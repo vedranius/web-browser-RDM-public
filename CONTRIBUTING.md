@@ -65,9 +65,9 @@ By submitting a contribution (code, documentation, translations or other materia
 repository you agree that:
 
 1. You wrote it yourself, or otherwise have the right to submit it under these terms.
-2. Your contribution is licensed under the project's license
-   ([PolyForm Noncommercial 1.0.0](LICENSE)), so everyone can use it on the same terms as the rest
-   of the project.
+2. Your contribution is licensed under the project's licenses
+   ([PolyForm Noncommercial 1.0.0 and PolyForm Internal Use 1.0.0](LICENSE)), so everyone can use
+   it on the same terms as the rest of the project.
 3. You additionally grant the project owner (**vedranius**) a perpetual, worldwide, non-exclusive,
    royalty-free, irrevocable license to use, modify, distribute, sublicense and relicense your
    contribution as part of the project, **including under commercial licenses**. This keeps the
