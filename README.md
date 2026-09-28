@@ -2,7 +2,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal, SFTP / FTP / FTPS file manager, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, audit log, policies): one self-hosted binary for your PC, server or company.
 
-**Current version: v10.0.0-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Security](SECURITY.md)
+**Current version: v10.0.1-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Security](SECURITY.md)
 
 ---
 
@@ -88,21 +88,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.0.0-mimo-linux-amd64
-   ./wrm-pro-v10.0.0-mimo-linux-amd64
+   chmod +x wrm-pro-v10.0.1-mimo-linux-amd64
+   ./wrm-pro-v10.0.1-mimo-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.0.0-mimo-windows-amd64.exe
+   .\wrm-pro-v10.0.1-mimo-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.0.0-mimo/wrm-pro-v10.0.0-mimo-android-arm64
-   chmod +x wrm-pro-v10.0.0-mimo-android-arm64 && ./wrm-pro-v10.0.0-mimo-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.0.1-mimo/wrm-pro-v10.0.1-mimo-android-arm64
+   chmod +x wrm-pro-v10.0.1-mimo-android-arm64 && ./wrm-pro-v10.0.1-mimo-android-arm64
    ```
 3. Open **http://localhost:8080** (or `http://<server-ip>:8080`). For voice calls from other computers use HTTPS — the quickest way is `HTTPS_SELF_SIGNED=1` (see [Configuration](#configuration)).
 4. **Create the administrator account** (the first account). After that, self-registration is **closed**: the administrator creates accounts in *Admin panel → Users* (or opens registration in *Security policies*).
@@ -131,6 +131,8 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 - **Existing shares keep their behaviour** (anyone with the link, role *Operator*). Edit them to use the new access modes and roles.
 - **Behind a reverse proxy:** state-changing API calls now require the `Origin` to match the `Host` (like WebSockets already did). Pass the `Host` header, or set `WRM_ALLOWED_ORIGINS`. Set `WRM_TRUST_PROXY=1` so rate limits and the audit log see real client IPs.
 - The per-IP sign-in limit is now 20 failures / 10 minutes; accounts additionally lock for 15 minutes after 10 wrong passwords (policy).
+- If the database comes from an earlier build that already had tables named like the new v10 tables (`audit_log`, `collab_messages`, …) but with a different layout, WRM keeps them as `<table>_old_<time>` and creates new ones (logged as *Upgraded table …*). Nothing is deleted.
+- The app is served at `/`. Old bookmarks to `/static/` are forwarded there.
 
 ---
 
@@ -476,7 +478,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.0.0-mimo-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.0.1-mimo-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -673,6 +675,7 @@ remote-manager/
   conntest.go     "Test connection" endpoint
   helpers.go      origin check, login rate limiting, shared helpers
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
+  upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs)
   static/index.html          the entire web UI (embedded into the binary)
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
 .github/workflows/build.yml  CI: vet, gofmt, tests (race), JS syntax check, builds all platforms, releases on tags

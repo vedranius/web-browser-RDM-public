@@ -1,10 +1,22 @@
-## Web Remote Manager PRO v10.0.0-mimo
+## Web Remote Manager PRO v10.0.1-mimo
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, server-to-server transfer, sharing, real-time collaboration and **voice calls**. One self-contained binary with an embedded web UI.
 
-v10 is a big release. It brings back **voice calls in collaboration rooms**, adds **user management, members and roles** for sharing, and **hardens security** throughout so WRM can be used in companies. Please read **Upgrading from v9** below before you replace the binary.
+### 🔧 Fixed in v10.0.1-mimo
+
+- **"404 page not found" at `http://localhost:8080/static/`.** Up to v9 the app also opened at `/static/`, and browsers remember that address. v10 turned off directory listings, so the old address returned 404. `/static/` and `/static/index.html` now forward to the app at `/`.
+- **Upgrading a database from an earlier WRM build** printed `Index warning: … no such column: ts` / `no such column: share_id`. Some earlier builds created tables named `audit_log` or `collab_messages` with a different layout, so v10 could not write the audit log or the chat history into them. v10 now detects such tables, keeps them under a new name (`<table>_old_<time>`, nothing is deleted) and creates them again with the right layout.
+- The server log now shows the address to open, e.g. `Listening on :8080 — open http://localhost:8080/ in your browser`.
+
+If you already run v10.0.0-mimo, just replace the binary. The fix is applied at the next start.
+
+---
+
+## Included from v10.0.0-mimo
+
+v10 is a big release. It brings back **voice calls in collaboration rooms**, adds **user management, members and roles** for sharing, and **hardens security** throughout so WRM can be used in companies. If you upgrade from v9, please read **Upgrading from v9** below before you replace the binary.
 
 ---
 
@@ -115,20 +127,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.0.0-mimo-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.0.0-mimo-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.0.0-mimo-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.0.0-mimo-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.0.0-mimo-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.0.0-mimo-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.0.0-mimo-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.0.0-mimo-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.0.0-mimo-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.0.0-mimo-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.0.0-mimo-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.0.0-mimo-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.0.0-mimo-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.0.0-mimo-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.0.1-mimo-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.0.1-mimo-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.0.1-mimo-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.0.1-mimo-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.0.1-mimo-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.0.1-mimo-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.0.1-mimo-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.0.1-mimo-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.0.1-mimo-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.0.1-mimo-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.0.1-mimo-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.0.1-mimo-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.0.1-mimo-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.0.1-mimo-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -136,22 +148,22 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.0.0-mimo-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.0.0-mimo-linux-amd64
+chmod +x wrm-pro-v10.0.1-mimo-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.0.1-mimo-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.0.0-mimo-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.0.1-mimo-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.0.0-mimo-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.0.1-mimo-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.0.0-mimo/wrm-pro-v10.0.0-mimo-android-arm64
-chmod +x wrm-pro-v10.0.0-mimo-android-arm64 && ./wrm-pro-v10.0.0-mimo-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.0.1-mimo/wrm-pro-v10.0.1-mimo-android-arm64
+chmod +x wrm-pro-v10.0.1-mimo-android-arm64 && ./wrm-pro-v10.0.1-mimo-android-arm64
 ```
 
 On the first start WRM creates `remote_manager.db` (the database) and `remote_manager.db.key` (the encryption key) next to each other, both with mode `0600`. **Back up the key file.**
@@ -169,12 +181,12 @@ WRM_ALLOWED_ORIGINS=host          extra allowed Origin hosts
 WRM_<POLICY>=value                force a policy, e.g. WRM_REQUIRE_2FA=all, WRM_TURN_PUBLIC_IP=203.0.113.10
 ```
 
-For the full documentation (reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/SECURITY.md).
+For the full documentation (reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.1-mimo/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.1-mimo/SECURITY.md).
 
 ---
 
 ### 📜 License
 
-Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, including forks and modifications. **Commercial use requires a separate license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/CONTRIBUTING.md).
+Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.1-mimo/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, including forks and modifications. **Commercial use requires a separate license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.1-mimo/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.1-mimo/CONTRIBUTING.md).
 
 ☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)**. Thank you!

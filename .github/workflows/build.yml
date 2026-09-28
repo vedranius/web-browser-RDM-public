@@ -17,7 +17,7 @@ permissions:
 
 env:
   # Base version used for file names. Tag builds embed the tag name as the version.
-  APP_VERSION: v10.0.0-mimo
+  APP_VERSION: v10.0.1-mimo
   GH_TOKEN: ${{ github.token }}
 
 jobs:
