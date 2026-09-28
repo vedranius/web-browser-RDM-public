@@ -115,6 +115,22 @@ func hostOnly(hp string) string {
 	return strings.Trim(hp, "[]")
 }
 
+// browserURL is the address to open in a browser for a listen address such as ":8080".
+func browserURL(addr string, tls bool) string {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return addr
+	}
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		host = "localhost"
+	}
+	scheme := "http"
+	if tls {
+		scheme = "https"
+	}
+	return scheme + "://" + net.JoinHostPort(host, port) + "/"
+}
+
 // ─── LOGIN RATE LIMITING ─────────────────────────────
 
 type loginAttempt struct {
