@@ -2,7 +2,6 @@ package main
 
 import (
 	"archive/zip"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -20,30 +19,55 @@ import (
 
 // ─── FILE MANAGER ─────────────────────────────────────
 
-// fileRequest validates access to the connection referenced by the "id" query parameter.
-func fileRequest(w http.ResponseWriter, r *http.Request) (Connection, bool) {
+// fileRequest validates that the request may use the connection referenced by the "id"
+// query parameter for perm (PermFilesRead or PermFilesWrite).
+func fileRequest(w http.ResponseWriter, r *http.Request, perm string) (Connection, *connAccess, bool) {
 	connID, _ := strconv.Atoi(r.URL.Query().Get("id"))
-	if !isConnectionAccessible(r, connID) {
-		jsonError(w, "Not found", 404)
-		return Connection{}, false
+	acc, code, msg := authorizeConnection(r, connID, perm)
+	if acc == nil {
+		jsonError(w, msg, code)
+		return Connection{}, nil, false
 	}
 	c, err := loadConnection(connID)
 	if err != nil {
 		jsonError(w, "Connection not found", 404)
-		return Connection{}, false
+		return Connection{}, nil, false
 	}
-	return c, true
+	return c, acc, true
+}
+
+// auditFileOp records a change made through the file manager.
+func auditFileOp(r *http.Request, acc *connAccess, c Connection, action, target string, extra map[string]interface{}) {
+	uid, name := acc.actor()
+	d := map[string]interface{}{"connection": c.Name, "host": c.Host}
+	if acc.Share != nil {
+		d["share"] = acc.Share.Share.Name
+	}
+	for k, v := range extra {
+		d[k] = v
+	}
+	auditLogAs(r, uid, name, action, target, d)
+}
+
+func requireMethod(w http.ResponseWriter, r *http.Request, methods ...string) bool {
+	for _, m := range methods {
+		if r.Method == m {
+			return true
+		}
+	}
+	jsonError(w, "Method not allowed", 405)
+	return false
 }
 
 // dialFTP connects and logs in; FTPS uses explicit TLS (AUTH TLS).
 func dialFTP(c Connection) (*ftp.ServerConn, error) {
 	opts := []ftp.DialOption{ftp.DialWithTimeout(15 * time.Second)}
 	if strings.ToUpper(c.Protocol) == "FTPS" {
-		opts = append(opts, ftp.DialWithExplicitTLS(&tls.Config{InsecureSkipVerify: true, ServerName: hostOnly(c.Host)}))
+		opts = append(opts, ftp.DialWithExplicitTLS(ftpsTLSConfig(c)))
 	}
 	fc, err := ftp.Dial(c.Host, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("FTP: %v", err)
+		return nil, fmt.Errorf("FTP: %w", err)
 	}
 	if err := fc.Login(c.Username, c.Password); err != nil {
 		fc.Quit()
@@ -70,7 +94,7 @@ func fileOp(c Connection, retry bool, sftpFn func(*sftp.Client) error, ftpFn fun
 }
 
 func listRemoteFilesHandler(w http.ResponseWriter, r *http.Request) {
-	c, ok := fileRequest(w, r)
+	c, _, ok := fileRequest(w, r, PermFilesRead)
 	if !ok {
 		return
 	}
@@ -135,7 +159,7 @@ func listRemoteFilesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listRemoteRecursiveHandler(w http.ResponseWriter, r *http.Request) {
-	c, ok := fileRequest(w, r)
+	c, _, ok := fileRequest(w, r, PermFilesRead)
 	if !ok {
 		return
 	}
@@ -214,11 +238,14 @@ type errStreamStarted struct{ err error }
 func (e errStreamStarted) Error() string { return e.err.Error() }
 
 func downloadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
-	c, ok := fileRequest(w, r)
+	c, acc, ok := fileRequest(w, r, PermFilesRead)
 	if !ok {
 		return
 	}
 	remotePath := r.URL.Query().Get("path")
+	if acc.Share != nil && r.URL.Query().Get("inline") != "1" {
+		auditFileOp(r, acc, c, "file.download", remotePath, nil)
+	}
 	disposition := attachmentHeader(path.Base(remotePath))
 	if r.URL.Query().Get("inline") == "1" {
 		disposition = "inline"
@@ -271,7 +298,7 @@ func downloadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadRemoteDirHandler(w http.ResponseWriter, r *http.Request) {
-	c, ok := fileRequest(w, r)
+	c, _, ok := fileRequest(w, r, PermFilesRead)
 	if !ok {
 		return
 	}
@@ -398,10 +425,12 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 	params := map[string]string{"id": q.Get("id"), "path": q.Get("path"), "overwrite": q.Get("overwrite"), "share_token": q.Get("share_token")}
 	var (
 		c        Connection
+		acc      *connAccess
 		haveConn bool
 		results  []uploadResult
 		relDir   string
 	)
+	maxBytes := int64(settingInt("max_upload_mb")) << 20
 	ensureConn := func() bool {
 		if haveConn {
 			return true
@@ -412,10 +441,12 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 			qq.Set("share_token", params["share_token"])
 			r.URL.RawQuery = qq.Encode()
 		}
-		if !isConnectionAccessible(r, connID) {
-			jsonError(w, "Not found", 404)
+		a, code, msg := authorizeConnection(r, connID, PermFilesWrite)
+		if a == nil {
+			jsonError(w, msg, code)
 			return false
 		}
+		acc = a
 		var err error
 		if c, err = loadConnection(connID); err != nil {
 			jsonError(w, "Connection not found", 404)
@@ -474,7 +505,7 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fullPath := joinRemote(targetDir, fileName)
 		overwrite := params["overwrite"] == "true" || params["overwrite"] == "1"
-		cr := &countingReader{r: part}
+		cr := &countingReader{r: part, max: maxBytes}
 		opErr := fileOp(c, false, func(sc *sftp.Client) error {
 			if targetDir != baseDir {
 				if err := sc.MkdirAll(targetDir); err != nil {
@@ -492,6 +523,9 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if _, err := dst.ReadFrom(cr); err != nil {
 				dst.Close()
+				if errors.Is(err, errTooLarge) {
+					sc.Remove(fullPath)
+				}
 				return err
 			}
 			return dst.Close()
@@ -504,7 +538,12 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 					return errConflict
 				}
 			}
-			return fc.Stor(fullPath, cr)
+			err := fc.Stor(fullPath, cr)
+			if errors.Is(err, errTooLarge) || cr.tooBig {
+				fc.Delete(fullPath)
+				return errTooLarge
+			}
+			return err
 		})
 		res.Size = cr.n
 		switch {
@@ -521,6 +560,16 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 	if !haveConn {
 		jsonError(w, "No file received", 400)
 		return
+	}
+	okFiles, bytes := 0, int64(0)
+	for _, res := range results {
+		if res.Status == "ok" {
+			okFiles++
+			bytes += res.Size
+		}
+	}
+	if okFiles > 0 {
+		auditFileOp(r, acc, c, "file.upload", params["path"], map[string]interface{}{"files": okFiles, "bytes": bytes})
 	}
 	status := http.StatusOK
 	allConflict := len(results) > 0
@@ -542,15 +591,23 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 var errConflict = errors.New("file exists")
+var errTooLarge = errors.New("file exceeds the maximum upload size set by the administrator")
 
+// countingReader counts bytes and stops with errTooLarge after max bytes (0 = unlimited).
 type countingReader struct {
-	r io.Reader
-	n int64
+	r      io.Reader
+	n      int64
+	max    int64
+	tooBig bool
 }
 
 func (c *countingReader) Read(p []byte) (int, error) {
 	n, err := c.r.Read(p)
 	c.n += int64(n)
+	if c.max > 0 && c.n > c.max {
+		c.tooBig = true
+		return n, errTooLarge
+	}
 	return n, err
 }
 
@@ -573,7 +630,10 @@ func ftpMkdirAll(fc *ftp.ServerConn, dir string) {
 }
 
 func mkdirRemoteHandler(w http.ResponseWriter, r *http.Request) {
-	c, ok := fileRequest(w, r)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	c, acc, ok := fileRequest(w, r, PermFilesWrite)
 	if !ok {
 		return
 	}
@@ -587,11 +647,15 @@ func mkdirRemoteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), 500)
 		return
 	}
+	auditFileOp(r, acc, c, "file.mkdir", remotePath, nil)
 	jsonOK(w, map[string]interface{}{"ok": true, "status": "ok"})
 }
 
 func deleteRemoteHandler(w http.ResponseWriter, r *http.Request) {
-	c, ok := fileRequest(w, r)
+	if !requireMethod(w, r, http.MethodDelete, http.MethodPost) {
+		return
+	}
+	c, acc, ok := fileRequest(w, r, PermFilesWrite)
 	if !ok {
 		return
 	}
@@ -616,17 +680,21 @@ func deleteRemoteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), 500)
 		return
 	}
+	auditFileOp(r, acc, c, "file.delete", remotePath, map[string]interface{}{"dir": isDir})
 	jsonOK(w, map[string]interface{}{"ok": true, "status": "ok"})
 }
 
 func renameRemoteHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
 	oldPath := r.URL.Query().Get("old")
 	newPath := r.URL.Query().Get("new")
 	if oldPath == "" || newPath == "" {
 		jsonError(w, "Missing old/new path", 400)
 		return
 	}
-	c, ok := fileRequest(w, r)
+	c, acc, ok := fileRequest(w, r, PermFilesWrite)
 	if !ok {
 		return
 	}
@@ -645,6 +713,7 @@ func renameRemoteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), 500)
 		return
 	}
+	auditFileOp(r, acc, c, "file.rename", oldPath, map[string]interface{}{"to": newPath})
 	jsonOK(w, map[string]interface{}{"ok": true, "status": "ok"})
 }
 

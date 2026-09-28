@@ -17,15 +17,28 @@ import (
 	"github.com/pkg/sftp"
 )
 
-// loadConnection reads a connection by ID, decrypts its secrets and normalises the host:port.
-func loadConnection(connID int) (Connection, error) {
+// loadConnectionRaw reads a connection by ID and decrypts its secrets.
+func loadConnectionRaw(connID int) (Connection, error) {
 	var c Connection
-	err := db.QueryRow(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path FROM connections WHERE id=?`, connID).
-		Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath)
+	var uid *int
+	err := db.QueryRow(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id FROM connections WHERE id=?`, connID).
+		Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &uid)
 	if err != nil {
 		return c, fmt.Errorf("connection not found")
 	}
+	if uid != nil {
+		c.UserID = *uid
+	}
 	decryptConnectionSecrets(&c)
+	return c, nil
+}
+
+// loadConnection is loadConnectionRaw with the host normalised to host:port for dialing.
+func loadConnection(connID int) (Connection, error) {
+	c, err := loadConnectionRaw(connID)
+	if err != nil {
+		return c, err
+	}
 	c.Host = ensurePort(c.Host, c.Protocol)
 	return c, nil
 }
@@ -66,7 +79,11 @@ func joinRemote(dir, name string) string {
 // Host (or X-Forwarded-Host) of the request. Set WRM_ALLOW_ANY_ORIGIN=1 to disable, or
 // WRM_ALLOWED_ORIGINS=a.example.com,b.example.com to allow extra hosts.
 func checkWSOrigin(r *http.Request) bool {
-	origin := r.Header.Get("Origin")
+	return originAllowed(r, r.Header.Get("Origin"))
+}
+
+// originAllowed reports whether an Origin/Referer URL belongs to this server.
+func originAllowed(r *http.Request, origin string) bool {
 	if origin == "" || os.Getenv("WRM_ALLOW_ANY_ORIGIN") == "1" {
 		return true
 	}
@@ -87,7 +104,7 @@ func checkWSOrigin(r *http.Request) bool {
 			return true
 		}
 	}
-	log.Printf("WebSocket origin rejected: %s (host %s)", origin, r.Host)
+	log.Printf("Cross-origin request rejected: %s (host %s)", origin, r.Host)
 	return false
 }
 
@@ -111,15 +128,12 @@ var (
 	loginAttemptsMu sync.Mutex
 )
 
+// Per IP address; accounts additionally lock after login_max_failures (policy).
 const (
-	loginMaxFails   = 8
+	loginMaxFails   = 20
 	loginFailWindow = 10 * time.Minute
 	loginLockout    = 5 * time.Minute
 )
-
-func clientIP(r *http.Request) string {
-	return hostOnly(r.RemoteAddr)
-}
 
 // loginBlocked reports whether the IP is temporarily locked out and for how long.
 func loginBlocked(ip string) (bool, time.Duration) {
@@ -143,6 +157,13 @@ func recordLoginResult(ip string, success bool) {
 		return
 	}
 	now := time.Now()
+	if len(loginAttempts) > 20000 { // bound memory under a distributed attack
+		for k, v := range loginAttempts {
+			if now.Sub(v.first) > loginFailWindow && now.After(v.lockedUntil) {
+				delete(loginAttempts, k)
+			}
+		}
+	}
 	a := loginAttempts[ip]
 	if a == nil || now.Sub(a.first) > loginFailWindow {
 		a = &loginAttempt{first: now}

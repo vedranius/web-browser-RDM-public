@@ -14,3 +14,8 @@ wrm-pro-*
 .vscode/
 .DS_Store
 Thumbs.db
+
+# WRM secrets next to the database (keep them private!)
+*.db.key
+wrm-selfsigned.crt
+wrm-selfsigned.key

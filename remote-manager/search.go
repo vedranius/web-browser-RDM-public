@@ -85,7 +85,7 @@ func shellQuote(s string) string {
 }
 
 func searchRemoteHandler(w http.ResponseWriter, r *http.Request) {
-	c, ok := fileRequest(w, r)
+	c, _, ok := fileRequest(w, r, PermFilesRead)
 	if !ok {
 		return
 	}

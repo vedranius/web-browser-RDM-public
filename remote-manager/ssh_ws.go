@@ -72,8 +72,9 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := strconv.Atoi(r.URL.Query().Get("id"))
-	if !isConnectionAccessible(r, id) {
-		fail("Access denied or connection not found.")
+	acc, _, denyMsg := authorizeConnection(r, id, PermTerminal)
+	if acc == nil {
+		fail(denyMsg)
 		return
 	}
 	c, err := loadConnection(id)
@@ -93,16 +94,47 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 
 	sendCtl(map[string]interface{}{"type": "status", "state": "connecting", "host": c.Host})
 	printTerm("\r\n\x1b[36mConnecting to " + c.Host + "...\x1b[0m\r\n")
-	sshClient, err := ssh.Dial("tcp", c.Host, &ssh.ClientConfig{
-		User: c.Username, Auth: am,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         15 * time.Second,
+	cfg := sshClientConfig(c, am, func(fp string) {
+		printTerm("\x1b[33mNew host " + c.Host + " — key " + fp + " saved (trust on first use).\x1b[0m\r\n")
 	})
+	sshClient, err := ssh.Dial("tcp", c.Host, cfg)
 	if err != nil {
+		if hk := asHostKeyError(err); hk != nil {
+			sendCtl(map[string]interface{}{"type": "hostkey", "kind": hk.Kind, "host": hk.Host, "key_type": hk.KeyType,
+				"expected": hk.Expected, "fingerprint": hk.Got, "conn_id": c.ID, "can_accept": acc.Share == nil})
+			printTerm("\r\n\x1b[41;97m " + map[string]string{"mismatch": "WARNING: HOST KEY CHANGED", "unknown": "UNKNOWN HOST"}[hk.Kind] + " \x1b[0m\r\n")
+			fail(hk.Error())
+			return
+		}
 		fail("Connection failed: " + err.Error())
 		return
 	}
 	defer sshClient.Close()
+
+	// Register the terminal so administrators can see/end it and access can be revoked.
+	actorID, actorName := acc.actor()
+	ts := &termSession{ID: randomToken(9), UserID: actorID, User: actorName, ConnID: c.ID, ConnName: c.Name, Host: c.Host, IP: clientIP(r), Started: time.Now()}
+	if acc.Share != nil {
+		ts.ShareID, ts.Share, ts.PKey, ts.Ctx = acc.Share.Share.ID, acc.Share.Share.Name, acc.Share.PKey, acc.Share.Ctx
+	}
+	var killOnce sync.Once
+	ts.kill = func(reason string) {
+		killOnce.Do(func() {
+			printTerm("\r\n\x1b[31m" + reason + "\x1b[0m\r\n")
+			sendCtl(map[string]interface{}{"type": "error", "message": reason})
+			wsMu.Lock()
+			closeWSRevoked(ws, reason)
+			wsMu.Unlock()
+			sshClient.Close()
+			ws.Close()
+		})
+	}
+	registerTerminal(ts)
+	defer unregisterTerminal(ts.ID)
+	auditLogAs(r, actorID, actorName, "terminal.open", c.Name, map[string]interface{}{"host": c.Host, "user": c.Username, "share": ts.Share})
+	defer func() {
+		auditLogAs(r, actorID, actorName, "terminal.close", c.Name, map[string]interface{}{"host": c.Host, "minutes": int(time.Since(ts.Started).Minutes())})
+	}()
 
 	session, err := sshClient.NewSession()
 	if err != nil {
