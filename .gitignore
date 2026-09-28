@@ -1,0 +1,16 @@
+# Build output
+dist/
+remote-manager/wrm-server
+remote-manager/wrm-server.exe
+wrm-pro-*
+
+# Local databases (contain users, sessions and encrypted connection secrets — never commit!)
+*.db
+*.db-shm
+*.db-wal
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
