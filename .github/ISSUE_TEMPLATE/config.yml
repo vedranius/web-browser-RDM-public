@@ -2,7 +2,7 @@ blank_issues_enabled: true
 contact_links:
   - name: Commercial license
     url: https://github.com/vedranius/web-browser-RDM-public/issues/new?title=Commercial%20license
-    about: Using WRM in a company, for paid work or in a commercial product requires a commercial license (see COMMERCIAL-LICENSE.md).
+    about: Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license (see COMMERCIAL-LICENSE.md). Using it as a work tool in a company is free.
   - name: Support the project on Ko-fi
     url: https://ko-fi.com/vedranius
     about: Buy the developer a coffee if WRM is useful to you.
