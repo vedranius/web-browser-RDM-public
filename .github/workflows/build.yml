@@ -1,0 +1,196 @@
+name: Build Web Remote Manager PRO
+
+# Binaries are attached directly to the GitHub Release (no Actions artifacts), so builds do
+# not depend on the Actions artifact storage quota. Branch pushes / PRs only verify that
+# everything compiles for every platform.
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # Base version used for file names. Tag builds embed the tag name as the version.
+  APP_VERSION: v9.10.2-mimo
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  # ─────────────────────────────────────────────
+  #  Checks: go vet + gofmt + JavaScript syntax of the embedded UI
+  # ─────────────────────────────────────────────
+  check:
+    name: Vet & lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: remote-manager/go.mod
+          cache: false
+
+      - name: Download Go modules (retries on network errors)
+        working-directory: remote-manager
+        run: |
+          for i in 1 2 3 4 5; do
+            go mod download && exit 0
+            echo "go mod download failed (attempt $i), retrying..."; sleep $((i * 10))
+          done
+          exit 1
+
+      - name: go vet
+        working-directory: remote-manager
+        run: go vet ./...
+
+      - name: gofmt (new files)
+        working-directory: remote-manager
+        run: |
+          out=$(gofmt -l ssh_ws.go files.go search.go sftp_pool.go helpers.go conntest.go)
+          if [ -n "$out" ]; then echo "Not gofmt-ed: $out"; exit 1; fi
+
+      - name: JavaScript syntax check (static/index.html)
+        run: |
+          python3 - <<'EOF'
+          import re
+          html = open('remote-manager/static/index.html', encoding='utf-8').read()
+          scripts = re.findall(r'<script>(.*?)</script>', html, re.S)
+          assert scripts, 'no inline script found'
+          open('/tmp/app.js', 'w', encoding='utf-8').write(scripts[-1])
+          EOF
+          node --check /tmp/app.js
+
+  # ─────────────────────────────────────────────
+  #  Create the release (tags only) before the binaries are uploaded
+  # ─────────────────────────────────────────────
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-24.04
+    needs: check
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Create or update GitHub Release
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "Web Remote Manager PRO $TAG" --notes-file RELEASE_NOTES.md
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "Web Remote Manager PRO $TAG" --notes-file RELEASE_NOTES.md --latest
+          fi
+
+  # ─────────────────────────────────────────────
+  #  Cross-platform binary builds (pure Go, no CGO)
+  # ─────────────────────────────────────────────
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ubuntu-24.04
+    needs: [check, create-release]
+    # create-release is skipped on branch pushes; still build (compile check) in that case.
+    if: ${{ !cancelled() && needs.check.result == 'success' && needs.create-release.result != 'failure' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: linux-amd64,    goos: linux,   goarch: amd64, goarm: "",  ext: "" }
+          - { label: linux-arm64,    goos: linux,   goarch: arm64, goarm: "",  ext: "" }
+          - { label: linux-armv7,    goos: linux,   goarch: arm,   goarm: "7", ext: "" }
+          - { label: linux-armv6,    goos: linux,   goarch: arm,   goarm: "6", ext: "" }
+          - { label: linux-386,      goos: linux,   goarch: "386", goarm: "",  ext: "" }
+          - { label: windows-amd64,  goos: windows, goarch: amd64, goarm: "",  ext: ".exe" }
+          - { label: windows-arm64,  goos: windows, goarch: arm64, goarm: "",  ext: ".exe" }
+          - { label: darwin-amd64,   goos: darwin,  goarch: amd64, goarm: "",  ext: "" }
+          - { label: darwin-arm64,   goos: darwin,  goarch: arm64, goarm: "",  ext: "" }
+          - { label: android-arm64,  goos: android, goarch: arm64, goarm: "",  ext: "" }
+          - { label: freebsd-amd64,  goos: freebsd, goarch: amd64, goarm: "",  ext: "" }
+          - { label: freebsd-arm64,  goos: freebsd, goarch: arm64, goarm: "",  ext: "" }
+          - { label: openbsd-amd64,  goos: openbsd, goarch: amd64, goarm: "",  ext: "" }
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: remote-manager/go.mod
+          cache: false
+
+      - name: Download Go modules (retries on network errors)
+        working-directory: remote-manager
+        run: |
+          for i in 1 2 3 4 5; do
+            go mod download && exit 0
+            echo "go mod download failed (attempt $i), retrying..."; sleep $((i * 10))
+          done
+          exit 1
+
+      - name: Build binary
+        working-directory: remote-manager
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+          CGO_ENABLED: 0
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="${APP_VERSION}-$(git rev-parse --short HEAD)"
+          fi
+          OUTPUT="wrm-pro-${APP_VERSION}-${{ matrix.label }}${{ matrix.ext }}"
+          mkdir -p ../dist
+          go build -ldflags="-s -w -X main.AppVersion=${VERSION}" -trimpath -o "../dist/${OUTPUT}" .
+          echo "Built ${OUTPUT} (${VERSION}) — $(du -h ../dist/${OUTPUT} | cut -f1)"
+
+      - name: Upload to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: gh release upload "${GITHUB_REF_NAME}" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+
+  # ─────────────────────────────────────────────
+  #  macOS universal binary + SHA-256 checksums (tags only)
+  # ─────────────────────────────────────────────
+  finalize:
+    name: Universal binary & checksums
+    runs-on: ubuntu-24.04
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+          cache: false
+
+      - name: Download release binaries
+        run: |
+          mkdir -p dist && cd dist
+          gh release download "${GITHUB_REF_NAME}" --repo "$GITHUB_REPOSITORY" --pattern 'wrm-pro-*'
+          ls -la
+
+      - name: Create macOS universal binary
+        run: |
+          set -euo pipefail
+          cd dist
+          OUT="wrm-pro-${APP_VERSION}-darwin-universal"
+          if command -v llvm-lipo >/dev/null 2>&1; then
+            LIPO=llvm-lipo
+          else
+            go install github.com/konoui/lipo@latest
+            LIPO="$(go env GOPATH)/bin/lipo"
+          fi
+          "$LIPO" -create "wrm-pro-${APP_VERSION}-darwin-amd64" "wrm-pro-${APP_VERSION}-darwin-arm64" -output "$OUT"
+          file "$OUT"
+          gh release upload "${GITHUB_REF_NAME}" "$OUT" --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: SHA-256 checksums
+        run: |
+          cd dist
+          rm -f SHA256SUMS.txt
+          sha256sum wrm-pro-* | sort > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload "${GITHUB_REF_NAME}" SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
