@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  Web Remote Manager PRO v9.10.2-mimo — build all platform binaries
+#  Web Remote Manager PRO v10.0.0-mimo — build all platform binaries
 #  Run this from the repo root OR from inside remote-manager/
 #  Usage:  bash remote-manager/build-all.sh
 #          bash build-all.sh          (if you're already in remote-manager/)
@@ -20,7 +20,7 @@ warn() { echo -e "${YELLOW}⚠${NC} $*"; }
 die()  { echo -e "${RED}✗ ERROR:${NC} $*" >&2; exit 1; }
 
 echo ""
-echo "  Web Remote Manager PRO v9.10.2-mimo — multiplatform build"
+echo "  Web Remote Manager PRO v10.0.0-mimo — multiplatform build"
 echo "  =================================================="
 echo ""
 
@@ -36,7 +36,7 @@ ok "Using $GO_VERSION"
 
 # ── 2. Prepare dist/ ─────────────────────────────────────────────────────────
 mkdir -p "$DIST_DIR"
-rm -f "$DIST_DIR"/wrm-pro-v9*   # wipe old builds
+rm -f "$DIST_DIR"/wrm-pro-v*   # wipe old builds
 
 # ── 3. Version tag ───────────────────────────────────────────────────────────
 GIT_SHORT=""
@@ -44,21 +44,26 @@ if command -v git &>/dev/null; then
   _sha=$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || true)
   [[ -n "$_sha" ]] && GIT_SHORT="-$_sha"
 fi
-VERSION="v9.10.2-mimo${GIT_SHORT}"
+VERSION="v10.0.0-mimo${GIT_SHORT}"
 ok "Build version: $VERSION"
 echo ""
 
 # ── 4. Target matrix ─────────────────────────────────────────────────────────
 # Format: "GOOS/GOARCH[/GOARM]/output-suffix"
 TARGETS=(
-  "linux/amd64//wrm-pro-v9.10.2-mimo-linux-amd64"
-  "linux/arm64//wrm-pro-v9.10.2-mimo-linux-arm64"
-  "linux/arm/7/wrm-pro-v9.10.2-mimo-linux-armv7"
-  "darwin/amd64//wrm-pro-v9.10.2-mimo-darwin-amd64"
-  "darwin/arm64//wrm-pro-v9.10.2-mimo-darwin-arm64"
-  "windows/amd64//wrm-pro-v9.10.2-mimo-windows-amd64.exe"
-  "windows/arm64//wrm-pro-v9.10.2-mimo-windows-arm64.exe"
-  "freebsd/amd64//wrm-pro-v9.10.2-mimo-freebsd-amd64"
+  "linux/amd64//wrm-pro-v10.0.0-mimo-linux-amd64"
+  "linux/arm64//wrm-pro-v10.0.0-mimo-linux-arm64"
+  "linux/arm/7/wrm-pro-v10.0.0-mimo-linux-armv7"
+  "linux/arm/6/wrm-pro-v10.0.0-mimo-linux-armv6"
+  "linux/386//wrm-pro-v10.0.0-mimo-linux-386"
+  "darwin/amd64//wrm-pro-v10.0.0-mimo-darwin-amd64"
+  "darwin/arm64//wrm-pro-v10.0.0-mimo-darwin-arm64"
+  "windows/amd64//wrm-pro-v10.0.0-mimo-windows-amd64.exe"
+  "windows/arm64//wrm-pro-v10.0.0-mimo-windows-arm64.exe"
+  "android/arm64//wrm-pro-v10.0.0-mimo-android-arm64"
+  "freebsd/amd64//wrm-pro-v10.0.0-mimo-freebsd-amd64"
+  "freebsd/arm64//wrm-pro-v10.0.0-mimo-freebsd-arm64"
+  "openbsd/amd64//wrm-pro-v10.0.0-mimo-openbsd-amd64"
 )
 
 BUILT=()
@@ -78,7 +83,7 @@ for target in "${TARGETS[@]}"; do
   [[ -n "$GOARM" ]] && BUILD_ENV+=("GOARM=$GOARM")
 
   if (cd "$SRC_DIR" && env "${BUILD_ENV[@]}" go build \
-       -ldflags="-s -w -X main.AppVersion=$VERSION" \
+       -ldflags="-s -w -X main.AppVersion=$VERSION" -trimpath \
        -o "$OUTPUT" . 2>/tmp/wrm-build-err); then
     SIZE=$(du -sh "$OUTPUT" 2>/dev/null | cut -f1)
     echo -e "${GREEN}OK${NC} (${SIZE})"
@@ -97,7 +102,7 @@ echo "  Built:  ${#BUILT[@]} / $((${#BUILT[@]} + ${#FAILED[@]}))"
 echo "  Output: $DIST_DIR/"
 echo ""
 
-ls -lh "$DIST_DIR"/wrm-pro-v9* 2>/dev/null | awk '{print "  "$NF"  ("$5")"}' || true
+ls -lh "$DIST_DIR"/wrm-pro-v* 2>/dev/null | awk '{print "  "$NF"  ("$5")"}' || true
 
 if [[ ${#FAILED[@]} -gt 0 ]]; then
   echo ""
@@ -111,6 +116,6 @@ echo ""
 ok "All ${#BUILT[@]} binaries ready in: $DIST_DIR/"
 echo ""
 echo "  Quick start:"
-echo "    chmod +x $DIST_DIR/wrm-pro-v9.10.2-mimo-linux-amd64"
-echo "    PORT=8080 $DIST_DIR/wrm-pro-v9.10.2-mimo-linux-amd64"
+echo "    chmod +x $DIST_DIR/wrm-pro-v10.0.0-mimo-linux-amd64"
+echo "    PORT=8080 $DIST_DIR/wrm-pro-v10.0.0-mimo-linux-amd64"
 echo ""

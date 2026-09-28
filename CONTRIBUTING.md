@@ -7,6 +7,8 @@ are all welcome.
 
 - **Report a bug** — open an issue using the *Bug report* template. Include your WRM version
   (`/api/version` or the top bar), OS, browser and steps to reproduce.
+- **Report a security problem** — privately, as described in [SECURITY.md](SECURITY.md). Please
+  do not open a public issue for it.
 - **Suggest an idea / feature** — open an issue using the *Feature request* template and describe
   the problem it solves.
 - **Improve translations** — the UI strings live in the `LANGS` object in
@@ -21,18 +23,39 @@ check.
 
 ```bash
 cd remote-manager
+gofmt -l .                      # must print nothing
 go vet ./...
+go test -race ./...             # unit tests (security, roles, 2FA, encryption, settings…)
 go build -o wrm-server .
-PORT=8080 ./wrm-server          # open http://localhost:8080
+HTTPS_SELF_SIGNED=1 PORT=8080 ./wrm-server   # open https://localhost:8080
 ```
 
-The whole frontend is `remote-manager/static/index.html` (embedded into the binary). Before sending
-a PR please make sure that:
+Use a separate `DB_PATH` for development so you do not touch your real database. Voice calls need
+HTTPS (or `localhost`) and two browser profiles or devices to test.
 
-- `go vet ./...` passes and new Go files are `gofmt`-ed,
+Code layout:
+
+| File | What it does |
+|---|---|
+| `main.go` | Startup, routes, database schema & migrations, connections API, server-to-server transfer |
+| `security.go` | Encryption of secrets, signed values, security headers, CSRF, HTTPS |
+| `users.go`, `totp.go` | Accounts, sessions, sign-in, 2FA, admin user management |
+| `settings.go`, `audit.go`, `admin.go` | Policies, audit log, admin panel API, terminal registry |
+| `shares.go`, `collab.go` | Shares, roles & permissions, collaboration rooms (chat, terminal sharing, voice signalling) |
+| `turn.go` | Built-in TURN relay for voice calls |
+| `ssh_ws.go`, `files.go`, `sftp_pool.go`, `search.go`, `conntest.go`, `hostkeys.go` | Terminal, file manager, SFTP connection pool, search, connection test, host key verification |
+| `static/index.html` | The whole web UI (embedded into the binary); `static/vendor/` holds xterm.js and fonts |
+
+Before sending a PR please make sure that:
+
+- `gofmt -l .` prints nothing, and `go vet ./...` and `go test -race ./...` pass,
 - the page has no JavaScript errors (the CI extracts the inline script and runs `node --check`),
 - new UI text has both `en` and `hr` entries in `LANGS`,
-- you tested the change in a browser (terminal, file manager and sessions if you touched them).
+- every new API endpoint or WebSocket message checks **who** may use it (signed-in user, share role
+  / permission, admin) on the server. The UI hiding a button is not access control,
+- secrets (passwords, keys, tokens) are never returned to the browser or written to the log,
+- you tested the change in a browser (terminal, file manager, sessions, collaboration and voice if
+  you touched them).
 
 CI (GitHub Actions) builds every platform for each pull request.
 
