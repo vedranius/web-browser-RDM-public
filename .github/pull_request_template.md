@@ -4,7 +4,8 @@
 
 ## How was it tested?
 
-- [ ] `go vet ./...` passes
+- [ ] `gofmt -l .` is empty, `go vet ./...` and `go test -race ./...` pass
+- [ ] Server-side permission checks for any new endpoint / action; no secrets sent to the browser or logged
 - [ ] Tested in the browser (terminal / file manager / sessions as relevant)
 - [ ] New UI text has `en` and `hr` translations
 
