@@ -6,14 +6,15 @@
 
 ---
 
-## 📜 License: free for noncommercial use
+## 📜 License: free for personal use and as a work tool in companies
 
-WRM is **source-available** under the **[PolyForm Noncommercial License 1.0.0](LICENSE)**.
+WRM is **source-available**. You may use it under the **[PolyForm Noncommercial License 1.0.0](LICENSE)** or the **[PolyForm Internal Use License 1.0.0](LICENSE)**, whichever fits.
 
 | | |
 |---|---|
-| ✅ **Free, no permission needed** | Personal use, home labs, learning, hobby projects, non-profits, schools and universities, public research, government. You may **use, fork, modify and share** it, including modified versions. Keep the [LICENSE](LICENSE) and its `Required Notice:` lines. |
-| 💼 **Needs a commercial license** | Use in a company or for paid work, offering WRM as a hosted service / SaaS, bundling or selling it, or using its code in a commercial product. See **[COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)**. |
+| ✅ **Free for personal & noncommercial use** | Personal use, home labs, learning, hobby projects, non-profits, schools and universities, public research, government. You may **use, fork, modify and share** it, including modified versions. Keep the [LICENSE](LICENSE) and its `Required Notice:` lines. |
+| ✅ **Free for companies as a work tool** | Companies of any size may run WRM on their own servers and use it for their work, **including paid work for their customers** (e.g. managing customers' servers), and may modify it for internal use. |
+| 💼 **Needs a commercial license** | Offering WRM to others as a hosted service / SaaS, **charging anyone for access to or use of WRM**, reselling, renting or white-labelling it, bundling it in a product or appliance, or using its code in a product you offer to others. Contact the owner first. See **[COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)**. |
 | 🤝 **Contributions welcome** | Ideas, bug reports, translations and pull requests. See **[CONTRIBUTING.md](CONTRIBUTING.md)**. |
 
 Copyright © 2026 vedranius. Third-party libraries keep their own licenses.
@@ -711,4 +712,4 @@ If WRM is useful to you, consider supporting it on **[Ko-fi](https://ko-fi.com/v
 
 ---
 
-<sub>Web Remote Manager PRO · © 2026 vedranius · [PolyForm Noncommercial 1.0.0](LICENSE) · commercial use: [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)</sub>
+<sub>Web Remote Manager PRO · © 2026 vedranius · [PolyForm Noncommercial 1.0.0 or PolyForm Internal Use 1.0.0](LICENSE) · hosting, reselling & bundling: [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)</sub>
