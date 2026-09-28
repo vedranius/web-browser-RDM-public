@@ -17,12 +17,12 @@ permissions:
 
 env:
   # Base version used for file names. Tag builds embed the tag name as the version.
-  APP_VERSION: v9.10.2-mimo
+  APP_VERSION: v10.0.0-mimo
   GH_TOKEN: ${{ github.token }}
 
 jobs:
   # ─────────────────────────────────────────────
-  #  Checks: go vet + gofmt + JavaScript syntax of the embedded UI
+  #  Checks: go vet + gofmt + unit tests (race detector) + JavaScript syntax of the UI
   # ─────────────────────────────────────────────
   check:
     name: Vet & lint
@@ -48,11 +48,15 @@ jobs:
         working-directory: remote-manager
         run: go vet ./...
 
-      - name: gofmt (new files)
+      - name: gofmt
         working-directory: remote-manager
         run: |
-          out=$(gofmt -l ssh_ws.go files.go search.go sftp_pool.go helpers.go conntest.go)
+          out=$(gofmt -l .)
           if [ -n "$out" ]; then echo "Not gofmt-ed: $out"; exit 1; fi
+
+      - name: Unit tests (race detector)
+        working-directory: remote-manager
+        run: go test -race -count=1 ./...
 
       - name: JavaScript syntax check (static/index.html)
         run: |

@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/ssh"
 )
 
 // POST /api/connections/test
@@ -25,7 +27,7 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if c.ID > 0 && userOwnsConnection(c.ID, userID) {
-		if stored, err := loadConnection(c.ID); err == nil {
+		if stored, err := loadConnectionRaw(c.ID); err == nil {
 			if c.Password == "" {
 				c.Password = stored.Password
 			}
@@ -39,12 +41,14 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Host is required", 400)
 		return
 	}
-	if c.Protocol == "" {
-		c.Protocol = "SSH"
+	if c.Name == "" {
+		c.Name = c.Host
 	}
-	if c.AuthMethod == "" {
-		c.AuthMethod = "PASSWORD"
+	if err := normalizeConnection(&c); err != nil {
+		jsonError(w, err.Error(), 400)
+		return
 	}
+	c.UserID = userID
 	c.Host = ensurePort(c.Host, c.Protocol)
 
 	start := time.Now()
@@ -60,16 +64,29 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		err = e
 	} else {
-		client, e := getSSHClient(c)
-		if e == nil {
-			detail = "SSH login OK (" + string(client.ServerVersion()) + ")"
-			client.Close()
+		var am []ssh.AuthMethod
+		am, err = buildAuthMethods(c)
+		if err == nil {
+			newKey := ""
+			var client *ssh.Client
+			client, err = ssh.Dial("tcp", c.Host, sshClientConfig(c, am, func(fp string) { newKey = fp }))
+			if err == nil {
+				detail = "SSH login OK (" + string(client.ServerVersion()) + ")"
+				if newKey != "" {
+					detail += " · new host key " + newKey + " saved"
+				}
+				client.Close()
+			}
 		}
-		err = e
 	}
 	ms := time.Since(start).Milliseconds()
 	if err != nil {
-		jsonOK(w, map[string]interface{}{"ok": false, "message": err.Error(), "latency_ms": ms})
+		out := map[string]interface{}{"ok": false, "message": err.Error(), "latency_ms": ms}
+		if hk := asHostKeyError(err); hk != nil {
+			out["hostkey"] = hk
+			out["message"] = hk.Error()
+		}
+		jsonOK(w, out)
 		return
 	}
 	jsonOK(w, map[string]interface{}{"ok": true, "message": detail, "latency_ms": ms})

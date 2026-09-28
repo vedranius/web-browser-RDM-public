@@ -1,143 +1,180 @@
-## Web Remote Manager PRO v9.10.2-mimo
+## Web Remote Manager PRO v10.0.0-mimo
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, server-to-server transfer, sharing and real-time collaboration — one self-contained binary with an embedded web UI.
+Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, server-to-server transfer, sharing, real-time collaboration and **voice calls**. One self-contained binary with an embedded web UI.
 
-### What's new in v9.10.2-mimo — collaboration security fix
-
-- **Security:** in a shared (collaboration) session any participant, including a guest without an account, could give *themselves* keyboard control and type into another participant's shared SSH terminal. Now only the participant who is sharing a terminal can grant control. Keystrokes go only to that sharer. Control is revoked automatically when the sharer stops sharing or leaves. The browser also accepts input only from people it granted control to.
-- **Remote control works:** the *🎮 Control* button now appears next to the other participants while you share a terminal. Before, it only appeared next to people who were sharing themselves, so control could never be given to a viewer.
-- Participants who join after someone started sharing now see the *👁 Watch* button right away.
-- Duplicate names in a room (the same user in two tabs or two guests) get a unique suffix, e.g. `tester (2)`; you are marked with *(you)*.
-
-### Included from v9.10.1-mimo
-
-**Saved sessions really restore your workspace**
-- *+ Save Session* now stores every open terminal / file-manager window: connection, mode, folder, position or snap slot, minimized and focused state. Before, only the session **name** was saved, so opening a saved session did nothing.
-- Click a saved session (in the Sessions panel or in an empty *New Window*) to open it. If windows are already open you choose **Replace** or **Add**.
-- Right-click a session: *Open (replace)*, *Open (add)*, **Save current windows here**, rename, lock, delete. Locked sessions cannot be overwritten. Positions are stored relative to the window area, so they also fit other screen sizes.
-
-**Reconnect button on every SSH window**
-- New **↻** button in the title bar of SSH windows, also when connected. It is useful when a session hangs. Shortcut: **Ctrl+Shift+R** inside the terminal. The same action is in the tab right-click menu.
-
-**Windows stay inside the screen**
-- Windows can no longer be dragged or resized past **any** edge (top, bottom, left, right). If the browser is zoomed, the resolution or panel sizes change, or a session from a bigger screen is opened, windows are moved and shrunk to fit automatically. The floating transfer panel stays on screen too.
-
-**Snap**
-- New snap targets **top half** and **bottom half**, next to left/right halves, the four quarters and maximize. All snap buttons have clear layout icons.
-- **Drag-to-edge snapping**: drag a window with the pointer to an edge or corner of the window area. A preview shows the slot, and releasing snaps the window there. Edges give halves, corners give quarters.
-- Narrow windows show a compact **snap layouts** menu instead of the full button row.
-- Tab right-click menu: *Reconnect*, *Duplicate window*, snap layouts, close.
+v10 is a big release. It brings back **voice calls in collaboration rooms**, adds **user management, members and roles** for sharing, and **hardens security** throughout so WRM can be used in companies. Please read **Upgrading from v9** below before you replace the binary.
 
 ---
 
-## Included from v9.10.0-mimo
+### 🎙 Voice calls in collaboration rooms (back, rebuilt)
 
-### 🔧 Fixed (v9.10.0)
+Everyone in a share room can talk. It works like Discord or Jitsi:
 
-- **"Connection error / disconnected" when a command prints a lot of output** (e.g. `cat` / `tail -f` of a big log with č, ć, ž, š, đ or emoji). Terminal data is now sent as binary WebSocket frames. Before, a 32 KB chunk could split a multi-byte UTF-8 character and the browser closed the connection.
-- **nano / vim / less / htop drawn in a small part of the window until the browser was zoomed.** The terminal size is now sent to the server when connecting and on every change: maximize, snap, window resize, sidebar toggle, browser zoom, font size. Before, maximize/snap/resize only resized the terminal in the browser.
-- Server-to-server transfer of folders failed when WRM runs on **Windows** (remote paths were built with `\`).
-- SSH session stayed "open" after typing `exit`; pasting a lot of text could drop input; terminal modes were 7-bit (now CS8 + IUTF8).
-- Collaboration server could crash (concurrent WebSocket write) when granting/revoking control.
-- Event WebSocket leaked subscribers and was reachable without login.
-- The "Edit Connection" dialog title showed the raw key `edit_connection_title`.
-- Download of files with quotes or non-ASCII characters in the name.
-- File sizes above 1 GB were shown in MB only.
+- **🎙 Join voice** in the collaboration bar; **mute** (Ctrl+Shift+M), **deafen** (Ctrl+Shift+D), **leave**.
+- **Push-to-talk** with a key of your choice (e.g. F8), or voice activity.
+- **Microphone and speaker selection**, live input level meter, test sound, **noise suppression**, **echo cancellation**, **automatic gain control**.
+- **Speaking indicators** (green ring), **per-person volume**, join/leave sounds, connection quality per person (P2P or relay, round-trip time).
+- **Listen-only**: without a microphone, or without permission to use it, you can still join and listen.
+- **Stable on real networks**: WebRTC with "perfect negotiation", automatic ICE restarts when the network changes, and automatic rejoin after reconnects.
+- **Built-in TURN relay** (UDP and TCP, port 3478): calls work behind NAT and strict firewalls with no extra software. It accepts only short-lived credentials issued to room participants. By default it refuses to relay to private or loopback networks.
+- **End-to-end encrypted** audio (DTLS-SRTP). The relay cannot decrypt it.
+- Moderators can **mute someone for everyone**. Admins can turn voice on or off, limit participants per call (default 12), and add external STUN/TURN servers.
 
-### ✨ New (v9.10.0)
+> Browsers allow the microphone only on **HTTPS** pages (or `localhost`). The quickest way to get HTTPS is `HTTPS_SELF_SIGNED=1`. For calls across the internet, open **UDP+TCP 3478** and the **UDP relay range** (default `49152-65535`) in the firewall. Behind NAT, set `turn_public_ip`.
 
-**Terminal**
-- **Reconnect**: banner with a *Reconnect* button, or press **Enter** in a closed terminal.
-- **Automatic reconnect** with backoff after SSH or network drops, and when the network comes back (Settings → Auto-reconnect).
-- Connection state indicator (connecting / connected / disconnected) on windows, tabs and sidebar connections.
-- Flow control for very fast output; SSH keepalive detects dead connections.
-- Search in terminal output (**Ctrl+Shift+F**), clickable URLs, configurable scrollback.
+### 👥 Users, members & roles
 
-**File manager**
-- **Search**: type to filter the current folder instantly; press **Enter** to search all subfolders **by name** (wildcards: `*.log`, `nginx*.conf`) or **by content** (grep on the server). Results stream live, can be stopped, and double-click jumps to the file.
-- Breadcrumb path, *Modified* column, file icons, status bar with selection size.
-- Multi-select (click, Ctrl/Shift+click, Ctrl+A) and keyboard: arrows, Enter, Backspace, Delete, F2 (rename), F5, Ctrl+F.
-- **Upload many files or whole folders**, **drag & drop** from the desktop, progress bar with speed, overwrite confirmation. Uploads are streamed to the server (no RAM buffering).
-- **Built-in text editor** (Ctrl+S, keeps LF/CRLF).
-- Context menu: *Open terminal here*, *Copy path*, bulk download / delete / transfer.
-- Pooled SFTP connections → much faster browsing.
+- **Admin panel → Users**: create users (a temporary password is generated if you leave it empty), set the display name, make or remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete. The last active administrator cannot be removed.
+- **Shares have three access modes**: 👥 *Members only* (default), 🏢 *Everyone signed in*, 🌐 *Anyone with the link* (guests; admins can disable this mode).
+- **Members** with an individual role each, plus a role for everyone else. There are **five roles**:
 
-**Connections & UI**
-- **Test connection** button, **Duplicate** connection, **FTPS** (explicit TLS).
-- Modern dark UI, configurable accent color, modern dialogs.
-- **Responsive**: the top bar adapts to the space available; on phones the sidebar and sessions become slide-in drawers and windows open full screen; tap to open connections.
-- Double-click a window title to maximize; dragging a maximized window restores it; maximized/snapped windows follow layout changes.
-- Setting for max upload size per file.
+  | | Observer | Viewer | Operator | Moderator | Owner |
+  |---|:-:|:-:|:-:|:-:|:-:|
+  | Chat & voice | ✔ | ✔ | ✔ | ✔ | ✔ |
+  | Watch shared terminals | ✔ | ✔ | ✔ | ✔ | ✔ |
+  | Browse & download files | — | ✔ | ✔ | ✔ | ✔ |
+  | Open terminals, change files, transfer | — | — | ✔ | ✔ | ✔ |
+  | Share own terminal, receive keyboard control | — | — | ✔ | ✔ | ✔ |
+  | Change roles, mute, remove, ban people | — | — | — | ✔ | ✔ |
+  | Share settings & members | — | — | — | — | ✔ |
 
-**Security**
-- Login rate limiting (8 failures per IP → 5 min lockout).
-- WebSocket origin check (`WRM_ALLOWED_ORIGINS`, `WRM_ALLOW_ANY_ORIGIN=1` to disable).
-- Optional HTTPS with `HTTPS_CERT_FILE` + `HTTPS_KEY_FILE`.
+  The **server enforces roles** on every file operation, terminal and room action.
+- **People** view per share: everyone who ever opened it, with last seen and IP. From there you can change a person's role or **ban** them.
+- **Share expiry** (1 hour to 30 days, or a custom date), **pause/resume**, **new link** (the old link stops working immediately).
+- **Revocation takes effect at once.** Deleting, pausing or rotating a share, removing a member, lowering a role, banning, or disabling a user closes their open terminals and room connections.
+
+### 💬 Collaboration
+
+- A **new collaboration bar** shows the share, your role, avatars of the people online, and the voice controls.
+- **👥 People panel**: who is in the call and who is online, with roles, mute and deafen state, shared terminals, raised hands, connection quality and volume. Moderators have a **⋯** menu for *change role*, *mute*, *stop sharing*, *lower hand*, *remove* and *ban*.
+- **Chat history** is kept, so people who join later see it. The chat has timestamps, clickable links, an unread badge and notifications. **File exchange** up to the policy limit: images get a preview, and other files are always downloaded, never opened in the page.
+- **✋ Raise hand.**
+- **Terminal sharing**: you can share several terminals at once. Viewers get a **snapshot of the current screen** (with colors) and then the live output. Terminal data is sent only to people who watch it.
+- **Remote keyboard control**: *Request control* → *Allow / Deny*. Keystrokes go only to the granted terminal, and only while it is shared.
+- **Identities come from the server.** Signed-in users appear under their account name. Guests pick a name and are marked *guest*.
+- The room **reconnects automatically** and restores watching, sharing and the voice call.
+- **Per-participant send queues**: one slow client can no longer stall a room.
+
+### 🔐 Security hardening
+
+- **Two-factor authentication (TOTP)** with QR code and single-use **recovery codes**. The policy can **require 2FA** for admins or for everyone.
+- **Self-registration is closed by default.** Only the first account (the administrator) registers itself.
+- **Accounts lock** after repeated wrong passwords (policy). Per-IP rate limiting. Unknown users get constant-time responses. After an admin reset, the user **must change the password**.
+- **Sessions**: 256-bit tokens, **stored hashed**. Idle and maximum lifetime (policy). A list of **signed-in devices** with remote sign-out.
+- **Stored secrets** (connection passwords, private keys, 2FA secrets) are encrypted with **AES-256-GCM** and a **random key per installation** (`remote_manager.db.key`, or your own `ENCRYPTION_KEY` / `ENCRYPTION_KEY_FILE`).
+- **Secrets are never sent to the browser**, not even to their owner. The *Edit connection* dialog shows "saved and encrypted — leave empty to keep it". *Export* leaves secrets out. *Export with passwords & keys* asks for your password again.
+- **SSH host key verification** (trust on first use, or strict). A changed key is refused and shown with its fingerprint. **FTPS certificates** are validated, or pinned on first use.
+- **Server-side key files** (*Key file* / *Auto (~/.ssh)*) are limited to administrators by default.
+- **CSRF protection** on every state-changing API call. **Content-Security-Policy**, `X-Frame-Options`, `nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, and HSTS on HTTPS. Request-size limits. No directory listings.
+- **All assets are served locally** (xterm.js and fonts are embedded). There is no CDN dependency at runtime.
+- **Share passwords** are held in signed cookies, which become invalid when the password changes. Guests get their own identity cookie. Share connection lists stay hidden until the share password is entered.
+- **HTTPS made easy**: `HTTPS_CERT_FILE` + `HTTPS_KEY_FILE`, or `HTTPS_SELF_SIGNED=1`. Behind a reverse proxy, `WRM_TRUST_PROXY=1` gives correct client IPs and secure cookies.
+- **Audit log** of sign-ins (failed ones too), account and policy changes, connections, shares, room joins and moderation, terminals, file changes, host keys, exports and imports. It is searchable in the admin panel, exportable as **CSV**, and written as `AUDIT …` lines to the server log (journald/syslog → SIEM).
+- **Recovery from the command line**: `wrm -reset-password USER [-reset-2fa]`.
+
+### 🛡 Admin panel
+
+*Settings → 🛡 Admin panel* has these tabs:
+- **Overview**: version, uptime, users, HTTPS, relay status, key source, **security warnings**, **open terminals** (with *End*), live rooms.
+- **Users**
+- **Shares**: every share on the server.
+- **Security policies**
+- **Voice & network**
+- **Host keys**
+- **Audit log**
+
+Any policy can also be **forced by an environment variable** (`WRM_<KEY>`, e.g. `WRM_REQUIRE_2FA=all`). A forced policy is shown as locked in the panel.
+
+### ✨ Other improvements
+
+- **Settings** are reorganised into tabs: General, Terminal, Security, Voice & audio, Data.
+- **Connections**: SSH keyboard-interactive authentication (servers that ask for the password that way). *Duplicate* copies the stored secrets on the server, so they never pass through the browser. Deleting a connection closes its open terminals.
+- **Uploads** respect the server-side size limit (`max_upload_mb`), and partial files are removed.
+- Translations (English / Hrvatski) cover the whole new UI.
+- A **unit test suite** (TOTP, recovery codes, roles, share access, CSRF, encryption and migration, signed values, settings, input validation) runs in CI with the race detector.
+
+---
+
+### ⬆️ Upgrading from v9
+
+Replace the binary and start it with the same database, and the same `ENCRYPTION_KEY` if you set one. Everything is migrated automatically.
+
+- **Stored secrets are re-encrypted.** If `ENCRYPTION_KEY` was not set, v9 used a public default key. v10 generates a random key file, `remote_manager.db.key`, next to the database and re-encrypts all secrets with it. **Back that file up separately from the database.** If you did set `ENCRYPTION_KEY`, nothing changes.
+- **Self-registration is now closed.** Existing accounts keep working. To reopen it: *Admin panel → Security policies*.
+- **SSH host keys are now verified.** The first connection to each server remembers its key.
+- **Key file / Auto (~/.ssh)** authentication is now admin-only, unless you turn on the policy *Allow server key files for all users*.
+- **Existing shares keep their behaviour**: anyone with the link can open them, with the role *Operator*. Edit a share to switch it to members only or to change roles.
+- **Behind a reverse proxy**, state-changing API calls now require the `Origin` to match the `Host`. Pass the `Host` header through (`proxy_set_header Host $host;`) or set `WRM_ALLOWED_ORIGINS`. Also set `WRM_TRUST_PROXY=1`.
+- For voice calls, open **UDP+TCP 3478** and the relay port range in the firewall (see above).
+
+---
 
 ### 📦 Downloads
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v9.10.2-mimo-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v9.10.2-mimo-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v9.10.2-mimo-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v9.10.2-mimo-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v9.10.2-mimo-linux-386` |
-| Windows | x86-64 | `wrm-pro-v9.10.2-mimo-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v9.10.2-mimo-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v9.10.2-mimo-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v9.10.2-mimo-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v9.10.2-mimo-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v9.10.2-mimo-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v9.10.2-mimo-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v9.10.2-mimo-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v9.10.2-mimo-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.0.0-mimo-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.0.0-mimo-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.0.0-mimo-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.0.0-mimo-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.0.0-mimo-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.0.0-mimo-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.0.0-mimo-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.0.0-mimo-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.0.0-mimo-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.0.0-mimo-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.0.0-mimo-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.0.0-mimo-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.0.0-mimo-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.0.0-mimo-openbsd-amd64` |
 
-Verify integrity with `SHA256SUMS.txt`.
+Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
 ### 🚀 Quick start
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v9.10.2-mimo-linux-amd64
-./wrm-pro-v9.10.2-mimo-linux-amd64
-# open http://localhost:8080 — the first registered user becomes admin
+chmod +x wrm-pro-v10.0.0-mimo-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.0.0-mimo-linux-amd64
+# open https://<server>:8080 — create the administrator account (the first account)
 ```
+On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows** — double-click `wrm-pro-v9.10.2-mimo-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.0.0-mimo-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:PORT=9000; .\wrm-pro-v9.10.2-mimo-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.0.0-mimo-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v9.10.2-mimo/wrm-pro-v9.10.2-mimo-android-arm64
-chmod +x wrm-pro-v9.10.2-mimo-android-arm64
-PORT=8080 ./wrm-pro-v9.10.2-mimo-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.0.0-mimo/wrm-pro-v10.0.0-mimo-android-arm64
+chmod +x wrm-pro-v10.0.0-mimo-android-arm64 && ./wrm-pro-v10.0.0-mimo-android-arm64
 ```
 
-### ⚙️ Environment variables
+On the first start WRM creates `remote_manager.db` (the database) and `remote_manager.db.key` (the encryption key) next to each other, both with mode `0600`. **Back up the key file.**
+
+### ⚙️ Most important settings
 
 ```
-PORT=8080                  # listening port (default 8080)
-LISTEN_ADDR=:8080          # full listen address (overrides PORT)
-DB_PATH=./remote_manager.db
-ENCRYPTION_KEY=...         # 32-char key for stored connection secrets — set your own!
-HTTPS_CERT_FILE=...        # enable HTTPS (together with HTTPS_KEY_FILE)
-HTTPS_KEY_FILE=...
-WRM_ALLOWED_ORIGINS=a.example.com   # extra hosts allowed to open WebSockets (reverse proxies)
-WRM_ALLOW_ANY_ORIGIN=1     # disable the WebSocket origin check
+PORT=8080 / LISTEN_ADDR=:8080     listening address
+DB_PATH=./remote_manager.db       database
+ENCRYPTION_KEY / ENCRYPTION_KEY_FILE   your own key for stored secrets (else <DB_PATH>.key)
+HTTPS_CERT_FILE + HTTPS_KEY_FILE  HTTPS with your certificate
+HTTPS_SELF_SIGNED=1               HTTPS with a generated self-signed certificate
+WRM_TRUST_PROXY=1                 behind a reverse proxy (real client IPs, secure cookies)
+WRM_ALLOWED_ORIGINS=host          extra allowed Origin hosts
+WRM_<POLICY>=value                force a policy, e.g. WRM_REQUIRE_2FA=all, WRM_TURN_PUBLIC_IP=203.0.113.10
 ```
 
-> **Upgrading behind a reverse proxy:** WebSockets now require the browser's `Origin` to match the `Host` (or `X-Forwarded-Host`) header. If terminals stop connecting after the upgrade, pass the Host header through (`proxy_set_header Host $host;` in nginx) or set `WRM_ALLOWED_ORIGINS`.
+For the full documentation (reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/SECURITY.md).
 
 ---
 
 ### 📜 License
 
-Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/main/LICENSE): free for personal, educational, non-profit and other noncommercial use, including forks and modifications. **Commercial use requires a separate license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/main/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/main/CONTRIBUTING.md).
+Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, including forks and modifications. **Commercial use requires a separate license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.0-mimo/CONTRIBUTING.md).
 
-☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)** — thank you!
+☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)**. Thank you!

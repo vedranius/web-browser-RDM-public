@@ -1,8 +1,8 @@
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** SSH terminal, SFTP / FTP / FTPS file manager, server-to-server transfers, saved workspaces, sharing and real-time collaboration: one self-hosted binary for your PC, server or team.
+**A remote server manager that runs in any web browser.** SSH terminal, SFTP / FTP / FTPS file manager, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, audit log, policies): one self-hosted binary for your PC, server or company.
 
-**Current version: v9.10.2-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md)
+**Current version: v10.0.0-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Security](SECURITY.md)
 
 ---
 
@@ -32,9 +32,10 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [How it works](#how-it-works)
-4. [Features in detail](#features-in-detail)
-   - [Accounts & login](#accounts--login)
+3. [Upgrading from v9](#upgrading-from-v9)
+4. [How it works](#how-it-works)
+5. [Features in detail](#features-in-detail)
+   - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
    - [Connections & folders](#connections--folders)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [SSH terminal](#ssh-terminal)
@@ -44,20 +45,21 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Server-to-server transfer](#server-to-server-transfer)
    - [Workspace sessions](#workspace-sessions)
    - [Clipboard panel](#clipboard-panel)
-   - [Sharing connections](#sharing-connections)
+   - [Sharing: members, roles & links](#sharing-members-roles--links)
    - [Real-time collaboration](#real-time-collaboration)
+   - [Voice calls](#voice-calls)
    - [Settings](#settings)
    - [Admin panel](#admin-panel)
    - [Mobile & responsive UI](#mobile--responsive-ui)
-5. [Keyboard shortcuts](#keyboard-shortcuts)
-6. [Configuration (environment variables)](#configuration-environment-variables)
-7. [Running as a service & behind a reverse proxy](#running-as-a-service--behind-a-reverse-proxy)
-8. [Security model](#security-model)
-9. [Limitations](#limitations)
-10. [API reference](#api-reference)
-11. [Building from source & releases](#building-from-source--releases)
-12. [Troubleshooting](#troubleshooting)
-13. [Contributing](#contributing)
+6. [Keyboard shortcuts](#keyboard-shortcuts)
+7. [Configuration](#configuration)
+8. [Running as a service, reverse proxy & firewall](#running-as-a-service-reverse-proxy--firewall)
+9. [Security model](#security-model)
+10. [Limitations](#limitations)
+11. [API reference](#api-reference)
+12. [Building from source & releases](#building-from-source--releases)
+13. [Troubleshooting](#troubleshooting)
+14. [Contributing](#contributing)
 
 ---
 
@@ -69,10 +71,11 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions.
-- **Sharing & collaboration**: share connections with colleagues or guests via a link, with chat, file exchange, live terminal sharing and remote keyboard control.
-- **Multi-user**: every user has their own connections, folders and sessions. The first user becomes admin.
+- **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
+- **Live collaboration**: chat with history, file exchange, **voice calls** (like Discord/Jitsi), terminal sharing with snapshots, remote keyboard control on request, raised hands and moderation.
+- **Enterprise security**: two-factor authentication, closed registration, admin-managed accounts, password & session policies, account lockout, audit log (with CSV export and SIEM-friendly log lines), SSH host-key verification, encrypted secrets, CSRF protection and strict security headers.
 
-Everything is stored in one local **SQLite** file. There is no external database, no Docker requirement and no cloud account.
+Everything is stored in one local **SQLite** file. There is no external database, no Docker requirement, no CDN and no cloud account: the binary also serves all scripts and fonts, so WRM works in closed networks.
 
 **Supported platforms (prebuilt binaries):** Linux (x86-64, arm64, ARMv7/Raspberry Pi, ARMv6, 32-bit), Windows (x86-64, arm64), macOS (Intel, Apple Silicon, Universal), Android arm64 (Termux), FreeBSD (x86-64, arm64), OpenBSD (x86-64).
 
@@ -85,27 +88,49 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v9.10.2-mimo-linux-amd64
-   ENCRYPTION_KEY='choose-your-own-32-character-key!' ./wrm-pro-v9.10.2-mimo-linux-amd64
+   chmod +x wrm-pro-v10.0.0-mimo-linux-amd64
+   ./wrm-pro-v10.0.0-mimo-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   $env:ENCRYPTION_KEY='choose-your-own-32-character-key!'; .\wrm-pro-v9.10.2-mimo-windows-amd64.exe
+   .\wrm-pro-v10.0.0-mimo-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v9.10.2-mimo/wrm-pro-v9.10.2-mimo-android-arm64
-   chmod +x wrm-pro-v9.10.2-mimo-android-arm64 && ./wrm-pro-v9.10.2-mimo-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.0.0-mimo/wrm-pro-v10.0.0-mimo-android-arm64
+   chmod +x wrm-pro-v10.0.0-mimo-android-arm64 && ./wrm-pro-v10.0.0-mimo-android-arm64
    ```
-3. Open **http://localhost:8080** (or `http://<server-ip>:8080`).
-4. Click **Register** and create the first account. **The first account becomes the administrator.**
+3. Open **http://localhost:8080** (or `http://<server-ip>:8080`). For voice calls from other computers use HTTPS — the quickest way is `HTTPS_SELF_SIGNED=1` (see [Configuration](#configuration)).
+4. **Create the administrator account** (the first account). After that, self-registration is **closed**: the administrator creates accounts in *Admin panel → Users* (or opens registration in *Security policies*).
 5. Click **+ Connection**, enter host, user and password or key, then double-click the connection to open it.
 
-The database file `remote_manager.db` is created in the current working directory (change with `DB_PATH`). **Set your own `ENCRYPTION_KEY` before adding connections.** See [Security model](#security-model).
+On the first start WRM creates, next to the database:
+
+| File | What it is |
+|---|---|
+| `remote_manager.db` | SQLite database (users, connections, shares, audit log). Mode `0600`. |
+| `remote_manager.db.key` | Random 256-bit key that encrypts stored passwords, private keys and 2FA secrets. Mode `0600`. **Back it up separately** — without it stored secrets cannot be decrypted. Or set your own key with `ENCRYPTION_KEY` / `ENCRYPTION_KEY_FILE`. |
+
+Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
+
+---
+
+## Upgrading from v9
+
+Replace the binary and start it with the same database and the same `ENCRYPTION_KEY` (if you set one). Everything is migrated automatically. Things to know:
+
+- **Stored secrets are re-encrypted.** Without `ENCRYPTION_KEY`, v9 used a public default key. v10 generates a random key file (`remote_manager.db.key`) and re-encrypts all secrets with it on the first start. Back that file up. (If you did set `ENCRYPTION_KEY`, nothing changes.)
+- **Self-registration is closed by default.** Existing accounts keep working. Open it again in *Admin panel → Security policies* if you want it.
+- **Passwords and keys are no longer sent to the browser.** The *Edit connection* dialog shows “saved and encrypted — leave empty to keep it”. *Export* is without secrets; *Export with passwords & keys* asks for your password.
+- **SSH host keys are verified** (trust on first use). The first connection to each server remembers its key; a changed key is refused until you accept it.
+- **Key file / Auto (~/.ssh)** authentication (keys stored on the WRM server) is limited to administrators unless the policy *Allow server key files for all users* is on.
+- **Existing shares keep their behaviour** (anyone with the link, role *Operator*). Edit them to use the new access modes and roles.
+- **Behind a reverse proxy:** state-changing API calls now require the `Origin` to match the `Host` (like WebSockets already did). Pass the `Host` header, or set `WRM_ALLOWED_ORIGINS`. Set `WRM_TRUST_PROXY=1` so rate limits and the audit log see real client IPs.
+- The per-IP sign-in limit is now 20 failures / 10 minutes; accounts additionally lock for 15 minutes after 10 wrong passwords (policy).
 
 ---
 
@@ -118,31 +143,33 @@ The database file `remote_manager.db` is created in the current working director
 │ single-page app,     │                │ WebSockets:                  │   FTP / FTPS   │ servers,  │
 │ xterm.js terminal)   │ ◀───────────── │  /ws/ssh     terminal        │ ─────────────▶ │ NAS, ...  │
 │                      │   WebSockets   │  /ws/share/  collaboration   │                └───────────┘
-└──────────────────────┘                │  /ws/events  live updates    │
-                                        │ SQLite: users, connections,  │
-                                        │ folders, sessions, shares    │
+└──────────┬───────────┘                │  /ws/events  live updates    │
+           │  voice (WebRTC, DTLS-SRTP) │ TURN relay  UDP/TCP 3478     │
+           └────────────────────────────┤ SQLite: users, connections,  │
+             peer-to-peer or via relay  │ shares, audit log, settings  │
                                         └──────────────────────────────┘
 ```
 
-- **The WRM server makes the connections.** Your browser talks only to WRM, and WRM talks to your servers with SSH (`golang.org/x/crypto/ssh`), SFTP (`pkg/sftp`) and FTP (`jlaffaye/ftp`). Your servers only need to be reachable **from the WRM machine**, not from every browser.
-- **Terminal:** every terminal window is a WebSocket (`/ws/ssh`) bound to one SSH session with a PTY on the server. Keystrokes and terminal output go as **binary frames**, so large outputs and multi-byte UTF-8 characters are never corrupted. The browser tells the server the terminal size on connect and after every resize, so full-screen programs always fit the window.
-- **Flow control:** when a command prints faster than the browser can draw (for example `cat` of a huge log), the browser asks the server to pause and resume. The tab stays responsive and nothing is lost.
-- **File operations** go through a small **pool of SFTP connections** per saved connection (reused for 5 minutes and health-checked), so browsing is fast. Uploads are **streamed** straight to the remote server. Downloads and ZIP archives are streamed to your browser.
-- **Secrets at rest:** passwords and private keys of connections are stored **AES-256-GCM encrypted** in SQLite. The key comes from `ENCRYPTION_KEY`.
-- **Live updates:** `/ws/events` notifies open browser tabs when sessions change, so the Sessions panel stays in sync across tabs.
-- **Collaboration:** `/ws/share/{token}` is a "room" per share link that relays chat, files, terminal-sharing data and remote-control keystrokes between participants.
+- **The WRM server makes the connections.** Your browser talks only to WRM, and WRM talks to your servers with SSH (`golang.org/x/crypto/ssh`), SFTP (`pkg/sftp`) and FTP (`jlaffaye/ftp`). Your servers only need to be reachable **from the WRM machine**.
+- **Terminal:** every terminal window is a WebSocket (`/ws/ssh`) bound to one SSH session with a PTY. Keystrokes and output go as **binary frames**, so large outputs and multi-byte UTF-8 are never corrupted. The PTY size follows the window.
+- **Flow control:** when a command prints faster than the browser can draw, the browser asks the server to pause and resume. Nothing is lost.
+- **File operations** use a small **pool of SFTP connections** per saved connection (reused for 5 minutes and health-checked). Uploads are **streamed**; downloads and ZIP archives are streamed to the browser.
+- **Secrets at rest** (connection passwords, private keys, 2FA secrets) are **AES-256-GCM encrypted**. Session tokens are stored only as SHA-256 hashes.
+- **Collaboration:** `/ws/share/{token}` is the room of a share. The server decides identities and roles and relays chat, files, terminal streams (only to people watching them), remote-control keystrokes (only to the person who granted control) and voice signalling.
+- **Voice:** audio flows **directly between browsers** (WebRTC, end-to-end encrypted with DTLS-SRTP). When browsers cannot reach each other (NAT, firewalls), the **built-in TURN relay** carries the still-encrypted audio.
 
 ---
 
 ## Features in detail
 
-### Accounts & login
+### Accounts, sign-in & two-factor authentication
 
-- Register with a username and password (min. 6 characters). Passwords are stored as **bcrypt** hashes.
-- The **first user becomes administrator** (see [Admin panel](#admin-panel)).
-- Login sessions use an HTTP-only cookie (valid 30 days). The browser pings `/api/auth/keepalive` every 60 s while you work. Sessions inactive for 7 days are removed automatically.
-- **Brute-force protection:** 8 failed logins from one IP within 10 minutes lock that IP out for 5 minutes.
-- If your login expires while terminals or transfers are running, WRM shows a message instead of reloading the page and killing your work.
+- The **first account becomes administrator**. Afterwards **self-registration is closed** (policy); administrators create accounts, optionally with a generated temporary password that must be changed at the first sign-in.
+- Passwords are stored as **bcrypt** hashes (cost 12). Minimum length is a policy (default 8).
+- **Two-factor authentication (TOTP)** with any authenticator app (Google/Microsoft Authenticator, 1Password, Bitwarden, FreeOTP…): *Settings → Security → Two-factor authentication*. A QR code is shown; **10 single-use recovery codes** are generated. Codes cannot be replayed. Administrators can **require 2FA** for administrators or for everyone — users without it must set it up at their next sign-in.
+- **Brute-force protection:** 20 failed sign-ins from one IP within 10 minutes lock that IP for 5 minutes; an **account** locks for 15 minutes after 10 wrong passwords (policy). Failed sign-ins take the same time whether the user exists or not.
+- **Sessions:** HttpOnly, SameSite cookie (`Secure` on HTTPS); the database only stores a hash of the token. Sessions end after inactivity (default 7 days) and after a maximum age (default 30 days) — both policies. *Settings → Security* lists your **signed-in devices** and signs out one or all others. Changing your password signs out every other device.
+- If your login expires while terminals or transfers are running, WRM shows a message instead of reloading the page.
 
 ### Connections & folders
 
@@ -151,23 +178,23 @@ Left sidebar ("PRO MANAGER"):
 - **+ Connection** creates a connection:
   - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), `FTP`, `FTPS` (FTP with explicit TLS; file manager only).
   - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS), **Username**, **Folder**.
-  - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, or *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user). If you point *Key file* to a `.pub` file, WRM looks for the matching private key.
-  - **🔌 Test connection** logs in once and shows the result and latency, without saving.
+  - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, or *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user). *Key file* and *Auto* use keys of the **WRM server itself** and are therefore limited to administrators (policy). Password authentication also answers keyboard-interactive prompts.
+  - **🔌 Test connection** logs in once and shows the result, latency and — for a new server — its host key fingerprint.
+- **Secrets never leave the server.** Passwords and private keys are write-only: the edit dialog shows “saved and encrypted — leave empty to keep it”, with an option to remove the saved secret. *Duplicate* copies the connection on the server.
+- **Host key verification:** the first connection to a server remembers its SSH host key (and, for FTPS, the certificate if it is not signed by a public CA). A **changed key is refused** with a clear warning and both fingerprints; the owner of the connection (or an administrator) can accept the new key after checking it. Policy: *trust on first use* (default), *strict* (new hosts must be approved) or *off*.
 - **Double-click** a connection to open it: SSH opens a terminal; SFTP/FTP/FTPS open the file manager. On touch devices a single tap opens it.
-- **Right-click** a connection: *Open as Terminal / File Manager* (in a new window or an existing window of the same type), *Edit*, *Duplicate*, *Share*, *Delete*.
-- **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Opened folders stay open while you work. Right-click a folder to *Share* or *Delete* it (its connections move to the root).
-- **Search box** filters by name, host, username or protocol.
-- **Multi-select** with **Ctrl/Cmd + click**, then use the bulk buttons **🤝 Share** or **Delete**.
-- A **green dot** next to a connection means one of its terminals is currently connected. Hover to see `user@host`.
-- **Shared with me** shows connections other users shared with you (see [Sharing](#sharing-connections)).
-- The sidebar can be **collapsed** (◀) and **resized** by dragging its edge. The state is remembered.
+- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Edit*, *Duplicate*, *Share*, *Delete*.
+- **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root).
+- **Search box** filters by name, host, username or protocol. **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share** or **Delete**.
+- A **green dot** next to a connection means one of its terminals is connected.
+- **Shared with me** lists shares you are a member of (and shares published for all users), with your **role**; ↗ opens the collaboration room.
 
 ### Windows, tabs & snapping
 
 Every opened connection is a **window** inside the workspace. There is also a **tab** for it in the tab bar.
 
 - **+ New Window** (or **Alt+N**) opens an empty window with quick buttons for your connections and **saved sessions**.
-- **Title bar:** drag to move, **double-click** to maximize or restore. Buttons: *snap layouts*, **↻ Reconnect** (SSH windows), 📡 *share terminal* (collaboration), minimize, maximize, close.
+- **Title bar:** drag to move, **double-click** to maximize or restore. Buttons: *snap layouts*, **↻ Reconnect** (SSH windows), 📡 *share terminal* (in a collaboration room), minimize, maximize, close.
 - **Snapping:** left, right, **top and bottom halves**, the four **quarters**, and **maximize**. Use the buttons in the title bar, the compact *snap layouts* menu in narrow windows, or the tab's right-click menu.
 - **Drag-to-edge snapping:** drag a window with the pointer to an edge (half) or a corner (quarter) of the workspace. A blue preview shows where it will go.
 - **Windows can never leave the workspace:** moving and resizing stop at all four edges. When the browser is resized or zoomed, or a panel changes size, windows are moved and shrunk to stay visible. Snapped and maximized windows keep their slot.
@@ -178,7 +205,7 @@ Every opened connection is a **window** inside the workspace. There is also a **
 
 ### SSH terminal
 
-- Full **xterm-256color** terminal (xterm.js 5) with the JetBrains Mono font. Works with `nano`, `vim`, `less`, `htop`, `mc`, `tmux`, colors, mouse reporting and UTF-8 (č, ć, ž, š, đ, emoji…).
+- Full **xterm-256color** terminal (xterm.js 5, served by WRM itself — no CDN) with the JetBrains Mono font. Works with `nano`, `vim`, `less`, `htop`, `mc`, `tmux`, colors, mouse reporting and UTF-8 (č, ć, ž, š, đ, emoji…).
 - **Correct size everywhere:** the PTY size follows the window on connect, maximize, snap, resize, sidebar toggle, font change and browser zoom.
 - **Large output is safe:** binary WebSocket frames plus flow control, so there are no disconnects on big `cat`/`tail`/`journalctl` output.
 - **Reconnect:**
@@ -205,7 +232,7 @@ Every opened connection is a **window** inside the workspace. There is also a **
   - **⬆ Upload** (many files at once), **🗂 Folder** (a whole folder with subfolders), or **drag & drop** files or folders from your computer onto the list
   - progress bar with speed, cancel button
   - existing files are detected, and you are asked whether to **overwrite** them
-  - optional per-file size limit (Settings)
+  - optional per-file size limit (Settings; administrators can enforce a limit on the server)
 - **Download:** single files, or **folders as ZIP** (SFTP). **⬇ Download** downloads all selected items.
 - **📁 New Folder**, **✏️ Rename** (F2), **🗑 Delete** (selected files and folders; folders recursively, with confirmation).
 - **⚡ Transfer** sends the selection to another server (see [Server-to-server transfer](#server-to-server-transfer)).
@@ -261,62 +288,96 @@ Right panel → **Clipboard**: the last 20 texts you copied from terminals (and 
 - Click an entry to copy it again. **Paste** sends it to the focused terminal.
 - The history is kept per workspace session in your browser (local storage), not on the server. Use **Clear** to empty it.
 
-### Sharing connections
+### Sharing: members, roles & links
 
-Share connections with other WRM users or with people **without an account**:
+Share connections (or whole folders) with other WRM users or with people **without an account** — the recipients use them **with your stored credentials without ever seeing them**.
 
-- Right-click a connection → **🤝 Share**, a folder → **Share Folder**, or select several connections and use the bulk **🤝 Share** button.
-- Options:
-  - **Share name**
-  - **Password lock** (optional; the recipient must enter it once and it is remembered for 7 days in their browser)
-  - **Share with users** (comma-separated usernames; the share appears under *Shared with me* in their sidebar)
-  - **Public link**: anyone with the URL can open it. Public shares are also listed under *Shared with me* for **every** user of this WRM server.
-- You get a link like `https://your-wrm/share/<token>`. **🤝 Shares** in the top bar lists your shares, lets you copy links and **delete** shares, which revokes access immediately.
-- People who open the link see the shared connections and can open **terminals and file managers** for them. WRM uses **your stored credentials**, so the recipients never see the password. They get the same access that account has on the server. Share only with people you trust, and prefer password-locked, non-public shares.
+Right-click a connection → **🤝 Share**, a folder → **Share Folder**, select several connections and use **🤝 Share**, or *Shares → + New share*. The share dialog has:
+
+- **Connections in this share:** tick connections and/or whole folders (a folder also includes connections added to it later). A share without connections is still a room for chat, voice and terminal sharing.
+- **Who can open the link:**
+
+  | Mode | Who |
+  |---|---|
+  | 👥 **Members only** (default) | Only the users you add as members. They sign in with their account. |
+  | 🏢 **Everyone signed in** | Any user of this WRM server who has the link. |
+  | 🌐 **Anyone with the link** | Also people without an account (guests). Administrators can disable this mode. |
+
+- **Members** with an individual role each; **role for everyone else** (non-members in the other two modes); optional **password** (members never need it); optional listing under “Shared with me” for all users; **expiry** (1 h … 30 days or a custom date).
+- **Roles:**
+
+  | | Observer | Viewer | Operator | Moderator | Owner |
+  |---|:-:|:-:|:-:|:-:|:-:|
+  | Chat & voice call | ✔ | ✔ | ✔ | ✔ | ✔ |
+  | Watch shared terminals | ✔ | ✔ | ✔ | ✔ | ✔ |
+  | Browse & download files | — | ✔ | ✔ | ✔ | ✔ |
+  | Open terminals | — | — | ✔ | ✔ | ✔ |
+  | Upload, edit, rename, delete, transfer | — | — | ✔ | ✔ | ✔ |
+  | Share own terminal, receive keyboard control | — | — | ✔ | ✔ | ✔ |
+  | Change roles, mute, remove, ban people | — | — | — | ✔ | ✔ |
+  | Share settings & members | — | — | — | — | ✔ |
+
+  Roles are **enforced by the server** on every request; the UI only hides what would be refused anyway.
+- **🤝 Shares** (top bar) lists your shares with mode, members, expiry and **how many people are online**. Actions: **Open room**, **Copy link**, **Edit** (everything above), **People** (everyone who ever opened the share, with last seen and IP — change a person's role or **ban** them), **New link** (the old link stops working immediately), **Pause/Resume**, **Delete**.
+- **Revocation is immediate:** deleting, pausing or rotating a share, removing a member, lowering a role, banning, or disabling a user closes the affected terminals and room connections at once.
 
 ### Real-time collaboration
 
-Everyone who opens the **same share link** (including you as the owner) joins a live room. A blue **Live Collab** bar shows who is online (you are marked *(you)*; guests get names like `Guest-4F2A1B`).
+Everyone who opens the **same share link** (including you as the owner) joins its live room. The **collaboration bar** shows the share, your role, avatars of the people online (a green ring shows who is speaking) and the controls.
 
-- **💬 Chat** with timestamps and join/leave messages.
-- **📎 File exchange** in the chat (up to 2 MB per file).
-- **📡 Terminal sharing:** press 📡 in the title bar of your SSH window. Others see a **👁 Watch** button next to your name, which opens a **read-only live copy of your terminal**. People who join later can watch too.
-- **🎮 Remote control:** while you share a terminal, a *🎮 Control* button appears next to every other participant. Granting it lets that person type into **your** terminal through their viewer window (a green banner tells them they have control). *🔒 Revoke* takes it back. Control also ends automatically when you stop sharing or leave. Only the person sharing a terminal can grant control over it, and keystrokes go only to that person.
+- **Identities are decided by the server:** signed-in users appear with their account name; guests choose a name on first visit and are marked **guest** (they cannot pose as a registered user).
+- **👥 People** panel: who is in the voice call and who is online, with roles, mute/deafen state, shared terminals, raised hands, connection quality (P2P/relay, latency) and a per-person volume slider. Moderators get a **⋯** menu: *change role*, *mute for everyone*, *stop their terminal sharing*, *lower hand*, *remove from room*, *ban from share*.
+- **💬 Chat** with **history** (last messages are kept, also for people who join later), timestamps, clickable links, unread badge and notifications. **📎 File exchange** up to the policy limit (images are previewed; other files are always downloaded, never opened in the page).
+- **✋ Raise hand.**
+- **📡 Terminal sharing:** press 📡 in the title bar of an SSH window. Several terminals can be shared at once. Others click **👁 Watch**: the viewer gets a **snapshot of the current screen** (with colors) and then the live output, in the sharer's exact size. Terminal data is only sent to people who watch it.
+- **🎮 Remote keyboard control:** a viewer clicks **Request control**; the sharer sees *Allow / Deny*. The sharer can also give control directly from the People panel and revoke it any time. Keystrokes go only to the terminal that was granted and only while it is shared. Only roles with *Operator* or higher can receive control.
+- The room reconnects automatically after network interruptions and restores watching, sharing and the voice call.
+
+### Voice calls
+
+Join the call with **🎙 Join voice** in the collaboration bar. It works like Discord or Jitsi:
+
+- **Mute** (🎤, **Ctrl+Shift+M**), **deafen** (🎧, **Ctrl+Shift+D**), **leave** (📞). Moderators can mute someone for everyone.
+- **Push-to-talk** with a key of your choice (e.g. F8), or voice activity.
+- **Microphone and speaker selection**, live **input level meter**, test sound, **noise suppression**, **echo cancellation** and **automatic gain control** (*Settings → Voice & audio*, or ⚙ in the call).
+- **Speaking indicators**, **per-person volume**, join/leave sounds, connection quality per person (good/fair/poor, P2P or relay, round-trip time).
+- **Listen-only:** without a microphone (or permission) you can still join and listen.
+- **Robust networking:** peer-to-peer WebRTC with automatic ICE restarts when the network changes, automatic rejoin after reconnects, and the **built-in TURN relay** (UDP and TCP) for networks where direct connections are blocked. External STUN/TURN servers (e.g. coturn on port 443/TLS for very strict networks) can be added in *Admin → Voice & network*.
+- **Private:** audio is end-to-end encrypted (DTLS-SRTP); the relay cannot decrypt it.
+- Browsers allow the microphone only on **HTTPS** pages (or `localhost`). Up to about 12 people per call work well (mesh); the limit is a policy.
 
 ### Settings
 
-**⚙ Settings** in the top bar:
+**⚙ Settings** in the top bar has tabs:
 
-| Setting | What it does |
+| Tab | What it contains |
 |---|---|
-| Language / Jezik | English or Croatian (Hrvatski) interface |
-| Terminal Font Size | 11–18 px for all terminals |
-| Close Window Confirmation | Always ask / Never ask / Only when connected |
-| Terminal scrollback | 5,000 – 50,000 lines of history |
-| Auto-reconnect SSH | On/Off: automatic reconnect after connection drops |
-| Accent color | Blue, Violet, Emerald, Amber, Pink or Cyan |
-| Max upload size | Per-file limit in MB (0 = unlimited) |
-| Export Config | Download your folders and connections as JSON (**contains passwords/keys in plain text**; keep it safe) |
-| Import Config | Import such a JSON file. Folders are matched by name, connections are added |
-| Admin Panel | (admins only) user management |
+| General | Language (English / Hrvatski), accent color, close-window confirmation, browser-side upload limit |
+| Terminal | Font size, scrollback, auto-reconnect |
+| Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
+| Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
+| Data | Export connections (without secrets), export **with** passwords & keys (asks for your password; policy), import |
 
-Settings are stored per browser.
+Personal preferences are stored per browser; everything security-related is stored on the server.
 
 ### Admin panel
 
-Settings → **Admin Panel** (administrators only):
+*Settings → 🛡 Admin panel* (administrators only):
 
-- List of all users with admin flag and join date.
-- **Make Admin / Remove Admin**. You cannot remove your own admin rights.
-- **Delete user**: removes the account, its login sessions and its shares. Its connections, folders and sessions are no longer accessible. You cannot delete yourself.
+- **Overview:** version, uptime, users (admins, 2FA), HTTPS, voice relay status, encryption key source, **security warnings** (no HTTPS, open registration, admins without 2FA, host keys off…), **open terminals** (who, which server, from which IP — with *End*), **live rooms** (participants, voice, shared terminals).
+- **Users:** create users (temporary password generated if you leave it empty), display name, make/remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete (with everything the user owns). The last active administrator cannot be removed.
+- **Shares:** every share on the server — pause/resume or delete.
+- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit retention.
+- **Voice & network:** voice on/off, participants per call, built-in TURN relay (port, public IP, host name, relay ports, private networks), additional STUN/TURN servers.
+- **Host keys:** remembered SSH host keys and FTPS certificates; forget an entry after a server was reinstalled.
+- **Audit log:** searchable and filterable (sign-ins, admin actions, connections, shares, collaboration, terminals, files, host keys, export/import), **CSV export**.
 
-The first registered account is always an administrator.
+Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g. for configuration management; it is then shown locked in the admin panel.
 
 ### Mobile & responsive UI
 
-- The top bar adapts to the available width (labels collapse into icons).
-- On phones (< 760 px): the connection list and the Sessions/Clipboard panel become **slide-in drawers** (☰ and 🗂 buttons), windows open **full screen**, and a single tap opens a connection.
-- Toolbars inside windows adapt to the window width.
+- The top bar and the collaboration bar adapt to the available width (labels collapse into icons).
+- On phones (< 760 px): the connection list and the Sessions/Clipboard panel become **slide-in drawers** (☰ and 🗂 buttons), windows open **full screen**, and a single tap opens a connection. Chat and People open as full-width panels.
 
 ---
 
@@ -325,7 +386,9 @@ The first registered account is always an administrator.
 | Where | Shortcut | Action |
 |---|---|---|
 | Anywhere | **Alt+N** | New window |
-| Anywhere | **Esc** | Close menus / dialogs / editor |
+| Anywhere | **Esc** | Close menus / dialogs / panels |
+| Voice call | **Ctrl+Shift+M** / **Ctrl+Shift+D** | Mute / deafen (also while a terminal has focus) |
+| Voice call | your push-to-talk key (e.g. **F8**) | Hold to talk |
 | Terminal | **Ctrl+Shift+F** | Search in terminal output |
 | Terminal | **Ctrl+Shift+C** / select text | Copy |
 | Terminal | **Ctrl+Shift+R** | Reconnect SSH |
@@ -341,21 +404,64 @@ The first registered account is always an administrator.
 
 ---
 
-## Configuration (environment variables)
+## Configuration
+
+**Environment variables**
 
 | Variable | Default | Description |
 |---|---|---|
 | `PORT` | `8080` | Listening port |
 | `LISTEN_ADDR` | `:PORT` | Full listen address, e.g. `127.0.0.1:8080` (overrides `PORT`) |
 | `DB_PATH` | `./remote_manager.db` | SQLite database file |
-| `ENCRYPTION_KEY` | built-in default | Key for encrypting stored connection passwords/keys (first 32 bytes are used). **Set your own before adding connections.** Changing it later makes existing stored secrets unreadable. |
-| `HTTPS_CERT_FILE` + `HTTPS_KEY_FILE` | – | Serve HTTPS directly with this certificate and key |
-| `WRM_ALLOWED_ORIGINS` | – | Extra hostnames allowed to open WebSockets (comma-separated), e.g. when a proxy rewrites the `Host` header |
-| `WRM_ALLOW_ANY_ORIGIN` | – | `1` disables the WebSocket origin check (not recommended) |
+| `ENCRYPTION_KEY` | – | Your own key for stored secrets (first 32 bytes are used; same derivation as v9). |
+| `ENCRYPTION_KEY_FILE` | – | Read the key from a file (64 hex characters = raw 256-bit key, anything else is hashed). |
+| *(neither set)* | `<DB_PATH>.key` | A random key is generated there on first start (mode `0600`). |
+| `HTTPS_CERT_FILE` + `HTTPS_KEY_FILE` | – | Serve HTTPS with this certificate and key (HSTS is sent). |
+| `HTTPS_SELF_SIGNED` | – | `1` = create and use a self-signed certificate (`wrm-selfsigned.crt/.key` next to the database). Browsers warn once; good for LANs and voice calls without a CA. |
+| `HTTPS_SELF_SIGNED_HOSTS` | – | Extra host names/IPs for the self-signed certificate, comma-separated. |
+| `WRM_TRUST_PROXY` | – | `1` = trust `X-Real-IP` / `X-Forwarded-For` / `X-Forwarded-Proto` / `X-Forwarded-Host` from your reverse proxy (client IPs in rate limits and audit, secure cookies). Only when WRM is reachable **only** through that proxy. |
+| `WRM_ALLOWED_ORIGINS` | – | Extra hostnames allowed as `Origin` (comma-separated), e.g. when a proxy rewrites the `Host` header |
+| `WRM_ALLOW_ANY_ORIGIN` | – | `1` disables the origin check (not recommended) |
+| `WRM_<POLICY>` | – | Forces a policy from the admin panel, e.g. `WRM_REGISTRATION=open`, `WRM_REQUIRE_2FA=all`, `WRM_TURN_PUBLIC_IP=203.0.113.10`, `WRM_TURN_ENABLED=0`, `WRM_HOST_KEY_POLICY=strict`. |
+
+**Policies** (*Admin panel*, or `WRM_<KEY>` in upper case)
+
+| Key | Default | Meaning |
+|---|---|---|
+| `registration` | `closed` | `closed` / `open` self-registration |
+| `require_2fa` | `off` | `off` / `admins` / `all` |
+| `password_min_length` | `8` | 6–128 |
+| `login_max_failures` | `10` | account lock (15 min) after this many wrong passwords |
+| `session_idle_hours` | `168` | sign out after inactivity |
+| `session_max_days` | `30` | maximum session age |
+| `host_key_policy` | `tofu` | `tofu` / `strict` / `off` |
+| `allow_server_keys` | `0` | allow *Key file* / *Auto* for non-admins |
+| `max_upload_mb` | `0` | server-side upload limit per file (0 = unlimited) |
+| `allow_secret_export` | `1` | allow users to export their secrets (after re-entering the password) |
+| `allow_link_shares` | `1` | allow “anyone with the link” shares for guests |
+| `chat_file_max_mb` | `5` | file size in collaboration chat (0 = off) |
+| `voice_enabled` | `1` | voice calls on/off |
+| `voice_max_participants` | `12` | people per call |
+| `turn_enabled` | `1` | built-in TURN relay |
+| `turn_port` | `3478` | relay port (UDP + TCP) |
+| `turn_public_ip` | auto | public IPv4 of the server when behind NAT |
+| `turn_host` | WRM host | host name browsers use to reach the relay |
+| `turn_relay_ports` | `49152-65535` | UDP port range for relayed audio |
+| `turn_allow_private` | `0` | allow relaying to private/loopback networks |
+| `ice_servers` | Google + Cloudflare STUN | additional STUN/TURN servers (JSON) |
+| `audit_retention_days` | `365` | how long audit log and chat history are kept |
+
+**Command line**
+
+```
+wrm -version                       print the version
+wrm -reset-password USER           set a new temporary password (must be changed at sign-in)
+wrm -reset-password USER -reset-2fa  … and turn off two-factor authentication
+```
 
 ---
 
-## Running as a service & behind a reverse proxy
+## Running as a service, reverse proxy & firewall
 
 **systemd (Linux)**, e.g. `/etc/systemd/system/wrm.service`:
 
@@ -367,11 +473,15 @@ After=network-online.target
 [Service]
 User=wrm
 WorkingDirectory=/opt/wrm
-Environment=PORT=8080
 Environment=LISTEN_ADDR=127.0.0.1:8080
-Environment=ENCRYPTION_KEY=choose-your-own-32-character-key!
-ExecStart=/opt/wrm/wrm-pro-v9.10.2-mimo-linux-amd64
+Environment=WRM_TRUST_PROXY=1
+Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
+ExecStart=/opt/wrm/wrm-pro-v10.0.0-mimo-linux-amd64
 Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/wrm
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
@@ -385,7 +495,7 @@ sudo systemctl daemon-reload && sudo systemctl enable --now wrm
 
 ```nginx
 server {
-    listen 443 ssl;
+    listen 443 ssl http2;
     server_name wrm.example.com;
     # ssl_certificate ...; ssl_certificate_key ...;
 
@@ -394,7 +504,9 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;                # required: WebSocket origin check
+        proxy_set_header Host $host;                # required: origin check
+        proxy_set_header X-Real-IP $remote_addr;    # with WRM_TRUST_PROXY=1
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 3600s;                   # long-lived terminals
         proxy_buffering off;                        # live transfer/search progress
@@ -403,34 +515,35 @@ server {
 }
 ```
 
+**Firewall for voice calls:** allow **UDP and TCP 3478** (TURN) and the **UDP relay range** (`49152-65535`, or narrow it with `turn_relay_ports`) to the WRM server. Behind NAT (cloud VM, home router) forward those ports and set `turn_public_ip`. The TURN port is not proxied through nginx. For networks that only allow HTTPS, run a TURN server with TLS on port 443 (e.g. coturn) and add it in *Admin → Voice & network*.
+
 ---
 
 ## Security model
 
-Please read this before exposing WRM to a network:
+See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardening checklist).
 
-- **Who can register:** anyone who can reach the WRM URL can create an account. Run WRM on a private network or VPN, or put it behind a reverse proxy with its own authentication, if the URL is reachable from the internet.
-- **Accounts:** bcrypt password hashes, HTTP-only session cookies, login rate limiting.
-- **Stored secrets:** connection passwords and private keys are AES-256-GCM encrypted in the SQLite file. The key is `ENCRYPTION_KEY`: **set your own**. With the built-in default key, anyone who gets your database file can decrypt the secrets. Protect the database file and backups. The owner of a connection can see its password in the *Edit* dialog, and *Export Config* writes secrets in plain text.
-- **SSH host keys are not verified** (like `StrictHostKeyChecking=no`). Use WRM on networks you trust, or through a VPN, to avoid man-in-the-middle attacks. FTPS certificates are not verified either.
-- **Transport:** use HTTPS (`HTTPS_CERT_FILE`/`HTTPS_KEY_FILE` or a reverse proxy). Otherwise passwords and terminal traffic between the browser and WRM travel unencrypted.
-- **WebSockets** only accept connections whose `Origin` matches the host, which protects against cross-site WebSocket hijacking.
-- **Sharing:** a share link gives terminal and file access **with your stored credentials** to everyone who can open it. Prefer password-locked, user-specific shares, and delete shares you no longer need.
-- **Collaboration control:** only the participant who shares a terminal can grant keyboard control, and can revoke it at any time.
-- **Browser dependencies:** the UI loads xterm.js and fonts from public CDNs (jsdelivr, Google Fonts), so the browser needs internet access for the terminal to load.
+- **Accounts:** bcrypt hashes, optional/required TOTP 2FA with single-use recovery codes, closed self-registration by default, account lockout and per-IP rate limiting, constant-time responses for unknown users, forced password change after an admin reset, disable/delete accounts with immediate sign-out everywhere.
+- **Sessions:** 256-bit random tokens in HttpOnly/SameSite cookies (`Secure` over HTTPS), stored hashed; idle and absolute expiry; device list and remote sign-out.
+- **Secrets at rest:** AES-256-GCM with a random per-installation key (or your own). Secrets are **never sent to the browser** — not to the owner, not to share recipients. The database and key files are created with mode `0600`.
+- **Web security:** CSRF protection (custom request header + Origin check on every state-changing API call), WebSocket origin check, strict **Content-Security-Policy** (no external scripts, `frame-ancestors 'none'`), `X-Frame-Options`, `nosniff`, `Referrer-Policy: no-referrer` (share tokens never leak via Referer), `Permissions-Policy`, HSTS on HTTPS, request-size limits, no directory listings, all assets served locally (no CDN / supply-chain dependency at runtime).
+- **SSH & FTPS:** host keys verified (TOFU/strict); FTPS certificates validated against public CAs or pinned. Server-side key files are admin-only by default.
+- **Sharing:** four roles enforced server-side on every file operation, terminal and room action; members-only / signed-in / guest modes; signed password cookies (invalidated when the password changes); expiry, pause and link rotation; bans; immediate revocation of open terminals and room connections.
+- **Collaboration:** server-assigned identities, per-client send queues (a slow client cannot stall a room), message rate limits and size limits, terminal data only to watchers, keystrokes only to the granting sharer, file downloads never rendered inline.
+- **Voice:** WebRTC with DTLS-SRTP; the built-in TURN relay accepts only short-lived HMAC credentials issued to room participants, limits allocations, and refuses private/loopback/link-local peers by default (no pivoting into internal networks).
+- **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminals, file changes, host keys, exports — stored in the database and written as `AUDIT …` lines to the server log (journald/syslog → SIEM).
+- **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
 
 ---
 
 ## Limitations
 
-To be clear about what WRM does **not** do (yet):
-
 - No **RDP/VNC** (graphical desktops): WRM is for SSH, SFTP, FTP and FTPS.
-- No **voice/audio calls** in collaboration. Chat, file exchange and terminal sharing are text-based.
-- No **2-factor authentication** and no option to disable self-registration yet.
+- No **SSO/LDAP/SAML** yet (local accounts with 2FA).
+- Voice calls are a **mesh**: fine up to about 12 people; larger meetings would need an SFU.
 - No SSH **agent forwarding**, **port forwarding/tunnels** or **jump hosts** yet.
-- Server-to-server transfer and ZIP download work with SSH/SFTP servers only (not FTP).
-- *File contents* search needs `grep` on the server.
+- Server-to-server transfer and ZIP download work with SSH/SFTP servers only (not FTP). *File contents* search needs `grep` on the server.
+- The built-in TURN relay is IPv4 and not available in the Android build (use an external TURN server there).
 
 Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -438,68 +551,89 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 
 ## API reference
 
-All endpoints (except login/register, version and share pages) need the session cookie. JSON in, JSON out, unless noted.
+All endpoints (except sign-in, `/api/auth/config`, version and share pages) need the session cookie. JSON in, JSON out, unless noted. **Every non-GET `/api` request must send `X-WRM-Request: 1`** (CSRF protection) and, if present, an `Origin` of this server.
 
-**Auth**
+**Accounts**
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/auth/register` | Create account `{username, password}` (first user = admin) |
-| POST | `/api/auth/login` | Log in `{username, password}` |
-| POST | `/api/auth/logout` | Log out |
-| GET | `/api/auth/me` | Current user |
-| GET | `/api/auth/keepalive` | Keep the login session alive |
+| GET | `/api/auth/config` | `{first_run, registration_open, version}` |
+| POST | `/api/auth/register` | Create account (first user = admin; afterwards only if registration is open) |
+| POST | `/api/auth/login` | `{username, password}` → user, or `{mfa_required, mfa_token}` |
+| POST | `/api/auth/mfa` | `{mfa_token, code}` (TOTP or recovery code) |
+| POST | `/api/auth/logout` | Sign out |
+| GET | `/api/auth/me` | Current user, restrictions and policies |
+| POST | `/api/auth/password` | `{current_password, new_password}` |
+| POST | `/api/auth/2fa/setup` · `enable` · `disable` · `recovery` | Two-factor management |
+| GET / DELETE | `/api/auth/sessions[/{id}]` | Signed-in devices / sign out one or all others |
+| GET | `/api/users?q=` | User directory (for adding members) |
 
 **Connections, folders, sessions**
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET / POST | `/api/connections` | List / create connections |
-| PUT / DELETE | `/api/connections/{id}` | Update / delete |
+| GET / POST | `/api/connections` | List (without secrets) / create |
+| GET / PUT / DELETE | `/api/connections/{id}` | Read / update (empty secret = keep; `clear_password`, `clear_private_key`) / delete |
+| POST | `/api/connections/{id}/duplicate` | Copy on the server |
 | POST | `/api/connections/bulk` | `{action: "move"\|"delete", ids, folder_id}` |
-| POST | `/api/connections/test` | Test a connection (SSH/SFTP/FTP login) |
-| GET / POST | `/api/folders` | List / create folders |
-| DELETE | `/api/folders/{id}` | Delete folder (connections move to root) |
-| GET / POST | `/api/sessions` | List / create workspace sessions (`layout` = JSON of windows) |
-| PUT / DELETE | `/api/sessions/{id}` | Update (name, lock, layout) / delete (`?force=true` for locked) |
-| GET | `/api/config/export` | Export folders + connections (JSON, secrets in plain text) |
-| POST | `/api/config/import` | Import that JSON |
+| POST | `/api/connections/test` | Test a connection (reports host key problems) |
+| POST | `/api/hostkeys/accept` | `{host, fingerprint}` accept a new/changed host key |
+| GET / POST | `/api/folders` · DELETE `/api/folders/{id}` | Folders |
+| GET / POST | `/api/sessions` · PUT / DELETE `/api/sessions/{id}` | Workspace sessions |
+| GET | `/api/config/export` | Export without secrets |
+| POST | `/api/config/export` | `{password}` export with secrets |
+| POST | `/api/config/import` | Import |
 
-**Remote files** (`id` = connection id; for shared connections add `share_token`)
+**Remote files** (`id` = connection id; for shared connections add `share_token`; the role must allow the action)
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/remote/list?id&path` | List a folder |
 | GET | `/api/remote/list-recursive?id&path` | All files below a path |
 | GET | `/api/remote/search?id&path&q&mode=name\|content&max&hidden` | Search (NDJSON stream) |
-| GET | `/api/remote/download?id&path` | Download a file (`inline=1` for the editor) |
+| GET | `/api/remote/download?id&path` | Download a file |
 | GET | `/api/remote/download-dir?id&path` | Download a folder as ZIP (SFTP) |
-| POST | `/api/remote/upload?id&path&overwrite` | Multipart upload, streamed; `relpath` field before a file part = subfolder |
+| POST | `/api/remote/upload?id&path&overwrite` | Multipart upload, streamed |
 | POST | `/api/remote/mkdir?id&path` | Create folder |
 | POST | `/api/remote/rename?id&old&new` | Rename / move |
-| DELETE | `/api/remote/delete?id&path&dir=0\|1` | Delete file or folder (recursive) |
-| POST | `/api/remote/transfer` | Server-to-server transfer (NDJSON progress stream) |
+| DELETE | `/api/remote/delete?id&path&dir=0\|1` | Delete file or folder |
+| POST | `/api/remote/transfer` | Server-to-server transfer (NDJSON progress) |
 
-**Sharing & admin**
+**Sharing**
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET / POST | `/api/shares` | Your shares / create a share |
-| DELETE | `/api/shares/{id}` | Delete a share |
-| GET / POST | `/api/share/{token}` | Share info / unlock with password |
-| GET | `/api/shared` | Shares visible to you ("Shared with me") |
-| GET | `/api/users` | Usernames (for sharing) |
-| GET | `/api/admin/users` | All users (admin) |
-| PUT / DELETE | `/api/admin/users/{id}` | Toggle admin / delete user (admin) |
+| GET / POST | `/api/shares` | My shares / create `{name, connection_ids, folder_ids, access_mode, guest_role, members:[{username, role}], password, public, expires_at}` |
+| GET / PUT / DELETE | `/api/shares/{id}` | Details / update (also `active`, `clear_password`) / delete |
+| POST | `/api/shares/{id}/rotate` | New link |
+| GET / POST | `/api/shares/{id}/members` · PUT / DELETE `…/members/{userID}` | Members and roles |
+| GET | `/api/shares/{id}/participants` · PUT `…/participants/{pid}` | People history; `{role, banned}` |
+| GET | `/api/share/{token}` | Share info, my role and permissions, connections |
+| POST | `/api/share/{token}/unlock` · `…/profile` | Password unlock · guest name |
+| GET | `/api/shared` | “Shared with me” |
+
+**Administration** (administrators)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET / POST | `/api/admin/users` | Users / create |
+| PUT / DELETE | `/api/admin/users/{id}` | `{is_admin, disabled, display_name}` / delete |
+| POST | `/api/admin/users/{id}/reset-password` · `reset-2fa` · `revoke-sessions` · `unlock` | Account actions |
+| GET / PUT | `/api/admin/settings` | Policies |
+| GET | `/api/admin/status` | Status, open terminals, rooms, relay |
+| POST | `/api/admin/terminals/{id}/kill` | End a terminal |
+| GET | `/api/admin/shares` | All shares |
+| GET / DELETE | `/api/admin/known-hosts[/{id}]` | Host keys |
+| GET | `/api/admin/audit?q&action&user&from&to&before_id&limit[&format=csv]` | Audit log |
 | GET | `/api/version` | Server version |
 
 **WebSockets**
 
 | Endpoint | Description |
 |---|---|
-| `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping` → server; `status`, `error`, `exit` ← server). Close codes: 1000 shell exited, 4001 connect failed, 4002 SSH connection lost |
-| `/ws/events` | Live notifications (`sessions_changed`) |
-| `/ws/share/{token}?name` | Collaboration room: `chat`, `file`, `screen`, `grant-control`, `revoke-control`, `remote-input`, `presence`, `welcome` |
+| `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping` → server; `status`, `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
+| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`) |
+| `/ws/share/{token}` | Collaboration room. Client → server: `chat`, `file`, `set-name`, `screen` (`start/stop/data/resize/snapshot`), `watch`, `unwatch`, `control-request/grant/revoke/release`, `remote-input`, `voice-join/leave/signal/state`, `hand`, `mod` (`set-role/mute/unmute/stop-share/lower-hand/kick/ban`). Server → client: `welcome`, `participants`, `chat`, `file`, `system`, `screen`, `watch-request`, `control`, `control-request`, `remote-input`, `voice-peers/joined/left/signal`, `force-mute`, `role`, `kicked`, `closed`, `error` |
 
 ---
 
@@ -510,25 +644,38 @@ Requirements: **Go** (version in `remote-manager/go.mod`). No C compiler is need
 ```bash
 git clone https://github.com/vedranius/web-browser-RDM-public.git
 cd web-browser-RDM-public/remote-manager
+go test ./...
 go build -o wrm-server .
-PORT=8080 ./wrm-server
+./wrm-server
 ```
 
-Cross-compile any platform, e.g. `GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o wrm-linux-arm64 .`, or build all at once with `bash remote-manager/build-all.sh`.
+Cross-compile any platform, e.g. `GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o wrm-linux-arm64 .`, or build all 13 targets with `bash remote-manager/build-all.sh`.
 
 **Project structure**
 
 ```
 remote-manager/
-  main.go         HTTP server, auth, connections, folders, sessions, shares, collaboration, transfer
+  main.go         HTTP server, routes, database schema & migrations, connections, folders, sessions, transfer
+  security.go     server secret, encryption key management, security headers, CSRF, self-signed TLS, validation
+  users.go        sign-in, 2FA step, sessions, password change, account administration
+  totp.go         TOTP (RFC 6238), QR code, recovery codes
+  settings.go     admin policies (database + WRM_<KEY> environment overrides)
+  audit.go        audit log, CSV export, retention
+  hostkeys.go     SSH host key verification (TOFU/strict), FTPS certificate pinning
+  shares.go       sharing model: access modes, roles, members, participants, authorization
+  collab.go       collaboration rooms: presence, chat, terminal sharing, control, voice signalling, moderation
+  turn.go         built-in TURN relay for voice (turn_android.go: stub for Android)
+  admin.go        open-terminal registry, admin status
   ssh_ws.go       SSH terminal WebSocket (binary frames, flow control, keepalive, reconnect codes)
-  files.go        File API: list, download, ZIP, streamed upload, mkdir, rename, delete
-  search.go       Recursive name / content search (NDJSON stream)
-  sftp_pool.go    Pooled SFTP connections with liveness checks
+  files.go        file API: list, download, ZIP, streamed upload, mkdir, rename, delete
+  search.go       recursive name / content search (NDJSON stream)
+  sftp_pool.go    pooled SFTP connections with liveness checks
   conntest.go     "Test connection" endpoint
-  helpers.go      Origin check, login rate limiting, shared helpers
-  static/index.html   The entire web UI (embedded into the binary)
-.github/workflows/build.yml   CI: vet + JS syntax check, builds all platforms, releases on tags
+  helpers.go      origin check, login rate limiting, shared helpers
+  security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
+  static/index.html          the entire web UI (embedded into the binary)
+  static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
+.github/workflows/build.yml  CI: vet, gofmt, tests (race), JS syntax check, builds all platforms, releases on tags
 ```
 
 **CI/CD:** every push builds all 13 targets. Pushing a tag `v*` creates a GitHub Release with all binaries, a macOS universal binary and `SHA256SUMS.txt`.
@@ -539,12 +686,16 @@ remote-manager/
 
 | Problem | Fix |
 |---|---|
-| Terminal says *Access denied* or does not connect behind a proxy | Pass the `Host` header (`proxy_set_header Host $host;`) and WebSocket upgrade headers, or set `WRM_ALLOWED_ORIGINS` |
-| Terminal area stays empty | The browser must be able to load xterm.js from `cdn.jsdelivr.net` |
-| *Connection failed: unable to authenticate* | Check user/password/key with **Test connection**; for *Key file*/*Auto* the key must exist on the **WRM server** |
-| Stored passwords stopped working after a restart | `ENCRYPTION_KEY` changed. Set the old key again, or re-enter the passwords |
+| *Request blocked by CSRF protection* / terminals do not connect behind a proxy | Pass the `Host` header (`proxy_set_header Host $host;`) and WebSocket upgrade headers, or set `WRM_ALLOWED_ORIGINS` |
+| *HOST KEY VERIFICATION FAILED* | The server's SSH key changed. If you know why (reinstall), click *Trust this key* in the terminal (connection owner/admin) or forget the host in *Admin → Host keys* |
+| *Microphone requires HTTPS* / no microphone | Use HTTPS (certificate, reverse proxy or `HTTPS_SELF_SIGNED=1`) and allow the microphone in the browser; you can also join as a listener |
+| Voice: *Connecting…* forever or *Connection problem* | Open UDP+TCP 3478 and the relay port range on the WRM server; behind NAT set `turn_public_ip` and forward the ports; in very strict networks add a TURN server on 443/TLS (*Admin → Voice & network*) |
+| Registration tab missing | Self-registration is closed (default). An administrator creates accounts, or opens registration in *Security policies* |
+| Locked out as administrator | `wrm -reset-password <user>` (add `-reset-2fa` if needed) |
+| *Connection failed: unable to authenticate* | Check user/password/key with **Test connection**; for *Key file*/*Auto* the key must exist on the **WRM server** and the account must be an administrator (or the policy allows it) |
+| Stored passwords stopped working after a restart | The encryption key changed (`ENCRYPTION_KEY`, `ENCRYPTION_KEY_FILE` or the `.key` file next to the database). Restore it, or re-enter the passwords |
 | *File contents* search fails | The server needs `grep` and a POSIX shell; use *File names* search instead |
-| Uploads fail at a certain size behind nginx | Set `client_max_body_size 0;` (or a larger value) |
+| Uploads fail at a certain size | The administrator's upload limit (`max_upload_mb`) or nginx `client_max_body_size` |
 | Transfer/search progress appears only at the end | Disable proxy buffering (`proxy_buffering off;`) |
 
 ---
