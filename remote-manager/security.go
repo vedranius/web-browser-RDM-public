@@ -383,6 +383,15 @@ func securityMiddleware(next http.Handler) http.Handler {
 func staticHandler() http.Handler {
 	fsrv := http.FileServer(http.FS(staticFiles))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/static/" || r.URL.Path == "/static/index.html" {
+			// Up to v9 the app was also reachable at /static/: keep bookmarks working.
+			target := "/"
+			if r.URL.RawQuery != "" {
+				target += "?" + r.URL.RawQuery
+			}
+			http.Redirect(w, r, target, http.StatusFound)
+			return
+		}
 		if strings.HasSuffix(r.URL.Path, "/") {
 			http.NotFound(w, r)
 			return

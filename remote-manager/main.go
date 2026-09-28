@@ -30,7 +30,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.0.0-mimo"
+var AppVersion = "v10.0.1-mimo"
 
 const sessionCookieName = "wrm_session"
 
@@ -294,10 +294,10 @@ func main() {
 
 	var err error
 	if tlsOn {
-		log.Printf("Listening on %s (HTTPS, certificate %s)", addr, certFile)
+		log.Printf("Listening on %s (HTTPS, certificate %s) — open %s in your browser", addr, certFile, browserURL(addr, true))
 		err = srv.ListenAndServeTLS(certFile, keyFile)
 	} else {
-		log.Printf("Listening on %s", addr)
+		log.Printf("Listening on %s — open %s in your browser", addr, browserURL(addr, false))
 		err = srv.ListenAndServe()
 	}
 	if err != nil && err != http.ErrServerClosed {
@@ -415,7 +415,7 @@ func initDB() {
 	mustExec(`CREATE TABLE IF NOT EXISTS share_members (
 		share_id INTEGER NOT NULL REFERENCES share_links(id) ON DELETE CASCADE,
 		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE)`)
-	mustExec(`CREATE TABLE IF NOT EXISTS share_participants (
+	ensureTable("share_participants", `CREATE TABLE IF NOT EXISTS share_participants (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		share_id INTEGER NOT NULL REFERENCES share_links(id) ON DELETE CASCADE,
 		pkey TEXT NOT NULL,
@@ -426,16 +426,18 @@ func initDB() {
 		first_seen TEXT NOT NULL DEFAULT '',
 		last_seen TEXT NOT NULL DEFAULT '',
 		last_ip TEXT NOT NULL DEFAULT '',
-		UNIQUE(share_id, pkey))`)
-	mustExec(`CREATE TABLE IF NOT EXISTS collab_messages (
+		UNIQUE(share_id, pkey))`,
+		"id", "share_id", "pkey", "user_id", "name", "role", "banned", "first_seen", "last_seen", "last_ip")
+	ensureTable("collab_messages", `CREATE TABLE IF NOT EXISTS collab_messages (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		share_id INTEGER NOT NULL REFERENCES share_links(id) ON DELETE CASCADE,
 		ts TEXT NOT NULL,
 		pkey TEXT NOT NULL DEFAULT '',
 		name TEXT NOT NULL DEFAULT '',
 		kind TEXT NOT NULL DEFAULT 'chat',
-		text TEXT NOT NULL DEFAULT '')`)
-	mustExec(`CREATE TABLE IF NOT EXISTS audit_log (
+		text TEXT NOT NULL DEFAULT '')`,
+		"id", "share_id", "ts", "pkey", "name", "kind", "text")
+	ensureTable("audit_log", `CREATE TABLE IF NOT EXISTS audit_log (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		ts TEXT NOT NULL,
 		user_id INTEGER DEFAULT NULL,
@@ -443,8 +445,9 @@ func initDB() {
 		ip TEXT NOT NULL DEFAULT '',
 		action TEXT NOT NULL,
 		target TEXT NOT NULL DEFAULT '',
-		details TEXT NOT NULL DEFAULT '')`)
-	mustExec(`CREATE TABLE IF NOT EXISTS known_hosts (
+		details TEXT NOT NULL DEFAULT '')`,
+		"id", "ts", "user_id", "username", "ip", "action", "target", "details")
+	ensureTable("known_hosts", `CREATE TABLE IF NOT EXISTS known_hosts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		host TEXT NOT NULL UNIQUE,
 		key_type TEXT NOT NULL,
@@ -452,10 +455,12 @@ func initDB() {
 		public_key TEXT NOT NULL,
 		first_seen TEXT NOT NULL,
 		last_seen TEXT NOT NULL,
-		added_by TEXT NOT NULL DEFAULT '')`)
-	mustExec(`CREATE TABLE IF NOT EXISTS app_settings (
+		added_by TEXT NOT NULL DEFAULT '')`,
+		"id", "host", "key_type", "fingerprint", "public_key", "first_seen", "last_seen", "added_by")
+	ensureTable("app_settings", `CREATE TABLE IF NOT EXISTS app_settings (
 		key TEXT PRIMARY KEY,
-		value TEXT NOT NULL)`)
+		value TEXT NOT NULL)`,
+		"key", "value")
 
 	// Safe migrations (columns added over time)
 	for _, m := range []string{
@@ -523,6 +528,70 @@ func mustExec(q string) {
 	if _, err := db.Exec(q); err != nil {
 		log.Fatalf("Schema error: %v\n%s", err, q)
 	}
+}
+
+// ensureTable creates a table introduced in v10. Some earlier WRM builds used the same
+// table names with a different layout (e.g. collab_messages keyed by share token). A table
+// that lacks a column v10 needs, or has a required column v10 does not fill, is kept under
+// a new name (<name>_old_<time>) and created again, so nothing is deleted.
+func ensureTable(name, create string, cols ...string) {
+	mustExec(create)
+	rows, err := db.Query(`SELECT name, "notnull", dflt_value IS NOT NULL, pk FROM pragma_table_info(?)`, name)
+	if err != nil {
+		log.Printf("Schema check %s: %v", name, err)
+		return
+	}
+	want := map[string]bool{}
+	for _, c := range cols {
+		want[c] = true
+	}
+	have := map[string]bool{}
+	var missing, extra []string
+	for rows.Next() {
+		var col string
+		var notNull, hasDefault, pk int
+		if rows.Scan(&col, &notNull, &hasDefault, &pk) != nil {
+			continue
+		}
+		col = strings.ToLower(col)
+		have[col] = true
+		if !want[col] && notNull == 1 && hasDefault == 0 && pk == 0 {
+			extra = append(extra, col)
+		}
+	}
+	rows.Close()
+	for _, c := range cols {
+		if !have[c] {
+			missing = append(missing, c)
+		}
+	}
+	if len(missing) == 0 && len(extra) == 0 {
+		return
+	}
+	reason := "missing " + strings.Join(missing, ", ")
+	if len(missing) == 0 {
+		reason = "unknown required " + strings.Join(extra, ", ")
+	}
+	old := name + "_old_" + time.Now().UTC().Format("20060102150405")
+	if _, err := db.Exec(`ALTER TABLE "` + name + `" RENAME TO "` + old + `"`); err != nil {
+		log.Fatalf("Upgrade of table %s (%s) failed: %v", name, reason, err)
+	}
+	// The old table's indexes keep their names; drop them so v10 can create its own.
+	var idx []string
+	if rows, err := db.Query(`SELECT name FROM sqlite_master WHERE type='index' AND tbl_name=? AND sql IS NOT NULL`, old); err == nil {
+		for rows.Next() {
+			var n string
+			if rows.Scan(&n) == nil {
+				idx = append(idx, n)
+			}
+		}
+		rows.Close()
+	}
+	for _, n := range idx {
+		db.Exec(`DROP INDEX IF EXISTS "` + strings.ReplaceAll(n, `"`, `""`) + `"`)
+	}
+	mustExec(create)
+	log.Printf("Upgraded table %s from an earlier version (%s); the old table was kept as %s", name, reason, old)
 }
 
 func jsonError(w http.ResponseWriter, msg string, code int) {
