@@ -25,7 +25,7 @@ Please include:
 
 You will get an answer as soon as possible, usually within a week. Once a fix is released, the release notes credit you if you want. Please give a reasonable time to release a fix before you publish anything.
 
-**In scope:** the WRM server and web UI in this repository. For example: authentication and 2FA bypass, privilege escalation between users or share roles, access to stored secrets, cross-site scripting or request forgery, reaching servers or networks you should not reach (the TURN relay included), and denial of service with small effort.
+**In scope:** the WRM server, web UI and container image in this repository. For example: authentication and 2FA bypass, privilege escalation between users or share roles, access to stored secrets or to other people's session recordings, changing or deleting audit records without detection, cross-site scripting or request forgery, reaching servers or networks you should not reach (the TURN relay included), and denial of service with small effort.
 
 **Out of scope:** problems that need an administrator account or access to the server's files, missing HTTPS when the operator did not configure it, social engineering, reports from automated scanners that come without a working attack, and vulnerabilities in the servers you connect to.
 
@@ -45,7 +45,7 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] **Back up the encryption key** (`<DB_PATH>.key`, or your `ENCRYPTION_KEY` / `ENCRYPTION_KEY_FILE`) **separately** from database backups. Someone who has both can decrypt the stored secrets.
 - [ ] Keep the database, the key file and the self-signed certificate readable only by the WRM service user. WRM creates them with mode `0600`.
-- [ ] Run WRM as an unprivileged user. The systemd example in the README adds `NoNewPrivileges`, `ProtectSystem=strict` and `PrivateTmp`.
+- [ ] Run WRM as an unprivileged user. The systemd example in the README adds `NoNewPrivileges`, `ProtectSystem=strict` and `PrivateTmp`. The Docker image runs as an unprivileged user; provide the encryption key as a Docker secret (`ENCRYPTION_KEY_FILE`) instead of keeping it only in the data volume.
 
 **Accounts**
 
@@ -62,9 +62,17 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Set `allow_link_shares=0` if guests without an account must not join shares.
 - [ ] Prefer **Members only** shares with the lowest role that is enough (*Viewer* to look at files, *Observer* for calls and watching). Give shares an expiry date.
 
+**Audit trail and session recording**
+
+- [ ] Keep the audit log on (`audit_enabled`, the default). Run *Admin panel → Audit log → 🔏 Verify integrity* regularly, and after any incident. A broken chain means that someone changed the database directly.
+- [ ] Decide about **session recording** (on by default). Tell your users that terminal sessions are recorded (in many countries this is required), and set `recording_retention_days` to match your retention and privacy rules.
+- [ ] Turn on keystroke recording (`session_recording_input`) only if you need it. Typing at password prompts is masked, but other secrets typed on the command line would be recorded.
+- [ ] Recordings may contain sensitive output (configuration files, logs). Keep the recordings folder (`WRM_RECORDINGS_DIR`, mode `0700`, files `0600`) on an encrypted disk, include it in protected backups, and give administrator rights only to people who may see them. Every view and download of a recording is audited.
+
 **Monitoring**
 
-- [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log regularly (*Admin panel → Audit log → CSV*). Set `audit_retention_days` to match your retention rules.
+- [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
+- [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
 - [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*` and `share.*` events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
 
