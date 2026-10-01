@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.0.1-mimo</title>
-<meta name="theme-color" content="#0a0c11">
+<title>Web Remote Manager PRO v10.1.0-mimo</title>
+<meta name="theme-color" content="#0f1419">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
 <meta name="referrer" content="no-referrer">
 <!-- All assets are served by WRM itself (no CDN): works offline / in closed networks. -->
 <link rel="stylesheet" href="/static/vendor/fonts.css">
@@ -1160,6 +1163,39 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   .mode-cards { grid-template-columns: 1fr; }
   #modal-admin .modal { height: calc(100vh - 20px); }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   v10.1 — BRAND, SESSION RECORDING, REPLAY, TRANSFERS
+   ══════════════════════════════════════════════════════════════ */
+.auth-logo .auth-lockup { display: block; width: 240px; max-width: 80%; height: auto; margin: 0 auto 6px; }
+.app-ver { display: inline-flex; align-items: center; gap: 7px; }
+.app-mark { width: 18px; height: 18px; flex: none; }
+.sb-title .brand .brand-mark { width: 16px; height: 16px; flex: none; }
+.sb-title .brand::before { display: none; }
+.win-rec { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; color: #fca5a5; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: default; animation: recPulse 2.4s ease-in-out infinite; }
+@keyframes recPulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+.adm-toolbar input[type=date] { width: 138px; color-scheme: dark; }
+.ts-table td .act { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.ts-table a.btn-sec { text-decoration: none; display: inline-flex; align-items: center; }
+.sha { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); cursor: help; }
+.replay-modal { width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); display: flex; flex-direction: column; gap: 10px; }
+.rp-meta { font-size: 11.5px; color: var(--text2); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.rp-meta b { color: var(--text); font-weight: 600; }
+.rp-screen { background: #0b0d12; border: 1px solid var(--border2); border-radius: 8px; padding: 8px; overflow: auto; min-height: 240px; max-height: calc(100vh - 290px); }
+.rp-screen .xterm { display: inline-block; }
+.rp-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rp-controls input[type=range] { flex: 1; min-width: 160px; accent-color: var(--accent); }
+.rp-time { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text2); min-width: 92px; text-align: center; }
+.rp-idle { font-size: 11.5px; color: var(--text2); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.rp-events summary { cursor: pointer; font-size: 12px; color: var(--text2); }
+.rp-events .admin-table { margin-top: 6px; }
+.verify-box { margin-bottom: 8px; }
+.tbl-scroll { overflow-x: auto; max-width: 100%; }
+#st-history .adm-toolbar { flex-wrap: wrap; }
+@media (max-width: 760px) {
+  .rp-screen { max-height: 55vh; }
+  .adm-toolbar input[type=date] { width: 120px; }
+}
 </style>
 </head>
 <body>
@@ -1184,9 +1220,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">
-      <span class="logo-icon">⚡</span>
-      <h1>Web Remote Manager</h1>
-      <p id="auth-ver">PRO v10.0.1-mimo · Secure · Multi-User</p>
+      <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
+      <p id="auth-ver">PRO v10.1.0-mimo · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1239,7 +1274,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="sidebar-inner">
     <div class="sb-header">
       <div class="sb-title">
-        <span class="brand">Pro Manager</span>
+        <span class="brand"><img class="brand-mark" src="/static/brand/mark-on-dark.svg" alt="" width="16" height="16">WRM PRO</span>
       </div>
       <input type="text" class="search-box" id="search-input" placeholder="🔍 Search connections..." oninput="renderTree()" data-i18n-placeholder="search_connections">
       <div class="sb-actions" id="sb-std-actions">
@@ -1262,7 +1297,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver">WRM v10.0.1-mimo</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.1.0-mimo</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1547,6 +1582,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="st-terminal" onclick="showSettingsTab('st-terminal')" data-i18n="tab_terminal">Terminal</button>
       <button class="tab-btn" data-tab="st-security" id="st-security-btn" onclick="showSettingsTab('st-security')" data-i18n="tab_security">Security</button>
       <button class="tab-btn" data-tab="st-audio" onclick="showSettingsTab('st-audio')" data-i18n="tab_audio">Voice &amp; audio</button>
+      <button class="tab-btn" data-tab="st-history" id="st-history-btn" onclick="showSettingsTab('st-history')" data-i18n="tab_history">Session history</button>
       <button class="tab-btn" data-tab="st-data" id="st-data-btn" onclick="showSettingsTab('st-data')" data-i18n="tab_data">Data</button>
     </div>
     <div class="tab-pane active" id="st-general">
@@ -1556,7 +1592,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="accent_color">Accent color</div><div class="setting-desc" data-i18n="accent_color_desc">Highlight color of the interface</div></div>
-        <div class="setting-control"><select class="setting-select" id="setting-accent" onchange="applySettings()"><option value="#4f8cff">Blue</option><option value="#8b5cf6">Violet</option><option value="#10b981">Emerald</option><option value="#f59e0b">Amber</option><option value="#ec4899">Pink</option><option value="#06b6d4">Cyan</option></select></div>
+        <div class="setting-control"><select class="setting-select" id="setting-accent" onchange="applySettings()"><option value="#4f8cff">Blue</option><option value="#e8772e">WRM Orange</option><option value="#8b5cf6">Violet</option><option value="#10b981">Emerald</option><option value="#f59e0b">Amber</option><option value="#ec4899">Pink</option><option value="#06b6d4">Cyan</option></select></div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="confirm_close">Close Window Confirmation</div><div class="setting-desc" data-i18n="confirm_close_desc">Ask before closing a window</div></div>
@@ -1583,6 +1619,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     </div>
     <div class="tab-pane" id="st-security"><div id="security-pane"></div></div>
     <div class="tab-pane" id="st-audio"><div id="audio-pane"></div></div>
+    <div class="tab-pane" id="st-history">
+      <div class="hint-box" data-i18n="history_help">Your terminal sessions and sessions of other people on your connections. Replay a recording or download it as an asciinema .cast file.</div>
+      <div id="history-pane"></div>
+    </div>
     <div class="tab-pane" id="st-data">
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="export_config">Export connections</div><div class="setting-desc" data-i18n="export_config_desc">Folders and connections as JSON, without passwords and keys</div></div>
@@ -1604,6 +1644,24 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   </div>
 </div>
 
+<!-- Session recording replay -->
+<div class="modal-overlay" id="modal-replay" style="z-index:9600;">
+  <div class="modal replay-modal">
+    <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">▶ <span id="rp-title" data-i18n="recording">Recording</span></h3><button class="icon-btn" onclick="closeReplay()">✕</button></div>
+    <div class="rp-meta" id="rp-meta"></div>
+    <div class="rp-screen" id="rp-screen"></div>
+    <div class="rp-controls">
+      <button class="btn-sm" id="rp-play" onclick="replayToggle()" style="min-width:40px;">▶</button>
+      <span class="rp-time" id="rp-time">0:00 / 0:00</span>
+      <input type="range" id="rp-seek" min="0" max="1000" value="0" oninput="replaySeekInput(this.value)">
+      <select id="rp-speed" class="setting-select" onchange="replaySetSpeed(this.value)"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option><option value="16">16×</option></select>
+      <label class="rp-idle"><input type="checkbox" id="rp-idle" checked onchange="replaySetIdle(this.checked)"><span data-i18n="skip_idle">Skip idle time</span></label>
+      <a class="btn-sec btn-sm" id="rp-download" href="#" download style="text-decoration:none;">⬇ .cast</a>
+    </div>
+    <details class="rp-events"><summary data-i18n="session_events">Session events</summary><div id="rp-events"></div></details>
+  </div>
+</div>
+
 <!-- Admin Panel Modal -->
 <div class="modal-overlay" id="modal-admin">
   <div class="modal">
@@ -1616,6 +1674,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="voice" onclick="showAdminTab('voice')" data-i18n="adm_voice">Voice &amp; network</button>
       <button class="tab-btn" data-tab="hosts" onclick="showAdminTab('hosts')" data-i18n="adm_hosts">Host keys</button>
       <button class="tab-btn" data-tab="audit" onclick="showAdminTab('audit')" data-i18n="adm_audit">Audit log</button>
+      <button class="tab-btn" data-tab="sessions" onclick="showAdminTab('sessions')" data-i18n="adm_sessions">Sessions &amp; recordings</button>
+      <button class="tab-btn" data-tab="transfers" onclick="showAdminTab('transfers')" data-i18n="adm_transfers">File transfers</button>
     </div>
     <div class="adm-body" id="admin-body"></div>
   </div>
@@ -2055,6 +2115,26 @@ const LANGS = {
 
 // v10 strings (collaboration, voice, roles, security, administration)
 Object.assign(LANGS.en, {
+  rec_badge_title:'This session is recorded (an administrator turned on session recording)',
+  tab_history:'Session history', history_help:'Your terminal sessions and sessions of other people on your connections. Replay a recording or download it as an asciinema .cast file.',
+  adm_sessions:'Sessions & recordings', adm_transfers:'File transfers',
+  sessions_help:'Every terminal session: who, when, from where, which server and how it ended. Replay the recording or download it as an asciinema .cast file. Viewing a recording is itself recorded in the audit log.',
+  transfers_help:'Every uploaded, downloaded and server-to-server copied file, with size and SHA-256 checksum.',
+  replay:'Replay', download_cast:'Download .cast (asciinema)', no_recording:'not recorded', truncated:'truncated', recording:'Recording',
+  started:'Started', server:'Server', duration:'Duration', all_statuses:'All statuses', no_sessions_yet:'No terminal sessions yet.',
+  ts_active:'Active', ts_connecting:'Connecting', ts_closed:'Closed', ts_failed:'Failed', ts_lost:'Connection lost', ts_killed:'Ended by admin', ts_interrupted:'Interrupted',
+  skip_idle:'Skip idle time', session_events:'Session events', replay_failed:'The recording could not be loaded',
+  date_from:'From date', date_to:'To date', verify_integrity:'Verify integrity',
+  audit_ok:'Audit log intact: {n} entries verified (#{first} – #{last}).', audit_unsigned:'{n} newer entries have no hash (written by an older version).',
+  audit_broken:'Audit log integrity check FAILED at entry #{id}: {reason}',
+  ev_recording:'Recordings', all_directions:'All directions', dir_upload:'Upload', dir_download:'Download', dir_s2s:'Server → server',
+  source:'Source', destination:'Destination', rs_size:'Size',
+  pg_recording:'Session recording',
+  p_audit_enabled:'Audit log', p_audit_enabled_d:'Record security events. Administrator actions are always recorded, also when this is off.',
+  p_session_recording:'Record terminal sessions', p_session_recording_d:'Record the output of every SSH terminal (asciinema format). Users see a notice and a REC badge. Passwords are not echoed by servers, so they are not in the recording.',
+  p_session_recording_input:'Record keystrokes', p_session_recording_input_d:'Also record what is typed. Typing at password, passphrase and PIN prompts is masked.',
+  p_recording_retention_days:'Keep recordings (days)', p_recording_retention_days_d:'Older recordings are deleted automatically (minimum 7 days).',
+  p_recording_max_mb:'Maximum recording size (MB)', p_recording_max_mb_d:'Per session. Recording stops at this size; the terminal keeps working (0 = unlimited).',
 "access": "Access",
 "access_revoked": "Access to this terminal was revoked",
 "active": "Active",
@@ -2511,6 +2591,26 @@ Object.assign(LANGS.en, {
 "off": "Off"
 });
 Object.assign(LANGS.hr, {
+  rec_badge_title:'Ova sesija se snima (administrator je uključio snimanje sesija)',
+  tab_history:'Povijest sesija', history_help:'Tvoje terminalske sesije i sesije drugih ljudi na tvojim vezama. Reproduciraj snimku ili je preuzmi kao asciinema .cast datoteku.',
+  adm_sessions:'Sesije i snimke', adm_transfers:'Prijenosi datoteka',
+  sessions_help:'Svaka terminalska sesija: tko, kada, odakle, na koji server i kako je završila. Reproduciraj snimku ili je preuzmi kao asciinema .cast datoteku. I samo gledanje snimke bilježi se u audit log.',
+  transfers_help:'Svaka poslana, preuzeta i između servera kopirana datoteka, s veličinom i SHA-256 kontrolnim zbrojem.',
+  replay:'Reproduciraj', download_cast:'Preuzmi .cast (asciinema)', no_recording:'nije snimljeno', truncated:'skraćeno', recording:'Snimka',
+  started:'Početak', server:'Server', duration:'Trajanje', all_statuses:'Svi statusi', no_sessions_yet:'Još nema terminalskih sesija.',
+  ts_active:'Aktivna', ts_connecting:'Spajanje', ts_closed:'Zatvorena', ts_failed:'Neuspjela', ts_lost:'Veza izgubljena', ts_killed:'Prekinuo admin', ts_interrupted:'Prekinuta',
+  skip_idle:'Preskoči neaktivnost', session_events:'Događaji sesije', replay_failed:'Snimku nije moguće učitati',
+  date_from:'Od datuma', date_to:'Do datuma', verify_integrity:'Provjeri integritet',
+  audit_ok:'Audit log je netaknut: provjereno {n} zapisa (#{first} – #{last}).', audit_unsigned:'{n} novijih zapisa nema hash (zapisala ih je starija verzija).',
+  audit_broken:'Provjera integriteta audit loga NIJE USPJELA kod zapisa #{id}: {reason}',
+  ev_recording:'Snimke', all_directions:'Svi smjerovi', dir_upload:'Slanje', dir_download:'Preuzimanje', dir_s2s:'Server → server',
+  source:'Izvor', destination:'Odredište', rs_size:'Veličina',
+  pg_recording:'Snimanje sesija',
+  p_audit_enabled:'Audit log', p_audit_enabled_d:'Bilježi sigurnosne događaje. Radnje administratora bilježe se uvijek, i kad je ovo isključeno.',
+  p_session_recording:'Snimaj terminalske sesije', p_session_recording_d:'Snima izlaz svakog SSH terminala (asciinema format). Korisnici vide obavijest i oznaku REC. Serveri ne ispisuju lozinke, pa ih nema u snimci.',
+  p_session_recording_input:'Snimaj unos s tipkovnice', p_session_recording_input_d:'Snima i ono što se tipka. Unos na upitima za lozinku, passphrase i PIN se maskira.',
+  p_recording_retention_days:'Čuvaj snimke (dana)', p_recording_retention_days_d:'Starije snimke se automatski brišu (najmanje 7 dana).',
+  p_recording_max_mb:'Najveća veličina snimke (MB)', p_recording_max_mb_d:'Po sesiji. Snimanje staje na toj veličini, terminal radi dalje (0 = neograničeno).',
 "access": "Pristup",
 "access_revoked": "Pristup ovom terminalu je opozvan",
 "active": "Aktivan",
@@ -3953,7 +4053,9 @@ function showAdminTab(tab) {
   const body = document.getElementById('admin-body');
   body.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
   ({overview: adminOverview, users: adminUsers, shares: adminShares, policies: () => adminPolicies('policies'),
-    voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit}[tab] || adminOverview)();
+    voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit,
+    sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
+    transfers: adminTransfers}[tab] || adminOverview)();
 }
 
 function fmtDuration(sec) {
@@ -4152,7 +4254,8 @@ const POLICY_GROUPS = {
     ['pg_accounts', ['registration', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days']],
     ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export']],
     ['pg_sharing', ['allow_link_shares', 'chat_file_max_mb']],
-    ['pg_audit', ['audit_retention_days']],
+    ['pg_audit', ['audit_enabled', 'audit_retention_days']],
+    ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],
   voice: [
     ['pg_voice', ['voice_enabled', 'voice_max_participants']],
@@ -4234,30 +4337,299 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
+      <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
+      <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
       <button class="btn-sec btn-sm" onclick="adminAudit()">${esc(t('filter'))}</button>
       <button class="btn-sec btn-sm" onclick="adminAuditCSV()">⬇ CSV</button>
-    </div><div id="aud-table"></div><div style="text-align:center;margin-top:10px;"><button class="btn-sec btn-sm" id="aud-more" onclick="adminAudit(true)" style="display:none;">${esc(t('load_more'))}</button></div>`;
+      <button class="btn-sec btn-sm" onclick="adminAuditVerify()">🔏 ${esc(t('verify_integrity'))}</button>
+    </div><div id="aud-verify" class="verify-box"></div><div id="aud-table"></div><div style="text-align:center;margin-top:10px;"><button class="btn-sec btn-sm" id="aud-more" onclick="adminAudit(true)" style="display:none;">${esc(t('load_more'))}</button></div>`;
     auditLastId = 0;
   }
-  const qs = new URLSearchParams({q: document.getElementById('aud-q').value, action: document.getElementById('aud-action').value, user: document.getElementById('aud-user').value, limit: 200});
+  const qs = auditQuery({limit: 200});
   if (more && auditLastId) qs.set('before_id', auditLastId);
   const res = await fetch('/api/admin/audit?' + qs);
   if (!res.ok) { showToast(await apiError(res), 'error'); return; }
   const list = await res.json();
   const tbl = document.getElementById('aud-table');
-  const rows = list.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td class="mono">${esc(e.ip)}</td><td><b style="color:var(--text);">${esc(e.action)}</b></td><td>${esc(e.target)}</td><td class="mono" style="font-size:10.5px;word-break:break-all;max-width:320px;">${esc(e.details)}</td></tr>`).join('');
+  const rows = list.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td class="mono">${esc(e.ip)}</td><td><b style="color:var(--text);">${esc(e.action)}</b>${e.session_id ? ` <a href="#" class="sub" onclick="openReplay(${Number(e.session_id)});return false;" title="${esc(t('replay'))}">▶ #${Number(e.session_id)}</a>` : ''}</td><td>${esc(e.target)}</td><td class="mono" style="font-size:10.5px;word-break:break-all;max-width:320px;">${esc(e.details)}</td></tr>`).join('');
   if (!more) tbl.innerHTML = `<table class="admin-table"><thead><tr><th>${esc(t('time'))}</th><th>${esc(t('user'))}</th><th>IP</th><th>${esc(t('event'))}</th><th>${esc(t('target'))}</th><th>${esc(t('details'))}</th></tr></thead><tbody id="aud-body">${rows}</tbody></table>`;
   else document.getElementById('aud-body').insertAdjacentHTML('beforeend', rows);
   if (list.length) auditLastId = list[list.length - 1].id;
   document.getElementById('aud-more').style.display = list.length === 200 ? '' : 'none';
 }
 
+function auditQuery(extra) {
+  const v = id => (document.getElementById(id) || {}).value || '';
+  return new URLSearchParams(Object.assign({q: v('aud-q'), action: v('aud-action'), user: v('aud-user'), from: v('aud-from'), to: v('aud-to')}, extra));
+}
+
+async function adminAuditVerify() {
+  const box = document.getElementById('aud-verify');
+  box.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
+  const res = await fetch('/api/admin/audit/verify');
+  if (!res.ok) { box.innerHTML = `<div class="hint-box warn">${esc(await apiError(res))}</div>`; return; }
+  const r = await res.json();
+  if (r.ok) {
+    box.innerHTML = `<div class="hint-box ok">✅ ${esc(t('audit_ok').replace('{n}', r.checked).replace('{first}', r.first_id || '—').replace('{last}', r.last_id || '—'))}${r.unsigned ? ' ' + esc(t('audit_unsigned').replace('{n}', r.unsigned)) : ''}</div>`;
+  } else {
+    box.innerHTML = `<div class="hint-box warn">⛔ ${esc(t('audit_broken').replace('{id}', r.broken_at || '?').replace('{reason}', r.reason || ''))}</div>`;
+  }
+}
+
 function adminAuditCSV() {
-  const qs = new URLSearchParams({q: document.getElementById('aud-q').value, action: document.getElementById('aud-action').value, user: document.getElementById('aud-user').value, format: 'csv'});
+  const qs = auditQuery({format: 'csv'});
   const a = document.createElement('a');
   a.href = '/api/admin/audit?' + qs; a.download = ''; document.body.appendChild(a); a.click(); a.remove();
+}
+
+// ══ TERMINAL SESSIONS, RECORDINGS & FILE TRANSFERS (v10.1) ══════════
+
+function fmtMs(ms) {
+  const s = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+  return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(sec).padStart(2, '0');
+}
+
+const TS_STATUS = {active: 'ok', connecting: 'info', closed: '', failed: 'bad', lost: 'warn', killed: 'warn', interrupted: 'warn'};
+const tsLastId = {};
+
+async function renderTermSessions(boxId, mine, more) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  const v = id => (document.getElementById(boxId + '-' + id) || {}).value || '';
+  if (!more) {
+    const prev = {q: v('q'), status: v('status'), from: v('from'), to: v('to')};
+    box.innerHTML = `<div class="adm-toolbar">
+      <input type="text" id="${boxId}-q" class="grow" placeholder="🔍 ${esc(t('search'))}" value="${esc(prev.q)}" onkeydown="if(event.key==='Enter') renderTermSessions('${boxId}', ${mine})">
+      <select id="${boxId}-status" onchange="renderTermSessions('${boxId}', ${mine})"><option value="">${esc(t('all_statuses'))}</option>${Object.keys(TS_STATUS).map(k => `<option value="${k}" ${prev.status === k ? 'selected' : ''}>${esc(t('ts_' + k))}</option>`).join('')}</select>
+      <input type="date" id="${boxId}-from" value="${esc(prev.from)}" title="${esc(t('date_from'))}" onchange="renderTermSessions('${boxId}', ${mine})">
+      <input type="date" id="${boxId}-to" value="${esc(prev.to)}" title="${esc(t('date_to'))}" onchange="renderTermSessions('${boxId}', ${mine})">
+      <button class="btn-sec btn-sm" onclick="renderTermSessions('${boxId}', ${mine})">${esc(t('filter'))}</button>
+    </div><div id="${boxId}-table"><div class="fm-loading">${esc(t('loading'))}</div></div>
+    <div style="text-align:center;margin-top:10px;"><button class="btn-sec btn-sm" id="${boxId}-more" style="display:none;" onclick="renderTermSessions('${boxId}', ${mine}, true)">${esc(t('load_more'))}</button></div>`;
+    tsLastId[boxId] = 0;
+  }
+  const qs = new URLSearchParams({q: v('q'), status: v('status'), from: v('from'), to: v('to'), limit: 100});
+  if (mine) qs.set('mine', '1');
+  if (more && tsLastId[boxId]) qs.set('before_id', tsLastId[boxId]);
+  const res = await fetch('/api/recordings?' + qs);
+  const tbl = document.getElementById(boxId + '-table');
+  if (!res.ok) { tbl.innerHTML = `<div class="fm-error">${esc(await apiError(res))}</div>`; return; }
+  const list = await res.json();
+  const rows = list.map(s => {
+    const rec = s.recording;
+    const st = `<span class="pill ${TS_STATUS[s.status] || ''}">${esc(t('ts_' + s.status))}</span>${s.exit_code !== null && s.exit_code !== undefined && s.status === 'closed' && s.exit_code !== 0 ? `<div class="sub">exit ${Number(s.exit_code)}</div>` : ''}`;
+    const recCell = rec
+      ? `<div class="act"><button class="btn-sm" onclick="openReplay(${Number(s.id)})">▶ ${esc(t('replay'))}</button><a class="btn-sec btn-sm" href="/api/recordings/${Number(s.id)}/cast?download=1" download title="${esc(t('download_cast'))}">⬇</a></div>
+         <div class="sub">${esc(fmtBytes(rec.size))}${rec.truncated ? ' · ' + esc(t('truncated')) : ''}${rec.input ? ' · ⌨' : ''}</div>`
+      : `<span class="sub">${esc(t('no_recording'))}</span>`;
+    return `<tr><td style="white-space:nowrap;">${esc(fmtTime(s.started_at))}<div class="sub">⏱ ${esc(fmtMs(s.duration_ms))}</div></td>
+      <td>${esc(s.username || '—')}<div class="sub mono">${esc(s.client_ip)}</div>${s.share ? `<div class="sub">🤝 ${esc(s.share)}</div>` : ''}</td>
+      <td>${esc(s.connection)}<div class="sub mono">${esc(s.remote_user ? s.remote_user + '@' : '')}${esc(s.host)}</div></td>
+      <td>${st}</td><td>${recCell}</td></tr>`;
+  }).join('');
+  if (!more) {
+    tbl.innerHTML = list.length ? `<div class="tbl-scroll"><table class="admin-table ts-table"><thead><tr><th>${esc(t('started'))}</th><th>${esc(t('user'))}</th><th>${esc(t('server'))}</th><th>${esc(t('status'))}</th><th>${esc(t('recording'))}</th></tr></thead><tbody id="${boxId}-body">${rows}</tbody></table></div>`
+      : `<div class="chat-empty">${esc(t('no_sessions_yet'))}</div>`;
+  } else {
+    const b = document.getElementById(boxId + '-body');
+    if (b) b.insertAdjacentHTML('beforeend', rows);
+  }
+  if (list.length) tsLastId[boxId] = list[list.length - 1].id;
+  document.getElementById(boxId + '-more').style.display = list.length === 100 ? '' : 'none';
+}
+
+// ── replay player (asciicast v2 on xterm.js) ──
+const replay = {term: null, raw: [], events: [], header: null, dur: 0, pos: 0, idx: 0, playing: false, speed: 1, idle: true, timer: null, wallStart: 0, posStart: 0};
+
+function buildReplayTimeline() {
+  let shift = 0, prev = 0;
+  replay.events = replay.raw.map(e => {
+    const tm = Number(e[0]) || 0;
+    if (replay.idle && tm - prev > 2) shift += tm - prev - 2;
+    prev = tm;
+    return [tm - shift, e[1], e[2], tm];
+  });
+  replay.dur = replay.events.length ? replay.events[replay.events.length - 1][0] : 0;
+}
+
+async function openReplay(id) {
+  closeReplay();
+  const modal = document.getElementById('modal-replay');
+  modal.classList.add('open');
+  document.getElementById('rp-title').textContent = t('recording') + ' #' + id;
+  document.getElementById('rp-meta').innerHTML = '';
+  document.getElementById('rp-events').innerHTML = '';
+  const screen = document.getElementById('rp-screen');
+  screen.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
+  document.getElementById('rp-download').href = '/api/recordings/' + Number(id) + '/cast?download=1';
+  let meta, text;
+  try {
+    const [mres, cres] = await Promise.all([fetch('/api/recordings/' + Number(id)), fetch('/api/recordings/' + Number(id) + '/cast')]);
+    if (!mres.ok) throw new Error(await apiError(mres));
+    if (!cres.ok) throw new Error(await apiError(cres));
+    meta = await mres.json();
+    text = await cres.text();
+  } catch (err) {
+    screen.innerHTML = `<div class="fm-error">${esc(t('replay_failed'))}: ${esc(err.message || err)}</div>`;
+    return;
+  }
+  if (!modal.classList.contains('open')) return;
+  const lines = text.split('\n');
+  try { replay.header = JSON.parse(lines[0]); } catch (_) { screen.innerHTML = `<div class="fm-error">${esc(t('replay_failed'))}</div>`; return; }
+  replay.raw = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i]) continue;
+    try { const e = JSON.parse(lines[i]); if (Array.isArray(e) && (e[1] === 'o' || e[1] === 'r')) replay.raw.push(e); } catch (_) {}
+  }
+  const s = meta.session || {};
+  document.getElementById('rp-title').textContent = `${s.username || '—'} → ${s.connection || ''} (${s.remote_user ? s.remote_user + '@' : ''}${s.host || ''})`;
+  document.getElementById('rp-meta').innerHTML = [
+    [t('started'), fmtTime(s.started_at)], [t('duration'), fmtMs(s.duration_ms)], ['IP', s.client_ip],
+    [t('status'), t('ts_' + s.status)], s.share ? [t('share'), s.share] : null,
+    s.recording ? ['SHA-256', (s.recording.sha256 || '').slice(0, 16) + '…'] : null,
+  ].filter(Boolean).map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
+  const ev = meta.events || [];
+  document.getElementById('rp-events').innerHTML = ev.length ? `<table class="admin-table"><tbody>` + ev.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td><b style="color:var(--text);">${esc(e.action)}</b></td><td class="mono" style="font-size:10.5px;word-break:break-all;">${esc(e.details)}</td></tr>`).join('') + '</tbody></table>' : `<div class="sub">${esc(t('none'))}</div>`;
+  screen.innerHTML = '';
+  replay.term = new Terminal(Object.assign(termOptions(), {cols: replay.header.width || 80, rows: replay.header.height || 24, scrollback: 5000, disableStdin: true, cursorBlink: false}));
+  replay.term.open(screen);
+  replay.speed = parseFloat(document.getElementById('rp-speed').value) || 1;
+  replay.idle = document.getElementById('rp-idle').checked;
+  buildReplayTimeline();
+  replay.pos = 0; replay.idx = 0;
+  updateReplayUI();
+  replayPlay();
+}
+
+function replayApplyUntil(target) {
+  let chunk = '';
+  while (replay.idx < replay.events.length && replay.events[replay.idx][0] <= target) {
+    const e = replay.events[replay.idx++];
+    if (e[1] === 'o') chunk += e[2];
+    else if (e[1] === 'r') {
+      if (chunk) { replay.term.write(chunk); chunk = ''; }
+      const [c, r] = String(e[2]).split('x').map(Number);
+      if (c > 0 && r > 0 && c < 2000 && r < 1000) replay.term.resize(c, r);
+    }
+  }
+  if (chunk) replay.term.write(chunk);
+}
+
+function updateReplayUI() {
+  document.getElementById('rp-time').textContent = fmtMs(replay.pos * 1000) + ' / ' + fmtMs(replay.dur * 1000);
+  document.getElementById('rp-seek').value = replay.dur ? Math.round(replay.pos / replay.dur * 1000) : 0;
+  document.getElementById('rp-play').textContent = replay.playing ? '❚❚' : '▶';
+}
+
+function replayTick() {
+  if (!replay.playing || !replay.term) return;
+  if (!document.getElementById('modal-replay').classList.contains('open')) { closeReplay(); return; }
+  replay.pos = Math.min(replay.dur, replay.posStart + (performance.now() - replay.wallStart) / 1000 * replay.speed);
+  replayApplyUntil(replay.pos);
+  if (replay.idx >= replay.events.length) { replay.pos = replay.dur; replay.playing = false; updateReplayUI(); return; }
+  updateReplayUI();
+  const wait = (replay.events[replay.idx][0] - replay.pos) * 1000 / replay.speed;
+  replay.timer = setTimeout(replayTick, Math.max(4, Math.min(250, wait)));
+}
+
+function replayPlay() {
+  if (!replay.term) return;
+  if (replay.idx >= replay.events.length) replaySeek(0);
+  replay.playing = true;
+  replay.wallStart = performance.now();
+  replay.posStart = replay.pos;
+  replayTick();
+  updateReplayUI();
+}
+
+function replayPause() {
+  replay.playing = false;
+  clearTimeout(replay.timer);
+  if (replay.term) updateReplayUI();
+}
+
+function replayToggle() { replay.playing ? replayPause() : replayPlay(); }
+
+function replaySeek(tm) {
+  if (!replay.term) return;
+  const was = replay.playing;
+  replayPause();
+  replay.term.reset();
+  replay.term.resize(replay.header.width || 80, replay.header.height || 24);
+  replay.idx = 0;
+  replay.pos = Math.max(0, Math.min(replay.dur, tm));
+  replayApplyUntil(replay.pos);
+  updateReplayUI();
+  if (was) replayPlay();
+}
+
+function replaySeekInput(v) { replaySeek(replay.dur * (Number(v) || 0) / 1000); }
+
+function replaySetSpeed(v) {
+  replay.speed = parseFloat(v) || 1;
+  replay.posStart = replay.pos;
+  replay.wallStart = performance.now();
+}
+
+function replaySetIdle(on) {
+  if (!replay.term) { replay.idle = on; return; }
+  const cur = replay.idx > 0 ? replay.events[replay.idx - 1][3] : 0; // original time of the current position
+  replay.idle = on;
+  buildReplayTimeline();
+  const e = replay.events.find(x => x[3] >= cur);
+  replaySeek(e ? e[0] : replay.dur);
+}
+
+function closeReplay() {
+  replayPause();
+  if (replay.term) { try { replay.term.dispose(); } catch (_) {} }
+  replay.term = null; replay.raw = []; replay.events = [];
+  document.getElementById('modal-replay').classList.remove('open');
+}
+
+// ── admin: file transfers ──
+let xferLastId = 0;
+async function adminTransfers(more) {
+  const body = document.getElementById('admin-body');
+  const v = id => (document.getElementById(id) || {}).value || '';
+  if (!more) {
+    body.innerHTML = `<div class="hint-box">${esc(t('transfers_help'))}</div><div class="adm-toolbar">
+      <input type="text" id="xf-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminTransfers()">
+      <select id="xf-dir" onchange="adminTransfers()"><option value="">${esc(t('all_directions'))}</option>${['upload', 'download', 's2s'].map(d => `<option value="${d}">${esc(t('dir_' + d))}</option>`).join('')}</select>
+      <input type="text" id="xf-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminTransfers()">
+      <input type="date" id="xf-from" title="${esc(t('date_from'))}" onchange="adminTransfers()">
+      <input type="date" id="xf-to" title="${esc(t('date_to'))}" onchange="adminTransfers()">
+      <button class="btn-sec btn-sm" onclick="adminTransfers()">${esc(t('filter'))}</button>
+      <button class="btn-sec btn-sm" onclick="adminTransfersCSV()">⬇ CSV</button>
+    </div><div id="xf-table"></div><div style="text-align:center;margin-top:10px;"><button class="btn-sec btn-sm" id="xf-more" onclick="adminTransfers(true)" style="display:none;">${esc(t('load_more'))}</button></div>`;
+    xferLastId = 0;
+  }
+  const qs = new URLSearchParams({q: v('xf-q'), direction: v('xf-dir'), user: v('xf-user'), from: v('xf-from'), to: v('xf-to'), limit: 200});
+  if (more && xferLastId) qs.set('before_id', xferLastId);
+  const res = await fetch('/api/admin/transfers?' + qs);
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  const list = await res.json();
+  const icon = {upload: '⬆', download: '⬇', s2s: '⇄'};
+  const loc = (h, p) => h || p ? `<span class="mono">${esc(h)}</span><div class="sub mono" style="word-break:break-all;">${esc(p)}</div>` : '—';
+  const rows = list.map(x => `<tr><td style="white-space:nowrap;">${esc(fmtTime(x.ts))}</td><td>${esc(x.username || '—')}<div class="sub mono">${esc(x.client_ip)}</div></td>
+    <td style="white-space:nowrap;">${icon[x.direction] || ''} ${esc(t('dir_' + x.direction))}</td><td>${loc(x.src_host, x.src_path)}</td><td>${loc(x.dst_host, x.dst_path)}</td>
+    <td style="white-space:nowrap;">${esc(fmtBytes(x.size))}</td><td><span class="sha" title="${esc(x.sha256)}">${esc((x.sha256 || '').slice(0, 12))}…</span></td>
+    <td>${x.status === 'ok' ? '<span class="pill ok">OK</span>' : `<span class="pill bad" title="${esc(x.error)}">${esc(t('failed'))}</span>`}</td></tr>`).join('');
+  const tbl = document.getElementById('xf-table');
+  if (!more) tbl.innerHTML = list.length ? `<table class="admin-table"><thead><tr><th>${esc(t('time'))}</th><th>${esc(t('user'))}</th><th></th><th>${esc(t('source'))}</th><th>${esc(t('destination'))}</th><th>${esc(t('rs_size'))}</th><th>SHA-256</th><th>${esc(t('status'))}</th></tr></thead><tbody id="xf-body">${rows}</tbody></table>` : `<div class="chat-empty">${esc(t('none'))}</div>`;
+  else document.getElementById('xf-body').insertAdjacentHTML('beforeend', rows);
+  if (list.length) xferLastId = list[list.length - 1].id;
+  document.getElementById('xf-more').style.display = list.length === 200 ? '' : 'none';
+}
+
+function adminTransfersCSV() {
+  const v = id => (document.getElementById(id) || {}).value || '';
+  const qs = new URLSearchParams({q: v('xf-q'), direction: v('xf-dir'), user: v('xf-user'), from: v('xf-from'), to: v('xf-to'), format: 'csv'});
+  const a = document.createElement('a');
+  a.href = '/api/admin/transfers?' + qs; a.download = ''; document.body.appendChild(a); a.click(); a.remove();
 }
 
 // ══ SESSIONS ══════════════════════════════════════════
@@ -4533,6 +4905,7 @@ function addWindow(opts) {
     <div class="win-header" id="wh-${id}">
       <div class="win-dot"></div>
       <span class="win-title" id="wt-${id}">Window ${id}</span>
+      <span class="win-rec" id="wrec-${id}" style="display:none;" title="${esc(t('rec_badge_title'))}">● REC</span>
       <div class="win-corner-btns" title="${t('snap_layouts')}">
         ${SNAP_ORDER.map(d => `<button class="win-corner-btn" title="${snapTitle(d)}" onclick="snapWindow(${id},'${d}')">${snapIcon(d)}</button>`).join('')}
       </div>
@@ -5018,6 +5391,7 @@ function setupSSH(wo) {
 
 function handleTermControl(wo, m) {
   if (m.type === 'status' && m.state === 'connected') {
+    showRecBadge(wo, !!m.recording);
     wo.everConnected = true;
     wo.reconnectAttempts = 0;
     setTermState(wo, 'connected');
@@ -5042,9 +5416,15 @@ function handleTermControl(wo, m) {
 
 function shellQuoteJS(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'"; }
 
+function showRecBadge(wo, on) {
+  const b = document.getElementById('wrec-' + wo.id);
+  if (b) b.style.display = on ? '' : 'none';
+}
+
 function handleTermClose(wo, ws, ev) {
   if (wo.socket !== ws) return; // an old socket we replaced on purpose
   wo.socket = null;
+  showRecBadge(wo, false);
   if (!wo.term || wo._disposed) return;
   wo.flowPaused = false;
   let reason, auto = false;
@@ -7275,6 +7655,7 @@ function openSettings(tab) {
   const signedIn = !!currentUser;
   document.getElementById('st-security-btn').style.display = signedIn ? '' : 'none';
   document.getElementById('st-data-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
+  document.getElementById('st-history-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   showSettingsTab(tab || 'st-general');
 }
 
@@ -7283,6 +7664,7 @@ function showSettingsTab(id) {
   document.querySelectorAll('#modal-settings .tab-pane').forEach(p => p.classList.toggle('active', p.id === id));
   if (id === 'st-security') renderSecurityPane();
   if (id === 'st-audio') renderAudioPane();
+  if (id === 'st-history') renderTermSessions('history-pane', true);
 }
 
 // ── Security: password, two-factor, sign-in sessions ──
