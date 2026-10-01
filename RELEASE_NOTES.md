@@ -1,26 +1,71 @@
-## Web Remote Manager PRO v10.0.1-mimo
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.1.0-mimo/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+
+## Web Remote Manager PRO v10.1.0-mimo — audit trail & session recording
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, server-to-server transfer, sharing, real-time collaboration and **voice calls**. One self-contained binary with an embedded web UI.
+Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, server-to-server transfer, sharing, real-time collaboration and **voice calls**. One self-contained binary (or container) with an embedded web UI.
 
-### 🔧 Fixed in v10.0.1-mimo
+v10.1 is the first step of making WRM a **lightweight PAM for teams**: everything people do on your servers is recorded and auditable per user.
 
-- **"404 page not found" at `http://localhost:8080/static/`.** Up to v9 the app also opened at `/static/`, and browsers remember that address. v10 turned off directory listings, so the old address returned 404. `/static/` and `/static/index.html` now forward to the app at `/`.
-- **Upgrading a database from an earlier WRM build** printed `Index warning: … no such column: ts` / `no such column: share_id`. Some earlier builds created tables named `audit_log` or `collab_messages` with a different layout, so v10 could not write the audit log or the chat history into them. v10 now detects such tables, keeps them under a new name (`<table>_old_<time>`, nothing is deleted) and creates them again with the right layout.
-- The server log now shows the address to open, e.g. `Listening on :8080 — open http://localhost:8080/ in your browser`.
+### 🎬 Session recording & replay
 
-If you already run v10.0.0-mimo, just replace the binary. The fix is applied at the next start.
+- **Every SSH terminal session is recorded** in the open **asciinema** format (asciicast v2), compressed, with its SHA-256 checksum stored in the database.
+- **▶ Replay in the browser** (play/pause, seek, 0.5–16× speed, *skip idle time*), or **⬇ download the `.cast`** and play it with `asciinema play`.
+- **Transparent for users:** the terminal shows *“This session is recorded”* and a **● REC** badge.
+- **No passwords in recordings:** servers do not echo passwords, so they never appear in the output. Keystroke recording is **off** by default. When an administrator turns it on, typing at password, passphrase and PIN prompts is masked.
+- **Never slows the terminal:** the recording is written in the background. A per-session size limit stops the recording, not the terminal.
+- **Who can watch:** administrators all; users their own sessions and sessions on **their** connections (e.g. guests of a share). Watching or downloading a recording is itself audited.
+- **Where to find it:** *Admin panel → Sessions & recordings* (everything), *Settings → Session history* (your own).
+
+### 🧾 Audit trail
+
+- **Terminal sessions:** who, from which IP, which server and remote user, start, duration, and how the session ended (closed, connection lost, ended by an administrator, interrupted by a restart).
+- **File transfers:** every upload, download (also files opened in the editor and every file of a ZIP download) and server-to-server copy, with source, destination, size and **SHA-256**. See *Admin panel → File transfers*, with CSV export.
+- **Append-only, tamper-evident audit log.** Database triggers refuse to change audit entries, transfers and recordings, and refuse to delete anything younger than 7 days. Only the retention job removes old data. Every entry contains the hash of the previous one, and **🔏 Verify integrity** checks the whole chain.
+- **Better audit search:** date range, events linked to the connection and the terminal session (click **▶ #id** to replay), recording events, and secrets in event details are always redacted.
+- **Feature flags:** `audit_enabled` (`AUDIT_ENABLED`) and `session_recording` (`SESSION_RECORDING_ENABLED`) are on by default. Also new: `session_recording_input`, `recording_retention_days` (90) and `recording_max_mb` (100). Administrator actions are always recorded.
+
+### 🐳 Operations
+
+- **Docker:** `Dockerfile` (static binary, unprivileged user, data volume `/data`, health check) and **`docker compose up -d`**. Release images are published to `ghcr.io/vedranius/wrm-pro`.
+- **`/healthz`** for load balancers and monitoring; **`wrm -healthcheck`** for container health checks.
+- Recordings location: `WRM_RECORDINGS_DIR` (default `recordings/` next to the database).
+
+### 🎨 New logo
+
+The WRM PRO logo is now used for the favicon, the app icons, the sign-in screen, the top bar, the README and the release. A **WRM Orange** accent color is available in *Settings → General*. The complete logo kit (SVG and PNG) is in `docs/brand/`.
+
+### 📐 Architecture & tests
+
+- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
+- A new **integration test** runs a real SSH + SFTP server inside the test. It checks connect → audit entries → recording (replayable, no passwords), transfer checksums and the append-only audit trail, and it runs in CI with the race detector.
+
+### ⬆️ Upgrading from v10.0
+
+Replace the binary. The database is only **extended**: new tables, columns and triggers are added, and nothing is changed or removed. The previous binary still runs on the upgraded database.
+
+- **Session recording is on by default.** Tell your users about it (in many countries this is required), or turn it off in *Admin panel → Security policies → Session recording*.
+- Recordings use disk space in `recordings/` next to the database. A session usually takes a few KB to a few MB. Recordings are kept for 90 days, with at most 100 MB per session.
+- Audit entries written before the upgrade have no hash. *Verify integrity* checks the chain from the first new entry on.
+
+Coming from v9? Read *Upgrading from v9* below as well.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/CHANGELOG.md) for the full history.
 
 ---
 
-## Included from v10.0.0-mimo
+## Included from v10.0.x
 
-v10 is a big release. It brings back **voice calls in collaboration rooms**, adds **user management, members and roles** for sharing, and **hardens security** throughout so WRM can be used in companies. If you upgrade from v9, please read **Upgrading from v9** below before you replace the binary.
+### 🔧 v10.0.1-mimo
 
----
+- `/static/` (the v9 address) forwards to the app instead of returning 404.
+- A database from an earlier build with an incompatible `audit_log` / `collab_messages` table is upgraded at startup. The old table is kept as `<table>_old_<time>`.
+- The server log shows the address to open in the browser.
 
-### 🎙 Voice calls in collaboration rooms (back, rebuilt)
+### v10.0.0-mimo
+
+#### 🎙 Voice calls in collaboration rooms (back, rebuilt)
 
 Everyone in a share room can talk. It works like Discord or Jitsi:
 
@@ -36,7 +81,7 @@ Everyone in a share room can talk. It works like Discord or Jitsi:
 
 > Browsers allow the microphone only on **HTTPS** pages (or `localhost`). The quickest way to get HTTPS is `HTTPS_SELF_SIGNED=1`. For calls across the internet, open **UDP+TCP 3478** and the **UDP relay range** (default `49152-65535`) in the firewall. Behind NAT, set `turn_public_ip`.
 
-### 👥 Users, members & roles
+#### 👥 Users, members & roles
 
 - **Admin panel → Users**: create users (a temporary password is generated if you leave it empty), set the display name, make or remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete. The last active administrator cannot be removed.
 - **Shares have three access modes**: 👥 *Members only* (default), 🏢 *Everyone signed in*, 🌐 *Anyone with the link* (guests; admins can disable this mode).
@@ -57,7 +102,7 @@ Everyone in a share room can talk. It works like Discord or Jitsi:
 - **Share expiry** (1 hour to 30 days, or a custom date), **pause/resume**, **new link** (the old link stops working immediately).
 - **Revocation takes effect at once.** Deleting, pausing or rotating a share, removing a member, lowering a role, banning, or disabling a user closes their open terminals and room connections.
 
-### 💬 Collaboration
+#### 💬 Collaboration
 
 - A **new collaboration bar** shows the share, your role, avatars of the people online, and the voice controls.
 - **👥 People panel**: who is in the call and who is online, with roles, mute and deafen state, shared terminals, raised hands, connection quality and volume. Moderators have a **⋯** menu for *change role*, *mute*, *stop sharing*, *lower hand*, *remove* and *ban*.
@@ -69,7 +114,7 @@ Everyone in a share room can talk. It works like Discord or Jitsi:
 - The room **reconnects automatically** and restores watching, sharing and the voice call.
 - **Per-participant send queues**: one slow client can no longer stall a room.
 
-### 🔐 Security hardening
+#### 🔐 Security hardening
 
 - **Two-factor authentication (TOTP)** with QR code and single-use **recovery codes**. The policy can **require 2FA** for admins or for everyone.
 - **Self-registration is closed by default.** Only the first account (the administrator) registers itself.
@@ -86,7 +131,7 @@ Everyone in a share room can talk. It works like Discord or Jitsi:
 - **Audit log** of sign-ins (failed ones too), account and policy changes, connections, shares, room joins and moderation, terminals, file changes, host keys, exports and imports. It is searchable in the admin panel, exportable as **CSV**, and written as `AUDIT …` lines to the server log (journald/syslog → SIEM).
 - **Recovery from the command line**: `wrm -reset-password USER [-reset-2fa]`.
 
-### 🛡 Admin panel
+#### 🛡 Admin panel
 
 *Settings → 🛡 Admin panel* has these tabs:
 - **Overview**: version, uptime, users, HTTPS, relay status, key source, **security warnings**, **open terminals** (with *End*), live rooms.
@@ -99,7 +144,7 @@ Everyone in a share room can talk. It works like Discord or Jitsi:
 
 Any policy can also be **forced by an environment variable** (`WRM_<KEY>`, e.g. `WRM_REQUIRE_2FA=all`). A forced policy is shown as locked in the panel.
 
-### ✨ Other improvements
+#### ✨ Other improvements
 
 - **Settings** are reorganised into tabs: General, Terminal, Security, Voice & audio, Data.
 - **Connections**: SSH keyboard-interactive authentication (servers that ask for the password that way). *Duplicate* copies the stored secrets on the server, so they never pass through the browser. Deleting a connection closes its open terminals.
@@ -109,7 +154,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`, e.g. 
 
 ---
 
-### ⬆️ Upgrading from v9
+#### ⬆️ Upgrading from v9
 
 Replace the binary and start it with the same database, and the same `ENCRYPTION_KEY` if you set one. Everything is migrated automatically.
 
@@ -123,24 +168,26 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 ---
 
+---
+
 ### 📦 Downloads
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.0.1-mimo-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.0.1-mimo-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.0.1-mimo-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.0.1-mimo-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.0.1-mimo-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.0.1-mimo-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.0.1-mimo-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.0.1-mimo-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.0.1-mimo-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.0.1-mimo-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.0.1-mimo-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.0.1-mimo-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.0.1-mimo-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.0.1-mimo-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.1.0-mimo-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.1.0-mimo-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.1.0-mimo-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.1.0-mimo-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.1.0-mimo-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.1.0-mimo-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.1.0-mimo-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.1.0-mimo-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.1.0-mimo-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.1.0-mimo-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.1.0-mimo-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.1.0-mimo-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.1.0-mimo-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.1.0-mimo-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -148,22 +195,28 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.0.1-mimo-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.0.1-mimo-linux-amd64
+chmod +x wrm-pro-v10.1.0-mimo-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.1.0-mimo-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.0.1-mimo-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.1.0-mimo-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.0.1-mimo-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.1.0-mimo-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.0.1-mimo/wrm-pro-v10.0.1-mimo-android-arm64
-chmod +x wrm-pro-v10.0.1-mimo-android-arm64 && ./wrm-pro-v10.0.1-mimo-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.1.0-mimo/wrm-pro-v10.1.0-mimo-android-arm64
+chmod +x wrm-pro-v10.1.0-mimo-android-arm64 && ./wrm-pro-v10.1.0-mimo-android-arm64
+```
+
+**Docker**
+```bash
+docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.1.0-mimo
+# or, from the source tree:  docker compose up -d
 ```
 
 On the first start WRM creates `remote_manager.db` (the database) and `remote_manager.db.key` (the encryption key) next to each other, both with mode `0600`. **Back up the key file.**
@@ -179,14 +232,16 @@ HTTPS_SELF_SIGNED=1               HTTPS with a generated self-signed certificate
 WRM_TRUST_PROXY=1                 behind a reverse proxy (real client IPs, secure cookies)
 WRM_ALLOWED_ORIGINS=host          extra allowed Origin hosts
 WRM_<POLICY>=value                force a policy, e.g. WRM_REQUIRE_2FA=all, WRM_TURN_PUBLIC_IP=203.0.113.10
+AUDIT_ENABLED / SESSION_RECORDING_ENABLED   audit log / session recording on (1) or off (0)
+WRM_RECORDINGS_DIR=/path          where session recordings are stored (default: recordings/ next to the database)
 ```
 
-For the full documentation (reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.1-mimo/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.0.1-mimo/SECURITY.md).
+For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/SECURITY.md).
 
 ---
 
 ### 📜 License
 
-Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/main/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/main/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/main/CONTRIBUTING.md).
+Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/CONTRIBUTING.md).
 
 ☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)**. Thank you!
