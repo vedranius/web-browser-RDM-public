@@ -25,7 +25,7 @@ check.
 cd remote-manager
 gofmt -l .                      # must print nothing
 go vet ./...
-go test -race ./...             # unit tests (security, roles, 2FA, encryption, settings…)
+go test -race ./...             # unit + integration tests (security, roles, 2FA, encryption, recording, audit…)
 go build -o wrm-server .
 HTTPS_SELF_SIGNED=1 PORT=8080 ./wrm-server   # open https://localhost:8080
 ```
@@ -40,11 +40,15 @@ Code layout:
 | `main.go` | Startup, routes, database schema & migrations, connections API, server-to-server transfer |
 | `security.go` | Encryption of secrets, signed values, security headers, CSRF, HTTPS |
 | `users.go`, `totp.go` | Accounts, sessions, sign-in, 2FA, admin user management |
-| `settings.go`, `audit.go`, `admin.go` | Policies, audit log, admin panel API, terminal registry |
+| `settings.go`, `audit.go`, `admin.go` | Policies (feature flags), audit log (hash chain, append-only), admin panel API, terminal registry |
+| `recording.go` | Terminal sessions, asciicast session recorder, file transfer log, recordings & transfers API |
 | `shares.go`, `collab.go` | Shares, roles & permissions, collaboration rooms (chat, terminal sharing, voice signalling) |
 | `turn.go` | Built-in TURN relay for voice calls |
 | `ssh_ws.go`, `files.go`, `sftp_pool.go`, `search.go`, `conntest.go`, `hostkeys.go` | Terminal, file manager, SFTP connection pool, search, connection test, host key verification |
-| `static/index.html` | The whole web UI (embedded into the binary); `static/vendor/` holds xterm.js and fonts |
+| `static/index.html` | The whole web UI (embedded into the binary); `static/vendor/` holds xterm.js and fonts, `static/brand/` the logo and icons |
+| `*_test.go` | `security_test.go` and `upgrade_test.go` (unit), `integration_test.go` (in-process SSH/SFTP server: connect → audit → recording, transfers) |
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how the parts fit together and where planned features belong.
 
 Before sending a PR please make sure that:
 
@@ -54,6 +58,8 @@ Before sending a PR please make sure that:
 - every new API endpoint or WebSocket message checks **who** may use it (signed-in user, share role
   / permission, admin) on the server. The UI hiding a button is not access control,
 - secrets (passwords, keys, tokens) are never returned to the browser or written to the log,
+- security-relevant actions write an audit entry (`auditLog…`), and nothing updates or deletes audit data outside the retention job,
+- new features that change behaviour sit behind a setting (feature flag), and the existing flow works with the flag off,
 - you tested the change in a browser (terminal, file manager, sessions, collaboration and voice if
   you touched them).
 

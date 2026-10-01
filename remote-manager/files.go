@@ -2,8 +2,11 @@ package main
 
 import (
 	"archive/zip"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"log"
 	"net/http"
@@ -46,7 +49,7 @@ func auditFileOp(r *http.Request, acc *connAccess, c Connection, action, target 
 	for k, v := range extra {
 		d[k] = v
 	}
-	auditLogAs(r, uid, name, action, target, d)
+	auditLogRef(r, uid, name, action, target, d, auditRef{ConnID: c.ID})
 }
 
 func requireMethod(w http.ResponseWriter, r *http.Request, methods ...string) bool {
@@ -243,14 +246,29 @@ func downloadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	remotePath := r.URL.Query().Get("path")
-	if acc.Share != nil && r.URL.Query().Get("inline") != "1" {
-		auditFileOp(r, acc, c, "file.download", remotePath, nil)
-	}
+	inline := r.URL.Query().Get("inline") == "1"
 	disposition := attachmentHeader(path.Base(remotePath))
-	if r.URL.Query().Get("inline") == "1" {
+	if inline {
 		disposition = "inline"
 	}
 	started := false
+	var copyErr error
+	hw := newHashingWriter(w)
+	defer func() {
+		if !started {
+			return
+		}
+		st, msg := "ok", ""
+		if copyErr != nil || r.Context().Err() != nil {
+			st, msg = "failed", "download interrupted"
+		}
+		logFileTransfer(r, acc, transferRec{Direction: "download", SrcConn: &c, SrcPath: remotePath, Size: hw.n, SHA256: hw.Sum(), Status: st, Error: msg})
+		action := "file.download"
+		if inline {
+			action = "file.open"
+		}
+		auditFileOp(r, acc, c, action, remotePath, map[string]interface{}{"bytes": hw.n, "sha256": hw.Sum(), "status": st})
+	}()
 	err := fileOp(c, true, func(sc *sftp.Client) error {
 		info, err := sc.Stat(remotePath)
 		if err != nil {
@@ -268,7 +286,8 @@ func downloadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10))
 		started = true
-		if _, err := io.Copy(w, io.LimitReader(file, info.Size())); err != nil {
+		if _, err := io.Copy(hw, io.LimitReader(file, info.Size())); err != nil {
+			copyErr = err
 			return errStreamStarted{err}
 		}
 		return nil
@@ -285,7 +304,9 @@ func downloadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Disposition", disposition)
 		w.Header().Set("Content-Type", "application/octet-stream")
 		started = true
-		_, err = io.Copy(w, resp)
+		if _, err = io.Copy(hw, resp); err != nil {
+			copyErr = err
+		}
 		return err
 	})
 	if err != nil {
@@ -298,7 +319,7 @@ func downloadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadRemoteDirHandler(w http.ResponseWriter, r *http.Request) {
-	c, _, ok := fileRequest(w, r, PermFilesRead)
+	c, acc, ok := fileRequest(w, r, PermFilesRead)
 	if !ok {
 		return
 	}
@@ -324,7 +345,10 @@ func downloadRemoteDirHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/zip")
 		started = true
 		zw := zip.NewWriter(w)
-		if err := zipRemoteDir(r, sc, zw, remotePath, dirName); err != nil {
+		st := &zipStats{acc: acc, conn: &c}
+		err = zipRemoteDir(r, sc, zw, remotePath, dirName, st)
+		auditFileOp(r, acc, c, "file.download_zip", remotePath, map[string]interface{}{"files": st.files, "bytes": st.bytes, "complete": err == nil})
+		if err != nil {
 			zw.Close()
 			return errStreamStarted{err}
 		}
@@ -339,7 +363,15 @@ func downloadRemoteDirHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func zipRemoteDir(r *http.Request, sc *sftp.Client, zw *zip.Writer, remotePath, baseName string) error {
+// zipStats records each file put into a ZIP download in the transfer log.
+type zipStats struct {
+	acc   *connAccess
+	conn  *Connection
+	files int
+	bytes int64
+}
+
+func zipRemoteDir(r *http.Request, sc *sftp.Client, zw *zip.Writer, remotePath, baseName string, st *zipStats) error {
 	entries, err := sc.ReadDir(remotePath)
 	if err != nil {
 		return err
@@ -354,7 +386,7 @@ func zipRemoteDir(r *http.Request, sc *sftp.Client, zw *zip.Writer, remotePath, 
 		fullRemote := joinRemote(remotePath, entry.Name())
 		zipPath := baseName + "/" + entry.Name()
 		if entry.IsDir() {
-			if err := zipRemoteDir(r, sc, zw, fullRemote, zipPath); err != nil {
+			if err := zipRemoteDir(r, sc, zw, fullRemote, zipPath, st); err != nil {
 				if r.Context().Err() != nil || isConnLostErr(err) {
 					return err
 				}
@@ -376,8 +408,16 @@ func zipRemoteDir(r *http.Request, sc *sftp.Client, zw *zip.Writer, remotePath, 
 			f.Close()
 			return err
 		}
-		_, err = io.Copy(fw, f)
+		hw := newHashingWriter(fw)
+		_, err = io.Copy(hw, f)
 		f.Close()
+		status, msg := "ok", ""
+		if err != nil {
+			status, msg = "failed", err.Error()
+		}
+		logFileTransfer(r, st.acc, transferRec{Direction: "download", SrcConn: st.conn, SrcPath: fullRemote, Size: hw.n, SHA256: hw.Sum(), Status: status, Error: msg})
+		st.files++
+		st.bytes += hw.n
 		if err != nil {
 			return err
 		}
@@ -505,7 +545,7 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fullPath := joinRemote(targetDir, fileName)
 		overwrite := params["overwrite"] == "true" || params["overwrite"] == "1"
-		cr := &countingReader{r: part, max: maxBytes}
+		cr := &countingReader{r: part, max: maxBytes, h: sha256.New()}
 		opErr := fileOp(c, false, func(sc *sftp.Client) error {
 			if targetDir != baseDir {
 				if err := sc.MkdirAll(targetDir); err != nil {
@@ -554,6 +594,14 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		default:
 			res.Status, res.Error = "error", opErr.Error()
 		}
+		if res.Status != "conflict" {
+			st := map[string]string{"ok": "ok"}[res.Status]
+			if st == "" {
+				st = "failed"
+			}
+			logFileTransfer(r, acc, transferRec{Direction: "upload", DstConn: &c, DstPath: fullPath, Size: cr.n,
+				SHA256: hex.EncodeToString(cr.h.Sum(nil)), Status: st, Error: res.Error})
+		}
 		io.Copy(io.Discard, part) // drain whatever was not consumed (conflict/error)
 		results = append(results, res)
 	}
@@ -599,11 +647,15 @@ type countingReader struct {
 	n      int64
 	max    int64
 	tooBig bool
+	h      hash.Hash // optional: checksum of everything read
 }
 
 func (c *countingReader) Read(p []byte) (int, error) {
 	n, err := c.r.Read(p)
 	c.n += int64(n)
+	if c.h != nil && n > 0 {
+		c.h.Write(p[:n])
+	}
 	if c.max > 0 && c.n > c.max {
 		c.tooBig = true
 		return n, errTooLarge

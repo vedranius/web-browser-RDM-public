@@ -17,7 +17,7 @@ permissions:
 
 env:
   # Base version used for file names. Tag builds embed the tag name as the version.
-  APP_VERSION: v10.0.1-mimo
+  APP_VERSION: v10.1.0-mimo
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -155,6 +155,46 @@ jobs:
       - name: Upload to release
         if: startsWith(github.ref, 'refs/tags/v')
         run: gh release upload "${GITHUB_REF_NAME}" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+
+  # ─────────────────────────────────────────────
+  #  Container image: built and smoke-tested on every run, published to
+  #  GitHub Container Registry (ghcr.io/<owner>/wrm-pro) for release tags
+  # ─────────────────────────────────────────────
+  docker:
+    name: Docker image
+    runs-on: ubuntu-24.04
+    needs: check
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build image
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then VERSION="${GITHUB_REF_NAME}"; else VERSION="${APP_VERSION}-$(git rev-parse --short HEAD)"; fi
+          docker build --build-arg VERSION="${VERSION}" -t wrm-pro:ci .
+          docker run --rm wrm-pro:ci -version
+
+      - name: Smoke test (starts, answers /healthz, container health check works)
+        run: |
+          docker run -d --name wrm -p 18080:8080 wrm-pro:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:18080/healthz && break; sleep 1; done
+          echo
+          curl -fsS http://127.0.0.1:18080/healthz
+          docker exec wrm /usr/local/bin/wrm -healthcheck
+          docker logs wrm
+          docker rm -f wrm
+
+      - name: Publish to GitHub Container Registry
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          IMAGE="ghcr.io/$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')/wrm-pro"
+          echo "${GH_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+          docker tag wrm-pro:ci "${IMAGE}:${GITHUB_REF_NAME}"
+          docker tag wrm-pro:ci "${IMAGE}:latest"
+          docker push "${IMAGE}:${GITHUB_REF_NAME}"
+          docker push "${IMAGE}:latest"
 
   # ─────────────────────────────────────────────
   #  macOS universal binary + SHA-256 checksums (tags only)

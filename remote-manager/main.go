@@ -2,12 +2,17 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/tls"
 	"database/sql"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,7 +35,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.0.1-mimo"
+var AppVersion = "v10.1.0-mimo"
 
 const sessionCookieName = "wrm_session"
 
@@ -155,34 +160,12 @@ func jsonMarshal(v interface{}) []byte {
 
 // ─── MAIN ────────────────────────────────────────────
 
-func main() {
-	showVersion := flag.Bool("version", false, "print the version and exit")
-	resetPassword := flag.String("reset-password", "", "set a new temporary password for `USER` (e.g. a locked-out administrator) and exit")
-	reset2FA := flag.Bool("reset-2fa", false, "together with -reset-password: also turn off two-factor authentication")
-	flag.Parse()
-	if *showVersion {
-		fmt.Println(AppVersion)
-		return
-	}
-
-	initDB()
-	loadAppSettings()
-	initServerSecret()
-	initEncryptionKey()
-	migrateSessionTokens()
-	ensureAdminExists()
-	if *resetPassword != "" {
-		if err := resetPasswordCLI(*resetPassword, *reset2FA); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-	log.Printf("Web Remote Manager %s starting", AppVersion)
-	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
-	startTURN()
-
+// newRouter builds the HTTP handler with every route and the security middleware.
+func newRouter() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("/static/", staticHandler())
+	mux.HandleFunc("/favicon.ico", faviconHandler)
+	mux.HandleFunc("/healthz", healthHandler)
 	mux.HandleFunc("/", rootHandler)
 	mux.HandleFunc("/share/", sharePageHandler)
 	mux.HandleFunc("/api/version", versionHandler)
@@ -221,6 +204,10 @@ func main() {
 	mux.HandleFunc("/api/admin/users/", apiAdminUserByIDHandler)
 	mux.HandleFunc("/api/admin/settings", apiAdminSettingsHandler)
 	mux.HandleFunc("/api/admin/audit", apiAdminAuditHandler)
+	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
+	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
+	mux.HandleFunc("/api/recordings", apiRecordingsHandler)
+	mux.HandleFunc("/api/recordings/", apiRecordingsHandler)
 	mux.HandleFunc("/api/admin/known-hosts", apiAdminKnownHostsHandler)
 	mux.HandleFunc("/api/admin/known-hosts/", apiAdminKnownHostsHandler)
 	mux.HandleFunc("/api/admin/status", apiAdminStatusHandler)
@@ -241,6 +228,43 @@ func main() {
 	mux.HandleFunc("/ws/ssh", sshHandler)
 	mux.HandleFunc("/ws/share/", shareWSHandler)
 	mux.HandleFunc("/ws/events", eventsHandler)
+	return securityMiddleware(mux)
+}
+
+func main() {
+	showVersion := flag.Bool("version", false, "print the version and exit")
+	resetPassword := flag.String("reset-password", "", "set a new temporary password for `USER` (e.g. a locked-out administrator) and exit")
+	reset2FA := flag.Bool("reset-2fa", false, "together with -reset-password: also turn off two-factor authentication")
+	healthcheck := flag.Bool("healthcheck", false, "check /healthz of the server running on this machine and exit (for container health checks)")
+	flag.Parse()
+	if *showVersion {
+		fmt.Println(AppVersion)
+		return
+	}
+	if *healthcheck {
+		os.Exit(runHealthcheck())
+	}
+
+	initDB()
+	loadAppSettings()
+	initServerSecret()
+	initEncryptionKey()
+	migrateSessionTokens()
+	ensureAdminExists()
+	if *resetPassword != "" {
+		if err := resetPasswordCLI(*resetPassword, *reset2FA); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+	log.Printf("Web Remote Manager %s starting", AppVersion)
+	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
+	startTURN()
+
+	recoverTerminalSessions()
+	if dir := recordingsDir(); settingBool("session_recording") {
+		log.Printf("Session recording is on (recordings in %s)", dir)
+	}
 
 	addr := os.Getenv("LISTEN_ADDR")
 	if addr == "" {
@@ -263,7 +287,7 @@ func main() {
 	}()
 
 	srv := &http.Server{
-		Addr: addr, Handler: securityMiddleware(mux),
+		Addr: addr, Handler: newRouter(),
 		ReadHeaderTimeout: 30 * time.Second, IdleTimeout: 120 * time.Second, MaxHeaderBytes: 64 << 10,
 	}
 	certFile, keyFile := os.Getenv("HTTPS_CERT_FILE"), os.Getenv("HTTPS_KEY_FILE")
@@ -329,6 +353,66 @@ func sharePageHandler(w http.ResponseWriter, r *http.Request) { serveIndex(w) }
 
 func versionHandler(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]string{"version": AppVersion})
+}
+
+// healthHandler is for load balancers and monitoring: 200 when the database answers.
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte(`{"status":"error","database":"unavailable"}`))
+		return
+	}
+	jsonOK(w, map[string]string{"status": "ok", "version": AppVersion})
+}
+
+// runHealthcheck queries /healthz of the local server (exit code 0 = healthy).
+func runHealthcheck() int {
+	addr := os.Getenv("LISTEN_ADDR")
+	if addr == "" {
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+		addr = ":" + port
+	}
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return 1
+	}
+	scheme := "http"
+	if (os.Getenv("HTTPS_CERT_FILE") != "" && os.Getenv("HTTPS_KEY_FILE") != "") || os.Getenv("HTTPS_SELF_SIGNED") == "1" {
+		scheme = "https"
+	}
+	client := &http.Client{Timeout: 5 * time.Second, Transport: &http.Transport{
+		// Loopback check of our own (possibly self-signed) certificate.
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+	}}
+	resp, err := client.Get(scheme + "://127.0.0.1:" + port + "/healthz")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintln(os.Stderr, "healthz:", resp.Status)
+		return 1
+	}
+	return 0
+}
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := staticFiles.ReadFile("static/brand/favicon.ico")
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "image/x-icon")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.Write(data)
 }
 
 // ─── DATABASE ────────────────────────────────────────
@@ -461,6 +545,67 @@ func initDB() {
 		key TEXT PRIMARY KEY,
 		value TEXT NOT NULL)`,
 		"key", "value")
+	// v10.1: terminal sessions, recordings and file transfers (audit trail). No foreign keys:
+	// audit records must survive the deletion of users, connections and shares.
+	ensureTable("terminal_sessions", `CREATE TABLE IF NOT EXISTS terminal_sessions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uid TEXT NOT NULL UNIQUE,
+		user_id INTEGER DEFAULT NULL,
+		username TEXT NOT NULL DEFAULT '',
+		pkey TEXT NOT NULL DEFAULT '',
+		share_id INTEGER DEFAULT NULL,
+		share_name TEXT NOT NULL DEFAULT '',
+		conn_id INTEGER DEFAULT NULL,
+		conn_name TEXT NOT NULL DEFAULT '',
+		conn_owner_id INTEGER DEFAULT NULL,
+		host TEXT NOT NULL DEFAULT '',
+		remote_user TEXT NOT NULL DEFAULT '',
+		protocol TEXT NOT NULL DEFAULT 'ssh',
+		client_ip TEXT NOT NULL DEFAULT '',
+		user_agent TEXT NOT NULL DEFAULT '',
+		started_at TEXT NOT NULL,
+		ended_at TEXT NOT NULL DEFAULT '',
+		status TEXT NOT NULL DEFAULT 'connecting',
+		exit_code INTEGER DEFAULT NULL,
+		jump_path TEXT NOT NULL DEFAULT '',
+		bytes_out INTEGER NOT NULL DEFAULT 0,
+		bytes_in INTEGER NOT NULL DEFAULT 0)`,
+		"id", "uid", "user_id", "username", "pkey", "share_id", "share_name", "conn_id", "conn_name", "conn_owner_id",
+		"host", "remote_user", "protocol", "client_ip", "user_agent", "started_at", "ended_at", "status", "exit_code",
+		"jump_path", "bytes_out", "bytes_in")
+	ensureTable("session_recordings", `CREATE TABLE IF NOT EXISTS session_recordings (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		session_id INTEGER NOT NULL,
+		format TEXT NOT NULL,
+		path TEXT NOT NULL,
+		size_bytes INTEGER NOT NULL DEFAULT 0,
+		data_bytes INTEGER NOT NULL DEFAULT 0,
+		sha256 TEXT NOT NULL DEFAULT '',
+		duration_ms INTEGER NOT NULL DEFAULT 0,
+		input_recorded INTEGER NOT NULL DEFAULT 0,
+		truncated INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL)`,
+		"id", "session_id", "format", "path", "size_bytes", "data_bytes", "sha256", "duration_ms", "input_recorded", "truncated", "created_at")
+	ensureTable("file_transfers", `CREATE TABLE IF NOT EXISTS file_transfers (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		ts TEXT NOT NULL,
+		user_id INTEGER DEFAULT NULL,
+		username TEXT NOT NULL DEFAULT '',
+		client_ip TEXT NOT NULL DEFAULT '',
+		share_id INTEGER DEFAULT NULL,
+		direction TEXT NOT NULL,
+		src_conn_id INTEGER DEFAULT NULL,
+		src_host TEXT NOT NULL DEFAULT '',
+		src_path TEXT NOT NULL DEFAULT '',
+		dst_conn_id INTEGER DEFAULT NULL,
+		dst_host TEXT NOT NULL DEFAULT '',
+		dst_path TEXT NOT NULL DEFAULT '',
+		size_bytes INTEGER NOT NULL DEFAULT 0,
+		sha256 TEXT NOT NULL DEFAULT '',
+		status TEXT NOT NULL DEFAULT 'ok',
+		error TEXT NOT NULL DEFAULT '')`,
+		"id", "ts", "user_id", "username", "client_ip", "share_id", "direction", "src_conn_id", "src_host", "src_path",
+		"dst_conn_id", "dst_host", "dst_path", "size_bytes", "sha256", "status", "error")
 
 	// Safe migrations (columns added over time)
 	for _, m := range []string{
@@ -496,6 +641,11 @@ func initDB() {
 		`ALTER TABLE share_links ADD COLUMN expires_at TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE share_members ADD COLUMN role TEXT NOT NULL DEFAULT 'operator'`,
 		`ALTER TABLE share_members ADD COLUMN added_at TEXT NOT NULL DEFAULT ''`,
+		// v10.1: audit entries reference connections and terminal sessions, and are hash-chained
+		`ALTER TABLE audit_log ADD COLUMN conn_id INTEGER DEFAULT NULL`,
+		`ALTER TABLE audit_log ADD COLUMN session_id INTEGER DEFAULT NULL`,
+		`ALTER TABLE audit_log ADD COLUMN prev_hash TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE audit_log ADD COLUMN hash TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -505,6 +655,15 @@ func initDB() {
 	for _, q := range []string{
 		`CREATE UNIQUE INDEX IF NOT EXISTS ux_share_members ON share_members(share_id, user_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_audit_ts ON audit_log(ts)`,
+		`CREATE INDEX IF NOT EXISTS ix_audit_user_ts ON audit_log(user_id, ts)`,
+		`CREATE INDEX IF NOT EXISTS ix_audit_conn_ts ON audit_log(conn_id, ts)`,
+		`CREATE INDEX IF NOT EXISTS ix_audit_session ON audit_log(session_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_tsess_user ON terminal_sessions(user_id, started_at)`,
+		`CREATE INDEX IF NOT EXISTS ix_tsess_conn ON terminal_sessions(conn_id, started_at)`,
+		`CREATE INDEX IF NOT EXISTS ix_tsess_started ON terminal_sessions(started_at)`,
+		`CREATE INDEX IF NOT EXISTS ix_recordings_session ON session_recordings(session_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_transfers_ts ON file_transfers(ts)`,
+		`CREATE INDEX IF NOT EXISTS ix_transfers_user ON file_transfers(user_id, ts)`,
 		`CREATE INDEX IF NOT EXISTS ix_collab_share ON collab_messages(share_id, id)`,
 		`CREATE INDEX IF NOT EXISTS ix_share_items ON share_items(share_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_connections_user ON connections(user_id)`,
@@ -513,6 +672,8 @@ func initDB() {
 			log.Printf("Index warning: %v", err)
 		}
 	}
+
+	createAppendOnlyTriggers()
 
 	// Session keepalive: update last_active_at for existing sessions that lack it
 	db.Exec(`UPDATE auth_sessions SET last_active_at = expires_at WHERE last_active_at = ''`)
@@ -1472,8 +1633,8 @@ func transferRemoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	actorID, actorName := srcAccess.actor()
-	auditLogAs(r, actorID, actorName, "file.transfer", srcConn.Name+" → "+dstConn.Name,
-		map[string]interface{}{"files": len(req.SourceFiles), "dest_path": req.DestPath})
+	auditLogRef(r, actorID, actorName, "file.transfer", srcConn.Name+" → "+dstConn.Name,
+		map[string]interface{}{"files": len(req.SourceFiles), "dest_path": req.DestPath, "to_conn_id": dstConn.ID}, auditRef{ConnID: srcConn.ID})
 
 	if isFTP(srcConn) || isFTP(dstConn) {
 		jsonError(w, "FTP not supported for server-to-server transfer", 400)
@@ -1648,6 +1809,16 @@ func transferRemoteHandler(w http.ResponseWriter, r *http.Request) {
 
 		buf := make([]byte, 1024*1024)
 		var written int64
+		sum := sha256.New()
+		logResult := func() {
+			st := "ok"
+			if result.Status != "ok" {
+				st = "failed"
+			}
+			logFileTransfer(r, srcAccess, transferRec{Direction: "s2s", SrcConn: &srcConn, SrcPath: srcPath, DstConn: &dstConn, DstPath: dstPath,
+				Size: written, SHA256: hex.EncodeToString(sum.Sum(nil)), Status: st, Error: result.Error})
+		}
+		defer logResult()
 		lastProgress := time.Now()
 		for {
 			select {
@@ -1670,6 +1841,7 @@ func transferRemoteHandler(w http.ResponseWriter, r *http.Request) {
 					return result
 				}
 				written += int64(nw)
+				sum.Write(buf[:nw])
 				// Send progress every 500ms
 				if time.Since(lastProgress) >= 500*time.Millisecond {
 					sendMsg(map[string]interface{}{
@@ -1682,11 +1854,22 @@ func transferRemoteHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if readErr != nil {
+				if readErr != io.EOF {
+					srcFileObj.Close()
+					dstFileObj.Close()
+					result.Status = "failed"
+					result.Error = "Read error: " + readErr.Error()
+					return result
+				}
 				break
 			}
 		}
 		srcFileObj.Close()
-		dstFileObj.Close()
+		if err := dstFileObj.Close(); err != nil {
+			result.Status = "failed"
+			result.Error = "Write error: " + err.Error()
+			return result
+		}
 
 		if !srcInfo.ModTime().IsZero() {
 			dstSFTP.Chtimes(dstPath, srcInfo.ModTime(), srcInfo.ModTime())

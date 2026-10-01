@@ -1,8 +1,15 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/svg/wrm-lockup-on-dark.svg">
+    <img src="docs/brand/svg/wrm-lockup-on-light.svg" alt="WRM PRO — Web Remote Manager" width="420">
+  </picture>
+</p>
+
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** SSH terminal, SFTP / FTP / FTPS file manager, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, audit log, policies): one self-hosted binary for your PC, server or company.
+**A remote server manager that runs in any web browser.** SSH terminal, SFTP / FTP / FTPS file manager, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.0.1-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Security](SECURITY.md)
+**Current version: v10.1.0-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -33,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v9](#upgrading-from-v9)
+3. [Upgrading from v10.0](#upgrading-from-v100) · [Upgrading from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -50,11 +57,12 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Real-time collaboration](#real-time-collaboration)
    - [Voice calls](#voice-calls)
    - [Settings](#settings)
+   - [Audit log, session recording & file transfers](#audit-log-session-recording--file-transfers)
    - [Admin panel](#admin-panel)
    - [Mobile & responsive UI](#mobile--responsive-ui)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
 7. [Configuration](#configuration)
-8. [Running as a service, reverse proxy & firewall](#running-as-a-service-reverse-proxy--firewall)
+8. [Docker, service, reverse proxy & firewall](#docker-service-reverse-proxy--firewall)
 9. [Security model](#security-model)
 10. [Limitations](#limitations)
 11. [API reference](#api-reference)
@@ -89,22 +97,29 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.0.1-mimo-linux-amd64
-   ./wrm-pro-v10.0.1-mimo-linux-amd64
+   chmod +x wrm-pro-v10.1.0-mimo-linux-amd64
+   ./wrm-pro-v10.1.0-mimo-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.0.1-mimo-windows-amd64.exe
+   .\wrm-pro-v10.1.0-mimo-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.0.1-mimo/wrm-pro-v10.0.1-mimo-android-arm64
-   chmod +x wrm-pro-v10.0.1-mimo-android-arm64 && ./wrm-pro-v10.0.1-mimo-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.1.0-mimo/wrm-pro-v10.1.0-mimo-android-arm64
+   chmod +x wrm-pro-v10.1.0-mimo-android-arm64 && ./wrm-pro-v10.1.0-mimo-android-arm64
    ```
+
+   **Docker**
+   ```bash
+   git clone https://github.com/vedranius/web-browser-RDM-public.git && cd web-browser-RDM-public
+   docker compose up -d          # https://<host>:8080 (self-signed certificate)
+   ```
+   See [Docker](#docker) for details.
 3. Open **http://localhost:8080** (or `http://<server-ip>:8080`). For voice calls from other computers use HTTPS — the quickest way is `HTTPS_SELF_SIGNED=1` (see [Configuration](#configuration)).
 4. **Create the administrator account** (the first account). After that, self-registration is **closed**: the administrator creates accounts in *Admin panel → Users* (or opens registration in *Security policies*).
 5. Click **+ Connection**, enter host, user and password or key, then double-click the connection to open it.
@@ -115,10 +130,21 @@ On the first start WRM creates, next to the database:
 |---|---|
 | `remote_manager.db` | SQLite database (users, connections, shares, audit log). Mode `0600`. |
 | `remote_manager.db.key` | Random 256-bit key that encrypts stored passwords, private keys and 2FA secrets. Mode `0600`. **Back it up separately** — without it stored secrets cannot be decrypted. Or set your own key with `ENCRYPTION_KEY` / `ENCRYPTION_KEY_FILE`. |
+| `recordings/` | Terminal session recordings (`YYYY/MM/<id>.cast.gz`, mode `0600`), created when the first session is recorded. Location: `WRM_RECORDINGS_DIR`. |
 
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.0
+
+Replace the binary. The database is extended automatically (new tables, columns and triggers only — nothing is changed or removed; the previous binary still runs on the upgraded database).
+
+- **Terminal sessions are now recorded by default** (`session_recording`). Users see *“This session is recorded”* and a **● REC** badge on the terminal. Inform your users (in many countries this is required), or turn it off in *Admin panel → Security policies → Session recording*. Keystrokes are **not** recorded unless you turn on *Record keystrokes*.
+- Recordings use disk space next to the database (`recordings/`, typically a few KB to a few MB per session; limit per session `recording_max_mb`, kept `recording_retention_days` = 90 days). Back up or exclude that folder as you need.
+- The audit log is now **append-only and hash-chained**. *Admin panel → Audit log → Verify integrity* checks it. Entries written before the upgrade have no hash and are skipped by the check.
+- Every upload, download (also files opened in the editor and files in ZIP downloads) and server-to-server copy is logged in *Admin panel → File transfers* with size and SHA-256.
+- New: `/healthz` for load balancers and monitoring, `wrm -healthcheck` for container health checks, a `Dockerfile` and `docker-compose.yml`.
 
 ## Upgrading from v9
 
@@ -349,6 +375,19 @@ Join the call with **🎙 Join voice** in the collaboration bar. It works like D
 - **Private:** audio is end-to-end encrypted (DTLS-SRTP); the relay cannot decrypt it.
 - Browsers allow the microphone only on **HTTPS** pages (or `localhost`). Up to about 12 people per call work well (mesh); the limit is a policy.
 
+### Audit log, session recording & file transfers
+
+WRM keeps a complete, tamper-evident record of who did what, where and when:
+
+- **Audit log** (*Admin panel → Audit log*): sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers and changes, host keys, exports, viewing of recordings. Entries are linked to the **connection** and the **terminal session** (click **▶ #id** to open the session). Filter by text, event type, user and date range; **CSV export**; **Verify integrity**.
+- **Append-only and tamper-evident:** the database refuses to change audit entries, file transfer records and recordings, and to delete anything younger than 7 days. Old entries are removed only by the retention job (`audit_retention_days`, `recording_retention_days`). Every entry contains the SHA-256 of the previous one (**hash chain**), so a changed or removed entry is detected by *Verify integrity*. Every entry is also written as an `AUDIT …` line to the server log (journald/syslog → SIEM).
+- **Terminal sessions** (*Admin panel → Sessions & recordings*; every user sees their own in *Settings → Session history*): who, from which IP, which server and remote user, when, how long, how it ended (closed, connection lost, ended by an administrator, interrupted by a server restart).
+- **Session recording:** the output of every SSH terminal is recorded in the open **asciinema** format (asciicast v2), compressed, with its SHA-256 stored in the database. **▶ Replay** in the browser — play/pause, seek, speed 0.5–16×, *skip idle time* — or **⬇ download** the `.cast` file and play it with `asciinema play`. The user sees *“This session is recorded”* and a **● REC** badge.
+  - **No passwords in recordings:** servers do not echo passwords, so they never appear in the output. Keystrokes are recorded only when an administrator turns on *Record keystrokes*, and typing at password, passphrase and PIN prompts is masked.
+  - Recording never slows the terminal (written in the background); a size limit per session stops recording (not the terminal).
+  - **Who can see recordings:** administrators all; users their own sessions and sessions of other people on **their** connections (e.g. guests of a share). Viewing or downloading a recording is itself recorded in the audit log.
+- **File transfers** (*Admin panel → File transfers*): every upload, download (including files opened in the editor and every file of a ZIP download) and server-to-server copy with source, destination, size, **SHA-256** and status; CSV export.
+
 ### Settings
 
 **⚙ Settings** in the top bar has tabs:
@@ -359,6 +398,7 @@ Join the call with **🎙 Join voice** in the collaboration bar. It works like D
 | Terminal | Font size, scrollback, auto-reconnect |
 | Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
 | Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
+| Session history | Your terminal sessions and sessions on your connections, with replay and `.cast` download |
 | Data | Export connections (without secrets), export **with** passwords & keys (asks for your password; policy), import |
 
 Personal preferences are stored per browser; everything security-related is stored on the server.
@@ -370,10 +410,12 @@ Personal preferences are stored per browser; everything security-related is stor
 - **Overview:** version, uptime, users (admins, 2FA), HTTPS, voice relay status, encryption key source, **security warnings** (no HTTPS, open registration, admins without 2FA, host keys off…), **open terminals** (who, which server, from which IP — with *End*), **live rooms** (participants, voice, shared terminals).
 - **Users:** create users (temporary password generated if you leave it empty), display name, make/remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete (with everything the user owns). The last active administrator cannot be removed.
 - **Shares:** every share on the server — pause/resume or delete.
-- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit retention.
+- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit).
 - **Voice & network:** voice on/off, participants per call, built-in TURN relay (port, public IP, host name, relay ports, private networks), additional STUN/TURN servers.
 - **Host keys:** remembered SSH host keys and FTPS certificates; forget an entry after a server was reinstalled.
-- **Audit log:** searchable and filterable (sign-ins, admin actions, connections, shares, collaboration, terminals, files, host keys, export/import), **CSV export**.
+- **Audit log:** searchable and filterable (event type, user, date range), linked to sessions, **CSV export**, **Verify integrity** (hash chain).
+- **Sessions & recordings:** every terminal session, with replay and `.cast` download.
+- **File transfers:** every transferred file with size and SHA-256, CSV export.
 
 Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g. for configuration management; it is then shown locked in the admin panel.
 
@@ -422,6 +464,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `HTTPS_CERT_FILE` + `HTTPS_KEY_FILE` | – | Serve HTTPS with this certificate and key (HSTS is sent). |
 | `HTTPS_SELF_SIGNED` | – | `1` = create and use a self-signed certificate (`wrm-selfsigned.crt/.key` next to the database). Browsers warn once; good for LANs and voice calls without a CA. |
 | `HTTPS_SELF_SIGNED_HOSTS` | – | Extra host names/IPs for the self-signed certificate, comma-separated. |
+| `WRM_RECORDINGS_DIR` | `<DB dir>/recordings` | Where session recordings are stored |
 | `WRM_TRUST_PROXY` | – | `1` = trust `X-Real-IP` / `X-Forwarded-For` / `X-Forwarded-Proto` / `X-Forwarded-Host` from your reverse proxy (client IPs in rate limits and audit, secure cookies). Only when WRM is reachable **only** through that proxy. |
 | `WRM_ALLOWED_ORIGINS` | – | Extra hostnames allowed as `Origin` (comma-separated), e.g. when a proxy rewrites the `Host` header |
 | `WRM_ALLOW_ANY_ORIGIN` | – | `1` disables the origin check (not recommended) |
@@ -452,7 +495,12 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `turn_relay_ports` | `49152-65535` | UDP port range for relayed audio |
 | `turn_allow_private` | `0` | allow relaying to private/loopback networks |
 | `ice_servers` | Google + Cloudflare STUN | additional STUN/TURN servers (JSON) |
-| `audit_retention_days` | `365` | how long audit log and chat history are kept |
+| `audit_enabled` | `1` | record security events (administrator actions are always recorded). Also `AUDIT_ENABLED` |
+| `audit_retention_days` | `365` | how long audit log, file transfers and chat history are kept (minimum 7) |
+| `session_recording` | `1` | record terminal sessions. Also `SESSION_RECORDING_ENABLED` |
+| `session_recording_input` | `0` | also record keystrokes (masked at password prompts) |
+| `recording_retention_days` | `90` | how long recordings are kept (minimum 7) |
+| `recording_max_mb` | `100` | maximum recording size per session (0 = unlimited) |
 
 **Command line**
 
@@ -460,11 +508,31 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 wrm -version                       print the version
 wrm -reset-password USER           set a new temporary password (must be changed at sign-in)
 wrm -reset-password USER -reset-2fa  … and turn off two-factor authentication
+wrm -healthcheck                   check /healthz of the local server (exit code 0 = healthy; for containers)
 ```
+
+`GET /healthz` (no sign-in) returns `{"status":"ok","version":…}` while the server and its database work, otherwise HTTP 503. Use it for load balancers and monitoring.
 
 ---
 
-## Running as a service, reverse proxy & firewall
+## Docker, service, reverse proxy & firewall
+
+### Docker
+
+The repository contains a `Dockerfile` (static binary on Alpine, runs as an unprivileged user, data in the volume `/data`, built-in health check) and a `docker-compose.yml`:
+
+```bash
+docker compose up -d                       # build and start
+WRM_TURN_PUBLIC_IP=203.0.113.10 docker compose up -d   # with voice relay: the IPv4 browsers reach this host at
+```
+
+Images of releases are also published to the GitHub Container Registry: `docker run -d -p 8080:8080 -v wrm-data:/data ghcr.io/vedranius/wrm-pro:latest`.
+
+- `/data` holds the database, the encryption key (`remote_manager.db.key`), recordings and the self-signed certificate. Back up the volume and keep a **separate** copy of the key — or provide your own key as a Docker secret (`ENCRYPTION_KEY_FILE=/run/secrets/…`, see the comments in `docker-compose.yml`).
+- The compose file enables `HTTPS_SELF_SIGNED=1`. Behind a TLS reverse proxy remove it and set `WRM_TRUST_PROXY=1`.
+- Voice relay from a container needs `WRM_TURN_PUBLIC_IP` and the published relay ports (`49160-49200/udp`, matching `WRM_TURN_RELAY_PORTS`).
+
+### Service
 
 **systemd (Linux)**, e.g. `/etc/systemd/system/wrm.service`:
 
@@ -479,7 +547,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.0.1-mimo-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.1.0-mimo-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -534,7 +602,8 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Sharing:** four roles enforced server-side on every file operation, terminal and room action; members-only / signed-in / guest modes; signed password cookies (invalidated when the password changes); expiry, pause and link rotation; bans; immediate revocation of open terminals and room connections.
 - **Collaboration:** server-assigned identities, per-client send queues (a slow client cannot stall a room), message rate limits and size limits, terminal data only to watchers, keystrokes only to the granting sharer, file downloads never rendered inline.
 - **Voice:** WebRTC with DTLS-SRTP; the built-in TURN relay accepts only short-lived HMAC credentials issued to room participants, limits allocations, and refuses private/loopback/link-local peers by default (no pivoting into internal networks).
-- **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminals, file changes, host keys, exports — stored in the database and written as `AUDIT …` lines to the server log (journald/syslog → SIEM).
+- **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers (with SHA-256) and changes, host keys, exports, viewing of recordings — stored **append-only** and **hash-chained** in the database (verifiable) and written as `AUDIT …` lines to the server log (journald/syslog → SIEM). Secrets in audit details are redacted.
+- **Session recording:** terminal output in asciicast v2, gzip, mode `0600`, SHA-256 in the database; no keystrokes unless enabled (then masked at password prompts); visible to administrators, the session's user and the connection's owner; every view is audited.
 - **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
 
 ---
@@ -627,14 +696,25 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/admin/terminals/{id}/kill` | End a terminal |
 | GET | `/api/admin/shares` | All shares |
 | GET / DELETE | `/api/admin/known-hosts[/{id}]` | Host keys |
-| GET | `/api/admin/audit?q&action&user&from&to&before_id&limit[&format=csv]` | Audit log |
+| GET | `/api/admin/audit?q&action&user&conn&session&from&to&before_id&limit[&format=csv]` | Audit log |
+| GET | `/api/admin/audit/verify` | Verify the hash chain `{ok, checked, first_id, last_id, unsigned, broken_at, reason}` |
+| GET | `/api/admin/transfers?q&user&conn&direction&from&to&before_id&limit[&format=csv]` | File transfers |
 | GET | `/api/version` | Server version |
+| GET | `/healthz` | Health check (no sign-in) |
+
+**Terminal sessions & recordings** (administrators: all; users: own sessions and sessions on their connections)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/recordings?mine&q&user&conn&host&status&from&to&before_id&limit` | Terminal sessions with recording info |
+| GET | `/api/recordings/{id}` | One session and its audit entries |
+| GET | `/api/recordings/{id}/cast[?download=1]` | The recording as asciicast v2 (`application/x-asciicast`) |
 
 **WebSockets**
 
 | Endpoint | Description |
 |---|---|
-| `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping` → server; `status`, `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
+| `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping` → server; `status` (with `recording`, `session_id`), `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
 | `/ws/events` | Live notifications for the signed-in user (`sessions_changed`) |
 | `/ws/share/{token}` | Collaboration room. Client → server: `chat`, `file`, `set-name`, `screen` (`start/stop/data/resize/snapshot`), `watch`, `unwatch`, `control-request/grant/revoke/release`, `remote-input`, `voice-join/leave/signal/state`, `hand`, `mod` (`set-role/mute/unmute/stop-share/lower-hand/kick/ban`). Server → client: `welcome`, `participants`, `chat`, `file`, `system`, `screen`, `watch-request`, `control`, `control-request`, `remote-input`, `voice-peers/joined/left/signal`, `force-mute`, `role`, `kicked`, `closed`, `error` |
 
@@ -663,7 +743,8 @@ remote-manager/
   users.go        sign-in, 2FA step, sessions, password change, account administration
   totp.go         TOTP (RFC 6238), QR code, recovery codes
   settings.go     admin policies (database + WRM_<KEY> environment overrides)
-  audit.go        audit log, CSV export, retention
+  audit.go        audit log (hash chain, append-only triggers), CSV export, integrity check, retention
+  recording.go    terminal sessions, asciicast recorder, file transfer log, recordings & transfers API
   hostkeys.go     SSH host key verification (TOFU/strict), FTPS certificate pinning
   shares.go       sharing model: access modes, roles, members, participants, authorization
   collab.go       collaboration rooms: presence, chat, terminal sharing, control, voice signalling, moderation
@@ -677,12 +758,17 @@ remote-manager/
   helpers.go      origin check, login rate limiting, shared helpers
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
   upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs)
+  integration_test.go  in-process SSH/SFTP server: connect → audit → recording, transfers, append-only audit
   static/index.html          the entire web UI (embedded into the binary)
+  static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
-.github/workflows/build.yml  CI: vet, gofmt, tests (race), JS syntax check, builds all platforms, releases on tags
+.github/workflows/build.yml  CI: vet, gofmt, tests (race), JS syntax check, builds all platforms, Docker image, releases on tags
+Dockerfile, docker-compose.yml  container image and one-command deployment
+ARCHITECTURE.md              how WRM is built; extension plan status and touch points
+docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favicon, social preview)
 ```
 
-**CI/CD:** every push builds all 13 targets. Pushing a tag `v*` creates a GitHub Release with all binaries, a macOS universal binary and `SHA256SUMS.txt`.
+**CI/CD:** every push builds all 13 targets and the Docker image. Pushing a tag `v*` creates a GitHub Release with all binaries, a macOS universal binary and `SHA256SUMS.txt`, and publishes the image `ghcr.io/vedranius/wrm-pro`.
 
 ---
 
@@ -697,6 +783,9 @@ remote-manager/
 | Registration tab missing | Self-registration is closed (default). An administrator creates accounts, or opens registration in *Security policies* |
 | Locked out as administrator | `wrm -reset-password <user>` (add `-reset-2fa` if needed) |
 | *Connection failed: unable to authenticate* | Check user/password/key with **Test connection**; for *Key file*/*Auto* the key must exist on the **WRM server** and the account must be an administrator (or the policy allows it) |
+| No *● REC* badge / no recordings | *Admin panel → Security policies → Session recording* is off, or forced off by `WRM_SESSION_RECORDING` / `SESSION_RECORDING_ENABLED`. Check the server log for `recording:` errors (e.g. the recordings folder is not writable) |
+| Recordings take too much disk space | Lower `recording_retention_days` or `recording_max_mb`, or move them with `WRM_RECORDINGS_DIR` |
+| *Verify integrity* reports a broken chain | An audit entry was changed or removed outside WRM (directly in the database). Restore the database from a backup and investigate who had access to the server |
 | Stored passwords stopped working after a restart | The encryption key changed (`ENCRYPTION_KEY`, `ENCRYPTION_KEY_FILE` or the `.key` file next to the database). Restore it, or re-enter the passwords |
 | *File contents* search fails | The server needs `grep` and a POSIX shell; use *File names* search instead |
 | Uploads fail at a certain size | The administrator's upload limit (`max_upload_mb`) or nginx `client_max_body_size` |
