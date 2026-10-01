@@ -65,7 +65,11 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		defer wsMu.Unlock()
 		ws.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(code, truncateStr(reason, 120)), time.Now().Add(2*time.Second))
 	}
+	var ta *termAudit // audit trail of this terminal (created once the connection is known)
 	fail := func(msg string) {
+		if ta != nil {
+			ta.failed(msg)
+		}
 		printTerm("\r\n\x1b[31m" + msg + "\x1b[0m\r\n")
 		sendCtl(map[string]interface{}{"type": "error", "message": msg})
 		closeWS(wsCloseConnectFailed, msg)
@@ -86,6 +90,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		fail("FTP connections do not support a terminal. Use the File Manager instead.")
 		return
 	}
+	ta = startTerminalSession(r, acc, c)
 	am, err := buildAuthMethods(c)
 	if err != nil {
 		fail("Auth error: " + err.Error())
@@ -117,9 +122,13 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	if acc.Share != nil {
 		ts.ShareID, ts.Share, ts.PKey, ts.Ctx = acc.Share.Share.ID, acc.Share.Share.Name, acc.Share.PKey, acc.Share.Ctx
 	}
+	var endStatus atomic.Value
+	endStatus.Store("closed")
+	var finalExit *int
 	var killOnce sync.Once
 	ts.kill = func(reason string) {
 		killOnce.Do(func() {
+			endStatus.Store("killed")
 			printTerm("\r\n\x1b[31m" + reason + "\x1b[0m\r\n")
 			sendCtl(map[string]interface{}{"type": "error", "message": reason})
 			wsMu.Lock()
@@ -131,10 +140,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	registerTerminal(ts)
 	defer unregisterTerminal(ts.ID)
-	auditLogAs(r, actorID, actorName, "terminal.open", c.Name, map[string]interface{}{"host": c.Host, "user": c.Username, "share": ts.Share})
-	defer func() {
-		auditLogAs(r, actorID, actorName, "terminal.close", c.Name, map[string]interface{}{"host": c.Host, "minutes": int(time.Since(ts.Started).Minutes())})
-	}()
+	defer func() { ta.end(endStatus.Load().(string), finalExit) }()
 
 	session, err := sshClient.NewSession()
 	if err != nil {
@@ -215,6 +221,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 					case "resize":
 						if ctl.Cols > 0 && ctl.Rows > 0 && ctl.Cols < 2000 && ctl.Rows < 1000 {
 							session.WindowChange(ctl.Rows, ctl.Cols)
+							ta.resize(ctl.Cols, ctl.Rows)
 							sizeOnce.Do(func() { close(gotSize) })
 						}
 					case "pause":
@@ -240,6 +247,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		for {
 			select {
 			case msg := <-stdinCh:
+				ta.input(msg)
 				if _, err := sshIn.Write(msg); err != nil {
 					return
 				}
@@ -264,7 +272,11 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("SSH connected: %s@%s", c.Username, c.Host)
-	sendCtl(map[string]interface{}{"type": "status", "state": "connected", "host": c.Host})
+	recorded := ta.connected(cols, rows, term)
+	if recorded {
+		printTerm("\x1b[2m● This session is recorded.\x1b[0m\r\n")
+	}
+	sendCtl(map[string]interface{}{"type": "status", "state": "connected", "host": c.Host, "recording": recorded, "session_id": ta.ID})
 
 	// ── Output pump ──
 	outDone := make(chan struct{})
@@ -286,6 +298,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			n, err := src.Read(buf)
 			if n > 0 {
+				ta.output(buf[:n])
 				if writeWS(websocket.BinaryMessage, buf[:n]) != nil {
 					finish()
 					return
@@ -355,10 +368,13 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 			sshLost.Store(true)
 		}
 		if sshLost.Load() {
+			endStatus.Store("lost")
 			printTerm("\r\n\x1b[31mSSH connection to the server was lost.\x1b[0m\r\n")
 			sendCtl(map[string]interface{}{"type": "exit", "lost": true})
 			closeWS(wsCloseSSHLost, "SSH connection lost")
 		} else {
+			code := exitCode
+			finalExit = &code
 			sendCtl(map[string]interface{}{"type": "exit", "code": exitCode})
 			closeWS(websocket.CloseNormalClosure, "session ended")
 		}

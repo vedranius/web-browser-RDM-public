@@ -18,6 +18,7 @@ import (
 // Every setting can also be forced with an environment variable WRM_<KEY IN UPPER CASE>
 // (e.g. WRM_REGISTRATION=open). A setting forced by the environment is shown as locked
 // in the admin panel and cannot be changed there — useful for configuration management.
+// Some settings also accept a shorter alias (e.g. AUDIT_ENABLED).
 
 type settingSpec struct {
 	Key     string   `json:"key"`
@@ -27,6 +28,7 @@ type settingSpec struct {
 	Min     int      `json:"min,omitempty"`
 	Max     int      `json:"max,omitempty"`
 	Restart bool     `json:"-"`
+	Alias   string   `json:"-"` // additional environment variable name
 }
 
 var settingSpecs = []settingSpec{
@@ -54,8 +56,13 @@ var settingSpecs = []settingSpec{
 	{Key: "turn_host", Default: "", Kind: "string"},
 	{Key: "turn_relay_ports", Default: "49152-65535", Kind: "string", Restart: true},
 	{Key: "turn_allow_private", Default: "0", Kind: "bool", Restart: true},
-	// Audit
+	// Audit & session recording
+	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
+	{Key: "session_recording", Default: "1", Kind: "bool", Alias: "SESSION_RECORDING_ENABLED"},
+	{Key: "session_recording_input", Default: "0", Kind: "bool"},
+	{Key: "recording_retention_days", Default: "90", Kind: "int", Min: 7, Max: 3650},
+	{Key: "recording_max_mb", Default: "100", Kind: "int", Min: 0, Max: 102400},
 }
 
 var settingsStore = struct {
@@ -74,6 +81,19 @@ func settingSpecFor(key string) (settingSpec, bool) {
 
 func settingEnvName(key string) string { return "WRM_" + strings.ToUpper(key) }
 
+// settingEnv returns the environment override of a setting and the variable it came from.
+func settingEnv(key string) (string, string) {
+	if v := os.Getenv(settingEnvName(key)); v != "" {
+		return v, settingEnvName(key)
+	}
+	if s, ok := settingSpecFor(key); ok && s.Alias != "" {
+		if v := os.Getenv(s.Alias); v != "" {
+			return v, s.Alias
+		}
+	}
+	return "", ""
+}
+
 // loadAppSettings reads every stored setting into memory (called once at startup).
 func loadAppSettings() {
 	rows, err := db.Query(`SELECT key, value FROM app_settings`)
@@ -91,9 +111,9 @@ func loadAppSettings() {
 		}
 	}
 	for _, s := range settingSpecs {
-		if env := os.Getenv(settingEnvName(s.Key)); env != "" {
+		if env, name := settingEnv(s.Key); env != "" {
 			if _, err := validateSetting(s, env); err != nil {
-				log.Printf("WARNING: ignoring %s=%q: %v", settingEnvName(s.Key), env, err)
+				log.Printf("WARNING: ignoring %s=%q: %v", name, env, err)
 			}
 		}
 	}
@@ -103,7 +123,7 @@ func loadAppSettings() {
 func getSetting(key string) string {
 	s, known := settingSpecFor(key)
 	if known {
-		if env := os.Getenv(settingEnvName(key)); env != "" {
+		if env, _ := settingEnv(key); env != "" {
 			if v, err := validateSetting(s, env); err == nil {
 				return v
 			}
@@ -129,7 +149,10 @@ func settingInt(key string) int {
 	return n
 }
 
-func settingLocked(key string) bool { return os.Getenv(settingEnvName(key)) != "" }
+func settingLocked(key string) bool {
+	env, _ := settingEnv(key)
+	return env != ""
+}
 
 func validateSetting(s settingSpec, v string) (string, error) {
 	v = strings.TrimSpace(v)
@@ -202,8 +225,8 @@ func setSetting(key, value string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("unknown setting %q", key)
 	}
-	if settingLocked(key) {
-		return "", fmt.Errorf("%s is set by the environment variable %s", key, settingEnvName(key))
+	if _, name := settingEnv(key); name != "" {
+		return "", fmt.Errorf("%s is set by the environment variable %s", key, name)
 	}
 	v, err := validateSetting(s, value)
 	if err != nil {
@@ -243,10 +266,14 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		out := []map[string]interface{}{}
 		for _, s := range settingSpecs {
+			envName := settingEnvName(s.Key)
+			if _, name := settingEnv(s.Key); name != "" {
+				envName = name
+			}
 			out = append(out, map[string]interface{}{
 				"key": s.Key, "value": getSetting(s.Key), "default": s.Default, "kind": s.Kind,
 				"enum": s.Enum, "min": s.Min, "max": s.Max, "locked": settingLocked(s.Key),
-				"env": settingEnvName(s.Key), "restart": s.Restart,
+				"env": envName, "restart": s.Restart,
 			})
 		}
 		jsonOK(w, out)
