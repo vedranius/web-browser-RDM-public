@@ -25,7 +25,7 @@ Please include:
 
 You will get an answer as soon as possible, usually within a week. Once a fix is released, the release notes credit you if you want. Please give a reasonable time to release a fix before you publish anything.
 
-**In scope:** the WRM server, web UI and container image in this repository. For example: authentication and 2FA bypass, privilege escalation between users or share roles, access to stored secrets or to other people's session recordings, changing or deleting audit records without detection, cross-site scripting or request forgery, reaching servers or networks you should not reach (the TURN relay included), and denial of service with small effort.
+**In scope:** the WRM server, web UI and container image in this repository. For example: authentication and 2FA bypass, privilege escalation between users or share roles, access to stored secrets or to other people's session recordings, changing or deleting audit records without detection, cross-site scripting or request forgery, reaching servers or networks you should not reach (the TURN relay, SSH tunnels and jump hosts included — e.g. using another user's jump host or tunnel, or bypassing the tunnel policies), and denial of service with small effort.
 
 **Out of scope:** problems that need an administrator account or access to the server's files, missing HTTPS when the operator did not configure it, social engineering, reports from automated scanners that come without a working attack, and vulnerabilities in the servers you connect to.
 
@@ -62,6 +62,15 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Set `allow_link_shares=0` if guests without an account must not join shares.
 - [ ] Prefer **Members only** shares with the lowest role that is enough (*Viewer* to look at files, *Observer* for calls and watching). Give shares an expiry date.
 
+**SSH tunnels and jump hosts**
+
+- [ ] Decide who may use tunnels: `tunnel_users=admins`, or `tunnels_enabled=0` if nobody needs them (`WRM_TUNNELS_ENABLED=0`). Tunnels reach whatever the SSH servers reach; they are as powerful as the SSH accounts behind them.
+- [ ] Keep `tunnel_bind_any=0` and `tunnel_remote_forward=admins` (the defaults). A tunnel on `0.0.0.0` or a network address is **not protected by WRM sign-in**: anyone who reaches that port uses the tunnel. If an administrator opens one, restrict it with the host firewall.
+- [ ] When WRM runs on a shared server, remember that `127.0.0.1` tunnel ports are reachable by **every local user and process** of that server. Run WRM on a dedicated host or container, or limit tunnels to administrators.
+- [ ] Set `tunnel_idle_minutes` so forgotten manual tunnels close themselves, and review running tunnels in *Admin panel → Overview*.
+- [ ] On the bastions, allow only the forwarding you need (`AllowTcpForwarding`, `PermitOpen`, `GatewayPorts no`), as you would for OpenSSH clients.
+- [ ] Watch for `tunnel.start`, `tunnel.error`, `tunnel.configured` and `web.open` events in the audit log.
+
 **Audit trail and session recording**
 
 - [ ] Keep the audit log on (`audit_enabled`, the default). Run *Admin panel → Audit log → 🔏 Verify integrity* regularly, and after any incident. A broken chain means that someone changed the database directly.
@@ -73,9 +82,9 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
 - [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
-- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*` and `share.*` events.
+- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*` and `tunnel.*` events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
 
 ## How WRM protects your data
 
-The [Security model](README.md#security-model) section of the README describes the protections in detail: accounts, sessions, encryption of stored secrets, web security headers, host key verification, share roles, collaboration, voice and TURN relay, and the audit log.
+The [Security model](README.md#security-model) section of the README describes the protections in detail: accounts, sessions, encryption of stored secrets, web security headers, host key verification, jump hosts and tunnels, share roles, collaboration, voice and TURN relay, and the audit log.
