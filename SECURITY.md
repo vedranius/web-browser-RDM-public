@@ -73,6 +73,7 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Give shared credentials a **host list** (`Only for hosts`): a password is sent to the server at login, so without one a colleague could send it to a server of their own. With a host list, the people it is shared with can only use matching hosts and jump hosts.
 - [ ] Prefer keys (deploy them with WRM) over shared passwords, and **revoke** keys of people who leave — *Who has access* shows what is left on a server.
 - [ ] Keep `allow_secret_export` off if users should not be able to export private keys or show vault passwords (administrators always can; every export is audited).
+- [ ] Use a **read-only** NetBox token for inventory imports; a remembered token is stored encrypted, but anyone with the WRM account can use it to read NetBox.
 - [ ] Set a rotation reminder on shared passwords and rotate them when a colleague leaves; check the audit log for `credential.rotation_incomplete`.
 
 **Remote desktop (RDP / VNC / Telnet)**
