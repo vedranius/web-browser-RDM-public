@@ -98,6 +98,10 @@ func dialFTP(c Connection) (*ftp.ServerConn, func(), error) {
 			via.Close()
 		}
 	}
+	if c.authErr != "" {
+		closeVia()
+		return nil, nil, errors.New(c.authErr)
+	}
 	fc, err := ftp.Dial(c.Host, opts...)
 	if err != nil {
 		closeVia()
