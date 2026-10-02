@@ -47,8 +47,9 @@ Code layout:
 | `ssh_ws.go`, `files.go`, `sftp_pool.go`, `search.go`, `conntest.go`, `hostkeys.go` | Terminal, file manager, SFTP connection pool, search, connection test, host key verification |
 | `jump.go`, `tunnels.go` | Jump hosts (dialing through chains of SSH connections), SSH tunnels (local / remote / SOCKS5), tunnels API, web interface connections |
 | `importers.go` | Import from mRemoteNG `confCons.xml` and OpenSSH config |
+| `snippets.go`, `status.go` | Snippets and run on connect; live up/down status monitor |
 | `static/index.html` | The whole web UI (embedded into the binary); `static/vendor/` holds xterm.js and fonts, `static/brand/` the logo and icons |
-| `*_test.go` | `security_test.go` and `upgrade_test.go` (unit), `integration_test.go` (in-process SSH/SFTP server: connect → audit → recording, transfers), `tunnels_test.go` (jump hosts, tunnels, web interfaces), `importers_test.go` (mRemoteNG, OpenSSH config) |
+| `*_test.go` | `security_test.go` and `upgrade_test.go` (unit), `integration_test.go` (in-process SSH/SFTP server: connect → audit → recording, transfers), `tunnels_test.go` (jump hosts, tunnels, web interfaces), `importers_test.go` (mRemoteNG, OpenSSH config), `snippets_test.go`, `status_test.go` |
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the parts fit together and where planned features belong.
 
