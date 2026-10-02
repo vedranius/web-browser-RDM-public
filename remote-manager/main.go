@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.5.0"
+var AppVersion = "v10.6.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -65,13 +65,14 @@ type Connection struct {
 	Options    map[string]string `json:"options,omitempty"` // RDP/VNC/Telnet options (nil = unchanged)
 	UserID     int               `json:"-"`
 	// KEY_REF logs in with a key of the key store, CREDENTIAL with a vault credential.
-	KeyID         *int   `json:"key_id,omitempty"`
-	CredentialID  *int   `json:"credential_id,omitempty"`
-	KeyRef        string `json:"key_ref,omitempty"`        // export / import: name of the key
-	CredentialRef string `json:"credential_ref,omitempty"` // export / import: name of the credential
-	authErr       string // why the key or credential cannot be used (set by resolveConnectionAuth)
-	usedKeyID     int    // stored key the connection logs in with (after resolving)
-	usedCredID    int    // vault credential it logs in with (after resolving)
+	KeyID         *int     `json:"key_id,omitempty"`
+	CredentialID  *int     `json:"credential_id,omitempty"`
+	Tags          []string `json:"tags,omitempty"`           // nil = unchanged (PUT)
+	KeyRef        string   `json:"key_ref,omitempty"`        // export / import: name of the key
+	CredentialRef string   `json:"credential_ref,omitempty"` // export / import: name of the credential
+	authErr       string   // why the key or credential cannot be used (set by resolveConnectionAuth)
+	usedKeyID     int      // stored key the connection logs in with (after resolving)
+	usedCredID    int      // vault credential it logs in with (after resolving)
 }
 
 type connView struct {
@@ -96,24 +97,30 @@ type connView struct {
 	CredID      *int              `json:"credential_id,omitempty"`
 	CredName    string            `json:"credential_name,omitempty"`
 	CredUser    string            `json:"credential_user,omitempty"`
+	Tags        []string          `json:"tags"`
+	Source      string            `json:"source,omitempty"` // inventory it was imported from ("netbox")
 }
 
 func (c Connection) view() connView {
 	v := connView{ID: c.ID, Name: c.Name, Protocol: c.Protocol, Host: c.Host, Username: c.Username, AuthMethod: c.AuthMethod,
 		KeyPath: c.KeyPath, FolderID: c.FolderID, JumpID: c.JumpID, WebPath: c.WebPath, HasPassword: c.Password != "", HasKey: c.PrivateKey != "",
-		KeyID: c.KeyID, CredID: c.CredentialID}
+		KeyID: c.KeyID, CredID: c.CredentialID, Tags: []string{}}
 	if c.JumpID != nil && *c.JumpID > 0 {
 		v.Route = jumpPath(c)
 	}
 	v.Monitor = true
 	if c.ID > 0 {
 		var mon int
-		var opts string
+		var opts, tags, ext string
 		if db.QueryRow(`SELECT (SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?), COALESCE(monitor,1), COALESCE(options,''),
 			COALESCE((SELECT name FROM ssh_keys WHERE id=connections.key_id),''), COALESCE((SELECT name FROM credentials WHERE id=connections.credential_id),''),
-			COALESCE((SELECT username FROM credentials WHERE id=connections.credential_id),'') FROM connections WHERE id=?`, c.ID, c.ID).
-			Scan(&v.Tunnels, &mon, &opts, &v.KeyName, &v.CredName, &v.CredUser) == nil {
+			COALESCE((SELECT username FROM credentials WHERE id=connections.credential_id),''), COALESCE(tags,''), COALESCE(ext_id,'') FROM connections WHERE id=?`, c.ID, c.ID).
+			Scan(&v.Tunnels, &mon, &opts, &v.KeyName, &v.CredName, &v.CredUser, &tags, &ext) == nil {
 			v.Monitor = mon == 1
+			v.Tags = parseTags(tags)
+			if i := strings.IndexByte(ext, ':'); i > 0 {
+				v.Source = ext[:i]
+			}
 			if opts != "" && opts != "{}" {
 				json.Unmarshal([]byte(opts), &v.Options)
 			}
@@ -267,6 +274,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
 	mux.HandleFunc("/api/status", apiStatusHandler)
 	mux.HandleFunc("/api/status/check", apiStatusHandler)
+	mux.HandleFunc("/api/inventory/", apiInventoryHandler)
 	mux.HandleFunc("/api/keys", apiKeysHandler)
 	mux.HandleFunc("/api/keys/", apiKeysHandler)
 	mux.HandleFunc("/api/credentials", apiCredentialsHandler)
@@ -765,6 +773,17 @@ func initDB() {
 		PRIMARY KEY (credential_id, user_id))`,
 		"credential_id", "user_id")
 
+	// v10.6: inventory sources (NetBox address and encrypted token per user)
+	ensureTable("inventory_sources", `CREATE TABLE IF NOT EXISTS inventory_sources (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		kind TEXT NOT NULL DEFAULT '',
+		url TEXT NOT NULL DEFAULT '',
+		token TEXT NOT NULL DEFAULT '',
+		options TEXT NOT NULL DEFAULT '',
+		last_sync_at TEXT NOT NULL DEFAULT '')`,
+		"id", "user_id", "kind", "url", "token", "options", "last_sync_at")
+
 	// Safe migrations (columns added over time)
 	for _, m := range []string{
 		`ALTER TABLE connections ADD COLUMN user_id INTEGER DEFAULT NULL`,
@@ -814,6 +833,10 @@ func initDB() {
 		// v10.5: logins from the SSH key store and the credentials vault
 		`ALTER TABLE connections ADD COLUMN key_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE connections ADD COLUMN credential_id INTEGER DEFAULT NULL`,
+		// v10.6: tags and the id in a source inventory (NetBox)
+		`ALTER TABLE connections ADD COLUMN tags TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE connections ADD COLUMN ext_id TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE connections ADD COLUMN ext_tags TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -837,6 +860,7 @@ func initDB() {
 		`CREATE INDEX IF NOT EXISTS ix_ssh_keys_user ON ssh_keys(user_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_credentials_owner ON credentials(owner_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_conn_credential ON connections(credential_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_conn_ext ON connections(user_id, ext_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_collab_share ON collab_messages(share_id, id)`,
 		`CREATE INDEX IF NOT EXISTS ix_share_items ON share_items(share_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_connections_user ON connections(user_id)`,
@@ -1057,7 +1081,7 @@ func isWeb(c Connection) bool {
 }
 
 func loadUserConnections(userID int) []Connection {
-	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path,key_id,credential_id FROM connections WHERE user_id=? ORDER BY name`, userID)
+	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path,key_id,credential_id,COALESCE(tags,'') FROM connections WHERE user_id=? ORDER BY name`, userID)
 	conns := []Connection{}
 	if err != nil {
 		return conns
@@ -1065,7 +1089,9 @@ func loadUserConnections(userID int) []Connection {
 	defer rows.Close()
 	for rows.Next() {
 		var c Connection
-		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath, &c.KeyID, &c.CredentialID)
+		var tags string
+		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath, &c.KeyID, &c.CredentialID, &tags)
+		c.Tags = parseTags(tags)
 		decryptConnectionSecrets(&c)
 		c.UserID = userID
 		conns = append(conns, c)
@@ -1116,8 +1142,8 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		plain := c
 		plain.UserID = userID
 		encryptConnectionSecrets(&c)
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,key_id,credential_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,key_id,credential_id,tags) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID, tagsString(c.Tags))
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1234,6 +1260,9 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if c.Options != nil {
 			db.Exec(`UPDATE connections SET options=? WHERE id=?`, string(jsonMarshal(c.Options)), id)
 		}
+		if c.Tags != nil {
+			db.Exec(`UPDATE connections SET tags=? WHERE id=?`, tagsString(c.Tags), id)
+		}
 		if c.Host != cur.Host || c.Protocol != cur.Protocol || !intPtrEq(c.JumpID, cur.JumpID) || c.Monitor != nil {
 			statusMon.poke()
 		}
@@ -1260,8 +1289,8 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case action == "authorized-keys":
 		authorizedKeysHandler(w, r, userID, id)
 	case action == "duplicate" && r.Method == http.MethodPost:
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id)
-			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id FROM connections WHERE id=? AND user_id=?`, id, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags)
+			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags FROM connections WHERE id=? AND user_id=?`, id, userID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1287,9 +1316,11 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var payload struct {
-		Action   string `json:"action"`
-		IDs      []int  `json:"ids"`
-		FolderID *int   `json:"folder_id"`
+		Action   string   `json:"action"`
+		IDs      []int    `json:"ids"`
+		FolderID *int     `json:"folder_id"`
+		Add      []string `json:"add"`    // tag
+		Remove   []string `json:"remove"` // tag
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		jsonError(w, "Bad JSON", 400)
@@ -1328,6 +1359,11 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		db.Exec("UPDATE connections SET folder_id=? WHERE id IN ("+ph+") AND user_id=?", append([]interface{}{payload.FolderID}, append(args, userID)...)...)
+	case "tag":
+		n := bulkTag(userID, payload.IDs, payload.Add, payload.Remove)
+		auditLog(r, userID, "connection.tagged", "", map[string]interface{}{"ids": payload.IDs, "add": normalizeTags(payload.Add), "remove": normalizeTags(payload.Remove), "changed": n})
+		jsonOK(w, map[string]interface{}{"ok": true, "changed": n})
+		return
 	default:
 		jsonError(w, "Unsupported action", 400)
 		return
@@ -1711,8 +1747,8 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		encryptConnectionSecrets(&c)
-		if res, err := tx.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path,key_id,credential_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, folderID, userID, c.WebPath, c.KeyID, c.CredentialID); err == nil {
+		if res, err := tx.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path,key_id,credential_id,tags) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, folderID, userID, c.WebPath, c.KeyID, c.CredentialID, tagsString(c.Tags)); err == nil {
 			imported++
 			nid, _ := res.LastInsertId()
 			if oldID > 0 {

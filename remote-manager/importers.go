@@ -38,6 +38,7 @@ import (
 
 type importResult struct {
 	Imported int            `json:"imported"`
+	Updated  int            `json:"updated"`
 	Folders  int            `json:"folders"`
 	Tunnels  int            `json:"tunnels"`
 	Jumps    int            `json:"jump_hosts"`
@@ -57,6 +58,8 @@ type importItem struct {
 	folder   string
 	jumpName string // resolved after all items exist
 	tunnels  []tunnelDef
+	extID    string   // id in the source inventory (NetBox): updated instead of duplicated
+	extTags  []string // tags that come from the source (replaced on update)
 }
 
 // importer collects folders and connections and writes them in one transaction.
@@ -65,6 +68,7 @@ type importer struct {
 	res     importResult
 	items   []*importItem
 	folders map[string]int
+	update  bool // update connections with the same ext_id
 }
 
 func newImporter(userID int) *importer {
@@ -117,6 +121,20 @@ func (im *importer) commit() error {
 	for _, c := range loadUserConnections(im.userID) {
 		dup[strings.ToLower(c.Name+"\x00"+c.Host+"\x00"+c.Protocol)] = true
 	}
+	type extConn struct {
+		id            int
+		tags, extTags string
+	}
+	byExt := map[string]extConn{}
+	if rows, err := db.Query(`SELECT id, COALESCE(tags,''), COALESCE(ext_tags,''), ext_id FROM connections WHERE user_id=? AND ext_id<>''`, im.userID); err == nil {
+		for rows.Next() {
+			var e extConn
+			var ext string
+			rows.Scan(&e.id, &e.tags, &e.extTags, &ext)
+			byExt[ext] = e
+		}
+		rows.Close()
+	}
 	created := map[string]int{}
 	ids := make([]int, len(im.items))
 	for i, it := range im.items {
@@ -124,6 +142,27 @@ func (im *importer) commit() error {
 		if err := normalizeConnection(&c); err != nil {
 			im.skip(c.Name, err.Error())
 			continue
+		}
+		if e, ok := byExt[it.extID]; ok && it.extID != "" {
+			if !im.update {
+				im.skip(c.Name, "imported before (turn on \"update\" to refresh it)")
+				continue
+			}
+			// Address, tags and folder follow the source; name and login stay as the user set them.
+			tags := tagsString(mergeTags(parseTags(e.tags), parseTags(e.extTags), c.Tags))
+			fid, err := im.folderID(it.folder)
+			if err != nil {
+				return err
+			}
+			db.Exec(`UPDATE connections SET host=?, tags=?, ext_tags=?, folder_id=COALESCE(?, folder_id) WHERE id=? AND user_id=?`,
+				c.Host, tags, tagsString(it.extTags), fid, e.id, im.userID)
+			im.res.Updated++
+			statusMon.poke()
+			continue
+		}
+		if err := checkAuthRefs(&c, im.userID); err != nil {
+			im.note(c.Name, err.Error()+" — imported without a login")
+			c.AuthMethod, c.KeyID, c.CredentialID = "PASSWORD", nil, nil
 		}
 		key := strings.ToLower(c.Name + "\x00" + c.Host + "\x00" + c.Protocol)
 		if dup[key] {
@@ -141,8 +180,10 @@ func (im *importer) commit() error {
 		if len(c.Options) > 0 {
 			opts = string(jsonMarshal(c.Options))
 		}
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path,options) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, im.userID, c.WebPath, opts)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path,options,key_id,credential_id,tags,ext_id,ext_tags)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, im.userID, c.WebPath, opts,
+			c.KeyID, c.CredentialID, tagsString(c.Tags), it.extID, tagsString(it.extTags))
 		if err != nil {
 			im.skip(c.Name, err.Error())
 			continue
