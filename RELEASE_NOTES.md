@@ -1,14 +1,54 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.2.0-mimo/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.3.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v10.2.0-mimo — jump hosts, SSH tunnels & mRemoteNG import
+## Web Remote Manager PRO v10.3.0 — snippets, broadcast input & live status
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, server-to-server transfer, sharing, real-time collaboration, **voice calls**, audit trail and session recording. One self-contained binary (or container) with an embedded web UI.
+Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, jump hosts and SSH tunnels, sharing, real-time collaboration with **voice calls**, audit trail and session recording. One self-contained binary (or container) with an embedded web UI.
 
-v10.2 brings what admins in data centers use every day in mRemoteNG, PuTTY and `ssh -J`: **servers behind bastions**, **SSH tunnels** to internal web interfaces and services, and a one-click **import of mRemoteNG and OpenSSH configurations**.
+v10.3 makes everyday work on many servers faster: saved commands with one click, typing into many terminals at once, and a live view of which servers are up.
 
-### 🪜 Jump hosts (bastions)
+### ⚡ Snippets & run on connect
+
+- **Saved commands** in the right panel (⚡ tab, groups, search) and in a **quick picker in every terminal: Ctrl+Shift+Space**. Click runs the snippet in the focused terminal, Shift+click types it without Enter.
+- **Variables** per terminal: `{{host}}`, `{{user}}`, `{{name}}`, `{{folder}}`, `{{date}}` … and **prompts** with defaults: `systemctl status {{?Service=nginx}}` asks for the service first and shows a preview.
+- **Scope:** all connections, one folder or one connection — the picker shows what fits the terminal.
+- **Run on connect:** `sudo -i`, `cd /srv/app`, `tmux attach || tmux new`, … are typed automatically when a terminal of the connection (or folder) connects. Right-click a connection or folder → *⚡ Run on connect…*.
+- **Shared snippets** from administrators for the whole team; **✨ example set** with the usual diagnostics (disk, memory, top processes, failed services, journal errors, listening ports, big files …).
+
+### 📣 Broadcast input
+
+- Select terminals with **📣 Broadcast** and type into all of them at once. An orange bar and window frames show where your keystrokes go; 📣 in a title bar adds or removes a terminal.
+- **Safety first:** dangerous-looking commands (`rm -rf`, `shutdown`, `mkfs`, `dd of=`, `iptables -F`, `DROP TABLE`, `kubectl delete`, …) and multi-line pastes ask before they are sent, with *Cancel* as the default button.
+- **Snippets on all terminals** at once, each with its own host and user.
+- Audited per terminal session (`terminal.broadcast`); administrators can turn it off (`broadcast_enabled`).
+
+### 🟢 Live up/down status
+
+- A **status dot** for every connection: 🟢 up (latency, since when, SSH version), 🟡 slow, 🔴 down (since when and why), a ring for connections behind a jump host.
+- **Down counters on folders**, a one-click **"show only down"** filter, and **notifications** (also desktop notifications in the background) when a server goes down or comes back.
+- **🔄 Check status now** for a connection or a whole folder — also through the jump hosts.
+- Checks like Nagios `check_ssh`: a TCP connection, the SSH/FTP greeting, a polite close; no login. Each host:port once per round (default every 60 s), with a retry before "down". Optional checks through jump hosts.
+- Policies `status_enabled`, `status_interval_seconds`, `status_jump_checks`; per-connection opt-out.
+
+### 🏷️ No more suffix in release names
+
+Releases, binaries and the Docker image are now simply `v10.3.0`, `wrm-pro-v10.3.0-linux-amd64`, `ghcr.io/vedranius/wrm-pro:v10.3.0`.
+
+### ⬆️ Upgrading from v10.2
+
+Replace the binary. The database gets a new table (`snippets`) and a new column (`connections.monitor`); the previous binary still starts on it.
+
+- Update scripts or systemd units that use the old file names with a suffix.
+- **Live status is on by default** and connects to every saved host:port once a minute (no login). If a server runs fail2ban in *aggressive* mode, add the WRM server to `ignoreip`, raise the interval, or untick *Monitor up/down status* for that connection.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v10.2.0 — jump hosts, SSH tunnels & mRemoteNG import
+
+#### 🪜 Jump hosts (bastions)
 
 - Every connection can go **through another saved SSH connection**: choose *Jump host (connect via)* in the connection. Like `ssh -J` / `ProxyJump` and the *SSH tunnel* setting of mRemoteNG.
 - **Chains** up to 5 hops (`vpn-gw → bastion-dc1 → app-01`); loops are refused.
@@ -16,7 +56,7 @@ v10.2 brings what admins in data centers use every day in mRemoteNG, PuTTY and `
 - Every hop uses **its own credentials** and its **host key is verified**. No port is opened on the jump host (`direct-tcpip`, the bastion only needs `AllowTcpForwarding yes`).
 - The route is shown everywhere: **⤳** in the sidebar, *Test connection* (`… via bastion-dc1`), the terminal, session history and the audit log.
 
-### 🔀 SSH tunnels (port forwarding)
+#### 🔀 SSH tunnels (port forwarding)
 
 - **Local (-L):** a port on the WRM machine → a host:port behind the server, e.g. `127.0.0.1:2443 → 10.0.0.5:443` for the web UI of a switch, iDRAC or iLO.
 - **SOCKS proxy (-D):** one proxy for your browser or tools that reaches the whole network behind a server.
@@ -26,29 +66,20 @@ v10.2 brings what admins in data centers use every day in mRemoteNG, PuTTY and `
 - **Reliable:** each tunnel keeps its own SSH connection through the jump hosts, checks it every 30 s and **reconnects automatically** while its port stays open.
 - **Safe defaults:** tunnels listen on `127.0.0.1`; network addresses and remote forwards are for administrators; a tunnel can be turned off or limited to administrators; every start, stop and error is **audited** with the traffic. Administrators see and stop all tunnels in *Admin panel → Overview*.
 
-### 🌐 Web interface connections
+#### 🌐 Web interface connections
 
 - New protocols **Web interface (HTTPS / HTTP)** with host:port and path: save the web UIs of your iDRACs, iLOs, switches, firewalls and NAS next to your servers.
 - **Double-click** opens it in a new tab — directly, or, **behind a jump host, through an automatic temporary tunnel** (closed after 30 minutes without traffic).
 
-### 📥 Import from mRemoteNG and OpenSSH
+#### 📥 Import from mRemoteNG and OpenSSH
 
 - **mRemoteNG `confCons.xml`:** folders, SSH and web connections **with their passwords** (both encryption formats, master password, full-file encryption), inherited settings, and **SSH tunnel → jump host**. RDP/VNC/Telnet are listed as skipped; duplicates are skipped.
 - **OpenSSH `~/.ssh/config`:** hosts, users, ports, `Host *` defaults, **`ProxyJump`** / `ProxyCommand ssh -W`, **`LocalForward` / `RemoteForward` / `DynamicForward`** and `IdentityFile`.
 - *Settings → Data* shows a summary of what was imported, skipped and what to check. Export/import of WRM's own format now includes jump hosts and tunnels.
 
-### ⚙️ New policies
+#### ⚙️ New policies
 
 `tunnels_enabled` (`TUNNELS_ENABLED`, on), `tunnel_users` (`all` / `admins`), `tunnel_bind_any` (off), `tunnel_remote_forward` (`off` / `admins` / `all`, default `admins`), `tunnel_idle_minutes` (0). All in *Admin panel → Security policies → SSH tunnels*, or forced with `WRM_<KEY>`.
-
-### ⬆️ Upgrading from v10.1
-
-Replace the binary. The database gets a new table (`connection_tunnels`) and two new columns (`connections.jump_conn_id`, `connections.web_path`); nothing else changes, and the previous binary still starts on the upgraded database.
-
-- **Tunnels are available to all users by default**, on `127.0.0.1` of the WRM machine only. If WRM runs on a shared server, consider `tunnel_users=admins` (local users of that server can reach `127.0.0.1` ports), or `WRM_TUNNELS_ENABLED=0`.
-- Where is a tunnel port? On the computer **where WRM runs**. That is usually your own PC. If WRM runs on a server, see *SSH tunnels → Where is the tunnel port?* in the README.
-
-Coming from v10.0 or v9? Read the upgrade notes below as well. See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/CHANGELOG.md) for the full history.
 
 ---
 
@@ -84,7 +115,7 @@ The WRM PRO logo is now used for the favicon, the app icons, the sign-in screen,
 
 #### 📐 Architecture & tests
 
-- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
+- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
 - A new **integration test** runs a real SSH + SFTP server inside the test. It checks connect → audit entries → recording (replayable, no passwords), transfer checksums and the append-only audit trail, and it runs in CI with the race detector.
 
 #### ⬆️ Upgrading from v10.0
@@ -99,13 +130,13 @@ Replace the binary. The database is only **extended**: new tables, columns and t
 
 ## Included from v10.0.x
 
-### 🔧 v10.0.1-mimo
+### 🔧 v10.0.1
 
 - `/static/` (the v9 address) forwards to the app instead of returning 404.
 - A database from an earlier build with an incompatible `audit_log` / `collab_messages` table is upgraded at startup. The old table is kept as `<table>_old_<time>`.
 - The server log shows the address to open in the browser.
 
-### v10.0.0-mimo
+### v10.0.0
 
 #### 🎙 Voice calls in collaboration rooms (back, rebuilt)
 
@@ -216,20 +247,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.2.0-mimo-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.2.0-mimo-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.2.0-mimo-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.2.0-mimo-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.2.0-mimo-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.2.0-mimo-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.2.0-mimo-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.2.0-mimo-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.2.0-mimo-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.2.0-mimo-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.2.0-mimo-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.2.0-mimo-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.2.0-mimo-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.2.0-mimo-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.3.0-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.3.0-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.3.0-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.3.0-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.3.0-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.3.0-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.3.0-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.3.0-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.3.0-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.3.0-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.3.0-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.3.0-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.3.0-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.3.0-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -237,27 +268,27 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.2.0-mimo-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.2.0-mimo-linux-amd64
+chmod +x wrm-pro-v10.3.0-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.3.0-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.2.0-mimo-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.3.0-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.2.0-mimo-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.3.0-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.2.0-mimo/wrm-pro-v10.2.0-mimo-android-arm64
-chmod +x wrm-pro-v10.2.0-mimo-android-arm64 && ./wrm-pro-v10.2.0-mimo-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.3.0/wrm-pro-v10.3.0-android-arm64
+chmod +x wrm-pro-v10.3.0-android-arm64 && ./wrm-pro-v10.3.0-android-arm64
 ```
 
 **Docker**
 ```bash
-docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.2.0-mimo
+docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.3.0
 # or, from the source tree:  docker compose up -d
 ```
 
@@ -276,15 +307,17 @@ WRM_ALLOWED_ORIGINS=host          extra allowed Origin hosts
 WRM_<POLICY>=value                force a policy, e.g. WRM_REQUIRE_2FA=all, WRM_TURN_PUBLIC_IP=203.0.113.10
 AUDIT_ENABLED / SESSION_RECORDING_ENABLED   audit log / session recording on (1) or off (0)
 TUNNELS_ENABLED=0                 turn SSH tunnels off (WRM_TUNNEL_USERS=admins: administrators only)
+STATUS_ENABLED=0                  turn the live up/down status off (WRM_STATUS_INTERVAL_SECONDS=300: check every 5 minutes)
+BROADCAST_ENABLED=0               turn broadcast input off
 WRM_RECORDINGS_DIR=/path          where session recordings are stored (default: recordings/ next to the database)
 ```
 
-For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/SECURITY.md).
+For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/SECURITY.md).
 
 ---
 
 ### 📜 License
 
-Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/CONTRIBUTING.md).
+Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/CONTRIBUTING.md).
 
 ☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)**. Thank you!

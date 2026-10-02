@@ -16,8 +16,8 @@ permissions:
   contents: write
 
 env:
-  # Base version used for file names. Tag builds embed the tag name as the version.
-  APP_VERSION: v10.2.0-mimo
+  # Version for branch builds. Tag builds use the tag name (e.g. v10.3.0) as version and in file names.
+  APP_VERSION: v10.3.0
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -143,11 +143,11 @@ jobs:
           CGO_ENABLED: 0
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            VERSION="${GITHUB_REF_NAME}"
+            VERSION="${GITHUB_REF_NAME}"; BASE="${GITHUB_REF_NAME}"
           else
-            VERSION="${APP_VERSION}-$(git rev-parse --short HEAD)"
+            VERSION="${APP_VERSION}-$(git rev-parse --short HEAD)"; BASE="${APP_VERSION}"
           fi
-          OUTPUT="wrm-pro-${APP_VERSION}-${{ matrix.label }}${{ matrix.ext }}"
+          OUTPUT="wrm-pro-${BASE}-${{ matrix.label }}${{ matrix.ext }}"
           mkdir -p ../dist
           go build -ldflags="-s -w -X main.AppVersion=${VERSION}" -trimpath -o "../dist/${OUTPUT}" .
           echo "Built ${OUTPUT} (${VERSION}) — $(du -h ../dist/${OUTPUT} | cut -f1)"
@@ -220,14 +220,15 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          OUT="wrm-pro-${APP_VERSION}-darwin-universal"
+          BASE="${GITHUB_REF_NAME}"   # file names follow the tag
+          OUT="wrm-pro-${BASE}-darwin-universal"
           if command -v llvm-lipo >/dev/null 2>&1; then
             LIPO=llvm-lipo
           else
             go install github.com/konoui/lipo@latest
             LIPO="$(go env GOPATH)/bin/lipo"
           fi
-          "$LIPO" -create "wrm-pro-${APP_VERSION}-darwin-amd64" "wrm-pro-${APP_VERSION}-darwin-arm64" -output "$OUT"
+          "$LIPO" -create "wrm-pro-${BASE}-darwin-amd64" "wrm-pro-${BASE}-darwin-arm64" -output "$OUT"
           file "$OUT"
           gh release upload "${GITHUB_REF_NAME}" "$OUT" --repo "$GITHUB_REPOSITORY" --clobber
 

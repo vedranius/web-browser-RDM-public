@@ -7,9 +7,9 @@
 
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** SSH terminal, SFTP / FTP / FTPS file manager, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
+**A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.2.0-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.3.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -51,6 +51,9 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Import from mRemoteNG and OpenSSH](#import-from-mremoteng-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [SSH terminal](#ssh-terminal)
+   - [Snippets & run on connect](#snippets--run-on-connect)
+   - [Broadcast input](#broadcast-input)
+   - [Live up/down status](#live-updown-status)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
    - [Search in files](#search-in-files)
    - [Text editor](#text-editor)
@@ -80,7 +83,8 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 WRM is a **single executable** with a built-in web server and a built-in web app. You start it on any machine: your PC, a Raspberry Pi, a VPS or a company server. Then you open it in a browser and manage your remote servers from there:
 
-- **SSH terminals** in the browser (xterm.js, 256 colors, full-screen apps like `nano`, `vim`, `htop`, `mc`).
+- **SSH terminals** in the browser (xterm.js, 256 colors, full-screen apps like `nano`, `vim`, `htop`, `mc`), with **snippets** (saved commands with variables, one click or Ctrl+Shift+Space), **run on connect** (`sudo -i`, `cd /srv/app`…) and **broadcast input** (type into many terminals at once, with a safety check for dangerous commands).
+- **Live up/down status** of every saved connection in the sidebar, with latency, server banner and a notification when a server goes down.
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
 - **Jump hosts** (like `ssh -J`): reach servers behind a bastion, also in chains — for terminals, files, transfers and tunnels.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
@@ -104,21 +108,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.2.0-mimo-linux-amd64
-   ./wrm-pro-v10.2.0-mimo-linux-amd64
+   chmod +x wrm-pro-v10.3.0-linux-amd64
+   ./wrm-pro-v10.3.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.2.0-mimo-windows-amd64.exe
+   .\wrm-pro-v10.3.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.2.0-mimo/wrm-pro-v10.2.0-mimo-android-arm64
-   chmod +x wrm-pro-v10.2.0-mimo-android-arm64 && ./wrm-pro-v10.2.0-mimo-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.3.0/wrm-pro-v10.3.0-android-arm64
+   chmod +x wrm-pro-v10.3.0-android-arm64 && ./wrm-pro-v10.3.0-android-arm64
    ```
 
    **Docker**
@@ -142,6 +146,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.2
+
+Replace the binary. The database gets a new table (`snippets`) and one new column (`connections.monitor`); the previous binary still starts on it.
+
+- **File names no longer carry a suffix:** releases are `v10.3.0`, binaries `wrm-pro-v10.3.0-linux-amd64` etc. Update scripts and systemd units that use the file name.
+- **Live status is on by default:** WRM opens a TCP connection to every saved host:port once a minute (SSH and FTP: it reads the greeting and closes politely, like Nagios `check_ssh`). Servers see it in their logs. Change the interval or turn it off in *Admin panel → Security policies → Live status*, or untick *Monitor up/down status* in a connection. See [Live up/down status](#live-updown-status) about fail2ban.
+- **Broadcast input** is available to everybody; turn it off with `broadcast_enabled` if you do not want it. Every start and stop is in the audit log.
 
 ## Upgrading from v10.1
 
@@ -233,7 +245,7 @@ Left sidebar ("PRO MANAGER"):
 - **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
 - **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root).
 - **Search box** filters by name, host, username or protocol. **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share** or **Delete**.
-- A **green dot** next to a connection means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
+- The **dot in front of a connection** is its [live status](#live-updown-status): 🟢 up, 🟡 up but slow (> 300 ms), 🔴 down, a ring = behind a jump host (colored by the jump host's state). A **blue dot after the name** means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
 - **Shared with me** lists shares you are a member of (and shares published for all users), with your **role**; ↗ opens the collaboration room.
 
 ### Jump hosts (bastions)
@@ -335,6 +347,52 @@ Every opened connection is a **window** inside the workspace. There is also a **
 - **Tabs:** click to focus or restore, **drag to reorder**, **middle-click** to close, **right-click** for *Reconnect*, *Duplicate window*, snap layouts and *Close*. SSH tabs show the connection state (🟡 connecting, 🟢 connected, 🔴 disconnected).
 - **Close confirmation** can be *Always*, *Never* or *Only when connected* (Settings).
 - The browser warns you before leaving the page while terminals are connected or a transfer is running.
+
+### Snippets & run on connect
+
+Snippets are saved commands. Open them in the right panel (**⚡ Snippets** tab), or press **Ctrl+Shift+Space** in a terminal (or ⚡ in its title bar) for a quick picker.
+
+- **Click** a snippet: it is typed into the focused terminal and run. **Shift+click** (or ⎘) types it without Enter, so you can edit it first. **Right-click:** run, insert, copy, edit, duplicate, delete.
+- **Quick picker:** type to filter, ↑ ↓ to choose, **Enter** runs, **Shift+Enter** inserts, **Esc** closes, **＋ New snippet** saves the selected terminal text as a snippet.
+- **Groups** (Diagnostics, Services, …), a description, and the scope: **all connections**, the connections of **one folder**, or **one connection**. The picker only offers snippets that apply to the terminal's connection.
+- **Multi-line snippets:** every line is one command.
+- **Variables** are filled in for each terminal: `{{host}}`, `{{port}}`, `{{user}}`, `{{name}}` (connection), `{{folder}}`, `{{wrm_user}}`, `{{date}}`, `{{time}}`. **Prompts** are asked before the snippet runs, with a live preview: `{{?Service}}` or with a default `{{?Service=nginx}}`. Example: `journalctl -u {{?Service=nginx}} --since "{{?Since=1 hour ago}}" --no-pager`.
+- **Run on connect:** tick *Run on connect* and WRM types the snippet into the shell as soon as a terminal of a matching connection is connected (also after a reconnect) — `sudo -i`, `cd /srv/app`, `tmux attach || tmux new`, `export KUBECONFIG=…`. Right-click a connection or a folder → **⚡ Run on connect…** creates one. Order: all-connection snippets, then folder, then connection snippets. A message lists what ran; the audit log records it (`terminal.auto_run`).
+- **Shared snippets:** administrators can share a snippet with all users (read-only for them, all connections, never auto-run) — a team runbook in the terminal.
+- **✨ Add example snippets** creates a starter set (disk, memory, top processes, failed services, journal errors, listening ports, big files, service status/restart…).
+- Snippets are included in *Export* / *Import*, copied with *Duplicate*, and removed with their connection or folder.
+- Dangerous-looking commands (see below) ask for confirmation before they run.
+
+### Broadcast input
+
+Type the same command into many servers at once — like *MultiSSH*, *cssh* or mRemoteNG's multi-SSH.
+
+1. Open the terminals (e.g. all web servers of a cluster).
+2. Top bar → **📣 Broadcast** → select the terminals → **Start broadcast** (asks once).
+3. Everything you type in one of them now goes to all of them. An orange bar shows how many terminals receive it; included windows get an orange frame. **📣** in a window's title bar adds or removes that terminal; **■ Stop** ends it.
+
+Safety:
+
+- **Dangerous commands ask first:** before Enter is sent for a line that looks dangerous — `rm -r/-f`, `shutdown`/`reboot`/`halt`, `init 0/6`, `systemctl stop/restart/disable…`, `mkfs`, `dd … of=`, `fdisk`/`parted`, `wipefs`, writing to `/dev/sd*` or `/etc/…`, `kill -9`, `pkill`, `chmod 777`, `chown -R`, `iptables -F`, `ufw disable`, `DROP/TRUNCATE TABLE`, `DELETE FROM`, `crontab -r`, package removal, `docker rm`, `kubectl delete`, `terraform destroy`, a fork bomb … — WRM shows the command and the number of terminals; **Cancel is the default button**.
+- **Pasting several lines** into a broadcast asks for confirmation too.
+- **Snippets** run on every terminal of the broadcast, each with its own `{{host}}`/`{{user}}`, after one confirmation.
+- The check works on what you typed in this broadcast (not on commands recalled from the shell history with ↑).
+- Each terminal records when it joined and left a broadcast (`terminal.broadcast`, with the number of terminals) and, as always, the session recording shows what happened on each server. Administrators can turn the feature off (`broadcast_enabled`).
+
+### Live up/down status
+
+WRM checks every saved connection in the background and shows the result in the sidebar:
+
+- 🟢 **up** (hover: latency, since when, SSH server version), 🟡 **slow** (more than 300 ms), 🔴 **down** (pulsing; hover: since when and why — *connection refused*, *timeout*, *host name not found* …), a **ring** for connections behind a jump host.
+- A folder shows how many of its connections are down (**2↓**). When something is down, a red bar above the tree shows **only the connections that are down** with one click.
+- **Notifications:** a message when a server goes down or comes back, and a desktop notification while WRM is in the background (*Settings → General → Notify when a server goes down*).
+- **🔄 Check status now** (right-click a connection or a folder) checks immediately — also **through the jump hosts** — and shows the result per connection.
+- **How it checks:** a TCP connection to the connection's port (SSH 22, FTP 21, web 80/443 or the port you set). SSH checks read the server banner and answer with `SSH-2.0-WRM_status_check` before closing, FTP checks read the 220 greeting and send `QUIT` — the same as Nagios `check_ssh`/`check_ftp`. Nothing logs in. A failed check is repeated once before a server counts as down. Each distinct host:port is checked once per round, however many connections and users point to it.
+- **Behind a jump host** a connection shows the state of its jump host (a red ring when the jump host is down). With the policy *Check through jump hosts*, WRM logs in to the jump host once per round and checks the ports behind it through that SSH connection.
+- Untick **Monitor up/down status** in a connection to leave it out (e.g. servers that are often off on purpose).
+- Policies: `status_enabled` (on), `status_interval_seconds` (60, 15–3600), `status_jump_checks` (off).
+
+> **fail2ban / IDS:** the check is an ordinary connection without a login. Default fail2ban `sshd` filters do not count it, but the *aggressive* / *ddos* modes may. Add the WRM server to `ignoreip`, raise the interval, or untick monitoring for such hosts.
 
 ### SSH terminal
 
@@ -498,7 +556,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 
 | Tab | What it contains |
 |---|---|
-| General | Language (English / Hrvatski), accent color, close-window confirmation, browser-side upload limit |
+| General | Language (English / Hrvatski), accent color, close-window confirmation, **notifications when a server goes down**, browser-side upload limit |
 | Terminal | Font size, scrollback, auto-reconnect |
 | Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
 | Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
@@ -514,7 +572,7 @@ Personal preferences are stored per browser; everything security-related is stor
 - **Overview:** version, uptime, users (admins, 2FA), HTTPS, voice relay status, encryption key source, **security warnings** (no HTTPS, open registration, admins without 2FA, host keys off…), **open terminals** (who, which server, from which IP — with *End*), **active SSH tunnels** (owner, connection and route, listen → target, traffic — with *Stop*), **live rooms** (participants, voice, shared terminals).
 - **Users:** create users (temporary password generated if you leave it empty), display name, make/remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete (with everything the user owns). The last active administrator cannot be removed.
 - **Shares:** every share on the server — pause/resume or delete.
-- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit), **SSH tunnels** (on/off, who may use them, listening on network addresses, remote forwarding, idle stop).
+- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit), **broadcast input**, **live status** (on/off, interval, checks through jump hosts), **SSH tunnels** (on/off, who may use them, listening on network addresses, remote forwarding, idle stop).
 - **Voice & network:** voice on/off, participants per call, built-in TURN relay (port, public IP, host name, relay ports, private networks), additional STUN/TURN servers.
 - **Host keys:** remembered SSH host keys and FTPS certificates; forget an entry after a server was reinstalled.
 - **Audit log:** searchable and filterable (event type, user, date range), linked to sessions, **CSV export**, **Verify integrity** (hash chain).
@@ -539,6 +597,8 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | Voice call | **Ctrl+Shift+M** / **Ctrl+Shift+D** | Mute / deafen (also while a terminal has focus) |
 | Voice call | your push-to-talk key (e.g. **F8**) | Hold to talk |
 | Terminal | **Ctrl+Shift+F** | Search in terminal output |
+| Terminal | **Ctrl+Shift+Space** | Snippet picker (Enter run, Shift+Enter insert) |
+| Snippets panel | **Click** / **Shift+click** | Run in the focused terminal / insert without Enter |
 | Terminal | **Ctrl+Shift+C** / select text | Copy |
 | Terminal | **Ctrl+Shift+R** | Reconnect SSH |
 | Terminal | **Enter** (when closed) | Reconnect |
@@ -610,6 +670,10 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `tunnel_bind_any` | `0` | allow non-administrators to listen on network addresses (`0.0.0.0`, LAN IP) instead of `127.0.0.1` |
 | `tunnel_remote_forward` | `admins` | `off` / `admins` / `all`: remote port forwarding (`-R`) |
 | `tunnel_idle_minutes` | `0` | stop tunnels started by hand after this many minutes without traffic (0 = never) |
+| `broadcast_enabled` | `1` | broadcast input (typing into several terminals at once). Also `BROADCAST_ENABLED` |
+| `status_enabled` | `1` | live up/down status of connections. Also `STATUS_ENABLED` |
+| `status_interval_seconds` | `60` | seconds between status rounds (15–3600) |
+| `status_jump_checks` | `0` | check connections behind jump hosts by logging in to the jump host |
 
 **Command line**
 
@@ -656,7 +720,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.2.0-mimo-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.3.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -713,6 +777,8 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Voice:** WebRTC with DTLS-SRTP; the built-in TURN relay accepts only short-lived HMAC credentials issued to room participants, limits allocations, and refuses private/loopback/link-local peers by default (no pivoting into internal networks).
 - **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers (with SHA-256) and changes, host keys, exports, viewing of recordings — stored **append-only** and **hash-chained** in the database (verifiable) and written as `AUDIT …` lines to the server log (journald/syslog → SIEM). Secrets in audit details are redacted.
 - **Session recording:** terminal output in asciicast v2, gzip, mode `0600`, SHA-256 in the database; no keystrokes unless enabled (then masked at password prompts); visible to administrators, the session's user and the connection's owner; every view is audited.
+- **Snippets & broadcast:** snippets are per user (shared snippets only by administrators, read-only for others, never auto-run); run-on-connect snippets come from the connection's owner and are recorded in the audit log; broadcast input is client-side typing into the user's own terminals, with confirmation of dangerous commands and an audit entry for every start and stop per terminal.
+- **Live status:** checks are plain TCP connections from the WRM server (no credentials, except optional checks through jump hosts with the jump host's own saved login); users only see the states of their own connections.
 - **Tunnels & jump hosts:** every hop is authenticated and host-key-verified; tunnels belong to the owner of the connection (only the owner starts them; administrators can stop any); listen on `127.0.0.1` by default; ports below 1024 refused; network addresses and remote forwards only for administrators (policies); a tunnel can be turned off globally or limited to administrators; every start/stop/error is audited with the traffic. A tunnel port on a network address is **not** protected by WRM sign-in — treat it like an open port of that machine.
 - **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
 
@@ -770,6 +836,17 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/config/import/sshconfig` | `{text, folder}` import an OpenSSH config |
 
 Connections have `jump_id` (jump host connection id or `null`) and `web_path`; lists also return `route` (e.g. `"vpn-gw → bastion-dc1"`) and `tunnels` (number of configured tunnels).
+
+**Snippets & status**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET / POST | `/api/snippets` | My snippets and shared snippets / create `{name, command, description, group, scope: "all"\|"folder"\|"connection", scope_id, auto_run, shared}` |
+| PUT / DELETE | `/api/snippets/{id}` | Update / delete (owner; administrators also shared snippets) |
+| GET | `/api/status` | `{enabled, interval, jump_checks, connections: {id: {state: "up"\|"down"\|"unknown", latency_ms, since, checked_at, error, banner, via, via_state}}}` |
+| POST | `/api/status/check` | `{ids: [...]}` check now, also through jump hosts (once every 3 s per user) |
+
+Connections also have `monitor` (live status on/off). The terminal WebSocket accepts `{"type":"broadcast","on":true\|false,"peers":n}` (audit) and sends `{"type":"autorun","snippets":[…]}` after run-on-connect snippets ran.
 
 **Tunnels & web interfaces**
 
@@ -839,7 +916,7 @@ Connections have `jump_id` (jump host connection id or `null`) and `web_path`; l
 | Endpoint | Description |
 |---|---|
 | `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping` → server; `status` (with `recording`, `session_id`), `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
-| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`, `tunnels_changed`) |
+| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`, `tunnels_changed`, `snippets_changed`, `status_changed`) |
 | `/ws/share/{token}` | Collaboration room. Client → server: `chat`, `file`, `set-name`, `screen` (`start/stop/data/resize/snapshot`), `watch`, `unwatch`, `control-request/grant/revoke/release`, `remote-input`, `voice-join/leave/signal/state`, `hand`, `mod` (`set-role/mute/unmute/stop-share/lower-hand/kick/ban`). Server → client: `welcome`, `participants`, `chat`, `file`, `system`, `screen`, `watch-request`, `control`, `control-request`, `remote-input`, `voice-peers/joined/left/signal`, `force-mute`, `role`, `kicked`, `closed`, `error` |
 
 ---
@@ -882,11 +959,15 @@ remote-manager/
   jump.go         jump hosts: chains, dialing through hops, validation
   tunnels.go      SSH tunnels (local, remote, SOCKS5), manager, reconnects, tunnels API, web interfaces
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
+  snippets.go     snippets (saved commands), variables, run on connect
+  status.go       live up/down status monitor and API
   helpers.go      origin check, login rate limiting, shared helpers
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
   upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs)
   integration_test.go  in-process SSH/SFTP server: connect → audit → recording, transfers, append-only audit
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
+  snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
+  status_test.go       live status: up/down, banners, jump hosts, check now
   importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
   static/index.html          the entire web UI (embedded into the binary)
   static/brand/              logo, favicon and app icons
@@ -919,6 +1000,12 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | *bastion cannot reach 10.0.0.21:22* (or *jump host "…": …*) | The jump host cannot open a connection to the next hop: check the host:port as seen **from the jump host**, its firewall, and `AllowTcpForwarding yes` in its `sshd_config` |
 | Tunnel shows 🔴 *Error* / *administratively prohibited* | The SSH server refuses forwarding (`AllowTcpForwarding`, `PermitOpen`, `GatewayPorts` for remote listeners on other addresses than loopback), or the target is not reachable from the server |
 | *address already in use* when starting a tunnel | Another program (or tunnel) uses that port on the WRM machine. Choose another port or leave it empty (automatic) |
+| A snippet does not appear in the ⚡ picker | Its scope is a folder or connection other than the terminal's. The panel shows all snippets (others dimmed) |
+| Run on connect does not run | It runs only for the owner's snippets that apply to that connection and have no `{{?…}}` prompts; check the audit log for `terminal.auto_run` |
+| Broadcast did not ask before a dangerous command | The check sees what you typed during the broadcast, not a command recalled from the shell history (↑) |
+| All connections stay grey (no status dot) | Live status is off (`status_enabled`), or the connection has *Monitor up/down status* unticked. The first round starts a few seconds after WRM starts |
+| A server shows 🔴 but SSH works | The port in the connection differs from the real one, or a firewall allows SSH only from some addresses (not from the WRM server). Behind a jump host use a jump host instead of a direct connection |
+| fail2ban bans the WRM server | Add WRM's IP to `ignoreip`, raise `status_interval_seconds`, or untick monitoring for those hosts |
 | Tunnel runs but the page does not open from my PC | The tunnel listens on `127.0.0.1` of the **WRM machine**. See [Where is the tunnel port?](#ssh-tunnels-port-forwarding) |
 | No *🔀 Tunnels* button / *not allowed* | Tunnels are off or limited to administrators (*Admin panel → Security policies → SSH tunnels*, or `WRM_TUNNELS_ENABLED` / `WRM_TUNNEL_USERS`) |
 | mRemoteNG import: *wrong master password* | Enter the master password the file was protected with in mRemoteNG. Files without a master password are opened automatically |
