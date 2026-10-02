@@ -133,6 +133,7 @@ func apiAdminStatusHandler(w http.ResponseWriter, r *http.Request) {
 		"encryption_key": encryptionKeySource, "https": isHTTPS(r), "trust_proxy": trustProxy,
 		"users": users, "admins": admins, "users_2fa": with2FA, "shares": shares, "connections": conns,
 		"terminals": tl, "rooms": roomsSummary(), "turn": turnStatus(), "warnings": warnings,
+		"tunnels": tunnelMgr.runsWhere(func(*tunnelRun) bool { return true }),
 	})
 }
 

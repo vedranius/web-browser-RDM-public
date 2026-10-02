@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.1.0-mimo</title>
+<title>Web Remote Manager PRO v10.2.0-mimo</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1196,6 +1196,65 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   .rp-screen { max-height: 55vh; }
   .adm-toolbar input[type=date] { width: 120px; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   v10.2 — JUMP HOSTS, TUNNELS, WEB INTERFACES, IMPORT
+   ══════════════════════════════════════════════════════════════ */
+#modal-conn .modal { width: min(720px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto; }
+.conn-proto-badge.http, .conn-proto-badge.https { background: rgba(167,139,250,.14); color: #c4b5fd; }
+.conn-route { flex: none; font-size: 11px; color: var(--text3); cursor: help; }
+.conn-tun { flex: none; font-size: 10px; opacity: .55; cursor: pointer; filter: grayscale(1); }
+.conn-tun.on { opacity: 1; filter: none; }
+.tun-box { border: 1px solid var(--border2); border-radius: 10px; padding: 8px 12px; margin: 6px 0 10px; background: rgba(0,0,0,.12); }
+.tun-box > summary { cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); padding: 4px 0; list-style: revert; }
+.tun-box .muted-text { margin: 6px 0 8px; line-height: 1.5; }
+.tun-row { border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin-bottom: 8px; background: var(--bg2); }
+.tun-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.tun-line:last-of-type { margin-bottom: 4px; }
+.tun-row input, .tun-row select { width: auto !important; padding: 5px 7px !important; font-size: 12px !important; background: var(--bg) !important; border: 1px solid var(--border2); border-radius: 6px; color: var(--text); }
+.tun-row input.tun-name { flex: 1; min-width: 120px; }
+.tun-row input.tun-bhost, .tun-row input.tun-thost { width: 128px !important; font-family: 'JetBrains Mono', monospace; }
+.tun-row input.tun-bport, .tun-row input.tun-tport { width: 78px !important; font-family: 'JetBrains Mono', monospace; }
+.tun-row input.tun-path { width: 100px !important; }
+.tun-lbl { font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; }
+.tun-line > .tun-lbl:first-child { min-width: 170px; }
+.conn-item .conn-name { flex: 1 1 auto; }
+.conn-item .conn-host { flex: 0 8 auto; min-width: 0; }
+.tun-item .t-stats div + div { margin-top: 2px; }
+.tun-arrow { color: var(--accent); font-weight: 700; }
+.tun-hint { font-size: 11px !important; margin: 0 !important; color: var(--text2) !important; }
+.tun-add { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.tun-add select { width: auto !important; }
+.tun-badge { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--green); color: #052e16; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; margin-left: 2px; }
+.tun-modal { width: min(980px, calc(100vw - 24px)); max-height: calc(100vh - 24px); display: flex; flex-direction: column; }
+#tun-list { overflow-y: auto; }
+.tun-group { margin-bottom: 14px; }
+.tun-group-h { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12.5px; color: var(--text); margin: 4px 0 6px; }
+.tun-group-h .sub { font-weight: 400; color: var(--text3); font-size: 11px; }
+.tun-item { display: grid; grid-template-columns: 14px minmax(140px, 1.2fr) minmax(200px, 2fr) minmax(120px, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg2); margin-bottom: 6px; }
+.tun-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text3); }
+.tun-dot.up { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,.6); }
+.tun-dot.reconnecting, .tun-dot.starting { background: var(--yellow); }
+.tun-dot.error { background: var(--red); }
+.tun-item .t-name { font-weight: 600; color: var(--text); font-size: 12.5px; }
+.tun-item .t-kind { font-size: 10.5px; color: var(--text3); }
+.tun-item .t-map { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text2); word-break: break-all; }
+.tun-item .t-stats { font-size: 11px; color: var(--text3); }
+.tun-item .t-err { font-size: 11px; color: #fca5a5; }
+.tun-item .t-act { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 760px) {
+  .tun-item { grid-template-columns: 14px minmax(0, 1fr); gap: 6px 10px; }
+  .tun-item > :nth-child(n+3) { grid-column: 2; }
+  .tun-item .t-act { justify-content: flex-start; }
+  .tun-line > .tun-lbl:first-child { min-width: 0; width: 100%; }
+  .tun-row input.tun-bhost, .tun-row input.tun-thost { width: 118px !important; }
+  .tun-group-h { flex-wrap: wrap; }
+}
+@media (max-width: 760px) {
+  .tun-item { grid-template-columns: 14px 1fr; }
+  .tun-item .t-map, .tun-item .t-stats, .tun-item .t-act { grid-column: 2; }
+  .tun-item .t-act { justify-content: flex-start; }
+}
 </style>
 </head>
 <body>
@@ -1221,7 +1280,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.1.0-mimo · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.2.0-mimo · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1297,7 +1356,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.1.0-mimo</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.2.0-mimo</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1305,6 +1364,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <span id="user-chip"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span></span>
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
       <button class="btn-top" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
+      <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
       <button class="btn-top" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
@@ -1408,24 +1468,35 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <input type="hidden" id="m-id">
     <div class="field-row">
       <div class="field">
-        <label>Folder</label>
+        <label data-i18n="folder_lbl">Folder</label>
         <select id="m-folder"><option value="">— No Folder —</option></select>
       </div>
       <div class="field">
-        <label>Protocol</label>
-        <select id="m-proto">
+        <label data-i18n="protocol">Protocol</label>
+        <select id="m-proto" onchange="onProtoChange()">
           <option value="SSH">SSH</option>
           <option value="SFTP">SFTP</option>
           <option value="FTP">FTP</option>
           <option value="FTPS">FTPS (explicit TLS)</option>
+          <option value="HTTPS">🌐 Web interface (HTTPS)</option>
+          <option value="HTTP">🌐 Web interface (HTTP)</option>
         </select>
       </div>
     </div>
-    <div class="field"><label>Name</label><input type="text" id="m-name" placeholder="e.g. Web Server 1"></div>
-    <div class="field"><label>Host : Port</label><input type="text" id="m-host" placeholder="192.168.1.1:22"></div>
-    <div class="field"><label>Username</label><input type="text" id="m-user" placeholder="root"></div>
+    <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="m-name" placeholder="e.g. Web Server 1"></div>
+    <div class="field-row">
+      <div class="field"><label data-i18n="host_port">Host : Port</label><input type="text" id="m-host" placeholder="192.168.1.1:22"></div>
+      <div class="field" id="field-webpath" style="display:none;"><label data-i18n="web_path">Path</label><input type="text" id="m-webpath" placeholder="/"></div>
+    </div>
     <div class="field">
-      <label>Authentication</label>
+      <label data-i18n="jump_host">Jump host (connect via)</label>
+      <select id="m-jump"></select>
+      <div class="muted-text" style="margin-top:4px;" id="m-jump-help" data-i18n="jump_host_help">Reach this server through another saved SSH connection (bastion / jump host), like ssh -J. That connection can have its own jump host (chains).</div>
+    </div>
+    <div id="m-auth-fields">
+    <div class="field"><label data-i18n="username">Username</label><input type="text" id="m-user" placeholder="root"></div>
+    <div class="field">
+      <label data-i18n="authentication">Authentication</label>
       <select id="m-auth" onchange="onAuthMethodChange()">
         <option value="PASSWORD">Password</option>
         <option value="KEY">Private Key (paste)</option>
@@ -1438,6 +1509,18 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="field" id="field-key" style="display:none;"><label data-i18n="private_key">Private Key</label><textarea id="m-key" rows="5" placeholder="Paste your private key here..." autocomplete="off" spellcheck="false"></textarea>
       <div class="muted-text" id="m-key-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span> <label style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;text-transform:none;letter-spacing:0;font-size:11px;font-weight:400;"><input type="checkbox" id="m-key-clear" style="width:auto;"> <span data-i18n="remove_saved">remove saved</span></label></div></div>
     <div class="field" id="field-key-file" style="display:none;"><label data-i18n="key_file_path">Key File Path</label><input type="text" id="m-keypath" placeholder="~/.ssh/id_rsa"></div>
+    </div>
+    <details class="tun-box" id="m-tun-box">
+      <summary>🔀 <span data-i18n="tunnels_title">SSH tunnels (port forwarding)</span> <span class="pill" id="m-tun-count" style="display:none;"></span></summary>
+      <div class="muted-text" data-i18n="tunnels_help">Local (-L): a port on the WRM machine leads to a host:port as seen from this server (e.g. the web interface of an internal device). SOCKS (-D): a proxy for your browser or tools that reaches everything this server reaches. Remote (-R): a port on this server leads back to a host:port reachable from WRM. Tunnels go through the jump hosts too.</div>
+      <div id="m-tun-rows"></div>
+      <div class="tun-add">
+        <button class="btn-sec btn-sm" type="button" onclick="addTunnelRow({kind:'local'})">+ <span data-i18n="tun_local">Local (-L)</span></button>
+        <button class="btn-sec btn-sm" type="button" onclick="addTunnelRow({kind:'dynamic'})">+ <span data-i18n="tun_dynamic">SOCKS proxy (-D)</span></button>
+        <button class="btn-sec btn-sm" type="button" onclick="addTunnelRow({kind:'remote'})">+ <span data-i18n="tun_remote">Remote (-R)</span></button>
+        <select class="setting-select" id="m-tun-preset" onchange="addTunnelPreset(this.value); this.value='';"></select>
+      </div>
+    </details>
     <div id="conn-test-result" class="conn-test-result"></div>
     <div class="modal-footer" style="justify-content:space-between;">
       <button class="btn-sec" onclick="testConn()" id="conn-test-btn">🔌 <span data-i18n="test_connection">Test connection</span></button>
@@ -1636,11 +1719,30 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div><div class="setting-label" data-i18n="import_config">Import connections</div><div class="setting-desc" data-i18n="import_config_desc">Import from a JSON export</div></div>
         <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".json" onchange="importConfig(this)" style="display:none;"></label></div>
       </div>
+      <div class="setting-row">
+        <div><div class="setting-label" data-i18n="import_mrng">Import from mRemoteNG</div><div class="setting-desc" data-i18n="import_mrng_desc">confCons.xml: folders, SSH and web connections with passwords, SSH tunnel → jump host. RDP/VNC/Telnet are listed as skipped.</div></div>
+        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".xml" onchange="importExternal(this, 'mremoteng')" style="display:none;"></label></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label" data-i18n="import_sshcfg">Import OpenSSH config</div><div class="setting-desc" data-i18n="import_sshcfg_desc">~/.ssh/config: hosts, users, ports, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.</div></div>
+        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" onchange="importExternal(this, 'sshconfig')" style="display:none;"></label></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-sec" id="admin-settings-row" style="display:none;margin-right:auto;" onclick="closeModal('modal-settings'); openAdminPanel()">🛡 <span data-i18n="admin_panel">Admin panel</span></button>
       <button onclick="closeModal('modal-settings')" data-i18n="close">Close</button>
     </div>
+  </div>
+</div>
+
+<!-- Tunnels -->
+<div class="modal-overlay" id="modal-tunnels">
+  <div class="modal tun-modal">
+    <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🔀 <span data-i18n="tunnels_title">SSH tunnels (port forwarding)</span></h3>
+      <label id="tun-all-wrap" style="display:none;font-size:12px;color:var(--text2);align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="tun-all" style="width:auto;" onchange="renderTunnelsPanel()"> <span data-i18n="tun_all_users">All users (admin)</span></label>
+      <button class="icon-btn" onclick="closeModal('modal-tunnels')">✕</button></div>
+    <div class="hint-box" style="margin-top:10px;" id="tun-help"></div>
+    <div id="tun-list"></div>
   </div>
 </div>
 
@@ -2115,6 +2217,45 @@ const LANGS = {
 
 // v10 strings (collaboration, voice, roles, security, administration)
 Object.assign(LANGS.en, {
+  via:'via', jump_host:'Jump host (connect via)', jump_direct:'Direct connection',
+  jump_host_help:'Reach this server through another saved SSH connection (bastion / jump host), like ssh -J. That connection can have its own jump host (chains).',
+  jump_host_help_web:'The web interface is reached through this SSH connection: WRM opens a temporary tunnel and the page opens in a new tab.',
+  web_path:'Path', web_iface:'Web interface', web_open:'Open web interface', web_dblclick:'Double-click opens the web interface',
+  web_tunnel_open:'Opened through {route}: {addr}', tunnels_lbl:'Tunnels', tunnels_title:'SSH tunnels (port forwarding)',
+  tunnels_help:'Local (-L): a port on the WRM machine leads to a host:port as seen from this server (e.g. the web interface of an internal device). SOCKS (-D): a proxy for your browser or tools that reaches everything this server reaches. Remote (-R): a port on this server leads back to a host:port reachable from WRM. Tunnels go through the jump hosts too.',
+  tunnels_panel_help:'Start and stop tunnels, open web interfaces and copy addresses. Configure tunnels in the connection (✏). Running tunnels reconnect automatically.',
+  tun_remote_browser_note:'Note: you opened WRM from another computer — tunnels listen on the WRM machine, so 127.0.0.1 addresses work only there.',
+  tun_local:'Local (-L)', tun_dynamic:'SOCKS proxy (-D)', tun_remote:'Remote (-R)', tun_templates:'Templates…',
+  tunp_https:'Web interface (HTTPS 443)', tunp_http:'Web interface (HTTP 80)', tunp_ssh:'SSH to an internal host (22)', tunp_rdp:'RDP (3389)',
+  tunp_pg:'PostgreSQL (5432)', tunp_mysql:'MySQL / MariaDB (3306)', tunp_vnc:'VNC (5900)', tunp_ipmi:'iDRAC / iLO / IPMI web', tunp_socks:'SOCKS proxy for the browser',
+  tun_start_mode:'When the tunnel runs', tun_mode_manual:'Manual', tun_mode_connect:'With terminal', tun_mode_always:'Always',
+  tun_mode_connect_d:'starts with the first terminal of this connection and stops after the last one', tun_mode_always_d:'starts with WRM and keeps running',
+  tun_listen_wrm:'Listen (WRM machine)', tun_listen_server:'Listen (on this server)', tun_target_server:'Target (from this server)', tun_target_wrm:'Target (from WRM)',
+  tun_open_as:'Open as', tun_bind_host_title:'127.0.0.1 = only this machine; 0.0.0.0 = all network interfaces (administrators)', auto:'auto', this_server:'this server',
+  tun_hint_local:'Connections to {bind} on the WRM machine go through {conn} to {target}.',
+  tun_hint_dynamic:'SOCKS5 proxy on {bind}: set it in the browser (FoxyProxy) or use socks5h://… — every destination is reached through {conn}.',
+  tun_hint_remote:'{conn} listens on {bind}; connections to it reach {target} from the WRM machine.',
+  tun_hint_exposed:'listens on the network — anyone who can reach this address can use the tunnel.',
+  tun_add:'Add tunnel…', tun_start_all:'Start tunnels', tun_stop_all:'Stop tunnels', tun_count_title:'{n} tunnel(s), {r} running — click for the tunnels',
+  tun_save_failed:'The connection was saved, but the tunnels were not', tun_none:'No tunnels yet. Add them in a connection (right-click → Add tunnel…).',
+  tun_disabled:'SSH tunnels are turned off or not allowed for your account (Admin panel → Security policies).',
+  tun_conns:'connections', tun_temporary:'temporary', tun_started:'Tunnel running on {addr}', tun_on_server:'on server',
+  tun_state_up:'Running', tun_state_starting:'Starting', tun_state_reconnecting:'Reconnecting', tun_state_error:'Error', tun_state_stopped:'Stopped',
+  tun_loopback_remote:'This tunnel listens on 127.0.0.1 of the WRM machine. Open {url} on the computer where WRM runs, or set the listen address of the tunnel to 0.0.0.0 (administrators) to reach it over the network.',
+  tun_all_users:'All users', tun_traffic:'Traffic', active_tunnels:'Active SSH tunnels', open:'Open', start:'Start', copy_address:'Copy address', copied:'Copied', remove:'Remove',
+  pg_tunnels:'SSH tunnels',
+  p_tunnels_enabled:'SSH tunnels', p_tunnels_enabled_d:'Port forwarding (local, remote, SOCKS) and web interfaces behind jump hosts. Off: running tunnels stop.',
+  p_tunnel_users:'Who may use tunnels', p_tunnel_users_d:'Everyone, or administrators only.',
+  po_tunnel_users_all:'Everyone', po_tunnel_users_admins:'Administrators',
+  p_tunnel_bind_any:'Users may listen on all interfaces', p_tunnel_bind_any_d:'Allow non-administrators to open tunnel ports on 0.0.0.0 / network addresses (reachable by others without signing in to WRM).',
+  p_tunnel_remote_forward:'Remote port forwarding (-R)', p_tunnel_remote_forward_d:'Lets a server reach hosts and ports on the WRM side.',
+  po_tunnel_remote_forward_off:'Off', po_tunnel_remote_forward_admins:'Administrators', po_tunnel_remote_forward_all:'Everyone',
+  p_tunnel_idle_minutes:'Stop idle tunnels (minutes)', p_tunnel_idle_minutes_d:'Tunnels started by hand stop after this time without traffic (0 = never). Tunnels started with a terminal or always on are not stopped. Temporary web tunnels stop after 30 minutes.',
+  import_mrng:'Import from mRemoteNG', import_mrng_desc:'confCons.xml: folders, SSH and web connections with passwords, SSH tunnel → jump host. RDP/VNC/Telnet are listed as skipped.',
+  import_sshcfg:'Import OpenSSH config', import_sshcfg_desc:'~/.ssh/config: hosts, users, ports, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.',
+  mrng_master_pw:'mRemoteNG master password', mrng_master_pw_d:'This connection file is protected with a master password.', mrng_wrong_pw:'Wrong master password — try again.',
+  import_result:'Imported {n} connection(s), {f} new folder(s), {j} jump host link(s), {t} tunnel(s).', import_skipped_h:'Skipped', import_notes_h:'Please check',
+  import_done_title:'Import finished', ev_tunnel:'Tunnels',
   rec_badge_title:'This session is recorded (an administrator turned on session recording)',
   tab_history:'Session history', history_help:'Your terminal sessions and sessions of other people on your connections. Replay a recording or download it as an asciinema .cast file.',
   adm_sessions:'Sessions & recordings', adm_transfers:'File transfers',
@@ -2591,6 +2732,45 @@ Object.assign(LANGS.en, {
 "off": "Off"
 });
 Object.assign(LANGS.hr, {
+  via:'preko', jump_host:'Jump host (spoji se preko)', jump_direct:'Izravna veza',
+  jump_host_help:'Do ovog servera dođi preko druge spremljene SSH veze (bastion / jump host), kao ssh -J. Ta veza može imati svoj jump host (lanci).',
+  jump_host_help_web:'Web sučelju se pristupa preko ove SSH veze: WRM otvori privremeni tunel i stranica se otvori u novoj kartici.',
+  web_path:'Putanja', web_iface:'Web sučelje', web_open:'Otvori web sučelje', web_dblclick:'Dvoklik otvara web sučelje',
+  web_tunnel_open:'Otvoreno preko {route}: {addr}', tunnels_lbl:'Tuneli', tunnels_title:'SSH tuneli (prosljeđivanje portova)',
+  tunnels_help:'Lokalni (-L): port na WRM računalu vodi do host:port kako ga vidi ovaj server (npr. web sučelje internog uređaja). SOCKS (-D): proxy za preglednik ili alate koji dosegne sve što dosegne ovaj server. Udaljeni (-R): port na ovom serveru vodi natrag do host:port dostupnog s WRM-a. Tuneli idu i kroz jump hostove.',
+  tunnels_panel_help:'Pokreni i zaustavi tunele, otvori web sučelja i kopiraj adrese. Tunele postavljaš u vezi (✏). Aktivni tuneli se sami ponovno spajaju.',
+  tun_remote_browser_note:'Napomena: WRM si otvorio s drugog računala — tuneli slušaju na WRM računalu, pa 127.0.0.1 adrese rade samo tamo.',
+  tun_local:'Lokalni (-L)', tun_dynamic:'SOCKS proxy (-D)', tun_remote:'Udaljeni (-R)', tun_templates:'Predlošci…',
+  tunp_https:'Web sučelje (HTTPS 443)', tunp_http:'Web sučelje (HTTP 80)', tunp_ssh:'SSH na interni host (22)', tunp_rdp:'RDP (3389)',
+  tunp_pg:'PostgreSQL (5432)', tunp_mysql:'MySQL / MariaDB (3306)', tunp_vnc:'VNC (5900)', tunp_ipmi:'iDRAC / iLO / IPMI web', tunp_socks:'SOCKS proxy za preglednik',
+  tun_start_mode:'Kada tunel radi', tun_mode_manual:'Ručno', tun_mode_connect:'S terminalom', tun_mode_always:'Uvijek',
+  tun_mode_connect_d:'pokreće se s prvim terminalom ove veze i staje nakon zadnjeg', tun_mode_always_d:'pokreće se s WRM-om i stalno radi',
+  tun_listen_wrm:'Slušaj (WRM računalo)', tun_listen_server:'Slušaj (na ovom serveru)', tun_target_server:'Cilj (s ovog servera)', tun_target_wrm:'Cilj (s WRM-a)',
+  tun_open_as:'Otvori kao', tun_bind_host_title:'127.0.0.1 = samo ovo računalo; 0.0.0.0 = sva mrežna sučelja (administratori)', auto:'auto', this_server:'ovaj server',
+  tun_hint_local:'Veze na {bind} na WRM računalu idu kroz {conn} do {target}.',
+  tun_hint_dynamic:'SOCKS5 proxy na {bind}: postavi ga u pregledniku (FoxyProxy) ili koristi socks5h://… — svako odredište se dosegne kroz {conn}.',
+  tun_hint_remote:'{conn} sluša na {bind}; veze na njega dolaze do {target} s WRM računala.',
+  tun_hint_exposed:'sluša na mreži — svatko tko dosegne tu adresu može koristiti tunel.',
+  tun_add:'Dodaj tunel…', tun_start_all:'Pokreni tunele', tun_stop_all:'Zaustavi tunele', tun_count_title:'{n} tunel(a), {r} aktivno — klikni za tunele',
+  tun_save_failed:'Veza je spremljena, ali tuneli nisu', tun_none:'Još nema tunela. Dodaj ih u vezi (desni klik → Dodaj tunel…).',
+  tun_disabled:'SSH tuneli su isključeni ili nisu dopušteni za tvoj račun (Admin panel → Sigurnosna pravila).',
+  tun_conns:'veza', tun_temporary:'privremeni', tun_started:'Tunel radi na {addr}', tun_on_server:'na serveru',
+  tun_state_up:'Radi', tun_state_starting:'Pokreće se', tun_state_reconnecting:'Ponovno spajanje', tun_state_error:'Greška', tun_state_stopped:'Zaustavljen',
+  tun_loopback_remote:'Ovaj tunel sluša na 127.0.0.1 WRM računala. Otvori {url} na računalu gdje radi WRM, ili postavi adresu slušanja tunela na 0.0.0.0 (administratori) da bi bio dostupan preko mreže.',
+  tun_all_users:'Svi korisnici', tun_traffic:'Promet', active_tunnels:'Aktivni SSH tuneli', open:'Otvori', start:'Pokreni', copy_address:'Kopiraj adresu', copied:'Kopirano', remove:'Ukloni',
+  pg_tunnels:'SSH tuneli',
+  p_tunnels_enabled:'SSH tuneli', p_tunnels_enabled_d:'Prosljeđivanje portova (lokalno, udaljeno, SOCKS) i web sučelja iza jump hostova. Isključeno: aktivni tuneli staju.',
+  p_tunnel_users:'Tko smije koristiti tunele', p_tunnel_users_d:'Svi ili samo administratori.',
+  po_tunnel_users_all:'Svi', po_tunnel_users_admins:'Administratori',
+  p_tunnel_bind_any:'Korisnici smiju slušati na svim sučeljima', p_tunnel_bind_any_d:'Dopusti ne-administratorima otvaranje portova tunela na 0.0.0.0 / mrežnim adresama (dostupno drugima bez prijave u WRM).',
+  p_tunnel_remote_forward:'Udaljeno prosljeđivanje (-R)', p_tunnel_remote_forward_d:'Omogućuje serveru da dosegne hostove i portove na strani WRM-a.',
+  po_tunnel_remote_forward_off:'Isključeno', po_tunnel_remote_forward_admins:'Administratori', po_tunnel_remote_forward_all:'Svi',
+  p_tunnel_idle_minutes:'Zaustavi neaktivne tunele (minuta)', p_tunnel_idle_minutes_d:'Ručno pokrenuti tuneli staju nakon ovog vremena bez prometa (0 = nikad). Tuneli uz terminal i oni koji uvijek rade se ne zaustavljaju. Privremeni web tuneli staju nakon 30 minuta.',
+  import_mrng:'Uvoz iz mRemoteNG-a', import_mrng_desc:'confCons.xml: mape, SSH i web veze s lozinkama, SSH tunel → jump host. RDP/VNC/Telnet se navode kao preskočeni.',
+  import_sshcfg:'Uvoz OpenSSH configa', import_sshcfg_desc:'~/.ssh/config: hostovi, korisnici, portovi, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.',
+  mrng_master_pw:'mRemoteNG master lozinka', mrng_master_pw_d:'Ova datoteka veza zaštićena je master lozinkom.', mrng_wrong_pw:'Pogrešna master lozinka — pokušaj ponovno.',
+  import_result:'Uvezeno {n} veza, {f} novih mapa, {j} povezanih jump hostova, {t} tunela.', import_skipped_h:'Preskočeno', import_notes_h:'Provjeri',
+  import_done_title:'Uvoz završen', ev_tunnel:'Tuneli',
   rec_badge_title:'Ova sesija se snima (administrator je uključio snimanje sesija)',
   tab_history:'Povijest sesija', history_help:'Tvoje terminalske sesije i sesije drugih ljudi na tvojim vezama. Reproduciraj snimku ili je preuzmi kao asciinema .cast datoteku.',
   adm_sessions:'Sesije i snimke', adm_transfers:'Prijenosi datoteka',
@@ -3300,6 +3480,7 @@ async function loadData() {
     } catch(_) {}
     renderTree();
     updateFolderSelects();
+    loadTunnels();
   } catch(e) { console.error('loadData', e); }
 }
 
@@ -3441,8 +3622,12 @@ function makeConnItem(c) {
   el.className = 'conn-item' + (selectedConns.has(c.id) ? ' selected' : '');
   el.draggable = true;
   const proto = (c.protocol || 'SSH').toLowerCase();
-  el.innerHTML = `<span class="conn-proto-badge ${proto}">${esc(c.protocol)}</span><span class="conn-name">${esc(c.name)}</span><span class="conn-host">${esc(c.host)}</span>`;
-  el.title = (c.username ? c.username + '@' : '') + c.host;
+  const tunRun = tunnelState.tunnels.filter(x => x.conn_id === c.id && x.running && !x.ephemeral).length;
+  el.innerHTML = `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : c.protocol)}</span><span class="conn-name">${esc(c.name)}</span>` +
+    (c.route ? `<span class="conn-route" title="${esc(t('via') + ' ' + c.route)}">⤳</span>` : '') +
+    (c.tunnels ? `<span class="conn-tun ${tunRun ? 'on' : ''}" title="${esc(t('tun_count_title').replace('{n}', c.tunnels).replace('{r}', tunRun))}" onclick="event.stopPropagation(); openTunnelsPanel(${c.id})">🔀</span>` : '') +
+    `<span class="conn-host">${esc(c.host)}</span>`;
+  el.title = (c.username ? c.username + '@' : '') + c.host + (c.route ? '\n' + t('via') + ' ' + c.route : '') + (isWebConn(c) ? '\n' + t('web_dblclick') : '');
   el.dataset.connId = c.id;
   if (winObjects.some(w => w.connId === c.id && w.connState === 'connected')) el.classList.add('live');
 
@@ -3459,6 +3644,7 @@ function makeConnItem(c) {
   el.ondblclick = () => {
     selectedConns.clear();
     closeDrawers();
+    if (isWebConn(c)) { openWebConn(c); return; }
     const wo = addWindow();
     wo.connId = c.id;
     setWinMode(wo.id, c.protocol === 'SFTP' || c.protocol === 'FTP' || c.protocol === 'FTPS' ? 'sftp' : 'ssh');
@@ -3493,12 +3679,24 @@ function buildWinOptions(mode) {
 
 function showConnCtx(x, y, conn) {
   const menu = document.getElementById('dyn-ctx-menu');
-  menu.innerHTML = `
+  const web = isWebConn(conn);
+  const tunRunning = tunnelState.tunnels.some(v => v.conn_id === conn.id && v.running && !v.ephemeral);
+  const tunItems = !web && !isFtpConn(conn) ? `
+    <div class="ctx-hr"></div>
+    ${conn.tunnels ? `<div class="ctx-item" onclick="closeAllCtx(); openTunnelsPanel(${conn.id})">🔀 ${esc(t('tunnels_lbl'))} (${conn.tunnels})</div>
+    <div class="ctx-item" onclick="closeAllCtx(); startConnTunnels(${conn.id})">▶ ${esc(t('tun_start_all'))}</div>
+    ${tunRunning ? `<div class="ctx-item" onclick="closeAllCtx(); stopConnTunnels(${conn.id})">■ ${esc(t('tun_stop_all'))}</div>` : ''}` : ''}
+    <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id}, true)">＋ ${esc(t('tun_add'))}</div>` : '';
+  menu.innerHTML = web ? `
+    <div class="ctx-item" onclick="closeAllCtx(); openWebConn(conns.find(x => x.id === ${conn.id}))">🌐 ${esc(t('web_open'))}</div>
+    <div class="ctx-hr"></div>` : `
     <div class="ctx-section">Open as</div>
     ${buildWinOptions('ssh')}
     <div class="ctx-hr"></div>
     ${buildWinOptions('sftp')}
-    <div class="ctx-hr"></div>
+    ${tunItems}
+    <div class="ctx-hr"></div>`;
+  menu.innerHTML += `
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">${t('edit_connection')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); duplicateConn(${conn.id})">⧉ ${t('duplicate')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalConn(${conn.id})">${t('share_connection')}</div>
@@ -3572,7 +3770,7 @@ function ctxOpenConnInWindow(winId, mode) {
 
 // ══ CONNECTION CRUD ════════════════════════════════════
 
-function openConnModal(id) {
+function openConnModal(id, focusTunnels) {
   document.getElementById('m-id').value = id || '';
   document.getElementById('conn-modal-title').textContent = id ? t('edit_connection_title') : t('new_connection_title');
   const c = id ? conns.find(x => x.id === id) : null;
@@ -3583,6 +3781,9 @@ function openConnModal(id) {
   document.getElementById('m-proto').value = c ? c.protocol : 'SSH';
   document.getElementById('m-auth').value = c ? c.auth_method : 'PASSWORD';
   document.getElementById('m-folder').value = c && c.folder_id ? c.folder_id : '';
+  document.getElementById('m-webpath').value = c ? (c.web_path || '') : '';
+  fillJumpSelect(c);
+  loadConnTunnels(id, focusTunnels);
   // Passwords and keys never come back from the server: an empty field keeps the saved one.
   document.getElementById('m-pass').value = '';
   document.getElementById('m-key').value = '';
@@ -3601,9 +3802,10 @@ function openConnModal(id) {
     if (o) { o.hidden = !pol.server_keys && !keep; o.disabled = !pol.server_keys && !keep; }
   });
   onAuthMethodChange();
+  onProtoChange();
   const tr = document.getElementById('conn-test-result'); tr.className = 'conn-test-result'; tr.textContent = '';
   document.getElementById('modal-conn').classList.add('open');
-  setTimeout(() => document.getElementById('m-name').focus(), 50);
+  setTimeout(() => { if (!document.getElementById('modal-conn').contains(document.activeElement)) document.getElementById('m-name').focus(); }, 50);
 }
 
 function onAuthMethodChange() {
@@ -3626,6 +3828,8 @@ function connFormPayload() {
     folder_id: document.getElementById('m-folder').value ? parseInt(document.getElementById('m-folder').value) : null,
     clear_password: document.getElementById('m-pass-clear').checked,
     clear_private_key: document.getElementById('m-key-clear').checked,
+    jump_id: document.getElementById('m-jump').value ? parseInt(document.getElementById('m-jump').value) : null,
+    web_path: document.getElementById('m-webpath').value.trim(),
   };
 }
 
@@ -3637,6 +3841,14 @@ async function saveConn() {
     method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(b)
   });
   if (res.ok) {
+    let cid = parseInt(id) || 0;
+    if (!cid) { const v = await res.clone().json().catch(() => ({})); cid = v.id || 0; }
+    if (cid && tunnelEditor.dirty) {
+      document.getElementById('m-id').value = cid;
+      const tr = await fetch('/api/connections/' + cid + '/tunnels', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(readTunnelRows())});
+      if (!tr.ok) { showToast(t('tun_save_failed') + ': ' + await apiError(tr), 'error', 8000); loadData(); return; }
+      tunnelEditor.dirty = false;
+    }
     closeModal('modal-conn');
     document.getElementById('m-pass').value = ''; document.getElementById('m-key').value = '';
     showToast(id ? t('connection_updated') : t('connection_created'), 'success');
@@ -4088,6 +4300,10 @@ async function adminOverview() {
     ${(st.terminals || []).length ? `<table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('connection'))}</th><th>${esc(t('share'))}</th><th>${esc(t('since'))}</th><th>IP</th><th></th></tr></thead><tbody>` +
       st.terminals.map(x => `<tr><td>${esc(x.user)}</td><td>${esc(x.connection)}<div class="sub mono">${esc(x.host)}</div></td><td>${esc(x.share || '—')}</td><td>${esc(fmtTime(x.started))}</td><td class="mono">${esc(x.ip)}</td>
         <td><button class="btn-danger btn-sm" onclick="adminKillTerminal(${jsq(x.id)})">${esc(t('end'))}</button></td></tr>`).join('') + '</tbody></table>' : `<div class="muted-text">${esc(t('none'))}</div>`}
+    <div class="adm-h">${esc(t('active_tunnels'))} (${(st.tunnels || []).length})</div>
+    ${(st.tunnels || []).length ? `<table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('connection'))}</th><th>${esc(t('tunnels_lbl'))}</th><th>${esc(t('since'))}</th><th>${esc(t('tun_traffic'))}</th><th></th></tr></thead><tbody>` +
+      st.tunnels.map(x => `<tr><td>${esc(x.owner || x.started_by)}</td><td>${esc(x.connection)}${x.route ? `<div class="sub">⤳ ${esc(x.route)}</div>` : ''}</td><td>${esc(x.ephemeral ? t('web_iface') + ' (' + t('tun_temporary') + ')' : x.name)}<div class="sub mono">${esc(tunnelMapText(x))}</div></td><td>${esc(fmtTime(x.started_at))}</td><td class="mono">↑${esc(fmtBytes(x.bytes_up))} ↓${esc(fmtBytes(x.bytes_down))}</td>
+        <td><button class="btn-danger btn-sm" onclick="tunnelStop(${jsq(x.key)}).then(() => showAdminTab('overview'))">${esc(t('stop'))}</button></td></tr>`).join('') + '</tbody></table>' : `<div class="muted-text">${esc(t('none'))}</div>`}
     <div class="adm-h">${esc(t('active_rooms'))} (${(st.rooms || []).length})</div>
     ${(st.rooms || []).length ? st.rooms.map(r => `<div class="share-card"><div class="sc-top"><span class="sc-name">${esc(r.name)}</span><span class="pill">${esc(t('owner'))}: ${esc(r.owner)}</span>${r.voice ? `<span class="pill ok">🎙 ${r.voice}</span>` : ''}${r.streams ? `<span class="pill warn">📡 ${r.streams}</span>` : ''}</div>
       <div class="sc-meta">${(r.participants || []).map(p => `<span>${roleBadge(p.role)} ${esc(p.name)}${p.guest ? ' <span class="guest-badge">' + esc(t('guest')) + '</span>' : ''}${p.voice ? ' 🎙' : ''} <span class="mono">${esc(p.ip)}</span></span>`).join('')}</div></div>`).join('') : `<div class="muted-text">${esc(t('none'))}</div>`}
@@ -4254,6 +4470,7 @@ const POLICY_GROUPS = {
     ['pg_accounts', ['registration', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days']],
     ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export']],
     ['pg_sharing', ['allow_link_shares', 'chat_file_max_mb']],
+    ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],
@@ -4337,7 +4554,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -4631,6 +4848,353 @@ function adminTransfersCSV() {
   const a = document.createElement('a');
   a.href = '/api/admin/transfers?' + qs; a.download = ''; document.body.appendChild(a); a.click(); a.remove();
 }
+
+// ══ JUMP HOSTS, TUNNELS & WEB INTERFACES (v10.2) ══════════════════
+
+let tunnelState = {tunnels: [], policy: {}};
+let tunnelRefreshTimer = null;
+let tunnelPanelConn = null;   // connection the panel is filtered to (null = all)
+let tunnelPanelPoll = null;
+
+function isWebConn(c) { return c && (c.protocol === 'HTTP' || c.protocol === 'HTTPS'); }
+function browserIsLocal() { return ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname); }
+
+async function loadTunnels() {
+  if (isCollabMode || !currentUser) return;
+  try {
+    const r = await fetch('/api/tunnels');
+    if (!r.ok) return;
+    const d = await r.json();
+    tunnelState = {tunnels: d.tunnels || [], policy: d.policy || {}};
+  } catch (_) { return; }
+  const running = tunnelState.tunnels.filter(x => x.running).length;
+  const badge = document.getElementById('tun-badge');
+  if (badge) { badge.style.display = running ? '' : 'none'; badge.textContent = running; }
+  const btn = document.getElementById('btn-tunnels');
+  if (btn) btn.style.display = tunnelState.policy.allowed === false && !running ? 'none' : '';
+  renderTree();
+  if (document.getElementById('modal-tunnels').classList.contains('open')) renderTunnelsPanel();
+}
+
+function scheduleTunnelRefresh() {
+  clearTimeout(tunnelRefreshTimer);
+  tunnelRefreshTimer = setTimeout(loadTunnels, 250);
+}
+
+// ── connection modal: protocol, jump host, tunnels ──
+function onProtoChange() {
+  const p = document.getElementById('m-proto').value;
+  const web = p === 'HTTP' || p === 'HTTPS';
+  const ftp = p === 'FTP' || p === 'FTPS';
+  document.getElementById('field-webpath').style.display = web ? '' : 'none';
+  document.getElementById('m-auth-fields').style.display = web ? 'none' : '';
+  document.getElementById('m-tun-box').style.display = web || ftp ? 'none' : '';
+  document.getElementById('m-host').placeholder = web ? (p === 'HTTPS' ? '10.0.0.5:443' : '10.0.0.5:80') : (ftp ? '192.168.1.1:21' : '192.168.1.1:22');
+  document.getElementById('m-jump-help').textContent = web ? t('jump_host_help_web') : t('jump_host_help');
+  document.getElementById('conn-test-btn').style.display = '';
+}
+
+function fillJumpSelect(c) {
+  const sel = document.getElementById('m-jump');
+  const self = c ? c.id : 0;
+  // A connection cannot use itself or a connection that goes through it.
+  const goesThrough = (x) => { let cur = x, n = 0; while (cur && cur.jump_id && n++ < 10) { if (cur.jump_id === self) return true; cur = conns.find(y => y.id === cur.jump_id); } return false; };
+  const opts = conns.filter(x => x.id !== self && (x.protocol === 'SSH' || x.protocol === 'SFTP') && !(self && goesThrough(x)))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  sel.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + opts.map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+  sel.value = c && c.jump_id ? c.jump_id : '';
+}
+
+const TUNNEL_PRESETS = {
+  https: {kind: 'local', name: 'Web interface', bind_port: 0, target_host: '127.0.0.1', target_port: 443, open_scheme: 'https'},
+  http: {kind: 'local', name: 'Web interface', bind_port: 0, target_host: '127.0.0.1', target_port: 80, open_scheme: 'http'},
+  ssh: {kind: 'local', name: 'SSH to internal host', bind_port: 2222, target_host: '10.0.0.10', target_port: 22},
+  rdp: {kind: 'local', name: 'RDP', bind_port: 13389, target_host: '10.0.0.10', target_port: 3389},
+  pg: {kind: 'local', name: 'PostgreSQL', bind_port: 15432, target_host: '127.0.0.1', target_port: 5432},
+  mysql: {kind: 'local', name: 'MySQL / MariaDB', bind_port: 13306, target_host: '127.0.0.1', target_port: 3306},
+  vnc: {kind: 'local', name: 'VNC', bind_port: 15900, target_host: '127.0.0.1', target_port: 5900},
+  ipmi: {kind: 'local', name: 'iDRAC / iLO / IPMI web', bind_port: 0, target_host: '10.0.0.200', target_port: 443, open_scheme: 'https'},
+  socks: {kind: 'dynamic', name: 'SOCKS proxy', bind_port: 1080},
+};
+const tunnelEditor = {rows: [], dirty: false};
+
+async function loadConnTunnels(id, open) {
+  tunnelEditor.rows = []; tunnelEditor.dirty = false;
+  const box = document.getElementById('m-tun-box');
+  box.open = !!open;
+  const pre = document.getElementById('m-tun-preset');
+  pre.innerHTML = `<option value="">${esc(t('tun_templates'))}</option>` + Object.keys(TUNNEL_PRESETS).map(k => `<option value="${k}">${esc(t('tunp_' + k))}</option>`).join('');
+  if (id) {
+    try { const r = await fetch('/api/connections/' + id + '/tunnels'); if (r.ok) tunnelEditor.rows = await r.json(); } catch (_) {}
+  }
+  if (tunnelEditor.rows.length) box.open = true;
+  renderTunnelRows();
+}
+
+function addTunnelPreset(k) {
+  if (TUNNEL_PRESETS[k]) addTunnelRow(Object.assign({}, TUNNEL_PRESETS[k], {name: t('tunp_' + k).replace(/\s*\([^)]*\)\s*$/, '')}));
+}
+
+function addTunnelRow(d) {
+  syncTunnelRows();
+  tunnelEditor.rows.push(Object.assign({kind: 'local', name: '', bind_host: '127.0.0.1', bind_port: 0, target_host: '', target_port: '', open_scheme: '', open_path: '', start_mode: 'manual'}, d));
+  tunnelEditor.dirty = true;
+  document.getElementById('m-tun-box').open = true;
+  renderTunnelRows();
+  const rows = document.querySelectorAll('#m-tun-rows .tun-row');
+  if (rows.length) rows[rows.length - 1].querySelector(d.kind === 'dynamic' ? '.tun-bport' : '.tun-thost')?.focus();
+}
+
+function removeTunnelRow(i) {
+  syncTunnelRows();
+  tunnelEditor.rows.splice(i, 1);
+  tunnelEditor.dirty = true;
+  renderTunnelRows();
+}
+
+function renderTunnelRows() {
+  const box = document.getElementById('m-tun-rows');
+  const rows = tunnelEditor.rows;
+  const cnt = document.getElementById('m-tun-count');
+  cnt.style.display = rows.length ? '' : 'none';
+  cnt.textContent = rows.length;
+  const pol = tunnelState.policy || {};
+  box.innerHTML = rows.map((d, i) => `<div class="tun-row" data-i="${i}">
+    <div class="tun-line">
+      <select class="tun-kind" onchange="syncTunnelRows(); renderTunnelRows();">
+        <option value="local" ${d.kind === 'local' ? 'selected' : ''}>${esc(t('tun_local'))}</option>
+        <option value="dynamic" ${d.kind === 'dynamic' ? 'selected' : ''}>${esc(t('tun_dynamic'))}</option>
+        <option value="remote" ${d.kind === 'remote' ? 'selected' : ''} ${pol.remote === false && d.kind !== 'remote' ? 'disabled' : ''}>${esc(t('tun_remote'))}</option>
+      </select>
+      <input class="tun-name" value="${esc(d.name || '')}" placeholder="${esc(t('name_lbl'))}" oninput="tunnelChanged(this)">
+      <select class="tun-start" onchange="tunnelChanged(this)" title="${esc(t('tun_start_mode'))}">
+        <option value="manual" ${d.start_mode === 'manual' ? 'selected' : ''}>${esc(t('tun_mode_manual'))}</option>
+        <option value="connect" ${d.start_mode === 'connect' ? 'selected' : ''}>${esc(t('tun_mode_connect'))}</option>
+        <option value="always" ${d.start_mode === 'always' ? 'selected' : ''}>${esc(t('tun_mode_always'))}</option>
+      </select>
+      <button class="icon-btn" type="button" title="${esc(t('remove'))}" onclick="removeTunnelRow(${i})">✕</button>
+    </div>
+    <div class="tun-line">
+      <span class="tun-lbl">${esc(d.kind === 'remote' ? t('tun_listen_server') : t('tun_listen_wrm'))}</span>
+      <input class="tun-bhost" value="${esc(d.bind_host || '127.0.0.1')}" oninput="tunnelChanged(this)" title="${esc(t('tun_bind_host_title'))}">:<input class="tun-bport" type="number" min="0" max="65535" value="${d.bind_port ? Number(d.bind_port) : ''}" placeholder="${esc(t('auto'))}" oninput="tunnelChanged(this)">
+    </div>
+    ${d.kind === 'dynamic' ? '' : `<div class="tun-line"><span class="tun-lbl"><span class="tun-arrow">→</span> ${esc(d.kind === 'remote' ? t('tun_target_wrm') : t('tun_target_server'))}</span>
+      <input class="tun-thost" value="${esc(d.target_host || '')}" placeholder="10.0.0.5" oninput="tunnelChanged(this)">:<input class="tun-tport" type="number" min="1" max="65535" value="${d.target_port ? Number(d.target_port) : ''}" placeholder="443" oninput="tunnelChanged(this)">
+      ${d.kind === 'local' ? `<span class="tun-lbl" style="margin-left:10px;">${esc(t('tun_open_as'))}</span><select class="tun-scheme" onchange="tunnelChanged(this)"><option value="">—</option><option value="http" ${d.open_scheme === 'http' ? 'selected' : ''}>http</option><option value="https" ${d.open_scheme === 'https' ? 'selected' : ''}>https</option></select><input class="tun-path" value="${esc(d.open_path || '')}" placeholder="/" oninput="tunnelChanged(this)">` : ''}
+    </div>`}
+    <div class="muted-text tun-hint">${esc(tunnelHint(d))}</div>
+  </div>`).join('');
+}
+
+function tunnelChanged(el) {
+  tunnelEditor.dirty = true;
+  syncTunnelRows();
+  const row = el.closest('.tun-row');
+  const d = tunnelEditor.rows[Number(row.dataset.i)];
+  row.querySelector('.tun-hint').textContent = tunnelHint(d);
+}
+
+function syncTunnelRows() {
+  document.querySelectorAll('#m-tun-rows .tun-row').forEach(row => {
+    const d = tunnelEditor.rows[Number(row.dataset.i)];
+    if (!d) return;
+    const v = cls => { const e = row.querySelector(cls); return e ? e.value.trim() : ''; };
+    d.kind = v('.tun-kind') || d.kind;
+    d.name = v('.tun-name');
+    d.start_mode = v('.tun-start') || 'manual';
+    d.bind_host = v('.tun-bhost') || '127.0.0.1';
+    d.bind_port = parseInt(v('.tun-bport')) || 0;
+    if (row.querySelector('.tun-thost')) { d.target_host = v('.tun-thost'); d.target_port = parseInt(v('.tun-tport')) || 0; }
+    if (row.querySelector('.tun-scheme')) { d.open_scheme = v('.tun-scheme'); d.open_path = v('.tun-path'); }
+  });
+}
+
+function readTunnelRows() {
+  syncTunnelRows();
+  return tunnelEditor.rows.map(d => ({id: d.id || 0, name: d.name, kind: d.kind, bind_host: d.bind_host, bind_port: d.bind_port || 0,
+    target_host: d.kind === 'dynamic' ? '' : d.target_host, target_port: d.kind === 'dynamic' ? 0 : (d.target_port || 0),
+    open_scheme: d.kind === 'local' ? (d.open_scheme || '') : '', open_path: d.kind === 'local' ? (d.open_path || '') : '', start_mode: d.start_mode || 'manual'}));
+}
+
+function tunnelHint(d) {
+  const bind = (d.bind_host || '127.0.0.1') + ':' + (d.bind_port || t('auto'));
+  const target = (d.target_host || '?') + ':' + (d.target_port || '?');
+  const conn = document.getElementById('m-name').value.trim() || t('this_server');
+  let s;
+  if (d.kind === 'dynamic') s = t('tun_hint_dynamic').replace('{bind}', bind).replace('{conn}', conn);
+  else if (d.kind === 'remote') s = t('tun_hint_remote').replace('{bind}', bind).replace('{target}', target).replace('{conn}', conn);
+  else s = t('tun_hint_local').replace('{bind}', bind).replace('{target}', target).replace('{conn}', conn);
+  if (d.bind_host && !['127.0.0.1', 'localhost', '::1'].includes(d.bind_host)) s += ' ⚠ ' + t('tun_hint_exposed');
+  if (d.start_mode === 'connect') s += ' · ' + t('tun_mode_connect_d');
+  if (d.start_mode === 'always') s += ' · ' + t('tun_mode_always_d');
+  return s;
+}
+
+// ── tunnels panel ──
+function tunnelMapText(v) {
+  const listen = v.running && v.listen ? v.listen : ((v.bind_host || '127.0.0.1') + ':' + (v.bind_port || t('auto')));
+  if (v.kind === 'dynamic') return 'SOCKS5 ' + listen;
+  const target = (v.target_host || '') + ':' + (v.target_port || '');
+  return v.kind === 'remote' ? `${t('tun_on_server')} ${listen} → ${target}` : `${listen} → ${target}`;
+}
+
+function tunnelURL(v) {
+  if (!v.running || !v.listen || !v.open_scheme) return '';
+  const i = v.listen.lastIndexOf(':');
+  let host = v.listen.slice(0, i).replace(/^\[|\]$/g, ''), port = v.listen.slice(i + 1);
+  if (host === '0.0.0.0' || host === '::') host = location.hostname;
+  if (host.includes(':')) host = '[' + host + ']';
+  return `${v.open_scheme}://${host}:${port}${v.open_path || ''}`;
+}
+
+function listenAddress(v) {
+  if (!v.listen) return '';
+  const i = v.listen.lastIndexOf(':');
+  let host = v.listen.slice(0, i).replace(/^\[|\]$/g, '');
+  if (host === '0.0.0.0' || host === '::') host = location.hostname;
+  return (host.includes(':') ? '[' + host + ']' : host) + ':' + v.listen.slice(i + 1);
+}
+
+function openTunnelsPanel(connId) {
+  tunnelPanelConn = connId || null;
+  document.getElementById('modal-tunnels').classList.add('open');
+  document.getElementById('tun-all-wrap').style.display = currentUser && currentUser.is_admin ? 'inline-flex' : 'none';
+  loadTunnels().then(renderTunnelsPanel);
+  clearInterval(tunnelPanelPoll);
+  tunnelPanelPoll = setInterval(() => {
+    if (!document.getElementById('modal-tunnels').classList.contains('open')) { clearInterval(tunnelPanelPoll); return; }
+    loadTunnels();
+  }, 4000);
+}
+
+async function renderTunnelsPanel() {
+  const box = document.getElementById('tun-list');
+  const pol = tunnelState.policy || {};
+  const help = document.getElementById('tun-help');
+  help.textContent = t('tunnels_panel_help') + (browserIsLocal() ? '' : ' ' + t('tun_remote_browser_note'));
+  if (pol.enabled === false || pol.allowed === false) help.textContent = '⚠ ' + t('tun_disabled');
+  let list = tunnelState.tunnels;
+  const all = document.getElementById('tun-all').checked && currentUser && currentUser.is_admin;
+  if (all) {
+    try { const r = await fetch('/api/tunnels?all=1'); if (r.ok) list = await r.json(); } catch (_) {}
+  }
+  if (tunnelPanelConn && !all) list = list.filter(v => v.conn_id === tunnelPanelConn);
+  if (!list.length) {
+    box.innerHTML = `<div class="chat-empty">${esc(t('tun_none'))}</div>`;
+    return;
+  }
+  const groups = {};
+  list.forEach(v => { const k = (all ? (v.owner || '') + ' · ' : '') + v.connection; (groups[k] = groups[k] || []).push(v); });
+  box.innerHTML = Object.keys(groups).sort().map(g => {
+    const first = groups[g][0];
+    return `<div class="tun-group"><div class="tun-group-h">🖥 ${esc(g)} <span class="sub mono">${esc(first.connection_host || '')}${first.route ? ' ⤳ ' + esc(first.route) : ''}</span>
+      ${!all && tunnelPanelConn === null && first.conn_id && !first.ephemeral ? `<button class="btn-sec btn-sm" style="margin-left:auto;" onclick="closeModal('modal-tunnels'); openConnModal(${Number(first.conn_id)}, true)">✏ ${esc(t('edit'))}</button>` : ''}</div>` +
+      groups[g].map(v => {
+        const url = tunnelURL(v);
+        const state = v.running ? v.state : 'stopped';
+        const stats = v.running ? `<div>${esc(t('tun_conns'))}: ${Number(v.active)} / ${Number(v.total)} · ↑${esc(fmtBytes(v.bytes_up))} ↓${esc(fmtBytes(v.bytes_down))}</div><div>${esc(t('since'))} ${esc(fmtTime(v.started_at))}${v.started_by ? ' · ' + esc(v.started_by) : ''}</div>` : esc(t('tun_mode_' + (v.start_mode || 'manual')));
+        return `<div class="tun-item">
+          <span class="tun-dot ${esc(state)}" title="${esc(t('tun_state_' + state))}"></span>
+          <div><div class="t-name">${esc(v.ephemeral ? t('web_iface') : (v.name || ''))}${v.ephemeral ? ' <span class="pill">🌐 ' + esc(t('tun_temporary')) + '</span>' : ''}</div><div class="t-kind">${esc(t('tun_' + v.kind))} · ${esc(t('tun_state_' + state))}</div></div>
+          <div><div class="t-map">${esc(tunnelMapText(v))}</div>${v.error ? `<div class="t-err">${esc(v.error)}</div>` : ''}</div>
+          <div class="t-stats">${stats}</div>
+          <div class="t-act">
+            ${url ? `<button class="btn-sm" onclick="openTunnelURL(${jsq(v.key)})">🌐 ${esc(t('open'))}</button>` : ''}
+            ${v.running && v.listen ? `<button class="btn-sec btn-sm" title="${esc(t('copy_address'))}" onclick="copyText(${jsq(v.kind === 'dynamic' ? 'socks5h://' + listenAddress(v) : (url || listenAddress(v)))})">📋</button>` : ''}
+            ${v.running ? `<button class="btn-danger btn-sm" onclick="tunnelStop(${jsq(v.key)})">■ ${esc(t('stop'))}</button>` : (all ? '' : `<button class="btn-sm" onclick="tunnelStart(${jsq(v.key)}, this)">▶ ${esc(t('start'))}</button>`)}
+          </div></div>`;
+      }).join('') + '</div>';
+  }).join('');
+}
+
+async function tunnelStart(key, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/start', {method: 'POST'});
+  if (!r.ok) showToast(await apiError(r), 'error', 8000);
+  else { const v = await r.json(); showToast(t('tun_started').replace('{addr}', listenAddress(v)), 'success', 3500); }
+  await loadTunnels();
+}
+
+async function tunnelStop(key) {
+  const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/stop', {method: 'POST'});
+  if (!r.ok) showToast(await apiError(r), 'error');
+  await loadTunnels();
+}
+
+async function startConnTunnels(connId) {
+  for (const v of tunnelState.tunnels.filter(x => x.conn_id === connId && !x.running && !x.ephemeral)) await tunnelStart(v.key);
+  openTunnelsPanel(connId);
+}
+
+async function stopConnTunnels(connId) {
+  for (const v of tunnelState.tunnels.filter(x => x.conn_id === connId && x.running && !x.ephemeral)) await tunnelStop(v.key);
+}
+
+async function openTunnelURL(key) {
+  const v = tunnelState.tunnels.find(x => x.key === key);
+  if (!v) return;
+  const url = tunnelURL(v);
+  const host = (v.listen || '').slice(0, (v.listen || '').lastIndexOf(':')).replace(/^\[|\]$/g, '');
+  if (!browserIsLocal() && ['127.0.0.1', '::1', 'localhost'].includes(host)) {
+    await uiConfirm(t('tun_loopback_remote').replace('{url}', url), {okText: t('ok'), cancelText: t('close')});
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
+}
+
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); }
+  catch (_) { const ta = document.createElement('textarea'); ta.value = s; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  showToast(t('copied') + ': ' + s, 'success', 2500);
+}
+
+// ── web interface connections ──
+async function openWebConn(c) {
+  if (!c) return;
+  // Open the window right away (inside the click), so popup blockers allow it.
+  const win = window.open('about:blank', '_blank');
+  const r = await fetch('/api/connections/' + c.id + '/open-web', {method: 'POST'});
+  if (!r.ok) { if (win) win.close(); showToast(await apiError(r), 'error', 8000); return; }
+  const d = await r.json();
+  if (!d.direct && !browserIsLocal()) {
+    if (win) win.close();
+    await uiConfirm(t('tun_loopback_remote').replace('{url}', d.url), {okText: t('ok'), cancelText: t('close')});
+    loadTunnels();
+    return;
+  }
+  if (win) { try { win.opener = null; } catch (_) {} win.location.href = d.url; }
+  else window.open(d.url, '_blank', 'noopener');
+  if (!d.direct) {
+    showToast(t('web_tunnel_open').replace('{route}', d.route || '').replace('{addr}', d.url), 'success', 5000);
+    loadTunnels();
+  }
+}
+
+// ── import from mRemoteNG / OpenSSH ──
+async function importExternal(input, kind, password) {
+  const file = input.files ? input.files[0] : null;
+  const text = file ? await file.text() : input._text;
+  if (input.files) input.value = '';
+  if (!text) return;
+  const body = kind === 'mremoteng' ? {xml: text, password: password || ''} : {text, folder: file ? '' : ''};
+  const r = await fetch('/api/config/import/' + kind, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    if (d.need_password || (password && /master password/.test(d.error || ''))) {
+      const pw = await uiPrompt(t('mrng_master_pw'), '', {okText: t('import'), message: password ? t('mrng_wrong_pw') : t('mrng_master_pw_d'), password: true});
+      if (pw) importExternal({_text: text}, kind, pw);
+      return;
+    }
+    showToast(d.error || t('failed'), 'error', 8000);
+    return;
+  }
+  const lines = [t('import_result').replace('{n}', d.imported).replace('{f}', d.folders).replace('{j}', d.jump_hosts).replace('{t}', d.tunnels)];
+  if ((d.skipped || []).length) lines.push('', t('import_skipped_h') + ':', ...d.skipped.slice(0, 30).map(x => '• ' + x.name + ' — ' + x.reason));
+  if ((d.notes || []).length) lines.push('', t('import_notes_h') + ':', ...d.notes.slice(0, 30).map(x => '• ' + x.name + ' — ' + x.reason));
+  await uiDialog({title: t('import_done_title'), message: lines.join('\n'), okText: t('ok'), cancelText: t('close')});
+  loadData();
+}
+
 
 // ══ SESSIONS ══════════════════════════════════════════
 
@@ -9145,7 +9709,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') loadSessions(); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();

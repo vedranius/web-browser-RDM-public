@@ -55,27 +55,39 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 	var detail string
 	var err error
 	if isFTP(c) {
-		fc, e := dialFTP(c)
+		fc, done, e := dialFTP(c)
 		if e == nil {
 			if wd, e2 := fc.CurrentDir(); e2 == nil {
 				detail = "FTP login OK, working directory " + wd
 			}
-			fc.Quit()
+			done()
 		}
 		err = e
 	} else {
-		var am []ssh.AuthMethod
-		am, err = buildAuthMethods(c)
-		if err == nil {
-			newKey := ""
-			var client *ssh.Client
-			client, err = ssh.Dial("tcp", c.Host, sshClientConfig(c, am, func(fp string) { newKey = fp }))
+		if isWeb(c) {
+			// Web interfaces: check that the port answers (through the jump hosts, if any).
+			err = testWebReachable(c)
 			if err == nil {
-				detail = "SSH login OK (" + string(client.ServerVersion()) + ")"
-				if newKey != "" {
-					detail += " · new host key " + newKey + " saved"
+				detail = "Port " + c.Host + " is reachable"
+				if route := jumpPath(c); route != "" {
+					detail += " via " + route
 				}
-				client.Close()
+			}
+		} else {
+			if err = validateJump(userID, c.ID, c.JumpID); err == nil {
+				newKeys := []string{}
+				var client *ssh.Client
+				client, err = dialSSH(c, func(host, fp string) { newKeys = append(newKeys, host+" "+fp) })
+				if err == nil {
+					detail = "SSH login OK (" + string(client.ServerVersion()) + ")"
+					if route := jumpPath(c); route != "" {
+						detail += " via " + route
+					}
+					if len(newKeys) > 0 {
+						detail += " · new host key saved: " + strings.Join(newKeys, ", ")
+					}
+					client.Close()
+				}
 			}
 		}
 	}

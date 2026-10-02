@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -62,26 +63,135 @@ func startTestSSHServer(t *testing.T) string {
 				return
 			}
 			go func() {
-				_, chans, reqs, err := ssh.NewServerConn(nc, cfg)
+				sconn, chans, reqs, err := ssh.NewServerConn(nc, cfg)
 				if err != nil {
 					return
 				}
-				go ssh.DiscardRequests(reqs)
+				go serveGlobalRequests(sconn, reqs)
 				for nch := range chans {
-					if nch.ChannelType() != "session" {
-						nch.Reject(ssh.UnknownChannelType, "only sessions")
-						continue
+					switch nch.ChannelType() {
+					case "session":
+						ch, creqs, err := nch.Accept()
+						if err != nil {
+							continue
+						}
+						go serveTestSession(ch, creqs)
+					case "direct-tcpip": // ssh -L / ProxyJump
+						var p struct {
+							Host     string
+							Port     uint32
+							OrigHost string
+							OrigPort uint32
+						}
+						if ssh.Unmarshal(nch.ExtraData(), &p) != nil {
+							nch.Reject(ssh.ConnectionFailed, "bad payload")
+							continue
+						}
+						out, err := net.DialTimeout("tcp", net.JoinHostPort(p.Host, strconv.Itoa(int(p.Port))), 5*time.Second)
+						if err != nil {
+							nch.Reject(ssh.ConnectionFailed, err.Error())
+							continue
+						}
+						ch, creqs, err := nch.Accept()
+						if err != nil {
+							out.Close()
+							continue
+						}
+						directTCPIPCount.Add(1)
+						go ssh.DiscardRequests(creqs)
+						go testPipe(ch, out)
+					default:
+						nch.Reject(ssh.UnknownChannelType, "not supported")
 					}
-					ch, creqs, err := nch.Accept()
-					if err != nil {
-						continue
-					}
-					go serveTestSession(ch, creqs)
 				}
 			}()
 		}
 	}()
 	return ln.Addr().String()
+}
+
+var directTCPIPCount atomic.Int64
+
+func testPipe(a io.ReadWriteCloser, b io.ReadWriteCloser) {
+	done := make(chan struct{}, 2)
+	go func() { io.Copy(a, b); done <- struct{}{} }()
+	go func() { io.Copy(b, a); done <- struct{}{} }()
+	<-done
+	a.Close()
+	b.Close()
+}
+
+// serveGlobalRequests implements "tcpip-forward" (ssh -R) and keepalives.
+func serveGlobalRequests(sconn *ssh.ServerConn, reqs <-chan *ssh.Request) {
+	listeners := map[string]net.Listener{}
+	var mu sync.Mutex
+	defer func() {
+		mu.Lock()
+		for _, l := range listeners {
+			l.Close()
+		}
+		mu.Unlock()
+	}()
+	for req := range reqs {
+		switch req.Type {
+		case "tcpip-forward":
+			var p struct {
+				Addr string
+				Port uint32
+			}
+			if ssh.Unmarshal(req.Payload, &p) != nil {
+				req.Reply(false, nil)
+				continue
+			}
+			ln, err := net.Listen("tcp", net.JoinHostPort(p.Addr, strconv.Itoa(int(p.Port))))
+			if err != nil {
+				req.Reply(false, nil)
+				continue
+			}
+			port := uint32(ln.Addr().(*net.TCPAddr).Port)
+			mu.Lock()
+			listeners[net.JoinHostPort(p.Addr, strconv.Itoa(int(port)))] = ln
+			mu.Unlock()
+			req.Reply(true, ssh.Marshal(struct{ Port uint32 }{port}))
+			go func(addr string, port uint32) {
+				for {
+					c, err := ln.Accept()
+					if err != nil {
+						return
+					}
+					ra := c.RemoteAddr().(*net.TCPAddr)
+					ch, creqs, err := sconn.OpenChannel("forwarded-tcpip", ssh.Marshal(struct {
+						Addr     string
+						Port     uint32
+						OrigAddr string
+						OrigPort uint32
+					}{addr, port, ra.IP.String(), uint32(ra.Port)}))
+					if err != nil {
+						c.Close()
+						continue
+					}
+					go ssh.DiscardRequests(creqs)
+					go testPipe(ch, c)
+				}
+			}(p.Addr, port)
+		case "cancel-tcpip-forward":
+			var p struct {
+				Addr string
+				Port uint32
+			}
+			ssh.Unmarshal(req.Payload, &p)
+			mu.Lock()
+			if l := listeners[net.JoinHostPort(p.Addr, strconv.Itoa(int(p.Port)))]; l != nil {
+				l.Close()
+			}
+			mu.Unlock()
+			req.Reply(true, nil)
+		default:
+			if req.WantReply {
+				req.Reply(false, nil)
+			}
+		}
+	}
 }
 
 func serveTestSession(ch ssh.Channel, reqs <-chan *ssh.Request) {
