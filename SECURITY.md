@@ -82,6 +82,12 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Keep `serial_ports` at `admins` (or `off`): serial ports belong to the WRM machine.
 - [ ] Watch `bmc.power` events; power actions and consoles are limited to the connection's owner.
 
+**Quick connect, notes & network tools**
+
+- [ ] Set `network_tools` to `admins` (or `off`) if users should not probe networks from the WRM server or from their servers; every run is audited as `nettool.run` (tool, target, source).
+- [ ] Notes are stored in clear text in the database (like connection names): keep passwords in the vault, not in notes.
+- [ ] Quick connections are audited as `connection.quick` and removed 24 hours after their last use; they use the same host key checks as saved connections.
+
 **Remote desktop (RDP / VNC / Telnet)**
 
 - [ ] Run guacd only on the WRM machine (or in WRM's network namespace) and keep it bound to `127.0.0.1`: guacd has no authentication of its own, so anyone who reaches port 4822 can open connections through it.

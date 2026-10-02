@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.8.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,11 +40,12 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
    - [Connections & folders](#connections--folders)
+   - [Quick connect & connection notes](#quick-connect--connection-notes)
    - [SSH keys & credentials vault](#ssh-keys--credentials-vault)
    - [Jump hosts (bastions)](#jump-hosts-bastions)
    - [SSH tunnels (port forwarding)](#ssh-tunnels-port-forwarding)
@@ -58,6 +59,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Snippets & run on connect](#snippets--run-on-connect)
    - [Broadcast input](#broadcast-input)
    - [Live up/down status](#live-updown-status)
+   - [Network tools](#network-tools)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
    - [Search in files](#search-in-files)
    - [Text editor](#text-editor)
@@ -70,7 +72,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Settings](#settings)
    - [Audit log, session recording & file transfers](#audit-log-session-recording--file-transfers)
    - [Admin panel](#admin-panel)
-   - [Mobile & responsive UI](#mobile--responsive-ui)
+   - [Mobile, responsive UI & installable app](#mobile-responsive-ui--installable-app)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
 7. [Configuration](#configuration)
 8. [Docker, service, reverse proxy & firewall](#docker-service-reverse-proxy--firewall)
@@ -89,6 +91,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 
 - **SSH terminals** in the browser (xterm.js, 256 colors, full-screen apps like `nano`, `vim`, `htop`, `mc`), with **snippets** (saved commands with variables, one click or Ctrl+Shift+Space), **run on connect** (`sudo -i`, `cd /srv/app`…) and **broadcast input** (type into many terminals at once, with a safety check for dangerous commands).
 - **Live up/down status** of every saved connection in the sidebar, with latency, server banner and a notification when a server goes down.
+- **Quick connect** — type `root@10.0.0.5:22` (or `rdp://…`, `vnc://…`) and connect without saving; **notes & runbooks** per connection (procedures, contacts, links); **network tools** — port check, ping, traceroute, DNS and HTTP/TLS check from the WRM server or **from any of your servers** ("can app-01 reach the database on 5432?").
 - **Out-of-band management** — power on/off/restart, health and inventory through the server's **BMC** (iDRAC, iLO, XClarity, Supermicro, OpenBMC via **Redfish**, or **IPMI**), and its **serial console** (BMC SSH or IPMI Serial-over-LAN) in a terminal window; **serial ports** of the WRM machine for switch and router consoles.
 - **Remote desktops** — **RDP** (Windows), **VNC** and **Telnet** in a browser window, also behind jump hosts, with clipboard, Ctrl+Alt+Del, recording and replay (through guacd, the Apache Guacamole proxy).
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
@@ -97,7 +100,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
 - **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
-- **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions.
+- **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions. **Installable as an app** (PWA) on desktops, tablets and phones.
 - **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
 - **Live collaboration**: chat with history, file exchange, **voice calls** (like Discord/Jitsi), terminal sharing with snapshots, remote keyboard control on request, raised hands and moderation.
 - **Enterprise security**: two-factor authentication, closed registration, admin-managed accounts, password & session policies, account lockout, audit log (with CSV export and SIEM-friendly log lines), SSH host-key verification, encrypted secrets, CSRF protection and strict security headers.
@@ -115,21 +118,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.7.0-linux-amd64
-   ./wrm-pro-v10.7.0-linux-amd64
+   chmod +x wrm-pro-v10.8.0-linux-amd64
+   ./wrm-pro-v10.8.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.7.0-windows-amd64.exe
+   .\wrm-pro-v10.8.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.7.0/wrm-pro-v10.7.0-android-arm64
-   chmod +x wrm-pro-v10.7.0-android-arm64 && ./wrm-pro-v10.7.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.8.0/wrm-pro-v10.8.0-android-arm64
+   chmod +x wrm-pro-v10.8.0-android-arm64 && ./wrm-pro-v10.8.0-android-arm64
    ```
 
    **Docker**
@@ -153,6 +156,15 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.7
+
+Replace the binary. The database gets two new columns (`connections.notes`, `connections.temp_until`); the previous binary still starts on it (it shows quick connections as normal ones).
+
+- **⚡ Quick connect** field at the top of the sidebar: `user@host:port` + Enter.
+- **📝 Notes** in the connection dialog and in the right-click menu; a 📝 next to a connection opens them.
+- **🧰 Tools** in the top bar, and *Network tools from this server…* / *Check ports of this host* in the right-click menu (policy `network_tools`, default: all users).
+- **Install as an app**: *Settings → General*, or the install icon of the browser's address bar (needs HTTPS with a trusted certificate, or `localhost`).
 
 ## Upgrading from v10.6
 
@@ -276,16 +288,31 @@ Left sidebar ("PRO MANAGER"):
   - **Jump host (connect via):** another saved SSH connection to go through (see [Jump hosts](#jump-hosts-bastions)).
   - **🔀 SSH tunnels:** port forwards of this connection (see [SSH tunnels](#ssh-tunnels-port-forwarding)).
   - **⚡ Out-of-band management:** the BMC of the server (see [Out-of-band management](#out-of-band-management-consoles--serial-ports)).
+  - **📝 Notes & runbook:** procedures, contacts, links (see [Notes](#quick-connect--connection-notes)).
   - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user), **🔑 SSH key from the key store** or **🗝 Credential from the vault** (see [SSH keys & credentials vault](#ssh-keys--credentials-vault)). *Key file* and *Auto* use keys of the **WRM server itself** and are therefore limited to administrators (policy). Password authentication also answers keyboard-interactive prompts. RDP, VNC, Telnet and FTP log in with a password or a vault credential.
   - **🔌 Test connection** logs in once and shows the result, latency and — for a new server — its host key fingerprint.
 - **Secrets never leave the server.** Passwords and private keys are write-only: the edit dialog shows “saved and encrypted — leave empty to keep it”, with an option to remove the saved secret. *Duplicate* copies the connection on the server.
 - **Host key verification:** the first connection to a server remembers its SSH host key (and, for FTPS, the certificate if it is not signed by a public CA). A **changed key is refused** with a clear warning and both fingerprints; the owner of the connection (or an administrator) can accept the new key after checking it. Policy: *trust on first use* (default), *strict* (new hosts must be approved) or *off*.
 - **Double-click** a connection to open it: SSH opens a terminal; SFTP/FTP/FTPS open the file manager. On touch devices a single tap opens it.
-- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Who has access (authorized_keys)…*, *Deploy SSH key…*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
+- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Network tools from this server…*, *Who has access (authorized_keys)…*, *Deploy SSH key…*, *Notes & runbook*, *Check ports of this host*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
 - **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root).
 - **Search box** filters by name, host, username, protocol or tag; `#tag` searches tags only, several words must all match (`#env:prod web`). The **🏷 tag bar** above the list filters by one or more tags (click again to remove). **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share**, **🔑 Key** (deploy an SSH key to all of them), **🏷 Tags** (add tags, or remove them with `-tag`) or **Delete**.
 - The **dot in front of a connection** is its [live status](#live-updown-status): 🟢 up, 🟡 up but slow (> 300 ms), 🔴 down, a ring = behind a jump host (colored by the jump host's state). A **blue dot after the name** means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
 - **Shared with me** lists shares you are a member of (and shares published for all users), with your **role**; ↗ opens the collaboration room.
+
+### Quick connect & connection notes
+
+**⚡ Quick connect** — the field at the top of the sidebar (*⚡ Quick connect: user@host:port*) — connects without filling in the connection dialog:
+
+- Type an address and press **Enter**: `root@10.0.0.5`, `admin@sw1:2222`, `10.0.0.7`, or with a scheme: `ssh://`, `sftp://`, `rdp://admin@10.0.0.20`, `vnc://10.0.0.30:5901`, `telnet://sw1:23`, `https://10.0.0.11/ui`. Without a scheme it is SSH.
+- A small dialog asks for the **login** — a password, a **vault credential** or a **key from the key store** — and optionally a **jump host**. Enter connects: a terminal, file manager, remote desktop or web interface opens like for a saved connection (host key check, recording and audit included; audit action `connection.quick`).
+- The connection is listed under **⚡ Quick connections** in the sidebar: 💾 (or right-click → *Save as a connection*) opens the connection dialog to give it a name, folder and tags and keep it; ✕ removes it. Quick connections are kept **24 hours after their last use** (an open terminal keeps them), at most 20 per user, are not monitored and not exported.
+
+**📝 Notes & runbook** — every connection has notes: what runs there, how to restart it, who to call, links to the wiki or the ticket:
+
+- *Edit → 📝 Notes & runbook*, or right-click → *Notes & runbook*. A **📝** after the name in the sidebar and in the window bar of its terminals opens them.
+- A small markdown: `# headings`, `- lists`, `**bold**`, `` `code` ``, ```` ``` ```` code blocks and links (`https://…`). Everything else is shown as text (no HTML).
+- Notes belong to the owner of the connection: share members don't see them. They are exported and imported with the connection and copied by *Duplicate*. Up to 20 000 characters.
 
 ### SSH keys & credentials vault
 
@@ -559,6 +586,22 @@ WRM checks every saved connection in the background and shows the result in the 
 
 > **fail2ban / IDS:** the check is an ordinary connection without a login. Default fail2ban `sshd` filters do not count it, but the *aggressive* / *ddos* modes may. Add the WRM server to `ignoreip`, raise the interval, or untick monitoring for such hosts.
 
+### Network tools
+
+**🧰 Tools** in the top bar (or right-click a connection → *Network tools from this server…* / *Check ports of this host*) — the usual first checks when something does not answer, without opening a terminal:
+
+| Tool | What it does |
+|---|---|
+| 🔍 **Port check** | TCP connection to up to 100 ports (`22, 80, 443`, ranges like `8000-8010`): **open** (with time), **closed** (refused) or **no answer** (filtered by a firewall) |
+| 📶 **Ping** | 4 pings, the output of `ping` |
+| 🛤 **Traceroute** | `traceroute` (or `tracepath`; `tracert` on Windows), up to 20 hops |
+| 🌍 **DNS** | Addresses, CNAME, MX, TXT, and the name of an IP address (PTR) |
+| 🔒 **HTTP / TLS** | One request to the URL (redirects are shown, not followed): status, time, server; for HTTPS the TLS version, certificate name, issuer, validity (**days left**), names and whether it is **trusted** |
+
+**From** chooses where the check runs: the **WRM server**, or **one of your SSH connections** — through its jump hosts. That answers "can *app-01* reach the database on 5432?" or "does the firewall between *dmz-web* and the API let 443 through?". From a server, port and HTTP checks go through SSH channels (nothing to install there); ping, traceroute and DNS run the commands of the server (`ping`, `traceroute`/`tracepath`, `getent`/`dig`/`nslookup`).
+
+Only your own connections can be used as a source; one check per user at a time; targets are host names or addresses only (no options or shell characters); every check is audited (`nettool.run`). Policy `network_tools`: all users (default), administrators only, or off.
+
 ### SSH terminal
 
 - Full **xterm-256color** terminal (xterm.js 5, served by WRM itself — no CDN) with the JetBrains Mono font. Works with `nano`, `vim`, `less`, `htop`, `mc`, `tmux`, colors, mouse reporting and UTF-8 (č, ć, ž, š, đ, emoji…).
@@ -721,7 +764,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 
 | Tab | What it contains |
 |---|---|
-| General | Language (English / Hrvatski), accent color, close-window confirmation, **notifications when a server goes down**, browser-side upload limit |
+| General | Language (English / Hrvatski), **install as an app**, accent color, close-window confirmation, **notifications when a server goes down**, browser-side upload limit |
 | Terminal | Font size, scrollback, auto-reconnect |
 | Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
 | Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
@@ -746,9 +789,10 @@ Personal preferences are stored per browser; everything security-related is stor
 
 Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g. for configuration management; it is then shown locked in the admin panel.
 
-### Mobile & responsive UI
+### Mobile, responsive UI & installable app
 
-- The top bar and the collaboration bar adapt to the available width (labels collapse into icons).
+- The top bar and the collaboration bar adapt to the available width (labels collapse into icons, step by step).
+- **Installable app (PWA):** *Settings → General → Install as an app* (or the install icon in the address bar; on iPhone/iPad: *Share → Add to Home Screen*) opens WRM in its own window, from the dock, start menu or home screen. The app caches only its own scripts and fonts (per version); connections and data always come live from the server, and without the server it shows an offline page. Browsers allow this only over **HTTPS with a trusted certificate** (or on `localhost`).
 - On phones (< 760 px): the connection list and the Sessions/Clipboard panel become **slide-in drawers** (☰ and 🗂 buttons), windows open **full screen**, and a single tap opens a connection. Chat and People open as full-width panels.
 
 ---
@@ -843,6 +887,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `guacd_address` | `127.0.0.1:4822` | host:port of guacd. Also `GUACD_ADDRESS` |
 | `bmc_enabled` | `1` | out-of-band management (BMC power, status, consoles). Also `BMC_ENABLED` |
 | `serial_ports` | `admins` | who may use serial ports of the WRM server: `off`, `admins`, `all` |
+| `network_tools` | `all` | who may use the network tools (port check, ping, traceroute, DNS, HTTP/TLS): `off`, `admins`, `all` |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
@@ -890,7 +935,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.7.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.8.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -954,12 +999,14 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Remote desktop:** WRM does the guacd handshake with the stored credentials (never sent to the browser) and forwards only display and allow-listed input instructions; jump-host tunnels for guacd listen on loopback and live only as long as the session; sessions are audited and recorded.
 - **Live status:** checks are plain TCP connections from the WRM server (no credentials, except optional checks through jump hosts with the jump host's own saved login); users only see the states of their own connections.
 - **Tunnels & jump hosts:** every hop is authenticated and host-key-verified; tunnels belong to the owner of the connection (only the owner starts them; administrators can stop any); listen on `127.0.0.1` by default; ports below 1024 refused; network addresses and remote forwards only for administrators (policies); a tunnel can be turned off globally or limited to administrators; every start/stop/error is audited with the traffic. A tunnel port on a network address is **not** protected by WRM sign-in — treat it like an open port of that machine.
+- **Quick connect, notes & network tools:** quick connections are ordinary connections of their owner (same checks, encryption, host keys, audit) that expire; notes are only shown to the owner and rendered as escaped text; network tools only take host names or addresses (never options or shell characters), run from the WRM server or the user's own SSH connections, one at a time per user, and are audited (`nettool.run`) — limit them with `network_tools`.
 - **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
 
 ---
 
 ## Limitations
 
+- Ping and traceroute use the commands of the WRM server or of the source server (`ping`, `traceroute`/`tracepath`); without them the tool says so. The app (PWA) installs only over HTTPS with a trusted certificate or on `localhost`.
 - IPMI needs `ipmitool` (on the WRM server or the jump host); Serial-over-LAN on the WRM server and serial ports need WRM on Linux. Power actions go to one server at a time.
 - Inventory import reads `.xlsx` and CSV, not old `.xls`; NetBox sync updates and reports, but never deletes connections.
 - Password rotation works for SSH logins that may run `passwd` (Linux, BSD, macOS) — not for Windows/RDP, network devices or IPMI. *Who has access* shows `~/.ssh/authorized_keys` of the login user only.
@@ -1022,6 +1069,16 @@ Connections have `jump_id` (jump host connection id or `null`) and `web_path`; l
 | `GET /api/recordings/{id}/guac[?download=1]` | Recording of a remote desktop session (Guacamole protocol stream) |
 
 Connections of type RDP/VNC/TELNET have `options` (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); sessions in `/api/recordings` have `protocol` and `recording.format` (`asciicast-v2+gzip` or `guacamole+gzip`).
+
+**Quick connect, notes & network tools**
+
+| Endpoint | Description |
+|---|---|
+| `POST /api/connections/quick` | `{target: "user@host:port" or "rdp://…", protocol?, password?, credential_id?, key_id?, jump_id?}` → the new temporary connection (`temporary: true`) |
+| `PUT /api/connections/{id}` | `{…, notes, temporary: false}` — `notes` sets the notes, `temporary: false` keeps a quick connection |
+| `GET /api/connections/{id}` | Includes `notes` (lists only have `has_notes`) |
+| `POST /api/nettools` | `{tool: ports\|ping\|traceroute\|dns\|http, target, ports?, source_id?}` → `{source, target, ms, ports: [{port, state: open\|closed\|filtered\|error, ms, info}] \| output \| dns: {addresses, cname, mx, txt, ptr} \| http: {status, tls, subject, issuer, not_after, days_left, names, trusted, trust_error}}` |
+| `GET /manifest.webmanifest`, `GET /sw.js` | Web app manifest and service worker (installable app) |
 
 **Out-of-band management**
 
@@ -1193,6 +1250,9 @@ remote-manager/
   snippets.go     snippets (saved commands), variables, run on connect
   status.go       live up/down status monitor and API
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
+  quick.go        quick connect (temporary connections and their cleanup), connection notes
+  nettools.go     network tools: port check, ping, traceroute, DNS, HTTP/TLS check, from WRM or a server
+  pwa.go          web app manifest and service worker (installable app)
   console.go      terminal backends: SSH shell, BMC SSH console, IPMI Serial-over-LAN, serial ports
   tty_linux.go    pseudo terminals and serial port settings (Linux); tty_other.go elsewhere
   inventory.go    tags, CSV/XLSX reader with column mapping, NetBox import and sync
@@ -1206,6 +1266,7 @@ remote-manager/
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
   status_test.go       live status: up/down, banners, jump hosts, check now
+  quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
   bmc_test.go          Redfish (fake BMC, pinning, jump host, credential), IPMI with a fake ipmitool, SOL (local PTY and jump host), BMC SSH console, serial port on a PTY
   inventory_test.go    tags, CSV encodings/separators, XLSX import, NetBox import and sync (fake NetBox)
   keys_test.go         key store, deploy/revoke/who has access, vault sharing and rotation (fake SSH server with sh and passwd)
@@ -1252,6 +1313,9 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | IPMI: *ipmitool is not installed* | `apt install ipmitool` on the WRM server, or on the jump host when the BMC is reached through it. IPMI over LAN must be enabled on the BMC |
 | Serial console shows nothing | Press Enter. iDRAC: the console needs *Serial communication → Redirection* in the BIOS; IPMI SOL: enable SOL on the BMC and the serial console in the OS (`console=ttyS1,115200`) |
 | Serial port: *permission denied* | Run WRM as a user in the `dialout` group (or give it access to the device) |
+| No *Install* button / *Install as an app* only shows a hint | Browsers install web apps only over HTTPS with a **trusted** certificate (a reverse proxy with Let's Encrypt or your company CA), or on `localhost`. With `HTTPS_SELF_SIGNED=1` trust the certificate first. Firefox on the desktop does not install web apps: use Chrome, Edge or Safari |
+| Network tools: *ping is not installed* | Install `iputils-ping` / `traceroute` on the WRM server (or on the source server), or use the port check — it needs nothing |
+| A quick connection disappeared | Quick connections are deleted 24 hours after their last use. Save the ones you need (💾) |
 | CSV import: wrong letters (`Ä�`, `?` instead of `č`) | WRM reads UTF-8, UTF-16 and Windows-1250. For other encodings save the file from Excel as *CSV UTF-8* or as `.xlsx` |
 | NetBox: *refused the token* / *API not found* | Use the base address (`https://netbox.example.com`, without `/api`), a token of a user that can view devices and VMs; for a self-signed certificate tick *Accept a self-signed certificate* |
 | Deploy SSH key: *cannot write ~/.ssh/authorized_keys* | The login user's home is read-only or its shell is not POSIX (network devices): add the key there by hand. A key that is not accepted afterwards: check `AuthorizedKeysFile` and `PubkeyAcceptedAlgorithms` (old servers may need RSA) in `sshd_config` |
