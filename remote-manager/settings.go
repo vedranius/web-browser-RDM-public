@@ -56,6 +56,12 @@ var settingSpecs = []settingSpec{
 	{Key: "turn_host", Default: "", Kind: "string"},
 	{Key: "turn_relay_ports", Default: "49152-65535", Kind: "string", Restart: true},
 	{Key: "turn_allow_private", Default: "0", Kind: "bool", Restart: true},
+	// SSH tunnels (port forwarding)
+	{Key: "tunnels_enabled", Default: "1", Kind: "bool", Alias: "TUNNELS_ENABLED"},
+	{Key: "tunnel_users", Default: "all", Kind: "enum", Enum: []string{"all", "admins"}},
+	{Key: "tunnel_bind_any", Default: "0", Kind: "bool"},
+	{Key: "tunnel_remote_forward", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "tunnel_idle_minutes", Default: "0", Kind: "int", Min: 0, Max: 10080},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
@@ -316,6 +322,12 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if turnChanged {
 			restartTURN()
+		}
+		for k := range changed {
+			if strings.HasPrefix(k, "tunnel") {
+				tunnelMgr.applyPolicy()
+				break
+			}
 		}
 		jsonOK(w, map[string]interface{}{"ok": true, "changed": changed})
 	default:

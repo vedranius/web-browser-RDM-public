@@ -21,8 +21,8 @@ import (
 func loadConnectionRaw(connID int) (Connection, error) {
 	var c Connection
 	var uid *int
-	err := db.QueryRow(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id FROM connections WHERE id=?`, connID).
-		Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &uid)
+	err := db.QueryRow(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path FROM connections WHERE id=?`, connID).
+		Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &uid, &c.JumpID, &c.WebPath)
 	if err != nil {
 		return c, fmt.Errorf("connection not found")
 	}
@@ -46,6 +46,13 @@ func loadConnection(connID int) (Connection, error) {
 func isFTP(c Connection) bool {
 	p := strings.ToUpper(c.Protocol)
 	return p == "FTP" || p == "FTPS"
+}
+
+func intPtrEq(a, b *int) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	return *a == *b
 }
 
 func truncateStr(s string, n int) string {

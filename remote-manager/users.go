@@ -1049,6 +1049,7 @@ func deleteUserCompletely(id int) {
 func disconnectUserEverywhere(userID int, reason string) {
 	killTerminals(func(t *termSession) bool { return t.UserID == userID }, reason)
 	kickUserFromRooms(userID, reason)
+	tunnelMgr.stopUser(userID, reason)
 }
 
 // resetPasswordCLI implements "wrm -reset-password <username>" for locked-out admins.

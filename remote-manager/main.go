@@ -35,7 +35,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.1.0-mimo"
+var AppVersion = "v10.2.0-mimo"
 
 const sessionCookieName = "wrm_session"
 
@@ -58,6 +58,8 @@ type Connection struct {
 	PrivateKey string `json:"private_key"`
 	KeyPath    string `json:"key_path"`
 	FolderID   *int   `json:"folder_id"`
+	JumpID     *int   `json:"jump_id"`  // reach this connection through another SSH connection
+	WebPath    string `json:"web_path"` // HTTP/HTTPS connections: path of the web interface
 	UserID     int    `json:"-"`
 }
 
@@ -70,13 +72,24 @@ type connView struct {
 	AuthMethod  string `json:"auth_method"`
 	KeyPath     string `json:"key_path"`
 	FolderID    *int   `json:"folder_id"`
+	JumpID      *int   `json:"jump_id"`
+	WebPath     string `json:"web_path"`
+	Route       string `json:"route,omitempty"` // jump hosts, e.g. "bastion → dc1-gw"
 	HasPassword bool   `json:"has_password"`
 	HasKey      bool   `json:"has_private_key"`
+	Tunnels     int    `json:"tunnels"` // configured port forwards
 }
 
 func (c Connection) view() connView {
-	return connView{ID: c.ID, Name: c.Name, Protocol: c.Protocol, Host: c.Host, Username: c.Username, AuthMethod: c.AuthMethod,
-		KeyPath: c.KeyPath, FolderID: c.FolderID, HasPassword: c.Password != "", HasKey: c.PrivateKey != ""}
+	v := connView{ID: c.ID, Name: c.Name, Protocol: c.Protocol, Host: c.Host, Username: c.Username, AuthMethod: c.AuthMethod,
+		KeyPath: c.KeyPath, FolderID: c.FolderID, JumpID: c.JumpID, WebPath: c.WebPath, HasPassword: c.Password != "", HasKey: c.PrivateKey != ""}
+	if c.JumpID != nil && *c.JumpID > 0 {
+		v.Route = jumpPath(c)
+	}
+	if c.ID > 0 {
+		db.QueryRow(`SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?`, c.ID).Scan(&v.Tunnels)
+	}
+	return v
 }
 
 type Folder struct {
@@ -194,6 +207,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/sessions/", apiSessionByIDHandler)
 	mux.HandleFunc("/api/config/export", apiExportHandler)
 	mux.HandleFunc("/api/config/import", apiImportHandler)
+	mux.HandleFunc("/api/config/import/", apiImportExternalHandler)
 	// sharing & collaboration
 	mux.HandleFunc("/api/shares", apiSharesHandler)
 	mux.HandleFunc("/api/shares/", apiSharesByIDHandler)
@@ -206,6 +220,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/audit", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
+	mux.HandleFunc("/api/tunnels", apiTunnelsHandler)
+	mux.HandleFunc("/api/tunnels/", apiTunnelsHandler)
 	mux.HandleFunc("/api/recordings", apiRecordingsHandler)
 	mux.HandleFunc("/api/recordings/", apiRecordingsHandler)
 	mux.HandleFunc("/api/admin/known-hosts", apiAdminKnownHostsHandler)
@@ -260,6 +276,7 @@ func main() {
 	log.Printf("Web Remote Manager %s starting", AppVersion)
 	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
 	startTURN()
+	tunnelMgr.startAlways()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -311,6 +328,7 @@ func main() {
 		<-stop
 		log.Printf("Shutting down…")
 		stopTURN()
+		tunnelMgr.stopAll("WRM was stopped")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		srv.Shutdown(ctx)
@@ -586,6 +604,23 @@ func initDB() {
 		truncated INTEGER NOT NULL DEFAULT 0,
 		created_at TEXT NOT NULL)`,
 		"id", "session_id", "format", "path", "size_bytes", "data_bytes", "sha256", "duration_ms", "input_recorded", "truncated", "created_at")
+	// v10.2: port forwards (tunnels) configured on a connection
+	ensureTable("connection_tunnels", `CREATE TABLE IF NOT EXISTS connection_tunnels (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		conn_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL DEFAULT '',
+		kind TEXT NOT NULL DEFAULT 'local',
+		bind_host TEXT NOT NULL DEFAULT '127.0.0.1',
+		bind_port INTEGER NOT NULL DEFAULT 0,
+		target_host TEXT NOT NULL DEFAULT '',
+		target_port INTEGER NOT NULL DEFAULT 0,
+		open_scheme TEXT NOT NULL DEFAULT '',
+		open_path TEXT NOT NULL DEFAULT '',
+		start_mode TEXT NOT NULL DEFAULT 'manual',
+		sort INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '')`,
+		"id", "conn_id", "user_id", "name", "kind", "bind_host", "bind_port", "target_host", "target_port", "open_scheme", "open_path", "start_mode", "sort", "created_at")
 	ensureTable("file_transfers", `CREATE TABLE IF NOT EXISTS file_transfers (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		ts TEXT NOT NULL,
@@ -646,6 +681,9 @@ func initDB() {
 		`ALTER TABLE audit_log ADD COLUMN session_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE audit_log ADD COLUMN prev_hash TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE audit_log ADD COLUMN hash TEXT NOT NULL DEFAULT ''`,
+		// v10.2: jump hosts and web interface connections
+		`ALTER TABLE connections ADD COLUMN jump_conn_id INTEGER DEFAULT NULL`,
+		`ALTER TABLE connections ADD COLUMN web_path TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -664,6 +702,7 @@ func initDB() {
 		`CREATE INDEX IF NOT EXISTS ix_recordings_session ON session_recordings(session_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_transfers_ts ON file_transfers(ts)`,
 		`CREATE INDEX IF NOT EXISTS ix_transfers_user ON file_transfers(user_id, ts)`,
+		`CREATE INDEX IF NOT EXISTS ix_tunnels_conn ON connection_tunnels(conn_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_collab_share ON collab_messages(share_id, id)`,
 		`CREATE INDEX IF NOT EXISTS ix_share_items ON share_items(share_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_connections_user ON connections(user_id)`,
@@ -803,7 +842,7 @@ func userOwnsSession(sessionID, userID int) bool {
 
 // ─── CONNECTIONS ─────────────────────────────────────
 
-var validProtocols = map[string]bool{"SSH": true, "SFTP": true, "FTP": true, "FTPS": true}
+var validProtocols = map[string]bool{"SSH": true, "SFTP": true, "FTP": true, "FTPS": true, "HTTP": true, "HTTPS": true}
 var validAuthMethods = map[string]bool{"PASSWORD": true, "KEY": true, "KEY_FILE": true, "KEY_AUTO": true}
 
 // serverKeysAllowed: "Key file" and "Auto (~/.ssh)" read private keys of the WRM server
@@ -841,11 +880,31 @@ func normalizeConnection(c *Connection) error {
 	if !validAuthMethods[c.AuthMethod] {
 		return fmt.Errorf("Invalid authentication method")
 	}
+	if c.JumpID != nil && *c.JumpID <= 0 {
+		c.JumpID = nil
+	}
+	c.WebPath = strings.TrimSpace(c.WebPath)
+	if isWeb(*c) {
+		if c.WebPath != "" && !strings.HasPrefix(c.WebPath, "/") {
+			c.WebPath = "/" + c.WebPath
+		}
+		if len(c.WebPath) > 1000 || strings.ContainsAny(c.WebPath, "\r\n\t ") {
+			return fmt.Errorf("Invalid web path")
+		}
+	} else {
+		c.WebPath = ""
+	}
 	return nil
 }
 
+// isWeb reports a web interface connection (opened in the browser, optionally through a tunnel).
+func isWeb(c Connection) bool {
+	p := strings.ToUpper(c.Protocol)
+	return p == "HTTP" || p == "HTTPS"
+}
+
 func loadUserConnections(userID int) []Connection {
-	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id FROM connections WHERE user_id=? ORDER BY name`, userID)
+	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path FROM connections WHERE user_id=? ORDER BY name`, userID)
 	conns := []Connection{}
 	if err != nil {
 		return conns
@@ -853,7 +912,7 @@ func loadUserConnections(userID int) []Connection {
 	defer rows.Close()
 	for rows.Next() {
 		var c Connection
-		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID)
+		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath)
 		decryptConnectionSecrets(&c)
 		c.UserID = userID
 		conns = append(conns, c)
@@ -890,17 +949,22 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		if c.FolderID != nil && !userOwnsFolder(*c.FolderID, userID) {
 			c.FolderID = nil
 		}
+		if err := validateJump(userID, 0, c.JumpID); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
 		plain := c
+		plain.UserID = userID
 		encryptConnectionSecrets(&c)
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID, c.JumpID, c.WebPath)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
 		}
 		id, _ := res.LastInsertId()
 		plain.ID = int(id)
-		auditLog(r, userID, "connection.created", c.Name, map[string]string{"host": c.Host, "protocol": c.Protocol, "auth": c.AuthMethod})
+		auditLogRef(r, userID, usernameOf(userID), "connection.created", c.Name, map[string]string{"host": c.Host, "protocol": c.Protocol, "auth": c.AuthMethod, "route": jumpPath(plain)}, auditRef{ConnID: plain.ID})
 		w.WriteHeader(http.StatusCreated)
 		jsonOK(w, plain.view())
 	default:
@@ -959,6 +1023,10 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if c.FolderID != nil && !userOwnsFolder(*c.FolderID, userID) {
 			c.FolderID = cur.FolderID
 		}
+		if err := validateJump(userID, id, c.JumpID); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
 		// Empty secret fields keep the stored secret (the browser never receives it).
 		changed := []string{}
 		if c.Password == "" && !in.ClearPassword {
@@ -972,34 +1040,45 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			changed = append(changed, "private_key")
 		}
 		for f, same := range map[string]bool{"name": c.Name == cur.Name, "host": c.Host == cur.Host, "username": c.Username == cur.Username,
-			"protocol": c.Protocol == cur.Protocol, "auth_method": c.AuthMethod == cur.AuthMethod, "key_path": c.KeyPath == cur.KeyPath} {
+			"protocol": c.Protocol == cur.Protocol, "auth_method": c.AuthMethod == cur.AuthMethod, "key_path": c.KeyPath == cur.KeyPath,
+			"jump_host": intPtrEq(c.JumpID, cur.JumpID), "web_path": c.WebPath == cur.WebPath} {
 			if !same {
 				changed = append(changed, f)
 			}
 		}
 		encryptConnectionSecrets(&c)
-		if _, err := db.Exec(`UPDATE connections SET name=?,protocol=?,host=?,username=?,auth_method=?,password=?,private_key=?,key_path=?,folder_id=? WHERE id=? AND user_id=?`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, id, userID); err != nil {
+		if _, err := db.Exec(`UPDATE connections SET name=?,protocol=?,host=?,username=?,auth_method=?,password=?,private_key=?,key_path=?,folder_id=?,jump_conn_id=?,web_path=? WHERE id=? AND user_id=?`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, c.JumpID, c.WebPath, id, userID); err != nil {
 			jsonError(w, err.Error(), 500)
 			return
 		}
 		if len(changed) > 0 {
-			auditLog(r, userID, "connection.updated", c.Name, map[string]interface{}{"id": id, "changed": changed})
+			auditLogRef(r, userID, usernameOf(userID), "connection.updated", c.Name, map[string]interface{}{"id": id, "changed": changed}, auditRef{ConnID: id})
+			// Running tunnels keep their SSH connection; restart them so they use the new settings.
+			tunnelMgr.restartConn(id)
 		}
 		jsonOK(w, map[string]bool{"ok": true})
 	case action == "" && r.Method == http.MethodDelete:
 		killTerminals(func(t *termSession) bool { return t.ConnID == id }, "The connection was deleted")
+		tunnelMgr.stopConn(id, "the connection was deleted")
+		db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
+		db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		db.Exec("DELETE FROM connections WHERE id=? AND user_id=?", id, userID)
 		auditLog(r, userID, "connection.deleted", cur.Name, map[string]interface{}{"id": id, "host": cur.Host})
 		jsonOK(w, map[string]bool{"ok": true})
+	case action == "tunnels":
+		connectionTunnelsHandler(w, r, userID, cur)
+	case action == "open-web" && r.Method == http.MethodPost:
+		openWebHandler(w, r, userID, cur)
 	case action == "duplicate" && r.Method == http.MethodPost:
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id)
-			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id FROM connections WHERE id=? AND user_id=?`, id, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path)
+			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path FROM connections WHERE id=? AND user_id=?`, id, userID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
 		}
 		nid, _ := res.LastInsertId()
+		copyTunnelDefs(id, int(nid))
 		dup, _ := loadConnectionRaw(int(nid))
 		auditLog(r, userID, "connection.created", dup.Name, map[string]interface{}{"duplicate_of": id})
 		jsonOK(w, dup.view())
@@ -1326,7 +1405,8 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 	auditLog(r, userID, "config.exported", "", map[string]interface{}{"connections": len(conns), "with_secrets": withSecrets})
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", attachmentHeader("wrm-config-"+AppVersion+".json"))
-	json.NewEncoder(w).Encode(map[string]interface{}{"version": AppVersion, "with_secrets": withSecrets, "folders": folders, "connections": conns})
+	json.NewEncoder(w).Encode(map[string]interface{}{"version": AppVersion, "with_secrets": withSecrets, "folders": folders, "connections": conns,
+		"tunnels": loadTunnelDefs("user_id=?", userID)})
 }
 
 func apiImportHandler(w http.ResponseWriter, r *http.Request) {
@@ -1341,6 +1421,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
 		Folders     []Folder     `json:"folders"`
 		Connections []Connection `json:"connections"`
+		Tunnels     []tunnelDef  `json:"tunnels"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		jsonError(w, "Bad JSON", 400)
@@ -1374,7 +1455,15 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		folderIDs[f.Name] = &i
 	}
 	imported, skipped := 0, 0
+	newIDs := map[int]int{} // exported connection id → new id
+	type jumpLink struct{ id, oldJump int }
+	var jumps []jumpLink
 	for _, c := range payload.Connections {
+		oldID, oldJump := c.ID, 0
+		if c.JumpID != nil {
+			oldJump = *c.JumpID
+		}
+		c.JumpID = nil
 		if normalizeConnection(&c) != nil || (usesServerKeys(c.AuthMethod) && !allowServerKeys) {
 			skipped++
 			continue
@@ -1389,17 +1478,41 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		encryptConnectionSecrets(&c)
-		if _, err := tx.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, folderID, userID); err == nil {
+		if res, err := tx.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, folderID, userID, c.WebPath); err == nil {
 			imported++
+			nid, _ := res.LastInsertId()
+			if oldID > 0 {
+				newIDs[oldID] = int(nid)
+			}
+			if oldJump > 0 {
+				jumps = append(jumps, jumpLink{int(nid), oldJump})
+			}
+		}
+	}
+	for _, j := range jumps {
+		if nj, ok := newIDs[j.oldJump]; ok {
+			tx.Exec(`UPDATE connections SET jump_conn_id=? WHERE id=?`, nj, j.id)
+		}
+	}
+	tunnelsImported := 0
+	now := time.Now().UTC().Format(time.RFC3339)
+	for _, d := range payload.Tunnels {
+		nc, ok := newIDs[d.ConnID]
+		if !ok || validateTunnelDef(&d, userID) != nil {
+			continue
+		}
+		if _, err := tx.Exec(`INSERT INTO connection_tunnels (conn_id, user_id, name, kind, bind_host, bind_port, target_host, target_port, open_scheme, open_path, start_mode, sort, created_at)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, nc, userID, d.Name, d.Kind, d.BindHost, d.BindPort, d.TargetHost, d.TargetPort, d.OpenScheme, d.OpenPath, d.StartMode, d.Sort, now); err == nil {
+			tunnelsImported++
 		}
 	}
 	if err := tx.Commit(); err != nil {
 		jsonError(w, err.Error(), 500)
 		return
 	}
-	auditLog(r, userID, "config.imported", "", map[string]int{"connections": imported, "skipped": skipped})
-	jsonOK(w, map[string]int{"imported": imported, "skipped": skipped})
+	auditLog(r, userID, "config.imported", "", map[string]int{"connections": imported, "skipped": skipped, "tunnels": tunnelsImported})
+	jsonOK(w, map[string]int{"imported": imported, "skipped": skipped, "tunnels": tunnelsImported})
 }
 
 // ─── EVENTS WS ───────────────────────────────────────
@@ -1571,18 +1684,20 @@ func ensurePort(host, protocol string) string {
 	if strings.Contains(host, ":") {
 		return host
 	}
-	if strings.ToUpper(protocol) == "FTP" || strings.ToUpper(protocol) == "FTPS" {
+	switch strings.ToUpper(protocol) {
+	case "FTP", "FTPS":
 		return host + ":21"
+	case "HTTP":
+		return host + ":80"
+	case "HTTPS":
+		return host + ":443"
 	}
 	return host + ":22"
 }
 
+// getSSHClient connects to c (through its jump hosts, if any).
 func getSSHClient(c Connection) (*ssh.Client, error) {
-	am, err := buildAuthMethods(c)
-	if err != nil {
-		return nil, err
-	}
-	return ssh.Dial("tcp", c.Host, sshClientConfig(c, am, nil))
+	return dialSSH(c, nil)
 }
 
 // ─── SERVER-TO-SERVER TRANSFER ───────────────────────
@@ -1636,8 +1751,8 @@ func transferRemoteHandler(w http.ResponseWriter, r *http.Request) {
 	auditLogRef(r, actorID, actorName, "file.transfer", srcConn.Name+" → "+dstConn.Name,
 		map[string]interface{}{"files": len(req.SourceFiles), "dest_path": req.DestPath, "to_conn_id": dstConn.ID}, auditRef{ConnID: srcConn.ID})
 
-	if isFTP(srcConn) || isFTP(dstConn) {
-		jsonError(w, "FTP not supported for server-to-server transfer", 400)
+	if isFTP(srcConn) || isFTP(dstConn) || isWeb(srcConn) || isWeb(dstConn) {
+		jsonError(w, "Server-to-server transfer needs SSH/SFTP connections on both sides", 400)
 		return
 	}
 
