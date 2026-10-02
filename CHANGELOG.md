@@ -4,6 +4,25 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.7.0] — 2026-10-02 — out-of-band management, consoles & serial ports
+
+### Added
+- **Out-of-band management** (`bmc.go`): a BMC per connection (`connections.bmc`, JSON with the password encrypted, or a vault credential):
+  - **Redfish** (iDRAC, iLO, XClarity, Supermicro, OpenBMC): power state, health, maker, model, serial number, BIOS, CPUs, memory, BMC firmware, power draw, inlet temperature; certificates pinned on first use like SSH host keys (shared with FTPS: `pinnedTLSConfig`);
+  - **IPMI** with `ipmitool` (`chassis status`, `mc info`, `fru print`), the password in the environment (`-E`);
+  - power actions on, graceful shutdown/restart, force off/restart, power cycle and NMI — only those the BMC offers — with confirmation and audit events `bmc.power` / `bmc.power_failed`;
+  - through the connection's jump hosts: Redfish over an SSH channel of the last hop, `ipmitool` on the last hop (password over stdin).
+- **Serial consoles** in terminal windows (`console.go`): over the BMC's SSH with the vendor's console command (iDRAC `console com2`, iLO `vsp`, …, suggested from the BMC maker), or IPMI **Serial-over-LAN** on the jump host or on the WRM server in a pseudo terminal; owner only, audited and recorded (`protocol` console / sol); saved in workspace sessions.
+- **Serial ports** of the WRM server: protocol `SERIAL` (device name, speed, data bits, parity, stop bits, flow control), raw terminal, *Test connection*; policy `serial_ports` (off / admins / all, default admins), Linux.
+- Policies `bmc_enabled` (`BMC_ENABLED`) and `serial_ports`; ipmitool in the admin overview; audit filters for `bmc.` and `inventory.`.
+- Tests: Redfish against a fake BMC (status, actions, pinning, changed certificate, wrong password, jump host, credential), IPMI with a fake ipmitool (locally and on a jump host), Serial-over-LAN (PTY and jump host), the BMC SSH console and a serial port on a pseudo terminal.
+
+### Changed
+- The terminal WebSocket runs on terminal backends (SSH shell, BMC console, SOL, serial port) instead of an SSH session only.
+
+### Fixed
+- Saved workspace sessions did not include remote desktop windows.
+
 ## [10.6.0] — 2026-10-02 — tags & inventory import (CSV, Excel, NetBox)
 
 ### Added
@@ -261,6 +280,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 - Full-screen programs drawn at the wrong size (the PTY size follows the window).
 - Folder transfer when WRM runs on Windows; several smaller issues.
 
+[10.7.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.7.0
 [10.6.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.6.0
 [10.5.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.5.0
 [10.4.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.4.0
