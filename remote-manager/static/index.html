@@ -3,11 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.7.0</title>
+<title>Web Remote Manager PRO v10.8.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="WRM">
 <meta name="referrer" content="no-referrer">
 <!-- All assets are served by WRM itself (no CDN): works offline / in closed networks. -->
 <link rel="stylesheet" href="/static/vendor/fonts.css">
@@ -1424,6 +1428,32 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .bmc-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 6px; }
 .bmc-actions button { font-size: 12px; }
 .win.console .win-header { background: linear-gradient(90deg, rgba(234,179,8,.18), transparent 70%); }
+
+/* v10.8: quick connect, notes, network tools */
+.quick-box { display: flex; gap: 4px; margin-top: 6px; }
+.quick-box input { flex: 1; min-width: 0; }
+.conn-note { font-size: 11px; cursor: pointer; opacity: .8; flex: none; }
+.conn-note:hover { opacity: 1; }
+.quick-act { font-size: 11px; cursor: pointer; opacity: .65; flex: none; padding: 0 2px; }
+.quick-act:hover { opacity: 1; }
+.notes-view { font-size: 13px; line-height: 1.6; color: var(--text); max-height: 60vh; overflow-y: auto; padding: 4px 2px; word-break: break-word; }
+.notes-view h1, .notes-view h2, .notes-view h3 { margin: 10px 0 4px; font-size: 15px; }
+.notes-view h1 { font-size: 17px; }
+.notes-view code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg3); border-radius: 4px; padding: 1px 5px; }
+.notes-view pre { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 8px 10px; overflow-x: auto; }
+.notes-view ul { margin: 4px 0 4px 18px; padding: 0; }
+.notes-view a { color: var(--accent); }
+.notes-view .empty { color: var(--text3); }
+#m-notes, #notes-edit { width: 100%; min-height: 140px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.tools-out { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: pre-wrap; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 8px 10px; max-height: 46vh; overflow: auto; margin-top: 8px; color: var(--text2); }
+.port-row { display: inline-flex; align-items: center; gap: 6px; margin: 3px 10px 3px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+#tools-result .kv .v { word-break: normal; overflow-wrap: anywhere; }
+#tools-tabs { flex-wrap: wrap; row-gap: 2px; }
+/* Top bar: give way step by step instead of overlapping (it reacts to the width of #center) */
+.btn-top, .add-win-btn { white-space: nowrap; flex-shrink: 0; }
+@container (max-width: 1200px) { .app-ver, .top-sep, .sess-lbl, #btn-settings .lbl, #btn-logout .lbl { display: none; } }
+@container (max-width: 960px) { .btn-top .lbl { display: none; } }
+@container (max-width: 640px) { .add-win-btn .lbl, #user-chip .name { display: none; } }
 </style>
 </head>
 <body>
@@ -1449,7 +1479,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.7.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.8.0 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1505,6 +1535,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <span class="brand"><img class="brand-mark" src="/static/brand/mark-on-dark.svg" alt="" width="16" height="16">WRM PRO</span>
       </div>
       <input type="text" class="search-box" id="search-input" placeholder="🔍 Search connections..." oninput="renderTree()" data-i18n-placeholder="search_connections">
+      <div class="quick-box"><input type="text" class="search-box" id="quick-input" placeholder="⚡ user@host:port" data-i18n-placeholder="quick_ph" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault(); openQuickModal(this.value);}"></div>
       <div class="sb-actions" id="sb-std-actions">
         <button class="btn-sec btn-sm" style="flex:1;" onclick="openFolderModal()" data-i18n="new_folder">📁 Folder</button>
         <button class="btn-sm" style="flex:1;" onclick="openConnModal(null)" data-i18n="new_connection">+ Connection</button>
@@ -1527,16 +1558,17 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.7.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.8.0</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
     <div id="auth-info">
       <span id="user-chip"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span></span>
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
-      <button class="btn-top" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
+      <button class="btn-top" id="btn-settings" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
       <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
+      <button class="btn-top" id="btn-tools" onclick="openTools()" title="Network tools"><span>🧰</span><span class="lbl" data-i18n="tools_lbl">Tools</span></button>
       <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
@@ -1703,6 +1735,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <summary>🖥 <span id="m-desk-title" data-i18n="desk_options">Remote desktop options</span></summary>
       <div class="muted-text" id="m-desk-help" data-i18n="desk_help">Remote desktops run through guacd (the Apache Guacamole proxy) next to WRM. The browser shows the screen; keyboard, mouse, clipboard and audio are passed through.</div>
       <div id="m-desk-fields"></div>
+    </details>
+    <details class="tun-box" id="m-notes-box">
+      <summary>📝 <span data-i18n="notes_title">Notes &amp; runbook</span></summary>
+      <div class="muted-text" data-i18n="notes_help">Procedures, contacts, links — shown with 📝 in the sidebar and in the terminal window. # headings, - lists, **bold**, `code`, ``` blocks and links work.</div>
+      <textarea id="m-notes" rows="7" spellcheck="false" maxlength="20000" placeholder="## Restart&#10;systemctl restart app&#10;&#10;On call: Ana, +385 1 234 5678"></textarea>
     </details>
     <details class="tun-box" id="m-bmc-box">
       <summary>⚡ <span data-i18n="bmc_title">Out-of-band management (iDRAC, iLO, IPMI)</span> <span class="pill" id="m-bmc-pill" style="display:none;"></span></summary>
@@ -1887,6 +1924,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div><div class="setting-label">Language / Jezik</div><div class="setting-desc" data-i18n="language_desc">Interface language</div></div>
         <div class="setting-control"><select class="setting-select" id="setting-lang" onchange="changeLang(this.value)"><option value="en">English</option><option value="hr">Hrvatski</option></select></div>
       </div>
+      <div class="setting-row" id="install-row">
+        <div><div class="setting-label" data-i18n="pwa_install">Install as an app</div><div class="setting-desc" id="pwa-install-desc" data-i18n="pwa_install_desc">WRM in its own window, from the dock, start menu or home screen.</div></div>
+        <div class="setting-control"><button class="btn-sec btn-sm" id="pwa-install-btn" onclick="installPWA()">📲 <span data-i18n="pwa_install_btn">Install</span></button></div>
+      </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="accent_color">Accent color</div><div class="setting-desc" data-i18n="accent_color_desc">Highlight color of the interface</div></div>
         <div class="setting-control"><select class="setting-select" id="setting-accent" onchange="applySettings()"><option value="#4f8cff">Blue</option><option value="#e8772e">WRM Orange</option><option value="#8b5cf6">Violet</option><option value="#10b981">Emerald</option><option value="#f59e0b">Amber</option><option value="#ec4899">Pink</option><option value="#06b6d4">Cyan</option></select></div>
@@ -2001,6 +2042,63 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 
 
 
+
+
+<!-- Quick connect, notes, network tools (v10.8) -->
+<div class="modal-overlay" id="modal-quick" style="z-index:9500;">
+  <div class="modal" style="width:min(520px, calc(100vw - 24px));">
+    <h3>⚡ <span data-i18n="quick_title">Quick connect</span></h3>
+    <div class="muted-text" style="line-height:1.5;" data-i18n="quick_help">Connect without saving: user@host:port, or ssh://, sftp://, rdp://, vnc://, telnet://, https://. The connection stays under "Quick connections" for 24 hours after its last use; 💾 keeps it.</div>
+    <div class="field" style="margin-top:10px;"><label data-i18n="quick_target">Address</label><input type="text" id="qc-target" autocomplete="off" spellcheck="false" placeholder="root@10.0.0.5:22" onkeydown="if(event.key==='Enter'){event.preventDefault(); quickConnect();}"></div>
+    <div class="field-row">
+      <div class="field"><label data-i18n="protocol">Protocol</label><select id="qc-proto"><option value="">auto (SSH)</option><option>SSH</option><option>SFTP</option><option>RDP</option><option>VNC</option><option>TELNET</option><option>HTTPS</option><option>HTTP</option></select></div>
+      <div class="field"><label data-i18n="inv_login">Login</label><select id="qc-auth" onchange="document.getElementById('qc-pass-f').style.display = this.value ? 'none' : ''"></select></div>
+    </div>
+    <div class="field" id="qc-pass-f"><label data-i18n="password">Password</label><input type="password" id="qc-pass" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault(); quickConnect();}"></div>
+    <div class="field"><label data-i18n="jump_host">Jump host (connect via)</label><select id="qc-jump"></select></div>
+    <div class="modal-footer">
+      <button class="btn-sec" onclick="closeModal('modal-quick')" data-i18n="cancel">Cancel</button>
+      <button onclick="quickConnect()">⚡ <span data-i18n="quick_connect">Connect</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-notes">
+  <div class="modal" style="width:min(720px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>📝 <span id="notes-title"></span></h3>
+    <div class="notes-view" id="notes-view"></div>
+    <textarea id="notes-edit" rows="14" spellcheck="false" maxlength="20000" style="display:none;"></textarea>
+    <div class="modal-footer">
+      <button class="btn-sec" id="notes-edit-btn" style="margin-right:auto;" onclick="editNotes()">✏ <span data-i18n="edit_lc">Edit</span></button>
+      <button class="btn-sec" onclick="closeModal('modal-notes')" data-i18n="close">Close</button>
+      <button id="notes-save-btn" style="display:none;" onclick="saveNotes()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-tools">
+  <div class="modal" style="width:min(780px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>🧰 <span data-i18n="tools_title">Network tools</span></h3>
+    <div class="tabs" id="tools-tabs">
+      <button class="tab-btn active" data-tab="ports" onclick="setToolsTab('ports')">🔍 <span data-i18n="tools_ports">Port check</span></button>
+      <button class="tab-btn" data-tab="ping" onclick="setToolsTab('ping')">📶 Ping</button>
+      <button class="tab-btn" data-tab="traceroute" onclick="setToolsTab('traceroute')">🛤 Traceroute</button>
+      <button class="tab-btn" data-tab="dns" onclick="setToolsTab('dns')">🌍 DNS</button>
+      <button class="tab-btn" data-tab="http" onclick="setToolsTab('http')">🔒 HTTP / TLS</button>
+    </div>
+    <div class="muted-text" id="tools-help" style="line-height:1.5;"></div>
+    <div class="field-row" style="margin-top:10px;">
+      <div class="field"><label data-i18n="tools_from">From</label><select id="tools-source"></select></div>
+      <div class="field"><label id="tools-target-lbl" data-i18n="tools_target">Host</label><input type="text" id="tools-target" autocomplete="off" spellcheck="false" placeholder="10.0.0.5" onkeydown="if(event.key==='Enter'){event.preventDefault(); runTool();}"></div>
+      <div class="field" id="tools-ports-f"><label data-i18n="tools_ports_lbl">Ports</label><input type="text" id="tools-ports" autocomplete="off" placeholder="22, 80, 443, 3306, 5432, 8000-8010" onkeydown="if(event.key==='Enter'){event.preventDefault(); runTool();}"></div>
+    </div>
+    <div id="tools-result"></div>
+    <div class="modal-footer">
+      <button class="btn-sec" onclick="closeModal('modal-tools')" data-i18n="close">Close</button>
+      <button id="tools-run" onclick="runTool()">▶ <span data-i18n="run">Run</span></button>
+    </div>
+  </div>
+</div>
 
 <!-- Out-of-band management (v10.7) -->
 <div class="modal-overlay" id="modal-bmc">
@@ -4046,6 +4144,48 @@ Object.assign(LANGS.hr, {
   po_serial_ports_off:'Nitko', po_serial_ports_admins:'Administratori', po_serial_ports_all:'Svi',
   ev_bmc:'Upravljanje izvan pojasa',
 });
+Object.assign(LANGS.en, {
+  quick_ph:'⚡ Quick connect: user@host:port', quick_title:'Quick connect', quick_target:'Address', quick_connect:'Connect', quick_section:'Quick connections',
+  quick_help:'Connect without saving: user@host:port, or ssh://, sftp://, rdp://, vnc://, telnet://, https://. The connection stays under "Quick connections" for 24 hours after its last use; 💾 keeps it.',
+  quick_save:'Save as a connection', quick_remove:'Remove', quick_save_title:'Save quick connection',
+  notes_title:'Notes & runbook', notes_help:'Procedures, contacts, links — shown with 📝 in the sidebar and in the terminal window. # headings, - lists, **bold**, `code`, ``` blocks and links work.',
+  notes_empty:'No notes yet.', notes_saved:'Notes saved',
+  tools_lbl:'Tools', tools_title:'Network tools', tools_ports:'Port check', tools_from:'From', tools_target:'Host', tools_ports_lbl:'Ports', tools_wrm:'the WRM server',
+  tools_from_here:'Network tools from this server…', tools_check_ports:'Check ports of this host', tools_running:'Checking…',
+  tools_help_ports:'Tries a TCP connection to every port — from the WRM server or from one of your servers (through its jump hosts; nothing is installed there). Open = something listens, closed = refused, no answer = filtered by a firewall.',
+  tools_help_ping:'Four pings from the WRM server or from a server (ping must be installed there). Many firewalls block ping: use the port check too.',
+  tools_help_traceroute:'The route to the host, hop by hop (traceroute or tracepath on the WRM server or the chosen server).',
+  tools_help_dns:'Addresses, CNAME, MX and TXT of a name, or the name of an IP address — as the WRM server or the chosen server resolves it.',
+  tools_help_http:'Requests the URL once (without following redirects): status, answer time, server, and for HTTPS the certificate — validity, names, issuer and days left.',
+  tools_ports_res:'{o} of {n} ports open', tools_state_open:'open', tools_state_closed:'closed', tools_state_filtered:'no answer', tools_state_error:'error',
+  tools_cert:'Certificate', tools_issuer:'Issuer', tools_valid_until:'Valid until', tools_names:'Names', tools_trusted:'Trusted', yes:'yes', no:'no',
+  pg_tools:'Network tools', p_network_tools:'Network tools', p_network_tools_d:'Port check, ping, traceroute, DNS and HTTP/TLS checks from the WRM server and from users\' servers.',
+  po_network_tools_off:'Nobody', po_network_tools_admins:'Administrators', po_network_tools_all:'Everyone', ev_nettool:'Network tools',
+  pwa_install:'Install as an app', pwa_install_desc:'WRM in its own window, from the dock, start menu or home screen.', pwa_install_btn:'Install',
+  pwa_need_https:'Browsers install apps only over HTTPS: open WRM with https:// (certificate, reverse proxy or HTTPS_SELF_SIGNED=1).',
+  pwa_menu_hint:'Use the browser menu: "Install WRM…" / "Add to home screen" (Safari: Share → Add to Home Screen).', pwa_running:'WRM is running as an installed app.', pwa_installed:'WRM was installed',
+});
+Object.assign(LANGS.hr, {
+  quick_ph:'⚡ Brzo spajanje: korisnik@host:port', quick_title:'Brzo spajanje', quick_target:'Adresa', quick_connect:'Spoji', quick_section:'Brze veze',
+  quick_help:'Spajanje bez spremanja: korisnik@host:port, ili ssh://, sftp://, rdp://, vnc://, telnet://, https://. Veza ostaje pod „Brze veze” 24 sata nakon zadnjeg korištenja; 💾 je trajno sprema.',
+  quick_save:'Spremi kao vezu', quick_remove:'Ukloni', quick_save_title:'Spremi brzu vezu',
+  notes_title:'Bilješke i upute', notes_help:'Postupci, kontakti, poveznice — prikazani sa 📝 u bočnoj traci i u prozoru terminala. Rade # naslovi, - popisi, **podebljano**, `kod`, ``` blokovi i poveznice.',
+  notes_empty:'Još nema bilježaka.', notes_saved:'Bilješke spremljene',
+  tools_lbl:'Alati', tools_title:'Mrežni alati', tools_ports:'Provjera portova', tools_from:'Odakle', tools_target:'Host', tools_ports_lbl:'Portovi', tools_wrm:'WRM server',
+  tools_from_here:'Mrežni alati s ovog servera…', tools_check_ports:'Provjeri portove ovog hosta', tools_running:'Provjeravam…',
+  tools_help_ports:'Pokušava TCP vezu na svaki port — s WRM servera ili s jednog od tvojih servera (kroz njegove jump hostove; ondje se ništa ne instalira). Otvoren = nešto sluša, zatvoren = odbijeno, bez odgovora = filtrira vatrozid.',
+  tools_help_ping:'Četiri pinga s WRM servera ili sa servera (ondje mora biti instaliran ping). Mnogi vatrozidi blokiraju ping: koristi i provjeru portova.',
+  tools_help_traceroute:'Put do hosta, skok po skok (traceroute ili tracepath na WRM serveru ili odabranom serveru).',
+  tools_help_dns:'Adrese, CNAME, MX i TXT imena, ili ime IP adrese — onako kako ih razrješava WRM server ili odabrani server.',
+  tools_help_http:'Jednom dohvaća URL (bez praćenja preusmjeravanja): status, vrijeme odgovora, server, a za HTTPS certifikat — valjanost, imena, izdavatelja i preostale dane.',
+  tools_ports_res:'{o} od {n} portova otvoreno', tools_state_open:'otvoren', tools_state_closed:'zatvoren', tools_state_filtered:'bez odgovora', tools_state_error:'greška',
+  tools_cert:'Certifikat', tools_issuer:'Izdavatelj', tools_valid_until:'Vrijedi do', tools_names:'Imena', tools_trusted:'Pouzdan', yes:'da', no:'ne',
+  pg_tools:'Mrežni alati', p_network_tools:'Mrežni alati', p_network_tools_d:'Provjera portova, ping, traceroute, DNS i HTTP/TLS provjere s WRM servera i sa servera korisnika.',
+  po_network_tools_off:'Nitko', po_network_tools_admins:'Administratori', po_network_tools_all:'Svi', ev_nettool:'Mrežni alati',
+  pwa_install:'Instaliraj kao aplikaciju', pwa_install_desc:'WRM u vlastitom prozoru, iz docka, izbornika Start ili početnog zaslona.', pwa_install_btn:'Instaliraj',
+  pwa_need_https:'Preglednici instaliraju aplikacije samo preko HTTPS-a: otvori WRM s https:// (certifikat, reverse proxy ili HTTPS_SELF_SIGNED=1).',
+  pwa_menu_hint:'Koristi izbornik preglednika: „Instaliraj WRM…” / „Dodaj na početni zaslon” (Safari: Dijeli → Dodaj na početni zaslon).', pwa_running:'WRM radi kao instalirana aplikacija.', pwa_installed:'WRM je instaliran',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4324,6 +4464,14 @@ function renderTree() {
   if (tagBar) wrap.appendChild(tagBar);
 
   // My connections section
+  const quick = conns.filter(c => c.temporary && visible(c));
+  if (quick.length) {
+    const ql = document.createElement('div');
+    ql.className = 'tree-section-label';
+    ql.textContent = '⚡ ' + t('quick_section');
+    wrap.appendChild(ql);
+    quick.forEach(c => wrap.appendChild(makeConnItem(c)));
+  }
   const myLabel = document.createElement('div');
   myLabel.className = 'tree-section-label';
   myLabel.textContent = t('my_connections');
@@ -4366,7 +4514,7 @@ function renderTree() {
   });
 
   // Root connections
-  const rootConns = conns.filter(c => !c.folder_id && visible(c));
+  const rootConns = conns.filter(c => !c.folder_id && !c.temporary && visible(c));
   rootConns.forEach(c => wrap.appendChild(makeConnItem(c)));
 
   if (conns.length === 0 && !query) {
@@ -4451,6 +4599,8 @@ function makeConnItem(c) {
   const tunRun = tunnelState.tunnels.filter(x => x.conn_id === c.id && x.running && !x.ephemeral).length;
   const st = connStatusOf(c);
   el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : (c.protocol === 'TELNET' ? 'TEL' : (c.protocol === 'SERIAL' ? 'COM' : c.protocol)))}</span><span class="conn-name">${esc(c.name)}</span>` + envPill(c) +
+    (c.has_notes ? `<span class="conn-note" title="${esc(t('notes_title'))}" onclick="event.stopPropagation(); openNotes(${c.id})">📝</span>` : '') +
+    (c.temporary ? `<span class="quick-act" title="${esc(t('quick_save'))}" onclick="event.stopPropagation(); openConnModal(${c.id})">💾</span><span class="quick-act" title="${esc(t('quick_remove'))}" onclick="event.stopPropagation(); removeQuick(${c.id})">✕</span>` : '') +
     (c.route ? `<span class="conn-route" title="${esc(t('via') + ' ' + c.route)}">⤳</span>` : '') +
     (c.tunnels ? `<span class="conn-tun ${tunRun ? 'on' : ''}" title="${esc(t('tun_count_title').replace('{n}', c.tunnels).replace('{r}', tunRun))}" onclick="event.stopPropagation(); openTunnelsPanel(${c.id})">🔀</span>` : '') +
     `<span class="conn-host">${esc(c.host)}</span>`;
@@ -4518,6 +4668,7 @@ function showConnCtx(x, y, conn) {
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id}, true)">＋ ${esc(t('tun_add'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'connection', scope_id: ${conn.id}, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
     <div class="ctx-hr"></div>
+    <div class="ctx-item" onclick="closeAllCtx(); openTools({source: ${conn.id}})">🧰 ${esc(t('tools_from_here'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openAuthKeys(${conn.id})">🔐 ${esc(t('ak_menu'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openKeyDeploy(null, 'deploy', [${conn.id}])">🚀 ${esc(t('vk_deploy_menu'))}</div>` : '';
   menu.innerHTML = web ? `
@@ -4538,6 +4689,9 @@ function showConnCtx(x, y, conn) {
     <div class="ctx-item" onclick="closeAllCtx(); openConsoleWindow(${conn.id}, ${jsq(conn.bmc.type === 'ipmi' ? 'sol' : 'bmc')})">📟 ${esc(t('bmc_console_menu'))}</div>
     <div class="ctx-hr"></div>`;
   menu.innerHTML += `
+    ${conn.temporary ? `<div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">💾 ${esc(t('quick_save'))}</div>` : ''}
+    <div class="ctx-item" onclick="closeAllCtx(); openNotes(${conn.id})">📝 ${esc(t('notes_title'))}</div>
+    ${conn.protocol !== 'SERIAL' ? `<div class="ctx-item" onclick="closeAllCtx(); openTools({target: ${jsq(conn.host)}, tool: 'ports'})">🔍 ${esc(t('tools_check_ports'))}</div>` : ''}
     <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow([${conn.id}])">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">${t('edit_connection')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); duplicateConn(${conn.id})">⧉ ${t('duplicate')}</div>
@@ -4587,6 +4741,8 @@ function applyPolicyToUI() {
   if (ex) ex.style.display = pol.secret_export ? '' : 'none';
   const bc = document.getElementById('btn-broadcast');
   if (bc) bc.style.display = pol.broadcast === false ? 'none' : '';
+  const tb = document.getElementById('btn-tools');
+  if (tb) tb.style.display = pol.network_tools === false ? 'none' : '';
   const os = document.getElementById('opt-serial');
   if (os) { os.hidden = !pol.serial; os.disabled = !pol.serial; }
 }
@@ -4634,6 +4790,20 @@ function openConnModal(id, focusTunnels) {
   document.getElementById('m-monitor').checked = c ? c.monitor !== false : true;
   document.getElementById('m-tags').value = c && c.tags ? c.tags.join(', ') : '';
   fillBmcForm(c);
+  const mid = document.getElementById('m-id');
+  mid.dataset.save = c && c.temporary ? '1' : '';
+  document.getElementById('m-notes').value = '';
+  document.getElementById('m-notes-box').open = false;
+  if (c) fetch('/api/connections/' + c.id).then(r => r.ok ? r.json() : null).then(full => {
+    if (full && document.getElementById('m-id').value == c.id) {
+      document.getElementById('m-notes').value = full.notes || '';
+      document.getElementById('m-notes-box').open = !!full.notes;
+    }
+  });
+  if (c && c.temporary) {
+    document.getElementById('conn-modal-title').textContent = t('quick_save_title');
+    if (c.name.startsWith('⚡ ')) document.getElementById('m-name').value = c.name.slice(2);
+  }
   renderTagSuggestions();
   deskOptsInit = (c && c.options) || {};
   fillJumpSelect(c);
@@ -4735,6 +4905,8 @@ function connFormPayload() {
     key_id: Number(document.getElementById('m-keyref').value) || null,
     tags: splitTagInput(document.getElementById('m-tags').value),
     bmc: readBmcForm(),
+    notes: document.getElementById('m-notes').value,
+    temporary: document.getElementById('m-id').dataset.save === '1' ? false : undefined,
     credential_id: Number(document.getElementById('m-cred').value) || null,
   };
 }
@@ -5383,6 +5555,7 @@ const POLICY_GROUPS = {
     ['pg_status', ['status_enabled', 'status_interval_seconds', 'status_jump_checks']],
     ['pg_desktop', ['desktop_enabled', 'guacd_address', 'desktop_tunnel_bind']],
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
+    ['pg_tools', ['network_tools']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
@@ -5467,7 +5640,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'snippet.', 'ssh_key.', 'credential.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -6137,6 +6310,217 @@ async function importExternal(input, kind, password) {
   loadData();
 }
 
+
+// ══ QUICK CONNECT, NOTES, NETWORK TOOLS, APP (v10.8) ═════
+
+async function openQuickModal(target) {
+  if (!currentUser) return;
+  await loadVault();
+  document.getElementById('qc-target').value = (target || '').trim();
+  document.getElementById('qc-pass').value = '';
+  document.getElementById('qc-proto').value = '';
+  const auth = document.getElementById('qc-auth');
+  auth.innerHTML = `<option value="">${esc(t('password'))}</option>` + vaultCreds.map(c => `<option value="credential:${c.id}">🗝 ${esc(c.name)}${c.username ? ' (' + esc(c.username) + ')' : ''}</option>`).join('') +
+    vaultKeys.filter(k => k.has_private).map(k => `<option value="key:${k.id}">🔑 ${esc(k.name)}</option>`).join('');
+  document.getElementById('qc-pass-f').style.display = '';
+  const jump = document.getElementById('qc-jump');
+  jump.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP') && !x.temporary).sort((a, b) => a.name.localeCompare(b.name))
+    .map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})</option>`).join('');
+  document.getElementById('modal-quick').classList.add('open');
+  setTimeout(() => document.getElementById(target ? 'qc-pass' : 'qc-target').focus(), 50);
+}
+
+async function quickConnect() {
+  const target = document.getElementById('qc-target').value.trim();
+  if (!target) { document.getElementById('qc-target').focus(); return; }
+  const [kind, id] = (document.getElementById('qc-auth').value || ':').split(':');
+  const body = {target, protocol: document.getElementById('qc-proto').value, password: kind ? '' : document.getElementById('qc-pass').value,
+    credential_id: kind === 'credential' ? Number(id) : null, key_id: kind === 'key' ? Number(id) : null,
+    jump_id: Number(document.getElementById('qc-jump').value) || null};
+  const r = await fetch('/api/connections/quick', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  const c = await r.json();
+  closeModal('modal-quick');
+  document.getElementById('quick-input').value = '';
+  await loadData();
+  if (isWebConn(c)) { openWebConn(conns.find(x => x.id === c.id) || c); return; }
+  const wo = addWindow();
+  wo.connId = c.id;
+  setWinMode(wo.id, defaultWinMode(c));
+}
+
+async function removeQuick(id) {
+  await fetch('/api/connections/' + id, {method: 'DELETE'});
+  loadData();
+}
+
+// ── notes ──
+let notesConnId = null;
+
+// renderNotes turns the small markdown of notes into safe HTML (everything is escaped first).
+function renderNotes(text) {
+  if (!text || !text.trim()) return `<div class="empty">${esc(t('notes_empty'))}</div>`;
+  const inline = s => esc(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, (m, a, u) => `${a}<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
+  const out = [];
+  let list = false, code = false, buf = [];
+  const closeList = () => { if (list) { out.push('</ul>'); list = false; } };
+  for (const line of text.split('\n')) {
+    if (line.trim().startsWith('```')) {
+      if (code) { out.push(`<pre>${esc(buf.join('\n'))}</pre>`); buf = []; code = false; } else { closeList(); code = true; }
+      continue;
+    }
+    if (code) { buf.push(line); continue; }
+    const h = line.match(/^(#{1,3})\s+(.*)$/);
+    const li = line.match(/^\s*[-*]\s+(.*)$/);
+    if (h) { closeList(); out.push(`<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`); }
+    else if (li) { if (!list) { out.push('<ul>'); list = true; } out.push(`<li>${inline(li[1])}</li>`); }
+    else { closeList(); out.push(line.trim() ? `<div>${inline(line)}</div>` : '<div style="height:6px;"></div>'); }
+  }
+  if (code) out.push(`<pre>${esc(buf.join('\n'))}</pre>`);
+  closeList();
+  return out.join('');
+}
+
+async function openNotes(connId) {
+  if (!connId) return;
+  const r = await fetch('/api/connections/' + connId);
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  const c = await r.json();
+  notesConnId = connId;
+  document.getElementById('notes-title').textContent = c.name;
+  document.getElementById('notes-view').innerHTML = renderNotes(c.notes || '');
+  document.getElementById('notes-view').style.display = '';
+  const ed = document.getElementById('notes-edit');
+  ed.value = c.notes || ''; ed.style.display = 'none';
+  document.getElementById('notes-edit-btn').style.display = '';
+  document.getElementById('notes-save-btn').style.display = 'none';
+  document.getElementById('modal-notes').classList.add('open');
+  if (!c.notes) editNotes();
+}
+
+function editNotes() {
+  document.getElementById('notes-view').style.display = 'none';
+  document.getElementById('notes-edit').style.display = '';
+  document.getElementById('notes-edit-btn').style.display = 'none';
+  document.getElementById('notes-save-btn').style.display = '';
+  setTimeout(() => document.getElementById('notes-edit').focus(), 30);
+}
+
+async function saveNotes() {
+  const c = conns.find(x => x.id === notesConnId);
+  if (!c) return;
+  const notes = document.getElementById('notes-edit').value;
+  const r = await fetch('/api/connections/' + c.id, {method: 'PUT', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name: c.name, host: c.host, protocol: c.protocol, username: c.username, auth_method: c.auth_method, key_path: c.key_path, folder_id: c.folder_id,
+      jump_id: c.jump_id, web_path: c.web_path, key_id: c.key_id, credential_id: c.credential_id, notes})});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  showToast(t('notes_saved'), 'success');
+  document.getElementById('notes-view').innerHTML = renderNotes(notes);
+  document.getElementById('notes-view').style.display = '';
+  document.getElementById('notes-edit').style.display = 'none';
+  document.getElementById('notes-edit-btn').style.display = '';
+  document.getElementById('notes-save-btn').style.display = 'none';
+  loadData();
+}
+
+// ── network tools ──
+let toolsTab = 'ports';
+
+function openTools(opts) {
+  opts = opts || {};
+  const src = document.getElementById('tools-source');
+  src.innerHTML = `<option value="0">🖥 ${esc(t('tools_wrm'))}</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP')).sort((a, b) => a.name.localeCompare(b.name))
+    .map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+  if (opts.source) src.value = opts.source;
+  if (opts.target) {
+    const h = String(opts.target).replace(/:\d+$/, '');
+    document.getElementById('tools-target').value = h;
+    const m = String(opts.target).match(/:(\d+)$/);
+    document.getElementById('tools-ports').value = [...new Set([...(m ? [m[1]] : []), '22', '80', '443', ...(m ? [] : ['3389', '5900'])])].join(', ');
+  }
+  document.getElementById('tools-result').innerHTML = '';
+  setToolsTab(opts.tool || toolsTab);
+  document.getElementById('modal-tools').classList.add('open');
+  setTimeout(() => document.getElementById('tools-target').focus(), 50);
+}
+
+function setToolsTab(tab) {
+  toolsTab = tab;
+  document.querySelectorAll('#tools-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('tools-ports-f').style.display = tab === 'ports' ? '' : 'none';
+  document.getElementById('tools-help').textContent = t('tools_help_' + tab);
+  document.getElementById('tools-target-lbl').textContent = tab === 'http' ? 'URL' : t('tools_target');
+  document.getElementById('tools-target').placeholder = tab === 'http' ? 'https://10.0.0.5/' : '10.0.0.5';
+}
+
+async function runTool() {
+  const target = document.getElementById('tools-target').value.trim();
+  if (!target) { document.getElementById('tools-target').focus(); return; }
+  const btn = document.getElementById('tools-run');
+  const out = document.getElementById('tools-result');
+  btn.disabled = true;
+  out.innerHTML = `<div class="hint-box">⏳ ${esc(t('tools_running'))}</div>`;
+  try {
+    const r = await fetch('/api/nettools', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({tool: toolsTab, target, ports: document.getElementById('tools-ports').value, source_id: Number(document.getElementById('tools-source').value) || 0})});
+    if (!r.ok) { out.innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; return; }
+    const j = await r.json();
+    let html = `<div class="muted-text" style="margin-top:6px;">${esc(t('tools_from'))}: <b>${esc(j.source)}</b> → ${esc(j.target)} · ${j.ms} ms</div>`;
+    if (j.error) html += `<div class="hint-box bad">${esc(j.error)}</div>`;
+    if (j.ports) {
+      const open = j.ports.filter(p => p.state === 'open').length;
+      html += `<div class="hint-box ${open ? 'ok' : 'warn'}">${esc(t('tools_ports_res').replace('{o}', open).replace('{n}', j.ports.length))}</div><div>` +
+        j.ports.map(p => `<span class="port-row" title="${esc(p.info || '')}"><span class="conn-st ${p.state === 'open' ? 'up' : (p.state === 'closed' ? 'down' : 'unknown')}"></span>${p.port} <span class="muted-text">${esc(t('tools_state_' + p.state))}${p.state === 'open' ? ' ' + p.ms + ' ms' : ''}</span></span>`).join('') + '</div>';
+    }
+    if (j.http) {
+      const h = j.http;
+      html += `<div class="hint-box ${h.status < 400 ? 'ok' : 'warn'}">HTTP ${h.status} ${esc(h.status_text)} · ${h.ms} ms${h.server ? ' · ' + esc(h.server) : ''}${h.location ? ' → ' + esc(h.location) : ''}</div>`;
+      if (h.tls) html += `<div class="kv-grid"><div class="kv"><div class="k">TLS</div><div class="v small">${esc(h.tls)}</div></div>
+        <div class="kv"><div class="k">${esc(t('tools_cert'))}</div><div class="v small">${esc(h.subject)}</div></div>
+        <div class="kv"><div class="k">${esc(t('tools_issuer'))}</div><div class="v small">${esc(h.issuer)}</div></div>
+        <div class="kv"><div class="k">${esc(t('tools_valid_until'))}</div><div class="v small">${esc(fmtTime(h.not_after))} (${h.days_left} ${esc(t('days_lc'))})</div></div>
+        <div class="kv"><div class="k">${esc(t('tools_names'))}</div><div class="v small">${esc((h.names || []).join(', ') || '—')}</div></div>
+        <div class="kv"><div class="k">${esc(t('tools_trusted'))}</div><div class="v small">${h.trusted ? '✅ ' + esc(t('yes')) : '⚠ ' + esc(h.trust_error || t('no'))}</div></div></div>`;
+    }
+    if (j.dns) {
+      const d = j.dns;
+      html += `<div class="tools-out">${esc([d.error ? '⚠ ' + d.error : '', (d.addresses || []).length ? 'A/AAAA  ' + d.addresses.join(', ') : '', d.cname ? 'CNAME   ' + d.cname : '',
+        (d.mx || []).length ? 'MX      ' + d.mx.join(', ') : '', (d.txt || []).length ? 'TXT     ' + d.txt.join('\n        ') : '', (d.ptr || []).length ? 'PTR     ' + d.ptr.join(', ') : ''].filter(Boolean).join('\n') || '—')}</div>`;
+    }
+    if (j.output) html += `<div class="tools-out">${esc(j.output)}</div>`;
+    out.innerHTML = html;
+  } finally { btn.disabled = false; }
+}
+
+// ── installable app ──
+let pwaPrompt = null;
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); pwaPrompt = e; updateInstallRow(); });
+window.addEventListener('appinstalled', () => { pwaPrompt = null; updateInstallRow(); showToast(t('pwa_installed'), 'success'); });
+
+function updateInstallRow() {
+  const btn = document.getElementById('pwa-install-btn');
+  const desc = document.getElementById('pwa-install-desc');
+  if (!btn || !desc) return;
+  const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+  btn.style.display = standalone ? 'none' : '';
+  if (standalone) desc.textContent = t('pwa_running');
+  else if (!pwaPrompt) desc.textContent = location.protocol !== 'https:' && location.hostname !== 'localhost' ? t('pwa_need_https') : t('pwa_menu_hint');
+  else desc.textContent = t('pwa_install_desc');
+}
+
+async function installPWA() {
+  if (!pwaPrompt) { updateInstallRow(); showToast(document.getElementById('pwa-install-desc').textContent, 'info', 6000); return; }
+  pwaPrompt.prompt();
+  try { await pwaPrompt.userChoice; } catch (_) {}
+  pwaPrompt = null;
+  updateInstallRow();
+}
 
 // ══ OUT-OF-BAND MANAGEMENT & CONSOLES (v10.7) ═══════════
 
@@ -8200,6 +8584,7 @@ function addWindow(opts) {
       <button class="win-snap-btn win-snap-menu-btn" title="${t('snap_layouts')}" onclick="openSnapMenu(event, ${id})">${snapIcon('nw')}</button>
       <div class="win-btns">
         <button class="win-btn reconnect" id="wb-rc-${id}" title="${t('reconnect_now')}" style="display:none;" onclick="reconnectTermById(${id})">↻</button>
+        <button class="win-btn" id="wb-nt-${id}" title="${esc(t('notes_title'))}" style="display:none;" onclick="openNotes((winObjects.find(w => w.id === ${id}) || {}).connId)">📝</button>
         <button class="win-btn snip" id="wb-sn-${id}" title="${esc(t('snip_title'))}" style="display:none;" onclick="openSnippetPicker(${id})">⚡</button>
         <button class="win-btn bc" id="wb-bc-${id}" style="display:none;" onclick="toggleWinBroadcast(${id})">📣</button>
         <button class="win-btn screen-share" id="wb-ss-${id}" title="${t('share_terminal')}" style="display:none;" onclick="toggleScreenShare(${id})">📡</button>
@@ -8348,6 +8733,8 @@ function setWinMode(id, mode) {
   if (rcBtn) rcBtn.style.display = mode === 'ssh' || mode === 'desk' ? '' : 'none';
   const snBtn = document.getElementById('wb-sn-' + id);
   if (snBtn) snBtn.style.display = mode === 'ssh' && (!isCollabMode || currentUser) ? '' : 'none';
+  const ntBtn = document.getElementById('wb-nt-' + id);
+  if (ntBtn) ntBtn.style.display = (mode === 'ssh' || mode === 'desk' || mode === 'sftp') && !isCollabMode && c && c.has_notes ? '' : 'none';
   if (mode !== 'ssh' && bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
 
   if (mode === 'ssh') {
@@ -12595,6 +12982,7 @@ window.addEventListener('load', async () => {
     document.getElementById('user-avatar').textContent = (document.getElementById('username-display').textContent || '?').charAt(0);
     document.getElementById('btn-shares').style.display = currentUser ? '' : 'none';
     document.getElementById('btn-vault').style.display = 'none';
+    document.getElementById('btn-tools').style.display = 'none';
     document.getElementById('btn-logout').style.display = currentUser ? '' : 'none';
     document.getElementById('admin-badge').style.display = 'none';
     applyLang();

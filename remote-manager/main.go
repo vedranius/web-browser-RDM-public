@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.7.0"
+var AppVersion = "v10.8.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -69,6 +69,8 @@ type Connection struct {
 	CredentialID  *int       `json:"credential_id,omitempty"`
 	Tags          []string   `json:"tags,omitempty"`           // nil = unchanged (PUT)
 	BMC           *bmcConfig `json:"bmc,omitempty"`            // out-of-band management; nil = unchanged (PUT)
+	Notes         *string    `json:"notes,omitempty"`          // runbook; nil = unchanged (PUT)
+	Temporary     *bool      `json:"temporary,omitempty"`      // quick connection; PUT false saves it
 	KeyRef        string     `json:"key_ref,omitempty"`        // export / import: name of the key
 	CredentialRef string     `json:"credential_ref,omitempty"` // export / import: name of the credential
 	authErr       string     // why the key or credential cannot be used (set by resolveConnectionAuth)
@@ -101,6 +103,9 @@ type connView struct {
 	Tags        []string          `json:"tags"`
 	Source      string            `json:"source,omitempty"` // inventory it was imported from ("netbox")
 	BMC         *bmcConfig        `json:"bmc,omitempty"`
+	Temporary   bool              `json:"temporary,omitempty"` // quick connection (deleted when unused)
+	HasNotes    bool              `json:"has_notes,omitempty"`
+	Notes       string            `json:"notes,omitempty"` // only in GET /api/connections/{id}
 }
 
 func (c Connection) view() connView {
@@ -113,11 +118,13 @@ func (c Connection) view() connView {
 	v.Monitor = true
 	if c.ID > 0 {
 		var mon int
-		var opts, tags, ext string
+		var opts, tags, ext, temp string
 		if db.QueryRow(`SELECT (SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?), COALESCE(monitor,1), COALESCE(options,''),
 			COALESCE((SELECT name FROM ssh_keys WHERE id=connections.key_id),''), COALESCE((SELECT name FROM credentials WHERE id=connections.credential_id),''),
-			COALESCE((SELECT username FROM credentials WHERE id=connections.credential_id),''), COALESCE(tags,''), COALESCE(ext_id,'') FROM connections WHERE id=?`, c.ID, c.ID).
-			Scan(&v.Tunnels, &mon, &opts, &v.KeyName, &v.CredName, &v.CredUser, &tags, &ext) == nil {
+			COALESCE((SELECT username FROM credentials WHERE id=connections.credential_id),''), COALESCE(tags,''), COALESCE(ext_id,''),
+			COALESCE(temp_until,''), COALESCE(notes,'')<>'' FROM connections WHERE id=?`, c.ID, c.ID).
+			Scan(&v.Tunnels, &mon, &opts, &v.KeyName, &v.CredName, &v.CredUser, &tags, &ext, &temp, &v.HasNotes) == nil {
+			v.Temporary = temp != ""
 			v.Monitor = mon == 1
 			v.Tags = parseTags(tags)
 			if b, ok := loadBMC(c.ID); ok {
@@ -256,6 +263,10 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/connections", apiConnectionsHandler)
 	mux.HandleFunc("/api/connections/bulk", apiConnectionsBulkHandler)
 	mux.HandleFunc("/api/connections/test", apiConnectionTestHandler)
+	mux.HandleFunc("/api/connections/quick", apiQuickConnectHandler)
+	mux.HandleFunc("/api/nettools", apiNetToolsHandler)
+	mux.HandleFunc("/manifest.webmanifest", manifestHandler)
+	mux.HandleFunc("/sw.js", serviceWorkerHandler)
 	mux.HandleFunc("/api/connections/", apiConnectionByIDHandler)
 	mux.HandleFunc("/api/hostkeys/accept", apiHostKeyAcceptHandler)
 	mux.HandleFunc("/api/folders", apiFoldersHandler)
@@ -345,6 +356,7 @@ func main() {
 	startTURN()
 	tunnelMgr.startAlways()
 	go statusMon.run()
+	go runQuickCleanup()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -844,6 +856,9 @@ func initDB() {
 		`ALTER TABLE connections ADD COLUMN ext_tags TEXT NOT NULL DEFAULT ''`,
 		// v10.7: out-of-band management (BMC: Redfish / IPMI), JSON with the password encrypted
 		`ALTER TABLE connections ADD COLUMN bmc TEXT NOT NULL DEFAULT ''`,
+		// v10.8: notes (runbook) and quick connections (deleted when unused)
+		`ALTER TABLE connections ADD COLUMN notes TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE connections ADD COLUMN temp_until TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -1187,6 +1202,11 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		if c.Notes != nil {
+			if err := validNotes(*c.Notes); err == nil {
+				db.Exec(`UPDATE connections SET notes=? WHERE id=?`, *c.Notes, id)
+			}
+		}
 		statusMon.poke()
 		auditLogRef(r, userID, usernameOf(userID), "connection.created", c.Name, map[string]string{"host": c.Host, "protocol": c.Protocol, "auth": c.AuthMethod, "route": jumpPath(plain)}, auditRef{ConnID: plain.ID})
 		w.WriteHeader(http.StatusCreated)
@@ -1224,7 +1244,9 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	switch {
 	case action == "" && r.Method == http.MethodGet:
-		jsonOK(w, cur.view())
+		v := cur.view()
+		v.Notes = loadNotes(id)
+		jsonOK(w, v)
 	case action == "" && r.Method == http.MethodPut:
 		var in struct {
 			Connection
@@ -1298,6 +1320,25 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if c.Tags != nil {
 			db.Exec(`UPDATE connections SET tags=? WHERE id=?`, tagsString(c.Tags), id)
 		}
+		if c.Notes != nil {
+			if err := validNotes(*c.Notes); err != nil {
+				jsonError(w, err.Error(), 400)
+				return
+			}
+			if *c.Notes != loadNotes(id) {
+				db.Exec(`UPDATE connections SET notes=? WHERE id=?`, *c.Notes, id)
+				changed = append(changed, "notes")
+			}
+		}
+		if c.Temporary != nil && !*c.Temporary {
+			// "Save" of a quick connection: it becomes a normal, monitored connection.
+			if res, _ := db.Exec(`UPDATE connections SET temp_until='', monitor=1 WHERE id=? AND temp_until<>''`, id); res != nil {
+				if n, _ := res.RowsAffected(); n > 0 {
+					changed = append(changed, "saved")
+					statusMon.poke()
+				}
+			}
+		}
 		if c.BMC != nil {
 			c.ID, c.UserID = id, userID
 			if err := saveBMC(c, c.BMC, userID); err != nil {
@@ -1333,8 +1374,8 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case action == "bmc":
 		bmcHandler(w, r, userID, cur)
 	case action == "duplicate" && r.Method == http.MethodPost:
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc)
-			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc FROM connections WHERE id=? AND user_id=?`, id, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc,notes)
+			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc,notes FROM connections WHERE id=? AND user_id=?`, id, userID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1674,8 +1715,19 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fRows.Close()
 	}
-	conns := loadUserConnections(userID)
+	all := loadUserConnections(userID)
+	conns := all[:0]
+	for _, c := range all {
+		var temp string
+		db.QueryRow(`SELECT COALESCE(temp_until,'') FROM connections WHERE id=?`, c.ID).Scan(&temp)
+		if temp == "" { // quick connections are not exported
+			conns = append(conns, c)
+		}
+	}
 	for i := range conns {
+		if n := loadNotes(conns[i].ID); n != "" {
+			conns[i].Notes = &n
+		}
 		if !withSecrets {
 			conns[i].Password, conns[i].PrivateKey = "", ""
 		}
@@ -1807,6 +1859,9 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if len(c.Options) > 0 {
 				tx.Exec(`UPDATE connections SET options=? WHERE id=?`, string(jsonMarshal(c.Options)), nid)
+			}
+			if c.Notes != nil && *c.Notes != "" && validNotes(*c.Notes) == nil {
+				tx.Exec(`UPDATE connections SET notes=? WHERE id=?`, *c.Notes, nid)
 			}
 			if c.BMC != nil && c.BMC.Type != "" {
 				b := *c.BMC

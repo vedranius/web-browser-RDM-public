@@ -313,6 +313,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"desktop":       settingBool("desktop_enabled"),
 			"bmc":           settingBool("bmc_enabled"),
 			"serial":        serialAllowed(u.ID),
+			"network_tools": networkToolsAllowed(u.ID),
 		},
 	}
 }
