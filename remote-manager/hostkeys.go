@@ -1,9 +1,7 @@
 package main
 
 import (
-	"crypto/sha256"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -174,44 +172,7 @@ func asHostKeyError(err error) *hostKeyError {
 // (self-signed, internal CA) the certificate is pinned on first use like an SSH key.
 
 func ftpsTLSConfig(c Connection) *tls.Config {
-	serverName := hostOnly(c.Host)
-	return &tls.Config{
-		ServerName:         serverName,
-		InsecureSkipVerify: true, // verified below: public CA chain, or pinned certificate
-		MinVersion:         tls.VersionTLS12,
-		VerifyConnection: func(cs tls.ConnectionState) error {
-			if len(cs.PeerCertificates) == 0 {
-				return fmt.Errorf("server sent no certificate")
-			}
-			policy := getSetting("host_key_policy")
-			leaf := cs.PeerCertificates[0]
-			inter := x509.NewCertPool()
-			for _, ic := range cs.PeerCertificates[1:] {
-				inter.AddCert(ic)
-			}
-			if _, err := leaf.Verify(x509.VerifyOptions{DNSName: serverName, Intermediates: inter}); err == nil || policy == "off" {
-				return nil
-			}
-			host := "ftps://" + normalizeHostKeyHost(c.Host)
-			sum := sha256.Sum256(leaf.Raw)
-			fp := "SHA256:" + base64.RawStdEncoding.EncodeToString(sum[:])
-			stored, ok := lookupHostKey(host)
-			if !ok {
-				if policy == "strict" {
-					rememberPendingKey(host, fp, leaf.Raw, "tls-cert")
-					return &hostKeyError{Kind: "unknown", Host: host, KeyType: "tls-cert", Got: fp}
-				}
-				storeHostKey(host, "tls-cert", fp, leaf.Raw, "tofu")
-				auditLogAs(nil, 0, "", "hostkey.trusted", host, map[string]string{"fingerprint": fp, "type": "tls-cert", "how": "first use"})
-				return nil
-			}
-			if stored.Fingerprint == fp {
-				return nil
-			}
-			rememberPendingKey(host, fp, leaf.Raw, "tls-cert")
-			return &hostKeyError{Kind: "mismatch", Host: host, KeyType: "tls-cert", Expected: stored.Fingerprint, Got: fp}
-		},
-	}
+	return pinnedTLSConfig("ftps://", c.Host)
 }
 
 // ─── API ─────────────────────────────────────────────
@@ -234,7 +195,7 @@ func apiHostKeyAcceptHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewDecoder(r.Body).Decode(&p)
 	host := strings.ToLower(strings.TrimSpace(p.Host))
-	if !isAdminUser(userID) && !userOwnsConnectionToHost(userID, strings.TrimPrefix(host, "ftps://")) {
+	if !isAdminUser(userID) && !userOwnsConnectionToHost(userID, strings.TrimPrefix(host, "ftps://")) && !(strings.HasPrefix(host, "bmc://") && userOwnsBMC(userID, strings.TrimPrefix(host, "bmc://"))) {
 		jsonError(w, "Only the owner of the connection or an administrator can accept a host key", 403)
 		return
 	}

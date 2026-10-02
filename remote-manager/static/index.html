@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.6.0</title>
+<title>Web Remote Manager PRO v10.7.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1413,6 +1413,17 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .inv-opts { border: 1px solid var(--border2); border-radius: 10px; padding: 8px 12px; margin: 10px 0; background: rgba(0,0,0,.12); }
 .inv-opts > summary { cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); padding: 4px 0; }
 .inv-res .r { font-size: 11.5px; padding: 2px 0; color: var(--text2); }
+
+/* v10.7: out-of-band management (BMC) and consoles */
+.conn-proto-badge.serial { background: rgba(234,179,8,.16); color: #facc15; }
+.bmc-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0 10px; }
+.bmc-power { font-size: 13px; font-weight: 800; letter-spacing: .06em; padding: 4px 12px; border-radius: 8px; text-transform: uppercase; }
+.bmc-power.on { background: rgba(34,197,94,.16); color: #86efac; border: 1px solid rgba(34,197,94,.4); }
+.bmc-power.off { background: rgba(148,163,184,.14); color: #cbd5e1; border: 1px solid var(--border2); }
+.bmc-power.unknown { background: rgba(245,158,11,.14); color: #fcd34d; border: 1px solid rgba(245,158,11,.4); }
+.bmc-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 6px; }
+.bmc-actions button { font-size: 12px; }
+.win.console .win-header { background: linear-gradient(90deg, rgba(234,179,8,.18), transparent 70%); }
 </style>
 </head>
 <body>
@@ -1438,7 +1449,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.6.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.7.0 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1516,7 +1527,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.6.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.7.0</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1644,6 +1655,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
           <option value="RDP">🖥 RDP (Windows Remote Desktop)</option>
           <option value="VNC">🖥 VNC</option>
           <option value="TELNET">Telnet</option>
+          <option value="SERIAL" id="opt-serial">🔌 Serial port (of the WRM server)</option>
           <option value="FTP">FTP</option>
           <option value="FTPS">FTPS (explicit TLS)</option>
           <option value="HTTPS">🌐 Web interface (HTTPS)</option>
@@ -1688,9 +1700,29 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="field" id="field-key-file" style="display:none;"><label data-i18n="key_file_path">Key File Path</label><input type="text" id="m-keypath" placeholder="~/.ssh/id_rsa"></div>
     </div>
     <details class="tun-box" id="m-desk-box" open style="display:none;">
-      <summary>🖥 <span data-i18n="desk_options">Remote desktop options</span></summary>
-      <div class="muted-text" data-i18n="desk_help">Remote desktops run through guacd (the Apache Guacamole proxy) next to WRM. The browser shows the screen; keyboard, mouse, clipboard and audio are passed through.</div>
+      <summary>🖥 <span id="m-desk-title" data-i18n="desk_options">Remote desktop options</span></summary>
+      <div class="muted-text" id="m-desk-help" data-i18n="desk_help">Remote desktops run through guacd (the Apache Guacamole proxy) next to WRM. The browser shows the screen; keyboard, mouse, clipboard and audio are passed through.</div>
       <div id="m-desk-fields"></div>
+    </details>
+    <details class="tun-box" id="m-bmc-box">
+      <summary>⚡ <span data-i18n="bmc_title">Out-of-band management (iDRAC, iLO, IPMI)</span> <span class="pill" id="m-bmc-pill" style="display:none;"></span></summary>
+      <div class="muted-text" data-i18n="bmc_help">The management controller (BMC) of the server: power on, off and restart, health, and the serial console — also when the operating system does not answer. Redfish works with iDRAC, iLO, XClarity, Supermicro and OpenBMC; IPMI uses ipmitool.</div>
+      <div class="field-row">
+        <div class="field"><label data-i18n="bmc_type">Type</label><select id="m-bmc-type" onchange="onBmcTypeChange()"><option value="" data-i18n="bmc_none">none</option><option value="redfish">Redfish (iDRAC, iLO, XClarity…)</option><option value="ipmi">IPMI (ipmitool)</option></select></div>
+        <div class="field"><label data-i18n="bmc_addr">BMC address</label><input type="text" id="m-bmc-host" placeholder="10.0.100.11"></div>
+      </div>
+      <div id="m-bmc-more">
+        <div class="field-row">
+          <div class="field"><label data-i18n="inv_login">Login</label><select id="m-bmc-cred" onchange="onBmcTypeChange()"></select></div>
+          <div class="field" id="m-bmc-user-f"><label data-i18n="username">Username</label><input type="text" id="m-bmc-user" placeholder="root"></div>
+          <div class="field" id="m-bmc-pass-f"><label data-i18n="password">Password</label><input type="password" id="m-bmc-pass" autocomplete="new-password"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label data-i18n="bmc_console">Serial console command (BMC SSH)</label><input type="text" id="m-bmc-console" list="m-bmc-console-list" placeholder="console com2"><datalist id="m-bmc-console-list"><option value="console com2">Dell iDRAC</option><option value="vsp">HPE iLO</option><option value="console 1">Lenovo XClarity</option><option value="cd system1/sol1; start">Supermicro</option></datalist></div>
+          <div class="field"><label data-i18n="bmc_ssh_port">BMC SSH port</label><input type="number" id="m-bmc-sshport" min="1" max="65535" placeholder="22"></div>
+        </div>
+        <label class="check-row" id="m-bmc-via-row"><input type="checkbox" id="m-bmc-via"> <span><b data-i18n="bmc_via">Through the jump host</b> — <span data-i18n="bmc_via_d">the management network is reached from the jump host of this connection (Redfish over SSH; ipmitool runs on the jump host).</span></span></label>
+      </div>
     </details>
     <details class="tun-box" id="m-tun-box">
       <summary>🔀 <span data-i18n="tunnels_title">SSH tunnels (port forwarding)</span> <span class="pill" id="m-tun-count" style="display:none;"></span></summary>
@@ -1968,6 +2000,22 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 </div>
 
 
+
+
+<!-- Out-of-band management (v10.7) -->
+<div class="modal-overlay" id="modal-bmc">
+  <div class="modal" style="width:min(680px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>⚡ <span id="bmc-title"></span></h3>
+    <div class="muted-text" id="bmc-sub"></div>
+    <div id="bmc-body"></div>
+    <div class="bmc-actions" id="bmc-actions"></div>
+    <div class="modal-footer">
+      <button class="btn-sec" style="margin-right:auto;" id="bmc-console-btn" onclick="bmcOpenConsole()">📟 <span data-i18n="bmc_console_menu">Serial console</span></button>
+      <button class="btn-sec" onclick="loadBMC()" title="Refresh">⟳</button>
+      <button class="btn-sec" onclick="closeModal('modal-bmc')" data-i18n="close">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Inventory import (v10.6) -->
 <div class="modal-overlay" id="modal-inventory">
@@ -3954,6 +4002,50 @@ Object.assign(LANGS.hr, {
   inv_result:'{n} uvezeno, {u} ažurirano, {f} novih mapa, {j} povezanih jump hostova',
   inv_col_site:'Lokacija', inv_col_role:'Uloga', inv_col_platform:'Platforma',
 });
+Object.assign(LANGS.en, {
+  bmc_title:'Out-of-band management (iDRAC, iLO, IPMI)', bmc_help:'The management controller (BMC) of the server: power on, off and restart, health, and the serial console — also when the operating system does not answer. Redfish works with iDRAC, iLO, XClarity, Supermicro and OpenBMC; IPMI uses ipmitool.',
+  bmc_type:'Type', bmc_none:'none', bmc_addr:'BMC address', bmc_console:'Serial console command (BMC SSH)', bmc_ssh_port:'BMC SSH port', bmc_own_login:'user name and password below',
+  bmc_via:'Through the jump host', bmc_via_d:'the management network is reached from the jump host of this connection (Redfish over SSH; ipmitool runs on the jump host).',
+  bmc_menu:'Power & status (BMC)…', bmc_console_menu:'Serial console', bmc_console_tab:'console', bmc_asking:'Asking the BMC…', bmc_no_ipmitool:'not installed (only needed for IPMI)',
+  bmc_power_on:'On', bmc_power_off:'Off', bmc_power_unknown:'Unknown', bmc_health:'Health', bmc_model:'Model', bmc_serial:'Serial number', bmc_cpu_mem:'CPUs / memory',
+  bmc_power_draw:'Power draw', bmc_inlet:'Inlet temperature', bmc_hostname:'Host name',
+  bmc_act_on:'Power on', bmc_act_on_d:'Switches the server on.',
+  bmc_act_shutdown:'Shut down', bmc_act_shutdown_d:'Asks the operating system to shut down (like a short press of the power button).',
+  bmc_act_restart:'Restart', bmc_act_restart_d:'Asks the operating system to restart.',
+  bmc_act_off:'Force off', bmc_act_off_d:'Cuts the power at once, like pulling the plug: unsaved data is lost.',
+  bmc_act_reset:'Force restart', bmc_act_reset_d:'Resets the machine at once, without shutting down the operating system.',
+  bmc_act_cycle:'Power cycle', bmc_act_cycle_d:'Switches the power off and on again.',
+  bmc_act_nmi:'NMI', bmc_act_nmi_d:'Sends a non-maskable interrupt (e.g. to get a kernel crash dump).',
+  bmc_confirm:'{action}: {name}?', bmc_sent:'{action} sent to the BMC',
+  ser_options:'Serial port settings', ser_help:'A serial port of the machine WRM runs on (USB console cable, ttyS0…), e.g. the console of a switch, router or firewall. Usually 9600 8N1 (Cisco, Juniper) or 115200 8N1.',
+  ser_baud:'Speed (baud)', ser_data:'Data bits', ser_parity:'Parity', ser_stop:'Stop bits', ser_flow:'Flow control', ser_none:'none', ser_even:'even', ser_odd:'odd',
+  pg_bmc:'Out-of-band management & serial ports', p_bmc_enabled:'Out-of-band management', p_bmc_enabled_d:'Power, health and serial consoles through the BMC of servers (Redfish, IPMI).',
+  p_serial_ports:'Serial ports of the WRM server', p_serial_ports_d:'Who may use serial ports (console cables) of the machine WRM runs on.',
+  po_serial_ports_off:'Nobody', po_serial_ports_admins:'Administrators', po_serial_ports_all:'Everyone',
+  ev_bmc:'Out-of-band management',
+});
+Object.assign(LANGS.hr, {
+  bmc_title:'Upravljanje izvan pojasa (iDRAC, iLO, IPMI)', bmc_help:'Upravljački kontroler (BMC) servera: uključivanje, isključivanje i ponovno pokretanje, stanje i serijska konzola — i kad operativni sustav ne odgovara. Redfish radi s iDRAC-om, iLO-om, XClarityjem, Supermicrom i OpenBMC-om; IPMI koristi ipmitool.',
+  bmc_type:'Vrsta', bmc_none:'ništa', bmc_addr:'Adresa BMC-a', bmc_console:'Naredba serijske konzole (SSH BMC-a)', bmc_ssh_port:'SSH port BMC-a', bmc_own_login:'korisničko ime i lozinka ispod',
+  bmc_via:'Kroz jump host', bmc_via_d:'mreža za upravljanje dostupna je s jump hosta ove veze (Redfish preko SSH-a; ipmitool se pokreće na jump hostu).',
+  bmc_menu:'Napajanje i stanje (BMC)…', bmc_console_menu:'Serijska konzola', bmc_console_tab:'konzola', bmc_asking:'Pitam BMC…', bmc_no_ipmitool:'nije instaliran (treba samo za IPMI)',
+  bmc_power_on:'Uključen', bmc_power_off:'Isključen', bmc_power_unknown:'Nepoznato', bmc_health:'Stanje', bmc_model:'Model', bmc_serial:'Serijski broj', bmc_cpu_mem:'Procesori / memorija',
+  bmc_power_draw:'Potrošnja', bmc_inlet:'Ulazna temperatura', bmc_hostname:'Ime hosta',
+  bmc_act_on:'Uključi', bmc_act_on_d:'Uključuje server.',
+  bmc_act_shutdown:'Ugasi', bmc_act_shutdown_d:'Traži od operativnog sustava da se ugasi (kao kratki pritisak tipke za napajanje).',
+  bmc_act_restart:'Ponovno pokreni', bmc_act_restart_d:'Traži od operativnog sustava ponovno pokretanje.',
+  bmc_act_off:'Prisilno isključi', bmc_act_off_d:'Odmah prekida napajanje, kao izvlačenje utikača: nespremljeni podaci se gube.',
+  bmc_act_reset:'Prisilno ponovno pokreni', bmc_act_reset_d:'Odmah resetira stroj, bez gašenja operativnog sustava.',
+  bmc_act_cycle:'Ciklus napajanja', bmc_act_cycle_d:'Isključuje napajanje i ponovno ga uključuje.',
+  bmc_act_nmi:'NMI', bmc_act_nmi_d:'Šalje nemaskirajući prekid (npr. za ispis jezgre nakon pada).',
+  bmc_confirm:'{action}: {name}?', bmc_sent:'{action} poslano BMC-u',
+  ser_options:'Postavke serijskog porta', ser_help:'Serijski port računala na kojem radi WRM (USB konzolni kabel, ttyS0…), npr. konzola switcha, routera ili vatrozida. Obično 9600 8N1 (Cisco, Juniper) ili 115200 8N1.',
+  ser_baud:'Brzina (baud)', ser_data:'Podatkovni bitovi', ser_parity:'Paritet', ser_stop:'Stop bitovi', ser_flow:'Kontrola toka', ser_none:'bez', ser_even:'parni', ser_odd:'neparni',
+  pg_bmc:'Upravljanje izvan pojasa i serijski portovi', p_bmc_enabled:'Upravljanje izvan pojasa', p_bmc_enabled_d:'Napajanje, stanje i serijske konzole preko BMC-a servera (Redfish, IPMI).',
+  p_serial_ports:'Serijski portovi WRM servera', p_serial_ports_d:'Tko smije koristiti serijske portove (konzolne kabele) računala na kojem radi WRM.',
+  po_serial_ports_off:'Nitko', po_serial_ports_admins:'Administratori', po_serial_ports_all:'Svi',
+  ev_bmc:'Upravljanje izvan pojasa',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4358,7 +4450,7 @@ function makeConnItem(c) {
   const proto = (c.protocol || 'SSH').toLowerCase();
   const tunRun = tunnelState.tunnels.filter(x => x.conn_id === c.id && x.running && !x.ephemeral).length;
   const st = connStatusOf(c);
-  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : (c.protocol === 'TELNET' ? 'TEL' : c.protocol))}</span><span class="conn-name">${esc(c.name)}</span>` + envPill(c) +
+  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : (c.protocol === 'TELNET' ? 'TEL' : (c.protocol === 'SERIAL' ? 'COM' : c.protocol)))}</span><span class="conn-name">${esc(c.name)}</span>` + envPill(c) +
     (c.route ? `<span class="conn-route" title="${esc(t('via') + ' ' + c.route)}">⤳</span>` : '') +
     (c.tunnels ? `<span class="conn-tun ${tunRun ? 'on' : ''}" title="${esc(t('tun_count_title').replace('{n}', c.tunnels).replace('{r}', tunRun))}" onclick="event.stopPropagation(); openTunnelsPanel(${c.id})">🔀</span>` : '') +
     `<span class="conn-host">${esc(c.host)}</span>`;
@@ -4440,6 +4532,11 @@ function showConnCtx(x, y, conn) {
     ${buildWinOptions('sftp')}
     ${tunItems}
     <div class="ctx-hr"></div>`;
+  const pol = (currentUser && currentUser.policy) || {};
+  if (conn.bmc && pol.bmc !== false) menu.innerHTML += `
+    <div class="ctx-item" onclick="closeAllCtx(); openBMC(${conn.id})">⚡ ${esc(t('bmc_menu'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openConsoleWindow(${conn.id}, ${jsq(conn.bmc.type === 'ipmi' ? 'sol' : 'bmc')})">📟 ${esc(t('bmc_console_menu'))}</div>
+    <div class="ctx-hr"></div>`;
   menu.innerHTML += `
     <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow([${conn.id}])">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">${t('edit_connection')}</div>
@@ -4490,6 +4587,8 @@ function applyPolicyToUI() {
   if (ex) ex.style.display = pol.secret_export ? '' : 'none';
   const bc = document.getElementById('btn-broadcast');
   if (bc) bc.style.display = pol.broadcast === false ? 'none' : '';
+  const os = document.getElementById('opt-serial');
+  if (os) { os.hidden = !pol.serial; os.disabled = !pol.serial; }
 }
 
 function showFolderCtx(x, y) {
@@ -4534,6 +4633,7 @@ function openConnModal(id, focusTunnels) {
   document.getElementById('m-webpath').value = c ? (c.web_path || '') : '';
   document.getElementById('m-monitor').checked = c ? c.monitor !== false : true;
   document.getElementById('m-tags').value = c && c.tags ? c.tags.join(', ') : '';
+  fillBmcForm(c);
   renderTagSuggestions();
   deskOptsInit = (c && c.options) || {};
   fillJumpSelect(c);
@@ -4617,7 +4717,7 @@ function onCredPick() {
 
 function connFormPayload() {
   return {
-    options: DESK_PROTOCOLS.includes(document.getElementById('m-proto').value) ? readDeskOptions() : undefined,
+    options: DESK_PROTOCOLS.includes(document.getElementById('m-proto').value) || document.getElementById('m-proto').value === 'SERIAL' ? readDeskOptions() : undefined,
     monitor: document.getElementById('m-monitor').checked,
     name: document.getElementById('m-name').value.trim(),
     host: document.getElementById('m-host').value.trim(),
@@ -4634,6 +4734,7 @@ function connFormPayload() {
     web_path: document.getElementById('m-webpath').value.trim(),
     key_id: Number(document.getElementById('m-keyref').value) || null,
     tags: splitTagInput(document.getElementById('m-tags').value),
+    bmc: readBmcForm(),
     credential_id: Number(document.getElementById('m-cred').value) || null,
   };
 }
@@ -5101,6 +5202,7 @@ async function adminOverview() {
       <div class="kv"><div class="k">${esc(t('database'))}</div><div class="v small">${esc(st.db_path)} (${fmtBytes(st.db_size)})</div></div>
       <div class="kv"><div class="k">${esc(t('encryption_key'))}</div><div class="v small">${esc(st.encryption_key)}</div></div>
       ${st.vault ? `<div class="kv"><div class="k">${esc(t('vault_title'))}</div><div class="v small">🔑 ${st.vault.keys} ${esc(t('vault_keys_lc'))} · 🚀 ${st.vault.deployments} ${esc(t('vault_deployments_lc'))} · 🗝 ${st.vault.credentials} ${esc(t('vault_creds_lc'))}${st.vault.rotation_due ? ' · ⏰ ' + st.vault.rotation_due + ' ' + esc(t('vc_due')) : ''}${st.vault.rotation_incomplete ? ' · ⚠ ' + st.vault.rotation_incomplete + ' ' + esc(t('vc_incomplete')) : ''}</div></div>` : ''}
+      <div class="kv"><div class="k">ipmitool</div><div class="v small">${st.ipmitool ? '✅ ' + esc(st.ipmitool) : esc(t('bmc_no_ipmitool'))}</div></div>
       ${st.guacd ? `<div class="kv"><div class="k">${esc(t('desk_proxy'))}</div><div class="v small">${!st.guacd.enabled ? esc(t('off')) : st.guacd.ok ? '✅ guacd ' + esc(st.guacd.version || '') + ' · ' + esc(st.guacd.address) : '❌ ' + esc(st.guacd.address) + ' — ' + esc(t('desk_proxy_down'))}</div></div>` : ''}
     </div>
     <div class="adm-h">${esc(t('active_terminals'))} (${(st.terminals || []).length})</div>
@@ -5280,6 +5382,7 @@ const POLICY_GROUPS = {
     ['pg_terminal', ['broadcast_enabled']],
     ['pg_status', ['status_enabled', 'status_interval_seconds', 'status_jump_checks']],
     ['pg_desktop', ['desktop_enabled', 'guacd_address', 'desktop_tunnel_bind']],
+    ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
@@ -5364,7 +5467,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'snippet.', 'ssh_key.', 'credential.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'snippet.', 'ssh_key.', 'credential.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -5710,19 +5813,25 @@ function onProtoChange() {
   const p = document.getElementById('m-proto').value;
   const web = p === 'HTTP' || p === 'HTTPS';
   const ftp = p === 'FTP' || p === 'FTPS';
+  const serial = p === 'SERIAL';
   const desk = DESK_PROTOCOLS.includes(p);
   const dbox = document.getElementById('m-desk-box');
-  if (desk) {
+  if (desk || serial) {
     const keep = dbox.dataset.proto === p ? readDeskOptions() : (dbox.dataset.proto ? {} : deskOptsInit);
     renderDeskOptions(p, keep);
   }
-  dbox.dataset.proto = desk ? p : '';
-  dbox.style.display = desk ? '' : 'none';
+  dbox.dataset.proto = desk || serial ? p : '';
+  dbox.style.display = desk || serial ? '' : 'none';
+  document.getElementById('m-desk-title').textContent = t(serial ? 'ser_options' : 'desk_options');
+  document.getElementById('m-desk-help').textContent = t(serial ? 'ser_help' : 'desk_help');
+  document.getElementById('m-bmc-box').style.display = web || serial || !(currentUser && currentUser.policy && currentUser.policy.bmc !== false) ? 'none' : '';
+  document.getElementById('m-jump').closest('.field').style.display = serial ? 'none' : '';
+  document.getElementById('m-monitor-row').style.display = serial ? 'none' : '';
   updateAuthOptions();
   document.getElementById('field-webpath').style.display = web ? '' : 'none';
-  document.getElementById('m-auth-fields').style.display = web ? 'none' : '';
-  document.getElementById('m-tun-box').style.display = web || ftp || desk ? 'none' : '';
-  document.getElementById('m-host').placeholder = web ? (p === 'HTTPS' ? '10.0.0.5:443' : '10.0.0.5:80') : (ftp ? '192.168.1.1:21' : ({RDP: '10.0.0.20:3389', VNC: '10.0.0.30:5900', TELNET: '10.0.0.40:23'})[p] || '192.168.1.1:22');
+  document.getElementById('m-auth-fields').style.display = web || serial ? 'none' : '';
+  document.getElementById('m-tun-box').style.display = web || ftp || desk || serial ? 'none' : '';
+  document.getElementById('m-host').placeholder = web ? (p === 'HTTPS' ? '10.0.0.5:443' : '10.0.0.5:80') : (ftp ? '192.168.1.1:21' : ({RDP: '10.0.0.20:3389', VNC: '10.0.0.30:5900', TELNET: '10.0.0.40:23', SERIAL: 'ttyUSB0'})[p] || '192.168.1.1:22');
   document.getElementById('m-jump-help').textContent = web ? t('jump_host_help_web') : (desk ? t('jump_host_help_desk') : t('jump_host_help'));
   document.getElementById('conn-test-btn').style.display = '';
 }
@@ -6028,6 +6137,119 @@ async function importExternal(input, kind, password) {
   loadData();
 }
 
+
+// ══ OUT-OF-BAND MANAGEMENT & CONSOLES (v10.7) ═══════════
+
+function fillBmcForm(c) {
+  const b = (c && c.bmc) || {};
+  document.getElementById('m-bmc-type').value = b.type || '';
+  document.getElementById('m-bmc-host').value = b.host || '';
+  document.getElementById('m-bmc-user').value = b.username || '';
+  const pw = document.getElementById('m-bmc-pass');
+  pw.value = ''; pw.placeholder = b.has_password ? '•••••••• (' + t('secret_stored') + ')' : '';
+  document.getElementById('m-bmc-console').value = b.console || '';
+  document.getElementById('m-bmc-sshport').value = b.ssh_port || '';
+  document.getElementById('m-bmc-via').checked = !!b.via_jump;
+  const cs = document.getElementById('m-bmc-cred');
+  cs.innerHTML = `<option value="">${esc(t('bmc_own_login'))}</option>` + vaultCreds.map(x => `<option value="${x.id}">🗝 ${esc(x.name)}${x.username ? ' (' + esc(x.username) + ')' : ''}</option>`).join('');
+  cs.value = b.credential_id || '';
+  const pill = document.getElementById('m-bmc-pill');
+  pill.style.display = b.type ? '' : 'none';
+  pill.textContent = b.type === 'ipmi' ? 'IPMI' : 'Redfish';
+  document.getElementById('m-bmc-box').open = !!b.type;
+  onBmcTypeChange();
+}
+
+function onBmcTypeChange() {
+  const type = document.getElementById('m-bmc-type').value;
+  document.getElementById('m-bmc-more').style.display = type ? '' : 'none';
+  const cred = !!document.getElementById('m-bmc-cred').value;
+  document.getElementById('m-bmc-pass-f').style.display = cred ? 'none' : '';
+  document.getElementById('m-bmc-host').placeholder = type === 'ipmi' ? '10.0.100.11 (:623)' : '10.0.100.11 (:443)';
+  document.getElementById('m-bmc-via-row').style.display = document.getElementById('m-jump').value ? '' : 'none';
+}
+
+function readBmcForm() {
+  const type = document.getElementById('m-bmc-type').value;
+  if (!type) return {type: ''};
+  const v = id => document.getElementById(id).value.trim();
+  return {type, host: v('m-bmc-host'), username: v('m-bmc-user'), password: document.getElementById('m-bmc-pass').value,
+    credential_id: Number(v('m-bmc-cred')) || null, console: v('m-bmc-console'), ssh_port: Number(v('m-bmc-sshport')) || 0,
+    via_jump: document.getElementById('m-bmc-via').checked && !!document.getElementById('m-jump').value};
+}
+
+let bmcConnId = null, bmcState = null;
+
+function openBMC(connId) {
+  bmcConnId = connId;
+  const c = conns.find(x => x.id === connId);
+  if (!c) return;
+  document.getElementById('bmc-title').textContent = c.name;
+  document.getElementById('bmc-sub').textContent = (c.bmc.type === 'ipmi' ? 'IPMI' : 'Redfish') + ' · ' + c.bmc.host + (c.bmc.via_jump && c.route ? ' ⤳ ' + c.route : '');
+  document.getElementById('modal-bmc').classList.add('open');
+  loadBMC();
+}
+
+async function loadBMC() {
+  const body = document.getElementById('bmc-body');
+  const acts = document.getElementById('bmc-actions');
+  body.innerHTML = `<div class="hint-box">⏳ ${esc(t('bmc_asking'))}</div>`;
+  acts.innerHTML = '';
+  const r = await fetch('/api/connections/' + bmcConnId + '/bmc');
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    body.innerHTML = `<div class="hint-box bad">${esc(j.error || ('HTTP ' + r.status))}</div>`;
+    if (j.hostkey) {
+      const b = document.createElement('button');
+      b.className = 'btn-sec btn-sm'; b.textContent = t('hostkey_accept_btn');
+      b.onclick = async () => { if (await acceptHostKey(j.hostkey)) loadBMC(); };
+      body.appendChild(b);
+    }
+    return;
+  }
+  bmcState = j;
+  const kv = (k, v) => v ? `<div class="kv"><div class="k">${esc(k)}</div><div class="v small">${esc(v)}</div></div>` : '';
+  const power = (j.power || 'unknown').toLowerCase();
+  const pclass = power === 'on' ? 'on' : (power === 'off' ? 'off' : 'unknown');
+  const health = j.health || '';
+  body.innerHTML = `<div class="bmc-head"><span class="bmc-power ${pclass}">${power === 'on' ? '● ' : '○ '}${esc(t('bmc_power_' + pclass))}</span>
+      ${health ? `<span class="pill ${health === 'OK' ? 'ok' : (health === 'Critical' ? 'bad' : 'warn')}">${esc(t('bmc_health'))}: ${esc(health)}</span>` : ''}
+      ${(j.faults || []).map(f => `<span class="pill bad">⚠ ${esc(f)}</span>`).join('')}</div>
+    <div class="kv-grid">${kv(t('bmc_model'), [j.manufacturer, j.model].filter(Boolean).join(' '))}${kv(t('bmc_serial'), j.serial)}${kv('BIOS', j.bios)}
+      ${kv(t('bmc_cpu_mem'), [j.cpus ? j.cpus + '× ' + (j.cpu_model || 'CPU') : '', j.memory_gib ? j.memory_gib + ' GiB' : ''].filter(Boolean).join(' · '))}
+      ${kv('BMC', [j.bmc_model, j.bmc_firmware].filter(Boolean).join(' · '))}${kv(t('bmc_power_draw'), j.power_watts ? j.power_watts + ' W' : '')}
+      ${kv(t('bmc_inlet'), j.inlet_c ? j.inlet_c + ' °C' : '')}${kv(t('bmc_hostname'), j.host_name)}</div>
+    ${(j.details || []).map(d => `<div class="muted-text">${esc(d)}</div>`).join('')}`;
+  const order = [['on', '▶', ''], ['shutdown', '⏻', 'danger'], ['restart', '↻', 'danger'], ['off', '■', 'danger'], ['reset', '⟲', 'danger'], ['cycle', '🔁', 'danger'], ['nmi', '⚠', 'danger']];
+  acts.innerHTML = order.filter(([a]) => (j.actions || []).includes(a)).map(([a, icon, cls]) =>
+    `<button class="${a === 'on' ? '' : 'btn-sec'}" onclick="bmcAction('${a}')" title="${esc(t('bmc_act_' + a + '_d'))}">${icon} ${esc(t('bmc_act_' + a))}</button>`).join('');
+  document.getElementById('bmc-console-btn').style.display = '';
+}
+
+async function bmcAction(action) {
+  const c = conns.find(x => x.id === bmcConnId);
+  if (!c) return;
+  if (action !== 'on' && !(await uiConfirm(t('bmc_confirm').replace('{action}', t('bmc_act_' + action)).replace('{name}', c.name) + '\n\n' + t('bmc_act_' + action + '_d'),
+    {okText: t('bmc_act_' + action), danger: true}))) return;
+  const r = await fetch('/api/connections/' + bmcConnId + '/bmc', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action})});
+  if (!r.ok) { showToast(await apiError(r), 'error', 8000); return; }
+  showToast(t('bmc_sent').replace('{action}', t('bmc_act_' + action)), 'success');
+  setTimeout(loadBMC, 2500);
+}
+
+function bmcOpenConsole() {
+  const c = conns.find(x => x.id === bmcConnId);
+  if (!c || !c.bmc) return;
+  closeModal('modal-bmc');
+  openConsoleWindow(c.id, c.bmc.type === 'ipmi' ? 'sol' : 'bmc');
+}
+
+function openConsoleWindow(connId, kind) {
+  const wo = addWindow();
+  wo.connId = connId;
+  wo.console = kind;
+  setWinMode(wo.id, 'ssh');
+}
 
 // ══ TAGS & INVENTORY IMPORT (v10.6) ═════════════════════
 
@@ -6846,6 +7068,13 @@ function loadGuacLib() {
 
 // ── connection modal: options ──
 const DESK_OPTION_FIELDS = {
+  SERIAL: [
+    ['baud', 'select', 'ser_baud', [['9600', '9600'], ['115200', '115200'], ['19200', '19200'], ['38400', '38400'], ['57600', '57600'], ['4800', '4800'], ['2400', '2400'], ['1200', '1200'], ['230400', '230400'], ['460800', '460800'], ['921600', '921600']]],
+    ['data_bits', 'select', 'ser_data', [['8', '8'], ['7', '7'], ['6', '6'], ['5', '5']]],
+    ['parity', 'select', 'ser_parity', [['none', 'ser_none'], ['even', 'ser_even'], ['odd', 'ser_odd']]],
+    ['stop_bits', 'select', 'ser_stop', [['1', '1'], ['2', '2']]],
+    ['flow', 'select', 'ser_flow', [['none', 'ser_none'], ['rtscts', 'RTS/CTS'], ['xonxoff', 'XON/XOFF']]],
+  ],
   RDP: [
     ['domain', 'text', 'desk_domain', 'CORP'],
     ['security', 'select', 'desk_security', [['any', 'desk_sec_any'], ['nla', 'desk_sec_nla'], ['nla-ext', 'desk_sec_nlaext'], ['tls', 'desk_sec_tls'], ['rdp', 'desk_sec_rdp'], ['vmconnect', 'desk_sec_vmconnect']]],
@@ -7738,7 +7967,7 @@ function captureLayout() {
   const windows = [];
   tabOrder.forEach(id => {
     const wo = winObjects.find(w => w.id === id);
-    if (!wo || !wo.connId || (wo.mode !== 'ssh' && wo.mode !== 'sftp')) return;
+    if (!wo || !wo.connId || (wo.mode !== 'ssh' && wo.mode !== 'sftp' && wo.mode !== 'desk')) return;
     const el = wo.el;
     const geo = wo.snap ? null : {
       l: +(parseInt(el.style.left) / cw).toFixed(4), t: +(parseInt(el.style.top) / ch).toFixed(4),
@@ -7748,6 +7977,7 @@ function captureLayout() {
       conn_id: wo.connId, mode: wo.mode, snap: wo.snap || null, geo,
       path: wo.mode === 'sftp' ? (wo.path || '.') : undefined,
       share_token: wo.shareToken || undefined,
+      console: wo.console || undefined,
       minimized: el.style.display === 'none' || undefined,
       focused: wo === focused || undefined,
     });
@@ -7781,6 +8011,7 @@ async function openSession(id, how) {
     const wo = addWindow();
     wo.connId = c.id;
     if (w.share_token) wo.shareToken = w.share_token;
+    if (w.console === 'bmc' || w.console === 'sol') wo.console = w.console;
     if (w.mode === 'sftp' && w.path) wo.path = w.path;
     if (w.snap && !isCompact()) snapWindow(wo.id, w.snap);
     else if (w.geo && !isCompact()) {
@@ -8130,7 +8361,7 @@ function setWinMode(id, mode) {
       </div>
       <div class="term-overlay" id="to-${id}" hidden></div>
     </div>`;
-    const title = c ? `${c.protocol} — ${c.name}` : `Terminal ${id}`;
+    const title = c ? `${wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : c.protocol} — ${c.name}` : `Terminal ${id}`;
     const el = document.getElementById('wt-' + id);
     if (el) el.textContent = title;
     renderTabs();
@@ -8435,6 +8666,8 @@ function setupSSH(wo) {
   fitTerm(wo);
   const qs = new URLSearchParams({id: wo.connId, cols: wo.term.cols, rows: wo.term.rows});
   if (wo.shareToken) qs.set('share_token', wo.shareToken);
+  if (wo.console) qs.set('console', wo.console);
+  if (wo.el) wo.el.classList.toggle('console', !!wo.console);
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/ssh?${qs}`);
   ws.binaryType = 'arraybuffer';
   wo.socket = ws;
@@ -10387,10 +10620,10 @@ function renderTabs() {
 
     let icon = '□', title = 'Window ' + id;
     if (wo.mode === 'ssh') {
-      icon = '⚡';
+      icon = wo.console ? '📟' : '⚡';
       const allConns = isCollabMode ? collabConns : conns;
       const c = wo.connId ? allConns.find(x => x.id === wo.connId) : null;
-      title = c ? c.name : 'Terminal ' + id;
+      title = c ? c.name + (wo.console ? ' — ' + t('bmc_console_tab') : '') : 'Terminal ' + id;
     } else if (wo.mode === 'sftp') {
       icon = '📂';
       const allConns = isCollabMode ? collabConns : conns;

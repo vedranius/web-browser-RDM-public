@@ -337,7 +337,13 @@ type termConn struct {
 
 func (c *testClient) openTerminal(connID int) *termConn {
 	c.t.Helper()
-	u := "ws" + strings.TrimPrefix(c.srv.URL, "http") + "/ws/ssh?id=" + strconv.Itoa(connID) + "&cols=100&rows=30"
+	return c.openTerminalQ(connID, "")
+}
+
+// openTerminalQ opens a terminal WebSocket with extra query parameters (e.g. "&console=sol").
+func (c *testClient) openTerminalQ(connID int, extra string) *termConn {
+	c.t.Helper()
+	u := "ws" + strings.TrimPrefix(c.srv.URL, "http") + "/ws/ssh?id=" + strconv.Itoa(connID) + "&cols=100&rows=30" + extra
 	hdr := http.Header{}
 	hdr.Set("Origin", c.srv.URL)
 	hdr.Set("Cookie", c.cookie.Name+"="+c.cookie.Value)
