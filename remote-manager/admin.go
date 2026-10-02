@@ -134,6 +134,7 @@ func apiAdminStatusHandler(w http.ResponseWriter, r *http.Request) {
 		"users": users, "admins": admins, "users_2fa": with2FA, "shares": shares, "connections": conns,
 		"terminals": tl, "rooms": roomsSummary(), "turn": turnStatus(), "warnings": warnings,
 		"tunnels": tunnelMgr.runsWhere(func(*tunnelRun) bool { return true }),
+		"guacd":   guacdStatus(),
 	})
 }
 
@@ -159,4 +160,18 @@ func apiAdminTerminalsHandler(w http.ResponseWriter, r *http.Request) {
 	target.kill("The session was ended by an administrator")
 	auditLog(r, adminID, "admin.terminal_killed", target.ConnName, map[string]interface{}{"user": target.User, "host": target.Host})
 	jsonOK(w, map[string]bool{"ok": true})
+}
+
+// guacdStatus reports the remote desktop proxy for the admin overview.
+func guacdStatus() map[string]interface{} {
+	st := map[string]interface{}{"enabled": settingBool("desktop_enabled"), "address": getSetting("guacd_address")}
+	if !settingBool("desktop_enabled") {
+		return st
+	}
+	if v, err := guacdCheck(); err != nil {
+		st["ok"], st["error"] = false, truncateStr(err.Error(), 200)
+	} else {
+		st["ok"], st["version"] = true, v
+	}
+	return st
 }

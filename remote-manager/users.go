@@ -310,6 +310,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"secret_export": u.IsAdmin || settingBool("allow_secret_export"),
 			"voice":         settingBool("voice_enabled"),
 			"broadcast":     settingBool("broadcast_enabled"),
+			"desktop":       settingBool("desktop_enabled"),
 		},
 	}
 }

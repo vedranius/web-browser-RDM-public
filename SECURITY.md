@@ -68,6 +68,13 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Review **shared snippets** (administrators publish them for everybody) like any runbook. Run-on-connect snippets come from the connection's owner and are audited (`terminal.auto_run`).
 - [ ] **Live status** opens a TCP connection to every monitored host:port once per interval (no login). Tell the teams who watch those servers, add the WRM server to fail2ban `ignoreip` where *aggressive* filters are used, and keep `status_jump_checks` off unless logins to the jump hosts every round are acceptable.
 
+**Remote desktop (RDP / VNC / Telnet)**
+
+- [ ] Run guacd only on the WRM machine (or in WRM's network namespace) and keep it bound to `127.0.0.1`: guacd has no authentication of its own, so anyone who reaches port 4822 can open connections through it.
+- [ ] Prefer **NLA** or **TLS** security for RDP and turn off *Accept the server certificate* where servers have proper certificates.
+- [ ] Turn off the remote clipboard (connection option) on servers where copying data out must not be possible; sessions are recorded like terminals.
+- [ ] Turn remote desktops off (`desktop_enabled=0`) if nobody needs them.
+
 **SSH tunnels and jump hosts**
 
 - [ ] Decide who may use tunnels: `tunnel_users=admins`, or `tunnels_enabled=0` if nobody needs them (`WRM_TUNNELS_ENABLED=0`). Tunnels reach whatever the SSH servers reach; they are as powerful as the SSH accounts behind them.
@@ -88,7 +95,7 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
 - [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
-- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `terminal.broadcast` and `snippet.*` events.
+- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast` and `snippet.*` events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
 
 ## How WRM protects your data

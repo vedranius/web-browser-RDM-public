@@ -7,9 +7,9 @@
 
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
+**A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.3.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.4.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -51,6 +51,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Import from mRemoteNG and OpenSSH](#import-from-mremoteng-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [SSH terminal](#ssh-terminal)
+   - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
    - [Snippets & run on connect](#snippets--run-on-connect)
    - [Broadcast input](#broadcast-input)
    - [Live up/down status](#live-updown-status)
@@ -85,6 +86,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 
 - **SSH terminals** in the browser (xterm.js, 256 colors, full-screen apps like `nano`, `vim`, `htop`, `mc`), with **snippets** (saved commands with variables, one click or Ctrl+Shift+Space), **run on connect** (`sudo -i`, `cd /srv/app`…) and **broadcast input** (type into many terminals at once, with a safety check for dangerous commands).
 - **Live up/down status** of every saved connection in the sidebar, with latency, server banner and a notification when a server goes down.
+- **Remote desktops** — **RDP** (Windows), **VNC** and **Telnet** in a browser window, also behind jump hosts, with clipboard, Ctrl+Alt+Del, recording and replay (through guacd, the Apache Guacamole proxy).
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
 - **Jump hosts** (like `ssh -J`): reach servers behind a bastion, also in chains — for terminals, files, transfers and tunnels.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
@@ -108,21 +110,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.3.0-linux-amd64
-   ./wrm-pro-v10.3.0-linux-amd64
+   chmod +x wrm-pro-v10.4.0-linux-amd64
+   ./wrm-pro-v10.4.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.3.0-windows-amd64.exe
+   .\wrm-pro-v10.4.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.3.0/wrm-pro-v10.3.0-android-arm64
-   chmod +x wrm-pro-v10.3.0-android-arm64 && ./wrm-pro-v10.3.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.4.0/wrm-pro-v10.4.0-android-arm64
+   chmod +x wrm-pro-v10.4.0-android-arm64 && ./wrm-pro-v10.4.0-android-arm64
    ```
 
    **Docker**
@@ -146,6 +148,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.3
+
+Replace the binary. The database gets one new column (`connections.options`); the previous binary still starts on it.
+
+- **Remote desktops need guacd** next to WRM: `apt install guacd` (Debian/Ubuntu), `docker run -d --network host guacamole/guacd`, or the `guacd` service that `docker-compose.yml` now contains. Without guacd everything else keeps working; opening an RDP/VNC/Telnet connection then explains what is missing. See [Remote desktop](#remote-desktop-rdp-vnc-telnet).
+- Importing from **mRemoteNG** now also brings RDP, VNC and Telnet connections (with domain, console, colors and RD Gateway).
+- SQLite now waits up to 10 s for a busy database on every connection (fixes rare *database is locked* errors under load).
 
 ## Upgrading from v10.2
 
@@ -233,7 +243,7 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 Left sidebar ("PRO MANAGER"):
 
 - **+ Connection** creates a connection:
-  - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), `FTP`, `FTPS` (FTP with explicit TLS; file manager only), **🌐 Web interface** `HTTPS` / `HTTP` (see [Web interfaces](#web-interfaces-http--https-connections)).
+  - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), **🖥 RDP**, **🖥 VNC**, **Telnet** (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)), `FTP`, `FTPS` (FTP with explicit TLS; file manager only), **🌐 Web interface** `HTTPS` / `HTTP` (see [Web interfaces](#web-interfaces-http--https-connections)).
   - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS, 443/80 for web interfaces), **Username**, **Folder**.
   - **Jump host (connect via):** another saved SSH connection to go through (see [Jump hosts](#jump-hosts-bastions)).
   - **🔀 SSH tunnels:** port forwards of this connection (see [SSH tunnels](#ssh-tunnels-port-forwarding)).
@@ -347,6 +357,46 @@ Every opened connection is a **window** inside the workspace. There is also a **
 - **Tabs:** click to focus or restore, **drag to reorder**, **middle-click** to close, **right-click** for *Reconnect*, *Duplicate window*, snap layouts and *Close*. SSH tabs show the connection state (🟡 connecting, 🟢 connected, 🔴 disconnected).
 - **Close confirmation** can be *Always*, *Never* or *Only when connected* (Settings).
 - The browser warns you before leaving the page while terminals are connected or a transfer is running.
+
+### Remote desktop: RDP, VNC, Telnet
+
+Windows servers (RDP), Linux desktops and KVM/IPMI consoles (VNC) and old network gear (Telnet) open in a WRM window next to your SSH terminals — no RDP client, no plug-in.
+
+```
+ browser ──WebSocket── WRM ──guacd protocol── guacd ──RDP / VNC / Telnet── server
+```
+
+**Setup (once):** WRM uses **guacd**, the proxy daemon of [Apache Guacamole](https://guacamole.apache.org/), which implements the protocols. Run it on the same machine as WRM:
+
+| Where WRM runs | Install guacd |
+|---|---|
+| Debian / Ubuntu | `sudo apt install guacd` (listens on 127.0.0.1:4822) |
+| Docker | `docker compose up -d` — `docker-compose.yml` contains a `guacd` service that shares WRM's network |
+| Any Linux with Docker | `docker run -d --name guacd --network host --restart unless-stopped guacamole/guacd` |
+| Windows / macOS | run guacd in Docker (Docker Desktop) or on a Linux machine and set `guacd_address` |
+
+*Admin panel → Overview* shows whether guacd answers (and its version); *Test connection* on an RDP/VNC connection checks the server's port **and** guacd.
+
+**Connections:** choose protocol **RDP**, **VNC** or **Telnet**, host (default ports 3389, 5900, 23), user, password and optionally a jump host. **🖥 Remote desktop options**:
+
+- **RDP:** domain, security (automatic, NLA, TLS, RDP, Hyper-V console), keyboard layout of the server, what happens when the window is resized (adapt the desktop size, reconnect, or keep and scale), colors, start program, accept the server certificate, console (admin) session, sound, clipboard, wallpaper, **RD Gateway** (host, port, user, domain).
+- **VNC:** colors, local or remote mouse pointer, view only, clipboard.
+- **Telnet:** font size, colors, login and password prompt patterns (for automatic login).
+
+**Working in a desktop window:**
+
+- **Double-click** the connection (or right-click → *Open remote desktop*). The window shows the remote screen, scaled to fit; **⤢ Fit** switches to 1:1 with scroll bars, **⛶** to full screen. With RDP the remote desktop adapts its size to the window.
+- **Keyboard and mouse** go to the remote computer while the window has the focus (click it). **Ctrl+Alt+Del** has its own button.
+- **Clipboard:** text copied on the remote computer appears in WRM's clipboard panel and in your clipboard; **📋 Clipboard** sends text to the remote clipboard. **⌨ Type** types text as keystrokes — for login screens, BIOS/iDRAC consoles and other places without a clipboard.
+- **Sound** from RDP plays in the browser.
+- If the server asks for credentials that are not stored (e.g. an empty password), WRM asks for them.
+- **↻** reconnects; the tab and the window show the connection state.
+- **Behind a jump host**, WRM opens a temporary tunnel through the jump hosts for the session (listed as *Remote desktop (temporary)* in the Tunnels panel) and closes it with the session.
+- Saved workspace sessions restore desktop windows too.
+
+**Audit and recording:** every desktop session appears in *Sessions & recordings* and the audit log (`desktop.open`, `desktop.close`, `desktop.error`). With session recording on, WRM records the screen stream (no passwords: they are sent to guacd during the handshake and never appear on screen) and **▶ Replay** plays it in the browser with play/pause and seek; *⬇ .guac* downloads it (playable with Guacamole's tools).
+
+**Security:** the browser never picks the target: WRM performs the handshake with the stored host, user, password and options, and afterwards forwards only display data and input instructions from an allow-list. Access follows the same rules as terminals (owner; share members with the *Operator* role or higher). Policies: `desktop_enabled` (`REMOTE_DESKTOP_ENABLED`), `guacd_address` (`GUACD_ADDRESS`, default `127.0.0.1:4822`), `desktop_tunnel_bind` (address of jump-host tunnels for guacd, default `127.0.0.1`).
 
 ### Snippets & run on connect
 
@@ -560,7 +610,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 | Terminal | Font size, scrollback, auto-reconnect |
 | Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
 | Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
-| Session history | Your terminal sessions and sessions on your connections, with replay and `.cast` download |
+| Session history | Your terminal and remote desktop sessions and sessions on your connections, with replay and download |
 | Data | Export connections (without secrets), export **with** passwords & keys (asks for your password; policy), import (also jump hosts and tunnels), **import from mRemoteNG** and **OpenSSH config** |
 
 Personal preferences are stored per browser; everything security-related is stored on the server.
@@ -674,6 +724,9 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `status_enabled` | `1` | live up/down status of connections. Also `STATUS_ENABLED` |
 | `status_interval_seconds` | `60` | seconds between status rounds (15–3600) |
 | `status_jump_checks` | `0` | check connections behind jump hosts by logging in to the jump host |
+| `desktop_enabled` | `1` | RDP / VNC / Telnet in the browser. Also `REMOTE_DESKTOP_ENABLED` |
+| `guacd_address` | `127.0.0.1:4822` | host:port of guacd. Also `GUACD_ADDRESS` |
+| `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
 
@@ -720,7 +773,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.3.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.4.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -778,6 +831,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers (with SHA-256) and changes, host keys, exports, viewing of recordings — stored **append-only** and **hash-chained** in the database (verifiable) and written as `AUDIT …` lines to the server log (journald/syslog → SIEM). Secrets in audit details are redacted.
 - **Session recording:** terminal output in asciicast v2, gzip, mode `0600`, SHA-256 in the database; no keystrokes unless enabled (then masked at password prompts); visible to administrators, the session's user and the connection's owner; every view is audited.
 - **Snippets & broadcast:** snippets are per user (shared snippets only by administrators, read-only for others, never auto-run); run-on-connect snippets come from the connection's owner and are recorded in the audit log; broadcast input is client-side typing into the user's own terminals, with confirmation of dangerous commands and an audit entry for every start and stop per terminal.
+- **Remote desktop:** WRM does the guacd handshake with the stored credentials (never sent to the browser) and forwards only display and allow-listed input instructions; jump-host tunnels for guacd listen on loopback and live only as long as the session; sessions are audited and recorded.
 - **Live status:** checks are plain TCP connections from the WRM server (no credentials, except optional checks through jump hosts with the jump host's own saved login); users only see the states of their own connections.
 - **Tunnels & jump hosts:** every hop is authenticated and host-key-verified; tunnels belong to the owner of the connection (only the owner starts them; administrators can stop any); listen on `127.0.0.1` by default; ports below 1024 refused; network addresses and remote forwards only for administrators (policies); a tunnel can be turned off globally or limited to administrators; every start/stop/error is audited with the traffic. A tunnel port on a network address is **not** protected by WRM sign-in — treat it like an open port of that machine.
 - **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
@@ -786,7 +840,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 
 ## Limitations
 
-- No **RDP/VNC** (graphical desktops): WRM is for SSH, SFTP, FTP and FTPS.
+- RDP, VNC and Telnet need **guacd** next to WRM (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); file transfer and printer redirection of RDP are not offered.
 - No **SSO/LDAP/SAML** yet (local accounts with 2FA).
 - Voice calls are a **mesh**: fine up to about 12 people; larger meetings would need an SFU.
 - No SSH **agent forwarding**. Jump hosts must be SSH servers (no HTTP/SOCKS proxies as jump hosts).
@@ -836,6 +890,15 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/config/import/sshconfig` | `{text, folder}` import an OpenSSH config |
 
 Connections have `jump_id` (jump host connection id or `null`) and `web_path`; lists also return `route` (e.g. `"vpn-gw → bastion-dc1"`) and `tunnels` (number of configured tunnels).
+
+**Remote desktop**
+
+| Endpoint | Description |
+|---|---|
+| `/ws/desktop?id&width&height&dpi&tz[&share_token]` | WebSocket (subprotocol `guacamole`) for an RDP/VNC/Telnet connection. WRM does the guacd handshake; the browser then exchanges Guacamole instructions (display ← / input →). First message: the tunnel id; then `wrm-session` (session id, recorded, route) |
+| `GET /api/recordings/{id}/guac[?download=1]` | Recording of a remote desktop session (Guacamole protocol stream) |
+
+Connections of type RDP/VNC/TELNET have `options` (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); sessions in `/api/recordings` have `protocol` and `recording.format` (`asciicast-v2+gzip` or `guacamole+gzip`).
 
 **Snippets & status**
 
@@ -961,6 +1024,7 @@ remote-manager/
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
   snippets.go     snippets (saved commands), variables, run on connect
   status.go       live up/down status monitor and API
+  guac.go         remote desktop: guacd handshake, relay, recording (RDP / VNC / Telnet)
   helpers.go      origin check, login rate limiting, shared helpers
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
   upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs)
@@ -968,6 +1032,7 @@ remote-manager/
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
   status_test.go       live status: up/down, banners, jump hosts, check now
+  guac_test.go         remote desktop relay against a fake guacd: handshake, filtering, recording, jump hosts
   importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
   static/index.html          the entire web UI (embedded into the binary)
   static/brand/              logo, favicon and app icons
@@ -1005,6 +1070,10 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Broadcast did not ask before a dangerous command | The check sees what you typed during the broadcast, not a command recalled from the shell history (↑) |
 | All connections stay grey (no status dot) | Live status is off (`status_enabled`), or the connection has *Monitor up/down status* unticked. The first round starts a few seconds after WRM starts |
 | A server shows 🔴 but SSH works | The port in the connection differs from the real one, or a firewall allows SSH only from some addresses (not from the WRM server). Behind a jump host use a jump host instead of a direct connection |
+| Remote desktop: *guacd … is not reachable* | Install and start guacd on the WRM machine (`apt install guacd` or the Docker image) or set `guacd_address`. *Admin panel → Overview* shows its state |
+| RDP: *login failed* / black screen and disconnect | Check user, password and **domain**; try *Security: NLA* or *TLS*; older servers need *RDP*. Accept the server certificate (option) for self-signed certificates |
+| RDP: wrong characters when typing | Set the **keyboard layout** to the server's layout (or *Unicode*) |
+| Remote desktop behind a jump host does not connect | guacd must reach the temporary tunnel on `desktop_tunnel_bind` (127.0.0.1): run guacd on the WRM machine or in the same network namespace (compose file) |
 | fail2ban bans the WRM server | Add WRM's IP to `ignoreip`, raise `status_interval_seconds`, or untick monitoring for those hosts |
 | Tunnel runs but the page does not open from my PC | The tunnel listens on `127.0.0.1` of the **WRM machine**. See [Where is the tunnel port?](#ssh-tunnels-port-forwarding) |
 | No *🔀 Tunnels* button / *not allowed* | Tunnels are off or limited to administrators (*Admin panel → Security policies → SSH tunnels*, or `WRM_TUNNELS_ENABLED` / `WRM_TUNNEL_USERS`) |
