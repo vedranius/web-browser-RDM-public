@@ -174,6 +174,12 @@ func defaultPortFor(protocol string) string {
 		return "443"
 	case "SSH", "SFTP", "":
 		return "22"
+	case "RDP":
+		return "3389"
+	case "VNC":
+		return "5900"
+	case "TELNET":
+		return "23"
 	}
 	return ""
 }

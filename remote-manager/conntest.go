@@ -64,13 +64,20 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		err = e
 	} else {
-		if isWeb(c) {
-			// Web interfaces: check that the port answers (through the jump hosts, if any).
+		if isWeb(c) || isDesktopProtocol(c.Protocol) {
+			// Web interfaces and remote desktops: check that the port answers (through the jump hosts, if any).
 			err = testWebReachable(c)
 			if err == nil {
 				detail = "Port " + c.Host + " is reachable"
 				if route := jumpPath(c); route != "" {
 					detail += " via " + route
+				}
+				if isDesktopProtocol(c.Protocol) {
+					if v, gerr := guacdCheck(); gerr != nil {
+						detail += " · ⚠ guacd (remote desktop proxy) is not reachable at " + getSetting("guacd_address")
+					} else {
+						detail += " · guacd " + v + " ready"
+					}
 				}
 			}
 		} else {

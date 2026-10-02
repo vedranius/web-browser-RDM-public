@@ -1,14 +1,48 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.3.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.4.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v10.3.0 — snippets, broadcast input & live status
+## Web Remote Manager PRO v10.4.0 — RDP, VNC & Telnet in the browser
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, jump hosts and SSH tunnels, sharing, real-time collaboration with **voice calls**, audit trail and session recording. One self-contained binary (or container) with an embedded web UI.
+Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts and SSH tunnels, **remote desktops**, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI.
 
-v10.3 makes everyday work on many servers faster: saved commands with one click, typing into many terminals at once, and a live view of which servers are up.
+v10.4 brings Windows servers, Linux desktops, KVM/VNC consoles and old Telnet gear into the same browser workspace as your SSH terminals — one tool instead of mRemoteNG + PuTTY + an RDP client.
 
-### ⚡ Snippets & run on connect
+### 🖥 Remote desktop: RDP, VNC, Telnet
+
+- **RDP**, **VNC** and **Telnet** connections open in a WRM window, next to terminals and file managers — no plug-in, no client software on the PC.
+- **Comfortable:** scale to fit or 1:1, full screen, the RDP desktop adapts to the window size, **Ctrl+Alt+Del**, **clipboard both ways**, **type text as keystrokes** (for login screens and consoles), sound from RDP, credentials prompts, reconnect.
+- **RDP options:** domain, NLA/TLS/RDP/Hyper-V security, keyboard layout, colors, start program, console session, certificate, sound, clipboard, wallpaper and **RD Gateway**. **VNC:** colors, pointer, view only. **Telnet:** font, colors, automatic login prompts.
+- **Behind jump hosts:** WRM tunnels the desktop through your bastions automatically for the length of the session.
+- **Audited and recorded:** desktop sessions are in *Sessions & recordings* and the audit log, and the screen is recorded — **▶ Replay** in the browser or download as `.guac`.
+- **Secure by design:** the browser never chooses the target; WRM does the handshake with the stored credentials and forwards only display data and allowed input.
+- **mRemoteNG import** now also brings your RDP, VNC and Telnet connections.
+
+### ⚙️ What you need: guacd
+
+Remote desktops use **guacd**, the proxy daemon of Apache Guacamole, on the same machine as WRM:
+
+- Debian/Ubuntu: `sudo apt install guacd`
+- Docker: `docker run -d --name guacd --network host --restart unless-stopped guacamole/guacd`
+- `docker compose up -d` from the repository now starts guacd too.
+
+*Admin panel → Overview* shows whether guacd answers. Everything else in WRM works without it.
+
+### 🔧 Fixed
+
+- SQLite waits for a busy database on every connection now (rare *database is locked* errors under load).
+
+### ⬆️ Upgrading from v10.3
+
+Replace the binary (and install guacd if you want remote desktops). The database gets one new column (`connections.options`); the previous binary still starts on it.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v10.3.0 — snippets, broadcast input & live status
+
+#### ⚡ Snippets & run on connect
 
 - **Saved commands** in the right panel (⚡ tab, groups, search) and in a **quick picker in every terminal: Ctrl+Shift+Space**. Click runs the snippet in the focused terminal, Shift+click types it without Enter.
 - **Variables** per terminal: `{{host}}`, `{{user}}`, `{{name}}`, `{{folder}}`, `{{date}}` … and **prompts** with defaults: `systemctl status {{?Service=nginx}}` asks for the service first and shows a preview.
@@ -16,33 +50,20 @@ v10.3 makes everyday work on many servers faster: saved commands with one click,
 - **Run on connect:** `sudo -i`, `cd /srv/app`, `tmux attach || tmux new`, … are typed automatically when a terminal of the connection (or folder) connects. Right-click a connection or folder → *⚡ Run on connect…*.
 - **Shared snippets** from administrators for the whole team; **✨ example set** with the usual diagnostics (disk, memory, top processes, failed services, journal errors, listening ports, big files …).
 
-### 📣 Broadcast input
+#### 📣 Broadcast input
 
 - Select terminals with **📣 Broadcast** and type into all of them at once. An orange bar and window frames show where your keystrokes go; 📣 in a title bar adds or removes a terminal.
 - **Safety first:** dangerous-looking commands (`rm -rf`, `shutdown`, `mkfs`, `dd of=`, `iptables -F`, `DROP TABLE`, `kubectl delete`, …) and multi-line pastes ask before they are sent, with *Cancel* as the default button.
 - **Snippets on all terminals** at once, each with its own host and user.
 - Audited per terminal session (`terminal.broadcast`); administrators can turn it off (`broadcast_enabled`).
 
-### 🟢 Live up/down status
+#### 🟢 Live up/down status
 
 - A **status dot** for every connection: 🟢 up (latency, since when, SSH version), 🟡 slow, 🔴 down (since when and why), a ring for connections behind a jump host.
 - **Down counters on folders**, a one-click **"show only down"** filter, and **notifications** (also desktop notifications in the background) when a server goes down or comes back.
 - **🔄 Check status now** for a connection or a whole folder — also through the jump hosts.
 - Checks like Nagios `check_ssh`: a TCP connection, the SSH/FTP greeting, a polite close; no login. Each host:port once per round (default every 60 s), with a retry before "down". Optional checks through jump hosts.
 - Policies `status_enabled`, `status_interval_seconds`, `status_jump_checks`; per-connection opt-out.
-
-### 🏷️ No more suffix in release names
-
-Releases, binaries and the Docker image are now simply `v10.3.0`, `wrm-pro-v10.3.0-linux-amd64`, `ghcr.io/vedranius/wrm-pro:v10.3.0`.
-
-### ⬆️ Upgrading from v10.2
-
-Replace the binary. The database gets a new table (`snippets`) and a new column (`connections.monitor`); the previous binary still starts on it.
-
-- Update scripts or systemd units that use the old file names with a suffix.
-- **Live status is on by default** and connects to every saved host:port once a minute (no login). If a server runs fail2ban in *aggressive* mode, add the WRM server to `ignoreip`, raise the interval, or untick *Monitor up/down status* for that connection.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/CHANGELOG.md) for details.
 
 ---
 
@@ -115,7 +136,7 @@ The WRM PRO logo is now used for the favicon, the app icons, the sign-in screen,
 
 #### 📐 Architecture & tests
 
-- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
+- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
 - A new **integration test** runs a real SSH + SFTP server inside the test. It checks connect → audit entries → recording (replayable, no passwords), transfer checksums and the append-only audit trail, and it runs in CI with the race detector.
 
 #### ⬆️ Upgrading from v10.0
@@ -247,20 +268,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.3.0-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.3.0-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.3.0-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.3.0-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.3.0-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.3.0-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.3.0-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.3.0-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.3.0-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.3.0-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.3.0-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.3.0-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.3.0-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.3.0-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.4.0-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.4.0-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.4.0-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.4.0-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.4.0-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.4.0-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.4.0-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.4.0-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.4.0-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.4.0-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.4.0-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.4.0-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.4.0-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.4.0-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -268,27 +289,27 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.3.0-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.3.0-linux-amd64
+chmod +x wrm-pro-v10.4.0-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.4.0-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.3.0-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.4.0-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.3.0-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.4.0-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.3.0/wrm-pro-v10.3.0-android-arm64
-chmod +x wrm-pro-v10.3.0-android-arm64 && ./wrm-pro-v10.3.0-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.4.0/wrm-pro-v10.4.0-android-arm64
+chmod +x wrm-pro-v10.4.0-android-arm64 && ./wrm-pro-v10.4.0-android-arm64
 ```
 
 **Docker**
 ```bash
-docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.3.0
+docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.4.0
 # or, from the source tree:  docker compose up -d
 ```
 
@@ -309,15 +330,16 @@ AUDIT_ENABLED / SESSION_RECORDING_ENABLED   audit log / session recording on (1)
 TUNNELS_ENABLED=0                 turn SSH tunnels off (WRM_TUNNEL_USERS=admins: administrators only)
 STATUS_ENABLED=0                  turn the live up/down status off (WRM_STATUS_INTERVAL_SECONDS=300: check every 5 minutes)
 BROADCAST_ENABLED=0               turn broadcast input off
+GUACD_ADDRESS=127.0.0.1:4822      where guacd runs (remote desktop); REMOTE_DESKTOP_ENABLED=0 turns it off
 WRM_RECORDINGS_DIR=/path          where session recordings are stored (default: recordings/ next to the database)
 ```
 
-For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/SECURITY.md).
+For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/SECURITY.md).
 
 ---
 
 ### 📜 License
 
-Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.3.0/CONTRIBUTING.md).
+Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/CONTRIBUTING.md).
 
 ☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)**. Thank you!

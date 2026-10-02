@@ -4,6 +4,39 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.4.0] — 2026-10-02 — RDP, VNC & Telnet in the browser
+
+### Added
+- **Remote desktop** connections — **RDP**, **VNC** and **Telnet** — in WRM windows, through guacd (Apache Guacamole proxy daemon):
+  - WRM performs the guacd handshake with the stored credentials and options and relays the Guacamole protocol over a WebSocket (`/ws/desktop`, subprotocol `guacamole`);
+  - browser → guacd input is limited to an allow-list of instructions; internal pings are answered by WRM;
+  - guacamole-common-js 1.5.0 (Apache 2.0) is bundled and loaded on demand.
+- **Desktop windows:**
+  - scale-to-fit or 1:1 with scroll bars, full screen, dynamic resolution for RDP (display update);
+  - keyboard and mouse (also touch), **Ctrl+Alt+Del**, **send to the remote clipboard**, **type text as keystrokes**;
+  - remote clipboard into WRM's clipboard panel, sound from RDP, prompts for credentials the server requires, reconnect;
+  - tabs with connection state; restored by saved workspace sessions.
+- **Connection options:**
+  - RDP: domain, security (NLA/TLS/RDP/Hyper-V), keyboard layout, resize behaviour, colors, start program, certificate, console session, sound, clipboard, wallpaper, **RD Gateway**;
+  - VNC: colors, pointer, view only, clipboard;
+  - Telnet: font size, colors, login/password prompt patterns.
+- **Behind jump hosts:** a temporary tunnel through the jump hosts is opened for guacd for the duration of the session.
+- **Audit and recording:**
+  - desktop sessions in *Sessions & recordings* (`protocol` rdp/vnc/telnet) and audit events `desktop.open`, `desktop.close`, `desktop.error`;
+  - the screen stream is recorded (gzip, SHA-256) and replayed in the browser with play/pause/seek, or downloaded as `.guac`.
+- **Admin overview** shows whether guacd answers and its version; *Test connection* checks the port and guacd.
+- **Policies** `desktop_enabled` (`REMOTE_DESKTOP_ENABLED`), `guacd_address` (`GUACD_ADDRESS`), `desktop_tunnel_bind`.
+- `docker-compose.yml` contains a `guacd` service sharing WRM's network.
+- **mRemoteNG import** brings RDP (domain, console, colors, RD Gateway, sound), VNC (view only) and Telnet connections instead of skipping them.
+- **Live status** checks RDP/VNC/Telnet ports too.
+- **Tests:**
+  - Guacamole codec;
+  - desktop relay against a fake guacd (handshake parameters, allow-list, ping, wrong password, policy, recording and download);
+  - VNC through a jump host.
+
+### Fixed
+- SQLite `busy_timeout` is now set on every pooled database connection (it reached only one before), avoiding rare "database is locked" errors under concurrent load.
+
 ## [10.3.0] — 2026-10-02 — snippets, broadcast input & live status
 
 Daily terminal work for data center admins (extension plan phases 4–6, first part). Release names no longer carry a suffix: this release is `v10.3.0`.
@@ -184,6 +217,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 - Full-screen programs drawn at the wrong size (the PTY size follows the window).
 - Folder transfer when WRM runs on Windows; several smaller issues.
 
+[10.4.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.4.0
 [10.3.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.3.0
 [10.2.0]: https://github.com/vedranius/web-browser-RDM-public/releases?q=v10.2.0&expanded=true
 [10.1.0]: https://github.com/vedranius/web-browser-RDM-public/releases?q=v10.1.0&expanded=true

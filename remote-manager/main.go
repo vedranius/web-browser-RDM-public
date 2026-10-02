@@ -35,7 +35,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.3.0"
+var AppVersion = "v10.4.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -48,38 +48,40 @@ var encryptionKey []byte
 // Connection is the full record including decrypted secrets. It is only used on the
 // server; the browser gets a connView without passwords or private keys.
 type Connection struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	Protocol   string `json:"protocol"`
-	Host       string `json:"host"`
-	Username   string `json:"username"`
-	AuthMethod string `json:"auth_method"`
-	Password   string `json:"password"`
-	PrivateKey string `json:"private_key"`
-	KeyPath    string `json:"key_path"`
-	FolderID   *int   `json:"folder_id"`
-	JumpID     *int   `json:"jump_id"`           // reach this connection through another SSH connection
-	WebPath    string `json:"web_path"`          // HTTP/HTTPS connections: path of the web interface
-	Monitor    *bool  `json:"monitor,omitempty"` // live status checks (nil = unchanged / default on)
-	UserID     int    `json:"-"`
+	ID         int               `json:"id"`
+	Name       string            `json:"name"`
+	Protocol   string            `json:"protocol"`
+	Host       string            `json:"host"`
+	Username   string            `json:"username"`
+	AuthMethod string            `json:"auth_method"`
+	Password   string            `json:"password"`
+	PrivateKey string            `json:"private_key"`
+	KeyPath    string            `json:"key_path"`
+	FolderID   *int              `json:"folder_id"`
+	JumpID     *int              `json:"jump_id"`           // reach this connection through another SSH connection
+	WebPath    string            `json:"web_path"`          // HTTP/HTTPS connections: path of the web interface
+	Monitor    *bool             `json:"monitor,omitempty"` // live status checks (nil = unchanged / default on)
+	Options    map[string]string `json:"options,omitempty"` // RDP/VNC/Telnet options (nil = unchanged)
+	UserID     int               `json:"-"`
 }
 
 type connView struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Protocol    string `json:"protocol"`
-	Host        string `json:"host"`
-	Username    string `json:"username"`
-	AuthMethod  string `json:"auth_method"`
-	KeyPath     string `json:"key_path"`
-	FolderID    *int   `json:"folder_id"`
-	JumpID      *int   `json:"jump_id"`
-	WebPath     string `json:"web_path"`
-	Route       string `json:"route,omitempty"` // jump hosts, e.g. "bastion → dc1-gw"
-	HasPassword bool   `json:"has_password"`
-	HasKey      bool   `json:"has_private_key"`
-	Tunnels     int    `json:"tunnels"` // configured port forwards
-	Monitor     bool   `json:"monitor"` // included in the live up/down status
+	ID          int               `json:"id"`
+	Name        string            `json:"name"`
+	Protocol    string            `json:"protocol"`
+	Host        string            `json:"host"`
+	Username    string            `json:"username"`
+	AuthMethod  string            `json:"auth_method"`
+	KeyPath     string            `json:"key_path"`
+	FolderID    *int              `json:"folder_id"`
+	JumpID      *int              `json:"jump_id"`
+	WebPath     string            `json:"web_path"`
+	Route       string            `json:"route,omitempty"` // jump hosts, e.g. "bastion → dc1-gw"
+	HasPassword bool              `json:"has_password"`
+	HasKey      bool              `json:"has_private_key"`
+	Tunnels     int               `json:"tunnels"`           // configured port forwards
+	Monitor     bool              `json:"monitor"`           // included in the live up/down status
+	Options     map[string]string `json:"options,omitempty"` // remote desktop options
 }
 
 func (c Connection) view() connView {
@@ -91,8 +93,12 @@ func (c Connection) view() connView {
 	v.Monitor = true
 	if c.ID > 0 {
 		var mon int
-		if db.QueryRow(`SELECT (SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?), COALESCE(monitor,1) FROM connections WHERE id=?`, c.ID, c.ID).Scan(&v.Tunnels, &mon) == nil {
+		var opts string
+		if db.QueryRow(`SELECT (SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?), COALESCE(monitor,1), COALESCE(options,'') FROM connections WHERE id=?`, c.ID, c.ID).Scan(&v.Tunnels, &mon, &opts) == nil {
 			v.Monitor = mon == 1
+			if opts != "" && opts != "{}" {
+				json.Unmarshal([]byte(opts), &v.Options)
+			}
 		}
 	}
 	return v
@@ -267,6 +273,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/remote/search", searchRemoteHandler)
 	// websockets
 	mux.HandleFunc("/ws/ssh", sshHandler)
+	mux.HandleFunc("/ws/desktop", desktopWSHandler)
 	mux.HandleFunc("/ws/share/", shareWSHandler)
 	mux.HandleFunc("/ws/events", eventsHandler)
 	return securityMiddleware(mux)
@@ -475,7 +482,13 @@ func resolveDBPath() string {
 func initDB() {
 	dbPath := resolveDBPath()
 	var err error
-	db, err = sql.Open("sqlite", dbPath)
+	// busy_timeout must be set on every pooled connection (a PRAGMA run once only reaches
+	// one of them), otherwise concurrent writers can fail with "database is locked".
+	dsn := dbPath
+	if !strings.ContainsAny(dbPath, "?#") {
+		dsn += "?_pragma=busy_timeout(10000)"
+	}
+	db, err = sql.Open("sqlite", dsn)
 	if err != nil {
 		log.Fatalf("Open DB: %v", err)
 	}
@@ -729,6 +742,8 @@ func initDB() {
 		`ALTER TABLE connections ADD COLUMN web_path TEXT NOT NULL DEFAULT ''`,
 		// v10.3: live status monitoring can be turned off per connection
 		`ALTER TABLE connections ADD COLUMN monitor INTEGER NOT NULL DEFAULT 1`,
+		// v10.4: options of remote desktop connections (RDP / VNC / Telnet), JSON
+		`ALTER TABLE connections ADD COLUMN options TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -888,7 +903,7 @@ func userOwnsSession(sessionID, userID int) bool {
 
 // ─── CONNECTIONS ─────────────────────────────────────
 
-var validProtocols = map[string]bool{"SSH": true, "SFTP": true, "FTP": true, "FTPS": true, "HTTP": true, "HTTPS": true}
+var validProtocols = map[string]bool{"SSH": true, "SFTP": true, "FTP": true, "FTPS": true, "HTTP": true, "HTTPS": true, "RDP": true, "VNC": true, "TELNET": true}
 var validAuthMethods = map[string]bool{"PASSWORD": true, "KEY": true, "KEY_FILE": true, "KEY_AUTO": true}
 
 // serverKeysAllowed: "Key file" and "Auto (~/.ssh)" read private keys of the WRM server
@@ -928,6 +943,20 @@ func normalizeConnection(c *Connection) error {
 	}
 	if c.JumpID != nil && *c.JumpID <= 0 {
 		c.JumpID = nil
+	}
+	if isDesktopProtocol(c.Protocol) {
+		if c.AuthMethod != "PASSWORD" {
+			return fmt.Errorf("RDP, VNC and Telnet connections use a password")
+		}
+		if c.Options != nil {
+			opts, err := normalizeDesktopOptions(c.Protocol, c.Options)
+			if err != nil {
+				return err
+			}
+			c.Options = opts
+		}
+	} else if c.Options != nil {
+		c.Options = map[string]string{}
 	}
 	c.WebPath = strings.TrimSpace(c.WebPath)
 	if isWeb(*c) {
@@ -1012,6 +1041,9 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		plain.ID = int(id)
 		if c.Monitor != nil && !*c.Monitor {
 			db.Exec(`UPDATE connections SET monitor=0 WHERE id=?`, id)
+		}
+		if c.Options != nil {
+			db.Exec(`UPDATE connections SET options=? WHERE id=?`, string(jsonMarshal(c.Options)), id)
 		}
 		statusMon.poke()
 		auditLogRef(r, userID, usernameOf(userID), "connection.created", c.Name, map[string]string{"host": c.Host, "protocol": c.Protocol, "auth": c.AuthMethod, "route": jumpPath(plain)}, auditRef{ConnID: plain.ID})
@@ -1105,6 +1137,9 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if c.Monitor != nil {
 			db.Exec(`UPDATE connections SET monitor=? WHERE id=?`, boolInt(*c.Monitor), id)
 		}
+		if c.Options != nil {
+			db.Exec(`UPDATE connections SET options=? WHERE id=?`, string(jsonMarshal(c.Options)), id)
+		}
 		if c.Host != cur.Host || c.Protocol != cur.Protocol || !intPtrEq(c.JumpID, cur.JumpID) || c.Monitor != nil {
 			statusMon.poke()
 		}
@@ -1128,8 +1163,8 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case action == "open-web" && r.Method == http.MethodPost:
 		openWebHandler(w, r, userID, cur)
 	case action == "duplicate" && r.Method == http.MethodPost:
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor)
-			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor FROM connections WHERE id=? AND user_id=?`, id, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options)
+			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options FROM connections WHERE id=? AND user_id=?`, id, userID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1462,9 +1497,12 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		fRows.Close()
 	}
 	conns := loadUserConnections(userID)
-	if !withSecrets {
-		for i := range conns {
+	for i := range conns {
+		if !withSecrets {
 			conns[i].Password, conns[i].PrivateKey = "", ""
+		}
+		if isDesktopProtocol(conns[i].Protocol) {
+			conns[i].Options = loadDesktopOptions(conns[i].ID)
 		}
 	}
 	auditLog(r, userID, "config.exported", "", map[string]interface{}{"connections": len(conns), "with_secrets": withSecrets})
@@ -1550,6 +1588,9 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			nid, _ := res.LastInsertId()
 			if oldID > 0 {
 				newIDs[oldID] = int(nid)
+			}
+			if len(c.Options) > 0 {
+				tx.Exec(`UPDATE connections SET options=? WHERE id=?`, string(jsonMarshal(c.Options)), nid)
 			}
 			if oldJump > 0 {
 				jumps = append(jumps, jumpLink{int(nid), oldJump})
@@ -1789,6 +1830,12 @@ func ensurePort(host, protocol string) string {
 		return host + ":80"
 	case "HTTPS":
 		return host + ":443"
+	case "RDP":
+		return host + ":3389"
+	case "VNC":
+		return host + ":5900"
+	case "TELNET":
+		return host + ":23"
 	}
 	return host + ":22"
 }
@@ -1849,7 +1896,7 @@ func transferRemoteHandler(w http.ResponseWriter, r *http.Request) {
 	auditLogRef(r, actorID, actorName, "file.transfer", srcConn.Name+" → "+dstConn.Name,
 		map[string]interface{}{"files": len(req.SourceFiles), "dest_path": req.DestPath, "to_conn_id": dstConn.ID}, auditRef{ConnID: srcConn.ID})
 
-	if isFTP(srcConn) || isFTP(dstConn) || isWeb(srcConn) || isWeb(dstConn) {
+	if isFTP(srcConn) || isFTP(dstConn) || isWeb(srcConn) || isWeb(dstConn) || isDesktopProtocol(srcConn.Protocol) || isDesktopProtocol(dstConn.Protocol) {
 		jsonError(w, "Server-to-server transfer needs SSH/SFTP connections on both sides", 400)
 		return
 	}

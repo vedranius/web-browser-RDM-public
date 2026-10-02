@@ -91,8 +91,15 @@ func TestImportMRemoteNG(t *testing.T) {
 	if code := u.jsonDo("POST", "/api/config/import/mremoteng", map[string]string{"xml": mrFile(t, "mR3m")}, &res); code != 200 {
 		t.Fatalf("import: %d %+v", code, res)
 	}
-	if res.Imported != 4 || res.Jumps != 2 || len(res.Skipped) != 1 || res.Skipped[0].Name != "win01" {
+	if res.Imported != 5 || res.Jumps != 2 || len(res.Skipped) != 0 || res.ByProto["RDP"] != 1 {
 		t.Fatalf("result: %+v", res)
+	}
+	win := connByName(t, u.userID, "win01")
+	if win.Protocol != "RDP" || win.Host != "10.0.0.20" {
+		t.Fatalf("RDP connection: %+v", win)
+	}
+	if o := loadDesktopOptions(win.ID); o["ignore_cert"] != "true" {
+		t.Fatalf("RDP options: %v", o)
 	}
 	b := connByName(t, u.userID, "bastion")
 	if b.Username != "root" || b.Password != "secret1" || b.Host != "203.0.113.10" || folderName(b.FolderID) != "DC1" {
@@ -123,7 +130,7 @@ func TestImportMRemoteNG(t *testing.T) {
 	if code := u2.jsonDo("POST", "/api/config/import/mremoteng", map[string]string{"xml": file, "password": "wrong"}, &e); code != 400 {
 		t.Fatalf("wrong password accepted: %d", code)
 	}
-	if code := u2.jsonDo("POST", "/api/config/import/mremoteng", map[string]string{"xml": file, "password": "Corp-Master-1"}, &res); code != 200 || res.Imported != 4 {
+	if code := u2.jsonDo("POST", "/api/config/import/mremoteng", map[string]string{"xml": file, "password": "Corp-Master-1"}, &res); code != 200 || res.Imported != 5 {
 		t.Fatalf("right password: %d %+v", code, res)
 	}
 	if connByName(t, u2.userID, "web01").Password != "pw2-č" {
