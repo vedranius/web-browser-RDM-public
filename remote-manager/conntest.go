@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -72,6 +73,15 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 			done()
 		}
 		err = e
+	} else if c.Protocol == "SERIAL" {
+		if !serialAllowed(userID) {
+			err = fmt.Errorf("serial ports of the WRM server are not allowed for this account")
+		} else if tio, e := openSerialPath(serialDevDir+hostOnly(c.Host), serialOptionsFrom(c.Options)); e != nil {
+			err = e
+		} else {
+			detail = tio.banner + " Opened."
+			tio.close()
+		}
 	} else {
 		if isWeb(c) || isDesktopProtocol(c.Protocol) {
 			// Web interfaces and remote desktops: check that the port answers (through the jump hosts, if any).

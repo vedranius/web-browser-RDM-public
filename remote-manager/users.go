@@ -311,6 +311,8 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"voice":         settingBool("voice_enabled"),
 			"broadcast":     settingBool("broadcast_enabled"),
 			"desktop":       settingBool("desktop_enabled"),
+			"bmc":           settingBool("bmc_enabled"),
+			"serial":        serialAllowed(u.ID),
 		},
 	}
 }

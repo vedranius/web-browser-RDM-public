@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -100,21 +99,79 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		fail("This is a remote desktop connection (" + c.Protocol + "). Open it with a double-click.")
 		return
 	}
+	// Consoles (BMC / Serial-over-LAN) and serial ports reach the hardware itself: only the
+	// connection's owner opens them, not share members.
+	console := r.URL.Query().Get("console")
+	serial := c.Protocol == "SERIAL"
+	if console != "" && console != "bmc" && console != "sol" {
+		fail("Unknown console.")
+		return
+	}
+	if (console != "" || serial) && acc.Share != nil {
+		fail("Consoles and serial ports can only be opened by the owner of the connection.")
+		return
+	}
+	if console != "" && !settingBool("bmc_enabled") {
+		fail("Out-of-band management is turned off by the administrator.")
+		return
+	}
+	if serial && !serialAllowed(c.UserID) {
+		fail("Serial ports of the WRM server are not allowed for this account (policy serial_ports).")
+		return
+	}
 	route := jumpPath(c)
 	ta = startTerminalSession(r, acc, c)
 	if route != "" {
 		db.Exec(`UPDATE terminal_sessions SET jump_path=? WHERE id=?`, route, ta.ID)
 	}
+	if kind := map[string]string{"bmc": "console", "sol": "sol"}[console]; kind != "" || serial {
+		if serial {
+			kind = "serial"
+		}
+		db.Exec(`UPDATE terminal_sessions SET protocol=? WHERE id=?`, kind, ta.ID)
+	}
+
+	// The browser tells us its real size in the URL, so the PTY is correct from the very
+	// first byte (nano/vim/less/htop draw correctly without waiting for a resize).
+	cols, _ := strconv.Atoi(r.URL.Query().Get("cols"))
+	rows, _ := strconv.Atoi(r.URL.Query().Get("rows"))
+	haveSize := cols > 0 && rows > 0
+	if !haveSize {
+		cols, rows = 80, 24
+	}
+	term := r.URL.Query().Get("term")
+	if term == "" {
+		term = "xterm-256color"
+	}
 
 	sendCtl(map[string]interface{}{"type": "status", "state": "connecting", "host": c.Host, "route": route})
-	if route != "" {
-		printTerm("\r\n\x1b[36mConnecting to " + c.Host + " via " + route + "...\x1b[0m\r\n")
-	} else {
-		printTerm("\r\n\x1b[36mConnecting to " + c.Host + "...\x1b[0m\r\n")
+	target := c.Host
+	switch {
+	case console == "bmc":
+		target = "the console of " + c.Name + " (BMC SSH)"
+	case console == "sol":
+		target = "the console of " + c.Name + " (Serial-over-LAN)"
 	}
-	sshClient, err := dialSSH(c, func(host, fp string) {
+	if route != "" && !serial {
+		printTerm("\r\n\x1b[36mConnecting to " + target + " via " + route + "...\x1b[0m\r\n")
+	} else {
+		printTerm("\r\n\x1b[36mConnecting to " + target + "...\x1b[0m\r\n")
+	}
+	onNewKey := func(host, fp string) {
 		printTerm("\x1b[33mNew host " + host + " — key " + fp + " saved (trust on first use).\x1b[0m\r\n")
-	})
+	}
+	var tio *termIO
+	switch {
+	case serial:
+		tio, err = openSerial(c)
+	case console != "":
+		tio, err = openConsole(c, console, cols, rows, term, onNewKey)
+	default:
+		var cl *ssh.Client
+		if cl, err = dialSSH(c, onNewKey); err == nil {
+			tio, err = sshTerm(cl, cols, rows, term, "")
+		}
+	}
 	if err != nil {
 		if hk := asHostKeyError(err); hk != nil {
 			sendCtl(map[string]interface{}{"type": "hostkey", "kind": hk.Kind, "host": hk.Host, "key_type": hk.KeyType,
@@ -126,7 +183,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		fail("Connection failed: " + err.Error())
 		return
 	}
-	defer sshClient.Close()
+	defer tio.close()
 
 	// Register the terminal so administrators can see/end it and access can be revoked.
 	actorID, actorName := acc.actor()
@@ -146,57 +203,18 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 			wsMu.Lock()
 			closeWSRevoked(ws, reason)
 			wsMu.Unlock()
-			sshClient.Close()
+			tio.close()
 			ws.Close()
 		})
 	}
 	registerTerminal(ts)
 	defer unregisterTerminal(ts.ID)
 	// Tunnels of this connection that start "on connect" run while a terminal is open.
-	if acc.Share == nil {
+	if acc.Share == nil && !serial && console == "" {
 		tunnelMgr.holdConn(c.ID, actorID, r)
 		defer tunnelMgr.releaseConn(c.ID)
 	}
 	defer func() { ta.end(endStatus.Load().(string), finalExit) }()
-
-	session, err := sshClient.NewSession()
-	if err != nil {
-		fail("Session error: " + err.Error())
-		return
-	}
-	defer session.Close()
-
-	// The browser tells us its real size in the URL, so the PTY is correct from the very
-	// first byte (nano/vim/less/htop draw correctly without waiting for a resize).
-	cols, _ := strconv.Atoi(r.URL.Query().Get("cols"))
-	rows, _ := strconv.Atoi(r.URL.Query().Get("rows"))
-	haveSize := cols > 0 && rows > 0
-	if !haveSize {
-		cols, rows = 80, 24
-	}
-	modes := ssh.TerminalModes{
-		ssh.ECHO: 1, ssh.ICANON: 1, ssh.ISIG: 1, ssh.IEXTEN: 1,
-		ssh.ICRNL: 1, ssh.IMAXBEL: 1, ssh.IXON: 1, ssh.IXANY: 1, ssh.IUTF8: 1,
-		ssh.OPOST: 1, ssh.ONLCR: 1, ssh.OCRNL: 0, ssh.ONLRET: 0,
-		ssh.CS8: 1, ssh.PARENB: 0,
-		ssh.VINTR: 3, ssh.VQUIT: 28, ssh.VERASE: 127, ssh.VKILL: 21, ssh.VEOF: 4,
-		ssh.VSTART: 17, ssh.VSTOP: 19, ssh.VSUSP: 26, ssh.VREPRINT: 18,
-		ssh.VWERASE: 23, ssh.VLNEXT: 22, ssh.VDISCARD: 15,
-		ssh.TTY_OP_ISPEED: 115200, ssh.TTY_OP_OSPEED: 115200,
-	}
-	term := r.URL.Query().Get("term")
-	if term == "" {
-		term = "xterm-256color"
-	}
-	if err := session.RequestPty(term, rows, cols, modes); err != nil {
-		fail("PTY error: " + err.Error())
-		return
-	}
-	session.Setenv("LANG", "C.UTF-8") // best effort, usually refused by AcceptEnv
-
-	sshIn, _ := session.StdinPipe()
-	sshOut, _ := session.StdoutPipe()
-	sshErr, _ := session.StderrPipe()
 
 	done := make(chan struct{})
 	var doneOnce sync.Once
@@ -238,7 +256,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 					switch ctl.Type {
 					case "resize":
 						if ctl.Cols > 0 && ctl.Rows > 0 && ctl.Cols < 2000 && ctl.Rows < 1000 {
-							session.WindowChange(ctl.Rows, ctl.Cols)
+							tio.resize(ctl.Cols, ctl.Rows)
 							ta.resize(ctl.Cols, ctl.Rows)
 							sizeOnce.Do(func() { close(gotSize) })
 						}
@@ -279,7 +297,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 			select {
 			case msg := <-stdinCh:
 				ta.input(msg)
-				if _, err := sshIn.Write(msg); err != nil {
+				if _, err := tio.stdin.Write(msg); err != nil {
 					return
 				}
 			case <-done:
@@ -298,16 +316,19 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := session.Shell(); err != nil {
+	if err := tio.start(); err != nil {
 		fail("Shell error: " + err.Error())
 		return
 	}
-	log.Printf("SSH connected: %s@%s", c.Username, c.Host)
+	log.Printf("Terminal connected: %s@%s%s", c.Username, c.Host, map[bool]string{true: " (" + console + ")"}[console != ""])
 	recorded := ta.connected(cols, rows, term)
+	if tio.banner != "" {
+		printTerm("\x1b[2m" + tio.banner + "\x1b[0m\r\n")
+	}
 	if recorded {
 		printTerm("\x1b[2m● This session is recorded.\x1b[0m\r\n")
 	}
-	sendCtl(map[string]interface{}{"type": "status", "state": "connected", "host": c.Host, "recording": recorded, "session_id": ta.ID})
+	sendCtl(map[string]interface{}{"type": "status", "state": "connected", "host": c.Host, "recording": recorded, "session_id": ta.ID, "console": firstNonEmpty(console, map[bool]string{true: "serial"}[serial])})
 
 	// ── Output pump ──
 	var lastOutput atomic.Int64 // unix nanoseconds of the last output (run on connect waits for a quiet prompt)
@@ -342,11 +363,38 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	go pump(sshOut, outDone)
-	go pump(sshErr, nil)
+	go pump(tio.stdout, outDone)
+	if tio.stderr != nil {
+		go pump(tio.stderr, nil)
+	}
+
+	// ── BMC console: the console command is typed once the BMC's prompt is quiet ──
+	if tio.typeCmd != "" {
+		go func() {
+			start := time.Now()
+			for time.Since(start) < 8*time.Second {
+				if last := lastOutput.Load(); last > 0 && time.Since(time.Unix(0, last)) >= 600*time.Millisecond {
+					break
+				}
+				select {
+				case <-done:
+					return
+				case <-time.After(100 * time.Millisecond):
+				}
+			}
+			select {
+			case stdinCh <- []byte(tio.typeCmd + "\r"):
+			case <-done:
+			}
+		}()
+	}
 
 	// ── Run on connect: snippets of the connection's owner, typed once the prompt is quiet ──
-	if autos := autoRunSnippets(c); len(autos) > 0 {
+	autos := []Snippet{}
+	if console == "" && !serial {
+		autos = autoRunSnippets(c)
+	}
+	if len(autos) > 0 {
 		go func() {
 			start := time.Now()
 			for time.Since(start) < 5*time.Second {
@@ -395,7 +443,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			case <-kaT.C:
-				if sshAlive(sshClient, 15*time.Second) {
+				if tio.alive == nil || tio.alive() {
 					misses = 0
 					continue
 				}
@@ -403,7 +451,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 				if misses >= 3 {
 					log.Printf("SSH keepalive failed: %s@%s", c.Username, c.Host)
 					sshLost.Store(true)
-					sshClient.Close()
+					tio.close()
 					return
 				}
 			}
@@ -413,25 +461,17 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	select {
 	case <-outDone:
 		// Remote side closed: either the shell exited or the connection dropped.
-		exitCode := -1
-		waitErr := make(chan error, 1)
-		go func() { waitErr <- session.Wait() }()
-		select {
-		case err := <-waitErr:
-			var ee *ssh.ExitError
-			if err == nil {
-				exitCode = 0
-			} else if errors.As(err, &ee) {
-				exitCode = ee.ExitStatus()
-			} else {
-				sshLost.Store(true)
-			}
-		case <-time.After(2 * time.Second):
+		exitCode, ok := tio.wait()
+		if !ok {
 			sshLost.Store(true)
 		}
 		if sshLost.Load() {
 			endStatus.Store("lost")
-			printTerm("\r\n\x1b[31mSSH connection to the server was lost.\x1b[0m\r\n")
+			if serial {
+				printTerm("\r\n\x1b[31mThe serial port was closed.\x1b[0m\r\n")
+			} else {
+				printTerm("\r\n\x1b[31mSSH connection to the server was lost.\x1b[0m\r\n")
+			}
 			sendCtl(map[string]interface{}{"type": "exit", "lost": true})
 			closeWS(wsCloseSSHLost, "SSH connection lost")
 		} else {
@@ -444,5 +484,5 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	case <-done:
 	}
 	finish()
-	log.Printf("SSH disconnected: %s@%s", c.Username, c.Host)
+	log.Printf("Terminal disconnected: %s@%s", c.Username, c.Host)
 }
