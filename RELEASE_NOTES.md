@@ -1,14 +1,39 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.4.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.5.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v10.4.0 — RDP, VNC & Telnet in the browser
+## Web Remote Manager PRO v10.5.0 — SSH keys & credentials vault
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts and SSH tunnels, **remote desktops**, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI.
+Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts and SSH tunnels, remote desktops (RDP/VNC/Telnet), **SSH key management and a credentials vault**, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI.
 
-v10.4 brings Windows servers, Linux desktops, KVM/VNC consoles and old Telnet gear into the same browser workspace as your SSH terminals — one tool instead of mRemoteNG + PuTTY + an RDP client.
+v10.5 takes care of the logins themselves: SSH keys that you generate once and put on a hundred servers with one click, a view of who can log in where, and shared logins like `root@dc1` whose password you change everywhere at once.
 
-### 🖥 Remote desktop: RDP, VNC, Telnet
+### 🔑 SSH key management
+
+- **Key store** (🔑 *Keys* in the top bar): **generate** ED25519, RSA or ECDSA keys, or **import** existing ones (also with a passphrase, also public keys of colleagues). Private keys are stored encrypted and never leave the server unless you export them (password confirmation, audited).
+- **Deploy like `ssh-copy-id`** to any number of SSH connections at once — through jump hosts too — and optionally **switch the connections to the key** right away (WRM tests the key login first). Right-click a connection → *Deploy SSH key…*, or select many connections → **🔑 Key**.
+- **Who has access:** right-click a connection → *Who has access (authorized_keys)…* lists every key that can log in as that user, with comment, fingerprint and options, names the keys from your key store, marks WRM's own login key and **removes** any other key with one click.
+- **Revoke** a key from many servers at once. WRM never removes the key it logs in with.
+
+### 🗝 Credentials vault
+
+- **One login for many connections:** a credential (`root@dc1`, `Administrator`, the iDRAC admin…) holds a user name and a password and/or an SSH key. Connections choose *Credential from the vault* — SSH, SFTP, RDP, VNC, Telnet and FTP. Change it once, every connection uses the new one.
+- **Share without revealing:** grant a credential to colleagues (administrators: to everybody). They use it in their own connections but never see or change the secret. **Host lists** (`*.dc1.example.com`, `10.1.0.0/16`) limit where a credential can be sent — for the people it is shared with, through matching jump hosts only.
+- **Password rotation** on all its SSH servers: a pre-flight login check everywhere, then `passwd` on each server, a login with the new password, and only then the new password is stored. **All or nothing**: when a server fails, the others get the old password back; if even that fails, the new password is kept as *pending* so nothing is lost. Live progress per server.
+- **Rotation reminders** per credential (days), a badge on 🔑 and a warning in the admin overview; **Show** reveals the password to its owner after a password confirmation.
+- Every action is in the audit log — never the secrets.
+
+### ⬆️ Upgrading from v10.4
+
+Replace the binary. The database gets new tables for keys and credentials and two new columns (`connections.key_id`, `connections.credential_id`); the previous binary still starts on it. Deleting an account now also deletes its snippets, tunnels, keys and credentials.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.5.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v10.4.0 — RDP, VNC & Telnet in the browser
+
+#### 🖥 Remote desktop: RDP, VNC, Telnet
 
 - **RDP**, **VNC** and **Telnet** connections open in a WRM window, next to terminals and file managers — no plug-in, no client software on the PC.
 - **Comfortable:** scale to fit or 1:1, full screen, the RDP desktop adapts to the window size, **Ctrl+Alt+Del**, **clipboard both ways**, **type text as keystrokes** (for login screens and consoles), sound from RDP, credentials prompts, reconnect.
@@ -18,7 +43,7 @@ v10.4 brings Windows servers, Linux desktops, KVM/VNC consoles and old Telnet ge
 - **Secure by design:** the browser never chooses the target; WRM does the handshake with the stored credentials and forwards only display data and allowed input.
 - **mRemoteNG import** now also brings your RDP, VNC and Telnet connections.
 
-### ⚙️ What you need: guacd
+#### ⚙️ What you need: guacd
 
 Remote desktops use **guacd**, the proxy daemon of Apache Guacamole, on the same machine as WRM:
 
@@ -28,15 +53,13 @@ Remote desktops use **guacd**, the proxy daemon of Apache Guacamole, on the same
 
 *Admin panel → Overview* shows whether guacd answers. Everything else in WRM works without it.
 
-### 🔧 Fixed
+#### 🔧 Fixed
 
 - SQLite waits for a busy database on every connection now (rare *database is locked* errors under load).
 
-### ⬆️ Upgrading from v10.3
+#### ⬆️ Upgrading from v10.3
 
 Replace the binary (and install guacd if you want remote desktops). The database gets one new column (`connections.options`); the previous binary still starts on it.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/CHANGELOG.md) for details.
 
 ---
 
@@ -136,7 +159,7 @@ The WRM PRO logo is now used for the favicon, the app icons, the sign-in screen,
 
 #### 📐 Architecture & tests
 
-- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
+- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.5.0/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
 - A new **integration test** runs a real SSH + SFTP server inside the test. It checks connect → audit entries → recording (replayable, no passwords), transfer checksums and the append-only audit trail, and it runs in CI with the race detector.
 
 #### ⬆️ Upgrading from v10.0
@@ -268,20 +291,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.4.0-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.4.0-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.4.0-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.4.0-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.4.0-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.4.0-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.4.0-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.4.0-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.4.0-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.4.0-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.4.0-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.4.0-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.4.0-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.4.0-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.5.0-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.5.0-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.5.0-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.5.0-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.5.0-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.5.0-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.5.0-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.5.0-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.5.0-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.5.0-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.5.0-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.5.0-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.5.0-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.5.0-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -289,27 +312,27 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.4.0-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.4.0-linux-amd64
+chmod +x wrm-pro-v10.5.0-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.5.0-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.4.0-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.5.0-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.4.0-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.5.0-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.4.0/wrm-pro-v10.4.0-android-arm64
-chmod +x wrm-pro-v10.4.0-android-arm64 && ./wrm-pro-v10.4.0-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.5.0/wrm-pro-v10.5.0-android-arm64
+chmod +x wrm-pro-v10.5.0-android-arm64 && ./wrm-pro-v10.5.0-android-arm64
 ```
 
 **Docker**
 ```bash
-docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.4.0
+docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.5.0
 # or, from the source tree:  docker compose up -d
 ```
 
@@ -334,12 +357,12 @@ GUACD_ADDRESS=127.0.0.1:4822      where guacd runs (remote desktop); REMOTE_DESK
 WRM_RECORDINGS_DIR=/path          where session recordings are stored (default: recordings/ next to the database)
 ```
 
-For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/SECURITY.md).
+For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.5.0/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.5.0/SECURITY.md).
 
 ---
 
 ### 📜 License
 
-Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.4.0/CONTRIBUTING.md).
+Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.5.0/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.5.0/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.5.0/CONTRIBUTING.md).
 
 ☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)**. Thank you!
