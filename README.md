@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.5.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.6.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -49,6 +49,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Jump hosts (bastions)](#jump-hosts-bastions)
    - [SSH tunnels (port forwarding)](#ssh-tunnels-port-forwarding)
    - [Web interfaces (HTTP / HTTPS connections)](#web-interfaces-http--https-connections)
+   - [Tags & inventory import (CSV, Excel, NetBox)](#tags--inventory-import-csv-excel-netbox)
    - [Import from mRemoteNG and OpenSSH](#import-from-mremoteng-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [SSH terminal](#ssh-terminal)
@@ -92,7 +93,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **SSH keys & credentials vault**: generate SSH keys, put them on many servers at once (like `ssh-copy-id`), see **who has access** to a server; one shared login such as `root@dc1` for many connections, shared with colleagues without revealing it, with **password rotation** on all its servers.
 - **Jump hosts** (like `ssh -J`): reach servers behind a bastion, also in chains — for terminals, files, transfers and tunnels.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
-- **Import** your connections from **mRemoteNG** (with passwords, folders and SSH tunnels) and from **OpenSSH** `~/.ssh/config`.
+- **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions.
 - **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
@@ -112,21 +113,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.5.0-linux-amd64
-   ./wrm-pro-v10.5.0-linux-amd64
+   chmod +x wrm-pro-v10.6.0-linux-amd64
+   ./wrm-pro-v10.6.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.5.0-windows-amd64.exe
+   .\wrm-pro-v10.6.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.5.0/wrm-pro-v10.5.0-android-arm64
-   chmod +x wrm-pro-v10.5.0-android-arm64 && ./wrm-pro-v10.5.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.6.0/wrm-pro-v10.6.0-android-arm64
+   chmod +x wrm-pro-v10.6.0-android-arm64 && ./wrm-pro-v10.6.0-android-arm64
    ```
 
    **Docker**
@@ -150,6 +151,13 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.5
+
+Replace the binary. The database gets three new columns (`connections.tags`, `ext_id`, `ext_tags`) and a table `inventory_sources`; the previous binary still starts on it (it ignores the tags).
+
+- Connections have **tags**; the sidebar shows a tag filter and an environment badge (`env:prod` …). See [Tags & inventory import](#tags--inventory-import-csv-excel-netbox).
+- **Settings → Data → Import inventory**: CSV / Excel files and NetBox.
 
 ## Upgrading from v10.4
 
@@ -254,7 +262,7 @@ Left sidebar ("PRO MANAGER"):
 
 - **+ Connection** creates a connection:
   - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), **🖥 RDP**, **🖥 VNC**, **Telnet** (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)), `FTP`, `FTPS` (FTP with explicit TLS; file manager only), **🌐 Web interface** `HTTPS` / `HTTP` (see [Web interfaces](#web-interfaces-http--https-connections)).
-  - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS, 443/80 for web interfaces), **Username**, **Folder**.
+  - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS, 443/80 for web interfaces), **Username**, **Folder**, **Tags** (comma separated, e.g. `env:prod, site:dc1, rack:a12, web`; the most used tags are offered below the field).
   - **Jump host (connect via):** another saved SSH connection to go through (see [Jump hosts](#jump-hosts-bastions)).
   - **🔀 SSH tunnels:** port forwards of this connection (see [SSH tunnels](#ssh-tunnels-port-forwarding)).
   - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user), **🔑 SSH key from the key store** or **🗝 Credential from the vault** (see [SSH keys & credentials vault](#ssh-keys--credentials-vault)). *Key file* and *Auto* use keys of the **WRM server itself** and are therefore limited to administrators (policy). Password authentication also answers keyboard-interactive prompts. RDP, VNC, Telnet and FTP log in with a password or a vault credential.
@@ -264,7 +272,7 @@ Left sidebar ("PRO MANAGER"):
 - **Double-click** a connection to open it: SSH opens a terminal; SFTP/FTP/FTPS open the file manager. On touch devices a single tap opens it.
 - **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Who has access (authorized_keys)…*, *Deploy SSH key…*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
 - **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root).
-- **Search box** filters by name, host, username or protocol. **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share**, **🔑 Key** (deploy an SSH key to all of them) or **Delete**.
+- **Search box** filters by name, host, username, protocol or tag; `#tag` searches tags only, several words must all match (`#env:prod web`). The **🏷 tag bar** above the list filters by one or more tags (click again to remove). **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share**, **🔑 Key** (deploy an SSH key to all of them), **🏷 Tags** (add tags, or remove them with `-tag`) or **Delete**.
 - The **dot in front of a connection** is its [live status](#live-updown-status): 🟢 up, 🟡 up but slow (> 300 ms), 🔴 down, a ring = behind a jump host (colored by the jump host's state). A **blue dot after the name** means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
 - **Shared with me** lists shares you are a member of (and shares published for all users), with your **role**; ↗ opens the collaboration room.
 
@@ -370,16 +378,42 @@ Save the web interfaces of your devices — iDRAC / iLO / IPMI, switches, firewa
 - TLS goes end to end from your browser to the device; for self-signed device certificates the browser shows its usual warning.
 - As with all tunnels, the temporary tunnel is on the WRM machine: when WRM runs on another computer, WRM shows the address instead of opening it (see *Where is the tunnel port?* above).
 
+### Tags & inventory import (CSV, Excel, NetBox)
+
+**Tags** describe connections: free words (`web`, `db`) and tags with a key — `env:` (environment), `site:` (location), `rack:`, `role:`, `tenant:`, `platform:`, `cluster:`. Tags are lower case, without spaces (`Rack A 12` becomes `rack:a-12`), at most 30 per connection.
+
+- Set them in the connection dialog or for many connections at once (**🏷 Tags** after a multi-select; `-tag` removes one).
+- The **🏷 tag bar** above the connections lists the most used tags with their counts; click tags to show only connections that have all of them (with *+N* for the rest). The search box finds tags too (`#rack:a12`).
+- **Environments stand out:** `env:prod` (also `production`, `prd`, `live`) gets a red **PROD** badge and a red edge, staging/UAT a yellow, test/QA a blue and dev/lab a green badge — so a production server is never mistaken for a test one.
+- Tags are kept by *Export* / *Import* and *Duplicate*.
+
+**Import inventory** (*Settings → Data → Import inventory*):
+
+*CSV / Excel*
+
+- Choose a **CSV** file (comma, semicolon, tab or `|` separated — detected automatically; UTF-8, UTF-16 or **Windows-1250** as Excel saves it in Croatian, so `č ć š ž đ` come out right) or an **Excel workbook (.xlsx)** with a sheet selector. Old `.xls` files: save them as `.xlsx` or CSV first.
+- WRM reads the first row as column names and **guesses the mapping** (English and Croatian names: *Name/Naziv/Hostname, IP/IP adresa/Address/URL, Port, Protocol/Protokol, User/Korisnik, Password/Lozinka, Folder/Mapa/Grupa, Tags/Oznake, Environment/Okruženje, Site/Location/Lokacija, Rack, Role/Uloga, Platform/OS, Jump host/Bastion, Path*). The preview shows the first rows under a field selector per column — change any column or set it to *ignore*.
+- The host column understands `10.0.0.5`, `10.0.0.5:2222`, `root@10.0.0.5`, `10.0.0.5/24`, IPv6 and URLs (`https://idrac-01/` becomes a web interface connection, `ssh://admin@sw1:2222` an SSH connection). A *Platform* containing *Windows* makes an RDP connection. *Environment*, *Site*, *Rack*, *Role* and *Platform* become tags; a *Jump host* column links connections to a jump host by name.
+
+*NetBox*
+
+- Enter the NetBox address and an **API token** (read-only is enough), optionally filters (sites, roles, tenants, a NetBox tag, status), whether to use the **primary IP** or the **name (DNS)** as address, and the name of a custom field that holds the environment. *Load from NetBox* reads **devices** and/or **virtual machines** (all pages) and shows them; objects without an address are marked.
+- Sites, racks, roles, tenants, platforms, clusters, the environment and NetBox tags become tags; Windows platforms become RDP connections.
+- **Sync:** imported objects remember their NetBox id. Loading again marks them as *imported*; with **Update the ones imported before** their address, NetBox tags and folder follow NetBox (your own tags, the name and the login stay). Objects that disappeared from NetBox are listed — WRM never deletes connections on its own.
+- *Remember address and token* stores the address, filters and the token (encrypted) for your account; the token is never shown again.
+
+*For both:* choose the **login** of the imported connections — none (set it later), a **vault credential** (e.g. `root@dc1`) or a **stored SSH key** — a default user name and protocol, **folders** (from a column, one per site / role / tenant, all in one, or none) and extra tags for all. Rows with their own password keep it. Existing connections (same name, host and protocol) are skipped, so importing again is safe. The result lists what was imported, updated and skipped (with reasons).
+
 ### Import from mRemoteNG and OpenSSH
 
 *Settings → Data*:
 
 - **Import from mRemoteNG** — the `confCons.xml` file (`%APPDATA%\mRemoteNG\confCons.xml`, or *File → Export* in mRemoteNG):
-  - containers become folders (`DC1 / Rack A`); SSH1/SSH2 connections become SSH connections, HTTP/HTTPS connections become web interface connections (with the path of the URL);
+  - containers become folders (`DC1 / Rack A`); SSH1/SSH2 connections become SSH connections, RDP, VNC and Telnet connections remote desktops (with their options), HTTP/HTTPS connections web interface connections (with the path of the URL);
   - **passwords are decrypted** (current AES-GCM format, older AES-CBC format, *FullFileEncryption*) and stored encrypted in WRM. If the file is protected with a **master password**, WRM asks for it;
   - inherited settings (*Inherit* user name, password, port, domain, SSH tunnel) are resolved from the parent folders;
   - the **SSH tunnel** setting (`SSHTunnelConnectionName`) becomes the **jump host**;
-  - RDP, VNC, Telnet, ICA and other protocols WRM does not open are listed as *skipped*; connections that already exist (same name, host and protocol) are skipped too, so importing again is safe.
+  - ICA, rlogin and other protocols WRM does not open are listed as *skipped*; connections that already exist (same name, host and protocol) are skipped too, so importing again is safe.
 - **Import OpenSSH config** — `~/.ssh/config` (folder *SSH config*):
   - `Host` entries with `HostName`, `User`, `Port`; defaults from `Host *` and from wildcard patterns;
   - **`ProxyJump`** (also `user@host:port`; a jump host that is not its own `Host` entry is created) and `ProxyCommand ssh -W …` become the **jump host**;
@@ -818,7 +852,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.5.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.6.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -876,6 +910,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers (with SHA-256) and changes, host keys, exports, viewing of recordings — stored **append-only** and **hash-chained** in the database (verifiable) and written as `AUDIT …` lines to the server log (journald/syslog → SIEM). Secrets in audit details are redacted.
 - **Session recording:** terminal output in asciicast v2, gzip, mode `0600`, SHA-256 in the database; no keystrokes unless enabled (then masked at password prompts); visible to administrators, the session's user and the connection's owner; every view is audited.
 - **Snippets & broadcast:** snippets are per user (shared snippets only by administrators, read-only for others, never auto-run); run-on-connect snippets come from the connection's owner and are recorded in the audit log; broadcast input is client-side typing into the user's own terminals, with confirmation of dangerous commands and an audit entry for every start and stop per terminal.
+- **Inventory import:** files are parsed in memory (CSV, or `.xlsx` read with size limits) and never stored. NetBox is called from the WRM server over HTTP(S) with your token; redirects and pagination links to another server are refused, responses are size-limited, and a remembered token is stored encrypted and never returned to the browser.
 - **SSH keys & vault:** private keys and vault passwords are encrypted at rest and used only on the server. Keys go to servers on stdin of a POSIX `sh` script (never on a command line); `authorized_keys` is changed in place, keeping other lines, permissions and SELinux contexts; WRM refuses to remove the key it logs in with. Shared credentials are usable but never readable by the people they are shared with; a host list limits where they can be sent (target and, for them, jump hosts). Rotation is all-or-nothing with a pre-flight check, verification of every new login and rollback; passwords are scrubbed from `passwd` output and never logged.
 - **Remote desktop:** WRM does the guacd handshake with the stored credentials (never sent to the browser) and forwards only display and allow-listed input instructions; jump-host tunnels for guacd listen on loopback and live only as long as the session; sessions are audited and recorded.
 - **Live status:** checks are plain TCP connections from the WRM server (no credentials, except optional checks through jump hosts with the jump host's own saved login); users only see the states of their own connections.
@@ -886,6 +921,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 
 ## Limitations
 
+- Inventory import reads `.xlsx` and CSV, not old `.xls`; NetBox sync updates and reports, but never deletes connections.
 - Password rotation works for SSH logins that may run `passwd` (Linux, BSD, macOS) — not for Windows/RDP, network devices or IPMI. *Who has access* shows `~/.ssh/authorized_keys` of the login user only.
 - RDP, VNC and Telnet need **guacd** next to WRM (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); file transfer and printer redirection of RDP are not offered.
 - No **SSO/LDAP/SAML** yet (local accounts with 2FA).
@@ -946,6 +982,19 @@ Connections have `jump_id` (jump host connection id or `null`) and `web_path`; l
 | `GET /api/recordings/{id}/guac[?download=1]` | Recording of a remote desktop session (Guacamole protocol stream) |
 
 Connections of type RDP/VNC/TELNET have `options` (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); sessions in `/api/recordings` have `protocol` and `recording.format` (`asciicast-v2+gzip` or `guacamole+gzip`).
+
+**Tags & inventory**
+
+| Endpoint | Description |
+|---|---|
+| `POST /api/connections/bulk` | `{action: "tag", ids, add: [tags], remove: [tags]}` → `{changed}` |
+| `POST /api/inventory/parse` | `{file_name, data (base64), sheet, header}` → `{sheets, sheet, encoding, delimiter, headers, rows (preview), total, mapping}` |
+| `POST /api/inventory/import` | `{file_name, data, sheet, header, mapping: {field: column}, options}` → import result. Fields: `name host port protocol username password folder tags env site rack role platform jump web_path` |
+| `GET /api/inventory/netbox` | Saved NetBox address and filters (`has_token`, never the token) |
+| `POST /api/inventory/netbox/preview` | `{query: {url, token, devices, vms, site, role, tenant, tag, status, host_from, env_field, insecure, remember}}` → `{rows, missing}` |
+| `POST /api/inventory/netbox/import` | `{query, rows, options}` → import result (`imported`, `updated`, `skipped`, `notes`) |
+
+`options`: `{default_protocol, username, auth: ""|credential|key, credential_id, key_id, folder_mode: column|site|role|tenant|fixed|none, folder, tags, update}`. Connections have `tags` (array; on PUT, leaving it out keeps them) and, when imported from NetBox, `source: "netbox"`.
 
 **SSH keys & credentials vault**
 
@@ -1093,6 +1142,7 @@ remote-manager/
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
   snippets.go     snippets (saved commands), variables, run on connect
   status.go       live up/down status monitor and API
+  inventory.go    tags, CSV/XLSX reader with column mapping, NetBox import and sync
   keys.go         SSH key store: generate/import, deploy/revoke (authorized_keys), who has access
   credentials.go  credentials vault: sharing, host lists, password rotation
   guac.go         remote desktop: guacd handshake, relay, recording (RDP / VNC / Telnet)
@@ -1103,6 +1153,7 @@ remote-manager/
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
   status_test.go       live status: up/down, banners, jump hosts, check now
+  inventory_test.go    tags, CSV encodings/separators, XLSX import, NetBox import and sync (fake NetBox)
   keys_test.go         key store, deploy/revoke/who has access, vault sharing and rotation (fake SSH server with sh and passwd)
   guac_test.go         remote desktop relay against a fake guacd: handshake, filtering, recording, jump hosts
   importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
@@ -1142,6 +1193,8 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Broadcast did not ask before a dangerous command | The check sees what you typed during the broadcast, not a command recalled from the shell history (↑) |
 | All connections stay grey (no status dot) | Live status is off (`status_enabled`), or the connection has *Monitor up/down status* unticked. The first round starts a few seconds after WRM starts |
 | A server shows 🔴 but SSH works | The port in the connection differs from the real one, or a firewall allows SSH only from some addresses (not from the WRM server). Behind a jump host use a jump host instead of a direct connection |
+| CSV import: wrong letters (`Ä�`, `?` instead of `č`) | WRM reads UTF-8, UTF-16 and Windows-1250. For other encodings save the file from Excel as *CSV UTF-8* or as `.xlsx` |
+| NetBox: *refused the token* / *API not found* | Use the base address (`https://netbox.example.com`, without `/api`), a token of a user that can view devices and VMs; for a self-signed certificate tick *Accept a self-signed certificate* |
 | Deploy SSH key: *cannot write ~/.ssh/authorized_keys* | The login user's home is read-only or its shell is not POSIX (network devices): add the key there by hand. A key that is not accepted afterwards: check `AuthorizedKeysFile` and `PubkeyAcceptedAlgorithms` (old servers may need RSA) in `sshd_config` |
 | Rotation: *the stored password does not work on …* | Nothing was changed. Fix the login (or the password with *Edit*) and check again |
 | Rotation: *passwd failed* / *rejected by its password rules* | The server's password policy (length, classes, history, minimum age) refused the new password: try your own password, or wait for the minimum age. The other servers got the old password back |

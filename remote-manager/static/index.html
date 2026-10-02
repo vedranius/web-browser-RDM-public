@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.5.0</title>
+<title>Web Remote Manager PRO v10.6.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1351,7 +1351,9 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 /* v10.5: SSH key store & credentials vault */
 #btn-vault .tun-badge { background: var(--yellow); color: #111; }
 .vault-tools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 4px 0 10px; }
-.vault-tools input { flex: 1; min-width: 140px; width: auto; }
+.vault-tools input:not([type=checkbox]) { flex: 1; min-width: 140px; width: auto; }
+.vault-tools input[type=checkbox], .inv-map input[type=checkbox] { width: auto; flex: none; }
+.vault-tools .check-row { align-items: center; white-space: nowrap; }
 .vk-fp { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); word-break: break-all; margin-top: 5px; }
 .vk-pub { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text2); background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; margin-top: 6px; word-break: break-all; max-height: 3.3em; overflow: hidden; cursor: copy; }
 .vk-pub:hover { border-color: var(--accent); }
@@ -1383,6 +1385,34 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .pw-row input { flex: 1; min-width: 0; }
 .vc-usage { margin-top: 8px; font-size: 11.5px; color: var(--text2); }
 .vc-usage div { padding: 2px 0; }
+
+/* v10.6: tags & inventory import */
+.env-pill { font-size: 8px; font-weight: 800; letter-spacing: .04em; padding: 1px 4px; border-radius: 4px; flex: none; text-transform: uppercase; background: rgba(148,163,184,.16); color: #cbd5e1; max-width: 46px; overflow: hidden; text-overflow: ellipsis; }
+.conn-item.has-env .conn-host { max-width: 26%; }
+.conn-item.env-prod { box-shadow: inset 2px 0 0 rgba(239,68,68,.75); }
+.env-pill.prod { background: rgba(239,68,68,.18); color: #fca5a5; }
+.env-pill.stage { background: rgba(245,158,11,.18); color: #fcd34d; }
+.env-pill.test { background: rgba(59,130,246,.18); color: #93c5fd; }
+.env-pill.dev { background: rgba(34,197,94,.16); color: #86efac; }
+.tag-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 8px 6px; }
+.tag-chip { font-size: 10.5px; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text2); cursor: pointer; user-select: none; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.tag-chip:hover { border-color: var(--accent); color: var(--text); }
+.tag-chip.on { background: var(--accent-d); border-color: var(--accent); color: var(--text); }
+.tag-chip .n { color: var(--text3); margin-left: 3px; }
+.tag-sugg { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.inv-map { overflow-x: auto; max-height: 42vh; border: 1px solid var(--border2); border-radius: 8px; margin-top: 8px; }
+.inv-map table { border-collapse: collapse; font-size: 11.5px; min-width: 100%; }
+.inv-map th, .inv-map td { padding: 4px 6px; border-bottom: 1px solid var(--border); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.inv-map th { position: sticky; top: 0; background: var(--bg2); z-index: 1; vertical-align: bottom; }
+.inv-map th select { font-size: 11px; padding: 2px 4px; width: 100%; min-width: 92px; background: var(--bg); color: var(--text); border: 1px solid var(--border2); border-radius: 5px; }
+.inv-map th .h { font-size: 10px; color: var(--text3); font-weight: 600; margin-bottom: 3px; }
+.inv-map th.mapped select { border-color: var(--accent); }
+.inv-map td.mapped { color: var(--text); }
+.inv-map td { color: var(--text3); }
+.inv-map tr.exists td { opacity: .65; }
+.inv-opts { border: 1px solid var(--border2); border-radius: 10px; padding: 8px 12px; margin: 10px 0; background: rgba(0,0,0,.12); }
+.inv-opts > summary { cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); padding: 4px 0; }
+.inv-res .r { font-size: 11.5px; padding: 2px 0; color: var(--text2); }
 </style>
 </head>
 <body>
@@ -1408,7 +1438,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.5.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.6.0 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1471,6 +1501,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="bulk-actions" id="bulk-actions" style="display:none;">
         <button class="btn-sec btn-sm" style="flex:1;" onclick="openShareModalBulk()">🤝 Share</button>
         <button class="btn-sec btn-sm" style="flex:1;" onclick="openKeyDeploy(null, 'deploy', [...selectedConns])" title="Deploy an SSH key">🔑 <span data-i18n="vault_key_short">Key</span></button>
+        <button class="btn-sec btn-sm" style="flex:1;" onclick="bulkTags()" title="Tags">🏷 <span data-i18n="tags_short">Tags</span></button>
         <button class="btn-danger btn-sm" style="flex:1;" onclick="bulkDelete()">Delete</button>
       </div>
     </div>
@@ -1485,7 +1516,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.5.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.6.0</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1621,6 +1652,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
     </div>
     <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="m-name" placeholder="e.g. Web Server 1"></div>
+    <div class="field"><label data-i18n="tags_lbl">Tags</label><input type="text" id="m-tags" autocomplete="off" oninput="renderTagSuggestions()" placeholder="env:prod, site:dc1, rack:a12, web">
+      <div class="tag-sugg" id="m-tags-sugg"></div></div>
     <div class="field-row">
       <div class="field"><label data-i18n="host_port">Host : Port</label><input type="text" id="m-host" placeholder="192.168.1.1:22"></div>
       <div class="field" id="field-webpath" style="display:none;"><label data-i18n="web_path">Path</label><input type="text" id="m-webpath" placeholder="/"></div>
@@ -1873,7 +1906,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".json" onchange="importConfig(this)" style="display:none;"></label></div>
       </div>
       <div class="setting-row">
-        <div><div class="setting-label" data-i18n="import_mrng">Import from mRemoteNG</div><div class="setting-desc" data-i18n="import_mrng_desc">confCons.xml: folders, SSH and web connections with passwords, SSH tunnel → jump host. RDP/VNC/Telnet are listed as skipped.</div></div>
+        <div><div class="setting-label" data-i18n="import_inventory">Import inventory (CSV, Excel, NetBox)</div><div class="setting-desc" data-i18n="import_inventory_desc">Server lists from a CSV or .xlsx file (you check the columns) or from NetBox, with tags for environment, site and rack, folders and a login from the vault.</div></div>
+        <div class="setting-control"><button class="btn-sec btn-sm" onclick="closeModal('modal-settings'); openInventory()" data-i18n="import">Import</button></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label" data-i18n="import_mrng">Import from mRemoteNG</div><div class="setting-desc" data-i18n="import_mrng_desc">confCons.xml: folders, SSH, RDP, VNC, Telnet and web connections with passwords, SSH tunnel → jump host.</div></div>
         <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".xml" onchange="importExternal(this, 'mremoteng')" style="display:none;"></label></div>
       </div>
       <div class="setting-row">
@@ -1930,6 +1967,74 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   </div>
 </div>
 
+
+
+<!-- Inventory import (v10.6) -->
+<div class="modal-overlay" id="modal-inventory">
+  <div class="modal" style="width:min(980px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>📥 <span data-i18n="inv_title">Import inventory</span></h3>
+    <div class="tabs" id="inv-tabs">
+      <button class="tab-btn active" data-tab="file" onclick="setInvTab('file')">📄 <span data-i18n="inv_tab_file">CSV / Excel</span></button>
+      <button class="tab-btn" data-tab="netbox" onclick="setInvTab('netbox')">🗄 NetBox</button>
+    </div>
+    <div class="tab-pane active" id="inv-file">
+      <div class="muted-text" style="line-height:1.5;" data-i18n="inv_file_help">A CSV file (comma, semicolon or tab; also as saved by Excel) or an Excel workbook (.xlsx). The first row should hold the column names; WRM guesses which column is what — check it in the preview.</div>
+      <div class="vault-tools" style="margin-top:10px;">
+        <label class="btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;">📂 <span data-i18n="inv_choose">Choose file…</span><input type="file" id="inv-file-input" accept=".csv,.txt,.tsv,.xlsx" onchange="invFileChosen(this)" style="display:none;"></label>
+        <span class="muted-text" id="inv-file-info"></span>
+        <select id="inv-sheet" class="setting-select" style="display:none;" onchange="invParse()"></select>
+        <label class="check-row" style="margin:0;"><input type="checkbox" id="inv-header" checked onchange="invParse()"> <span data-i18n="inv_header">First row has column names</span></label>
+      </div>
+      <div id="inv-preview"></div>
+    </div>
+    <div class="tab-pane" id="inv-netbox">
+      <div class="muted-text" style="line-height:1.5;" data-i18n="inv_nb_help">Devices and virtual machines from NetBox through its API (a read-only token is enough). Sites, racks, roles, tenants, platforms and NetBox tags become tags. Importing again updates the connections imported before.</div>
+      <div class="field-row" style="margin-top:10px;">
+        <div class="field"><label data-i18n="inv_nb_url">NetBox address</label><input type="text" id="nb-url" placeholder="https://netbox.example.com"></div>
+        <div class="field"><label data-i18n="inv_nb_token">API token</label><input type="password" id="nb-token" autocomplete="off"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label data-i18n="inv_nb_site">Sites (slugs)</label><input type="text" id="nb-site" placeholder="zg1, st1"></div>
+        <div class="field"><label data-i18n="inv_nb_role">Roles</label><input type="text" id="nb-role" placeholder="server"></div>
+        <div class="field"><label data-i18n="inv_nb_tenant">Tenants</label><input type="text" id="nb-tenant"></div>
+        <div class="field"><label data-i18n="inv_nb_tag">NetBox tag</label><input type="text" id="nb-tag"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label data-i18n="inv_nb_status">Status</label><select id="nb-status"><option value="active">active</option><option value="any" data-i18n="inv_nb_any">any</option><option value="planned">planned</option><option value="staged">staged</option><option value="offline">offline</option></select></div>
+        <div class="field"><label data-i18n="inv_nb_hostfrom">Address</label><select id="nb-hostfrom"><option value="ip" data-i18n="inv_nb_ip">primary IP</option><option value="name" data-i18n="inv_nb_dns">name (DNS)</option></select></div>
+        <div class="field"><label data-i18n="inv_nb_env">Environment custom field</label><input type="text" id="nb-env" placeholder="environment"></div>
+      </div>
+      <div class="vault-tools">
+        <label class="check-row" style="margin:0;"><input type="checkbox" id="nb-devices" checked> <span data-i18n="inv_nb_devices">Devices</span></label>
+        <label class="check-row" style="margin:0;"><input type="checkbox" id="nb-vms" checked> <span data-i18n="inv_nb_vms">Virtual machines</span></label>
+        <label class="check-row" style="margin:0;"><input type="checkbox" id="nb-insecure"> <span data-i18n="inv_nb_insecure">Accept a self-signed certificate</span></label>
+        <label class="check-row" style="margin:0;"><input type="checkbox" id="nb-remember" checked> <span data-i18n="inv_nb_remember">Remember address and token</span></label>
+        <button class="btn-sm" onclick="nbPreview()" id="nb-load">⟳ <span data-i18n="inv_nb_load">Load from NetBox</span></button>
+      </div>
+      <div id="nb-preview"></div>
+    </div>
+    <details class="inv-opts" id="inv-opts" open>
+      <summary>⚙ <span data-i18n="inv_opts">Login, folders and tags of the imported connections</span></summary>
+      <div class="field-row" style="margin-top:6px;">
+        <div class="field"><label data-i18n="inv_login">Login</label><select id="inv-auth"></select></div>
+        <div class="field"><label data-i18n="username">Username</label><input type="text" id="inv-user" placeholder="root"></div>
+        <div class="field"><label data-i18n="inv_proto">Protocol (if not in the file)</label><select id="inv-proto"><option>SSH</option><option>SFTP</option><option>RDP</option><option>VNC</option><option>TELNET</option><option>HTTPS</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label data-i18n="inv_folders">Folders</label><select id="inv-folder-mode" onchange="document.getElementById('inv-folder').style.display = this.value === 'fixed' ? '' : 'none'">
+          <option value="column" data-i18n="inv_f_column">from the folder column</option><option value="site" data-i18n="inv_f_site">one per site</option><option value="role" data-i18n="inv_f_role">one per role</option><option value="tenant" data-i18n="inv_f_tenant">one per tenant (NetBox)</option><option value="fixed" data-i18n="inv_f_fixed">all in one folder</option><option value="none" data-i18n="inv_f_none">no folder</option></select>
+          <input type="text" id="inv-folder" style="display:none;margin-top:6px;" placeholder="Imported"></div>
+        <div class="field"><label data-i18n="inv_tags">Extra tags for all</label><input type="text" id="inv-tags" placeholder="imported"></div>
+      </div>
+      <div class="muted-text" style="line-height:1.5;" data-i18n="inv_login_help">Rows with a password column keep their own password. Connections that already exist (same name, host and protocol) are skipped; NetBox objects imported before are updated when "update" is on.</div>
+    </details>
+    <div class="inv-res" id="inv-result"></div>
+    <div class="modal-footer">
+      <button class="btn-sec" onclick="closeModal('modal-inventory')" data-i18n="close">Close</button>
+      <button id="inv-go" onclick="invImport()" disabled>📥 <span data-i18n="import">Import</span></button>
+    </div>
+  </div>
+</div>
 
 <!-- SSH keys & credentials vault (v10.5) -->
 <div class="modal-overlay" id="modal-vault">
@@ -2591,7 +2696,7 @@ Object.assign(LANGS.en, {
   p_tunnel_remote_forward:'Remote port forwarding (-R)', p_tunnel_remote_forward_d:'Lets a server reach hosts and ports on the WRM side.',
   po_tunnel_remote_forward_off:'Off', po_tunnel_remote_forward_admins:'Administrators', po_tunnel_remote_forward_all:'Everyone',
   p_tunnel_idle_minutes:'Stop idle tunnels (minutes)', p_tunnel_idle_minutes_d:'Tunnels started by hand stop after this time without traffic (0 = never). Tunnels started with a terminal or always on are not stopped. Temporary web tunnels stop after 30 minutes.',
-  import_mrng:'Import from mRemoteNG', import_mrng_desc:'confCons.xml: folders, SSH and web connections with passwords, SSH tunnel → jump host. RDP/VNC/Telnet are listed as skipped.',
+  import_mrng:'Import from mRemoteNG', import_mrng_desc:'confCons.xml: folders, SSH, RDP, VNC, Telnet and web connections with passwords, SSH tunnel → jump host.',
   import_sshcfg:'Import OpenSSH config', import_sshcfg_desc:'~/.ssh/config: hosts, users, ports, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.',
   mrng_master_pw:'mRemoteNG master password', mrng_master_pw_d:'This connection file is protected with a master password.', mrng_wrong_pw:'Wrong master password — try again.',
   import_result:'Imported {n} connection(s), {f} new folder(s), {j} jump host link(s), {t} tunnel(s).', import_skipped_h:'Skipped', import_notes_h:'Please check',
@@ -3106,7 +3211,7 @@ Object.assign(LANGS.hr, {
   p_tunnel_remote_forward:'Udaljeno prosljeđivanje (-R)', p_tunnel_remote_forward_d:'Omogućuje serveru da dosegne hostove i portove na strani WRM-a.',
   po_tunnel_remote_forward_off:'Isključeno', po_tunnel_remote_forward_admins:'Administratori', po_tunnel_remote_forward_all:'Svi',
   p_tunnel_idle_minutes:'Zaustavi neaktivne tunele (minuta)', p_tunnel_idle_minutes_d:'Ručno pokrenuti tuneli staju nakon ovog vremena bez prometa (0 = nikad). Tuneli uz terminal i oni koji uvijek rade se ne zaustavljaju. Privremeni web tuneli staju nakon 30 minuta.',
-  import_mrng:'Uvoz iz mRemoteNG-a', import_mrng_desc:'confCons.xml: mape, SSH i web veze s lozinkama, SSH tunel → jump host. RDP/VNC/Telnet se navode kao preskočeni.',
+  import_mrng:'Uvoz iz mRemoteNG-a', import_mrng_desc:'confCons.xml: mape, SSH, RDP, VNC, Telnet i web veze s lozinkama, SSH tunel → jump host.',
   import_sshcfg:'Uvoz OpenSSH configa', import_sshcfg_desc:'~/.ssh/config: hostovi, korisnici, portovi, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.',
   mrng_master_pw:'mRemoteNG master lozinka', mrng_master_pw_d:'Ova datoteka veza zaštićena je master lozinkom.', mrng_wrong_pw:'Pogrešna master lozinka — pokušaj ponovno.',
   import_result:'Uvezeno {n} veza, {f} novih mapa, {j} povezanih jump hostova, {t} tunela.', import_skipped_h:'Preskočeno', import_notes_h:'Provjeri',
@@ -3801,6 +3906,54 @@ Object.assign(LANGS.hr, {
   warn_credential_rotation_due:'Za neke vjerodajnice iz trezora došlo je vrijeme rotacije (Ključevi → Vjerodajnice).',
   warn_credential_rotation_incomplete:'Rotacija vjerodajnice je nedovršena: neki serveri imaju novu lozinku, ostali staru (Ključevi → Vjerodajnice → Prikaži).',
 });
+Object.assign(LANGS.en, {
+  tag_more:'Show all tags', tag_fewer:'Show fewer tags',
+  tags_lbl:'Tags', tags_short:'Tags', tag_filter_title:'Show only connections with this tag (click again to remove)', tag_clear:'clear',
+  tags_bulk_title:'Tags for {n} connection(s)', tags_bulk_help:'Tags to add, comma separated. Put - in front of a tag to remove it (e.g. -old). Tags with a key: env:prod, site:dc1, rack:a12.',
+  tags_changed:'Tags changed on {n} connection(s)',
+  import_inventory:'Import inventory (CSV, Excel, NetBox)', import_inventory_desc:'Server lists from a CSV or .xlsx file (you check the columns) or from NetBox, with tags for environment, site and rack, folders and a login from the vault.',
+  inv_title:'Import inventory', inv_tab_file:'CSV / Excel', inv_choose:'Choose file…', inv_header:'First row has column names',
+  inv_file_help:'A CSV file (comma, semicolon or tab; also as saved by Excel) or an Excel workbook (.xlsx). The first row should hold the column names; WRM guesses which column is what — check it in the preview.',
+  inv_nb_help:'Devices and virtual machines from NetBox through its API (a read-only token is enough). Sites, racks, roles, tenants, platforms and NetBox tags become tags. Importing again updates the connections imported before.',
+  inv_nb_url:'NetBox address', inv_nb_token:'API token', inv_nb_site:'Sites (slugs)', inv_nb_role:'Roles', inv_nb_tenant:'Tenants', inv_nb_tag:'NetBox tag', inv_nb_status:'Status', inv_nb_any:'any',
+  inv_nb_hostfrom:'Address', inv_nb_ip:'primary IP', inv_nb_dns:'name (DNS)', inv_nb_env:'Environment custom field', inv_nb_devices:'Devices', inv_nb_vms:'Virtual machines',
+  inv_nb_insecure:'Accept a self-signed certificate', inv_nb_remember:'Remember address and token', inv_nb_load:'Load from NetBox', inv_nb_saved:'saved', inv_nb_loading:'Asking NetBox…',
+  inv_nb_found:'{n} objects, {e} imported before', inv_nb_only_new:'Only new', inv_nb_update:'Update the ones imported before (address, tags, folder)', inv_nb_exists:'imported',
+  inv_nb_missing:'{n} connection(s) imported from this NetBox were not found', inv_nb_missing_filters:'they may only be outside the filters; nothing is deleted',
+  inv_opts:'Login, folders and tags of the imported connections', inv_login:'Login', inv_login_none:'none (set it later)', inv_proto:'Protocol (if not in the file)',
+  inv_folders:'Folders', inv_f_column:'from the folder column', inv_f_site:'one per site', inv_f_role:'one per role', inv_f_tenant:'one per tenant (NetBox)', inv_f_fixed:'all in one folder', inv_f_none:'no folder',
+  inv_tags:'Extra tags for all', inv_login_help:'Rows with a password column keep their own password. Connections that already exist (same name, host and protocol) are skipped; NetBox objects imported before are updated when "update" is on.',
+  inv_too_big:'The file is larger than 10 MB', inv_sheet:'sheet', inv_delim:'separator', inv_rows:'rows', inv_ignore:'ignore',
+  inv_f_name:'Name', inv_f_host:'Host / IP / URL', inv_f_port:'Port', inv_f_protocol:'Protocol', inv_f_username:'User name', inv_f_password:'Password', inv_f_folder:'Folder',
+  inv_f_tags:'Tags', inv_f_env:'Environment → env:', inv_f_site:'Site / location → site:', inv_f_rack:'Rack → rack:', inv_f_role:'Role → role:', inv_f_platform:'Platform / OS', inv_f_jump:'Jump host (name)', inv_f_web_path:'Web path',
+  inv_map_ok:'{n} rows will be imported with this mapping.', inv_map_need:'Choose at least the host (or name) column.',
+  inv_result:'{n} imported, {u} updated, {f} new folders, {j} jump hosts linked',
+  inv_col_site:'Site', inv_col_role:'Role', inv_col_platform:'Platform',
+});
+Object.assign(LANGS.hr, {
+  tag_more:'Prikaži sve oznake', tag_fewer:'Prikaži manje oznaka',
+  tags_lbl:'Oznake', tags_short:'Oznake', tag_filter_title:'Prikaži samo veze s ovom oznakom (ponovni klik uklanja)', tag_clear:'očisti',
+  tags_bulk_title:'Oznake za {n} veza', tags_bulk_help:'Oznake za dodavanje, odvojene zarezom. Znak - ispred oznake je uklanja (npr. -staro). Oznake s ključem: env:prod, site:dc1, rack:a12.',
+  tags_changed:'Oznake promijenjene na {n} veza',
+  import_inventory:'Uvoz inventara (CSV, Excel, NetBox)', import_inventory_desc:'Popisi servera iz CSV ili .xlsx datoteke (provjeriš stupce) ili iz NetBoxa, s oznakama za okruženje, lokaciju i rack, mapama i prijavom iz trezora.',
+  inv_title:'Uvoz inventara', inv_tab_file:'CSV / Excel', inv_choose:'Odaberi datoteku…', inv_header:'Prvi red sadrži nazive stupaca',
+  inv_file_help:'CSV datoteka (zarez, točka-zarez ili tab; i kako je sprema Excel) ili Excel radna knjiga (.xlsx). Prvi red treba sadržavati nazive stupaca; WRM pogađa koji je stupac što — provjeri u pregledu.',
+  inv_nb_help:'Uređaji i virtualni strojevi iz NetBoxa preko njegovog API-ja (dovoljan je token samo za čitanje). Lokacije, rackovi, uloge, tenanti, platforme i NetBox oznake postaju oznake. Ponovni uvoz ažurira ranije uvezene veze.',
+  inv_nb_url:'Adresa NetBoxa', inv_nb_token:'API token', inv_nb_site:'Lokacije (slugovi)', inv_nb_role:'Uloge', inv_nb_tenant:'Tenanti', inv_nb_tag:'NetBox oznaka', inv_nb_status:'Status', inv_nb_any:'bilo koji',
+  inv_nb_hostfrom:'Adresa', inv_nb_ip:'primarna IP', inv_nb_dns:'ime (DNS)', inv_nb_env:'Prilagođeno polje za okruženje', inv_nb_devices:'Uređaji', inv_nb_vms:'Virtualni strojevi',
+  inv_nb_insecure:'Prihvati samopotpisani certifikat', inv_nb_remember:'Zapamti adresu i token', inv_nb_load:'Učitaj iz NetBoxa', inv_nb_saved:'spremljeno', inv_nb_loading:'Pitam NetBox…',
+  inv_nb_found:'{n} objekata, {e} ranije uvezeno', inv_nb_only_new:'Samo novi', inv_nb_update:'Ažuriraj ranije uvezene (adresa, oznake, mapa)', inv_nb_exists:'uvezeno',
+  inv_nb_missing:'{n} veza uvezenih iz ovog NetBoxa nije pronađeno', inv_nb_missing_filters:'možda su samo izvan filtara; ništa se ne briše',
+  inv_opts:'Prijava, mape i oznake uvezenih veza', inv_login:'Prijava', inv_login_none:'bez prijave (postavi kasnije)', inv_proto:'Protokol (ako ga nema u datoteci)',
+  inv_folders:'Mape', inv_f_column:'iz stupca mape', inv_f_site:'jedna po lokaciji', inv_f_role:'jedna po ulozi', inv_f_tenant:'jedna po tenantu (NetBox)', inv_f_fixed:'sve u jednu mapu', inv_f_none:'bez mape',
+  inv_tags:'Dodatne oznake za sve', inv_login_help:'Redovi sa stupcem lozinke zadržavaju svoju lozinku. Veze koje već postoje (isto ime, host i protokol) se preskaču; ranije uvezeni NetBox objekti ažuriraju se kad je uključeno „ažuriraj”.',
+  inv_too_big:'Datoteka je veća od 10 MB', inv_sheet:'list', inv_delim:'razdjelnik', inv_rows:'redova', inv_ignore:'zanemari',
+  inv_f_name:'Ime', inv_f_host:'Host / IP / URL', inv_f_port:'Port', inv_f_protocol:'Protokol', inv_f_username:'Korisničko ime', inv_f_password:'Lozinka', inv_f_folder:'Mapa',
+  inv_f_tags:'Oznake', inv_f_env:'Okruženje → env:', inv_f_site:'Lokacija → site:', inv_f_rack:'Rack → rack:', inv_f_role:'Uloga → role:', inv_f_platform:'Platforma / OS', inv_f_jump:'Jump host (ime)', inv_f_web_path:'Web putanja',
+  inv_map_ok:'S ovim mapiranjem uvest će se {n} redova.', inv_map_need:'Odaberi barem stupac hosta (ili imena).',
+  inv_result:'{n} uvezeno, {u} ažurirano, {f} novih mapa, {j} povezanih jump hostova',
+  inv_col_site:'Lokacija', inv_col_role:'Uloga', inv_col_platform:'Platforma',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4050,8 +4203,10 @@ function renderTree() {
   wrap.innerHTML = '';
   const downCount = conns.filter(c => (connStatusOf(c) || {}).state === 'down').length;
   if (statusDownOnly && !downCount) statusDownOnly = false;
-  const filterActive = !!query || statusDownOnly;
-  const visible = c => (!query || connMatches(c, query)) && (!statusDownOnly || (connStatusOf(c) || {}).state === 'down');
+  for (const tg of [...activeTags]) if (!conns.some(c => (c.tags || []).includes(tg))) activeTags.delete(tg);
+  const filterActive = !!query || statusDownOnly || activeTags.size > 0;
+  const visible = c => (!query || connMatches(c, query)) && (!statusDownOnly || (connStatusOf(c) || {}).state === 'down') &&
+    [...activeTags].every(tg => (c.tags || []).includes(tg));
 
   // Root drop area
   const rootDrop = document.createElement('div');
@@ -4073,6 +4228,8 @@ function renderTree() {
     chip.onclick = () => { statusDownOnly = !statusDownOnly; renderTree(); };
     wrap.appendChild(chip);
   }
+  const tagBar = buildTagBar();
+  if (tagBar) wrap.appendChild(tagBar);
 
   // My connections section
   const myLabel = document.createElement('div');
@@ -4185,7 +4342,13 @@ function renderTree() {
 }
 
 function connMatches(c, q) {
-  return (c.name || '').toLowerCase().includes(q) || (c.host || '').toLowerCase().includes(q) || (c.username || '').toLowerCase().includes(q) || (c.protocol || '').toLowerCase() === q;
+  const tags = c.tags || [];
+  // "#prod" or "env:prod" in the search box look at the tags; several words must all match
+  return q.split(/\s+/).filter(Boolean).every(w => {
+    if (w.startsWith('#')) return tags.some(x => x.includes(w.slice(1)));
+    return (c.name || '').toLowerCase().includes(w) || (c.host || '').toLowerCase().includes(w) || (c.username || '').toLowerCase().includes(w) ||
+      (c.protocol || '').toLowerCase() === w || tags.some(x => x.includes(w));
+  });
 }
 
 function makeConnItem(c) {
@@ -4195,12 +4358,14 @@ function makeConnItem(c) {
   const proto = (c.protocol || 'SSH').toLowerCase();
   const tunRun = tunnelState.tunnels.filter(x => x.conn_id === c.id && x.running && !x.ephemeral).length;
   const st = connStatusOf(c);
-  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : (c.protocol === 'TELNET' ? 'TEL' : c.protocol))}</span><span class="conn-name">${esc(c.name)}</span>` +
+  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : (c.protocol === 'TELNET' ? 'TEL' : c.protocol))}</span><span class="conn-name">${esc(c.name)}</span>` + envPill(c) +
     (c.route ? `<span class="conn-route" title="${esc(t('via') + ' ' + c.route)}">⤳</span>` : '') +
     (c.tunnels ? `<span class="conn-tun ${tunRun ? 'on' : ''}" title="${esc(t('tun_count_title').replace('{n}', c.tunnels).replace('{r}', tunRun))}" onclick="event.stopPropagation(); openTunnelsPanel(${c.id})">🔀</span>` : '') +
     `<span class="conn-host">${esc(c.host)}</span>`;
-  el.title = (c.username ? c.username + '@' : '') + c.host + (c.route ? '\n' + t('via') + ' ' + c.route : '') + (isWebConn(c) ? '\n' + t('web_dblclick') : '') + (st ? '\n' + statusTitle(st) : '');
+  el.title = (c.username ? c.username + '@' : '') + c.host + (c.route ? '\n' + t('via') + ' ' + c.route : '') + ((c.tags || []).length ? '\n🏷 ' + c.tags.join(', ') : '') + (isWebConn(c) ? '\n' + t('web_dblclick') : '') + (st ? '\n' + statusTitle(st) : '');
   el.dataset.connId = c.id;
+  const envTag = (c.tags || []).find(x => x.startsWith('env:'));
+  if (envTag) { el.classList.add('has-env'); if (envClass(envTag.slice(4)) === 'prod') el.classList.add('env-prod'); }
   if (winObjects.some(w => w.connId === c.id && w.connState === 'connected')) el.classList.add('live');
 
   el.onclick = e => {
@@ -4368,6 +4533,8 @@ function openConnModal(id, focusTunnels) {
   document.getElementById('m-folder').value = c && c.folder_id ? c.folder_id : '';
   document.getElementById('m-webpath').value = c ? (c.web_path || '') : '';
   document.getElementById('m-monitor').checked = c ? c.monitor !== false : true;
+  document.getElementById('m-tags').value = c && c.tags ? c.tags.join(', ') : '';
+  renderTagSuggestions();
   deskOptsInit = (c && c.options) || {};
   fillJumpSelect(c);
   loadConnTunnels(id, focusTunnels);
@@ -4466,6 +4633,7 @@ function connFormPayload() {
     jump_id: document.getElementById('m-jump').value ? parseInt(document.getElementById('m-jump').value) : null,
     web_path: document.getElementById('m-webpath').value.trim(),
     key_id: Number(document.getElementById('m-keyref').value) || null,
+    tags: splitTagInput(document.getElementById('m-tags').value),
     credential_id: Number(document.getElementById('m-cred').value) || null,
   };
 }
@@ -5860,6 +6028,271 @@ async function importExternal(input, kind, password) {
   loadData();
 }
 
+
+// ══ TAGS & INVENTORY IMPORT (v10.6) ═════════════════════
+
+let activeTags = new Set(), tagBarAll = false;
+try { tagBarAll = localStorage.getItem('wrm_tagbar_all') === '1'; } catch (_) {}
+
+function splitTagInput(v) { return String(v || '').split(/[,;]/).map(x => x.trim()).filter(Boolean); }
+
+function tagCounts() {
+  const n = {};
+  conns.forEach(c => (c.tags || []).forEach(x => { n[x] = (n[x] || 0) + 1; }));
+  return Object.entries(n).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+function envClass(v) {
+  v = (v || '').toLowerCase();
+  if (/^(prod|production|prd|live)/.test(v)) return 'prod';
+  if (/^(stag|stage|uat|preprod|pre-prod|acc)/.test(v)) return 'stage';
+  if (/^(test|qa|tst)/.test(v)) return 'test';
+  if (/^(dev|development|lab|sandbox)/.test(v)) return 'dev';
+  return '';
+}
+
+function envPill(c) {
+  const e = (c.tags || []).find(x => x.startsWith('env:'));
+  if (!e) return '';
+  const v = e.slice(4);
+  return `<span class="env-pill ${envClass(v)}" title="${esc(e)}">${esc(v)}</span>`;
+}
+
+function buildTagBar() {
+  const all = tagCounts();
+  if (!all.length) return null;
+  const bar = document.createElement('div');
+  bar.className = 'tag-bar';
+  const limit = tagBarAll ? all.length : 6;
+  const shown = all.slice(0, limit);
+  activeTags.forEach(tg => { if (!shown.some(x => x[0] === tg)) { const f = all.find(x => x[0] === tg); if (f) shown.push(f); } });
+  bar.innerHTML = '<span class="muted-text" style="font-size:10.5px;align-self:center;">🏷</span>' +
+    shown.map(([tg, n]) => `<span class="tag-chip${activeTags.has(tg) ? ' on' : ''}" data-tag="${esc(tg)}" title="${esc(t('tag_filter_title'))}">${esc(tg)}<span class="n">${n}</span></span>`).join('') +
+    (all.length > 6 ? `<span class="tag-chip" data-more="1" title="${esc(t(tagBarAll ? 'tag_fewer' : 'tag_more'))}">${tagBarAll ? '−' : '+' + (all.length - 6)}</span>` : '') +
+    (activeTags.size ? `<span class="tag-chip" data-clear="1">✕ ${esc(t('tag_clear'))}</span>` : '');
+  bar.onclick = e => {
+    const el = e.target.closest('.tag-chip');
+    if (!el) return;
+    if (el.dataset.more) { tagBarAll = !tagBarAll; try { localStorage.setItem('wrm_tagbar_all', tagBarAll ? '1' : ''); } catch (_) {} }
+    else if (el.dataset.clear) activeTags.clear();
+    else if (activeTags.has(el.dataset.tag)) activeTags.delete(el.dataset.tag);
+    else activeTags.add(el.dataset.tag);
+    renderTree();
+  };
+  return bar;
+}
+
+function renderTagSuggestions() {
+  const box = document.getElementById('m-tags-sugg');
+  if (!box) return;
+  const cur = new Set(splitTagInput(document.getElementById('m-tags').value).map(x => x.toLowerCase().replace(/\s*:\s*/, ':')));
+  const keys = new Set([...cur].filter(x => x.includes(':')).map(x => x.split(':')[0]));
+  // one value per key (env:, site:, rack: …): no second env: when there is one
+  const sugg = tagCounts().map(x => x[0]).filter(x => !cur.has(x) && !(x.includes(':') && keys.has(x.split(':')[0]))).slice(0, 14);
+  box.innerHTML = sugg.map(x => `<span class="tag-chip" onclick="addTagToInput(${jsq(x)})">+ ${esc(x)}</span>`).join('');
+}
+
+function addTagToInput(tg) {
+  const inp = document.getElementById('m-tags');
+  const cur = splitTagInput(inp.value);
+  if (!cur.includes(tg)) cur.push(tg);
+  inp.value = cur.join(', ');
+  renderTagSuggestions();
+}
+
+async function bulkTags() {
+  const ids = [...selectedConns];
+  if (!ids.length) return;
+  const v = await uiPrompt(t('tags_bulk_title').replace('{n}', ids.length), '', {message: t('tags_bulk_help'), placeholder: 'env:prod, site:dc1, -old', okText: t('save')});
+  if (!v || !v.trim()) return;
+  const parts = splitTagInput(v);
+  const add = parts.filter(x => !x.startsWith('-')), remove = parts.filter(x => x.startsWith('-')).map(x => x.slice(1));
+  const r = await fetch('/api/connections/bulk', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'tag', ids, add, remove})});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  const j = await r.json();
+  showToast(t('tags_changed').replace('{n}', j.changed), 'success');
+  loadData();
+}
+
+// ── inventory dialog ──
+let invFile = null, invParsed = null, invMapping = {}, invTab = 'file', nbRows = [], nbChecked = new Set();
+const INV_FIELDS = ['name', 'host', 'port', 'protocol', 'username', 'password', 'folder', 'tags', 'env', 'site', 'rack', 'role', 'platform', 'jump', 'web_path'];
+
+async function openInventory(tab) {
+  if (!currentUser) return;
+  await loadVault();
+  setInvTab(tab || invTab);
+  const auth = document.getElementById('inv-auth');
+  auth.innerHTML = `<option value="">${esc(t('inv_login_none'))}</option>` +
+    vaultCreds.map(c => `<option value="credential:${c.id}">🗝 ${esc(c.name)}${c.username ? ' (' + esc(c.username) + ')' : ''}</option>`).join('') +
+    vaultKeys.filter(k => k.has_private).map(k => `<option value="key:${k.id}">🔑 ${esc(k.name)}</option>`).join('');
+  document.getElementById('inv-result').innerHTML = '';
+  try {
+    const r = await fetch('/api/inventory/netbox');
+    if (r.ok) {
+      const j = await r.json();
+      if (j.saved) {
+        const q = j.query || {};
+        const set = (id, v) => { if (v != null) document.getElementById(id).value = v; };
+        set('nb-url', q.url); set('nb-site', q.site || ''); set('nb-role', q.role || ''); set('nb-tenant', q.tenant || ''); set('nb-tag', q.tag || '');
+        set('nb-status', q.status || 'active'); set('nb-hostfrom', q.host_from || 'ip'); set('nb-env', q.env_field || '');
+        document.getElementById('nb-insecure').checked = !!q.insecure;
+        document.getElementById('nb-devices').checked = q.devices !== false;
+        document.getElementById('nb-vms').checked = !!q.vms;
+        document.getElementById('nb-token').placeholder = j.has_token ? '•••••••• (' + t('inv_nb_saved') + ')' : '';
+      }
+    }
+  } catch (_) {}
+  document.getElementById('modal-inventory').classList.add('open');
+}
+
+function setInvTab(tab) {
+  invTab = tab === 'netbox' ? 'netbox' : 'file';
+  document.querySelectorAll('#inv-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === invTab));
+  document.getElementById('inv-file').classList.toggle('active', invTab === 'file');
+  document.getElementById('inv-netbox').classList.toggle('active', invTab === 'netbox');
+  const fm = document.getElementById('inv-folder-mode');
+  [...fm.options].forEach(o => { o.hidden = invTab === 'netbox' ? o.value === 'column' : o.value === 'tenant'; });
+  if (fm.selectedOptions[0] && fm.selectedOptions[0].hidden) fm.value = invTab === 'netbox' ? 'site' : 'column';
+  document.getElementById('inv-go').disabled = invTab === 'file' ? !invParsed : !nbRows.length;
+}
+
+function invOptions() {
+  const [kind, id] = (document.getElementById('inv-auth').value || ':').split(':');
+  return {
+    default_protocol: document.getElementById('inv-proto').value,
+    username: document.getElementById('inv-user').value.trim(),
+    auth: kind || '', credential_id: kind === 'credential' ? Number(id) : 0, key_id: kind === 'key' ? Number(id) : 0,
+    folder_mode: document.getElementById('inv-folder-mode').value,
+    folder: document.getElementById('inv-folder').value.trim(),
+    tags: document.getElementById('inv-tags').value.trim(),
+  };
+}
+
+async function invFileChosen(inp) {
+  const f = inp.files && inp.files[0];
+  if (!f) return;
+  if (f.size > 10 * 1024 * 1024) { showToast(t('inv_too_big'), 'error'); return; }
+  const buf = new Uint8Array(await f.arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+  invFile = {name: f.name, data: btoa(bin)};
+  document.getElementById('inv-sheet').innerHTML = '';
+  invMapping = {};
+  inp.value = '';
+  invParse();
+}
+
+async function invParse() {
+  if (!invFile) return;
+  const sheetSel = document.getElementById('inv-sheet');
+  const box = document.getElementById('inv-preview');
+  box.innerHTML = `<div class="hint-box">⏳ ${esc(t('loading'))}</div>`;
+  const r = await fetch('/api/inventory/parse', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({file_name: invFile.name, data: invFile.data, sheet: sheetSel.value || '', header: document.getElementById('inv-header').checked})});
+  if (!r.ok) { invParsed = null; box.innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; setInvTab('file'); return; }
+  invParsed = await r.json();
+  invMapping = Object.assign({}, invParsed.mapping || {});
+  if ((invParsed.sheets || []).length > 1) {
+    sheetSel.innerHTML = invParsed.sheets.map(n => `<option${n === invParsed.sheet ? ' selected' : ''}>${esc(n)}</option>`).join('');
+    sheetSel.style.display = '';
+  } else sheetSel.style.display = 'none';
+  document.getElementById('inv-file-info').textContent = invFile.name + ' · ' + (invParsed.sheet ? t('inv_sheet') + ' ' + invParsed.sheet : (invParsed.encoding + ', ' + t('inv_delim') + ' ' + invParsed.delimiter)) + ' · ' + invParsed.total + ' ' + t('inv_rows');
+  renderInvPreview();
+  setInvTab('file');
+}
+
+function renderInvPreview() {
+  const p = invParsed;
+  const colField = {};
+  Object.entries(invMapping).forEach(([f, i]) => { colField[i] = f; });
+  const opts = sel => `<option value="">— ${esc(t('inv_ignore'))} —</option>` + INV_FIELDS.map(f => `<option value="${f}"${sel === f ? ' selected' : ''}>${esc(t('inv_f_' + f))}</option>`).join('');
+  const cols = Math.max(p.columns || 0, (p.headers || []).length);
+  let html = `<div class="inv-map"><table><thead><tr>`;
+  for (let i = 0; i < cols; i++) html += `<th class="${colField[i] ? 'mapped' : ''}"><div class="h">${esc((p.headers || [])[i] || '')}</div><select onchange="invSetField(${i}, this.value)">${opts(colField[i])}</select></th>`;
+  html += `</tr></thead><tbody>` + (p.rows || []).slice(0, 12).map(row => '<tr>' + Array.from({length: cols}, (_, i) => `<td class="${colField[i] ? 'mapped' : ''}">${esc(colField[i] === 'password' && row[i] ? '••••' : (row[i] || ''))}</td>`).join('') + '</tr>').join('') + '</tbody></table></div>';
+  const ok = invMapping.host != null || invMapping.name != null;
+  html += `<div class="muted-text" style="margin-top:6px;">${ok ? esc(t('inv_map_ok').replace('{n}', p.total)) : '⚠ ' + esc(t('inv_map_need'))}</div>`;
+  document.getElementById('inv-preview').innerHTML = html;
+  document.getElementById('inv-go').disabled = !ok;
+}
+
+function invSetField(col, field) {
+  Object.keys(invMapping).forEach(f => { if (invMapping[f] === col) delete invMapping[f]; });
+  if (field) invMapping[field] = col;
+  renderInvPreview();
+}
+
+function nbQuery() {
+  const v = id => document.getElementById(id).value.trim();
+  return {url: v('nb-url'), token: v('nb-token'), site: v('nb-site'), role: v('nb-role'), tenant: v('nb-tenant'), tag: v('nb-tag'),
+    status: v('nb-status'), host_from: v('nb-hostfrom'), env_field: v('nb-env'), insecure: document.getElementById('nb-insecure').checked,
+    devices: document.getElementById('nb-devices').checked, vms: document.getElementById('nb-vms').checked, remember: document.getElementById('nb-remember').checked};
+}
+
+async function nbPreview() {
+  const box = document.getElementById('nb-preview');
+  const btn = document.getElementById('nb-load');
+  btn.disabled = true;
+  box.innerHTML = `<div class="hint-box">⏳ ${esc(t('inv_nb_loading'))}</div>`;
+  try {
+    const r = await fetch('/api/inventory/netbox/preview', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query: nbQuery()})});
+    if (!r.ok) { nbRows = []; box.innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; setInvTab('netbox'); return; }
+    const j = await r.json();
+    nbRows = j.rows || [];
+    nbChecked = new Set(nbRows.filter(x => x.host).map(x => x.ext_id));
+    const sites = {};
+    nbRows.forEach(x => { sites[x.site || '—'] = (sites[x.site || '—'] || 0) + 1; });
+    const existing = nbRows.filter(x => x.conn_id).length;
+    let html = `<div class="muted-text" style="margin-top:8px;">${esc(t('inv_nb_found').replace('{n}', nbRows.length).replace('{e}', existing))} · ${Object.entries(sites).map(([k, n]) => esc(k) + ' ' + n).join(' · ')}</div>`;
+    html += `<div class="vault-tools" style="margin-top:6px;"><button class="btn-sec btn-sm" onclick="nbSelect(true)">${esc(t('bc_all'))}</button><button class="btn-sec btn-sm" onclick="nbSelect(false)">${esc(t('bc_none'))}</button>
+      <button class="btn-sec btn-sm" onclick="nbSelect('new')">${esc(t('inv_nb_only_new'))}</button>
+      <label class="check-row" style="margin:0;"><input type="checkbox" id="nb-update" ${existing ? 'checked' : ''}> <span>${esc(t('inv_nb_update'))}</span></label></div>`;
+    html += `<div class="inv-map"><table><thead><tr><th></th><th>${esc(t('name_lbl'))}</th><th>${esc(t('host_port'))}</th><th>${esc(t('protocol'))}</th><th>${esc(t('inv_col_site'))}</th><th>Rack</th><th>${esc(t('inv_col_role'))}</th><th>${esc(t('inv_col_platform'))}</th><th>${esc(t('tags_lbl'))}</th></tr></thead><tbody>` +
+      nbRows.map(x => `<tr class="${x.conn_id ? 'exists' : ''}"><td><input type="checkbox" style="width:auto;" data-ext="${esc(x.ext_id)}" ${nbChecked.has(x.ext_id) ? 'checked' : ''} ${x.host ? '' : 'disabled'} onchange="this.checked ? nbChecked.add(this.dataset.ext) : nbChecked.delete(this.dataset.ext)"></td>
+        <td>${x.kind === 'vm' ? '☁ ' : ''}${esc(x.name)}${x.conn_id ? ` <span class="pill">${esc(t('inv_nb_exists'))}</span>` : ''}</td><td>${x.host ? esc(x.host) : `<span style="color:#fca5a5;">${esc(x.problem || '—')}</span>`}</td><td>${esc(x.protocol)}</td>
+        <td>${esc(x.site)}</td><td>${esc(x.rack)}</td><td>${esc(x.role)}</td><td>${esc(x.platform)}</td><td>${esc((x.tags || []).join(', '))}${x.env ? ' env:' + esc(x.env) : ''}</td></tr>`).join('') + '</tbody></table></div>';
+    if ((j.missing || []).length) html += `<div class="hint-box warn" style="margin-top:8px;">${esc(t('inv_nb_missing').replace('{n}', j.missing.length))}: ${j.missing.slice(0, 30).map(m => esc(m.name)).join(', ')}${j.partial_filters ? ' — ' + esc(t('inv_nb_missing_filters')) : ''}</div>`;
+    box.innerHTML = html;
+    if (nbQuery().remember) document.getElementById('nb-token').placeholder = '•••••••• (' + t('inv_nb_saved') + ')';
+    setInvTab('netbox');
+  } finally { btn.disabled = false; }
+}
+
+function nbSelect(v) {
+  nbChecked = new Set(nbRows.filter(x => x.host && (v === true || (v === 'new' && !x.conn_id))).map(x => x.ext_id));
+  document.querySelectorAll('#nb-preview input[data-ext]').forEach(c => { c.checked = nbChecked.has(c.dataset.ext); });
+}
+
+async function invImport() {
+  const go = document.getElementById('inv-go');
+  const res = document.getElementById('inv-result');
+  const opts = invOptions();
+  let url, body;
+  if (invTab === 'file') {
+    if (!invParsed) return;
+    url = '/api/inventory/import';
+    body = {file_name: invFile.name, data: invFile.data, sheet: invParsed.sheet || '', header: document.getElementById('inv-header').checked, mapping: invMapping, options: opts};
+  } else {
+    const rows = nbRows.filter(x => nbChecked.has(x.ext_id));
+    if (!rows.length) { showToast(t('vk_pick_conns'), 'warning'); return; }
+    opts.update = !!(document.getElementById('nb-update') || {}).checked;
+    url = '/api/inventory/netbox/import';
+    body = {query: nbQuery(), rows, options: opts};
+  }
+  go.disabled = true;
+  res.innerHTML = `<div class="hint-box">⏳ ${esc(t('loading'))}</div>`;
+  try {
+    const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    if (!r.ok) { res.innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; return; }
+    const d = await r.json();
+    res.innerHTML = `<div class="hint-box ok">✅ ${esc(t('inv_result').replace('{n}', d.imported).replace('{u}', d.updated || 0).replace('{f}', d.folders).replace('{j}', d.jump_hosts))}</div>` +
+      ((d.skipped || []).length ? `<details><summary class="muted-text">${esc(t('import_skipped_h'))} (${d.skipped.length})</summary>${d.skipped.slice(0, 200).map(x => `<div class="r">• ${esc(x.name)} — ${esc(x.reason)}</div>`).join('')}</details>` : '') +
+      ((d.notes || []).length ? `<details><summary class="muted-text">${esc(t('import_notes_h'))} (${d.notes.length})</summary>${d.notes.slice(0, 200).map(x => `<div class="r">• ${esc(x.name)} — ${esc(x.reason)}</div>`).join('')}</details>` : '');
+    loadData();
+    if (invTab === 'netbox') nbPreview();
+  } finally { go.disabled = false; }
+}
 
 // ══ SSH KEY STORE & CREDENTIALS VAULT (v10.5) ═══════════
 
