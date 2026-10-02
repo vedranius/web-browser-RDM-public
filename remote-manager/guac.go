@@ -511,6 +511,10 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 		fail("This is not a remote desktop connection.", 768)
 		return
 	}
+	if c.authErr != "" {
+		fail(c.authErr, 769)
+		return
+	}
 	width, _ := strconv.Atoi(q.Get("width"))
 	height, _ := strconv.Atoi(q.Get("height"))
 	dpi, _ := strconv.Atoi(q.Get("dpi"))
