@@ -1048,6 +1048,7 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM ssh_keys WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM credential_grants WHERE user_id=? OR credential_id IN (SELECT id FROM credentials WHERE owner_id=?)`, id, id)
 	tx.Exec(`DELETE FROM credentials WHERE owner_id=?`, id)
+	tx.Exec(`DELETE FROM inventory_sources WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM auth_sessions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM users WHERE id=?`, id)
 	tx.Commit()
