@@ -62,6 +62,12 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Set `allow_link_shares=0` if guests without an account must not join shares.
 - [ ] Prefer **Members only** shares with the lowest role that is enough (*Viewer* to look at files, *Observer* for calls and watching). Give shares an expiry date.
 
+**Terminal features and live status**
+
+- [ ] Decide about **broadcast input** (`broadcast_enabled`). It only types into the user's own open terminals, but one command reaches many servers; dangerous commands ask first. Every start and stop is in the audit log (`terminal.broadcast`).
+- [ ] Review **shared snippets** (administrators publish them for everybody) like any runbook. Run-on-connect snippets come from the connection's owner and are audited (`terminal.auto_run`).
+- [ ] **Live status** opens a TCP connection to every monitored host:port once per interval (no login). Tell the teams who watch those servers, add the WRM server to fail2ban `ignoreip` where *aggressive* filters are used, and keep `status_jump_checks` off unless logins to the jump hosts every round are acceptable.
+
 **SSH tunnels and jump hosts**
 
 - [ ] Decide who may use tunnels: `tunnel_users=admins`, or `tunnels_enabled=0` if nobody needs them (`WRM_TUNNELS_ENABLED=0`). Tunnels reach whatever the SSH servers reach; they are as powerful as the SSH accounts behind them.
@@ -82,7 +88,7 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
 - [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
-- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*` and `tunnel.*` events.
+- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `terminal.broadcast` and `snippet.*` events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
 
 ## How WRM protects your data
