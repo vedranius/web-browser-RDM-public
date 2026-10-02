@@ -4,6 +4,21 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.8.0] — 2026-10-02 — quick connect, notes, network tools & installable app
+
+### Added
+- **Quick connect** (`quick.go`): a field at the top of the sidebar takes `user@host:port` or a URL-like target (`ssh://`, `sftp://`, `rdp://`, `vnc://`, `telnet://`, `https://`) and connects without the connection dialog:
+  - a small dialog for the login (password, vault credential or stored key) and an optional jump host; `POST /api/connections/quick`;
+  - the connection is a **temporary** connection of its owner (`connections.temp_until`) — same checks, host keys, recording and audit (`connection.quick`) — listed under *Quick connections*, kept 24 hours after its last use (open terminals keep it alive), at most 20 per user, not monitored, not exported;
+  - 💾 / *Save as a connection* turns it into a normal connection (`PUT … {temporary: false}`).
+- **Notes & runbook** per connection (`connections.notes`, up to 20 000 characters): a small markdown (headings, lists, bold, code, code blocks, links) rendered as escaped text; edited in the connection dialog or a notes window; 📝 in the sidebar, the terminal window bar and the context menu; owner only (not share members); kept by export / import and *Duplicate*; lists only carry `has_notes`.
+- **Network tools** (`nettools.go`, 🧰 *Tools*, `POST /api/nettools`): port check (up to 100 ports and ranges; open / closed / no answer), ping, traceroute (`traceroute`, `tracepath` or `tracert`), DNS (addresses, CNAME, MX, TXT, PTR) and an HTTP/TLS check (status, server, redirect target, TLS version, certificate subject, issuer, expiry and days left, names, trust) — **from the WRM server or from one of the user's SSH connections through its jump hosts** (port and HTTP checks over SSH channels, the other tools with the server's commands); targets are validated as host names or addresses, one run per user at a time, audit event `nettool.run`, policy `network_tools` (off / admins / all, default all); context menu entries *Network tools from this server…* and *Check ports of this host*.
+- **Installable app (PWA)** (`pwa.go`): `/manifest.webmanifest` and a service worker (`/sw.js`) that caches the app's own static files per version and shows an offline page; *Settings → General → Install as an app*.
+- Tests: quick connect (targets, temporary connections, expiry with and without open terminals, limit, export), notes (save, limit, list flag, duplicate), network tools (ports and HTTP/TLS from WRM and through SSH, DNS, ping and traceroute on a server, validation, ownership, policy) and the PWA endpoints.
+
+### Fixed
+- The top bar overlapped its buttons at medium widths (and the version label never collapsed); it now gives way step by step.
+
 ## [10.7.0] — 2026-10-02 — out-of-band management, consoles & serial ports
 
 ### Added

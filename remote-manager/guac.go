@@ -532,6 +532,7 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 		tz = ""
 	}
 
+	touchQuick(c.ID)
 	ta := startDesktopSession(r, acc, c)
 	actorID, actorName := acc.actor()
 	route := jumpPath(c)
