@@ -4,6 +4,26 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.6.0] — 2026-10-02 — tags & inventory import (CSV, Excel, NetBox)
+
+### Added
+- **Tags** on connections (`connections.tags`): free tags and tags with a key (`env:`, `site:`, `rack:`, `role:`, `tenant:`, `platform:`, `cluster:`), normalised to lower case, at most 30:
+  - a tags field with suggestions in the connection dialog, bulk tagging (`POST /api/connections/bulk` action `tag`, add / remove);
+  - a tag filter bar in the sidebar (several tags = all must match), tag search (`#tag`, several words);
+  - environment badges (PROD / staging / test / dev colours) and a red edge for production connections;
+  - kept by export / import and *Duplicate*.
+- **Inventory import** (`inventory.go`, *Settings → Data → Import inventory*):
+  - **CSV** with automatic separator (`,` `;` tab `|`, Excel's `sep=` line) and encoding detection (UTF-8, UTF-16, Windows-1250), and **Excel .xlsx** (read with archive/zip + encoding/xml, sheet selection, shared and inline strings);
+  - a column mapping guessed from English and Croatian header names, checked and changed in a preview;
+  - host fields with ports, users, CIDR suffixes, IPv6 and URLs; Windows platforms become RDP; environment / site / rack / role / platform columns become tags; jump hosts by name;
+  - **NetBox** devices and virtual machines through the REST API (filters, all pages, primary IP or DNS name, environment custom field), with **sync**: `connections.ext_id` remembers the NetBox object, a later import updates address, NetBox tags and folder (`ext_tags`) and lists objects that disappeared; address and token can be remembered per user (token encrypted, table `inventory_sources`);
+  - for both: the login of the imported connections (none, a **vault credential** or a **stored SSH key**), default user and protocol, folders by column / site / role / tenant / one folder, extra tags.
+- Audit events `inventory.imported`, `inventory.netbox_imported`, `connection.tagged`.
+- Tests: tags (normalisation, bulk, export/import), CSV encodings and separators, an XLSX import, NetBox import and sync against a fake NetBox with pagination.
+
+### Fixed
+- Texts that still said mRemoteNG RDP/VNC/Telnet connections are skipped (they are imported since 10.4).
+
 ## [10.5.0] — 2026-10-02 — SSH keys & credentials vault
 
 ### Added
@@ -241,6 +261,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 - Full-screen programs drawn at the wrong size (the PTY size follows the window).
 - Folder transfer when WRM runs on Windows; several smaller issues.
 
+[10.6.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.6.0
 [10.5.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.5.0
 [10.4.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.4.0
 [10.3.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.3.0
