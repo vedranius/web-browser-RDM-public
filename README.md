@@ -7,9 +7,9 @@
 
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** SSH terminal, SFTP / FTP / FTPS file manager, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
+**A remote server manager that runs in any web browser.** SSH terminal, SFTP / FTP / FTPS file manager, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.1.0-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.2.0-mimo** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,11 +40,15 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.0](#upgrading-from-v100) · [Upgrading from v9](#upgrading-from-v9)
+3. [Upgrading from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
    - [Connections & folders](#connections--folders)
+   - [Jump hosts (bastions)](#jump-hosts-bastions)
+   - [SSH tunnels (port forwarding)](#ssh-tunnels-port-forwarding)
+   - [Web interfaces (HTTP / HTTPS connections)](#web-interfaces-http--https-connections)
+   - [Import from mRemoteNG and OpenSSH](#import-from-mremoteng-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [SSH terminal](#ssh-terminal)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
@@ -78,6 +82,9 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 
 - **SSH terminals** in the browser (xterm.js, 256 colors, full-screen apps like `nano`, `vim`, `htop`, `mc`).
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
+- **Jump hosts** (like `ssh -J`): reach servers behind a bastion, also in chains — for terminals, files, transfers and tunnels.
+- **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
+- **Import** your connections from **mRemoteNG** (with passwords, folders and SSH tunnels) and from **OpenSSH** `~/.ssh/config`.
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions.
 - **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
@@ -97,21 +104,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.1.0-mimo-linux-amd64
-   ./wrm-pro-v10.1.0-mimo-linux-amd64
+   chmod +x wrm-pro-v10.2.0-mimo-linux-amd64
+   ./wrm-pro-v10.2.0-mimo-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.1.0-mimo-windows-amd64.exe
+   .\wrm-pro-v10.2.0-mimo-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.1.0-mimo/wrm-pro-v10.1.0-mimo-android-arm64
-   chmod +x wrm-pro-v10.1.0-mimo-android-arm64 && ./wrm-pro-v10.1.0-mimo-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.2.0-mimo/wrm-pro-v10.2.0-mimo-android-arm64
+   chmod +x wrm-pro-v10.2.0-mimo-android-arm64 && ./wrm-pro-v10.2.0-mimo-android-arm64
    ```
 
    **Docker**
@@ -135,6 +142,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.1
+
+Replace the binary. The database gets a new table (`connection_tunnels`) and two new columns on `connections` (`jump_conn_id`, `web_path`); nothing else changes. To go back, run the v10.1 binary on the same database; it does not know these features (connections behind a jump host then try to connect directly, web interface connections cannot be opened, tunnels do not run).
+
+- New: [jump hosts](#jump-hosts-bastions), [SSH tunnels](#ssh-tunnels-port-forwarding), [web interface connections](#web-interfaces-http--https-connections) and [import from mRemoteNG / OpenSSH](#import-from-mremoteng-and-openssh).
+- **Tunnels are on by default for all users**, listening on `127.0.0.1` of the WRM machine only. Remote forwards (`-R`) and listening on network addresses are limited to administrators. Review *Admin panel → Security policies → SSH tunnels* — e.g. turn tunnels off (`WRM_TUNNELS_ENABLED=0`) or limit them to administrators if WRM runs on a shared server.
+- Jump hosts need `AllowTcpForwarding yes` on the bastion (the OpenSSH default), exactly like `ssh -J`.
 
 ## Upgrading from v10.0
 
@@ -185,6 +200,7 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 - **File operations** use a small **pool of SFTP connections** per saved connection (reused for 5 minutes and health-checked). Uploads are **streamed**; downloads and ZIP archives are streamed to the browser.
 - **Secrets at rest** (connection passwords, private keys, 2FA secrets) are **AES-256-GCM encrypted**. Session tokens are stored only as SHA-256 hashes.
 - **Collaboration:** `/ws/share/{token}` is the room of a share. The server decides identities and roles and relays chat, files, terminal streams (only to people watching them), remote-control keystrokes (only to the person who granted control) and voice signalling.
+- **Jump hosts and tunnels:** WRM logs in to the jump host, opens an SSH `direct-tcpip` channel through it and runs a second, separately encrypted SSH session inside it (like `ssh -J`). Tunnels listen on the **WRM machine** (local / SOCKS) or on the SSH server (remote) and forward every connection through SSH. Tunnel ports are opened by WRM, not by the browser.
 - **Voice:** audio flows **directly between browsers** (WebRTC, end-to-end encrypted with DTLS-SRTP). When browsers cannot reach each other (NAT, firewalls), the **built-in TURN relay** carries the still-encrypted audio.
 
 ---
@@ -205,18 +221,106 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 Left sidebar ("PRO MANAGER"):
 
 - **+ Connection** creates a connection:
-  - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), `FTP`, `FTPS` (FTP with explicit TLS; file manager only).
-  - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS), **Username**, **Folder**.
+  - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), `FTP`, `FTPS` (FTP with explicit TLS; file manager only), **🌐 Web interface** `HTTPS` / `HTTP` (see [Web interfaces](#web-interfaces-http--https-connections)).
+  - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS, 443/80 for web interfaces), **Username**, **Folder**.
+  - **Jump host (connect via):** another saved SSH connection to go through (see [Jump hosts](#jump-hosts-bastions)).
+  - **🔀 SSH tunnels:** port forwards of this connection (see [SSH tunnels](#ssh-tunnels-port-forwarding)).
   - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, or *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user). *Key file* and *Auto* use keys of the **WRM server itself** and are therefore limited to administrators (policy). Password authentication also answers keyboard-interactive prompts.
   - **🔌 Test connection** logs in once and shows the result, latency and — for a new server — its host key fingerprint.
 - **Secrets never leave the server.** Passwords and private keys are write-only: the edit dialog shows “saved and encrypted — leave empty to keep it”, with an option to remove the saved secret. *Duplicate* copies the connection on the server.
 - **Host key verification:** the first connection to a server remembers its SSH host key (and, for FTPS, the certificate if it is not signed by a public CA). A **changed key is refused** with a clear warning and both fingerprints; the owner of the connection (or an administrator) can accept the new key after checking it. Policy: *trust on first use* (default), *strict* (new hosts must be approved) or *off*.
 - **Double-click** a connection to open it: SSH opens a terminal; SFTP/FTP/FTPS open the file manager. On touch devices a single tap opens it.
-- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Edit*, *Duplicate*, *Share*, *Delete*.
+- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
 - **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root).
 - **Search box** filters by name, host, username or protocol. **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share** or **Delete**.
-- A **green dot** next to a connection means one of its terminals is connected.
+- A **green dot** next to a connection means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
 - **Shared with me** lists shares you are a member of (and shares published for all users), with your **role**; ↗ opens the collaboration room.
+
+### Jump hosts (bastions)
+
+Servers in data centers and customer networks are often reachable only through a bastion ("jump host"). WRM goes through it like `ssh -J` / `ProxyJump` and like the *SSH tunnel* setting of mRemoteNG:
+
+1. Create the bastion as a normal SSH connection, e.g. `bastion-dc1` → `203.0.113.10:22`.
+2. Create the internal server, e.g. `app-01` → `10.0.0.21:22`, and choose **Jump host (connect via) → bastion-dc1**.
+3. Double-click `app-01`. The terminal shows `Connecting to 10.0.0.21:22 via bastion-dc1…`.
+
+```
+ WRM ──SSH──► bastion-dc1 ──SSH inside the first connection──► app-01 (10.0.0.21)
+```
+
+- **Everything works through it:** terminal, file manager (SFTP), FTP/FTPS (the FTP connection is made from the jump host), search, editor, server-to-server transfer, *Test connection*, tunnels and web interfaces.
+- **Chains:** a jump host can have its own jump host — up to 5 hops, e.g. `vpn-gw → bastion-dc1 → app-01`. Loops are refused when you save.
+- **Every hop logs in with its own credentials** (password, key, key file) and **its host key is verified** (trust on first use / strict), like a direct connection. WRM opens no port on the jump host; it uses a `direct-tcpip` channel, so the bastion only needs `AllowTcpForwarding yes` (the OpenSSH default).
+- The route is shown in the sidebar (**⤳**), in *Test connection* (`… via bastion-dc1`), in the terminal, in *Sessions & recordings* and in the audit log.
+- Jump hosts are your own saved SSH connections. **Shares** of a connection behind a jump host work too — members never see the credentials of either.
+- Deleting a jump host makes the connections that used it direct again.
+
+### SSH tunnels (port forwarding)
+
+Like `ssh -L / -R / -D`, the tunnels of PuTTY and the SSH tunnel feature of mRemoteNG. You configure tunnels in a connection (**✏ Edit → 🔀 SSH tunnels**, or right-click → *Add tunnel…*) and start and stop them in the **🔀 Tunnels** panel in the top bar.
+
+| Type | What it does | Example |
+|---|---|---|
+| **Local (-L)** | A port on the **WRM machine** leads, through the SSH connection, to a host:port **as seen from that server**. | Listen `127.0.0.1:2443` → target `10.0.0.5:443`: open `https://127.0.0.1:2443` to reach the web UI of a switch behind the server |
+| **SOCKS proxy (-D)** | A SOCKS5 proxy on the WRM machine. Every destination is reached through the server. | `127.0.0.1:1080`: set it in the browser (e.g. FoxyProxy, *SOCKS v5, proxy DNS*) and browse the whole management network, or `curl --socks5-hostname 127.0.0.1:1080 http://10.0.0.5` |
+| **Remote (-R)** | A port **on the SSH server** leads back to a host:port reachable **from WRM**. | `127.0.0.1:9000` on the server → `10.10.0.2:80`: the server downloads from a mirror on your side |
+
+**Fields of a tunnel**
+
+- **Listen:** address and port. `127.0.0.1` (default) means only programs on the WRM machine can use the tunnel. Leave the port empty for a free port chosen automatically (shown while running). Local and SOCKS ports must be 1024–65535. A network address (`0.0.0.0`, a LAN IP) makes the tunnel reachable by **anyone who can reach that port, without signing in to WRM** — administrators only, unless the policy allows it.
+- **Target:** host:port, as seen from the server (local) or from WRM (remote). Not used by SOCKS.
+- **Open as** `http`/`https` + path: adds a **🌐 Open** button that opens the tunnel in a new browser tab.
+- **Start:** *Manual* (▶ in the Tunnels panel); *With terminal* (starts with the first terminal of the connection and stops about 15 s after the last one closes); *Always* (starts with WRM and keeps running, also after a restart).
+- **Templates:** web interface (HTTPS 443 / HTTP 80), SSH, RDP and VNC to an internal host, PostgreSQL, MySQL/MariaDB, iDRAC / iLO / IPMI web, SOCKS proxy.
+
+The hint under each tunnel says in plain words what it will do, e.g. *Connections to 127.0.0.1:2443 on the WRM machine go through Site1 to 10.0.0.5:443.*
+
+**The 🔀 Tunnels panel** lists your tunnels by connection: state (🟢 running, 🟡 reconnecting, 🔴 error), listen → target, open / total connections, traffic ↑↓, since when and who started it, with **🌐 Open**, **📋 Copy address** (for SOCKS as `socks5h://…`), **▶ Start** and **■ Stop**. The number on the button counts running tunnels. Administrators can show **all users'** tunnels and stop them (also in *Admin panel → Overview*).
+
+**Reliability:** every running tunnel has its own SSH connection (through the jump hosts), checks it every 30 seconds and **reconnects automatically** (after 2, 5, 10, 30, 60 s…) while its port stays open. Changing a connection restarts its running tunnels; deleting it stops them. Each start, stop (with the bytes transferred) and error is in the **audit log**.
+
+**Where is the tunnel port?** On the computer where **WRM runs**:
+
+- **WRM on your own PC** (the usual case): open `http://127.0.0.1:<port>` in your browser, or point any program (DBeaver, RDP client, `psql`, FileZilla…) at `127.0.0.1:<port>`.
+- **WRM on a server you reach over the network:** a `127.0.0.1` tunnel is usable only on that server. An administrator can use listen address `0.0.0.0` (or the server's LAN address) and allow the port in the firewall — then everyone who can reach that port can use the tunnel, so prefer a restricted network. Or forward the port to your PC with plain SSH (`ssh -L 2443:127.0.0.1:2443 wrm-server`).
+
+**Example — the web interface of a server behind a site gateway** (PC → WRM → `Site1` → `Site1-Webserver:443`):
+
+1. Connection `Site1` (SSH to the site gateway).
+2. *Edit `Site1` → 🔀 SSH tunnels → + Local (-L)*: listen `127.0.0.1:2443`, target `10.1.0.20:443` (the web server as seen from `Site1`), open as `https`.
+3. *🔀 Tunnels → ▶ Start → 🌐 Open* → `https://127.0.0.1:2443`.
+
+Even simpler: save it as a [web interface connection](#web-interfaces-http--https-connections) with jump host `Site1`.
+
+### Web interfaces (HTTP / HTTPS connections)
+
+Save the web interfaces of your devices — iDRAC / iLO / IPMI, switches, firewalls, NAS, hypervisors, monitoring — as connections with protocol **🌐 Web interface (HTTPS)** or **(HTTP)**: host:port, an optional **path** (e.g. `/login.html`) and an optional **jump host**.
+
+- **Double-click** (or right-click → *Open web interface*) opens it in a new browser tab.
+- **Without a jump host** the browser opens the address directly (`https://10.0.0.200/login.html`).
+- **With a jump host** WRM opens a **temporary tunnel** on the WRM machine (`127.0.0.1:<free port>` → host:port as seen from the last jump host) and opens that. The tunnel is reused while you work and stops after 30 minutes without traffic; the Tunnels panel shows it as *temporary*.
+- *Test connection* checks that the port answers (through the jump hosts).
+- TLS goes end to end from your browser to the device; for self-signed device certificates the browser shows its usual warning.
+- As with all tunnels, the temporary tunnel is on the WRM machine: when WRM runs on another computer, WRM shows the address instead of opening it (see *Where is the tunnel port?* above).
+
+### Import from mRemoteNG and OpenSSH
+
+*Settings → Data*:
+
+- **Import from mRemoteNG** — the `confCons.xml` file (`%APPDATA%\mRemoteNG\confCons.xml`, or *File → Export* in mRemoteNG):
+  - containers become folders (`DC1 / Rack A`); SSH1/SSH2 connections become SSH connections, HTTP/HTTPS connections become web interface connections (with the path of the URL);
+  - **passwords are decrypted** (current AES-GCM format, older AES-CBC format, *FullFileEncryption*) and stored encrypted in WRM. If the file is protected with a **master password**, WRM asks for it;
+  - inherited settings (*Inherit* user name, password, port, domain, SSH tunnel) are resolved from the parent folders;
+  - the **SSH tunnel** setting (`SSHTunnelConnectionName`) becomes the **jump host**;
+  - RDP, VNC, Telnet, ICA and other protocols WRM does not open are listed as *skipped*; connections that already exist (same name, host and protocol) are skipped too, so importing again is safe.
+- **Import OpenSSH config** — `~/.ssh/config` (folder *SSH config*):
+  - `Host` entries with `HostName`, `User`, `Port`; defaults from `Host *` and from wildcard patterns;
+  - **`ProxyJump`** (also `user@host:port`; a jump host that is not its own `Host` entry is created) and `ProxyCommand ssh -W …` become the **jump host**;
+  - **`LocalForward`, `RemoteForward`, `DynamicForward`** become tunnels that start with the terminal;
+  - `IdentityFile` becomes *Key file* authentication (only if key files on the WRM server are allowed for you; otherwise a note asks you to add the key or a password);
+  - `Match` blocks and wildcard-only hosts are skipped.
+
+After the import a summary lists the imported connections, folders, jump host links and tunnels, what was skipped and what to check (e.g. connections without a user name or password).
 
 ### Windows, tabs & snapping
 
@@ -399,7 +503,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 | Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
 | Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
 | Session history | Your terminal sessions and sessions on your connections, with replay and `.cast` download |
-| Data | Export connections (without secrets), export **with** passwords & keys (asks for your password; policy), import |
+| Data | Export connections (without secrets), export **with** passwords & keys (asks for your password; policy), import (also jump hosts and tunnels), **import from mRemoteNG** and **OpenSSH config** |
 
 Personal preferences are stored per browser; everything security-related is stored on the server.
 
@@ -407,10 +511,10 @@ Personal preferences are stored per browser; everything security-related is stor
 
 *Settings → 🛡 Admin panel* (administrators only):
 
-- **Overview:** version, uptime, users (admins, 2FA), HTTPS, voice relay status, encryption key source, **security warnings** (no HTTPS, open registration, admins without 2FA, host keys off…), **open terminals** (who, which server, from which IP — with *End*), **live rooms** (participants, voice, shared terminals).
+- **Overview:** version, uptime, users (admins, 2FA), HTTPS, voice relay status, encryption key source, **security warnings** (no HTTPS, open registration, admins without 2FA, host keys off…), **open terminals** (who, which server, from which IP — with *End*), **active SSH tunnels** (owner, connection and route, listen → target, traffic — with *Stop*), **live rooms** (participants, voice, shared terminals).
 - **Users:** create users (temporary password generated if you leave it empty), display name, make/remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete (with everything the user owns). The last active administrator cannot be removed.
 - **Shares:** every share on the server — pause/resume or delete.
-- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit).
+- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit), **SSH tunnels** (on/off, who may use them, listening on network addresses, remote forwarding, idle stop).
 - **Voice & network:** voice on/off, participants per call, built-in TURN relay (port, public IP, host name, relay ports, private networks), additional STUN/TURN servers.
 - **Host keys:** remembered SSH host keys and FTPS certificates; forget an entry after a server was reinstalled.
 - **Audit log:** searchable and filterable (event type, user, date range), linked to sessions, **CSV export**, **Verify integrity** (hash chain).
@@ -501,6 +605,11 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `session_recording_input` | `0` | also record keystrokes (masked at password prompts) |
 | `recording_retention_days` | `90` | how long recordings are kept (minimum 7) |
 | `recording_max_mb` | `100` | maximum recording size per session (0 = unlimited) |
+| `tunnels_enabled` | `1` | SSH tunnels and web interfaces behind jump hosts; off stops running tunnels. Also `TUNNELS_ENABLED` |
+| `tunnel_users` | `all` | `all` / `admins`: who may use tunnels |
+| `tunnel_bind_any` | `0` | allow non-administrators to listen on network addresses (`0.0.0.0`, LAN IP) instead of `127.0.0.1` |
+| `tunnel_remote_forward` | `admins` | `off` / `admins` / `all`: remote port forwarding (`-R`) |
+| `tunnel_idle_minutes` | `0` | stop tunnels started by hand after this many minutes without traffic (0 = never) |
 
 **Command line**
 
@@ -547,7 +656,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.1.0-mimo-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.2.0-mimo-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -604,6 +713,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Voice:** WebRTC with DTLS-SRTP; the built-in TURN relay accepts only short-lived HMAC credentials issued to room participants, limits allocations, and refuses private/loopback/link-local peers by default (no pivoting into internal networks).
 - **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers (with SHA-256) and changes, host keys, exports, viewing of recordings — stored **append-only** and **hash-chained** in the database (verifiable) and written as `AUDIT …` lines to the server log (journald/syslog → SIEM). Secrets in audit details are redacted.
 - **Session recording:** terminal output in asciicast v2, gzip, mode `0600`, SHA-256 in the database; no keystrokes unless enabled (then masked at password prompts); visible to administrators, the session's user and the connection's owner; every view is audited.
+- **Tunnels & jump hosts:** every hop is authenticated and host-key-verified; tunnels belong to the owner of the connection (only the owner starts them; administrators can stop any); listen on `127.0.0.1` by default; ports below 1024 refused; network addresses and remote forwards only for administrators (policies); a tunnel can be turned off globally or limited to administrators; every start/stop/error is audited with the traffic. A tunnel port on a network address is **not** protected by WRM sign-in — treat it like an open port of that machine.
 - **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
 
 ---
@@ -613,7 +723,8 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - No **RDP/VNC** (graphical desktops): WRM is for SSH, SFTP, FTP and FTPS.
 - No **SSO/LDAP/SAML** yet (local accounts with 2FA).
 - Voice calls are a **mesh**: fine up to about 12 people; larger meetings would need an SFU.
-- No SSH **agent forwarding**, **port forwarding/tunnels** or **jump hosts** yet.
+- No SSH **agent forwarding**. Jump hosts must be SSH servers (no HTTP/SOCKS proxies as jump hosts).
+- Tunnel ports open on the **WRM machine**: when WRM runs on a server, a tunnel listening on `127.0.0.1` is not reachable from your PC (see [Where is the tunnel port?](#ssh-tunnels-port-forwarding)).
 - Server-to-server transfer and ZIP download work with SSH/SFTP servers only (not FTP). *File contents* search needs `grep` on the server.
 - The built-in TURN relay is IPv4 and not available in the Android build (use an external TURN server there).
 
@@ -652,9 +763,22 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/hostkeys/accept` | `{host, fingerprint}` accept a new/changed host key |
 | GET / POST | `/api/folders` · DELETE `/api/folders/{id}` | Folders |
 | GET / POST | `/api/sessions` · PUT / DELETE `/api/sessions/{id}` | Workspace sessions |
-| GET | `/api/config/export` | Export without secrets |
+| GET | `/api/config/export` | Export without secrets (with jump hosts and tunnels) |
 | POST | `/api/config/export` | `{password}` export with secrets |
-| POST | `/api/config/import` | Import |
+| POST | `/api/config/import` | Import → `{imported, skipped, tunnels}` |
+| POST | `/api/config/import/mremoteng` | `{xml, password}` import an mRemoteNG `confCons.xml` → `{imported, folders, jump_hosts, tunnels, skipped, notes}`; HTTP 400 with `need_password: true` when a master password is needed |
+| POST | `/api/config/import/sshconfig` | `{text, folder}` import an OpenSSH config |
+
+Connections have `jump_id` (jump host connection id or `null`) and `web_path`; lists also return `route` (e.g. `"vpn-gw → bastion-dc1"`) and `tunnels` (number of configured tunnels).
+
+**Tunnels & web interfaces**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET / PUT | `/api/connections/{id}/tunnels` | Tunnels of a connection / replace them: `[{id?, name, kind: "local"\|"remote"\|"dynamic", bind_host, bind_port, target_host, target_port, open_scheme, open_path, start_mode: "manual"\|"connect"\|"always"}]` |
+| GET | `/api/tunnels[?all=1]` | `{tunnels: [...], policy}` my tunnels with state (`running`, `state`, `listen`, `active`, `total`, `bytes_up`, `bytes_down`, `started_by`, …); administrators: `all=1` → every running tunnel |
+| POST | `/api/tunnels/{key}/start` · `…/stop` | Start (owner) / stop (owner or administrator) |
+| POST | `/api/connections/{id}/open-web` | Web interface connection → `{url, direct, route}` (opens a temporary tunnel when it has a jump host) |
 
 **Remote files** (`id` = connection id; for shared connections add `share_token`; the role must allow the action)
 
@@ -715,7 +839,7 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | Endpoint | Description |
 |---|---|
 | `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping` → server; `status` (with `recording`, `session_id`), `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
-| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`) |
+| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`, `tunnels_changed`) |
 | `/ws/share/{token}` | Collaboration room. Client → server: `chat`, `file`, `set-name`, `screen` (`start/stop/data/resize/snapshot`), `watch`, `unwatch`, `control-request/grant/revoke/release`, `remote-input`, `voice-join/leave/signal/state`, `hand`, `mod` (`set-role/mute/unmute/stop-share/lower-hand/kick/ban`). Server → client: `welcome`, `participants`, `chat`, `file`, `system`, `screen`, `watch-request`, `control`, `control-request`, `remote-input`, `voice-peers/joined/left/signal`, `force-mute`, `role`, `kicked`, `closed`, `error` |
 
 ---
@@ -755,10 +879,15 @@ remote-manager/
   search.go       recursive name / content search (NDJSON stream)
   sftp_pool.go    pooled SFTP connections with liveness checks
   conntest.go     "Test connection" endpoint
+  jump.go         jump hosts: chains, dialing through hops, validation
+  tunnels.go      SSH tunnels (local, remote, SOCKS5), manager, reconnects, tunnels API, web interfaces
+  importers.go    import from mRemoteNG confCons.xml and OpenSSH config
   helpers.go      origin check, login rate limiting, shared helpers
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
   upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs)
   integration_test.go  in-process SSH/SFTP server: connect → audit → recording, transfers, append-only audit
+  tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
+  importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
   static/index.html          the entire web UI (embedded into the binary)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
@@ -787,6 +916,12 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Recordings take too much disk space | Lower `recording_retention_days` or `recording_max_mb`, or move them with `WRM_RECORDINGS_DIR` |
 | *Verify integrity* reports a broken chain | An audit entry was changed or removed outside WRM (directly in the database). Restore the database from a backup and investigate who had access to the server |
 | Stored passwords stopped working after a restart | The encryption key changed (`ENCRYPTION_KEY`, `ENCRYPTION_KEY_FILE` or the `.key` file next to the database). Restore it, or re-enter the passwords |
+| *bastion cannot reach 10.0.0.21:22* (or *jump host "…": …*) | The jump host cannot open a connection to the next hop: check the host:port as seen **from the jump host**, its firewall, and `AllowTcpForwarding yes` in its `sshd_config` |
+| Tunnel shows 🔴 *Error* / *administratively prohibited* | The SSH server refuses forwarding (`AllowTcpForwarding`, `PermitOpen`, `GatewayPorts` for remote listeners on other addresses than loopback), or the target is not reachable from the server |
+| *address already in use* when starting a tunnel | Another program (or tunnel) uses that port on the WRM machine. Choose another port or leave it empty (automatic) |
+| Tunnel runs but the page does not open from my PC | The tunnel listens on `127.0.0.1` of the **WRM machine**. See [Where is the tunnel port?](#ssh-tunnels-port-forwarding) |
+| No *🔀 Tunnels* button / *not allowed* | Tunnels are off or limited to administrators (*Admin panel → Security policies → SSH tunnels*, or `WRM_TUNNELS_ENABLED` / `WRM_TUNNEL_USERS`) |
+| mRemoteNG import: *wrong master password* | Enter the master password the file was protected with in mRemoteNG. Files without a master password are opened automatically |
 | *File contents* search fails | The server needs `grep` and a POSIX shell; use *File names* search instead |
 | Uploads fail at a certain size | The administrator's upload limit (`max_upload_mb`) or nginx `client_max_body_size` |
 | Transfer/search progress appears only at the end | Disable proxy buffering (`proxy_buffering off;`) |
