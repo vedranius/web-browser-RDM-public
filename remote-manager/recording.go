@@ -509,6 +509,11 @@ func recoverTerminalSessions() {
 		ended := time.Now().UTC().Format(time.RFC3339)
 		if t, err := time.Parse(time.RFC3339, o.started); err == nil {
 			rel := filepath.ToSlash(filepath.Join(t.UTC().Format("2006"), t.UTC().Format("01"), o.uid+".cast.gz"))
+			format := recordingFormat
+			if _, err := os.Stat(filepath.Join(recordingsDir(), filepath.FromSlash(rel))); err != nil {
+				rel = strings.TrimSuffix(rel, ".cast.gz") + ".guac.gz"
+				format = guacRecordingFormat
+			}
 			abs := filepath.Join(recordingsDir(), filepath.FromSlash(rel))
 			if st, err := os.Stat(abs); err == nil {
 				ended = st.ModTime().UTC().Format(time.RFC3339)
@@ -518,7 +523,7 @@ func recoverTerminalSessions() {
 					sum, size := fileSHA256(abs)
 					db.Exec(`INSERT INTO session_recordings (session_id, format, path, size_bytes, data_bytes, sha256, duration_ms,
 						input_recorded, truncated, created_at) VALUES (?,?,?,?,0,?,?,0,1,?)`,
-						o.id, recordingFormat, rel, size, sum, st.ModTime().Sub(t).Milliseconds(), ended)
+						o.id, format, rel, size, sum, st.ModTime().Sub(t).Milliseconds(), ended)
 				}
 			}
 		}
@@ -664,6 +669,7 @@ type termSessionView struct {
 	EndedAt    string                 `json:"ended_at"`
 	DurationMs int64                  `json:"duration_ms"`
 	Status     string                 `json:"status"`
+	Protocol   string                 `json:"protocol"`
 	ExitCode   *int                   `json:"exit_code"`
 	BytesOut   int64                  `json:"bytes_out"`
 	BytesIn    int64                  `json:"bytes_in"`
@@ -679,16 +685,16 @@ func sessionVisibility(userID int, admin, mine bool) (string, []interface{}) {
 }
 
 const termSessionCols = `s.id, s.uid, s.user_id, s.username, s.share_name, s.conn_id, s.conn_name, s.host, s.remote_user, s.client_ip,
-	s.user_agent, s.started_at, s.ended_at, s.status, s.exit_code, s.bytes_out, s.bytes_in,
-	r.id, r.size_bytes, r.data_bytes, r.sha256, r.duration_ms, r.input_recorded, r.truncated`
+	s.user_agent, s.started_at, s.ended_at, s.status, s.exit_code, s.bytes_out, s.bytes_in, s.protocol,
+	r.id, r.size_bytes, r.data_bytes, r.sha256, r.duration_ms, r.input_recorded, r.truncated, r.format`
 
 func scanTermSession(sc interface{ Scan(...interface{}) error }) (termSessionView, error) {
 	var v termSessionView
 	var uid, cid, ec, rid, rsize, rdata, rdur, rin, rtr sql.NullInt64
-	var rsha sql.NullString
+	var rsha, rfmt sql.NullString
 	err := sc.Scan(&v.ID, &v.UID, &uid, &v.Username, &v.ShareName, &cid, &v.ConnName, &v.Host, &v.RemoteUser, &v.ClientIP,
-		&v.UserAgent, &v.StartedAt, &v.EndedAt, &v.Status, &ec, &v.BytesOut, &v.BytesIn,
-		&rid, &rsize, &rdata, &rsha, &rdur, &rin, &rtr)
+		&v.UserAgent, &v.StartedAt, &v.EndedAt, &v.Status, &ec, &v.BytesOut, &v.BytesIn, &v.Protocol,
+		&rid, &rsize, &rdata, &rsha, &rdur, &rin, &rtr, &rfmt)
 	if err != nil {
 		return v, err
 	}
@@ -702,7 +708,7 @@ func scanTermSession(sc interface{ Scan(...interface{}) error }) (termSessionVie
 	}
 	if rid.Valid {
 		v.Recording = map[string]interface{}{"id": rid.Int64, "size": rsize.Int64, "data_bytes": rdata.Int64, "sha256": rsha.String,
-			"duration_ms": rdur.Int64, "input": rin.Int64 == 1, "truncated": rtr.Int64 == 1}
+			"duration_ms": rdur.Int64, "input": rin.Int64 == 1, "truncated": rtr.Int64 == 1, "format": rfmt.String}
 	}
 	return v, nil
 }
@@ -755,8 +761,13 @@ func apiRecordingsHandler(w http.ResponseWriter, r *http.Request) {
 		jsonOK(w, map[string]interface{}{"session": v, "events": events})
 		return
 	}
-	if parts[1] != "cast" || v.Recording == nil {
+	if (parts[1] != "cast" && parts[1] != "guac") || v.Recording == nil {
 		jsonError(w, "No recording for this session", 404)
+		return
+	}
+	isGuac := v.Recording["format"] == guacRecordingFormat
+	if isGuac != (parts[1] == "guac") {
+		jsonError(w, "This recording is available as /"+map[bool]string{true: "guac", false: "cast"}[isGuac], 404)
 		return
 	}
 	var rel string
@@ -785,9 +796,14 @@ func apiRecordingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	auditLogRef(r, userID, usernameOf(userID), action, v.ConnName, map[string]interface{}{"session_user": v.Username, "host": v.Host}, auditRef{ConnID: intOr0(v.ConnID), SessionID: int(v.ID)})
 	w.Header().Set("Content-Type", "application/x-asciicast; charset=utf-8")
+	ext := "cast"
+	if isGuac {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		ext = "guac"
+	}
 	w.Header().Set("Cache-Control", "no-store")
 	if download {
-		name := fmt.Sprintf("wrm-%s-%s-%d.cast", safeFileName(v.ConnName), strings.NewReplacer(":", "", "-", "").Replace(v.StartedAt), v.ID)
+		name := fmt.Sprintf("wrm-%s-%s-%d.%s", safeFileName(v.ConnName), strings.NewReplacer(":", "", "-", "").Replace(v.StartedAt), v.ID, ext)
 		w.Header().Set("Content-Disposition", attachmentHeader(name))
 	}
 	// A recording cut off by a crash ends with a truncated gzip stream: serve what is readable.

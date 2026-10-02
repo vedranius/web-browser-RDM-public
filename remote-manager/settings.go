@@ -64,6 +64,10 @@ var settingSpecs = []settingSpec{
 	{Key: "tunnel_idle_minutes", Default: "0", Kind: "int", Min: 0, Max: 10080},
 	// Terminal productivity
 	{Key: "broadcast_enabled", Default: "1", Kind: "bool", Alias: "BROADCAST_ENABLED"},
+	// Remote desktop (RDP / VNC / Telnet through guacd)
+	{Key: "desktop_enabled", Default: "1", Kind: "bool", Alias: "REMOTE_DESKTOP_ENABLED"},
+	{Key: "guacd_address", Default: "127.0.0.1:4822", Kind: "string", Alias: "GUACD_ADDRESS"},
+	{Key: "desktop_tunnel_bind", Default: "127.0.0.1", Kind: "string"},
 	// Live up/down status of connections
 	{Key: "status_enabled", Default: "1", Kind: "bool", Alias: "STATUS_ENABLED"},
 	{Key: "status_interval_seconds", Default: "60", Kind: "int", Min: 15, Max: 3600},

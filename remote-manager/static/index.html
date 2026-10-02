@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.3.0</title>
+<title>Web Remote Manager PRO v10.4.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1324,6 +1324,29 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .folder-down { font-size: 10px; font-weight: 700; color: #fca5a5; background: rgba(239,68,68,.16); border-radius: 8px; padding: 0 6px; line-height: 16px; }
 .st-chip { margin: 4px 8px 6px; padding: 5px 9px; border-radius: 7px; font-size: 11.5px; cursor: pointer; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); color: #fecaca; user-select: none; }
 .st-chip:hover, .st-chip.on { background: rgba(239,68,68,.24); }
+
+/* v10.4: remote desktop (RDP / VNC / Telnet) */
+.conn-proto-badge.rdp { background: rgba(14,165,233,.16); color: #38bdf8; }
+.conn-proto-badge.vnc { background: rgba(168,85,247,.16); color: #c084fc; }
+.conn-proto-badge.telnet { background: rgba(148,163,184,.16); color: #cbd5e1; }
+.desk-wrap { position: relative; display: flex; flex-direction: column; height: 100%; background: #04060a; outline: none; }
+.desk-bar { display: flex; gap: 4px; align-items: center; padding: 4px 6px; border-bottom: 1px solid var(--border); background: var(--bg2); flex: none; flex-wrap: wrap; }
+.desk-bar button { padding: 3px 8px; font-size: 11px; }
+.desk-bar .desk-st { margin-left: auto; font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.desk-view { flex: 1; min-height: 0; overflow: hidden; position: relative; display: flex; align-items: flex-start; justify-content: center; }
+.desk-view.scroll { overflow: auto; justify-content: flex-start; }
+.desk-view > div { flex: none; }
+.desk-wrap:focus .desk-view, .desk-wrap:focus-within .desk-view { box-shadow: inset 0 0 0 1px var(--accent-b); }
+.desk-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(4,6,10,.84); color: var(--text2); font-size: 13px; text-align: center; padding: 20px; line-height: 1.5; z-index: 5; }
+.desk-overlay[hidden] { display: none; }
+.desk-overlay .big { font-size: 15px; color: var(--text); font-weight: 600; }
+.desk-overlay .hint { font-size: 11.5px; color: var(--text3); max-width: 520px; }
+#m-desk-box .desk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 12px; margin: 6px 0; }
+#m-desk-box .desk-grid .field { margin: 0; }
+#m-desk-box .desk-checks { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 6px 0; }
+#m-desk-box .desk-checks label { display: flex; align-items: center; gap: 6px; font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--text2); cursor: pointer; }
+#m-desk-box .desk-checks input { width: auto; }
+.rp-screen .guac-holder { display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
 </style>
 </head>
 <body>
@@ -1349,7 +1372,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.3.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.4.0 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1425,7 +1448,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.3.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.4.0</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1549,6 +1572,9 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <select id="m-proto" onchange="onProtoChange()">
           <option value="SSH">SSH</option>
           <option value="SFTP">SFTP</option>
+          <option value="RDP">🖥 RDP (Windows Remote Desktop)</option>
+          <option value="VNC">🖥 VNC</option>
+          <option value="TELNET">Telnet</option>
           <option value="FTP">FTP</option>
           <option value="FTPS">FTPS (explicit TLS)</option>
           <option value="HTTPS">🌐 Web interface (HTTPS)</option>
@@ -1584,6 +1610,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="muted-text" id="m-key-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span> <label style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;text-transform:none;letter-spacing:0;font-size:11px;font-weight:400;"><input type="checkbox" id="m-key-clear" style="width:auto;"> <span data-i18n="remove_saved">remove saved</span></label></div></div>
     <div class="field" id="field-key-file" style="display:none;"><label data-i18n="key_file_path">Key File Path</label><input type="text" id="m-keypath" placeholder="~/.ssh/id_rsa"></div>
     </div>
+    <details class="tun-box" id="m-desk-box" open style="display:none;">
+      <summary>🖥 <span data-i18n="desk_options">Remote desktop options</span></summary>
+      <div class="muted-text" data-i18n="desk_help">Remote desktops run through guacd (the Apache Guacamole proxy) next to WRM. The browser shows the screen; keyboard, mouse, clipboard and audio are passed through.</div>
+      <div id="m-desk-fields"></div>
+    </details>
     <details class="tun-box" id="m-tun-box">
       <summary>🔀 <span data-i18n="tunnels_title">SSH tunnels (port forwarding)</span> <span class="pill" id="m-tun-count" style="display:none;"></span></summary>
       <div class="muted-text" data-i18n="tunnels_help">Local (-L): a port on the WRM machine leads to a host:port as seen from this server (e.g. the web interface of an internal device). SOCKS (-D): a proxy for your browser or tools that reaches everything this server reaches. Remote (-R): a port on this server leads back to a host:port reachable from WRM. Tunnels go through the jump hosts too.</div>
@@ -3448,6 +3479,48 @@ Object.assign(LANGS.hr, {
   p_status_interval_seconds:'Interval provjere (sekundi)', p_status_interval_seconds_d:'15–3600. Kraći interval prije primijeti ispad i otvara više veza.',
   p_status_jump_checks:'Provjere kroz jump hostove', p_status_jump_checks_d:'Prijava na jump hostove radi provjere veza iza njih (jedna SSH prijava po jump hostu i krugu, vidljiva u njegovom auth logu). Isključeno: prikazuju stanje svog jump hosta.',
 });
+Object.assign(LANGS.en, {
+  desk_options:'Remote desktop options', desk_help:'Remote desktops run through guacd (the Apache Guacamole proxy) next to WRM. The browser shows the screen; keyboard, mouse, clipboard and audio are passed through.',
+  desk_domain:'Domain', desk_security:'Security', desk_sec_any:'Automatic', desk_sec_nla:'NLA (Network Level Authentication)', desk_sec_nlaext:'NLA, extended', desk_sec_tls:'TLS',
+  desk_sec_rdp:'RDP (legacy)', desk_sec_vmconnect:'Hyper-V console (VMConnect)', desk_layout:'Keyboard layout', desk_auto:'Automatic', desk_layout_unicode:'Unicode (any layout)',
+  desk_resize:'When the window is resized', desk_resize_update:'Adapt the desktop size', desk_resize_reconnect:'Reconnect with the new size', desk_resize_none:'Keep the size (scale)',
+  desk_colors:'Colors', desk_program:'Start program (optional)', desk_ignore_cert:'Accept the server certificate', desk_console:'Console session (admin)', desk_audio:'Sound',
+  desk_clipboard:'Clipboard', desk_wallpaper:'Wallpaper', desk_gw_host:'RD Gateway (optional)', desk_gw_port:'Gateway port', desk_gw_user:'Gateway user', desk_gw_domain:'Gateway domain',
+  desk_gw_help:'The RD Gateway logs in with the password of this connection.', desk_cursor:'Mouse pointer', desk_cursor_local:'Drawn by the browser (faster)', desk_cursor_remote:'Drawn by the server',
+  desk_read_only:'View only', desk_font_size:'Font size', desk_color_scheme:'Colors', desk_user_regex:'Login prompt (regex)', desk_pass_regex:'Password prompt (regex)',
+  desk_clip_send:'Clipboard', desk_clip_send_t:'Send text to the remote clipboard (then paste it there with Ctrl+V)', desk_type:'Type', desk_type_t:'Type text as keystrokes (for login screens and consoles without clipboard)',
+  desk_fit:'Fit', desk_fit_t:'Fit the desktop to the window / show it 1:1 with scroll bars', desk_full_t:'Full screen', desk_connecting:'Connecting…',
+  desk_lib_failed:'The remote desktop component could not be loaded.', desk_disconnected:'Disconnected', desk_failed:'Connection failed',
+  desk_guacd_hint:'Remote desktop needs guacd running next to WRM: apt install guacd (Debian/Ubuntu), docker run -d --network host guacamole/guacd, or the guacd service in docker-compose.yml. Administrators set its address in Security policies → Remote desktop.',
+  desk_login_hint:'Check the user name, password and domain of the connection.', desk_required:'The server asks for: {name}', desk_clip_sent:'Sent to the remote clipboard',
+  desk_open:'Open remote desktop', jump_host_help_desk:'WRM opens a temporary tunnel through this SSH connection for the remote desktop (guacd must run on the WRM machine).',
+  desk_proxy:'Remote desktop (guacd)', desk_proxy_down:'not reachable', desk_tunnel:'Remote desktop',
+  pg_desktop:'Remote desktop (RDP / VNC / Telnet)', p_desktop_enabled:'Remote desktop', p_desktop_enabled_d:'RDP, VNC and Telnet connections in the browser, through guacd (Apache Guacamole proxy).',
+  p_guacd_address:'guacd address', p_guacd_address_d:'host:port of guacd, normally 127.0.0.1:4822 on the WRM machine.',
+  p_desktop_tunnel_bind:'Tunnel address for guacd', p_desktop_tunnel_bind_d:'Address the temporary tunnels behind jump hosts listen on; guacd must reach it. Keep 127.0.0.1 when guacd runs on the WRM machine.',
+  ev_desktop:'Remote desktop',
+});
+Object.assign(LANGS.hr, {
+  desk_options:'Opcije udaljene radne površine', desk_help:'Udaljene radne površine rade preko guacd-a (Apache Guacamole proxy) uz WRM. Preglednik prikazuje ekran; tipkovnica, miš, međuspremnik i zvuk prolaze kroz njega.',
+  desk_domain:'Domena', desk_security:'Sigurnost', desk_sec_any:'Automatski', desk_sec_nla:'NLA (Network Level Authentication)', desk_sec_nlaext:'NLA, prošireno', desk_sec_tls:'TLS',
+  desk_sec_rdp:'RDP (staro)', desk_sec_vmconnect:'Hyper-V konzola (VMConnect)', desk_layout:'Raspored tipkovnice', desk_auto:'Automatski', desk_layout_unicode:'Unicode (bilo koji raspored)',
+  desk_resize:'Kad se prozor promijeni', desk_resize_update:'Prilagodi veličinu radne površine', desk_resize_reconnect:'Ponovno spajanje s novom veličinom', desk_resize_none:'Zadrži veličinu (skaliraj)',
+  desk_colors:'Boje', desk_program:'Pokreni program (neobavezno)', desk_ignore_cert:'Prihvati certifikat servera', desk_console:'Konzolna sesija (admin)', desk_audio:'Zvuk',
+  desk_clipboard:'Međuspremnik', desk_wallpaper:'Pozadina', desk_gw_host:'RD Gateway (neobavezno)', desk_gw_port:'Port gatewaya', desk_gw_user:'Korisnik gatewaya', desk_gw_domain:'Domena gatewaya',
+  desk_gw_help:'RD Gateway se prijavljuje lozinkom ove veze.', desk_cursor:'Pokazivač miša', desk_cursor_local:'Crta ga preglednik (brže)', desk_cursor_remote:'Crta ga server',
+  desk_read_only:'Samo pregled', desk_font_size:'Veličina fonta', desk_color_scheme:'Boje', desk_user_regex:'Upit za prijavu (regex)', desk_pass_regex:'Upit za lozinku (regex)',
+  desk_clip_send:'Međuspremnik', desk_clip_send_t:'Pošalji tekst u udaljeni međuspremnik (zatim ga tamo zalijepi s Ctrl+V)', desk_type:'Upiši', desk_type_t:'Upiši tekst kao pritiske tipki (za ekrane prijave i konzole bez međuspremnika)',
+  desk_fit:'Prilagodi', desk_fit_t:'Prilagodi radnu površinu prozoru / prikaži 1:1 s klizačima', desk_full_t:'Cijeli zaslon', desk_connecting:'Spajanje…',
+  desk_lib_failed:'Komponenta za udaljenu radnu površinu nije se mogla učitati.', desk_disconnected:'Veza prekinuta', desk_failed:'Spajanje nije uspjelo',
+  desk_guacd_hint:'Udaljena radna površina treba guacd uz WRM: apt install guacd (Debian/Ubuntu), docker run -d --network host guacamole/guacd, ili servis guacd u docker-compose.yml. Administrator postavlja adresu u Sigurnosne politike → Udaljena radna površina.',
+  desk_login_hint:'Provjeri korisničko ime, lozinku i domenu veze.', desk_required:'Server traži: {name}', desk_clip_sent:'Poslano u udaljeni međuspremnik',
+  desk_open:'Otvori udaljenu radnu površinu', jump_host_help_desk:'WRM otvara privremeni tunel kroz ovu SSH vezu za udaljenu radnu površinu (guacd mora raditi na WRM računalu).',
+  desk_proxy:'Udaljena radna površina (guacd)', desk_proxy_down:'nedostupan', desk_tunnel:'Udaljena radna površina',
+  pg_desktop:'Udaljena radna površina (RDP / VNC / Telnet)', p_desktop_enabled:'Udaljena radna površina', p_desktop_enabled_d:'RDP, VNC i Telnet veze u pregledniku, preko guacd-a (Apache Guacamole proxy).',
+  p_guacd_address:'Adresa guacd-a', p_guacd_address_d:'host:port guacd-a, obično 127.0.0.1:4822 na WRM računalu.',
+  p_desktop_tunnel_bind:'Adresa tunela za guacd', p_desktop_tunnel_bind_d:'Adresa na kojoj slušaju privremeni tuneli iza jump hostova; guacd je mora dosegnuti. Ostavi 127.0.0.1 kad guacd radi na WRM računalu.',
+  ev_desktop:'Udaljena radna površina',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -3841,7 +3914,7 @@ function makeConnItem(c) {
   const proto = (c.protocol || 'SSH').toLowerCase();
   const tunRun = tunnelState.tunnels.filter(x => x.conn_id === c.id && x.running && !x.ephemeral).length;
   const st = connStatusOf(c);
-  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : c.protocol)}</span><span class="conn-name">${esc(c.name)}</span>` +
+  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : (c.protocol === 'TELNET' ? 'TEL' : c.protocol))}</span><span class="conn-name">${esc(c.name)}</span>` +
     (c.route ? `<span class="conn-route" title="${esc(t('via') + ' ' + c.route)}">⤳</span>` : '') +
     (c.tunnels ? `<span class="conn-tun ${tunRun ? 'on' : ''}" title="${esc(t('tun_count_title').replace('{n}', c.tunnels).replace('{r}', tunRun))}" onclick="event.stopPropagation(); openTunnelsPanel(${c.id})">🔀</span>` : '') +
     `<span class="conn-host">${esc(c.host)}</span>`;
@@ -3865,7 +3938,7 @@ function makeConnItem(c) {
     if (isWebConn(c)) { openWebConn(c); return; }
     const wo = addWindow();
     wo.connId = c.id;
-    setWinMode(wo.id, c.protocol === 'SFTP' || c.protocol === 'FTP' || c.protocol === 'FTPS' ? 'sftp' : 'ssh');
+    setWinMode(wo.id, defaultWinMode(c));
   };
   el.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = null; showConnCtx(e.clientX, e.clientY, c); };
   el.ondragstart = e => { e.dataTransfer.setData('connId', c.id); };
@@ -3885,7 +3958,7 @@ function updateFolderSelects() {
 // ══ DYNAMIC CONTEXT MENUS ════════════════════════════
 
 function buildWinOptions(mode) {
-  const label = mode === 'ssh' ? t('open_terminal') : t('open_files');
+  const label = mode === 'ssh' ? t('open_terminal') : mode === 'desk' ? t('desk_open') : t('open_files');
   let html = `<div class="ctx-sub-label">${label}</div>`;
   html += `<div class="ctx-win-row" onclick="ctxOpenConnInWindow(null,'${mode}')">🆕 ${t('open_in_new')}</div>`;
   winObjects.filter(w => w.el && w.el.style.display !== 'none' && w.mode === mode).forEach(w => {
@@ -3899,7 +3972,7 @@ function showConnCtx(x, y, conn) {
   const menu = document.getElementById('dyn-ctx-menu');
   const web = isWebConn(conn);
   const tunRunning = tunnelState.tunnels.some(v => v.conn_id === conn.id && v.running && !v.ephemeral);
-  const tunItems = !web && !isFtpConn(conn) ? `
+  const tunItems = !web && !isFtpConn(conn) && !isDeskConn(conn) ? `
     <div class="ctx-hr"></div>
     ${conn.tunnels ? `<div class="ctx-item" onclick="closeAllCtx(); openTunnelsPanel(${conn.id})">🔀 ${esc(t('tunnels_lbl'))} (${conn.tunnels})</div>
     <div class="ctx-item" onclick="closeAllCtx(); startConnTunnels(${conn.id})">▶ ${esc(t('tun_start_all'))}</div>
@@ -3908,6 +3981,9 @@ function showConnCtx(x, y, conn) {
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'connection', scope_id: ${conn.id}, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>` : '';
   menu.innerHTML = web ? `
     <div class="ctx-item" onclick="closeAllCtx(); openWebConn(conns.find(x => x.id === ${conn.id}))">🌐 ${esc(t('web_open'))}</div>
+    <div class="ctx-hr"></div>` : isDeskConn(conn) ? `
+    <div class="ctx-section">${esc(conn.protocol)}</div>
+    ${buildWinOptions('desk')}
     <div class="ctx-hr"></div>` : `
     <div class="ctx-section">Open as</div>
     ${buildWinOptions('ssh')}
@@ -3948,7 +4024,8 @@ function openSharedConnection(c, token, perms) {
   wo.shareToken = token;
   wo.perms = perms;
   const wantFiles = c.protocol === 'SFTP' || c.protocol === 'FTP' || c.protocol === 'FTPS' || !perms.terminal;
-  setWinMode(wo.id, wantFiles ? 'sftp' : 'ssh');
+  if (isDeskConn(c) && !perms.terminal) { showToast(t('no_access_role'), 'warning'); return; }
+  setWinMode(wo.id, isDeskConn(c) ? 'desk' : (wantFiles ? 'sftp' : 'ssh'));
 }
 
 function roleBadge(role) {
@@ -4007,6 +4084,7 @@ function openConnModal(id, focusTunnels) {
   document.getElementById('m-folder').value = c && c.folder_id ? c.folder_id : '';
   document.getElementById('m-webpath').value = c ? (c.web_path || '') : '';
   document.getElementById('m-monitor').checked = c ? c.monitor !== false : true;
+  deskOptsInit = (c && c.options) || {};
   fillJumpSelect(c);
   loadConnTunnels(id, focusTunnels);
   // Passwords and keys never come back from the server: an empty field keeps the saved one.
@@ -4042,6 +4120,7 @@ function onAuthMethodChange() {
 
 function connFormPayload() {
   return {
+    options: DESK_PROTOCOLS.includes(document.getElementById('m-proto').value) ? readDeskOptions() : undefined,
     monitor: document.getElementById('m-monitor').checked,
     name: document.getElementById('m-name').value.trim(),
     host: document.getElementById('m-host').value.trim(),
@@ -4521,6 +4600,7 @@ async function adminOverview() {
       <div class="kv"><div class="k">${esc(t('system'))}</div><div class="v small">${esc(st.os)} · ${esc(st.go)}</div></div>
       <div class="kv"><div class="k">${esc(t('database'))}</div><div class="v small">${esc(st.db_path)} (${fmtBytes(st.db_size)})</div></div>
       <div class="kv"><div class="k">${esc(t('encryption_key'))}</div><div class="v small">${esc(st.encryption_key)}</div></div>
+      ${st.guacd ? `<div class="kv"><div class="k">${esc(t('desk_proxy'))}</div><div class="v small">${!st.guacd.enabled ? esc(t('off')) : st.guacd.ok ? '✅ guacd ' + esc(st.guacd.version || '') + ' · ' + esc(st.guacd.address) : '❌ ' + esc(st.guacd.address) + ' — ' + esc(t('desk_proxy_down'))}</div></div>` : ''}
     </div>
     <div class="adm-h">${esc(t('active_terminals'))} (${(st.terminals || []).length})</div>
     ${(st.terminals || []).length ? `<table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('connection'))}</th><th>${esc(t('share'))}</th><th>${esc(t('since'))}</th><th>IP</th><th></th></tr></thead><tbody>` +
@@ -4528,7 +4608,7 @@ async function adminOverview() {
         <td><button class="btn-danger btn-sm" onclick="adminKillTerminal(${jsq(x.id)})">${esc(t('end'))}</button></td></tr>`).join('') + '</tbody></table>' : `<div class="muted-text">${esc(t('none'))}</div>`}
     <div class="adm-h">${esc(t('active_tunnels'))} (${(st.tunnels || []).length})</div>
     ${(st.tunnels || []).length ? `<table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('connection'))}</th><th>${esc(t('tunnels_lbl'))}</th><th>${esc(t('since'))}</th><th>${esc(t('tun_traffic'))}</th><th></th></tr></thead><tbody>` +
-      st.tunnels.map(x => `<tr><td>${esc(x.owner || x.started_by)}</td><td>${esc(x.connection)}${x.route ? `<div class="sub">⤳ ${esc(x.route)}</div>` : ''}</td><td>${esc(x.ephemeral ? t('web_iface') + ' (' + t('tun_temporary') + ')' : x.name)}<div class="sub mono">${esc(tunnelMapText(x))}</div></td><td>${esc(fmtTime(x.started_at))}</td><td class="mono">↑${esc(fmtBytes(x.bytes_up))} ↓${esc(fmtBytes(x.bytes_down))}</td>
+      st.tunnels.map(x => `<tr><td>${esc(x.owner || x.started_by)}</td><td>${esc(x.connection)}${x.route ? `<div class="sub">⤳ ${esc(x.route)}</div>` : ''}</td><td>${esc(x.ephemeral ? (x.reason === 'desktop' ? t('desk_tunnel') : t('web_iface')) + ' (' + t('tun_temporary') + ')' : x.name)}<div class="sub mono">${esc(tunnelMapText(x))}</div></td><td>${esc(fmtTime(x.started_at))}</td><td class="mono">↑${esc(fmtBytes(x.bytes_up))} ↓${esc(fmtBytes(x.bytes_down))}</td>
         <td><button class="btn-danger btn-sm" onclick="tunnelStop(${jsq(x.key)}).then(() => showAdminTab('overview'))">${esc(t('stop'))}</button></td></tr>`).join('') + '</tbody></table>' : `<div class="muted-text">${esc(t('none'))}</div>`}
     <div class="adm-h">${esc(t('active_rooms'))} (${(st.rooms || []).length})</div>
     ${(st.rooms || []).length ? st.rooms.map(r => `<div class="share-card"><div class="sc-top"><span class="sc-name">${esc(r.name)}</span><span class="pill">${esc(t('owner'))}: ${esc(r.owner)}</span>${r.voice ? `<span class="pill ok">🎙 ${r.voice}</span>` : ''}${r.streams ? `<span class="pill warn">📡 ${r.streams}</span>` : ''}</div>
@@ -4698,6 +4778,7 @@ const POLICY_GROUPS = {
     ['pg_sharing', ['allow_link_shares', 'chat_file_max_mb']],
     ['pg_terminal', ['broadcast_enabled']],
     ['pg_status', ['status_enabled', 'status_interval_seconds', 'status_jump_checks']],
+    ['pg_desktop', ['desktop_enabled', 'guacd_address', 'desktop_tunnel_bind']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
@@ -4782,7 +4863,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'snippet.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'snippet.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -4910,12 +4991,25 @@ async function openReplay(id) {
   const screen = document.getElementById('rp-screen');
   screen.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
   document.getElementById('rp-download').href = '/api/recordings/' + Number(id) + '/cast?download=1';
+  ['rp-speed', 'rp-idle'].forEach(x => { const el = document.getElementById(x); if (el) el.closest('select, label').style.display = ''; });
+  document.getElementById('rp-download').textContent = '⬇ .cast';
   let meta, text;
   try {
-    const [mres, cres] = await Promise.all([fetch('/api/recordings/' + Number(id)), fetch('/api/recordings/' + Number(id) + '/cast')]);
+    const mres = await fetch('/api/recordings/' + Number(id));
     if (!mres.ok) throw new Error(await apiError(mres));
-    if (!cres.ok) throw new Error(await apiError(cres));
     meta = await mres.json();
+    const ms = meta.session || {};
+    if (ms.recording && ms.recording.format === 'guacamole+gzip') {
+      document.getElementById('rp-title').textContent = `${ms.username || '—'} → ${ms.connection || ''} (${(ms.protocol || '').toUpperCase()} ${ms.host || ''})`;
+      document.getElementById('rp-meta').innerHTML = [[t('started'), fmtTime(ms.started_at)], [t('duration'), fmtMs(ms.duration_ms)], ['IP', ms.client_ip], [t('status'), t('ts_' + ms.status)],
+        ['SHA-256', (ms.recording.sha256 || '').slice(0, 16) + '…']].map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
+      const evs = meta.events || [];
+      document.getElementById('rp-events').innerHTML = evs.length ? `<table class="admin-table"><tbody>` + evs.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td><b style="color:var(--text);">${esc(e.action)}</b></td><td class="mono" style="font-size:10.5px;word-break:break-all;">${esc(e.details)}</td></tr>`).join('') + '</tbody></table>' : `<div class="sub">${esc(t('none'))}</div>`;
+      openGuacReplay(id, meta);
+      return;
+    }
+    const cres = await fetch('/api/recordings/' + Number(id) + '/cast');
+    if (!cres.ok) throw new Error(await apiError(cres));
     text = await cres.text();
   } catch (err) {
     screen.innerHTML = `<div class="fm-error">${esc(t('replay_failed'))}: ${esc(err.message || err)}</div>`;
@@ -4996,7 +5090,7 @@ function replayPause() {
   if (replay.term) updateReplayUI();
 }
 
-function replayToggle() { replay.playing ? replayPause() : replayPlay(); }
+function replayToggle() { if (replay.guac) { replay.guac.isPlaying() ? replay.guac.pause() : replay.guac.play(); return; } replay.playing ? replayPause() : replayPlay(); }
 
 function replaySeek(tm) {
   if (!replay.term) return;
@@ -5011,7 +5105,7 @@ function replaySeek(tm) {
   if (was) replayPlay();
 }
 
-function replaySeekInput(v) { replaySeek(replay.dur * (Number(v) || 0) / 1000); }
+function replaySeekInput(v) { if (replay.guac) { replay.guac.seek(Math.round(replay.guac.getDuration() * (Number(v) || 0) / 1000)); return; } replaySeek(replay.dur * (Number(v) || 0) / 1000); }
 
 function replaySetSpeed(v) {
   replay.speed = parseFloat(v) || 1;
@@ -5029,6 +5123,7 @@ function replaySetIdle(on) {
 }
 
 function closeReplay() {
+  if (replay.guac) { try { replay.guac.pause(); replay.guac.abort(); } catch (_) {} replay.guac = null; }
   replayPause();
   if (replay.term) { try { replay.term.dispose(); } catch (_) {} }
   replay.term = null; replay.raw = []; replay.events = [];
@@ -5114,11 +5209,22 @@ function onProtoChange() {
   const p = document.getElementById('m-proto').value;
   const web = p === 'HTTP' || p === 'HTTPS';
   const ftp = p === 'FTP' || p === 'FTPS';
+  const desk = DESK_PROTOCOLS.includes(p);
+  const dbox = document.getElementById('m-desk-box');
+  if (desk) {
+    const keep = dbox.dataset.proto === p ? readDeskOptions() : (dbox.dataset.proto ? {} : deskOptsInit);
+    renderDeskOptions(p, keep);
+  }
+  dbox.dataset.proto = desk ? p : '';
+  dbox.style.display = desk ? '' : 'none';
+  const authSel = document.getElementById('m-auth');
+  if (desk && authSel.value !== 'PASSWORD') { authSel.value = 'PASSWORD'; onAuthMethodChange(); }
+  authSel.closest('.field').style.display = desk ? 'none' : '';
   document.getElementById('field-webpath').style.display = web ? '' : 'none';
   document.getElementById('m-auth-fields').style.display = web ? 'none' : '';
-  document.getElementById('m-tun-box').style.display = web || ftp ? 'none' : '';
-  document.getElementById('m-host').placeholder = web ? (p === 'HTTPS' ? '10.0.0.5:443' : '10.0.0.5:80') : (ftp ? '192.168.1.1:21' : '192.168.1.1:22');
-  document.getElementById('m-jump-help').textContent = web ? t('jump_host_help_web') : t('jump_host_help');
+  document.getElementById('m-tun-box').style.display = web || ftp || desk ? 'none' : '';
+  document.getElementById('m-host').placeholder = web ? (p === 'HTTPS' ? '10.0.0.5:443' : '10.0.0.5:80') : (ftp ? '192.168.1.1:21' : ({RDP: '10.0.0.20:3389', VNC: '10.0.0.30:5900', TELNET: '10.0.0.40:23'})[p] || '192.168.1.1:22');
+  document.getElementById('m-jump-help').textContent = web ? t('jump_host_help_web') : (desk ? t('jump_host_help_desk') : t('jump_host_help'));
   document.getElementById('conn-test-btn').style.display = '';
 }
 
@@ -5323,7 +5429,7 @@ async function renderTunnelsPanel() {
         const stats = v.running ? `<div>${esc(t('tun_conns'))}: ${Number(v.active)} / ${Number(v.total)} · ↑${esc(fmtBytes(v.bytes_up))} ↓${esc(fmtBytes(v.bytes_down))}</div><div>${esc(t('since'))} ${esc(fmtTime(v.started_at))}${v.started_by ? ' · ' + esc(v.started_by) : ''}</div>` : esc(t('tun_mode_' + (v.start_mode || 'manual')));
         return `<div class="tun-item">
           <span class="tun-dot ${esc(state)}" title="${esc(t('tun_state_' + state))}"></span>
-          <div><div class="t-name">${esc(v.ephemeral ? t('web_iface') : (v.name || ''))}${v.ephemeral ? ' <span class="pill">🌐 ' + esc(t('tun_temporary')) + '</span>' : ''}</div><div class="t-kind">${esc(t('tun_' + v.kind))} · ${esc(t('tun_state_' + state))}</div></div>
+          <div><div class="t-name">${esc(v.ephemeral ? (v.reason === 'desktop' ? t('desk_tunnel') : t('web_iface')) : (v.name || ''))}${v.ephemeral ? ' <span class="pill">🌐 ' + esc(t('tun_temporary')) + '</span>' : ''}</div><div class="t-kind">${esc(t('tun_' + v.kind))} · ${esc(t('tun_state_' + state))}</div></div>
           <div><div class="t-map">${esc(tunnelMapText(v))}</div>${v.error ? `<div class="t-err">${esc(v.error)}</div>` : ''}</div>
           <div class="t-stats">${stats}</div>
           <div class="t-act">
@@ -5423,6 +5529,291 @@ async function importExternal(input, kind, password) {
   loadData();
 }
 
+
+// ══ REMOTE DESKTOP (v10.4): RDP / VNC / Telnet through guacd ═══
+const DESK_PROTOCOLS = ['RDP', 'VNC', 'TELNET'];
+function isDeskConn(c) { return c && DESK_PROTOCOLS.includes(c.protocol); }
+function defaultWinMode(c) { return isDeskConn(c) ? 'desk' : (c && (c.protocol === 'SFTP' || c.protocol === 'FTP' || c.protocol === 'FTPS') ? 'sftp' : 'ssh'); }
+
+let _guacLoading = null;
+function loadGuacLib() {
+  if (window.Guacamole) return Promise.resolve();
+  if (!_guacLoading) _guacLoading = new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = '/static/vendor/guacamole-common.min.js';
+    sc.onload = () => resolve();
+    sc.onerror = () => { _guacLoading = null; reject(new Error('guacamole-common.min.js')); };
+    document.head.appendChild(sc);
+  });
+  return _guacLoading;
+}
+
+// ── connection modal: options ──
+const DESK_OPTION_FIELDS = {
+  RDP: [
+    ['domain', 'text', 'desk_domain', 'CORP'],
+    ['security', 'select', 'desk_security', [['any', 'desk_sec_any'], ['nla', 'desk_sec_nla'], ['nla-ext', 'desk_sec_nlaext'], ['tls', 'desk_sec_tls'], ['rdp', 'desk_sec_rdp'], ['vmconnect', 'desk_sec_vmconnect']]],
+    ['layout', 'select', 'desk_layout', [['', 'desk_auto'], ['en-us-qwerty', 'English (US)'], ['en-gb-qwerty', 'English (UK)'], ['de-de-qwertz', 'Deutsch'], ['de-ch-qwertz', 'Deutsch (Schweiz)'], ['fr-fr-azerty', 'Français'], ['fr-ch-qwertz', 'Français (Suisse)'], ['fr-be-azerty', 'Français (Belgique)'], ['it-it-qwerty', 'Italiano'], ['es-es-qwerty', 'Español'], ['es-latam-qwerty', 'Español (Latinoamérica)'], ['pt-br-qwerty', 'Português (Brasil)'], ['pt-pt-qwerty', 'Português'], ['sv-se-qwerty', 'Svenska'], ['da-dk-qwerty', 'Dansk'], ['no-no-qwerty', 'Norsk'], ['fi-fi-qwerty', 'Suomi'], ['hu-hu-qwertz', 'Magyar'], ['tr-tr-qwerty', 'Türkçe'], ['ja-jp-qwerty', '日本語'], ['failsafe', 'desk_layout_unicode']]],
+    ['resize', 'select', 'desk_resize', [['display-update', 'desk_resize_update'], ['reconnect', 'desk_resize_reconnect'], ['none', 'desk_resize_none']]],
+    ['color_depth', 'select', 'desk_colors', [['', 'desk_auto'], ['8', '256'], ['16', 'High color (16 bit)'], ['24', 'True color (24 bit)'], ['32', 'True color (32 bit)']]],
+    ['initial_program', 'text', 'desk_program', ''],
+    ['ignore_cert', 'check', 'desk_ignore_cert', true], ['console', 'check', 'desk_console', false], ['audio', 'check', 'desk_audio', true],
+    ['clipboard', 'check', 'desk_clipboard', true], ['wallpaper', 'check', 'desk_wallpaper', false],
+    ['gateway_host', 'text', 'desk_gw_host', 'rdgw.example.com'], ['gateway_port', 'text', 'desk_gw_port', '443'],
+    ['gateway_user', 'text', 'desk_gw_user', ''], ['gateway_domain', 'text', 'desk_gw_domain', ''],
+  ],
+  VNC: [
+    ['color_depth', 'select', 'desk_colors', [['', 'desk_auto'], ['8', '256'], ['16', 'High color (16 bit)'], ['24', 'True color (24 bit)'], ['32', 'True color (32 bit)']]],
+    ['cursor', 'select', 'desk_cursor', [['local', 'desk_cursor_local'], ['remote', 'desk_cursor_remote']]],
+    ['read_only', 'check', 'desk_read_only', false], ['clipboard', 'check', 'desk_clipboard', true],
+  ],
+  TELNET: [
+    ['font_size', 'select', 'desk_font_size', [['10', '10'], ['11', '11'], ['12', '12'], ['13', '13'], ['14', '14'], ['16', '16'], ['18', '18'], ['20', '20']]],
+    ['color_scheme', 'select', 'desk_color_scheme', [['', 'desk_auto'], ['gray-black', 'Gray on black'], ['green-black', 'Green on black'], ['white-black', 'White on black'], ['black-white', 'Black on white']]],
+    ['username_regex', 'text', 'desk_user_regex', '[Ll]ogin:'], ['password_regex', 'text', 'desk_pass_regex', '[Pp]assword:'],
+  ],
+};
+let deskOptsInit = {};
+
+function renderDeskOptions(proto, values) {
+  const box = document.getElementById('m-desk-fields');
+  const fields = DESK_OPTION_FIELDS[proto] || [];
+  const v = values || {};
+  const lbl = k => (LANGS.en[k] ? t(k) : k);
+  const inputs = fields.filter(f => f[1] !== 'check').map(([k, type, label, extra]) => {
+    if (type === 'select') return `<div class="field"><label>${esc(lbl(label))}</label><select data-o="${k}">${extra.map(([val, l]) => `<option value="${esc(val)}" ${String(v[k] || '') === val ? 'selected' : ''}>${esc(lbl(l))}</option>`).join('')}</select></div>`;
+    return `<div class="field"><label>${esc(lbl(label))}</label><input type="text" data-o="${k}" value="${esc(v[k] || '')}" placeholder="${esc(extra || '')}"></div>`;
+  }).join('');
+  const checks = fields.filter(f => f[1] === 'check').map(([k, , label, def]) => {
+    const on = v[k] === undefined ? def : v[k] === 'true';
+    return `<label><input type="checkbox" data-o="${k}" data-def="${def}" ${on ? 'checked' : ''}> ${esc(lbl(label))}</label>`;
+  }).join('');
+  box.innerHTML = `<div class="desk-grid">${inputs}</div><div class="desk-checks">${checks}</div>` + (proto === 'RDP' ? `<div class="muted-text">${esc(t('desk_gw_help'))}</div>` : '');
+}
+
+function readDeskOptions() {
+  const out = {};
+  document.querySelectorAll('#m-desk-fields [data-o]').forEach(el => {
+    if (el.type === 'checkbox') out[el.dataset.o] = el.checked ? 'true' : 'false';
+    else if (el.value.trim()) out[el.dataset.o] = el.value.trim();
+  });
+  return out;
+}
+
+// ── desktop windows ──
+function deskHTML(id) {
+  return `<div class="desk-wrap" id="dw-${id}" tabindex="0">
+    <div class="desk-bar">
+      <button class="btn-sec btn-sm" onclick="deskCAD(${id})" title="Ctrl+Alt+Del">Ctrl+Alt+Del</button>
+      <button class="btn-sec btn-sm" onclick="deskSendClipboard(${id})" title="${esc(t('desk_clip_send_t'))}">📋 ${esc(t('desk_clip_send'))}</button>
+      <button class="btn-sec btn-sm" onclick="deskTypeText(${id})" title="${esc(t('desk_type_t'))}">⌨ ${esc(t('desk_type'))}</button>
+      <button class="btn-sec btn-sm" id="dfit-${id}" onclick="deskToggleFit(${id})" title="${esc(t('desk_fit_t'))}">⤢ ${esc(t('desk_fit'))}</button>
+      <button class="btn-sec btn-sm" onclick="deskFullscreen(${id})" title="${esc(t('desk_full_t'))}">⛶</button>
+      <span class="desk-st" id="dst-${id}"></span>
+    </div>
+    <div class="desk-view" id="dv-${id}"></div>
+    <div class="desk-overlay" id="dov-${id}" hidden></div>
+  </div>`;
+}
+
+function deskOverlay(wo, html) {
+  const ov = document.getElementById('dov-' + wo.id);
+  if (!ov) return;
+  if (!html) { ov.hidden = true; ov.innerHTML = ''; return; }
+  ov.hidden = false;
+  ov.innerHTML = html;
+}
+
+function deskStatus(wo, text) { const el = document.getElementById('dst-' + wo.id); if (el) el.textContent = text || ''; }
+
+async function startDesktop(wo) {
+  const c = winConn(wo);
+  deskOverlay(wo, `<div class="big">⏳ ${esc(t('desk_connecting'))}</div><div class="hint">${esc(c ? c.protocol + ' — ' + c.name + ' (' + c.host + ')' : '')}</div>`);
+  setTermState(wo, 'connecting');
+  try { await loadGuacLib(); } catch (e) { deskOverlay(wo, `<div class="big">⚠ ${esc(t('desk_lib_failed'))}</div>`); return; }
+  if (wo._disposed || wo.mode !== 'desk') return;
+  const view = document.getElementById('dv-' + wo.id), wrap = document.getElementById('dw-' + wo.id);
+  if (!view || !wrap) return;
+  view.innerHTML = '';
+  const tunnel = new Guacamole.WebSocketTunnel(`${wsProto()}//${location.host}/ws/desktop`);
+  const client = new Guacamole.Client(tunnel);
+  const desk = wo.desk = {client, tunnel, fit: wo.desk ? wo.desk.fit !== false : true, connected: false};
+  const orig = tunnel.oninstruction;
+  tunnel.oninstruction = (op, args) => {
+    if (op === 'wrm-session') { desk.sessionId = Number(args[0]); showRecBadge(wo, args[1] === 'true'); if (args[2]) desk.route = args[2]; return; }
+    if (orig) orig(op, args);
+  };
+  const display = client.getDisplay();
+  const del = display.getElement();
+  view.appendChild(del);
+  display.onresize = () => deskRescale(wo);
+  client.onstatechange = st => {
+    if (desk !== wo.desk) return;
+    if (st === 3) { // CONNECTED
+      desk.connected = true; wo.everConnected = true;
+      setTermState(wo, 'connected');
+      deskOverlay(wo, null);
+      deskStatus(wo, (c ? c.protocol : '') + (desk.route ? ' · ' + t('via') + ' ' + desk.route : ''));
+      deskRescale(wo);
+      try { wrap.focus(); } catch (_) {}
+    } else if (st === 5) { // DISCONNECTED
+      setTermState(wo, 'disconnected');
+      if (!desk.error) deskOverlay(wo, `<div class="big">${esc(t('desk_disconnected'))}</div><button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button>`);
+    }
+  };
+  client.onerror = status => {
+    desk.error = status;
+    setTermState(wo, 'disconnected');
+    const msg = (status && status.message) || t('desk_failed');
+    const hint = /guacd/i.test(msg) ? t('desk_guacd_hint') : (status && status.code === 769 ? t('desk_login_hint') : '');
+    deskOverlay(wo, `<div class="big">⚠ ${esc(msg)}</div>${hint ? `<div class="hint">${esc(hint)}</div>` : ''}<button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button>`);
+  };
+  client.onclipboard = (stream, mimetype) => {
+    if (!/^text\//.test(mimetype)) return;
+    const reader = new Guacamole.StringReader(stream);
+    let data = '';
+    reader.ontext = txt => { data += txt; };
+    reader.onend = () => { if (data) { addClip(data); copyText(data, true); } };
+  };
+  client.onrequired = async params => {
+    for (const name of params) {
+      const val = await uiPrompt(t('desk_required').replace('{name}', name), '', {password: /pass/i.test(name), okText: t('ok')});
+      if (val === null) { client.disconnect(); return; }
+      const st = client.createArgumentValueStream('text/plain', name);
+      const w = new Guacamole.StringWriter(st);
+      w.sendText(val); w.sendEnd();
+    }
+  };
+  const mouse = new Guacamole.Mouse(del);
+  mouse.onEach(['mousedown', 'mouseup', 'mousemove'], e => { if (desk === wo.desk) client.sendMouseState(e.state, true); });
+  try {
+    const touch = new Guacamole.Mouse.Touchscreen(del);
+    touch.onEach(['mousedown', 'mouseup', 'mousemove'], e => { if (desk === wo.desk) client.sendMouseState(e.state, true); });
+  } catch (_) {}
+  const kb = new Guacamole.Keyboard(wrap);
+  kb.onkeydown = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(1, keysym); return false; };
+  kb.onkeyup = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(0, keysym); };
+  desk.keyboard = kb;
+  wrap.onmousedown = () => { focusWindow(wo.id); setTimeout(() => { try { wrap.focus(); } catch (_) {} }, 0); };
+  wo.resizeObs = new ResizeObserver(() => { clearTimeout(desk._rt); desk._rt = setTimeout(() => deskResized(wo), 250); });
+  wo.resizeObs.observe(view);
+  const w = Math.max(320, Math.round(view.clientWidth)), h = Math.max(240, Math.round(view.clientHeight));
+  const qs = new URLSearchParams({id: wo.connId, width: w, height: h, dpi: Math.round(96 * Math.min(2, window.devicePixelRatio || 1)),
+    tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || '')});
+  if (wo.shareToken) qs.set('share_token', wo.shareToken);
+  desk.lastSize = w + 'x' + h;
+  client.connect(qs.toString());
+}
+
+function deskResized(wo) {
+  const d = wo.desk, view = document.getElementById('dv-' + wo.id);
+  if (!d || !view || !d.connected) return;
+  const w = Math.round(view.clientWidth), h = Math.round(view.clientHeight);
+  if (w < 100 || h < 100) return;
+  if (d.fit && d.lastSize !== w + 'x' + h) { d.lastSize = w + 'x' + h; try { d.client.sendSize(w, h); } catch (_) {} }
+  deskRescale(wo);
+}
+
+function deskRescale(wo) {
+  const d = wo.desk, view = document.getElementById('dv-' + wo.id);
+  if (!d || !view) return;
+  const disp = d.client.getDisplay(), dw = disp.getWidth(), dh = disp.getHeight();
+  if (!dw || !dh) return;
+  view.classList.toggle('scroll', !d.fit);
+  const scale = d.fit ? Math.min(view.clientWidth / dw, view.clientHeight / dh, 1) : 1;
+  disp.scale(scale > 0 ? scale : 1);
+  const b = document.getElementById('dfit-' + wo.id);
+  if (b) b.classList.toggle('active', d.fit);
+}
+
+function deskToggleFit(id) { const wo = winObjects.find(w => w.id === id); if (!wo || !wo.desk) return; wo.desk.fit = !wo.desk.fit; deskResized(wo); deskRescale(wo); }
+function deskFullscreen(id) { const wo = winObjects.find(w => w.id === id); if (wo && wo.el && wo.el.requestFullscreen) wo.el.requestFullscreen().catch(() => {}); }
+
+function deskKeys(wo, keys) {
+  const c = wo && wo.desk && wo.desk.client;
+  if (!c) return;
+  keys.forEach(k => c.sendKeyEvent(1, k));
+  keys.slice().reverse().forEach(k => c.sendKeyEvent(0, k));
+}
+function deskCAD(id) { deskKeys(winObjects.find(w => w.id === id), [0xFFE3, 0xFFE9, 0xFFFF]); }
+
+async function deskSendClipboard(id) {
+  const wo = winObjects.find(w => w.id === id);
+  if (!wo || !wo.desk) return;
+  let text = '';
+  try { text = await navigator.clipboard.readText(); } catch (_) {}
+  text = await uiPrompt(t('desk_clip_send_t'), text, {okText: t('desk_clip_send')});
+  if (text === null) return;
+  const st = wo.desk.client.createClipboardStream('text/plain');
+  const w = new Guacamole.StringWriter(st);
+  w.sendText(text); w.sendEnd();
+  showToast('📋 ' + t('desk_clip_sent'), 'success', 2500);
+  try { document.getElementById('dw-' + id).focus(); } catch (_) {}
+}
+
+async function deskTypeText(id) {
+  const wo = winObjects.find(w => w.id === id);
+  if (!wo || !wo.desk) return;
+  const text = await uiPrompt(t('desk_type_t'), '', {okText: t('desk_type')});
+  if (!text) return;
+  for (const ch of text) {
+    const cp = ch.codePointAt(0);
+    const keysym = ch === '\n' ? 0xFF0D : (cp >= 0x20 && cp <= 0xFF ? cp : 0x01000000 | cp);
+    wo.desk.client.sendKeyEvent(1, keysym);
+    wo.desk.client.sendKeyEvent(0, keysym);
+  }
+  try { document.getElementById('dw-' + id).focus(); } catch (_) {}
+}
+
+function deskReconnect(id) {
+  const wo = winObjects.find(w => w.id === id);
+  if (!wo) return;
+  disposeDesktop(wo);
+  wo._disposed = false;
+  startDesktop(wo);
+}
+
+function disposeDesktop(wo) {
+  const d = wo.desk;
+  if (!d) return;
+  wo.desk = null;
+  try { d.client.disconnect(); } catch (_) {}
+  try { if (d.keyboard) { d.keyboard.onkeydown = null; d.keyboard.onkeyup = null; } } catch (_) {}
+  if (wo.resizeObs) { try { wo.resizeObs.disconnect(); } catch (_) {} wo.resizeObs = null; }
+}
+
+// ── replay of desktop recordings ──
+async function openGuacReplay(id, meta) {
+  const screen = document.getElementById('rp-screen');
+  screen.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
+  ['rp-speed', 'rp-idle'].forEach(x => { const el = document.getElementById(x); if (el) el.closest('select, label').style.display = 'none'; });
+  document.getElementById('rp-download').href = '/api/recordings/' + Number(id) + '/guac?download=1';
+  document.getElementById('rp-download').textContent = '⬇ .guac';
+  try {
+    await loadGuacLib();
+    if (!document.getElementById('modal-replay').classList.contains('open')) return;
+    // Streamed through a static HTTP tunnel (the Blob source of guacamole-common-js 1.5.0 is broken).
+    const rec = new Guacamole.SessionRecording(new Guacamole.StaticHTTPTunnel('/api/recordings/' + Number(id) + '/guac'));
+    replay.guac = rec;
+    const disp = rec.getDisplay();
+    screen.innerHTML = '<div class="guac-holder"></div>';
+    screen.firstChild.appendChild(disp.getElement());
+    const fit = () => { const w = disp.getWidth(), h = disp.getHeight(); if (w && h) disp.scale(Math.min(screen.clientWidth / w, (screen.clientHeight || 480) / h, 1)); };
+    disp.onresize = fit;
+    const upd = () => {
+      const pos = rec.getPosition(), dur = rec.getDuration();
+      document.getElementById('rp-time').textContent = fmtMs(pos) + ' / ' + fmtMs(dur);
+      document.getElementById('rp-seek').value = dur ? Math.round(pos / dur * 1000) : 0;
+      document.getElementById('rp-play').textContent = rec.isPlaying() ? '❚❚' : '▶';
+    };
+    rec.onprogress = upd; rec.onplay = upd; rec.onpause = upd; rec.onseek = upd;
+    rec.onload = () => { upd(); rec.play(); };
+    rec.onerror = m => { screen.innerHTML = `<div class="fm-error">${esc(t('replay_failed'))}: ${esc(m)}</div>`; };
+    rec.connect();
+  } catch (err) {
+    screen.innerHTML = `<div class="fm-error">${esc(t('replay_failed'))}: ${esc(err.message || err)}</div>`;
+  }
+}
 
 // ══ LIVE STATUS (v10.3) ══════════════════════════════
 // The server checks every monitored connection regularly and pushes "status_changed".
@@ -6101,7 +6492,7 @@ async function openSession(id, how) {
       wo.el.style.width = Math.round(w.geo.w * cw) + 'px'; wo.el.style.height = Math.round(w.geo.h * ch) + 'px';
       clampWinToBounds(wo.el);
     }
-    setWinMode(wo.id, w.mode === 'sftp' ? 'sftp' : 'ssh');
+    setWinMode(wo.id, w.mode === 'sftp' ? 'sftp' : (w.mode === 'desk' ? 'desk' : 'ssh'));
     if (w.minimized) wo.el.style.display = 'none';
     if (w.focused) focusId = wo.id;
   });
@@ -6396,7 +6787,7 @@ function renderConnPicker(winId) {
       wo.connId = c.id;
       if (isCollabMode) { wo.shareToken = collabToken; wo.perms = collab.perms; }
       const files = c.protocol === 'SFTP' || c.protocol === 'FTP' || c.protocol === 'FTPS' || (isCollabMode && !collab.perms.terminal);
-      setWinMode(winId, files ? 'sftp' : 'ssh');
+      setWinMode(winId, isDeskConn(c) ? 'desk' : (files ? 'sftp' : 'ssh'));
     };
     cp.appendChild(btn);
   });
@@ -6422,12 +6813,12 @@ function setWinMode(id, mode) {
   if (!wo) return;
   const wc = document.getElementById('wc-' + id);
   if (!wc) return;
-  if (wo.mode === 'ssh' || wo.term) disposeWinTerminal(wo);
+  if (wo.mode === 'ssh' || wo.term || wo.desk) disposeWinTerminal(wo);
   wo._disposed = false;
   wo.mode = mode;
   const c = winConn(wo);
   const rcBtn = document.getElementById('wb-rc-' + id);
-  if (rcBtn) rcBtn.style.display = mode === 'ssh' ? '' : 'none';
+  if (rcBtn) rcBtn.style.display = mode === 'ssh' || mode === 'desk' ? '' : 'none';
   const snBtn = document.getElementById('wb-sn-' + id);
   if (snBtn) snBtn.style.display = mode === 'ssh' && (!isCollabMode || currentUser) ? '' : 'none';
   if (mode !== 'ssh' && bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
@@ -6463,6 +6854,12 @@ function setWinMode(id, mode) {
       requestAnimationFrame(start);
       setTimeout(start, 150);
     });
+  } else if (mode === 'desk') {
+    wc.innerHTML = deskHTML(id);
+    const el = document.getElementById('wt-' + id);
+    if (el) el.textContent = c ? `${c.protocol} — ${c.name}` : `Desktop ${id}`;
+    renderTabs();
+    requestAnimationFrame(() => startDesktop(wo));
   } else if (mode === 'sftp') {
     setTermState(wo, null);
     wo.selected = new Set(); wo.cursor = null; wo._searchResults = null;
@@ -6889,7 +7286,7 @@ function hideTermOverlay(wo) {
   clearInterval(wo._countdownT);
 }
 
-function reconnectTermById(id) { const wo = winObjects.find(w => w.id === id); if (wo) { reconnectTerm(wo); try { wo.term.focus(); } catch(_) {} } }
+function reconnectTermById(id) { const wo = winObjects.find(w => w.id === id); if (wo && wo.mode === 'desk') { deskReconnect(id); return; } if (wo) { reconnectTerm(wo); try { wo.term.focus(); } catch(_) {} } }
 function cancelAutoReconnect(id) {
   const wo = winObjects.find(w => w.id === id);
   if (!wo) return;
@@ -6899,6 +7296,7 @@ function cancelAutoReconnect(id) {
 
 function disposeWinTerminal(wo) {
   wo._disposed = true;
+  if (wo.desk) disposeDesktop(wo);
   clearTimeout(wo._reconnectT); clearInterval(wo._countdownT); clearTimeout(wo._fitT);
   if (wo.socket) { const s = wo.socket; wo.socket = null; try { s.close(); } catch(_) {} }
   if (wo.resizeObs) { try { wo.resizeObs.disconnect(); } catch(_) {} wo.resizeObs = null; }
@@ -8702,11 +9100,15 @@ function renderTabs() {
       const allConns = isCollabMode ? collabConns : conns;
       const c = wo.connId ? allConns.find(x => x.id === wo.connId) : null;
       title = c ? 'Files — ' + c.name : 'Files ' + id;
+    } else if (wo.mode === 'desk') {
+      icon = '🖥';
+      const c = winConn(wo);
+      title = c ? c.name : 'Desktop ' + id;
     }
     if (wo.mode === 'screen-viewer' && wo.viewing) { icon = '👁'; title = wo.viewing.name + ' — ' + wo.viewing.title; }
     if (wo.el && wo.el.style.display === 'none') icon = '▪';
 
-    const stateDot = wo.mode === 'ssh' ? `<span class="tab-state state-${wo.connState || 'connecting'}" title="${esc(wo.connState || '')}"></span>` : '';
+    const stateDot = wo.mode === 'ssh' || wo.mode === 'desk' ? `<span class="tab-state state-${wo.connState || 'connecting'}" title="${esc(wo.connState || '')}"></span>` : '';
     t2.innerHTML = `${stateDot}<span class="tab-icon">${icon}</span><span class="tab-title" title="${esc(title)}">${esc(title)}</span><button class="tab-close" title="Close">✕</button>`;
     t2.querySelector('.tab-close').onclick = e => { e.stopPropagation(); handleCloseWindow(id); };
     t2.onclick = e => {

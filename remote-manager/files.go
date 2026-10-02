@@ -42,6 +42,10 @@ func fileRequest(w http.ResponseWriter, r *http.Request, perm string) (Connectio
 		jsonError(w, "This is a web interface connection; it has no file manager", 400)
 		return Connection{}, nil, false
 	}
+	if isDesktopProtocol(c.Protocol) {
+		jsonError(w, "This is a remote desktop connection; it has no file manager", 400)
+		return Connection{}, nil, false
+	}
 	return c, acc, true
 }
 
