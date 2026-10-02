@@ -1134,7 +1134,7 @@ func openWebHandler(w http.ResponseWriter, r *http.Request, userID int, c Connec
 	if t == nil {
 		def := tunnelDef{ConnID: c.ID, UserID: userID, Name: c.Name, Kind: "local", BindHost: "127.0.0.1", BindPort: 0,
 			TargetHost: host, TargetPort: pn, OpenScheme: scheme, OpenPath: c.WebPath, StartMode: "manual"}
-		t, err = tunnelMgr.startEphemeral(key, def, via, c, userID, r)
+		t, err = tunnelMgr.startEphemeral(key, def, via, c, userID, "web", r)
 		if err != nil {
 			jsonError(w, err.Error(), 502)
 			return
@@ -1147,14 +1147,14 @@ func openWebHandler(w http.ResponseWriter, r *http.Request, userID int, c Connec
 }
 
 // startEphemeral starts a temporary local tunnel over via for the web connection c.
-func (m *tunnelManager) startEphemeral(key string, def tunnelDef, via, c Connection, userID int, r *http.Request) (*tunnelRun, error) {
+func (m *tunnelManager) startEphemeral(key string, def tunnelDef, via, c Connection, userID int, reason string, r *http.Request) (*tunnelRun, error) {
 	m.mu.Lock()
 	if old := m.runs[key]; old != nil {
 		m.mu.Unlock()
 		return old, nil
 	}
 	t := &tunnelRun{key: key, def: def, conn: via, route: jumpPath(c), ownerID: userID, startedByID: userID, startedBy: usernameOf(userID),
-		reason: "web", ephemeral: true, forConn: c.ID, shown: c, idleLimit: 30 * time.Minute, startedAt: time.Now(), state: "starting", stopCh: make(chan struct{}), ip: clientIP(r)}
+		reason: reason, ephemeral: true, forConn: c.ID, shown: c, idleLimit: 30 * time.Minute, startedAt: time.Now(), state: "starting", stopCh: make(chan struct{}), ip: clientIP(r)}
 	t.def.Name = c.Name
 	t.touch()
 	m.runs[key] = t

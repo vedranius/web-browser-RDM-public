@@ -137,8 +137,12 @@ func (im *importer) commit() error {
 		}
 		c.FolderID = fid
 		encryptConnectionSecrets(&c)
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, im.userID, c.WebPath)
+		opts := ""
+		if len(c.Options) > 0 {
+			opts = string(jsonMarshal(c.Options))
+		}
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path,options) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, im.userID, c.WebPath, opts)
 		if err != nil {
 			im.skip(c.Name, err.Error())
 			continue
@@ -377,8 +381,40 @@ func (im *importer) mrConnection(mc mrCrypto, name string, a attrMap, eff map[st
 				}
 			}
 		}
+	case "RDP":
+		c.Protocol = "RDP"
+		c.Options = map[string]string{"ignore_cert": "true"}
+		if d := strings.TrimSpace(eff["Domain"]); d != "" {
+			c.Options["domain"] = d
+		}
+		if strings.EqualFold(a.get("UseConsoleSession"), "true") {
+			c.Options["console"] = "true"
+		}
+		if cd := map[string]string{"Colors256": "8", "Colors15Bit": "16", "Colors16Bit": "16", "Colors24Bit": "24", "Colors32Bit": "32"}[a.get("Colors")]; cd != "" {
+			c.Options["color_depth"] = cd
+		}
+		if gw := strings.TrimSpace(a.get("RDGatewayHostname")); gw != "" && !strings.EqualFold(a.get("RDGatewayUsageMethod"), "Never") {
+			c.Options["gateway_host"] = gw
+			if u := strings.TrimSpace(a.get("RDGatewayUsername")); u != "" {
+				c.Options["gateway_user"] = u
+			}
+			if d := strings.TrimSpace(a.get("RDGatewayDomain")); d != "" {
+				c.Options["gateway_domain"] = d
+			}
+		}
+		if strings.EqualFold(a.get("RedirectSound"), "DoNotPlay") {
+			c.Options["audio"] = "false"
+		}
+	case "VNC":
+		c.Protocol = "VNC"
+		c.Options = map[string]string{}
+		if strings.EqualFold(a.get("VNCViewOnly"), "true") {
+			c.Options["read_only"] = "true"
+		}
+	case "TELNET":
+		c.Protocol = "TELNET"
 	default:
-		im.skip(name, fmt.Sprintf("protocol %s is not supported by WRM (SSH, SFTP, FTP, HTTP/HTTPS only)", a.get("Protocol")))
+		im.skip(name, fmt.Sprintf("protocol %s is not supported by WRM (SSH, SFTP, RDP, VNC, Telnet, HTTP/HTTPS)", a.get("Protocol")))
 		return
 	}
 	if host == "" {
@@ -386,7 +422,7 @@ func (im *importer) mrConnection(mc mrCrypto, name string, a attrMap, eff map[st
 		return
 	}
 	if port > 0 && !strings.Contains(strings.Trim(host, "[]"), ":") {
-		def := map[string]int{"SSH": 22, "HTTP": 80, "HTTPS": 443}[c.Protocol]
+		def := map[string]int{"SSH": 22, "HTTP": 80, "HTTPS": 443, "RDP": 3389, "VNC": 5900, "TELNET": 23}[c.Protocol]
 		if port != def {
 			host = net.JoinHostPort(host, strconv.Itoa(port))
 		}

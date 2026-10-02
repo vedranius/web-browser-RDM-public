@@ -96,6 +96,10 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		fail("This is a web interface connection. Open it with 🌐 (double-click) instead of a terminal.")
 		return
 	}
+	if isDesktopProtocol(c.Protocol) {
+		fail("This is a remote desktop connection (" + c.Protocol + "). Open it with a double-click.")
+		return
+	}
 	route := jumpPath(c)
 	ta = startTerminalSession(r, acc, c)
 	if route != "" {
