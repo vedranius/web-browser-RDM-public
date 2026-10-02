@@ -20,7 +20,7 @@ import (
 //   server → client  binary frame : raw terminal output (never split-UTF-8 sensitive)
 //                    text frame   : JSON control {"type":"status"|"error"|"exit", ...}
 //   client → server  binary frame : keyboard input
-//                    text frame   : JSON control {"type":"resize"|"pause"|"resume"|"ping"}
+//                    text frame   : JSON control {"type":"resize"|"pause"|"resume"|"ping"|"broadcast"}
 //                                   (non-JSON text is treated as keyboard input for
 //                                    backwards compatibility)
 //
@@ -38,9 +38,11 @@ const (
 )
 
 type termControl struct {
-	Type string `json:"type"`
-	Cols int    `json:"cols"`
-	Rows int    `json:"rows"`
+	Type  string `json:"type"`
+	Cols  int    `json:"cols"`
+	Rows  int    `json:"rows"`
+	On    bool   `json:"on"`    // broadcast: this terminal joined (true) or left (false) a broadcast group
+	Peers int    `json:"peers"` // broadcast: number of terminals in the group
 }
 
 func sshHandler(w http.ResponseWriter, r *http.Request) {
@@ -209,6 +211,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 
 	// ── WebSocket reader ──
 	stdinCh := make(chan []byte, 1024)
+	broadcasting := false
 	gotSize := make(chan struct{})
 	var sizeOnce sync.Once
 	readDone := make(chan struct{})
@@ -241,6 +244,19 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 						resume()
 					case "ping":
 						sendCtl(map[string]string{"type": "pong"})
+					case "broadcast":
+						// Broadcast input is done by the browser (it sends the same keystrokes to
+						// every terminal of the group); the server records who did it, where and when.
+						if ctl.On && !settingBool("broadcast_enabled") {
+							sendCtl(map[string]interface{}{"type": "broadcast", "allowed": false, "message": "Broadcast input is turned off by the administrator."})
+							continue
+						}
+						if ctl.On != broadcasting {
+							broadcasting = ctl.On
+							actorID, actorName := acc.actor()
+							auditLogRef(r, actorID, actorName, "terminal.broadcast", c.Name, map[string]interface{}{"on": ctl.On, "terminals": ctl.Peers},
+								auditRef{ConnID: c.ID, SessionID: int(ta.ID)})
+						}
 					}
 					continue
 				}
@@ -290,6 +306,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	sendCtl(map[string]interface{}{"type": "status", "state": "connected", "host": c.Host, "recording": recorded, "session_id": ta.ID})
 
 	// ── Output pump ──
+	var lastOutput atomic.Int64 // unix nanoseconds of the last output (run on connect waits for a quiet prompt)
 	outDone := make(chan struct{})
 	pump := func(src interface{ Read([]byte) (int, error) }, signal chan struct{}) {
 		if signal != nil {
@@ -309,6 +326,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			n, err := src.Read(buf)
 			if n > 0 {
+				lastOutput.Store(time.Now().UnixNano())
 				ta.output(buf[:n])
 				if writeWS(websocket.BinaryMessage, buf[:n]) != nil {
 					finish()
@@ -322,6 +340,35 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	go pump(sshOut, outDone)
 	go pump(sshErr, nil)
+
+	// ── Run on connect: snippets of the connection's owner, typed once the prompt is quiet ──
+	if autos := autoRunSnippets(c); len(autos) > 0 {
+		go func() {
+			start := time.Now()
+			for time.Since(start) < 5*time.Second {
+				if last := lastOutput.Load(); last > 0 && time.Since(time.Unix(0, last)) >= 400*time.Millisecond {
+					break
+				}
+				select {
+				case <-done:
+					return
+				case <-time.After(100 * time.Millisecond):
+				}
+			}
+			names := make([]string, 0, len(autos))
+			for _, sn := range autos {
+				select {
+				case stdinCh <- snippetKeystrokes(expandSnippet(sn.Command, c, actorName)):
+				case <-done:
+					return
+				}
+				names = append(names, sn.Name)
+			}
+			sendCtl(map[string]interface{}{"type": "autorun", "snippets": names})
+			auditLogRef(r, actorID, actorName, "terminal.auto_run", c.Name, map[string]interface{}{"snippets": names},
+				auditRef{ConnID: c.ID, SessionID: int(ta.ID)})
+		}()
+	}
 
 	// ── WebSocket ping + SSH keepalive ──
 	var sshLost atomic.Bool

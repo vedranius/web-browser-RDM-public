@@ -4,7 +4,41 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
-## [10.2.0-mimo] — 2026-10-02 — jump hosts, SSH tunnels & mRemoteNG import
+## [10.3.0] — 2026-10-02 — snippets, broadcast input & live status
+
+Daily terminal work for data center admins (extension plan phases 4–6, first part). Release names no longer carry a suffix: this release is `v10.3.0`.
+
+### Added
+- **Snippets** — saved commands:
+  - in the right panel (⚡ tab, grouped, searchable) and in a quick picker in every terminal (**Ctrl+Shift+Space** or ⚡ in the title bar);
+  - click runs in the focused terminal, Shift+click inserts without Enter;
+  - scope: all connections, one folder, or one connection; multi-line commands;
+  - variables `{{host}} {{port}} {{user}} {{name}} {{folder}} {{wrm_user}} {{date}} {{time}}` and prompts `{{?Label}}` / `{{?Label=default}}` with a preview;
+  - shared snippets for all users (administrators); example set; export/import; copied with *Duplicate*.
+- **Run on connect:** snippets typed into the shell by the server once a terminal of a matching connection is connected (also after reconnects), e.g. `sudo -i`, `cd /srv/app`, `tmux attach`. Created from the connection or folder context menu; audited as `terminal.auto_run`.
+- **Broadcast input:**
+  - type into several terminals at once (📣 in the top bar, per-window toggle, orange frame and status bar);
+  - dangerous commands (rm -rf, shutdown, mkfs, dd, iptables -F, DROP TABLE, kubectl delete, …) and multi-line pastes ask first, with Cancel as the default;
+  - snippets run on every terminal of the broadcast with their own variables;
+  - every start and stop is audited per terminal (`terminal.broadcast`); policy `broadcast_enabled` (`BROADCAST_ENABLED`).
+- **Live up/down status:**
+  - a background monitor checks every saved connection (TCP connect; SSH and FTP read the greeting and close politely, like Nagios check_ssh) once per host:port and round, retrying before reporting down;
+  - status dots in the sidebar with latency, banner and "since"; down counter per folder; "show only down" filter;
+  - notifications (also desktop notifications in the background) when a server goes down or comes back;
+  - *Check status now* for a connection or a whole folder, also through jump hosts;
+  - connections behind jump hosts show their jump host's state, or are checked through it (`status_jump_checks`);
+  - per-connection opt-out (*Monitor up/down status*); policies `status_enabled` (`STATUS_ENABLED`), `status_interval_seconds`, `status_jump_checks`; API `GET /api/status`, `POST /api/status/check`; event `status_changed`.
+- **Tests** for snippets (API, sharing, validation, variables, run on connect, export/import), broadcast audit and the status monitor (up/down, banners, jump hosts, check now, FTP greeting).
+
+### Changed
+- Release tags, binaries and the Docker image no longer have a suffix after the version number (`v10.3.0`, `wrm-pro-v10.3.0-linux-amd64`). CI names the release files after the tag.
+- Confirmation dialogs for dangerous actions focus *Cancel*, so Enter cannot confirm them by accident.
+- The "terminal connected" marker in the sidebar is blue (green is now the live status).
+
+### Fixed
+- Deleting several connections at once also stops their tunnels, removes their tunnel definitions and detaches connections that used them as jump host (single deletes already did).
+
+## [10.2.0] — 2026-10-02 — jump hosts, SSH tunnels & mRemoteNG import
 
 Phase 5 (fleet operations) of the extension plan, first part: what mRemoteNG, PuTTY and `ssh -J` users need to manage servers behind bastions (see [ARCHITECTURE.md](ARCHITECTURE.md)).
 
@@ -49,7 +83,7 @@ Phase 5 (fleet operations) of the extension plan, first part: what mRemoteNG, Pu
 ### Fixed
 - The connection dialog no longer moves the focus back to *Name* when you already started typing in another field.
 
-## [10.1.0-mimo] — 2026-10-01 — audit trail & session recording
+## [10.1.0] — 2026-10-01 — audit trail & session recording
 
 First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCHITECTURE.md](ARCHITECTURE.md)).
 
@@ -88,7 +122,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 - Server-to-server transfer reports a read error as a failed file instead of a partial "ok".
 - The audit log CSV export has new columns: connection, session and hash.
 
-## [10.0.1-mimo] — 2026-09-28
+## [10.0.1] — 2026-09-28
 
 ### Fixed
 - "404 page not found" at `/static/`, the v9 address of the app. It now redirects to `/`.
@@ -97,7 +131,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 ### Added
 - The startup log shows the address to open in the browser.
 
-## [10.0.0-mimo] — 2026-09-28
+## [10.0.0] — 2026-09-28
 
 ### Added
 - **Voice calls** in collaboration rooms (WebRTC):
@@ -119,7 +153,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 - **Admin panel:** overview with warnings, users, shares, policies, voice & network, host keys, audit log. Policies can be forced with `WRM_<KEY>` environment variables.
 - `wrm -version`, `wrm -reset-password USER [-reset-2fa]`; unit tests in CI with the race detector; `SECURITY.md`.
 
-## [9.10.2-mimo]
+## [9.10.2]
 
 ### Security
 - In a collaboration session any participant could give themselves keyboard control of another participant's shared terminal. Now only the sharer can grant control, keystrokes go only to that sharer, and control ends when sharing stops.
@@ -127,7 +161,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 ### Fixed
 - The *Control* button appears next to participants while you share a terminal; late joiners see *Watch* at once; duplicate names get a suffix.
 
-## [9.10.1-mimo]
+## [9.10.1]
 
 ### Added
 - Saved sessions restore all windows (connection, mode, folder, position, snap, minimized, focus).
@@ -137,7 +171,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 ### Fixed
 - Windows stay inside the screen when the zoom, resolution or panel sizes change.
 
-## [9.10.0-mimo]
+## [9.10.0]
 
 ### Added
 - Terminal: reconnect and automatic reconnect, connection state, flow control, SSH keepalive, search in output, clickable URLs, configurable scrollback.
@@ -150,8 +184,9 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 - Full-screen programs drawn at the wrong size (the PTY size follows the window).
 - Folder transfer when WRM runs on Windows; several smaller issues.
 
-[10.2.0-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.2.0-mimo
-[10.1.0-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.1.0-mimo
-[10.0.1-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.0.1-mimo
-[10.0.0-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.0.0-mimo
-[9.10.2-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v9.10.2-mimo
+[10.3.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.3.0
+[10.2.0]: https://github.com/vedranius/web-browser-RDM-public/releases?q=v10.2.0&expanded=true
+[10.1.0]: https://github.com/vedranius/web-browser-RDM-public/releases?q=v10.1.0&expanded=true
+[10.0.1]: https://github.com/vedranius/web-browser-RDM-public/releases?q=v10.0.1&expanded=true
+[10.0.0]: https://github.com/vedranius/web-browser-RDM-public/releases?q=v10.0.0&expanded=true
+[9.10.2]: https://github.com/vedranius/web-browser-RDM-public/releases?q=v9.10.2&expanded=true

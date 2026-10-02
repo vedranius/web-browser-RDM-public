@@ -9,8 +9,8 @@ services:
     build:
       context: .
       args:
-        VERSION: v10.2.0-mimo
-    image: wrm-pro:v10.2.0-mimo
+        VERSION: v10.3.0
+    image: wrm-pro:v10.3.0
     restart: unless-stopped
     ports:
       - "8080:8080"              # web UI (HTTPS with the self-signed certificate below)

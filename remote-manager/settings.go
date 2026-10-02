@@ -62,6 +62,12 @@ var settingSpecs = []settingSpec{
 	{Key: "tunnel_bind_any", Default: "0", Kind: "bool"},
 	{Key: "tunnel_remote_forward", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "tunnel_idle_minutes", Default: "0", Kind: "int", Min: 0, Max: 10080},
+	// Terminal productivity
+	{Key: "broadcast_enabled", Default: "1", Kind: "bool", Alias: "BROADCAST_ENABLED"},
+	// Live up/down status of connections
+	{Key: "status_enabled", Default: "1", Kind: "bool", Alias: "STATUS_ENABLED"},
+	{Key: "status_interval_seconds", Default: "60", Kind: "int", Min: 15, Max: 3600},
+	{Key: "status_jump_checks", Default: "0", Kind: "bool"},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
