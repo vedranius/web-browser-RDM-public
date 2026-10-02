@@ -91,6 +91,9 @@ func dialSSH(c Connection, onNewKey func(host, fp string)) (*ssh.Client, error) 
 	}
 	for i, hop := range hops {
 		hop.Host = ensurePort(hop.Host, hop.Protocol)
+		if usesStoredSecretRef(hop.AuthMethod) && hop.authErr == "" {
+			resolveConnectionAuth(&hop) // also sets the user name of a credential
+		}
 		am, err := buildAuthMethods(hop)
 		if err != nil {
 			closeAll()

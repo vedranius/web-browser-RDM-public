@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.4.0</title>
+<title>Web Remote Manager PRO v10.5.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1347,6 +1347,42 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 #m-desk-box .desk-checks label { display: flex; align-items: center; gap: 6px; font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--text2); cursor: pointer; }
 #m-desk-box .desk-checks input { width: auto; }
 .rp-screen .guac-holder { display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
+
+/* v10.5: SSH key store & credentials vault */
+#btn-vault .tun-badge { background: var(--yellow); color: #111; }
+.vault-tools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 4px 0 10px; }
+.vault-tools input { flex: 1; min-width: 140px; width: auto; }
+.vk-fp { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); word-break: break-all; margin-top: 5px; }
+.vk-pub { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text2); background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; margin-top: 6px; word-break: break-all; max-height: 3.3em; overflow: hidden; cursor: copy; }
+.vk-pub:hover { border-color: var(--accent); }
+.vk-empty { text-align: center; padding: 22px 10px; color: var(--text3); font-size: 12.5px; line-height: 1.6; border: 1px dashed var(--border2); border-radius: 12px; }
+.kd-list { max-height: 36vh; overflow-y: auto; border: 1px solid var(--border2); border-radius: 8px; padding: 4px; background: var(--bg); }
+.kd-row { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 6px; font-size: 12px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text); margin: 0; }
+.kd-row:hover { background: var(--bg4); }
+.kd-row.off { opacity: .55; cursor: default; }
+.kd-row input { width: auto; }
+.kd-row .bc-host { margin-left: auto; white-space: nowrap; }
+.kd-folder { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); padding: 7px 7px 2px; }
+.kd-res { margin-top: 10px; max-height: 30vh; overflow-y: auto; }
+.kd-res .r { display: flex; gap: 8px; align-items: baseline; font-size: 12px; padding: 5px 2px; border-bottom: 1px solid var(--border); }
+.kd-res .r .m { color: var(--text3); font-size: 11px; }
+.kd-res .r .e { color: #fca5a5; font-size: 11px; }
+.rot-hosts { max-height: 40vh; overflow-y: auto; margin-top: 8px; }
+.rot-host { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; margin-bottom: 5px; font-size: 12px; }
+.rot-host .st { flex: none; width: 18px; text-align: center; }
+.rot-host .k { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text); }
+.rot-host .c { color: var(--text3); font-size: 11px; }
+.rot-host .e { color: #fca5a5; font-size: 11px; margin-top: 2px; word-break: break-word; }
+.ak-table td { vertical-align: top; }
+.ak-table .opt { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--yellow); word-break: break-all; }
+.ak-table .fp { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); word-break: break-all; }
+.grant-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+.grant-chip { display: inline-flex; gap: 2px; align-items: center; font-size: 11.5px; padding: 2px 2px 2px 9px; border-radius: 12px; background: var(--bg4); border: 1px solid var(--border2); color: var(--text); }
+.grant-chip button { padding: 0 6px; font-size: 12px; background: transparent !important; border: none; color: var(--text3); box-shadow: none !important; }
+.pw-row { display: flex; gap: 6px; align-items: center; }
+.pw-row input { flex: 1; min-width: 0; }
+.vc-usage { margin-top: 8px; font-size: 11.5px; color: var(--text2); }
+.vc-usage div { padding: 2px 0; }
 </style>
 </head>
 <body>
@@ -1372,7 +1408,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.4.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.5.0 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1434,6 +1470,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
       <div class="bulk-actions" id="bulk-actions" style="display:none;">
         <button class="btn-sec btn-sm" style="flex:1;" onclick="openShareModalBulk()">🤝 Share</button>
+        <button class="btn-sec btn-sm" style="flex:1;" onclick="openKeyDeploy(null, 'deploy', [...selectedConns])" title="Deploy an SSH key">🔑 <span data-i18n="vault_key_short">Key</span></button>
         <button class="btn-danger btn-sm" style="flex:1;" onclick="bulkDelete()">Delete</button>
       </div>
     </div>
@@ -1448,7 +1485,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.4.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.5.0</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1458,6 +1495,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-top" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
       <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
+      <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
       <button class="btn-top" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
@@ -1602,8 +1640,14 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <option value="KEY">Private Key (paste)</option>
         <option value="KEY_FILE" id="opt-key-file">Key File (path on the WRM server)</option>
         <option value="KEY_AUTO" id="opt-key-auto">Auto (~/.ssh/ of the WRM server)</option>
+        <option value="KEY_REF" id="opt-key-ref">🔑 SSH key from the key store</option>
+        <option value="CREDENTIAL" id="opt-cred">🗝 Credential from the vault</option>
       </select>
     </div>
+    <div class="field" id="field-keyref" style="display:none;"><label data-i18n="vk_key">SSH key</label><select id="m-keyref"></select>
+      <div class="muted-text" style="margin-top:5px;"><a href="#" onclick="openVault('keys'); return false;" data-i18n="vault_manage_keys">Manage keys…</a></div></div>
+    <div class="field" id="field-cred" style="display:none;"><label data-i18n="vc_cred">Credential</label><select id="m-cred" onchange="onCredPick()"></select>
+      <div class="muted-text" id="m-cred-info" style="margin-top:5px;line-height:1.5;"></div></div>
     <div class="field" id="field-pass"><label data-i18n="password">Password</label><input type="password" id="m-pass" autocomplete="new-password">
       <div class="muted-text" id="m-pass-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span> <label style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;text-transform:none;letter-spacing:0;font-size:11px;font-weight:400;"><input type="checkbox" id="m-pass-clear" style="width:auto;"> <span data-i18n="remove_saved">remove saved</span></label></div></div>
     <div class="field" id="field-key" style="display:none;"><label data-i18n="private_key">Private Key</label><textarea id="m-key" rows="5" placeholder="Paste your private key here..." autocomplete="off" spellcheck="false"></textarea>
@@ -1882,6 +1926,138 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="modal-footer">
       <button class="btn-sec" onclick="snipVarsDone(false)" data-i18n="cancel">Cancel</button>
       <button onclick="snipVarsDone(true)">▶ <span data-i18n="run">Run</span></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- SSH keys & credentials vault (v10.5) -->
+<div class="modal-overlay" id="modal-vault">
+  <div class="modal" style="width:min(820px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>🔑 <span data-i18n="vault_title">SSH keys &amp; credentials</span></h3>
+    <div class="tabs" id="vault-tabs">
+      <button class="tab-btn active" data-tab="keys" onclick="setVaultTab('keys')">🔑 <span data-i18n="vault_keys">SSH keys</span></button>
+      <button class="tab-btn" data-tab="creds" onclick="setVaultTab('creds')">🗝 <span data-i18n="vault_creds">Credentials</span> <span class="pill warn" id="vault-tab-due" style="display:none;"></span></button>
+    </div>
+    <div class="tab-pane active" id="vault-keys">
+      <div class="muted-text" style="line-height:1.5;" data-i18n="vk_help">Your SSH keys, stored encrypted on the WRM server. Generate a key or import one, put it on servers (like ssh-copy-id, through jump hosts too) and let connections log in with it. "Who has access" on an SSH connection shows which keys can log in there.</div>
+      <div class="vault-tools" style="margin-top:10px;">
+        <button class="btn-sm" onclick="openKeyNew('generate')">＋ <span data-i18n="vk_generate">Generate key</span></button>
+        <button class="btn-sec btn-sm" onclick="openKeyNew('import')">⤓ <span data-i18n="vk_import">Import key</span></button>
+        <button class="btn-sec btn-sm" onclick="openKeyDeploy(null, 'deploy')">🚀 <span data-i18n="vk_deploy">Deploy…</span></button>
+      </div>
+      <div id="vk-list"></div>
+    </div>
+    <div class="tab-pane" id="vault-creds">
+      <div class="muted-text" style="line-height:1.5;" data-i18n="vc_help">A credential is a user name with a password (or an SSH key) that many connections log in with, e.g. root@dc1. Change it once and every connection uses the new one. Share it with colleagues: they can use it but never see it. Rotation changes the password on all its SSH servers at once.</div>
+      <div class="vault-tools" style="margin-top:10px;"><button class="btn-sm" onclick="openCredModal(null)">＋ <span data-i18n="vc_new">New credential</span></button></div>
+      <div id="vc-list"></div>
+    </div>
+    <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-vault')" data-i18n="close">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-keynew" style="z-index:9500;">
+  <div class="modal" style="width:min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3 id="kn-title">🔑</h3>
+    <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="kn-name" maxlength="120" placeholder="ops-2026"></div>
+    <div id="kn-gen">
+      <div class="field-row">
+        <div class="field"><label data-i18n="vk_type">Type</label><select id="kn-type"><option value="ed25519">ED25519 (recommended)</option><option value="rsa:4096">RSA 4096</option><option value="rsa:3072">RSA 3072</option><option value="rsa:2048">RSA 2048</option><option value="ecdsa:256">ECDSA P-256</option><option value="ecdsa:384">ECDSA P-384</option><option value="ecdsa:521">ECDSA P-521</option></select></div>
+        <div class="field"><label data-i18n="vk_comment">Comment</label><input type="text" id="kn-comment" maxlength="100" placeholder="me@wrm"></div>
+      </div>
+      <div class="muted-text" style="line-height:1.5;" data-i18n="vk_gen_help">The key is created on the WRM server and stored encrypted; the private key leaves it only if you export it. ED25519 is short and fast; use RSA only for old servers. RSA keys take a few seconds.</div>
+    </div>
+    <div id="kn-imp">
+      <div class="field"><label data-i18n="vk_paste">Private key or public key</label><textarea id="kn-key" rows="7" spellcheck="false" autocomplete="off" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;…&#10;ssh-ed25519 AAAA… alice@laptop"></textarea>
+        <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="vk_paste_help">OpenSSH or PEM private keys (ED25519, RSA, ECDSA). A public key alone (e.g. a colleague's) can be put on servers, but WRM cannot log in with it. PuTTY .ppk: export it with PuTTYgen → Conversions → Export OpenSSH key first.</div></div>
+      <div class="field"><input type="file" id="kn-file" onchange="keyFileChosen(this)" style="font-size:11px;"></div>
+      <div class="field" id="kn-pp-wrap" style="display:none;"><label data-i18n="vk_passphrase">Passphrase of the key</label><input type="password" id="kn-pp" autocomplete="off" onkeydown="if(event.key==='Enter') saveNewKey()">
+        <div class="muted-text" style="margin-top:5px;" data-i18n="vk_passphrase_help">Used once to read the key; WRM stores it encrypted with its own key.</div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sec" onclick="closeModal('modal-keynew')" data-i18n="cancel">Cancel</button>
+      <button id="kn-ok" onclick="saveNewKey()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-keydeploy" style="z-index:9500;">
+  <div class="modal" style="width:min(640px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3 id="kd-title">🚀</h3>
+    <div class="muted-text" id="kd-help" style="line-height:1.5;"></div>
+    <div class="field" style="margin-top:10px;"><label data-i18n="vk_key">SSH key</label><select id="kd-key" onchange="renderKeyDeployList(true)"></select></div>
+    <div class="vault-tools"><input type="text" class="search-box" id="kd-filter" autocomplete="off" data-i18n-placeholder="filter_ph" placeholder="Filter…" oninput="renderKeyDeployList()"><button class="btn-sec btn-sm" onclick="kdSelect(true)" data-i18n="bc_all">All</button><button class="btn-sec btn-sm" onclick="kdSelect(false)" data-i18n="bc_none">None</button></div>
+    <div class="kd-list" id="kd-list"></div>
+    <label class="check-row" id="kd-switch-row"><input type="checkbox" id="kd-switch" checked> <span><b data-i18n="vk_switch">Log in with this key from now on</b> — <span data-i18n="vk_switch_d">after adding the key, WRM logs in with it to test it and then switches these connections to it.</span></span></label>
+    <div class="kd-res" id="kd-res"></div>
+    <div class="modal-footer">
+      <button class="btn-sec" onclick="closeModal('modal-keydeploy')" data-i18n="close">Close</button>
+      <button id="kd-go" onclick="runKeyDeploy()">🚀</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-authkeys">
+  <div class="modal" style="width:min(860px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>🔐 <span data-i18n="ak_title">Who has access</span></h3>
+    <div class="muted-text" id="ak-sub" style="line-height:1.5;"></div>
+    <div id="ak-body" style="margin-top:10px;"></div>
+    <div class="modal-footer">
+      <button class="btn-sec" style="margin-right:auto;" onclick="akDeployHere()">🚀 <span data-i18n="ak_add">Add a key…</span></button>
+      <button class="btn-sec" onclick="loadAuthKeys()" title="Refresh">⟳</button>
+      <button class="btn-sec" onclick="closeModal('modal-authkeys')" data-i18n="close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-cred" style="z-index:9500;">
+  <div class="modal" style="width:min(600px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3 id="cr-title">🗝</h3>
+    <input type="hidden" id="cr-id">
+    <div class="field-row">
+      <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="cr-name" maxlength="120" placeholder="root@dc1"></div>
+      <div class="field"><label data-i18n="username">Username</label><input type="text" id="cr-user" maxlength="120" placeholder="root"></div>
+    </div>
+    <div class="field"><label data-i18n="password">Password</label>
+      <div class="pw-row"><input type="password" id="cr-pass" autocomplete="new-password"><button class="btn-sec btn-sm" type="button" onclick="crGenPassword()" title="Generate">🎲</button><button class="btn-sec btn-sm" type="button" onclick="crTogglePw()" title="Show">👁</button></div>
+      <div class="muted-text" id="cr-pass-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span></div></div>
+    <div class="field"><label data-i18n="vc_key">SSH key (optional)</label><select id="cr-key"></select>
+      <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="vc_key_help">With a key, connections log in with the key. A password stored as well can still be checked and rotated.</div></div>
+    <div class="field"><label data-i18n="vc_hosts">Only for hosts (optional)</label><input type="text" id="cr-hosts" maxlength="2000" placeholder="*.dc1.example.com, 10.1.0.0/16">
+      <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="vc_hosts_help">Host names with * and ?, or CIDR ranges. The credential then works only for matching hosts. Recommended for shared credentials: a password is sent to the server when logging in, so it cannot be used to log in to a server somebody else controls.</div></div>
+    <div class="field-row">
+      <div class="field"><label data-i18n="vc_rotate_days">Rotation reminder (days)</label><input type="number" id="cr-rot" min="0" max="3650" placeholder="0"></div>
+      <div class="field"><label data-i18n="vc_desc">Description</label><input type="text" id="cr-desc" maxlength="2000"></div>
+    </div>
+    <div class="field"><label data-i18n="vc_grants">Share with users</label>
+      <div class="pw-row"><input type="text" id="cr-grant-q" list="cr-grant-users" autocomplete="off" data-i18n-placeholder="vc_grant_ph" placeholder="User name…" oninput="crGrantSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault(); crGrantAdd();}"><button class="btn-sec btn-sm" type="button" onclick="crGrantAdd()">＋</button></div>
+      <datalist id="cr-grant-users"></datalist>
+      <div class="grant-chips" id="cr-grants"></div>
+      <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="vc_grants_help">They can use the credential in their own connections, but never see or change it.</div></div>
+    <label class="check-row" id="cr-all-row"><input type="checkbox" id="cr-all"> <span><b data-i18n="vc_shared_all">Share with all users</b> — <span data-i18n="vc_shared_all_d">everybody can use it in their connections (administrators only).</span></span></label>
+    <div class="modal-footer">
+      <button class="btn-danger" id="cr-del" style="margin-right:auto;" onclick="deleteCred(Number(document.getElementById('cr-id').value))">🗑</button>
+      <button class="btn-sec" onclick="closeModal('modal-cred')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveCred()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-rotate" style="z-index:9500;">
+  <div class="modal" style="width:min(640px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>🔄 <span id="rot-title"></span></h3>
+    <div class="muted-text" style="line-height:1.5;" data-i18n="rot_help">Check logs in to every SSH server that uses this credential with the stored password and changes nothing. Rotate does the same check first, then runs passwd on each server, logs in with the new password and stores it. If a server fails, the servers already changed get the old password back.</div>
+    <div class="field" style="margin-top:10px;"><label data-i18n="rot_new">New password</label>
+      <select id="rot-mode" onchange="document.getElementById('rot-own').style.display = this.value === 'own' ? '' : 'none'"><option value="gen" data-i18n="rot_gen">Generate a strong password (24 characters)</option><option value="own" data-i18n="rot_own">Enter my own</option></select>
+      <input type="password" id="rot-own" style="display:none;margin-top:6px;" autocomplete="new-password">
+    </div>
+    <div id="rot-msg"></div>
+    <div class="rot-hosts" id="rot-hosts"></div>
+    <div class="modal-footer">
+      <button class="btn-sec" style="margin-right:auto;" onclick="closeModal('modal-rotate')" data-i18n="close">Close</button>
+      <button class="btn-sec" id="rot-check" onclick="startCredRotation('check')">🔍 <span data-i18n="rot_check">Check logins</span></button>
+      <button class="btn-danger" id="rot-go" onclick="startCredRotation('rotate')">🔄 <span data-i18n="rot_go">Rotate now</span></button>
     </div>
   </div>
 </div>
@@ -3521,6 +3697,110 @@ Object.assign(LANGS.hr, {
   p_desktop_tunnel_bind:'Adresa tunela za guacd', p_desktop_tunnel_bind_d:'Adresa na kojoj slušaju privremeni tuneli iza jump hostova; guacd je mora dosegnuti. Ostavi 127.0.0.1 kad guacd radi na WRM računalu.',
   ev_desktop:'Udaljena radna površina',
 });
+Object.assign(LANGS.en, {
+  vault_lbl:'Keys', vault_key_short:'Key', vault_title:'SSH keys & credentials', vault_keys:'SSH keys', vault_creds:'Credentials',
+  vault_keys_lc:'keys', vault_deployments_lc:'deployments', vault_creds_lc:'credentials', vault_manage_keys:'Manage keys…',
+  vk_help:'Your SSH keys, stored encrypted on the WRM server. Generate a key or import one, put it on servers (like ssh-copy-id, through jump hosts too) and let connections log in with it. "Who has access" on an SSH connection shows which keys can log in there.',
+  vk_generate:'Generate key', vk_import:'Import key', vk_deploy:'Deploy…', vk_revoke:'Revoke…', vk_type:'Type', vk_comment:'Comment', vk_key:'SSH key',
+  vk_gen_help:'The key is created on the WRM server and stored encrypted; the private key leaves it only if you export it. ED25519 is short and fast; use RSA only for old servers. RSA keys take a few seconds.',
+  vk_paste:'Private key or public key', vk_paste_help:"OpenSSH or PEM private keys (ED25519, RSA, ECDSA). A public key alone (e.g. a colleague's) can be put on servers, but WRM cannot log in with it. PuTTY .ppk: export it with PuTTYgen → Conversions → Export OpenSSH key first.",
+  vk_passphrase:'Passphrase of the key', vk_passphrase_help:'Used once to read the key; WRM stores it encrypted with its own key.', vk_file_big:'That file is too big for a key',
+  vk_generating:'generating', vk_saved:'Key saved', vk_pair:'key pair', vk_public_only:'public key only', vk_login_for:'logs in', vk_on_servers:'on servers',
+  vk_copy_pub:'Copy public key', vk_last_used:'last used', vk_export:'Export private key', vk_export_q:'Enter your WRM password to export the private key. The export is recorded in the audit log.',
+  vk_export_pp:'Passphrase for the exported file (recommended; leave empty for none):', vk_exported:'Private key downloaded — keep it safe',
+  vk_delete_q:'Delete the key "{name}" from the key store? Servers keep it in their authorized_keys until you revoke it.',
+  vk_empty:'No keys yet. Generate one (ED25519 is a good choice) or import an existing key.', vk_none_yet:'no SSH keys in the key store yet', vk_missing:'(deleted key)',
+  vk_deploy_title:'Deploy SSH key', vk_revoke_title:'Revoke SSH key', vk_deploy_menu:'Deploy SSH key…',
+  vk_deploy_help:"Adds the public key to ~/.ssh/authorized_keys of the connection's user on every selected server, like ssh-copy-id. WRM logs in with each connection's current login (through jump hosts too). A key that is already there is not added twice.",
+  vk_revoke_help:'Removes the key from ~/.ssh/authorized_keys on the selected servers. Other keys stay untouched. A connection that logs in with this key cannot be selected (WRM would lock itself out).',
+  vk_switch:'Log in with this key from now on', vk_switch_d:'after adding the key, WRM logs in with it to test it and then switches these connections to it.',
+  vk_deploy_go:'Deploy', vk_revoke_go:'Revoke', vk_login:'logs in with it', vk_present:'deployed', vk_no_ssh_conns:'No SSH connections.', vk_pick_conns:'Select at least one connection',
+  vk_login_key_lock:'This connection logs in with this key', vk_working:'Working on {n} server(s)…', vk_result:'{ok} done, {failed} failed',
+  vk_already:'was already there', vk_added:'added', vk_switched:'now logs in with the key', vk_removed:'{n} line(s) removed',
+  vk_revoke_q:'Remove the key "{name}" from {n} server(s)?',
+  ak_title:'Who has access', ak_menu:'Who has access (authorized_keys)…', ak_add:'Add a key…', ak_reading:'Reading ~/.ssh/authorized_keys…', ak_file:'File', ak_entries:'Keys',
+  ak_key:'Key', ak_wrm:'In WRM', ak_current:'WRM logs in with this key', ak_unknown:'not in your key store', ak_remove:'Remove', ak_invalid:'Unreadable line', ak_line:'line',
+  ak_none:'No keys: nobody can log in to this account with a key.', ak_removed:'Key removed',
+  ak_remove_q:'Remove the key "{key}" from authorized_keys on this server? Whoever uses it can no longer log in with it.',
+  ak_note:'This shows the authorized_keys file of the user WRM logs in as. Keys can also be allowed elsewhere (e.g. AuthorizedKeysFile or AuthorizedKeysCommand in sshd_config, or other accounts).',
+  vc_help:'A credential is a user name with a password (or an SSH key) that many connections log in with, e.g. root@dc1. Change it once and every connection uses the new one. Share it with colleagues: they can use it but never see it. Rotation changes the password on all its SSH servers at once.',
+  vc_new:'New credential', vc_cred:'Credential', vc_key:'SSH key (optional)', vc_no_key:'no key, password only',
+  vc_key_help:'With a key, connections log in with the key. A password stored as well can still be checked and rotated.',
+  vc_hosts:'Only for hosts (optional)', vc_hosts_help:'Host names with * and ?, or CIDR ranges. The credential then works only for matching hosts. Recommended for shared credentials: a password is sent to the server when logging in, so it cannot be used to log in to a server somebody else controls.',
+  vc_rotate_days:'Rotation reminder (days)', vc_desc:'Description', vc_grants:'Share with users', vc_grant_ph:'User name…', vc_grants_help:'They can use the credential in their own connections, but never see or change it.',
+  vc_shared_all:'Share with all users', vc_shared_all_d:'everybody can use it in their connections (administrators only).', vc_user_unknown:'No such user',
+  vc_share_nohosts_q:'This credential is shared but works for any host. A colleague could send the password to a server of their own. Restrict it to hosts (recommended), or save anyway?',
+  vc_saved:'Credential saved', vc_delete_q:'Delete the credential "{name}"?', vc_empty:'No credentials yet. Create one, e.g. "root@dc1", and choose it as the login of your connections.',
+  vc_none_yet:'no credentials yet', vc_missing:'(not available)', vc_create_first:'Create a credential first…',
+  vc_user_from:'from the credential', vc_logs_in_as:'logs in as', vc_user_conn:"uses this connection's user name", vc_only_hosts:'only', vc_shared_by:'shared by',
+  vc_everybody:'everybody', vc_incomplete:'rotation incomplete', vc_due:'rotation due', vc_any_host:'any host', vc_used_by:'connections', vc_every:'every', days_lc:'days',
+  vc_rotate:'Rotate…', vc_reveal:'Show', vc_usage:'Used by', vc_unused:'No connection uses it yet.', vc_host_not_allowed:'host not allowed — cannot log in',
+  vc_reveal_q:'Enter your WRM password to show the stored password. This is recorded in the audit log.', vc_pending_pw:'New password of the incomplete rotation (some servers have it)',
+  vc_attention:'Credentials that need attention', edit_lc:'Edit', password_lc:'password', deleted:'Deleted', next:'Next', name_required:'Name is required',
+  vk_no_folder:'No folder', filter_ph:'Filter…',
+  rot_help:'Check logs in to every SSH server that uses this credential with the stored password and changes nothing. Rotate does the same check first, then runs passwd on each server, logs in with the new password and stores it. If a server fails, the servers already changed get the old password back.',
+  rot_title:'Rotate password', rot_new:'New password', rot_gen:'Generate a strong password (24 characters)', rot_own:'Enter my own', rot_check:'Check logins', rot_go:'Rotate now',
+  rot_confirm:'Change the password of "{name}" on all its SSH servers now?', rot_too_short:'The new password needs at least 8 characters',
+  rot_no_password:'This credential has no password: only a password can be rotated.',
+  rot_stage_preflight:'Checking the logins', rot_stage_change:'Changing the password', rot_stage_rollback:'Changing back', rot_stage_done:'Done',
+  rot_state_pending:'waiting', rot_state_checking:'checking', rot_state_ok:'login OK', rot_state_changing:'changing', rot_state_changed:'changed and verified',
+  rot_state_failed:'failed', rot_state_rolled_back:'changed back to the old password', rot_state_rollback_failed:'still has the NEW password', rot_state_skipped:'not changed',
+  ev_ssh_key:'SSH keys', ev_credential:'Credentials',
+  warn_credential_rotation_due:'Some vault credentials are due for rotation (Keys → Credentials).',
+  warn_credential_rotation_incomplete:'A credential rotation is incomplete: some servers have the new password, the others the old one (Keys → Credentials → Show).',
+});
+Object.assign(LANGS.hr, {
+  vault_lbl:'Ključevi', vault_key_short:'Ključ', vault_title:'SSH ključevi i vjerodajnice', vault_keys:'SSH ključevi', vault_creds:'Vjerodajnice',
+  vault_keys_lc:'ključeva', vault_deployments_lc:'postavljanja', vault_creds_lc:'vjerodajnica', vault_manage_keys:'Upravljaj ključevima…',
+  vk_help:'Tvoji SSH ključevi, spremljeni šifrirano na WRM serveru. Generiraj ili uvezi ključ, postavi ga na servere (kao ssh-copy-id, i kroz jump hostove) i neka se veze prijavljuju njime. „Tko ima pristup” na SSH vezi pokazuje kojim se ključevima tamo može prijaviti.',
+  vk_generate:'Generiraj ključ', vk_import:'Uvezi ključ', vk_deploy:'Postavi…', vk_revoke:'Opozovi…', vk_type:'Vrsta', vk_comment:'Komentar', vk_key:'SSH ključ',
+  vk_gen_help:'Ključ nastaje na WRM serveru i sprema se šifrirano; privatni ključ ga napušta samo ako ga izvezeš. ED25519 je kratak i brz; RSA koristi samo za stare servere. RSA ključevi traju nekoliko sekundi.',
+  vk_paste:'Privatni ili javni ključ', vk_paste_help:'OpenSSH ili PEM privatni ključevi (ED25519, RSA, ECDSA). Sam javni ključ (npr. kolegin) može se postaviti na servere, ali se WRM njime ne može prijaviti. PuTTY .ppk: najprije ga izvezi u PuTTYgenu → Conversions → Export OpenSSH key.',
+  vk_passphrase:'Lozinka ključa', vk_passphrase_help:'Koristi se jednom za čitanje ključa; WRM ga sprema šifriranog svojim ključem.', vk_file_big:'Datoteka je prevelika za ključ',
+  vk_generating:'generiram', vk_saved:'Ključ spremljen', vk_pair:'par ključeva', vk_public_only:'samo javni ključ', vk_login_for:'prijavljuje', vk_on_servers:'na serverima',
+  vk_copy_pub:'Kopiraj javni ključ', vk_last_used:'zadnje korišten', vk_export:'Izvezi privatni ključ', vk_export_q:'Upiši svoju WRM lozinku za izvoz privatnog ključa. Izvoz se bilježi u revizijski zapis.',
+  vk_export_pp:'Lozinka za izvezenu datoteku (preporučeno; prazno = bez lozinke):', vk_exported:'Privatni ključ preuzet — čuvaj ga',
+  vk_delete_q:'Obrisati ključ „{name}” iz spremišta? Serveri ga zadržavaju u authorized_keys dok ga ne opozoveš.',
+  vk_empty:'Još nema ključeva. Generiraj jedan (ED25519 je dobar izbor) ili uvezi postojeći.', vk_none_yet:'još nema SSH ključeva u spremištu', vk_missing:'(obrisan ključ)',
+  vk_deploy_title:'Postavi SSH ključ', vk_revoke_title:'Opozovi SSH ključ', vk_deploy_menu:'Postavi SSH ključ…',
+  vk_deploy_help:'Dodaje javni ključ u ~/.ssh/authorized_keys korisnika veze na svakom odabranom serveru, kao ssh-copy-id. WRM se prijavljuje trenutnom prijavom svake veze (i kroz jump hostove). Ključ koji je već tamo ne dodaje se dvaput.',
+  vk_revoke_help:'Uklanja ključ iz ~/.ssh/authorized_keys na odabranim serverima. Ostali ključevi ostaju netaknuti. Veza koja se prijavljuje tim ključem ne može se odabrati (WRM bi sebi zaključao pristup).',
+  vk_switch:'Odsad se prijavljuj ovim ključem', vk_switch_d:'nakon dodavanja WRM se prijavi ključem da ga provjeri, a zatim prebaci ove veze na njega.',
+  vk_deploy_go:'Postavi', vk_revoke_go:'Opozovi', vk_login:'prijavljuje se njime', vk_present:'postavljen', vk_no_ssh_conns:'Nema SSH veza.', vk_pick_conns:'Odaberi barem jednu vezu',
+  vk_login_key_lock:'Ova se veza prijavljuje ovim ključem', vk_working:'Radim na {n} server(a)…', vk_result:'{ok} gotovo, {failed} neuspješno',
+  vk_already:'već je bio tamo', vk_added:'dodan', vk_switched:'sad se prijavljuje ključem', vk_removed:'uklonjeno redaka: {n}',
+  vk_revoke_q:'Ukloniti ključ „{name}” s {n} server(a)?',
+  ak_title:'Tko ima pristup', ak_menu:'Tko ima pristup (authorized_keys)…', ak_add:'Dodaj ključ…', ak_reading:'Čitam ~/.ssh/authorized_keys…', ak_file:'Datoteka', ak_entries:'Ključeva',
+  ak_key:'Ključ', ak_wrm:'U WRM-u', ak_current:'WRM se prijavljuje ovim ključem', ak_unknown:'nije u tvom spremištu', ak_remove:'Ukloni', ak_invalid:'Nečitljiv redak', ak_line:'redak',
+  ak_none:'Nema ključeva: na ovaj se račun nitko ne može prijaviti ključem.', ak_removed:'Ključ uklonjen',
+  ak_remove_q:'Ukloniti ključ „{key}” iz authorized_keys na ovom serveru? Tko ga koristi, više se njime neće moći prijaviti.',
+  ak_note:'Prikazana je datoteka authorized_keys korisnika kojim se WRM prijavljuje. Ključevi mogu biti dopušteni i drugdje (npr. AuthorizedKeysFile ili AuthorizedKeysCommand u sshd_config, ili drugi računi).',
+  vc_help:'Vjerodajnica je korisničko ime s lozinkom (ili SSH ključem) kojom se prijavljuje više veza, npr. root@dc1. Promijeniš je jednom i sve veze koriste novu. Podijeli je s kolegama: mogu je koristiti, ali je nikad ne vide. Rotacija mijenja lozinku na svim njezinim SSH serverima odjednom.',
+  vc_new:'Nova vjerodajnica', vc_cred:'Vjerodajnica', vc_key:'SSH ključ (neobavezno)', vc_no_key:'bez ključa, samo lozinka',
+  vc_key_help:'S ključem se veze prijavljuju ključem. Lozinka spremljena uz njega i dalje se može provjeriti i rotirati.',
+  vc_hosts:'Samo za hostove (neobavezno)', vc_hosts_help:'Imena hostova sa * i ?, ili CIDR rasponi. Vjerodajnica tada radi samo za odgovarajuće hostove. Preporučeno za dijeljene vjerodajnice: lozinka se pri prijavi šalje serveru, pa je se tako ne može poslati na server koji kontrolira netko drugi.',
+  vc_rotate_days:'Podsjetnik za rotaciju (dana)', vc_desc:'Opis', vc_grants:'Podijeli s korisnicima', vc_grant_ph:'Korisničko ime…', vc_grants_help:'Mogu je koristiti u svojim vezama, ali je nikad ne vide niti mijenjaju.',
+  vc_shared_all:'Podijeli sa svim korisnicima', vc_shared_all_d:'svi je mogu koristiti u svojim vezama (samo administratori).', vc_user_unknown:'Nema takvog korisnika',
+  vc_share_nohosts_q:'Ova je vjerodajnica podijeljena, a radi za bilo koji host. Kolega bi lozinku mogao poslati na svoj server. Ograniči je na hostove (preporučeno) ili ipak spremi?',
+  vc_saved:'Vjerodajnica spremljena', vc_delete_q:'Obrisati vjerodajnicu „{name}”?', vc_empty:'Još nema vjerodajnica. Napravi jednu, npr. „root@dc1”, i odaberi je kao prijavu svojih veza.',
+  vc_none_yet:'još nema vjerodajnica', vc_missing:'(nedostupna)', vc_create_first:'Najprije napravi vjerodajnicu…',
+  vc_user_from:'iz vjerodajnice', vc_logs_in_as:'prijavljuje se kao', vc_user_conn:'koristi korisničko ime ove veze', vc_only_hosts:'samo', vc_shared_by:'dijeli',
+  vc_everybody:'svi', vc_incomplete:'rotacija nedovršena', vc_due:'vrijeme za rotaciju', vc_any_host:'bilo koji host', vc_used_by:'veza', vc_every:'svakih', days_lc:'dana',
+  vc_rotate:'Rotiraj…', vc_reveal:'Prikaži', vc_usage:'Koriste je', vc_unused:'Još je nijedna veza ne koristi.', vc_host_not_allowed:'host nije dopušten — prijava ne radi',
+  vc_reveal_q:'Upiši svoju WRM lozinku za prikaz spremljene lozinke. To se bilježi u revizijski zapis.', vc_pending_pw:'Nova lozinka nedovršene rotacije (neki serveri je imaju)',
+  vc_attention:'Vjerodajnice koje traže pažnju', edit_lc:'Uredi', password_lc:'lozinka', deleted:'Obrisano', next:'Dalje', name_required:'Ime je obavezno',
+  vk_no_folder:'Bez mape', filter_ph:'Filtar…',
+  rot_help:'Provjera se prijavljuje na svaki SSH server koji koristi ovu vjerodajnicu spremljenom lozinkom i ništa ne mijenja. Rotacija najprije napravi istu provjeru, zatim na svakom serveru pokrene passwd, prijavi se novom lozinkom i spremi je. Ako neki server ne uspije, već promijenjeni serveri vraćaju staru lozinku.',
+  rot_title:'Rotacija lozinke', rot_new:'Nova lozinka', rot_gen:'Generiraj jaku lozinku (24 znaka)', rot_own:'Upisat ću svoju', rot_check:'Provjeri prijave', rot_go:'Rotiraj sada',
+  rot_confirm:'Promijeniti lozinku „{name}” sada na svim njezinim SSH serverima?', rot_too_short:'Nova lozinka treba barem 8 znakova',
+  rot_no_password:'Ova vjerodajnica nema lozinku: rotirati se može samo lozinka.',
+  rot_stage_preflight:'Provjeravam prijave', rot_stage_change:'Mijenjam lozinku', rot_stage_rollback:'Vraćam staru lozinku', rot_stage_done:'Gotovo',
+  rot_state_pending:'čeka', rot_state_checking:'provjeravam', rot_state_ok:'prijava OK', rot_state_changing:'mijenjam', rot_state_changed:'promijenjeno i provjereno',
+  rot_state_failed:'neuspjelo', rot_state_rolled_back:'vraćena stara lozinka', rot_state_rollback_failed:'još ima NOVU lozinku', rot_state_skipped:'nije mijenjano',
+  ev_ssh_key:'SSH ključevi', ev_credential:'Vjerodajnice',
+  warn_credential_rotation_due:'Za neke vjerodajnice iz trezora došlo je vrijeme rotacije (Ključevi → Vjerodajnice).',
+  warn_credential_rotation_incomplete:'Rotacija vjerodajnice je nedovršena: neki serveri imaju novu lozinku, ostali staru (Ključevi → Vjerodajnice → Prikaži).',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -3758,6 +4038,7 @@ async function loadData() {
     loadTunnels();
     loadSnippets();
     loadStatus();
+    loadVault();
   } catch(e) { console.error('loadData', e); }
 }
 
@@ -3978,7 +4259,10 @@ function showConnCtx(x, y, conn) {
     <div class="ctx-item" onclick="closeAllCtx(); startConnTunnels(${conn.id})">▶ ${esc(t('tun_start_all'))}</div>
     ${tunRunning ? `<div class="ctx-item" onclick="closeAllCtx(); stopConnTunnels(${conn.id})">■ ${esc(t('tun_stop_all'))}</div>` : ''}` : ''}
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id}, true)">＋ ${esc(t('tun_add'))}</div>
-    <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'connection', scope_id: ${conn.id}, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>` : '';
+    <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'connection', scope_id: ${conn.id}, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
+    <div class="ctx-hr"></div>
+    <div class="ctx-item" onclick="closeAllCtx(); openAuthKeys(${conn.id})">🔐 ${esc(t('ak_menu'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openKeyDeploy(null, 'deploy', [${conn.id}])">🚀 ${esc(t('vk_deploy_menu'))}</div>` : '';
   menu.innerHTML = web ? `
     <div class="ctx-item" onclick="closeAllCtx(); openWebConn(conns.find(x => x.id === ${conn.id}))">🌐 ${esc(t('web_open'))}</div>
     <div class="ctx-hr"></div>` : isDeskConn(conn) ? `
@@ -4036,7 +4320,7 @@ function roleBadge(role) {
 // Hide options the account may not use (server key files, secret export).
 function applyPolicyToUI() {
   const pol = (currentUser && currentUser.policy) || {};
-  ['opt-key-file', 'opt-key-auto'].forEach(id => { const o = document.getElementById(id); if (o) { o.hidden = !pol.server_keys; o.disabled = !pol.server_keys; } });
+  ['opt-key-file', 'opt-key-auto'].forEach(id => { const o = document.getElementById(id); if (o) { o.hidden = !pol.server_keys; o.disabled = !pol.server_keys; o.dataset.polHidden = pol.server_keys ? '0' : '1'; } });
   const ex = document.getElementById('export-secrets-row');
   if (ex) ex.style.display = pol.secret_export ? '' : 'none';
   const bc = document.getElementById('btn-broadcast');
@@ -4102,8 +4386,9 @@ function openConnModal(id, focusTunnels) {
   ['opt-key-file', 'opt-key-auto'].forEach(oid => {
     const o = document.getElementById(oid);
     const keep = c && o && c.auth_method === o.value;
-    if (o) { o.hidden = !pol.server_keys && !keep; o.disabled = !pol.server_keys && !keep; }
+    if (o) { o.hidden = !pol.server_keys && !keep; o.disabled = !pol.server_keys && !keep; o.dataset.polHidden = !pol.server_keys && !keep ? '1' : '0'; }
   });
+  fillAuthRefSelects(c);
   onAuthMethodChange();
   onProtoChange();
   const tr = document.getElementById('conn-test-result'); tr.className = 'conn-test-result'; tr.textContent = '';
@@ -4116,6 +4401,51 @@ function onAuthMethodChange() {
   document.getElementById('field-pass').style.display = v === 'PASSWORD' ? 'block' : 'none';
   document.getElementById('field-key').style.display = v === 'KEY' ? 'block' : 'none';
   document.getElementById('field-key-file').style.display = v === 'KEY_FILE' ? 'block' : 'none';
+  document.getElementById('field-keyref').style.display = v === 'KEY_REF' ? 'block' : 'none';
+  document.getElementById('field-cred').style.display = v === 'CREDENTIAL' ? 'block' : 'none';
+  onCredPick();
+}
+
+// Auth methods a protocol can use: remote desktops and FTP log in with a password or a vault credential.
+function updateAuthOptions() {
+  const p = document.getElementById('m-proto').value;
+  const pwOnly = DESK_PROTOCOLS.includes(p) || p === 'FTP' || p === 'FTPS';
+  const sel = document.getElementById('m-auth');
+  [...sel.options].forEach(o => {
+    const off = o.dataset.polHidden === '1' || (pwOnly && o.value !== 'PASSWORD' && o.value !== 'CREDENTIAL');
+    o.hidden = off; o.disabled = off;
+  });
+  if (sel.selectedOptions[0] && sel.selectedOptions[0].disabled) sel.value = 'PASSWORD';
+  onAuthMethodChange();
+}
+
+// Key store keys and vault credentials for the connection dialog.
+function fillAuthRefSelects(c) {
+  const ks = document.getElementById('m-keyref');
+  const pairs = vaultKeys.filter(k => k.has_private);
+  ks.innerHTML = pairs.length ? pairs.map(k => `<option value="${k.id}">${esc(k.name)} · ${esc(keyTypeLabel(k))}</option>`).join('') : `<option value="">— ${esc(t('vk_none_yet'))} —</option>`;
+  if (c && c.key_id && !pairs.some(k => k.id === c.key_id)) ks.innerHTML += `<option value="${c.key_id}">${esc(c.key_name || t('vk_missing'))}</option>`;
+  if (c && c.key_id) ks.value = c.key_id;
+  const cs = document.getElementById('m-cred');
+  cs.innerHTML = vaultCreds.length ? vaultCreds.map(x => `<option value="${x.id}">${esc(x.name)}${x.username ? ' (' + esc(x.username) + ')' : ''}${x.mine ? '' : ' · ' + esc(x.owner)}</option>`).join('') : `<option value="">— ${esc(t('vc_none_yet'))} —</option>`;
+  if (c && c.credential_id && !vaultCreds.some(x => x.id === c.credential_id)) cs.innerHTML += `<option value="${c.credential_id}">${esc(c.credential_name || t('vc_missing'))}</option>`;
+  if (c && c.credential_id) cs.value = c.credential_id;
+}
+
+function onCredPick() {
+  const info = document.getElementById('m-cred-info');
+  const user = document.getElementById('m-user');
+  if (!info || !user) return;
+  const isCred = document.getElementById('m-auth').value === 'CREDENTIAL';
+  const cr = isCred ? vaultCreds.find(x => x.id === Number(document.getElementById('m-cred').value)) : null;
+  user.placeholder = cr && cr.username ? t('vc_user_from') + ': ' + cr.username : 'root';
+  if (!cr) { info.innerHTML = isCred && !vaultCreds.length ? `<a href="#" onclick="openVault('creds'); return false;">${esc(t('vc_create_first'))}</a>` : ''; return; }
+  const parts = [];
+  parts.push(cr.username ? `👤 ${esc(t('vc_logs_in_as'))} <b>${esc(cr.username)}</b>` : `👤 ${esc(t('vc_user_conn'))}`);
+  parts.push(cr.key_id ? `🔑 ${esc(cr.key_name || t('vk_key'))}` : '🔒 ' + esc(t('password_lc')));
+  if (cr.hosts) parts.push(`🎯 ${esc(t('vc_only_hosts'))}: ${esc(cr.hosts)}`);
+  if (!cr.mine) parts.push(`👥 ${esc(t('vc_shared_by'))} ${esc(cr.owner)}`);
+  info.innerHTML = parts.join(' · ');
 }
 
 function connFormPayload() {
@@ -4135,6 +4465,8 @@ function connFormPayload() {
     clear_private_key: document.getElementById('m-key-clear').checked,
     jump_id: document.getElementById('m-jump').value ? parseInt(document.getElementById('m-jump').value) : null,
     web_path: document.getElementById('m-webpath').value.trim(),
+    key_id: Number(document.getElementById('m-keyref').value) || null,
+    credential_id: Number(document.getElementById('m-cred').value) || null,
   };
 }
 
@@ -4600,6 +4932,7 @@ async function adminOverview() {
       <div class="kv"><div class="k">${esc(t('system'))}</div><div class="v small">${esc(st.os)} · ${esc(st.go)}</div></div>
       <div class="kv"><div class="k">${esc(t('database'))}</div><div class="v small">${esc(st.db_path)} (${fmtBytes(st.db_size)})</div></div>
       <div class="kv"><div class="k">${esc(t('encryption_key'))}</div><div class="v small">${esc(st.encryption_key)}</div></div>
+      ${st.vault ? `<div class="kv"><div class="k">${esc(t('vault_title'))}</div><div class="v small">🔑 ${st.vault.keys} ${esc(t('vault_keys_lc'))} · 🚀 ${st.vault.deployments} ${esc(t('vault_deployments_lc'))} · 🗝 ${st.vault.credentials} ${esc(t('vault_creds_lc'))}${st.vault.rotation_due ? ' · ⏰ ' + st.vault.rotation_due + ' ' + esc(t('vc_due')) : ''}${st.vault.rotation_incomplete ? ' · ⚠ ' + st.vault.rotation_incomplete + ' ' + esc(t('vc_incomplete')) : ''}</div></div>` : ''}
       ${st.guacd ? `<div class="kv"><div class="k">${esc(t('desk_proxy'))}</div><div class="v small">${!st.guacd.enabled ? esc(t('off')) : st.guacd.ok ? '✅ guacd ' + esc(st.guacd.version || '') + ' · ' + esc(st.guacd.address) : '❌ ' + esc(st.guacd.address) + ' — ' + esc(t('desk_proxy_down'))}</div></div>` : ''}
     </div>
     <div class="adm-h">${esc(t('active_terminals'))} (${(st.terminals || []).length})</div>
@@ -4863,7 +5196,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'snippet.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'snippet.', 'ssh_key.', 'credential.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -5217,9 +5550,7 @@ function onProtoChange() {
   }
   dbox.dataset.proto = desk ? p : '';
   dbox.style.display = desk ? '' : 'none';
-  const authSel = document.getElementById('m-auth');
-  if (desk && authSel.value !== 'PASSWORD') { authSel.value = 'PASSWORD'; onAuthMethodChange(); }
-  authSel.closest('.field').style.display = desk ? 'none' : '';
+  updateAuthOptions();
   document.getElementById('field-webpath').style.display = web ? '' : 'none';
   document.getElementById('m-auth-fields').style.display = web ? 'none' : '';
   document.getElementById('m-tun-box').style.display = web || ftp || desk ? 'none' : '';
@@ -5529,6 +5860,538 @@ async function importExternal(input, kind, password) {
   loadData();
 }
 
+
+// ══ SSH KEY STORE & CREDENTIALS VAULT (v10.5) ═══════════
+
+let vaultKeys = [], vaultCreds = [], vaultTab = 'keys';
+let _vaultLoading = null;
+
+function loadVault() {
+  if (!currentUser || isCollabMode) return Promise.resolve();
+  if (_vaultLoading) return _vaultLoading;
+  _vaultLoading = (async () => {
+    try {
+      const [k, c] = await Promise.all([fetch('/api/keys'), fetch('/api/credentials')]);
+      if (k.ok) vaultKeys = await k.json();
+      if (c.ok) vaultCreds = await c.json();
+    } catch (_) {}
+    renderVaultBadge();
+    if (document.getElementById('modal-vault').classList.contains('open')) renderVault();
+  })().finally(() => { _vaultLoading = null; });
+  return _vaultLoading;
+}
+
+function keyTypeLabel(k) {
+  const tpe = k.key_type || '';
+  if (tpe === 'ssh-ed25519') return 'ED25519';
+  if (tpe === 'ssh-rsa') return 'RSA ' + (k.bits || '');
+  if (tpe.startsWith('ecdsa-')) return 'ECDSA ' + (k.bits || '');
+  return tpe;
+}
+
+function renderVaultBadge() {
+  const attn = vaultCreds.filter(c => c.mine && (c.rotation_due || c.rotation_incomplete));
+  const b = document.getElementById('vault-badge');
+  if (b) { b.style.display = attn.length ? '' : 'none'; b.textContent = attn.length || ''; }
+  const btn = document.getElementById('btn-vault');
+  if (btn) btn.title = attn.length ? t('vc_attention') + ': ' + attn.map(c => c.name).join(', ') : t('vault_title');
+  const tb = document.getElementById('vault-tab-due');
+  if (tb) { tb.style.display = attn.length ? '' : 'none'; tb.textContent = attn.length; }
+}
+
+async function openVault(tab) {
+  if (!currentUser) return;
+  if (tab) vaultTab = tab;
+  setVaultTab(vaultTab);
+  document.getElementById('vk-list').innerHTML = document.getElementById('vc-list').innerHTML = `<div class="muted-text">${esc(t('loading'))}</div>`;
+  document.getElementById('modal-vault').classList.add('open');
+  await loadVault();
+  renderVault();
+}
+
+function setVaultTab(tab) {
+  vaultTab = tab === 'creds' ? 'creds' : 'keys';
+  document.querySelectorAll('#vault-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === vaultTab));
+  document.getElementById('vault-keys').classList.toggle('active', vaultTab === 'keys');
+  document.getElementById('vault-creds').classList.toggle('active', vaultTab === 'creds');
+}
+
+function renderVault() {
+  const pol = (currentUser && currentUser.policy) || {};
+  const connName = id => { const c = conns.find(x => x.id === id); return c ? c.name : '#' + id; };
+  document.getElementById('vk-list').innerHTML = vaultKeys.length ? vaultKeys.map(k => {
+    const used = k.used_by || [], dep = k.deployed || [];
+    return `<div class="share-card">
+      <div class="sc-top"><span class="sc-name">🔑 ${esc(k.name)}</span>
+        <span class="pill">${esc(keyTypeLabel(k))}</span>
+        ${k.has_private ? `<span class="pill ok">${esc(t('vk_pair'))}</span>` : `<span class="pill">${esc(t('vk_public_only'))}</span>`}
+        ${used.length ? `<span class="pill" title="${esc(used.join(', '))}">🔐 ${esc(t('vk_login_for'))}: ${used.length}</span>` : ''}
+        ${dep.length ? `<span class="pill" title="${esc(dep.map(connName).join(', '))}">🚀 ${esc(t('vk_on_servers'))}: ${dep.length}</span>` : ''}</div>
+      <div class="vk-fp">${esc(k.fingerprint)}${k.comment ? ' · ' + esc(k.comment) : ''}</div>
+      <div class="vk-pub" title="${esc(t('vk_copy_pub'))}" onclick="copyText(${jsq(k.public_key)})">${esc(k.public_key)}</div>
+      <div class="sc-meta"><span>${esc(t('created'))}: ${esc(fmtTime(k.created_at))}</span>${k.last_used_at ? `<span>${esc(t('vk_last_used'))}: ${esc(fmtTime(k.last_used_at))}</span>` : ''}
+        ${used.length ? `<span>🔐 ${esc(used.join(', '))}</span>` : ''}${dep.length ? `<span>🚀 ${esc(dep.map(connName).join(', '))}</span>` : ''}</div>
+      <div class="sc-actions">
+        <button class="btn-sm" onclick="openKeyDeploy(${k.id}, 'deploy')">🚀 ${esc(t('vk_deploy'))}</button>
+        <button class="btn-sec btn-sm" onclick="openKeyDeploy(${k.id}, 'revoke')">✂ ${esc(t('vk_revoke'))}</button>
+        <button class="btn-sec btn-sm" onclick="copyText(${jsq(k.public_key)})">📋 ${esc(t('vk_copy_pub'))}</button>
+        <button class="btn-sec btn-sm" onclick="location.href='/api/keys/${k.id}/public'">⬇ .pub</button>
+        ${k.has_private && pol.secret_export ? `<button class="btn-sec btn-sm" onclick="exportKey(${k.id})">🔓 ${esc(t('vk_export'))}</button>` : ''}
+        <button class="btn-sec btn-sm" onclick="renameKey(${k.id})" title="${esc(t('rename_plain'))}">✏</button>
+        <button class="btn-danger btn-sm" onclick="deleteKey(${k.id})" title="${esc(t('delete'))}">🗑</button>
+      </div></div>`;
+  }).join('') : `<div class="vk-empty">${esc(t('vk_empty'))}</div>`;
+  document.getElementById('vc-list').innerHTML = vaultCreds.length ? vaultCreds.map(c => {
+    const st = c.rotation_status || '';
+    const showSt = c.mine && st && !st.startsWith('ok ') && !st.startsWith('set by hand');
+    return `<div class="share-card">
+      <div class="sc-top"><span class="sc-name">🗝 ${esc(c.name)}</span>
+        ${c.username ? `<span class="pill">👤 ${esc(c.username)}</span>` : ''}
+        ${c.key_id ? `<span class="pill">🔑 ${esc(c.key_name || t('vk_key'))}</span>` : ''}
+        ${c.has_password ? `<span class="pill">🔒 ${esc(t('password_lc'))}</span>` : ''}
+        ${c.mine ? (c.shared_all ? `<span class="pill warn">👥 ${esc(t('vc_everybody'))}</span>` : (c.grant_names || []).length ? `<span class="pill" title="${esc(c.grant_names.join(', '))}">👥 ${esc(c.grant_names.join(', '))}</span>` : '') : `<span class="pill">👥 ${esc(t('vc_shared_by'))} ${esc(c.owner)}</span>`}
+        ${c.rotation_incomplete ? `<span class="pill bad">⚠ ${esc(t('vc_incomplete'))}</span>` : c.rotation_due ? `<span class="pill warn">⏰ ${esc(t('vc_due'))}</span>` : ''}</div>
+      <div class="sc-meta"><span>🎯 ${c.hosts ? esc(c.hosts) : esc(t('vc_any_host'))}</span><span>🔗 ${esc(t('vc_used_by'))}: ${c.used_by}</span>
+        ${c.mine && c.rotated_at ? `<span>🔄 ${esc(fmtTime(c.rotated_at))}${c.rotate_days ? ' · ' + esc(t('vc_every')) + ' ' + c.rotate_days + ' ' + esc(t('days_lc')) : ''}</span>` : ''}
+        ${c.description ? `<span>${esc(c.description)}</span>` : ''}</div>
+      ${showSt ? `<div class="hint-box ${c.rotation_incomplete ? 'bad' : 'warn'}">${esc(st)}</div>` : ''}
+      <div class="vc-usage" id="vc-usage-${c.id}" style="display:none;"></div>
+      <div class="sc-actions">
+        ${c.mine ? `<button class="btn-sec btn-sm" onclick="openCredModal(${c.id})">✏ ${esc(t('edit_lc'))}</button>
+        <button class="btn-sm" onclick="openRotation(${c.id})">🔄 ${esc(t('vc_rotate'))}</button>
+        ${pol.secret_export ? `<button class="btn-sec btn-sm" onclick="revealCred(${c.id})">👁 ${esc(t('vc_reveal'))}</button>` : ''}` : ''}
+        <button class="btn-sec btn-sm" onclick="credUsage(${c.id})">🔗 ${esc(t('vc_usage'))}</button>
+        ${c.mine ? `<button class="btn-danger btn-sm" onclick="deleteCred(${c.id})" title="${esc(t('delete'))}">🗑</button>` : ''}
+      </div></div>`;
+  }).join('') : `<div class="vk-empty">${esc(t('vc_empty'))}</div>`;
+  renderVaultBadge();
+}
+
+// ── keys ──
+function openKeyNew(mode) {
+  const gen = mode === 'generate';
+  document.getElementById('kn-title').textContent = gen ? '🔑 ' + t('vk_generate') : '⤓ ' + t('vk_import');
+  document.getElementById('kn-gen').style.display = gen ? '' : 'none';
+  document.getElementById('kn-imp').style.display = gen ? 'none' : '';
+  document.getElementById('kn-name').value = '';
+  document.getElementById('kn-comment').value = '';
+  document.getElementById('kn-comment').placeholder = (currentUser ? currentUser.username : 'me') + '@wrm';
+  document.getElementById('kn-key').value = '';
+  document.getElementById('kn-pp').value = '';
+  document.getElementById('kn-file').value = '';
+  document.getElementById('kn-pp-wrap').style.display = 'none';
+  const ok = document.getElementById('kn-ok');
+  ok.dataset.mode = mode; ok.disabled = false;
+  ok.textContent = gen ? t('vk_generate') : t('vk_import');
+  document.getElementById('modal-keynew').classList.add('open');
+  setTimeout(() => document.getElementById(gen ? 'kn-name' : 'kn-key').focus(), 50);
+}
+
+function keyFileChosen(inp) {
+  const f = inp.files && inp.files[0];
+  if (!f) return;
+  if (f.size > 32768) { showToast(t('vk_file_big'), 'error'); return; }
+  const r = new FileReader();
+  r.onload = () => {
+    document.getElementById('kn-key').value = String(r.result || '');
+    if (!document.getElementById('kn-name').value) document.getElementById('kn-name').value = f.name.replace(/\.(pub|pem|key)$/i, '');
+  };
+  r.readAsText(f);
+}
+
+async function saveNewKey() {
+  const ok = document.getElementById('kn-ok');
+  const gen = ok.dataset.mode === 'generate';
+  const body = {name: document.getElementById('kn-name').value.trim()};
+  if (gen) {
+    const [type, bits] = document.getElementById('kn-type').value.split(':');
+    body.generate = {type, bits: Number(bits) || 0};
+    body.comment = document.getElementById('kn-comment').value.trim();
+  } else {
+    body.key = document.getElementById('kn-key').value;
+    body.passphrase = document.getElementById('kn-pp').value;
+    if (!body.key.trim()) { showToast(t('vk_paste'), 'warning'); return; }
+  }
+  ok.disabled = true;
+  const old = ok.textContent;
+  ok.textContent = '⏳ ' + (gen ? t('vk_generating') : t('loading'));
+  try {
+    const r = await fetch('/api/keys', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      if (j.need_passphrase) {
+        document.getElementById('kn-pp-wrap').style.display = '';
+        document.getElementById('kn-pp').focus();
+      }
+      showToast(j.error || ('HTTP ' + r.status), j.need_passphrase ? 'warning' : 'error', 5000);
+      return;
+    }
+    closeModal('modal-keynew');
+    showToast(t('vk_saved') + ': ' + j.name, 'success');
+    await loadVault();
+    renderVault();
+  } finally { ok.disabled = false; ok.textContent = old; }
+}
+
+async function renameKey(id) {
+  const k = vaultKeys.find(x => x.id === id);
+  if (!k) return;
+  const name = await uiPrompt(t('rename_plain'), k.name);
+  if (!name || !name.trim() || name.trim() === k.name) return;
+  const r = await fetch('/api/keys/' + id, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: name.trim()})});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  await loadVault(); renderVault();
+  loadData();
+}
+
+async function deleteKey(id) {
+  const k = vaultKeys.find(x => x.id === id);
+  if (!k) return;
+  if (!(await uiConfirm(t('vk_delete_q').replace('{name}', k.name), {okText: t('delete'), danger: true}))) return;
+  const r = await fetch('/api/keys/' + id, {method: 'DELETE'});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  showToast(t('deleted'), 'success');
+  await loadVault(); renderVault();
+}
+
+async function exportKey(id) {
+  const k = vaultKeys.find(x => x.id === id);
+  if (!k) return;
+  const pw = await uiDialog({title: t('vk_export') + ': ' + k.name, message: t('vk_export_q'), input: true, password: true, okText: t('next')});
+  if (!pw) return;
+  const pp = await uiDialog({title: t('vk_export') + ': ' + k.name, message: t('vk_export_pp'), input: true, password: true, okText: t('vk_export')});
+  if (pp === null) return;
+  const r = await fetch('/api/keys/' + id + '/export', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pw, passphrase: pp || ''})});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  const j = await r.json();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([j.private_key], {type: 'application/octet-stream'}));
+  a.download = (j.file_name || 'id_wrm');
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  showToast(t('vk_exported'), 'success');
+}
+
+// ── deploy / revoke ──
+let kdMode = 'deploy', kdChecked = new Set();
+
+function kdConnections() {
+  return conns.filter(c => c.protocol === 'SSH' || c.protocol === 'SFTP');
+}
+
+async function openKeyDeploy(keyId, mode, connIds) {
+  if (!currentUser) return;
+  await loadVault();
+  if (!vaultKeys.length) { showToast(t('vk_none_yet'), 'warning'); openVault('keys'); return; }
+  kdMode = mode === 'revoke' ? 'revoke' : 'deploy';
+  const sel = document.getElementById('kd-key');
+  sel.innerHTML = vaultKeys.map(k => `<option value="${k.id}">${esc(k.name)} · ${esc(keyTypeLabel(k))}${k.has_private ? '' : ' · ' + esc(t('vk_public_only'))}</option>`).join('');
+  if (keyId) sel.value = keyId;
+  else if (kdMode === 'deploy') { const pair = vaultKeys.find(k => k.has_private); if (pair) sel.value = pair.id; }
+  kdChecked = new Set((connIds || []).filter(id => kdConnections().some(c => c.id === id)));
+  document.getElementById('kd-filter').value = '';
+  document.getElementById('kd-res').innerHTML = '';
+  document.getElementById('kd-title').textContent = kdMode === 'deploy' ? '🚀 ' + t('vk_deploy_title') : '✂ ' + t('vk_revoke_title');
+  document.getElementById('kd-help').textContent = t(kdMode === 'deploy' ? 'vk_deploy_help' : 'vk_revoke_help');
+  const go = document.getElementById('kd-go');
+  go.className = kdMode === 'revoke' ? 'btn-danger' : '';
+  go.disabled = false;
+  renderKeyDeployList(!connIds || !connIds.length);
+  document.getElementById('modal-keydeploy').classList.add('open');
+}
+
+function kdKey() { return vaultKeys.find(k => k.id === Number(document.getElementById('kd-key').value)); }
+
+function renderKeyDeployList(preselect) {
+  const k = kdKey();
+  if (!k) return;
+  if (preselect && kdMode === 'revoke') kdChecked = new Set((k.deployed || []));
+  const q = (document.getElementById('kd-filter').value || '').toLowerCase();
+  const list = kdConnections().filter(c => !q || (c.name + ' ' + c.host + ' ' + (c.username || '')).toLowerCase().includes(q));
+  const byFolder = {};
+  list.forEach(c => { (byFolder[c.folder_id || 0] = byFolder[c.folder_id || 0] || []).push(c); });
+  const folderName = id => { const f = folders.find(x => x.id === Number(id)); return f ? f.name : t('vk_no_folder'); };
+  const keys = Object.keys(byFolder).sort((a, b) => (a === '0') - (b === '0') || folderName(a).localeCompare(folderName(b)));
+  document.getElementById('kd-list').innerHTML = list.length ? keys.map(fid => `<div class="kd-folder">${esc(folderName(fid))}</div>` + byFolder[fid].sort((a, b) => a.name.localeCompare(b.name)).map(c => {
+    const login = c.auth_method === 'KEY_REF' && c.key_id === k.id;
+    const off = kdMode === 'revoke' && login;
+    const deployed = (k.deployed || []).includes(c.id);
+    return `<label class="kd-row${off ? ' off' : ''}" title="${off ? esc(t('vk_login_key_lock')) : ''}"><input type="checkbox" data-id="${c.id}" ${kdChecked.has(c.id) && !off ? 'checked' : ''} ${off ? 'disabled' : ''} onchange="this.checked ? kdChecked.add(${c.id}) : kdChecked.delete(${c.id})">
+      <span>${esc(c.name)}</span>${login ? `<span class="pill ok">🔐 ${esc(t('vk_login'))}</span>` : deployed ? `<span class="pill">🚀 ${esc(t('vk_present'))}</span>` : ''}
+      <span class="bc-host">${esc((c.credential_user || c.username) ? (c.credential_user || c.username) + '@' : '')}${esc(c.host)}${c.route ? ' ⤳ ' + esc(c.route) : ''}</span></label>`;
+  }).join('')).join('') : `<div class="muted-text" style="padding:8px;">${esc(t('vk_no_ssh_conns'))}</div>`;
+  document.getElementById('kd-switch-row').style.display = kdMode === 'deploy' && k.has_private ? '' : 'none';
+  const go = document.getElementById('kd-go');
+  go.textContent = (kdMode === 'deploy' ? '🚀 ' + t('vk_deploy_go') : '✂ ' + t('vk_revoke_go'));
+}
+
+function kdSelect(v) {
+  document.querySelectorAll('#kd-list input[type=checkbox]:not(:disabled)').forEach(c => { c.checked = v; const id = Number(c.dataset.id); v ? kdChecked.add(id) : kdChecked.delete(id); });
+}
+
+async function runKeyDeploy() {
+  const k = kdKey();
+  const ids = [...kdChecked].filter(id => kdConnections().some(c => c.id === id));
+  if (!k || !ids.length) { showToast(t('vk_pick_conns'), 'warning'); return; }
+  if (kdMode === 'revoke' && !(await uiConfirm(t('vk_revoke_q').replace('{name}', k.name).replace('{n}', ids.length), {okText: t('vk_revoke_go'), danger: true}))) return;
+  const go = document.getElementById('kd-go');
+  go.disabled = true;
+  const res = document.getElementById('kd-res');
+  res.innerHTML = `<div class="hint-box">⏳ ${esc(t('vk_working').replace('{n}', ids.length))}</div>`;
+  try {
+    const r = await fetch('/api/keys/' + k.id + '/' + kdMode, {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({conn_ids: ids, use_key: kdMode === 'deploy' && k.has_private && document.getElementById('kd-switch').checked})});
+    if (!r.ok) { res.innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; return; }
+    const j = await r.json();
+    res.innerHTML = `<div class="hint-box ${j.failed ? 'warn' : 'ok'}">${j.failed ? '⚠' : '✅'} ${esc(t('vk_result').replace('{ok}', j.ok).replace('{failed}', j.failed))}</div>` +
+      j.results.map(x => `<div class="r"><span>${x.ok ? '✅' : '❌'}</span><b>${esc(x.name || ('#' + x.conn_id))}</b>
+        <span class="${x.error ? 'e' : 'm'}">${esc(x.error ? x.error : kdMode === 'revoke' ? t('vk_removed').replace('{n}', x.removed || 0) : (x.already ? t('vk_already') : t('vk_added')) + (x.switched ? ' · ' + t('vk_switched') : ''))}</span></div>`).join('');
+    await loadVault();
+    if (j.results.some(x => x.switched)) await loadData();
+    renderKeyDeployList();
+  } finally { go.disabled = false; }
+}
+
+// ── who has access (authorized_keys) ──
+let akConnId = null;
+
+function openAuthKeys(connId) {
+  akConnId = connId;
+  const c = conns.find(x => x.id === connId);
+  document.getElementById('ak-sub').textContent = c ? c.name + ' — ' + ((c.credential_user || c.username) ? (c.credential_user || c.username) + '@' : '') + c.host + (c.route ? ' ⤳ ' + c.route : '') : '';
+  document.getElementById('modal-authkeys').classList.add('open');
+  loadAuthKeys();
+}
+
+async function loadAuthKeys() {
+  const body = document.getElementById('ak-body');
+  body.innerHTML = `<div class="hint-box">⏳ ${esc(t('ak_reading'))}</div>`;
+  const r = await fetch('/api/connections/' + akConnId + '/authorized-keys');
+  if (!r.ok) { body.innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; return; }
+  const j = await r.json();
+  loadVault();
+  const es = j.entries || [];
+  body.innerHTML = `<div class="muted-text" style="margin-bottom:8px;">${esc(t('ak_file'))}: <span class="mono">${esc(j.path || '~/.ssh/authorized_keys')}</span>${j.user ? ' · ' + esc(t('user')) + ': <b>' + esc(j.user) + '</b>' : ''} · ${esc(t('ak_entries'))}: ${es.length}</div>` +
+    (es.length ? `<table class="admin-table ak-table"><thead><tr><th>${esc(t('vk_type'))}</th><th>${esc(t('ak_key'))}</th><th>${esc(t('ak_wrm'))}</th><th></th></tr></thead><tbody>` + es.map(e => e.invalid ? `<tr><td colspan="3" class="muted-text">${esc(t('ak_invalid'))} (${esc(t('ak_line'))} ${e.line}): <span class="mono">${esc(e.text)}</span></td><td></td></tr>` : `<tr>
+      <td>${esc(keyTypeLabel(e))}</td>
+      <td><b>${esc(e.comment || '—')}</b><div class="fp">${esc(e.fingerprint)}</div>${e.options ? `<div class="opt">${esc(e.options)}</div>` : ''}</td>
+      <td>${e.current ? `<span class="pill ok">🔐 ${esc(t('ak_current'))}</span> ` : ''}${e.key_name ? `<span class="pill">🔑 ${esc(e.key_name)}</span>` : `<span class="muted-text">${esc(t('ak_unknown'))}</span>`}</td>
+      <td>${e.current ? '' : `<button class="btn-danger btn-sm" onclick="akRemove(${jsq(e.fingerprint)}, ${jsq(e.comment || e.fingerprint)})">✂ ${esc(t('ak_remove'))}</button>`}</td></tr>`).join('') + '</tbody></table>'
+      : `<div class="vk-empty">${esc(t('ak_none'))}</div>`) +
+    `<div class="muted-text" style="margin-top:8px;line-height:1.5;">${esc(t('ak_note'))}</div>`;
+}
+
+async function akRemove(fp, label) {
+  if (!(await uiConfirm(t('ak_remove_q').replace('{key}', label), {okText: t('ak_remove'), danger: true}))) return;
+  const r = await fetch('/api/connections/' + akConnId + '/authorized-keys?fingerprint=' + encodeURIComponent(fp), {method: 'DELETE'});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  showToast(t('ak_removed'), 'success');
+  loadAuthKeys();
+}
+
+function akDeployHere() { openKeyDeploy(null, 'deploy', [akConnId]); }
+
+// ── credentials ──
+let crGrants = [], crUserIds = {};
+
+async function openCredModal(id) {
+  await loadVault();
+  const c = id ? vaultCreds.find(x => x.id === id && x.mine) : null;
+  if (id && !c) return;
+  document.getElementById('cr-title').textContent = c ? '🗝 ' + c.name : '🗝 ' + t('vc_new');
+  document.getElementById('cr-id').value = c ? c.id : '';
+  document.getElementById('cr-name').value = c ? c.name : '';
+  document.getElementById('cr-user').value = c ? c.username : '';
+  const pw = document.getElementById('cr-pass');
+  pw.value = ''; pw.type = 'password';
+  pw.placeholder = c && c.has_password ? '••••••••' : '';
+  document.getElementById('cr-pass-note').style.display = c && c.has_password ? '' : 'none';
+  const ks = document.getElementById('cr-key');
+  ks.innerHTML = `<option value="">— ${esc(t('vc_no_key'))} —</option>` + vaultKeys.filter(k => k.has_private).map(k => `<option value="${k.id}">${esc(k.name)} · ${esc(keyTypeLabel(k))}</option>`).join('');
+  ks.value = c && c.key_id ? c.key_id : '';
+  document.getElementById('cr-hosts').value = c ? c.hosts : '';
+  document.getElementById('cr-rot').value = c && c.rotate_days ? c.rotate_days : '';
+  document.getElementById('cr-desc').value = c ? c.description : '';
+  crGrants = c ? (c.grants || []).map((uid, i) => ({id: uid, username: (c.grant_names || [])[i] || ('#' + uid)})) : [];
+  renderCrGrants();
+  document.getElementById('cr-grant-q').value = '';
+  document.getElementById('cr-all').checked = !!(c && c.shared_all);
+  document.getElementById('cr-all-row').style.display = currentUser && currentUser.is_admin ? '' : 'none';
+  document.getElementById('cr-del').style.display = c ? '' : 'none';
+  document.getElementById('modal-cred').classList.add('open');
+  setTimeout(() => document.getElementById('cr-name').focus(), 50);
+}
+
+function renderCrGrants() {
+  document.getElementById('cr-grants').innerHTML = crGrants.map(g => `<span class="grant-chip">👤 ${esc(g.username)}<button type="button" onclick="crGrants = crGrants.filter(x => x.id !== ${g.id}); renderCrGrants();" title="${esc(t('remove'))}">✕</button></span>`).join('');
+}
+
+let _crSearchT = null;
+function crGrantSearch() {
+  clearTimeout(_crSearchT);
+  _crSearchT = setTimeout(async () => {
+    const q = document.getElementById('cr-grant-q').value.trim();
+    try {
+      const r = await fetch('/api/users?q=' + encodeURIComponent(q));
+      if (!r.ok) return;
+      const us = await r.json();
+      us.forEach(u => { crUserIds[u.username.toLowerCase()] = u; });
+      document.getElementById('cr-grant-users').innerHTML = us.filter(u => u.id !== currentUser.id).map(u => `<option value="${esc(u.username)}">${esc(u.display_name || '')}</option>`).join('');
+    } catch (_) {}
+  }, 200);
+}
+
+async function crGrantAdd() {
+  const inp = document.getElementById('cr-grant-q');
+  const name = inp.value.trim().toLowerCase();
+  if (!name) return;
+  let u = crUserIds[name];
+  if (!u) {
+    try { const r = await fetch('/api/users?q=' + encodeURIComponent(name)); if (r.ok) (await r.json()).forEach(x => { crUserIds[x.username.toLowerCase()] = x; }); } catch (_) {}
+    u = crUserIds[name];
+  }
+  if (!u) { showToast(t('vc_user_unknown'), 'warning'); return; }
+  if (u.id === currentUser.id) { inp.value = ''; return; }
+  if (!crGrants.some(g => g.id === u.id)) crGrants.push({id: u.id, username: u.username});
+  inp.value = '';
+  renderCrGrants();
+}
+
+function randomPasswordJS(n) {
+  const lower = 'abcdefghijkmnopqrstuvwxyz', upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ', digits = '23456789', sym = '-_.,:+=!@%^*';
+  const all = lower + upper + digits + sym;
+  for (;;) {
+    const a = new Uint32Array(n); crypto.getRandomValues(a);
+    const s = [...a].map(x => all[x % all.length]).join('');
+    if (/[a-z]/.test(s) && /[A-Z]/.test(s) && /[2-9]/.test(s) && /[-_.,:+=!@%^*]/.test(s) && !sym.includes(s[0])) return s;
+  }
+}
+function crGenPassword() { const p = document.getElementById('cr-pass'); p.value = randomPasswordJS(24); p.type = 'text'; }
+function crTogglePw() { const p = document.getElementById('cr-pass'); p.type = p.type === 'password' ? 'text' : 'password'; }
+
+async function saveCred() {
+  const id = Number(document.getElementById('cr-id').value) || 0;
+  const body = {
+    name: document.getElementById('cr-name').value.trim(),
+    username: document.getElementById('cr-user').value.trim(),
+    password: document.getElementById('cr-pass').value,
+    key_id: Number(document.getElementById('cr-key').value) || null,
+    hosts: document.getElementById('cr-hosts').value.trim(),
+    rotate_days: Number(document.getElementById('cr-rot').value) || 0,
+    description: document.getElementById('cr-desc').value.trim(),
+    grants: crGrants.map(g => g.id),
+    shared_all: document.getElementById('cr-all').checked,
+  };
+  if (!body.name) { showToast(t('name_required'), 'warning'); return; }
+  if ((body.grants.length || body.shared_all) && !body.hosts && !body.key_id &&
+      !(await uiConfirm(t('vc_share_nohosts_q'), {okText: t('save')}))) return;
+  const r = await fetch('/api/credentials' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  closeModal('modal-cred');
+  showToast(t('vc_saved'), 'success');
+  await loadVault(); renderVault();
+  loadData();
+}
+
+async function deleteCred(id) {
+  const c = vaultCreds.find(x => x.id === id);
+  if (!c) return;
+  if (!(await uiConfirm(t('vc_delete_q').replace('{name}', c.name), {okText: t('delete'), danger: true}))) return;
+  const r = await fetch('/api/credentials/' + id, {method: 'DELETE'});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  closeModal('modal-cred');
+  showToast(t('deleted'), 'success');
+  await loadVault(); renderVault();
+}
+
+async function credUsage(id) {
+  const box = document.getElementById('vc-usage-' + id);
+  if (!box) return;
+  if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+  const r = await fetch('/api/credentials/' + id + '/usage');
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  const list = await r.json();
+  box.innerHTML = list.length ? list.map(u => `<div>${u.host_allowed ? '🔗' : '⛔'} <b>${esc(u.name)}</b> <span class="mono">${esc(u.protocol)} ${esc(u.host)}</span>${u.mine ? '' : ' · 👤 ' + esc(u.owner)}${u.host_allowed ? '' : ' · ' + esc(t('vc_host_not_allowed'))}</div>`).join('') : `<div class="muted-text">${esc(t('vc_unused'))}</div>`;
+  box.style.display = '';
+}
+
+async function revealCred(id) {
+  const c = vaultCreds.find(x => x.id === id);
+  if (!c) return;
+  const pw = await uiDialog({title: t('vc_reveal') + ': ' + c.name, message: t('vc_reveal_q'), input: true, password: true, okText: t('vc_reveal')});
+  if (!pw) return;
+  const r = await fetch('/api/credentials/' + id + '/reveal', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pw})});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  const j = await r.json();
+  const msg = (c.username ? t('username') + ': ' + c.username + '\n' : '') + t('password') + ': ' + (j.password || '—') +
+    (j.pending_password ? '\n\n⚠ ' + t('vc_pending_pw') + ': ' + j.pending_password : '');
+  const a = await uiDialog({title: '🗝 ' + c.name, message: msg, okText: t('close'), altText: '📋 ' + t('copy'), cancelText: t('cancel')});
+  if (a === 'alt') copyText(j.password || '');
+}
+
+// ── rotation ──
+let rotCredId = null, rotPolling = false;
+
+async function openRotation(id) {
+  const c = vaultCreds.find(x => x.id === id);
+  if (!c) return;
+  rotCredId = id;
+  document.getElementById('rot-title').textContent = t('rot_title') + ': ' + c.name;
+  document.getElementById('rot-mode').value = 'gen';
+  document.getElementById('rot-own').value = '';
+  document.getElementById('rot-own').style.display = 'none';
+  document.getElementById('rot-msg').innerHTML = c.has_password ? '' : `<div class="hint-box warn">${esc(t('rot_no_password'))}</div>`;
+  document.getElementById('rot-hosts').innerHTML = '';
+  document.getElementById('modal-rotate').classList.add('open');
+  const r = await fetch('/api/credentials/' + id + '/rotation');
+  if (r.ok) { const st = await r.json(); if (st.stage) renderRotation(st); if (st.running) pollRotation(); }
+}
+
+async function startCredRotation(mode) {
+  const c = vaultCreds.find(x => x.id === rotCredId);
+  if (!c) return;
+  const body = {mode};
+  if (mode === 'rotate') {
+    if (document.getElementById('rot-mode').value === 'own') {
+      body.new_password = document.getElementById('rot-own').value;
+      if (body.new_password.length < 8) { showToast(t('rot_too_short'), 'warning'); return; }
+    }
+    if (!(await uiConfirm(t('rot_confirm').replace('{name}', c.name), {okText: t('rot_go'), danger: true}))) return;
+  }
+  const r = await fetch('/api/credentials/' + rotCredId + '/rotate', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) { document.getElementById('rot-msg').innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; return; }
+  renderRotation(await r.json());
+  pollRotation();
+}
+
+async function pollRotation() {
+  if (rotPolling) return;
+  rotPolling = true;
+  try {
+    for (;;) {
+      await new Promise(res => setTimeout(res, 700));
+      if (!document.getElementById('modal-rotate').classList.contains('open') || !rotCredId) break;
+      const r = await fetch('/api/credentials/' + rotCredId + '/rotation');
+      if (!r.ok) break;
+      const st = await r.json();
+      renderRotation(st);
+      if (!st.running) { loadVault(); break; }
+    }
+  } finally { rotPolling = false; }
+}
+
+const ROT_ICONS = {pending: '⏸', checking: '⏳', ok: '✅', changing: '⏳', changed: '✅', failed: '❌', rolled_back: '↩', rollback_failed: '⚠', skipped: '⏭'};
+function renderRotation(st) {
+  const running = !!st.running;
+  document.getElementById('rot-check').disabled = running;
+  document.getElementById('rot-go').disabled = running;
+  const stageTxt = t('rot_stage_' + (st.stage || 'done'));
+  document.getElementById('rot-msg').innerHTML = running
+    ? `<div class="hint-box">⏳ ${esc(stageTxt)}…</div>`
+    : (st.message ? `<div class="hint-box ${st.ok ? 'ok' : 'bad'}">${st.ok ? '✅' : '⚠'} ${esc(st.message)}</div>` : '');
+  document.getElementById('rot-hosts').innerHTML = (st.hosts || []).map(h => `<div class="rot-host"><span class="st" title="${esc(t('rot_state_' + h.state))}">${ROT_ICONS[h.state] || '•'}</span>
+    <div style="min-width:0;"><div class="k">${esc(h.key)}</div><div class="c">${esc((h.connections || []).join(', '))} · ${esc(t('rot_state_' + h.state))}</div>${h.error ? `<div class="e">${esc(h.error)}</div>` : ''}</div></div>`).join('');
+}
 
 // ══ REMOTE DESKTOP (v10.4): RDP / VNC / Telnet through guacd ═══
 const DESK_PROTOCOLS = ['RDP', 'VNC', 'TELNET'];
@@ -10936,7 +11799,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'status_changed') loadStatus(true); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed') loadVault(); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();
@@ -11065,6 +11928,7 @@ window.addEventListener('load', async () => {
     document.getElementById('username-display').textContent = currentUser ? (currentUser.display_name || currentUser.username) : t('guest');
     document.getElementById('user-avatar').textContent = (document.getElementById('username-display').textContent || '?').charAt(0);
     document.getElementById('btn-shares').style.display = currentUser ? '' : 'none';
+    document.getElementById('btn-vault').style.display = 'none';
     document.getElementById('btn-logout').style.display = currentUser ? '' : 'none';
     document.getElementById('admin-badge').style.display = 'none';
     applyLang();

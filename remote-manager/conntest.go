@@ -48,8 +48,17 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), 400)
 		return
 	}
+	if err := checkAuthRefs(&c, userID); err != nil {
+		jsonError(w, err.Error(), 400)
+		return
+	}
 	c.UserID = userID
 	c.Host = ensurePort(c.Host, c.Protocol)
+	resolveConnectionAuth(&c)
+	if c.authErr != "" {
+		jsonOK(w, map[string]interface{}{"ok": false, "error": c.authErr})
+		return
+	}
 
 	start := time.Now()
 	var detail string

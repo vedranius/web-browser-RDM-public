@@ -49,8 +49,9 @@ Code layout:
 | `importers.go` | Import from mRemoteNG `confCons.xml` and OpenSSH config |
 | `snippets.go`, `status.go` | Snippets and run on connect; live up/down status monitor |
 | `guac.go` | Remote desktop (RDP / VNC / Telnet) through guacd: handshake, relay, recording |
+| `keys.go`, `credentials.go` | SSH key store (deploy, revoke, who has access) and credentials vault (sharing, host lists, password rotation) |
 | `static/index.html` | The whole web UI (embedded into the binary); `static/vendor/` holds xterm.js, guacamole-common-js and fonts, `static/brand/` the logo and icons |
-| `*_test.go` | `security_test.go` and `upgrade_test.go` (unit), `integration_test.go` (in-process SSH/SFTP server: connect → audit → recording, transfers), `tunnels_test.go` (jump hosts, tunnels, web interfaces), `importers_test.go` (mRemoteNG, OpenSSH config), `snippets_test.go`, `status_test.go`, `guac_test.go` |
+| `*_test.go` | `security_test.go` and `upgrade_test.go` (unit), `integration_test.go` (in-process SSH/SFTP server: connect → audit → recording, transfers), `tunnels_test.go` (jump hosts, tunnels, web interfaces), `importers_test.go` (mRemoteNG, OpenSSH config), `snippets_test.go`, `status_test.go`, `guac_test.go`, `keys_test.go` (fake SSH server with `sh` and a simulated `passwd`) |
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the parts fit together and where planned features belong.
 

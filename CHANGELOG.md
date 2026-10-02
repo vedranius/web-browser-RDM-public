@@ -4,6 +4,30 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.5.0] — 2026-10-02 — SSH keys & credentials vault
+
+### Added
+- **SSH key store** (🔑 *Keys* in the top bar, `keys.go`):
+  - generate ED25519, RSA 2048/3072/4096 or ECDSA 256/384/521 keys, or import OpenSSH/PEM private keys (with passphrase) and public keys; private keys are encrypted at rest;
+  - new auth method **SSH key from the key store** (`KEY_REF`, `connections.key_id`); last use is recorded;
+  - **deploy** a key to many SSH connections at once like `ssh-copy-id` (through jump hosts, idempotent, keeps other lines, restores SELinux contexts) and optionally switch them to the key after a test login;
+  - **revoke** a key from many servers (never the key WRM logs in with);
+  - **who has access**: read a connection's `~/.ssh/authorized_keys`, match the keys of the key store, mark WRM's login key, remove single entries;
+  - public key copy/download, rename, delete (refused while in use), export of the private key with re-authentication and an optional new passphrase.
+- **Credentials vault** (`credentials.go`):
+  - a credential holds a user name with a password and/or a stored key; new auth method **Credential from the vault** (`CREDENTIAL`, `connections.credential_id`) for SSH, SFTP, RDP, VNC, Telnet and FTP;
+  - sharing with selected users (administrators: everybody) without revealing the secret; host lists (glob patterns, CIDR) limit where it can be used — for grantees also the jump hosts;
+  - **password rotation** on all SSH servers that use it: pre-flight login check, `passwd` over a PTY, verification of the new login, all-or-nothing with rollback, a *pending* password if a rollback fails, live progress per server; a check-only mode;
+  - rotation reminders (badge, admin overview warning), owner-only *Show* with re-authentication, usage list.
+- Audit events `ssh_key.*` and `credential.*`; audit filter entries for both; admin overview card with key, deployment and credential counts.
+- Bulk action **🔑 Key** for selected connections; context menu entries *Who has access…* and *Deploy SSH key…*.
+- Export/import reference keys and credentials by name (`key_ref`, `credential_ref`) instead of copying them.
+- Tests with a fake SSH server that runs scripts in `sh` and simulates `passwd`: key store, deploy/revoke/who has access, vault sharing, host and jump-host restrictions, rotation with success, rollback and incomplete rollback.
+
+### Changed
+- Deleting an account also deletes its snippets, tunnel definitions, keys and credentials (and its grants).
+- RDP, VNC, Telnet and FTP connections offer only password and vault logins in the connection dialog.
+
 ## [10.4.0] — 2026-10-02 — RDP, VNC & Telnet in the browser
 
 ### Added
@@ -217,6 +241,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 - Full-screen programs drawn at the wrong size (the PTY size follows the window).
 - Folder transfer when WRM runs on Windows; several smaller issues.
 
+[10.5.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.5.0
 [10.4.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.4.0
 [10.3.0]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.3.0
 [10.2.0]: https://github.com/vedranius/web-browser-RDM-public/releases?q=v10.2.0&expanded=true

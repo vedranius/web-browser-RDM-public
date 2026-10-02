@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.4.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.5.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,11 +40,12 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
    - [Connections & folders](#connections--folders)
+   - [SSH keys & credentials vault](#ssh-keys--credentials-vault)
    - [Jump hosts (bastions)](#jump-hosts-bastions)
    - [SSH tunnels (port forwarding)](#ssh-tunnels-port-forwarding)
    - [Web interfaces (HTTP / HTTPS connections)](#web-interfaces-http--https-connections)
@@ -88,6 +89,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **Live up/down status** of every saved connection in the sidebar, with latency, server banner and a notification when a server goes down.
 - **Remote desktops** — **RDP** (Windows), **VNC** and **Telnet** in a browser window, also behind jump hosts, with clipboard, Ctrl+Alt+Del, recording and replay (through guacd, the Apache Guacamole proxy).
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
+- **SSH keys & credentials vault**: generate SSH keys, put them on many servers at once (like `ssh-copy-id`), see **who has access** to a server; one shared login such as `root@dc1` for many connections, shared with colleagues without revealing it, with **password rotation** on all its servers.
 - **Jump hosts** (like `ssh -J`): reach servers behind a bastion, also in chains — for terminals, files, transfers and tunnels.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
 - **Import** your connections from **mRemoteNG** (with passwords, folders and SSH tunnels) and from **OpenSSH** `~/.ssh/config`.
@@ -110,21 +112,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.4.0-linux-amd64
-   ./wrm-pro-v10.4.0-linux-amd64
+   chmod +x wrm-pro-v10.5.0-linux-amd64
+   ./wrm-pro-v10.5.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.4.0-windows-amd64.exe
+   .\wrm-pro-v10.5.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.4.0/wrm-pro-v10.4.0-android-arm64
-   chmod +x wrm-pro-v10.4.0-android-arm64 && ./wrm-pro-v10.4.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.5.0/wrm-pro-v10.5.0-android-arm64
+   chmod +x wrm-pro-v10.5.0-android-arm64 && ./wrm-pro-v10.5.0-android-arm64
    ```
 
    **Docker**
@@ -148,6 +150,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.4
+
+Replace the binary. The database gets new tables (`ssh_keys`, `ssh_key_deployments`, `credentials`, `credential_grants`) and two new columns (`connections.key_id`, `connections.credential_id`); the previous binary still starts on it (connections that use the new login types then cannot log in).
+
+- New **🔑 Keys** button: your SSH key store and the credentials vault. See [SSH keys & credentials vault](#ssh-keys--credentials-vault).
+- Connections can log in with an **SSH key from the key store** or a **credential from the vault**; remote desktops and FTP can use vault credentials too.
+- Deleting an account now also deletes its snippets, tunnels, keys and credentials.
 
 ## Upgrading from v10.3
 
@@ -247,16 +257,51 @@ Left sidebar ("PRO MANAGER"):
   - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS, 443/80 for web interfaces), **Username**, **Folder**.
   - **Jump host (connect via):** another saved SSH connection to go through (see [Jump hosts](#jump-hosts-bastions)).
   - **🔀 SSH tunnels:** port forwards of this connection (see [SSH tunnels](#ssh-tunnels-port-forwarding)).
-  - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, or *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user). *Key file* and *Auto* use keys of the **WRM server itself** and are therefore limited to administrators (policy). Password authentication also answers keyboard-interactive prompts.
+  - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user), **🔑 SSH key from the key store** or **🗝 Credential from the vault** (see [SSH keys & credentials vault](#ssh-keys--credentials-vault)). *Key file* and *Auto* use keys of the **WRM server itself** and are therefore limited to administrators (policy). Password authentication also answers keyboard-interactive prompts. RDP, VNC, Telnet and FTP log in with a password or a vault credential.
   - **🔌 Test connection** logs in once and shows the result, latency and — for a new server — its host key fingerprint.
 - **Secrets never leave the server.** Passwords and private keys are write-only: the edit dialog shows “saved and encrypted — leave empty to keep it”, with an option to remove the saved secret. *Duplicate* copies the connection on the server.
 - **Host key verification:** the first connection to a server remembers its SSH host key (and, for FTPS, the certificate if it is not signed by a public CA). A **changed key is refused** with a clear warning and both fingerprints; the owner of the connection (or an administrator) can accept the new key after checking it. Policy: *trust on first use* (default), *strict* (new hosts must be approved) or *off*.
 - **Double-click** a connection to open it: SSH opens a terminal; SFTP/FTP/FTPS open the file manager. On touch devices a single tap opens it.
-- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
+- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Who has access (authorized_keys)…*, *Deploy SSH key…*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
 - **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root).
-- **Search box** filters by name, host, username or protocol. **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share** or **Delete**.
+- **Search box** filters by name, host, username or protocol. **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share**, **🔑 Key** (deploy an SSH key to all of them) or **Delete**.
 - The **dot in front of a connection** is its [live status](#live-updown-status): 🟢 up, 🟡 up but slow (> 300 ms), 🔴 down, a ring = behind a jump host (colored by the jump host's state). A **blue dot after the name** means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
 - **Shared with me** lists shares you are a member of (and shares published for all users), with your **role**; ↗ opens the collaboration room.
+
+### SSH keys & credentials vault
+
+The **🔑 Keys** button in the top bar opens two lists: **SSH keys** and **Credentials**.
+
+**SSH keys (key store)**
+
+- **Generate key:** ED25519 (recommended), RSA 2048/3072/4096 or ECDSA 256/384/521, with a name and a comment. The key is created on the WRM server and stored **encrypted** like all other secrets.
+- **Import key:** paste (or choose the file of) an OpenSSH or PEM private key — keys with a passphrase are asked for it once and then stored encrypted with WRM's key. A **public key alone** (e.g. a colleague's `id_ed25519.pub`) can be imported too: it can be deployed to servers, but WRM cannot log in with it. PuTTY `.ppk` keys: export them with PuTTYgen → *Conversions → Export OpenSSH key* first.
+- **Use it:** in a connection choose *Authentication → SSH key from the key store*. The key list shows which connections log in with a key, where it is deployed and when it was last used.
+- **🚀 Deploy:** puts the public key on the selected SSH connections, like `ssh-copy-id`: WRM logs in with each connection's current login (password, other key or vault credential — through jump hosts too), creates `~/.ssh` if needed and appends the key to `~/.ssh/authorized_keys` once (a key that is already there is not added again; other lines stay untouched; SELinux contexts are restored). With **"Log in with this key from now on"** WRM then logs in with the key to test it and switches the connections to it. Deploy from the key, from a connection (right-click → *Deploy SSH key…*) or for many selected connections (**🔑 Key** in the sidebar).
+- **✂ Revoke:** removes the key from `authorized_keys` on the selected servers. A connection that logs in with that key cannot be selected — WRM would lock itself out.
+- **📋 Copy public key**, **⬇ .pub** download, **rename**, **delete** (refused while connections or credentials log in with the key — servers keep a deleted key until you revoke it).
+- **🔓 Export private key:** after entering your WRM password again, optionally protected with a new passphrase; recorded in the audit log. Allowed when *allow_secret_export* is on (always for administrators).
+
+**Who has access** (right-click an SSH connection → *Who has access (authorized_keys)…*): WRM reads `~/.ssh/authorized_keys` of the user it logs in as and lists every key with type, size, comment, fingerprint and options (`from=…`, `command=…`). Keys of your key store are named, **the key WRM itself logs in with** is marked (and cannot be removed), and every other key can be **removed** with one click. *Add a key…* deploys one there. Keys allowed elsewhere (`AuthorizedKeysFile`, `AuthorizedKeysCommand`, other accounts) are not shown.
+
+**Credentials (vault)**
+
+A credential is a login that many connections share: a user name with a **password**, an **SSH key** of the key store, or both. Typical: `root@dc1`, `Administrator` of the Windows servers, the iDRAC/iLO admin.
+
+- **New credential:** name, user name (optional — without one each connection uses its own user name), password (🎲 generates a strong one), SSH key, description, a **rotation reminder** in days and **Only for hosts**: host names with `*` and `?` or CIDR ranges (`*.dc1.example.com, 10.1.0.0/16`). With a host list the credential works only for matching hosts.
+- **Use it:** in a connection choose *Authentication → Credential from the vault*. SSH, SFTP, RDP, VNC, Telnet and FTP connections can use it. Change the credential once — every connection logs in with the new secret.
+- **Share with users:** add colleagues (or, administrators, *all users*). They see the credential in their list and can use it in **their own** connections, but they never see or change the secret. Removing a user stops their connections from logging in with it at once. Because a password is sent to the server when logging in, a shared credential should have a host list: then it only works for those hosts — and, for the people it is shared with, only through jump hosts that match the list too. WRM asks before saving a shared credential without a host list.
+- **👁 Show** reveals the stored password to its owner after entering the WRM password again (audited; policy *allow_secret_export*). **🔗 Used by** lists the connections that use it (all users' for the owner).
+
+**Password rotation** (🔄 *Rotate…* on a credential, owner only) changes the password on every SSH server that uses the credential:
+
+1. **Check logins** — WRM logs in to every server with the stored password (through jump hosts, in parallel) and changes nothing. Connections of other users that use the credential are included; the same user@host:port is changed only once.
+2. **Rotate now** — the same check first: if one server does not accept the stored password, **nothing is changed**. Then, one server after the other, WRM runs `passwd` over SSH (answering its prompts in a terminal), logs in with the new password to verify it, and finally stores it in the vault. The new password is generated (24 characters: upper and lower case letters, digits and symbols) or entered by you.
+3. **All or nothing:** when a server fails (password rules, `passwd` not allowed…), the servers already changed get the old password back and the vault keeps it. If even that fails (e.g. a password history rule refuses the old password), the vault keeps the old password and remembers the new one as **pending**: the credential is marked *rotation incomplete*, *Show* reveals both, and the result lists which servers have which password. Set the right password with *Edit* once fixed.
+
+The progress of every server is shown live. Rotation needs SSH connections to servers where the login user may change its own password with `passwd` (Linux, BSD, macOS). Connections of other types (RDP, VNC, FTP…) block rotation — change those passwords yourself and save the new one with *Edit* (*Edit* with a new password counts as rotated). When the rotation reminder is due, the 🔑 button shows a badge and *Admin panel → Overview* warns.
+
+Everything is in the audit log: `ssh_key.created`, `ssh_key.deployed`, `ssh_key.revoked`, `ssh_key.exported`, `ssh_key.deleted`, `credential.created`, `credential.updated`, `credential.granted`, `credential.grant_revoked`, `credential.revealed`, `credential.checked`, `credential.rotated`, `credential.rotation_failed`, `credential.rotation_incomplete` (never the secrets).
 
 ### Jump hosts (bastions)
 
@@ -697,7 +742,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `host_key_policy` | `tofu` | `tofu` / `strict` / `off` |
 | `allow_server_keys` | `0` | allow *Key file* / *Auto* for non-admins |
 | `max_upload_mb` | `0` | server-side upload limit per file (0 = unlimited) |
-| `allow_secret_export` | `1` | allow users to export their secrets (after re-entering the password) |
+| `allow_secret_export` | `1` | allow users to export their secrets, export private keys of the key store and show vault passwords (after re-entering the password) |
 | `allow_link_shares` | `1` | allow “anyone with the link” shares for guests |
 | `chat_file_max_mb` | `5` | file size in collaboration chat (0 = off) |
 | `voice_enabled` | `1` | voice calls on/off |
@@ -773,7 +818,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.4.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.5.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -822,7 +867,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 
 - **Accounts:** bcrypt hashes, optional/required TOTP 2FA with single-use recovery codes, closed self-registration by default, account lockout and per-IP rate limiting, constant-time responses for unknown users, forced password change after an admin reset, disable/delete accounts with immediate sign-out everywhere.
 - **Sessions:** 256-bit random tokens in HttpOnly/SameSite cookies (`Secure` over HTTPS), stored hashed; idle and absolute expiry; device list and remote sign-out.
-- **Secrets at rest:** AES-256-GCM with a random per-installation key (or your own). Secrets are **never sent to the browser** — not to the owner, not to share recipients. The database and key files are created with mode `0600`.
+- **Secrets at rest:** AES-256-GCM with a random per-installation key (or your own) — connection passwords and keys, the SSH key store and the credentials vault. Secrets are **never sent to the browser** — not to share recipients, not to users a credential is shared with — except when their owner explicitly exports or shows them after entering the account password again (policy `allow_secret_export`, audited). The database and key files are created with mode `0600`.
 - **Web security:** CSRF protection (custom request header + Origin check on every state-changing API call), WebSocket origin check, strict **Content-Security-Policy** (no external scripts, `frame-ancestors 'none'`), `X-Frame-Options`, `nosniff`, `Referrer-Policy: no-referrer` (share tokens never leak via Referer), `Permissions-Policy`, HSTS on HTTPS, request-size limits, no directory listings, all assets served locally (no CDN / supply-chain dependency at runtime).
 - **SSH & FTPS:** host keys verified (TOFU/strict); FTPS certificates validated against public CAs or pinned. Server-side key files are admin-only by default.
 - **Sharing:** four roles enforced server-side on every file operation, terminal and room action; members-only / signed-in / guest modes; signed password cookies (invalidated when the password changes); expiry, pause and link rotation; bans; immediate revocation of open terminals and room connections.
@@ -831,6 +876,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers (with SHA-256) and changes, host keys, exports, viewing of recordings — stored **append-only** and **hash-chained** in the database (verifiable) and written as `AUDIT …` lines to the server log (journald/syslog → SIEM). Secrets in audit details are redacted.
 - **Session recording:** terminal output in asciicast v2, gzip, mode `0600`, SHA-256 in the database; no keystrokes unless enabled (then masked at password prompts); visible to administrators, the session's user and the connection's owner; every view is audited.
 - **Snippets & broadcast:** snippets are per user (shared snippets only by administrators, read-only for others, never auto-run); run-on-connect snippets come from the connection's owner and are recorded in the audit log; broadcast input is client-side typing into the user's own terminals, with confirmation of dangerous commands and an audit entry for every start and stop per terminal.
+- **SSH keys & vault:** private keys and vault passwords are encrypted at rest and used only on the server. Keys go to servers on stdin of a POSIX `sh` script (never on a command line); `authorized_keys` is changed in place, keeping other lines, permissions and SELinux contexts; WRM refuses to remove the key it logs in with. Shared credentials are usable but never readable by the people they are shared with; a host list limits where they can be sent (target and, for them, jump hosts). Rotation is all-or-nothing with a pre-flight check, verification of every new login and rollback; passwords are scrubbed from `passwd` output and never logged.
 - **Remote desktop:** WRM does the guacd handshake with the stored credentials (never sent to the browser) and forwards only display and allow-listed input instructions; jump-host tunnels for guacd listen on loopback and live only as long as the session; sessions are audited and recorded.
 - **Live status:** checks are plain TCP connections from the WRM server (no credentials, except optional checks through jump hosts with the jump host's own saved login); users only see the states of their own connections.
 - **Tunnels & jump hosts:** every hop is authenticated and host-key-verified; tunnels belong to the owner of the connection (only the owner starts them; administrators can stop any); listen on `127.0.0.1` by default; ports below 1024 refused; network addresses and remote forwards only for administrators (policies); a tunnel can be turned off globally or limited to administrators; every start/stop/error is audited with the traffic. A tunnel port on a network address is **not** protected by WRM sign-in — treat it like an open port of that machine.
@@ -840,6 +886,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 
 ## Limitations
 
+- Password rotation works for SSH logins that may run `passwd` (Linux, BSD, macOS) — not for Windows/RDP, network devices or IPMI. *Who has access* shows `~/.ssh/authorized_keys` of the login user only.
 - RDP, VNC and Telnet need **guacd** next to WRM (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); file transfer and printer redirection of RDP are not offered.
 - No **SSO/LDAP/SAML** yet (local accounts with 2FA).
 - Voice calls are a **mesh**: fine up to about 12 people; larger meetings would need an SFU.
@@ -899,6 +946,28 @@ Connections have `jump_id` (jump host connection id or `null`) and `web_path`; l
 | `GET /api/recordings/{id}/guac[?download=1]` | Recording of a remote desktop session (Guacamole protocol stream) |
 
 Connections of type RDP/VNC/TELNET have `options` (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); sessions in `/api/recordings` have `protocol` and `recording.format` (`asciicast-v2+gzip` or `guacamole+gzip`).
+
+**SSH keys & credentials vault**
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/keys` | Your key store (public keys, fingerprints, `used_by`, `deployed`; never private keys) |
+| `POST /api/keys` | `{name, comment, generate: {type: ed25519\|rsa\|ecdsa, bits}}` or `{name, key, passphrase}` (private or public key). `400 {need_passphrase: true}` when the key is encrypted |
+| `PUT / DELETE /api/keys/{id}` | Rename `{name}` / delete (`409` while in use) |
+| `GET /api/keys/{id}/public` | Public key file (`.pub`) |
+| `POST /api/keys/{id}/export` | `{password, passphrase}` → `{private_key}` (re-authentication, policy `allow_secret_export`) |
+| `POST /api/keys/{id}/deploy` | `{conn_ids, use_key}` → `{results: [{conn_id, name, ok, already, switched, error}], ok, failed}` |
+| `POST /api/keys/{id}/revoke` | `{conn_ids}` → `{results: [{conn_id, name, ok, removed, error}], ok, failed}` |
+| `GET /api/connections/{id}/authorized-keys` | `{user, path, entries: [{line, key_type, bits, fingerprint, comment, options, key_id, key_name, current}], login_key}` |
+| `DELETE /api/connections/{id}/authorized-keys?fingerprint=SHA256:…` | Remove that key from the server (`409` for WRM's own login key) |
+| `GET /api/credentials` | Credentials you own, are granted or are shared with everybody (no secrets) |
+| `POST /api/credentials` · `PUT / DELETE /api/credentials/{id}` | `{name, username, password, key_id, description, hosts, rotate_days, grants: [user ids], shared_all}`; empty `password` on PUT keeps it (owner only) |
+| `GET /api/credentials/{id}/usage` | Connections that use it |
+| `POST /api/credentials/{id}/reveal` | `{password}` → `{password, pending_password}` (owner, re-authentication) |
+| `POST /api/credentials/{id}/rotate` | `{mode: check\|rotate, new_password}` → starts a background job |
+| `GET /api/credentials/{id}/rotation` | `{running, stage: preflight\|change\|rollback\|done, ok, message, hosts: [{key, connections, state, error}]}` |
+
+Connections with `auth_method` `KEY_REF` have `key_id`, with `CREDENTIAL` a `credential_id` (views add `key_name`, `credential_name`, `credential_user`). Exports name keys and credentials (`key_ref`, `credential_ref`) instead of containing them; an import uses your key or credential with that name.
 
 **Snippets & status**
 
@@ -1024,6 +1093,8 @@ remote-manager/
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
   snippets.go     snippets (saved commands), variables, run on connect
   status.go       live up/down status monitor and API
+  keys.go         SSH key store: generate/import, deploy/revoke (authorized_keys), who has access
+  credentials.go  credentials vault: sharing, host lists, password rotation
   guac.go         remote desktop: guacd handshake, relay, recording (RDP / VNC / Telnet)
   helpers.go      origin check, login rate limiting, shared helpers
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
@@ -1032,6 +1103,7 @@ remote-manager/
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
   status_test.go       live status: up/down, banners, jump hosts, check now
+  keys_test.go         key store, deploy/revoke/who has access, vault sharing and rotation (fake SSH server with sh and passwd)
   guac_test.go         remote desktop relay against a fake guacd: handshake, filtering, recording, jump hosts
   importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
   static/index.html          the entire web UI (embedded into the binary)
@@ -1070,6 +1142,11 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Broadcast did not ask before a dangerous command | The check sees what you typed during the broadcast, not a command recalled from the shell history (↑) |
 | All connections stay grey (no status dot) | Live status is off (`status_enabled`), or the connection has *Monitor up/down status* unticked. The first round starts a few seconds after WRM starts |
 | A server shows 🔴 but SSH works | The port in the connection differs from the real one, or a firewall allows SSH only from some addresses (not from the WRM server). Behind a jump host use a jump host instead of a direct connection |
+| Deploy SSH key: *cannot write ~/.ssh/authorized_keys* | The login user's home is read-only or its shell is not POSIX (network devices): add the key there by hand. A key that is not accepted afterwards: check `AuthorizedKeysFile` and `PubkeyAcceptedAlgorithms` (old servers may need RSA) in `sshd_config` |
+| Rotation: *the stored password does not work on …* | Nothing was changed. Fix the login (or the password with *Edit*) and check again |
+| Rotation: *passwd failed* / *rejected by its password rules* | The server's password policy (length, classes, history, minimum age) refused the new password: try your own password, or wait for the minimum age. The other servers got the old password back |
+| *rotation incomplete* | Some servers have the new password and could not be changed back: *Show* reveals both; set the servers to one of them, then save it with *Edit* |
+| *credential … is shared for hosts matching …: the jump host … does not match* | The credential's owner limited it to some hosts: the jump hosts of your connection must match the list too (ask the owner to add the bastion) |
 | Remote desktop: *guacd … is not reachable* | Install and start guacd on the WRM machine (`apt install guacd` or the Docker image) or set `guacd_address`. *Admin panel → Overview* shows its state |
 | RDP: *login failed* / black screen and disconnect | Check user, password and **domain**; try *Security: NLA* or *TLS*; older servers need *RDP*. Accept the server certificate (option) for self-signed certificates |
 | RDP: wrong characters when typing | Set the **keyboard layout** to the server's layout (or *Unicode*) |

@@ -21,8 +21,8 @@ import (
 func loadConnectionRaw(connID int) (Connection, error) {
 	var c Connection
 	var uid *int
-	err := db.QueryRow(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path FROM connections WHERE id=?`, connID).
-		Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &uid, &c.JumpID, &c.WebPath)
+	err := db.QueryRow(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,key_id,credential_id FROM connections WHERE id=?`, connID).
+		Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &uid, &c.JumpID, &c.WebPath, &c.KeyID, &c.CredentialID)
 	if err != nil {
 		return c, fmt.Errorf("connection not found")
 	}
@@ -33,13 +33,15 @@ func loadConnectionRaw(connID int) (Connection, error) {
 	return c, nil
 }
 
-// loadConnection is loadConnectionRaw with the host normalised to host:port for dialing.
+// loadConnection is loadConnectionRaw with the host normalised to host:port for dialing
+// and a key of the key store or a vault credential resolved to the secret it points to.
 func loadConnection(connID int) (Connection, error) {
 	c, err := loadConnectionRaw(connID)
 	if err != nil {
 		return c, err
 	}
 	c.Host = ensurePort(c.Host, c.Protocol)
+	resolveConnectionAuth(&c)
 	return c, nil
 }
 
