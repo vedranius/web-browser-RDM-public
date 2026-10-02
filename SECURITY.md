@@ -76,6 +76,12 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Use a **read-only** NetBox token for inventory imports; a remembered token is stored encrypted, but anyone with the WRM account can use it to read NetBox.
 - [ ] Set a rotation reminder on shared passwords and rotate them when a colleague leaves; check the audit log for `credential.rotation_incomplete`.
 
+**Out-of-band management & serial ports**
+
+- [ ] Use BMC accounts with the least role that does the job (*Operator* for power actions) and a vault credential with a host list for them.
+- [ ] Keep `serial_ports` at `admins` (or `off`): serial ports belong to the WRM machine.
+- [ ] Watch `bmc.power` events; power actions and consoles are limited to the connection's owner.
+
 **Remote desktop (RDP / VNC / Telnet)**
 
 - [ ] Run guacd only on the WRM machine (or in WRM's network namespace) and keep it bound to `127.0.0.1`: guacd has no authentication of its own, so anyone who reaches port 4822 can open connections through it.
@@ -103,7 +109,7 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
 - [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
-- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `ssh_key.*` (deploy, revoke, export) and `credential.*` (grants, reveal, rotation) events.
+- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `ssh_key.*` (deploy, revoke, export) and `credential.*` (grants, reveal, rotation) and `bmc.*` (power actions) events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
 
 ## How WRM protects your data
