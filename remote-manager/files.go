@@ -9,6 +9,7 @@ import (
 	"hash"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 )
 
 // ─── FILE MANAGER ─────────────────────────────────────
@@ -34,6 +36,10 @@ func fileRequest(w http.ResponseWriter, r *http.Request, perm string) (Connectio
 	c, err := loadConnection(connID)
 	if err != nil {
 		jsonError(w, "Connection not found", 404)
+		return Connection{}, nil, false
+	}
+	if isWeb(c) {
+		jsonError(w, "This is a web interface connection; it has no file manager", 400)
 		return Connection{}, nil, false
 	}
 	return c, acc, true
@@ -62,29 +68,51 @@ func requireMethod(w http.ResponseWriter, r *http.Request, methods ...string) bo
 	return false
 }
 
-// dialFTP connects and logs in; FTPS uses explicit TLS (AUTH TLS).
-func dialFTP(c Connection) (*ftp.ServerConn, error) {
+// dialFTP connects and logs in; FTPS uses explicit TLS (AUTH TLS). With a jump host the
+// control and data connections go through the jump host's SSH connection. Always call
+// the returned close function (it also closes the jump host connection).
+func dialFTP(c Connection) (*ftp.ServerConn, func(), error) {
 	opts := []ftp.DialOption{ftp.DialWithTimeout(15 * time.Second)}
 	if strings.ToUpper(c.Protocol) == "FTPS" {
 		opts = append(opts, ftp.DialWithExplicitTLS(ftpsTLSConfig(c)))
 	}
+	var via *ssh.Client
+	if c.JumpID != nil && *c.JumpID > 0 {
+		chain, err := jumpChain(c)
+		if err != nil {
+			return nil, nil, err
+		}
+		if via, err = dialSSH(chain[len(chain)-1], nil); err != nil {
+			return nil, nil, err
+		}
+		opts = append(opts, ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
+			return via.Dial("tcp", address)
+		}))
+	}
+	closeVia := func() {
+		if via != nil {
+			via.Close()
+		}
+	}
 	fc, err := ftp.Dial(c.Host, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("FTP: %w", err)
+		closeVia()
+		return nil, nil, fmt.Errorf("FTP: %w", err)
 	}
 	if err := fc.Login(c.Username, c.Password); err != nil {
 		fc.Quit()
-		return nil, fmt.Errorf("FTP login: %v", err)
+		closeVia()
+		return nil, nil, fmt.Errorf("FTP login: %v", err)
 	}
-	return fc, nil
+	return fc, func() { fc.Quit(); closeVia() }, nil
 }
 
 func withFTP(c Connection, fn func(*ftp.ServerConn) error) error {
-	fc, err := dialFTP(c)
+	fc, done, err := dialFTP(c)
 	if err != nil {
 		return err
 	}
-	defer fc.Quit()
+	defer done()
 	return fn(fc)
 }
 

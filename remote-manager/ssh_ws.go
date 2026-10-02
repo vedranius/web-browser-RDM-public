@@ -90,19 +90,25 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		fail("FTP connections do not support a terminal. Use the File Manager instead.")
 		return
 	}
-	ta = startTerminalSession(r, acc, c)
-	am, err := buildAuthMethods(c)
-	if err != nil {
-		fail("Auth error: " + err.Error())
+	if isWeb(c) {
+		fail("This is a web interface connection. Open it with 🌐 (double-click) instead of a terminal.")
 		return
 	}
+	route := jumpPath(c)
+	ta = startTerminalSession(r, acc, c)
+	if route != "" {
+		db.Exec(`UPDATE terminal_sessions SET jump_path=? WHERE id=?`, route, ta.ID)
+	}
 
-	sendCtl(map[string]interface{}{"type": "status", "state": "connecting", "host": c.Host})
-	printTerm("\r\n\x1b[36mConnecting to " + c.Host + "...\x1b[0m\r\n")
-	cfg := sshClientConfig(c, am, func(fp string) {
-		printTerm("\x1b[33mNew host " + c.Host + " — key " + fp + " saved (trust on first use).\x1b[0m\r\n")
+	sendCtl(map[string]interface{}{"type": "status", "state": "connecting", "host": c.Host, "route": route})
+	if route != "" {
+		printTerm("\r\n\x1b[36mConnecting to " + c.Host + " via " + route + "...\x1b[0m\r\n")
+	} else {
+		printTerm("\r\n\x1b[36mConnecting to " + c.Host + "...\x1b[0m\r\n")
+	}
+	sshClient, err := dialSSH(c, func(host, fp string) {
+		printTerm("\x1b[33mNew host " + host + " — key " + fp + " saved (trust on first use).\x1b[0m\r\n")
 	})
-	sshClient, err := ssh.Dial("tcp", c.Host, cfg)
 	if err != nil {
 		if hk := asHostKeyError(err); hk != nil {
 			sendCtl(map[string]interface{}{"type": "hostkey", "kind": hk.Kind, "host": hk.Host, "key_type": hk.KeyType,
@@ -140,6 +146,11 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	registerTerminal(ts)
 	defer unregisterTerminal(ts.ID)
+	// Tunnels of this connection that start "on connect" run while a terminal is open.
+	if acc.Share == nil {
+		tunnelMgr.holdConn(c.ID, actorID, r)
+		defer tunnelMgr.releaseConn(c.ID)
+	}
 	defer func() { ta.end(endStatus.Load().(string), finalExit) }()
 
 	session, err := sshClient.NewSession()
