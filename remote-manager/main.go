@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.6.0"
+var AppVersion = "v10.7.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -65,14 +65,15 @@ type Connection struct {
 	Options    map[string]string `json:"options,omitempty"` // RDP/VNC/Telnet options (nil = unchanged)
 	UserID     int               `json:"-"`
 	// KEY_REF logs in with a key of the key store, CREDENTIAL with a vault credential.
-	KeyID         *int     `json:"key_id,omitempty"`
-	CredentialID  *int     `json:"credential_id,omitempty"`
-	Tags          []string `json:"tags,omitempty"`           // nil = unchanged (PUT)
-	KeyRef        string   `json:"key_ref,omitempty"`        // export / import: name of the key
-	CredentialRef string   `json:"credential_ref,omitempty"` // export / import: name of the credential
-	authErr       string   // why the key or credential cannot be used (set by resolveConnectionAuth)
-	usedKeyID     int      // stored key the connection logs in with (after resolving)
-	usedCredID    int      // vault credential it logs in with (after resolving)
+	KeyID         *int       `json:"key_id,omitempty"`
+	CredentialID  *int       `json:"credential_id,omitempty"`
+	Tags          []string   `json:"tags,omitempty"`           // nil = unchanged (PUT)
+	BMC           *bmcConfig `json:"bmc,omitempty"`            // out-of-band management; nil = unchanged (PUT)
+	KeyRef        string     `json:"key_ref,omitempty"`        // export / import: name of the key
+	CredentialRef string     `json:"credential_ref,omitempty"` // export / import: name of the credential
+	authErr       string     // why the key or credential cannot be used (set by resolveConnectionAuth)
+	usedKeyID     int        // stored key the connection logs in with (after resolving)
+	usedCredID    int        // vault credential it logs in with (after resolving)
 }
 
 type connView struct {
@@ -99,6 +100,7 @@ type connView struct {
 	CredUser    string            `json:"credential_user,omitempty"`
 	Tags        []string          `json:"tags"`
 	Source      string            `json:"source,omitempty"` // inventory it was imported from ("netbox")
+	BMC         *bmcConfig        `json:"bmc,omitempty"`
 }
 
 func (c Connection) view() connView {
@@ -118,6 +120,9 @@ func (c Connection) view() connView {
 			Scan(&v.Tunnels, &mon, &opts, &v.KeyName, &v.CredName, &v.CredUser, &tags, &ext) == nil {
 			v.Monitor = mon == 1
 			v.Tags = parseTags(tags)
+			if b, ok := loadBMC(c.ID); ok {
+				v.BMC = b.view()
+			}
 			if i := strings.IndexByte(ext, ':'); i > 0 {
 				v.Source = ext[:i]
 			}
@@ -837,6 +842,8 @@ func initDB() {
 		`ALTER TABLE connections ADD COLUMN tags TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE connections ADD COLUMN ext_id TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE connections ADD COLUMN ext_tags TEXT NOT NULL DEFAULT ''`,
+		// v10.7: out-of-band management (BMC: Redfish / IPMI), JSON with the password encrypted
+		`ALTER TABLE connections ADD COLUMN bmc TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -1000,7 +1007,7 @@ func userOwnsSession(sessionID, userID int) bool {
 
 // ─── CONNECTIONS ─────────────────────────────────────
 
-var validProtocols = map[string]bool{"SSH": true, "SFTP": true, "FTP": true, "FTPS": true, "HTTP": true, "HTTPS": true, "RDP": true, "VNC": true, "TELNET": true}
+var validProtocols = map[string]bool{"SSH": true, "SFTP": true, "FTP": true, "FTPS": true, "HTTP": true, "HTTPS": true, "RDP": true, "VNC": true, "TELNET": true, "SERIAL": true}
 var validAuthMethods = map[string]bool{"PASSWORD": true, "KEY": true, "KEY_FILE": true, "KEY_AUTO": true, "KEY_REF": true, "CREDENTIAL": true}
 
 // serverKeysAllowed: "Key file" and "Auto (~/.ssh)" read private keys of the WRM server
@@ -1046,7 +1053,20 @@ func normalizeConnection(c *Connection) error {
 	if c.JumpID != nil && *c.JumpID <= 0 {
 		c.JumpID = nil
 	}
-	if isDesktopProtocol(c.Protocol) {
+	if c.Protocol == "SERIAL" {
+		// A serial port of the WRM server: the host is the device name (ttyUSB0), options the line settings.
+		if !serialNameRe.MatchString(c.Host) {
+			return fmt.Errorf("Serial port: enter the device name, e.g. ttyUSB0, ttyS0 or ttyACM0")
+		}
+		c.AuthMethod, c.Password, c.PrivateKey, c.KeyID, c.CredentialID, c.JumpID = "PASSWORD", "", "", nil, nil, nil
+		if c.Options != nil {
+			opts, err := normalizeSerialOptions(c.Options)
+			if err != nil {
+				return err
+			}
+			c.Options = opts
+		}
+	} else if isDesktopProtocol(c.Protocol) {
 		if c.AuthMethod != "PASSWORD" && c.AuthMethod != "CREDENTIAL" {
 			return fmt.Errorf("RDP, VNC and Telnet connections use a password or a vault credential")
 		}
@@ -1125,6 +1145,10 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Key files on the WRM server can only be used by administrators", 403)
 			return
 		}
+		if c.Protocol == "SERIAL" && !serialAllowed(userID) {
+			jsonError(w, "Serial ports of the WRM server are not allowed for this account (policy serial_ports)", 403)
+			return
+		}
 		if c.FolderID != nil && !userOwnsFolder(*c.FolderID, userID) {
 			c.FolderID = nil
 		}
@@ -1155,6 +1179,13 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if c.Options != nil {
 			db.Exec(`UPDATE connections SET options=? WHERE id=?`, string(jsonMarshal(c.Options)), id)
+		}
+		if c.BMC != nil {
+			if err := saveBMC(plain, c.BMC, userID); err != nil {
+				db.Exec(`DELETE FROM connections WHERE id=?`, id)
+				jsonError(w, err.Error(), 400)
+				return
+			}
 		}
 		statusMon.poke()
 		auditLogRef(r, userID, usernameOf(userID), "connection.created", c.Name, map[string]string{"host": c.Host, "protocol": c.Protocol, "auth": c.AuthMethod, "route": jumpPath(plain)}, auditRef{ConnID: plain.ID})
@@ -1213,6 +1244,10 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Key files on the WRM server can only be used by administrators", 403)
 			return
 		}
+		if c.Protocol == "SERIAL" && (cur.Protocol != "SERIAL" || c.Host != cur.Host) && !serialAllowed(userID) {
+			jsonError(w, "Serial ports of the WRM server are not allowed for this account (policy serial_ports)", 403)
+			return
+		}
 		if c.FolderID != nil && !userOwnsFolder(*c.FolderID, userID) {
 			c.FolderID = cur.FolderID
 		}
@@ -1263,6 +1298,13 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if c.Tags != nil {
 			db.Exec(`UPDATE connections SET tags=? WHERE id=?`, tagsString(c.Tags), id)
 		}
+		if c.BMC != nil {
+			c.ID, c.UserID = id, userID
+			if err := saveBMC(c, c.BMC, userID); err != nil {
+				jsonError(w, "Saved, but the BMC settings were not: "+err.Error(), 400)
+				return
+			}
+		}
 		if c.Host != cur.Host || c.Protocol != cur.Protocol || !intPtrEq(c.JumpID, cur.JumpID) || c.Monitor != nil {
 			statusMon.poke()
 		}
@@ -1288,9 +1330,11 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		openWebHandler(w, r, userID, cur)
 	case action == "authorized-keys":
 		authorizedKeysHandler(w, r, userID, id)
+	case action == "bmc":
+		bmcHandler(w, r, userID, cur)
 	case action == "duplicate" && r.Method == http.MethodPost:
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags)
-			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags FROM connections WHERE id=? AND user_id=?`, id, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc)
+			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc FROM connections WHERE id=? AND user_id=?`, id, userID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1643,8 +1687,15 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 			db.QueryRow(`SELECT name FROM credentials WHERE id=?`, *conns[i].CredentialID).Scan(&conns[i].CredentialRef)
 		}
 		conns[i].KeyID, conns[i].CredentialID = nil, nil
-		if isDesktopProtocol(conns[i].Protocol) {
+		if isDesktopProtocol(conns[i].Protocol) || conns[i].Protocol == "SERIAL" {
 			conns[i].Options = loadDesktopOptions(conns[i].ID)
+		}
+		if b, ok := loadBMC(conns[i].ID); ok {
+			if !withSecrets {
+				b.Password = ""
+			}
+			b.HasPassword, b.CredentialID = false, nil // credentials stay in the vault
+			conns[i].BMC = &b
 		}
 	}
 	auditLog(r, userID, "config.exported", "", map[string]interface{}{"connections": len(conns), "with_secrets": withSecrets})
@@ -1756,6 +1807,15 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if len(c.Options) > 0 {
 				tx.Exec(`UPDATE connections SET options=? WHERE id=?`, string(jsonMarshal(c.Options)), nid)
+			}
+			if c.BMC != nil && c.BMC.Type != "" {
+				b := *c.BMC
+				b.CredentialID, b.ViaJump = nil, false
+				b.Type = strings.ToLower(b.Type)
+				if (b.Type == "redfish" || b.Type == "ipmi") && bmcHostRe.MatchString(b.Host) {
+					b.Password, b.HasPassword = encryptValue(b.Password), false
+					tx.Exec(`UPDATE connections SET bmc=? WHERE id=?`, string(jsonMarshal(b)), nid)
+				}
 			}
 			if oldJump > 0 {
 				jumps = append(jumps, jumpLink{int(nid), oldJump})
@@ -2010,6 +2070,8 @@ func ensurePort(host, protocol string) string {
 		return host + ":5900"
 	case "TELNET":
 		return host + ":23"
+	case "SERIAL":
+		return host
 	}
 	return host + ":22"
 }

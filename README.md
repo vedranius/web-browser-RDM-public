@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.6.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -54,6 +54,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [SSH terminal](#ssh-terminal)
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
+   - [Out-of-band management, consoles & serial ports](#out-of-band-management-consoles--serial-ports)
    - [Snippets & run on connect](#snippets--run-on-connect)
    - [Broadcast input](#broadcast-input)
    - [Live up/down status](#live-updown-status)
@@ -88,6 +89,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 
 - **SSH terminals** in the browser (xterm.js, 256 colors, full-screen apps like `nano`, `vim`, `htop`, `mc`), with **snippets** (saved commands with variables, one click or Ctrl+Shift+Space), **run on connect** (`sudo -i`, `cd /srv/app`…) and **broadcast input** (type into many terminals at once, with a safety check for dangerous commands).
 - **Live up/down status** of every saved connection in the sidebar, with latency, server banner and a notification when a server goes down.
+- **Out-of-band management** — power on/off/restart, health and inventory through the server's **BMC** (iDRAC, iLO, XClarity, Supermicro, OpenBMC via **Redfish**, or **IPMI**), and its **serial console** (BMC SSH or IPMI Serial-over-LAN) in a terminal window; **serial ports** of the WRM machine for switch and router consoles.
 - **Remote desktops** — **RDP** (Windows), **VNC** and **Telnet** in a browser window, also behind jump hosts, with clipboard, Ctrl+Alt+Del, recording and replay (through guacd, the Apache Guacamole proxy).
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
 - **SSH keys & credentials vault**: generate SSH keys, put them on many servers at once (like `ssh-copy-id`), see **who has access** to a server; one shared login such as `root@dc1` for many connections, shared with colleagues without revealing it, with **password rotation** on all its servers.
@@ -113,21 +115,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.6.0-linux-amd64
-   ./wrm-pro-v10.6.0-linux-amd64
+   chmod +x wrm-pro-v10.7.0-linux-amd64
+   ./wrm-pro-v10.7.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.6.0-windows-amd64.exe
+   .\wrm-pro-v10.7.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.6.0/wrm-pro-v10.6.0-android-arm64
-   chmod +x wrm-pro-v10.6.0-android-arm64 && ./wrm-pro-v10.6.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.7.0/wrm-pro-v10.7.0-android-arm64
+   chmod +x wrm-pro-v10.7.0-android-arm64 && ./wrm-pro-v10.7.0-android-arm64
    ```
 
    **Docker**
@@ -151,6 +153,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.6
+
+Replace the binary. The database gets one new column (`connections.bmc`); the previous binary still starts on it.
+
+- Connections can have a **BMC** (*Edit → Out-of-band management*); right-click → *Power & status (BMC)…* and *Serial console*. For IPMI install `ipmitool` on the WRM server or on the jump host (`apt install ipmitool`).
+- New protocol **Serial port** for console cables on the WRM machine (administrators by default, policy `serial_ports`).
+- Saved workspace sessions now really keep remote desktop windows (and console windows).
 
 ## Upgrading from v10.5
 
@@ -261,10 +271,11 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 Left sidebar ("PRO MANAGER"):
 
 - **+ Connection** creates a connection:
-  - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), **🖥 RDP**, **🖥 VNC**, **Telnet** (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)), `FTP`, `FTPS` (FTP with explicit TLS; file manager only), **🌐 Web interface** `HTTPS` / `HTTP` (see [Web interfaces](#web-interfaces-http--https-connections)).
+  - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), **🖥 RDP**, **🖥 VNC**, **Telnet** (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)), **🔌 Serial port** of the WRM server (see [Serial ports](#out-of-band-management-consoles--serial-ports)), `FTP`, `FTPS` (FTP with explicit TLS; file manager only), **🌐 Web interface** `HTTPS` / `HTTP` (see [Web interfaces](#web-interfaces-http--https-connections)).
   - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS, 443/80 for web interfaces), **Username**, **Folder**, **Tags** (comma separated, e.g. `env:prod, site:dc1, rack:a12, web`; the most used tags are offered below the field).
   - **Jump host (connect via):** another saved SSH connection to go through (see [Jump hosts](#jump-hosts-bastions)).
   - **🔀 SSH tunnels:** port forwards of this connection (see [SSH tunnels](#ssh-tunnels-port-forwarding)).
+  - **⚡ Out-of-band management:** the BMC of the server (see [Out-of-band management](#out-of-band-management-consoles--serial-ports)).
   - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user), **🔑 SSH key from the key store** or **🗝 Credential from the vault** (see [SSH keys & credentials vault](#ssh-keys--credentials-vault)). *Key file* and *Auto* use keys of the **WRM server itself** and are therefore limited to administrators (policy). Password authentication also answers keyboard-interactive prompts. RDP, VNC, Telnet and FTP log in with a password or a vault credential.
   - **🔌 Test connection** logs in once and shows the result, latency and — for a new server — its host key fingerprint.
 - **Secrets never leave the server.** Passwords and private keys are write-only: the edit dialog shows “saved and encrypted — leave empty to keep it”, with an option to remove the saved secret. *Duplicate* copies the connection on the server.
@@ -476,6 +487,31 @@ Windows servers (RDP), Linux desktops and KVM/IPMI consoles (VNC) and old networ
 **Audit and recording:** every desktop session appears in *Sessions & recordings* and the audit log (`desktop.open`, `desktop.close`, `desktop.error`). With session recording on, WRM records the screen stream (no passwords: they are sent to guacd during the handshake and never appear on screen) and **▶ Replay** plays it in the browser with play/pause and seek; *⬇ .guac* downloads it (playable with Guacamole's tools).
 
 **Security:** the browser never picks the target: WRM performs the handshake with the stored host, user, password and options, and afterwards forwards only display data and input instructions from an allow-list. Access follows the same rules as terminals (owner; share members with the *Operator* role or higher). Policies: `desktop_enabled` (`REMOTE_DESKTOP_ENABLED`), `guacd_address` (`GUACD_ADDRESS`, default `127.0.0.1:4822`), `desktop_tunnel_bind` (address of jump-host tunnels for guacd, default `127.0.0.1`).
+
+### Out-of-band management, consoles & serial ports
+
+**The BMC of a server** (iDRAC, iLO, XClarity, Supermicro, OpenBMC, any IPMI controller) is set in the connection: *Edit → ⚡ Out-of-band management*:
+
+- **Type:** **Redfish** (the HTTPS API of current BMCs) or **IPMI** (IPMI over LAN with `ipmitool`).
+- **BMC address** (`10.0.100.11`, or `host:port`), **login**: a user name and password (stored encrypted), or a **vault credential** (e.g. one `idrac-root` for all servers).
+- **Through the jump host:** when the management network is only reachable from the bastion, WRM reaches the BMC through the connection's jump hosts — Redfish over an SSH channel of the last hop, `ipmitool` runs **on** the last hop (IPMI uses UDP).
+- **Serial console command** for the BMC's SSH (`console com2` for iDRAC, `vsp` for iLO, `console 1` for XClarity; suggested from the BMC's maker) and its SSH port.
+
+**⚡ Power & status** (right-click → *Power & status (BMC)…*):
+
+- Power state, health (with fault messages over IPMI), maker, model, serial number, BIOS, CPUs and memory, BMC model and firmware, power draw and inlet temperature (as far as the BMC tells).
+- **Power on**, **Shut down** (graceful), **Restart** (graceful), **Force off**, **Force restart**, **Power cycle**, **NMI** — only what the BMC offers. Everything except *Power on* asks first and explains what happens; every action is in the audit log (`bmc.power`, `bmc.power_failed`).
+- Redfish certificates are mostly self-signed: WRM pins the certificate on first use like an SSH host key and refuses a changed one (accept it after checking, like a host key).
+
+**📟 Serial console** (right-click → *Serial console*, or the button in *Power & status*) opens a terminal window with the console of the machine — BIOS/UEFI setup, boot loader, kernel messages, a login prompt when the network is down:
+
+- **Redfish BMCs:** WRM logs in to the BMC's SSH with the BMC login and types the console command (iDRAC `console com2`, iLO `vsp` …).
+- **IPMI:** Serial-over-LAN (`ipmitool sol activate`, an old session is deactivated first), on the jump host or on the WRM server (Linux). `~.` ends it.
+- Consoles are terminal sessions like any other: audited, recorded (`protocol` *console* / *sol*), visible to administrators — and only the connection's owner opens them (not share members). Saved workspace sessions restore console windows.
+
+**🔌 Serial ports of the WRM machine** (USB console cables, `ttyS0`): protocol *Serial port*, the device name (`ttyUSB0`, `ttyACM0`, `ttyS0`) as host and the line settings — speed (default 9600; 115200 is common too), data bits, parity, stop bits, flow control (none, RTS/CTS, XON/XOFF). *Test connection* opens the port; a double-click opens it in a terminal (raw, recorded). Serial ports belong to the WRM server like its key files: by default only administrators may add them (policy `serial_ports`: off / admins / all); WRM must run on Linux, as a user that may open the device (group `dialout`).
+
+Policies: `bmc_enabled` (`BMC_ENABLED`), `serial_ports`.
 
 ### Snippets & run on connect
 
@@ -805,6 +841,8 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `status_jump_checks` | `0` | check connections behind jump hosts by logging in to the jump host |
 | `desktop_enabled` | `1` | RDP / VNC / Telnet in the browser. Also `REMOTE_DESKTOP_ENABLED` |
 | `guacd_address` | `127.0.0.1:4822` | host:port of guacd. Also `GUACD_ADDRESS` |
+| `bmc_enabled` | `1` | out-of-band management (BMC power, status, consoles). Also `BMC_ENABLED` |
+| `serial_ports` | `admins` | who may use serial ports of the WRM server: `off`, `admins`, `all` |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
@@ -852,7 +890,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.6.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.7.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -910,6 +948,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers (with SHA-256) and changes, host keys, exports, viewing of recordings — stored **append-only** and **hash-chained** in the database (verifiable) and written as `AUDIT …` lines to the server log (journald/syslog → SIEM). Secrets in audit details are redacted.
 - **Session recording:** terminal output in asciicast v2, gzip, mode `0600`, SHA-256 in the database; no keystrokes unless enabled (then masked at password prompts); visible to administrators, the session's user and the connection's owner; every view is audited.
 - **Snippets & broadcast:** snippets are per user (shared snippets only by administrators, read-only for others, never auto-run); run-on-connect snippets come from the connection's owner and are recorded in the audit log; broadcast input is client-side typing into the user's own terminals, with confirmation of dangerous commands and an audit entry for every start and stop per terminal.
+- **Out-of-band management:** BMC passwords are encrypted (or come from the vault, with its host rules); Redfish certificates are pinned on first use, ipmitool gets the password in its environment (`-E`) — on a jump host through stdin, never on a command line; power actions and consoles are audited and limited to the connection's owner; serial ports are an administrator feature by default.
 - **Inventory import:** files are parsed in memory (CSV, or `.xlsx` read with size limits) and never stored. NetBox is called from the WRM server over HTTP(S) with your token; redirects and pagination links to another server are refused, responses are size-limited, and a remembered token is stored encrypted and never returned to the browser.
 - **SSH keys & vault:** private keys and vault passwords are encrypted at rest and used only on the server. Keys go to servers on stdin of a POSIX `sh` script (never on a command line); `authorized_keys` is changed in place, keeping other lines, permissions and SELinux contexts; WRM refuses to remove the key it logs in with. Shared credentials are usable but never readable by the people they are shared with; a host list limits where they can be sent (target and, for them, jump hosts). Rotation is all-or-nothing with a pre-flight check, verification of every new login and rollback; passwords are scrubbed from `passwd` output and never logged.
 - **Remote desktop:** WRM does the guacd handshake with the stored credentials (never sent to the browser) and forwards only display and allow-listed input instructions; jump-host tunnels for guacd listen on loopback and live only as long as the session; sessions are audited and recorded.
@@ -921,6 +960,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 
 ## Limitations
 
+- IPMI needs `ipmitool` (on the WRM server or the jump host); Serial-over-LAN on the WRM server and serial ports need WRM on Linux. Power actions go to one server at a time.
 - Inventory import reads `.xlsx` and CSV, not old `.xls`; NetBox sync updates and reports, but never deletes connections.
 - Password rotation works for SSH logins that may run `passwd` (Linux, BSD, macOS) — not for Windows/RDP, network devices or IPMI. *Who has access* shows `~/.ssh/authorized_keys` of the login user only.
 - RDP, VNC and Telnet need **guacd** next to WRM (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); file transfer and printer redirection of RDP are not offered.
@@ -982,6 +1022,16 @@ Connections have `jump_id` (jump host connection id or `null`) and `web_path`; l
 | `GET /api/recordings/{id}/guac[?download=1]` | Recording of a remote desktop session (Guacamole protocol stream) |
 
 Connections of type RDP/VNC/TELNET have `options` (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); sessions in `/api/recordings` have `protocol` and `recording.format` (`asciicast-v2+gzip` or `guacamole+gzip`).
+
+**Out-of-band management**
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/connections/{id}/bmc` | `{type, power: on\|off\|unknown, health, manufacturer, model, serial, bios, cpus, cpu_model, memory_gib, bmc_model, bmc_firmware, power_watts, inlet_c, faults, actions, console}`. A changed certificate answers `502` with `hostkey` |
+| `POST /api/connections/{id}/bmc` | `{action: on\|shutdown\|restart\|off\|reset\|cycle\|nmi}` |
+| `/ws/ssh?id&…&console=bmc\|sol` | The serial console of the connection's server (same protocol as terminals) |
+
+Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only), credential_id, via_jump, console, ssh_port}` (`{type: ""}` removes it; views add `has_password`, `credential_name`). Protocol `SERIAL` connections have the device name as `host` and `options: {baud, data_bits, parity, stop_bits, flow}`.
 
 **Tags & inventory**
 
@@ -1142,6 +1192,9 @@ remote-manager/
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
   snippets.go     snippets (saved commands), variables, run on connect
   status.go       live up/down status monitor and API
+  bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
+  console.go      terminal backends: SSH shell, BMC SSH console, IPMI Serial-over-LAN, serial ports
+  tty_linux.go    pseudo terminals and serial port settings (Linux); tty_other.go elsewhere
   inventory.go    tags, CSV/XLSX reader with column mapping, NetBox import and sync
   keys.go         SSH key store: generate/import, deploy/revoke (authorized_keys), who has access
   credentials.go  credentials vault: sharing, host lists, password rotation
@@ -1153,6 +1206,7 @@ remote-manager/
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
   status_test.go       live status: up/down, banners, jump hosts, check now
+  bmc_test.go          Redfish (fake BMC, pinning, jump host, credential), IPMI with a fake ipmitool, SOL (local PTY and jump host), BMC SSH console, serial port on a PTY
   inventory_test.go    tags, CSV encodings/separators, XLSX import, NetBox import and sync (fake NetBox)
   keys_test.go         key store, deploy/revoke/who has access, vault sharing and rotation (fake SSH server with sh and passwd)
   guac_test.go         remote desktop relay against a fake guacd: handshake, filtering, recording, jump hosts
@@ -1193,6 +1247,11 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Broadcast did not ask before a dangerous command | The check sees what you typed during the broadcast, not a command recalled from the shell history (↑) |
 | All connections stay grey (no status dot) | Live status is off (`status_enabled`), or the connection has *Monitor up/down status* unticked. The first round starts a few seconds after WRM starts |
 | A server shows 🔴 but SSH works | The port in the connection differs from the real one, or a firewall allows SSH only from some addresses (not from the WRM server). Behind a jump host use a jump host instead of a direct connection |
+| BMC: *refused the login* / *the BMC user may not do this* | Check the BMC user and password (or the vault credential); the user needs the *Operator* or *Administrator* role on the BMC for power actions |
+| BMC: *not reachable* | The management network is often only reachable from a bastion: set the jump host on the connection and tick *Through the jump host* |
+| IPMI: *ipmitool is not installed* | `apt install ipmitool` on the WRM server, or on the jump host when the BMC is reached through it. IPMI over LAN must be enabled on the BMC |
+| Serial console shows nothing | Press Enter. iDRAC: the console needs *Serial communication → Redirection* in the BIOS; IPMI SOL: enable SOL on the BMC and the serial console in the OS (`console=ttyS1,115200`) |
+| Serial port: *permission denied* | Run WRM as a user in the `dialout` group (or give it access to the device) |
 | CSV import: wrong letters (`Ä�`, `?` instead of `č`) | WRM reads UTF-8, UTF-16 and Windows-1250. For other encodings save the file from Excel as *CSV UTF-8* or as `.xlsx` |
 | NetBox: *refused the token* / *API not found* | Use the base address (`https://netbox.example.com`, without `/api`), a token of a user that can view devices and VMs; for a self-signed certificate tick *Accept a self-signed certificate* |
 | Deploy SSH key: *cannot write ~/.ssh/authorized_keys* | The login user's home is read-only or its shell is not POSIX (network devices): add the key there by hand. A key that is not accepted afterwards: check `AuthorizedKeysFile` and `PubkeyAcceptedAlgorithms` (old servers may need RSA) in `sshd_config` |
