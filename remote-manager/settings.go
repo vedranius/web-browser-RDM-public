@@ -71,6 +71,8 @@ var settingSpecs = []settingSpec{
 	// Out-of-band management (BMC) and serial ports
 	{Key: "bmc_enabled", Default: "1", Kind: "bool", Alias: "BMC_ENABLED"},
 	{Key: "serial_ports", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	// Network tools (port check, ping, traceroute, DNS, HTTP/TLS)
+	{Key: "network_tools", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	// Live up/down status of connections
 	{Key: "status_enabled", Default: "1", Kind: "bool", Alias: "STATUS_ENABLED"},
 	{Key: "status_interval_seconds", Default: "60", Kind: "int", Min: 15, Max: 3600},

@@ -120,6 +120,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	route := jumpPath(c)
+	touchQuick(c.ID)
 	ta = startTerminalSession(r, acc, c)
 	if route != "" {
 		db.Exec(`UPDATE terminal_sessions SET jump_path=? WHERE id=?`, route, ta.ID)
