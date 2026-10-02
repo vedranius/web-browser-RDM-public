@@ -1,14 +1,60 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.1.0-mimo/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.2.0-mimo/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v10.1.0-mimo — audit trail & session recording
+## Web Remote Manager PRO v10.2.0-mimo — jump hosts, SSH tunnels & mRemoteNG import
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, server-to-server transfer, sharing, real-time collaboration and **voice calls**. One self-contained binary (or container) with an embedded web UI.
+Browser-based remote server management: SSH terminal, SFTP/FTP/FTPS file manager, server-to-server transfer, sharing, real-time collaboration, **voice calls**, audit trail and session recording. One self-contained binary (or container) with an embedded web UI.
 
-v10.1 is the first step of making WRM a **lightweight PAM for teams**: everything people do on your servers is recorded and auditable per user.
+v10.2 brings what admins in data centers use every day in mRemoteNG, PuTTY and `ssh -J`: **servers behind bastions**, **SSH tunnels** to internal web interfaces and services, and a one-click **import of mRemoteNG and OpenSSH configurations**.
 
-### 🎬 Session recording & replay
+### 🪜 Jump hosts (bastions)
+
+- Every connection can go **through another saved SSH connection**: choose *Jump host (connect via)* in the connection. Like `ssh -J` / `ProxyJump` and the *SSH tunnel* setting of mRemoteNG.
+- **Chains** up to 5 hops (`vpn-gw → bastion-dc1 → app-01`); loops are refused.
+- **Everything works through it:** terminal, file manager, FTP/FTPS, search, editor, server-to-server transfer, *Test connection*, tunnels and web interfaces.
+- Every hop uses **its own credentials** and its **host key is verified**. No port is opened on the jump host (`direct-tcpip`, the bastion only needs `AllowTcpForwarding yes`).
+- The route is shown everywhere: **⤳** in the sidebar, *Test connection* (`… via bastion-dc1`), the terminal, session history and the audit log.
+
+### 🔀 SSH tunnels (port forwarding)
+
+- **Local (-L):** a port on the WRM machine → a host:port behind the server, e.g. `127.0.0.1:2443 → 10.0.0.5:443` for the web UI of a switch, iDRAC or iLO.
+- **SOCKS proxy (-D):** one proxy for your browser or tools that reaches the whole network behind a server.
+- **Remote (-R):** a port on the server → a host:port on the WRM side (administrators, policy).
+- Configure them in the connection (**🔀 SSH tunnels**, with **templates**: web HTTPS/HTTP, SSH, RDP, VNC, PostgreSQL, MySQL, iDRAC/iLO/IPMI, SOCKS) and use the new **🔀 Tunnels** panel: state, listen → target, connections, traffic, **🌐 Open**, **📋 Copy address**, **▶ Start / ■ Stop**.
+- **Start modes:** manual, **with the terminal** (starts with the first terminal and stops after the last one), **always** (starts with WRM).
+- **Reliable:** each tunnel keeps its own SSH connection through the jump hosts, checks it every 30 s and **reconnects automatically** while its port stays open.
+- **Safe defaults:** tunnels listen on `127.0.0.1`; network addresses and remote forwards are for administrators; a tunnel can be turned off or limited to administrators; every start, stop and error is **audited** with the traffic. Administrators see and stop all tunnels in *Admin panel → Overview*.
+
+### 🌐 Web interface connections
+
+- New protocols **Web interface (HTTPS / HTTP)** with host:port and path: save the web UIs of your iDRACs, iLOs, switches, firewalls and NAS next to your servers.
+- **Double-click** opens it in a new tab — directly, or, **behind a jump host, through an automatic temporary tunnel** (closed after 30 minutes without traffic).
+
+### 📥 Import from mRemoteNG and OpenSSH
+
+- **mRemoteNG `confCons.xml`:** folders, SSH and web connections **with their passwords** (both encryption formats, master password, full-file encryption), inherited settings, and **SSH tunnel → jump host**. RDP/VNC/Telnet are listed as skipped; duplicates are skipped.
+- **OpenSSH `~/.ssh/config`:** hosts, users, ports, `Host *` defaults, **`ProxyJump`** / `ProxyCommand ssh -W`, **`LocalForward` / `RemoteForward` / `DynamicForward`** and `IdentityFile`.
+- *Settings → Data* shows a summary of what was imported, skipped and what to check. Export/import of WRM's own format now includes jump hosts and tunnels.
+
+### ⚙️ New policies
+
+`tunnels_enabled` (`TUNNELS_ENABLED`, on), `tunnel_users` (`all` / `admins`), `tunnel_bind_any` (off), `tunnel_remote_forward` (`off` / `admins` / `all`, default `admins`), `tunnel_idle_minutes` (0). All in *Admin panel → Security policies → SSH tunnels*, or forced with `WRM_<KEY>`.
+
+### ⬆️ Upgrading from v10.1
+
+Replace the binary. The database gets a new table (`connection_tunnels`) and two new columns (`connections.jump_conn_id`, `connections.web_path`); nothing else changes, and the previous binary still starts on the upgraded database.
+
+- **Tunnels are available to all users by default**, on `127.0.0.1` of the WRM machine only. If WRM runs on a shared server, consider `tunnel_users=admins` (local users of that server can reach `127.0.0.1` ports), or `WRM_TUNNELS_ENABLED=0`.
+- Where is a tunnel port? On the computer **where WRM runs**. That is usually your own PC. If WRM runs on a server, see *SSH tunnels → Where is the tunnel port?* in the README.
+
+Coming from v10.0 or v9? Read the upgrade notes below as well. See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/CHANGELOG.md) for the full history.
+
+---
+
+## Included from v10.1.0 — audit trail & session recording
+
+#### 🎬 Session recording & replay
 
 - **Every SSH terminal session is recorded** in the open **asciinema** format (asciicast v2), compressed, with its SHA-256 checksum stored in the database.
 - **▶ Replay in the browser** (play/pause, seek, 0.5–16× speed, *skip idle time*), or **⬇ download the `.cast`** and play it with `asciinema play`.
@@ -18,7 +64,7 @@ v10.1 is the first step of making WRM a **lightweight PAM for teams**: everythin
 - **Who can watch:** administrators all; users their own sessions and sessions on **their** connections (e.g. guests of a share). Watching or downloading a recording is itself audited.
 - **Where to find it:** *Admin panel → Sessions & recordings* (everything), *Settings → Session history* (your own).
 
-### 🧾 Audit trail
+#### 🧾 Audit trail
 
 - **Terminal sessions:** who, from which IP, which server and remote user, start, duration, and how the session ended (closed, connection lost, ended by an administrator, interrupted by a restart).
 - **File transfers:** every upload, download (also files opened in the editor and every file of a ZIP download) and server-to-server copy, with source, destination, size and **SHA-256**. See *Admin panel → File transfers*, with CSV export.
@@ -26,32 +72,28 @@ v10.1 is the first step of making WRM a **lightweight PAM for teams**: everythin
 - **Better audit search:** date range, events linked to the connection and the terminal session (click **▶ #id** to replay), recording events, and secrets in event details are always redacted.
 - **Feature flags:** `audit_enabled` (`AUDIT_ENABLED`) and `session_recording` (`SESSION_RECORDING_ENABLED`) are on by default. Also new: `session_recording_input`, `recording_retention_days` (90) and `recording_max_mb` (100). Administrator actions are always recorded.
 
-### 🐳 Operations
+#### 🐳 Operations
 
 - **Docker:** `Dockerfile` (static binary, unprivileged user, data volume `/data`, health check) and **`docker compose up -d`**. Release images are published to `ghcr.io/vedranius/wrm-pro`.
 - **`/healthz`** for load balancers and monitoring; **`wrm -healthcheck`** for container health checks.
 - Recordings location: `WRM_RECORDINGS_DIR` (default `recordings/` next to the database).
 
-### 🎨 New logo
+#### 🎨 New logo
 
 The WRM PRO logo is now used for the favicon, the app icons, the sign-in screen, the top bar, the README and the release. A **WRM Orange** accent color is available in *Settings → General*. The complete logo kit (SVG and PNG) is in `docs/brand/`.
 
-### 📐 Architecture & tests
+#### 📐 Architecture & tests
 
-- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
+- [`ARCHITECTURE.md`](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/ARCHITECTURE.md) describes how WRM is built. It also maps the extension plan (RBAC, SSO, broadcast input, fleet status, …) to the code.
 - A new **integration test** runs a real SSH + SFTP server inside the test. It checks connect → audit entries → recording (replayable, no passwords), transfer checksums and the append-only audit trail, and it runs in CI with the race detector.
 
-### ⬆️ Upgrading from v10.0
+#### ⬆️ Upgrading from v10.0
 
 Replace the binary. The database is only **extended**: new tables, columns and triggers are added, and nothing is changed or removed. The previous binary still runs on the upgraded database.
 
 - **Session recording is on by default.** Tell your users about it (in many countries this is required), or turn it off in *Admin panel → Security policies → Session recording*.
 - Recordings use disk space in `recordings/` next to the database. A session usually takes a few KB to a few MB. Recordings are kept for 90 days, with at most 100 MB per session.
 - Audit entries written before the upgrade have no hash. *Verify integrity* checks the chain from the first new entry on.
-
-Coming from v9? Read *Upgrading from v9* below as well.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/CHANGELOG.md) for the full history.
 
 ---
 
@@ -174,20 +216,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.1.0-mimo-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.1.0-mimo-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.1.0-mimo-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.1.0-mimo-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.1.0-mimo-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.1.0-mimo-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.1.0-mimo-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.1.0-mimo-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.1.0-mimo-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.1.0-mimo-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.1.0-mimo-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.1.0-mimo-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.1.0-mimo-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.1.0-mimo-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.2.0-mimo-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.2.0-mimo-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.2.0-mimo-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.2.0-mimo-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.2.0-mimo-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.2.0-mimo-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.2.0-mimo-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.2.0-mimo-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.2.0-mimo-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.2.0-mimo-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.2.0-mimo-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.2.0-mimo-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.2.0-mimo-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.2.0-mimo-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -195,27 +237,27 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.1.0-mimo-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.1.0-mimo-linux-amd64
+chmod +x wrm-pro-v10.2.0-mimo-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.2.0-mimo-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.1.0-mimo-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.2.0-mimo-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.1.0-mimo-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.2.0-mimo-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.1.0-mimo/wrm-pro-v10.1.0-mimo-android-arm64
-chmod +x wrm-pro-v10.1.0-mimo-android-arm64 && ./wrm-pro-v10.1.0-mimo-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.2.0-mimo/wrm-pro-v10.2.0-mimo-android-arm64
+chmod +x wrm-pro-v10.2.0-mimo-android-arm64 && ./wrm-pro-v10.2.0-mimo-android-arm64
 ```
 
 **Docker**
 ```bash
-docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.1.0-mimo
+docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.2.0-mimo
 # or, from the source tree:  docker compose up -d
 ```
 
@@ -233,15 +275,16 @@ WRM_TRUST_PROXY=1                 behind a reverse proxy (real client IPs, secur
 WRM_ALLOWED_ORIGINS=host          extra allowed Origin hosts
 WRM_<POLICY>=value                force a policy, e.g. WRM_REQUIRE_2FA=all, WRM_TURN_PUBLIC_IP=203.0.113.10
 AUDIT_ENABLED / SESSION_RECORDING_ENABLED   audit log / session recording on (1) or off (0)
+TUNNELS_ENABLED=0                 turn SSH tunnels off (WRM_TUNNEL_USERS=admins: administrators only)
 WRM_RECORDINGS_DIR=/path          where session recordings are stored (default: recordings/ next to the database)
 ```
 
-For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/SECURITY.md).
+For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/SECURITY.md).
 
 ---
 
 ### 📜 License
 
-Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.1.0-mimo/CONTRIBUTING.md).
+Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.2.0-mimo/CONTRIBUTING.md).
 
 ☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)**. Thank you!

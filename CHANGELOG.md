@@ -4,6 +4,51 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.2.0-mimo] — 2026-10-02 — jump hosts, SSH tunnels & mRemoteNG import
+
+Phase 5 (fleet operations) of the extension plan, first part: what mRemoteNG, PuTTY and `ssh -J` users need to manage servers behind bastions (see [ARCHITECTURE.md](ARCHITECTURE.md)).
+
+### Added
+- **Jump hosts** (ProxyJump):
+  - any connection can go through another saved SSH connection, in chains of up to 5 hops; loops, foreign and non-SSH jump hosts are refused;
+  - used by terminals, the file manager (SFTP and FTP/FTPS), search, editor, server-to-server transfer, *Test connection*, tunnels and web interfaces;
+  - every hop authenticates with its own credentials and its host key is verified;
+  - the route is shown in the sidebar (⤳), connection test, terminal, session history (`jump_path`) and audit log.
+- **SSH tunnels** (port forwarding) per connection:
+  - local (`-L`), remote (`-R`) and dynamic SOCKS5 (`-D`) tunnels, through the jump hosts too;
+  - listen address and port (0 = automatic), target, *Open as* http/https + path, start mode *manual*, *with terminal* or *always* (also after a restart);
+  - templates: web interface (HTTPS/HTTP), SSH, RDP, VNC, PostgreSQL, MySQL/MariaDB, iDRAC/iLO/IPMI, SOCKS;
+  - a hint in plain words for every tunnel;
+  - each tunnel keeps its own SSH connection with a 30 s keepalive and automatic reconnect (backoff 2–60 s) while its port stays open;
+  - statistics: open and total connections, bytes up/down;
+  - **🔀 Tunnels** panel (top bar, with a counter of running tunnels): state, listen → target, traffic, *Open*, *Copy address*, *Start/Stop*; administrators can show and stop the tunnels of all users;
+  - connection context menu: *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*;
+  - live updates through `/ws/events` (`tunnels_changed`).
+- **Web interface connections** (protocols `HTTPS` / `HTTP`, with a path): a double-click opens the page in a new tab, directly or, behind a jump host, through an automatic temporary tunnel (30 minutes idle limit). *Test connection* checks that the port answers.
+- **Import from mRemoteNG** (`confCons.xml`):
+  - AES-GCM and legacy AES-CBC passwords, master password (checked with `Protected`, asked for when needed), full-file encryption;
+  - inheritance of user name, password, port, domain and SSH tunnel;
+  - containers become folders; `SSHTunnelConnectionName` becomes the jump host;
+  - unsupported protocols and duplicates are reported as skipped.
+- **Import from OpenSSH config:** `Host` blocks, `Host *` and wildcard defaults, `HostName`/`User`/`Port`, `ProxyJump` (implicit jump hosts are created), `ProxyCommand ssh -W`, `LocalForward`/`RemoteForward`/`DynamicForward` (tunnels that start with the terminal), `IdentityFile` (when server key files are allowed).
+- **Policies:** `tunnels_enabled` (`TUNNELS_ENABLED`), `tunnel_users`, `tunnel_bind_any`, `tunnel_remote_forward`, `tunnel_idle_minutes`. Running tunnels that a policy change no longer allows are stopped.
+- **Audit events:** `tunnel.configured`, `tunnel.start`, `tunnel.stop` (with traffic), `tunnel.error`, `tunnel.reconnected`, `web.open`; connection changes record the jump host.
+- **Admin panel → Overview:** active SSH tunnels with *Stop*. **Admin status API** includes the tunnels.
+- **API:** `GET/PUT /api/connections/{id}/tunnels`, `GET /api/tunnels[?all=1]`, `POST /api/tunnels/{key}/start|stop`, `POST /api/connections/{id}/open-web`, `POST /api/config/import/mremoteng`, `POST /api/config/import/sshconfig`. Connections have `jump_id`, `web_path`, `route` and `tunnels`.
+- **Tests:**
+  - the in-process SSH test server also handles `direct-tcpip` and `tcpip-forward`;
+  - new tests for two-hop jump chains (terminal, SFTP, connection test, validation), local/SOCKS/remote tunnels (traffic, ownership, policies, audit, start modes) and web interfaces;
+  - new tests for mRemoteNG import (both encryption formats, master password, inheritance) and OpenSSH config import.
+
+### Changed
+- Export and import of WRM's own format include jump hosts and tunnels (IDs are remapped).
+- *Duplicate* copies the jump host, path and tunnels of a connection. Deleting a connection stops its tunnels and makes connections that used it as jump host direct.
+- Editing a connection restarts its running tunnels with the new settings.
+- The connection dialog is wider and fully translated (labels were partly English in Croatian).
+
+### Fixed
+- The connection dialog no longer moves the focus back to *Name* when you already started typing in another field.
+
 ## [10.1.0-mimo] — 2026-10-01 — audit trail & session recording
 
 First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCHITECTURE.md](ARCHITECTURE.md)).
@@ -105,6 +150,7 @@ First phase of the extension plan: WRM as a lightweight PAM for teams (see [ARCH
 - Full-screen programs drawn at the wrong size (the PTY size follows the window).
 - Folder transfer when WRM runs on Windows; several smaller issues.
 
+[10.2.0-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.2.0-mimo
 [10.1.0-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.1.0-mimo
 [10.0.1-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.0.1-mimo
 [10.0.0-mimo]: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v10.0.0-mimo
