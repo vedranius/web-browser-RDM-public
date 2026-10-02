@@ -8,6 +8,7 @@ import (
 	"embed"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -35,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.4.0"
+var AppVersion = "v10.5.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -63,6 +64,14 @@ type Connection struct {
 	Monitor    *bool             `json:"monitor,omitempty"` // live status checks (nil = unchanged / default on)
 	Options    map[string]string `json:"options,omitempty"` // RDP/VNC/Telnet options (nil = unchanged)
 	UserID     int               `json:"-"`
+	// KEY_REF logs in with a key of the key store, CREDENTIAL with a vault credential.
+	KeyID         *int   `json:"key_id,omitempty"`
+	CredentialID  *int   `json:"credential_id,omitempty"`
+	KeyRef        string `json:"key_ref,omitempty"`        // export / import: name of the key
+	CredentialRef string `json:"credential_ref,omitempty"` // export / import: name of the credential
+	authErr       string // why the key or credential cannot be used (set by resolveConnectionAuth)
+	usedKeyID     int    // stored key the connection logs in with (after resolving)
+	usedCredID    int    // vault credential it logs in with (after resolving)
 }
 
 type connView struct {
@@ -82,11 +91,17 @@ type connView struct {
 	Tunnels     int               `json:"tunnels"`           // configured port forwards
 	Monitor     bool              `json:"monitor"`           // included in the live up/down status
 	Options     map[string]string `json:"options,omitempty"` // remote desktop options
+	KeyID       *int              `json:"key_id,omitempty"`
+	KeyName     string            `json:"key_name,omitempty"`
+	CredID      *int              `json:"credential_id,omitempty"`
+	CredName    string            `json:"credential_name,omitempty"`
+	CredUser    string            `json:"credential_user,omitempty"`
 }
 
 func (c Connection) view() connView {
 	v := connView{ID: c.ID, Name: c.Name, Protocol: c.Protocol, Host: c.Host, Username: c.Username, AuthMethod: c.AuthMethod,
-		KeyPath: c.KeyPath, FolderID: c.FolderID, JumpID: c.JumpID, WebPath: c.WebPath, HasPassword: c.Password != "", HasKey: c.PrivateKey != ""}
+		KeyPath: c.KeyPath, FolderID: c.FolderID, JumpID: c.JumpID, WebPath: c.WebPath, HasPassword: c.Password != "", HasKey: c.PrivateKey != "",
+		KeyID: c.KeyID, CredID: c.CredentialID}
 	if c.JumpID != nil && *c.JumpID > 0 {
 		v.Route = jumpPath(c)
 	}
@@ -94,7 +109,10 @@ func (c Connection) view() connView {
 	if c.ID > 0 {
 		var mon int
 		var opts string
-		if db.QueryRow(`SELECT (SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?), COALESCE(monitor,1), COALESCE(options,'') FROM connections WHERE id=?`, c.ID, c.ID).Scan(&v.Tunnels, &mon, &opts) == nil {
+		if db.QueryRow(`SELECT (SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?), COALESCE(monitor,1), COALESCE(options,''),
+			COALESCE((SELECT name FROM ssh_keys WHERE id=connections.key_id),''), COALESCE((SELECT name FROM credentials WHERE id=connections.credential_id),''),
+			COALESCE((SELECT username FROM credentials WHERE id=connections.credential_id),'') FROM connections WHERE id=?`, c.ID, c.ID).
+			Scan(&v.Tunnels, &mon, &opts, &v.KeyName, &v.CredName, &v.CredUser) == nil {
 			v.Monitor = mon == 1
 			if opts != "" && opts != "{}" {
 				json.Unmarshal([]byte(opts), &v.Options)
@@ -249,6 +267,10 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
 	mux.HandleFunc("/api/status", apiStatusHandler)
 	mux.HandleFunc("/api/status/check", apiStatusHandler)
+	mux.HandleFunc("/api/keys", apiKeysHandler)
+	mux.HandleFunc("/api/keys/", apiKeysHandler)
+	mux.HandleFunc("/api/credentials", apiCredentialsHandler)
+	mux.HandleFunc("/api/credentials/", apiCredentialsHandler)
 	mux.HandleFunc("/api/snippets", apiSnippetsHandler)
 	mux.HandleFunc("/api/snippets/", apiSnippetsHandler)
 	mux.HandleFunc("/api/tunnels", apiTunnelsHandler)
@@ -698,6 +720,51 @@ func initDB() {
 		updated_at TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "name", "command", "description", "grp", "scope", "scope_id", "auto_run", "shared", "sort", "created_at", "updated_at")
 
+	// v10.5: SSH key store and credentials vault (secrets encrypted like connection secrets)
+	ensureTable("ssh_keys", `CREATE TABLE IF NOT EXISTS ssh_keys (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL DEFAULT '',
+		key_type TEXT NOT NULL DEFAULT '',
+		bits INTEGER NOT NULL DEFAULT 0,
+		public_key TEXT NOT NULL DEFAULT '',
+		private_key TEXT NOT NULL DEFAULT '',
+		fingerprint TEXT NOT NULL DEFAULT '',
+		comment TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '',
+		last_used_at TEXT NOT NULL DEFAULT '')`,
+		"id", "user_id", "name", "key_type", "bits", "public_key", "private_key", "fingerprint", "comment", "created_at", "last_used_at")
+	ensureTable("ssh_key_deployments", `CREATE TABLE IF NOT EXISTS ssh_key_deployments (
+		key_id INTEGER NOT NULL,
+		conn_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL DEFAULT 0,
+		deployed_at TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (key_id, conn_id))`,
+		"key_id", "conn_id", "user_id", "deployed_at")
+	ensureTable("credentials", `CREATE TABLE IF NOT EXISTS credentials (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		owner_id INTEGER NOT NULL,
+		name TEXT NOT NULL DEFAULT '',
+		username TEXT NOT NULL DEFAULT '',
+		password TEXT NOT NULL DEFAULT '',
+		key_id INTEGER DEFAULT NULL,
+		description TEXT NOT NULL DEFAULT '',
+		hosts TEXT NOT NULL DEFAULT '',
+		shared_all INTEGER NOT NULL DEFAULT 0,
+		rotate_days INTEGER NOT NULL DEFAULT 0,
+		rotated_at TEXT NOT NULL DEFAULT '',
+		pending_password TEXT NOT NULL DEFAULT '',
+		rotation_status TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '')`,
+		"id", "owner_id", "name", "username", "password", "key_id", "description", "hosts", "shared_all", "rotate_days", "rotated_at",
+		"pending_password", "rotation_status", "created_at", "updated_at")
+	ensureTable("credential_grants", `CREATE TABLE IF NOT EXISTS credential_grants (
+		credential_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		PRIMARY KEY (credential_id, user_id))`,
+		"credential_id", "user_id")
+
 	// Safe migrations (columns added over time)
 	for _, m := range []string{
 		`ALTER TABLE connections ADD COLUMN user_id INTEGER DEFAULT NULL`,
@@ -744,6 +811,9 @@ func initDB() {
 		`ALTER TABLE connections ADD COLUMN monitor INTEGER NOT NULL DEFAULT 1`,
 		// v10.4: options of remote desktop connections (RDP / VNC / Telnet), JSON
 		`ALTER TABLE connections ADD COLUMN options TEXT NOT NULL DEFAULT ''`,
+		// v10.5: logins from the SSH key store and the credentials vault
+		`ALTER TABLE connections ADD COLUMN key_id INTEGER DEFAULT NULL`,
+		`ALTER TABLE connections ADD COLUMN credential_id INTEGER DEFAULT NULL`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -764,6 +834,9 @@ func initDB() {
 		`CREATE INDEX IF NOT EXISTS ix_transfers_user ON file_transfers(user_id, ts)`,
 		`CREATE INDEX IF NOT EXISTS ix_tunnels_conn ON connection_tunnels(conn_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_snippets_user ON snippets(user_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_ssh_keys_user ON ssh_keys(user_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_credentials_owner ON credentials(owner_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_conn_credential ON connections(credential_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_collab_share ON collab_messages(share_id, id)`,
 		`CREATE INDEX IF NOT EXISTS ix_share_items ON share_items(share_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_connections_user ON connections(user_id)`,
@@ -904,12 +977,17 @@ func userOwnsSession(sessionID, userID int) bool {
 // ─── CONNECTIONS ─────────────────────────────────────
 
 var validProtocols = map[string]bool{"SSH": true, "SFTP": true, "FTP": true, "FTPS": true, "HTTP": true, "HTTPS": true, "RDP": true, "VNC": true, "TELNET": true}
-var validAuthMethods = map[string]bool{"PASSWORD": true, "KEY": true, "KEY_FILE": true, "KEY_AUTO": true}
+var validAuthMethods = map[string]bool{"PASSWORD": true, "KEY": true, "KEY_FILE": true, "KEY_AUTO": true, "KEY_REF": true, "CREDENTIAL": true}
 
 // serverKeysAllowed: "Key file" and "Auto (~/.ssh)" read private keys of the WRM server
 // itself, so only administrators may use them unless the policy allows it.
 func serverKeysAllowed(userID int) bool {
 	return isAdminUser(userID) || settingBool("allow_server_keys")
+}
+
+// usesStoredSecretRef: the connection logs in with a key of the key store or a vault credential.
+func usesStoredSecretRef(authMethod string) bool {
+	return authMethod == "KEY_REF" || authMethod == "CREDENTIAL"
 }
 
 func usesServerKeys(authMethod string) bool {
@@ -945,8 +1023,8 @@ func normalizeConnection(c *Connection) error {
 		c.JumpID = nil
 	}
 	if isDesktopProtocol(c.Protocol) {
-		if c.AuthMethod != "PASSWORD" {
-			return fmt.Errorf("RDP, VNC and Telnet connections use a password")
+		if c.AuthMethod != "PASSWORD" && c.AuthMethod != "CREDENTIAL" {
+			return fmt.Errorf("RDP, VNC and Telnet connections use a password or a vault credential")
 		}
 		if c.Options != nil {
 			opts, err := normalizeDesktopOptions(c.Protocol, c.Options)
@@ -979,7 +1057,7 @@ func isWeb(c Connection) bool {
 }
 
 func loadUserConnections(userID int) []Connection {
-	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path FROM connections WHERE user_id=? ORDER BY name`, userID)
+	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path,key_id,credential_id FROM connections WHERE user_id=? ORDER BY name`, userID)
 	conns := []Connection{}
 	if err != nil {
 		return conns
@@ -987,7 +1065,7 @@ func loadUserConnections(userID int) []Connection {
 	defer rows.Close()
 	for rows.Next() {
 		var c Connection
-		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath)
+		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath, &c.KeyID, &c.CredentialID)
 		decryptConnectionSecrets(&c)
 		c.UserID = userID
 		conns = append(conns, c)
@@ -1028,11 +1106,18 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
+		if err := checkAuthRefs(&c, userID); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
+		if usesStoredSecretRef(c.AuthMethod) {
+			c.Password, c.PrivateKey = "", ""
+		}
 		plain := c
 		plain.UserID = userID
 		encryptConnectionSecrets(&c)
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID, c.JumpID, c.WebPath)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,key_id,credential_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1109,6 +1194,10 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
+		if err := checkAuthRefs(&c, userID); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
 		// Empty secret fields keep the stored secret (the browser never receives it).
 		changed := []string{}
 		if c.Password == "" && !in.ClearPassword {
@@ -1121,16 +1210,21 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		} else if c.PrivateKey != cur.PrivateKey {
 			changed = append(changed, "private_key")
 		}
+		if usesStoredSecretRef(c.AuthMethod) {
+			// The key store / vault holds the secret: the connection keeps none of its own.
+			c.Password, c.PrivateKey = "", ""
+		}
 		for f, same := range map[string]bool{"name": c.Name == cur.Name, "host": c.Host == cur.Host, "username": c.Username == cur.Username,
 			"protocol": c.Protocol == cur.Protocol, "auth_method": c.AuthMethod == cur.AuthMethod, "key_path": c.KeyPath == cur.KeyPath,
-			"jump_host": intPtrEq(c.JumpID, cur.JumpID), "web_path": c.WebPath == cur.WebPath} {
+			"jump_host": intPtrEq(c.JumpID, cur.JumpID), "web_path": c.WebPath == cur.WebPath, "ssh_key": intPtrEq(c.KeyID, cur.KeyID),
+			"credential_ref": intPtrEq(c.CredentialID, cur.CredentialID)} {
 			if !same {
 				changed = append(changed, f)
 			}
 		}
 		encryptConnectionSecrets(&c)
-		if _, err := db.Exec(`UPDATE connections SET name=?,protocol=?,host=?,username=?,auth_method=?,password=?,private_key=?,key_path=?,folder_id=?,jump_conn_id=?,web_path=? WHERE id=? AND user_id=?`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, c.JumpID, c.WebPath, id, userID); err != nil {
+		if _, err := db.Exec(`UPDATE connections SET name=?,protocol=?,host=?,username=?,auth_method=?,password=?,private_key=?,key_path=?,folder_id=?,jump_conn_id=?,web_path=?,key_id=?,credential_id=? WHERE id=? AND user_id=?`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID, id, userID); err != nil {
 			jsonError(w, err.Error(), 500)
 			return
 		}
@@ -1153,6 +1247,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		killTerminals(func(t *termSession) bool { return t.ConnID == id }, "The connection was deleted")
 		tunnelMgr.stopConn(id, "the connection was deleted")
 		db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
+		db.Exec("DELETE FROM ssh_key_deployments WHERE conn_id=?", id)
 		deleteSnippetsForScope("connection", id)
 		db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		db.Exec("DELETE FROM connections WHERE id=? AND user_id=?", id, userID)
@@ -1162,9 +1257,11 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		connectionTunnelsHandler(w, r, userID, cur)
 	case action == "open-web" && r.Method == http.MethodPost:
 		openWebHandler(w, r, userID, cur)
+	case action == "authorized-keys":
+		authorizedKeysHandler(w, r, userID, id)
 	case action == "duplicate" && r.Method == http.MethodPost:
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options)
-			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options FROM connections WHERE id=? AND user_id=?`, id, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id)
+			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id FROM connections WHERE id=? AND user_id=?`, id, userID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1219,6 +1316,7 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 		for id := range ids {
 			tunnelMgr.stopConn(id, "the connection was deleted")
 			db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
+			db.Exec("DELETE FROM ssh_key_deployments WHERE conn_id=?", id)
 			deleteSnippetsForScope("connection", id)
 			db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		}
@@ -1501,6 +1599,14 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		if !withSecrets {
 			conns[i].Password, conns[i].PrivateKey = "", ""
 		}
+		// Keys and credentials stay in the key store / vault; the export names them.
+		if conns[i].KeyID != nil {
+			db.QueryRow(`SELECT name FROM ssh_keys WHERE id=? AND user_id=?`, *conns[i].KeyID, userID).Scan(&conns[i].KeyRef)
+		}
+		if conns[i].CredentialID != nil {
+			db.QueryRow(`SELECT name FROM credentials WHERE id=?`, *conns[i].CredentialID).Scan(&conns[i].CredentialRef)
+		}
+		conns[i].KeyID, conns[i].CredentialID = nil, nil
 		if isDesktopProtocol(conns[i].Protocol) {
 			conns[i].Options = loadDesktopOptions(conns[i].ID)
 		}
@@ -1568,9 +1674,32 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			oldJump = *c.JumpID
 		}
 		c.JumpID = nil
+		// Keys and credentials are referenced by name: use the importing user's ones.
+		c.KeyID, c.CredentialID = nil, nil
+		switch strings.ToUpper(c.AuthMethod) {
+		case "KEY_REF":
+			var kid int
+			if c.KeyRef != "" && db.QueryRow(`SELECT id FROM ssh_keys WHERE user_id=? AND name=? AND private_key<>'' ORDER BY id LIMIT 1`, userID, c.KeyRef).Scan(&kid) == nil {
+				c.KeyID = &kid
+			} else {
+				c.AuthMethod = "PASSWORD"
+			}
+		case "CREDENTIAL":
+			c.AuthMethod = "PASSWORD"
+			for _, cr := range credentialsForUser(userID) {
+				if cr.Name == c.CredentialRef && c.CredentialRef != "" && hostAllowed(cr.Hosts, c.Host) {
+					cid := cr.ID
+					c.AuthMethod, c.CredentialID = "CREDENTIAL", &cid
+					break
+				}
+			}
+		}
 		if normalizeConnection(&c) != nil || (usesServerKeys(c.AuthMethod) && !allowServerKeys) {
 			skipped++
 			continue
+		}
+		if usesStoredSecretRef(c.AuthMethod) {
+			c.Password, c.PrivateKey = "", ""
 		}
 		var folderID *int
 		if c.FolderID != nil {
@@ -1582,8 +1711,8 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		encryptConnectionSecrets(&c)
-		if res, err := tx.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, folderID, userID, c.WebPath); err == nil {
+		if res, err := tx.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path,key_id,credential_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, folderID, userID, c.WebPath, c.KeyID, c.CredentialID); err == nil {
 			imported++
 			nid, _ := res.LastInsertId()
 			if oldID > 0 {
@@ -1793,6 +1922,15 @@ func resolveKeyMaterial(c Connection) ([]byte, error) {
 }
 
 func buildAuthMethods(c Connection) ([]ssh.AuthMethod, error) {
+	if usesStoredSecretRef(c.AuthMethod) && c.authErr == "" {
+		resolveConnectionAuth(&c)
+	}
+	if c.authErr != "" {
+		return nil, errors.New(c.authErr)
+	}
+	if c.usedKeyID > 0 {
+		touchKeyUsed(c.usedKeyID)
+	}
 	if c.AuthMethod == "PASSWORD" || c.AuthMethod == "" {
 		pw := c.Password
 		// Many servers only offer keyboard-interactive; answer password prompts with it.

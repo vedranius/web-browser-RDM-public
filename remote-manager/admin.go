@@ -127,6 +127,13 @@ func apiAdminStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("WRM_ALLOW_ANY_ORIGIN") == "1" {
 		warnings = append(warnings, "any_origin")
 	}
+	vault := mergeCounts(keysSummary(), credentialsSummary())
+	if vault["rotation_incomplete"] > 0 {
+		warnings = append(warnings, "credential_rotation_incomplete")
+	}
+	if vault["rotation_due"] > 0 {
+		warnings = append(warnings, "credential_rotation_due")
+	}
 	jsonOK(w, map[string]interface{}{
 		"version": AppVersion, "go": runtime.Version(), "os": runtime.GOOS + "/" + runtime.GOARCH,
 		"uptime_s": int(time.Since(startedAt).Seconds()), "db_path": resolveDBPath(), "db_size": dbSize,
@@ -135,6 +142,7 @@ func apiAdminStatusHandler(w http.ResponseWriter, r *http.Request) {
 		"terminals": tl, "rooms": roomsSummary(), "turn": turnStatus(), "warnings": warnings,
 		"tunnels": tunnelMgr.runsWhere(func(*tunnelRun) bool { return true }),
 		"guacd":   guacdStatus(),
+		"vault":   vault,
 	})
 }
 
@@ -174,4 +182,14 @@ func guacdStatus() map[string]interface{} {
 		st["ok"], st["version"] = true, v
 	}
 	return st
+}
+
+func mergeCounts(maps ...map[string]int) map[string]int {
+	out := map[string]int{}
+	for _, m := range maps {
+		for k, v := range m {
+			out[k] = v
+		}
+	}
+	return out
 }
