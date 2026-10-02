@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.2.0-mimo</title>
+<title>Web Remote Manager PRO v10.3.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1255,6 +1255,75 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   .tun-item .t-map, .tun-item .t-stats, .tun-item .t-act { grid-column: 2; }
   .tun-item .t-act { justify-content: flex-start; }
 }
+
+/* v10.3: snippets & broadcast input */
+.rp-tabs { display: flex; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 2px; }
+.rp-tabs button { background: transparent; border: none; color: var(--text3); font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 5px; cursor: pointer; letter-spacing: .08em; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.rp-tabs button span { font-size: inherit !important; letter-spacing: inherit !important; color: inherit !important; font-weight: inherit !important; }
+.rp-tabs button.active { background: var(--bg3); color: var(--text); }
+#snip-tools { display: flex; gap: 5px; }
+#snip-tools input { flex: 1; min-width: 0; padding: 5px 8px; font-size: 11.5px; }
+#snip-tools button { padding: 3px 9px; }
+#snip-list { flex: 1; overflow-y: auto; padding: 4px 6px 8px; }
+.snip-group-h { font-size: 9.5px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; padding: 7px 4px 3px; cursor: pointer; user-select: none; font-family: 'JetBrains Mono', monospace; }
+.snip-group-h .sub { font-weight: 400; opacity: .7; }
+.snip-item { position: relative; padding: 5px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; margin-bottom: 2px; }
+.snip-item:hover { background: var(--bg3); border-color: var(--border); }
+.snip-item.dim { opacity: .45; }
+.snip-top { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.snip-name { font-size: 12px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.snip-cmd { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+.snip-badge { font-size: 9px; flex: none; padding: 0 4px; border-radius: 4px; background: var(--bg4); color: var(--text2); line-height: 15px; }
+.snip-badge.auto { background: rgba(245,158,11,.16); color: #fbbf24; }
+.snip-acts { position: absolute; right: 4px; top: 4px; display: none; gap: 2px; }
+.snip-item:hover .snip-acts { display: flex; }
+.snip-acts button { width: 22px; height: 20px; padding: 0; font-size: 11px; background: var(--bg2); border: 1px solid var(--border2); border-radius: 4px; color: var(--text2); cursor: pointer; }
+.snip-acts button:hover { color: var(--text); border-color: var(--accent); }
+.snip-empty { font-size: 11.5px; color: var(--text3); padding: 10px 6px; line-height: 1.5; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.snip-picker { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(540px, calc(100% - 20px)); z-index: 20; background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 14px 44px rgba(0,0,0,.55); display: flex; flex-direction: column; max-height: calc(100% - 20px); }
+.snip-picker .snip-picker-q { margin: 8px; padding: 8px 10px; font-size: 13px; width: auto; }
+.snip-picker-list { overflow-y: auto; padding: 0 6px 4px; flex: 1; min-height: 0; }
+.sp-item { padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+.sp-item.sel, .sp-item:hover { background: var(--accent-d); }
+.sp-name { font-size: 12.5px; font-weight: 600; color: var(--text); }
+.sp-group { font-size: 10px; color: var(--text3); margin-left: 6px; }
+.sp-cmd { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-empty { padding: 10px; font-size: 12px; color: var(--text3); }
+.snip-picker-foot { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-top: 1px solid var(--border); font-size: 10.5px; color: var(--text3); }
+.snip-picker-foot a { color: var(--accent); text-decoration: none; white-space: nowrap; }
+.snip-preview { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text2); white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow: auto; margin: 4px 0 10px; }
+#sn-cmd { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.45; }
+.check-row { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--text2); margin: 8px 0; text-transform: none; letter-spacing: 0; font-weight: 400; line-height: 1.45; cursor: pointer; }
+.check-row input { width: auto; margin-top: 2px; flex: none; }
+.check-row b { color: var(--text); }
+#bc-bar { display: none; align-items: center; gap: 10px; padding: 5px 12px; background: linear-gradient(90deg, rgba(234,88,12,.30), rgba(234,88,12,.10)); border-bottom: 1px solid rgba(234,88,12,.55); color: #fed7aa; font-size: 12px; flex-shrink: 0; }
+#bc-bar .sp { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#bc-bar b { color: #fff; }
+.win.bc-on { box-shadow: 0 0 0 2px rgba(234,88,12,.9), 0 8px 30px rgba(0,0,0,.45) !important; }
+.win.bc-on .win-header { background: linear-gradient(90deg, rgba(234,88,12,.22), transparent 70%); }
+.win-btn.bc.active { color: #fb923c; background: rgba(234,88,12,.2); }
+#btn-broadcast.active { background: rgba(234,88,12,.24); border-color: rgba(234,88,12,.65); color: #fed7aa; }
+.bc-row { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 7px; margin-bottom: 5px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 12.5px; color: var(--text); }
+.bc-row input { width: auto; }
+.bc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex: none; }
+.bc-dot.connected { background: var(--green); }
+.bc-host { margin-left: auto; font-size: 11px; color: var(--text3); }
+.bc-tools { display: flex; gap: 6px; margin: 10px 0 8px; }
+#bc-list { max-height: 50vh; overflow-y: auto; }
+
+/* v10.3: live up/down status */
+.conn-st { width: 7px; height: 7px; border-radius: 50%; flex: none; box-sizing: border-box; }
+.conn-st.up { background: var(--green); box-shadow: 0 0 5px rgba(34,197,94,.5); }
+.conn-st.slow { background: var(--yellow); }
+.conn-st.down { background: var(--red); box-shadow: 0 0 6px rgba(239,68,68,.75); animation: st-pulse 1.6s infinite; }
+.conn-st.via-up { border: 1.5px solid var(--green); }
+.conn-st.via-down { border: 1.5px solid var(--red); }
+.conn-st.unknown, .conn-st.via-unknown { border: 1.5px solid var(--text3); opacity: .7; }
+@keyframes st-pulse { 50% { opacity: .4; } }
+.conn-item.live .conn-name::after { background: var(--accent) !important; box-shadow: 0 0 6px var(--accent-b) !important; }
+.folder-down { font-size: 10px; font-weight: 700; color: #fca5a5; background: rgba(239,68,68,.16); border-radius: 8px; padding: 0 6px; line-height: 16px; }
+.st-chip { margin: 4px 8px 6px; padding: 5px 9px; border-radius: 7px; font-size: 11.5px; cursor: pointer; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); color: #fecaca; user-select: none; }
+.st-chip:hover, .st-chip.on { background: rgba(239,68,68,.24); }
 </style>
 </head>
 <body>
@@ -1280,7 +1349,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.2.0-mimo · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.3.0 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1356,7 +1425,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.2.0-mimo</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.3.0</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1364,6 +1433,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <span id="user-chip"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span></span>
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
       <button class="btn-top" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
+      <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
@@ -1396,6 +1466,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     </div>
     <button class="tab-scroll-btn" onclick="scrollTabBar(120)" title="Scroll right">›</button>
   </div>
+  <div id="bc-bar"><span>📣</span><span class="sp" id="bc-bar-text"></span><button class="btn-sec btn-sm" onclick="openBroadcastModal()" data-i18n="bc_change">Change…</button><button class="btn-danger btn-sm" onclick="stopBroadcast()">■ <span data-i18n="bc_stop">Stop</span></button></div>
   <div id="win-container">
     <div class="no-windows-hint" id="no-win-hint">
       <span class="hint-icon">⚡</span>
@@ -1415,11 +1486,13 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="sess-panel-inner">
     <div class="sess-hdr">
       <div class="sess-hdr-top">
-        <span data-i18n="sessions">Sessions</span>
+        <div class="rp-tabs"><button id="rp-tab-sess" class="active" onclick="setRightTab('sessions')" data-i18n="sessions">Sessions</button><button id="rp-tab-snip" onclick="setRightTab('snippets')" title="Ctrl+Shift+Space">⚡ <span data-i18n="snippets">Snippets</span></button></div>
       </div>
-      <button class="btn-save-sess" onclick="saveCurrentSession()" data-i18n="save_session">+ Save Session</button>
+      <button class="btn-save-sess" id="rp-sess-save" onclick="saveCurrentSession()" data-i18n="save_session">+ Save Session</button>
+      <div id="snip-tools" style="display:none;"><input type="text" id="snip-search" data-i18n-placeholder="snip_search" placeholder="Search snippets…" oninput="renderSnippets()"><button class="btn-sm" onclick="openSnippetModal(null)" title="New snippet">＋</button></div>
     </div>
     <div id="sess-list"></div>
+    <div id="snip-list" style="display:none;"></div>
     <div class="clip-panel">
       <div class="clip-header">
         <span data-i18n="clipboard">Clipboard</span>
@@ -1493,6 +1566,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <select id="m-jump"></select>
       <div class="muted-text" style="margin-top:4px;" id="m-jump-help" data-i18n="jump_host_help">Reach this server through another saved SSH connection (bastion / jump host), like ssh -J. That connection can have its own jump host (chains).</div>
     </div>
+    <label class="check-row" id="m-monitor-row"><input type="checkbox" id="m-monitor" checked> <span><b data-i18n="st_monitor">Monitor up/down status</b> — <span data-i18n="st_monitor_d">checked regularly with a connection to its port, like a monitoring system (no login).</span></span></label>
     <div id="m-auth-fields">
     <div class="field"><label data-i18n="username">Username</label><input type="text" id="m-user" placeholder="root"></div>
     <div class="field">
@@ -1682,6 +1756,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div class="setting-control"><select class="setting-select" id="setting-confirm-close" onchange="applySettings()"><option value="1" data-i18n="always_ask">Always ask</option><option value="0" data-i18n="never_ask">Never ask</option><option value="connected" selected data-i18n="only_connected">Only when connected</option></select></div>
       </div>
       <div class="setting-row">
+        <div><div class="setting-label" data-i18n="notify_down">Notify when a server goes down</div><div class="setting-desc" data-i18n="notify_down_desc">A message (and a desktop notification while WRM is in the background) when a monitored connection goes down or comes back</div></div>
+        <div class="setting-control"><select class="setting-select" id="setting-notify-down" onchange="applySettings()"><option value="1" data-i18n="on">On</option><option value="0" data-i18n="off">Off</option></select></div>
+      </div>
+      <div class="setting-row">
         <div><div class="setting-label" data-i18n="max_upload">Max upload size</div><div class="setting-desc" data-i18n="max_upload_desc">Per file, 0 = unlimited (MB)</div></div>
         <div class="setting-control"><input type="number" min="0" step="100" id="setting-max-upload" onchange="applySettings()" style="width:90px;background:var(--bg);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 8px;"></div>
       </div>
@@ -1736,6 +1814,61 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 </div>
 
 <!-- Tunnels -->
+
+<!-- Snippet editor (v10.3) -->
+<div class="modal-overlay" id="modal-snippet">
+  <div class="modal" style="width:min(640px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3 id="snip-modal-title">⚡ Snippet</h3>
+    <input type="hidden" id="sn-id">
+    <div class="field-row">
+      <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="sn-name" maxlength="120" placeholder="Disk usage"></div>
+      <div class="field"><label data-i18n="snip_group">Group</label><input type="text" id="sn-group" list="sn-groups" maxlength="60" placeholder="Diagnostics"><datalist id="sn-groups"></datalist></div>
+    </div>
+    <div class="field"><label data-i18n="snip_command">Command(s)</label><textarea id="sn-cmd" rows="6" spellcheck="false" autocomplete="off" placeholder="df -hT -x tmpfs"></textarea>
+      <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="snip_vars_help">Every line is one command. Variables: {{host}} {{port}} {{user}} {{name}} {{folder}} {{wrm_user}} {{date}} {{time}}. Asked when used: {{?Service}} or {{?Service=nginx}}.</div></div>
+    <div class="field"><label data-i18n="snip_desc">Description (optional)</label><input type="text" id="sn-desc" maxlength="1000"></div>
+    <div class="field-row">
+      <div class="field"><label data-i18n="snip_applies">Applies to</label><select id="sn-scope" onchange="onSnipScopeChange()"><option value="all" data-i18n="snip_scope_all">All connections</option><option value="folder" data-i18n="snip_scope_folder">Connections in a folder</option><option value="connection" data-i18n="snip_scope_conn">One connection</option></select></div>
+      <div class="field" id="sn-scope-id-wrap"><label id="sn-scope-id-lbl">Folder</label><select id="sn-scope-id"></select></div>
+    </div>
+    <label class="check-row"><input type="checkbox" id="sn-auto" onchange="onSnipFlagsChange()"> <span><b data-i18n="snip_autorun">Run on connect</b> — <span data-i18n="snip_autorun_d">typed into the shell automatically when a terminal of these connections connects (also after a reconnect), e.g. sudo -i, cd /srv/app, tmux attach.</span></span></label>
+    <label class="check-row" id="sn-shared-row"><input type="checkbox" id="sn-shared" onchange="onSnipFlagsChange()"> <span><b data-i18n="snip_shared">Share with all users</b> — <span data-i18n="snip_shared_d">everybody can use it (read-only). Shared snippets apply to all connections and do not run on connect.</span></span></label>
+    <div class="modal-footer">
+      <button class="btn-danger" id="sn-del" onclick="deleteSnippet(Number(document.getElementById('sn-id').value))" style="margin-right:auto;">🗑</button>
+      <button class="btn-sec" onclick="closeModal('modal-snippet')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveSnippet()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Snippet variables (v10.3) -->
+<div class="modal-overlay" id="modal-snipvars" style="z-index:9600;">
+  <div class="modal" style="width:min(480px, calc(100vw - 24px));">
+    <h3 id="sv-title">⚡</h3>
+    <div class="muted-text" id="sv-target" style="margin-bottom:10px;"></div>
+    <div id="sv-fields"></div>
+    <pre class="snip-preview" id="sv-preview"></pre>
+    <div class="modal-footer">
+      <button class="btn-sec" onclick="snipVarsDone(false)" data-i18n="cancel">Cancel</button>
+      <button onclick="snipVarsDone(true)">▶ <span data-i18n="run">Run</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Broadcast input (v10.3) -->
+<div class="modal-overlay" id="modal-broadcast">
+  <div class="modal" style="width:min(580px, calc(100vw - 24px));">
+    <h3>📣 <span data-i18n="bc_title">Broadcast input</span></h3>
+    <div class="muted-text" style="line-height:1.5;" data-i18n="bc_help">What you type in one of the selected terminals is sent to all of them at the same time — run the same command on many servers. Commands that look dangerous (rm -rf, shutdown, mkfs, DROP TABLE…) and pasted multi-line text ask for confirmation first. Snippets run on every selected terminal with their own host and user.</div>
+    <div class="bc-tools"><button class="btn-sec btn-sm" onclick="bcSelect(true)" data-i18n="bc_all">All</button><button class="btn-sec btn-sm" onclick="bcSelect(false)" data-i18n="bc_none">None</button></div>
+    <div id="bc-list"></div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="bc-stop-btn" onclick="stopBroadcast()" style="margin-right:auto;">■ <span data-i18n="bc_stop">Stop</span></button>
+      <button class="btn-sec" onclick="closeModal('modal-broadcast')" data-i18n="cancel">Cancel</button>
+      <button id="bc-start-btn" onclick="applyBroadcast()">📣 Start</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="modal-tunnels">
   <div class="modal tun-modal">
     <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🔀 <span data-i18n="tunnels_title">SSH tunnels (port forwarding)</span></h3>
@@ -3248,6 +3381,73 @@ Object.assign(LANGS.hr, {
 });
 
 let currentLang = localStorage.getItem('wrm_lang') || 'en';
+Object.assign(LANGS.en, {
+  snippets:'Snippets', snip_search:'Search snippets…', snip_new:'New snippet', snip_edit:'Edit snippet', snip_group:'Group',
+  snip_command:'Command(s)', snip_desc:'Description (optional)', snip_applies:'Applies to', snip_scope_all:'All connections',
+  snip_scope_folder:'Connections in a folder', snip_scope_conn:'One connection', snip_folder_lbl:'Folder', snip_conn_lbl:'Connection',
+  snip_vars_help:'Every line is one command. Variables: {{host}} {{port}} {{user}} {{name}} {{folder}} {{wrm_user}} {{date}} {{time}}. Asked when used: {{?Service}} or {{?Service=nginx}}.',
+  snip_autorun:'Run on connect', snip_autorun_d:'typed into the shell automatically when a terminal of these connections connects (also after a reconnect), e.g. sudo -i, cd /srv/app, tmux attach.',
+  snip_shared:'Share with all users', snip_shared_d:'everybody can use it (read-only). Shared snippets apply to all connections and do not run on connect.',
+  snip_shared_by:'Shared by {u}', snip_empty:'No snippets yet. Save the commands you use every day and send them to the focused terminal with one click — or press Ctrl+Shift+Space in a terminal.',
+  snip_empty_short:'No snippets yet', snip_examples:'Add example snippets', snip_examples_added:'{n} example snippets added', snip_ungrouped:'Other',
+  snip_no_match:'No matching snippets', snip_insert:'Insert without running (Shift+click)', snip_copy:'Copy command',
+  snip_no_terminal:'Open or click a terminal first — snippets go to the focused terminal.', snip_picker_ph:'Run a snippet…',
+  snip_picker_keys:'Enter run · Shift+Enter insert · Esc close', snip_delete_q:'Delete the snippet "{name}"?', snip_onconnect:'Run on connect…',
+  snip_group_onconnect:'On connect', snip_title:'Snippets (Ctrl+Shift+Space)', snip_click_help:'Click: run in the focused terminal · Shift+click: insert · right-click: more',
+  snip_name_cmd_required:'Name and command are required', autorun_done:'Run on connect: {names}', run:'Run',
+  broadcast_lbl:'Broadcast', bc_title:'Broadcast input', bc_all:'All', bc_none:'None', bc_start:'Start broadcast', bc_update:'Apply', bc_stop:'Stop', bc_change:'Change…',
+  bc_help:'What you type in one of the selected terminals is sent to all of them at the same time — run the same command on many servers. Commands that look dangerous (rm -rf, shutdown, mkfs, DROP TABLE…) and pasted multi-line text ask for confirmation first. Snippets run on every selected terminal with their own host and user.',
+  bc_confirm:'Everything you type in one of these {n} terminals will be sent to all of them. Start broadcast input?',
+  bc_bar:'typing goes to {n} of {m} terminals. 📣 in a window header adds or removes it.', bc_stopped:'Broadcast stopped', bc_min_two:'Select at least two terminals',
+  bc_no_terms:'Open two or more SSH terminals first.', bc_danger:'This looks like a dangerous command:\n{cmd}', bc_paste:'You are pasting {l} commands.',
+  bc_on_n:'It runs on {n} terminals at the same time.', bc_send:'Send to all', bc_snippet_confirm:'Run the snippet "{name}" on {n} terminals?',
+  bc_join:'Add this terminal to the broadcast', bc_leave:'Remove this terminal from the broadcast', bc_disabled:'Broadcast input is turned off by the administrator.',
+  pg_terminal:'Terminal', p_broadcast_enabled:'Broadcast input', p_broadcast_enabled_d:'Users may type into several terminals at once (dangerous commands ask first). Every start and stop is recorded in the audit log.',
+  ev_snippet:'Snippets',
+});
+Object.assign(LANGS.hr, {
+  snippets:'Snippeti', snip_search:'Traži snippete…', snip_new:'Novi snippet', snip_edit:'Uredi snippet', snip_group:'Grupa',
+  snip_command:'Naredba(e)', snip_desc:'Opis (neobavezno)', snip_applies:'Vrijedi za', snip_scope_all:'Sve veze',
+  snip_scope_folder:'Veze u mapi', snip_scope_conn:'Jednu vezu', snip_folder_lbl:'Mapa', snip_conn_lbl:'Veza',
+  snip_vars_help:'Svaki redak je jedna naredba. Varijable: {{host}} {{port}} {{user}} {{name}} {{folder}} {{wrm_user}} {{date}} {{time}}. Pita se pri korištenju: {{?Servis}} ili {{?Servis=nginx}}.',
+  snip_autorun:'Pokreni pri spajanju', snip_autorun_d:'automatski se upisuje u shell kad se terminal ovih veza spoji (i nakon ponovnog spajanja), npr. sudo -i, cd /srv/app, tmux attach.',
+  snip_shared:'Podijeli sa svim korisnicima', snip_shared_d:'svi ga mogu koristiti (samo čitanje). Dijeljeni snippeti vrijede za sve veze i ne pokreću se pri spajanju.',
+  snip_shared_by:'Dijeli {u}', snip_empty:'Još nema snippeta. Spremi naredbe koje koristiš svaki dan i pošalji ih u aktivni terminal jednim klikom — ili pritisni Ctrl+Shift+Space u terminalu.',
+  snip_empty_short:'Još nema snippeta', snip_examples:'Dodaj primjere', snip_examples_added:'Dodano primjera: {n}', snip_ungrouped:'Ostalo',
+  snip_no_match:'Nema snippeta koji odgovaraju', snip_insert:'Upiši bez pokretanja (Shift+klik)', snip_copy:'Kopiraj naredbu',
+  snip_no_terminal:'Najprije otvori ili klikni terminal — snippeti idu u aktivni terminal.', snip_picker_ph:'Pokreni snippet…',
+  snip_picker_keys:'Enter pokreni · Shift+Enter upiši · Esc zatvori', snip_delete_q:'Obrisati snippet "{name}"?', snip_onconnect:'Pokreni pri spajanju…',
+  snip_group_onconnect:'Pri spajanju', snip_title:'Snippeti (Ctrl+Shift+Space)', snip_click_help:'Klik: pokreni u aktivnom terminalu · Shift+klik: upiši · desni klik: više',
+  snip_name_cmd_required:'Naziv i naredba su obavezni', autorun_done:'Pokrenuto pri spajanju: {names}', run:'Pokreni',
+  broadcast_lbl:'Broadcast', bc_title:'Istovremeni unos (broadcast)', bc_all:'Svi', bc_none:'Nijedan', bc_start:'Pokreni broadcast', bc_update:'Primijeni', bc_stop:'Zaustavi', bc_change:'Promijeni…',
+  bc_help:'Ono što upišeš u jedan od odabranih terminala šalje se u sve njih istovremeno — ista naredba na mnogo servera. Naredbe koje izgledaju opasno (rm -rf, shutdown, mkfs, DROP TABLE…) i zalijepljeni tekst u više redaka najprije traže potvrdu. Snippeti se pokreću na svakom odabranom terminalu s njegovim hostom i korisnikom.',
+  bc_confirm:'Sve što upišeš u jedan od ovih {n} terminala poslat će se u sve njih. Pokrenuti istovremeni unos?',
+  bc_bar:'unos ide u {n} od {m} terminala. 📣 u zaglavlju prozora dodaje ga ili uklanja.', bc_stopped:'Broadcast zaustavljen', bc_min_two:'Odaberi barem dva terminala',
+  bc_no_terms:'Najprije otvori dva ili više SSH terminala.', bc_danger:'Ovo izgleda kao opasna naredba:\n{cmd}', bc_paste:'Lijepiš {l} naredbi.',
+  bc_on_n:'Izvršit će se na {n} terminala istovremeno.', bc_send:'Pošalji svima', bc_snippet_confirm:'Pokrenuti snippet "{name}" na {n} terminala?',
+  bc_join:'Dodaj ovaj terminal u broadcast', bc_leave:'Ukloni ovaj terminal iz broadcasta', bc_disabled:'Administrator je isključio istovremeni unos.',
+  pg_terminal:'Terminal', p_broadcast_enabled:'Istovremeni unos (broadcast)', p_broadcast_enabled_d:'Korisnici smiju tipkati u više terminala odjednom (opasne naredbe traže potvrdu). Svako pokretanje i zaustavljanje bilježi se u audit log.',
+  ev_snippet:'Snippeti',
+});
+
+Object.assign(LANGS.en, {
+  st_up:'Up', st_down:'Down', st_unknown:'Not checked yet', st_via:'Behind jump host {name} ({state})', st_check_now:'Check status now', st_checking:'Checking…',
+  st_went_down:'Down: {names}', st_back_up:'Up again: {names}', st_down_chip:'{n} down — show only these', st_down_chip_on:'Showing {n} down — show all', st_folder_down:'{n} down',
+  st_monitor:'Monitor up/down status', st_monitor_d:'checked regularly with a connection to its port, like a monitoring system (no login). Behind a jump host it shows the jump host\'s state, unless the administrator turned on checks through jump hosts.',
+  notify_down:'Notify when a server goes down', notify_down_desc:'A message (and a desktop notification while WRM is in the background) when a monitored connection goes down or comes back',
+  pg_status:'Live status', p_status_enabled:'Live up/down status', p_status_enabled_d:'WRM checks every saved connection regularly: a TCP connection to its port; SSH and FTP read the greeting, like Nagios check_ssh. Each host:port once per round.',
+  p_status_interval_seconds:'Check interval (seconds)', p_status_interval_seconds_d:'15–3600. Shorter intervals notice outages sooner and open more connections.',
+  p_status_jump_checks:'Check through jump hosts', p_status_jump_checks_d:'Log in to jump hosts to check the connections behind them (one SSH login per jump host and round, visible in its auth log). Off: they show the state of their jump host.',
+});
+Object.assign(LANGS.hr, {
+  st_up:'Dostupan', st_down:'Nedostupan', st_unknown:'Još nije provjereno', st_via:'Iza jump hosta {name} ({state})', st_check_now:'Provjeri status sada', st_checking:'Provjeravam…',
+  st_went_down:'Nedostupno: {names}', st_back_up:'Ponovno dostupno: {names}', st_down_chip:'Nedostupno: {n} — prikaži samo njih', st_down_chip_on:'Prikazano nedostupnih: {n} — prikaži sve', st_folder_down:'Nedostupno: {n}',
+  st_monitor:'Prati dostupnost (up/down)', st_monitor_d:'redovito se provjerava spajanjem na port, kao u sustavu za nadzor (bez prijave). Iza jump hosta prikazuje stanje jump hosta, osim ako administrator ne uključi provjere kroz jump hostove.',
+  notify_down:'Obavijesti kad server postane nedostupan', notify_down_desc:'Poruka (i obavijest na radnoj površini dok je WRM u pozadini) kad praćena veza postane nedostupna ili se vrati',
+  pg_status:'Status uživo', p_status_enabled:'Status dostupnosti uživo', p_status_enabled_d:'WRM redovito provjerava svaku spremljenu vezu: TCP spajanje na port; SSH i FTP čitaju pozdrav, kao Nagios check_ssh. Svaki host:port jednom po krugu.',
+  p_status_interval_seconds:'Interval provjere (sekundi)', p_status_interval_seconds_d:'15–3600. Kraći interval prije primijeti ispad i otvara više veza.',
+  p_status_jump_checks:'Provjere kroz jump hostove', p_status_jump_checks_d:'Prijava na jump hostove radi provjere veza iza njih (jedna SSH prijava po jump hostu i krugu, vidljiva u njegovom auth logu). Isključeno: prikazuju stanje svog jump hosta.',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -3255,6 +3455,7 @@ function applyLang() {
   const sbl = document.getElementById('sess-lbl2');
   if (sbl) sbl.textContent = t('session_label');
   if (currentUser || isCollabMode) renderTree();
+  if (typeof renderSnippets === 'function') { renderSnippets(); renderBroadcastUI(); }
 }
 function changeLang(l) {
   currentLang = l;
@@ -3457,6 +3658,7 @@ function initApp() {
     document.getElementById('admin-badge').style.display = currentUser.is_admin ? 'inline' : 'none';
     document.getElementById('admin-settings-row').style.display = currentUser.is_admin ? '' : 'none';
     applyPolicyToUI();
+    setRightTab(rightTab);
   }
   if (enforceRestrictions()) return;
   setupResize();
@@ -3481,6 +3683,8 @@ async function loadData() {
     renderTree();
     updateFolderSelects();
     loadTunnels();
+    loadSnippets();
+    loadStatus();
   } catch(e) { console.error('loadData', e); }
 }
 
@@ -3490,6 +3694,10 @@ function renderTree() {
   const query = (document.getElementById('search-input')?.value || '').toLowerCase();
   const wrap = document.getElementById('tree-wrap');
   wrap.innerHTML = '';
+  const downCount = conns.filter(c => (connStatusOf(c) || {}).state === 'down').length;
+  if (statusDownOnly && !downCount) statusDownOnly = false;
+  const filterActive = !!query || statusDownOnly;
+  const visible = c => (!query || connMatches(c, query)) && (!statusDownOnly || (connStatusOf(c) || {}).state === 'down');
 
   // Root drop area
   const rootDrop = document.createElement('div');
@@ -3504,6 +3712,14 @@ function renderTree() {
   };
   wrap.appendChild(rootDrop);
 
+  if (downCount) {
+    const chip = document.createElement('div');
+    chip.className = 'st-chip' + (statusDownOnly ? ' on' : '');
+    chip.textContent = '🔴 ' + (statusDownOnly ? t('st_down_chip_on') : t('st_down_chip')).replace('{n}', downCount);
+    chip.onclick = () => { statusDownOnly = !statusDownOnly; renderTree(); };
+    wrap.appendChild(chip);
+  }
+
   // My connections section
   const myLabel = document.createElement('div');
   myLabel.className = 'tree-section-label';
@@ -3512,13 +3728,14 @@ function renderTree() {
 
   // Folders
   folders.forEach(f => {
-    const fConns = conns.filter(c => c.folder_id === f.id && (!query || connMatches(c, query)));
-    if (query && fConns.length === 0) return;
+    const fConns = conns.filter(c => c.folder_id === f.id && visible(c));
+    if (filterActive && fConns.length === 0) return;
+    const fDown = conns.filter(c => c.folder_id === f.id && (connStatusOf(c) || {}).state === 'down').length;
 
     const folderWrap = document.createElement('div');
     const row = document.createElement('div');
     row.className = 'folder-row';
-    row.innerHTML = `<span class="folder-chevron ${query || openFolderIds.has(f.id) ? 'open' : ''}">▶</span><span style="font-size:14px;">📁</span><span style="flex:1;">${esc(f.name)}</span><button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
+    row.innerHTML = `<span class="folder-chevron ${filterActive || openFolderIds.has(f.id) ? 'open' : ''}">▶</span><span style="font-size:14px;">📁</span><span style="flex:1;">${esc(f.name)}</span>${fDown ? `<span class="folder-down" title="${esc(t('st_folder_down').replace('{n}', fDown))}">${fDown}↓</span>` : ''}<button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
     row.draggable = false;
     row.ondragover = e => { e.preventDefault(); row.classList.add('drag-over'); };
     row.ondragleave = () => row.classList.remove('drag-over');
@@ -3537,7 +3754,7 @@ function renderTree() {
     row.oncontextmenu = e => { e.preventDefault(); ctxFolderId = f.id; showFolderCtx(e.clientX, e.clientY); };
 
     const children = document.createElement('div');
-    children.className = 'folder-children' + (query || openFolderIds.has(f.id) ? ' open' : '');
+    children.className = 'folder-children' + (filterActive || openFolderIds.has(f.id) ? ' open' : '');
 
     fConns.forEach(c => children.appendChild(makeConnItem(c)));
     folderWrap.appendChild(row);
@@ -3546,7 +3763,7 @@ function renderTree() {
   });
 
   // Root connections
-  const rootConns = conns.filter(c => !c.folder_id && (!query || connMatches(c, query)));
+  const rootConns = conns.filter(c => !c.folder_id && visible(c));
   rootConns.forEach(c => wrap.appendChild(makeConnItem(c)));
 
   if (conns.length === 0 && !query) {
@@ -3623,11 +3840,12 @@ function makeConnItem(c) {
   el.draggable = true;
   const proto = (c.protocol || 'SSH').toLowerCase();
   const tunRun = tunnelState.tunnels.filter(x => x.conn_id === c.id && x.running && !x.ephemeral).length;
-  el.innerHTML = `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : c.protocol)}</span><span class="conn-name">${esc(c.name)}</span>` +
+  const st = connStatusOf(c);
+  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : c.protocol)}</span><span class="conn-name">${esc(c.name)}</span>` +
     (c.route ? `<span class="conn-route" title="${esc(t('via') + ' ' + c.route)}">⤳</span>` : '') +
     (c.tunnels ? `<span class="conn-tun ${tunRun ? 'on' : ''}" title="${esc(t('tun_count_title').replace('{n}', c.tunnels).replace('{r}', tunRun))}" onclick="event.stopPropagation(); openTunnelsPanel(${c.id})">🔀</span>` : '') +
     `<span class="conn-host">${esc(c.host)}</span>`;
-  el.title = (c.username ? c.username + '@' : '') + c.host + (c.route ? '\n' + t('via') + ' ' + c.route : '') + (isWebConn(c) ? '\n' + t('web_dblclick') : '');
+  el.title = (c.username ? c.username + '@' : '') + c.host + (c.route ? '\n' + t('via') + ' ' + c.route : '') + (isWebConn(c) ? '\n' + t('web_dblclick') : '') + (st ? '\n' + statusTitle(st) : '');
   el.dataset.connId = c.id;
   if (winObjects.some(w => w.connId === c.id && w.connState === 'connected')) el.classList.add('live');
 
@@ -3686,7 +3904,8 @@ function showConnCtx(x, y, conn) {
     ${conn.tunnels ? `<div class="ctx-item" onclick="closeAllCtx(); openTunnelsPanel(${conn.id})">🔀 ${esc(t('tunnels_lbl'))} (${conn.tunnels})</div>
     <div class="ctx-item" onclick="closeAllCtx(); startConnTunnels(${conn.id})">▶ ${esc(t('tun_start_all'))}</div>
     ${tunRunning ? `<div class="ctx-item" onclick="closeAllCtx(); stopConnTunnels(${conn.id})">■ ${esc(t('tun_stop_all'))}</div>` : ''}` : ''}
-    <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id}, true)">＋ ${esc(t('tun_add'))}</div>` : '';
+    <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id}, true)">＋ ${esc(t('tun_add'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'connection', scope_id: ${conn.id}, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>` : '';
   menu.innerHTML = web ? `
     <div class="ctx-item" onclick="closeAllCtx(); openWebConn(conns.find(x => x.id === ${conn.id}))">🌐 ${esc(t('web_open'))}</div>
     <div class="ctx-hr"></div>` : `
@@ -3697,6 +3916,7 @@ function showConnCtx(x, y, conn) {
     ${tunItems}
     <div class="ctx-hr"></div>`;
   menu.innerHTML += `
+    <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow([${conn.id}])">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">${t('edit_connection')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); duplicateConn(${conn.id})">⧉ ${t('duplicate')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalConn(${conn.id})">${t('share_connection')}</div>
@@ -3742,12 +3962,16 @@ function applyPolicyToUI() {
   ['opt-key-file', 'opt-key-auto'].forEach(id => { const o = document.getElementById(id); if (o) { o.hidden = !pol.server_keys; o.disabled = !pol.server_keys; } });
   const ex = document.getElementById('export-secrets-row');
   if (ex) ex.style.display = pol.secret_export ? '' : 'none';
+  const bc = document.getElementById('btn-broadcast');
+  if (bc) bc.style.display = pol.broadcast === false ? 'none' : '';
 }
 
 function showFolderCtx(x, y) {
   const menu = document.getElementById('dyn-ctx-menu');
   menu.innerHTML = `
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow(conns.filter(c => c.folder_id === ctxFolderId).map(c => c.id))">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-hr"></div>
     <div class="ctx-item danger" onclick="closeAllCtx(); delFolder(${ctxFolderId})">🗑 ${t('delete_folder')}</div>
   `;
@@ -3782,6 +4006,7 @@ function openConnModal(id, focusTunnels) {
   document.getElementById('m-auth').value = c ? c.auth_method : 'PASSWORD';
   document.getElementById('m-folder').value = c && c.folder_id ? c.folder_id : '';
   document.getElementById('m-webpath').value = c ? (c.web_path || '') : '';
+  document.getElementById('m-monitor').checked = c ? c.monitor !== false : true;
   fillJumpSelect(c);
   loadConnTunnels(id, focusTunnels);
   // Passwords and keys never come back from the server: an empty field keeps the saved one.
@@ -3817,6 +4042,7 @@ function onAuthMethodChange() {
 
 function connFormPayload() {
   return {
+    monitor: document.getElementById('m-monitor').checked,
     name: document.getElementById('m-name').value.trim(),
     host: document.getElementById('m-host').value.trim(),
     username: document.getElementById('m-user').value.trim(),
@@ -4470,6 +4696,8 @@ const POLICY_GROUPS = {
     ['pg_accounts', ['registration', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days']],
     ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export']],
     ['pg_sharing', ['allow_link_shares', 'chat_file_max_mb']],
+    ['pg_terminal', ['broadcast_enabled']],
+    ['pg_status', ['status_enabled', 'status_interval_seconds', 'status_jump_checks']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
@@ -4554,7 +4782,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'snippet.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -5196,6 +5424,584 @@ async function importExternal(input, kind, password) {
 }
 
 
+// ══ LIVE STATUS (v10.3) ══════════════════════════════
+// The server checks every monitored connection regularly and pushes "status_changed".
+let connStatus = {}, statusInfo = {enabled: false}, statusDownOnly = false;
+
+async function loadStatus(notify) {
+  if (isCollabMode || !currentUser) return;
+  try {
+    const r = await fetch('/api/status');
+    if (!r.ok) return;
+    const d = await r.json();
+    const prev = connStatus;
+    connStatus = d.connections || {};
+    statusInfo = {enabled: !!d.enabled, interval: d.interval, jump_checks: !!d.jump_checks};
+    if (notify) notifyStatusChanges(prev, connStatus);
+  } catch (_) { return; }
+  renderTree();
+}
+
+function connStatusOf(c) { return c && statusInfo.enabled ? connStatus[c.id] || null : null; }
+
+function statusClass(st) {
+  if (st.state === 'up') return st.latency_ms > 300 ? 'slow' : 'up';
+  if (st.state === 'down') return 'down';
+  if (st.via) return 'via-' + (st.via_state || 'unknown');
+  return 'unknown';
+}
+
+function statusTitle(st) {
+  if (!st) return '';
+  const since = st.since ? ' · ' + t('since').toLowerCase() + ' ' + fmtTime(st.since) : '';
+  if (st.state === 'up') return `🟢 ${t('st_up')} · ${Number(st.latency_ms)} ms${since}${st.via ? ' · ' + t('via') + ' ' + st.via : ''}${st.banner ? '\n' + st.banner : ''}`;
+  if (st.state === 'down') return `🔴 ${t('st_down')}${since}${st.error ? ' — ' + st.error : ''}`;
+  if (st.via) return '⤳ ' + t('st_via').replace('{name}', st.via).replace('{state}', t('st_' + (st.via_state || 'unknown')));
+  return '⚪ ' + t('st_unknown') + (st.error ? ' — ' + st.error : '');
+}
+
+function notifyStatusChanges(prev, cur) {
+  if (settings.notifyDown === false) return;
+  const downs = [], ups = [];
+  Object.keys(cur).forEach(id => {
+    const a = prev[id], b = cur[id];
+    if (!a || !b || a.state === b.state) return;
+    const c = conns.find(x => x.id === Number(id));
+    if (!c) return;
+    if (b.state === 'down') downs.push(c.name + (b.error ? ' (' + b.error + ')' : ''));
+    else if (b.state === 'up' && a.state === 'down') ups.push(c.name);
+  });
+  if (downs.length) {
+    const msg = t('st_went_down').replace('{names}', downs.join(', '));
+    showToast('🔴 ' + msg, 'error', 9000);
+    browserNotify('🔴 ' + msg);
+  }
+  if (ups.length) {
+    const msg = t('st_back_up').replace('{names}', ups.join(', '));
+    showToast('🟢 ' + msg, 'success', 5000);
+    browserNotify('🟢 ' + msg);
+  }
+}
+
+function browserNotify(text) {
+  try {
+    if (document.hidden && 'Notification' in window && Notification.permission === 'granted') new Notification('WRM PRO', {body: text, icon: '/static/brand/icon-192.png'});
+  } catch (_) {}
+}
+
+async function checkStatusNow(ids) {
+  ids = (ids || []).filter(Boolean);
+  if (!ids.length) return;
+  showToast('🔄 ' + t('st_checking'), 'info', 1500);
+  const r = await fetch('/api/status/check', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ids})});
+  if (!r.ok) { showToast(await apiError(r), 'error', 5000); return; }
+  const d = await r.json();
+  const res = d.connections || {};
+  Object.assign(connStatus, res);
+  renderTree();
+  const lines = ids.map(id => {
+    const c = conns.find(x => x.id === id), st = res[id];
+    if (!c || !st) return null;
+    const icon = st.state === 'up' ? '🟢' : st.state === 'down' ? '🔴' : '⚪';
+    return `${icon} ${c.name}: ${st.state === 'up' ? Number(st.latency_ms) + ' ms' + (st.via ? ' (' + t('via') + ' ' + st.via + ')' : '') : (st.error || t('st_unknown'))}`;
+  }).filter(Boolean);
+  if (lines.length === 1) showToast(lines[0], res[ids[0]] && res[ids[0]].state === 'up' ? 'success' : 'error', 6000);
+  else if (lines.length) uiDialog({title: '🔄 ' + t('st_check_now'), message: lines.join('\n'), okText: t('ok'), cancelText: t('close')});
+}
+
+// ══ SNIPPETS (v10.3) ══════════════════════════════════
+// Saved commands for the focused terminal (or every terminal of a broadcast). Variables are
+// filled in per terminal; {{?Label}} prompts are asked once. "Run on connect" snippets are
+// typed by the server itself when a terminal connects.
+let snippets = [];
+let rightTab = 'sessions';
+try { rightTab = localStorage.getItem('wrm_right_tab') || 'sessions'; } catch (_) {}
+const snipGroupsClosed = {};
+let snipPicker = null;
+
+async function loadSnippets() {
+  if (!currentUser) return;
+  try { const r = await fetch('/api/snippets'); if (r.ok) snippets = await r.json(); } catch (_) {}
+  renderSnippets();
+  if (snipPicker) renderSnippetPicker();
+}
+
+function setRightTab(tab) {
+  if (!currentUser) tab = 'sessions';
+  rightTab = tab === 'snippets' ? 'snippets' : 'sessions';
+  try { localStorage.setItem('wrm_right_tab', rightTab); } catch (_) {}
+  const sn = rightTab === 'snippets';
+  const el = id => document.getElementById(id);
+  el('rp-tab-sess').classList.toggle('active', !sn);
+  el('rp-tab-snip').classList.toggle('active', sn);
+  el('rp-tab-snip').style.display = currentUser ? '' : 'none';
+  el('sess-list').style.display = sn ? 'none' : '';
+  el('rp-sess-save').style.display = sn || isCollabMode ? 'none' : '';
+  el('snip-tools').style.display = sn ? 'flex' : 'none';
+  el('snip-list').style.display = sn ? '' : 'none';
+  if (sn) renderSnippets();
+}
+
+function snippetHostPort(c) {
+  const h = (c && c.host) || '';
+  const m = h.match(/^\[([^\]]+)\]:(\d+)$/) || h.match(/^([^:]+):(\d+)$/);
+  if (m) return [m[1], m[2]];
+  return [h, ({SSH: '22', SFTP: '22', FTP: '21', FTPS: '21', HTTP: '80', HTTPS: '443'})[(c && c.protocol) || 'SSH'] || ''];
+}
+
+function expandSnippetJS(cmd, c, answers) {
+  const [host, port] = snippetHostPort(c);
+  const f = c && c.folder_id ? folders.find(x => x.id === c.folder_id) : null;
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  const vals = {host, port, user: (c && c.username) || '', name: (c && c.name) || '', folder: f ? f.name : '',
+    wrm_user: (currentUser && currentUser.username) || '',
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`};
+  return String(cmd).replace(/\{\{\s*(\?)?\s*([^}=]*?)\s*(?:=([^}]*))?\}\}/g, (m, q, k, def) => {
+    k = (k || '').trim();
+    if (q) return answers && Object.prototype.hasOwnProperty.call(answers, k) ? answers[k] : (def || '');
+    return Object.prototype.hasOwnProperty.call(vals, k) ? vals[k] : m;
+  });
+}
+
+function snippetPrompts(cmd) {
+  const out = [], re = /\{\{\s*\?\s*([^}=]*?)\s*(?:=([^}]*))?\}\}/g;
+  let m;
+  while ((m = re.exec(cmd))) { const k = m[1].trim(); if (k && !out.find(x => x.key === k)) out.push({key: k, def: m[2] || ''}); }
+  return out;
+}
+
+function snippetAppliesTo(s, c) {
+  if (s.scope === 'all') return true;
+  if (!c) return false;
+  if (s.scope === 'folder') return c.folder_id === s.scope_id;
+  return c.id === s.scope_id;
+}
+
+function snippetScopeLabel(s) {
+  if (s.scope === 'folder') { const f = folders.find(x => x.id === s.scope_id); return '📁 ' + (f ? f.name : '?'); }
+  if (s.scope === 'connection') { const c = conns.find(x => x.id === s.scope_id); return '🖥 ' + (c ? c.name : '?'); }
+  return t('snip_scope_all');
+}
+
+function snippetTargetWin() {
+  const ssh = winObjects.filter(w => w.mode === 'ssh' && w.term && w.el && w.el.style.display !== 'none');
+  return ssh.find(w => w.el.classList.contains('focused')) || ssh.sort((a, b) => (b._lastFocus || 0) - (a._lastFocus || 0))[0] || null;
+}
+
+function renderSnippets() {
+  const list = document.getElementById('snip-list');
+  if (!list || rightTab !== 'snippets') return;
+  const q = (document.getElementById('snip-search').value || '').toLowerCase().trim();
+  if (!snippets.length) {
+    list.innerHTML = `<div class="snip-empty">${esc(t('snip_empty'))}<button class="btn-sec btn-sm" onclick="addExampleSnippets()">✨ ${esc(t('snip_examples'))}</button></div>`;
+    return;
+  }
+  const items = snippets.filter(s => !q || [s.name, s.command, s.group, s.description].some(v => (v || '').toLowerCase().includes(q)));
+  if (!items.length) { list.innerHTML = `<div class="snip-empty">${esc(t('snip_no_match'))}</div>`; return; }
+  const target = snippetTargetWin(), tc = target ? winConn(target) : null;
+  const groups = {};
+  items.forEach(s => { const g = s.group || t('snip_ungrouped'); (groups[g] = groups[g] || []).push(s); });
+  list.innerHTML = Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(g => {
+    const closed = snipGroupsClosed[g] && !q;
+    return `<div class="snip-group"><div class="snip-group-h" onclick="toggleSnipGroup(${jsq(g)})">${closed ? '▸' : '▾'} ${esc(g)} <span class="sub">${groups[g].length}</span></div>` +
+      (closed ? '' : groups[g].map(s => snippetItemHTML(s, tc)).join('')) + '</div>';
+  }).join('') + (snippets.length < 6 && !q ? `<div class="snip-empty"><button class="btn-sec btn-sm" onclick="addExampleSnippets()">✨ ${esc(t('snip_examples'))}</button></div>` : '');
+}
+
+function toggleSnipGroup(g) { snipGroupsClosed[g] = !snipGroupsClosed[g]; renderSnippets(); }
+
+function canEditSnippet(s) { return s.mine || (s.shared && currentUser && currentUser.is_admin); }
+
+function snippetItemHTML(s, tc) {
+  const applies = !tc || snippetAppliesTo(s, tc);
+  const badges = (s.auto_run ? `<span class="snip-badge auto" title="${esc(t('snip_autorun'))}">⚡ auto</span>` : '') +
+    (s.shared ? `<span class="snip-badge" title="${esc(t('snip_shared_by').replace('{u}', s.owner || t('you')))}">👥</span>` : '') +
+    (s.scope !== 'all' ? `<span class="snip-badge" title="${esc(snippetScopeLabel(s))}">${s.scope === 'folder' ? '📁' : '🖥'}</span>` : '');
+  const first = s.command.split('\n')[0];
+  return `<div class="snip-item ${applies ? '' : 'dim'}" onclick="runSnippet(${s.id}, event.shiftKey ? 'insert' : 'run')" oncontextmenu="event.preventDefault(); showSnippetCtx(event.clientX, event.clientY, ${s.id})" title="${esc(s.command + (s.description ? '\n\n' + s.description : '') + '\n\n' + t('snip_click_help'))}">
+    <div class="snip-top"><span class="snip-name">${esc(s.name)}</span>${badges}</div>
+    <div class="snip-cmd">${esc(first)}${s.command.includes('\n') ? ' …' : ''}</div>
+    <div class="snip-acts"><button title="${esc(t('snip_insert'))}" onclick="event.stopPropagation(); runSnippet(${s.id}, 'insert')">⎘</button>${canEditSnippet(s) ? `<button title="${esc(t('edit'))}" onclick="event.stopPropagation(); openSnippetModal(${s.id})">✏</button>` : ''}</div>
+  </div>`;
+}
+
+function showSnippetCtx(x, y, id) {
+  const s = snippets.find(v => v.id === id);
+  if (!s) return;
+  const menu = document.getElementById('dyn-ctx-menu');
+  menu.innerHTML = `
+    <div class="ctx-item" onclick="closeAllCtx(); runSnippet(${id}, 'run')">▶ ${esc(t('run'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); runSnippet(${id}, 'insert')">⎘ ${esc(t('snip_insert'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); copyText(snippets.find(v => v.id === ${id}).command)">📋 ${esc(t('snip_copy'))}</div>
+    <div class="ctx-hr"></div>
+    ${canEditSnippet(s) ? `<div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(${id})">✏ ${esc(t('edit'))}</div>` : ''}
+    <div class="ctx-item" onclick="closeAllCtx(); duplicateSnippet(${id})">⧉ ${esc(t('duplicate'))}</div>
+    ${canEditSnippet(s) ? `<div class="ctx-hr"></div><div class="ctx-item danger" onclick="closeAllCtx(); deleteSnippet(${id})">🗑 ${esc(t('delete'))}</div>` : ''}`;
+  showCtx('dyn-ctx-menu', x, y);
+}
+
+function duplicateSnippet(id) {
+  const s = snippets.find(v => v.id === id);
+  if (s) openSnippetModal(null, {name: s.name + ' (copy)', command: s.command, description: s.description, group: s.group, scope: s.shared ? 'all' : s.scope, scope_id: s.scope_id, auto_run: false});
+}
+
+let _snipVarsResolve = null;
+function askSnippetVars(s, prompts, c, n) {
+  return new Promise(resolve => {
+    if (_snipVarsResolve) _snipVarsResolve(null);
+    _snipVarsResolve = resolve;
+    document.getElementById('sv-title').textContent = '⚡ ' + s.name;
+    document.getElementById('sv-target').textContent = n > 1 ? t('bc_on_n').replace('{n}', n) : (c ? c.name + ' — ' + c.host : '');
+    const box = document.getElementById('sv-fields');
+    box._s = s; box._c = c;
+    box.innerHTML = prompts.map(p => `<div class="field"><label>${esc(p.key)}</label><input type="text" data-k="${esc(p.key)}" value="${esc(p.def)}" oninput="snipVarsPreview()" onkeydown="if(event.key==='Enter'){event.preventDefault();snipVarsDone(true);}"></div>`).join('');
+    snipVarsPreview();
+    document.getElementById('modal-snipvars').classList.add('open');
+    setTimeout(() => { const f = box.querySelector('input'); if (f) { f.focus(); f.select(); } }, 30);
+  });
+}
+function snipVarsValues() { const a = {}; document.querySelectorAll('#sv-fields input').forEach(i => { a[i.dataset.k] = i.value; }); return a; }
+function snipVarsPreview() { const box = document.getElementById('sv-fields'); if (box._s) document.getElementById('sv-preview').textContent = expandSnippetJS(box._s.command, box._c, snipVarsValues()); }
+function snipVarsDone(ok) {
+  const r = _snipVarsResolve; _snipVarsResolve = null;
+  const vals = ok ? snipVarsValues() : null;
+  closeModal('modal-snipvars');
+  if (r) r(vals);
+}
+
+// runSnippet sends a snippet to the target terminal, or to every terminal of the broadcast
+// group the target belongs to. mode: 'run' (with Enter) or 'insert' (typed, not executed).
+async function runSnippet(id, mode, winId) {
+  const s = snippets.find(v => v.id === id);
+  if (!s) return;
+  const wo = winId ? winObjects.find(w => w.id === winId) : snippetTargetWin();
+  if (!wo || wo.mode !== 'ssh' || !wo.term) { showToast(t('snip_no_terminal'), 'info', 4500); return; }
+  let targets = bcast.on && bcast.ids.has(wo.id) ? bcastTargets() : [wo];
+  if (!targets.length) targets = [wo];
+  let answers = {};
+  const prompts = snippetPrompts(s.command);
+  if (prompts.length) {
+    answers = await askSnippetVars(s, prompts, winConn(wo), targets.length);
+    if (!answers) { try { wo.term.focus(); } catch (_) {} return; }
+  }
+  const texts = targets.map(w => expandSnippetJS(s.command, winConn(w), answers));
+  const multiLine = texts[0].includes('\n');
+  const bracketed = w => !!(w.term && w.term.modes && w.term.modes.bracketedPasteMode);
+  if (mode === 'insert' && multiLine && !targets.every(bracketed)) mode = 'run'; // cannot type several lines without running them
+  if (mode !== 'insert') {
+    const danger = texts[0].split('\n').find(isDangerousCommand);
+    if (targets.length > 1 || danger) {
+      const msg = [targets.length > 1 ? t('bc_snippet_confirm').replace('{name}', s.name).replace('{n}', targets.length) : '',
+        danger ? '⚠ ' + t('bc_danger').replace('{cmd}', danger.trim()) : ''].filter(Boolean).join('\n\n');
+      if (!await uiConfirm(msg, {title: '⚡ ' + s.name, okText: t('run'), danger: !!danger})) { try { wo.term.focus(); } catch (_) {} return; }
+    }
+  }
+  targets.forEach((w, i) => {
+    const txt = texts[i].replace(/\r?\n/g, '\r');
+    if (mode === 'insert') termSend(w, bracketed(w) ? '\x1b[200~' + txt + '\x1b[201~' : txt);
+    else termSend(w, txt + '\r');
+  });
+  if (targets.length > 1) bcast.line = '';
+  try { wo.term.focus(); } catch (_) {}
+}
+
+function openSnippetModal(id, prefill) {
+  const s = id ? snippets.find(v => v.id === id) : Object.assign({name: '', command: '', description: '', group: '', scope: 'all', scope_id: 0, auto_run: false, shared: false}, prefill || {});
+  if (!s) return;
+  const el = x => document.getElementById(x);
+  el('sn-id').value = id || '';
+  el('snip-modal-title').textContent = '⚡ ' + (id ? t('snip_edit') : t('snip_new'));
+  el('sn-name').value = s.name || '';
+  el('sn-group').value = s.group || '';
+  el('sn-cmd').value = s.command || '';
+  el('sn-desc').value = s.description || '';
+  el('sn-scope').value = s.scope || 'all';
+  el('sn-auto').checked = !!s.auto_run;
+  el('sn-shared').checked = !!s.shared;
+  el('sn-shared-row').style.display = currentUser && currentUser.is_admin ? '' : 'none';
+  el('sn-del').style.display = id ? '' : 'none';
+  el('sn-groups').innerHTML = [...new Set(snippets.map(v => v.group).filter(Boolean))].sort().map(g => `<option value="${esc(g)}">`).join('');
+  onSnipScopeChange(s.scope_id);
+  onSnipFlagsChange();
+  el('modal-snippet').classList.add('open');
+  setTimeout(() => (s.name ? el('sn-cmd') : el('sn-name')).focus(), 40);
+}
+
+function onSnipScopeChange(selected) {
+  const scope = document.getElementById('sn-scope').value;
+  const wrap = document.getElementById('sn-scope-id-wrap'), sel = document.getElementById('sn-scope-id');
+  wrap.style.display = scope === 'all' ? 'none' : '';
+  if (scope === 'folder') {
+    document.getElementById('sn-scope-id-lbl').textContent = t('snip_folder_lbl');
+    sel.innerHTML = folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(f.name)}</option>`).join('');
+  } else if (scope === 'connection') {
+    document.getElementById('sn-scope-id-lbl').textContent = t('snip_conn_lbl');
+    sel.innerHTML = conns.filter(c => c.protocol === 'SSH' || c.protocol === 'SFTP').sort((a, b) => a.name.localeCompare(b.name))
+      .map(c => `<option value="${c.id}">🖥 ${esc(c.name)} (${esc(c.host)})</option>`).join('');
+  }
+  if (selected) sel.value = String(selected);
+}
+
+function onSnipFlagsChange() {
+  const shared = document.getElementById('sn-shared').checked;
+  if (shared) { document.getElementById('sn-scope').value = 'all'; onSnipScopeChange(); document.getElementById('sn-auto').checked = false; }
+  document.getElementById('sn-scope').disabled = shared;
+  document.getElementById('sn-auto').disabled = shared;
+}
+
+async function saveSnippet() {
+  const el = x => document.getElementById(x);
+  const id = Number(el('sn-id').value) || 0;
+  const scope = el('sn-scope').value;
+  const body = {name: el('sn-name').value.trim(), group: el('sn-group').value.trim(), command: el('sn-cmd').value, description: el('sn-desc').value.trim(),
+    scope, scope_id: scope === 'all' ? 0 : Number(el('sn-scope-id').value) || 0, auto_run: el('sn-auto').checked, shared: el('sn-shared').checked};
+  if (!body.name || !body.command.trim()) { showToast(t('snip_name_cmd_required'), 'error'); return; }
+  const r = await fetch(id ? '/api/snippets/' + id : '/api/snippets', {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  closeModal('modal-snippet');
+  showToast('⚡ ' + t('saved'), 'success', 1500);
+  await loadSnippets();
+  if (rightTab !== 'snippets') setRightTab('snippets');
+}
+
+async function deleteSnippet(id) {
+  const s = snippets.find(v => v.id === id);
+  if (!s || !await uiConfirm(t('snip_delete_q').replace('{name}', s.name), {okText: t('delete'), danger: true})) return;
+  const r = await fetch('/api/snippets/' + id, {method: 'DELETE'});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  closeModal('modal-snippet');
+  loadSnippets();
+}
+
+const EXAMPLE_SNIPPETS = [
+  ['Diagnostics', 'Disk usage', 'df -hT -x tmpfs -x devtmpfs -x overlay'],
+  ['Diagnostics', 'Memory', 'free -h'],
+  ['Diagnostics', 'Uptime & load', 'uptime'],
+  ['Diagnostics', 'Top processes (CPU)', 'ps aux --sort=-%cpu | head -15'],
+  ['Diagnostics', 'Top processes (memory)', 'ps aux --sort=-%mem | head -15'],
+  ['Diagnostics', 'Failed services', 'systemctl --failed --no-pager'],
+  ['Diagnostics', 'Errors in the journal (last hour)', 'journalctl -p err --since "1 hour ago" --no-pager | tail -50'],
+  ['Diagnostics', 'Last logins', 'last -n 20'],
+  ['Services', 'Service status', 'systemctl status {{?Service=nginx}} --no-pager'],
+  ['Services', 'Follow service log', 'journalctl -u {{?Service=nginx}} -f'],
+  ['Services', 'Restart service', 'sudo systemctl restart {{?Service=nginx}} && systemctl status {{?Service=nginx}} --no-pager | head -5'],
+  ['Network', 'IP addresses', 'ip -br address'],
+  ['Network', 'Listening ports', 'ss -tulpn'],
+  ['Network', 'Routes', 'ip route'],
+  ['Network', 'Test a TCP port', 'timeout 5 bash -c "</dev/tcp/{{?Host}}/{{?Port=443}}" && echo open || echo closed'],
+  ['Files', 'Largest directories', 'du -xh --max-depth=1 {{?Path=/}} 2>/dev/null | sort -rh | head -20'],
+  ['Files', 'Big files', 'find {{?Path=/var}} -xdev -type f -size +{{?Minimum size=100M}} -exec ls -lh {} + 2>/dev/null | sort -k5 -rh | head -20'],
+];
+
+async function addExampleSnippets() {
+  let n = 0;
+  for (const [group, name, command] of EXAMPLE_SNIPPETS) {
+    const r = await fetch('/api/snippets', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({group, name, command})});
+    if (r.ok) n++;
+  }
+  showToast('✨ ' + t('snip_examples_added').replace('{n}', n), 'success', 3000);
+  loadSnippets();
+}
+
+// ── quick picker inside a terminal (Ctrl+Shift+Space or ⚡) ──
+function openSnippetPicker(winId) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo || wo.mode !== 'ssh' || !currentUser) return;
+  const old = document.getElementById('snip-picker');
+  if (old) old.remove();
+  focusWindow(winId);
+  const wrap = wo.el.querySelector('.term-wrap');
+  if (!wrap) return;
+  const box = document.createElement('div');
+  box.className = 'snip-picker';
+  box.id = 'snip-picker';
+  box.innerHTML = `<input type="text" class="snip-picker-q" placeholder="${esc(t('snip_picker_ph'))}" autocomplete="off" spellcheck="false">
+    <div class="snip-picker-list"></div>
+    <div class="snip-picker-foot"><span>${esc(t('snip_picker_keys'))}</span><a href="#" onmousedown="event.preventDefault(); newSnippetFromTerm(${winId})">＋ ${esc(t('snip_new'))}</a></div>`;
+  wrap.appendChild(box);
+  snipPicker = {winId, sel: 0, items: []};
+  const q = box.querySelector('input');
+  q.oninput = () => { snipPicker.sel = 0; renderSnippetPicker(); };
+  q.onkeydown = e => {
+    if (!snipPicker) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); snipPicker.sel = Math.min(snipPicker.sel + 1, Math.max(0, snipPicker.items.length - 1)); renderSnippetPicker(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); snipPicker.sel = Math.max(0, snipPicker.sel - 1); renderSnippetPicker(); }
+    else if (e.key === 'Enter') { e.preventDefault(); pickSnippet(snipPicker.sel, e.shiftKey); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSnippetPicker(); }
+  };
+  q.onblur = () => setTimeout(() => { const b = document.getElementById('snip-picker'); if (b && !b.contains(document.activeElement)) closeSnippetPicker(true); }, 200);
+  renderSnippetPicker();
+  q.focus();
+}
+
+function renderSnippetPicker() {
+  const box = document.getElementById('snip-picker');
+  if (!box || !snipPicker) return;
+  const wo = winObjects.find(w => w.id === snipPicker.winId);
+  const c = winConn(wo);
+  const q = box.querySelector('input').value.toLowerCase().trim();
+  const items = snippets.filter(s => snippetAppliesTo(s, c) && (!q || (s.name + ' ' + s.command + ' ' + (s.group || '')).toLowerCase().includes(q)));
+  items.sort((a, b) => (q ? (b.name.toLowerCase().startsWith(q) - a.name.toLowerCase().startsWith(q)) : 0) || (a.group || '').localeCompare(b.group || '') || a.name.localeCompare(b.name));
+  snipPicker.items = items.slice(0, 60);
+  const list = box.querySelector('.snip-picker-list');
+  list.innerHTML = snipPicker.items.length ? snipPicker.items.map((s, i) => `<div class="sp-item ${i === snipPicker.sel ? 'sel' : ''}" onmousedown="event.preventDefault(); pickSnippet(${i}, event.shiftKey)">
+      <span class="sp-name">${esc(s.name)}</span>${s.group ? `<span class="sp-group">${esc(s.group)}</span>` : ''}${s.auto_run ? ' <span class="snip-badge auto">⚡ auto</span>' : ''}
+      <div class="sp-cmd">${esc(s.command.split('\n')[0])}</div></div>`).join('')
+    : `<div class="sp-empty">${esc(snippets.length ? t('snip_no_match') : t('snip_empty_short'))}</div>`;
+  const selEl = list.querySelector('.sel');
+  if (selEl) selEl.scrollIntoView({block: 'nearest'});
+}
+
+function pickSnippet(i, insert) {
+  if (!snipPicker) return;
+  const s = snipPicker.items[i], wid = snipPicker.winId;
+  closeSnippetPicker();
+  if (s) runSnippet(s.id, insert ? 'insert' : 'run', wid);
+}
+
+function closeSnippetPicker(keepFocus) {
+  const b = document.getElementById('snip-picker');
+  const wid = snipPicker && snipPicker.winId;
+  snipPicker = null;
+  if (b) b.remove();
+  const wo = winObjects.find(w => w.id === wid);
+  if (!keepFocus && wo && wo.term) { try { wo.term.focus(); } catch (_) {} }
+}
+
+function newSnippetFromTerm(winId) {
+  const wo = winObjects.find(w => w.id === winId);
+  const sel = wo && wo.term ? wo.term.getSelection().trim() : '';
+  closeSnippetPicker(true);
+  openSnippetModal(null, {command: sel});
+}
+
+// ══ BROADCAST INPUT (v10.3) ═══════════════════════════
+// Keystrokes typed in one terminal of the group go to every connected terminal of it.
+// Enter on a line that looks dangerous, and pasted multi-line text, ask first.
+const bcast = {on: false, ids: new Set(), line: '', confirming: false};
+const DANGEROUS_CMDS = [
+  /\brm\s+(?:-[^\s]*\s+)*-[a-zA-Z]*[rRf]/, /\b(?:shutdown|reboot|halt|poweroff)\b/, /\binit\s+[06]\b/,
+  /\bsystemctl\s+(?:stop|restart|disable|mask|kill|poweroff|reboot|halt|isolate|rescue|emergency)\b/, /\bservice\s+\S+\s+(?:stop|restart)\b/,
+  /\bmkfs(?:\.\w+)?\b/, /\bwipefs\b/, /\b(?:fdisk|sfdisk|parted|sgdisk|gdisk)\b/, /\bdd\s+[^|]*\bof=/, />\s*\/dev\/(?:sd|nvme|vd|hd|xvd|mmcblk)/,
+  /\b(?:lvremove|vgremove|pvremove)\b/, /\bz(?:pool|fs)\s+destroy\b/,
+  /\bkill(?:all)?\s+(?:-9|-KILL|-SIGKILL)\b/, /\bpkill\b/, /\bchmod\s+(?:-R\s+)?0?777\b/, /\bch(?:own|mod)\s+-R\b/,
+  /\biptables\s+(?:-F|--flush|-X|-P\s+\w+\s+DROP)\b/, /\bnft\s+flush\b/, /\bufw\s+(?:disable|reset)\b/,
+  /\b(?:drop|truncate)\s+(?:table|database|schema)\b/i, /\bdelete\s+from\b/i,
+  /\bcrontab\s+-r\b/, /:\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;\s*:/, /\bmv\s+\S+\s+\/dev\/null\b/, /\buserdel\b/, /\bpasswd\s+-[dl]\b/,
+  /\b(?:apt(?:-get)?|yum|dnf|zypper)\s+(?:-y\s+)?(?:remove|purge|erase|autoremove)\b/,
+  /\bdocker\s+(?:rm|rmi|system\s+prune|volume\s+rm|container\s+prune)\b/, /\bkubectl\s+delete\b/, /\bterraform\s+destroy\b/,
+  />\s*\/etc\//, /\bhistory\s+-c\b/,
+];
+function isDangerousCommand(line) { const s = String(line || '').trim(); return !!s && DANGEROUS_CMDS.some(re => re.test(s)); }
+
+function sshWins() { return winObjects.filter(w => w.mode === 'ssh' && w.term && !w.viewing); }
+function bcastTargets() { return [...bcast.ids].map(id => winObjects.find(w => w.id === id)).filter(w => w && w.socket && w.socket.readyState === 1); }
+
+function openBroadcastModal() {
+  const pol = (currentUser && currentUser.policy) || {};
+  if (pol.broadcast === false) { showToast(t('bc_disabled'), 'error', 5000); return; }
+  const list = sshWins();
+  const box = document.getElementById('bc-list');
+  box.innerHTML = list.length ? list.map(w => {
+    const c = winConn(w), connected = w.socket && w.socket.readyState === 1;
+    const on = bcast.on ? bcast.ids.has(w.id) : connected;
+    return `<label class="bc-row"><input type="checkbox" data-w="${w.id}" ${on ? 'checked' : ''} ${connected ? '' : 'disabled'}><span class="bc-dot ${connected ? 'connected' : ''}"></span><span>${esc(c ? c.name : 'Terminal ' + w.id)}</span><span class="bc-host mono">${esc(c ? c.host : '')}</span></label>`;
+  }).join('') : `<div class="chat-empty">${esc(t('bc_no_terms'))}</div>`;
+  document.getElementById('bc-stop-btn').style.display = bcast.on ? '' : 'none';
+  const sb = document.getElementById('bc-start-btn');
+  sb.textContent = bcast.on ? t('bc_update') : '📣 ' + t('bc_start');
+  sb.disabled = list.length < 2;
+  document.getElementById('modal-broadcast').classList.add('open');
+}
+
+function bcSelect(v) { document.querySelectorAll('#bc-list input[type=checkbox]:not(:disabled)').forEach(c => { c.checked = v; }); }
+
+async function applyBroadcast() {
+  const ids = [...document.querySelectorAll('#bc-list input[type=checkbox]:checked')].map(c => Number(c.dataset.w));
+  if (ids.length < 2) { showToast(t('bc_min_two'), 'info', 4000); return; }
+  if (!bcast.on && !await uiConfirm(t('bc_confirm').replace('{n}', ids.length), {title: '📣 ' + t('bc_title'), okText: t('bc_start')})) return;
+  closeModal('modal-broadcast');
+  const old = new Set(bcast.ids);
+  bcast.on = true; bcast.ids = new Set(ids); bcast.line = '';
+  old.forEach(id => { if (!bcast.ids.has(id)) bcastNotify(id, false); });
+  bcast.ids.forEach(id => bcastNotify(id, true));
+  renderBroadcastUI();
+  if (!bcast.ids.has((snippetTargetWin() || {}).id)) focusWindow(ids[0]);
+}
+
+function bcastNotify(id, on) { const w = winObjects.find(x => x.id === id); if (w) sendTermCtl(w, {type: 'broadcast', on, peers: bcast.ids.size}); }
+
+function stopBroadcast() {
+  closeModal('modal-broadcast');
+  if (!bcast.on) return;
+  bcast.ids.forEach(id => bcastNotify(id, false));
+  bcast.on = false; bcast.ids = new Set(); bcast.line = '';
+  renderBroadcastUI();
+  showToast(t('bc_stopped'), 'info', 2500);
+}
+
+function toggleWinBroadcast(id) {
+  if (!bcast.on) return;
+  if (bcast.ids.has(id)) {
+    bcast.ids.delete(id); bcastNotify(id, false);
+    if (bcast.ids.size < 2) { stopBroadcast(); return; }
+  } else { bcast.ids.add(id); bcastNotify(id, true); }
+  renderBroadcastUI();
+}
+
+function renderBroadcastUI() {
+  bcast.ids.forEach(id => { if (!winObjects.find(w => w.id === id)) bcast.ids.delete(id); });
+  if (bcast.on && bcast.ids.size === 0) { bcast.on = false; bcast.line = ''; }
+  const bar = document.getElementById('bc-bar');
+  if (!bar) return;
+  bar.style.display = bcast.on ? 'flex' : 'none';
+  if (bcast.on) document.getElementById('bc-bar-text').innerHTML = `<b>${esc(t('bc_title'))}</b> — ${esc(t('bc_bar').replace('{n}', bcastTargets().length).replace('{m}', bcast.ids.size))}`;
+  winObjects.forEach(w => {
+    if (!w.el) return;
+    const inGroup = bcast.on && bcast.ids.has(w.id);
+    w.el.classList.toggle('bc-on', inGroup);
+    const b = document.getElementById('wb-bc-' + w.id);
+    if (b) { b.style.display = bcast.on && w.mode === 'ssh' ? '' : 'none'; b.classList.toggle('active', inGroup); b.title = inGroup ? t('bc_leave') : t('bc_join'); }
+  });
+  const tb = document.getElementById('btn-broadcast');
+  if (tb) tb.classList.toggle('active', bcast.on);
+}
+
+function bcastTrackLine(d) {
+  for (const ch of d.replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]|\x1bO./g, '')) {
+    if (ch === '\r' || ch === '\n' || ch === '\x03' || ch === '\x15') bcast.line = '';
+    else if (ch === '\x7f' || ch === '\b') bcast.line = bcast.line.slice(0, -1);
+    else if (ch === '\x17') bcast.line = bcast.line.replace(/\S+\s*$/, '');
+    else if (ch >= ' ') bcast.line += ch;
+  }
+  if (bcast.line.length > 4000) bcast.line = bcast.line.slice(-4000);
+}
+
+// termInput is the keyboard path of every terminal: normal terminals send to themselves,
+// terminals of an active broadcast send to the whole group.
+async function termInput(wo, d) {
+  if (!bcast.on || !bcast.ids.has(wo.id)) { termSend(wo, d); return; }
+  let targets = bcastTargets();
+  if (targets.length < 2) { termSend(wo, d); return; }
+  if (/[\r\n]/.test(d)) {
+    if (bcast.confirming) return;
+    const lines = (bcast.line + d).split(/\r\n|\r|\n/).slice(0, -1);
+    const danger = lines.find(isDangerousCommand);
+    const paste = d.length > 2 && lines.length > 1;
+    if (danger || paste) {
+      bcast.confirming = true;
+      const msg = (danger ? '⚠ ' + t('bc_danger').replace('{cmd}', danger.trim()) : t('bc_paste').replace('{l}', lines.length)) + '\n\n' + t('bc_on_n').replace('{n}', targets.length);
+      const ok = await uiConfirm(msg, {title: '📣 ' + t('bc_title'), okText: t('bc_send'), danger: true});
+      bcast.confirming = false;
+      try { wo.term.focus(); } catch (_) {}
+      if (!ok) return;
+      targets = bcastTargets();
+    }
+  }
+  bcastTrackLine(d);
+  targets.forEach(w => termSend(w, d));
+}
+
 // ══ SESSIONS ══════════════════════════════════════════
 
 async function loadSessions() {
@@ -5476,6 +6282,8 @@ function addWindow(opts) {
       <button class="win-snap-btn win-snap-menu-btn" title="${t('snap_layouts')}" onclick="openSnapMenu(event, ${id})">${snapIcon('nw')}</button>
       <div class="win-btns">
         <button class="win-btn reconnect" id="wb-rc-${id}" title="${t('reconnect_now')}" style="display:none;" onclick="reconnectTermById(${id})">↻</button>
+        <button class="win-btn snip" id="wb-sn-${id}" title="${esc(t('snip_title'))}" style="display:none;" onclick="openSnippetPicker(${id})">⚡</button>
+        <button class="win-btn bc" id="wb-bc-${id}" style="display:none;" onclick="toggleWinBroadcast(${id})">📣</button>
         <button class="win-btn screen-share" id="wb-ss-${id}" title="${t('share_terminal')}" style="display:none;" onclick="toggleScreenShare(${id})">📡</button>
         <button class="win-btn minimize" title="Minimize" onclick="minimizeWindow(${id})">━</button>
         <button class="win-btn maximize" title="Maximize/Restore" onclick="toggleMaximize(${id})">□</button>
@@ -5620,6 +6428,9 @@ function setWinMode(id, mode) {
   const c = winConn(wo);
   const rcBtn = document.getElementById('wb-rc-' + id);
   if (rcBtn) rcBtn.style.display = mode === 'ssh' ? '' : 'none';
+  const snBtn = document.getElementById('wb-sn-' + id);
+  if (snBtn) snBtn.style.display = mode === 'ssh' && (!isCollabMode || currentUser) ? '' : 'none';
+  if (mode !== 'ssh' && bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
 
   if (mode === 'ssh') {
     wc.innerHTML = `<div class="term-wrap">
@@ -5820,7 +6631,7 @@ function createTerminal(wo, host) {
   if (window.SerializeAddon) { try { wo.serializeAddon = new SerializeAddon.SerializeAddon(); term.loadAddon(wo.serializeAddon); } catch(_) {} }
   term.open(host);
   wo.term = term; wo.fitAddon = fit;
-  term.onData(d => termSend(wo, d));
+  term.onData(d => termInput(wo, d));
   term.onBinary(d => { if (wo.socket && wo.socket.readyState === 1) { const b = new Uint8Array(d.length); for (let i = 0; i < d.length; i++) b[i] = d.charCodeAt(i) & 255; wo.socket.send(b); } });
   term.onResize(({cols, rows}) => {
     sendTermResize(wo, cols, rows);
@@ -5830,6 +6641,7 @@ function createTerminal(wo, host) {
     if (e.type !== 'keydown') return true;
     const k = (e.key || '').toLowerCase();
     if (e.ctrlKey && e.shiftKey && k === 'f') { openTermSearch(wo); return false; }
+    if (e.ctrlKey && e.shiftKey && (e.code === 'Space' || k === ' ')) { e.preventDefault(); openSnippetPicker(wo.id); return false; }
     if (e.ctrlKey && e.shiftKey && k === 'r') { e.preventDefault(); reconnectTerm(wo); return false; }
     if (e.ctrlKey && e.shiftKey && (k === 'm' || k === 'd') && voice.active) return false; // voice shortcuts
     if (e.ctrlKey && e.shiftKey && k === 'c') { const s = term.getSelection(); if (s) copyText(s); return false; }
@@ -5966,6 +6778,7 @@ function handleTermControl(wo, m) {
       termSend(wo, 'cd -- ' + shellQuoteJS(wo.pendingCwd) + '\r');
       wo.pendingCwd = null;
     }
+    if (bcast.on && bcast.ids.has(wo.id)) { sendTermCtl(wo, {type: 'broadcast', on: true, peers: bcast.ids.size}); renderBroadcastUI(); }
     try { if (wo.el.classList.contains('focused')) wo.term.focus(); } catch(_) {}
   } else if (m.type === 'status' && m.state === 'connecting') {
     setTermState(wo, 'connecting');
@@ -5975,6 +6788,11 @@ function handleTermControl(wo, m) {
     wo.exitInfo = m;
   } else if (m.type === 'hostkey') {
     wo.hostKey = m;
+  } else if (m.type === 'autorun') {
+    showToast('⚡ ' + t('autorun_done').replace('{names}', (m.snippets || []).join(', ')), 'info', 3500);
+  } else if (m.type === 'broadcast' && m.allowed === false) {
+    showToast(m.message || t('bc_disabled'), 'error', 6000);
+    stopBroadcast();
   }
 }
 
@@ -6926,7 +7744,7 @@ function uiDialog(opts) {
         inp.focus();
         const dot = opts.selectBase ? inp.value.lastIndexOf('.') : -1;
         if (dot > 0) inp.setSelectionRange(0, dot); else inp.select();
-      } else ok.focus();
+      } else (opts.danger ? document.getElementById('dialog-cancel') : ok).focus(); // Enter must not confirm a dangerous action
     }, 30);
   });
 }
@@ -7779,6 +8597,7 @@ function focusWindow(id) {
   if (w && w.el) {
     w.el.classList.add('focused');
     w.el.style.zIndex = ++topZ;
+    w._lastFocus = Date.now();
     if (w.term && document.activeElement && !w.el.contains(document.activeElement)) { try { w.term.focus(); } catch(_) {} }
   }
   renderTabs();
@@ -7813,6 +8632,8 @@ function closeWindow(id) {
   if (wo.el) wo.el.remove();
   winObjects = winObjects.filter(x => x.id !== id);
   tabOrder = tabOrder.filter(x => x !== id);
+  if (bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
+  if (snipPicker && snipPicker.winId === id) snipPicker = null;
   const next = [...winObjects].reverse().find(w => w.el && w.el.style.display !== 'none');
   if (next) focusWindow(next.id); else renderTabs();
   updateNoWindowsHint();
@@ -8172,7 +8993,9 @@ function loadSettings() {
     settings.autoReconnect = s.autoReconnect !== false;
     settings.accent = s.accent || '#4f8cff';
     settings.maxUploadMB = s.maxUploadMB || 0;
+    settings.notifyDown = s.notifyDown !== false;
   } catch(_) {}
+  document.getElementById('setting-notify-down').value = settings.notifyDown === false ? '0' : '1';
   document.getElementById('setting-font-size').value = settings.fontSize;
   document.getElementById('setting-confirm-close').value = settings.confirmClose;
   document.getElementById('setting-scrollback').value = settings.scrollback;
@@ -8203,6 +9026,8 @@ function applySettings() {
   settings.autoReconnect = document.getElementById('setting-auto-reconnect').value === '1';
   settings.accent = document.getElementById('setting-accent').value || '#4f8cff';
   settings.maxUploadMB = Math.max(0, parseInt(document.getElementById('setting-max-upload').value) || 0);
+  settings.notifyDown = document.getElementById('setting-notify-down').value === '1';
+  if (settings.notifyDown && 'Notification' in window && Notification.permission === 'default') { try { Notification.requestPermission(); } catch(_) {} }
   localStorage.setItem('wrm_settings_v9', JSON.stringify(settings));
   applyAccent();
   winObjects.forEach(wo => {
@@ -9709,7 +10534,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'status_changed') loadStatus(true); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();
@@ -9794,6 +10619,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeAllCtx(); hideFmCtx(); closeDrawers();
     if (document.getElementById('modal-dialog').classList.contains('open')) { dialogDone(false); return; }
+    if (document.getElementById('modal-snipvars').classList.contains('open')) { snipVarsDone(false); return; }
     if (document.getElementById('modal-editor').classList.contains('open')) { closeEditor(); return; }
     document.querySelectorAll('.modal-overlay.open').forEach(m => {
       if (!m.id.includes('auth') && m.id !== 'modal-transfer' && m.dataset.locked !== '1') m.classList.remove('open');

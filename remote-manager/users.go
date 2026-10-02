@@ -309,6 +309,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"link_shares":   u.IsAdmin || settingBool("allow_link_shares"),
 			"secret_export": u.IsAdmin || settingBool("allow_secret_export"),
 			"voice":         settingBool("voice_enabled"),
+			"broadcast":     settingBool("broadcast_enabled"),
 		},
 	}
 }

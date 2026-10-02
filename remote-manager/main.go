@@ -35,7 +35,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.2.0-mimo"
+var AppVersion = "v10.3.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -58,8 +58,9 @@ type Connection struct {
 	PrivateKey string `json:"private_key"`
 	KeyPath    string `json:"key_path"`
 	FolderID   *int   `json:"folder_id"`
-	JumpID     *int   `json:"jump_id"`  // reach this connection through another SSH connection
-	WebPath    string `json:"web_path"` // HTTP/HTTPS connections: path of the web interface
+	JumpID     *int   `json:"jump_id"`           // reach this connection through another SSH connection
+	WebPath    string `json:"web_path"`          // HTTP/HTTPS connections: path of the web interface
+	Monitor    *bool  `json:"monitor,omitempty"` // live status checks (nil = unchanged / default on)
 	UserID     int    `json:"-"`
 }
 
@@ -78,6 +79,7 @@ type connView struct {
 	HasPassword bool   `json:"has_password"`
 	HasKey      bool   `json:"has_private_key"`
 	Tunnels     int    `json:"tunnels"` // configured port forwards
+	Monitor     bool   `json:"monitor"` // included in the live up/down status
 }
 
 func (c Connection) view() connView {
@@ -86,8 +88,12 @@ func (c Connection) view() connView {
 	if c.JumpID != nil && *c.JumpID > 0 {
 		v.Route = jumpPath(c)
 	}
+	v.Monitor = true
 	if c.ID > 0 {
-		db.QueryRow(`SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?`, c.ID).Scan(&v.Tunnels)
+		var mon int
+		if db.QueryRow(`SELECT (SELECT COUNT(*) FROM connection_tunnels WHERE conn_id=?), COALESCE(monitor,1) FROM connections WHERE id=?`, c.ID, c.ID).Scan(&v.Tunnels, &mon) == nil {
+			v.Monitor = mon == 1
+		}
 	}
 	return v
 }
@@ -164,6 +170,21 @@ func (h *Hub) sendTo(userID int, msg []byte) {
 	}
 }
 
+// sendAll sends msg to every signed-in user (e.g. a shared snippet changed).
+func (h *Hub) sendAll(msg []byte) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for ch, uid := range h.clients {
+		if uid <= 0 {
+			continue
+		}
+		select {
+		case ch <- msg:
+		default:
+		}
+	}
+}
+
 func broadcastSessionUpdate(userID int) { hub.sendTo(userID, []byte(`{"type":"sessions_changed"}`)) }
 
 func jsonMarshal(v interface{}) []byte {
@@ -220,6 +241,10 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/audit", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
+	mux.HandleFunc("/api/status", apiStatusHandler)
+	mux.HandleFunc("/api/status/check", apiStatusHandler)
+	mux.HandleFunc("/api/snippets", apiSnippetsHandler)
+	mux.HandleFunc("/api/snippets/", apiSnippetsHandler)
 	mux.HandleFunc("/api/tunnels", apiTunnelsHandler)
 	mux.HandleFunc("/api/tunnels/", apiTunnelsHandler)
 	mux.HandleFunc("/api/recordings", apiRecordingsHandler)
@@ -277,6 +302,7 @@ func main() {
 	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
 	startTURN()
 	tunnelMgr.startAlways()
+	go statusMon.run()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -642,6 +668,23 @@ func initDB() {
 		"id", "ts", "user_id", "username", "client_ip", "share_id", "direction", "src_conn_id", "src_host", "src_path",
 		"dst_conn_id", "dst_host", "dst_path", "size_bytes", "sha256", "status", "error")
 
+	// v10.3: saved commands (snippets), optionally run when a terminal connects
+	ensureTable("snippets", `CREATE TABLE IF NOT EXISTS snippets (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL DEFAULT '',
+		command TEXT NOT NULL DEFAULT '',
+		description TEXT NOT NULL DEFAULT '',
+		grp TEXT NOT NULL DEFAULT '',
+		scope TEXT NOT NULL DEFAULT 'all',
+		scope_id INTEGER NOT NULL DEFAULT 0,
+		auto_run INTEGER NOT NULL DEFAULT 0,
+		shared INTEGER NOT NULL DEFAULT 0,
+		sort INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '')`,
+		"id", "user_id", "name", "command", "description", "grp", "scope", "scope_id", "auto_run", "shared", "sort", "created_at", "updated_at")
+
 	// Safe migrations (columns added over time)
 	for _, m := range []string{
 		`ALTER TABLE connections ADD COLUMN user_id INTEGER DEFAULT NULL`,
@@ -684,6 +727,8 @@ func initDB() {
 		// v10.2: jump hosts and web interface connections
 		`ALTER TABLE connections ADD COLUMN jump_conn_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE connections ADD COLUMN web_path TEXT NOT NULL DEFAULT ''`,
+		// v10.3: live status monitoring can be turned off per connection
+		`ALTER TABLE connections ADD COLUMN monitor INTEGER NOT NULL DEFAULT 1`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -703,6 +748,7 @@ func initDB() {
 		`CREATE INDEX IF NOT EXISTS ix_transfers_ts ON file_transfers(ts)`,
 		`CREATE INDEX IF NOT EXISTS ix_transfers_user ON file_transfers(user_id, ts)`,
 		`CREATE INDEX IF NOT EXISTS ix_tunnels_conn ON connection_tunnels(conn_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_snippets_user ON snippets(user_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_collab_share ON collab_messages(share_id, id)`,
 		`CREATE INDEX IF NOT EXISTS ix_share_items ON share_items(share_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_connections_user ON connections(user_id)`,
@@ -964,6 +1010,10 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		id, _ := res.LastInsertId()
 		plain.ID = int(id)
+		if c.Monitor != nil && !*c.Monitor {
+			db.Exec(`UPDATE connections SET monitor=0 WHERE id=?`, id)
+		}
+		statusMon.poke()
 		auditLogRef(r, userID, usernameOf(userID), "connection.created", c.Name, map[string]string{"host": c.Host, "protocol": c.Protocol, "auth": c.AuthMethod, "route": jumpPath(plain)}, auditRef{ConnID: plain.ID})
 		w.WriteHeader(http.StatusCreated)
 		jsonOK(w, plain.view())
@@ -1052,6 +1102,12 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 500)
 			return
 		}
+		if c.Monitor != nil {
+			db.Exec(`UPDATE connections SET monitor=? WHERE id=?`, boolInt(*c.Monitor), id)
+		}
+		if c.Host != cur.Host || c.Protocol != cur.Protocol || !intPtrEq(c.JumpID, cur.JumpID) || c.Monitor != nil {
+			statusMon.poke()
+		}
 		if len(changed) > 0 {
 			auditLogRef(r, userID, usernameOf(userID), "connection.updated", c.Name, map[string]interface{}{"id": id, "changed": changed}, auditRef{ConnID: id})
 			// Running tunnels keep their SSH connection; restart them so they use the new settings.
@@ -1062,6 +1118,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		killTerminals(func(t *termSession) bool { return t.ConnID == id }, "The connection was deleted")
 		tunnelMgr.stopConn(id, "the connection was deleted")
 		db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
+		deleteSnippetsForScope("connection", id)
 		db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		db.Exec("DELETE FROM connections WHERE id=? AND user_id=?", id, userID)
 		auditLog(r, userID, "connection.deleted", cur.Name, map[string]interface{}{"id": id, "host": cur.Host})
@@ -1071,14 +1128,15 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case action == "open-web" && r.Method == http.MethodPost:
 		openWebHandler(w, r, userID, cur)
 	case action == "duplicate" && r.Method == http.MethodPost:
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path)
-			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path FROM connections WHERE id=? AND user_id=?`, id, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor)
+			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor FROM connections WHERE id=? AND user_id=?`, id, userID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
 		}
 		nid, _ := res.LastInsertId()
 		copyTunnelDefs(id, int(nid))
+		copySnippetsForConnection(id, int(nid), userID)
 		dup, _ := loadConnectionRaw(int(nid))
 		auditLog(r, userID, "connection.created", dup.Name, map[string]interface{}{"duplicate_of": id})
 		jsonOK(w, dup.view())
@@ -1123,6 +1181,12 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		killTerminals(func(t *termSession) bool { return ids[t.ConnID] }, "The connection was deleted")
+		for id := range ids {
+			tunnelMgr.stopConn(id, "the connection was deleted")
+			db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
+			deleteSnippetsForScope("connection", id)
+			db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
+		}
 		db.Exec("DELETE FROM connections WHERE id IN ("+ph+") AND user_id=?", append(args, userID)...)
 		auditLog(r, userID, "connection.deleted", "", map[string]interface{}{"ids": payload.IDs})
 	case "move":
@@ -1202,6 +1266,7 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tx.Exec("UPDATE connections SET folder_id=NULL WHERE folder_id=? AND user_id=?", id, userID)
 	tx.Exec("DELETE FROM folders WHERE id=? AND user_id=?", id, userID)
+	tx.Exec("DELETE FROM snippets WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
 	tx.Commit()
 	jsonOK(w, map[string]bool{"ok": true})
 }
@@ -1406,7 +1471,7 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", attachmentHeader("wrm-config-"+AppVersion+".json"))
 	json.NewEncoder(w).Encode(map[string]interface{}{"version": AppVersion, "with_secrets": withSecrets, "folders": folders, "connections": conns,
-		"tunnels": loadTunnelDefs("user_id=?", userID)})
+		"tunnels": loadTunnelDefs("user_id=?", userID), "snippets": loadSnippets("user_id=?", userID)})
 }
 
 func apiImportHandler(w http.ResponseWriter, r *http.Request) {
@@ -1422,6 +1487,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		Folders     []Folder     `json:"folders"`
 		Connections []Connection `json:"connections"`
 		Tunnels     []tunnelDef  `json:"tunnels"`
+		Snippets    []Snippet    `json:"snippets"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		jsonError(w, "Bad JSON", 400)
@@ -1511,8 +1577,40 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), 500)
 		return
 	}
-	auditLog(r, userID, "config.imported", "", map[string]int{"connections": imported, "skipped": skipped, "tunnels": tunnelsImported})
-	jsonOK(w, map[string]int{"imported": imported, "skipped": skipped, "tunnels": tunnelsImported})
+	// Snippets are added after the commit, so their folder/connection checks see the new rows.
+	oldFolders := map[int]int{}
+	for _, f := range payload.Folders {
+		if nf := folderIDs[strings.TrimSpace(f.Name)]; nf != nil && f.ID > 0 {
+			oldFolders[f.ID] = *nf
+		}
+	}
+	snippetsImported := 0
+	existing := map[string]bool{}
+	for _, s := range loadSnippets("user_id=?", userID) {
+		existing[s.Name+"\x00"+s.Command] = true
+	}
+	for _, sn := range payload.Snippets {
+		sn.Shared = false
+		switch sn.Scope {
+		case "folder":
+			sn.ScopeID = oldFolders[sn.ScopeID]
+		case "connection":
+			sn.ScopeID = newIDs[sn.ScopeID]
+		}
+		if validateSnippet(&sn, userID) != nil || existing[sn.Name+"\x00"+sn.Command] {
+			continue
+		}
+		existing[sn.Name+"\x00"+sn.Command] = true
+		if _, err := db.Exec(`INSERT INTO snippets (user_id, name, command, description, grp, scope, scope_id, auto_run, shared, sort, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,0,?,?,?)`,
+			userID, sn.Name, sn.Command, sn.Description, sn.Group, sn.Scope, sn.ScopeID, boolInt(sn.AutoRun), sn.Sort, now, now); err == nil {
+			snippetsImported++
+		}
+	}
+	if snippetsImported > 0 {
+		notifySnippetsChanged(userID, false)
+	}
+	auditLog(r, userID, "config.imported", "", map[string]int{"connections": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported})
+	jsonOK(w, map[string]int{"imported": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported})
 }
 
 // ─── EVENTS WS ───────────────────────────────────────
