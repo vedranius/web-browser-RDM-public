@@ -14,7 +14,7 @@ Planned work that is agreed but not built yet. Released work is in [CHANGELOG.md
   - Hide the *Install* button when it cannot work.
   - README: a short HTTPS recipe (Caddy).
 
-## v10.9.0 — proxy as a connection setting
+## v10.9.0 — proxy as a connection setting, folder defaults, notifications
 
 Requested by users who want to replace PuTTY: some servers are reached through jump hosts, others through a SOCKS or HTTP proxy.
 
@@ -65,6 +65,9 @@ A folder can carry a default jump host and proxy. Its connections, including new
 In-process SOCKS5 and HTTP CONNECT proxies, with and without authentication, covering:
 - terminal, SFTP, the desktop relay, web interfaces and status;
 - jump host + proxy together.
+
+### Notifications module (moved into v10.9)
+The general notifications module described under v11 (channels, digests, quiet hours) is built in v10.9. Its first users are live status (a server went down or came back) and credential rotation reminders; the Git events plug in later.
 
 ### Later (v10.9.x)
 - **Import PuTTY sessions** from a `.reg` export (`HKCU\Software\SimonTatham\PuTTY\Sessions`): host, port, user, key and proxy settings. Proxies are created and linked to the connections.
@@ -181,7 +184,7 @@ WRM writes `VERSION.md` (overall version and a per-file table), `.deploy-bak/<ti
 - Edit the catalog's exclude / protected lists in the same place.
 - Output: **a download by default**. A merge request only when the user explicitly chooses it; WRM never writes to a Git server on its own.
 
-### Notifications (a general WRM module)
+### Notifications (a general WRM module, built in v10.9)
 A general module, also usable by live status, credential rotation and other features.
 - **Channels:** in WRM, browser notifications, e-mail (SMTP), Telegram, Slack / Mattermost / Rocket.Chat, Microsoft Teams (Workflows webhook), Discord, ntfy, Gotify, Pushover, and a generic webhook (JSON, HMAC-signed).
 - **Configuration:** administrators set up the channels; users choose what they want to receive.
