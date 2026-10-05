@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.8.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.8.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -118,21 +118,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.8.0-linux-amd64
-   ./wrm-pro-v10.8.0-linux-amd64
+   chmod +x wrm-pro-v10.8.1-linux-amd64
+   ./wrm-pro-v10.8.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.8.0-windows-amd64.exe
+   .\wrm-pro-v10.8.1-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.8.0/wrm-pro-v10.8.0-android-arm64
-   chmod +x wrm-pro-v10.8.0-android-arm64 && ./wrm-pro-v10.8.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.8.1/wrm-pro-v10.8.1-android-arm64
+   chmod +x wrm-pro-v10.8.1-android-arm64 && ./wrm-pro-v10.8.1-android-arm64
    ```
 
    **Docker**
@@ -156,6 +156,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.8.0
+
+Replace the binary. Nothing changes in the database.
+
+- **Larger imports work:** mRemoteNG, OpenSSH config and inventory (CSV / Excel) files up to **20 MB** import again (from about 1 MB on they failed with *Bad JSON*). A larger file gets a clear message with its size and the limit, already in the browser.
+- **Install as an app** (*Settings → General*) now shows the steps for your browser, or the reason why installing is not possible here (plain `http://` to an address other than `localhost`, an untrusted certificate, Firefox on the desktop). The *Install* button appears only when the browser can install right away. To get HTTPS quickly, see [HTTPS with Caddy](#https-with-caddy).
+- A reverse proxy in front of WRM must allow request bodies of at least 32 MB for imports (`client_max_body_size 0;` in the nginx example does).
 
 ## Upgrading from v10.7
 
@@ -460,6 +468,8 @@ Save the web interfaces of your devices — iDRAC / iLO / IPMI, switches, firewa
   - `Match` blocks and wildcard-only hosts are skipped.
 
 After the import a summary lists the imported connections, folders, jump host links and tunnels, what was skipped and what to check (e.g. connections without a user name or password).
+
+**Size limit:** every import file (WRM export, mRemoteNG, OpenSSH config, CSV / Excel inventory) may be up to **20 MB**. The browser checks the size before sending; a larger file gets *The file is too large (… MB): the import limit is 20.0 MB* (HTTP 413 from the API).
 
 ### Windows, tabs & snapping
 
@@ -792,7 +802,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 ### Mobile, responsive UI & installable app
 
 - The top bar and the collaboration bar adapt to the available width (labels collapse into icons, step by step).
-- **Installable app (PWA):** *Settings → General → Install as an app* (or the install icon in the address bar; on iPhone/iPad: *Share → Add to Home Screen*) opens WRM in its own window, from the dock, start menu or home screen. The app caches only its own scripts and fonts (per version); connections and data always come live from the server, and without the server it shows an offline page. Browsers allow this only over **HTTPS with a trusted certificate** (or on `localhost`).
+- **Installable app (PWA):** *Settings → General → Install as an app* (or the install icon in the address bar; on iPhone/iPad: *Share → Add to Home Screen*) opens WRM in its own window, from the dock, start menu or home screen. The app caches only its own scripts and fonts (per version); connections and data always come live from the server, and without the server it shows an offline page. Browsers allow this only over **HTTPS with a trusted certificate** (or on `localhost`). The *Install as an app* row shows the steps for the current browser, or why installing is not possible (plain `http://`, an untrusted certificate, Firefox on the desktop); the *Install* button appears only when the browser can install right away.
 - On phones (< 760 px): the connection list and the Sessions/Clipboard panel become **slide-in drawers** (☰ and 🗂 buttons), windows open **full screen**, and a single tap opens a connection. Chat and People open as full-width panels.
 
 ---
@@ -935,7 +945,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.8.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.8.1-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -975,6 +985,34 @@ server {
 ```
 
 **Firewall for voice calls:** allow **UDP and TCP 3478** (TURN) and the **UDP relay range** (`49152-65535`, or narrow it with `turn_relay_ports`) to the WRM server. Behind NAT (cloud VM, home router) forward those ports and set `turn_public_ip`. The TURN port is not proxied through nginx. For networks that only allow HTTPS, run a TURN server with TLS on port 443 (e.g. coturn) and add it in *Admin → Voice & network*.
+
+### HTTPS with Caddy
+
+[Caddy](https://caddyserver.com/) gets and renews a certificate by itself and proxies WebSockets without extra settings — the shortest way to HTTPS, which browsers need to **install WRM as an app**, for the microphone and for secure cookies. WRM listens on `127.0.0.1:8080` with `WRM_TRUST_PROXY=1` (as in the service above). `/etc/caddy/Caddyfile`:
+
+```caddyfile
+# A public DNS name pointing to this server (ports 80 and 443 open): a Let's Encrypt certificate.
+wrm.example.com {
+    reverse_proxy 127.0.0.1:8080
+}
+```
+
+Only an internal name or an IP address? Let Caddy be its own certificate authority and trust it once on every computer that opens WRM:
+
+```caddyfile
+wrm.lan.example.com, 10.0.0.10 {
+    tls internal
+    reverse_proxy 127.0.0.1:8080
+}
+```
+
+```bash
+sudo systemctl reload caddy
+# root certificate of Caddy's local CA, to import into the browsers' / systems' trusted roots:
+sudo cat /var/lib/caddy/.local/share/caddy/pki/authorities/local/root.crt
+```
+
+Caddy has no request body limit by default, so large imports and uploads pass. With WRM in Docker, point `reverse_proxy` at the published port and remove `HTTPS_SELF_SIGNED=1` from the compose file.
 
 ---
 
@@ -1058,6 +1096,8 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/config/import` | Import → `{imported, skipped, tunnels}` |
 | POST | `/api/config/import/mremoteng` | `{xml, password}` import an mRemoteNG `confCons.xml` → `{imported, folders, jump_hosts, tunnels, skipped, notes}`; HTTP 400 with `need_password: true` when a master password is needed |
 | POST | `/api/config/import/sshconfig` | `{text, folder}` import an OpenSSH config |
+
+Import files may be up to 20 MB (request bodies of `/api/config/import*` and `/api/inventory/*` up to 32 MB); larger ones get HTTP 413 with the size and the limit.
 
 Connections have `jump_id` (jump host connection id or `null`) and `web_path`; lists also return `route` (e.g. `"vpn-gw → bastion-dc1"`) and `tunnels` (number of configured tunnels).
 
@@ -1272,6 +1312,7 @@ remote-manager/
   keys_test.go         key store, deploy/revoke/who has access, vault sharing and rotation (fake SSH server with sh and passwd)
   guac_test.go         remote desktop relay against a fake guacd: handshake, filtering, recording, jump hosts
   importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
+  import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   static/index.html          the entire web UI (embedded into the binary)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
@@ -1313,7 +1354,8 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | IPMI: *ipmitool is not installed* | `apt install ipmitool` on the WRM server, or on the jump host when the BMC is reached through it. IPMI over LAN must be enabled on the BMC |
 | Serial console shows nothing | Press Enter. iDRAC: the console needs *Serial communication → Redirection* in the BIOS; IPMI SOL: enable SOL on the BMC and the serial console in the OS (`console=ttyS1,115200`) |
 | Serial port: *permission denied* | Run WRM as a user in the `dialout` group (or give it access to the device) |
-| No *Install* button / *Install as an app* only shows a hint | Browsers install web apps only over HTTPS with a **trusted** certificate (a reverse proxy with Let's Encrypt or your company CA), or on `localhost`. With `HTTPS_SELF_SIGNED=1` trust the certificate first. Firefox on the desktop does not install web apps: use Chrome, Edge or Safari |
+| No *Install* button / *Install as an app* only shows steps or a reason | The button appears only when the browser offers to install right away; otherwise the row shows the steps for your browser (Chrome/Edge/Brave: the icon in the address bar or the menu; Safari on macOS: *File → Add to Dock*; iPhone/iPad: *Share → Add to Home Screen*; Android: menu → *Install app*). *Not possible here* means: plain `http://` to an address other than `localhost` (use HTTPS with a **trusted** certificate, e.g. [Caddy](#https-with-caddy)), an untrusted certificate (`HTTPS_SELF_SIGNED=1`: trust it first, or use Caddy's `tls internal` CA), or Firefox on the desktop (use Chrome, Edge, Brave or Safari) |
+| Import: *The file is too large (… MB): the import limit is 20.0 MB* | Import files may be up to 20 MB. Split the file (e.g. export mRemoteNG folders separately, or split the CSV) and import the parts — existing connections are skipped. Behind a reverse proxy allow bodies of at least 32 MB (nginx `client_max_body_size`) |
 | Network tools: *ping is not installed* | Install `iputils-ping` / `traceroute` on the WRM server (or on the source server), or use the port check — it needs nothing |
 | A quick connection disappeared | Quick connections are deleted 24 hours after their last use. Save the ones you need (💾) |
 | CSV import: wrong letters (`Ä�`, `?` instead of `č`) | WRM reads UTF-8, UTF-16 and Windows-1250. For other encodings save the file from Excel as *CSV UTF-8* or as `.xlsx` |

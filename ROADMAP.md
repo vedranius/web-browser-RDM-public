@@ -2,18 +2,6 @@
 
 Planned work that is agreed but not built yet. Released work is in [CHANGELOG.md](CHANGELOG.md).
 
-## v10.8.1 — fixes
-
-- **mRemoteNG and inventory import of larger files.** The security middleware limits every API body to 1 MB (`bodyLimitFor` in `security.go`); only `/api/config/import` has 32 MB. `/api/config/import/mremoteng`, `/api/config/import/sshconfig` and `/api/inventory/*` therefore fail with "Bad JSON" from about 1 MB on.
-  - Give `/api/config/import/*` and `/api/inventory/*` a proper limit (32 MB).
-  - A clear error when a file is too large (its size and the limit), and a size check in the browser before sending.
-  - Tests with a multi-MB `confCons.xml` and a large CSV.
-- **Install as an app:** explain in the UI what to do in the current browser.
-  - Exact steps per browser (Chrome/Edge, Safari, iOS, Android).
-  - The real reason when installing is not possible (plain `http://` to an IP address, Firefox on the desktop).
-  - Hide the *Install* button when it cannot work.
-  - README: a short HTTPS recipe (Caddy).
-
 ## v10.9.0 — proxy as a connection setting, folder defaults, notifications
 
 Requested by users who want to replace PuTTY: some servers are reached through jump hosts, others through a SOCKS or HTTP proxy.
