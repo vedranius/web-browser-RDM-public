@@ -72,19 +72,95 @@ In-process SOCKS5 and HTTP CONNECT proxies, with and without authentication, cov
 
 ## Idea, awaiting decisions — Git: compare and deploy services
 
-A separate **Git** workspace in WRM, outside the connection tree and the terminal UI. It is generic: it works with any GitLab or GitHub (cloud or self-hosted) that a user connects. WRM ships no services of its own and no organisation-specific configuration. The details are fixed once the open questions are answered.
+A separate **Git** workspace in WRM: a button in the top bar opens it full screen, and its code loads only then. It stays out of the connection tree and the terminal UI, and policy `git_enabled=0` hides it completely.
 
-1. Connect a GitLab group or GitHub organisation/user (URL + read-only token).
-   - WRM lists the repositories.
-   - The user picks which ones are services.
-2. **Installations:** which service runs on which server (connection), in which folder, on which branch or tag. Version detection: git checkout, a version file, a command, Docker image tags.
-3. **Batch check:** a servers × services matrix with versions and status (up to date, behind, ahead, local changes, unknown).
-4. **Periodic check** while WRM runs. The user is notified when a server runs an old version.
-5. **Upgrade:**
-   - choose a branch or tag and see the commits and release notes in between;
-   - update through git on the server, or WRM transfers the code;
-   - post-install steps, rollback, rolling over several servers.
-6. **Install or transfer to a new server:**
-   - choose a folder;
-   - the inputs the service needs (from a `.wrm/deploy.yml` manifest or `.env.example`), stored encrypted.
-7. **.gitignore helper:** pick untracked files from a server installation and stack templates, preview, then a merge request or a download.
+It is generic: it works with any GitLab or GitHub (cloud or self-hosted) that a user connects. WRM ships no services of its own and no organisation-specific configuration.
+
+The design targets servers **without git, pip or internet access**: WRM fetches code through the Git provider's API and works on servers over its existing SSH connections, so jump hosts, the vault and proxies all apply.
+
+### Service catalog
+Per service:
+- project;
+- ref: `tag:latest`, `tag:vX` or a branch;
+- tag filter (regex);
+- subdirectory of the repository that matches the installation root;
+- include / exclude globs;
+- **protected** per-host files that are never overwritten (`config*`, `*.ini`, `.env`);
+- **fingerprint** files used to recognise an installation;
+- kind (app, library, tool).
+
+How it is filled in:
+- WRM suggests a catalog entry from the repository tree.
+- Catalogs can be imported and exported as JSON.
+
+Refs:
+- Branch-aware tags: only tags reachable from the chosen branch count, with a warning and a fallback to the branch head.
+- Ref choice per run: the catalog, one branch for all, per service, or each project's default branch.
+
+### Discovery
+- One SSH call per server walks the configured roots (e.g. `/opt`, `/srv`, a scripts directory) to a limited depth.
+- It finds installations by their fingerprint files.
+- It skips copies and backups (`*_BKP`, `*_OLD`, `backup`, `.deploy-bak`, …; configurable).
+- It derives an environment label from the path.
+
+### File-level comparison
+- The server returns normalised content hashes of its files (POSIX `sha256sum`, CRLF→LF, no Python needed).
+- WRM compares them with the target ref and with the **history of each file** on that branch (cached by blob).
+- **File states:**
+  - ok;
+  - old (a known earlier version, *n versions behind*);
+  - modified (local change);
+  - missing;
+  - extra (only on the server);
+  - protected.
+- **Installation states:**
+  - *needs update*;
+  - *review* (local changes);
+  - *up to date*.
+- Details show:
+  - a coloured diff;
+  - the systemd / supervisor units that point to the installation directory;
+  - the version recorded in `VERSION.md`.
+
+### Overview and monitoring
+- A servers × installations matrix with filters (needs update / review / up to date, environment, folder, tag).
+- Periodic checks while WRM runs. They **never update on their own**; they notify about new versions and about drift (files changed by hand on a server).
+
+### Update
+For each selected installation and its selected files:
+1. A double confirmation (typing the host name for production).
+2. A check for dangling imports (Python).
+3. A backup to `.deploy-bak/<time>/`.
+4. Atomic writes that keep owner, mode and line endings.
+5. Language checks (`py_compile`, `node --check`, `sh -n`, or a custom command).
+6. An **automatic rollback** on failure.
+7. Writing `VERSION.md` (overall version and a per-file table).
+8. An optional service restart and health check.
+
+Also:
+- Rolling over several servers, stopping at the first failure.
+- History with rollback.
+- *Stamp* writes `VERSION.md` where an installation is already current.
+
+### New server
+- **Install** from the repository into a chosen directory. Protected files are filled from templates in the repository (`*.example`) or entered in a form; secrets come from the vault.
+- **Transfer**: copy an existing installation from another server.
+- Optional systemd / supervisor unit from a template.
+
+### .gitignore helper
+- Pick files that exist only on servers (*extra*) and add standard patterns per language.
+- Warn about per-host configuration committed to the repository.
+- Edit the catalog's exclude / protected lists in the same place.
+- Output: a merge request, or a download.
+
+### Security
+- Read-only tokens (encrypted; write access only for merge requests).
+- Self-signed Git servers are pinned on first use.
+- Policies `git_enabled`, `git_checks`, `git_deploy`.
+- Every update, rollback and install is audited.
+
+### Phases
+1. Sources, catalog, discovery, comparison, matrix, monitoring (read-only).
+2. Update and rollback.
+3. New server (install / transfer).
+4. .gitignore helper.
