@@ -1772,8 +1772,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		Tunnels     []tunnelDef  `json:"tunnels"`
 		Snippets    []Snippet    `json:"snippets"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		jsonError(w, "Bad JSON", 400)
+	if !decodeImportJSON(w, r, &payload) {
 		return
 	}
 	allowServerKeys := serverKeysAllowed(userID)

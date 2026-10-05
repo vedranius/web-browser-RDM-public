@@ -4069,7 +4069,7 @@ Object.assign(LANGS.en, {
   inv_opts:'Login, folders and tags of the imported connections', inv_login:'Login', inv_login_none:'none (set it later)', inv_proto:'Protocol (if not in the file)',
   inv_folders:'Folders', inv_f_column:'from the folder column', inv_f_site:'one per site', inv_f_role:'one per role', inv_f_tenant:'one per tenant (NetBox)', inv_f_fixed:'all in one folder', inv_f_none:'no folder',
   inv_tags:'Extra tags for all', inv_login_help:'Rows with a password column keep their own password. Connections that already exist (same name, host and protocol) are skipped; NetBox objects imported before are updated when "update" is on.',
-  inv_too_big:'The file is larger than 10 MB', inv_sheet:'sheet', inv_delim:'separator', inv_rows:'rows', inv_ignore:'ignore',
+  inv_sheet:'sheet', inv_delim:'separator', inv_rows:'rows', inv_ignore:'ignore',
   inv_f_name:'Name', inv_f_host:'Host / IP / URL', inv_f_port:'Port', inv_f_protocol:'Protocol', inv_f_username:'User name', inv_f_password:'Password', inv_f_folder:'Folder',
   inv_f_tags:'Tags', inv_f_env:'Environment → env:', inv_f_site:'Site / location → site:', inv_f_rack:'Rack → rack:', inv_f_role:'Role → role:', inv_f_platform:'Platform / OS', inv_f_jump:'Jump host (name)', inv_f_web_path:'Web path',
   inv_map_ok:'{n} rows will be imported with this mapping.', inv_map_need:'Choose at least the host (or name) column.',
@@ -4093,7 +4093,7 @@ Object.assign(LANGS.hr, {
   inv_opts:'Prijava, mape i oznake uvezenih veza', inv_login:'Prijava', inv_login_none:'bez prijave (postavi kasnije)', inv_proto:'Protokol (ako ga nema u datoteci)',
   inv_folders:'Mape', inv_f_column:'iz stupca mape', inv_f_site:'jedna po lokaciji', inv_f_role:'jedna po ulozi', inv_f_tenant:'jedna po tenantu (NetBox)', inv_f_fixed:'sve u jednu mapu', inv_f_none:'bez mape',
   inv_tags:'Dodatne oznake za sve', inv_login_help:'Redovi sa stupcem lozinke zadržavaju svoju lozinku. Veze koje već postoje (isto ime, host i protokol) se preskaču; ranije uvezeni NetBox objekti ažuriraju se kad je uključeno „ažuriraj”.',
-  inv_too_big:'Datoteka je veća od 10 MB', inv_sheet:'list', inv_delim:'razdjelnik', inv_rows:'redova', inv_ignore:'zanemari',
+  inv_sheet:'list', inv_delim:'razdjelnik', inv_rows:'redova', inv_ignore:'zanemari',
   inv_f_name:'Ime', inv_f_host:'Host / IP / URL', inv_f_port:'Port', inv_f_protocol:'Protokol', inv_f_username:'Korisničko ime', inv_f_password:'Lozinka', inv_f_folder:'Mapa',
   inv_f_tags:'Oznake', inv_f_env:'Okruženje → env:', inv_f_site:'Lokacija → site:', inv_f_rack:'Rack → rack:', inv_f_role:'Uloga → role:', inv_f_platform:'Platforma / OS', inv_f_jump:'Jump host (ime)', inv_f_web_path:'Web putanja',
   inv_map_ok:'S ovim mapiranjem uvest će se {n} redova.', inv_map_need:'Odaberi barem stupac hosta (ili imena).',
@@ -4162,7 +4162,14 @@ Object.assign(LANGS.en, {
   pg_tools:'Network tools', p_network_tools:'Network tools', p_network_tools_d:'Port check, ping, traceroute, DNS and HTTP/TLS checks from the WRM server and from users\' servers.',
   po_network_tools_off:'Nobody', po_network_tools_admins:'Administrators', po_network_tools_all:'Everyone', ev_nettool:'Network tools',
   pwa_install:'Install as an app', pwa_install_desc:'WRM in its own window, from the dock, start menu or home screen.', pwa_install_btn:'Install',
-  pwa_need_https:'Browsers install apps only over HTTPS: open WRM with https:// (certificate, reverse proxy or HTTPS_SELF_SIGNED=1).',
+  pwa_need_https:'Installing is not possible here: this page is opened over plain http:// to {host}. Browsers install apps only from HTTPS with a trusted certificate (or from localhost). Put WRM behind a reverse proxy with HTTPS, e.g. Caddy (see the README).',
+  pwa_cert:'Installing is not possible here: the browser does not trust this site\'s HTTPS certificate (self-signed?). Use a certificate the browser trusts, e.g. Caddy with a public domain name, or install Caddy\'s local CA on this computer.',
+  pwa_firefox:'Firefox on the desktop does not install web apps. To install WRM, open it in Chrome, Edge or Brave (or Safari on a Mac).',
+  pwa_steps_chromium:'Click the install icon at the right end of the address bar, or open the menu ⋮ → "Cast, save and share" → "Install page as app…" (Edge: ⋯ → Apps → "Install this site as an app"). If neither is there, WRM is already installed or the certificate is not trusted.',
+  pwa_steps_safari_mac:'Safari on macOS: File → "Add to Dock…" (Safari 17 or later).',
+  pwa_steps_ios:'iPhone / iPad: tap Share (the square with an arrow) → "Add to Home Screen" → Add.',
+  pwa_steps_android:'Android: open the browser menu ⋮ → "Install app" (or "Add to Home screen").',
+  import_too_big:'The file is too large ({size}): the import limit is {max}.',
   pwa_menu_hint:'Use the browser menu: "Install WRM…" / "Add to home screen" (Safari: Share → Add to Home Screen).', pwa_running:'WRM is running as an installed app.', pwa_installed:'WRM was installed',
 });
 Object.assign(LANGS.hr, {
@@ -4183,7 +4190,14 @@ Object.assign(LANGS.hr, {
   pg_tools:'Mrežni alati', p_network_tools:'Mrežni alati', p_network_tools_d:'Provjera portova, ping, traceroute, DNS i HTTP/TLS provjere s WRM servera i sa servera korisnika.',
   po_network_tools_off:'Nitko', po_network_tools_admins:'Administratori', po_network_tools_all:'Svi', ev_nettool:'Mrežni alati',
   pwa_install:'Instaliraj kao aplikaciju', pwa_install_desc:'WRM u vlastitom prozoru, iz docka, izbornika Start ili početnog zaslona.', pwa_install_btn:'Instaliraj',
-  pwa_need_https:'Preglednici instaliraju aplikacije samo preko HTTPS-a: otvori WRM s https:// (certifikat, reverse proxy ili HTTPS_SELF_SIGNED=1).',
+  pwa_need_https:'Instalacija ovdje nije moguća: stranica je otvorena preko običnog http:// na {host}. Preglednici instaliraju aplikacije samo s HTTPS-a s pouzdanim certifikatom (ili s localhosta). Stavi WRM iza reverse proxyja s HTTPS-om, npr. Caddy (vidi README).',
+  pwa_cert:'Instalacija ovdje nije moguća: preglednik ne vjeruje HTTPS certifikatu ove stranice (samopotpisani?). Koristi certifikat kojem preglednik vjeruje, npr. Caddy s javnim imenom domene, ili instaliraj Caddyjev lokalni CA na ovo računalo.',
+  pwa_firefox:'Firefox na računalu ne instalira web-aplikacije. Za instalaciju otvori WRM u Chromeu, Edgeu ili Braveu (ili u Safariju na Macu).',
+  pwa_steps_chromium:'Klikni ikonu za instalaciju na desnom kraju adresne trake ili otvori izbornik ⋮ → „Prenesi, spremi i dijeli” → „Instaliraj stranicu kao aplikaciju…” (Edge: ⋯ → Aplikacije → „Instaliraj ovo web-mjesto kao aplikaciju”). Ako nema ni jednog, WRM je već instaliran ili certifikat nije pouzdan.',
+  pwa_steps_safari_mac:'Safari na macOS-u: Datoteka → „Dodaj u Dock…” (Safari 17 ili noviji).',
+  pwa_steps_ios:'iPhone / iPad: dodirni Dijeli (kvadrat sa strelicom) → „Dodaj na početni zaslon” → Dodaj.',
+  pwa_steps_android:'Android: otvori izbornik preglednika ⋮ → „Instaliraj aplikaciju” (ili „Dodaj na početni zaslon”).',
+  import_too_big:'Datoteka je prevelika ({size}): ograničenje za uvoz je {max}.',
   pwa_menu_hint:'Koristi izbornik preglednika: „Instaliraj WRM…” / „Dodaj na početni zaslon” (Safari: Dijeli → Dodaj na početni zaslon).', pwa_running:'WRM radi kao instalirana aplikacija.', pwa_installed:'WRM je instaliran',
 });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
@@ -4194,6 +4208,7 @@ function applyLang() {
   if (sbl) sbl.textContent = t('session_label');
   if (currentUser || isCollabMode) renderTree();
   if (typeof renderSnippets === 'function') { renderSnippets(); renderBroadcastUI(); }
+  if (typeof updateInstallRow === 'function') updateInstallRow();
 }
 function changeLang(l) {
   currentLang = l;
@@ -6285,9 +6300,21 @@ async function openWebConn(c) {
   }
 }
 
+// ── import size limit ──
+// Must match maxImportFile in security.go: the server answers 413 above it.
+const IMPORT_MAX_BYTES = 20 * 1024 * 1024;
+function fmtMB(n) { return (n / 1048576).toFixed(1) + ' MB'; }
+// importFileTooBig shows the size and the limit and returns true when a file cannot be imported.
+function importFileTooBig(file) {
+  if (!file || file.size <= IMPORT_MAX_BYTES) return false;
+  showToast(t('import_too_big').replace('{size}', fmtMB(file.size)).replace('{max}', fmtMB(IMPORT_MAX_BYTES)), 'error', 8000);
+  return true;
+}
+
 // ── import from mRemoteNG / OpenSSH ──
 async function importExternal(input, kind, password) {
   const file = input.files ? input.files[0] : null;
+  if (importFileTooBig(file)) { input.value = ''; return; }
   const text = file ? await file.text() : input._text;
   if (input.files) input.value = '';
   if (!text) return;
@@ -6496,26 +6523,55 @@ async function runTool() {
 }
 
 // ── installable app ──
-let pwaPrompt = null;
+let pwaPrompt = null, pwaCertError = false;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(e => {
+      // Chrome refuses service workers (and so installing) on a site with an untrusted certificate.
+      if (/SSL|certificate/i.test((e && e.message) || '')) { pwaCertError = true; updateInstallRow(); }
+    });
+  });
 }
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); pwaPrompt = e; updateInstallRow(); });
 window.addEventListener('appinstalled', () => { pwaPrompt = null; updateInstallRow(); showToast(t('pwa_installed'), 'success'); });
+
+// pwaBrowser tells which install steps apply to the current browser.
+function pwaBrowser() {
+  const ua = navigator.userAgent || '';
+  const touchMac = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1; // iPadOS asks for desktop pages
+  if (/iPhone|iPad|iPod/.test(ua) || touchMac) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  if (/Firefox\//.test(ua)) return 'firefox';
+  if (/Chrome\/|Chromium\/|Edg\//.test(ua)) return 'chromium';
+  if (/Safari\//.test(ua) && /Macintosh/.test(ua)) return 'safari_mac';
+  return 'other';
+}
+
+// pwaInstallState: {text, button}. The Install button is shown only when the browser offered
+// its install prompt; otherwise the row explains the steps or why installing cannot work.
+function pwaInstallState() {
+  if (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: window-controls-overlay)').matches) || navigator.standalone)
+    return {text: t('pwa_running'), button: false};
+  if (pwaPrompt) return {text: t('pwa_install_desc'), button: true};
+  const b = pwaBrowser();
+  if (!window.isSecureContext) return {text: t('pwa_need_https').replace('{host}', location.host), button: false};
+  if (b === 'firefox') return {text: t('pwa_firefox'), button: false};
+  if (pwaCertError) return {text: t('pwa_cert'), button: false};
+  const steps = {chromium: 'pwa_steps_chromium', safari_mac: 'pwa_steps_safari_mac', ios: 'pwa_steps_ios', android: 'pwa_steps_android'}[b];
+  return {text: t(steps || 'pwa_menu_hint'), button: false};
+}
 
 function updateInstallRow() {
   const btn = document.getElementById('pwa-install-btn');
   const desc = document.getElementById('pwa-install-desc');
   if (!btn || !desc) return;
-  const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
-  btn.style.display = standalone ? 'none' : '';
-  if (standalone) desc.textContent = t('pwa_running');
-  else if (!pwaPrompt) desc.textContent = location.protocol !== 'https:' && location.hostname !== 'localhost' ? t('pwa_need_https') : t('pwa_menu_hint');
-  else desc.textContent = t('pwa_install_desc');
+  const st = pwaInstallState();
+  btn.style.display = st.button ? '' : 'none';
+  desc.textContent = st.text;
 }
 
 async function installPWA() {
-  if (!pwaPrompt) { updateInstallRow(); showToast(document.getElementById('pwa-install-desc').textContent, 'info', 6000); return; }
+  if (!pwaPrompt) { updateInstallRow(); showToast(pwaInstallState().text, 'info', 8000); return; }
   pwaPrompt.prompt();
   try { await pwaPrompt.userChoice; } catch (_) {}
   pwaPrompt = null;
@@ -6778,7 +6834,7 @@ function invOptions() {
 async function invFileChosen(inp) {
   const f = inp.files && inp.files[0];
   if (!f) return;
-  if (f.size > 10 * 1024 * 1024) { showToast(t('inv_too_big'), 'error'); return; }
+  if (importFileTooBig(f)) { inp.value = ''; return; }
   const buf = new Uint8Array(await f.arrayBuffer());
   let bin = '';
   for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
@@ -11364,6 +11420,7 @@ function openSettings(tab) {
   document.getElementById('st-data-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-history-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   showSettingsTab(tab || 'st-general');
+  updateInstallRow();
 }
 
 function showSettingsTab(id) {
@@ -11543,6 +11600,7 @@ async function exportConfig(withSecrets) {
 async function importConfig(input) {
   const file = input.files[0];
   if (!file) return;
+  if (importFileTooBig(file)) { input.value = ''; return; }
   const text = await file.text();
   input.value = '';
   let data; try { data = JSON.parse(text); } catch(_) { showToast(t('invalid_json'), 'error'); return; }
