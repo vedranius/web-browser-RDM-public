@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.8.0"
+var AppVersion = "v10.8.1"
 
 const sessionCookieName = "wrm_session"
 
@@ -1772,8 +1772,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		Tunnels     []tunnelDef  `json:"tunnels"`
 		Snippets    []Snippet    `json:"snippets"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		jsonError(w, "Bad JSON", 400)
+	if !decodeImportJSON(w, r, &payload) {
 		return
 	}
 	allowServerKeys := serverKeysAllowed(userID)

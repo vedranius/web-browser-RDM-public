@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -756,8 +755,11 @@ func apiImportExternalHandler(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 		Folder   string `json:"folder"`
 	}
-	if err := json.NewDecoder(io.LimitReader(r.Body, 20<<20)).Decode(&in); err != nil {
-		jsonError(w, "Bad JSON (file larger than 20 MB?)", 400)
+	if !decodeImportJSON(w, r, &in) {
+		return
+	}
+	if n := int64(len(in.XML) + len(in.Text)); n > maxImportFile {
+		importTooLarge(w, n)
 		return
 	}
 	var res *importResult

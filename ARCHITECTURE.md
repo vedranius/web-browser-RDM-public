@@ -21,6 +21,7 @@ every phase of that plan to the code that it touches.
 - Two-factor authentication: TOTP (RFC 6238) with single-use recovery codes; a policy can require it for admins or everyone (`users.go`, `totp.go`).
 - Roles today: `users.is_admin` (administrator or user) plus per-share roles (see Sharing). Policies are in `app_settings` and can be forced with `WRM_<KEY>` environment variables (`settings.go`).
 - CSRF: every non-GET `/api` request needs `X-WRM-Request: 1` and a same-origin `Origin`; WebSockets check `Origin` (`security.go`).
+- Request bodies are limited per path (`bodyLimitFor`): 1 MB by default, 32 MB for the import endpoints (`/api/config/import*`, `/api/inventory/*`; files up to `maxImportFile` = 20 MB, the same limit the browser checks), streamed uploads by policy. Import handlers answer HTTP 413 with the size and the limit (`decodeImportJSON`).
 
 ## SSH / connection layer
 
@@ -73,6 +74,7 @@ every phase of that plan to the code that it touches.
   - `keys_test.go`: key store (generate, import with passphrase, public keys, encryption at rest), deploy / revoke / who has access against a fake SSH server that runs commands in a real `sh`, vault sharing and host / jump-host restrictions, rotation (check, success, rollback, incomplete rollback) with a simulated `passwd`;
   - `status_test.go`: live status (up/down, SSH banner, jump hosts, checks through jump hosts, check now, opt-out, FTP greeting);
   - `importers_test.go`: mRemoteNG files (both encryption formats, master password, inheritance, folders, jump hosts) and OpenSSH config.
+  - `import_limits_test.go`: import size limits through the real middleware chain (multi-MB `confCons.xml` and CSV import; HTTP 413 with the size and the limit above it; the browser's limit matches the server's).
 - **Migrations** run at startup in `initDB` (`main.go`), and they are idempotent: `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE … ADD COLUMN`, indexes and triggers. `ensureTable` keeps a table left by an earlier build with an incompatible layout as `<name>_old_<time>` and creates it again.
 - Migrations are **additive only**: new tables, columns, indexes and triggers, and no data is removed or rewritten. A previous binary ignores the new objects, so a downgrade is "run the previous binary". This is the reversible ("down") path, and it loses no data.
 
