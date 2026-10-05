@@ -12,6 +12,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -338,12 +340,26 @@ func contentSecurityPolicy(r *http.Request) string {
 	}, "; ")
 }
 
+// Import limits. A file of up to maxImportFile bytes (WRM JSON, mRemoteNG XML, SSH config,
+// CSV/XLSX inventory) fits into a request body of maxImportBody bytes even after JSON
+// escaping or base64 encoding (4/3). The browser checks maxImportFile before sending.
+const (
+	maxImportFile = 20 << 20
+	maxImportBody = 32 << 20
+)
+
+// isImportPath reports whether a request path is an import endpoint with the larger body limit.
+func isImportPath(path string) bool {
+	return path == "/api/config/import" || strings.HasPrefix(path, "/api/config/import/") ||
+		path == "/api/inventory" || strings.HasPrefix(path, "/api/inventory/")
+}
+
 func bodyLimitFor(path string) int64 {
 	switch {
 	case path == "/api/remote/upload":
 		return -1 // streamed; limited per file by the max_upload_mb policy
-	case path == "/api/config/import":
-		return 32 << 20
+	case isImportPath(path):
+		return maxImportBody
 	case strings.HasPrefix(path, "/api/sessions"):
 		return 2 << 20
 	}
@@ -502,4 +518,37 @@ func validatePassword(pw string) error {
 		return fmt.Errorf("password must be at most 72 bytes")
 	}
 	return nil
+}
+
+// formatMB formats a byte count as megabytes for error messages ("12.4 MB").
+func formatMB(n int64) string {
+	return strconv.FormatFloat(float64(n)/(1<<20), 'f', 1, 64) + " MB"
+}
+
+// importTooLarge answers 413 with the size and the limit.
+func importTooLarge(w http.ResponseWriter, size int64) {
+	msg := "The file is too large"
+	if size > 0 {
+		msg += " (" + formatMB(size) + ")"
+	}
+	jsonError(w, msg+": the import limit is "+formatMB(maxImportFile), http.StatusRequestEntityTooLarge)
+}
+
+// decodeImportJSON decodes an import request body. When the body is larger than the
+// middleware limit it answers 413 with the size and the limit instead of "Bad JSON".
+func decodeImportJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
+	if r.ContentLength > maxImportBody {
+		importTooLarge(w, r.ContentLength)
+		return false
+	}
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		var mbe *http.MaxBytesError
+		if errors.As(err, &mbe) {
+			importTooLarge(w, r.ContentLength)
+			return false
+		}
+		jsonError(w, "Bad JSON", 400)
+		return false
+	}
+	return true
 }

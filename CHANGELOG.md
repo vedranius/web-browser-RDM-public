@@ -4,6 +4,24 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.8.1] — 2026-10-05 — fixes: larger imports, install hints
+
+### Fixed
+- **mRemoteNG, OpenSSH config and inventory imports of larger files.** The security middleware limited every API body to 1 MB except `/api/config/import`, so `/api/config/import/mremoteng`, `/api/config/import/sshconfig` and `/api/inventory/*` failed with *Bad JSON* from about 1 MB on.
+  - One limit for all imports: files up to 20 MB (`maxImportFile`), request bodies up to 32 MB (`maxImportBody`, room for JSON escaping and base64) for `/api/config/import`, `/api/config/import/*` and `/api/inventory/*` (`bodyLimitFor`). The separate inventory limits (10 MB file, 30 MB body) are gone.
+  - A file or body above the limit gets **HTTP 413** with its size and the limit (*The file is too large (21.0 MB): the import limit is 20.0 MB*) instead of *Bad JSON* (`decodeImportJSON`).
+  - The browser checks the size before sending (mRemoteNG / OpenSSH config import, WRM configuration import, inventory file).
+
+### Changed
+- **Install as an app** (*Settings → General*) explains what to do in the current browser:
+  - the steps for Chrome / Edge / Brave (the install icon in the address bar or the menu), Safari on macOS (*File → Add to Dock*), iPhone / iPad (*Share → Add to Home Screen*) and Android;
+  - the real reason when installing is not possible: plain `http://` to an address other than `localhost` (HTTPS with a trusted certificate is needed), an untrusted certificate, Firefox on the desktop;
+  - the *Install* button is shown only when the browser can install right away.
+- README: *HTTPS with Caddy* in the reverse proxy section (public name with Let's Encrypt, or `tls internal` for internal names and IP addresses), the import size limit, troubleshooting rows for installing and for too large files.
+
+### Added
+- Tests (`import_limits_test.go`), through the real middleware chain: a multi-MB `confCons.xml` and a large CSV import; oversized bodies (with and without `Content-Length`) and oversized files get the clear 413; the browser's limit matches the server's.
+
 ## [10.8.0] — 2026-10-02 — quick connect, notes, network tools & installable app
 
 ### Added

@@ -41,7 +41,6 @@ import (
 const (
 	maxConnTags      = 30
 	maxInventoryRows = 20000
-	maxInventoryFile = 10 << 20
 	maxNetboxObjects = 10000
 )
 
@@ -136,8 +135,8 @@ func parseTableFile(name string, data []byte, sheet string) (*tableFile, error) 
 	if len(data) == 0 {
 		return nil, fmt.Errorf("the file is empty")
 	}
-	if len(data) > maxInventoryFile {
-		return nil, fmt.Errorf("the file is larger than %d MB", maxInventoryFile>>20)
+	if len(data) > maxImportFile {
+		return nil, fmt.Errorf("the file is too large (%s): the import limit is %s", formatMB(int64(len(data))), formatMB(maxImportFile))
 	}
 	if bytes.HasPrefix(data, []byte("PK\x03\x04")) {
 		return parseXLSX(data, sheet)
@@ -977,8 +976,7 @@ func apiInventoryHandler(w http.ResponseWriter, r *http.Request) {
 		Query    netboxQuery      `json:"query"`
 		Rows     []netboxRow      `json:"rows"`
 	}
-	if err := json.NewDecoder(io.LimitReader(r.Body, 3*maxInventoryFile)).Decode(&in); err != nil {
-		jsonError(w, "Bad JSON (file too large?)", 400)
+	if !decodeImportJSON(w, r, &in) {
 		return
 	}
 	switch action {
@@ -986,6 +984,10 @@ func apiInventoryHandler(w http.ResponseWriter, r *http.Request) {
 		data, err := base64.StdEncoding.DecodeString(in.Data)
 		if err != nil {
 			jsonError(w, "Bad file data", 400)
+			return
+		}
+		if len(data) > maxImportFile {
+			importTooLarge(w, int64(len(data)))
 			return
 		}
 		tf, err := parseTableFile(in.FileName, data, in.Sheet)
