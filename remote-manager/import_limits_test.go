@@ -52,6 +52,12 @@ func TestLargeImportsThroughMiddleware(t *testing.T) {
 	srv := httptest.NewServer(newRouter())
 	defer srv.Close()
 	u := newTestUser(t, srv, "big-import", false)
+	// Thousands of connections in the shared test database would slow down later tests
+	// (the status monitor probes every monitored connection): remove them afterwards.
+	t.Cleanup(func() {
+		db.Exec(`DELETE FROM connections WHERE user_id=?`, u.userID)
+		db.Exec(`DELETE FROM folders WHERE user_id=?`, u.userID)
+	})
 
 	// A multi-MB confCons.xml: above the old 1 MB middleware limit.
 	xml, n := bigMRemoteNG(4 << 20)
