@@ -97,6 +97,11 @@ Refs:
 - Branch-aware tags: only tags reachable from the chosen branch count, with a warning and a fallback to the branch head.
 - Ref choice per run: the catalog, one branch for all, per service, or each project's default branch.
 
+### Sources
+- The GitLab API v4 or the GitHub REST API: groups or organisations (with subgroups), projects, branches, tags.
+- **Fewer API calls.** One recursive tree listing per ref gives the blob ID of every file. File contents are fetched only for blobs not seen before and cached by blob ID forever (the same blob in 20 versions is fetched once). The normalised hash is computed from that content.
+- **Offline source:** import a bundle (a JSON manifest with files, hashes and per-file history, plus the payload) built elsewhere, for setups where the WRM server cannot reach the Git server.
+
 ### Discovery
 - One SSH call per server walks the configured roots (e.g. `/opt`, `/srv`, a scripts directory) to a limited depth.
 - It finds installations by their fingerprint files.
