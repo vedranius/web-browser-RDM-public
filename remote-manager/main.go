@@ -289,6 +289,10 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
 	mux.HandleFunc("/api/status", apiStatusHandler)
+	mux.HandleFunc("/api/notify", apiNotifyHandler)
+	mux.HandleFunc("/api/notify/test", apiNotifyHandler)
+	mux.HandleFunc("/api/admin/notify/channels", apiAdminNotifyHandler)
+	mux.HandleFunc("/api/admin/notify/channels/", apiAdminNotifyHandler)
 	mux.HandleFunc("/api/status/check", apiStatusHandler)
 	mux.HandleFunc("/api/inventory/", apiInventoryHandler)
 	mux.HandleFunc("/api/keys", apiKeysHandler)
@@ -356,6 +360,8 @@ func main() {
 	startTURN()
 	tunnelMgr.startAlways()
 	go statusMon.run()
+	go notifier.run()
+	go runCredentialReminders()
 	go runQuickCleanup()
 
 	recoverTerminalSessions()
@@ -801,6 +807,49 @@ func initDB() {
 		last_sync_at TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "kind", "url", "token", "options", "last_sync_at")
 
+	// v10.9: notifications (channels configured by administrators, subscriptions per user)
+	ensureTable("notify_channels", `CREATE TABLE IF NOT EXISTS notify_channels (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL DEFAULT '',
+		kind TEXT NOT NULL DEFAULT '',
+		config TEXT NOT NULL DEFAULT '',
+		enabled INTEGER NOT NULL DEFAULT 1,
+		user_address INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '',
+		last_sent_at TEXT NOT NULL DEFAULT '',
+		last_error TEXT NOT NULL DEFAULT '')`,
+		"id", "name", "kind", "config", "enabled", "user_address", "created_at", "updated_at", "last_sent_at", "last_error")
+	ensureTable("notify_subscriptions", `CREATE TABLE IF NOT EXISTS notify_subscriptions (
+		user_id INTEGER NOT NULL,
+		event TEXT NOT NULL,
+		channel_id INTEGER NOT NULL,
+		address TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (user_id, event, channel_id))`,
+		"user_id", "event", "channel_id", "address")
+	ensureTable("notify_prefs", `CREATE TABLE IF NOT EXISTS notify_prefs (
+		user_id INTEGER PRIMARY KEY,
+		quiet_enabled INTEGER NOT NULL DEFAULT 0,
+		quiet_start TEXT NOT NULL DEFAULT '22:00',
+		quiet_end TEXT NOT NULL DEFAULT '07:00',
+		tz TEXT NOT NULL DEFAULT 'UTC',
+		lang TEXT NOT NULL DEFAULT 'en')`,
+		"user_id", "quiet_enabled", "quiet_start", "quiet_end", "tz", "lang")
+	ensureTable("notify_pending", `CREATE TABLE IF NOT EXISTS notify_pending (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		channel_id INTEGER NOT NULL,
+		address TEXT NOT NULL DEFAULT '',
+		event TEXT NOT NULL DEFAULT '',
+		title TEXT NOT NULL DEFAULT '',
+		body TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '')`,
+		"id", "user_id", "channel_id", "address", "event", "title", "body", "created_at")
+	ensureTable("notify_state", `CREATE TABLE IF NOT EXISTS notify_state (
+		key TEXT PRIMARY KEY,
+		value TEXT NOT NULL DEFAULT '')`,
+		"key", "value")
+
 	// Safe migrations (columns added over time)
 	for _, m := range []string{
 		`ALTER TABLE connections ADD COLUMN user_id INTEGER DEFAULT NULL`,
@@ -886,6 +935,8 @@ func initDB() {
 		`CREATE INDEX IF NOT EXISTS ix_collab_share ON collab_messages(share_id, id)`,
 		`CREATE INDEX IF NOT EXISTS ix_share_items ON share_items(share_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_connections_user ON connections(user_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_notify_pending_user ON notify_pending(user_id, channel_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_notify_subs_channel ON notify_subscriptions(channel_id)`,
 	} {
 		if _, err := db.Exec(q); err != nil {
 			log.Printf("Index warning: %v", err)

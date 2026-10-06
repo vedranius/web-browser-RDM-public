@@ -314,6 +314,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"bmc":           settingBool("bmc_enabled"),
 			"serial":        serialAllowed(u.ID),
 			"network_tools": networkToolsAllowed(u.ID),
+			"notifications": settingBool("notifications_enabled"),
 		},
 	}
 }
@@ -1052,6 +1053,9 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM credential_grants WHERE user_id=? OR credential_id IN (SELECT id FROM credentials WHERE owner_id=?)`, id, id)
 	tx.Exec(`DELETE FROM credentials WHERE owner_id=?`, id)
 	tx.Exec(`DELETE FROM inventory_sources WHERE user_id=?`, id)
+	tx.Exec(`DELETE FROM notify_subscriptions WHERE user_id=?`, id)
+	tx.Exec(`DELETE FROM notify_prefs WHERE user_id=?`, id)
+	tx.Exec(`DELETE FROM notify_pending WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM auth_sessions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM users WHERE id=?`, id)
 	tx.Commit()

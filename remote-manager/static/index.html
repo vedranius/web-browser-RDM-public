@@ -1915,6 +1915,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn active" data-tab="st-general" onclick="showSettingsTab('st-general')" data-i18n="tab_general">General</button>
       <button class="tab-btn" data-tab="st-terminal" onclick="showSettingsTab('st-terminal')" data-i18n="tab_terminal">Terminal</button>
       <button class="tab-btn" data-tab="st-security" id="st-security-btn" onclick="showSettingsTab('st-security')" data-i18n="tab_security">Security</button>
+      <button class="tab-btn" data-tab="st-notify" id="st-notify-btn" onclick="showSettingsTab('st-notify')" data-i18n="tab_notify">Notifications</button>
       <button class="tab-btn" data-tab="st-audio" onclick="showSettingsTab('st-audio')" data-i18n="tab_audio">Voice &amp; audio</button>
       <button class="tab-btn" data-tab="st-history" id="st-history-btn" onclick="showSettingsTab('st-history')" data-i18n="tab_history">Session history</button>
       <button class="tab-btn" data-tab="st-data" id="st-data-btn" onclick="showSettingsTab('st-data')" data-i18n="tab_data">Data</button>
@@ -1960,6 +1961,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
     </div>
     <div class="tab-pane" id="st-security"><div id="security-pane"></div></div>
+    <div class="tab-pane" id="st-notify"><div id="notify-pane"></div></div>
     <div class="tab-pane" id="st-audio"><div id="audio-pane"></div></div>
     <div class="tab-pane" id="st-history">
       <div class="hint-box" data-i18n="history_help">Your terminal sessions and sessions of other people on your connections. Replay a recording or download it as an asciinema .cast file.</div>
@@ -2356,6 +2358,26 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 </div>
 
 <!-- Admin Panel Modal -->
+<div class="modal-overlay" id="modal-notify-ch" style="z-index:9500;">
+  <div class="modal" style="width:min(600px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>🔔 <span id="nc-title"></span></h3>
+    <input type="hidden" id="nc-id">
+    <div class="field-row">
+      <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="nc-name" maxlength="120" placeholder="Ops e-mail"></div>
+      <div class="field"><label data-i18n="nf_kind">Type</label><select id="nc-kind" onchange="renderNotifyChannelFields()"></select></div>
+    </div>
+    <div class="muted-text" id="nc-help" style="line-height:1.5;margin-bottom:8px;"></div>
+    <div id="nc-fields"></div>
+    <label class="check-row" id="nc-ua-row"><input type="checkbox" id="nc-ua"> <span><b data-i18n="nf_user_address">Users may enter their own recipient</b> — <span id="nc-ua-d"></span></span></label>
+    <label class="check-row"><input type="checkbox" id="nc-enabled" checked> <span><b data-i18n="nf_enabled">Enabled</b> — <span data-i18n="nf_enabled_d">users can subscribe to it and it sends messages.</span></span></label>
+    <div class="modal-footer">
+      <button class="btn-danger" id="nc-del" style="margin-right:auto;" onclick="deleteNotifyChannel(Number(document.getElementById('nc-id').value))">🗑</button>
+      <button class="btn-sec" onclick="closeModal('modal-notify-ch')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveNotifyChannel()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-admin">
   <div class="modal">
     <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🛡 <span data-i18n="admin_panel">Admin panel</span></h3><button class="icon-btn" onclick="closeModal('modal-admin')">✕</button></div>
@@ -2365,6 +2387,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="shares" onclick="showAdminTab('shares')" data-i18n="adm_shares">Shares</button>
       <button class="tab-btn" data-tab="policies" onclick="showAdminTab('policies')" data-i18n="adm_policies">Security policies</button>
       <button class="tab-btn" data-tab="voice" onclick="showAdminTab('voice')" data-i18n="adm_voice">Voice &amp; network</button>
+      <button class="tab-btn" data-tab="notify" onclick="showAdminTab('notify')" data-i18n="adm_notify">Notifications</button>
       <button class="tab-btn" data-tab="hosts" onclick="showAdminTab('hosts')" data-i18n="adm_hosts">Host keys</button>
       <button class="tab-btn" data-tab="audit" onclick="showAdminTab('audit')" data-i18n="adm_audit">Audit log</button>
       <button class="tab-btn" data-tab="sessions" onclick="showAdminTab('sessions')" data-i18n="adm_sessions">Sessions &amp; recordings</button>
@@ -4200,6 +4223,74 @@ Object.assign(LANGS.hr, {
   import_too_big:'Datoteka je prevelika ({size}): ograničenje za uvoz je {max}.',
   pwa_menu_hint:'Koristi izbornik preglednika: „Instaliraj WRM…” / „Dodaj na početni zaslon” (Safari: Dijeli → Dodaj na početni zaslon).', pwa_running:'WRM radi kao instalirana aplikacija.', pwa_installed:'WRM je instaliran',
 });
+Object.assign(LANGS.en, {
+  tab_notify:'Notifications', adm_notify:'Notifications', nf_channels_lc:'channels', nf_subscribers_lc:'users subscribed',
+  nf_admin_help:'Channels through which WRM sends notifications: e-mail, chat (Telegram, Slack / Mattermost / Rocket.Chat, Microsoft Teams, Discord), push (ntfy, Gotify, Pushover) or a webhook. Users choose in Settings → Notifications which events they receive and where. Secrets (passwords, tokens, webhook URLs) are stored encrypted and never shown again.',
+  nf_new:'New channel', nf_none:'No channels yet.', nf_kind:'Type', nf_subscribers:'Users', nf_last_sent:'Last sent', nf_own_address:'own recipient',
+  nf_send_test:'Send test', nf_test_sent:'Test message sent', nf_test_failed:'Sending failed', nf_delete_q:'Delete this channel? Users subscribed to it no longer get messages through it.',
+  nf_enabled:'Enabled', nf_enabled_d:'users can subscribe to it and it sends messages.',
+  nf_user_address:'Users may enter their own recipient', nf_user_address_d:'each user can enter their own {field}; otherwise the one above is used.',
+  nf_secret_kept:'saved — leave empty to keep it',
+  nk_email:'E-mail (SMTP)', nk_telegram:'Telegram', nk_slack:'Slack / Mattermost / Rocket.Chat', nk_teams:'Microsoft Teams (Workflows)', nk_discord:'Discord', nk_ntfy:'ntfy', nk_gotify:'Gotify', nk_pushover:'Pushover', nk_webhook:'Webhook (JSON)',
+  nk_email_help:'An SMTP server (port 587 with STARTTLS, 465 with TLS). A user name and password are sent only over TLS or to a server on this machine.',
+  nk_telegram_help:'Create a bot with @BotFather, add it to a group or start a chat with it, and enter the chat ID (groups start with -100…). The API address only changes for a local Bot API server.',
+  nk_slack_help:'An incoming webhook URL. Mattermost and Rocket.Chat accept the same Slack format.',
+  nk_teams_help:'A Workflows webhook: in Teams, "Workflows" → "Post to a channel when a webhook request is received", then copy the URL. The message is an Adaptive Card.',
+  nk_discord_help:'Server settings → Integrations → Webhooks → New webhook → Copy URL.',
+  nk_ntfy_help:'The server (ntfy.sh or your own) and a topic. An access token is needed for protected topics.',
+  nk_gotify_help:'The address of your Gotify server and the token of an application created there.',
+  nk_pushover_help:'The API token of your Pushover application and the user or group key that receives the messages.',
+  nk_webhook_help:'WRM POSTs JSON (title, text and the events). With a secret, the header X-WRM-Signature carries sha256=HMAC-SHA256 of the body, so the receiver can check it.',
+  nf_f_host:'SMTP server', nf_f_port:'Port', nf_f_security:'Security', nf_f_username:'User name', nf_f_password:'Password', nf_f_from:'From', nf_f_to:'To (comma-separated)',
+  nf_f_bot_token:'Bot token', nf_f_chat_id:'Chat ID', nf_f_api_url:'API address', nf_f_webhook_url:'Webhook URL', nf_f_server:'Server', nf_f_topic:'Topic',
+  nf_f_access_token:'Access token', nf_f_app_token:'Application token', nf_f_user_key:'User key', nf_f_url:'URL', nf_f_hmac_secret:'Signing secret (HMAC)',
+  nf_opt_starttls:'STARTTLS', nf_opt_tls:'TLS', nf_opt_none:'none (plain)',
+  nf_ph_host:'smtp.example.com', nf_ph_from:'WRM <wrm@example.com>', nf_ph_to:'ops@example.com', nf_ph_chat_id:'-1001234567890', nf_ph_webhook_url:'https://…', nf_ph_topic:'wrm-alerts',
+  nf_ph_url:'https://example.com/hooks/wrm', nf_ph_user_key:'u…', nf_ph_username:'', nf_ph_server:'https://gotify.example.com',
+  ne_status_down:'A server went down', ne_status_up:'A server is up again', ne_credential_rotation_due:'Credential rotation is due', ne_credential_rotation_incomplete:'Credential rotation is incomplete',
+  nf_user_help:'Messages outside the browser: choose which events you receive and through which channel. Events from one check round arrive as one message. Notifications in WRM itself and in the browser (General → Notify when a server goes down) stay as they are.',
+  nf_disabled:'Notifications are turned off by the administrator.', nf_no_channels:'No notification channels yet: an administrator sets them up.',
+  nf_no_channels_admin:'No notification channels yet: add one in Admin panel → Notifications.', nf_event:'Event',
+  nf_your_to:'your e-mail address', nf_your_chat_id:'your Telegram chat ID', nf_your_topic:'your ntfy topic', nf_your_user_key:'your Pushover user key', nf_addr_default:'empty = the channel\'s recipient',
+  nf_quiet:'Quiet hours', nf_quiet_on:'Hold messages during quiet hours', nf_quiet_d:'they are sent together when the quiet hours end.', nf_quiet_from:'From', nf_quiet_to:'To', nf_tz:'Time zone',
+  nf_pending:'{n} messages waiting to be sent', ev_notify:'Notifications',
+  pg_notify:'Notifications', p_notifications_enabled:'Notifications', p_notifications_enabled_d:'Send notifications through the channels below (e-mail, chat, push, webhook).',
+  p_notify_min_interval_seconds:'Minimum interval (s)', p_notify_min_interval_seconds_d:'At most one message per user and channel in this time; what comes in meanwhile is sent together in the next one.',
+});
+Object.assign(LANGS.hr, {
+  tab_notify:'Obavijesti', adm_notify:'Obavijesti', nf_channels_lc:'kanala', nf_subscribers_lc:'korisnika pretplaćeno',
+  nf_admin_help:'Kanali kroz koje WRM šalje obavijesti: e-pošta, chat (Telegram, Slack / Mattermost / Rocket.Chat, Microsoft Teams, Discord), push (ntfy, Gotify, Pushover) ili webhook. Korisnici u Postavke → Obavijesti biraju koje događaje primaju i gdje. Tajne (lozinke, tokeni, webhook URL-ovi) spremaju se šifrirane i više se ne prikazuju.',
+  nf_new:'Novi kanal', nf_none:'Još nema kanala.', nf_kind:'Vrsta', nf_subscribers:'Korisnici', nf_last_sent:'Zadnje poslano', nf_own_address:'vlastiti primatelj',
+  nf_send_test:'Pošalji probu', nf_test_sent:'Probna poruka poslana', nf_test_failed:'Slanje nije uspjelo', nf_delete_q:'Obrisati ovaj kanal? Pretplaćeni korisnici više neće kroz njega dobivati poruke.',
+  nf_enabled:'Uključen', nf_enabled_d:'korisnici se mogu pretplatiti i kanal šalje poruke.',
+  nf_user_address:'Korisnici smiju upisati vlastitog primatelja', nf_user_address_d:'svaki korisnik može upisati svoj {field}; inače se koristi onaj gore.',
+  nf_secret_kept:'spremljeno — ostavi prazno za zadržati',
+  nk_email:'E-pošta (SMTP)', nk_telegram:'Telegram', nk_slack:'Slack / Mattermost / Rocket.Chat', nk_teams:'Microsoft Teams (Workflows)', nk_discord:'Discord', nk_ntfy:'ntfy', nk_gotify:'Gotify', nk_pushover:'Pushover', nk_webhook:'Webhook (JSON)',
+  nk_email_help:'SMTP poslužitelj (port 587 sa STARTTLS-om, 465 s TLS-om). Korisničko ime i lozinka šalju se samo preko TLS-a ili poslužitelju na ovom računalu.',
+  nk_telegram_help:'Napravi bota preko @BotFather, dodaj ga u grupu ili započni razgovor s njim i upiši ID chata (grupe počinju s -100…). Adresa API-ja mijenja se samo za lokalni Bot API poslužitelj.',
+  nk_slack_help:'URL dolaznog webhooka. Mattermost i Rocket.Chat prihvaćaju isti Slack format.',
+  nk_teams_help:'Workflows webhook: u Teamsu „Workflows” → „Post to a channel when a webhook request is received”, zatim kopiraj URL. Poruka je Adaptive Card.',
+  nk_discord_help:'Postavke servera → Integracije → Webhookovi → Novi webhook → Kopiraj URL.',
+  nk_ntfy_help:'Poslužitelj (ntfy.sh ili vlastiti) i tema. Za zaštićene teme potreban je pristupni token.',
+  nk_gotify_help:'Adresa tvog Gotify poslužitelja i token aplikacije napravljene na njemu.',
+  nk_pushover_help:'API token tvoje Pushover aplikacije i korisnički ili grupni ključ koji prima poruke.',
+  nk_webhook_help:'WRM šalje JSON POST-om (naslov, tekst i događaji). S tajnom zaglavlje X-WRM-Signature nosi sha256=HMAC-SHA256 tijela, pa primatelj može provjeriti poruku.',
+  nf_f_host:'SMTP poslužitelj', nf_f_port:'Port', nf_f_security:'Sigurnost', nf_f_username:'Korisničko ime', nf_f_password:'Lozinka', nf_f_from:'Pošiljatelj', nf_f_to:'Primatelji (odvojeni zarezom)',
+  nf_f_bot_token:'Token bota', nf_f_chat_id:'ID chata', nf_f_api_url:'Adresa API-ja', nf_f_webhook_url:'Webhook URL', nf_f_server:'Poslužitelj', nf_f_topic:'Tema',
+  nf_f_access_token:'Pristupni token', nf_f_app_token:'Token aplikacije', nf_f_user_key:'Korisnički ključ', nf_f_url:'URL', nf_f_hmac_secret:'Tajna za potpis (HMAC)',
+  nf_opt_starttls:'STARTTLS', nf_opt_tls:'TLS', nf_opt_none:'bez (nešifrirano)',
+  nf_ph_host:'smtp.example.com', nf_ph_from:'WRM <wrm@example.com>', nf_ph_to:'ops@example.com', nf_ph_chat_id:'-1001234567890', nf_ph_webhook_url:'https://…', nf_ph_topic:'wrm-alerts',
+  nf_ph_url:'https://example.com/hooks/wrm', nf_ph_user_key:'u…', nf_ph_username:'', nf_ph_server:'https://gotify.example.com',
+  ne_status_down:'Server je postao nedostupan', ne_status_up:'Server je ponovno dostupan', ne_credential_rotation_due:'Vrijeme je za rotaciju vjerodajnice', ne_credential_rotation_incomplete:'Rotacija vjerodajnice nije dovršena',
+  nf_user_help:'Poruke izvan preglednika: odaberi koje događaje primaš i kroz koji kanal. Događaji jednog kruga provjere stižu kao jedna poruka. Obavijesti u samom WRM-u i u pregledniku (Općenito → Obavijesti kad server postane nedostupan) ostaju kakve jesu.',
+  nf_disabled:'Administrator je isključio obavijesti.', nf_no_channels:'Još nema kanala za obavijesti: postavlja ih administrator.',
+  nf_no_channels_admin:'Još nema kanala za obavijesti: dodaj ga u Admin panel → Obavijesti.', nf_event:'Događaj',
+  nf_your_to:'tvoja adresa e-pošte', nf_your_chat_id:'tvoj Telegram ID chata', nf_your_topic:'tvoja ntfy tema', nf_your_user_key:'tvoj Pushover korisnički ključ', nf_addr_default:'prazno = primatelj kanala',
+  nf_quiet:'Tihi sati', nf_quiet_on:'Zadrži poruke tijekom tihih sati', nf_quiet_d:'šalju se zajedno kad tihi sati završe.', nf_quiet_from:'Od', nf_quiet_to:'Do', nf_tz:'Vremenska zona',
+  nf_pending:'{n} poruka čeka slanje', ev_notify:'Obavijesti',
+  pg_notify:'Obavijesti', p_notifications_enabled:'Obavijesti', p_notifications_enabled_d:'Slanje obavijesti kroz kanale ispod (e-pošta, chat, push, webhook).',
+  p_notify_min_interval_seconds:'Najkraći razmak (s)', p_notify_min_interval_seconds_d:'Najviše jedna poruka po korisniku i kanalu u tom vremenu; ono što stigne u međuvremenu šalje se zajedno u sljedećoj.',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5358,7 +5449,7 @@ function showAdminTab(tab) {
   const body = document.getElementById('admin-body');
   body.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
   ({overview: adminOverview, users: adminUsers, shares: adminShares, policies: () => adminPolicies('policies'),
-    voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit,
+    voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
     transfers: adminTransfers}[tab] || adminOverview)();
 }
@@ -5389,6 +5480,7 @@ async function adminOverview() {
       <div class="kv"><div class="k">${esc(t('database'))}</div><div class="v small">${esc(st.db_path)} (${fmtBytes(st.db_size)})</div></div>
       <div class="kv"><div class="k">${esc(t('encryption_key'))}</div><div class="v small">${esc(st.encryption_key)}</div></div>
       ${st.vault ? `<div class="kv"><div class="k">${esc(t('vault_title'))}</div><div class="v small">🔑 ${st.vault.keys} ${esc(t('vault_keys_lc'))} · 🚀 ${st.vault.deployments} ${esc(t('vault_deployments_lc'))} · 🗝 ${st.vault.credentials} ${esc(t('vault_creds_lc'))}${st.vault.rotation_due ? ' · ⏰ ' + st.vault.rotation_due + ' ' + esc(t('vc_due')) : ''}${st.vault.rotation_incomplete ? ' · ⚠ ' + st.vault.rotation_incomplete + ' ' + esc(t('vc_incomplete')) : ''}</div></div>` : ''}
+      ${st.notify ? `<div class="kv"><div class="k">${esc(t('adm_notify'))}</div><div class="v small">${st.notify.enabled} / ${st.notify.channels} ${esc(t('nf_channels_lc'))} · ${st.notify.subscribers} ${esc(t('nf_subscribers_lc'))}${st.notify.pending ? ' · ⏳ ' + st.notify.pending : ''}</div></div>` : ''}
       <div class="kv"><div class="k">ipmitool</div><div class="v small">${st.ipmitool ? '✅ ' + esc(st.ipmitool) : esc(t('bmc_no_ipmitool'))}</div></div>
       ${st.guacd ? `<div class="kv"><div class="k">${esc(t('desk_proxy'))}</div><div class="v small">${!st.guacd.enabled ? esc(t('off')) : st.guacd.ok ? '✅ guacd ' + esc(st.guacd.version || '') + ' · ' + esc(st.guacd.address) : '❌ ' + esc(st.guacd.address) + ' — ' + esc(t('desk_proxy_down'))}</div></div>` : ''}
     </div>
@@ -5655,7 +5747,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'notify.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -11413,12 +11505,159 @@ function applySettings() {
   });
 }
 
+// ── Notifications (v10.9): channels (admin) and subscriptions (user) ──
+const NOTIFY_ICONS = {email: '✉️', telegram: '✈️', slack: '💬', teams: '👥', discord: '🎮', ntfy: '🔔', gotify: '📣', pushover: '📲', webhook: '🪝'};
+let notifyAdminCache = null, notifyMine = null;
+
+function notifyKindLabel(k) { return (NOTIFY_ICONS[k] || '🔔') + ' ' + t('nk_' + k); }
+function notifyEventLabel(e) { return t('ne_' + e.replace(/\./g, '_')); }
+
+async function adminNotify() {
+  const body = document.getElementById('admin-body');
+  const [res, sres] = await Promise.all([fetch('/api/admin/notify/channels'), fetch('/api/admin/settings')]);
+  if (!res.ok) { body.innerHTML = `<div class="fm-error">${esc(await apiError(res))}</div>`; return; }
+  notifyAdminCache = await res.json();
+  if (sres.ok) adminSettingsCache = await sres.json();
+  const list = notifyAdminCache.channels || [];
+  body.innerHTML = `<div class="hint-box">${esc(t('nf_admin_help'))}</div>
+    <div class="policy-group">${['notifications_enabled', 'notify_min_interval_seconds'].map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
+    <div class="adm-toolbar" style="margin-top:10px;"><button class="btn-sm" onclick="openNotifyChannel(null)">＋ <span>${esc(t('nf_new'))}</span></button></div>
+    ${list.length ? `<div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>${esc(t('name_lbl'))}</th><th>${esc(t('nf_kind'))}</th><th>${esc(t('nf_subscribers'))}</th><th>${esc(t('nf_last_sent'))}</th><th></th></tr></thead><tbody>` +
+      list.map(c => `<tr><td><b>${esc(c.name)}</b> ${c.enabled ? '' : `<span class="pill">${esc(t('off'))}</span>`}${c.user_address ? ` <span class="pill info">${esc(t('nf_own_address'))}</span>` : ''}
+          ${c.last_error ? `<div class="sub" style="color:#fca5a5;">⚠ ${esc(c.last_error)}</div>` : ''}</td>
+        <td>${esc(notifyKindLabel(c.kind))}</td><td>${c.subscribers}</td><td>${esc(fmtTime(c.last_sent_at))}</td>
+        <td style="white-space:nowrap;"><button class="btn-sec btn-sm" onclick="adminNotifyTest(${c.id}, this)">📨 ${esc(t('nf_send_test'))}</button>
+          <button class="btn-sec btn-sm" onclick="openNotifyChannel(${c.id})">✏️</button></td></tr>`).join('') + '</tbody></table></div>'
+      : `<div class="chat-empty">${esc(t('nf_none'))}</div>`}`;
+}
+
+function openNotifyChannel(id) {
+  const c = id ? (notifyAdminCache.channels || []).find(x => x.id === id) : null;
+  document.getElementById('nc-id').value = c ? c.id : '';
+  document.getElementById('nc-title').textContent = c ? c.name : t('nf_new');
+  document.getElementById('nc-name').value = c ? c.name : '';
+  const kind = document.getElementById('nc-kind');
+  kind.innerHTML = notifyAdminCache.kinds.map(k => `<option value="${esc(k.kind)}">${esc(notifyKindLabel(k.kind))}</option>`).join('');
+  kind.value = c ? c.kind : 'email';
+  kind.disabled = !!c;
+  document.getElementById('nc-enabled').checked = c ? c.enabled : true;
+  document.getElementById('nc-ua').checked = c ? c.user_address : false;
+  document.getElementById('nc-del').style.display = c ? '' : 'none';
+  renderNotifyChannelFields(c);
+  document.getElementById('modal-notify-ch').classList.add('open');
+  setTimeout(() => document.getElementById('nc-name').focus(), 50);
+}
+
+function renderNotifyChannelFields(c) {
+  const kindName = document.getElementById('nc-kind').value;
+  const k = notifyAdminCache.kinds.find(x => x.kind === kindName);
+  if (!c || c.kind !== kindName) { const id = Number(document.getElementById('nc-id').value); c = (notifyAdminCache.channels || []).find(x => x.id === id && x.kind === kindName) || null; }
+  document.getElementById('nc-help').textContent = t('nk_' + kindName + '_help');
+  const cfg = (c && c.config) || {}, set = (c && c.secrets_set) || [];
+  document.getElementById('nc-fields').innerHTML = k.fields.map(f => {
+    const id = 'nc-f-' + f.name, v = cfg[f.name] || '';
+    let ctl;
+    if (f.kind === 'enum') ctl = `<select id="${id}">${f.enum.map(e => `<option value="${esc(e)}" ${e === (v || f.default) ? 'selected' : ''}>${esc(t('nf_opt_' + e))}</option>`).join('')}</select>`;
+    else if (f.secret) ctl = `<input type="password" id="${id}" autocomplete="new-password" placeholder="${set.includes(f.name) ? esc(t('nf_secret_kept')) : ''}">`;
+    else ctl = `<input type="${f.kind === 'int' ? 'number' : 'text'}" id="${id}" value="${esc(v)}" placeholder="${esc(f.default || ((LANGS.en['nf_ph_' + f.name] !== undefined) ? t('nf_ph_' + f.name) : ''))}">`;
+    return `<div class="field"><label>${esc(t('nf_f_' + f.name))}${f.required ? ' *' : ''}${f.secret ? ' 🔒' : ''}</label>${ctl}</div>`;
+  }).join('');
+  document.getElementById('nc-ua-row').style.display = k.address ? '' : 'none';
+  document.getElementById('nc-ua-d').textContent = k.address ? t('nf_user_address_d').replace('{field}', t('nf_f_' + k.address)) : '';
+}
+
+async function saveNotifyChannel() {
+  const id = Number(document.getElementById('nc-id').value) || 0;
+  const kind = document.getElementById('nc-kind').value;
+  const k = notifyAdminCache.kinds.find(x => x.kind === kind);
+  const config = {};
+  k.fields.forEach(f => { config[f.name] = document.getElementById('nc-f-' + f.name).value.trim(); });
+  const body = {name: document.getElementById('nc-name').value.trim(), kind, config,
+    enabled: document.getElementById('nc-enabled').checked, user_address: document.getElementById('nc-ua').checked};
+  const res = await fetch('/api/admin/notify/channels' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!res.ok) { showToast(await apiError(res), 'error', 6000); return; }
+  closeModal('modal-notify-ch');
+  showToast(t('saved'), 'success', 1500);
+  adminNotify();
+}
+
+async function deleteNotifyChannel(id) {
+  if (!id || !(await uiConfirm(t('nf_delete_q'), {okText: t('delete'), danger: true}))) return;
+  const res = await fetch('/api/admin/notify/channels/' + id, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  closeModal('modal-notify-ch');
+  adminNotify();
+}
+
+async function adminNotifyTest(id, btn) {
+  if (btn) btn.disabled = true;
+  const res = await fetch('/api/admin/notify/channels/' + id + '/test', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'});
+  if (btn) btn.disabled = false;
+  if (res.ok) showToast(t('nf_test_sent'), 'success', 3000);
+  else showToast(t('nf_test_failed') + ': ' + await apiError(res), 'error', 9000);
+  adminNotify();
+}
+
+async function renderNotifyPane() {
+  const pane = document.getElementById('notify-pane');
+  pane.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
+  const res = await fetch('/api/notify');
+  if (!res.ok) { pane.innerHTML = `<div class="fm-error">${esc(await apiError(res))}</div>`; return; }
+  const d = notifyMine = await res.json();
+  const head = `<div class="hint-box">${esc(t('nf_user_help'))}</div>`;
+  if (!d.enabled) { pane.innerHTML = head + `<div class="hint-box warn">${esc(t('nf_disabled'))}</div>`; return; }
+  if (!d.channels.length) { pane.innerHTML = head + `<div class="hint-box">${esc(t(currentUser && currentUser.is_admin ? 'nf_no_channels_admin' : 'nf_no_channels'))}</div>`; return; }
+  const sub = (e, c) => d.subscriptions.some(s => s.event === e && s.channel_id === c);
+  const addrOf = c => (d.subscriptions.find(s => s.channel_id === c && s.address) || {}).address || '';
+  const p = d.prefs || {};
+  pane.innerHTML = head + `<div style="overflow-x:auto;"><table class="admin-table nf-matrix"><thead><tr><th>${esc(t('nf_event'))}</th>` +
+    d.channels.map(c => `<th style="text-align:center;">${esc((NOTIFY_ICONS[c.kind] || '') + ' ' + c.name)}</th>`).join('') + `</tr></thead><tbody>` +
+    d.events.map(e => `<tr><td>${esc(notifyEventLabel(e))}</td>` + d.channels.map(c => `<td style="text-align:center;"><input type="checkbox" class="nf-sub" data-ev="${esc(e)}" data-ch="${c.id}" ${sub(e, c.id) ? 'checked' : ''}></td>`).join('') + '</tr>').join('') +
+    `<tr><td></td>` + d.channels.map(c => `<td style="text-align:center;"><button class="btn-sec btn-sm" onclick="testMyNotify(${c.id}, this)">📨 ${esc(t('nf_send_test'))}</button></td>`).join('') + `</tr></tbody></table></div>` +
+    d.channels.filter(c => c.address_field).map(c => `<div class="field" style="margin-top:8px;"><label>${esc(c.name)}: ${esc(t('nf_your_' + c.address_field))}</label>
+      <input type="text" class="nf-addr" data-ch="${c.id}" value="${esc(addrOf(c.id))}" placeholder="${esc(t('nf_addr_default'))}"></div>`).join('') +
+    `<div class="adm-h">${esc(t('nf_quiet'))}</div>
+    <label class="check-row"><input type="checkbox" id="nf-quiet" ${p.quiet_enabled ? 'checked' : ''}> <span><b>${esc(t('nf_quiet_on'))}</b> — <span>${esc(t('nf_quiet_d'))}</span></span></label>
+    <div class="field-row"><div class="field"><label>${esc(t('nf_quiet_from'))}</label><input type="time" id="nf-qs" value="${esc(p.quiet_start || '22:00')}"></div>
+      <div class="field"><label>${esc(t('nf_quiet_to'))}</label><input type="time" id="nf-qe" value="${esc(p.quiet_end || '07:00')}"></div>
+      <div class="field"><label>${esc(t('nf_tz'))}</label><input type="text" id="nf-tz" value="${esc(browserTZ())}" readonly></div></div>
+    ${d.pending ? `<div class="muted-text">⏳ ${esc(t('nf_pending').replace('{n}', d.pending))}</div>` : ''}
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;"><button onclick="saveNotifyPane()">${esc(t('save'))}</button></div>`;
+}
+
+function browserTZ() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(_) { return 'UTC'; } }
+
+function collectNotifySubs() {
+  const addr = {};
+  document.querySelectorAll('#notify-pane .nf-addr').forEach(i => { addr[i.dataset.ch] = i.value.trim(); });
+  return [...document.querySelectorAll('#notify-pane .nf-sub')].filter(c => c.checked)
+    .map(c => ({event: c.dataset.ev, channel_id: Number(c.dataset.ch), address: addr[c.dataset.ch] || ''}));
+}
+
+async function saveNotifyPane() {
+  const body = {subscriptions: collectNotifySubs(), prefs: {quiet_enabled: document.getElementById('nf-quiet').checked,
+    quiet_start: document.getElementById('nf-qs').value || '22:00', quiet_end: document.getElementById('nf-qe').value || '07:00', tz: browserTZ(), lang: currentLang}};
+  const res = await fetch('/api/notify', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!res.ok) { showToast(await apiError(res), 'error', 6000); return; }
+  showToast(t('saved'), 'success', 1500);
+}
+
+async function testMyNotify(id, btn) {
+  const a = document.querySelector(`#notify-pane .nf-addr[data-ch="${id}"]`);
+  btn.disabled = true;
+  const res = await fetch('/api/notify/test', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({channel_id: id, address: a ? a.value.trim() : ''})});
+  btn.disabled = false;
+  if (res.ok) showToast(t('nf_test_sent'), 'success', 3000);
+  else showToast(t('nf_test_failed') + ': ' + await apiError(res), 'error', 9000);
+}
+
 function openSettings(tab) {
   document.getElementById('modal-settings').classList.add('open');
   const signedIn = !!currentUser;
   document.getElementById('st-security-btn').style.display = signedIn ? '' : 'none';
   document.getElementById('st-data-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-history-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
+  document.getElementById('st-notify-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   showSettingsTab(tab || 'st-general');
   updateInstallRow();
 }
@@ -11428,6 +11667,7 @@ function showSettingsTab(id) {
   document.querySelectorAll('#modal-settings .tab-pane').forEach(p => p.classList.toggle('active', p.id === id));
   if (id === 'st-security') renderSecurityPane();
   if (id === 'st-audio') renderAudioPane();
+  if (id === 'st-notify') renderNotifyPane();
   if (id === 'st-history') renderTermSessions('history-pane', true);
 }
 
