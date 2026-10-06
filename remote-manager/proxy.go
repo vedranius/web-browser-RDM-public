@@ -300,6 +300,24 @@ func validateProxyChoice(userID, connID int, c *Connection) error {
 	return nil
 }
 
+// validateRoute checks the route a connection would use (its own choices or its folder's
+// defaults). c holds the stored choice and is not changed, except SERIAL dropping a proxy.
+func validateRoute(userID, connID int, c *Connection) error {
+	if c.Protocol == "SERIAL" {
+		c.ProxyID = nil
+		return nil
+	}
+	eff := *c
+	eff.ID, eff.UserID = connID, userID
+	applyFolderDefaults(&eff)
+	if eff.jumpInherited {
+		if _, err := jumpChain(eff); err != nil {
+			return fmt.Errorf("the folder's jump host: %v", err)
+		}
+	}
+	return validateProxyChoice(userID, connID, &eff)
+}
+
 // ─── DIALING ─────────────────────────────────────────
 
 func directDial(network, addr string) (net.Conn, error) {
@@ -1010,7 +1028,7 @@ func saveProxy(w http.ResponseWriter, r *http.Request, userID int, cur *proxyDef
 // restartProxyTunnels restarts running tunnels of connections that use a proxy (directly
 // or through their jump hosts).
 func restartProxyTunnels(proxyID int) {
-	rows, err := db.Query(`SELECT id FROM connections WHERE proxy_id=?`, proxyID)
+	rows, err := db.Query(`SELECT id FROM connections WHERE proxy_id=? OR (proxy_id IS NULL AND folder_id IN (SELECT id FROM folders WHERE proxy_id=?))`, proxyID, proxyID)
 	if err != nil {
 		return
 	}

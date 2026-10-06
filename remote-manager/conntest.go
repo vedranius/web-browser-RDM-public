@@ -54,6 +54,10 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.UserID = userID
+	if c.FolderID != nil && !userOwnsFolder(*c.FolderID, userID) {
+		c.FolderID = nil
+	}
+	applyFolderDefaults(&c) // test the route the connection would use
 	c.Host = ensurePort(c.Host, c.Protocol)
 	resolveConnectionAuth(&c)
 	if c.authErr != "" {
