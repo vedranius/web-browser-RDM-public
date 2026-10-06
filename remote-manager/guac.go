@@ -547,20 +547,15 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	port, _ := strconv.Atoi(portS)
 	var tunnelKey string
-	if c.JumpID != nil && *c.JumpID > 0 {
-		chain, err := jumpChain(c)
-		if err != nil || len(chain) == 0 {
-			ta.failed(fmt.Sprint(err))
-			fail("Jump host: "+fmt.Sprint(err), 519)
-			return
-		}
+	if needsRoute(c) {
+		// guacd connects to a local relay that goes through the jump hosts and / or the proxy.
 		tunnelKey = "g" + ta.UID
 		def := tunnelDef{ConnID: c.ID, UserID: c.UserID, Name: c.Name, Kind: "local", BindHost: firstNonEmpty(getSetting("desktop_tunnel_bind"), "127.0.0.1"),
 			TargetHost: host, TargetPort: port, StartMode: "manual"}
-		t, err := tunnelMgr.startEphemeral(tunnelKey, def, chain[len(chain)-1], c, c.UserID, "desktop", r)
+		t, err := tunnelMgr.startEphemeral(tunnelKey, def, c, c.UserID, "desktop", r)
 		if err != nil {
 			ta.failed(err.Error())
-			fail("Jump host "+route+": "+err.Error(), 519)
+			fail("Route "+route+": "+err.Error(), 519)
 			return
 		}
 		defer tunnelMgr.stop(tunnelKey, 0, "desktop session ended")

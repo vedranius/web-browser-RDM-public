@@ -128,7 +128,7 @@ func apiAdminStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("WRM_ALLOW_ANY_ORIGIN") == "1" {
 		warnings = append(warnings, "any_origin")
 	}
-	vault := mergeCounts(keysSummary(), credentialsSummary())
+	vault := mergeCounts(mergeCounts(keysSummary(), credentialsSummary()), proxiesSummary())
 	if vault["rotation_incomplete"] > 0 {
 		warnings = append(warnings, "credential_rotation_incomplete")
 	}

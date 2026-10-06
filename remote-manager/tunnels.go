@@ -221,6 +221,7 @@ type tunnelRun struct {
 	startedBy   string
 	reason      string // manual | connect | always | web
 	ephemeral   bool
+	useRoute    bool       // dial the target over shown's route (jump hosts and / or proxy), not over conn's SSH
 	forConn     int        // web connection a temporary tunnel was opened for
 	shown       Connection // connection shown in lists (the web connection, not the jump host it runs over)
 	idleLimit   time.Duration
@@ -233,6 +234,7 @@ type tunnelRun struct {
 	boundAddr string
 	ln        net.Listener
 	client    *ssh.Client
+	rt        *targetRoute // with useRoute
 	stopCh    chan struct{}
 	stopped   bool
 
@@ -248,6 +250,9 @@ type tunnelManager struct {
 }
 
 var tunnelMgr = &tunnelManager{runs: map[string]*tunnelRun{}, holds: map[int]int{}}
+
+// proxyTunnelIdle: a tunnel started for a proxy stops after this time without traffic.
+var proxyTunnelIdle = 30 * time.Minute
 
 // tunnelConnectGrace: "connect" tunnels stop this long after the last terminal closed.
 var tunnelConnectGrace = 15 * time.Second
@@ -322,6 +327,10 @@ func (m *tunnelManager) start(key string, def tunnelDef, c Connection, startedBy
 	if mins := settingInt("tunnel_idle_minutes"); mins > 0 && reason == "manual" {
 		t.idleLimit = time.Duration(mins) * time.Minute
 	}
+	// A SOCKS tunnel started for a "WRM SOCKS tunnel" proxy stops when it is no longer used.
+	if reason == "proxy" && def.StartMode != "always" {
+		t.idleLimit = proxyTunnelIdle
+	}
 	t.touch()
 	m.runs[key] = t
 	m.mu.Unlock()
@@ -370,7 +379,7 @@ func (t *tunnelRun) open() error {
 		}
 		ln = l
 	}
-	client, err := dialSSH(t.conn, nil)
+	client, rt, err := t.connect()
 	if err != nil {
 		if ln != nil {
 			ln.Close()
@@ -387,7 +396,7 @@ func (t *tunnelRun) open() error {
 		ln = l
 	}
 	t.mu.Lock()
-	t.client, t.ln = client, ln
+	t.client, t.rt, t.ln = client, rt, ln
 	t.boundAddr = ln.Addr().String()
 	if t.def.Kind == "remote" {
 		// The server reports the address it listens on; keep the configured host.
@@ -444,6 +453,15 @@ func (t *tunnelRun) handle(in net.Conn) {
 
 // dialRemote opens a connection from the SSH server to addr.
 func (t *tunnelRun) dialRemote(addr string) (net.Conn, error) {
+	t.mu.Lock()
+	rt := t.rt
+	t.mu.Unlock()
+	if t.useRoute {
+		if rt == nil {
+			return nil, fmt.Errorf("the connection is not ready")
+		}
+		return rt.Dial("tcp", addr)
+	}
 	cl := t.currentClient()
 	if cl == nil {
 		return nil, fmt.Errorf("SSH connection is not ready")
@@ -600,6 +618,9 @@ func (t *tunnelRun) supervise() {
 			return
 		}
 		cl := t.currentClient()
+		if t.useRoute && cl == nil {
+			continue // proxy only: nothing to keep alive, every connection dials anew
+		}
 		if cl != nil && sshAlive(cl, 15*time.Second) {
 			continue
 		}
@@ -614,6 +635,7 @@ func (t *tunnelRun) reconnect() {
 		t.client.Close()
 		t.client = nil
 	}
+	t.rt = nil
 	if t.def.Kind == "remote" && t.ln != nil {
 		t.ln.Close() // a remote listener dies with its SSH connection
 		t.ln = nil
@@ -624,7 +646,7 @@ func (t *tunnelRun) reconnect() {
 		if t.isStopped() {
 			return
 		}
-		client, err := dialSSH(t.conn, nil)
+		client, rt, err := t.connect()
 		if err == nil && t.def.Kind == "remote" {
 			var ln net.Listener
 			ln, err = client.Listen("tcp", net.JoinHostPort(t.def.BindHost, strconv.Itoa(t.def.BindPort)))
@@ -644,7 +666,7 @@ func (t *tunnelRun) reconnect() {
 				client.Close()
 				return
 			}
-			t.client = client
+			t.client, t.rt = client, rt
 			t.mu.Unlock()
 			t.setState("up", "")
 			auditLogRef(nil, t.startedByID, t.startedBy, "tunnel.reconnected", t.conn.Name, t.auditDetails(), t.auditRef())
@@ -665,6 +687,20 @@ func (t *tunnelRun) reconnect() {
 		case <-time.After(wait):
 		}
 	}
+}
+
+// connect opens the SSH connection of the tunnel, or for useRoute the route to the target
+// (whose SSH client, if any, is the last jump host).
+func (t *tunnelRun) connect() (*ssh.Client, *targetRoute, error) {
+	if t.useRoute {
+		rt, err := openTargetRoute(t.shown)
+		if err != nil {
+			return nil, nil, err
+		}
+		return rt.via, rt, nil
+	}
+	cl, err := dialSSH(t.conn, nil)
+	return cl, nil, err
 }
 
 func (t *tunnelRun) close() {
@@ -1113,7 +1149,7 @@ func openWebHandler(w http.ResponseWriter, r *http.Request, userID int, c Connec
 		jsonError(w, "Invalid host", 400)
 		return
 	}
-	if c.JumpID == nil || *c.JumpID <= 0 {
+	if !needsRoute(c) {
 		auditLogRef(r, userID, usernameOf(userID), "web.open", c.Name, map[string]string{"url": scheme + "://" + net.JoinHostPort(host, port) + c.WebPath}, auditRef{ConnID: c.ID})
 		jsonOK(w, map[string]interface{}{"url": scheme + "://" + net.JoinHostPort(host, port) + c.WebPath, "direct": true})
 		return
@@ -1122,19 +1158,13 @@ func openWebHandler(w http.ResponseWriter, r *http.Request, userID int, c Connec
 		jsonError(w, err.Error(), 403)
 		return
 	}
-	chain, err := jumpChain(c)
-	if err != nil || len(chain) == 0 {
-		jsonError(w, "Jump host: "+fmt.Sprint(err), 400)
-		return
-	}
-	via := chain[len(chain)-1] // the tunnel runs over the last jump host, to host:port
 	pn, _ := strconv.Atoi(port)
 	key := "w" + strconv.Itoa(c.ID) + "u" + strconv.Itoa(userID)
 	t := tunnelMgr.get(key)
 	if t == nil {
 		def := tunnelDef{ConnID: c.ID, UserID: userID, Name: c.Name, Kind: "local", BindHost: "127.0.0.1", BindPort: 0,
 			TargetHost: host, TargetPort: pn, OpenScheme: scheme, OpenPath: c.WebPath, StartMode: "manual"}
-		t, err = tunnelMgr.startEphemeral(key, def, via, c, userID, "web", r)
+		t, err = tunnelMgr.startEphemeral(key, def, c, userID, "web", r)
 		if err != nil {
 			jsonError(w, err.Error(), 502)
 			return
@@ -1146,15 +1176,22 @@ func openWebHandler(w http.ResponseWriter, r *http.Request, userID int, c Connec
 	jsonOK(w, map[string]interface{}{"url": url, "direct": false, "listen": t.view().Listen, "route": jumpPath(c), "local_only": true})
 }
 
-// startEphemeral starts a temporary local tunnel over via for the web connection c.
-func (m *tunnelManager) startEphemeral(key string, def tunnelDef, via, c Connection, userID int, reason string, r *http.Request) (*tunnelRun, error) {
+// startEphemeral starts a temporary local tunnel to c's host:port over c's route (jump
+// hosts and / or proxy), for web interfaces and remote desktops.
+func (m *tunnelManager) startEphemeral(key string, def tunnelDef, c Connection, userID int, reason string, r *http.Request) (*tunnelRun, error) {
+	via := c // shown as the connection it runs over: the last jump host, or c itself
+	if chain, err := jumpChain(c); err != nil {
+		return nil, err
+	} else if len(chain) > 0 {
+		via = chain[len(chain)-1]
+	}
 	m.mu.Lock()
 	if old := m.runs[key]; old != nil {
 		m.mu.Unlock()
 		return old, nil
 	}
 	t := &tunnelRun{key: key, def: def, conn: via, route: jumpPath(c), ownerID: userID, startedByID: userID, startedBy: usernameOf(userID),
-		reason: reason, ephemeral: true, forConn: c.ID, shown: c, idleLimit: 30 * time.Minute, startedAt: time.Now(), state: "starting", stopCh: make(chan struct{}), ip: clientIP(r)}
+		reason: reason, ephemeral: true, useRoute: true, forConn: c.ID, shown: c, idleLimit: 30 * time.Minute, startedAt: time.Now(), state: "starting", stopCh: make(chan struct{}), ip: clientIP(r)}
 	t.def.Name = c.Name
 	t.touch()
 	m.runs[key] = t
@@ -1175,26 +1212,24 @@ func (m *tunnelManager) startEphemeral(key string, def tunnelDef, via, c Connect
 // (through the jump hosts when configured).
 func testWebReachable(c Connection) error {
 	addr := ensurePort(c.Host, c.Protocol)
-	if c.JumpID == nil || *c.JumpID <= 0 {
+	if !needsRoute(c) {
 		conn, err := net.DialTimeout("tcp", addr, 10*time.Second)
 		if err != nil {
 			return err
 		}
 		return conn.Close()
 	}
-	chain, err := jumpChain(c)
+	rt, err := openTargetRoute(c)
 	if err != nil {
 		return err
 	}
-	cl, err := dialSSH(chain[len(chain)-1], nil)
+	defer rt.Close()
+	conn, err := rt.Dial("tcp", addr)
 	if err != nil {
-		return err
-	}
-	defer cl.Close()
-	t := &tunnelRun{client: cl}
-	conn, err := t.dialRemote(addr)
-	if err != nil {
-		return fmt.Errorf("%s cannot reach %s: %v", chain[len(chain)-1].Name, addr, err)
+		if _, ok := err.(*proxyError); ok {
+			return err
+		}
+		return fmt.Errorf("%s cannot reach %s: %v", jumpPath(c), addr, err)
 	}
 	return conn.Close()
 }

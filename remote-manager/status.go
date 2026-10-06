@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -93,15 +92,17 @@ type statusTarget struct {
 	addr  string
 	proto string
 	jump  int // check through this jump connection (0 = directly)
+	proxy int // and then through this proxy (0 = none)
+	user  int // owner of the connection (proxy access)
 }
 
 type monConn struct {
-	id, userID, jump  int
-	name, proto, host string
+	id, userID, jump, proxy int
+	name, proto, host       string
 }
 
 func loadMonitoredConns() []monConn {
-	rows, err := db.Query(`SELECT id, COALESCE(user_id,0), name, protocol, host, COALESCE(jump_conn_id,0) FROM connections WHERE COALESCE(monitor,1)=1 AND protocol<>'SERIAL'`)
+	rows, err := db.Query(`SELECT id, COALESCE(user_id,0), name, protocol, host, COALESCE(jump_conn_id,0), COALESCE(proxy_id,0) FROM connections WHERE COALESCE(monitor,1)=1 AND protocol<>'SERIAL'`)
 	if err != nil {
 		return nil
 	}
@@ -109,7 +110,7 @@ func loadMonitoredConns() []monConn {
 	var out []monConn
 	for rows.Next() {
 		var c monConn
-		if rows.Scan(&c.id, &c.userID, &c.name, &c.proto, &c.host, &c.jump) == nil && c.host != "" {
+		if rows.Scan(&c.id, &c.userID, &c.name, &c.proto, &c.host, &c.jump, &c.proxy) == nil && c.host != "" {
 			out = append(out, c)
 		}
 	}
@@ -118,13 +119,20 @@ func loadMonitoredConns() []monConn {
 
 func statusKey(c monConn, throughJumps bool) (statusTarget, bool) {
 	addr := ensurePort(c.host, c.proto)
+	px := ""
+	if c.proxy > 0 {
+		px = "px" + strconv.Itoa(c.proxy) + "|"
+	}
 	if c.jump <= 0 {
+		if px != "" {
+			return statusTarget{key: px + addr, addr: addr, proto: c.proto, proxy: c.proxy, user: c.userID}, true
+		}
 		return statusTarget{key: "tcp|" + addr, addr: addr, proto: c.proto}, true
 	}
 	if !throughJumps {
 		return statusTarget{}, false
 	}
-	return statusTarget{key: "via" + strconv.Itoa(c.jump) + "|" + addr, addr: addr, proto: c.proto, jump: c.jump}, true
+	return statusTarget{key: "via" + strconv.Itoa(c.jump) + "|" + px + addr, addr: addr, proto: c.proto, jump: c.jump, proxy: c.proxy, user: c.userID}, true
 }
 
 // round checks every monitored connection once.
@@ -242,7 +250,7 @@ func (m *statusMonitor) probeAll(targets map[string]statusTarget) map[string]*ho
 		go func() {
 			defer wg.Done()
 			for t := range direct {
-				put(t.key, probeWithRetry(t, net.Dial))
+				put(t.key, probeWithRetry(t, statusDialer(t, directDial, false)))
 			}
 		}()
 	}
@@ -283,7 +291,7 @@ func probeViaJump(jumpID int, list []statusTarget) map[string]*hostStatus {
 	}
 	defer cl.Close()
 	for _, t := range list {
-		r := probeWithRetry(t, cl.Dial)
+		r := probeWithRetry(t, statusDialer(t, cl.Dial, true))
 		r.Via = jc.Name
 		out[t.key] = r
 	}
@@ -291,6 +299,21 @@ func probeViaJump(jumpID int, list []statusTarget) map[string]*hostStatus {
 }
 
 type dialFunc func(network, addr string) (net.Conn, error)
+
+// statusDialer reaches a target through its proxy when it has one.
+func statusDialer(t statusTarget, base dialFunc, behindJump bool) dialFunc {
+	if t.proxy <= 0 {
+		return base
+	}
+	px := t.proxy
+	rp, err := proxyOf(Connection{UserID: t.user, ProxyID: &px, Name: t.addr}, behindJump)
+	return func(network, addr string) (net.Conn, error) {
+		if err != nil {
+			return nil, err
+		}
+		return rp.dial(base, addr)
+	}
+}
 
 func probeWithRetry(t statusTarget, dial dialFunc) *hostStatus {
 	r := probe(t, dial)
@@ -352,6 +375,9 @@ func probe(t statusTarget, dial dialFunc) *hostStatus {
 }
 
 func shortNetError(err error) string {
+	if pe, ok := err.(*proxyError); ok {
+		return truncateStr(pe.Error(), 200) // says whether the proxy or the target failed
+	}
 	s := err.Error()
 	switch {
 	case strings.Contains(s, "connection refused"):
@@ -422,16 +448,13 @@ func (m *statusMonitor) checkNow(cs []Connection) map[string]hostStatus {
 			addr := ensurePort(c.Host, c.Protocol)
 			t := statusTarget{addr: addr, proto: c.Protocol}
 			var r *hostStatus
-			if c.JumpID != nil && *c.JumpID > 0 {
-				chain, err := jumpChain(c)
-				if err != nil || len(chain) == 0 {
-					r = &hostStatus{State: "unknown", Error: fmt.Sprint(err)}
-				} else if cl, err := dialSSH(chain[len(chain)-1], nil); err != nil {
-					r = &hostStatus{State: "unknown", Via: jumpPath(c), ViaState: "down", Error: truncateStr("jump host: "+err.Error(), 200)}
+			if needsRoute(c) {
+				if rt, err := openTargetRoute(c); err != nil {
+					r = &hostStatus{State: "unknown", Via: jumpPath(c), ViaState: "down", Error: truncateStr(err.Error(), 200)}
 				} else {
-					r = probe(t, cl.Dial)
+					r = probe(t, rt.Dial)
 					r.Via = jumpPath(c)
-					cl.Close()
+					rt.Close()
 				}
 			} else {
 				r = probeWithRetry(t, net.Dial)
@@ -447,7 +470,7 @@ func (m *statusMonitor) checkNow(cs []Connection) map[string]hostStatus {
 	m.mu.Lock()
 	for _, c := range cs {
 		r, ok := out[strconv.Itoa(c.ID)]
-		if !ok || (c.JumpID != nil && *c.JumpID > 0) {
+		if !ok || needsRoute(c) {
 			continue
 		}
 		key := "tcp|" + ensurePort(c.Host, c.Protocol)
