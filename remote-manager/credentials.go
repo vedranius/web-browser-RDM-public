@@ -636,6 +636,9 @@ func runRotation(j *rotationJob, cr credential, newPW string, audit func(string,
 			j.Message = msg
 		})
 		hub.sendTo(j.userID, []byte(`{"type":"credentials_changed"}`))
+		if j.Mode == "rotate" {
+			go checkCredentialReminders() // an incomplete rotation is reported right away
+		}
 	}
 	// 1. Pre-flight: log in everywhere with the current password.
 	var wg sync.WaitGroup

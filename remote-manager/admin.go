@@ -144,6 +144,7 @@ func apiAdminStatusHandler(w http.ResponseWriter, r *http.Request) {
 		"tunnels": tunnelMgr.runsWhere(func(*tunnelRun) bool { return true }),
 		"guacd":   guacdStatus(),
 		"vault":   vault,
+		"notify":  notifySummary(),
 		"ipmitool": func() string {
 			if p, err := exec.LookPath(ipmitoolPath); err == nil {
 				return p

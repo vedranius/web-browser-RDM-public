@@ -49,12 +49,13 @@ type statusMonitor struct {
 	lastConn map[int]string         // last reported state per connection (change detection)
 	owners   map[int]int            // connection id → owner
 	names    map[int]string         // connection id → name (for "via …")
+	downAt   map[int]time.Time      // when a connection went down (for "up again after …")
 	trigger  chan struct{}
 	running  sync.Mutex // one round at a time
 }
 
 var statusMon = &statusMonitor{hosts: map[string]*hostStatus{}, conns: map[int]string{}, jumpOf: map[int]int{},
-	lastConn: map[int]string{}, owners: map[int]int{}, names: map[int]string{}, trigger: make(chan struct{}, 1)}
+	lastConn: map[int]string{}, owners: map[int]int{}, names: map[int]string{}, downAt: map[int]time.Time{}, trigger: make(chan struct{}, 1)}
 
 const (
 	statusDialTimeout   = 4 * time.Second
@@ -133,10 +134,11 @@ func (m *statusMonitor) round() {
 	through := settingBool("status_jump_checks")
 	conns := loadMonitoredConns()
 	targets := map[string]statusTarget{}
-	connKeys, jumpOf, owners, names := map[int]string{}, map[int]int{}, map[int]int{}, map[int]string{}
+	connKeys, jumpOf, owners, names, hosts := map[int]string{}, map[int]int{}, map[int]int{}, map[int]string{}, map[int]string{}
 	for _, c := range conns {
 		owners[c.id] = c.userID
 		names[c.id] = c.name
+		hosts[c.id] = c.host
 		if t, ok := statusKey(c, through); ok {
 			targets[t.key] = t
 			connKeys[c.id] = t.key
@@ -171,11 +173,33 @@ func (m *statusMonitor) round() {
 	}
 	m.conns, m.jumpOf, m.owners, m.names = connKeys, jumpOf, owners, names
 	changedUsers := map[int]bool{}
+	type transition struct {
+		uid, id        int
+		state, errText string
+		downFor        time.Duration
+	}
+	var transitions []transition
 	for id, uid := range owners {
-		st := m.connStatusLocked(id, 0).State
-		if m.lastConn[id] != st {
-			if _, seen := m.lastConn[id]; seen {
+		cs := m.connStatusLocked(id, 0)
+		st := cs.State
+		prev, seen := m.lastConn[id]
+		if prev != st {
+			if seen {
 				changedUsers[uid] = true
+				// Went down (from up, or from unknown behind a jump host) or came back.
+				if st == "down" && prev != "down" {
+					m.downAt[id] = time.Now()
+					transitions = append(transitions, transition{uid: uid, id: id, state: "down", errText: cs.Error})
+				} else if st == "up" && prev == "down" {
+					var d time.Duration
+					if t, ok := m.downAt[id]; ok {
+						d = time.Since(t)
+					}
+					transitions = append(transitions, transition{uid: uid, id: id, state: "up", downFor: d})
+				}
+			}
+			if st != "down" {
+				delete(m.downAt, id)
 			}
 			m.lastConn[id] = st
 		}
@@ -183,11 +207,15 @@ func (m *statusMonitor) round() {
 	for id := range m.lastConn {
 		if _, ok := owners[id]; !ok {
 			delete(m.lastConn, id)
+			delete(m.downAt, id)
 		}
 	}
 	m.mu.Unlock()
 	for uid := range changedUsers {
 		hub.sendTo(uid, []byte(`{"type":"status_changed"}`))
+	}
+	for _, tr := range transitions {
+		notifyStatusChange(tr.uid, names[tr.id], hosts[tr.id], tr.state, tr.errText, tr.downFor)
 	}
 }
 
