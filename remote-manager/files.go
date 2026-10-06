@@ -19,7 +19,6 @@ import (
 
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 )
 
 // ─── FILE MANAGER ─────────────────────────────────────
@@ -80,24 +79,18 @@ func dialFTP(c Connection) (*ftp.ServerConn, func(), error) {
 	if strings.ToUpper(c.Protocol) == "FTPS" {
 		opts = append(opts, ftp.DialWithExplicitTLS(ftpsTLSConfig(c)))
 	}
-	var via *ssh.Client
-	if c.JumpID != nil && *c.JumpID > 0 {
-		chain, err := jumpChain(c)
-		if err != nil {
-			return nil, nil, err
-		}
-		if via, err = dialSSH(chain[len(chain)-1], nil); err != nil {
+	var via *targetRoute
+	if needsRoute(c) {
+		// Control and data connections go through the jump hosts and / or the proxy.
+		var err error
+		if via, err = openTargetRoute(c); err != nil {
 			return nil, nil, err
 		}
 		opts = append(opts, ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
 			return via.Dial("tcp", address)
 		}))
 	}
-	closeVia := func() {
-		if via != nil {
-			via.Close()
-		}
-	}
+	closeVia := func() { via.Close() }
 	if c.authErr != "" {
 		closeVia()
 		return nil, nil, errors.New(c.authErr)

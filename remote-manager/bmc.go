@@ -113,8 +113,11 @@ func saveBMC(c Connection, in *bmcConfig, userID int) error {
 			return fmt.Errorf("BMC: %v", err)
 		}
 	}
-	if in.ViaJump && (c.JumpID == nil || *c.JumpID <= 0) {
+	if in.ViaJump && !needsRoute(c) {
 		in.ViaJump = false
+	}
+	if err := ipmiProxyRefused(c, *in); err != nil {
+		return err
 	}
 	cur, _ := loadBMC(c.ID)
 	pw := in.Password
@@ -128,6 +131,23 @@ func saveBMC(c Connection, in *bmcConfig, userID int) error {
 	store.Password, store.ClearPass, store.HasPassword, store.CredName = encryptValue(pw), false, false, ""
 	_, err := db.Exec(`UPDATE connections SET bmc=? WHERE id=?`, string(jsonMarshal(store)), c.ID)
 	return err
+}
+
+// ipmiProxyRefused: IPMI and Serial-over-LAN use UDP, which a SOCKS / HTTP proxy cannot carry.
+func ipmiProxyRefused(c Connection, b bmcConfig) error {
+	if b.Type == "ipmi" && b.ViaJump && c.ProxyID != nil && *c.ProxyID > 0 {
+		return fmt.Errorf("IPMI and Serial-over-LAN use UDP: they cannot go through the proxy of this connection. Use Redfish, or turn off \"through the jump host\" (ipmitool then runs on the WRM server)")
+	}
+	return nil
+}
+
+// bmcProxy is the proxy the BMC is reached through (the connection's, when "through the
+// route of this connection" is on).
+func bmcProxy(c Connection, b bmcConfig) *int {
+	if b.ViaJump {
+		return c.ProxyID
+	}
+	return nil
 }
 
 func bmcJump(c Connection, b bmcConfig) *int {
@@ -273,7 +293,7 @@ type redfishClient struct {
 	hc   *http.Client
 	user string
 	pass string
-	hop  *ssh.Client
+	hop  *targetRoute
 }
 
 func newRedfish(c Connection, b bmcConfig) (*redfishClient, error) {
@@ -285,9 +305,12 @@ func newRedfish(c Connection, b bmcConfig) (*redfishClient, error) {
 	if _, _, err := net.SplitHostPort(hostport); err != nil {
 		hostport = net.JoinHostPort(strings.Trim(hostport, "[]"), "443")
 	}
-	hop, err := bmcHop(c, b)
-	if err != nil {
-		return nil, err
+	var hop *targetRoute
+	if b.ViaJump && needsRoute(c) {
+		// Redfish (HTTPS, TCP) goes through the jump hosts and the proxy of the connection.
+		if hop, err = openTargetRoute(c); err != nil {
+			return nil, err
+		}
 	}
 	tr := &http.Transport{TLSClientConfig: pinnedTLSConfig("bmc://", hostport), TLSHandshakeTimeout: 15 * time.Second,
 		ResponseHeaderTimeout: 60 * time.Second, MaxIdleConns: 2, DisableCompression: false}
@@ -534,6 +557,9 @@ func runIPMI(c Connection, b bmcConfig, args ...string) (string, error) {
 		return "", err
 	}
 	full := append(ipmiArgs(b, user), args...)
+	if err := ipmiProxyRefused(c, b); err != nil {
+		return "", err
+	}
 	hop, err := bmcHop(c, b)
 	if err != nil {
 		return "", err

@@ -1707,6 +1707,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <select id="m-jump"></select>
       <div class="muted-text" style="margin-top:4px;" id="m-jump-help" data-i18n="jump_host_help">Reach this server through another saved SSH connection (bastion / jump host), like ssh -J. That connection can have its own jump host (chains).</div>
     </div>
+    <div class="field" id="m-proxy-field">
+      <label data-i18n="proxy_lbl">Proxy</label>
+      <select id="m-proxy" onchange="onProxyPick()"></select>
+      <div class="muted-text" style="margin-top:4px;line-height:1.5;" id="m-proxy-help" data-i18n="proxy_help">A SOCKS or HTTP proxy for everything this connection does over TCP. With a jump host, the proxy is reached through it. IPMI and Serial-over-LAN use UDP and do not go through a proxy.</div>
+      <div class="muted-text" id="m-route" style="margin-top:4px;"></div>
+    </div>
     <label class="check-row" id="m-monitor-row"><input type="checkbox" id="m-monitor" checked> <span><b data-i18n="st_monitor">Monitor up/down status</b> — <span data-i18n="st_monitor_d">checked regularly with a connection to its port, like a monitoring system (no login).</span></span></label>
     <div id="m-auth-fields">
     <div class="field"><label data-i18n="username">Username</label><input type="text" id="m-user" placeholder="root"></div>
@@ -2191,6 +2197,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="tabs" id="vault-tabs">
       <button class="tab-btn active" data-tab="keys" onclick="setVaultTab('keys')">🔑 <span data-i18n="vault_keys">SSH keys</span></button>
       <button class="tab-btn" data-tab="creds" onclick="setVaultTab('creds')">🗝 <span data-i18n="vault_creds">Credentials</span> <span class="pill warn" id="vault-tab-due" style="display:none;"></span></button>
+      <button class="tab-btn" data-tab="proxies" onclick="setVaultTab('proxies')">🌐 <span data-i18n="vault_proxies">Proxies</span></button>
     </div>
     <div class="tab-pane active" id="vault-keys">
       <div class="muted-text" style="line-height:1.5;" data-i18n="vk_help">Your SSH keys, stored encrypted on the WRM server. Generate a key or import one, put it on servers (like ssh-copy-id, through jump hosts too) and let connections log in with it. "Who has access" on an SSH connection shows which keys can log in there.</div>
@@ -2205,6 +2212,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="muted-text" style="line-height:1.5;" data-i18n="vc_help">A credential is a user name with a password (or an SSH key) that many connections log in with, e.g. root@dc1. Change it once and every connection uses the new one. Share it with colleagues: they can use it but never see it. Rotation changes the password on all its SSH servers at once.</div>
       <div class="vault-tools" style="margin-top:10px;"><button class="btn-sm" onclick="openCredModal(null)">＋ <span data-i18n="vc_new">New credential</span></button></div>
       <div id="vc-list"></div>
+    </div>
+    <div class="tab-pane" id="vault-proxies">
+      <div class="muted-text" style="line-height:1.5;" data-i18n="vp_help">SOCKS5, SOCKS4/4a and HTTP CONNECT proxies, or a SOCKS tunnel (-D) of one of your connections that WRM starts when needed. Choose one in a connection (Proxy) or as a folder default. Share it with colleagues: they can use it but never see its login.</div>
+      <div class="vault-tools" style="margin-top:10px;"><button class="btn-sm" id="vp-new-btn" onclick="openProxyModal(null)">＋ <span data-i18n="vp_new">New proxy</span></button></div>
+      <div id="vp-list"></div>
     </div>
     <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-vault')" data-i18n="close">Close</button></div>
   </div>
@@ -2293,6 +2305,51 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-danger" id="cr-del" style="margin-right:auto;" onclick="deleteCred(Number(document.getElementById('cr-id').value))">🗑</button>
       <button class="btn-sec" onclick="closeModal('modal-cred')" data-i18n="cancel">Cancel</button>
       <button onclick="saveCred()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-proxy" style="z-index:9550;">
+  <div class="modal" style="width:min(600px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3 id="px-title">🌐</h3>
+    <input type="hidden" id="px-id">
+    <div class="field-row">
+      <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="px-name" maxlength="120" placeholder="dc1-socks"></div>
+      <div class="field"><label data-i18n="vp_kind">Type</label><select id="px-kind" onchange="onProxyKind()">
+        <option value="socks5">SOCKS5</option><option value="socks4">SOCKS4 / SOCKS4a</option><option value="http">HTTP CONNECT</option>
+        <option value="wrm_tunnel" data-i18n="vp_kind_tunnel">WRM SOCKS tunnel of a connection</option></select></div>
+    </div>
+    <div id="px-net">
+      <div class="field-row">
+        <div class="field"><label data-i18n="host">Host</label><input type="text" id="px-host" placeholder="10.1.1.1" oninput="onProxyKind()"></div>
+        <div class="field" style="max-width:120px;"><label data-i18n="vp_port">Port</label><input type="number" id="px-port" min="1" max="65535" placeholder="1080"></div>
+      </div>
+      <div class="hint-box warn" id="px-docker" style="display:none;" data-i18n="vp_docker_warn">WRM runs in a container: 127.0.0.1 is the container itself, not the Docker host. For a proxy on the host use host.docker.internal (docker-compose.yml maps it to the host).</div>
+      <div class="field"><label data-i18n="vp_login">Login</label><select id="px-login" onchange="onProxyKind()"></select></div>
+      <div class="field-row" id="px-own">
+        <div class="field"><label data-i18n="username">Username</label><input type="text" id="px-user" autocomplete="off"></div>
+        <div class="field" id="px-pass-f"><label data-i18n="password">Password</label><input type="password" id="px-pass" autocomplete="new-password">
+          <div class="muted-text" id="px-pass-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span></div></div>
+      </div>
+      <label class="check-row"><input type="checkbox" id="px-dns" checked> <span><b data-i18n="vp_dns">DNS at the proxy</b> — <span data-i18n="vp_dns_d">the proxy resolves host names (SOCKS5 domain names, SOCKS4a). Off: WRM resolves them and sends the address.</span></span></label>
+    </div>
+    <div class="field" id="px-tun-f"><label data-i18n="vp_tunnel">SOCKS tunnel (-D)</label><select id="px-tunnel"></select>
+      <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="vp_tunnel_help">A dynamic tunnel of one of your SSH connections. WRM starts it when a connection needs the proxy and stops it after 30 minutes without traffic. Add one under the connection's SSH tunnels → SOCKS proxy (-D).</div></div>
+    <div class="field"><label data-i18n="vc_desc">Description</label><input type="text" id="px-desc" maxlength="2000"></div>
+    <div id="px-share">
+      <div class="field"><label data-i18n="vc_grants">Share with users</label>
+        <div class="pw-row"><input type="text" id="px-grant-q" list="cr-grant-users" autocomplete="off" data-i18n-placeholder="vc_grant_ph" placeholder="User name…" oninput="crGrantSearch('px-grant-q')" onkeydown="if(event.key==='Enter'){event.preventDefault(); pxGrantAdd();}"><button class="btn-sec btn-sm" type="button" onclick="pxGrantAdd()">＋</button></div>
+        <div class="grant-chips" id="px-grants"></div>
+        <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="vp_grants_help">They can use the proxy in their connections, but never see its login. A proxy shared with a password is not reached through their own jump hosts.</div></div>
+      <label class="check-row" id="px-all-row"><input type="checkbox" id="px-all"> <span><b data-i18n="vc_shared_all">Share with all users</b> — <span data-i18n="vp_shared_all_d">everybody can use it in their connections (administrators only).</span></span></label>
+    </div>
+    <div class="field"><label data-i18n="vp_test_target">Test through the proxy (optional host:port)</label>
+      <div class="pw-row"><input type="text" id="px-test-target" placeholder="10.0.0.5:22"><button class="btn-sec btn-sm" type="button" onclick="testProxy()">🔌 <span data-i18n="vp_test">Test</span></button></div>
+      <div id="px-test-res" class="conn-test-result"></div></div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="px-del" style="margin-right:auto;" onclick="deleteProxy(Number(document.getElementById('px-id').value))">🗑</button>
+      <button class="btn-sec" onclick="closeModal('modal-proxy')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveProxy()" data-i18n="save">Save</button>
     </div>
   </div>
 </div>
@@ -4291,6 +4348,34 @@ Object.assign(LANGS.hr, {
   pg_notify:'Obavijesti', p_notifications_enabled:'Obavijesti', p_notifications_enabled_d:'Slanje obavijesti kroz kanale ispod (e-pošta, chat, push, webhook).',
   p_notify_min_interval_seconds:'Najkraći razmak (s)', p_notify_min_interval_seconds_d:'Najviše jedna poruka po korisniku i kanalu u tom vremenu; ono što stigne u međuvremenu šalje se zajedno u sljedećoj.',
 });
+Object.assign(LANGS.en, {
+  proxy_lbl:'Proxy', proxy_none:'no proxy', proxy_help:'A SOCKS or HTTP proxy for everything this connection does over TCP. With a jump host, the proxy is reached through it. IPMI and Serial-over-LAN use UDP and do not go through a proxy.',
+  route_lbl:'Route', vault_proxies:'Proxies', vp_new:'New proxy', vp_kind:'Type', vp_port:'Port', vp_kind_tunnel:'WRM SOCKS tunnel of a connection', vp_kind_tunnel_short:'WRM tunnel',
+  vp_help:'SOCKS5, SOCKS4/4a and HTTP CONNECT proxies, or a SOCKS tunnel (-D) of one of your connections that WRM starts when needed. Choose one in a connection (Proxy) or as a folder default. Share it with colleagues: they can use it but never see its login.',
+  vp_login:'Login', vp_login_none:'none', vp_login_own:'user name and password', vp_with_login:'login', vp_dns:'DNS at the proxy',
+  vp_dns_d:'the proxy resolves host names (SOCKS5 domain names, SOCKS4a). Off: WRM resolves them and sends the address.',
+  vp_tunnel:'SOCKS tunnel (-D)', vp_tunnel_help:'A dynamic tunnel of one of your SSH connections. WRM starts it when a connection needs the proxy and stops it after 30 minutes without traffic. Add one under the connection\'s SSH tunnels → SOCKS proxy (-D).',
+  vp_no_tunnels:'no SOCKS tunnel yet', vp_grants_help:'They can use the proxy in their connections, but never see its login. A proxy shared with a password is not reached through their own jump hosts.',
+  vp_shared_all_d:'everybody can use it in their connections (administrators only).', vp_test_target:'Test through the proxy (optional host:port)', vp_test:'Test',
+  vp_save_first:'Save the proxy first, then test it.', vp_delete_q:'Delete the proxy "{name}"?', vp_empty:'No proxies yet.', vp_missing:'(proxy not available)',
+  vp_docker_warn:'WRM runs in a container: 127.0.0.1 is the container itself, not the Docker host. For a proxy on the host use host.docker.internal (docker-compose.yml maps it to the host).',
+  pg_proxies:'Proxies', p_proxies:'Define proxies', p_proxies_d:'Who may create saved SOCKS / HTTP proxies. Everybody can use proxies shared with them.',
+  po_proxies_off:'Nobody', po_proxies_admins:'Administrators', po_proxies_all:'Everyone', ev_proxy:'Proxies',
+});
+Object.assign(LANGS.hr, {
+  proxy_lbl:'Proxy', proxy_none:'bez proxyja', proxy_help:'SOCKS ili HTTP proxy za sve što ova veza radi preko TCP-a. S jump hostom proxy se doseže kroz njega. IPMI i Serial-over-LAN koriste UDP i ne idu kroz proxy.',
+  route_lbl:'Put', vault_proxies:'Proxyji', vp_new:'Novi proxy', vp_kind:'Vrsta', vp_port:'Port', vp_kind_tunnel:'WRM SOCKS tunel veze', vp_kind_tunnel_short:'WRM tunel',
+  vp_help:'SOCKS5, SOCKS4/4a i HTTP CONNECT proxyji, ili SOCKS tunel (-D) jedne od tvojih veza koji WRM pokreće po potrebi. Odaberi ga u vezi (Proxy) ili kao zadano za mapu. Podijeli ga s kolegama: mogu ga koristiti, ali nikad ne vide njegovu prijavu.',
+  vp_login:'Prijava', vp_login_none:'bez', vp_login_own:'korisničko ime i lozinka', vp_with_login:'prijava', vp_dns:'DNS na proxyju',
+  vp_dns_d:'proxy razrješava imena hostova (SOCKS5 imena domena, SOCKS4a). Isključeno: WRM ih razrješava i šalje adresu.',
+  vp_tunnel:'SOCKS tunel (-D)', vp_tunnel_help:'Dinamički tunel jedne od tvojih SSH veza. WRM ga pokreće kad ga veza treba i zaustavlja nakon 30 minuta bez prometa. Dodaj ga pod SSH tuneli veze → SOCKS proxy (-D).',
+  vp_no_tunnels:'još nema SOCKS tunela', vp_grants_help:'Mogu koristiti proxy u svojim vezama, ali nikad ne vide njegovu prijavu. Proxy podijeljen s lozinkom ne doseže se kroz njihove vlastite jump hostove.',
+  vp_shared_all_d:'svi ga mogu koristiti u svojim vezama (samo administratori).', vp_test_target:'Provjera kroz proxy (neobavezno host:port)', vp_test:'Provjeri',
+  vp_save_first:'Najprije spremi proxy, zatim ga provjeri.', vp_delete_q:'Obrisati proxy „{name}”?', vp_empty:'Još nema proxyja.', vp_missing:'(proxy nije dostupan)',
+  vp_docker_warn:'WRM radi u kontejneru: 127.0.0.1 je sam kontejner, a ne Docker host. Za proxy na hostu koristi host.docker.internal (docker-compose.yml ga usmjerava na host).',
+  pg_proxies:'Proxyji', p_proxies:'Definiranje proxyja', p_proxies_d:'Tko smije stvarati spremljene SOCKS / HTTP proxyje. Svi mogu koristiti proxyje podijeljene s njima.',
+  po_proxies_off:'Nitko', po_proxies_admins:'Administratori', po_proxies_all:'Svi', ev_proxy:'Proxyji',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4913,6 +4998,7 @@ function openConnModal(id, focusTunnels) {
   renderTagSuggestions();
   deskOptsInit = (c && c.options) || {};
   fillJumpSelect(c);
+  fillProxySelect(c);
   loadConnTunnels(id, focusTunnels);
   // Passwords and keys never come back from the server: an empty field keeps the saved one.
   document.getElementById('m-pass').value = '';
@@ -5007,6 +5093,7 @@ function connFormPayload() {
     clear_password: document.getElementById('m-pass-clear').checked,
     clear_private_key: document.getElementById('m-key-clear').checked,
     jump_id: document.getElementById('m-jump').value ? parseInt(document.getElementById('m-jump').value) : null,
+    proxy_id: parseInt(document.getElementById('m-proxy').value) || null,
     web_path: document.getElementById('m-webpath').value.trim(),
     key_id: Number(document.getElementById('m-keyref').value) || null,
     tags: splitTagInput(document.getElementById('m-tags').value),
@@ -5663,6 +5750,7 @@ const POLICY_GROUPS = {
     ['pg_desktop', ['desktop_enabled', 'guacd_address', 'desktop_tunnel_bind']],
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
+    ['pg_proxies', ['proxies']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
@@ -5747,7 +5835,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'notify.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'proxy.', 'notify.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -6106,6 +6194,7 @@ function onProtoChange() {
   document.getElementById('m-desk-help').textContent = t(serial ? 'ser_help' : 'desk_help');
   document.getElementById('m-bmc-box').style.display = web || serial || !(currentUser && currentUser.policy && currentUser.policy.bmc !== false) ? 'none' : '';
   document.getElementById('m-jump').closest('.field').style.display = serial ? 'none' : '';
+  document.getElementById('m-proxy-field').style.display = serial ? 'none' : '';
   document.getElementById('m-monitor-row').style.display = serial ? 'none' : '';
   updateAuthOptions();
   document.getElementById('field-webpath').style.display = web ? '' : 'none';
@@ -6125,6 +6214,7 @@ function fillJumpSelect(c) {
     .sort((a, b) => a.name.localeCompare(b.name));
   sel.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + opts.map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
   sel.value = c && c.jump_id ? c.jump_id : '';
+  sel.onchange = updateRoutePreview;
 }
 
 const TUNNEL_PRESETS = {
@@ -7050,7 +7140,7 @@ async function invImport() {
 
 // ══ SSH KEY STORE & CREDENTIALS VAULT (v10.5) ═══════════
 
-let vaultKeys = [], vaultCreds = [], vaultTab = 'keys';
+let vaultKeys = [], vaultCreds = [], vaultProxies = [], vaultTab = 'keys', proxyCanDefine = true, proxyContainer = false;
 let _vaultLoading = null;
 
 function loadVault() {
@@ -7058,9 +7148,10 @@ function loadVault() {
   if (_vaultLoading) return _vaultLoading;
   _vaultLoading = (async () => {
     try {
-      const [k, c] = await Promise.all([fetch('/api/keys'), fetch('/api/credentials')]);
+      const [k, c, p] = await Promise.all([fetch('/api/keys'), fetch('/api/credentials'), fetch('/api/proxies')]);
       if (k.ok) vaultKeys = await k.json();
       if (c.ok) vaultCreds = await c.json();
+      if (p.ok) { const d = await p.json(); vaultProxies = d.proxies || []; proxyCanDefine = d.can_define; proxyContainer = d.container; }
     } catch (_) {}
     renderVaultBadge();
     if (document.getElementById('modal-vault').classList.contains('open')) renderVault();
@@ -7097,13 +7188,15 @@ async function openVault(tab) {
 }
 
 function setVaultTab(tab) {
-  vaultTab = tab === 'creds' ? 'creds' : 'keys';
+  vaultTab = ['creds', 'proxies'].includes(tab) ? tab : 'keys';
   document.querySelectorAll('#vault-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === vaultTab));
   document.getElementById('vault-keys').classList.toggle('active', vaultTab === 'keys');
   document.getElementById('vault-creds').classList.toggle('active', vaultTab === 'creds');
+  document.getElementById('vault-proxies').classList.toggle('active', vaultTab === 'proxies');
 }
 
 function renderVault() {
+  renderProxyList();
   const pol = (currentUser && currentUser.policy) || {};
   const connName = id => { const c = conns.find(x => x.id === id); return c ? c.name : '#' + id; };
   document.getElementById('vk-list').innerHTML = vaultKeys.length ? vaultKeys.map(k => {
@@ -7414,10 +7507,10 @@ function renderCrGrants() {
 }
 
 let _crSearchT = null;
-function crGrantSearch() {
+function crGrantSearch(inputId) {
   clearTimeout(_crSearchT);
   _crSearchT = setTimeout(async () => {
-    const q = document.getElementById('cr-grant-q').value.trim();
+    const q = document.getElementById(inputId || 'cr-grant-q').value.trim();
     try {
       const r = await fetch('/api/users?q=' + encodeURIComponent(q));
       if (!r.ok) return;
@@ -11651,6 +11744,178 @@ async function testMyNotify(id, btn) {
   else showToast(t('nf_test_failed') + ': ' + await apiError(res), 'error', 9000);
 }
 
+// ── Proxies (v10.9): saved SOCKS / HTTP proxies, chosen per connection ──
+let pxGrants = [], pxTunnels = [];
+
+function proxyLabel(p) { return p.name + ' · ' + (p.kind === 'wrm_tunnel' ? '⇄ ' + (p.tunnel_conn || '') : p.url) + (p.mine ? '' : ' · ' + p.owner); }
+
+function fillProxySelect(c, selectId) {
+  const sel = document.getElementById('m-proxy');
+  const cur = selectId != null ? selectId : (c && c.proxy_id ? c.proxy_id : '');
+  sel.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('') +
+    (c && c.proxy_id && !vaultProxies.some(p => p.id === c.proxy_id) ? `<option value="${c.proxy_id}">${esc(c.proxy_name || t('vp_missing'))}</option>` : '') +
+    (proxyCanDefine ? `<option value="__new">＋ ${esc(t('vp_new'))}…</option>` : '');
+  sel.value = cur || '';
+  updateRoutePreview();
+}
+
+function onProxyPick() {
+  const sel = document.getElementById('m-proxy');
+  if (sel.value === '__new') { sel.value = ''; openProxyModal(null, true); return; }
+  updateRoutePreview();
+}
+
+function updateRoutePreview() {
+  const el = document.getElementById('m-route');
+  if (!el) return;
+  const parts = [];
+  const jid = parseInt(document.getElementById('m-jump').value) || 0;
+  const j = conns.find(x => x.id === jid);
+  if (j) { if (j.route) parts.push(j.route); parts.push(j.name); }
+  const p = vaultProxies.find(x => x.id === (parseInt(document.getElementById('m-proxy').value) || 0));
+  if (p) parts.push(p.kind === 'wrm_tunnel' ? '⇄ ' + (p.tunnel_conn || p.name) : p.url);
+  el.textContent = parts.length ? '⤳ ' + t('route_lbl') + ': ' + parts.join(' → ') + ' → ' + (document.getElementById('m-name').value.trim() || document.getElementById('m-host').value.trim() || '…') : '';
+}
+
+function renderProxyList() {
+  const el = document.getElementById('vp-list');
+  if (!el) return;
+  document.getElementById('vp-new-btn').style.display = proxyCanDefine ? '' : 'none';
+  el.innerHTML = vaultProxies.length ? vaultProxies.map(p => `<div class="share-card">
+    <div class="sc-top"><span class="sc-name">🌐 ${esc(p.name)}</span><span class="pill">${esc(p.kind === 'wrm_tunnel' ? t('vp_kind_tunnel_short') : p.kind.toUpperCase())}</span>
+      ${p.has_password || p.credential_id ? `<span class="pill">🔒 ${esc(t('vp_with_login'))}</span>` : ''}
+      ${!p.mine ? `<span class="pill info">👤 ${esc(p.owner)}</span>` : ''}${p.shared_all ? `<span class="pill info">${esc(t('vc_shared_all'))}</span>` : ''}
+      ${p.used_by ? `<span class="pill">🔗 ${p.used_by}</span>` : ''}</div>
+    <div class="vk-fp mono">${esc(p.kind === 'wrm_tunnel' ? '⇄ ' + (p.tunnel_conn || '?') + ' · ' + (p.tunnel_name || '') : p.url)}${p.remote_dns && p.kind !== 'http' && p.kind !== 'wrm_tunnel' ? ' · DNS @proxy' : ''}</div>
+    ${p.warning ? `<div class="hint-box warn">⚠ ${esc(t('vp_docker_warn'))}</div>` : ''}
+    ${p.description ? `<div class="sc-meta"><span>${esc(p.description)}</span></div>` : ''}
+    ${(p.grant_names || []).length ? `<div class="sc-meta"><span>👥 ${esc(p.grant_names.join(', '))}</span></div>` : ''}
+    <div class="sc-actions">${p.mine ? `<button class="btn-sec btn-sm" onclick="openProxyModal(${p.id})">✏ ${esc(t('edit'))}</button>` : ''}
+      <button class="btn-sec btn-sm" onclick="openProxyModal(${p.id}, false, true)">🔌 ${esc(t('vp_test'))}</button></div></div>`).join('')
+    : `<div class="vk-empty">${esc(t('vp_empty'))}</div>`;
+}
+
+let pxFromConn = false;
+async function openProxyModal(id, fromConn, testOnly) {
+  await loadVault();
+  const p = id ? vaultProxies.find(x => x.id === id) : null;
+  if (id && !p) return;
+  pxFromConn = !!fromConn;
+  const ro = p && !p.mine;
+  document.getElementById('px-title').textContent = '🌐 ' + (p ? p.name : t('vp_new'));
+  document.getElementById('px-id').value = p ? p.id : '';
+  document.getElementById('px-name').value = p ? p.name : '';
+  document.getElementById('px-kind').value = p ? p.kind : 'socks5';
+  document.getElementById('px-host').value = p && p.kind !== 'wrm_tunnel' ? p.host : '';
+  document.getElementById('px-port').value = p && p.kind !== 'wrm_tunnel' ? p.port : '';
+  document.getElementById('px-user').value = p ? p.username || '' : '';
+  const pw = document.getElementById('px-pass'); pw.value = ''; pw.placeholder = p && p.has_password ? '••••••••' : '';
+  document.getElementById('px-pass-note').style.display = p && p.has_password ? '' : 'none';
+  document.getElementById('px-dns').checked = p ? p.remote_dns : true;
+  document.getElementById('px-desc').value = p ? p.description || '' : '';
+  const login = document.getElementById('px-login');
+  login.innerHTML = `<option value="">${esc(t('vp_login_none'))}</option><option value="own">${esc(t('vp_login_own'))}</option>` +
+    vaultCreds.map(x => `<option value="c${x.id}">🗝 ${esc(x.name)}${x.username ? ' (' + esc(x.username) + ')' : ''}</option>`).join('');
+  login.value = p && p.credential_id ? 'c' + p.credential_id : (p && (p.username || p.has_password) ? 'own' : '');
+  pxGrants = p ? (p.grants || []).map((uid, i) => ({id: uid, username: (p.grant_names || [])[i] || ('#' + uid)})) : [];
+  renderPxGrants();
+  document.getElementById('px-all').checked = !!(p && p.shared_all);
+  document.getElementById('px-all-row').style.display = currentUser && currentUser.is_admin ? '' : 'none';
+  document.getElementById('px-del').style.display = p && p.mine ? '' : 'none';
+  document.getElementById('px-test-res').className = 'conn-test-result'; document.getElementById('px-test-res').textContent = '';
+  document.getElementById('modal-proxy').querySelectorAll('input, select').forEach(x => { if (x.id !== 'px-test-target') x.disabled = ro; });
+  document.getElementById('modal-proxy').querySelector('.modal-footer button:last-child').style.display = ro ? 'none' : '';
+  try { const r = await fetch('/api/tunnels'); if (r.ok) pxTunnels = (await r.json()).filter(x => x.kind === 'dynamic' && !x.ephemeral); } catch (_) {}
+  const ts = document.getElementById('px-tunnel');
+  ts.innerHTML = pxTunnels.length ? pxTunnels.map(x => `<option value="${x.id}">${esc(x.connection || x.conn_name || '')} · ${esc(x.name || 'SOCKS')} (${esc(x.bind_host)}:${x.bind_port || 'auto'})</option>`).join('') : `<option value="">— ${esc(t('vp_no_tunnels'))} —</option>`;
+  if (p && p.tunnel_id) ts.value = p.tunnel_id;
+  onProxyKind();
+  document.getElementById('modal-proxy').classList.add('open');
+  setTimeout(() => document.getElementById(testOnly ? 'px-test-target' : 'px-name').focus(), 50);
+}
+
+function onProxyKind() {
+  const k = document.getElementById('px-kind').value, tun = k === 'wrm_tunnel';
+  document.getElementById('px-net').style.display = tun ? 'none' : '';
+  document.getElementById('px-tun-f').style.display = tun ? '' : 'none';
+  document.getElementById('px-share').style.display = tun ? 'none' : '';
+  const login = document.getElementById('px-login').value;
+  document.getElementById('px-own').style.display = login === 'own' ? '' : 'none';
+  document.getElementById('px-pass-f').style.display = k === 'socks4' ? 'none' : '';
+  document.getElementById('px-port').placeholder = k === 'http' ? '3128' : '1080';
+  const h = document.getElementById('px-host').value.trim();
+  document.getElementById('px-docker').style.display = proxyContainer && !tun && /^(127\.|localhost$|::1$|\[::1\]$)/.test(h) ? '' : 'none';
+}
+
+function renderPxGrants() {
+  document.getElementById('px-grants').innerHTML = pxGrants.map(g => `<span class="grant-chip">👤 ${esc(g.username)}<button type="button" onclick="pxGrants = pxGrants.filter(x => x.id !== ${g.id}); renderPxGrants();" title="${esc(t('remove'))}">✕</button></span>`).join('');
+}
+
+async function pxGrantAdd() {
+  const inp = document.getElementById('px-grant-q');
+  const name = inp.value.trim().toLowerCase();
+  if (!name) return;
+  let u = crUserIds[name];
+  if (!u) {
+    try { const r = await fetch('/api/users?q=' + encodeURIComponent(name)); if (r.ok) (await r.json()).forEach(x => { crUserIds[x.username.toLowerCase()] = x; }); } catch (_) {}
+    u = crUserIds[name];
+  }
+  if (!u) { showToast(t('vc_user_unknown'), 'warning'); return; }
+  if (u.id !== currentUser.id && !pxGrants.some(g => g.id === u.id)) pxGrants.push({id: u.id, username: u.username});
+  inp.value = '';
+  renderPxGrants();
+}
+
+function proxyFormPayload() {
+  const login = document.getElementById('px-login').value;
+  return {name: document.getElementById('px-name').value.trim(), kind: document.getElementById('px-kind').value,
+    host: document.getElementById('px-host').value.trim(), port: parseInt(document.getElementById('px-port').value) || 0,
+    username: login === 'own' ? document.getElementById('px-user').value.trim() : '',
+    password: login === 'own' ? document.getElementById('px-pass').value : '', clear_password: login !== 'own',
+    credential_id: login.startsWith('c') ? Number(login.slice(1)) : null, remote_dns: document.getElementById('px-dns').checked,
+    tunnel_id: Number(document.getElementById('px-tunnel').value) || null, description: document.getElementById('px-desc').value.trim(),
+    grants: pxGrants.map(g => g.id), shared_all: document.getElementById('px-all').checked};
+}
+
+async function saveProxy() {
+  const id = Number(document.getElementById('px-id').value) || 0;
+  const body = proxyFormPayload();
+  if (!body.name) { showToast(t('name_required'), 'warning'); return; }
+  const r = await fetch('/api/proxies' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  const saved = await r.json();
+  closeModal('modal-proxy');
+  showToast(saved.warning ? '⚠ ' + t('vp_docker_warn') : t('saved'), saved.warning ? 'warning' : 'success', saved.warning ? 9000 : 1500);
+  await loadVault(); renderVault();
+  if (pxFromConn && document.getElementById('modal-conn').classList.contains('open')) {
+    const c = conns.find(x => x.id === Number(document.getElementById('m-id').value));
+    fillProxySelect(c, saved.id);
+  }
+  loadData();
+}
+
+async function deleteProxy(id) {
+  const p = vaultProxies.find(x => x.id === id);
+  if (!p || !(await uiConfirm(t('vp_delete_q').replace('{name}', p.name), {okText: t('delete'), danger: true}))) return;
+  const r = await fetch('/api/proxies/' + id, {method: 'DELETE'});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  closeModal('modal-proxy');
+  showToast(t('deleted'), 'success');
+  await loadVault(); renderVault();
+}
+
+async function testProxy() {
+  const id = Number(document.getElementById('px-id').value) || 0;
+  const out = document.getElementById('px-test-res');
+  if (!id) { out.className = 'conn-test-result fail'; out.textContent = t('vp_save_first'); return; }
+  out.className = 'conn-test-result busy'; out.textContent = '⏳ ' + t('testing');
+  const r = await fetch('/api/proxies/' + id + '/test', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({target: document.getElementById('px-test-target').value.trim()})});
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { out.className = 'conn-test-result fail'; out.textContent = '❌ ' + (d.error || r.statusText); return; }
+  out.className = 'conn-test-result ' + (d.ok ? 'ok' : 'fail');
+  out.textContent = (d.ok ? '✅ ' : '❌ ') + d.message + ' · ' + d.latency_ms + ' ms' + (d.warning ? ' — ⚠ ' + t('vp_docker_warn') : '');
+}
+
 function openSettings(tab) {
   document.getElementById('modal-settings').classList.add('open');
   const signedIn = !!currentUser;
@@ -13150,7 +13415,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed') loadVault(); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();

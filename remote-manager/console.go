@@ -106,7 +106,7 @@ func bmcSSHConn(c Connection, b bmcConfig) (Connection, error) {
 		port = strconv.Itoa(b.SSHPort)
 	}
 	bc := Connection{ID: 0, Name: c.Name + " (BMC)", Protocol: "SSH", Host: joinHostPortSafe(host, port), Username: user, Password: pass,
-		AuthMethod: "PASSWORD", UserID: c.UserID, JumpID: bmcJump(c, b)}
+		AuthMethod: "PASSWORD", UserID: c.UserID, JumpID: bmcJump(c, b), ProxyID: bmcProxy(c, b)}
 	return bc, nil
 }
 
@@ -204,6 +204,9 @@ func openConsole(c Connection, kind string, cols, rows int, term string, onNewKe
 			return nil, err
 		}
 		args := append(ipmiArgs(b, user), "sol", "activate")
+		if err := ipmiProxyRefused(c, b); err != nil {
+			return nil, err
+		}
 		hop, err := bmcHop(c, b)
 		if err != nil {
 			return nil, err
