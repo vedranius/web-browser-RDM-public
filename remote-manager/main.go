@@ -78,6 +78,10 @@ type Connection struct {
 	authErr       string     // why the key or credential cannot be used (set by resolveConnectionAuth)
 	usedKeyID     int        // stored key the connection logs in with (after resolving)
 	usedCredID    int        // vault credential it logs in with (after resolving)
+	// JumpID / ProxyID hold the effective route (folder defaults applied). The stored
+	// choice: nil = as the folder, -1 = none, > 0 = this one (see applyFolderDefaults).
+	jumpRaw, proxyRaw           *int
+	jumpInherited, proxyInherit bool
 }
 
 type connView struct {
@@ -92,6 +96,10 @@ type connView struct {
 	JumpID      *int              `json:"jump_id"`
 	ProxyID     *int              `json:"proxy_id"`
 	ProxyName   string            `json:"proxy_name,omitempty"`
+	JumpChoice  *int              `json:"jump_choice"`  // stored choice: null = folder default, -1 = none
+	ProxyChoice *int              `json:"proxy_choice"` // stored choice: null = folder default, -1 = none
+	JumpFolder  bool              `json:"jump_inherited,omitempty"`
+	ProxyFolder bool              `json:"proxy_inherited,omitempty"`
 	WebPath     string            `json:"web_path"`
 	Route       string            `json:"route,omitempty"` // jump hosts, e.g. "bastion → dc1-gw"
 	HasPassword bool              `json:"has_password"`
@@ -115,7 +123,8 @@ type connView struct {
 func (c Connection) view() connView {
 	v := connView{ID: c.ID, Name: c.Name, Protocol: c.Protocol, Host: c.Host, Username: c.Username, AuthMethod: c.AuthMethod,
 		KeyPath: c.KeyPath, FolderID: c.FolderID, JumpID: c.JumpID, ProxyID: c.ProxyID, WebPath: c.WebPath, HasPassword: c.Password != "", HasKey: c.PrivateKey != "",
-		KeyID: c.KeyID, CredID: c.CredentialID, Tags: []string{}}
+		KeyID: c.KeyID, CredID: c.CredentialID, Tags: []string{}, JumpChoice: c.jumpRaw, ProxyChoice: c.proxyRaw,
+		JumpFolder: c.jumpInherited, ProxyFolder: c.proxyInherit}
 	if needsRoute(c) {
 		v.Route = jumpPath(c)
 	}
@@ -149,8 +158,13 @@ func (c Connection) view() connView {
 }
 
 type Folder struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	JumpID    *int   `json:"jump_id"`  // default jump host of its connections
+	ProxyID   *int   `json:"proxy_id"` // default proxy of its connections
+	JumpName  string `json:"jump_name,omitempty"`
+	ProxyName string `json:"proxy_name,omitempty"`
+	ProxyRef  string `json:"proxy_ref,omitempty"` // export / import: name of the proxy
 }
 
 type FileItem struct {
@@ -1156,11 +1170,14 @@ func normalizeConnection(c *Connection) error {
 	if !validAuthMethods[c.AuthMethod] {
 		return fmt.Errorf("Invalid authentication method")
 	}
-	if c.JumpID != nil && *c.JumpID <= 0 {
-		c.JumpID = nil
-	}
-	if c.ProxyID != nil && *c.ProxyID <= 0 {
-		c.ProxyID = nil
+	// nil = use the folder's default, -1 = none (also when the folder has one)
+	for _, p := range []**int{&c.JumpID, &c.ProxyID} {
+		if *p != nil && **p == 0 {
+			*p = nil
+		} else if *p != nil && **p < 0 {
+			none := -1
+			*p = &none
+		}
 	}
 	if c.Protocol == "SERIAL" {
 		// A serial port of the WRM server: the host is the device name (ttyUSB0), options the line settings.
@@ -1216,6 +1233,7 @@ func loadUserConnections(userID int) []Connection {
 		return conns
 	}
 	defer rows.Close()
+	defaults := folderDefaultsOf(userID)
 	for rows.Next() {
 		var c Connection
 		var tags string
@@ -1223,6 +1241,11 @@ func loadUserConnections(userID int) []Connection {
 		c.Tags = parseTags(tags)
 		decryptConnectionSecrets(&c)
 		c.UserID = userID
+		var fd Folder
+		if c.FolderID != nil {
+			fd = defaults[*c.FolderID]
+		}
+		resolveRouteDefaults(&c, fd.JumpID, fd.ProxyID)
 		conns = append(conns, c)
 	}
 	return conns
@@ -1265,7 +1288,7 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
-		if err := validateProxyChoice(userID, 0, &c); err != nil {
+		if err := validateRoute(userID, 0, &c); err != nil {
 			jsonError(w, err.Error(), 400)
 			return
 		}
@@ -1278,6 +1301,7 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		plain := c
 		plain.UserID = userID
+		applyFolderDefaults(&plain)
 		encryptConnectionSecrets(&c)
 		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,key_id,credential_id,tags,proxy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID, tagsString(c.Tags), c.ProxyID)
@@ -1308,6 +1332,10 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		statusMon.poke()
 		auditLogRef(r, userID, usernameOf(userID), "connection.created", c.Name, map[string]string{"host": c.Host, "protocol": c.Protocol, "auth": c.AuthMethod, "route": jumpPath(plain)}, auditRef{ConnID: plain.ID})
 		w.WriteHeader(http.StatusCreated)
+		if saved, err := loadConnectionRaw(plain.ID); err == nil {
+			jsonOK(w, saved.view())
+			return
+		}
 		jsonOK(w, plain.view())
 	default:
 		jsonError(w, "Method not allowed", 405)
@@ -1375,7 +1403,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
-		if err := validateProxyChoice(userID, id, &c); err != nil {
+		if err := validateRoute(userID, id, &c); err != nil {
 			jsonError(w, err.Error(), 400)
 			return
 		}
@@ -1401,8 +1429,8 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		for f, same := range map[string]bool{"name": c.Name == cur.Name, "host": c.Host == cur.Host, "username": c.Username == cur.Username,
 			"protocol": c.Protocol == cur.Protocol, "auth_method": c.AuthMethod == cur.AuthMethod, "key_path": c.KeyPath == cur.KeyPath,
-			"jump_host": intPtrEq(c.JumpID, cur.JumpID), "web_path": c.WebPath == cur.WebPath, "ssh_key": intPtrEq(c.KeyID, cur.KeyID),
-			"credential_ref": intPtrEq(c.CredentialID, cur.CredentialID), "proxy": intPtrEq(c.ProxyID, cur.ProxyID)} {
+			"jump_host": intPtrEq(c.JumpID, cur.jumpRaw), "web_path": c.WebPath == cur.WebPath, "ssh_key": intPtrEq(c.KeyID, cur.KeyID),
+			"credential_ref": intPtrEq(c.CredentialID, cur.CredentialID), "proxy": intPtrEq(c.ProxyID, cur.proxyRaw), "folder": intPtrEq(c.FolderID, cur.FolderID)} {
 			if !same {
 				changed = append(changed, f)
 			}
@@ -1443,12 +1471,14 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if c.BMC != nil {
 			c.ID, c.UserID = id, userID
-			if err := saveBMC(c, c.BMC, userID); err != nil {
+			bc := c
+			applyFolderDefaults(&bc) // "through the jump host" follows the effective route
+			if err := saveBMC(bc, c.BMC, userID); err != nil {
 				jsonError(w, "Saved, but the BMC settings were not: "+err.Error(), 400)
 				return
 			}
 		}
-		if c.Host != cur.Host || c.Protocol != cur.Protocol || !intPtrEq(c.JumpID, cur.JumpID) || !intPtrEq(c.ProxyID, cur.ProxyID) || c.Monitor != nil {
+		if c.Host != cur.Host || c.Protocol != cur.Protocol || !intPtrEq(c.JumpID, cur.jumpRaw) || !intPtrEq(c.ProxyID, cur.proxyRaw) || !intPtrEq(c.FolderID, cur.FolderID) || c.Monitor != nil {
 			statusMon.poke()
 		}
 		if len(changed) > 0 {
@@ -1548,6 +1578,11 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		db.Exec("UPDATE connections SET folder_id=? WHERE id IN ("+ph+") AND user_id=?", append([]interface{}{payload.FolderID}, append(args, userID)...)...)
+		// The folder's defaults (jump host, proxy) may change the route of the moved connections.
+		for _, id := range payload.IDs {
+			tunnelMgr.restartConn(id)
+		}
+		statusMon.poke()
 	case "tag":
 		n := bulkTag(userID, payload.IDs, payload.Add, payload.Remove)
 		auditLog(r, userID, "connection.tagged", "", map[string]interface{}{"ids": payload.IDs, "add": normalizeTags(payload.Add), "remove": normalizeTags(payload.Remove), "changed": n})
@@ -1569,17 +1604,7 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case http.MethodGet:
-		folders := make([]Folder, 0)
-		rows, err := db.Query("SELECT id,name FROM folders WHERE user_id=? ORDER BY name", userID)
-		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var f Folder
-				rows.Scan(&f.ID, &f.Name)
-				folders = append(folders, f)
-			}
-		}
-		jsonOK(w, folders)
+		jsonOK(w, loadFolders(userID))
 	case http.MethodPost:
 		var f Folder
 		json.NewDecoder(r.Body).Decode(&f)
@@ -1588,14 +1613,27 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Name required", 400)
 			return
 		}
-		res, err := db.Exec("INSERT INTO folders (name,user_id) VALUES (?,?)", f.Name, userID)
+		if err := validateFolderDefaults(userID, &f); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
+		res, err := db.Exec("INSERT INTO folders (name,user_id,jump_conn_id,proxy_id) VALUES (?,?,?,?)", f.Name, userID, f.JumpID, f.ProxyID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
 		}
 		id, _ := res.LastInsertId()
 		f.ID = int(id)
+		if f.JumpID != nil || f.ProxyID != nil {
+			auditLog(r, userID, "folder.created", f.Name, map[string]interface{}{"folder_id": f.ID, "default_jump": f.JumpID, "default_proxy": f.ProxyID})
+		}
 		w.WriteHeader(http.StatusCreated)
+		for _, x := range loadFolders(userID) {
+			if x.ID == f.ID {
+				jsonOK(w, x)
+				return
+			}
+		}
 		jsonOK(w, f)
 	default:
 		jsonError(w, "Method not allowed", 405)
@@ -1609,12 +1647,16 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/folders/")
 	id, _ := strconv.Atoi(strings.TrimSpace(idStr))
-	if r.Method != http.MethodDelete {
-		jsonError(w, "Method not allowed", 405)
-		return
-	}
 	if !userOwnsFolder(id, userID) {
 		jsonError(w, "Not found", 404)
+		return
+	}
+	if r.Method == http.MethodPut {
+		updateFolder(w, r, userID, id)
+		return
+	}
+	if r.Method != http.MethodDelete {
+		jsonError(w, "Method not allowed", 405)
 		return
 	}
 	tx, err := db.Begin()
@@ -1810,14 +1852,10 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Method not allowed", 405)
 		return
 	}
-	folders := []Folder{}
-	if fRows, err := db.Query("SELECT id,name FROM folders WHERE user_id=? ORDER BY name", userID); err == nil {
-		for fRows.Next() {
-			var f Folder
-			fRows.Scan(&f.ID, &f.Name)
-			folders = append(folders, f)
-		}
-		fRows.Close()
+	folders := loadFolders(userID)
+	for i := range folders {
+		// The default proxy is referenced by name; the jump host by the exported connection id.
+		folders[i].ProxyRef, folders[i].ProxyID, folders[i].JumpName, folders[i].ProxyName = folders[i].ProxyName, nil, "", ""
 	}
 	all := loadUserConnections(userID)
 	conns := all[:0]
@@ -1842,10 +1880,13 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		if conns[i].CredentialID != nil {
 			db.QueryRow(`SELECT name FROM credentials WHERE id=?`, *conns[i].CredentialID).Scan(&conns[i].CredentialRef)
 		}
-		if conns[i].ProxyID != nil {
+		// The stored choices, not the folder defaults: null = as the folder, -1 = none.
+		conns[i].JumpID, conns[i].ProxyID = conns[i].jumpRaw, conns[i].proxyRaw
+		if conns[i].ProxyID != nil && *conns[i].ProxyID > 0 {
 			db.QueryRow(`SELECT name FROM proxies WHERE id=?`, *conns[i].ProxyID).Scan(&conns[i].ProxyRef)
+			conns[i].ProxyID = nil
 		}
-		conns[i].KeyID, conns[i].CredentialID, conns[i].ProxyID = nil, nil, nil
+		conns[i].KeyID, conns[i].CredentialID = nil, nil
 		if isDesktopProtocol(conns[i].Protocol) || conns[i].Protocol == "SERIAL" {
 			conns[i].Options = loadDesktopOptions(conns[i].ID)
 		}
@@ -1926,6 +1967,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		if c.JumpID != nil {
 			oldJump = *c.JumpID
 		}
+		noProxy := c.ProxyID != nil && *c.ProxyID < 0 // "none" (also when the folder has a default)
 		c.JumpID, c.ProxyID = nil, nil
 		// Keys and credentials are referenced by name: use the importing user's ones.
 		c.KeyID, c.CredentialID = nil, nil
@@ -1988,6 +2030,11 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if oldJump > 0 {
 				jumps = append(jumps, jumpLink{int(nid), oldJump})
+			} else if oldJump < 0 {
+				tx.Exec(`UPDATE connections SET jump_conn_id=-1 WHERE id=?`, nid)
+			}
+			if noProxy {
+				tx.Exec(`UPDATE connections SET proxy_id=-1 WHERE id=?`, nid)
 			}
 			if c.ProxyRef != "" {
 				proxyLinks = append(proxyLinks, proxyLink{int(nid), c.ProxyRef})
@@ -1997,6 +2044,14 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	for _, j := range jumps {
 		if nj, ok := newIDs[j.oldJump]; ok {
 			tx.Exec(`UPDATE connections SET jump_conn_id=? WHERE id=?`, nj, j.id)
+		}
+	}
+	// Folder default jump hosts point to imported connections.
+	for _, f := range payload.Folders {
+		if nf := folderIDs[strings.TrimSpace(f.Name)]; nf != nil && f.JumpID != nil {
+			if nj, ok := newIDs[*f.JumpID]; ok {
+				tx.Exec(`UPDATE folders SET jump_conn_id=? WHERE id=? AND jump_conn_id IS NULL`, nj, *nf)
+			}
 		}
 	}
 	tunnelsImported := 0
@@ -2022,6 +2077,13 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// "WRM SOCKS tunnel" proxies need the imported tunnels; then the connections are linked.
 	proxiesImported += importProxies(r, userID, payload.Proxies, true, newTunnels)
+	for _, f := range payload.Folders {
+		if nf := folderIDs[strings.TrimSpace(f.Name)]; nf != nil && f.ProxyRef != "" {
+			if pid := proxyByName(userID, f.ProxyRef); pid > 0 {
+				db.Exec(`UPDATE folders SET proxy_id=? WHERE id=? AND proxy_id IS NULL`, pid, *nf)
+			}
+		}
+	}
 	for _, pl := range proxyLinks {
 		if pid := proxyByName(userID, pl.ref); pid > 0 {
 			c, _ := loadConnectionRaw(pl.id)

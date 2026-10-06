@@ -102,7 +102,8 @@ type monConn struct {
 }
 
 func loadMonitoredConns() []monConn {
-	rows, err := db.Query(`SELECT id, COALESCE(user_id,0), name, protocol, host, COALESCE(jump_conn_id,0), COALESCE(proxy_id,0) FROM connections WHERE COALESCE(monitor,1)=1 AND protocol<>'SERIAL'`)
+	rows, err := db.Query(`SELECT c.id, COALESCE(c.user_id,0), c.name, c.protocol, c.host, ` + effJumpSQL + `, ` + effProxySQL + ` FROM connections c ` + folderJoin + `
+		WHERE COALESCE(c.monitor,1)=1 AND c.protocol<>'SERIAL'`)
 	if err != nil {
 		return nil
 	}

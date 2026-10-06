@@ -1677,7 +1677,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="field-row">
       <div class="field">
         <label data-i18n="folder_lbl">Folder</label>
-        <select id="m-folder"><option value="">— No Folder —</option></select>
+        <select id="m-folder" onchange="onConnFolderChange()"><option value="">— No Folder —</option></select>
       </div>
       <div class="field">
         <label data-i18n="protocol">Protocol</label>
@@ -1791,12 +1791,16 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 
 <!-- Folder Modal -->
 <div class="modal-overlay" id="modal-folder">
-  <div class="modal" style="width:300px;">
-    <h3>New Folder</h3>
-    <div class="field"><label>Name</label><input type="text" id="f-name" placeholder="e.g. Production" onkeydown="if(event.key==='Enter') saveFolder()"></div>
+  <div class="modal" style="width:min(480px, calc(100vw - 24px));">
+    <h3 id="f-title">New Folder</h3>
+    <input type="hidden" id="f-id">
+    <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="f-name" placeholder="e.g. Production" onkeydown="if(event.key==='Enter') saveFolder()"></div>
+    <div class="field"><label data-i18n="fd_jump">Default jump host</label><select id="f-jump"></select></div>
+    <div class="field"><label data-i18n="fd_proxy">Default proxy</label><select id="f-proxy"></select></div>
+    <div class="muted-text" style="line-height:1.5;" data-i18n="fd_help">Connections in this folder, also new ones, use these unless they choose their own jump host or proxy.</div>
     <div class="modal-footer">
-      <button class="btn-sec" onclick="closeModal('modal-folder')">Cancel</button>
-      <button onclick="saveFolder()">Create</button>
+      <button class="btn-sec" onclick="closeModal('modal-folder')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveFolder()" id="f-save" data-i18n="save">Save</button>
     </div>
   </div>
 </div>
@@ -4376,6 +4380,18 @@ Object.assign(LANGS.hr, {
   pg_proxies:'Proxyji', p_proxies:'Definiranje proxyja', p_proxies_d:'Tko smije stvarati spremljene SOCKS / HTTP proxyje. Svi mogu koristiti proxyje podijeljene s njima.',
   po_proxies_off:'Nitko', po_proxies_admins:'Administratori', po_proxies_all:'Svi', ev_proxy:'Proxyji',
 });
+Object.assign(LANGS.en, {
+  fd_edit:'Folder settings…', fd_jump:'Default jump host', fd_proxy:'Default proxy', fd_defaults:'Folder defaults',
+  fd_help:'Connections in this folder, also new ones, use these unless they choose their own jump host or proxy.',
+  fd_from_folder:'as the folder', fd_jump_none:'no jump host (not the folder\'s)', fd_proxy_none:'no proxy (not the folder\'s)', fd_new_folder:'New folder',
+  ev_folder:'Folders',
+});
+Object.assign(LANGS.hr, {
+  fd_edit:'Postavke mape…', fd_jump:'Zadani jump host', fd_proxy:'Zadani proxy', fd_defaults:'Zadano za mapu',
+  fd_help:'Veze u ovoj mapi, i nove, koriste ovo osim ako odaberu vlastiti jump host ili proxy.',
+  fd_from_folder:'kao mapa', fd_jump_none:'bez jump hosta (ne onaj mape)', fd_proxy_none:'bez proxyja (ne onaj mape)', fd_new_folder:'Nova mapa',
+  ev_folder:'Mape',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4677,7 +4693,7 @@ function renderTree() {
     const folderWrap = document.createElement('div');
     const row = document.createElement('div');
     row.className = 'folder-row';
-    row.innerHTML = `<span class="folder-chevron ${filterActive || openFolderIds.has(f.id) ? 'open' : ''}">▶</span><span style="font-size:14px;">📁</span><span style="flex:1;">${esc(f.name)}</span>${fDown ? `<span class="folder-down" title="${esc(t('st_folder_down').replace('{n}', fDown))}">${fDown}↓</span>` : ''}<button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
+    row.innerHTML = `<span class="folder-chevron ${filterActive || openFolderIds.has(f.id) ? 'open' : ''}">▶</span><span style="font-size:14px;">📁</span><span style="flex:1;">${esc(f.name)}</span>${f.jump_id || f.proxy_id ? `<span class="conn-route" title="${esc(t('fd_defaults') + ': ' + [f.jump_name, f.proxy_name].filter(Boolean).join(' → '))}">⤳</span>` : ''}${fDown ? `<span class="folder-down" title="${esc(t('st_folder_down').replace('{n}', fDown))}">${fDown}↓</span>` : ''}<button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
     row.draggable = false;
     row.ondragover = e => { e.preventDefault(); row.classList.add('drag-over'); };
     row.ondragleave = () => row.classList.remove('drag-over');
@@ -4941,6 +4957,7 @@ function applyPolicyToUI() {
 function showFolderCtx(x, y) {
   const menu = document.getElementById('dyn-ctx-menu');
   menu.innerHTML = `
+    <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(ctxFolderId)">✏ ${esc(t('fd_edit'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow(conns.filter(c => c.folder_id === ctxFolderId).map(c => c.id))">🔄 ${esc(t('st_check_now'))}</div>
@@ -5183,17 +5200,41 @@ async function deleteConn(id) {
   loadData();
 }
 
-function openFolderModal() {
-  document.getElementById('f-name').value = '';
+async function openFolderModal(id) {
+  const f = id ? folders.find(x => x.id === id) : null;
+  if (currentUser && !isCollabMode) await loadVault();
+  document.getElementById('f-id').value = f ? f.id : '';
+  document.getElementById('f-title').textContent = f ? '📁 ' + f.name : t('fd_new_folder');
+  document.getElementById('f-name').value = f ? f.name : '';
+  const js = document.getElementById('f-jump');
+  js.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP') && !x.temporary)
+    .sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+  js.value = f && f.jump_id ? f.jump_id : '';
+  const ps = document.getElementById('f-proxy');
+  ps.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('');
+  ps.value = f && f.proxy_id ? f.proxy_id : '';
   document.getElementById('modal-folder').classList.add('open');
   setTimeout(() => document.getElementById('f-name').focus(), 50);
 }
 
 async function saveFolder() {
+  const id = Number(document.getElementById('f-id').value) || 0;
   const name = document.getElementById('f-name').value.trim();
   if (!name) return;
-  const res = await fetch('/api/folders', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
-  if (res.ok) { closeModal('modal-folder'); showToast(t('folder_created'), 'success'); loadData(); }
+  const body = {name, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
+  const res = await fetch('/api/folders' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if (res.ok) { closeModal('modal-folder'); showToast(id ? t('saved') : t('folder_created'), 'success'); loadData(); }
+  else showToast(await apiError(res), 'error', 6000);
+}
+
+// The folder chosen in the connection dialog (its defaults are inherited).
+function connDialogFolder() { const v = Number(document.getElementById('m-folder').value) || 0; return folders.find(f => f.id === v) || null; }
+
+function onConnFolderChange() {
+  const c = conns.find(x => x.id === Number(document.getElementById('m-id').value)) || null;
+  const jv = document.getElementById('m-jump').value, pv = document.getElementById('m-proxy').value;
+  fillJumpSelect(c, jv);
+  fillProxySelect(c, pv);
 }
 
 async function delFolder(id) {
@@ -5835,7 +5876,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'proxy.', 'notify.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'proxy.', 'folder.', 'notify.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -6205,15 +6246,21 @@ function onProtoChange() {
   document.getElementById('conn-test-btn').style.display = '';
 }
 
-function fillJumpSelect(c) {
+function fillJumpSelect(c, keep) {
   const sel = document.getElementById('m-jump');
+  const f = connDialogFolder();
+  const choice = keep != null ? keep : (c ? (c.jump_choice == null ? '' : String(c.jump_choice)) : '');
   const self = c ? c.id : 0;
   // A connection cannot use itself or a connection that goes through it.
   const goesThrough = (x) => { let cur = x, n = 0; while (cur && cur.jump_id && n++ < 10) { if (cur.jump_id === self) return true; cur = conns.find(y => y.id === cur.jump_id); } return false; };
   const opts = conns.filter(x => x.id !== self && (x.protocol === 'SSH' || x.protocol === 'SFTP') && !(self && goesThrough(x)))
     .sort((a, b) => a.name.localeCompare(b.name));
-  sel.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + opts.map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
-  sel.value = c && c.jump_id ? c.jump_id : '';
+  const inherited = f && f.jump_id && f.jump_id !== self;
+  sel.innerHTML = (inherited ? `<option value="">— ${esc(t('fd_from_folder'))}: ${esc(f.jump_name || '#' + f.jump_id)} —</option><option value="-1">— ${esc(t('fd_jump_none'))} —</option>`
+      : `<option value="">— ${esc(t('jump_direct'))} —</option>` + (choice === '-1' ? `<option value="-1">— ${esc(t('fd_jump_none'))} —</option>` : '')) +
+    opts.map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+  sel.value = choice;
+  if (sel.value !== choice) sel.value = '';
   sel.onchange = updateRoutePreview;
 }
 
@@ -11751,11 +11798,15 @@ function proxyLabel(p) { return p.name + ' · ' + (p.kind === 'wrm_tunnel' ? '�
 
 function fillProxySelect(c, selectId) {
   const sel = document.getElementById('m-proxy');
-  const cur = selectId != null ? selectId : (c && c.proxy_id ? c.proxy_id : '');
-  sel.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('') +
-    (c && c.proxy_id && !vaultProxies.some(p => p.id === c.proxy_id) ? `<option value="${c.proxy_id}">${esc(c.proxy_name || t('vp_missing'))}</option>` : '') +
+  const cur = String(selectId != null ? selectId : (c ? (c.proxy_choice == null ? '' : c.proxy_choice) : ''));
+  const f = connDialogFolder();
+  const fp = f && f.proxy_id ? (vaultProxies.find(p => p.id === f.proxy_id) || {name: f.proxy_name || '#' + f.proxy_id}) : null;
+  sel.innerHTML = (fp ? `<option value="">— ${esc(t('fd_from_folder'))}: ${esc(fp.name)} —</option><option value="-1">— ${esc(t('fd_proxy_none'))} —</option>`
+      : `<option value="">— ${esc(t('proxy_none'))} —</option>` + (cur === '-1' ? `<option value="-1">— ${esc(t('fd_proxy_none'))} —</option>` : '')) + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('') +
+    (c && c.proxy_choice > 0 && !vaultProxies.some(p => p.id === c.proxy_choice) ? `<option value="${c.proxy_choice}">${esc(c.proxy_name || t('vp_missing'))}</option>` : '') +
     (proxyCanDefine ? `<option value="__new">＋ ${esc(t('vp_new'))}…</option>` : '');
-  sel.value = cur || '';
+  sel.value = cur;
+  if (sel.value !== cur) sel.value = '';
   updateRoutePreview();
 }
 
@@ -11769,10 +11820,13 @@ function updateRoutePreview() {
   const el = document.getElementById('m-route');
   if (!el) return;
   const parts = [];
-  const jid = parseInt(document.getElementById('m-jump').value) || 0;
-  const j = conns.find(x => x.id === jid);
+  const f = connDialogFolder();
+  const jv = document.getElementById('m-jump').value, pv = document.getElementById('m-proxy').value;
+  const jid = jv === '' ? (f && f.jump_id) || 0 : parseInt(jv) || 0;
+  const j = conns.find(x => x.id === jid && x.id !== Number(document.getElementById('m-id').value));
   if (j) { if (j.route) parts.push(j.route); parts.push(j.name); }
-  const p = vaultProxies.find(x => x.id === (parseInt(document.getElementById('m-proxy').value) || 0));
+  const pid = pv === '' ? (f && f.proxy_id) || 0 : parseInt(pv) || 0;
+  const p = vaultProxies.find(x => x.id === pid);
   if (p) parts.push(p.kind === 'wrm_tunnel' ? '⇄ ' + (p.tunnel_conn || p.name) : p.url);
   el.textContent = parts.length ? '⤳ ' + t('route_lbl') + ': ' + parts.join(' → ') + ' → ' + (document.getElementById('m-name').value.trim() || document.getElementById('m-host').value.trim() || '…') : '';
 }

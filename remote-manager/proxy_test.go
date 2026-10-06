@@ -525,3 +525,118 @@ func TestProxyJumpHostWebDesktopAndTunnel(t *testing.T) {
 		t.Fatalf("connection using its own tunnel as proxy accepted: %d", code)
 	}
 }
+
+func TestFolderDefaults(t *testing.T) {
+	sshAddr := startTestSSHServer(t)
+	srv := httptest.NewServer(newRouter())
+	defer srv.Close()
+	u := newTestUser(t, srv, "folder-defaults", false)
+	socks := startTestProxy(t, "socks5", "", "")
+	sp := u.addProxy("fd-socks", "socks5", socks)
+	bastion := u.addConnection("fd-bastion", sshAddr)
+
+	var f Folder
+	if code := u.jsonDo("POST", "/api/folders", map[string]interface{}{"name": "DC1", "jump_id": bastion, "proxy_id": sp}, &f); code != 201 || f.JumpName != "fd-bastion" || f.ProxyName != "fd-socks" {
+		t.Fatalf("create folder with defaults: %d %+v", code, f)
+	}
+	db.Exec(`UPDATE connections SET folder_id=? WHERE id=?`, f.ID, bastion) // the jump host itself lives in the folder too
+
+	// a new connection in the folder inherits both
+	var cv connView
+	if code := u.jsonDo("POST", "/api/connections", map[string]interface{}{"name": "fd-app", "protocol": "SSH", "host": sshAddr, "username": testSSHUser,
+		"auth_method": "PASSWORD", "password": testSSHPass, "folder_id": f.ID}, &cv); code != 201 {
+		t.Fatalf("create connection: %d", code)
+	}
+	if cv.JumpID == nil || *cv.JumpID != bastion || !cv.JumpFolder || cv.JumpChoice != nil || cv.ProxyID == nil || *cv.ProxyID != sp || !cv.ProxyFolder ||
+		cv.Route != "socks5://"+socks.addr+" → fd-bastion → socks5://"+socks.addr { // the bastion is in the folder too: it uses the folder proxy
+		t.Fatalf("inherited route: %+v", cv)
+	}
+	tc := u.openTerminal(cv.ID)
+	tc.waitFor("$ ")
+	tc.send("exit\r")
+	<-tc.closed
+	if len(socks.seen()) == 0 {
+		t.Fatalf("inherited proxy not used")
+	}
+	// the jump host does not inherit itself (but does get the folder proxy)
+	jb, _ := loadConnection(bastion)
+	if jb.JumpID != nil || jb.ProxyID == nil {
+		t.Fatalf("jump host in its own folder: jump %v proxy %v", jb.JumpID, jb.ProxyID)
+	}
+
+	// own choices win: none (-1) and another jump host
+	var own connView
+	if code := u.jsonDo("POST", "/api/connections", map[string]interface{}{"name": "fd-direct", "protocol": "SSH", "host": sshAddr, "username": testSSHUser,
+		"auth_method": "PASSWORD", "password": testSSHPass, "folder_id": f.ID, "jump_id": -1, "proxy_id": -1}, &own); code != 201 {
+		t.Fatalf("create direct connection: %d", code)
+	}
+	if own.JumpID != nil || own.ProxyID != nil || own.JumpChoice == nil || *own.JumpChoice != -1 || own.Route != "" {
+		t.Fatalf("own choice 'none': %+v", own)
+	}
+	var stored *int
+	db.QueryRow(`SELECT jump_conn_id FROM connections WHERE id=?`, own.ID).Scan(&stored)
+	if stored == nil || *stored != -1 {
+		t.Fatalf("stored choice: %v", stored)
+	}
+
+	// status follows the effective route (checked behind the jump host: state of the jump host)
+	setSetting("status_jump_checks", "0")
+	statusMon.round()
+	var st struct {
+		Connections map[string]hostStatus `json:"connections"`
+	}
+	u.jsonDo("GET", "/api/status", nil, &st)
+	if s := st.Connections[strconv.Itoa(cv.ID)]; s.Via != "fd-bastion" {
+		t.Fatalf("status of an inheriting connection: %+v", s)
+	}
+	if s := st.Connections[strconv.Itoa(own.ID)]; s.State != "up" || s.Via != "" {
+		t.Fatalf("status of a direct connection: %+v", s)
+	}
+
+	// changing the folder is audited; removing the defaults changes the route
+	if code := u.jsonDo("PUT", "/api/folders/"+strconv.Itoa(f.ID), map[string]interface{}{"name": "DC1", "jump_id": bastion}, &f); code != 200 || f.ProxyID != nil {
+		t.Fatalf("update folder: %d %+v", code, f)
+	}
+	var n int
+	db.QueryRow(`SELECT COUNT(*) FROM audit_log WHERE action='folder.updated' AND details LIKE '%default_proxy%'`).Scan(&n)
+	if n == 0 {
+		t.Fatalf("folder change not audited")
+	}
+	c, _ := loadConnection(cv.ID)
+	if c.ProxyID != nil || c.JumpID == nil {
+		t.Fatalf("route after the folder change: jump %v proxy %v", c.JumpID, c.ProxyID)
+	}
+	// a folder default that leads back to the connection is refused
+	other := u.addConnection("fd-other", sshAddr)
+	db.Exec(`UPDATE connections SET jump_conn_id=? WHERE id=?`, cv.ID, other)
+	if code := u.jsonDo("PUT", "/api/connections/"+strconv.Itoa(cv.ID), map[string]interface{}{"name": "fd-app", "protocol": "SSH", "host": sshAddr,
+		"username": testSSHUser, "auth_method": "PASSWORD", "folder_id": f.ID, "jump_id": nil}, nil); code != 200 {
+		t.Fatalf("plain update: %d", code)
+	}
+	var f2 Folder
+	if code := u.jsonDo("POST", "/api/folders", map[string]interface{}{"name": "loop", "jump_id": other}, &f2); code != 201 {
+		t.Fatalf("folder 2: %d", code)
+	}
+	if code := u.jsonDo("PUT", "/api/connections/"+strconv.Itoa(cv.ID), map[string]interface{}{"name": "fd-app", "protocol": "SSH", "host": sshAddr,
+		"username": testSSHUser, "auth_method": "PASSWORD", "folder_id": f2.ID}, nil); code != 400 {
+		t.Fatalf("folder default leading back to the connection accepted: %d", code)
+	}
+	db.Exec(`UPDATE connections SET jump_conn_id=NULL WHERE id=?`, other)
+
+	// export and import keep the defaults (jump host by connection, proxy by name)
+	u.jsonDo("PUT", "/api/folders/"+strconv.Itoa(f.ID), map[string]interface{}{"name": "DC1", "jump_id": bastion, "proxy_id": sp}, nil)
+	resp := u.do("GET", "/api/config/export", nil, "")
+	exp, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	imp := newTestUser(t, srv, "folder-importer", false)
+	if code := imp.jsonDo("POST", "/api/config/import", json.RawMessage(exp), nil); code != 200 {
+		t.Fatalf("import: %d", code)
+	}
+	var jn, pn, ch string
+	db.QueryRow(`SELECT COALESCE(j.name,''), COALESCE(p.name,'') FROM folders f LEFT JOIN connections j ON j.id=f.jump_conn_id LEFT JOIN proxies p ON p.id=f.proxy_id
+		WHERE f.user_id=? AND f.name='DC1'`, imp.userID).Scan(&jn, &pn)
+	db.QueryRow(`SELECT COALESCE(jump_conn_id,0) || '/' || COALESCE(proxy_id,0) FROM connections WHERE user_id=? AND name='fd-direct'`, imp.userID).Scan(&ch)
+	if jn != "fd-bastion" || pn != "fd-socks" || ch != "-1/-1" {
+		t.Fatalf("imported folder defaults: jump %q proxy %q, direct connection %q", jn, pn, ch)
+	}
+}
