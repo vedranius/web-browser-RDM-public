@@ -1056,6 +1056,7 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM inventory_sources WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM proxy_grants WHERE user_id=? OR proxy_id IN (SELECT id FROM proxies WHERE owner_id=?)`, id, id)
 	tx.Exec(`DELETE FROM proxies WHERE owner_id=?`, id)
+	tx.Exec(`DELETE FROM putty_sessions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_subscriptions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_prefs WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_pending WHERE user_id=?`, id)
