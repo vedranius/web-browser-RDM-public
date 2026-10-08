@@ -358,6 +358,10 @@ func bodyLimitFor(path string) int64 {
 	switch {
 	case path == "/api/remote/upload":
 		return -1 // streamed; limited per file by the max_upload_mb policy
+	case path == "/api/git/bundles":
+		return gitMaxBundle
+	case path == "/api/git/catalog" || path == "/api/git/catalog/import":
+		return maxImportBody
 	case isImportPath(path):
 		return maxImportBody
 	case strings.HasPrefix(path, "/api/sessions"):
