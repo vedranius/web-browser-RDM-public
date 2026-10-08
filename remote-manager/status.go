@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -49,12 +48,13 @@ type statusMonitor struct {
 	lastConn map[int]string         // last reported state per connection (change detection)
 	owners   map[int]int            // connection id → owner
 	names    map[int]string         // connection id → name (for "via …")
+	downAt   map[int]time.Time      // when a connection went down (for "up again after …")
 	trigger  chan struct{}
 	running  sync.Mutex // one round at a time
 }
 
 var statusMon = &statusMonitor{hosts: map[string]*hostStatus{}, conns: map[int]string{}, jumpOf: map[int]int{},
-	lastConn: map[int]string{}, owners: map[int]int{}, names: map[int]string{}, trigger: make(chan struct{}, 1)}
+	lastConn: map[int]string{}, owners: map[int]int{}, names: map[int]string{}, downAt: map[int]time.Time{}, trigger: make(chan struct{}, 1)}
 
 const (
 	statusDialTimeout   = 4 * time.Second
@@ -92,15 +92,18 @@ type statusTarget struct {
 	addr  string
 	proto string
 	jump  int // check through this jump connection (0 = directly)
+	proxy int // and then through this proxy (0 = none)
+	user  int // owner of the connection (proxy access)
 }
 
 type monConn struct {
-	id, userID, jump  int
-	name, proto, host string
+	id, userID, jump, proxy int
+	name, proto, host       string
 }
 
 func loadMonitoredConns() []monConn {
-	rows, err := db.Query(`SELECT id, COALESCE(user_id,0), name, protocol, host, COALESCE(jump_conn_id,0) FROM connections WHERE COALESCE(monitor,1)=1 AND protocol<>'SERIAL'`)
+	rows, err := db.Query(`SELECT c.id, COALESCE(c.user_id,0), c.name, c.protocol, c.host, ` + effJumpSQL + `, ` + effProxySQL + ` FROM connections c ` + folderJoin + `
+		WHERE COALESCE(c.monitor,1)=1 AND c.protocol<>'SERIAL'`)
 	if err != nil {
 		return nil
 	}
@@ -108,7 +111,7 @@ func loadMonitoredConns() []monConn {
 	var out []monConn
 	for rows.Next() {
 		var c monConn
-		if rows.Scan(&c.id, &c.userID, &c.name, &c.proto, &c.host, &c.jump) == nil && c.host != "" {
+		if rows.Scan(&c.id, &c.userID, &c.name, &c.proto, &c.host, &c.jump, &c.proxy) == nil && c.host != "" {
 			out = append(out, c)
 		}
 	}
@@ -117,13 +120,20 @@ func loadMonitoredConns() []monConn {
 
 func statusKey(c monConn, throughJumps bool) (statusTarget, bool) {
 	addr := ensurePort(c.host, c.proto)
+	px := ""
+	if c.proxy > 0 {
+		px = "px" + strconv.Itoa(c.proxy) + "u" + strconv.Itoa(c.userID) + "|" // proxy access is per user
+	}
 	if c.jump <= 0 {
+		if px != "" {
+			return statusTarget{key: px + addr, addr: addr, proto: c.proto, proxy: c.proxy, user: c.userID}, true
+		}
 		return statusTarget{key: "tcp|" + addr, addr: addr, proto: c.proto}, true
 	}
 	if !throughJumps {
 		return statusTarget{}, false
 	}
-	return statusTarget{key: "via" + strconv.Itoa(c.jump) + "|" + addr, addr: addr, proto: c.proto, jump: c.jump}, true
+	return statusTarget{key: "via" + strconv.Itoa(c.jump) + "|" + px + addr, addr: addr, proto: c.proto, jump: c.jump, proxy: c.proxy, user: c.userID}, true
 }
 
 // round checks every monitored connection once.
@@ -133,10 +143,11 @@ func (m *statusMonitor) round() {
 	through := settingBool("status_jump_checks")
 	conns := loadMonitoredConns()
 	targets := map[string]statusTarget{}
-	connKeys, jumpOf, owners, names := map[int]string{}, map[int]int{}, map[int]int{}, map[int]string{}
+	connKeys, jumpOf, owners, names, hosts := map[int]string{}, map[int]int{}, map[int]int{}, map[int]string{}, map[int]string{}
 	for _, c := range conns {
 		owners[c.id] = c.userID
 		names[c.id] = c.name
+		hosts[c.id] = c.host
 		if t, ok := statusKey(c, through); ok {
 			targets[t.key] = t
 			connKeys[c.id] = t.key
@@ -171,11 +182,31 @@ func (m *statusMonitor) round() {
 	}
 	m.conns, m.jumpOf, m.owners, m.names = connKeys, jumpOf, owners, names
 	changedUsers := map[int]bool{}
+	type transition struct {
+		uid, id        int
+		state, errText string
+		downFor        time.Duration
+	}
+	var transitions []transition
 	for id, uid := range owners {
-		st := m.connStatusLocked(id, 0).State
-		if m.lastConn[id] != st {
-			if _, seen := m.lastConn[id]; seen {
+		cs := m.connStatusLocked(id, 0)
+		st := cs.State
+		prev, seen := m.lastConn[id]
+		if prev != st {
+			if seen {
 				changedUsers[uid] = true
+				// Went down (from up, or from unknown behind a jump host), or came back from a
+				// reported down: up again, or behind a jump host that is up again.
+				_, reported := m.downAt[id]
+				recovered := st == "up" || (st == "unknown" && cs.ViaState == "up")
+				if st == "down" && !reported {
+					m.downAt[id] = time.Now()
+					transitions = append(transitions, transition{uid: uid, id: id, state: "down", errText: cs.Error})
+				} else if recovered && reported {
+					d := time.Since(m.downAt[id])
+					delete(m.downAt, id)
+					transitions = append(transitions, transition{uid: uid, id: id, state: "up", downFor: d})
+				}
 			}
 			m.lastConn[id] = st
 		}
@@ -183,11 +214,15 @@ func (m *statusMonitor) round() {
 	for id := range m.lastConn {
 		if _, ok := owners[id]; !ok {
 			delete(m.lastConn, id)
+			delete(m.downAt, id)
 		}
 	}
 	m.mu.Unlock()
 	for uid := range changedUsers {
 		hub.sendTo(uid, []byte(`{"type":"status_changed"}`))
+	}
+	for _, tr := range transitions {
+		notifyStatusChange(tr.uid, names[tr.id], hosts[tr.id], tr.state, tr.errText, tr.downFor)
 	}
 }
 
@@ -214,7 +249,7 @@ func (m *statusMonitor) probeAll(targets map[string]statusTarget) map[string]*ho
 		go func() {
 			defer wg.Done()
 			for t := range direct {
-				put(t.key, probeWithRetry(t, net.Dial))
+				put(t.key, probeWithRetry(t, statusDialer(t, directDial, false)))
 			}
 		}()
 	}
@@ -255,7 +290,7 @@ func probeViaJump(jumpID int, list []statusTarget) map[string]*hostStatus {
 	}
 	defer cl.Close()
 	for _, t := range list {
-		r := probeWithRetry(t, cl.Dial)
+		r := probeWithRetry(t, statusDialer(t, cl.Dial, true))
 		r.Via = jc.Name
 		out[t.key] = r
 	}
@@ -263,6 +298,38 @@ func probeViaJump(jumpID int, list []statusTarget) map[string]*hostStatus {
 }
 
 type dialFunc func(network, addr string) (net.Conn, error)
+
+// statusDialer reaches a target through its proxy when it has one.
+func statusDialer(t statusTarget, base dialFunc, behindJump bool) dialFunc {
+	if t.proxy <= 0 {
+		return base
+	}
+	px := t.proxy
+	rp, err := proxyOf(Connection{UserID: t.user, ProxyID: &px, Name: t.addr}, behindJump)
+	return func(network, addr string) (net.Conn, error) {
+		if err != nil {
+			return nil, statusUnknown{err.Error()} // the route cannot be used: not a "down" server
+		}
+		if rp.p.Kind == "wrm_tunnel" {
+			// Never start a WRM tunnel for a status check, and do not keep it alive: check
+			// over the SSH connection of a running tunnel, else the state is unknown.
+			var tr *tunnelRun
+			if rp.p.TunnelID != nil {
+				tr = tunnelMgr.get("t" + strconv.Itoa(*rp.p.TunnelID))
+			}
+			if tr == nil || tr.currentClient() == nil {
+				return nil, statusUnknown{"the WRM SOCKS tunnel of the proxy is not running"}
+			}
+			return tr.dialRemote(addr)
+		}
+		return rp.dial(base, addr)
+	}
+}
+
+// statusUnknown: the check could not be made (no "down" state, no notification).
+type statusUnknown struct{ msg string }
+
+func (e statusUnknown) Error() string { return e.msg }
 
 func probeWithRetry(t statusTarget, dial dialFunc) *hostStatus {
 	r := probe(t, dial)
@@ -289,6 +356,9 @@ func probe(t statusTarget, dial dialFunc) *hostStatus {
 	select {
 	case r := <-ch:
 		if r.err != nil {
+			if su, ok := r.err.(statusUnknown); ok {
+				return &hostStatus{State: "unknown", Error: truncateStr(su.msg, 200)}
+			}
 			return &hostStatus{State: "down", Error: shortNetError(r.err)}
 		}
 		conn = r.c
@@ -324,6 +394,9 @@ func probe(t statusTarget, dial dialFunc) *hostStatus {
 }
 
 func shortNetError(err error) string {
+	if pe, ok := err.(*proxyError); ok {
+		return truncateStr(pe.Error(), 200) // says whether the proxy or the target failed
+	}
 	s := err.Error()
 	switch {
 	case strings.Contains(s, "connection refused"):
@@ -394,16 +467,13 @@ func (m *statusMonitor) checkNow(cs []Connection) map[string]hostStatus {
 			addr := ensurePort(c.Host, c.Protocol)
 			t := statusTarget{addr: addr, proto: c.Protocol}
 			var r *hostStatus
-			if c.JumpID != nil && *c.JumpID > 0 {
-				chain, err := jumpChain(c)
-				if err != nil || len(chain) == 0 {
-					r = &hostStatus{State: "unknown", Error: fmt.Sprint(err)}
-				} else if cl, err := dialSSH(chain[len(chain)-1], nil); err != nil {
-					r = &hostStatus{State: "unknown", Via: jumpPath(c), ViaState: "down", Error: truncateStr("jump host: "+err.Error(), 200)}
+			if needsRoute(c) {
+				if rt, err := openTargetRoute(c); err != nil {
+					r = &hostStatus{State: "unknown", Via: jumpPath(c), ViaState: "down", Error: truncateStr(err.Error(), 200)}
 				} else {
-					r = probe(t, cl.Dial)
+					r = probe(t, rt.Dial)
 					r.Via = jumpPath(c)
-					cl.Close()
+					rt.Close()
 				}
 			} else {
 				r = probeWithRetry(t, net.Dial)
@@ -419,7 +489,7 @@ func (m *statusMonitor) checkNow(cs []Connection) map[string]hostStatus {
 	m.mu.Lock()
 	for _, c := range cs {
 		r, ok := out[strconv.Itoa(c.ID)]
-		if !ok || (c.JumpID != nil && *c.JumpID > 0) {
+		if !ok || needsRoute(c) {
 			continue
 		}
 		key := "tcp|" + ensurePort(c.Host, c.Protocol)

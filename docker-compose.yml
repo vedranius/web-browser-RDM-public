@@ -9,8 +9,8 @@ services:
     build:
       context: .
       args:
-        VERSION: v10.8.1
-    image: wrm-pro:v10.8.1
+        VERSION: v10.9.0
+    image: wrm-pro:v10.9.0
     restart: unless-stopped
     ports:
       - "8080:8080"              # web UI (HTTPS with the self-signed certificate below)
@@ -24,6 +24,10 @@ services:
       WRM_TURN_PUBLIC_IP: "${WRM_TURN_PUBLIC_IP:-}"
       # Optional: your own encryption key as a Docker secret instead of the generated key file
       # ENCRYPTION_KEY_FILE: /run/secrets/wrm_encryption_key
+    # Inside the container 127.0.0.1 is the container itself. A SOCKS / HTTP proxy that runs
+    # on the Docker host (e.g. "ssh -D 1080" or a local proxy) is reached as host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - wrm-data:/data
     # secrets: [wrm_encryption_key]

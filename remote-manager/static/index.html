@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.8.1</title>
+<title>Web Remote Manager PRO v10.9.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1479,7 +1479,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.8.1 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.9.0 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1558,7 +1558,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.8.1</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.9.0</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1677,7 +1677,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="field-row">
       <div class="field">
         <label data-i18n="folder_lbl">Folder</label>
-        <select id="m-folder"><option value="">— No Folder —</option></select>
+        <select id="m-folder" onchange="onConnFolderChange()"><option value="">— No Folder —</option></select>
       </div>
       <div class="field">
         <label data-i18n="protocol">Protocol</label>
@@ -1706,6 +1706,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <label data-i18n="jump_host">Jump host (connect via)</label>
       <select id="m-jump"></select>
       <div class="muted-text" style="margin-top:4px;" id="m-jump-help" data-i18n="jump_host_help">Reach this server through another saved SSH connection (bastion / jump host), like ssh -J. That connection can have its own jump host (chains).</div>
+    </div>
+    <div class="field" id="m-proxy-field">
+      <label data-i18n="proxy_lbl">Proxy</label>
+      <select id="m-proxy" onchange="onProxyPick()"></select>
+      <div class="muted-text" style="margin-top:4px;line-height:1.5;" id="m-proxy-help" data-i18n="proxy_help">A SOCKS or HTTP proxy for everything this connection does over TCP. With a jump host, the proxy is reached through it. IPMI and Serial-over-LAN use UDP and do not go through a proxy.</div>
+      <div class="muted-text" id="m-route" style="margin-top:4px;"></div>
     </div>
     <label class="check-row" id="m-monitor-row"><input type="checkbox" id="m-monitor" checked> <span><b data-i18n="st_monitor">Monitor up/down status</b> — <span data-i18n="st_monitor_d">checked regularly with a connection to its port, like a monitoring system (no login).</span></span></label>
     <div id="m-auth-fields">
@@ -1785,12 +1791,16 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 
 <!-- Folder Modal -->
 <div class="modal-overlay" id="modal-folder">
-  <div class="modal" style="width:300px;">
-    <h3>New Folder</h3>
-    <div class="field"><label>Name</label><input type="text" id="f-name" placeholder="e.g. Production" onkeydown="if(event.key==='Enter') saveFolder()"></div>
+  <div class="modal" style="width:min(480px, calc(100vw - 24px));">
+    <h3 id="f-title">New Folder</h3>
+    <input type="hidden" id="f-id">
+    <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="f-name" placeholder="e.g. Production" onkeydown="if(event.key==='Enter') saveFolder()"></div>
+    <div class="field"><label data-i18n="fd_jump">Default jump host</label><select id="f-jump"></select></div>
+    <div class="field"><label data-i18n="fd_proxy">Default proxy</label><select id="f-proxy"></select></div>
+    <div class="muted-text" style="line-height:1.5;" data-i18n="fd_help">Connections in this folder, also new ones, use these unless they choose their own jump host or proxy.</div>
     <div class="modal-footer">
-      <button class="btn-sec" onclick="closeModal('modal-folder')">Cancel</button>
-      <button onclick="saveFolder()">Create</button>
+      <button class="btn-sec" onclick="closeModal('modal-folder')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveFolder()" id="f-save" data-i18n="save">Save</button>
     </div>
   </div>
 </div>
@@ -1915,6 +1925,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn active" data-tab="st-general" onclick="showSettingsTab('st-general')" data-i18n="tab_general">General</button>
       <button class="tab-btn" data-tab="st-terminal" onclick="showSettingsTab('st-terminal')" data-i18n="tab_terminal">Terminal</button>
       <button class="tab-btn" data-tab="st-security" id="st-security-btn" onclick="showSettingsTab('st-security')" data-i18n="tab_security">Security</button>
+      <button class="tab-btn" data-tab="st-notify" id="st-notify-btn" onclick="showSettingsTab('st-notify')" data-i18n="tab_notify">Notifications</button>
       <button class="tab-btn" data-tab="st-audio" onclick="showSettingsTab('st-audio')" data-i18n="tab_audio">Voice &amp; audio</button>
       <button class="tab-btn" data-tab="st-history" id="st-history-btn" onclick="showSettingsTab('st-history')" data-i18n="tab_history">Session history</button>
       <button class="tab-btn" data-tab="st-data" id="st-data-btn" onclick="showSettingsTab('st-data')" data-i18n="tab_data">Data</button>
@@ -1960,6 +1971,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
     </div>
     <div class="tab-pane" id="st-security"><div id="security-pane"></div></div>
+    <div class="tab-pane" id="st-notify"><div id="notify-pane"></div></div>
     <div class="tab-pane" id="st-audio"><div id="audio-pane"></div></div>
     <div class="tab-pane" id="st-history">
       <div class="hint-box" data-i18n="history_help">Your terminal sessions and sessions of other people on your connections. Replay a recording or download it as an asciinema .cast file.</div>
@@ -2189,6 +2201,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="tabs" id="vault-tabs">
       <button class="tab-btn active" data-tab="keys" onclick="setVaultTab('keys')">🔑 <span data-i18n="vault_keys">SSH keys</span></button>
       <button class="tab-btn" data-tab="creds" onclick="setVaultTab('creds')">🗝 <span data-i18n="vault_creds">Credentials</span> <span class="pill warn" id="vault-tab-due" style="display:none;"></span></button>
+      <button class="tab-btn" data-tab="proxies" onclick="setVaultTab('proxies')">🌐 <span data-i18n="vault_proxies">Proxies</span></button>
     </div>
     <div class="tab-pane active" id="vault-keys">
       <div class="muted-text" style="line-height:1.5;" data-i18n="vk_help">Your SSH keys, stored encrypted on the WRM server. Generate a key or import one, put it on servers (like ssh-copy-id, through jump hosts too) and let connections log in with it. "Who has access" on an SSH connection shows which keys can log in there.</div>
@@ -2203,6 +2216,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="muted-text" style="line-height:1.5;" data-i18n="vc_help">A credential is a user name with a password (or an SSH key) that many connections log in with, e.g. root@dc1. Change it once and every connection uses the new one. Share it with colleagues: they can use it but never see it. Rotation changes the password on all its SSH servers at once.</div>
       <div class="vault-tools" style="margin-top:10px;"><button class="btn-sm" onclick="openCredModal(null)">＋ <span data-i18n="vc_new">New credential</span></button></div>
       <div id="vc-list"></div>
+    </div>
+    <div class="tab-pane" id="vault-proxies">
+      <div class="muted-text" style="line-height:1.5;" data-i18n="vp_help">SOCKS5, SOCKS4/4a and HTTP CONNECT proxies, or a SOCKS tunnel (-D) of one of your connections that WRM starts when needed. Choose one in a connection (Proxy) or as a folder default. Share it with colleagues: they can use it but never see its login.</div>
+      <div class="vault-tools" style="margin-top:10px;"><button class="btn-sm" id="vp-new-btn" onclick="openProxyModal(null)">＋ <span data-i18n="vp_new">New proxy</span></button></div>
+      <div id="vp-list"></div>
     </div>
     <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-vault')" data-i18n="close">Close</button></div>
   </div>
@@ -2295,6 +2313,51 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-proxy" style="z-index:9550;">
+  <div class="modal" style="width:min(600px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3 id="px-title">🌐</h3>
+    <input type="hidden" id="px-id">
+    <div class="field-row">
+      <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="px-name" maxlength="120" placeholder="dc1-socks"></div>
+      <div class="field"><label data-i18n="vp_kind">Type</label><select id="px-kind" onchange="onProxyKind()">
+        <option value="socks5">SOCKS5</option><option value="socks4">SOCKS4 / SOCKS4a</option><option value="http">HTTP CONNECT</option>
+        <option value="wrm_tunnel" data-i18n="vp_kind_tunnel">WRM SOCKS tunnel of a connection</option></select></div>
+    </div>
+    <div id="px-net">
+      <div class="field-row">
+        <div class="field"><label data-i18n="host">Host</label><input type="text" id="px-host" placeholder="10.1.1.1" oninput="onProxyKind()"></div>
+        <div class="field" style="max-width:120px;"><label data-i18n="vp_port">Port</label><input type="number" id="px-port" min="1" max="65535" placeholder="1080"></div>
+      </div>
+      <div class="hint-box warn" id="px-docker" style="display:none;" data-i18n="vp_docker_warn">WRM runs in a container: 127.0.0.1 is the container itself, not the Docker host. For a proxy on the host use host.docker.internal (docker-compose.yml maps it to the host).</div>
+      <div class="field"><label data-i18n="vp_login">Login</label><select id="px-login" onchange="onProxyKind()"></select></div>
+      <div class="field-row" id="px-own">
+        <div class="field"><label data-i18n="username">Username</label><input type="text" id="px-user" autocomplete="off"></div>
+        <div class="field" id="px-pass-f"><label data-i18n="password">Password</label><input type="password" id="px-pass" autocomplete="new-password">
+          <div class="muted-text" id="px-pass-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span></div></div>
+      </div>
+      <label class="check-row"><input type="checkbox" id="px-dns" checked> <span><b data-i18n="vp_dns">DNS at the proxy</b> — <span data-i18n="vp_dns_d">the proxy resolves host names (SOCKS5 domain names, SOCKS4a). Off: WRM resolves them and sends the address.</span></span></label>
+    </div>
+    <div class="field" id="px-tun-f"><label data-i18n="vp_tunnel">SOCKS tunnel (-D)</label><select id="px-tunnel"></select>
+      <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="vp_tunnel_help">A dynamic tunnel of one of your SSH connections. WRM starts it when a connection needs the proxy and stops it after 30 minutes without traffic. Add one under the connection's SSH tunnels → SOCKS proxy (-D).</div></div>
+    <div class="field"><label data-i18n="vc_desc">Description</label><input type="text" id="px-desc" maxlength="2000"></div>
+    <div id="px-share">
+      <div class="field"><label data-i18n="vc_grants">Share with users</label>
+        <div class="pw-row"><input type="text" id="px-grant-q" list="cr-grant-users" autocomplete="off" data-i18n-placeholder="vc_grant_ph" placeholder="User name…" oninput="crGrantSearch('px-grant-q')" onkeydown="if(event.key==='Enter'){event.preventDefault(); pxGrantAdd();}"><button class="btn-sec btn-sm" type="button" onclick="pxGrantAdd()">＋</button></div>
+        <div class="grant-chips" id="px-grants"></div>
+        <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="vp_grants_help">They can use the proxy in their connections, but never see its login. A proxy shared with a password is not reached through their own jump hosts.</div></div>
+      <label class="check-row" id="px-all-row"><input type="checkbox" id="px-all"> <span><b data-i18n="vc_shared_all">Share with all users</b> — <span data-i18n="vp_shared_all_d">everybody can use it in their connections (administrators only).</span></span></label>
+    </div>
+    <div class="field"><label data-i18n="vp_test_target">Test through the proxy (optional host:port)</label>
+      <div class="pw-row"><input type="text" id="px-test-target" placeholder="10.0.0.5:22"><button class="btn-sec btn-sm" type="button" onclick="testProxy()">🔌 <span data-i18n="vp_test">Test</span></button></div>
+      <div id="px-test-res" class="conn-test-result"></div></div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="px-del" style="margin-right:auto;" onclick="deleteProxy(Number(document.getElementById('px-id').value))">🗑</button>
+      <button class="btn-sec" onclick="closeModal('modal-proxy')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveProxy()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-rotate" style="z-index:9500;">
   <div class="modal" style="width:min(640px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
     <h3>🔄 <span id="rot-title"></span></h3>
@@ -2356,6 +2419,26 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 </div>
 
 <!-- Admin Panel Modal -->
+<div class="modal-overlay" id="modal-notify-ch" style="z-index:9500;">
+  <div class="modal" style="width:min(600px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3>🔔 <span id="nc-title"></span></h3>
+    <input type="hidden" id="nc-id">
+    <div class="field-row">
+      <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="nc-name" maxlength="120" placeholder="Ops e-mail"></div>
+      <div class="field"><label data-i18n="nf_kind">Type</label><select id="nc-kind" onchange="renderNotifyChannelFields()"></select></div>
+    </div>
+    <div class="muted-text" id="nc-help" style="line-height:1.5;margin-bottom:8px;"></div>
+    <div id="nc-fields"></div>
+    <label class="check-row" id="nc-ua-row"><input type="checkbox" id="nc-ua"> <span><b data-i18n="nf_user_address">Users may enter their own recipient</b> — <span id="nc-ua-d"></span></span></label>
+    <label class="check-row"><input type="checkbox" id="nc-enabled" checked> <span><b data-i18n="nf_enabled">Enabled</b> — <span data-i18n="nf_enabled_d">users can subscribe to it and it sends messages.</span></span></label>
+    <div class="modal-footer">
+      <button class="btn-danger" id="nc-del" style="margin-right:auto;" onclick="deleteNotifyChannel(Number(document.getElementById('nc-id').value))">🗑</button>
+      <button class="btn-sec" onclick="closeModal('modal-notify-ch')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveNotifyChannel()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-admin">
   <div class="modal">
     <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🛡 <span data-i18n="admin_panel">Admin panel</span></h3><button class="icon-btn" onclick="closeModal('modal-admin')">✕</button></div>
@@ -2365,6 +2448,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="shares" onclick="showAdminTab('shares')" data-i18n="adm_shares">Shares</button>
       <button class="tab-btn" data-tab="policies" onclick="showAdminTab('policies')" data-i18n="adm_policies">Security policies</button>
       <button class="tab-btn" data-tab="voice" onclick="showAdminTab('voice')" data-i18n="adm_voice">Voice &amp; network</button>
+      <button class="tab-btn" data-tab="notify" onclick="showAdminTab('notify')" data-i18n="adm_notify">Notifications</button>
       <button class="tab-btn" data-tab="hosts" onclick="showAdminTab('hosts')" data-i18n="adm_hosts">Host keys</button>
       <button class="tab-btn" data-tab="audit" onclick="showAdminTab('audit')" data-i18n="adm_audit">Audit log</button>
       <button class="tab-btn" data-tab="sessions" onclick="showAdminTab('sessions')" data-i18n="adm_sessions">Sessions &amp; recordings</button>
@@ -4200,6 +4284,114 @@ Object.assign(LANGS.hr, {
   import_too_big:'Datoteka je prevelika ({size}): ograničenje za uvoz je {max}.',
   pwa_menu_hint:'Koristi izbornik preglednika: „Instaliraj WRM…” / „Dodaj na početni zaslon” (Safari: Dijeli → Dodaj na početni zaslon).', pwa_running:'WRM radi kao instalirana aplikacija.', pwa_installed:'WRM je instaliran',
 });
+Object.assign(LANGS.en, {
+  tab_notify:'Notifications', adm_notify:'Notifications', nf_channels_lc:'channels', nf_subscribers_lc:'users subscribed',
+  nf_admin_help:'Channels through which WRM sends notifications: e-mail, chat (Telegram, Slack / Mattermost / Rocket.Chat, Microsoft Teams, Discord), push (ntfy, Gotify, Pushover) or a webhook. Users choose in Settings → Notifications which events they receive and where. Secrets (passwords, tokens, webhook URLs) are stored encrypted and never shown again.',
+  nf_new:'New channel', nf_none:'No channels yet.', nf_kind:'Type', nf_subscribers:'Users', nf_last_sent:'Last sent', nf_own_address:'own recipient',
+  nf_send_test:'Send test', nf_test_sent:'Test message sent', nf_test_failed:'Sending failed', nf_delete_q:'Delete this channel? Users subscribed to it no longer get messages through it.',
+  nf_enabled:'Enabled', nf_enabled_d:'users can subscribe to it and it sends messages.',
+  nf_user_address:'Users may enter their own recipient', nf_user_address_d:'each user can enter their own {field}; otherwise the one above is used.',
+  nf_secret_kept:'saved — leave empty to keep it', nf_secret_remove:'Remove the stored value',
+  nk_email:'E-mail (SMTP)', nk_telegram:'Telegram', nk_slack:'Slack / Mattermost / Rocket.Chat', nk_teams:'Microsoft Teams (Workflows)', nk_discord:'Discord', nk_ntfy:'ntfy', nk_gotify:'Gotify', nk_pushover:'Pushover', nk_webhook:'Webhook (JSON)',
+  nk_email_help:'An SMTP server (port 587 with STARTTLS, 465 with TLS). A user name and password are sent only over TLS or to a server on this machine.',
+  nk_telegram_help:'Create a bot with @BotFather, add it to a group or start a chat with it, and enter the chat ID (groups start with -100…). The API address only changes for a local Bot API server.',
+  nk_slack_help:'An incoming webhook URL. Mattermost and Rocket.Chat accept the same Slack format.',
+  nk_teams_help:'A Workflows webhook: in Teams, "Workflows" → "Post to a channel when a webhook request is received", then copy the URL. The message is an Adaptive Card.',
+  nk_discord_help:'Server settings → Integrations → Webhooks → New webhook → Copy URL.',
+  nk_ntfy_help:'The server (ntfy.sh or your own) and a topic. An access token is needed for protected topics.',
+  nk_gotify_help:'The address of your Gotify server and the token of an application created there.',
+  nk_pushover_help:'The API token of your Pushover application and the user or group key that receives the messages.',
+  nk_webhook_help:'WRM POSTs JSON (title, text and the events). With a secret, the header X-WRM-Signature carries sha256=HMAC-SHA256 of the body, so the receiver can check it.',
+  nf_f_host:'SMTP server', nf_f_port:'Port', nf_f_security:'Security', nf_f_username:'User name', nf_f_password:'Password', nf_f_from:'From', nf_f_to:'To (comma-separated)',
+  nf_f_bot_token:'Bot token', nf_f_chat_id:'Chat ID', nf_f_api_url:'API address', nf_f_webhook_url:'Webhook URL', nf_f_server:'Server', nf_f_topic:'Topic',
+  nf_f_access_token:'Access token', nf_f_app_token:'Application token', nf_f_user_key:'User key', nf_f_url:'URL', nf_f_hmac_secret:'Signing secret (HMAC)',
+  nf_opt_starttls:'STARTTLS', nf_opt_tls:'TLS', nf_opt_none:'none (plain)',
+  nf_ph_host:'smtp.example.com', nf_ph_from:'WRM <wrm@example.com>', nf_ph_to:'ops@example.com', nf_ph_chat_id:'-1001234567890', nf_ph_webhook_url:'https://…', nf_ph_topic:'wrm-alerts',
+  nf_ph_url:'https://example.com/hooks/wrm', nf_ph_user_key:'u…', nf_ph_username:'', nf_ph_server:'https://gotify.example.com',
+  ne_status_down:'A server went down', ne_status_up:'A server is up again', ne_credential_rotation_due:'Credential rotation is due', ne_credential_rotation_incomplete:'Credential rotation is incomplete',
+  nf_user_help:'Messages outside the browser: choose which events you receive and through which channel. Events from one check round arrive as one message. Notifications in WRM itself and in the browser (General → Notify when a server goes down) stay as they are.',
+  nf_disabled:'Notifications are turned off by the administrator.', nf_no_channels:'No notification channels yet: an administrator sets them up.',
+  nf_no_channels_admin:'No notification channels yet: add one in Admin panel → Notifications.', nf_event:'Event',
+  nf_your_to:'your e-mail address', nf_your_chat_id:'your Telegram chat ID', nf_your_topic:'your ntfy topic', nf_your_user_key:'your Pushover user key', nf_addr_default:'empty = the channel\'s recipient',
+  nf_quiet:'Quiet hours', nf_quiet_on:'Hold messages during quiet hours', nf_quiet_d:'they are sent together when the quiet hours end.', nf_quiet_from:'From', nf_quiet_to:'To', nf_tz:'Time zone',
+  nf_pending:'{n} messages waiting to be sent', ev_notify:'Notifications',
+  pg_notify:'Notifications', p_notifications_enabled:'Notifications', p_notifications_enabled_d:'Send notifications through the channels below (e-mail, chat, push, webhook).',
+  p_notify_min_interval_seconds:'Minimum interval (s)', p_notify_min_interval_seconds_d:'At most one message per user and channel in this time; what comes in meanwhile is sent together in the next one.',
+});
+Object.assign(LANGS.hr, {
+  tab_notify:'Obavijesti', adm_notify:'Obavijesti', nf_channels_lc:'kanala', nf_subscribers_lc:'korisnika pretplaćeno',
+  nf_admin_help:'Kanali kroz koje WRM šalje obavijesti: e-pošta, chat (Telegram, Slack / Mattermost / Rocket.Chat, Microsoft Teams, Discord), push (ntfy, Gotify, Pushover) ili webhook. Korisnici u Postavke → Obavijesti biraju koje događaje primaju i gdje. Tajne (lozinke, tokeni, webhook URL-ovi) spremaju se šifrirane i više se ne prikazuju.',
+  nf_new:'Novi kanal', nf_none:'Još nema kanala.', nf_kind:'Vrsta', nf_subscribers:'Korisnici', nf_last_sent:'Zadnje poslano', nf_own_address:'vlastiti primatelj',
+  nf_send_test:'Pošalji probu', nf_test_sent:'Probna poruka poslana', nf_test_failed:'Slanje nije uspjelo', nf_delete_q:'Obrisati ovaj kanal? Pretplaćeni korisnici više neće kroz njega dobivati poruke.',
+  nf_enabled:'Uključen', nf_enabled_d:'korisnici se mogu pretplatiti i kanal šalje poruke.',
+  nf_user_address:'Korisnici smiju upisati vlastitog primatelja', nf_user_address_d:'svaki korisnik može upisati svoj {field}; inače se koristi onaj gore.',
+  nf_secret_kept:'spremljeno — ostavi prazno za zadržati', nf_secret_remove:'Ukloni spremljenu vrijednost',
+  nk_email:'E-pošta (SMTP)', nk_telegram:'Telegram', nk_slack:'Slack / Mattermost / Rocket.Chat', nk_teams:'Microsoft Teams (Workflows)', nk_discord:'Discord', nk_ntfy:'ntfy', nk_gotify:'Gotify', nk_pushover:'Pushover', nk_webhook:'Webhook (JSON)',
+  nk_email_help:'SMTP poslužitelj (port 587 sa STARTTLS-om, 465 s TLS-om). Korisničko ime i lozinka šalju se samo preko TLS-a ili poslužitelju na ovom računalu.',
+  nk_telegram_help:'Napravi bota preko @BotFather, dodaj ga u grupu ili započni razgovor s njim i upiši ID chata (grupe počinju s -100…). Adresa API-ja mijenja se samo za lokalni Bot API poslužitelj.',
+  nk_slack_help:'URL dolaznog webhooka. Mattermost i Rocket.Chat prihvaćaju isti Slack format.',
+  nk_teams_help:'Workflows webhook: u Teamsu „Workflows” → „Post to a channel when a webhook request is received”, zatim kopiraj URL. Poruka je Adaptive Card.',
+  nk_discord_help:'Postavke servera → Integracije → Webhookovi → Novi webhook → Kopiraj URL.',
+  nk_ntfy_help:'Poslužitelj (ntfy.sh ili vlastiti) i tema. Za zaštićene teme potreban je pristupni token.',
+  nk_gotify_help:'Adresa tvog Gotify poslužitelja i token aplikacije napravljene na njemu.',
+  nk_pushover_help:'API token tvoje Pushover aplikacije i korisnički ili grupni ključ koji prima poruke.',
+  nk_webhook_help:'WRM šalje JSON POST-om (naslov, tekst i događaji). S tajnom zaglavlje X-WRM-Signature nosi sha256=HMAC-SHA256 tijela, pa primatelj može provjeriti poruku.',
+  nf_f_host:'SMTP poslužitelj', nf_f_port:'Port', nf_f_security:'Sigurnost', nf_f_username:'Korisničko ime', nf_f_password:'Lozinka', nf_f_from:'Pošiljatelj', nf_f_to:'Primatelji (odvojeni zarezom)',
+  nf_f_bot_token:'Token bota', nf_f_chat_id:'ID chata', nf_f_api_url:'Adresa API-ja', nf_f_webhook_url:'Webhook URL', nf_f_server:'Poslužitelj', nf_f_topic:'Tema',
+  nf_f_access_token:'Pristupni token', nf_f_app_token:'Token aplikacije', nf_f_user_key:'Korisnički ključ', nf_f_url:'URL', nf_f_hmac_secret:'Tajna za potpis (HMAC)',
+  nf_opt_starttls:'STARTTLS', nf_opt_tls:'TLS', nf_opt_none:'bez (nešifrirano)',
+  nf_ph_host:'smtp.example.com', nf_ph_from:'WRM <wrm@example.com>', nf_ph_to:'ops@example.com', nf_ph_chat_id:'-1001234567890', nf_ph_webhook_url:'https://…', nf_ph_topic:'wrm-alerts',
+  nf_ph_url:'https://example.com/hooks/wrm', nf_ph_user_key:'u…', nf_ph_username:'', nf_ph_server:'https://gotify.example.com',
+  ne_status_down:'Server je postao nedostupan', ne_status_up:'Server je ponovno dostupan', ne_credential_rotation_due:'Vrijeme je za rotaciju vjerodajnice', ne_credential_rotation_incomplete:'Rotacija vjerodajnice nije dovršena',
+  nf_user_help:'Poruke izvan preglednika: odaberi koje događaje primaš i kroz koji kanal. Događaji jednog kruga provjere stižu kao jedna poruka. Obavijesti u samom WRM-u i u pregledniku (Općenito → Obavijesti kad server postane nedostupan) ostaju kakve jesu.',
+  nf_disabled:'Administrator je isključio obavijesti.', nf_no_channels:'Još nema kanala za obavijesti: postavlja ih administrator.',
+  nf_no_channels_admin:'Još nema kanala za obavijesti: dodaj ga u Admin panel → Obavijesti.', nf_event:'Događaj',
+  nf_your_to:'tvoja adresa e-pošte', nf_your_chat_id:'tvoj Telegram ID chata', nf_your_topic:'tvoja ntfy tema', nf_your_user_key:'tvoj Pushover korisnički ključ', nf_addr_default:'prazno = primatelj kanala',
+  nf_quiet:'Tihi sati', nf_quiet_on:'Zadrži poruke tijekom tihih sati', nf_quiet_d:'šalju se zajedno kad tihi sati završe.', nf_quiet_from:'Od', nf_quiet_to:'Do', nf_tz:'Vremenska zona',
+  nf_pending:'{n} poruka čeka slanje', ev_notify:'Obavijesti',
+  pg_notify:'Obavijesti', p_notifications_enabled:'Obavijesti', p_notifications_enabled_d:'Slanje obavijesti kroz kanale ispod (e-pošta, chat, push, webhook).',
+  p_notify_min_interval_seconds:'Najkraći razmak (s)', p_notify_min_interval_seconds_d:'Najviše jedna poruka po korisniku i kanalu u tom vremenu; ono što stigne u međuvremenu šalje se zajedno u sljedećoj.',
+});
+Object.assign(LANGS.en, {
+  proxy_lbl:'Proxy', proxy_none:'no proxy', proxy_help:'A SOCKS or HTTP proxy for everything this connection does over TCP. With a jump host, the proxy is reached through it. IPMI and Serial-over-LAN use UDP and do not go through a proxy.',
+  route_lbl:'Route', vault_proxies:'Proxies', vp_new:'New proxy', vp_kind:'Type', vp_port:'Port', vp_kind_tunnel:'WRM SOCKS tunnel of a connection', vp_kind_tunnel_short:'WRM tunnel',
+  vp_help:'SOCKS5, SOCKS4/4a and HTTP CONNECT proxies, or a SOCKS tunnel (-D) of one of your connections that WRM starts when needed. Choose one in a connection (Proxy) or as a folder default. Share it with colleagues: they can use it but never see its login.',
+  vp_login:'Login', vp_login_none:'none', vp_login_own:'user name and password', vp_with_login:'login', vp_dns:'DNS at the proxy',
+  vp_dns_d:'the proxy resolves host names (SOCKS5 domain names, SOCKS4a). Off: WRM resolves them and sends the address.',
+  vp_tunnel:'SOCKS tunnel (-D)', vp_tunnel_help:'A dynamic tunnel of one of your SSH connections. WRM starts it when a connection needs the proxy and stops it after 30 minutes without traffic. Add one under the connection\'s SSH tunnels → SOCKS proxy (-D).',
+  vp_no_tunnels:'no SOCKS tunnel yet', vp_grants_help:'They can use the proxy in their connections, but never see its login. A proxy shared with a password is not reached through their own jump hosts.',
+  vp_shared_all_d:'everybody can use it in their connections (administrators only).', vp_test_target:'Test through the proxy (optional host:port)', vp_test:'Test',
+  vp_save_first:'Save the proxy first, then test it.', vp_delete_q:'Delete the proxy "{name}"?', vp_empty:'No proxies yet.', vp_missing:'(proxy not available)',
+  vp_docker_warn:'WRM runs in a container: 127.0.0.1 is the container itself, not the Docker host. For a proxy on the host use host.docker.internal (docker-compose.yml maps it to the host).',
+  pg_proxies:'Proxies', p_proxies:'Define proxies', p_proxies_d:'Who may create saved SOCKS / HTTP proxies. Everybody can use proxies shared with them.',
+  po_proxies_off:'Nobody', po_proxies_admins:'Administrators', po_proxies_all:'Everyone', ev_proxy:'Proxies',
+});
+Object.assign(LANGS.hr, {
+  proxy_lbl:'Proxy', proxy_none:'bez proxyja', proxy_help:'SOCKS ili HTTP proxy za sve što ova veza radi preko TCP-a. S jump hostom proxy se doseže kroz njega. IPMI i Serial-over-LAN koriste UDP i ne idu kroz proxy.',
+  route_lbl:'Put', vault_proxies:'Proxyji', vp_new:'Novi proxy', vp_kind:'Vrsta', vp_port:'Port', vp_kind_tunnel:'WRM SOCKS tunel veze', vp_kind_tunnel_short:'WRM tunel',
+  vp_help:'SOCKS5, SOCKS4/4a i HTTP CONNECT proxyji, ili SOCKS tunel (-D) jedne od tvojih veza koji WRM pokreće po potrebi. Odaberi ga u vezi (Proxy) ili kao zadano za mapu. Podijeli ga s kolegama: mogu ga koristiti, ali nikad ne vide njegovu prijavu.',
+  vp_login:'Prijava', vp_login_none:'bez', vp_login_own:'korisničko ime i lozinka', vp_with_login:'prijava', vp_dns:'DNS na proxyju',
+  vp_dns_d:'proxy razrješava imena hostova (SOCKS5 imena domena, SOCKS4a). Isključeno: WRM ih razrješava i šalje adresu.',
+  vp_tunnel:'SOCKS tunel (-D)', vp_tunnel_help:'Dinamički tunel jedne od tvojih SSH veza. WRM ga pokreće kad ga veza treba i zaustavlja nakon 30 minuta bez prometa. Dodaj ga pod SSH tuneli veze → SOCKS proxy (-D).',
+  vp_no_tunnels:'još nema SOCKS tunela', vp_grants_help:'Mogu koristiti proxy u svojim vezama, ali nikad ne vide njegovu prijavu. Proxy podijeljen s lozinkom ne doseže se kroz njihove vlastite jump hostove.',
+  vp_shared_all_d:'svi ga mogu koristiti u svojim vezama (samo administratori).', vp_test_target:'Provjera kroz proxy (neobavezno host:port)', vp_test:'Provjeri',
+  vp_save_first:'Najprije spremi proxy, zatim ga provjeri.', vp_delete_q:'Obrisati proxy „{name}”?', vp_empty:'Još nema proxyja.', vp_missing:'(proxy nije dostupan)',
+  vp_docker_warn:'WRM radi u kontejneru: 127.0.0.1 je sam kontejner, a ne Docker host. Za proxy na hostu koristi host.docker.internal (docker-compose.yml ga usmjerava na host).',
+  pg_proxies:'Proxyji', p_proxies:'Definiranje proxyja', p_proxies_d:'Tko smije stvarati spremljene SOCKS / HTTP proxyje. Svi mogu koristiti proxyje podijeljene s njima.',
+  po_proxies_off:'Nitko', po_proxies_admins:'Administratori', po_proxies_all:'Svi', ev_proxy:'Proxyji',
+});
+Object.assign(LANGS.en, {
+  fd_edit:'Folder settings…', fd_jump:'Default jump host', fd_proxy:'Default proxy', fd_defaults:'Folder defaults',
+  fd_help:'Connections in this folder, also new ones, use these unless they choose their own jump host or proxy.',
+  fd_from_folder:'as the folder', fd_jump_none:'no jump host (not the folder\'s)', fd_proxy_none:'no proxy (not the folder\'s)', fd_new_folder:'New folder',
+  ev_folder:'Folders',
+});
+Object.assign(LANGS.hr, {
+  fd_edit:'Postavke mape…', fd_jump:'Zadani jump host', fd_proxy:'Zadani proxy', fd_defaults:'Zadano za mapu',
+  fd_help:'Veze u ovoj mapi, i nove, koriste ovo osim ako odaberu vlastiti jump host ili proxy.',
+  fd_from_folder:'kao mapa', fd_jump_none:'bez jump hosta (ne onaj mape)', fd_proxy_none:'bez proxyja (ne onaj mape)', fd_new_folder:'Nova mapa',
+  ev_folder:'Mape',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4501,7 +4693,7 @@ function renderTree() {
     const folderWrap = document.createElement('div');
     const row = document.createElement('div');
     row.className = 'folder-row';
-    row.innerHTML = `<span class="folder-chevron ${filterActive || openFolderIds.has(f.id) ? 'open' : ''}">▶</span><span style="font-size:14px;">📁</span><span style="flex:1;">${esc(f.name)}</span>${fDown ? `<span class="folder-down" title="${esc(t('st_folder_down').replace('{n}', fDown))}">${fDown}↓</span>` : ''}<button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
+    row.innerHTML = `<span class="folder-chevron ${filterActive || openFolderIds.has(f.id) ? 'open' : ''}">▶</span><span style="font-size:14px;">📁</span><span style="flex:1;">${esc(f.name)}</span>${f.jump_id || f.proxy_id ? `<span class="conn-route" title="${esc(t('fd_defaults') + ': ' + [f.jump_name, f.proxy_name].filter(Boolean).join(' → '))}">⤳</span>` : ''}${fDown ? `<span class="folder-down" title="${esc(t('st_folder_down').replace('{n}', fDown))}">${fDown}↓</span>` : ''}<button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
     row.draggable = false;
     row.ondragover = e => { e.preventDefault(); row.classList.add('drag-over'); };
     row.ondragleave = () => row.classList.remove('drag-over');
@@ -4765,6 +4957,7 @@ function applyPolicyToUI() {
 function showFolderCtx(x, y) {
   const menu = document.getElementById('dyn-ctx-menu');
   menu.innerHTML = `
+    <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(ctxFolderId)">✏ ${esc(t('fd_edit'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow(conns.filter(c => c.folder_id === ctxFolderId).map(c => c.id))">🔄 ${esc(t('st_check_now'))}</div>
@@ -4822,6 +5015,7 @@ function openConnModal(id, focusTunnels) {
   renderTagSuggestions();
   deskOptsInit = (c && c.options) || {};
   fillJumpSelect(c);
+  fillProxySelect(c);
   loadConnTunnels(id, focusTunnels);
   // Passwords and keys never come back from the server: an empty field keeps the saved one.
   document.getElementById('m-pass').value = '';
@@ -4916,6 +5110,7 @@ function connFormPayload() {
     clear_password: document.getElementById('m-pass-clear').checked,
     clear_private_key: document.getElementById('m-key-clear').checked,
     jump_id: document.getElementById('m-jump').value ? parseInt(document.getElementById('m-jump').value) : null,
+    proxy_id: parseInt(document.getElementById('m-proxy').value) || null,
     web_path: document.getElementById('m-webpath').value.trim(),
     key_id: Number(document.getElementById('m-keyref').value) || null,
     tags: splitTagInput(document.getElementById('m-tags').value),
@@ -5005,17 +5200,41 @@ async function deleteConn(id) {
   loadData();
 }
 
-function openFolderModal() {
-  document.getElementById('f-name').value = '';
+async function openFolderModal(id) {
+  const f = id ? folders.find(x => x.id === id) : null;
+  if (currentUser && !isCollabMode) await loadVault();
+  document.getElementById('f-id').value = f ? f.id : '';
+  document.getElementById('f-title').textContent = f ? '📁 ' + f.name : t('fd_new_folder');
+  document.getElementById('f-name').value = f ? f.name : '';
+  const js = document.getElementById('f-jump');
+  js.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP') && !x.temporary)
+    .sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+  js.value = f && f.jump_id ? f.jump_id : '';
+  const ps = document.getElementById('f-proxy');
+  ps.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('');
+  ps.value = f && f.proxy_id ? f.proxy_id : '';
   document.getElementById('modal-folder').classList.add('open');
   setTimeout(() => document.getElementById('f-name').focus(), 50);
 }
 
 async function saveFolder() {
+  const id = Number(document.getElementById('f-id').value) || 0;
   const name = document.getElementById('f-name').value.trim();
   if (!name) return;
-  const res = await fetch('/api/folders', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
-  if (res.ok) { closeModal('modal-folder'); showToast(t('folder_created'), 'success'); loadData(); }
+  const body = {name, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
+  const res = await fetch('/api/folders' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if (res.ok) { closeModal('modal-folder'); showToast(id ? t('saved') : t('folder_created'), 'success'); loadData(); }
+  else showToast(await apiError(res), 'error', 6000);
+}
+
+// The folder chosen in the connection dialog (its defaults are inherited).
+function connDialogFolder() { const v = Number(document.getElementById('m-folder').value) || 0; return folders.find(f => f.id === v) || null; }
+
+function onConnFolderChange() {
+  const c = conns.find(x => x.id === Number(document.getElementById('m-id').value)) || null;
+  const jv = document.getElementById('m-jump').value, pv = document.getElementById('m-proxy').value;
+  fillJumpSelect(c, jv);
+  fillProxySelect(c, pv);
 }
 
 async function delFolder(id) {
@@ -5358,7 +5577,7 @@ function showAdminTab(tab) {
   const body = document.getElementById('admin-body');
   body.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
   ({overview: adminOverview, users: adminUsers, shares: adminShares, policies: () => adminPolicies('policies'),
-    voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit,
+    voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
     transfers: adminTransfers}[tab] || adminOverview)();
 }
@@ -5389,6 +5608,7 @@ async function adminOverview() {
       <div class="kv"><div class="k">${esc(t('database'))}</div><div class="v small">${esc(st.db_path)} (${fmtBytes(st.db_size)})</div></div>
       <div class="kv"><div class="k">${esc(t('encryption_key'))}</div><div class="v small">${esc(st.encryption_key)}</div></div>
       ${st.vault ? `<div class="kv"><div class="k">${esc(t('vault_title'))}</div><div class="v small">🔑 ${st.vault.keys} ${esc(t('vault_keys_lc'))} · 🚀 ${st.vault.deployments} ${esc(t('vault_deployments_lc'))} · 🗝 ${st.vault.credentials} ${esc(t('vault_creds_lc'))}${st.vault.rotation_due ? ' · ⏰ ' + st.vault.rotation_due + ' ' + esc(t('vc_due')) : ''}${st.vault.rotation_incomplete ? ' · ⚠ ' + st.vault.rotation_incomplete + ' ' + esc(t('vc_incomplete')) : ''}</div></div>` : ''}
+      ${st.notify ? `<div class="kv"><div class="k">${esc(t('adm_notify'))}</div><div class="v small">${st.notify.enabled} / ${st.notify.channels} ${esc(t('nf_channels_lc'))} · ${st.notify.subscribers} ${esc(t('nf_subscribers_lc'))}${st.notify.pending ? ' · ⏳ ' + st.notify.pending : ''}</div></div>` : ''}
       <div class="kv"><div class="k">ipmitool</div><div class="v small">${st.ipmitool ? '✅ ' + esc(st.ipmitool) : esc(t('bmc_no_ipmitool'))}</div></div>
       ${st.guacd ? `<div class="kv"><div class="k">${esc(t('desk_proxy'))}</div><div class="v small">${!st.guacd.enabled ? esc(t('off')) : st.guacd.ok ? '✅ guacd ' + esc(st.guacd.version || '') + ' · ' + esc(st.guacd.address) : '❌ ' + esc(st.guacd.address) + ' — ' + esc(t('desk_proxy_down'))}</div></div>` : ''}
     </div>
@@ -5571,6 +5791,7 @@ const POLICY_GROUPS = {
     ['pg_desktop', ['desktop_enabled', 'guacd_address', 'desktop_tunnel_bind']],
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
+    ['pg_proxies', ['proxies']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
@@ -5655,7 +5876,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'proxy.', 'folder.', 'notify.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -6014,6 +6235,7 @@ function onProtoChange() {
   document.getElementById('m-desk-help').textContent = t(serial ? 'ser_help' : 'desk_help');
   document.getElementById('m-bmc-box').style.display = web || serial || !(currentUser && currentUser.policy && currentUser.policy.bmc !== false) ? 'none' : '';
   document.getElementById('m-jump').closest('.field').style.display = serial ? 'none' : '';
+  document.getElementById('m-proxy-field').style.display = serial ? 'none' : '';
   document.getElementById('m-monitor-row').style.display = serial ? 'none' : '';
   updateAuthOptions();
   document.getElementById('field-webpath').style.display = web ? '' : 'none';
@@ -6024,15 +6246,22 @@ function onProtoChange() {
   document.getElementById('conn-test-btn').style.display = '';
 }
 
-function fillJumpSelect(c) {
+function fillJumpSelect(c, keep) {
   const sel = document.getElementById('m-jump');
+  const f = connDialogFolder();
+  const choice = keep != null ? keep : (c ? (c.jump_choice == null ? '' : String(c.jump_choice)) : '');
   const self = c ? c.id : 0;
   // A connection cannot use itself or a connection that goes through it.
   const goesThrough = (x) => { let cur = x, n = 0; while (cur && cur.jump_id && n++ < 10) { if (cur.jump_id === self) return true; cur = conns.find(y => y.id === cur.jump_id); } return false; };
   const opts = conns.filter(x => x.id !== self && (x.protocol === 'SSH' || x.protocol === 'SFTP') && !(self && goesThrough(x)))
     .sort((a, b) => a.name.localeCompare(b.name));
-  sel.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + opts.map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
-  sel.value = c && c.jump_id ? c.jump_id : '';
+  const inherited = f && f.jump_id && f.jump_id !== self;
+  sel.innerHTML = (inherited ? `<option value="">— ${esc(t('fd_from_folder'))}: ${esc(f.jump_name || '#' + f.jump_id)} —</option><option value="-1">— ${esc(t('fd_jump_none'))} —</option>`
+      : `<option value="">— ${esc(t('jump_direct'))} —</option>` + (choice === '-1' ? `<option value="-1">— ${esc(t('fd_jump_none'))} —</option>` : '')) +
+    opts.map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+  sel.value = choice;
+  if (sel.value !== choice) sel.value = '';
+  sel.onchange = updateRoutePreview;
 }
 
 const TUNNEL_PRESETS = {
@@ -6442,7 +6671,8 @@ async function saveNotes() {
   const notes = document.getElementById('notes-edit').value;
   const r = await fetch('/api/connections/' + c.id, {method: 'PUT', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({name: c.name, host: c.host, protocol: c.protocol, username: c.username, auth_method: c.auth_method, key_path: c.key_path, folder_id: c.folder_id,
-      jump_id: c.jump_id, web_path: c.web_path, key_id: c.key_id, credential_id: c.credential_id, notes})});
+      jump_id: c.jump_choice == null ? null : c.jump_choice, proxy_id: c.proxy_choice == null ? null : c.proxy_choice,
+      web_path: c.web_path, key_id: c.key_id, credential_id: c.credential_id, notes})});
   if (!r.ok) { showToast(await apiError(r), 'error'); return; }
   showToast(t('notes_saved'), 'success');
   document.getElementById('notes-view').innerHTML = renderNotes(notes);
@@ -6958,7 +7188,7 @@ async function invImport() {
 
 // ══ SSH KEY STORE & CREDENTIALS VAULT (v10.5) ═══════════
 
-let vaultKeys = [], vaultCreds = [], vaultTab = 'keys';
+let vaultKeys = [], vaultCreds = [], vaultProxies = [], vaultTab = 'keys', proxyCanDefine = true, proxyContainer = false;
 let _vaultLoading = null;
 
 function loadVault() {
@@ -6966,9 +7196,10 @@ function loadVault() {
   if (_vaultLoading) return _vaultLoading;
   _vaultLoading = (async () => {
     try {
-      const [k, c] = await Promise.all([fetch('/api/keys'), fetch('/api/credentials')]);
+      const [k, c, p] = await Promise.all([fetch('/api/keys'), fetch('/api/credentials'), fetch('/api/proxies')]);
       if (k.ok) vaultKeys = await k.json();
       if (c.ok) vaultCreds = await c.json();
+      if (p.ok) { const d = await p.json(); vaultProxies = d.proxies || []; proxyCanDefine = d.can_define; proxyContainer = d.container; }
     } catch (_) {}
     renderVaultBadge();
     if (document.getElementById('modal-vault').classList.contains('open')) renderVault();
@@ -7005,13 +7236,15 @@ async function openVault(tab) {
 }
 
 function setVaultTab(tab) {
-  vaultTab = tab === 'creds' ? 'creds' : 'keys';
+  vaultTab = ['creds', 'proxies'].includes(tab) ? tab : 'keys';
   document.querySelectorAll('#vault-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === vaultTab));
   document.getElementById('vault-keys').classList.toggle('active', vaultTab === 'keys');
   document.getElementById('vault-creds').classList.toggle('active', vaultTab === 'creds');
+  document.getElementById('vault-proxies').classList.toggle('active', vaultTab === 'proxies');
 }
 
 function renderVault() {
+  renderProxyList();
   const pol = (currentUser && currentUser.policy) || {};
   const connName = id => { const c = conns.find(x => x.id === id); return c ? c.name : '#' + id; };
   document.getElementById('vk-list').innerHTML = vaultKeys.length ? vaultKeys.map(k => {
@@ -7322,10 +7555,10 @@ function renderCrGrants() {
 }
 
 let _crSearchT = null;
-function crGrantSearch() {
+function crGrantSearch(inputId) {
   clearTimeout(_crSearchT);
   _crSearchT = setTimeout(async () => {
-    const q = document.getElementById('cr-grant-q').value.trim();
+    const q = document.getElementById(inputId || 'cr-grant-q').value.trim();
     try {
       const r = await fetch('/api/users?q=' + encodeURIComponent(q));
       if (!r.ok) return;
@@ -11413,12 +11646,343 @@ function applySettings() {
   });
 }
 
+// ── Notifications (v10.9): channels (admin) and subscriptions (user) ──
+const NOTIFY_ICONS = {email: '✉️', telegram: '✈️', slack: '💬', teams: '👥', discord: '🎮', ntfy: '🔔', gotify: '📣', pushover: '📲', webhook: '🪝'};
+let notifyAdminCache = null, notifyMine = null;
+
+function notifyKindLabel(k) { return (NOTIFY_ICONS[k] || '🔔') + ' ' + t('nk_' + k); }
+function notifyEventLabel(e) { return t('ne_' + e.replace(/\./g, '_')); }
+
+async function adminNotify() {
+  const body = document.getElementById('admin-body');
+  const [res, sres] = await Promise.all([fetch('/api/admin/notify/channels'), fetch('/api/admin/settings')]);
+  if (!res.ok) { body.innerHTML = `<div class="fm-error">${esc(await apiError(res))}</div>`; return; }
+  notifyAdminCache = await res.json();
+  if (sres.ok) adminSettingsCache = await sres.json();
+  const list = notifyAdminCache.channels || [];
+  body.innerHTML = `<div class="hint-box">${esc(t('nf_admin_help'))}</div>
+    <div class="policy-group">${['notifications_enabled', 'notify_min_interval_seconds'].map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
+    <div class="adm-toolbar" style="margin-top:10px;"><button class="btn-sm" onclick="openNotifyChannel(null)">＋ <span>${esc(t('nf_new'))}</span></button></div>
+    ${list.length ? `<div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>${esc(t('name_lbl'))}</th><th>${esc(t('nf_kind'))}</th><th>${esc(t('nf_subscribers'))}</th><th>${esc(t('nf_last_sent'))}</th><th></th></tr></thead><tbody>` +
+      list.map(c => `<tr><td><b>${esc(c.name)}</b> ${c.enabled ? '' : `<span class="pill">${esc(t('off'))}</span>`}${c.user_address ? ` <span class="pill info">${esc(t('nf_own_address'))}</span>` : ''}
+          ${c.last_error ? `<div class="sub" style="color:#fca5a5;">⚠ ${esc(c.last_error)}</div>` : ''}</td>
+        <td>${esc(notifyKindLabel(c.kind))}</td><td>${c.subscribers}</td><td>${esc(fmtTime(c.last_sent_at))}</td>
+        <td style="white-space:nowrap;"><button class="btn-sec btn-sm" onclick="adminNotifyTest(${c.id}, this)">📨 ${esc(t('nf_send_test'))}</button>
+          <button class="btn-sec btn-sm" onclick="openNotifyChannel(${c.id})">✏️</button></td></tr>`).join('') + '</tbody></table></div>'
+      : `<div class="chat-empty">${esc(t('nf_none'))}</div>`}`;
+}
+
+function openNotifyChannel(id) {
+  const c = id ? (notifyAdminCache.channels || []).find(x => x.id === id) : null;
+  document.getElementById('nc-id').value = c ? c.id : '';
+  document.getElementById('nc-title').textContent = c ? c.name : t('nf_new');
+  document.getElementById('nc-name').value = c ? c.name : '';
+  const kind = document.getElementById('nc-kind');
+  kind.innerHTML = notifyAdminCache.kinds.map(k => `<option value="${esc(k.kind)}">${esc(notifyKindLabel(k.kind))}</option>`).join('');
+  kind.value = c ? c.kind : 'email';
+  kind.disabled = !!c;
+  document.getElementById('nc-enabled').checked = c ? c.enabled : true;
+  document.getElementById('nc-ua').checked = c ? c.user_address : false;
+  document.getElementById('nc-del').style.display = c ? '' : 'none';
+  renderNotifyChannelFields(c);
+  document.getElementById('modal-notify-ch').classList.add('open');
+  setTimeout(() => document.getElementById('nc-name').focus(), 50);
+}
+
+function renderNotifyChannelFields(c) {
+  const kindName = document.getElementById('nc-kind').value;
+  const k = notifyAdminCache.kinds.find(x => x.kind === kindName);
+  if (!c || c.kind !== kindName) { const id = Number(document.getElementById('nc-id').value); c = (notifyAdminCache.channels || []).find(x => x.id === id && x.kind === kindName) || null; }
+  document.getElementById('nc-help').textContent = t('nk_' + kindName + '_help');
+  const cfg = (c && c.config) || {}, set = (c && c.secrets_set) || [];
+  document.getElementById('nc-fields').innerHTML = k.fields.map(f => {
+    const id = 'nc-f-' + f.name, v = cfg[f.name] || '';
+    let ctl;
+    if (f.kind === 'enum') ctl = `<select id="${id}">${f.enum.map(e => `<option value="${esc(e)}" ${e === (v || f.default) ? 'selected' : ''}>${esc(t('nf_opt_' + e))}</option>`).join('')}</select>`;
+    else if (f.secret) ctl = `<input type="password" id="${id}" autocomplete="new-password" placeholder="${set.includes(f.name) ? esc(t('nf_secret_kept')) : ''}">` +
+      (!f.required && set.includes(f.name) ? `<label class="check-row" style="margin-top:4px;"><input type="checkbox" id="nc-c-${f.name}"> <span>${esc(t('nf_secret_remove'))}</span></label>` : '');
+    else ctl = `<input type="${f.kind === 'int' ? 'number' : 'text'}" id="${id}" value="${esc(v)}" placeholder="${esc(f.default || ((LANGS.en['nf_ph_' + f.name] !== undefined) ? t('nf_ph_' + f.name) : ''))}">`;
+    return `<div class="field"><label>${esc(t('nf_f_' + f.name))}${f.required ? ' *' : ''}${f.secret ? ' 🔒' : ''}</label>${ctl}</div>`;
+  }).join('');
+  document.getElementById('nc-ua-row').style.display = k.address ? '' : 'none';
+  document.getElementById('nc-ua-d').textContent = k.address ? t('nf_user_address_d').replace('{field}', t('nf_f_' + k.address)) : '';
+}
+
+async function saveNotifyChannel() {
+  const id = Number(document.getElementById('nc-id').value) || 0;
+  const kind = document.getElementById('nc-kind').value;
+  const k = notifyAdminCache.kinds.find(x => x.kind === kind);
+  const config = {};
+  k.fields.forEach(f => { config[f.name] = document.getElementById('nc-f-' + f.name).value.trim(); });
+  const clear = k.fields.filter(f => { const cb = document.getElementById('nc-c-' + f.name); return cb && cb.checked; }).map(f => f.name);
+  const body = {name: document.getElementById('nc-name').value.trim(), kind, config, clear,
+    enabled: document.getElementById('nc-enabled').checked, user_address: document.getElementById('nc-ua').checked};
+  const res = await fetch('/api/admin/notify/channels' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!res.ok) { showToast(await apiError(res), 'error', 6000); return; }
+  closeModal('modal-notify-ch');
+  showToast(t('saved'), 'success', 1500);
+  adminNotify();
+}
+
+async function deleteNotifyChannel(id) {
+  if (!id || !(await uiConfirm(t('nf_delete_q'), {okText: t('delete'), danger: true}))) return;
+  const res = await fetch('/api/admin/notify/channels/' + id, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  closeModal('modal-notify-ch');
+  adminNotify();
+}
+
+async function adminNotifyTest(id, btn) {
+  if (btn) btn.disabled = true;
+  const res = await fetch('/api/admin/notify/channels/' + id + '/test', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'});
+  if (btn) btn.disabled = false;
+  if (res.ok) showToast(t('nf_test_sent'), 'success', 3000);
+  else showToast(t('nf_test_failed') + ': ' + await apiError(res), 'error', 9000);
+  adminNotify();
+}
+
+async function renderNotifyPane() {
+  const pane = document.getElementById('notify-pane');
+  pane.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
+  const res = await fetch('/api/notify');
+  if (!res.ok) { pane.innerHTML = `<div class="fm-error">${esc(await apiError(res))}</div>`; return; }
+  const d = notifyMine = await res.json();
+  const head = `<div class="hint-box">${esc(t('nf_user_help'))}</div>`;
+  if (!d.enabled) { pane.innerHTML = head + `<div class="hint-box warn">${esc(t('nf_disabled'))}</div>`; return; }
+  if (!d.channels.length) { pane.innerHTML = head + `<div class="hint-box">${esc(t(currentUser && currentUser.is_admin ? 'nf_no_channels_admin' : 'nf_no_channels'))}</div>`; return; }
+  const sub = (e, c) => d.subscriptions.some(s => s.event === e && s.channel_id === c);
+  const addrOf = c => (d.subscriptions.find(s => s.channel_id === c && s.address) || {}).address || '';
+  const p = d.prefs || {};
+  pane.innerHTML = head + `<div style="overflow-x:auto;"><table class="admin-table nf-matrix"><thead><tr><th>${esc(t('nf_event'))}</th>` +
+    d.channels.map(c => `<th style="text-align:center;">${esc((NOTIFY_ICONS[c.kind] || '') + ' ' + c.name)}</th>`).join('') + `</tr></thead><tbody>` +
+    d.events.map(e => `<tr><td>${esc(notifyEventLabel(e))}</td>` + d.channels.map(c => `<td style="text-align:center;"><input type="checkbox" class="nf-sub" data-ev="${esc(e)}" data-ch="${c.id}" ${sub(e, c.id) ? 'checked' : ''}></td>`).join('') + '</tr>').join('') +
+    `<tr><td></td>` + d.channels.map(c => `<td style="text-align:center;"><button class="btn-sec btn-sm" onclick="testMyNotify(${c.id}, this)">📨 ${esc(t('nf_send_test'))}</button></td>`).join('') + `</tr></tbody></table></div>` +
+    d.channels.filter(c => c.address_field).map(c => `<div class="field" style="margin-top:8px;"><label>${esc(c.name)}: ${esc(t('nf_your_' + c.address_field))}</label>
+      <input type="text" class="nf-addr" data-ch="${c.id}" value="${esc(addrOf(c.id))}" placeholder="${esc(t('nf_addr_default'))}"></div>`).join('') +
+    `<div class="adm-h">${esc(t('nf_quiet'))}</div>
+    <label class="check-row"><input type="checkbox" id="nf-quiet" ${p.quiet_enabled ? 'checked' : ''}> <span><b>${esc(t('nf_quiet_on'))}</b> — <span>${esc(t('nf_quiet_d'))}</span></span></label>
+    <div class="field-row"><div class="field"><label>${esc(t('nf_quiet_from'))}</label><input type="time" id="nf-qs" value="${esc(p.quiet_start || '22:00')}"></div>
+      <div class="field"><label>${esc(t('nf_quiet_to'))}</label><input type="time" id="nf-qe" value="${esc(p.quiet_end || '07:00')}"></div>
+      <div class="field"><label>${esc(t('nf_tz'))}</label><input type="text" id="nf-tz" value="${esc(browserTZ())}" readonly></div></div>
+    ${d.pending ? `<div class="muted-text">⏳ ${esc(t('nf_pending').replace('{n}', d.pending))}</div>` : ''}
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;"><button onclick="saveNotifyPane()">${esc(t('save'))}</button></div>`;
+}
+
+function browserTZ() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(_) { return 'UTC'; } }
+
+function collectNotifySubs() {
+  const addr = {};
+  document.querySelectorAll('#notify-pane .nf-addr').forEach(i => { addr[i.dataset.ch] = i.value.trim(); });
+  return [...document.querySelectorAll('#notify-pane .nf-sub')].filter(c => c.checked)
+    .map(c => ({event: c.dataset.ev, channel_id: Number(c.dataset.ch), address: addr[c.dataset.ch] || ''}));
+}
+
+async function saveNotifyPane() {
+  const body = {subscriptions: collectNotifySubs(), prefs: {quiet_enabled: document.getElementById('nf-quiet').checked,
+    quiet_start: document.getElementById('nf-qs').value || '22:00', quiet_end: document.getElementById('nf-qe').value || '07:00', tz: browserTZ(), lang: currentLang}};
+  const res = await fetch('/api/notify', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!res.ok) { showToast(await apiError(res), 'error', 6000); return; }
+  showToast(t('saved'), 'success', 1500);
+}
+
+async function testMyNotify(id, btn) {
+  const a = document.querySelector(`#notify-pane .nf-addr[data-ch="${id}"]`);
+  btn.disabled = true;
+  const res = await fetch('/api/notify/test', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({channel_id: id, address: a ? a.value.trim() : ''})});
+  btn.disabled = false;
+  if (res.ok) showToast(t('nf_test_sent'), 'success', 3000);
+  else showToast(t('nf_test_failed') + ': ' + await apiError(res), 'error', 9000);
+}
+
+// ── Proxies (v10.9): saved SOCKS / HTTP proxies, chosen per connection ──
+let pxGrants = [], pxTunnels = [];
+
+function proxyLabel(p) { return p.name + ' · ' + (p.kind === 'wrm_tunnel' ? '⇄ ' + (p.tunnel_conn || '') : p.url) + (p.mine ? '' : ' · ' + p.owner); }
+
+function fillProxySelect(c, selectId) {
+  const sel = document.getElementById('m-proxy');
+  const cur = String(selectId != null ? selectId : (c ? (c.proxy_choice == null ? '' : c.proxy_choice) : ''));
+  const f = connDialogFolder();
+  const fp = f && f.proxy_id ? (vaultProxies.find(p => p.id === f.proxy_id) || {name: f.proxy_name || '#' + f.proxy_id}) : null;
+  sel.innerHTML = (fp ? `<option value="">— ${esc(t('fd_from_folder'))}: ${esc(fp.name)} —</option><option value="-1">— ${esc(t('fd_proxy_none'))} —</option>`
+      : `<option value="">— ${esc(t('proxy_none'))} —</option>` + (cur === '-1' ? `<option value="-1">— ${esc(t('fd_proxy_none'))} —</option>` : '')) + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('') +
+    (c && c.proxy_choice > 0 && !vaultProxies.some(p => p.id === c.proxy_choice) ? `<option value="${c.proxy_choice}">${esc(c.proxy_name || t('vp_missing'))}</option>` : '') +
+    (proxyCanDefine ? `<option value="__new">＋ ${esc(t('vp_new'))}…</option>` : '');
+  sel.value = cur;
+  if (sel.value !== cur) sel.value = '';
+  sel.dataset.prev = sel.value;
+  updateRoutePreview();
+}
+
+function onProxyPick() {
+  const sel = document.getElementById('m-proxy');
+  // "+ New proxy…" opens the proxy dialog; until a new proxy is saved the previous choice stays.
+  if (sel.value === '__new') { sel.value = sel.dataset.prev || ''; openProxyModal(null, true); return; }
+  sel.dataset.prev = sel.value;
+  updateRoutePreview();
+}
+
+function updateRoutePreview() {
+  const el = document.getElementById('m-route');
+  if (!el) return;
+  const parts = [];
+  const f = connDialogFolder();
+  const jv = document.getElementById('m-jump').value, pv = document.getElementById('m-proxy').value;
+  const jid = jv === '' ? (f && f.jump_id) || 0 : parseInt(jv) || 0;
+  const j = conns.find(x => x.id === jid && x.id !== Number(document.getElementById('m-id').value));
+  if (j) { if (j.route) parts.push(j.route); parts.push(j.name); }
+  const pid = pv === '' ? (f && f.proxy_id) || 0 : parseInt(pv) || 0;
+  const p = vaultProxies.find(x => x.id === pid);
+  if (p) parts.push(p.kind === 'wrm_tunnel' ? '⇄ ' + (p.tunnel_conn || p.name) : p.url);
+  el.textContent = parts.length ? '⤳ ' + t('route_lbl') + ': ' + parts.join(' → ') + ' → ' + (document.getElementById('m-name').value.trim() || document.getElementById('m-host').value.trim() || '…') : '';
+}
+
+function renderProxyList() {
+  const el = document.getElementById('vp-list');
+  if (!el) return;
+  document.getElementById('vp-new-btn').style.display = proxyCanDefine ? '' : 'none';
+  el.innerHTML = vaultProxies.length ? vaultProxies.map(p => `<div class="share-card">
+    <div class="sc-top"><span class="sc-name">🌐 ${esc(p.name)}</span><span class="pill">${esc(p.kind === 'wrm_tunnel' ? t('vp_kind_tunnel_short') : p.kind.toUpperCase())}</span>
+      ${p.has_password || p.credential_id ? `<span class="pill">🔒 ${esc(t('vp_with_login'))}</span>` : ''}
+      ${!p.mine ? `<span class="pill info">👤 ${esc(p.owner)}</span>` : ''}${p.shared_all ? `<span class="pill info">${esc(t('vc_shared_all'))}</span>` : ''}
+      ${p.used_by ? `<span class="pill">🔗 ${p.used_by}</span>` : ''}</div>
+    <div class="vk-fp mono">${esc(p.kind === 'wrm_tunnel' ? '⇄ ' + (p.tunnel_conn || '?') + ' · ' + (p.tunnel_name || '') : p.url)}${p.remote_dns && p.kind !== 'http' && p.kind !== 'wrm_tunnel' ? ' · DNS @proxy' : ''}</div>
+    ${p.warning ? `<div class="hint-box warn">⚠ ${esc(t('vp_docker_warn'))}</div>` : ''}
+    ${p.description ? `<div class="sc-meta"><span>${esc(p.description)}</span></div>` : ''}
+    ${(p.grant_names || []).length ? `<div class="sc-meta"><span>👥 ${esc(p.grant_names.join(', '))}</span></div>` : ''}
+    <div class="sc-actions">${p.mine ? `<button class="btn-sec btn-sm" onclick="openProxyModal(${p.id})">✏ ${esc(t('edit'))}</button>` : ''}
+      <button class="btn-sec btn-sm" onclick="openProxyModal(${p.id}, false, true)">🔌 ${esc(t('vp_test'))}</button></div></div>`).join('')
+    : `<div class="vk-empty">${esc(t('vp_empty'))}</div>`;
+}
+
+let pxFromConn = false;
+async function openProxyModal(id, fromConn, testOnly) {
+  await loadVault();
+  const p = id ? vaultProxies.find(x => x.id === id) : null;
+  if (id && !p) return;
+  pxFromConn = !!fromConn;
+  const ro = p && !p.mine;
+  document.getElementById('px-title').textContent = '🌐 ' + (p ? p.name : t('vp_new'));
+  document.getElementById('px-id').value = p ? p.id : '';
+  document.getElementById('px-name').value = p ? p.name : '';
+  document.getElementById('px-kind').value = p ? p.kind : 'socks5';
+  document.getElementById('px-host').value = p && p.kind !== 'wrm_tunnel' ? p.host : '';
+  document.getElementById('px-port').value = p && p.kind !== 'wrm_tunnel' ? p.port : '';
+  document.getElementById('px-user').value = p ? p.username || '' : '';
+  const pw = document.getElementById('px-pass'); pw.value = ''; pw.placeholder = p && p.has_password ? '••••••••' : '';
+  document.getElementById('px-pass-note').style.display = p && p.has_password ? '' : 'none';
+  document.getElementById('px-dns').checked = p ? p.remote_dns : true;
+  document.getElementById('px-desc').value = p ? p.description || '' : '';
+  const login = document.getElementById('px-login');
+  login.innerHTML = `<option value="">${esc(t('vp_login_none'))}</option><option value="own">${esc(t('vp_login_own'))}</option>` +
+    vaultCreds.map(x => `<option value="c${x.id}">🗝 ${esc(x.name)}${x.username ? ' (' + esc(x.username) + ')' : ''}</option>`).join('');
+  login.value = p && p.credential_id ? 'c' + p.credential_id : (p && (p.username || p.has_password) ? 'own' : '');
+  pxGrants = p ? (p.grants || []).map((uid, i) => ({id: uid, username: (p.grant_names || [])[i] || ('#' + uid)})) : [];
+  renderPxGrants();
+  document.getElementById('px-all').checked = !!(p && p.shared_all);
+  document.getElementById('px-all-row').style.display = currentUser && currentUser.is_admin ? '' : 'none';
+  document.getElementById('px-del').style.display = p && p.mine ? '' : 'none';
+  document.getElementById('px-test-res').className = 'conn-test-result'; document.getElementById('px-test-res').textContent = '';
+  document.getElementById('modal-proxy').querySelectorAll('input, select').forEach(x => { if (x.id !== 'px-test-target') x.disabled = ro; });
+  document.getElementById('modal-proxy').querySelector('.modal-footer button:last-child').style.display = ro ? 'none' : '';
+  try { const r = await fetch('/api/tunnels'); if (r.ok) pxTunnels = (await r.json()).filter(x => x.kind === 'dynamic' && !x.ephemeral); } catch (_) {}
+  const ts = document.getElementById('px-tunnel');
+  ts.innerHTML = pxTunnels.length ? pxTunnels.map(x => `<option value="${x.id}">${esc(x.connection || x.conn_name || '')} · ${esc(x.name || 'SOCKS')} (${esc(x.bind_host)}:${x.bind_port || 'auto'})</option>`).join('') : `<option value="">— ${esc(t('vp_no_tunnels'))} —</option>`;
+  if (p && p.tunnel_id) ts.value = p.tunnel_id;
+  onProxyKind();
+  document.getElementById('modal-proxy').classList.add('open');
+  setTimeout(() => document.getElementById(testOnly ? 'px-test-target' : 'px-name').focus(), 50);
+}
+
+function onProxyKind() {
+  const k = document.getElementById('px-kind').value, tun = k === 'wrm_tunnel';
+  document.getElementById('px-net').style.display = tun ? 'none' : '';
+  document.getElementById('px-tun-f').style.display = tun ? '' : 'none';
+  document.getElementById('px-share').style.display = tun ? 'none' : '';
+  const login = document.getElementById('px-login').value;
+  document.getElementById('px-own').style.display = login === 'own' ? '' : 'none';
+  document.getElementById('px-pass-f').style.display = k === 'socks4' ? 'none' : '';
+  document.getElementById('px-port').placeholder = k === 'http' ? '3128' : '1080';
+  const h = document.getElementById('px-host').value.trim();
+  document.getElementById('px-docker').style.display = proxyContainer && !tun && /^(127\.|localhost$|::1$|\[::1\]$)/.test(h) ? '' : 'none';
+}
+
+function renderPxGrants() {
+  document.getElementById('px-grants').innerHTML = pxGrants.map(g => `<span class="grant-chip">👤 ${esc(g.username)}<button type="button" onclick="pxGrants = pxGrants.filter(x => x.id !== ${g.id}); renderPxGrants();" title="${esc(t('remove'))}">✕</button></span>`).join('');
+}
+
+async function pxGrantAdd() {
+  const inp = document.getElementById('px-grant-q');
+  const name = inp.value.trim().toLowerCase();
+  if (!name) return;
+  let u = crUserIds[name];
+  if (!u) {
+    try { const r = await fetch('/api/users?q=' + encodeURIComponent(name)); if (r.ok) (await r.json()).forEach(x => { crUserIds[x.username.toLowerCase()] = x; }); } catch (_) {}
+    u = crUserIds[name];
+  }
+  if (!u) { showToast(t('vc_user_unknown'), 'warning'); return; }
+  if (u.id !== currentUser.id && !pxGrants.some(g => g.id === u.id)) pxGrants.push({id: u.id, username: u.username});
+  inp.value = '';
+  renderPxGrants();
+}
+
+function proxyFormPayload() {
+  const login = document.getElementById('px-login').value;
+  return {name: document.getElementById('px-name').value.trim(), kind: document.getElementById('px-kind').value,
+    host: document.getElementById('px-host').value.trim(), port: parseInt(document.getElementById('px-port').value) || 0,
+    username: login === 'own' ? document.getElementById('px-user').value.trim() : '',
+    password: login === 'own' ? document.getElementById('px-pass').value : '', clear_password: login !== 'own',
+    credential_id: login.startsWith('c') ? Number(login.slice(1)) : null, remote_dns: document.getElementById('px-dns').checked,
+    tunnel_id: Number(document.getElementById('px-tunnel').value) || null, description: document.getElementById('px-desc').value.trim(),
+    grants: pxGrants.map(g => g.id), shared_all: document.getElementById('px-all').checked};
+}
+
+async function saveProxy() {
+  const id = Number(document.getElementById('px-id').value) || 0;
+  const body = proxyFormPayload();
+  if (!body.name) { showToast(t('name_required'), 'warning'); return; }
+  const r = await fetch('/api/proxies' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  const saved = await r.json();
+  closeModal('modal-proxy');
+  showToast(saved.warning ? '⚠ ' + t('vp_docker_warn') : t('saved'), saved.warning ? 'warning' : 'success', saved.warning ? 9000 : 1500);
+  await loadVault(); renderVault();
+  if (pxFromConn && document.getElementById('modal-conn').classList.contains('open')) {
+    const c = conns.find(x => x.id === Number(document.getElementById('m-id').value));
+    fillProxySelect(c, saved.id);
+  }
+  loadData();
+}
+
+async function deleteProxy(id) {
+  const p = vaultProxies.find(x => x.id === id);
+  if (!p || !(await uiConfirm(t('vp_delete_q').replace('{name}', p.name), {okText: t('delete'), danger: true}))) return;
+  const r = await fetch('/api/proxies/' + id, {method: 'DELETE'});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  closeModal('modal-proxy');
+  showToast(t('deleted'), 'success');
+  await loadVault(); renderVault();
+}
+
+async function testProxy() {
+  const id = Number(document.getElementById('px-id').value) || 0;
+  const out = document.getElementById('px-test-res');
+  if (!id) { out.className = 'conn-test-result fail'; out.textContent = t('vp_save_first'); return; }
+  out.className = 'conn-test-result busy'; out.textContent = '⏳ ' + t('testing');
+  const r = await fetch('/api/proxies/' + id + '/test', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({target: document.getElementById('px-test-target').value.trim()})});
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { out.className = 'conn-test-result fail'; out.textContent = '❌ ' + (d.error || r.statusText); return; }
+  out.className = 'conn-test-result ' + (d.ok ? 'ok' : 'fail');
+  out.textContent = (d.ok ? '✅ ' : '❌ ') + d.message + ' · ' + d.latency_ms + ' ms' + (d.warning ? ' — ⚠ ' + t('vp_docker_warn') : '');
+}
+
 function openSettings(tab) {
   document.getElementById('modal-settings').classList.add('open');
   const signedIn = !!currentUser;
   document.getElementById('st-security-btn').style.display = signedIn ? '' : 'none';
   document.getElementById('st-data-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-history-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
+  document.getElementById('st-notify-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   showSettingsTab(tab || 'st-general');
   updateInstallRow();
 }
@@ -11428,6 +11992,7 @@ function showSettingsTab(id) {
   document.querySelectorAll('#modal-settings .tab-pane').forEach(p => p.classList.toggle('active', p.id === id));
   if (id === 'st-security') renderSecurityPane();
   if (id === 'st-audio') renderAudioPane();
+  if (id === 'st-notify') renderNotifyPane();
   if (id === 'st-history') renderTermSessions('history-pane', true);
 }
 
@@ -12910,7 +13475,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed') loadVault(); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();

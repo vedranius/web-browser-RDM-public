@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.8.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.9.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -48,6 +48,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Quick connect & connection notes](#quick-connect--connection-notes)
    - [SSH keys & credentials vault](#ssh-keys--credentials-vault)
    - [Jump hosts (bastions)](#jump-hosts-bastions)
+   - [Proxies (SOCKS / HTTP)](#proxies-socks--http)
    - [SSH tunnels (port forwarding)](#ssh-tunnels-port-forwarding)
    - [Web interfaces (HTTP / HTTPS connections)](#web-interfaces-http--https-connections)
    - [Tags & inventory import (CSV, Excel, NetBox)](#tags--inventory-import-csv-excel-netbox)
@@ -59,6 +60,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Snippets & run on connect](#snippets--run-on-connect)
    - [Broadcast input](#broadcast-input)
    - [Live up/down status](#live-updown-status)
+   - [Notifications (e-mail, chat, push, webhook)](#notifications-e-mail-chat-push-webhook)
    - [Network tools](#network-tools)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
    - [Search in files](#search-in-files)
@@ -118,21 +120,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.8.1-linux-amd64
-   ./wrm-pro-v10.8.1-linux-amd64
+   chmod +x wrm-pro-v10.9.0-linux-amd64
+   ./wrm-pro-v10.9.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.8.1-windows-amd64.exe
+   .\wrm-pro-v10.9.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.8.1/wrm-pro-v10.8.1-android-arm64
-   chmod +x wrm-pro-v10.8.1-android-arm64 && ./wrm-pro-v10.8.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.9.0/wrm-pro-v10.9.0-android-arm64
+   chmod +x wrm-pro-v10.9.0-android-arm64 && ./wrm-pro-v10.9.0-android-arm64
    ```
 
    **Docker**
@@ -156,6 +158,16 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.8.1
+
+Replace the binary. The database gets new tables (`proxies`, `proxy_grants`, `notify_channels`, `notify_subscriptions`, `notify_prefs`, `notify_pending`, `notify_state`) and columns (`connections.proxy_id`, `folders.jump_conn_id`, `folders.proxy_id`); the previous binary still starts on it and ignores them (connections then go without their proxy and folder defaults).
+
+- **Proxies:** define SOCKS5, SOCKS4/4a or HTTP CONNECT proxies (or a SOCKS tunnel of a connection) under *🔑 SSH keys & credentials → 🌐 Proxies* and choose one in a connection (*Proxy*, next to *Jump host*). See [Proxies](#proxies-socks--http).
+- **Folder defaults:** right-click a folder → *Folder settings…* to give it a default jump host and proxy. Connections in the folder that have no jump host of their own then use the folder's (existing connections without a jump host included). Choose *no jump host (not the folder's)* where a connection must stay direct.
+- **Notifications:** an administrator adds channels in *Admin panel → Notifications* (e-mail, Telegram, Slack / Mattermost / Rocket.Chat, Teams, Discord, ntfy, Gotify, Pushover, webhook); users subscribe in *Settings → Notifications*. Nothing is sent until both happened. See [Notifications](#notifications-e-mail-chat-push-webhook).
+- **Docker:** `docker-compose.yml` now maps `host.docker.internal` to the Docker host (`extra_hosts`), for proxies that run on the host.
+- Deleting a jump host now makes the connections that used it fall back to their folder's default jump host (or go direct).
 
 ## Upgrading from v10.8.0
 
@@ -294,6 +306,8 @@ Left sidebar ("PRO MANAGER"):
   - **Protocol:** `SSH` (terminal, plus files over SFTP), `SFTP` (opens the file manager by default), **🖥 RDP**, **🖥 VNC**, **Telnet** (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)), **🔌 Serial port** of the WRM server (see [Serial ports](#out-of-band-management-consoles--serial-ports)), `FTP`, `FTPS` (FTP with explicit TLS; file manager only), **🌐 Web interface** `HTTPS` / `HTTP` (see [Web interfaces](#web-interfaces-http--https-connections)).
   - **Host : Port** (default port 22 for SSH/SFTP, 21 for FTP/FTPS, 443/80 for web interfaces), **Username**, **Folder**, **Tags** (comma separated, e.g. `env:prod, site:dc1, rack:a12, web`; the most used tags are offered below the field).
   - **Jump host (connect via):** another saved SSH connection to go through (see [Jump hosts](#jump-hosts-bastions)).
+  - **Proxy:** a saved SOCKS / HTTP proxy for everything the connection does over TCP (see [Proxies](#proxies-socks--http)). With a jump host the proxy is reached through it; the dialog shows the route, e.g. `⤳ Route: bastion → socks5://10.1.1.1:1080 → app-01`.
+  - Both show *— as the folder: … —* when the folder has a default (see below); *no jump host / no proxy (not the folder's)* overrides it.
   - **🔀 SSH tunnels:** port forwards of this connection (see [SSH tunnels](#ssh-tunnels-port-forwarding)).
   - **⚡ Out-of-band management:** the BMC of the server (see [Out-of-band management](#out-of-band-management-consoles--serial-ports)).
   - **📝 Notes & runbook:** procedures, contacts, links (see [Notes](#quick-connect--connection-notes)).
@@ -303,7 +317,7 @@ Left sidebar ("PRO MANAGER"):
 - **Host key verification:** the first connection to a server remembers its SSH host key (and, for FTPS, the certificate if it is not signed by a public CA). A **changed key is refused** with a clear warning and both fingerprints; the owner of the connection (or an administrator) can accept the new key after checking it. Policy: *trust on first use* (default), *strict* (new hosts must be approved) or *off*.
 - **Double-click** a connection to open it: SSH opens a terminal; SFTP/FTP/FTPS open the file manager. On touch devices a single tap opens it.
 - **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Network tools from this server…*, *Who has access (authorized_keys)…*, *Deploy SSH key…*, *Notes & runbook*, *Check ports of this host*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
-- **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root).
+- **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root), or **Folder settings…** to rename it and give it a **default jump host** and a **default proxy**: its connections — also new ones and the ones moved into it — use them unless they choose their own (⤳ after the folder name). Export and import keep the defaults.
 - **Search box** filters by name, host, username, protocol or tag; `#tag` searches tags only, several words must all match (`#env:prod web`). The **🏷 tag bar** above the list filters by one or more tags (click again to remove). **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share**, **🔑 Key** (deploy an SSH key to all of them), **🏷 Tags** (add tags, or remove them with `-tag`) or **Delete**.
 - The **dot in front of a connection** is its [live status](#live-updown-status): 🟢 up, 🟡 up but slow (> 300 ms), 🔴 down, a ring = behind a jump host (colored by the jump host's state). A **blue dot after the name** means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
 - **Shared with me** lists shares you are a member of (and shares published for all users), with your **role**; ↗ opens the collaboration room.
@@ -374,7 +388,38 @@ Servers in data centers and customer networks are often reachable only through a
 - **Every hop logs in with its own credentials** (password, key, key file) and **its host key is verified** (trust on first use / strict), like a direct connection. WRM opens no port on the jump host; it uses a `direct-tcpip` channel, so the bastion only needs `AllowTcpForwarding yes` (the OpenSSH default).
 - The route is shown in the sidebar (**⤳**), in *Test connection* (`… via bastion-dc1`), in the terminal, in *Sessions & recordings* and in the audit log.
 - Jump hosts are your own saved SSH connections. **Shares** of a connection behind a jump host work too — members never see the credentials of either.
-- Deleting a jump host makes the connections that used it direct again.
+- Deleting a jump host makes the connections that used it direct again (or use their folder's default jump host).
+- A folder can give its connections a **default jump host** (*Folder settings…*); a jump host that is itself in the folder does not go through itself.
+
+### Proxies (SOCKS / HTTP)
+
+Some servers are reached through a SOCKS or HTTP proxy instead of (or after) a bastion, like PuTTY's *Connection → Proxy*. A proxy is defined once and chosen per connection, like a vault credential:
+
+- *🔑 SSH keys & credentials → 🌐 Proxies → New proxy* (or *＋ New proxy…* in the connection dialog's **Proxy** field). Types:
+  - **SOCKS5**, with an optional user name and password (RFC 1929) — encrypted, or a **vault credential**;
+  - **SOCKS4 / SOCKS4a** (a user id, no password);
+  - **HTTP CONNECT** with Basic authentication;
+  - **WRM SOCKS tunnel of a connection:** a dynamic tunnel (`-D`) of one of your SSH connections. WRM starts it when a connection needs it and stops it after 30 minutes without traffic.
+- **DNS at the proxy** (PuTTY: *Do DNS name lookup at proxy end*, default on): the proxy resolves host names (SOCKS5 domain names, SOCKS4a). Off: WRM resolves them and sends the address.
+- **Everything a connection does over TCP goes through it:** SSH terminal, SFTP, search, transfers, tunnels, key deploy and password rotation, FTP/FTPS (also the data connections), RDP / VNC / Telnet (guacd connects to a local relay on `desktop_tunnel_bind`), web interfaces (opened through a local relay on `127.0.0.1`), *Test connection*, live status, network tools from the server, Redfish (when *Through the jump host* is ticked). **IPMI and Serial-over-LAN use UDP** and cannot go through a proxy: WRM refuses that combination.
+- **Proxy and jump host together:** the proxy is reached through the jump hosts, then the target:
+
+```
+ WRM ──SSH──► bastion ──direct-tcpip──► proxy 10.1.1.1:1080 ──SOCKS CONNECT──► app-01:22
+```
+
+  The route is shown in the sidebar, the dialog, the terminal, *Sessions & recordings* and the audit log: `bastion → socks5://10.1.1.1:1080 → app-01`. Jump hosts can have proxies of their own.
+- **Clear errors** that tell the proxy and the target apart:
+  - `proxy socks5://10.1.1.1:1080: not reachable: connection refused` — the proxy itself;
+  - `proxy socks5://…: authentication required` / `authentication failed: wrong user name or password` (HTTP: `407`);
+  - `proxy socks5://… cannot reach 10.0.0.5:22: connection refused (SOCKS5 reply 5)` — the proxy works, the target does not answer (HTTP: `502` / `504`).
+- **Live status** checks through a *WRM SOCKS tunnel* proxy only while that tunnel runs (it is never started or kept alive by a check); otherwise the state is *unknown*.
+- A proxy address on the WRM machine that is a running SSH tunnel of **another user** is refused (*this address is an SSH tunnel of another user on the WRM server*): tunnel listeners have no login of their own.
+- **Sharing:** share a proxy with users (or, administrators, with everybody): they can use it but never see its login. A proxy shared **with a password** is not reached through the grantee's own jump hosts (they could read the plain-text proxy login there). WRM tunnel proxies are not shared.
+- **Folder default:** *Folder settings…* → *Default proxy*.
+- **Policy `proxies`** (`all` / `admins` / `off`): who may define proxies. Everybody can use proxies shared with them.
+- Export and import keep proxies by name (the export lists your proxies, passwords only in an export with secrets; an import creates the missing ones); *Duplicate* keeps the proxy.
+- **Docker:** inside a container `127.0.0.1` is the container itself. `docker-compose.yml` maps `host.docker.internal` to the Docker host (`extra_hosts: ["host.docker.internal:host-gateway"]`): for `ssh -D 1080` or a proxy on the host use `host.docker.internal:1080`, and let it listen on an address the container reaches (not only `127.0.0.1` of the host). WRM warns when a proxy at `127.0.0.1` is saved while it runs in a container.
 
 ### SSH tunnels (port forwarding)
 
@@ -587,7 +632,8 @@ WRM checks every saved connection in the background and shows the result in the 
 
 - 🟢 **up** (hover: latency, since when, SSH server version), 🟡 **slow** (more than 300 ms), 🔴 **down** (pulsing; hover: since when and why — *connection refused*, *timeout*, *host name not found* …), a **ring** for connections behind a jump host.
 - A folder shows how many of its connections are down (**2↓**). When something is down, a red bar above the tree shows **only the connections that are down** with one click.
-- **Notifications:** a message when a server goes down or comes back, and a desktop notification while WRM is in the background (*Settings → General → Notify when a server goes down*).
+- **Notifications:** a message when a server goes down or comes back, and a desktop notification while WRM is in the background (*Settings → General → Notify when a server goes down*). Outside the browser: e-mail, chat or push through [Notifications](#notifications-e-mail-chat-push-webhook).
+- **Through a proxy:** connections with a proxy are checked through it (and through their jump hosts when *Check through jump hosts* is on).
 - **🔄 Check status now** (right-click a connection or a folder) checks immediately — also **through the jump hosts** — and shows the result per connection.
 - **How it checks:** a TCP connection to the connection's port (SSH 22, FTP 21, web 80/443 or the port you set). SSH checks read the server banner and answer with `SSH-2.0-WRM_status_check` before closing, FTP checks read the 220 greeting and send `QUIT` — the same as Nagios `check_ssh`/`check_ftp`. Nothing logs in. A failed check is repeated once before a server counts as down. Each distinct host:port is checked once per round, however many connections and users point to it.
 - **Behind a jump host** a connection shows the state of its jump host (a red ring when the jump host is down). With the policy *Check through jump hosts*, WRM logs in to the jump host once per round and checks the ports behind it through that SSH connection.
@@ -595,6 +641,32 @@ WRM checks every saved connection in the background and shows the result in the 
 - Policies: `status_enabled` (on), `status_interval_seconds` (60, 15–3600), `status_jump_checks` (off).
 
 > **fail2ban / IDS:** the check is an ordinary connection without a login. Default fail2ban `sshd` filters do not count it, but the *aggressive* / *ddos* modes may. Add the WRM server to `ignoreip`, raise the interval, or untick monitoring for such hosts.
+
+### Notifications (e-mail, chat, push, webhook)
+
+WRM tells you about events outside the browser too. **Administrators** set up the channels (*Admin panel → Notifications*), **users** choose what they receive and where (*Settings → Notifications*). The in-app messages and browser notifications stay as they are.
+
+- **Channels:**
+
+| Type | What it needs |
+|---|---|
+| E-mail (SMTP) | server, port, security (STARTTLS / TLS / none), optional login, from, to. A login is only sent over TLS or to a server on the WRM machine |
+| Telegram | bot token (@BotFather), chat ID; optionally the address of a local Bot API server |
+| Slack / Mattermost / Rocket.Chat | incoming webhook URL (Slack format) |
+| Microsoft Teams | a *Workflows* webhook URL (*Post to a channel when a webhook request is received*); sent as an Adaptive Card |
+| Discord | webhook URL |
+| ntfy | server (ntfy.sh or your own), topic, optional access token |
+| Gotify | server, application token |
+| Pushover | application token, user or group key |
+| Webhook | URL; WRM POSTs JSON (`title`, `text`, `events`). With a signing secret the header `X-WRM-Signature: sha256=<HMAC-SHA256 of the body>` lets the receiver check it |
+
+- Secrets (passwords, tokens, webhook URLs) are **encrypted** and never shown again; leave a field empty to keep it. **📨 Send test** sends a test message at once and shows the service's answer (*HTTP 400 chat not found*, *SMTP login: …*). The last delivery and the last error are listed per channel.
+- *Users may enter their own recipient* (e-mail, Telegram, ntfy, Pushover): each user can enter their own address, chat ID, topic or user key (e-mail: plain addresses only); otherwise the channel's is used. A channel without a default recipient needs the user's own. Slack-format and Discord messages cannot mention `@channel` / `@everyone` through connection names.
+- **Events:** a server went down, a server is up again (only the owner's own monitored connections; connections with monitoring off are left out), credential rotation is due (again every 7 days while it stays due), credential rotation is incomplete (again every day).
+- **One message per round:** what happens in one status round (or within a few seconds) goes out as **one digest** per user and channel, and a channel sends to the same recipient at most once per `notify_min_interval_seconds` (60); what comes in meanwhile goes into the next message.
+- **Quiet hours** (per user, in the browser's time zone): messages wait and are sent together when the quiet hours end.
+- Messages are in the user's language (English / Hrvatski). Waiting messages survive a restart; a failing channel is retried with a growing delay and gives up after 6 attempts.
+- Policies `notifications_enabled` (on) and `notify_min_interval_seconds`. Channel changes and tests are audited (`admin.notify_channel_*`), subscriptions too (`notify.settings_changed`).
 
 ### Network tools
 
@@ -775,6 +847,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 | Tab | What it contains |
 |---|---|
 | General | Language (English / Hrvatski), **install as an app**, accent color, close-window confirmation, **notifications when a server goes down**, browser-side upload limit |
+| Notifications | Events × channels to receive outside the browser, your own recipient where the channel allows it, quiet hours, *Send test* |
 | Terminal | Font size, scrollback, auto-reconnect |
 | Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
 | Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
@@ -790,7 +863,8 @@ Personal preferences are stored per browser; everything security-related is stor
 - **Overview:** version, uptime, users (admins, 2FA), HTTPS, voice relay status, encryption key source, **security warnings** (no HTTPS, open registration, admins without 2FA, host keys off…), **open terminals** (who, which server, from which IP — with *End*), **active SSH tunnels** (owner, connection and route, listen → target, traffic — with *Stop*), **live rooms** (participants, voice, shared terminals).
 - **Users:** create users (temporary password generated if you leave it empty), display name, make/remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete (with everything the user owns). The last active administrator cannot be removed.
 - **Shares:** every share on the server — pause/resume or delete.
-- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit), **broadcast input**, **live status** (on/off, interval, checks through jump hosts), **SSH tunnels** (on/off, who may use them, listening on network addresses, remote forwarding, idle stop).
+- **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit), **broadcast input**, **live status** (on/off, interval, checks through jump hosts), **SSH tunnels** (on/off, who may use them, listening on network addresses, remote forwarding, idle stop), **proxies** (who may define them).
+- **Notifications:** notification channels (e-mail, Telegram, Slack / Mattermost / Rocket.Chat, Teams, Discord, ntfy, Gotify, Pushover, webhook) with *Send test*, last delivery and error; notifications on/off and the minimum interval.
 - **Voice & network:** voice on/off, participants per call, built-in TURN relay (port, public IP, host name, relay ports, private networks), additional STUN/TURN servers.
 - **Host keys:** remembered SSH host keys and FTPS certificates; forget an entry after a server was reinstalled.
 - **Audit log:** searchable and filterable (event type, user, date range), linked to sessions, **CSV export**, **Verify integrity** (hash chain).
@@ -898,6 +972,9 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `bmc_enabled` | `1` | out-of-band management (BMC power, status, consoles). Also `BMC_ENABLED` |
 | `serial_ports` | `admins` | who may use serial ports of the WRM server: `off`, `admins`, `all` |
 | `network_tools` | `all` | who may use the network tools (port check, ping, traceroute, DNS, HTTP/TLS): `off`, `admins`, `all` |
+| `proxies` | `all` | who may define saved proxies: `off`, `admins`, `all` (everybody may use proxies shared with them) |
+| `notifications_enabled` | `1` | send notifications through the channels of *Admin panel → Notifications*. Also `NOTIFICATIONS_ENABLED` |
+| `notify_min_interval_seconds` | `60` | at most one message per user and channel in this time (0–86400); the rest goes into the next digest |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
@@ -929,6 +1006,7 @@ Images of releases are also published to the GitHub Container Registry: `docker 
 - `/data` holds the database, the encryption key (`remote_manager.db.key`), recordings and the self-signed certificate. Back up the volume and keep a **separate** copy of the key — or provide your own key as a Docker secret (`ENCRYPTION_KEY_FILE=/run/secrets/…`, see the comments in `docker-compose.yml`).
 - The compose file enables `HTTPS_SELF_SIGNED=1`. Behind a TLS reverse proxy remove it and set `WRM_TRUST_PROXY=1`.
 - Voice relay from a container needs `WRM_TURN_PUBLIC_IP` and the published relay ports (`49160-49200/udp`, matching `WRM_TURN_RELAY_PORTS`).
+- `127.0.0.1` inside the container is the container. The compose file adds `extra_hosts: ["host.docker.internal:host-gateway"]`, so a [proxy](#proxies-socks--http) on the Docker host is `host.docker.internal:<port>` (it must listen on an address the container reaches, e.g. the Docker bridge). With `docker run` add `--add-host=host.docker.internal:host-gateway`.
 
 ### Service
 
@@ -945,7 +1023,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.8.1-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.9.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1037,6 +1115,8 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Remote desktop:** WRM does the guacd handshake with the stored credentials (never sent to the browser) and forwards only display and allow-listed input instructions; jump-host tunnels for guacd listen on loopback and live only as long as the session; sessions are audited and recorded.
 - **Live status:** checks are plain TCP connections from the WRM server (no credentials, except optional checks through jump hosts with the jump host's own saved login); users only see the states of their own connections.
 - **Tunnels & jump hosts:** every hop is authenticated and host-key-verified; tunnels belong to the owner of the connection (only the owner starts them; administrators can stop any); listen on `127.0.0.1` by default; ports below 1024 refused; network addresses and remote forwards only for administrators (policies); a tunnel can be turned off globally or limited to administrators; every start/stop/error is audited with the traffic. A tunnel port on a network address is **not** protected by WRM sign-in — treat it like an open port of that machine.
+- **Proxies:** proxy passwords are encrypted, never sent to the browser and not shown to grantees; a proxy shared with a password is never reached through the grantee's own jump hosts; WRM tunnel proxies cannot be shared; IPMI / SOL never bypass a proxy silently (refused). Creation, changes, grants and tests are audited (`proxy.*`) and every session records its route.
+- **Notifications:** channel secrets are encrypted and write-only; users only see enabled channels by name and type; messages go only to the owner of a connection or credential; configuration changes are audited as `admin.*` (always recorded).
 - **Quick connect, notes & network tools:** quick connections are ordinary connections of their owner (same checks, encryption, host keys, audit) that expire; notes are only shown to the owner and rendered as escaped text; network tools only take host names or addresses (never options or shell characters), run from the WRM server or the user's own SSH connections, one at a time per user, and are audited (`nettool.run`) — limit them with `network_tools`.
 - **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
 
@@ -1089,7 +1169,7 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/connections/bulk` | `{action: "move"\|"delete", ids, folder_id}` |
 | POST | `/api/connections/test` | Test a connection (reports host key problems) |
 | POST | `/api/hostkeys/accept` | `{host, fingerprint}` accept a new/changed host key |
-| GET / POST | `/api/folders` · DELETE `/api/folders/{id}` | Folders |
+| GET / POST | `/api/folders` · PUT / DELETE `/api/folders/{id}` | Folders: `{name, jump_id, proxy_id}` (defaults of its connections; views add `jump_name`, `proxy_name`) |
 | GET / POST | `/api/sessions` · PUT / DELETE `/api/sessions/{id}` | Workspace sessions |
 | GET | `/api/config/export` | Export without secrets (with jump hosts and tunnels) |
 | POST | `/api/config/export` | `{password}` export with secrets |
@@ -1162,6 +1242,29 @@ Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only
 | `POST /api/credentials/{id}/reveal` | `{password}` → `{password, pending_password}` (owner, re-authentication) |
 | `POST /api/credentials/{id}/rotate` | `{mode: check\|rotate, new_password}` → starts a background job |
 | `GET /api/credentials/{id}/rotation` | `{running, stage: preflight\|change\|rollback\|done, ok, message, hosts: [{key, connections, state, error}]}` |
+
+**Proxies**
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/proxies` | `{proxies: [...], can_define, container}`: proxies you own, are granted or are shared with everybody (no secrets; `url`, `warning: docker_loopback`) |
+| `POST /api/proxies` · `PUT / DELETE /api/proxies/{id}` | `{name, kind: socks5\|socks4\|http\|wrm_tunnel, host, port, username, password, credential_id, remote_dns, tunnel_id, description, grants, shared_all}`; empty `password` on PUT keeps it (owner only; policy `proxies`); DELETE is refused (409) while connections or folders use it |
+| `POST /api/proxies/{id}/test` | `{target?: "host:port"}` → `{ok, message, latency_ms}`: connects to the proxy (and through it to the target) |
+
+Connections have `proxy_id` (and `jump_id`): `null` = as the folder, `-1` = none, an id otherwise. Views return the effective `jump_id` / `proxy_id`, the stored `jump_choice` / `proxy_choice`, `jump_inherited` / `proxy_inherited`, `proxy_name` and the `route`. Exports name proxies (`proxy_ref`, and a `proxies` list).
+
+**Notifications**
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/notify` | `{enabled, events, channels: [{id, name, kind, user_address, address_field}], subscriptions: [{event, channel_id, address}], prefs: {quiet_enabled, quiet_start, quiet_end, tz, lang}, pending}` |
+| `PUT /api/notify` | `{subscriptions: [...], prefs: {...}}` replaces your subscriptions and quiet hours |
+| `POST /api/notify/test` | `{channel_id, address}` a test message to you (once every 10 s) |
+| `GET / POST /api/admin/notify/channels` | channels (secret fields empty, `secrets_set`), channel types and their fields · create `{name, kind, enabled, user_address, config: {…}}` |
+| `PUT / DELETE /api/admin/notify/channels/{id}` | change (empty secret fields keep the stored value; `clear: [field]` removes one) · delete |
+| `POST /api/admin/notify/channels/{id}/test` | `{address?}` send a test message now (HTTP 502 with the service's error) |
+
+Events: `status.down`, `status.up`, `credential.rotation_due`, `credential.rotation_incomplete`.
 
 Connections with `auth_method` `KEY_REF` have `key_id`, with `CREDENTIAL` a `credential_id` (views add `key_name`, `credential_name`, `credential_user`). Exports name keys and credentials (`key_ref`, `credential_ref`) instead of containing them; an import uses your key or credential with that name.
 
@@ -1284,7 +1387,9 @@ remote-manager/
   search.go       recursive name / content search (NDJSON stream)
   sftp_pool.go    pooled SFTP connections with liveness checks
   conntest.go     "Test connection" endpoint
-  jump.go         jump hosts: chains, dialing through hops, validation
+  jump.go         jump hosts: chains, dialing through hops (and their proxies), validation
+  proxy.go        saved proxies: SOCKS5 / SOCKS4(a) / HTTP CONNECT clients, WRM tunnel proxies, routes, API
+  notify.go       notifications: channels (SMTP, chat, push, webhook), subscriptions, digests, quiet hours
   tunnels.go      SSH tunnels (local, remote, SOCKS5), manager, reconnects, tunnels API, web interfaces
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
   snippets.go     snippets (saved commands), variables, run on connect
@@ -1312,6 +1417,9 @@ remote-manager/
   keys_test.go         key store, deploy/revoke/who has access, vault sharing and rotation (fake SSH server with sh and passwd)
   guac_test.go         remote desktop relay against a fake guacd: handshake, filtering, recording, jump hosts
   importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
+  proxy_test.go        proxies (in-process SOCKS5 / HTTP CONNECT, with and without auth): terminal, SFTP, status, jump host + proxy, web interface, desktop relay, WRM tunnel proxy, errors, sharing, folder defaults
+  review_fixes_test.go  FTP with EPSV through a proxy (fake FTP server), another user's tunnel refused as a proxy, folder defaults (own WRM tunnel, loops refused, PUT keeps choices), per-user status keys, notification fixes (recipient injection, mentions, reminders, AUTH LOGIN)
+  notify_test.go       notification channels against fake HTTP endpoints and a fake SMTP server, digests, rate limit, quiet hours, status and rotation events
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   static/index.html          the entire web UI (embedded into the binary)
   static/brand/              logo, favicon and app icons
@@ -1356,6 +1464,14 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Serial port: *permission denied* | Run WRM as a user in the `dialout` group (or give it access to the device) |
 | No *Install* button / *Install as an app* only shows steps or a reason | The button appears only when the browser offers to install right away; otherwise the row shows the steps for your browser (Chrome/Edge/Brave: the icon in the address bar or the menu; Safari on macOS: *File → Add to Dock*; iPhone/iPad: *Share → Add to Home Screen*; Android: menu → *Install app*). *Not possible here* means: plain `http://` to an address other than `localhost` (use HTTPS with a **trusted** certificate, e.g. [Caddy](#https-with-caddy)), an untrusted certificate (`HTTPS_SELF_SIGNED=1`: trust it first, or use Caddy's `tls internal` CA), or Firefox on the desktop (use Chrome, Edge, Brave or Safari) |
 | Import: *The file is too large (… MB): the import limit is 20.0 MB* | Import files may be up to 20 MB. Split the file (e.g. export mRemoteNG folders separately, or split the CSV) and import the parts — existing connections are skipped. Behind a reverse proxy allow bodies of at least 32 MB (nginx `client_max_body_size`) |
+| `proxy socks5://…: not reachable` | WRM cannot open a TCP connection to the proxy: check its address and port, and with a jump host that the **jump host** can reach it. In Docker `127.0.0.1` is the container: use `host.docker.internal` |
+| `proxy …: authentication required` / `authentication failed` / HTTP `407` | Set or correct the proxy's user name and password (or its vault credential) in *🌐 Proxies* |
+| `proxy … cannot reach host:port: … (SOCKS5 reply 5)` / HTTP `502` | The proxy works but the target refused or is unreachable from the proxy. Check the host:port as seen **from the proxy**; turn off *DNS at the proxy* if the proxy cannot resolve internal names |
+| *IPMI and Serial-over-LAN use UDP: they cannot go through the proxy* | Use Redfish for that BMC, or untick *Through the jump host* (ipmitool then runs on the WRM server) |
+| *proxy … is shared with a password: it cannot be reached through your own jump hosts* | Ask the owner for a proxy without a password for this route, or define your own proxy |
+| A connection suddenly goes through a jump host / proxy | Its folder has a default (*Folder settings…*, ⤳ after the folder name). Choose *no jump host / no proxy (not the folder's)* in the connection |
+| Notifications: nothing arrives | Check *Admin panel → Notifications* (channel enabled, last error, *Send test*), *Settings → Notifications* (events ticked, quiet hours) and the policy `notifications_enabled`. Messages of one round arrive together after a few seconds, at most one per `notify_min_interval_seconds` |
+| Notifications: *SMTP login: … unencrypted connection* | Go's SMTP client sends a password only over TLS (or to localhost): choose STARTTLS or TLS |
 | Network tools: *ping is not installed* | Install `iputils-ping` / `traceroute` on the WRM server (or on the source server), or use the port check — it needs nothing |
 | A quick connection disappeared | Quick connections are deleted 24 hours after their last use. Save the ones you need (💾) |
 | CSV import: wrong letters (`Ä�`, `?` instead of `č`) | WRM reads UTF-8, UTF-16 and Windows-1250. For other encodings save the file from Excel as *CSV UTF-8* or as `.xlsx` |

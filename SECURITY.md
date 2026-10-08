@@ -104,6 +104,21 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] On the bastions, allow only the forwarding you need (`AllowTcpForwarding`, `PermitOpen`, `GatewayPorts no`), as you would for OpenSSH clients.
 - [ ] Watch for `tunnel.start`, `tunnel.error`, `tunnel.configured` and `web.open` events in the audit log.
 
+**Proxies**
+
+- [ ] Decide who may define proxies (`proxies=admins` or `off`); everybody may use proxies shared with them. A proxy reaches whatever its network reaches, like a jump host.
+- [ ] SOCKS and HTTP proxy logins travel in plain text to the proxy. Prefer proxies on trusted networks, reach them through a jump host (the hop is encrypted), and give shared proxies their own accounts. WRM never sends a shared proxy's password through a grantee's own jump hosts.
+- [ ] A "WRM SOCKS tunnel" proxy uses its owner's SSH login and cannot be shared. Review running tunnels (*Admin panel → Overview*) and the `tunnel.*` and `proxy.*` events.
+- [ ] In Docker, a proxy on the host (`host.docker.internal`) should listen only on the Docker bridge, not on every interface.
+- [ ] WRM refuses a proxy address on its own machine that is a running SSH tunnel of another user; tunnels on `0.0.0.0` (administrators, `tunnel_bind_any`) are still reachable from the network, see *SSH tunnels* below.
+
+**Notifications**
+
+- [ ] Channel secrets (bot tokens, webhook URLs, SMTP passwords) are encrypted at rest and never returned; treat a leaked webhook URL like a password and replace it.
+- [ ] Use STARTTLS or TLS for e-mail; WRM does not send an SMTP password over a plain connection to another machine.
+- [ ] Notification texts contain connection names, hosts and error messages: send them only to channels the recipients may read. With *Users may enter their own recipient* users can send their own notifications to any address of that kind.
+- [ ] Sign webhooks (`X-WRM-Signature`, HMAC-SHA256) and check the signature on the receiving side. Watch `admin.notify_channel_*` events.
+
 **Audit trail and session recording**
 
 - [ ] Keep the audit log on (`audit_enabled`, the default). Run *Admin panel → Audit log → 🔏 Verify integrity* regularly, and after any incident. A broken chain means that someone changed the database directly.
@@ -115,7 +130,7 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
 - [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
-- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `ssh_key.*` (deploy, revoke, export) and `credential.*` (grants, reveal, rotation) and `bmc.*` (power actions) events.
+- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `ssh_key.*` (deploy, revoke, export) `credential.*` (grants, reveal, rotation), `proxy.*` (created, shared, tested), `folder.updated` (default jump host / proxy), `admin.notify_channel_*` and `bmc.*` (power actions) events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
 
 ## How WRM protects your data
