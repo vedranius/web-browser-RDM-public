@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.9.0"
+var AppVersion = "v10.9.1"
 
 const sessionCookieName = "wrm_session"
 
@@ -897,6 +897,13 @@ func initDB() {
 		user_id INTEGER NOT NULL,
 		PRIMARY KEY (proxy_id, user_id))`,
 		"proxy_id", "user_id")
+	// v10.9.1: imported PuTTY sessions and their proxy, for mRemoteNG connections imported later
+	ensureTable("putty_sessions", `CREATE TABLE IF NOT EXISTS putty_sessions (
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL COLLATE NOCASE,
+		proxy_id INTEGER DEFAULT NULL,
+		PRIMARY KEY (user_id, name))`,
+		"user_id", "name", "proxy_id")
 
 	// Safe migrations (columns added over time)
 	for _, m := range []string{
@@ -960,6 +967,8 @@ func initDB() {
 		`ALTER TABLE connections ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE folders ADD COLUMN jump_conn_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE folders ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
+		// v10.9.1: the PuTTY session an imported mRemoteNG connection names (PuttySession)
+		`ALTER TABLE connections ADD COLUMN putty_session TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)

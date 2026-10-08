@@ -47,6 +47,7 @@ Code layout:
 | `ssh_ws.go`, `files.go`, `sftp_pool.go`, `search.go`, `conntest.go`, `hostkeys.go` | Terminal, file manager, SFTP connection pool, search, connection test, host key verification |
 | `jump.go`, `tunnels.go` | Jump hosts (dialing through chains of SSH connections), SSH tunnels (local / remote / SOCKS5), tunnels API, web interface connections |
 | `importers.go` | Import from mRemoteNG `confCons.xml` and OpenSSH config |
+| `putty.go` | Import of PuTTY sessions (`.reg`) with their proxies; links mRemoteNG `PuttySession` |
 | `snippets.go`, `status.go` | Snippets and run on connect; live up/down status monitor |
 | `guac.go` | Remote desktop (RDP / VNC / Telnet) through guacd: handshake, relay, recording |
 | `bmc.go`, `console.go`, `tty_linux.go` | Out-of-band management (Redfish, IPMI), terminal backends (BMC console, Serial-over-LAN, serial ports), pseudo terminals and termios |

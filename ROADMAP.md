@@ -2,10 +2,6 @@
 
 Planned work that is agreed but not built yet. Released work is in [CHANGELOG.md](CHANGELOG.md).
 
-## v10.9.x — PuTTY session import
-- **Import PuTTY sessions** from a `.reg` export (`HKCU\Software\SimonTatham\PuTTY\Sessions`): host, port, user, key and proxy settings. Proxies are created and linked to the connections.
-- With mRemoteNG, connections that point to a PuTTY session (`PuttySession`) get that session's proxy.
-
 ## v10.10.0 — folder bookmarks (server-specific and global)
 
 User request: the same deep directories (e.g. `/opt/app/servers/myServer/downloads/`) are needed on many servers; WinSCP-style bookmarks.
