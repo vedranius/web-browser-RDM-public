@@ -567,8 +567,10 @@ func TestNotificationEvents(t *testing.T) {
 	}()
 	defer ln2.Close()
 	statusMon.round()
-	if got := pending(owner.userID); len(got) != 1 || !strings.HasPrefix(got[0], "status.up 🟢 ev-web is up again") {
-		t.Fatalf("up event: %q", got)
+	// both come back: the server, and the connection behind it (its jump host is up again)
+	if got := strings.Join(pending(owner.userID), "|"); strings.Count(got, "status.up") != 2 || !strings.Contains(got, "status.up 🟢 ev-web is up again") ||
+		!strings.Contains(got, "status.up 🟢 ev-behind is up again") {
+		t.Fatalf("up events: %q", got)
 	}
 	db.Exec(`DELETE FROM notify_pending`)
 

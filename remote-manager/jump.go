@@ -179,7 +179,12 @@ func sshOverConn(conn net.Conn, addr string, cfg *ssh.ClientConfig) (*ssh.Client
 		timeout = 15 * time.Second
 	}
 	conn.SetDeadline(time.Now().Add(2 * timeout))
+	timer := time.AfterFunc(2*timeout, func() { conn.Close() }) // SSH channels have no deadlines
 	ncc, chans, reqs, err := ssh.NewClientConn(conn, addr, cfg)
+	if !timer.Stop() && err == nil {
+		ncc.Close()
+		return nil, fmt.Errorf("timeout")
+	}
 	if err != nil {
 		conn.Close()
 		return nil, err

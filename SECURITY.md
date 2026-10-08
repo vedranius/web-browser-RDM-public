@@ -110,6 +110,7 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] SOCKS and HTTP proxy logins travel in plain text to the proxy. Prefer proxies on trusted networks, reach them through a jump host (the hop is encrypted), and give shared proxies their own accounts. WRM never sends a shared proxy's password through a grantee's own jump hosts.
 - [ ] A "WRM SOCKS tunnel" proxy uses its owner's SSH login and cannot be shared. Review running tunnels (*Admin panel → Overview*) and the `tunnel.*` and `proxy.*` events.
 - [ ] In Docker, a proxy on the host (`host.docker.internal`) should listen only on the Docker bridge, not on every interface.
+- [ ] WRM refuses a proxy address on its own machine that is a running SSH tunnel of another user; tunnels on `0.0.0.0` (administrators, `tunnel_bind_any`) are still reachable from the network, see *SSH tunnels* below.
 
 **Notifications**
 

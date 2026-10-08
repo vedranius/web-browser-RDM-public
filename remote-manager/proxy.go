@@ -13,7 +13,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -216,6 +215,8 @@ type resolvedProxy struct {
 	p          proxyDef
 	user, pass string
 	label      string
+	forUser    int  // the user the route is opened for
+	behindJump bool // reached through jump hosts (not from the WRM machine)
 }
 
 type proxyError struct {
@@ -244,7 +245,10 @@ func proxyOf(c Connection, behindJump bool) (*resolvedProxy, error) {
 	if c.UserID > 0 && !proxyAccessible(p, c.UserID) {
 		return nil, fmt.Errorf("proxy %q is no longer shared with you", p.Name)
 	}
-	rp := &resolvedProxy{p: p, label: p.URL}
+	rp := &resolvedProxy{p: p, label: p.URL, forUser: c.UserID, behindJump: behindJump}
+	if rp.forUser <= 0 {
+		rp.forUser = p.OwnerID
+	}
 	switch p.Kind {
 	case "wrm_tunnel":
 		if behindJump {
@@ -365,7 +369,20 @@ func (rp *resolvedProxy) dial(base dialFunc, target string) (net.Conn, error) {
 	if err != nil {
 		return nil, &proxyError{label: rp.label, msg: "not reachable: " + shortNetError(err)}
 	}
+	// Tunnel listeners on the WRM machine have no login of their own: a proxy may not lead
+	// into another user's SSH tunnel (their SSH login and network).
+	if rp.p.Kind != "wrm_tunnel" && !rp.behindJump {
+		if ta, ok := conn.RemoteAddr().(*net.TCPAddr); ok && isLocalIP(ta.IP) {
+			if owner := tunnelMgr.localListenerOwner(ta.Port); owner != 0 && owner != rp.forUser {
+				conn.Close()
+				return nil, &proxyError{label: rp.label, msg: "this address is an SSH tunnel of another user on the WRM server"}
+			}
+		}
+	}
+	// SSH channels (a proxy behind a jump host) have no deadlines: a timer closes the
+	// connection when the handshake takes too long.
 	conn.SetDeadline(time.Now().Add(proxyDialTimeout))
+	timer := time.AfterFunc(proxyDialTimeout, func() { conn.Close() })
 	var out net.Conn = conn
 	switch kind {
 	case "socks5":
@@ -377,6 +394,10 @@ func (rp *resolvedProxy) dial(base dialFunc, target string) (net.Conn, error) {
 	default:
 		err = fmt.Errorf("unknown proxy type %q", kind)
 	}
+	if !timer.Stop() {
+		conn.Close()
+		return nil, &proxyError{label: rp.label, msg: "no answer to the proxy handshake (timeout)"}
+	}
 	if err != nil {
 		conn.Close()
 		if pe, ok := err.(*proxyError); ok {
@@ -387,6 +408,26 @@ func (rp *resolvedProxy) dial(base dialFunc, target string) (net.Conn, error) {
 	}
 	conn.SetDeadline(time.Time{})
 	return out, nil
+}
+
+// isLocalIP: ip is an address of the WRM machine (loopback, unspecified or an interface address).
+func isLocalIP(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+	if ip.IsLoopback() || ip.IsUnspecified() {
+		return true
+	}
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return false
+	}
+	for _, a := range addrs {
+		if n, ok := a.(*net.IPNet); ok && n.IP.Equal(ip) {
+			return true
+		}
+	}
+	return false
 }
 
 func splitTarget(target string, remoteDNS bool) (host string, ip net.IP, port int, err error) {
@@ -617,17 +658,20 @@ func ensureProxyTunnel(p proxyDef) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("the connection of the SOCKS tunnel no longer exists")
 		}
-		if c.ProxyID != nil && *c.ProxyID > 0 {
-			if cp, err := loadProxy(*c.ProxyID); err == nil && cp.Kind == "wrm_tunnel" {
-				return "", fmt.Errorf("connection %q of this tunnel uses a WRM tunnel proxy itself", c.Name)
+		// The tunnel's own route must not need a WRM tunnel proxy (that could wait for itself).
+		chain, err := jumpChain(c)
+		if err != nil {
+			return "", fmt.Errorf("the SOCKS tunnel of %s: %v", c.Name, err)
+		}
+		for _, hop := range append(chain, c) {
+			if hop.ProxyID != nil && *hop.ProxyID > 0 {
+				if cp, err := loadProxy(*hop.ProxyID); err == nil && cp.Kind == "wrm_tunnel" {
+					return "", fmt.Errorf("connection %q of this tunnel is reached through a WRM tunnel proxy itself", hop.Name)
+				}
 			}
 		}
-		proxyTunnelMu.Lock()
-		t = tunnelMgr.get(key)
-		if t == nil {
-			t, err = tunnelMgr.start(key, def, c, def.UserID, "proxy", nil)
-		}
-		proxyTunnelMu.Unlock()
+		// start returns the run that is already registered (also one that is still starting).
+		t, err = tunnelMgr.start(key, def, c, def.UserID, "proxy", nil)
 		if err != nil {
 			return "", fmt.Errorf("starting the SOCKS tunnel of %s failed: %v", c.Name, err)
 		}
@@ -649,8 +693,6 @@ func ensureProxyTunnel(p proxyDef) (string, error) {
 		time.Sleep(100 * time.Millisecond)
 	}
 }
-
-var proxyTunnelMu sync.Mutex
 
 // ─── ROUTES ──────────────────────────────────────────
 

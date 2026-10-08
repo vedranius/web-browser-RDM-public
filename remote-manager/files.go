@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/jlaffaye/ftp"
@@ -76,8 +78,10 @@ func requireMethod(w http.ResponseWriter, r *http.Request, methods ...string) bo
 // the returned close function (it also closes the jump host connection).
 func dialFTP(c Connection) (*ftp.ServerConn, func(), error) {
 	opts := []ftp.DialOption{ftp.DialWithTimeout(15 * time.Second)}
-	if strings.ToUpper(c.Protocol) == "FTPS" {
-		opts = append(opts, ftp.DialWithExplicitTLS(ftpsTLSConfig(c)))
+	ftps := strings.ToUpper(c.Protocol) == "FTPS"
+	tlsCfg := ftpsTLSConfig(c) // one config for the control and the data connections
+	if ftps {
+		opts = append(opts, ftp.DialWithExplicitTLS(tlsCfg))
 	}
 	var via *targetRoute
 	if needsRoute(c) {
@@ -86,9 +90,7 @@ func dialFTP(c Connection) (*ftp.ServerConn, func(), error) {
 		if via, err = openTargetRoute(c); err != nil {
 			return nil, nil, err
 		}
-		opts = append(opts, ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
-			return via.Dial("tcp", address)
-		}))
+		opts = append(opts, ftp.DialWithDialFunc(routedFTPDial(via, hostOnly(c.Host), ftps, tlsCfg)))
 	}
 	closeVia := func() { via.Close() }
 	if c.authErr != "" {
@@ -106,6 +108,45 @@ func dialFTP(c Connection) (*ftp.ServerConn, func(), error) {
 		return nil, nil, fmt.Errorf("FTP login: %v", err)
 	}
 	return fc, func() { fc.Quit(); closeVia() }, nil
+}
+
+// ftpRouteHost stands for the FTP server in the control connection's RemoteAddr when it
+// goes through a route: the library takes the EPSV data host from there, and through a
+// proxy or an SSH channel that address is not the server's (TEST-NET-1, never a target).
+var ftpRouteHost = net.IPv4(192, 0, 2, 255)
+
+type ftpAddrConn struct {
+	net.Conn
+	raddr net.Addr
+}
+
+func (a *ftpAddrConn) RemoteAddr() net.Addr { return a.raddr }
+
+// routedFTPDial dials the control and the data connections of an FTP session over a route.
+// With a dial function the library neither knows the server's address nor adds TLS to
+// the data connections, so this does both.
+func routedFTPDial(via *targetRoute, server string, ftps bool, cfg *tls.Config) func(network, address string) (net.Conn, error) {
+	var ctrlDone atomic.Bool
+	return func(network, address string) (net.Conn, error) {
+		if !ctrlDone.Swap(true) { // the control connection (the library adds TLS after AUTH TLS)
+			conn, err := via.Dial("tcp", address)
+			if err != nil {
+				return nil, err
+			}
+			return &ftpAddrConn{Conn: conn, raddr: &net.TCPAddr{IP: ftpRouteHost}}, nil
+		}
+		if h, p, err := net.SplitHostPort(address); err == nil && net.ParseIP(h).Equal(ftpRouteHost) {
+			address = net.JoinHostPort(server, p) // EPSV: the data port on the FTP server
+		}
+		conn, err := via.Dial("tcp", address)
+		if err != nil {
+			return nil, err
+		}
+		if ftps {
+			return tls.Client(conn, cfg), nil // PROT P: the data connections are TLS too
+		}
+		return conn, nil
+	}
 }
 
 func withFTP(c Connection, fn func(*ftp.ServerConn) error) error {

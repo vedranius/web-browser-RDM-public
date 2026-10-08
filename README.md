@@ -413,6 +413,8 @@ Some servers are reached through a SOCKS or HTTP proxy instead of (or after) a b
   - `proxy socks5://10.1.1.1:1080: not reachable: connection refused` — the proxy itself;
   - `proxy socks5://…: authentication required` / `authentication failed: wrong user name or password` (HTTP: `407`);
   - `proxy socks5://… cannot reach 10.0.0.5:22: connection refused (SOCKS5 reply 5)` — the proxy works, the target does not answer (HTTP: `502` / `504`).
+- **Live status** checks through a *WRM SOCKS tunnel* proxy only while that tunnel runs (it is never started or kept alive by a check); otherwise the state is *unknown*.
+- A proxy address on the WRM machine that is a running SSH tunnel of **another user** is refused (*this address is an SSH tunnel of another user on the WRM server*): tunnel listeners have no login of their own.
 - **Sharing:** share a proxy with users (or, administrators, with everybody): they can use it but never see its login. A proxy shared **with a password** is not reached through the grantee's own jump hosts (they could read the plain-text proxy login there). WRM tunnel proxies are not shared.
 - **Folder default:** *Folder settings…* → *Default proxy*.
 - **Policy `proxies`** (`all` / `admins` / `off`): who may define proxies. Everybody can use proxies shared with them.
@@ -659,7 +661,7 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 | Webhook | URL; WRM POSTs JSON (`title`, `text`, `events`). With a signing secret the header `X-WRM-Signature: sha256=<HMAC-SHA256 of the body>` lets the receiver check it |
 
 - Secrets (passwords, tokens, webhook URLs) are **encrypted** and never shown again; leave a field empty to keep it. **📨 Send test** sends a test message at once and shows the service's answer (*HTTP 400 chat not found*, *SMTP login: …*). The last delivery and the last error are listed per channel.
-- *Users may enter their own recipient* (e-mail, Telegram, ntfy, Pushover): each user can enter their own address, chat ID, topic or user key; otherwise the channel's is used.
+- *Users may enter their own recipient* (e-mail, Telegram, ntfy, Pushover): each user can enter their own address, chat ID, topic or user key (e-mail: plain addresses only); otherwise the channel's is used. A channel without a default recipient needs the user's own. Slack-format and Discord messages cannot mention `@channel` / `@everyone` through connection names.
 - **Events:** a server went down, a server is up again (only the owner's own monitored connections; connections with monitoring off are left out), credential rotation is due (again every 7 days while it stays due), credential rotation is incomplete (again every day).
 - **One message per round:** what happens in one status round (or within a few seconds) goes out as **one digest** per user and channel, and a channel sends to the same recipient at most once per `notify_min_interval_seconds` (60); what comes in meanwhile goes into the next message.
 - **Quiet hours** (per user, in the browser's time zone): messages wait and are sent together when the quiet hours end.
@@ -1416,6 +1418,7 @@ remote-manager/
   guac_test.go         remote desktop relay against a fake guacd: handshake, filtering, recording, jump hosts
   importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
   proxy_test.go        proxies (in-process SOCKS5 / HTTP CONNECT, with and without auth): terminal, SFTP, status, jump host + proxy, web interface, desktop relay, WRM tunnel proxy, errors, sharing, folder defaults
+  review_fixes_test.go  FTP with EPSV through a proxy (fake FTP server), another user's tunnel refused as a proxy, folder defaults (own WRM tunnel, loops refused, PUT keeps choices), per-user status keys, notification fixes (recipient injection, mentions, reminders, AUTH LOGIN)
   notify_test.go       notification channels against fake HTTP endpoints and a fake SMTP server, digests, rate limit, quiet hours, status and rotation events
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   static/index.html          the entire web UI (embedded into the binary)
