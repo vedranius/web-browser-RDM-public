@@ -49,13 +49,14 @@ Code layout:
 | `importers.go` | Import from mRemoteNG `confCons.xml` and OpenSSH config |
 | `putty.go` | Import of PuTTY sessions (`.reg`) with their proxies; links mRemoteNG `PuttySession` |
 | `snippets.go`, `status.go` | Snippets and run on connect; live up/down status monitor |
+| `bookmarks.go` | Folder bookmarks: scopes, path variables, shell-quoted `cd`, start directory, WinSCP.ini import |
 | `guac.go` | Remote desktop (RDP / VNC / Telnet) through guacd: handshake, relay, recording |
 | `bmc.go`, `console.go`, `tty_linux.go` | Out-of-band management (Redfish, IPMI), terminal backends (BMC console, Serial-over-LAN, serial ports), pseudo terminals and termios |
 | `inventory.go` | Tags, CSV / XLSX inventory import with column mapping, NetBox import and sync |
 | `quick.go`, `nettools.go`, `pwa.go` | Quick connect (temporary connections) and notes, network tools (port check, ping, traceroute, DNS, HTTP/TLS), web app manifest and service worker |
 | `keys.go`, `credentials.go` | SSH key store (deploy, revoke, who has access) and credentials vault (sharing, host lists, password rotation) |
 | `static/index.html` | The whole web UI (embedded into the binary); `static/vendor/` holds xterm.js, guacamole-common-js and fonts, `static/brand/` the logo and icons |
-| `*_test.go` | `security_test.go` and `upgrade_test.go` (unit), `integration_test.go` (in-process SSH/SFTP server: connect → audit → recording, transfers), `tunnels_test.go` (jump hosts, tunnels, web interfaces), `importers_test.go` (mRemoteNG, OpenSSH config), `import_limits_test.go` (import size limits), `snippets_test.go`, `status_test.go`, `guac_test.go`, `keys_test.go` (fake SSH server with `sh` and a simulated `passwd`), `inventory_test.go` (CSV/XLSX, fake NetBox), `bmc_test.go` (fake Redfish, fake ipmitool, PTYs), `quick_test.go` (quick connect, notes, network tools, PWA) |
+| `*_test.go` | `security_test.go` and `upgrade_test.go` (unit), `integration_test.go` (in-process SSH/SFTP server: connect → audit → recording, transfers), `tunnels_test.go` (jump hosts, tunnels, web interfaces), `importers_test.go` (mRemoteNG, OpenSSH config), `import_limits_test.go` (import size limits), `snippets_test.go`, `bookmarks_test.go`, `status_test.go`, `guac_test.go`, `keys_test.go` (fake SSH server with `sh` and a simulated `passwd`), `inventory_test.go` (CSV/XLSX, fake NetBox), `bmc_test.go` (fake Redfish, fake ipmitool, PTYs), `quick_test.go` (quick connect, notes, network tools, PWA) |
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the parts fit together and where planned features belong.
 

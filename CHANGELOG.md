@@ -4,6 +4,21 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.10.0] — 2026-10-08 — folder bookmarks
+
+### Added
+- **Folder bookmarks** (`bookmarks.go`, `/api/bookmarks`, new table `bookmarks`): named remote directories with an optional colour and note, for **one connection**, the connections of **a folder**, the connections with **a tag**, or **all SSH / SFTP / FTP connections** (global).
+  - **File manager:** a ★ button next to the path bar with *Bookmark this directory…*, the bookmarks of the connection and *Manage bookmarks…*. A bookmark whose directory is missing on the server gives a clear message and keeps the current folder open.
+  - **Terminal:** ★ in the window's title bar and the bookmarks in the Ctrl+Shift+Space picker type `cd -- '<path>'` (shell-quoted on the server; a leading `~/` stays unquoted so the shell expands it). In a broadcast group, 📣 next to a bookmark sends the `cd` to every terminal, each resolved for its own connection (`POST /api/bookmarks/resolve`).
+  - **Path variables** filled in by the server per connection: `~`, `$USER` / `${USER}` / `{user}`, `{host}`, `{name}` — e.g. `/opt/app/servers/{name}/downloads`.
+  - **Start directory:** a bookmark can be the start directory of its connections. The file manager opens there; a terminal types the `cd` on connect (also after a reconnect), before the run-on-connect snippets. The most specific one wins (connection, tag, folder, global). *★ Start directory…* in the context menu of a connection and a folder.
+  - **Management:** rename, reorder, move between scopes, delete. Global bookmarks can be **shared with share members** (read-only, `GET /api/bookmarks?conn=…&share_token=…`).
+  - **Import of WinSCP bookmarks:** *Manage bookmarks → Import WinSCP.ini* (`POST /api/bookmarks/import-winscp`) reads the `[Configuration\Bookmarks\Remote\…]` sections as global bookmarks; existing ones are skipped.
+  - Bookmarks are part of the configuration export and import (folders and connections are mapped), copied with *Duplicate*, and removed with their connection, folder or user.
+  - Audit events `bookmark.created`, `bookmark.updated`, `bookmark.deleted`, `bookmark.imported`; live update event `bookmarks_changed`.
+- The file manager opens `~/…` paths below the home directory (SFTP) or the login directory (FTP).
+- Tests: `bookmarks_test.go` (scopes, ownership, validation, variables, `cd` quoting, reorder, duplicate / delete, export / import, share access, WinSCP.ini, start directory on connect).
+
 ## [10.9.1] — 2026-10-08 — PuTTY session import
 
 ### Added

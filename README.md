@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.9.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.10.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -58,6 +58,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
    - [Out-of-band management, consoles & serial ports](#out-of-band-management-consoles--serial-ports)
    - [Snippets & run on connect](#snippets--run-on-connect)
+   - [Folder bookmarks](#folder-bookmarks)
    - [Broadcast input](#broadcast-input)
    - [Live up/down status](#live-updown-status)
    - [Notifications (e-mail, chat, push, webhook)](#notifications-e-mail-chat-push-webhook)
@@ -120,21 +121,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.9.1-linux-amd64
-   ./wrm-pro-v10.9.1-linux-amd64
+   chmod +x wrm-pro-v10.10.0-linux-amd64
+   ./wrm-pro-v10.10.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.9.1-windows-amd64.exe
+   .\wrm-pro-v10.10.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.9.1/wrm-pro-v10.9.1-android-arm64
-   chmod +x wrm-pro-v10.9.1-android-arm64 && ./wrm-pro-v10.9.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.10.0/wrm-pro-v10.10.0-android-arm64
+   chmod +x wrm-pro-v10.10.0-android-arm64 && ./wrm-pro-v10.10.0-android-arm64
    ```
 
    **Docker**
@@ -158,6 +159,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.9.1
+
+Replace the binary. The database gets a new table `bookmarks`; the previous binary still starts on it and ignores it.
+
+- **Folder bookmarks:** ★ next to the path bar of the file manager and in a terminal's title bar. *Bookmark this directory…* saves the current folder for one connection, a folder, a tag or all connections; paths may use `~`, `$USER`, `{host}` and `{name}`. A bookmark can be the **start directory** of a connection. See [Folder bookmarks](#folder-bookmarks).
+- **WinSCP bookmarks:** *★ → Manage bookmarks… → Import WinSCP.ini* adds the remote directory bookmarks of a WinSCP configuration as global bookmarks.
+- Bookmarks are part of *Export* / *Import*.
 
 ## Upgrading from v10.9.0
 
@@ -623,6 +632,20 @@ Snippets are saved commands. Open them in the right panel (**⚡ Snippets** tab)
 - Snippets are included in *Export* / *Import*, copied with *Duplicate*, and removed with their connection or folder.
 - Dangerous-looking commands (see below) ask for confirmation before they run.
 
+### Folder bookmarks
+
+Bookmarks are named remote directories, like WinSCP's: the same deep folders (`/opt/app/servers/<server>/downloads`) are one click away on every server.
+
+- **★ in the file manager** (next to the path bar): **☆ Bookmark this directory…**, the bookmarks of this connection, and **⚙ Manage bookmarks…**. Picking a bookmark opens that directory. If it does not exist on this server, a message says so and the current folder stays open.
+- **★ in a terminal's title bar** and in the **Ctrl+Shift+Space** picker (after the snippets): picking a bookmark types `cd -- '<path>'` into the terminal (shell-quoted; a leading `~/` stays outside the quotes so the shell expands it). In a [broadcast](#broadcast-input), **📣** next to a bookmark sends the `cd` to every terminal of the group, each with its own connection's variables.
+- **Scope:** **one connection**, the connections of **a folder**, the connections with **a tag**, or **all SSH / SFTP / FTP connections** (global).
+- **Variables**, filled in by the server for each connection: `~` (home directory), `$USER` / `${USER}` / `{user}` (the connection's user name), `{host}` (without the port), `{name}` (connection name). Example: `/opt/app/servers/{name}/downloads`.
+- **Start directory:** tick *Start directory* and the file manager of a matching connection opens there; a terminal types the `cd` when it connects (also after a reconnect), before the [run-on-connect](#snippets--run-on-connect) snippets. The most specific start directory wins: connection, then tag, then folder, then global. Right-click a connection or a folder → **★ Start directory…** creates one.
+- **Name, colour and note**; **Manage bookmarks** renames, reorders (↑ ↓), moves bookmarks between scopes and deletes them.
+- **Sharing:** a global bookmark marked *Share with share members* is offered (read-only) to the people who use your connections through a [share](#sharing-members-roles--links).
+- **Import from WinSCP:** *Manage bookmarks → Import WinSCP.ini* reads the remote directory bookmarks (`[Configuration\Bookmarks\Remote\…]`) of a WinSCP configuration file and adds them as global bookmarks, with the WinSCP site in the note. Bookmarks that already exist (same name and path) are skipped.
+- Bookmarks are included in *Export* / *Import*, copied with *Duplicate*, and removed with their connection or folder.
+
 ### Broadcast input
 
 Type the same command into many servers at once — like *MultiSSH*, *cssh* or mRemoteNG's multi-SSH.
@@ -1036,7 +1059,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.9.1-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.10.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1121,6 +1144,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Voice:** WebRTC with DTLS-SRTP; the built-in TURN relay accepts only short-lived HMAC credentials issued to room participants, limits allocations, and refuses private/loopback/link-local peers by default (no pivoting into internal networks).
 - **Audit:** sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers (with SHA-256) and changes, host keys, exports, viewing of recordings — stored **append-only** and **hash-chained** in the database (verifiable) and written as `AUDIT …` lines to the server log (journald/syslog → SIEM). Secrets in audit details are redacted.
 - **Session recording:** terminal output in asciicast v2, gzip, mode `0600`, SHA-256 in the database; no keystrokes unless enabled (then masked at password prompts); visible to administrators, the session's user and the connection's owner; every view is audited.
+- **Folder bookmarks:** per user; the server fills in the variables and builds the shell-quoted `cd`, so a path cannot inject commands. Share participants see only the owner's bookmarks marked as shared (global, read-only), and only for connections of the share.
 - **Snippets & broadcast:** snippets are per user (shared snippets only by administrators, read-only for others, never auto-run); run-on-connect snippets come from the connection's owner and are recorded in the audit log; broadcast input is client-side typing into the user's own terminals, with confirmation of dangerous commands and an audit entry for every start and stop per terminal.
 - **Out-of-band management:** BMC passwords are encrypted (or come from the vault, with its host rules); Redfish certificates are pinned on first use, ipmitool gets the password in its environment (`-E`) — on a jump host through stdin, never on a command line; power actions and consoles are audited and limited to the connection's owner; serial ports are an administrator feature by default.
 - **Inventory import:** files are parsed in memory (CSV, or `.xlsx` read with size limits) and never stored. NetBox is called from the WRM server over HTTP(S) with your token; redirects and pagination links to another server are refused, responses are size-limited, and a remembered token is stored encrypted and never returned to the browser.
@@ -1288,6 +1312,12 @@ Connections with `auth_method` `KEY_REF` have `key_id`, with `CREDENTIAL` a `cre
 |---|---|---|
 | GET / POST | `/api/snippets` | My snippets and shared snippets / create `{name, command, description, group, scope: "all"\|"folder"\|"connection", scope_id, auto_run, shared}` |
 | PUT / DELETE | `/api/snippets/{id}` | Update / delete (owner; administrators also shared snippets) |
+| GET / POST | `/api/bookmarks` | My folder bookmarks / create `{name, path, scope: "global"\|"folder"\|"tag"\|"connection", scope_id, tag, color, note, start_dir, shared}` |
+| GET | `/api/bookmarks?conn={id}` | Bookmarks for one connection with `resolved` path and `cd` command, plus `start` (also with `share_token`: the owner's shared ones) |
+| POST | `/api/bookmarks/resolve` | `{id, conns: [...]}` → `{conn_id: {path, cd}}` (a broadcast group) |
+| POST | `/api/bookmarks/reorder` | `{ids: [...]}` |
+| POST | `/api/bookmarks/import-winscp` | Body: a `WinSCP.ini` → `{found, imported, skipped}` |
+| PUT / DELETE | `/api/bookmarks/{id}` | Update (rename, move between scopes) / delete |
 | GET | `/api/status` | `{enabled, interval, jump_checks, connections: {id: {state: "up"\|"down"\|"unknown", latency_ms, since, checked_at, error, banner, via, via_state}}}` |
 | POST | `/api/status/check` | `{ids: [...]}` check now, also through jump hosts (once every 3 s per user) |
 
@@ -1361,7 +1391,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | Endpoint | Description |
 |---|---|
 | `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping` → server; `status` (with `recording`, `session_id`), `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
-| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`, `tunnels_changed`, `snippets_changed`, `status_changed`) |
+| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`, `tunnels_changed`, `snippets_changed`, `bookmarks_changed`, `status_changed`) |
 | `/ws/share/{token}` | Collaboration room. Client → server: `chat`, `file`, `set-name`, `screen` (`start/stop/data/resize/snapshot`), `watch`, `unwatch`, `control-request/grant/revoke/release`, `remote-input`, `voice-join/leave/signal/state`, `hand`, `mod` (`set-role/mute/unmute/stop-share/lower-hand/kick/ban`). Server → client: `welcome`, `participants`, `chat`, `file`, `system`, `screen`, `watch-request`, `control`, `control-request`, `remote-input`, `voice-peers/joined/left/signal`, `force-mute`, `role`, `kicked`, `closed`, `error` |
 
 ---
@@ -1408,6 +1438,7 @@ remote-manager/
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
   putty.go        import of PuTTY sessions (.reg) with proxies, link to mRemoteNG PuttySession
   snippets.go     snippets (saved commands), variables, run on connect
+  bookmarks.go    folder bookmarks: scopes, variables, shell-quoted cd, start directory, WinSCP import
   status.go       live up/down status monitor and API
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
@@ -1425,6 +1456,7 @@ remote-manager/
   integration_test.go  in-process SSH/SFTP server: connect → audit → recording, transfers, append-only audit
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
+  bookmarks_test.go    folder bookmarks: scopes, ownership, variables, cd quoting, shares, WinSCP.ini, start directory
   status_test.go       live status: up/down, banners, jump hosts, check now
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
   bmc_test.go          Redfish (fake BMC, pinning, jump host, credential), IPMI with a fake ipmitool, SOL (local PTY and jump host), BMC SSH console, serial port on a PTY
@@ -1470,6 +1502,8 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | *address already in use* when starting a tunnel | Another program (or tunnel) uses that port on the WRM machine. Choose another port or leave it empty (automatic) |
 | A snippet does not appear in the ⚡ picker | Its scope is a folder or connection other than the terminal's. The panel shows all snippets (others dimmed) |
 | Run on connect does not run | It runs only for the owner's snippets that apply to that connection and have no `{{?…}}` prompts; check the audit log for `terminal.auto_run` |
+| A bookmark does not appear under ★ | Its scope is another connection, folder or tag. In a share you see only bookmarks the owner shared (global ones) |
+| *the directory … does not exist on this server* | The bookmark's path (after `{name}`, `{host}`, `$USER` are filled in) is not there or not readable on that server. Edit the path or use a narrower scope |
 | Broadcast did not ask before a dangerous command | The check sees what you typed during the broadcast, not a command recalled from the shell history (↑) |
 | All connections stay grey (no status dot) | Live status is off (`status_enabled`), or the connection has *Monitor up/down status* unticked. The first round starts a few seconds after WRM starts |
 | A server shows 🔴 but SSH works | The port in the connection differs from the real one, or a firewall allows SSH only from some addresses (not from the WRM server). Behind a jump host use a jump host instead of a direct connection |
