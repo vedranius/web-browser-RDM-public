@@ -257,6 +257,30 @@ var proxyTunnelIdle = 30 * time.Minute
 // tunnelConnectGrace: "connect" tunnels stop this long after the last terminal closed.
 var tunnelConnectGrace = 15 * time.Second
 
+// localListenerOwner returns the owner of a running tunnel that listens on the WRM machine
+// on port (0 = none).
+func (m *tunnelManager) localListenerOwner(port int) int {
+	m.mu.Lock()
+	runs := make([]*tunnelRun, 0, len(m.runs))
+	for _, t := range m.runs {
+		runs = append(runs, t)
+	}
+	m.mu.Unlock()
+	ps := strconv.Itoa(port)
+	for _, t := range runs {
+		if t.def.Kind == "remote" { // listens on the SSH server
+			continue
+		}
+		t.mu.Lock()
+		a := t.boundAddr
+		t.mu.Unlock()
+		if _, p, err := net.SplitHostPort(a); err == nil && p == ps {
+			return t.ownerID
+		}
+	}
+	return 0
+}
+
 func (m *tunnelManager) get(key string) *tunnelRun {
 	m.mu.Lock()
 	defer m.mu.Unlock()

@@ -4291,7 +4291,7 @@ Object.assign(LANGS.en, {
   nf_send_test:'Send test', nf_test_sent:'Test message sent', nf_test_failed:'Sending failed', nf_delete_q:'Delete this channel? Users subscribed to it no longer get messages through it.',
   nf_enabled:'Enabled', nf_enabled_d:'users can subscribe to it and it sends messages.',
   nf_user_address:'Users may enter their own recipient', nf_user_address_d:'each user can enter their own {field}; otherwise the one above is used.',
-  nf_secret_kept:'saved — leave empty to keep it',
+  nf_secret_kept:'saved — leave empty to keep it', nf_secret_remove:'Remove the stored value',
   nk_email:'E-mail (SMTP)', nk_telegram:'Telegram', nk_slack:'Slack / Mattermost / Rocket.Chat', nk_teams:'Microsoft Teams (Workflows)', nk_discord:'Discord', nk_ntfy:'ntfy', nk_gotify:'Gotify', nk_pushover:'Pushover', nk_webhook:'Webhook (JSON)',
   nk_email_help:'An SMTP server (port 587 with STARTTLS, 465 with TLS). A user name and password are sent only over TLS or to a server on this machine.',
   nk_telegram_help:'Create a bot with @BotFather, add it to a group or start a chat with it, and enter the chat ID (groups start with -100…). The API address only changes for a local Bot API server.',
@@ -4325,7 +4325,7 @@ Object.assign(LANGS.hr, {
   nf_send_test:'Pošalji probu', nf_test_sent:'Probna poruka poslana', nf_test_failed:'Slanje nije uspjelo', nf_delete_q:'Obrisati ovaj kanal? Pretplaćeni korisnici više neće kroz njega dobivati poruke.',
   nf_enabled:'Uključen', nf_enabled_d:'korisnici se mogu pretplatiti i kanal šalje poruke.',
   nf_user_address:'Korisnici smiju upisati vlastitog primatelja', nf_user_address_d:'svaki korisnik može upisati svoj {field}; inače se koristi onaj gore.',
-  nf_secret_kept:'spremljeno — ostavi prazno za zadržati',
+  nf_secret_kept:'spremljeno — ostavi prazno za zadržati', nf_secret_remove:'Ukloni spremljenu vrijednost',
   nk_email:'E-pošta (SMTP)', nk_telegram:'Telegram', nk_slack:'Slack / Mattermost / Rocket.Chat', nk_teams:'Microsoft Teams (Workflows)', nk_discord:'Discord', nk_ntfy:'ntfy', nk_gotify:'Gotify', nk_pushover:'Pushover', nk_webhook:'Webhook (JSON)',
   nk_email_help:'SMTP poslužitelj (port 587 sa STARTTLS-om, 465 s TLS-om). Korisničko ime i lozinka šalju se samo preko TLS-a ili poslužitelju na ovom računalu.',
   nk_telegram_help:'Napravi bota preko @BotFather, dodaj ga u grupu ili započni razgovor s njim i upiši ID chata (grupe počinju s -100…). Adresa API-ja mijenja se samo za lokalni Bot API poslužitelj.',
@@ -6671,7 +6671,8 @@ async function saveNotes() {
   const notes = document.getElementById('notes-edit').value;
   const r = await fetch('/api/connections/' + c.id, {method: 'PUT', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({name: c.name, host: c.host, protocol: c.protocol, username: c.username, auth_method: c.auth_method, key_path: c.key_path, folder_id: c.folder_id,
-      jump_id: c.jump_id, web_path: c.web_path, key_id: c.key_id, credential_id: c.credential_id, notes})});
+      jump_id: c.jump_choice == null ? null : c.jump_choice, proxy_id: c.proxy_choice == null ? null : c.proxy_choice,
+      web_path: c.web_path, key_id: c.key_id, credential_id: c.credential_id, notes})});
   if (!r.ok) { showToast(await apiError(r), 'error'); return; }
   showToast(t('notes_saved'), 'success');
   document.getElementById('notes-view').innerHTML = renderNotes(notes);
@@ -11698,7 +11699,8 @@ function renderNotifyChannelFields(c) {
     const id = 'nc-f-' + f.name, v = cfg[f.name] || '';
     let ctl;
     if (f.kind === 'enum') ctl = `<select id="${id}">${f.enum.map(e => `<option value="${esc(e)}" ${e === (v || f.default) ? 'selected' : ''}>${esc(t('nf_opt_' + e))}</option>`).join('')}</select>`;
-    else if (f.secret) ctl = `<input type="password" id="${id}" autocomplete="new-password" placeholder="${set.includes(f.name) ? esc(t('nf_secret_kept')) : ''}">`;
+    else if (f.secret) ctl = `<input type="password" id="${id}" autocomplete="new-password" placeholder="${set.includes(f.name) ? esc(t('nf_secret_kept')) : ''}">` +
+      (!f.required && set.includes(f.name) ? `<label class="check-row" style="margin-top:4px;"><input type="checkbox" id="nc-c-${f.name}"> <span>${esc(t('nf_secret_remove'))}</span></label>` : '');
     else ctl = `<input type="${f.kind === 'int' ? 'number' : 'text'}" id="${id}" value="${esc(v)}" placeholder="${esc(f.default || ((LANGS.en['nf_ph_' + f.name] !== undefined) ? t('nf_ph_' + f.name) : ''))}">`;
     return `<div class="field"><label>${esc(t('nf_f_' + f.name))}${f.required ? ' *' : ''}${f.secret ? ' 🔒' : ''}</label>${ctl}</div>`;
   }).join('');
@@ -11712,7 +11714,8 @@ async function saveNotifyChannel() {
   const k = notifyAdminCache.kinds.find(x => x.kind === kind);
   const config = {};
   k.fields.forEach(f => { config[f.name] = document.getElementById('nc-f-' + f.name).value.trim(); });
-  const body = {name: document.getElementById('nc-name').value.trim(), kind, config,
+  const clear = k.fields.filter(f => { const cb = document.getElementById('nc-c-' + f.name); return cb && cb.checked; }).map(f => f.name);
+  const body = {name: document.getElementById('nc-name').value.trim(), kind, config, clear,
     enabled: document.getElementById('nc-enabled').checked, user_address: document.getElementById('nc-ua').checked};
   const res = await fetch('/api/admin/notify/channels' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   if (!res.ok) { showToast(await apiError(res), 'error', 6000); return; }
@@ -11807,12 +11810,15 @@ function fillProxySelect(c, selectId) {
     (proxyCanDefine ? `<option value="__new">＋ ${esc(t('vp_new'))}…</option>` : '');
   sel.value = cur;
   if (sel.value !== cur) sel.value = '';
+  sel.dataset.prev = sel.value;
   updateRoutePreview();
 }
 
 function onProxyPick() {
   const sel = document.getElementById('m-proxy');
-  if (sel.value === '__new') { sel.value = ''; openProxyModal(null, true); return; }
+  // "+ New proxy…" opens the proxy dialog; until a new proxy is saved the previous choice stays.
+  if (sel.value === '__new') { sel.value = sel.dataset.prev || ''; openProxyModal(null, true); return; }
+  sel.dataset.prev = sel.value;
   updateRoutePreview();
 }
 

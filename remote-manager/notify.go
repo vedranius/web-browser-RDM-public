@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 	_ "time/tzdata" // quiet hours use IANA time zones, also where the system has none
+	"unicode"       // quiet hours use IANA time zones, also where the system has none
 )
 
 // ─── NOTIFICATIONS ───────────────────────────────────
@@ -259,6 +260,9 @@ func validateNotifyConfig(kind string, cfg map[string]string, userAddress bool) 
 var emailRe = regexp.MustCompile(`^[^\s@<>",;]+@[^\s@<>",;]+$`)
 
 func validEmail(a string) bool {
+	if strings.IndexFunc(a, unicode.IsControl) >= 0 {
+		return false // no CR / LF / TAB: the address goes into a mail header
+	}
 	a = strings.TrimSpace(a)
 	if i := strings.LastIndexByte(a, '<'); i >= 0 && strings.HasSuffix(a, ">") {
 		a = a[i+1 : len(a)-1]
@@ -291,7 +295,7 @@ func validateNotifyAddress(ch notifyChannel, addr string) error {
 			return fmt.Errorf("1 to 5 e-mail addresses")
 		}
 		for _, a := range list {
-			if !validEmail(a) {
+			if !emailRe.MatchString(a) { // users enter bare addresses only (no display name)
 				return fmt.Errorf("invalid e-mail address %q", a)
 			}
 		}
@@ -424,15 +428,15 @@ func (p notifyPrefs) inQuietHours(t time.Time) bool {
 // ─── EMIT ────────────────────────────────────────────
 
 // notifyUser queues an event for a user on every channel they subscribed it to. text
-// builds the title and body in the user's language.
-func notifyUser(userID int, event string, text func(lang string) (string, string)) {
+// builds the title and body in the user's language. It reports whether anything was queued.
+func notifyUser(userID int, event string, text func(lang string) (string, string)) bool {
 	if userID <= 0 || !settingBool("notifications_enabled") {
-		return
+		return false
 	}
 	rows, err := db.Query(`SELECT s.channel_id, s.address FROM notify_subscriptions s JOIN notify_channels c ON c.id=s.channel_id
 		WHERE s.user_id=? AND s.event=? AND c.enabled=1`, userID, event)
 	if err != nil {
-		return
+		return false
 	}
 	type sub struct {
 		ch   int
@@ -447,7 +451,7 @@ func notifyUser(userID int, event string, text func(lang string) (string, string
 	}
 	rows.Close()
 	if len(subs) == 0 {
-		return
+		return false
 	}
 	title, body := text(loadNotifyPrefs(userID).Lang)
 	now := time.Now().UTC().Format(time.RFC3339Nano)
@@ -459,6 +463,7 @@ func notifyUser(userID int, event string, text func(lang string) (string, string
 	db.Exec(`DELETE FROM notify_pending WHERE user_id=? AND id NOT IN (SELECT id FROM notify_pending WHERE user_id=? ORDER BY id DESC LIMIT ?)`,
 		userID, userID, maxPendingPerUser)
 	notifier.poke()
+	return true
 }
 
 // ─── DISPATCHER ──────────────────────────────────────
@@ -495,6 +500,11 @@ func (d *notifyDispatcher) run() {
 		case <-t.C:
 		case <-d.trigger:
 			time.Sleep(notifyDebounce / 2)
+		}
+		if !settingBool("notifications_enabled") {
+			// Turned off: nothing more is sent, also not what was waiting or being retried.
+			db.Exec(`DELETE FROM notify_pending`)
+			continue
 		}
 		d.dispatch(time.Now(), false)
 	}
@@ -663,9 +673,11 @@ func sendNotification(ch notifyChannel, addr, title, body string, msgs []notifyM
 		return postJSON(base("api_url")+"/bot"+ch.get("bot_token")+"/sendMessage", map[string]interface{}{
 			"chat_id": ch.get("chat_id"), "text": truncateStr(text, 4000), "disable_web_page_preview": true}, nil, "telegram")
 	case "slack":
-		return postJSON(ch.get("webhook_url"), map[string]interface{}{"text": truncateStr(text, 30000)}, nil, "")
+		// Names and hosts come from users: no <!channel>, @here or links of their own.
+		return postJSON(ch.get("webhook_url"), map[string]interface{}{"text": truncateStr(slackEscape(text), 30000)}, nil, "")
 	case "discord":
-		return postJSON(ch.get("webhook_url"), map[string]interface{}{"content": truncateStr(text, 1990)}, nil, "")
+		return postJSON(ch.get("webhook_url"), map[string]interface{}{"content": truncateStr(text, 1990),
+			"allowed_mentions": map[string]interface{}{"parse": []string{}}}, nil, "")
 	case "teams":
 		blocks := []map[string]interface{}{{"type": "TextBlock", "text": title, "weight": "Bolder", "size": "Medium", "wrap": true}}
 		if body != "" {
@@ -796,7 +808,15 @@ func sendSMTP(ch notifyChannel, subject, body string) error {
 		}
 	}
 	if user := ch.get("username"); user != "" {
-		if err := c.Auth(smtp.PlainAuth("", user, ch.get("password"), host)); err != nil {
+		// PLAIN, or LOGIN for servers that offer only that (e.g. Exchange receive connectors).
+		var auth smtp.Auth = smtp.PlainAuth("", user, ch.get("password"), host)
+		if ok, mechs := c.Extension("AUTH"); ok {
+			m := " " + strings.ToUpper(mechs) + " "
+			if !strings.Contains(m, " PLAIN ") && strings.Contains(m, " LOGIN ") {
+				auth = &smtpLoginAuth{user: user, pass: ch.get("password"), host: host}
+			}
+		}
+		if err := c.Auth(auth); err != nil {
 			return fmt.Errorf("SMTP login: %v", err)
 		}
 	}
@@ -815,7 +835,7 @@ func sendSMTP(ch notifyChannel, subject, body string) error {
 	var msg bytes.Buffer
 	fmt.Fprintf(&msg, "From: %s\r\nTo: %s\r\nSubject: %s\r\nDate: %s\r\nMessage-ID: <%d.wrm@%s>\r\nMIME-Version: 1.0\r\n"+
 		"Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\nAuto-Submitted: auto-generated\r\n\r\n",
-		from, strings.Join(to, ", "), mime.QEncoding.Encode("utf-8", subject), time.Now().Format(time.RFC1123Z), time.Now().UnixNano(), hostOnly(host))
+		from, strings.Join(bareAddrs(to), ", "), mime.QEncoding.Encode("utf-8", subject), time.Now().Format(time.RFC1123Z), time.Now().UnixNano(), hostOnly(host))
 	qp := quotedprintable.NewWriter(&msg)
 	qp.Write([]byte(strings.ReplaceAll(body, "\n", "\r\n")))
 	qp.Close()
@@ -827,6 +847,47 @@ func sendSMTP(ch notifyChannel, subject, body string) error {
 	}
 	return c.Quit()
 }
+
+// smtpLoginAuth implements AUTH LOGIN, with the same rule as smtp.PlainAuth: the password
+// only goes over TLS or to the local machine.
+type smtpLoginAuth struct{ user, pass, host string }
+
+func (a *smtpLoginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	if !server.TLS && a.host != "localhost" && a.host != "127.0.0.1" && a.host != "::1" {
+		return "", nil, fmt.Errorf("unencrypted connection")
+	}
+	if server.Name != a.host {
+		return "", nil, fmt.Errorf("wrong host name")
+	}
+	return "LOGIN", nil, nil
+}
+
+func (a *smtpLoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if !more {
+		return nil, nil
+	}
+	if strings.Contains(strings.ToLower(string(fromServer)), "user") {
+		return []byte(a.user), nil
+	}
+	return []byte(a.pass), nil
+}
+
+func bareAddrs(list []string) []string {
+	out := make([]string, len(list))
+	for i, a := range list {
+		out[i] = bareAddr(a)
+	}
+	return out
+}
+
+// slackEscape escapes the characters Slack (and Mattermost / Rocket.Chat) use for links and
+// mentions, and breaks @channel / @here / @all / @everyone.
+func slackEscape(s string) string {
+	s = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;").Replace(s)
+	return slackMentionRe.ReplaceAllString(s, "@\u200b$1")
+}
+
+var slackMentionRe = regexp.MustCompile(`(?i)@(channel|here|all|everyone)\b`)
 
 func bareAddr(a string) string {
 	a = strings.TrimSpace(a)
@@ -903,17 +964,18 @@ func checkCredentialReminders() {
 	}
 	rows.Close()
 	now := time.Now().UTC()
-	remind := func(key, marker string, every time.Duration) bool {
-		// state: "<marker>|<last reminder>"; a new marker (a new rotation) starts over
+	// state: "<marker>|<last reminder>"; a new marker (a new rotation) starts over. The state
+	// is written only when a reminder was queued, so subscribing later still gets one.
+	due := func(key, marker string, every time.Duration) bool {
 		st := getNotifyState(key)
 		if i := strings.LastIndexByte(st, '|'); i >= 0 && st[:i] == marker {
 			if t, err := time.Parse(time.RFC3339, st[i+1:]); err == nil && now.Sub(t) < every {
 				return false
 			}
 		}
-		setNotifyState(key, marker+"|"+now.Format(time.RFC3339))
 		return true
 	}
+	sent := func(key, marker string) { setNotifyState(key, marker+"|"+now.Format(time.RFC3339)) }
 	for _, c := range list {
 		dueKey, incKey := "cred_due:"+strconv.Itoa(c.ID), "cred_incomplete:"+strconv.Itoa(c.ID)
 		vars := func(lang string) map[string]string {
@@ -931,21 +993,21 @@ func checkCredentialReminders() {
 			return map[string]string{"name": c.Name, "user": c.Username, "date": last, "days": strconv.Itoa(c.RotateDays), "status": truncateStr(st, 300)}
 		}
 		if c.RotationDue && !c.Incomplete {
-			if remind(dueKey, c.RotatedAt, credDueRemindEvery) {
-				notifyUser(c.OwnerID, "credential.rotation_due", func(lang string) (string, string) {
-					v := vars(lang)
-					return notifyText(lang, "credential.rotation_due", v), notifyText(lang, "credential.rotation_due.body", v)
-				})
+			if due(dueKey, c.RotatedAt, credDueRemindEvery) && notifyUser(c.OwnerID, "credential.rotation_due", func(lang string) (string, string) {
+				v := vars(lang)
+				return notifyText(lang, "credential.rotation_due", v), notifyText(lang, "credential.rotation_due.body", v)
+			}) {
+				sent(dueKey, c.RotatedAt)
 			}
 		} else {
 			db.Exec(`DELETE FROM notify_state WHERE key=?`, dueKey)
 		}
 		if c.Incomplete {
-			if remind(incKey, c.RotationStatus, credIncRemindEvery) {
-				notifyUser(c.OwnerID, "credential.rotation_incomplete", func(lang string) (string, string) {
-					v := vars(lang)
-					return notifyText(lang, "credential.rotation_incomplete", v), notifyText(lang, "credential.rotation_incomplete.body", v)
-				})
+			if due(incKey, c.RotationStatus, credIncRemindEvery) && notifyUser(c.OwnerID, "credential.rotation_incomplete", func(lang string) (string, string) {
+				v := vars(lang)
+				return notifyText(lang, "credential.rotation_incomplete", v), notifyText(lang, "credential.rotation_incomplete.body", v)
+			}) {
+				sent(incKey, c.RotationStatus)
 			}
 		} else {
 			db.Exec(`DELETE FROM notify_state WHERE key=?`, incKey)
@@ -1238,6 +1300,10 @@ func apiNotifyHandler(w http.ResponseWriter, r *http.Request) {
 				jsonError(w, ch.Name+": "+err.Error(), 400)
 				return
 			}
+			if k, _ := notifyKindFor(ch.Kind); k.Address != "" && s.Address == "" && ch.get(k.Address) == "" {
+				jsonError(w, ch.Name+": enter your "+k.Address+" (this channel has no default recipient)", 400)
+				return
+			}
 			key := s.Event + "\x00" + strconv.Itoa(s.ChannelID)
 			if !seen[key] {
 				seen[key] = true
@@ -1256,7 +1322,12 @@ func apiNotifyHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer tx.Rollback()
-		tx.Exec(`DELETE FROM notify_subscriptions WHERE user_id=?`, userID)
+		// Only the channels offered (enabled) are replaced: subscriptions to a channel that is
+		// disabled for a while stay; those of deleted channels go.
+		for id := range chans {
+			tx.Exec(`DELETE FROM notify_subscriptions WHERE user_id=? AND channel_id=?`, userID, id)
+		}
+		tx.Exec(`DELETE FROM notify_subscriptions WHERE user_id=? AND channel_id NOT IN (SELECT id FROM notify_channels)`, userID)
 		for _, s := range subs {
 			tx.Exec(`INSERT INTO notify_subscriptions (user_id, event, channel_id, address) VALUES (?,?,?,?)`, userID, s.Event, s.ChannelID, s.Address)
 		}

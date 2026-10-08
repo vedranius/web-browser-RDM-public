@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/pkg/sftp"
 )
@@ -68,10 +69,41 @@ func resolveRouteDefaults(c *Connection, folderJump, folderProxy *int) {
 		return raw, false
 	}
 	c.JumpID, c.jumpInherited = eff(c.jumpRaw, folderJump, c.ID)
+	if c.proxyRaw == nil && folderProxy != nil && *folderProxy > 0 && isOwnTunnelProxy(*folderProxy, c.ID) {
+		folderProxy = nil // the connection of a WRM tunnel proxy does not go through its own tunnel
+	}
 	c.ProxyID, c.proxyInherit = eff(c.proxyRaw, folderProxy, 0)
 	if c.Protocol == "SERIAL" {
 		c.JumpID, c.ProxyID, c.jumpInherited, c.proxyInherit = nil, nil, false, false
 	}
+}
+
+// isOwnTunnelProxy: proxy proxyID is the WRM SOCKS tunnel of connection connID.
+func isOwnTunnelProxy(proxyID, connID int) bool {
+	if connID <= 0 {
+		return false
+	}
+	var n int
+	db.QueryRow(`SELECT COUNT(*) FROM proxies p JOIN connection_tunnels t ON t.id=p.tunnel_id WHERE p.id=? AND p.kind='wrm_tunnel' AND t.conn_id=?`, proxyID, connID).Scan(&n)
+	return n > 0
+}
+
+// validateRoutesOf checks the effective routes of connections (after a folder default or
+// a folder changed): jump host chains without loops, and a usable proxy.
+func validateRoutesOf(userID int, ids []int) error {
+	for _, id := range ids {
+		c, err := loadConnectionRaw(id)
+		if err != nil {
+			continue
+		}
+		if _, err := jumpChain(c); err != nil {
+			return fmt.Errorf("%s: %v", c.Name, err)
+		}
+		if err := validateProxyChoice(userID, id, &c); err != nil {
+			return fmt.Errorf("%s: %v", c.Name, err)
+		}
+	}
+	return nil
 }
 
 // folderDefaultsOf returns the folders of a user with their defaults.
@@ -94,8 +126,9 @@ func folderDefaultsOf(userID int) map[int]Folder {
 // Effective jump host / proxy of a row of connections c joined with folders f (SQL).
 const (
 	effJumpSQL  = `CASE WHEN c.protocol='SERIAL' THEN 0 WHEN c.jump_conn_id IS NULL THEN CASE WHEN f.jump_conn_id=c.id THEN 0 ELSE COALESCE(f.jump_conn_id,0) END WHEN c.jump_conn_id<0 THEN 0 ELSE c.jump_conn_id END`
-	effProxySQL = `CASE WHEN c.protocol='SERIAL' THEN 0 WHEN c.proxy_id IS NULL THEN COALESCE(f.proxy_id,0) WHEN c.proxy_id<0 THEN 0 ELSE c.proxy_id END`
-	folderJoin  = `LEFT JOIN folders f ON f.id=c.folder_id AND f.user_id=c.user_id`
+	effProxySQL = `CASE WHEN c.protocol='SERIAL' THEN 0 WHEN c.proxy_id IS NULL THEN CASE WHEN EXISTS (SELECT 1 FROM proxies p JOIN connection_tunnels t ON t.id=p.tunnel_id
+		WHERE p.id=f.proxy_id AND p.kind='wrm_tunnel' AND t.conn_id=c.id) THEN 0 ELSE COALESCE(f.proxy_id,0) END WHEN c.proxy_id<0 THEN 0 ELSE c.proxy_id END`
+	folderJoin = `LEFT JOIN folders f ON f.id=c.folder_id AND f.user_id=c.user_id`
 )
 
 // loadConnection is loadConnectionRaw with the host normalised to host:port for dialing
@@ -122,9 +155,13 @@ func intPtrEq(a, b *int) bool {
 	return *a == *b
 }
 
+// truncateStr shortens s to at most n bytes without cutting a UTF-8 character.
 func truncateStr(s string, n int) string {
 	if len(s) <= n {
 		return s
+	}
+	for n > 0 && !utf8.RuneStart(s[n]) {
+		n--
 	}
 	return s[:n]
 }
@@ -312,6 +349,13 @@ func validateFolderDefaults(userID int, f *Folder) error {
 	if f.ProxyID != nil && *f.ProxyID <= 0 {
 		f.ProxyID = nil
 	}
+	if f.JumpID != nil {
+		var temp string
+		db.QueryRow(`SELECT COALESCE(temp_until,'') FROM connections WHERE id=?`, *f.JumpID).Scan(&temp)
+		if temp != "" {
+			return fmt.Errorf("a quick connection cannot be a folder's default jump host: save it first")
+		}
+	}
 	if err := validateJump(userID, 0, f.JumpID); err != nil {
 		return err
 	}
@@ -359,6 +403,23 @@ func updateFolder(w http.ResponseWriter, r *http.Request, userID, id int) {
 		changed = append(changed, "name")
 	}
 	routeChanged := !intPtrEq(f.JumpID, cur.JumpID) || !intPtrEq(f.ProxyID, cur.ProxyID)
+	var inheriting []int
+	if routeChanged {
+		if rows, err := db.Query(`SELECT id FROM connections WHERE folder_id=? AND user_id=? AND (jump_conn_id IS NULL OR proxy_id IS NULL)`, id, userID); err == nil {
+			for rows.Next() {
+				var cid int
+				rows.Scan(&cid)
+				inheriting = append(inheriting, cid)
+			}
+			rows.Close()
+		}
+		// The connections that inherit the new defaults must still have a valid route.
+		if err := validateRoutesOf(userID, inheriting); err != nil {
+			db.Exec(`UPDATE folders SET name=?, jump_conn_id=?, proxy_id=? WHERE id=? AND user_id=?`, cur.Name, cur.JumpID, cur.ProxyID, id, userID)
+			jsonError(w, "Not saved: the folder defaults would break connection "+err.Error(), 400)
+			return
+		}
+	}
 	if !intPtrEq(f.JumpID, cur.JumpID) {
 		changed = append(changed, "default_jump")
 	}
@@ -370,17 +431,8 @@ func updateFolder(w http.ResponseWriter, r *http.Request, userID, id int) {
 	}
 	if routeChanged {
 		// Connections that inherit the defaults now take another route.
-		if rows, err := db.Query(`SELECT id FROM connections WHERE folder_id=? AND user_id=? AND (jump_conn_id IS NULL OR proxy_id IS NULL)`, id, userID); err == nil {
-			var ids []int
-			for rows.Next() {
-				var cid int
-				rows.Scan(&cid)
-				ids = append(ids, cid)
-			}
-			rows.Close()
-			for _, cid := range ids {
-				tunnelMgr.restartConn(cid)
-			}
+		for _, cid := range inheriting {
+			tunnelMgr.restartConn(cid)
 		}
 		statusMon.poke()
 	}

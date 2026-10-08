@@ -122,7 +122,7 @@ func statusKey(c monConn, throughJumps bool) (statusTarget, bool) {
 	addr := ensurePort(c.host, c.proto)
 	px := ""
 	if c.proxy > 0 {
-		px = "px" + strconv.Itoa(c.proxy) + "|"
+		px = "px" + strconv.Itoa(c.proxy) + "u" + strconv.Itoa(c.userID) + "|" // proxy access is per user
 	}
 	if c.jump <= 0 {
 		if px != "" {
@@ -195,20 +195,18 @@ func (m *statusMonitor) round() {
 		if prev != st {
 			if seen {
 				changedUsers[uid] = true
-				// Went down (from up, or from unknown behind a jump host) or came back.
-				if st == "down" && prev != "down" {
+				// Went down (from up, or from unknown behind a jump host), or came back from a
+				// reported down: up again, or behind a jump host that is up again.
+				_, reported := m.downAt[id]
+				recovered := st == "up" || (st == "unknown" && cs.ViaState == "up")
+				if st == "down" && !reported {
 					m.downAt[id] = time.Now()
 					transitions = append(transitions, transition{uid: uid, id: id, state: "down", errText: cs.Error})
-				} else if st == "up" && prev == "down" {
-					var d time.Duration
-					if t, ok := m.downAt[id]; ok {
-						d = time.Since(t)
-					}
+				} else if recovered && reported {
+					d := time.Since(m.downAt[id])
+					delete(m.downAt, id)
 					transitions = append(transitions, transition{uid: uid, id: id, state: "up", downFor: d})
 				}
-			}
-			if st != "down" {
-				delete(m.downAt, id)
 			}
 			m.lastConn[id] = st
 		}
@@ -310,11 +308,28 @@ func statusDialer(t statusTarget, base dialFunc, behindJump bool) dialFunc {
 	rp, err := proxyOf(Connection{UserID: t.user, ProxyID: &px, Name: t.addr}, behindJump)
 	return func(network, addr string) (net.Conn, error) {
 		if err != nil {
-			return nil, err
+			return nil, statusUnknown{err.Error()} // the route cannot be used: not a "down" server
+		}
+		if rp.p.Kind == "wrm_tunnel" {
+			// Never start a WRM tunnel for a status check, and do not keep it alive: check
+			// over the SSH connection of a running tunnel, else the state is unknown.
+			var tr *tunnelRun
+			if rp.p.TunnelID != nil {
+				tr = tunnelMgr.get("t" + strconv.Itoa(*rp.p.TunnelID))
+			}
+			if tr == nil || tr.currentClient() == nil {
+				return nil, statusUnknown{"the WRM SOCKS tunnel of the proxy is not running"}
+			}
+			return tr.dialRemote(addr)
 		}
 		return rp.dial(base, addr)
 	}
 }
+
+// statusUnknown: the check could not be made (no "down" state, no notification).
+type statusUnknown struct{ msg string }
+
+func (e statusUnknown) Error() string { return e.msg }
 
 func probeWithRetry(t statusTarget, dial dialFunc) *hostStatus {
 	r := probe(t, dial)
@@ -341,6 +356,9 @@ func probe(t statusTarget, dial dialFunc) *hostStatus {
 	select {
 	case r := <-ch:
 		if r.err != nil {
+			if su, ok := r.err.(statusUnknown); ok {
+				return &hostStatus{State: "unknown", Error: truncateStr(su.msg, 200)}
+			}
 			return &hostStatus{State: "down", Error: shortNetError(r.err)}
 		}
 		conn = r.c

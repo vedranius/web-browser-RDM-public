@@ -1379,11 +1379,22 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			ClearPassword   bool `json:"clear_password"`
 			ClearPrivateKey bool `json:"clear_private_key"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		body, err := io.ReadAll(r.Body)
+		if err != nil || json.Unmarshal(body, &in) != nil {
 			jsonError(w, "Bad JSON", 400)
 			return
 		}
 		c := in.Connection
+		// A client that does not send jump_id / proxy_id keeps the stored choices
+		// (null would mean "as the folder").
+		var keys map[string]json.RawMessage
+		json.Unmarshal(body, &keys)
+		if _, ok := keys["jump_id"]; !ok {
+			c.JumpID = cur.jumpRaw
+		}
+		if _, ok := keys["proxy_id"]; !ok {
+			c.ProxyID = cur.proxyRaw
+		}
 		if err := normalizeConnection(&c); err != nil {
 			jsonError(w, err.Error(), 400)
 			return
@@ -1577,9 +1588,33 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Folder not found", 404)
 			return
 		}
+		// The folder's defaults (jump host, proxy) may change the route of the moved connections:
+		// remember where they were, check the new routes, and put them back when one breaks.
+		oldFolder := map[int]*int{}
+		if rows, err := db.Query("SELECT id, folder_id FROM connections WHERE id IN ("+ph+") AND user_id=?", append(args, userID)...); err == nil {
+			for rows.Next() {
+				var id int
+				var f *int
+				rows.Scan(&id, &f)
+				if !intPtrEq(f, payload.FolderID) {
+					oldFolder[id] = f
+				}
+			}
+			rows.Close()
+		}
 		db.Exec("UPDATE connections SET folder_id=? WHERE id IN ("+ph+") AND user_id=?", append([]interface{}{payload.FolderID}, append(args, userID)...)...)
-		// The folder's defaults (jump host, proxy) may change the route of the moved connections.
-		for _, id := range payload.IDs {
+		moved := make([]int, 0, len(oldFolder))
+		for id := range oldFolder {
+			moved = append(moved, id)
+		}
+		if err := validateRoutesOf(userID, moved); err != nil {
+			for id, f := range oldFolder {
+				db.Exec("UPDATE connections SET folder_id=? WHERE id=? AND user_id=?", f, id, userID)
+			}
+			jsonError(w, "Not moved: the folder's defaults would break connection "+err.Error(), 400)
+			return
+		}
+		for _, id := range moved {
 			tunnelMgr.restartConn(id)
 		}
 		statusMon.poke()

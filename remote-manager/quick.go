@@ -145,6 +145,7 @@ func cleanupQuickConnections() {
 		}
 		db.Exec(`DELETE FROM ssh_key_deployments WHERE conn_id=?`, id)
 		db.Exec(`UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=?`, id)
+		db.Exec(`UPDATE folders SET jump_conn_id=NULL WHERE jump_conn_id=?`, id)
 		db.Exec(`DELETE FROM connections WHERE id=? AND temp_until<>''`, id)
 	}
 	if len(ids) > 0 {

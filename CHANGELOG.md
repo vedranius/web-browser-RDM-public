@@ -26,7 +26,11 @@ All notable changes to Web Remote Manager PRO. The format follows
   - policies `notifications_enabled` and `notify_min_interval_seconds`; audit events `admin.notify_channel_created` / `_updated` / `_deleted` / `_tested`, `notify.settings_changed`, `notify.tested`.
 - Tests: `proxy_test.go` (in-process SOCKS5 and HTTP CONNECT proxies with and without authentication for terminal, SFTP, status, jump host + proxy, web interface, desktop relay, WRM tunnel proxy; errors, policy, sharing, Docker warning; folder defaults) and `notify_test.go` (fake HTTP endpoints and a fake SMTP server; digests, rate limit, quiet hours, retries, events).
 
+### Fixed
+- **FTP / FTPS behind a jump host** (and now through a proxy): EPSV data connections went to the address the library took from the control connection (the jump host channel or the proxy) instead of the FTP server, and FTPS data connections were not encrypted after `PROT P`. Both are fixed (`routedFTPDial`).
+
 ### Changed
+- E-mail notifications log in with AUTH PLAIN or, when the server offers only that (e.g. Exchange), AUTH LOGIN.
 - `connections.jump_conn_id` NULL now means "as the folder" (still direct without a folder default); deleting a jump host makes its connections fall back to the folder default.
 - The admin overview shows proxies and notification channels; the audit filter has *Proxies*, *Folders* and *Notifications*.
 
