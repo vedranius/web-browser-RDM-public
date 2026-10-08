@@ -61,6 +61,22 @@ The general notifications module described under v11 (channels, digests, quiet h
 - **Import PuTTY sessions** from a `.reg` export (`HKCU\Software\SimonTatham\PuTTY\Sessions`): host, port, user, key and proxy settings. Proxies are created and linked to the connections.
 - With mRemoteNG, connections that point to a PuTTY session (`PuttySession`) get that session's proxy.
 
+## v10.10.0 — folder bookmarks (server-specific and global)
+
+User request: the same deep directories (e.g. `/opt/app/servers/myServer/downloads/`) are needed on many servers; WinSCP-style bookmarks.
+
+- **Bookmark** = a name and a path, optionally with a folder icon/colour and a note. Scope:
+  - **server**: belongs to one connection;
+  - **global**: offered on every SSH/SFTP/FTP connection;
+  - optionally **folder / tag**: offered on all connections in a WRM folder or with a tag.
+- Paths may use variables: `~`, `$USER`, `{host}`, `{name}` (connection name), e.g. `/opt/app/servers/{name}/downloads`.
+- **File manager:** a ★ button next to the path bar: *Bookmark this directory* (choose scope) and a list of bookmarks; picking one opens that directory. A missing directory shows a clear message, not an error page.
+- **Terminal:** the same list in the window menu and the command palette; picking one types `cd -- '<path>'` (shell-quoted) into the terminal; an option sends it to every terminal of a broadcast group.
+- **Start directory:** a bookmark can be marked as the start directory of a connection (file manager opens there; terminal runs `cd` on connect, like run on connect).
+- Management: rename, reorder, move between scopes, sharing of global bookmarks with share members (read-only), export/import with the configuration.
+- Import of WinSCP bookmarks (`WinSCP.ini` `[Configuration\Bookmarks]`) if simple.
+- Tests: API (scopes, ownership, variables), file manager and terminal in the browser.
+
 ## v11 — Git: compare and deploy services (decisions taken, not started)
 
 A separate **Git** workspace in WRM: a button in the top bar opens it full screen, and its code loads only then. It stays out of the connection tree and the terminal UI, and policy `git_enabled=0` hides it completely.
