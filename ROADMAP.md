@@ -2,62 +2,7 @@
 
 Planned work that is agreed but not built yet. Released work is in [CHANGELOG.md](CHANGELOG.md).
 
-## v10.9.0 — proxy as a connection setting, folder defaults, notifications
-
-Requested by users who want to replace PuTTY: some servers are reached through jump hosts, others through a SOCKS or HTTP proxy.
-
-### Saved proxies
-A proxy is defined once and picked per connection, like a vault credential. It has:
-- a name;
-- a type: **SOCKS5**, **SOCKS4/4a** or **HTTP CONNECT**;
-- host and port;
-- an optional user name and password (encrypted, or a vault credential);
-- *DNS at the proxy* (PuTTY: "Do DNS name lookup at proxy end").
-
-Proxies can be shared with other users without revealing the password. Export and import keep them by name.
-
-### In the connection dialog
-A **Proxy** field next to *Connect via (jump host)*: none / a saved proxy / *+ New proxy…*.
-
-### What goes through the proxy
-- Everything a connection does over TCP:
-  - SSH terminal, SFTP, search, transfers, tunnels;
-  - key deploy and password rotation;
-  - FTP/FTPS;
-  - RDP/VNC/Telnet (through a local relay, like jump hosts today);
-  - web interfaces;
-  - *Test connection*;
-  - live status;
-  - network tools from a server;
-  - Redfish BMCs.
-- Not IPMI and Serial-over-LAN: they use UDP. The UI says so.
-- **Proxy and jump host together:** the proxy is reached through the jump hosts, then the target. The route is shown and audited, e.g. `bastion → socks5://10.1.1.1:1080 → app-01`.
-- Proxy type **"WRM SOCKS tunnel of connection X"**: a dynamic tunnel that WRM starts when needed.
-
-### Docker
-Inside a container `127.0.0.1` is the container itself.
-- `docker-compose.yml` gets `extra_hosts: host.docker.internal:host-gateway`.
-- The README explains the setup.
-- WRM warns when a proxy at `127.0.0.1` is set while it runs in a container.
-
-### Folder defaults
-A folder can carry a default jump host and proxy. Its connections, including new ones, inherit them unless they set their own.
-
-### Security and errors
-- Proxy passwords are encrypted and never sent to the browser.
-- Policy `proxies`: who may define proxies.
-- Use is audited with the route.
-- Clear messages that separate proxy errors from target errors: proxy unreachable, authentication required or failed, SOCKS reply codes, HTTP status.
-
-### Tests
-In-process SOCKS5 and HTTP CONNECT proxies, with and without authentication, covering:
-- terminal, SFTP, the desktop relay, web interfaces and status;
-- jump host + proxy together.
-
-### Notifications module (moved into v10.9)
-The general notifications module described under v11 (channels, digests, quiet hours) is built in v10.9. Its first users are live status (a server went down or came back) and credential rotation reminders; the Git events plug in later.
-
-### Later (v10.9.x)
+## v10.9.x — PuTTY session import
 - **Import PuTTY sessions** from a `.reg` export (`HKCU\Software\SimonTatham\PuTTY\Sessions`): host, port, user, key and proxy settings. Proxies are created and linked to the connections.
 - With mRemoteNG, connections that point to a PuTTY session (`PuttySession`) get that session's proxy.
 
@@ -172,8 +117,8 @@ WRM writes `VERSION.md` (overall version and a per-file table), `.deploy-bak/<ti
 - Edit the catalog's exclude / protected lists in the same place.
 - Output: **a download by default**. A merge request only when the user explicitly chooses it; WRM never writes to a Git server on its own.
 
-### Notifications (a general WRM module, built in v10.9)
-A general module, also usable by live status, credential rotation and other features.
+### Notifications (a general WRM module — built in v10.9.0)
+**Already built in v10.9.0** (`notify.go`: channels, subscriptions, digests, quiet hours; first users live status and credential rotation). v11 only adds the Git events below.
 - **Channels:** in WRM, browser notifications, e-mail (SMTP), Telegram, Slack / Mattermost / Rocket.Chat, Microsoft Teams (Workflows webhook), Discord, ntfy, Gotify, Pushover, and a generic webhook (JSON, HMAC-signed).
 - **Configuration:** administrators set up the channels; users choose what they want to receive.
 - **Behaviour:** one digest per check run instead of a flood, and optional quiet hours.
