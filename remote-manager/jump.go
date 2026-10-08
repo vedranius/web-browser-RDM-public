@@ -57,17 +57,35 @@ func jumpChain(c Connection) ([]Connection, error) {
 	return chain, nil
 }
 
-// jumpPath describes the route of c for logs and the UI, e.g. "bastion → app-01".
+// jumpPath describes the route to c for logs and the UI: its jump hosts and proxies,
+// e.g. "bastion → socks5://10.1.1.1:1080" (the target itself is not included).
 func jumpPath(c Connection) string {
 	chain, err := jumpChain(c)
-	if err != nil || len(chain) == 0 {
+	if err != nil {
 		return ""
 	}
-	names := make([]string, 0, len(chain))
-	for _, j := range chain {
-		names = append(names, j.Name)
+	var parts []string
+	for i, hop := range append(chain, c) {
+		if hop.ProxyID != nil && *hop.ProxyID > 0 {
+			if p, err := loadProxy(*hop.ProxyID); err == nil {
+				parts = append(parts, p.URL)
+			} else {
+				parts = append(parts, "proxy?")
+			}
+		}
+		if i < len(chain) {
+			parts = append(parts, hop.Name)
+		}
 	}
-	return strings.Join(names, " → ")
+	return strings.Join(parts, " → ")
+}
+
+// fullRoute is jumpPath with the target, e.g. "bastion → socks5://10.1.1.1:1080 → app-01".
+func fullRoute(c Connection) string {
+	if r := jumpPath(c); r != "" {
+		return r + " → " + c.Name
+	}
+	return c.Name
 }
 
 func isSSHProtocol(c Connection) bool {
@@ -106,7 +124,22 @@ func dialSSH(c Connection, onNewKey func(host, fp string)) (*ssh.Client, error) 
 			}
 		})
 		var cl *ssh.Client
-		if i == 0 {
+		rp, perr := proxyOf(hop, i > 0)
+		if perr != nil {
+			closeAll()
+			return nil, hopError(hop, i < len(hops)-1, perr)
+		}
+		if rp != nil {
+			// The proxy is reached from WRM, or through the previous hop.
+			var base dialFunc = directDial
+			if i > 0 {
+				base = opened[i-1].Dial
+			}
+			var conn net.Conn
+			if conn, err = rp.dial(base, hop.Host); err == nil {
+				cl, err = sshOverConn(conn, hop.Host, cfg)
+			}
+		} else if i == 0 {
 			cl, err = ssh.Dial("tcp", hop.Host, cfg)
 		} else {
 			cl, err = dialThrough(opened[i-1], hop.Host, cfg)
@@ -137,6 +170,27 @@ func hopError(hop Connection, isJump bool, err error) error {
 		return err
 	}
 	return fmt.Errorf("jump host %q: %w", hop.Name, err)
+}
+
+// sshOverConn runs the SSH handshake on an open connection (e.g. through a proxy).
+func sshOverConn(conn net.Conn, addr string, cfg *ssh.ClientConfig) (*ssh.Client, error) {
+	timeout := cfg.Timeout
+	if timeout <= 0 {
+		timeout = 15 * time.Second
+	}
+	conn.SetDeadline(time.Now().Add(2 * timeout))
+	timer := time.AfterFunc(2*timeout, func() { conn.Close() }) // SSH channels have no deadlines
+	ncc, chans, reqs, err := ssh.NewClientConn(conn, addr, cfg)
+	if !timer.Stop() && err == nil {
+		ncc.Close()
+		return nil, fmt.Errorf("timeout")
+	}
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+	conn.SetDeadline(time.Time{})
+	return ssh.NewClient(ncc, chans, reqs), nil
 }
 
 // dialThrough opens an SSH client to addr through an already connected client.

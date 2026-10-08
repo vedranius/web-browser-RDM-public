@@ -4,6 +4,36 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.9.0] — 2026-10-06 — proxies, folder defaults, notifications
+
+### Added
+- **Saved proxies** (`proxy.go`, *🔑 SSH keys & credentials → 🌐 Proxies*, `/api/proxies`): SOCKS5 with an optional user name and password (RFC 1929) and *DNS at the proxy*, SOCKS4 / SOCKS4a, HTTP CONNECT with Basic authentication, and the type **WRM SOCKS tunnel of a connection** (a dynamic tunnel that WRM starts when needed and stops after 30 minutes without traffic).
+  - The login is encrypted or a vault credential and never sent to the browser; proxies are shared like credentials (grants, everybody) without revealing it.
+  - A **Proxy** field in the connection dialog next to *Connect via (jump host)*, with *＋ New proxy…* and the route of the connection.
+  - **Every TCP path goes through it:** the SSH hops in `dialSSH` (terminal, SFTP, search, transfers, tunnels, key deploy, rotation, network tools from a server), FTP/FTPS (control and data connections), the local relay of RDP / VNC / Telnet, web interfaces, live status and *Check now*, Redfish, *Test connection*.
+  - **Proxy + jump host:** the proxy is reached through the jump hosts; jump hosts can have proxies themselves. The route is shown and audited, e.g. `bastion → socks5://10.1.1.1:1080 → app-01` (sidebar, dialog, terminal, *Sessions & recordings*, audit details).
+  - Errors tell proxy and target apart: proxy unreachable, authentication required / failed, SOCKS5 and SOCKS4 reply codes, HTTP status (`407`, `502`, …).
+  - IPMI and Serial-over-LAN (UDP) through a proxy are refused with a clear message.
+  - Policy `proxies` (`all` / `admins` / `off`): who may define proxies. Audit events `proxy.created`, `proxy.updated`, `proxy.deleted`, `proxy.granted`, `proxy.grant_revoked`, `proxy.tested`.
+  - Export lists the user's proxies (passwords only with secrets) and names them in connections (`proxy_ref`); import creates missing ones and links by name. *Duplicate* keeps the proxy.
+  - **Docker:** `docker-compose.yml` maps `host.docker.internal` to the Docker host (`extra_hosts`); WRM warns when a proxy at 127.0.0.1 is saved while it runs in a container (`/.dockerenv`).
+- **Folder defaults:** a folder can carry a default jump host and a default proxy (*Folder settings…* in the folder's context menu, `PUT /api/folders/{id}`). Its connections, also new ones, inherit them unless they choose their own (*no jump host / no proxy (not the folder's)*). The connection dialog shows the inherited value (*— as the folder: bastion —*), the tree shows ⤳ after the folder name. Export and import keep them. Audit event `folder.updated`.
+- **Notifications module** (`notify.go`):
+  - channels configured by administrators (*Admin panel → Notifications*): SMTP e-mail (STARTTLS / TLS), Telegram, Slack / Mattermost / Rocket.Chat (incoming webhooks), Microsoft Teams (Workflows webhook, Adaptive Card), Discord, ntfy, Gotify, Pushover and a generic JSON webhook signed with `X-WRM-Signature: sha256=HMAC-SHA256`; secrets encrypted and never returned; **Send test** per channel; last delivery and last error;
+  - users subscribe per event and channel (*Settings → Notifications*), optionally with their own recipient (e-mail, Telegram chat, ntfy topic, Pushover key), and set **quiet hours** in their time zone;
+  - one **digest** per user and channel for everything of one check round, at most one message per `notify_min_interval_seconds`; waiting messages are stored and retried with backoff; texts in English or Croatian;
+  - first events: a server went down / is up again (live status; owner only, monitoring opt-out respected) and credential rotation due / incomplete;
+  - policies `notifications_enabled` and `notify_min_interval_seconds`; audit events `admin.notify_channel_created` / `_updated` / `_deleted` / `_tested`, `notify.settings_changed`, `notify.tested`.
+- Tests: `proxy_test.go` (in-process SOCKS5 and HTTP CONNECT proxies with and without authentication for terminal, SFTP, status, jump host + proxy, web interface, desktop relay, WRM tunnel proxy; errors, policy, sharing, Docker warning; folder defaults) and `notify_test.go` (fake HTTP endpoints and a fake SMTP server; digests, rate limit, quiet hours, retries, events).
+
+### Fixed
+- **FTP / FTPS behind a jump host** (and now through a proxy): EPSV data connections went to the address the library took from the control connection (the jump host channel or the proxy) instead of the FTP server, and FTPS data connections were not encrypted after `PROT P`. Both are fixed (`routedFTPDial`).
+
+### Changed
+- E-mail notifications log in with AUTH PLAIN or, when the server offers only that (e.g. Exchange), AUTH LOGIN.
+- `connections.jump_conn_id` NULL now means "as the folder" (still direct without a folder default); deleting a jump host makes its connections fall back to the folder default.
+- The admin overview shows proxies and notification channels; the audit filter has *Proxies*, *Folders* and *Notifications*.
+
 ## [10.8.1] — 2026-10-05 — fixes: larger imports, install hints
 
 ### Fixed

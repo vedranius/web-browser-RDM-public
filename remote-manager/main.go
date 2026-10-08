@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.8.1"
+var AppVersion = "v10.9.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -60,6 +60,7 @@ type Connection struct {
 	KeyPath    string            `json:"key_path"`
 	FolderID   *int              `json:"folder_id"`
 	JumpID     *int              `json:"jump_id"`           // reach this connection through another SSH connection
+	ProxyID    *int              `json:"proxy_id"`          // reach it through a saved proxy (after the jump hosts)
 	WebPath    string            `json:"web_path"`          // HTTP/HTTPS connections: path of the web interface
 	Monitor    *bool             `json:"monitor,omitempty"` // live status checks (nil = unchanged / default on)
 	Options    map[string]string `json:"options,omitempty"` // RDP/VNC/Telnet options (nil = unchanged)
@@ -73,9 +74,14 @@ type Connection struct {
 	Temporary     *bool      `json:"temporary,omitempty"`      // quick connection; PUT false saves it
 	KeyRef        string     `json:"key_ref,omitempty"`        // export / import: name of the key
 	CredentialRef string     `json:"credential_ref,omitempty"` // export / import: name of the credential
+	ProxyRef      string     `json:"proxy_ref,omitempty"`      // export / import: name of the proxy
 	authErr       string     // why the key or credential cannot be used (set by resolveConnectionAuth)
 	usedKeyID     int        // stored key the connection logs in with (after resolving)
 	usedCredID    int        // vault credential it logs in with (after resolving)
+	// JumpID / ProxyID hold the effective route (folder defaults applied). The stored
+	// choice: nil = as the folder, -1 = none, > 0 = this one (see applyFolderDefaults).
+	jumpRaw, proxyRaw           *int
+	jumpInherited, proxyInherit bool
 }
 
 type connView struct {
@@ -88,6 +94,12 @@ type connView struct {
 	KeyPath     string            `json:"key_path"`
 	FolderID    *int              `json:"folder_id"`
 	JumpID      *int              `json:"jump_id"`
+	ProxyID     *int              `json:"proxy_id"`
+	ProxyName   string            `json:"proxy_name,omitempty"`
+	JumpChoice  *int              `json:"jump_choice"`  // stored choice: null = folder default, -1 = none
+	ProxyChoice *int              `json:"proxy_choice"` // stored choice: null = folder default, -1 = none
+	JumpFolder  bool              `json:"jump_inherited,omitempty"`
+	ProxyFolder bool              `json:"proxy_inherited,omitempty"`
 	WebPath     string            `json:"web_path"`
 	Route       string            `json:"route,omitempty"` // jump hosts, e.g. "bastion → dc1-gw"
 	HasPassword bool              `json:"has_password"`
@@ -110,10 +122,14 @@ type connView struct {
 
 func (c Connection) view() connView {
 	v := connView{ID: c.ID, Name: c.Name, Protocol: c.Protocol, Host: c.Host, Username: c.Username, AuthMethod: c.AuthMethod,
-		KeyPath: c.KeyPath, FolderID: c.FolderID, JumpID: c.JumpID, WebPath: c.WebPath, HasPassword: c.Password != "", HasKey: c.PrivateKey != "",
-		KeyID: c.KeyID, CredID: c.CredentialID, Tags: []string{}}
-	if c.JumpID != nil && *c.JumpID > 0 {
+		KeyPath: c.KeyPath, FolderID: c.FolderID, JumpID: c.JumpID, ProxyID: c.ProxyID, WebPath: c.WebPath, HasPassword: c.Password != "", HasKey: c.PrivateKey != "",
+		KeyID: c.KeyID, CredID: c.CredentialID, Tags: []string{}, JumpChoice: c.jumpRaw, ProxyChoice: c.proxyRaw,
+		JumpFolder: c.jumpInherited, ProxyFolder: c.proxyInherit}
+	if needsRoute(c) {
 		v.Route = jumpPath(c)
+	}
+	if c.ProxyID != nil && *c.ProxyID > 0 {
+		db.QueryRow(`SELECT name FROM proxies WHERE id=?`, *c.ProxyID).Scan(&v.ProxyName)
 	}
 	v.Monitor = true
 	if c.ID > 0 {
@@ -142,8 +158,13 @@ func (c Connection) view() connView {
 }
 
 type Folder struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	JumpID    *int   `json:"jump_id"`  // default jump host of its connections
+	ProxyID   *int   `json:"proxy_id"` // default proxy of its connections
+	JumpName  string `json:"jump_name,omitempty"`
+	ProxyName string `json:"proxy_name,omitempty"`
+	ProxyRef  string `json:"proxy_ref,omitempty"` // export / import: name of the proxy
 }
 
 type FileItem struct {
@@ -289,12 +310,18 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
 	mux.HandleFunc("/api/status", apiStatusHandler)
+	mux.HandleFunc("/api/notify", apiNotifyHandler)
+	mux.HandleFunc("/api/notify/test", apiNotifyHandler)
+	mux.HandleFunc("/api/admin/notify/channels", apiAdminNotifyHandler)
+	mux.HandleFunc("/api/admin/notify/channels/", apiAdminNotifyHandler)
 	mux.HandleFunc("/api/status/check", apiStatusHandler)
 	mux.HandleFunc("/api/inventory/", apiInventoryHandler)
 	mux.HandleFunc("/api/keys", apiKeysHandler)
 	mux.HandleFunc("/api/keys/", apiKeysHandler)
 	mux.HandleFunc("/api/credentials", apiCredentialsHandler)
 	mux.HandleFunc("/api/credentials/", apiCredentialsHandler)
+	mux.HandleFunc("/api/proxies", apiProxiesHandler)
+	mux.HandleFunc("/api/proxies/", apiProxiesHandler)
 	mux.HandleFunc("/api/snippets", apiSnippetsHandler)
 	mux.HandleFunc("/api/snippets/", apiSnippetsHandler)
 	mux.HandleFunc("/api/tunnels", apiTunnelsHandler)
@@ -356,6 +383,8 @@ func main() {
 	startTURN()
 	tunnelMgr.startAlways()
 	go statusMon.run()
+	go notifier.run()
+	go runCredentialReminders()
 	go runQuickCleanup()
 
 	recoverTerminalSessions()
@@ -801,6 +830,74 @@ func initDB() {
 		last_sync_at TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "kind", "url", "token", "options", "last_sync_at")
 
+	// v10.9: notifications (channels configured by administrators, subscriptions per user)
+	ensureTable("notify_channels", `CREATE TABLE IF NOT EXISTS notify_channels (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL DEFAULT '',
+		kind TEXT NOT NULL DEFAULT '',
+		config TEXT NOT NULL DEFAULT '',
+		enabled INTEGER NOT NULL DEFAULT 1,
+		user_address INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '',
+		last_sent_at TEXT NOT NULL DEFAULT '',
+		last_error TEXT NOT NULL DEFAULT '')`,
+		"id", "name", "kind", "config", "enabled", "user_address", "created_at", "updated_at", "last_sent_at", "last_error")
+	ensureTable("notify_subscriptions", `CREATE TABLE IF NOT EXISTS notify_subscriptions (
+		user_id INTEGER NOT NULL,
+		event TEXT NOT NULL,
+		channel_id INTEGER NOT NULL,
+		address TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (user_id, event, channel_id))`,
+		"user_id", "event", "channel_id", "address")
+	ensureTable("notify_prefs", `CREATE TABLE IF NOT EXISTS notify_prefs (
+		user_id INTEGER PRIMARY KEY,
+		quiet_enabled INTEGER NOT NULL DEFAULT 0,
+		quiet_start TEXT NOT NULL DEFAULT '22:00',
+		quiet_end TEXT NOT NULL DEFAULT '07:00',
+		tz TEXT NOT NULL DEFAULT 'UTC',
+		lang TEXT NOT NULL DEFAULT 'en')`,
+		"user_id", "quiet_enabled", "quiet_start", "quiet_end", "tz", "lang")
+	ensureTable("notify_pending", `CREATE TABLE IF NOT EXISTS notify_pending (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		channel_id INTEGER NOT NULL,
+		address TEXT NOT NULL DEFAULT '',
+		event TEXT NOT NULL DEFAULT '',
+		title TEXT NOT NULL DEFAULT '',
+		body TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '')`,
+		"id", "user_id", "channel_id", "address", "event", "title", "body", "created_at")
+	ensureTable("notify_state", `CREATE TABLE IF NOT EXISTS notify_state (
+		key TEXT PRIMARY KEY,
+		value TEXT NOT NULL DEFAULT '')`,
+		"key", "value")
+
+	// v10.9: saved proxies (SOCKS5 / SOCKS4 / HTTP CONNECT / a WRM SOCKS tunnel), shared like credentials
+	ensureTable("proxies", `CREATE TABLE IF NOT EXISTS proxies (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		owner_id INTEGER NOT NULL,
+		name TEXT NOT NULL DEFAULT '',
+		kind TEXT NOT NULL DEFAULT 'socks5',
+		host TEXT NOT NULL DEFAULT '',
+		port INTEGER NOT NULL DEFAULT 0,
+		username TEXT NOT NULL DEFAULT '',
+		password TEXT NOT NULL DEFAULT '',
+		credential_id INTEGER DEFAULT NULL,
+		remote_dns INTEGER NOT NULL DEFAULT 1,
+		tunnel_id INTEGER DEFAULT NULL,
+		description TEXT NOT NULL DEFAULT '',
+		shared_all INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '')`,
+		"id", "owner_id", "name", "kind", "host", "port", "username", "password", "credential_id", "remote_dns", "tunnel_id",
+		"description", "shared_all", "created_at", "updated_at")
+	ensureTable("proxy_grants", `CREATE TABLE IF NOT EXISTS proxy_grants (
+		proxy_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		PRIMARY KEY (proxy_id, user_id))`,
+		"proxy_id", "user_id")
+
 	// Safe migrations (columns added over time)
 	for _, m := range []string{
 		`ALTER TABLE connections ADD COLUMN user_id INTEGER DEFAULT NULL`,
@@ -859,6 +956,10 @@ func initDB() {
 		// v10.8: notes (runbook) and quick connections (deleted when unused)
 		`ALTER TABLE connections ADD COLUMN notes TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE connections ADD COLUMN temp_until TEXT NOT NULL DEFAULT ''`,
+		// v10.9: proxies, and default jump host / proxy of a folder
+		`ALTER TABLE connections ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
+		`ALTER TABLE folders ADD COLUMN jump_conn_id INTEGER DEFAULT NULL`,
+		`ALTER TABLE folders ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -886,6 +987,10 @@ func initDB() {
 		`CREATE INDEX IF NOT EXISTS ix_collab_share ON collab_messages(share_id, id)`,
 		`CREATE INDEX IF NOT EXISTS ix_share_items ON share_items(share_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_connections_user ON connections(user_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_conn_proxy ON connections(proxy_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_proxies_owner ON proxies(owner_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_notify_pending_user ON notify_pending(user_id, channel_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_notify_subs_channel ON notify_subscriptions(channel_id)`,
 	} {
 		if _, err := db.Exec(q); err != nil {
 			log.Printf("Index warning: %v", err)
@@ -1065,15 +1170,21 @@ func normalizeConnection(c *Connection) error {
 	if !validAuthMethods[c.AuthMethod] {
 		return fmt.Errorf("Invalid authentication method")
 	}
-	if c.JumpID != nil && *c.JumpID <= 0 {
-		c.JumpID = nil
+	// nil = use the folder's default, -1 = none (also when the folder has one)
+	for _, p := range []**int{&c.JumpID, &c.ProxyID} {
+		if *p != nil && **p == 0 {
+			*p = nil
+		} else if *p != nil && **p < 0 {
+			none := -1
+			*p = &none
+		}
 	}
 	if c.Protocol == "SERIAL" {
 		// A serial port of the WRM server: the host is the device name (ttyUSB0), options the line settings.
 		if !serialNameRe.MatchString(c.Host) {
 			return fmt.Errorf("Serial port: enter the device name, e.g. ttyUSB0, ttyS0 or ttyACM0")
 		}
-		c.AuthMethod, c.Password, c.PrivateKey, c.KeyID, c.CredentialID, c.JumpID = "PASSWORD", "", "", nil, nil, nil
+		c.AuthMethod, c.Password, c.PrivateKey, c.KeyID, c.CredentialID, c.JumpID, c.ProxyID = "PASSWORD", "", "", nil, nil, nil, nil
 		if c.Options != nil {
 			opts, err := normalizeSerialOptions(c.Options)
 			if err != nil {
@@ -1116,19 +1227,25 @@ func isWeb(c Connection) bool {
 }
 
 func loadUserConnections(userID int) []Connection {
-	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path,key_id,credential_id,COALESCE(tags,'') FROM connections WHERE user_id=? ORDER BY name`, userID)
+	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path,key_id,credential_id,COALESCE(tags,''),proxy_id FROM connections WHERE user_id=? ORDER BY name`, userID)
 	conns := []Connection{}
 	if err != nil {
 		return conns
 	}
 	defer rows.Close()
+	defaults := folderDefaultsOf(userID)
 	for rows.Next() {
 		var c Connection
 		var tags string
-		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath, &c.KeyID, &c.CredentialID, &tags)
+		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath, &c.KeyID, &c.CredentialID, &tags, &c.ProxyID)
 		c.Tags = parseTags(tags)
 		decryptConnectionSecrets(&c)
 		c.UserID = userID
+		var fd Folder
+		if c.FolderID != nil {
+			fd = defaults[*c.FolderID]
+		}
+		resolveRouteDefaults(&c, fd.JumpID, fd.ProxyID)
 		conns = append(conns, c)
 	}
 	return conns
@@ -1171,6 +1288,10 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
+		if err := validateRoute(userID, 0, &c); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
 		if err := checkAuthRefs(&c, userID); err != nil {
 			jsonError(w, err.Error(), 400)
 			return
@@ -1180,9 +1301,10 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		plain := c
 		plain.UserID = userID
+		applyFolderDefaults(&plain)
 		encryptConnectionSecrets(&c)
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,key_id,credential_id,tags) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID, tagsString(c.Tags))
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,key_id,credential_id,tags,proxy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, userID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID, tagsString(c.Tags), c.ProxyID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1210,6 +1332,10 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		statusMon.poke()
 		auditLogRef(r, userID, usernameOf(userID), "connection.created", c.Name, map[string]string{"host": c.Host, "protocol": c.Protocol, "auth": c.AuthMethod, "route": jumpPath(plain)}, auditRef{ConnID: plain.ID})
 		w.WriteHeader(http.StatusCreated)
+		if saved, err := loadConnectionRaw(plain.ID); err == nil {
+			jsonOK(w, saved.view())
+			return
+		}
 		jsonOK(w, plain.view())
 	default:
 		jsonError(w, "Method not allowed", 405)
@@ -1253,11 +1379,22 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			ClearPassword   bool `json:"clear_password"`
 			ClearPrivateKey bool `json:"clear_private_key"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		body, err := io.ReadAll(r.Body)
+		if err != nil || json.Unmarshal(body, &in) != nil {
 			jsonError(w, "Bad JSON", 400)
 			return
 		}
 		c := in.Connection
+		// A client that does not send jump_id / proxy_id keeps the stored choices
+		// (null would mean "as the folder").
+		var keys map[string]json.RawMessage
+		json.Unmarshal(body, &keys)
+		if _, ok := keys["jump_id"]; !ok {
+			c.JumpID = cur.jumpRaw
+		}
+		if _, ok := keys["proxy_id"]; !ok {
+			c.ProxyID = cur.proxyRaw
+		}
 		if err := normalizeConnection(&c); err != nil {
 			jsonError(w, err.Error(), 400)
 			return
@@ -1274,6 +1411,10 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			c.FolderID = cur.FolderID
 		}
 		if err := validateJump(userID, id, c.JumpID); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
+		if err := validateRoute(userID, id, &c); err != nil {
 			jsonError(w, err.Error(), 400)
 			return
 		}
@@ -1299,15 +1440,15 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		for f, same := range map[string]bool{"name": c.Name == cur.Name, "host": c.Host == cur.Host, "username": c.Username == cur.Username,
 			"protocol": c.Protocol == cur.Protocol, "auth_method": c.AuthMethod == cur.AuthMethod, "key_path": c.KeyPath == cur.KeyPath,
-			"jump_host": intPtrEq(c.JumpID, cur.JumpID), "web_path": c.WebPath == cur.WebPath, "ssh_key": intPtrEq(c.KeyID, cur.KeyID),
-			"credential_ref": intPtrEq(c.CredentialID, cur.CredentialID)} {
+			"jump_host": intPtrEq(c.JumpID, cur.jumpRaw), "web_path": c.WebPath == cur.WebPath, "ssh_key": intPtrEq(c.KeyID, cur.KeyID),
+			"credential_ref": intPtrEq(c.CredentialID, cur.CredentialID), "proxy": intPtrEq(c.ProxyID, cur.proxyRaw), "folder": intPtrEq(c.FolderID, cur.FolderID)} {
 			if !same {
 				changed = append(changed, f)
 			}
 		}
 		encryptConnectionSecrets(&c)
-		if _, err := db.Exec(`UPDATE connections SET name=?,protocol=?,host=?,username=?,auth_method=?,password=?,private_key=?,key_path=?,folder_id=?,jump_conn_id=?,web_path=?,key_id=?,credential_id=? WHERE id=? AND user_id=?`,
-			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID, id, userID); err != nil {
+		if _, err := db.Exec(`UPDATE connections SET name=?,protocol=?,host=?,username=?,auth_method=?,password=?,private_key=?,key_path=?,folder_id=?,jump_conn_id=?,web_path=?,key_id=?,credential_id=?,proxy_id=? WHERE id=? AND user_id=?`,
+			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, c.JumpID, c.WebPath, c.KeyID, c.CredentialID, c.ProxyID, id, userID); err != nil {
 			jsonError(w, err.Error(), 500)
 			return
 		}
@@ -1341,12 +1482,14 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if c.BMC != nil {
 			c.ID, c.UserID = id, userID
-			if err := saveBMC(c, c.BMC, userID); err != nil {
+			bc := c
+			applyFolderDefaults(&bc) // "through the jump host" follows the effective route
+			if err := saveBMC(bc, c.BMC, userID); err != nil {
 				jsonError(w, "Saved, but the BMC settings were not: "+err.Error(), 400)
 				return
 			}
 		}
-		if c.Host != cur.Host || c.Protocol != cur.Protocol || !intPtrEq(c.JumpID, cur.JumpID) || c.Monitor != nil {
+		if c.Host != cur.Host || c.Protocol != cur.Protocol || !intPtrEq(c.JumpID, cur.jumpRaw) || !intPtrEq(c.ProxyID, cur.proxyRaw) || !intPtrEq(c.FolderID, cur.FolderID) || c.Monitor != nil {
 			statusMon.poke()
 		}
 		if len(changed) > 0 {
@@ -1362,6 +1505,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		db.Exec("DELETE FROM ssh_key_deployments WHERE conn_id=?", id)
 		deleteSnippetsForScope("connection", id)
 		db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
+		db.Exec("UPDATE folders SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		db.Exec("DELETE FROM connections WHERE id=? AND user_id=?", id, userID)
 		auditLog(r, userID, "connection.deleted", cur.Name, map[string]interface{}{"id": id, "host": cur.Host})
 		jsonOK(w, map[string]bool{"ok": true})
@@ -1374,8 +1518,8 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case action == "bmc":
 		bmcHandler(w, r, userID, cur)
 	case action == "duplicate" && r.Method == http.MethodPost:
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc,notes)
-			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc,notes FROM connections WHERE id=? AND user_id=?`, id, userID)
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc,notes,proxy_id)
+			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc,notes,proxy_id FROM connections WHERE id=? AND user_id=?`, id, userID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1435,6 +1579,7 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 			db.Exec("DELETE FROM ssh_key_deployments WHERE conn_id=?", id)
 			deleteSnippetsForScope("connection", id)
 			db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
+			db.Exec("UPDATE folders SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		}
 		db.Exec("DELETE FROM connections WHERE id IN ("+ph+") AND user_id=?", append(args, userID)...)
 		auditLog(r, userID, "connection.deleted", "", map[string]interface{}{"ids": payload.IDs})
@@ -1443,7 +1588,36 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Folder not found", 404)
 			return
 		}
+		// The folder's defaults (jump host, proxy) may change the route of the moved connections:
+		// remember where they were, check the new routes, and put them back when one breaks.
+		oldFolder := map[int]*int{}
+		if rows, err := db.Query("SELECT id, folder_id FROM connections WHERE id IN ("+ph+") AND user_id=?", append(args, userID)...); err == nil {
+			for rows.Next() {
+				var id int
+				var f *int
+				rows.Scan(&id, &f)
+				if !intPtrEq(f, payload.FolderID) {
+					oldFolder[id] = f
+				}
+			}
+			rows.Close()
+		}
 		db.Exec("UPDATE connections SET folder_id=? WHERE id IN ("+ph+") AND user_id=?", append([]interface{}{payload.FolderID}, append(args, userID)...)...)
+		moved := make([]int, 0, len(oldFolder))
+		for id := range oldFolder {
+			moved = append(moved, id)
+		}
+		if err := validateRoutesOf(userID, moved); err != nil {
+			for id, f := range oldFolder {
+				db.Exec("UPDATE connections SET folder_id=? WHERE id=? AND user_id=?", f, id, userID)
+			}
+			jsonError(w, "Not moved: the folder's defaults would break connection "+err.Error(), 400)
+			return
+		}
+		for _, id := range moved {
+			tunnelMgr.restartConn(id)
+		}
+		statusMon.poke()
 	case "tag":
 		n := bulkTag(userID, payload.IDs, payload.Add, payload.Remove)
 		auditLog(r, userID, "connection.tagged", "", map[string]interface{}{"ids": payload.IDs, "add": normalizeTags(payload.Add), "remove": normalizeTags(payload.Remove), "changed": n})
@@ -1465,17 +1639,7 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case http.MethodGet:
-		folders := make([]Folder, 0)
-		rows, err := db.Query("SELECT id,name FROM folders WHERE user_id=? ORDER BY name", userID)
-		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var f Folder
-				rows.Scan(&f.ID, &f.Name)
-				folders = append(folders, f)
-			}
-		}
-		jsonOK(w, folders)
+		jsonOK(w, loadFolders(userID))
 	case http.MethodPost:
 		var f Folder
 		json.NewDecoder(r.Body).Decode(&f)
@@ -1484,14 +1648,27 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Name required", 400)
 			return
 		}
-		res, err := db.Exec("INSERT INTO folders (name,user_id) VALUES (?,?)", f.Name, userID)
+		if err := validateFolderDefaults(userID, &f); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
+		res, err := db.Exec("INSERT INTO folders (name,user_id,jump_conn_id,proxy_id) VALUES (?,?,?,?)", f.Name, userID, f.JumpID, f.ProxyID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
 		}
 		id, _ := res.LastInsertId()
 		f.ID = int(id)
+		if f.JumpID != nil || f.ProxyID != nil {
+			auditLog(r, userID, "folder.created", f.Name, map[string]interface{}{"folder_id": f.ID, "default_jump": f.JumpID, "default_proxy": f.ProxyID})
+		}
 		w.WriteHeader(http.StatusCreated)
+		for _, x := range loadFolders(userID) {
+			if x.ID == f.ID {
+				jsonOK(w, x)
+				return
+			}
+		}
 		jsonOK(w, f)
 	default:
 		jsonError(w, "Method not allowed", 405)
@@ -1505,12 +1682,16 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/folders/")
 	id, _ := strconv.Atoi(strings.TrimSpace(idStr))
-	if r.Method != http.MethodDelete {
-		jsonError(w, "Method not allowed", 405)
-		return
-	}
 	if !userOwnsFolder(id, userID) {
 		jsonError(w, "Not found", 404)
+		return
+	}
+	if r.Method == http.MethodPut {
+		updateFolder(w, r, userID, id)
+		return
+	}
+	if r.Method != http.MethodDelete {
+		jsonError(w, "Method not allowed", 405)
 		return
 	}
 	tx, err := db.Begin()
@@ -1706,14 +1887,10 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Method not allowed", 405)
 		return
 	}
-	folders := []Folder{}
-	if fRows, err := db.Query("SELECT id,name FROM folders WHERE user_id=? ORDER BY name", userID); err == nil {
-		for fRows.Next() {
-			var f Folder
-			fRows.Scan(&f.ID, &f.Name)
-			folders = append(folders, f)
-		}
-		fRows.Close()
+	folders := loadFolders(userID)
+	for i := range folders {
+		// The default proxy is referenced by name; the jump host by the exported connection id.
+		folders[i].ProxyRef, folders[i].ProxyID, folders[i].JumpName, folders[i].ProxyName = folders[i].ProxyName, nil, "", ""
 	}
 	all := loadUserConnections(userID)
 	conns := all[:0]
@@ -1738,6 +1915,12 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		if conns[i].CredentialID != nil {
 			db.QueryRow(`SELECT name FROM credentials WHERE id=?`, *conns[i].CredentialID).Scan(&conns[i].CredentialRef)
 		}
+		// The stored choices, not the folder defaults: null = as the folder, -1 = none.
+		conns[i].JumpID, conns[i].ProxyID = conns[i].jumpRaw, conns[i].proxyRaw
+		if conns[i].ProxyID != nil && *conns[i].ProxyID > 0 {
+			db.QueryRow(`SELECT name FROM proxies WHERE id=?`, *conns[i].ProxyID).Scan(&conns[i].ProxyRef)
+			conns[i].ProxyID = nil
+		}
 		conns[i].KeyID, conns[i].CredentialID = nil, nil
 		if isDesktopProtocol(conns[i].Protocol) || conns[i].Protocol == "SERIAL" {
 			conns[i].Options = loadDesktopOptions(conns[i].ID)
@@ -1754,7 +1937,7 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", attachmentHeader("wrm-config-"+AppVersion+".json"))
 	json.NewEncoder(w).Encode(map[string]interface{}{"version": AppVersion, "with_secrets": withSecrets, "folders": folders, "connections": conns,
-		"tunnels": loadTunnelDefs("user_id=?", userID), "snippets": loadSnippets("user_id=?", userID)})
+		"tunnels": loadTunnelDefs("user_id=?", userID), "snippets": loadSnippets("user_id=?", userID), "proxies": exportProxies(userID, withSecrets)})
 }
 
 func apiImportHandler(w http.ResponseWriter, r *http.Request) {
@@ -1767,14 +1950,17 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var payload struct {
-		Folders     []Folder     `json:"folders"`
-		Connections []Connection `json:"connections"`
-		Tunnels     []tunnelDef  `json:"tunnels"`
-		Snippets    []Snippet    `json:"snippets"`
+		Folders     []Folder      `json:"folders"`
+		Connections []Connection  `json:"connections"`
+		Tunnels     []tunnelDef   `json:"tunnels"`
+		Snippets    []Snippet     `json:"snippets"`
+		Proxies     []proxyExport `json:"proxies"`
 	}
 	if !decodeImportJSON(w, r, &payload) {
 		return
 	}
+	// Proxies first (by name: an existing one of the same name is used), so connections can link to them.
+	proxiesImported := importProxies(r, userID, payload.Proxies, false, nil)
 	allowServerKeys := serverKeysAllowed(userID)
 	tx, err := db.Begin()
 	if err != nil {
@@ -1806,12 +1992,18 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	newIDs := map[int]int{} // exported connection id → new id
 	type jumpLink struct{ id, oldJump int }
 	var jumps []jumpLink
+	type proxyLink struct {
+		id  int
+		ref string
+	}
+	var proxyLinks []proxyLink
 	for _, c := range payload.Connections {
 		oldID, oldJump := c.ID, 0
 		if c.JumpID != nil {
 			oldJump = *c.JumpID
 		}
-		c.JumpID = nil
+		noProxy := c.ProxyID != nil && *c.ProxyID < 0 // "none" (also when the folder has a default)
+		c.JumpID, c.ProxyID = nil, nil
 		// Keys and credentials are referenced by name: use the importing user's ones.
 		c.KeyID, c.CredentialID = nil, nil
 		switch strings.ToUpper(c.AuthMethod) {
@@ -1873,6 +2065,14 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if oldJump > 0 {
 				jumps = append(jumps, jumpLink{int(nid), oldJump})
+			} else if oldJump < 0 {
+				tx.Exec(`UPDATE connections SET jump_conn_id=-1 WHERE id=?`, nid)
+			}
+			if noProxy {
+				tx.Exec(`UPDATE connections SET proxy_id=-1 WHERE id=?`, nid)
+			}
+			if c.ProxyRef != "" {
+				proxyLinks = append(proxyLinks, proxyLink{int(nid), c.ProxyRef})
 			}
 		}
 	}
@@ -1881,21 +2081,52 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			tx.Exec(`UPDATE connections SET jump_conn_id=? WHERE id=?`, nj, j.id)
 		}
 	}
+	// Folder default jump hosts point to imported connections.
+	for _, f := range payload.Folders {
+		if nf := folderIDs[strings.TrimSpace(f.Name)]; nf != nil && f.JumpID != nil {
+			if nj, ok := newIDs[*f.JumpID]; ok {
+				tx.Exec(`UPDATE folders SET jump_conn_id=? WHERE id=? AND jump_conn_id IS NULL`, nj, *nf)
+			}
+		}
+	}
 	tunnelsImported := 0
+	newTunnels := map[int]int{}
 	now := time.Now().UTC().Format(time.RFC3339)
 	for _, d := range payload.Tunnels {
 		nc, ok := newIDs[d.ConnID]
+		oldTunnel := d.ID
 		if !ok || validateTunnelDef(&d, userID) != nil {
 			continue
 		}
-		if _, err := tx.Exec(`INSERT INTO connection_tunnels (conn_id, user_id, name, kind, bind_host, bind_port, target_host, target_port, open_scheme, open_path, start_mode, sort, created_at)
+		if res, err := tx.Exec(`INSERT INTO connection_tunnels (conn_id, user_id, name, kind, bind_host, bind_port, target_host, target_port, open_scheme, open_path, start_mode, sort, created_at)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, nc, userID, d.Name, d.Kind, d.BindHost, d.BindPort, d.TargetHost, d.TargetPort, d.OpenScheme, d.OpenPath, d.StartMode, d.Sort, now); err == nil {
 			tunnelsImported++
+			if nt, _ := res.LastInsertId(); oldTunnel > 0 {
+				newTunnels[oldTunnel] = int(nt)
+			}
 		}
 	}
 	if err := tx.Commit(); err != nil {
 		jsonError(w, err.Error(), 500)
 		return
+	}
+	// "WRM SOCKS tunnel" proxies need the imported tunnels; then the connections are linked.
+	proxiesImported += importProxies(r, userID, payload.Proxies, true, newTunnels)
+	for _, f := range payload.Folders {
+		if nf := folderIDs[strings.TrimSpace(f.Name)]; nf != nil && f.ProxyRef != "" {
+			if pid := proxyByName(userID, f.ProxyRef); pid > 0 {
+				db.Exec(`UPDATE folders SET proxy_id=? WHERE id=? AND proxy_id IS NULL`, pid, *nf)
+			}
+		}
+	}
+	for _, pl := range proxyLinks {
+		if pid := proxyByName(userID, pl.ref); pid > 0 {
+			c, _ := loadConnectionRaw(pl.id)
+			c.ProxyID = &pid
+			if validateProxyChoice(userID, pl.id, &c) == nil {
+				db.Exec(`UPDATE connections SET proxy_id=? WHERE id=?`, pid, pl.id)
+			}
+		}
 	}
 	// Snippets are added after the commit, so their folder/connection checks see the new rows.
 	oldFolders := map[int]int{}
@@ -1929,8 +2160,8 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	if snippetsImported > 0 {
 		notifySnippetsChanged(userID, false)
 	}
-	auditLog(r, userID, "config.imported", "", map[string]int{"connections": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported})
-	jsonOK(w, map[string]int{"imported": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported})
+	auditLog(r, userID, "config.imported", "", map[string]int{"connections": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported, "proxies": proxiesImported})
+	jsonOK(w, map[string]int{"imported": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported, "proxies": proxiesImported})
 }
 
 // ─── EVENTS WS ───────────────────────────────────────

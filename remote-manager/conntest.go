@@ -54,6 +54,20 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.UserID = userID
+	if c.FolderID != nil && !userOwnsFolder(*c.FolderID, userID) {
+		c.FolderID = nil
+	}
+	ownID := 0
+	if c.ID > 0 && userOwnsConnection(c.ID, userID) {
+		ownID = c.ID
+	}
+	// The proxy (own or folder default) must be one the user may use: "proxy not found"
+	// otherwise, without its name.
+	if err := validateRoute(userID, ownID, &c); err != nil {
+		jsonOK(w, map[string]interface{}{"ok": false, "message": err.Error()})
+		return
+	}
+	applyFolderDefaults(&c) // test the route the connection would use
 	c.Host = ensurePort(c.Host, c.Protocol)
 	resolveConnectionAuth(&c)
 	if c.authErr != "" {
