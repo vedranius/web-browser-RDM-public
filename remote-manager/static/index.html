@@ -1260,6 +1260,26 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   .tun-item .t-act { justify-content: flex-start; }
 }
 
+/* v10.10: folder bookmarks */
+.ctx-menu.bm-menu { max-height: min(70vh, 520px); overflow-y: auto; max-width: min(420px, calc(100vw - 16px)); }
+.bm-menu .ctx-item { display: flex; align-items: center; gap: 7px; }
+.bm-menu .bm-row-name { flex: 0 0 auto; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bm-path { color: var(--text3); font-family: monospace; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1 1 auto; }
+.bm-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; background: var(--text3); opacity: .35; }
+.bm-dot.c { opacity: 1; }
+.bm-menu .bm-bc { margin-left: auto; border: none; background: transparent; cursor: pointer; padding: 0 4px; font-size: 13px; }
+.bm-menu .bm-empty { padding: 8px 10px; color: var(--text3); font-size: 12px; max-width: 300px; line-height: 1.45; }
+.bm-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.bm-import { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.bm-list { overflow-y: auto; min-height: 80px; border: 1px solid var(--border); border-radius: 7px; }
+.bm-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+.bm-item:last-child { border-bottom: none; }
+.bm-item .bm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bm-item .bm-main b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.bm-item .bm-meta { color: var(--text3); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bm-item .bm-acts { display: flex; gap: 2px; flex: 0 0 auto; }
+.bm-item .bm-acts .icon-btn:disabled { opacity: .3; cursor: default; }
+.bm-list .bm-empty { padding: 14px; color: var(--text3); line-height: 1.5; }
 /* v10.3: snippets & broadcast input */
 .rp-tabs { display: flex; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 2px; }
 .rp-tabs button { background: transparent; border: none; color: var(--text3); font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 5px; cursor: pointer; letter-spacing: .08em; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
@@ -2039,6 +2059,51 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-sec" onclick="closeModal('modal-snippet')" data-i18n="cancel">Cancel</button>
       <button onclick="saveSnippet()" data-i18n="save">Save</button>
     </div>
+  </div>
+</div>
+
+<!-- Folder bookmark editor (v10.10) -->
+<div class="modal-overlay" id="modal-bookmark" style="z-index:9550;">
+  <div class="modal" style="width:min(600px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;">
+    <h3 id="bm-modal-title">★</h3>
+    <input type="hidden" id="bm-id">
+    <div class="field-row">
+      <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="bm-name" maxlength="120" placeholder="downloads"></div>
+      <div class="field" style="max-width:150px;"><label data-i18n="bm_color">Colour</label><select id="bm-color">
+        <option value="">—</option><option value="#3b82f6">🔵</option><option value="#22c55e">🟢</option><option value="#eab308">🟡</option>
+        <option value="#f97316">🟠</option><option value="#ef4444">🔴</option><option value="#a855f7">🟣</option><option value="#94a3b8">⚪</option></select></div>
+    </div>
+    <div class="field"><label data-i18n="bm_path">Directory</label><input type="text" id="bm-path" maxlength="1024" spellcheck="false" autocomplete="off" placeholder="/opt/app/servers/{name}/downloads">
+      <div class="muted-text" style="margin-top:5px;line-height:1.5;" data-i18n="bm_vars_help">Variables: ~ (home directory), $USER or {user} (the connection's user), {host}, {name} (connection name) — e.g. /opt/app/servers/{name}/downloads</div></div>
+    <div class="field-row">
+      <div class="field"><label data-i18n="bm_scope">Offered on</label><select id="bm-scope" onchange="onBmScopeChange()">
+        <option value="connection" data-i18n="bm_scope_connection">One connection</option>
+        <option value="folder" data-i18n="bm_scope_folder">Connections in a folder</option>
+        <option value="tag" data-i18n="bm_scope_tag">Connections with a tag</option>
+        <option value="global" data-i18n="bm_scope_global">All SSH / SFTP / FTP connections (global)</option></select></div>
+      <div class="field" id="bm-target-wrap"><label id="bm-target-lbl">—</label><select id="bm-target"></select><input type="text" id="bm-tag" list="bm-tags" maxlength="64" style="display:none;" placeholder="env:prod"><datalist id="bm-tags"></datalist></div>
+    </div>
+    <div class="field"><label data-i18n="bm_note">Note (optional)</label><input type="text" id="bm-note" maxlength="1000"></div>
+    <label class="check-row"><input type="checkbox" id="bm-start"> <span><b data-i18n="bm_start">Start directory</b> — <span data-i18n="bm_start_d">the file manager opens here and a terminal runs cd here when it connects (before the run-on-connect snippets). The most specific one wins: connection, tag, folder, global.</span></span></label>
+    <label class="check-row" id="bm-shared-row"><input type="checkbox" id="bm-shared"> <span><b data-i18n="bm_shared">Share with share members</b> — <span data-i18n="bm_shared_d">people who use your connections through a share see this bookmark (read-only). Global bookmarks only.</span></span></label>
+    <div class="modal-footer">
+      <button class="btn-danger" id="bm-del" onclick="deleteBookmark(Number(document.getElementById('bm-id').value))" style="margin-right:auto;">🗑</button>
+      <button class="btn-sec" onclick="closeModal('modal-bookmark')" data-i18n="cancel">Cancel</button>
+      <button onclick="saveBookmark()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Folder bookmarks: manage (v10.10) -->
+<div class="modal-overlay" id="modal-bookmarks">
+  <div class="modal" style="width:min(760px, calc(100vw - 24px)); max-height: calc(100vh - 24px); display:flex; flex-direction:column;">
+    <h3>★ <span data-i18n="bm_title">Folder bookmarks</span></h3>
+    <div class="bm-tools">
+      <button class="btn-sm" onclick="openBookmarkModal(null)">＋ <span data-i18n="bm_new">New bookmark</span></button>
+      <label class="btn-sec btn-sm bm-import">⬆ <span data-i18n="bm_import_winscp">Import WinSCP.ini</span><input type="file" accept=".ini,text/plain" style="display:none;" onchange="importWinSCPBookmarks(this)"></label>
+    </div>
+    <div id="bm-list" class="bm-list"></div>
+    <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-bookmarks')" data-i18n="close">Close</button></div>
   </div>
 </div>
 
@@ -4400,6 +4465,42 @@ Object.assign(LANGS.hr, {
   import_putty:'Uvoz iz PuTTY-ja', import_putty_desc:'Spremljene sesije izvezene regeditom (.reg ključa …\\PuTTY\\Sessions): SSH i Telnet sesije s hostom, portom i korisnikom; proxyji se spremaju i povezuju.',
   import_result_proxies:'{p} novih proxyja, {l} veza povezano s proxyjem svoje PuTTY sesije.',
 });
+Object.assign(LANGS.en, {
+  bm_title:'Folder bookmarks', bm_add_here:'Bookmark this directory…', bm_manage:'Manage bookmarks…', bm_none:'No bookmarks for this connection yet.',
+  bm_new:'New bookmark', bm_edit:'Edit bookmark', bm_path:'Directory', bm_color:'Colour', bm_note:'Note (optional)', bm_global:'All connections', bm_tag:'Tag',
+  bm_vars_help:'Variables: ~ (home directory), $USER or {user} (the connection\'s user), {host}, {name} (connection name) — e.g. /opt/app/servers/{name}/downloads',
+  bm_scope:'Offered on', bm_scope_connection:'One connection', bm_scope_folder:'Connections in a folder', bm_scope_tag:'Connections with a tag',
+  bm_scope_global:'All SSH / SFTP / FTP connections (global)',
+  bm_start:'Start directory', bm_start_d:'the file manager opens here and a terminal runs cd here when it connects (before the run-on-connect snippets). The most specific one wins: connection, tag, folder, global.',
+  bm_start_menu:'Start directory…', bm_shared:'Share with share members',
+  bm_shared_d:'people who use your connections through a share see this bookmark (read-only). Global bookmarks only.', bm_shared_by:'Shared by {u}',
+  bm_missing:'Bookmark "{name}": the directory {path} does not exist on this server or cannot be opened.',
+  bm_start_missing:'The start directory {path} cannot be opened on this server; showing the home directory.',
+  bm_bc_all:'cd in all {n} terminals of the broadcast group', bm_bc_confirm:'Change to the bookmark "{name}" in {n} terminals?',
+  bm_bc_partial:'The cd was sent to {n} of {m} terminals (the bookmark does not belong to the other connections\' owner).',
+  bm_import_winscp:'Import WinSCP.ini', bm_import_done:'WinSCP: {n} bookmark(s) imported, {s} skipped.', bm_import_none:'No remote directory bookmarks found in this file.',
+  bm_delete_q:'Delete the bookmark "{name}"?', bm_path_required:'The directory is required.', bm_up:'Move up', bm_down:'Move down',
+  bm_empty:'No bookmarks yet. Open a directory in the file manager and click ★ → Bookmark this directory, or import your WinSCP bookmarks.',
+  ev_bookmark:'Bookmarks',
+});
+Object.assign(LANGS.hr, {
+  bm_title:'Favoriti direktoriji', bm_add_here:'Dodaj ovaj direktorij u favorite…', bm_manage:'Upravljaj favoritima…', bm_none:'Za ovu vezu još nema favorita.',
+  bm_new:'Novi favorit', bm_edit:'Uredi favorit', bm_path:'Direktorij', bm_color:'Boja', bm_note:'Bilješka (neobavezno)', bm_global:'Sve veze', bm_tag:'Oznaka',
+  bm_vars_help:'Varijable: ~ (kućni direktorij), $USER ili {user} (korisnik veze), {host}, {name} (naziv veze) — npr. /opt/app/servers/{name}/downloads',
+  bm_scope:'Nudi se na', bm_scope_connection:'Jednoj vezi', bm_scope_folder:'Vezama u mapi', bm_scope_tag:'Vezama s oznakom',
+  bm_scope_global:'Svim SSH / SFTP / FTP vezama (globalno)',
+  bm_start:'Početni direktorij', bm_start_d:'upravitelj datoteka otvara se ovdje, a terminal pri spajanju izvršava cd ovamo (prije snippeta koji se pokreću pri spajanju). Vrijedi najspecifičniji: veza, oznaka, mapa, globalno.',
+  bm_start_menu:'Početni direktorij…', bm_shared:'Podijeli s članovima dijeljenja',
+  bm_shared_d:'osobe koje tvoje veze koriste putem dijeljenja vide ovaj favorit (samo čitanje). Samo globalni favoriti.', bm_shared_by:'Dijeli {u}',
+  bm_missing:'Favorit „{name}”: direktorij {path} ne postoji na ovom serveru ili se ne može otvoriti.',
+  bm_start_missing:'Početni direktorij {path} ne može se otvoriti na ovom serveru; prikazan je kućni direktorij.',
+  bm_bc_all:'cd u svih {n} terminala grupe za istovremeni unos', bm_bc_confirm:'Prijeći u favorit „{name}” u {n} terminala?',
+  bm_bc_partial:'cd je poslan u {n} od {m} terminala (favorit ne pripada vlasniku ostalih veza).',
+  bm_import_winscp:'Uvezi WinSCP.ini', bm_import_done:'WinSCP: uvezeno favorita: {n}, preskočeno: {s}.', bm_import_none:'U ovoj datoteci nema favorita udaljenih direktorija.',
+  bm_delete_q:'Obrisati favorit „{name}”?', bm_path_required:'Direktorij je obavezan.', bm_up:'Pomakni gore', bm_down:'Pomakni dolje',
+  bm_empty:'Još nema favorita. Otvori direktorij u upravitelju datoteka i klikni ★ → Dodaj ovaj direktorij u favorite ili uvezi favorite iz WinSCP-a.',
+  ev_bookmark:'Favoriti',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4455,7 +4556,7 @@ function showToast(msg, type = 'info', dur = 3000) {
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function closeAllCtx() { document.querySelectorAll('.ctx-menu').forEach(m => m.classList.remove('open')); }
+function closeAllCtx() { document.querySelectorAll('.ctx-menu').forEach(m => m.classList.remove('open', 'bm-menu')); }
 
 function showCtx(menuId, x, y) {
   closeAllCtx();
@@ -4637,6 +4738,7 @@ async function loadData() {
     updateFolderSelects();
     loadTunnels();
     loadSnippets();
+    loadBookmarks();
     loadStatus();
     loadVault();
   } catch(e) { console.error('loadData', e); }
@@ -4882,6 +4984,7 @@ function showConnCtx(x, y, conn) {
     ${tunRunning ? `<div class="ctx-item" onclick="closeAllCtx(); stopConnTunnels(${conn.id})">■ ${esc(t('tun_stop_all'))}</div>` : ''}` : ''}
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id}, true)">＋ ${esc(t('tun_add'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'connection', scope_id: ${conn.id}, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openBookmarkModal(null, {scope: 'connection', scope_id: ${conn.id}, start_dir: true})">★ ${esc(t('bm_start_menu'))}</div>
     <div class="ctx-hr"></div>
     <div class="ctx-item" onclick="closeAllCtx(); openTools({source: ${conn.id}})">🧰 ${esc(t('tools_from_here'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openAuthKeys(${conn.id})">🔐 ${esc(t('ak_menu'))}</div>
@@ -4968,6 +5071,7 @@ function showFolderCtx(x, y) {
     <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(ctxFolderId)">✏ ${esc(t('fd_edit'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openBookmarkModal(null, {scope: 'folder', scope_id: ctxFolderId, start_dir: true})">★ ${esc(t('bm_start_menu'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow(conns.filter(c => c.folder_id === ctxFolderId).map(c => c.id))">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-hr"></div>
     <div class="ctx-item danger" onclick="closeAllCtx(); delFolder(${ctxFolderId})">🗑 ${t('delete_folder')}</div>
@@ -5884,7 +5988,7 @@ async function adminAudit(more) {
   if (!more) {
     body.innerHTML = `<div class="adm-toolbar">
       <input type="text" id="aud-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminAudit()">
-      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'ssh_key.', 'credential.', 'proxy.', 'folder.', 'notify.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
+      <select id="aud-action" onchange="adminAudit()"><option value="">${esc(t('all_events'))}</option>${['auth.', 'admin.', 'connection.', 'share.', 'collab.', 'terminal.', 'file.', 'tunnel.', 'web.', 'desktop.', 'bmc.', 'nettool.', 'snippet.', 'bookmark.', 'ssh_key.', 'credential.', 'proxy.', 'folder.', 'notify.', 'inventory.', 'recording.', 'hostkey.', 'config.'].map(a => `<option value="${a}">${esc(t('ev_' + a.slice(0, -1)))}</option>`).join('')}</select>
       <input type="text" id="aud-user" placeholder="${esc(t('user'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminAudit()">
       <input type="date" id="aud-from" title="${esc(t('date_from'))}" onchange="adminAudit()">
       <input type="date" id="aud-to" title="${esc(t('date_to'))}" onchange="adminAudit()">
@@ -8436,6 +8540,11 @@ function openSnippetPicker(winId) {
   q.onblur = () => setTimeout(() => { const b = document.getElementById('snip-picker'); if (b && !b.contains(document.activeElement)) closeSnippetPicker(true); }, 200);
   renderSnippetPicker();
   q.focus();
+  bookmarksForWin(wo).then(d => {
+    if (!snipPicker || snipPicker.winId !== winId) return;
+    wo._bm = d.bookmarks;
+    renderSnippetPicker();
+  });
 }
 
 function renderSnippetPicker() {
@@ -8446,9 +8555,13 @@ function renderSnippetPicker() {
   const q = box.querySelector('input').value.toLowerCase().trim();
   const items = snippets.filter(s => snippetAppliesTo(s, c) && (!q || (s.name + ' ' + s.command + ' ' + (s.group || '')).toLowerCase().includes(q)));
   items.sort((a, b) => (q ? (b.name.toLowerCase().startsWith(q) - a.name.toLowerCase().startsWith(q)) : 0) || (a.group || '').localeCompare(b.group || '') || a.name.localeCompare(b.name));
-  snipPicker.items = items.slice(0, 60);
+  // Folder bookmarks of the connection follow the snippets: picking one types the cd.
+  const bms = ((wo && wo._bm) || []).map((b, bi) => ({bm: b, bi})).filter(x => !q || (x.bm.name + ' ' + x.bm.resolved).toLowerCase().includes(q));
+  snipPicker.items = items.slice(0, 60).concat(bms.slice(0, 40));
   const list = box.querySelector('.snip-picker-list');
-  list.innerHTML = snipPicker.items.length ? snipPicker.items.map((s, i) => `<div class="sp-item ${i === snipPicker.sel ? 'sel' : ''}" onmousedown="event.preventDefault(); pickSnippet(${i}, event.shiftKey)">
+  list.innerHTML = snipPicker.items.length ? snipPicker.items.map((s, i) => s.bm ? `<div class="sp-item ${i === snipPicker.sel ? 'sel' : ''}" title="${esc(bmTip(s.bm))}" onmousedown="event.preventDefault(); pickSnippet(${i}, event.shiftKey)">
+      <span class="sp-name">★ ${esc(s.bm.name)}</span><span class="sp-group">${esc(t('bm_title'))}</span>
+      <div class="sp-cmd">${esc(s.bm.cd)}</div></div>` : `<div class="sp-item ${i === snipPicker.sel ? 'sel' : ''}" onmousedown="event.preventDefault(); pickSnippet(${i}, event.shiftKey)">
       <span class="sp-name">${esc(s.name)}</span>${s.group ? `<span class="sp-group">${esc(s.group)}</span>` : ''}${s.auto_run ? ' <span class="snip-badge auto">⚡ auto</span>' : ''}
       <div class="sp-cmd">${esc(s.command.split('\n')[0])}</div></div>`).join('')
     : `<div class="sp-empty">${esc(snippets.length ? t('snip_no_match') : t('snip_empty_short'))}</div>`;
@@ -8460,7 +8573,8 @@ function pickSnippet(i, insert) {
   if (!snipPicker) return;
   const s = snipPicker.items[i], wid = snipPicker.winId;
   closeSnippetPicker();
-  if (s) runSnippet(s.id, insert ? 'insert' : 'run', wid);
+  if (s && s.bm) termCdBookmark(wid, s.bi, false, insert);
+  else if (s) runSnippet(s.id, insert ? 'insert' : 'run', wid);
 }
 
 function closeSnippetPicker(keepFocus) {
@@ -8477,6 +8591,238 @@ function newSnippetFromTerm(winId) {
   const sel = wo && wo.term ? wo.term.getSelection().trim() : '';
   closeSnippetPicker(true);
   openSnippetModal(null, {command: sel});
+}
+
+// ══ FOLDER BOOKMARKS (v10.10) ═════════════════════════
+// Named remote directories: the file manager opens them, a terminal gets `cd -- '<path>'`
+// typed in. Scopes: one connection, a folder, a tag, or global. The server fills in the
+// variables ({host} {name} {user} $USER) per connection and builds the shell-quoted cd.
+let bookmarks = [];                 // my bookmarks (for managing them)
+const bmConnCache = new Map();      // connId|share token → {at, data}
+
+async function loadBookmarks() {
+  bmConnCache.clear();
+  if (!currentUser) return;
+  try { const r = await fetch('/api/bookmarks'); if (r.ok) bookmarks = await r.json(); } catch (_) {}
+  if (document.getElementById('modal-bookmarks').classList.contains('open')) renderBookmarkList();
+}
+
+// bookmarksForWin returns {bookmarks, start} for the connection of a window (cached briefly).
+async function bookmarksForWin(wo, fresh) {
+  if (!wo || !wo.connId) return {bookmarks: [], start: null};
+  const key = wo.connId + '|' + (wo.shareToken || '');
+  const hit = bmConnCache.get(key);
+  if (!fresh && hit && Date.now() - hit.at < 30000) return hit.data;
+  let data = {bookmarks: [], start: null};
+  try {
+    const r = await fetch('/api/bookmarks?conn=' + encodeURIComponent(wo.connId) + (wo.shareToken ? '&share_token=' + encodeURIComponent(wo.shareToken) : ''));
+    if (r.ok) data = await r.json();
+  } catch (_) {}
+  data.bookmarks = data.bookmarks || [];
+  bmConnCache.set(key, {at: Date.now(), data});
+  return data;
+}
+
+function bmCanManage(wo) { return !!currentUser && !(wo && wo.shareToken) && !isCollabMode; }
+function bmDot(b) { return `<span class="bm-dot ${b.color ? 'c' : ''}" ${b.color ? `style="background:${esc(b.color)}"` : ''}></span>`; }
+function bmTip(b) {
+  return [b.resolved || b.path, b.note, b.start_dir ? '⌂ ' + t('bm_start') : '', b.owner ? t('bm_shared_by').replace('{u}', b.owner) : ''].filter(Boolean).join('\n');
+}
+
+// The ★ menu: in the file manager it opens a bookmark, in a terminal it types the cd.
+async function openBookmarkMenu(winId, btn) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo) return;
+  const data = await bookmarksForWin(wo, true);
+  wo._bm = data.bookmarks;
+  const term = wo.mode === 'ssh';
+  const peers = term && bcast.on && bcast.ids.has(wo.id) ? bcastTargets().length : 0;
+  const menu = document.getElementById('dyn-ctx-menu');
+  const items = wo._bm.map((b, i) => `<div class="ctx-item" title="${esc(bmTip(b))}" onclick="closeAllCtx(); ${term ? `termCdBookmark(${winId}, ${i}, false)` : `fmOpenBookmark(${winId}, ${i})`}">
+      ${bmDot(b)}<span class="bm-row-name">${esc(b.name)}${b.start_dir ? ' ⌂' : ''}</span><span class="bm-path">${esc(b.resolved)}</span>
+      ${peers > 1 ? `<button class="bm-bc" title="${esc(t('bm_bc_all').replace('{n}', peers))}" onclick="event.stopPropagation(); closeAllCtx(); termCdBookmark(${winId}, ${i}, true)">📣</button>` : ''}</div>`).join('');
+  const manage = bmCanManage(wo);
+  menu.innerHTML = (manage && !term ? `<div class="ctx-item" onclick="closeAllCtx(); bookmarkCurrentDir(${winId})">☆ ${esc(t('bm_add_here'))}</div><div class="ctx-hr"></div>` : '') +
+    (items || `<div class="bm-empty">${esc(t('bm_none'))}</div>`) +
+    (manage ? `<div class="ctx-hr"></div><div class="ctx-item" onclick="closeAllCtx(); openBookmarksManager()">⚙ ${esc(t('bm_manage'))}</div>` : '');
+  const r = btn.getBoundingClientRect();
+  showCtx('dyn-ctx-menu', r.left, r.bottom + 4);
+  menu.classList.add('bm-menu'); // closeAllCtx removes it again
+}
+
+function fmOpenBookmark(winId, i) {
+  const wo = winObjects.find(w => w.id === winId);
+  const b = wo && wo._bm && wo._bm[i];
+  if (!b) return;
+  loadFiles(winId, b.resolved, {onError: msg => showToast(t('bm_missing').replace('{name}', b.name).replace('{path}', b.resolved) + '\n' + msg, 'warning', 8000)});
+}
+
+// fmFirstLoad opens a new file manager in the start directory of the connection, if any.
+async function fmFirstLoad(winId) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo) return;
+  if (wo.path && wo.path !== '.') { loadFiles(winId, wo.path); return; }
+  const data = await bookmarksForWin(wo);
+  const start = data.start;
+  if (!start || !start.path) { loadFiles(winId, '.'); return; }
+  loadFiles(winId, start.path, {onError: () => {
+    showToast(t('bm_start_missing').replace('{path}', start.path), 'warning', 7000);
+    loadFiles(winId, '.');
+  }});
+}
+
+function bookmarkCurrentDir(winId) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo) return;
+  openBookmarkModal(null, {path: wo.path || '', scope: 'connection', scope_id: wo.connId});
+}
+
+// termCdBookmark types the cd of bookmark i into the terminal, or into every terminal of
+// its broadcast group (each with its own connection's variables).
+async function termCdBookmark(winId, i, all, insert) {
+  const wo = winObjects.find(w => w.id === winId);
+  const b = wo && wo._bm && wo._bm[i];
+  if (!b || !wo.term) return;
+  let targets = all ? bcastTargets() : [wo];
+  if (!targets.length) targets = [wo];
+  if (targets.length === 1 && targets[0] === wo) {
+    termSend(wo, b.cd + (insert ? '' : '\r'));
+    try { wo.term.focus(); } catch (_) {}
+    return;
+  }
+  if (!await uiConfirm(t('bm_bc_confirm').replace('{name}', b.name).replace('{n}', targets.length), {title: '★ ' + b.name, okText: t('run')})) return;
+  const ids = [...new Set(targets.map(w => w.connId))];
+  let map = {};
+  try {
+    const r = await fetch('/api/bookmarks/resolve' + (wo.shareToken ? '?share_token=' + encodeURIComponent(wo.shareToken) : ''),
+      {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: b.id, conns: ids})});
+    if (r.ok) map = await r.json();
+  } catch (_) {}
+  let sent = 0;
+  targets.forEach(w => { const x = map[String(w.connId)]; if (x && termSend(w, x.cd + '\r')) sent++; });
+  if (sent < targets.length) showToast(t('bm_bc_partial').replace('{n}', sent).replace('{m}', targets.length), 'warning', 6000);
+  bcast.line = '';
+  try { wo.term.focus(); } catch (_) {}
+}
+
+// ── editor ──
+function bmScopeTargets(scope) {
+  if (scope === 'folder') return folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(f.name)}</option>`).join('');
+  if (scope === 'connection') return conns.filter(c => ['SSH', 'SFTP', 'FTP', 'FTPS'].includes(c.protocol)).sort((a, b) => a.name.localeCompare(b.name))
+    .map(c => `<option value="${c.id}">🖥 ${esc(c.name)} (${esc(c.host)})</option>`).join('');
+  return '';
+}
+
+function openBookmarkModal(id, prefill) {
+  const b = id ? bookmarks.find(v => v.id === id) : Object.assign({name: '', path: '', scope: 'connection', scope_id: 0, tag: '', color: '', note: '', start_dir: false, shared: false}, prefill || {});
+  if (!b) return;
+  const el = x => document.getElementById(x);
+  el('bm-id').value = id || '';
+  el('bm-modal-title').textContent = '★ ' + (id ? t('bm_edit') : t('bm_new'));
+  el('bm-name').value = b.name || '';
+  el('bm-path').value = b.path || '';
+  el('bm-color').value = b.color || '';
+  el('bm-note').value = b.note || '';
+  el('bm-start').checked = !!b.start_dir;
+  el('bm-shared').checked = !!b.shared;
+  el('bm-scope').value = b.scope || 'connection';
+  el('bm-tag').value = b.tag || '';
+  el('bm-tags').innerHTML = [...new Set(conns.flatMap(c => c.tags || []))].sort().map(x => `<option value="${esc(x)}">`).join('');
+  el('bm-del').style.display = id ? '' : 'none';
+  onBmScopeChange(b.scope_id);
+  el('modal-bookmark').classList.add('open');
+  setTimeout(() => (b.path ? el('bm-name') : el('bm-path')).focus(), 40);
+}
+
+function onBmScopeChange(selected) {
+  const el = x => document.getElementById(x);
+  const scope = el('bm-scope').value, sel = el('bm-target'), tag = el('bm-tag');
+  el('bm-target-wrap').style.display = scope === 'global' ? 'none' : '';
+  el('bm-shared-row').style.display = scope === 'global' ? '' : 'none';
+  tag.style.display = scope === 'tag' ? '' : 'none';
+  sel.style.display = scope === 'tag' ? 'none' : '';
+  el('bm-target-lbl').textContent = scope === 'folder' ? t('snip_folder_lbl') : scope === 'tag' ? t('bm_tag') : t('snip_conn_lbl');
+  if (scope === 'folder' || scope === 'connection') {
+    sel.innerHTML = bmScopeTargets(scope);
+    if (selected) sel.value = String(selected);
+  }
+}
+
+async function saveBookmark() {
+  const el = x => document.getElementById(x);
+  const id = Number(el('bm-id').value) || 0;
+  const scope = el('bm-scope').value;
+  const old = id ? bookmarks.find(v => v.id === id) : null;
+  const body = {name: el('bm-name').value.trim(), path: el('bm-path').value.trim(), scope, color: el('bm-color').value, note: el('bm-note').value.trim(),
+    scope_id: scope === 'folder' || scope === 'connection' ? Number(el('bm-target').value) || 0 : 0, tag: scope === 'tag' ? el('bm-tag').value.trim() : '',
+    start_dir: el('bm-start').checked, shared: scope === 'global' && el('bm-shared').checked, sort: old ? old.sort : 0};
+  if (!body.path) { showToast(t('bm_path_required'), 'error'); return; }
+  const r = await fetch(id ? '/api/bookmarks/' + id : '/api/bookmarks', {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  closeModal('modal-bookmark');
+  showToast('★ ' + t('saved'), 'success', 1500);
+  await loadBookmarks();
+}
+
+async function deleteBookmark(id) {
+  const b = bookmarks.find(v => v.id === id);
+  if (!b || !await uiConfirm(t('bm_delete_q').replace('{name}', b.name), {danger: true, okText: t('delete')})) return;
+  const r = await fetch('/api/bookmarks/' + id, {method: 'DELETE'});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  closeModal('modal-bookmark');
+  await loadBookmarks();
+}
+
+// ── manager ──
+async function openBookmarksManager() {
+  if (!currentUser) return;
+  document.getElementById('modal-bookmarks').classList.add('open');
+  await loadBookmarks();
+  renderBookmarkList();
+}
+
+function bmScopeLabel(b) {
+  if (b.scope === 'folder') { const f = folders.find(x => x.id === b.scope_id); return '📁 ' + (f ? f.name : '?'); }
+  if (b.scope === 'connection') { const c = conns.find(x => x.id === b.scope_id); return '🖥 ' + (c ? c.name : '?'); }
+  if (b.scope === 'tag') return '🏷 ' + b.tag;
+  return '🌐 ' + t('bm_global');
+}
+
+function renderBookmarkList() {
+  const list = document.getElementById('bm-list');
+  if (!list) return;
+  if (!bookmarks.length) { list.innerHTML = `<div class="bm-empty">${esc(t('bm_empty'))}</div>`; return; }
+  list.innerHTML = bookmarks.map((b, i) => `<div class="bm-item">
+      ${bmDot(b)}
+      <div class="bm-main"><b title="${esc(b.note || b.name)}">${esc(b.name)}${b.start_dir ? ` <span title="${esc(t('bm_start'))}">⌂</span>` : ''}${b.shared ? ` <span title="${esc(t('bm_shared'))}">👥</span>` : ''}</b>
+        <span class="bm-path">${esc(b.path)}</span><span class="bm-meta">${esc(bmScopeLabel(b))}${b.note ? ' · ' + esc(b.note) : ''}</span></div>
+      <div class="bm-acts">
+        <button class="icon-btn" title="${esc(t('bm_up'))}" ${i === 0 ? 'disabled' : ''} onclick="moveBookmark(${i}, -1)">↑</button>
+        <button class="icon-btn" title="${esc(t('bm_down'))}" ${i === bookmarks.length - 1 ? 'disabled' : ''} onclick="moveBookmark(${i}, 1)">↓</button>
+        <button class="icon-btn" title="${esc(t('edit'))}" onclick="openBookmarkModal(${b.id})">✏</button>
+        <button class="icon-btn" title="${esc(t('delete'))}" onclick="deleteBookmark(${b.id})">🗑</button>
+      </div></div>`).join('');
+}
+
+async function moveBookmark(i, d) {
+  const j = i + d;
+  if (j < 0 || j >= bookmarks.length) return;
+  [bookmarks[i], bookmarks[j]] = [bookmarks[j], bookmarks[i]];
+  bookmarks.forEach((b, k) => { b.sort = k + 1; });
+  renderBookmarkList();
+  const r = await fetch('/api/bookmarks/reorder', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ids: bookmarks.map(b => b.id)})});
+  if (!r.ok) { showToast(await apiError(r), 'error'); loadBookmarks(); }
+}
+
+async function importWinSCPBookmarks(input) {
+  const f = input.files && input.files[0];
+  input.value = '';
+  if (!f) return;
+  const r = await fetch('/api/bookmarks/import-winscp', {method: 'POST', headers: {'Content-Type': 'text/plain'}, body: await f.text()});
+  if (!r.ok) { showToast(await apiError(r), 'error', 6000); return; }
+  const res = await r.json();
+  showToast(res.found ? t('bm_import_done').replace('{n}', res.imported).replace('{s}', res.skipped) : t('bm_import_none'), res.found ? 'success' : 'warning', 6000);
+  await loadBookmarks();
 }
 
 // ══ BROADCAST INPUT (v10.3) ═══════════════════════════
@@ -8889,6 +9235,7 @@ function addWindow(opts) {
       <div class="win-btns">
         <button class="win-btn reconnect" id="wb-rc-${id}" title="${t('reconnect_now')}" style="display:none;" onclick="reconnectTermById(${id})">↻</button>
         <button class="win-btn" id="wb-nt-${id}" title="${esc(t('notes_title'))}" style="display:none;" onclick="openNotes((winObjects.find(w => w.id === ${id}) || {}).connId)">📝</button>
+        <button class="win-btn bm" id="wb-bm-${id}" title="${esc(t('bm_title'))}" style="display:none;" onclick="openBookmarkMenu(${id}, this)">★</button>
         <button class="win-btn snip" id="wb-sn-${id}" title="${esc(t('snip_title'))}" style="display:none;" onclick="openSnippetPicker(${id})">⚡</button>
         <button class="win-btn bc" id="wb-bc-${id}" style="display:none;" onclick="toggleWinBroadcast(${id})">📣</button>
         <button class="win-btn screen-share" id="wb-ss-${id}" title="${t('share_terminal')}" style="display:none;" onclick="toggleScreenShare(${id})">📡</button>
@@ -9035,6 +9382,8 @@ function setWinMode(id, mode) {
   const c = winConn(wo);
   const rcBtn = document.getElementById('wb-rc-' + id);
   if (rcBtn) rcBtn.style.display = mode === 'ssh' || mode === 'desk' ? '' : 'none';
+  const bmBtn = document.getElementById('wb-bm-' + id);
+  if (bmBtn) bmBtn.style.display = mode === 'ssh' ? '' : 'none';
   const snBtn = document.getElementById('wb-sn-' + id);
   if (snBtn) snBtn.style.display = mode === 'ssh' && (!isCollabMode || currentUser) ? '' : 'none';
   const ntBtn = document.getElementById('wb-nt-' + id);
@@ -9086,7 +9435,7 @@ function setWinMode(id, mode) {
     const termBtn = document.getElementById('fm-term-' + id);
     if (termBtn && isFtpConn(c)) termBtn.style.display = 'none';
     applyFmPermissions(wo);
-    loadFiles(id, wo.path && wo.path !== '.' ? wo.path : '.');
+    fmFirstLoad(id);
     const title = c ? `Files — ${c.name}` : `Files ${id}`;
     const el = document.getElementById('wt-' + id);
     if (el) el.textContent = title;
@@ -9617,6 +9966,7 @@ function fmHTML(id) {
     <div class="fm-toolbar">
       <button class="fm-btn" onclick="loadFiles(${id}, '..')" title="${t('fm_up')} (Backspace)"><span>↑</span></button>
       <button class="fm-btn" onclick="reloadFmFiles(${id})" title="${t('fm_refresh')} (F5)"><span>⟳</span></button>
+      <button class="fm-btn fm-bm" onclick="openBookmarkMenu(${id}, this)" title="${t('bm_title')}"><span>★</span></button>
       <div class="fm-crumbs" id="fcr-${id}" title="${t('fm_click_edit_path')}"></div>
       <input class="fm-path" id="fp-${id}" hidden placeholder="/path/to/folder"
              onkeydown="if(event.key==='Enter'){event.preventDefault();loadFiles(${id},this.value);} else if(event.key==='Escape'){hidePathInput(${id});}"
@@ -9744,6 +10094,7 @@ async function loadFiles(winId, path, opts) {
     if (wo._listReq !== reqId) return;
     if (!res.ok) {
       const msg = await apiError(res);
+      if (opts.onError) { fmRestoreList(winId); opts.onError(msg); return; }
       showFmError(winId, msg, path);
       return;
     }
@@ -9760,8 +10111,18 @@ async function loadFiles(winId, path, opts) {
     if (opts.highlight) highlightFile(winId, opts.highlight);
   } catch(e) {
     clearTimeout(spinT);
-    if (wo._listReq === reqId) showFmError(winId, e.message, path);
+    if (wo._listReq !== reqId) return;
+    if (opts.onError) { fmRestoreList(winId); opts.onError(e.message); return; }
+    showFmError(winId, e.message, path);
   }
+}
+
+// fmRestoreList shows the directory that was open before a failed jump (a bookmark).
+function fmRestoreList(winId) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo) return;
+  if (wo.path && wo._cachedFiles) { renderCrumbs(winId, wo.path); renderFileList(winId, wo.path, wo._cachedFiles); }
+  else { const list = document.getElementById('fl-' + winId); if (list) list.innerHTML = ''; }
 }
 
 function showFmError(winId, msg, path) {
@@ -13490,7 +13851,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();
