@@ -4,6 +4,17 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [10.9.1] — 2026-10-08 — PuTTY session import
+
+### Added
+- **Import from PuTTY** (*Settings → Data*, `POST /api/config/import/putty`, `putty.go`): a registry export (`.reg`, UTF-16 LE with a BOM as written by regedit, or UTF-8) of `HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions`.
+  - URL-encoded session names are decoded (`My%20Server`); `HostName` (also `user@host`), `PortNumber`, `UserName` and `Protocol` are imported into the folder *PuTTY*. *Default Settings* is not imported but supplies the defaults of the other sessions.
+  - SSH and Telnet sessions become connections; raw, rlogin and serial sessions are listed as skipped. `PublicKeyFile` gives a note (convert the `.ppk` with PuTTYgen and add the key).
+  - **Proxies:** SOCKS4 / SOCKS5 / HTTP settings (`ProxyMethod`, `ProxyHost`, `ProxyPort`, `ProxyUsername`, `ProxyPassword`, `ProxyDNS`) become saved proxies linked to the connections. One proxy per distinct setting; an identical proxy the user already owns is reused, so importing again creates none. PuTTY's *SSH proxy* becomes the jump host (by name); Telnet and local-command proxies get a note. The policy `proxies` applies.
+  - **With mRemoteNG:** connections whose `PuttySession` (also inherited) names an imported PuTTY session get its proxy, whichever file is imported first (new table `putty_sessions`, new column `connections.putty_session`).
+  - The import result and the audit event `config.imported` also count `proxies` and `proxy_links`.
+- Tests: `putty_test.go` (UTF-16 and UTF-8 files, defaults, proxies and their reuse, SSH proxy → jump host, mRemoteNG linking in both orders).
+
 ## [10.9.0] — 2026-10-06 — proxies, folder defaults, notifications
 
 ### Added

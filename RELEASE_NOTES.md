@@ -1,12 +1,29 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.9.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.9.1/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v10.9.0 — proxies, folder defaults, notifications
+## Web Remote Manager PRO v10.9.1 — PuTTY session import
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🌐 Proxies as a connection setting
+### 📥 Import from PuTTY
+
+- *Settings → Data → Import from PuTTY* reads a `.reg` export of your saved sessions (`regedit` → `HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions` → *Export*, UTF-16 or UTF-8).
+- SSH and Telnet sessions become connections with host, port and user; *Default Settings* supplies the defaults. Key files get a hint to convert the `.ppk`.
+- **Proxies come along:** SOCKS4, SOCKS5 and HTTP proxies (with login and DNS setting) become saved proxies, one per distinct proxy, reused when you already have it, and linked to the connections. PuTTY's *SSH proxy* becomes the jump host.
+- **With mRemoteNG:** connections that use a PuTTY session (*PuttySession*) get that session's proxy, whichever file you import first.
+
+### ⬆️ Upgrading from v10.9.0
+
+Replace the binary. The database gets a new table (`putty_sessions`) and column (`connections.putty_session`); the previous binary still starts on it.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.9.1/CHANGELOG.md) for details.
+
+---
+
+## Included from v10.9.0 — proxies, folder defaults, notifications
+
+#### 🌐 Proxies as a connection setting
 
 - Define a proxy once and pick it per connection, like a vault credential: **SOCKS5** (user / password, DNS at the proxy), **SOCKS4 / 4a**, **HTTP CONNECT** (Basic auth), or the **SOCKS tunnel of one of your connections**, which WRM starts when needed.
 - **Everything goes through it:** terminal, SFTP, FTP, tunnels, key deploy and rotation, RDP / VNC / Telnet, web interfaces, *Test connection*, live status, network tools from the server, Redfish.
@@ -15,18 +32,18 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - Share proxies without revealing their login; policy `proxies` decides who may define them. IPMI / Serial-over-LAN (UDP) are refused through a proxy.
 - **Docker:** `host.docker.internal` points to the Docker host, and WRM warns about `127.0.0.1` proxies inside a container.
 
-### 📁 Folder defaults
+#### 📁 Folder defaults
 
 - Right-click a folder → *Folder settings…*: a **default jump host** and **default proxy** for all its connections, also new ones.
 - A connection shows what it inherits (*— as the folder: bastion —*) and can override it (*no jump host (not the folder's)*). Export and import keep it.
 
-### 🔔 Notifications
+#### 🔔 Notifications
 
 - Administrators add channels: **e-mail (SMTP)**, **Telegram**, **Slack / Mattermost / Rocket.Chat**, **Microsoft Teams**, **Discord**, **ntfy**, **Gotify**, **Pushover**, or a signed **webhook** — with a *Send test* button.
 - Users choose the events and channels in *Settings → Notifications*, with their own address where allowed and optional **quiet hours**.
 - First events: **a server went down / is up again**, **credential rotation due / incomplete**. One check round sends **one message**, not a flood.
 
-### ⬆️ Upgrading from v10.8.1
+#### ⬆️ Upgrading from v10.8.1
 
 Replace the binary. The database gets new tables and columns (proxies, folder defaults, notifications); the previous binary still starts on it. Connections without a jump host of their own now use their folder's default once you set one. Docker users: pull the new `docker-compose.yml` for `host.docker.internal`.
 
@@ -434,20 +451,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.9.0-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.9.0-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.9.0-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.9.0-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.9.0-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.9.0-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.9.0-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.9.0-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.9.0-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.9.0-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.9.0-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.9.0-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.9.0-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.9.0-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.9.1-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.9.1-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.9.1-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.9.1-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.9.1-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.9.1-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.9.1-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.9.1-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.9.1-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.9.1-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.9.1-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.9.1-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.9.1-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.9.1-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -455,22 +472,22 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.9.0-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.9.0-linux-amd64
+chmod +x wrm-pro-v10.9.1-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.9.1-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.9.0-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.9.1-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.9.0-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.9.1-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.9.0/wrm-pro-v10.9.0-android-arm64
-chmod +x wrm-pro-v10.9.0-android-arm64 && ./wrm-pro-v10.9.0-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.9.1/wrm-pro-v10.9.1-android-arm64
+chmod +x wrm-pro-v10.9.1-android-arm64 && ./wrm-pro-v10.9.1-android-arm64
 ```
 
 **Docker**
