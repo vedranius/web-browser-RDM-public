@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v10.9.0</title>
+<title>Web Remote Manager PRO v10.9.1</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1479,7 +1479,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v10.9.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v10.9.1 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1558,7 +1558,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.9.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v10.9.1</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -2001,6 +2001,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="import_sshcfg">Import OpenSSH config</div><div class="setting-desc" data-i18n="import_sshcfg_desc">~/.ssh/config: hosts, users, ports, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.</div></div>
         <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" onchange="importExternal(this, 'sshconfig')" style="display:none;"></label></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label" data-i18n="import_putty">Import from PuTTY</div><div class="setting-desc" data-i18n="import_putty_desc">Saved sessions exported with regedit (.reg of …\PuTTY\Sessions): SSH and Telnet sessions with host, port and user; proxies are saved and linked.</div></div>
+        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".reg" onchange="importExternal(this, 'putty')" style="display:none;"></label></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -4385,12 +4389,16 @@ Object.assign(LANGS.en, {
   fd_help:'Connections in this folder, also new ones, use these unless they choose their own jump host or proxy.',
   fd_from_folder:'as the folder', fd_jump_none:'no jump host (not the folder\'s)', fd_proxy_none:'no proxy (not the folder\'s)', fd_new_folder:'New folder',
   ev_folder:'Folders',
+  import_putty:'Import from PuTTY', import_putty_desc:'Saved sessions exported with regedit (.reg of …\\PuTTY\\Sessions): SSH and Telnet sessions with host, port and user; proxies are saved and linked.',
+  import_result_proxies:'{p} new proxy(ies), {l} connection(s) linked to the proxy of their PuTTY session.',
 });
 Object.assign(LANGS.hr, {
   fd_edit:'Postavke mape…', fd_jump:'Zadani jump host', fd_proxy:'Zadani proxy', fd_defaults:'Zadano za mapu',
   fd_help:'Veze u ovoj mapi, i nove, koriste ovo osim ako odaberu vlastiti jump host ili proxy.',
   fd_from_folder:'kao mapa', fd_jump_none:'bez jump hosta (ne onaj mape)', fd_proxy_none:'bez proxyja (ne onaj mape)', fd_new_folder:'Nova mapa',
   ev_folder:'Mape',
+  import_putty:'Uvoz iz PuTTY-ja', import_putty_desc:'Spremljene sesije izvezene regeditom (.reg ključa …\\PuTTY\\Sessions): SSH i Telnet sesije s hostom, portom i korisnikom; proxyji se spremaju i povezuju.',
+  import_result_proxies:'{p} novih proxyja, {l} veza povezano s proxyjem svoje PuTTY sesije.',
 });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
@@ -6544,10 +6552,16 @@ function importFileTooBig(file) {
 async function importExternal(input, kind, password) {
   const file = input.files ? input.files[0] : null;
   if (importFileTooBig(file)) { input.value = ''; return; }
-  const text = file ? await file.text() : input._text;
+  let text = input._text;
+  if (file && kind === 'putty') { // .reg files from regedit are UTF-16: the server decodes the raw bytes
+    const b = new Uint8Array(await file.arrayBuffer());
+    let bin = '';
+    for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+    text = btoa(bin);
+  } else if (file) text = await file.text();
   if (input.files) input.value = '';
   if (!text) return;
-  const body = kind === 'mremoteng' ? {xml: text, password: password || ''} : {text, folder: file ? '' : ''};
+  const body = kind === 'mremoteng' ? {xml: text, password: password || ''} : kind === 'putty' ? {data: text} : {text, folder: ''};
   const r = await fetch('/api/config/import/' + kind, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   const d = await r.json().catch(() => ({}));
   if (!r.ok) {
@@ -6560,6 +6574,7 @@ async function importExternal(input, kind, password) {
     return;
   }
   const lines = [t('import_result').replace('{n}', d.imported).replace('{f}', d.folders).replace('{j}', d.jump_hosts).replace('{t}', d.tunnels)];
+  if (d.proxies || d.proxy_links) lines.push(t('import_result_proxies').replace('{p}', d.proxies || 0).replace('{l}', d.proxy_links || 0));
   if ((d.skipped || []).length) lines.push('', t('import_skipped_h') + ':', ...d.skipped.slice(0, 30).map(x => '• ' + x.name + ' — ' + x.reason));
   if ((d.notes || []).length) lines.push('', t('import_notes_h') + ':', ...d.notes.slice(0, 30).map(x => '• ' + x.name + ' — ' + x.reason));
   await uiDialog({title: t('import_done_title'), message: lines.join('\n'), okText: t('ok'), cancelText: t('close')});

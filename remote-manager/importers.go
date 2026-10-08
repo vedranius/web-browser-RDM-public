@@ -34,6 +34,8 @@ import (
 // OpenSSH (~/.ssh/config): Host blocks become connections; HostName, User, Port,
 // ProxyJump / ProxyCommand "ssh -W", LocalForward, RemoteForward, DynamicForward and
 // IdentityFile are understood.
+//
+// PuTTY (.reg export of the saved sessions): see putty.go.
 
 type importResult struct {
 	Imported int            `json:"imported"`
@@ -41,6 +43,8 @@ type importResult struct {
 	Folders  int            `json:"folders"`
 	Tunnels  int            `json:"tunnels"`
 	Jumps    int            `json:"jump_hosts"`
+	Proxies  int            `json:"proxies"`     // saved proxies created (PuTTY)
+	Linked   int            `json:"proxy_links"` // connections that got the proxy of their PuTTY session
 	Skipped  []importIssue  `json:"skipped"`
 	Notes    []importIssue  `json:"notes"`
 	ByProto  map[string]int `json:"by_protocol"`
@@ -57,8 +61,12 @@ type importItem struct {
 	folder   string
 	jumpName string // resolved after all items exist
 	tunnels  []tunnelDef
-	extID    string   // id in the source inventory (NetBox): updated instead of duplicated
-	extTags  []string // tags that come from the source (replaced on update)
+	extID    string      // id in the source inventory (NetBox): updated instead of duplicated
+	extTags  []string    // tags that come from the source (replaced on update)
+	proxy    *proxyInput // PuTTY: a proxy to create (or reuse) and link
+	proxyOut *int        // PuTTY: the saved proxy, once resolved (0: could not be saved)
+	puttyRef string      // mRemoteNG: the PuTTY session it names (PuttySession)
+	puttyOwn string      // PuTTY: the name of the imported session
 }
 
 // importer collects folders and connections and writes them in one transaction.
@@ -68,6 +76,7 @@ type importer struct {
 	items   []*importItem
 	folders map[string]int
 	update  bool // update connections with the same ext_id
+	proxies map[string]int
 }
 
 func newImporter(userID int) *importer {
@@ -169,6 +178,16 @@ func (im *importer) commit() error {
 			continue
 		}
 		dup[key] = true
+		if it.proxy != nil {
+			if pid := im.itemProxy(it); pid > 0 {
+				c.ProxyID = &pid
+			}
+		} else if it.puttyRef != "" {
+			if pid := puttyProxy(im.userID, it.puttyRef); pid > 0 {
+				c.ProxyID = &pid
+				im.res.Linked++
+			}
+		}
 		fid, err := im.folderID(it.folder)
 		if err != nil {
 			return err
@@ -179,10 +198,10 @@ func (im *importer) commit() error {
 		if len(c.Options) > 0 {
 			opts = string(jsonMarshal(c.Options))
 		}
-		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path,options,key_id,credential_id,tags,ext_id,ext_tags)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,web_path,options,key_id,credential_id,tags,ext_id,ext_tags,proxy_id,putty_session)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 			c.Name, c.Protocol, c.Host, c.Username, c.AuthMethod, c.Password, c.PrivateKey, c.KeyPath, c.FolderID, im.userID, c.WebPath, opts,
-			c.KeyID, c.CredentialID, tagsString(c.Tags), it.extID, tagsString(it.extTags))
+			c.KeyID, c.CredentialID, tagsString(c.Tags), it.extID, tagsString(it.extTags), c.ProxyID, it.puttyRef)
 		if err != nil {
 			im.skip(c.Name, err.Error())
 			continue
@@ -378,7 +397,7 @@ func importMRemoteNG(userID int, data []byte, password string) (*importResult, e
 			name := strings.TrimSpace(a.get("Name"))
 			// effective values with mRemoteNG inheritance from the parent container
 			eff := map[string]string{}
-			for _, k := range []string{"Username", "Password", "Port", "SSHTunnelConnectionName", "Domain"} {
+			for _, k := range []string{"Username", "Password", "Port", "SSHTunnelConnectionName", "Domain", "PuttySession"} {
 				eff[k] = a.get(k)
 				if strings.EqualFold(a.get("Inherit"+k), "true") {
 					eff[k] = inherited[k]
@@ -479,7 +498,11 @@ func (im *importer) mrConnection(mc mrCrypto, name string, a attrMap, eff map[st
 	if c.Protocol == "SSH" && c.Username == "" {
 		im.note(name, "no user name — set it before connecting")
 	}
-	im.items = append(im.items, &importItem{c: c, folder: folder, jumpName: strings.TrimSpace(eff["SSHTunnelConnectionName"])})
+	item := &importItem{c: c, folder: folder, jumpName: strings.TrimSpace(eff["SSHTunnelConnectionName"])}
+	if ps := strings.TrimSpace(eff["PuttySession"]); (c.Protocol == "SSH" || c.Protocol == "TELNET") && ps != "" && !strings.EqualFold(ps, "Default Settings") {
+		item.puttyRef = truncateStr(ps, 200)
+	}
+	im.items = append(im.items, item)
 }
 
 // ── OpenSSH config ──
@@ -740,6 +763,7 @@ func parseForward(kind, v string) (tunnelDef, bool) {
 
 // POST /api/config/import/mremoteng   {"xml": "...", "password": "optional master password"}
 // POST /api/config/import/sshconfig   {"text": "...", "folder": "optional folder name"}
+// POST /api/config/import/putty       {"data": "base64 of the .reg file", "folder": "optional folder name"}
 func apiImportExternalHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireAuth(w, r)
 	if !ok {
@@ -754,11 +778,12 @@ func apiImportExternalHandler(w http.ResponseWriter, r *http.Request) {
 		Text     string `json:"text"`
 		Password string `json:"password"`
 		Folder   string `json:"folder"`
+		Data     string `json:"data"` // PuTTY: the .reg file, base64 (UTF-16 or UTF-8)
 	}
 	if !decodeImportJSON(w, r, &in) {
 		return
 	}
-	if n := int64(len(in.XML) + len(in.Text)); n > maxImportFile {
+	if n := int64(len(in.XML) + len(in.Text) + base64.StdEncoding.DecodedLen(len(in.Data))); n > maxImportFile {
 		importTooLarge(w, n)
 		return
 	}
@@ -776,6 +801,12 @@ func apiImportExternalHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "sshconfig":
 		res, err = importSSHConfig(userID, in.Text, in.Folder)
+	case "putty":
+		raw, derr := base64.StdEncoding.DecodeString(in.Data)
+		if derr != nil {
+			raw = []byte(in.Text)
+		}
+		res, err = importPuTTY(userID, raw, in.Folder)
 	default:
 		jsonError(w, "Not found", 404)
 		return
@@ -785,7 +816,7 @@ func apiImportExternalHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	auditLog(r, userID, "config.imported", source, map[string]interface{}{"connections": res.Imported, "folders": res.Folders,
-		"tunnels": res.Tunnels, "jump_hosts": res.Jumps, "skipped": len(res.Skipped)})
+		"tunnels": res.Tunnels, "jump_hosts": res.Jumps, "proxies": res.Proxies, "proxy_links": res.Linked, "skipped": len(res.Skipped)})
 	broadcastSessionUpdate(userID)
 	jsonOK(w, res)
 }

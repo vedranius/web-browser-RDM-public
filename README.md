@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.9.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v10.9.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -52,7 +52,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [SSH tunnels (port forwarding)](#ssh-tunnels-port-forwarding)
    - [Web interfaces (HTTP / HTTPS connections)](#web-interfaces-http--https-connections)
    - [Tags & inventory import (CSV, Excel, NetBox)](#tags--inventory-import-csv-excel-netbox)
-   - [Import from mRemoteNG and OpenSSH](#import-from-mremoteng-and-openssh)
+   - [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [SSH terminal](#ssh-terminal)
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
@@ -100,7 +100,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **SSH keys & credentials vault**: generate SSH keys, put them on many servers at once (like `ssh-copy-id`), see **who has access** to a server; one shared login such as `root@dc1` for many connections, shared with colleagues without revealing it, with **password rotation** on all its servers.
 - **Jump hosts** (like `ssh -J`): reach servers behind a bastion, also in chains — for terminals, files, transfers and tunnels.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
-- **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
+- **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels), **PuTTY** (with proxies) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions. **Installable as an app** (PWA) on desktops, tablets and phones.
 - **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
@@ -120,21 +120,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.9.0-linux-amd64
-   ./wrm-pro-v10.9.0-linux-amd64
+   chmod +x wrm-pro-v10.9.1-linux-amd64
+   ./wrm-pro-v10.9.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.9.0-windows-amd64.exe
+   .\wrm-pro-v10.9.1-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.9.0/wrm-pro-v10.9.0-android-arm64
-   chmod +x wrm-pro-v10.9.0-android-arm64 && ./wrm-pro-v10.9.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.9.1/wrm-pro-v10.9.1-android-arm64
+   chmod +x wrm-pro-v10.9.1-android-arm64 && ./wrm-pro-v10.9.1-android-arm64
    ```
 
    **Docker**
@@ -158,6 +158,13 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.9.0
+
+Replace the binary. The database gets a new table `putty_sessions` and a column `connections.putty_session`; the previous binary still starts on it and ignores them.
+
+- **Import from PuTTY:** *Settings → Data → Import from PuTTY* reads a `.reg` export of your saved PuTTY sessions, with their proxies. See [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh).
+- mRemoteNG connections imported **before** v10.9.1 do not remember their *PuttySession*, and importing the file again skips them as existing: give them the proxy by hand (or through their folder's default proxy).
 
 ## Upgrading from v10.8.1
 
@@ -229,7 +236,7 @@ Replace the binary. The database gets a new table (`snippets`) and one new colum
 
 Replace the binary. The database gets a new table (`connection_tunnels`) and two new columns on `connections` (`jump_conn_id`, `web_path`); nothing else changes. To go back, run the v10.1 binary on the same database; it does not know these features (connections behind a jump host then try to connect directly, web interface connections cannot be opened, tunnels do not run).
 
-- New: [jump hosts](#jump-hosts-bastions), [SSH tunnels](#ssh-tunnels-port-forwarding), [web interface connections](#web-interfaces-http--https-connections) and [import from mRemoteNG / OpenSSH](#import-from-mremoteng-and-openssh).
+- New: [jump hosts](#jump-hosts-bastions), [SSH tunnels](#ssh-tunnels-port-forwarding), [web interface connections](#web-interfaces-http--https-connections) and [import from mRemoteNG / OpenSSH](#import-from-mremoteng-putty-and-openssh).
 - **Tunnels are on by default for all users**, listening on `127.0.0.1` of the WRM machine only. Remote forwards (`-R`) and listening on network addresses are limited to administrators. Review *Admin panel → Security policies → SSH tunnels* — e.g. turn tunnels off (`WRM_TUNNELS_ENABLED=0`) or limit them to administrators if WRM runs on a shared server.
 - Jump hosts need `AllowTcpForwarding yes` on the bastion (the OpenSSH default), exactly like `ssh -J`.
 
@@ -495,7 +502,7 @@ Save the web interfaces of your devices — iDRAC / iLO / IPMI, switches, firewa
 
 *For both:* choose the **login** of the imported connections — none (set it later), a **vault credential** (e.g. `root@dc1`) or a **stored SSH key** — a default user name and protocol, **folders** (from a column, one per site / role / tenant, all in one, or none) and extra tags for all. Rows with their own password keep it. Existing connections (same name, host and protocol) are skipped, so importing again is safe. The result lists what was imported, updated and skipped (with reasons).
 
-### Import from mRemoteNG and OpenSSH
+### Import from mRemoteNG, PuTTY and OpenSSH
 
 *Settings → Data*:
 
@@ -511,10 +518,16 @@ Save the web interfaces of your devices — iDRAC / iLO / IPMI, switches, firewa
   - **`LocalForward`, `RemoteForward`, `DynamicForward`** become tunnels that start with the terminal;
   - `IdentityFile` becomes *Key file* authentication (only if key files on the WRM server are allowed for you; otherwise a note asks you to add the key or a password);
   - `Match` blocks and wildcard-only hosts are skipped.
+- **Import from PuTTY** — a registry export of the saved sessions (folder *PuTTY*). In `regedit` right-click `HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions` → *Export*, or run `reg export HKCU\Software\SimonTatham\PuTTY\Sessions putty.reg`. Both UTF-16 (regedit's default) and UTF-8 files are read:
+  - session names are decoded (`My%20Server` → *My Server*); `HostName` (also `user@host`), `PortNumber`, `UserName` and `Protocol` are imported. *Default Settings* is not imported as a connection, but its values are the defaults of the other sessions;
+  - **SSH** and **Telnet** sessions become connections; raw, rlogin and serial sessions (a COM port of the Windows PC) are listed as *skipped*;
+  - `PublicKeyFile` gives a note: convert the `.ppk` with PuTTYgen (*Conversions → Export OpenSSH key*) and add it under *🔑 SSH keys*;
+  - **proxies:** SOCKS4, SOCKS5 and HTTP proxies (`ProxyMethod`, `ProxyHost`, `ProxyPort`, `ProxyUsername`, `ProxyPassword`, `ProxyDNS`) become [saved proxies](#proxies-socks--http) named e.g. *PuTTY socks5 proxy.example.com:1080*, linked to the connections. Sessions with the same proxy share one; a proxy you already have (same type, address, login and DNS setting) is reused, so importing again creates nothing new. PuTTY's *SSH proxy* becomes the **jump host** (by name); Telnet and local-command proxies get a note. Needs the policy `proxies` to allow you to define proxies;
+  - **with mRemoteNG:** connections whose *PuttySession* names an imported PuTTY session get that session's proxy (unless they have a proxy already). The order does not matter: the second import links connections that the first one created.
 
 After the import a summary lists the imported connections, folders, jump host links and tunnels, what was skipped and what to check (e.g. connections without a user name or password).
 
-**Size limit:** every import file (WRM export, mRemoteNG, OpenSSH config, CSV / Excel inventory) may be up to **20 MB**. The browser checks the size before sending; a larger file gets *The file is too large (… MB): the import limit is 20.0 MB* (HTTP 413 from the API).
+**Size limit:** every import file (WRM export, mRemoteNG, PuTTY, OpenSSH config, CSV / Excel inventory) may be up to **20 MB**. The browser checks the size before sending; a larger file gets *The file is too large (… MB): the import limit is 20.0 MB* (HTTP 413 from the API).
 
 ### Windows, tabs & snapping
 
@@ -852,7 +865,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 | Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
 | Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
 | Session history | Your terminal and remote desktop sessions and sessions on your connections, with replay and download |
-| Data | Export connections (without secrets), export **with** passwords & keys (asks for your password; policy), import (also jump hosts and tunnels), **import from mRemoteNG** and **OpenSSH config** |
+| Data | Export connections (without secrets), export **with** passwords & keys (asks for your password; policy), import (also jump hosts and tunnels), **import from mRemoteNG**, **PuTTY** and **OpenSSH config** |
 
 Personal preferences are stored per browser; everything security-related is stored on the server.
 
@@ -1023,7 +1036,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.9.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v10.9.1-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1176,6 +1189,7 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/config/import` | Import → `{imported, skipped, tunnels}` |
 | POST | `/api/config/import/mremoteng` | `{xml, password}` import an mRemoteNG `confCons.xml` → `{imported, folders, jump_hosts, tunnels, skipped, notes}`; HTTP 400 with `need_password: true` when a master password is needed |
 | POST | `/api/config/import/sshconfig` | `{text, folder}` import an OpenSSH config |
+| POST | `/api/config/import/putty` | `{data, folder}` import a PuTTY `.reg` export (`data` = the file, base64; UTF-16 or UTF-8) → also `{proxies, proxy_links}` |
 
 Import files may be up to 20 MB (request bodies of `/api/config/import*` and `/api/inventory/*` up to 32 MB); larger ones get HTTP 413 with the size and the limit.
 
@@ -1392,6 +1406,7 @@ remote-manager/
   notify.go       notifications: channels (SMTP, chat, push, webhook), subscriptions, digests, quiet hours
   tunnels.go      SSH tunnels (local, remote, SOCKS5), manager, reconnects, tunnels API, web interfaces
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
+  putty.go        import of PuTTY sessions (.reg) with proxies, link to mRemoteNG PuttySession
   snippets.go     snippets (saved commands), variables, run on connect
   status.go       live up/down status monitor and API
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
@@ -1417,6 +1432,7 @@ remote-manager/
   keys_test.go         key store, deploy/revoke/who has access, vault sharing and rotation (fake SSH server with sh and passwd)
   guac_test.go         remote desktop relay against a fake guacd: handshake, filtering, recording, jump hosts
   importers_test.go    mRemoteNG (encryption formats, inheritance, master password) and OpenSSH config import
+  putty_test.go        PuTTY .reg import (UTF-16 / UTF-8, defaults, proxies and their reuse, SSH proxy → jump host), link with mRemoteNG in both orders
   proxy_test.go        proxies (in-process SOCKS5 / HTTP CONNECT, with and without auth): terminal, SFTP, status, jump host + proxy, web interface, desktop relay, WRM tunnel proxy, errors, sharing, folder defaults
   review_fixes_test.go  FTP with EPSV through a proxy (fake FTP server), another user's tunnel refused as a proxy, folder defaults (own WRM tunnel, loops refused, PUT keeps choices), per-user status keys, notification fixes (recipient injection, mentions, reminders, AUTH LOGIN)
   notify_test.go       notification channels against fake HTTP endpoints and a fake SMTP server, digests, rate limit, quiet hours, status and rotation events
