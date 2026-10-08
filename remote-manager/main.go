@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.9.1"
+var AppVersion = "v10.10.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -324,6 +324,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/proxies/", apiProxiesHandler)
 	mux.HandleFunc("/api/snippets", apiSnippetsHandler)
 	mux.HandleFunc("/api/snippets/", apiSnippetsHandler)
+	mux.HandleFunc("/api/bookmarks", apiBookmarksHandler)
+	mux.HandleFunc("/api/bookmarks/", apiBookmarksHandler)
 	mux.HandleFunc("/api/tunnels", apiTunnelsHandler)
 	mux.HandleFunc("/api/tunnels/", apiTunnelsHandler)
 	mux.HandleFunc("/api/recordings", apiRecordingsHandler)
@@ -774,6 +776,24 @@ func initDB() {
 		updated_at TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "name", "command", "description", "grp", "scope", "scope_id", "auto_run", "shared", "sort", "created_at", "updated_at")
 
+	// v10.10: folder bookmarks (server-specific, folder, tag and global)
+	ensureTable("bookmarks", `CREATE TABLE IF NOT EXISTS bookmarks (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL DEFAULT '',
+		path TEXT NOT NULL DEFAULT '',
+		scope TEXT NOT NULL DEFAULT 'global',
+		scope_id INTEGER NOT NULL DEFAULT 0,
+		tag TEXT NOT NULL DEFAULT '',
+		color TEXT NOT NULL DEFAULT '',
+		note TEXT NOT NULL DEFAULT '',
+		start_dir INTEGER NOT NULL DEFAULT 0,
+		shared INTEGER NOT NULL DEFAULT 0,
+		sort INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '')`,
+		"id", "user_id", "name", "path", "scope", "scope_id", "tag", "color", "note", "start_dir", "shared", "sort", "created_at", "updated_at")
+
 	// v10.5: SSH key store and credentials vault (secrets encrypted like connection secrets)
 	ensureTable("ssh_keys", `CREATE TABLE IF NOT EXISTS ssh_keys (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -989,6 +1009,7 @@ func initDB() {
 		`CREATE INDEX IF NOT EXISTS ix_transfers_user ON file_transfers(user_id, ts)`,
 		`CREATE INDEX IF NOT EXISTS ix_tunnels_conn ON connection_tunnels(conn_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_snippets_user ON snippets(user_id)`,
+		`CREATE INDEX IF NOT EXISTS ix_bookmarks_user ON bookmarks(user_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_ssh_keys_user ON ssh_keys(user_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_credentials_owner ON credentials(owner_id)`,
 		`CREATE INDEX IF NOT EXISTS ix_conn_credential ON connections(credential_id)`,
@@ -1513,6 +1534,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
 		db.Exec("DELETE FROM ssh_key_deployments WHERE conn_id=?", id)
 		deleteSnippetsForScope("connection", id)
+		deleteBookmarksForScope("connection", id)
 		db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		db.Exec("UPDATE folders SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		db.Exec("DELETE FROM connections WHERE id=? AND user_id=?", id, userID)
@@ -1536,6 +1558,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		nid, _ := res.LastInsertId()
 		copyTunnelDefs(id, int(nid))
 		copySnippetsForConnection(id, int(nid), userID)
+		copyBookmarksForConnection(id, int(nid), userID)
 		dup, _ := loadConnectionRaw(int(nid))
 		auditLog(r, userID, "connection.created", dup.Name, map[string]interface{}{"duplicate_of": id})
 		jsonOK(w, dup.view())
@@ -1587,6 +1610,7 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 			db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
 			db.Exec("DELETE FROM ssh_key_deployments WHERE conn_id=?", id)
 			deleteSnippetsForScope("connection", id)
+			deleteBookmarksForScope("connection", id)
 			db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 			db.Exec("UPDATE folders SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		}
@@ -1711,6 +1735,7 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	tx.Exec("UPDATE connections SET folder_id=NULL WHERE folder_id=? AND user_id=?", id, userID)
 	tx.Exec("DELETE FROM folders WHERE id=? AND user_id=?", id, userID)
 	tx.Exec("DELETE FROM snippets WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
+	tx.Exec("DELETE FROM bookmarks WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
 	tx.Commit()
 	jsonOK(w, map[string]bool{"ok": true})
 }
@@ -1946,7 +1971,8 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", attachmentHeader("wrm-config-"+AppVersion+".json"))
 	json.NewEncoder(w).Encode(map[string]interface{}{"version": AppVersion, "with_secrets": withSecrets, "folders": folders, "connections": conns,
-		"tunnels": loadTunnelDefs("user_id=?", userID), "snippets": loadSnippets("user_id=?", userID), "proxies": exportProxies(userID, withSecrets)})
+		"tunnels": loadTunnelDefs("user_id=?", userID), "snippets": loadSnippets("user_id=?", userID), "proxies": exportProxies(userID, withSecrets),
+		"bookmarks": loadBookmarks("user_id=?", userID)})
 }
 
 func apiImportHandler(w http.ResponseWriter, r *http.Request) {
@@ -1964,6 +1990,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		Tunnels     []tunnelDef   `json:"tunnels"`
 		Snippets    []Snippet     `json:"snippets"`
 		Proxies     []proxyExport `json:"proxies"`
+		Bookmarks   []Bookmark    `json:"bookmarks"`
 	}
 	if !decodeImportJSON(w, r, &payload) {
 		return
@@ -2169,8 +2196,9 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	if snippetsImported > 0 {
 		notifySnippetsChanged(userID, false)
 	}
-	auditLog(r, userID, "config.imported", "", map[string]int{"connections": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported, "proxies": proxiesImported})
-	jsonOK(w, map[string]int{"imported": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported, "proxies": proxiesImported})
+	bookmarksImported := importBookmarks(userID, payload.Bookmarks, oldFolders, newIDs)
+	auditLog(r, userID, "config.imported", "", map[string]int{"connections": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported, "proxies": proxiesImported, "bookmarks": bookmarksImported})
+	jsonOK(w, map[string]int{"imported": imported, "skipped": skipped, "tunnels": tunnelsImported, "snippets": snippetsImported, "proxies": proxiesImported, "bookmarks": bookmarksImported})
 }
 
 // ─── EVENTS WS ───────────────────────────────────────

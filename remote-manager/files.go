@@ -178,13 +178,23 @@ func listRemoteFilesHandler(w http.ResponseWriter, r *http.Request) {
 	list := make([]FileItem, 0)
 	err := fileOp(c, true, func(sc *sftp.Client) error {
 		list = list[:0]
-		if p == "." || p == "~" {
+		if p == "." || p == "~" || strings.HasPrefix(p, "~/") {
+			rel := "" // a directory below the home directory (a bookmark such as ~/logs)
+			if strings.HasPrefix(p, "~/") {
+				rel = strings.TrimLeft(p[2:], "/")
+			}
 			if rp, err := sc.RealPath("."); err == nil {
 				p = rp
 			} else if wd, err := sc.Getwd(); err == nil {
 				p = wd
+			} else {
+				p = "."
 			}
-		} else if rp, err := sc.RealPath(p); err == nil {
+			if rel != "" {
+				p = joinRemote(p, rel)
+			}
+		}
+		if rp, err := sc.RealPath(p); err == nil {
 			p = rp // resolves "..", "." and duplicate slashes
 		}
 		files, err := sc.ReadDir(p)
@@ -206,6 +216,12 @@ func listRemoteFilesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return nil
 	}, func(fc *ftp.ServerConn) error {
+		if p == "~" || strings.HasPrefix(p, "~/") {
+			p = strings.TrimLeft(p[1:], "/") // the login directory, or a directory below it
+			if p == "" {
+				p = "."
+			}
+		}
 		if p != "." && p != "" {
 			if err := fc.ChangeDir(p); err != nil {
 				return fmt.Errorf("cannot open %s: %v", p, err)

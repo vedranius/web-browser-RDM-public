@@ -390,10 +390,14 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		}()
 	}
 
-	// ── Run on connect: snippets of the connection's owner, typed once the prompt is quiet ──
+	// ── Run on connect: the start directory bookmark (a cd) and the snippets of the
+	// connection's owner, typed once the prompt is quiet ──
 	autos := []Snippet{}
 	if console == "" && !serial {
-		autos = autoRunSnippets(c)
+		if sb, ok := startBookmark(c); ok {
+			autos = append(autos, Snippet{Name: "★ " + sb.Name, Command: sb.Cd, literal: true})
+		}
+		autos = append(autos, autoRunSnippets(c)...)
 	}
 	if len(autos) > 0 {
 		go func() {
@@ -410,8 +414,12 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			names := make([]string, 0, len(autos))
 			for _, sn := range autos {
+				cmd := sn.Command
+				if !sn.literal {
+					cmd = expandSnippet(cmd, c, actorName)
+				}
 				select {
-				case stdinCh <- snippetKeystrokes(expandSnippet(sn.Command, c, actorName)):
+				case stdinCh <- snippetKeystrokes(cmd):
 				case <-done:
 					return
 				}

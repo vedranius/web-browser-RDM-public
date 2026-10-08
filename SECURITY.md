@@ -66,6 +66,7 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] Decide about **broadcast input** (`broadcast_enabled`). It only types into the user's own open terminals, but one command reaches many servers; dangerous commands ask first. Every start and stop is in the audit log (`terminal.broadcast`).
 - [ ] Review **shared snippets** (administrators publish them for everybody) like any runbook. Run-on-connect snippets come from the connection's owner and are audited (`terminal.auto_run`).
+- [ ] **Folder bookmarks** marked as shared are visible (read-only) to everybody who uses your connections through a share: do not put secrets in their names, paths or notes.
 - [ ] **Live status** opens a TCP connection to every monitored host:port once per interval (no login). Tell the teams who watch those servers, add the WRM server to fail2ban `ignoreip` where *aggressive* filters are used, and keep `status_jump_checks` off unless logins to the jump hosts every round are acceptable.
 
 **SSH keys & credentials vault**
@@ -130,7 +131,7 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
 - [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
-- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `ssh_key.*` (deploy, revoke, export) `credential.*` (grants, reveal, rotation), `proxy.*` (created, shared, tested), `folder.updated` (default jump host / proxy), `admin.notify_channel_*` and `bmc.*` (power actions) events.
+- [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `bookmark.*`, `ssh_key.*` (deploy, revoke, export) `credential.*` (grants, reveal, rotation), `proxy.*` (created, shared, tested), `folder.updated` (default jump host / proxy), `admin.notify_channel_*` and `bmc.*` (power actions) events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
 
 ## How WRM protects your data

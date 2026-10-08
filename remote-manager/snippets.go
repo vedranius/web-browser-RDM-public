@@ -44,6 +44,7 @@ type Snippet struct {
 	Shared      bool   `json:"shared"`
 	Sort        int    `json:"sort"`
 	UpdatedAt   string `json:"updated_at"`
+	literal     bool   // typed as it is (a start directory cd), no variables
 }
 
 const snippetCols = `id, user_id, name, command, description, grp, scope, scope_id, auto_run, shared, sort, updated_at`

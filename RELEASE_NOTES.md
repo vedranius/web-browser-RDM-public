@@ -1,19 +1,39 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.9.1/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.10.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v10.9.1 — PuTTY session import
+## Web Remote Manager PRO v10.10.0 — folder bookmarks
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 📥 Import from PuTTY
+### ★ Folder bookmarks
+
+- The same deep directories on many servers, one click away — like WinSCP's bookmarks. **★ next to the path bar** of the file manager: *Bookmark this directory…*, your bookmarks for this connection, *Manage bookmarks…*.
+- **Scope:** one connection, the connections of a folder, the connections with a tag, or **all SSH / SFTP / FTP connections**.
+- **Variables:** `~`, `$USER`, `{host}`, `{name}` — `/opt/app/servers/{name}/downloads` opens the right folder on every server.
+- **In the terminal:** ★ in the title bar and the Ctrl+Shift+Space picker type `cd -- '<path>'`, safely shell-quoted. With broadcast input, 📣 sends it to every terminal of the group.
+- **Start directory:** mark a bookmark and the file manager opens there and a terminal `cd`s there on connect.
+- A missing directory gives a clear message instead of an error. Bookmarks can be renamed, reordered, moved between scopes, shared with share members (global ones, read-only), exported and imported with your configuration.
+- **Import from WinSCP:** *Manage bookmarks → Import WinSCP.ini*.
+
+### ⬆️ Upgrading from v10.9.1
+
+Replace the binary. The database gets a new table (`bookmarks`); the previous binary still starts on it.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.10.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v10.9.1 — PuTTY session import
+
+#### 📥 Import from PuTTY
 
 - *Settings → Data → Import from PuTTY* reads a `.reg` export of your saved sessions (`regedit` → `HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions` → *Export*, UTF-16 or UTF-8).
 - SSH and Telnet sessions become connections with host, port and user; *Default Settings* supplies the defaults. Key files get a hint to convert the `.ppk`.
 - **Proxies come along:** SOCKS4, SOCKS5 and HTTP proxies (with login and DNS setting) become saved proxies, one per distinct proxy, reused when you already have it, and linked to the connections. PuTTY's *SSH proxy* becomes the jump host.
 - **With mRemoteNG:** connections that use a PuTTY session (*PuttySession*) get that session's proxy, whichever file you import first.
 
-### ⬆️ Upgrading from v10.9.0
+#### ⬆️ Upgrading from v10.9.0
 
 Replace the binary. The database gets a new table (`putty_sessions`) and column (`connections.putty_session`); the previous binary still starts on it.
 
@@ -451,20 +471,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.9.1-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.9.1-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.9.1-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.9.1-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.9.1-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.9.1-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.9.1-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.9.1-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.9.1-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.9.1-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.9.1-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.9.1-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.9.1-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.9.1-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v10.10.0-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v10.10.0-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.10.0-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v10.10.0-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v10.10.0-linux-386` |
+| Windows | x86-64 | `wrm-pro-v10.10.0-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v10.10.0-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v10.10.0-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v10.10.0-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v10.10.0-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v10.10.0-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v10.10.0-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v10.10.0-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v10.10.0-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -472,22 +492,22 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.9.1-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.9.1-linux-amd64
+chmod +x wrm-pro-v10.10.0-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.10.0-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.9.1-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v10.10.0-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.9.1-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.10.0-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.9.1/wrm-pro-v10.9.1-android-arm64
-chmod +x wrm-pro-v10.9.1-android-arm64 && ./wrm-pro-v10.9.1-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.10.0/wrm-pro-v10.10.0-android-arm64
+chmod +x wrm-pro-v10.10.0-android-arm64 && ./wrm-pro-v10.10.0-android-arm64
 ```
 
 **Docker**
