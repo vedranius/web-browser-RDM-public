@@ -1200,7 +1200,10 @@ type gitEnvCellDest struct {
 	Current  *gitEnvRecord `json:"current,omitempty"`
 	VersionM string        `json:"version_md,omitempty"`
 	CommitMD string        `json:"commit_md,omitempty"`
-	Behind   int           `json:"behind"` // -1 = not known
+	RefMD    string        `json:"ref_md,omitempty"`     // Grana/ref of VERSION.md
+	UserMD   string        `json:"user_md,omitempty"`    // who wrote VERSION.md
+	UpdateMD string        `json:"updated_md,omitempty"` // and when
+	Behind   int           `json:"behind"`               // -1 = not known
 	Lock     *gitEnvLock   `json:"lock,omitempty"`
 	Error    string        `json:"error,omitempty"`
 }
@@ -1237,6 +1240,7 @@ func envCell(userID int, app, env string) (map[string]interface{}, error) {
 				}
 				v := parseVersionMD(vl)
 				cd.VersionM, cd.CommitMD = v.Version, strings.TrimSpace(strings.Split(v.Commit, " ")[0])
+				cd.RefMD, cd.UserMD, cd.UpdateMD = v.Ref, v.User, v.Updated
 				cd.Lock = parseLock(o)
 			}
 		}

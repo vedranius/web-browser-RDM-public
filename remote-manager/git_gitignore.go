@@ -445,6 +445,9 @@ type gitMRResult struct {
 // createGitignoreMR puts the new .gitignore on a new branch and opens a merge request
 // (GitLab) or a pull request (GitHub) against the service's branch.
 func createGitignoreMR(info *gitIgnoreInfo, content string, added []string, now time.Time) (gitMRResult, error) {
+	if info.src.Kind == "gitea" {
+		return gitMRResult{}, fmt.Errorf("pull requests from WRM are not available for Gitea sources yet: download the file instead")
+	}
 	p, err := newGitWriteProvider(info.src)
 	if err != nil {
 		return gitMRResult{}, err
