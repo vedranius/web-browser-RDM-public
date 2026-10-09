@@ -305,25 +305,26 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 		"recovery_codes_left": recoveryCodesLeft(u.Recovery),
 		"password_min_length": settingInt("password_min_length"),
 		"policy": map[string]interface{}{
-			"server_keys":   u.IsAdmin || settingBool("allow_server_keys"),
-			"link_shares":   u.IsAdmin || settingBool("allow_link_shares"),
-			"secret_export": u.IsAdmin || settingBool("allow_secret_export"),
-			"voice":         settingBool("voice_enabled"),
-			"broadcast":     settingBool("broadcast_enabled"),
-			"desktop":       settingBool("desktop_enabled"),
-			"bmc":           settingBool("bmc_enabled"),
-			"serial":        serialAllowed(u.ID),
-			"network_tools": networkToolsAllowed(u.ID),
-			"notifications": settingBool("notifications_enabled"),
-			"proxies":       proxiesAllowed(u.ID),
-			"git":           gitAllowed(),
-			"git_checks":    gitChecksAllowed(u.ID),
-			"git_update":    gitActionAllowed(u.ID, "git_update"),
-			"git_upgrade":   gitActionAllowed(u.ID, "git_upgrade"),
-			"git_rollback":  gitActionAllowed(u.ID, "git_rollback"),
-			"git_restart":   gitActionAllowed(u.ID, "git_restart"),
-			"git_install":   gitActionAllowed(u.ID, "git_install"),
-			"git_transfer":  gitActionAllowed(u.ID, "git_transfer"),
+			"server_keys":      u.IsAdmin || settingBool("allow_server_keys"),
+			"link_shares":      u.IsAdmin || settingBool("allow_link_shares"),
+			"secret_export":    u.IsAdmin || settingBool("allow_secret_export"),
+			"voice":            settingBool("voice_enabled"),
+			"broadcast":        settingBool("broadcast_enabled"),
+			"desktop":          settingBool("desktop_enabled"),
+			"bmc":              settingBool("bmc_enabled"),
+			"serial":           serialAllowed(u.ID),
+			"network_tools":    networkToolsAllowed(u.ID),
+			"notifications":    settingBool("notifications_enabled"),
+			"proxies":          proxiesAllowed(u.ID),
+			"git":              gitAllowed(),
+			"git_checks":       gitChecksAllowed(u.ID),
+			"git_update":       gitActionAllowed(u.ID, "git_update"),
+			"git_upgrade":      gitActionAllowed(u.ID, "git_upgrade"),
+			"git_rollback":     gitActionAllowed(u.ID, "git_rollback"),
+			"git_restart":      gitActionAllowed(u.ID, "git_restart"),
+			"git_install":      gitActionAllowed(u.ID, "git_install"),
+			"git_transfer":     gitActionAllowed(u.ID, "git_transfer"),
+			"git_gitignore_mr": gitActionAllowed(u.ID, "git_gitignore_mr"),
 		},
 	}
 }
@@ -1069,7 +1070,7 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM notify_subscriptions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_prefs WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_pending WHERE user_id=?`, id)
-	for _, t := range []string{"git_workspace", "git_targets", "git_installs", "git_runs", "git_pending_restarts"} {
+	for _, t := range []string{"git_workspace", "git_targets", "git_installs", "git_runs", "git_pending_restarts", "git_feeds", "git_pipelines"} {
 		tx.Exec(`DELETE FROM `+t+` WHERE user_id=?`, id)
 	}
 	tx.Exec(`DELETE FROM git_blobs WHERE source_id IN (SELECT id FROM git_sources WHERE user_id=?)`, id)
