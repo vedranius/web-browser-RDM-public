@@ -2,68 +2,9 @@
 
 Planned work that is agreed but not built yet. Released work is in [CHANGELOG.md](CHANGELOG.md).
 
-## v11 — Git: compare and deploy services (decisions taken, not started)
+## v11 — Git: deploy services (phases 2–5; decisions taken)
 
-A separate **Git** workspace in WRM: a button in the top bar opens it full screen, and its code loads only then. It stays out of the connection tree and the terminal UI, and policy `git_enabled=0` hides it completely.
-
-It is generic: it works with any GitLab or GitHub (cloud or self-hosted) that a user connects. WRM ships no services of its own and no organisation-specific configuration.
-
-The design targets servers **without git, pip or internet access**: WRM fetches code through the Git provider's API and works on servers over its existing SSH connections, so jump hosts, the vault and proxies all apply.
-
-### Service catalog
-Per service:
-- project;
-- ref: `tag:latest`, `tag:vX` or a branch;
-- tag filter (regex);
-- subdirectory of the repository that matches the installation root;
-- include / exclude globs;
-- **protected** per-host files that are never overwritten (`config*`, `*.ini`, `.env`);
-- **fingerprint** files used to recognise an installation;
-- kind (app, library, tool).
-
-How it is filled in:
-- WRM suggests a catalog entry from the repository tree.
-- Catalogs can be imported and exported as JSON.
-
-Refs:
-- Branch-aware tags: only tags reachable from the chosen branch count, with a warning and a fallback to the branch head.
-- Ref choice per run: the catalog, one branch for all, per service, or each project's default branch.
-
-### Sources
-- The GitLab API v4 or the GitHub REST API: groups or organisations (with subgroups), projects, branches, tags.
-- **Fewer API calls.** One recursive tree listing per ref gives the blob ID of every file. File contents are fetched only for blobs not seen before and cached by blob ID forever (the same blob in 20 versions is fetched once). The normalised hash is computed from that content.
-- **Offline bundles (required):** for setups where the WRM server cannot reach the Git server.
-  - **Import:** upload a `.tar.gz` bundle (a JSON manifest with files, hashes and per-file history, plus the payload) built elsewhere. WRM shows its age and source. Protected files in the payload are ignored, matched as globs.
-  - **Export:** WRM builds the same bundle format, for servers that only a file-based tool can reach.
-
-### Discovery
-- One SSH call per server walks the configured roots (e.g. `/opt`, `/srv`, a scripts directory) to a limited depth.
-- It finds installations by their fingerprint files.
-- It skips copies and backups (`*_BKP`, `*_OLD`, `backup`, `.deploy-bak`, …; configurable).
-- It derives an environment label from the path.
-
-### File-level comparison
-- The server returns normalised content hashes of its files (POSIX `sha256sum`, CRLF→LF, no Python needed).
-- WRM compares them with the target ref and with the **history of each file** on that branch (cached by blob).
-- **File states:**
-  - ok;
-  - old (a known earlier version, *n versions behind*);
-  - modified (local change);
-  - missing;
-  - extra (only on the server);
-  - protected.
-- **Installation states:**
-  - *needs update*;
-  - *review* (local changes);
-  - *up to date*.
-- Details show:
-  - a coloured diff;
-  - the systemd / supervisor units that point to the installation directory;
-  - the version recorded in `VERSION.md`.
-
-### Overview and monitoring
-- A servers × installations matrix with filters (needs update / review / up to date, environment, folder, tag).
-- Periodic checks while WRM runs. They **never update on their own**; they notify about new versions and about drift (files changed by hand on a server).
+Phase 1 (sources, offline bundles, catalog, discovery, file-level comparison, overview matrix, periodic checks with notifications; read-only on servers) shipped in **v11.0.0**, see [CHANGELOG.md](CHANGELOG.md). The phases below build on that **Git** workspace (`git*.go`, `static/git.js`) and keep its rules: generic for any GitLab / GitHub, servers without git, pip or internet access, everything over WRM's SSH connections.
 
 ### Update and upgrade
 - **Update:** bring an installation to the newest version of the ref it follows (same branch, a newer tag or commit).
@@ -113,26 +54,17 @@ WRM writes `VERSION.md` (overall version and a per-file table), `.deploy-bak/<ti
 - Edit the catalog's exclude / protected lists in the same place.
 - Output: **a download by default**. A merge request only when the user explicitly chooses it; WRM never writes to a Git server on its own.
 
-### Notifications (a general WRM module — built in v10.9.0)
-**Already built in v10.9.0** (`notify.go`: channels, subscriptions, digests, quiet hours; first users live status and credential rotation). v11 only adds the Git events below.
-- **Channels:** in WRM, browser notifications, e-mail (SMTP), Telegram, Slack / Mattermost / Rocket.Chat, Microsoft Teams (Workflows webhook), Discord, ntfy, Gotify, Pushover, and a generic webhook (JSON, HMAC-signed).
-- **Configuration:** administrators set up the channels; users choose what they want to receive.
-- **Behaviour:** one digest per check run instead of a flood, and optional quiet hours.
-- **Git events:**
-  - a new version is available;
-  - drift on a server;
-  - a server is unreachable;
-  - update / upgrade started, succeeded, failed or rolled back;
-  - a restart is scheduled or done.
+### Notifications
+The notifications module (v10.9.0) already carries the phase 1 Git events (new version, drift, unreachable server). Still to add:
+- update / upgrade started, succeeded, failed or rolled back;
+- a restart is scheduled or done.
 
 ### Permissions
-Each action is a policy that administrators can change in the admin panel:
-- check: all users by default;
+Each action is a policy that administrators can change in the admin panel (`git_enabled` and `git_checks` exist since v11.0.0):
 - update, upgrade, install, transfer, rollback, restart and the .gitignore merge request: administrators by default.
 
 ### Security
-- Read-only tokens (encrypted; write access only for merge requests).
-- Self-signed Git servers are pinned on first use.
+- Tokens stay read-only (encrypted since v11.0.0); write access only for merge requests.
 - Every update, upgrade, rollback, install, transfer and restart is audited.
 
 ### Optional CI integration (later)
@@ -142,7 +74,7 @@ WRM does not depend on Jenkins or GitLab CI, but can work with them:
 - a service whose deployment is a CI pipeline can be updated by triggering that job (Jenkins or GitLab CI) with the server and version as parameters, with its status shown in WRM.
 
 ### Phases
-1. Sources, offline bundles, catalog, discovery, comparison, matrix, monitoring, notifications (read-only on servers).
+1. ~~Sources, offline bundles, catalog, discovery, comparison, matrix, monitoring, notifications (read-only on servers).~~ Done in v11.0.0.
 2. Update / upgrade / rollback, opt-in restarts, scheduling.
 3. New server (install / transfer).
 4. .gitignore helper.

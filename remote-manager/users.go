@@ -316,6 +316,8 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"network_tools": networkToolsAllowed(u.ID),
 			"notifications": settingBool("notifications_enabled"),
 			"proxies":       proxiesAllowed(u.ID),
+			"git":           gitAllowed(),
+			"git_checks":    gitChecksAllowed(u.ID),
 		},
 	}
 }
@@ -1061,6 +1063,12 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM notify_subscriptions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_prefs WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_pending WHERE user_id=?`, id)
+	for _, t := range []string{"git_workspace", "git_targets", "git_installs"} {
+		tx.Exec(`DELETE FROM `+t+` WHERE user_id=?`, id)
+	}
+	tx.Exec(`DELETE FROM git_blobs WHERE source_id IN (SELECT id FROM git_sources WHERE user_id=?)`, id)
+	tx.Exec(`DELETE FROM git_trees WHERE source_id IN (SELECT id FROM git_sources WHERE user_id=?)`, id)
+	tx.Exec(`DELETE FROM git_sources WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM auth_sessions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM users WHERE id=?`, id)
 	tx.Commit()

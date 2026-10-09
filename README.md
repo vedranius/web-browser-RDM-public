@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v10.10.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v11.0.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -102,6 +102,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **Jump hosts** (like `ssh -J`): reach servers behind a bastion, also in chains — for terminals, files, transfers and tunnels.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
 - **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels), **PuTTY** (with proxies) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
+- **Git workspace**: which version of which service runs where — compare installations on your servers **file by file** with **GitLab / GitHub** or an **offline bundle**, see what is *old*, *missing* or *changed by hand*, with diffs and notifications (read-only).
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions. **Installable as an app** (PWA) on desktops, tablets and phones.
 - **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
@@ -121,21 +122,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v10.10.0-linux-amd64
-   ./wrm-pro-v10.10.0-linux-amd64
+   chmod +x wrm-pro-v11.0.0-linux-amd64
+   ./wrm-pro-v11.0.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v10.10.0-windows-amd64.exe
+   .\wrm-pro-v11.0.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.10.0/wrm-pro-v10.10.0-android-arm64
-   chmod +x wrm-pro-v10.10.0-android-arm64 && ./wrm-pro-v10.10.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.0.0/wrm-pro-v11.0.0-android-arm64
+   chmod +x wrm-pro-v11.0.0-android-arm64 && ./wrm-pro-v11.0.0-android-arm64
    ```
 
    **Docker**
@@ -159,6 +160,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v10.10.0
+
+Replace the binary. The database gets new tables (`git_sources`, `git_trees`, `git_blobs`, `git_workspace`, `git_targets`, `git_installs`); the previous binary still starts on it and ignores them.
+
+- **Git workspace:** the new **⎇ Git** button in the top bar compares the services installed on your servers with GitLab / GitHub or an offline bundle, file by file and read-only. See [Git workspace](#git-workspace-compare-services).
+- It is on for everyone. Administrators can hide it (`git_enabled` off, or `WRM_GIT_ENABLED=0`) or limit checks to administrators (`git_checks`).
+- New notification events *Git: a new version is available*, *Git: files changed by hand on a server* and *Git: a server is unreachable for checks* in *Settings → Notifications*.
 
 ## Upgrading from v10.9.1
 
@@ -704,6 +713,22 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 - Messages are in the user's language (English / Hrvatski). Waiting messages survive a restart; a failing channel is retried with a growing delay and gives up after 6 attempts.
 - Policies `notifications_enabled` (on) and `notify_min_interval_seconds`. Channel changes and tests are audited (`admin.notify_channel_*`), subscriptions too (`notify.settings_changed`).
 
+### Git workspace: compare services
+
+**⎇ Git** in the top bar opens a full-screen workspace (its code, `static/git.js`, loads only then). It answers *which version of which service runs where, and what was changed by hand* — for any GitLab or GitHub (cloud or self-hosted) that you connect. WRM ships no services or organisation-specific configuration. Servers need no git, Python or internet access: WRM reads the Git provider's API itself and works on servers over its existing SSH connections, so jump hosts, proxies and the vault apply. **This version only reads**: nothing on a server is updated, installed or restarted.
+
+- **Sources** (*Settings*): GitLab (API v4) or GitHub (REST; `github.com` or Enterprise `<url>/api/v3`) with a **read-only token** (encrypted, never sent back to the browser). *Test* lists the projects of the catalog's groups / organisations (with subgroups). Self-signed Git servers are pinned on first use.
+- **Few API calls:** one recursive tree listing per version (cached forever, a commit never changes) gives the blob ID of every file; a file's content is downloaded only for a blob WRM has not seen yet and cached by blob ID — the same file in 20 versions is fetched once.
+- **Offline bundles** (*Settings → Offline bundles*): when WRM cannot reach the Git server, import a `.tar.gz` built elsewhere — one top directory with `bundle.json` (per service the target ref and the hash and history of every file) and `payload/<service>/<path>`; `deploytool.py` and `README.txt` are ignored, protected files of the payload are never used. The list shows the bundle's age, author and source. *Services → Export bundle* writes the same format for servers that only a file-based deploy tool can reach. *Targets from*: automatic (the Git API, otherwise the newest bundle), the Git API or a bundle.
+- **Service catalog** (*Services*): name, project, ref (`tag:latest`, `tag:v2` = the newest `v2.x`, or a branch), branch for tags, tag filter (regex), **subdirectory** of the repository that is the installation root, include / exclude globs, **protected** per-host files (`config*`, `*.ini`, `.env`; matched like Python's `fnmatch` on the path and the file name) that are never overwritten and only shown, **fingerprint** files that recognise an installation, install hints (directory names) and kind (app, library, tool). *Suggest from repository* fills an entry from the repository tree. *Import catalog* (merge or replace) and *Export catalog* use catalog JSON (`gitlab.url` / `groups`, `fallback_branches`, `server_roots`, `apps`, `ignore_dirs`). Services of imported bundles work without a catalog entry.
+- **Refs:** only tags whose commit is on the chosen branch count (*branch-aware*); versions sort numerically (`v1.10` after `v1.9`); `tag:latest` without a matching tag uses the branch head, and a missing branch falls back to `fallback_branches` or the default branch — both with a warning. *Ref* in the overview: as in the catalog, one branch for all, or each project's default branch.
+- **Discovery** (*Installations → Discover*, and with every check): one SSH call per server walks the server roots (`/opt`, `/srv`, …) to depth 3 and finds installations by their fingerprint files. Paths that look like copies or backups are skipped (segments with `bkp`, `backup`, `bak`, `old`, `orig`, `prev`, `copy`, `kopija`, `stari`, `recyclebin`, `trash`, `snapshot`, policy `git_backup_words`, plus the catalog's `ignore_dirs`). The environment comes from the path: `/srv/scripts/test/App` → *test*, `/opt/App_prod` → *prod*. Installations can also be added by hand.
+- **Comparison:** the server hashes its files with `tr -d '\r' < f | sha256sum` (or `shasum` / `openssl`); WRM compares them with the target (SHA-256 with CRLF → LF) and with the earlier versions of every file (the earlier tags of the branch, *History depth* in *Settings*). Files are **ok**, **old** (*n behind*, with the tag it matches), **modified**, **missing**, **extra** (only on the server) or **protected**; an installation is **review** when a file is modified, **needs update** when a file is old or missing, otherwise **up to date**. `VERSION.md` and `updates.jsonl` of deploy tools, `.deploy-bak`, `.git`, `__pycache__` are left out.
+- **Details:** the version recorded in `VERSION.md` (`**Verzija**:` line, otherwise the `# <service> - <version>` title; *missing* when there is none), the systemd / supervisor units whose unit file mentions the directory, the file states and a coloured **diff** of a file (server → target).
+- **Overview:** the target of every service (version, latest tag, source, warnings) and a **servers × services matrix** with the state, environment, `VERSION.md` version and *n behind* of each installation, filtered by state, environment, folder, tag and text.
+- **Periodic checks** (*Settings → Periodic checks*): while WRM runs, the chosen servers are checked every `git_check_interval_minutes` (60). Checks never change anything. They notify (one digest per round) about **a new version** of a service, **drift** (an installation that turns to *review*) and **unreachable servers** — subscribe to the *Git* events in *Settings → Notifications*.
+- Everything is per user (sources, catalog, installations). Policies `git_enabled` (hides the workspace), `git_checks` (who may run checks: everyone), `git_check_interval_minutes`, `git_backup_words`. Checks, bundle imports / exports, source and catalog changes and viewed diffs are audited (`git.*`).
+
 ### Network tools
 
 **🧰 Tools** in the top bar (or right-click a connection → *Network tools from this server…* / *Check ports of this host*) — the usual first checks when something does not answer, without opening a terminal:
@@ -1011,6 +1036,10 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `proxies` | `all` | who may define saved proxies: `off`, `admins`, `all` (everybody may use proxies shared with them) |
 | `notifications_enabled` | `1` | send notifications through the channels of *Admin panel → Notifications*. Also `NOTIFICATIONS_ENABLED` |
 | `notify_min_interval_seconds` | `60` | at most one message per user and channel in this time (0–86400); the rest goes into the next digest |
+| `git_enabled` | `1` | the Git workspace (⎇ Git); off hides it completely. Also `GIT_ENABLED` |
+| `git_checks` | `all` | who may run Git checks (discovery and comparison over SSH, read-only): `off`, `admins`, `all` |
+| `git_check_interval_minutes` | `60` | interval of periodic Git checks for users who turned them on (0 = none, up to 10080) |
+| `git_backup_words` | `bkp,backup,bak,old,…` | path segments with one of these words are treated as copies / backups by Git discovery and comparison |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
@@ -1059,7 +1088,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v10.10.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v11.0.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1323,6 +1352,28 @@ Connections with `auth_method` `KEY_REF` have `key_id`, with `CREDENTIAL` a `cre
 
 Connections also have `monitor` (live status on/off). The terminal WebSocket accepts `{"type":"broadcast","on":true\|false,"peers":n}` (audit) and sends `{"type":"autorun","snippets":[…]}` after run-on-connect snippets ran.
 
+**Git workspace**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/git` | Workspace state: `catalog`, `settings`, `sources` (no tokens), `targets`, `installs`, `bundle_apps`, `last_check_at`, `can_check` |
+| PUT | `/api/git/settings` | `{mode: "auto"\|"live"\|"bundle", source_id, bundle_id, ref_mode: "catalog"\|"default"\|"branch", ref_branch, ref_overrides: {app: ref}, history_depth, conn_ids, monitor}` |
+| PUT | `/api/git/catalog` | The whole catalog (catalog JSON) |
+| POST | `/api/git/catalog/import?mode=replace\|merge` | Import catalog JSON |
+| GET | `/api/git/catalog/export` | Catalog JSON (download) |
+| PUT / DELETE | `/api/git/catalog/apps/{name}` | Add or change / delete one service |
+| POST | `/api/git/sources` | `{kind: "gitlab"\|"github", name, url, token}`; `PUT` / `DELETE /api/git/sources/{id}` (an omitted `token` keeps the stored one) |
+| POST | `/api/git/sources/{id}/test` | `{projects}` of the catalog's groups |
+| POST | `/api/git/suggest` | `{project, ref}` → `{app, files}` (catalog entry from the repository tree) |
+| POST | `/api/git/bundles` | Body: a bundle `.tar.gz` → `{result: {source, files, payload, warnings}, state}` |
+| POST | `/api/git/bundles/export` | `{apps: [...]}` → bundle `.tar.gz` |
+| POST | `/api/git/targets/refresh` | `{apps}` (empty = all): resolve refs and build targets |
+| GET | `/api/git/targets/{app}` | Target with files and per-file history |
+| POST | `/api/git/check` | `{conn_ids (empty = the chosen servers), discover, refresh}` → `{result: {servers, installs, targets}, state}` |
+| POST | `/api/git/installs` | `{conn_id, path, app, env}` (added by hand) |
+| GET / DELETE | `/api/git/installs/{id}` | Details with file states / forget |
+| GET | `/api/git/installs/{id}/diff?path=` | `{lines: [{op: " "\|"-"\|"+"\|"@", a, b, s}], binary, truncated}` (server → target) |
+
 **Tunnels & web interfaces**
 
 | Method | Endpoint | Description |
@@ -1440,6 +1491,11 @@ remote-manager/
   snippets.go     snippets (saved commands), variables, run on connect
   bookmarks.go    folder bookmarks: scopes, variables, shell-quoted cd, start directory, WinSCP import
   status.go       live up/down status monitor and API
+  git.go          Git workspace: storage, settings, targets, API, diff
+  git_source.go   GitLab API v4 / GitHub REST client, tree and blob cache, ref resolution, suggestions
+  git_bundle.go   offline bundles: import and export (bundle.json + payload)
+  git_scan.go     discovery and file hashing over SSH, VERSION.md, units, comparison
+  git_monitor.go  periodic Git checks and their notifications
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
   nettools.go     network tools: port check, ping, traceroute, DNS, HTTP/TLS check, from WRM or a server
@@ -1458,6 +1514,7 @@ remote-manager/
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
   bookmarks_test.go    folder bookmarks: scopes, ownership, variables, cd quoting, shares, WinSCP.ini, start directory
   status_test.go       live status: up/down, banners, jump hosts, check now
+  git_test.go          Git workspace: fake GitLab / GitHub, branch-aware tags, blob cache, bundles, catalog, discovery and comparison on a fake SSH host, notifications
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
   bmc_test.go          Redfish (fake BMC, pinning, jump host, credential), IPMI with a fake ipmitool, SOL (local PTY and jump host), BMC SSH console, serial port on a PTY
   inventory_test.go    tags, CSV encodings/separators, XLSX import, NetBox import and sync (fake NetBox)
@@ -1470,6 +1527,7 @@ remote-manager/
   notify_test.go       notification channels against fake HTTP endpoints and a fake SMTP server, digests, rate limit, quiet hours, status and rotation events
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   static/index.html          the entire web UI (embedded into the binary)
+  static/git.js              the Git workspace (loaded when it is opened)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
 .github/workflows/build.yml  CI: vet, gofmt, tests (race), JS syntax check, builds all platforms, Docker image, releases on tags
@@ -1520,6 +1578,9 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | *IPMI and Serial-over-LAN use UDP: they cannot go through the proxy* | Use Redfish for that BMC, or untick *Through the jump host* (ipmitool then runs on the WRM server) |
 | *proxy … is shared with a password: it cannot be reached through your own jump hosts* | Ask the owner for a proxy without a password for this route, or define your own proxy |
 | A connection suddenly goes through a jump host / proxy | Its folder has a default (*Folder settings…*, ⤳ after the folder name). Choose *no jump host / no proxy (not the folder's)* in the connection |
+| Git: an installation is not found | Check *Settings → Catalog settings → Server roots* (searched to depth 3), the service's fingerprint files (relative to the installation root, all must exist) and whether the path looks like a backup (`git_backup_words`, `ignore_dirs`). Installations can be added by hand |
+| Git: every file is *modified* | The *subdirectory* of the service must be the part of the repository that is the installation root (e.g. `linux`). The server needs `sha256sum`, `shasum` or `openssl` |
+| Git: `HTTP 401` / `403` from the Git server | Check the token (read access to the API and repositories) in *Settings → Git sources*; 403 can also be the API rate limit |
 | Notifications: nothing arrives | Check *Admin panel → Notifications* (channel enabled, last error, *Send test*), *Settings → Notifications* (events ticked, quiet hours) and the policy `notifications_enabled`. Messages of one round arrive together after a few seconds, at most one per `notify_min_interval_seconds` |
 | Notifications: *SMTP login: … unencrypted connection* | Go's SMTP client sends a password only over TLS (or to localhost): choose STARTTLS or TLS |
 | Network tools: *ping is not installed* | Install `iputils-ping` / `traceroute` on the WRM server (or on the source server), or use the port check — it needs nothing |

@@ -6,8 +6,8 @@ Security fixes go into the **latest release** only. Please upgrade before you re
 
 | Version | Supported |
 |---|---|
-| v10.x | ✔ |
-| v9.x and older | ✘ (upgrade: see *Upgrading from v9* in the [README](README.md#upgrading-from-v9)) |
+| v11.x | ✔ |
+| v10.x and older | ✘ (upgrade: see *Upgrading* in the [README](README.md#table-of-contents)) |
 
 ## Reporting a vulnerability
 
@@ -74,6 +74,7 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Give shared credentials a **host list** (`Only for hosts`): a password is sent to the server at login, so without one a colleague could send it to a server of their own. With a host list, the people it is shared with can only use matching hosts and jump hosts.
 - [ ] Prefer keys (deploy them with WRM) over shared passwords, and **revoke** keys of people who leave — *Who has access* shows what is left on a server.
 - [ ] Keep `allow_secret_export` off if users should not be able to export private keys or show vault passwords (administrators always can; every export is audited).
+- [ ] Use **read-only** GitLab / GitHub tokens for the Git workspace (e.g. GitLab `read_api` + `read_repository`, a GitHub fine-grained token with *Contents: read*). They are stored encrypted and never returned, but anyone with the WRM account can use them to read the repositories. Git checks only read files on servers; limit them with `git_checks` or hide the workspace with `git_enabled`.
 - [ ] Use a **read-only** NetBox token for inventory imports; a remembered token is stored encrypted, but anyone with the WRM account can use it to read NetBox.
 - [ ] Set a rotation reminder on shared passwords and rotate them when a colleague leaves; check the audit log for `credential.rotation_incomplete`.
 
