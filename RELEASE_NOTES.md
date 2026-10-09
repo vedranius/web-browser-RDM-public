@@ -1,12 +1,47 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.4.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.5.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.4.0 — Git: every file of an installation, partial and incremental checks
+## Web Remote Manager PRO v11.5.0 — Git: environments, deploy plans and safe deploys
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, updates them and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
+Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, updates them, deploys them to environments and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 📂 Every file of an installation
+### 🌍 Environments
+
+- Give a service **environments** — e.g. *test* and *prod* — each an **ordered list of servers and paths** with its own rules: **type the environment name** to deploy, **allowed refs** (only `refs/tags/v*` to production), extra **ignore patterns**, an optional **`post_deploy`** command and how many **backups** to keep.
+- A new **Environments** tab shows every service × environment: the version, commit, who deployed it and when, **how many commits behind**, a lock, and a warning when **the servers of one environment differ**. Every cell loads on its own.
+- Services without environments keep using *Update*, *Upgrade* and *Rollback* exactly as before.
+
+### 📋 A deploy plan you review — and apply once
+
+- *Deploy* compares every server and shows what will be **added, changed and deleted** (deleting files removed from the repository is opt-in), what is **excluded** and which files differ **only in CRLF/LF** (shown as *same (CRLF/LF)*, counted separately, and still sent so the line endings get normalised).
+- Untick a file to leave it out of **this** deploy — WRM **remembers** it for the next compare with who and when. Or **exclude it permanently** for the whole service or one environment (an anchored, escaped pattern; skipped when a pattern already covers it).
+- The plan has a **fingerprint** and can be applied **once**. Under the lock WRM compares again and **stops if anything changed** since you reviewed it.
+- **Dry run:** the same options, no lock, nothing written, everything in the log.
+- Plan errors and warnings: a directory that becomes a file (or back), a symlink that would be replaced, files changed by hand, a path that does not exist yet (the first deploy creates it).
+
+### 🔒 Safe deploys on the server
+
+- A **lock** in the state directory (`mkdir`, with an owner file: who, from which WRM, since when by the server's clock) keeps colleagues and other WRM instances from deploying to the same place at once. A deploy releases only **its own** lock; a **stale** lock is removed only after you confirm it, and the server checks again that it is the same lock.
+- Files travel as **one verified stream** (timeout at least an hour), the replaced and deleted files are **backed up**, then everything is put in place, checked and **restored automatically** on failure. An **interrupted transfer** is recorded as partial and changes nothing; a **failed `post_deploy`** is recorded with a note and the next servers are not started.
+- **State and history on the server**, next to the installation (`.deploy-bak/` by default, compatible with `VERSION.md`, `updates.jsonl` and the existing backup layout): the current and previous version, and every DEPLOY with the lists of new, changed and deleted files.
+- **Rollback** of a deploy on the servers you choose, in reverse order: files the deploy added and the current versions are **moved aside, never deleted**, removed directories come back with their mode and owner, and **nothing is done through a symlink** (such items are skipped and the rollback can be repeated after fixing the server).
+
+### 🩺 Access doctor
+
+- Per server: SSH, a clean non-interactive shell, root or not, write access (also for a path that does not exist yet), the state directory, unreadable subdirectories, signs of another deploy method (`.git` checkout, release directories), a public web root, and `sha256sum` / `rsync` / `tar` with their versions.
+
+### ⬆️ Upgrading from v11.4.0
+
+Replace the binary. The database gets one new table (`git_env_exclusions`); the previous binary still starts on it. Nothing changes until you add environments to a service. Patterns starting with `/` are now anchored to the service root.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.5.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.4.0 — Git: every file of an installation, partial and incremental checks
+
+#### 📂 Every file of an installation
 
 - The details of an installation now list **every file in the server folder** (the catalog's ignored directories are honoured) and **every file of the repository** at the target ref — not just the files the catalog tracks.
 - Each row shows the size, the modification time, the state and **why**: tracked, **excluded by the catalog (with the pattern)**, not in the include list, protected (with the pattern), only on the server, only in Git, a **symlink** (its target is shown, never followed out of the installation) or **unreadable**.
@@ -16,7 +51,7 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - Files the catalog does not track **never change the state** of an installation.
 - **Commits behind:** the commits between the server's version (the commit in `VERSION.md`) and the target, from GitLab or GitHub.
 
-### ⚡ Partial and incremental checks
+#### ⚡ Partial and incremental checks
 
 - **Filter the overview** by service, server / host, environment and state (review, needs update, up to date, error, not checked).
 - **Pick what to check:** tick installations, whole rows (servers) or columns (services), then *Check selected*; or *Check visible*, *Check this cell*, or *Check only stale* (never checked, older than 1 hour / 24 hours / 7 days). *Check now* still checks everything.
@@ -24,15 +59,13 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - Everything you did not check **keeps its result** with "checked X ago"; a failed check keeps the **last good result** next to the error.
 - The same on the *Installations* tab.
 
-### 🛠 Fixes
+#### 🛠 Fixes
 
 - Upgrading a database from v11.2.0 or earlier to v11.3.0 set the Git sources aside (`git_sources_old_<time>`) instead of adding the new columns. v11.4.0 adds the columns in place and **restores the set-aside sources** once, when the new table is still empty.
 
-### ⬆️ Upgrading from v11.3.0
+#### ⬆️ Upgrading from v11.3.0
 
 Replace the binary. The database gets two new columns on `git_installs` (`last_ok_at`, `last_ok_state`); the previous binary still starts on it. Git sources lost by the v11.3.0 upgrade come back on the first start. Refresh the targets once so the repository files outside the catalog are listed too.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.4.0/CHANGELOG.md) for details.
 
 ---
 
