@@ -658,7 +658,7 @@ const gitMaxCommitList = 200
 func (p *gitProvider) compareCommits(project, from, to string) (int, []gitCommitInfo, error) {
 	var out []gitCommitInfo
 	total := 0
-	if p.kind == "github" {
+	if p.hub() {
 		var v struct {
 			TotalCommits int `json:"total_commits"`
 			Commits      []struct {
