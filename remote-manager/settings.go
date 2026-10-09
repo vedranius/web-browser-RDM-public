@@ -87,6 +87,11 @@ var settingSpecs = []settingSpec{
 	{Key: "git_checks", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_check_interval_minutes", Default: "60", Kind: "int", Min: 0, Max: 10080},
 	{Key: "git_backup_words", Default: defaultBackupWords, Kind: "string"},
+	{Key: "git_update", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "git_upgrade", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "git_rollback", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "git_restart", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "git_schedule_grace_minutes", Default: "30", Kind: "int", Min: 1, Max: 1440},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
