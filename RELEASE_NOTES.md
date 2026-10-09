@@ -1,18 +1,53 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.5.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.6.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.5.0 — Git: environments, deploy plans and safe deploys
+## Web Remote Manager PRO v11.6.0 — Git: activity and deploy history per user and branch
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, updates them, deploys them to environments and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
+Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub / Gitea or offline bundles, updates them, deploys them to environments, shows who changed and deployed what where, and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🌍 Environments
+### 📈 Git activity
+
+- A new **Activity** tab in the Git workspace. *Git activity* shows the **pushes and commits** of a service **per branch and per author**, straight from the Git server: GitLab push events and commits, GitHub commits and (where the token allows it) repository activity, Gitea commits.
+- Filter by **branch**, **author** and **dates**; the **per author** and **per branch** summaries (commits, pushes, last activity) follow the filters — click a row to filter by it. Every commit and push links to its **commit or compare page**.
+- Gentle on the Git server: paging stops before the API limit runs out (and says so, with the time it resets), and results are cached for a few minutes.
+
+### 🕘 Deploy history
+
+- One list of **every deploy and rollback** of every server of every environment — read from the servers' own `history.jsonl` — together with WRM's runs on installations without environments.
+- Filter by **service, environment, server, who, branch, version and action** (deploy / rollback / update / upgrade / install / transfer) and dates, and open the **per-file lists** (new, changed, deleted, restored …) of each entry.
+
+### 🗺 What is where
+
+- Per service, environment and server: the **branch, commit and version** that runs there, **who deployed it and when**, and **how many commits it is behind its branch head** — with a link to exactly those commits.
+- Servers of one environment that run something else than the others are **highlighted**. Installations without environments are listed from their last check.
+- Cells load one by one, like the *Environments* tab.
+
+### ⬇ CSV export
+
+- Each of the three views exports **what its filters show** as CSV (opens cleanly in spreadsheets; values that look like formulas are neutralised).
+
+### 🧩 Gitea sources
+
+- A Git source can now be a **Gitea** server (API v1). Targets, comparisons, deploys and the activity work as with GitHub.
+
+### ⬆️ Upgrading from v11.5.0
+
+Replace the binary; the database does not change. There are no new settings or policies: the activity needs only the Git workspace, the deploy history from the servers and the matrix need the `git_checks` policy, like the *Environments* tab. For GitHub pushes the read token needs read access to the repository's metadata; otherwise only commits are shown.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.6.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.5.0 — Git: environments, deploy plans and safe deploys
+
+#### 🌍 Environments
 
 - Give a service **environments** — e.g. *test* and *prod* — each an **ordered list of servers and paths** with its own rules: **type the environment name** to deploy, **allowed refs** (only `refs/tags/v*` to production), extra **ignore patterns**, an optional **`post_deploy`** command and how many **backups** to keep.
 - A new **Environments** tab shows every service × environment: the version, commit, who deployed it and when, **how many commits behind**, a lock, and a warning when **the servers of one environment differ**. Every cell loads on its own.
 - Services without environments keep using *Update*, *Upgrade* and *Rollback* exactly as before.
 
-### 📋 A deploy plan you review — and apply once
+#### 📋 A deploy plan you review — and apply once
 
 - *Deploy* compares every server and shows what will be **added, changed and deleted** (deleting files removed from the repository is opt-in), what is **excluded** and which files differ **only in CRLF/LF** (shown as *same (CRLF/LF)*, counted separately, and still sent so the line endings get normalised).
 - Untick a file to leave it out of **this** deploy — WRM **remembers** it for the next compare with who and when. Or **exclude it permanently** for the whole service or one environment (an anchored, escaped pattern; skipped when a pattern already covers it).
@@ -20,22 +55,20 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - **Dry run:** the same options, no lock, nothing written, everything in the log.
 - Plan errors and warnings: a directory that becomes a file (or back), a symlink that would be replaced, files changed by hand, a path that does not exist yet (the first deploy creates it).
 
-### 🔒 Safe deploys on the server
+#### 🔒 Safe deploys on the server
 
 - A **lock** in the state directory (`mkdir`, with an owner file: who, from which WRM, since when by the server's clock) keeps colleagues and other WRM instances from deploying to the same place at once. A deploy releases only **its own** lock; a **stale** lock is removed only after you confirm it, and the server checks again that it is the same lock.
 - Files travel as **one verified stream** (timeout at least an hour), the replaced and deleted files are **backed up**, then everything is put in place, checked and **restored automatically** on failure. An **interrupted transfer** is recorded as partial and changes nothing; a **failed `post_deploy`** is recorded with a note and the next servers are not started.
 - **State and history on the server**, next to the installation (`.deploy-bak/` by default, compatible with `VERSION.md`, `updates.jsonl` and the existing backup layout): the current and previous version, and every DEPLOY with the lists of new, changed and deleted files.
 - **Rollback** of a deploy on the servers you choose, in reverse order: files the deploy added and the current versions are **moved aside, never deleted**, removed directories come back with their mode and owner, and **nothing is done through a symlink** (such items are skipped and the rollback can be repeated after fixing the server).
 
-### 🩺 Access doctor
+#### 🩺 Access doctor
 
 - Per server: SSH, a clean non-interactive shell, root or not, write access (also for a path that does not exist yet), the state directory, unreadable subdirectories, signs of another deploy method (`.git` checkout, release directories), a public web root, and `sha256sum` / `rsync` / `tar` with their versions.
 
-### ⬆️ Upgrading from v11.4.1
+#### ⬆️ Upgrading from v11.4.1
 
 Replace the binary. The database gets one new table (`git_env_exclusions`); the previous binary still starts on it. Nothing changes until you add environments to a service. Patterns starting with `/` are now anchored to the service root.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.5.0/CHANGELOG.md) for details.
 
 ---
 
@@ -643,20 +676,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v11.0.0-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v11.0.0-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v11.0.0-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v11.0.0-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v11.0.0-linux-386` |
-| Windows | x86-64 | `wrm-pro-v11.0.0-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v11.0.0-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v11.0.0-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v11.0.0-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v11.0.0-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v11.0.0-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v11.0.0-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v11.0.0-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v11.0.0-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v11.6.0-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v11.6.0-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v11.6.0-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v11.6.0-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v11.6.0-linux-386` |
+| Windows | x86-64 | `wrm-pro-v11.6.0-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v11.6.0-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v11.6.0-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v11.6.0-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v11.6.0-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v11.6.0-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v11.6.0-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v11.6.0-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v11.6.0-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -664,27 +697,27 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v11.0.0-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v11.0.0-linux-amd64
+chmod +x wrm-pro-v11.6.0-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v11.6.0-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v11.0.0-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v11.6.0-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v11.0.0-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v11.6.0-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.0.0/wrm-pro-v11.0.0-android-arm64
-chmod +x wrm-pro-v11.0.0-android-arm64 && ./wrm-pro-v11.0.0-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.6.0/wrm-pro-v11.6.0-android-arm64
+chmod +x wrm-pro-v11.6.0-android-arm64 && ./wrm-pro-v11.6.0-android-arm64
 ```
 
 **Docker**
 ```bash
-docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v10.9.0
+docker run -d --name wrm -p 8080:8080 -v wrm-data:/data -e HTTPS_SELF_SIGNED=1 ghcr.io/vedranius/wrm-pro:v11.6.0
 # or, from the source tree:  docker compose up -d
 ```
 
@@ -710,12 +743,12 @@ WRM_RECORDINGS_DIR=/path          where session recordings are stored (default: 
 WRM_NETWORK_TOOLS=admins          network tools for administrators only (off: turn them off)
 ```
 
-For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v10.8.1/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.8.1/SECURITY.md).
+For the full documentation (Docker, reverse proxy, systemd, firewall, API), see the [README](https://github.com/vedranius/web-browser-RDM-public/blob/v11.6.0/README.md). To report a vulnerability, see [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.6.0/SECURITY.md).
 
 ---
 
 ### 📜 License
 
-Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v10.8.1/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.8.1/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v10.8.1/CONTRIBUTING.md).
+Web Remote Manager PRO is **source-available** under the [PolyForm Noncommercial License 1.0.0 or the PolyForm Internal Use License 1.0.0](https://github.com/vedranius/web-browser-RDM-public/blob/v11.6.0/LICENSE). It is free for personal, educational, non-profit and other noncommercial use, and **free for companies that use it as a work tool**, including paid work for their customers. **Offering WRM as a hosted service, charging for its use, reselling or bundling it requires a commercial license**; see [COMMERCIAL-LICENSE.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.6.0/COMMERCIAL-LICENSE.md). Contributions are welcome; see [CONTRIBUTING.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.6.0/CONTRIBUTING.md).
 
 ☕ **Like WRM?** Support its development on **[Ko-fi](https://ko-fi.com/vedranius)**. Thank you!
