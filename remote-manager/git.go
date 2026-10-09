@@ -652,6 +652,9 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if idx >= 0 {
+				if a.Environments == nil {
+					a.Environments = cat.Apps[idx].Environments // a client that does not know them keeps them
+				}
 				cat.Apps[idx] = a
 			} else {
 				cat.Apps = append(cat.Apps, a)
