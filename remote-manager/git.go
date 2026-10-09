@@ -100,6 +100,7 @@ func initGitSchema() {
 	mustExec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_git_installs_path ON git_installs(user_id, conn_id, path)`)
 	initGitRunsSchema()
 	initGitCISchema()
+	initGitEnvSchema()
 }
 
 // restoreSetAsideGitSources brings back the Git sources of a table v11.3.0 set aside
@@ -135,6 +136,7 @@ func deleteGitUserData(userID int) {
 	db.Exec(`DELETE FROM git_pending_restarts WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_feeds WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_pipelines WHERE user_id=?`, userID)
+	db.Exec(`DELETE FROM git_env_exclusions WHERE user_id=?`, userID)
 }
 
 func gitAllowed() bool { return settingBool("git_enabled") }
@@ -551,6 +553,7 @@ func decodeGitJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 //	deploy routes (plan, backups, runs): see apiGitDeploy in git_runs.go
 //	.gitignore helper: see apiGitIgnore in git_gitignore.go
 //	webhooks, artifact feeds, CI pipelines: see apiGitCI in git_ci.go
+//	environments (plans, history, doctor, locks, excludes): see apiGitEnv in git_env.go
 func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireAuth(w, r)
 	if !ok {
@@ -569,7 +572,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return true
 	}
-	if apiGitJobs(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
+	if apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
 		return
 	}
 	switch {
