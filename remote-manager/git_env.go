@@ -92,7 +92,9 @@ type gitEnvironment struct {
 var prodEnvNames = map[string]bool{"prod": true, "production": true, "prd": true, "live": true}
 
 // needsConfirm: the environment asks for it, or its name says production.
-func (e gitEnvironment) needsConfirm() bool { return e.Confirm || prodEnvNames[strings.ToLower(e.Name)] }
+func (e gitEnvironment) needsConfirm() bool {
+	return e.Confirm || prodEnvNames[strings.ToLower(e.Name)]
+}
 
 func (e gitEnvironment) keep() int {
 	if e.KeepBackups <= 0 {
@@ -947,14 +949,15 @@ func capList(l []string, n int) []string {
 }
 
 // fingerprint covers what the plan compared: the destination, its current deploy, the
-// target commit and every listed file with its server hash.
+// target commit and every listed file with its server hash (not whether the directory
+// exists: the lock creates the state directory, and a missing directory has no files).
 func (x *envPlanCtx) fingerprint(dp *gitEnvDestPlan) string {
 	h := sha256.New()
 	cur := ""
 	if dp.Current != nil {
 		cur = dp.Current.DeployID
 	}
-	fmt.Fprintf(h, "%s\n%s\n%v\n%s\n%s\n%s\n", strings.ToLower(dp.Server), dp.Path, dp.Exists, cur, x.t.CommitFull, x.t.Commit)
+	fmt.Fprintf(h, "%s\n%s\n%s\n%s\n%s\n", strings.ToLower(dp.Server), dp.Path, cur, x.t.CommitFull, x.t.Commit)
 	for _, f := range dp.Files {
 		fmt.Fprintf(h, "%s\t%s\t%s\t%d\t%v\n", f.Path, f.State, f.hash, f.cr, f.Link)
 	}

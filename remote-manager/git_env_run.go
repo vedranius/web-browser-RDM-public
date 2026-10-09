@@ -127,7 +127,7 @@ func createEnvRun(r *http.Request, userID int, p gitRunParams) (int, int, error)
 		}
 		p.Targets = map[string]gitTarget{app.Name: plan.target}
 		p.Ref = plan.Ref
-		e.DeployID = gitBackupName(bundleOf(plan.target, label), now)
+		e.DeployID = gitBackupName(bundleOf(plan.target, label)+"-"+randomID(2), now) // unique when two deploys start in one second
 	case "rollback":
 		if !gitActionAllowed(userID, "git_rollback") {
 			return 0, 403, fmt.Errorf("rollbacks are not allowed for your account")
@@ -438,10 +438,19 @@ func envPrune(s *deploySession, stateDir, current string, keep int) []string {
 		return ids[i] > ids[j]
 	})
 	var drop []string
-	for i, id := range ids {
-		if i >= keep && id != current {
-			drop = append(drop, id)
+	kept := 0
+	if current != "" {
+		kept = 1 // the current deploy counts first
+	}
+	for _, id := range ids {
+		if id == current {
+			continue
 		}
+		if kept < keep {
+			kept++
+			continue
+		}
+		drop = append(drop, id)
 	}
 	script := fmt.Sprintf(`SD=%s
 while IFS= read -r id; do [ -n "$id" ] && rm -rf "$SD/$id" "$SD/deploys/$id.json"; done
