@@ -170,6 +170,20 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Docker Hub rate-limits anonymous pulls from shared runners (429 Too Many Requests).
+      # Pull the base images of the Dockerfile from Google's Docker Hub mirror first, with a
+      # few retries and Docker Hub as the fallback; docker build then uses the local copies.
+      - name: Pull base images
+        run: |
+          for img in $(awk 'toupper($1)=="FROM"{print $2}' Dockerfile | sort -u); do
+            for try in 1 2 3; do
+              if docker pull "mirror.gcr.io/library/${img}" && docker tag "mirror.gcr.io/library/${img}" "${img}"; then break; fi
+              if docker pull "${img}"; then break; fi
+              sleep $((try * 15))
+            done
+            docker image inspect "${img}" >/dev/null
+          done
+
       - name: Build image
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then VERSION="${GITHUB_REF_NAME}"; else VERSION="${APP_VERSION}-$(git rev-parse --short HEAD)"; fi
