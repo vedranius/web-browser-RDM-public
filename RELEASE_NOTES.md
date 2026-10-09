@@ -1,12 +1,36 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v10.10.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.0.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v10.10.0 — folder bookmarks
+## Web Remote Manager PRO v11.0.0 — Git workspace: compare services
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
+Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### ★ Folder bookmarks
+### ⎇ Git workspace (phase 1: compare, read-only)
+
+- **Which version runs where?** The new **⎇ Git** button opens a full-screen workspace that compares the services installed on your servers with **GitLab** or **GitHub** (cloud or self-hosted) — **file by file**, over WRM's existing SSH connections, so jump hosts, proxies and the vault apply. Servers need no git, Python or internet access.
+- **Offline bundles:** when WRM cannot reach the Git server, import a `.tar.gz` bundle built elsewhere; WRM shows its age and source. WRM also **exports** the same format for servers that only a file-based deploy tool can reach.
+- **Service catalog:** project, ref (`tag:latest`, `tag:v2`, a branch), subdirectory, include / exclude, **protected** per-host files (`config*`, `*.ini`, `.env`) and fingerprint files. WRM **suggests an entry from the repository tree**; catalogs import and export as JSON.
+- **Discovery:** one SSH call per server finds the installations below `/opt`, `/srv`, … by their fingerprint files, skips copies and backups (`*_BKP`, `backup`, `.deploy-bak`, …) and labels environments from the path (`test/App` → *test*, `App_prod` → *prod*).
+- **Comparison:** every file is *ok*, *old* (*2 behind* — it matches an earlier tag), *modified* (changed by hand), *missing*, *extra* or *protected*. Installations are *needs update*, *review* or *up to date*. Details show the version in `VERSION.md`, the systemd / supervisor units and a coloured **diff**.
+- **Refs that make sense:** only tags on the chosen branch count, versions sort numerically (`v1.10` after `v1.9`), and you can check against the catalog, one branch for all, or each project's default branch.
+- **Few API calls:** one tree listing per version, and each file content is downloaded once, ever.
+- **Monitoring:** turn on periodic checks and get **one notification per round** about **new versions**, **drift** and **unreachable servers** through your notification channels. Checks never change anything.
+- Administrators: policies `git_enabled` (hides it completely), `git_checks`, `git_check_interval_minutes`, `git_backup_words`.
+
+Updating, upgrading, rollback and restarts follow in the next phases.
+
+### ⬆️ Upgrading from v10.10.0
+
+Replace the binary. The database gets new tables (`git_sources`, `git_trees`, `git_blobs`, `git_workspace`, `git_targets`, `git_installs`); the previous binary still starts on it. The Git workspace is on for everyone; set `git_enabled` to off (or `WRM_GIT_ENABLED=0`) to hide it.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.0.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v10.10.0 — folder bookmarks
+
+#### ★ Folder bookmarks
 
 - The same deep directories on many servers, one click away — like WinSCP's bookmarks. **★ next to the path bar** of the file manager: *Bookmark this directory…*, your bookmarks for this connection, *Manage bookmarks…*.
 - **Scope:** one connection, the connections of a folder, the connections with a tag, or **all SSH / SFTP / FTP connections**.
@@ -16,7 +40,7 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - A missing directory gives a clear message instead of an error. Bookmarks can be renamed, reordered, moved between scopes, shared with share members (global ones, read-only), exported and imported with your configuration.
 - **Import from WinSCP:** *Manage bookmarks → Import WinSCP.ini*.
 
-### ⬆️ Upgrading from v10.9.1
+#### ⬆️ Upgrading from v10.9.1
 
 Replace the binary. The database gets a new table (`bookmarks`); the previous binary still starts on it.
 
@@ -471,20 +495,20 @@ Replace the binary and start it with the same database, and the same `ENCRYPTION
 
 | Platform | Architecture | Binary |
 |---|---|---|
-| Linux | x86-64 | `wrm-pro-v10.10.0-linux-amd64` |
-| Linux | arm64 | `wrm-pro-v10.10.0-linux-arm64` |
-| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v10.10.0-linux-armv7` |
-| Linux | ARMv6 | `wrm-pro-v10.10.0-linux-armv6` |
-| Linux | 32-bit | `wrm-pro-v10.10.0-linux-386` |
-| Windows | x86-64 | `wrm-pro-v10.10.0-windows-amd64.exe` |
-| Windows | arm64 | `wrm-pro-v10.10.0-windows-arm64.exe` |
-| macOS | Intel | `wrm-pro-v10.10.0-darwin-amd64` |
-| macOS | Apple Silicon | `wrm-pro-v10.10.0-darwin-arm64` |
-| macOS | Universal | `wrm-pro-v10.10.0-darwin-universal` |
-| Android | arm64 (Termux) | `wrm-pro-v10.10.0-android-arm64` |
-| FreeBSD | x86-64 | `wrm-pro-v10.10.0-freebsd-amd64` |
-| FreeBSD | arm64 | `wrm-pro-v10.10.0-freebsd-arm64` |
-| OpenBSD | x86-64 | `wrm-pro-v10.10.0-openbsd-amd64` |
+| Linux | x86-64 | `wrm-pro-v11.0.0-linux-amd64` |
+| Linux | arm64 | `wrm-pro-v11.0.0-linux-arm64` |
+| Linux | ARMv7 (Raspberry Pi) | `wrm-pro-v11.0.0-linux-armv7` |
+| Linux | ARMv6 | `wrm-pro-v11.0.0-linux-armv6` |
+| Linux | 32-bit | `wrm-pro-v11.0.0-linux-386` |
+| Windows | x86-64 | `wrm-pro-v11.0.0-windows-amd64.exe` |
+| Windows | arm64 | `wrm-pro-v11.0.0-windows-arm64.exe` |
+| macOS | Intel | `wrm-pro-v11.0.0-darwin-amd64` |
+| macOS | Apple Silicon | `wrm-pro-v11.0.0-darwin-arm64` |
+| macOS | Universal | `wrm-pro-v11.0.0-darwin-universal` |
+| Android | arm64 (Termux) | `wrm-pro-v11.0.0-android-arm64` |
+| FreeBSD | x86-64 | `wrm-pro-v11.0.0-freebsd-amd64` |
+| FreeBSD | arm64 | `wrm-pro-v11.0.0-freebsd-arm64` |
+| OpenBSD | x86-64 | `wrm-pro-v11.0.0-openbsd-amd64` |
 
 Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN relay; configure an external TURN server there if you need one.
 
@@ -492,22 +516,22 @@ Verify integrity with `SHA256SUMS.txt`. The Android build has no built-in TURN r
 
 **Linux / macOS**
 ```bash
-chmod +x wrm-pro-v10.10.0-linux-amd64
-HTTPS_SELF_SIGNED=1 ./wrm-pro-v10.10.0-linux-amd64
+chmod +x wrm-pro-v11.0.0-linux-amd64
+HTTPS_SELF_SIGNED=1 ./wrm-pro-v11.0.0-linux-amd64
 # open https://<server>:8080 — create the administrator account (the first account)
 ```
 On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
-**Windows**: double-click `wrm-pro-v10.10.0-windows-amd64.exe`, or in PowerShell:
+**Windows**: double-click `wrm-pro-v11.0.0-windows-amd64.exe`, or in PowerShell:
 ```powershell
-$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v10.10.0-windows-amd64.exe
+$env:HTTPS_SELF_SIGNED=1; .\wrm-pro-v11.0.0-windows-amd64.exe
 ```
 
 **Android (Termux)**
 ```bash
 pkg install wget
-wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v10.10.0/wrm-pro-v10.10.0-android-arm64
-chmod +x wrm-pro-v10.10.0-android-arm64 && ./wrm-pro-v10.10.0-android-arm64
+wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.0.0/wrm-pro-v11.0.0-android-arm64
+chmod +x wrm-pro-v11.0.0-android-arm64 && ./wrm-pro-v11.0.0-android-arm64
 ```
 
 **Docker**
