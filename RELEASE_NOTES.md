@@ -1,30 +1,60 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.3.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.4.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.3.0 — Git: .gitignore helper and optional CI integration
+## Web Remote Manager PRO v11.4.0 — Git: every file of an installation, partial and incremental checks
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, updates them and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🧹 .gitignore helper
+### 📂 Every file of an installation
+
+- The details of an installation now list **every file in the server folder** (the catalog's ignored directories are honoured) and **every file of the repository** at the target ref — not just the files the catalog tracks.
+- Each row shows the size, the modification time, the state and **why**: tracked, **excluded by the catalog (with the pattern)**, not in the include list, protected (with the pattern), only on the server, only in Git, a **symlink** (its target is shown, never followed out of the installation) or **unreadable**.
+- Filter the list (all / differing / tracked only / not tracked) and search it.
+- **Open any file** (view only, size-limited; binary files are detected and compared by hash).
+- **Diff server ↔ Git for any file in the repository**, including files the catalog excludes such as `setup.py` — clearly labelled *informational, not updated*. Unified or side-by-side, line endings ignored like the hashing, usable on a phone.
+- Files the catalog does not track **never change the state** of an installation.
+- **Commits behind:** the commits between the server's version (the commit in `VERSION.md`) and the target, from GitLab or GitHub.
+
+### ⚡ Partial and incremental checks
+
+- **Filter the overview** by service, server / host, environment and state (review, needs update, up to date, error, not checked).
+- **Pick what to check:** tick installations, whole rows (servers) or columns (services), then *Check selected*; or *Check visible*, *Check this cell*, or *Check only stale* (never checked, older than 1 hour / 24 hours / 7 days). *Check now* still checks everything.
+- **Results stream in** per installation, with a spinner on each cell and a **Cancel** button. Two new settings bound the work: `git_check_parallel` (8) and `git_check_per_server` (2).
+- Everything you did not check **keeps its result** with "checked X ago"; a failed check keeps the **last good result** next to the error.
+- The same on the *Installations* tab.
+
+### 🛠 Fixes
+
+- Upgrading a database from v11.2.0 or earlier to v11.3.0 set the Git sources aside (`git_sources_old_<time>`) instead of adding the new columns. v11.4.0 adds the columns in place and **restores the set-aside sources** once, when the new table is still empty.
+
+### ⬆️ Upgrading from v11.3.0
+
+Replace the binary. The database gets two new columns on `git_installs` (`last_ok_at`, `last_ok_state`); the previous binary still starts on it. Git sources lost by the v11.3.0 upgrade come back on the first start. Refresh the targets once so the repository files outside the catalog are listed too.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.4.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.3.0 — Git: .gitignore helper and optional CI integration
+
+#### 🧹 .gitignore helper
 
 - A new **.gitignore** tab in the Git workspace collects candidates per service: files that exist **only on servers** (from the latest checks, with size and the servers they were seen on), **standard patterns** for Python, Node, Go, Java, Docker and IDE files (pre-selected when the repository uses them) and the service's **protected** per-host globs.
 - **Warnings** about committed secrets or per-host configuration (`.env`, `*.pem`, `*.key`, `*credentials*`, files matching the protected globs) with the advice to commit a `.example` template instead.
 - Edit the service's catalog **exclude / protected** lists on the same screen, and **preview** the new `.gitignore` as a diff against the current one.
 - The output is a **download**. A **merge request** (GitLab) or **pull request** (GitHub) on a new branch is created **only when you choose it** and type the repository name; it needs an optional, encrypted **write token** on the Git source and the new policy **`git_gitignore_mr`** (administrators by default). Audited as `git.gitignore_mr`.
 
-### 🔗 Optional CI integration
+#### 🔗 Optional CI integration
 
 - **Webhook per Git source:** GitLab push / tag events, GitHub push / release events (HMAC-signed) or a POST from Jenkins or any CI start an **immediate check** of the affected services. Rate-limited, audited, replays refused.
 - **Bundles from CI artifacts:** fetch the newest bundle from a GitLab job artifact, a Jenkins artifact or any HTTPS URL (with an auth header), by hand or on a schedule, and use it as the offline source.
 - **Deploy method "CI pipeline"** for services built elsewhere: *Update* triggers a **Jenkins** job (`buildWithParameters`) or a **GitLab pipeline** (trigger token) with `server`, `install_path` and `version`; WRM follows the status and shows the result and a link in the run history. Same confirmation, policies and audit as a normal update.
 - Everything is opt-in: WRM keeps working without any CI.
 
-### ⬆️ Upgrading from v11.2.0
+#### ⬆️ Upgrading from v11.2.0
 
 Replace the binary. The database gets two new tables (`git_feeds`, `git_pipelines`) and new columns on `git_sources`; the previous binary still starts on it. Only administrators may open .gitignore merge requests until you change `git_gitignore_mr` in *Admin → Policies*. Behind a reverse proxy that filters paths, forward `/api/hooks/git/` for webhooks.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.3.0/CHANGELOG.md) for details.
 
 ---
 

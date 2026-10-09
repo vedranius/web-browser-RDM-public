@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v11.3.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v11.4.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -67,6 +67,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Git workspace: new servers (install & transfer)](#git-workspace-new-servers-install--transfer)
    - [Git workspace: .gitignore helper](#git-workspace-gitignore-helper)
    - [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional)
+   - [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks)
    - [Network tools](#network-tools)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
    - [Search in files](#search-in-files)
@@ -129,21 +130,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v11.3.0-linux-amd64
-   ./wrm-pro-v11.3.0-linux-amd64
+   chmod +x wrm-pro-v11.4.0-linux-amd64
+   ./wrm-pro-v11.4.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v11.3.0-windows-amd64.exe
+   .\wrm-pro-v11.4.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.3.0/wrm-pro-v11.3.0-android-arm64
-   chmod +x wrm-pro-v11.3.0-android-arm64 && ./wrm-pro-v11.3.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.4.0/wrm-pro-v11.4.0-android-arm64
+   chmod +x wrm-pro-v11.4.0-android-arm64 && ./wrm-pro-v11.4.0-android-arm64
    ```
 
    **Docker**
@@ -167,6 +168,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v11.3.0
+
+Replace the binary. The database gets two new columns of `git_installs` (`last_ok_at`, `last_ok_state`); the previous binary still starts on it and ignores them.
+
+- **Git sources lost by the v11.3.0 upgrade come back:** upgrading a database from v11.2.0 or earlier to v11.3.0 set the `git_sources` table aside as `git_sources_old_<time>`. On the first start, v11.4.0 restores those sources (with their encrypted tokens) when no source exists yet; the old table is renamed to `git_sources_restored_<time>`.
+- **Every file of an installation:** the details list every file of the server folder and of the repository, with the reason for each state, and diff any repository file (also the ones the catalog excludes). **Refresh the targets once** so the targets keep their full commit and the repository files outside the catalog are listed too. See [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks).
+- **Partial checks:** select installations, servers or services and check only those (or only stale ones); results stream in and can be cancelled. Two new settings: `git_check_parallel` (8) and `git_check_per_server` (2).
 
 ## Upgrading from v11.2.0
 
@@ -762,6 +771,27 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 - **Periodic checks** (*Settings → Periodic checks*): while WRM runs, the chosen servers are checked every `git_check_interval_minutes` (60). Checks never change anything. They notify (one digest per round) about **a new version** of a service, **drift** (an installation that turns to *review*) and **unreachable servers** — subscribe to the *Git* events in *Settings → Notifications*.
 - Everything is per user (sources, catalog, installations). Policies `git_enabled` (hides the workspace), `git_checks` (who may run checks: everyone), `git_check_interval_minutes`, `git_backup_words`. Checks, bundle imports / exports, source and catalog changes and viewed diffs are audited (`git.*`).
 
+### Git workspace: every file and partial checks
+
+**Every file of an installation.** The details of an installation (click it in the overview, or *Details*) read the server folder once and list **every file** — not only the ones the catalog tracks — together with every file of the repository at the target ref below the service's subdirectory:
+
+- **Columns:** path, size, modification time, state and **why**: *tracked*, *excluded by the catalog* (with the pattern, e.g. `setup.py` or `tests`), *not in the include list*, *protected* (with the pattern), *not in Git* (only on the server), *written by the deploy tool* (`VERSION.md`, `updates.jsonl`), *compiled file*, *in Git, not tracked*.
+- **States:** tracked files as in checks (*ok*, *old*, *modified*, *missing*); files the catalog does not track are *same*, *differs* or *not compared*; *extra* (only on the server), *missing* (only in Git), *symlink* (the target is shown, a symlink is **never followed**, and one that points out of the installation is marked), *unreadable* (permission denied, also for directories).
+- The catalog's `ignore_dirs`, backup-looking paths and `.git`, `.deploy-bak`, `node_modules`, `__pycache__`, virtual environments are left out; at most 10 000 entries are listed (a notice says when the folder has more).
+- **Filters:** *All*, *Differing*, *Tracked only*, *Not tracked*, and a search.
+- **Open** shows any file (view only, up to about 1.9 MB; binary files show their size and hash), from the server or from Git. **Diff** compares server ↔ Git for **any file in the repository** — also files the catalog excludes, labelled *informational, not updated* — unified or side by side; line endings are ignored like in the hashing. Binary and large files are compared by hash.
+- Files the catalog does not track are **informational**: they never change the state of an installation (*review* / *needs update* / *up to date* still come from the tracked files only).
+- **Commits behind:** when `VERSION.md` names a commit (or a version), the details show how many commits the target is ahead and lists them (GitLab / GitHub compare API).
+- Server files are read over SSH with quoted paths and POSIX tools only, never cached by WRM. Opening a file is audited (`git.file_viewed`). The other repository files come from the cached tree of the target commit; their contents are fetched and cached like target files (at most 200 unknown files per listing).
+
+**Partial and incremental checks.** In the overview and on the *Installations* tab:
+
+- **Filters** by service, server, state (including *not checked*), environment, folder, tag and a search that also matches the host.
+- **Selection:** a checkbox on every installation, every server row and every service column (and *all visible*). *Check selected*, *Check visible* (what the filters show), *↻ Check this cell*, *Check only stale* (never checked, or older than 1 hour / 24 hours / 7 days). *Check now* in the header still checks everything (discovery on the servers of *Settings* and fresh targets).
+- **Streaming:** a check runs as a job in the background; each installation is saved as soon as it is compared and shows a spinner while it is queued or being checked. *Cancel* skips what is queued and drops the scans that are running.
+- **Limits:** `git_check_per_server` (2) installations of one server and `git_check_parallel` (8) installations overall at the same time.
+- Installations that are not part of a check keep their result and show *checked X ago*. A failed check keeps the files and counts of the **last good result** and shows it next to the error.
+
 ### Git workspace: update, upgrade, rollback & restarts
 
 Runs change servers only when you start or schedule them. Select installations on the *Installations* tab (or open one) and choose an action; a run works on the installations **one after another** and **stops at the first failure** (*rolling*). Everything goes over SSH with POSIX tools (`sh`, `cp`, `mv`, `find`, `awk`, `tr`, `sha256sum`).
@@ -1174,6 +1204,8 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `git_checks` | `all` | who may run Git checks (discovery and comparison over SSH, read-only): `off`, `admins`, `all` |
 | `git_check_interval_minutes` | `60` | interval of periodic Git checks for users who turned them on (0 = none, up to 10080) |
 | `git_backup_words` | `bkp,backup,bak,old,…` | path segments with one of these words are treated as copies / backups by Git discovery and comparison |
+| `git_check_parallel` | `8` | how many installations a Git check compares at the same time, over all servers (1–64) |
+| `git_check_per_server` | `2` | how many installations of one server a Git check compares at the same time (SSH sessions on one login, 1–8) |
 | `git_update` / `git_upgrade` / `git_rollback` / `git_restart` | `admins` | who may update (and stamp), upgrade, roll back installations and restart their units: `off`, `admins`, `all` |
 | `git_install` / `git_transfer` | `admins` | who may install services on a new server and transfer installations between servers: `off`, `admins`, `all` |
 | `git_gitignore_mr` | `admins` | who may open a .gitignore merge request (GitLab) / pull request (GitHub) from the helper: `off`, `admins`, `all` |
@@ -1226,7 +1258,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v11.3.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v11.4.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1510,7 +1542,13 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/check` | `{conn_ids (empty = the chosen servers), discover, refresh}` → `{result: {servers, installs, targets}, state}` |
 | POST | `/api/git/installs` | `{conn_id, path, app, env}` (added by hand) |
 | GET / DELETE | `/api/git/installs/{id}` | Details with file states / forget |
-| GET | `/api/git/installs/{id}/diff?path=` | `{lines: [{op: " "\|"-"\|"+"\|"@", a, b, s}], binary, truncated}` (server → target) |
+| GET | `/api/git/installs/{id}/diff?path=` | `{lines: [{op: " "\|"-"\|"+"\|"@", a, b, s}], state, tracked, informational, reason, pattern, same, binary, too_big, missing_on_server, truncated}` (server → target; any file in the repository except protected ones) |
+| GET | `/api/git/installs/{id}/files` | Every file of the folder and of the repository: `{files: [{path, kind, size, mtime, link, outside, on_server, in_git, tracked, state, reason, pattern, diffable, viewable}], truncated, git_partial, not_compared, target}` |
+| GET | `/api/git/installs/{id}/file?path=&side=server\|git` | One file for viewing: `{side, size, hash, text \| binary \| too_big}` |
+| GET | `/api/git/installs/{id}/commits` | `{from, to, count, commits: [{sha, title, author, date}]}` between `VERSION.md`'s commit and the target |
+| POST | `/api/git/check/jobs` | `{install_ids, conn_ids, all, discover, refresh, stale_minutes, only_never}` → a check job (one at a time) |
+| GET | `/api/git/check/jobs/current?since=N` | `{job: {id, state, phase, total, done, seq, items: [{install_id, state, error}], installs}}` (installations finished after `N`) |
+| POST | `/api/git/check/jobs/current/cancel` | Cancel the running check job |
 | POST | `/api/git/plan` | `{kind: "update"\|"upgrade"\|"stamp", ref, install_ids}` → `{items: [{install_id, prod, units, from_version, target, current, files: [{path, state, selected, local}], removed, counts, eligible}]}` |
 | GET | `/api/git/installs/{id}/backups` | Backups in `.deploy-bak` with their files, `VERSION.md` and `updates.jsonl` line (policy `git_rollback`) |
 | POST | `/api/git/runs` | Start or schedule a run: `{kind: "update"\|"upgrade"\|"rollback"\|"stamp"\|"restart", ref, items: [{install_id, files, modified_ok, backup}], restart: {mode: "none"\|"now"\|"at"\|"delay", at, delay_minutes}, schedule_at, checks: {service: command}, ignore_imports, force, set_ref_override, confirm: {install_id: server name}}`. Install / transfer (right away): `{kind: "install"\|"transfer", provision: {conn_id, services: [{app, ref: ""\|"bundle:<id>"\|branch\|"tag:…", path, env, files: [{path, mode: "template"\|"copy"\|"manual"\|"skip", template, values: {field id: {value} \| {cred_id, part}}, from_install, content}], unit: {kind: "systemd"\|"supervisor", name, user, command, work_dir, enable}}], source_install, path, env, unit, overwrite, confirm: server name}, restart: {mode: "none"\|"now"}, checks}` |
@@ -1656,6 +1694,8 @@ remote-manager/
   git_template.go   templates of per-host files: destinations, fields, filling, slots
   git_gitignore.go  .gitignore helper: candidates, warnings, preview, merge / pull request
   git_ci.go         optional CI: webhooks, bundles from CI artifacts, CI pipeline deploy method
+  git_files.go      every file of an installation: listing with reasons, view, diff of any repository file, commits behind
+  git_jobs.go       check jobs: partial, streamed and cancellable checks with concurrency limits
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
   nettools.go     network tools: port check, ping, traceroute, DNS, HTTP/TLS check, from WRM or a server
@@ -1677,6 +1717,7 @@ remote-manager/
   git_test.go          Git workspace: fake GitLab / GitHub, branch-aware tags, blob cache, bundles, catalog, discovery and comparison on a fake SSH host, notifications
   git_deploy_test.go   Git deploy: VERSION.md / updates.jsonl formats, dangling imports; update, CRLF, protected files, stamp, rollback, failed check → rollback, scheduled restart (fake SSH host)
   git_gitignore_test.go  .gitignore helper: candidates from a check, preview, download, merge request only on explicit choice (fake GitLab), pull request (fake GitHub)
+  git_files_test.go      every file of an installation (reasons, excluded file diff, symlinks, unreadable, quoting, commits) and check jobs (partial, stale, limits, cancel, last good result)
   git_ci_test.go         webhooks (GitLab token, GitHub HMAC, generic token / HMAC, replays, rate limit), artifact feed fetch and schedule, Jenkins job and GitLab pipeline runs
   git_provision_test.go  Git install / transfer: templates, exclusions, units; install from the fake GitLab and from a bundle, vault values, overwrite refusal and backup, transfer A → B, policies
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
@@ -1752,6 +1793,8 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Git: the restart fails or the unit is not *active* | The SSH user must be root or allowed `sudo -n systemctl restart …` / `supervisorctl` without a password. The run shows the output of `systemctl is-active` / `supervisorctl status` |
 | Git: an install or transfer stops at *Pre-checks* | The message names the problem: free space (`df`), a directory the SSH user cannot write (use a writable root or a user with rights), `tar` missing, or an existing installation (tick *Replace it* and type the server name) |
 | Git: *the unit … exists already* or *cannot write* the unit | WRM never overwrites a unit file: choose another name. Writing units needs root or `sudo -n tee` without a password. The files of the installation stay installed |
+| Git: the file list says *only the catalog's files of the repository are known* | The target was computed by an earlier version or comes from a bundle: *Refresh targets* (bundles only contain the catalog's files) |
+| Git: *A check is already running* | One check per user runs at a time (also the periodic one and webhook checks). Wait for it or press *Cancel* in the check bar |
 | Git: a template field is not offered | Fields are placeholders (`{{ name }}`, `${NAME}`, `__NAME__`, `@NAME@`, `<NAME>`) and simple `key = value` / `key: value` lines; nested YAML / JSON values are not fields — type the file or copy it from another installation instead |
 | Git: a scheduled run was *skipped* | WRM was not running at its time for longer than `git_schedule_grace_minutes`, the update it waited for failed, or the action is no longer allowed for the account |
 | Git: `HTTP 401` / `403` from the Git server | Check the token (read access to the API and repositories) in *Settings → Git sources*; 403 can also be the API rate limit |
