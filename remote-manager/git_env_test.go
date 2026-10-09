@@ -198,7 +198,7 @@ func TestGitEnvDeployDryRunAndRollback(t *testing.T) {
 			Current string `json:"current"`
 		} `json:"dests"`
 	}
-	if code := e.u.jsonDo("GET", "/api/git/env/history?app=demo-api&env=test", nil, &hist); code != 200 || len(hist.Entries) != 1 || len(hist.Entries[0]["servers"].([]interface{})) != 2 || hist.Dests[1].Current != id {
+	if code := e.u.jsonDo("GET", "/api/git/env/history?app=demo-api&env=test", nil, &hist); code != 200 || len(hist.Entries) != 2 || hist.Entries[0]["dest"] != 0.0 || hist.Entries[1]["path"] != d1 || hist.Dests[1].Current != id {
 		t.Fatalf("history api: %d %+v", code, hist)
 	}
 	// the overview cell
