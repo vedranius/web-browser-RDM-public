@@ -280,6 +280,96 @@ Object.assign(LANGS.hr, {
   git_commits_range: '{f} → {t}', git_commits_more: 'Prikazano je najnovijih {n}.',
 });
 
+// v11.5.0: environments, deploy plans and safe deploys
+Object.assign(LANGS.en, {
+  git_tab_envs: 'Environments', genv_lazy_h: 'Every cell is read from its servers when it is shown.',
+  genv_none: 'No service has environments yet. Add them with ✎ below: ordered destinations (server:/path) and the rules of each environment.',
+  genv_services: 'Environments per service', genv_services_h: 'Services without environments keep working with Update, Upgrade and Rollback as before.',
+  genv_edit: 'Environments', genv_deploy: 'Deploy', genv_history: 'History', genv_doctor: 'Doctor', genv_n_dests: '{n} destination(s)…',
+  genv_drift: 'The servers of this environment differ', genv_not_deployed: 'not deployed yet', genv_no_state: 'no deploy state (VERSION.md only)',
+  genv_locked_by: 'locked by {user} from {from}', genv_stale: 'stale',
+  genv_edit_title: 'Environments of {app}', genv_edit_h: 'Destinations are deployed in this order; a rollback goes backwards. The server is the name of an SSH connection.',
+  genv_none_app: 'No environments yet.', genv_add: 'Add environment', genv_remove: 'Remove', genv_name: 'Name', genv_keep: 'Backups to keep',
+  genv_state_dir: 'State directory', genv_state_dir_ph: 'empty = <path>/.deploy-bak', genv_dests: 'Destinations (server:/path, in order)',
+  genv_dests_h: 'One per line, e.g. app-01:/opt/demo-api', genv_allowed: 'Allowed refs (empty = any)', genv_ignore: 'Extra ignore patterns',
+  genv_post: 'post_deploy command', genv_post_h: 'Runs in the app directory after the files, only when you tick it for a deploy or rollback.',
+  genv_confirm: 'Ask to type the environment name before a deploy',
+  genv_plan_title: 'Deploy {app} → {env}', genv_comparing: 'Comparing every destination with the repository…', genv_ref: 'Ref',
+  genv_ref_ph: 'empty = the service target; tag:v2 or a branch', genv_compare: 'Compare',
+  genv_fs_new: 'new', genv_fs_changed: 'changed', genv_fs_eol: 'same (CRLF/LF)', genv_fs_same: 'same', genv_fs_removed: 'removed from Git',
+  genv_fs_extra: 'only on the server', genv_fs_protected: 'protected', genv_fs_ignored: 'ignored', genv_symlink: 'symlink on the server',
+  genv_excluded_by: 'excluded by {by} · {at}', genv_include_h: 'Untick to leave this file out of this deploy (remembered for the next compare)',
+  genv_excl_svc: 'service', genv_excl_env: 'environment', genv_excl_svc_h: 'Exclude permanently for the whole service (catalog exclude)',
+  genv_excl_env_h: 'Exclude permanently in this environment only', genv_excl_q: 'Exclude {path} permanently ({scope})? An anchored pattern is written and the plan is compared again.',
+  genv_excl_added: 'Pattern added: {p}', genv_excl_covered: 'Already covered by {p}', genv_current: 'current: {v} ({id}) · {by} · {at}',
+  genv_dir_to_file: 'The branch turns the directory {path} into a file; these server files must be deleted:',
+  genv_file_to_dir: 'The branch turns the file {path} into a directory; it must be deleted:',
+  genv_unlock: 'Remove the stale lock',
+  genv_unlock_q: 'Remove the lock of {user} from {from} (deploy {id})? Only do this when no deploy is running there. The server checks again that it is the same, stale lock.',
+  genv_unlocked: 'The lock was removed', genv_options: 'Options', genv_n_excluded: '{n} file(s) left out of this deploy',
+  genv_clear_excl: 'Clear remembered exclusions', genv_delete_removed: 'Delete files removed from the repository ({n})', genv_run_post: 'Run post_deploy:',
+  genv_no_post: 'This environment has no post_deploy command.', genv_restart: 'Restart the units of each destination after its files (now)',
+  genv_dry_run: 'Dry run', genv_deploy_go: 'Deploy…', genv_plan_used: 'This plan was applied already: compare again.',
+  genv_confirm_title: 'Deploy {app} {v} to {env}?', genv_confirm_list: 'Destinations, in this order:', genv_type_env: 'Type the environment name {env} to confirm',
+  genv_back: 'Back to the plan', genv_history_title: 'History of {app} · {env}', genv_when: 'When', genv_action: 'Action', genv_id: 'Deploy id', genv_who: 'Who',
+  genv_version: 'Version', genv_previous: 'Previous', genv_servers: 'Servers', genv_files: 'Files', genv_history_empty: 'No deploys are recorded on these servers yet.',
+  genv_l_new: 'New', genv_l_changed: 'Changed', genv_l_deleted: 'Deleted', genv_l_excluded: 'Excluded', genv_l_restored: 'Restored', genv_l_moved_aside: 'Moved aside',
+  genv_l_skipped: 'Skipped (symlinks)', genv_l_moved: 'Arrived before the interruption', genv_rollback: 'Roll back…', genv_rb_title: 'Roll back deploy {id}',
+  genv_rb_h: 'Destinations are rolled back in reverse order. Files the deploy added and the current versions are moved to backups/rollback-<id>/ in the state directory; nothing is deleted.',
+  genv_rb_latest: 'latest deploy here', genv_rb_not_latest: 'not the latest (current: {id})', genv_rb_go: 'Roll back…', genv_rb_confirm: 'Roll back {id} on {n} destination(s)?',
+  genv_rb_none: 'Choose at least one destination.', genv_doctor_title: 'Access doctor: {app} · {env}', genv_doctor_running: 'Checking every destination…',
+  genv_chk_ssh: 'SSH', genv_chk_shell: 'Shell', genv_chk_user: 'User', genv_chk_path: 'App directory', genv_chk_state: 'State directory', genv_chk_unreadable: 'Subdirectories',
+  genv_chk_method: 'Deploy method', genv_chk_webroot: 'Web root', genv_chk_sha256sum: 'sha256sum', genv_chk_rsync: 'rsync', genv_chk_tar: 'tar', genv_chk_lock: 'Lock',
+  genv_dry: 'dry run', genv_partial: 'Interrupted transfer: {n} file(s) had arrived (removed again); nothing was changed.', genv_skipped: 'Skipped (symlinks on the server)',
+  genv_result: 'Result', genv_blocked: 'Fix the errors above first.',
+  git_step_lock: 'Lock', git_step_unlock: 'Unlock', git_step_plan: 'Plan', git_step_dry_run: 'Dry run', git_step_transfer: 'Transfer', git_step_state: 'State',
+  git_step_history: 'History', git_step_post_deploy: 'post_deploy', git_step_restore: 'Restore',
+});
+Object.assign(LANGS.hr, {
+  git_tab_envs: 'Okruženja', genv_lazy_h: 'Svaka se ćelija čita sa svojih servera kad se prikaže.',
+  genv_none: 'Nijedan servis još nema okruženja. Dodajte ih gumbom ✎ ispod: poredana odredišta (server:/putanja) i pravila svakog okruženja.',
+  genv_services: 'Okruženja po servisu', genv_services_h: 'Servisi bez okruženja i dalje rade s Ažuriraj, Nadogradi i Vrati kao prije.',
+  genv_edit: 'Okruženja', genv_deploy: 'Isporuka', genv_history: 'Povijest', genv_doctor: 'Dijagnostika', genv_n_dests: 'odredišta: {n}…',
+  genv_drift: 'Serveri ovog okruženja se razlikuju', genv_not_deployed: 'još nije isporučeno', genv_no_state: 'nema stanja isporuke (samo VERSION.md)',
+  genv_locked_by: 'zaključao {user} s {from}', genv_stale: 'zastarjelo',
+  genv_edit_title: 'Okruženja servisa {app}', genv_edit_h: 'Odredišta se isporučuju ovim redom; vraćanje ide unatrag. Server je naziv SSH veze.',
+  genv_none_app: 'Još nema okruženja.', genv_add: 'Dodaj okruženje', genv_remove: 'Ukloni', genv_name: 'Naziv', genv_keep: 'Broj sigurnosnih kopija',
+  genv_state_dir: 'Direktorij stanja', genv_state_dir_ph: 'prazno = <putanja>/.deploy-bak', genv_dests: 'Odredišta (server:/putanja, redom)',
+  genv_dests_h: 'Jedno po retku, npr. app-01:/opt/demo-api', genv_allowed: 'Dopušteni refovi (prazno = svi)', genv_ignore: 'Dodatni uzorci za ignoriranje',
+  genv_post: 'Naredba post_deploy', genv_post_h: 'Pokreće se u direktoriju aplikacije nakon datoteka, samo kad je označite za isporuku ili vraćanje.',
+  genv_confirm: 'Traži upis naziva okruženja prije isporuke',
+  genv_plan_title: 'Isporuka {app} → {env}', genv_comparing: 'Usporedba svakog odredišta s repozitorijem…', genv_ref: 'Ref',
+  genv_ref_ph: 'prazno = cilj servisa; tag:v2 ili grana', genv_compare: 'Usporedi',
+  genv_fs_new: 'nova', genv_fs_changed: 'izmijenjena', genv_fs_eol: 'ista (CRLF/LF)', genv_fs_same: 'ista', genv_fs_removed: 'uklonjena iz Gita',
+  genv_fs_extra: 'samo na serveru', genv_fs_protected: 'zaštićena', genv_fs_ignored: 'ignorirana', genv_symlink: 'simbolička veza na serveru',
+  genv_excluded_by: 'izostavio {by} · {at}', genv_include_h: 'Odznačite da datoteka ne ide u ovu isporuku (pamti se za sljedeću usporedbu)',
+  genv_excl_svc: 'servis', genv_excl_env: 'okruženje', genv_excl_svc_h: 'Trajno izostavi za cijeli servis (exclude u katalogu)',
+  genv_excl_env_h: 'Trajno izostavi samo u ovom okruženju', genv_excl_q: 'Trajno izostaviti {path} ({scope})? Upisuje se usidreni uzorak i plan se ponovno uspoređuje.',
+  genv_excl_added: 'Dodan uzorak: {p}', genv_excl_covered: 'Već obuhvaćeno uzorkom {p}', genv_current: 'trenutno: {v} ({id}) · {by} · {at}',
+  genv_dir_to_file: 'Grana pretvara direktorij {path} u datoteku; ove datoteke na serveru moraju se obrisati:',
+  genv_file_to_dir: 'Grana pretvara datoteku {path} u direktorij; mora se obrisati:',
+  genv_unlock: 'Ukloni zastarjelu bravu',
+  genv_unlock_q: 'Ukloniti bravu korisnika {user} s {from} (isporuka {id})? Učinite to samo ako ondje ne teče nijedna isporuka. Server ponovno provjerava da je to ista, zastarjela brava.',
+  genv_unlocked: 'Brava je uklonjena', genv_options: 'Opcije', genv_n_excluded: 'Izostavljenih datoteka u ovoj isporuci: {n}',
+  genv_clear_excl: 'Očisti zapamćena izostavljanja', genv_delete_removed: 'Obriši datoteke uklonjene iz repozitorija ({n})', genv_run_post: 'Pokreni post_deploy:',
+  genv_no_post: 'Ovo okruženje nema naredbu post_deploy.', genv_restart: 'Ponovno pokreni jedinice svakog odredišta nakon njegovih datoteka (odmah)',
+  genv_dry_run: 'Probno izvođenje', genv_deploy_go: 'Isporuči…', genv_plan_used: 'Ovaj je plan već primijenjen: ponovno usporedite.',
+  genv_confirm_title: 'Isporučiti {app} {v} u {env}?', genv_confirm_list: 'Odredišta, ovim redom:', genv_type_env: 'Za potvrdu upišite naziv okruženja {env}',
+  genv_back: 'Natrag na plan', genv_history_title: 'Povijest: {app} · {env}', genv_when: 'Kada', genv_action: 'Radnja', genv_id: 'Oznaka isporuke', genv_who: 'Tko',
+  genv_version: 'Verzija', genv_previous: 'Prethodno', genv_servers: 'Serveri', genv_files: 'Datoteke', genv_history_empty: 'Na ovim serverima još nema zabilježenih isporuka.',
+  genv_l_new: 'Nove', genv_l_changed: 'Izmijenjene', genv_l_deleted: 'Obrisane', genv_l_excluded: 'Izostavljene', genv_l_restored: 'Vraćene', genv_l_moved_aside: 'Premještene u stranu',
+  genv_l_skipped: 'Preskočene (simboličke veze)', genv_l_moved: 'Stigle prije prekida', genv_rollback: 'Vrati…', genv_rb_title: 'Vraćanje isporuke {id}',
+  genv_rb_h: 'Odredišta se vraćaju obrnutim redom. Datoteke koje je isporuka dodala i trenutne verzije premještaju se u backups/rollback-<id>/ u direktoriju stanja; ništa se ne briše.',
+  genv_rb_latest: 'ovdje zadnja isporuka', genv_rb_not_latest: 'nije zadnja (trenutna: {id})', genv_rb_go: 'Vrati…', genv_rb_confirm: 'Vratiti {id} na odredištima: {n}?',
+  genv_rb_none: 'Odaberite barem jedno odredište.', genv_doctor_title: 'Dijagnostika pristupa: {app} · {env}', genv_doctor_running: 'Provjera svakog odredišta…',
+  genv_chk_ssh: 'SSH', genv_chk_shell: 'Ljuska', genv_chk_user: 'Korisnik', genv_chk_path: 'Direktorij aplikacije', genv_chk_state: 'Direktorij stanja', genv_chk_unreadable: 'Poddirektoriji',
+  genv_chk_method: 'Način isporuke', genv_chk_webroot: 'Web korijen', genv_chk_sha256sum: 'sha256sum', genv_chk_rsync: 'rsync', genv_chk_tar: 'tar', genv_chk_lock: 'Brava',
+  genv_dry: 'probno', genv_partial: 'Prekinut prijenos: stiglo je datoteka: {n} (ponovno uklonjene); ništa nije promijenjeno.', genv_skipped: 'Preskočeno (simboličke veze na serveru)',
+  genv_result: 'Rezultat', genv_blocked: 'Najprije ispravite pogreške iznad.',
+  git_step_lock: 'Zaključavanje', git_step_unlock: 'Otključavanje', git_step_plan: 'Plan', git_step_dry_run: 'Probno izvođenje', git_step_transfer: 'Prijenos', git_step_state: 'Stanje',
+  git_step_history: 'Povijest', git_step_post_deploy: 'post_deploy', git_step_restore: 'Vraćanje datoteka',
+});
+
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const $ = id => document.getElementById(id);
@@ -422,6 +512,17 @@ Object.assign(LANGS.hr, {
 #git-modal .g-dhead { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 12px 0 6px; }
 #git-modal .g-dhead h3 { margin: 0; flex: 1 1 200px; }
 #git-modal .g-commits table td { white-space: normal; }
+#git-modal .s-enew, #git-modal .s-echanged { background: rgba(245,158,11,.14); color: var(--yellow); }
+#git-modal .s-eeol { background: rgba(139,92,246,.16); color: var(--purple); }
+#git-modal .s-esame { background: rgba(34,197,94,.10); color: var(--green); }
+#git-modal .s-eremoved { background: rgba(239,68,68,.14); color: var(--red); }
+#git-modal .s-eextra, #git-modal .s-eprotected, #git-modal .s-eignored { background: var(--bg4); color: var(--text2); }
+#git-modal .g-cellbtn { background: transparent; border: 1px dashed var(--border2); color: var(--text2); border-radius: 6px; padding: 1px 7px; font-size: 11px; cursor: pointer; }
+#git-modal .g-cellbtn:hover { border-color: var(--accent); color: var(--text); }
+#git-modal .g-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+#git-modal .g-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+#git-modal details summary { cursor: pointer; }
+#git-ws .g-envcell .g-inst { cursor: default; }
 @media (max-width: 640px) { #git-modal { padding: 8px 4px; } #git-modal .g-dlg { padding: 12px 10px; } #git-modal .g-hm { display: none; } #git-modal .g-flist { max-height: 55vh; } }
 `;
 
@@ -455,7 +556,7 @@ Object.assign(LANGS.hr, {
 
   function render() {
     const s = G.state;
-    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'runs', 'gitignore', 'settings'].map(k =>
+    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'envs', 'runs', 'gitignore', 'settings'].map(k =>
       `<button class="${G.tab === k ? 'on' : ''}" onclick="gitWorkspace.tab('${k}')">${esc(t('git_tab_' + k))}</button>`).join('');
     $('git-last').textContent = `${t('git_last_check')}: ${s.last_check_at ? fmtTime(s.last_check_at) : t('git_never')}`;
     $('git-check').disabled = !s.can_check || G.busy || jobRunning();
@@ -466,11 +567,12 @@ Object.assign(LANGS.hr, {
     else if (G.tab === 'services') body.innerHTML = servicesHTML();
     else if (G.tab === 'installs') body.innerHTML = installsHTML();
     else if (G.tab === 'runs') body.innerHTML = runsHTML();
+    else if (G.tab === 'envs') { body.innerHTML = envsHTML(); if (E.ov) envCells(); }
     else if (G.tab === 'gitignore') body.innerHTML = ignoreHTML();
     else body.innerHTML = settingsHTML();
   }
 
-  function setTab(k) { G.tab = k; render(); if (k === 'runs') loadRuns(); if (k === 'gitignore' && !I.info && !I.loading) ignoreLoad(); }
+  function setTab(k) { G.tab = k; render(); if (k === 'runs') loadRuns(); if (k === 'envs' && !E.ov) envLoad(); if (k === 'gitignore' && !I.info && !I.loading) ignoreLoad(); }
 
   // ── overview ──
   function filtered() {
@@ -704,6 +806,7 @@ Object.assign(LANGS.hr, {
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="ga-save">${esc(t('git_save'))}</button></div>`);
     $('ga-save').onclick = async () => {
       const app = readAppForm();
+      if (a.environments) app.environments = a.environments;
       const r = await fetch('/api/git/catalog/apps/' + encodeURIComponent(name || app.name), json('PUT', app));
       if (!r.ok) { showToast(await apiError(r), 'error'); return; }
       G.state = await r.json();
@@ -1761,6 +1864,295 @@ Object.assign(LANGS.hr, {
     return true;
   }
 
+  // ── environments: overview, editor, plan and deploy, history and rollback, doctor ──
+  const E = {cells: {}, ov: null, plan: null, excl: new Set(), showAll: false, opts: {}};
+  const envKey = (app, env) => app + '\u0000' + env;
+  const ENV_ACT = ['new', 'changed', 'eol', 'removed'];
+  const envBadge = s => `<span class="g-st s-e${esc(s)}">${esc(t('genv_fs_' + s))}</span>`;
+  const envEnc = (app, env) => `app=${encodeURIComponent(app)}&env=${encodeURIComponent(env)}`;
+  const errModal = async (title, r) => modal(`<h3>${esc(title)}</h3><div class="hint-box bad">${esc(await apiError(r))}</div><div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
+
+  async function envLoad() {
+    const r = await fetch('/api/git/env/overview');
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    E.ov = await r.json();
+    if (G.tab === 'envs' && $('git-body')) { $('git-body').innerHTML = envsHTML(); envCells(); }
+  }
+  function envRefresh() { E.cells = {}; E.ov = null; if ($('git-body')) $('git-body').innerHTML = envsHTML(); envLoad(); }
+  function envOf(app, env) { const s = ((E.ov || {}).services || []).find(x => x.app === app); return (s && s.envs.find(x => x.name === env)) || null; }
+
+  function envsHTML() {
+    const ov = E.ov;
+    if (!ov) return `<div class="hint-box">⏳</div>`;
+    let html = `<div class="g-bar"><button class="btn-sec btn-sm" onclick="gitWorkspace.envRefresh()">↻ ${esc(t('git_refresh'))}</button><span class="g-mut">${esc(t('genv_lazy_h'))}</span></div>`;
+    if (!ov.services.length) html += `<div class="hint-box">${esc(t('genv_none'))}</div>`;
+    else html += `<div class="g-card g-scroll"><table class="g-matrix"><tr><th>${esc(t('git_service'))}</th>${ov.envs.map(n => `<th>${esc(n)}</th>`).join('')}</tr>` +
+      ov.services.map(s => `<tr><td><b>${esc(s.app)}</b><div><button class="g-cellbtn" onclick="gitWorkspace.envEdit('${esc(s.app)}')">✎ ${esc(t('genv_edit'))}</button></div></td>${ov.envs.map(n => {
+        const e = s.envs.find(x => x.name === n);
+        return e ? `<td class="g-cell g-envcell" data-app="${esc(s.app)}" data-env="${esc(n)}">${envCellHTML(s.app, e)}</td>` : '<td class="g-mut">—</td>'; }).join('')}</tr>`).join('') + '</table></div>';
+    const apps = G.state.catalog.apps;
+    html += `<div class="g-card"><h3>${esc(t('genv_services'))}</h3><div class="g-mut">${esc(t('genv_services_h'))}</div><div class="g-actions" style="margin-top:8px">${apps.map(a =>
+      `<button class="btn-sec btn-sm" onclick="gitWorkspace.envEdit('${esc(a.name)}')">✎ ${esc(a.name)} (${(a.environments || []).length})</button>`).join('') || `<span class="g-mut">${esc(t('git_empty_overview'))}</span>`}</div></div>`;
+    return html;
+  }
+
+  function envCellHTML(app, e) {
+    const c = E.cells[envKey(app, e.name)];
+    const a = `'${esc(app)}','${esc(e.name)}'`;
+    const btns = `<div class="g-actions" style="margin-top:4px">${can('update') ? `<button class="g-cellbtn" onclick="gitWorkspace.envPlan(${a})">▶ ${esc(t('genv_deploy'))}</button>` : ''}
+      <button class="g-cellbtn" onclick="gitWorkspace.envHistory(${a})">🕘 ${esc(t('genv_history'))}</button><button class="g-cellbtn" onclick="gitWorkspace.envDoctor(${a})">🩺 ${esc(t('genv_doctor'))}</button></div>`;
+    if (!c) return `<div class="g-mut"><span class="g-spin"></span> ${esc(tf('genv_n_dests', {n: e.destinations.length}))}</div>${btns}`;
+    if (c.error) return `<div class="hint-box bad">${esc(c.error)}</div>${btns}`;
+    const d = c.data;
+    return (d.drift ? `<div><span class="g-st s-review">⚠ ${esc(t('genv_drift'))}</span></div>` : '') + d.dests.map(x => {
+      const cur = x.current;
+      const ver = cur ? cur.version : x.version_md;
+      const commit = cur ? String(cur.commit || '').slice(0, 10) : x.commit_md;
+      const behind = x.behind > 0 ? ` <span class="g-st s-update">${esc(tf('git_behind', {n: x.behind}))}</span>` : x.behind === 0 ? ` <span class="g-st s-ok">${esc(t('git_st_ok'))}</span>` : '';
+      return `<div class="g-inst"><b>${esc(x.server)}</b> <span class="g-mono g-mut">${esc(x.path)}</span>
+        ${x.error ? `<div><span class="g-st s-error">${esc(x.error)}</span></div>` : !x.exists ? `<div class="g-mut">${esc(t('genv_not_deployed'))}</div>`
+          : `<div><span class="g-mono">${esc(ver || '—')}</span> <span class="g-mut g-mono">${esc(commit || '')}</span>${behind}</div><div class="g-ago">${cur ? esc((cur.by || '') + ' · ' + fmtTime(cur.at)) : esc(t('genv_no_state'))}</div>`}
+        ${x.lock ? `<div class="g-q">🔒 ${esc(tf('genv_locked_by', {user: x.lock.user || '?', from: x.lock.from || '?'}))}${x.lock.stale ? ' · ' + esc(t('genv_stale')) : ''}</div>` : ''}</div>`;
+    }).join('') + btns;
+  }
+
+  // one request per cell, three at a time
+  function envCells() {
+    const todo = [...document.querySelectorAll('#git-body .g-envcell')].filter(td => !E.cells[envKey(td.dataset.app, td.dataset.env)]);
+    let i = 0;
+    const next = async () => {
+      if (i >= todo.length) return;
+      const td = todo[i++], app = td.dataset.app, env = td.dataset.env;
+      try {
+        const r = await fetch('/api/git/env/cell?' + envEnc(app, env));
+        E.cells[envKey(app, env)] = r.ok ? {data: await r.json()} : {error: await apiError(r)};
+      } catch (err) { E.cells[envKey(app, env)] = {error: String(err)}; }
+      const cell = document.querySelector(`#git-body .g-envcell[data-app="${CSS.escape(app)}"][data-env="${CSS.escape(env)}"]`), e = envOf(app, env);
+      if (cell && e) cell.innerHTML = envCellHTML(app, e);
+      return next();
+    };
+    for (let n = 0; n < 3; n++) next();
+  }
+
+  // ── environment editor ──
+  function envEdit(app) {
+    const a = G.state.catalog.apps.find(x => x.name === app);
+    if (!a) return;
+    E.edit = JSON.parse(JSON.stringify(a.environments || []));
+    paintEnvEdit(app);
+  }
+  function envFormHTML(e, i) {
+    const ta = (cls, label, v, ph) => `<div><label>${esc(t(label))}</label><textarea class="${cls}" placeholder="${esc(ph)}">${esc(v)}</textarea></div>`;
+    return `<div class="g-item ge-env" data-i="${i}"><div class="g-grid">
+      <div><label>${esc(t('genv_name'))}</label><input class="ge-name" value="${esc(e.name || '')}" placeholder="test"></div>
+      <div><label>${esc(t('genv_keep'))}</label><input class="ge-keep" type="number" min="1" max="50" value="${esc(e.keep_backups || 5)}"></div>
+      <div><label>${esc(t('genv_state_dir'))}</label><input class="ge-state" value="${esc(e.state_dir || '')}" placeholder="${esc(t('genv_state_dir_ph'))}"></div></div>
+      <div class="g-grid" style="margin-top:8px"><div><label>${esc(t('genv_dests'))}</label><textarea class="ge-dests" placeholder="app-01:/opt/demo-api">${esc((e.destinations || []).map(d => d.server + ':' + d.path).join('\n'))}</textarea><div class="g-mut">${esc(t('genv_dests_h'))}</div></div>
+      ${ta('ge-refs', 'genv_allowed', (e.allowed_refs || []).join('\n'), 'refs/heads/main\nrefs/tags/v*')}${ta('ge-ignore', 'genv_ignore', (e.ignore || []).join('\n'), t('git_lines_h'))}</div>
+      <div class="g-grid" style="margin-top:8px"><div><label>${esc(t('genv_post'))}</label><input class="ge-post" value="${esc(e.post_deploy || '')}" placeholder="./bin/migrate --yes"><div class="g-mut">${esc(t('genv_post_h'))}</div></div></div>
+      <label class="g-opt"><input type="checkbox" class="ge-confirm" ${e.confirm ? 'checked' : ''}><span>${esc(t('genv_confirm'))}</span></label>
+      <div class="g-btns" style="margin-top:4px"><button class="btn-danger btn-sm" onclick="gitWorkspace.envEditDel('${esc(e._app || '')}', ${i})">✕ ${esc(t('genv_remove'))}</button></div></div>`;
+  }
+  function paintEnvEdit(app) {
+    E.edit.forEach(e => { e._app = app; });
+    modal(`<h3>${esc(tf('genv_edit_title', {app}))}</h3><div class="g-mut">${esc(t('genv_edit_h'))}</div>
+      <div id="ge-list">${E.edit.map(envFormHTML).join('') || `<div class="hint-box">${esc(t('genv_none_app'))}</div>`}</div>
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.envEditAdd('${esc(app)}')">＋ ${esc(t('genv_add'))}</button><span style="flex:1"></span>
+      <button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="ge-save">${esc(t('git_save'))}</button></div>`);
+    $('ge-save').onclick = () => envEditSave(app);
+  }
+  function readEnvForms() {
+    return [...document.querySelectorAll('#ge-list .ge-env')].map(el => {
+      const v = c => el.querySelector(c).value.trim();
+      return {name: v('.ge-name'), keep_backups: Number(v('.ge-keep')) || 0, state_dir: v('.ge-state'), post_deploy: v('.ge-post'), confirm: el.querySelector('.ge-confirm').checked,
+        allowed_refs: lines(v('.ge-refs')), ignore: v('.ge-ignore').split('\n').map(x => x.trim()).filter(Boolean),
+        destinations: v('.ge-dests').split('\n').map(x => x.trim()).filter(Boolean).map(x => { const k = x.indexOf(':/'); return k > 0 ? {server: x.slice(0, k).trim(), path: x.slice(k + 1).trim()} : {server: x, path: ''}; })};
+    });
+  }
+  function envEditAdd(app) { E.edit = readEnvForms(); E.edit.push({name: '', destinations: [], keep_backups: 5}); paintEnvEdit(app); }
+  function envEditDel(app, i) { E.edit = readEnvForms(); E.edit.splice(i, 1); paintEnvEdit(app); }
+  async function envEditSave(app) {
+    const a = G.state.catalog.apps.find(x => x.name === app);
+    const r = await fetch('/api/git/catalog/apps/' + encodeURIComponent(app), json('PUT', Object.assign({}, a, {environments: readEnvForms()})));
+    if (!r.ok) { showToast(await apiError(r), 'error', 7000); return; }
+    G.state = await r.json();
+    closeModal(); showToast(t('git_saved'), 'success');
+    if (G.tab === 'envs') envRefresh(); else render();
+  }
+
+  // ── plan, dry run and deploy ──
+  async function envPlan(app, env, ref) {
+    E.ctx = {app, env};
+    modal(`<h3>${esc(tf('genv_plan_title', {app, env}))}</h3><div class="hint-box">⏳ ${esc(t('genv_comparing'))}</div>`);
+    const r = await fetch('/api/git/env/plan', json('POST', {app, env, ref: ref || ''}));
+    if (!r.ok) { await errModal(tf('genv_plan_title', {app, env}), r); return; }
+    E.plan = await r.json();
+    E.excl = new Set(Object.keys(E.plan.excluded || {}));
+    E.opts = {del: false, post: false, restart: false, check: ((G.state.settings || {}).check_commands || {})[app] || ''};
+    paintPlan();
+  }
+  function envRecompare() { const ref = $('ge-ref') ? $('ge-ref').value.trim() : (E.plan || {}).ref; envPlan(E.ctx.app, E.ctx.env, ref); }
+  function envSaveOpts() {
+    if (!$('ge-check')) return;
+    E.opts = {del: !!($('ge-del') || {}).checked, post: !!($('ge-post') || {}).checked, restart: !!($('ge-restart') || {}).checked, check: $('ge-check').value.trim()};
+  }
+  function paintPlan() {
+    const p = E.plan, o = E.opts, tg = p.target || {};
+    const blocked = (p.errors || []).length > 0 || p.dests.some(d => (d.errors || []).length);
+    const removed = Math.max(0, ...p.dests.map(d => (d.counts || {}).removed || 0));
+    const destHTML = d => {
+      const c = d.counts || {};
+      const files = d.files.filter(f => E.showAll || ENV_ACT.includes(f.state) || E.excl.has(f.path));
+      const rows = files.map(f => {
+        const act = ENV_ACT.includes(f.state), x = (p.excluded || {})[f.path];
+        const xb = scope => `<button class="g-cellbtn ge-x" data-p="${esc(f.path)}" data-scope="${scope}" title="${esc(t(scope === 'service' ? 'genv_excl_svc_h' : 'genv_excl_env_h'))}" onclick="gitWorkspace.envExclude(this)">⊘ ${esc(t(scope === 'service' ? 'genv_excl_svc' : 'genv_excl_env'))}</button>`;
+        return `<tr><td>${act ? `<input type="checkbox" class="ge-f" data-p="${esc(f.path)}" ${E.excl.has(f.path) ? '' : 'checked'} title="${esc(t('genv_include_h'))}" onchange="gitWorkspace.envToggle(this)">` : ''}</td>
+          <td class="g-mono">${esc(f.path)}</td><td>${envBadge(f.state)}${f.local ? ` <span class="g-mut">${esc(t('git_local'))}</span>` : ''}${f.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: f.behind}))} ${esc(f.tag || '')}</span>` : ''}${f.link ? ` <span class="g-mut">⤳ ${esc(t('genv_symlink'))}</span>` : ''}${f.pattern ? ` <span class="g-mut g-mono">${esc(f.pattern)}</span>` : ''}${x ? `<div class="g-mut">${esc(tf('genv_excluded_by', {by: x.by, at: fmtTime(x.at)}))}</div>` : ''}</td>
+          <td style="white-space:nowrap">${act || f.state === 'extra' ? xb('service') + ' ' + xb('env') : ''}</td></tr>`;
+      }).join('');
+      const cur = d.current;
+      return `<div class="g-item"><h4>${d.index + 1}. ${esc(d.server)} · <span class="g-mono">${esc(d.path)}</span></h4>
+        <div class="g-mut">${cur ? esc(tf('genv_current', {v: cur.version, id: cur.deploy_id, by: cur.by, at: fmtTime(cur.at)})) : esc(t(d.exists ? 'genv_no_state' : 'genv_not_deployed'))}${d.from_version ? ' · VERSION.md ' + esc(d.from_version) : ''}</div>
+        <div class="g-actions" style="margin:5px 0">${['new', 'changed', 'eol', 'removed', 'extra', 'protected', 'ignored', 'same'].filter(k => c[k]).map(k => `${envBadge(k)} <b>${c[k]}</b>`).join(' ')}</div>
+        ${(d.errors || []).map(x => `<div class="hint-box bad">${esc(x)}</div>`).join('')}${(d.warnings || []).map(x => `<div class="hint-box warn">${esc(x)}</div>`).join('')}
+        ${(d.conflicts || []).map(x => `<div class="hint-box warn">${esc(tf(x.kind === 'dir_to_file' ? 'genv_dir_to_file' : 'genv_file_to_dir', {path: x.path}))} <span class="g-mono">${x.server.map(esc).join(', ')}</span></div>`).join('')}
+        ${d.lock && d.lock.stale ? `<div class="g-btns" style="justify-content:flex-start;margin-top:4px"><button class="btn-danger btn-sm" data-dest="${d.index}" data-id="${esc(d.lock.id)}" data-user="${esc(d.lock.user)}" data-from="${esc(d.lock.from)}" onclick="gitWorkspace.envUnlock(this)">🔓 ${esc(t('genv_unlock'))}</button></div>` : ''}
+        ${files.length ? `<div class="g-files"><table>${rows}</table></div>` : `<div class="g-mut">${esc(t('git_files_none'))}</div>`}</div>`;
+    };
+    modal(`<h3>${esc(tf('genv_plan_title', {app: p.app, env: p.env}))}</h3>
+      <div class="g-bar" style="margin:0 0 6px"><label class="g-mut">${esc(t('genv_ref'))}</label><input id="ge-ref" value="${esc(p.ref || '')}" placeholder="${esc(t('genv_ref_ph'))}" style="flex:1 1 220px"><button class="btn-sec btn-sm" onclick="gitWorkspace.envRecompare()">↻ ${esc(t('genv_compare'))}</button></div>
+      <div class="g-mut">${esc(t('git_target'))}: <span class="g-mono">${esc(tg.version || '—')}</span> · <span class="g-mono">${esc(p.ref_name || '')}</span> · <span class="g-mono">${esc(tg.commit || '')}</span> ${esc(tg.commit_date || '')}</div>
+      ${(p.errors || []).map(x => `<div class="hint-box bad">${esc(x)}</div>`).join('')}${p.used ? `<div class="hint-box warn">${esc(t('genv_plan_used'))}</div>` : ''}
+      <label class="g-opt"><input type="checkbox" ${E.showAll ? 'checked' : ''} onchange="gitWorkspace.envShowAll(this.checked)"><span>${esc(t('git_show_all'))}</span></label>
+      ${p.dests.map(destHTML).join('')}
+      <div class="g-card"><h3>${esc(t('genv_options'))}</h3>
+        <div class="g-actions"><span class="g-mut" id="ge-nexcl">${esc(tf('genv_n_excluded', {n: E.excl.size}))}</span>${Object.keys(p.excluded || {}).length ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.envClearExcl()">${esc(t('genv_clear_excl'))}</button>` : ''}</div>
+        <label class="g-opt"><input type="checkbox" id="ge-del" ${o.del ? 'checked' : ''} ${removed ? '' : 'disabled'}><span>${esc(tf('genv_delete_removed', {n: removed}))}</span></label>
+        ${p.post_deploy ? `<label class="g-opt"><input type="checkbox" id="ge-post" ${o.post ? 'checked' : ''}><span>${esc(t('genv_run_post'))} <code class="g-mono">${esc(p.post_deploy)}</code></span></label>` : `<div class="g-mut">${esc(t('genv_no_post'))}</div>`}
+        <label class="g-opt"><input type="checkbox" id="ge-restart" ${o.restart ? 'checked' : ''} ${can('restart') ? '' : 'disabled'}><span>${esc(t('genv_restart'))}</span></label>
+        <div style="margin-top:6px"><label class="g-mut">${esc(tf('git_check_cmd', {app: p.app}))}</label><input id="ge-check" value="${esc(o.check || '')}" placeholder="./run.py --selftest" style="width:100%"></div></div>
+      ${blocked ? `<div class="hint-box bad">${esc(t('genv_blocked'))}</div>` : ''}
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button>
+        <button class="btn-sec" onclick="gitWorkspace.envGo(true)" ${blocked || p.used ? 'disabled' : ''}>🧪 ${esc(t('genv_dry_run'))}</button>
+        <button class="btn-danger" onclick="gitWorkspace.envGo(false)" ${blocked || p.used ? 'disabled' : ''}>${esc(t('genv_deploy_go'))}</button></div>`);
+  }
+  function envShowAll(v) { envSaveOpts(); E.showAll = v; paintPlan(); }
+  function envToggle(el) {
+    const p = el.dataset.p;
+    if (el.checked) E.excl.delete(p); else E.excl.add(p);
+    document.querySelectorAll('.ge-f').forEach(x => { if (x.dataset.p === p) x.checked = el.checked; });
+    $('ge-nexcl').textContent = tf('genv_n_excluded', {n: E.excl.size});
+  }
+  async function envExclude(btn) {
+    const path = btn.dataset.p, scope = btn.dataset.scope, p = E.plan;
+    if (!(await uiConfirm(tf('genv_excl_q', {path, scope: t(scope === 'service' ? 'genv_excl_svc' : 'genv_excl_env')}), {okText: '⊘'}))) return;
+    const r = await fetch('/api/git/env/exclude', json('POST', {app: p.app, env: p.env, path, scope}));
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    const res = await r.json();
+    showToast(tf(res.added ? 'genv_excl_added' : 'genv_excl_covered', {p: res.pattern}), 'success', 5000);
+    load(); envPlan(p.app, p.env, p.ref);
+  }
+  async function envClearExcl() {
+    const p = E.plan;
+    const r = await fetch('/api/git/env/exclusions?' + envEnc(p.app, p.env), {method: 'DELETE'});
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    envSaveOpts(); p.excluded = {}; E.excl.clear(); paintPlan();
+  }
+  async function envUnlock(btn) {
+    const p = E.plan;
+    if (!(await uiConfirm(tf('genv_unlock_q', {user: btn.dataset.user || '?', from: btn.dataset.from || '?', id: btn.dataset.id || '?'}), {danger: true, okText: t('genv_unlock')}))) return;
+    const r = await fetch('/api/git/env/unlock', json('POST', {app: p.app, env: p.env, dest: Number(btn.dataset.dest), lock_id: btn.dataset.id}));
+    if (!r.ok) { showToast(await apiError(r), 'error', 7000); return; }
+    showToast(t('genv_unlocked'), 'success'); envRecompare();
+  }
+  function envGo(dry) {
+    envSaveOpts();
+    const p = E.plan, o = E.opts;
+    const body = {kind: 'update', restart: {mode: o.restart ? 'now' : 'none'}, checks: {[p.app]: o.check},
+      env: {app: p.app, env: p.env, plan_id: p.id, exclude: [...E.excl], delete_removed: o.del, post_deploy: o.post, dry_run: dry}};
+    if (dry) { envStart(body); return; }
+    modal(`<h3>${esc(tf('genv_confirm_title', {app: p.app, v: (p.target || {}).version || '', env: p.env}))}</h3>
+      <div>${esc(t('genv_confirm_list'))}</div><ol>${p.dests.map(d => `<li><b>${esc(d.server)}</b> <span class="g-mono">${esc(d.path)}</span> <span class="g-mut">${['new', 'changed', 'eol', 'removed'].filter(k => (d.counts || {})[k]).map(k => t('genv_fs_' + k) + ' ' + d.counts[k]).join(' · ')}</span></li>`).join('')}</ol>
+      ${E.excl.size ? `<div class="g-mut">${esc(tf('genv_n_excluded', {n: E.excl.size}))}</div>` : ''}${o.del ? `<div class="hint-box warn">${esc(tf('genv_delete_removed', {n: Math.max(0, ...p.dests.map(d => (d.counts || {}).removed || 0))}))}</div>` : ''}
+      ${o.post ? `<div class="hint-box warn">${esc(t('genv_run_post'))} <code class="g-mono">${esc(p.post_deploy)}</code></div>` : ''}${o.restart ? `<div class="hint-box warn">${esc(t('genv_restart'))}</div>` : ''}
+      ${p.confirm ? `<div class="g-conf"><label>${esc(tf('genv_type_env', {env: p.env}))}</label><input id="ge-conf" autocomplete="off"></div>` : ''}
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.envBack()">${esc(t('genv_back'))}</button><button id="ge-start" class="btn-danger" ${p.confirm ? 'disabled' : ''}>${esc(t('git_start'))}</button></div>`);
+    if (p.confirm) $('ge-conf').oninput = () => { $('ge-start').disabled = $('ge-conf').value.trim().toLowerCase() !== p.env.toLowerCase(); };
+    $('ge-start').onclick = () => { if (p.confirm) body.env.confirm = $('ge-conf').value.trim(); $('ge-start').disabled = true; envStart(body); };
+  }
+  async function envStart(body) {
+    const r = await fetch('/api/git/runs', json('POST', body));
+    if (!r.ok) { showToast(await apiError(r), 'error', 8000); if ($('ge-start')) $('ge-start').disabled = false; return; }
+    const v = await r.json();
+    if (!body.env.dry_run && body.kind === 'update' && E.plan) E.plan.used = true;
+    E.cells = {};
+    showRun(v.id);
+  }
+  function envBack() { if (E.plan) paintPlan(); }
+
+  // ── history and rollback ──
+  async function envHistory(app, env) {
+    E.ctx = {app, env};
+    modal(`<h3>${esc(tf('genv_history_title', {app, env}))}</h3><div class="hint-box">⏳</div>`);
+    const r = await fetch('/api/git/env/history?' + envEnc(app, env));
+    if (!r.ok) { await errModal(tf('genv_history_title', {app, env}), r); return; }
+    const h = E.hist = await r.json();
+    const cur = new Set(h.dests.map(d => d.current).filter(Boolean));
+    const lists = x => ['new', 'changed', 'deleted', 'excluded', 'restored', 'moved_aside', 'skipped', 'moved'].filter(k => (x[k] || []).length).map(k =>
+      `<div style="margin-top:4px"><b>${esc(t('genv_l_' + k))}</b> (${(x.counts || {})[k] != null ? x.counts[k] : x[k].length})<div class="g-mono g-mut">${x[k].map(esc).join('<br>')}</div></div>`).join('');
+    const sum = x => { const c = x.counts || {}; return x.action === 'ROLLBACK' ? `↩ ${c.restored || 0} · ⇢ ${c.moved_aside || 0}${c.skipped ? ' · ⚠ ' + c.skipped : ''}` : x.result === 'partial' ? `⚠ ${c.moved || 0}/${c.total || 0}` : `+${c.new || 0} ~${c.changed || 0} −${c.deleted || 0}${c.eol ? ' · CRLF/LF ' + c.eol : ''}`; };
+    const res = x => x.action === 'ROLLBACK' ? (x.complete === false ? 'failed' : 'done') : x.result === 'ok' ? 'done' : 'failed';
+    modal(`<h3>${esc(tf('genv_history_title', {app, env}))}</h3>
+      ${h.dests.filter(d => d.error).map(d => `<div class="hint-box bad">${esc(d.server)}: ${esc(d.error)}</div>`).join('')}
+      ${h.entries.length ? `<div class="g-scroll"><table><tr><th>${esc(t('genv_when'))}</th><th>${esc(t('genv_action'))}</th><th>${esc(t('genv_id'))}</th><th>${esc(t('genv_who'))}</th><th>${esc(t('genv_version'))}</th><th>${esc(t('genv_previous'))}</th><th>${esc(t('genv_servers'))}</th><th>${esc(t('genv_files'))}</th><th></th></tr>
+        ${h.entries.map(x => `<tr><td class="g-mut">${esc(fmtTime(x.at))}</td><td><span class="g-st s-${res(x)}">${esc(x.action)}</span>${x.result && x.result !== 'ok' ? `<div class="g-mut">${esc(x.result)}</div>` : ''}${x.post_deploy ? `<div class="g-mut">post_deploy: ${esc(x.post_deploy)}</div>` : ''}</td>
+          <td class="g-mono">${esc(x.id || '')}${x.rolled_back ? `<div class="g-mut">↩ ${esc(x.rolled_back)}</div>` : ''}</td><td>${esc(x.by || '')}</td>
+          <td class="g-mono">${esc(x.version || '')}<div class="g-mut">${esc(String(x.commit || '').slice(0, 10))} ${esc(x.branch || '')}</div></td>
+          <td class="g-mono g-mut">${x.previous ? esc(x.previous.version + ' · ' + x.previous.deploy_id) : x.action === 'DEPLOY' ? '—' : ''}</td>
+          <td>${(x.servers || []).map(esc).join('<br>')}</td>
+          <td><details><summary class="g-mut">${esc(sum(x))}</summary>${lists(x)}${x.error ? `<div class="g-mut">${esc(x.error)}</div>` : ''}${x.note ? `<div class="g-mut">${esc(x.note)}</div>` : ''}</details></td>
+          <td>${x.action === 'DEPLOY' && cur.has(x.id) && can('rollback') ? `<button class="btn-sec btn-sm" data-id="${esc(x.id)}" onclick="gitWorkspace.envRollback(this)">↩ ${esc(t('genv_rollback'))}</button>` : ''}</td></tr>`).join('')}</table></div>`
+        : `<div class="hint-box">${esc(t('genv_history_empty'))}</div>`}
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
+  }
+  function envRollback(btn) {
+    const id = btn.dataset.id, h = E.hist, e = envOf(h.app, h.env) || {};
+    modal(`<h3>${esc(tf('genv_rb_title', {id}))}</h3><div class="g-mut">${esc(t('genv_rb_h'))}</div>
+      <table style="margin-top:8px">${h.dests.map((d, i) => `<tr><td><input type="checkbox" class="ge-rbd" value="${i}" ${d.current === id ? 'checked' : 'disabled'}></td><td>${i + 1}. <b>${esc(d.server)}</b></td><td class="g-mono">${esc(d.path)}</td>
+        <td class="g-mut">${d.current === id ? esc(t('genv_rb_latest')) : esc(tf('genv_rb_not_latest', {id: d.current || '—'}))}</td></tr>`).join('')}</table>
+      <div class="g-card">${e.post_deploy ? `<label class="g-opt"><input type="checkbox" id="ge-rbpost"><span>${esc(t('genv_run_post'))} <code class="g-mono">${esc(e.post_deploy)}</code></span></label>` : `<div class="g-mut">${esc(t('genv_no_post'))}</div>`}
+        <label class="g-opt"><input type="checkbox" id="ge-rbrestart" ${can('restart') ? '' : 'disabled'}><span>${esc(t('genv_restart'))}</span></label></div>
+      ${e.confirm ? `<div class="g-conf"><label>${esc(tf('genv_type_env', {env: h.env}))}</label><input id="ge-rbconf" autocomplete="off"></div>` : ''}
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.envHistory('${esc(h.app)}','${esc(h.env)}')">${esc(t('git_cancel'))}</button>
+        <button class="btn-sec" id="ge-rbdry">🧪 ${esc(t('genv_dry_run'))}</button><button class="btn-danger" id="ge-rbgo" ${e.confirm ? 'disabled' : ''}>${esc(t('genv_rb_go'))}</button></div>`);
+    if (e.confirm) $('ge-rbconf').oninput = () => { $('ge-rbgo').disabled = $('ge-rbconf').value.trim().toLowerCase() !== h.env.toLowerCase(); };
+    const go = async dry => {
+      const dests = [...document.querySelectorAll('.ge-rbd:checked')].map(x => Number(x.value));
+      if (!dests.length) { showToast(t('genv_rb_none'), 'warning'); return; }
+      if (!dry && !(await uiConfirm(tf('genv_rb_confirm', {id, n: dests.length}), {danger: true, okText: t('genv_rb_go')}))) return;
+      const body = {kind: 'rollback', restart: {mode: $('ge-rbrestart').checked ? 'now' : 'none'},
+        env: {app: h.app, env: h.env, deploy_id: id, dests, post_deploy: !!($('ge-rbpost') || {}).checked, dry_run: dry, confirm: ($('ge-rbconf') || {}).value || ''}};
+      const r = await fetch('/api/git/runs', json('POST', body));
+      if (!r.ok) { showToast(await apiError(r), 'error', 8000); return; }
+      E.cells = {};
+      showRun((await r.json()).id);
+    };
+    $('ge-rbdry').onclick = () => go(true);
+    $('ge-rbgo').onclick = () => go(false);
+  }
+
+  // ── access doctor ──
+  async function envDoctor(app, env) {
+    const title = `🩺 ${tf('genv_doctor_title', {app, env})}`;
+    modal(`<h3>${esc(title)}</h3><div class="hint-box">⏳ ${esc(t('genv_doctor_running'))}</div>`);
+    const r = await fetch('/api/git/env/doctor', json('POST', {app, env}));
+    if (!r.ok) { await errModal(title, r); return; }
+    const icon = {ok: '✅', warn: '⚠️', fail: '❌', info: 'ℹ️'};
+    modal(`<h3>${esc(title)}</h3>${(await r.json()).dests.map((d, i) => `<div class="g-item"><h4>${i + 1}. ${esc(d.server)} · <span class="g-mono">${esc(d.path)}</span></h4>
+      <table>${d.checks.map(c => `<tr><td style="width:24px">${icon[c.status] || '•'}</td><td style="white-space:nowrap"><b>${esc(t('genv_chk_' + c.name))}</b></td><td>${esc(c.msg)}</td></tr>`).join('')}</table></div>`).join('')}
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.envDoctor('${esc(app)}','${esc(env)}')">↻</button><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
+  }
+
   // ── progress and history ──
   let runTimer = null;
   async function showRun(id) {
@@ -1771,20 +2163,25 @@ Object.assign(LANGS.hr, {
     const open = $('git-modal');
     if (open && open.dataset.run && open.dataset.run !== String(id)) return;
     const icon = s => ({ok: '✅', fail: '❌', skip: '⏭', info: 'ℹ'}[s] || '•');
-    const html = `<h3>${esc(tf('git_progress', {label: v.label}))} · ${esc(kindName(v.kind))}${v.ref ? ' → <span class="g-mono">' + esc(v.ref) + '</span>' : ''} ${runBadge(v.state)}</h3>
+    const ev = v.env;
+    const html = `<h3>${esc(tf('git_progress', {label: v.label}))} · ${esc(kindName(v.kind))}${ev ? ` · ${esc(ev.app)} → ${esc(ev.env)}` : ''}${v.ref ? ' → <span class="g-mono">' + esc(v.ref) + '</span>' : ''} ${runBadge(v.state)}${ev && ev.dry_run ? ` <span class="g-st s-scheduled">🧪 ${esc(t('genv_dry'))}</span>` : ''}</h3>
+      ${ev && ev.deploy_id ? `<div class="g-mut">${esc(t('genv_id'))}: <span class="g-mono">${esc(ev.deploy_id)}</span></div>` : ''}
       ${v.message ? `<div class="hint-box ${v.state === 'failed' ? 'bad' : ''}">${esc(v.message)}</div>` : ''}
       ${v.scheduled_at ? `<div class="g-mut">${esc(t('git_scheduled_for'))}: ${esc(fmtTime(v.scheduled_at))}</div>` : v.parent_id ? `<div class="g-mut">${esc(t('git_scheduled_for'))}: ${esc(t('git_waits_update'))}</div>` : ''}
       ${v.items.map(it => `<div class="g-item"><h4>${esc(it.conn_name)} · ${esc(it.app)} · <span class="g-mono">${esc(it.path)}</span> ${runBadge(it.state)}${it.step ? ` <span class="g-mut">⏳ ${esc(t('git_step_' + it.step))}</span>` : ''}</h4>
         ${it.source_path ? `<div class="g-mut">${esc(t('git_w_source'))}: ${esc(it.source_conn_name)} · <span class="g-mono">${esc(it.source_path)}</span></div>` : ''}
         ${it.from_version || it.to_version ? `<div class="g-mut g-mono">${esc(it.from_version || '')} → ${esc(it.to_version || '')}</div>` : ''}
         ${it.via === 'ci' ? `<div>🔧 ${esc(t('git_step_ci'))} (${esc(it.ci_kind || '')}): <b>${esc(it.ci_status || '…')}</b>${it.ci_url ? ` · <a href="${esc(it.ci_url)}" target="_blank" rel="noopener noreferrer">${esc(t('git_ci_link'))}</a>` : ''}</div>` : ''}
-        ${it.error ? `<div class="hint-box bad">${esc(it.error)}</div>` : ''}
+        ${it.error ? `<div class="hint-box bad">${esc(it.error)}</div>` : ''}${it.note && it.note !== it.error ? `<div class="hint-box warn">${esc(it.note)}</div>` : ''}
+        ${it.partial ? `<div class="hint-box warn">${esc(tf('genv_partial', {n: it.moved_count || 0}))}${(it.moved || []).length ? `<details><summary class="g-mut">${esc(t('genv_l_moved'))}</summary><div class="g-mono g-mut">${it.moved.map(esc).join('<br>')}</div></details>` : ''}</div>` : ''}
+        ${(it.skipped || []).length ? `<div class="hint-box warn"><b>${esc(t('genv_skipped'))}</b><div class="g-mono">${it.skipped.map(esc).join('<br>')}</div></div>` : ''}
+        ${it.post_deploy ? `<div class="g-mut">post_deploy: <b>${esc(it.post_deploy)}</b></div>` : ''}
         ${(it.dangling || []).length ? `<div class="hint-box bad"><b>${esc(t('git_dangling'))}</b><div class="g-mono">${it.dangling.map(esc).join('<br>')}</div></div>` : ''}
         ${(it.health || []).length ? `<div><b>${esc(t('git_health'))}:</b> ${it.health.map(h => `${h.ok ? '✅' : '❌'} <span class="g-mono">${esc(h.name)}</span> ${esc(h.status)}`).join(' · ')}</div>` : ''}
         ${it.made_backup ? `<div class="g-mut">${esc(t('git_backup'))}: <span class="g-mono">${esc(it.made_backup)}</span></div>` : ''}
         ${(it.written || []).length || (it.deleted || []).length ? `<div class="g-mut">${esc(tf('git_written', {n: (it.written || []).length}))}${(it.deleted || []).length ? ' · ' + esc(tf('git_deleted', {n: it.deleted.length})) : ''}</div>` : ''}
         <ul class="g-log">${(it.log || []).map(l => `<li>${icon(l.status)} <b>${esc(t('git_step_' + l.step))}</b> ${esc(l.msg || '')}</li>`).join('')}</ul></div>`).join('')}
-      <div class="g-btns">${v.running ? `<button class="btn-danger" onclick="gitWorkspace.cancelRun(${v.id})">${esc(t('git_stop'))}</button>` : v.state === 'scheduled' ? `<button class="btn-danger" onclick="gitWorkspace.cancelRun(${v.id})">${esc(t('git_cancel_run'))}</button>` : ''}
+      <div class="g-btns">${ev && ev.dry_run && !v.running && E.plan && E.plan.id === ev.plan_id && !E.plan.used ? `<button onclick="gitWorkspace.envBack()">${esc(t('genv_back'))}</button>` : ''}${v.running ? `<button class="btn-danger" onclick="gitWorkspace.cancelRun(${v.id})">${esc(t('git_stop'))}</button>` : v.state === 'scheduled' ? `<button class="btn-danger" onclick="gitWorkspace.cancelRun(${v.id})">${esc(t('git_cancel_run'))}</button>` : ''}
         <button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`;
     if (open && open.dataset.run === String(id)) open.querySelector('.g-dlg').innerHTML = html;
     else { modal(html); $('git-modal').dataset.run = String(id); }
@@ -1812,7 +2209,7 @@ Object.assign(LANGS.hr, {
     if (!list) return `<div class="hint-box">⏳</div>`;
     return `<div class="g-bar"><button class="btn-sec btn-sm" onclick="gitWorkspace.loadRuns()">↻ ${esc(t('git_refresh'))}</button></div>
       <div class="g-card g-scroll">${list.length ? `<table><tr><th>${esc(t('git_run'))}</th><th>${esc(t('git_kind_col'))}</th><th>${esc(t('git_state'))}</th><th>${esc(t('git_items'))}</th><th>${esc(t('git_versions'))}</th><th>${esc(t('git_created'))}</th><th>${esc(t('git_scheduled_for'))}</th><th></th></tr>
-      ${list.map(v => `<tr><td class="g-mono">${esc(v.label)}<div class="g-mut">#${v.id}${v.parent_id ? ' ← #' + v.parent_id : ''}</div></td><td>${esc(kindName(v.kind))}${v.ref ? ` <span class="g-mono">${esc(v.ref)}</span>` : ''}</td>
+      ${list.map(v => `<tr><td class="g-mono">${esc(v.label)}<div class="g-mut">#${v.id}${v.parent_id ? ' ← #' + v.parent_id : ''}</div></td><td>${esc(kindName(v.kind))}${v.ref ? ` <span class="g-mono">${esc(v.ref)}</span>` : ''}${v.env ? `<div class="g-mut">${esc(v.env.app)} → ${esc(v.env.env)}${v.env.dry_run ? ' · 🧪 ' + esc(t('genv_dry')) : ''}</div>` : ''}</td>
         <td>${runBadge(v.state)}${v.message ? `<div class="g-mut">${esc(v.message)}</div>` : ''}</td>
         <td>${v.items.map(it => `<div>${runBadge(it.state)} ${esc(it.app)} @ ${esc(it.conn_name)}</div>`).join('')}</td>
         <td class="g-mono">${Object.entries(v.versions || {}).map(([a, x]) => esc(a + ' ' + x)).join('<br>')}</td>
@@ -1837,7 +2234,8 @@ Object.assign(LANGS.hr, {
   window.gitWorkspace = {
     open, close, tab: setTab, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
-    update, upgrade, rollback, restart, stamp, install, transfer, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
+    update, upgrade, rollback, restart, stamp, install, transfer,
+    envRefresh, envEdit, envEditAdd, envEditDel, envPlan, envRecompare, envShowAll, envToggle, envExclude, envClearExcl, envUnlock, envGo, envBack, envHistory, envRollback, envDoctor, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
     ignoreLoad, ignoreMark, ignorePreview, ignoreDownload, ignoreSaveLists, ignoreMR, webhook, hookSet, editFeed, feedFetch, delFeed, pipelineKind,
     editSource, testSource, delSource, importBundle, saveSettings, saveCatalogSettings, setRef, filterConns, selConns, closeModal,
     filter(k, v, debounce) { G.f[k] = v; clearTimeout(qTimer); if (debounce) qTimer = setTimeout(() => { render(); const i = document.querySelector('#git-body input[type=search]'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); else render(); },
