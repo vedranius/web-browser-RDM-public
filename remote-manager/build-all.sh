@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  Web Remote Manager PRO v11.1.0 — build all platform binaries
+#  Web Remote Manager PRO v11.2.0 — build all platform binaries
 #  Run this from the repo root OR from inside remote-manager/
 #  Usage:  bash remote-manager/build-all.sh
 #          bash build-all.sh          (if you're already in remote-manager/)
@@ -20,7 +20,7 @@ warn() { echo -e "${YELLOW}⚠${NC} $*"; }
 die()  { echo -e "${RED}✗ ERROR:${NC} $*" >&2; exit 1; }
 
 echo ""
-echo "  Web Remote Manager PRO v11.1.0 — multiplatform build"
+echo "  Web Remote Manager PRO v11.2.0 — multiplatform build"
 echo "  =================================================="
 echo ""
 
@@ -44,26 +44,26 @@ if command -v git &>/dev/null; then
   _sha=$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || true)
   [[ -n "$_sha" ]] && GIT_SHORT="-$_sha"
 fi
-VERSION="v11.1.0${GIT_SHORT}"
+VERSION="v11.2.0${GIT_SHORT}"
 ok "Build version: $VERSION"
 echo ""
 
 # ── 4. Target matrix ─────────────────────────────────────────────────────────
 # Format: "GOOS/GOARCH[/GOARM]/output-suffix"
 TARGETS=(
-  "linux/amd64//wrm-pro-v11.1.0-linux-amd64"
-  "linux/arm64//wrm-pro-v11.1.0-linux-arm64"
-  "linux/arm/7/wrm-pro-v11.1.0-linux-armv7"
-  "linux/arm/6/wrm-pro-v11.1.0-linux-armv6"
-  "linux/386//wrm-pro-v11.1.0-linux-386"
-  "darwin/amd64//wrm-pro-v11.1.0-darwin-amd64"
-  "darwin/arm64//wrm-pro-v11.1.0-darwin-arm64"
-  "windows/amd64//wrm-pro-v11.1.0-windows-amd64.exe"
-  "windows/arm64//wrm-pro-v11.1.0-windows-arm64.exe"
-  "android/arm64//wrm-pro-v11.1.0-android-arm64"
-  "freebsd/amd64//wrm-pro-v11.1.0-freebsd-amd64"
-  "freebsd/arm64//wrm-pro-v11.1.0-freebsd-arm64"
-  "openbsd/amd64//wrm-pro-v11.1.0-openbsd-amd64"
+  "linux/amd64//wrm-pro-v11.2.0-linux-amd64"
+  "linux/arm64//wrm-pro-v11.2.0-linux-arm64"
+  "linux/arm/7/wrm-pro-v11.2.0-linux-armv7"
+  "linux/arm/6/wrm-pro-v11.2.0-linux-armv6"
+  "linux/386//wrm-pro-v11.2.0-linux-386"
+  "darwin/amd64//wrm-pro-v11.2.0-darwin-amd64"
+  "darwin/arm64//wrm-pro-v11.2.0-darwin-arm64"
+  "windows/amd64//wrm-pro-v11.2.0-windows-amd64.exe"
+  "windows/arm64//wrm-pro-v11.2.0-windows-arm64.exe"
+  "android/arm64//wrm-pro-v11.2.0-android-arm64"
+  "freebsd/amd64//wrm-pro-v11.2.0-freebsd-amd64"
+  "freebsd/arm64//wrm-pro-v11.2.0-freebsd-arm64"
+  "openbsd/amd64//wrm-pro-v11.2.0-openbsd-amd64"
 )
 
 BUILT=()
@@ -116,6 +116,6 @@ echo ""
 ok "All ${#BUILT[@]} binaries ready in: $DIST_DIR/"
 echo ""
 echo "  Quick start:"
-echo "    chmod +x $DIST_DIR/wrm-pro-v11.1.0-linux-amd64"
-echo "    PORT=8080 $DIST_DIR/wrm-pro-v11.1.0-linux-amd64"
+echo "    chmod +x $DIST_DIR/wrm-pro-v11.2.0-linux-amd64"
+echo "    PORT=8080 $DIST_DIR/wrm-pro-v11.2.0-linux-amd64"
 echo ""
