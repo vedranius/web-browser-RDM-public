@@ -1111,7 +1111,6 @@ func envPlanRequest(userID int, app, env, ref string) (*gitEnvPlan, int, error) 
 	if !refAllowed(t, e.AllowedRefs) {
 		p.Errors = append(p.Errors, fmt.Sprintf("%s is not allowed in %s (allowed: %s)", p.RefName, env, strings.Join(e.AllowedRefs, ", ")))
 	}
-	x := newEnvPlanCtx(userID, cat, a, e, t)
 	results := make([]*gitEnvDestPlan, len(e.Destinations))
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, 4)
@@ -1121,7 +1120,7 @@ func envPlanRequest(userID int, app, env, ref string) (*gitEnvPlan, int, error) 
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			results[i] = envDestPlanOver(userID, x, i, d)
+			results[i] = envDestPlanOver(userID, newEnvPlanCtx(userID, cat, a, e, t), i, d) // a context per goroutine (caches)
 		}(i, d)
 	}
 	wg.Wait()

@@ -254,14 +254,14 @@ echo WRM_DONE
 // backup directory; symlinks are kept as symlinks.
 func envBackup(s *deploySession, backup string, rels []string) error {
 	script := fmt.Sprintf(`B=%s; D=%s
-mkdir -p "${B%%/*}" || exit 3
+mkdir -p -- "${B%%/*}" || exit 3
 mkdir "$B" 2>/dev/null || { printf 'E\tthe backup %%s exists already\n' "$B"; exit 0; }
 cd "$D" || exit 3
 while IFS= read -r rel; do
   [ -n "$rel" ] || continue
-  d=${rel%%/*}; [ "$d" = "$rel" ] || mkdir -p "$B/$d" || { printf 'F\t%%s\n' "$rel"; exit 3; }
-  if [ -L "$rel" ]; then ln -s "$(readlink "$rel")" "$B/$rel" || { printf 'F\t%%s\n' "$rel"; exit 3; }
-  elif [ -f "$rel" ]; then cp -p "$rel" "$B/$rel" || { printf 'F\t%%s\n' "$rel"; exit 3; }; fi
+  d=${rel%%/*}; [ "$d" = "$rel" ] || mkdir -p -- "$B/$d" || { printf 'F\t%%s\n' "$rel"; exit 3; }
+  if [ -L "$rel" ]; then ln -s -- "$(readlink -- "$rel")" "$B/$rel" || { printf 'F\t%%s\n' "$rel"; exit 3; }
+  elif [ -f "$rel" ]; then cp -p -- "$rel" "$B/$rel" || { printf 'F\t%%s\n' "$rel"; exit 3; }; fi
 done
 echo WRM_OK
 `, shellQuote(backup), shellQuote(s.in.Path))
@@ -291,18 +291,18 @@ type gitEnvDir struct {
 func envCommit(s *deploySession, staging string, writes, deletes []string) ([]gitEnvDir, error) {
 	script := fmt.Sprintf(`D=%s; T=%s
 cd "$D" || exit 3
-mo() { m=$(stat -c %%a "$1" 2>/dev/null || stat -f %%Lp "$1" 2>/dev/null); o=$(stat -c %%u:%%g "$1" 2>/dev/null || stat -f %%u:%%g "$1" 2>/dev/null); printf '%%s\t%%s' "$m" "$o"; }
-keep() { { [ -f "$1" ] && [ ! -L "$1" ]; } || return 0; m=$(stat -c %%a "$1" 2>/dev/null || stat -f %%Lp "$1" 2>/dev/null); o=$(stat -c %%u:%%g "$1" 2>/dev/null || stat -f %%u:%%g "$1" 2>/dev/null)
-  [ -z "$m" ] || chmod "$m" "$2"; [ -z "$o" ] || chown "$o" "$2" 2>/dev/null; return 0; }
+mo() { m=$(stat -c %%a -- "$1" 2>/dev/null || stat -f %%Lp -- "$1" 2>/dev/null); o=$(stat -c %%u:%%g -- "$1" 2>/dev/null || stat -f %%u:%%g -- "$1" 2>/dev/null); printf '%%s\t%%s' "$m" "$o"; }
+keep() { { [ -f "$1" ] && [ ! -L "$1" ]; } || return 0; m=$(stat -c %%a -- "$1" 2>/dev/null || stat -f %%Lp -- "$1" 2>/dev/null); o=$(stat -c %%u:%%g -- "$1" 2>/dev/null || stat -f %%u:%%g -- "$1" 2>/dev/null)
+  [ -z "$m" ] || chmod -- "$m" "$2"; [ -z "$o" ] || chown -- "$o" "$2" 2>/dev/null; return 0; }
 while IFS= read -r line; do
   k=${line%%%%	*}; rel=${line#*	}
   case $k in
-  X) if [ -L "$rel" ] || [ -f "$rel" ]; then rm -f "$rel" || { printf 'F\t%%s\n' "$rel"; exit 3; }; fi
-     d=$rel; while :; do case $d in */*) d=${d%%/*};; *) break;; esac; [ -L "$d" ] && break; x=$(mo "$d"); rmdir "$d" 2>/dev/null || break; printf 'R\t%%s\t%%s\n' "$d" "$x"; done ;;
+  X) if [ -L "$rel" ] || [ -f "$rel" ]; then rm -f -- "$rel" || { printf 'F\t%%s\n' "$rel"; exit 3; }; fi
+     d=$rel; while :; do case $d in */*) d=${d%%/*};; *) break;; esac; [ -L "$d" ] && break; x=$(mo "$d"); rmdir -- "$d" 2>/dev/null || break; printf 'R\t%%s\t%%s\n' "$d" "$x"; done ;;
   W) if [ -d "$rel" ] && [ ! -L "$rel" ]; then printf 'F\t%%s\tis a directory\n' "$rel"; exit 3; fi
      d=${rel%%/*}; if [ "$d" != "$rel" ] && [ ! -d "$d" ]; then m=$d; while :; do case $m in */*) [ -d "${m%%/*}" ] && break; m=${m%%/*};; *) break;; esac; done
-       mkdir -p "$d" || { printf 'F\t%%s\n' "$rel"; exit 3; }; printf 'M\t%%s\n' "$D/$m"; fi
-     keep "$rel" "$T/$rel"; mv -f "$T/$rel" "$rel" || { printf 'F\t%%s\n' "$rel"; exit 3; } ;;
+       mkdir -p -- "$d" || { printf 'F\t%%s\n' "$rel"; exit 3; }; printf 'M\t%%s\n' "$D/$m"; fi
+     keep "$rel" "$T/$rel"; mv -f -- "$T/$rel" "$rel" || { printf 'F\t%%s\n' "$rel"; exit 3; } ;;
   esac
 done
 echo WRM_OK
@@ -346,11 +346,11 @@ cd "$D" || exit 3
 while IFS= read -r line; do
   k=${line%%%%	*}; rel=${line#*	}
   case $k in
-  E) d=${rel%%/*}; [ "$d" = "$rel" ] || mkdir -p "$d"
-     if [ -L "$B/$rel" ]; then { ln -s "$(readlink "$B/$rel")" "$rel.wrm-back" && mv -f "$rel.wrm-back" "$rel"; } || { printf 'F\t%%s\n' "$rel"; bad=1; }
-     elif [ -f "$B/$rel" ]; then { cp -p "$B/$rel" "$rel.wrm-back" && mv -f "$rel.wrm-back" "$rel"; } || { printf 'F\t%%s\n' "$rel"; bad=1; }
+  E) d=${rel%%/*}; [ "$d" = "$rel" ] || mkdir -p -- "$d"
+     if [ -L "$B/$rel" ]; then { ln -s -- "$(readlink -- "$B/$rel")" "$rel.wrm-back" && mv -f -- "$rel.wrm-back" "$rel"; } || { printf 'F\t%%s\n' "$rel"; bad=1; }
+     elif [ -f "$B/$rel" ]; then { cp -p -- "$B/$rel" "$rel.wrm-back" && mv -f -- "$rel.wrm-back" "$rel"; } || { printf 'F\t%%s\n' "$rel"; bad=1; }
      else printf 'F\t%%s\n' "$rel"; bad=1; fi ;;
-  N) rm -f "$rel" ;;
+  N) rm -f -- "$rel" ;;
   C) find "$rel" -depth -type d -exec rmdir {} \; 2>/dev/null ;;
   esac
 done
@@ -866,19 +866,19 @@ func envRollbackScript(dir, backup, aside string, dry bool) string {
 cd "$D" || { printf 'E\tcannot enter %%s\n' "$D"; exit 0; }
 act() { [ "$DRY" = 1 ] || "$@"; }
 issym() { p=$1; while :; do [ -L "$p" ] && return 0; case $p in */*) p=${p%%/*};; *) return 1;; esac; done; }
-keepcur() { [ -e "$1" ] || return 0; [ -e "$R/$1" ] && return 0; d=${1%%/*}; [ "$d" = "$1" ] || act mkdir -p "$R/$d" || return 1; act cp -p "$1" "$R/$1"; }
-fromb() { d=${1%%/*}; [ "$d" = "$1" ] || act mkdir -p "$d" || return 1; act cp -p "$B/$1" "$1.wrm-back" && act mv -f "$1.wrm-back" "$1"; }
+keepcur() { [ -e "$1" ] || return 0; [ -e "$R/$1" ] && return 0; d=${1%%/*}; [ "$d" = "$1" ] || act mkdir -p -- "$R/$d" || return 1; act cp -p -- "$1" "$R/$1"; }
+fromb() { d=${1%%/*}; [ "$d" = "$1" ] || act mkdir -p -- "$d" || return 1; act cp -p -- "$B/$1" "$1.wrm-back" && act mv -f -- "$1.wrm-back" "$1"; }
 [ -d "$B" ] || { printf 'E\tthe backup %%s is missing\n' "$B"; exit 0; }
-act mkdir -p "$R" || { printf 'E\tcannot create %%s\n' "$R"; exit 0; }
+act mkdir -p -- "$R" || { printf 'E\tcannot create %%s\n' "$R"; exit 0; }
 while IFS= read -r line; do
   k=${line%%%%	*}; rest=${line#*	}
   case $k in
   A) if issym "$rest"; then printf 'S\t%%s\n' "$rest"
-     elif [ -e "$rest" ]; then d=${rest%%/*}; { [ "$d" = "$rest" ] || act mkdir -p "$R/$d"; } && act mv -f "$rest" "$R/$rest" && printf 'A\t%%s\n' "$rest" || printf 'F\t%%s\n' "$rest"; fi ;;
-  Z) if ! issym "$rest" && [ -d "$rest" ]; then act rmdir "$rest" 2>/dev/null; fi ;;
+     elif [ -e "$rest" ]; then d=${rest%%/*}; { [ "$d" = "$rest" ] || act mkdir -p -- "$R/$d"; } && act mv -f -- "$rest" "$R/$rest" && printf 'A\t%%s\n' "$rest" || printf 'F\t%%s\n' "$rest"; fi ;;
+  Z) if ! issym "$rest" && [ -d "$rest" ]; then act rmdir -- "$rest" 2>/dev/null; fi ;;
   M) d=${rest%%%%	*}; x=${rest#*	}; m=${x%%%%	*}; o=${x#*	}
      if issym "$d"; then printf 'S\t%%s\n' "$d"
-     elif [ ! -d "$d" ]; then if act mkdir -p "$d"; then [ -z "$m" ] || act chmod "$m" "$d"; [ -z "$o" ] || act chown "$o" "$d" 2>/dev/null; printf 'M\t%%s\n' "$d"; else printf 'F\t%%s\n' "$d"; fi; fi ;;
+     elif [ ! -d "$d" ]; then if act mkdir -p -- "$d"; then [ -z "$m" ] || act chmod -- "$m" "$d"; [ -z "$o" ] || act chown -- "$o" "$d" 2>/dev/null; printf 'M\t%%s\n' "$d"; else printf 'F\t%%s\n' "$d"; fi; fi ;;
   C|D) if issym "$rest"; then printf 'S\t%%s\n' "$rest"
      elif [ ! -f "$B/$rest" ]; then printf 'F\t%%s\tnot in the backup\n' "$rest"
      elif { [ "$k" = D ] || keepcur "$rest"; } && fromb "$rest"; then printf '%%s\t%%s\n' "$k" "$rest"
