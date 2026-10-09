@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v11.4.0</title>
+<title>Web Remote Manager PRO v11.4.1</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1499,7 +1499,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v11.4.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v11.4.1 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1578,7 +1578,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v11.4.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v11.4.1</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -4738,6 +4738,9 @@ async function checkAuth() {
 async function doLogout() {
   stopSessionKeepalive();
   try { if (voice.active) voiceLeave(true); } catch(_) {}
+  // Signing out forgets this user's clipboard history on this browser (it may hold secrets).
+  try { const k = clipStorageKey(); if (k) localStorage.removeItem(k); } catch(_) {}
+  clipData = {};
   await fetch('/api/auth/logout', {method: 'POST'}).catch(() => {});
   location.href = '/';
 }
@@ -9208,8 +9211,14 @@ async function ctxDeleteSession() {
 
 function sessionClipKey(sessId) { return sessId ? 'session_' + sessId : 'global'; }
 
+// The clipboard history is kept per signed-in user, so another account signing in on the
+// same browser never sees it. The old unscoped key cannot be attributed to a user and is dropped.
+function clipStorageKey() { return currentUser && currentUser.id != null ? CLIP_KEY + ':u' + currentUser.id : ''; }
+
 function loadClipboard() {
-  try { clipData = JSON.parse(localStorage.getItem(CLIP_KEY) || '{}'); } catch(_) { clipData = {}; }
+  try { localStorage.removeItem(CLIP_KEY); } catch(_) {}
+  const key = clipStorageKey();
+  try { clipData = key ? JSON.parse(localStorage.getItem(key) || '{}') : {}; } catch(_) { clipData = {}; }
   renderClipboard(currentSessionId);
 }
 
@@ -9218,7 +9227,11 @@ function loadClipboardForSession(sessId) {
   renderClipboard(sessId);
 }
 
-function saveClipboard() { localStorage.setItem(CLIP_KEY, JSON.stringify(clipData)); }
+function saveClipboard() {
+  const key = clipStorageKey();
+  if (!key) return;
+  try { localStorage.setItem(key, JSON.stringify(clipData)); } catch(_) {}
+}
 
 function addClip(text) {
   if (!text || !text.trim()) return;
