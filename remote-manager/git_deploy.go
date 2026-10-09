@@ -1006,6 +1006,9 @@ echo WRM_DONE
 		parts := strings.SplitN(line, "\t", 3)
 		switch {
 		case len(parts) == 2 && parts[0] == "K":
+			if parts[1] == "backups" || parts[1] == "deploys" {
+				continue // environments: rollback backups and deploy manifests
+			}
 			if by[parts[1]] == nil {
 				by[parts[1]] = &gitBackup{Name: parts[1], Files: []string{}}
 				order = append(order, parts[1])

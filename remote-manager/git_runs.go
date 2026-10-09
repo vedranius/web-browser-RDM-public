@@ -139,6 +139,17 @@ type gitRunItem struct {
 	CIKind   string `json:"ci_kind,omitempty"`
 	CIURL    string `json:"ci_url,omitempty"`
 	CIStatus string `json:"ci_status,omitempty"`
+	// environment deploys and rollbacks (git_env_run.go)
+	Dest        int      `json:"dest,omitempty"` // index of the destination in the environment
+	StateDir    string   `json:"state_dir,omitempty"`
+	Fingerprint string   `json:"fingerprint,omitempty"` // of the reviewed plan
+	DeployID    string   `json:"deploy_id,omitempty"`
+	Partial     bool     `json:"partial,omitempty"` // the transfer was interrupted
+	Moved       []string `json:"moved,omitempty"`   // what had arrived before
+	MovedCount  int      `json:"moved_count,omitempty"`
+	Skipped     []string `json:"skipped,omitempty"` // rollback: symlinks left alone
+	PostDeploy  string   `json:"post_deploy,omitempty"`
+	Note        string   `json:"note,omitempty"`
 }
 
 type gitRestartChoice struct {
@@ -161,7 +172,10 @@ type gitRunParams struct {
 	SetRefOverride bool                 `json:"set_ref_override,omitempty"`
 	Targets        map[string]gitTarget `json:"targets,omitempty"`   // pinned when the run is created
 	Provision      *gitProvision        `json:"provision,omitempty"` // install / transfer (stored without typed values)
+	Env            *gitEnvRun           `json:"env,omitempty"`       // environment deploy or rollback
 }
+
+func (run *gitRun) dryRun() bool { return run.P.Env != nil && run.P.Env.DryRun }
 
 // gitRun is a run being worked on.
 type gitRun struct {
@@ -207,6 +221,7 @@ type gitRunView struct {
 	EndedAt     string            `json:"ended_at,omitempty"`
 	Running     bool              `json:"running"`
 	Versions    map[string]string `json:"versions,omitempty"` // service → target version
+	Env         *gitEnvRun        `json:"env,omitempty"`
 	Items       []*gitRunItem     `json:"items"`
 }
 
@@ -220,7 +235,7 @@ func loadGitRunView(userID, id int) (*gitRunView, *gitRunParams, bool) {
 	}
 	var p gitRunParams
 	jsonUnmarshalString(params, &p)
-	v.Ref, v.Restart = p.Ref, p.Restart
+	v.Ref, v.Restart, v.Env = p.Ref, p.Restart, p.Env
 	v.Items = p.Items
 	if result != "" {
 		var items []*gitRunItem
@@ -294,6 +309,12 @@ func createGitRun(r *http.Request, userID int, p gitRunParams) (int, int, error)
 		return createProvisionRun(r, userID, p)
 	}
 	p.Provision = nil
+	if p.Env != nil {
+		if p.Kind != "update" && p.Kind != "upgrade" && p.Kind != "rollback" {
+			return 0, 400, fmt.Errorf("environments support update, upgrade and rollback")
+		}
+		return createEnvRun(r, userID, p)
+	}
 	key, known := gitKindPolicy[p.Kind]
 	if !known {
 		return 0, 400, fmt.Errorf("unknown kind")
@@ -723,7 +744,7 @@ func executeGitRun(run *gitRun) {
 			finishGitRun(run)
 		}
 	}()
-	if run.Kind != "restart" {
+	if run.Kind != "restart" && !run.dryRun() {
 		notifyGitRun(run, "git.deploy_started")
 	}
 	failed := false
@@ -743,13 +764,19 @@ func executeGitRun(run *gitRun) {
 		var err error
 		switch run.Kind {
 		case "update", "upgrade":
-			if it.Via == "ci" {
+			if run.P.Env != nil {
+				err = run.envDeployItem(it)
+			} else if it.Via == "ci" {
 				err = run.pipelineItem(it)
 			} else {
 				err = run.deployFiles(it)
 			}
 		case "rollback":
-			err = run.rollbackItem(it)
+			if run.P.Env != nil {
+				err = run.envRollbackItem(it)
+			} else {
+				err = run.rollbackItem(it)
+			}
 		case "stamp":
 			err = run.stampItem(it)
 		case "restart":
@@ -812,7 +839,9 @@ func finishGitRun(run *gitRun) {
 		delete(gitLive.busy, run.UserID)
 	}
 	gitLive.Unlock()
-	if run.Kind == "restart" {
+	if run.dryRun() {
+		// a dry run changes nothing: no notification
+	} else if run.Kind == "restart" {
 		notifyGitRun(run, "git.restart_done")
 	} else if state == "done" {
 		notifyGitRun(run, "git.deploy_done")
@@ -1432,6 +1461,21 @@ func auditGitItem(run *gitRun, it *gitRunItem) {
 	}
 	if it.Via == "ci" {
 		details["via"], details["ci_kind"], details["ci_url"], details["ci_status"] = "ci", it.CIKind, it.CIURL, it.CIStatus
+	}
+	if e := run.P.Env; e != nil {
+		details["env"], details["deploy_id"] = e.Env, e.DeployID
+		if e.DryRun {
+			details["dry_run"] = true
+		}
+		if it.Partial {
+			details["partial"], details["moved"] = true, it.MovedCount
+		}
+		if it.PostDeploy != "" {
+			details["post_deploy"] = it.PostDeploy
+		}
+		if len(it.Skipped) > 0 {
+			details["skipped"] = len(it.Skipped)
+		}
 	}
 	if run.Kind == "install" || run.Kind == "transfer" {
 		details["to_conn_id"] = it.ConnID
