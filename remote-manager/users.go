@@ -322,6 +322,8 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"git_upgrade":   gitActionAllowed(u.ID, "git_upgrade"),
 			"git_rollback":  gitActionAllowed(u.ID, "git_rollback"),
 			"git_restart":   gitActionAllowed(u.ID, "git_restart"),
+			"git_install":   gitActionAllowed(u.ID, "git_install"),
+			"git_transfer":  gitActionAllowed(u.ID, "git_transfer"),
 		},
 	}
 }
