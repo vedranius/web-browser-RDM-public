@@ -1,12 +1,36 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.2.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.3.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.2.0 — Git: new servers (install and transfer)
+## Web Remote Manager PRO v11.3.0 — Git: .gitignore helper and optional CI integration
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, updates them and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🆕 Install a service on a new server
+### 🧹 .gitignore helper
+
+- A new **.gitignore** tab in the Git workspace collects candidates per service: files that exist **only on servers** (from the latest checks, with size and the servers they were seen on), **standard patterns** for Python, Node, Go, Java, Docker and IDE files (pre-selected when the repository uses them) and the service's **protected** per-host globs.
+- **Warnings** about committed secrets or per-host configuration (`.env`, `*.pem`, `*.key`, `*credentials*`, files matching the protected globs) with the advice to commit a `.example` template instead.
+- Edit the service's catalog **exclude / protected** lists on the same screen, and **preview** the new `.gitignore` as a diff against the current one.
+- The output is a **download**. A **merge request** (GitLab) or **pull request** (GitHub) on a new branch is created **only when you choose it** and type the repository name; it needs an optional, encrypted **write token** on the Git source and the new policy **`git_gitignore_mr`** (administrators by default). Audited as `git.gitignore_mr`.
+
+### 🔗 Optional CI integration
+
+- **Webhook per Git source:** GitLab push / tag events, GitHub push / release events (HMAC-signed) or a POST from Jenkins or any CI start an **immediate check** of the affected services. Rate-limited, audited, replays refused.
+- **Bundles from CI artifacts:** fetch the newest bundle from a GitLab job artifact, a Jenkins artifact or any HTTPS URL (with an auth header), by hand or on a schedule, and use it as the offline source.
+- **Deploy method "CI pipeline"** for services built elsewhere: *Update* triggers a **Jenkins** job (`buildWithParameters`) or a **GitLab pipeline** (trigger token) with `server`, `install_path` and `version`; WRM follows the status and shows the result and a link in the run history. Same confirmation, policies and audit as a normal update.
+- Everything is opt-in: WRM keeps working without any CI.
+
+### ⬆️ Upgrading from v11.2.0
+
+Replace the binary. The database gets two new tables (`git_feeds`, `git_pipelines`) and new columns on `git_sources`; the previous binary still starts on it. Only administrators may open .gitignore merge requests until you change `git_gitignore_mr` in *Admin → Policies*. Behind a reverse proxy that filters paths, forward `/api/hooks/git/` for webhooks.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.3.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.2.0 — Git: new servers (install and transfer)
+
+#### 🆕 Install a service on a new server
 
 - **Install…** on the *Installations* tab of the Git workspace opens a wizard: pick **any SSH connection**, the **services** (each at its catalog version, another branch or tag, or from an imported **offline bundle**) and the **target directory** (suggested from the server roots).
 - **Pre-checks first:** free disk space, a writable directory, `tar`, the `python3` / `node` versions when the service has such files, and an **existing installation** at the target — refused unless you confirm the overwrite, and then the replaced files are backed up to `.deploy-bak/`.
@@ -14,20 +38,18 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - WRM writes the files in **one verified transfer** (staged, checked by hash, then renamed into place), runs the usual checks, rolls back automatically on failure, and writes **`VERSION.md`** and the **`updates.jsonl`** line like an update does.
 - **Optional unit:** a systemd unit or supervisor program from a small template (user, working directory, command) — opt-in, with a warning, never over an existing one. **Starting** the service afterwards is opt-in too, with a health check.
 
-### 🚚 Transfer an installation to another server
+#### 🚚 Transfer an installation to another server
 
 - **Transfer…** copies an installation from server A to server B **with its per-host configuration**, but **without** logs, `.deploy-bak`, caches (`__pycache__`, `*.pyc`), the catalog's ignored directories and backup-looking paths (`*_BKP`, `run.py.bak`, …). The wizard lists what stays behind.
 - The files stream directly from A to B through WRM (no temporary copies on WRM's disk), are verified by hash, and existing files at the target are backed up first. `VERSION.md` gets the new host and user.
 
-### 🔐 Policies, audit and notifications
+#### 🔐 Policies, audit and notifications
 
 - New policies **`git_install`** and **`git_transfer`** (administrators by default, changeable in *Admin → Policies*). Every install and transfer is audited (`git.install`, `git.transfer`) and sends the usual run notifications (started, done, failed).
 
-### ⬆️ Upgrading from v11.1.0
+#### ⬆️ Upgrading from v11.1.0
 
 Replace the binary. The database is unchanged (installs and transfers are stored as runs); the previous binary still starts on it. Only administrators may install and transfer until you change the new policies in *Admin → Policies*. Production targets and overwrites need the server name typed.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.2.0/CHANGELOG.md) for details.
 
 ---
 
