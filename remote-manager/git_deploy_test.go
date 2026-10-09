@@ -263,7 +263,7 @@ func TestGitDeployUpdateRollbackStamp(t *testing.T) {
 		}
 	}
 	logLines := strings.Split(strings.TrimSpace(readFile(t, e.logFile)), "\n")
-	if len(logLines) != 1 || !regexp.MustCompile(`^\{"app": "demo-api", "backup": "[^"]+", "branch": "main", "bundle": "wrm-\d{8}-\d{4}", "env": "", "files": \["lib/util.py", "run.py"\], "from_version": "-", "host": "[^"]+", "install": "[^"]+", "services": \["systemctl demo-api"\], "time": "\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d", "to_version": "` + c2 + ` \(2026-09-10\)", "user": "[^"]+"\}$`).MatchString(logLines[0]) {
+	if len(logLines) != 1 || !regexp.MustCompile(`^\{"app": "demo-api", "backup": "[^"]+", "branch": "main", "bundle": "wrm-\d{8}-\d{4}", "env": "", "files": \["lib/util.py", "run.py"\], "from_version": "-", "host": "[^"]+", "install": "[^"]+", "services": \["systemctl demo-api"\], "time": "\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d", "to_version": "`+c2+` \(2026-09-10\)", "user": "[^"]+"\}$`).MatchString(logLines[0]) {
 		t.Fatalf("updates.jsonl: %s", logLines[0])
 	}
 	if it.UpdateLog != e.logFile {
