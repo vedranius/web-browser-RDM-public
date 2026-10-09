@@ -223,8 +223,65 @@ Object.assign(LANGS.hr, {
   git_ci_item: 'Isporučuje CI ({kind}): WRM pokreće posao s parametrima server, install_path i version i prati njegovo stanje; datoteke se ne zapisuju.', git_ci_link: 'Otvori u CI-ju', git_step_ci: 'CI pipeline',
 });
 
+Object.assign(LANGS.en, {
+  git_all_services: 'All services', git_all_servers: 'All servers', git_search_srv: 'Search server, host, path…',
+  git_check_selected: 'Check selected ({n})', git_check_visible: 'Check visible ({n})', git_check_stale: 'Check only stale', git_check_cell: 'Check this cell',
+  git_stale_never: 'never checked', git_stale_60: 'older than 1 hour', git_stale_1440: 'older than 24 hours', git_stale_10080: 'older than 7 days',
+  git_sel_row: 'Select every installation of this server', git_sel_col: 'Select every installation of this service', git_sel_all: 'Select every visible installation',
+  git_clear_sel: 'Clear selection', git_cancel_check: 'Cancel', git_job_progress: 'Checking {done}/{total}', git_job_targets: 'Refreshing targets…',
+  git_job_done: 'Check finished: {n} installations.', git_job_cancelled: 'Check cancelled.', git_job_errors: '{n} could not be checked.', git_nothing_stale: 'No visible installation is that old.',
+  git_q_queued: 'queued', git_q_running: 'checking…', git_checked_ago: 'checked {t}', git_ago_now: 'just now', git_ago_min: '{n} min ago', git_ago_h: '{n} h ago', git_ago_d: '{n} d ago',
+  git_last_good: 'last good: {s}, {t}',
+  git_files_all: 'Files in the folder and in Git', git_ff_all: 'All', git_ff_diff: 'Differing', git_ff_tracked: 'Tracked only', git_ff_untracked: 'Not tracked', git_files_search: 'Search files…',
+  git_files_loading: 'Reading the folder on the server…', git_files_count: '{n} of {total}', git_files_truncated: 'The folder has more than {n} entries: only the first {n} are listed.',
+  git_files_partial: 'Only the catalog\'s files of the repository are known: refresh the targets to see the other repository files too.',
+  git_files_notcmp: '{n} repository files outside the catalog were not compared yet (Diff compares them).', git_files_more: 'Showing the first {n} rows: narrow the list with the filters.',
+  git_files_failed: 'The folder could not be read: {e}', git_files_stored: 'Files of the last check', git_files_info: 'Files the catalog does not track are informational: they never change the state of the installation.',
+  git_size: 'Size', git_mtime: 'Modified', git_reason: 'Why', git_open: 'Open',
+  git_fs_same: 'same', git_fs_differs: 'differs', git_fs_unknown: 'not compared', git_fs_symlink: 'symlink', git_fs_unreadable: 'unreadable',
+  git_r_tracked: 'tracked', git_r_excluded: 'excluded by the catalog', git_r_excluded_p: 'excluded by the catalog ({p})', git_r_not_included: 'not in the include list',
+  git_r_protected: 'protected', git_r_protected_p: 'protected ({p})', git_r_extra: 'not in Git', git_r_tool: 'written by the deploy tool', git_r_compiled: 'compiled file',
+  git_r_not_tracked: 'in Git, not tracked', git_r_no_target: 'no target yet', git_link_outside: 'points out of the installation (not followed)', git_dir_unreadable: 'directory: permission denied',
+  git_informational: 'Excluded by the catalog — informational, not updated.', git_info_untracked: 'Not tracked by the catalog — informational, not updated.',
+  git_view_unified: 'Unified', git_view_split: 'Side by side', git_from_server: 'Server', git_from_git: 'Git',
+  git_binary_same: 'Binary file: the same on the server and in Git (by hash).', git_binary_differs: 'Binary file: differs between the server and Git (by hash).',
+  git_big_same: 'The file is too large to show: the same on the server and in Git (by hash).', git_big_differs: 'The file is too large to show: it differs between the server and Git (by hash).',
+  git_missing_srv: 'The file is not on the server: everything below would be added.', git_view_binary: 'Binary file, {s}, SHA-256 {h}', git_view_big: 'The file is too large to show ({s}), SHA-256 {h}',
+  git_crlf: 'Line endings are ignored (CRLF = LF).', git_view_side: 'Open from', git_target_err: 'Target: {e}',
+  git_commits: 'Commits', git_commits_behind: 'Commits behind: {n}', git_commits_none: 'The server is at the target commit.', git_commits_loading: 'Loading commits…',
+  git_commits_range: '{f} → {t}', git_commits_more: 'The newest {n} are shown.',
+});
+Object.assign(LANGS.hr, {
+  git_all_services: 'Svi servisi', git_all_servers: 'Svi serveri', git_search_srv: 'Traži server, host, putanju…',
+  git_check_selected: 'Provjeri odabrane ({n})', git_check_visible: 'Provjeri prikazane ({n})', git_check_stale: 'Provjeri samo zastarjele', git_check_cell: 'Provjeri ovu ćeliju',
+  git_stale_never: 'nikad provjerene', git_stale_60: 'starije od 1 sata', git_stale_1440: 'starije od 24 sata', git_stale_10080: 'starije od 7 dana',
+  git_sel_row: 'Odaberi sve instalacije ovog servera', git_sel_col: 'Odaberi sve instalacije ovog servisa', git_sel_all: 'Odaberi sve prikazane instalacije',
+  git_clear_sel: 'Poništi odabir', git_cancel_check: 'Prekini', git_job_progress: 'Provjera {done}/{total}', git_job_targets: 'Osvježavanje ciljeva…',
+  git_job_done: 'Provjera završena: {n} instalacija.', git_job_cancelled: 'Provjera prekinuta.', git_job_errors: 'Nije moguće provjeriti: {n}.', git_nothing_stale: 'Nijedna prikazana instalacija nije toliko stara.',
+  git_q_queued: 'na čekanju', git_q_running: 'provjera…', git_checked_ago: 'provjereno {t}', git_ago_now: 'upravo', git_ago_min: 'prije {n} min', git_ago_h: 'prije {n} h', git_ago_d: 'prije {n} d',
+  git_last_good: 'zadnje uspješno: {s}, {t}',
+  git_files_all: 'Datoteke u direktoriju i u Gitu', git_ff_all: 'Sve', git_ff_diff: 'Različite', git_ff_tracked: 'Samo praćene', git_ff_untracked: 'Nepraćene', git_files_search: 'Traži datoteke…',
+  git_files_loading: 'Čitanje direktorija na serveru…', git_files_count: '{n} od {total}', git_files_truncated: 'Direktorij ima više od {n} stavki: prikazano je samo prvih {n}.',
+  git_files_partial: 'Poznate su samo datoteke repozitorija iz kataloga: osvježite ciljeve da biste vidjeli i ostale datoteke repozitorija.',
+  git_files_notcmp: 'Datoteke repozitorija izvan kataloga koje još nisu uspoređene: {n} (usporedite ih gumbom Razlike).', git_files_more: 'Prikazano je prvih {n} redaka: suzite popis filtrima.',
+  git_files_failed: 'Direktorij nije moguće pročitati: {e}', git_files_stored: 'Datoteke zadnje provjere', git_files_info: 'Datoteke koje katalog ne prati samo su informativne: nikad ne mijenjaju stanje instalacije.',
+  git_size: 'Veličina', git_mtime: 'Izmijenjeno', git_reason: 'Zašto', git_open: 'Otvori',
+  git_fs_same: 'isto', git_fs_differs: 'razlikuje se', git_fs_unknown: 'nije uspoređeno', git_fs_symlink: 'simbolička veza', git_fs_unreadable: 'nečitljivo',
+  git_r_tracked: 'praćeno', git_r_excluded: 'isključeno katalogom', git_r_excluded_p: 'isključeno katalogom ({p})', git_r_not_included: 'nije na popisu uključenih',
+  git_r_protected: 'zaštićeno', git_r_protected_p: 'zaštićeno ({p})', git_r_extra: 'nije u Gitu', git_r_tool: 'zapisuje alat za isporuku', git_r_compiled: 'prevedena datoteka',
+  git_r_not_tracked: 'u Gitu, nije praćeno', git_r_no_target: 'još nema cilja', git_link_outside: 'vodi izvan instalacije (ne slijedi se)', git_dir_unreadable: 'direktorij: pristup odbijen',
+  git_informational: 'Isključeno katalogom — informativno, ne ažurira se.', git_info_untracked: 'Katalog ovo ne prati — informativno, ne ažurira se.',
+  git_view_unified: 'Objedinjeno', git_view_split: 'Usporedno', git_from_server: 'Server', git_from_git: 'Git',
+  git_binary_same: 'Binarna datoteka: ista na serveru i u Gitu (po hashu).', git_binary_differs: 'Binarna datoteka: razlikuje se između servera i Gita (po hashu).',
+  git_big_same: 'Datoteka je prevelika za prikaz: ista na serveru i u Gitu (po hashu).', git_big_differs: 'Datoteka je prevelika za prikaz: razlikuje se između servera i Gita (po hashu).',
+  git_missing_srv: 'Datoteke nema na serveru: sve ispod bilo bi dodano.', git_view_binary: 'Binarna datoteka, {s}, SHA-256 {h}', git_view_big: 'Datoteka je prevelika za prikaz ({s}), SHA-256 {h}',
+  git_crlf: 'Završeci redaka se zanemaruju (CRLF = LF).', git_view_side: 'Otvori iz', git_target_err: 'Cilj: {e}',
+  git_commits: 'Commitovi', git_commits_behind: 'Commitova iza cilja: {n}', git_commits_none: 'Server je na commitu cilja.', git_commits_loading: 'Učitavanje commitova…',
+  git_commits_range: '{f} → {t}', git_commits_more: 'Prikazano je najnovijih {n}.',
+});
+
 (function () {
-  const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: ''}, onlyChanges: true, busy: false};
+  const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const $ = id => document.getElementById(id);
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(b); return s; };
   const lines = s => String(s || '').split(/[\n,]/).map(x => x.trim()).filter(Boolean);
@@ -326,6 +383,46 @@ Object.assign(LANGS.hr, {
 #git-ws .g-warn { border-color: var(--red); }
 #git-ws pre.g-pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; max-height: 30vh; overflow: auto; font-size: 11.5px; margin: 0; white-space: pre-wrap; word-break: break-all; }
 @media (max-width: 640px) { #git-ws .g-head { padding: 8px 10px; } #git-ws .g-body { padding: 10px; } #git-ws .g-bar select, #git-ws .g-bar input { min-width: 0; flex: 1 1 140px; } }
+#git-ws .g-cb, #git-modal .g-cb { width: auto; margin: 0 5px 0 0; vertical-align: middle; cursor: pointer; }
+#git-ws .g-inst.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+#git-ws .g-inst .g-ago { font-size: 10.5px; color: var(--text3); }
+#git-ws .g-cellbtn { background: transparent; border: 1px dashed var(--border2); color: var(--text2); border-radius: 6px; padding: 1px 7px; font-size: 11px; margin-top: 2px; cursor: pointer; }
+#git-ws .g-cellbtn:hover { border-color: var(--accent); color: var(--text); }
+#git-ws .g-cellbtn:disabled { opacity: .4; cursor: default; }
+#git-ws .g-prog { display: inline-flex; gap: 6px; align-items: center; color: var(--text2); font-size: 12px; white-space: nowrap; }
+.g-spin { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: g-spin .8s linear infinite; vertical-align: -1px; }
+@keyframes g-spin { to { transform: rotate(360deg); } }
+#git-ws .g-q { display: inline-flex; gap: 5px; align-items: center; font-size: 10.5px; color: var(--yellow); font-weight: 600; }
+#git-ws .g-hostname { font-size: 10.5px; color: var(--text3); font-weight: 400; }
+#git-ws .g-checkbar { padding: 6px 8px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg2); }
+#git-ws .g-checkbar select { min-width: 0; }
+#git-modal .g-seg { display: inline-flex; border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+#git-modal .g-seg button { background: transparent; color: var(--text2); border: 0; border-right: 1px solid var(--border2); border-radius: 0; padding: 4px 10px; font-size: 12px; }
+#git-modal .g-seg button:last-child { border-right: 0; }
+#git-modal .g-seg button.on { background: var(--accent-d); color: var(--text); }
+#git-modal .g-flist { max-height: 45vh; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+#git-modal .g-flist table td { vertical-align: top; }
+#git-modal .g-flist .g-why { color: var(--text2); font-size: 11px; }
+#git-modal .g-flist .g-pat { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+#git-modal .g-untracked td:first-child { opacity: .85; }
+#git-modal .s-same { background: rgba(34,197,94,.10); color: var(--green); }
+#git-modal .s-differs { background: rgba(139,92,246,.16); color: var(--purple); }
+#git-modal .s-symlink, #git-modal .s-unknown { background: var(--bg4); color: var(--text2); }
+#git-modal .s-unreadable { background: rgba(239,68,68,.10); color: var(--red); }
+#git-modal .g-diff .d-add { color: var(--green); }
+#git-modal .g-diff .d-del { color: var(--red); }
+#git-modal .g-split { table-layout: fixed; width: 100%; border-collapse: collapse; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+#git-modal .g-split td { white-space: pre-wrap; word-break: break-all; padding: 0 6px; border: 0; vertical-align: top; }
+#git-modal .g-split td.ln { width: 3.4em; color: var(--text3); text-align: right; user-select: none; padding: 0 4px; }
+#git-modal .g-split td.d-del { background: rgba(239,68,68,.13); color: var(--red); }
+#git-modal .g-split td.d-add { background: rgba(34,197,94,.13); color: var(--green); }
+#git-modal .g-split td.d-none { background: var(--bg3); }
+#git-modal .g-split tr.d-hunk td { background: var(--accent-d); color: var(--text2); }
+#git-modal pre.g-code { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; max-height: 60vh; overflow: auto; font-size: 11.5px; margin: 0; white-space: pre; tab-size: 4; }
+#git-modal .g-dhead { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 12px 0 6px; }
+#git-modal .g-dhead h3 { margin: 0; flex: 1 1 200px; }
+#git-modal .g-commits table td { white-space: normal; }
+@media (max-width: 640px) { #git-modal { padding: 8px 4px; } #git-modal .g-dlg { padding: 12px 10px; } #git-modal .g-hm { display: none; } #git-modal .g-flist { max-height: 55vh; } }
 `;
 
   function stBadge(s) { return `<span class="g-st s-${esc(s)}">${esc(t('git_st_' + s))}</span>`; }
@@ -351,7 +448,7 @@ Object.assign(LANGS.hr, {
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('git-ws') && !$('git-modal')) close(); });
     }
     ws.style.display = 'flex';
-    load().then(ok => ok && render());
+    load().then(ok => { if (ok) { render(); resumeJob(); } });
   }
 
   function close() { const ws = $('git-ws'); if (ws) ws.style.display = 'none'; closeModal(); }
@@ -361,9 +458,9 @@ Object.assign(LANGS.hr, {
     $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'runs', 'gitignore', 'settings'].map(k =>
       `<button class="${G.tab === k ? 'on' : ''}" onclick="gitWorkspace.tab('${k}')">${esc(t('git_tab_' + k))}</button>`).join('');
     $('git-last').textContent = `${t('git_last_check')}: ${s.last_check_at ? fmtTime(s.last_check_at) : t('git_never')}`;
-    $('git-check').disabled = !s.can_check || G.busy;
+    $('git-check').disabled = !s.can_check || G.busy || jobRunning();
     $('git-check').title = s.can_check ? '' : t('git_no_checks');
-    $('git-check').textContent = G.busy ? t('git_checking') : t('git_check_now');
+    $('git-check').textContent = G.busy || jobRunning() ? t('git_checking') : t('git_check_now');
     const body = $('git-body');
     if (G.tab === 'overview') body.innerHTML = overviewHTML();
     else if (G.tab === 'services') body.innerHTML = servicesHTML();
@@ -380,7 +477,8 @@ Object.assign(LANGS.hr, {
     const f = G.f, q = f.q.toLowerCase();
     return G.state.installs.filter(i => (!f.state || i.state === f.state) && (!f.env || i.env === f.env) &&
       (!f.folder || String(i.folder_id || '') === f.folder) && (!f.tag || (i.tags || []).includes(f.tag)) &&
-      (!q || (i.conn_name + ' ' + i.app + ' ' + i.path).toLowerCase().includes(q)));
+      (!f.app || i.app === f.app) && (!f.conn || String(i.conn_id) === f.conn) &&
+      (!q || (i.conn_name + ' ' + (i.host || '') + ' ' + i.app + ' ' + i.path + ' ' + (i.env || '')).toLowerCase().includes(q)));
   }
 
   function filterBar() {
@@ -388,13 +486,17 @@ Object.assign(LANGS.hr, {
     const envs = [...new Set(s.installs.map(i => i.env).filter(Boolean))].sort();
     const fids = [...new Set(s.installs.map(i => i.folder_id).filter(Boolean))];
     const tags = [...new Set(s.installs.flatMap(i => i.tags || []))].sort();
+    const appNames = [...new Set(s.installs.map(i => i.app))].sort();
+    const servers = [...new Map(s.installs.map(i => [i.conn_id, i.conn_name])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
     const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(label)}</option>`;
     const fname = id => ((folders || []).find(x => x.id === id) || {}).name || ('#' + id);
-    return `<select onchange="gitWorkspace.filter('state', this.value)">${opt('', t('git_all_states'), f.state)}${['update', 'review', 'ok', 'error', 'gone', 'unknown'].map(x => opt(x, t('git_st_' + x), f.state)).join('')}</select>
+    return `<select onchange="gitWorkspace.filter('app', this.value)">${opt('', t('git_all_services'), f.app)}${appNames.map(x => opt(x, x, f.app)).join('')}</select>
+      <select onchange="gitWorkspace.filter('conn', this.value)">${opt('', t('git_all_servers'), f.conn)}${servers.map(([id, n]) => opt(id, n, f.conn)).join('')}</select>
+      <select onchange="gitWorkspace.filter('state', this.value)">${opt('', t('git_all_states'), f.state)}${['update', 'review', 'ok', 'error', 'gone', 'unknown'].map(x => opt(x, t('git_st_' + x), f.state)).join('')}</select>
       <select onchange="gitWorkspace.filter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${envs.map(x => opt(x, x, f.env)).join('')}</select>
       <select onchange="gitWorkspace.filter('folder', this.value)">${opt('', t('git_all_folders'), f.folder)}${fids.map(x => opt(x, fname(x), f.folder)).join('')}</select>
       <select onchange="gitWorkspace.filter('tag', this.value)">${opt('', t('git_all_tags'), f.tag)}${tags.map(x => opt(x, x, f.tag)).join('')}</select>
-      <input type="search" placeholder="${esc(t('git_search'))}" value="${esc(f.q)}" oninput="gitWorkspace.filter('q', this.value, true)">`;
+      <input type="search" id="git-q" placeholder="${esc(t('git_search_srv'))}" value="${esc(f.q)}" oninput="gitWorkspace.filter('q', this.value, true)">`;
   }
 
   function refBar() {
@@ -414,19 +516,151 @@ Object.assign(LANGS.hr, {
       (apps.length ? apps.map(a => { const x = targets[a]; return `<tr><td><b>${esc(a)}</b></td><td>${x ? `<span class="g-mono">${esc(x.version || '—')}</span> <span class="g-mut">${esc(x.branch || '')} · ${esc(x.commit_date || '')}</span>` : `<span class="g-mut">${esc(t('git_no_target'))}</span>`}</td>
         <td class="g-mono">${esc((x && x.latest_tag) || '—')}</td><td class="g-mut">${esc(x ? x.source : '')}</td><td>${x && x.error ? `<span class="g-st s-error">${esc(x.error)}</span>` : esc(((x && x.warnings) || []).join('; '))}</td></tr>`; }).join('')
         : `<tr><td colspan="5" class="g-mut">${esc(t('git_empty_overview'))}</td></tr>`) + '</table></div></div>';
-    html += `<div class="g-bar">${filterBar()}</div>`;
-    const servers = [...new Map(list.map(i => [i.conn_id, i.conn_name])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    html += `<div class="g-bar">${filterBar()}</div>${checkBar(list)}`;
+    const servers = [...new Map(list.map(i => [i.conn_id, i])).entries()].sort((a, b) => a[1].conn_name.localeCompare(b[1].conn_name));
     if (!servers.length) return html + `<div class="hint-box">${esc(t('git_empty_overview'))}</div>`;
-    const cols = apps.filter(a => list.some(i => i.app === a));
-    html += `<div class="g-card g-scroll"><table class="g-matrix"><tr><th>${esc(t('git_server'))}</th>${cols.map(a => `<th>${esc(a)}</th>`).join('')}</tr>` +
-      servers.map(([cid, name]) => `<tr><td><b>${esc(name)}</b></td>${cols.map(a => `<td class="g-cell">${list.filter(i => i.conn_id === cid && i.app === a).map(instChip).join('')}</td>`).join('')}</tr>`).join('') + '</table></div>';
+    const cols = [...apps, ...new Set(list.map(i => i.app))].filter((a, k, arr) => arr.indexOf(a) === k && list.some(i => i.app === a));
+    const ids = l => l.map(i => i.id);
+    const running = jobRunning();
+    html += `<div class="g-card g-scroll"><table class="g-matrix"><tr><th>${selBox(ids(list), t('git_sel_all'))}${esc(t('git_server'))}</th>${cols.map(a => `<th>${selBox(ids(list.filter(i => i.app === a)), t('git_sel_col'))}${esc(a)}</th>`).join('')}</tr>` +
+      servers.map(([cid, x]) => { const row = list.filter(i => i.conn_id === cid);
+        return `<tr><td>${selBox(ids(row), t('git_sel_row'))}<b>${esc(x.conn_name)}</b>${x.host ? `<div class="g-hostname g-mono">${esc(x.host)}</div>` : ''}</td>${cols.map(a => { const cell = row.filter(i => i.app === a);
+          return `<td class="g-cell">${cell.map(instChip).join('')}${cell.length && G.state.can_check ? `<button class="g-cellbtn" title="${esc(t('git_check_cell'))}" ${running ? 'disabled' : ''} onclick="gitWorkspace.checkIds([${ids(cell).join(',')}])">↻ ${esc(t('git_check_cell'))}</button>` : ''}</td>`; }).join('')}</tr>`; }).join('') + '</table></div>';
     return html;
   }
 
   function instChip(i) {
     const v = (i.version_md && i.version_md.version) || '';
-    return `<span class="g-inst" onclick="gitWorkspace.details(${i.id})" title="${esc(i.path)}">${stBadge(i.state)}${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}
-      <div class="g-mut">${esc(t('git_version_md'))}: <span class="g-mono">${v ? esc(v) : esc(t('git_vmd_missing'))}</span>${i.behind ? ' · ' + esc(tf('git_behind', {n: i.behind})) : ''}</div></span>`;
+    return `<span class="g-inst${G.sel.has(i.id) ? ' sel' : ''}" onclick="gitWorkspace.details(${i.id})" title="${esc(i.path)}"><input type="checkbox" class="g-cb" ${G.sel.has(i.id) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="gitWorkspace.sel([${i.id}], this.checked)">${stateCell(i)}${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}
+      <div class="g-mut">${esc(t('git_version_md'))}: <span class="g-mono">${v ? esc(v) : esc(t('git_vmd_missing'))}</span>${i.behind ? ' · ' + esc(tf('git_behind', {n: i.behind})) : ''}</div>
+      <div class="g-ago" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${lastGood(i)}${esc(tf('git_checked_ago', {t: ago(i.checked_at)}))}</div></span>`;
+  }
+
+  // ── selection and check jobs ──
+  const J = {job: null, items: {}, seq: 0, timer: null, stale: 'never'};
+  const jobRunning = () => !!(J.job && J.job.state === 'running');
+
+  function ago(ts) {
+    if (!ts) return t('git_never');
+    const s = Math.max(0, (Date.now() - new Date(ts).getTime()) / 1000);
+    if (s < 60) return t('git_ago_now');
+    if (s < 3600) return tf('git_ago_min', {n: Math.floor(s / 60)});
+    if (s < 86400) return tf('git_ago_h', {n: Math.floor(s / 3600)});
+    return tf('git_ago_d', {n: Math.floor(s / 86400)});
+  }
+
+  function lastGood(i) { return i.state === 'error' && i.last_ok_state ? esc(tf('git_last_good', {s: t('git_st_' + i.last_ok_state), t: ago(i.last_ok_at)})) + ' · ' : ''; }
+
+  // the state badge, or the job's spinner while the installation is queued or being checked
+  function stateCell(i) {
+    const it = jobRunning() && J.items[i.id];
+    if (it && it.state === 'running') return `<span class="g-q"><span class="g-spin"></span>${esc(t('git_q_running'))}</span>`;
+    if (it && it.state === 'queued') return `<span class="g-q">⏳ ${esc(t('git_q_queued'))}</span>`;
+    return stBadge(i.state);
+  }
+
+  function selBox(ids, title) {
+    const on = ids.length > 0 && ids.every(id => G.sel.has(id));
+    return `<input type="checkbox" class="g-cb" title="${esc(title)}" ${on ? 'checked' : ''} ${ids.length ? '' : 'disabled'} onclick="event.stopPropagation()" onchange="gitWorkspace.sel([${ids.join(',')}], this.checked)">`;
+  }
+
+  function checkBar(list) {
+    const running = jobRunning(), can = G.state.can_check, n = G.sel.size;
+    const j = J.job || {};
+    const stale = ['never', '60', '1440', '10080'];
+    return `<div class="g-bar g-checkbar">
+      <button class="btn-sm" onclick="gitWorkspace.checkSel()" ${can && !running && n ? '' : 'disabled'}>✓ ${esc(tf('git_check_selected', {n}))}</button>
+      <button class="btn-sec btn-sm" onclick="gitWorkspace.checkVisible()" ${can && !running && list.length ? '' : 'disabled'}>${esc(tf('git_check_visible', {n: list.length}))}</button>
+      <span style="display:inline-flex;gap:4px;align-items:center"><button class="btn-sec btn-sm" onclick="gitWorkspace.checkStale()" ${can && !running && list.length ? '' : 'disabled'}>${esc(t('git_check_stale'))}</button>
+      <select id="git-stale" onchange="gitWorkspace.setStale(this.value)">${stale.map(x => `<option value="${x}" ${J.stale === x ? 'selected' : ''}>${esc(t('git_stale_' + x))}</option>`).join('')}</select></span>
+      ${n ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.clearSel()">${esc(t('git_clear_sel'))}</button>` : ''}
+      ${running ? `<span class="g-sp"></span><span class="g-prog"><span class="g-spin"></span>${esc(j.phase === 'targets' ? t('git_job_targets') : tf('git_job_progress', {done: j.done || 0, total: j.total || 0}))}</span>
+        <button class="btn-danger btn-sm" onclick="gitWorkspace.cancelCheck()">✕ ${esc(t('git_cancel_check'))}</button>` : ''}</div>`;
+  }
+
+  // keepView re-renders the tab and keeps the focus, the caret and the scroll positions
+  function keepView() {
+    if (!$('git-ws') || $('git-ws').style.display === 'none') return;
+    const ae = document.activeElement, id = ae && ae.id, pos = ae && typeof ae.selectionStart === 'number' ? ae.selectionStart : null;
+    const scr = [...document.querySelectorAll('#git-body .g-scroll')].map(e => [e.scrollLeft, e.scrollTop]);
+    const top = $('git-body') ? $('git-body').scrollTop : 0;
+    render();
+    document.querySelectorAll('#git-body .g-scroll').forEach((e, k) => { if (scr[k]) { e.scrollLeft = scr[k][0]; e.scrollTop = scr[k][1]; } });
+    if ($('git-body')) $('git-body').scrollTop = top;
+    if (id && $(id) && !$('git-modal')) { $(id).focus(); if (pos !== null) try { $(id).setSelectionRange(pos, pos); } catch (e) { /* not a text input */ } }
+  }
+
+  function sel(ids, on) { ids.forEach(id => on ? G.sel.add(id) : G.sel.delete(id)); keepView(); }
+  function clearSel() { G.sel.clear(); keepView(); }
+  function setStale(v) { J.stale = v; }
+
+  function mergeInstalls(list) {
+    const by = new Map(list.map(i => [i.id, i]));
+    G.state.installs = G.state.installs.map(i => by.has(i.id) ? by.get(i.id) : i);
+    const have = new Set(G.state.installs.map(i => i.id));
+    list.forEach(i => { if (!have.has(i.id)) G.state.installs.push(i); });
+  }
+
+  function setJob(j) {
+    J.job = j;
+    J.items = {};
+    (j.items || []).forEach(it => { J.items[it.install_id] = it; });
+    if (j.installs) mergeInstalls(j.installs);
+    J.seq = j.seq || 0;
+  }
+
+  async function startJob(body) {
+    if (jobRunning()) return;
+    const r = await fetch('/api/git/check/jobs', json('POST', body));
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    J.seq = 0;
+    setJob(await r.json());
+    keepView();
+    pollJob();
+  }
+
+  function pollJob() {
+    clearTimeout(J.timer);
+    J.timer = setTimeout(async () => {
+      let j = null;
+      try {
+        const r = await fetch('/api/git/check/jobs/current?since=' + J.seq);
+        if (r.ok) j = (await r.json()).job;
+      } catch (e) { /* network: try again */ }
+      if (!j) { if (jobRunning()) J.timer = setTimeout(pollJob, 3000); return; }
+      setJob(j);
+      if (j.state === 'running') { keepView(); pollJob(); return; }
+      const errs = (j.items || []).filter(x => x.state === 'error').length;
+      showToast((j.state === 'cancelled' ? t('git_job_cancelled') : tf('git_job_done', {n: (j.items || []).filter(x => x.state === 'done').length})) +
+        (errs ? ' ' + tf('git_job_errors', {n: errs}) : ''), errs ? 'warning' : 'success', 5000);
+      if (await load()) keepView();
+    }, 900);
+  }
+
+  async function resumeJob() {
+    try {
+      const r = await fetch('/api/git/check/jobs/current');
+      if (!r.ok) return;
+      const j = (await r.json()).job;
+      if (j && j.state === 'running') { J.seq = 0; setJob(j); keepView(); pollJob(); }
+    } catch (e) { /* no job */ }
+  }
+
+  function checkIds(ids) { if (ids.length) startJob({install_ids: ids}); }
+  function checkSel() { if (!G.sel.size) { showToast(t('git_select_installs'), 'warning'); return; } checkIds([...G.sel]); }
+  function checkVisible() { checkIds(filtered().map(i => i.id)); }
+  function checkStale() {
+    const ids = filtered().map(i => i.id);
+    if (!ids.length) return;
+    const body = J.stale === 'never' ? {install_ids: ids, only_never: true} : {install_ids: ids, stale_minutes: Number(J.stale)};
+    const cutoff = J.stale === 'never' ? 0 : Date.now() - Number(J.stale) * 60e3;
+    if (!filtered().some(i => !i.checked_at || (cutoff && new Date(i.checked_at).getTime() <= cutoff))) { showToast(t('git_nothing_stale'), 'info'); return; }
+    startJob(body);
+  }
+
+  async function cancelCheck() {
+    const r = await fetch('/api/git/check/jobs/current/cancel', {method: 'POST'});
+    if (!r.ok) showToast(await apiError(r), 'error');
   }
 
   // ── services ──
@@ -538,15 +772,15 @@ Object.assign(LANGS.hr, {
     const list = filtered();
     const sshConns = (conns || []).filter(c => c.protocol === 'SSH').sort((a, b) => a.name.localeCompare(b.name));
     const apps = [...G.state.catalog.apps.map(a => a.name), ...(G.state.bundle_apps || [])];
-    return `<div class="g-bar">${filterBar()}<button class="btn-sec" onclick="gitWorkspace.check(true)" ${G.state.can_check ? '' : 'disabled'}>🔎 ${esc(t('git_discover'))}</button>
+    return `<div class="g-bar">${filterBar()}<button class="btn-sec" onclick="gitWorkspace.check(true)" ${G.state.can_check && !jobRunning() ? '' : 'disabled'}>🔎 ${esc(t('git_discover'))}</button>
       <button class="btn-sm" onclick="gitWorkspace.install()" ${can('install') ? '' : `disabled title="${esc(t('git_no_permission'))}"`}>＋ ${esc(t('git_install'))}</button></div>
-      <div class="g-bar g-actions">${actionButtons('')}</div>
-      <div class="g-card g-scroll"><table><tr><th><input type="checkbox" style="width:auto" onchange="document.querySelectorAll('.git-isel').forEach(x => x.checked = this.checked)"></th><th>${esc(t('git_server'))}</th><th>${esc(t('git_service'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_env'))}</th><th>${esc(t('git_state'))}</th>
+      ${checkBar(list)}<div class="g-bar g-actions">${actionButtons('')}</div>
+      <div class="g-card g-scroll"><table><tr><th>${selBox(list.map(i => i.id), t('git_sel_all'))}</th><th>${esc(t('git_server'))}</th><th>${esc(t('git_service'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_env'))}</th><th>${esc(t('git_state'))}</th>
       <th>${esc(t('git_version_md'))}</th><th>${esc(t('git_target'))}</th><th>${esc(t('git_checked'))}</th><th></th></tr>
-      ${list.map(i => `<tr><td><input type="checkbox" class="git-isel" value="${i.id}" style="width:auto"></td><td>${esc(i.conn_name)}</td><td><b>${esc(i.app)}</b>${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}</td><td class="g-mono">${esc(i.path)}</td><td>${esc(i.env || '')}</td>
-        <td>${stBadge(i.state)}${i.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: i.behind}))}</span>` : ''}${i.error ? `<div class="g-mut">${esc(i.error)}</div>` : ''}</td>
-        <td class="g-mono">${esc((i.version_md && i.version_md.version) || t('git_vmd_missing'))}</td><td class="g-mono">${esc(i.target || '—')}</td><td class="g-mut">${esc(i.checked_at ? fmtTime(i.checked_at) : '—')}</td>
-        <td style="white-space:nowrap"><button class="btn-sec btn-sm" onclick="gitWorkspace.details(${i.id})">${esc(t('git_details'))}</button> <button class="btn-danger btn-sm" onclick="gitWorkspace.forget(${i.id})">✕</button></td></tr>`).join('')}</table></div>
+      ${list.map(i => `<tr><td><input type="checkbox" class="git-isel g-cb" value="${i.id}" ${G.sel.has(i.id) ? 'checked' : ''} onchange="gitWorkspace.sel([${i.id}], this.checked)"></td><td>${esc(i.conn_name)}${i.host ? `<div class="g-hostname g-mono">${esc(i.host)}</div>` : ''}</td><td><b>${esc(i.app)}</b>${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}</td><td class="g-mono">${esc(i.path)}</td><td>${esc(i.env || '')}</td>
+        <td>${stateCell(i)}${i.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: i.behind}))}</span>` : ''}${i.error ? `<div class="g-mut">${esc(i.error)}</div>` : ''}${i.state === 'error' && i.last_ok_state ? `<div class="g-mut">${lastGood(i).replace(/ · $/, '')}</div>` : ''}</td>
+        <td class="g-mono">${esc((i.version_md && i.version_md.version) || t('git_vmd_missing'))}</td><td class="g-mono">${esc(i.target || '—')}</td><td class="g-mut" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${esc(ago(i.checked_at))}</td>
+        <td style="white-space:nowrap">${G.state.can_check ? `<button class="btn-sec btn-sm" title="${esc(t('git_check_cell'))}" ${jobRunning() ? 'disabled' : ''} onclick="gitWorkspace.checkIds([${i.id}])">↻</button> ` : ''}<button class="btn-sec btn-sm" onclick="gitWorkspace.details(${i.id})">${esc(t('git_details'))}</button> <button class="btn-danger btn-sm" onclick="gitWorkspace.forget(${i.id})">✕</button></td></tr>`).join('')}</table></div>
       <div class="g-card"><h3>${esc(t('git_add_install'))}</h3><div class="g-bar"><select id="gi-conn">${sshConns.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
       <select id="gi-app">${apps.map(a => `<option>${esc(a)}</option>`).join('')}</select><input id="gi-path" placeholder="/opt/service" style="min-width:200px"><input id="gi-env" placeholder="${esc(t('git_env'))}">
       <button class="btn-sec" onclick="gitWorkspace.addInstall()">＋</button></div></div>`;
@@ -564,38 +798,187 @@ Object.assign(LANGS.hr, {
     if (r.ok) { G.state = await r.json(); render(); }
   }
 
+  // ── installation details: every file, diff, view, commits ──
+  const F = {id: 0, list: null, err: '', loading: false, filter: 'all', q: '', diff: null, mode: window.innerWidth < 700 ? 'unified' : 'split'};
+
   async function details(id) {
     const r = await fetch('/api/git/installs/' + id);
     if (!r.ok) { showToast(await apiError(r), 'error'); return; }
     const i = await r.json();
     G.detail = i;
+    Object.assign(F, {id, list: null, err: '', loading: G.state.can_check, q: '', diff: null});
     const v = i.version_md || {};
-    const files = (i.files || []).filter(f => !G.onlyChanges || (f.state !== 'ok' && f.state !== 'protected'));
     modal(`<h3>${esc(i.conn_name)} · ${esc(i.app)} · <span class="g-mono">${esc(i.path)}</span></h3>
-      <div class="g-bar">${stBadge(i.state)}${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${Object.entries(i.counts || {}).map(([k, n]) => `${fsBadge(k)} ${n}`).join(' ')}</div>
+      <div class="g-bar">${stBadge(i.state)}${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${Object.entries(i.counts || {}).map(([k, n]) => `${fsBadge(k)} ${n}`).join(' ')}
+        <span class="g-mut" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${lastGood(i)}${esc(tf('git_checked_ago', {t: ago(i.checked_at)}))}</span></div>
       <div class="g-bar g-actions">${actionButtons(i.id)}</div>
       ${i.error ? `<div class="hint-box bad">${esc(i.error)}</div>` : ''}${i.capped ? `<div class="hint-box warn">${esc(t('git_capped'))}</div>` : ''}
       <div class="g-grid"><div><label>${esc(t('git_version_md'))}</label><span class="g-mono">${v.version ? esc(v.version) : esc(t('git_vmd_missing'))}</span>
-        ${v.ref ? `<div class="g-mut">${esc(v.ref)} · ${esc(v.commit || '')}</div>` : ''}${v.updated ? `<div class="g-mut">${esc(v.updated)} ${esc(v.user || '')}${v.bundle ? ' · ' + esc(v.bundle) : ''}</div>` : ''}</div>
-        <div><label>${esc(t('git_target'))}</label><span class="g-mono">${esc(i.target || '—')}</span></div>
+        ${v.ref || v.commit ? `<div class="g-mut">${[v.ref ? esc(v.ref) : '', v.commit ? `<span class="g-mono">${esc(v.commit)}</span>` : ''].filter(Boolean).join(' · ')}</div>` : ''}${v.updated ? `<div class="g-mut">${esc(v.updated)} ${esc(v.user || '')}${v.bundle ? ' · ' + esc(v.bundle) : ''}</div>` : ''}</div>
+        <div><label>${esc(t('git_target'))}</label><span class="g-mono">${esc(i.target || '—')}</span><div id="git-commits" class="g-commits"></div></div>
         <div><label>${esc(t('git_units'))}</label>${(i.units || []).length ? i.units.map(u => `<div class="g-mono">${esc(u.kind)}: ${esc(u.name)}</div>`).join('') : `<span class="g-mut">${esc(t('git_no_units'))}</span>`}</div></div>
-      <label style="display:flex;gap:6px;align-items:center;margin:12px 0 6px"><input type="checkbox" style="width:auto" ${G.onlyChanges ? 'checked' : ''} onchange="gitWorkspace.toggleChanges(this.checked)">${esc(t('git_files_only'))}</label>
-      <div style="max-height:45vh;overflow:auto"><table><tr><th>${esc(t('git_files'))}</th><th>${esc(t('git_state'))}</th><th></th></tr>
-      ${files.map(f => `<tr><td class="g-mono">${esc(f.path)}</td><td>${fsBadge(f.state)}${f.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: f.behind}))} (${esc(f.tag || '')} ${esc(f.date || '')})</span>` : ''}${f.note ? ` <span class="g-mut">${esc(f.note)}</span>` : ''}</td>
-        <td>${f.diffable && f.state !== 'ok' && G.state.can_check ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.diff(${i.id}, '${esc(encodeURIComponent(f.path))}')">${esc(t('git_diff'))}</button>` : ''}</td></tr>`).join('')}</table></div>
+      <h3 style="margin:14px 0 6px">${esc(t('git_files_all'))}</h3><div id="git-files">${filesHTML()}</div>
       <div id="git-diff"></div><div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
+    if (G.state.can_check) { loadFiles(id); loadCommits(i); }
+  }
+
+  async function loadFiles(id) {
+    let list = null, err = '';
+    try {
+      const r = await fetch(`/api/git/installs/${id}/files`);
+      if (r.ok) list = await r.json(); else err = await apiError(r);
+    } catch (e) { err = e.message; }
+    if (F.id !== id || !$('git-files')) return;
+    Object.assign(F, {list, err, loading: false});
+    paintFiles();
+  }
+
+  function paintFiles() {
+    const el = $('git-files');
+    if (!el) return;
+    const ae = document.activeElement, focused = ae && ae.id === 'git-fq', pos = focused ? ae.selectionStart : 0;
+    const box = el.querySelector('.g-flist'), top = box ? box.scrollTop : 0;
+    el.innerHTML = filesHTML();
+    const nb = el.querySelector('.g-flist');
+    if (nb) nb.scrollTop = top;
+    if (focused && $('git-fq')) { $('git-fq').focus(); $('git-fq').setSelectionRange(pos, pos); }
+  }
+
+  // the stored comparison of the last check (tracked and extra files)
+  function storedHTML(i) {
+    const files = (i.files || []).filter(f => !G.onlyChanges || (f.state !== 'ok' && f.state !== 'protected'));
+    return `<label style="display:flex;gap:6px;align-items:center;margin:8px 0 6px"><input type="checkbox" style="width:auto" ${G.onlyChanges ? 'checked' : ''} onchange="gitWorkspace.toggleChanges(this.checked)">${esc(t('git_files_only'))}</label>
+      <div class="g-flist"><table><tr><th>${esc(t('git_files_stored'))}</th><th>${esc(t('git_state'))}</th><th></th></tr>
+      ${files.map(f => `<tr><td class="g-mono">${esc(f.path)}</td><td>${fsBadge(f.state)}${f.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: f.behind}))} (${esc(f.tag || '')} ${esc(f.date || '')})</span>` : ''}${f.note ? ` <span class="g-mut">${esc(f.note)}</span>` : ''}</td>
+        <td>${f.diffable && f.state !== 'ok' && G.state.can_check ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.diff(${i.id}, '${esc(encodeURIComponent(f.path))}')">${esc(t('git_diff'))}</button>` : ''}</td></tr>`).join('')}</table></div>`;
+  }
+
+  const DIFFERING = ['old', 'modified', 'differs', 'missing', 'extra'];
+
+  function reasonText(f) {
+    if (f.pattern && (f.reason === 'excluded' || f.reason === 'protected')) return tf('git_r_' + f.reason + '_p', {p: f.pattern});
+    return t('git_r_' + f.reason);
+  }
+
+  function filesHTML() {
+    const i = G.detail;
+    if (!G.state.can_check) return storedHTML(i);
+    if (F.loading) return `<div class="hint-box">⏳ ${esc(t('git_files_loading'))}</div>`;
+    if (F.err || !F.list) return `<div class="hint-box bad">${esc(tf('git_files_failed', {e: F.err}))}</div>${storedHTML(i)}`;
+    const L = F.list, q = F.q.toLowerCase();
+    const pass = f => (F.filter === 'all' || (F.filter === 'diff' && DIFFERING.includes(f.state)) || (F.filter === 'tracked' && f.tracked) || (F.filter === 'untracked' && !f.tracked)) &&
+      (!q || f.path.toLowerCase().includes(q));
+    const rows = L.files.filter(pass), max = 1500;
+    const seg = k => `<button class="${F.filter === k ? 'on' : ''}" onclick="gitWorkspace.fileFilter('${k}')">${esc(t('git_ff_' + k))}</button>`;
+    const enc = p => esc(encodeURIComponent(p));
+    const row = f => {
+      const name = f.kind === 'symlink' ? `${esc(f.path)} <span class="g-mut">→ ${esc(f.link || '?')}</span>${f.outside ? `<div style="color:var(--red);font-family:inherit;font-size:11px">${esc(t('git_link_outside'))}</div>` : ''}`
+        : f.kind === 'dir' ? `${esc(f.path)}/ <span class="g-mut">${esc(t('git_dir_unreadable'))}</span>` : esc(f.path);
+      return `<tr class="${f.tracked ? '' : 'g-untracked'}"><td class="g-mono">${name}</td>
+        <td class="g-mut g-hm" style="white-space:nowrap">${f.on_server && f.kind === 'file' ? esc(fmtBytes(f.size)) : f.size ? esc(fmtBytes(f.size)) : ''}</td>
+        <td class="g-mut g-hm" style="white-space:nowrap">${f.mtime ? esc(fmtTime(f.mtime)) : ''}</td>
+        <td>${fsBadge(f.state)}${f.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: f.behind}))}${f.tag ? ' (' + esc(f.tag) + ')' : ''}</span>` : ''}</td>
+        <td class="g-why">${esc(reasonText(f))}</td>
+        <td style="white-space:nowrap">${f.viewable ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.viewFile('${enc(f.path)}', '')">${esc(t('git_open'))}</button> ` : ''}${f.diffable && f.state !== 'ok' && f.state !== 'same' ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.diff(${i.id}, '${enc(f.path)}')">${esc(t('git_diff'))}</button>` : ''}</td></tr>`;
+    };
+    return `${L.target_error ? `<div class="hint-box warn">${esc(tf('git_target_err', {e: L.target_error}))}</div>` : ''}
+      ${L.truncated ? `<div class="hint-box warn">${esc(tf('git_files_truncated', {n: 10000}))}</div>` : ''}
+      ${L.git_partial && L.target ? `<div class="hint-box">${esc(t('git_files_partial'))}</div>` : ''}
+      ${L.not_compared ? `<div class="g-mut">${esc(tf('git_files_notcmp', {n: L.not_compared}))}</div>` : ''}
+      <div class="g-bar" style="margin:6px 0"><span class="g-seg">${['all', 'diff', 'tracked', 'untracked'].map(seg).join('')}</span>
+        <input type="search" id="git-fq" placeholder="${esc(t('git_files_search'))}" value="${esc(F.q)}" oninput="gitWorkspace.fileSearch(this.value)" style="flex:1 1 160px;min-width:0">
+        <span class="g-mut">${esc(tf('git_files_count', {n: rows.length, total: L.files.length}))}</span></div>
+      <div class="g-mut" style="margin-bottom:6px">${esc(t('git_files_info'))}</div>
+      <div class="g-flist"><table><tr><th>${esc(t('git_path'))}</th><th class="g-hm">${esc(t('git_size'))}</th><th class="g-hm">${esc(t('git_mtime'))}</th><th>${esc(t('git_state'))}</th><th>${esc(t('git_reason'))}</th><th></th></tr>
+      ${rows.slice(0, max).map(row).join('')}</table></div>${rows.length > max ? `<div class="g-mut">${esc(tf('git_files_more', {n: max}))}</div>` : ''}`;
+  }
+
+  let fqTimer = null;
+  function fileFilter(k) { F.filter = k; paintFiles(); }
+  function fileSearch(v) { F.q = v; clearTimeout(fqTimer); fqTimer = setTimeout(paintFiles, 200); }
+
+  async function loadCommits(i) {
+    const el = $('git-commits');
+    const v = i.version_md || {};
+    if (!el || !i.target || !(v.commit || v.version)) return;
+    el.innerHTML = `<div class="g-mut">⏳ ${esc(t('git_commits_loading'))}</div>`;
+    let c = null, err = '';
+    try {
+      const r = await fetch(`/api/git/installs/${i.id}/commits`);
+      if (r.ok) c = await r.json(); else err = await apiError(r);
+    } catch (e) { err = e.message; }
+    if (F.id !== i.id || !$('git-commits')) return;
+    if (!c) { $('git-commits').innerHTML = `<div class="g-mut">${esc(t('git_commits'))}: ${esc(err)}</div>`; return; }
+    $('git-commits').innerHTML = !c.count ? `<div class="g-mut">✓ ${esc(t('git_commits_none'))}</div>`
+      : `<details><summary><b>${esc(tf('git_commits_behind', {n: c.count}))}</b> <span class="g-mut g-mono">${esc(tf('git_commits_range', {f: c.from, t: c.to}))}</span></summary>
+        <div class="g-flist" style="max-height:30vh;margin-top:6px"><table>${c.commits.map(x => `<tr><td class="g-mono">${esc(x.sha.slice(0, 10))}</td><td>${esc(x.title)}</td><td class="g-mut g-hm">${esc(x.author)}</td><td class="g-mut g-hm" style="white-space:nowrap">${esc(x.date ? fmtTime(x.date) : '')}</td></tr>`).join('')}</table></div>
+        ${c.commits.length < c.count ? `<div class="g-mut">${esc(tf('git_commits_more', {n: c.commits.length}))}</div>` : ''}</details>`;
   }
 
   async function diff(id, path) {
     const out = $('git-diff');
     out.innerHTML = `<div class="hint-box">⏳</div>`;
+    out.scrollIntoView({block: 'nearest'});
     const r = await fetch(`/api/git/installs/${id}/diff?path=${path}`);
     if (!r.ok) { out.innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; return; }
-    const d = await r.json();
-    if (d.binary) { out.innerHTML = `<div class="hint-box">${esc(t('git_binary'))}</div>`; return; }
-    if (!d.lines.length) { out.innerHTML = `<div class="hint-box">${esc(t('git_no_diff'))}</div>`; return; }
-    out.innerHTML = `<h3 style="margin-top:12px">${esc(t('git_diff_title'))}: <span class="g-mono">${esc(d.path)}</span> → ${esc(d.target || '')}</h3><div class="g-diff">` +
-      d.lines.map(l => l.op === '@' ? `<div class="d-hunk">@@ -${l.a} +${l.b} @@</div>` : `<div class="${l.op === '+' ? 'd-add' : l.op === '-' ? 'd-del' : ''}">${esc(l.op + ' ' + l.s)}</div>`).join('') + '</div>';
+    F.diff = await r.json();
+    paintDiff();
+  }
+
+  function setMode(m) { F.mode = m; paintDiff(); }
+
+  // splitRows pairs removed and added lines of a unified diff for the side-by-side view
+  function splitRows(lines) {
+    const rows = [];
+    let del = [], add = [];
+    const flush = () => { for (let k = 0; k < Math.max(del.length, add.length); k++) rows.push({l: del[k] || null, r: add[k] || null}); del = []; add = []; };
+    for (const l of lines) {
+      if (l.op === '-') del.push(l);
+      else if (l.op === '+') add.push(l);
+      else { flush(); rows.push(l.op === '@' ? {hunk: l} : {l, r: l, ctx: true}); }
+    }
+    flush();
+    return rows;
+  }
+
+  function paintDiff() {
+    const out = $('git-diff'), d = F.diff;
+    if (!out || !d) return;
+    const info = d.informational ? `<div class="hint-box warn">${esc(d.reason === 'excluded' || d.reason === 'not_included' ? t('git_informational') : t('git_info_untracked'))}${d.pattern ? ` <span class="g-mono">(${esc(d.pattern)})</span>` : ''}</div>` : '';
+    const head = `<div class="g-dhead"><h3>${esc(t('git_diff_title'))}: <span class="g-mono">${esc(d.path)}</span> → ${esc(d.target || '')} ${fsBadge(d.state)}</h3>
+      ${d.lines && d.lines.length ? `<span class="g-seg"><button class="${F.mode === 'unified' ? 'on' : ''}" onclick="gitWorkspace.diffMode('unified')">${esc(t('git_view_unified'))}</button><button class="${F.mode === 'split' ? 'on' : ''}" onclick="gitWorkspace.diffMode('split')">${esc(t('git_view_split'))}</button></span>` : ''}</div>`;
+    let body;
+    if (d.binary) body = `<div class="hint-box">${esc(t(d.same ? 'git_binary_same' : 'git_binary_differs'))}</div>`;
+    else if (d.too_big) body = `<div class="hint-box">${esc(t(d.same ? 'git_big_same' : 'git_big_differs'))}</div>`;
+    else if (!d.lines.length) body = `<div class="hint-box">${esc(t('git_no_diff'))}</div>`;
+    else if (F.mode === 'split') {
+      const cell = (l, side) => !l ? `<td class="ln"></td><td class="d-none"></td>` : `<td class="ln">${side === 'l' ? l.a || '' : l.b || ''}</td><td class="${l.op === '-' ? 'd-del' : l.op === '+' ? 'd-add' : ''}">${esc(l.s)}</td>`;
+      body = `<div class="g-diff"><table class="g-split">${splitRows(d.lines).map(x => x.hunk ? `<tr class="d-hunk"><td class="ln"></td><td>@@ ${x.hunk.a}</td><td class="ln"></td><td>@@ ${x.hunk.b}</td></tr>` : `<tr>${cell(x.l, 'l')}${cell(x.r, 'r')}</tr>`).join('')}</table></div>`;
+    } else {
+      body = '<div class="g-diff">' + d.lines.map(l => l.op === '@' ? `<div class="d-hunk">@@ -${l.a} +${l.b} @@</div>` : `<div class="${l.op === '+' ? 'd-add' : l.op === '-' ? 'd-del' : ''}">${esc(l.op + ' ' + l.s)}</div>`).join('') + '</div>';
+    }
+    const notes = [d.missing_on_server ? t('git_missing_srv') : '', d.crlf_server !== d.crlf_target && d.lines && d.lines.length ? t('git_crlf') : ''].filter(Boolean);
+    out.innerHTML = head + info + (notes.length ? `<div class="g-mut" style="margin-bottom:6px">${esc(notes.join(' '))}</div>` : '') + body;
+    out.scrollIntoView({block: 'nearest'});
+  }
+
+  async function viewFile(path, side) {
+    const out = $('git-diff'), id = F.id;
+    if (!out) return;
+    out.innerHTML = `<div class="hint-box">⏳</div>`;
+    out.scrollIntoView({block: 'nearest'});
+    const r = await fetch(`/api/git/installs/${id}/file?path=${path}${side ? '&side=' + side : ''}`);
+    if (!r.ok) { out.innerHTML = `<div class="hint-box bad">${esc(await apiError(r))}</div>`; return; }
+    const v = await r.json();
+    const f = ((F.list || {}).files || []).find(x => x.path === v.path) || {};
+    const other = v.side === 'server' ? (f.in_git && f.reason !== 'protected' ? 'git' : '') : (f.on_server ? 'server' : '');
+    const head = `<div class="g-dhead"><h3>${esc(t('git_open'))}: <span class="g-mono">${esc(v.path)}</span> · ${esc(v.side === 'git' ? t('git_from_git') + (v.target ? ' ' + v.target : '') : t('git_from_server'))}</h3>
+      ${other ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.viewFile('${esc(encodeURIComponent(v.path))}', '${other}')">${esc(t('git_view_side'))} ${esc(t(other === 'git' ? 'git_from_git' : 'git_from_server'))}</button>` : ''}</div>`;
+    let body;
+    if (v.too_big) body = `<div class="hint-box">${esc(tf('git_view_big', {s: fmtBytes(v.size), h: v.hash || ''}))}</div>`;
+    else if (v.binary) body = `<div class="hint-box">${esc(tf('git_view_binary', {s: fmtBytes(v.size), h: v.hash || ''}))}</div>`;
+    else body = `<pre class="g-code">${esc(v.text)}</pre>`;
+    out.innerHTML = head + body;
     out.scrollIntoView({block: 'nearest'});
   }
 
@@ -711,17 +1094,10 @@ Object.assign(LANGS.hr, {
   }
 
   // ── runs ──
-  async function check(discoverOnly) {
-    if (G.busy) return;
-    G.busy = true; render();
-    try {
-      const r = await fetch('/api/git/check', json('POST', {discover: true, refresh: !discoverOnly}));
-      if (!r.ok) { showToast(await apiError(r), 'error'); return; }
-      const j = await r.json();
-      G.state = j.state;
-      const errs = j.result.servers.filter(s => s.error);
-      if (errs.length) showToast(errs.map(s => s.name + ': ' + s.error).join('\n'), 'warning', 7000);
-    } finally { G.busy = false; render(); }
+  // "Check now" checks everything (discovery on the servers of the settings, targets first)
+  function check(discoverOnly) {
+    if (G.busy || jobRunning()) return;
+    startJob({all: true, discover: true, refresh: !discoverOnly});
   }
 
   async function refresh() {
@@ -750,7 +1126,7 @@ Object.assign(LANGS.hr, {
   }
 
   function pickIds(ids) {
-    ids = ids || [...document.querySelectorAll('.git-isel:checked')].map(x => Number(x.value));
+    ids = ids || [...G.sel];
     if (!ids.length) showToast(t('git_select_installs'), 'warning');
     return ids;
   }
@@ -1459,7 +1835,8 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = {
-    open, close, tab: setTab, check, refresh, details, diff, forget, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
+    open, close, tab: setTab, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
     ignoreLoad, ignoreMark, ignorePreview, ignoreDownload, ignoreSaveLists, ignoreMR, webhook, hookSet, editFeed, feedFetch, delFeed, pipelineKind,
     editSource, testSource, delSource, importBundle, saveSettings, saveCatalogSettings, setRef, filterConns, selConns, closeModal,
