@@ -59,7 +59,7 @@ const (
 var notifyDebounce = 3 * time.Second
 
 // Event types users can subscribe to.
-var notifyEvents = []string{"status.down", "status.up", "credential.rotation_due", "credential.rotation_incomplete"}
+var notifyEvents = []string{"status.down", "status.up", "credential.rotation_due", "credential.rotation_incomplete", "git.new_version", "git.drift", "git.unreachable"}
 
 func validNotifyEvent(e string) bool {
 	for _, x := range notifyEvents {
@@ -330,10 +330,16 @@ var notifyTexts = map[string]map[string]string{
 		"credential.rotation_incomplete": "⚠ Rotation incomplete: {name}",
 		"credential.rotation_incomplete.body": "The last rotation of the credential {name} ({user}) could not be completed: {status}. " +
 			"Some servers have the new password (kept as pending in the vault). Fix them and save the right password.",
-		"digest":      "WRM: {n} notifications",
-		"digest.more": "… and {n} more",
-		"test":        "WRM test message",
-		"test.body":   "This is a test message from WRM PRO (channel {channel}). If you can read it, the channel works.",
+		"git.new_version":      "🆕 {app}: {new}",
+		"git.new_version.body": "A new version of {app} is available: {old} → {new}.",
+		"git.drift":            "✏ Drift: {app} on {server}",
+		"git.drift.body":       "Files of {app} in {path} on {server} were changed by hand. Review them in the Git workspace.",
+		"git.unreachable":      "⚠ Git check: {server} unreachable",
+		"git.unreachable.body": "The Git check could not log in to {server}: {error}.",
+		"digest":               "WRM: {n} notifications",
+		"digest.more":          "… and {n} more",
+		"test":                 "WRM test message",
+		"test.body":            "This is a test message from WRM PRO (channel {channel}). If you can read it, the channel works.",
 	},
 	"hr": {
 		"status.down":                    "🔴 {name} je nedostupan",
@@ -346,10 +352,16 @@ var notifyTexts = map[string]map[string]string{
 		"credential.rotation_incomplete": "⚠ Rotacija nije dovršena: {name}",
 		"credential.rotation_incomplete.body": "Zadnja rotacija vjerodajnice {name} ({user}) nije dovršena: {status}. " +
 			"Neki serveri imaju novu lozinku (spremljena je kao nedovršena u trezoru). Popravite ih i spremite ispravnu lozinku.",
-		"digest":      "WRM: {n} obavijesti",
-		"digest.more": "… i još {n}",
-		"test":        "WRM probna poruka",
-		"test.body":   "Ovo je probna poruka iz WRM PRO (kanal {channel}). Ako je vidite, kanal radi.",
+		"git.new_version":      "🆕 {app}: {new}",
+		"git.new_version.body": "Dostupna je nova verzija servisa {app}: {old} → {new}.",
+		"git.drift":            "✏ Odstupanje: {app} na {server}",
+		"git.drift.body":       "Datoteke servisa {app} u {path} na {server} ručno su promijenjene. Pregledajte ih u Git radnom prostoru.",
+		"git.unreachable":      "⚠ Git provjera: {server} nedostupan",
+		"git.unreachable.body": "Git provjera se ne može prijaviti na {server}: {error}.",
+		"digest":               "WRM: {n} obavijesti",
+		"digest.more":          "… i još {n}",
+		"test":                 "WRM probna poruka",
+		"test.body":            "Ovo je probna poruka iz WRM PRO (kanal {channel}). Ako je vidite, kanal radi.",
 	},
 }
 

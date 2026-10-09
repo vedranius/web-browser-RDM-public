@@ -4,6 +4,23 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [11.0.0] — 2026-10-09 — Git workspace: compare services (phase 1)
+
+### Added
+- **Git workspace** (`git.go`, `git_source.go`, `git_bundle.go`, `git_scan.go`, `git_monitor.go`, `/api/git`): a full-screen workspace opened from the **⎇ Git** button in the top bar. Its code (`static/git.js`) loads only when it is opened. Tabs *Overview*, *Services*, *Installations* and *Settings*. **Read-only on servers** in this version: nothing is updated, installed or restarted.
+  - **Sources:** GitLab API v4 and GitHub REST (cloud or self-hosted, groups / organisations with subgroups) with a read-only token, encrypted at rest and never sent to the browser. Self-signed Git servers are pinned on first use. One recursive tree listing per commit (cached forever) gives every file's blob ID; file contents are fetched only for blobs not seen before and cached by blob ID (new tables `git_sources`, `git_trees`, `git_blobs`).
+  - **Offline bundles:** import a `.tar.gz` (`<name>/bundle.json` + `payload/<app>/<rel>`, the format of file-based deploy tools; `deploytool.py` and `README.txt` are ignored) when WRM cannot reach the Git server, with its age and source; protected files of the payload are never used. **Export** writes the same format (`bundle.json` with indent 1 and sorted keys, payload without protected files) for servers that only a file-based tool can reach.
+  - **Service catalog:** project, ref (`tag:latest`, `tag:vX` or a branch), branch, tag filter, subdirectory = installation root, include / exclude globs, **protected** per-host files, fingerprint files, install hints and kind (app, library, tool). **Suggestion from the repository tree** (subdirectory, fingerprint, protected and exclude globs, kind). Import (replace or merge) and export as catalog JSON. Services of imported bundles are used even when the catalog does not list them.
+  - **Refs:** branch-aware tags (only tags whose commit is on the branch count; `tag:latest` falls back to the branch head with a warning), numeric version sort (`v1.10` > `v1.9`), fallback branches, and a ref choice per run: as in the catalog, one branch for all, each project's default branch, or per service.
+  - **Discovery over SSH:** one `find` per server over the configured roots (depth 3) recognises installations by their fingerprint files (or install hints), skips copies and backups (`*_BKP`, `backup`, `.deploy-bak`, `kopija`, … as path segments; configurable) and derives an environment label from the path (`/srv/scripts/test/App` → `test`, `App_prod` → `prod`). Installations can also be added by hand.
+  - **File-level comparison:** the server hashes its files with POSIX tools (`tr -d '\r' < f | sha256sum`, no Python); WRM compares them with the target and with the **history of every file** (the earlier tags of the branch). File states *ok*, *old* (*n behind*), *modified*, *missing*, *extra*, *protected*; installation states *needs update*, *review*, *up to date*. Details show the version from `VERSION.md`, the systemd / supervisor units that mention the directory, the files and a coloured **diff** (server → target).
+  - **Overview:** targets per service (version, latest tag, source, warnings) and a servers × services matrix with filters (state, environment, folder, tag, text).
+  - **Periodic checks** while WRM runs (per user, opt-in, every `git_check_interval_minutes`): they never change anything and notify through the notifications module — new events **`git.new_version`**, **`git.drift`** (files changed by hand) and **`git.unreachable`**, one digest per round.
+  - Policies `git_enabled` (hides the workspace completely), `git_checks` (who may run checks: everyone by default), `git_check_interval_minutes` (60, 0 = off) and `git_backup_words`; `mePayload` flags `git` and `git_checks`.
+  - Audit events `git.source_added`, `git.source_changed`, `git.source_deleted`, `git.catalog_saved`, `git.service_saved`, `git.settings_changed`, `git.bundle_imported`, `git.bundle_exported`, `git.checked`, `git.install_added`, `git.diff_viewed`.
+- `tools/check-ui.js` also checks `static/git.js` (syntax and translation keys).
+- Tests: `git_test.go` (fake GitLab and GitHub servers: targets, branch-aware tags, fallbacks, blob cache, suggestion, tokens; bundle export / import round trip and unsafe archives; catalog import / export; discovery, comparison, `VERSION.md`, units, diff and notifications against a fake SSH host; policies and ownership).
+
 ## [10.10.0] — 2026-10-08 — folder bookmarks
 
 ### Added

@@ -82,6 +82,11 @@ var settingSpecs = []settingSpec{
 	// Notifications (e-mail, chat and push channels)
 	{Key: "notifications_enabled", Default: "1", Kind: "bool", Alias: "NOTIFICATIONS_ENABLED"},
 	{Key: "notify_min_interval_seconds", Default: "60", Kind: "int", Min: 0, Max: 86400},
+	// Git workspace (compare services on servers with GitLab / GitHub or offline bundles)
+	{Key: "git_enabled", Default: "1", Kind: "bool", Alias: "GIT_ENABLED"},
+	{Key: "git_checks", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "git_check_interval_minutes", Default: "60", Kind: "int", Min: 0, Max: 10080},
+	{Key: "git_backup_words", Default: defaultBackupWords, Kind: "string"},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},

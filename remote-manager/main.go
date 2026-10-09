@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v10.10.0"
+var AppVersion = "v11.0.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -316,6 +316,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/notify/channels/", apiAdminNotifyHandler)
 	mux.HandleFunc("/api/status/check", apiStatusHandler)
 	mux.HandleFunc("/api/inventory/", apiInventoryHandler)
+	mux.HandleFunc("/api/git", apiGitHandler)
+	mux.HandleFunc("/api/git/", apiGitHandler)
 	mux.HandleFunc("/api/keys", apiKeysHandler)
 	mux.HandleFunc("/api/keys/", apiKeysHandler)
 	mux.HandleFunc("/api/credentials", apiCredentialsHandler)
@@ -388,6 +390,7 @@ func main() {
 	go notifier.run()
 	go runCredentialReminders()
 	go runQuickCleanup()
+	go runGitMonitor()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -1031,6 +1034,9 @@ func initDB() {
 
 	// Session keepalive: update last_active_at for existing sessions that lack it
 	db.Exec(`UPDATE auth_sessions SET last_active_at = expires_at WHERE last_active_at = ''`)
+
+	// v11.0: Git workspace (sources, blob cache, catalog, targets, installations)
+	initGitSchema()
 
 	var nC, nF, nS int
 	db.QueryRow("SELECT COUNT(*) FROM connections").Scan(&nC)
