@@ -168,6 +168,61 @@ Object.assign(LANGS.hr, {
   git_step_precheck: 'Provjere', git_step_fetch: 'Sadržaj', git_step_receive: 'Kopiranje na server', git_step_register: 'Upis', git_step_unit: 'Jedinica', git_step_source: 'Izvor',
 });
 
+Object.assign(LANGS.en, {
+  git_tab_gitignore: '.gitignore', gi_service: 'Service', gi_load: 'Load', gi_loading: 'Reading the repository and the latest checks…',
+  gi_repo: 'Repository', gi_file: 'File', gi_branch: 'Branch', gi_current: 'Current .gitignore', gi_no_current: 'The repository has no .gitignore here yet.',
+  gi_warnings: 'Committed files that look like secrets or per-host configuration', gi_reason_secret: 'looks like a secret', gi_reason_protected: 'matches a protected glob',
+  gi_warn_advice: 'Commit a template {tmpl} instead (WRM fills it on install), add {path} to .gitignore and remove it from the repository with git rm --cached {path}.',
+  gi_extra: 'Files only on servers (state extra, from the latest checks)', gi_extra_none: 'No extra files in the latest checks of this service.', gi_size: 'Size', gi_pattern: 'Pattern',
+  gi_stacks: 'Standard patterns', gi_detected: 'found: {f}', gi_protected: 'Protected globs (per-host files)', gi_custom: 'More patterns', gi_custom_h: 'One per line, e.g. /data/ or *.local.ini',
+  gi_lists: 'Catalog lists of this service', gi_lists_h: 'Exclude: never compared or deployed. Protected: per-host files, never overwritten.', gi_not_catalog: 'This service comes from a bundle: add it to the catalog to edit its lists.',
+  gi_preview: 'Preview', gi_download: 'Download .gitignore', gi_mr: 'Create merge request…', gi_mr_gh: 'Create pull request…', gi_nothing: 'Nothing to add: the .gitignore already has these patterns.',
+  gi_added: '{n} patterns added', gi_diff: 'Current → new', gi_mr_title: 'Merge request to {repo}', gi_mr_q: 'WRM creates the branch {branch}, commits {file} with these patterns and opens a merge request against {base} in:',
+  gi_mr_type: 'Type the repository name {name} to confirm', gi_mr_go: 'Create', gi_mr_done: 'Created: {url}', gi_mr_default: 'The default output is a download; WRM writes to the Git server only when you choose this.',
+  gi_note: 'Note',
+  git_write_token: 'Write token (optional)', git_write_token_h: 'Only for .gitignore merge / pull requests. Leave empty to keep the stored one.',
+  git_webhook: 'Webhook…', git_wh_title: 'Incoming webhook: {name}', git_wh_h: 'A push, tag or release in GitLab / GitHub, or a POST from a CI job, starts an immediate check of the affected services instead of waiting for the interval.',
+  git_wh_off: 'The webhook is off.', git_wh_enable: 'Turn on', git_wh_renew: 'New secret', git_wh_disable: 'Turn off', git_wh_url: 'URL', git_wh_secret: 'Secret (shown only now: copy it)',
+  git_wh_last: 'Last delivery', git_wh_gitlab: 'GitLab: Settings → Webhooks, the URL, the secret as "Secret token", events "Push" and "Tag push".',
+  git_wh_github: 'GitHub: Settings → Webhooks, the URL, content type application/json, the secret, events "push" and "release".',
+  git_wh_generic: 'Jenkins or any CI: POST with the header X-WRM-Token: <secret>, optionally a JSON body {"project": "group/name"} or {"services": ["name"]}.',
+  git_feeds: 'Bundles from CI artifacts', git_feeds_h: 'Fetch the newest bundle from a URL (GitLab job artifacts API, Jenkins artifact URL or any HTTPS URL) and use it as the offline source.',
+  git_add_feed: 'Add artifact URL', git_feed_url: 'URL of the bundle (.tar.gz)', git_feed_header: 'Auth header name', git_feed_value: 'Auth header value', git_feed_value_h: 'PRIVATE-TOKEN: <token> for GitLab, Authorization: Basic user:token for Jenkins. Leave empty to keep the stored value.',
+  git_feed_interval: 'Fetch every (minutes, 0 = only by hand)', git_feed_fetch: 'Fetch now', git_feed_imported: 'Bundle imported', git_feed_unchanged: 'Unchanged since the last fetch', git_feed_last: 'Last fetched',
+  git_deploy_method: 'Deploy method', git_dm_files: 'Files over SSH (WRM writes the files)', git_dm_jenkins: 'CI pipeline: Jenkins job', git_dm_gitlab: 'CI pipeline: GitLab pipeline',
+  git_dm_h: 'For services built elsewhere: an update or upgrade triggers the job with the parameters server, install_path and version, and WRM follows its status.',
+  git_dm_job: 'Job URL', git_dm_user: 'Jenkins user', git_dm_token: 'API token (or the job\'s trigger token without a user)', git_dm_gl_url: 'GitLab address (empty = the Git source)', git_dm_project: 'Project (empty = the service\'s project)',
+  git_dm_ref: 'Branch to run (empty = the target\'s branch)', git_dm_trigger: 'Pipeline trigger token', git_dm_keep: 'leave empty to keep the stored token',
+  git_ci_item: 'Deployed by CI ({kind}): WRM triggers the job with server, install_path and version and follows its status; no files are written.', git_ci_link: 'Open in CI', git_step_ci: 'CI pipeline',
+});
+Object.assign(LANGS.hr, {
+  git_tab_gitignore: '.gitignore', gi_service: 'Servis', gi_load: 'Učitaj', gi_loading: 'Čitanje repozitorija i zadnjih provjera…',
+  gi_repo: 'Repozitorij', gi_file: 'Datoteka', gi_branch: 'Grana', gi_current: 'Trenutni .gitignore', gi_no_current: 'Repozitorij ovdje još nema .gitignore.',
+  gi_warnings: 'Datoteke u repozitoriju koje izgledaju kao tajne ili konfiguracija po hostu', gi_reason_secret: 'izgleda kao tajna', gi_reason_protected: 'odgovara zaštićenom globu',
+  gi_warn_advice: 'Umjesto nje spremite predložak {tmpl} (WRM ga popunjava pri instalaciji), dodajte {path} u .gitignore i uklonite je iz repozitorija s git rm --cached {path}.',
+  gi_extra: 'Datoteke samo na serverima (stanje višak, iz zadnjih provjera)', gi_extra_none: 'U zadnjim provjerama ovog servisa nema viška datoteka.', gi_size: 'Veličina', gi_pattern: 'Uzorak',
+  gi_stacks: 'Standardni uzorci', gi_detected: 'pronađeno: {f}', gi_protected: 'Zaštićeni globovi (datoteke po hostu)', gi_custom: 'Dodatni uzorci', gi_custom_h: 'Jedan po retku, npr. /data/ ili *.local.ini',
+  gi_lists: 'Popisi ovog servisa u katalogu', gi_lists_h: 'Isključi: nikad se ne uspoređuje ni ne isporučuje. Zaštićeno: datoteke po hostu, nikad se ne prepisuju.', gi_not_catalog: 'Ovaj servis dolazi iz bundlea: dodajte ga u katalog da biste uređivali njegove popise.',
+  gi_preview: 'Pregled', gi_download: 'Preuzmi .gitignore', gi_mr: 'Izradi merge request…', gi_mr_gh: 'Izradi pull request…', gi_nothing: 'Nema ničega za dodati: .gitignore već ima ove uzorke.',
+  gi_added: 'dodano uzoraka: {n}', gi_diff: 'Trenutno → novo', gi_mr_title: 'Merge request u {repo}', gi_mr_q: 'WRM izrađuje granu {branch}, sprema {file} s ovim uzorcima i otvara merge request prema {base} u:',
+  gi_mr_type: 'Upišite naziv repozitorija {name} za potvrdu', gi_mr_go: 'Izradi', gi_mr_done: 'Izrađeno: {url}', gi_mr_default: 'Zadani izlaz je preuzimanje; WRM piše na Git server samo kad odaberete ovo.',
+  gi_note: 'Napomena',
+  git_write_token: 'Token za pisanje (neobavezno)', git_write_token_h: 'Samo za merge / pull requestove za .gitignore. Ostavite prazno za zadržavanje spremljenog.',
+  git_webhook: 'Webhook…', git_wh_title: 'Dolazni webhook: {name}', git_wh_h: 'Push, tag ili release u GitLabu / GitHubu, ili POST iz CI posla, odmah pokreće provjeru zahvaćenih servisa umjesto čekanja intervala.',
+  git_wh_off: 'Webhook je isključen.', git_wh_enable: 'Uključi', git_wh_renew: 'Nova tajna', git_wh_disable: 'Isključi', git_wh_url: 'URL', git_wh_secret: 'Tajna (prikazuje se samo sada: kopirajte je)',
+  git_wh_last: 'Zadnja isporuka', git_wh_gitlab: 'GitLab: Settings → Webhooks, URL, tajna kao "Secret token", događaji "Push" i "Tag push".',
+  git_wh_github: 'GitHub: Settings → Webhooks, URL, content type application/json, tajna, događaji "push" i "release".',
+  git_wh_generic: 'Jenkins ili bilo koji CI: POST sa zaglavljem X-WRM-Token: <tajna>, neobavezno JSON tijelo {"project": "grupa/naziv"} ili {"services": ["naziv"]}.',
+  git_feeds: 'Bundleovi iz CI artefakata', git_feeds_h: 'Dohvati najnoviji bundle s URL-a (GitLab API za artefakte posla, URL artefakta u Jenkinsu ili bilo koji HTTPS URL) i koristi ga kao offline izvor.',
+  git_add_feed: 'Dodaj URL artefakta', git_feed_url: 'URL bundlea (.tar.gz)', git_feed_header: 'Naziv zaglavlja za prijavu', git_feed_value: 'Vrijednost zaglavlja za prijavu', git_feed_value_h: 'PRIVATE-TOKEN: <token> za GitLab, Authorization: Basic korisnik:token za Jenkins. Ostavite prazno za zadržavanje spremljene vrijednosti.',
+  git_feed_interval: 'Dohvaćaj svakih (minuta, 0 = samo ručno)', git_feed_fetch: 'Dohvati sada', git_feed_imported: 'Bundle uvezen', git_feed_unchanged: 'Nepromijenjeno od zadnjeg dohvata', git_feed_last: 'Zadnji dohvat',
+  git_deploy_method: 'Način isporuke', git_dm_files: 'Datoteke preko SSH-a (WRM zapisuje datoteke)', git_dm_jenkins: 'CI pipeline: Jenkins posao', git_dm_gitlab: 'CI pipeline: GitLab pipeline',
+  git_dm_h: 'Za servise koji se grade drugdje: ažuriranje ili nadogradnja pokreće posao s parametrima server, install_path i version, a WRM prati njegovo stanje.',
+  git_dm_job: 'URL posla', git_dm_user: 'Jenkins korisnik', git_dm_token: 'API token (ili token za okidanje posla bez korisnika)', git_dm_gl_url: 'Adresa GitLaba (prazno = Git izvor)', git_dm_project: 'Projekt (prazno = projekt servisa)',
+  git_dm_ref: 'Grana za pokretanje (prazno = grana cilja)', git_dm_trigger: 'Token za okidanje pipelinea', git_dm_keep: 'ostavite prazno za zadržavanje spremljenog tokena',
+  git_ci_item: 'Isporučuje CI ({kind}): WRM pokreće posao s parametrima server, install_path i version i prati njegovo stanje; datoteke se ne zapisuju.', git_ci_link: 'Otvori u CI-ju', git_step_ci: 'CI pipeline',
+});
+
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: ''}, onlyChanges: true, busy: false};
   const $ = id => document.getElementById(id);
@@ -260,6 +315,16 @@ Object.assign(LANGS.hr, {
 #git-ws .s-failed, #git-ws .s-rolled_back { background: rgba(239,68,68,.14); color: var(--red); }
 #git-ws .s-scheduled, #git-ws .s-running, #git-ws .s-starting, #git-ws .s-pending { background: rgba(245,158,11,.14); color: var(--yellow); }
 #git-ws .s-cancelled, #git-ws .s-skipped, #git-ws .s-interrupted { background: var(--bg4); color: var(--text2); }
+#git-ws .g-diff { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-height: 50vh; }
+#git-ws .g-diff div { white-space: pre; padding: 0 8px; }
+#git-ws .g-diff .d-add { background: rgba(34,197,94,.13); color: var(--green); }
+#git-ws .g-diff .d-del { background: rgba(239,68,68,.13); color: var(--red); }
+#git-ws .g-diff .d-hunk { color: var(--text3); }
+#git-ws .g-pats { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+#git-ws .g-pats label { display: inline-flex; gap: 5px; align-items: center; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+#git-ws .g-pats input, #git-ws td input[type=checkbox] { width: auto; }
+#git-ws .g-warn { border-color: var(--red); }
+#git-ws pre.g-pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; max-height: 30vh; overflow: auto; font-size: 11.5px; margin: 0; white-space: pre-wrap; word-break: break-all; }
 @media (max-width: 640px) { #git-ws .g-head { padding: 8px 10px; } #git-ws .g-body { padding: 10px; } #git-ws .g-bar select, #git-ws .g-bar input { min-width: 0; flex: 1 1 140px; } }
 `;
 
@@ -293,7 +358,7 @@ Object.assign(LANGS.hr, {
 
   function render() {
     const s = G.state;
-    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'runs', 'settings'].map(k =>
+    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'runs', 'gitignore', 'settings'].map(k =>
       `<button class="${G.tab === k ? 'on' : ''}" onclick="gitWorkspace.tab('${k}')">${esc(t('git_tab_' + k))}</button>`).join('');
     $('git-last').textContent = `${t('git_last_check')}: ${s.last_check_at ? fmtTime(s.last_check_at) : t('git_never')}`;
     $('git-check').disabled = !s.can_check || G.busy;
@@ -304,10 +369,11 @@ Object.assign(LANGS.hr, {
     else if (G.tab === 'services') body.innerHTML = servicesHTML();
     else if (G.tab === 'installs') body.innerHTML = installsHTML();
     else if (G.tab === 'runs') body.innerHTML = runsHTML();
+    else if (G.tab === 'gitignore') body.innerHTML = ignoreHTML();
     else body.innerHTML = settingsHTML();
   }
 
-  function setTab(k) { G.tab = k; render(); if (k === 'runs') loadRuns(); }
+  function setTab(k) { G.tab = k; render(); if (k === 'runs') loadRuns(); if (k === 'gitignore' && !I.info && !I.loading) ignoreLoad(); }
 
   // ── overview ──
   function filtered() {
@@ -400,14 +466,17 @@ Object.assign(LANGS.hr, {
 
   function editApp(name, preset, files) {
     const a = preset || G.state.catalog.apps.find(x => x.name === name) || {kind: 'app', ref: 'tag:latest', protected: ['config*', '*.ini', '.env']};
-    modal(`<h3>${esc(name || t('git_add_service'))}</h3>${appForm(a)}${files ? `<details style="margin-top:10px"><summary class="g-mut">${esc(t('git_repo_files'))} (${files.length})</summary><div class="g-mono" style="max-height:200px;overflow:auto">${files.map(esc).join('<br>')}</div></details>` : ''}
+    modal(`<h3>${esc(name || t('git_add_service'))}</h3>${appForm(a)}${name ? pipelineForm(name) : ''}${files ? `<details style="margin-top:10px"><summary class="g-mut">${esc(t('git_repo_files'))} (${files.length})</summary><div class="g-mono" style="max-height:200px;overflow:auto">${files.map(esc).join('<br>')}</div></details>` : ''}
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="ga-save">${esc(t('git_save'))}</button></div>`);
     $('ga-save').onclick = async () => {
       const app = readAppForm();
       const r = await fetch('/api/git/catalog/apps/' + encodeURIComponent(name || app.name), json('PUT', app));
       if (!r.ok) { showToast(await apiError(r), 'error'); return; }
-      G.state = await r.json(); closeModal(); render(); showToast(t('git_saved'), 'success');
+      G.state = await r.json();
+      if (name && !(await savePipeline(app.name))) return;
+      closeModal(); render(); showToast(t('git_saved'), 'success');
     };
+    if ($('gp-kind')) pipelineKind();
   }
 
   async function delApp(name) {
@@ -538,12 +607,13 @@ Object.assign(LANGS.hr, {
     const sel = new Set(st.conn_ids || []);
     return `<div class="g-card"><h3>${esc(t('git_sources'))}</h3>
       ${apiSources.length ? `<table>${apiSources.map(x => `<tr><td><b>${esc(x.name)}</b> <span class="g-mut">${esc(x.kind)}</span><div class="g-mono g-mut">${esc(x.url)}</div>${x.last_error ? `<div class="g-st s-error">${esc(x.last_error)}</div>` : ''}</td>
-        <td style="white-space:nowrap"><button class="btn-sec btn-sm" onclick="gitWorkspace.testSource(${x.id})">${esc(t('git_test'))}</button> <button class="btn-sec btn-sm" onclick="gitWorkspace.editSource(${x.id})">${esc(t('git_edit'))}</button> <button class="btn-danger btn-sm" onclick="gitWorkspace.delSource(${x.id})">✕</button></td></tr>`).join('')}</table>` : ''}
+        <td style="white-space:nowrap"><button class="btn-sec btn-sm" onclick="gitWorkspace.testSource(${x.id})">${esc(t('git_test'))}</button> <button class="btn-sec btn-sm" ${s.can_check ? '' : 'disabled'} onclick="gitWorkspace.webhook(${x.id})">${x.hook_id ? '🔔 ' : ''}${esc(t('git_webhook'))}</button> <button class="btn-sec btn-sm" onclick="gitWorkspace.editSource(${x.id})">${esc(t('git_edit'))}</button> <button class="btn-danger btn-sm" onclick="gitWorkspace.delSource(${x.id})">✕</button></td></tr>`).join('')}</table>` : ''}
       <div class="g-bar" style="margin-top:8px"><button class="btn-sec" onclick="gitWorkspace.editSource(0)">＋ ${esc(t('git_add_source'))}</button></div></div>
       <div class="g-card"><h3>${esc(t('git_bundles'))}</h3>
       ${bundles.length ? `<table>${bundles.map(x => `<tr><td><b>${esc(x.bundle_id || x.name)}</b> <span class="g-mut">${esc(tf('git_bundle_age', {d: x.created || '?'}))} · ${esc(x.created_by || '')}</span><div class="g-mono g-mut">${esc(x.origin || '')}</div><div class="g-mut">${esc((x.apps || []).join(', '))}</div></td>
         <td><button class="btn-danger btn-sm" onclick="gitWorkspace.delSource(${x.id})">✕</button></td></tr>`).join('')}</table>` : ''}
       <div class="g-bar" style="margin-top:8px"><button class="btn-sec" onclick="document.getElementById('git-bundle-file').click()">⬆ ${esc(t('git_import_bundle'))}</button><input type="file" id="git-bundle-file" accept=".gz,.tgz,application/gzip" style="display:none" onchange="gitWorkspace.importBundle(this)"></div></div>
+      ${feedsHTML()}
       <div class="g-card"><h3>${esc(t('git_source_mode'))}</h3><div class="g-grid">
         <div><label>${esc(t('git_source_mode'))}</label><select id="gx-mode">${['auto', 'live', 'bundle'].map(m => `<option value="${m}" ${st.mode === m ? 'selected' : ''}>${esc(t('git_mode_' + m))}</option>`).join('')}</select></div>
         <div><label>${esc(t('git_mode_bundle'))}</label><select id="gx-bundle"><option value="0">${esc(t('git_newest_bundle'))}</option>${bundles.map(b => `<option value="${b.id}" ${st.bundle_id === b.id ? 'selected' : ''}>${esc(b.bundle_id || b.name)}</option>`).join('')}</select></div>
@@ -602,12 +672,15 @@ Object.assign(LANGS.hr, {
       <div><label>${esc(t('git_kind'))}</label><select id="gsrc-kind"><option value="gitlab" ${x.kind === 'gitlab' ? 'selected' : ''}>GitLab</option><option value="github" ${x.kind === 'github' ? 'selected' : ''}>GitHub</option></select></div>
       <div><label>${esc(t('git_f_name'))}</label><input id="gsrc-name" value="${esc(x.name)}"></div>
       <div><label>${esc(t('git_url'))}</label><input id="gsrc-url" value="${esc(x.url)}" placeholder="https://git.example.com"></div>
-      <div><label>${esc(t('git_token'))}</label><input id="gsrc-token" type="password" autocomplete="new-password" placeholder="${id && x.has_token ? esc(t('git_token_keep')) : ''}"></div></div>
+      <div><label>${esc(t('git_token'))}</label><input id="gsrc-token" type="password" autocomplete="new-password" placeholder="${id && x.has_token ? esc(t('git_token_keep')) : ''}"></div>
+      <div><label>${esc(t('git_write_token'))}</label><input id="gsrc-wtoken" type="password" autocomplete="new-password" placeholder="${id && x.has_write_token ? esc(t('git_token_keep')) : ''}"></div></div>
+      <div class="g-mut" style="margin-top:6px">${esc(t('git_write_token_h'))}</div>
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gsrc-save">${esc(t('git_save'))}</button></div>`);
     $('gsrc-save').onclick = async () => {
       const body = {kind: $('gsrc-kind').value, name: $('gsrc-name').value.trim(), url: $('gsrc-url').value.trim()};
       const tok = $('gsrc-token').value;
       if (tok || !id) body.token = tok;
+      if ($('gsrc-wtoken').value) body.write_token = $('gsrc-wtoken').value;
       const r = await fetch(id ? '/api/git/sources/' + id : '/api/git/sources', json(id ? 'PUT' : 'POST', body));
       if (!r.ok) { showToast(await apiError(r), 'error'); return; }
       G.state = await r.json(); closeModal(); render();
@@ -719,6 +792,7 @@ Object.assign(LANGS.hr, {
       const head = `<h4>${esc(i.conn_name)} · ${esc(i.app)} · <span class="g-mono">${esc(i.path)}</span>${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${i.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</h4>`;
       if (i.error) return `<div class="g-item">${head}<div class="hint-box bad">${esc(i.error)}</div></div>`;
       const ver = `<div class="g-mut">${esc(t('git_version_md'))}: <span class="g-mono">${esc(i.from_version || t('git_vmd_missing'))}</span> → ${esc(t('git_target'))}: <span class="g-mono">${esc(i.target ? i.target.version : '—')}</span> ${i.target ? `<span class="g-mut">${esc(i.target.branch)} · ${esc(i.target.commit_date || '')}</span>` : ''}${kind === 'upgrade' && i.current ? ` <span class="g-mut">(${esc(t('git_from'))} ${esc(i.current.version)} · ${esc(i.current.branch)})</span>` : ''}</div>`;
+      if (i.pipeline) return `<div class="g-item">${head}${ver}<div class="hint-box">🔧 ${esc(tf('git_ci_item', {kind: i.pipeline.kind === 'gitlab' ? 'GitLab' : 'Jenkins'}))}<div class="g-mono g-mut">${esc(i.pipeline.url)}</div></div></div>`;
       if (kind === 'stamp') return `<div class="g-item">${head}${ver}<div>${i.eligible ? fsBadge('ok') : `<span class="g-st s-review">${esc(t('git_not_current'))}</span>`} ${i.has_version_md ? `<span class="g-mut">${esc(t('git_has_vmd'))}</span>` : ''}</div></div>`;
       const c = i.counts || {};
       const sum = kind === 'upgrade' ? `<div class="hint-box warn">${esc(tf('git_changes_summary', {changed: (c.changed || 0) + (c.old || 0), missing: c.missing || 0, local: c.modified || 0, removed: (i.removed || []).length}))}${(i.removed || []).length ? `<div class="g-mono g-mut">${(i.removed || []).map(esc).join(', ')}</div>` : ''}</div>` : '';
@@ -763,6 +837,7 @@ Object.assign(LANGS.hr, {
     D.plan.forEach((i, idx) => {
       if (i.error) return;
       if (kind === 'stamp') { if (i.eligible) items.push({install_id: i.install_id}); return; }
+      if (i.pipeline) { items.push({install_id: i.install_id}); return; }
       const boxes = [...document.querySelectorAll(`.gd-f[data-i="${idx}"]:checked`)];
       if (!boxes.length) return;
       items.push({install_id: i.install_id, files: boxes.map(b => b.dataset.p), modified_ok: boxes.filter(b => b.dataset.local === '1').map(b => b.dataset.p)});
@@ -1115,6 +1190,201 @@ Object.assign(LANGS.hr, {
     };
   }
 
+  // ── .gitignore helper ──
+  const I = {app: '', info: null, loading: false, preview: null, checked: null};
+  const fmtSize = n => !n ? '—' : n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+  function allApps() { return [...G.state.catalog.apps.map(a => a.name), ...(G.state.bundle_apps || [])]; }
+
+  async function ignoreLoad(app) {
+    const apps = allApps();
+    I.app = app || I.app || apps[0] || '';
+    I.info = null; I.preview = null; I.checked = null;
+    if (!I.app) { if (G.tab === 'gitignore') render(); return; }
+    I.loading = true; if (G.tab === 'gitignore') render();
+    try {
+      const r = await fetch('/api/git/gitignore/' + encodeURIComponent(I.app));
+      if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+      I.info = await r.json();
+      // pre-selected: the patterns of the stacks found in the repository and the protected globs
+      I.checked = new Set([...I.info.stacks.filter(x => x.detected).flatMap(x => x.patterns), ...I.info.protected]);
+    } finally { I.loading = false; if (G.tab === 'gitignore') render(); }
+  }
+
+  function ignoreHTML() {
+    const apps = allApps();
+    const bar = `<div class="g-bar"><label class="g-mut">${esc(t('gi_service'))}</label><select onchange="gitWorkspace.ignoreLoad(this.value)">${apps.map(a => `<option value="${esc(a)}" ${a === I.app ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select>
+      <button class="btn-sec btn-sm" onclick="gitWorkspace.ignoreLoad()">↻ ${esc(t('gi_load'))}</button></div>`;
+    if (!apps.length) return bar + `<div class="hint-box">${esc(t('git_empty_overview'))}</div>`;
+    if (I.loading || !I.info) return bar + `<div class="hint-box">⏳ ${esc(t('gi_loading'))}</div>`;
+    const x = I.info, chk = v => I.checked && I.checked.has(v) ? 'checked' : '';
+    const pat = v => `<label><input type="checkbox" class="gi-p" value="${esc(v)}" ${chk(v)} onchange="gitWorkspace.ignoreMark(this)">${esc(v)}</label>`;
+    let h = bar + `<div class="g-card"><div class="g-grid"><div><label>${esc(t('gi_repo'))}</label><span class="g-mono">${esc(x.repo || '—')}</span></div>
+      <div><label>${esc(t('gi_branch'))}</label><span class="g-mono">${esc(x.branch || '—')}</span></div><div><label>${esc(t('gi_file'))}</label><span class="g-mono">${esc(x.file)}</span></div></div>
+      ${x.note ? `<div class="hint-box warn" style="margin-top:8px">${esc(t('gi_note'))}: ${esc(x.note)}</div>` : ''}</div>`;
+    if (x.warnings.length) h += `<div class="g-card g-warn"><h3>⚠ ${esc(t('gi_warnings'))}</h3>${x.warnings.map(w => `<div style="margin:6px 0"><span class="g-mono"><b>${esc(w.path)}</b></span> <span class="g-st s-review">${esc(t('gi_reason_' + w.reason))}</span>
+      <div class="g-mut">${esc(tf('gi_warn_advice', {tmpl: w.template, path: w.path}))}</div></div>`).join('')}</div>`;
+    h += `<div class="g-card"><h3>${esc(t('gi_extra'))}</h3>${x.extra.length ? `<div class="g-scroll" style="max-height:40vh"><table><tr><th></th><th>${esc(t('git_path'))}</th><th>${esc(t('gi_size'))}</th><th>${esc(t('git_server'))}</th><th>${esc(t('gi_pattern'))}</th></tr>
+      ${x.extra.map(c => `<tr><td><input type="checkbox" class="gi-p" value="${esc(c.pattern)}" ${chk(c.pattern)} onchange="gitWorkspace.ignoreMark(this)"></td><td class="g-mono">${esc(c.path)}</td><td class="g-mut" style="white-space:nowrap">${esc(fmtSize(c.size))}</td>
+        <td class="g-mut">${esc(c.servers.join(', '))}</td><td class="g-mono">${esc(c.pattern)}</td></tr>`).join('')}</table></div>` : `<div class="g-mut">${esc(t('gi_extra_none'))}</div>`}</div>`;
+    h += `<div class="g-card"><h3>${esc(t('gi_stacks'))}</h3>${x.stacks.map(st => `<div style="margin:6px 0"><b>${esc(st.name)}</b>${st.detected ? ` <span class="g-st s-ok">${esc(tf('gi_detected', {f: st.reason}))}</span>` : ''}<div class="g-pats">${st.patterns.map(pat).join('')}</div></div>`).join('')}
+      ${x.protected.length ? `<div style="margin:10px 0 6px"><b>${esc(t('gi_protected'))}</b><div class="g-pats">${x.protected.map(pat).join('')}</div></div>` : ''}
+      <div class="g-grid" style="margin-top:8px"><div><label>${esc(t('gi_custom'))}</label><textarea id="gi-custom" placeholder="${esc(t('gi_custom_h'))}">${esc(I.custom || '')}</textarea></div></div></div>`;
+    h += `<div class="g-card"><h3>${esc(t('gi_lists'))}</h3><div class="g-mut" style="margin-bottom:6px">${esc(t('gi_lists_h'))}</div>${x.in_catalog ? `<div class="g-grid">
+      <div><label>${esc(t('git_f_exclude'))}</label><textarea id="gi-exclude">${esc(x.exclude.join('\n'))}</textarea></div>
+      <div><label>${esc(t('git_f_protected'))}</label><textarea id="gi-protected">${esc(x.protected.join('\n'))}</textarea></div></div>
+      <div class="g-bar" style="margin-top:8px"><button class="btn-sec btn-sm" onclick="gitWorkspace.ignoreSaveLists()">${esc(t('git_save'))}</button></div>` : `<div class="g-mut">${esc(t('gi_not_catalog'))}</div>`}</div>`;
+    h += `<div class="g-card"><h3>${esc(t('gi_current'))}</h3>${x.has_current ? `<pre class="g-pre">${esc(x.current)}</pre>` : `<div class="g-mut">${esc(t('gi_no_current'))}</div>`}</div>`;
+    const mrLabel = t(x.source_kind === 'github' ? 'gi_mr_gh' : 'gi_mr');
+    h += `<div class="g-bar"><button onclick="gitWorkspace.ignorePreview()">${esc(t('gi_preview'))}</button><button class="btn-sec" onclick="gitWorkspace.ignoreDownload()">⬇ ${esc(t('gi_download'))}</button>
+      <button class="btn-sec" ${x.can_mr ? '' : `disabled title="${esc(x.mr_note || '')}"`} onclick="gitWorkspace.ignoreMR()">${esc(mrLabel)}</button>${x.can_mr ? '' : ` <span class="g-mut">${esc(x.mr_note || '')}</span>`}</div>
+      <div class="g-mut">${esc(t('gi_mr_default'))}</div><div id="gi-out">${I.preview ? previewHTML(I.preview) : ''}</div>`;
+    return h;
+  }
+
+  function ignoreMark(el) { if (!I.checked) I.checked = new Set(); if (el.checked) I.checked.add(el.value); else I.checked.delete(el.value); document.querySelectorAll('.gi-p').forEach(b => { if (b.value === el.value) b.checked = el.checked; }); }
+  function ignorePatterns() { I.custom = ($('gi-custom') || {}).value || ''; return [...new Set([...(I.checked || [])].concat(lines(I.custom.replace(/,/g, '\n'))))]; }
+
+  function previewHTML(p) {
+    if (!p.added.length) return `<div class="hint-box">${esc(t('gi_nothing'))}</div>`;
+    return `<h3 style="margin:12px 0 6px">${esc(t('gi_diff'))} · ${esc(tf('gi_added', {n: p.added.length}))}</h3><div class="g-diff">` +
+      p.lines.map(l => l.op === '@' ? `<div class="d-hunk">@@ -${l.a} +${l.b} @@</div>` : `<div class="${l.op === '+' ? 'd-add' : l.op === '-' ? 'd-del' : ''}">${esc(l.op + ' ' + l.s)}</div>`).join('') + '</div>';
+  }
+
+  async function ignorePreview() {
+    const r = await fetch(`/api/git/gitignore/${encodeURIComponent(I.app)}/preview`, json('POST', {patterns: ignorePatterns()}));
+    if (!r.ok) { showToast(await apiError(r), 'error'); return null; }
+    I.preview = await r.json();
+    $('gi-out').innerHTML = previewHTML(I.preview);
+    $('gi-out').scrollIntoView({block: 'nearest'});
+    return I.preview;
+  }
+
+  function ignoreDownload() { fetch(`/api/git/gitignore/${encodeURIComponent(I.app)}/download`, json('POST', {patterns: ignorePatterns()})).then(r => download(r, '.gitignore')); }
+
+  async function ignoreSaveLists() {
+    const a = G.state.catalog.apps.find(x => x.name === I.app);
+    if (!a) return;
+    const body = Object.assign({}, a, {exclude: lines($('gi-exclude').value), protected: lines($('gi-protected').value)});
+    const r = await fetch('/api/git/catalog/apps/' + encodeURIComponent(I.app), json('PUT', body));
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    G.state = await r.json(); showToast(t('git_saved'), 'success'); ignoreLoad(I.app);
+  }
+
+  async function ignoreMR() {
+    const x = I.info, p = await ignorePreview();
+    if (!p || !p.added.length) return;
+    const gh = x.source_kind === 'github';
+    modal(`<h3>${esc(gh ? t('gi_mr_gh').replace('…', '') : tf('gi_mr_title', {repo: x.repo}))}</h3>
+      <div>${esc(tf('gi_mr_q', {branch: 'wrm/gitignore-' + I.app.toLowerCase() + '-…', file: x.file, base: x.branch}))}</div>
+      <div class="hint-box warn" style="margin:8px 0"><b class="g-mono">${esc(x.repo)}</b></div>
+      <div class="g-mono g-mut">${p.added.map(esc).join('<br>')}</div>
+      <div class="g-conf"><label>${esc(tf('gi_mr_type', {name: x.project}))}</label><input id="gi-conf" autocomplete="off"></div>
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gi-go" disabled>${esc(t('gi_mr_go'))}</button></div>`);
+    $('gi-conf').oninput = () => { $('gi-go').disabled = $('gi-conf').value.trim() !== x.project; };
+    $('gi-go').onclick = async () => {
+      $('gi-go').disabled = true;
+      const r = await fetch(`/api/git/gitignore/${encodeURIComponent(I.app)}/mr`, json('POST', {patterns: ignorePatterns(), confirm: $('gi-conf').value.trim()}));
+      if (!r.ok) { $('gi-go').disabled = false; showToast(await apiError(r), 'error', 7000); return; }
+      const res = await r.json();
+      modal(`<h3>✅ ${esc(tf('gi_mr_done', {url: ''}))}</h3><div><a href="${esc(res.url)}" target="_blank" rel="noopener noreferrer" class="g-mono">${esc(res.url)}</a></div><div class="g-mut g-mono">${esc(res.branch)}</div>
+        <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
+    };
+  }
+
+  // ── CI: webhooks, artifact feeds, deploy method ──
+  function hookURL(id) { return location.origin + '/api/hooks/git/' + id; }
+  function webhook(id, secret) {
+    const x = G.state.sources.find(s => s.id === id);
+    if (!x) return;
+    modal(`<h3>${esc(tf('git_wh_title', {name: x.name}))}</h3><div class="g-mut">${esc(t('git_wh_h'))}</div>
+      ${x.hook_id ? `<div class="g-card"><label>${esc(t('git_wh_url'))}</label><input readonly value="${esc(hookURL(x.hook_id))}" onclick="this.select()" style="width:100%">
+        ${secret ? `<label style="margin-top:8px">${esc(t('git_wh_secret'))}</label><input readonly value="${esc(secret)}" onclick="this.select()" style="width:100%">` : ''}
+        <div class="g-mut" style="margin-top:6px">${esc(t('git_wh_last'))}: ${x.hook_at ? esc(fmtTime(x.hook_at)) : esc(t('git_never'))}</div></div>
+        <ul class="g-mut"><li>${esc(t('git_wh_gitlab'))}</li><li>${esc(t('git_wh_github'))}</li><li>${esc(t('git_wh_generic'))}</li></ul>` : `<div class="hint-box">${esc(t('git_wh_off'))}</div>`}
+      <div class="g-btns">${x.hook_id ? `<button class="btn-danger" onclick="gitWorkspace.hookSet(${id}, false)">${esc(t('git_wh_disable'))}</button><button class="btn-sec" onclick="gitWorkspace.hookSet(${id}, true)">${esc(t('git_wh_renew'))}</button>`
+        : `<button onclick="gitWorkspace.hookSet(${id}, true)">${esc(t('git_wh_enable'))}</button>`}<button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
+  }
+  async function hookSet(id, on) {
+    const r = await fetch(`/api/git/sources/${id}/hook`, {method: on ? 'POST' : 'DELETE'});
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    const j = await r.json();
+    G.state = on ? j.state : j; render();
+    webhook(id, on ? j.secret : '');
+  }
+
+  function feedsHTML() {
+    const feeds = G.state.feeds || [];
+    return `<div class="g-card"><h3>${esc(t('git_feeds'))}</h3><div class="g-mut" style="margin-bottom:6px">${esc(t('git_feeds_h'))}</div>
+      ${feeds.length ? `<table>${feeds.map(f => `<tr><td><b>${esc(f.name)}</b>${f.interval_minutes ? ` <span class="g-mut">⏱ ${f.interval_minutes} min</span>` : ''}<div class="g-mono g-mut">${esc(f.url)}</div>
+        <div class="g-mut">${esc(t('git_feed_last'))}: ${f.last_ok_at ? esc(fmtTime(f.last_ok_at)) : esc(t('git_never'))}</div>${f.last_error ? `<div class="g-st s-error">${esc(f.last_error)}</div>` : ''}</td>
+        <td style="white-space:nowrap"><button class="btn-sec btn-sm" onclick="gitWorkspace.feedFetch(${f.id})">${esc(t('git_feed_fetch'))}</button> <button class="btn-sec btn-sm" onclick="gitWorkspace.editFeed(${f.id})">${esc(t('git_edit'))}</button> <button class="btn-danger btn-sm" onclick="gitWorkspace.delFeed(${f.id})">✕</button></td></tr>`).join('')}</table>` : ''}
+      <div class="g-bar" style="margin-top:8px"><button class="btn-sec" onclick="gitWorkspace.editFeed(0)">＋ ${esc(t('git_add_feed'))}</button></div></div>`;
+  }
+  function editFeed(id) {
+    const f = (G.state.feeds || []).find(x => x.id === id) || {name: '', url: '', header_name: 'PRIVATE-TOKEN', interval_minutes: 0};
+    modal(`<h3>${esc(id ? f.name : t('git_add_feed'))}</h3><div class="g-grid">
+      <div><label>${esc(t('git_f_name'))}</label><input id="gf-name" value="${esc(f.name)}"></div>
+      <div style="grid-column:1/-1"><label>${esc(t('git_feed_url'))}</label><input id="gf-url" value="${esc(f.url)}" placeholder="https://git.example.com/api/v4/projects/demo%2Fdemo-api/jobs/artifacts/main/raw/bundle.tar.gz?job=bundle"></div>
+      <div><label>${esc(t('git_feed_header'))}</label><input id="gf-hname" value="${esc(f.header_name)}" placeholder="PRIVATE-TOKEN"></div>
+      <div><label>${esc(t('git_feed_value'))}</label><input id="gf-hval" type="password" autocomplete="new-password" placeholder="${f.has_header ? esc(t('git_token_keep')) : ''}"></div>
+      <div><label>${esc(t('git_feed_interval'))}</label><input id="gf-int" type="number" min="0" max="10080" value="${f.interval_minutes || 0}"></div></div>
+      <div class="g-mut" style="margin-top:6px">${esc(t('git_feed_value_h'))}</div>
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gf-save">${esc(t('git_save'))}</button></div>`);
+    $('gf-save').onclick = async () => {
+      const body = {name: $('gf-name').value.trim(), url: $('gf-url').value.trim(), header_name: $('gf-hname').value.trim(), interval_minutes: Number($('gf-int').value) || 0};
+      if ($('gf-hval').value || !id) body.header_value = $('gf-hval').value;
+      const r = await fetch(id ? '/api/git/feeds/' + id : '/api/git/feeds', json(id ? 'PUT' : 'POST', body));
+      if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+      G.state = await r.json(); closeModal(); render();
+    };
+  }
+  async function feedFetch(id) {
+    showToast('⏳ ' + t('git_feed_fetch'), 'info', 1500);
+    const r = await fetch(`/api/git/feeds/${id}/fetch`, {method: 'POST'});
+    if (!r.ok) { showToast(await apiError(r), 'error', 7000); load().then(ok => ok && render()); return; }
+    const j = await r.json();
+    G.state = j.state; render();
+    showToast(t(j.status === 'imported' ? 'git_feed_imported' : 'git_feed_unchanged'), 'success');
+  }
+  async function delFeed(id) {
+    if (!(await uiConfirm(t('git_delete') + '?', {danger: true, okText: t('git_delete')}))) return;
+    const r = await fetch('/api/git/feeds/' + id, {method: 'DELETE'});
+    if (r.ok) { G.state = await r.json(); render(); }
+  }
+
+  function pipelineForm(name) {
+    if (!can('update')) return '';
+    const p = (G.state.pipelines || []).find(x => x.app === name) || {kind: ''};
+    const f = (k, label, v, ph, type) => `<div class="gp-f gp-${k}"><label>${esc(t(label))}</label><input id="gp-${k}" value="${esc(v || '')}" placeholder="${esc(ph || '')}" ${type ? `type="${type}" autocomplete="new-password"` : ''}></div>`;
+    return `<div class="g-card"><h3>${esc(t('git_deploy_method'))}</h3><select id="gp-kind" onchange="gitWorkspace.pipelineKind()">
+      <option value="">${esc(t('git_dm_files'))}</option><option value="jenkins" ${p.kind === 'jenkins' ? 'selected' : ''}>${esc(t('git_dm_jenkins'))}</option><option value="gitlab" ${p.kind === 'gitlab' ? 'selected' : ''}>${esc(t('git_dm_gitlab'))}</option></select>
+      <div class="g-mut" style="margin:6px 0">${esc(t('git_dm_h'))}</div><div class="g-grid" id="gp-fields" data-had="${p.kind ? 1 : 0}">
+      ${f('url', p.kind === 'gitlab' ? 'git_dm_gl_url' : 'git_dm_job', p.url, 'https://ci.example.com/job/deploy-demo')}${f('username', 'git_dm_user', p.username, 'ci-bot')}
+      ${f('project', 'git_dm_project', p.project, 'group/project')}${f('ref', 'git_dm_ref', p.ref, 'main')}
+      ${f('token', p.kind === 'gitlab' ? 'git_dm_trigger' : 'git_dm_token', '', p.has_token ? t('git_dm_keep') : '', 'password')}</div></div>`;
+  }
+  function pipelineKind() {
+    const k = $('gp-kind').value;
+    document.querySelectorAll('.gp-f').forEach(el => { el.style.display = !k ? 'none' : (el.classList.contains('gp-username') ? k === 'jenkins' : el.classList.contains('gp-project') || el.classList.contains('gp-ref') ? k === 'gitlab' : true) ? '' : 'none'; });
+    if (k) { document.querySelector('.gp-url label').textContent = t(k === 'gitlab' ? 'git_dm_gl_url' : 'git_dm_job'); document.querySelector('.gp-token label').textContent = t(k === 'gitlab' ? 'git_dm_trigger' : 'git_dm_token'); }
+  }
+  async function savePipeline(name) {
+    if (!$('gp-kind')) return true;
+    const k = $('gp-kind').value, had = $('gp-fields').dataset.had === '1';
+    if (!k) {
+      if (!had) return true;
+      const r = await fetch('/api/git/pipelines/' + encodeURIComponent(name), {method: 'DELETE'});
+      if (r.ok) G.state = await r.json();
+      return r.ok;
+    }
+    const body = {kind: k, url: $('gp-url').value.trim(), username: $('gp-username').value.trim(), project: $('gp-project').value.trim(), ref: $('gp-ref').value.trim()};
+    if ($('gp-token').value || !had) body.token = $('gp-token').value;
+    const r = await fetch('/api/git/pipelines/' + encodeURIComponent(name), json('PUT', body));
+    if (!r.ok) { showToast(await apiError(r), 'error'); return false; }
+    G.state = await r.json();
+    return true;
+  }
+
   // ── progress and history ──
   let runTimer = null;
   async function showRun(id) {
@@ -1131,6 +1401,7 @@ Object.assign(LANGS.hr, {
       ${v.items.map(it => `<div class="g-item"><h4>${esc(it.conn_name)} · ${esc(it.app)} · <span class="g-mono">${esc(it.path)}</span> ${runBadge(it.state)}${it.step ? ` <span class="g-mut">⏳ ${esc(t('git_step_' + it.step))}</span>` : ''}</h4>
         ${it.source_path ? `<div class="g-mut">${esc(t('git_w_source'))}: ${esc(it.source_conn_name)} · <span class="g-mono">${esc(it.source_path)}</span></div>` : ''}
         ${it.from_version || it.to_version ? `<div class="g-mut g-mono">${esc(it.from_version || '')} → ${esc(it.to_version || '')}</div>` : ''}
+        ${it.via === 'ci' ? `<div>🔧 ${esc(t('git_step_ci'))} (${esc(it.ci_kind || '')}): <b>${esc(it.ci_status || '…')}</b>${it.ci_url ? ` · <a href="${esc(it.ci_url)}" target="_blank" rel="noopener noreferrer">${esc(t('git_ci_link'))}</a>` : ''}</div>` : ''}
         ${it.error ? `<div class="hint-box bad">${esc(it.error)}</div>` : ''}
         ${(it.dangling || []).length ? `<div class="hint-box bad"><b>${esc(t('git_dangling'))}</b><div class="g-mono">${it.dangling.map(esc).join('<br>')}</div></div>` : ''}
         ${(it.health || []).length ? `<div><b>${esc(t('git_health'))}:</b> ${it.health.map(h => `${h.ok ? '✅' : '❌'} <span class="g-mono">${esc(h.name)}</span> ${esc(h.status)}`).join(' · ')}</div>` : ''}
@@ -1190,6 +1461,7 @@ Object.assign(LANGS.hr, {
   window.gitWorkspace = {
     open, close, tab: setTab, check, refresh, details, diff, forget, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
+    ignoreLoad, ignoreMark, ignorePreview, ignoreDownload, ignoreSaveLists, ignoreMR, webhook, hookSet, editFeed, feedFetch, delFeed, pipelineKind,
     editSource, testSource, delSource, importBundle, saveSettings, saveCatalogSettings, setRef, filterConns, selConns, closeModal,
     filter(k, v, debounce) { G.f[k] = v; clearTimeout(qTimer); if (debounce) qTimer = setTimeout(() => { render(); const i = document.querySelector('#git-body input[type=search]'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); else render(); },
     toggleChanges(on) { G.onlyChanges = on; if (G.detail) details(G.detail.id); },
