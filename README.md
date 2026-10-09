@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v11.0.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v11.1.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -62,6 +62,8 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Broadcast input](#broadcast-input)
    - [Live up/down status](#live-updown-status)
    - [Notifications (e-mail, chat, push, webhook)](#notifications-e-mail-chat-push-webhook)
+   - [Git workspace: compare services](#git-workspace-compare-services)
+   - [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts)
    - [Network tools](#network-tools)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
    - [Search in files](#search-in-files)
@@ -102,7 +104,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **Jump hosts** (like `ssh -J`): reach servers behind a bastion, also in chains — for terminals, files, transfers and tunnels.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
 - **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels), **PuTTY** (with proxies) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
-- **Git workspace**: which version of which service runs where — compare installations on your servers **file by file** with **GitLab / GitHub** or an **offline bundle**, see what is *old*, *missing* or *changed by hand*, with diffs and notifications (read-only).
+- **Git workspace**: which version of which service runs where — compare installations on your servers **file by file** with **GitLab / GitHub** or an **offline bundle**, see what is *old*, *missing* or *changed by hand*, with diffs and notifications — and **update, upgrade or roll back** them over SSH (backups, atomic writes, checks, automatic rollback, opt-in restarts, maintenance windows).
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions. **Installable as an app** (PWA) on desktops, tablets and phones.
 - **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
@@ -122,21 +124,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v11.0.0-linux-amd64
-   ./wrm-pro-v11.0.0-linux-amd64
+   chmod +x wrm-pro-v11.1.0-linux-amd64
+   ./wrm-pro-v11.1.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v11.0.0-windows-amd64.exe
+   .\wrm-pro-v11.1.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.0.0/wrm-pro-v11.0.0-android-arm64
-   chmod +x wrm-pro-v11.0.0-android-arm64 && ./wrm-pro-v11.0.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.1.0/wrm-pro-v11.1.0-android-arm64
+   chmod +x wrm-pro-v11.1.0-android-arm64 && ./wrm-pro-v11.1.0-android-arm64
    ```
 
    **Docker**
@@ -160,6 +162,15 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v11.0.0
+
+Replace the binary. The database gets two new tables (`git_runs`, `git_pending_restarts`); the previous binary still starts on it and ignores them.
+
+- **Deploying from the Git workspace:** *Update*, *Upgrade…*, *Rollback…*, *Restart…* and *Stamp* on the *Installations* tab and in the details of an installation, a new *Runs* tab, and scheduled runs. See [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts).
+- New policies `git_update`, `git_upgrade`, `git_rollback`, `git_restart` — **administrators only** by default; change them in *Admin panel → Policies* — and `git_schedule_grace_minutes` (30).
+- New notification events for runs and restarts (*Git: an update, upgrade or rollback started / succeeded / failed*, *a service restart is scheduled / done*, *a scheduled run starts soon*) in *Settings → Notifications*.
+- WRM writes on servers only when you start or schedule a run; checks stay read-only.
 
 ## Upgrading from v10.10.0
 
@@ -715,7 +726,7 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 
 ### Git workspace: compare services
 
-**⎇ Git** in the top bar opens a full-screen workspace (its code, `static/git.js`, loads only then). It answers *which version of which service runs where, and what was changed by hand* — for any GitLab or GitHub (cloud or self-hosted) that you connect. WRM ships no services or organisation-specific configuration. Servers need no git, Python or internet access: WRM reads the Git provider's API itself and works on servers over its existing SSH connections, so jump hosts, proxies and the vault apply. **This version only reads**: nothing on a server is updated, installed or restarted.
+**⎇ Git** in the top bar opens a full-screen workspace (its code, `static/git.js`, loads only then). It answers *which version of which service runs where, and what was changed by hand* — for any GitLab or GitHub (cloud or self-hosted) that you connect. WRM ships no services or organisation-specific configuration. Servers need no git, Python or internet access: WRM reads the Git provider's API itself and works on servers over its existing SSH connections, so jump hosts, proxies and the vault apply. Checks only read; servers are changed only by the runs described in the next section.
 
 - **Sources** (*Settings*): GitLab (API v4) or GitHub (REST; `github.com` or Enterprise `<url>/api/v3`) with a **read-only token** (encrypted, never sent back to the browser). *Test* lists the projects of the catalog's groups / organisations (with subgroups). Self-signed Git servers are pinned on first use.
 - **Few API calls:** one recursive tree listing per version (cached forever, a commit never changes) gives the blob ID of every file; a file's content is downloaded only for a blob WRM has not seen yet and cached by blob ID — the same file in 20 versions is fetched once.
@@ -728,6 +739,58 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 - **Overview:** the target of every service (version, latest tag, source, warnings) and a **servers × services matrix** with the state, environment, `VERSION.md` version and *n behind* of each installation, filtered by state, environment, folder, tag and text.
 - **Periodic checks** (*Settings → Periodic checks*): while WRM runs, the chosen servers are checked every `git_check_interval_minutes` (60). Checks never change anything. They notify (one digest per round) about **a new version** of a service, **drift** (an installation that turns to *review*) and **unreachable servers** — subscribe to the *Git* events in *Settings → Notifications*.
 - Everything is per user (sources, catalog, installations). Policies `git_enabled` (hides the workspace), `git_checks` (who may run checks: everyone), `git_check_interval_minutes`, `git_backup_words`. Checks, bundle imports / exports, source and catalog changes and viewed diffs are audited (`git.*`).
+
+### Git workspace: update, upgrade, rollback & restarts
+
+Runs change servers only when you start or schedule them. Select installations on the *Installations* tab (or open one) and choose an action; a run works on the installations **one after another** and **stops at the first failure** (*rolling*). Everything goes over SSH with POSIX tools (`sh`, `cp`, `mv`, `find`, `awk`, `tr`, `sha256sum`).
+
+- **Update** — the newest version of the ref the installation follows. **Upgrade…** — another branch or tag (`main`, `tag:v2`, `tag:latest`), with a warning and a summary per installation: files to change, new files, files changed locally, and files that the new version no longer has (they stay on the server). *Follow this ref from now on* sets the services' ref override, so later comparisons use it. **Rollback…** — restore a backup from `.deploy-bak/`. **Stamp** — write `VERSION.md` where an installation is up to date and has none (*Overwrite an existing VERSION.md* forces it).
+- **Choosing files:** *old* and *missing* files are ticked. A file **changed by hand** is written only when you tick it, with a warning (its content stays in the backup). **Protected** files are never written. *Show all files* lists the current ones too.
+- **Confirmation:** a summary, and for **production** installations — tag `env:prod` (or `prod`, `production`, `prd`, `live`) or an environment directory with that name — you type the server name. The server checks it again.
+- **Steps per installation**, shown live in the run's details:
+  1. **Compare again** (a fresh scan): a file changed since the last check stops the run unless it was ticked as changed.
+  2. **Dangling Python imports:** when `.py` files are written, a `from mod import name` in another file of the installation whose `name` the new `mod.py` no longer defines (a scan of its top-level `def`, `class`, assignments and imports; relative imports and packages are resolved) stops the run before anything is written. *Skip the check for dangling Python imports* turns it off for one run.
+  3. **Backup** of the files that are replaced (and `VERSION.md`) to `<install>/.deploy-bak/<id>-<YYYYMMDD-HHMMSS>/<path>`; `<id>` is the bundle ID for targets from a bundle, else the run ID `wrm-<YYYYMMDD-HHMM>`.
+  4. **Atomic writes:** each file is written to a temporary file in the same directory (copied from the old file first, so **mode and owner stay**) and verified by hash, then all are renamed into place. **Line endings stay**: a CRLF file gets CRLF; a new file gets what most files of the installation use; new files get mode `644` (`755` with a `#!` line) and the installation's owner.
+  5. **Checks:** `python3 -m py_compile` for `.py` (when `python3` exists; its `.pyc` files go to a temporary directory), `node --check` for `.js`, `sh -n` (`bash -n` for bash scripts) for `.sh`, and an optional **custom command** per service (run in the installation directory, exit code 0 = OK; remembered for the next run).
+  6. **Automatic rollback** on any failure: the replaced files come back from the backup (atomically), new files and new directories are removed and the backup is dropped. A run that fails before writing changes nothing.
+  7. **`VERSION.md`** and a line in **`updates.jsonl`**, then the installation is compared again.
+  8. Optionally a **restart** (below).
+- **Compatibility with file-based deploy tools** — WRM writes their formats, so both can be used side by side:
+  - `VERSION.md` in the installation root, with the installation's line endings (never part of the comparison):
+
+    ```
+    # demo-api - v1.10
+
+    - **Servis**:      demo-api
+    - **Verzija**:     v1.10
+    - **Grana/ref**:   main (tag)
+    - **Commit**:      0123456789 (2026-09-10)
+    - **Azurirano**:   2026-10-09 21:05:07
+    - **Host**:        app-01
+    - **Korisnik**:    deploy
+    - **Bundle**:      wrm-20261009-2105
+
+    ## Skripte (3)
+
+    | Datoteka    | Verzija    | Datum      |
+    | ----------- | ---------- | ---------- |
+    | config.ini  | (per-host) | -          |
+    | lib/util.py | v1.10      | 2026-09-10 |
+    | run.py      | v1.10      | 2026-09-10 |
+    ```
+
+    Rows are sorted by path; columns are padded to the longest value. *Verzija* is the tag of the file's newest history entry, else its commit; older files that were not updated show the version they match, files changed by hand `(local)`.
+  - `updates.jsonl`: one line per installation and run (sorted keys) in the first writable of `/var/log/deploytool/updates.jsonl`, `<install>/.deploy-bak/updates.jsonl` and `/tmp/deploytool-updates.jsonl`:
+
+    ```
+    {"app": "demo-api", "backup": "/opt/demo-api/.deploy-bak/wrm-20261009-2105-20261009-210507", "branch": "main", "bundle": "wrm-20261009-2105", "env": "prod", "files": ["lib/util.py", "run.py"], "from_version": "v1.9", "host": "app-01", "install": "/opt/demo-api", "services": ["systemctl demo-api"], "time": "2026-10-09T21:05:07", "to_version": "0123456789 (2026-09-10)", "user": "deploy"}
+    ```
+  - **Rollback** lists the backups of the installation with their time, `VERSION.md` and log line. The files of a backup come from WRM's run history or the `updates.jsonl` line; a file that did not exist before is deleted on restore. For a backup without such a record only the files in it are restored. The current files are backed up first, so a rollback can be rolled back.
+- **Service restart (opt-in, off by default).** The units are the systemd / supervisor units found by the check (their unit file mentions the installation directory). Per run: **do not restart** (the installation shows *↻ restart pending*), **right after a successful update** (in the rolling order), **at a chosen time** or **after a delay**. A warning names the units and servers. Every restart is followed by a **health check** (`systemctl is-active` must say `active`, `supervisorctl status` must show `RUNNING`); an unhealthy unit stops the run. `sudo -n` is used when the SSH user is not root and may use it without a password. *Restart…* also restarts installations without an update.
+- **Scheduling (maintenance windows):** *When → At a chosen time*. Scheduled runs and restarts are stored in the database, **survive a WRM restart** and can be **cancelled** (*Runs*). A restart that waits for an update is skipped if the update failed. A run is **skipped when WRM was not running at its time** for longer than `git_schedule_grace_minutes` (30). Notifications: 15 minutes before (*a scheduled run starts soon*), at the start and at the end.
+- **Runs tab:** history (the last 500 runs per user) and scheduled runs with installations, versions, states and every step; *Stop after the current server* for a run that works.
+- **Policies:** `git_update` (update and stamp), `git_upgrade`, `git_rollback`, `git_restart` — `admins` by default, `all` or `off`. Runs are audited per installation (`git.update`, `git.upgrade`, `git.rollback`, `git.restart`, `git.stamp` with the result, files, backup and versions), and so are scheduling, cancelling and skipped runs.
 
 ### Network tools
 
@@ -1040,6 +1103,8 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `git_checks` | `all` | who may run Git checks (discovery and comparison over SSH, read-only): `off`, `admins`, `all` |
 | `git_check_interval_minutes` | `60` | interval of periodic Git checks for users who turned them on (0 = none, up to 10080) |
 | `git_backup_words` | `bkp,backup,bak,old,…` | path segments with one of these words are treated as copies / backups by Git discovery and comparison |
+| `git_update` / `git_upgrade` / `git_rollback` / `git_restart` | `admins` | who may update (and stamp), upgrade, roll back installations and restart their units: `off`, `admins`, `all` |
+| `git_schedule_grace_minutes` | `30` | a scheduled Git run or restart is skipped when WRM was not running at its time for longer than this (1–1440) |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
@@ -1088,7 +1153,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v11.0.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v11.1.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1373,6 +1438,12 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/installs` | `{conn_id, path, app, env}` (added by hand) |
 | GET / DELETE | `/api/git/installs/{id}` | Details with file states / forget |
 | GET | `/api/git/installs/{id}/diff?path=` | `{lines: [{op: " "\|"-"\|"+"\|"@", a, b, s}], binary, truncated}` (server → target) |
+| POST | `/api/git/plan` | `{kind: "update"\|"upgrade"\|"stamp", ref, install_ids}` → `{items: [{install_id, prod, units, from_version, target, current, files: [{path, state, selected, local}], removed, counts, eligible}]}` |
+| GET | `/api/git/installs/{id}/backups` | Backups in `.deploy-bak` with their files, `VERSION.md` and `updates.jsonl` line (policy `git_rollback`) |
+| POST | `/api/git/runs` | Start or schedule a run: `{kind: "update"\|"upgrade"\|"rollback"\|"stamp"\|"restart", ref, items: [{install_id, files, modified_ok, backup}], restart: {mode: "none"\|"now"\|"at"\|"delay", at, delay_minutes}, schedule_at, checks: {service: command}, ignore_imports, force, set_ref_override, confirm: {install_id: server name}}` |
+| GET | `/api/git/runs` | History and scheduled runs |
+| GET | `/api/git/runs/{id}` | A run with live progress: items with `state`, `step`, `log`, `written`, `deleted`, `made_backup`, `dangling`, `health` |
+| POST | `/api/git/runs/{id}/cancel` | Cancel a scheduled run (with its waiting restart) or stop a running one after the current installation |
 
 **Tunnels & web interfaces**
 
@@ -1496,6 +1567,8 @@ remote-manager/
   git_bundle.go   offline bundles: import and export (bundle.json + payload)
   git_scan.go     discovery and file hashing over SSH, VERSION.md, units, comparison
   git_monitor.go  periodic Git checks and their notifications
+  git_deploy.go   deploy steps over SSH: backup, atomic writes, checks, rollback, VERSION.md, updates.jsonl, dangling imports, restarts
+  git_runs.go     Git runs: plan, rolling execution, scheduling, live progress, policies, notifications, API
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
   nettools.go     network tools: port check, ping, traceroute, DNS, HTTP/TLS check, from WRM or a server
@@ -1515,6 +1588,7 @@ remote-manager/
   bookmarks_test.go    folder bookmarks: scopes, ownership, variables, cd quoting, shares, WinSCP.ini, start directory
   status_test.go       live status: up/down, banners, jump hosts, check now
   git_test.go          Git workspace: fake GitLab / GitHub, branch-aware tags, blob cache, bundles, catalog, discovery and comparison on a fake SSH host, notifications
+  git_deploy_test.go   Git deploy: VERSION.md / updates.jsonl formats, dangling imports; update, CRLF, protected files, stamp, rollback, failed check → rollback, scheduled restart (fake SSH host)
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
   bmc_test.go          Redfish (fake BMC, pinning, jump host, credential), IPMI with a fake ipmitool, SOL (local PTY and jump host), BMC SSH console, serial port on a PTY
   inventory_test.go    tags, CSV encodings/separators, XLSX import, NetBox import and sync (fake NetBox)
@@ -1580,6 +1654,10 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | A connection suddenly goes through a jump host / proxy | Its folder has a default (*Folder settings…*, ⤳ after the folder name). Choose *no jump host / no proxy (not the folder's)* in the connection |
 | Git: an installation is not found | Check *Settings → Catalog settings → Server roots* (searched to depth 3), the service's fingerprint files (relative to the installation root, all must exist) and whether the path looks like a backup (`git_backup_words`, `ignore_dirs`). Installations can be added by hand |
 | Git: every file is *modified* | The *subdirectory* of the service must be the part of the repository that is the installation root (e.g. `linux`). The server needs `sha256sum`, `shasum` or `openssl` |
+| Git: a run stops with *dangling imports* | Another file imports a name the new module no longer defines: update that file in the same run (tick it), fix the repository, or tick *Skip the check for dangling Python imports* if the import is not used |
+| Git: *… was changed on the server since the check* | Someone edited the file after the last check. Check again, review the diff, and tick the file explicitly if it should be overwritten (it stays in the backup) |
+| Git: the restart fails or the unit is not *active* | The SSH user must be root or allowed `sudo -n systemctl restart …` / `supervisorctl` without a password. The run shows the output of `systemctl is-active` / `supervisorctl status` |
+| Git: a scheduled run was *skipped* | WRM was not running at its time for longer than `git_schedule_grace_minutes`, the update it waited for failed, or the action is no longer allowed for the account |
 | Git: `HTTP 401` / `403` from the Git server | Check the token (read access to the API and repositories) in *Settings → Git sources*; 403 can also be the API rate limit |
 | Notifications: nothing arrives | Check *Admin panel → Notifications* (channel enabled, last error, *Send test*), *Settings → Notifications* (events ticked, quiet hours) and the policy `notifications_enabled`. Messages of one round arrive together after a few seconds, at most one per `notify_min_interval_seconds` |
 | Notifications: *SMTP login: … unencrypted connection* | Go's SMTP client sends a password only over TLS (or to localhost): choose STARTTLS or TLS |

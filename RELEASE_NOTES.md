@@ -1,12 +1,38 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.0.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.1.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.0.0 — Git workspace: compare services
+## Web Remote Manager PRO v11.1.0 — Git: update, upgrade, rollback, restarts
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
+Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles and updates them, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### ⎇ Git workspace (phase 1: compare, read-only)
+### 🚀 Update, upgrade and rollback from the Git workspace
+
+- **Update** an installation to the newest version of its ref, **upgrade** it to another branch or tag (with a summary of what changes), or **roll back** to a backup — from the *Installations* tab or the details of an installation, over WRM's SSH connections (jump hosts, proxies, the vault). Servers need nothing but POSIX tools.
+- **You choose the files:** old and missing files are ticked; files changed by hand only when you tick them (with a warning); protected per-host files never.
+- **Safe by default:** a fresh comparison, a **dangling-import check** for Python, a **backup** in `.deploy-bak/`, **atomic writes** that keep mode, owner and line endings (CRLF stays CRLF), checks (`py_compile`, `node --check`, `sh -n` or your own command) and an **automatic rollback** if anything fails.
+- **Production needs two confirmations:** a summary, then you type the server name.
+- **Rolling** over many servers, stopping at the first failure, with **live progress** per step.
+- **Works with file-based deploy tools:** WRM writes `VERSION.md`, `.deploy-bak/<id>-<time>/` and `updates.jsonl` in their format. *Stamp* writes `VERSION.md` where an installation is already current.
+
+### 🔄 Service restarts (opt-in) and maintenance windows
+
+- Restarts are **off by default**. Per run: only show what needs a restart, restart right after a successful update, at a chosen time, or after a delay — a warning names the units and servers. A **health check** (`systemctl is-active`, `supervisorctl status`) follows every restart.
+- **Schedule** updates and restarts into a maintenance window. Scheduled runs survive a WRM restart, can be cancelled, are skipped if WRM was down too long, and **notify before and after**.
+- The new **Runs** tab shows the history and what is scheduled.
+- Administrators: policies `git_update`, `git_upgrade`, `git_rollback`, `git_restart` (administrators by default) and `git_schedule_grace_minutes`. Every update, upgrade, rollback and restart is audited.
+
+### ⬆️ Upgrading from v11.0.0
+
+Replace the binary. The database gets two new tables (`git_runs`, `git_pending_restarts`); the previous binary still starts on it. Only administrators may update, upgrade, roll back and restart until you change the new policies in *Admin → Policies*. Subscribe to the new *Git* events in *Settings → Notifications* if you want them.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.1.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.0.0 — Git workspace: compare services
+
+#### ⎇ Git workspace (phase 1: compare, read-only)
 
 - **Which version runs where?** The new **⎇ Git** button opens a full-screen workspace that compares the services installed on your servers with **GitLab** or **GitHub** (cloud or self-hosted) — **file by file**, over WRM's existing SSH connections, so jump hosts, proxies and the vault apply. Servers need no git, Python or internet access.
 - **Offline bundles:** when WRM cannot reach the Git server, import a `.tar.gz` bundle built elsewhere; WRM shows its age and source. WRM also **exports** the same format for servers that only a file-based deploy tool can reach.
@@ -20,7 +46,7 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 
 Updating, upgrading, rollback and restarts follow in the next phases.
 
-### ⬆️ Upgrading from v10.10.0
+#### ⬆️ Upgrading from v10.10.0
 
 Replace the binary. The database gets new tables (`git_sources`, `git_trees`, `git_blobs`, `git_workspace`, `git_targets`, `git_installs`); the previous binary still starts on it. The Git workspace is on for everyone; set `git_enabled` to off (or `WRM_GIT_ENABLED=0`) to hide it.
 
