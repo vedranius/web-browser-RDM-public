@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v11.4.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v11.5.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -64,6 +64,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Notifications (e-mail, chat, push, webhook)](#notifications-e-mail-chat-push-webhook)
    - [Git workspace: compare services](#git-workspace-compare-services)
    - [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts)
+   - [Git workspace: environments, deploy plans & safe deploys](#git-workspace-environments-deploy-plans--safe-deploys)
    - [Git workspace: new servers (install & transfer)](#git-workspace-new-servers-install--transfer)
    - [Git workspace: .gitignore helper](#git-workspace-gitignore-helper)
    - [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional)
@@ -110,7 +111,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **Notifications** when a server goes down or comes back, a password is due for rotation or a new service version is out: in WRM, in the browser, by e-mail, Telegram, Slack / Mattermost, Microsoft Teams, Discord, ntfy, Gotify, Pushover or a signed webhook.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
 - **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels), **PuTTY** (with proxies) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
-- **Git workspace**: which version of which service runs where — compare installations on your servers **file by file** with **GitLab / GitHub** or an **offline bundle**, see what is *old*, *missing* or *changed by hand*, with diffs and notifications — and **update, upgrade or roll back** them over SSH (backups, atomic writes, checks, automatic rollback, opt-in restarts, maintenance windows), or **install them on a new server** and **transfer** them between servers with their per-host configuration; a **.gitignore helper**, and optional **CI integration** (GitLab / GitHub / Jenkins webhooks, bundles from CI artifacts, deploy through a pipeline).
+- **Git workspace**: which version of which service runs where — compare installations on your servers **file by file** with **GitLab / GitHub** or an **offline bundle**, see what is *old*, *missing* or *changed by hand*, with diffs and notifications — and **update, upgrade or roll back** them over SSH (backups, atomic writes, checks, automatic rollback, opt-in restarts, maintenance windows), deploy to **environments** of ordered servers with a reviewed one-shot plan, a dry run, a server-side lock, history and rollback per deploy, or **install them on a new server** and **transfer** them between servers with their per-host configuration; a **.gitignore helper**, and optional **CI integration** (GitLab / GitHub / Jenkins webhooks, bundles from CI artifacts, deploy through a pipeline).
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions. **Installable as an app** (PWA) on desktops, tablets and phones.
 - **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
@@ -130,21 +131,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v11.4.1-linux-amd64
-   ./wrm-pro-v11.4.1-linux-amd64
+   chmod +x wrm-pro-v11.5.0-linux-amd64
+   ./wrm-pro-v11.5.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v11.4.1-windows-amd64.exe
+   .\wrm-pro-v11.5.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.4.1/wrm-pro-v11.4.1-android-arm64
-   chmod +x wrm-pro-v11.4.1-android-arm64 && ./wrm-pro-v11.4.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.5.0/wrm-pro-v11.5.0-android-arm64
+   chmod +x wrm-pro-v11.5.0-android-arm64 && ./wrm-pro-v11.5.0-android-arm64
    ```
 
    **Docker**
@@ -168,6 +169,15 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v11.4.1
+
+Replace the binary. The database gets one new table (`git_env_exclusions`); the previous binary still starts on it and ignores it. Catalogs and installations without environments work exactly as before.
+
+- **Environments (optional):** a service of the catalog can get named environments — ordered destinations `server:/path` (the server is the name of an SSH connection) with rules: typed confirmation, `allowed_refs`, extra ignore patterns, an optional `post_deploy` command and the number of backups to keep. Add them on the new *Environments* tab (✎) or in the catalog JSON (`apps[].environments`). See [Git workspace: environments, deploy plans & safe deploys](#git-workspace-environments-deploy-plans--safe-deploys).
+- **Server-side state:** an environment deploy keeps its state next to the installation, by default in `<path>/.deploy-bak` (the existing backup directory): `state.json`, `history.jsonl`, `deploys/<id>.json`, `backups/rollback-<id>/` and the lock `.lock/`. Backups keep the existing `<id>-<YYYYMMDD-HHMMSS>` layout, and `VERSION.md` / `updates.jsonl` are written as before, so file-based tools keep working.
+- **Anchored patterns:** an exclude or ignore pattern that starts with `/` now matches the whole relative path only (`/lib/a.py` does not match `x/lib/a.py`). *Exclude permanently* writes such patterns; existing patterns are unchanged.
+- The same policies apply: `git_update` (deploy), `git_upgrade` (deploy of another ref), `git_rollback`, `git_restart`. Environment deploys run right away (no scheduling); use a dry run to preview.
 
 ## Upgrading from v11.4.0
 
@@ -850,6 +860,63 @@ Runs change servers only when you start or schedule them. Select installations o
 - **Runs tab:** history (the last 500 runs per user) and scheduled runs with installations, versions, states and every step; *Stop after the current server* for a run that works.
 - **Policies:** `git_update` (update and stamp), `git_upgrade`, `git_rollback`, `git_restart` — `admins` by default, `all` or `off`. Runs are audited per installation (`git.update`, `git.upgrade`, `git.rollback`, `git.restart`, `git.stamp` with the result, files, backup and versions), and so are scheduling, cancelling and skipped runs.
 
+### Git workspace: environments, deploy plans & safe deploys
+
+Environments are **optional**. A service without environments keeps using *Update*, *Upgrade* and *Rollback* per installation as before. An environment is a named, **ordered** list of destinations of one service, with its own rules; a deploy is reviewed as a plan, applied once, locked on the server and recorded there.
+
+**Defining environments** (*Environments* tab → ✎, or the catalog JSON):
+
+```json
+"environments": [{
+  "name": "prod",
+  "destinations": [{"server": "app-01", "path": "/opt/demo-api"}, {"server": "app-02", "path": "/opt/demo-api"}],
+  "confirm": true,
+  "allowed_refs": ["refs/tags/v*"],
+  "ignore": ["/data", "*.local"],
+  "post_deploy": "./bin/migrate --yes",
+  "keep_backups": 5,
+  "state_dir": ""
+}]
+```
+
+- `server` is the name of an SSH connection (jump hosts, vault credentials and proxies work as everywhere); paths are absolute service directories, not system directories.
+- `confirm` asks to type the environment name before a deploy or rollback (always for an environment named `prod`, `production`, `prd` or `live`). `allowed_refs` limits what may be deployed (`refs/heads/main`, `refs/tags/v*`; a pattern without `refs/` matches the short branch or tag name). `ignore` adds patterns to the catalog's excludes for this environment. `post_deploy` runs in the app directory after the files — **only when it is ticked** for a deploy or rollback. `keep_backups` (1–50, default 5) deploy backups are kept per destination.
+- `state_dir` (optional) moves the server-side state to `<state_dir>/<service>/<path with / as _>`; by default it is `<path>/.deploy-bak`.
+- **Validation:** two destinations on the same server where one app path lies inside the other are rejected unless the outer service's excludes (or environment ignores) cover the inner path; a `state_dir` inside any app path is rejected.
+
+**The overview** (*Environments* tab) is a service × environment table. Every cell is read **lazily, one request per cell**: per destination the deployed version and commit, who deployed it and when (from `state.json`, else `VERSION.md`), how many commits it is behind the service's target, and a lock if there is one. A cell warns when **the servers of one environment differ**.
+
+**Deploy:** *▶ Deploy* compares every destination with the target (or another ref: `tag:v2`, a branch) and shows the **plan** per server:
+
+- **States:** *new*, *changed* (with *changed by hand* when it matches no version of the repository, or how many versions behind), **same (CRLF/LF)** — only the line endings differ: counted separately and **sent anyway**, so the deploy normalises the line endings to the repository's —, *removed from Git* (in the repository at the deployed commit but not any more), *only on the server*, *protected*, *ignored* (with the pattern), *same* (*Show all files*).
+- **Excluding files:** untick a file to leave it out of **this** run; the choice is **remembered** for the next compare with who and when (*Clear remembered exclusions*). **⊘ service** / **⊘ environment** exclude a file **permanently**: an anchored pattern with glob characters escaped (`/lib/a[[]1].py`) is written to the service's excludes or to the environment's ignore list, unless an existing pattern already covers the file; the plan is compared again.
+- **Options:** delete files removed from the repository (opt-in), run `post_deploy` (opt-in, the command is shown), restart the units after each destination (opt-in), the custom check command.
+- **Plan errors and warnings:** excluding (or not deleting) something the branch turns from a directory into a file or back is an error; replacing a symlink on the server, files changed by hand, a missing path (**the first deploy creates the path and its parents**) and a lock are warnings.
+- Every destination plan has a **fingerprint** of what was compared (the server files with their hashes, the current deploy, the target commit). A plan can be applied **once**; a new deploy needs a new compare.
+- **Dry run** uses exactly the options of the real deploy, takes **no lock**, writes **nothing** and needs no typed confirmation; the run log lists what would be added, changed, deleted and run. *Back to the plan* returns to the same plan.
+
+**Per destination, in order** (the run's log refreshes about every second):
+
+1. **Lock:** `mkdir <state>/.lock` (atomic) with an owner file — deploy id, WRM user, WRM host and the **server's** time. A lock held by someone else stops the deploy; a deploy releases **only its own** lock (the owner file must name its deploy id).
+2. **The plan again under the lock:** another fingerprint stops the deploy before anything is written (*compare again*).
+3. **Transfer:** the files (and `VERSION.md`) as **one tar stream** into `<path>/.wrm-incoming-<id>` (timeout at least 1 hour), verified by hash. An **interrupted transfer** is recorded as **partial** with what had really arrived (removed again); nothing in the installation changes and no new current state is written.
+4. **Backup** of what is replaced or deleted to `<state>/<id>/` (the existing backup layout), then deletes and renames (mode and owner of replaced files stay; directories left empty by deletes are removed and remembered with their mode and owner), checks (`py_compile`, `node --check`, `sh -n`, the custom command) and an **automatic restore** on failure.
+5. **State:** `deploys/<id>.json` (the manifest: added, changed and deleted files, removed directories, the previous state), `state.json` (`current` and `previous`), the `updates.jsonl` line, `post_deploy` when chosen, then a **DEPLOY** entry in `history.jsonl` with the previous state and the lists of new, changed and deleted files (at most 500 names per kind, plus the real counts). The oldest backups beyond `keep_backups` are removed.
+6. A failure stops the run: the remaining destinations are not started. A **failed `post_deploy`** is recorded with a note — the files are already on the server and the new state is current.
+
+**History** (*🕘 History*) merges `history.jsonl` of every destination (one row per destination) with the file lists in an expandable column. **Rollback** works per deploy id on the chosen destinations (default: every destination where it is the latest), **in reverse destination order**:
+
+- Under the lock it checks that this deploy is **still the latest** on the destination and that its backup exists.
+- Files the deploy **added** are **moved** to `<state>/backups/rollback-<id>/` (never deleted); the **current versions** of changed files are kept there too, then the backed-up versions come back atomically; deleted files come back; **removed directories are re-created with their mode and owner**.
+- **Nothing is done through a symlink** on the server: such items are skipped and the rollback is marked **incomplete** (the state does not change; fix the server and roll back again).
+- Then `post_deploy` (when ticked), the stored previous state becomes current again, and a **ROLLBACK** entry with `rolled_back=<id>` is written. The last 5 rollback backups are kept. A dry run shows what a rollback would do.
+
+**Stale locks:** a lock older than max(30 minutes, the transfer timeout), measured by the server's clock, is *stale*. The plan offers *Remove the stale lock* after a confirmation; one server command checks again that it is the same lock (owner id) and still stale before it removes it (audited as `git.lock_removed`).
+
+**🩺 Doctor** checks every destination: SSH login, a clean non-interactive shell (no banner or rc output before the commands), the SSH user (a warning for `root`), the app directory (writable; a missing one is OK when its nearest existing parent is writable), the state directory, unreadable subdirectories, signs of another deploy method (`.git`, `.svn`, `.hg`, `releases` / `current`, a symlinked app path), a path that looks like a public web root, `sha256sum`, `rsync` and `tar` with their versions, and the lock.
+
+Environment deploys and rollbacks are ordinary runs: they appear on the *Runs* tab, can be stopped after the current destination, send the run notifications (not for dry runs) and are audited per destination (`git.update` / `git.upgrade` / `git.rollback` with `env`, `deploy_id`, `dry_run`, `partial`, `post_deploy`).
+
 ### Git workspace: new servers (install & transfer)
 
 Two wizards set up a service where it does not run yet. Both are runs (they appear on the *Runs* tab with every step), start right away and work over SSH with POSIX tools plus `tar`.
@@ -1264,7 +1331,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v11.4.1-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v11.5.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1570,6 +1637,15 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/feeds` | `{name, url, header_name, header_value, interval_minutes}`; `PUT` / `DELETE /api/git/feeds/{id}` |
 | POST | `/api/git/feeds/{id}/fetch` | Fetch and import now → `{status: "imported"\|"unchanged", result, state}` |
 | PUT / DELETE | `/api/git/pipelines/{app}` | Deploy method *CI pipeline*: `{kind: "jenkins"\|"gitlab", url, username, project, ref, token}`; `DELETE` → files over SSH again |
+| GET | `/api/git/env/overview` | Services with environments: `{services: [{app, envs: [{name, destinations, confirm, allowed_refs, post_deploy}]}], envs, stale_minutes}` |
+| GET | `/api/git/env/cell?app=&env=` | One overview cell: `{dests: [{server, path, exists, current, version_md, commit_md, behind, lock, error}], drift, target}` |
+| POST | `/api/git/env/plan` | `{app, env, ref}` → `{id, ref_name, target, confirm, post_deploy, excluded: {path: {by, at}}, errors, dests: [{index, server, path, state_dir, exists, current, from_version, files: [{path, state: "new"\|"changed"\|"eol"\|"same"\|"removed"\|"extra"\|"protected"\|"ignored", local, link, behind, tag, pattern}], counts, conflicts: [{path, kind, server}], fingerprint, lock, errors, warnings}]}` (kept in memory for 2 hours, applied once) |
+| POST | `/api/git/runs` (environment) | Deploy: `{kind: "update", env: {app, env, plan_id, exclude: [path], delete_removed, post_deploy, dry_run, confirm: environment name}, restart: {mode: "none"\|"now"}, checks}`. Rollback: `{kind: "rollback", env: {app, env, deploy_id, dests: [index], post_deploy, dry_run, confirm}, restart}` |
+| GET | `/api/git/env/history?app=&env=` | `{dests: [{server, path, current, error}], entries: [{action: "DEPLOY"\|"ROLLBACK", id, rolled_back, by, at, version, commit, branch, previous, new, changed, deleted, excluded, restored, moved_aside, skipped, counts, result, post_deploy, server, path, dest}]}` |
+| POST | `/api/git/env/doctor` | `{app, env}` → `{dests: [{server, path, checks: [{name, status: "ok"\|"warn"\|"fail"\|"info", msg}]}]}` |
+| POST | `/api/git/env/unlock` | `{app, env, dest, lock_id}`: remove a stale lock (checked again on the server; `409` when it changed) |
+| POST | `/api/git/env/exclude` | `{app, env, path, scope: "service"\|"env"}` → `{pattern, added}` (anchored, escaped; not added when a pattern covers the file) |
+| DELETE | `/api/git/env/exclusions?app=&env=[&path=]` | Clear the remembered per-run exclusions |
 | POST | `/api/git/runs/{id}/cancel` | Cancel a scheduled run (with its waiting restart) or stop a running one after the current installation |
 
 **Tunnels & web interfaces**
@@ -1702,6 +1778,8 @@ remote-manager/
   git_ci.go         optional CI: webhooks, bundles from CI artifacts, CI pipeline deploy method
   git_files.go      every file of an installation: listing with reasons, view, diff of any repository file, commits behind
   git_jobs.go       check jobs: partial, streamed and cancellable checks with concurrency limits
+  git_env.go        environments: validation, plans with fingerprints, locks, server-side state, overview, history, doctor, API
+  git_env_run.go    environment deploy and rollback runs: dry run, staged transfer, backup, manifest, history, post_deploy
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
   nettools.go     network tools: port check, ping, traceroute, DNS, HTTP/TLS check, from WRM or a server
@@ -1725,6 +1803,7 @@ remote-manager/
   git_gitignore_test.go  .gitignore helper: candidates from a check, preview, download, merge request only on explicit choice (fake GitLab), pull request (fake GitHub)
   git_files_test.go      every file of an installation (reasons, excluded file diff, symlinks, unreadable, quoting, commits) and check jobs (partial, stale, limits, cancel, last good result)
   git_ci_test.go         webhooks (GitLab token, GitHub HMAC, generic token / HMAC, replays, rate limit), artifact feed fetch and schedule, Jenkins job and GitLab pipeline runs
+  git_env_test.go        environments: plan with CRLF-only files, dry run, typed confirmation, one-shot plans, fingerprint mismatch, lock contention, stale lock, own lock only, remembered and permanent exclusions, allowed_refs, nested paths, partial transfer, post_deploy failure, rollback (moved aside, symlinks skipped, removed directories, kept backups), doctor, drift
   git_provision_test.go  Git install / transfer: templates, exclusions, units; install from the fake GitLab and from a bundle, vault values, overwrite refusal and backup, transfer A → B, policies
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
   bmc_test.go          Redfish (fake BMC, pinning, jump host, credential), IPMI with a fake ipmitool, SOL (local PTY and jump host), BMC SSH console, serial port on a PTY
@@ -1759,6 +1838,9 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | *HOST KEY VERIFICATION FAILED* | The server's SSH key changed. If you know why (reinstall), click *Trust this key* in the terminal (connection owner/admin) or forget the host in *Admin → Host keys* |
 | *Microphone requires HTTPS* / no microphone | Use HTTPS (certificate, reverse proxy or `HTTPS_SELF_SIGNED=1`) and allow the microphone in the browser; you can also join as a listener |
 | Voice: *Connecting…* forever or *Connection problem* | Open UDP+TCP 3478 and the relay port range on the WRM server; behind NAT set `turn_public_ip` and forward the ports; in very strict networks add a TURN server on 443/TLS (*Admin → Voice & network*) |
+| Environment deploy: *the server or the repository changed since the plan was reviewed* | Something changed between the compare and the deploy (a file on the server, another deploy, a new target). Compare again, review the new plan and deploy it |
+| Environment deploy: *locked by … from …* | Another deploy holds the lock of that destination. Wait for it; a lock older than max(30 min, the transfer timeout) is *stale* and the plan offers to remove it — only do so when no deploy is running there |
+| Environment rollback *incomplete* | A file or directory of the rollback is a symlink on the server, so it was skipped. Fix the server (replace the symlink) and roll back the same deploy again |
 | Registration tab missing | Self-registration is closed (default). An administrator creates accounts, or opens registration in *Security policies* |
 | Locked out as administrator | `wrm -reset-password <user>` (add `-reset-2fa` if needed) |
 | *Connection failed: unable to authenticate* | Check user/password/key with **Test connection**; for *Key file*/*Auto* the key must exist on the **WRM server** and the account must be an administrator (or the policy allows it) |
