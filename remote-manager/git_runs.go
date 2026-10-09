@@ -20,7 +20,8 @@ import (
 // runs and restarts are stored in git_runs, survive a WRM restart, can be cancelled and are
 // skipped when WRM was down past git_schedule_grace_minutes. Progress is kept in memory
 // while a run works (the UI polls it, as for credential rotations) and stored when it ends.
-// Policies: git_update (also stamp), git_upgrade, git_rollback and git_restart.
+// Policies: git_update (also stamp), git_upgrade, git_rollback, git_restart, git_install and
+// git_transfer (install and transfer runs: git_provision.go).
 
 const (
 	gitMaxRunItems     = 100
@@ -59,7 +60,8 @@ func initGitRunsSchema() {
 
 // ─── policies ────────────────────────────────────────
 
-var gitKindPolicy = map[string]string{"update": "git_update", "stamp": "git_update", "upgrade": "git_upgrade", "rollback": "git_rollback", "restart": "git_restart"}
+var gitKindPolicy = map[string]string{"update": "git_update", "stamp": "git_update", "upgrade": "git_upgrade", "rollback": "git_rollback", "restart": "git_restart",
+	"install": "git_install", "transfer": "git_transfer"}
 
 func gitActionAllowed(userID int, key string) bool {
 	if !gitAllowed() {
@@ -76,7 +78,8 @@ func gitActionAllowed(userID int, key string) bool {
 
 func gitDeployPolicies(userID int) map[string]bool {
 	return map[string]bool{"update": gitActionAllowed(userID, "git_update"), "upgrade": gitActionAllowed(userID, "git_upgrade"),
-		"rollback": gitActionAllowed(userID, "git_rollback"), "restart": gitActionAllowed(userID, "git_restart")}
+		"rollback": gitActionAllowed(userID, "git_rollback"), "restart": gitActionAllowed(userID, "git_restart"),
+		"install": gitActionAllowed(userID, "git_install"), "transfer": gitActionAllowed(userID, "git_transfer")}
 }
 
 // isProdInstall: tagged env:prod / prod (or production, prd, live) or found in such an
@@ -127,6 +130,9 @@ type gitRunItem struct {
 	Health      []gitHealth  `json:"health,omitempty"`
 	UpdateLog   string       `json:"update_log,omitempty"`
 	Error       string       `json:"error,omitempty"`
+	// transfer: where the installation comes from
+	SourceConnName string `json:"source_conn_name,omitempty"`
+	SourcePath     string `json:"source_path,omitempty"`
 }
 
 type gitRestartChoice struct {
@@ -147,7 +153,8 @@ type gitRunParams struct {
 	ScheduleAt     string               `json:"schedule_at,omitempty"`
 	Confirm        map[string]string    `json:"confirm,omitempty"` // install id → typed host name
 	SetRefOverride bool                 `json:"set_ref_override,omitempty"`
-	Targets        map[string]gitTarget `json:"targets,omitempty"` // pinned when the run is created
+	Targets        map[string]gitTarget `json:"targets,omitempty"`   // pinned when the run is created
+	Provision      *gitProvision        `json:"provision,omitempty"` // install / transfer (stored without typed values)
 }
 
 // gitRun is a run being worked on.
@@ -277,6 +284,10 @@ func parseRunTime(s string) (time.Time, error) {
 // createGitRun validates a request, pins the targets and starts or schedules the run.
 func createGitRun(r *http.Request, userID int, p gitRunParams) (int, int, error) {
 	p.Targets = nil
+	if p.Kind == "install" || p.Kind == "transfer" {
+		return createProvisionRun(r, userID, p)
+	}
+	p.Provision = nil
 	key, known := gitKindPolicy[p.Kind]
 	if !known {
 		return 0, 400, fmt.Errorf("unknown kind")
@@ -653,8 +664,9 @@ func gitPlan(userID int, kind, ref string, ids []int) ([]gitPlanItem, error) {
 
 // ─── running ─────────────────────────────────────────
 
-// startGitRun marks a run as running and works on it in the background.
-func startGitRun(userID, id int, r *http.Request) error {
+// startGitRun marks a run as running and works on it in the background. full is the
+// complete request when the stored one is redacted (install: typed values).
+func startGitRun(userID, id int, r *http.Request, full ...*gitRunParams) error {
 	var params, label, kind string
 	var parent int
 	if db.QueryRow(`SELECT params, label, kind, parent_id FROM git_runs WHERE id=? AND user_id=?`, id, userID).Scan(&params, &label, &kind, &parent) != nil {
@@ -662,6 +674,9 @@ func startGitRun(userID, id int, r *http.Request) error {
 	}
 	run := &gitRun{ID: id, UserID: userID, Kind: kind, State: "running", Label: label, ParentID: parent, Started: nowStamp(), r: r}
 	jsonUnmarshalString(params, &run.P)
+	if len(full) == 1 && full[0] != nil {
+		run.P = *full[0]
+	}
 	gitLive.Lock()
 	if gitLive.busy[userID] != 0 {
 		gitLive.Unlock()
@@ -717,6 +732,10 @@ func executeGitRun(run *gitRun) {
 			err = run.stampItem(it)
 		case "restart":
 			err = run.restartItem(it)
+		case "install":
+			err = run.installItem(i, it)
+		case "transfer":
+			err = run.transferItem(it)
 		}
 		if err == nil && run.Kind != "restart" && run.Kind != "stamp" && run.P.Restart.Mode == "now" && it.State == "ok" && len(it.Units) > 0 && (len(it.Written) > 0 || len(it.Deleted) > 0) {
 			err = run.restartItem(it)
@@ -734,7 +753,6 @@ func executeGitRun(run *gitRun) {
 		}
 		auditGitItem(run, it)
 		run.save()
-		_ = i
 	}
 	run.set(func() {
 		switch {
@@ -1387,6 +1405,15 @@ func auditGitItem(run *gitRun, it *gitRunItem) {
 	if run.P.Ref != "" {
 		details["ref"] = run.P.Ref
 	}
+	if it.SourcePath != "" {
+		details["source"] = it.SourceConnName + ":" + it.SourcePath
+	}
+	if run.Kind == "install" || run.Kind == "transfer" {
+		details["to_conn_id"] = it.ConnID
+		if it.InstallID != 0 {
+			details["install_id"] = it.InstallID
+		}
+	}
 	action := "git." + run.Kind
 	if run.Kind != "restart" && len(it.Health) > 0 {
 		auditLogRef(run.r, run.UserID, usernameOf(run.UserID), "git.restart", it.Path, map[string]interface{}{"run_id": run.ID, "units": unitNames(it.Units), "result": it.State}, auditRef{ConnID: it.ConnID})
@@ -1396,8 +1423,8 @@ func auditGitItem(run *gitRun, it *gitRunItem) {
 }
 
 var gitKindText = map[string]map[string]string{
-	"en": {"update": "update", "upgrade": "upgrade", "rollback": "rollback", "stamp": "stamp", "restart": "restart"},
-	"hr": {"update": "ažuriranje", "upgrade": "nadogradnja", "rollback": "vraćanje", "stamp": "označavanje", "restart": "ponovno pokretanje"},
+	"en": {"update": "update", "upgrade": "upgrade", "rollback": "rollback", "stamp": "stamp", "restart": "restart", "install": "install", "transfer": "transfer"},
+	"hr": {"update": "ažuriranje", "upgrade": "nadogradnja", "rollback": "vraćanje", "stamp": "označavanje", "restart": "ponovno pokretanje", "install": "instalacija", "transfer": "prijenos"},
 }
 
 func gitItemsSummary(items []*gitRunItem) string {
@@ -1589,6 +1616,7 @@ func cancelGitRun(r *http.Request, userID, id int) error {
 //	POST /api/git/runs                {kind, items, …}       → start or schedule a run
 //	GET  /api/git/runs/{id}                                  → live progress / result
 //	POST /api/git/runs/{id}/cancel
+//	POST /api/git/provision/prepare  {kind, conn_id, services | source_install, path} → targets, templates, pre-checks
 func apiGitDeploy(w http.ResponseWriter, r *http.Request, userID int, rest string, parts []string) bool {
 	switch {
 	case rest == "plan" && r.Method == http.MethodPost:
@@ -1646,6 +1674,18 @@ func apiGitDeploy(w http.ResponseWriter, r *http.Request, userID int, rest strin
 			}
 		}
 		jsonOK(w, map[string]interface{}{"backups": backups, "dir": path.Join(list[0].Path, gitBackupDir)})
+
+	case rest == "provision/prepare" && r.Method == http.MethodPost:
+		var in gitPrepareReq
+		if !decodeGitJSON(w, r, &in) {
+			return true
+		}
+		res, code, err := gitPrepare(userID, in)
+		if err != nil {
+			jsonError(w, err.Error(), code)
+			return true
+		}
+		jsonOK(w, res)
 
 	case rest == "runs" && r.Method == http.MethodGet:
 		jsonOK(w, map[string]interface{}{"runs": loadGitRuns(userID, 100)})
