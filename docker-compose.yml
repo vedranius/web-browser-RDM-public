@@ -9,8 +9,8 @@ services:
     build:
       context: .
       args:
-        VERSION: v11.6.0
-    image: wrm-pro:v11.6.0
+        VERSION: v11.6.1
+    image: wrm-pro:v11.6.1
     restart: unless-stopped
     ports:
       - "8080:8080"              # web UI (HTTPS with the self-signed certificate below)
