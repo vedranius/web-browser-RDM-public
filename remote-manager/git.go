@@ -29,8 +29,12 @@ func initGitSchema() {
 		token TEXT NOT NULL DEFAULT '',
 		info TEXT NOT NULL DEFAULT '',
 		created_at TEXT NOT NULL DEFAULT '',
-		last_error TEXT NOT NULL DEFAULT '')`,
-		"id", "user_id", "kind", "name", "url", "token", "info", "created_at", "last_error")
+		last_error TEXT NOT NULL DEFAULT '',
+		write_token TEXT NOT NULL DEFAULT '',
+		hook_id TEXT NOT NULL DEFAULT '',
+		hook_secret TEXT NOT NULL DEFAULT '',
+		hook_at TEXT NOT NULL DEFAULT '')`,
+		"id", "user_id", "kind", "name", "url", "token", "info", "created_at", "last_error", "write_token", "hook_id", "hook_secret", "hook_at")
 	ensureTable("git_blobs", `CREATE TABLE IF NOT EXISTS git_blobs (
 		source_id INTEGER NOT NULL,
 		blob TEXT NOT NULL,
@@ -78,6 +82,7 @@ func initGitSchema() {
 		"id", "user_id", "conn_id", "app", "path", "env", "manual", "state", "data", "checked_at", "discovered_at")
 	mustExec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_git_installs_path ON git_installs(user_id, conn_id, path)`)
 	initGitRunsSchema()
+	initGitCISchema()
 }
 
 func deleteGitUserData(userID int) {
@@ -89,6 +94,8 @@ func deleteGitUserData(userID int) {
 	db.Exec(`DELETE FROM git_installs WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_runs WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_pending_restarts WHERE user_id=?`, userID)
+	db.Exec(`DELETE FROM git_feeds WHERE user_id=?`, userID)
+	db.Exec(`DELETE FROM git_pipelines WHERE user_id=?`, userID)
 }
 
 func gitAllowed() bool { return settingBool("git_enabled") }
@@ -467,7 +474,7 @@ func gitState(userID int) map[string]interface{} {
 		"installs": loadGitInstalls(userID, false, ""), "bundle_apps": fromBundle, "last_check_at": last,
 		"can_check": gitChecksAllowed(userID), "interval_minutes": settingInt("git_check_interval_minutes"),
 		"notifications": settingBool("notifications_enabled"), "deploy": gitDeployPolicies(userID),
-		"grace_minutes": settingInt("git_schedule_grace_minutes"),
+		"grace_minutes": settingInt("git_schedule_grace_minutes"), "feeds": loadGitFeeds(userID), "pipelines": loadGitPipelines(userID),
 	}
 }
 
@@ -499,6 +506,8 @@ func decodeGitJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 //	GET    /api/git/installs/{id}            details with file states; DELETE forgets it
 //	GET    /api/git/installs/{id}/diff?path= coloured diff server ↔ target
 //	deploy routes (plan, backups, runs): see apiGitDeploy in git_runs.go
+//	.gitignore helper: see apiGitIgnore in git_gitignore.go
+//	webhooks, artifact feeds, CI pipelines: see apiGitCI in git_ci.go
 func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireAuth(w, r)
 	if !ok {
@@ -517,7 +526,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return true
 	}
-	if apiGitDeploy(w, r, userID, rest, parts) {
+	if apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
 		return
 	}
 	switch {
@@ -616,10 +625,11 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 
 	case rest == "sources" && r.Method == http.MethodPost, len(parts) == 2 && parts[0] == "sources" && r.Method == http.MethodPut:
 		var in struct {
-			Kind  string  `json:"kind"`
-			Name  string  `json:"name"`
-			URL   string  `json:"url"`
-			Token *string `json:"token"`
+			Kind       string  `json:"kind"`
+			Name       string  `json:"name"`
+			URL        string  `json:"url"`
+			Token      *string `json:"token"`
+			WriteToken *string `json:"write_token"` // optional, only for .gitignore merge requests
 		}
 		if !decodeGitJSON(w, r, &in) {
 			return
@@ -644,18 +654,21 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 				jsonError(w, "at most 20 Git sources", 400)
 				return
 			}
-			tok := ""
+			tok, wtok := "", ""
 			if in.Token != nil && strings.TrimSpace(*in.Token) != "" {
 				tok = encryptValue(strings.TrimSpace(*in.Token))
 			}
-			res, err := db.Exec(`INSERT INTO git_sources (user_id, kind, name, url, token, info, created_at, last_error) VALUES (?,?,?,?,?,'',?,'')`,
-				userID, in.Kind, truncateStr(in.Name, 100), in.URL, tok, nowStamp())
+			if in.WriteToken != nil && strings.TrimSpace(*in.WriteToken) != "" {
+				wtok = encryptValue(strings.TrimSpace(*in.WriteToken))
+			}
+			res, err := db.Exec(`INSERT INTO git_sources (user_id, kind, name, url, token, info, created_at, last_error, write_token) VALUES (?,?,?,?,?,'',?,'',?)`,
+				userID, in.Kind, truncateStr(in.Name, 100), in.URL, tok, nowStamp(), wtok)
 			if err != nil {
 				jsonError(w, "Cannot save", 500)
 				return
 			}
 			id, _ := res.LastInsertId()
-			auditLog(r, userID, "git.source_added", in.Name, map[string]interface{}{"kind": in.Kind, "url": in.URL, "source_id": id})
+			auditLog(r, userID, "git.source_added", in.Name, map[string]interface{}{"kind": in.Kind, "url": in.URL, "source_id": id, "write_access": wtok != ""})
 		} else {
 			id, _ := strconv.Atoi(parts[1])
 			src, found := loadGitSource(userID, id)
@@ -671,12 +684,20 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				db.Exec(`UPDATE git_sources SET token=? WHERE id=?`, tok, id)
 			}
+			if in.WriteToken != nil {
+				wtok := ""
+				if t := strings.TrimSpace(*in.WriteToken); t != "" {
+					wtok = encryptValue(t)
+				}
+				db.Exec(`UPDATE git_sources SET write_token=? WHERE id=?`, wtok, id)
+			}
 			if in.URL != src.URL {
 				// a different server: cached trees and blobs belong to the old one
 				db.Exec(`DELETE FROM git_blobs WHERE source_id=?`, id)
 				db.Exec(`DELETE FROM git_trees WHERE source_id=?`, id)
 			}
-			auditLog(r, userID, "git.source_changed", in.Name, map[string]interface{}{"kind": in.Kind, "url": in.URL, "source_id": id, "new_secret": in.Token != nil})
+			auditLog(r, userID, "git.source_changed", in.Name, map[string]interface{}{"kind": in.Kind, "url": in.URL, "source_id": id, "new_secret": in.Token != nil,
+				"new_write_secret": in.WriteToken != nil})
 		}
 		jsonOK(w, gitState(userID))
 

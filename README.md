@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** (bastions, chains), **SSH tunnels** (local, remote, SOCKS), **web interfaces** behind jump hosts, **import from mRemoteNG** and `~/.ssh/config`, server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v11.2.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v11.3.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -65,6 +65,8 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Git workspace: compare services](#git-workspace-compare-services)
    - [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts)
    - [Git workspace: new servers (install & transfer)](#git-workspace-new-servers-install--transfer)
+   - [Git workspace: .gitignore helper](#git-workspace-gitignore-helper)
+   - [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional)
    - [Network tools](#network-tools)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
    - [Search in files](#search-in-files)
@@ -125,21 +127,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v11.2.0-linux-amd64
-   ./wrm-pro-v11.2.0-linux-amd64
+   chmod +x wrm-pro-v11.3.0-linux-amd64
+   ./wrm-pro-v11.3.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v11.2.0-windows-amd64.exe
+   .\wrm-pro-v11.3.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.2.0/wrm-pro-v11.2.0-android-arm64
-   chmod +x wrm-pro-v11.2.0-android-arm64 && ./wrm-pro-v11.2.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.3.0/wrm-pro-v11.3.0-android-arm64
+   chmod +x wrm-pro-v11.3.0-android-arm64 && ./wrm-pro-v11.3.0-android-arm64
    ```
 
    **Docker**
@@ -163,6 +165,15 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v11.2.0
+
+Replace the binary. The database gets two new tables (`git_feeds`, `git_pipelines`) and four new columns of `git_sources` (`write_token`, `hook_id`, `hook_secret`, `hook_at`); the previous binary still starts on it and ignores them.
+
+- **.gitignore helper:** a new *.gitignore* tab in the Git workspace. The output is a download; a merge / pull request needs an optional **write token** on the Git source and the new policy `git_gitignore_mr` (**administrators only** by default). See [Git workspace: .gitignore helper](#git-workspace-gitignore-helper).
+- **Optional CI integration:** a webhook per Git source, bundles fetched from CI artifacts, and the deploy method *CI pipeline* per service. All of it is off until you set it up; WRM works without any CI. See [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional).
+- Webhooks arrive at `/api/hooks/git/<id>`: if WRM is behind a reverse proxy that only forwards some paths, forward this one too.
+- Checks now also record the size of files found only on servers; installations show it after their next check.
 
 ## Upgrading from v11.1.0
 
@@ -822,6 +833,34 @@ Two wizards set up a service where it does not run yet. Both are runs (they appe
 - **Confirmation:** a summary; production targets (tag `env:prod`, or a production environment label) and overwrites need the **server name typed**.
 - **Policies:** `git_install` and `git_transfer` — `admins` by default, `all` or `off`. Audit `git.install` / `git.transfer` per installation (result, files, backup, versions, source, the new installation). Notifications as for other runs (*started*, *succeeded*, *failed*).
 
+### Git workspace: .gitignore helper
+
+The **.gitignore** tab of the Git workspace builds the `.gitignore` of a service's repository from what the checks found. Pick the service; WRM reads the head of its branch through the API (trees and files are cached like everything else) and shows:
+
+- **Files only on servers** — the files in state *extra* from the latest checks of every installation of the service, with their **size** and the **servers** they were seen on, and a suggested pattern: a known directory (`logs/`, `tmp/`, `cache/`, `venv/`, …), a known extension (`*.log`, `*.pyc`, `*.bak`, `*.sqlite`, …) or the file itself (`/local.txt`).
+- **Standard patterns** per stack — Python, Node, Go, Java, Docker and IDE files. Stacks found in the repository tree (`requirements.txt`, `*.py`, `package.json`, `go.mod`, `pom.xml`, `Dockerfile`, …) are pre-selected.
+- The service's **protected globs** (per-host files), pre-selected, and a box for more patterns.
+- **Warnings** about committed files that look like secrets (`.env`, `*.pem`, `*.key`, `*credentials*`, `*secret*`, `id_rsa*`, …) or match the protected globs (per-host configuration such as `config.ini`), with the advice to commit a **template** instead (`config.example.ini`, `.env.example` — the install wizard fills those), add the file to `.gitignore` and remove it with `git rm --cached`.
+- The service's **exclude / protected lists** of the catalog, editable on the same screen.
+- The **current `.gitignore`** (in the service's subdirectory, e.g. `linux/.gitignore`).
+
+**Preview** shows the result as a diff against the current file: only patterns it does not have yet are appended, under a dated comment, with the file's line endings. The output is a **download** by default. **Create merge request…** (GitLab) / **Create pull request…** (GitHub) is a separate, explicit choice: it needs a **write token** on the Git source (optional, encrypted, used for nothing else — the read token stays read-only) and the policy `git_gitignore_mr` (`admins` by default). The confirmation names the repository, and its name must be typed. WRM then creates a branch `wrm/gitignore-<service>-<time>` from the head it read, commits the file and opens the request against the service's branch. Audit `git.gitignore_mr` (repository, branch, number of patterns, the link or the error). WRM never writes to a Git server on its own.
+
+### Git workspace: CI integration (optional)
+
+WRM does not need Jenkins or GitLab CI; each of these is opt-in.
+
+- **Incoming webhook per Git source** (*Settings → Git sources → Webhook…*): turning it on shows the URL (`https://<wrm>/api/hooks/git/<id>`) and a secret **once** (stored encrypted; *New secret* replaces it). A delivery starts an **immediate check** of the affected services — their targets are refreshed and their installations compared — instead of waiting for the interval, with the usual notifications.
+  - **GitLab** push, tag push and release events: the secret as *Secret token* (`X-Gitlab-Token`).
+  - **GitHub** push and release events: the secret signs the body (`X-Hub-Signature-256`, HMAC-SHA256); `ping` is answered.
+  - **Generic POST** (Jenkins, any CI): the header `X-WRM-Token: <secret>`, or a signature `X-WRM-Signature: sha256=<HMAC of "<timestamp>.<body>">` with `X-WRM-Timestamp` (unix seconds, at most 5 minutes off). The body may name `{"project": "group/name"}` or `{"services": ["name"]}`; without one, all services are checked.
+  - The services are those whose catalog project is the event's project. Deliveries are **rate-limited** (30 per minute per hook and per client address), **audited** (`git.webhook`, `git.webhook_rejected` with the reason) and **replays are refused** where the provider sends a delivery ID (`X-GitHub-Delivery`, `X-Gitlab-Event-UUID`, `X-WRM-Delivery`, or the generic signature). Deliveries that arrive during a check are merged into the next one. The owner of the source needs the `git_checks` policy.
+- **Bundles from CI artifacts** (*Settings → Bundles from CI artifacts*): a URL of a bundle `.tar.gz` — the GitLab job artifacts API (`…/api/v4/projects/<id>/jobs/artifacts/<ref>/raw/bundle.tar.gz?job=<job>` with `PRIVATE-TOKEN`), a Jenkins artifact URL (`…/lastSuccessfulBuild/artifact/bundle.tar.gz` with `Authorization: Basic user:token`, encoded by WRM) or any HTTPS URL — with an optional **auth header** (encrypted, never shown again), fetched **by hand** (*Fetch now*) or **every N minutes**. A changed file is imported as an offline bundle (the feed keeps only its newest one); an unchanged one is skipped. Audit `git.bundle_fetched` / `git.bundle_fetch_failed`.
+- **Deploy method "CI pipeline" per service** (the service's *Edit* dialog, policy `git_update`): for services that are built and deployed elsewhere.
+  - **Jenkins job:** the job URL, a user and API token (or the job's *trigger builds remotely* token without a user). *Update* / *Upgrade* calls `buildWithParameters` with `server` (the connection's host), `install_path` and `version` (the target version), then follows the queue item and the build until it ends (`SUCCESS` succeeds; `FAILURE`, `UNSTABLE`, `ABORTED` fail the run).
+  - **GitLab pipeline:** the GitLab address (default: the Git source), the project (default: the service's project), the branch (default: the target's branch) and a **pipeline trigger token**; the variables are `server`, `install_path` and `version`. The status is read with the read token of the GitLab source on the same host.
+  - The run goes through the **same plan, confirmation (production: the server name typed), policies and audit** (`git.update` / `git.upgrade` with `via: ci`, the link and the result) as a normal update. No files are written; the run history shows the CI status and a link. Afterwards WRM compares the installation again when it can log in. *Stop* stops waiting (the job keeps running in CI).
+
 ### Network tools
 
 **🧰 Tools** in the top bar (or right-click a connection → *Network tools from this server…* / *Check ports of this host*) — the usual first checks when something does not answer, without opening a terminal:
@@ -1135,6 +1174,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `git_backup_words` | `bkp,backup,bak,old,…` | path segments with one of these words are treated as copies / backups by Git discovery and comparison |
 | `git_update` / `git_upgrade` / `git_rollback` / `git_restart` | `admins` | who may update (and stamp), upgrade, roll back installations and restart their units: `off`, `admins`, `all` |
 | `git_install` / `git_transfer` | `admins` | who may install services on a new server and transfer installations between servers: `off`, `admins`, `all` |
+| `git_gitignore_mr` | `admins` | who may open a .gitignore merge request (GitLab) / pull request (GitHub) from the helper: `off`, `admins`, `all` |
 | `git_schedule_grace_minutes` | `30` | a scheduled Git run or restart is skipped when WRM was not running at its time for longer than this (1–1440) |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
@@ -1184,7 +1224,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v11.2.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v11.3.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1475,6 +1515,15 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/provision/prepare` | `{kind: "install", conn_id, services: [{app, ref, path}], overwrite}` → `{roots, prod, services: [{target, files, bytes, check: {exists, existing, files, version, parent, writable, free_kb, need_kb, tools, needs, errors, warnings}, slots: [{path, protected, in_repo, templates: [{path, available, fields: [{id, name, kind, default, secret}]}], copies}]}]}`; `{kind: "transfer", conn_id, source_install, path, overwrite}` → `{source: {files, bytes, excluded, excluded_list, units, version}, check}` |
 | GET | `/api/git/runs` | History and scheduled runs |
 | GET | `/api/git/runs/{id}` | A run with live progress: items with `state`, `step`, `log`, `written`, `deleted`, `made_backup`, `dangling`, `health` |
+| GET | `/api/git/gitignore/{app}` | .gitignore helper: `{repo, project, branch, file, current, has_current, note, extra: [{path, size, servers, pattern}], stacks: [{name, detected, reason, patterns}], protected, exclude, warnings: [{path, reason, template}], can_mr, mr_note, source_kind}` |
+| POST | `/api/git/gitignore/{app}/preview` | `{patterns}` → `{content, added, lines, has_current, file}` |
+| POST | `/api/git/gitignore/{app}/download` | `{patterns}` → the new `.gitignore` (download) |
+| POST | `/api/git/gitignore/{app}/mr` | `{patterns, confirm: project}` → `{url, branch, kind: "merge_request"\|"pull_request"}` (policy `git_gitignore_mr`, write token) |
+| POST / DELETE | `/api/git/sources/{id}/hook` | Turn the webhook of a source on (→ `{hook_id, path, secret}`, the secret only now) or off |
+| POST | `/api/hooks/git/{hook_id}` | Incoming webhook (no session; GitLab `X-Gitlab-Token`, GitHub `X-Hub-Signature-256`, generic `X-WRM-Token` or `X-WRM-Signature` + `X-WRM-Timestamp`) → `202 {queued, services}` |
+| POST | `/api/git/feeds` | `{name, url, header_name, header_value, interval_minutes}`; `PUT` / `DELETE /api/git/feeds/{id}` |
+| POST | `/api/git/feeds/{id}/fetch` | Fetch and import now → `{status: "imported"\|"unchanged", result, state}` |
+| PUT / DELETE | `/api/git/pipelines/{app}` | Deploy method *CI pipeline*: `{kind: "jenkins"\|"gitlab", url, username, project, ref, token}`; `DELETE` → files over SSH again |
 | POST | `/api/git/runs/{id}/cancel` | Cancel a scheduled run (with its waiting restart) or stop a running one after the current installation |
 
 **Tunnels & web interfaces**
@@ -1603,6 +1652,8 @@ remote-manager/
   git_runs.go     Git runs: plan, rolling execution, scheduling, live progress, policies, notifications, API
   git_provision.go  Git install and transfer: pre-checks, staged tar transfer, units, wizard API
   git_template.go   templates of per-host files: destinations, fields, filling, slots
+  git_gitignore.go  .gitignore helper: candidates, warnings, preview, merge / pull request
+  git_ci.go         optional CI: webhooks, bundles from CI artifacts, CI pipeline deploy method
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
   nettools.go     network tools: port check, ping, traceroute, DNS, HTTP/TLS check, from WRM or a server
@@ -1623,6 +1674,8 @@ remote-manager/
   status_test.go       live status: up/down, banners, jump hosts, check now
   git_test.go          Git workspace: fake GitLab / GitHub, branch-aware tags, blob cache, bundles, catalog, discovery and comparison on a fake SSH host, notifications
   git_deploy_test.go   Git deploy: VERSION.md / updates.jsonl formats, dangling imports; update, CRLF, protected files, stamp, rollback, failed check → rollback, scheduled restart (fake SSH host)
+  git_gitignore_test.go  .gitignore helper: candidates from a check, preview, download, merge request only on explicit choice (fake GitLab), pull request (fake GitHub)
+  git_ci_test.go         webhooks (GitLab token, GitHub HMAC, generic token / HMAC, replays, rate limit), artifact feed fetch and schedule, Jenkins job and GitLab pipeline runs
   git_provision_test.go  Git install / transfer: templates, exclusions, units; install from the fake GitLab and from a bundle, vault values, overwrite refusal and backup, transfer A → B, policies
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
   bmc_test.go          Redfish (fake BMC, pinning, jump host, credential), IPMI with a fake ipmitool, SOL (local PTY and jump host), BMC SSH console, serial port on a PTY
@@ -1691,6 +1744,9 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Git: every file is *modified* | The *subdirectory* of the service must be the part of the repository that is the installation root (e.g. `linux`). The server needs `sha256sum`, `shasum` or `openssl` |
 | Git: a run stops with *dangling imports* | Another file imports a name the new module no longer defines: update that file in the same run (tick it), fix the repository, or tick *Skip the check for dangling Python imports* if the import is not used |
 | Git: *… was changed on the server since the check* | Someone edited the file after the last check. Check again, review the diff, and tick the file explicitly if it should be overwritten (it stays in the backup) |
+| Git: a webhook does nothing | *Settings → Git sources → Webhook…* shows the last delivery. Check the audit log for `git.webhook_rejected` (bad token or signature, replay, too old timestamp). The event's project must be the catalog project of a service; the owner needs the `git_checks` policy. Behind a reverse proxy, forward `/api/hooks/git/` |
+| Git: *Create merge request* is greyed out | The Git source needs a write token (*Edit* the source), and the policy `git_gitignore_mr` must allow it for you. The download always works |
+| Git: a CI pipeline run fails right away | Jenkins: the job must have the parameters `server`, `install_path`, `version` and the user / API token must be allowed to build it. GitLab: check the trigger token; without a read token for that GitLab the status cannot be followed (the run then says so) |
 | Git: the restart fails or the unit is not *active* | The SSH user must be root or allowed `sudo -n systemctl restart …` / `supervisorctl` without a password. The run shows the output of `systemctl is-active` / `supervisorctl status` |
 | Git: an install or transfer stops at *Pre-checks* | The message names the problem: free space (`df`), a directory the SSH user cannot write (use a writable root or a user with rights), `tar` missing, or an existing installation (tick *Replace it* and type the server name) |
 | Git: *the unit … exists already* or *cannot write* the unit | WRM never overwrites a unit file: choose another name. Writing units needs root or `sudo -n tee` without a password. The files of the installation stay installed |
