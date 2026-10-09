@@ -1,12 +1,26 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.4.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.4.1/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.4.0 — Git: every file of an installation, partial and incremental checks
+## Web Remote Manager PRO v11.4.1 — clipboard history per user
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, updates them and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 📂 Every file of an installation
+### 🛠 Fixes
+
+- **Clipboard history per user** ([#30](https://github.com/vedranius/web-browser-RDM-public/issues/30)): the *Clipboard* panel (right panel) kept one history per browser, so after signing out and signing in as another user on the same browser, the previous user's copied texts were still visible. The history is now kept **per user**, and **signing out removes it** from the browser.
+
+### ⬆️ Upgrading from v11.4.0
+
+Replace the binary; the database does not change. The browser-wide clipboard history of earlier versions cannot be attributed to a user, so it is deleted on the first sign-in: the *Clipboard* panel starts empty once.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.4.1/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.4.0 — Git: every file of an installation, partial and incremental checks
+
+#### 📂 Every file of an installation
 
 - The details of an installation now list **every file in the server folder** (the catalog's ignored directories are honoured) and **every file of the repository** at the target ref — not just the files the catalog tracks.
 - Each row shows the size, the modification time, the state and **why**: tracked, **excluded by the catalog (with the pattern)**, not in the include list, protected (with the pattern), only on the server, only in Git, a **symlink** (its target is shown, never followed out of the installation) or **unreadable**.
@@ -16,7 +30,7 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - Files the catalog does not track **never change the state** of an installation.
 - **Commits behind:** the commits between the server's version (the commit in `VERSION.md`) and the target, from GitLab or GitHub.
 
-### ⚡ Partial and incremental checks
+#### ⚡ Partial and incremental checks
 
 - **Filter the overview** by service, server / host, environment and state (review, needs update, up to date, error, not checked).
 - **Pick what to check:** tick installations, whole rows (servers) or columns (services), then *Check selected*; or *Check visible*, *Check this cell*, or *Check only stale* (never checked, older than 1 hour / 24 hours / 7 days). *Check now* still checks everything.
@@ -24,11 +38,11 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - Everything you did not check **keeps its result** with "checked X ago"; a failed check keeps the **last good result** next to the error.
 - The same on the *Installations* tab.
 
-### 🛠 Fixes
+#### 🛠 Fixes
 
 - Upgrading a database from v11.2.0 or earlier to v11.3.0 set the Git sources aside (`git_sources_old_<time>`) instead of adding the new columns. v11.4.0 adds the columns in place and **restores the set-aside sources** once, when the new table is still empty.
 
-### ⬆️ Upgrading from v11.3.0
+#### ⬆️ Upgrading from v11.3.0
 
 Replace the binary. The database gets two new columns on `git_installs` (`last_ok_at`, `last_ok_state`); the previous binary still starts on it. Git sources lost by the v11.3.0 upgrade come back on the first start. Refresh the targets once so the repository files outside the catalog are listed too.
 
