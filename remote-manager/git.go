@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 // ─── GIT WORKSPACE: storage, settings and API ────────
@@ -20,6 +20,20 @@ import (
 // run checks (discovery / comparison over SSH).
 
 func initGitSchema() {
+	// columns added after a table was first released are added in place before ensureTable
+	// checks the table (it would otherwise set the table aside and start an empty one)
+	for _, m := range []string{
+		// v11.3.0
+		`ALTER TABLE git_sources ADD COLUMN write_token TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE git_sources ADD COLUMN hook_id TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE git_sources ADD COLUMN hook_secret TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE git_sources ADD COLUMN hook_at TEXT NOT NULL DEFAULT ''`,
+		// v11.4.0: the last good result of a check
+		`ALTER TABLE git_installs ADD COLUMN last_ok_at TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE git_installs ADD COLUMN last_ok_state TEXT NOT NULL DEFAULT ''`,
+	} {
+		db.Exec(m) // fails harmlessly when the table does not exist yet or has the column
+	}
 	ensureTable("git_sources", `CREATE TABLE IF NOT EXISTS git_sources (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,
@@ -35,6 +49,7 @@ func initGitSchema() {
 		hook_secret TEXT NOT NULL DEFAULT '',
 		hook_at TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "kind", "name", "url", "token", "info", "created_at", "last_error", "write_token", "hook_id", "hook_secret", "hook_at")
+	restoreSetAsideGitSources()
 	ensureTable("git_blobs", `CREATE TABLE IF NOT EXISTS git_blobs (
 		source_id INTEGER NOT NULL,
 		blob TEXT NOT NULL,
@@ -78,11 +93,35 @@ func initGitSchema() {
 		state TEXT NOT NULL DEFAULT '',
 		data TEXT NOT NULL DEFAULT '',
 		checked_at TEXT NOT NULL DEFAULT '',
-		discovered_at TEXT NOT NULL DEFAULT '')`,
-		"id", "user_id", "conn_id", "app", "path", "env", "manual", "state", "data", "checked_at", "discovered_at")
+		discovered_at TEXT NOT NULL DEFAULT '',
+		last_ok_at TEXT NOT NULL DEFAULT '',
+		last_ok_state TEXT NOT NULL DEFAULT '')`,
+		"id", "user_id", "conn_id", "app", "path", "env", "manual", "state", "data", "checked_at", "discovered_at", "last_ok_at", "last_ok_state")
 	mustExec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_git_installs_path ON git_installs(user_id, conn_id, path)`)
 	initGitRunsSchema()
 	initGitCISchema()
+}
+
+// restoreSetAsideGitSources brings back the Git sources of a table v11.3.0 set aside
+// (git_sources_old_<time>) when it upgraded an earlier database, while the new table is still
+// empty. The old table is renamed afterwards so this happens once.
+func restoreSetAsideGitSources() {
+	var n int
+	db.QueryRow(`SELECT COUNT(*) FROM git_sources`).Scan(&n)
+	var old string
+	if n > 0 || db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'git_sources_old_%' ORDER BY name DESC LIMIT 1`).Scan(&old) != nil {
+		return
+	}
+	q := `"` + strings.ReplaceAll(old, `"`, `""`) + `"`
+	res, err := db.Exec(`INSERT INTO git_sources (id, user_id, kind, name, url, token, info, created_at, last_error)
+		SELECT id, user_id, kind, name, url, token, info, created_at, last_error FROM ` + q)
+	if err != nil {
+		log.Printf("Git sources in %s could not be restored: %v", old, err)
+		return
+	}
+	k, _ := res.RowsAffected()
+	db.Exec(`ALTER TABLE ` + q + ` RENAME TO "` + strings.Replace(old, "_old_", "_restored_", 1) + `"`)
+	log.Printf("Restored %d Git source(s) from %s", k, old)
 }
 
 func deleteGitUserData(userID int) {
@@ -504,7 +543,11 @@ func decodeGitJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 //	POST   /api/git/check                    {conn_ids, discover} → discovery + comparison
 //	POST   /api/git/installs                 {conn_id, path, app} (added by hand)
 //	GET    /api/git/installs/{id}            details with file states; DELETE forgets it
-//	GET    /api/git/installs/{id}/diff?path= coloured diff server ↔ target
+//	GET    /api/git/installs/{id}/diff?path= coloured diff server ↔ target (any file in the repository)
+//	GET    /api/git/installs/{id}/files      every file of the folder and of the repository, with reasons
+//	GET    /api/git/installs/{id}/file?path=&side= one file for viewing (server or git)
+//	GET    /api/git/installs/{id}/commits    commits between VERSION.md's commit and the target
+//	check jobs (partial, streamed, cancellable): see apiGitJobs in git_jobs.go
 //	deploy routes (plan, backups, runs): see apiGitDeploy in git_runs.go
 //	.gitignore helper: see apiGitIgnore in git_gitignore.go
 //	webhooks, artifact feeds, CI pipelines: see apiGitCI in git_ci.go
@@ -526,7 +569,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return true
 	}
-	if apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
+	if apiGitJobs(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
 		return
 	}
 	switch {
@@ -935,6 +978,37 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			auditLogRef(r, userID, usernameOf(userID), "git.diff_viewed", in.Path+"/"+r.URL.Query().Get("path"), map[string]interface{}{"app": in.App}, auditRef{ConnID: in.ConnID})
 			jsonOK(w, out)
+		case len(parts) == 3 && parts[2] == "files" && r.Method == http.MethodGet:
+			if !needCheck() {
+				return
+			}
+			out, err := listInstallFiles(userID, in)
+			if err != nil {
+				jsonError(w, err.Error(), 502)
+				return
+			}
+			jsonOK(w, out)
+		case len(parts) == 3 && parts[2] == "file" && r.Method == http.MethodGet:
+			if !needCheck() {
+				return
+			}
+			out, err := viewInstallFile(userID, in, r.URL.Query().Get("path"), r.URL.Query().Get("side"))
+			if err != nil {
+				jsonError(w, err.Error(), 400)
+				return
+			}
+			auditLogRef(r, userID, usernameOf(userID), "git.file_viewed", in.Path+"/"+cleanRel(r.URL.Query().Get("path")), map[string]interface{}{"app": in.App, "side": out["side"]}, auditRef{ConnID: in.ConnID})
+			jsonOK(w, out)
+		case len(parts) == 3 && parts[2] == "commits" && r.Method == http.MethodGet:
+			if !needCheck() {
+				return
+			}
+			out, err := installCommits(userID, in)
+			if err != nil {
+				jsonError(w, err.Error(), 400)
+				return
+			}
+			jsonOK(w, out)
 		default:
 			jsonError(w, "Not found", 404)
 		}
@@ -977,78 +1051,6 @@ type diffLine struct {
 	A  int    `json:"a,omitempty"`
 	B  int    `json:"b,omitempty"`
 	S  string `json:"s"`
-}
-
-func installDiff(userID int, in gitInstall, rel string) (map[string]interface{}, error) {
-	rel = cleanRel(rel)
-	var fs *gitFileState
-	for i := range in.Files {
-		if in.Files[i].Path == rel {
-			fs = &in.Files[i]
-		}
-	}
-	if fs == nil || rel == "" {
-		return nil, fmt.Errorf("unknown file")
-	}
-	t, ok := loadGitTarget(userID, in.App)
-	if !ok {
-		return nil, fmt.Errorf("no target for this service")
-	}
-	if globHit(rel, t.Protected) {
-		return nil, fmt.Errorf("protected files are not compared")
-	}
-	var target []byte
-	if f, ok := t.Files[rel]; ok {
-		if f.Blob == "" {
-			return nil, fmt.Errorf("the content of this file is not available")
-		}
-		data, have := blobContent(t.SourceID, f.Blob)
-		if !have {
-			src, found := loadGitSource(userID, t.SourceID)
-			if !found || src.Kind == "bundle" {
-				return nil, fmt.Errorf("the content of this file is not available")
-			}
-			p, err := newGitProvider(src)
-			if err != nil {
-				return nil, err
-			}
-			if data, err = p.blob(t.Project, f.Blob); err != nil {
-				return nil, err
-			}
-			storeBlob(src.ID, f.Blob, data)
-		}
-		target = data
-	}
-	var server []byte
-	if fs.State != "missing" {
-		c, err := loadConnection(in.ConnID)
-		if err != nil || c.UserID != userID {
-			return nil, fmt.Errorf("connection not found")
-		}
-		cl, err := dialSSH(c, nil)
-		if err != nil {
-			return nil, fmt.Errorf("cannot log in to %s: %v", c.Name, err)
-		}
-		defer cl.Close()
-		q := shellQuote(in.Path + "/" + rel)
-		out, err := runRemoteScript(cl, fmt.Sprintf(`f=%s; [ -f "$f" ] || { echo "WRM_NOFILE"; exit 0; }; s=$(wc -c < "$f"); [ "$s" -le %d ] || { echo "WRM_TOOBIG"; exit 0; }; echo WRM_FILE; cat -- "$f"`, q, gitMaxDiffFile), "", time.Minute)
-		if err != nil {
-			return nil, err
-		}
-		switch {
-		case strings.HasPrefix(out, "WRM_NOFILE"):
-			return nil, fmt.Errorf("the file does not exist on the server any more")
-		case strings.HasPrefix(out, "WRM_TOOBIG"):
-			return nil, fmt.Errorf("the file is too large to compare")
-		}
-		server = []byte(strings.TrimPrefix(out, "WRM_FILE\n"))
-	}
-	if bytes.IndexByte(server, 0) >= 0 || bytes.IndexByte(target, 0) >= 0 {
-		return map[string]interface{}{"path": rel, "state": fs.State, "binary": true, "lines": []diffLine{}}, nil
-	}
-	lines, truncated := unifiedDiff(splitLines(string(server)), splitLines(string(target)), 3)
-	return map[string]interface{}{"path": rel, "state": fs.State, "target": t.Version, "lines": lines, "truncated": truncated,
-		"crlf_server": bytes.Contains(server, []byte("\r\n")), "crlf_target": bytes.Contains(target, []byte("\r\n"))}, nil
 }
 
 func splitLines(s string) []string {

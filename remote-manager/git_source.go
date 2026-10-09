@@ -663,6 +663,7 @@ type gitTarget struct {
 	Version     string                   `json:"version"`
 	LatestTag   string                   `json:"latest_tag"`
 	Commit      string                   `json:"commit"`
+	CommitFull  string                   `json:"commit_full,omitempty"` // the whole SHA (tree cache key, commit lists)
 	CommitDate  string                   `json:"commit_date"`
 	Subdir      string                   `json:"subdir"`
 	Kind        string                   `json:"kind"`
@@ -840,7 +841,7 @@ func computeTarget(p *gitProvider, src gitSource, cat *gitCatalog, a gitCatalogA
 			t.RefKind = "tag"
 		}
 	}
-	t.Commit, t.CommitDate = short10(target.commit), target.date
+	t.Commit, t.CommitFull, t.CommitDate = short10(target.commit), target.commit, target.date
 	t.Version = target.tag
 	if t.Version == "" {
 		t.Version = short10(target.commit)

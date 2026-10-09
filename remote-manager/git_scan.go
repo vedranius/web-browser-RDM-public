@@ -24,7 +24,6 @@ const (
 	gitDiscoverDepth   = 3
 	gitMaxInstallFiles = 5000
 	gitScanTimeout     = 3 * time.Minute
-	gitServerParallel  = 6
 )
 
 // unit file locations searched for units of an installation (a variable for tests)
@@ -419,6 +418,27 @@ func matchHash(h string, hashes ...string) bool {
 	return false
 }
 
+// trackedState compares the server hash of a tracked file with the target and its history:
+// ok, old (with how many versions behind and the tag) or modified.
+func trackedState(f gitTargetFile, h string) (string, int, string, string) {
+	if matchHash(h, f.Hash, f.Hash2) {
+		return "ok", 0, "", ""
+	}
+	for i, e := range f.History {
+		if i == 0 {
+			continue
+		}
+		if matchHash(h, e.Hash, e.Hash2) {
+			tag := e.Tag
+			if tag == "" {
+				tag = e.Commit
+			}
+			return "old", i, tag, e.Date
+		}
+	}
+	return "modified", 0, "", ""
+}
+
 // compareInstall compares the files on a server with a target.
 func compareInstall(t gitTarget, server map[string]string, ignore []string) ([]gitFileState, map[string]int, string) {
 	words := backupWords()
@@ -440,22 +460,8 @@ func compareInstall(t gitTarget, server map[string]string, ignore []string) ([]g
 		case h == "-":
 			fs.State = "modified"
 			fs.Note = "unreadable"
-		case matchHash(h, f.Hash, f.Hash2):
-			fs.State = "ok"
 		default:
-			fs.State = "modified"
-			for i, e := range f.History {
-				if i == 0 {
-					continue
-				}
-				if matchHash(h, e.Hash, e.Hash2) {
-					fs.State, fs.Behind, fs.Tag, fs.Date = "old", i, e.Tag, e.Date
-					if fs.Tag == "" {
-						fs.Tag = e.Commit
-					}
-					break
-				}
-			}
+			fs.State, fs.Behind, fs.Tag, fs.Date = trackedState(f, h)
 		}
 		counts[fs.State]++
 		out = append(out, fs)
@@ -500,6 +506,7 @@ type gitInstall struct {
 	ID           int            `json:"id"`
 	ConnID       int            `json:"conn_id"`
 	ConnName     string         `json:"conn_name"`
+	Host         string         `json:"host,omitempty"`
 	FolderID     *int           `json:"folder_id,omitempty"`
 	Tags         []string       `json:"tags,omitempty"`
 	App          string         `json:"app"`
@@ -516,7 +523,9 @@ type gitInstall struct {
 	Capped       bool           `json:"capped,omitempty"`
 	CheckedAt    string         `json:"checked_at"`
 	DiscoveredAt string         `json:"discovered_at"`
-	Files        []gitFileState `json:"files,omitempty"` // details only
+	LastOKAt     string         `json:"last_ok_at,omitempty"`    // last check that did not fail
+	LastOKState  string         `json:"last_ok_state,omitempty"` // and its state
+	Files        []gitFileState `json:"files,omitempty"`         // details only
 	// time of the last update whose units were not restarted yet
 	RestartPending string `json:"restart_pending,omitempty"`
 }
@@ -534,8 +543,8 @@ type gitInstallData struct {
 
 func loadGitInstalls(userID int, withFiles bool, where string, args ...interface{}) []gitInstall {
 	out := []gitInstall{}
-	q := `SELECT i.id, i.conn_id, COALESCE(c.name,''), c.folder_id, COALESCE(c.tags,''), i.app, i.path, i.env, i.manual, i.state, i.data, i.checked_at, i.discovered_at,
-		COALESCE(p.since,'') FROM git_installs i LEFT JOIN connections c ON c.id=i.conn_id LEFT JOIN git_pending_restarts p ON p.install_id=i.id WHERE i.user_id=?`
+	q := `SELECT i.id, i.conn_id, COALESCE(c.name,''), COALESCE(c.host,''), c.folder_id, COALESCE(c.tags,''), i.app, i.path, i.env, i.manual, i.state, i.data, i.checked_at, i.discovered_at,
+		COALESCE(p.since,''), i.last_ok_at, i.last_ok_state FROM git_installs i LEFT JOIN connections c ON c.id=i.conn_id LEFT JOIN git_pending_restarts p ON p.install_id=i.id WHERE i.user_id=?`
 	if where != "" {
 		q += " AND " + where
 	}
@@ -548,7 +557,8 @@ func loadGitInstalls(userID int, withFiles bool, where string, args ...interface
 		var in gitInstall
 		var tags, data string
 		var manual int
-		rows.Scan(&in.ID, &in.ConnID, &in.ConnName, &in.FolderID, &tags, &in.App, &in.Path, &in.Env, &manual, &in.State, &data, &in.CheckedAt, &in.DiscoveredAt, &in.RestartPending)
+		rows.Scan(&in.ID, &in.ConnID, &in.ConnName, &in.Host, &in.FolderID, &tags, &in.App, &in.Path, &in.Env, &manual, &in.State, &data, &in.CheckedAt, &in.DiscoveredAt, &in.RestartPending,
+			&in.LastOKAt, &in.LastOKState)
 		in.Manual = manual == 1
 		in.Tags = parseTags(tags)
 		var d gitInstallData
@@ -604,7 +614,7 @@ func runGitCheck(userID int, connIDs []int, discover bool, targets map[string]gi
 	apps := effectiveApps(userID, cat)
 	res := gitRunResult{Servers: []gitServerResult{}}
 	var mu sync.Mutex
-	sem := make(chan struct{}, gitServerParallel)
+	sem := make(chan struct{}, settingInt("git_check_parallel"))
 	var wg sync.WaitGroup
 	for _, id := range connIDs {
 		wg.Add(1)
@@ -651,28 +661,11 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 	defer cl.Close()
 	setNotifyState(fmt.Sprintf("git:unreach:%d:%d", userID, connID), "")
 	if discover {
-		found, err := discoverOn(cl, cat, apps)
+		n, err := discoverAndRegister(userID, connID, cl, cat, apps, now)
 		if err != nil {
 			sr.Error = err.Error()
 		} else {
-			sr.Found = len(found)
-			seen := map[string]bool{}
-			for _, f := range found {
-				seen[f.Path] = true
-				var id int
-				if db.QueryRow(`SELECT id FROM git_installs WHERE user_id=? AND conn_id=? AND path=?`, userID, connID, f.Path).Scan(&id) == nil {
-					db.Exec(`UPDATE git_installs SET app=?, env=? WHERE id=? AND manual=0`, f.App, f.Env, id)
-				} else {
-					db.Exec(`INSERT INTO git_installs (user_id, conn_id, app, path, env, manual, state, data, checked_at, discovered_at) VALUES (?,?,?,?,?,0,'unknown','','',?)`,
-						userID, connID, f.App, f.Path, f.Env, now)
-				}
-			}
-			// installations that are no longer found (and were not added by hand) are forgotten
-			for _, in := range loadGitInstalls(userID, false, "i.conn_id=? AND i.manual=0", connID) {
-				if !seen[in.Path] {
-					db.Exec(`DELETE FROM git_installs WHERE id=?`, in.ID)
-				}
-			}
+			sr.Found = n
 		}
 	}
 	installs := loadGitInstalls(userID, true, "i.conn_id=?", connID)
@@ -703,6 +696,32 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 		saveInstallResult(in.ID, state, d)
 	}
 	return sr, changes
+}
+
+// discoverAndRegister finds the installations on one server and stores new ones; the ones that
+// are no longer found (and were not added by hand) are forgotten.
+func discoverAndRegister(userID, connID int, cl *ssh.Client, cat *gitCatalog, apps []gitCatalogApp, now string) (int, error) {
+	found, err := discoverOn(cl, cat, apps)
+	if err != nil {
+		return 0, err
+	}
+	seen := map[string]bool{}
+	for _, f := range found {
+		seen[f.Path] = true
+		var id int
+		if db.QueryRow(`SELECT id FROM git_installs WHERE user_id=? AND conn_id=? AND path=?`, userID, connID, f.Path).Scan(&id) == nil {
+			db.Exec(`UPDATE git_installs SET app=?, env=? WHERE id=? AND manual=0`, f.App, f.Env, id)
+		} else {
+			db.Exec(`INSERT INTO git_installs (user_id, conn_id, app, path, env, manual, state, data, checked_at, discovered_at) VALUES (?,?,?,?,?,0,'unknown','','',?)`,
+				userID, connID, f.App, f.Path, f.Env, now)
+		}
+	}
+	for _, in := range loadGitInstalls(userID, false, "i.conn_id=? AND i.manual=0", connID) {
+		if !seen[in.Path] {
+			db.Exec(`DELETE FROM git_installs WHERE id=?`, in.ID)
+		}
+	}
+	return len(found), nil
 }
 
 // evalInstall derives the state and the stored data of an installation from its scan.
@@ -763,5 +782,21 @@ func saveInstallResult(id int, state string, d gitInstallData) {
 	if d.Files == nil {
 		d.Files = []gitFileState{}
 	}
-	db.Exec(`UPDATE git_installs SET state=?, data=?, checked_at=? WHERE id=?`, state, string(jsonMarshal(d)), nowStamp(), id)
+	now := nowStamp()
+	if state == "error" || state == "gone" {
+		db.Exec(`UPDATE git_installs SET state=?, data=?, checked_at=? WHERE id=?`, state, string(jsonMarshal(d)), now, id)
+		return
+	}
+	db.Exec(`UPDATE git_installs SET state=?, data=?, checked_at=?, last_ok_at=?, last_ok_state=? WHERE id=?`, state, string(jsonMarshal(d)), now, now, state, id)
+}
+
+// saveInstallError records a failed check of one installation and keeps the files and
+// counts of the last good result (the last good state and time stay in their columns).
+func saveInstallError(in gitInstall, msg string) {
+	var data string
+	db.QueryRow(`SELECT data FROM git_installs WHERE id=?`, in.ID).Scan(&data)
+	var d gitInstallData
+	jsonUnmarshalString(data, &d)
+	d.Error = msg
+	saveInstallResult(in.ID, "error", d)
 }
