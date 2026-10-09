@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v11.1.0</title>
+<title>Web Remote Manager PRO v11.2.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1499,7 +1499,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v11.1.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v11.2.0 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1578,7 +1578,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v11.1.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v11.2.0</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -4516,6 +4516,9 @@ Object.assign(LANGS.en, {
   p_git_upgrade: 'Git upgrades', p_git_upgrade_d: 'Who may switch installations to another branch or version.',
   p_git_rollback: 'Git rollbacks', p_git_rollback_d: 'Who may restore a .deploy-bak backup on a server.',
   p_git_restart: 'Service restarts', p_git_restart_d: 'Who may restart the systemd / supervisor units of installations (always opt-in per run).',
+  p_git_install: 'Git installs (new server)', p_git_install_d: 'Who may install services from the repository or a bundle into a new directory of a server (with per-host files and an optional unit).',
+  p_git_transfer: 'Git transfers', p_git_transfer_d: 'Who may copy an installation with its per-host configuration from one server to another.',
+  po_git_install_off: 'Nobody', po_git_install_admins: 'Administrators', po_git_install_all: 'Everyone', po_git_transfer_off: 'Nobody', po_git_transfer_admins: 'Administrators', po_git_transfer_all: 'Everyone',
   po_git_update_off: 'Nobody', po_git_update_admins: 'Administrators', po_git_update_all: 'Everyone', po_git_upgrade_off: 'Nobody', po_git_upgrade_admins: 'Administrators', po_git_upgrade_all: 'Everyone',
   po_git_rollback_off: 'Nobody', po_git_rollback_admins: 'Administrators', po_git_rollback_all: 'Everyone', po_git_restart_off: 'Nobody', po_git_restart_admins: 'Administrators', po_git_restart_all: 'Everyone',
   p_git_schedule_grace_minutes: 'Grace period of scheduled runs (minutes)', p_git_schedule_grace_minutes_d: 'A scheduled update or restart is skipped when WRM was not running at its time for longer than this.',
@@ -4534,6 +4537,9 @@ Object.assign(LANGS.hr, {
   p_git_upgrade: 'Git nadogradnje', p_git_upgrade_d: 'Tko smije prebaciti instalacije na drugu granu ili verziju.',
   p_git_rollback: 'Git vraćanja', p_git_rollback_d: 'Tko smije vratiti sigurnosnu kopiju iz .deploy-bak na serveru.',
   p_git_restart: 'Ponovno pokretanje servisa', p_git_restart_d: 'Tko smije ponovno pokretati systemd / supervisor jedinice instalacija (uvijek izričit odabir po izvođenju).',
+  p_git_install: 'Git instalacije (novi server)', p_git_install_d: 'Tko smije instalirati servise iz repozitorija ili bundlea u novi direktorij servera (s datotekama po hostu i neobaveznom jedinicom).',
+  p_git_transfer: 'Git prijenosi', p_git_transfer_d: 'Tko smije kopirati instalaciju s njezinom konfiguracijom po hostu s jednog servera na drugi.',
+  po_git_install_off: 'Nitko', po_git_install_admins: 'Administratori', po_git_install_all: 'Svi', po_git_transfer_off: 'Nitko', po_git_transfer_admins: 'Administratori', po_git_transfer_all: 'Svi',
   po_git_update_off: 'Nitko', po_git_update_admins: 'Administratori', po_git_update_all: 'Svi', po_git_upgrade_off: 'Nitko', po_git_upgrade_admins: 'Administratori', po_git_upgrade_all: 'Svi',
   po_git_rollback_off: 'Nitko', po_git_rollback_admins: 'Administratori', po_git_rollback_all: 'Svi', po_git_restart_off: 'Nitko', po_git_restart_admins: 'Administratori', po_git_restart_all: 'Svi',
   p_git_schedule_grace_minutes: 'Rok zakazanih izvođenja (minute)', p_git_schedule_grace_minutes_d: 'Zakazano ažuriranje ili ponovno pokretanje preskače se ako WRM u to vrijeme nije radio dulje od ovoga.',
@@ -5943,7 +5949,7 @@ const POLICY_GROUPS = {
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
     ['pg_proxies', ['proxies']],
-    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_schedule_grace_minutes']],
+    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_transfer', 'git_schedule_grace_minutes']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],

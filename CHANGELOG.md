@@ -4,6 +4,24 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [11.2.0] — 2026-10-09 — Git: new servers, install and transfer (phase 3)
+
+### Added
+- **Install wizard** in the Git workspace (*Installations → Install…*, `git_provision.go`, `git_template.go`): install services on **any SSH connection** into a chosen directory.
+  - **Services and versions:** each service at its target (as in the catalog), another branch or tag (Git API) or from an imported **offline bundle** (`ref: "bundle:<source id>"`). **Target directory** per service, suggested from the server roots; system directories are refused.
+  - **Pre-checks** on the target (`precheckDirs`): free disk space, a writable directory (or nearest existing parent), `tar`, the `python3` / `node` versions when the service has such files, and an **existing installation** — refused unless the overwrite is confirmed (typed server name), then the replaced files are backed up to `.deploy-bak/`.
+  - **Per-host files:** protected files are never taken from the repository. Each is filled **from a template** of the repository (`<name>.example`, `.sample`, `.template`, `.tmpl`, `.tpl`, `.dist`, `.default`, `settings.example.py` → `settings.py`, or the protected file itself; placeholders `{{ name }}`, `${NAME}` / `${NAME:-default}`, `__NAME__`, `@NAME@`, `<NAME>` and `key = value` / `key: value` lines become form fields, INI keys as `section.key`), **copied** from another installation of the same service, **typed**, or left out. Field values can come from the **vault** (password or user name, only for servers the credential's host list allows). Filled files get mode `640`. Typed values and contents are **not stored** with the run.
+  - **Writing:** the files travel as one tar stream into a staging directory inside the target, are verified by hash and renamed into place; language checks and the custom check run; any failure rolls back. Then `VERSION.md` and the `updates.jsonl` line, as an update writes them, and the installation is registered (as added by hand) and compared.
+  - **Optional unit** (opt-in, with a warning): a systemd unit (`User=`, `WorkingDirectory=`, `ExecStart=`, `daemon-reload`, optional `enable`) or a supervisor program (`supervisorctl reread`), written as root or with `sudo -n`, never over an existing file. **Optional start** afterwards (policy `git_restart`) with the health check of v11.1.
+- **Transfer wizard** (*Transfer…* for an installation): copies an installation from server A to server B (or another directory) **with its per-host configuration**, but without logs, `.deploy-bak`, caches, the catalog's `ignore_dirs`, backup-looking paths and the usual prunes (`.git`, `node_modules`, virtual environments). The wizard lists what stays behind. The files stream from A to B through WRM (`tar -c` → `tar -x`, nothing on WRM's disk) with the same pre-checks, overwrite confirmation, backup, verification, checks and rollback; `VERSION.md` gets the new host and user.
+- **Policies** `git_install` and `git_transfer` (administrators by default, changeable in *Admin → Policies*, `WRM_GIT_INSTALL` / `WRM_GIT_TRANSFER`); `mePayload` flags `git_install`, `git_transfer`; the workspace state's `deploy` map has `install` and `transfer`.
+- **Audit** `git.install` and `git.transfer` per installation (result, files, backup, versions, source, the new installation). Installs and transfers send the run notifications (`git.deploy_started`, `git.deploy_done`, `git.deploy_failed`) with the kind *install* / *transfer*.
+- API: `POST /api/git/provision/prepare` (targets, per-host slots with template fields, server roots, pre-checks; or the source files and exclusions of a transfer); `POST /api/git/runs` takes `kind: "install" | "transfer"` with `provision`.
+- Tests: `git_provision_test.go` (templates, exclusions, directories, units; install from the fake GitLab with a vault value, a typed file, a systemd unit and a start; refused and confirmed overwrite with backup; install from a bundle with a copied per-host file; transfer between two fake SSH hosts with exclusions and a supervisor program; policies).
+
+### Changed
+- Runs carry the source of a transfer (`source_conn_name`, `source_path`) and the installation an install created (`install_id`).
+
 ## [11.1.0] — 2026-10-09 — Git: update, upgrade, rollback, restarts (phase 2)
 
 ### Added

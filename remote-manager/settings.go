@@ -91,6 +91,8 @@ var settingSpecs = []settingSpec{
 	{Key: "git_upgrade", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_rollback", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_restart", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "git_install", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "git_transfer", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_schedule_grace_minutes", Default: "30", Kind: "int", Min: 1, Max: 1440},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
