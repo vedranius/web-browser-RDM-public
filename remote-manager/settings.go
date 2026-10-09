@@ -87,6 +87,8 @@ var settingSpecs = []settingSpec{
 	{Key: "git_checks", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_check_interval_minutes", Default: "60", Kind: "int", Min: 0, Max: 10080},
 	{Key: "git_backup_words", Default: defaultBackupWords, Kind: "string"},
+	{Key: "git_check_parallel", Default: "8", Kind: "int", Min: 1, Max: 64},
+	{Key: "git_check_per_server", Default: "2", Kind: "int", Min: 1, Max: 8},
 	{Key: "git_update", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_upgrade", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_rollback", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},

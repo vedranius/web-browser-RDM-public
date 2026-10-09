@@ -4,6 +4,28 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [11.4.0] — 2026-10-09 — Git: every file of an installation, partial and incremental checks
+
+### Added
+- **Every file of an installation** (`git_files.go`, the details of an installation):
+  - `GET /api/git/installs/{id}/files` lists every file of the server folder (one `find` over the folder with POSIX tools, `stat -c` / `stat -f` for size and time, hashes as in checks; `.git`, `.deploy-bak`, `node_modules`, `__pycache__`, virtual environments and the catalog's `ignore_dirs` pruned; backup-looking paths skipped; at most 10 000 entries, then *truncated*) and every file of the repository at the target ref below the service's subdirectory (the cached tree of the target commit; targets now keep the full commit, `commit_full`).
+  - Per file: kind, size, modification time, on server / in Git / tracked, a **state** (`ok` / `old` / `modified` for tracked files; `same` / `differs` / `unknown` for repository files the catalog does not track; `extra`, `missing`, `protected`, `symlink`, `unreadable`) and a **reason** with the matching pattern (`tracked`, `excluded`, `not_included`, `protected`, `extra`, `tool`, `compiled`, `not_tracked`, `no_target`). Untracked repository files are compared through the blob cache, fetching at most 200 unknown blobs per listing.
+  - Symlinks are listed with their target and never followed (an *outside* flag when they point out of the installation); unreadable files and directories are shown as such.
+  - `GET /api/git/installs/{id}/file?path=&side=server|git` opens one file (view only, up to ~1.9 MB, binary detected by NUL bytes, otherwise the size and hash). The server side never follows a symlink and refuses paths that lead out of the installation (`pwd -P` check); paths are always shell-quoted. Audit `git.file_viewed`.
+  - `GET /api/git/installs/{id}/diff` works for **any file in the repository at the target**, including files the catalog excludes or does not include (`informational: true`, with the reason and pattern), and files missing on the server; binary or large files are compared by hash (`same`). Protected files are still not compared.
+  - `GET /api/git/installs/{id}/commits`: the commits between the commit in `VERSION.md` (or its version) and the target, newest first, with the count (GitLab `repository/compare`, GitHub `compare/a...b`).
+  - UI: filters *All / Differing / Tracked only / Not tracked*, search, *Open* (server or Git side) and *Diff* per file, unified and side-by-side diff, the informational label, *Commits behind* with the list.
+- **Check jobs** (`git_jobs.go`): `POST /api/git/check/jobs` with `install_ids`, `conn_ids`, `all`, `discover`, `refresh`, `stale_minutes` or `only_never`; `GET /api/git/check/jobs/current?since=N` returns the job with every installation's state (queued / running / done / error / cancelled) and the installations finished after `N`; `POST /api/git/check/jobs/current/cancel` skips the queued installations and aborts running scans without saving them. Each installation is scanned and saved on its own; concurrency is bounded per server and overall by the new settings **`git_check_per_server`** (2) and **`git_check_parallel`** (8; also used by periodic checks). One check at a time per user, as before. Audit `git.checked` (with the job) and `git.check_cancelled`.
+- UI: overview filters by **service** and **server** (the search also matches host and environment); checkboxes per installation, server row and service column; *Check selected*, *Check visible*, *Check this cell*, *Check only stale* (never checked, older than 1 hour / 24 hours / 7 days) and *Cancel*; a spinner per queued or running cell; "checked X ago" and the last good result on every cell; the same selection and buttons on the *Installations* tab. *Check now* runs as a job too.
+- Tests: `git_files_test.go` (the file list with reasons and patterns, an excluded file that is diffable, CRLF, a file only in Git, symlinks inside and outside, an unreadable file, binary files, quoting, commits, other users — against the fake GitLab and GitHub and the fake SSH host; check jobs: streaming, a partial check that keeps other results, stale and never-checked selections, the per-server and overall limits, cancel, an unreachable server that keeps the last good result, policies; the restore of set-aside Git sources).
+
+### Changed
+- A failed check of an installation keeps the files and counts of the last good result; the new columns `git_installs.last_ok_at` / `last_ok_state` remember it.
+- Installations carry the connection's host (`host`).
+
+### Fixed
+- Upgrading a database from v11.2.0 or earlier to v11.3.0 set the `git_sources` table aside (as `git_sources_old_<time>`) instead of adding its new columns, so Git sources were lost. Columns are now added in place before the table check, and the sources of a set-aside table are restored once when `git_sources` is still empty.
+
 ## [11.3.0] — 2026-10-09 — Git: .gitignore helper and optional CI integration (phases 4–5)
 
 ### Added

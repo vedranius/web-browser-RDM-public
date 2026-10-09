@@ -197,6 +197,54 @@ func (g *fakeGit) serve(w http.ResponseWriter, r *http.Request) {
 		} else {
 			out(map[string]interface{}{"tree": l, "truncated": false})
 		}
+	case rest == "/compare" || strings.HasPrefix(rest, "/compare/"):
+		from, to := q.Get("from"), q.Get("to")
+		if g.kind == "github" {
+			from, to, _ = strings.Cut(strings.TrimPrefix(rest, "/compare/"), "...")
+		}
+		resolve := func(x string) *fakeCommit {
+			if c, ok := g.tags[x]; ok {
+				return c
+			}
+			for _, c := range g.branches["main"] {
+				if x != "" && strings.HasPrefix(c.sha, x) {
+					return c
+				}
+			}
+			return nil
+		}
+		a, b := resolve(from), resolve(to)
+		if a == nil || b == nil {
+			w.WriteHeader(404)
+			return
+		}
+		var between []*fakeCommit // newest first
+		on := false
+		for _, c := range g.branches["main"] {
+			if c == b {
+				on = true
+			}
+			if c == a {
+				break
+			}
+			if on {
+				between = append(between, c)
+			}
+		}
+		var l []map[string]interface{}
+		for i := len(between) - 1; i >= 0; i-- {
+			c := between[i]
+			if g.kind == "gitlab" {
+				l = append(l, map[string]interface{}{"id": c.sha, "title": "change " + c.date, "author_name": "Dev", "committed_date": c.date + "T10:00:00Z"})
+			} else {
+				l = append(l, map[string]interface{}{"sha": c.sha, "commit": map[string]interface{}{"message": "change " + c.date + "\n\nbody", "author": map[string]string{"name": "Dev", "date": c.date + "T10:00:00Z"}}})
+			}
+		}
+		if g.kind == "gitlab" {
+			out(map[string]interface{}{"commits": l})
+		} else {
+			out(map[string]interface{}{"total_commits": len(l), "commits": l})
+		}
 	case strings.HasPrefix(rest, "/blobs/"):
 		g.blobReqs.Add(1)
 		sha := strings.TrimSuffix(strings.TrimPrefix(rest, "/blobs/"), "/raw")
