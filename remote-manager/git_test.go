@@ -104,6 +104,8 @@ func (g *fakeGit) serve(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("PRIVATE-TOKEN")
 	if g.kind == "github" {
 		auth = strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	} else if g.kind == "gitea" {
+		auth = strings.TrimPrefix(r.Header.Get("Authorization"), "token ")
 	}
 	if auth != g.token {
 		w.WriteHeader(401)
@@ -127,7 +129,7 @@ func (g *fakeGit) serve(w http.ResponseWriter, r *http.Request) {
 		proj, rest = "demo/demo-api", strings.TrimPrefix(p, "/projects/demo%2Fdemo-api")
 		rest = strings.TrimPrefix(rest, "/repository")
 	} else {
-		p = strings.TrimPrefix(p, "/api/v3")
+		p = strings.TrimPrefix(strings.TrimPrefix(p, "/api/v3"), "/api/v1")
 		if p == "/orgs/demo/repos" {
 			out([]map[string]interface{}{{"full_name": "demo/demo-api"}})
 			return
@@ -149,6 +151,13 @@ func (g *fakeGit) serve(w http.ResponseWriter, r *http.Request) {
 			l = append(l, map[string]string{"name": b})
 		}
 		out(l)
+	case strings.HasPrefix(rest, "/branches/"):
+		list := g.branches[strings.TrimPrefix(rest, "/branches/")]
+		if len(list) == 0 {
+			w.WriteHeader(404)
+			return
+		}
+		out(map[string]interface{}{"name": strings.TrimPrefix(rest, "/branches/"), "commit": map[string]string{"id": list[0].sha, "sha": list[0].sha}})
 	case rest == "/tags":
 		var l []map[string]interface{}
 		for n, c := range g.tags {
@@ -157,7 +166,7 @@ func (g *fakeGit) serve(w http.ResponseWriter, r *http.Request) {
 		out(l)
 	case rest == "/commits":
 		b := q.Get("ref_name")
-		if g.kind == "github" {
+		if g.kind != "gitlab" {
 			b = q.Get("sha")
 		}
 		var l []map[string]interface{}
@@ -176,7 +185,7 @@ func (g *fakeGit) serve(w http.ResponseWriter, r *http.Request) {
 	case rest == "/tree" || strings.HasPrefix(rest, "/trees/"):
 		g.treeReqs.Add(1)
 		sha := q.Get("ref")
-		if g.kind == "github" {
+		if g.kind != "gitlab" {
 			sha = strings.TrimPrefix(rest, "/trees/")
 		}
 		c := g.commit(sha)
@@ -199,7 +208,7 @@ func (g *fakeGit) serve(w http.ResponseWriter, r *http.Request) {
 		}
 	case rest == "/compare" || strings.HasPrefix(rest, "/compare/"):
 		from, to := q.Get("from"), q.Get("to")
-		if g.kind == "github" {
+		if g.kind != "gitlab" {
 			from, to, _ = strings.Cut(strings.TrimPrefix(rest, "/compare/"), "...")
 		}
 		resolve := func(x string) *fakeCommit {
@@ -352,7 +361,7 @@ func TestGitHelpers(t *testing.T) {
 
 func TestGitTargets(t *testing.T) {
 	srv := newTestServer(t)
-	for _, kind := range []string{"gitlab", "github"} {
+	for _, kind := range []string{"gitlab", "github", "gitea"} {
 		t.Run(kind, func(t *testing.T) {
 			g := newFakeGit(t, kind)
 			u := setupGitUser(t, srv, "git-"+kind, g)
