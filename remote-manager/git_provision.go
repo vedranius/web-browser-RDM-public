@@ -448,10 +448,10 @@ func tarOf(files map[string][]byte, modes map[string]int64) ([]byte, error) {
 	tw := tar.NewWriter(&buf)
 	rels := keysOf(files)
 	sort.Strings(rels)
-	now := time.Now()
+	now := time.Now().Truncate(time.Second) // whole seconds: plain ustar headers where the names allow it
 	for _, rel := range rels {
 		data := files[rel]
-		if err := tw.WriteHeader(&tar.Header{Name: rel, Mode: modes[rel], Size: int64(len(data)), ModTime: now, Typeflag: tar.TypeReg, Format: tar.FormatPAX}); err != nil {
+		if err := tw.WriteHeader(&tar.Header{Name: rel, Mode: modes[rel], Size: int64(len(data)), ModTime: now, Typeflag: tar.TypeReg}); err != nil {
 			return nil, err
 		}
 		if _, err := tw.Write(data); err != nil {
