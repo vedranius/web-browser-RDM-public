@@ -7,9 +7,9 @@
 
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
+**A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v11.5.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v11.6.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -65,6 +65,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Git workspace: compare services](#git-workspace-compare-services)
    - [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts)
    - [Git workspace: environments, deploy plans & safe deploys](#git-workspace-environments-deploy-plans--safe-deploys)
+   - [Git workspace: activity, deploy history & what is where](#git-workspace-activity-deploy-history--what-is-where)
    - [Git workspace: new servers (install & transfer)](#git-workspace-new-servers-install--transfer)
    - [Git workspace: .gitignore helper](#git-workspace-gitignore-helper)
    - [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional)
@@ -131,21 +132,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v11.5.0-linux-amd64
-   ./wrm-pro-v11.5.0-linux-amd64
+   chmod +x wrm-pro-v11.6.0-linux-amd64
+   ./wrm-pro-v11.6.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v11.5.0-windows-amd64.exe
+   .\wrm-pro-v11.6.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.5.0/wrm-pro-v11.5.0-android-arm64
-   chmod +x wrm-pro-v11.5.0-android-arm64 && ./wrm-pro-v11.5.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.6.0/wrm-pro-v11.6.0-android-arm64
+   chmod +x wrm-pro-v11.6.0-android-arm64 && ./wrm-pro-v11.6.0-android-arm64
    ```
 
    **Docker**
@@ -169,6 +170,15 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v11.5.0
+
+Replace the binary; the database does not change.
+
+- **Activity tab** in the Git workspace with three views — *Git activity* (pushes and commits per branch and author from the Git server), *Deploy history* (the `history.jsonl` of every environment destination merged with the WRM runs of installations without environments) and *What is where* (branch, commit, version, who and when per environment and server, commits behind the branch head, drift). Each view has a **CSV export** of what its filters show. See [Git workspace: activity, deploy history & what is where](#git-workspace-activity-deploy-history--what-is-where).
+- **Gitea sources:** a Git source can now be a Gitea server (API v1, `Authorization: token …`). Targets, comparisons, deploys and the activity work as with GitHub; a .gitignore pull request is not available for Gitea yet (download the file).
+- The activity reads the provider API with the source's **read-only token**; for GitHub repository activity (pushes, force pushes) the token needs read access to the repository's metadata, otherwise only commits are shown. The deploy history and the matrix read the destinations over SSH like the *Environments* tab and need the `git_checks` policy; without it only WRM's own records are shown.
+- No new settings or policies.
 
 ## Upgrading from v11.4.1
 
@@ -775,7 +785,7 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 
 **⎇ Git** in the top bar opens a full-screen workspace (its code, `static/git.js`, loads only then). It answers *which version of which service runs where, and what was changed by hand* — for any GitLab or GitHub (cloud or self-hosted) that you connect. WRM ships no services or organisation-specific configuration. Servers need no git, Python or internet access: WRM reads the Git provider's API itself and works on servers over its existing SSH connections, so jump hosts, proxies and the vault apply. Checks only read; servers are changed only by the runs described in the next section.
 
-- **Sources** (*Settings*): GitLab (API v4) or GitHub (REST; `github.com` or Enterprise `<url>/api/v3`) with a **read-only token** (encrypted, never sent back to the browser). *Test* lists the projects of the catalog's groups / organisations (with subgroups). Self-signed Git servers are pinned on first use.
+- **Sources** (*Settings*): GitLab (API v4), GitHub (REST; `github.com` or Enterprise `<url>/api/v3`) or Gitea (API v1, `<url>/api/v1`) with a **read-only token** (encrypted, never sent back to the browser). *Test* lists the projects of the catalog's groups / organisations (with subgroups). Self-signed Git servers are pinned on first use.
 - **Few API calls:** one recursive tree listing per version (cached forever, a commit never changes) gives the blob ID of every file; a file's content is downloaded only for a blob WRM has not seen yet and cached by blob ID — the same file in 20 versions is fetched once.
 - **Offline bundles** (*Settings → Offline bundles*): when WRM cannot reach the Git server, import a `.tar.gz` built elsewhere — one top directory with `bundle.json` (per service the target ref and the hash and history of every file) and `payload/<service>/<path>`; `deploytool.py` and `README.txt` are ignored, protected files of the payload are never used. The list shows the bundle's age, author and source. *Services → Export bundle* writes the same format for servers that only a file-based deploy tool can reach. *Targets from*: automatic (the Git API, otherwise the newest bundle), the Git API or a bundle.
 - **Service catalog** (*Services*): name, project, ref (`tag:latest`, `tag:v2` = the newest `v2.x`, or a branch), branch for tags, tag filter (regex), **subdirectory** of the repository that is the installation root, include / exclude globs, **protected** per-host files (`config*`, `*.ini`, `.env`; matched like Python's `fnmatch` on the path and the file name) that are never overwritten and only shown, **fingerprint** files that recognise an installation, install hints (directory names) and kind (app, library, tool). *Suggest from repository* fills an entry from the repository tree. *Import catalog* (merge or replace) and *Export catalog* use catalog JSON (`gitlab.url` / `groups`, `fallback_branches`, `server_roots`, `apps`, `ignore_dirs`). Services of imported bundles work without a catalog entry.
@@ -916,6 +926,23 @@ Environments are **optional**. A service without environments keeps using *Updat
 **🩺 Doctor** checks every destination: SSH login, a clean non-interactive shell (no banner or rc output before the commands), the SSH user (a warning for `root`), the app directory (writable; a missing one is OK when its nearest existing parent is writable), the state directory, unreadable subdirectories, signs of another deploy method (`.git`, `.svn`, `.hg`, `releases` / `current`, a symlinked app path), a path that looks like a public web root, `sha256sum`, `rsync` and `tar` with their versions, and the lock.
 
 Environment deploys and rollbacks are ordinary runs: they appear on the *Runs* tab, can be stopped after the current destination, send the run notifications (not for dry runs) and are audited per destination (`git.update` / `git.upgrade` / `git.rollback` with `env`, `deploy_id`, `dry_run`, `partial`, `post_deploy`).
+
+### Git workspace: activity, deploy history & what is where
+
+The *Activity* tab answers *who changed what on which branch, who deployed what where, and what runs where now*. It has three views, each with its own filters and a **⬇ CSV** export of exactly what the filters show (UTF-8 with a byte order mark for spreadsheets; values that a spreadsheet would run as a formula are prefixed with `'`).
+
+**Git activity** (per service, from the Git source of its target):
+
+- **GitLab:** project events with `action=pushed` (every branch and tag: who pushed, how many commits, from → to) and the commits of the listed branches. **GitHub:** the commits of the listed branches and, where the token allows it, the repository activity (pushes, force pushes, branch creation and deletion, merges). **Gitea:** the commits of the listed branches.
+- **Branches:** without a chosen branch, the commits of the service's branch, the target's branch, the default branch, the catalog's `fallback_branches` and the branches of the environments' `allowed_refs` are listed (at most 6). Pick any branch of the project in the filter. A commit on several listed branches appears once, with its branches.
+- **Filters:** branch, author (part of the name, user name or e-mail) and dates (default: the last 30 days, at most 366). **Per author** (commits, pushes, branches, last activity) and **per branch** (commits, pushes, authors, last activity, a link to the branch's commits) summaries follow the filters; click a row to filter by it. Each commit links to its commit page, each push to the compare page of its range.
+- **API limits:** listings follow the provider's next links up to 10 pages each and stop early when the provider reports that 5 or fewer calls are left; a cut listing says so (with the time calls are possible again when the provider tells it). A rate-limited request (HTTP 429, or 403 with no calls left) becomes a note instead of an error. Results are cached per user, service, branch and dates for 3 minutes (*↻ Refresh* reads again); the author filter works on the cached listing.
+
+**Deploy history:** the `history.jsonl` of every destination of every environment (deploys and rollbacks, one row per destination, read over SSH like the environment cells, **one request per service and environment, three at a time**) merged with the WRM runs (update, upgrade, rollback, install, transfer) of installations without environments — environment runs are left out there because their destinations keep the history. Filters: service, environment, server, action (deploy / rollback / update / upgrade / install / transfer), who, branch, version or commit, dates. Every row shows the result, the version before, the commit (linked) and the per-file lists (new, changed, deleted, excluded, restored, moved aside …) in an expandable column.
+
+**What is where:** per service, environment and server the branch, commit (linked) and version that runs there, who deployed it and when (from `state.json`, else `VERSION.md`), and **how many commits it is behind the head of its branch**, linked to the compare page of those commits. A tag deploy or a `VERSION.md` without a branch counts against the service's branch. Servers of one environment whose commit and version differ from the others are **highlighted** (*differs*). Installations without environments are listed from their last check (no SSH). Cells load lazily like the *Environments* tab; head and compare answers are cached for 2 minutes.
+
+Policies: the activity needs only the Git workspace (`git_enabled`); the deploy history from the servers and the matrix need `git_checks` (WRM's own records are shown without it). Tokens never reach the browser.
 
 ### Git workspace: new servers (install & transfer)
 
@@ -1331,7 +1358,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v11.5.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v11.6.0-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -1605,7 +1632,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/catalog/import?mode=replace\|merge` | Import catalog JSON |
 | GET | `/api/git/catalog/export` | Catalog JSON (download) |
 | PUT / DELETE | `/api/git/catalog/apps/{name}` | Add or change / delete one service |
-| POST | `/api/git/sources` | `{kind: "gitlab"\|"github", name, url, token}`; `PUT` / `DELETE /api/git/sources/{id}` (an omitted `token` keeps the stored one) |
+| POST | `/api/git/sources` | `{kind: "gitlab"\|"github"\|"gitea", name, url, token}`; `PUT` / `DELETE /api/git/sources/{id}` (an omitted `token` keeps the stored one) |
 | POST | `/api/git/sources/{id}/test` | `{projects}` of the catalog's groups |
 | POST | `/api/git/suggest` | `{project, ref}` → `{app, files}` (catalog entry from the repository tree) |
 | POST | `/api/git/bundles` | Body: a bundle `.tar.gz` → `{result: {source, files, payload, warnings}, state}` |
@@ -1638,7 +1665,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/feeds/{id}/fetch` | Fetch and import now → `{status: "imported"\|"unchanged", result, state}` |
 | PUT / DELETE | `/api/git/pipelines/{app}` | Deploy method *CI pipeline*: `{kind: "jenkins"\|"gitlab", url, username, project, ref, token}`; `DELETE` → files over SSH again |
 | GET | `/api/git/env/overview` | Services with environments: `{services: [{app, envs: [{name, destinations, confirm, allowed_refs, post_deploy}]}], envs, stale_minutes}` |
-| GET | `/api/git/env/cell?app=&env=` | One overview cell: `{dests: [{server, path, exists, current, version_md, commit_md, behind, lock, error}], drift, target}` |
+| GET | `/api/git/env/cell?app=&env=` | One overview cell: `{dests: [{server, path, exists, current, version_md, commit_md, ref_md, user_md, updated_md, behind, lock, error}], drift, target}` |
 | POST | `/api/git/env/plan` | `{app, env, ref}` → `{id, ref_name, target, confirm, post_deploy, excluded: {path: {by, at}}, errors, dests: [{index, server, path, state_dir, exists, current, from_version, files: [{path, state: "new"\|"changed"\|"eol"\|"same"\|"removed"\|"extra"\|"protected"\|"ignored", local, link, behind, tag, pattern}], counts, conflicts: [{path, kind, server}], fingerprint, lock, errors, warnings}]}` (kept in memory for 2 hours, applied once) |
 | POST | `/api/git/runs` (environment) | Deploy: `{kind: "update", env: {app, env, plan_id, exclude: [path], delete_removed, post_deploy, dry_run, confirm: environment name}, restart: {mode: "none"\|"now"}, checks}`. Rollback: `{kind: "rollback", env: {app, env, deploy_id, dests: [index], post_deploy, dry_run, confirm}, restart}` |
 | GET | `/api/git/env/history?app=&env=` | `{dests: [{server, path, current, error}], entries: [{action: "DEPLOY"\|"ROLLBACK", id, rolled_back, by, at, version, commit, branch, previous, new, changed, deleted, excluded, restored, moved_aside, skipped, counts, result, post_deploy, server, path, dest}]}` |
@@ -1646,6 +1673,14 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/env/unlock` | `{app, env, dest, lock_id}`: remove a stale lock (checked again on the server; `409` when it changed) |
 | POST | `/api/git/env/exclude` | `{app, env, path, scope: "service"\|"env"}` → `{pattern, added}` (anchored, escaped; not added when a pattern covers the file) |
 | DELETE | `/api/git/env/exclusions?app=&env=[&path=]` | Clear the remembered per-run exclusions |
+| GET | `/api/git/activity?app=&branch=&author=&since=&until=&refresh=1` | Pushes and commits of a service: `{app, project, provider, since, until, branches, tracked, items: [{kind: "commit"\|"push", at, author, login, branch, branches, ref_type, ref, sha, title, action, count, before, after, url}], authors: [{key, commits, pushes, branches, last}], by_branch: [{key, commits, pushes, authors, last, url}], truncated, rate_limited, rate_reset, notes, fetched_at, cached, calls}` (dates `YYYY-MM-DD`, default the last 30 days) |
+| GET | `/api/git/activity/export.csv?…` | The same items as CSV |
+| GET | `/api/git/history/runs?<filters>` | WRM runs of installations without environments: `{rows: [{at, action, source: "run", app, env, server, path, by, branch, version, commit, id, run_id, result, previous, counts, files, error, note, commit_url}]}` |
+| GET | `/api/git/history/cell?app=&env=&<filters>&refresh=1` | `history.jsonl` of every destination of an environment (policy `git_checks`): `{app, env, rows, errors, at}` |
+| GET | `/api/git/history/export.csv?<filters>` | Everything as CSV (filters: `app`, `env`, `server`, `who`, `branch`, `version`, `action` = `deploy`\|`rollback`\|`update`\|`upgrade`\|`install`\|`transfer`, `since`, `until`) |
+| GET | `/api/git/where/cell?app=&env=&refresh=1` | The destinations of an environment (policy `git_checks`): `{rows: [{app, env, server, path, kind: "env", exists, branch, commit, version, by, at, deploy_id, head, behind, commit_url, compare_url, branch_url, drift, locked, error}], drift, note}` |
+| GET | `/api/git/where/installs?app=&refresh=1` | Installations of a service without environment, from their last check: `{rows: [{… kind: "install", state}]}` |
+| GET | `/api/git/where/export.csv?app=&env=&server=` | The matrix as CSV |
 | POST | `/api/git/runs/{id}/cancel` | Cancel a scheduled run (with its waiting restart) or stop a running one after the current installation |
 
 **Tunnels & web interfaces**
@@ -1780,6 +1815,8 @@ remote-manager/
   git_jobs.go       check jobs: partial, streamed and cancellable checks with concurrency limits
   git_env.go        environments: validation, plans with fingerprints, locks, server-side state, overview, history, doctor, API
   git_env_run.go    environment deploy and rollback runs: dry run, staged transfer, backup, manifest, history, post_deploy
+  git_activity.go   Git activity: pushes and commits per branch and author, paging with rate limits, short cache, web links, CSV
+  git_where.go      deploy history (server history + WRM runs) and the "what is where" matrix with commits behind the branch head
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
   nettools.go     network tools: port check, ping, traceroute, DNS, HTTP/TLS check, from WRM or a server
@@ -1798,12 +1835,14 @@ remote-manager/
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
   bookmarks_test.go    folder bookmarks: scopes, ownership, variables, cd quoting, shares, WinSCP.ini, start directory
   status_test.go       live status: up/down, banners, jump hosts, check now
-  git_test.go          Git workspace: fake GitLab / GitHub, branch-aware tags, blob cache, bundles, catalog, discovery and comparison on a fake SSH host, notifications
+  git_test.go          Git workspace: fake GitLab / GitHub / Gitea, branch-aware tags, blob cache, bundles, catalog, discovery and comparison on a fake SSH host, notifications
   git_deploy_test.go   Git deploy: VERSION.md / updates.jsonl formats, dangling imports; update, CRLF, protected files, stamp, rollback, failed check → rollback, scheduled restart (fake SSH host)
   git_gitignore_test.go  .gitignore helper: candidates from a check, preview, download, merge request only on explicit choice (fake GitLab), pull request (fake GitHub)
   git_files_test.go      every file of an installation (reasons, excluded file diff, symlinks, unreadable, quoting, commits) and check jobs (partial, stale, limits, cancel, last good result)
   git_ci_test.go         webhooks (GitLab token, GitHub HMAC, generic token / HMAC, replays, rate limit), artifact feed fetch and schedule, Jenkins job and GitLab pipeline runs
   git_env_test.go        environments: plan with CRLF-only files, dry run, typed confirmation, one-shot plans, fingerprint mismatch, lock contention, stale lock, own lock only, remembered and permanent exclusions, allowed_refs, nested paths, partial transfer, post_deploy failure, rollback (moved aside, symlinks skipped, removed directories, kept backups), doctor, drift
+  git_activity_test.go   Git activity against fake GitLab / GitHub / Gitea: paging (X-Next-Page, Link, cursors), tracked branches, filters, author / branch summaries, links, cache, rate limits and 429, CSV escaping
+  git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)
   git_provision_test.go  Git install / transfer: templates, exclusions, units; install from the fake GitLab and from a bundle, vault values, overwrite refusal and backup, transfer A → B, policies
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
   bmc_test.go          Redfish (fake BMC, pinning, jump host, credential), IPMI with a fake ipmitool, SOL (local PTY and jump host), BMC SSH console, serial port on a PTY
@@ -1841,6 +1880,9 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Environment deploy: *the server or the repository changed since the plan was reviewed* | Something changed between the compare and the deploy (a file on the server, another deploy, a new target). Compare again, review the new plan and deploy it |
 | Environment deploy: *locked by … from …* | Another deploy holds the lock of that destination. Wait for it; a lock older than max(30 min, the transfer timeout) is *stale* and the plan offers to remove it — only do so when no deploy is running there |
 | Environment rollback *incomplete* | A file or directory of the rollback is a symlink on the server, so it was skipped. Fix the server (replace the symlink) and roll back the same deploy again |
+| Activity: *the API rate limit was reached* / the list is incomplete | The Git server limits API calls per token. Wait until the time shown, narrow the dates or choose one branch; results are cached for 3 minutes |
+| Activity on GitHub shows commits but no pushes | The token cannot read the repository activity (it needs read access to the repository's metadata); commits are listed anyway |
+| What is where: *behind* shows — | The branch head or the compare could not be read (no API source, a branch that no longer exists, or the commit is not in the repository) |
 | Registration tab missing | Self-registration is closed (default). An administrator creates accounts, or opens registration in *Security policies* |
 | Locked out as administrator | `wrm -reset-password <user>` (add `-reset-2fa` if needed) |
 | *Connection failed: unable to authenticate* | Check user/password/key with **Test connection**; for *Key file*/*Auto* the key must exist on the **WRM server** and the account must be an administrator (or the policy allows it) |
