@@ -1,37 +1,53 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.6.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.6.1/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.6.0 — Git: activity and deploy history per user and branch
+## Web Remote Manager PRO v11.6.1 — file manager from the terminal's title bar
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub / Gitea or offline bundles, updates them, deploys them to environments, shows who changed and deployed what where, and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 📈 Git activity
+### 📂 File manager from the terminal
+
+- A new **📂** button in the title bar of every SSH terminal opens the **file manager of the same server** — no more searching for the connection in a long sidebar, and no risk of opening the wrong server ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)).
+- If a file manager of that connection is already open, 📂 brings it to the front.
+- When the remote shell reports its current directory (OSC 7), the file manager opens **in the terminal's directory**. Otherwise it opens the home directory. To enable it in bash, add to `~/.bashrc`: `PROMPT_COMMAND='printf "\033]7;file://%s%s\033\\" "$HOSTNAME" "$PWD"'`
+
+### ⬆️ Upgrading from v11.6.0
+
+Replace the binary; the database does not change.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.6.1/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.6.0 — Git: activity and deploy history per user and branch
+
+#### 📈 Git activity
 
 - A new **Activity** tab in the Git workspace. *Git activity* shows the **pushes and commits** of a service **per branch and per author**, straight from the Git server: GitLab push events and commits, GitHub commits and (where the token allows it) repository activity, Gitea commits.
 - Filter by **branch**, **author** and **dates**; the **per author** and **per branch** summaries (commits, pushes, last activity) follow the filters — click a row to filter by it. Every commit and push links to its **commit or compare page**.
 - Gentle on the Git server: paging stops before the API limit runs out (and says so, with the time it resets), and results are cached for a few minutes.
 
-### 🕘 Deploy history
+#### 🕘 Deploy history
 
 - One list of **every deploy and rollback** of every server of every environment — read from the servers' own `history.jsonl` — together with WRM's runs on installations without environments.
 - Filter by **service, environment, server, who, branch, version and action** (deploy / rollback / update / upgrade / install / transfer) and dates, and open the **per-file lists** (new, changed, deleted, restored …) of each entry.
 
-### 🗺 What is where
+#### 🗺 What is where
 
 - Per service, environment and server: the **branch, commit and version** that runs there, **who deployed it and when**, and **how many commits it is behind its branch head** — with a link to exactly those commits.
 - Servers of one environment that run something else than the others are **highlighted**. Installations without environments are listed from their last check.
 - Cells load one by one, like the *Environments* tab.
 
-### ⬇ CSV export
+#### ⬇ CSV export
 
 - Each of the three views exports **what its filters show** as CSV (opens cleanly in spreadsheets; values that look like formulas are neutralised).
 
-### 🧩 Gitea sources
+#### 🧩 Gitea sources
 
 - A Git source can now be a **Gitea** server (API v1). Targets, comparisons, deploys and the activity work as with GitHub.
 
-### ⬆️ Upgrading from v11.5.0
+#### ⬆️ Upgrading from v11.5.0
 
 Replace the binary; the database does not change. There are no new settings or policies: the activity needs only the Git workspace, the deploy history from the servers and the matrix need the `git_checks` policy, like the *Environments* tab. For GitHub pushes the read token needs read access to the repository's metadata; otherwise only commits are shown.
 

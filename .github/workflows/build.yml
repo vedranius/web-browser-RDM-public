@@ -17,7 +17,7 @@ permissions:
 
 env:
   # Version for branch builds. Tag builds use the tag name (e.g. v10.10.0) as version and in file names.
-  APP_VERSION: v11.6.0
+  APP_VERSION: v11.6.1
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -169,6 +169,20 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v5
+
+      # Docker Hub rate-limits anonymous pulls from shared runners (429 Too Many Requests).
+      # Pull the base images of the Dockerfile from Google's Docker Hub mirror first, with a
+      # few retries and Docker Hub as the fallback; docker build then uses the local copies.
+      - name: Pull base images
+        run: |
+          for img in $(awk 'toupper($1)=="FROM"{print $2}' Dockerfile | sort -u); do
+            for try in 1 2 3; do
+              if docker pull "mirror.gcr.io/library/${img}" && docker tag "mirror.gcr.io/library/${img}" "${img}"; then break; fi
+              if docker pull "${img}"; then break; fi
+              sleep $((try * 15))
+            done
+            docker image inspect "${img}" >/dev/null
+          done
 
       - name: Build image
         run: |

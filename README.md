@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v11.6.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v11.6.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -132,21 +132,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v11.6.0-linux-amd64
-   ./wrm-pro-v11.6.0-linux-amd64
+   chmod +x wrm-pro-v11.6.1-linux-amd64
+   ./wrm-pro-v11.6.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v11.6.0-windows-amd64.exe
+   .\wrm-pro-v11.6.1-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.6.0/wrm-pro-v11.6.0-android-arm64
-   chmod +x wrm-pro-v11.6.0-android-arm64 && ./wrm-pro-v11.6.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.6.1/wrm-pro-v11.6.1-android-arm64
+   chmod +x wrm-pro-v11.6.1-android-arm64 && ./wrm-pro-v11.6.1-android-arm64
    ```
 
    **Docker**
@@ -170,6 +170,12 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v11.6.0
+
+Replace the binary; the database does not change.
+
+- **📂 in the title bar of SSH terminals** opens the file manager of the same server, in the terminal's current directory when the shell reports it (OSC 7) ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)). See [Windows, tabs & snapping](#windows-tabs--snapping).
 
 ## Upgrading from v11.5.0
 
@@ -620,7 +626,8 @@ After the import a summary lists the imported connections, folders, jump host li
 Every opened connection is a **window** inside the workspace. There is also a **tab** for it in the tab bar.
 
 - **+ New Window** (or **Alt+N**) opens an empty window with quick buttons for your connections and **saved sessions**.
-- **Title bar:** drag to move, **double-click** to maximize or restore. Buttons: *snap layouts*, **↻ Reconnect** (SSH windows), 📡 *share terminal* (in a collaboration room), minimize, maximize, close.
+- **Title bar:** drag to move, **double-click** to maximize or restore. Buttons: *snap layouts*, **↻ Reconnect** (SSH windows), **📂 Files** (SSH terminals), 📡 *share terminal* (in a collaboration room), minimize, maximize, close.
+- **📂 Files** in an SSH terminal's title bar opens the **file manager of the same server** ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)); a file manager of that connection that is already open is brought to the front. When the remote shell reports its current directory with OSC 7, the file manager opens (or moves) there; otherwise it opens the home directory. For bash, add to `~/.bashrc`: `PROMPT_COMMAND='printf "\033]7;file://%s%s\033\\" "$HOSTNAME" "$PWD"'`
 - **Snapping:** left, right, **top and bottom halves**, the four **quarters**, and **maximize**. Use the buttons in the title bar, the compact *snap layouts* menu in narrow windows, or the tab's right-click menu.
 - **Drag-to-edge snapping:** drag a window with the pointer to an edge (half) or a corner (quarter) of the workspace. A blue preview shows where it will go.
 - **Windows can never leave the workspace:** moving and resizing stop at all four edges. When the browser is resized or zoomed, or a panel changes size, windows are moved and shrunk to stay visible. Snapped and maximized windows keep their slot.
@@ -1358,7 +1365,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v11.6.0-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v11.6.1-linux-amd64
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
