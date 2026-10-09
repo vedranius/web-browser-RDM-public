@@ -280,6 +280,8 @@ func gitIgnoreState(userID int, app string) (*gitIgnoreInfo, int, error) {
 		info.MRNote = "not allowed for your account"
 	case api == nil:
 		info.MRNote = "needs a GitLab or GitHub source"
+	case api.Kind == "gitea":
+		info.MRNote = "not available for Gitea sources yet: download the file"
 	case !api.HasWriteToken:
 		info.MRNote = "the source has no write token (Settings → Git sources)"
 	case info.head == "":
