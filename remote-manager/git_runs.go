@@ -79,7 +79,8 @@ func gitActionAllowed(userID int, key string) bool {
 func gitDeployPolicies(userID int) map[string]bool {
 	return map[string]bool{"update": gitActionAllowed(userID, "git_update"), "upgrade": gitActionAllowed(userID, "git_upgrade"),
 		"rollback": gitActionAllowed(userID, "git_rollback"), "restart": gitActionAllowed(userID, "git_restart"),
-		"install": gitActionAllowed(userID, "git_install"), "transfer": gitActionAllowed(userID, "git_transfer")}
+		"install": gitActionAllowed(userID, "git_install"), "transfer": gitActionAllowed(userID, "git_transfer"),
+		"gitignore_mr": gitActionAllowed(userID, "git_gitignore_mr")}
 }
 
 // isProdInstall: tagged env:prod / prod (or production, prd, live) or found in such an
@@ -133,6 +134,11 @@ type gitRunItem struct {
 	// transfer: where the installation comes from
 	SourceConnName string `json:"source_conn_name,omitempty"`
 	SourcePath     string `json:"source_path,omitempty"`
+	// deploy method "CI pipeline": the triggered job or pipeline
+	Via      string `json:"via,omitempty"` // ci
+	CIKind   string `json:"ci_kind,omitempty"`
+	CIURL    string `json:"ci_url,omitempty"`
+	CIStatus string `json:"ci_status,omitempty"`
 }
 
 type gitRestartChoice struct {
@@ -374,6 +380,12 @@ func createGitRun(r *http.Request, userID int, p gitRunParams) (int, int, error)
 		it.Units = in.Units
 		it.State, it.Log, it.Step = "pending", []gitStepLog{}, ""
 		it.Written, it.Deleted, it.MadeBackup, it.Error, it.Health, it.Dangling, it.UpdateLog = nil, nil, "", "", nil, nil, ""
+		it.Via, it.CIKind, it.CIURL, it.CIStatus = "", "", "", ""
+		if p.Kind == "update" || p.Kind == "upgrade" {
+			if _, ci := loadGitPipeline(userID, in.App); ci {
+				it.Via = "ci" // the service is deployed by its CI pipeline
+			}
+		}
 		files := []string{}
 		for _, f := range it.Files {
 			if f = cleanRel(f); f != "" && !strings.HasPrefix(f, "..") {
@@ -581,7 +593,8 @@ type gitPlanItem struct {
 	Files          []planFile      `json:"files"`
 	Removed        []string        `json:"removed,omitempty"` // upgrade: files of the current target the new one does not have
 	Counts         map[string]int  `json:"counts"`
-	Eligible       bool            `json:"eligible"` // stamp: up to date
+	Eligible       bool            `json:"eligible"`           // stamp: up to date
+	Pipeline       *gitPipeline    `json:"pipeline,omitempty"` // deployed by CI: the run triggers it instead of writing files
 	HasVersionMD   bool            `json:"has_version_md"`
 	RestartPending string          `json:"restart_pending,omitempty"`
 	Error          string          `json:"error,omitempty"`
@@ -642,6 +655,11 @@ func gitPlan(userID int, kind, ref string, ids []int) ([]gitPlanItem, error) {
 		}
 		b := t.brief()
 		pi.Target = &b
+		if kind != "stamp" {
+			if pl, ci := loadGitPipeline(userID, in.App); ci {
+				pi.Pipeline = &pl
+			}
+		}
 		var curp *gitTarget
 		if haveCur {
 			curp = &cur
@@ -725,7 +743,11 @@ func executeGitRun(run *gitRun) {
 		var err error
 		switch run.Kind {
 		case "update", "upgrade":
-			err = run.deployFiles(it)
+			if it.Via == "ci" {
+				err = run.pipelineItem(it)
+			} else {
+				err = run.deployFiles(it)
+			}
 		case "rollback":
 			err = run.rollbackItem(it)
 		case "stamp":
@@ -1408,6 +1430,9 @@ func auditGitItem(run *gitRun, it *gitRunItem) {
 	if it.SourcePath != "" {
 		details["source"] = it.SourceConnName + ":" + it.SourcePath
 	}
+	if it.Via == "ci" {
+		details["via"], details["ci_kind"], details["ci_url"], details["ci_status"] = "ci", it.CIKind, it.CIURL, it.CIStatus
+	}
 	if run.Kind == "install" || run.Kind == "transfer" {
 		details["to_conn_id"] = it.ConnID
 		if it.InstallID != 0 {
@@ -1512,6 +1537,7 @@ func runGitScheduler() {
 				}
 			}()
 			gitSchedulerTick(time.Now())
+			gitFeedsTick(time.Now())
 		}()
 	}
 }

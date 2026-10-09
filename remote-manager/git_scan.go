@@ -5,6 +5,7 @@ import (
 	"path"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -248,6 +249,7 @@ type gitScanResult struct {
 	Path    string
 	Missing bool
 	Files   map[string]string // rel → hash ("-" = unreadable)
+	Sizes   map[string]int64  // rel → size in bytes
 	Version []string          // first lines of VERSION.md
 	Units   []gitUnit
 	Capped  bool
@@ -278,8 +280,8 @@ func scanOn(cl *ssh.Client, dirs []string) (map[string]*gitScanResult, error) {
 		fmt.Fprintf(&sb, "if [ ! -d %s ]; then echo X; else\n", q)
 		fmt.Fprintf(&sb, "find %s %s -o -type f -print 2>/dev/null | head -n %d | while IFS= read -r f; do\n", q, findPrune(), gitMaxInstallFiles+1)
 		fmt.Fprintf(&sb, "  rel=${f#%s/}\n", q)
-		sb.WriteString(`  if [ -r "$f" ]; then h=$(tr -d '\r' < "$f" | $S | cut -c1-64); else h=-; fi` + "\n")
-		sb.WriteString(`  printf 'F\t%s\t%s\n' "$h" "$rel"` + "\n")
+		sb.WriteString(`  if [ -r "$f" ]; then h=$(tr -d '\r' < "$f" | $S | cut -c1-64); z=$(wc -c < "$f"); z=${z##* }; else h=-; z=0; fi` + "\n")
+		sb.WriteString(`  printf 'F\t%s\t%s\t%s\n' "$h" "$z" "$rel"` + "\n")
 		sb.WriteString("done\n")
 		fmt.Fprintf(&sb, "if [ -f %s/VERSION.md ]; then head -n 40 %s/VERSION.md | sed 's/^/V\t/'; fi\n", q, q)
 		fmt.Fprintf(&sb, "for u in %s; do [ -d \"$u\" ] && grep -lE -- %s \"$u\"/*.service 2>/dev/null; done | sort -u | while IFS= read -r f; do printf 'U\\tsystemd\\t%%s\\n' \"${f##*/}\"; done\n", strings.Join(sysd, " "), re)
@@ -298,19 +300,20 @@ func scanOn(cl *ssh.Client, dirs []string) (map[string]*gitScanResult, error) {
 		case strings.HasPrefix(line, "E\t"):
 			return nil, fmt.Errorf("%s", line[2:])
 		case strings.HasPrefix(line, "D\t"):
-			cur = &gitScanResult{Path: line[2:], Files: map[string]string{}}
+			cur = &gitScanResult{Path: line[2:], Files: map[string]string{}, Sizes: map[string]int64{}}
 			res[cur.Path] = cur
 		case cur == nil:
 		case line == "X":
 			cur.Missing = true
 		case strings.HasPrefix(line, "F\t"):
-			parts := strings.SplitN(line[2:], "\t", 2)
-			if len(parts) == 2 {
+			parts := strings.SplitN(line[2:], "\t", 3)
+			if len(parts) == 3 {
 				if len(cur.Files) >= gitMaxInstallFiles {
 					cur.Capped = true
 					continue
 				}
-				cur.Files[parts[1]] = parts[0]
+				cur.Files[parts[2]] = parts[0]
+				cur.Sizes[parts[2]], _ = strconv.ParseInt(parts[1], 10, 64)
 			}
 		case strings.HasPrefix(line, "V\t"):
 			cur.Version = append(cur.Version, line[2:])
@@ -399,6 +402,7 @@ type gitFileState struct {
 	Date       string `json:"date,omitempty"`
 	ServerHash string `json:"server_hash,omitempty"`
 	TargetHash string `json:"target_hash,omitempty"`
+	Size       int64  `json:"size,omitempty"` // extra files: size on the server
 	Note       string `json:"note,omitempty"`
 	Diffable   bool   `json:"diffable,omitempty"`
 }
@@ -724,11 +728,16 @@ func evalInstall(s *gitScanResult, t gitTarget, ok bool, ignore []string) (strin
 				d.Error = t.Error
 			}
 			for rel, h := range s.Files {
-				d.Files = append(d.Files, gitFileState{Path: rel, State: "extra", ServerHash: h})
+				d.Files = append(d.Files, gitFileState{Path: rel, State: "extra", ServerHash: h, Size: s.Sizes[rel]})
 			}
 		} else {
 			d.Target = t.Version
 			d.Files, d.Counts, state = compareInstall(t, s.Files, ignore)
+			for i := range d.Files {
+				if d.Files[i].State == "extra" {
+					d.Files[i].Size = s.Sizes[d.Files[i].Path]
+				}
+			}
 			for _, f := range d.Files {
 				if f.State == "old" && f.Behind > d.Behind {
 					d.Behind = f.Behind

@@ -318,6 +318,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/inventory/", apiInventoryHandler)
 	mux.HandleFunc("/api/git", apiGitHandler)
 	mux.HandleFunc("/api/git/", apiGitHandler)
+	mux.HandleFunc("/api/hooks/git/", gitHookHandler)
 	mux.HandleFunc("/api/keys", apiKeysHandler)
 	mux.HandleFunc("/api/keys/", apiKeysHandler)
 	mux.HandleFunc("/api/credentials", apiCredentialsHandler)

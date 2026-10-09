@@ -36,25 +36,29 @@ const (
 )
 
 type gitSource struct {
-	ID        int    `json:"id"`
-	Kind      string `json:"kind"` // gitlab | github | bundle
-	Name      string `json:"name"`
-	URL       string `json:"url"`
-	HasToken  bool   `json:"has_token"`
-	CreatedAt string `json:"created_at"`
-	LastError string `json:"last_error,omitempty"`
+	ID            int    `json:"id"`
+	Kind          string `json:"kind"` // gitlab | github | bundle
+	Name          string `json:"name"`
+	URL           string `json:"url"`
+	HasToken      bool   `json:"has_token"`
+	HasWriteToken bool   `json:"has_write_token"`
+	HookID        string `json:"hook_id,omitempty"` // incoming webhook: /api/hooks/git/<hook_id>
+	HookAt        string `json:"hook_at,omitempty"` // last accepted webhook
+	CreatedAt     string `json:"created_at"`
+	LastError     string `json:"last_error,omitempty"`
 	// bundles
-	BundleID  string   `json:"bundle_id,omitempty"`
-	Created   string   `json:"created,omitempty"`
-	CreatedBy string   `json:"created_by,omitempty"`
-	Origin    string   `json:"origin,omitempty"`
-	Apps      []string `json:"apps,omitempty"`
-	token     string
+	BundleID   string   `json:"bundle_id,omitempty"`
+	Created    string   `json:"created,omitempty"`
+	CreatedBy  string   `json:"created_by,omitempty"`
+	Origin     string   `json:"origin,omitempty"`
+	Apps       []string `json:"apps,omitempty"`
+	token      string
+	writeToken string
 }
 
 func loadGitSources(userID int) []gitSource {
 	out := []gitSource{}
-	rows, err := db.Query(`SELECT id, kind, name, url, token, info, created_at, last_error FROM git_sources WHERE user_id=? ORDER BY kind='bundle', id`, userID)
+	rows, err := db.Query(`SELECT id, kind, name, url, token, info, created_at, last_error, write_token, hook_id, hook_at FROM git_sources WHERE user_id=? ORDER BY kind='bundle', id`, userID)
 	if err != nil {
 		return out
 	}
@@ -62,8 +66,9 @@ func loadGitSources(userID int) []gitSource {
 	for rows.Next() {
 		var s gitSource
 		var tok, info string
-		rows.Scan(&s.ID, &s.Kind, &s.Name, &s.URL, &tok, &info, &s.CreatedAt, &s.LastError)
+		rows.Scan(&s.ID, &s.Kind, &s.Name, &s.URL, &tok, &info, &s.CreatedAt, &s.LastError, &s.writeToken, &s.HookID, &s.HookAt)
 		s.HasToken = tok != ""
+		s.HasWriteToken = s.writeToken != ""
 		s.token = tok
 		if s.Kind == "bundle" {
 			var m gitBundleManifest
@@ -165,17 +170,22 @@ func (p *gitProvider) get(rel string, accept string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	if accept == "" {
+		accept = "application/json"
+		if p.kind == "github" {
+			accept = "application/vnd.github+json"
+		}
+	}
+	return p.do(req, accept)
+}
+
+// do sends a request with the token and turns an answer other than 2xx into a gitHTTPError.
+func (p *gitProvider) do(req *http.Request, accept string) (*http.Response, error) {
 	if p.token != "" {
 		if p.kind == "gitlab" {
 			req.Header.Set("PRIVATE-TOKEN", p.token)
 		} else {
 			req.Header.Set("Authorization", "Bearer "+p.token)
-		}
-	}
-	if accept == "" {
-		accept = "application/json"
-		if p.kind == "github" {
-			accept = "application/vnd.github+json"
 		}
 	}
 	req.Header.Set("Accept", accept)
@@ -187,16 +197,20 @@ func (p *gitProvider) get(rel string, accept string) (*http.Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot reach the Git server: %s", shortNetError(err))
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode/100 != 2 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
 		resp.Body.Close()
 		msg := fmt.Sprintf("Git server answered HTTP %d", resp.StatusCode)
 		var e struct {
-			Message string `json:"message"`
-			Error   string `json:"error"`
+			Message interface{} `json:"message"`
+			Error   string      `json:"error"`
 		}
 		if json.Unmarshal(body, &e) == nil {
-			if m := strings.TrimSpace(e.Message + " " + e.Error); m != "" {
+			m := strings.TrimSpace(e.Error)
+			if e.Message != nil {
+				m = strings.TrimSpace(fmt.Sprint(e.Message) + " " + m)
+			}
+			if m != "" {
 				msg += ": " + truncateStr(m, 200)
 			}
 		}
