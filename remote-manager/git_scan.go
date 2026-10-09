@@ -513,6 +513,8 @@ type gitInstall struct {
 	CheckedAt    string         `json:"checked_at"`
 	DiscoveredAt string         `json:"discovered_at"`
 	Files        []gitFileState `json:"files,omitempty"` // details only
+	// time of the last update whose units were not restarted yet
+	RestartPending string `json:"restart_pending,omitempty"`
 }
 
 type gitInstallData struct {
@@ -528,8 +530,8 @@ type gitInstallData struct {
 
 func loadGitInstalls(userID int, withFiles bool, where string, args ...interface{}) []gitInstall {
 	out := []gitInstall{}
-	q := `SELECT i.id, i.conn_id, COALESCE(c.name,''), c.folder_id, COALESCE(c.tags,''), i.app, i.path, i.env, i.manual, i.state, i.data, i.checked_at, i.discovered_at
-		FROM git_installs i LEFT JOIN connections c ON c.id=i.conn_id WHERE i.user_id=?`
+	q := `SELECT i.id, i.conn_id, COALESCE(c.name,''), c.folder_id, COALESCE(c.tags,''), i.app, i.path, i.env, i.manual, i.state, i.data, i.checked_at, i.discovered_at,
+		COALESCE(p.since,'') FROM git_installs i LEFT JOIN connections c ON c.id=i.conn_id LEFT JOIN git_pending_restarts p ON p.install_id=i.id WHERE i.user_id=?`
 	if where != "" {
 		q += " AND " + where
 	}
@@ -542,7 +544,7 @@ func loadGitInstalls(userID int, withFiles bool, where string, args ...interface
 		var in gitInstall
 		var tags, data string
 		var manual int
-		rows.Scan(&in.ID, &in.ConnID, &in.ConnName, &in.FolderID, &tags, &in.App, &in.Path, &in.Env, &manual, &in.State, &data, &in.CheckedAt, &in.DiscoveredAt)
+		rows.Scan(&in.ID, &in.ConnID, &in.ConnName, &in.FolderID, &tags, &in.App, &in.Path, &in.Env, &manual, &in.State, &data, &in.CheckedAt, &in.DiscoveredAt, &in.RestartPending)
 		in.Manual = manual == 1
 		in.Tags = parseTags(tags)
 		var d gitInstallData
@@ -686,50 +688,66 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 		return sr, changes
 	}
 	for _, in := range installs {
-		s := scans[in.Path]
-		d := gitInstallData{Units: []gitUnit{}}
-		state := "unknown"
-		switch {
-		case s == nil:
-			d.Error = "no answer for this directory"
-			state = "error"
-		case s.Missing:
-			d.Error = "the directory does not exist any more"
-			state = "gone"
-		default:
-			d.VersionMD = parseVersionMD(s.Version)
-			if s.Units != nil {
-				d.Units = s.Units
-			}
-			d.Capped = s.Capped
-			t, ok := targets[in.App]
-			if !ok {
-				t, ok = loadGitTarget(userID, in.App)
-			}
-			if !ok || t.Error != "" || len(t.Files) == 0 {
-				d.Error = "no target for this service yet (refresh the targets)"
-				if ok && t.Error != "" {
-					d.Error = t.Error
-				}
-				for rel, h := range s.Files {
-					d.Files = append(d.Files, gitFileState{Path: rel, State: "extra", ServerHash: h})
-				}
-			} else {
-				d.Target = t.Version
-				d.Files, d.Counts, state = compareInstall(t, s.Files, cat.IgnoreDirs)
-				for _, f := range d.Files {
-					if f.State == "old" && f.Behind > d.Behind {
-						d.Behind = f.Behind
-					}
-				}
-			}
+		t, ok := targets[in.App]
+		if !ok {
+			t, ok = loadGitTarget(userID, in.App)
 		}
+		state, d := evalInstall(scans[in.Path], t, ok, cat.IgnoreDirs)
 		if state == "review" && in.State != "review" && in.State != "unknown" {
 			changes = append(changes, gitChange{Kind: "drift", Name: c.Name, App: in.App, Path: in.Path})
 		}
 		saveInstallResult(in.ID, state, d)
 	}
 	return sr, changes
+}
+
+// evalInstall derives the state and the stored data of an installation from its scan.
+func evalInstall(s *gitScanResult, t gitTarget, ok bool, ignore []string) (string, gitInstallData) {
+	d := gitInstallData{Units: []gitUnit{}}
+	state := "unknown"
+	switch {
+	case s == nil:
+		d.Error = "no answer for this directory"
+		state = "error"
+	case s.Missing:
+		d.Error = "the directory does not exist any more"
+		state = "gone"
+	default:
+		d.VersionMD = parseVersionMD(s.Version)
+		if s.Units != nil {
+			d.Units = s.Units
+		}
+		d.Capped = s.Capped
+		if !ok || t.Error != "" || len(t.Files) == 0 {
+			d.Error = "no target for this service yet (refresh the targets)"
+			if ok && t.Error != "" {
+				d.Error = t.Error
+			}
+			for rel, h := range s.Files {
+				d.Files = append(d.Files, gitFileState{Path: rel, State: "extra", ServerHash: h})
+			}
+		} else {
+			d.Target = t.Version
+			d.Files, d.Counts, state = compareInstall(t, s.Files, ignore)
+			for _, f := range d.Files {
+				if f.State == "old" && f.Behind > d.Behind {
+					d.Behind = f.Behind
+				}
+			}
+		}
+	}
+	return state, d
+}
+
+// refreshInstallState compares one installation again (after a change on the server).
+func refreshInstallState(userID int, in gitInstall, cl *ssh.Client) {
+	scans, err := scanOn(cl, []string{in.Path})
+	if err != nil {
+		return
+	}
+	t, ok := loadGitTarget(userID, in.App)
+	state, d := evalInstall(scans[in.Path], t, ok, loadGitCatalog(userID).IgnoreDirs)
+	saveInstallResult(in.ID, state, d)
 }
 
 func saveInstallResult(id int, state string, d gitInstallData) {
