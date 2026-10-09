@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v11.6.0</title>
+<title>Web Remote Manager PRO v11.6.1</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1499,7 +1499,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v11.6.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v11.6.1 · Secure · Multi-User</p>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1578,7 +1578,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v11.6.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v11.6.1</span>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -2798,7 +2798,7 @@ const LANGS = {
     new_window:'＋ New Window', sign_out:'Sign Out', settings:'⚙ Settings', shares:'🤝 Shares',
     sessions:'Sessions', save_session:'+ Save Session',
     clipboard:'Clipboard', clear:'Clear', no_items:'No clipboard items', paste:'Paste',
-    open_terminal:'⚡ Terminal (SSH)', open_files:'📂 File Manager',
+    open_terminal:'⚡ Terminal (SSH)', open_files:'📂 File Manager', win_files_t:'File manager of this server (in the current directory when the shell reports it)',
     open_in_new:'Open in New Window', open_in_window:'Open in Window',
     edit_connection:'✏ Edit', share_connection:'🤝 Share', delete_connection:'Delete Connection',
     delete_folder:'Delete Folder', share_folder:'🤝 Share Folder',
@@ -2883,7 +2883,7 @@ const LANGS = {
     new_window:'＋ Novi prozor', sign_out:'Odjava', settings:'⚙ Postavke', shares:'🤝 Dijeljenja',
     sessions:'Sesije', save_session:'+ Spremi sesiju',
     clipboard:'Međuspremnik', clear:'Očisti', no_items:'Nema stavki', paste:'Zalijepi',
-    open_terminal:'⚡ Terminal (SSH)', open_files:'📂 Preglednik datoteka',
+    open_terminal:'⚡ Terminal (SSH)', open_files:'📂 Preglednik datoteka', win_files_t:'Preglednik datoteka ovog servera (u trenutnom direktoriju kad ga ljuska javlja)',
     open_in_new:'Otvori u novom prozoru', open_in_window:'Otvori u prozoru',
     edit_connection:'✏ Uredi', share_connection:'🤝 Podijeli', delete_connection:'Obriši vezu',
     delete_folder:'Obriši mapu', share_folder:'🤝 Podijeli mapu',
@@ -9315,6 +9315,7 @@ function addWindow(opts) {
       <button class="win-snap-btn win-snap-menu-btn" title="${t('snap_layouts')}" onclick="openSnapMenu(event, ${id})">${snapIcon('nw')}</button>
       <div class="win-btns">
         <button class="win-btn reconnect" id="wb-rc-${id}" title="${t('reconnect_now')}" style="display:none;" onclick="reconnectTermById(${id})">↻</button>
+        <button class="win-btn fm" id="wb-fm-${id}" title="${esc(t('win_files_t'))}" style="display:none;" onclick="openFilesForWin(${id})">📂</button>
         <button class="win-btn" id="wb-nt-${id}" title="${esc(t('notes_title'))}" style="display:none;" onclick="openNotes((winObjects.find(w => w.id === ${id}) || {}).connId)">📝</button>
         <button class="win-btn bm" id="wb-bm-${id}" title="${esc(t('bm_title'))}" style="display:none;" onclick="openBookmarkMenu(${id}, this)">★</button>
         <button class="win-btn snip" id="wb-sn-${id}" title="${esc(t('snip_title'))}" style="display:none;" onclick="openSnippetPicker(${id})">⚡</button>
@@ -9467,6 +9468,8 @@ function setWinMode(id, mode) {
   if (bmBtn) bmBtn.style.display = mode === 'ssh' ? '' : 'none';
   const snBtn = document.getElementById('wb-sn-' + id);
   if (snBtn) snBtn.style.display = mode === 'ssh' && (!isCollabMode || currentUser) ? '' : 'none';
+  const fmBtn = document.getElementById('wb-fm-' + id);
+  if (fmBtn) fmBtn.style.display = mode === 'ssh' && !wo.console && c && (c.protocol || 'SSH') === 'SSH' && winCan(wo, 'files_read') ? '' : 'none';
   const ntBtn = document.getElementById('wb-nt-' + id);
   if (ntBtn) ntBtn.style.display = (mode === 'ssh' || mode === 'desk' || mode === 'sftp') && !isCollabMode && c && c.has_notes ? '' : 'none';
   if (mode !== 'ssh' && bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
@@ -9676,6 +9679,15 @@ function createTerminal(wo, host) {
   if (window.SerializeAddon) { try { wo.serializeAddon = new SerializeAddon.SerializeAddon(); term.loadAddon(wo.serializeAddon); } catch(_) {} }
   term.open(host);
   wo.term = term; wo.fitAddon = fit;
+  // Shells that report their directory (OSC 7, file://host/path) let the 📂 button open
+  // the file manager in the terminal's current directory.
+  try {
+    term.parser.registerOscHandler(7, data => {
+      const m = /^file:\/\/[^/]*(\/.*)$/.exec(data || '');
+      if (m) { try { wo.cwd = decodeURIComponent(m[1]); } catch (_) { wo.cwd = m[1]; } }
+      return true;
+    });
+  } catch (_) {}
   term.onData(d => termInput(wo, d));
   term.onBinary(d => { if (wo.socket && wo.socket.readyState === 1) { const b = new Uint8Array(d.length); for (let i = 0; i < d.length; i++) b[i] = d.charCodeAt(i) & 255; wo.socket.send(b); } });
   term.onResize(({cols, rows}) => {
@@ -9990,6 +10002,27 @@ function openTerminalAt(winId, path) {
   wo.perms = src.perms;
   wo.pendingCwd = path;
   setWinMode(wo.id, 'ssh');
+}
+
+// 📂 in a terminal's title bar: the file manager of the same server. An open file manager
+// of that connection is brought to the front; otherwise a new one opens in the terminal's
+// directory when the shell reports it (OSC 7), else in the home directory.
+function openFilesForWin(winId) {
+  const src = winObjects.find(w => w.id === winId);
+  if (!src || !src.connId || !guardWin(src, 'files_read')) return;
+  const open = winObjects.find(w => w.el && w.mode === 'sftp' && w.connId === src.connId && w.shareToken === src.shareToken);
+  if (open) {
+    if (open.el.style.display === 'none') minimizeWindow(open.id);
+    else focusWindow(open.id);
+    if (src.cwd && open.path !== src.cwd) loadFiles(open.id, src.cwd);
+    return;
+  }
+  const wo = addWindow();
+  wo.connId = src.connId;
+  wo.shareToken = src.shareToken;
+  wo.perms = src.perms;
+  if (src.cwd) wo.path = src.cwd;
+  setWinMode(wo.id, 'sftp');
 }
 
 // Reconnect dropped terminals as soon as the network comes back.

@@ -85,6 +85,10 @@ func startFakeHost(t *testing.T, user, password string) *fakeHost {
 	}
 	t.Cleanup(func() { ln.Close() })
 	h.addr = ln.Addr().String()
+	// a new host key on a port an earlier test server may have used (see startTestSSHServer)
+	if db != nil {
+		db.Exec(`DELETE FROM known_hosts WHERE host=?`, normalizeHostKeyHost(h.addr))
+	}
 	go func() {
 		for {
 			nc, err := ln.Accept()

@@ -56,6 +56,12 @@ func startTestSSHServer(t *testing.T) string {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { ln.Close() })
+	// Every test server has a new host key, but the kernel can hand out a port an earlier
+	// test server used; forget the key remembered for that address (trust on first use)
+	// so the new server is not refused as a changed host key.
+	if db != nil {
+		db.Exec(`DELETE FROM known_hosts WHERE host=?`, normalizeHostKeyHost(ln.Addr().String()))
+	}
 	go func() {
 		for {
 			nc, err := ln.Accept()

@@ -4,6 +4,16 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [11.6.1] — 2026-10-09 — File manager from the terminal's title bar
+
+### Added
+- **📂 in the title bar of SSH terminals** ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)) opens the file manager of the same server, so you no longer have to find the connection in a long sidebar (and cannot pick the wrong server). If a file manager of that connection is already open, it is brought to the front instead of opening another one. Shown only for SSH connections (not for Telnet, serial or BMC consoles) and only with the *Browse & download files* right on shared connections.
+- **The terminal's current directory:** when the remote shell reports its directory with the standard OSC 7 escape sequence (`file://host/path`), the file manager opens there, and an already open one moves there. Shells that do not report it open the home directory. Bash example for `~/.bashrc`: `PROMPT_COMMAND='printf "\033]7;file://%s%s\033\\" "$HOSTNAME" "$PWD"'`.
+
+### Fixed
+- Tests: a test SSH server could get a port an earlier test server had used, and its new host key was then refused as a changed key (`TestStatusMonitor` failed intermittently). The test servers now forget the key remembered for their address when they start.
+- CI: the Docker image job pulls the Dockerfile's base images from Google's Docker Hub mirror (`mirror.gcr.io`) first, with retries and Docker Hub as the fallback, because anonymous Docker Hub pulls from shared runners were refused with `429 Too Many Requests`.
+
 ## [11.6.0] — 2026-10-09 — Git: activity and deploy history per user and branch
 
 ### Added
