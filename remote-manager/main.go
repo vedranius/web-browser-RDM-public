@@ -391,6 +391,7 @@ func main() {
 	go runCredentialReminders()
 	go runQuickCleanup()
 	go runGitMonitor()
+	go runGitScheduler()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {

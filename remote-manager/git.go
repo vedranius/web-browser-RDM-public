@@ -77,6 +77,7 @@ func initGitSchema() {
 		discovered_at TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "conn_id", "app", "path", "env", "manual", "state", "data", "checked_at", "discovered_at")
 	mustExec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_git_installs_path ON git_installs(user_id, conn_id, path)`)
+	initGitRunsSchema()
 }
 
 func deleteGitUserData(userID int) {
@@ -86,6 +87,8 @@ func deleteGitUserData(userID int) {
 	db.Exec(`DELETE FROM git_workspace WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_targets WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_installs WHERE user_id=?`, userID)
+	db.Exec(`DELETE FROM git_runs WHERE user_id=?`, userID)
+	db.Exec(`DELETE FROM git_pending_restarts WHERE user_id=?`, userID)
 }
 
 func gitAllowed() bool { return settingBool("git_enabled") }
@@ -114,6 +117,8 @@ type gitSettings struct {
 	HistoryDepth int               `json:"history_depth"`
 	ConnIDs      []int             `json:"conn_ids"` // servers to check
 	Monitor      bool              `json:"monitor"`  // periodic checks
+	// custom check command per service, remembered from the last run
+	CheckCommands map[string]string `json:"check_commands"`
 }
 
 func (s *gitSettings) normalize(userID int) error {
@@ -149,6 +154,13 @@ func (s *gitSettings) normalize(userID int) error {
 		}
 	}
 	s.RefOverrides = ov
+	cc := map[string]string{}
+	for k, v := range s.CheckCommands {
+		if v = strings.TrimSpace(v); v != "" && len(v) <= 500 && len(cc) < 500 {
+			cc[k] = v
+		}
+	}
+	s.CheckCommands = cc
 	ids := []int{}
 	seen := map[int]bool{}
 	for _, id := range s.ConnIDs {
@@ -454,7 +466,8 @@ func gitState(userID int) map[string]interface{} {
 		"catalog": cat, "settings": st, "sources": loadGitSources(userID), "targets": loadGitTargets(userID),
 		"installs": loadGitInstalls(userID, false, ""), "bundle_apps": fromBundle, "last_check_at": last,
 		"can_check": gitChecksAllowed(userID), "interval_minutes": settingInt("git_check_interval_minutes"),
-		"notifications": settingBool("notifications_enabled"),
+		"notifications": settingBool("notifications_enabled"), "deploy": gitDeployPolicies(userID),
+		"grace_minutes": settingInt("git_schedule_grace_minutes"),
 	}
 }
 
@@ -485,6 +498,7 @@ func decodeGitJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 //	POST   /api/git/installs                 {conn_id, path, app} (added by hand)
 //	GET    /api/git/installs/{id}            details with file states; DELETE forgets it
 //	GET    /api/git/installs/{id}/diff?path= coloured diff server ↔ target
+//	deploy routes (plan, backups, runs): see apiGitDeploy in git_runs.go
 func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireAuth(w, r)
 	if !ok {
@@ -502,6 +516,9 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 			return false
 		}
 		return true
+	}
+	if apiGitDeploy(w, r, userID, rest, parts) {
+		return
 	}
 	switch {
 	case rest == "" && r.Method == http.MethodGet:
