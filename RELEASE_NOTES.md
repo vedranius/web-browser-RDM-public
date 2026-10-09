@@ -1,12 +1,39 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.1.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.2.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.1.0 — Git: update, upgrade, rollback, restarts
+## Web Remote Manager PRO v11.2.0 — Git: new servers (install and transfer)
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles and updates them, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
+Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub or offline bundles, updates them and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🚀 Update, upgrade and rollback from the Git workspace
+### 🆕 Install a service on a new server
+
+- **Install…** on the *Installations* tab of the Git workspace opens a wizard: pick **any SSH connection**, the **services** (each at its catalog version, another branch or tag, or from an imported **offline bundle**) and the **target directory** (suggested from the server roots).
+- **Pre-checks first:** free disk space, a writable directory, `tar`, the `python3` / `node` versions when the service has such files, and an **existing installation** at the target — refused unless you confirm the overwrite, and then the replaced files are backed up to `.deploy-bak/`.
+- **Per-host files done right:** protected files are never taken from the repository. Fill them **from a template** in the repository (`config.ini.example`, `.env.sample`, `settings.example.py`, …: its placeholders and `key = value` lines become form fields), **copy** them from another installation of the same service, or **type** them. Secret values can come **from the vault**; they are used on the server only and never stored with the run.
+- WRM writes the files in **one verified transfer** (staged, checked by hash, then renamed into place), runs the usual checks, rolls back automatically on failure, and writes **`VERSION.md`** and the **`updates.jsonl`** line like an update does.
+- **Optional unit:** a systemd unit or supervisor program from a small template (user, working directory, command) — opt-in, with a warning, never over an existing one. **Starting** the service afterwards is opt-in too, with a health check.
+
+### 🚚 Transfer an installation to another server
+
+- **Transfer…** copies an installation from server A to server B **with its per-host configuration**, but **without** logs, `.deploy-bak`, caches (`__pycache__`, `*.pyc`), the catalog's ignored directories and backup-looking paths (`*_BKP`, `run.py.bak`, …). The wizard lists what stays behind.
+- The files stream directly from A to B through WRM (no temporary copies on WRM's disk), are verified by hash, and existing files at the target are backed up first. `VERSION.md` gets the new host and user.
+
+### 🔐 Policies, audit and notifications
+
+- New policies **`git_install`** and **`git_transfer`** (administrators by default, changeable in *Admin → Policies*). Every install and transfer is audited (`git.install`, `git.transfer`) and sends the usual run notifications (started, done, failed).
+
+### ⬆️ Upgrading from v11.1.0
+
+Replace the binary. The database is unchanged (installs and transfers are stored as runs); the previous binary still starts on it. Only administrators may install and transfer until you change the new policies in *Admin → Policies*. Production targets and overwrites need the server name typed.
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.2.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.1.0 — Git: update, upgrade, rollback, restarts
+
+#### 🚀 Update, upgrade and rollback from the Git workspace
 
 - **Update** an installation to the newest version of its ref, **upgrade** it to another branch or tag (with a summary of what changes), or **roll back** to a backup — from the *Installations* tab or the details of an installation, over WRM's SSH connections (jump hosts, proxies, the vault). Servers need nothing but POSIX tools.
 - **You choose the files:** old and missing files are ticked; files changed by hand only when you tick them (with a warning); protected per-host files never.
@@ -15,18 +42,16 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - **Rolling** over many servers, stopping at the first failure, with **live progress** per step.
 - **Works with file-based deploy tools:** WRM writes `VERSION.md`, `.deploy-bak/<id>-<time>/` and `updates.jsonl` in their format. *Stamp* writes `VERSION.md` where an installation is already current.
 
-### 🔄 Service restarts (opt-in) and maintenance windows
+#### 🔄 Service restarts (opt-in) and maintenance windows
 
 - Restarts are **off by default**. Per run: only show what needs a restart, restart right after a successful update, at a chosen time, or after a delay — a warning names the units and servers. A **health check** (`systemctl is-active`, `supervisorctl status`) follows every restart.
 - **Schedule** updates and restarts into a maintenance window. Scheduled runs survive a WRM restart, can be cancelled, are skipped if WRM was down too long, and **notify before and after**.
 - The new **Runs** tab shows the history and what is scheduled.
 - Administrators: policies `git_update`, `git_upgrade`, `git_rollback`, `git_restart` (administrators by default) and `git_schedule_grace_minutes`. Every update, upgrade, rollback and restart is audited.
 
-### ⬆️ Upgrading from v11.0.0
+#### ⬆️ Upgrading from v11.0.0
 
 Replace the binary. The database gets two new tables (`git_runs`, `git_pending_restarts`); the previous binary still starts on it. Only administrators may update, upgrade, roll back and restart until you change the new policies in *Admin → Policies*. Subscribe to the new *Git* events in *Settings → Notifications* if you want them.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.1.0/CHANGELOG.md) for details.
 
 ---
 

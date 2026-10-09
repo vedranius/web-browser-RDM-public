@@ -129,6 +129,45 @@ Object.assign(LANGS.hr, {
   git_step_write: 'Zapisivanje', git_step_checks: 'Provjere', git_step_rollback: 'Vraćanje', git_step_version: 'VERSION.md', git_step_log: 'updates.jsonl', git_step_restart: 'Ponovno pokretanje',
 });
 
+Object.assign(LANGS.en, {
+  git_install: 'Install…', git_transfer: 'Transfer…', git_k_install: 'Install', git_k_transfer: 'Transfer', git_new_server: 'New server',
+  git_w_server: 'Target server', git_w_services: 'Services', git_w_ref: 'Version', git_w_ref_target: 'Target ({v})', git_w_ref_other: 'Branch or tag…', git_w_ref_bundle: 'Bundle {b}',
+  git_w_pick_service: 'Choose at least one service.', git_w_dirs: 'Target directories', git_w_roots: 'Server roots', git_w_root_missing: 'does not exist', git_w_root_ro: 'not writable',
+  git_w_files: '{n} files, {kb} KB', git_w_check: 'Check the target', git_w_checks: 'Pre-checks', git_w_free: '{free} MB free, {need} MB needed', git_w_tools: 'Tools',
+  git_w_missing_tool: 'missing', git_w_existing: 'An installation exists here ({n} files{v}).', git_w_overwrite: 'Replace it (the replaced files are backed up to .deploy-bak first)',
+  git_w_protected: 'Per-host files', git_w_protected_h: 'Protected files are never taken from the repository. Fill them from a template, copy them from another installation or type them.',
+  git_w_no_slots: 'The catalog lists no protected files for this service.', git_w_m_template: 'From a template', git_w_m_copy: 'Copy from', git_w_m_manual: 'Type the content', git_w_m_skip: 'Leave it out',
+  git_w_tmpl_na: 'not available', git_w_in_repo: 'in the repository', git_w_typed: 'Typed value', git_w_vault_pw: '🔑 {n}: password', git_w_vault_user: '🔑 {n}: user name',
+  git_w_vault_h: 'Values from the vault are read on the server side only and are not stored with the run.',
+  git_w_unit: 'Create a service unit (optional)', git_w_unit_kind: 'Kind', git_w_unit_name: 'Name', git_w_unit_user: 'Run as user (empty = default)', git_w_unit_cmd: 'Command (absolute path)',
+  git_w_unit_dir: 'Working directory', git_w_unit_enable: 'Start at boot (systemctl enable)',
+  git_w_unit_warn: 'The unit file is written to the server as root (or with sudo -n) and is never written over an existing one. WRM does not test the command: check it.',
+  git_w_start: 'Start the service after the install (restart of its units)', git_w_start_h: 'Units that mention the directory (also an existing or the new one) are started; their health is checked.',
+  git_w_blocked: 'Fix the problems above first.', git_w_confirm: '{kind}: {n} service(s) on {server}', git_w_type: 'Type the server name {name} to confirm (production or overwrite)',
+  git_w_source: 'Source', git_w_excluded: '{n} paths are not copied (logs, caches, backups, ignored directories)', git_w_tr_h: 'Copies the installation with its per-host configuration. Virtual environments and node_modules are not copied: recreate them on the target.',
+  git_w_units_not_copied: 'Units of the source are not copied: {list}', git_w_same: 'Choose another server or directory than the source.', git_w_env: 'Environment',
+  git_step_precheck: 'Pre-checks', git_step_fetch: 'Contents', git_step_receive: 'Copy to the server', git_step_register: 'Register', git_step_unit: 'Unit', git_step_source: 'Source',
+});
+Object.assign(LANGS.hr, {
+  git_install: 'Instaliraj…', git_transfer: 'Prenesi…', git_k_install: 'Instalacija', git_k_transfer: 'Prijenos', git_new_server: 'Novi server',
+  git_w_server: 'Ciljni server', git_w_services: 'Servisi', git_w_ref: 'Verzija', git_w_ref_target: 'Cilj ({v})', git_w_ref_other: 'Grana ili tag…', git_w_ref_bundle: 'Bundle {b}',
+  git_w_pick_service: 'Odaberite barem jedan servis.', git_w_dirs: 'Ciljni direktoriji', git_w_roots: 'Korijeni na serveru', git_w_root_missing: 'ne postoji', git_w_root_ro: 'nije zapisiv',
+  git_w_files: '{n} datoteka, {kb} KB', git_w_check: 'Provjeri cilj', git_w_checks: 'Provjere prije instalacije', git_w_free: 'slobodno {free} MB, potrebno {need} MB', git_w_tools: 'Alati',
+  git_w_missing_tool: 'nema', git_w_existing: 'Ovdje postoji instalacija ({n} datoteka{v}).', git_w_overwrite: 'Zamijeni je (zamijenjene datoteke najprije se spremaju u .deploy-bak)',
+  git_w_protected: 'Datoteke po hostu', git_w_protected_h: 'Zaštićene datoteke nikad se ne uzimaju iz repozitorija. Popunite ih iz predloška, kopirajte iz druge instalacije ili upišite.',
+  git_w_no_slots: 'Katalog ne navodi zaštićene datoteke za ovaj servis.', git_w_m_template: 'Iz predloška', git_w_m_copy: 'Kopiraj iz', git_w_m_manual: 'Upiši sadržaj', git_w_m_skip: 'Izostavi',
+  git_w_tmpl_na: 'nije dostupno', git_w_in_repo: 'u repozitoriju', git_w_typed: 'Upisana vrijednost', git_w_vault_pw: '🔑 {n}: lozinka', git_w_vault_user: '🔑 {n}: korisničko ime',
+  git_w_vault_h: 'Vrijednosti iz trezora čitaju se samo na strani poslužitelja i ne spremaju se uz izvođenje.',
+  git_w_unit: 'Izradi jedinicu servisa (neobavezno)', git_w_unit_kind: 'Vrsta', git_w_unit_name: 'Naziv', git_w_unit_user: 'Pokreni kao korisnik (prazno = zadano)', git_w_unit_cmd: 'Naredba (apsolutna putanja)',
+  git_w_unit_dir: 'Radni direktorij', git_w_unit_enable: 'Pokreni pri podizanju sustava (systemctl enable)',
+  git_w_unit_warn: 'Datoteka jedinice zapisuje se na server kao root (ili sa sudo -n) i nikad ne prepisuje postojeću. WRM ne testira naredbu: provjerite je.',
+  git_w_start: 'Pokreni servis nakon instalacije (ponovno pokretanje njegovih jedinica)', git_w_start_h: 'Pokreću se jedinice koje spominju direktorij (i postojeće i nova); provjerava se njihovo stanje.',
+  git_w_blocked: 'Najprije riješite gornje probleme.', git_w_confirm: '{kind}: {n} servis(a) na {server}', git_w_type: 'Upišite naziv servera {name} za potvrdu (produkcija ili zamjena)',
+  git_w_source: 'Izvor', git_w_excluded: '{n} putanja se ne kopira (zapisi, priručne datoteke, sigurnosne kopije, zanemareni direktoriji)', git_w_tr_h: 'Kopira instalaciju s njezinom konfiguracijom po hostu. Virtualna okruženja i node_modules se ne kopiraju: izradite ih ponovno na cilju.',
+  git_w_units_not_copied: 'Jedinice izvora se ne kopiraju: {list}', git_w_same: 'Odaberite drugi server ili direktorij od izvora.', git_w_env: 'Okruženje',
+  git_step_precheck: 'Provjere', git_step_fetch: 'Sadržaj', git_step_receive: 'Kopiranje na server', git_step_register: 'Upis', git_step_unit: 'Jedinica', git_step_source: 'Izvor',
+});
+
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: ''}, onlyChanges: true, busy: false};
   const $ = id => document.getElementById(id);
@@ -430,7 +469,8 @@ Object.assign(LANGS.hr, {
     const list = filtered();
     const sshConns = (conns || []).filter(c => c.protocol === 'SSH').sort((a, b) => a.name.localeCompare(b.name));
     const apps = [...G.state.catalog.apps.map(a => a.name), ...(G.state.bundle_apps || [])];
-    return `<div class="g-bar">${filterBar()}<button class="btn-sec" onclick="gitWorkspace.check(true)" ${G.state.can_check ? '' : 'disabled'}>🔎 ${esc(t('git_discover'))}</button></div>
+    return `<div class="g-bar">${filterBar()}<button class="btn-sec" onclick="gitWorkspace.check(true)" ${G.state.can_check ? '' : 'disabled'}>🔎 ${esc(t('git_discover'))}</button>
+      <button class="btn-sm" onclick="gitWorkspace.install()" ${can('install') ? '' : `disabled title="${esc(t('git_no_permission'))}"`}>＋ ${esc(t('git_install'))}</button></div>
       <div class="g-bar g-actions">${actionButtons('')}</div>
       <div class="g-card g-scroll"><table><tr><th><input type="checkbox" style="width:auto" onchange="document.querySelectorAll('.git-isel').forEach(x => x.checked = this.checked)"></th><th>${esc(t('git_server'))}</th><th>${esc(t('git_service'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_env'))}</th><th>${esc(t('git_state'))}</th>
       <th>${esc(t('git_version_md'))}</th><th>${esc(t('git_target'))}</th><th>${esc(t('git_checked'))}</th><th></th></tr>
@@ -633,7 +673,7 @@ Object.assign(LANGS.hr, {
   function actionButtons(id) {
     const a = id ? `[${id}]` : 'null';
     const b = (k, label, cls) => `<button class="${cls || 'btn-sec'} btn-sm" ${can(k === 'stamp' ? 'update' : k) ? '' : `disabled title="${esc(t('git_no_permission'))}"`} onclick="gitWorkspace.${k}(${a})">${esc(t(label))}</button>`;
-    return b('update', 'git_update', 'btn-sm') + b('upgrade', 'git_upgrade') + (id ? b('rollback', 'git_rollback') : '') + b('restart', 'git_restart') + b('stamp', 'git_stamp');
+    return b('update', 'git_update', 'btn-sm') + b('upgrade', 'git_upgrade') + (id ? b('rollback', 'git_rollback') : '') + b('restart', 'git_restart') + b('stamp', 'git_stamp') + b('transfer', 'git_transfer');
   }
 
   function pickIds(ids) {
@@ -841,6 +881,240 @@ Object.assign(LANGS.hr, {
 
   function stamp(ids) { ids = pickIds(ids); if (ids.length) openDeploy('stamp', ids, ''); }
 
+  // ── new server: install and transfer wizards ──
+  const W = {};
+  const kb = n => Math.ceil((n || 0) / 1024);
+  const sshConns = () => (conns || []).filter(c => c.protocol === 'SSH').sort((a, b) => a.name.localeCompare(b.name));
+  const errBox = async r => `<div class="hint-box bad">${esc(await apiError(r))}</div>`;
+  const btns = (next, label) => `<div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="${next}">${esc(t(label))}</button></div>`;
+
+  function install() {
+    if (!can('install')) return;
+    const s = G.state;
+    const apps = [...s.catalog.apps.map(a => a.name), ...(s.bundle_apps || [])];
+    const targets = Object.fromEntries(s.targets.map(x => [x.app, x]));
+    const bundles = s.sources.filter(x => x.kind === 'bundle');
+    W.kind = 'install';
+    const refSel = a => `<select class="gw-ref" data-app="${esc(a)}" onchange="gitWorkspace.wSvcRef(this)" style="width:auto">
+        <option value="">${esc(tf('git_w_ref_target', {v: targets[a] ? targets[a].version : t('git_no_target')}))}</option>
+        ${s.sources.some(x => x.kind !== 'bundle') ? `<option value="?">${esc(t('git_w_ref_other'))}</option>` : ''}
+        ${bundles.filter(b => (b.apps || []).includes(a)).map(b => `<option value="bundle:${b.id}">${esc(tf('git_w_ref_bundle', {b: b.bundle_id || b.name}))}</option>`).join('')}</select>
+        <input class="gw-refx" data-app="${esc(a)}" placeholder="tag:v2 / main" style="display:none;width:130px">`;
+    modal(`<h3>${esc(t('git_k_install'))}: ${esc(t('git_new_server'))}</h3>
+      <div class="g-grid"><div><label>${esc(t('git_w_server'))}</label><select id="gw-conn">${sshConns().map(c => `<option value="${c.id}">${esc(c.name)} (${esc(c.host)})</option>`).join('')}</select></div></div>
+      <div class="g-card"><h3>${esc(t('git_w_services'))}</h3><div class="g-files"><table>${apps.map(a => `<tr><td><input type="checkbox" class="gw-app" value="${esc(a)}"></td><td><b>${esc(a)}</b></td><td>${refSel(a)}</td></tr>`).join('')}</table></div></div>
+      ${btns('gw-next', 'git_continue')}`);
+    $('gw-next').onclick = () => {
+      const svcs = [...document.querySelectorAll('.gw-app:checked')].map(x => {
+        const a = x.value, sel = document.querySelector(`.gw-ref[data-app="${CSS.escape(a)}"]`);
+        const ref = sel.value === '?' ? document.querySelector(`.gw-refx[data-app="${CSS.escape(a)}"]`).value.trim() : sel.value;
+        return {app: a, ref};
+      });
+      if (!svcs.length || !$('gw-conn').value) { showToast(t('git_w_pick_service'), 'warning'); return; }
+      W.conn = Number($('gw-conn').value); W.svcs = svcs;
+      installDirs();
+    };
+  }
+  function wSvcRef(sel) { const x = document.querySelector(`.gw-refx[data-app="${CSS.escape(sel.dataset.app)}"]`); x.style.display = sel.value === '?' ? '' : 'none'; if (sel.value === '?') x.focus(); }
+
+  async function prepare(body) {
+    const r = await fetch('/api/git/provision/prepare', json('POST', body));
+    if (!r.ok) { modal(`<h3>${esc(t('git_k_' + W.kind))}</h3>${await errBox(r)}<div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`); return null; }
+    return r.json();
+  }
+
+  function rootsHTML(p) {
+    return `<div class="g-mut">${esc(t('git_w_roots'))}: ${(p.roots || []).map(r => `<span class="g-mono">${esc(r.path)}</span> ${r.exists ? (r.writable ? '✅' : '⚠ ' + esc(t('git_w_root_ro'))) : '✗ ' + esc(t('git_w_root_missing'))}`).join(' · ') || '—'}</div>`;
+  }
+
+  async function installDirs() {
+    modal(`<h3>${esc(t('git_k_install'))}</h3><div class="hint-box">⏳ ${esc(t('git_plan_loading'))}</div>`);
+    const p = await prepare({kind: 'install', conn_id: W.conn, services: W.svcs});
+    if (!p) return;
+    const root = ((p.roots || []).find(r => r.exists && r.writable) || (p.roots || [])[0] || {}).path || '/opt';
+    modal(`<h3>${esc(t('git_k_install'))} → ${esc(p.conn_name)}${p.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</h3>${rootsHTML(p)}
+      <div class="g-card"><h3>${esc(t('git_w_dirs'))}</h3>${p.services.map((x, i) => `<div class="g-item"><h4>${esc(x.app)} ${x.target ? `<span class="g-mono">${esc(x.target.version)}</span> <span class="g-mut">${esc(x.target.branch)} · ${esc(x.target.source)} · ${esc(tf('git_w_files', {n: x.files, kb: kb(x.bytes)}))}</span>` : ''}</h4>
+        ${x.error ? `<div class="hint-box bad">${esc(x.error)}</div>` : `<div class="g-grid"><div><label>${esc(t('git_path'))}</label><input class="gw-path" data-i="${i}" value="${esc(root.replace(/\/$/, '') + '/' + x.app)}"></div>
+        <div><label>${esc(t('git_w_env'))}</label><input class="gw-env" data-i="${i}" placeholder="test / prod"></div></div>`}</div>`).join('')}</div>
+      ${btns('gw-next', 'git_w_check')}`);
+    if (p.services.some(x => x.error)) { $('gw-next').disabled = true; return; }
+    $('gw-next').onclick = () => {
+      W.svcs = W.svcs.map((x, i) => Object.assign({}, x, {path: document.querySelector(`.gw-path[data-i="${i}"]`).value.trim(), env: document.querySelector(`.gw-env[data-i="${i}"]`).value.trim()}));
+      installCheck();
+    };
+  }
+
+  function checkHTML(c, idx) {
+    if (!c) return '';
+    const tools = Object.entries(c.tools || {}).filter(([k]) => k !== 'tar').map(([k, v]) => `${esc(k)} <span class="g-mono">${esc(v)}</span>`);
+    const errs = c.errors || [];
+    return `<div class="g-mut">${esc(t('git_w_checks'))}: ${esc(c.parent)} · ${esc(tf('git_w_free', {free: Math.floor(c.free_kb / 1024), need: Math.ceil(c.need_kb / 1024)}))}${tools.length ? ' · ' + tools.join(', ') : ''}${(c.needs || []).filter(n => !(c.tools || {})[n]).map(n => ` · ⚠ ${esc(n)} ${esc(t('git_w_missing_tool'))}`).join('')}</div>
+      ${errs.map(e => `<div class="hint-box bad">${esc(e)}</div>`).join('')}${(c.warnings || []).map(w => `<div class="hint-box warn">${esc(w)}</div>`).join('')}
+      ${c.existing ? `<div class="hint-box warn">${esc(tf('git_w_existing', {n: c.files, v: c.version ? ', VERSION.md ' + c.version : ''}))}<label class="g-opt"><input type="checkbox" class="gw-over" data-i="${idx}"><span>${esc(t('git_w_overwrite'))}</span></label></div>` : ''}`;
+  }
+  const blocking = c => c && (c.errors || []).length > 0; // prepared with overwrite: an existing installation is a tick, not an error
+
+  function slotHTML(i, k, sl) {
+    const tmpls = sl.templates.filter(x => x.available);
+    const mode = tmpls.length ? 'template' : sl.copies.length ? 'copy' : 'skip';
+    const radio = (m, label, dis) => `<label class="g-opt"><input type="radio" name="gw-m-${i}-${k}" value="${m}" ${m === mode ? 'checked' : ''} ${dis ? 'disabled' : ''} onchange="gitWorkspace.wSlotMode(${i}, ${k})"><span>${esc(t(label))}</span></label>`;
+    const vaultOpts = (W.creds || []).map(c => `<option value="${c.id}:password">${esc(tf('git_w_vault_pw', {n: c.name}))}</option><option value="${c.id}:username">${esc(tf('git_w_vault_user', {n: c.name}))}</option>`).join('');
+    const fields = (tp, ti) => `<div class="g-grid gw-fields" data-t="${ti}" ${ti ? 'style="display:none"' : ''}>${tp.fields.map(f => `<div><label class="g-mono">${esc(f.name)}</label>
+      <input class="gw-fv" data-id="${esc(f.id)}" data-def="${esc(f.default)}" value="${esc(f.default)}" type="${f.secret ? 'password' : 'text'}" autocomplete="off">
+      ${vaultOpts ? `<select class="gw-fs" data-id="${esc(f.id)}" onchange="this.previousElementSibling.style.display = this.value ? 'none' : ''"><option value="">${esc(t('git_w_typed'))}</option>${vaultOpts}</select>` : ''}</div>`).join('')}</div>`;
+    return `<div class="g-item gw-slot" data-i="${i}" data-k="${k}" data-path="${esc(sl.path)}"><h4><span class="g-mono">${esc(sl.path)}</span> ${sl.protected ? fsBadge('protected') : ''}</h4>
+      <div class="g-bar">${radio('template', 'git_w_m_template', !tmpls.length)}${radio('copy', 'git_w_m_copy', !sl.copies.length)}${radio('manual', 'git_w_m_manual')}${radio('skip', 'git_w_m_skip')}</div>
+      <div class="gw-p gw-p-template" ${mode === 'template' ? '' : 'style="display:none"'}>${tmpls.length > 1 ? `<select class="gw-tsel" onchange="this.parentElement.querySelectorAll('.gw-fields').forEach(x => x.style.display = x.dataset.t === this.value ? '' : 'none')">${tmpls.map((x, ti) => `<option value="${ti}">${esc(x.path)}</option>`).join('')}</select>` : ''}
+        ${tmpls.map((tp, ti) => `<div class="g-mut gw-tname" data-t="${ti}" data-path="${esc(tp.path)}" ${ti ? 'style="display:none"' : ''}>${esc(tp.path)}${sl.in_repo && tp.path === sl.path ? ' (' + esc(t('git_w_in_repo')) + ')' : ''}</div>`).join('')}
+        ${tmpls.map(fields).join('')}${sl.templates.filter(x => !x.available).map(x => `<div class="g-mut">${esc(x.path)}: ${esc(t('git_w_tmpl_na'))}</div>`).join('')}</div>
+      <div class="gw-p gw-p-copy" ${mode === 'copy' ? '' : 'style="display:none"'}><select class="gw-copy">${sl.copies.map(c => `<option value="${c.install_id}">${esc(c.conn_name)} · ${esc(c.path)}</option>`).join('')}</select></div>
+      <div class="gw-p gw-p-manual" style="display:none"><textarea class="gw-manual" rows="5" spellcheck="false"></textarea></div></div>`;
+  }
+  function wSlotMode(i, k) {
+    const el = document.querySelector(`.gw-slot[data-i="${i}"][data-k="${k}"]`);
+    const m = el.querySelector('input[type=radio]:checked').value;
+    el.querySelectorAll('.gw-p').forEach(x => { x.style.display = x.classList.contains('gw-p-' + m) ? '' : 'none'; });
+  }
+
+  function unitHTML(i, app, dir) {
+    return `<div class="g-card"><label class="g-opt"><input type="checkbox" class="gw-unit-on" data-i="${i}" onchange="gitWorkspace.wUnit(${i})"><span><b>${esc(t('git_w_unit'))}</b></span></label>
+      <div class="gw-unit" data-i="${i}" style="display:none"><div class="hint-box warn">${esc(t('git_w_unit_warn'))}</div><div class="g-grid">
+        <div><label>${esc(t('git_w_unit_kind'))}</label><select class="gw-uk"><option value="systemd">systemd</option><option value="supervisor">supervisor</option></select></div>
+        <div><label>${esc(t('git_w_unit_name'))}</label><input class="gw-un" value="${esc(app)}"></div>
+        <div><label>${esc(t('git_w_unit_user'))}</label><input class="gw-uu" placeholder="svc-${esc(app)}"></div>
+        <div><label>${esc(t('git_w_unit_cmd'))}</label><input class="gw-uc" placeholder="/usr/bin/python3 ${esc(dir)}/run.py"></div>
+        <div><label>${esc(t('git_w_unit_dir'))}</label><input class="gw-ud" value="${esc(dir)}"></div></div>
+        <label class="g-opt"><input type="checkbox" class="gw-ue" checked><span>${esc(t('git_w_unit_enable'))}</span></label></div></div>`;
+  }
+  function wUnit(i) { document.querySelector(`.gw-unit[data-i="${i}"]`).style.display = document.querySelector(`.gw-unit-on[data-i="${i}"]`).checked ? '' : 'none'; }
+  function unitOf(i) {
+    if (!document.querySelector(`.gw-unit-on[data-i="${i}"]`).checked) return null;
+    const el = document.querySelector(`.gw-unit[data-i="${i}"]`), v = c => el.querySelector(c).value.trim();
+    return {kind: v('.gw-uk'), name: v('.gw-un'), user: v('.gw-uu'), command: v('.gw-uc'), work_dir: v('.gw-ud'), enable: el.querySelector('.gw-ue').checked};
+  }
+  const startHTML = () => `<div class="g-card"><label class="g-opt"><input type="checkbox" id="gw-start" ${can('restart') ? '' : 'disabled'}><span>${esc(t('git_w_start'))}</span></label>
+    <div class="g-mut">${esc(can('restart') ? t('git_w_start_h') : t('git_no_permission'))}</div></div>`;
+
+  async function installCheck() {
+    modal(`<h3>${esc(t('git_k_install'))}</h3><div class="hint-box">⏳ ${esc(t('git_plan_loading'))}</div>`);
+    if (!W.creds) { const r = await fetch('/api/credentials'); W.creds = r.ok ? (await r.json()).filter(c => c.has_password || c.username) : []; }
+    const p = await prepare({kind: 'install', conn_id: W.conn, services: W.svcs, overwrite: true});
+    if (!p) return;
+    W.prep = p;
+    const st = G.state.settings || {};
+    modal(`<h3>${esc(t('git_k_install'))} → ${esc(p.conn_name)}${p.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</h3>
+      ${p.services.map((x, i) => `<div class="g-card"><h3>${esc(x.app)} <span class="g-mono">${esc(x.target ? x.target.version : '')}</span> → <span class="g-mono">${esc(x.path || '')}</span></h3>
+        ${x.error ? `<div class="hint-box bad">${esc(x.error)}</div>` : checkHTML(x.check, i)}
+        <h3 style="margin-top:10px">${esc(t('git_w_protected'))}</h3><div class="g-mut">${esc(t('git_w_protected_h'))}${W.creds.length ? ' ' + esc(t('git_w_vault_h')) : ''}</div>
+        ${x.slots.length ? x.slots.map((sl, k) => slotHTML(i, k, sl)).join('') : `<div class="g-mut">${esc(t('git_w_no_slots'))}</div>`}
+        <div style="margin-top:8px"><label class="g-mut">${esc(tf('git_check_cmd', {app: x.app}))}</label><input class="gw-chk" data-app="${esc(x.app)}" value="${esc((st.check_commands || {})[x.app] || '')}" style="width:100%"></div>
+        ${unitHTML(i, x.app, x.path || '')}</div>`).join('')}
+      ${startHTML()}<div id="gw-block" class="hint-box bad" style="display:none">${esc(t('git_w_blocked'))}</div>${btns('gw-next', 'git_continue')}`);
+    $('gw-next').onclick = installNext;
+  }
+
+  function slotSpec(el) {
+    const m = el.querySelector('input[type=radio]:checked').value, f = {path: el.dataset.path, mode: m};
+    if (m === 'copy') f.from_install = Number(el.querySelector('.gw-copy').value);
+    if (m === 'manual') f.content = el.querySelector('.gw-manual').value;
+    if (m === 'template') {
+      const ti = el.querySelector('.gw-tsel') ? el.querySelector('.gw-tsel').value : '0';
+      f.template = el.querySelector(`.gw-tname[data-t="${ti}"]`).dataset.path;
+      f.values = {};
+      el.querySelectorAll(`.gw-fields[data-t="${ti}"] .gw-fv`).forEach(inp => {
+        const vs = inp.parentElement.querySelector('.gw-fs');
+        if (vs && vs.value) { const [id, part] = vs.value.split(':'); f.values[inp.dataset.id] = {cred_id: Number(id), part}; }
+        else if (inp.value !== inp.dataset.def) f.values[inp.dataset.id] = {value: inp.value};
+      });
+    }
+    return f;
+  }
+
+  function installNext() {
+    const p = W.prep;
+    let blocked = false;
+    const services = p.services.map((x, i) => {
+      const c = x.check;
+      const over = document.querySelector(`.gw-over[data-i="${i}"]`);
+      if (x.error || !c || blocking(c) || (c.existing && !(over && over.checked))) blocked = true;
+      return {app: x.app, ref: W.svcs[i].ref, path: x.path, env: W.svcs[i].env, files: [...document.querySelectorAll(`.gw-slot[data-i="${i}"]`)].map(slotSpec), unit: unitOf(i)};
+    });
+    $('gw-block').style.display = blocked ? '' : 'none';
+    if (blocked) return;
+    const overwrite = p.services.some(x => x.check && x.check.existing);
+    const body = {kind: 'install', provision: {conn_id: W.conn, services, overwrite}, restart: {mode: $('gw-start').checked ? 'now' : 'none'},
+      checks: Object.fromEntries([...document.querySelectorAll('.gw-chk')].map(x => [x.dataset.app, x.value.trim()]))};
+    provisionConfirm(body, p, services.map(x => `<li><b>${esc(x.app)}</b> → <span class="g-mono">${esc(x.path)}</span>${x.unit ? ` · ${esc(x.unit.kind)} <span class="g-mono">${esc(x.unit.name)}</span>` : ''}</li>`).join(''), overwrite);
+  }
+
+  function provisionConfirm(body, p, list, overwrite) {
+    W.body = body;
+    const need = p.prod || overwrite;
+    modal(`<h3>${esc(tf('git_confirm_title', {kind: kindName(body.kind)}))}</h3>
+      <div>${esc(tf('git_w_confirm', {kind: kindName(body.kind), n: (body.provision.services || [1]).length, server: p.conn_name}))}${p.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</div><ul>${list}</ul>
+      ${overwrite ? `<div class="hint-box warn">${esc(t('git_w_overwrite'))}</div>` : ''}
+      ${body.restart.mode === 'now' ? `<div class="hint-box warn">${esc(t('git_w_start'))}</div>` : ''}
+      ${need ? `<div class="g-conf"><label>${esc(tf('git_w_type', {name: p.conn_name}))}</label><input id="gw-conf" autocomplete="off" oninput="gitWorkspace.wCheckGo()"></div>` : ''}
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gw-go" class="btn-danger" ${need ? 'disabled' : ''}>${esc(t('git_start'))}</button></div>`);
+    W.confName = p.conn_name;
+    $('gw-go').onclick = async () => {
+      const b = JSON.parse(JSON.stringify(W.body));
+      if ($('gw-conf')) b.provision.confirm = $('gw-conf').value.trim();
+      $('gw-go').disabled = true;
+      const r = await fetch('/api/git/runs', json('POST', b));
+      if (!r.ok) { $('gw-go').disabled = false; showToast(await apiError(r), 'error', 7000); return; }
+      showRun((await r.json()).id);
+    };
+  }
+  function wCheckGo() { $('gw-go').disabled = $('gw-conf').value.trim().toLowerCase() !== String(W.confName).trim().toLowerCase(); }
+
+  function transfer(ids) {
+    ids = pickIds(ids);
+    if (!ids.length || !can('transfer')) return;
+    const src = installById(ids[0]);
+    W.kind = 'transfer'; W.src = src;
+    const others = sshConns();
+    modal(`<h3>${esc(t('git_k_transfer'))}: ${esc(src.app)} · ${esc(src.conn_name)} · <span class="g-mono">${esc(src.path)}</span></h3>
+      <div class="g-mut">${esc(t('git_w_tr_h'))}</div>
+      <div class="g-grid" style="margin-top:8px"><div><label>${esc(t('git_w_server'))}</label><select id="gw-conn">${others.map(c => `<option value="${c.id}">${esc(c.name)} (${esc(c.host)})</option>`).join('')}</select></div>
+        <div><label>${esc(t('git_path'))}</label><input id="gw-path" value="${esc(src.path)}"></div>
+        <div><label>${esc(t('git_w_env'))}</label><input id="gw-env" value="${esc(src.env || '')}"></div></div>
+      ${btns('gw-next', 'git_w_check')}`);
+    const firstOther = others.find(c => c.id !== src.conn_id);
+    if (firstOther) $('gw-conn').value = String(firstOther.id);
+    $('gw-next').onclick = () => {
+      W.conn = Number($('gw-conn').value); W.path = $('gw-path').value.trim(); W.env = $('gw-env').value.trim();
+      if (W.conn === src.conn_id && W.path === src.path) { showToast(t('git_w_same'), 'warning'); return; }
+      transferCheck();
+    };
+  }
+
+  async function transferCheck() {
+    modal(`<h3>${esc(t('git_k_transfer'))}</h3><div class="hint-box">⏳ ${esc(t('git_plan_loading'))}</div>`);
+    const p = await prepare({kind: 'transfer', conn_id: W.conn, source_install: W.src.id, path: W.path, overwrite: true});
+    if (!p) return;
+    W.prep = p;
+    const s = p.source, c = p.check;
+    modal(`<h3>${esc(t('git_k_transfer'))}: ${esc(s.app)} → ${esc(p.conn_name)}${p.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</h3>
+      <div class="g-card"><h3>${esc(t('git_w_source'))}: ${esc(s.conn_name)} · <span class="g-mono">${esc(s.path)}</span> ${s.version ? `<span class="g-mono">${esc(s.version)}</span>` : ''}</h3>
+        <div class="g-mut">${esc(tf('git_w_files', {n: s.files, kb: kb(s.bytes)}))}</div>
+        ${s.excluded ? `<details><summary class="g-mut">${esc(tf('git_w_excluded', {n: s.excluded}))}</summary><div class="g-mono g-mut">${s.excluded_list.map(x => esc(x.path) + ' <i>(' + esc(x.why) + ')</i>').join('<br>')}</div></details>` : ''}
+        ${(s.units || []).length ? `<div class="g-mut">${esc(tf('git_w_units_not_copied', {list: s.units.map(u => u.name).join(', ')}))}</div>` : ''}</div>
+      <div class="g-card"><h3>→ <span class="g-mono">${esc(W.path)}</span></h3>${checkHTML(c, 0)}</div>
+      ${unitHTML(0, s.app, W.path)}${startHTML()}
+      <div class="g-card"><label class="g-mut">${esc(tf('git_check_cmd', {app: s.app}))}</label><input class="gw-chk" data-app="${esc(s.app)}" value="${esc(((G.state.settings || {}).check_commands || {})[s.app] || '')}" style="width:100%"></div>
+      <div id="gw-block" class="hint-box bad" style="display:none">${esc(t('git_w_blocked'))}</div>${btns('gw-next', 'git_continue')}`);
+    $('gw-next').onclick = () => {
+      const over = document.querySelector('.gw-over');
+      const blocked = !c || blocking(c) || (c.existing && !(over && over.checked));
+      $('gw-block').style.display = blocked ? '' : 'none';
+      if (blocked) return;
+      const body = {kind: 'transfer', provision: {conn_id: W.conn, source_install: W.src.id, path: W.path, env: W.env, unit: unitOf(0), overwrite: !!c.existing},
+        restart: {mode: $('gw-start').checked ? 'now' : 'none'}, checks: {[s.app]: document.querySelector('.gw-chk').value.trim()}};
+      provisionConfirm(body, p, `<li><b>${esc(s.app)}</b>: ${esc(s.conn_name)} <span class="g-mono">${esc(s.path)}</span> → ${esc(p.conn_name)} <span class="g-mono">${esc(W.path)}</span></li>`, !!c.existing);
+    };
+  }
+
   // ── progress and history ──
   let runTimer = null;
   async function showRun(id) {
@@ -855,6 +1129,7 @@ Object.assign(LANGS.hr, {
       ${v.message ? `<div class="hint-box ${v.state === 'failed' ? 'bad' : ''}">${esc(v.message)}</div>` : ''}
       ${v.scheduled_at ? `<div class="g-mut">${esc(t('git_scheduled_for'))}: ${esc(fmtTime(v.scheduled_at))}</div>` : v.parent_id ? `<div class="g-mut">${esc(t('git_scheduled_for'))}: ${esc(t('git_waits_update'))}</div>` : ''}
       ${v.items.map(it => `<div class="g-item"><h4>${esc(it.conn_name)} · ${esc(it.app)} · <span class="g-mono">${esc(it.path)}</span> ${runBadge(it.state)}${it.step ? ` <span class="g-mut">⏳ ${esc(t('git_step_' + it.step))}</span>` : ''}</h4>
+        ${it.source_path ? `<div class="g-mut">${esc(t('git_w_source'))}: ${esc(it.source_conn_name)} · <span class="g-mono">${esc(it.source_path)}</span></div>` : ''}
         ${it.from_version || it.to_version ? `<div class="g-mut g-mono">${esc(it.from_version || '')} → ${esc(it.to_version || '')}</div>` : ''}
         ${it.error ? `<div class="hint-box bad">${esc(it.error)}</div>` : ''}
         ${(it.dangling || []).length ? `<div class="hint-box bad"><b>${esc(t('git_dangling'))}</b><div class="g-mono">${it.dangling.map(esc).join('<br>')}</div></div>` : ''}
@@ -914,7 +1189,7 @@ Object.assign(LANGS.hr, {
   let qTimer = null;
   window.gitWorkspace = {
     open, close, tab: setTab, check, refresh, details, diff, forget, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
-    update, upgrade, rollback, restart, stamp, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
+    update, upgrade, rollback, restart, stamp, install, transfer, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
     editSource, testSource, delSource, importBundle, saveSettings, saveCatalogSettings, setRef, filterConns, selConns, closeModal,
     filter(k, v, debounce) { G.f[k] = v; clearTimeout(qTimer); if (debounce) qTimer = setTimeout(() => { render(); const i = document.querySelector('#git-body input[type=search]'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); else render(); },
     toggleChanges(on) { G.onlyChanges = on; if (G.detail) details(G.detail.id); },
