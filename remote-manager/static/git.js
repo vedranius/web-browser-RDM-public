@@ -286,7 +286,7 @@ Object.assign(LANGS.en, {
   genv_none: 'No service has environments yet. Add them with ✎ below: ordered destinations (server:/path) and the rules of each environment.',
   genv_services: 'Environments per service', genv_services_h: 'Services without environments keep working with Update, Upgrade and Rollback as before.',
   genv_edit: 'Environments', genv_deploy: 'Deploy', genv_history: 'History', genv_doctor: 'Doctor', genv_n_dests: '{n} destination(s)…',
-  genv_drift: 'The servers of this environment differ', genv_not_deployed: 'not deployed yet', genv_no_state: 'no deploy state (VERSION.md only)',
+  genv_drift: 'The servers of this environment differ', genv_not_deployed: 'not deployed yet', genv_no_state: 'no deploy state recorded yet',
   genv_locked_by: 'locked by {user} from {from}', genv_stale: 'stale',
   genv_edit_title: 'Environments of {app}', genv_edit_h: 'Destinations are deployed in this order; a rollback goes backwards. The server is the name of an SSH connection.',
   genv_none_app: 'No environments yet.', genv_add: 'Add environment', genv_remove: 'Remove', genv_name: 'Name', genv_keep: 'Backups to keep',
@@ -312,7 +312,7 @@ Object.assign(LANGS.en, {
   genv_dry_run: 'Dry run', genv_deploy_go: 'Deploy…', genv_plan_used: 'This plan was applied already: compare again.',
   genv_confirm_title: 'Deploy {app} {v} to {env}?', genv_confirm_list: 'Destinations, in this order:', genv_type_env: 'Type the environment name {env} to confirm',
   genv_back: 'Back to the plan', genv_history_title: 'History of {app} · {env}', genv_when: 'When', genv_action: 'Action', genv_id: 'Deploy id', genv_who: 'Who',
-  genv_version: 'Version', genv_previous: 'Previous', genv_servers: 'Servers', genv_files: 'Files', genv_history_empty: 'No deploys are recorded on these servers yet.',
+  genv_version: 'Version', genv_previous: 'Previous', genv_servers: 'Destination', genv_files: 'Files', genv_history_empty: 'No deploys are recorded on these servers yet.',
   genv_l_new: 'New', genv_l_changed: 'Changed', genv_l_deleted: 'Deleted', genv_l_excluded: 'Excluded', genv_l_restored: 'Restored', genv_l_moved_aside: 'Moved aside',
   genv_l_skipped: 'Skipped (symlinks)', genv_l_moved: 'Arrived before the interruption', genv_rollback: 'Roll back…', genv_rb_title: 'Roll back deploy {id}',
   genv_rb_h: 'Destinations are rolled back in reverse order. Files the deploy added and the current versions are moved to backups/rollback-<id>/ in the state directory; nothing is deleted.',
@@ -330,7 +330,7 @@ Object.assign(LANGS.hr, {
   genv_none: 'Nijedan servis još nema okruženja. Dodajte ih gumbom ✎ ispod: poredana odredišta (server:/putanja) i pravila svakog okruženja.',
   genv_services: 'Okruženja po servisu', genv_services_h: 'Servisi bez okruženja i dalje rade s Ažuriraj, Nadogradi i Vrati kao prije.',
   genv_edit: 'Okruženja', genv_deploy: 'Isporuka', genv_history: 'Povijest', genv_doctor: 'Dijagnostika', genv_n_dests: 'odredišta: {n}…',
-  genv_drift: 'Serveri ovog okruženja se razlikuju', genv_not_deployed: 'još nije isporučeno', genv_no_state: 'nema stanja isporuke (samo VERSION.md)',
+  genv_drift: 'Serveri ovog okruženja se razlikuju', genv_not_deployed: 'još nije isporučeno', genv_no_state: 'još nema zapisanog stanja isporuke',
   genv_locked_by: 'zaključao {user} s {from}', genv_stale: 'zastarjelo',
   genv_edit_title: 'Okruženja servisa {app}', genv_edit_h: 'Odredišta se isporučuju ovim redom; vraćanje ide unatrag. Server je naziv SSH veze.',
   genv_none_app: 'Još nema okruženja.', genv_add: 'Dodaj okruženje', genv_remove: 'Ukloni', genv_name: 'Naziv', genv_keep: 'Broj sigurnosnih kopija',
@@ -356,7 +356,7 @@ Object.assign(LANGS.hr, {
   genv_dry_run: 'Probno izvođenje', genv_deploy_go: 'Isporuči…', genv_plan_used: 'Ovaj je plan već primijenjen: ponovno usporedite.',
   genv_confirm_title: 'Isporučiti {app} {v} u {env}?', genv_confirm_list: 'Odredišta, ovim redom:', genv_type_env: 'Za potvrdu upišite naziv okruženja {env}',
   genv_back: 'Natrag na plan', genv_history_title: 'Povijest: {app} · {env}', genv_when: 'Kada', genv_action: 'Radnja', genv_id: 'Oznaka isporuke', genv_who: 'Tko',
-  genv_version: 'Verzija', genv_previous: 'Prethodno', genv_servers: 'Serveri', genv_files: 'Datoteke', genv_history_empty: 'Na ovim serverima još nema zabilježenih isporuka.',
+  genv_version: 'Verzija', genv_previous: 'Prethodno', genv_servers: 'Odredište', genv_files: 'Datoteke', genv_history_empty: 'Na ovim serverima još nema zabilježenih isporuka.',
   genv_l_new: 'Nove', genv_l_changed: 'Izmijenjene', genv_l_deleted: 'Obrisane', genv_l_excluded: 'Izostavljene', genv_l_restored: 'Vraćene', genv_l_moved_aside: 'Premještene u stranu',
   genv_l_skipped: 'Preskočene (simboličke veze)', genv_l_moved: 'Stigle prije prekida', genv_rollback: 'Vrati…', genv_rb_title: 'Vraćanje isporuke {id}',
   genv_rb_h: 'Odredišta se vraćaju obrnutim redom. Datoteke koje je isporuka dodala i trenutne verzije premještaju se u backups/rollback-<id>/ u direktoriju stanja; ništa se ne briše.',
@@ -1947,7 +1947,7 @@ Object.assign(LANGS.hr, {
       <div><label>${esc(t('genv_name'))}</label><input class="ge-name" value="${esc(e.name || '')}" placeholder="test"></div>
       <div><label>${esc(t('genv_keep'))}</label><input class="ge-keep" type="number" min="1" max="50" value="${esc(e.keep_backups || 5)}"></div>
       <div><label>${esc(t('genv_state_dir'))}</label><input class="ge-state" value="${esc(e.state_dir || '')}" placeholder="${esc(t('genv_state_dir_ph'))}"></div></div>
-      <div class="g-grid" style="margin-top:8px"><div><label>${esc(t('genv_dests'))}</label><textarea class="ge-dests" placeholder="app-01:/opt/demo-api">${esc((e.destinations || []).map(d => d.server + ':' + d.path).join('\n'))}</textarea><div class="g-mut">${esc(t('genv_dests_h'))}</div></div>
+      <div class="g-grid" style="margin-top:8px"><div style="grid-column:1/-1"><label>${esc(t('genv_dests'))}</label><textarea class="ge-dests g-mono" rows="3" placeholder="app-01:/opt/demo-api">${esc((e.destinations || []).map(d => d.server + ':' + d.path).join('\n'))}</textarea><div class="g-mut">${esc(t('genv_dests_h'))}</div></div>
       ${ta('ge-refs', 'genv_allowed', (e.allowed_refs || []).join('\n'), 'refs/heads/main\nrefs/tags/v*')}${ta('ge-ignore', 'genv_ignore', (e.ignore || []).join('\n'), t('git_lines_h'))}</div>
       <div class="g-grid" style="margin-top:8px"><div><label>${esc(t('genv_post'))}</label><input class="ge-post" value="${esc(e.post_deploy || '')}" placeholder="./bin/migrate --yes"><div class="g-mut">${esc(t('genv_post_h'))}</div></div></div>
       <label class="g-opt"><input type="checkbox" class="ge-confirm" ${e.confirm ? 'checked' : ''}><span>${esc(t('genv_confirm'))}</span></label>
@@ -2017,7 +2017,7 @@ Object.assign(LANGS.hr, {
         ${(d.errors || []).map(x => `<div class="hint-box bad">${esc(x)}</div>`).join('')}${(d.warnings || []).map(x => `<div class="hint-box warn">${esc(x)}</div>`).join('')}
         ${(d.conflicts || []).map(x => `<div class="hint-box warn">${esc(tf(x.kind === 'dir_to_file' ? 'genv_dir_to_file' : 'genv_file_to_dir', {path: x.path}))} <span class="g-mono">${x.server.map(esc).join(', ')}</span></div>`).join('')}
         ${d.lock && d.lock.stale ? `<div class="g-btns" style="justify-content:flex-start;margin-top:4px"><button class="btn-danger btn-sm" data-dest="${d.index}" data-id="${esc(d.lock.id)}" data-user="${esc(d.lock.user)}" data-from="${esc(d.lock.from)}" onclick="gitWorkspace.envUnlock(this)">🔓 ${esc(t('genv_unlock'))}</button></div>` : ''}
-        ${files.length ? `<div class="g-files"><table>${rows}</table></div>` : `<div class="g-mut">${esc(t('git_files_none'))}</div>`}</div>`;
+        ${files.length ? `<div class="g-files"><table>${rows}</table></div>` : (d.errors || []).length ? '' : `<div class="g-mut">${esc(t('git_files_none'))}</div>`}</div>`;
     };
     modal(`<h3>${esc(tf('genv_plan_title', {app: p.app, env: p.env}))}</h3>
       <div class="g-bar" style="margin:0 0 6px"><label class="g-mut">${esc(t('genv_ref'))}</label><input id="ge-ref" value="${esc(p.ref || '')}" placeholder="${esc(t('genv_ref_ph'))}" style="flex:1 1 220px"><button class="btn-sec btn-sm" onclick="gitWorkspace.envRecompare()">↻ ${esc(t('genv_compare'))}</button></div>
@@ -2109,8 +2109,8 @@ Object.assign(LANGS.hr, {
           <td class="g-mono">${esc(x.id || '')}${x.rolled_back ? `<div class="g-mut">↩ ${esc(x.rolled_back)}</div>` : ''}</td><td>${esc(x.by || '')}</td>
           <td class="g-mono">${esc(x.version || '')}<div class="g-mut">${esc(String(x.commit || '').slice(0, 10))} ${esc(x.branch || '')}</div></td>
           <td class="g-mono g-mut">${x.previous ? esc(x.previous.version + ' · ' + x.previous.deploy_id) : x.action === 'DEPLOY' ? '—' : ''}</td>
-          <td>${(x.servers || []).map(esc).join('<br>')}</td>
-          <td><details><summary class="g-mut">${esc(sum(x))}</summary>${lists(x)}${x.error ? `<div class="g-mut">${esc(x.error)}</div>` : ''}${x.note ? `<div class="g-mut">${esc(x.note)}</div>` : ''}</details></td>
+          <td>${esc(x.server || '')}<div class="g-mono g-mut">${esc(x.path || '')}</div></td>
+          <td style="min-width:150px"><details><summary class="g-mut">${esc(sum(x))}</summary>${lists(x)}${x.error ? `<div class="g-mut">${esc(x.error)}</div>` : ''}${x.note ? `<div class="g-mut">${esc(x.note)}</div>` : ''}</details></td>
           <td>${x.action === 'DEPLOY' && cur.has(x.id) && can('rollback') ? `<button class="btn-sec btn-sm" data-id="${esc(x.id)}" onclick="gitWorkspace.envRollback(this)">↩ ${esc(t('genv_rollback'))}</button>` : ''}</td></tr>`).join('')}</table></div>`
         : `<div class="hint-box">${esc(t('genv_history_empty'))}</div>`}
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);

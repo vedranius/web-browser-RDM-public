@@ -1295,8 +1295,8 @@ func envCell(userID int, app, env string) (map[string]interface{}, error) {
 	return res, nil
 }
 
-// envHistory merges history.jsonl of every destination (newest first) and returns the
-// current deploy of each destination.
+// envHistory merges history.jsonl of every destination (newest first, one row per
+// destination) and returns the current deploy of each destination.
 func envHistory(userID int, app, env string) (map[string]interface{}, error) {
 	cat := loadGitCatalog(userID)
 	a, e, err := findEnv(cat, app, env)
@@ -1333,14 +1333,11 @@ func envHistory(userID int, app, env string) (map[string]interface{}, error) {
 						}
 						id, _ := entry["id"].(string)
 						action, _ := entry["action"].(string)
-						key := action + "|" + id
+						// one row per destination: the file lists differ between servers
+						key := fmt.Sprintf("%s|%s|%d|%s", action, id, dc.idx, entry["at"])
+						entry["dest"], entry["server"], entry["path"] = dc.idx, dc.d.Server, dc.d.Path
 						mu.Lock()
-						if old := byKey[key]; old != nil {
-							old["servers"] = append(old["servers"].([]string), dc.d.Server)
-						} else {
-							entry["servers"] = []string{dc.d.Server}
-							byKey[key] = entry
-						}
+						byKey[key] = entry
 						mu.Unlock()
 					}
 				}
@@ -1358,6 +1355,14 @@ func envHistory(userID int, app, env string) (map[string]interface{}, error) {
 	sort.SliceStable(list, func(i, j int) bool {
 		ai, _ := list[i]["at"].(string)
 		aj, _ := list[j]["at"].(string)
+		if ai[:min(len(ai), 16)] != aj[:min(len(aj), 16)] {
+			return ai > aj // newest first (to the minute), then in destination order
+		}
+		di, _ := list[i]["dest"].(int)
+		dj, _ := list[j]["dest"].(int)
+		if di != dj {
+			return di < dj
+		}
 		return ai > aj
 	})
 	return map[string]interface{}{"app": app, "env": env, "dests": dests, "entries": list}, nil
