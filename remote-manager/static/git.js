@@ -370,6 +370,51 @@ Object.assign(LANGS.hr, {
   git_step_history: 'Povijest', git_step_post_deploy: 'post_deploy', git_step_restore: 'Vraćanje datoteka',
 });
 
+Object.assign(LANGS.en, {
+  git_tab_activity: 'Activity', gact_v_git: 'Git activity', gact_v_history: 'Deploy history', gact_v_where: 'What is where',
+  gact_v_git_h: 'Pushes and commits per branch and author, from the Git server.',
+  gact_v_history_h: 'Deploys and rollbacks of every server, merged with the WRM runs of installations without environments.',
+  gact_v_where_h: 'Branch, commit and version per environment and server, and how far each is behind its branch.',
+  gact_csv_h: 'Download the current view with its filters as CSV', gact_from: 'From', gact_to: 'To', gact_tracked: 'Service and environment branches',
+  gact_author_ph: 'Author (name, user, e-mail)', gact_loading: 'Reading the Git server…', gact_scope: '{p} on {src} · commits of: {b}',
+  gact_fetched: 'read {t}', gact_cached: 'from the cache (↻ reads again)', gact_rate: 'The Git server\'s API rate limit was reached: the list is incomplete. Try again later.',
+  gact_rate_until: 'The Git server\'s API rate limit was reached: the list is incomplete. Calls are possible again from {t}.',
+  gact_truncated: 'Only the newest entries were read: narrow the dates or choose a branch.', gact_by_author: 'Per author', gact_by_branch: 'Per branch',
+  gact_commits: 'Commits', gact_pushes: 'Pushes', gact_authors: 'Authors', gact_branches: 'Branches', gact_last: 'Last activity', gact_none: 'Nothing in this range.',
+  gact_items: 'Pushes and commits ({n})', gact_kind: 'Kind', gact_branch: 'Branch', gact_author: 'Author', gact_change: 'Change',
+  gact_k_commit: 'commit', gact_k_push: 'push', gact_n_commits: '{n} commit(s)', gact_more: '{n} more in the CSV export',
+  gact_all_services: 'All services', gact_all_servers: 'All servers', gact_all_actions: 'All actions', gact_who_ph: 'Who', gact_branch_ph: 'Branch', gact_version_ph: 'Version or commit',
+  gact_a_deploy: 'deploy', gact_a_rollback: 'rollback', gact_a_update: 'update', gact_a_upgrade: 'upgrade', gact_a_install: 'install', gact_a_transfer: 'transfer',
+  gact_src_env: 'server history', gact_src_run: 'WRM run', gact_reading: 'Reading the servers: {n} of {m}',
+  gact_no_checks: 'Checks are not allowed for your account: only what WRM stored is shown, not what the servers say.',
+  gact_f_new: 'new', gact_f_changed: 'changed', gact_f_deleted: 'deleted', gact_f_excluded: 'excluded', gact_f_restored: 'restored', gact_f_moved_aside: 'moved aside',
+  gact_f_skipped: 'skipped', gact_f_failed: 'failed', gact_f_moved: 'arrived before the break', gact_f_written: 'written',
+  gact_at_head: 'at the head', gact_install: 'installation without environment', gact_drift: 'differs', gact_where_none: 'No environments or checked installations yet.',
+  gact_env: 'Environment', gact_commit: 'Commit', gact_deployed: 'Deployed by', gact_behind: 'Behind the branch',
+});
+Object.assign(LANGS.hr, {
+  git_tab_activity: 'Aktivnost', gact_v_git: 'Git aktivnost', gact_v_history: 'Povijest isporuka', gact_v_where: 'Što je gdje',
+  gact_v_git_h: 'Push i commiti po granama i autorima, s Git servera.',
+  gact_v_history_h: 'Isporuke i vraćanja svih servera, spojeni s WRM izvođenjima instalacija bez okruženja.',
+  gact_v_where_h: 'Grana, commit i verzija po okruženju i serveru te koliko svaki zaostaje za svojom granom.',
+  gact_csv_h: 'Preuzmi trenutni prikaz s njegovim filtrima kao CSV', gact_from: 'Od', gact_to: 'Do', gact_tracked: 'Grane servisa i okruženja',
+  gact_author_ph: 'Autor (ime, korisnik, e-pošta)', gact_loading: 'Čitanje Git servera…', gact_scope: '{p} na {src} · commiti grana: {b}',
+  gact_fetched: 'pročitano {t}', gact_cached: 'iz međuspremnika (↻ čita ponovno)', gact_rate: 'Dosegnuto je ograničenje API poziva Git servera: popis je nepotpun. Pokušajte kasnije.',
+  gact_rate_until: 'Dosegnuto je ograničenje API poziva Git servera: popis je nepotpun. Pozivi su ponovno mogući od {t}.',
+  gact_truncated: 'Pročitani su samo najnoviji zapisi: suzite datume ili odaberite granu.', gact_by_author: 'Po autoru', gact_by_branch: 'Po grani',
+  gact_commits: 'Commiti', gact_pushes: 'Push', gact_authors: 'Autori', gact_branches: 'Grane', gact_last: 'Zadnja aktivnost', gact_none: 'Ništa u ovom razdoblju.',
+  gact_items: 'Push i commiti ({n})', gact_kind: 'Vrsta', gact_branch: 'Grana', gact_author: 'Autor', gact_change: 'Promjena',
+  gact_k_commit: 'commit', gact_k_push: 'push', gact_n_commits: 'commita: {n}', gact_more: 'još {n} u CSV izvozu',
+  gact_all_services: 'Svi servisi', gact_all_servers: 'Svi serveri', gact_all_actions: 'Sve radnje', gact_who_ph: 'Tko', gact_branch_ph: 'Grana', gact_version_ph: 'Verzija ili commit',
+  gact_a_deploy: 'isporuka', gact_a_rollback: 'vraćanje', gact_a_update: 'ažuriranje', gact_a_upgrade: 'nadogradnja', gact_a_install: 'instalacija', gact_a_transfer: 'prijenos',
+  gact_src_env: 'povijest na serveru', gact_src_run: 'WRM izvođenje', gact_reading: 'Čitanje servera: {n} od {m}',
+  gact_no_checks: 'Provjere nisu dopuštene za vaš račun: prikazano je samo ono što je WRM spremio, ne ono što kažu serveri.',
+  gact_f_new: 'nove', gact_f_changed: 'izmijenjene', gact_f_deleted: 'obrisane', gact_f_excluded: 'izostavljene', gact_f_restored: 'vraćene', gact_f_moved_aside: 'premještene u stranu',
+  gact_f_skipped: 'preskočene', gact_f_failed: 'neuspjele', gact_f_moved: 'stigle prije prekida', gact_f_written: 'zapisane',
+  gact_at_head: 'na vrhu grane', gact_install: 'instalacija bez okruženja', gact_drift: 'razlikuje se', gact_where_none: 'Još nema okruženja ni provjerenih instalacija.',
+  gact_env: 'Okruženje', gact_commit: 'Commit', gact_deployed: 'Isporučio', gact_behind: 'Zaostatak za granom',
+});
+
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const $ = id => document.getElementById(id);
@@ -523,6 +568,26 @@ Object.assign(LANGS.hr, {
 #git-modal .g-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 #git-modal details summary { cursor: pointer; }
 #git-ws .g-envcell .g-inst { cursor: default; }
+#git-ws .g-seg { display: inline-flex; border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+#git-ws .g-seg button { background: transparent; color: var(--text2); border: 0; border-right: 1px solid var(--border2); border-radius: 0; padding: 5px 11px; font-size: 12px; cursor: pointer; }
+#git-ws .g-seg button:last-child { border-right: 0; }
+#git-ws .g-seg button.on { background: var(--accent-d); color: var(--text); }
+#git-ws .g-wide { grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); }
+#git-ws .g-wide .g-card { margin-bottom: 0; }
+#git-ws tr.g-click { cursor: pointer; }
+#git-ws tr.g-click:hover td { background: var(--bg3); }
+#git-ws .s-kcommit { background: var(--accent-d); color: var(--text); }
+#git-ws .s-kpush { background: rgba(139,92,246,.16); color: var(--purple); }
+#git-ws tr.g-drift td { background: rgba(239,68,68,.06); }
+#git-ws tr.g-drift td:first-child { box-shadow: inset 3px 0 0 var(--red); }
+#git-ws td a { color: var(--accent); text-decoration: none; }
+#git-ws td a:hover { text-decoration: underline; }
+#git-ws .g-bar input[type=date] { min-width: 0; }
+#git-ws td.g-nw, #git-ws .g-nw { white-space: nowrap; word-break: normal; }
+#git-ws td.g-path { min-width: 180px; }
+#git-ws .g-date { display: inline-flex; gap: 6px; align-items: center; }
+@media (max-width: 640px) { #git-ws .g-date { flex: 1 1 170px; } #git-ws .g-date input { flex: 1 1 auto; } }
+@media (max-width: 1280px) { #git-ws .g-tabs button { padding: 6px 8px; } #git-ws .g-head { gap: 8px; } }
 @media (max-width: 640px) { #git-modal { padding: 8px 4px; } #git-modal .g-dlg { padding: 12px 10px; } #git-modal .g-hm { display: none; } #git-modal .g-flist { max-height: 55vh; } }
 `;
 
@@ -556,7 +621,7 @@ Object.assign(LANGS.hr, {
 
   function render() {
     const s = G.state;
-    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'envs', 'runs', 'gitignore', 'settings'].map(k =>
+    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'envs', 'runs', 'activity', 'gitignore', 'settings'].map(k =>
       `<button class="${G.tab === k ? 'on' : ''}" onclick="gitWorkspace.tab('${k}')">${esc(t('git_tab_' + k))}</button>`).join('');
     $('git-last').textContent = `${t('git_last_check')}: ${s.last_check_at ? fmtTime(s.last_check_at) : t('git_never')}`;
     $('git-check').disabled = !s.can_check || G.busy || jobRunning();
@@ -568,11 +633,12 @@ Object.assign(LANGS.hr, {
     else if (G.tab === 'installs') body.innerHTML = installsHTML();
     else if (G.tab === 'runs') body.innerHTML = runsHTML();
     else if (G.tab === 'envs') { body.innerHTML = envsHTML(); if (E.ov) envCells(); }
+    else if (G.tab === 'activity') body.innerHTML = activityHTML();
     else if (G.tab === 'gitignore') body.innerHTML = ignoreHTML();
     else body.innerHTML = settingsHTML();
   }
 
-  function setTab(k) { G.tab = k; render(); if (k === 'runs') loadRuns(); if (k === 'envs' && !E.ov) envLoad(); if (k === 'gitignore' && !I.info && !I.loading) ignoreLoad(); }
+  function setTab(k) { G.tab = k; render(); if (k === 'runs') loadRuns(); if (k === 'envs' && !E.ov) envLoad(); if (k === 'gitignore' && !I.info && !I.loading) ignoreLoad(); if (k === 'activity') actStart(); }
 
   // ── overview ──
   function filtered() {
@@ -1155,7 +1221,7 @@ Object.assign(LANGS.hr, {
   function editSource(id) {
     const x = G.state.sources.find(s => s.id === id) || {kind: 'gitlab', name: '', url: G.state.catalog.gitlab.url || ''};
     modal(`<h3>${esc(id ? x.name : t('git_add_source'))}</h3><div class="g-grid">
-      <div><label>${esc(t('git_kind'))}</label><select id="gsrc-kind"><option value="gitlab" ${x.kind === 'gitlab' ? 'selected' : ''}>GitLab</option><option value="github" ${x.kind === 'github' ? 'selected' : ''}>GitHub</option></select></div>
+      <div><label>${esc(t('git_kind'))}</label><select id="gsrc-kind"><option value="gitlab" ${x.kind === 'gitlab' ? 'selected' : ''}>GitLab</option><option value="github" ${x.kind === 'github' ? 'selected' : ''}>GitHub</option><option value="gitea" ${x.kind === 'gitea' ? 'selected' : ''}>Gitea</option></select></div>
       <div><label>${esc(t('git_f_name'))}</label><input id="gsrc-name" value="${esc(x.name)}"></div>
       <div><label>${esc(t('git_url'))}</label><input id="gsrc-url" value="${esc(x.url)}" placeholder="https://git.example.com"></div>
       <div><label>${esc(t('git_token'))}</label><input id="gsrc-token" type="password" autocomplete="new-password" placeholder="${id && x.has_token ? esc(t('git_token_keep')) : ''}"></div>
@@ -2217,6 +2283,203 @@ Object.assign(LANGS.hr, {
         <td style="white-space:nowrap"><button class="btn-sec btn-sm" onclick="gitWorkspace.showRun(${v.id})">${esc(t('git_details'))}</button>${v.state === 'scheduled' || v.running ? ` <button class="btn-danger btn-sm" onclick="gitWorkspace.cancelRun(${v.id})">✕</button>` : ''}</td></tr>`).join('')}</table>` : `<div class="g-mut">${esc(t('git_runs_empty'))}</div>`}</div>`;
   }
 
+  // ── activity: Git activity per branch and author, deploy history, what is where ──
+  const A = {view: 'git', act: null, actErr: '', actBusy: false, af: {app: '', branch: '', author: '', since: '', until: ''},
+    hf: {app: '', env: '', server: '', who: '', branch: '', version: '', action: '', since: '', until: ''}, hist: null, wf: {app: '', env: '', server: ''}, where: null, seq: 0};
+  const isoDay = d => { const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
+  const qs = o => Object.entries(o).filter(([, v]) => v !== '' && v != null && v !== false).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+  const ext = (url, html) => url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${html}</a>` : html;
+  const short = s => String(s || '').slice(0, 10);
+  const when = ts => ts ? esc(fmtTime(ts)) : '—';
+  const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(label)}</option>`;
+  const envPairsOf = (app, env) => G.state.catalog.apps.filter(a => !app || a.name === app).flatMap(a => (a.environments || []).filter(e => !env || e.name === env).map(e => ({app: a.name, env: e.name, n: e.destinations.length})));
+  const allEnvs = () => [...new Set(G.state.catalog.apps.flatMap(a => (a.environments || []).map(e => e.name)).concat((G.state.installs || []).map(i => i.env).filter(Boolean)))].sort();
+  const allServers = () => [...new Set(G.state.catalog.apps.flatMap(a => (a.environments || []).flatMap(e => e.destinations.map(d => d.server))).concat((G.state.installs || []).map(i => i.conn_name)))].filter(Boolean).sort();
+  const csvBtn = fn => `<button class="btn-sec btn-sm" onclick="gitWorkspace.${fn}()" title="${esc(t('gact_csv_h'))}">⬇ CSV</button>`;
+  const dateInputs = (f, fn) => `<span class="g-date"><label class="g-mut">${esc(t('gact_from'))}</label><input type="date" value="${esc(f.since)}" onchange="gitWorkspace.${fn}('since', this.value)"></span>
+    <span class="g-date"><label class="g-mut">${esc(t('gact_to'))}</label><input type="date" value="${esc(f.until)}" onchange="gitWorkspace.${fn}('until', this.value)"></span>`;
+
+  function activityHTML() {
+    const seg = ['git', 'history', 'where'].map(k => `<button class="${A.view === k ? 'on' : ''}" onclick="gitWorkspace.actView('${k}')">${esc(t('gact_v_' + k))}</button>`).join('');
+    return `<div class="g-bar"><div class="g-seg">${seg}</div><span class="g-mut">${esc(t('gact_v_' + A.view + '_h'))}</span></div><div id="gact-body">${actBody()}</div>`;
+  }
+  function actBody() { return A.view === 'git' ? actGitHTML() : A.view === 'history' ? histHTML() : whereHTML(); }
+  function actPaint() { const b = $('gact-body'); if (G.tab === 'activity' && b) b.innerHTML = actBody(); }
+  function actView(v) { A.view = v; render(); actStart(); }
+  function actStart() {
+    if (A.view === 'git' && !A.act && !A.actBusy && !A.actErr) actLoad();
+    else if (A.view === 'history' && !A.hist) histLoad();
+    else if (A.view === 'where' && !A.where) whereLoad();
+  }
+
+  // Git activity
+  function actDefaults() {
+    if (!A.af.app) A.af.app = (G.state.catalog.apps[0] || {}).name || '';
+    if (!A.af.until) A.af.until = isoDay(new Date());
+    if (!A.af.since) A.af.since = isoDay(new Date(Date.now() - 30 * 864e5));
+  }
+  async function actLoad(refresh) {
+    actDefaults();
+    if (!A.af.app) { actPaint(); return; }
+    const seq = ++A.seq;
+    A.actBusy = true; A.actErr = ''; actPaint();
+    try {
+      const r = await fetch('/api/git/activity?' + qs(Object.assign({}, A.af, {refresh: refresh ? 1 : ''})));
+      if (seq !== A.seq) return;
+      if (r.ok) A.act = await r.json(); else { A.act = null; A.actErr = await apiError(r); }
+    } catch (err) { A.actErr = String(err); }
+    A.actBusy = false; actPaint();
+  }
+  function actFilter(k, v) { A.af[k] = v; if (k === 'app') A.af.branch = ''; A.act = null; actLoad(); }
+  function actCSV() { fetch('/api/git/activity/export.csv?' + qs(A.af)).then(r => download(r, 'activity.csv')); }
+  function actGitHTML() {
+    actDefaults();
+    const apps = G.state.catalog.apps;
+    if (!apps.length) return `<div class="hint-box">${esc(t('git_empty_overview'))}</div>`;
+    const x = A.act, f = A.af;
+    const branches = x ? x.branches : (f.branch ? [f.branch] : []);
+    let h = `<div class="g-bar"><select onchange="gitWorkspace.actFilter('app', this.value)">${apps.map(a => opt(a.name, a.name, f.app)).join('')}</select>
+      <select onchange="gitWorkspace.actFilter('branch', this.value)">${opt('', t('gact_tracked'), f.branch)}${branches.map(b => opt(b, b, f.branch)).join('')}</select>
+      <input type="search" placeholder="${esc(t('gact_author_ph'))}" value="${esc(f.author)}" onchange="gitWorkspace.actFilter('author', this.value.trim())">
+      ${dateInputs(f, 'actFilter')}
+      <button class="btn-sec btn-sm" onclick="gitWorkspace.actLoad(true)" ${A.actBusy ? 'disabled' : ''}>↻ ${esc(t('git_refresh'))}</button>${csvBtn('actCSV')}</div>`;
+    if (A.actBusy) return h + `<div class="hint-box"><span class="g-spin"></span> ${esc(t('gact_loading'))}</div>`;
+    if (A.actErr) return h + `<div class="hint-box bad">${esc(A.actErr)}</div>`;
+    if (!x) return h;
+    h += `<div class="g-mut" style="margin:-4px 0 8px">${esc(tf('gact_scope', {p: x.project, src: x.provider, b: (x.tracked || []).join(', ') || '—'}))} · ${esc(tf('gact_fetched', {t: fmtTime(x.fetched_at)}))}${x.cached ? ' · ' + esc(t('gact_cached')) : ''}</div>`;
+    if (x.rate_limited) h += `<div class="hint-box warn">${esc(x.rate_reset ? tf('gact_rate_until', {t: fmtTime(x.rate_reset)}) : t('gact_rate'))}</div>`;
+    else if (x.truncated) h += `<div class="hint-box warn">${esc(t('gact_truncated'))}</div>`;
+    (x.notes || []).forEach(n => { h += `<div class="hint-box warn g-mono">${esc(n)}</div>`; });
+    const sumRow = (s, k) => `<tr class="g-click" data-k="${esc(s.key)}" onclick="gitWorkspace.actFilter('${k}', this.dataset.k)"><td class="g-nw">${k === 'branch' ? `<span class="g-mono">${esc(s.key)}</span>` : esc(s.key)}</td><td>${s.commits}</td><td>${s.pushes}</td>
+      <td>${k === 'branch' ? s.authors : `<span class="g-mono g-mut">${esc((s.branches || []).join(', '))}</span>`}</td><td class="g-mut">${when(s.last)}${k === 'branch' && s.url ? ` · ${ext(s.url, '↗')}` : ''}</td></tr>`;
+    const sumTable = (list, k) => `<div class="g-card g-scroll"><h3>${esc(t(k === 'branch' ? 'gact_by_branch' : 'gact_by_author'))}</h3>${list.length ? `<table><tr><th>${esc(t(k === 'branch' ? 'gact_branch' : 'gact_author'))}</th><th>${esc(t('gact_commits'))}</th><th>${esc(t('gact_pushes'))}</th><th>${esc(t(k === 'branch' ? 'gact_authors' : 'gact_branches'))}</th><th>${esc(t('gact_last'))}</th></tr>${list.map(s => sumRow(s, k)).join('')}</table>` : `<div class="g-mut">${esc(t('gact_none'))}</div>`}</div>`;
+    h += `<div class="g-grid g-wide">${sumTable(x.authors, 'author')}${sumTable(x.by_branch, 'branch')}</div>`;
+    const items = x.items.slice(0, 500);
+    h += `<div class="g-card g-scroll"><h3>${esc(tf('gact_items', {n: x.items.length}))}</h3>${items.length ? `<table><tr><th>${esc(t('genv_when'))}</th><th>${esc(t('gact_kind'))}</th><th>${esc(t('gact_branch'))}</th><th>${esc(t('gact_author'))}</th><th>${esc(t('gact_change'))}</th></tr>
+      ${items.map(i => `<tr><td class="g-mut" style="white-space:nowrap">${when(i.at)}</td><td><span class="g-st s-k${esc(i.kind)}">${esc(t('gact_k_' + i.kind))}</span>${i.kind === 'push' && i.action && i.action !== 'pushed' && i.action !== 'push' ? `<div class="g-mut">${esc(i.action)}</div>` : ''}</td>
+        <td class="g-mono g-nw">${esc(i.kind === 'commit' ? (i.branches || [i.branch]).join(', ') : i.ref_type === 'tag' ? '🏷 ' + i.ref : i.branch || i.ref || '')}</td><td>${esc(i.author || i.login || '')}</td>
+        <td>${i.kind === 'push' ? `${i.count ? esc(tf('gact_n_commits', {n: i.count})) + ' · ' : ''}${ext(i.url, `<span class="g-mono">${esc(i.before && !/^0+$/.test(i.before) ? short(i.before) + '…' : '')}${esc(short(i.after))}</span>`)}${i.title ? ` <span class="g-mut">${esc(i.title)}</span>` : ''}`
+          : `${ext(i.url, `<span class="g-mono">${esc(short(i.sha))}</span>`)} ${esc(i.title || '')}`}</td></tr>`).join('')}</table>${x.items.length > items.length ? `<div class="g-mut">${esc(tf('gact_more', {n: x.items.length - items.length}))}</div>` : ''}` : `<div class="g-mut">${esc(t('gact_none'))}</div>`}</div>`;
+    return h;
+  }
+
+  // deploy history: the WRM runs, then one request per service and environment (three at a time)
+  function histFilter(k, v) { A.hf[k] = v; histLoad(); }
+  function histCSV() { fetch('/api/git/history/export.csv?' + qs(A.hf)).then(r => download(r, 'deploy-history.csv')); }
+  function histSort(rows) { return rows.sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0) || a.app.localeCompare(b.app) || String(a.env || '').localeCompare(String(b.env || '')) || a.server.localeCompare(b.server)); }
+  async function histLoad(refresh) {
+    const seq = ++A.seq, f = A.hf;
+    const pairs = G.state.can_check ? envPairsOf(f.app, f.env) : [];
+    const H = A.hist = {rows: [], errors: [], done: 0, total: pairs.length + 1};
+    actPaint();
+    const add = (rows, errs) => { if (seq !== A.seq) return false; H.rows = histSort(H.rows.concat(rows || [])); H.errors = H.errors.concat(errs || []); H.done++; actPaint(); return true; };
+    try {
+      const r = await fetch('/api/git/history/runs?' + qs(f));
+      if (!add(r.ok ? (await r.json()).rows : [], r.ok ? [] : [await apiError(r)])) return;
+    } catch (err) { if (!add([], [String(err)])) return; }
+    let i = 0;
+    const next = async () => {
+      if (i >= pairs.length || seq !== A.seq) return;
+      const p = pairs[i++];
+      try {
+        const r = await fetch('/api/git/history/cell?' + qs(Object.assign({}, f, {app: p.app, env: p.env, refresh: refresh ? 1 : ''})));
+        if (r.ok) { const c = await r.json(); if (!add(c.rows, (c.errors || []).map(e => `${p.app} · ${p.env}: ${e}`))) return; }
+        else if (!add([], [`${p.app} · ${p.env}: ${await apiError(r)}`])) return;
+      } catch (err) { if (!add([], [String(err)])) return; }
+      return next();
+    };
+    for (let n = 0; n < 3; n++) next();
+  }
+  function histFiles(x) {
+    const keys = ['new', 'changed', 'deleted', 'excluded', 'restored', 'moved_aside', 'skipped', 'failed', 'moved', 'written'];
+    const files = x.files || {}, c = x.counts || {};
+    const present = keys.filter(k => (files[k] || []).length || c[k]);
+    if (!present.length) return '<span class="g-mut">—</span>';
+    const sum = present.map(k => `${t('gact_f_' + k)} ${c[k] != null ? c[k] : files[k].length}`).join(' · ');
+    const lists = present.filter(k => (files[k] || []).length).map(k => `<div style="margin-top:4px"><b>${esc(t('gact_f_' + k))}</b><div class="g-mono g-mut">${files[k].map(esc).join('<br>')}</div></div>`).join('');
+    return lists ? `<details><summary class="g-mut">${esc(sum)}</summary>${lists}</details>` : `<span class="g-mut">${esc(sum)}</span>`;
+  }
+  function histHTML() {
+    const f = A.hf, H = A.hist;
+    const apps = G.state.catalog.apps.map(a => a.name);
+    let h = `<div class="g-bar"><select onchange="gitWorkspace.histFilter('app', this.value)">${opt('', t('gact_all_services'), f.app)}${apps.map(a => opt(a, a, f.app)).join('')}</select>
+      <select onchange="gitWorkspace.histFilter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${allEnvs().map(e => opt(e, e, f.env)).join('')}</select>
+      <select onchange="gitWorkspace.histFilter('server', this.value)">${opt('', t('gact_all_servers'), f.server)}${allServers().map(s => opt(s, s, f.server)).join('')}</select>
+      <select onchange="gitWorkspace.histFilter('action', this.value)">${opt('', t('gact_all_actions'), f.action)}${['deploy', 'rollback', 'update', 'upgrade', 'install', 'transfer'].map(a => opt(a, t('gact_a_' + a), f.action)).join('')}</select>
+      <input type="search" placeholder="${esc(t('gact_who_ph'))}" value="${esc(f.who)}" onchange="gitWorkspace.histFilter('who', this.value.trim())">
+      <input type="search" placeholder="${esc(t('gact_branch_ph'))}" value="${esc(f.branch)}" onchange="gitWorkspace.histFilter('branch', this.value.trim())">
+      <input type="search" placeholder="${esc(t('gact_version_ph'))}" value="${esc(f.version)}" onchange="gitWorkspace.histFilter('version', this.value.trim())">
+      ${dateInputs(f, 'histFilter')}<button class="btn-sec btn-sm" onclick="gitWorkspace.histLoad(true)">↻ ${esc(t('git_refresh'))}</button>${csvBtn('histCSV')}</div>`;
+    if (!G.state.can_check) h += `<div class="hint-box">${esc(t('gact_no_checks'))}</div>`;
+    if (!H) return h;
+    if (H.done < H.total) h += `<div class="g-mut" style="margin-bottom:6px"><span class="g-spin"></span> ${esc(tf('gact_reading', {n: H.done, m: H.total}))}</div>`;
+    h += H.errors.map(e => `<div class="hint-box bad">${esc(e)}</div>`).join('');
+    const res = x => x.result === 'ok' ? 'done' : x.result === 'partial' || x.result === 'post_deploy_failed' ? 'pending' : 'failed';
+    h += `<div class="g-card g-scroll">${H.rows.length ? `<table><tr><th>${esc(t('genv_when'))}</th><th>${esc(t('genv_action'))}</th><th>${esc(t('git_service'))}</th><th>${esc(t('genv_servers'))}</th><th>${esc(t('genv_who'))}</th><th>${esc(t('gact_branch'))}</th><th>${esc(t('genv_version'))}</th><th>${esc(t('genv_files'))}</th></tr>
+      ${H.rows.slice(0, 1000).map(x => `<tr><td class="g-mut" style="white-space:nowrap">${when(x.at)}</td>
+        <td class="g-nw"><span class="g-st s-${res(x)}">${esc(t('gact_a_' + x.action))}</span>${x.result !== 'ok' ? `<div class="g-mut">${esc(x.result)}</div>` : ''}<div class="g-mut">${esc(t(x.source === 'run' ? 'gact_src_run' : 'gact_src_env'))}${x.run_id ? ' #' + x.run_id : ''}</div></td>
+        <td class="g-nw"><b>${esc(x.app)}</b>${x.env ? `<span class="g-env">${esc(x.env)}</span>` : ''}${x.id ? `<div class="g-mono g-mut g-nw">${esc(x.id)}</div>` : ''}</td>
+        <td class="g-path">${esc(x.server)}<div class="g-mono g-mut">${esc(x.path)}</div></td><td>${esc(x.by || '')}</td><td class="g-mono g-nw">${esc(x.branch || '')}</td>
+        <td class="g-mono g-nw">${esc(x.version || '')}${x.previous ? `<div class="g-mut">← ${esc(x.previous)}</div>` : ''}<div class="g-mut">${ext(x.commit_url, esc(short(x.commit)))}</div></td>
+        <td style="min-width:150px">${histFiles(x)}${x.error ? `<div class="g-mut">${esc(x.error)}</div>` : ''}${x.note ? `<div class="g-mut">${esc(x.note)}</div>` : ''}</td></tr>`).join('')}</table>${H.rows.length > 1000 ? `<div class="g-mut">${esc(tf('gact_more', {n: H.rows.length - 1000}))}</div>` : ''}`
+        : H.done < H.total ? '' : `<div class="g-mut">${esc(t('gact_none'))}</div>`}</div>`;
+    return h;
+  }
+
+  // what is where: one request per service and environment and one per service for installations without environment
+  function whereFilter(k, v) { A.wf[k] = v; if (k === 'server') actPaint(); else whereLoad(); }
+  function whereCSV() { fetch('/api/git/where/export.csv?' + qs(A.wf)).then(r => download(r, 'what-is-where.csv')); }
+  function whereLoad(refresh) {
+    const seq = ++A.seq, f = A.wf;
+    const cells = (G.state.can_check ? envPairsOf(f.app, f.env).map(p => Object.assign(p, {kind: 'env'})) : [])
+      .concat(G.state.catalog.apps.filter(a => !f.app || a.name === f.app).filter(a => (G.state.installs || []).some(i => i.app === a.name)).map(a => ({app: a.name, env: '', kind: 'install'})));
+    A.where = {cells, data: {}};
+    actPaint();
+    let i = 0;
+    const next = async () => {
+      if (i >= cells.length || seq !== A.seq) return;
+      const c = cells[i++], key = c.kind + '\u0000' + c.app + '\u0000' + c.env;
+      const url = c.kind === 'env' ? '/api/git/where/cell?' + qs({app: c.app, env: c.env, refresh: refresh ? 1 : ''}) : '/api/git/where/installs?' + qs({app: c.app, refresh: refresh ? 1 : ''});
+      let d;
+      try { const r = await fetch(url); d = r.ok ? await r.json() : {error: await apiError(r)}; } catch (err) { d = {error: String(err)}; }
+      if (seq !== A.seq) return;
+      A.where.data[key] = d;
+      actPaint();
+      return next();
+    };
+    for (let n = 0; n < 3; n++) next();
+  }
+  function whereRow(r) {
+    const behind = r.behind > 0 ? ext(r.compare_url, `<span class="g-st s-update">${esc(tf('git_behind', {n: r.behind}))}</span>`) : r.behind === 0 ? `<span class="g-st s-ok">${esc(t('gact_at_head'))}</span>` : '<span class="g-mut">—</span>';
+    return `<tr class="${r.drift ? 'g-drift' : ''}"><td class="g-nw"><b>${esc(r.app)}</b></td><td>${r.env ? `<span class="g-env">${esc(r.env)}</span>` : '<span class="g-mut">—</span>'}${r.kind === 'install' ? `<div class="g-mut">${esc(t('gact_install'))}</div>` : ''}</td>
+      <td class="g-path">${esc(r.server)}<div class="g-mono g-mut">${esc(r.path)}</div></td>
+      ${r.error ? `<td colspan="5"><span class="g-st s-error">${esc(r.error)}</span></td>` : !r.exists ? `<td colspan="5" class="g-mut">${esc(t('genv_not_deployed'))}</td>`
+        : `<td class="g-mono g-nw">${ext(r.branch_url, esc(r.branch || '—'))}</td><td class="g-mono g-nw">${ext(r.commit_url, esc(short(r.commit) || '—'))}</td>
+      <td class="g-mono g-nw">${esc(r.version || '—')}${r.drift ? ` <span class="g-st s-review">⚠ ${esc(t('gact_drift'))}</span>` : ''}${r.state ? ` ${stBadge(r.state)}` : ''}${r.locked ? ' 🔒' : ''}</td>
+      <td class="g-nw">${esc(r.by || '—')}<div class="g-mut">${r.at ? esc(/^\d{4}-\d\d-\d\dT/.test(r.at) ? fmtTime(r.at) : r.at) : ''}</div></td><td class="g-nw">${behind}</td>`}</tr>`;
+  }
+  function whereHTML() {
+    const f = A.wf, W = A.where;
+    const apps = G.state.catalog.apps.map(a => a.name);
+    let h = `<div class="g-bar"><select onchange="gitWorkspace.whereFilter('app', this.value)">${opt('', t('gact_all_services'), f.app)}${apps.map(a => opt(a, a, f.app)).join('')}</select>
+      <select onchange="gitWorkspace.whereFilter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${allEnvs().map(e => opt(e, e, f.env)).join('')}</select>
+      <select onchange="gitWorkspace.whereFilter('server', this.value)">${opt('', t('gact_all_servers'), f.server)}${allServers().map(s => opt(s, s, f.server)).join('')}</select>
+      <button class="btn-sec btn-sm" onclick="gitWorkspace.whereLoad(true)">↻ ${esc(t('git_refresh'))}</button>${csvBtn('whereCSV')}</div>`;
+    if (!G.state.can_check) h += `<div class="hint-box">${esc(t('gact_no_checks'))}</div>`;
+    if (!W) return h;
+    if (!W.cells.length) return h + `<div class="hint-box">${esc(t('gact_where_none'))}</div>`;
+    let rows = '';
+    for (const c of W.cells) {
+      const d = W.data[c.kind + '\u0000' + c.app + '\u0000' + c.env];
+      if (!d) { rows += `<tr><td><b>${esc(c.app)}</b></td><td>${c.env ? `<span class="g-env">${esc(c.env)}</span>` : '—'}</td><td colspan="6" class="g-mut"><span class="g-spin"></span> ${esc(c.kind === 'env' ? tf('genv_n_dests', {n: c.n}) : t('gact_install'))}</td></tr>`; continue; }
+      if (d.error) { rows += `<tr><td><b>${esc(c.app)}</b></td><td>${c.env ? `<span class="g-env">${esc(c.env)}</span>` : '—'}</td><td colspan="6"><span class="g-st s-error">${esc(d.error)}</span></td></tr>`; continue; }
+      const list = (d.rows || []).filter(r => !f.server || r.server === f.server).filter(r => !f.env || r.env === f.env);
+      if (d.note && list.length) rows += `<tr><td colspan="8" class="g-mut">${esc(c.app)}: ${esc(d.note)}</td></tr>`;
+      rows += list.map(whereRow).join('');
+    }
+    return h + `<div class="g-card g-scroll"><table class="g-where"><tr><th>${esc(t('git_service'))}</th><th>${esc(t('gact_env'))}</th><th>${esc(t('genv_servers'))}</th><th>${esc(t('gact_branch'))}</th><th>${esc(t('gact_commit'))}</th><th>${esc(t('genv_version'))}</th><th>${esc(t('gact_deployed'))}</th><th>${esc(t('gact_behind'))}</th></tr>${rows}</table></div>`;
+  }
+
   function modal(html) {
     closeModal();
     const m = document.createElement('div');
@@ -2235,6 +2498,7 @@ Object.assign(LANGS.hr, {
     open, close, tab: setTab, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
+    actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
     envRefresh, envEdit, envEditAdd, envEditDel, envPlan, envRecompare, envShowAll, envToggle, envExclude, envClearExcl, envUnlock, envGo, envBack, envHistory, envRollback, envDoctor, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
     ignoreLoad, ignoreMark, ignorePreview, ignoreDownload, ignoreSaveLists, ignoreMR, webhook, hookSet, editFeed, feedFetch, delFeed, pipelineKind,
     editSource, testSource, delSource, importBundle, saveSettings, saveCatalogSettings, setRef, filterConns, selConns, closeModal,

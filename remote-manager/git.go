@@ -554,6 +554,8 @@ func decodeGitJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 //	.gitignore helper: see apiGitIgnore in git_gitignore.go
 //	webhooks, artifact feeds, CI pipelines: see apiGitCI in git_ci.go
 //	environments (plans, history, doctor, locks, excludes): see apiGitEnv in git_env.go
+//	activity per branch and author: see apiGitActivity in git_activity.go
+//	deploy history and "what is where": see apiGitWhere in git_where.go
 func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireAuth(w, r)
 	if !ok {
@@ -572,7 +574,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return true
 	}
-	if apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
+	if apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitActivity(w, r, userID, rest) || apiGitWhere(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
 		return
 	}
 	switch {
@@ -685,8 +687,8 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		in.Name = strings.TrimSpace(in.Name)
 		in.URL = strings.TrimRight(strings.TrimSpace(in.URL), "/")
-		if in.Kind != "gitlab" && in.Kind != "github" {
-			jsonError(w, "Kind must be gitlab or github", 400)
+		if !gitAPIKind(in.Kind) {
+			jsonError(w, "Kind must be gitlab, github or gitea", 400)
 			return
 		}
 		if _, err := gitAPIBase(in.Kind, in.URL); err != nil {

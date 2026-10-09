@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-// ─── GIT SOURCES: GitLab API v4 and GitHub REST ──────
+// ─── GIT SOURCES: GitLab API v4, GitHub REST and Gitea API v1 ───
 //
 // API calls are kept low: one recursive tree listing per commit (cached forever by commit,
 // trees are immutable) gives the blob ID of every file, and file contents are fetched only
@@ -37,7 +37,7 @@ const (
 
 type gitSource struct {
 	ID            int    `json:"id"`
-	Kind          string `json:"kind"` // gitlab | github | bundle
+	Kind          string `json:"kind"` // gitlab | github | gitea | bundle
 	Name          string `json:"name"`
 	URL           string `json:"url"`
 	HasToken      bool   `json:"has_token"`
@@ -117,7 +117,8 @@ type gitProvider struct {
 }
 
 // gitAPIBase derives the API URL: GitLab <url>/api/v4; GitHub api.github.com or
-// <url>/api/v3 (Enterprise). A URL that already contains /api/ is used as it is.
+// <url>/api/v3 (Enterprise); Gitea <url>/api/v1. A URL that already contains /api/ is used
+// as it is.
 func gitAPIBase(kind, raw string) (string, error) {
 	raw = strings.TrimRight(strings.TrimSpace(raw), "/")
 	u, err := url.Parse(raw)
@@ -133,11 +134,14 @@ func gitAPIBase(kind, raw string) (string, error) {
 		}
 		return raw + "/api/v3", nil
 	}
+	if kind == "gitea" {
+		return raw + "/api/v1", nil
+	}
 	return raw + "/api/v4", nil
 }
 
 func newGitProvider(s gitSource) (*gitProvider, error) {
-	if s.Kind != "gitlab" && s.Kind != "github" {
+	if !gitAPIKind(s.Kind) {
 		return nil, fmt.Errorf("not an API source")
 	}
 	api, err := gitAPIBase(s.Kind, s.URL)
@@ -158,9 +162,18 @@ func newGitProvider(s gitSource) (*gitProvider, error) {
 		}}}, nil
 }
 
+// gitAPIKind tells whether a source kind is a Git server with an API.
+func gitAPIKind(kind string) bool { return kind == "gitlab" || kind == "github" || kind == "gitea" }
+
+// hub tells whether the provider speaks the GitHub-style REST API (GitHub and Gitea).
+func (p *gitProvider) hub() bool { return p.kind != "gitlab" }
+
 type gitHTTPError struct {
 	Status int
 	Msg    string
+	// rate limit headers of the answer (429, or 403 with no calls left)
+	Remaining string
+	Reset     string
 }
 
 func (e *gitHTTPError) Error() string { return e.Msg }
@@ -184,6 +197,8 @@ func (p *gitProvider) do(req *http.Request, accept string) (*http.Response, erro
 	if p.token != "" {
 		if p.kind == "gitlab" {
 			req.Header.Set("PRIVATE-TOKEN", p.token)
+		} else if p.kind == "gitea" {
+			req.Header.Set("Authorization", "token "+p.token)
 		} else {
 			req.Header.Set("Authorization", "Bearer "+p.token)
 		}
@@ -221,8 +236,10 @@ func (p *gitProvider) do(req *http.Request, accept string) (*http.Response, erro
 			msg += " (no access, or the API rate limit was reached)"
 		case 404:
 			msg += " (not found, or no access)"
+		case 429:
+			msg += " (the API rate limit was reached)"
 		}
-		return nil, &gitHTTPError{Status: resp.StatusCode, Msg: msg}
+		return nil, &gitHTTPError{Status: resp.StatusCode, Msg: msg, Remaining: rateRemaining(resp.Header), Reset: rateReset(resp.Header)}
 	}
 	return resp, nil
 }
@@ -243,7 +260,7 @@ func (p *gitProvider) getJSON(rel string, out interface{}) (http.Header, error) 
 func (p *gitProvider) pages(rel string, maxPages int, fn func(raw json.RawMessage) (int, error)) error {
 	for page := 1; page <= maxPages; page++ {
 		var raw json.RawMessage
-		h, err := p.getJSON(rel+"&per_page=100&page="+strconv.Itoa(page), &raw)
+		h, err := p.getJSON(rel+p.pageQuery(page), &raw)
 		if err != nil {
 			return err
 		}
@@ -263,6 +280,14 @@ func (p *gitProvider) pages(rel string, maxPages int, fn func(raw json.RawMessag
 		}
 	}
 	return nil
+}
+
+// pageQuery is the paging part of a list request: Gitea takes limit (at most 50 by default).
+func (p *gitProvider) pageQuery(page int) string {
+	if p.kind == "gitea" {
+		return "&limit=50&page=" + strconv.Itoa(page)
+	}
+	return "&per_page=100&page=" + strconv.Itoa(page)
 }
 
 func (p *gitProvider) gl(project string) string { return "/projects/" + url.PathEscape(project) }
@@ -291,7 +316,7 @@ func (p *gitProvider) defaultBranch(project string) (string, error) {
 		DefaultBranch string `json:"default_branch"`
 	}
 	rel := p.gl(project)
-	if p.kind == "github" {
+	if p.hub() {
 		rel = p.gh(project)
 	}
 	if _, err := p.getJSON(rel, &v); err != nil {
@@ -306,7 +331,7 @@ func (p *gitProvider) defaultBranch(project string) (string, error) {
 func (p *gitProvider) branches(project string) ([]string, error) {
 	out := []string{}
 	rel := p.gl(project) + "/repository/branches?x=1"
-	if p.kind == "github" {
+	if p.hub() {
 		rel = p.gh(project) + "/branches?x=1"
 	}
 	err := p.pages(rel, gitAPIPageLimit, func(raw json.RawMessage) (int, error) {
@@ -327,7 +352,7 @@ func (p *gitProvider) branches(project string) ([]string, error) {
 func (p *gitProvider) tags(project string) ([]gitTag, error) {
 	out := []gitTag{}
 	rel := p.gl(project) + "/repository/tags?x=1"
-	if p.kind == "github" {
+	if p.hub() {
 		rel = p.gh(project) + "/tags?x=1"
 	}
 	err := p.pages(rel, gitAPIPageLimit, func(raw json.RawMessage) (int, error) {
@@ -337,6 +362,7 @@ func (p *gitProvider) tags(project string) ([]gitTag, error) {
 				ID            string `json:"id"`
 				SHA           string `json:"sha"`
 				CommittedDate string `json:"committed_date"`
+				Created       string `json:"created"` // Gitea
 			} `json:"commit"`
 		}
 		if err := json.Unmarshal(raw, &list); err != nil {
@@ -347,7 +373,11 @@ func (p *gitProvider) tags(project string) ([]gitTag, error) {
 			if c == "" {
 				c = t.Commit.SHA
 			}
-			out = append(out, gitTag{Name: t.Name, Commit: c, Date: dateOnly(t.Commit.CommittedDate)})
+			d := t.Commit.CommittedDate
+			if d == "" {
+				d = t.Commit.Created
+			}
+			out = append(out, gitTag{Name: t.Name, Commit: c, Date: dateOnly(d)})
 		}
 		return len(list), nil
 	})
@@ -358,8 +388,11 @@ func (p *gitProvider) tags(project string) ([]gitTag, error) {
 func (p *gitProvider) branchCommits(project, branch string, pages int) ([]gitCommit, error) {
 	out := []gitCommit{}
 	rel := p.gl(project) + "/repository/commits?ref_name=" + url.QueryEscape(branch)
-	if p.kind == "github" {
+	if p.hub() {
 		rel = p.gh(project) + "/commits?sha=" + url.QueryEscape(branch)
+	}
+	if p.kind == "gitea" {
+		rel += "&stat=false&verification=false&files=false"
 	}
 	err := p.pages(rel, pages, func(raw json.RawMessage) (int, error) {
 		var list []struct {
@@ -400,6 +433,8 @@ func (p *gitProvider) commitDate(project, sha string) string {
 	rel := p.gl(project) + "/repository/commits/" + url.PathEscape(sha)
 	if p.kind == "github" {
 		rel = p.gh(project) + "/commits/" + url.PathEscape(sha)
+	} else if p.kind == "gitea" {
+		rel = p.gh(project) + "/git/commits/" + url.PathEscape(sha)
 	}
 	if _, err := p.getJSON(rel, &v); err != nil {
 		return ""
@@ -413,6 +448,9 @@ func (p *gitProvider) commitDate(project, sha string) string {
 // rawTree lists every file of a commit: path → blob ID.
 func (p *gitProvider) rawTree(project, commit string) (map[string]string, error) {
 	out := map[string]string{}
+	if p.kind == "gitea" {
+		return p.giteaTree(project, commit)
+	}
 	if p.kind == "github" {
 		var v struct {
 			Tree []struct {
@@ -457,8 +495,38 @@ func (p *gitProvider) rawTree(project, commit string) (map[string]string, error)
 	return out, err
 }
 
+// giteaTree lists a Gitea tree page by page (the recursive listing is paginated there).
+func (p *gitProvider) giteaTree(project, commit string) (map[string]string, error) {
+	out := map[string]string{}
+	for page := 1; page <= 1000; page++ {
+		var v struct {
+			Tree []struct {
+				Path string `json:"path"`
+				Type string `json:"type"`
+				SHA  string `json:"sha"`
+			} `json:"tree"`
+			Truncated bool `json:"truncated"`
+		}
+		if _, err := p.getJSON(p.gh(project)+"/git/trees/"+url.PathEscape(commit)+"?recursive=true&per_page=1000&page="+strconv.Itoa(page), &v); err != nil {
+			return nil, err
+		}
+		for _, e := range v.Tree {
+			if e.Type == "blob" {
+				out[e.Path] = e.SHA
+			}
+		}
+		if len(out) > gitMaxTreeFiles {
+			return nil, fmt.Errorf("%s: more than %d files", project, gitMaxTreeFiles)
+		}
+		if !v.Truncated || len(v.Tree) == 0 {
+			break
+		}
+	}
+	return out, nil
+}
+
 func (p *gitProvider) blob(project, sha string) ([]byte, error) {
-	if p.kind == "github" {
+	if p.hub() {
 		var v struct {
 			Content  string `json:"content"`
 			Encoding string `json:"encoding"`
@@ -515,7 +583,7 @@ func (p *gitProvider) projects(groups []string) ([]string, error) {
 	}
 	if len(groups) == 0 {
 		rel := "/projects?membership=true&simple=true&archived=false"
-		if p.kind == "github" {
+		if p.hub() {
 			rel = "/user/repos?sort=full_name"
 		}
 		if err := p.pages(rel, 20, add); err != nil {
@@ -524,7 +592,7 @@ func (p *gitProvider) projects(groups []string) ([]string, error) {
 	}
 	for _, g := range groups {
 		var err error
-		if p.kind == "github" {
+		if p.hub() {
 			err = p.pages("/orgs/"+url.PathEscape(g)+"/repos?type=all", 20, add)
 			var he *gitHTTPError
 			if errors.As(err, &he) && he.Status == 404 {
