@@ -1589,6 +1589,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-tools" onclick="openTools()" title="Network tools"><span>🧰</span><span class="lbl" data-i18n="tools_lbl">Tools</span></button>
+      <button class="btn-top" id="btn-git" onclick="openGit()" title="Git"><span>⎇</span><span class="lbl" data-i18n="git_lbl">Git</span></button>
       <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
@@ -4501,6 +4502,24 @@ Object.assign(LANGS.hr, {
   bm_empty:'Još nema favorita. Otvori direktorij u upravitelju datoteka i klikni ★ → Dodaj ovaj direktorij u favorite ili uvezi favorite iz WinSCP-a.',
   ev_bookmark:'Favoriti',
 });
+Object.assign(LANGS.en, {
+  git_lbl: 'Git', git_load_failed: 'The Git workspace could not be loaded.',
+  ne_git_new_version: 'Git: a new version is available', ne_git_drift: 'Git: files changed by hand on a server', ne_git_unreachable: 'Git: a server is unreachable for checks',
+  pg_git: 'Git workspace', p_git_enabled: 'Git workspace', p_git_enabled_d: 'Compare services on servers with GitLab / GitHub or offline bundles. Off hides the workspace completely.',
+  p_git_checks: 'Git checks', p_git_checks_d: 'Who may run checks (discovery and file comparison over SSH, read-only).',
+  po_git_checks_off: 'Nobody', po_git_checks_admins: 'Administrators', po_git_checks_all: 'Everyone',
+  p_git_check_interval_minutes: 'Periodic check interval (minutes)', p_git_check_interval_minutes_d: 'How often the servers of users who turned on periodic checks are checked. 0 = no periodic checks.',
+  p_git_backup_words: 'Backup words', p_git_backup_words_d: 'Path segments with one of these words (comma-separated) are treated as copies and backups and skipped.',
+});
+Object.assign(LANGS.hr, {
+  git_lbl: 'Git', git_load_failed: 'Git radni prostor nije se mogao učitati.',
+  ne_git_new_version: 'Git: dostupna je nova verzija', ne_git_drift: 'Git: datoteke na serveru ručno su promijenjene', ne_git_unreachable: 'Git: server je nedostupan za provjere',
+  pg_git: 'Git radni prostor', p_git_enabled: 'Git radni prostor', p_git_enabled_d: 'Usporedba servisa na serverima s GitLabom / GitHubom ili offline bundleovima. Isključeno potpuno skriva radni prostor.',
+  p_git_checks: 'Git provjere', p_git_checks_d: 'Tko smije pokretati provjere (pretraga i usporedba datoteka preko SSH-a, samo čitanje).',
+  po_git_checks_off: 'Nitko', po_git_checks_admins: 'Administratori', po_git_checks_all: 'Svi',
+  p_git_check_interval_minutes: 'Interval periodičnih provjera (minute)', p_git_check_interval_minutes_d: 'Koliko se često provjeravaju serveri korisnika koji su uključili periodične provjere. 0 = bez periodičnih provjera.',
+  p_git_backup_words: 'Riječi za kopije', p_git_backup_words_d: 'Dijelovi putanje s nekom od ovih riječi (odvojenih zarezom) smatraju se kopijama i sigurnosnim kopijama i preskaču se.',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5061,6 +5080,8 @@ function applyPolicyToUI() {
   if (bc) bc.style.display = pol.broadcast === false ? 'none' : '';
   const tb = document.getElementById('btn-tools');
   if (tb) tb.style.display = pol.network_tools === false ? 'none' : '';
+  const gb = document.getElementById('btn-git');
+  if (gb) gb.style.display = pol.git === false ? 'none' : '';
   const os = document.getElementById('opt-serial');
   if (os) { os.hidden = !pol.serial; os.disabled = !pol.serial; }
 }
@@ -5904,6 +5925,7 @@ const POLICY_GROUPS = {
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
     ['pg_proxies', ['proxies']],
+    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
@@ -6804,6 +6826,20 @@ async function saveNotes() {
 
 // ── network tools ──
 let toolsTab = 'ports';
+
+// Git workspace: its code (static/git.js) is loaded the first time it is opened.
+let gitLoading = null;
+function openGit() {
+  if (window.gitWorkspace) { window.gitWorkspace.open(); return; }
+  if (!gitLoading) gitLoading = new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = '/static/git.js';
+    s.onload = ok;
+    s.onerror = () => { gitLoading = null; fail(); };
+    document.head.appendChild(s);
+  });
+  gitLoading.then(() => window.gitWorkspace.open(), () => showToast(t('git_load_failed'), 'error'));
+}
 
 function openTools(opts) {
   opts = opts || {};
