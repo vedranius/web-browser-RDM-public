@@ -360,6 +360,8 @@ func bodyLimitFor(path string) int64 {
 		return -1 // streamed; limited per file by the max_upload_mb policy
 	case path == "/api/git/bundles":
 		return gitMaxBundle
+	case strings.HasPrefix(path, "/api/hooks/"):
+		return gitHookMaxBody
 	case path == "/api/git/catalog" || path == "/api/git/catalog/import":
 		return maxImportBody
 	case isImportPath(path):
@@ -387,7 +389,8 @@ func securityMiddleware(next http.Handler) http.Handler {
 			h.Set("Cache-Control", "no-store")
 			// CSRF protection: state-changing API calls must carry the custom header that
 			// only same-origin JavaScript can set, and must not come from another site.
-			if !safeMethod(r.Method) && (r.Header.Get("X-WRM-Request") != "1" || !sameOriginRequest(r)) {
+			// Incoming webhooks have no session: their secret authenticates them.
+			if !safeMethod(r.Method) && !strings.HasPrefix(r.URL.Path, "/api/hooks/") && (r.Header.Get("X-WRM-Request") != "1" || !sameOriginRequest(r)) {
 				jsonError(w, "Request blocked by CSRF protection — reload the page and try again", 403)
 				return
 			}

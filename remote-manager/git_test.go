@@ -38,6 +38,8 @@ type fakeGit struct {
 	blobs    map[string]string
 	blobReqs atomic.Int64
 	treeReqs atomic.Int64
+	// extra routes of a test (write API, CI triggers); returns true when it answered
+	extra func(w http.ResponseWriter, r *http.Request) bool
 }
 
 func blobSHA(content string) string {
@@ -96,6 +98,9 @@ func (g *fakeGit) commit(sha string) *fakeCommit {
 func (g *fakeGit) serve(w http.ResponseWriter, r *http.Request) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
+	if g.extra != nil && g.extra(w, r) {
+		return
+	}
 	auth := r.Header.Get("PRIVATE-TOKEN")
 	if g.kind == "github" {
 		auth = strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")

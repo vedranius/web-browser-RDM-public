@@ -4,6 +4,28 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [11.3.0] — 2026-10-09 — Git: .gitignore helper and optional CI integration (phases 4–5)
+
+### Added
+- **.gitignore helper** (`git_gitignore.go`, a new *.gitignore* tab in the Git workspace) per service:
+  - **Candidates:** files in state *extra* from the latest checks with their **size** and the **servers** they were seen on, and a suggested pattern (known directories such as `logs/`, known extensions such as `*.log`, or the anchored file); **standard patterns** per stack (Python, Node, Go, Java, Docker, IDE), pre-selected when the repository tree shows the stack; the catalog's **protected globs**; more patterns by hand.
+  - The repository's **current `.gitignore`** (in the service's subdirectory) read through the API at the head of the service's branch.
+  - **Warnings** about committed secret-looking files (`.env`, `*.pem`, `*.key`, `*credentials*`, `*secret*`, `id_rsa*`, …) and files matching the protected globs, with the advice to commit a `.example` template instead (`config.example.ini`, `.env.example`).
+  - The service's catalog **exclude / protected lists** edited on the same screen.
+  - **Preview** as a diff against the current file (only new patterns, under a dated comment, line endings kept) and a **download** by default.
+  - **Merge request (GitLab) / pull request (GitHub)** on a new branch `wrm/gitignore-<service>-<time>` **only when chosen explicitly**, with a confirmation that names the repository (its name is typed and checked by the server). It needs an optional **write token per Git source** (encrypted, used only for this). Policy **`git_gitignore_mr`** (administrators by default, `WRM_GIT_GITIGNORE_MR`, *Admin → Policies*); `mePayload` flag `git_gitignore_mr`. Audit **`git.gitignore_mr`**.
+- **Optional CI integration** (`git_ci.go`; all opt-in, WRM works without any CI):
+  - **Incoming webhook per Git source** (`POST /api/hooks/git/<id>`, no session, outside the CSRF check): GitLab push / tag / release events (`X-Gitlab-Token`), GitHub push / release events (HMAC `X-Hub-Signature-256`, `ping` answered), and a generic POST (`X-WRM-Token`, or `X-WRM-Signature` over `<timestamp>.<body>` with `X-WRM-Timestamp` within 5 minutes). It queues an **immediate check** of the affected services (targets refreshed, installations compared, notifications as for periodic checks); deliveries during a check are merged. **Rate-limited** (30 per minute per hook and per client address), **replay protection** by delivery ID (`X-GitHub-Delivery`, `X-Gitlab-Event-UUID` / `Idempotency-Key`, `X-WRM-Delivery`, the generic signature), audit `git.webhook`, `git.webhook_rejected`, `git.webhook_enabled`, `git.webhook_disabled`. The secret is shown once and stored encrypted.
+  - **Bundles from CI artifacts** (table `git_feeds`): a URL (GitLab job artifacts API, Jenkins artifact URL, any HTTPS URL) with an optional auth header (encrypted; `Basic user:token` is encoded), fetched by hand or every N minutes by the Git scheduler, imported as an offline bundle when it changed (the feed keeps its newest bundle). Audit `git.bundle_fetched`, `git.bundle_fetch_failed`, `git.feed_added`, `git.feed_changed`, `git.feed_deleted`.
+  - **Deploy method "CI pipeline" per service** (table `git_pipelines`, the service's *Edit* dialog, policy `git_update`): *Update* / *Upgrade* trigger a **Jenkins** job (`buildWithParameters` with user + API token or the job's trigger token; queue item and build followed) or a **GitLab pipeline** (trigger token; status read with the source's read token) with `server`, `install_path` and `version`. Same plan, confirmation, policies and audit as a normal update (`git.update` / `git.upgrade` with `via: ci`, link, result); the run history shows the CI status and a link. Audit `git.pipeline_saved`, `git.pipeline_deleted`.
+- API: `GET /api/git/gitignore/{app}`, `POST …/preview`, `…/download`, `…/mr`; `POST|DELETE /api/git/sources/{id}/hook`; `POST /api/git/feeds`, `PUT|DELETE /api/git/feeds/{id}`, `POST /api/git/feeds/{id}/fetch`; `PUT|DELETE /api/git/pipelines/{app}`; `POST /api/hooks/git/{hook_id}`. Git sources take `write_token`; the workspace state lists `feeds` and `pipelines` (no secrets).
+- Tests: `git_gitignore_test.go` (candidates from a check on the fake SSH host, warnings, preview, download, merge request only with a write token, the explicit request and the typed repository — fake GitLab — and a pull request on the fake GitHub, policy), `git_ci_test.go` (webhook tokens, signatures, rejections, replays and rate limit; artifact feed import, unchanged, error and schedule; Jenkins job and GitLab pipeline runs, failure, policy).
+
+### Changed
+- Checks record the **size** of files found only on servers (`wc -c` in the hashing script).
+- Write calls to the Git API share the error handling of read calls (`gitProvider.do`).
+- The roadmap is done: `ROADMAP.md` keeps a short note for new ideas.
+
 ## [11.2.0] — 2026-10-09 — Git: new servers, install and transfer (phase 3)
 
 ### Added
