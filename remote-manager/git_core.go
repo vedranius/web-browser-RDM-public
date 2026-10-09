@@ -39,6 +39,8 @@ type gitCatalogApp struct {
 	Protected   []string `json:"protected"`
 	Fingerprint []string `json:"fingerprint"`
 	InstallHint []string `json:"install_hint"`
+	// deploy environments (v11.5.0); a catalog without them works as before
+	Environments []gitEnvironment `json:"environments,omitempty"`
 }
 
 type gitCatalogSource struct {
@@ -126,6 +128,11 @@ func (a *gitCatalogApp) normalize() error {
 		}
 	}
 	a.Fingerprint = fp
+	envs, err := normalizeEnvs(a.Name, a.Environments)
+	if err != nil {
+		return err
+	}
+	a.Environments = envs
 	return nil
 }
 
@@ -161,7 +168,7 @@ func (c *gitCatalog) normalize() error {
 		}
 		seen[strings.ToLower(c.Apps[i].Name)] = true
 	}
-	return nil
+	return checkEnvPaths(c.Apps)
 }
 
 func (c *gitCatalog) app(name string) (*gitCatalogApp, bool) {
@@ -230,9 +237,16 @@ func fnmatchRe(pattern string) *regexp.Regexp {
 func fnmatch(name, pattern string) bool { return fnmatchRe(pattern).MatchString(name) }
 
 // globHit matches a relative path or its base name (protected files, as the deploy tool does).
+// A pattern starting with / is anchored: it matches the whole relative path only.
 func globHit(rel string, globs []string) bool {
 	base := path.Base(rel)
 	for _, g := range globs {
+		if strings.HasPrefix(g, "/") {
+			if fnmatch(rel, g[1:]) {
+				return true
+			}
+			continue
+		}
 		if fnmatch(rel, g) || fnmatch(base, g) {
 			return true
 		}
@@ -250,6 +264,12 @@ func globHitDir(rel string, globs []string) bool {
 	for i := 1; i < len(parts); i++ {
 		dir := strings.Join(parts[:i], "/")
 		for _, g := range globs {
+			if strings.HasPrefix(g, "/") {
+				if fnmatch(dir, g[1:]) {
+					return true
+				}
+				continue
+			}
 			if fnmatch(dir, g) || fnmatch(parts[i-1], g) {
 				return true
 			}
