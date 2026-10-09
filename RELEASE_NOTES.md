@@ -31,11 +31,23 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 
 - Per server: SSH, a clean non-interactive shell, root or not, write access (also for a path that does not exist yet), the state directory, unreadable subdirectories, signs of another deploy method (`.git` checkout, release directories), a public web root, and `sha256sum` / `rsync` / `tar` with their versions.
 
-### ⬆️ Upgrading from v11.4.0
+### ⬆️ Upgrading from v11.4.1
 
 Replace the binary. The database gets one new table (`git_env_exclusions`); the previous binary still starts on it. Nothing changes until you add environments to a service. Patterns starting with `/` are now anchored to the service root.
 
 See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.5.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.4.1 — clipboard history per user
+
+#### 🛠 Fixes
+
+- **Clipboard history per user** ([#30](https://github.com/vedranius/web-browser-RDM-public/issues/30)): the *Clipboard* panel (right panel) kept one history per browser, so after signing out and signing in as another user on the same browser, the previous user's copied texts were still visible. The history is now kept **per user**, and **signing out removes it** from the browser.
+
+#### ⬆️ Upgrading from v11.4.0
+
+Replace the binary; the database does not change. The browser-wide clipboard history of earlier versions cannot be attributed to a user, so it is deleted on the first sign-in: the *Clipboard* panel starts empty once.
 
 ---
 

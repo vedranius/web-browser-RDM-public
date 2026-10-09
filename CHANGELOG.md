@@ -28,6 +28,11 @@ All notable changes to Web Remote Manager PRO. The format follows
 - The backup list of the per-installation *Rollback…* skips the `backups` and `deploys` directories of the environment state.
 - `PUT /api/git/catalog/apps/{name}` keeps the environments of a service when the request does not send `environments`.
 
+## [11.4.1] — 2026-10-09 — Clipboard history per user
+
+### Fixed
+- **The clipboard history leaked between accounts on the same browser** ([#30](https://github.com/vedranius/web-browser-RDM-public/issues/30)). The *Clipboard* panel stored its history in one browser-wide `localStorage` key, so after signing out and signing in as another user, the previous user's copied texts were still listed. The history is now stored per user (`wrm_clipboard_v9:u<user id>`), signing out removes the signed-in user's history from the browser, and the old browser-wide key is deleted on the next sign-in (it cannot be attributed to a user).
+
 ## [11.4.0] — 2026-10-09 — Git: every file of an installation, partial and incremental checks
 
 ### Added
