@@ -12,11 +12,20 @@ const file = process.argv[2] || path.join(__dirname, '..', 'remote-manager', 'st
 const html = fs.readFileSync(file, 'utf8');
 const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]);
 if (!scripts.length) { console.error('no inline script found'); process.exit(1); }
-const js = scripts.reduce((a, b) => (b.length > a.length ? b : a));
+let js = scripts.reduce((a, b) => (b.length > a.length ? b : a));
 
 let problems = 0;
 try { new vm.Script(js, { filename: 'index.html <script>' }); }
 catch (e) { console.error('JavaScript syntax error:', e.message); process.exit(1); }
+// Scripts loaded on demand (static/git.js): syntax, and their translations and keys are checked with the page.
+for (const extra of ['git.js']) {
+  const f = path.join(path.dirname(file), extra);
+  if (!fs.existsSync(f)) continue;
+  const src = fs.readFileSync(f, 'utf8');
+  try { new vm.Script(src, { filename: extra }); }
+  catch (e) { console.error(`JavaScript syntax error in ${extra}:`, e.message); process.exit(1); }
+  js += '\n' + src;
+}
 
 // Evaluate only the translation tables: the LANGS literal and the later Object.assign(LANGS.xx, {…}) blocks.
 const start = js.indexOf('const LANGS = {');
