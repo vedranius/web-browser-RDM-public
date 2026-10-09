@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -170,7 +170,7 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
-## Upgrading from v11.4.0
+## Upgrading from v11.4.1
 
 Replace the binary. The database gets one new table (`git_env_exclusions`); the previous binary still starts on it and ignores it. Catalogs and installations without environments work exactly as before.
 
@@ -178,6 +178,12 @@ Replace the binary. The database gets one new table (`git_env_exclusions`); the 
 - **Server-side state:** an environment deploy keeps its state next to the installation, by default in `<path>/.deploy-bak` (the existing backup directory): `state.json`, `history.jsonl`, `deploys/<id>.json`, `backups/rollback-<id>/` and the lock `.lock/`. Backups keep the existing `<id>-<YYYYMMDD-HHMMSS>` layout, and `VERSION.md` / `updates.jsonl` are written as before, so file-based tools keep working.
 - **Anchored patterns:** an exclude or ignore pattern that starts with `/` now matches the whole relative path only (`/lib/a.py` does not match `x/lib/a.py`). *Exclude permanently* writes such patterns; existing patterns are unchanged.
 - The same policies apply: `git_update` (deploy), `git_upgrade` (deploy of another ref), `git_rollback`, `git_restart`. Environment deploys run right away (no scheduling); use a dry run to preview.
+
+## Upgrading from v11.4.0
+
+Replace the binary; the database does not change.
+
+- **Clipboard history per user:** the *Clipboard* panel now keeps its history per signed-in user, and signing out removes it from the browser ([#30](https://github.com/vedranius/web-browser-RDM-public/issues/30)). The browser-wide history of earlier versions is deleted on the first sign-in, so the panel starts empty once.
 
 ## Upgrading from v11.3.0
 
@@ -1059,7 +1065,7 @@ Right panel → **Sessions**:
 Right panel → **Clipboard**: the last 20 texts you copied from terminals (and copied paths).
 
 - Click an entry to copy it again. **Paste** sends it to the focused terminal.
-- The history is kept per workspace session in your browser (local storage), not on the server. Use **Clear** to empty it.
+- The history is kept per workspace session and **per user** in your browser (local storage), not on the server. Another account signing in on the same browser does not see it, and **signing out removes it**. Use **Clear** to empty it.
 
 ### Sharing: members, roles & links
 
