@@ -4510,6 +4510,15 @@ Object.assign(LANGS.en, {
   po_git_checks_off: 'Nobody', po_git_checks_admins: 'Administrators', po_git_checks_all: 'Everyone',
   p_git_check_interval_minutes: 'Periodic check interval (minutes)', p_git_check_interval_minutes_d: 'How often the servers of users who turned on periodic checks are checked. 0 = no periodic checks.',
   p_git_backup_words: 'Backup words', p_git_backup_words_d: 'Path segments with one of these words (comma-separated) are treated as copies and backups and skipped.',
+  ne_git_deploy_started: 'Git: an update, upgrade or rollback started', ne_git_deploy_done: 'Git: an update, upgrade or rollback succeeded', ne_git_deploy_failed: 'Git: an update, upgrade or rollback failed or was rolled back',
+  ne_git_restart_scheduled: 'Git: a service restart is scheduled', ne_git_restart_done: 'Git: a service restart is done (with its health check)', ne_git_job_upcoming: 'Git: a scheduled run starts soon',
+  p_git_update: 'Git updates', p_git_update_d: 'Who may update installations on servers (newest version of the ref they follow) and stamp VERSION.md.',
+  p_git_upgrade: 'Git upgrades', p_git_upgrade_d: 'Who may switch installations to another branch or version.',
+  p_git_rollback: 'Git rollbacks', p_git_rollback_d: 'Who may restore a .deploy-bak backup on a server.',
+  p_git_restart: 'Service restarts', p_git_restart_d: 'Who may restart the systemd / supervisor units of installations (always opt-in per run).',
+  po_git_update_off: 'Nobody', po_git_update_admins: 'Administrators', po_git_update_all: 'Everyone', po_git_upgrade_off: 'Nobody', po_git_upgrade_admins: 'Administrators', po_git_upgrade_all: 'Everyone',
+  po_git_rollback_off: 'Nobody', po_git_rollback_admins: 'Administrators', po_git_rollback_all: 'Everyone', po_git_restart_off: 'Nobody', po_git_restart_admins: 'Administrators', po_git_restart_all: 'Everyone',
+  p_git_schedule_grace_minutes: 'Grace period of scheduled runs (minutes)', p_git_schedule_grace_minutes_d: 'A scheduled update or restart is skipped when WRM was not running at its time for longer than this.',
 });
 Object.assign(LANGS.hr, {
   git_lbl: 'Git', git_load_failed: 'Git radni prostor nije se mogao učitati.',
@@ -4519,6 +4528,15 @@ Object.assign(LANGS.hr, {
   po_git_checks_off: 'Nitko', po_git_checks_admins: 'Administratori', po_git_checks_all: 'Svi',
   p_git_check_interval_minutes: 'Interval periodičnih provjera (minute)', p_git_check_interval_minutes_d: 'Koliko se često provjeravaju serveri korisnika koji su uključili periodične provjere. 0 = bez periodičnih provjera.',
   p_git_backup_words: 'Riječi za kopije', p_git_backup_words_d: 'Dijelovi putanje s nekom od ovih riječi (odvojenih zarezom) smatraju se kopijama i sigurnosnim kopijama i preskaču se.',
+  ne_git_deploy_started: 'Git: pokrenuto je ažuriranje, nadogradnja ili vraćanje', ne_git_deploy_done: 'Git: ažuriranje, nadogradnja ili vraćanje uspjelo je', ne_git_deploy_failed: 'Git: ažuriranje, nadogradnja ili vraćanje nije uspjelo ili je vraćeno',
+  ne_git_restart_scheduled: 'Git: zakazano je ponovno pokretanje servisa', ne_git_restart_done: 'Git: ponovno pokretanje servisa je gotovo (s provjerom stanja)', ne_git_job_upcoming: 'Git: zakazano izvođenje uskoro počinje',
+  p_git_update: 'Git ažuriranja', p_git_update_d: 'Tko smije ažurirati instalacije na serverima (najnovija verzija refa koji prate) i upisivati VERSION.md.',
+  p_git_upgrade: 'Git nadogradnje', p_git_upgrade_d: 'Tko smije prebaciti instalacije na drugu granu ili verziju.',
+  p_git_rollback: 'Git vraćanja', p_git_rollback_d: 'Tko smije vratiti sigurnosnu kopiju iz .deploy-bak na serveru.',
+  p_git_restart: 'Ponovno pokretanje servisa', p_git_restart_d: 'Tko smije ponovno pokretati systemd / supervisor jedinice instalacija (uvijek izričit odabir po izvođenju).',
+  po_git_update_off: 'Nitko', po_git_update_admins: 'Administratori', po_git_update_all: 'Svi', po_git_upgrade_off: 'Nitko', po_git_upgrade_admins: 'Administratori', po_git_upgrade_all: 'Svi',
+  po_git_rollback_off: 'Nitko', po_git_rollback_admins: 'Administratori', po_git_rollback_all: 'Svi', po_git_restart_off: 'Nitko', po_git_restart_admins: 'Administratori', po_git_restart_all: 'Svi',
+  p_git_schedule_grace_minutes: 'Rok zakazanih izvođenja (minute)', p_git_schedule_grace_minutes_d: 'Zakazano ažuriranje ili ponovno pokretanje preskače se ako WRM u to vrijeme nije radio dulje od ovoga.',
 });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
@@ -5925,7 +5943,7 @@ const POLICY_GROUPS = {
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
     ['pg_proxies', ['proxies']],
-    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words']],
+    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_schedule_grace_minutes']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
@@ -13887,7 +13905,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();
