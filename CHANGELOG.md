@@ -12,6 +12,7 @@ All notable changes to Web Remote Manager PRO. The format follows
 
 ### Fixed
 - Tests: a test SSH server could get a port an earlier test server had used, and its new host key was then refused as a changed key (`TestStatusMonitor` failed intermittently). The test servers now forget the key remembered for their address when they start.
+- CI: the Docker image job pulls the Dockerfile's base images from Google's Docker Hub mirror (`mirror.gcr.io`) first, with retries and Docker Hub as the fallback, because anonymous Docker Hub pulls from shared runners were refused with `429 Too Many Requests`.
 
 ## [11.6.0] — 2026-10-09 — Git: activity and deploy history per user and branch
 
