@@ -362,28 +362,76 @@ func main() {
 	resetPassword := flag.String("reset-password", "", "set a new temporary password for `USER` (e.g. a locked-out administrator) and exit")
 	reset2FA := flag.Bool("reset-2fa", false, "together with -reset-password: also turn off two-factor authentication")
 	healthcheck := flag.Bool("healthcheck", false, "check /healthz of the server running on this machine and exit (for container health checks)")
+	installSvc := flag.Bool("install-service", false, "install WRM as a service that starts at boot (systemd, launchd, rc.d or a Windows service), start it and exit")
+	uninstallSvc := flag.Bool("uninstall-service", false, "stop and remove the WRM service and exit (the data stays)")
+	svcStatus := flag.Bool("service-status", false, "show whether the WRM service is installed and running, and exit")
+	noSvcPrompt := flag.Bool("no-service-prompt", false, "do not ask on the console whether to install WRM as a service")
+	svcName := flag.String("service-name", "wrm", "`NAME` of the service for -install-service, -uninstall-service and -service-status")
+	svcScope := flag.String("service-scope", "", "macOS: `system` (LaunchDaemon, starts at boot) or user (LaunchAgent, starts at login)")
+	svcUser := flag.String("service-user", "", "Unix `ACCOUNT` the service runs as (default: the user who runs the installer, or SUDO_USER)")
+	flag.StringVar(&serviceMode, "service", "", "set by the service definition: systemd, launchd, rcd, rcd-openbsd or windows (not for interactive use)")
+	envFile := flag.String("env-file", "", "read environment variables (KEY=value lines) from `FILE` before starting; variables already set win")
+	workDir := flag.String("workdir", "", "change to `DIR` before starting")
 	flag.Parse()
 	if *showVersion {
 		fmt.Println(AppVersion)
 		return
 	}
+	if *workDir != "" {
+		if err := os.Chdir(*workDir); err != nil {
+			log.Fatalf("-workdir: %v", err)
+		}
+	}
+	if *envFile != "" {
+		if err := loadEnvFile(*envFile); err != nil {
+			log.Fatalf("-env-file: %v", err)
+		}
+	}
 	if *healthcheck {
 		os.Exit(runHealthcheck())
 	}
+	currentServiceName = *svcName
+	opts := serviceOptions{Name: *svcName, Scope: *svcScope, User: *svcUser}
+	if *installSvc || *uninstallSvc || *svcStatus {
+		os.Exit(runServiceCommand(*installSvc, *uninstallSvc, *svcStatus, opts))
+	}
+	if *resetPassword != "" {
+		initDB()
+		loadAppSettings()
+		initServerSecret()
+		initEncryptionKey()
+		migrateSessionTokens()
+		ensureAdminExists()
+		if err := resetPasswordCLI(*resetPassword, *reset2FA); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+	if handled, code := runAsWindowsService(*svcName, serve); handled {
+		os.Exit(code)
+	}
+	if shouldPromptService(*noSvcPrompt, *svcName) && promptService(opts) {
+		return
+	}
+	os.Exit(serve(nil))
+}
 
+// serve runs the server until a signal, a stop of the Windows service (stop) or a restart
+// request, and returns the exit code.
+func serve(stop <-chan struct{}) int {
+	if serviceMode != "" {
+		openServiceLog()
+		if switchToNewerBinary() {
+			return exitRestart
+		}
+	}
 	initDB()
 	loadAppSettings()
 	initServerSecret()
 	initEncryptionKey()
 	migrateSessionTokens()
 	ensureAdminExists()
-	if *resetPassword != "" {
-		if err := resetPasswordCLI(*resetPassword, *reset2FA); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-	log.Printf("Web Remote Manager %s starting", AppVersion)
+	log.Printf("Web Remote Manager %s starting%s", AppVersion, map[bool]string{true: " (service: " + serviceMode + ")"}[serviceMode != ""])
 	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
 	startTURN()
 	tunnelMgr.startAlways()
@@ -438,16 +486,24 @@ func main() {
 		log.Printf("NOTE: self-registration is open — anyone who can reach this server can create an account.")
 	}
 
+	shutdownDone := make(chan struct{})
 	go func() {
-		stop := make(chan os.Signal, 1)
-		signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-		<-stop
-		log.Printf("Shutting down…")
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+		select {
+		case <-sig:
+			log.Printf("Shutting down…")
+		case <-stop:
+			log.Printf("Service stop requested, shutting down…")
+		case <-restartState.ch:
+			log.Printf("Restarting…")
+		}
 		stopTURN()
 		tunnelMgr.stopAll("WRM was stopped")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		srv.Shutdown(ctx)
+		close(shutdownDone)
 	}()
 
 	var err error
@@ -461,7 +517,12 @@ func main() {
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
+	<-shutdownDone
 	db.Close()
+	if ok, target := restartRequested(); ok {
+		return finishRestart(target)
+	}
+	return 0
 }
 
 func serveIndex(w http.ResponseWriter) {
