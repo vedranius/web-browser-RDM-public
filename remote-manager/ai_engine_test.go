@@ -180,7 +180,6 @@ func toolResultFor(s *aiSession, callPrefix string) map[string]interface{} {
 	return nil
 }
 
-
 // ─── tests ───────────────────────────────────────────
 
 // The ask mode: reads run, a change waits for an approval; the user edits the command
@@ -279,7 +278,7 @@ func TestAIAskModeApprovalEditAndInjection(t *testing.T) {
 	var recs int
 	db.QueryRow(`SELECT protocol, status FROM terminal_sessions WHERE id=?`, s.termID).Scan(&proto, &status)
 	db.QueryRow(`SELECT COUNT(*) FROM session_recordings WHERE session_id=?`, s.termID).Scan(&recs)
-	if proto != "ai" || status != "ended" || recs != 1 {
+	if proto != "ai" || status != "closed" || recs != 1 {
 		t.Fatalf("recording: %s %s %d", proto, status, recs)
 	}
 	code, v = e.admin.aiDo("GET", fmt.Sprintf("/api/recordings/%d/cast", s.termID), nil)
