@@ -7,9 +7,9 @@
 
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
+**A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v11.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.0.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -70,6 +70,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Git workspace: .gitignore helper](#git-workspace-gitignore-helper)
    - [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional)
    - [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks)
+   - [AI assistant](#ai-assistant)
    - [Network tools](#network-tools)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
    - [Search in files](#search-in-files)
@@ -114,6 +115,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
 - **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels), **PuTTY** (with proxies) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
 - **Git workspace**: which version of which service runs where — compare installations on your servers **file by file** with **GitLab / GitHub** or an **offline bundle**, see what is *old*, *missing* or *changed by hand*, with diffs and notifications — and **update, upgrade or roll back** them over SSH (backups, atomic writes, checks, automatic rollback, opt-in restarts, maintenance windows), deploy to **environments** of ordered servers with a reviewed one-shot plan, a dry run, a server-side lock, history and rollback per deploy, or **install them on a new server** and **transfer** them between servers with their per-host configuration; a **.gitignore helper**, and optional **CI integration** (GitLab / GitHub / Jenkins webhooks, bundles from CI artifacts, deploy through a pipeline).
+- **AI assistant** next to the terminal and the file manager: ask about a server and the assistant reads logs, services, packages and files through WRM's own tools. **Read-only**, **ask before every change** (the exact command or a diff, approved, edited or denied by you) or **automatic within limits** (an allow list, a time and an action limit you opt into). Destructive commands are always refused; administrators decide which modes, providers and models are allowed per connection, folder or tag, and every request, tool call and approval is audited and recorded. Works with the Anthropic API, OpenAI, Azure OpenAI, AWS Bedrock, Google Vertex AI and OpenAI-compatible local models, with the organisation's key or your own.
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions. **Installable as an app** (PWA) on desktops, tablets and phones.
 - **Sharing with roles**: give colleagues or guests access to some connections — as *Observer*, *Viewer*, *Operator* or *Moderator* — without ever revealing the passwords.
@@ -133,21 +135,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v11.7.0-linux-amd64
-   ./wrm-pro-v11.7.0-linux-amd64
+   chmod +x wrm-pro-v12.0.0-linux-amd64
+   ./wrm-pro-v12.0.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v11.7.0-windows-amd64.exe
+   .\wrm-pro-v12.0.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-android-arm64
-   chmod +x wrm-pro-v11.7.0-android-arm64 && ./wrm-pro-v11.7.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-android-arm64
+   chmod +x wrm-pro-v12.0.0-android-arm64 && ./wrm-pro-v12.0.0-android-arm64
    ```
 
    **Docker**
@@ -171,6 +173,16 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v11.7.0
+
+Replace the binary. The database gets new tables (`ai_providers`, `ai_sessions`, `ai_messages`) and the column `users.ai_blocked`; v11.7.0 still starts on it and ignores them.
+
+- **AI assistant** (off by default). An administrator turns it on in *Admin panel → AI assistant* (`ai_assistant` = `admins` or `all`) and adds the organisation's provider (Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Vertex AI or an OpenAI-compatible endpoint). Users then get an **AI** button in the title bar of SSH terminals and file managers. See [AI assistant](#ai-assistant).
+- New modes are restrictive by default: `ai_modes` = `read_only,ask` (the automatic mode must be allowed explicitly), personal API keys are off (`ai_personal_keys`), output is redacted before it is sent to the provider (`ai_redact_output`).
+- **Consumer chat subscriptions (Claude.ai, ChatGPT) cannot be used** by WRM or any other third-party application: use an API key, an enterprise gateway, or the MCP integration planned for v12.1.0.
+- AI sessions appear in *Sessions & recordings* with an **✦ AI** mark (the transcript is recorded like a terminal) and in the audit log as `ai.*` events.
+- The top bar no longer overlaps the *New window* button at about 1100 px.
 
 ## Upgrading from v11.6.1
 
@@ -1012,6 +1024,33 @@ WRM does not need Jenkins or GitLab CI; each of these is opt-in.
   - **GitLab pipeline:** the GitLab address (default: the Git source), the project (default: the service's project), the branch (default: the target's branch) and a **pipeline trigger token**; the variables are `server`, `install_path` and `version`. The status is read with the read token of the GitLab source on the same host.
   - The run goes through the **same plan, confirmation (production: the server name typed), policies and audit** (`git.update` / `git.upgrade` with `via: ci`, the link and the result) as a normal update. No files are written; the run history shows the CI status and a link. Afterwards WRM compares the installation again when it can log in. *Stop* stops waiting (the job keeps running in CI).
 
+### AI assistant
+
+An AI assistant in a panel **next to the terminal** (also from the file manager). Click **AI** in the title bar of an SSH terminal or file manager window, choose the provider, model and mode, and ask in plain language: *why is nginx failing?*, *free some disk space*, *raise the worker count*. The assistant explains every step and works only through WRM:
+
+- **The model never gets a shell.** It can only call WRM's tools: `system_info`, `read_file` (size-limited), `list_directory`, `tail_log`, `journal` (journalctl), `service_status`, `list_packages`, `processes`, `disk_usage`, `network_status`, `run_command`, `write_file` and `edit_file`. Every call goes through the **permission engine on the server**, which decides; WRM runs the result over its own SSH connection to that server (jump hosts, proxies and vault logins as for the terminal).
+- **Three modes per session** (the panel shows the current one; WRM's side of the policy decides):
+
+| Mode | What happens |
+|---|---|
+| **Read-only** | The read tools and commands the **read-only classifier** accepts (`systemctl status`, `journalctl -u …`, `df`, `ss -tulpn`, `dpkg -l`, `grep … /var/log/…`, pipes of such commands …). Anything that is not clearly read-only — unknown commands, redirections, `$( … )`, `sed -i`, `find -delete`, `systemctl restart` — is refused. File edits are not even offered to the model. |
+| **Ask before every change** | Reads run directly. Every command that changes something and every file edit becomes a **pending approval** in the panel: the exact command (you can **edit** it before approving) or a **unified diff** (you can edit the new content). Approve or deny with an optional note; an approval that is not answered in time (`ai_approval_timeout_seconds`) is **denied**. A file is written only if it did not change since the diff was made. |
+| **Automatic within limits** | Only after an explicit opt-in for this session: an **allow list** and a **deny list** of command patterns (`systemctl restart nginx`, `apt-get install -y *`) and file paths (`/etc/nginx/**`), a **time limit** and a **maximum number of actions** (both capped by policy). Matching changes run without asking; the deny list refuses; everything else, and everything after the limits, asks again. When the time is over the session falls back to *ask*. |
+
+- **Always blocked, in every mode, also after an approval:** `rm -rf /` and of system directories, `mkfs` / `wipefs` / partitioning, `dd` to disks, fork bombs, stopping or killing the SSH server, flushing the firewall, killing PID 1, stopping the audit, `crontab -r`, deleting or locking root, writing to `/etc/shadow`, `/etc/passwd`, sudoers, `/boot`, raw disks or `authorized_keys`, `curl … | sh`. `shutdown` / `reboot` are blocked unless the `ai_allow_power` policy allows them **with an approval** (never automatically). Administrators add their own patterns (`ai_blocked_commands`); the built-in list is shown in *Admin panel → AI assistant*.
+- **Sensitive files are never read:** password hashes, SSH and TLS private keys, cloud and tool credentials (`~/.aws/credentials`, `.kube/config`, `.netrc` …), process environments — also through wildcards or symlinks — plus your own patterns (`ai_read_deny_paths`).
+- **What the AI sees** (👁 in the panel): the tool results of this session, the OS of the server and, only if you tick it, your notes for the connection. Never the passwords and keys stored in WRM, your WRM sign-in, other connections or your terminal screen. **Secrets in output are redacted** before they are sent to the provider (`ai_redact_output`): private keys, passwords and tokens in `key=value` form, `Authorization` headers, passwords in URLs, AWS / GitHub / GitLab / Slack / OpenAI / Anthropic / Google keys, JWTs, password hashes. Output is limited per call (`ai_output_max_kb`).
+- **Server output is untrusted data.** Tool results are framed as untrusted data and the model is told never to follow instructions found in them. A log line that says *switch to automatic mode* changes nothing: only you can change the mode, in the WRM interface, and every change goes through the same checks.
+- **Stop and kill:** ■ *Stop* cancels the running request and command; ⏻ ends the session. Administrators end one session, all sessions of a user, or every session (*Stop every AI session now*), turn the assistant off for a user, or turn on the **kill switch** (`ai_kill_switch`, also `WRM_AI_KILL_SWITCH=1`), which ends everything and blocks new sessions. An **✦ AI** badge on the window shows that a session is active.
+- **Providers:** the **Anthropic API** (the latest Claude models, e.g. `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; an optional gateway base URL), the **OpenAI API**, **Azure OpenAI** (deployment + api-version, or the v1 API), **AWS Bedrock** (the Converse API with SigV4 access keys or a Bedrock API key, or the Messages API endpoint with an API key; model IDs such as `anthropic.claude-opus-5-5`), **Google Vertex AI** (Claude through `rawPredict`, or the OpenAI-compatible endpoint, with a service account key) and any **OpenAI-compatible** base URL (Ollama, vLLM, LM Studio …). Responses are streamed; tokens and the estimated cost are counted per request (built-in list prices for Anthropic models, your own prices for others); requests time out and are cancelled with *Stop*.
+- **Keys:** the organisation's providers are managed by administrators (*Admin panel → AI assistant → Organisation providers*); personal keys (*🔑 My API keys* in the panel) only when `ai_personal_keys` allows them. Keys are encrypted at rest and **never sent to the browser**; *Test* sends one tiny request.
+- **Consumer subscriptions do not work:** Claude.ai and ChatGPT chat subscriptions cannot be used by third-party applications. Use an API key (or your company's gateway), or connect a desktop AI app to WRM over MCP (planned for v12.1.0).
+- **Shared connections:** the assistant can be used on a shared connection by signed-in users whose role allows terminals and file changes (*Operator* and up); their notes are not shared.
+
+**Admin policies** (*Admin panel → AI assistant*): who may use it (`ai_assistant`), the allowed modes (`ai_modes`) and **mode rules per tag, folder, connection or host** — the **most restrictive** matching rule wins, e.g. `[{"match":"tag","value":"prod","modes":["read_only"]}, {"match":"folder","value":"Staging","modes":["read_only","ask"]}]` — the default mode, providers and models (`ai_provider_kinds`, `ai_models`), personal keys, redaction, sharing notes, the approval timeout, the automatic mode's maximum time and actions, power commands, extra blocked commands and unreadable files, the command time limit, the output limit, the steps per request, the idle timeout and the **transcript retention** (`ai_transcript_retention_days`). A running session follows a policy change at its next tool call.
+
+**Audit and transcripts:** every AI request (provider, model, tokens, cost), every tool call with its inputs and its (redacted) output, every approval and denial with who and when, mode changes, stops and kills are audit events (`ai.*`) linked to the connection. The session transcript (redacted) is kept for `ai_transcript_retention_days` and shown to its user (🕘 in the panel) and to administrators (*Admin panel → AI assistant → Transcript*); it is also **recorded like a terminal session** (*Sessions & recordings*, marked ✦ AI, with replay).
+
 ### Network tools
 
 **🧰 Tools** in the top bar (or right-click a connection → *Network tools from this server…* / *Check ports of this host*) — the usual first checks when something does not answer, without opening a terminal:
@@ -1212,6 +1251,7 @@ Personal preferences are stored per browser; everything security-related is stor
 - **Voice & network:** voice on/off, participants per call, built-in TURN relay (port, public IP, host name, relay ports, private networks), additional STUN/TURN servers.
 - **Host keys:** remembered SSH host keys and FTPS certificates; forget an entry after a server was reinstalled.
 - **Audit log:** searchable and filterable (event type, user, date range), linked to sessions, **CSV export**, **Verify integrity** (hash chain).
+- **AI assistant:** organisation providers, AI sessions with transcripts, replay and *Kill*, usage per user (turn the assistant off for a user), the kill switch and the AI policies.
 - **Sessions & recordings:** every terminal session, with replay and `.cast` download.
 - **File transfers:** every transferred file with size and SHA-256, CSV export.
 
@@ -1350,6 +1390,26 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `update_repo` | `vedranius/web-browser-RDM-public` | GitHub repository (`owner/name`) whose releases are checked and installed |
 | `update_proxy` | – | HTTP proxy for the update check and download (e.g. `http://proxy.example.com:3128`); empty = `HTTPS_PROXY` / `HTTP_PROXY` |
 | `self_update` | `admins` | who may update, roll back and restart WRM from the version badge: `off`, `admins` (never in Docker) |
+| `ai_assistant` | `off` | who may use the AI assistant: `off`, `admins`, `all` |
+| `ai_kill_switch` | `0` | `1` ends every AI session and blocks new ones |
+| `ai_modes` | `read_only,ask` | allowed modes (`read_only`, `ask`, `auto`); mode rules can only narrow them |
+| `ai_default_mode` | `read_only` | mode of a new session when allowed: `read_only`, `ask` |
+| `ai_mode_rules` | `[]` | JSON rules `{"match": "tag"\|"folder"\|"connection"\|"host", "value", "modes"}`; the most restrictive matching rule wins |
+| `ai_personal_keys` | `off` | who may add their own provider keys: `off`, `admins`, `all` |
+| `ai_provider_kinds` | all | allowed provider types: `anthropic,openai,azure,bedrock,vertex,openai_compatible` |
+| `ai_models` | – | allowed models, comma-separated patterns (`claude-*`); empty = every model of the providers |
+| `ai_redact_output` | `1` | redact secrets before output is sent to the provider (transcripts and the audit are always redacted) |
+| `ai_share_notes` | `1` | users may opt in to send their connection notes |
+| `ai_transcript_retention_days` | `90` | AI transcripts are deleted after this time (1–3650) |
+| `ai_approval_timeout_seconds` | `300` | an unanswered approval is denied (30–3600) |
+| `ai_auto_max_minutes` / `ai_auto_max_actions` | `60` / `50` | the largest time limit and action count a user may opt into |
+| `ai_allow_power` | `off` | `shutdown` / `reboot`: `off` (blocked) or `ask` (each needs an approval, never automatic) |
+| `ai_blocked_commands` | – | extra command patterns refused in every mode |
+| `ai_read_deny_paths` | – | extra path patterns never read (a pattern without `/` matches the file name) |
+| `ai_command_timeout_seconds` | `60` | a tool call is stopped after this time |
+| `ai_output_max_kb` | `64` | output per tool call and the read limit for files |
+| `ai_max_steps` | `25` | model requests per user message |
+| `ai_idle_minutes` | `60` | an idle AI session ends |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
@@ -1406,9 +1466,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v11.7.0-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v11.7.0-linux-amd64 -service-status
-sudo ./wrm-pro-v11.7.0-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.0.0-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.0.0-linux-amd64 -service-status
+sudo ./wrm-pro-v12.0.0-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). Edit that file and restart the service to change them.
@@ -1437,7 +1497,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v11.7.0-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.0.0-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1537,6 +1597,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Proxies:** proxy passwords are encrypted, never sent to the browser and not shown to grantees; a proxy shared with a password is never reached through the grantee's own jump hosts; WRM tunnel proxies cannot be shared; IPMI / SOL never bypass a proxy silently (refused). Creation, changes, grants and tests are audited (`proxy.*`) and every session records its route.
 - **Notifications:** channel secrets are encrypted and write-only; users only see enabled channels by name and type; messages go only to the owner of a connection or credential; configuration changes are audited as `admin.*` (always recorded).
 - **Quick connect, notes & network tools:** quick connections are ordinary connections of their owner (same checks, encryption, host keys, audit) that expire; notes are only shown to the owner and rendered as escaped text; network tools only take host names or addresses (never options or shell characters), run from the WRM server or the user's own SSH connections, one at a time per user, and are audited (`nettool.run`) — limit them with `network_tools`.
+- **AI assistant:** the model acts only through WRM's tools; the server-side permission engine (read-only classifier, approvals, automatic-mode limits, the always-blocked destructive list, unreadable sensitive files) decides every call, and only the user changes the mode. Server output is passed to the model as untrusted data and redacted (policy); provider keys are encrypted and never sent to the browser; every request, tool call and approval is audited and recorded. See [SECURITY.md](SECURITY.md#ai-assistant-threat-model).
 - **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
 
 ---
@@ -1548,6 +1609,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - Inventory import reads `.xlsx` and CSV, not old `.xls`; NetBox sync updates and reports, but never deletes connections.
 - Password rotation works for SSH logins that may run `passwd` (Linux, BSD, macOS) — not for Windows/RDP, network devices or IPMI. *Who has access* shows `~/.ssh/authorized_keys` of the login user only.
 - RDP, VNC and Telnet need **guacd** next to WRM (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); file transfer and printer redirection of RDP are not offered.
+- The AI assistant works with SSH connections (not RDP / VNC / Telnet or BMC consoles), runs non-interactive commands only (no editors, pagers or password prompts), and its read-only classifier is deliberately strict: a harmless command it does not know needs an approval. Consumer chat subscriptions (Claude.ai, ChatGPT) cannot be used; desktop AI apps over MCP come with v12.1.0.
 - No **SSO/LDAP/SAML** yet (local accounts with 2FA).
 - Voice calls are a **mesh**: fine up to about 12 people; larger meetings would need an SFU.
 - No SSH **agent forwarding**. Jump hosts must be SSH servers (no HTTP/SOCKS proxies as jump hosts).
@@ -1831,6 +1893,28 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/update/rollback` | Swap back to `<binary>.previous` and restart |
 | POST | `/api/update/restart` | `{local: true}`: restart with the newest valid binary in the folder (or the same one without `local`) |
 
+**AI assistant** (signed-in users the policy allows; the connection must be their own or shared with a role that allows terminals and file changes — add `?share_token=` for shared ones)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/ai/config` | `{enabled, reason, providers: [{id, name, kind, scope, models, default_model}], modes, default_mode, personal_keys, redact_output, kill_switch, active: [sessions]…}` — never keys |
+| GET | `/api/ai/connections/{id}` | `{allowed_modes, default_mode, rules, has_notes, sees}` for a connection (most restrictive rule wins) |
+| GET / POST / PUT / DELETE | `/api/ai/providers[/{id}]` | Personal providers (policy `ai_personal_keys`); secrets are write-only (`api_key`, `access_key_id`, `secret_access_key`, `session_token`, `service_account`; omitted = unchanged, `""` = removed), responses carry `has_api_key` / `has_access_key` / `has_service_account` |
+| POST | `/api/ai/providers/{id}/test` | One tiny request `{model}` → `{ok, reply \| error}` |
+| GET / POST | `/api/ai/sessions` | Own sessions / start `{conn_id, provider_id, model, mode, auto: {allow, deny, path_allow, path_deny, minutes, max_actions}, confirm_auto, share_notes}` |
+| GET | `/api/ai/sessions/{id}` | Session and its (redacted) transcript |
+| GET | `/api/ai/sessions/{id}/events?since=N` | Server-sent events: `session`, `user`, `assistant_start`, `text`, `assistant_done`, `tool_call`, `approval_required`, `approval_resolved`, `tool_result`, `mode`, `usage`, `busy`, `notice`, `error`, `ended` |
+| POST | `/api/ai/sessions/{id}/prompt` | `{text}` |
+| POST | `/api/ai/sessions/{id}/mode` | `{mode, auto, confirm}` |
+| POST | `/api/ai/sessions/{id}/approvals/{approval}` | `{decision: "approve"\|"deny", command?, content?, note?}` (only the session's user) |
+| POST | `/api/ai/sessions/{id}/stop` · `/kill` | Cancel the running request / end the session |
+| POST | `/api/ai/kill-all` | End all own sessions |
+| GET / POST / PUT / DELETE | `/api/admin/ai/providers[/{id}]`, POST `…/{id}/test` | Organisation providers (administrators) |
+| GET | `/api/admin/ai/sessions?user&conn&status&limit`, `/api/admin/ai/sessions/{id}` | Every AI session; a transcript (viewing is audited) |
+| POST | `/api/admin/ai/sessions/{id}/kill`, `/api/admin/ai/users/{id}/kill`, `/api/admin/ai/kill-all` | Kill switch per session, per user, for everyone |
+| PUT | `/api/admin/ai/users/{id}` | `{blocked}`: turn the assistant off (and end the sessions) for a user |
+| GET | `/api/admin/ai/summary` | Usage per user, active sessions, the destructive rules |
+
 **Terminal sessions & recordings** (administrators: all; users: own sessions and sessions on their connections)
 
 | Method | Endpoint | Description |
@@ -1884,6 +1968,17 @@ remote-manager/
   service.go      run as a service: prompt, env file, service files, versions, newest binary in the folder, restarts
   service_unix.go / service_windows.go  systemd, launchd, rc.d installers / Windows service (SCM)
   update.go       update check against GitHub releases, verified self-update, rollback, restart
+  ai_engine.go    AI sessions: tool calls through the permission engine, approvals, kill switch, transcript, recording, the agent loop
+  ai_policy.go    AI modes, mode rules (most restrictive wins), automatic-mode limits, the decision
+  ai_classify.go  read-only command classifier and unreadable sensitive files
+  ai_destructive.go  always-blocked destructive patterns
+  ai_shell.go     shell command parser and glob matching for the AI checks
+  ai_tools.go     the AI tools (fixed read scripts, run_command, file edits with diffs)
+  ai_redact.go    redaction of secrets in AI output, transcripts and audit
+  ai_llm.go       model calls: Anthropic Messages, OpenAI Chat Completions, Bedrock Converse; streaming, usage, cost
+  ai_cloud.go     AWS SigV4, AWS event streams, Google service account tokens
+  ai_provider.go  AI providers (organisation / personal), encrypted keys, schema
+  ai_api.go       /api/ai and /api/admin/ai
   files.go        file API: list, download, ZIP, streamed upload, mkdir, rename, delete
   search.go       recursive name / content search (NDJSON stream)
   sftp_pool.go    pooled SFTP connections with liveness checks
@@ -1954,9 +2049,13 @@ remote-manager/
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
   update_test.go       self-update against a fake GitHub releases server: success and rollback, checksum mismatch, missing checksums file or line, missing asset, wrong -version, policy, Docker, local binary
+  ai_policy_test.go    read-only classifier (many cases), destructive patterns (every rule, false positives), admin patterns, globs
+  ai_engine_test.go    AI sessions against a fake Anthropic / OpenAI-compatible server and the fake SSH host: approve, edit, deny, timeout, read-only, destructive in every mode, automatic-mode limits, file edits with diffs, kill switch, most restrictive policy, keys never returned, redaction, audit, transcript and recording, prompt injection, the event stream
+  ai_provider_test.go  SigV4 test vector, Bedrock Converse event stream, Vertex token exchange, Azure / OpenAI, Anthropic request shape, refusal, cancel, cost
   termcwd_test.go      the shell's working directory over SSH against the fake SSH host (a real sh on a PTY): start directory, after cd, a foreground job
   static/index.html          the entire web UI (embedded into the binary)
   static/git.js              the Git workspace (loaded when it is opened)
+  static/ai.js               the AI assistant panel and the admin AI tab (loaded when used)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
 .github/workflows/build.yml  CI: vet, gofmt, tests (race), JS syntax check, builds all platforms, Docker image, releases on tags
@@ -1974,6 +2073,11 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Problem | Fix |
 |---|---|
 | *Request blocked by CSRF protection* / terminals do not connect behind a proxy | Pass the `Host` header (`proxy_set_header Host $host;`) and WebSocket upgrade headers, or set `WRM_ALLOWED_ORIGINS` |
+| AI: no **AI** button on a terminal | The assistant is off (`ai_assistant`), not for your account, the kill switch is on, the connection is not SSH, or your share role does not allow terminals and file changes |
+| AI: *the policy does not allow the AI assistant on this connection* | A mode rule for its tag, folder, host or id leaves no mode; ask an administrator (*Admin panel → AI assistant → Mode rules*) |
+| AI: a harmless command needs an approval in read-only mode | The read-only classifier only accepts commands it knows are read-only (no redirections, substitutions or variables). Use a read tool, approve it in *ask* mode, or add it to the automatic-mode allow list |
+| AI: *the provider answered HTTP 401/403/404* | Check the key, the model name (Bedrock: `anthropic.…` IDs or inference profiles; Vertex: the region offers the model) and the base URL; *Test* in the provider list sends one small request |
+| AI: a Claude.ai / ChatGPT subscription does not work | Consumer chat subscriptions cannot be used by other applications: use an API key or your company's gateway |
 | *HOST KEY VERIFICATION FAILED* | The server's SSH key changed. If you know why (reinstall), click *Trust this key* in the terminal (connection owner/admin) or forget the host in *Admin → Host keys* |
 | *Microphone requires HTTPS* / no microphone | Use HTTPS (certificate, reverse proxy or `HTTPS_SELF_SIGNED=1`) and allow the microphone in the browser; you can also join as a listener |
 | Voice: *Connecting…* forever or *Connection problem* | Open UDP+TCP 3478 and the relay port range on the WRM server; behind NAT set `turn_public_ip` and forward the ports; in very strict networks add a TURN server on 443/TLS (*Admin → Voice & network*) |

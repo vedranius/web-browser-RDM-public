@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v11.7.0"
+var AppVersion = "v12.0.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -331,6 +331,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/bookmarks/", apiBookmarksHandler)
 	mux.HandleFunc("/api/tunnels", apiTunnelsHandler)
 	mux.HandleFunc("/api/tunnels/", apiTunnelsHandler)
+	mux.HandleFunc("/api/ai/", apiAIHandler)
+	mux.HandleFunc("/api/admin/ai/", apiAdminAIHandler)
 	mux.HandleFunc("/api/recordings", apiRecordingsHandler)
 	mux.HandleFunc("/api/recordings/", apiRecordingsHandler)
 	mux.HandleFunc("/api/admin/known-hosts", apiAdminKnownHostsHandler)
@@ -445,6 +447,7 @@ func serve(stop <-chan struct{}) int {
 	go runGitMonitor()
 	go runGitScheduler()
 	go runUpdateChecker()
+	go runAIJanitor()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -1109,6 +1112,9 @@ func initDB() {
 
 	// v11.0: Git workspace (sources, blob cache, catalog, targets, installations)
 	initGitSchema()
+
+	// v12.0: AI assistant (providers, sessions, transcripts)
+	initAISchema()
 
 	var nC, nF, nS int
 	db.QueryRow("SELECT COUNT(*) FROM connections").Scan(&nC)

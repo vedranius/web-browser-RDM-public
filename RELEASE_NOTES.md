@@ -1,12 +1,46 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.7.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.0.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.7.0 — run as a service, self-update, file manager "here" or "/"
+## Web Remote Manager PRO v12.0.0 — AI assistant with approvals, limits and a full audit
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub / Gitea or offline bundles, updates them, deploys them to environments, shows who changed and deployed what where, and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
+Browser-based remote server management: an AI assistant next to the terminal, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🛠 Run as a service on every OS
+### ✦ AI assistant next to the terminal
+
+- Click **AI** in the title bar of an SSH terminal or file manager and ask: *why is nginx failing?* The assistant reads logs, services, packages and files and explains every step.
+- **The model never gets a shell.** It acts only through WRM's tools, and every call is decided **on the server** by the permission engine.
+- Your provider: **Anthropic API** (latest Claude models), **OpenAI**, **Azure OpenAI**, **AWS Bedrock**, **Google Vertex AI** or any **OpenAI-compatible** endpoint (local models). The organisation's key (administrators) or your own (if the policy allows it). Keys are encrypted and never reach the browser. Streaming answers, token and cost counters.
+- Consumer Claude.ai / ChatGPT subscriptions cannot be used by third-party apps: use an API key, an enterprise gateway, or the MCP integration coming in v12.1.0.
+
+### 🛡 Three modes, approvals and hard limits
+
+- **Read-only:** inspection only. A strict classifier accepts only commands it knows are read-only.
+- **Ask before every change:** every change waits for you, as the **exact command** (edit it before approving) or a **diff** of the file. Unanswered approvals are denied.
+- **Automatic within limits:** only after you opt in for the session, with an allow / deny list, a time limit and an action limit.
+- **Always blocked:** `rm -rf /`, `mkfs`, `dd` to disks, fork bombs, cutting off SSH, writing to `/etc/shadow` or `authorized_keys`, `curl | sh` … and `shutdown` / `reboot` unless an administrator allows them with an approval. Password hashes, private keys and credentials are never read.
+- Text in logs that tries to instruct the AI changes nothing: only you can change the mode.
+
+### 🔍 Audit, recording and kill switch
+
+- Every AI request, tool call (with its redacted output), approval and denial — who and when — is in the audit log; the transcript is kept and **recorded like a terminal session**.
+- Secrets in output are **redacted** before they are sent to the provider.
+- **Kill switch:** stop a session, all sessions of a user, or every session at once; an **✦ AI** badge shows where a session is active.
+- **Admin policies:** who may use it, which modes per **tag, folder, connection or host** (the most restrictive wins), which providers and models, personal keys, transcript retention.
+
+### ⬆️ Upgrading from v11.7.0
+
+Replace the binary (or update with one click from the version badge). The assistant is **off** until an administrator turns it on in *Admin panel → AI assistant* and adds a provider. New tables are added; v11.7.0 still starts on the database.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.0.0)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.0.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.7.0 — run as a service, self-update, file manager "here" or "/"
+
+#### 🛠 Run as a service on every OS
 
 - Start WRM once in a terminal and it asks: **install as a service that starts at boot?** *Yes*, *No* or *Don't ask again* (remembered next to the database).
 - Or use `-install-service`, `-uninstall-service` and `-service-status` in scripts.
@@ -14,25 +48,21 @@ Browser-based remote server management: SSH terminal with snippets, broadcast in
 - The service keeps the **same data and settings** as your interactive start.
 - Copy a newer `wrm-pro-v…` binary next to the old one: the service picks it up on its next start, and the UI offers **Restart to v…**.
 
-### ⬆ Self-update from GitHub releases
+#### ⬆ Self-update from GitHub releases
 
 - WRM checks the project's releases once a day (no user data is sent; `WRM_UPDATE_CHECK=off` for air-gapped networks, a proxy is supported).
 - The version in the top bar and on the sign-in page shows **⬆ Update vX.Y.Z** with the release notes.
 - Administrators update with **one click**: download, **SHA-256 check against `SHA256SUMS.txt`**, `-version` sanity check, atomic replacement, restart, and the page reconnects by itself. The previous binary is kept for a **one-click rollback**. Every step is in the audit log.
 - In Docker the image is never replaced from inside: the dialog shows the `docker pull` / compose commands.
 
-### 📂 File manager from the terminal: here, / or home
+#### 📂 File manager from the terminal: here, / or home
 
 - The 📂 button of an SSH terminal is now a menu: **Open here**, **Open /**, **Open home**.
 - **"Here" needs no shell configuration any more:** WRM asks the server for the terminal shell's working directory over a separate SSH channel (Linux and BSD). Shells that report it with OSC 7 are still the fast path; if the directory cannot be found, WRM says why and offers home or `/`.
 
-### ⬆️ Upgrading from v11.6.1
+#### ⬆️ Upgrading from v11.6.1
 
 Replace the binary; the database does not change. From this version on, later releases can be installed with one click from the version badge.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v11.7.0)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.7.0/CHANGELOG.md) for details.
 
 ---
 

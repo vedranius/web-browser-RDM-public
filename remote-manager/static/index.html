@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v11.7.0</title>
+<title>Web Remote Manager PRO v12.0.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -890,6 +890,8 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 }
 #auth-info { min-width: 0; flex-shrink: 1; }
 .add-win-btn { flex-shrink: 0; }
+/* between the icon-only top bar and the labelled one the buttons need a little less room */
+@media (min-width: 900px) and (max-width: 1260px) { #auth-info { gap: 5px; } }
 
 /* Snap buttons, snap-layout popover and drag-to-edge preview */
 .win.snapped { min-width: 0; min-height: 0; }
@@ -1199,6 +1201,9 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .sb-title .brand .brand-mark { width: 16px; height: 16px; flex: none; }
 .sb-title .brand::before { display: none; }
 .win-rec { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; color: #fca5a5; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: default; animation: recPulse 2.4s ease-in-out infinite; }
+.win-ai { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; color: #c4b5fd; background: rgba(139,92,246,.14); border: 1px solid rgba(139,92,246,.45); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: pointer; animation: recPulse 2.4s ease-in-out infinite; }
+.win-btn.ai { font-weight: 800; font-size: 10px; letter-spacing: .02em; width: auto; min-width: 24px; padding: 0 6px; }
+.win-btn.ai.on { color: #c4b5fd; background: rgba(139,92,246,.18); }
 @keyframes recPulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 .adm-toolbar input[type=date] { width: 138px; color-scheme: dark; }
 .ts-table td .act { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
@@ -1522,7 +1527,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v11.7.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.0.0 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1602,7 +1607,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v11.7.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v12.0.0</span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -2554,6 +2559,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="users" onclick="showAdminTab('users')" data-i18n="adm_users">Users</button>
       <button class="tab-btn" data-tab="shares" onclick="showAdminTab('shares')" data-i18n="adm_shares">Shares</button>
       <button class="tab-btn" data-tab="policies" onclick="showAdminTab('policies')" data-i18n="adm_policies">Security policies</button>
+      <button class="tab-btn" data-tab="ai" onclick="showAdminTab('ai')" data-i18n="adm_ai">AI assistant</button>
       <button class="tab-btn" data-tab="voice" onclick="showAdminTab('voice')" data-i18n="adm_voice">Voice &amp; network</button>
       <button class="tab-btn" data-tab="notify" onclick="showAdminTab('notify')" data-i18n="adm_notify">Notifications</button>
       <button class="tab-btn" data-tab="hosts" onclick="showAdminTab('hosts')" data-i18n="adm_hosts">Host keys</button>
@@ -4640,6 +4646,14 @@ Object.assign(LANGS.hr, {
   fm_here_unknown: 'Trenutni direktorij terminala nije moguće odrediti ({reason}). Otvoriti preglednik datoteka u home direktoriju ili na / umjesto toga?',
   fm_here_timeout: 'server nije odgovorio', fm_here_offline: 'terminal nije spojen',
 });
+Object.assign(LANGS.en, {
+  adm_ai: 'AI assistant', ai_btn_t: 'AI assistant for this server', ai_active_t: 'An AI session is active on this window',
+  ai_load_failed: 'The AI assistant could not be loaded', ai_rec_t: 'AI session (transcript recording)',
+});
+Object.assign(LANGS.hr, {
+  adm_ai: 'AI asistent', ai_btn_t: 'AI asistent za ovaj server', ai_active_t: 'Na ovom prozoru je aktivna AI sesija',
+  ai_load_failed: 'AI asistent se nije mogao učitati', ai_rec_t: 'AI sesija (snimka transkripta)',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -6012,7 +6026,8 @@ function showAdminTab(tab) {
   ({overview: adminOverview, users: adminUsers, shares: adminShares, policies: () => adminPolicies('policies'),
     voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
-    transfers: adminTransfers}[tab] || adminOverview)();
+    transfers: adminTransfers,
+    ai: () => loadAI().then(() => wrmAI.adminTab(), () => { document.getElementById('admin-body').innerHTML = `<div class="fm-error">${esc(t('ai_load_failed'))}</div>`; })}[tab] || adminOverview)();
 }
 
 function fmtDuration(sec) {
@@ -6401,7 +6416,7 @@ async function renderTermSessions(boxId, mine, more) {
       : `<span class="sub">${esc(t('no_recording'))}</span>`;
     return `<tr><td style="white-space:nowrap;">${esc(fmtTime(s.started_at))}<div class="sub">⏱ ${esc(fmtMs(s.duration_ms))}</div></td>
       <td>${esc(s.username || '—')}<div class="sub mono">${esc(s.client_ip)}</div>${s.share ? `<div class="sub">🤝 ${esc(s.share)}</div>` : ''}</td>
-      <td>${esc(s.connection)}<div class="sub mono">${esc(s.remote_user ? s.remote_user + '@' : '')}${esc(s.host)}</div></td>
+      <td>${esc(s.connection)}${s.protocol === 'ai' ? ' <span class="pill info" title="' + esc(t('ai_rec_t')) + '">✦ AI</span>' : ''}<div class="sub mono">${esc(s.remote_user ? s.remote_user + '@' : '')}${esc(s.host)}</div></td>
       <td>${st}</td><td>${recCell}</td></tr>`;
   }).join('');
   if (!more) {
@@ -7140,6 +7155,28 @@ function openGit() {
     document.head.appendChild(s);
   });
   gitLoading.then(() => window.gitWorkspace.open(), () => showToast(t('git_load_failed'), 'error'));
+}
+
+// AI assistant: its code (static/ai.js) is loaded the first time it is used.
+let aiLoading = null;
+function loadAI() {
+  if (window.wrmAI) return Promise.resolve();
+  if (!aiLoading) aiLoading = new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = '/static/ai.js';
+    s.onload = ok;
+    s.onerror = () => { aiLoading = null; fail(); };
+    document.head.appendChild(s);
+  });
+  return aiLoading;
+}
+function aiAvailable(wo, mode) {
+  const c = winConn(wo);
+  return !!(currentUser && currentUser.policy && currentUser.policy.ai && c && (c.protocol || 'SSH') === 'SSH' && !wo.console &&
+    (mode === 'ssh' || mode === 'sftp') && winCan(wo, 'terminal') && winCan(wo, 'files_write'));
+}
+function openAI(id) {
+  loadAI().then(() => wrmAI.toggle(id), () => showToast(t('ai_load_failed'), 'error'));
 }
 
 function openTools(opts) {
@@ -9575,6 +9612,7 @@ function addWindow(opts) {
       <div class="win-dot"></div>
       <span class="win-title" id="wt-${id}">Window ${id}</span>
       <span class="win-rec" id="wrec-${id}" style="display:none;" title="${esc(t('rec_badge_title'))}">● REC</span>
+      <span class="win-ai" id="wai-${id}" style="display:none;" title="${esc(t('ai_active_t'))}" onclick="openAI(${id})">✦ AI</span>
       <div class="win-corner-btns" title="${t('snap_layouts')}">
         ${SNAP_ORDER.map(d => `<button class="win-corner-btn" title="${snapTitle(d)}" onclick="snapWindow(${id},'${d}')">${snapIcon(d)}</button>`).join('')}
       </div>
@@ -9582,6 +9620,7 @@ function addWindow(opts) {
       <div class="win-btns">
         <button class="win-btn reconnect" id="wb-rc-${id}" title="${t('reconnect_now')}" style="display:none;" onclick="reconnectTermById(${id})">↻</button>
         <button class="win-btn fm" id="wb-fm-${id}" title="${esc(t('win_files_t'))}" style="display:none;" onclick="event.stopPropagation(); openFilesMenu(${id}, this)">📂<span class="fm-caret">▾</span></button>
+        <button class="win-btn ai" id="wb-ai-${id}" title="${esc(t('ai_btn_t'))}" style="display:none;" onclick="openAI(${id})">AI</button>
         <button class="win-btn" id="wb-nt-${id}" title="${esc(t('notes_title'))}" style="display:none;" onclick="openNotes((winObjects.find(w => w.id === ${id}) || {}).connId)">📝</button>
         <button class="win-btn bm" id="wb-bm-${id}" title="${esc(t('bm_title'))}" style="display:none;" onclick="openBookmarkMenu(${id}, this)">★</button>
         <button class="win-btn snip" id="wb-sn-${id}" title="${esc(t('snip_title'))}" style="display:none;" onclick="openSnippetPicker(${id})">⚡</button>
@@ -9738,6 +9777,8 @@ function setWinMode(id, mode) {
   if (fmBtn) fmBtn.style.display = mode === 'ssh' && !wo.console && c && (c.protocol || 'SSH') === 'SSH' && winCan(wo, 'files_read') ? '' : 'none';
   const ntBtn = document.getElementById('wb-nt-' + id);
   if (ntBtn) ntBtn.style.display = (mode === 'ssh' || mode === 'desk' || mode === 'sftp') && !isCollabMode && c && c.has_notes ? '' : 'none';
+  const aiBtn = document.getElementById('wb-ai-' + id);
+  if (aiBtn) aiBtn.style.display = aiAvailable(wo, mode) ? '' : 'none';
   if (mode !== 'ssh' && bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
 
   if (mode === 'ssh') {
@@ -12026,6 +12067,7 @@ function closeWindow(id) {
   if (!wo) return;
   if (wo.screenSharing) { wo.screenSharing = false; collabSend({type: 'screen', action: 'stop', sid: 'w' + wo.id}); }
   if (wo.viewing) closeViewerWindow(wo);
+  if (window.wrmAI) wrmAI.onWinClose(wo);
   disposeWinTerminal(wo);
   if (wo._searchCtrl) { try { wo._searchCtrl.abort(); } catch(_) {} }
   if (wo._uploading) { try { wo._uploading.abort(); } catch(_) {} }
@@ -14273,7 +14315,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();
