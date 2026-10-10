@@ -325,6 +325,8 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"git_install":      gitActionAllowed(u.ID, "git_install"),
 			"git_transfer":     gitActionAllowed(u.ID, "git_transfer"),
 			"git_gitignore_mr": gitActionAllowed(u.ID, "git_gitignore_mr"),
+			"ai":               aiAllowedFlag(u.ID),
+			"ai_personal_keys": aiPersonalKeysAllowed(u.ID),
 		},
 	}
 }
@@ -1040,6 +1042,7 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 // encrypted secrets, folders, sessions, shares) and disconnects it everywhere.
 func deleteUserCompletely(id int) {
 	disconnectUserEverywhere(id, "Your account was deleted")
+	aiKillWhere(func(s *aiSession) bool { return s.UserID == id }, 0, "the account was deleted")
 	var shareIDs []int
 	if rows, err := db.Query(`SELECT id FROM share_links WHERE owner_id=?`, id); err == nil {
 		for rows.Next() {
@@ -1069,6 +1072,7 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM credential_grants WHERE user_id=? OR credential_id IN (SELECT id FROM credentials WHERE owner_id=?)`, id, id)
 	tx.Exec(`DELETE FROM credentials WHERE owner_id=?`, id)
 	tx.Exec(`DELETE FROM inventory_sources WHERE user_id=?`, id)
+	tx.Exec(`DELETE FROM ai_providers WHERE scope='user' AND user_id=?`, id)
 	tx.Exec(`DELETE FROM proxy_grants WHERE user_id=? OR proxy_id IN (SELECT id FROM proxies WHERE owner_id=?)`, id, id)
 	tx.Exec(`DELETE FROM proxies WHERE owner_id=?`, id)
 	tx.Exec(`DELETE FROM putty_sessions WHERE user_id=?`, id)
