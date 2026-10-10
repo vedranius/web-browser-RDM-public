@@ -370,6 +370,10 @@ func mcpAuthorizeHandler(w http.ResponseWriter, r *http.Request) {
 		oauthPage(w, 404, "AI connections are turned off", "An administrator has not enabled AI connections (MCP) on this WRM server.")
 		return
 	}
+	if !mcpRateOK("authz:"+clientIP(r), 60, 10*time.Minute) {
+		oauthPage(w, 429, "Too many requests", "Wait a few minutes and start the connection in the application again.")
+		return
+	}
 	q := r.URL.Query()
 	c, err := loadMCPClient(q.Get("client_id"))
 	if err != nil {

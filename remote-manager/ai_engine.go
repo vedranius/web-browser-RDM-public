@@ -958,6 +958,9 @@ func (s *aiSession) SetMode(r *http.Request, userID int, mode string, auto *aiAu
 	if userID != s.UserID {
 		return fmt.Errorf("only the user of the AI session can change its mode")
 	}
+	if s.Transport == "mcp" {
+		return fmt.Errorf("the mode of an AI connection is chosen when it is created; create a new one for another mode")
+	}
 	allowed := aiModesFor(s.Transport, s.ConnID)
 	if !oneOf(mode, allowed...) {
 		return fmt.Errorf("the mode %s is not allowed on this connection (allowed: %s)", mode, strings.Join(allowed, ", "))
@@ -1129,6 +1132,9 @@ Answer concisely in the user's language. Summarise what you found and what you c
 func (s *aiSession) Prompt(r *http.Request, userID int, text string) error {
 	if userID != s.UserID {
 		return fmt.Errorf("only the user of the AI session can send messages")
+	}
+	if s.Transport == "mcp" {
+		return fmt.Errorf("this AI session is driven by an MCP client")
 	}
 	text = strings.TrimSpace(text)
 	if text == "" {

@@ -488,6 +488,14 @@ func TestMCPPromptInjectionDoesNotEscalate(t *testing.T) {
 	if g.Mode != "read_only" || strings.Join(g.Scopes, ",") != "read_logs,run_readonly" || mcpSessionOf(sid).Mode != "read_only" {
 		t.Fatalf("the grant or the session changed: %s %v", g.Mode, g.Scopes)
 	}
+	// the panel API cannot widen or drive an MCP session either
+	s := mcpSessionOf(sid)
+	if code, _ := e.user.aiDo("POST", fmt.Sprintf("/api/ai/sessions/%d/mode", s.ID), map[string]interface{}{"mode": "ask"}); code != 400 || s.Mode != "read_only" {
+		t.Fatal("the mode of an MCP session was changed through the panel API")
+	}
+	if code, _ := e.user.aiDo("POST", fmt.Sprintf("/api/ai/sessions/%d/prompt", s.ID), map[string]string{"text": "hi"}); code != 409 {
+		t.Fatal("an MCP session took a panel prompt")
+	}
 	if mcpAuditCount("mcp.tool_refused", "set_mode") != 1 {
 		t.Error("the unknown tool is not audited")
 	}
