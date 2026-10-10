@@ -192,7 +192,22 @@ func (r aiModeRule) matches(f aiConnFacts) bool {
 // aiAllowedModes returns the modes allowed for a connection (most restrictive wins) and
 // the rules that limited them.
 func aiAllowedModes(f aiConnFacts) ([]string, []string) {
-	allowed, _ := normalizeModeList(getSetting("ai_modes"))
+	return aiAllowedModesFrom(getSetting("ai_modes"), f)
+}
+
+// aiModesFor returns the modes allowed for a connection to a transport: the panel uses
+// ai_modes, MCP clients ai_mcp_modes; the mode rules narrow both.
+func aiModesFor(transport string, connID int) []string {
+	base := getSetting("ai_modes")
+	if transport == "mcp" {
+		base = getSetting("ai_mcp_modes")
+	}
+	out, _ := aiAllowedModesFrom(base, aiFactsOf(connID))
+	return out
+}
+
+func aiAllowedModesFrom(base string, f aiConnFacts) ([]string, []string) {
+	allowed, _ := normalizeModeList(base)
 	set := map[string]bool{}
 	for _, m := range allowed {
 		set[m] = true
@@ -518,6 +533,20 @@ func expandAll(pats []string, home string) []string {
 		out = append(out, aiExpandHome(p, home))
 	}
 	return out
+}
+
+// userAllowed checks the session's user against the policy of its transport.
+func (s *aiSession) userAllowed() (bool, string) {
+	if s.Transport == "mcp" {
+		if ok, why := mcpUserAllowed(s.UserID); !ok {
+			return false, why
+		}
+		if s.TokenID > 0 && !mcpGrantActive(s.TokenID) {
+			return false, "the AI connection was revoked or has expired"
+		}
+		return true, ""
+	}
+	return aiUserAllowed(s.UserID)
 }
 
 func aiAllowedFlag(userID int) bool {

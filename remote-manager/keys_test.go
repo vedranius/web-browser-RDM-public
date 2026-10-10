@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -134,6 +135,20 @@ func (h *fakeHost) serveSession(ch ssh.Channel, reqs <-chan *ssh.Request) {
 			}
 			req.Reply(true, nil)
 			go h.runShell(ch, dir)
+		case "subsystem":
+			var p struct{ Name string }
+			ssh.Unmarshal(req.Payload, &p)
+			if p.Name != "sftp" {
+				req.Reply(false, nil)
+				continue
+			}
+			req.Reply(true, nil)
+			go func() {
+				if srv, err := sftp.NewServer(ch, sftp.WithServerWorkingDirectory(h.home)); err == nil {
+					srv.Serve()
+				}
+				ch.Close()
+			}()
 		case "exec":
 			var p struct{ Cmd string }
 			ssh.Unmarshal(req.Payload, &p)
