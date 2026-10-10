@@ -1,22 +1,52 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.6.1/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v11.7.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v11.6.1 — file manager from the terminal's title bar
+## Web Remote Manager PRO v11.7.0 — run as a service, self-update, file manager "here" or "/"
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace that compares deployed services with GitLab / GitHub / Gitea or offline bundles, updates them, deploys them to environments, shows who changed and deployed what where, and installs them on new servers, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 📂 File manager from the terminal
+### 🛠 Run as a service on every OS
+
+- Start WRM once in a terminal and it asks: **install as a service that starts at boot?** *Yes*, *No* or *Don't ask again* (remembered next to the database).
+- Or use `-install-service`, `-uninstall-service` and `-service-status` in scripts.
+- **Linux:** a hardened systemd unit (`NoNewPrivileges`, `ProtectSystem=strict`, own working directory, an env file for `PORT` / `DB_PATH`). **macOS:** launchd, at boot (LaunchDaemon) or at login (LaunchAgent). **Windows:** a real Windows service with restart on failure. **FreeBSD / OpenBSD:** an rc.d script.
+- The service keeps the **same data and settings** as your interactive start.
+- Copy a newer `wrm-pro-v…` binary next to the old one: the service picks it up on its next start, and the UI offers **Restart to v…**.
+
+### ⬆ Self-update from GitHub releases
+
+- WRM checks the project's releases once a day (no user data is sent; `WRM_UPDATE_CHECK=off` for air-gapped networks, a proxy is supported).
+- The version in the top bar and on the sign-in page shows **⬆ Update vX.Y.Z** with the release notes.
+- Administrators update with **one click**: download, **SHA-256 check against `SHA256SUMS.txt`**, `-version` sanity check, atomic replacement, restart, and the page reconnects by itself. The previous binary is kept for a **one-click rollback**. Every step is in the audit log.
+- In Docker the image is never replaced from inside: the dialog shows the `docker pull` / compose commands.
+
+### 📂 File manager from the terminal: here, / or home
+
+- The 📂 button of an SSH terminal is now a menu: **Open here**, **Open /**, **Open home**.
+- **"Here" needs no shell configuration any more:** WRM asks the server for the terminal shell's working directory over a separate SSH channel (Linux and BSD). Shells that report it with OSC 7 are still the fast path; if the directory cannot be found, WRM says why and offers home or `/`.
+
+### ⬆️ Upgrading from v11.6.1
+
+Replace the binary; the database does not change. From this version on, later releases can be installed with one click from the version badge.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v11.7.0)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.7.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v11.6.1 — file manager from the terminal's title bar
+
+#### 📂 File manager from the terminal
 
 - A new **📂** button in the title bar of every SSH terminal opens the **file manager of the same server** — no more searching for the connection in a long sidebar, and no risk of opening the wrong server ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)).
 - If a file manager of that connection is already open, 📂 brings it to the front.
 - When the remote shell reports its current directory (OSC 7), the file manager opens **in the terminal's directory**. Otherwise it opens the home directory. To enable it in bash, add to `~/.bashrc`: `PROMPT_COMMAND='printf "\033]7;file://%s%s\033\\" "$HOSTNAME" "$PWD"'`
 
-### ⬆️ Upgrading from v11.6.0
+#### ⬆️ Upgrading from v11.6.0
 
 Replace the binary; the database does not change.
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v11.6.1/CHANGELOG.md) for details.
 
 ---
 

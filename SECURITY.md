@@ -45,7 +45,13 @@ WRM is secure by default in most respects. For production and company use, also 
 
 - [ ] **Back up the encryption key** (`<DB_PATH>.key`, or your `ENCRYPTION_KEY` / `ENCRYPTION_KEY_FILE`) **separately** from database backups. Someone who has both can decrypt the stored secrets.
 - [ ] Keep the database, the key file and the self-signed certificate readable only by the WRM service user. WRM creates them with mode `0600`.
-- [ ] Run WRM as an unprivileged user. The systemd example in the README adds `NoNewPrivileges`, `ProtectSystem=strict` and `PrivateTmp`. The Docker image runs as an unprivileged user; provide the encryption key as a Docker secret (`ENCRYPTION_KEY_FILE`) instead of keeping it only in the data volume.
+- [ ] Run WRM as an unprivileged user. `-install-service` writes a systemd unit with `User=`, `NoNewPrivileges`, `ProtectSystem=strict` (the data and binary folders writable), `ProtectHome=read-only` and `PrivateTmp`; the service's settings file `<data dir>/wrm.env` is mode `0600` (it may hold `ENCRYPTION_KEY`). The Docker image runs as an unprivileged user; provide the encryption key as a Docker secret (`ENCRYPTION_KEY_FILE`) instead of keeping it only in the data volume.
+
+**Updates**
+
+- [ ] The one-click update installs only a release file whose **SHA-256 matches the release's `SHA256SUMS.txt`** and which answers `-version` with the release version; it is refused otherwise. Both come from the same GitHub release, so the check protects against broken or swapped downloads, not against a compromised release repository: keep `update_repo` at the official repository (or your own mirror) and `self_update` at `admins` (or `off` with `WRM_SELF_UPDATE=off`). Every step is audited (`system.update_*`).
+- [ ] The update check sends no user data (only the repository path and a fixed User-Agent). Turn it off in air-gapped networks with `WRM_UPDATE_CHECK=off`.
+- [ ] Only administrators may write to the binary's folder: a newer `wrm-pro-v…` file copied there is started by the service on its next start (after a `-version` check).
 
 **Accounts**
 
