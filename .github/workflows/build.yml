@@ -56,7 +56,7 @@ jobs:
 
       - name: Unit tests (race detector)
         working-directory: remote-manager
-        run: go test -race -count=1 ./...
+        run: go test -race -count=1 -timeout 20m ./...
 
       - name: JavaScript syntax check (static/index.html)
         run: |

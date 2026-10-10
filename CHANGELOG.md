@@ -31,6 +31,10 @@ All notable changes to Web Remote Manager PRO. The format follows
 - `main.go`: the server runs in `serve(stop)`, so the Windows service manager, signals and restarts share one shutdown path; the shutdown now waits for the HTTP server before closing the database.
 - The README's systemd example passes `-service=systemd` and allows exit code 75 (restart requested by WRM).
 
+### Fixed
+- Tests: `TestGitDeployScheduledRestart` read the notifications as soon as the run showed *done*, but the run sends them a moment later, so it failed intermittently under load. It now waits for them.
+- CI: the unit tests get a 20-minute timeout (the default 10 minutes was nearly reached on the shared runners).
+
 ## [11.6.1] — 2026-10-09 — File manager from the terminal's title bar
 
 ### Added
