@@ -974,6 +974,25 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 .guest-badge { font-size: 9.5px; color: var(--text3); border: 1px dashed var(--border2); border-radius: 5px; padding: 0 5px; }
 .muted-text { color: var(--text3); font-size: 11px; }
 .hint-box { font-size: 11.5px; color: var(--text2); background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 11px; line-height: 1.5; margin: 8px 0; }
+.upd-badge { margin-left: 8px; background: rgba(16,185,129,.14); color: var(--green); border: 1px solid rgba(16,185,129,.38); border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.upd-badge:hover { background: rgba(16,185,129,.26); }
+.auth-upd { margin: 6px auto 0; display: inline-block; background: rgba(16,185,129,.14); color: var(--green); border: 1px solid rgba(16,185,129,.38); border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 600; text-decoration: none; }
+.upd-grid { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 12.5px; margin-bottom: 10px; color: var(--text2); }
+.upd-grid b { color: var(--text); }
+.upd-tag { display: inline-block; margin-left: 6px; font-size: 10.5px; padding: 1px 7px; border-radius: 999px; background: var(--bg4); color: var(--text2); }
+.upd-tag.new { background: rgba(16,185,129,.16); color: var(--green); }
+.upd-h { font-size: 12px; font-weight: 600; color: var(--text2); margin: 12px 0 6px; }
+.upd-notes { white-space: pre-wrap; word-break: break-word; max-height: 32vh; overflow: auto; font-size: 12px; line-height: 1.5; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 12px; margin: 0; font-family: inherit; }
+.upd-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.upd-progress { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; margin: 8px 0 4px; }
+.upd-progress > div { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+.upd-cmd { display: block; font-family: var(--mono, monospace); font-size: 11.5px; background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 8px; margin: 4px 0; user-select: all; overflow-x: auto; white-space: nowrap; }
+#upd-reconnect { position: fixed; inset: 0; z-index: 20000; display: none; align-items: center; justify-content: center; background: rgba(4,6,10,.78); backdrop-filter: blur(4px); }
+#upd-reconnect.open { display: flex; }
+#upd-reconnect .box { background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px; padding: 22px 26px; max-width: 360px; text-align: center; color: var(--text); font-size: 13px; line-height: 1.5; }
+#upd-reconnect .spin { font-size: 26px; display: inline-block; animation: updspin 1.2s linear infinite; }
+@keyframes updspin { to { transform: rotate(360deg); } }
+@media (max-width: 700px) { .upd-badge .lbl { display: none; } .upd-badge { margin-left: 4px; padding: 2px 7px; } }
 .hint-box.warn { border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.07); color: #fde68a; }
 .hint-box.bad { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.07); color: #fecaca; }
 .hint-box.ok { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.06); color: #bbf7d0; }
@@ -1472,6 +1491,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 /* Top bar: give way step by step instead of overlapping (it reacts to the width of #center) */
 .btn-top, .add-win-btn { white-space: nowrap; flex-shrink: 0; }
 @container (max-width: 1200px) { .app-ver, .top-sep, .sess-lbl, #btn-settings .lbl, #btn-logout .lbl { display: none; } }
+@container (max-width: 1200px) { .upd-badge .lbl { display: none; } .upd-badge { margin-left: 4px; padding: 2px 7px; } }
 @container (max-width: 960px) { .btn-top .lbl { display: none; } }
 @container (max-width: 640px) { .add-win-btn .lbl, #user-chip .name { display: none; } }
 </style>
@@ -1500,6 +1520,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
       <p id="auth-ver">PRO v11.6.1 · Secure · Multi-User</p>
+      <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
       <div id="auth-note" class="auth-note" style="display:none;"></div>
@@ -1579,6 +1600,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
     <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v11.6.1</span>
+    <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
@@ -1915,6 +1937,18 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     </div>
   </div>
 </div>
+
+<!-- Updates -->
+<div class="modal-overlay" id="modal-update">
+  <div class="modal" style="max-width:560px;">
+    <h3 data-i18n="upd_title">⬆ Updates</h3>
+    <div id="upd-body"></div>
+    <div class="modal-footer">
+      <button class="btn-sec" onclick="closeUpdateModal()" data-i18n="close">Close</button>
+    </div>
+  </div>
+</div>
+<div id="upd-reconnect"><div class="box"><div class="spin">↻</div><div id="upd-reconnect-msg" style="margin-top:10px;"></div><div id="upd-reconnect-slow" style="display:none;margin-top:12px;"><button onclick="location.reload()" data-i18n="upd_reload">Reload the page</button></div></div></div>
 
 <!-- Share People (history, roles, bans) -->
 <div class="modal-overlay" id="modal-share-people" style="z-index:9150;">
@@ -4552,6 +4586,49 @@ Object.assign(LANGS.hr, {
   po_git_rollback_off: 'Nitko', po_git_rollback_admins: 'Administratori', po_git_rollback_all: 'Svi', po_git_restart_off: 'Nitko', po_git_restart_admins: 'Administratori', po_git_restart_all: 'Svi',
   p_git_schedule_grace_minutes: 'Rok zakazanih izvođenja (minute)', p_git_schedule_grace_minutes_d: 'Zakazano ažuriranje ili ponovno pokretanje preskače se ako WRM u to vrijeme nije radio dulje od ovoga.',
 });
+Object.assign(LANGS.en, {
+  // v11.7.0: updates, file manager from the terminal
+  upd_badge: 'Update {v}', upd_badge_t: 'Update available: {v}. Click for the release notes.', upd_title: '⬆ Updates',
+  upd_current: 'This server', upd_latest: 'Latest release', upd_checked: 'Last check', upd_never: 'not checked yet',
+  upd_new: 'update available', upd_up_to_date: 'up to date', upd_service: 'service: {m}',
+  upd_check_off: 'The daily update check is off (policy update_check).', upd_check_failed: 'The last check failed',
+  upd_notes: 'Release notes', upd_release_page: 'Release page', upd_check_now: 'Check now', upd_checking: 'Checking…',
+  upd_docker: 'WRM runs in Docker: update the image instead', upd_docker_build: 'With the docker-compose.yml of the repository (image built from source):',
+  upd_not_writable: 'WRM cannot write to the folder of its binary, so it cannot update itself. Replace the binary by hand or give the service account write access to that folder.',
+  upd_policy_off: 'One-click update is turned off (policy self_update).',
+  upd_apply: 'Update to {v}', upd_apply_q: 'Update this server from {cur} to {v}? WRM downloads the release file, checks its SHA-256 against the release checksums, replaces its binary and restarts. Open terminals and transfers are interrupted; the page reconnects by itself. The previous binary is kept for a rollback.',
+  upd_restart_local: 'Restart to {v}', upd_restart_local_q: 'Restart WRM with {file} ({v}) from its folder? Open terminals and transfers are interrupted; the page reconnects by itself.',
+  upd_rollback: 'Roll back to {v}', upd_rollback_q: 'Go back to the previous binary ({v}) and restart? The database stays as it is.',
+  upd_state_downloading: 'Downloading {v}…', upd_state_verifying: 'Verifying {v} (SHA-256, -version)…', upd_state_installing: 'Installing {v}…', upd_state_restarting: 'Restarting with {v}…',
+  upd_failed: 'The update failed; this server keeps running the current version', upd_reconnecting: 'WRM is restarting{v}. The page reconnects automatically…',
+  upd_reload: 'Reload the page', upd_auth_badge: 'update available {v}',
+  pg_updates: 'Updates', p_update_check: 'Check for updates', p_update_check_d: 'Once a day ask the GitHub releases of the repository below for a newer version (no user data is sent). Turn off for air-gapped installations (WRM_UPDATE_CHECK=off).',
+  p_update_repo: 'Release repository', p_update_repo_d: 'GitHub repository (owner/name) whose releases are checked and installed.', p_update_repo_ph: 'owner/repository',
+  p_update_proxy: 'Proxy for the update check', p_update_proxy_d: 'HTTP proxy for GitHub (e.g. http://proxy.example.com:3128). Empty: HTTPS_PROXY / HTTP_PROXY of the server, if set.', p_update_proxy_ph: 'http://proxy:3128',
+  p_self_update: 'One-click update', p_self_update_d: 'Who may update this server from the version badge (download, SHA-256 check, replace, restart, rollback). Never in Docker.',
+  po_self_update_off: 'Nobody', po_self_update_admins: 'Administrators',
+});
+Object.assign(LANGS.hr, {
+  upd_badge: 'Nadogradnja {v}', upd_badge_t: 'Dostupna je nadogradnja: {v}. Klikni za bilješke izdanja.', upd_title: '⬆ Nadogradnje',
+  upd_current: 'Ovaj server', upd_latest: 'Najnovije izdanje', upd_checked: 'Zadnja provjera', upd_never: 'još nije provjereno',
+  upd_new: 'dostupna nadogradnja', upd_up_to_date: 'ažurno', upd_service: 'servis: {m}',
+  upd_check_off: 'Dnevna provjera nadogradnji je isključena (politika update_check).', upd_check_failed: 'Zadnja provjera nije uspjela',
+  upd_notes: 'Bilješke izdanja', upd_release_page: 'Stranica izdanja', upd_check_now: 'Provjeri sada', upd_checking: 'Provjeravam…',
+  upd_docker: 'WRM radi u Dockeru: umjesto toga nadogradi image', upd_docker_build: 'S docker-compose.yml iz repozitorija (image se gradi iz izvornog koda):',
+  upd_not_writable: 'WRM ne može pisati u direktorij svoje izvršne datoteke pa se ne može sam nadograditi. Zamijeni datoteku ručno ili daj računu servisa pravo pisanja u taj direktorij.',
+  upd_policy_off: 'Nadogradnja jednim klikom je isključena (politika self_update).',
+  upd_apply: 'Nadogradi na {v}', upd_apply_q: 'Nadograditi ovaj server s {cur} na {v}? WRM preuzima datoteku izdanja, provjerava njen SHA-256 prema kontrolnim zbrojevima izdanja, zamjenjuje svoju izvršnu datoteku i ponovno se pokreće. Otvoreni terminali i prijenosi se prekidaju; stranica se sama ponovno spaja. Prethodna izvršna datoteka čuva se za povratak.',
+  upd_restart_local: 'Ponovno pokreni na {v}', upd_restart_local_q: 'Ponovno pokrenuti WRM s datotekom {file} ({v}) iz njegovog direktorija? Otvoreni terminali i prijenosi se prekidaju; stranica se sama ponovno spaja.',
+  upd_rollback: 'Vrati na {v}', upd_rollback_q: 'Vratiti prethodnu izvršnu datoteku ({v}) i ponovno pokrenuti? Baza ostaje kakva jest.',
+  upd_state_downloading: 'Preuzimam {v}…', upd_state_verifying: 'Provjeravam {v} (SHA-256, -version)…', upd_state_installing: 'Instaliram {v}…', upd_state_restarting: 'Ponovno pokrećem s {v}…',
+  upd_failed: 'Nadogradnja nije uspjela; server i dalje radi na trenutnoj verziji', upd_reconnecting: 'WRM se ponovno pokreće{v}. Stranica se sama ponovno spaja…',
+  upd_reload: 'Ponovno učitaj stranicu', upd_auth_badge: 'dostupna nadogradnja {v}',
+  pg_updates: 'Nadogradnje', p_update_check: 'Provjera nadogradnji', p_update_check_d: 'Jednom dnevno pitaj GitHub izdanja donjeg repozitorija postoji li novija verzija (ne šalju se podaci korisnika). Isključi za izolirane instalacije (WRM_UPDATE_CHECK=off).',
+  p_update_repo: 'Repozitorij izdanja', p_update_repo_d: 'GitHub repozitorij (vlasnik/ime) čija se izdanja provjeravaju i instaliraju.', p_update_repo_ph: 'vlasnik/repozitorij',
+  p_update_proxy: 'Proxy za provjeru nadogradnji', p_update_proxy_d: 'HTTP proxy za GitHub (npr. http://proxy.example.com:3128). Prazno: HTTPS_PROXY / HTTP_PROXY servera, ako su postavljeni.', p_update_proxy_ph: 'http://proxy:3128',
+  p_self_update: 'Nadogradnja jednim klikom', p_self_update_d: 'Tko smije nadograditi ovaj server preko oznake verzije (preuzimanje, SHA-256 provjera, zamjena, ponovno pokretanje, povratak). Nikad u Dockeru.',
+  po_self_update_off: 'Nitko', po_self_update_admins: 'Administratori',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4653,6 +4730,12 @@ async function loadAuthConfig() {
     if (!authConfig.registration_open) switchAuthTab('login');
   }
   if (authConfig.version) document.getElementById('auth-ver').textContent = 'PRO ' + authConfig.version + ' · Secure · Multi-User';
+  const upd = document.getElementById('auth-upd');
+  upd.style.display = authConfig.update ? 'inline-block' : 'none';
+  if (authConfig.update) {
+    upd.textContent = '⬆ ' + t('upd_auth_badge').replace('{v}', authConfig.update);
+    if (/^https:\/\//.test(authConfig.update_url || '')) upd.href = authConfig.update_url; else upd.removeAttribute('href');
+  }
 }
 
 function showAuthScreen(noteText) {
@@ -4754,6 +4837,176 @@ function enforceRestrictions() {
   return true;
 }
 
+// ══ UPDATES ═══════════════════════════════════════════
+// The server checks the project's GitHub releases daily (policy update_check). Everyone sees
+// the "update available" badge and the release notes; administrators (policy self_update)
+// update with one click: the server downloads the file for its platform, verifies the
+// SHA-256 against the release checksums, replaces its binary and restarts; the page then
+// reconnects by itself. In Docker the badge shows the image commands instead.
+let updState = null, updPollTimer = null;
+
+async function refreshUpdateBadge() {
+  try {
+    const r = await fetch('/api/update');
+    if (!r.ok) return;
+    updState = await r.json();
+  } catch (_) { return; }
+  renderUpdateBadge();
+}
+
+function renderUpdateBadge() {
+  const b = document.getElementById('upd-badge');
+  if (!b) return;
+  const s = updState || {};
+  const v = s.available ? s.latest : (s.local && s.local.version) || '';
+  b.style.display = v ? '' : 'none';
+  if (!v) return;
+  b.innerHTML = '⬆<span class="lbl"> ' + esc(t('upd_badge').replace('{v}', v)) + '</span>';
+  b.title = t('upd_badge_t').replace('{v}', v);
+}
+setInterval(() => { if (currentUser && !isCollabMode) refreshUpdateBadge(); }, 3 * 3600 * 1000);
+
+async function openUpdateModal() {
+  document.getElementById('upd-body').innerHTML = `<div class="hint-box">${esc(t('loading'))}</div>`;
+  document.getElementById('modal-update').classList.add('open');
+  await refreshUpdateBadge();
+  renderUpdateModal();
+  const p = (updState && updState.progress) || {};
+  if (['downloading', 'verifying', 'installing'].includes(p.state)) startUpdatePoll();
+}
+
+function closeUpdateModal() {
+  closeModal('modal-update');
+  if (updPollTimer && !((updState && updState.progress) || {}).state) { clearInterval(updPollTimer); updPollTimer = null; }
+}
+
+function renderUpdateModal() {
+  const s = updState || {}, admin = !!(currentUser && currentUser.is_admin);
+  const p = s.progress || {state: 'idle'};
+  const busy = ['downloading', 'verifying', 'installing', 'restarting'].includes(p.state);
+  let h = `<div class="upd-grid">
+    <div>${esc(t('upd_current'))}</div><div><b>${esc(s.current || '')}</b>${s.service ? `<span class="upd-tag">${esc(t('upd_service').replace('{m}', s.service))}</span>` : ''}${s.docker ? '<span class="upd-tag">Docker</span>' : ''}</div>
+    <div>${esc(t('upd_latest'))}</div><div>${s.latest ? `<b>${esc(s.latest)}</b>` : '—'}${s.available ? `<span class="upd-tag new">${esc(t('upd_new'))}</span>` : (s.latest ? `<span class="upd-tag">${esc(t('upd_up_to_date'))}</span>` : '')}</div>
+    <div>${esc(t('upd_checked'))}</div><div>${s.checked_at ? esc(fmtTime(s.checked_at)) : esc(t('upd_never'))}${admin && s.repo ? ` · ${esc(s.repo)}` : ''}</div>
+  </div>`;
+  if (!s.check_enabled) h += `<div class="hint-box">${esc(t('upd_check_off'))}</div>`;
+  if (admin && s.error) h += `<div class="hint-box warn">⚠ ${esc(t('upd_check_failed'))}: ${esc(s.error)}</div>`;
+  if (s.latest && s.notes) h += `<div class="upd-h">${esc(t('upd_notes'))}: ${esc(s.name || s.latest)}</div><pre class="upd-notes">${esc(plainNotes(s.notes))}</pre>`;
+  if (s.url && /^https:\/\//.test(s.url)) h += `<div style="margin-top:8px;font-size:12px;"><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">${esc(t('upd_release_page'))} ↗</a></div>`;
+  if (admin) {
+    if (s.docker && s.available) {
+      h += `<div class="upd-h">${esc(t('upd_docker'))}</div>
+        <code class="upd-cmd">docker pull ${esc(s.docker_image)}:${esc(s.latest)}</code>
+        <code class="upd-cmd">docker compose pull &amp;&amp; docker compose up -d</code>
+        <div class="setting-desc">${esc(t('upd_docker_build'))}</div>
+        <code class="upd-cmd">git pull &amp;&amp; docker compose up -d --build</code>`;
+    } else if (s.blocked === 'not_writable') h += `<div class="hint-box warn">⚠ ${esc(t('upd_not_writable'))}</div>`;
+    else if (s.policy === 'off') h += `<div class="hint-box">${esc(t('upd_policy_off'))}</div>`;
+    if (busy) {
+      const pct = p.total > 0 ? Math.min(100, Math.round(100 * (p.done || 0) / p.total)) : (p.state === 'downloading' ? 5 : 100);
+      h += `<div class="upd-h">${esc(t('upd_state_' + p.state).replace('{v}', p.version || ''))}${p.state === 'downloading' && p.total > 0 ? ` · ${pct}%` : ''}</div>
+        <div class="upd-progress"><div style="width:${pct}%;"></div></div>`;
+    } else if (p.state === 'failed') h += `<div class="hint-box warn">⚠ ${esc(t('upd_failed'))}: ${esc(p.error || '')}</div>`;
+    h += '<div class="upd-actions">';
+    if (s.can_update && s.available && !busy) h += `<button onclick="updApply()">⬆ ${esc(t('upd_apply').replace('{v}', s.latest))}</button>`;
+    if (s.can_update && s.local && !busy) h += `<button class="btn-sec" title="${esc(s.local.file)}" onclick="updRestartLocal()">↻ ${esc(t('upd_restart_local').replace('{v}', s.local.version))}</button>`;
+    if (s.can_update && s.rollback && !busy) h += `<button class="btn-sec" onclick="updRollback()">↩ ${esc(t('upd_rollback').replace('{v}', s.rollback))}</button>`;
+    if (!busy) h += `<button class="btn-sec" id="upd-check-btn" onclick="updCheckNow()">${esc(t('upd_check_now'))}</button>`;
+    h += '</div>';
+  }
+  document.getElementById('upd-body').innerHTML = h;
+}
+
+// plainNotes shows release notes (Markdown with some HTML) as readable text.
+function plainNotes(md) {
+  return String(md || '').replace(/<[^>]*>/g, '').replace(/\[!\[[^\]]*\]\([^)]*\)\]\([^)]*\)/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/^#{1,6}\s*/gm, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+async function updCheckNow() {
+  const b = document.getElementById('upd-check-btn');
+  if (b) { b.disabled = true; b.textContent = t('upd_checking'); }
+  try {
+    const r = await fetch('/api/update/check', {method: 'POST'});
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    updState = await r.json();
+  } catch (_) { showToast(t('network_error_retry'), 'error'); }
+  renderUpdateBadge();
+  renderUpdateModal();
+}
+
+async function updPost(path, body) {
+  const r = await fetch('/api/update/' + path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return false; }
+  return true;
+}
+
+async function updApply() {
+  const s = updState || {};
+  if (!(await uiConfirm(t('upd_apply_q').replace('{v}', s.latest).replace('{cur}', s.current), {okText: t('upd_apply').replace('{v}', s.latest)}))) return;
+  if (await updPost('apply', {version: s.latest})) startUpdatePoll();
+}
+
+async function updRollback() {
+  const s = updState || {};
+  if (!(await uiConfirm(t('upd_rollback_q').replace('{v}', s.rollback), {okText: t('upd_rollback').replace('{v}', s.rollback), danger: true}))) return;
+  if (await updPost('rollback')) startUpdatePoll();
+}
+
+async function updRestartLocal() {
+  const s = updState || {};
+  if (!s.local) return;
+  if (!(await uiConfirm(t('upd_restart_local_q').replace('{v}', s.local.version).replace('{file}', s.local.file), {okText: t('upd_restart_local').replace('{v}', s.local.version)}))) return;
+  if (await updPost('restart', {local: true})) showUpdateReconnect(s.local.version);
+}
+
+// startUpdatePoll follows the progress until the server restarts.
+function startUpdatePoll() {
+  if (updPollTimer) clearInterval(updPollTimer);
+  const tick = async () => {
+    try {
+      const r = await fetch('/api/update');
+      if (!r.ok) throw new Error();
+      updState = await r.json();
+    } catch (_) {
+      clearInterval(updPollTimer); updPollTimer = null;
+      showUpdateReconnect(((updState || {}).progress || {}).version || '');
+      return;
+    }
+    const p = updState.progress || {};
+    if (document.getElementById('modal-update').classList.contains('open')) renderUpdateModal();
+    if (p.state === 'restarting') { clearInterval(updPollTimer); updPollTimer = null; showUpdateReconnect(p.version || ''); }
+    else if (!['downloading', 'verifying', 'installing'].includes(p.state)) { clearInterval(updPollTimer); updPollTimer = null; }
+  };
+  updPollTimer = setInterval(tick, 700);
+  tick();
+}
+
+// showUpdateReconnect waits for the restarted server and reloads the page.
+function showUpdateReconnect(version) {
+  const ov = document.getElementById('upd-reconnect');
+  if (ov.classList.contains('open')) return;
+  closeModal('modal-update');
+  document.getElementById('upd-reconnect-msg').textContent = t('upd_reconnecting').replace('{v}', version ? ' (' + version + ')' : '');
+  document.getElementById('upd-reconnect-slow').style.display = 'none';
+  ov.classList.add('open');
+  const old = (updState || {}).current || '';
+  const started = Date.now();
+  let wentDown = false;
+  const tick = async () => {
+    let v = null;
+    try {
+      const r = await fetch('/api/version', {cache: 'no-store'});
+      if (r.ok) v = (await r.json()).version;
+    } catch (_) {}
+    if (v === null) wentDown = true;
+    else if (v !== old || wentDown || Date.now() - started > 30000) { location.reload(); return; }
+    if (Date.now() - started > 180000) document.getElementById('upd-reconnect-slow').style.display = '';
+    setTimeout(tick, 1500);
+  };
+  setTimeout(tick, 1500);
+}
+
 // ══ APP INIT ══════════════════════════════════════════
 
 function initApp() {
@@ -4773,6 +5026,7 @@ function initApp() {
   loadClipboard();
   loadData();
   loadSessions();
+  refreshUpdateBadge();
   connectEventBus();
   startSessionKeepalive();
 }
@@ -5962,6 +6216,7 @@ const POLICY_GROUPS = {
     ['pg_proxies', ['proxies']],
     ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_check_parallel', 'git_check_per_server', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_transfer', 'git_gitignore_mr', 'git_schedule_grace_minutes']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
+    ['pg_updates', ['update_check', 'update_repo', 'update_proxy', 'self_update']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],

@@ -336,6 +336,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/known-hosts", apiAdminKnownHostsHandler)
 	mux.HandleFunc("/api/admin/known-hosts/", apiAdminKnownHostsHandler)
 	mux.HandleFunc("/api/admin/status", apiAdminStatusHandler)
+	mux.HandleFunc("/api/update", apiUpdateHandler)
+	mux.HandleFunc("/api/update/", apiUpdateHandler)
 	mux.HandleFunc("/api/admin/terminals/", apiAdminTerminalsHandler)
 	mux.HandleFunc("/api/admin/shares", apiAdminSharesHandler)
 	// remote files
@@ -425,6 +427,7 @@ func serve(stop <-chan struct{}) int {
 			return exitRestart
 		}
 	}
+	cleanupReplacedBinary()
 	initDB()
 	loadAppSettings()
 	initServerSecret()
@@ -441,6 +444,7 @@ func serve(stop <-chan struct{}) int {
 	go runQuickCleanup()
 	go runGitMonitor()
 	go runGitScheduler()
+	go runUpdateChecker()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -546,8 +550,13 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 func sharePageHandler(w http.ResponseWriter, r *http.Request) { serveIndex(w) }
 
+// versionHandler also names an available update (for the sign-in page's version badge).
 func versionHandler(w http.ResponseWriter, r *http.Request) {
-	jsonOK(w, map[string]string{"version": AppVersion})
+	out := map[string]string{"version": AppVersion}
+	if info := lastUpdateInfo(); settingBool("update_check") && updateAvailable(info) {
+		out["update"] = info.Latest
+	}
+	jsonOK(w, out)
 }
 
 // healthHandler is for load balancers and monitoring: 200 when the database answers.

@@ -378,11 +378,16 @@ func parseMFAToken(tok string) (int, string, bool) {
 func apiAuthConfigHandler(w http.ResponseWriter, r *http.Request) {
 	var n int
 	db.QueryRow(`SELECT COUNT(*) FROM users`).Scan(&n)
-	jsonOK(w, map[string]interface{}{
+	out := map[string]interface{}{
 		"version":           AppVersion,
 		"first_run":         n == 0,
 		"registration_open": n == 0 || getSetting("registration") == "open",
-	})
+	}
+	// The sign-in page's version badge: an available update and its release page.
+	if info := lastUpdateInfo(); settingBool("update_check") && updateAvailable(info) {
+		out["update"], out["update_url"] = info.Latest, info.URL
+	}
+	jsonOK(w, out)
 }
 
 func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
