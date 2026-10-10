@@ -23,7 +23,7 @@ Run everything from `remote-manager/` unless noted:
 ```
 gofmt -l .                      # must print nothing
 go vet ./...
-go test -race -count=1 ./...    # full suite, ~4–5 minutes
+go test -race -count=1 -timeout 20m ./...   # full suite, ~10 minutes (the default 10m timeout is too short)
 node ../tools/check-ui.js       # UI: JS syntax + en/hr translation keys
 ```
 
