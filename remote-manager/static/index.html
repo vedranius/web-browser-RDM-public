@@ -993,6 +993,9 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 #upd-reconnect .spin { font-size: 26px; display: inline-block; animation: updspin 1.2s linear infinite; }
 @keyframes updspin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) { .upd-badge .lbl { display: none; } .upd-badge { margin-left: 4px; padding: 2px 7px; } }
+.win-btn.fm { width: auto; padding: 0 3px; flex-direction: row; white-space: nowrap; }
+.win-btn.fm .fm-caret { font-size: 8px; margin-left: 1px; opacity: .8; }
+.fm-menu-path { display: block; font-size: 10.5px; color: var(--text3); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hint-box.warn { border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.07); color: #fde68a; }
 .hint-box.bad { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.07); color: #fecaca; }
 .hint-box.ok { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.06); color: #bbf7d0; }
@@ -2832,7 +2835,7 @@ const LANGS = {
     new_window:'＋ New Window', sign_out:'Sign Out', settings:'⚙ Settings', shares:'🤝 Shares',
     sessions:'Sessions', save_session:'+ Save Session',
     clipboard:'Clipboard', clear:'Clear', no_items:'No clipboard items', paste:'Paste',
-    open_terminal:'⚡ Terminal (SSH)', open_files:'📂 File Manager', win_files_t:'File manager of this server (in the current directory when the shell reports it)',
+    open_terminal:'⚡ Terminal (SSH)', open_files:'📂 File Manager', win_files_t:'File manager of this server: here (the terminal\'s directory), / or home',
     open_in_new:'Open in New Window', open_in_window:'Open in Window',
     edit_connection:'✏ Edit', share_connection:'🤝 Share', delete_connection:'Delete Connection',
     delete_folder:'Delete Folder', share_folder:'🤝 Share Folder',
@@ -2917,7 +2920,7 @@ const LANGS = {
     new_window:'＋ Novi prozor', sign_out:'Odjava', settings:'⚙ Postavke', shares:'🤝 Dijeljenja',
     sessions:'Sesije', save_session:'+ Spremi sesiju',
     clipboard:'Međuspremnik', clear:'Očisti', no_items:'Nema stavki', paste:'Zalijepi',
-    open_terminal:'⚡ Terminal (SSH)', open_files:'📂 Preglednik datoteka', win_files_t:'Preglednik datoteka ovog servera (u trenutnom direktoriju kad ga ljuska javlja)',
+    open_terminal:'⚡ Terminal (SSH)', open_files:'📂 Preglednik datoteka', win_files_t:'Preglednik datoteka ovog servera: ovdje (direktorij terminala), / ili home',
     open_in_new:'Otvori u novom prozoru', open_in_window:'Otvori u prozoru',
     edit_connection:'✏ Uredi', share_connection:'🤝 Podijeli', delete_connection:'Obriši vezu',
     delete_folder:'Obriši mapu', share_folder:'🤝 Podijeli mapu',
@@ -4607,6 +4610,10 @@ Object.assign(LANGS.en, {
   p_update_proxy: 'Proxy for the update check', p_update_proxy_d: 'HTTP proxy for GitHub (e.g. http://proxy.example.com:3128). Empty: HTTPS_PROXY / HTTP_PROXY of the server, if set.', p_update_proxy_ph: 'http://proxy:3128',
   p_self_update: 'One-click update', p_self_update_d: 'Who may update this server from the version badge (download, SHA-256 check, replace, restart, rollback). Never in Docker.',
   po_self_update_off: 'Nobody', po_self_update_admins: 'Administrators',
+  fm_open_here: 'Open here', fm_open_root: 'Open /', fm_open_home: 'Open home',
+  fm_here_looking: 'Looking up the terminal\'s directory…', fm_here_unknown_t: 'Directory not found',
+  fm_here_unknown: 'The terminal\'s current directory could not be determined ({reason}). Open the file manager in the home directory or at / instead?',
+  fm_here_timeout: 'the server did not answer', fm_here_offline: 'the terminal is not connected',
 });
 Object.assign(LANGS.hr, {
   upd_badge: 'Nadogradnja {v}', upd_badge_t: 'Dostupna je nadogradnja: {v}. Klikni za bilješke izdanja.', upd_title: '⬆ Nadogradnje',
@@ -4628,6 +4635,10 @@ Object.assign(LANGS.hr, {
   p_update_proxy: 'Proxy za provjeru nadogradnji', p_update_proxy_d: 'HTTP proxy za GitHub (npr. http://proxy.example.com:3128). Prazno: HTTPS_PROXY / HTTP_PROXY servera, ako su postavljeni.', p_update_proxy_ph: 'http://proxy:3128',
   p_self_update: 'Nadogradnja jednim klikom', p_self_update_d: 'Tko smije nadograditi ovaj server preko oznake verzije (preuzimanje, SHA-256 provjera, zamjena, ponovno pokretanje, povratak). Nikad u Dockeru.',
   po_self_update_off: 'Nitko', po_self_update_admins: 'Administratori',
+  fm_open_here: 'Otvori ovdje', fm_open_root: 'Otvori /', fm_open_home: 'Otvori home',
+  fm_here_looking: 'Tražim direktorij terminala…', fm_here_unknown_t: 'Direktorij nije pronađen',
+  fm_here_unknown: 'Trenutni direktorij terminala nije moguće odrediti ({reason}). Otvoriti preglednik datoteka u home direktoriju ili na / umjesto toga?',
+  fm_here_timeout: 'server nije odgovorio', fm_here_offline: 'terminal nije spojen',
 });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
@@ -9570,7 +9581,7 @@ function addWindow(opts) {
       <button class="win-snap-btn win-snap-menu-btn" title="${t('snap_layouts')}" onclick="openSnapMenu(event, ${id})">${snapIcon('nw')}</button>
       <div class="win-btns">
         <button class="win-btn reconnect" id="wb-rc-${id}" title="${t('reconnect_now')}" style="display:none;" onclick="reconnectTermById(${id})">↻</button>
-        <button class="win-btn fm" id="wb-fm-${id}" title="${esc(t('win_files_t'))}" style="display:none;" onclick="openFilesForWin(${id})">📂</button>
+        <button class="win-btn fm" id="wb-fm-${id}" title="${esc(t('win_files_t'))}" style="display:none;" onclick="event.stopPropagation(); openFilesMenu(${id}, this)">📂<span class="fm-caret">▾</span></button>
         <button class="win-btn" id="wb-nt-${id}" title="${esc(t('notes_title'))}" style="display:none;" onclick="openNotes((winObjects.find(w => w.id === ${id}) || {}).connId)">📝</button>
         <button class="win-btn bm" id="wb-bm-${id}" title="${esc(t('bm_title'))}" style="display:none;" onclick="openBookmarkMenu(${id}, this)">★</button>
         <button class="win-btn snip" id="wb-sn-${id}" title="${esc(t('snip_title'))}" style="display:none;" onclick="openSnippetPicker(${id})">⚡</button>
@@ -10102,6 +10113,8 @@ function handleTermControl(wo, m) {
     wo.exitInfo = m;
   } else if (m.type === 'hostkey') {
     wo.hostKey = m;
+  } else if (m.type === 'cwd') {
+    if (wo._cwdWaiter) wo._cwdWaiter({path: m.path || '', error: m.error || ''});
   } else if (m.type === 'autorun') {
     showToast('⚡ ' + t('autorun_done').replace('{names}', (m.snippets || []).join(', ')), 'info', 3500);
   } else if (m.type === 'broadcast' && m.allowed === false) {
@@ -10259,24 +10272,64 @@ function openTerminalAt(winId, path) {
   setWinMode(wo.id, 'ssh');
 }
 
-// 📂 in a terminal's title bar: the file manager of the same server. An open file manager
-// of that connection is brought to the front; otherwise a new one opens in the terminal's
-// directory when the shell reports it (OSC 7), else in the home directory.
-function openFilesForWin(winId) {
+// 📂 in a terminal's title bar: a menu that opens the file manager of the same server here
+// (the terminal's current directory), at / or in the home directory.
+function openFilesMenu(winId, btn) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo || !wo.connId || !guardWin(wo, 'files_read')) return;
+  const menu = document.getElementById('dyn-ctx-menu');
+  menu.innerHTML = `<div class="ctx-item" onclick="closeAllCtx(); openFilesHere(${winId})">📂 <span>${esc(t('fm_open_here'))}${wo.cwd ? `<span class="fm-menu-path">${esc(wo.cwd)}</span>` : ''}</span></div>
+    <div class="ctx-item" onclick="closeAllCtx(); openFilesForWin(${winId}, '/')">🗄 <span>${esc(t('fm_open_root'))}<span class="fm-menu-path">/</span></span></div>
+    <div class="ctx-item" onclick="closeAllCtx(); openFilesForWin(${winId}, '~')">🏠 <span>${esc(t('fm_open_home'))}<span class="fm-menu-path">~</span></span></div>`;
+  const r = btn.getBoundingClientRect();
+  showCtx('dyn-ctx-menu', Math.max(4, Math.min(r.left, window.innerWidth - 240)), r.bottom + 4);
+}
+
+// openFilesHere: the directory the shell reported (OSC 7, the fast path), else the server is
+// asked for the shell's working directory over a separate SSH channel. When it cannot be
+// found, the user picks home or /.
+async function openFilesHere(winId) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo) return;
+  if (wo.cwd) { openFilesForWin(winId, wo.cwd); return; }
+  const res = await termAskCwd(wo);
+  if (res.path) { openFilesForWin(winId, res.path); return; }
+  const choice = await uiDialog({title: t('fm_here_unknown_t'), message: t('fm_here_unknown').replace('{reason}', res.error || ''),
+    okText: '🏠 ' + t('fm_open_home'), altText: '🗄 ' + t('fm_open_root')});
+  if (choice === 'alt') openFilesForWin(winId, '/');
+  else if (choice) openFilesForWin(winId, '~');
+}
+
+// termAskCwd sends {"type":"cwd"} on the terminal's WebSocket; the answer is {type:"cwd", path | error}.
+function termAskCwd(wo) {
+  return new Promise(resolve => {
+    if (!wo.socket || wo.socket.readyState !== 1) { resolve({error: t('fm_here_offline')}); return; }
+    if (wo._cwdWaiter) wo._cwdWaiter({error: ''});
+    const timer = setTimeout(() => { if (wo._cwdWaiter) { wo._cwdWaiter = null; resolve({error: t('fm_here_timeout')}); } }, 15000);
+    wo._cwdWaiter = r => { clearTimeout(timer); wo._cwdWaiter = null; resolve(r); };
+    showToast('📂 ' + t('fm_here_looking'), 'info', 1500);
+    sendTermCtl(wo, {type: 'cwd'});
+  });
+}
+
+// openFilesForWin opens (or brings to the front) the file manager of the terminal's server:
+// in path, or without one in the directory the shell reported (else the home directory).
+function openFilesForWin(winId, path) {
   const src = winObjects.find(w => w.id === winId);
   if (!src || !src.connId || !guardWin(src, 'files_read')) return;
+  const dir = path || src.cwd || '';
   const open = winObjects.find(w => w.el && w.mode === 'sftp' && w.connId === src.connId && w.shareToken === src.shareToken);
   if (open) {
     if (open.el.style.display === 'none') minimizeWindow(open.id);
     else focusWindow(open.id);
-    if (src.cwd && open.path !== src.cwd) loadFiles(open.id, src.cwd);
+    if (dir && open.path !== dir) loadFiles(open.id, dir);
     return;
   }
   const wo = addWindow();
   wo.connId = src.connId;
   wo.shareToken = src.shareToken;
   wo.perms = src.perms;
-  if (src.cwd) wo.path = src.cwd;
+  if (dir) wo.path = dir;
   setWinMode(wo.id, 'sftp');
 }
 
