@@ -112,21 +112,8 @@ func parseAIModeRules(v string) ([]aiModeRule, error) {
 	}
 	for i := range rules {
 		r := &rules[i]
-		r.Match = strings.ToLower(strings.TrimSpace(r.Match))
-		r.Value = strings.TrimSpace(r.Value)
-		if !oneOf(r.Match, "tag", "folder", "connection", "host") {
-			return nil, fmt.Errorf("rule %d: match must be tag, folder, connection or host", i+1)
-		}
-		if r.Value == "" || len(r.Value) > 200 {
-			return nil, fmt.Errorf("rule %d: value is required", i+1)
-		}
-		if r.Match == "connection" {
-			if n, err := strconv.Atoi(r.Value); err != nil || n <= 0 {
-				return nil, fmt.Errorf("rule %d: connection must be a connection id", i+1)
-			}
-		}
-		if r.Match == "tag" {
-			r.Value = normalizeTag(r.Value)
+		if err := normalizeRuleTarget(r, i); err != nil {
+			return nil, err
 		}
 		modes, err := normalizeModeList(strings.Join(r.Modes, ","))
 		if err != nil {
@@ -138,6 +125,28 @@ func parseAIModeRules(v string) ([]aiModeRule, error) {
 		}
 	}
 	return rules, nil
+}
+
+// normalizeRuleTarget checks and normalises what a rule matches (shared by the mode rules
+// and the terminal sharing rules).
+func normalizeRuleTarget(r *aiModeRule, i int) error {
+	r.Match = strings.ToLower(strings.TrimSpace(r.Match))
+	r.Value = strings.TrimSpace(r.Value)
+	if !oneOf(r.Match, "tag", "folder", "connection", "host") {
+		return fmt.Errorf("rule %d: match must be tag, folder, connection or host", i+1)
+	}
+	if r.Value == "" || len(r.Value) > 200 {
+		return fmt.Errorf("rule %d: value is required", i+1)
+	}
+	if r.Match == "connection" {
+		if n, err := strconv.Atoi(r.Value); err != nil || n <= 0 {
+			return fmt.Errorf("rule %d: connection must be a connection id", i+1)
+		}
+	}
+	if r.Match == "tag" {
+		r.Value = normalizeTag(r.Value)
+	}
+	return nil
 }
 
 func validateAIModeRules(v string) (string, error) {

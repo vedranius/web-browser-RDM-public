@@ -125,6 +125,9 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_output_max_kb", Default: "64", Kind: "int", Min: 4, Max: 1024},
 	{Key: "ai_max_steps", Default: "25", Kind: "int", Min: 1, Max: 200},
 	{Key: "ai_idle_minutes", Default: "60", Kind: "int", Min: 5, Max: 1440},
+	{Key: "ai_terminal_share", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "ai_terminal_share_rules", Default: "[]", Kind: "json"},
+	{Key: "ai_terminal_context_lines", Default: "200", Kind: "int", Min: 10, Max: termTrackMaxLines},
 	// AI desktop apps (MCP)
 	{Key: "ai_mcp_enabled", Default: "0", Kind: "bool"},
 	{Key: "ai_mcp", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
@@ -273,6 +276,9 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		}
 		if s.Key == "ai_mode_rules" {
 			return validateAIModeRules(v)
+		}
+		if s.Key == "ai_terminal_share_rules" {
+			return validateAIShareRules(v)
 		}
 		return v, nil
 	}
@@ -450,6 +456,12 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if _, ok := changed["ai_mcp"]; ok {
 			mcpShutdown(adminID, "the policy no longer allows AI connections for the user", func(uid int) bool { ok, _ := mcpUserAllowed(uid); return !ok })
+		}
+		for k := range changed {
+			if strings.HasPrefix(k, "ai_") {
+				aiTermJanitor() // shared terminals follow the AI policies at once
+				break
+			}
 		}
 		for k := range changed {
 			if strings.HasPrefix(k, "tunnel") {

@@ -30,27 +30,34 @@ import (
 //
 // The answer is one line, "WRMCWD:<path>" or "WRMCWD-ERR:<reason>".
 
-const cwdLookupScript = `if [ -r /proc/self/stat ]; then
-  P=$(cat /proc/[0-9]*/stat 2>/dev/null | awk '{p=$1; sub(/^.*\) /, ""); print p, $2, $5, $6}')
+// procTableScript lists pid, ppid, tty, tpgid and the command name of every process.
+const procTableScript = `if [ -r /proc/self/stat ]; then
+  P=$(cat /proc/[0-9]*/stat 2>/dev/null | awk '{p=$1; c=$0; sub(/^[^(]*\(/, "", c); sub(/\) [^)]*$/, "", c); gsub(/[ \t]/, "_", c); sub(/^.*\) /, ""); print p, $2, $5, $6, c}')
 else
-  P=$(ps -A -o pid= -o ppid= -o tty= -o tpgid= 2>/dev/null)
+  P=$(ps -A -o pid= -o ppid= -o tty= -o tpgid= -o comm= 2>/dev/null)
 fi
-[ -n "$P" ] || { echo "WRMCWD-ERR:ps"; exit 0; }
-pick=$(printf '%s\n' "$P" | awk -v me="$$" '
+[ -n "$P" ] || { echo "WRM%[1]s-ERR:ps"; exit 0; }
+`
+
+// pickShellScript finds the terminal's shell and its foreground process: "shell fg
+// shell-name fg-name fg-parent-name".
+const pickShellScript = `pick=$(printf '%%s\n' "$P" | awk -v me="$$" '
   function none(x) { return x == "" || x == "0" || x == "?" || x == "??" || x == "-" }
-  NF >= 4 { pp[$1] = $2; tt[$1] = $3; tg[$1] = $4 }
+  NF >= 4 { pp[$1] = $2; tt[$1] = $3; tg[$1] = $4; cm[$1] = NF >= 5 ? $5 : "-" }
   END {
     mine = tt[me]; chain[me] = 1; a = pp[me]
     for (lvl = 0; lvl < 4 && a != "" && a + 0 > 1; lvl++) {
       best = ""
       for (p in pp) if (pp[p] == a && !(p in chain) && !none(tt[p]) && tt[p] != mine && (best == "" || p + 0 > best + 0)) best = p
-      if (best != "") { fg = tg[best] + 0 > 0 ? tg[best] : best; print best, fg; exit }
+      if (best != "") { fg = tg[best] + 0 > 0 ? tg[best] : best; print best, fg, cm[best], (cm[fg] == "" ? "-" : cm[fg]), (cm[pp[fg]] == "" ? "-" : cm[pp[fg]]); exit }
       chain[a] = 1; a = pp[a]
     }
   }')
-[ -n "$pick" ] || { echo "WRMCWD-ERR:noshell"; exit 0; }
+[ -n "$pick" ] || { echo "WRM%[1]s-ERR:noshell"; exit 0; }
 set -- $pick
-cwdof() {
+`
+
+var cwdLookupScript = fmt.Sprintf(procTableScript+pickShellScript, "CWD") + `cwdof() {
   d=$(readlink "/proc/$1/cwd" 2>/dev/null)
   if [ -z "$d" ] && command -v pwdx >/dev/null 2>&1; then d=$(pwdx "$1" 2>/dev/null | sed -n 's/^[0-9]*: //p'); fi
   if [ -z "$d" ] && command -v procstat >/dev/null 2>&1; then d=$(procstat -h -f "$1" 2>/dev/null | awk '$3 == "cwd" { s = $10; for (i = 11; i <= NF; i++) s = s " " $i; print s; exit }'); fi
@@ -61,8 +68,14 @@ cwdof() {
 cwdof "$2" || cwdof "$1" || echo "WRMCWD-ERR:unreadable"
 `
 
+// fgLookupScript prints "WRMFG:<shell> <fg> <shell name> <fg name> <fg parent name>".
+var fgLookupScript = fmt.Sprintf(procTableScript+pickShellScript, "FG") + `echo "WRMFG:$*"
+`
+
 // cwdLookupCommand runs the script with sh, whatever the account's login shell is.
 var cwdLookupCommand = "sh -c " + shQuote(cwdLookupScript)
+
+var fgLookupCommand = "sh -c " + shQuote(fgLookupScript)
 
 const cwdLookupTimeout = 10 * time.Second
 
@@ -113,4 +126,85 @@ func parseCwdAnswer(out string) (string, error) {
 		}
 	}
 	return "", errCwdUnknown{fmt.Sprintf("unexpected answer from the server (%q)", truncateStr(strings.TrimSpace(out), 80))}
+}
+
+// ─── the terminal's foreground process (v12.2.0) ─────
+//
+// Before WRM types a command into a shared terminal (terminal_run) it checks over an exec
+// channel that the terminal's foreground process is the shell itself, so a command is never
+// typed into another program (an editor, a REPL, a database client, ssh to another host, a
+// running job) even if the program's output imitates a prompt or shell integration markers.
+// sudo / su / doas (and a shell they started) count as the shell: the screen checks (prompt,
+// password prompt, alternate screen) still apply inside them.
+
+const fgLookupTimeout = 8 * time.Second
+
+var (
+	termShellNames   = []string{"sh", "bash", "dash", "zsh", "fish", "ksh", "mksh", "ksh93", "pdksh", "ash", "busybox", "tcsh", "csh", "yash", "oksh", "rbash", "nu", "xonsh", "elvish"}
+	termWrapperNames = []string{"sudo", "su", "doas", "sudo-rs", "su-rs", "run0", "machinectl"}
+)
+
+func cleanComm(c string) string {
+	c = strings.TrimPrefix(strings.TrimSpace(c), "-")
+	if i := strings.LastIndex(c, "/"); i >= 0 {
+		c = c[i+1:]
+	}
+	return strings.ToLower(c)
+}
+
+// termForeground asks the server for the terminal's foreground process. known is false
+// when the server cannot tell (no /proc and no ps, the shell not found): the caller then
+// relies on the screen checks alone.
+func termForeground(cl *ssh.Client) (known bool, refusal *termRefusal) {
+	if cl == nil {
+		return false, nil
+	}
+	sess, err := cl.NewSession()
+	if err != nil {
+		return false, nil
+	}
+	defer sess.Close()
+	var out bytes.Buffer
+	sess.Stdout = &out
+	done := make(chan error, 1)
+	go func() { done <- sess.Run(fgLookupCommand) }()
+	select {
+	case <-done:
+	case <-time.After(fgLookupTimeout):
+		return false, nil
+	}
+	return parseFgAnswer(out.String())
+}
+
+func parseFgAnswer(out string) (bool, *termRefusal) {
+	for _, line := range strings.Split(out, "\n") {
+		line = strings.TrimRight(line, "\r")
+		v, ok := strings.CutPrefix(line, "WRMFG:")
+		if !ok {
+			continue
+		}
+		f := strings.Fields(v)
+		if len(f) < 2 {
+			return false, nil
+		}
+		if f[0] == f[1] {
+			return true, nil
+		}
+		comm := func(i int) string {
+			if i < len(f) {
+				return cleanComm(f[i])
+			}
+			return ""
+		}
+		fg, parent := comm(3), comm(4)
+		if oneOf(fg, termWrapperNames...) || (oneOf(fg, termShellNames...) && oneOf(parent, termWrapperNames...)) {
+			return true, nil
+		}
+		name := fg
+		if name == "" || name == "-" {
+			name = "pid " + f[1]
+		}
+		return true, &termRefusal{Rule: "foreground", Why: "a program is running in the foreground of the terminal (" + truncateStr(name, 40) + "), not the shell", Hard: true}
+	}
+	return false, nil
 }

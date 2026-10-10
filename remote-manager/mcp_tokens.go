@@ -35,7 +35,7 @@ import (
 //   GET grants, DELETE grants/{id}, POST revoke-all, GET clients, DELETE clients/{id}
 
 const (
-	mcpAllScopes        = "read_logs,run_readonly,run_with_approval,edit_file_with_approval,transfer"
+	mcpAllScopes        = "read_logs,run_readonly,run_with_approval,edit_file_with_approval,transfer,terminal_read,terminal_with_approval"
 	mcpMaxGrantsPerUser = 25
 	mcpMaxConnsPerGrant = 50
 	mcpPATPrefix        = "wrm_pat_"
@@ -465,6 +465,7 @@ func mcpRevoke(r *http.Request, id int64, byID int, reason string) bool {
 	db.Exec(`UPDATE mcp_tokens SET revoked_at=?, revoked_by=?, revoke_reason=? WHERE id=? AND revoked_at=''`, nowRFC(), by, truncateStr(reason, 200), id)
 	n := aiKillWhere(func(s *aiSession) bool { return s.TokenID == id }, byID, "the AI connection was revoked: "+reason)
 	mcpDropConns(func(c *mcpConn) bool { return c.grantID == id })
+	aiTermDetachGrant(id, "the AI connection was revoked")
 	actor := byID
 	if actor <= 0 {
 		actor = g.UserID
@@ -510,6 +511,7 @@ func mcpShutdown(byID int, reason string, pred func(userID int) bool) int {
 // runMCPJanitor ends AI sessions of expired AI connections, drops idle MCP sessions and
 // expired authorization codes, and deletes old AI connections.
 func mcpJanitorTick(now time.Time) {
+	aiTermJanitor()
 	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.Transport == "mcp" }) {
 		if ok, why := s.userAllowed(); !ok {
 			s.Kill(0, why)

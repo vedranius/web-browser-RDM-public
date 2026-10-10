@@ -329,6 +329,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"ai_personal_keys": aiPersonalKeysAllowed(u.ID),
 			"mcp":              mcpAllowedFlag(u.ID),
 			"mcp_enabled":      settingBool("ai_mcp_enabled"),
+			"ai_terminal":      aiTerminalShareFlag(u.ID),
 		},
 	}
 }

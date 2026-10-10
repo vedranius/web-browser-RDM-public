@@ -162,7 +162,8 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		printTerm("\x1b[33mNew host " + host + " — key " + fp + " saved (trust on first use).\x1b[0m\r\n")
 	}
 	var tio *termIO
-	var sshCl *ssh.Client // the terminal's SSH connection (a cwd lookup opens another channel on it)
+	var sshCl *ssh.Client                 // the terminal's SSH connection (a cwd lookup opens another channel on it)
+	var aiTermP atomic.Pointer[termShare] // what an AI may see and type when the user shares this terminal (v12.2.0)
 	switch {
 	case serial:
 		tio, err = openSerial(c)
@@ -269,6 +270,13 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 						resume()
 					case "ping":
 						sendCtl(map[string]string{"type": "pong"})
+					case "ai_share":
+						// the browser's toggle; the API does the same (/api/ai/terminals/{id}/share)
+						if at := aiTermP.Load(); at != nil {
+							if err := at.setShare(r, ctl.On, "by the user"); err != nil {
+								sendCtl(map[string]interface{}{"type": "ai_share", "on": false, "error": err.Error(), "id": at.ID})
+							}
+						}
 					case "cwd":
 						// The 📂 menu's "Open here" without OSC 7: ask the server for the shell's directory.
 						go func() {
@@ -295,6 +303,9 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 					}
 					continue
 				}
+			}
+			if at := aiTermP.Load(); at != nil {
+				at.noteInput()
 			}
 			select {
 			case stdinCh <- msg:
@@ -341,7 +352,30 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	if recorded {
 		printTerm("\x1b[2m● This session is recorded.\x1b[0m\r\n")
 	}
-	sendCtl(map[string]interface{}{"type": "status", "state": "connected", "host": c.Host, "recording": recorded, "session_id": ta.ID, "console": firstNonEmpty(console, map[bool]string{true: "serial"}[serial])})
+	status := map[string]interface{}{"type": "status", "state": "connected", "host": c.Host, "recording": recorded, "session_id": ta.ID, "console": firstNonEmpty(console, map[bool]string{true: "serial"}[serial])}
+	// AI in this terminal: an SSH shell of a signed-in user whose access allows the assistant
+	if sshCl != nil && acc.UserID > 0 && (acc.Share == nil || roleCan(acc.Share.Role, PermFilesWrite)) {
+		shareID := 0
+		if acc.Share != nil {
+			shareID = acc.Share.Share.ID
+		}
+		typeFn := func(b []byte) bool {
+			select {
+			case stdinCh <- b:
+				return true
+			case <-done:
+				return false
+			case <-time.After(5 * time.Second):
+				return false
+			}
+		}
+		at := registerAITerm(acc.UserID, shareID, c, ta.ID, sshCl, typeFn, sendCtl)
+		aiTermP.Store(at)
+		defer at.close("the terminal window was closed")
+		status["ai_terminal"] = at.ID
+		status["ai_share_allowed"] = aiTerminalShareFlag(acc.UserID)
+	}
+	sendCtl(status)
 
 	// ── Output pump ──
 	var lastOutput atomic.Int64 // unix nanoseconds of the last output (run on connect waits for a quiet prompt)
@@ -366,6 +400,9 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 			if n > 0 {
 				lastOutput.Store(time.Now().UnixNano())
 				ta.output(buf[:n])
+				if at := aiTermP.Load(); at != nil {
+					at.feed(buf[:n])
+				}
 				if writeWS(websocket.BinaryMessage, buf[:n]) != nil {
 					finish()
 					return

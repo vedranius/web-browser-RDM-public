@@ -27,6 +27,7 @@ import (
 //   POST sessions/{id}/stop                   cancel the running request / command
 //   POST sessions/{id}/kill                   end the session
 //   POST kill-all                             end every own session
+//   GET|POST terminals/{id}[/share|bind|attach|detach|selection]   the shared terminal (ai_terminal.go)
 // Admin API (/api/admin/ai/…):
 //   GET|POST|PUT|DELETE providers[/{id}], POST providers/{id}/test   organisation providers
 //   GET  sessions?user&conn&status&limit      every session (active ones marked live)
@@ -57,6 +58,8 @@ func apiAIHandler(w http.ResponseWriter, r *http.Request) {
 		handleAIProviders(w, r, userID, "user", strings.TrimPrefix(rest, "providers"))
 	case "sessions":
 		aiSessionsHandler(w, r, userID, parts[1:])
+	case "terminals":
+		aiTerminalsHandler(w, r, userID, parts[1:])
 	case "kill-all":
 		if r.Method != http.MethodPost {
 			jsonError(w, "Method not allowed", 405)
@@ -134,7 +137,7 @@ func aiVisibility(allowed []string) map[string]interface{} {
 	read := []string{}
 	write := []string{}
 	for _, t := range aiTools {
-		if t.MCPOnly {
+		if t.MCPOnly || t.Terminal {
 			continue
 		}
 		switch t.Kind {
@@ -147,7 +150,8 @@ func aiVisibility(allowed []string) map[string]interface{} {
 	return map[string]interface{}{
 		"read_tools": read, "write_tools": write, "command_tool": "run_command",
 		"redacted": settingBool("ai_redact_output"), "read_max_kb": settingInt("ai_output_max_kb"),
-		"never":         []string{"passwords and keys stored in WRM", "your WRM session", "other connections", "the terminal screen"},
+		"never":          []string{"passwords and keys stored in WRM", "your WRM session", "other connections", "the terminal screen unless you share it"},
+		"terminal_tools": []string{"terminal_read", "terminal_run"}, "terminal_lines": aiContextLines(),
 		"denied_paths":  len(aiReadDenyDefaults) + len(splitPatterns(getSetting("ai_read_deny_paths"))),
 		"allowed_modes": allowed,
 	}
@@ -205,13 +209,14 @@ func aiSessionsHandler(w http.ResponseWriter, r *http.Request, userID int, parts
 	switch parts[1] {
 	case "prompt":
 		var in struct {
-			Text string `json:"text"`
+			Text      string `json:"text"`
+			Selection string `json:"selection"` // "Ask AI" on a terminal selection (v12.2.0)
 		}
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 			jsonError(w, "Bad JSON", 400)
 			return
 		}
-		if err := s.Prompt(r, userID, in.Text); err != nil {
+		if err := s.Prompt(r, userID, in.Text, in.Selection); err != nil {
 			jsonError(w, err.Error(), 409)
 			return
 		}
@@ -275,6 +280,7 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		Auto        *aiAutoLimits `json:"auto"`
 		ConfirmAuto bool          `json:"confirm_auto"`
 		ShareNotes  bool          `json:"share_notes"`
+		Terminal    string        `json:"terminal"` // bind the session to this shared terminal window
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		jsonError(w, "Bad JSON", 400)
@@ -294,6 +300,13 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		auditLog(r, userID, "ai.session_refused", "", map[string]interface{}{"conn_id": in.ConnID, "reason": err.Error()})
 		jsonError(w, err.Error(), 403)
 		return
+	}
+	if in.Terminal != "" {
+		if ts := aiTermGet(in.Terminal); ts != nil && ts.UserID == userID {
+			if on, _ := ts.isOn(); on {
+				ts.bindSession(r, s, "panel")
+			}
+		}
 	}
 	hub.sendTo(userID, jsonMarshal(map[string]interface{}{"type": "ai_sessions_changed"}))
 	jsonOK(w, s.view())
