@@ -134,6 +134,9 @@ func aiVisibility(allowed []string) map[string]interface{} {
 	read := []string{}
 	write := []string{}
 	for _, t := range aiTools {
+		if t.MCPOnly {
+			continue
+		}
 		switch t.Kind {
 		case "read":
 			read = append(read, t.Def.Name)

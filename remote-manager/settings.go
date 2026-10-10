@@ -125,6 +125,19 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_output_max_kb", Default: "64", Kind: "int", Min: 4, Max: 1024},
 	{Key: "ai_max_steps", Default: "25", Kind: "int", Min: 1, Max: 200},
 	{Key: "ai_idle_minutes", Default: "60", Kind: "int", Min: 5, Max: 1440},
+	// AI desktop apps (MCP)
+	{Key: "ai_mcp_enabled", Default: "0", Kind: "bool"},
+	{Key: "ai_mcp", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "ai_mcp_scopes", Default: mcpAllScopes, Kind: "string"},
+	{Key: "ai_mcp_modes", Default: "read_only,ask", Kind: "string"},
+	{Key: "ai_mcp_token_hours", Default: "8", Kind: "int", Min: 1, Max: 8760},
+	{Key: "ai_mcp_max_token_hours", Default: "24", Kind: "int", Min: 1, Max: 8760},
+	{Key: "ai_mcp_oauth", Default: "1", Kind: "bool"},
+	{Key: "ai_mcp_redirect_uris", Default: mcpDefaultRedirectURIs, Kind: "string"},
+	{Key: "ai_mcp_allowed_origins", Default: "", Kind: "string"},
+	{Key: "ai_mcp_public_url", Default: "", Kind: "string"},
+	{Key: "ai_mcp_elicitation", Default: "1", Kind: "bool"},
+	{Key: "ai_mcp_transfer_max_mb", Default: "100", Kind: "int", Min: 1, Max: 10240},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
@@ -275,8 +288,30 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		if _, _, err := parsePortRange(v); err != nil {
 			return "", err
 		}
-	case "ai_modes":
+	case "ai_modes", "ai_mcp_modes":
 		return normalizeAIModes(v)
+	case "ai_mcp_scopes":
+		return normalizeMCPScopes(v)
+	case "ai_mcp_redirect_uris":
+		return validateRedirectPatterns(v)
+	case "ai_mcp_allowed_origins":
+		var out []string
+		for _, o := range splitPatterns(v) {
+			u, err := url.Parse(o)
+			if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" || (u.Path != "" && u.Path != "/") || u.User != nil {
+				return "", fmt.Errorf("use origins such as https://app.example.com: %s", o)
+			}
+			out = append(out, u.Scheme+"://"+u.Host)
+		}
+		return strings.Join(out, ","), nil
+	case "ai_mcp_public_url":
+		if v != "" {
+			u, err := url.Parse(v)
+			if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" || u.User != nil || u.RawQuery != "" {
+				return "", fmt.Errorf("use the public address of WRM, such as https://wrm.example.com")
+			}
+			return strings.TrimRight(v, "/"), nil
+		}
 	case "ai_provider_kinds":
 		return normalizeAIKinds(v)
 	case "update_repo":
@@ -408,7 +443,13 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 			aiKillAll(adminID, "kill switch turned on by an administrator")
 		}
 		if v, ok := changed["ai_assistant"]; ok && v == "off" {
-			aiKillAll(adminID, "the AI assistant was turned off")
+			aiKillWhere(func(s *aiSession) bool { return s.Transport != "mcp" }, adminID, "the AI assistant was turned off")
+		}
+		if v, ok := changed["ai_mcp_enabled"]; ok && v == "0" {
+			mcpShutdown(adminID, "AI connections (MCP) were turned off", nil)
+		}
+		if _, ok := changed["ai_mcp"]; ok {
+			mcpShutdown(adminID, "the policy no longer allows AI connections for the user", func(uid int) bool { ok, _ := mcpUserAllowed(uid); return !ok })
 		}
 		for k := range changed {
 			if strings.HasPrefix(k, "tunnel") {

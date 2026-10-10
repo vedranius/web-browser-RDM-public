@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // ─── AI: TOOLS ───────────────────────────────────────
@@ -21,10 +22,11 @@ import (
 // only if the file did not change since the diff was made.
 
 type aiToolSpec struct {
-	Def    aiToolDef
-	Kind   string // read | command | write
-	Modes  []string
-	Expose bool // offered to the model
+	Def     aiToolDef
+	Kind    string // read | command | write
+	Modes   []string
+	Expose  bool // offered to the model
+	MCPOnly bool // offered to MCP clients only (needs a second session of the same AI connection)
 }
 
 func obj(props map[string]interface{}, required ...string) map[string]interface{} {
@@ -69,6 +71,50 @@ var aiTools = []aiToolSpec{
 	{Kind: "write", Def: aiToolDef{Name: "edit_file", Description: "Replace one exact occurrence of a text in a file. The user sees a unified diff and must approve it (unless the session's automatic mode allows the path).",
 		Schema: obj(map[string]interface{}{"path": strProp("Absolute path, or ~/"), "old_text": strProp("The exact text to replace; it must occur exactly once"),
 			"new_text": strProp("The replacement"), "reason": strProp("One sentence for the user: why this change")}, "path", "old_text", "new_text", "reason")}},
+	{Kind: "write", MCPOnly: true, Def: aiToolDef{Name: "transfer_file", Description: "Copy one file from another server of this AI connection to this session's server, through WRM (SFTP). The destination is treated like a file edit: refused in read-only mode, otherwise the user approves it (unless the automatic mode allows the path). Sensitive source files are refused.",
+		Schema: obj(map[string]interface{}{"path": strProp("Destination path on this session's server (absolute, or ~/)"), "from_path": strProp("Source path on the other server (absolute, or ~/)"),
+			"reason": strProp("One sentence for the user: why this transfer")}, "path", "from_path", "reason")}},
+}
+
+// aiScopesFor lists the MCP scopes that allow a tool (any one of them is enough).
+func aiScopesFor(name string) []string {
+	spec, ok := aiToolSpecFor(name)
+	if !ok {
+		return nil
+	}
+	switch {
+	case spec.Kind == "read":
+		return []string{"read_logs"}
+	case spec.Kind == "command":
+		return []string{"run_readonly", "run_with_approval"}
+	case name == "transfer_file":
+		return []string{"transfer"}
+	}
+	return []string{"edit_file_with_approval"}
+}
+
+// aiToolInScopes reports whether a session's scopes allow a tool; nil scopes (the
+// built-in panel) allow every tool except the MCP-only ones.
+func aiToolInScopes(name string, scopes []string) bool {
+	if scopes == nil {
+		spec, ok := aiToolSpecFor(name)
+		return ok && !spec.MCPOnly
+	}
+	for _, sc := range aiScopesFor(name) {
+		if oneOf(sc, scopes...) {
+			return true
+		}
+	}
+	return false
+}
+
+type aiCtxKey int
+
+const aiTransferSourceKey aiCtxKey = 1
+
+// withTransferSource passes the source session of a transfer_file call to the engine.
+func withTransferSource(ctx context.Context, src *aiSession) context.Context {
+	return context.WithValue(ctx, aiTransferSourceKey, src)
 }
 
 func aiToolSpecFor(name string) (aiToolSpec, bool) {
@@ -85,7 +131,7 @@ func aiToolSpecFor(name string) (aiToolSpec, bool) {
 func aiToolDefsFor(mode string) []aiToolDef {
 	var out []aiToolDef
 	for _, t := range aiTools {
-		if t.Kind == "write" && mode == aiModeReadOnly {
+		if (t.Kind == "write" && mode == aiModeReadOnly) || t.MCPOnly {
 			continue
 		}
 		out = append(out, t.Def)
@@ -112,6 +158,7 @@ type aiToolInput struct {
 	Content  string `json:"content"`
 	OldText  string `json:"old_text"`
 	NewText  string `json:"new_text"`
+	FromPath string `json:"from_path"`
 }
 
 var (
@@ -146,6 +193,11 @@ type aiPlanned struct {
 	NewText   string
 	Diff      string
 	maxOutput int
+	// transfers (transfer_file): the source session, its real path and the size
+	Transfer bool
+	From     *aiSession
+	FromPath string
+	Size     int64
 }
 
 func aiRequirePath(p string) (string, error) {
@@ -328,6 +380,8 @@ func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiP
 			pl.Display += " (→ " + real + ")"
 		}
 		return pl, nil
+	case "transfer_file":
+		return s.planTransfer(ctx, in)
 	}
 	return nil, fmt.Errorf("unknown tool %q", name)
 }
@@ -413,4 +467,85 @@ func decodeToolInput(raw json.RawMessage) (aiToolInput, error) {
 		return in, fmt.Errorf("invalid arguments: %v", err)
 	}
 	return in, nil
+}
+
+// planTransfer checks both ends of a transfer_file call: the source must be a readable,
+// not sensitive regular file within the size limit; the destination is evaluated as a
+// write of its real path.
+func (s *aiSession) planTransfer(ctx context.Context, in aiToolInput) (*aiPlanned, error) {
+	src, _ := ctx.Value(aiTransferSourceKey).(*aiSession)
+	if src == nil {
+		return nil, fmt.Errorf("from_session_id is required: open a session to the source server with the same AI connection first")
+	}
+	dst, err := aiRequirePath(in.Path)
+	if err != nil {
+		return nil, err
+	}
+	from, err := aiRequirePath(in.FromPath)
+	if err != nil {
+		return nil, fmt.Errorf("from_path: %v", err)
+	}
+	src.mu.Lock()
+	srcHome := src.home
+	src.mu.Unlock()
+	if srcHome == "" {
+		src.gather(ctx)
+		src.mu.Lock()
+		srcHome = src.home
+		src.mu.Unlock()
+	}
+	from = aiExpandHome(from, srcHome)
+	dst = aiExpandHome(dst, s.home)
+	out, code, err := src.exec(ctx, `f=`+shellQuote(from)+`; r=$(readlink -f -- "$f" 2>/dev/null || printf %s "$f"); printf 'WRM-REAL %s\n' "$r"; `+
+		`[ -f "$r" ] || { echo "WRM-ERR not a regular file"; exit 0; }; [ -r "$r" ] || { echo "WRM-ERR not readable"; exit 0; }; printf 'WRM-SIZE %s\n' "$(wc -c < "$r")"`, "", 30*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	if code != 0 {
+		return nil, fmt.Errorf("cannot check the source file (exit %d)", code)
+	}
+	var real string
+	var size int64 = -1
+	for _, l := range strings.Split(out, "\n") {
+		switch {
+		case strings.HasPrefix(l, "WRM-REAL "):
+			real = strings.TrimPrefix(l, "WRM-REAL ")
+		case strings.HasPrefix(l, "WRM-ERR "):
+			return nil, fmt.Errorf("source %s: %s", from, strings.TrimPrefix(l, "WRM-ERR "))
+		case strings.HasPrefix(l, "WRM-SIZE "):
+			size, _ = strconv.ParseInt(strings.TrimSpace(strings.TrimPrefix(l, "WRM-SIZE ")), 10, 64)
+		}
+	}
+	if real == "" || size < 0 {
+		return nil, fmt.Errorf("unexpected answer from the source server")
+	}
+	if why := aiReadDenied(real); why != "" {
+		return nil, fmt.Errorf("%s is not readable by the assistant (%s)", real, why)
+	}
+	if max := int64(settingInt("ai_mcp_transfer_max_mb")) << 20; size > max {
+		return nil, fmt.Errorf("the file is larger than the transfer limit (%d MB)", max>>20)
+	}
+	out, _, err = s.exec(ctx, `f=`+shellQuote(dst)+`; r=$(readlink -f -- "$f" 2>/dev/null || printf %s "$f"); printf 'WRM-REAL %s\n' "$r"; [ -e "$r" ] && echo WRM-EXISTS; [ -d "$r" ] && echo WRM-DIR; true`, "", 30*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	realDst := dst
+	exists := false
+	for _, l := range strings.Split(out, "\n") {
+		switch {
+		case strings.HasPrefix(l, "WRM-REAL "):
+			realDst = strings.TrimPrefix(l, "WRM-REAL ")
+		case l == "WRM-EXISTS":
+			exists = true
+		case l == "WRM-DIR":
+			return nil, fmt.Errorf("the destination is a directory: give the full file path")
+		}
+	}
+	verb := "create"
+	if exists {
+		verb = "replace"
+	}
+	pl := &aiPlanned{Act: aiAction{Tool: "transfer_file", Kind: "write", Path: realDst}, Transfer: true, Path: realDst, From: src, FromPath: real, Size: size}
+	pl.Display = fmt.Sprintf("transfer %s:%s → %s:%s (%s, %d bytes)", src.ConnName, real, s.ConnName, realDst, verb, size)
+	return pl, nil
 }

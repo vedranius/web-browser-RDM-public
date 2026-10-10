@@ -43,21 +43,23 @@ type aiApprovalResult struct {
 	Edited   bool
 	Note     string
 	Outcome  string // approved | denied | timeout | cancelled
+	Via      string // "mcp" when answered through MCP elicitation
 }
 
 type aiApproval struct {
-	ID      string    `json:"id"`
-	CallID  string    `json:"call_id"`
-	Tool    string    `json:"tool"`
-	Command string    `json:"command,omitempty"`
-	Path    string    `json:"path,omitempty"`
-	Diff    string    `json:"diff,omitempty"`
-	Content string    `json:"content,omitempty"`
-	Reason  string    `json:"reason,omitempty"` // the model's reason
-	Why     string    `json:"why,omitempty"`    // why WRM asks
-	Created time.Time `json:"created"`
-	Expires time.Time `json:"expires"`
-	ch      chan aiApprovalResult
+	ID       string    `json:"id"`
+	CallID   string    `json:"call_id"`
+	Tool     string    `json:"tool"`
+	Command  string    `json:"command,omitempty"`
+	Path     string    `json:"path,omitempty"`
+	Diff     string    `json:"diff,omitempty"`
+	Content  string    `json:"content,omitempty"`
+	Transfer string    `json:"transfer,omitempty"` // transfer_file: what is copied where
+	Reason   string    `json:"reason,omitempty"`   // the model's reason
+	Why      string    `json:"why,omitempty"`      // why WRM asks
+	Created  time.Time `json:"created"`
+	Expires  time.Time `json:"expires"`
+	ch       chan aiApprovalResult
 }
 
 type aiSession struct {
@@ -80,6 +82,10 @@ type aiSession struct {
 	ClientIP   string
 	Started    time.Time
 	lastActive time.Time
+	// MCP sessions (v12.1.0): the AI connection (mcp_tokens row) and its scopes; nil
+	// scopes mean every tool (the built-in panel).
+	TokenID int64
+	Scopes  []string
 
 	conn     Connection
 	client   *ssh.Client
@@ -163,11 +169,20 @@ type aiStartParams struct {
 	ShareNotes bool
 	Transport  string
 	Request    *http.Request
+	// MCP (transport "mcp"): no provider; the client's name stands for the model.
+	ClientName string
+	TokenID    int64
+	Scopes     []string
 }
 
 // aiStart opens a session after every policy check.
 func aiStart(p aiStartParams) (*aiSession, error) {
-	if ok, why := aiUserAllowed(p.UserID); !ok {
+	mcp := p.Transport == "mcp"
+	userOK, why := aiUserAllowed(p.UserID)
+	if mcp {
+		userOK, why = mcpUserAllowed(p.UserID)
+	}
+	if !userOK {
 		return nil, errors.New(why)
 	}
 	c, err := loadConnection(p.ConnID)
@@ -177,32 +192,39 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 	if !strings.EqualFold(c.Protocol, "SSH") {
 		return nil, fmt.Errorf("the AI assistant works with SSH connections")
 	}
-	prov, err := loadAIProvider(p.ProviderID)
-	if err != nil {
-		return nil, fmt.Errorf("provider not found")
-	}
-	if ok, why := prov.usableBy(p.UserID); !ok {
-		return nil, errors.New(why)
-	}
-	model := p.Model
-	if model == "" {
-		model = prov.DefaultModel
-	}
-	if model == "" {
-		for _, m := range prov.modelList() {
-			if aiModelAllowed(m) {
-				model = m
-				break
+	var prov aiProvider
+	var model string
+	if mcp {
+		// the model runs in the MCP client: WRM only knows the client's name
+		model = truncateStr(nonEmpty(strings.TrimSpace(p.ClientName), "MCP client"), 80)
+		prov = aiProvider{Name: model, Kind: "mcp"}
+	} else {
+		if prov, err = loadAIProvider(p.ProviderID); err != nil {
+			return nil, fmt.Errorf("provider not found")
+		}
+		if ok, why := prov.usableBy(p.UserID); !ok {
+			return nil, errors.New(why)
+		}
+		model = p.Model
+		if model == "" {
+			model = prov.DefaultModel
+		}
+		if model == "" {
+			for _, m := range prov.modelList() {
+				if aiModelAllowed(m) {
+					model = m
+					break
+				}
 			}
 		}
+		if !oneOf(model, prov.modelList()...) {
+			return nil, fmt.Errorf("the model %q is not offered by this provider", model)
+		}
+		if !aiModelAllowed(model) {
+			return nil, fmt.Errorf("the policy does not allow the model %q", model)
+		}
 	}
-	if !oneOf(model, prov.modelList()...) {
-		return nil, fmt.Errorf("the model %q is not offered by this provider", model)
-	}
-	if !aiModelAllowed(model) {
-		return nil, fmt.Errorf("the policy does not allow the model %q", model)
-	}
-	allowed, _ := aiAllowedModes(aiFactsOf(p.ConnID))
+	allowed := aiModesFor(p.Transport, p.ConnID)
 	if len(allowed) == 0 {
 		return nil, fmt.Errorf("the policy does not allow the AI assistant on this connection")
 	}
@@ -224,7 +246,7 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		}
 		auto = &a
 	}
-	if len(aiActiveSessions(func(s *aiSession) bool { return s.UserID == p.UserID })) >= aiMaxSessionsPerUser {
+	if len(aiActiveSessions(func(s *aiSession) bool { return s.UserID == p.UserID && (s.Transport == "mcp") == mcp })) >= aiMaxSessionsPerUser {
 		return nil, fmt.Errorf("you have %d open AI sessions; close one first", aiMaxSessionsPerUser)
 	}
 	transport := p.Transport
@@ -235,7 +257,7 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		UID: randomToken(12), UserID: p.UserID, Username: p.Username, ConnID: c.ID, ConnName: c.Name, Host: c.Host,
 		ShareID: p.ShareID, Transport: transport, provider: prov, Model: model, Mode: mode, Auto: auto,
 		ShareNotes: p.ShareNotes && settingBool("ai_share_notes"), Started: time.Now(), lastActive: time.Now(),
-		conn: c, pending: map[string]*aiApproval{}, notify: make(chan struct{}),
+		conn: c, pending: map[string]*aiApproval{}, notify: make(chan struct{}), TokenID: p.TokenID, Scopes: p.Scopes,
 	}
 	if p.Request != nil {
 		s.ClientIP = clientIP(p.Request)
@@ -254,6 +276,9 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		return nil, fmt.Errorf("could not store the session")
 	}
 	s.ID, _ = res.LastInsertId()
+	if s.TokenID > 0 {
+		db.Exec(`UPDATE ai_sessions SET mcp_token_id=? WHERE id=?`, s.TokenID, s.ID)
+	}
 	s.startRecording(p.Request)
 	aiReg.Lock()
 	aiReg.m[s.ID] = s
@@ -262,6 +287,10 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		"transport": transport, "share_notes": s.ShareNotes, "redact_output": settingBool("ai_redact_output"), "allowed_modes": strings.Join(allowed, ",")}
 	if auto != nil {
 		d["auto"] = aiAutoSummary(auto)
+	}
+	if mcp {
+		d["mcp_grant"] = s.TokenID
+		d["scopes"] = strings.Join(s.Scopes, ",")
 	}
 	s.audit(p.Request, "ai.session_start", d)
 	s.transcript("system", s.Username, fmt.Sprintf("AI session on %s (%s) with %s / %s, mode %s", s.ConnName, s.Host, prov.Name, model, mode), d)
@@ -292,6 +321,7 @@ func (s *aiSession) view() map[string]interface{} {
 		"end_reason": s.endReason, "started_at": s.Started.UTC().Format(time.RFC3339), "share_notes": s.ShareNotes, "transport": s.Transport,
 		"requests": s.requests, "tool_calls": s.toolCalls, "approvals": s.approvalsN, "denials": s.denials, "tokens_in": s.tokensIn,
 		"tokens_out": s.tokensOut, "cost_usd": s.cost, "pending": pend, "user": s.Username, "seq": s.seq,
+		"mcp_grant": s.TokenID, "scopes": s.Scopes,
 	}
 }
 
@@ -588,6 +618,13 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		s.audit(nil, "ai.tool_call", map[string]interface{}{"tool": truncateStr(call.Name, 80), "decision": aiDeny, "reason": "unknown tool"})
 		return fail("Unknown tool " + truncateStr(call.Name, 80) + ". Only the listed WRM tools exist; the mode can only be changed by the user in WRM.")
 	}
+	if !aiToolInScopes(call.Name, s.Scopes) {
+		s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": call.Name, "rule": "scope", "scopes": strings.Join(s.Scopes, ",")})
+		s.mu.Lock()
+		s.denials++
+		s.mu.Unlock()
+		return fail("Denied by WRM: the AI connection has no scope for " + call.Name + ". Only the user can change the scopes, in WRM.")
+	}
 	if call.BadInput != "" {
 		return fail(call.BadInput)
 	}
@@ -624,6 +661,9 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		return fail(err.Error())
 	}
 	dec := aiEvaluate(mode, auto, pl.Act, home, time.Now())
+	if s.Scopes != nil && spec.Kind == "command" && dec.Action != aiDeny && !dec.ReadOnly && !oneOf("run_with_approval", s.Scopes...) {
+		dec = aiDecision{Action: aiDeny, Rule: "scope", Reason: "the AI connection only allows read-only commands (scope run_readonly)"}
+	}
 	callMeta := map[string]interface{}{"call_id": call.ID, "tool": call.Name, "decision": dec.Action, "rule": dec.Rule}
 	if pl.Act.Command != "" {
 		callMeta["command"] = redactText(truncateStr(pl.Act.Command, 2000))
@@ -676,7 +716,9 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		s.mu.Unlock()
 		if r.Edited {
 			// an edited item is evaluated again: it must not be destructive and the mode must allow changes
-			if pl.Write {
+			if pl.Transfer {
+				// a transfer cannot be edited (Resolve ignores edits)
+			} else if pl.Write {
 				pl.NewText = r.Content
 				pl.Diff = aiUnifiedDiff(pl.Path, pl.Old, pl.NewText, pl.OldHash == "new")
 			} else {
@@ -716,7 +758,9 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 	var code int
 	var err error
 	start := time.Now()
-	if pl.Write {
+	if pl.Transfer {
+		out, code, err = s.transferRun(ctx, pl)
+	} else if pl.Write {
 		out, code, err = s.exec(ctx, aiWriteScript(pl.Path, pl.OldHash), pl.NewText, 0)
 	} else {
 		out, code, err = s.exec(ctx, pl.Script, "", 0)
@@ -766,7 +810,10 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 	res.IsError = code != 0 || timedOut
 	d := map[string]interface{}{"tool": call.Name, "exit_code": code, "bytes": len(out), "ms": time.Since(start).Milliseconds(),
 		"redactions": n, "output": truncateStr(redacted, 1500)}
-	if pl.Write {
+	if pl.Transfer {
+		d["path"] = pl.Path
+		d["from"] = pl.From.ConnName + ":" + pl.FromPath
+	} else if pl.Write {
 		d["path"] = pl.Path
 		d["diff"] = truncateStr(redactText(pl.Diff), 2000)
 	} else {
@@ -787,7 +834,9 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	timeout := aiApprovalTimeout()
 	a := &aiApproval{ID: randomToken(8), CallID: call.ID, Tool: call.Name, Reason: redactText(truncateStr(reason, 500)), Why: why,
 		Created: time.Now(), Expires: time.Now().Add(timeout), ch: make(chan aiApprovalResult, 1)}
-	if pl.Write {
+	if pl.Transfer {
+		a.Path, a.Transfer = pl.Path, pl.Display
+	} else if pl.Write {
 		a.Path, a.Diff, a.Content = pl.Path, pl.Diff, pl.NewText
 	} else {
 		a.Command = pl.Act.Command
@@ -796,9 +845,10 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	s.pending[a.ID] = a
 	s.emitLocked("approval_required", map[string]interface{}{"approval": a})
 	s.mu.Unlock()
+	s.notifyMCP()
 	s.audit(nil, "ai.approval_requested", map[string]interface{}{"approval": a.ID, "tool": call.Name, "command": redactText(truncateStr(a.Command, 1000)),
 		"path": a.Path, "why": why, "expires": a.Expires.UTC().Format(time.RFC3339)})
-	s.transcript("approval", "WRM", "Waiting for approval: "+nonEmpty(a.Command, "edit "+a.Path), map[string]interface{}{"approval": a.ID})
+	s.transcript("approval", "WRM", "Waiting for approval: "+nonEmpty(a.Command, nonEmpty(a.Transfer, "edit "+a.Path)), map[string]interface{}{"approval": a.ID})
 	var r aiApprovalResult
 	t := time.NewTimer(timeout)
 	defer t.Stop()
@@ -828,14 +878,22 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	if r.By > 0 {
 		d["by"] = r.ByName
 	}
+	if r.Via != "" {
+		d["via"] = r.Via
+	}
 	s.audit(nil, action, d)
-	s.emit("approval_resolved", map[string]interface{}{"approval_id": a.ID, "call_id": call.ID, "outcome": r.Outcome, "edited": r.Edited, "by": r.ByName})
+	s.emit("approval_resolved", map[string]interface{}{"approval_id": a.ID, "call_id": call.ID, "outcome": r.Outcome, "edited": r.Edited, "by": r.ByName, "via": r.Via})
+	s.notifyMCP()
 	s.transcript("decision", nonEmpty(r.ByName, "WRM"), r.Outcome+map[bool]string{true: " (edited)", false: ""}[r.Edited], d)
 	return r
 }
 
 // Resolve applies a decision on a pending approval. Only the session's user decides.
 func (s *aiSession) Resolve(approvalID string, userID int, approve bool, command, content *string, note string) error {
+	return s.resolveVia(approvalID, userID, approve, command, content, note, "")
+}
+
+func (s *aiSession) resolveVia(approvalID string, userID int, approve bool, command, content *string, note, via string) error {
 	if userID != s.UserID {
 		return fmt.Errorf("only the user of the AI session can decide")
 	}
@@ -848,7 +906,10 @@ func (s *aiSession) Resolve(approvalID string, userID int, approve bool, command
 	if a == nil {
 		return fmt.Errorf("the approval is no longer pending")
 	}
-	r := aiApprovalResult{Approved: approve, By: userID, ByName: usernameOf(userID), Note: note, Outcome: "denied"}
+	r := aiApprovalResult{Approved: approve, By: userID, ByName: usernameOf(userID), Note: note, Outcome: "denied", Via: via}
+	if a.Transfer != "" {
+		command, content = nil, nil // a transfer is approved or denied as it is
+	}
 	if approve {
 		r.Outcome = "approved"
 		if command != nil && a.Command != "" && strings.TrimSpace(*command) != a.Command {
@@ -878,7 +939,7 @@ func (s *aiSession) Resolve(approvalID string, userID int, approve bool, command
 // recheckMode applies policy changes made while the session runs: a mode that is no
 // longer allowed falls back to the most restrictive allowed one (or ends the session).
 func (s *aiSession) recheckMode() {
-	allowed, _ := aiAllowedModes(aiFactsOf(s.ConnID))
+	allowed := aiModesFor(s.Transport, s.ConnID)
 	s.mu.Lock()
 	mode := s.Mode
 	s.mu.Unlock()
@@ -897,7 +958,7 @@ func (s *aiSession) SetMode(r *http.Request, userID int, mode string, auto *aiAu
 	if userID != s.UserID {
 		return fmt.Errorf("only the user of the AI session can change its mode")
 	}
-	allowed, _ := aiAllowedModes(aiFactsOf(s.ConnID))
+	allowed := aiModesFor(s.Transport, s.ConnID)
 	if !oneOf(mode, allowed...) {
 		return fmt.Errorf("the mode %s is not allowed on this connection (allowed: %s)", mode, strings.Join(allowed, ", "))
 	}
@@ -994,6 +1055,14 @@ func (s *aiSession) Kill(by int, reason string) {
 	s.emit("ended", map[string]interface{}{"reason": reason, "by": byName, "status": status})
 	s.finishRecording(status)
 	hub.sendTo(s.UserID, jsonMarshal(map[string]interface{}{"type": "ai_sessions_changed"}))
+	s.notifyMCP()
+}
+
+// notifyMCP tells the user's browsers that an MCP session changed (approvals, end).
+func (s *aiSession) notifyMCP() {
+	if s.Transport == "mcp" {
+		hub.sendTo(s.UserID, jsonMarshal(map[string]interface{}{"type": "mcp_changed"}))
+	}
 }
 
 func (s *aiSession) finishRecording(status string) {
@@ -1238,11 +1307,11 @@ func aiJanitorTick(now time.Time) {
 		}
 		if expired {
 			s.setModeInternal(aiModeAsk, nil, "WRM", "the automatic mode time limit is over")
-			if allowed, _ := aiAllowedModes(aiFactsOf(s.ConnID)); !oneOf(aiModeAsk, allowed...) {
+			if allowed := aiModesFor(s.Transport, s.ConnID); !oneOf(aiModeAsk, allowed...) {
 				s.recheckMode()
 			}
 		}
-		if ok, why := aiUserAllowed(s.UserID); !ok {
+		if ok, why := s.userAllowed(); !ok {
 			s.Kill(0, why)
 		}
 	}
