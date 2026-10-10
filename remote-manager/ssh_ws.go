@@ -19,7 +19,7 @@ import (
 //   server → client  binary frame : raw terminal output (never split-UTF-8 sensitive)
 //                    text frame   : JSON control {"type":"status"|"error"|"exit", ...}
 //   client → server  binary frame : keyboard input
-//                    text frame   : JSON control {"type":"resize"|"pause"|"resume"|"ping"|"broadcast"}
+//                    text frame   : JSON control {"type":"resize"|"pause"|"resume"|"ping"|"broadcast"|"cwd"}
 //                                   (non-JSON text is treated as keyboard input for
 //                                    backwards compatibility)
 //
@@ -162,6 +162,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		printTerm("\x1b[33mNew host " + host + " — key " + fp + " saved (trust on first use).\x1b[0m\r\n")
 	}
 	var tio *termIO
+	var sshCl *ssh.Client // the terminal's SSH connection (a cwd lookup opens another channel on it)
 	switch {
 	case serial:
 		tio, err = openSerial(c)
@@ -170,6 +171,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		var cl *ssh.Client
 		if cl, err = dialSSH(c, onNewKey); err == nil {
+			sshCl = cl
 			tio, err = sshTerm(cl, cols, rows, term, "")
 		}
 	}
@@ -267,6 +269,16 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 						resume()
 					case "ping":
 						sendCtl(map[string]string{"type": "pong"})
+					case "cwd":
+						// The 📂 menu's "Open here" without OSC 7: ask the server for the shell's directory.
+						go func() {
+							p, err := terminalCwd(sshCl)
+							if err != nil {
+								sendCtl(map[string]string{"type": "cwd", "error": err.Error()})
+								return
+							}
+							sendCtl(map[string]string{"type": "cwd", "path": p})
+						}()
 					case "broadcast":
 						// Broadcast input is done by the browser (it sends the same keystrokes to
 						// every terminal of the group); the server records who did it, where and when.

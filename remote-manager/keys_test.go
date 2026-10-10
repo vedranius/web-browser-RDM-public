@@ -41,6 +41,7 @@ type fakeHost struct {
 	keyLogins  atomic.Int64
 	pwLogins   atomic.Int64
 	passwdRuns atomic.Int64
+	shellDir   string // when set, "shell" runs a real sh on a PTY in this directory (Linux)
 }
 
 func (h *fakeHost) pw() string {
@@ -123,6 +124,16 @@ func (h *fakeHost) serveSession(ch ssh.Channel, reqs <-chan *ssh.Request) {
 		switch req.Type {
 		case "pty-req", "env", "window-change":
 			req.Reply(true, nil)
+		case "shell":
+			h.mu.Lock()
+			dir := h.shellDir
+			h.mu.Unlock()
+			if dir == "" {
+				req.Reply(false, nil)
+				continue
+			}
+			req.Reply(true, nil)
+			go h.runShell(ch, dir)
 		case "exec":
 			var p struct{ Cmd string }
 			ssh.Unmarshal(req.Payload, &p)
@@ -151,6 +162,26 @@ func (h *fakeHost) serveSession(ch ssh.Channel, reqs <-chan *ssh.Request) {
 			}
 		}
 	}
+}
+
+// runShell runs an interactive sh on a pseudo terminal, like sshd does for a login shell.
+func (h *fakeHost) runShell(ch ssh.Channel, dir string) {
+	cmd := exec.Command("sh", "-i")
+	cmd.Dir = dir
+	cmd.Env = []string{"HOME=" + h.home, "PATH=" + os.Getenv("PATH"), "USER=" + h.user, "PS1=$ ", "ENV="}
+	master, err := startInPTY(cmd, 100, 30)
+	if err != nil {
+		ch.Write([]byte(err.Error() + "\r\n"))
+		ch.Close()
+		return
+	}
+	go io.Copy(master, ch)
+	io.Copy(ch, master)
+	cmd.Process.Kill()
+	cmd.Wait()
+	master.Close()
+	ch.SendRequest("exit-status", false, ssh.Marshal(struct{ Status uint32 }{0}))
+	ch.Close()
 }
 
 func readLine(r io.Reader) (string, bool) {
