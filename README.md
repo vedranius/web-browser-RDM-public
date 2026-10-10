@@ -7,9 +7,9 @@
 
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
+**A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), an **MCP server** so Claude, ChatGPT and other AI apps can work on chosen servers under the same rules, SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v12.0.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.1.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -71,6 +71,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional)
    - [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks)
    - [AI assistant](#ai-assistant)
+   - [AI desktop apps (MCP)](#ai-desktop-apps-mcp)
    - [Network tools](#network-tools)
    - [File manager (SFTP / FTP / FTPS)](#file-manager-sftp--ftp--ftps)
    - [Search in files](#search-in-files)
@@ -115,6 +116,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
 - **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels), **PuTTY** (with proxies) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
 - **Git workspace**: which version of which service runs where — compare installations on your servers **file by file** with **GitLab / GitHub** or an **offline bundle**, see what is *old*, *missing* or *changed by hand*, with diffs and notifications — and **update, upgrade or roll back** them over SSH (backups, atomic writes, checks, automatic rollback, opt-in restarts, maintenance windows), deploy to **environments** of ordered servers with a reviewed one-shot plan, a dry run, a server-side lock, history and rollback per deploy, or **install them on a new server** and **transfer** them between servers with their per-host configuration; a **.gitignore helper**, and optional **CI integration** (GitLab / GitHub / Jenkins webhooks, bundles from CI artifacts, deploy through a pipeline).
+- **AI desktop apps (MCP):** connect Claude (desktop or claude.ai), ChatGPT or any other MCP client to WRM — with OAuth or a personal access token, or through the small stdio bridge in the WRM binary. The app gets time-limited access to the servers, mode and scopes you choose; every call goes through the same permission engine, changes wait for your approval (in WRM or in the app), an **AI connected** indicator shows the session and revokes it with one click.
 - **AI assistant** next to the terminal and the file manager: ask about a server and the assistant reads logs, services, packages and files through WRM's own tools. **Read-only**, **ask before every change** (the exact command or a diff, approved, edited or denied by you) or **automatic within limits** (an allow list, a time and an action limit you opt into). Destructive commands are always refused; administrators decide which modes, providers and models are allowed per connection, folder or tag, and every request, tool call and approval is audited and recorded. Works with the Anthropic API, OpenAI, Azure OpenAI, AWS Bedrock, Google Vertex AI and OpenAI-compatible local models, with the organisation's key or your own.
 - **Server-to-server copy** between two SSH servers, without downloading to your computer first.
 - **Workspaces**: many terminal and file windows side by side, tabs, snapping, saved sessions. **Installable as an app** (PWA) on desktops, tablets and phones.
@@ -135,21 +137,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.0.0-linux-amd64
-   ./wrm-pro-v12.0.0-linux-amd64
+   chmod +x wrm-pro-v12.1.0-linux-amd64
+   ./wrm-pro-v12.1.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.0.0-windows-amd64.exe
+   .\wrm-pro-v12.1.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-android-arm64
-   chmod +x wrm-pro-v12.0.0-android-arm64 && ./wrm-pro-v12.0.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-android-arm64
+   chmod +x wrm-pro-v12.1.0-android-arm64 && ./wrm-pro-v12.1.0-android-arm64
    ```
 
    **Docker**
@@ -174,13 +176,22 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
+## Upgrading from v12.0.0
+
+Replace the binary. The database gets new tables (`mcp_tokens`, `mcp_clients`) and the column `ai_sessions.mcp_token_id`; v12.0.0 still starts on it and ignores them.
+
+- **AI desktop apps (MCP)** are **off by default**. An administrator turns them on in *Admin panel → AI connections* (`ai_mcp_enabled`); by default only administrators may create AI connections (`ai_mcp` = `admins`), with the modes `read_only,ask` (`ai_mcp_modes`), a default lifetime of 8 hours (`ai_mcp_token_hours`) and at most 24 hours (`ai_mcp_max_token_hours`). Users then find *Settings → AI connections*. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
+- MCP clients reach WRM at `https://<your WRM>/mcp`. Hosted connectors (claude.ai, ChatGPT) connect **from the provider's cloud**: WRM must be reachable from the internet over HTTPS for them. Behind a reverse proxy set `ai_mcp_public_url` (the address the apps use) and pass `/mcp`, `/oauth/` and `/.well-known/` through. Desktop apps with the stdio bridge only need to reach WRM from your computer.
+- The kill switch of the AI assistant (`ai_kill_switch`) also stops every AI connection. Turning off the built-in assistant (`ai_assistant`) does not turn off MCP, and the other way round.
+- The top bar shows **🤖 AI connected** while an AI app is connected; at narrower widths the top-bar labels hide a little earlier than before so nothing overlaps.
+
 ## Upgrading from v11.7.0
 
 Replace the binary. The database gets new tables (`ai_providers`, `ai_sessions`, `ai_messages`) and the column `users.ai_blocked`; v11.7.0 still starts on it and ignores them.
 
 - **AI assistant** (off by default). An administrator turns it on in *Admin panel → AI assistant* (`ai_assistant` = `admins` or `all`) and adds the organisation's provider (Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Vertex AI or an OpenAI-compatible endpoint). Users then get an **AI** button in the title bar of SSH terminals and file managers. See [AI assistant](#ai-assistant).
 - New modes are restrictive by default: `ai_modes` = `read_only,ask` (the automatic mode must be allowed explicitly), personal API keys are off (`ai_personal_keys`), output is redacted before it is sent to the provider (`ai_redact_output`).
-- **Consumer chat subscriptions (Claude.ai, ChatGPT) cannot be used** by WRM or any other third-party application: use an API key, an enterprise gateway, or the MCP integration planned for v12.1.0.
+- **Consumer chat subscriptions (Claude.ai, ChatGPT) cannot be used** by WRM or any other third-party application: use an API key, an enterprise gateway, or the MCP integration of v12.1.0 ([AI desktop apps](#ai-desktop-apps-mcp)).
 - AI sessions appear in *Sessions & recordings* with an **✦ AI** mark (the transcript is recorded like a terminal) and in the audit log as `ai.*` events.
 - The top bar no longer overlaps the *New window* button at about 1100 px.
 
@@ -1044,12 +1055,62 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 - **Stop and kill:** ■ *Stop* cancels the running request and command; ⏻ ends the session. Administrators end one session, all sessions of a user, or every session (*Stop every AI session now*), turn the assistant off for a user, or turn on the **kill switch** (`ai_kill_switch`, also `WRM_AI_KILL_SWITCH=1`), which ends everything and blocks new sessions. An **✦ AI** badge on the window shows that a session is active.
 - **Providers:** the **Anthropic API** (the latest Claude models, e.g. `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; an optional gateway base URL), the **OpenAI API**, **Azure OpenAI** (deployment + api-version, or the v1 API), **AWS Bedrock** (the Converse API with SigV4 access keys or a Bedrock API key, or the Messages API endpoint with an API key; model IDs such as `anthropic.claude-opus-5-5`), **Google Vertex AI** (Claude through `rawPredict`, or the OpenAI-compatible endpoint, with a service account key) and any **OpenAI-compatible** base URL (Ollama, vLLM, LM Studio …). Responses are streamed; tokens and the estimated cost are counted per request (built-in list prices for Anthropic models, your own prices for others); requests time out and are cancelled with *Stop*.
 - **Keys:** the organisation's providers are managed by administrators (*Admin panel → AI assistant → Organisation providers*); personal keys (*🔑 My API keys* in the panel) only when `ai_personal_keys` allows them. Keys are encrypted at rest and **never sent to the browser**; *Test* sends one tiny request.
-- **Consumer subscriptions do not work:** Claude.ai and ChatGPT chat subscriptions cannot be used by third-party applications. Use an API key (or your company's gateway), or connect a desktop AI app to WRM over MCP (planned for v12.1.0).
+- **Consumer subscriptions do not work here:** Claude.ai and ChatGPT chat subscriptions cannot be used by third-party applications as an API. Use an API key (or your company's gateway) for this panel — or let the chat app itself connect to WRM over MCP: see [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 - **Shared connections:** the assistant can be used on a shared connection by signed-in users whose role allows terminals and file changes (*Operator* and up); their notes are not shared.
 
 **Admin policies** (*Admin panel → AI assistant*): who may use it (`ai_assistant`), the allowed modes (`ai_modes`) and **mode rules per tag, folder, connection or host** — the **most restrictive** matching rule wins, e.g. `[{"match":"tag","value":"prod","modes":["read_only"]}, {"match":"folder","value":"Staging","modes":["read_only","ask"]}]` — the default mode, providers and models (`ai_provider_kinds`, `ai_models`), personal keys, redaction, sharing notes, the approval timeout, the automatic mode's maximum time and actions, power commands, extra blocked commands and unreadable files, the command time limit, the output limit, the steps per request, the idle timeout and the **transcript retention** (`ai_transcript_retention_days`). A running session follows a policy change at its next tool call.
 
 **Audit and transcripts:** every AI request (provider, model, tokens, cost), every tool call with its inputs and its (redacted) output, every approval and denial with who and when, mode changes, stops and kills are audit events (`ai.*`) linked to the connection. The session transcript (redacted) is kept for `ai_transcript_retention_days` and shown to its user (🕘 in the panel) and to administrators (*Admin panel → AI assistant → Transcript*); it is also **recorded like a terminal session** (*Sessions & recordings*, marked ✦ AI, with replay).
+
+### AI desktop apps (MCP)
+
+WRM is an **MCP server** (Model Context Protocol). AI apps that speak MCP — **Claude** (the desktop app and claude.ai), **ChatGPT** (connectors / developer mode), Claude Code and other MCP clients — can open a WRM session to a server you chose and work on it, under the same rules as the built-in assistant. The model runs in the app, on your account there; WRM never sees your chat and never needs a provider key.
+
+> **Using a Claude or ChatGPT subscription with WRM:** consumer chat subscriptions cannot be used by other applications as an API (so the built-in assistant needs an API key). The supported way to use your Claude or ChatGPT account with WRM is the other direction: the chat app connects to WRM over MCP, as described here.
+
+**How it works**
+
+- An **AI connection** binds **you**, the **servers** you pick (your own SSH connections), one **mode** (read-only, ask before every change, or automatic within limits), the **scopes** and a **lifetime** (default 8 hours, at most what the policy allows). It is a **personal access token** you create in *Settings → AI connections*, or an **OAuth approval** you give when an app connects. Tokens are shown once and stored only as a hash; they can be revoked at any time.
+- The app sees these tools: `list_connections` (the servers of the AI connection and the mode WRM applies there), `open_session` / `close_session`, and the WRM tools the scopes allow, each with the `session_id` of an open session:
+
+| Scope | Tools | What WRM does |
+|---|---|---|
+| `read_logs` | `system_info`, `read_file`, `list_directory`, `tail_log`, `journal`, `service_status`, `list_packages`, `processes`, `disk_usage`, `network_status` | Reads; sensitive files (password hashes, private keys, credentials) are refused |
+| `run_readonly` | `run_command` | Only commands the **read-only classifier** accepts |
+| `run_with_approval` | `run_command` | Also commands that change something: each waits for **your approval** (or the automatic-mode allow list) |
+| `edit_file_with_approval` | `write_file`, `edit_file` | File changes as a **unified diff** that you approve |
+| `transfer` | `transfer_file` | Copies one file from one server of the AI connection to another over SFTP, after your approval; recorded in *File transfers* with size and SHA-256 |
+
+- **Every call goes through the v12.0.0 permission engine**: the read-only classifier, the always-blocked destructive patterns, the approvals, the automatic-mode limits (per session), the mode rules per tag / folder / connection / host (the most restrictive wins — a production server can be read-only for apps even when the AI connection allows *ask*), redaction of secrets in output, and the audit.
+- **Approvals** appear in WRM as a card with **Approve**, **Deny** and **Edit** (the exact command, or the diff), on every open WRM tab of yours — and, when the app supports **MCP elicitation**, also as a question in the app (policy `ai_mcp_elicitation`). Whichever answers first decides; an unanswered approval is denied after `ai_approval_timeout_seconds`.
+- **Server output is untrusted.** Tool results are framed as untrusted data; nothing in them, and nothing the app asks for, can change the mode or the scopes: there is no such tool, and only you change them, in WRM (by creating a new AI connection).
+- **🤖 AI connected** in the top bar shows while an app has an open session (with the number of pending approvals); click it to see the apps and **revoke** one or all with one click. Revoking ends the sessions at once; so do expiry, the kill switch and the policies.
+- Each session is an AI session with transport *mcp*: in the audit log (`mcp.*` for connecting, tokens and OAuth; `ai.*` for every tool call, approval and denial), in the transcripts and in **Sessions & recordings** (✦ AI), like the built-in assistant.
+
+**Set up your app** — *Settings → AI connections* shows the address (`https://<your WRM>/mcp`) and, after you create a token, ready-to-copy snippets:
+
+1. **Claude (claude.ai or the desktop app) — custom connector with OAuth.** *Settings → Connectors → Add custom connector*, enter `https://<your WRM>/mcp`. Claude registers itself (dynamic client registration), opens WRM in the browser, you sign in (with 2FA) and choose the servers, the mode, the scopes and the lifetime; Claude then gets a token for exactly that. claude.ai connects from Anthropic's cloud, so WRM must be reachable from the internet over HTTPS (put it behind a reverse proxy with a real certificate, and keep the other hardening of [SECURITY.md](SECURITY.md)).
+2. **ChatGPT — connector.** *Settings → Apps & Connectors → Advanced settings → Developer mode*, then *Create* (*Add custom connector*): the MCP server URL `https://<your WRM>/mcp`, authentication **OAuth**. ChatGPT opens WRM for your approval, as above. ChatGPT also connects from its cloud: WRM must be reachable over HTTPS.
+3. **Claude Desktop — local stdio bridge** (no inbound access from the internet needed). Copy the WRM binary for your computer's system (the same release file as the server) to your computer, create a token, and add to `claude_desktop_config.json` (*Claude → Settings → Developer → Edit config*):
+   ```json
+   {
+     "mcpServers": {
+       "wrm": {
+         "command": "/path/to/wrm-pro",
+         "args": ["-mcp-stdio", "-url", "https://wrm.example.com/mcp"],
+         "env": { "WRM_MCP_TOKEN": "wrm_pat_…" }
+       }
+     }
+   }
+   ```
+   The bridge (`wrm -mcp-stdio -url … -token …`, or the token from `WRM_MCP_TOKEN` / `-token-file`) passes MCP messages between stdin/stdout and WRM's `/mcp`, including approval questions; `-ca-file` trusts a private CA or a self-signed WRM certificate. Use it for any client that only starts local (stdio) servers.
+4. **Other MCP clients** (Claude Code, IDE agents, your own scripts) with streamable HTTP and a header:
+   ```json
+   { "mcpServers": { "wrm": { "type": "http", "url": "https://wrm.example.com/mcp", "headers": { "Authorization": "Bearer wrm_pat_…" } } } }
+   ```
+   e.g. `claude mcp add --transport http wrm https://wrm.example.com/mcp --header "Authorization: Bearer wrm_pat_…"`. Clients that support OAuth discovery (the `WWW-Authenticate` answer with `resource_metadata`) can use OAuth instead of a token.
+
+**Admin** (*Admin panel → AI connections*): every active AI connection (user, app, servers, mode, scopes, expiry, last use and address) with **Revoke** and **Revoke all**, the registered OAuth apps (remove one to revoke its connections), and the policies: MCP on/off (`ai_mcp_enabled`, default off), who may use AI connections (`ai_mcp`: off / admins / all, default admins), allowed scopes (`ai_mcp_scopes`) and modes (`ai_mcp_modes`), default and maximum lifetime (`ai_mcp_token_hours`, `ai_mcp_max_token_hours`), OAuth on/off (`ai_mcp_oauth`), the **redirect URI allowlist** (`ai_mcp_redirect_uris`: by default the callbacks of claude.ai / claude.com and ChatGPT, plus `http://localhost:*` for desktop clients), browser origins allowed to call `/mcp` (`ai_mcp_allowed_origins`, CORS), the public address (`ai_mcp_public_url`), approvals in the app (`ai_mcp_elicitation`) and the transfer size limit (`ai_mcp_transfer_max_mb`). The AI assistant's kill switch, mode rules, blocked commands, unreadable paths, approval timeout, redaction and limits apply to MCP sessions too.
 
 ### Network tools
 
@@ -1235,6 +1296,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 | Security | Change password, two-factor authentication (enable/disable, new recovery codes), signed-in devices |
 | Voice & audio | Microphone, speaker, level meter, noise suppression, echo cancellation, gain control, input mode / push-to-talk key, call sounds |
 | Session history | Your terminal and remote desktop sessions and sessions on your connections, with replay and download |
+| AI connections | The MCP address, your AI connections (revoke), a new token with servers, mode, scopes and lifetime, and setup snippets for Claude Desktop, Claude and ChatGPT connectors and other MCP clients (when MCP is on) |
 | Data | Export connections (without secrets), export **with** passwords & keys (asks for your password; policy), import (also jump hosts and tunnels), **import from mRemoteNG**, **PuTTY** and **OpenSSH config** |
 
 Personal preferences are stored per browser; everything security-related is stored on the server.
@@ -1252,6 +1314,7 @@ Personal preferences are stored per browser; everything security-related is stor
 - **Host keys:** remembered SSH host keys and FTPS certificates; forget an entry after a server was reinstalled.
 - **Audit log:** searchable and filterable (event type, user, date range), linked to sessions, **CSV export**, **Verify integrity** (hash chain).
 - **AI assistant:** organisation providers, AI sessions with transcripts, replay and *Kill*, usage per user (turn the assistant off for a user), the kill switch and the AI policies.
+- **AI connections:** AI apps connected over MCP (revoke one or all), registered OAuth apps and the MCP policies.
 - **Sessions & recordings:** every terminal session, with replay and `.cast` download.
 - **File transfers:** every transferred file with size and SHA-256, CSV export.
 
@@ -1410,6 +1473,17 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `ai_output_max_kb` | `64` | output per tool call and the read limit for files |
 | `ai_max_steps` | `25` | model requests per user message |
 | `ai_idle_minutes` | `60` | an idle AI session ends |
+| `ai_mcp_enabled` | `0` | serve the MCP endpoint `/mcp` and the OAuth endpoints for AI apps |
+| `ai_mcp` | `admins` | who may create and use AI connections: `off`, `admins`, `all` |
+| `ai_mcp_scopes` | all five | allowed scopes: `read_logs`, `run_readonly`, `run_with_approval`, `edit_file_with_approval`, `transfer` |
+| `ai_mcp_modes` | `read_only,ask` | allowed modes of AI connections (the mode rules narrow them per connection) |
+| `ai_mcp_token_hours` / `ai_mcp_max_token_hours` | `8` / `24` | default and maximum lifetime of a token or OAuth approval |
+| `ai_mcp_oauth` | `1` | OAuth 2.1 (PKCE, dynamic client registration) for AI apps; `0` = tokens only |
+| `ai_mcp_redirect_uris` | claude.ai, claude.com, ChatGPT, `http://localhost:*` | OAuth redirect URI allowlist (`*` = any text; https, or http on loopback) |
+| `ai_mcp_allowed_origins` | – | browser origins (besides WRM) allowed to call `/mcp` (CORS) |
+| `ai_mcp_public_url` | – | the public address of WRM for AI apps (reverse proxy) |
+| `ai_mcp_elicitation` | `1` | also ask approvals in the AI app (MCP elicitation) |
+| `ai_mcp_transfer_max_mb` | `100` | the largest file of the `transfer` scope |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
@@ -1428,6 +1502,9 @@ wrm -service-status                is the service installed and running?
 wrm -no-service-prompt             do not ask on the console whether to install the service
 wrm -env-file FILE                 read KEY=value lines before starting (variables already set win)
 wrm -workdir DIR                   change to DIR before starting
+wrm -mcp-stdio -url URL -token T   stdio bridge for MCP clients to the WRM server at URL (see AI desktop apps)
+    -token-file FILE               read the token from FILE (or WRM_MCP_TOKEN; the URL also from WRM_MCP_URL)
+    -ca-file FILE                  trust this CA / self-signed certificate (PEM) for the WRM server
 ```
 
 `-service=…` is set by the service definitions WRM writes; it is not for interactive use.
@@ -1466,9 +1543,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.0.0-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.0.0-linux-amd64 -service-status
-sudo ./wrm-pro-v12.0.0-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.1.0-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.1.0-linux-amd64 -service-status
+sudo ./wrm-pro-v12.1.0-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). Edit that file and restart the service to change them.
@@ -1497,7 +1574,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.0.0-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.1.0-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1598,6 +1675,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - **Notifications:** channel secrets are encrypted and write-only; users only see enabled channels by name and type; messages go only to the owner of a connection or credential; configuration changes are audited as `admin.*` (always recorded).
 - **Quick connect, notes & network tools:** quick connections are ordinary connections of their owner (same checks, encryption, host keys, audit) that expire; notes are only shown to the owner and rendered as escaped text; network tools only take host names or addresses (never options or shell characters), run from the WRM server or the user's own SSH connections, one at a time per user, and are audited (`nettool.run`) — limit them with `network_tools`.
 - **AI assistant:** the model acts only through WRM's tools; the server-side permission engine (read-only classifier, approvals, automatic-mode limits, the always-blocked destructive list, unreadable sensitive files) decides every call, and only the user changes the mode. Server output is passed to the model as untrusted data and redacted (policy); provider keys are encrypted and never sent to the browser; every request, tool call and approval is audited and recorded. See [SECURITY.md](SECURITY.md#ai-assistant-threat-model).
+- **AI desktop apps (MCP):** `/mcp` accepts only bearer tokens of AI connections (never the WRM cookie); tokens are random, stored as SHA-256, bound to a user, chosen connections, a mode, scopes and an expiry, and revocable; OAuth needs PKCE (S256), exact redirect URIs from an allowlist and the user's consent after a normal sign-in; requests from foreign browser origins are refused and CORS answers only allowed origins; every tool call goes through the same permission engine and audit as the built-in assistant. See the MCP threat model in [SECURITY.md](SECURITY.md).
 - **Transport:** use HTTPS (certificate, reverse proxy, or `HTTPS_SELF_SIGNED=1`). Without it passwords and terminal traffic between browser and WRM are not encrypted and browsers block the microphone.
 
 ---
@@ -1610,6 +1688,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - Password rotation works for SSH logins that may run `passwd` (Linux, BSD, macOS) — not for Windows/RDP, network devices or IPMI. *Who has access* shows `~/.ssh/authorized_keys` of the login user only.
 - RDP, VNC and Telnet need **guacd** next to WRM (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); file transfer and printer redirection of RDP are not offered.
 - The AI assistant works with SSH connections (not RDP / VNC / Telnet or BMC consoles), runs non-interactive commands only (no editors, pagers or password prompts), and its read-only classifier is deliberately strict: a harmless command it does not know needs an approval. Consumer chat subscriptions (Claude.ai, ChatGPT) cannot be used; desktop AI apps over MCP come with v12.1.0.
+- AI connections (MCP) work with the user's **own** SSH connections (not connections shared with them); OAuth access is not refreshed — when it expires the user approves the app again. `/mcp` offers no standalone event stream (GET) and no resumption of an interrupted stream; a call interrupted while it waits for an approval is cancelled.
 - No **SSO/LDAP/SAML** yet (local accounts with 2FA).
 - Voice calls are a **mesh**: fine up to about 12 people; larger meetings would need an SFU.
 - No SSH **agent forwarding**. Jump hosts must be SSH servers (no HTTP/SOCKS proxies as jump hosts).
@@ -1909,6 +1988,26 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/ai/sessions/{id}/approvals/{approval}` | `{decision: "approve"\|"deny", command?, content?, note?}` (only the session's user) |
 | POST | `/api/ai/sessions/{id}/stop` · `/kill` | Cancel the running request / end the session |
 | POST | `/api/ai/kill-all` | End all own sessions |
+
+**AI connections (MCP)** — the MCP endpoint takes a bearer token, the OAuth endpoints are public, the rest needs a WRM sign-in
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST / DELETE | `/mcp` | MCP streamable HTTP (protocol versions `2025-11-25`, `2025-06-18`, `2025-03-26`): JSON-RPC `initialize` (answers `Mcp-Session-Id`), `ping`, `tools/list`, `tools/call` (JSON, or an event stream that can carry `elicitation/create` and `notifications/progress`), `notifications/cancelled`; DELETE ends the MCP session. `Authorization: Bearer wrm_pat_…` / `wrm_oat_…`; without one: 401 with `WWW-Authenticate: Bearer resource_metadata="…"`. Requests with a foreign `Origin` are refused (403) |
+| GET | `/.well-known/oauth-protected-resource[/mcp]` | RFC 9728 metadata: resource, authorization server, scopes |
+| GET | `/.well-known/oauth-authorization-server` | RFC 8414 metadata |
+| POST | `/oauth/register` | RFC 7591 dynamic client registration `{client_name, redirect_uris, token_endpoint_auth_method}` (redirect URIs from `ai_mcp_redirect_uris` only) |
+| GET | `/oauth/authorize` | `response_type=code`, `client_id`, `redirect_uri`, `code_challenge` + `code_challenge_method=S256` (required), `state`, `scope`, `resource` → WRM's consent dialog |
+| POST | `/oauth/token` | `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `code_verifier` → `{access_token, token_type: "Bearer", expires_in, scope}` (no refresh tokens) |
+| POST | `/oauth/revoke` | RFC 7009 `token` |
+| GET | `/api/mcp/config` | What the user may choose: `{enabled, reason, connections, modes, scopes, default_hours, max_hours, url, oauth, elicitation}` |
+| GET / POST | `/api/mcp/grants` | Own AI connections / create a token `{name, conn_ids, mode, scopes, hours, auto, confirm_auto}` → `{grant, token, url}` (the token only here) |
+| DELETE | `/api/mcp/grants/{id}` | Revoke (ends its sessions) |
+| POST | `/api/mcp/revoke-all` | Revoke every own AI connection |
+| GET | `/api/mcp/active` | `{live: [AI connections with open sessions], pending: [approvals]}` for the indicator; decide with `/api/ai/sessions/{id}/approvals/{approval}` |
+| GET / POST | `/api/mcp/authorize/{id}` | The consent dialog: the request (`client_name`, `redirect_host`, `scopes`) / `{decision: "approve"\|"deny", conn_ids, mode, scopes, hours}` → `{redirect}` |
+| GET / DELETE | `/api/admin/mcp/grants[/{id}]`, POST `/api/admin/mcp/revoke-all` | Every AI connection; revoke one or all (administrators) |
+| GET / DELETE | `/api/admin/mcp/clients[/{id}]` | Registered OAuth apps; removing one revokes its AI connections |
 | GET / POST / PUT / DELETE | `/api/admin/ai/providers[/{id}]`, POST `…/{id}/test` | Organisation providers (administrators) |
 | GET | `/api/admin/ai/sessions?user&conn&status&limit`, `/api/admin/ai/sessions/{id}` | Every AI session; a transcript (viewing is audited) |
 | POST | `/api/admin/ai/sessions/{id}/kill`, `/api/admin/ai/users/{id}/kill`, `/api/admin/ai/kill-all` | Kill switch per session, per user, for everyone |
@@ -1928,7 +2027,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | Endpoint | Description |
 |---|---|
 | `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping`, `cwd` (the shell's working directory) → server; `cwd` with `path` or `error`, `status` (with `recording`, `session_id`), `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
-| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`, `tunnels_changed`, `snippets_changed`, `bookmarks_changed`, `status_changed`) |
+| `/ws/events` | Live notifications for the signed-in user (`sessions_changed`, `tunnels_changed`, `snippets_changed`, `bookmarks_changed`, `status_changed`, `ai_sessions_changed`, `mcp_changed`) |
 | `/ws/share/{token}` | Collaboration room. Client → server: `chat`, `file`, `set-name`, `screen` (`start/stop/data/resize/snapshot`), `watch`, `unwatch`, `control-request/grant/revoke/release`, `remote-input`, `voice-join/leave/signal/state`, `hand`, `mod` (`set-role/mute/unmute/stop-share/lower-hand/kick/ban`). Server → client: `welcome`, `participants`, `chat`, `file`, `system`, `screen`, `watch-request`, `control`, `control-request`, `remote-input`, `voice-peers/joined/left/signal`, `force-mute`, `role`, `kicked`, `closed`, `error` |
 
 ---
@@ -1979,6 +2078,11 @@ remote-manager/
   ai_cloud.go     AWS SigV4, AWS event streams, Google service account tokens
   ai_provider.go  AI providers (organisation / personal), encrypted keys, schema
   ai_api.go       /api/ai and /api/admin/ai
+  ai_transfer.go  transfer_file: SFTP copy between two sessions of one AI connection
+  mcp_server.go   the MCP server at /mcp: streamable HTTP, JSON-RPC, tools, elicitation, origin and CORS checks
+  mcp_tokens.go   AI connections (hashed tokens, scopes, expiry, revoke), policies, /api/mcp and /api/admin/mcp
+  mcp_oauth.go    OAuth 2.1 for MCP clients: metadata, dynamic client registration, consent, PKCE, token, revoke
+  mcp_stdio.go    the stdio bridge (wrm -mcp-stdio) for clients that only start local servers
   files.go        file API: list, download, ZIP, streamed upload, mkdir, rename, delete
   search.go       recursive name / content search (NDJSON stream)
   sftp_pool.go    pooled SFTP connections with liveness checks
@@ -2051,11 +2155,13 @@ remote-manager/
   update_test.go       self-update against a fake GitHub releases server: success and rollback, checksum mismatch, missing checksums file or line, missing asset, wrong -version, policy, Docker, local binary
   ai_policy_test.go    read-only classifier (many cases), destructive patterns (every rule, false positives), admin patterns, globs
   ai_engine_test.go    AI sessions against a fake Anthropic / OpenAI-compatible server and the fake SSH host: approve, edit, deny, timeout, read-only, destructive in every mode, automatic-mode limits, file edits with diffs, kill switch, most restrictive policy, keys never returned, redaction, audit, transcript and recording, prompt injection, the event stream
+  mcp_test.go          an MCP client harness: initialize, tools/list, tools/call, elicitation; OAuth with PKCE failure and code reuse; token scopes and expiry; revoke and kill switch; approval round trip; read-only and scope enforcement; destructive block; prompt injection; audit; transfer; the stdio bridge; origin and CORS checks
   ai_provider_test.go  SigV4 test vector, Bedrock Converse event stream, Vertex token exchange, Azure / OpenAI, Anthropic request shape, refusal, cancel, cost
   termcwd_test.go      the shell's working directory over SSH against the fake SSH host (a real sh on a PTY): start directory, after cd, a foreground job
   static/index.html          the entire web UI (embedded into the binary)
   static/git.js              the Git workspace (loaded when it is opened)
   static/ai.js               the AI assistant panel and the admin AI tab (loaded when used)
+  static/mcp.js              AI connections (MCP): settings, indicator, approval cards, OAuth consent, admin tab (loaded when used)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
 .github/workflows/build.yml  CI: vet, gofmt, tests (race), JS syntax check, builds all platforms, Docker image, releases on tags
@@ -2077,7 +2183,15 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | AI: *the policy does not allow the AI assistant on this connection* | A mode rule for its tag, folder, host or id leaves no mode; ask an administrator (*Admin panel → AI assistant → Mode rules*) |
 | AI: a harmless command needs an approval in read-only mode | The read-only classifier only accepts commands it knows are read-only (no redirections, substitutions or variables). Use a read tool, approve it in *ask* mode, or add it to the automatic-mode allow list |
 | AI: *the provider answered HTTP 401/403/404* | Check the key, the model name (Bedrock: `anthropic.…` IDs or inference profiles; Vertex: the region offers the model) and the base URL; *Test* in the provider list sends one small request |
-| AI: a Claude.ai / ChatGPT subscription does not work | Consumer chat subscriptions cannot be used by other applications: use an API key or your company's gateway |
+| AI: a Claude.ai / ChatGPT subscription does not work | Consumer chat subscriptions cannot be used by other applications: use an API key or your company's gateway — or connect the chat app to WRM over MCP ([AI desktop apps](#ai-desktop-apps-mcp)) |
+| MCP: no *AI connections* tab in Settings | MCP is off (`ai_mcp_enabled`); the tab says why when the policy `ai_mcp` does not include you or the kill switch is on |
+| MCP: claude.ai / ChatGPT cannot connect (*couldn't reach the server*, timeout) | Hosted connectors connect from the provider's cloud: WRM must be reachable from the internet over HTTPS with a trusted certificate. Behind a reverse proxy pass `/mcp`, `/oauth/` and `/.well-known/` through, turn off response buffering for `/mcp` (server-sent events) and set `ai_mcp_public_url` |
+| MCP: *the redirect URI … is not allowed* | The app's OAuth callback is not in `ai_mcp_redirect_uris`; an administrator adds it (*Admin panel → AI connections*) |
+| MCP: HTTP 401 *the token has expired* / *was revoked* | Create a new token, or let the app connect again (OAuth); tokens live `ai_mcp_token_hours` (at most `ai_mcp_max_token_hours`) |
+| MCP: HTTP 403 *origin not allowed* | A browser-based client on another origin: add it to `ai_mcp_allowed_origins` |
+| MCP: a change is *Denied by WRM … run_readonly* | The AI connection has no `run_with_approval` scope; create one with it (if the policy allows) |
+| MCP: the app waits and nothing happens | An approval is pending: answer it on the card in WRM (or in the app); unanswered approvals are denied after `ai_approval_timeout_seconds` |
+| MCP stdio bridge: *certificate signed by unknown authority* | Start the bridge with `-ca-file` pointing to the WRM certificate or your CA (PEM) |
 | *HOST KEY VERIFICATION FAILED* | The server's SSH key changed. If you know why (reinstall), click *Trust this key* in the terminal (connection owner/admin) or forget the host in *Admin → Host keys* |
 | *Microphone requires HTTPS* / no microphone | Use HTTPS (certificate, reverse proxy or `HTTPS_SELF_SIGNED=1`) and allow the microphone in the browser; you can also join as a listener |
 | Voice: *Connecting…* forever or *Connection problem* | Open UDP+TCP 3478 and the relay port range on the WRM server; behind NAT set `turn_public_ip` and forward the ports; in very strict networks add a TURN server on 443/TLS (*Admin → Voice & network*) |

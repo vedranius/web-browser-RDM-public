@@ -25,7 +25,7 @@ import (
 //   SetMode   changes the mode (only through the authenticated API, never from a model);
 //   Kill      ends the session (per session, per user, globally).
 // Every step is an event (aiEvent) that transports subscribe to: the panel streams them
-// over server-sent events; MCP clients (v12.1.0) will map them to their protocol.
+// over server-sent events; the MCP server (mcp_server.go) maps approvals to elicitation.
 
 type aiEvent struct {
 	Seq  int64                  `json:"seq"`
