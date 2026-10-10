@@ -103,6 +103,28 @@ var settingSpecs = []settingSpec{
 	{Key: "update_repo", Default: defaultUpdateRepo, Kind: "string"},
 	{Key: "update_proxy", Default: "", Kind: "string"},
 	{Key: "self_update", Default: "admins", Kind: "enum", Enum: []string{"off", "admins"}},
+	// AI assistant: who may use it, permission modes, providers, data handling, kill switch
+	{Key: "ai_assistant", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "ai_kill_switch", Default: "0", Kind: "bool"},
+	{Key: "ai_modes", Default: "read_only,ask", Kind: "string"},
+	{Key: "ai_default_mode", Default: "read_only", Kind: "enum", Enum: []string{"read_only", "ask"}},
+	{Key: "ai_mode_rules", Default: "[]", Kind: "json"},
+	{Key: "ai_personal_keys", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "ai_provider_kinds", Default: aiAllProviderKinds, Kind: "string"},
+	{Key: "ai_models", Default: "", Kind: "string"},
+	{Key: "ai_redact_output", Default: "1", Kind: "bool"},
+	{Key: "ai_share_notes", Default: "1", Kind: "bool"},
+	{Key: "ai_transcript_retention_days", Default: "90", Kind: "int", Min: 1, Max: 3650},
+	{Key: "ai_approval_timeout_seconds", Default: "300", Kind: "int", Min: 30, Max: 3600},
+	{Key: "ai_auto_max_minutes", Default: "60", Kind: "int", Min: 1, Max: 1440},
+	{Key: "ai_auto_max_actions", Default: "50", Kind: "int", Min: 1, Max: 1000},
+	{Key: "ai_allow_power", Default: "off", Kind: "enum", Enum: []string{"off", "ask"}},
+	{Key: "ai_blocked_commands", Default: "", Kind: "string"},
+	{Key: "ai_read_deny_paths", Default: "", Kind: "string"},
+	{Key: "ai_command_timeout_seconds", Default: "60", Kind: "int", Min: 5, Max: 3600},
+	{Key: "ai_output_max_kb", Default: "64", Kind: "int", Min: 4, Max: 1024},
+	{Key: "ai_max_steps", Default: "25", Kind: "int", Min: 1, Max: 200},
+	{Key: "ai_idle_minutes", Default: "60", Kind: "int", Min: 5, Max: 1440},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
@@ -236,6 +258,9 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		if err := json.Unmarshal([]byte(v), &tmp); err != nil {
 			return "", fmt.Errorf("invalid JSON: %v", err)
 		}
+		if s.Key == "ai_mode_rules" {
+			return validateAIModeRules(v)
+		}
 		return v, nil
 	}
 	if len(v) > 4096 {
@@ -250,6 +275,10 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		if _, _, err := parsePortRange(v); err != nil {
 			return "", err
 		}
+	case "ai_modes":
+		return normalizeAIModes(v)
+	case "ai_provider_kinds":
+		return normalizeAIKinds(v)
 	case "update_repo":
 		if !updateRepoRe.MatchString(v) {
 			return "", fmt.Errorf("use the form owner/repository")
@@ -374,6 +403,12 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if turnChanged {
 			restartTURN()
+		}
+		if v, ok := changed["ai_kill_switch"]; ok && v == "1" {
+			aiKillAll(adminID, "kill switch turned on by an administrator")
+		}
+		if v, ok := changed["ai_assistant"]; ok && v == "off" {
+			aiKillAll(adminID, "the AI assistant was turned off")
 		}
 		for k := range changed {
 			if strings.HasPrefix(k, "tunnel") {
