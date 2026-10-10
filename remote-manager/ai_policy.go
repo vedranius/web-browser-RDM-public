@@ -24,7 +24,7 @@ import (
 // The most restrictive answer wins — the allowed set is the intersection.
 //
 // The evaluation (aiEvaluate) is independent of how the session is driven (the built-in
-// panel today, MCP clients in v12.1.0): the transport only shows approvals and passes
+// panel or MCP clients): the transport only shows approvals and passes
 // the user's decision back.
 
 const (
