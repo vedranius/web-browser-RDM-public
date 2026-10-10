@@ -6,8 +6,8 @@ Security fixes go into the **latest release** only. Please upgrade before you re
 
 | Version | Supported |
 |---|---|
-| v11.x | ✔ |
-| v10.x and older | ✘ (upgrade: see *Upgrading* in the [README](README.md#table-of-contents)) |
+| v12.x | ✔ |
+| v11.x and older | ✘ (upgrade: see *Upgrading* in the [README](README.md#table-of-contents)) |
 
 ## Reporting a vulnerability
 
@@ -25,7 +25,7 @@ Please include:
 
 You will get an answer as soon as possible, usually within a week. Once a fix is released, the release notes credit you if you want. Please give a reasonable time to release a fix before you publish anything.
 
-**In scope:** the WRM server, web UI and container image in this repository. For example: authentication and 2FA bypass, privilege escalation between users or share roles, access to stored secrets or to other people's session recordings, changing or deleting audit records without detection, cross-site scripting or request forgery, reaching servers or networks you should not reach (the TURN relay, SSH tunnels and jump hosts included — e.g. using another user's jump host or tunnel, or bypassing the tunnel policies), and denial of service with small effort.
+**In scope:** the WRM server, web UI and container image in this repository. For example: authentication and 2FA bypass, privilege escalation between users or share roles, access to stored secrets or to other people's session recordings, changing or deleting audit records without detection, cross-site scripting or request forgery, reaching servers or networks you should not reach (the TURN relay, SSH tunnels and jump hosts included — e.g. using another user's jump host or tunnel, or bypassing the tunnel policies), getting the **AI assistant** to run something its mode does not allow (escaping the read-only classifier, the approvals, the automatic-mode limits or the destructive-pattern list, or changing the mode from server output), reading another user's AI transcripts, provider keys reaching the browser, and denial of service with small effort.
 
 **Out of scope:** problems that need an administrator account or access to the server's files, missing HTTPS when the operator did not configure it, social engineering, reports from automated scanners that come without a working attack, and vulnerabilities in the servers you connect to.
 
@@ -143,12 +143,37 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Turn on keystroke recording (`session_recording_input`) only if you need it. Typing at password prompts is masked, but other secrets typed on the command line would be recorded.
 - [ ] Recordings may contain sensitive output (configuration files, logs). Keep the recordings folder (`WRM_RECORDINGS_DIR`, mode `0700`, files `0600`) on an encrypted disk, include it in protected backups, and give administrator rights only to people who may see them. Every view and download of a recording is audited.
 
+**AI assistant**
+
+- [ ] Keep the assistant off (`ai_assistant=off`, the default) until you have decided who may use it, with which provider, and where its data goes. Start with `admins`.
+- [ ] Keep `ai_modes` at `read_only,ask` (the default). Allow `auto` only where you want it, and narrow it with **mode rules**: e.g. `{"match":"tag","value":"prod","modes":["read_only"]}` for production. The most restrictive matching rule wins.
+- [ ] Keep `ai_redact_output` on. Redaction is pattern-based: it catches common secret formats, not every secret. Treat everything the assistant reads as sent to the provider.
+- [ ] Choose providers deliberately (`ai_provider_kinds`, `ai_models`): an enterprise agreement (zero data retention, a regional endpoint, Bedrock or Vertex in your own cloud account, a gateway, or a local model) where server data must not leave your control. Keep `ai_personal_keys=off` if users must not send server data to their own accounts.
+- [ ] Use dedicated API keys for WRM with spending limits at the provider; rotate them like any credential. They are encrypted at rest and never sent to the browser.
+- [ ] Give the SSH logins the assistant uses the least privilege: it acts with the connection's login (and `sudo -n` only where that login may). Add organisation-specific dangerous commands to `ai_blocked_commands` and secret files to `ai_read_deny_paths`.
+- [ ] Keep `ai_allow_power=off` unless reboots through the assistant are needed (then each one needs an approval).
+- [ ] Watch `ai.*` audit events (`ai.tool_denied`, `ai.approved` with `edited`, `ai.auto_allowed`, `ai.session_killed`), set `ai_transcript_retention_days`, and know where the kill switch is (*Admin panel → AI assistant*, or `WRM_AI_KILL_SWITCH=1`).
+
 **Monitoring**
 
 - [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
 - [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
 - [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `bookmark.*`, `ssh_key.*` (deploy, revoke, export) `credential.*` (grants, reveal, rotation), `proxy.*` (created, shared, tested), `folder.updated` (default jump host / proxy), `admin.notify_channel_*` and `bmc.*` (power actions) events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
+
+## AI assistant: threat model
+
+The built-in assistant (v12.0.0) lets a language model act on a server. WRM treats the model as an **untrusted, possibly manipulated actor** and puts the decisions on the server:
+
+- **No shell for the model.** The model can only call WRM's fixed tools. Each call becomes an action (read a file, run a command, edit a file) that the **permission engine** evaluates on the server before anything runs: the session's mode, the read-only classifier, the automatic-mode allow / deny lists and limits, the always-blocked destructive patterns and the unreadable sensitive files. The browser only shows approvals and passes the user's decision back; the engine does not depend on the panel (the MCP integration of v12.1.0 uses the same engine).
+- **Prompt injection from server output.** Logs, files and command output can contain text written by anyone (an attacker who can write a log line, a web request, a file in a shared directory). Tool results are given to the model as **untrusted data**, framed and labelled as such, and the system prompt tells the model never to follow instructions in them. This reduces but cannot eliminate manipulation, so it is not what WRM relies on: **only the user can change the mode** (through the authenticated API, never through a tool), there is no tool that changes permissions, unknown tools are refused, and every action is evaluated by the engine regardless of why the model asked for it. In *ask* mode a manipulated model can only *propose* a change, which the user sees exactly; in *auto* mode it can only do what the user's allow list permits, within the limits, and never anything on the destructive list.
+- **Read-only means read-only.** The classifier is an allowlist: commands it does not know, and anything with redirections, command or process substitution, here-documents, subshells, background jobs or variables, count as changes. Wrappers (`sudo -n`, `timeout`, `xargs`) are unwrapped and the inner command is checked. Sensitive files (password hashes, private keys, cloud credentials, process environments) are refused also through wildcards and symlinks (`read_file` resolves the real path first). A file the login can read through other means (e.g. a custom script) is outside what any classifier can know: give the SSH login only the rights it needs.
+- **Destructive patterns** are checked on the parsed command and again on the raw text with quotes removed, so a pattern hidden in `sh -c "…"` or `eval` is still caught; they are refused in every mode, also after an approval and after the user edits a command. The list is maintained in `ai_destructive.go` and every rule has a test.
+- **Approvals.** A pending approval shows the exact command or a unified diff; only the session's user decides; an edited command or content is evaluated again; an unanswered approval is denied after `ai_approval_timeout_seconds`; a file is written only if it is unchanged since the diff was made. Every request, decision (approved, denied, edited, timed out, cancelled), who and when, is audited.
+- **Data leaving to providers.** Everything the assistant reads — command output, file contents, the OS description, and the connection notes if the user opts in — is sent to the chosen provider. With `ai_redact_output` (default on) secrets are replaced before sending (the patterns of the audit redaction — password, secret, token, credential, private key, passphrase … — plus private key blocks, `Authorization` headers, passwords in URLs, AWS / GitHub / GitLab / Slack / OpenAI / Anthropic / Google keys, JWTs, password hashes). Redaction is best effort; administrators choose which providers and models are allowed, and personal keys are off by default. Stored WRM secrets (connection passwords, keys, vault entries) are never given to the model.
+- **Keys.** Provider keys, AWS secrets and service account keys are encrypted at rest (`encryptValue`), never returned by the API (only *is set* flags), never written to the audit log, and scrubbed from provider error messages.
+- **Kill switch.** A session can be stopped (the running request and command are cancelled) or ended by its user; administrators end one session, all sessions of a user, or all sessions, turn the assistant off per user, or turn on `ai_kill_switch`, which ends everything and blocks new sessions until it is turned off. Pending approvals of an ended session are cancelled.
+- **Recording.** Transcripts are redacted, kept for `ai_transcript_retention_days` and visible to the session's user and administrators; every session is also recorded like a terminal session.
 
 ## How WRM protects your data
 
