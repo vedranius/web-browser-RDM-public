@@ -735,6 +735,11 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 			out, code = "Denied by WRM: "+real+" is not readable by the assistant ("+why+").", 1
 		}
 	}
+	if (call.Name == "read_file" || call.Name == "tail_log") && strings.HasPrefix(out, "WRM-SIZE ") {
+		if i := strings.Index(out, "\n"); i > 0 {
+			out = "(file size: " + strings.TrimSpace(out[len("WRM-SIZE "):i]) + " bytes)\n" + out[i+1:]
+		}
+	}
 	timedOut := err != nil
 	if err != nil {
 		if errors.Is(err, errAIStopped) {
@@ -1003,6 +1008,10 @@ func (s *aiSession) finishRecording(status string) {
 				s.termID, recordingFormat, info.RelPath, info.Size, info.DataBytes, info.SHA256, info.DurationMs,
 				0, boolInt(info.Truncated), nowRFC())
 		}
+	}
+	// the recordings list knows closed / killed
+	if status != "killed" {
+		status = "closed"
 	}
 	db.Exec(`UPDATE terminal_sessions SET status=?, ended_at=? WHERE id=?`, status, nowRFC(), s.termID)
 }
