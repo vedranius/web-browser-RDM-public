@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -97,6 +98,11 @@ var settingSpecs = []settingSpec{
 	{Key: "git_transfer", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_gitignore_mr", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_schedule_grace_minutes", Default: "30", Kind: "int", Min: 1, Max: 1440},
+	// Updates: check the GitHub releases of update_repo daily; one-click self-update
+	{Key: "update_check", Default: "1", Kind: "bool"},
+	{Key: "update_repo", Default: defaultUpdateRepo, Kind: "string"},
+	{Key: "update_proxy", Default: "", Kind: "string"},
+	{Key: "self_update", Default: "admins", Kind: "enum", Enum: []string{"off", "admins"}},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
@@ -243,6 +249,17 @@ func validateSetting(s settingSpec, v string) (string, error) {
 	case "turn_relay_ports":
 		if _, _, err := parsePortRange(v); err != nil {
 			return "", err
+		}
+	case "update_repo":
+		if !updateRepoRe.MatchString(v) {
+			return "", fmt.Errorf("use the form owner/repository")
+		}
+	case "update_proxy":
+		if v != "" {
+			u, err := url.Parse(v)
+			if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https" && u.Scheme != "socks5") {
+				return "", fmt.Errorf("use a proxy URL such as http://proxy.example.com:3128")
+			}
 		}
 	}
 	return v, nil

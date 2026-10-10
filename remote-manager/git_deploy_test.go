@@ -431,6 +431,10 @@ func TestGitDeployScheduledRestart(t *testing.T) {
 	if child == nil || child.State != "scheduled" || child.Kind != "restart" || child.ScheduledAt != at {
 		t.Fatalf("restart run: %+v", runs.Runs)
 	}
+	// The run reads as done before finishGitRun sends its notifications: wait for them.
+	for deadline := time.Now().Add(10 * time.Second); events()["git.restart_scheduled"] == 0 && time.Now().Before(deadline); {
+		time.Sleep(20 * time.Millisecond)
+	}
 	if ev := events(); ev["git.deploy_started"] != 1 || ev["git.deploy_done"] != 1 || ev["git.restart_scheduled"] != 1 {
 		t.Fatalf("events: %v", ev)
 	}
@@ -454,6 +458,9 @@ func TestGitDeployScheduledRestart(t *testing.T) {
 	}
 	if in = loadGitInstalls(e.u.userID, false, "i.id=?", in.ID)[0]; in.RestartPending != "" {
 		t.Fatal("the pending restart was not cleared")
+	}
+	for deadline := time.Now().Add(10 * time.Second); events()["git.restart_done"] == 0 && time.Now().Before(deadline); {
+		time.Sleep(20 * time.Millisecond)
 	}
 	if ev := events(); ev["git.restart_done"] != 1 {
 		t.Fatalf("restart notification: %v", ev)

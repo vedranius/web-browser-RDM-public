@@ -4,6 +4,37 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [11.7.0] — 2026-10-10 — Run as a service, self-update, file manager "here" or "/"
+
+### Added
+- **Run as a service on every OS** (`service.go`, `service_unix.go`, `service_windows.go`):
+  - On an interactive start (stdin is a terminal, not a service, not in a container) WRM asks whether to install itself as a service that starts at boot: *Yes*, *No* (ask again next time), *Don't ask again*. The answer is remembered in `<DB_PATH>.service.json`; `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1` skips the question.
+  - Flags `-install-service`, `-uninstall-service`, `-service-status`, with `-service-name`, `-service-scope system|user` (macOS) and `-service-user`; general flags `-env-file FILE` and `-workdir DIR`.
+  - **Linux:** a systemd unit with `EnvironmentFile`, `WorkingDirectory`, `User`, `Restart=on-failure` and hardening (`NoNewPrivileges`, `ProtectSystem=strict` with `ReadWritePaths`, `ProtectHome=read-only`, `PrivateTmp`, kernel / cgroup protection, `UMask=0077`, `CAP_NET_BIND_SERVICE` below port 1024); a clear message with the start command when systemd is missing. Installing as a normal user runs the installer through `sudo` / `doas`.
+  - **macOS:** launchd, as a LaunchDaemon (boot) or a LaunchAgent (login).
+  - **Windows:** a real Windows service (Service Control Manager), automatic (delayed) start, recovery *restart on failure*, log file; elevation through UAC or a clear "administrator rights needed" message.
+  - **FreeBSD:** an rc.d script with `daemon(8) -r`; **OpenBSD:** an rc.d script with `rc.subr`.
+  - The service keeps the data directory and the settings of the interactive start: `<data dir>/<name>.env` (mode `0600`) with `PORT` / `LISTEN_ADDR`, the absolute `DB_PATH`, key and certificate files, proxies and every `WRM_*` variable.
+  - **Newest binary in the folder:** a service start switches to the newest valid `wrm-pro-v<semver>-<os>-<arch>[.exe]` next to the binary (it must answer `-version` with the version in its name); the update dialog offers **Restart to v…** for it.
+- **Self-update from GitHub releases** (`update.go`):
+  - Daily and on-demand check of the releases of `update_repo` (default this project; `WRM_UPDATE_REPO`). New settings `update_check` (on; `WRM_UPDATE_CHECK=off` for air-gapped installations), `update_repo`, `update_proxy` (else `HTTPS_PROXY` / `HTTP_PROXY`). Only the repository path and a fixed User-Agent are sent.
+  - **Version badge** *⬆ Update vX.Y.Z* in the top bar and on the sign-in page, with the release notes and a link to the release.
+  - **One-click update** for administrators (new policy `self_update`, `off` / `admins`, default `admins`): download of the release file for this OS / architecture with progress, **SHA-256 verification against `SHA256SUMS.txt`** (refused when the file, its line or the hash is missing or different), a `-version` sanity check, an atomic replacement of the binary (Windows: the running `.exe` is renamed to `.old` and kept as the rollback copy on the next start), a restart through the service manager or in place, and a page that reconnects by itself.
+  - **One-click rollback** to the previous binary (`<binary>.previous`).
+  - Docker never replaces itself: the badge stays and the dialog shows the `docker pull` / `docker compose` commands.
+  - Audit entries `system.update_check`, `system.update_started`, `system.update_downloaded`, `system.update_verified`, `system.update_installed`, `system.update_failed`, `system.update_restart`, `system.update_rollback`.
+  - API `GET /api/update`, `POST /api/update/check`, `/apply`, `/rollback`, `/restart`; `/api/version` and `/api/auth/config` name an available update.
+- **File manager from the terminal: here, / or home** (`termcwd.go`): the 📂 button of an SSH terminal is a menu with *Open here*, *Open /* and *Open home*. "Here" works without configuring OSC 7: WRM asks the server for the shell's working directory over a separate exec channel of the terminal's SSH connection (process table from `/proc` or `ps` on Linux and BSD, the terminal's foreground process first, directory from `/proc/<pid>/cwd`, `pwdx`, `procstat` or `lsof`). OSC 7 stays the fast path; when the directory cannot be found WRM says why and offers home or `/`. WebSocket control message `cwd`.
+- Tests: `service_test.go` (golden service files for every OS in `testdata/service`, env file, version comparison, newest binary in the folder), `update_test.go` (fake GitHub releases server: success, rollback, checksum mismatch, missing checksums file or line, missing asset, wrong `-version`, policy, Docker detection, local binary), `termcwd_test.go` (the cwd lookup against the fake SSH host with a real shell on a PTY).
+
+### Changed
+- `main.go`: the server runs in `serve(stop)`, so the Windows service manager, signals and restarts share one shutdown path; the shutdown now waits for the HTTP server before closing the database.
+- The README's systemd example passes `-service=systemd` and allows exit code 75 (restart requested by WRM).
+
+### Fixed
+- Tests: `TestGitDeployScheduledRestart` read the notifications as soon as the run showed *done*, but the run sends them a moment later, so it failed intermittently under load. It now waits for them.
+- CI: the unit tests get a 20-minute timeout (the default 10 minutes was nearly reached on the shared runners).
+
 ## [11.6.1] — 2026-10-09 — File manager from the terminal's title bar
 
 ### Added
