@@ -85,7 +85,7 @@ func aiConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		out["providers"] = providersFor(userID)
 	}
 	active := []map[string]interface{}{}
-	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.UserID == userID }) {
+	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.UserID == userID && s.Transport != "mcp" }) {
 		active = append(active, s.view())
 	}
 	out["active"] = active
@@ -134,6 +134,9 @@ func aiVisibility(allowed []string) map[string]interface{} {
 	read := []string{}
 	write := []string{}
 	for _, t := range aiTools {
+		if t.MCPOnly {
+			continue
+		}
 		switch t.Kind {
 		case "read":
 			read = append(read, t.Def.Name)

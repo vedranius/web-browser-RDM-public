@@ -17,8 +17,8 @@ let js = scripts.reduce((a, b) => (b.length > a.length ? b : a));
 let problems = 0;
 try { new vm.Script(js, { filename: 'index.html <script>' }); }
 catch (e) { console.error('JavaScript syntax error:', e.message); process.exit(1); }
-// Scripts loaded on demand (static/git.js, static/ai.js): syntax, and their translations and keys are checked with the page.
-for (const extra of ['git.js', 'ai.js']) {
+// Scripts loaded on demand (static/git.js, static/ai.js, static/mcp.js): syntax, and their translations and keys are checked with the page.
+for (const extra of ['git.js', 'ai.js', 'mcp.js']) {
   const f = path.join(path.dirname(file), extra);
   if (!fs.existsSync(f)) continue;
   const src = fs.readFileSync(f, 'utf8');
