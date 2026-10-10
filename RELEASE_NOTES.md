@@ -1,19 +1,50 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.0.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.1.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.0.0 — AI assistant with approvals, limits and a full audit
+## Web Remote Manager PRO v12.1.0 — AI desktop apps (MCP): Claude, ChatGPT and other AI apps under WRM's rules
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
-Browser-based remote server management: an AI assistant next to the terminal, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
+Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### ✦ AI assistant next to the terminal
+### 🤖 Connect Claude, ChatGPT and other AI apps
+
+- WRM is now an **MCP server** (`https://<your WRM>/mcp`, streamable HTTP). **Claude** (claude.ai and the desktop app), **ChatGPT** connectors, Claude Code and other MCP clients can open a WRM session to a server you chose and work on it.
+- **This is the supported way to use your Claude or ChatGPT account with WRM:** the chat app connects to WRM, the model runs in the app, and WRM never needs a provider key.
+- Connect with **OAuth** (add a custom connector, sign in to WRM and approve), with a **personal access token**, or through the small **stdio bridge** built into the WRM binary (`wrm -mcp-stdio -url … -token …`) for apps that only start local servers. *Settings → AI connections* shows ready-to-copy setup snippets.
+
+### 🛡 Same rules as the built-in assistant
+
+- Each **AI connection** is bound to you, the **servers** you pick, one **mode** (read-only, ask before every change, automatic within limits), **scopes** (`read_logs`, `run_readonly`, `run_with_approval`, `edit_file_with_approval`, `transfer`) and a **lifetime** (8 hours by default). Tokens are stored hashed and shown once.
+- Every call goes through the **v12.0.0 permission engine**: the read-only classifier, the always-blocked destructive list, approvals, automatic-mode limits, mode rules per tag / folder / host, redaction and the audit. Nothing a server prints — and nothing the app asks — can raise the scopes or the mode.
+- **Approvals** appear in WRM as a card with **Approve**, **Deny** and **Edit**, and as a question in the app when it supports MCP elicitation.
+- Copy files between the chosen servers with the `transfer` scope, after your approval, recorded with size and SHA-256.
+
+### 🔌 See it, stop it
+
+- **🤖 AI connected** in the top bar while an app has a session, with **one-click revoke**.
+- *Admin panel → AI connections:* every active AI connection, **revoke all**, registered OAuth apps and the policies — MCP on/off (**off by default**), who may use it (`ai_mcp`, administrators by default), allowed scopes and modes, maximum lifetime, the OAuth redirect URI allowlist, allowed browser origins.
+- The AI assistant's kill switch stops every AI connection too. Everything is in the audit log (`mcp.*`, `ai.*`) and in **Sessions & recordings**.
+
+### ⬆️ Upgrading from v12.0.0
+
+Replace the binary (or update with one click from the version badge). AI connections are **off** until an administrator turns them on in *Admin panel → AI connections*. Hosted connectors (claude.ai, ChatGPT) need WRM reachable from the internet over HTTPS; the stdio bridge does not. New tables are added; v12.0.0 still starts on the database. See the MCP threat model in [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.1.0/SECURITY.md).
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.1.0)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.1.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.0.0 — AI assistant with approvals, limits and a full audit
+
+#### ✦ AI assistant next to the terminal
 
 - Click **AI** in the title bar of an SSH terminal or file manager and ask: *why is nginx failing?* The assistant reads logs, services, packages and files and explains every step.
 - **The model never gets a shell.** It acts only through WRM's tools, and every call is decided **on the server** by the permission engine.
 - Your provider: **Anthropic API** (latest Claude models), **OpenAI**, **Azure OpenAI**, **AWS Bedrock**, **Google Vertex AI** or any **OpenAI-compatible** endpoint (local models). The organisation's key (administrators) or your own (if the policy allows it). Keys are encrypted and never reach the browser. Streaming answers, token and cost counters.
-- Consumer Claude.ai / ChatGPT subscriptions cannot be used by third-party apps: use an API key, an enterprise gateway, or the MCP integration coming in v12.1.0.
+- Consumer Claude.ai / ChatGPT subscriptions cannot be used by third-party apps: use an API key, an enterprise gateway, or the MCP integration of v12.1.0.
 
-### 🛡 Three modes, approvals and hard limits
+#### 🛡 Three modes, approvals and hard limits
 
 - **Read-only:** inspection only. A strict classifier accepts only commands it knows are read-only.
 - **Ask before every change:** every change waits for you, as the **exact command** (edit it before approving) or a **diff** of the file. Unanswered approvals are denied.
@@ -21,20 +52,16 @@ Browser-based remote server management: an AI assistant next to the terminal, SS
 - **Always blocked:** `rm -rf /`, `mkfs`, `dd` to disks, fork bombs, cutting off SSH, writing to `/etc/shadow` or `authorized_keys`, `curl | sh` … and `shutdown` / `reboot` unless an administrator allows them with an approval. Password hashes, private keys and credentials are never read.
 - Text in logs that tries to instruct the AI changes nothing: only you can change the mode.
 
-### 🔍 Audit, recording and kill switch
+#### 🔍 Audit, recording and kill switch
 
 - Every AI request, tool call (with its redacted output), approval and denial — who and when — is in the audit log; the transcript is kept and **recorded like a terminal session**.
 - Secrets in output are **redacted** before they are sent to the provider.
 - **Kill switch:** stop a session, all sessions of a user, or every session at once; an **✦ AI** badge shows where a session is active.
 - **Admin policies:** who may use it, which modes per **tag, folder, connection or host** (the most restrictive wins), which providers and models, personal keys, transcript retention.
 
-### ⬆️ Upgrading from v11.7.0
+#### ⬆️ Upgrading from v11.7.0
 
 Replace the binary (or update with one click from the version badge). The assistant is **off** until an administrator turns it on in *Admin panel → AI assistant* and adds a provider. New tables are added; v11.7.0 still starts on the database.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.0.0/wrm-pro-v12.0.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.0.0)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.0.0/CHANGELOG.md) for details.
 
 ---
 

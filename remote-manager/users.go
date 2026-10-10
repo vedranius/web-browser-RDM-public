@@ -327,6 +327,8 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"git_gitignore_mr": gitActionAllowed(u.ID, "git_gitignore_mr"),
 			"ai":               aiAllowedFlag(u.ID),
 			"ai_personal_keys": aiPersonalKeysAllowed(u.ID),
+			"mcp":              mcpAllowedFlag(u.ID),
+			"mcp_enabled":      settingBool("ai_mcp_enabled"),
 		},
 	}
 }

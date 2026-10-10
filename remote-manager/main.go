@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.0.0"
+var AppVersion = "v12.1.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -333,6 +333,17 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/tunnels/", apiTunnelsHandler)
 	mux.HandleFunc("/api/ai/", apiAIHandler)
 	mux.HandleFunc("/api/admin/ai/", apiAdminAIHandler)
+	mux.HandleFunc("/api/mcp/", apiMCPHandler)
+	mux.HandleFunc("/api/admin/mcp/", apiAdminMCPHandler)
+	mux.HandleFunc("/mcp", mcpHandler)
+	mux.HandleFunc("/.well-known/oauth-protected-resource", mcpProtectedResourceHandler)
+	mux.HandleFunc("/.well-known/oauth-protected-resource/mcp", mcpProtectedResourceHandler)
+	mux.HandleFunc("/.well-known/oauth-authorization-server", mcpAuthServerMetadataHandler)
+	mux.HandleFunc("/.well-known/oauth-authorization-server/mcp", mcpAuthServerMetadataHandler)
+	mux.HandleFunc("/oauth/register", mcpRegisterHandler)
+	mux.HandleFunc("/oauth/authorize", mcpAuthorizeHandler)
+	mux.HandleFunc("/oauth/token", mcpTokenHandler)
+	mux.HandleFunc("/oauth/revoke", mcpRevokeHandler)
 	mux.HandleFunc("/api/recordings", apiRecordingsHandler)
 	mux.HandleFunc("/api/recordings/", apiRecordingsHandler)
 	mux.HandleFunc("/api/admin/known-hosts", apiAdminKnownHostsHandler)
@@ -376,10 +387,18 @@ func main() {
 	flag.StringVar(&serviceMode, "service", "", "set by the service definition: systemd, launchd, rcd, rcd-openbsd or windows (not for interactive use)")
 	envFile := flag.String("env-file", "", "read environment variables (KEY=value lines) from `FILE` before starting; variables already set win")
 	workDir := flag.String("workdir", "", "change to `DIR` before starting")
+	mcpStdio := flag.Bool("mcp-stdio", false, "run as a stdio bridge for MCP clients to the WRM server at -url (with -token) and exit when stdin closes")
+	mcpURL := flag.String("url", "", "with -mcp-stdio: the `URL` of the WRM server's MCP endpoint, e.g. https://wrm.example.com/mcp (or WRM_MCP_URL)")
+	mcpToken := flag.String("token", "", "with -mcp-stdio: the AI connection `TOKEN` from Settings → AI connections (or -token-file, WRM_MCP_TOKEN)")
+	mcpTokenFile := flag.String("token-file", "", "with -mcp-stdio: read the token from `FILE`")
+	mcpCA := flag.String("ca-file", "", "with -mcp-stdio: trust the CA or self-signed certificate in `FILE` (PEM) for the WRM server")
 	flag.Parse()
 	if *showVersion {
 		fmt.Println(AppVersion)
 		return
+	}
+	if *mcpStdio {
+		os.Exit(runMCPStdio(*mcpURL, *mcpToken, *mcpTokenFile, *mcpCA, os.Stdin, os.Stdout))
 	}
 	if *workDir != "" {
 		if err := os.Chdir(*workDir); err != nil {
@@ -448,6 +467,7 @@ func serve(stop <-chan struct{}) int {
 	go runGitScheduler()
 	go runUpdateChecker()
 	go runAIJanitor()
+	go runMCPJanitor()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -1115,6 +1135,7 @@ func initDB() {
 
 	// v12.0: AI assistant (providers, sessions, transcripts)
 	initAISchema()
+	initMCPSchema()
 
 	var nC, nF, nS int
 	db.QueryRow("SELECT COUNT(*) FROM connections").Scan(&nC)

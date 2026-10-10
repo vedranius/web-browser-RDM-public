@@ -606,13 +606,18 @@ type transferRec struct {
 
 // logFileTransfer stores one transferred file (with size and checksum) for the audit trail.
 func logFileTransfer(r *http.Request, acc *connAccess, t transferRec) {
-	if !settingBool("audit_enabled") {
-		return
-	}
 	uid, name := acc.actor()
 	shareID := 0
 	if acc.Share != nil {
 		shareID = acc.Share.Share.ID
+	}
+	logFileTransferAs(uid, name, clientIP(r), shareID, t)
+}
+
+// logFileTransferAs stores a transfer for an actor without a request (AI sessions).
+func logFileTransferAs(uid int, name, ip string, shareID int, t transferRec) {
+	if !settingBool("audit_enabled") {
+		return
 	}
 	var srcID, dstID interface{}
 	srcHost, dstHost := "", ""
@@ -627,7 +632,7 @@ func logFileTransfer(r *http.Request, acc *connAccess, t transferRec) {
 	}
 	if _, err := db.Exec(`INSERT INTO file_transfers (ts, user_id, username, client_ip, share_id, direction, src_conn_id, src_host, src_path,
 		dst_conn_id, dst_host, dst_path, size_bytes, sha256, status, error) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-		time.Now().UTC().Format(time.RFC3339), nullableInt(uid), name, clientIP(r), nullableInt(shareID), t.Direction,
+		time.Now().UTC().Format(time.RFC3339), nullableInt(uid), name, ip, nullableInt(shareID), t.Direction,
 		srcID, srcHost, t.SrcPath, dstID, dstHost, t.DstPath, t.Size, t.SHA256, t.Status, truncateStr(t.Error, 300)); err != nil {
 		log.Printf("file transfer log: %v", err)
 	}
