@@ -1498,10 +1498,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 #tools-tabs { flex-wrap: wrap; row-gap: 2px; }
 /* Top bar: give way step by step instead of overlapping (it reacts to the width of #center) */
 .btn-top, .add-win-btn { white-space: nowrap; flex-shrink: 0; }
-@container (max-width: 1200px) { .app-ver, .top-sep, .sess-lbl, #btn-settings .lbl, #btn-logout .lbl { display: none; } }
+@container (max-width: 1260px) { .app-ver, .top-sep, .sess-lbl, #btn-settings .lbl, #btn-logout .lbl { display: none; } }
+@container (max-width: 1400px) { #btn-mcp .lbl { display: none; } }
 @container (max-width: 1200px) { .upd-badge .lbl { display: none; } .upd-badge { margin-left: 4px; padding: 2px 7px; } }
-@container (max-width: 960px) { .btn-top .lbl { display: none; } }
-@container (max-width: 640px) { .add-win-btn .lbl, #user-chip .name { display: none; } }
+@container (max-width: 1040px) { .btn-top .lbl { display: none; } }
+@container (max-width: 700px) { .add-win-btn .lbl, #user-chip .name { display: none; } }
+@container (max-width: 600px) { #top-bar.mcp-on #sess-bar-name { display: none; } }
 </style>
 </head>
 <body>
@@ -1615,6 +1617,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div id="auth-info">
       <span id="user-chip"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span></span>
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
+      <button class="btn-top" id="btn-mcp" style="display:none;" onclick="openMCPPop()" title="AI apps connected through MCP"><span>🤖</span><span class="lbl" data-i18n="mcp_connected_lbl">AI connected</span><span class="tun-badge" id="mcp-badge"></span></button>
       <button class="btn-top" id="btn-settings" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
       <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
@@ -1991,6 +1994,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="st-notify" id="st-notify-btn" onclick="showSettingsTab('st-notify')" data-i18n="tab_notify">Notifications</button>
       <button class="tab-btn" data-tab="st-audio" onclick="showSettingsTab('st-audio')" data-i18n="tab_audio">Voice &amp; audio</button>
       <button class="tab-btn" data-tab="st-history" id="st-history-btn" onclick="showSettingsTab('st-history')" data-i18n="tab_history">Session history</button>
+      <button class="tab-btn" data-tab="st-mcp" id="st-mcp-btn" onclick="showSettingsTab('st-mcp')" data-i18n="tab_mcp">AI connections</button>
       <button class="tab-btn" data-tab="st-data" id="st-data-btn" onclick="showSettingsTab('st-data')" data-i18n="tab_data">Data</button>
     </div>
     <div class="tab-pane active" id="st-general">
@@ -2040,6 +2044,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="hint-box" data-i18n="history_help">Your terminal sessions and sessions of other people on your connections. Replay a recording or download it as an asciinema .cast file.</div>
       <div id="history-pane"></div>
     </div>
+    <div class="tab-pane" id="st-mcp"><div id="mcp-pane"></div></div>
     <div class="tab-pane" id="st-data">
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="export_config">Export connections</div><div class="setting-desc" data-i18n="export_config_desc">Folders and connections as JSON, without passwords and keys</div></div>
@@ -2560,6 +2565,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="shares" onclick="showAdminTab('shares')" data-i18n="adm_shares">Shares</button>
       <button class="tab-btn" data-tab="policies" onclick="showAdminTab('policies')" data-i18n="adm_policies">Security policies</button>
       <button class="tab-btn" data-tab="ai" onclick="showAdminTab('ai')" data-i18n="adm_ai">AI assistant</button>
+      <button class="tab-btn" data-tab="mcp" onclick="showAdminTab('mcp')" data-i18n="adm_mcp">AI connections</button>
       <button class="tab-btn" data-tab="voice" onclick="showAdminTab('voice')" data-i18n="adm_voice">Voice &amp; network</button>
       <button class="tab-btn" data-tab="notify" onclick="showAdminTab('notify')" data-i18n="adm_notify">Notifications</button>
       <button class="tab-btn" data-tab="hosts" onclick="showAdminTab('hosts')" data-i18n="adm_hosts">Host keys</button>
@@ -4654,6 +4660,14 @@ Object.assign(LANGS.hr, {
   adm_ai: 'AI asistent', ai_btn_t: 'AI asistent za ovaj server', ai_active_t: 'Na ovom prozoru je aktivna AI sesija',
   ai_load_failed: 'AI asistent se nije mogao učitati', ai_rec_t: 'AI sesija (snimka transkripta)',
 });
+Object.assign(LANGS.en, {
+  tab_mcp: 'AI connections', adm_mcp: 'AI connections', mcp_connected_lbl: 'AI connected', mcp_btn_t: 'AI apps connected through MCP: see them or revoke access',
+  mcp_load_failed: 'AI connections could not be loaded',
+});
+Object.assign(LANGS.hr, {
+  tab_mcp: 'AI veze', adm_mcp: 'AI veze', mcp_connected_lbl: 'AI povezan', mcp_btn_t: 'AI aplikacije povezane preko MCP-a: pregled ili opoziv pristupa',
+  mcp_load_failed: 'AI veze se nisu mogle učitati',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5054,6 +5068,7 @@ function initApp() {
   refreshUpdateBadge();
   connectEventBus();
   startSessionKeepalive();
+  mcpStart();
 }
 
 async function loadData() {
@@ -6027,7 +6042,8 @@ function showAdminTab(tab) {
     voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
     transfers: adminTransfers,
-    ai: () => loadAI().then(() => wrmAI.adminTab(), () => { document.getElementById('admin-body').innerHTML = `<div class="fm-error">${esc(t('ai_load_failed'))}</div>`; })}[tab] || adminOverview)();
+    ai: () => loadAI().then(() => wrmAI.adminTab(), () => { document.getElementById('admin-body').innerHTML = `<div class="fm-error">${esc(t('ai_load_failed'))}</div>`; }),
+    mcp: () => loadMCP().then(() => wrmMCP.adminTab(), () => { document.getElementById('admin-body').innerHTML = `<div class="fm-error">${esc(t('mcp_load_failed'))}</div>`; })}[tab] || adminOverview)();
 }
 
 function fmtDuration(sec) {
@@ -7177,6 +7193,44 @@ function aiAvailable(wo, mode) {
 }
 function openAI(id) {
   loadAI().then(() => wrmAI.toggle(id), () => showToast(t('ai_load_failed'), 'error'));
+}
+
+// AI desktop apps (MCP): static/mcp.js is loaded when there is something to show (an AI app
+// is connected, an approval waits, the consent dialog, Settings → AI connections, the admin tab).
+let mcpLoading = null;
+function loadMCP() {
+  if (window.wrmMCP) return Promise.resolve();
+  if (!mcpLoading) mcpLoading = new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = '/static/mcp.js';
+    s.onload = ok;
+    s.onerror = () => { mcpLoading = null; fail(); };
+    document.head.appendChild(s);
+  });
+  return mcpLoading;
+}
+let mcpPoll = null;
+async function mcpRefresh() {
+  const pol = (currentUser && currentUser.policy) || {};
+  const btn = document.getElementById('btn-mcp');
+  if (!pol.mcp_enabled || isCollabMode) { if (btn) btn.style.display = 'none'; return; }
+  if (btn) btn.title = t('mcp_btn_t');
+  if (window.wrmMCP) { wrmMCP.refresh(); return; }
+  try {
+    const r = await fetch('/api/mcp/active');
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d.live.length || d.pending.length) loadMCP().then(() => wrmMCP.indicator(d), () => {});
+  } catch (_) {}
+}
+function mcpStart() {
+  const id = new URLSearchParams(location.search).get('mcp_authorize');
+  if (id) loadMCP().then(() => wrmMCP.consent(id), () => showToast(t('mcp_load_failed'), 'error'));
+  mcpRefresh();
+  if (!mcpPoll) mcpPoll = setInterval(mcpRefresh, 60000);
+}
+function openMCPPop() {
+  loadMCP().then(() => wrmMCP.togglePop(), () => showToast(t('mcp_load_failed'), 'error'));
 }
 
 function openTools(opts) {
@@ -12823,6 +12877,7 @@ function openSettings(tab) {
   document.getElementById('st-data-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-history-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-notify-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
+  document.getElementById('st-mcp-btn').style.display = signedIn && !isCollabMode && currentUser.policy && currentUser.policy.mcp_enabled ? '' : 'none';
   showSettingsTab(tab || 'st-general');
   updateInstallRow();
 }
@@ -12834,6 +12889,7 @@ function showSettingsTab(id) {
   if (id === 'st-audio') renderAudioPane();
   if (id === 'st-notify') renderNotifyPane();
   if (id === 'st-history') renderTermSessions('history-pane', true);
+  if (id === 'st-mcp') loadMCP().then(() => wrmMCP.settingsPane(), () => showToast(t('mcp_load_failed'), 'error'));
 }
 
 // ── Security: password, two-factor, sign-in sessions ──
@@ -14315,7 +14371,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); if (m.type === 'mcp_changed') mcpRefresh(); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();
