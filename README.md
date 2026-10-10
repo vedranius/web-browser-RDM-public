@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v11.6.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v11.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -83,6 +83,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Settings](#settings)
    - [Audit log, session recording & file transfers](#audit-log-session-recording--file-transfers)
    - [Admin panel](#admin-panel)
+   - [Updates & self-update](#updates--self-update)
    - [Mobile, responsive UI & installable app](#mobile-responsive-ui--installable-app)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
 7. [Configuration](#configuration)
@@ -132,21 +133,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v11.6.1-linux-amd64
-   ./wrm-pro-v11.6.1-linux-amd64
+   chmod +x wrm-pro-v11.7.0-linux-amd64
+   ./wrm-pro-v11.7.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v11.6.1-windows-amd64.exe
+   .\wrm-pro-v11.7.0-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.6.1/wrm-pro-v11.6.1-android-arm64
-   chmod +x wrm-pro-v11.6.1-android-arm64 && ./wrm-pro-v11.6.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v11.7.0/wrm-pro-v11.7.0-android-arm64
+   chmod +x wrm-pro-v11.7.0-android-arm64 && ./wrm-pro-v11.7.0-android-arm64
    ```
 
    **Docker**
@@ -170,6 +171,15 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v11.6.1
+
+Replace the binary (or use the new one-click update from the next release on); the database does not change.
+
+- **Run as a service:** on an interactive start WRM asks once whether to install itself as a service that starts at boot (systemd, launchd, rc.d or a Windows service; *Don't ask again* is remembered in `<DB_PATH>.service.json`). Scripts use `-install-service`, `-uninstall-service` and `-service-status`; `-no-service-prompt` skips the question. See [Service](#service).
+- **Updates:** WRM checks the project's GitHub releases once a day (no user data is sent). The version in the top bar shows **⬆ Update vX.Y.Z** with the release notes; administrators update with one click (SHA-256 checked against `SHA256SUMS.txt`, previous binary kept for a rollback). Air-gapped installations: `WRM_UPDATE_CHECK=off`. Docker never replaces itself. See [Updates & self-update](#updates--self-update).
+- **📂 in an SSH terminal** is now a menu: *Open here*, *Open /*, *Open home*. "Here" works without configuring OSC 7. See [Windows, tabs & snapping](#windows-tabs--snapping).
+- A systemd unit that runs WRM with `ProtectSystem=strict` needs the binary's folder in `ReadWritePaths` for the one-click update (units written by `-install-service` have it).
 
 ## Upgrading from v11.6.0
 
@@ -627,7 +637,9 @@ Every opened connection is a **window** inside the workspace. There is also a **
 
 - **+ New Window** (or **Alt+N**) opens an empty window with quick buttons for your connections and **saved sessions**.
 - **Title bar:** drag to move, **double-click** to maximize or restore. Buttons: *snap layouts*, **↻ Reconnect** (SSH windows), **📂 Files** (SSH terminals), 📡 *share terminal* (in a collaboration room), minimize, maximize, close.
-- **📂 Files** in an SSH terminal's title bar opens the **file manager of the same server** ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)); a file manager of that connection that is already open is brought to the front. When the remote shell reports its current directory with OSC 7, the file manager opens (or moves) there; otherwise it opens the home directory. For bash, add to `~/.bashrc`: `PROMPT_COMMAND='printf "\033]7;file://%s%s\033\\" "$HOSTNAME" "$PWD"'`
+- **📂▾ Files** in an SSH terminal's title bar is a menu that opens the **file manager of the same server** ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)); a file manager of that connection that is already open is brought to the front and moves to the chosen directory:
+  - **Open here:** the terminal's current directory. When the remote shell reports it with OSC 7, WRM uses it right away (bash: `PROMPT_COMMAND='printf "\033]7;file://%s%s\033\\" "$HOSTNAME" "$PWD"'` in `~/.bashrc`). Otherwise WRM asks the server over a separate SSH channel of the same connection: it finds the terminal's shell among the server's processes (`/proc` or `ps`, Linux and BSD), prefers the terminal's foreground program, and reads its working directory (`/proc/<pid>/cwd`, `pwdx`, `procstat` or `lsof`). Nothing has to be configured. When the directory cannot be found (no `/proc` / `ps`, another user's process after `sudo -i`, a non-OpenSSH server), WRM says why and offers home or `/`.
+  - **Open /** and **Open home**.
 - **Snapping:** left, right, **top and bottom halves**, the four **quarters**, and **maximize**. Use the buttons in the title bar, the compact *snap layouts* menu in narrow windows, or the tab's right-click menu.
 - **Drag-to-edge snapping:** drag a window with the pointer to an edge (half) or a corner (quarter) of the workspace. A blue preview shows where it will go.
 - **Windows can never leave the workspace:** moving and resizing stop at all four edges. When the browser is resized or zoomed, or a panel changes size, windows are moved and shrunk to stay visible. Snapped and maximized windows keep their slot.
@@ -1205,6 +1217,23 @@ Personal preferences are stored per browser; everything security-related is stor
 
 Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g. for configuration management; it is then shown locked in the admin panel.
 
+### Updates & self-update
+
+- **Update check:** once a day (and with *Check now*) WRM asks the GitHub releases API of `update_repo` (default this project) for the latest release. Only the repository path and a fixed `User-Agent` are sent: no user data, no installation ID. A proxy comes from `update_proxy` or `HTTPS_PROXY` / `HTTP_PROXY`. Air-gapped installations turn it off with `update_check` (`WRM_UPDATE_CHECK=off`).
+- **Version badge:** when a newer release exists, the top bar shows **⬆ Update vX.Y.Z** (only ⬆ on narrow screens) and the sign-in page shows *update available vX.Y.Z*. The badge opens the release notes and the release page.
+- **One-click update** (administrators, policy `self_update`):
+  1. downloads `wrm-pro-vX.Y.Z-<os>-<arch>[.exe]` of the release next to the binary (with progress);
+  2. verifies its **SHA-256 against the release's `SHA256SUMS.txt`** and refuses the update when the checksums file, its line or the hash does not match;
+  3. runs the new file with `-version`, which must answer the release's version;
+  4. replaces the binary **atomically**: a rename over the old file (Linux, macOS, BSD), or on Windows a rename of the running `.exe` to `.exe.old` and the new file in its place (the `.old` file becomes the rollback copy on the next start);
+  5. restarts: a service through its service manager (exit code 75: systemd, launchd, FreeBSD `daemon(8)`, Windows recovery), otherwise WRM starts itself again in place. The page waits and reconnects by itself.
+  - The previous binary is kept as `<binary>.previous`: **↩ Roll back to vX.Y.Z** swaps it back and restarts.
+  - Every step is audited: `system.update_check`, `system.update_started`, `system.update_downloaded`, `system.update_verified`, `system.update_installed`, `system.update_failed`, `system.update_restart`, `system.update_rollback`.
+  - The database is never touched by the update itself; the new version runs its usual additive migrations, so the previous binary still starts on it.
+  - The binary's folder must be writable by WRM; otherwise the dialog says so.
+- **Newest binary in the folder:** copy a newer `wrm-pro-v<semver>-<os>-<arch>[.exe]` next to the running binary. A service switches to the newest valid one when it starts (it must answer `-version` with the version in its name; other platforms, older versions and files that do not answer are ignored). The update dialog offers **↻ Restart to vX.Y.Z** for it.
+- **Docker:** a container never replaces itself. The badge and the release notes are shown; the dialog lists `docker pull ghcr.io/<owner>/wrm-pro:vX.Y.Z` and the compose commands instead.
+
 ### Mobile, responsive UI & installable app
 
 - The top bar and the collaboration bar adapt to the available width (labels collapse into icons, step by step).
@@ -1317,6 +1346,10 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `git_install` / `git_transfer` | `admins` | who may install services on a new server and transfer installations between servers: `off`, `admins`, `all` |
 | `git_gitignore_mr` | `admins` | who may open a .gitignore merge request (GitLab) / pull request (GitHub) from the helper: `off`, `admins`, `all` |
 | `git_schedule_grace_minutes` | `30` | a scheduled Git run or restart is skipped when WRM was not running at its time for longer than this (1–1440) |
+| `update_check` | `1` | check the GitHub releases of `update_repo` once a day (no user data is sent); `WRM_UPDATE_CHECK=off` for air-gapped installations |
+| `update_repo` | `vedranius/web-browser-RDM-public` | GitHub repository (`owner/name`) whose releases are checked and installed |
+| `update_proxy` | – | HTTP proxy for the update check and download (e.g. `http://proxy.example.com:3128`); empty = `HTTPS_PROXY` / `HTTP_PROXY` |
+| `self_update` | `admins` | who may update, roll back and restart WRM from the version badge: `off`, `admins` (never in Docker) |
 | `desktop_tunnel_bind` | `127.0.0.1` | address of the temporary jump-host tunnels guacd connects to (keep 127.0.0.1 when guacd runs on the WRM machine) |
 
 **Command line**
@@ -1326,7 +1359,18 @@ wrm -version                       print the version
 wrm -reset-password USER           set a new temporary password (must be changed at sign-in)
 wrm -reset-password USER -reset-2fa  … and turn off two-factor authentication
 wrm -healthcheck                   check /healthz of the local server (exit code 0 = healthy; for containers)
+wrm -install-service               install WRM as a service that starts at boot, start it (see Service)
+wrm -uninstall-service             stop and remove the service (the data stays)
+wrm -service-status                is the service installed and running?
+    -service-name NAME             service name (default wrm)
+    -service-scope system|user     macOS: LaunchDaemon (boot) or LaunchAgent (login)
+    -service-user ACCOUNT          Unix account the service runs as (default: you, or SUDO_USER)
+wrm -no-service-prompt             do not ask on the console whether to install the service
+wrm -env-file FILE                 read KEY=value lines before starting (variables already set win)
+wrm -workdir DIR                   change to DIR before starting
 ```
+
+`-service=…` is set by the service definitions WRM writes; it is not for interactive use.
 
 `GET /healthz` (no sign-in) returns `{"status":"ok","version":…}` while the server and its database work, otherwise HTTP 503. Use it for load balancers and monitoring.
 
@@ -1352,7 +1396,35 @@ Images of releases are also published to the GitHub Container Registry: `docker 
 
 ### Service
 
-**systemd (Linux)**, e.g. `/etc/systemd/system/wrm.service`:
+**The easy way:** start WRM once in a terminal. It asks:
+
+```
+WRM can run as a service that starts at boot (a systemd unit).
+Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
+```
+
+*Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
+
+```bash
+sudo ./wrm-pro-v11.7.0-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v11.7.0-linux-amd64 -service-status
+sudo ./wrm-pro-v11.7.0-linux-amd64 -uninstall-service        # the data stays
+```
+
+The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). Edit that file and restart the service to change them.
+
+| OS | What `-install-service` does |
+|---|---|
+| **Linux** | `/etc/systemd/system/wrm.service` with `EnvironmentFile=`, `WorkingDirectory=`, `User=` (you, or `SUDO_USER`; `-service-user`), `Restart=on-failure` and hardening (`NoNewPrivileges`, `ProtectSystem=strict` with `ReadWritePaths=` for the data and binary folders, `ProtectHome=read-only`, `PrivateTmp`, kernel and cgroup protection, `UMask=0077`; `CAP_NET_BIND_SERVICE` for ports below 1024), then `systemctl enable --now`. Needs root: when you answer *Yes* as a normal user, WRM runs the installer with `sudo` (or `doas`). Without systemd it says so and prints the command for your init system. |
+| **macOS** | A launchd plist `local.wrm`: a **LaunchDaemon** in `/Library/LaunchDaemons` (starts at boot, needs `sudo`; runs as you) or a **LaunchAgent** in `~/Library/LaunchAgents` (starts at login): you choose in the prompt or with `-service-scope system|user`. `KeepAlive` restarts it after a failure; the log is `<data dir>/wrm-service.log`. |
+| **Windows** | A real Windows service (Service Control Manager) *Web Remote Manager PRO*, automatic (delayed) start, recovery *restart after 3 s* (also when WRM asks for a restart), log in `<data dir>\wrm-service.log`. Needs administrator rights: the prompt asks Windows for them (UAC); otherwise run `.\wrm-pro-….exe -install-service` in PowerShell opened with *Run as administrator*. |
+| **FreeBSD** | `/usr/local/etc/rc.d/wrm` running WRM under `daemon(8) -r` (restart on exit) as your user, `sysrc wrm_enable=YES`, `service wrm start`. |
+| **OpenBSD** | `/etc/rc.d/wrm` with `rc.subr` (`daemon_user`, output to syslog), `rcctl enable wrm`, `rcctl start wrm`. |
+| Android (Termux), others | Not supported: WRM says so; use your init system or `tmux` / `screen`. |
+
+`-service-name NAME` installs several instances side by side (each with its own data directory).
+
+**By hand (systemd):** if you prefer to write the unit yourself, e.g. `/etc/systemd/system/wrm.service`:
 
 ```ini
 [Unit]
@@ -1365,8 +1437,10 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v11.6.1-linux-amd64
+ExecStart=/opt/wrm/wrm-pro-v11.7.0-linux-amd64 -service=systemd
 Restart=on-failure
+RestartForceExitStatus=75
+SuccessExitStatus=75
 NoNewPrivileges=true
 ProtectSystem=strict
 ReadWritePaths=/opt/wrm
@@ -1379,6 +1453,8 @@ WantedBy=multi-user.target
 ```bash
 sudo systemctl daemon-reload && sudo systemctl enable --now wrm
 ```
+
+`-service=systemd` and exit code 75 let the one-click update restart WRM through systemd; `ReadWritePaths` must include the binary's folder for it.
 
 **nginx** in front of WRM (TLS, WebSockets, streaming and big uploads):
 
@@ -1491,7 +1567,7 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/auth/config` | `{first_run, registration_open, version}` |
+| GET | `/api/auth/config` | `{first_run, registration_open, version}`; with an available update also `update`, `update_url` |
 | POST | `/api/auth/register` | Create account (first user = admin; afterwards only if registration is open) |
 | POST | `/api/auth/login` | `{username, password}` → user, or `{mfa_required, mfa_token}` |
 | POST | `/api/auth/mfa` | `{mfa_token, code}` (TOTP or recovery code) |
@@ -1742,8 +1818,18 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/api/admin/audit?q&action&user&conn&session&from&to&before_id&limit[&format=csv]` | Audit log |
 | GET | `/api/admin/audit/verify` | Verify the hash chain `{ok, checked, first_id, last_id, unsigned, broken_at, reason}` |
 | GET | `/api/admin/transfers?q&user&conn&direction&from&to&before_id&limit[&format=csv]` | File transfers |
-| GET | `/api/version` | Server version |
+| GET | `/api/version` | Server version `{version}`, with `update` when a newer release is known |
 | GET | `/healthz` | Health check (no sign-in) |
+
+**Updates** (status for everyone; actions for administrators, policy `self_update`; never in a container)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/update` | `{current, latest, available, name, notes, url, published_at, checked_at, check_enabled, docker}`; administrators also `{repo, error, service, platform, policy, can_update, blocked: ""\|"docker"\|"not_writable", docker_image, local: {file, version}, rollback, progress: {state: "idle"\|"downloading"\|"verifying"\|"installing"\|"restarting"\|"failed", version, done, total, error}}` |
+| POST | `/api/update/check` | Check the GitHub releases now → the status |
+| POST | `/api/update/apply` | `{version}`: download, verify (SHA-256 against `SHA256SUMS.txt`, `-version`), replace and restart in the background; follow `progress` |
+| POST | `/api/update/rollback` | Swap back to `<binary>.previous` and restart |
+| POST | `/api/update/restart` | `{local: true}`: restart with the newest valid binary in the folder (or the same one without `local`) |
 
 **Terminal sessions & recordings** (administrators: all; users: own sessions and sessions on their connections)
 
@@ -1757,7 +1843,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 
 | Endpoint | Description |
 |---|---|
-| `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping` → server; `status` (with `recording`, `session_id`), `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
+| `/ws/ssh?id&cols&rows[&share_token]` | Terminal. Binary frames = terminal data; text frames = JSON control (`resize`, `pause`, `resume`, `ping`, `cwd` (the shell's working directory) → server; `cwd` with `path` or `error`, `status` (with `recording`, `session_id`), `error`, `exit`, `hostkey` ← server). Close codes: 1000 shell exited, 4001 connect failed / not allowed, 4002 SSH connection lost, 4003 access revoked |
 | `/ws/events` | Live notifications for the signed-in user (`sessions_changed`, `tunnels_changed`, `snippets_changed`, `bookmarks_changed`, `status_changed`) |
 | `/ws/share/{token}` | Collaboration room. Client → server: `chat`, `file`, `set-name`, `screen` (`start/stop/data/resize/snapshot`), `watch`, `unwatch`, `control-request/grant/revoke/release`, `remote-input`, `voice-join/leave/signal/state`, `hand`, `mod` (`set-role/mute/unmute/stop-share/lower-hand/kick/ban`). Server → client: `welcome`, `participants`, `chat`, `file`, `system`, `screen`, `watch-request`, `control`, `control-request`, `remote-input`, `voice-peers/joined/left/signal`, `force-mute`, `role`, `kicked`, `closed`, `error` |
 
@@ -1794,6 +1880,10 @@ remote-manager/
   turn.go         built-in TURN relay for voice (turn_android.go: stub for Android)
   admin.go        open-terminal registry, admin status
   ssh_ws.go       SSH terminal WebSocket (binary frames, flow control, keepalive, reconnect codes)
+  termcwd.go      working directory of a terminal's shell over a separate SSH exec channel (📂 Open here)
+  service.go      run as a service: prompt, env file, service files, versions, newest binary in the folder, restarts
+  service_unix.go / service_windows.go  systemd, launchd, rc.d installers / Windows service (SCM)
+  update.go       update check against GitHub releases, verified self-update, rollback, restart
   files.go        file API: list, download, ZIP, streamed upload, mkdir, rename, delete
   search.go       recursive name / content search (NDJSON stream)
   sftp_pool.go    pooled SFTP connections with liveness checks
@@ -1862,6 +1952,9 @@ remote-manager/
   review_fixes_test.go  FTP with EPSV through a proxy (fake FTP server), another user's tunnel refused as a proxy, folder defaults (own WRM tunnel, loops refused, PUT keeps choices), per-user status keys, notification fixes (recipient injection, mentions, reminders, AUTH LOGIN)
   notify_test.go       notification channels against fake HTTP endpoints and a fake SMTP server, digests, rate limit, quiet hours, status and rotation events
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
+  service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
+  update_test.go       self-update against a fake GitHub releases server: success and rollback, checksum mismatch, missing checksums file or line, missing asset, wrong -version, policy, Docker, local binary
+  termcwd_test.go      the shell's working directory over SSH against the fake SSH host (a real sh on a PTY): start directory, after cd, a foreground job
   static/index.html          the entire web UI (embedded into the binary)
   static/git.js              the Git workspace (loaded when it is opened)
   static/brand/              logo, favicon and app icons
@@ -1891,6 +1984,11 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | Activity on GitHub shows commits but no pushes | The token cannot read the repository activity (it needs read access to the repository's metadata); commits are listed anyway |
 | What is where: *behind* shows — | The branch head or the compare could not be read (no API source, a branch that no longer exists, or the commit is not in the repository) |
 | Registration tab missing | Self-registration is closed (default). An administrator creates accounts, or opens registration in *Security policies* |
+| The service does not start / *-install-service* fails | `wrm -service-status`; Linux: `journalctl -u wrm`, macOS / Windows / BSD: `<data dir>/wrm-service.log`. Installing needs root (`sudo`) or administrator rights (Windows). Settings of the service are in `<data dir>/wrm.env` |
+| *Update refused: … SHA256SUMS.txt …* | The release has no checksums file, no line for this platform's file, or the download does not match it. WRM does not install unverified files; wait for a complete release or replace the binary by hand |
+| *WRM cannot write to the folder of its binary* | The one-click update writes next to the binary. Give the service account write access to that folder (systemd units with `ProtectSystem=strict` need it in `ReadWritePaths`) or update by hand |
+| No update badge in an air-gapped network | Expected: the check cannot reach GitHub. Turn it off with `WRM_UPDATE_CHECK=off`, or set `update_proxy` |
+| 📂 *Open here*: *directory not found* | The shell was not found among the server's processes (a non-OpenSSH server, no `/proc` / `ps`) or its directory cannot be read (e.g. a root shell after `sudo -i`). Let the shell report its directory with OSC 7 (see [Windows, tabs & snapping](#windows-tabs--snapping)) or open home or `/` |
 | Locked out as administrator | `wrm -reset-password <user>` (add `-reset-2fa` if needed) |
 | *Connection failed: unable to authenticate* | Check user/password/key with **Test connection**; for *Key file*/*Auto* the key must exist on the **WRM server** and the account must be an administrator (or the policy allows it) |
 | No *● REC* badge / no recordings | *Admin panel → Security policies → Session recording* is off, or forced off by `WRM_SESSION_RECORDING` / `SESSION_RECORDING_ENABLED`. Check the server log for `recording:` errors (e.g. the recordings folder is not writable) |
