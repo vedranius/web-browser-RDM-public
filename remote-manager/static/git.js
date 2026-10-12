@@ -455,6 +455,28 @@ Object.assign(LANGS.hr, {
   gs_rb_q: 'Vratiti {app} u {env} na {v}?', gs_rb_h: 'Datoteke koje je promijenila zadnja isporuka vraćaju se iz sigurnosne kopije.',
 });
 
+// Plain-language description under each tab of the Git workspace (v12.2.3)
+Object.assign(LANGS.en, {
+  gtd_overview: 'Compares what runs on each server with the latest version in the Git repository. Choose which version counts as the target, press "Check now" and read the colored states: up to date, needs update or review. Checking only reads files; nothing is changed.',
+  gtd_services: 'The catalog of your applications: which Git project each one comes from, which branch or tag to follow and which files belong to it. Add a service by hand, suggest it from a repository, or import and export the whole catalog.',
+  gtd_installs: 'Every copy of a service found on your servers. Discover finds them automatically, Add by hand registers one yourself, and Details shows the files that differ from the target. From here you can update, upgrade or roll back a single installation.',
+  gtd_envs: 'Groups the same service into environments such as test and production, with a branch for each. Here you see what runs where and deploy or roll back a whole environment in one go.',
+  gtd_runs: 'The list of every update, upgrade, rollback and restart started from WRM, with its state per server and the versions involved. Scheduled runs wait here until their time.',
+  gtd_activity: 'What is happening in the repositories and on the servers: Git activity (pushes and commits), deploy history and a "what is where" table of branches, commits and versions.',
+  gtd_gitignore: 'Shows which files a service keeps out of version control and helps you add missing patterns to its .gitignore, so temporary or secret files are not committed by accident.',
+  gtd_settings: 'One-time setup: the Git servers WRM reads from, offline bundles for servers without Git access, where targets come from, which SSH servers to check and whether to check periodically.',
+});
+Object.assign(LANGS.hr, {
+  gtd_overview: 'Uspoređuje što radi na svakom serveru s najnovijom verzijom u Git repozitoriju. Odaberite koja verzija je cilj, pritisnite „Provjeri sada” i čitajte obojena stanja: ažurno, treba nadogradnju ili pregled. Provjera samo čita datoteke; ništa se ne mijenja.',
+  gtd_services: 'Katalog vaših aplikacija: iz kojeg Git projekta svaka dolazi, koju granu ili oznaku prati i koje datoteke joj pripadaju. Servis dodajte ručno, predložite ga iz repozitorija ili uvezite i izvezite cijeli katalog.',
+  gtd_installs: 'Svaka kopija servisa pronađena na vašim serverima. „Otkrij” ih pronalazi automatski, „Dodaj ručno” upisuje jednu sami, a „Detalji” prikazuju datoteke koje se razlikuju od cilja. Odavde možete nadograditi, osvježiti ili vratiti pojedinu instalaciju.',
+  gtd_envs: 'Grupira isti servis u okruženja poput testnog i produkcijskog, sa svojom granom za svako. Vidite što radi gdje i možete isporučiti ili vratiti cijelo okruženje odjednom.',
+  gtd_runs: 'Popis svake nadogradnje, osvježavanja, povratka i ponovnog pokretanja započetog iz WRM-a, sa stanjem po serveru i verzijama. Zakazana izvođenja čekaju ovdje do svog vremena.',
+  gtd_activity: 'Što se događa u repozitorijima i na serverima: Git aktivnost (push i commiti), povijest isporuka i tablica „što je gdje” s granama, commitima i verzijama.',
+  gtd_gitignore: 'Prikazuje koje datoteke servis drži izvan verzioniranja i pomaže dodati nedostajuće obrasce u njegov .gitignore, da privremene ili tajne datoteke ne završe slučajno u repozitoriju.',
+  gtd_settings: 'Jednokratno podešavanje: Git serveri s kojih WRM čita, offline paketi za servere bez Git pristupa, odakle dolaze ciljevi, koje SSH servere provjeravati i hoće li se provjeravati periodički.',
+});
+
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const modeKey = () => 'wrm_git_mode:' + ((typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.username)) || '');
@@ -473,6 +495,8 @@ Object.assign(LANGS.hr, {
 #git-ws .g-tabs button.on { background: var(--accent-d); border-color: var(--accent); color: var(--text); }
 #git-ws .g-sp { flex: 1; }
 #git-ws .g-body { flex: 1; overflow: auto; padding: 14px 16px 40px; }
+#git-ws .g-intro { padding: 8px 16px; font-size: 12px; line-height: 1.5; color: var(--text2); background: var(--bg2); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+#git-ws .g-intro::before { content: 'ℹ '; color: var(--accent); }
 #git-ws .g-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; }
 #git-ws .g-bar select, #git-ws .g-bar input { width: auto; min-width: 120px; flex: 0 1 auto; }
 #git-ws .g-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
@@ -559,7 +583,7 @@ Object.assign(LANGS.hr, {
 #git-ws .g-pats input, #git-ws td input[type=checkbox] { width: auto; }
 #git-ws .g-warn { border-color: var(--red); }
 #git-ws pre.g-pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; max-height: 30vh; overflow: auto; font-size: 11.5px; margin: 0; white-space: pre-wrap; word-break: break-all; }
-@media (max-width: 640px) { #git-ws .g-head { padding: 8px 10px; } #git-ws .g-body { padding: 10px; } #git-ws .g-bar select, #git-ws .g-bar input { min-width: 0; flex: 1 1 140px; } }
+@media (max-width: 640px) { #git-ws .g-head { padding: 8px 10px; } #git-ws .g-body { padding: 10px; } #git-ws .g-intro { padding: 6px 10px; } #git-ws .g-bar select, #git-ws .g-bar input { min-width: 0; flex: 1 1 140px; } }
 #git-ws .g-cb, #git-modal .g-cb { width: auto; margin: 0 5px 0 0; vertical-align: middle; cursor: pointer; }
 #git-ws .g-inst.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 #git-ws .g-inst .g-ago { font-size: 10.5px; color: var(--text3); }
@@ -663,7 +687,7 @@ Object.assign(LANGS.hr, {
       ws.id = 'git-ws';
       ws.innerHTML = `<div class="g-head"><h2>⎇ ${esc(t('git_title'))}</h2><div class="g-tabs" id="git-tabs"></div><span class="g-sp"></span>
         <span class="g-seg" id="git-mode" title="${esc(t('gs_mode_h'))}"></span><span class="g-mut" id="git-last"></span><button id="git-check" onclick="gitWorkspace.check()">${esc(t('git_check_now'))}</button>
-        <button class="btn-sec" onclick="gitWorkspace.close()" title="${esc(t('git_close'))}">✕</button></div><div class="g-body" id="git-body"></div>`;
+        <button class="btn-sec" onclick="gitWorkspace.close()" title="${esc(t('git_close'))}">✕</button></div><div class="g-intro" id="git-intro"></div><div class="g-body" id="git-body"></div>`;
       document.body.appendChild(ws);
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('git-ws') && !$('git-modal')) close(); });
     }
@@ -678,13 +702,16 @@ Object.assign(LANGS.hr, {
     $('git-mode').innerHTML = ['simple', 'advanced'].map(m => `<button class="${G.mode === m ? 'on' : ''}" onclick="gitWorkspace.setGitMode('${m}')">${esc(t('gs_' + m))}</button>`).join('');
     if (G.mode === 'simple') {
       $('git-tabs').innerHTML = '';
+      $('git-intro').style.display = 'none';
       $('git-last').style.display = $('git-check').style.display = 'none';
       paintSimple();
       return;
     }
     $('git-last').style.display = $('git-check').style.display = '';
     $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'envs', 'runs', 'activity', 'gitignore', 'settings'].map(k =>
-      `<button class="${G.tab === k ? 'on' : ''}" onclick="gitWorkspace.tab('${k}')">${esc(t('git_tab_' + k))}</button>`).join('');
+      `<button class="${G.tab === k ? 'on' : ''}" title="${esc(t('gtd_' + k))}" onclick="gitWorkspace.tab('${k}')">${esc(t('git_tab_' + k))}</button>`).join('');
+    $('git-intro').style.display = '';
+    $('git-intro').textContent = t('gtd_' + G.tab);
     $('git-last').textContent = `${t('git_last_check')}: ${s.last_check_at ? fmtTime(s.last_check_at) : t('git_never')}`;
     $('git-check').disabled = !s.can_check || G.busy || jobRunning();
     $('git-check').title = s.can_check ? '' : t('git_no_checks');
