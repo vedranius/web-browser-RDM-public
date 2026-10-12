@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.2.0</title>
+<title>Web Remote Manager PRO v12.2.1</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1529,7 +1529,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.2.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.2.1 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1609,7 +1609,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v12.2.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v12.2.1</span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -9471,6 +9471,7 @@ async function openSession(id, how) {
     const c = conns.find(x => x.id === w.conn_id) || (sharedGroups || []).flatMap(g => g.connections || []).find(x => x.id === w.conn_id);
     if (!c) { missing++; return; }
     const wo = addWindow();
+    wo._restored = true;
     wo.connId = c.id;
     if (w.share_token) wo.shareToken = w.share_token;
     if (w.console === 'bmc' || w.console === 'sol') wo.console = w.console;
@@ -9836,6 +9837,10 @@ function setWinMode(id, mode) {
   if (mode !== 'ssh' && bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
 
   if (mode === 'ssh') {
+    // New terminals open maximized (sessions restore their own layout); an existing
+    // window being switched to a terminal keeps its geometry.
+    if (!wo._restored && !wo._opened && !wo.snap && !isCompact()) snapWindow(id, 'full');
+    wo._opened = true;
     wc.innerHTML = `<div class="term-wrap">
       <div class="term-host" id="th-${id}"></div>
       <div class="term-search" id="ts-${id}" hidden>
@@ -9861,6 +9866,8 @@ function setWinMode(id, mode) {
         if (started || wo.mode !== 'ssh' || !wo.term) return;
         started = true;
         fitTerm(wo); setupSSH(wo);
+        if (wo.el.style.display === 'none') return;
+        if (!wo._restored) focusWindow(id);
         if (wo.el.classList.contains('focused')) wo.term.focus();
       };
       requestAnimationFrame(start);
@@ -10068,10 +10075,23 @@ function createTerminal(wo, host) {
     return true;
   });
   term.onSelectionChange(() => {
+    // Copy once the selection settles. Copying on every change while the mouse is still
+    // dragging moved the focus out of the terminal and cut a selection that scrolls
+    // (more than one screen) short.
+    clearTimeout(wo._selT);
+    wo._selT = setTimeout(copySettledSelection, 200);
+  });
+  const copySettledSelection = () => {
+    if (wo._selDown) { wo._selT = setTimeout(copySettledSelection, 200); return; }
     const sel = term.getSelection();
     if (!sel || !sel.trim()) return;
     copyText(sel, true);
     addClip(sel.trim());
+  };
+  host.addEventListener('mousedown', () => {
+    wo._selDown = true;
+    const up = () => { wo._selDown = false; document.removeEventListener('mouseup', up, true); };
+    document.addEventListener('mouseup', up, true);
   });
   wo.resizeObs = new ResizeObserver(() => scheduleFit(wo));
   wo.resizeObs.observe(host);
@@ -12269,17 +12289,27 @@ function startWinDrag(e, id) {
   focusWindow(id);
   const el = document.getElementById('win-' + id);
   const wo0 = winObjects.find(w => w.id === id);
-  if (wo0 && wo0.snap) {
-    // Dragging a snapped/maximized window restores its previous size under the cursor.
-    const w = wo0.savedPos ? parseInt(wo0.savedPos.width) || el.offsetWidth : el.offsetWidth;
-    const ratio = (e.clientX - el.getBoundingClientRect().left) / el.offsetWidth;
-    restoreWindowGeometry(wo0);
-    const cont = document.getElementById('win-container').getBoundingClientRect();
-    el.style.left = Math.round(e.clientX - cont.left - w * ratio) + 'px';
-    el.style.top = Math.max(0, Math.round(e.clientY - cont.top - 16)) + 'px';
-    scheduleFit(wo0);
-  }
-  winDragState = { id, sx: e.clientX, sy: e.clientY, l: parseInt(el.style.left) || 0, t: parseInt(el.style.top) || 0, armed: !snapZoneAt(e.clientX, e.clientY), zone: null };
+  winDragState = { id, sx: e.clientX, sy: e.clientY, l: parseInt(el.style.left) || 0, t: parseInt(el.style.top) || 0, armed: !snapZoneAt(e.clientX, e.clientY), zone: null,
+    // A snapped / maximized window is restored only once the pointer really moves, so a plain
+    // click or a double-click on the title bar never changes its size by accident.
+    pendingUnsnap: !!(wo0 && wo0.snap) };
+}
+
+function unsnapForDrag(st, e) {
+  const el = document.getElementById('win-' + st.id);
+  const wo0 = winObjects.find(w => w.id === st.id);
+  st.pendingUnsnap = false;
+  if (!el || !wo0 || !wo0.snap) return;
+  // Dragging a snapped/maximized window restores its previous size under the cursor.
+  const w = wo0.savedPos ? parseInt(wo0.savedPos.width) || el.offsetWidth : el.offsetWidth;
+  const ratio = (st.sx - el.getBoundingClientRect().left) / el.offsetWidth;
+  restoreWindowGeometry(wo0);
+  const cont = document.getElementById('win-container').getBoundingClientRect();
+  el.style.left = Math.round(e.clientX - cont.left - w * ratio) + 'px';
+  el.style.top = Math.max(0, Math.round(e.clientY - cont.top - 16)) + 'px';
+  st.sx = e.clientX; st.sy = e.clientY;
+  st.l = parseInt(el.style.left) || 0; st.t = parseInt(el.style.top) || 0;
+  scheduleFit(wo0);
 }
 
 function startWinResize(e, id, handle) {
@@ -12359,6 +12389,10 @@ function showSnapPreview(zone) {
 
 document.addEventListener('mousemove', e => {
   if (winDragState) {
+    if (winDragState.pendingUnsnap) {
+      if (Math.abs(e.clientX - winDragState.sx) + Math.abs(e.clientY - winDragState.sy) < 5) return;
+      unsnapForDrag(winDragState, e);
+    }
     const el = document.getElementById('win-' + winDragState.id);
     if (!el) return;
     const cont = document.getElementById('win-container');
@@ -12413,7 +12447,7 @@ document.addEventListener('mousemove', e => {
 document.addEventListener('mouseup', () => {
   if (winDragState) {
     showSnapPreview(null);
-    if (winDragState.zone) snapWindow(winDragState.id, winDragState.zone);
+    if (winDragState.zone && !winDragState.pendingUnsnap) snapWindow(winDragState.id, winDragState.zone);
   }
   winDragState = null;
   winResizeState = null;

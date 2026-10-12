@@ -1,25 +1,39 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.1/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.2.0 — AI provider fixes: Gemini tools, busy providers and token limits
+## Web Remote Manager PRO v12.2.1 — Terminal fixes: copying long selections, maximized windows, cursor in the terminal
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🛠 AI assistant fixes
+### 🖥 Terminal fixes
+
+- **Copy long output:** a selection that scrolls (more than one screen) is now copied completely; no more zooming out. The copy happens when you release the mouse.
+- **New terminals open maximized** and the cursor is already in the terminal. Windows of a saved session keep their layout.
+- **No more jumping windows:** clicking or double-clicking the title bar of a maximized window no longer shrinks or expands it; only dragging restores it.
+
+### ⬆️ Upgrading from v12.2.0
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes. The remaining items of issue #43 are planned for the next versions.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.1/wrm-pro-v12.2.1-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.1/wrm-pro-v12.2.1-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.1/wrm-pro-v12.2.1-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.1/wrm-pro-v12.2.1-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.1)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.1/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.2.0 — AI provider fixes: Gemini tools, busy providers and token limits
+
+#### 🛠 AI assistant fixes
 
 - **Gemini** (and other OpenAI-compatible providers that return a signature with each tool call) works with tools: *HTTP 400: Function call is missing a thought_signature* is gone. WRM keeps the provider's `extra_content` of every tool call and sends it back unchanged.
 - **Busy providers:** *HTTP 503 — this model is currently experiencing high demand* (and 408 / 429 / 5xx) is retried up to three times with a short back-off before an error is shown.
 - **Token limits:** *HTTP 413 / request too large* (for example Groq's tokens-per-minute limit) shortens the long command output of the conversation and retries, so you get the assistant's answer instead of only the command output.
 - The assistant shows a short notice while it retries or shortens. English and Croatian.
 
-### ⬆️ Upgrading from v12.1.0
+#### ⬆️ Upgrading from v12.1.0
 
 Replace the binary (or update with one click from the version badge). No database changes; v12.1.0 still starts on the same database. The remaining items of issue #43 are planned for the next versions.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.0/wrm-pro-v12.2.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.0/wrm-pro-v12.2.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.0/wrm-pro-v12.2.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.0/wrm-pro-v12.2.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.0)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.0/CHANGELOG.md) for details.
 
 ---
 
