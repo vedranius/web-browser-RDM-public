@@ -1,25 +1,42 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.5/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.6/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.2.5 — Movable, resizable AI assistant window
+## Web Remote Manager PRO v12.2.6 — Guided AI and MCP setup
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### ▶ AI assistant window: dock, float, resize, expand
+### 🧭 Connect AI apps and providers step by step
+
+- **Settings → AI connections** now starts with a wizard: pick your app (Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code / other, or Claude and ChatGPT through sign-in) → pick the servers and what the app may do → copy the ready-made command or config file (or download it) → press **Test**. WRM creates the token for you; it is shown once.
+- **AI provider wizard** in the assistant: pick a provider (Anthropic, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama or any OpenAI-compatible endpoint) → key and model → automatic test → done. The old form is still there as the advanced option.
+- **Clients now know what "wrm" is.** The MCP server introduces itself ("WRM PRO — Remote Manager", what it does, which scopes exist) and the wizard offers a ready AGENTS.md / CLAUDE.md / GEMINI.md text, so Codex no longer asks what *wrm* refers to.
+- **Clear permission messages.** When a connection's scopes or mode do not allow an action, the answer says which scope is missing and that the user must create an AI connection with it (Settings → AI connections), instead of a vague "insufficient permissions". The MCP session info lists what the connection cannot do (
+ot_allowed, how_to_allow).
+- English and Croatian. No database changes.
+
+### ⬆️ Upgrading from v12.2.5
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.6/wrm-pro-v12.2.6-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.6/wrm-pro-v12.2.6-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.6/wrm-pro-v12.2.6-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.6/wrm-pro-v12.2.6-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.6)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.6/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.2.5 — Movable, resizable AI assistant window
+
+#### ▶ AI assistant window: dock, float, resize, expand
 
 - **Dock** the assistant to the left, right, top or bottom of the terminal window, or let it **float**: drag the title bar to move it and the corner to resize it.
 - **Resize** it (drag the inner edge of a docked panel) so the whole command and output are visible; the terminal is refitted beside it.
 - **Expand** it over the whole terminal window with ⛶ (or double-click the title bar) and restore it again.
 - Dock, size and position are remembered per user in the browser. On phones and narrow windows the layout is unchanged. English and Croatian.
 
-### ⬆️ Upgrading from v12.2.4
+#### ⬆️ Upgrading from v12.2.4
 
 Replace the binary (or update with one click from the version badge). No database or configuration changes.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.5/wrm-pro-v12.2.5-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.5/wrm-pro-v12.2.5-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.5/wrm-pro-v12.2.5-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.5/wrm-pro-v12.2.5-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.5)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.5/CHANGELOG.md) for details.
 
 ---
 
