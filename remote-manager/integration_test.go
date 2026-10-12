@@ -503,18 +503,26 @@ func TestTerminalSessionAuditAndRecording(t *testing.T) {
 			t.Fatalf("exit code %d", exitCode)
 		}
 
-		// audit entries linked to the session
-		rows, _ := db.Query(`SELECT action, details FROM audit_log WHERE session_id=? ORDER BY id`, sid)
+		// audit entries linked to the session (pričekaj do 3s da pozadinska goroutina zapiše terminal.close pod -race)
 		var actions []string
-		for rows.Next() {
-			var a, d string
-			rows.Scan(&a, &d)
-			actions = append(actions, a)
-			if strings.Contains(d, testSudoPW) || strings.Contains(d, testSSHPass) {
-				t.Fatalf("password in audit details: %s", d)
+		deadline := time.Now().Add(3 * time.Second)
+		for {
+			actions = nil
+			rows, _ := db.Query(`SELECT action, details FROM audit_log WHERE session_id=? ORDER BY id`, sid)
+			for rows.Next() {
+				var a, d string
+				rows.Scan(&a, &d)
+				actions = append(actions, a)
+				if strings.Contains(d, testSudoPW) || strings.Contains(d, testSSHPass) {
+					t.Fatalf("password in audit details: %s", d)
+				}
 			}
+			rows.Close()
+			if strings.Join(actions, ",") == "terminal.open,terminal.close" || time.Now().After(deadline) {
+				break
+			}
+			time.Sleep(30 * time.Millisecond)
 		}
-		rows.Close()
 		if strings.Join(actions, ",") != "terminal.open,terminal.close" {
 			t.Fatalf("audit actions for session = %v", actions)
 		}

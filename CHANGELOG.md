@@ -1,3 +1,8 @@
+## [12.3.3] - 2026-10-12
+
+### Fixed
+- **Integration Test Race Condition**: Riješeno asinkrono kašnjenje upisa `terminal.close` pod `-race` detektorom u `TestTerminalSessionAuditAndRecording`.
+
 ## [12.3.2] - 2026-10-12
 
 ### Fixed
