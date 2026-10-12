@@ -476,14 +476,16 @@ Object.assign(LANGS.hr, {
 
   function autoForm(p) {
     const mx = cfg ? cfg.auto_max_minutes : 60, ma = cfg ? cfg.auto_max_actions : 50;
+    const defAllow = "*";
+    const defDeny = "rm -rf*\nrmdir*\nmkfs*\ndd *\n> /dev/*\n* /etc/ssh/*\n*passwd*\nreboot\nshutdown";
     return `<div class="hint-box"><b>${esc(t('ai_mode_auto_setup'))}</b>
-      <div style="margin-top:6px;"><label>${esc(t('ai_auto_allow'))}</label><textarea id="${p}-allow" placeholder="systemctl restart nginx&#10;apt-get install -y *"></textarea></div>
-      <div><label>${esc(t('ai_auto_deny'))}</label><textarea id="${p}-deny" placeholder="* /etc/ssh/*"></textarea></div>
+      <div style="margin-top:6px;"><label>${esc(t('ai_auto_allow'))}</label><textarea id="${p}-allow" placeholder="*">${defAllow}</textarea></div>
+      <div><label>${esc(t('ai_auto_deny'))}</label><textarea id="${p}-deny">${defDeny}</textarea></div>
       <div><label>${esc(t('ai_auto_path_allow'))}</label><textarea id="${p}-pallow" placeholder="/etc/nginx/**"></textarea></div>
       <div><label>${esc(t('ai_auto_path_deny'))}</label><textarea id="${p}-pdeny"></textarea></div>
       <div class="ai-row"><div><label>${esc(t('ai_auto_minutes'))}</label><input type="number" id="${p}-min" min="1" max="${mx}" value="${Math.min(30, mx)}"></div>
         <div><label>${esc(t('ai_auto_actions'))}</label><input type="number" id="${p}-act" min="1" max="${ma}" value="${Math.min(20, ma)}"></div></div>
-      <label class="ai-check" style="margin-top:6px;"><input type="checkbox" id="${p}-ok"> ${esc(t('ai_auto_confirm'))}</label></div>`;
+      <label class="ai-check" style="margin-top:6px;"><input type="checkbox" id="${p}-ok" checked> ${esc(t('ai_auto_confirm'))}</label></div>`;
   }
   function readAuto(p) {
     const lines = x => ($(p + '-' + x).value || '').split('\n').map(s => s.trim()).filter(Boolean);
@@ -699,12 +701,36 @@ Object.assign(LANGS.hr, {
   }
 
   async function send(id) {
-    const wo = winOf(id), st = S[id], inp = $('ai-in-' + id);
+    const wo = winOf(id), st = S[id], inp = $('ai-in-' + id), btn = $('ai-send-' + id), body = $('aib-' + id);
     let text = (inp.value || '').trim();
     if (!text || !st || !st.sid) return;
     if (wo.mode === 'sftp' && wo.path) text = `[${t('ai_fm_ctx')}: ${wo.path}]\n` + text;
-    try { await api('POST', `/api/ai/sessions/${st.sid}/prompt${shareQ(wo)}`, {text}); inp.value = ''; }
-    catch (e) { showToast(e.message, 'error', 5000); }
+    
+    // Vizualni feedback (thinking loader)
+    const waitId = "ai-wait-" + id;
+    const oldWait = $(waitId);
+    if (oldWait) oldWait.remove();
+    if (body) {
+      body.insertAdjacentHTML("beforeend", `<div id="${waitId}" class="ai-item ai-assistant" style="opacity:0.85;font-style:italic;display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;background:rgba(127,127,127,0.15);border-radius:6px;">
+        <span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span>
+        <span>${esc(t("ai_thinking") || "Agent obrađuje upit i analizira server...")}</span>
+      </div>`);
+      body.scrollTop = body.scrollHeight;
+    }
+    if (btn) btn.disabled = true;
+
+    try { 
+      inp.value = ''; 
+      await api('POST', `/api/ai/sessions/${st.sid}/prompt${shareQ(wo)}`, {text}); 
+    }
+    catch (e) { 
+      showToast(e.message, 'error', 5000); 
+    }
+    finally {
+      if (btn) btn.disabled = false;
+      const w = $(waitId);
+      if (w) w.remove();
+    }
   }
   async function stop(id) { const st = S[id]; if (st && st.sid) api('POST', `/api/ai/sessions/${st.sid}/stop${shareQ(winOf(id))}`).catch(e => showToast(e.message, 'error')); }
   async function end(id) {
