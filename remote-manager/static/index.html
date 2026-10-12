@@ -1212,11 +1212,14 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .ts-table td .act { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
 .ts-table a.btn-sec { text-decoration: none; display: inline-flex; align-items: center; }
 .sha { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); cursor: help; }
-.replay-modal { width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); display: flex; flex-direction: column; gap: 10px; }
+.replay-modal { width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); display: flex; flex-direction: column; gap: 10px; resize: both; overflow: auto; min-width: min(340px, 95vw); min-height: 300px; max-width: 98vw; }
+.replay-modal.rp-fs { position: fixed; inset: 0; width: 100vw !important; height: 100vh !important; max-width: none; max-height: none; border-radius: 0; border: 0; resize: none; padding: 12px 14px; }
+.rp-head-btns { display: flex; gap: 4px; flex: none; }
 .rp-meta { font-size: 11.5px; color: var(--text2); display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .rp-meta b { color: var(--text); font-weight: 600; }
-.rp-screen { background: #0b0d12; border: 1px solid var(--border2); border-radius: 8px; padding: 8px; overflow: auto; min-height: 240px; max-height: calc(100vh - 290px); }
-.rp-screen .xterm { display: inline-block; }
+.rp-screen { background: #0b0d12; border: 1px solid var(--border2); border-radius: 8px; padding: 8px; overflow: auto; min-height: 120px; flex: 1 1 auto; }
+.rp-screen .xterm { display: inline-block; transform-origin: 0 0; }
+.rp-screen .rp-scale { margin: 0 auto; position: relative; overflow: hidden; }
 .rp-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rp-controls input[type=range] { flex: 1; min-width: 160px; accent-color: var(--accent); }
 .rp-time { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text2); min-width: 92px; text-align: center; }
@@ -1227,7 +1230,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .tbl-scroll { overflow-x: auto; max-width: 100%; }
 #st-history .adm-toolbar { flex-wrap: wrap; }
 @media (max-width: 760px) {
-  .rp-screen { max-height: 55vh; }
+  .replay-modal:not(.rp-fs) { padding: 14px; }
   .adm-toolbar input[type=date] { width: 120px; }
 }
 
@@ -2524,7 +2527,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <!-- Session recording replay -->
 <div class="modal-overlay" id="modal-replay" style="z-index:9600;">
   <div class="modal replay-modal">
-    <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">▶ <span id="rp-title" data-i18n="recording">Recording</span></h3><button class="icon-btn" onclick="closeReplay()">✕</button></div>
+    <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">▶ <span id="rp-title" data-i18n="recording">Recording</span></h3><div class="rp-head-btns"><button class="icon-btn" id="rp-fs" onclick="replayToggleFs()">⛶</button><button class="icon-btn" onclick="closeReplay()">✕</button></div></div>
     <div class="rp-meta" id="rp-meta"></div>
     <div class="rp-screen" id="rp-screen"></div>
     <div class="rp-controls">
@@ -4695,6 +4698,7 @@ Object.assign(LANGS.en, {
   adin_audit: 'Who did what and when: sign-ins, setting changes and actions on servers. Secrets are never stored in it.',
   adin_sessions: 'All terminal sessions and their recordings, including those of other users. Replay or download them.',
   adin_transfers: 'A log of files uploaded and downloaded through WRM.',
+  replay_fs: 'Fullscreen', replay_exit_fs: 'Exit fullscreen (Esc)',
 });
 Object.assign(LANGS.hr, {
   stin_general: 'Svakodnevne postavke ovog preglednika: jezik, boja isticanja, ograničenje uploada i poruke koje WRM prikazuje.',
@@ -4717,6 +4721,7 @@ Object.assign(LANGS.hr, {
   adin_audit: 'Tko je što i kada radio: prijave, promjene postavki i radnje na serverima. Tajne se nikad ne spremaju u njega.',
   adin_sessions: 'Sve terminalske sesije i njihove snimke, uključujući sesije drugih korisnika. Pustite ih ili preuzmite.',
   adin_transfers: 'Dnevnik datoteka prenesenih kroz WRM (upload i download).',
+  replay_fs: 'Cijeli zaslon', replay_exit_fs: 'Izlaz iz cijelog zaslona (Esc)',
 });
 function setTabIntro(id, key) {
   const el = document.getElementById(id);
@@ -4733,6 +4738,7 @@ function applyLang() {
   if (currentUser || isCollabMode) renderTree();
   if (typeof renderSnippets === 'function') { renderSnippets(); renderBroadcastUI(); }
   if (typeof updateInstallRow === 'function') updateInstallRow();
+  if (typeof updateReplayFsBtn === 'function') updateReplayFsBtn();
 }
 function changeLang(l) {
   currentLang = l;
@@ -6521,6 +6527,10 @@ async function openReplay(id) {
   closeReplay();
   const modal = document.getElementById('modal-replay');
   modal.classList.add('open');
+  const rbox = modal.querySelector('.replay-modal');
+  rbox.classList.remove('rp-fs'); rbox.style.width = ''; rbox.style.height = '';
+  updateReplayFsBtn();
+  replayObserve();
   document.getElementById('rp-title').textContent = t('recording') + ' #' + id;
   document.getElementById('rp-meta').innerHTML = '';
   document.getElementById('rp-events').innerHTML = '';
@@ -6568,9 +6578,12 @@ async function openReplay(id) {
   ].filter(Boolean).map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
   const ev = meta.events || [];
   document.getElementById('rp-events').innerHTML = ev.length ? `<table class="admin-table"><tbody>` + ev.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td><b style="color:var(--text);">${esc(e.action)}</b></td><td class="mono" style="font-size:10.5px;word-break:break-all;">${esc(e.details)}</td></tr>`).join('') + '</tbody></table>' : `<div class="sub">${esc(t('none'))}</div>`;
-  screen.innerHTML = '';
+  screen.innerHTML = '<div class="rp-scale"></div>';
   replay.term = new Terminal(Object.assign(termOptions(), {cols: replay.header.width || 80, rows: replay.header.height || 24, scrollback: 5000, disableStdin: true, cursorBlink: false}));
-  replay.term.open(screen);
+  replay.term.open(screen.firstChild);
+  replay.term.onResize(() => replayFitSoon());
+  replayFitSoon();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(replayFitSoon);
   replay.speed = parseFloat(document.getElementById('rp-speed').value) || 1;
   replay.idle = document.getElementById('rp-idle').checked;
   buildReplayTimeline();
@@ -6663,7 +6676,61 @@ function closeReplay() {
   replayPause();
   if (replay.term) { try { replay.term.dispose(); } catch (_) {} }
   replay.term = null; replay.raw = []; replay.events = [];
+  if (replay.ro) { replay.ro.disconnect(); replay.ro = null; }
+  replay.guacFit = null;
+  document.querySelector('#modal-replay .replay-modal').classList.remove('rp-fs');
   document.getElementById('modal-replay').classList.remove('open');
+}
+
+// Scales the terminal (keeping the recorded cols x rows) to the available space instead of scrolling sideways.
+function replayFit() {
+  if (replay.guacFit) { replay.guacFit(); return; }
+  if (!replay.term || !replay.term.element) return;
+  const screen = document.getElementById('rp-screen');
+  const wrap = screen.querySelector('.rp-scale');
+  const inner = replay.term.element.querySelector('.xterm-screen');
+  if (!wrap || !inner || !inner.offsetWidth || !inner.offsetHeight) return;
+  const w = inner.offsetWidth, h = inner.offsetHeight;
+  const cs = getComputedStyle(screen);
+  const availW = screen.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const availH = screen.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const fs = document.querySelector('#modal-replay .replay-modal').classList.contains('rp-fs');
+  let s = availW / w;
+  s = fs ? Math.min(s, availH / h, 4) : Math.min(s, 1);
+  s = Math.max(s, 0.1);
+  replay.term.element.style.transform = `scale(${s})`;
+  wrap.style.width = Math.floor(w * s) + 'px';
+  wrap.style.height = Math.floor(h * s) + 'px';
+}
+function replayFitSoon() { requestAnimationFrame(replayFit); }
+function replayObserve() {
+  if (replay.ro || typeof ResizeObserver === 'undefined') return;
+  let lw = 0, lh = 0;
+  replay.ro = new ResizeObserver(() => {
+    const el = document.getElementById('rp-screen');
+    if (el.clientWidth === lw && el.clientHeight === lh) return;
+    lw = el.clientWidth; lh = el.clientHeight;
+    replayFit();
+  });
+  replay.ro.observe(document.getElementById('rp-screen'));
+}
+function replayToggleFs(force) {
+  const box = document.querySelector('#modal-replay .replay-modal');
+  const on = typeof force === 'boolean' ? force : !box.classList.contains('rp-fs');
+  box.classList.toggle('rp-fs', on);
+  updateReplayFsBtn();
+  replayFitSoon();
+}
+function updateReplayFsBtn() {
+  const b = document.getElementById('rp-fs');
+  if (!b) return;
+  const on = document.querySelector('#modal-replay .replay-modal').classList.contains('rp-fs');
+  b.textContent = on ? '🗗' : '⛶';
+  b.title = t(on ? 'replay_exit_fs' : 'replay_fs');
+}
+function replayFsActive() {
+  const m = document.getElementById('modal-replay');
+  return m.classList.contains('open') && m.querySelector('.replay-modal').classList.contains('rp-fs');
 }
 
 // ── admin: file transfers ──
@@ -8602,6 +8669,7 @@ async function openGuacReplay(id, meta) {
     screen.firstChild.appendChild(disp.getElement());
     const fit = () => { const w = disp.getWidth(), h = disp.getHeight(); if (w && h) disp.scale(Math.min(screen.clientWidth / w, (screen.clientHeight || 480) / h, 1)); };
     disp.onresize = fit;
+    replay.guacFit = fit;
     const upd = () => {
       const pos = rec.getPosition(), dur = rec.getDuration();
       document.getElementById('rp-time').textContent = fmtMs(pos) + ' / ' + fmtMs(dur);
@@ -14550,6 +14618,7 @@ document.addEventListener('keydown', e => {
     if (document.getElementById('modal-dialog').classList.contains('open')) { dialogDone(false); return; }
     if (document.getElementById('modal-snipvars').classList.contains('open')) { snipVarsDone(false); return; }
     if (document.getElementById('modal-editor').classList.contains('open')) { closeEditor(); return; }
+    if (replayFsActive()) { replayToggleFs(false); return; }
     document.querySelectorAll('.modal-overlay.open').forEach(m => {
       if (!m.id.includes('auth') && m.id !== 'modal-transfer' && m.dataset.locked !== '1') m.classList.remove('open');
     });
