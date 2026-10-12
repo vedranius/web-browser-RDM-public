@@ -4,6 +4,17 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.1] — 2026-10-12 — Terminal fixes
+
+Second step of issue #43 (terminal items). No server or database changes.
+
+### Fixed
+- **Copying a long selection from the terminal:** the selection was copied on every change while the mouse was still dragging, which moved the focus out of the terminal and cut a selection that scrolls (more than one screen) short, so people had to zoom out. The copy now happens once the selection has settled (mouse released, 200 ms without change), and the whole selection, scrollback included, is copied.
+- **Windows that suddenly shrink or grow:** pressing the mouse on the title bar of a maximized or snapped window restored its size at once, so a click (or the first half of a double-click) shrank it and the second half expanded it. The window is now restored only when the pointer actually moves (5 px), as when dragging.
+
+### Changed
+- **New terminal windows open maximized** and the cursor is placed in the terminal at once. Windows restored from a saved session keep their saved layout and focus; small screens already used full-size windows.
+
 ## [12.2.0] — 2026-10-12 — AI provider fixes
 
 First step of issue #43. The other items of the issue stay open and are planned for the next versions.
