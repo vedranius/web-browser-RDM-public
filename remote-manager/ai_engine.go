@@ -623,7 +623,8 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		s.mu.Lock()
 		s.denials++
 		s.mu.Unlock()
-		return fail("Denied by WRM: the AI connection has no scope for " + call.Name + ". Only the user can change the scopes, in WRM.")
+		return fail("Denied by WRM: this AI connection's scopes (" + strings.Join(s.Scopes, ", ") + ") do not allow " + call.Name + "; it needs one of: " +
+			strings.Join(aiScopesFor(call.Name), ", ") + ". This is a limit of the connection, not of the server. Tell the user to create an AI connection with that scope in WRM (Settings → AI connections); do not retry.")
 	}
 	if call.BadInput != "" {
 		return fail(call.BadInput)
