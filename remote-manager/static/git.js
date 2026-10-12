@@ -419,7 +419,13 @@ Object.assign(LANGS.hr, {
 Object.assign(LANGS.en, {
   gs_simple: 'Simple', gs_advanced: 'Advanced', gs_mode_h: 'Simple shows only deployment, versions, update, install and rollback. Advanced is the full Git workspace.',
   gs_intro: 'Pick an environment below. You see what runs on the server compared with the latest version on the branch, and you can install, update or roll back with one click. Everything else is in Advanced mode.',
-  gs_none: 'Nothing to manage yet. An administrator can set up environments in Advanced mode (Environments tab); they then appear here.',
+  gs_none: 'Nothing found yet. Once a Git source is connected and your servers are reachable, services detected on the servers appear here automatically. Run a check to look for them.',
+  gs_find: 'Find services on my servers',
+  gs_auto_n: '{n} environment(s) were detected automatically from your servers.',
+  gs_auto_h: 'They work as they are; nothing is deployed until you start it.',
+  gs_auto_save: 'Save detected environments',
+  gs_auto_q: 'Save the detected environments to the catalog? Existing definitions are not changed.',
+  gs_auto_done: '{n} environment(s) saved.',
   gs_on_server: 'On the server', gs_on_branch: 'Latest on the branch', gs_version: 'Version', gs_commit: 'Commit', gs_not_installed: 'Not installed here yet',
   gs_no_target: 'The latest version on the branch is not known yet. In Advanced mode open Overview and refresh the targets.',
   gs_status_ok: 'Up to date', gs_status_update: 'Update available', gs_status_missing: 'Not installed', gs_status_unknown: 'Cannot compare', gs_status_error: 'Problem',
@@ -438,7 +444,13 @@ Object.assign(LANGS.en, {
 Object.assign(LANGS.hr, {
   gs_simple: 'Jednostavno', gs_advanced: 'Napredno', gs_mode_h: 'Jednostavno prikazuje samo isporuku, verzije, nadogradnju, instalaciju i povratak. Napredno je cijeli Git radni prostor.',
   gs_intro: 'Odaberite okruženje ispod. Vidite što radi na serveru u usporedbi s najnovijom verzijom na grani i jednim klikom možete instalirati, nadograditi ili vratiti prethodnu verziju. Sve ostalo je u naprednom načinu.',
-  gs_none: 'Još nema što upravljati. Administrator može postaviti okruženja u naprednom načinu (kartica Okruženja); tada se prikazuju ovdje.',
+  gs_none: 'Još ništa nije pronađeno. Kad je Git izvor spojen i serveri dostupni, servisi pronađeni na serverima pojavljuju se ovdje automatski. Pokrenite provjeru da ih potražite.',
+  gs_find: 'Pronađi servise na mojim serverima',
+  gs_auto_n: '{n} okruženje(a) automatski je otkriveno na vašim serverima.',
+  gs_auto_h: 'Rade kakva jesu; ništa se ne isporučuje dok to sami ne pokrenete.',
+  gs_auto_save: 'Spremi otkrivena okruženja',
+  gs_auto_q: 'Spremiti otkrivena okruženja u katalog? Postojeće definicije se ne mijenjaju.',
+  gs_auto_done: '{n} okruženje(a) spremljeno.',
   gs_on_server: 'Na serveru', gs_on_branch: 'Najnovije na grani', gs_version: 'Verzija', gs_commit: 'Commit', gs_not_installed: 'Ovdje još nije instalirano',
   gs_no_target: 'Najnovija verzija na grani još nije poznata. U naprednom načinu otvorite Pregled i osvježite ciljeve.',
   gs_status_ok: 'Ažurno', gs_status_update: 'Dostupna nadogradnja', gs_status_missing: 'Nije instalirano', gs_status_unknown: 'Nije moguće usporediti', gs_status_error: 'Problem',
@@ -748,7 +760,7 @@ Object.assign(LANGS.hr, {
     const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(label)}</option>`;
     const fname = id => ((folders || []).find(x => x.id === id) || {}).name || ('#' + id);
     return `<select onchange="gitWorkspace.filter('app', this.value)">${opt('', t('git_all_services'), f.app)}${appNames.map(x => opt(x, x, f.app)).join('')}</select>
-      <select onchange="gitWorkspace.filter('conn', this.value)">${opt('', t('git_all_servers'), f.conn)}${servers.map(([id, n]) => opt(id, n, f.conn)).join('')}</select>
+      <select onchange="gitWorkspace.filter('conn', this.value)">${opt('', t('git_all_servers'), f.conn)}${servers.map(([id, n]) => opt(id, hn(n), f.conn)).join('')}</select>
       <select onchange="gitWorkspace.filter('state', this.value)">${opt('', t('git_all_states'), f.state)}${['update', 'review', 'ok', 'error', 'gone', 'unknown'].map(x => opt(x, t('git_st_' + x), f.state)).join('')}</select>
       <select onchange="gitWorkspace.filter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${envs.map(x => opt(x, x, f.env)).join('')}</select>
       <select onchange="gitWorkspace.filter('folder', this.value)">${opt('', t('git_all_folders'), f.folder)}${fids.map(x => opt(x, fname(x), f.folder)).join('')}</select>
@@ -781,7 +793,7 @@ Object.assign(LANGS.hr, {
     const running = jobRunning();
     html += `<div class="g-card g-scroll"><table class="g-matrix"><tr><th>${selBox(ids(list), t('git_sel_all'))}${esc(t('git_server'))}</th>${cols.map(a => `<th>${selBox(ids(list.filter(i => i.app === a)), t('git_sel_col'))}${esc(a)}</th>`).join('')}</tr>` +
       servers.map(([cid, x]) => { const row = list.filter(i => i.conn_id === cid);
-        return `<tr><td>${selBox(ids(row), t('git_sel_row'))}<b>${esc(x.conn_name)}</b>${x.host ? `<div class="g-hostname g-mono">${esc(x.host)}</div>` : ''}</td>${cols.map(a => { const cell = row.filter(i => i.app === a);
+        return `<tr><td>${selBox(ids(row), t('git_sel_row'))}<b>${esc(hn(x.conn_name, x.hostname))}</b>${x.host ? `<div class="g-hostname g-mono">${esc(x.host)}</div>` : ''}</td>${cols.map(a => { const cell = row.filter(i => i.app === a);
           return `<td class="g-cell">${cell.map(instChip).join('')}${cell.length && G.state.can_check ? `<button class="g-cellbtn" title="${esc(t('git_check_cell'))}" ${running ? 'disabled' : ''} onclick="gitWorkspace.checkIds([${ids(cell).join(',')}])">↻ ${esc(t('git_check_cell'))}</button>` : ''}</td>`; }).join('')}</tr>`; }).join('') + '</table></div>';
     return html;
   }
@@ -1035,7 +1047,7 @@ Object.assign(LANGS.hr, {
       ${checkBar(list)}<div class="g-bar g-actions">${actionButtons('')}</div>
       <div class="g-card g-scroll"><table><tr><th>${selBox(list.map(i => i.id), t('git_sel_all'))}</th><th>${esc(t('git_server'))}</th><th>${esc(t('git_service'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_env'))}</th><th>${esc(t('git_state'))}</th>
       <th>${esc(t('git_version_md'))}</th><th>${esc(t('git_target'))}</th><th>${esc(t('git_checked'))}</th><th></th></tr>
-      ${list.map(i => `<tr><td><input type="checkbox" class="git-isel g-cb" value="${i.id}" ${G.sel.has(i.id) ? 'checked' : ''} onchange="gitWorkspace.sel([${i.id}], this.checked)"></td><td>${esc(i.conn_name)}${i.host ? `<div class="g-hostname g-mono">${esc(i.host)}</div>` : ''}</td><td><b>${esc(i.app)}</b>${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}</td><td class="g-mono">${esc(i.path)}</td><td>${esc(i.env || '')}</td>
+      ${list.map(i => `<tr><td><input type="checkbox" class="git-isel g-cb" value="${i.id}" ${G.sel.has(i.id) ? 'checked' : ''} onchange="gitWorkspace.sel([${i.id}], this.checked)"></td><td>${esc(hn(i.conn_name, i.hostname))}${i.host ? `<div class="g-hostname g-mono">${esc(i.host)}</div>` : ''}</td><td><b>${esc(i.app)}</b>${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}</td><td class="g-mono">${esc(i.path)}</td><td>${esc(i.env || '')}</td>
         <td>${stateCell(i)}${i.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: i.behind}))}</span>` : ''}${i.error ? `<div class="g-mut">${esc(i.error)}</div>` : ''}${i.state === 'error' && i.last_ok_state ? `<div class="g-mut">${lastGood(i).replace(/ · $/, '')}</div>` : ''}</td>
         <td class="g-mono">${esc((i.version_md && i.version_md.version) || t('git_vmd_missing'))}</td><td class="g-mono">${esc(i.target || '—')}</td><td class="g-mut" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${esc(ago(i.checked_at))}</td>
         <td style="white-space:nowrap">${G.state.can_check ? `<button class="btn-sec btn-sm" title="${esc(t('git_check_cell'))}" ${jobRunning() ? 'disabled' : ''} onclick="gitWorkspace.checkIds([${i.id}])">↻</button> ` : ''}<button class="btn-sec btn-sm" onclick="gitWorkspace.details(${i.id})">${esc(t('git_details'))}</button> <button class="btn-danger btn-sm" onclick="gitWorkspace.forget(${i.id})">✕</button></td></tr>`).join('')}</table></div>
@@ -1066,7 +1078,7 @@ Object.assign(LANGS.hr, {
     G.detail = i;
     Object.assign(F, {id, list: null, err: '', loading: G.state.can_check, q: '', diff: null});
     const v = i.version_md || {};
-    modal(`<h3>${esc(i.conn_name)} · ${esc(i.app)} · <span class="g-mono">${esc(i.path)}</span></h3>
+    modal(`<h3>${esc(hn(i.conn_name, i.hostname))} · ${esc(i.app)} · <span class="g-mono">${esc(i.path)}</span></h3>
       <div class="g-bar">${stBadge(i.state)}${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${Object.entries(i.counts || {}).map(([k, n]) => `${fsBadge(k)} ${n}`).join(' ')}
         <span class="g-mut" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${lastGood(i)}${esc(tf('git_checked_ago', {t: ago(i.checked_at)}))}</span></div>
       <div class="g-bar g-actions">${actionButtons(i.id)}</div>
@@ -1423,7 +1435,7 @@ Object.assign(LANGS.hr, {
     };
     const itemHTML = (i, idx) => {
       const changes = (i.files || []).filter(f => f.state !== 'ok' && f.state !== 'protected');
-      const head = `<h4>${esc(i.conn_name)} · ${esc(i.app)} · <span class="g-mono">${esc(i.path)}</span>${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${i.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</h4>`;
+      const head = `<h4>${esc(hn(i.conn_name, i.hostname))} · ${esc(i.app)} · <span class="g-mono">${esc(i.path)}</span>${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${i.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</h4>`;
       if (i.error) return `<div class="g-item">${head}<div class="hint-box bad">${esc(i.error)}</div></div>`;
       const ver = `<div class="g-mut">${esc(t('git_version_md'))}: <span class="g-mono">${esc(i.from_version || t('git_vmd_missing'))}</span> → ${esc(t('git_target'))}: <span class="g-mono">${esc(i.target ? i.target.version : '—')}</span> ${i.target ? `<span class="g-mut">${esc(i.target.branch)} · ${esc(i.target.commit_date || '')}</span>` : ''}${kind === 'upgrade' && i.current ? ` <span class="g-mut">(${esc(t('git_from'))} ${esc(i.current.version)} · ${esc(i.current.branch)})</span>` : ''}</div>`;
       if (i.pipeline) return `<div class="g-item">${head}${ver}<div class="hint-box">🔧 ${esc(tf('git_ci_item', {kind: i.pipeline.kind === 'gitlab' ? 'GitLab' : 'Jenkins'}))}<div class="g-mono g-mut">${esc(i.pipeline.url)}</div></div></div>`;
@@ -1505,11 +1517,11 @@ Object.assign(LANGS.hr, {
     const units = list.filter(i => (i.units || []).length);
     modal(`<h3>${esc(tf('git_confirm_title', {kind: kindName(body.kind)}))}</h3>
       <div>${esc(tf('git_confirm_q', {kind: kindName(body.kind), n: list.length, m: servers.length}))}</div>
-      <ul>${list.map(i => `<li><b>${esc(i.app)}</b> @ ${esc(i.conn_name)} <span class="g-mono">${esc(i.path)}</span>${i.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}${body.backup_names ? ` ← <span class="g-mono">${esc(body.backup_names[i.install_id] || '')}</span>` : ''}</li>`).join('')}</ul>
+      <ul>${list.map(i => `<li><b>${esc(i.app)}</b> @ ${esc(hn(i.conn_name, i.hostname))} <span class="g-mono">${esc(i.path)}</span>${i.prod ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}${body.backup_names ? ` ← <span class="g-mono">${esc(body.backup_names[i.install_id] || '')}</span>` : ''}</li>`).join('')}</ul>
       ${body.kind === 'upgrade' ? `<div class="hint-box warn">${esc(t('git_upgrade_warn'))} → <b class="g-mono">${esc(body.ref)}</b></div>` : ''}
       ${rm && rm !== 'none' && units.length ? `<div class="hint-box warn">${esc(tf('git_restart_warn', {list: units.map(i => i.conn_name + ': ' + i.units.map(u => u.name).join(', ')).join('; ')}))}${body.restart.at ? ' · ' + esc(fmtTime(body.restart.at)) : ''}${body.restart.delay_minutes ? ' · +' + body.restart.delay_minutes + ' min' : ''}</div>` : ''}
       ${body.schedule_at ? `<div class="hint-box">⏰ ${esc(tf('git_scheduled_ok', {t: fmtTime(body.schedule_at)}))}</div>` : ''}
-      ${prod.map(i => `<div class="g-conf"><label>${esc(tf('git_type_host', {name: i.conn_name}))}</label><input class="gd-conf" data-name="${esc(i.conn_name)}" autocomplete="off" oninput="gitWorkspace.confirmCheck()"></div>`).join('')}
+      ${prod.map(i => `<div class="g-conf"><label>${esc(tf('git_type_host', {name: i.conn_name}))}</label><input class="gd-conf" data-name="${esc(hn(i.conn_name, i.hostname))}" autocomplete="off" oninput="gitWorkspace.confirmCheck()"></div>`).join('')}
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gd-go" class="${body.kind === 'stamp' ? '' : 'btn-danger'}" ${prod.length ? 'disabled' : ''}>${esc(t(body.schedule_at || (body.kind === 'restart' && rm !== 'now') ? 'git_schedule' : 'git_start'))}</button></div>`);
     D.items = list;
     $('gd-go').onclick = startRun;
@@ -1571,7 +1583,7 @@ Object.assign(LANGS.hr, {
     const list = ids.map(installById).filter(i => i.id);
     const withUnits = list.filter(i => (i.units || []).length);
     modal(`<h3>${esc(kindName('restart'))}</h3>
-      ${withUnits.length ? `<table><tr><th>${esc(t('git_server'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_unit_list'))}</th></tr>${withUnits.map(i => `<tr><td>${esc(i.conn_name)}${isProd(i) ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</td><td class="g-mono">${esc(i.path)}</td><td class="g-mono">${i.units.map(u => esc(u.kind + ': ' + u.name)).join('<br>')}</td></tr>`).join('')}</table>`
+      ${withUnits.length ? `<table><tr><th>${esc(t('git_server'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_unit_list'))}</th></tr>${withUnits.map(i => `<tr><td>${esc(hn(i.conn_name, i.hostname))}${isProd(i) ? `<span class="g-prod">${esc(t('git_prod'))}</span>` : ''}</td><td class="g-mono">${esc(i.path)}</td><td class="g-mono">${i.units.map(u => esc(u.kind + ': ' + u.name)).join('<br>')}</td></tr>`).join('')}</table>`
         : `<div class="hint-box">${esc(t('git_no_units_restart'))}</div>`}
       ${withUnits.length ? `<div class="g-card" style="margin-top:10px"><label class="g-opt"><input type="radio" name="gx-rm" value="now" checked><span>${esc(t('git_run_now'))}</span></label>
         <label class="g-opt"><input type="radio" name="gx-rm" value="at"><span>${esc(t('git_rm_at'))}</span> <input type="datetime-local" id="gx-rat" value="${defaultTime(2)}"></label>
@@ -2027,10 +2039,19 @@ Object.assign(LANGS.hr, {
   const envEnc = (app, env) => `app=${encodeURIComponent(app)}&env=${encodeURIComponent(env)}`;
   const errModal = async (title, r) => modal(`<h3>${esc(title)}</h3><div class="hint-box bad">${esc(await apiError(r))}</div><div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
 
+  // servers are shown by their hostname; the connection name stays the key for filters and requests
+  const hostMap = {};
+  function hn(name, host) {
+    if (host) return host;
+    return hostMap[name] || ((G.state || {}).hosts || {})[name] || name;
+  }
+  const learnHosts = h => { if (h) Object.assign(hostMap, h); };
+
   async function envLoad() {
-    const r = await fetch('/api/git/env/overview');
+    const r = await fetch('/api/git/env/overview' + (G.mode === 'simple' ? '?auto=1' : ''));
     if (!r.ok) { showToast(await apiError(r), 'error'); return; }
     E.ov = await r.json();
+    learnHosts(E.ov.hosts);
     if (G.mode === 'simple') { if ($('git-body')) paintSimple(); return; }
     if (G.tab === 'envs' && $('git-body')) { $('git-body').innerHTML = envsHTML(); envCells(); }
   }
@@ -2065,7 +2086,7 @@ Object.assign(LANGS.hr, {
       const ver = cur ? cur.version : x.version_md;
       const commit = cur ? String(cur.commit || '').slice(0, 10) : x.commit_md;
       const behind = x.behind > 0 ? ` <span class="g-st s-update">${esc(tf('git_behind', {n: x.behind}))}</span>` : x.behind === 0 ? ` <span class="g-st s-ok">${esc(t('git_st_ok'))}</span>` : '';
-      return `<div class="g-inst"><b>${esc(x.server)}</b> <span class="g-mono g-mut">${esc(x.path)}</span>
+      return `<div class="g-inst"><b>${esc(hn(x.server))}</b> <span class="g-mono g-mut">${esc(x.path)}</span>
         ${x.error ? `<div><span class="g-st s-error">${esc(x.error)}</span></div>` : !x.exists ? `<div class="g-mut">${esc(t('genv_not_deployed'))}</div>`
           : `<div><span class="g-mono">${esc(ver || '—')}</span> <span class="g-mut g-mono">${esc(commit || '')}</span>${behind}</div><div class="g-ago">${cur ? esc((cur.by || '') + ' · ' + fmtTime(cur.at)) : esc(t('genv_no_state'))}</div>`}
         ${x.lock ? `<div class="g-q">🔒 ${esc(tf('genv_locked_by', {user: x.lock.user || '?', from: x.lock.from || '?'}))}${x.lock.stale ? ' · ' + esc(t('genv_stale')) : ''}</div>` : ''}</div>`;
@@ -2167,7 +2188,7 @@ Object.assign(LANGS.hr, {
           <td style="white-space:nowrap">${act || f.state === 'extra' ? xb('service') + ' ' + xb('env') : ''}</td></tr>`;
       }).join('');
       const cur = d.current;
-      return `<div class="g-item"><h4>${d.index + 1}. ${esc(d.server)} · <span class="g-mono">${esc(d.path)}</span></h4>
+      return `<div class="g-item"><h4>${d.index + 1}. ${esc(hn(d.server))} · <span class="g-mono">${esc(d.path)}</span></h4>
         <div class="g-mut">${cur ? esc(tf('genv_current', {v: cur.version, id: cur.deploy_id, by: cur.by, at: fmtTime(cur.at)})) : esc(t(d.exists ? 'genv_no_state' : 'genv_not_deployed'))}${d.from_version ? ' · VERSION.md ' + esc(d.from_version) : ''}</div>
         <div class="g-actions" style="margin:5px 0">${['new', 'changed', 'eol', 'removed', 'extra', 'protected', 'ignored', 'same'].filter(k => c[k]).map(k => `${envBadge(k)} <b>${c[k]}</b>`).join(' ')}</div>
         ${(d.errors || []).map(x => `<div class="hint-box bad">${esc(x)}</div>`).join('')}${(d.warnings || []).map(x => `<div class="hint-box warn">${esc(x)}</div>`).join('')}
@@ -2228,7 +2249,7 @@ Object.assign(LANGS.hr, {
       env: {app: p.app, env: p.env, plan_id: p.id, exclude: [...E.excl], delete_removed: o.del, post_deploy: o.post, dry_run: dry}};
     if (dry) { envStart(body); return; }
     modal(`<h3>${esc(tf('genv_confirm_title', {app: p.app, v: (p.target || {}).version || '', env: p.env}))}</h3>
-      <div>${esc(t('genv_confirm_list'))}</div><ol>${p.dests.map(d => `<li><b>${esc(d.server)}</b> <span class="g-mono">${esc(d.path)}</span> <span class="g-mut">${['new', 'changed', 'eol', 'removed'].filter(k => (d.counts || {})[k]).map(k => t('genv_fs_' + k) + ' ' + d.counts[k]).join(' · ')}</span></li>`).join('')}</ol>
+      <div>${esc(t('genv_confirm_list'))}</div><ol>${p.dests.map(d => `<li><b>${esc(hn(d.server))}</b> <span class="g-mono">${esc(d.path)}</span> <span class="g-mut">${['new', 'changed', 'eol', 'removed'].filter(k => (d.counts || {})[k]).map(k => t('genv_fs_' + k) + ' ' + d.counts[k]).join(' · ')}</span></li>`).join('')}</ol>
       ${E.excl.size ? `<div class="g-mut">${esc(tf('genv_n_excluded', {n: E.excl.size}))}</div>` : ''}${o.del ? `<div class="hint-box warn">${esc(tf('genv_delete_removed', {n: Math.max(0, ...p.dests.map(d => (d.counts || {}).removed || 0))}))}</div>` : ''}
       ${o.post ? `<div class="hint-box warn">${esc(t('genv_run_post'))} <code class="g-mono">${esc(p.post_deploy)}</code></div>` : ''}${o.restart ? `<div class="hint-box warn">${esc(t('genv_restart'))}</div>` : ''}
       ${p.confirm ? `<div class="g-conf"><label>${esc(tf('genv_type_env', {env: p.env}))}</label><input id="ge-conf" autocomplete="off"></div>` : ''}
@@ -2259,7 +2280,7 @@ Object.assign(LANGS.hr, {
     const sum = x => { const c = x.counts || {}; return x.action === 'ROLLBACK' ? `↩ ${c.restored || 0} · ⇢ ${c.moved_aside || 0}${c.skipped ? ' · ⚠ ' + c.skipped : ''}` : x.result === 'partial' ? `⚠ ${c.moved || 0}/${c.total || 0}` : `+${c.new || 0} ~${c.changed || 0} −${c.deleted || 0}${c.eol ? ' · CRLF/LF ' + c.eol : ''}`; };
     const res = x => x.action === 'ROLLBACK' ? (x.complete === false ? 'failed' : 'done') : x.result === 'ok' ? 'done' : 'failed';
     modal(`<h3>${esc(tf('genv_history_title', {app, env}))}</h3>
-      ${h.dests.filter(d => d.error).map(d => `<div class="hint-box bad">${esc(d.server)}: ${esc(d.error)}</div>`).join('')}
+      ${h.dests.filter(d => d.error).map(d => `<div class="hint-box bad">${esc(hn(d.server))}: ${esc(d.error)}</div>`).join('')}
       ${h.entries.length ? `<div class="g-scroll"><table><tr><th>${esc(t('genv_when'))}</th><th>${esc(t('genv_action'))}</th><th>${esc(t('genv_id'))}</th><th>${esc(t('genv_who'))}</th><th>${esc(t('genv_version'))}</th><th>${esc(t('genv_previous'))}</th><th>${esc(t('genv_servers'))}</th><th>${esc(t('genv_files'))}</th><th></th></tr>
         ${h.entries.map(x => `<tr><td class="g-mut">${esc(fmtTime(x.at))}</td><td><span class="g-st s-${res(x)}">${esc(x.action)}</span>${x.result && x.result !== 'ok' ? `<div class="g-mut">${esc(x.result)}</div>` : ''}${x.post_deploy ? `<div class="g-mut">post_deploy: ${esc(x.post_deploy)}</div>` : ''}</td>
           <td class="g-mono">${esc(x.id || '')}${x.rolled_back ? `<div class="g-mut">↩ ${esc(x.rolled_back)}</div>` : ''}</td><td>${esc(x.by || '')}</td>
@@ -2274,7 +2295,7 @@ Object.assign(LANGS.hr, {
   function envRollback(btn) {
     const id = btn.dataset.id, h = E.hist, e = envOf(h.app, h.env) || {};
     modal(`<h3>${esc(tf('genv_rb_title', {id}))}</h3><div class="g-mut">${esc(t('genv_rb_h'))}</div>
-      <table style="margin-top:8px">${h.dests.map((d, i) => `<tr><td><input type="checkbox" class="ge-rbd" value="${i}" ${d.current === id ? 'checked' : 'disabled'}></td><td>${i + 1}. <b>${esc(d.server)}</b></td><td class="g-mono">${esc(d.path)}</td>
+      <table style="margin-top:8px">${h.dests.map((d, i) => `<tr><td><input type="checkbox" class="ge-rbd" value="${i}" ${d.current === id ? 'checked' : 'disabled'}></td><td>${i + 1}. <b>${esc(hn(d.server))}</b></td><td class="g-mono">${esc(d.path)}</td>
         <td class="g-mut">${d.current === id ? esc(t('genv_rb_latest')) : esc(tf('genv_rb_not_latest', {id: d.current || '—'}))}</td></tr>`).join('')}</table>
       <div class="g-card">${e.post_deploy ? `<label class="g-opt"><input type="checkbox" id="ge-rbpost"><span>${esc(t('genv_run_post'))} <code class="g-mono">${esc(e.post_deploy)}</code></span></label>` : `<div class="g-mut">${esc(t('genv_no_post'))}</div>`}
         <label class="g-opt"><input type="checkbox" id="ge-rbrestart" ${can('restart') ? '' : 'disabled'}><span>${esc(t('genv_restart'))}</span></label></div>
@@ -2304,7 +2325,7 @@ Object.assign(LANGS.hr, {
     const r = await fetch('/api/git/env/doctor', json('POST', {app, env}));
     if (!r.ok) { await errModal(title, r); return; }
     const icon = {ok: '✅', warn: '⚠️', fail: '❌', info: 'ℹ️'};
-    modal(`<h3>${esc(title)}</h3>${(await r.json()).dests.map((d, i) => `<div class="g-item"><h4>${i + 1}. ${esc(d.server)} · <span class="g-mono">${esc(d.path)}</span></h4>
+    modal(`<h3>${esc(title)}</h3>${(await r.json()).dests.map((d, i) => `<div class="g-item"><h4>${i + 1}. ${esc(hn(d.server))} · <span class="g-mono">${esc(d.path)}</span></h4>
       <table>${d.checks.map(c => `<tr><td style="width:24px">${icon[c.status] || '•'}</td><td style="white-space:nowrap"><b>${esc(t('genv_chk_' + c.name))}</b></td><td>${esc(c.msg)}</td></tr>`).join('')}</table></div>`).join('')}
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.envDoctor('${esc(app)}','${esc(env)}')">↻</button><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
   }
@@ -2324,7 +2345,7 @@ Object.assign(LANGS.hr, {
       ${ev && ev.deploy_id ? `<div class="g-mut">${esc(t('genv_id'))}: <span class="g-mono">${esc(ev.deploy_id)}</span></div>` : ''}
       ${v.message ? `<div class="hint-box ${v.state === 'failed' ? 'bad' : ''}">${esc(v.message)}</div>` : ''}
       ${v.scheduled_at ? `<div class="g-mut">${esc(t('git_scheduled_for'))}: ${esc(fmtTime(v.scheduled_at))}</div>` : v.parent_id ? `<div class="g-mut">${esc(t('git_scheduled_for'))}: ${esc(t('git_waits_update'))}</div>` : ''}
-      ${v.items.map(it => `<div class="g-item"><h4>${esc(it.conn_name)} · ${esc(it.app)} · <span class="g-mono">${esc(it.path)}</span> ${runBadge(it.state)}${it.step ? ` <span class="g-mut">⏳ ${esc(t('git_step_' + it.step))}</span>` : ''}</h4>
+      ${v.items.map(it => `<div class="g-item"><h4>${esc(hn(it.conn_name))} · ${esc(it.app)} · <span class="g-mono">${esc(it.path)}</span> ${runBadge(it.state)}${it.step ? ` <span class="g-mut">⏳ ${esc(t('git_step_' + it.step))}</span>` : ''}</h4>
         ${it.source_path ? `<div class="g-mut">${esc(t('git_w_source'))}: ${esc(it.source_conn_name)} · <span class="g-mono">${esc(it.source_path)}</span></div>` : ''}
         ${it.from_version || it.to_version ? `<div class="g-mut g-mono">${esc(it.from_version || '')} → ${esc(it.to_version || '')}</div>` : ''}
         ${it.via === 'ci' ? `<div>🔧 ${esc(t('git_step_ci'))} (${esc(it.ci_kind || '')}): <b>${esc(it.ci_status || '…')}</b>${it.ci_url ? ` · <a href="${esc(it.ci_url)}" target="_blank" rel="noopener noreferrer">${esc(t('git_ci_link'))}</a>` : ''}</div>` : ''}
@@ -2367,7 +2388,7 @@ Object.assign(LANGS.hr, {
       <div class="g-card g-scroll">${list.length ? `<table><tr><th>${esc(t('git_run'))}</th><th>${esc(t('git_kind_col'))}</th><th>${esc(t('git_state'))}</th><th>${esc(t('git_items'))}</th><th>${esc(t('git_versions'))}</th><th>${esc(t('git_created'))}</th><th>${esc(t('git_scheduled_for'))}</th><th></th></tr>
       ${list.map(v => `<tr><td class="g-mono">${esc(v.label)}<div class="g-mut">#${v.id}${v.parent_id ? ' ← #' + v.parent_id : ''}</div></td><td>${esc(kindName(v.kind))}${v.ref ? ` <span class="g-mono">${esc(v.ref)}</span>` : ''}${v.env ? `<div class="g-mut">${esc(v.env.app)} → ${esc(v.env.env)}${v.env.dry_run ? ' · 🧪 ' + esc(t('genv_dry')) : ''}</div>` : ''}</td>
         <td>${runBadge(v.state)}${v.message ? `<div class="g-mut">${esc(v.message)}</div>` : ''}</td>
-        <td>${v.items.map(it => `<div>${runBadge(it.state)} ${esc(it.app)} @ ${esc(it.conn_name)}</div>`).join('')}</td>
+        <td>${v.items.map(it => `<div>${runBadge(it.state)} ${esc(it.app)} @ ${esc(hn(it.conn_name))}</div>`).join('')}</td>
         <td class="g-mono">${Object.entries(v.versions || {}).map(([a, x]) => esc(a + ' ' + x)).join('<br>')}</td>
         <td class="g-mut">${esc(fmtTime(v.created_at))}</td><td class="g-mut">${v.scheduled_at ? esc(fmtTime(v.scheduled_at)) : v.parent_id && v.state === 'scheduled' ? esc(t('git_waits_update')) : '—'}</td>
         <td style="white-space:nowrap"><button class="btn-sec btn-sm" onclick="gitWorkspace.showRun(${v.id})">${esc(t('git_details'))}</button>${v.state === 'scheduled' || v.running ? ` <button class="btn-danger btn-sm" onclick="gitWorkspace.cancelRun(${v.id})">✕</button>` : ''}</td></tr>`).join('')}</table>` : `<div class="g-mut">${esc(t('git_runs_empty'))}</div>`}</div>`;
@@ -2494,7 +2515,7 @@ Object.assign(LANGS.hr, {
     const apps = G.state.catalog.apps.map(a => a.name);
     let h = `<div class="g-bar"><select onchange="gitWorkspace.histFilter('app', this.value)">${opt('', t('gact_all_services'), f.app)}${apps.map(a => opt(a, a, f.app)).join('')}</select>
       <select onchange="gitWorkspace.histFilter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${allEnvs().map(e => opt(e, e, f.env)).join('')}</select>
-      <select onchange="gitWorkspace.histFilter('server', this.value)">${opt('', t('gact_all_servers'), f.server)}${allServers().map(s => opt(s, s, f.server)).join('')}</select>
+      <select onchange="gitWorkspace.histFilter('server', this.value)">${opt('', t('gact_all_servers'), f.server)}${allServers().map(s => opt(s, hn(s), f.server)).join('')}</select>
       <select onchange="gitWorkspace.histFilter('action', this.value)">${opt('', t('gact_all_actions'), f.action)}${['deploy', 'rollback', 'update', 'upgrade', 'install', 'transfer'].map(a => opt(a, t('gact_a_' + a), f.action)).join('')}</select>
       <input type="search" placeholder="${esc(t('gact_who_ph'))}" value="${esc(f.who)}" onchange="gitWorkspace.histFilter('who', this.value.trim())">
       <input type="search" placeholder="${esc(t('gact_branch_ph'))}" value="${esc(f.branch)}" onchange="gitWorkspace.histFilter('branch', this.value.trim())">
@@ -2509,7 +2530,7 @@ Object.assign(LANGS.hr, {
       ${H.rows.slice(0, 1000).map(x => `<tr><td class="g-mut" style="white-space:nowrap">${when(x.at)}</td>
         <td class="g-nw"><span class="g-st s-${res(x)}">${esc(t('gact_a_' + x.action))}</span>${x.result !== 'ok' ? `<div class="g-mut">${esc(x.result)}</div>` : ''}<div class="g-mut">${esc(t(x.source === 'run' ? 'gact_src_run' : 'gact_src_env'))}${x.run_id ? ' #' + x.run_id : ''}</div></td>
         <td class="g-nw"><b>${esc(x.app)}</b>${x.env ? `<span class="g-env">${esc(x.env)}</span>` : ''}${x.id ? `<div class="g-mono g-mut g-nw">${esc(x.id)}</div>` : ''}</td>
-        <td class="g-path">${esc(x.server)}<div class="g-mono g-mut">${esc(x.path)}</div></td><td>${esc(x.by || '')}</td><td class="g-mono g-nw">${esc(x.branch || '')}</td>
+        <td class="g-path">${esc(hn(x.server))}<div class="g-mono g-mut">${esc(x.path)}</div></td><td>${esc(x.by || '')}</td><td class="g-mono g-nw">${esc(x.branch || '')}</td>
         <td class="g-mono g-nw">${esc(x.version || '')}${x.previous ? `<div class="g-mut">← ${esc(x.previous)}</div>` : ''}<div class="g-mut">${ext(x.commit_url, esc(short(x.commit)))}</div></td>
         <td style="min-width:150px">${histFiles(x)}${x.error ? `<div class="g-mut">${esc(x.error)}</div>` : ''}${x.note ? `<div class="g-mut">${esc(x.note)}</div>` : ''}</td></tr>`).join('')}</table>${H.rows.length > 1000 ? `<div class="g-mut">${esc(tf('gact_more', {n: H.rows.length - 1000}))}</div>` : ''}`
         : H.done < H.total ? '' : `<div class="g-mut">${esc(t('gact_none'))}</div>`}</div>`;
@@ -2542,7 +2563,7 @@ Object.assign(LANGS.hr, {
   function whereRow(r) {
     const behind = r.behind > 0 ? ext(r.compare_url, `<span class="g-st s-update">${esc(tf('git_behind', {n: r.behind}))}</span>`) : r.behind === 0 ? `<span class="g-st s-ok">${esc(t('gact_at_head'))}</span>` : '<span class="g-mut">—</span>';
     return `<tr class="${r.drift ? 'g-drift' : ''}"><td class="g-nw"><b>${esc(r.app)}</b></td><td>${r.env ? `<span class="g-env">${esc(r.env)}</span>` : '<span class="g-mut">—</span>'}${r.kind === 'install' ? `<div class="g-mut">${esc(t('gact_install'))}</div>` : ''}</td>
-      <td class="g-path">${esc(r.server)}<div class="g-mono g-mut">${esc(r.path)}</div></td>
+      <td class="g-path">${esc(hn(r.server))}<div class="g-mono g-mut">${esc(r.path)}</div></td>
       ${r.error ? `<td colspan="5"><span class="g-st s-error">${esc(r.error)}</span></td>` : !r.exists ? `<td colspan="5" class="g-mut">${esc(t('genv_not_deployed'))}</td>`
         : `<td class="g-mono g-nw">${ext(r.branch_url, esc(r.branch || '—'))}</td><td class="g-mono g-nw">${ext(r.commit_url, esc(short(r.commit) || '—'))}</td>
       <td class="g-mono g-nw">${esc(r.version || '—')}${r.drift ? ` <span class="g-st s-review">⚠ ${esc(t('gact_drift'))}</span>` : ''}${r.state ? ` ${stBadge(r.state)}` : ''}${r.locked ? ' 🔒' : ''}</td>
@@ -2553,7 +2574,7 @@ Object.assign(LANGS.hr, {
     const apps = G.state.catalog.apps.map(a => a.name);
     let h = `<div class="g-bar"><select onchange="gitWorkspace.whereFilter('app', this.value)">${opt('', t('gact_all_services'), f.app)}${apps.map(a => opt(a, a, f.app)).join('')}</select>
       <select onchange="gitWorkspace.whereFilter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${allEnvs().map(e => opt(e, e, f.env)).join('')}</select>
-      <select onchange="gitWorkspace.whereFilter('server', this.value)">${opt('', t('gact_all_servers'), f.server)}${allServers().map(s => opt(s, s, f.server)).join('')}</select>
+      <select onchange="gitWorkspace.whereFilter('server', this.value)">${opt('', t('gact_all_servers'), f.server)}${allServers().map(s => opt(s, hn(s), f.server)).join('')}</select>
       <button class="btn-sec btn-sm" onclick="gitWorkspace.whereLoad(true)">↻ ${esc(t('git_refresh'))}</button>${csvBtn('whereCSV')}</div>`;
     if (!G.state.can_check) h += `<div class="hint-box">${esc(t('gact_no_checks'))}</div>`;
     if (!W) return h;
@@ -2598,7 +2619,20 @@ Object.assign(LANGS.hr, {
       <div class="g-bar" style="margin-bottom:10px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleRefresh()">↻ ${esc(t('gs_refresh'))}</button></div>`;
     if (!ov) return html + `<div class="hint-box">⏳</div></div>`;
     const cards = ov.services.flatMap(s => s.envs.map(e => `<div class="g-card gs-card" id="${sKey(s.app, e.name)}">${simpleCardHTML(s.app, e)}</div>`));
-    return html + (cards.join('') || `<div class="hint-box">${esc(t('gs_none'))}</div>`) + '</div>';
+    if ((ov.auto || 0) > 0) html += `<div class="hint-box"><div>${esc(tf('gs_auto_n', {n: ov.auto}))} ${esc(t('gs_auto_h'))}</div>${can('update') ? `<div class="g-btns" style="margin-top:6px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleAdopt()">${esc(t('gs_auto_save'))}</button></div>` : ''}</div>`;
+    const empty = `<div class="hint-box">${esc(t('gs_none'))}${(G.state || {}).can_check ? `<div class="g-btns" style="margin-top:6px"><button class="btn-sec btn-sm" onclick="gitWorkspace.check()">${esc(t('gs_find'))}</button></div>` : ''}</div>`;
+    return html + (cards.join('') || empty) + '</div>';
+  }
+
+  // stores the detected environments in the catalog (server side: permission check and audit)
+  async function simpleAdopt() {
+    if (!(await uiConfirm(t('gs_auto_q'), {okText: t('gs_auto_save')}))) return;
+    const r = await fetch('/api/git/env/adopt', json('POST', {}));
+    if (!r.ok) { showToast(await apiError(r), 'error', 8000); return; }
+    const j = await r.json();
+    showToast(tf('gs_auto_done', {n: j.environments || 0}), 'success');
+    try { const s = await fetch('/api/git'); if (s.ok) G.state = await s.json(); } catch (_) {}
+    simpleRefresh();
   }
 
   // up to date / update / missing / unknown / error, from the cell data of one environment
@@ -2626,7 +2660,7 @@ Object.assign(LANGS.hr, {
     const badge = `<span class="g-st s-${cls} gs-big">${esc(t('gs_status_' + st))}</span>`;
     const dests = d.dests.map(x => {
       const cur = x.current, ver = cur ? cur.version : x.version_md, commit = sh10(cur ? cur.commit : x.commit_md);
-      return `<div style="margin-bottom:6px"><b>${esc(x.server)}</b> <span class="g-mono g-mut">${esc(x.path)}</span>` + (x.error ? `<div><span class="g-st s-error">${esc(x.error)}</span></div>`
+      return `<div style="margin-bottom:6px"><b>${esc(hn(x.server))}</b> <span class="g-mono g-mut">${esc(x.path)}</span>` + (x.error ? `<div><span class="g-st s-error">${esc(x.error)}</span></div>`
         : !x.exists ? `<div class="g-mut">${esc(t('gs_not_installed'))}</div>`
         : `<div><span class="gs-ver g-mono">${esc(ver || '—')}</span> <span class="g-mono g-mut">${esc(commit)}</span></div>${cur ? `<div class="g-ago">${esc((cur.by || '') + ' · ' + fmtTime(cur.at))}</div>` : ''}`)
         + (x.lock ? `<div class="g-q">🔒 ${esc(tf('genv_locked_by', {user: x.lock.user || '?', from: x.lock.from || '?'}))}</div>` : '') + '</div>';
@@ -2684,7 +2718,7 @@ Object.assign(LANGS.hr, {
     modal(`<h3>${esc(tf('gs_title_' + kind, {app, env}))}</h3>
       <div class="gs-from-to">${esc(tf('gs_from_to', {from: fromV, to: tg.version || p.ref_name || '—'}))} <span class="g-mono g-mut">${esc(sh10(tg.commit))}</span></div>
       ${(p.errors || []).map(x => `<div class="hint-box bad">${esc(x)}</div>`).join('')}
-      ${p.dests.map(d => `<div class="g-item"><b>${esc(d.server)}</b> <span class="g-mono g-mut">${esc(d.path)}</span>
+      ${p.dests.map(d => `<div class="g-item"><b>${esc(hn(d.server))}</b> <span class="g-mono g-mut">${esc(d.path)}</span>
         <div>${(d.errors || []).length ? '' : (d.counts || {}).new || changedOf(d) ? esc(tf('gs_files_n', {n: (d.counts || {}).new || 0, c: changedOf(d)})) : esc(t('gs_no_changes'))}</div>
         ${(d.errors || []).map(x => `<div class="hint-box bad">${esc(x)}</div>`).join('')}${(d.warnings || []).map(x => `<div class="hint-box warn">${esc(x)}</div>`).join('')}</div>`).join('')}
       <div class="g-mut">${esc(t('gs_backup_h'))}</div>
@@ -2727,14 +2761,14 @@ Object.assign(LANGS.hr, {
     const h = await r.json(), cur = new Set(h.dests.map(d => d.current).filter(Boolean));
     const x = h.entries.find(y => y.action === 'DEPLOY' && cur.has(y.id));
     const close = `<div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`;
-    if (!x) { modal(`<h3>${esc(title)}</h3>${h.dests.filter(d => d.error).map(d => `<div class="hint-box bad">${esc(d.server)}: ${esc(d.error)}</div>`).join('')}<div class="hint-box">${esc(t('gs_rb_none'))}</div>${close}`); return; }
+    if (!x) { modal(`<h3>${esc(title)}</h3>${h.dests.filter(d => d.error).map(d => `<div class="hint-box bad">${esc(hn(d.server))}: ${esc(d.error)}</div>`).join('')}<div class="hint-box">${esc(t('gs_rb_none'))}</div>${close}`); return; }
     const dests = h.dests.map((d, i) => d.current === x.id ? i : -1).filter(i => i >= 0);
     const e = envOf(app, env) || {}, prev = x.previous ? x.previous.version : t('gs_rb_prev_unknown');
     modal(`<h3>${esc(title)}</h3>
       <div class="gs-cols"><div class="gs-box"><h4>${esc(t('gs_rb_now'))}</h4><div class="gs-ver g-mono">${esc(x.version || '—')}</div><div class="g-ago">${esc((x.by || '') + ' · ' + fmtTime(x.at))}</div></div>
         <div class="gs-box"><h4>${esc(t('gs_rb_to'))}</h4><div class="gs-ver g-mono">${esc(prev)}</div></div></div>
       <div class="g-mut" style="margin-top:6px">${esc(t('gs_rb_h'))}</div>
-      <div class="g-mut">${dests.map(i => `${esc(h.dests[i].server)} <span class="g-mono">${esc(h.dests[i].path)}</span>`).join('<br>')}</div>
+      <div class="g-mut">${dests.map(i => `${esc(hn(h.dests[i].server))} <span class="g-mono">${esc(h.dests[i].path)}</span>`).join('<br>')}</div>
       ${e.post_deploy || can('restart') ? `<div class="g-card">${e.post_deploy ? `<label class="g-opt"><input type="checkbox" id="gs-rbpost"><span>${esc(t('genv_run_post'))} <code class="g-mono">${esc(e.post_deploy)}</code></span></label>` : ''}
         ${can('restart') ? `<label class="g-opt"><input type="checkbox" id="gs-rbrestart"><span>${esc(t('genv_restart'))}</span></label>` : ''}</div>` : ''}
       ${e.confirm ? `<div class="g-conf"><label>${esc(tf('genv_type_env', {env}))}</label><input id="gs-rbconf" autocomplete="off"></div>` : ''}
@@ -2766,7 +2800,7 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = {
-    open, close, tab: setTab, setGitMode, simpleRefresh, simplePlan, simpleRecompare, simpleRollback, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,

@@ -515,7 +515,7 @@ func gitState(userID int) map[string]interface{} {
 		"installs": loadGitInstalls(userID, false, ""), "bundle_apps": fromBundle, "last_check_at": last,
 		"can_check": gitChecksAllowed(userID), "interval_minutes": settingInt("git_check_interval_minutes"),
 		"notifications": settingBool("notifications_enabled"), "deploy": gitDeployPolicies(userID),
-		"grace_minutes": settingInt("git_schedule_grace_minutes"), "feeds": loadGitFeeds(userID), "pipelines": loadGitPipelines(userID),
+		"grace_minutes": settingInt("git_schedule_grace_minutes"), "feeds": loadGitFeeds(userID), "pipelines": loadGitPipelines(userID), "hosts": hostLabels(userID),
 	}
 }
 

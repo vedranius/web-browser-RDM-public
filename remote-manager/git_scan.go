@@ -507,6 +507,7 @@ type gitInstall struct {
 	ConnID       int            `json:"conn_id"`
 	ConnName     string         `json:"conn_name"`
 	Host         string         `json:"host,omitempty"`
+	Hostname     string         `json:"hostname,omitempty"` // the server's real hostname (cached), "" = not read yet
 	FolderID     *int           `json:"folder_id,omitempty"`
 	Tags         []string       `json:"tags,omitempty"`
 	App          string         `json:"app"`
@@ -543,8 +544,8 @@ type gitInstallData struct {
 
 func loadGitInstalls(userID int, withFiles bool, where string, args ...interface{}) []gitInstall {
 	out := []gitInstall{}
-	q := `SELECT i.id, i.conn_id, COALESCE(c.name,''), COALESCE(c.host,''), c.folder_id, COALESCE(c.tags,''), i.app, i.path, i.env, i.manual, i.state, i.data, i.checked_at, i.discovered_at,
-		COALESCE(p.since,''), i.last_ok_at, i.last_ok_state FROM git_installs i LEFT JOIN connections c ON c.id=i.conn_id LEFT JOIN git_pending_restarts p ON p.install_id=i.id WHERE i.user_id=?`
+	q := `SELECT i.id, i.conn_id, COALESCE(c.name,''), COALESCE(c.host,''), COALESCE(h.hostname,''), c.folder_id, COALESCE(c.tags,''), i.app, i.path, i.env, i.manual, i.state, i.data, i.checked_at, i.discovered_at,
+		COALESCE(p.since,''), i.last_ok_at, i.last_ok_state FROM git_installs i LEFT JOIN connections c ON c.id=i.conn_id LEFT JOIN git_hostnames h ON h.conn_id=i.conn_id LEFT JOIN git_pending_restarts p ON p.install_id=i.id WHERE i.user_id=?`
 	if where != "" {
 		q += " AND " + where
 	}
@@ -557,7 +558,7 @@ func loadGitInstalls(userID int, withFiles bool, where string, args ...interface
 		var in gitInstall
 		var tags, data string
 		var manual int
-		rows.Scan(&in.ID, &in.ConnID, &in.ConnName, &in.Host, &in.FolderID, &tags, &in.App, &in.Path, &in.Env, &manual, &in.State, &data, &in.CheckedAt, &in.DiscoveredAt, &in.RestartPending,
+		rows.Scan(&in.ID, &in.ConnID, &in.ConnName, &in.Host, &in.Hostname, &in.FolderID, &tags, &in.App, &in.Path, &in.Env, &manual, &in.State, &data, &in.CheckedAt, &in.DiscoveredAt, &in.RestartPending,
 			&in.LastOKAt, &in.LastOKState)
 		in.Manual = manual == 1
 		in.Tags = parseTags(tags)
@@ -659,6 +660,7 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 		return sr, changes
 	}
 	defer cl.Close()
+	cacheServerHostname(connID, cl)
 	setNotifyState(fmt.Sprintf("git:unreach:%d:%d", userID, connID), "")
 	if discover {
 		n, err := discoverAndRegister(userID, connID, cl, cat, apps, now)
