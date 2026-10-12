@@ -4,6 +4,21 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.6] — 2026-10-12 — Guided AI and MCP setup
+
+Seventh step of issue #43. No database changes; no new endpoints.
+
+### Added
+- **MCP connection wizard** (Settings → AI connections): pick the app (Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code / other, Claude and ChatGPT through OAuth) → pick servers and access level (look only / look and change with approval, limited by the admin policy) → ready-made commands and config files (`codex mcp add`, `config.toml`, `claude mcp add`, `gemini mcp add`, `settings.json`, `mcp.json`) with copy and download buttons → in-browser **connection test** that runs `initialize` and `tools/list` with the new token. The token is created through the existing audited `POST /api/mcp/grants` and shown once. The old token form is kept under "Advanced".
+- **AI provider wizard**: provider presets (Anthropic, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama, custom OpenAI-compatible) → key and model → test → done, using the existing provider endpoints. The old form is kept as the advanced option.
+- The MCP server now **introduces itself**: `serverInfo.title` / `description` and rewritten `instructions` explain that "wrm" is WRM PRO and list what it can do and which scopes exist. `GET /api/mcp/config` also returns `instructions`, `description` and `version`, and the wizard offers a ready `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text, so clients such as Codex no longer ask what *wrm* refers to.
+- The `open_session` result lists `not_allowed` and `how_to_allow` when the connection's scopes or mode limit it.
+- Tests: `mcp_wizard_test.go`.
+
+### Changed
+- The scope-denial message ("Denied by WRM …") now states which scopes the connection has, which one the tool needs, that this is a limit of the connection and not of the server, and tells the user to create an AI connection with that scope (Settings → AI connections). This replaces the vague "insufficient permissions" reaction of AI clients.
+- All new texts are in English and Croatian.
+
 ## [12.2.5] — 2026-10-12 — Movable, resizable AI assistant window
 
 Sixth step of issue #43. No server or database changes.
