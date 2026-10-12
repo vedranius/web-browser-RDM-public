@@ -48,6 +48,13 @@ Object.assign(LANGS.en, {
   ai_prov_none: 'No providers yet.', ai_models_col: 'Models', ai_prov_secrets: 'Keys', ai_kind_anthropic: 'Anthropic API', ai_kind_openai: 'OpenAI API', ai_kind_azure: 'Azure OpenAI',
   ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-compatible (local models)',
   ai_subscriptions_note: 'Consumer Claude.ai and ChatGPT chat subscriptions cannot be used by other applications. Use an API key or an enterprise gateway here, or connect the chat app to WRM over MCP (Settings → AI connections).',
+  aiw_title: 'Add an AI provider (step by step)', aiw_s_pick: 'Provider', aiw_s_key: 'Key and model', aiw_s_test: 'Test', aiw_s_done: 'Done',
+  aiw_pick: 'Which AI service do you want to use?', aiw_p_anthropic: 'Anthropic (Claude)', aiw_p_openai: 'OpenAI', aiw_p_gemini: 'Google Gemini', aiw_p_groq: 'Groq', aiw_p_openrouter: 'OpenRouter', aiw_p_mistral: 'Mistral',
+  aiw_p_ollama: 'Ollama (local, free)', aiw_p_custom: 'Other OpenAI-compatible', aiw_p_advanced: 'Azure, AWS Bedrock, Vertex (advanced form)',
+  aiw_key: 'API key', aiw_key_opt: 'API key (optional for local models)', aiw_endpoint: 'Address (base URL)', aiw_model: 'Model', aiw_model_ph: 'e.g. {m}', aiw_name: 'Name',
+  aiw_key_note: 'The key is stored encrypted and is never shown again.', aiw_ollama_note: 'Ollama must run on the same computer as WRM (or be reachable from it). Install it from ollama.com, then run: ollama pull {m}',
+  aiw_testing: 'Saving and testing…', aiw_ok: 'It works. The provider answered{reply}.', aiw_fail: 'The provider did not answer: {err}', aiw_fix: 'Go back and check the key, the address and the model name.',
+  aiw_next: 'Save and test', aiw_back: 'Back', aiw_finish: 'Done', aiw_use: 'Open an AI assistant window on a server connection and choose this provider. Every session is recorded and audited.', aiw_wizard: 'Setup wizard', aiw_need: 'Fill in the required fields.',
   // admin
   adm_ai_kill: 'Kill switch', ai_kill_all: 'Stop every AI session now', ai_kill_all_q: 'End every AI session of every user now?', ai_killed_n: '{n} sessions ended',
   ai_kill_switch_on: 'The kill switch is ON: nobody can use the AI assistant.', ai_kill_switch_off: 'The kill switch is off.',
@@ -119,6 +126,13 @@ Object.assign(LANGS.hr, {
   ai_prov_none: 'Još nema pružatelja.', ai_models_col: 'Modeli', ai_prov_secrets: 'Ključevi', ai_kind_anthropic: 'Anthropic API', ai_kind_openai: 'OpenAI API', ai_kind_azure: 'Azure OpenAI',
   ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-kompatibilan (lokalni modeli)',
   ai_subscriptions_note: 'Potrošačke pretplate na Claude.ai i ChatGPT chat ne mogu koristiti druge aplikacije. Ovdje koristi API ključ ili enterprise gateway, ili poveži chat aplikaciju s WRM-om preko MCP-a (Postavke → AI veze).',
+  aiw_title: 'Dodavanje AI pružatelja (korak po korak)', aiw_s_pick: 'Pružatelj', aiw_s_key: 'Ključ i model', aiw_s_test: 'Test', aiw_s_done: 'Gotovo',
+  aiw_pick: 'Koju AI uslugu želite koristiti?', aiw_p_anthropic: 'Anthropic (Claude)', aiw_p_openai: 'OpenAI', aiw_p_gemini: 'Google Gemini', aiw_p_groq: 'Groq', aiw_p_openrouter: 'OpenRouter', aiw_p_mistral: 'Mistral',
+  aiw_p_ollama: 'Ollama (lokalno, besplatno)', aiw_p_custom: 'Ostalo, kompatibilno s OpenAI-jem', aiw_p_advanced: 'Azure, AWS Bedrock, Vertex (napredni obrazac)',
+  aiw_key: 'API ključ', aiw_key_opt: 'API ključ (neobavezno za lokalne modele)', aiw_endpoint: 'Adresa (osnovni URL)', aiw_model: 'Model', aiw_model_ph: 'npr. {m}', aiw_name: 'Naziv',
+  aiw_key_note: 'Ključ se sprema šifriran i više se nikada ne prikazuje.', aiw_ollama_note: 'Ollama mora raditi na istom računalu kao WRM (ili biti dostupan s njega). Instalirajte ga s ollama.com, zatim pokrenite: ollama pull {m}',
+  aiw_testing: 'Spremanje i testiranje…', aiw_ok: 'Radi. Pružatelj je odgovorio{reply}.', aiw_fail: 'Pružatelj nije odgovorio: {err}', aiw_fix: 'Vratite se i provjerite ključ, adresu i naziv modela.',
+  aiw_next: 'Spremi i testiraj', aiw_back: 'Natrag', aiw_finish: 'Gotovo', aiw_use: 'Otvorite prozor AI asistenta na vezi prema poslužitelju i odaberite ovog pružatelja. Svaka sesija se bilježi i evidentira u reviziji.', aiw_wizard: 'Čarobnjak za postavljanje', aiw_need: 'Ispunite obavezna polja.',
   adm_ai_kill: 'Prekidač za hitno zaustavljanje', ai_kill_all: 'Odmah zaustavi sve AI sesije', ai_kill_all_q: 'Odmah završiti sve AI sesije svih korisnika?', ai_killed_n: 'Završeno sesija: {n}',
   ai_kill_switch_on: 'Prekidač je UKLJUČEN: nitko ne može koristiti AI asistenta.', ai_kill_switch_off: 'Prekidač je isključen.',
   ai_policies: 'Politike', ai_providers_org: 'Pružatelji organizacije', ai_sessions: 'AI sesije', ai_usage_users: 'Potrošnja po korisniku', ai_destructive: 'Uvijek blokirano (destruktivni uzorci)',
@@ -220,6 +234,9 @@ Object.assign(LANGS.hr, {
 .ai-tr { display: flex; flex-direction: column; gap: 6px; }
 .ai-tr .k { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; }
 .ai-form .field { margin-bottom: 9px; }
+.ai-wsteps { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; font-size: 11px; } .ai-wsteps span { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border2); color: var(--text3); }
+.ai-wsteps span.on { background: var(--accent); border-color: var(--accent); color: #fff; } .ai-wsteps span.done { color: var(--text2); }
+.ai-wgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin: 8px 0; } .ai-wgrid button { height: auto; white-space: normal; text-align: left; padding: 9px 11px; }
 .ai-form .field label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px; }
 .ai-form input[type=text], .ai-form input[type=password], .ai-form input[type=number], .ai-form select, .ai-form textarea { width: 100%; }
 .ai-form textarea { min-height: 90px; font: 11px 'JetBrains Mono', monospace; }
@@ -402,7 +419,7 @@ Object.assign(LANGS.hr, {
     const provs = cfg.providers || [];
     const own = cfg.personal_keys ? `<button class="btn-sec btn-sm" onclick="wrmAI.myKeys(${id})">🔑 ${esc(t('ai_my_keys'))}</button>` : '';
     if (!provs.length) {
-      body.innerHTML = `<div class="hint-box">${esc(t('ai_no_providers'))}</div>${cfg.personal_keys ? `<button class="btn-sm" onclick="wrmAI.myKeys(${id})">🔑 ${esc(t('ai_add_own_key'))}</button>` : ''}
+      body.innerHTML = `<div class="hint-box">${esc(t('ai_no_providers'))}</div>${cfg.personal_keys ? `<button class="btn-sm" onclick="wrmAI.myWizard(${id})">🧭 ${esc(t('aiw_wizard'))}</button> <button class="btn-sec btn-sm" onclick="wrmAI.myKeys(${id})">🔑 ${esc(t('ai_add_own_key'))}</button>` : ''}
         <div class="hint-box">${esc(t('ai_subscriptions_note'))}</div>`;
       return;
     }
@@ -809,7 +826,7 @@ Object.assign(LANGS.hr, {
     let list = [];
     try { list = await api('GET', base); } catch (e) { showToast(e.message, 'error'); return; }
     const html = `<div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🔑 ${esc(t(scope === 'org' ? 'ai_providers_org' : 'ai_my_keys'))}</h3><button class="icon-btn" onclick="wrmAI.closeModal()">✕</button></div>
-      <div class="hint-box">${esc(t('ai_subscriptions_note'))}</div>${provList(list, scope)}<div style="margin-top:10px;"><button class="btn-sm" onclick="wrmAI.editProv('${scope}', 0)">＋ ${esc(t('ai_prov_add'))}</button></div>`;
+      <div class="hint-box">${esc(t('ai_subscriptions_note'))}</div>${provList(list, scope)}<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-sm" onclick="wrmAI.awOpen('${scope}')">🧭 ${esc(t('aiw_wizard'))}</button><button class="btn-sec btn-sm" onclick="wrmAI.editProv('${scope}', 0)">＋ ${esc(t('ai_prov_add'))}</button></div>`;
     modal(html);
     provAfter = after;
   }
@@ -849,6 +866,92 @@ Object.assign(LANGS.hr, {
     const base = scope === 'org' ? '/api/admin/ai/providers' : '/api/ai/providers';
     try { await api('DELETE', `${base}/${pid}`); } catch (e) { showToast(e.message, 'error'); return; }
     if (scope === 'org' && adminTab === 'ai') adminAI(); else providersDialog(scope, provAfter);
+  }
+
+  // ── provider wizard: pick → key and model → test → done ──
+  // Uses the same endpoints, policies and audit as the full provider form.
+  const AIW_PRESETS = [
+    {id: 'anthropic', kind: 'anthropic', model: 'claude-sonnet-5-5', key: true},
+    {id: 'openai', kind: 'openai', model: 'gpt-4.1', key: true},
+    {id: 'gemini', kind: 'openai_compatible', base: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash', key: true},
+    {id: 'groq', kind: 'openai_compatible', base: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile', key: true},
+    {id: 'openrouter', kind: 'openai_compatible', base: 'https://openrouter.ai/api/v1', model: 'anthropic/claude-sonnet-4.5', key: true},
+    {id: 'mistral', kind: 'openai_compatible', base: 'https://api.mistral.ai/v1', model: 'mistral-large-latest', key: true},
+    {id: 'ollama', kind: 'openai_compatible', base: 'http://localhost:11434/v1', model: 'qwen2.5-coder:7b', key: false},
+    {id: 'custom', kind: 'openai_compatible', base: '', model: '', key: false},
+  ];
+  let AW = null;
+  function awSteps() { return ['aiw_s_pick', 'aiw_s_key', 'aiw_s_test']; }
+  function awOpen(scope) {
+    AW = {scope, step: 1, preset: null, pid: 0, result: null};
+    awRender();
+  }
+  function awRender() {
+    const steps = awSteps();
+    const p = AIW_PRESETS.find(x => x.id === AW.preset);
+    const bar = `<div class="ai-wsteps">${steps.map((s, i) => `<span class="${i + 1 === AW.step ? 'on' : i + 1 < AW.step ? 'done' : ''}">${i + 1}. ${esc(t(s))}</span>`).join('')}</div>`;
+    let body = '', nav = '';
+    if (AW.step === 1) {
+      const kinds = AW.scope === 'user' && cfg ? (cfg.provider_kinds || KINDS) : KINDS;
+      const list = AIW_PRESETS.filter(x => kinds.includes(x.kind));
+      body = `<div class="ai-see">${esc(t('aiw_pick'))}</div><div class="ai-wgrid">${list.map(x => `<button class="btn-sec" onclick="wrmAI.awPick('${x.id}')">${esc(t('aiw_p_' + x.id))}</button>`).join('')}
+        <button class="btn-sec" onclick="wrmAI.editProv('${AW.scope}', 0)">${esc(t('aiw_p_advanced'))}</button></div>`;
+    } else if (AW.step === 2) {
+      const v = AW.vals || {};
+      const field = (id, lbl, val, type, ph) => `<div class="field"><label>${esc(lbl)}</label><input type="${type || 'text'}" id="aiw-${id}" value="${esc(val || '')}" placeholder="${esc(ph || '')}" autocomplete="off"></div>`;
+      body = `<div class="ai-form">${field('name', t('aiw_name'), v.name != null ? v.name : t('aiw_p_' + p.id))}
+        ${p.kind === 'openai_compatible' ? field('base', t('aiw_endpoint'), v.base != null ? v.base : p.base, 'text', 'https://…/v1') : ''}
+        ${p.key || p.id === 'custom' ? field('key', t(p.key ? 'aiw_key' : 'aiw_key_opt'), '', 'password') : ''}
+        ${field('model', t('aiw_model'), v.model != null ? v.model : p.model, 'text', tf('aiw_model_ph', {m: p.model || 'model-name'}))}
+        <div class="ai-see">${esc(t('aiw_key_note'))}${p.id === 'ollama' ? ' ' + esc(tf('aiw_ollama_note', {m: p.model})) : ''}</div></div>`;
+      nav = `<button class="btn-sec" onclick="wrmAI.awGo(-1)">← ${esc(t('aiw_back'))}</button><button onclick="wrmAI.awTest()">${esc(t('aiw_next'))} →</button>`;
+    } else {
+      const r = AW.result;
+      body = !r ? `<div class="ai-see">${esc(t('aiw_testing'))}</div>` : r.ok
+        ? `<div class="hint-box">✅ ${esc(tf('aiw_ok', {reply: r.reply ? ': ' + r.reply : ''}))}</div><div class="ai-see">${esc(t('aiw_use'))}</div>`
+        : `<div class="hint-box warn">❌ ${esc(tf('aiw_fail', {err: r.error}))}</div><div class="ai-see">${esc(t('aiw_fix'))}</div>`;
+      nav = r && !r.ok ? `<button class="btn-sec" onclick="wrmAI.awGo(-1)">← ${esc(t('aiw_back'))}</button>` : '';
+      nav += r && r.ok ? `<button onclick="wrmAI.awFinish()">✓ ${esc(t('aiw_finish'))}</button>` : '';
+    }
+    modal(`<div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🧭 ${esc(t('aiw_title'))}</h3><button class="icon-btn" onclick="wrmAI.awFinish()">✕</button></div>${bar}${body}${nav ? `<div class="modal-footer">${nav}</div>` : ''}`);
+  }
+  function awPick(id) { AW.preset = id; AW.vals = null; AW.step = 2; awRender(); }
+  function awGo(d) {
+    if (AW.step === 2) AW.vals = awRead();
+    AW.step += d; AW.result = null; awRender();
+  }
+  function awRead() {
+    const v = id => { const el = $('aiw-' + id); return el ? el.value.trim() : ''; };
+    return {name: v('name'), base: v('base').replace(/\/+$/, ''), key: ($('aiw-key') || {}).value || '', model: v('model')};
+  }
+  async function awTest() {
+    const p = AIW_PRESETS.find(x => x.id === AW.preset);
+    const v = awRead();
+    AW.vals = Object.assign({}, v, {key: ''});
+    if (!v.name || !v.model || (p.kind === 'openai_compatible' && !v.base) || (p.key && !v.key && !AW.pid)) { showToast(t('aiw_need'), 'error'); return; }
+    AW.step = 3; AW.result = null; awRender();
+    const base = AW.scope === 'org' ? '/api/admin/ai/providers' : '/api/ai/providers';
+    const models = v.model.split(/[\s,]+/).filter(Boolean).join(',');
+    const body = {name: v.name, kind: p.kind, models, default_model: models.split(',')[0], enabled: true, refusal_fallback: true, base_url: p.kind === 'openai_compatible' || p.kind === 'openai' ? v.base : ''};
+    if (v.key) body.api_key = v.key;
+    try {
+      const saved = await api(AW.pid ? 'PUT' : 'POST', AW.pid ? `${base}/${AW.pid}` : base, body);
+      AW.pid = AW.pid || (saved && (saved.id || (saved.provider && saved.provider.id))) || 0;
+      if (!AW.pid) {
+        const list = await api('GET', base);
+        const mine = list.filter(x => x.name === v.name).sort((a, b) => b.id - a.id)[0];
+        AW.pid = mine ? mine.id : 0;
+      }
+      AW.result = AW.pid ? await api('POST', `${base}/${AW.pid}/test`, {}) : {ok: false, error: t('aiw_need')};
+    } catch (e) { AW.result = {ok: false, error: e.message}; }
+    if (AW && AW.step === 3) awRender();
+  }
+  function awFinish() {
+    closeAIModal();
+    const scope = AW && AW.scope;
+    AW = null;
+    if (scope === 'org' && typeof adminTab !== 'undefined' && adminTab === 'ai') adminAI();
+    if (provAfter) provAfter();
   }
 
   // ── admin tab ─────────────────────────────────────────
@@ -905,6 +1008,8 @@ Object.assign(LANGS.hr, {
     toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession,
     myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); }),
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
+    awOpen, awPick, awGo, awTest, awFinish,
+    myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); }; awOpen('user'); },
     closeModal: closeAIModal, adminTab: adminAI, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
   };
 })();

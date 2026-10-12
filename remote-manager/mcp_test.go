@@ -298,7 +298,7 @@ func TestMCPReadOnlySessionAndAudit(t *testing.T) {
 		t.Fatal("the command ran")
 	}
 	text, isErr = c.call("write_file", map[string]interface{}{"session_id": sid, "path": "~/x", "content": "x", "reason": "x"})
-	if !isErr || !strings.Contains(text, "no scope") {
+	if !isErr || !strings.Contains(text, "do not allow write_file") || !strings.Contains(text, "edit_file_with_approval") {
 		t.Fatalf("write_file without its scope: %s", text)
 	}
 	s := mcpSessionOf(sid)
