@@ -1,3 +1,8 @@
+## [12.3.2] - 2026-10-12
+
+### Fixed
+- **Ollama Textual Tool Call Interceptor**: Dodan fallback u `ai_llm.go` koji automatski presreće tekstualne JSON pozive alata kada lokalni modeli (Ollama/Qwen) vrate naredbu kroz tekst umjesto API strukture, te ih izvršava na poslužitelju.
+
 ## [12.3.1] - 2026-10-12
 
 ### Added
