@@ -112,6 +112,7 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_personal_keys", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "ai_provider_kinds", Default: aiAllProviderKinds, Kind: "string"},
 	{Key: "ai_models", Default: "", Kind: "string"},
+	{Key: "ai_ollama_manage", Default: "0", Kind: "bool"},
 	{Key: "ai_redact_output", Default: "1", Kind: "bool"},
 	{Key: "ai_share_notes", Default: "1", Kind: "bool"},
 	{Key: "ai_transcript_retention_days", Default: "90", Kind: "int", Min: 1, Max: 3650},

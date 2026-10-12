@@ -621,7 +621,7 @@ func mcpConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 	jsonOK(w, map[string]interface{}{
 		"enabled": ok, "reason": why, "connections": conns, "modes": mcpAllowedModes(), "scopes": mcpAllowedScopes(), "all_scopes": mcpScopeOrder,
 		"default_hours": min(settingInt("ai_mcp_token_hours"), settingInt("ai_mcp_max_token_hours")), "max_hours": settingInt("ai_mcp_max_token_hours"),
-		"url": base + "/mcp", "base_url": base, "oauth": settingBool("ai_mcp_oauth"), "elicitation": settingBool("ai_mcp_elicitation"),
+		"url": base + "/mcp", "base_url": base, "instructions": mcpInstructions, "description": mcpServerDescription, "version": AppVersion, "oauth": settingBool("ai_mcp_oauth"), "elicitation": settingBool("ai_mcp_elicitation"),
 		"auto_max_minutes": settingInt("ai_auto_max_minutes"), "auto_max_actions": settingInt("ai_auto_max_actions"),
 	})
 }

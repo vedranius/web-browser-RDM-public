@@ -1,37 +1,156 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.1.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.7/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.1.0 — AI desktop apps (MCP): Claude, ChatGPT and other AI apps under WRM's rules
+## Web Remote Manager PRO v12.2.7 — More AI providers and guided Ollama
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🤖 Connect Claude, ChatGPT and other AI apps
+### 🤖 More AI providers and a guided local Ollama
+
+- **Refreshed provider presets** in the AI provider wizard: Anthropic, OpenAI, Gemini, Groq, OpenRouter, Mistral, **xAI, DeepSeek, Together AI, Fireworks AI, Cerebras, Cohere, Perplexity**, Ollama and any OpenAI-compatible endpoint (Azure OpenAI and similar through the advanced form). Each preset offers several suggested models, and the model name is always free text.
+- **Load the model list** from the provider (`GET …/models`) and add models with one click. The list is fetched by the WRM server with the stored key; the key never reaches the browser.
+- **Ollama, step by step:** the wizard detects Ollama (default `http://127.0.0.1:11434`), shows the installed models and the install / background-service / download-a-model commands for Linux, macOS and Windows, with copy buttons. Ollama is added as an OpenAI-compatible provider (`/v1`, no API key).
+- **Optional "do it with WRM":** administrators can let WRM run the install, start (as a background service) and model download. Off by default; enabled by the new policy **ai_ollama_manage** (`WRM_AI_OLLAMA_MANAGE`). Every run needs an explicit confirmation, is checked on the server (admin + policy), uses fixed commands only, and is recorded in the audit log and in a run history.
+- English and Croatian. One additive table (`ai_ollama_runs`).
+
+### ⬆️ Upgrading from v12.2.6
+
+Replace the binary (or update with one click from the version badge). One new table is created automatically; no configuration changes.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.7)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.7/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.2.6 — Guided AI and MCP setup
+
+#### 🧭 Connect AI apps and providers step by step
+
+- **Settings → AI connections** now starts with a wizard: pick your app (Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code / other, or Claude and ChatGPT through sign-in) → pick the servers and what the app may do → copy the ready-made command or config file (or download it) → press **Test**. WRM creates the token for you; it is shown once.
+- **AI provider wizard** in the assistant: pick a provider (Anthropic, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama or any OpenAI-compatible endpoint) → key and model → automatic test → done. The old form is still there as the advanced option.
+- **Clients now know what "wrm" is.** The MCP server introduces itself ("WRM PRO — Remote Manager", what it does, which scopes exist) and the wizard offers a ready AGENTS.md / CLAUDE.md / GEMINI.md text, so Codex no longer asks what *wrm* refers to.
+- **Clear permission messages.** When a connection's scopes or mode do not allow an action, the answer says which scope is missing and that the user must create an AI connection with it (Settings → AI connections), instead of a vague "insufficient permissions". The MCP session info lists what the connection cannot do (
+ot_allowed, how_to_allow).
+- English and Croatian. No database changes.
+
+#### ⬆️ Upgrading from v12.2.5
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+---
+
+## Included from v12.2.5 — Movable, resizable AI assistant window
+
+#### ▶ AI assistant window: dock, float, resize, expand
+
+- **Dock** the assistant to the left, right, top or bottom of the terminal window, or let it **float**: drag the title bar to move it and the corner to resize it.
+- **Resize** it (drag the inner edge of a docked panel) so the whole command and output are visible; the terminal is refitted beside it.
+- **Expand** it over the whole terminal window with ⛶ (or double-click the title bar) and restore it again.
+- Dock, size and position are remembered per user in the browser. On phones and narrow windows the layout is unchanged. English and Croatian.
+
+#### ⬆️ Upgrading from v12.2.4
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+---
+
+## Included from v12.2.4 — Resizable, fullscreen session replay
+
+#### ▶ Session replay: resize, fullscreen, no sideways scrolling
+
+- **Resizable window:** drag the bottom-right corner of the replay window to make it as large as you need.
+- **Fullscreen:** a new ⛶ button in the header expands the replay to the whole screen; **Esc** or the button leaves it.
+- **No horizontal scrolling:** the terminal keeps the recorded size but is scaled to the width of the window, and re-fitted when you resize it or toggle fullscreen. Works at phone width too.
+- Playback controls and behaviour are unchanged. English and Croatian.
+
+#### ⬆️ Upgrading from v12.2.3
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+---
+
+## Included from v12.2.3 — Explanations for every Git tab and setting
+
+#### 💡 Explanations for every tab
+
+- **A short description under every tab** of the Advanced Git workspace (also as a tooltip on the tab), of the Settings window and of the Admin panel: what the tab is for and how to use it, in plain language, in English and Croatian.
+- Nothing else changes: same behaviour, same layout (checked at 390 px).
+
+#### ⬆️ Upgrading from v12.2.2
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+---
+
+## Included from v12.2.2 — Git Simple Mode: install, update and roll back in one clear view
+
+#### 🧭 Git Simple Mode
+
+- **Simple | Advanced switch** in the Git workspace header (remembered per user). Advanced is the default and unchanged.
+- **One card per environment:** the version on the server next to the latest version on the branch, with a clear status: up to date, update available, not installed.
+- **Big, safe actions:** Install, Update / Deploy again and Roll back to the previous version, each with a plain-language confirmation. Same permissions, backups and audit as the Advanced deploy.
+
+#### ⬆️ Upgrading from v12.2.1
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+---
+
+## Included from v12.2.1 — Terminal fixes: copying long selections, maximized windows, cursor in the terminal
+
+#### 🖥 Terminal fixes
+
+- **Copy long output:** a selection that scrolls (more than one screen) is now copied completely; no more zooming out. The copy happens when you release the mouse.
+- **New terminals open maximized** and the cursor is already in the terminal. Windows of a saved session keep their layout.
+- **No more jumping windows:** clicking or double-clicking the title bar of a maximized window no longer shrinks or expands it; only dragging restores it.
+
+#### ⬆️ Upgrading from v12.2.0
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes. The remaining items of issue #43 are planned for the next versions.
+
+---
+
+## Included from v12.2.0 — AI provider fixes: Gemini tools, busy providers and token limits
+
+#### 🛠 AI assistant fixes
+
+- **Gemini** (and other OpenAI-compatible providers that return a signature with each tool call) works with tools: *HTTP 400: Function call is missing a thought_signature* is gone. WRM keeps the provider's `extra_content` of every tool call and sends it back unchanged.
+- **Busy providers:** *HTTP 503 — this model is currently experiencing high demand* (and 408 / 429 / 5xx) is retried up to three times with a short back-off before an error is shown.
+- **Token limits:** *HTTP 413 / request too large* (for example Groq's tokens-per-minute limit) shortens the long command output of the conversation and retries, so you get the assistant's answer instead of only the command output.
+- The assistant shows a short notice while it retries or shortens. English and Croatian.
+
+#### ⬆️ Upgrading from v12.1.0
+
+Replace the binary (or update with one click from the version badge). No database changes; v12.1.0 still starts on the same database. The remaining items of issue #43 are planned for the next versions.
+
+---
+
+## Included from v12.1.0 — AI desktop apps (MCP): Claude, ChatGPT and other AI apps under WRM's rules
+
+#### 🤖 Connect Claude, ChatGPT and other AI apps
 
 - WRM is now an **MCP server** (`https://<your WRM>/mcp`, streamable HTTP). **Claude** (claude.ai and the desktop app), **ChatGPT** connectors, Claude Code and other MCP clients can open a WRM session to a server you chose and work on it.
 - **This is the supported way to use your Claude or ChatGPT account with WRM:** the chat app connects to WRM, the model runs in the app, and WRM never needs a provider key.
 - Connect with **OAuth** (add a custom connector, sign in to WRM and approve), with a **personal access token**, or through the small **stdio bridge** built into the WRM binary (`wrm -mcp-stdio -url … -token …`) for apps that only start local servers. *Settings → AI connections* shows ready-to-copy setup snippets.
 
-### 🛡 Same rules as the built-in assistant
+#### 🛡 Same rules as the built-in assistant
 
 - Each **AI connection** is bound to you, the **servers** you pick, one **mode** (read-only, ask before every change, automatic within limits), **scopes** (`read_logs`, `run_readonly`, `run_with_approval`, `edit_file_with_approval`, `transfer`) and a **lifetime** (8 hours by default). Tokens are stored hashed and shown once.
 - Every call goes through the **v12.0.0 permission engine**: the read-only classifier, the always-blocked destructive list, approvals, automatic-mode limits, mode rules per tag / folder / host, redaction and the audit. Nothing a server prints — and nothing the app asks — can raise the scopes or the mode.
 - **Approvals** appear in WRM as a card with **Approve**, **Deny** and **Edit**, and as a question in the app when it supports MCP elicitation.
 - Copy files between the chosen servers with the `transfer` scope, after your approval, recorded with size and SHA-256.
 
-### 🔌 See it, stop it
+#### 🔌 See it, stop it
 
 - **🤖 AI connected** in the top bar while an app has a session, with **one-click revoke**.
 - *Admin panel → AI connections:* every active AI connection, **revoke all**, registered OAuth apps and the policies — MCP on/off (**off by default**), who may use it (`ai_mcp`, administrators by default), allowed scopes and modes, maximum lifetime, the OAuth redirect URI allowlist, allowed browser origins.
 - The AI assistant's kill switch stops every AI connection too. Everything is in the audit log (`mcp.*`, `ai.*`) and in **Sessions & recordings**.
 
-### ⬆️ Upgrading from v12.0.0
+#### ⬆️ Upgrading from v12.0.0
 
 Replace the binary (or update with one click from the version badge). AI connections are **off** until an administrator turns them on in *Admin panel → AI connections*. Hosted connectors (claude.ai, ChatGPT) need WRM reachable from the internet over HTTPS; the stdio bridge does not. New tables are added; v12.0.0 still starts on the database. See the MCP threat model in [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.1.0/SECURITY.md).
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.1.0)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.1.0/CHANGELOG.md) for details.
 
 ---
 

@@ -4,6 +4,98 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.7] — 2026-10-12 — More AI providers and guided Ollama
+
+Last step of issue #43. One additive table (`ai_ollama_runs`).
+
+### Added
+- **Provider presets** in the AI provider wizard for xAI, DeepSeek, Together AI, Fireworks AI, Cerebras, Cohere and Perplexity (all OpenAI-compatible), with refreshed multi-model suggestion lists for the existing presets. The model name stays free text and the lists stay editable.
+- **Model list loading:** `GET /api/admin/ai/providers/{id}/models` asks the provider for its `/models` list (OpenAI-compatible and Anthropic kinds) using the stored key; the wizard shows the result as one-click chips. Audited as `ai.provider_models_listed`.
+- **Guided Ollama setup** (wizard step "Ollama on this server"): detects Ollama (`/api/version`, `/api/tags`, default `http://127.0.0.1:11434`), shows status and installed models, per-OS install / background-service / pull commands with copy buttons, and adds Ollama as an OpenAI-compatible provider (`/v1`, no key).
+- **Optional "do it with WRM"**: `POST /api/ai/ollama/action` (`install`, `start`, `pull`) runs fixed commands as a background job. Server-side checks: administrator, policy `ai_ollama_manage` (default off, `WRM_AI_OLLAMA_MANAGE`), explicit `confirm`, supported OS, validated URL and model name, one run at a time. Runs are stored in `ai_ollama_runs` (`GET /api/ai/ollama/runs`, admin only) and audited as `admin.ai_ollama_install|start|pull|finished|denied` with neutral detail keys.
+- Tests: `ai_ollama_test.go` (fake Ollama server, permissions, audit, model list).
+
+### Changed
+- The wizard test step and the last step offer "Load the model list". All new texts are in English and Croatian.
+
+## [12.2.6] — 2026-10-12 — Guided AI and MCP setup
+
+Seventh step of issue #43. No database changes; no new endpoints.
+
+### Added
+- **MCP connection wizard** (Settings → AI connections): pick the app (Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code / other, Claude and ChatGPT through OAuth) → pick servers and access level (look only / look and change with approval, limited by the admin policy) → ready-made commands and config files (`codex mcp add`, `config.toml`, `claude mcp add`, `gemini mcp add`, `settings.json`, `mcp.json`) with copy and download buttons → in-browser **connection test** that runs `initialize` and `tools/list` with the new token. The token is created through the existing audited `POST /api/mcp/grants` and shown once. The old token form is kept under "Advanced".
+- **AI provider wizard**: provider presets (Anthropic, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama, custom OpenAI-compatible) → key and model → test → done, using the existing provider endpoints. The old form is kept as the advanced option.
+- The MCP server now **introduces itself**: `serverInfo.title` / `description` and rewritten `instructions` explain that "wrm" is WRM PRO and list what it can do and which scopes exist. `GET /api/mcp/config` also returns `instructions`, `description` and `version`, and the wizard offers a ready `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text, so clients such as Codex no longer ask what *wrm* refers to.
+- The `open_session` result lists `not_allowed` and `how_to_allow` when the connection's scopes or mode limit it.
+- Tests: `mcp_wizard_test.go`.
+
+### Changed
+- The scope-denial message ("Denied by WRM …") now states which scopes the connection has, which one the tool needs, that this is a limit of the connection and not of the server, and tells the user to create an AI connection with that scope (Settings → AI connections). This replaces the vague "insufficient permissions" reaction of AI clients.
+- All new texts are in English and Croatian.
+
+## [12.2.5] — 2026-10-12 — Movable, resizable AI assistant window
+
+Sixth step of issue #43. No server or database changes.
+
+### Added
+- The **AI assistant panel** inside a terminal window can now be **docked left, right, top or bottom**, shown as a **floating window**, **resized** (drag its inner edge, or the corner when floating) and **expanded** over the whole terminal window with a new ⛶ button (a double-click on the title bar does the same; press it again to restore). Drag the title bar to move it; moving a docked panel makes it float. The terminal and file area shrink beside a docked panel and are refitted, so the full command and output stay visible.
+- Dock, size and floating position are **remembered per user** in the browser (`localStorage`, key `wrm_ai_win_<user id>`). The expanded state is not remembered.
+- All new texts are in English and Croatian.
+
+### Changed
+- On compact windows (up to 760 px wide, e.g. phones) the layout is unchanged: the panel covers the terminal window below the title bar, and the new controls are hidden.
+
+## [12.2.4] — 2026-10-12 — Resizable, fullscreen session replay
+
+Fifth step of issue #43. No server or database changes.
+
+### Added
+- **Session recording replay** (terminal recordings) can be **resized** by dragging its bottom-right corner and expanded to **fullscreen** with a new ⛶ button in the header (**Esc** or the button leaves fullscreen). The size resets each time a recording is opened. Remote desktop (RDP/VNC) replays use the same window and also refit to it.
+- All new texts are in English and Croatian.
+
+### Changed
+- The replay terminal keeps the recorded size (columns × rows) but is now **scaled to fit the available width** (and, in fullscreen, the height), re-fitted whenever the window is resized, so there is no sideways scrolling, also on phones (checked at 390 px). Playback controls and behaviour are unchanged.
+
+## [12.2.3] — 2026-10-12 — Explanations for tabs and settings
+
+Fourth step of issue #43. No server or database changes.
+
+### Added
+- **A short description under every tab** of the Advanced Git workspace (Overview, Services, Installations, Environments, Runs, Activity, .gitignore, Settings), also shown as a tooltip on the tab button.
+- The same for the **Settings** window (General, Terminal, Security, Notifications, Voice & audio, Session history, AI connections, Data) and every tab of the **Admin panel**.
+- All texts are in English and Croatian and wrap on small screens (checked at 390 px).
+
+## [12.2.2] — 2026-10-12 — Git Simple Mode
+
+Third step of issue #43. No server or database changes.
+
+### Added
+- **Simple mode for the Git workspace.** A **Simple | Advanced** switch in the header (remembered per user in the browser; Advanced stays the default and is unchanged). Simple shows one guided card per service environment: the version on the server next to the latest version on the branch, a clear status (up to date / update available / not installed / cannot compare / problem), and big actions **Install**, **Update** / **Deploy again** and **Roll back to the previous version**, each with a plain-language confirmation (version change, files per server, optional post-deploy and restart, optional other version, typing the environment name for protected environments).
+- It reuses the existing environment endpoints (overview, cell, plan, history, runs), so permissions, locks, backups, audit and run history are exactly those of the Advanced deploy; no new privileged paths.
+## [12.2.1] — 2026-10-12 — Terminal fixes
+
+Second step of issue #43 (terminal items). No server or database changes.
+
+### Fixed
+- **Copying a long selection from the terminal:** the selection was copied on every change while the mouse was still dragging, which moved the focus out of the terminal and cut a selection that scrolls (more than one screen) short, so people had to zoom out. The copy now happens once the selection has settled (mouse released, 200 ms without change), and the whole selection, scrollback included, is copied.
+- **Windows that suddenly shrink or grow:** pressing the mouse on the title bar of a maximized or snapped window restored its size at once, so a click (or the first half of a double-click) shrank it and the second half expanded it. The window is now restored only when the pointer actually moves (5 px), as when dragging.
+
+### Changed
+- **New terminal windows open maximized** and the cursor is placed in the terminal at once. Windows restored from a saved session keep their saved layout and focus; small screens already used full-size windows.
+
+## [12.2.0] — 2026-10-12 — AI provider fixes
+
+First step of issue #43. The other items of the issue stay open and are planned for the next versions.
+
+### Fixed
+- **Gemini (and other OpenAI-compatible providers) with tools:** the provider's `extra_content` of a tool call (Gemini's `thought_signature`) is now kept in the session history and sent back with the call, so the next request no longer fails with *HTTP 400: Function call is missing a thought_signature*.
+- **Temporary provider errors** (HTTP 408 / 429 / 500 / 502 / 503 / 504 / 529, for example *This model is currently experiencing high demand*) are retried up to three times (3, 8 and 15 seconds) instead of ending the turn.
+- **Requests that are too large** (HTTP 413, or a 400 / 429 that names a token or context limit, as Groq does) shorten the long tool output of the conversation (4000, 1200, then 300 bytes per result, keeping start and end) and retry, so the assistant's answer is shown instead of only the error.
+
+### Added
+- Assistant notices *The provider is busy; trying again shortly…* and *The request was too large for the provider; long command output was shortened…* (English and Croatian).
+- Tests: `ai_recovery_test.go` (the `thought_signature` round trip against a fake streaming provider, error classification, history shortening).
+
 ## [12.1.0] — 2026-10-10 — AI desktop apps (MCP)
 
 ### Added

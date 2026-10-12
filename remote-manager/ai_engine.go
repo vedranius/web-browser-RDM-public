@@ -623,7 +623,8 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		s.mu.Lock()
 		s.denials++
 		s.mu.Unlock()
-		return fail("Denied by WRM: the AI connection has no scope for " + call.Name + ". Only the user can change the scopes, in WRM.")
+		return fail("Denied by WRM: this AI connection's scopes (" + strings.Join(s.Scopes, ", ") + ") do not allow " + call.Name + "; it needs one of: " +
+			strings.Join(aiScopesFor(call.Name), ", ") + ". This is a limit of the connection, not of the server. Tell the user to create an AI connection with that scope in WRM (Settings → AI connections); do not retry.")
 	}
 	if call.BadInput != "" {
 		return fail(call.BadInput)
@@ -1200,6 +1201,43 @@ func (s *aiSession) Stop(userID int) {
 	s.audit(nil, "ai.stopped", map[string]interface{}{"by": usernameOf(userID)})
 }
 
+// completeWithRecovery runs one model request and recovers from temporary provider
+// problems: HTTP 429/5xx are retried with a short back-off, and a "request too large"
+// answer (413, or the provider's token limit) shrinks the old tool output and retries.
+func (s *aiSession) completeWithRecovery(ctx context.Context, prov aiProvider, req *aiLLMRequest) (aiLLMResponse, error) {
+	onText := func(t string) { s.emit("text", map[string]interface{}{"delta": t}) }
+	delays := []time.Duration{3 * time.Second, 8 * time.Second, 15 * time.Second}
+	shrunk := 0
+	for attempt := 0; ; attempt++ {
+		resp, err := aiComplete(ctx, prov, *req, onText)
+		var ae *aiAPIError
+		if err == nil || !errors.As(err, &ae) || ctx.Err() != nil {
+			return resp, err
+		}
+		switch {
+		case aiTooLarge(ae) && shrunk < len(aiShrinkLimits):
+			s.mu.Lock()
+			changed := aiShrinkHistory(s.history, aiShrinkLimits[shrunk])
+			req.Messages = append([]aiMsg{}, s.history...)
+			s.mu.Unlock()
+			shrunk++
+			if !changed && shrunk >= len(aiShrinkLimits) {
+				return resp, err
+			}
+			s.emit("notice", map[string]interface{}{"text": "shrunk"})
+		case aiRetryable(ae) && attempt < len(delays):
+			s.emit("notice", map[string]interface{}{"text": "retry"})
+			select {
+			case <-ctx.Done():
+				return resp, ctx.Err()
+			case <-time.After(delays[attempt]):
+			}
+		default:
+			return resp, err
+		}
+	}
+}
+
 func (s *aiSession) runTurn(ctx context.Context, cancel context.CancelFunc) {
 	defer func() {
 		cancel()
@@ -1222,9 +1260,7 @@ func (s *aiSession) runTurn(ctx context.Context, cancel context.CancelFunc) {
 		s.mu.Unlock()
 		s.emit("assistant_start", nil)
 		start := time.Now()
-		resp, err := aiComplete(ctx, prov, req, func(t string) {
-			s.emit("text", map[string]interface{}{"delta": t})
-		})
+		resp, err := s.completeWithRecovery(ctx, prov, &req)
 		cost := aiCost(prov, s.Model, resp.Usage)
 		s.mu.Lock()
 		s.requests++

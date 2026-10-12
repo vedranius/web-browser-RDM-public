@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.1.0</title>
+<title>Web Remote Manager PRO v12.2.7</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1098,6 +1098,9 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; border-radius: 0; color: var(--text2); padding: 8px 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap; box-shadow: none !important; }
 .tab-btn:hover { color: var(--text); background: transparent !important; }
 .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); background: transparent !important; }
+.tab-intro { font-size: 11.5px; color: var(--text2); line-height: 1.5; margin: -6px 0 12px; overflow-wrap: anywhere; }
+.tab-intro:empty { display: none; }
+.tab-intro::before { content: 'ℹ '; color: var(--accent); }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
 #modal-settings .modal { width: 560px; }
@@ -1209,11 +1212,14 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .ts-table td .act { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
 .ts-table a.btn-sec { text-decoration: none; display: inline-flex; align-items: center; }
 .sha { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); cursor: help; }
-.replay-modal { width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); display: flex; flex-direction: column; gap: 10px; }
+.replay-modal { width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); display: flex; flex-direction: column; gap: 10px; resize: both; overflow: auto; min-width: min(340px, 95vw); min-height: 300px; max-width: 98vw; }
+.replay-modal.rp-fs { position: fixed; inset: 0; width: 100vw !important; height: 100vh !important; max-width: none; max-height: none; border-radius: 0; border: 0; resize: none; padding: 12px 14px; }
+.rp-head-btns { display: flex; gap: 4px; flex: none; }
 .rp-meta { font-size: 11.5px; color: var(--text2); display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .rp-meta b { color: var(--text); font-weight: 600; }
-.rp-screen { background: #0b0d12; border: 1px solid var(--border2); border-radius: 8px; padding: 8px; overflow: auto; min-height: 240px; max-height: calc(100vh - 290px); }
-.rp-screen .xterm { display: inline-block; }
+.rp-screen { background: #0b0d12; border: 1px solid var(--border2); border-radius: 8px; padding: 8px; overflow: auto; min-height: 120px; flex: 1 1 auto; }
+.rp-screen .xterm { display: inline-block; transform-origin: 0 0; }
+.rp-screen .rp-scale { margin: 0 auto; position: relative; overflow: hidden; }
 .rp-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rp-controls input[type=range] { flex: 1; min-width: 160px; accent-color: var(--accent); }
 .rp-time { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text2); min-width: 92px; text-align: center; }
@@ -1224,7 +1230,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .tbl-scroll { overflow-x: auto; max-width: 100%; }
 #st-history .adm-toolbar { flex-wrap: wrap; }
 @media (max-width: 760px) {
-  .rp-screen { max-height: 55vh; }
+  .replay-modal:not(.rp-fs) { padding: 14px; }
   .adm-toolbar input[type=date] { width: 120px; }
 }
 
@@ -1529,7 +1535,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.1.0 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.2.7 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1609,7 +1615,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v12.1.0</span>
+    <span class="app-ver"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18">WRM v12.2.7</span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1997,6 +2003,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="st-mcp" id="st-mcp-btn" onclick="showSettingsTab('st-mcp')" data-i18n="tab_mcp">AI connections</button>
       <button class="tab-btn" data-tab="st-data" id="st-data-btn" onclick="showSettingsTab('st-data')" data-i18n="tab_data">Data</button>
     </div>
+    <div class="tab-intro" id="settings-intro"></div>
     <div class="tab-pane active" id="st-general">
       <div class="setting-row">
         <div><div class="setting-label">Language / Jezik</div><div class="setting-desc" data-i18n="language_desc">Interface language</div></div>
@@ -2520,7 +2527,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <!-- Session recording replay -->
 <div class="modal-overlay" id="modal-replay" style="z-index:9600;">
   <div class="modal replay-modal">
-    <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">▶ <span id="rp-title" data-i18n="recording">Recording</span></h3><button class="icon-btn" onclick="closeReplay()">✕</button></div>
+    <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">▶ <span id="rp-title" data-i18n="recording">Recording</span></h3><div class="rp-head-btns"><button class="icon-btn" id="rp-fs" onclick="replayToggleFs()">⛶</button><button class="icon-btn" onclick="closeReplay()">✕</button></div></div>
     <div class="rp-meta" id="rp-meta"></div>
     <div class="rp-screen" id="rp-screen"></div>
     <div class="rp-controls">
@@ -2573,6 +2580,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="sessions" onclick="showAdminTab('sessions')" data-i18n="adm_sessions">Sessions &amp; recordings</button>
       <button class="tab-btn" data-tab="transfers" onclick="showAdminTab('transfers')" data-i18n="adm_transfers">File transfers</button>
     </div>
+    <div class="tab-intro" id="admin-intro"></div>
     <div class="adm-body" id="admin-body"></div>
   </div>
 </div>
@@ -4668,6 +4676,59 @@ Object.assign(LANGS.hr, {
   tab_mcp: 'AI veze', adm_mcp: 'AI veze', mcp_connected_lbl: 'AI povezan', mcp_btn_t: 'AI aplikacije povezane preko MCP-a: pregled ili opoziv pristupa',
   mcp_load_failed: 'AI veze se nisu mogle učitati',
 });
+// Short "what is this for" lines under the Settings and Admin panel tabs (v12.2.3)
+Object.assign(LANGS.en, {
+  stin_general: 'Everyday preferences for this browser: language, accent color, upload limit and the messages WRM shows you.',
+  stin_terminal: 'How terminal windows look and behave: text size, how many lines are kept for scrolling back, and whether a dropped SSH connection reconnects by itself.',
+  stin_security: 'Protect your own account: change the password, turn on two-factor sign-in and sign out devices you no longer use.',
+  stin_notify: 'Choose where WRM sends you messages (for example when a server goes down or a deployment finishes) and which events you want to hear about.',
+  stin_audio: 'Microphone, speaker and voice-chat options for shared sessions. Nothing is recorded unless you start a call.',
+  stin_history: 'Recorded terminal sessions. Replay one to see exactly what was typed and shown, or download it as an asciinema .cast file.',
+  stin_mcp: 'AI apps (such as a desktop chat assistant) that you allowed to use WRM through MCP. Review them here and revoke access at any time.',
+  stin_data: 'Move your setup between installations: export your connections as JSON (without passwords or keys) or import them again.',
+  adin_overview: 'Health of this WRM installation: version, uptime, database, encryption key and warnings that need your attention.',
+  adin_users: 'Create and manage accounts: roles, passwords, two-factor status and which features each person may use.',
+  adin_shares: 'Links that give other people access to a session or a connection. Review who joined and turn links off.',
+  adin_policies: 'Rules for the whole installation: sign-in security, what users may do and how long data is kept. Each rule explains itself; locked ones are set by the server environment.',
+  adin_ai: 'The built-in AI assistant: which provider and model to use, who may use it and how much it is allowed to do on servers.',
+  adin_mcp: 'Lets external AI apps use WRM through MCP. Choose whether it is allowed, what connected apps may do and see active connections.',
+  adin_voice: 'Voice chat and the network relay (TURN) that makes calls work behind firewalls.',
+  adin_notify: 'Delivery channels (e-mail, chat webhooks and similar) that users can subscribe to for events such as outages and deployments.',
+  adin_hosts: 'SSH server fingerprints WRM has seen. A changed fingerprint is blocked until you review it here.',
+  adin_audit: 'Who did what and when: sign-ins, setting changes and actions on servers. Secrets are never stored in it.',
+  adin_sessions: 'All terminal sessions and their recordings, including those of other users. Replay or download them.',
+  adin_transfers: 'A log of files uploaded and downloaded through WRM.',
+  replay_fs: 'Fullscreen', replay_exit_fs: 'Exit fullscreen (Esc)',
+});
+Object.assign(LANGS.hr, {
+  stin_general: 'Svakodnevne postavke ovog preglednika: jezik, boja isticanja, ograničenje uploada i poruke koje WRM prikazuje.',
+  stin_terminal: 'Izgled i ponašanje terminala: veličina teksta, koliko se redaka pamti za pomicanje unatrag i hoće li se prekinuta SSH veza sama ponovno spojiti.',
+  stin_security: 'Zaštita vlastitog računa: promjena lozinke, uključivanje dvofaktorske prijave i odjava uređaja koje više ne koristite.',
+  stin_notify: 'Odaberite kamo WRM šalje poruke (npr. kad server padne ili završi isporuka) i o kojim događajima želite biti obaviješteni.',
+  stin_audio: 'Mikrofon, zvučnik i opcije glasovnog razgovora u dijeljenim sesijama. Ništa se ne snima dok ne pokrenete poziv.',
+  stin_history: 'Snimljene terminalske sesije. Pustite snimku da vidite što je točno upisano i prikazano ili je preuzmite kao asciinema .cast datoteku.',
+  stin_mcp: 'AI aplikacije (npr. desktop chat asistent) kojima ste dopustili korištenje WRM-a preko MCP-a. Ovdje ih pregledajte i u svakom trenutku opozovite pristup.',
+  stin_data: 'Prenesite postavke između instalacija: izvezite veze kao JSON (bez lozinki i ključeva) ili ih ponovno uvezite.',
+  adin_overview: 'Zdravlje ove WRM instalacije: verzija, vrijeme rada, baza, ključ za šifriranje i upozorenja kojima se treba posvetiti.',
+  adin_users: 'Izrada i upravljanje računima: uloge, lozinke, status dvofaktorske prijave i koje značajke koja osoba smije koristiti.',
+  adin_shares: 'Poveznice koje drugima daju pristup sesiji ili vezi. Pregledajte tko se pridružio i isključite poveznice.',
+  adin_policies: 'Pravila za cijelu instalaciju: sigurnost prijave, što korisnici smiju i koliko se dugo čuvaju podaci. Svako pravilo samo objašnjava što radi; zaključana pravila postavlja okolina servera.',
+  adin_ai: 'Ugrađeni AI asistent: koji pružatelj i model se koristi, tko ga smije koristiti i koliko smije raditi na serverima.',
+  adin_mcp: 'Omogućuje vanjskim AI aplikacijama korištenje WRM-a preko MCP-a. Odaberite je li dopušteno, što povezane aplikacije smiju i pregledajte aktivne veze.',
+  adin_voice: 'Glasovni razgovor i mrežni relej (TURN) zbog kojeg pozivi rade iza vatrozida.',
+  adin_notify: 'Kanali dostave (e-pošta, chat webhookovi i slično) na koje se korisnici mogu pretplatiti za događaje poput ispada i isporuka.',
+  adin_hosts: 'SSH otisci servera koje je WRM vidio. Promijenjeni otisak je blokiran dok ga ovdje ne pregledate.',
+  adin_audit: 'Tko je što i kada radio: prijave, promjene postavki i radnje na serverima. Tajne se nikad ne spremaju u njega.',
+  adin_sessions: 'Sve terminalske sesije i njihove snimke, uključujući sesije drugih korisnika. Pustite ih ili preuzmite.',
+  adin_transfers: 'Dnevnik datoteka prenesenih kroz WRM (upload i download).',
+  replay_fs: 'Cijeli zaslon', replay_exit_fs: 'Izlaz iz cijelog zaslona (Esc)',
+});
+function setTabIntro(id, key) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.setAttribute('data-i18n', key);
+  el.textContent = t(key);
+}
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4677,6 +4738,7 @@ function applyLang() {
   if (currentUser || isCollabMode) renderTree();
   if (typeof renderSnippets === 'function') { renderSnippets(); renderBroadcastUI(); }
   if (typeof updateInstallRow === 'function') updateInstallRow();
+  if (typeof updateReplayFsBtn === 'function') updateReplayFsBtn();
 }
 function changeLang(l) {
   currentLang = l;
@@ -6037,6 +6099,7 @@ function showAdminTab(tab) {
   adminTab = tab;
   document.querySelectorAll('#admin-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   const body = document.getElementById('admin-body');
+  setTabIntro('admin-intro', 'adin_' + (document.querySelector(`#admin-tabs [data-tab="${tab}"]`) ? tab : 'overview'));
   body.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
   ({overview: adminOverview, users: adminUsers, shares: adminShares, policies: () => adminPolicies('policies'),
     voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
@@ -6464,6 +6527,10 @@ async function openReplay(id) {
   closeReplay();
   const modal = document.getElementById('modal-replay');
   modal.classList.add('open');
+  const rbox = modal.querySelector('.replay-modal');
+  rbox.classList.remove('rp-fs'); rbox.style.width = ''; rbox.style.height = '';
+  updateReplayFsBtn();
+  replayObserve();
   document.getElementById('rp-title').textContent = t('recording') + ' #' + id;
   document.getElementById('rp-meta').innerHTML = '';
   document.getElementById('rp-events').innerHTML = '';
@@ -6511,9 +6578,12 @@ async function openReplay(id) {
   ].filter(Boolean).map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
   const ev = meta.events || [];
   document.getElementById('rp-events').innerHTML = ev.length ? `<table class="admin-table"><tbody>` + ev.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td><b style="color:var(--text);">${esc(e.action)}</b></td><td class="mono" style="font-size:10.5px;word-break:break-all;">${esc(e.details)}</td></tr>`).join('') + '</tbody></table>' : `<div class="sub">${esc(t('none'))}</div>`;
-  screen.innerHTML = '';
+  screen.innerHTML = '<div class="rp-scale"></div>';
   replay.term = new Terminal(Object.assign(termOptions(), {cols: replay.header.width || 80, rows: replay.header.height || 24, scrollback: 5000, disableStdin: true, cursorBlink: false}));
-  replay.term.open(screen);
+  replay.term.open(screen.firstChild);
+  replay.term.onResize(() => replayFitSoon());
+  replayFitSoon();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(replayFitSoon);
   replay.speed = parseFloat(document.getElementById('rp-speed').value) || 1;
   replay.idle = document.getElementById('rp-idle').checked;
   buildReplayTimeline();
@@ -6606,7 +6676,61 @@ function closeReplay() {
   replayPause();
   if (replay.term) { try { replay.term.dispose(); } catch (_) {} }
   replay.term = null; replay.raw = []; replay.events = [];
+  if (replay.ro) { replay.ro.disconnect(); replay.ro = null; }
+  replay.guacFit = null;
+  document.querySelector('#modal-replay .replay-modal').classList.remove('rp-fs');
   document.getElementById('modal-replay').classList.remove('open');
+}
+
+// Scales the terminal (keeping the recorded cols x rows) to the available space instead of scrolling sideways.
+function replayFit() {
+  if (replay.guacFit) { replay.guacFit(); return; }
+  if (!replay.term || !replay.term.element) return;
+  const screen = document.getElementById('rp-screen');
+  const wrap = screen.querySelector('.rp-scale');
+  const inner = replay.term.element.querySelector('.xterm-screen');
+  if (!wrap || !inner || !inner.offsetWidth || !inner.offsetHeight) return;
+  const w = inner.offsetWidth, h = inner.offsetHeight;
+  const cs = getComputedStyle(screen);
+  const availW = screen.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const availH = screen.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const fs = document.querySelector('#modal-replay .replay-modal').classList.contains('rp-fs');
+  let s = availW / w;
+  s = fs ? Math.min(s, availH / h, 4) : Math.min(s, 1);
+  s = Math.max(s, 0.1);
+  replay.term.element.style.transform = `scale(${s})`;
+  wrap.style.width = Math.floor(w * s) + 'px';
+  wrap.style.height = Math.floor(h * s) + 'px';
+}
+function replayFitSoon() { requestAnimationFrame(replayFit); }
+function replayObserve() {
+  if (replay.ro || typeof ResizeObserver === 'undefined') return;
+  let lw = 0, lh = 0;
+  replay.ro = new ResizeObserver(() => {
+    const el = document.getElementById('rp-screen');
+    if (el.clientWidth === lw && el.clientHeight === lh) return;
+    lw = el.clientWidth; lh = el.clientHeight;
+    replayFit();
+  });
+  replay.ro.observe(document.getElementById('rp-screen'));
+}
+function replayToggleFs(force) {
+  const box = document.querySelector('#modal-replay .replay-modal');
+  const on = typeof force === 'boolean' ? force : !box.classList.contains('rp-fs');
+  box.classList.toggle('rp-fs', on);
+  updateReplayFsBtn();
+  replayFitSoon();
+}
+function updateReplayFsBtn() {
+  const b = document.getElementById('rp-fs');
+  if (!b) return;
+  const on = document.querySelector('#modal-replay .replay-modal').classList.contains('rp-fs');
+  b.textContent = on ? '🗗' : '⛶';
+  b.title = t(on ? 'replay_exit_fs' : 'replay_fs');
+}
+function replayFsActive() {
+  const m = document.getElementById('modal-replay');
+  return m.classList.contains('open') && m.querySelector('.replay-modal').classList.contains('rp-fs');
 }
 
 // ── admin: file transfers ──
@@ -8545,6 +8669,7 @@ async function openGuacReplay(id, meta) {
     screen.firstChild.appendChild(disp.getElement());
     const fit = () => { const w = disp.getWidth(), h = disp.getHeight(); if (w && h) disp.scale(Math.min(screen.clientWidth / w, (screen.clientHeight || 480) / h, 1)); };
     disp.onresize = fit;
+    replay.guacFit = fit;
     const upd = () => {
       const pos = rec.getPosition(), dur = rec.getDuration();
       document.getElementById('rp-time').textContent = fmtMs(pos) + ' / ' + fmtMs(dur);
@@ -9471,6 +9596,7 @@ async function openSession(id, how) {
     const c = conns.find(x => x.id === w.conn_id) || (sharedGroups || []).flatMap(g => g.connections || []).find(x => x.id === w.conn_id);
     if (!c) { missing++; return; }
     const wo = addWindow();
+    wo._restored = true;
     wo.connId = c.id;
     if (w.share_token) wo.shareToken = w.share_token;
     if (w.console === 'bmc' || w.console === 'sol') wo.console = w.console;
@@ -9836,6 +9962,10 @@ function setWinMode(id, mode) {
   if (mode !== 'ssh' && bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
 
   if (mode === 'ssh') {
+    // New terminals open maximized (sessions restore their own layout); an existing
+    // window being switched to a terminal keeps its geometry.
+    if (!wo._restored && !wo._opened && !wo.snap && !isCompact()) snapWindow(id, 'full');
+    wo._opened = true;
     wc.innerHTML = `<div class="term-wrap">
       <div class="term-host" id="th-${id}"></div>
       <div class="term-search" id="ts-${id}" hidden>
@@ -9861,6 +9991,8 @@ function setWinMode(id, mode) {
         if (started || wo.mode !== 'ssh' || !wo.term) return;
         started = true;
         fitTerm(wo); setupSSH(wo);
+        if (wo.el.style.display === 'none') return;
+        if (!wo._restored) focusWindow(id);
         if (wo.el.classList.contains('focused')) wo.term.focus();
       };
       requestAnimationFrame(start);
@@ -10068,10 +10200,23 @@ function createTerminal(wo, host) {
     return true;
   });
   term.onSelectionChange(() => {
+    // Copy once the selection settles. Copying on every change while the mouse is still
+    // dragging moved the focus out of the terminal and cut a selection that scrolls
+    // (more than one screen) short.
+    clearTimeout(wo._selT);
+    wo._selT = setTimeout(copySettledSelection, 200);
+  });
+  const copySettledSelection = () => {
+    if (wo._selDown) { wo._selT = setTimeout(copySettledSelection, 200); return; }
     const sel = term.getSelection();
     if (!sel || !sel.trim()) return;
     copyText(sel, true);
     addClip(sel.trim());
+  };
+  host.addEventListener('mousedown', () => {
+    wo._selDown = true;
+    const up = () => { wo._selDown = false; document.removeEventListener('mouseup', up, true); };
+    document.addEventListener('mouseup', up, true);
   });
   wo.resizeObs = new ResizeObserver(() => scheduleFit(wo));
   wo.resizeObs.observe(host);
@@ -12269,17 +12414,27 @@ function startWinDrag(e, id) {
   focusWindow(id);
   const el = document.getElementById('win-' + id);
   const wo0 = winObjects.find(w => w.id === id);
-  if (wo0 && wo0.snap) {
-    // Dragging a snapped/maximized window restores its previous size under the cursor.
-    const w = wo0.savedPos ? parseInt(wo0.savedPos.width) || el.offsetWidth : el.offsetWidth;
-    const ratio = (e.clientX - el.getBoundingClientRect().left) / el.offsetWidth;
-    restoreWindowGeometry(wo0);
-    const cont = document.getElementById('win-container').getBoundingClientRect();
-    el.style.left = Math.round(e.clientX - cont.left - w * ratio) + 'px';
-    el.style.top = Math.max(0, Math.round(e.clientY - cont.top - 16)) + 'px';
-    scheduleFit(wo0);
-  }
-  winDragState = { id, sx: e.clientX, sy: e.clientY, l: parseInt(el.style.left) || 0, t: parseInt(el.style.top) || 0, armed: !snapZoneAt(e.clientX, e.clientY), zone: null };
+  winDragState = { id, sx: e.clientX, sy: e.clientY, l: parseInt(el.style.left) || 0, t: parseInt(el.style.top) || 0, armed: !snapZoneAt(e.clientX, e.clientY), zone: null,
+    // A snapped / maximized window is restored only once the pointer really moves, so a plain
+    // click or a double-click on the title bar never changes its size by accident.
+    pendingUnsnap: !!(wo0 && wo0.snap) };
+}
+
+function unsnapForDrag(st, e) {
+  const el = document.getElementById('win-' + st.id);
+  const wo0 = winObjects.find(w => w.id === st.id);
+  st.pendingUnsnap = false;
+  if (!el || !wo0 || !wo0.snap) return;
+  // Dragging a snapped/maximized window restores its previous size under the cursor.
+  const w = wo0.savedPos ? parseInt(wo0.savedPos.width) || el.offsetWidth : el.offsetWidth;
+  const ratio = (st.sx - el.getBoundingClientRect().left) / el.offsetWidth;
+  restoreWindowGeometry(wo0);
+  const cont = document.getElementById('win-container').getBoundingClientRect();
+  el.style.left = Math.round(e.clientX - cont.left - w * ratio) + 'px';
+  el.style.top = Math.max(0, Math.round(e.clientY - cont.top - 16)) + 'px';
+  st.sx = e.clientX; st.sy = e.clientY;
+  st.l = parseInt(el.style.left) || 0; st.t = parseInt(el.style.top) || 0;
+  scheduleFit(wo0);
 }
 
 function startWinResize(e, id, handle) {
@@ -12359,6 +12514,10 @@ function showSnapPreview(zone) {
 
 document.addEventListener('mousemove', e => {
   if (winDragState) {
+    if (winDragState.pendingUnsnap) {
+      if (Math.abs(e.clientX - winDragState.sx) + Math.abs(e.clientY - winDragState.sy) < 5) return;
+      unsnapForDrag(winDragState, e);
+    }
     const el = document.getElementById('win-' + winDragState.id);
     if (!el) return;
     const cont = document.getElementById('win-container');
@@ -12413,7 +12572,7 @@ document.addEventListener('mousemove', e => {
 document.addEventListener('mouseup', () => {
   if (winDragState) {
     showSnapPreview(null);
-    if (winDragState.zone) snapWindow(winDragState.id, winDragState.zone);
+    if (winDragState.zone && !winDragState.pendingUnsnap) snapWindow(winDragState.id, winDragState.zone);
   }
   winDragState = null;
   winResizeState = null;
@@ -12885,6 +13044,7 @@ function openSettings(tab) {
 function showSettingsTab(id) {
   document.querySelectorAll('#settings-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
   document.querySelectorAll('#modal-settings .tab-pane').forEach(p => p.classList.toggle('active', p.id === id));
+  setTabIntro('settings-intro', 'stin_' + id.slice(3));
   if (id === 'st-security') renderSecurityPane();
   if (id === 'st-audio') renderAudioPane();
   if (id === 'st-notify') renderNotifyPane();
@@ -14458,6 +14618,7 @@ document.addEventListener('keydown', e => {
     if (document.getElementById('modal-dialog').classList.contains('open')) { dialogDone(false); return; }
     if (document.getElementById('modal-snipvars').classList.contains('open')) { snipVarsDone(false); return; }
     if (document.getElementById('modal-editor').classList.contains('open')) { closeEditor(); return; }
+    if (replayFsActive()) { replayToggleFs(false); return; }
     document.querySelectorAll('.modal-overlay.open').forEach(m => {
       if (!m.id.includes('auth') && m.id !== 'modal-transfer' && m.dataset.locked !== '1') m.classList.remove('open');
     });
