@@ -4,6 +4,20 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.7] — 2026-10-12 — More AI providers and guided Ollama
+
+Last step of issue #43. One additive table (`ai_ollama_runs`).
+
+### Added
+- **Provider presets** in the AI provider wizard for xAI, DeepSeek, Together AI, Fireworks AI, Cerebras, Cohere and Perplexity (all OpenAI-compatible), with refreshed multi-model suggestion lists for the existing presets. The model name stays free text and the lists stay editable.
+- **Model list loading:** `GET /api/admin/ai/providers/{id}/models` asks the provider for its `/models` list (OpenAI-compatible and Anthropic kinds) using the stored key; the wizard shows the result as one-click chips. Audited as `ai.provider_models_listed`.
+- **Guided Ollama setup** (wizard step "Ollama on this server"): detects Ollama (`/api/version`, `/api/tags`, default `http://127.0.0.1:11434`), shows status and installed models, per-OS install / background-service / pull commands with copy buttons, and adds Ollama as an OpenAI-compatible provider (`/v1`, no key).
+- **Optional "do it with WRM"**: `POST /api/ai/ollama/action` (`install`, `start`, `pull`) runs fixed commands as a background job. Server-side checks: administrator, policy `ai_ollama_manage` (default off, `WRM_AI_OLLAMA_MANAGE`), explicit `confirm`, supported OS, validated URL and model name, one run at a time. Runs are stored in `ai_ollama_runs` (`GET /api/ai/ollama/runs`, admin only) and audited as `admin.ai_ollama_install|start|pull|finished|denied` with neutral detail keys.
+- Tests: `ai_ollama_test.go` (fake Ollama server, permissions, audit, model list).
+
+### Changed
+- The wizard test step and the last step offer "Load the model list". All new texts are in English and Croatian.
+
 ## [12.2.6] — 2026-10-12 — Guided AI and MCP setup
 
 Seventh step of issue #43. No database changes; no new endpoints.
