@@ -4,6 +4,15 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.3] — 2026-10-12 — Explanations for tabs and settings
+
+Fourth step of issue #43. No server or database changes.
+
+### Added
+- **A short description under every tab** of the Advanced Git workspace (Overview, Services, Installations, Environments, Runs, Activity, .gitignore, Settings), also shown as a tooltip on the tab button.
+- The same for the **Settings** window (General, Terminal, Security, Notifications, Voice & audio, Session history, AI connections, Data) and every tab of the **Admin panel**.
+- All texts are in English and Croatian and wrap on small screens (checked at 390 px).
+
 ## [12.2.2] — 2026-10-12 — Git Simple Mode
 
 Third step of issue #43. No server or database changes.

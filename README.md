@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), an **MCP server** so Claude, ChatGPT and other AI apps can work on chosen servers under the same rules, SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v12.2.2** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.2.3** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -64,6 +64,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Notifications (e-mail, chat, push, webhook)](#notifications-e-mail-chat-push-webhook)
    - [Git workspace: compare services](#git-workspace-compare-services)
    - [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts)
+   - [Git workspace: tab explanations](#git-workspace-tab-explanations)
    - [Git workspace: Simple mode](#git-workspace-simple-mode)
    - [Git workspace: environments, deploy plans & safe deploys](#git-workspace-environments-deploy-plans--safe-deploys)
    - [Git workspace: activity, deploy history & what is where](#git-workspace-activity-deploy-history--what-is-where)
@@ -138,21 +139,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.2.2-linux-amd64
-   ./wrm-pro-v12.2.2-linux-amd64
+   chmod +x wrm-pro-v12.2.3-linux-amd64
+   ./wrm-pro-v12.2.3-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.2.2-windows-amd64.exe
+   .\wrm-pro-v12.2.3-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.2/wrm-pro-v12.2.2-android-arm64
-   chmod +x wrm-pro-v12.2.2-android-arm64 && ./wrm-pro-v12.2.2-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.3/wrm-pro-v12.2.3-android-arm64
+   chmod +x wrm-pro-v12.2.3-android-arm64 && ./wrm-pro-v12.2.3-android-arm64
    ```
 
    **Docker**
@@ -176,6 +177,12 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.2.2
+
+Replace the binary. No database or configuration changes; v12.2.2 still starts on the same database.
+
+- Every tab of the Advanced Git workspace, of Settings and of the Admin panel now has a short explanation of what it is for. See [Git workspace: tab explanations](#git-workspace-tab-explanations).
 
 ## Upgrading from v12.2.1
 
@@ -932,6 +939,10 @@ Runs change servers only when you start or schedule them. Select installations o
 - **Runs tab:** history (the last 500 runs per user) and scheduled runs with installations, versions, states and every step; *Stop after the current server* for a run that works.
 - **Policies:** `git_update` (update and stamp), `git_upgrade`, `git_rollback`, `git_restart` — `admins` by default, `all` or `off`. Runs are audited per installation (`git.update`, `git.upgrade`, `git.rollback`, `git.restart`, `git.stamp` with the result, files, backup and versions), and so are scheduling, cancelling and skipped runs.
 
+### Git workspace: tab explanations
+
+Every tab of the **Advanced** Git workspace (Overview, Services, Installations, Environments, Runs, Activity, .gitignore, Settings) shows a short plain-language description under the header and the same text as a tooltip on the tab button. The Settings window and the Admin panel show one under their tab bar too (Settings: General, Terminal, Security, Notifications, Voice & audio, Session history, AI connections, Data; Admin: Overview … File transfers). The texts are in English and Croatian (`gtd_*`, `stin_*`, `adin_*` keys). Behaviour and layout are otherwise unchanged; Simple mode keeps its own intro.
+
 ### Git workspace: Simple mode
 
 The header of the Git workspace has a **Simple | Advanced** switch. The choice is remembered per user in this browser (`localStorage`); **Advanced** is the default and is exactly the workspace described in the other Git sections.
@@ -1578,9 +1589,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.2.2-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.2.2-linux-amd64 -service-status
-sudo ./wrm-pro-v12.2.2-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.2.3-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.2.3-linux-amd64 -service-status
+sudo ./wrm-pro-v12.2.3-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). Edit that file and restart the service to change them.
@@ -1609,7 +1620,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.2.2-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.2.3-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
