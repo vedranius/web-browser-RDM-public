@@ -1,3 +1,12 @@
+## [12.3.1] - 2026-10-12
+
+### Added
+- **Prefilled Safe Auto-Mode**: Automatski ponuđene sigurne naredbe (*), blokirane destruktivne i automatski označena kvačica potvrde.
+- **UI Thinking Feedback**: Vizualni indikator (loader) i privremeno zaključavanje sučelja dok agent analizira i izvršava upite na serveru.
+
+### Fixed
+- **Ollama Context Sanitizer**: Sprječavanje loopa sirovog JSON-a kod ponovnog učitavanja poruka iz baze.
+
 ## [12.3.0] - 2026-10-12
 
 ### Added
