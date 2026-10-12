@@ -1,3 +1,8 @@
+## [12.3.4] - 2026-10-12
+
+### Fixed
+- **Multi-Tool Interceptor for Local Models**: Pametno izvlačenje višestrukih JSON poziva alata iz običnog tekstualnog odgovora modela (npr. kada model pošalje uvodni tekst i više alata odjednom).
+
 ## [12.3.3] - 2026-10-12
 
 ### Fixed

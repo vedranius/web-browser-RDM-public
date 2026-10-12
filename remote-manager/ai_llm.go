@@ -787,29 +787,69 @@ func openaiStream(ctx context.Context, p aiProvider, endpoint string, req aiLLMR
 	}
 	out.Text = text.String()
 
-	// Fallback za lokalne modele (Ollama/Qwen): ako model vrati JSON poziv kroz običan tekst
-	if len(out.Calls) == 0 {
-		trimmed := strings.TrimSpace(out.Text)
-		if strings.HasPrefix(trimmed, `{"name":`) && strings.Contains(trimmed, `"arguments":`) {
-			// Pokušaj zatvoriti vitičaste zagrade ako je odgovor bio prekinut
-			if !strings.HasSuffix(trimmed, "}") {
-				trimmed += "}}"
+	// Fallback za lokalne modele (Ollama/Qwen): pronalazi sve JSON pozive alata bilo gdje u tekstu
+	if len(out.Calls) == 0 && strings.Contains(out.Text, `{"name":`) {
+		cleanText := out.Text
+		for {
+			idx := strings.Index(cleanText, `{"name":`)
+			if idx == -1 {
+				break
 			}
-			var fallbackCall struct {
+			depth := 0
+			end := -1
+			inStr := false
+			escape := false
+			for i := idx; i < len(cleanText); i++ {
+				ch := cleanText[i]
+				if inStr {
+					if escape {
+						escape = false
+					} else if ch == '\\' {
+						escape = true
+					} else if ch == '"' {
+						inStr = false
+					}
+					continue
+				}
+				if ch == '"' {
+					inStr = true
+				} else if ch == '{' {
+					depth++
+				} else if ch == '}' {
+					depth--
+					if depth == 0 {
+						end = i + 1
+						break
+					}
+				}
+			}
+			if end == -1 {
+				cand := cleanText[idx:] + "}}"
+				var fc struct {
+					Name      string          `json:"name"`
+					Arguments json.RawMessage `json:"arguments"`
+				}
+				if json.Unmarshal([]byte(cand), &fc) == nil && fc.Name != "" {
+					in, bad := parseToolInput(string(fc.Arguments))
+					out.Calls = append(out.Calls, aiToolCall{ID: "call_" + randomToken(8), Name: fc.Name, Input: in, BadInput: bad})
+				}
+				cleanText = cleanText[:idx]
+				break
+			}
+			cand := cleanText[idx:end]
+			var fc struct {
 				Name      string          `json:"name"`
 				Arguments json.RawMessage `json:"arguments"`
 			}
-			if err := json.Unmarshal([]byte(trimmed), &fallbackCall); err == nil && fallbackCall.Name != "" {
-				in, bad := parseToolInput(string(fallbackCall.Arguments))
-				out.Calls = append(out.Calls, aiToolCall{
-					ID:       "call_" + randomToken(8),
-					Name:     fallbackCall.Name,
-					Input:    in,
-					BadInput: bad,
-				})
-				out.Text = "" // Očisti sirovi JSON iz korisničkog prikaza
+			if json.Unmarshal([]byte(cand), &fc) == nil && fc.Name != "" {
+				in, bad := parseToolInput(string(fc.Arguments))
+				out.Calls = append(out.Calls, aiToolCall{ID: "call_" + randomToken(8), Name: fc.Name, Input: in, BadInput: bad})
+				cleanText = cleanText[:idx] + cleanText[end:]
+			} else {
+				break
 			}
 		}
+		out.Text = strings.TrimSpace(cleanText)
 	}
 
 	if out.Stop == "content_filter" {
