@@ -1,24 +1,41 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.8/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.9/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.2.8 — Updates dialog always reachable
+## Web Remote Manager PRO v12.2.9 — Git Simple mode is automatic
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
-
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🔧 Updates dialog without a known update
+### 🤖 Automatic environments
+
+- **No more defining environments per service.** Once a Git source is connected and the checker has found your services on the servers, Git Simple mode shows them as ready cards. They are derived from the detected installations; nothing is deployed until you start an install, update or rollback, with the same plan, locks, backups, permissions and audit as before.
+- **Save detected environments** stores them in the catalog (needs the `git_update` policy, audited as `git.env_adopted`). Your own definitions keep priority; Advanced mode is unchanged.
+- **Find services on my servers** in an empty Simple mode runs the normal check.
+
+### 🖥️ Servers shown by hostname
+
+- The Git workspace shows each server by its real **hostname** (read over the existing SSH login with a fixed command and cached), falling back to the connection's host address, instead of the name you gave the connection.
+- One additive table (`git_hostnames`). English and Croatian.
+
+### ⬆️ Upgrading from v12.2.8
+
+Replace the binary (or update with one click from the version badge). One new table is created automatically; no configuration changes.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.9/wrm-pro-v12.2.9-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.9/wrm-pro-v12.2.9-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.9/wrm-pro-v12.2.9-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.9/wrm-pro-v12.2.9-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.9)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.9/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.2.8 — Updates dialog always reachable
+#### 🔧 Updates dialog without a known update
 
 - The **version label in the top bar** ("WRM v12.2.8") now opens the Updates dialog, so an administrator can always use **Check now**, even when no update is known and the green badge is hidden. Other users see the versions only.
 - Tooltip in English and Croatian; works with the keyboard (Tab, Enter, Space). On narrow windows the logo next to the label is the button.
 - Frontend only: no database or configuration changes.
 
-### ⬆️ Upgrading from v12.2.7
+#### ⬆️ Upgrading from v12.2.7
 
 Replace the binary (or update with one click from the version badge). No database or configuration changes.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.8/wrm-pro-v12.2.8-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.8/wrm-pro-v12.2.8-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.8/wrm-pro-v12.2.8-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.8/wrm-pro-v12.2.8-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.8)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.8/CHANGELOG.md) for details.
 
 ---
 
