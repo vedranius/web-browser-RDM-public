@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), an **MCP server** so Claude, ChatGPT and other AI apps can work on chosen servers under the same rules, SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v12.1.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.2.7** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -64,6 +64,8 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Notifications (e-mail, chat, push, webhook)](#notifications-e-mail-chat-push-webhook)
    - [Git workspace: compare services](#git-workspace-compare-services)
    - [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts)
+   - [Git workspace: tab explanations](#git-workspace-tab-explanations)
+   - [Git workspace: Simple mode](#git-workspace-simple-mode)
    - [Git workspace: environments, deploy plans & safe deploys](#git-workspace-environments-deploy-plans--safe-deploys)
    - [Git workspace: activity, deploy history & what is where](#git-workspace-activity-deploy-history--what-is-where)
    - [Git workspace: new servers (install & transfer)](#git-workspace-new-servers-install--transfer)
@@ -137,21 +139,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.1.0-linux-amd64
-   ./wrm-pro-v12.1.0-linux-amd64
+   chmod +x wrm-pro-v12.2.7-linux-amd64
+   ./wrm-pro-v12.2.7-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.1.0-windows-amd64.exe
+   .\wrm-pro-v12.2.7-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-android-arm64
-   chmod +x wrm-pro-v12.1.0-android-arm64 && ./wrm-pro-v12.1.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-android-arm64
+   chmod +x wrm-pro-v12.2.7-android-arm64 && ./wrm-pro-v12.2.7-android-arm64
    ```
 
    **Docker**
@@ -176,8 +178,59 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
-## Upgrading from v12.0.0
+## Upgrading from v12.2.6
 
+Replace the binary. One additive table (`ai_ollama_runs`) is created automatically; v12.2.6 still starts on the same database. No configuration changes.
+
+- The **AI provider wizard** has presets for xAI, DeepSeek, Together AI, Fireworks AI, Cerebras, Cohere and Perplexity, refreshed model suggestions and a **Load the model list** button (the provider's `/models`). Models can always be typed freely.
+- **Ollama, step by step:** detection, status, installed models, per-OS install / background-service / download commands and, optionally, **running them through WRM**. The last is off by default: an administrator enables the policy `ai_ollama_manage` (`WRM_AI_OLLAMA_MANAGE=1`). Each run needs a confirmation, is permission-checked on the server and written to the audit log (`admin.ai_ollama_*`). See the configuration table and the API reference below.
+
+## Upgrading from v12.2.5
+
+Replace the binary. No database or configuration changes; v12.2.5 still starts on the same database.
+
+- **Settings → AI connections** now has a step-by-step **wizard** for connecting Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code, Claude and ChatGPT: it creates the token, shows (and lets you download) the ready command or config file and tests the connection. The AI assistant has a matching **provider wizard**. See *Connect an AI app* below.
+- The MCP server explains what "wrm" is to its clients, and permission denials now say which scope is missing and how to fix it.
+
+## Upgrading from v12.2.4
+
+Replace the binary. No database or configuration changes; v12.2.4 still starts on the same database.
+
+- The **AI assistant window** inside a terminal window can now be docked left / right / top / bottom, floated, moved, resized and expanded over the whole terminal window. See *AI assistant* below.
+
+## Upgrading from v12.2.3
+
+Replace the binary. No database or configuration changes; v12.2.3 still starts on the same database.
+
+- The **session recording replay** window can now be resized (drag its bottom-right corner) and expanded to **fullscreen** (⛶ button, **Esc** leaves). The terminal is scaled to the window width, so there is no sideways scrolling. See *Session recording* below.
+
+## Upgrading from v12.2.2
+
+Replace the binary. No database or configuration changes; v12.2.2 still starts on the same database.
+
+- Every tab of the Advanced Git workspace, of Settings and of the Admin panel now has a short explanation of what it is for. See [Git workspace: tab explanations](#git-workspace-tab-explanations).
+
+## Upgrading from v12.2.1
+
+Replace the binary. No database or configuration changes; v12.2.1 still starts on the same database.
+
+- The Git workspace has a **Simple / Advanced** switch in its header. **Simple** shows one guided card per service environment (what runs on the server vs. the latest version on the branch, a clear status) with **Install / Update / Deploy again** and **Roll back to the previous version**. **Advanced** is the unchanged Git workspace and stays the default. See [Git workspace: Simple mode](#git-workspace-simple-mode).
+
+## Upgrading from v12.2.0
+
+Replace the binary. No database or configuration changes.
+
+- New terminal windows open **maximized** with the cursor in the terminal; windows of a saved session keep their layout.
+- Selecting more text than fits on the screen now copies the **whole selection** (it is copied when you release the mouse).
+- A click or double-click on the title bar of a maximized window no longer shrinks it; only dragging restores it.
+
+## Upgrading from v12.1.0
+Replace the binary. There are no database changes; v12.1.0 still starts on the same database.
+
+- **Gemini and other OpenAI-compatible providers** work with tools: the provider's `extra_content` (Gemini's `thought_signature`) of each tool call is stored in the session and sent back unchanged, which fixes *HTTP 400: Function call is missing a thought_signature*.
+- **Temporary provider errors** no longer end the turn at once: HTTP 408 / 429 / 5xx (for example 503 *high demand*) are retried up to three times with a back-off, and a request that is too large for the provider (HTTP 413, or a token limit such as Groq's) shortens the long command output of the conversation and is retried. The assistant shows a short notice for both.
+
+## Upgrading from v12.0.0
 Replace the binary. The database gets new tables (`mcp_tokens`, `mcp_clients`) and the column `ai_sessions.mcp_token_id`; v12.0.0 still starts on it and ignores them.
 
 - **AI desktop apps (MCP)** are **off by default**. An administrator turns them on in *Admin panel → AI connections* (`ai_mcp_enabled`); by default only administrators may create AI connections (`ai_mcp` = `admins`), with the modes `read_only,ask` (`ai_mcp_modes`), a default lifetime of 8 hours (`ai_mcp_token_hours`) and at most 24 hours (`ai_mcp_max_token_hours`). Users then find *Settings → AI connections*. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
@@ -912,6 +965,25 @@ Runs change servers only when you start or schedule them. Select installations o
 - **Runs tab:** history (the last 500 runs per user) and scheduled runs with installations, versions, states and every step; *Stop after the current server* for a run that works.
 - **Policies:** `git_update` (update and stamp), `git_upgrade`, `git_rollback`, `git_restart` — `admins` by default, `all` or `off`. Runs are audited per installation (`git.update`, `git.upgrade`, `git.rollback`, `git.restart`, `git.stamp` with the result, files, backup and versions), and so are scheduling, cancelling and skipped runs.
 
+### Git workspace: tab explanations
+
+Every tab of the **Advanced** Git workspace (Overview, Services, Installations, Environments, Runs, Activity, .gitignore, Settings) shows a short plain-language description under the header and the same text as a tooltip on the tab button. The Settings window and the Admin panel show one under their tab bar too (Settings: General, Terminal, Security, Notifications, Voice & audio, Session history, AI connections, Data; Admin: Overview … File transfers). The texts are in English and Croatian (`gtd_*`, `stin_*`, `adin_*` keys). Behaviour and layout are otherwise unchanged; Simple mode keeps its own intro.
+
+### Git workspace: Simple mode
+
+The header of the Git workspace has a **Simple | Advanced** switch. The choice is remembered per user in this browser (`localStorage`); **Advanced** is the default and is exactly the workspace described in the other Git sections.
+
+**Simple** is a single view for people who only want to know what is deployed and to update it. For every environment of every service (set up once in Advanced → *Environments*) it shows one card:
+
+- **On the server**: the version, commit and who deployed it, per destination server (or *Not installed here yet*).
+- **Latest on the branch**: version, branch, commit and date of the service target.
+- A status: **Up to date**, **Update available**, **Not installed**, **Cannot compare** or **Problem**.
+- Big actions: **Install** (not installed yet), **Update** (a newer version exists), **Deploy again** (already current) and **Roll back to the previous version**.
+
+Install, update and deploy open a plain-language confirmation: the version change, how many files are added or changed per server, optional *post_deploy* and *restart* checkboxes (when allowed), an optional *different version* (tag or branch), and, for protected environments, typing the environment name. Rollback shows the version now on the server and the one it returns to.
+
+Simple mode adds **no new endpoints**: it uses the environment overview, cell, plan, history and run endpoints of the Advanced deploy, so permissions (`deploy` update / rollback / restart), locks, backups, remembered exclusions, the audit trail and run history are the same. Anything else (settings, sources, catalog, activity, `.gitignore`, CI, schedules, partial deploys) stays in Advanced.
+
 ### Git workspace: environments, deploy plans & safe deploys
 
 Environments are **optional**. A service without environments keeps using *Update*, *Upgrade* and *Rollback* per installation as before. An environment is a named, **ordered** list of destinations of one service, with its own rules; a deploy is reviewed as a plan, applied once, locked on the server and recorded there.
@@ -1039,6 +1111,8 @@ WRM does not need Jenkins or GitLab CI; each of these is opt-in.
 
 An AI assistant in a panel **next to the terminal** (also from the file manager). Click **AI** in the title bar of an SSH terminal or file manager window, choose the provider, model and mode, and ask in plain language: *why is nginx failing?*, *free some disk space*, *raise the worker count*. The assistant explains every step and works only through WRM:
 
+**Position and size (desktop):** the panel can be **docked** left, right, top or bottom with the ◧ ⬒ ⬓ ◨ buttons, shown as a **floating window** with ❐, **expanded** over the whole terminal window with ⛶ (or a double-click on the title bar; press again to restore) and **resized** by dragging its inner edge (the corner when floating). Drag the title bar to move it; a docked panel then starts floating. The terminal shrinks beside a docked panel and is refitted. Dock, size and floating position are remembered per user in the browser (`localStorage` key `wrm_ai_win_<user id>`). On compact windows (up to 760 px wide, e.g. phones) the panel keeps its full-window layout and these buttons are hidden.
+
 - **The model never gets a shell.** It can only call WRM's tools: `system_info`, `read_file` (size-limited), `list_directory`, `tail_log`, `journal` (journalctl), `service_status`, `list_packages`, `processes`, `disk_usage`, `network_status`, `run_command`, `write_file` and `edit_file`. Every call goes through the **permission engine on the server**, which decides; WRM runs the result over its own SSH connection to that server (jump hosts, proxies and vault logins as for the terminal).
 - **Three modes per session** (the panel shows the current one; WRM's side of the policy decides):
 
@@ -1067,6 +1141,14 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 WRM is an **MCP server** (Model Context Protocol). AI apps that speak MCP — **Claude** (the desktop app and claude.ai), **ChatGPT** (connectors / developer mode), Claude Code and other MCP clients — can open a WRM session to a server you chose and work on it, under the same rules as the built-in assistant. The model runs in the app, on your account there; WRM never sees your chat and never needs a provider key.
 
 > **Using a Claude or ChatGPT subscription with WRM:** consumer chat subscriptions cannot be used by other applications as an API (so the built-in assistant needs an API key). The supported way to use your Claude or ChatGPT account with WRM is the other direction: the chat app connects to WRM over MCP, as described here.
+
+**Connect an AI app (wizard)**
+
+*Settings → AI connections* opens with a step-by-step wizard: **1.** pick the app (Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code / other, or Claude / ChatGPT through sign-in); **2.** pick the servers and what the app may do (*look only*, or *look and change with your approval* when the policy allows `ask`); **3.** copy or download the ready command or config file; **4.** press *Test*, which runs `initialize` and `tools/list` against the MCP address with the new token. The token is created by the audited `POST /api/mcp/grants` and shown once; the old form is under *Advanced*. For Codex CLI: `codex mcp add wrm --url <address> --bearer-token-env-var WRM_MCP_TOKEN`; for Claude Code: `claude mcp add --transport http wrm <address> --header "Authorization: Bearer …"`; for Gemini CLI: `gemini mcp add --transport http wrm <address> -H "Authorization: Bearer …"`.
+
+The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that explains to the agent that **"wrm" is the WRM PRO MCP server**; the server sends the same explanation in `instructions` during `initialize`, so clients no longer ask what *wrm* is.
+
+**Permission messages.** If a tool is refused, WRM answers `Denied by WRM: this AI connection's scopes (…) do not allow <tool>; it needs one of: …`. This is a limit of the **AI connection** (scopes or mode), not of the server or the server account: create a new AI connection with that scope (Settings → AI connections) and reconnect. the `open_session` result lists `not_allowed` and `how_to_allow`.
 
 **How it works**
 
@@ -1278,7 +1360,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 - **Audit log** (*Admin panel → Audit log*): sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers and changes, host keys, exports, viewing of recordings. Entries are linked to the **connection** and the **terminal session** (click **▶ #id** to open the session). Filter by text, event type, user and date range; **CSV export**; **Verify integrity**.
 - **Append-only and tamper-evident:** the database refuses to change audit entries, file transfer records and recordings, and to delete anything younger than 7 days. Old entries are removed only by the retention job (`audit_retention_days`, `recording_retention_days`). Every entry contains the SHA-256 of the previous one (**hash chain**), so a changed or removed entry is detected by *Verify integrity*. Every entry is also written as an `AUDIT …` line to the server log (journald/syslog → SIEM).
 - **Terminal sessions** (*Admin panel → Sessions & recordings*; every user sees their own in *Settings → Session history*): who, from which IP, which server and remote user, when, how long, how it ended (closed, connection lost, ended by an administrator, interrupted by a server restart).
-- **Session recording:** the output of every SSH terminal is recorded in the open **asciinema** format (asciicast v2), compressed, with its SHA-256 stored in the database. **▶ Replay** in the browser — play/pause, seek, speed 0.5–16×, *skip idle time* — or **⬇ download** the `.cast` file and play it with `asciinema play`. The user sees *“This session is recorded”* and a **● REC** badge.
+- **Session recording:** the output of every SSH terminal is recorded in the open **asciinema** format (asciicast v2), compressed, with its SHA-256 stored in the database. **▶ Replay** in the browser — play/pause, seek, speed 0.5–16×, *skip idle time*; the replay window can be **resized** (drag the bottom-right corner) or shown in **fullscreen** (⛶, **Esc** leaves), and the terminal is scaled to the width so no sideways scrolling is needed — or **⬇ download** the `.cast` file and play it with `asciinema play`. The user sees *“This session is recorded”* and a **● REC** badge.
   - **No passwords in recordings:** servers do not echo passwords, so they never appear in the output. Keystrokes are recorded only when an administrator turns on *Record keystrokes*, and typing at password, passphrase and PIN prompts is masked.
   - Recording never slows the terminal (written in the background); a size limit per session stops recording (not the terminal).
   - **Who can see recordings:** administrators all; users their own sessions and sessions of other people on **their** connections (e.g. guests of a share). Viewing or downloading a recording is itself recorded in the audit log.
@@ -1461,6 +1543,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 | `ai_personal_keys` | `off` | who may add their own provider keys: `off`, `admins`, `all` |
 | `ai_provider_kinds` | all | allowed provider types: `anthropic,openai,azure,bedrock,vertex,openai_compatible` |
 | `ai_models` | – | allowed models, comma-separated patterns (`claude-*`); empty = every model of the providers |
+| `ai_ollama_manage` | `0` | lets administrators install / start / pull Ollama through WRM from the provider wizard (`WRM_AI_OLLAMA_MANAGE`); off = the wizard only shows the commands |
 | `ai_redact_output` | `1` | redact secrets before output is sent to the provider (transcripts and the audit are always redacted) |
 | `ai_share_notes` | `1` | users may opt in to send their connection notes |
 | `ai_transcript_retention_days` | `90` | AI transcripts are deleted after this time (1–3650) |
@@ -1543,9 +1626,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.1.0-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.1.0-linux-amd64 -service-status
-sudo ./wrm-pro-v12.1.0-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.2.7-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.2.7-linux-amd64 -service-status
+sudo ./wrm-pro-v12.2.7-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). Edit that file and restart the service to change them.
@@ -1574,7 +1657,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.1.0-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.2.7-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -2000,7 +2083,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/oauth/authorize` | `response_type=code`, `client_id`, `redirect_uri`, `code_challenge` + `code_challenge_method=S256` (required), `state`, `scope`, `resource` → WRM's consent dialog |
 | POST | `/oauth/token` | `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `code_verifier` → `{access_token, token_type: "Bearer", expires_in, scope}` (no refresh tokens) |
 | POST | `/oauth/revoke` | RFC 7009 `token` |
-| GET | `/api/mcp/config` | What the user may choose: `{enabled, reason, connections, modes, scopes, default_hours, max_hours, url, oauth, elicitation}` |
+| GET | `/api/mcp/config` | What the user may choose: `{enabled, reason, connections, modes, scopes, default_hours, max_hours, url, oauth, elicitation, instructions, description, version}` |
 | GET / POST | `/api/mcp/grants` | Own AI connections / create a token `{name, conn_ids, mode, scopes, hours, auto, confirm_auto}` → `{grant, token, url}` (the token only here) |
 | DELETE | `/api/mcp/grants/{id}` | Revoke (ends its sessions) |
 | POST | `/api/mcp/revoke-all` | Revoke every own AI connection |
@@ -2009,6 +2092,10 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET / DELETE | `/api/admin/mcp/grants[/{id}]`, POST `/api/admin/mcp/revoke-all` | Every AI connection; revoke one or all (administrators) |
 | GET / DELETE | `/api/admin/mcp/clients[/{id}]` | Registered OAuth apps; removing one revokes its AI connections |
 | GET / POST / PUT / DELETE | `/api/admin/ai/providers[/{id}]`, POST `…/{id}/test` | Organisation providers (administrators) |
+| GET | `/api/admin/ai/providers/{id}/models` | The provider's own model list (`GET {base}/models`) → `{ok, models \| error}`; audited |
+| GET | `/api/ai/ollama/status[?url=]` | Ollama detection `{running, version, models, binary, os, steps, can_manage, openai_base}` (`url` is admin only) |
+| POST | `/api/ai/ollama/action` | `{action: install\|start\|pull, model, url, confirm: true}` → `{run_id}`; administrator + policy `ai_ollama_manage`, fixed commands, one run at a time |
+| GET | `/api/ai/ollama/runs[/{id}]` | Last runs with output (administrators) |
 | GET | `/api/admin/ai/sessions?user&conn&status&limit`, `/api/admin/ai/sessions/{id}` | Every AI session; a transcript (viewing is audited) |
 | POST | `/api/admin/ai/sessions/{id}/kill`, `/api/admin/ai/users/{id}/kill`, `/api/admin/ai/kill-all` | Kill switch per session, per user, for everyone |
 | PUT | `/api/admin/ai/users/{id}` | `{blocked}`: turn the assistant off (and end the sessions) for a user |
@@ -2078,6 +2165,7 @@ remote-manager/
   ai_cloud.go     AWS SigV4, AWS event streams, Google service account tokens
   ai_provider.go  AI providers (organisation / personal), encrypted keys, schema
   ai_api.go       /api/ai and /api/admin/ai
+  ai_ollama.go    Ollama detection / install / start / pull (audited), provider model lists
   ai_transfer.go  transfer_file: SFTP copy between two sessions of one AI connection
   mcp_server.go   the MCP server at /mcp: streamable HTTP, JSON-RPC, tools, elicitation, origin and CORS checks
   mcp_tokens.go   AI connections (hashed tokens, scopes, expiry, revoke), policies, /api/mcp and /api/admin/mcp
@@ -2183,6 +2271,9 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 | AI: *the policy does not allow the AI assistant on this connection* | A mode rule for its tag, folder, host or id leaves no mode; ask an administrator (*Admin panel → AI assistant → Mode rules*) |
 | AI: a harmless command needs an approval in read-only mode | The read-only classifier only accepts commands it knows are read-only (no redirections, substitutions or variables). Use a read tool, approve it in *ask* mode, or add it to the automatic-mode allow list |
 | AI: *the provider answered HTTP 401/403/404* | Check the key, the model name (Bedrock: `anthropic.…` IDs or inference profiles; Vertex: the region offers the model) and the base URL; *Test* in the provider list sends one small request |
+| AI: *HTTP 503* (*high demand*) or *429* | Temporary provider overload: since v12.2.0 WRM retries up to three times (3, 8 and 15 seconds) before it shows the error; try again later or choose another model |
+| AI: *HTTP 413* / *request too large* (Groq and other providers with token-per-minute limits) | Since v12.2.0 WRM shortens the long command output of the conversation and retries; if the provider's limit is still too small for the system prompt and tools, pick a model with a larger limit |
+| AI: Gemini answers *missing a thought_signature* | Fixed in v12.2.0: WRM sends the provider's `extra_content` of tool calls back unchanged. Update WRM |
 | AI: a Claude.ai / ChatGPT subscription does not work | Consumer chat subscriptions cannot be used by other applications: use an API key or your company's gateway — or connect the chat app to WRM over MCP ([AI desktop apps](#ai-desktop-apps-mcp)) |
 | MCP: no *AI connections* tab in Settings | MCP is off (`ai_mcp_enabled`); the tab says why when the policy `ai_mcp` does not include you or the kill switch is on |
 | MCP: claude.ai / ChatGPT cannot connect (*couldn't reach the server*, timeout) | Hosted connectors connect from the provider's cloud: WRM must be reachable from the internet over HTTPS with a trusted certificate. Behind a reverse proxy pass `/mcp`, `/oauth/` and `/.well-known/` through, turn off response buffering for `/mcp` (server-sent events) and set `ai_mcp_public_url` |

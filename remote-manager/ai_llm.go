@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // ─── AI: MODEL CALLS ─────────────────────────────────
@@ -34,7 +35,8 @@ type aiToolCall struct {
 	ID       string          `json:"id"`
 	Name     string          `json:"name"`
 	Input    json.RawMessage `json:"input"`
-	BadInput string          `json:"-"` // the arguments were not valid JSON
+	BadInput string          `json:"-"`               // the arguments were not valid JSON
+	Extra    json.RawMessage `json:"extra,omitempty"` // provider data to send back with the call (Gemini thought_signature)
 }
 
 type aiToolResult struct {
@@ -190,6 +192,62 @@ func aiTestProvider(ctx context.Context, p aiProvider, model string) (string, er
 		return "", err
 	}
 	return res.Text, nil
+}
+
+// ─── temporary failures and oversized requests ───────
+
+var aiShrinkLimits = []int{4000, 1200, 300}
+
+const aiShrinkMarker = "\n[... output shortened to fit the provider's size limit ...]\n"
+
+func aiRetryable(e *aiAPIError) bool {
+	switch e.Status {
+	case 408, 429, 500, 502, 503, 504, 529:
+		return true
+	}
+	return false
+}
+
+// aiTooLarge reports an answer that says the request exceeds a size or token limit.
+func aiTooLarge(e *aiAPIError) bool {
+	if e.Status == 413 {
+		return true
+	}
+	if e.Status != 400 && e.Status != 429 {
+		return false
+	}
+	m := strings.ToLower(e.Msg)
+	for _, k := range []string{"request too large", "too many tokens", "reduce your message", "context length", "context_length", "maximum context", "prompt is too long", "input is too long", "input token count"} {
+		if strings.Contains(m, k) {
+			return true
+		}
+	}
+	return false
+}
+
+// aiShrinkHistory cuts every tool result longer than limit bytes (keeping the start and
+// the end) and reports whether anything changed.
+func aiShrinkHistory(msgs []aiMsg, limit int) bool {
+	changed := false
+	for i := range msgs {
+		for j := range msgs[i].Results {
+			c := msgs[i].Results[j].Content
+			if len(c) <= limit+len(aiShrinkMarker) && (len(c) <= limit || strings.Contains(c, aiShrinkMarker)) {
+				continue
+			}
+			head, tail := limit*2/3, limit/3
+			for head > 0 && !utf8.RuneStart(c[head]) {
+				head--
+			}
+			cut := len(c) - tail
+			for cut < len(c) && !utf8.RuneStart(c[cut]) {
+				cut++
+			}
+			msgs[i].Results[j].Content = c[:head] + aiShrinkMarker + c[cut:]
+			changed = true
+		}
+	}
+	return changed
 }
 
 // ─── HTTP helpers ────────────────────────────────────
@@ -582,8 +640,12 @@ func openaiMessages(system string, msgs []aiMsg) []map[string]interface{} {
 		if len(m.Calls) > 0 {
 			calls := []map[string]interface{}{}
 			for _, c := range m.Calls {
-				calls = append(calls, map[string]interface{}{"id": c.ID, "type": "function",
-					"function": map[string]interface{}{"name": c.Name, "arguments": string(c.Input)}})
+				call := map[string]interface{}{"id": c.ID, "type": "function",
+					"function": map[string]interface{}{"name": c.Name, "arguments": string(c.Input)}}
+				if len(c.Extra) > 0 {
+					call["extra_content"] = c.Extra
+				}
+				calls = append(calls, call)
 			}
 			msg["tool_calls"] = calls
 		}
@@ -625,6 +687,7 @@ func openaiStream(ctx context.Context, p aiProvider, endpoint string, req aiLLMR
 	var out aiLLMResponse
 	type call struct {
 		id, name string
+		extra    json.RawMessage
 		args     strings.Builder
 	}
 	calls := map[int]*call{}
@@ -645,6 +708,7 @@ func openaiStream(ctx context.Context, p aiProvider, endpoint string, req aiLLMR
 							Name      string `json:"name"`
 							Arguments string `json:"arguments"`
 						} `json:"function"`
+						Extra json.RawMessage `json:"extra_content"`
 					} `json:"tool_calls"`
 				} `json:"delta"`
 				Finish string `json:"finish_reason"`
@@ -690,6 +754,9 @@ func openaiStream(ctx context.Context, p aiProvider, endpoint string, req aiLLMR
 				if tc.ID != "" {
 					c.id = tc.ID
 				}
+				if len(tc.Extra) > 0 && string(tc.Extra) != "null" {
+					c.extra = tc.Extra
+				}
 				if tc.Function.Name != "" {
 					c.name += tc.Function.Name
 				}
@@ -716,7 +783,7 @@ func openaiStream(ctx context.Context, p aiProvider, endpoint string, req aiLLMR
 			c.id = "call_" + randomToken(8)
 		}
 		in, bad := parseToolInput(c.args.String())
-		out.Calls = append(out.Calls, aiToolCall{ID: c.id, Name: c.name, Input: in, BadInput: bad})
+		out.Calls = append(out.Calls, aiToolCall{ID: c.id, Name: c.name, Input: in, BadInput: bad, Extra: c.extra})
 	}
 	out.Text = text.String()
 	if out.Stop == "content_filter" {
