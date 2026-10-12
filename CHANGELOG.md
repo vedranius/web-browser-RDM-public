@@ -4,6 +4,18 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.5] — 2026-10-12 — Movable, resizable AI assistant window
+
+Sixth step of issue #43. No server or database changes.
+
+### Added
+- The **AI assistant panel** inside a terminal window can now be **docked left, right, top or bottom**, shown as a **floating window**, **resized** (drag its inner edge, or the corner when floating) and **expanded** over the whole terminal window with a new ⛶ button (a double-click on the title bar does the same; press it again to restore). Drag the title bar to move it; moving a docked panel makes it float. The terminal and file area shrink beside a docked panel and are refitted, so the full command and output stay visible.
+- Dock, size and floating position are **remembered per user** in the browser (`localStorage`, key `wrm_ai_win_<user id>`). The expanded state is not remembered.
+- All new texts are in English and Croatian.
+
+### Changed
+- On compact windows (up to 760 px wide, e.g. phones) the layout is unchanged: the panel covers the terminal window below the title bar, and the new controls are hidden.
+
 ## [12.2.4] — 2026-10-12 — Resizable, fullscreen session replay
 
 Fifth step of issue #43. No server or database changes.
