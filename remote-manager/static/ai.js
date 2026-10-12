@@ -6,6 +6,8 @@
 'use strict';
 
 Object.assign(LANGS.en, {
+  ai_dock_left: 'Dock left', ai_dock_right: 'Dock right', ai_dock_top: 'Dock to the top', ai_dock_bottom: 'Dock to the bottom',
+  ai_float: 'Float (drag the title bar to move, drag the corner to resize)', ai_expand: 'Expand over the whole terminal window', ai_restore: 'Restore size',
   ai_title: 'AI assistant', ai_start: 'Start', ai_provider: 'Provider', ai_model: 'Model', ai_mode: 'Mode',
   ai_mode_read_only: 'Read-only', ai_mode_ask: 'Ask before every change', ai_mode_auto: 'Automatic within limits',
   ai_mode_read_only_d: 'The assistant reads logs, files, services and packages. Every change is refused.',
@@ -76,6 +78,8 @@ Object.assign(LANGS.en, {
   p_ai_idle_minutes: 'Idle timeout (minutes)', p_ai_idle_minutes_d: 'An idle AI session ends after this time.',
 });
 Object.assign(LANGS.hr, {
+  ai_dock_left: 'Usidri lijevo', ai_dock_right: 'Usidri desno', ai_dock_top: 'Usidri gore', ai_dock_bottom: 'Usidri dolje',
+  ai_float: 'Slobodan prozor (povuci naslovnu traku za pomicanje, povuci kut za promjenu veličine)', ai_expand: 'Proširi preko cijelog prozora terminala', ai_restore: 'Vrati veličinu',
   ai_title: 'AI asistent', ai_start: 'Pokreni', ai_provider: 'Pružatelj', ai_model: 'Model', ai_mode: 'Način rada',
   ai_mode_read_only: 'Samo čitanje', ai_mode_ask: 'Pitaj prije svake promjene', ai_mode_auto: 'Automatski u granicama',
   ai_mode_read_only_d: 'Asistent čita logove, datoteke, servise i pakete. Svaka promjena se odbija.',
@@ -151,8 +155,22 @@ Object.assign(LANGS.hr, {
 
   const css = `
 .ai-panel { position: absolute; right: 0; bottom: 0; width: 380px; max-width: 100%; display: flex; flex-direction: column; background: var(--bg2); border-left: 1px solid var(--border2); z-index: 5; border-radius: 0 0 11px 0; min-width: 0; }
-.win.ai-open .win-content { margin-right: 380px; }
-@container (max-width: 760px) { .win.ai-open .ai-panel { width: 100%; border-left: none; border-radius: 0 0 11px 11px; } .win.ai-open .win-content { margin-right: 0; } }
+@container (max-width: 760px) { .win.ai-open .ai-panel { width: 100%; border-left: none; border-radius: 0 0 11px 11px; } }
+.ai-panel[data-dock=left] { border-left: none; border-right: 1px solid var(--border2); border-radius: 0 0 0 11px; }
+.ai-panel[data-dock=top] { border-left: none; border-bottom: 1px solid var(--border2); border-radius: 0; }
+.ai-panel[data-dock=bottom] { border-left: none; border-top: 1px solid var(--border2); border-radius: 0 0 11px 11px; }
+.ai-panel[data-dock=max] { border: none; border-radius: 0 0 11px 11px; }
+.ai-panel[data-dock=float] { border: 1px solid var(--border2); border-radius: 10px; box-shadow: var(--shadow-md, 0 8px 32px rgba(0,0,0,.5)); overflow: hidden; }
+.ai-panel:not(.ai-compact) .ai-head { cursor: move; user-select: none; touch-action: none; }
+.ai-panel[data-dock=max] .ai-head { cursor: default; }
+.ai-panel.ai-compact .ai-dockb, .ai-panel.ai-compact .ai-rs, .ai-panel[data-dock=max] .ai-rs, .ai-panel[data-dock=max] .ai-dockb:not(.ai-xb) { display: none; }
+.ai-ib.on { background: var(--bg4); color: var(--accent); }
+.ai-rs { position: absolute; z-index: 6; touch-action: none; }
+.ai-panel[data-dock=right] .ai-rs { left: -3px; top: 0; bottom: 0; width: 7px; cursor: ew-resize; }
+.ai-panel[data-dock=left] .ai-rs { right: -3px; top: 0; bottom: 0; width: 7px; cursor: ew-resize; }
+.ai-panel[data-dock=top] .ai-rs { left: 0; right: 0; bottom: -3px; height: 7px; cursor: ns-resize; }
+.ai-panel[data-dock=bottom] .ai-rs { left: 0; right: 0; top: -3px; height: 7px; cursor: ns-resize; }
+.ai-panel[data-dock=float] .ai-rs { right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 55%, var(--text3, #888) 55%, var(--text3, #888) 62%, transparent 62%, transparent 76%, var(--text3, #888) 76%, var(--text3, #888) 83%, transparent 83%); }
 .ai-panel input[type=text], .ai-panel input[type=number], .ai-panel select, .ai-panel textarea, .ai-modal input[type=text], .ai-modal input[type=password], .ai-modal input[type=number], .ai-modal select, .ai-modal textarea {
   background: var(--bg); border: 1px solid var(--border2); color: var(--text); border-radius: 6px; padding: 6px 8px; font-size: 12px; outline: none; font-family: inherit; user-select: text; }
 .ai-panel input:focus, .ai-panel select:focus, .ai-panel textarea:focus, .ai-modal input:focus, .ai-modal select:focus, .ai-modal textarea:focus { border-color: var(--accent); }
@@ -244,22 +262,109 @@ Object.assign(LANGS.hr, {
     p.className = 'ai-panel';
     p.id = 'aip-' + wo.id;
     p.innerHTML = `<div class="ai-head"><span class="ai-ttl">✦ ${esc(t('ai_title'))}</span><span class="pill info" id="aipm-${wo.id}" style="display:none;"></span><span class="ai-sp"></span>
+      <button class="ai-ib ai-dockb" data-d="left" title="${esc(t('ai_dock_left'))}" onclick="wrmAI.dock(${wo.id},'left')">◧</button>
+      <button class="ai-ib ai-dockb" data-d="top" title="${esc(t('ai_dock_top'))}" onclick="wrmAI.dock(${wo.id},'top')">⬒</button>
+      <button class="ai-ib ai-dockb" data-d="bottom" title="${esc(t('ai_dock_bottom'))}" onclick="wrmAI.dock(${wo.id},'bottom')">⬓</button>
+      <button class="ai-ib ai-dockb" data-d="right" title="${esc(t('ai_dock_right'))}" onclick="wrmAI.dock(${wo.id},'right')">◨</button>
+      <button class="ai-ib ai-dockb" data-d="float" title="${esc(t('ai_float'))}" onclick="wrmAI.dock(${wo.id},'float')">❐</button>
+      <button class="ai-ib ai-dockb ai-xb" title="${esc(t('ai_expand'))}" onclick="wrmAI.expand(${wo.id})">⛶</button>
       <button class="ai-ib" title="${esc(t('ai_see'))}" onclick="wrmAI.see(${wo.id})">👁</button>
       <button class="ai-ib" title="${esc(t('ai_history'))}" onclick="wrmAI.history(${wo.id})">🕘</button>
       <button class="ai-ib danger" id="aipk-${wo.id}" title="${esc(t('ai_end'))}" style="display:none;" onclick="wrmAI.end(${wo.id})">⏻</button>
       <button class="ai-ib" title="${esc(t('ai_close_panel'))}" onclick="wrmAI.toggle(${wo.id})">✕</button></div>
       <div class="ai-body" id="aib-${wo.id}"></div><div class="ai-foot" id="aif-${wo.id}" style="display:none;"></div>`;
+    p.insertAdjacentHTML('beforeend', '<div class="ai-rs"></div>');
     wo.el.appendChild(p);
+    const head = p.querySelector('.ai-head'), rs = p.querySelector('.ai-rs');
+    head.addEventListener('pointerdown', e => dragStart(wo, e, 'move'));
+    head.addEventListener('dblclick', e => { if (!e.target.closest('button')) expand(wo.id); });
+    rs.addEventListener('pointerdown', e => dragStart(wo, e, 'size'));
+    if (window.ResizeObserver) new ResizeObserver(() => { if (wo.el.classList.contains('ai-open')) layout(wo, true); }).observe(wo.el);
     return p;
   }
 
-  function layout(wo) {
-    const p = panelEl(wo.id);
-    if (p) {
-      const hdr = $('wh-' + wo.id);
-      p.style.top = (hdr ? hdr.offsetHeight : 34) + 'px';
+  // ── position, size, dock (remembered per user) ───────
+  const DOCKS = ['left', 'right', 'top', 'bottom', 'float'];
+  const MAX = {}; // per window: expanded over the whole terminal window (not remembered)
+  const wkey = () => 'wrm_ai_win_' + ((typeof currentUser !== 'undefined' && currentUser && currentUser.id) || 0);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function getPref() {
+    let p = {};
+    try { p = JSON.parse(localStorage.getItem(wkey()) || '{}') || {}; } catch (_) {}
+    const n = (v, d) => (isFinite(+v) && +v > 0 ? +v : d);
+    return {dock: DOCKS.includes(p.dock) ? p.dock : 'right', w: n(p.w, 380), h: n(p.h, 280), fw: n(p.fw, 420), fh: n(p.fh, 360),
+      fx: typeof p.fx === 'number' ? p.fx : null, fy: typeof p.fy === 'number' ? p.fy : null};
+  }
+  function setPref(p) { try { localStorage.setItem(wkey(), JSON.stringify(p)); } catch (_) {} }
+
+  function layout(wo, noFit) {
+    const p = panelEl(wo.id), wc = $('wc-' + wo.id);
+    if (p && wc) {
+      const hdr = $('wh-' + wo.id), ht = hdr ? hdr.offsetHeight : 34;
+      const W = wo.el.clientWidth, H = wo.el.clientHeight - ht, s = p.style;
+      const compact = W <= 760;
+      p.classList.toggle('ai-compact', compact);
+      ['left', 'right', 'top', 'bottom', 'width', 'height'].forEach(k => { s[k] = ''; });
+      wc.style.margin = '';
+      s.top = ht + 'px';
+      const pr = getPref(), mx = !compact && !!MAX[wo.id];
+      p.dataset.dock = compact ? 'right' : (mx ? 'max' : pr.dock);
+      p.querySelectorAll('.ai-dockb[data-d]').forEach(b => b.classList.toggle('on', !mx && b.dataset.d === pr.dock));
+      const xb = p.querySelector('.ai-xb');
+      if (xb) { xb.classList.toggle('on', mx); xb.textContent = mx ? '🗗' : '⛶'; xb.title = t(mx ? 'ai_restore' : 'ai_expand'); }
+      if (!compact && wo.el.classList.contains('ai-open')) {
+        const w = clamp(pr.w, 260, Math.max(260, W - 160)), h = clamp(pr.h, 140, Math.max(140, H - 100));
+        if (mx) { s.left = '0'; s.right = '0'; s.bottom = '0'; s.width = 'auto'; }
+        else if (pr.dock === 'right') { s.right = '0'; s.bottom = '0'; s.width = w + 'px'; wc.style.marginRight = w + 'px'; }
+        else if (pr.dock === 'left') { s.left = '0'; s.bottom = '0'; s.width = w + 'px'; s.right = 'auto'; wc.style.marginLeft = w + 'px'; }
+        else if (pr.dock === 'top') { s.left = '0'; s.right = '0'; s.width = 'auto'; s.height = h + 'px'; wc.style.marginTop = h + 'px'; }
+        else if (pr.dock === 'bottom') { s.left = '0'; s.right = '0'; s.top = 'auto'; s.width = 'auto'; s.bottom = '0'; s.height = h + 'px'; wc.style.marginBottom = h + 'px'; }
+        else {
+          const fw = clamp(pr.fw, 260, Math.max(260, W - 8)), fh = clamp(pr.fh, 160, Math.max(160, H - 8));
+          const fx = clamp(pr.fx === null ? W - fw - 12 : pr.fx, 0, Math.max(0, W - fw)), fy = clamp(pr.fy === null ? 8 : pr.fy, 0, Math.max(0, H - fh));
+          s.right = 'auto'; s.bottom = 'auto'; s.left = fx + 'px'; s.top = (ht + fy) + 'px'; s.width = fw + 'px'; s.height = fh + 'px';
+        }
+      }
     }
-    setTimeout(() => { try { fitTerm(wo); } catch (_) {} }, 60);
+    if (!noFit) setTimeout(() => { try { fitTerm(wo); } catch (_) {} }, 60);
+  }
+
+  function dock(id, d) {
+    const wo = winOf(id); if (!wo || !DOCKS.includes(d)) return;
+    const pr = getPref(), p = panelEl(id);
+    if (d === 'float' && p && pr.dock !== 'float') { pr.fw = clamp(p.offsetWidth, 260, 460); pr.fh = clamp(p.offsetHeight, 240, 520); pr.fx = null; pr.fy = null; }
+    pr.dock = d; MAX[id] = false; setPref(pr); layout(wo);
+  }
+  function expand(id) {
+    const wo = winOf(id); if (!wo || wo.el.clientWidth <= 760) return;
+    MAX[id] = !MAX[id]; layout(wo);
+  }
+
+  function dragStart(wo, e, kind) {
+    if (e.button !== 0 || wo.el.clientWidth <= 760 || MAX[wo.id]) return;
+    if (kind === 'move' && e.target.closest('button')) return;
+    const p = panelEl(wo.id), ht = ($('wh-' + wo.id) || {}).offsetHeight || 34, pr = getPref();
+    const src = e.currentTarget, x0 = e.clientX, y0 = e.clientY;
+    const start = {w: p.offsetWidth, h: p.offsetHeight, x: p.offsetLeft, y: p.offsetTop - ht};
+    if (kind === 'move' && pr.dock !== 'float') { pr.dock = 'float'; pr.fw = clamp(start.w, 260, 460); pr.fh = clamp(start.h, 240, 520); }
+    if (kind === 'move') { pr.fx = start.x; pr.fy = start.y; }
+    e.preventDefault();
+    try { src.setPointerCapture(e.pointerId); } catch (_) {}
+    const mv = ev => {
+      const dx = ev.clientX - x0, dy = ev.clientY - y0;
+      if (kind === 'move') { pr.fx = start.x + dx; pr.fy = start.y + dy; }
+      else if (pr.dock === 'right') pr.w = start.w - dx;
+      else if (pr.dock === 'left') pr.w = start.w + dx;
+      else if (pr.dock === 'top') pr.h = start.h + dy;
+      else if (pr.dock === 'bottom') pr.h = start.h - dy;
+      else { pr.fw = start.w + dx; pr.fh = start.h + dy; }
+      setPref(pr); layout(wo, true);
+    };
+    const up = () => {
+      src.removeEventListener('pointermove', mv); src.removeEventListener('pointerup', up); src.removeEventListener('pointercancel', up);
+      layout(wo);
+    };
+    src.addEventListener('pointermove', mv); src.addEventListener('pointerup', up); src.addEventListener('pointercancel', up);
   }
 
   async function toggle(id) {
@@ -644,7 +749,7 @@ Object.assign(LANGS.hr, {
     if (st && st.sid && !st.ended) api('POST', `/api/ai/sessions/${st.sid}/kill${shareQ(wo)}`).catch(() => {});
     if (st && st.es) st.es.close();
     if (st && st.timer) clearInterval(st.timer);
-    delete S[wo.id];
+    delete S[wo.id]; delete MAX[wo.id];
   }
 
   async function refresh() {
@@ -797,7 +902,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmAI = {
-    toggle, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession,
+    toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession,
     myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); }),
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     closeModal: closeAIModal, adminTab: adminAI, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
