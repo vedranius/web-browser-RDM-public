@@ -4,6 +4,17 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.4] — 2026-10-12 — Resizable, fullscreen session replay
+
+Fifth step of issue #43. No server or database changes.
+
+### Added
+- **Session recording replay** (terminal recordings) can be **resized** by dragging its bottom-right corner and expanded to **fullscreen** with a new ⛶ button in the header (**Esc** or the button leaves fullscreen). The size resets each time a recording is opened. Remote desktop (RDP/VNC) replays use the same window and also refit to it.
+- All new texts are in English and Croatian.
+
+### Changed
+- The replay terminal keeps the recorded size (columns × rows) but is now **scaled to fit the available width** (and, in fullscreen, the height), re-fitted whenever the window is resized, so there is no sideways scrolling, also on phones (checked at 390 px). Playback controls and behaviour are unchanged.
+
 ## [12.2.3] — 2026-10-12 — Explanations for tabs and settings
 
 Fourth step of issue #43. No server or database changes.
