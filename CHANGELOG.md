@@ -1,3 +1,15 @@
+## [12.3.0] - 2026-10-12
+
+### Added
+- **Smart Safe Auto-Mode**: Automatsko odobravanje sigurnih dijagnostičkih naredbi (`df`, `free`, `top`, `ps`, `docker ps`, `ls`) u auto modu.
+- **AI UI Thinking Status**: Prikaz stanja obrade i izvođenja naredbi na serveru u stvarnom vremenu.
+- **Ollama Context Sanitizer**: Sprječavanje slanja tekstualnog JSON-a u model nakon učitavanja povijesti iz baze.
+
+### Fixed
+- Ispravljen loop odbijanja alata kod Qwen modela na lokalnoj Ollami.
+- Session 0 poboljšanja stabilnosti servisa na Windows poslužiteljima.
+
+
 # Changelog
 
 All notable changes to Web Remote Manager PRO. The format follows
@@ -198,7 +210,7 @@ First step of issue #43. The other items of the issue stay open and are planned 
 
 ### Added
 - **📂 in the title bar of SSH terminals** ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)) opens the file manager of the same server, so you no longer have to find the connection in a long sidebar (and cannot pick the wrong server). If a file manager of that connection is already open, it is brought to the front instead of opening another one. Shown only for SSH connections (not for Telnet, serial or BMC consoles) and only with the *Browse & download files* right on shared connections.
-- **The terminal's current directory:** when the remote shell reports its directory with the standard OSC 7 escape sequence (`file://host/path`), the file manager opens there, and an already open one moves there. Shells that do not report it open the home directory. Bash example for `~/.bashrc`: `PROMPT_COMMAND='printf "\033]7;file://%s%s\033\\" "$HOSTNAME" "$PWD"'`.
+- **The terminal's current directory:** when the remote shell reports its directory with the standard OSC 7 escape sequence (`file://host/path`), the file manager opens there, and an already open one moves there. Shells that do not report it open the home directory. Bash example for `~/.bashrc`: `PROMPT_COMMAND='printf "]7;file://%s%s\" "$HOSTNAME" "$PWD"'`.
 
 ### Fixed
 - Tests: a test SSH server could get a port an earlier test server had used, and its new host key was then refused as a changed key (`TestStatusMonitor` failed intermittently). The test servers now forget the key remembered for their address when they start.
@@ -343,7 +355,7 @@ First step of issue #43. The other items of the issue stay open and are planned 
   - **Service catalog:** project, ref (`tag:latest`, `tag:vX` or a branch), branch, tag filter, subdirectory = installation root, include / exclude globs, **protected** per-host files, fingerprint files, install hints and kind (app, library, tool). **Suggestion from the repository tree** (subdirectory, fingerprint, protected and exclude globs, kind). Import (replace or merge) and export as catalog JSON. Services of imported bundles are used even when the catalog does not list them.
   - **Refs:** branch-aware tags (only tags whose commit is on the branch count; `tag:latest` falls back to the branch head with a warning), numeric version sort (`v1.10` > `v1.9`), fallback branches, and a ref choice per run: as in the catalog, one branch for all, each project's default branch, or per service.
   - **Discovery over SSH:** one `find` per server over the configured roots (depth 3) recognises installations by their fingerprint files (or install hints), skips copies and backups (`*_BKP`, `backup`, `.deploy-bak`, `kopija`, … as path segments; configurable) and derives an environment label from the path (`/srv/scripts/test/App` → `test`, `App_prod` → `prod`). Installations can also be added by hand.
-  - **File-level comparison:** the server hashes its files with POSIX tools (`tr -d '\r' < f | sha256sum`, no Python); WRM compares them with the target and with the **history of every file** (the earlier tags of the branch). File states *ok*, *old* (*n behind*), *modified*, *missing*, *extra*, *protected*; installation states *needs update*, *review*, *up to date*. Details show the version from `VERSION.md`, the systemd / supervisor units that mention the directory, the files and a coloured **diff** (server → target).
+  - **File-level comparison:** the server hashes its files with POSIX tools (`tr -d '' < f | sha256sum`, no Python); WRM compares them with the target and with the **history of every file** (the earlier tags of the branch). File states *ok*, *old* (*n behind*), *modified*, *missing*, *extra*, *protected*; installation states *needs update*, *review*, *up to date*. Details show the version from `VERSION.md`, the systemd / supervisor units that mention the directory, the files and a coloured **diff** (server → target).
   - **Overview:** targets per service (version, latest tag, source, warnings) and a servers × services matrix with filters (state, environment, folder, tag, text).
   - **Periodic checks** while WRM runs (per user, opt-in, every `git_check_interval_minutes`): they never change anything and notify through the notifications module — new events **`git.new_version`**, **`git.drift`** (files changed by hand) and **`git.unreachable`**, one digest per round.
   - Policies `git_enabled` (hides the workspace completely), `git_checks` (who may run checks: everyone by default), `git_check_interval_minutes` (60, 0 = off) and `git_backup_words`; `mePayload` flags `git` and `git_checks`.
