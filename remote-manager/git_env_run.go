@@ -37,8 +37,7 @@ type gitEnvRun struct {
 func createEnvRun(r *http.Request, userID int, p gitRunParams) (int, int, error) {
 	e := p.Env
 	e.App, e.Env = strings.TrimSpace(e.App), strings.TrimSpace(e.Env)
-	cat := loadGitCatalog(userID)
-	app, env, err := findEnv(cat, e.App, e.Env)
+	app, env, err := findEnv(envCatalog(userID, e.App, e.Env), e.App, e.Env)
 	if err != nil {
 		return 0, 404, err
 	}
@@ -507,7 +506,7 @@ func (run *gitRun) envDeployItem(it *gitRunItem) error {
 	if !ok {
 		return fmt.Errorf("no target for %s", it.App)
 	}
-	cat := loadGitCatalog(run.UserID)
+	cat := envCatalog(run.UserID, e.App, e.Env)
 	app, env, err := findEnv(cat, e.App, e.Env)
 	if err != nil {
 		return err
@@ -895,7 +894,7 @@ echo WRM_DONE
 func (run *gitRun) envRollbackItem(it *gitRunItem) error {
 	c := itemCtx{run, it}
 	e := run.P.Env
-	cat := loadGitCatalog(run.UserID)
+	cat := envCatalog(run.UserID, e.App, e.Env)
 	app, env, err := findEnv(cat, e.App, e.Env)
 	if err != nil {
 		return err

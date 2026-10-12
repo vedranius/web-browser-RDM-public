@@ -4,6 +4,25 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.9] — 2026-10-12 — Git Simple mode is automatic, servers shown by hostname
+
+Part of #43.
+
+### Added
+- **Automatic environments in Git Simple mode.** Services and environments the checker already found on the servers (`git_installs`) are *derived* into virtual environments and shown as ready cards, so the administrator no longer defines environments per service. `GET /api/git/env/overview?auto=1` (Simple mode only) merges them; plan, cell, history, doctor, unlock and run creation resolve them too, so locks, backups, permission checks and audit are unchanged and nothing is deployed without an explicit run. Stored environments win (same name, or the same server and folder); invalid or conflicting derivations are dropped.
+- **Save detected environments** (`POST /api/git/env/adopt`): stores the derived environments in the catalog. Requires the `git_update` policy, audited as `git.env_adopted` (neutral keys `services`, `environments`).
+- **Find services on my servers** in an empty Simple mode (the normal check).
+- **Cached hostnames:** the table `git_hostnames` (additive) caches each connection's `hostname`, read with a fixed command over the existing SSH login during checks and deploy plans (6 h).
+
+### Changed
+- **Servers are shown by hostname** instead of the connection name in Git Simple mode and wherever the Git workspace lists servers (Environments, Activity, Installations, Runs, filters), falling back to the connection's host address. Filters and requests still use the connection name.
+- English and Croatian texts for the new notice, buttons and messages.
+## [12.2.8] — 2026-10-12 — Updates dialog always reachable
+
+Part of #43. Frontend only; no database or backend change.
+
+### Fixed
+- **The Updates dialog can be opened without a known update.** It used to open only from the green update badge, which is hidden until an update is known, so an administrator could not force a check. The version label in the top bar ("WRM vX.Y.Z") is now a button (tooltip in English and Croatian, keyboard: Tab, Enter, Space) that opens the dialog; **Check now** is there for administrators, other users see the versions only. On narrow windows, where the text is hidden, the logo next to it stays as the button. The badge and the sign-in page are unchanged.
 ## [12.2.7] — 2026-10-12 — More AI providers and guided Ollama
 
 Last step of issue #43. One additive table (`ai_ollama_runs`).

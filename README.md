@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), an **MCP server** so Claude, ChatGPT and other AI apps can work on chosen servers under the same rules, SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v12.2.7** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.2.9** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -139,21 +139,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.2.7-linux-amd64
-   ./wrm-pro-v12.2.7-linux-amd64
+   chmod +x wrm-pro-v12.2.9-linux-amd64
+   ./wrm-pro-v12.2.9-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.2.7-windows-amd64.exe
+   .\wrm-pro-v12.2.9-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-android-arm64
-   chmod +x wrm-pro-v12.2.7-android-arm64 && ./wrm-pro-v12.2.7-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.9/wrm-pro-v12.2.9-android-arm64
+   chmod +x wrm-pro-v12.2.9-android-arm64 && ./wrm-pro-v12.2.9-android-arm64
    ```
 
    **Docker**
@@ -177,6 +177,19 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.2.8
+
+Replace the binary. One additive table (`git_hostnames`) is created automatically; v12.2.8 still starts on the same database. No configuration changes.
+
+- **Git Simple mode is automatic.** Services and environments the checker found on your servers appear as ready cards without defining environments per service; **Save detected environments** stores them in the catalog (audited). Advanced is unchanged and your own definitions keep priority.
+- **Servers are shown by hostname** (read once over the existing SSH login and cached, falling back to the connection host) instead of the connection name.
+
+## Upgrading from v12.2.7
+
+Replace the binary. No database or configuration changes; v12.2.7 still starts on the same database.
+
+- The **version label in the top bar** ("WRM v12.2.8") now opens the **Updates** dialog, so an administrator can always press **Check now**, even when no update is known and the green badge is hidden. Non-administrators see the versions only.
 
 ## Upgrading from v12.2.6
 
@@ -973,7 +986,7 @@ Every tab of the **Advanced** Git workspace (Overview, Services, Installations, 
 
 The header of the Git workspace has a **Simple | Advanced** switch. The choice is remembered per user in this browser (`localStorage`); **Advanced** is the default and is exactly the workspace described in the other Git sections.
 
-**Simple** is a single view for people who only want to know what is deployed and to update it. For every environment of every service (set up once in Advanced → *Environments*) it shows one card:
+**Simple** is a single view for people who only want to know what is deployed and to update it. For every environment of every service it shows one card. **No manual setup is needed:** once a Git source is connected and the checker has found your services on the servers, the environments appear automatically (see *Automatic environments* below); environments defined in Advanced → *Environments* are shown as before and win over detected ones:
 
 - **On the server**: the version, commit and who deployed it, per destination server (or *Not installed here yet*).
 - **Latest on the branch**: version, branch, commit and date of the service target.
@@ -982,7 +995,11 @@ The header of the Git workspace has a **Simple | Advanced** switch. The choice i
 
 Install, update and deploy open a plain-language confirmation: the version change, how many files are added or changed per server, optional *post_deploy* and *restart* checkboxes (when allowed), an optional *different version* (tag or branch), and, for protected environments, typing the environment name. Rollback shows the version now on the server and the one it returns to.
 
-Simple mode adds **no new endpoints**: it uses the environment overview, cell, plan, history and run endpoints of the Advanced deploy, so permissions (`deploy` update / rollback / restart), locks, backups, remembered exclusions, the audit trail and run history are the same. Anything else (settings, sources, catalog, activity, `.gitignore`, CI, schedules, partial deploys) stays in Advanced.
+**Automatic environments.** Simple mode asks the overview for detected environments (`?auto=1`). For every service of the catalog, the installations the checker found (`git_installs`) are grouped by environment label (the tag or folder-name hint, `default` if none) into virtual environments; a production label asks for the typed environment name, as before. They are only *derived*: nothing is stored and nothing is deployed until you start an install, update or rollback, which runs through the same plan, locks, backups, permission checks and audit. A stored environment with the same name, or one that already lists the same server and folder, takes priority; conflicting or invalid derivations are left out. A notice shows how many were detected and, for users allowed `git_update`, **Save detected environments** stores them in the catalog (`POST /api/git/env/adopt`, audited as `git.env_adopted`; existing definitions are untouched). An empty Simple mode offers **Find services on my servers** (the normal check). The Advanced tabs show stored environments only.
+
+**Servers are shown by hostname.** Wherever the Git workspace lists a server (Simple cards and dialogs, Environments, Activity, Installations, Runs), the label is the server's real hostname instead of the connection name you chose. WRM reads `hostname` over the existing SSH login during checks and deploy plans, caches it (`git_hostnames`, 6 h) and falls back to the connection's host address until it is known. Filters and requests still use the connection name.
+
+Simple mode adds one endpoint (`POST /api/git/env/adopt`) and otherwise uses the environment overview, cell, plan, history and run endpoints of the Advanced deploy, so permissions (`deploy` update / rollback / restart), locks, backups, remembered exclusions, the audit trail and run history are the same. Anything else (settings, sources, catalog, activity, `.gitignore`, CI, schedules, partial deploys) stays in Advanced.
 
 ### Git workspace: environments, deploy plans & safe deploys
 
@@ -1626,9 +1643,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.2.7-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.2.7-linux-amd64 -service-status
-sudo ./wrm-pro-v12.2.7-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.2.9-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.2.9-linux-amd64 -service-status
+sudo ./wrm-pro-v12.2.9-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). Edit that file and restart the service to change them.
@@ -1657,7 +1674,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.2.7-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.2.9-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1971,7 +1988,8 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/feeds` | `{name, url, header_name, header_value, interval_minutes}`; `PUT` / `DELETE /api/git/feeds/{id}` |
 | POST | `/api/git/feeds/{id}/fetch` | Fetch and import now → `{status: "imported"\|"unchanged", result, state}` |
 | PUT / DELETE | `/api/git/pipelines/{app}` | Deploy method *CI pipeline*: `{kind: "jenkins"\|"gitlab", url, username, project, ref, token}`; `DELETE` → files over SSH again |
-| GET | `/api/git/env/overview` | Services with environments: `{services: [{app, envs: [{name, destinations, confirm, allowed_refs, post_deploy}]}], envs, stale_minutes}` |
+| POST | `/api/git/env/adopt` | Save the detected (derived) environments of one service or all to the catalog (`{app?}`, policy `git_update`, audit `git.env_adopted`): `{added, environments}` |
+| GET | `/api/git/env/overview` | Services with environments (`?auto=1` also merges the environments derived from detected installs, flagged `auto`, plus `auto` count and `hosts`: connection name → hostname): `{services: [{app, envs: [{name, destinations, confirm, allowed_refs, post_deploy}]}], envs, stale_minutes}` |
 | GET | `/api/git/env/cell?app=&env=` | One overview cell: `{dests: [{server, path, exists, current, version_md, commit_md, ref_md, user_md, updated_md, behind, lock, error}], drift, target}` |
 | POST | `/api/git/env/plan` | `{app, env, ref}` → `{id, ref_name, target, confirm, post_deploy, excluded: {path: {by, at}}, errors, dests: [{index, server, path, state_dir, exists, current, from_version, files: [{path, state: "new"\|"changed"\|"eol"\|"same"\|"removed"\|"extra"\|"protected"\|"ignored", local, link, behind, tag, pattern}], counts, conflicts: [{path, kind, server}], fingerprint, lock, errors, warnings}]}` (kept in memory for 2 hours, applied once) |
 | POST | `/api/git/runs` (environment) | Deploy: `{kind: "update", env: {app, env, plan_id, exclude: [path], delete_removed, post_deploy, dry_run, confirm: environment name}, restart: {mode: "none"\|"now"}, checks}`. Rollback: `{kind: "rollback", env: {app, env, deploy_id, dests: [index], post_deploy, dry_run, confirm}, restart}` |

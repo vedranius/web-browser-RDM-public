@@ -87,6 +87,7 @@ type gitEnvironment struct {
 	PostDeploy   string       `json:"post_deploy,omitempty"`  // runs in the app directory when chosen
 	KeepBackups  int          `json:"keep_backups,omitempty"` // deploy backups kept per destination
 	StateDir     string       `json:"state_dir,omitempty"`    // "" = <path>/.deploy-bak
+	Auto         bool         `json:"auto,omitempty"`         // derived from the detected installations, not stored (git_env_auto.go)
 }
 
 var prodEnvNames = map[string]bool{"prod": true, "production": true, "prd": true, "live": true}
@@ -1015,6 +1016,11 @@ func initGitEnvSchema() {
 		at TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (user_id, app, env, path))`,
 		"user_id", "app", "env", "path", "by_user", "at")
+	ensureTable("git_hostnames", `CREATE TABLE IF NOT EXISTS git_hostnames (
+		conn_id INTEGER PRIMARY KEY,
+		hostname TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '')`,
+		"conn_id", "hostname", "updated_at")
 }
 
 func loadEnvExclusions(userID int, app, env string) map[string]gitEnvExclusion {
@@ -1089,7 +1095,7 @@ func addPermanentExclude(userID int, app, env, rel, scope string) (string, bool,
 
 // envPlanRequest computes the plan of an environment at a ref ("" = the service's target).
 func envPlanRequest(userID int, app, env, ref string) (*gitEnvPlan, int, error) {
-	cat := loadGitCatalog(userID)
+	cat := envCatalog(userID, app, env)
 	a, e, err := findEnv(cat, app, env)
 	if err != nil {
 		return nil, 404, err
@@ -1144,6 +1150,7 @@ func envDestPlanOver(userID int, x *envPlanCtx, i int, d gitEnvDest) *gitEnvDest
 		return fail(fmt.Errorf("cannot log in to %s: %v", conn.Name, err))
 	}
 	defer cl.Close()
+	cacheServerHostname(conn.ID, cl)
 	dp, err := x.destPlan(cl, i, d, conn)
 	if err != nil {
 		dp.Errors = append(dp.Errors, err.Error())
@@ -1185,6 +1192,7 @@ func forEachDest(userID int, app *gitCatalogApp, e *gitEnvironment, fn func(dc e
 				return
 			}
 			defer cl.Close()
+			cacheServerHostname(conn.ID, cl)
 			dc.cl = cl
 			fn(dc, nil)
 		}(i, d)
@@ -1210,7 +1218,7 @@ type gitEnvCellDest struct {
 
 // envCell reads the state of every destination of an environment.
 func envCell(userID int, app, env string) (map[string]interface{}, error) {
-	cat := loadGitCatalog(userID)
+	cat := envCatalog(userID, app, env)
 	a, e, err := findEnv(cat, app, env)
 	if err != nil {
 		return nil, err
@@ -1291,7 +1299,7 @@ func envCell(userID int, app, env string) (map[string]interface{}, error) {
 		cd.Behind = n
 	}
 	drift = len(seen) > 1
-	res := map[string]interface{}{"app": app, "env": env, "dests": out, "drift": drift}
+	res := map[string]interface{}{"app": app, "env": env, "dests": out, "drift": drift, "hosts": hostLabels(userID)}
 	if haveT {
 		res["target"] = t.brief()
 	}
@@ -1301,7 +1309,7 @@ func envCell(userID int, app, env string) (map[string]interface{}, error) {
 // envHistory merges history.jsonl of every destination (newest first, one row per
 // destination) and returns the current deploy of each destination.
 func envHistory(userID int, app, env string) (map[string]interface{}, error) {
-	cat := loadGitCatalog(userID)
+	cat := envCatalog(userID, app, env)
 	a, e, err := findEnv(cat, app, env)
 	if err != nil {
 		return nil, err
@@ -1423,7 +1431,7 @@ for x in rsync sha256sum tar; do if command -v $x >/dev/null 2>&1; then printf '
 }
 
 func envDoctor(userID int, app, env string) ([]gitDoctorDest, error) {
-	cat := loadGitCatalog(userID)
+	cat := envCatalog(userID, app, env)
 	a, e, err := findEnv(cat, app, env)
 	if err != nil {
 		return nil, err
@@ -1563,7 +1571,8 @@ func envDoctor(userID int, app, env string) ([]gitDoctorDest, error) {
 
 // apiGitEnv handles /api/git/env/…; it returns false for other routes.
 //
-//	GET    /api/git/env/overview                 services with environments (cells load separately)
+//	GET    /api/git/env/overview[?auto=1]        services with environments (cells load separately); auto=1 adds the derived ones
+//	POST   /api/git/env/adopt {app}              store the derived environments in the catalog (audited)
 //	GET    /api/git/env/cell?app=&env=           state of every destination, commits behind, drift
 //	POST   /api/git/env/plan {app, env, ref}     → plan with fingerprints (applied once)
 //	GET    /api/git/env/history?app=&env=        merged history.jsonl of the destinations
@@ -1587,12 +1596,23 @@ func apiGitEnv(w http.ResponseWriter, r *http.Request, userID int, rest string) 
 	switch {
 	case rest == "env/overview" && r.Method == http.MethodGet:
 		cat := loadGitCatalog(userID)
+		auto := q.Get("auto") == "1" // Simple mode: add the environments derived from the detected installations
+		autoN := 0
+		if auto {
+			for name, envs := range deriveEnvs(userID, cat) {
+				if a, ok := cat.app(name); ok {
+					a.Environments = append(a.Environments, envs...)
+					autoN += len(envs)
+				}
+			}
+		}
 		type envBrief struct {
 			Name        string       `json:"name"`
 			Dests       []gitEnvDest `json:"destinations"`
 			Confirm     bool         `json:"confirm"`
 			AllowedRefs []string     `json:"allowed_refs"`
 			PostDeploy  string       `json:"post_deploy,omitempty"`
+			Auto        bool         `json:"auto,omitempty"`
 		}
 		type svc struct {
 			App  string     `json:"app"`
@@ -1607,7 +1627,7 @@ func apiGitEnv(w http.ResponseWriter, r *http.Request, userID int, rest string) 
 			}
 			s := svc{App: a.Name}
 			for _, e := range a.Environments {
-				s.Envs = append(s.Envs, envBrief{e.Name, e.Destinations, e.needsConfirm(), nonNil(e.AllowedRefs), e.PostDeploy})
+				s.Envs = append(s.Envs, envBrief{e.Name, e.Destinations, e.needsConfirm(), nonNil(e.AllowedRefs), e.PostDeploy, e.Auto})
 				if !names[e.Name] {
 					names[e.Name] = true
 					order = append(order, e.Name)
@@ -1618,7 +1638,30 @@ func apiGitEnv(w http.ResponseWriter, r *http.Request, userID int, rest string) 
 		if order == nil {
 			order = []string{}
 		}
-		jsonOK(w, map[string]interface{}{"services": list, "envs": order, "stale_minutes": int(gitEnvStaleAfter() / time.Minute)})
+		jsonOK(w, map[string]interface{}{"services": list, "envs": order, "stale_minutes": int(gitEnvStaleAfter() / time.Minute), "auto": autoN, "hosts": hostLabels(userID)})
+
+	case rest == "env/adopt" && r.Method == http.MethodPost:
+		if !gitActionAllowed(userID, "git_update") {
+			jsonError(w, "This action is not allowed for your account", 403)
+			return true
+		}
+		var in struct {
+			App string `json:"app"`
+		}
+		if !decodeGitJSON(w, r, &in) {
+			return true
+		}
+		added, err := adoptDerivedEnvs(userID, strings.TrimSpace(in.App))
+		if err != nil {
+			jsonError(w, err.Error(), 400)
+			return true
+		}
+		total := 0
+		for _, n := range added {
+			total += n
+		}
+		auditLog(r, userID, "git.env_adopted", strings.TrimSpace(in.App), map[string]interface{}{"services": len(added), "environments": total})
+		jsonOK(w, map[string]interface{}{"added": added, "environments": total})
 
 	case rest == "env/cell" && r.Method == http.MethodGet:
 		if !needCheck() {
@@ -1690,7 +1733,7 @@ func apiGitEnv(w http.ResponseWriter, r *http.Request, userID int, rest string) 
 		if !decodeGitJSON(w, r, &in) {
 			return true
 		}
-		cat := loadGitCatalog(userID)
+		cat := envCatalog(userID, in.App, in.Env)
 		a, e, err := findEnv(cat, in.App, in.Env)
 		if err != nil || in.Dest < 0 || in.Dest >= len(e.Destinations) {
 			jsonError(w, "Destination not found", 404)
