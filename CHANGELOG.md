@@ -4,6 +4,13 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.2] — 2026-10-12 — Git Simple Mode
+
+Third step of issue #43. No server or database changes.
+
+### Added
+- **Simple mode for the Git workspace.** A **Simple | Advanced** switch in the header (remembered per user in the browser; Advanced stays the default and is unchanged). Simple shows one guided card per service environment: the version on the server next to the latest version on the branch, a clear status (up to date / update available / not installed / cannot compare / problem), and big actions **Install**, **Update** / **Deploy again** and **Roll back to the previous version**, each with a plain-language confirmation (version change, files per server, optional post-deploy and restart, optional other version, typing the environment name for protected environments).
+- It reuses the existing environment endpoints (overview, cell, plan, history, runs), so permissions, locks, backups, audit and run history are exactly those of the Advanced deploy; no new privileged paths.
 ## [12.2.1] — 2026-10-12 — Terminal fixes
 
 Second step of issue #43 (terminal items). No server or database changes.

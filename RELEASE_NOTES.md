@@ -1,24 +1,38 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.1/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.2/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.2.1 — Terminal fixes: copying long selections, maximized windows, cursor in the terminal
+## Web Remote Manager PRO v12.2.2 — Git Simple Mode: install, update and roll back in one clear view
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🖥 Terminal fixes
+### 🧭 Git Simple Mode
+
+- **Simple | Advanced switch** in the Git workspace header (remembered per user). Advanced is the default and unchanged.
+- **One card per environment:** the version on the server next to the latest version on the branch, with a clear status: up to date, update available, not installed.
+- **Big, safe actions:** Install, Update / Deploy again and Roll back to the previous version, each with a plain-language confirmation. Same permissions, backups and audit as the Advanced deploy.
+
+### ⬆️ Upgrading from v12.2.1
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.2/wrm-pro-v12.2.2-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.2/wrm-pro-v12.2.2-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.2/wrm-pro-v12.2.2-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.2/wrm-pro-v12.2.2-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.2)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.2/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.2.1 — Terminal fixes: copying long selections, maximized windows, cursor in the terminal
+
+#### 🖥 Terminal fixes
 
 - **Copy long output:** a selection that scrolls (more than one screen) is now copied completely; no more zooming out. The copy happens when you release the mouse.
 - **New terminals open maximized** and the cursor is already in the terminal. Windows of a saved session keep their layout.
 - **No more jumping windows:** clicking or double-clicking the title bar of a maximized window no longer shrinks or expands it; only dragging restores it.
 
-### ⬆️ Upgrading from v12.2.0
+#### ⬆️ Upgrading from v12.2.0
 
 Replace the binary (or update with one click from the version badge). No database or configuration changes. The remaining items of issue #43 are planned for the next versions.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.1/wrm-pro-v12.2.1-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.1/wrm-pro-v12.2.1-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.1/wrm-pro-v12.2.1-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.1/wrm-pro-v12.2.1-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.1)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.1/CHANGELOG.md) for details.
 
 ---
 
