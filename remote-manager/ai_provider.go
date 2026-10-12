@@ -68,6 +68,7 @@ const aiProviderCols = `id, scope, COALESCE(user_id,0), name, kind, base_url, re
 
 func initAISchema() {
 	db.Exec(`ALTER TABLE users ADD COLUMN ai_blocked INTEGER NOT NULL DEFAULT 0`)
+	initOllamaSchema()
 	ensureTable("ai_providers", `CREATE TABLE IF NOT EXISTS ai_providers (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		scope TEXT NOT NULL DEFAULT 'org',
@@ -523,6 +524,20 @@ func handleAIProviders(w http.ResponseWriter, r *http.Request, userID int, scope
 			return
 		}
 		jsonOK(w, map[string]interface{}{"ok": true, "reply": truncateStr(res, 200)})
+		return
+	}
+	if len(parts) == 2 && parts[1] == "models" && r.Method == http.MethodGet {
+		list, err := aiListModels(r.Context(), p)
+		d := map[string]interface{}{"id": p.ID, "kind": p.Kind, "ok": err == nil, "count": len(list)}
+		if err != nil {
+			d["error"] = truncateStr(err.Error(), 300)
+		}
+		auditLog(r, userID, "ai.provider_models_listed", p.Name, d)
+		if err != nil {
+			jsonOK(w, map[string]interface{}{"ok": false, "error": err.Error(), "models": []string{}})
+			return
+		}
+		jsonOK(w, map[string]interface{}{"ok": true, "models": list})
 		return
 	}
 	if len(parts) != 1 {
