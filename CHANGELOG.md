@@ -4,6 +4,19 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.0] — 2026-10-12 — AI provider fixes
+
+First step of issue #43. The other items of the issue stay open and are planned for the next versions.
+
+### Fixed
+- **Gemini (and other OpenAI-compatible providers) with tools:** the provider's `extra_content` of a tool call (Gemini's `thought_signature`) is now kept in the session history and sent back with the call, so the next request no longer fails with *HTTP 400: Function call is missing a thought_signature*.
+- **Temporary provider errors** (HTTP 408 / 429 / 500 / 502 / 503 / 504 / 529, for example *This model is currently experiencing high demand*) are retried up to three times (3, 8 and 15 seconds) instead of ending the turn.
+- **Requests that are too large** (HTTP 413, or a 400 / 429 that names a token or context limit, as Groq does) shorten the long tool output of the conversation (4000, 1200, then 300 bytes per result, keeping start and end) and retry, so the assistant's answer is shown instead of only the error.
+
+### Added
+- Assistant notices *The provider is busy; trying again shortly…* and *The request was too large for the provider; long command output was shortened…* (English and Croatian).
+- Tests: `ai_recovery_test.go` (the `thought_signature` round trip against a fake streaming provider, error classification, history shortening).
+
 ## [12.1.0] — 2026-10-10 — AI desktop apps (MCP)
 
 ### Added
