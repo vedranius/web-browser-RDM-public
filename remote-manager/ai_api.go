@@ -27,8 +27,11 @@ import (
 //   POST sessions/{id}/stop                   cancel the running request / command
 //   POST sessions/{id}/kill                   end the session
 //   POST kill-all                             end every own session
+//   GET  ollama/status[?url]                  detect Ollama (admins may probe another URL), per-OS commands
+//   POST ollama/action                        {action: install|start|pull, model?, confirm} admin + policy ai_ollama_manage
+//   GET  ollama/runs[/{id}]                   recorded Ollama actions (admin)
 // Admin API (/api/admin/ai/…):
-//   GET|POST|PUT|DELETE providers[/{id}], POST providers/{id}/test   organisation providers
+//   GET|POST|PUT|DELETE providers[/{id}], POST providers/{id}/test, GET providers/{id}/models   organisation providers
 //   GET  sessions?user&conn&status&limit      every session (active ones marked live)
 //   GET  sessions/{id}                        transcript
 //   POST sessions/{id}/kill
@@ -55,6 +58,8 @@ func apiAIHandler(w http.ResponseWriter, r *http.Request) {
 		aiConnectionHandler(w, r, userID, id)
 	case "providers":
 		handleAIProviders(w, r, userID, "user", strings.TrimPrefix(rest, "providers"))
+	case "ollama":
+		apiOllamaHandler(w, r, userID, parts[1:])
 	case "sessions":
 		aiSessionsHandler(w, r, userID, parts[1:])
 	case "kill-all":
