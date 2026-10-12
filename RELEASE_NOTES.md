@@ -1,12 +1,32 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.6/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.7/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.2.6 — Guided AI and MCP setup
+## Web Remote Manager PRO v12.2.7 — More AI providers and guided Ollama
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🧭 Connect AI apps and providers step by step
+### 🤖 More AI providers and a guided local Ollama
+
+- **Refreshed provider presets** in the AI provider wizard: Anthropic, OpenAI, Gemini, Groq, OpenRouter, Mistral, **xAI, DeepSeek, Together AI, Fireworks AI, Cerebras, Cohere, Perplexity**, Ollama and any OpenAI-compatible endpoint (Azure OpenAI and similar through the advanced form). Each preset offers several suggested models, and the model name is always free text.
+- **Load the model list** from the provider (`GET …/models`) and add models with one click. The list is fetched by the WRM server with the stored key; the key never reaches the browser.
+- **Ollama, step by step:** the wizard detects Ollama (default `http://127.0.0.1:11434`), shows the installed models and the install / background-service / download-a-model commands for Linux, macOS and Windows, with copy buttons. Ollama is added as an OpenAI-compatible provider (`/v1`, no API key).
+- **Optional "do it with WRM":** administrators can let WRM run the install, start (as a background service) and model download. Off by default; enabled by the new policy **ai_ollama_manage** (`WRM_AI_OLLAMA_MANAGE`). Every run needs an explicit confirmation, is checked on the server (admin + policy), uses fixed commands only, and is recorded in the audit log and in a run history.
+- English and Croatian. One additive table (`ai_ollama_runs`).
+
+### ⬆️ Upgrading from v12.2.6
+
+Replace the binary (or update with one click from the version badge). One new table is created automatically; no configuration changes.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.7)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.7/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.2.6 — Guided AI and MCP setup
+
+#### 🧭 Connect AI apps and providers step by step
 
 - **Settings → AI connections** now starts with a wizard: pick your app (Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code / other, or Claude and ChatGPT through sign-in) → pick the servers and what the app may do → copy the ready-made command or config file (or download it) → press **Test**. WRM creates the token for you; it is shown once.
 - **AI provider wizard** in the assistant: pick a provider (Anthropic, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama or any OpenAI-compatible endpoint) → key and model → automatic test → done. The old form is still there as the advanced option.
@@ -15,13 +35,9 @@ Browser-based remote server management: an AI assistant next to the terminal and
 ot_allowed, how_to_allow).
 - English and Croatian. No database changes.
 
-### ⬆️ Upgrading from v12.2.5
+#### ⬆️ Upgrading from v12.2.5
 
 Replace the binary (or update with one click from the version badge). No database or configuration changes.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.6/wrm-pro-v12.2.6-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.6/wrm-pro-v12.2.6-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.6/wrm-pro-v12.2.6-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.6/wrm-pro-v12.2.6-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.6)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.6/CHANGELOG.md) for details.
 
 ---
 
