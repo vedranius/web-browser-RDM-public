@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), an **MCP server** so Claude, ChatGPT and other AI apps can work on chosen servers under the same rules, SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v12.2.3** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.2.4** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -40,7 +40,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -139,21 +139,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.2.3-linux-amd64
-   ./wrm-pro-v12.2.3-linux-amd64
+   chmod +x wrm-pro-v12.2.4-linux-amd64
+   ./wrm-pro-v12.2.4-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.2.3-windows-amd64.exe
+   .\wrm-pro-v12.2.4-windows-amd64.exe
    ```
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.3/wrm-pro-v12.2.3-android-arm64
-   chmod +x wrm-pro-v12.2.3-android-arm64 && ./wrm-pro-v12.2.3-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.4/wrm-pro-v12.2.4-android-arm64
+   chmod +x wrm-pro-v12.2.4-android-arm64 && ./wrm-pro-v12.2.4-android-arm64
    ```
 
    **Docker**
@@ -177,6 +177,12 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.2.3
+
+Replace the binary. No database or configuration changes; v12.2.3 still starts on the same database.
+
+- The **session recording replay** window can now be resized (drag its bottom-right corner) and expanded to **fullscreen** (⛶ button, **Esc** leaves). The terminal is scaled to the window width, so there is no sideways scrolling. See *Session recording* below.
 
 ## Upgrading from v12.2.2
 
@@ -1324,7 +1330,7 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
 - **Audit log** (*Admin panel → Audit log*): sign-ins (also failed), account and policy changes, connections, shares, room joins and moderation, terminal sessions, file transfers and changes, host keys, exports, viewing of recordings. Entries are linked to the **connection** and the **terminal session** (click **▶ #id** to open the session). Filter by text, event type, user and date range; **CSV export**; **Verify integrity**.
 - **Append-only and tamper-evident:** the database refuses to change audit entries, file transfer records and recordings, and to delete anything younger than 7 days. Old entries are removed only by the retention job (`audit_retention_days`, `recording_retention_days`). Every entry contains the SHA-256 of the previous one (**hash chain**), so a changed or removed entry is detected by *Verify integrity*. Every entry is also written as an `AUDIT …` line to the server log (journald/syslog → SIEM).
 - **Terminal sessions** (*Admin panel → Sessions & recordings*; every user sees their own in *Settings → Session history*): who, from which IP, which server and remote user, when, how long, how it ended (closed, connection lost, ended by an administrator, interrupted by a server restart).
-- **Session recording:** the output of every SSH terminal is recorded in the open **asciinema** format (asciicast v2), compressed, with its SHA-256 stored in the database. **▶ Replay** in the browser — play/pause, seek, speed 0.5–16×, *skip idle time* — or **⬇ download** the `.cast` file and play it with `asciinema play`. The user sees *“This session is recorded”* and a **● REC** badge.
+- **Session recording:** the output of every SSH terminal is recorded in the open **asciinema** format (asciicast v2), compressed, with its SHA-256 stored in the database. **▶ Replay** in the browser — play/pause, seek, speed 0.5–16×, *skip idle time*; the replay window can be **resized** (drag the bottom-right corner) or shown in **fullscreen** (⛶, **Esc** leaves), and the terminal is scaled to the width so no sideways scrolling is needed — or **⬇ download** the `.cast` file and play it with `asciinema play`. The user sees *“This session is recorded”* and a **● REC** badge.
   - **No passwords in recordings:** servers do not echo passwords, so they never appear in the output. Keystrokes are recorded only when an administrator turns on *Record keystrokes*, and typing at password, passphrase and PIN prompts is masked.
   - Recording never slows the terminal (written in the background); a size limit per session stops recording (not the terminal).
   - **Who can see recordings:** administrators all; users their own sessions and sessions of other people on **their** connections (e.g. guests of a share). Viewing or downloading a recording is itself recorded in the audit log.
@@ -1589,9 +1595,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.2.3-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.2.3-linux-amd64 -service-status
-sudo ./wrm-pro-v12.2.3-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.2.4-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.2.4-linux-amd64 -service-status
+sudo ./wrm-pro-v12.2.4-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). Edit that file and restart the service to change them.
@@ -1620,7 +1626,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.2.3-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.2.4-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75

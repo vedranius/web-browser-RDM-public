@@ -1,23 +1,38 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.3/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.4/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.2.3 — Explanations for every Git tab and setting
+## Web Remote Manager PRO v12.2.4 — Resizable, fullscreen session replay
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 💡 Explanations for every tab
+### ▶ Session replay: resize, fullscreen, no sideways scrolling
+
+- **Resizable window:** drag the bottom-right corner of the replay window to make it as large as you need.
+- **Fullscreen:** a new ⛶ button in the header expands the replay to the whole screen; **Esc** or the button leaves it.
+- **No horizontal scrolling:** the terminal keeps the recorded size but is scaled to the width of the window, and re-fitted when you resize it or toggle fullscreen. Works at phone width too.
+- Playback controls and behaviour are unchanged. English and Croatian.
+
+### ⬆️ Upgrading from v12.2.3
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.4/wrm-pro-v12.2.4-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.4/wrm-pro-v12.2.4-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.4/wrm-pro-v12.2.4-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.4/wrm-pro-v12.2.4-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.4)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.4/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.2.3 — Explanations for every Git tab and setting
+
+#### 💡 Explanations for every tab
 
 - **A short description under every tab** of the Advanced Git workspace (also as a tooltip on the tab), of the Settings window and of the Admin panel: what the tab is for and how to use it, in plain language, in English and Croatian.
 - Nothing else changes: same behaviour, same layout (checked at 390 px).
 
-### ⬆️ Upgrading from v12.2.2
+#### ⬆️ Upgrading from v12.2.2
 
 Replace the binary (or update with one click from the version badge). No database or configuration changes.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.3/wrm-pro-v12.2.3-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.3/wrm-pro-v12.2.3-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.3/wrm-pro-v12.2.3-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.3/wrm-pro-v12.2.3-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.3)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.3/CHANGELOG.md) for details.
 
 ---
 
