@@ -1,37 +1,52 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.1.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.1.0 — AI desktop apps (MCP): Claude, ChatGPT and other AI apps under WRM's rules
+## Web Remote Manager PRO v12.2.0 — AI provider fixes: Gemini tools, busy providers and token limits
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🤖 Connect Claude, ChatGPT and other AI apps
+### 🛠 AI assistant fixes
+
+- **Gemini** (and other OpenAI-compatible providers that return a signature with each tool call) works with tools: *HTTP 400: Function call is missing a thought_signature* is gone. WRM keeps the provider's `extra_content` of every tool call and sends it back unchanged.
+- **Busy providers:** *HTTP 503 — this model is currently experiencing high demand* (and 408 / 429 / 5xx) is retried up to three times with a short back-off before an error is shown.
+- **Token limits:** *HTTP 413 / request too large* (for example Groq's tokens-per-minute limit) shortens the long command output of the conversation and retries, so you get the assistant's answer instead of only the command output.
+- The assistant shows a short notice while it retries or shortens. English and Croatian.
+
+### ⬆️ Upgrading from v12.1.0
+
+Replace the binary (or update with one click from the version badge). No database changes; v12.1.0 still starts on the same database. The remaining items of issue #43 are planned for the next versions.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.0/wrm-pro-v12.2.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.0/wrm-pro-v12.2.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.0/wrm-pro-v12.2.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.0/wrm-pro-v12.2.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.0)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.0/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.1.0 — AI desktop apps (MCP): Claude, ChatGPT and other AI apps under WRM's rules
+
+#### 🤖 Connect Claude, ChatGPT and other AI apps
 
 - WRM is now an **MCP server** (`https://<your WRM>/mcp`, streamable HTTP). **Claude** (claude.ai and the desktop app), **ChatGPT** connectors, Claude Code and other MCP clients can open a WRM session to a server you chose and work on it.
 - **This is the supported way to use your Claude or ChatGPT account with WRM:** the chat app connects to WRM, the model runs in the app, and WRM never needs a provider key.
 - Connect with **OAuth** (add a custom connector, sign in to WRM and approve), with a **personal access token**, or through the small **stdio bridge** built into the WRM binary (`wrm -mcp-stdio -url … -token …`) for apps that only start local servers. *Settings → AI connections* shows ready-to-copy setup snippets.
 
-### 🛡 Same rules as the built-in assistant
+#### 🛡 Same rules as the built-in assistant
 
 - Each **AI connection** is bound to you, the **servers** you pick, one **mode** (read-only, ask before every change, automatic within limits), **scopes** (`read_logs`, `run_readonly`, `run_with_approval`, `edit_file_with_approval`, `transfer`) and a **lifetime** (8 hours by default). Tokens are stored hashed and shown once.
 - Every call goes through the **v12.0.0 permission engine**: the read-only classifier, the always-blocked destructive list, approvals, automatic-mode limits, mode rules per tag / folder / host, redaction and the audit. Nothing a server prints — and nothing the app asks — can raise the scopes or the mode.
 - **Approvals** appear in WRM as a card with **Approve**, **Deny** and **Edit**, and as a question in the app when it supports MCP elicitation.
 - Copy files between the chosen servers with the `transfer` scope, after your approval, recorded with size and SHA-256.
 
-### 🔌 See it, stop it
+#### 🔌 See it, stop it
 
 - **🤖 AI connected** in the top bar while an app has a session, with **one-click revoke**.
 - *Admin panel → AI connections:* every active AI connection, **revoke all**, registered OAuth apps and the policies — MCP on/off (**off by default**), who may use it (`ai_mcp`, administrators by default), allowed scopes and modes, maximum lifetime, the OAuth redirect URI allowlist, allowed browser origins.
 - The AI assistant's kill switch stops every AI connection too. Everything is in the audit log (`mcp.*`, `ai.*`) and in **Sessions & recordings**.
 
-### ⬆️ Upgrading from v12.0.0
+#### ⬆️ Upgrading from v12.0.0
 
 Replace the binary (or update with one click from the version badge). AI connections are **off** until an administrator turns them on in *Admin panel → AI connections*. Hosted connectors (claude.ai, ChatGPT) need WRM reachable from the internet over HTTPS; the stdio bridge does not. New tables are added; v12.0.0 still starts on the database. See the MCP threat model in [SECURITY.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.1.0/SECURITY.md).
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.1.0/wrm-pro-v12.1.0-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.1.0)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.1.0/CHANGELOG.md) for details.
 
 ---
 
