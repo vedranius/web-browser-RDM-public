@@ -4,6 +4,12 @@ All notable changes to Web Remote Manager PRO. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Release notes with downloads are on the
 [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases).
 
+## [12.2.8] — 2026-10-12 — Updates dialog always reachable
+
+Part of #43. Frontend only; no database or backend change.
+
+### Fixed
+- **The Updates dialog can be opened without a known update.** It used to open only from the green update badge, which is hidden until an update is known, so an administrator could not force a check. The version label in the top bar ("WRM vX.Y.Z") is now a button (tooltip in English and Croatian, keyboard: Tab, Enter, Space) that opens the dialog; **Check now** is there for administrators, other users see the versions only. On narrow windows, where the text is hidden, the logo next to it stays as the button. The badge and the sign-in page are unchanged.
 ## [12.2.7] — 2026-10-12 — More AI providers and guided Ollama
 
 Last step of issue #43. One additive table (`ai_ollama_runs`).

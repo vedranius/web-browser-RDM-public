@@ -1,12 +1,30 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.7/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.2.8/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.2.7 — More AI providers and guided Ollama
+## Web Remote Manager PRO v12.2.8 — Updates dialog always reachable
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vedranius)
 
 Browser-based remote server management: an AI assistant next to the terminal and an MCP server for AI apps, SSH terminal with snippets, broadcast input and live status, SFTP/FTP/FTPS file manager, jump hosts, proxies and SSH tunnels, remote desktops (RDP/VNC/Telnet), out-of-band management and serial consoles, SSH key management and a credentials vault, tags and inventory import, quick connect, runbooks and network tools, notifications by e-mail, chat and push, a Git workspace for GitLab / GitHub / Gitea, sharing, real-time collaboration with voice calls, audit trail and session recording. One self-contained binary (or container) with an embedded web UI, installable as an app.
 
-### 🤖 More AI providers and a guided local Ollama
+### 🔧 Updates dialog without a known update
+
+- The **version label in the top bar** ("WRM v12.2.8") now opens the Updates dialog, so an administrator can always use **Check now**, even when no update is known and the green badge is hidden. Other users see the versions only.
+- Tooltip in English and Croatian; works with the keyboard (Tab, Enter, Space). On narrow windows the logo next to the label is the button.
+- Frontend only: no database or configuration changes.
+
+### ⬆️ Upgrading from v12.2.7
+
+Replace the binary (or update with one click from the version badge). No database or configuration changes.
+
+**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.8/wrm-pro-v12.2.8-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.8/wrm-pro-v12.2.8-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.8/wrm-pro-v12.2.8-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.8/wrm-pro-v12.2.8-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.8)
+
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.8/CHANGELOG.md) for details.
+
+---
+
+## Included from v12.2.7 — More AI providers and guided Ollama
+
+#### 🤖 More AI providers and a guided local Ollama
 
 - **Refreshed provider presets** in the AI provider wizard: Anthropic, OpenAI, Gemini, Groq, OpenRouter, Mistral, **xAI, DeepSeek, Together AI, Fireworks AI, Cerebras, Cohere, Perplexity**, Ollama and any OpenAI-compatible endpoint (Azure OpenAI and similar through the advanced form). Each preset offers several suggested models, and the model name is always free text.
 - **Load the model list** from the provider (`GET …/models`) and add models with one click. The list is fetched by the WRM server with the stored key; the key never reaches the browser.
@@ -14,13 +32,9 @@ Browser-based remote server management: an AI assistant next to the terminal and
 - **Optional "do it with WRM":** administrators can let WRM run the install, start (as a background service) and model download. Off by default; enabled by the new policy **ai_ollama_manage** (`WRM_AI_OLLAMA_MANAGE`). Every run needs an explicit confirmation, is checked on the server (admin + policy), uses fixed commands only, and is recorded in the audit log and in a run history.
 - English and Croatian. One additive table (`ai_ollama_runs`).
 
-### ⬆️ Upgrading from v12.2.6
+#### ⬆️ Upgrading from v12.2.6
 
 Replace the binary (or update with one click from the version badge). One new table is created automatically; no configuration changes.
-
-**Downloads:** [Linux x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-linux-amd64) · [Linux arm64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-linux-arm64) · [Windows x86-64](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-windows-amd64.exe) · [macOS Universal](https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.2.7/wrm-pro-v12.2.7-darwin-universal) · [all files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.2.7)
-
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.2.7/CHANGELOG.md) for details.
 
 ---
 
