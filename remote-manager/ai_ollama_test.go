@@ -165,6 +165,10 @@ func TestOllamaActionsRecorded(t *testing.T) {
 			last = asMap(rv)
 			return last["status"] != "running"
 		})
+		if !ollamaBusy.TryLock() {
+			t.Fatal("a completed run must release the action lock before publishing its status")
+		}
+		ollamaBusy.Unlock()
 		return last
 	}
 

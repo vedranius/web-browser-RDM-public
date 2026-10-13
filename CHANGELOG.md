@@ -1,10 +1,11 @@
-## [12.3.5] - 2026-10-13
+## [12.3.6] - 2026-10-13
 
 ### Added
 - **Linux AppImage**: portable x86_64 and ARM64 packages with persistent user data, localhost defaults, desktop icon and FUSE-free extraction fallback. Updates preserve data; boot services use standalone binaries.
 - **Complete release publication**: draft releases are published only after all 16 packages, macOS universal binary, SHA-256 checksums and Docker publication succeed.
 
 ### Fixed
+- **Ollama action completion**: command execution and its audit now finish and release the action lock before the completed status is published, preventing a transient HTTP 409 when the next setup step starts. CI exposed the timing window; the regression checks lock availability at completion.
 - **AI server date and tool output reliability**: `system_info` now reports the remote server's actual date and time. The assistant is told not to fabricate tool calls, logs, dates or internal tool-result wrappers.
 - **AI button after policy changes**: enabling or disabling the assistant refreshes the current user's policy and AI buttons on already-open terminals without reconnecting. Legacy lowercase SSH protocol values are also recognized; shared connection roles remain enforced.
 - **AI processing and tool JSON**: the processing indicator follows the complete model turn; finalized messages remove recognized tool JSON while retaining ordinary text. Corrected the missing English/Croatian label and expanded translation checks to include double-quoted and formatted keys.

@@ -1,10 +1,12 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.3.5/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.3.6/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.3.5 — Git Simple, AI and Linux service fixes
+## Web Remote Manager PRO v12.3.6 — Git Simple, AI and Linux service fixes
 
 This release adds deployment review and server selection to Git Simple, gives AI tools the server's actual date, and improves Linux systemd service installation and failure diagnostics.
 
 ### 🤖 AI assistant
+
+- Ollama setup releases its action lock before reporting completion, so the next setup step can start immediately. This fixes the intermittent HTTP 409 exposed by the release CI run.
 
 - `system_info` now reports the remote server's actual date and time instead of leaving the model to infer it from the kernel build string.
 - The assistant is explicitly instructed not to invent tool calls, tool output, logs or internal `<tool_response>` wrappers.
@@ -31,12 +33,12 @@ This release adds deployment review and server selection to Git Simple, gives AI
 - **Windows**: amd64 and arm64 `.exe` files.
 - **macOS**: Intel, Apple Silicon and universal binaries.
 - **Android / Termux**: arm64; **FreeBSD**: amd64 and arm64; **OpenBSD**: amd64.
-- Docker: `ghcr.io/vedranius/wrm-pro:v12.3.5` and `latest` (Linux amd64).
+- Docker: `ghcr.io/vedranius/wrm-pro:v12.3.6` and `latest` (Linux amd64).
 - `SHA256SUMS.txt` covers all 16 downloadable packages. GitHub also provides source archives.
 
-AppImage quick start: `chmod +x wrm-pro-v12.3.5-linux-amd64.AppImage`, then run it and open **http://localhost:8080**. On ARM64 choose the arm64 AppImage. Without FUSE, add `--appimage-extract-and-run`. Data stays in `${XDG_DATA_HOME:-$HOME/.local/share}/wrm-pro/` unless `DB_PATH` is set. Replace the AppImage to upgrade; use the standalone binary for boot services.
+AppImage quick start: `chmod +x wrm-pro-v12.3.6-linux-amd64.AppImage`, then run it and open **http://localhost:8080**. On ARM64 choose the arm64 AppImage. Without FUSE, add `--appimage-extract-and-run`. Data stays in `${XDG_DATA_HOME:-$HOME/.local/share}/wrm-pro/` unless `DB_PATH` is set. Replace the AppImage to upgrade; use the standalone binary for boot services.
 
-The pre-push review covered race tests, UI regressions, all 13 cross-compilation targets, native Linux/Docker health checks, Git Simple browser deployment and rollback, and a real local Ollama tool call. Other OS binaries were compiled; they were not run on their respective OSes. See [the review report](https://github.com/vedranius/web-browser-RDM-public/blob/v12.3.5/docs/PRE_PUSH_REVIEW_v12.3.5.md).
+The pre-push review covered race tests, UI regressions, all 13 cross-compilation targets, native Linux/Docker health checks, Git Simple browser deployment and rollback, and a real local Ollama tool call. Other OS binaries were compiled; they were not run on their respective OSes. See [the review report](https://github.com/vedranius/web-browser-RDM-public/blob/v12.3.6/docs/PRE_PUSH_REVIEW_v12.3.5.md).
 
 ### ⬆️ Upgrading from v12.3.4
 
@@ -44,8 +46,8 @@ Replace the binary or use the in-app updater. No database migration is required.
 
 For an existing Linux service, re-run `-install-service` with the new binary to regenerate its unit and apply the path and restart-limit fixes. This restarts that service.
 
-**Downloads:** [all v12.3.5 files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.3.5)
+**Downloads:** [all v12.3.6 files and `SHA256SUMS.txt`](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.3.6)
 
-See [the release summary](https://github.com/vedranius/web-browser-RDM-public/blob/v12.3.5/docs/RELEASE_SUMMARY_v12.3.5.md) for package and validation details.
+See [the release summary](https://github.com/vedranius/web-browser-RDM-public/blob/v12.3.6/docs/RELEASE_SUMMARY_v12.3.6.md) for package and validation details.
 
-See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.3.5/CHANGELOG.md) for the complete change history.
+See [CHANGELOG.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.3.6/CHANGELOG.md) for the complete change history.
