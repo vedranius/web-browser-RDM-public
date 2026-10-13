@@ -350,7 +350,6 @@ func ollamaActionHandler(w http.ResponseWriter, r *http.Request, userID int) {
 	runID, _ := res.LastInsertId()
 	auditLog(r, userID, "admin.ai_ollama_"+in.Action, target, map[string]interface{}{"run_id": runID, "os": ollamaOS, "model": model, "confirmed": true})
 	go func() {
-		defer ollamaBusy.Unlock()
 		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Minute)
 		defer cancel()
 		out, err := ollamaExecute(ctx, in.Action, base, model)
@@ -359,8 +358,12 @@ func ollamaActionHandler(w http.ResponseWriter, r *http.Request, userID int) {
 			status = "failed"
 			out = strings.TrimSpace(out + "\n" + err.Error())
 		}
-		db.Exec(`UPDATE ai_ollama_runs SET status=?, output=?, ended_at=? WHERE id=?`, status, truncateStr(out, 8000), time.Now().UTC().Format(time.RFC3339), runID)
 		auditLog(r, userID, "admin.ai_ollama_finished", target, map[string]interface{}{"run_id": runID, "action": in.Action, "status": status})
+		// Publish completion only once the command and audit are finished and the
+		// next action can acquire the lock. A visible done/failed status must not
+		// leave callers hitting a transient "already running" response.
+		ollamaBusy.Unlock()
+		db.Exec(`UPDATE ai_ollama_runs SET status=?, output=?, ended_at=? WHERE id=?`, status, truncateStr(out, 8000), time.Now().UTC().Format(time.RFC3339), runID)
 	}()
 	jsonOK(w, map[string]interface{}{"run_id": runID, "status": "running"})
 }

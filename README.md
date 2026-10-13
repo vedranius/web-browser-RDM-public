@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), an **MCP server** so Claude, ChatGPT and other AI apps can work on chosen servers under the same rules, SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v12.3.5** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.3.6** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -139,21 +139,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.3.5-linux-amd64
-   ./wrm-pro-v12.3.5-linux-amd64
+   chmod +x wrm-pro-v12.3.6-linux-amd64
+   ./wrm-pro-v12.3.6-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.3.5-windows-amd64.exe
+   .\wrm-pro-v12.3.6-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.3.5-linux-amd64.AppImage
-   ./wrm-pro-v12.3.5-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.3.5-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.3.6-linux-amd64.AppImage
+   ./wrm-pro-v12.3.6-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.3.6-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -162,8 +162,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.3.5/wrm-pro-v12.3.5-android-arm64
-   chmod +x wrm-pro-v12.3.5-android-arm64 && ./wrm-pro-v12.3.5-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.3.6/wrm-pro-v12.3.6-android-arm64
+   chmod +x wrm-pro-v12.3.6-android-arm64 && ./wrm-pro-v12.3.6-android-arm64
    ```
 
    **Docker**
@@ -1654,9 +1654,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.3.5-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.3.5-linux-amd64 -service-status
-sudo ./wrm-pro-v12.3.5-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.3.6-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.3.6-linux-amd64 -service-status
+sudo ./wrm-pro-v12.3.6-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1687,7 +1687,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.3.5-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.3.6-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -2413,8 +2413,8 @@ If WRM is useful to you, consider supporting it on **[Ko-fi](https://ko-fi.com/v
 On x86_64 Linux with Go, curl and sha256sum installed:
 
 ```bash
-bash tools/build-appimage.sh v12.3.5 amd64
-bash tools/build-appimage.sh v12.3.5 arm64
+bash tools/build-appimage.sh v12.3.6 amd64
+bash tools/build-appimage.sh v12.3.6 arm64
 ```
 
 Outputs go to `dist/`. The script verifies pinned upstream AppImage tooling and runtimes, uses the existing WRM icon, and needs no FUSE during the build. GitHub releases remain drafts until all 16 packages and their checksums are verified and the Docker publication succeeds.
