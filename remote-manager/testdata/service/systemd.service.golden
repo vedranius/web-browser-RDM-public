@@ -5,6 +5,8 @@ Description=Web Remote Manager PRO
 Documentation=https://github.com/vedranius/web-browser-RDM-public
 After=network-online.target
 Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple

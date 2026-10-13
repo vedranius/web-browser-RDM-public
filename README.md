@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), an **MCP server** so Claude, ChatGPT and other AI apps can work on chosen servers under the same rules, SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
 
-**Current version: v12.3.4** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.3.5** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ---
 
@@ -139,21 +139,31 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.3.4-linux-amd64
-   ./wrm-pro-v12.3.4-linux-amd64
+   chmod +x wrm-pro-v12.3.5-linux-amd64
+   ./wrm-pro-v12.3.5-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.3.4-windows-amd64.exe
+   .\wrm-pro-v12.3.5-windows-amd64.exe
    ```
+
+   **Linux AppImage (x86_64 / ARM64)**
+   ```bash
+   chmod +x wrm-pro-v12.3.5-linux-amd64.AppImage
+   ./wrm-pro-v12.3.5-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.3.5-linux-arm64.AppImage instead.
+   ```
+   Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
+
+   Data is stored in `${XDG_DATA_HOME:-$HOME/.local/share}/wrm-pro/`, or at your explicit `DB_PATH`. Replace the AppImage to upgrade; the data and encryption key stay in place. For a boot service use the standalone Linux binary with `-install-service`.
 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.3.4/wrm-pro-v12.3.4-android-arm64
-   chmod +x wrm-pro-v12.3.4-android-arm64 && ./wrm-pro-v12.3.4-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.3.5/wrm-pro-v12.3.5-android-arm64
+   chmod +x wrm-pro-v12.3.5-android-arm64 && ./wrm-pro-v12.3.5-android-arm64
    ```
 
    **Docker**
@@ -991,15 +1001,16 @@ The header of the Git workspace has a **Simple | Advanced** switch. The choice i
 - **On the server**: the version, commit and who deployed it, per destination server (or *Not installed here yet*).
 - **Latest on the branch**: version, branch, commit and date of the service target.
 - A status: **Up to date**, **Update available**, **Not installed**, **Cannot compare** or **Problem**.
+- Combined filters for service, hostname, environment and status, plus searches for branch, version or commit; each card shows when its server state was compared.
 - Big actions: **Install** (not installed yet), **Update** (a newer version exists), **Deploy again** (already current) and **Roll back to the previous version**.
 
-Install, update and deploy open a plain-language confirmation: the version change, how many files are added or changed per server, optional *post_deploy* and *restart* checkboxes (when allowed), an optional *different version* (tag or branch), and, for protected environments, typing the environment name. Rollback shows the version now on the server and the one it returns to.
+Install, update and deploy open a plain-language review: the version change, how many files are added or changed per server, and an expandable file list with each file's status on each destination. You can choose the successfully compared servers and exclude files before confirmation. Empty selections are refused. Simple mode keeps files removed from the repository; Advanced mode lets you delete them after backup. Optional *post_deploy* and *restart* checkboxes (when allowed), an optional *different version* (tag or branch), and, for protected environments, typing the environment name are also available. Rollback lets you choose which servers to restore and shows the version now on each server and the one it returns to.
 
 **Automatic environments.** Simple mode asks the overview for detected environments (`?auto=1`). For every service of the catalog, the installations the checker found (`git_installs`) are grouped by environment label (the tag or folder-name hint, `default` if none) into virtual environments; a production label asks for the typed environment name, as before. They are only *derived*: nothing is stored and nothing is deployed until you start an install, update or rollback, which runs through the same plan, locks, backups, permission checks and audit. A stored environment with the same name, or one that already lists the same server and folder, takes priority; conflicting or invalid derivations are left out. A notice shows how many were detected and, for users allowed `git_update`, **Save detected environments** stores them in the catalog (`POST /api/git/env/adopt`, audited as `git.env_adopted`; existing definitions are untouched). An empty Simple mode offers **Find services on my servers** (the normal check). The Advanced tabs show stored environments only.
 
 **Servers are shown by hostname.** Wherever the Git workspace lists a server (Simple cards and dialogs, Environments, Activity, Installations, Runs), the label is the server's real hostname instead of the connection name you chose. WRM reads `hostname` over the existing SSH login during checks and deploy plans, caches it (`git_hostnames`, 6 h) and falls back to the connection's host address until it is known. Filters and requests still use the connection name.
 
-Simple mode adds one endpoint (`POST /api/git/env/adopt`) and otherwise uses the environment overview, cell, plan, history and run endpoints of the Advanced deploy, so permissions (`deploy` update / rollback / restart), locks, backups, remembered exclusions, the audit trail and run history are the same. Anything else (settings, sources, catalog, activity, `.gitignore`, CI, schedules, partial deploys) stays in Advanced.
+Simple mode adds one endpoint (`POST /api/git/env/adopt`) and otherwise uses the environment overview, cell, plan, history and run endpoints of the Advanced deploy, so permissions (`deploy` update / rollback / restart), locks, backups, remembered exclusions, the audit trail and run history are the same. Settings, sources, catalog, activity, `.gitignore`, CI, schedules and other advanced controls stay in Advanced.
 
 ### Git workspace: environments, deploy plans & safe deploys
 
@@ -1643,16 +1654,16 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.3.4-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.3.4-linux-amd64 -service-status
-sudo ./wrm-pro-v12.3.4-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.3.5-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.3.5-linux-amd64 -service-status
+sudo ./wrm-pro-v12.3.5-linux-amd64 -uninstall-service        # the data stays
 ```
 
-The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). Edit that file and restart the service to change them.
+The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
 
 | OS | What `-install-service` does |
 |---|---|
-| **Linux** | `/etc/systemd/system/wrm.service` with `EnvironmentFile=`, `WorkingDirectory=`, `User=` (you, or `SUDO_USER`; `-service-user`), `Restart=on-failure` and hardening (`NoNewPrivileges`, `ProtectSystem=strict` with `ReadWritePaths=` for the data and binary folders, `ProtectHome=read-only`, `PrivateTmp`, kernel and cgroup protection, `UMask=0077`; `CAP_NET_BIND_SERVICE` for ports below 1024), then `systemctl enable --now`. Needs root: when you answer *Yes* as a normal user, WRM runs the installer with `sudo` (or `doas`). Without systemd it says so and prints the command for your init system. |
+| **Linux** | `/etc/systemd/system/wrm.service` with `EnvironmentFile=`, `WorkingDirectory=`, `User=` (you, or `SUDO_USER`; `-service-user`), `Restart=on-failure` with a restart-rate limit, and hardening (`NoNewPrivileges`, `ProtectSystem=strict` with `ReadWritePaths=` for the data and binary folders, `ProtectHome=read-only`, `PrivateTmp`, kernel and cgroup protection, `UMask=0077`; `CAP_NET_BIND_SERVICE` for ports below 1024), then enables the unit, clears previous startup failures and restarts it to apply the new binary. If startup fails, the installer prints the unit status and recent journal entries. Needs root: when you answer *Yes* as a normal user, WRM runs the installer with `sudo` (or `doas`). Without systemd it says so and prints the command for your init system. |
 | **macOS** | A launchd plist `local.wrm`: a **LaunchDaemon** in `/Library/LaunchDaemons` (starts at boot, needs `sudo`; runs as you) or a **LaunchAgent** in `~/Library/LaunchAgents` (starts at login): you choose in the prompt or with `-service-scope system|user`. `KeepAlive` restarts it after a failure; the log is `<data dir>/wrm-service.log`. |
 | **Windows** | A real Windows service (Service Control Manager) *Web Remote Manager PRO*, automatic (delayed) start, recovery *restart after 3 s* (also when WRM asks for a restart), log in `<data dir>\wrm-service.log`. Needs administrator rights: the prompt asks Windows for them (UAC); otherwise run `.\wrm-pro-….exe -install-service` in PowerShell opened with *Run as administrator*. |
 | **FreeBSD** | `/usr/local/etc/rc.d/wrm` running WRM under `daemon(8) -r` (restart on exit) as your user, `sysrc wrm_enable=YES`, `service wrm start`. |
@@ -1667,6 +1678,8 @@ The service uses the **same data directory and settings** as the interactive sta
 [Unit]
 Description=Web Remote Manager PRO
 After=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 User=wrm
@@ -1674,7 +1687,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.3.4-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.3.5-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -2276,7 +2289,7 @@ ARCHITECTURE.md              how WRM is built; extension plan status and touch p
 docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favicon, social preview)
 ```
 
-**CI/CD:** every push builds all 13 targets and the Docker image. Pushing a tag `v*` creates a GitHub Release with all binaries, a macOS universal binary and `SHA256SUMS.txt`, and publishes the image `ghcr.io/vedranius/wrm-pro`.
+**CI/CD:** every push builds all 13 targets and the Docker image. Pushing a tag `v*` creates a GitHub Release with all binaries, a macOS universal binary, Linux x86_64 / ARM64 AppImages and `SHA256SUMS.txt`, and publishes the image `ghcr.io/vedranius/wrm-pro`.
 
 ---
 
@@ -2394,3 +2407,14 @@ If WRM is useful to you, consider supporting it on **[Ko-fi](https://ko-fi.com/v
 ---
 
 <sub>Web Remote Manager PRO · © 2026 vedranius · [PolyForm Noncommercial 1.0.0 or PolyForm Internal Use 1.0.0](LICENSE) · hosting, reselling & bundling: [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)</sub>
+
+### Building Linux AppImages locally
+
+On x86_64 Linux with Go, curl and sha256sum installed:
+
+```bash
+bash tools/build-appimage.sh v12.3.5 amd64
+bash tools/build-appimage.sh v12.3.5 arm64
+```
+
+Outputs go to `dist/`. The script verifies pinned upstream AppImage tooling and runtimes, uses the existing WRM icon, and needs no FUSE during the build. GitHub releases remain drafts until all 16 packages and their checksums are verified and the Docker publication succeeds.

@@ -1,3 +1,22 @@
+## [12.3.5] - 2026-10-13
+
+### Added
+- **Linux AppImage**: portable x86_64 and ARM64 packages with persistent user data, localhost defaults, desktop icon and FUSE-free extraction fallback. Updates preserve data; boot services use standalone binaries.
+- **Complete release publication**: draft releases are published only after all 16 packages, macOS universal binary, SHA-256 checksums and Docker publication succeed.
+
+### Fixed
+- **AI server date and tool output reliability**: `system_info` now reports the remote server's actual date and time. The assistant is told not to fabricate tool calls, logs, dates or internal tool-result wrappers.
+- **AI button after policy changes**: enabling or disabling the assistant refreshes the current user's policy and AI buttons on already-open terminals without reconnecting. Legacy lowercase SSH protocol values are also recognized; shared connection roles remain enforced.
+- **AI processing and tool JSON**: the processing indicator follows the complete model turn; finalized messages remove recognized tool JSON while retaining ordinary text. Corrected the missing English/Croatian label and expanded translation checks to include double-quoted and formatted keys.
+- **Local model text fallback**: accepts only complete JSON calls to offered tools with object arguments. Truncated responses are preserved rather than repaired into commands or silently discarded; ordinary JSON answers remain visible. Regression coverage includes multiple streamed calls and refusal to run truncated text even in automatic mode.
+- **Git Simple review before deploy**: added combined filters for service, hostname, environment, status, branch and version/commit; cards show when their server state was compared, and the deploy plan lists each changed file with its state on each destination. Users can choose successful destinations and exclude files before confirmation; deploys still use the existing fingerprinted plan, backup, lock and audit flow.
+- **Deployment connection binding**: a reviewed plan is also bound to the connection's identity, host, login and effective jump/proxy selection. Changing those settings requires a new comparison; a late change is checked again before taking the destination lock.
+- **Linux service database diagnostics**: installation checks whether the service account can write the configured SQLite database and data directory; failed starts include systemd status and recent journal output, with a targeted hint for read-only database errors.
+- **Systemd restart storms**: generated units cap repeated restarts to avoid a tight loop after a persistent startup failure.
+- **Systemd paths and reinstall**: fixed single-path directives for directories containing spaces, preserved literal dollars in path lists and escaped percent specifiers. Reinstalling clears previous startup failures and restarts the new binary instead of leaving the old process running.
+- **Service configuration visibility**: successful installation output names the database path used by the service.
+- **Pre-push review fixes**: refusing an explicit empty server selection in both deploy and rollback; recomputing confirmation after server changes; ignoring canceled or superseded comparisons; keeping per-server rollback versions visible; preserving service settings on database preflight failure. Regression checks cover the new paths and run in CI; Ollama setup tests no longer depend on a locally installed binary.
+
 ## [12.3.4] - 2026-10-12
 
 ### Fixed
@@ -379,7 +398,8 @@ First step of issue #43. The other items of the issue stay open and are planned 
   - **Service catalog:** project, ref (`tag:latest`, `tag:vX` or a branch), branch, tag filter, subdirectory = installation root, include / exclude globs, **protected** per-host files, fingerprint files, install hints and kind (app, library, tool). **Suggestion from the repository tree** (subdirectory, fingerprint, protected and exclude globs, kind). Import (replace or merge) and export as catalog JSON. Services of imported bundles are used even when the catalog does not list them.
   - **Refs:** branch-aware tags (only tags whose commit is on the branch count; `tag:latest` falls back to the branch head with a warning), numeric version sort (`v1.10` > `v1.9`), fallback branches, and a ref choice per run: as in the catalog, one branch for all, each project's default branch, or per service.
   - **Discovery over SSH:** one `find` per server over the configured roots (depth 3) recognises installations by their fingerprint files (or install hints), skips copies and backups (`*_BKP`, `backup`, `.deploy-bak`, `kopija`, … as path segments; configurable) and derives an environment label from the path (`/srv/scripts/test/App` → `test`, `App_prod` → `prod`). Installations can also be added by hand.
-  - **File-level comparison:** the server hashes its files with POSIX tools (`tr -d '' < f | sha256sum`, no Python); WRM compares them with the target and with the **history of every file** (the earlier tags of the branch). File states *ok*, *old* (*n behind*), *modified*, *missing*, *extra*, *protected*; installation states *needs update*, *review*, *up to date*. Details show the version from `VERSION.md`, the systemd / supervisor units that mention the directory, the files and a coloured **diff** (server → target).
+  - **File-level comparison:** the server hashes its files with POSIX tools (`tr -d '
+' < f | sha256sum`, no Python); WRM compares them with the target and with the **history of every file** (the earlier tags of the branch). File states *ok*, *old* (*n behind*), *modified*, *missing*, *extra*, *protected*; installation states *needs update*, *review*, *up to date*. Details show the version from `VERSION.md`, the systemd / supervisor units that mention the directory, the files and a coloured **diff** (server → target).
   - **Overview:** targets per service (version, latest tag, source, warnings) and a servers × services matrix with filters (state, environment, folder, tag, text).
   - **Periodic checks** while WRM runs (per user, opt-in, every `git_check_interval_minutes`): they never change anything and notify through the notifications module — new events **`git.new_version`**, **`git.drift`** (files changed by hand) and **`git.unreachable`**, one digest per round.
   - Policies `git_enabled` (hides the workspace completely), `git_checks` (who may run checks: everyone by default), `git_check_interval_minutes` (60, 0 = off) and `git_backup_words`; `mePayload` flags `git` and `git_checks`.

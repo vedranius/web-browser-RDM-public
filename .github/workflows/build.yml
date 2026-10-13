@@ -17,7 +17,7 @@ permissions:
 
 env:
   # Version for branch builds. Tag builds use the tag name (e.g. v10.10.0) as version and in file names.
-  APP_VERSION: v12.2.9
+  APP_VERSION: v12.3.5
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -58,19 +58,13 @@ jobs:
         working-directory: remote-manager
         run: go test -race -count=1 -timeout 20m ./...
 
-      - name: JavaScript syntax check (static/index.html)
+      - name: Web UI syntax, translations and Git Simple / AI regressions
         run: |
-          python3 - <<'EOF'
-          import re
-          html = open('remote-manager/static/index.html', encoding='utf-8').read()
-          scripts = re.findall(r'<script>(.*?)</script>', html, re.S)
-          assert scripts, 'no inline script found'
-          open('/tmp/app.js', 'w', encoding='utf-8').write(scripts[-1])
-          EOF
-          node --check /tmp/app.js
+          node tools/check-ui.js
+          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js
 
   # ─────────────────────────────────────────────
-  #  Create the release (tags only) before the binaries are uploaded
+  #  Create the release (tags only) as a draft before the binaries are uploaded
   # ─────────────────────────────────────────────
   create-release:
     name: Create Release
@@ -87,7 +81,7 @@ jobs:
             gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "Web Remote Manager PRO $TAG" --notes-file RELEASE_NOTES.md
           else
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag \
-              --title "Web Remote Manager PRO $TAG" --notes-file RELEASE_NOTES.md --latest
+              --title "Web Remote Manager PRO $TAG" --notes-file RELEASE_NOTES.md --draft
           fi
 
   # ─────────────────────────────────────────────
@@ -156,6 +150,30 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: gh release upload "${GITHUB_REF_NAME}" dist/* --repo "$GITHUB_REPOSITORY" --clobber
 
+  # Linux portable desktop packages; separate from standalone service binaries.
+  appimage:
+    name: AppImage ${{ matrix.arch }}
+    runs-on: ubuntu-24.04
+    needs: [check, create-release]
+    if: ${{ !cancelled() && needs.check.result == 'success' && needs.create-release.result != 'failure' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: remote-manager/go.mod
+          cache: false
+      - name: Build and check AppImage
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then VERSION="$GITHUB_REF_NAME"; else VERSION="$APP_VERSION-$(git rev-parse --short HEAD)"; fi
+          bash tools/build-appimage.sh "$VERSION" "${{ matrix.arch }}"
+      - name: Upload to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: gh release upload "$GITHUB_REF_NAME" dist/*.AppImage --repo "$GITHUB_REPOSITORY" --clobber
+
   # ─────────────────────────────────────────────
   #  Container image: built and smoke-tested on every run, published to
   #  GitHub Container Registry (ghcr.io/<owner>/wrm-pro) for release tags
@@ -214,11 +232,12 @@ jobs:
   #  macOS universal binary + SHA-256 checksums (tags only)
   # ─────────────────────────────────────────────
   finalize:
-    name: Universal binary & checksums
+    name: Verify assets & publish release
     runs-on: ubuntu-24.04
-    needs: build
+    needs: [build, appimage, docker]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
           go-version: 'stable'
@@ -239,7 +258,7 @@ jobs:
           if command -v llvm-lipo >/dev/null 2>&1; then
             LIPO=llvm-lipo
           else
-            go install github.com/konoui/lipo@latest
+            go install github.com/konoui/lipo@v0.10.0
             LIPO="$(go env GOPATH)/bin/lipo"
           fi
           "$LIPO" -create "wrm-pro-${BASE}-darwin-amd64" "wrm-pro-${BASE}-darwin-arm64" -output "$OUT"
@@ -253,3 +272,8 @@ jobs:
           sha256sum wrm-pro-* | sort > SHA256SUMS.txt
           cat SHA256SUMS.txt
           gh release upload "${GITHUB_REF_NAME}" SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Verify complete asset set and publish
+        run: |
+          python3 tools/verify-release-assets.py "$GITHUB_REF_NAME" dist
+          gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest

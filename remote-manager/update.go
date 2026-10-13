@@ -320,6 +320,9 @@ func dockerImage() string {
 
 // updateBlocked says why this installation cannot replace itself ("" = it can).
 func updateBlocked() string {
+	if os.Getenv("WRM_APPIMAGE") == "1" {
+		return "appimage"
+	}
 	if inContainer() {
 		return "docker"
 	}
@@ -406,6 +409,7 @@ func apiUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if b := updateBlocked(); b != "" {
 		msg := map[string]string{
+			"appimage":     "Stop WRM and download the new AppImage from the release page. Your data stays in the same location.",
 			"docker":       "WRM runs in a container: update the image (docker pull / docker compose) instead.",
 			"not_writable": "WRM cannot write to the folder of its binary.",
 		}[b]

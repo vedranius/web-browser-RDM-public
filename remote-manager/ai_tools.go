@@ -45,7 +45,7 @@ func intProp(desc string) map[string]interface{} {
 }
 
 var aiTools = []aiToolSpec{
-	{Kind: "read", Def: aiToolDef{Name: "system_info", Description: "Show the operating system, kernel, uptime, memory and CPU count of the server.", Schema: obj(map[string]interface{}{})}},
+	{Kind: "read", Def: aiToolDef{Name: "system_info", Description: "Show the server's current date and time, operating system, kernel, uptime, memory and CPU count.", Schema: obj(map[string]interface{}{})}},
 	{Kind: "read", Def: aiToolDef{Name: "read_file", Description: "Read a text file on the server (size-limited). Sensitive files (password hashes, private keys, credentials) are refused.",
 		Schema: obj(map[string]interface{}{"path": strProp("Absolute path, or ~/ for the home directory"), "offset": intProp("Byte offset to start at (default 0)"), "max_bytes": intProp("Bytes to read (default and maximum: the policy limit)")}, "path")}},
 	{Kind: "read", Def: aiToolDef{Name: "list_directory", Description: "List a directory with sizes, owners, permissions and times.",
@@ -224,7 +224,7 @@ func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiP
 	switch name {
 	case "system_info":
 		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read"}, Display: "system information",
-			Script: `uname -a; echo; cat /etc/os-release 2>/dev/null; echo; uptime; echo; free -m 2>/dev/null; echo; echo "CPUs: $(nproc 2>/dev/null)"`}, nil
+			Script: `echo "Server date: $(date '+%Y-%m-%d %H:%M:%S %Z (%z)' 2>/dev/null || date)"; echo; uname -a; echo; cat /etc/os-release 2>/dev/null; echo; uptime; echo; free -m 2>/dev/null; echo; echo "CPUs: $(nproc 2>/dev/null)"`}, nil
 	case "read_file", "tail_log":
 		p, err := aiRequirePath(in.Path)
 		if err != nil {

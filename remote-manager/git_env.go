@@ -550,6 +550,7 @@ type gitEnvDestPlan struct {
 	Errors      []string         `json:"errors"`
 	Warnings    []string         `json:"warnings"`
 	vmdCR       bool
+	connBinding string // safe connection settings captured during comparison
 	vmdExists   bool
 	state       *gitEnvState
 }
@@ -815,6 +816,7 @@ func (x *envPlanCtx) repoCR(rel string, serverCR bool) bool {
 func (x *envPlanCtx) destPlan(cl *ssh.Client, idx int, d gitEnvDest, conn Connection) (*gitEnvDestPlan, error) {
 	dp := &gitEnvDestPlan{Index: idx, Server: d.Server, ConnID: conn.ID, Path: d.Path, StateDir: envStateDir(*x.env, x.app.Name, d.Path),
 		Files: []gitEnvFile{}, Counts: map[string]int{}, Errors: []string{}, Warnings: []string{}}
+	dp.connBinding = gitEnvConnBinding(conn)
 	sc, err := runEnvScan(cl, d.Path, dp.StateDir, x.cat.IgnoreDirs)
 	if err != nil {
 		return dp, err
@@ -958,11 +960,24 @@ func (x *envPlanCtx) fingerprint(dp *gitEnvDestPlan) string {
 	if dp.Current != nil {
 		cur = dp.Current.DeployID
 	}
-	fmt.Fprintf(h, "%s\n%s\n%s\n%s\n%s\n", strings.ToLower(dp.Server), dp.Path, cur, x.t.CommitFull, x.t.Commit)
+	fmt.Fprintf(h, "%s\n%d\n%s\n%s\n%s\n%s\n%s\n", strings.ToLower(dp.Server), dp.ConnID, dp.connBinding, dp.Path, cur, x.t.CommitFull, x.t.Commit)
 	for _, f := range dp.Files {
 		fmt.Fprintf(h, "%s\t%s\t%s\t%d\t%v\n", f.Path, f.State, f.hash, f.cr, f.Link)
 	}
 	return hex.EncodeToString(h.Sum(nil))[:32]
+}
+
+// Bind reviewed destinations to connection identity, login and effective route without
+// including secrets. Renaming/changing a connection requires a new comparison.
+func gitEnvConnBinding(c Connection) string {
+	settings := struct {
+		ID, UserID                     int
+		Name, Protocol, Host, Username string
+		JumpID, ProxyID                *int
+	}{c.ID, c.UserID, c.Name, c.Protocol, c.Host, c.Username, c.JumpID, c.ProxyID}
+	b, _ := json.Marshal(settings)
+	h := sha256.Sum256(b)
+	return hex.EncodeToString(h[:])
 }
 
 // envSelection is what a deploy does on one destination: the files to write and to

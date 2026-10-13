@@ -122,11 +122,70 @@ func chownToUser(path, name string) {
 	os.Chown(path, uid, gid)
 }
 
+// checkSystemdDatabaseAccess catches a common service-install failure: WRM was previously
+// started as root, leaving a root-owned SQLite database that the unprivileged service user
+// can read but cannot migrate or write. runuser performs the check with the service account's
+// real permissions (including ACLs); if it is unavailable, systemd's startup diagnostics remain
+// the fallback.
+func checkSystemdDatabaseAccess(s serviceSpec) error {
+	if runtime.GOOS != "linux" || s.User == "" {
+		return nil
+	}
+	runuser, err := exec.LookPath("runuser")
+	if err != nil {
+		return nil
+	}
+	for _, path := range []string{s.DBPath, s.DBPath + "-wal", s.DBPath + "-shm"} {
+		if _, err := os.Stat(path); err == nil {
+			for _, access := range []string{"-r", "-w"} {
+				if _, err := run(runuser, "-u", s.User, "--", "test", access, path); err != nil {
+					return fmt.Errorf("database file %q is not readable and writable by service user %q; set DB_PATH to the intended database or grant that user read/write access to the database files", path, s.User)
+				}
+			}
+		} else if !os.IsNotExist(err) {
+			return fmt.Errorf("checking database file %q: %w", path, err)
+		}
+	}
+	for _, access := range []string{"-w", "-x"} {
+		if _, err := run(runuser, "-u", s.User, "--", "test", access, s.DataDir); err != nil {
+			return fmt.Errorf("database directory %q is not writable and searchable by service user %q; set DB_PATH to a writable location or grant that user write and search access to the directory", s.DataDir, s.User)
+		}
+	}
+	return nil
+}
+
 func needRoot(o serviceOptions) error {
 	if os.Geteuid() == 0 || (runtime.GOOS == "darwin" && o.Scope == "user") {
 		return nil
 	}
 	return errNeedsAdmin{hint: "installing a system service needs root: run  sudo " + filepath.Base(os.Args[0]) + " -install-service"}
+}
+
+func startSystemdService(s serviceSpec) error {
+	unit := s.Name + ".service"
+	if _, err := run("systemctl", "enable", unit); err != nil {
+		return err
+	}
+	// A corrected installation may still be rate-limited by the old unit's failures.
+	// Restart also applies the new ExecStart when the old service is already running.
+	run("systemctl", "reset-failed", unit)
+	if _, err := run("systemctl", "restart", unit); err != nil {
+		status, _ := run("systemctl", "status", "--no-pager", "--full", unit)
+		journal, _ := run("journalctl", "-u", unit, "-n", "40", "--no-pager", "--output", "short-iso")
+		var detail strings.Builder
+		fmt.Fprintf(&detail, "%v", err)
+		if status != "" {
+			fmt.Fprintf(&detail, "\n\nService status:\n%s", status)
+		}
+		if journal != "" {
+			fmt.Fprintf(&detail, "\n\nRecent service log:\n%s", journal)
+			if strings.Contains(strings.ToLower(journal), "readonly database") {
+				fmt.Fprintf(&detail, "\n\nSQLite could not write the database. Check DB_PATH in %s and make sure service user %q can write the database file and its directory.", s.EnvFile, s.User)
+			}
+		}
+		return errors.New(detail.String())
+	}
+	return nil
 }
 
 func installService(o serviceOptions) error {
@@ -159,8 +218,16 @@ func installService(o serviceOptions) error {
 	if err := needRoot(o); err != nil {
 		return err
 	}
-	s, err := buildServiceSpec(o)
+	s, err := collectServiceSpec(o)
 	if err != nil {
+		return err
+	}
+	if runtime.GOOS == "linux" {
+		if err := checkSystemdDatabaseAccess(s); err != nil {
+			return err
+		}
+	}
+	if err := writeEnvFile(s, serviceEnvironment(s.DBPath)); err != nil {
 		return err
 	}
 	chownToUser(s.EnvFile, s.User)
@@ -173,7 +240,7 @@ func installService(o serviceOptions) error {
 		if _, err := run("systemctl", "daemon-reload"); err != nil {
 			return err
 		}
-		if _, err := run("systemctl", "enable", "--now", o.Name+".service"); err != nil {
+		if err := startSystemdService(s); err != nil {
 			return err
 		}
 	case "darwin":
@@ -211,8 +278,8 @@ func installService(o serviceOptions) error {
 			return err
 		}
 	}
-	fmt.Printf("Installed and started the service %q (%s).\n  Definition:  %s\n  Settings:    %s\n  Binary:      %s\n  Data:        %s\n",
-		o.Name, serviceManagerName(o.Scope), path, s.EnvFile, s.Exe, s.DataDir)
+	fmt.Printf("Installed and started the service %q (%s).\n  Definition:  %s\n  Settings:    %s\n  Binary:      %s\n  Database:    %s\n",
+		o.Name, serviceManagerName(o.Scope), path, s.EnvFile, s.Exe, s.DBPath)
 	if s.User != "" {
 		fmt.Printf("  Runs as:     %s\n", s.User)
 	}

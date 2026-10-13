@@ -60,6 +60,7 @@ var (
 		return nil
 	}
 	ollamaLookPath  = exec.LookPath
+	ollamaStat      = os.Stat
 	ollamaStartWait = 20 * time.Second
 )
 
@@ -161,7 +162,7 @@ func ollamaBinary() string {
 	}
 	for _, c := range cands {
 		if c != "" && filepath.IsAbs(c) {
-			if st, err := os.Stat(c); err == nil && !st.IsDir() {
+			if st, err := ollamaStat(c); err == nil && !st.IsDir() {
 				return c
 			}
 		}

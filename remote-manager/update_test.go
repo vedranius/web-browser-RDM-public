@@ -326,6 +326,20 @@ func TestSelfUpdateRefusals(t *testing.T) {
 	setSetting("self_update", "admins")
 }
 
+func TestSelfUpdateAppImageBlocked(t *testing.T) {
+	e := newUpdateEnv(t)
+	t.Setenv("WRM_APPIMAGE", "1")
+	st := e.status(e.admin)
+	if st["blocked"] != "appimage" || st["can_update"] != false {
+		t.Fatalf("AppImage must not replace its mounted or temporarily extracted binary: %v", st)
+	}
+	for _, endpoint := range []string{"apply", "rollback", "restart"} {
+		if code := e.admin.jsonDo("POST", "/api/update/"+endpoint, map[string]string{"version": "v11.8.0"}, nil); code != 409 {
+			t.Fatalf("AppImage %s: got HTTP %d, want 409", endpoint, code)
+		}
+	}
+}
+
 func TestSelfUpdateDockerAndLocalBinary(t *testing.T) {
 	e := newUpdateEnv(t)
 	newBin := fakeScript("v11.8.0")

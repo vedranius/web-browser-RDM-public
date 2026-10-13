@@ -9,6 +9,7 @@ Object.assign(LANGS.en, {
   ai_dock_left: 'Dock left', ai_dock_right: 'Dock right', ai_dock_top: 'Dock to the top', ai_dock_bottom: 'Dock to the bottom',
   ai_float: 'Float (drag the title bar to move, drag the corner to resize)', ai_expand: 'Expand over the whole terminal window', ai_restore: 'Restore size',
   ai_title: 'AI assistant', ai_start: 'Start', ai_provider: 'Provider', ai_model: 'Model', ai_mode: 'Mode',
+  ai_thinking: 'Processing your request…',
   ai_mode_read_only: 'Read-only', ai_mode_ask: 'Ask before every change', ai_mode_auto: 'Automatic within limits',
   ai_mode_read_only_d: 'The assistant reads logs, files, services and packages. Every change is refused.',
   ai_mode_ask_d: 'Reads run directly. Every command that changes something and every file edit waits for your approval.',
@@ -106,6 +107,7 @@ Object.assign(LANGS.hr, {
   ai_dock_left: 'Usidri lijevo', ai_dock_right: 'Usidri desno', ai_dock_top: 'Usidri gore', ai_dock_bottom: 'Usidri dolje',
   ai_float: 'Slobodan prozor (povuci naslovnu traku za pomicanje, povuci kut za promjenu veličine)', ai_expand: 'Proširi preko cijelog prozora terminala', ai_restore: 'Vrati veličinu',
   ai_title: 'AI asistent', ai_start: 'Pokreni', ai_provider: 'Pružatelj', ai_model: 'Model', ai_mode: 'Način rada',
+  ai_thinking: 'Obrađujem upit…',
   ai_mode_read_only: 'Samo čitanje', ai_mode_ask: 'Pitaj prije svake promjene', ai_mode_auto: 'Automatski u granicama',
   ai_mode_read_only_d: 'Asistent čita logove, datoteke, servise i pakete. Svaka promjena se odbija.',
   ai_mode_ask_d: 'Čitanje se izvršava odmah. Svaka naredba koja nešto mijenja i svaka izmjena datoteke čeka tvoje odobrenje.',
@@ -598,6 +600,16 @@ Object.assign(LANGS.hr, {
     return `<span class="pill ${cls}">${esc(lbl)}</span>`;
   }
 
+  function workingUI(id, busy) {
+    const waitId = 'ai-wait-' + id, wait = $(waitId), body = $('aib-' + id);
+    if (!busy) { if (wait) wait.remove(); return; }
+    if (!wait && body) {
+      body.insertAdjacentHTML('beforeend', `<div id="${waitId}" class="ai-note" role="status" style="display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span><span>${esc(t('ai_thinking'))}</span></div>`);
+      scrollEnd(id);
+    }
+  }
+
   function onEvent(id, ev) {
     const st = S[id];
     if (!st || ev.seq <= st.seq) return;
@@ -612,6 +624,7 @@ Object.assign(LANGS.hr, {
         st.curText += d.delta; st.cur.textContent = st.curText; scrollEnd(id); break;
       case 'assistant_done':
         if (d.text) { if (!st.cur) st.cur = add(id, `<div class="ai-msg assistant"></div>`); st.cur.innerHTML = md(d.text); }
+        else if (st.cur && d.text === '') st.cur.remove(); // parsed tool JSON has no final assistant text
         st.cur = null; break;
       case 'tool_call': {
         const el = add(id, `<div class="ai-card ${d.decision === 'deny' ? 'deny' : ''}" id="aic-${id}-${esc(d.call_id)}">
@@ -651,13 +664,15 @@ Object.assign(LANGS.hr, {
       case 'busy': {
         st.busy = d.busy;
         const s1 = $('ai-send-' + id), s2 = $('ai-stop-' + id);
-        if (s1) s1.style.display = d.busy ? 'none' : ''; if (s2) s2.style.display = d.busy ? '' : 'none';
+        if (s1) { s1.style.display = d.busy ? 'none' : ''; s1.disabled = !!d.busy; } if (s2) s2.style.display = d.busy ? '' : 'none';
+        workingUI(id, !!d.busy);
         break;
       }
       case 'error': add(id, `<div class="ai-note err">⚠ ${esc(d.error)}</div>`); break;
       case 'notice': add(id, `<div class="ai-note">${esc(t('ai_n_' + d.text))}</div>`); break;
       case 'ended':
         st.ended = true;
+        workingUI(id, false);
         if (st.es) st.es.close();
         add(id, `<div class="ai-note err">⏻ ${esc(t('ai_ended'))}: ${esc(reasonText(d.reason))}</div><button class="btn-sm" style="align-self:center;" onclick="wrmAI.newSession(${id})">✦ ${esc(t('ai_new'))}</button>`);
         const f = $('aif-' + id); if (f) f.style.display = 'none';
@@ -701,22 +716,12 @@ Object.assign(LANGS.hr, {
   }
 
   async function send(id) {
-    const wo = winOf(id), st = S[id], inp = $('ai-in-' + id), btn = $('ai-send-' + id), body = $('aib-' + id);
+    const wo = winOf(id), st = S[id], inp = $('ai-in-' + id), btn = $('ai-send-' + id);
     let text = (inp.value || '').trim();
-    if (!text || !st || !st.sid) return;
+    if (!text || !st || !st.sid || st.busy) return;
     if (wo.mode === 'sftp' && wo.path) text = `[${t('ai_fm_ctx')}: ${wo.path}]\n` + text;
     
-    // Vizualni feedback (thinking loader)
-    const waitId = "ai-wait-" + id;
-    const oldWait = $(waitId);
-    if (oldWait) oldWait.remove();
-    if (body) {
-      body.insertAdjacentHTML("beforeend", `<div id="${waitId}" class="ai-item ai-assistant" style="opacity:0.85;font-style:italic;display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;background:rgba(127,127,127,0.15);border-radius:6px;">
-        <span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span>
-        <span>${esc(t("ai_thinking") || "Agent obrađuje upit i analizira server...")}</span>
-      </div>`);
-      body.scrollTop = body.scrollHeight;
-    }
+    workingUI(id, true);
     if (btn) btn.disabled = true;
 
     try { 
@@ -724,12 +729,11 @@ Object.assign(LANGS.hr, {
       await api('POST', `/api/ai/sessions/${st.sid}/prompt${shareQ(wo)}`, {text}); 
     }
     catch (e) { 
+      workingUI(id, false);
       showToast(e.message, 'error', 5000); 
     }
     finally {
-      if (btn) btn.disabled = false;
-      const w = $(waitId);
-      if (w) w.remove();
+      if (btn) btn.disabled = !!st.busy;
     }
   }
   async function stop(id) { const st = S[id]; if (st && st.sid) api('POST', `/api/ai/sessions/${st.sid}/stop${shareQ(winOf(id))}`).catch(e => showToast(e.message, 'error')); }
