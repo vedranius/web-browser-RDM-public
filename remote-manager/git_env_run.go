@@ -19,18 +19,19 @@ import (
 
 // gitEnvRun is the environment part of a run request.
 type gitEnvRun struct {
-	App           string   `json:"app"`
-	Env           string   `json:"env"`
-	PlanID        string   `json:"plan_id,omitempty"`
-	Exclude       []string `json:"exclude,omitempty"`        // deploy: files left out of this run
-	DeleteRemoved bool     `json:"delete_removed,omitempty"` // deploy: delete files removed from the repository
-	PostDeploy    bool     `json:"post_deploy,omitempty"`    // run the environment's post_deploy command
-	PostCommand   string   `json:"post_command,omitempty"`   // pinned when the run is created
-	DryRun        bool     `json:"dry_run,omitempty"`
-	Confirm       string   `json:"confirm,omitempty"`   // the typed environment name (not stored)
-	DeployID      string   `json:"deploy_id,omitempty"` // deploy: assigned; rollback: the deploy to undo
-	Dests         []int    `json:"dests,omitempty"`     // rollback: destinations (empty = all)
-	Keep          int      `json:"keep,omitempty"`
+	App           string         `json:"app"`
+	Env           string         `json:"env"`
+	PlanID        string         `json:"plan_id,omitempty"`
+	Exclude       []string       `json:"exclude,omitempty"`        // deploy: files left out of this run
+	DeleteRemoved bool           `json:"delete_removed,omitempty"` // deploy: delete files removed from the repository
+	PostDeploy    bool           `json:"post_deploy,omitempty"`    // run the environment's post_deploy command
+	PostCommand   string         `json:"post_command,omitempty"`   // pinned when the run is created
+	DryRun        bool           `json:"dry_run,omitempty"`
+	Confirm       string         `json:"confirm,omitempty"`       // the typed environment name (not stored)
+	DeployID      string         `json:"deploy_id,omitempty"`     // deploy: assigned; rollback: the deploy to undo
+	Dests         []int          `json:"dests,omitempty"`         // deploy/rollback: destinations (omitted = all; empty is refused)
+	ConnBindings  map[int]string `json:"conn_bindings,omitempty"` // pinned by the server when creating a deploy
+	Keep          int            `json:"keep,omitempty"`
 }
 
 // createEnvRun validates an environment deploy or rollback and starts it (never scheduled).
@@ -43,6 +44,9 @@ func createEnvRun(r *http.Request, userID int, p gitRunParams) (int, int, error)
 	}
 	if p.ScheduleAt != "" {
 		return 0, 400, fmt.Errorf("environment deploys run now (use a dry run to preview)")
+	}
+	if e.Dests != nil && len(e.Dests) == 0 {
+		return 0, 400, fmt.Errorf("select at least one destination")
 	}
 	switch p.Restart.Mode {
 	case "", "none":
@@ -66,6 +70,7 @@ func createEnvRun(r *http.Request, userID int, p gitRunParams) (int, int, error)
 		return 0, 400, fmt.Errorf("type the environment name %q to confirm", env.Name)
 	}
 	e.Confirm = ""
+	e.ConnBindings = nil
 	e.PostCommand = ""
 	if e.PostDeploy {
 		if env.PostDeploy == "" {
@@ -112,18 +117,48 @@ func createEnvRun(r *http.Request, userID int, p gitRunParams) (int, int, error)
 		if len(plan.Dests) != len(env.Destinations) {
 			return 0, 409, fmt.Errorf("the environment changed since the plan: compare again")
 		}
+		byIndex := make(map[int]*gitEnvDestPlan, len(plan.Dests))
 		for _, dp := range plan.Dests {
-			if len(dp.Errors) > 0 {
-				return 0, 400, fmt.Errorf("%s: %s", dp.Server, strings.Join(dp.Errors, "; "))
+			if dp.Index < 0 || dp.Index >= len(env.Destinations) || byIndex[dp.Index] != nil {
+				return 0, 409, fmt.Errorf("the environment changed since the plan: compare again")
 			}
 			if d := env.Destinations[dp.Index]; d.Path != dp.Path || !strings.EqualFold(d.Server, dp.Server) {
 				return 0, 409, fmt.Errorf("the environment changed since the plan: compare again")
 			}
+			byIndex[dp.Index] = dp
+		}
+		selected := append([]int(nil), e.Dests...)
+		if len(selected) == 0 {
+			for i := range env.Destinations {
+				selected = append(selected, i)
+			}
+		}
+		sort.Ints(selected) // retain the configured destination order
+		seen := make(map[int]bool, len(selected))
+		e.ConnBindings = make(map[int]string, len(selected))
+		for _, i := range selected {
+			if i < 0 || i >= len(env.Destinations) || seen[i] {
+				return 0, 400, fmt.Errorf("unknown or duplicate destination")
+			}
+			seen[i] = true
+			dp := byIndex[i]
+			if dp == nil {
+				return 0, 409, fmt.Errorf("the environment changed since the plan: compare again")
+			}
+			if len(dp.Errors) > 0 {
+				return 0, 400, fmt.Errorf("%s: %s", dp.Server, strings.Join(dp.Errors, "; "))
+			}
+			conn, err := envConn(userID, dp.Server)
+			if err != nil || conn.ID != dp.ConnID || gitEnvConnBinding(conn) != dp.connBinding {
+				return 0, 409, fmt.Errorf("the connection changed since the plan: compare again")
+			}
+			e.ConnBindings[i] = dp.connBinding
 			if _, _, err := envSelection(dp, excl, e.DeleteRemoved); err != nil {
 				return 0, 400, err
 			}
 			p.Items = append(p.Items, envItem(userID, app.Name, env.Name, dp.Index, dp.ConnID, dp.Server, dp.Path, dp.StateDir, dp.Fingerprint))
 		}
+		e.Dests = selected
 		p.Targets = map[string]gitTarget{app.Name: plan.target}
 		p.Ref = plan.Ref
 		e.DeployID = gitBackupName(bundleOf(plan.target, label)+"-"+randomID(2), now) // unique when two deploys start in one second
@@ -519,6 +554,9 @@ func (run *gitRun) envDeployItem(it *gitRunItem) error {
 		return err
 	}
 	defer cl.Close()
+	if binding := e.ConnBindings[it.Dest]; binding != "" && gitEnvConnBinding(conn) != binding {
+		return fmt.Errorf("the connection changed since the plan: compare again")
+	}
 	run.set(func() { it.DeployID = e.DeployID })
 	if e.DryRun {
 		c.log("lock", "skip", "dry run: no lock is taken and nothing is written")

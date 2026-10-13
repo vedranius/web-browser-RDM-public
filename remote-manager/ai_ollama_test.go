@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -133,8 +134,9 @@ func TestOllamaActionsRecorded(t *testing.T) {
 	admin := newTestUser(t, srv, "oll-admin-3", true)
 	fake, pulled := fakeOllama(t)
 
-	oldOS, oldRun, oldLook := ollamaOS, ollamaRun, ollamaLookPath
-	t.Cleanup(func() { ollamaOS, ollamaRun, ollamaLookPath = oldOS, oldRun, oldLook })
+	oldOS, oldRun, oldLook, oldStat := ollamaOS, ollamaRun, ollamaLookPath, ollamaStat
+	t.Cleanup(func() { ollamaOS, ollamaRun, ollamaLookPath, ollamaStat = oldOS, oldRun, oldLook, oldStat })
+	ollamaStat = func(string) (os.FileInfo, error) { return nil, os.ErrNotExist }
 	ollamaOS = "linux"
 	var ran []string
 	var rmu sync.Mutex

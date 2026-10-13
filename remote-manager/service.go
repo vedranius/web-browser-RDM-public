@@ -71,6 +71,7 @@ type serviceSpec struct {
 	Name    string   // service / unit name, e.g. "wrm"
 	Exe     string   // absolute path of the binary
 	WorkDir string   // working directory of the interactive start (relative paths resolve the same)
+	DBPath  string   // database file used by this installation
 	DataDir string   // directory of the database
 	EnvFile string   // KEY=value lines: PORT, DB_PATH, key files, WRM_* settings
 	User    string   // Unix account of the service ("" = root / LocalSystem)
@@ -97,10 +98,15 @@ func serviceArgs(s serviceSpec, mode string) []string {
 // ─── service files (golden-tested) ───────────────────
 
 func systemdQuote(s string) string {
+	// ExecStart expands $VAR even inside quotes; $$ is its literal dollar escape.
+	return systemdPathWord(strings.ReplaceAll(s, "$", "$$"))
+}
+
+func systemdPathWord(s string) string {
 	if s != "" && !strings.ContainsAny(s, " \t\"'\\$%;") {
 		return s
 	}
-	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, `$`, `$$`, `%`, `%%`)
+	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, `%`, `%%`)
 	return `"` + r.Replace(s) + `"`
 }
 
@@ -114,14 +120,18 @@ func systemdUnit(s serviceSpec) string {
 	w("Documentation=%s", serviceDocsURL)
 	w("After=network-online.target")
 	w("Wants=network-online.target")
+	w("StartLimitIntervalSec=60")
+	w("StartLimitBurst=5")
 	w("")
 	w("[Service]")
 	w("Type=simple")
 	if s.User != "" {
 		w("User=%s", s.User)
 	}
-	w("WorkingDirectory=%s", systemdQuote(s.WorkDir))
-	w("EnvironmentFile=%s", systemdQuote(s.EnvFile))
+	// These directives take the entire value as one path; quote characters become
+	// part of the path. Only specifiers expand, so escape % and retain literal $.
+	w("WorkingDirectory=%s", strings.ReplaceAll(s.WorkDir, "%", "%%"))
+	w("EnvironmentFile=%s", strings.ReplaceAll(s.EnvFile, "%", "%%"))
 	args := []string{systemdQuote(s.Exe)}
 	for _, a := range serviceArgs(s, svcSystemd) {
 		args = append(args, systemdQuote(a))
@@ -138,7 +148,7 @@ func systemdUnit(s serviceSpec) string {
 	w("ProtectHome=read-only")
 	paths := make([]string, 0, len(s.RWPaths))
 	for _, p := range s.RWPaths {
-		paths = append(paths, systemdQuote(p))
+		paths = append(paths, systemdPathWord(p))
 	}
 	w("ReadWritePaths=%s", strings.Join(paths, " "))
 	w("PrivateTmp=true")
@@ -782,6 +792,15 @@ func (e errNeedsAdmin) Error() string { return e.hint }
 
 // buildServiceSpec collects the paths and writes the environment file of the service.
 func buildServiceSpec(o serviceOptions) (serviceSpec, error) {
+	s, err := collectServiceSpec(o)
+	if err != nil {
+		return serviceSpec{}, err
+	}
+	return s, writeEnvFile(s, serviceEnvironment(s.DBPath))
+}
+
+// collectServiceSpec leaves existing service settings intact until preflight checks pass.
+func collectServiceSpec(o serviceOptions) (serviceSpec, error) {
 	if !serviceNameRe.MatchString(o.Name) {
 		return serviceSpec{}, fmt.Errorf("invalid service name %q (letters, digits and _, starting with a letter)", o.Name)
 	}
@@ -804,7 +823,14 @@ func buildServiceSpec(o serviceOptions) (serviceSpec, error) {
 		return serviceSpec{}, err
 	}
 	dataDir := filepath.Dir(dbPath)
-	s := serviceSpec{Name: o.Name, Exe: exe, WorkDir: wd, DataDir: dataDir, User: o.User, Scope: o.Scope,
+	if runtime.GOOS == "linux" {
+		for _, p := range []string{wd, dbPath, exe} {
+			if strings.ContainsAny(p, "\n\r") || strings.TrimSpace(p) != p || strings.HasSuffix(p, `\`) {
+				return serviceSpec{}, fmt.Errorf("service path %q contains a line break, trailing whitespace or a trailing backslash that systemd cannot represent safely", p)
+			}
+		}
+	}
+	s := serviceSpec{Name: o.Name, Exe: exe, WorkDir: wd, DBPath: dbPath, DataDir: dataDir, User: o.User, Scope: o.Scope,
 		EnvFile: filepath.Join(dataDir, o.Name+".env"), LogFile: filepath.Join(dataDir, o.Name+"-service.log")}
 	for _, p := range []string{wd, dataDir, filepath.Dir(exe)} {
 		if !slices.Contains(s.RWPaths, p) {
@@ -818,7 +844,7 @@ func buildServiceSpec(o serviceOptions) (serviceSpec, error) {
 	if _, port, err := splitListen(env["LISTEN_ADDR"]); err == nil && port > 0 && port < 1024 {
 		s.LowPort = true
 	}
-	return s, writeEnvFile(s, env)
+	return s, nil
 }
 
 func splitListen(addr string) (string, int, error) {

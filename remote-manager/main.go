@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.3.4"
+var AppVersion = "v12.3.5"
 
 const sessionCookieName = "wrm_session"
 
@@ -415,6 +415,10 @@ func main() {
 	}
 	currentServiceName = *svcName
 	opts := serviceOptions{Name: *svcName, Scope: *svcScope, User: *svcUser}
+	if *installSvc && os.Getenv("WRM_APPIMAGE") == "1" {
+		fmt.Fprintln(os.Stderr, "For boot services, download the standalone Linux binary and run -install-service from its permanent location.")
+		os.Exit(1)
+	}
 	if *installSvc || *uninstallSvc || *svcStatus {
 		os.Exit(runServiceCommand(*installSvc, *uninstallSvc, *svcStatus, opts))
 	}

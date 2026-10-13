@@ -247,6 +247,119 @@ func fileExists(p string) bool {
 	return err == nil
 }
 
+func TestGitEnvSelectedDestinations(t *testing.T) {
+	e := newEnvTest(t, "env-selected", map[string]interface{}{"confirm": true})
+	for _, dir := range e.dirs {
+		writeFile(t, dir+"/run.py", runV19)
+	}
+	p := e.plan(t, "")
+	for _, selected := range [][]int{{}, {-1}, {2}, {1, 1}} {
+		if _, code := e.deploy(t, p, map[string]interface{}{"confirm": "test", "dests": selected}); code != 400 {
+			t.Fatalf("invalid destinations %v: %d", selected, code)
+		}
+	}
+	if _, code := e.deploy(t, p, map[string]interface{}{"dests": []int{1}}); code != 400 {
+		t.Fatalf("selected deploy without confirmation: %d", code)
+	}
+	v, code := e.deploy(t, p, map[string]interface{}{"confirm": "test", "dests": []int{1}, "exclude": []string{"lib/util.py"}})
+	if code != 200 || v.State != "done" || len(v.Items) != 1 || v.Items[0].Dest != 1 || len(v.Env.Dests) != 1 || v.Env.Dests[0] != 1 {
+		t.Fatalf("selected deploy: %d %+v", code, v)
+	}
+	if readFile(t, e.dirs[1]+"/run.py") != runV110 || fileExists(e.dirs[1]+"/lib/util.py") || readFile(t, e.dirs[0]+"/run.py") != runV19 || fileExists(e.dirs[0]+"/.deploy-bak") || fileExists(e.dirs[0]+"/VERSION.md") {
+		t.Fatal("deployment changed an unselected destination or an excluded file")
+	}
+	id := v.Env.DeployID
+	for _, selected := range [][]int{{}, {-1}, {2}, {1, 1}} {
+		if _, code := e.rollback(t, id, map[string]interface{}{"confirm": "test", "dests": selected}); code != 400 {
+			t.Fatalf("invalid rollback destinations %v: %d", selected, code)
+		}
+	}
+	v, code = e.rollback(t, id, map[string]interface{}{"confirm": "test", "dests": []int{1}})
+	if code != 200 || v.State != "done" || len(v.Items) != 1 || v.Items[0].Dest != 1 || readFile(t, e.dirs[1]+"/run.py") != runV19 || fileExists(e.dirs[0]+"/.deploy-bak") {
+		t.Fatalf("selected rollback: %d %+v", code, v)
+	}
+	if fileExists(e.dirs[1]+"/.deploy-bak/.lock") || readState(t, e.dirs[1]+"/.deploy-bak").Current != nil {
+		t.Fatal("rollback left the current deployment or a lock behind")
+	}
+}
+
+func TestGitEnvSelectHealthyDestination(t *testing.T) {
+	e := newEnvTest(t, "env-select-healthy", nil)
+	configured := e.cat["apps"].([]map[string]interface{})[0]["environments"].([]map[string]interface{})[0]
+	configured["destinations"] = []map[string]string{{"server": "unavailable", "path": e.dirs[0]}, {"server": "app-01", "path": e.dirs[1]}}
+	put := func() {
+		t.Helper()
+		if code := e.u.jsonDo("PUT", "/api/git/catalog", e.cat, nil); code != 200 {
+			t.Fatalf("catalog: %d", code)
+		}
+	}
+	put()
+	p := e.plan(t, "")
+	if len(p.Errors) != 0 || len(p.Dests[0].Errors) == 0 || len(p.Dests[1].Errors) != 0 {
+		t.Fatalf("plan with unavailable destination: %+v", p)
+	}
+	for _, options := range []map[string]interface{}{{}, {"dests": []int{0}}} {
+		if _, code := e.deploy(t, p, options); code != 400 {
+			t.Fatalf("deploy including unavailable destination: %d", code)
+		}
+	}
+	// A change even to an unselected destination invalidates the reviewed environment.
+	configured["destinations"].([]map[string]string)[0]["path"] = e.dirs[0] + "-moved"
+	put()
+	if _, code := e.deploy(t, p, map[string]interface{}{"dests": []int{1}}); code != 409 {
+		t.Fatalf("changed environment accepted: %d", code)
+	}
+	configured["destinations"].([]map[string]string)[0]["path"] = e.dirs[0]
+	put()
+	v, code := e.deploy(t, p, map[string]interface{}{"dests": []int{1}})
+	if code != 200 || v.State != "done" || len(v.Items) != 1 || v.Items[0].Dest != 1 || readFile(t, e.dirs[1]+"/run.py") != runV110 || fileExists(e.dirs[0]) {
+		t.Fatalf("healthy destination: %d %+v", code, v)
+	}
+}
+
+func TestGitEnvSelectedPostDeployFailureAndRollback(t *testing.T) {
+	e := newEnvTest(t, "env-selected-failure", map[string]interface{}{"post_deploy": "echo health-check-failed; exit 3"})
+	for _, dir := range e.dirs {
+		writeFile(t, dir+"/run.py", runV19)
+	}
+	v, code := e.deploy(t, e.plan(t, ""), map[string]interface{}{"dests": []int{1}, "post_deploy": true})
+	if code != 200 || v.State != "failed" || len(v.Items) != 1 || !strings.Contains(v.Items[0].PostDeploy, "failed") {
+		t.Fatalf("post-deploy failure: %d %+v", code, v)
+	}
+	id := v.Env.DeployID
+	history := readHistory(t, e.dirs[1]+"/.deploy-bak")
+	if len(history) != 1 || history[0]["result"] != "post_deploy_failed" || readFile(t, e.dirs[1]+"/run.py") != runV110 || fileExists(e.dirs[0]+"/.deploy-bak") {
+		t.Fatal("failed health check was not recorded per destination")
+	}
+	v, code = e.rollback(t, id, map[string]interface{}{"dests": []int{1}})
+	if code != 200 || v.State != "done" || readFile(t, e.dirs[1]+"/run.py") != runV19 || readFile(t, e.dirs[0]+"/run.py") != runV19 || fileExists(e.dirs[0]+"/.deploy-bak") {
+		t.Fatalf("rollback after failed health check: %d %+v", code, v)
+	}
+}
+
+func TestGitEnvConnectionChangeInvalidatesPlan(t *testing.T) {
+	e := newEnvTest(t, "env-connection-binding", nil)
+	writeFile(t, e.dirs[0]+"/run.py", runV19)
+	p := e.plan(t, "")
+	other := startFakeHost(t, testSSHUser, testSSHPass)
+	if _, err := db.Exec(`UPDATE connections SET host=? WHERE id=?`, other.addr, e.conn); err != nil {
+		t.Fatal(err)
+	}
+	if _, code := e.deploy(t, p, map[string]interface{}{"dests": []int{0}}); code != 409 {
+		t.Fatalf("retargeted connection was accepted: %d", code)
+	}
+	if readFile(t, e.dirs[0]+"/run.py") != runV19 || fileExists(e.dirs[0]+"/.deploy-bak") {
+		t.Fatal("a rejected plan wrote to the server")
+	}
+	if _, err := db.Exec(`UPDATE connections SET host=? WHERE id=?`, e.h.addr, e.conn); err != nil {
+		t.Fatal(err)
+	}
+	v, code := e.deploy(t, p, map[string]interface{}{"dests": []int{0}})
+	if code != 200 || v.State != "done" || readFile(t, e.dirs[0]+"/run.py") != runV110 {
+		t.Fatalf("original connection binding failed: %d %+v", code, v)
+	}
+}
+
 func TestGitEnvFingerprintLocksAndExclusions(t *testing.T) {
 	e := newEnvTest(t, "env-locker", map[string]interface{}{"destinations": nil})
 	d0 := e.dirs[0]

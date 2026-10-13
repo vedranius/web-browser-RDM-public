@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -360,6 +361,9 @@ func parseToolInput(s string) (json.RawMessage, string) {
 	var obj map[string]interface{}
 	if err := json.Unmarshal([]byte(s), &obj); err != nil {
 		return json.RawMessage(`{}`), "the tool arguments are not valid JSON: " + err.Error()
+	}
+	if obj == nil {
+		return json.RawMessage(`{}`), "the tool arguments must be a JSON object"
 	}
 	return json.RawMessage(s), ""
 }
@@ -787,75 +791,63 @@ func openaiStream(ctx context.Context, p aiProvider, endpoint string, req aiLLMR
 	}
 	out.Text = text.String()
 
-	// Fallback za lokalne modele (Ollama/Qwen): pronalazi sve JSON pozive alata bilo gdje u tekstu
-	if len(out.Calls) == 0 && strings.Contains(out.Text, `{"name":`) {
-		cleanText := out.Text
-		for {
-			idx := strings.Index(cleanText, `{"name":`)
-			if idx == -1 {
-				break
-			}
-			depth := 0
-			end := -1
-			inStr := false
-			escape := false
-			for i := idx; i < len(cleanText); i++ {
-				ch := cleanText[i]
-				if inStr {
-					if escape {
-						escape = false
-					} else if ch == '\\' {
-						escape = true
-					} else if ch == '"' {
-						inStr = false
-					}
-					continue
-				}
-				if ch == '"' {
-					inStr = true
-				} else if ch == '{' {
-					depth++
-				} else if ch == '}' {
-					depth--
-					if depth == 0 {
-						end = i + 1
-						break
-					}
-				}
-			}
-			if end == -1 {
-				cand := cleanText[idx:] + "}}"
-				var fc struct {
-					Name      string          `json:"name"`
-					Arguments json.RawMessage `json:"arguments"`
-				}
-				if json.Unmarshal([]byte(cand), &fc) == nil && fc.Name != "" {
-					in, bad := parseToolInput(string(fc.Arguments))
-					out.Calls = append(out.Calls, aiToolCall{ID: "call_" + randomToken(8), Name: fc.Name, Input: in, BadInput: bad})
-				}
-				cleanText = cleanText[:idx]
-				break
-			}
-			cand := cleanText[idx:end]
-			var fc struct {
-				Name      string          `json:"name"`
-				Arguments json.RawMessage `json:"arguments"`
-			}
-			if json.Unmarshal([]byte(cand), &fc) == nil && fc.Name != "" {
-				in, bad := parseToolInput(string(fc.Arguments))
-				out.Calls = append(out.Calls, aiToolCall{ID: "call_" + randomToken(8), Name: fc.Name, Input: in, BadInput: bad})
-				cleanText = cleanText[:idx] + cleanText[end:]
-			} else {
-				break
-			}
-		}
-		out.Text = strings.TrimSpace(cleanText)
+	// Some local models emit tool JSON as text instead of structured tool_calls.
+	if len(out.Calls) == 0 {
+		out.Text, out.Calls = extractInlineToolCalls(out.Text, req.Tools)
 	}
 
 	if out.Stop == "content_filter" {
 		out.Refusal = true
 	}
 	return out, nil
+}
+
+// Only complete calls to offered tools are converted. Incomplete JSON and ordinary
+// JSON answers remain text; repairing braces could turn a truncated request into an action.
+var inlineToolStart = regexp.MustCompile(`\{\s*"name"\s*:`)
+var emptyToolFence = regexp.MustCompile("(?s)```(?:json)?\\s*```")
+
+func extractInlineToolCalls(text string, tools []aiToolDef) (string, []aiToolCall) {
+	allowed := map[string]bool{}
+	for _, tool := range tools {
+		allowed[tool.Name] = true
+	}
+	if len(allowed) == 0 {
+		return text, nil
+	}
+	var clean strings.Builder
+	var calls []aiToolCall
+	cursor, kept := 0, 0
+	for cursor < len(text) {
+		match := inlineToolStart.FindStringIndex(text[cursor:])
+		if match == nil {
+			break
+		}
+		start := cursor + match[0]
+		decoder := json.NewDecoder(strings.NewReader(text[start:]))
+		var candidate map[string]json.RawMessage
+		if err := decoder.Decode(&candidate); err != nil {
+			break // keep malformed output intact; never parse a nested fragment of it
+		}
+		end := start + int(decoder.InputOffset())
+		var name string
+		json.Unmarshal(candidate["name"], &name)
+		args := bytes.TrimSpace(candidate["arguments"])
+		if len(candidate) == 2 && allowed[name] && len(args) > 0 && args[0] == '{' {
+			input, bad := parseToolInput(string(args))
+			if bad == "" {
+				calls = append(calls, aiToolCall{ID: "call_" + randomToken(8), Name: name, Input: input})
+				clean.WriteString(text[kept:start])
+				kept = end
+			}
+		}
+		cursor = end
+	}
+	if len(calls) == 0 {
+		return text, nil
+	}
+	clean.WriteString(text[kept:])
+	return strings.TrimSpace(emptyToolFence.ReplaceAllString(clean.String(), "")), calls
 }
 
 // ─── AWS Bedrock Converse ────────────────────────────

@@ -763,6 +763,12 @@ func TestAIOpenAICompatibleToolLoop(t *testing.T) {
 	if len(r) != 2 || !strings.Contains(r[0], "CPUs") || !strings.Contains(r[1], "exit_code=\"0\"") {
 		t.Fatalf("results: %v", r)
 	}
+	_, serverDate, found := strings.Cut(r[0], "Server date: ")
+	serverDate, _, _ = strings.Cut(serverDate, "\n")
+	actualDate, err := time.Parse("2006-01-02 15:04:05 MST (-0700)", serverDate)
+	if !found || err != nil || time.Since(actualDate) > time.Minute || time.Until(actualDate) > time.Minute {
+		t.Fatalf("system_info did not return the actual server date: %q (%v)", serverDate, err)
+	}
 	msgs := e.llm.body(1)["messages"].([]interface{})
 	if asMap(msgs[0])["role"] != "system" || !strings.Contains(fmt.Sprint(asMap(msgs[0])["content"]), "UNTRUSTED") {
 		t.Fatal("system prompt")

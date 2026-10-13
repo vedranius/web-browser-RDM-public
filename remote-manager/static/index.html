@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.3.4</title>
+<title>Web Remote Manager PRO v12.3.5</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1538,7 +1538,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.3.4 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.3.5 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1618,7 +1618,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.3.4</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.3.5</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -4620,6 +4620,7 @@ Object.assign(LANGS.en, {
   upd_check_off: 'The daily update check is off (policy update_check).', upd_check_failed: 'The last check failed',
   upd_notes: 'Release notes', upd_release_page: 'Release page', upd_check_now: 'Check now', upd_checking: 'Checking…',
   upd_docker: 'WRM runs in Docker: update the image instead', upd_docker_build: 'With the docker-compose.yml of the repository (image built from source):',
+  upd_appimage: 'To update, stop WRM and download the new AppImage from the release page. Your data stays in the same location.',
   upd_not_writable: 'WRM cannot write to the folder of its binary, so it cannot update itself. Replace the binary by hand or give the service account write access to that folder.',
   upd_policy_off: 'One-click update is turned off (policy self_update).',
   upd_apply: 'Update to {v}', upd_apply_q: 'Update this server from {cur} to {v}? WRM downloads the release file, checks its SHA-256 against the release checksums, replaces its binary and restarts. Open terminals and transfers are interrupted; the page reconnects by itself. The previous binary is kept for a rollback.',
@@ -4645,6 +4646,7 @@ Object.assign(LANGS.hr, {
   upd_check_off: 'Dnevna provjera nadogradnji je isključena (politika update_check).', upd_check_failed: 'Zadnja provjera nije uspjela',
   upd_notes: 'Bilješke izdanja', upd_release_page: 'Stranica izdanja', upd_check_now: 'Provjeri sada', upd_checking: 'Provjeravam…',
   upd_docker: 'WRM radi u Dockeru: umjesto toga nadogradi image', upd_docker_build: 'S docker-compose.yml iz repozitorija (image se gradi iz izvornog koda):',
+  upd_appimage: 'Za nadogradnju zaustavi WRM i preuzmi novi AppImage sa stranice izdanja. Tvoji podaci ostaju na istom mjestu.',
   upd_not_writable: 'WRM ne može pisati u direktorij svoje izvršne datoteke pa se ne može sam nadograditi. Zamijeni datoteku ručno ili daj računu servisa pravo pisanja u taj direktorij.',
   upd_policy_off: 'Nadogradnja jednim klikom je isključena (politika self_update).',
   upd_apply: 'Nadogradi na {v}', upd_apply_q: 'Nadograditi ovaj server s {cur} na {v}? WRM preuzima datoteku izdanja, provjerava njen SHA-256 prema kontrolnim zbrojevima izdanja, zamjenjuje svoju izvršnu datoteku i ponovno se pokreće. Otvoreni terminali i prijenosi se prekidaju; stranica se sama ponovno spaja. Prethodna izvršna datoteka čuva se za povratak.',
@@ -5005,7 +5007,8 @@ function renderUpdateModal() {
         <code class="upd-cmd">docker compose pull &amp;&amp; docker compose up -d</code>
         <div class="setting-desc">${esc(t('upd_docker_build'))}</div>
         <code class="upd-cmd">git pull &amp;&amp; docker compose up -d --build</code>`;
-    } else if (s.blocked === 'not_writable') h += `<div class="hint-box warn">⚠ ${esc(t('upd_not_writable'))}</div>`;
+    } else if (s.blocked === 'appimage') h += `<div class="hint-box">${esc(t('upd_appimage'))}</div>`;
+    else if (s.blocked === 'not_writable') h += `<div class="hint-box warn">⚠ ${esc(t('upd_not_writable'))}</div>`;
     else if (s.policy === 'off') h += `<div class="hint-box">${esc(t('upd_policy_off'))}</div>`;
     if (busy) {
       const pct = p.total > 0 ? Math.min(100, Math.round(100 * (p.done || 0) / p.total)) : (p.state === 'downloading' ? 5 : 100);
@@ -5155,6 +5158,7 @@ async function loadData() {
     loadBookmarks();
     loadStatus();
     loadVault();
+    refreshAIButtons();
   } catch(e) { console.error('loadData', e); }
 }
 
@@ -5479,6 +5483,20 @@ function applyPolicyToUI() {
   if (gb) gb.style.display = pol.git === false ? 'none' : '';
   const os = document.getElementById('opt-serial');
   if (os) { os.hidden = !pol.serial; os.disabled = !pol.serial; }
+  refreshAIButtons();
+}
+
+async function refreshUserPolicy() {
+  const user = currentUser;
+  if (!user) return;
+  try {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) return;
+    const me = await res.json();
+    if (currentUser !== user || me.id !== user.id || !me.policy) return;
+    currentUser.policy = me.policy;
+    applyPolicyToUI();
+  } catch (_) {}
 }
 
 function showFolderCtx(x, y) {
@@ -6384,6 +6402,7 @@ async function saveSetting(key, value, el) {
   const st = adminSettingsCache.find(x => x.key === key);
   if (st && d.changed && key in d.changed) st.value = d.changed[key];
   showToast(t('saved'), 'success', 1200);
+  if (key.startsWith('ai_')) await refreshUserPolicy();
   if (key.startsWith('turn_') || key === 'voice_enabled') setTimeout(() => { if (adminTab === 'voice') adminPolicies('voice'); }, 600);
 }
 
@@ -7316,8 +7335,14 @@ function loadAI() {
 }
 function aiAvailable(wo, mode) {
   const c = winConn(wo);
-  return !!(currentUser && currentUser.policy && currentUser.policy.ai && c && (c.protocol || 'SSH') === 'SSH' && !wo.console &&
+  return !!(currentUser && currentUser.policy && currentUser.policy.ai && c && String(c.protocol || 'SSH').toUpperCase() === 'SSH' && !wo.console &&
     (mode === 'ssh' || mode === 'sftp') && winCan(wo, 'terminal') && winCan(wo, 'files_write'));
+}
+function refreshAIButtons() {
+  winObjects.forEach(wo => {
+    const button = document.getElementById('wb-ai-' + wo.id);
+    if (button) button.style.display = aiAvailable(wo, wo.mode) ? '' : 'none';
+  });
 }
 function openAI(id) {
   loadAI().then(() => wrmAI.toggle(id), () => showToast(t('ai_load_failed'), 'error'));

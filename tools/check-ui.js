@@ -49,7 +49,7 @@ while ((m = re.exec(js))) {
 }
 
 const used = new Set();
-for (const mm of js.matchAll(/\bt\('([a-zA-Z0-9_]+)'\)/g)) used.add(mm[1]);
+for (const mm of js.matchAll(/\b(?:t|tf)\(\s*(['"])([a-zA-Z0-9_]+)\1\s*[,)]/g)) used.add(mm[2]);
 for (const mm of html.matchAll(/data-i18n(?:-[a-z]+)?="([a-zA-Z0-9_]+)"/g)) used.add(mm[1]);
 for (const lang of ['en', 'hr']) {
   const missing = [...used].filter(k => !(k in L[lang]));

@@ -5,12 +5,14 @@ Description=Web Remote Manager PRO
 Documentation=https://github.com/vedranius/web-browser-RDM-public
 After=network-online.target
 Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
 User=ops
-WorkingDirectory="/srv/remote tools"
-EnvironmentFile="/srv/remote tools/wrm.env"
+WorkingDirectory=/srv/remote tools
+EnvironmentFile=/srv/remote tools/wrm.env
 ExecStart="/srv/remote tools/wrm-pro-v11.7.0-linux-arm64" -service=systemd
 Restart=on-failure
 RestartSec=3

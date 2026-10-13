@@ -424,6 +424,11 @@ Object.assign(LANGS.en, {
   gs_auto_n: '{n} environment(s) were detected automatically from your servers.',
   gs_auto_h: 'They work as they are; nothing is deployed until you start it.',
   gs_auto_save: 'Save detected environments',
+  gs_filter_service: 'All services', gs_filter_server: 'All servers', gs_filter_env: 'All environments', gs_filter_status: 'All statuses',
+  gs_filter_branch: 'Branch contains…', gs_filter_version: 'Version or commit contains…', gs_filter_clear: 'Clear filters', gs_filter_none: 'No environments match these filters.',
+  gs_checked: 'Compared', gs_files_preview: 'Files in this plan ({n})', gs_include_file: 'Include this file in the deployment', gs_file_status: 'Status by destination',
+  gs_deploy_destinations: 'Deploy to selected servers', gs_destinations_selected: '{n} of {total} servers selected', gs_select_rollback: 'Select servers to roll back to this version',
+  gs_removed_kept: 'kept on the server', gs_removed_h: 'Simple mode keeps files removed from the repository. Use Advanced mode to delete them after backup.',
   gs_auto_q: 'Save the detected environments to the catalog? Existing definitions are not changed.',
   gs_auto_done: '{n} environment(s) saved.',
   gs_on_server: 'On the server', gs_on_branch: 'Latest on the branch', gs_version: 'Version', gs_commit: 'Commit', gs_not_installed: 'Not installed here yet',
@@ -449,6 +454,11 @@ Object.assign(LANGS.hr, {
   gs_auto_n: '{n} okruženje(a) automatski je otkriveno na vašim serverima.',
   gs_auto_h: 'Rade kakva jesu; ništa se ne isporučuje dok to sami ne pokrenete.',
   gs_auto_save: 'Spremi otkrivena okruženja',
+  gs_filter_service: 'Sve usluge', gs_filter_server: 'Svi serveri', gs_filter_env: 'Sva okruženja', gs_filter_status: 'Sva stanja',
+  gs_filter_branch: 'Grana sadrži…', gs_filter_version: 'Verzija ili commit sadrži…', gs_filter_clear: 'Očisti filtre', gs_filter_none: 'Nijedno okruženje ne odgovara filtrima.',
+  gs_checked: 'Uspoređeno', gs_files_preview: 'Datoteke u planu ({n})', gs_include_file: 'Uključi ovu datoteku u isporuku', gs_file_status: 'Stanje po odredištu',
+  gs_deploy_destinations: 'Isporuči na odabrane servere', gs_destinations_selected: 'Odabrano servera: {n} od {total}', gs_select_rollback: 'Odaberite servere za povratak na ovu verziju',
+  gs_removed_kept: 'ostaje na serveru', gs_removed_h: 'Simple način zadržava datoteke uklonjene iz repozitorija. Za njihovo brisanje uz backup koristite Advanced način.',
   gs_auto_q: 'Spremiti otkrivena okruženja u katalog? Postojeće definicije se ne mijenjaju.',
   gs_auto_done: '{n} okruženje(a) spremljeno.',
   gs_on_server: 'Na serveru', gs_on_branch: 'Najnovije na grani', gs_version: 'Verzija', gs_commit: 'Commit', gs_not_installed: 'Ovdje još nije instalirano',
@@ -676,6 +686,10 @@ Object.assign(LANGS.hr, {
 #git-ws .gs-acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 #git-ws .gs-acts button, #git-modal .gs-go { font-size: 14px; padding: 9px 18px; }
 #git-ws .gs-acts button.gs-primary { min-width: 160px; }
+#git-modal .gs-destinations { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 8px 0; }
+#git-modal .gs-destinations > b { display: block; margin-bottom: 5px; }
+#git-modal .gs-destinations .g-opt { margin: 2px 0; }
+#git-modal .gs-file-review td:nth-child(2) { min-width: 140px; }
 #git-modal .gs-from-to { font-size: 15px; margin: 8px 0; }
 @media (max-width: 1280px) { #git-ws .g-tabs button { padding: 6px 8px; } #git-ws .g-head { gap: 8px; } }
 @media (max-width: 640px) { #git-modal { padding: 8px 4px; } #git-modal .g-dlg { padding: 12px 10px; } #git-modal .g-hm { display: none; } #git-modal .g-flist { max-height: 55vh; } }
@@ -2592,7 +2606,7 @@ Object.assign(LANGS.hr, {
   }
 
   // ── Simple mode: one guided card per service environment, built on the environment endpoints ──
-  const S = {pending: new Set(), loading: false, plan: null, ctx: null};
+  const S = {pending: new Set(), loading: false, plan: null, ctx: null, submitting: false, excluded: new Set(), destinations: new Set(), rollbackDestinations: new Set(), filters: {app: '', server: '', env: '', status: '', branch: '', version: '', q: ''}};
   const sKey = (app, env) => 'gs-' + btoa(unescape(encodeURIComponent(app + '\u0000' + env))).replace(/[^A-Za-z0-9]/g, '');
   const sh10 = c => String(c || '').slice(0, 10);
 
@@ -2608,7 +2622,7 @@ Object.assign(LANGS.hr, {
     if (!body || G.mode !== 'simple') return;
     if (!E.ov && !S.loading) { S.loading = true; envLoad().finally(() => { S.loading = false; }); }
     body.innerHTML = simpleHTML();
-    if (E.ov) simpleCells();
+    if (E.ov) { simpleApplyFilters(); simpleCells(); }
   }
 
   function simpleRefresh() { E.cells = {}; E.ov = null; S.pending.clear(); paintSimple(); }
@@ -2618,10 +2632,57 @@ Object.assign(LANGS.hr, {
     let html = `<div class="gs-wrap"><div class="hint-box">${esc(t('gs_intro'))}</div>
       <div class="g-bar" style="margin-bottom:10px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleRefresh()">↻ ${esc(t('gs_refresh'))}</button></div>`;
     if (!ov) return html + `<div class="hint-box">⏳</div></div>`;
+    if (ov.services.length) html += simpleFilterHTML();
     const cards = ov.services.flatMap(s => s.envs.map(e => `<div class="g-card gs-card" id="${sKey(s.app, e.name)}">${simpleCardHTML(s.app, e)}</div>`));
     if ((ov.auto || 0) > 0) html += `<div class="hint-box"><div>${esc(tf('gs_auto_n', {n: ov.auto}))} ${esc(t('gs_auto_h'))}</div>${can('update') ? `<div class="g-btns" style="margin-top:6px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleAdopt()">${esc(t('gs_auto_save'))}</button></div>` : ''}</div>`;
     const empty = `<div class="hint-box">${esc(t('gs_none'))}${(G.state || {}).can_check ? `<div class="g-btns" style="margin-top:6px"><button class="btn-sec btn-sm" onclick="gitWorkspace.check()">${esc(t('gs_find'))}</button></div>` : ''}</div>`;
-    return html + (cards.join('') || empty) + '</div>';
+    return html + (cards.join('') || empty) + (cards.length ? `<div id="gs-filter-empty" class="hint-box" style="display:none">${esc(t('gs_filter_none'))}</div>` : '') + '</div>';
+  }
+
+  function simpleFilterHTML() {
+    const f = S.filters, services = [...new Set(E.ov.services.map(s => s.app))].sort();
+    const envs = [...new Set(E.ov.services.flatMap(s => s.envs.map(e => e.name)))].sort();
+    const servers = [...new Set(E.ov.services.flatMap(s => s.envs.flatMap(e => e.destinations.map(d => d.server))))].sort();
+    const opt = (value, label, current) => `<option value="${esc(value)}" ${value === current ? 'selected' : ''}>${esc(label)}</option>`;
+    const statuses = ['ok', 'update', 'missing', 'unknown', 'error'];
+    return `<div class="g-bar gs-filters" aria-label="${esc(t('gs_intro'))}">
+      <select aria-label="${esc(t('gs_filter_service'))}" onchange="gitWorkspace.simpleFilter('app',this.value)">${opt('', t('gs_filter_service'), f.app)}${services.map(x => opt(x, x, f.app)).join('')}</select>
+      <select id="gs-server-filter" aria-label="${esc(t('gs_filter_server'))}" onchange="gitWorkspace.simpleFilter('server',this.value)">${opt('', t('gs_filter_server'), f.server)}${servers.map(x => opt(x, hn(x), f.server)).join('')}</select>
+      <select aria-label="${esc(t('gs_filter_env'))}" onchange="gitWorkspace.simpleFilter('env',this.value)">${opt('', t('gs_filter_env'), f.env)}${envs.map(x => opt(x, x, f.env)).join('')}</select>
+      <select aria-label="${esc(t('gs_filter_status'))}" onchange="gitWorkspace.simpleFilter('status',this.value)">${opt('', t('gs_filter_status'), f.status)}${statuses.map(x => opt(x, t('gs_status_' + x), f.status)).join('')}</select>
+      <input type="search" aria-label="${esc(t('gs_filter_branch'))}" placeholder="${esc(t('gs_filter_branch'))}" value="${esc(f.branch)}" oninput="gitWorkspace.simpleFilter('branch',this.value)">
+      <input type="search" aria-label="${esc(t('gs_filter_version'))}" placeholder="${esc(t('gs_filter_version'))}" value="${esc(f.version)}" oninput="gitWorkspace.simpleFilter('version',this.value)">
+      <input type="search" aria-label="${esc(t('git_filter'))}" placeholder="${esc(t('git_filter'))}" value="${esc(f.q)}" oninput="gitWorkspace.simpleFilter('q',this.value)">
+      <button class="btn-sec btn-sm" onclick="gitWorkspace.simpleClearFilters()">${esc(t('gs_filter_clear'))}</button></div>`;
+  }
+
+  function simpleFilter(k, v) { S.filters[k] = v || ''; simpleApplyFilters(); }
+  function simpleClearFilters() {
+    S.filters = {app: '', server: '', env: '', status: '', branch: '', version: '', q: ''};
+    document.querySelectorAll('#git-body .gs-filters select, #git-body .gs-filters input').forEach(el => { el.value = ''; });
+    simpleApplyFilters();
+  }
+  function simpleApplyFilters() {
+    const f = S.filters, q = f.q.toLowerCase(), branch = f.branch.toLowerCase(), version = f.version.toLowerCase();
+    const serverFilter = $('gs-server-filter');
+    if (serverFilter) [...serverFilter.options].forEach(o => { if (o.value) o.textContent = hn(o.value); });
+    let visible = 0;
+    for (const svc of (E.ov || {}).services || []) for (const e of svc.envs) {
+      const el = $(sKey(svc.app, e.name)); if (!el) continue;
+      const c = E.cells[envKey(svc.app, e.name)], d = c && c.data, tg = (d && d.target) || {};
+      const dests = (d && d.dests) || e.destinations || [];
+      const servers = dests.map(x => `${x.server || ''} ${hn(x.server || '', x.hostname || '')} ${x.path || ''}`);
+      const versions = dests.flatMap(x => [x.current && x.current.version, x.version_md, x.current && x.current.commit, x.commit_md]).filter(Boolean);
+      const branches = [tg.branch, tg.ref_name, ...dests.map(x => (x.current && x.current.ref) || x.ref_md)].filter(Boolean);
+      const status = c ? (c.error ? 'error' : d ? simpleStatus(d) : 'unknown') : 'unknown';
+      const haystack = [svc.app, e.name, tg.version, tg.branch, tg.commit, ...servers, ...versions, ...branches].join(' ').toLowerCase();
+      const show = (!f.app || svc.app === f.app) && (!f.env || e.name === f.env) &&
+        (!f.server || dests.some(x => x.server === f.server)) && (!f.status || status === f.status) &&
+        (!branch || branches.join(' ').toLowerCase().includes(branch)) && (!version || versions.concat([tg.version, tg.commit]).filter(Boolean).join(' ').toLowerCase().includes(version)) &&
+        (!q || haystack.includes(q));
+      el.style.display = show ? '' : 'none'; if (show) visible++;
+    }
+    const empty = $('gs-filter-empty'); if (empty) empty.style.display = visible ? 'none' : '';
   }
 
   // stores the detected environments in the catalog (server side: permission check and audit)
@@ -2662,65 +2723,95 @@ Object.assign(LANGS.hr, {
       const cur = x.current, ver = cur ? cur.version : x.version_md, commit = sh10(cur ? cur.commit : x.commit_md);
       return `<div style="margin-bottom:6px"><b>${esc(hn(x.server))}</b> <span class="g-mono g-mut">${esc(x.path)}</span>` + (x.error ? `<div><span class="g-st s-error">${esc(x.error)}</span></div>`
         : !x.exists ? `<div class="g-mut">${esc(t('gs_not_installed'))}</div>`
-        : `<div><span class="gs-ver g-mono">${esc(ver || '—')}</span> <span class="g-mono g-mut">${esc(commit)}</span></div>${cur ? `<div class="g-ago">${esc((cur.by || '') + ' · ' + fmtTime(cur.at))}</div>` : ''}`)
+        : `<div><span class="gs-ver g-mono">${esc(ver || '—')}</span> <span class="g-mono g-mut">${esc(commit)}</span></div>${cur || x.updated_md ? `<div class="g-ago">${esc((cur ? cur.by || '' : x.user_md || '') + ' · ' + fmtTime(cur ? cur.at : x.updated_md))}</div>` : ''}`)
         + (x.lock ? `<div class="g-q">🔒 ${esc(tf('genv_locked_by', {user: x.lock.user || '?', from: x.lock.from || '?'}))}</div>` : '') + '</div>';
     }).join('');
     const branch = tg.version || tg.commit
       ? `<div><span class="gs-ver g-mono">${esc(tg.version || '—')}</span> <span class="g-mono g-mut">${esc(sh10(tg.commit))}</span></div><div class="g-ago">${esc([tg.branch, tg.commit_date].filter(Boolean).join(' · '))}</div>`
       : `<div class="g-mut">${esc(tg.error || t('gs_no_target'))}</div>`;
-    const canGo = can('update') && st !== 'error';
+    const canGo = can('update') && d.dests.some(x => !x.error);
     const label = st === 'missing' ? 'install' : st === 'update' ? 'update' : st === 'ok' ? 'redeploy' : 'deploy';
     const anyExists = d.dests.some(x => x.exists);
-    return head(badge) + (d.drift ? `<div class="hint-box warn">${esc(t('gs_differ'))}</div>` : '') +
+    const checked = c.checkedAt ? `<div class="g-ago">${esc(t('gs_checked'))}: ${esc(fmtTime(new Date(c.checkedAt).toISOString()))}</div>` : '';
+    return head(badge) + (checked ? `<div class="g-mut">${checked}</div>` : '') + (d.drift ? `<div class="hint-box warn">${esc(t('gs_differ'))}</div>` : '') +
       `<div class="gs-cols"><div class="gs-box"><h4>${esc(t('gs_on_server'))}</h4>${dests}</div><div class="gs-box"><h4>${esc(t('gs_on_branch'))}</h4>${branch}</div></div>
       <div class="gs-acts">${canGo ? `<button class="${st === 'ok' ? 'btn-sec' : 'gs-primary'}" onclick="gitWorkspace.simplePlan(${a},'${label}')">${esc(t('gs_' + label))}</button>` : ''}
         ${can('rollback') && anyExists ? `<button class="btn-sec" onclick="gitWorkspace.simpleRollback(${a})">↩ ${esc(t('gs_rollback'))}</button>` : ''}</div>`;
   }
 
   function simpleCells() {
+    const cells = E.cells;
     const todo = ((E.ov || {}).services || []).flatMap(s => s.envs.map(e => [s.app, e.name])).filter(([app, env]) => !E.cells[envKey(app, env)] && !S.pending.has(envKey(app, env)));
     let i = 0;
     const next = async () => {
-      if (i >= todo.length) return;
+      if (i >= todo.length || E.cells !== cells || G.mode !== 'simple') return;
       const [app, env] = todo[i++], k = envKey(app, env);
       S.pending.add(k);
       try {
         const r = await fetch('/api/git/env/cell?' + envEnc(app, env));
-        E.cells[k] = r.ok ? {data: await r.json()} : {error: await apiError(r)};
-      } catch (err) { E.cells[k] = {error: String(err)}; }
+        const result = r.ok ? {data: await r.json(), checkedAt: Date.now()} : {error: await apiError(r), checkedAt: Date.now()};
+        if (E.cells !== cells) return;
+        E.cells[k] = result;
+        if (result.data) learnHosts(result.data.hosts);
+      } catch (err) { if (E.cells !== cells) return; E.cells[k] = {error: String(err), checkedAt: Date.now()}; }
       S.pending.delete(k);
       const el = G.mode === 'simple' && $(sKey(app, env)), e = envOf(app, env);
       if (el && e) el.innerHTML = simpleCardHTML(app, e);
+      if (G.mode === 'simple') simpleApplyFilters();
       return next();
     };
     for (let n = 0; n < 3; n++) next();
   }
 
   // install / update / deploy: the same plan and run endpoints as the advanced deploy dialog
-  async function simplePlan(app, env, label, ref) {
-    S.ctx = {app, env, label};
+  async function simplePlan(app, env, label, ref, preserve = false) {
+    const same = preserve && S.ctx && S.ctx.app === app && S.ctx.env === env && S.plan && !S.plan.used;
+    const previousExclusions = same ? new Set(S.excluded) : null;
+    const previousDestinations = same ? new Set(S.destinations) : null;
+    if (!same) S.opts = null;
+    const ctx = S.ctx = {app, env, label};
+    S.plan = null; S.submitting = false;
     const title = tf('gs_title_' + (label === 'redeploy' ? 'deploy' : label), {app, env});
     modal(`<h3>${esc(title)}</h3><div class="hint-box">⏳ ${esc(t('genv_comparing'))}</div>`);
-    const r = await fetch('/api/git/env/plan', json('POST', {app, env, ref: ref || ''}));
-    if (!r.ok) { await errModal(title, r); return; }
-    S.plan = await r.json();
-    paintSimplePlan();
+    const pendingModal = $('git-modal'), active = () => S.ctx === ctx && $('git-modal') === pendingModal;
+    try {
+      const r = await fetch('/api/git/env/plan', json('POST', {app, env, ref: ref || ''}));
+      if (!r.ok) { const error = await apiError(r); if (active()) modal(`<h3>${esc(title)}</h3><div class="hint-box bad">${esc(error)}</div>`); return; }
+      const plan = await r.json();
+      if (!active()) return;
+      S.plan = plan;
+      S.excluded = previousExclusions || new Set(Object.keys(plan.excluded || {}));
+      const usable = plan.dests.filter(d => !(d.errors || []).length).map(d => d.index);
+      S.destinations = previousDestinations ? new Set([...previousDestinations].filter(i => usable.includes(i))) : new Set(usable);
+      paintSimplePlan();
+    } catch (err) {
+      if (active()) modal(`<h3>${esc(title)}</h3><div class="hint-box bad">${esc(String(err))}</div>`);
+    }
   }
 
-  function simpleRecompare() { const v = $('gs-ref').value.trim(); simplePlan(S.ctx.app, S.ctx.env, S.ctx.label, v); }
+  function simpleRecompare() {
+    if (S.submitting || !S.plan) return;
+    const v = $('gs-ref').value.trim();
+    S.opts = {post: !!($('gs-post') || {}).checked, restart: !!($('gs-restart') || {}).checked};
+    return simplePlan(S.ctx.app, S.ctx.env, S.ctx.label, v, true);
+  }
 
   function paintSimplePlan() {
     const p = S.plan, {app, env, label} = S.ctx, tg = p.target || {};
     const kind = label === 'redeploy' ? 'deploy' : label;
-    const blocked = (p.errors || []).length > 0 || p.dests.some(d => (d.errors || []).length) || p.used;
+    const selectedDests = p.dests.filter(d => S.destinations.has(d.index));
+    const blocked = (p.errors || []).length > 0 || selectedDests.length === 0 || selectedDests.some(d => (d.errors || []).length) || p.used;
     const fromV = [...new Set(p.dests.map(d => (d.current && d.current.version) || d.from_version).filter(Boolean))].join(', ') || '—';
     const o = S.opts || {};
     modal(`<h3>${esc(tf('gs_title_' + kind, {app, env}))}</h3>
       <div class="gs-from-to">${esc(tf('gs_from_to', {from: fromV, to: tg.version || p.ref_name || '—'}))} <span class="g-mono g-mut">${esc(sh10(tg.commit))}</span></div>
       ${(p.errors || []).map(x => `<div class="hint-box bad">${esc(x)}</div>`).join('')}
+      <div id="gs-dest-count" class="g-mut">${esc(tf('gs_destinations_selected', {n: selectedDests.length, total: p.dests.length}))}</div>
+      <div class="gs-destinations"><b>${esc(t('gs_deploy_destinations'))}</b>${p.dests.map(d => `<label class="g-opt"><input type="checkbox" data-index="${d.index}" ${S.destinations.has(d.index) ? 'checked' : ''} ${(d.errors || []).length ? 'disabled' : ''} onchange="gitWorkspace.simpleDestination(${d.index},this.checked)"><span>${esc(hn(d.server))} <span class="g-mono g-mut">${esc(d.path)}</span>${(d.errors || []).length ? ` · ${esc(t('gs_status_error'))}` : ''}</span></label>`).join('')}</div>
       ${p.dests.map(d => `<div class="g-item"><b>${esc(hn(d.server))}</b> <span class="g-mono g-mut">${esc(d.path)}</span>
         <div>${(d.errors || []).length ? '' : (d.counts || {}).new || changedOf(d) ? esc(tf('gs_files_n', {n: (d.counts || {}).new || 0, c: changedOf(d)})) : esc(t('gs_no_changes'))}</div>
         ${(d.errors || []).map(x => `<div class="hint-box bad">${esc(x)}</div>`).join('')}${(d.warnings || []).map(x => `<div class="hint-box warn">${esc(x)}</div>`).join('')}</div>`).join('')}
+      ${simpleFilesHTML(p)}
       <div class="g-mut">${esc(t('gs_backup_h'))}</div>
       <details style="margin-top:8px"><summary class="g-mut">${esc(t('gs_other_version'))}</summary>
         <div class="g-bar" style="margin-top:6px"><input id="gs-ref" value="${esc(p.ref || '')}" placeholder="${esc(t('genv_ref_ph'))}" style="flex:1 1 200px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleRecompare()">↻ ${esc(t('gs_compare'))}</button></div>
@@ -2728,61 +2819,145 @@ Object.assign(LANGS.hr, {
       ${p.post_deploy || can('restart') ? `<div class="g-card"><h3>${esc(t('gs_options'))}</h3>
         ${p.post_deploy ? `<label class="g-opt"><input type="checkbox" id="gs-post" ${o.post ? 'checked' : ''}><span>${esc(t('genv_run_post'))} <code class="g-mono">${esc(p.post_deploy)}</code></span></label>` : ''}
         ${can('restart') ? `<label class="g-opt"><input type="checkbox" id="gs-restart" ${o.restart ? 'checked' : ''}><span>${esc(t('genv_restart'))}</span></label>` : ''}</div>` : ''}
-      ${blocked ? `<div class="hint-box bad">${esc(t('gs_blocked'))}</div>` : ''}
+      <div id="gs-blocked" class="hint-box bad" style="${blocked ? '' : 'display:none'}">${esc(t('gs_blocked'))}</div>
       ${p.confirm ? `<div class="g-conf"><label>${esc(tf('genv_type_env', {env}))}</label><input id="gs-conf" autocomplete="off"></div>` : ''}
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button>
         <button id="gs-start" class="btn-danger gs-go" ${blocked || p.confirm ? 'disabled' : ''}>${esc(t('gs_start_' + kind))}</button></div>`);
-    if (p.confirm) $('gs-conf').oninput = () => { $('gs-start').disabled = blocked || $('gs-conf').value.trim().toLowerCase() !== env.toLowerCase(); };
+    if (p.confirm) $('gs-conf').oninput = simpleUpdateStartButton;
     $('gs-start').onclick = () => simpleStart(kind);
+  }
+  function simpleFilesHTML(p) {
+    const byPath = new Map();
+    for (const d of p.dests || []) for (const f of d.files || []) {
+      if (!ENV_ACT.includes(f.state)) continue;
+      if (!byPath.has(f.path)) byPath.set(f.path, []);
+      byPath.get(f.path).push({server: d.server, path: d.path, state: f.state});
+    }
+    const files = [...byPath.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    if (!files.length) return '';
+    const rows = files.map(([path, states]) => {
+      const removedOnly = states.every(x => x.state === 'removed');
+      return `<tr><td><input type="checkbox" data-path="${esc(path)}" ${removedOnly ? 'disabled' : S.excluded.has(path) ? '' : 'checked'} title="${esc(t(removedOnly ? 'gs_removed_h' : 'gs_include_file'))}" onchange="gitWorkspace.simpleExclude(this.dataset.path,this.checked)"></td>
+        <td class="g-mono">${esc(path)}</td><td>${states.map(x => `${esc(hn(x.server))} <span class="g-mono g-mut">${esc(x.path)}</span>: ${esc(t('genv_fs_' + x.state))}${x.state === 'removed' ? ' · ' + esc(t('gs_removed_kept')) : ''}`).join('<br>')}${S.excluded.has(path) && (p.excluded || {})[path] ? `<div class="g-mut">${esc(tf('genv_excluded_by', {by: p.excluded[path].by, at: fmtTime(p.excluded[path].at)}))}</div>` : ''}</td></tr>`;
+    }).join('');
+    return `<details class="g-card" style="margin-top:8px"><summary><b>${esc(tf('gs_files_preview', {n: files.length}))}</b></summary><div class="g-mut" style="margin:6px 0">${esc(t('genv_include_h'))}</div>${files.some(([, states]) => states.some(x => x.state === 'removed')) ? `<div class="g-mut">${esc(t('gs_removed_h'))}</div>` : ''}<div class="g-files"><table class="gs-file-review"><tr><th></th><th>${esc(t('genv_files'))}</th><th>${esc(t('gs_file_status'))}</th></tr>${rows}</table></div><div id="gs-excluded-count" class="g-mut" style="margin-top:6px">${esc(tf('genv_n_excluded', {n: S.excluded.size}))}</div></details>`;
+  }
+  function simpleExclude(path, include) {
+    if (!path || S.submitting) return;
+    if (include) S.excluded.delete(path); else S.excluded.add(path);
+    const count = $('gs-excluded-count'); if (count) count.textContent = tf('genv_n_excluded', {n: S.excluded.size});
+  }
+  function simpleDestination(index, selected) {
+    index = Number(index);
+    if (S.submitting || !S.plan || !S.plan.dests.some(d => d.index === index && !(d.errors || []).length)) return;
+    if (selected) S.destinations.add(index); else S.destinations.delete(index);
+    const p = S.plan, count = $('gs-dest-count');
+    if (p && count) count.textContent = tf('gs_destinations_selected', {n: S.destinations.size, total: p.dests.length});
+    simpleUpdateStartButton();
+  }
+  function simpleUpdateStartButton() {
+    const start = $('gs-start'), p = S.plan;
+    if (start && p) {
+      const bad = (p.errors || []).length > 0 || p.used || S.destinations.size === 0 || p.dests.some(d => S.destinations.has(d.index) && (d.errors || []).length);
+      const confirm = p.confirm && (!$('gs-conf') || $('gs-conf').value.trim().toLowerCase() !== S.ctx.env.toLowerCase());
+      start.disabled = S.submitting || bad || !!confirm;
+      const blocked = $('gs-blocked'); if (blocked) blocked.style.display = bad ? '' : 'none';
+    }
   }
   const changedOf = d => ((d.counts || {}).changed || 0) + ((d.counts || {}).eol || 0);
 
   async function simpleStart(kind) {
+    simpleUpdateStartButton();
+    if (!$('gs-start') || $('gs-start').disabled) return;
     const p = S.plan, {app, env} = S.ctx;
-    S.opts = {post: !!($('gs-post') || {}).checked, restart: !!($('gs-restart') || {}).checked};
-    if (!(await uiConfirm(tf('gs_confirm_q', {action: t('gs_' + (kind === 'deploy' ? 'deploy' : kind)), app, env, n: p.dests.length}), {danger: true, okText: t('gs_start_' + kind)}))) return;
-    const body = {kind: 'update', restart: {mode: S.opts.restart ? 'now' : 'none'}, checks: {[app]: ((G.state.settings || {}).check_commands || {})[app] || ''},
-      env: {app, env, plan_id: p.id, exclude: Object.keys(p.excluded || {}), delete_removed: false, post_deploy: S.opts.post, dry_run: false, confirm: ($('gs-conf') || {}).value || ''}};
-    $('gs-start').disabled = true;
-    const r = await fetch('/api/git/runs', json('POST', body));
-    if (!r.ok) { showToast(await apiError(r), 'error', 8000); $('gs-start').disabled = false; return; }
-    p.used = true; S.opts = null;
-    E.cells = {};
-    showRun((await r.json()).id);
+    const ctx = S.ctx, review = $('git-modal');
+    const opts = {post: !!($('gs-post') || {}).checked, restart: !!($('gs-restart') || {}).checked};
+    S.opts = opts;
+    const selected = p.dests.filter(d => S.destinations.has(d.index)).map(d => d.index);
+    const body = {kind: 'update', restart: {mode: opts.restart ? 'now' : 'none'}, checks: {[app]: ((G.state.settings || {}).check_commands || {})[app] || ''},
+      env: {app, env, plan_id: p.id, dests: selected, exclude: [...S.excluded], delete_removed: false, post_deploy: opts.post, dry_run: false, confirm: ($('gs-conf') || {}).value || ''}};
+    S.submitting = true; simpleUpdateStartButton();
+    try {
+      if (!(await uiConfirm(tf('gs_confirm_q', {action: t('gs_' + (kind === 'deploy' ? 'deploy' : kind)), app, env, n: selected.length}), {danger: true, okText: t('gs_start_' + kind)}))) return;
+      if (S.ctx !== ctx || S.plan !== p || $('git-modal') !== review) return;
+      const r = await fetch('/api/git/runs', json('POST', body));
+      if (!r.ok) { showToast(await apiError(r), 'error', 8000); return; }
+      const id = (await r.json()).id;
+      p.used = true;
+      E.cells = {};
+      if (S.ctx === ctx && $('git-modal') === review) { S.opts = null; showRun(id); }
+    } catch (err) { showToast(String(err), 'error', 8000); }
+    finally { if (S.ctx === ctx) { S.submitting = false; simpleUpdateStartButton(); } }
   }
 
   // rollback: the newest deployment that is still current on a server
   async function simpleRollback(app, env) {
-    S.ctx = {app, env};
+    const ctx = S.ctx = {app, env};
+    S.plan = null; S.submitting = false;
     const title = tf('gs_rb_title', {app, env});
     modal(`<h3>${esc(title)}</h3><div class="hint-box">⏳</div>`);
-    const r = await fetch('/api/git/env/history?' + envEnc(app, env));
-    if (!r.ok) { await errModal(title, r); return; }
-    const h = await r.json(), cur = new Set(h.dests.map(d => d.current).filter(Boolean));
-    const x = h.entries.find(y => y.action === 'DEPLOY' && cur.has(y.id));
+    const pendingModal = $('git-modal');
+    let h;
+    try {
+      const r = await fetch('/api/git/env/history?' + envEnc(app, env));
+      if (!r.ok) throw new Error(await apiError(r));
+      h = await r.json();
+    } catch (err) {
+      if (S.ctx === ctx && $('git-modal') === pendingModal) modal(`<h3>${esc(title)}</h3><div class="hint-box bad">${esc(String(err))}</div>`);
+      return;
+    }
+    if (S.ctx !== ctx || $('git-modal') !== pendingModal) return;
+    const cur = new Set(h.dests.map(d => d.current).filter(Boolean));
+    const x = h.entries.filter(y => y.action === 'DEPLOY' && cur.has(y.id)).sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))[0];
     const close = `<div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`;
     if (!x) { modal(`<h3>${esc(title)}</h3>${h.dests.filter(d => d.error).map(d => `<div class="hint-box bad">${esc(hn(d.server))}: ${esc(d.error)}</div>`).join('')}<div class="hint-box">${esc(t('gs_rb_none'))}</div>${close}`); return; }
     const dests = h.dests.map((d, i) => d.current === x.id ? i : -1).filter(i => i >= 0);
-    const e = envOf(app, env) || {}, prev = x.previous ? x.previous.version : t('gs_rb_prev_unknown');
+    S.rollbackDestinations = new Set(dests);
+    const previous = i => {
+      const row = h.entries.find(y => y.action === 'DEPLOY' && y.id === x.id && y.dest === i);
+      return row && row.previous ? row.previous.version || t('gs_rb_prev_unknown') : t('gs_rb_prev_unknown');
+    };
+    const e = envOf(app, env) || {}, prev = [...new Set(dests.map(previous))].join(', ');
     modal(`<h3>${esc(title)}</h3>
       <div class="gs-cols"><div class="gs-box"><h4>${esc(t('gs_rb_now'))}</h4><div class="gs-ver g-mono">${esc(x.version || '—')}</div><div class="g-ago">${esc((x.by || '') + ' · ' + fmtTime(x.at))}</div></div>
         <div class="gs-box"><h4>${esc(t('gs_rb_to'))}</h4><div class="gs-ver g-mono">${esc(prev)}</div></div></div>
       <div class="g-mut" style="margin-top:6px">${esc(t('gs_rb_h'))}</div>
-      <div class="g-mut">${dests.map(i => `${esc(hn(h.dests[i].server))} <span class="g-mono">${esc(h.dests[i].path)}</span>`).join('<br>')}</div>
+      <div class="g-mut" style="margin:8px 0">${esc(t('gs_select_rollback'))}</div><div class="gs-destinations">${dests.map(i => `<label class="g-opt"><input type="checkbox" data-index="${i}" checked onchange="gitWorkspace.simpleRollbackDestination(${i},this.checked)"><span>${esc(hn(h.dests[i].server))} <span class="g-mono g-mut">${esc(h.dests[i].path)}</span><div class="g-mut">${esc(tf('gs_from_to', {from: x.version || '—', to: previous(i)}))}</div></span></label>`).join('')}</div>
       ${e.post_deploy || can('restart') ? `<div class="g-card">${e.post_deploy ? `<label class="g-opt"><input type="checkbox" id="gs-rbpost"><span>${esc(t('genv_run_post'))} <code class="g-mono">${esc(e.post_deploy)}</code></span></label>` : ''}
         ${can('restart') ? `<label class="g-opt"><input type="checkbox" id="gs-rbrestart"><span>${esc(t('genv_restart'))}</span></label>` : ''}</div>` : ''}
       ${e.confirm ? `<div class="g-conf"><label>${esc(tf('genv_type_env', {env}))}</label><input id="gs-rbconf" autocomplete="off"></div>` : ''}
-      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gs-rbgo" class="btn-danger gs-go" ${e.confirm ? 'disabled' : ''}>${esc(t('gs_rb_go'))}</button></div>`);
-    if (e.confirm) $('gs-rbconf').oninput = () => { $('gs-rbgo').disabled = $('gs-rbconf').value.trim().toLowerCase() !== env.toLowerCase(); };
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gs-rbgo" class="btn-danger gs-go" ${e.confirm || !dests.length ? 'disabled' : ''}>${esc(t('gs_rb_go'))}</button></div>`);
+    if (e.confirm) $('gs-rbconf').oninput = simpleUpdateRollbackButton;
     $('gs-rbgo').onclick = async () => {
-      if (!(await uiConfirm(tf('gs_rb_q', {app, env, v: prev}), {danger: true, okText: t('gs_rb_go')}))) return;
+      simpleUpdateRollbackButton();
+      if (!$('gs-rbgo') || $('gs-rbgo').disabled) return;
+      const review = $('git-modal');
       const body = {kind: 'rollback', restart: {mode: ($('gs-rbrestart') || {}).checked ? 'now' : 'none'},
-        env: {app, env, deploy_id: x.id, dests, post_deploy: !!($('gs-rbpost') || {}).checked, dry_run: false, confirm: ($('gs-rbconf') || {}).value || ''}};
-      const r2 = await fetch('/api/git/runs', json('POST', body));
-      if (!r2.ok) { showToast(await apiError(r2), 'error', 8000); return; }
-      E.cells = {};
-      showRun((await r2.json()).id);
+        env: {app, env, deploy_id: x.id, dests: dests.filter(i => S.rollbackDestinations.has(i)), post_deploy: !!($('gs-rbpost') || {}).checked, dry_run: false, confirm: ($('gs-rbconf') || {}).value || ''}};
+      S.submitting = true; simpleUpdateRollbackButton();
+      try {
+        if (!(await uiConfirm(tf('gs_rb_q', {app, env, v: prev}), {danger: true, okText: t('gs_rb_go')}))) return;
+        if (S.ctx !== ctx || $('git-modal') !== review) return;
+        const r2 = await fetch('/api/git/runs', json('POST', body));
+        if (!r2.ok) { showToast(await apiError(r2), 'error', 8000); return; }
+        const id = (await r2.json()).id;
+        E.cells = {};
+        if (S.ctx === ctx && $('git-modal') === review) showRun(id);
+      } catch (err) { showToast(String(err), 'error', 8000); }
+      finally { if (S.ctx === ctx) { S.submitting = false; simpleUpdateRollbackButton(); } }
     };
+  }
+  function simpleRollbackDestination(index, selected) {
+    index = Number(index);
+    if (S.submitting || !Number.isInteger(index)) return;
+    if (selected) S.rollbackDestinations.add(index); else S.rollbackDestinations.delete(index);
+    simpleUpdateRollbackButton();
+  }
+  function simpleUpdateRollbackButton() {
+    const go = $('gs-rbgo');
+    if (!go) return;
+    const needsConfirm = !!envOf(S.ctx.app, S.ctx.env)?.confirm;
+    go.disabled = S.submitting || S.rollbackDestinations.size === 0 || (needsConfirm && (!$('gs-rbconf') || $('gs-rbconf').value.trim().toLowerCase() !== S.ctx.env.toLowerCase()));
   }
 
   function modal(html) {
@@ -2800,7 +2975,7 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = {
-    open, close, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
