@@ -7,9 +7,25 @@
 
 # Web Remote Manager PRO (WRM)
 
-**A remote server manager that runs in any web browser.** An **AI assistant** next to the terminal (your own Claude, OpenAI, Azure, Bedrock, Vertex or local model, with read-only / ask-before-every-change / automatic-within-limits modes, approvals and a full audit), an **MCP server** so Claude, ChatGPT and other AI apps can work on chosen servers under the same rules, SSH terminal with **snippets**, **broadcast input** and **live up/down status**, SFTP / FTP / FTPS file manager with **bookmarks**, **RDP, VNC and Telnet remote desktops** in the browser, **jump hosts** and **SOCKS / HTTP proxies**, **SSH tunnels**, **BMC power control and serial consoles**, an **SSH key & credentials vault**, **import from mRemoteNG, PuTTY, NetBox, CSV/Excel** and `~/.ssh/config`, a **Git workspace** that compares and deploys services from GitLab / GitHub / Gitea, **notifications** (e-mail, Telegram, Slack, Teams, webhooks …), server-to-server transfers, saved workspaces, sharing with roles, real-time collaboration with **voice calls**, and enterprise security (2FA, policies, a tamper-evident **audit log**, **session recording** with replay, file transfer log): one self-hosted binary (or container) for your PC, server or company.
+**A remote server manager that runs in any web browser, with an AI assistant and guided setup for AI agents.** Add your own AI provider or a local model: WRM offers model suggestions, an Ollama setup wizard and connection presets for MCP agents to help you start practical work on your servers quickly.
+
+**Optional automatic Ollama installation:** from WRM, an administrator can install the Ollama server on the **WRM host**, start it as a background service and download the chosen model. Enable `ai_ollama_manage` in Admin → AI, then confirm each action in the provider wizard. Choose the suggested local model or another supported model; installation and setup actions are recorded and audited. Connect **Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code, Claude or ChatGPT** through the MCP wizard, which supplies the connection commands or configuration and lets you choose the servers and permissions.
+
+Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
 **Current version: v12.3.6** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.3.6
+
+- **AI setup for server work:** add a cloud provider or local Ollama from the guided wizard, use model suggestions or the provider's model list, and connect the offered MCP agents with ready connection commands and configuration. Optional administrator-controlled Ollama installation, service startup and model download are available directly in WRM.
+- **Git Simple deployment review:** combined service, hostname, environment, status, branch and version filters; per-file review and exclusions; selected destination servers; comparison timestamps and each server's previous rollback version.
+- **Deployment checks:** reviewed plans are bound to the SSH destination, login and effective jump/proxy settings. Empty selections are refused, confirmation follows the current selection, and canceled or superseded comparisons cannot reopen a deployment review.
+- **AI reliability:** actual remote server date/time, immediate AI button refresh after policy changes, a processing indicator that follows the whole model turn, and complete offered-tool calls. Incomplete model JSON stays visible instead of being repaired into executable commands.
+- **Ollama setup completion:** each setup action releases its lock before reporting completion, allowing the next step to start immediately.
+- **Linux service installation:** SQLite access checks before changing service settings, clearer startup diagnostics, restart limits, correct handling of paths with spaces and special characters, and reinstalls that restart the newly configured binary.
+- **Portable releases:** 16 packages across Linux, Windows, macOS, Android, FreeBSD and OpenBSD, including **Linux x86_64 / ARM64 AppImages** and **macOS universal**, plus Docker. SHA-256 checksums cover every package; publication waits for the complete verified asset set.
+
+See the [release summary](docs/RELEASE_SUMMARY_v12.3.6.md), [release notes](RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
 
 ---
 
