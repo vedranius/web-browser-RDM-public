@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -160,5 +162,54 @@ func TestRuntimeUnitLimitIsUnverified(t *testing.T) {
 	checkGitFunctionality(cl, in, nil, "ok", &d)
 	if d.Functionality.State != "unknown" || !strings.Contains(strings.Join(d.Functionality.Warnings, " "), "limit reached") {
 		t.Fatalf("partial check reported healthy: %+v", d.Functionality)
+	}
+}
+
+func TestRuntimeHTTPAndTCPProbeSemantics(t *testing.T) {
+	srv := newTestServer(t)
+	u := newTestUser(t, srv, "runtime-probes", false)
+	conn := u.addConnection("probe-source", startTestSSHServer(t))
+	c, err := loadConnection(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cl, err := dialSSH(c, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cl.Close()
+	hits := make(chan string, 10)
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits <- r.URL.Path
+		switch r.URL.Path {
+		case "/ok":
+			w.WriteHeader(204)
+		case "/redirect":
+			w.Header().Set("Location", "/ok")
+			w.WriteHeader(302)
+		default:
+			w.WriteHeader(503)
+		}
+	}))
+	defer target.Close()
+	if got := checkRuntimeEndpoint(cl, "http", target.URL+"/ok"); got.State != "healthy" || got.Status != "HTTP 204" {
+		t.Fatalf("healthy HTTP: %+v", got)
+	}
+	if got := checkRuntimeEndpoint(cl, "http", target.URL+"/bad"); got.State != "failed" {
+		t.Fatalf("failed HTTP: %+v", got)
+	}
+	if got := checkRuntimeEndpoint(cl, "http", target.URL+"/redirect"); got.State != "failed" || got.Status != "HTTP 302" {
+		t.Fatalf("redirect followed: %+v", got)
+	}
+	if len(hits) != 3 {
+		t.Fatalf("unexpected requests (possible redirect): %d", len(hits))
+	}
+	if got := checkRuntimeEndpoint(cl, "tcp", strings.TrimPrefix(target.URL, "http://")); got.State != "healthy" {
+		t.Fatalf("TCP through SSH: %+v", got)
+	}
+	tlsTarget := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(204) }))
+	defer tlsTarget.Close()
+	if got := checkRuntimeEndpoint(cl, "http", tlsTarget.URL); got.State != "failed" {
+		t.Fatalf("untrusted TLS accepted: %+v", got)
 	}
 }
