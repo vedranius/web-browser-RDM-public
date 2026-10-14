@@ -213,3 +213,28 @@ func TestRuntimeHTTPAndTCPProbeSemantics(t *testing.T) {
 		t.Fatalf("untrusted TLS accepted: %+v", got)
 	}
 }
+
+func TestUnsupportedRuntimeNamesRemainUnverified(t *testing.T) {
+	e := newDeployEnv(t, "runtime-names")
+	writeFile(t, e.dir+"/run.py", runV110)
+	in := gitInstall{Path: e.dir, ConnID: e.conn, App: "demo-api"}
+	cl, err := dialInstall(e.u.userID, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cl.Close()
+	d := gitInstallData{Units: []gitUnit{{Kind: "systemd", Name: "demo.service"}, {Kind: "systemd", Name: `demo\x20worker.service`}}}
+	checkGitFunctionality(cl, in, nil, "ok", &d)
+	if d.Functionality.State != "unknown" || !strings.Contains(strings.Join(d.Functionality.Warnings, " "), "Unsupported") {
+		t.Fatalf("unsupported unit hidden: %+v", d.Functionality)
+	}
+	bin := t.TempDir()
+	writeFile(t, bin+"/supervisorctl", "#!/bin/sh\nprintf 'demo:worker_00 RUNNING pid 100\\ndemo:worker_é RUNNING pid 101\\n'\n")
+	os.Chmod(bin+"/supervisorctl", 0755)
+	t.Setenv("PATH", bin+":"+os.Getenv("PATH"))
+	checkGitServerHealth(e.u.userID, e.conn, cl)
+	list := loadGitServerHealth(e.u.userID)
+	if len(list) != 1 || list[0].State != "unknown" {
+		t.Fatalf("unsupported worker inventory hidden: %+v", list)
+	}
+}

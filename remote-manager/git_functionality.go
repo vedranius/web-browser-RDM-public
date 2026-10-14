@@ -102,7 +102,7 @@ func runtimeUnitsScript(units []gitUnit, all bool, dir string) string {
  printf '%s\n' "$o" | head -n 256 | while IFS= read -r line; do
   name=${line%% *}; rest=${line#* }; rest=$(printf '%s' "$rest" | sed 's/^[[:space:]]*//'); status=${rest%% *}
   case "$status" in RUNNING) state=healthy;; STOPPED|STARTING|BACKOFF|STOPPING|EXITED|FATAL|UNKNOWN) state=failed;; *) record supervisor "$*" unknown "$o" ''; break;; esac
-  case "$name" in ''|*[!a-zA-Z0-9_.:@+-]*) continue;; esac
+  case "$name" in ''|*[!a-zA-Z0-9_.:@+-]*) record supervisor inventory unknown 'Unsupported worker name; inspect with supervisorctl' "$line"; continue;; esac
   log=''
   if [ "$state" != healthy ]; then log=$(bounded supervisorctl tail "$name" stderr 2>&1 | tail -n 40); fi
   record supervisor "$name" "$state" "$rest" "$log"
@@ -254,6 +254,11 @@ func checkGitFunctionality(cl *ssh.Client, in gitInstall, app *gitCatalogApp, st
 	}
 	if spec.TCP != "" {
 		checks = append(checks, checkRuntimeEndpoint(cl, "tcp", spec.TCP))
+	}
+	for _, unit := range units {
+		if (unit.Kind != "systemd" && unit.Kind != "supervisor") || !gitRuntimeNameRe.MatchString(unit.Name) || strings.Contains(unit.Name, "*") {
+			checks = append(checks, gitRuntimeCheck{Kind: "runtime", Name: unit.Name, State: "unknown", Status: "Unsupported runtime unit name or kind; this unit was not checked"})
+		}
 	}
 	if unitsCapped {
 		checks = append(checks, gitRuntimeCheck{Kind: "runtime", Name: "unit-limit", State: "unknown", Status: "Runtime unit limit reached (64); additional units were not checked"})
