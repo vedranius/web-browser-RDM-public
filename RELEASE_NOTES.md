@@ -1,29 +1,56 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.4.0/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.4.3/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
 
-## Web Remote Manager PRO v12.4.0 — Service functionality, nested folders and remote previews
+## Web Remote Manager PRO v12.4.3 — Original Medium deployment, config profiles and Bitwarden
+
+### Added
+
+- **Medium** uses the original supplied deploy tool and deploy-config format unchanged: original screens, comparisons, file selection/exclusions, builds, native plans/confirmations, deployment progress, backups, history, rollback and config Git controls. Import the private tool/config ZIPs in Git → Medium. WRM handles authenticated access, private directories, encrypted runtime preferences and setup status. [Original-tool parity record](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.3/docs/MEDIUM_PARITY_v12.4.3.md).
+- **Functionality config profiles** inspect uploaded reference settings across servers/operators and show searchable reference/actual values, differences, missing settings and masked secrets. INI/config/Python parsing is static; incomplete checks remain explicit.
+- **Bitwarden** account sign-in/unlock and direct native SSH item references for SSH/SFTP. Private key retrieval happens on the server during authentication. Master passwords and unlock sessions are not persisted; per-user CLI profiles are encrypted between commands.
+- **Folder order** persists after drag/drop, Move up/down and export/import, including nested folders.
+
+### Fixed and changed
+
+- Git dialogs now stay visible above mobile drawers and keep wide tables within their scroll area.
+- The bridge supports original same-origin no-referrer forms and rejects cross-site submissions; stop refuses active original-tool operations.
+- Docker includes Python, git, OpenSSH, rsync and the official Bitwarden CLI. Standalone installations need these optional dependencies on the WRM host. Medium defaults to administrators; grant it only to trusted operators because its native build/config commands run as the WRM OS account.
+
+### Validation and packages
+
+Original tool: **1,581 tests passed, 9 skipped**. Real Chromium exercised private archive imports and native comparison, deploy, history and rollback against test Git/SSH destinations. Config profiles, folder persistence and layouts at 390/1100/1440/1920 px were checked without JavaScript errors. Bitwarden mock-account flows and direct real SSH authentication were tested; a real cloud account was not used. Full WRM race/vet/format/UI checks and platform builds are detailed in the [release summary](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.3/docs/RELEASE_SUMMARY_v12.4.3.md).
+
+Release packages: 13 standalone targets, macOS universal and Linux amd64/arm64 AppImages, plus `SHA256SUMS.txt`. Docker: `ghcr.io/vedranius/wrm-pro:v12.4.3` and `latest`. The pipeline publishes only after the complete package set and Docker succeed.
+
+### Upgrading from v12.4.0
+
+Replace the binary/AppImage or update Docker. Startup adds the config-profile table and folder order column. Preserve your database, encryption key and private adjacent `.medium`/`.bitwarden` directories. Tool and config archives are private imports, not public release assets. Git/SSH targets must be reachable from the runtime. The earlier client GitLab relay/replay, AI/navigation and icon/color requests remain accepted backlog, and were not included in this prioritized release.
+
+**Downloads:** [v12.4.3 packages and checksums](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.4.3). [Changelog](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.3/CHANGELOG.md).
+
+### Included from v12.4.0 — Service functionality, nested folders and remote previews
 
 Inspect service functionality and configuration on your servers, distinguish identically named connections by client/site, and preview remote files directly in WRM.
 
-### Added
+#### Added
 
 - **Git → Functionality** checks every Supervisor worker and failed systemd service on selected servers, as well as each catalog service's runtime units. It shows installation problems, disk/memory warnings, timestamps and bounded error logs. Optional HTTP/TCP health probes run from the selected server. Unavailable checks remain unverified; problem/recovery notifications are available.
 - **Configuration** shows section, variable/function, value and description for each service's config/INI/environment files and JSON. Secrets are masked. Paths stay inside the installation; contents are read on demand with explicit limits and parse-gap warnings.
 - **Nested folders** ([#57](https://github.com/vedranius/web-browser-RDM-public/issues/57)): recursive tree, parent selection, complete folder paths in connection pickers/windows/tabs, folder tab filtering and hierarchy-preserving imports. Folder shares include descendants; route defaults remain local to the immediate folder.
 - **Remote previews** ([#55](https://github.com/vedranius/web-browser-RDM-public/issues/55)): video/audio streaming with seekable byte ranges over SFTP/FTP, image/PDF viewing and bounded text viewing. Select a path in a terminal and right-click to preview/download it; the file manager offers Preview too. Browser codec support determines playable media formats.
 
-### Fixed
+#### Fixed
 
 - **AI entry points and diagnostics** ([discussion #56](https://github.com/vedranius/web-browser-RDM-public/discussions/56)): AI is visible in SSH/SFTP windows; unavailable permissions lead to an explanation. Settings → AI assistant and the top AI button provide setup/status access. Policy changes refresh other open browsers. A successful provider test is distinguished from account permission, and the terminal assistant requires no MCP setup.
 - Missing installations stay visible with a warning. Supervisor programs in the same configuration file are associated with the correct service stanza.
 - Docker Compose uses the current version consistently.
 
-### Packages and validation
+#### Packages and validation
 
 Linux, Windows, macOS (including universal), Android/Termux, FreeBSD and OpenBSD standalone binaries; Linux amd64/arm64 AppImages; Docker `ghcr.io/vedranius/wrm-pro:v12.4.0` and `latest`. The release pipeline verifies all 16 downloadable packages and `SHA256SUMS.txt` before publication.
 
 Validation details: [v12.4.0 release summary](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.0/docs/RELEASE_SUMMARY_v12.4.0.md).
 
-### Upgrading from v12.3.6
+#### Upgrading from v12.3.6
 
 Replace the binary/AppImage or update the container. Startup adds `folders.parent_id` and a service-health cache table without removing existing data. Previous binaries ignore the new fields; run the previous binary to downgrade. Existing catalogs need no new fields. Git runtime checks use the SSH account's read permissions and do not restart services.
 
