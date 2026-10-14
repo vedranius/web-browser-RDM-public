@@ -22,7 +22,7 @@ The supplied config was parsed with the original loader: **5 projects, 7 servers
 | `/povijest`, `/povijest/rollback` | Native history, per-server state and rollback, including dry run | Original suite; browser dry rollback and actual v2-to-v1 restoration |
 | `/postavke/server`, `/okolina`, `/projekt` | Native server/environment/project CRUD, order and all original project editor options | Original suite; browser settings/project editor |
 | `/postavke/yaml` validation/save | Native YAML editor/validation | Original suite; route preserved |
-| `/postavke/git/{commit,povuci,provjeri}` | Native Git configuration editor actions | Original suite; browser local config-repo clone and Git controls; actual remote Git push not separately exercised |
+| `/postavke/git/{commit,povuci,provjeri}` | Native Git configuration editor actions | Original suite; browser local config-repo clone, native commit/push and fetch/pull through the final WRM binary against a local bare repository |
 | Original data layout | Native `current.json`, `history.jsonl`, comparisons, backups and locks under the user's private data directory | Original suite and deploy/rollback browser workflow |
 
 The original source suite completed with **1,581 passed, 9 skipped**. These are the reference's own tests, not a claim that every original action was manually tested in the bridge. WRM regressions separately cover URL rewriting, redirects, authentication/header isolation, same-origin/no-referrer forms, CSRF rejection and wrapper busy state. Chromium exercised original forms without JavaScript errors.
@@ -38,3 +38,7 @@ The original source suite completed with **1,581 passed, 9 skipped**. These are 
 ## Runtime requirements and trust
 
 Python 3.12+, git, OpenSSH and rsync are required; Docker includes them. Builds additionally need their original toolchains and OS user privileges. Private ZIPs are imported after installation and are not release assets. Separate operator directories/processes are not an OS sandbox: trusted native code and editable commands execute as the WRM OS account. Simple/Advanced retain WRM's existing catalog and deploy engine; their history and Medium history are separate.
+
+## Additional final-binary verification
+
+After tagging, Chromium also completed native **Commit i push**, verified the commit on the local bare config origin, then completed **Provjeri sada / Povuci s gita** after a separate fixture commit and verified equal local/origin HEADs. There were no JavaScript errors. These were local test repositories; no private/live team repository was changed. ZIP imports use multipart form data with field `file`, matching the WRM UI.
