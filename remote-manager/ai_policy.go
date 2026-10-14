@@ -541,8 +541,14 @@ func (s *aiSession) userAllowed() (bool, string) {
 		if ok, why := mcpUserAllowed(s.UserID); !ok {
 			return false, why
 		}
-		if s.TokenID > 0 && !mcpGrantActive(s.TokenID) {
-			return false, "the AI connection was revoked or has expired"
+		if s.TokenID > 0 {
+			g, err := loadGrant(s.TokenID)
+			if err != nil || !g.active(time.Now()) {
+				return false, "the AI connection was revoked or has expired"
+			}
+			if !g.hasConn(s.ConnID) || (s.grantPolicy != "" && s.grantPolicy != mcpPolicySignature(g)) {
+				return false, "AI connection permissions changed; reopen the session with the same token"
+			}
 		}
 		return true, ""
 	}

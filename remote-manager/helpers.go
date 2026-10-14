@@ -343,12 +343,16 @@ func loadFolders(userID int) []Folder {
 	}
 	for i := range out {
 		out[i].Path = folderPath(out, out[i].ID)
+		out[i].Label = loadVisualLabel("folder", out[i].ID)
 	}
 	return out
 }
 
 // validateFolderDefaults checks the default jump host and proxy of a folder.
 func validateFolderDefaults(userID int, f *Folder) error {
+	if err := validateVisualLabel(f.Label); err != nil {
+		return err
+	}
 	if err := validateFolderParent(userID, f); err != nil {
 		return err
 	}
@@ -411,6 +415,7 @@ func updateFolder(w http.ResponseWriter, r *http.Request, userID, id int) {
 		jsonError(w, err.Error(), 500)
 		return
 	}
+	saveVisualLabel(db, "folder", id, userID, f.Label)
 	changed := []string{}
 	if f.Name != cur.Name {
 		changed = append(changed, "name")

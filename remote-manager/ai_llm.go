@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 )
@@ -24,7 +25,7 @@ import (
 //   any OpenAI-compatible server), and the Bedrock Converse API.
 // Every call streams (server-sent events, or AWS event streams for Converse): text is
 // passed to onText as it arrives, tool calls are assembled and returned with the usage.
-// The context cancels the HTTP request (stop / kill), and aiRequestTimeout bounds a turn.
+// The context cancels the HTTP request (stop / kill), and the provider request limit bounds generation.
 
 type aiToolDef struct {
 	Name        string
@@ -76,8 +77,6 @@ type aiLLMResponse struct {
 	Usage   aiUsage
 }
 
-const aiRequestTimeout = 10 * time.Minute
-
 var aiHTTPClient = &http.Client{Transport: &http.Transport{
 	Proxy:                 http.ProxyFromEnvironment,
 	ResponseHeaderTimeout: 3 * time.Minute,
@@ -111,7 +110,7 @@ func aiCompleteRaw(ctx context.Context, p aiProvider, req aiLLMRequest, onText f
 			req.MaxTokens = 16000
 		}
 	}
-	ctx, cancel := context.WithTimeout(ctx, aiRequestTimeout)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(aiClamp(settingInt("ai_provider_request_seconds"), 3600, 60, 14400))*time.Second)
 	defer cancel()
 	switch p.Kind {
 	case "anthropic":
@@ -263,7 +262,15 @@ func (e *aiAPIError) Error() string {
 }
 
 func aiPost(ctx context.Context, u string, body []byte, setHeaders func(http.Header), sign func(*http.Request) error) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(body))
+	requestCtx, requestCancel := context.WithCancel(ctx)
+	cleanup := context.CancelFunc(requestCancel)
+	success := false
+	defer func() {
+		if !success {
+			cleanup()
+		}
+	}()
+	req, err := http.NewRequestWithContext(requestCtx, http.MethodPost, u, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -277,18 +284,45 @@ func aiPost(ctx context.Context, u string, body []byte, setHeaders func(http.Hea
 			return nil, err
 		}
 	}
-	resp, err := aiHTTPClient.Do(req)
+	client := aiHTTPClient
+	if transport, ok := client.Transport.(*http.Transport); ok {
+		tr := transport.Clone()
+		tr.ResponseHeaderTimeout = 0
+		copy := *client
+		copy.Transport = tr
+		client = &copy
+		cleanup = func() { requestCancel(); tr.CloseIdleConnections() }
+	}
+	var headerExpired atomic.Bool
+	var headersDone atomic.Bool
+	timer := time.AfterFunc(time.Duration(aiClamp(settingInt("ai_provider_header_seconds"), 900, 30, 7200))*time.Second, func() {
+		if !headersDone.Load() {
+			headerExpired.Store(true)
+			requestCancel()
+		}
+	})
+	resp, err := client.Do(req)
+	headersDone.Store(true)
+	timer.Stop()
 	if err != nil {
 		if ctx.Err() != nil {
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				return nil, fmt.Errorf("provider request time limit reached; model loading, queueing and generation share this limit: %w", ctx.Err())
+			}
 			return nil, ctx.Err()
+		}
+		if headerExpired.Load() || strings.Contains(err.Error(), "timeout awaiting response headers") {
+			return nil, fmt.Errorf("provider response-header time limit reached while waiting for model loading, prompt evaluation or a queued request; increase ai_provider_header_seconds if needed: %v", err)
 		}
 		return nil, fmt.Errorf("cannot reach the provider: %v", err)
 	}
+	resp.Body = newAIIdleBody(resp.Body, time.Duration(aiClamp(settingInt("ai_provider_stream_idle_seconds"), 600, 30, 7200))*time.Second, cleanup)
 	if resp.StatusCode/100 != 2 {
 		b, _ := io.ReadAll(io.LimitReader(resp.Body, 8<<10))
 		resp.Body.Close()
 		return nil, &aiAPIError{Status: resp.StatusCode, Msg: aiErrorMessage(b)}
 	}
+	success = true
 	return resp, nil
 }
 

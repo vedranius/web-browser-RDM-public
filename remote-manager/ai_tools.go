@@ -45,6 +45,7 @@ func intProp(desc string) map[string]interface{} {
 }
 
 var aiTools = []aiToolSpec{
+	{Kind: "read", Def: aiToolDef{Name: "inventory_files", Description: "Read-only bounded recursive file inventory and literal content search using SFTP, without a shell command. Skips symlinks and sensitive paths. Prefer this for .ini/.py configuration inventories. Reports limits and permission failures.", Schema: obj(map[string]interface{}{"path": strProp("Absolute root directory or ~/"), "filter": strProp("Comma-separated extensions, e.g. ini,py,conf; empty means ini,py,conf,json,yaml,yml,log,txt"), "grep": strProp("Optional literal text to find in file contents"), "limit": intProp("Maximum files, 1-3000, default 500")}, "path")}},
 	{Kind: "read", Def: aiToolDef{Name: "system_info", Description: "Show the server's current date and time, operating system, kernel, uptime, memory and CPU count.", Schema: obj(map[string]interface{}{})}},
 	{Kind: "read", Def: aiToolDef{Name: "read_file", Description: "Read a text file on the server (size-limited). Sensitive files (password hashes, private keys, credentials) are refused.",
 		Schema: obj(map[string]interface{}{"path": strProp("Absolute path, or ~/ for the home directory"), "offset": intProp("Byte offset to start at (default 0)"), "max_bytes": intProp("Bytes to read (default and maximum: the policy limit)")}, "path")}},
@@ -192,6 +193,7 @@ type aiPlanned struct {
 	OldHash   string // "new" when the file does not exist
 	NewText   string
 	Diff      string
+	Inventory *aiToolInput
 	maxOutput int
 	// transfers (transfer_file): the source session, its real path and the size
 	Transfer bool
@@ -222,6 +224,19 @@ func aiReadMax() int64 { return int64(settingInt("ai_output_max_kb")) << 10 }
 func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiPlanned, error) {
 	q := shellQuote
 	switch name {
+	case "inventory_files":
+		p, err := aiRequirePath(in.Path)
+		if err != nil {
+			return nil, err
+		}
+		in.Path = aiExpandHome(p, s.home)
+		if len(in.Grep) > 200 || strings.ContainsAny(in.Grep, "\x00\r\n") {
+			return nil, fmt.Errorf("invalid search text")
+		}
+		if _, err := inventoryExtensions(in.Filter); err != nil {
+			return nil, err
+		}
+		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: in.Path}, Display: "file inventory " + in.Path, Inventory: &in}, nil
 	case "system_info":
 		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read"}, Display: "system information",
 			Script: `echo "Server date: $(date '+%Y-%m-%d %H:%M:%S %Z (%z)' 2>/dev/null || date)"; echo; uname -a; echo; cat /etc/os-release 2>/dev/null; echo; uptime; echo; free -m 2>/dev/null; echo; echo "CPUs: $(nproc 2>/dev/null)"`}, nil

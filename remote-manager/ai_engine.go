@@ -84,8 +84,9 @@ type aiSession struct {
 	lastActive time.Time
 	// MCP sessions (v12.1.0): the AI connection (mcp_tokens row) and its scopes; nil
 	// scopes mean every tool (the built-in panel).
-	TokenID int64
-	Scopes  []string
+	grantPolicy string
+	TokenID     int64
+	Scopes      []string
 
 	conn     Connection
 	client   *ssh.Client
@@ -170,9 +171,10 @@ type aiStartParams struct {
 	Transport  string
 	Request    *http.Request
 	// MCP (transport "mcp"): no provider; the client's name stands for the model.
-	ClientName string
-	TokenID    int64
-	Scopes     []string
+	GrantPolicy string
+	ClientName  string
+	TokenID     int64
+	Scopes      []string
 }
 
 // aiStart opens a session after every policy check.
@@ -258,6 +260,16 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		ShareID: p.ShareID, Transport: transport, provider: prov, Model: model, Mode: mode, Auto: auto,
 		ShareNotes: p.ShareNotes && settingBool("ai_share_notes"), Started: time.Now(), lastActive: time.Now(),
 		conn: c, pending: map[string]*aiApproval{}, notify: make(chan struct{}), TokenID: p.TokenID, Scopes: p.Scopes,
+	}
+	if s.TokenID > 0 {
+		g, err := loadGrant(s.TokenID)
+		if err != nil || !g.active(time.Now()) || !g.hasConn(s.ConnID) {
+			return nil, fmt.Errorf("AI connection is no longer authorized")
+		}
+		s.grantPolicy = mcpPolicySignature(g)
+		if p.GrantPolicy != "" && s.grantPolicy != p.GrantPolicy {
+			return nil, fmt.Errorf("AI connection permissions changed; reopen the session")
+		}
 	}
 	if p.Request != nil {
 		s.ClientIP = clientIP(p.Request)
@@ -612,6 +624,10 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 	if ended || settingBool("ai_kill_switch") {
 		return fail("The AI session has been stopped.")
 	}
+	if ok, why := s.userAllowed(); !ok {
+		s.Kill(0, why)
+		return fail(why)
+	}
 	s.touch()
 	spec, ok := aiToolSpecFor(call.Name)
 	if !ok {
@@ -624,7 +640,7 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		s.denials++
 		s.mu.Unlock()
 		return fail("Denied by WRM: this AI connection's scopes (" + strings.Join(s.Scopes, ", ") + ") do not allow " + call.Name + "; it needs one of: " +
-			strings.Join(aiScopesFor(call.Name), ", ") + ". This is a limit of the connection, not of the server. Tell the user to create an AI connection with that scope in WRM (Settings → AI connections); do not retry.")
+			strings.Join(aiScopesFor(call.Name), ", ") + ". This is a limit of the connection, not of the server. Tell the user to edit this AI connection and enable that scope in WRM (Settings → AI connections); do not retry.")
 	}
 	if call.BadInput != "" {
 		return fail(call.BadInput)
@@ -759,7 +775,12 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 	var code int
 	var err error
 	start := time.Now()
-	if pl.Transfer {
+	if ok, why := s.userAllowed(); !ok {
+		return aiToolResult{ID: call.ID, Name: call.Name, IsError: true, Content: why}
+	}
+	if pl.Inventory != nil {
+		out, code, err = s.inventoryFiles(ctx, *pl.Inventory)
+	} else if pl.Transfer {
 		out, code, err = s.transferRun(ctx, pl)
 	} else if pl.Write {
 		out, code, err = s.exec(ctx, aiWriteScript(pl.Path, pl.OldHash), pl.NewText, 0)
@@ -1114,7 +1135,7 @@ func (s *aiSession) systemPrompt() string {
 	b.WriteString(`How you work:
 - You never have a shell. You act only through the WRM tools; WRM checks every call against the session's permission mode and runs it over its own SSH connection.
 - Before each tool call, say in one short sentence what you are going to do and why. Give run_command, write_file and edit_file a clear "reason".
-- Prefer the read tools (system_info, read_file, list_directory, tail_log, journal, service_status, list_packages, processes, disk_usage, network_status) for inspection.
+- Prefer inventory_files for recursive configuration inventories and literal content search; do not retry a denied shell command with another shell command. Prefer the read tools (system_info, read_file, list_directory, tail_log, journal, service_status, list_packages, processes, disk_usage, network_status) for inspection.
 - Commands must be non-interactive: no pagers, editors, prompts or endless output (no tail -f, journalctl -f, top without -b). Use sudo -n when root is needed.
 - Changes (commands that modify the system, file edits) may need the user's approval. If WRM denies a call, do not try to get around it with another command; explain what you need and let the user decide.
 - Destructive operations (wiping disks or file systems, rm -rf of system directories, cutting off SSH access, editing password files …) are always refused.

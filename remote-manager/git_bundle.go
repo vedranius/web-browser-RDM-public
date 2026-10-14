@@ -223,6 +223,9 @@ func importBundle(userID int, r io.Reader) (*bundleImportResult, error) {
 }
 
 func deleteGitSource(id int) {
+	for _, table := range []string{"git_relay_cache", "git_relay_members", "git_relay_meta"} {
+		db.Exec(`DELETE FROM `+table+` WHERE source_id=?`, id)
+	}
 	db.Exec(`DELETE FROM git_blobs WHERE source_id=?`, id)
 	db.Exec(`DELETE FROM git_trees WHERE source_id=?`, id)
 	db.Exec(`DELETE FROM git_sources WHERE id=?`, id)

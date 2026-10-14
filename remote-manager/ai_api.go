@@ -47,6 +47,10 @@ func apiAIHandler(w http.ResponseWriter, r *http.Request) {
 	rest := strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/ai"), "/")
 	parts := strings.Split(rest, "/")
 	switch parts[0] {
+	case "servers":
+		aiServerPickerHandler(w, r, userID)
+	case "context":
+		aiContextHandler(w, r, userID)
 	case "config":
 		aiConfigHandler(w, r, userID)
 	case "connections":
