@@ -13,18 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.4.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.4.3** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
-## What's new in v12.4.0
+## What's new in v12.4.3
 
-- **Service functionality:** GitLab/catalog services, every Supervisor worker, failed systemd units, installation problems, error logs and disk/memory warnings per server. Optional HTTP/TCP probes and problem/recovery notifications.
-- **Configuration visibility:** structured config/INI/environment/JSON settings with descriptions, masked secrets and explicit inspection limits.
-- **Nested folders and connection context:** recursive folders, hierarchy-preserving imports and a folder row above connection tabs. Full folder paths distinguish same-named servers. [Issue #57](https://github.com/vedranius/web-browser-RDM-public/issues/57).
-- **Remote previews:** embedded media streaming with byte-range seeking, image/PDF/text viewing, and preview/download actions on terminal-selected paths. [Issue #55](https://github.com/vedranius/web-browser-RDM-public/issues/55).
-- **AI availability:** visible SSH/SFTP entry points, account/setup diagnostics and policy refresh across browsers. OpenAI-compatible providers work independently of MCP. [Discussion #56](https://github.com/vedranius/web-browser-RDM-public/discussions/56).
-- **Portable releases:** 16 packages across Linux, Windows, macOS, Android, FreeBSD and OpenBSD, including AppImages and macOS universal, plus Docker. Checksums cover every package.
+- **Medium deployment mode:** run the supplied original deploy tool unchanged, with its original screens, YAML config, comparison, file selection, builds, deployment, rollback, history and config Git controls. Import the private tool/config ZIPs in Git → Medium; WRM supplies authenticated access and private runtime directories.
+- **Functionality config profiles:** upload a reference INI/config/Python file and compare its settings against installations by hostname, service, environment and operator. Values are searchable; secrets are masked and missing/unparsed settings are explicit.
+- **Bitwarden SSH keys:** sign in and unlock your account through the official CLI, then select a native SSH key item in a connection. WRM stores the item reference and obtains the key during the SSH handshake.
+- **Folder ordering:** drag folders before/after siblings or into a parent, or use Move up / Move down. The order persists across reloads and config export/import.
 
-See the [release summary](docs/RELEASE_SUMMARY_v12.4.0.md), [release notes](RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
+See the [release summary](docs/RELEASE_SUMMARY_v12.4.3.md), [Medium parity record](docs/MEDIUM_PARITY_v12.4.3.md), [release notes](RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
 
 ---
 
@@ -55,7 +53,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -155,21 +153,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.4.0-linux-amd64
-   ./wrm-pro-v12.4.0-linux-amd64
+   chmod +x wrm-pro-v12.4.3-linux-amd64
+   ./wrm-pro-v12.4.3-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.4.0-windows-amd64.exe
+   .\wrm-pro-v12.4.3-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.4.0-linux-amd64.AppImage
-   ./wrm-pro-v12.4.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.4.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.4.3-linux-amd64.AppImage
+   ./wrm-pro-v12.4.3-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.4.3-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -178,8 +176,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.0/wrm-pro-v12.4.0-android-arm64
-   chmod +x wrm-pro-v12.4.0-android-arm64 && ./wrm-pro-v12.4.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.3/wrm-pro-v12.4.3-android-arm64
+   chmod +x wrm-pro-v12.4.3-android-arm64 && ./wrm-pro-v12.4.3-android-arm64
    ```
 
    **Docker**
@@ -203,6 +201,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.4.0
+
+Replace the binary/AppImage or update the container. Additive migrations create `git_config_profiles` and add `folders.sort_order`. Existing folders retain alphabetical order until reordered. Back up the database, matching encryption key and adjacent `.medium` / `.bitwarden` directories; they contain private runtime/configuration data. Older binaries ignore the new fields, but cannot use the new features.
+
+Medium is enabled for administrators by default. Import the original deploy-tool ZIP once as an administrator, then each operator imports their deploy-config and optional SSH profile. The Docker image includes Python 3.12+, git, OpenSSH, rsync and the official Bitwarden CLI. Standalone binaries keep these dependencies optional: install them on the WRM host before enabling the corresponding feature. Medium uses the original engine's own plans, locks, backups and history; it does not import those into Simple/Advanced runs.
+
+The earlier client GitLab relay/replay and AI/navigation/color/icon requests remain in [ROADMAP.md](ROADMAP.md). The owner explicitly prioritized v12.4.3; these backlog items are not represented as delivered in this release.
 
 ## Upgrading from v12.3.6
 
@@ -554,6 +560,8 @@ Left sidebar ("PRO MANAGER"):
 - The **dot in front of a connection** is its [live status](#live-updown-status): 🟢 up, 🟡 up but slow (> 300 ms), 🔴 down, a ring = behind a jump host (colored by the jump host's state). A **blue dot after the name** means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
 - **Shared with me** lists shares you are a member of (and shares published for all users), with your **role**; ↗ opens the collaboration room.
 
+Folders also support manual ordering: use the folder menu's **Move up / Move down**, or drag into the top/bottom third of another folder to place before/after it. Drop in the center to make it a child, or on the root area to move it to the root. Ownership, hierarchy depth and cycle checks apply. Export/import includes the saved order.
+
 ### Quick connect & connection notes
 
 **⚡ Quick connect** — the field at the top of the sidebar (*⚡ Quick connect: user@host:port*) — connects without filling in the connection dialog:
@@ -602,6 +610,14 @@ A credential is a login that many connections share: a user name with a **passwo
 The progress of every server is shown live. Rotation needs SSH connections to servers where the login user may change its own password with `passwd` (Linux, BSD, macOS). Connections of other types (RDP, VNC, FTP…) block rotation — change those passwords yourself and save the new one with *Edit* (*Edit* with a new password counts as rotated). When the rotation reminder is due, the 🔑 button shows a badge and *Admin panel → Overview* warns.
 
 Everything is in the audit log: `ssh_key.created`, `ssh_key.deployed`, `ssh_key.revoked`, `ssh_key.exported`, `ssh_key.deleted`, `credential.created`, `credential.updated`, `credential.granted`, `credential.grant_revoked`, `credential.revealed`, `credential.checked`, `credential.rotated`, `credential.rotation_failed`, `credential.rotation_incomplete` (never the secrets).
+
+### Bitwarden SSH keys
+
+Open **Keys & credentials → Bitwarden**, choose the cloud/EU/self-hosted HTTPS server, and sign in with email, master password and supported two-step code. Personal API credentials plus a master password are also supported when email login requires a bot challenge or another MFA flow. Unlock the vault, sync if needed, then choose **Bitwarden SSH key** in an SSH/SFTP connection and select a native SSH key item. Secure-note attachments and arbitrary text fields are not SSH key items.
+
+Install the [official Bitwarden CLI](https://bitwarden.com/help/cli/) on the WRM server (`bw` on PATH or `WRM_BITWARDEN_CLI`); Docker includes CLI 2026.9.1. Each WRM account has its own CLI profile. The connection stores its item ID; private keys are fetched server-side for authentication and are not returned to the browser or copied into the connection database. Master passwords and unlock session keys are not persisted. CLI `data.json` is sealed with the WRM encryption key between commands and recovered at startup after interrupted calls.
+
+The default unlock inactivity is 15 minutes; a WRM restart, WRM logout, Lock or Sign out also ends unlock access. Lock prevents new key retrieval; existing SSH sessions continue. Refreshing keys and manual vault synchronization extend interactive inactivity; background SSH operations do not. Cloud login requires reachability from the WRM host. Errors distinguish missing CLI/locked vault from login failures without exposing CLI output.
 
 ### Jump hosts (bastions)
 
@@ -959,6 +975,22 @@ Optional catalog fields (existing catalogs remain valid):
 ```
 
 Subscribe in **Settings → Notifications** to `git.functionality_problem`, `git.functionality_recovered`, `git.server_problem` and `git.server_recovered`. The server events include workers with no catalog association. Notifications report transitions/changed warnings and do not repeat an identical result on each check.
+
+### Functionality configuration profiles
+
+In **Git → Functionality → Config profiles**, upload a reference such as `storage_backend.ini` or `config.py`, choose the catalog service, relative path inside each installation and optional operator label. Run a profile check across that service's installations (or selected installation IDs through the API). The matrix shows hostname, connection, service, environment, operator, path, timestamp, section/key/function and reference/actual values. Search matches server/operator/settings. Values are marked matching, different, additional, missing or masked.
+
+Profiles use the existing static parser: Python expressions are displayed as source text, never evaluated. Parse gaps, missing files, unsafe symlinks and incomplete inspections are explicit. Up to 50 profiles per account, 256 KiB reference files, 50 installations per check and four concurrent reads are supported. Structured reference values are masked and encrypted in SQLite; live remote values are read on demand. These profiles inspect WRM catalog installations; Medium uses its own native config and does not automatically register its private projects in that catalog.
+
+### Git workspace: Medium original deploy tool
+
+Select **Medium** next to Simple and Advanced. The original tool is required as a private ZIP and is not bundled in this public repository. An administrator imports the approved tool ZIP; WRM creates its Python virtual environment and installs the archive's pinned `requirements.lock`. Setup may take several minutes and reports status. Each user imports their deploy-config ZIP (`servers.yaml`, `environments.yaml`, `projects/*.yaml`) and optional SSH ZIP (`config`, keys and `known_hosts`). Confirm executable-code/config imports in the UI. Stop the runtime before replacing its config/profile/settings; stopping is refused while a comparison or background deployment is active.
+
+The original tool runs unchanged behind WRM's authenticated `/medium/` bridge, embedded in the workspace or opened in a full window. Its own project editor, server/tag/branch selection, comparison, exclusions, local build, dry run, confirmation, deploy, per-server progress, backups, rollback, history and config Git controls remain available. See the [parity record](docs/MEDIUM_PARITY_v12.4.3.md). Closing the Git window leaves the process running; restarting WRM stops it. Runtime data remains on disk.
+
+Use **Runtime settings** for the original `DEPLOY_CONFIG_REPO`, pull/check cadence, user email/hostname, SSH options, build user and timeout. Preferences are encrypted; stored command/credential values are masked on read. A config Git clone lives separately from the imported flat config. Git identity, keys, known-host verification and repository write access must be configured for native Git push. Uploaded SSH files use the user's private runtime home; a trusted administrator may provide `WRM_MEDIUM_SSH_AUTH_SOCK` for users allowed server-side keys.
+
+Medium needs Python 3.12+, git, OpenSSH and rsync on the WRM host (`WRM_MEDIUM_PYTHON` can select Python). Builds need their original toolchain and OS user permissions. Git and target hosts must be reachable from the runtime. **Grant Medium only to trusted operators:** editable configs/builds/deploy commands execute as the WRM OS account. Per-user directories/processes are not an OS sandbox. WRM checks authentication, `git_medium`, Git checks and action policies and records the action boundary; the original tool supplies its native review/locks/history. Simple and Advanced continue using WRM's existing engine and catalog.
 
 ### Git workspace: every file and partial checks
 
@@ -1533,6 +1565,18 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 
 ## Configuration
 
+New optional runtime settings for v12.4.3:
+
+| Setting / environment override | Default | Purpose |
+|---|---|---|
+| `git_medium` / `WRM_GIT_MEDIUM` | `admins` | `off`, `admins`, `all`; trusted original-tool operators. Tool code imports always require administrator access. |
+| `bitwarden` / `WRM_BITWARDEN` | `all` | `off`, `admins`, `all`; access to each user's own vault. |
+| `bitwarden_idle_minutes` / `WRM_BITWARDEN_IDLE_MINUTES` | `15` | Unlock inactivity, 1–240 minutes. |
+| `WRM_BITWARDEN_CLI` | `bw` on PATH | Official CLI executable override. |
+| `WRM_MEDIUM_PYTHON` | Python on PATH | Python 3.12+ executable for the private venv. |
+| `WRM_MEDIUM_SSH_AUTH_SOCK` | unset | Optional SSH agent socket, restricted to users allowed server-side keys. |
+
+
 **Environment variables**
 
 | Variable | Default | Description |
@@ -1705,9 +1749,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.4.0-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.4.0-linux-amd64 -service-status
-sudo ./wrm-pro-v12.4.0-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.4.3-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.4.3-linux-amd64 -service-status
+sudo ./wrm-pro-v12.4.3-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1738,7 +1782,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.4.0-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.4.3-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1865,6 +1909,25 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 ---
 
 ## API reference
+
+### v12.4.3 endpoints
+
+All endpoints require a WRM session and effective owner/policy access. Mutating `/api/` calls require WRM's normal CSRF header/origin.
+
+| Endpoint | Behavior |
+|---|---|
+| `GET /api/git/medium` | Runtime/import/dependency status and tool SHA-256. |
+| `POST /api/git/medium/{tool,config,ssh}?confirm=1` | Raw ZIP import; tool is administrator-only; 20 MiB expanded limit. |
+| `GET, POST /api/git/medium/settings` | Read masked / save encrypted original runtime preferences. |
+| `POST /api/git/medium/{start,stop}` | Start original app / stop only when idle. |
+| `/medium/*` | Original UI and native actions behind WRM authentication, policy and origin checks. |
+| `GET, POST /api/git/config-profiles` | List / add reference `{name,app,path,operator,content}`. |
+| `DELETE /api/git/config-profiles/{id}` | Remove owned profile. |
+| `POST /api/git/config-profiles/{id}/check` | Inspect matching installs; optional `{ids:[...]}` selection. |
+| `GET /api/bitwarden`, `GET /api/bitwarden/keys` | CLI/account status / native SSH item metadata only. |
+| `POST /api/bitwarden/{login,unlock,sync,lock,logout}` | Account and memory-only unlock operations. Login accepts `server,email,master_password,client_id,client_secret,method,code` as appropriate. |
+| `POST /api/folders/reorder` | Move `{id,parent_id,before_id}` or `{id,parent_id,after_id}` with owner/cycle/depth guards. |
+
 
 All endpoints (except sign-in, `/api/auth/config`, version and share pages) need the session cookie. JSON in, JSON out, unless noted. **Every unsafe `/api` request (POST/PUT/PATCH/DELETE) must send `X-WRM-Request: 1`** (CSRF protection) and, if present, an `Origin` of this server.
 
@@ -2355,7 +2418,7 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 
 ## Troubleshooting
 
-For v12.4.0, **AI missing/unavailable** is diagnosed in Settings → AI assistant; check account policy/kill switch, provider availability and SSH/SFTP context. **Functionality unverified** means the remote account cannot inspect a service manager, no unit/probe is configured, or a check is incomplete; inspect its status message and configure the service's health endpoint if needed. **Media cannot play** can mean missing browser codec support or an FTP server without SIZE/REST; use Download. **Same-named servers** can be distinguished by full folder paths; choose Parent folder to build client/site nesting.
+For v12.4.3, **AI missing/unavailable** is diagnosed in Settings → AI assistant; check account policy/kill switch, provider availability and SSH/SFTP context. **Functionality unverified** means the remote account cannot inspect a service manager, no unit/probe is configured, or a check is incomplete; inspect its status message and configure the service's health endpoint if needed. **Media cannot play** can mean missing browser codec support or an FTP server without SIZE/REST; use Download. **Same-named servers** can be distinguished by full folder paths; choose Parent folder to build client/site nesting.
 
 | Problem | Fix |
 |---|---|
@@ -2475,8 +2538,17 @@ If WRM is useful to you, consider supporting it on **[Ko-fi](https://ko-fi.com/v
 On x86_64 Linux with Go, curl and sha256sum installed:
 
 ```bash
-bash tools/build-appimage.sh v12.4.0 amd64
-bash tools/build-appimage.sh v12.4.0 arm64
+bash tools/build-appimage.sh v12.4.3 amd64
+bash tools/build-appimage.sh v12.4.3 arm64
 ```
 
 Outputs go to `dist/`. The script verifies pinned upstream AppImage tooling and runtimes, uses the existing WRM icon, and needs no FUSE during the build. GitHub releases remain drafts until all 16 packages and their checksums are verified and the Docker publication succeeds.
+
+## v12.4.3 runtime troubleshooting and source map
+
+- **Medium setup unavailable:** install Python 3.12+, git, OpenSSH and rsync, or use Docker. Dependency installation needs access to the original requirements' package registry. The import status reports failure without exposing arbitrary installer output.
+- **Medium SSH/Git fails:** check the private SSH profile, known hosts, Git identity, host reachability, native repository permissions, build dependencies and OS user privileges. WRM's own connection credentials are separate from this original engine's SSH configuration.
+- **Bitwarden login fails:** verify official CLI/server compatibility, HTTPS reachability, account credentials and MFA. Use personal API credentials with master password when interactive bot challenges prevent email login. Unlock again after inactivity/restart; no private key is returned by the key-list API.
+- **Config profile missing/unparsed:** verify the catalog service and relative path, remote read permissions and supported static syntax. A source expression is not its evaluated runtime value.
+
+Implementation: `remote-manager/git_medium.go`, embedded `medium_wrapper.py`, `git_config_profiles.go`, `bitwarden.go` and folder reorder code in `folders.go`. Regression coverage: `v1243_test.go`, native SSH/rsync helper in `keys_test.go` and `python3 tools/test-medium-wrapper.py`, alongside the full Go race suite, UI/translation check and existing Node tests. Private source/config archives and runtime state are excluded from Git/Docker build context.

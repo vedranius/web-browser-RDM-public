@@ -1,3 +1,20 @@
+## [12.4.3] - 2026-10-14
+
+### Added
+- **Medium original deployment tool** beside Simple and Advanced. Administrators import the supplied private tool ZIP; operators import their native deploy-config/SSH profile. The original Python app, templates and deployment engine run unchanged behind WRM authentication in private per-user directories. All original UI/config options remain native, including comparisons, exclusions, builds, plans, confirmation, deployment progress, backup/history/rollback and config Git controls. ZIP SHA-256, setup/dependency status, encrypted runtime preferences and idle-only stop are exposed. See the [parity record](docs/MEDIUM_PARITY_v12.4.3.md).
+- **Functionality configuration profiles**: upload a reference INI/config/Python file and inspect matching catalog installations by hostname, connection, environment, operator, section and setting. Searchable reference/actual matrix with missing/different/additional/masked states, parse warnings and bounded parallel remote reads. Stored structured references are masked and encrypted; source expressions are not executed.
+- **Bitwarden native SSH keys**: official CLI account login/MFA or personal API login, unlock/sync/lock/logout, cloud/EU/self-hosted HTTPS servers and per-user profiles. SSH/SFTP connections store a native item reference and fetch the key only for authentication; private keys never reach the browser. Unlock sessions stay in memory and expire after interactive inactivity (15 minutes by default), WRM logout or restart. CLI profiles are encrypted between commands with startup recovery.
+- **Manual folder ordering**: drag before/after siblings, nest/reparent or move up/down from the menu. Additive `sort_order`, owner/cycle/depth validation, persistent sibling order and export/import support.
+
+### Changed
+- Docker includes Python 3.12+, git, OpenSSH, rsync, Node and pinned official Bitwarden CLI 2026.9.1. Standalone packages retain optional runtime dependencies. Medium access defaults to administrators and is intended for trusted operators: native build/config commands run as the WRM OS account; per-user directories are not an OS sandbox.
+- Additive `git_config_profiles` table; new Medium/config-profile/Bitwarden/folder-reorder APIs and English/Croatian controls. Earlier client GitLab relay/replay, AI timeout/navigation and color/icon requests remain documented backlog; the owner prioritized v12.4.3.
+
+### Fixed
+- Git dialogs remain above mobile drawers and fit narrow widths; wide profile matrices scroll inside the dialog.
+- Native same-origin forms with `Origin: null` under the original tool's no-referrer policy work through the authenticated bridge; cross-site/null-origin submissions remain rejected.
+- Connection tests display provider-specific errors for locked/unavailable Bitwarden authentication.
+
 ## [12.4.0] - 2026-10-14
 
 ### Added
