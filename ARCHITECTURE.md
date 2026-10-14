@@ -14,6 +14,18 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
+## Service functionality, folder hierarchy and previews (v12.4.0)
+
+`git_functionality.go` extends the existing per-user Git catalog with optional `functionality` units, HTTP/TCP endpoints and config paths. Manual jobs, periodic rounds and post-deploy refreshes store redacted runtime checks in `git_installs.data`; `git_server_health` caches per-user/per-connection Supervisor inventory, failed systemd units and resource checks. `git_scan.go` associates Supervisor stanzas with installations and retains gone installations. Unknown/incomplete checks are explicit, and notifications compare previous state/warnings to avoid repeated identical alerts. Runtime commands do not start/restart services and use the SSH account without automatic sudo. Endpoint probes use SSH `direct-tcpip`, short timeouts, verified TLS and no redirects.
+
+Configuration inspection is an owner/policy-checked on-demand API (`GET /api/git/installs/{id}/configuration`) that reads bounded files inside an installation, parses structured settings/functions and masks sensitive values before sending them to the browser. Raw configuration is not persisted. JSON, INI and assignment-style files are supported; unsupported lines and inspection limits are reported.
+
+`folders.parent_id` is additive. `folders.go` validates ownership, cycles and depth, serializes hierarchy mutations, derives full paths and imports parents before children. Folder deletion reparents children. Shared folder membership uses an owner-scoped recursive CTE; route defaults continue to use the immediate folder. Config export/import preserves old-ID mappings, and new mRemoteNG imports create nested folders. The sidebar renders recursively; folder context is visible in pickers/windows/tabs, with a separate folder row filtering open tabs.
+
+`preview.go` serves authenticated allowlisted remote file previews. SFTP uses a seekable remote file with `http.ServeContent`; FTP uses REST/RETR for range offsets. Text is bounded, active formats use text MIME, and inline responses use nosniff plus a restrictive CSP (sandboxed for non-PDF previews; PDFs use the browser native viewer). File permissions/share roles are checked on every metadata/content/range request. The viewer closes media sources when dismissed. Terminal selection is a filename, resolved against CWD/home, never a shell command.
+
+AI eligibility includes SSH-backed SFTP connections. An always-available account status entry point distinguishes provider connectivity from account policy. `ai_policy_changed` events refresh other browsers and effective policy is refreshed after event-bus reconnect. Backend access checks continue to govern every session/action; terminal AI and MCP setup remain independent.
+
 ## Auth model
 
 - Local accounts in `users` (bcrypt cost 12). The first account is the administrator; self-registration is closed by default.

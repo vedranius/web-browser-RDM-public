@@ -25,7 +25,7 @@ check.
 cd remote-manager
 gofmt -l .                      # must print nothing
 go vet ./...
-go test -race ./...             # unit + integration tests (security, roles, 2FA, encryption, recording, audit…)
+go test -race -count=1 -timeout 20m ./...             # unit + integration tests (security, roles, 2FA, encryption, recording, audit…)
 go build -o wrm-server .
 HTTPS_SELF_SIGNED=1 PORT=8080 ./wrm-server   # open https://localhost:8080
 ```
@@ -76,6 +76,8 @@ Before sending a PR please make sure that:
 - new features that change behaviour sit behind a setting (feature flag), and the existing flow works with the flag off,
 - you tested the change in a browser (terminal, file manager, sessions, collaboration and voice if
   you touched them).
+
+The v12.4.0 regressions include `folders_test.go` (hierarchy, ownership, imports), `git_functionality_test.go` (workers, redaction and config boundaries), `preview_test.go` (SFTP/FTP ranges, active content and share permissions) and `ai_availability_test.go` (SFTP providers and policy events). Run `node tools/check-ui.js` and `node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js` from the repository root. UI layout/media checks require a real browser; retain a concise report that distinguishes compiled platforms from platforms actually run.
 
 CI (GitHub Actions) builds every platform for each pull request.
 
