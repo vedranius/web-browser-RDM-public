@@ -13,15 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.4.3b** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.4.4** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
-## What's new in v12.4.3b
+## What's new in v12.4.4
 
-**Medium on Windows uses a managed Linux Docker runtime.** Python, Git, SSH and rsync run inside the pinned runtime image; Windows needs Docker with a Linux engine, not separate native deployment tools. Tool ZIPs survive failed preparation, and an administrator can retry **Prepare runtime** without re-uploading. Private Linux volumes preserve permissions, Git metadata, deploy state/history and rollbacks.
+Monitoring with Zabbix metrics/history and service Functionality, multi-window logs, client GitLab token access with persistent snapshots, easier MCP setup and editable grants, structured configuration inventory, terminal selection-to-AI/Open terminal here, visual folder/connection labels, longer provider timeouts, sticky filters and replay/import fixes.
 
-[Hotfix validation](docs/RELEASE_SUMMARY_v12.4.3b.md) · [Original-tool parity](docs/MEDIUM_PARITY_v12.4.3.md). The earlier requests and the new monitoring/MCP/log requirements are accepted for **v12.4.4** in [ROADMAP.md](ROADMAP.md); they are not implemented by this hotfix.
-
----
+[Operation and limits](docs/V12.4.4_GUIDE.md) · [Release validation](docs/RELEASE_SUMMARY_v12.4.4.md) · [Original Medium tool parity](docs/MEDIUM_PARITY_v12.4.3.md). General configuration import now recognizes mRemoteNG XML and PuTTY registry files ([#5](https://github.com/vedranius/web-browser-RDM-public/issues/5)).
 
 ## 📜 License: free for personal use and as a work tool in companies
 
@@ -50,7 +48,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -150,21 +148,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.4.3b-linux-amd64
-   ./wrm-pro-v12.4.3b-linux-amd64
+   chmod +x wrm-pro-v12.4.4-linux-amd64
+   ./wrm-pro-v12.4.4-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.4.3b-windows-amd64.exe
+   .\wrm-pro-v12.4.4-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.4.3b-linux-amd64.AppImage
-   ./wrm-pro-v12.4.3b-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.4.3b-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.4.4-linux-amd64.AppImage
+   ./wrm-pro-v12.4.4-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.4.4-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -173,8 +171,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.3b/wrm-pro-v12.4.3b-android-arm64
-   chmod +x wrm-pro-v12.4.3b-android-arm64 && ./wrm-pro-v12.4.3b-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.4/wrm-pro-v12.4.4-android-arm64
+   chmod +x wrm-pro-v12.4.4-android-arm64 && ./wrm-pro-v12.4.4-android-arm64
    ```
 
    **Docker**
@@ -199,6 +197,12 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
+## Upgrading from v12.4.3b
+
+Replace the executable/container with v12.4.4 and retain the DB, encryption key and private runtime directories/volumes. Migrations are additive. Existing explicit policy values remain in force; MCP is still off by default. Functionality moves to **Monitoring → Functionality**. Configure each server's agent transport/log roots; automatic metrics polling is opt-in.
+
+Client GitLab cache requires a client token and browser CORS permission or the companion on the computer that can access GitLab. Native Medium's Git/build subprocesses still need their direct route. [v12.4.4 setup, limits and troubleshooting](docs/V12.4.4_GUIDE.md).
+
 ## Upgrading from v12.4.3
 
 Download the v12.4.3b Windows executable, stop WRM and replace the previous executable while retaining its database and encryption key. **The v12.4.3 updater cannot parse the `b` suffix, so this first hotfix needs a manual download.** v12.4.3b adds letter-hotfix support for subsequent checks/updates.
@@ -217,7 +221,7 @@ Replace the binary/AppImage or update the container. Additive migrations create 
 
 Medium is enabled for administrators by default. Import the original deploy-tool ZIP once as an administrator, then each operator imports their deploy-config and optional SSH profile. The Docker image includes Python 3.12+, git, OpenSSH, rsync and the official Bitwarden CLI. Standalone binaries keep these dependencies optional: install them on the WRM host before enabling the corresponding feature. Medium uses the original engine's own plans, locks, backups and history; it does not import those into Simple/Advanced runs.
 
-The earlier client GitLab relay/replay and AI/navigation/color/icon requests remain in [ROADMAP.md](ROADMAP.md). The owner explicitly prioritized v12.4.3b; these backlog items are not represented as delivered in this release.
+The earlier client GitLab relay/replay and AI/navigation/color/icon requests are delivered in v12.4.4; see the [operation guide](docs/V12.4.4_GUIDE.md).
 
 ## Upgrading from v12.3.6
 
@@ -293,7 +297,7 @@ Replace the binary. There are no database changes; v12.1.0 still starts on the s
 ## Upgrading from v12.0.0
 Replace the binary. The database gets new tables (`mcp_tokens`, `mcp_clients`) and the column `ai_sessions.mcp_token_id`; v12.0.0 still starts on it and ignores them.
 
-- **AI desktop apps (MCP)** are **off by default**. An administrator turns them on in *Admin panel → AI connections* (`ai_mcp_enabled`); by default only administrators may create AI connections (`ai_mcp` = `admins`), with the modes `read_only,ask` (`ai_mcp_modes`), a default lifetime of 8 hours (`ai_mcp_token_hours`) and at most 24 hours (`ai_mcp_max_token_hours`). Users then find *Settings → AI connections*. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
+- **AI desktop apps (MCP)** are **off by default**. An administrator turns them on in *Admin panel → AI connections* (`ai_mcp_enabled`); by default only administrators may create AI connections (`ai_mcp` = `admins`), with the modes `read_only,ask,auto` (`ai_mcp_modes`), a default lifetime of 8 hours (`ai_mcp_token_hours`) and at most 24 hours (`ai_mcp_max_token_hours`). Users then find *Settings → AI connections*. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 - MCP clients reach WRM at `https://<your WRM>/mcp`. Hosted connectors (claude.ai, ChatGPT) connect **from the provider's cloud**: WRM must be reachable from the internet over HTTPS for them. Behind a reverse proxy set `ai_mcp_public_url` (the address the apps use) and pass `/mcp`, `/oauth/` and `/.well-known/` through. Desktop apps with the stdio bridge only need to reach WRM from your computer.
 - The kill switch of the AI assistant (`ai_kill_switch`) also stops every AI connection. Turning off the built-in assistant (`ai_assistant`) does not turn off MCP, and the other way round.
 - The top bar shows **🤖 AI connected** while an AI app is connected; at narrower widths the top-bar labels hide a little earlier than before so nothing overlaps.
@@ -966,7 +970,7 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 
 ### Git workspace: service functionality and configuration
 
-Open **Git → Functionality** in Advanced mode, or the **Functionality** button in Simple mode. It uses the existing service catalog and installations, including GitLab sources. Manual and periodic Git checks inspect all Supervisor workers on each selected server, failed systemd services, installation disk usage and Linux memory usage (90% warns). Each installation checks discovered/configured units and reports healthy, warning, failed or unverified state with timestamps and bounded error logs. A running Supervisor worker never hides a failed sibling. Missing installations remain visible. Read access failures, absent tools, no runtime check and incomplete scans cannot be reported as healthy.
+Open **Monitoring → Functionality**, or the **Functionality** button in Git Simple mode. It uses the existing service catalog and installations, including GitLab sources. Manual and periodic Git checks inspect all Supervisor workers on each selected server, failed systemd services, installation disk usage and Linux memory usage (90% warns). Each installation checks discovered/configured units and reports healthy, warning, failed or unverified state with timestamps and bounded error logs. A running Supervisor worker never hides a failed sibling. Missing installations remain visible. Read access failures, absent tools, no runtime check and incomplete scans cannot be reported as healthy.
 
 Edit a service to set optional runtime units, an HTTP health URL or a TCP `host:port`. HTTP accepts 2xx, follows no redirects and verifies TLS; probes originate through SSH from the selected server. Unit commands use the SSH account, without automatic sudo or restart. Commands are bounded by a 30-second runtime step (individual commands use a six-second timeout where available); endpoints use six seconds. The server inventory caps workers at 256 and failed systemd units at 64, with an explicit warning if incomplete. Logs are capped at 16 KiB per check and redacted before storage.
 
@@ -987,7 +991,7 @@ Subscribe in **Settings → Notifications** to `git.functionality_problem`, `git
 
 ### Functionality configuration profiles
 
-In **Git → Functionality → Config profiles**, upload a reference such as `storage_backend.ini` or `config.py`, choose the catalog service, relative path inside each installation and optional operator label. Run a profile check across that service's installations (or selected installation IDs through the API). The matrix shows hostname, connection, service, environment, operator, path, timestamp, section/key/function and reference/actual values. Search matches server/operator/settings. Values are marked matching, different, additional, missing or masked.
+In **Monitoring → Functionality → Config profiles**, upload a reference such as `storage_backend.ini` or `config.py`, choose the catalog service, relative path inside each installation and optional operator label. Run a profile check across that service's installations (or selected installation IDs through the API). The matrix shows hostname, connection, service, environment, operator, path, timestamp, section/key/function and reference/actual values. Search matches server/operator/settings. Values are marked matching, different, additional, missing or masked.
 
 Profiles use the existing static parser: Python expressions are displayed as source text, never evaluated. Parse gaps, missing files, unsafe symlinks and incomplete inspections are explicit. Up to 50 profiles per account, 256 KiB reference files, 50 installations per check and four concurrent reads are supported. Structured reference values are masked and encrypted in SQLite; live remote values are read on demand. These profiles inspect WRM catalog installations; Medium uses its own native config and does not automatically register its private projects in that catalog.
 
@@ -1574,7 +1578,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 
 ## Configuration
 
-New optional runtime settings for v12.4.3b:
+Medium runtime settings (introduced in v12.4.3b):
 
 | Setting / environment override | Default | Purpose |
 |---|---|---|
@@ -1694,7 +1698,10 @@ New optional runtime settings for v12.4.3b:
 | `ai_mcp_enabled` | `0` | serve the MCP endpoint `/mcp` and the OAuth endpoints for AI apps |
 | `ai_mcp` | `admins` | who may create and use AI connections: `off`, `admins`, `all` |
 | `ai_mcp_scopes` | all five | allowed scopes: `read_logs`, `run_readonly`, `run_with_approval`, `edit_file_with_approval`, `transfer` |
-| `ai_mcp_modes` | `read_only,ask` | allowed modes of AI connections (the mode rules narrow them per connection) |
+| `ai_provider_header_seconds` | `900` | provider response-header wait, 30–7200 seconds |
+| `ai_provider_request_seconds` | `3600` | total provider request, 60–14400 seconds |
+| `ai_provider_stream_idle_seconds` | `600` | provider stream inactivity, 30–7200 seconds |
+| `ai_mcp_modes` | `read_only,ask,auto` | allowed modes of AI connections (the mode rules narrow them per connection) |
 | `ai_mcp_token_hours` / `ai_mcp_max_token_hours` | `8` / `24` | default and maximum lifetime of a token or OAuth approval |
 | `ai_mcp_oauth` | `1` | OAuth 2.1 (PKCE, dynamic client registration) for AI apps; `0` = tokens only |
 | `ai_mcp_redirect_uris` | claude.ai, claude.com, ChatGPT, `http://localhost:*` | OAuth redirect URI allowlist (`*` = any text; https, or http on loopback) |
@@ -1761,9 +1768,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.4.3b-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.4.3b-linux-amd64 -service-status
-sudo ./wrm-pro-v12.4.3b-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.4.4-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.4.4-linux-amd64 -service-status
+sudo ./wrm-pro-v12.4.4-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1794,7 +1801,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.4.3b-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.4.4-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1922,7 +1929,7 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 
 ## API reference
 
-### v12.4.3b endpoints
+### v12.4.4 endpoints
 
 All endpoints require a WRM session and effective owner/policy access. Mutating `/api/` calls require WRM's normal CSRF header/origin.
 
@@ -2430,7 +2437,7 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 
 ## Troubleshooting
 
-For v12.4.3b, **AI missing/unavailable** is diagnosed in Settings → AI assistant; check account policy/kill switch, provider availability and SSH/SFTP context. **Functionality unverified** means the remote account cannot inspect a service manager, no unit/probe is configured, or a check is incomplete; inspect its status message and configure the service's health endpoint if needed. **Media cannot play** can mean missing browser codec support or an FTP server without SIZE/REST; use Download. **Same-named servers** can be distinguished by full folder paths; choose Parent folder to build client/site nesting.
+For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistant; check account policy/kill switch, provider availability and SSH/SFTP context. **Functionality unverified** means the remote account cannot inspect a service manager, no unit/probe is configured, or a check is incomplete; inspect its status message and configure the service's health endpoint if needed. **Media cannot play** can mean missing browser codec support or an FTP server without SIZE/REST; use Download. **Same-named servers** can be distinguished by full folder paths; choose Parent folder to build client/site nesting.
 
 | Problem | Fix |
 |---|---|
@@ -2550,13 +2557,13 @@ If WRM is useful to you, consider supporting it on **[Ko-fi](https://ko-fi.com/v
 On x86_64 Linux with Go, curl and sha256sum installed:
 
 ```bash
-bash tools/build-appimage.sh v12.4.3b amd64
-bash tools/build-appimage.sh v12.4.3b arm64
+bash tools/build-appimage.sh v12.4.4 amd64
+bash tools/build-appimage.sh v12.4.4 arm64
 ```
 
 Outputs go to `dist/`. The script verifies pinned upstream AppImage tooling and runtimes, uses the existing WRM icon, and needs no FUSE during the build. GitHub releases remain drafts until all 16 packages and their checksums are verified and the Docker publication succeeds.
 
-## v12.4.3b runtime troubleshooting and source map
+## v12.4.4 runtime troubleshooting and source map
 
 - **Medium setup unavailable:** on Windows start Docker Desktop in Linux-container mode and retry Prepare runtime; on Linux install native tools or select the managed Docker runtime. Dependency installation needs access to the original requirements' package registry. The import status reports failure without exposing arbitrary installer output.
 - **Medium SSH/Git fails:** check the private SSH profile, known hosts, Git identity, host reachability, native repository permissions, build dependencies and OS user privileges. WRM's own connection credentials are separate from this original engine's SSH configuration.
@@ -2564,3 +2571,11 @@ Outputs go to `dist/`. The script verifies pinned upstream AppImage tooling and 
 - **Config profile missing/unparsed:** verify the catalog service and relative path, remote read permissions and supported static syntax. A source expression is not its evaluated runtime value.
 
 Implementation: `remote-manager/git_medium.go`, embedded `medium_wrapper.py`, `git_config_profiles.go`, `bitwarden.go` and folder reorder code in `folders.go`. Regression coverage: `v1243_test.go`, native SSH/rsync helper in `keys_test.go` and `python3 tools/test-medium-wrapper.py`, alongside the full Go race suite, UI/translation check and existing Node tests. Private source/config archives and runtime state are excluded from Git/Docker build context.
+
+## v12.4.4 workspaces, API and regression coverage
+
+See [the operation guide](docs/V12.4.4_GUIDE.md) for Monitoring/Zabbix transports, log roots/search/live panels, client GitLab cache/companion, MCP app setup and commands, editable grant scopes, selected AI context, terminal directory startup, visual labels, import routing and their exact API/bounds. [Validation and platform limits](docs/RELEASE_SUMMARY_v12.4.4.md) distinguish actual agents/browser/local-provider checks from fixtures and cross-compilation.
+
+New backend modules: `monitoring.go`, `monitoring_zabbix.go`, `monitoring_logs.go`, `git_relay.go`, `git_relay_client.go`, `git_review.go`, `mcp_edit.go`, `mcp_prompts.go`, `mcp_picker.go`, `ai_inventory.go`, `ai_context.go`, `ai_idle.go`, `terminal_directory.go`, `visual_labels.go`. On-demand UI modules: `static/monitoring.js` and `static/git_client.js`.
+
+`v1244_test.go`, `v1244_extra_test.go` and `git_relay_test.go` cover grant edits/session invalidation, inventories, labels/ownership/import, provider HTTP cancellation/idle/header limits, Zabbix framing/API TLS/items, log roots/symlinks/timestamps/rotation, literal terminal paths, client-cache token/scope/failure/generation isolation and reviewed targets surviving a changed/failed refresh. Run the full race/vet/format/UI/Node/Python checks described in CONTRIBUTING.

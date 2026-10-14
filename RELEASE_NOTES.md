@@ -1,18 +1,40 @@
-## Web Remote Manager PRO v12.4.3b — Windows Medium runtime fix
+## Web Remote Manager PRO v12.4.4 — Monitoring, logs and AI workflows
+
+### Added
+
+- **Monitoring** brings Zabbix server metrics, history, agent detection and service Functionality into one workspace. Use passive agent/agent 2 over SSH or your configured network route, verified certificate TLS, PSK through the existing remote `zabbix_get`, or an existing HTTPS Zabbix server API for active-only agents. Unavailable metrics are unknown and diagnostics remain visible.
+- **Logs** supports multiple roots/operators/services, historical segmented search and date/timezone/keyword filters, highlighted results, copying/downloads, terminal actions and up to 16 movable/resizable live windows with tiling/cascade/pause/rotation handling.
+- **Client GitLab tokens and cache** let a computer with GitLab access supply bounded repository snapshots to WRM. The GitLab token stays in browser memory or the companion's local token file. The latest complete successful server cache survives client disconnect and WRM restart; refresh is atomic, sharing is explicit and reviewed deployment content stays pinned.
+- **MCP onboarding and permissions:** CLI setup scripts, OAuth/cloud guidance, Cursor install link, `wrm` prompt and authorized server picker, native assistant `/wrm`, safe structured configuration inventory, visible Automatic within limits and editable existing grants. Grant edits retain bearer/expiry and terminate old sessions/approvals.
+- **Terminal and navigation:** previewed/redacted selection-to-AI context, Open terminal here for POSIX/PowerShell, Copy/Paste/native-menu fallback, hostname groups/combined Functionality filters and folder/connection colors/icons.
 
 ### Fixed
+
+General import recognizes mRemoteNG XML/PuTTY `.reg` ([issue #5](https://github.com/vedranius/web-browser-RDM-public/issues/5)); synthetic 4 MiB XML and UTF-16 registry exports were exercised in the browser. Provider header/request/idle timeouts are configurable for longer local AI requests. Wide replay fits phone/desktop widths. Search/filter bars remain at the top of supported scroll areas, and MCP wizard controls align correctly on narrow screens.
+
+### Upgrade and operation
+
+Replace the executable/container and retain the database, encryption key and private runtime files. Migrations are additive. Functionality is now **Monitoring → Functionality**. Configure each server's installed Zabbix agent and log roots in Monitoring settings; automatic polling is opt-in. MCP stays disabled by default and existing explicit administrator policies remain in force.
+
+Browser GitLab access needs the GitLab CORS/origin/local-network permissions; use the WRM companion when the browser cannot reach that API. The relay is for WRM repository API reads: native Medium Git clone/build/config Git operations and GitLab writes still need a direct route. Native Medium's Windows Linux-container prerequisite from v12.4.3b remains.
+
+[Download v12.4.4](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.4.4) · [setup/limits](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.4/docs/V12.4.4_GUIDE.md) · [validation](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.4/docs/RELEASE_SUMMARY_v12.4.4.md). Windows packages are cross-compiled; no native Windows VM execution is claimed.
+
+### Included from v12.4.3b — Windows Medium runtime fix
+
+#### Fixed
 
 Windows `.exe` installations run the original Medium deploy tool inside a managed Linux Docker runtime. Python, Git, OpenSSH and rsync are supplied by its pinned image; separate Windows installations are unnecessary. ZIP imports survive setup failure and can be prepared again without re-uploading. Private Linux volumes preserve deploy history, rollback state, permissions and config edits across restarts. Native Linux mode remains available.
 
 The original tool remains unchanged. Runtime source/venv are read-only, SSH/config are private and builds use an unprivileged user. Runtime environment forwarding preserves Docker CLI context and keeps secret values out of command arguments. Only owned containers are stopped.
 
-### Windows upgrade
+#### Windows upgrade
 
 **Download the new Windows executable manually:** v12.4.3 cannot parse a `b` suffix; v12.4.3b supports it for later updates. Retain the DB/key. Start Docker Desktop with **Linux containers** on Windows 10/11, then use **Git → Medium → Prepare runtime / retry** for an existing tool import, or import your trusted tool ZIP first. Import deploy-config/SSH profile and start Medium. A browser client needs no deployment dependencies.
 
 Docker Desktop is not supported on Windows Server; use a supported Linux WRM host/VM/container for Medium. The Docker engine must be local and accessible to the WRM account. Back up private `.medium` files and the managed Linux runtime/user Docker volumes.
 
-### Validation and packages
+#### Validation and packages
 
 Real pinned-image setup, original comparison/build, two actual OpenSSH/rsync deployments, rollback and stop/start history persistence were exercised against a local fixture. The build user could not read private SSH/config. Browser layouts at 390/1100/1440/1920 px had no JavaScript errors. Windows is cross-compiled; no native Windows VM run is claimed. Full validation: [hotfix summary](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.3b/docs/RELEASE_SUMMARY_v12.4.3b.md).
 
