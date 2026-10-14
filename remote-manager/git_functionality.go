@@ -424,6 +424,7 @@ func parseGitConfig(rel string, data []byte) gitConfigFile {
 		var walk func(string, interface{}, int)
 		walk = func(key string, v interface{}, depth int) {
 			if len(f.Entries) >= 2000 || depth > 32 {
+				f.Error = "Configuration entry/depth limit reached; inspection is incomplete"
 				f.Unparsed++
 				return
 			}
@@ -454,11 +455,54 @@ func parseGitConfig(rel string, data []byte) gitConfigFile {
 		walk("", value, 0)
 		return f
 	}
+	if strings.HasPrefix(strings.TrimSpace(string(data)), "PuTTY-User-Key-File-") {
+		e := configEntry("", "private_key", "", "", "secret", 1)
+		e.Secret = true
+		e.Value = aiRedacted
+		f.Entries = append(f.Entries, e)
+		return f
+	}
 	section, description := "", ""
 	multilineSecret := false
+	privateBlock, secretQuote := false, ""
 	for n, line := range strings.Split(strings.ReplaceAll(string(data), "\r\n", "\n"), "\n") {
+		if len(f.Entries) >= 2000 {
+			f.Error = "Configuration entry limit reached (2000); inspection is incomplete"
+			break
+		}
+		indented := len(line) > 0 && (line[0] == ' ' || line[0] == '\t')
 		line = strings.TrimSpace(line)
+		if privateBlock {
+			if strings.Contains(line, "-----END ") && strings.Contains(line, "PRIVATE KEY") {
+				privateBlock = false
+			}
+			continue
+		}
+		if secretQuote != "" {
+			if configQuoteClosed(line, secretQuote, 0) {
+				secretQuote = ""
+			}
+			continue
+		}
+		if strings.Contains(line, "-----BEGIN ") && strings.Contains(line, "PRIVATE KEY") {
+			key := "private_key"
+			if m := gitConfigAssignRe.FindStringSubmatch(line); m != nil {
+				key = m[1]
+			}
+			e := configEntry(section, key, "", "", "secret", n+1)
+			e.Secret = true
+			e.Value = aiRedacted
+			f.Entries = append(f.Entries, e)
+			privateBlock = !(strings.Contains(line, "-----END ") && strings.Contains(line, "PRIVATE KEY"))
+			description = ""
+			continue
+		}
+		// INI indented continuation lines belong to the preceding secret value.
+		if multilineSecret && indented {
+			continue
+		}
 		if line == "" {
+			multilineSecret = false
 			description = ""
 			continue
 		}
@@ -476,6 +520,15 @@ func parseGitConfig(rel string, data []byte) gitConfigFile {
 			e := configEntry(section, m[1], m[2], strings.TrimSpace(description), "setting", n+1)
 			f.Entries = append(f.Entries, e)
 			multilineSecret = e.Secret
+			if e.Secret {
+				v := strings.TrimSpace(m[2])
+				for _, quote := range []string{strings.Repeat(string(rune(34)), 3), strings.Repeat(string(rune(39)), 3), string(rune(34)), string(rune(39))} {
+					if strings.HasPrefix(v, quote) && !configQuoteClosed(v, quote, len(quote)) {
+						secretQuote = quote
+						break
+					}
+				}
+			}
 			description = ""
 		} else if m := gitConfigFunctionRe.FindStringSubmatch(line); m != nil {
 			f.Entries = append(f.Entries, configEntry(section, m[1], "defined", strings.TrimSpace(description), "function", n+1))
@@ -488,9 +541,13 @@ func parseGitConfig(rel string, data []byte) gitConfigFile {
 			}
 		}
 		if len(f.Entries) >= 2000 {
+			f.Error = "Configuration entry limit reached (2000); inspection is incomplete"
 			f.Unparsed++
 			break
 		}
+	}
+	if f.Error == "" && (privateBlock || secretQuote != "") {
+		f.Error = "Unterminated secret block; remaining contents were masked"
 	}
 	return f
 }
@@ -601,4 +658,18 @@ func saveGitServerHealth(userID, connID int, h gitFunctionality) {
 		})
 	}
 	db.Exec(`INSERT INTO git_server_health(user_id,conn_id,data) VALUES(?,?,?) ON CONFLICT(user_id,conn_id) DO UPDATE SET data=excluded.data`, userID, connID, string(jsonMarshal(h)))
+}
+
+// Match a closing delimiter without treating an escaped quote as the end of a secret.
+func configQuoteClosed(s, quote string, start int) bool {
+	for i := start; i <= len(s)-len(quote); i++ {
+		if s[i] == 92 {
+			i++
+			continue
+		}
+		if strings.HasPrefix(s[i:], quote) {
+			return true
+		}
+	}
+	return false
 }
