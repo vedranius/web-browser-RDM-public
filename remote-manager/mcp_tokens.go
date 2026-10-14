@@ -291,6 +291,7 @@ type mcpGrantRequest struct {
 	Hours   int           `json:"hours"`
 	Auto    *aiAutoLimits `json:"auto"`
 	Confirm bool          `json:"confirm_auto"`
+	editing bool
 }
 
 // validate checks a request against the policies and the user's connections.
@@ -369,7 +370,7 @@ func (q *mcpGrantRequest) validate(userID int) error {
 	}
 	var n int
 	db.QueryRow(`SELECT COUNT(*) FROM mcp_tokens WHERE user_id=? AND revoked_at='' AND expires_at > ?`, userID, nowRFC()).Scan(&n)
-	if n >= mcpMaxGrantsPerUser {
+	if n >= mcpMaxGrantsPerUser && !q.editing {
 		return fmt.Errorf("you have %d active AI connections; revoke one first", n)
 	}
 	return nil
@@ -572,13 +573,17 @@ func apiMCPHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		id, _ := strconv.ParseInt(parts[1], 10, 64)
-		if r.Method != http.MethodDelete || len(parts) != 2 {
+		if !oneOf(r.Method, http.MethodDelete, http.MethodPut) || len(parts) != 2 {
 			jsonError(w, "Method not allowed", 405)
 			return
 		}
 		var owner int
 		if db.QueryRow(`SELECT user_id FROM mcp_tokens WHERE id=?`, id).Scan(&owner) != nil || owner != userID {
 			jsonError(w, "AI connection not found", 404)
+			return
+		}
+		if r.Method == http.MethodPut {
+			mcpEditGrant(w, r, id, userID)
 			return
 		}
 		mcpRevoke(r, id, userID, "revoked by the user")

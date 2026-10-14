@@ -167,6 +167,9 @@ func selectRunFiles(plan []planFile, it *gitRunItem) ([]planFile, error) {
 
 // gitFileContent returns a target file's content (blob cache, else the Git API).
 func gitFileContent(userID int, t gitTarget, rel string, providers map[int]*gitProvider) ([]byte, error) {
+	if loadGitRelayMeta(t.SourceID).OwnerID > 0 && !relaySourceAllowed(userID, t.SourceID) {
+		return nil, fmt.Errorf("shared Git source access has been removed")
+	}
 	f, ok := t.Files[rel]
 	if !ok || f.Blob == "" {
 		return nil, fmt.Errorf("%s: the content is not available (refresh the target)", rel)

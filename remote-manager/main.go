@@ -49,6 +49,7 @@ var encryptionKey []byte
 // Connection is the full record including decrypted secrets. It is only used on the
 // server; the browser gets a connView without passwords or private keys.
 type Connection struct {
+	Label      *visualLabel      `json:"label,omitempty"`
 	ID         int               `json:"id"`
 	Name       string            `json:"name"`
 	Protocol   string            `json:"protocol"`
@@ -85,6 +86,7 @@ type Connection struct {
 }
 
 type connView struct {
+	Label       *visualLabel      `json:"label,omitempty"`
 	FolderPath  string            `json:"folder_path,omitempty"`
 	ID          int               `json:"id"`
 	Name        string            `json:"name"`
@@ -132,6 +134,7 @@ func (c Connection) view() connView {
 	if c.ProxyID != nil && *c.ProxyID > 0 {
 		db.QueryRow(`SELECT name FROM proxies WHERE id=?`, *c.ProxyID).Scan(&v.ProxyName)
 	}
+	v.Label = loadVisualLabel("connection", c.ID)
 	v.FolderPath = folderPathOf(c.UserID, c.FolderID)
 	v.Monitor = true
 	if c.ID > 0 {
@@ -160,16 +163,17 @@ func (c Connection) view() connView {
 }
 
 type Folder struct {
-	SortOrder int    `json:"sort_order"`
-	ParentID  *int   `json:"parent_id"`
-	Path      string `json:"path,omitempty"`
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	JumpID    *int   `json:"jump_id"`  // default jump host of its connections
-	ProxyID   *int   `json:"proxy_id"` // default proxy of its connections
-	JumpName  string `json:"jump_name,omitempty"`
-	ProxyName string `json:"proxy_name,omitempty"`
-	ProxyRef  string `json:"proxy_ref,omitempty"` // export / import: name of the proxy
+	Label     *visualLabel `json:"label,omitempty"`
+	SortOrder int          `json:"sort_order"`
+	ParentID  *int         `json:"parent_id"`
+	Path      string       `json:"path,omitempty"`
+	ID        int          `json:"id"`
+	Name      string       `json:"name"`
+	JumpID    *int         `json:"jump_id"`  // default jump host of its connections
+	ProxyID   *int         `json:"proxy_id"` // default proxy of its connections
+	JumpName  string       `json:"jump_name,omitempty"`
+	ProxyName string       `json:"proxy_name,omitempty"`
+	ProxyRef  string       `json:"proxy_ref,omitempty"` // export / import: name of the proxy
 }
 
 type FileItem struct {
@@ -324,6 +328,9 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/notify/channels/", apiAdminNotifyHandler)
 	mux.HandleFunc("/api/status/check", apiStatusHandler)
 	mux.HandleFunc("/api/inventory/", apiInventoryHandler)
+	mux.HandleFunc("/gitlab-relay", gitRelayWorkerHandler)
+	mux.HandleFunc("/api/monitoring", apiMonitoringHandler)
+	mux.HandleFunc("/api/monitoring/", apiMonitoringHandler)
 	mux.HandleFunc("/api/git", apiGitHandler)
 	mux.HandleFunc("/api/git/", apiGitHandler)
 	mux.HandleFunc("/api/git/medium", apiMediumHandler)
@@ -404,7 +411,15 @@ func main() {
 	mcpToken := flag.String("token", "", "with -mcp-stdio: the AI connection `TOKEN` from Settings → AI connections (or -token-file, WRM_MCP_TOKEN)")
 	mcpTokenFile := flag.String("token-file", "", "with -mcp-stdio: read the token from `FILE`")
 	mcpCA := flag.String("ca-file", "", "with -mcp-stdio: trust the CA or self-signed certificate in `FILE` (PEM) for the WRM server")
+	gitlabRelay := flag.Bool("gitlab-relay", false, "run a client GitLab relay on this computer, using the exact -url relay job URL from WRM")
+	gitlabURL := flag.String("gitlab-url", "", "the selected GitLab origin for the client relay")
+	relayKeyFile := flag.String("relay-key-file", "", "read the short-lived WRM relay job key from FILE")
+	relayLive := flag.Bool("relay-live", true, "keep the GitLab client relay online for uncached read-only API operations until the job expires")
+	gitlabTokenFile := flag.String("gitlab-token-file", "", "read the client GitLab access token from FILE (or WRM_GITLAB_TOKEN)")
 	flag.Parse()
+	if *gitlabRelay {
+		os.Exit(runGitLabRelayClient(*mcpURL, *gitlabURL, *relayKeyFile, *gitlabTokenFile, *mcpCA, os.Stdout, *relayLive))
+	}
 	if *showVersion {
 		fmt.Println(AppVersion)
 		return
@@ -475,6 +490,7 @@ func serve(stop <-chan struct{}) int {
 	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
 	startTURN()
 	tunnelMgr.startAlways()
+	go runMonitoring()
 	go statusMon.run()
 	go notifier.run()
 	go runCredentialReminders()
@@ -1151,6 +1167,8 @@ func initDB() {
 	db.Exec(`UPDATE auth_sessions SET last_active_at = expires_at WHERE last_active_at = ''`)
 
 	// v11.0: Git workspace (sources, blob cache, catalog, targets, installations)
+	initMonitoring()
+	initVisualLabels()
 	initGitSchema()
 	initGitConfigProfiles()
 
@@ -1302,6 +1320,9 @@ func usesServerKeys(authMethod string) bool {
 }
 
 func normalizeConnection(c *Connection) error {
+	if err := validateVisualLabel(c.Label); err != nil {
+		return err
+	}
 	c.Name = truncateStr(strings.TrimSpace(c.Name), 120)
 	c.Host = strings.TrimSpace(c.Host)
 	c.Username = strings.TrimSpace(c.Username)
@@ -1397,6 +1418,7 @@ func loadUserConnections(userID int) []Connection {
 		var tags string
 		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath, &c.KeyID, &c.CredentialID, &tags, &c.ProxyID)
 		c.Tags = parseTags(tags)
+		c.Label = loadVisualLabel("connection", c.ID)
 		decryptConnectionSecrets(&c)
 		c.UserID = userID
 		var fd Folder
@@ -1469,6 +1491,7 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		id, _ := res.LastInsertId()
 		plain.ID = int(id)
+		saveVisualLabel(db, "connection", plain.ID, userID, c.Label)
 		if c.Monitor != nil && !*c.Monitor {
 			db.Exec(`UPDATE connections SET monitor=0 WHERE id=?`, id)
 		}
@@ -1613,6 +1636,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 500)
 			return
 		}
+		saveVisualLabel(db, "connection", id, userID, c.Label)
 		if c.Monitor != nil {
 			db.Exec(`UPDATE connections SET monitor=? WHERE id=?`, boolInt(*c.Monitor), id)
 		}
@@ -1688,6 +1712,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		nid, _ := res.LastInsertId()
 		copyTunnelDefs(id, int(nid))
+		saveVisualLabel(db, "connection", int(nid), userID, loadVisualLabel("connection", id))
 		copySnippetsForConnection(id, int(nid), userID)
 		copyBookmarksForConnection(id, int(nid), userID)
 		dup, _ := loadConnectionRaw(int(nid))
@@ -1830,6 +1855,7 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		id, _ := res.LastInsertId()
 		f.ID = int(id)
+		saveVisualLabel(db, "folder", f.ID, userID, f.Label)
 		if f.JumpID != nil || f.ProxyID != nil {
 			auditLog(r, userID, "folder.created", f.Name, map[string]interface{}{"folder_id": f.ID, "default_jump": f.JumpID, "default_proxy": f.ProxyID})
 		}
@@ -2177,6 +2203,11 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			n, _ := res.LastInsertId()
 			id = int(n)
 		}
+		if err := saveVisualLabel(tx, "folder", id, userID, f.Label); err != nil {
+			tx.Rollback()
+			jsonError(w, err.Error(), 400)
+			return
+		}
 		folderIDs[folderImportKey(f)] = &id
 	}
 	imported, skipped := 0, 0
@@ -2238,6 +2269,11 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 			nid, _ := res.LastInsertId()
 			if oldID > 0 {
 				newIDs[oldID] = int(nid)
+			}
+			if err := saveVisualLabel(tx, "connection", int(nid), userID, c.Label); err != nil {
+				tx.Rollback()
+				jsonError(w, err.Error(), 400)
+				return
 			}
 			if len(c.Options) > 0 {
 				tx.Exec(`UPDATE connections SET options=? WHERE id=?`, string(jsonMarshal(c.Options)), nid)

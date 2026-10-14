@@ -98,6 +98,8 @@ func initGitSchema() {
 		last_ok_state TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "conn_id", "app", "path", "env", "manual", "state", "data", "checked_at", "discovered_at", "last_ok_at", "last_ok_state")
 	mustExec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_git_installs_path ON git_installs(user_id, conn_id, path)`)
+	initGitRelay()
+	initGitReview()
 	initGitFunctionalitySchema()
 	initGitRunsSchema()
 	initGitCISchema()
@@ -576,7 +578,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return true
 	}
-	if apiGitConfigProfiles(w, r, userID, rest) || apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitActivity(w, r, userID, rest) || apiGitWhere(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
+	if apiGitRelay(w, r, userID, rest) || apiGitConfigProfiles(w, r, userID, rest) || apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitActivity(w, r, userID, rest) || apiGitWhere(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
 		return
 	}
 	switch {
@@ -725,7 +727,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			id, _ := strconv.Atoi(parts[1])
 			src, found := loadGitSource(userID, id)
-			if !found || src.Kind == "bundle" {
+			if !found || !src.Owned || src.Kind == "bundle" {
 				jsonError(w, "Source not found", 404)
 				return
 			}
@@ -746,6 +748,8 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if in.URL != src.URL {
 				// a different server: cached trees and blobs belong to the old one
+				db.Exec(`UPDATE git_relay_meta SET published=0,error='Source address changed; synchronize again' WHERE source_id=?`, id)
+				db.Exec(`DELETE FROM git_relay_cache WHERE source_id=?`, id)
 				db.Exec(`DELETE FROM git_blobs WHERE source_id=?`, id)
 				db.Exec(`DELETE FROM git_trees WHERE source_id=?`, id)
 			}
@@ -757,7 +761,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 	case len(parts) == 2 && parts[0] == "sources" && r.Method == http.MethodDelete:
 		id, _ := strconv.Atoi(parts[1])
 		src, found := loadGitSource(userID, id)
-		if !found {
+		if !found || !src.Owned {
 			jsonError(w, "Source not found", 404)
 			return
 		}
