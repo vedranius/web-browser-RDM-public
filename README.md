@@ -13,16 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.4.3** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.4.3b** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
-## What's new in v12.4.3
+## What's new in v12.4.3b
 
-- **Medium deployment mode:** run the supplied original deploy tool unchanged, with its original screens, YAML config, comparison, file selection, builds, deployment, rollback, history and config Git controls. Import the private tool/config ZIPs in Git → Medium; WRM supplies authenticated access and private runtime directories.
-- **Functionality config profiles:** upload a reference INI/config/Python file and compare its settings against installations by hostname, service, environment and operator. Values are searchable; secrets are masked and missing/unparsed settings are explicit.
-- **Bitwarden SSH keys:** sign in and unlock your account through the official CLI, then select a native SSH key item in a connection. WRM stores the item reference and obtains the key during the SSH handshake.
-- **Folder ordering:** drag folders before/after siblings or into a parent, or use Move up / Move down. The order persists across reloads and config export/import.
+**Medium on Windows uses a managed Linux Docker runtime.** Python, Git, SSH and rsync run inside the pinned runtime image; Windows needs Docker with a Linux engine, not separate native deployment tools. Tool ZIPs survive failed preparation, and an administrator can retry **Prepare runtime** without re-uploading. Private Linux volumes preserve permissions, Git metadata, deploy state/history and rollbacks.
 
-See the [release summary](docs/RELEASE_SUMMARY_v12.4.3.md), [Medium parity record](docs/MEDIUM_PARITY_v12.4.3.md), [release notes](RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
+[Hotfix validation](docs/RELEASE_SUMMARY_v12.4.3b.md) · [Original-tool parity](docs/MEDIUM_PARITY_v12.4.3.md). The earlier requests and the new monitoring/MCP/log requirements are accepted for **v12.4.4** in [ROADMAP.md](ROADMAP.md); they are not implemented by this hotfix.
 
 ---
 
@@ -53,7 +50,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -153,21 +150,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.4.3-linux-amd64
-   ./wrm-pro-v12.4.3-linux-amd64
+   chmod +x wrm-pro-v12.4.3b-linux-amd64
+   ./wrm-pro-v12.4.3b-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.4.3-windows-amd64.exe
+   .\wrm-pro-v12.4.3b-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.4.3-linux-amd64.AppImage
-   ./wrm-pro-v12.4.3-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.4.3-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.4.3b-linux-amd64.AppImage
+   ./wrm-pro-v12.4.3b-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.4.3b-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -176,8 +173,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.3/wrm-pro-v12.4.3-android-arm64
-   chmod +x wrm-pro-v12.4.3-android-arm64 && ./wrm-pro-v12.4.3-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.3b/wrm-pro-v12.4.3b-android-arm64
+   chmod +x wrm-pro-v12.4.3b-android-arm64 && ./wrm-pro-v12.4.3b-android-arm64
    ```
 
    **Docker**
@@ -202,13 +199,25 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
+## Upgrading from v12.4.3
+
+Download the v12.4.3b Windows executable, stop WRM and replace the previous executable while retaining its database and encryption key. **The v12.4.3 updater cannot parse the `b` suffix, so this first hotfix needs a manual download.** v12.4.3b adds letter-hotfix support for subsequent checks/updates.
+
+For Windows 10/11, install/start [Docker Desktop with Linux containers](https://docs.docker.com/desktop/setup/install/windows-install/) under the account running WRM. In **Git → Medium**, import the original tool ZIP or, if it is already imported, click **Prepare runtime / retry**. WRM pulls the pinned Linux image and installs the original lockfile in a Linux volume. Import your deploy-config and SSH profile and start Medium. Standard `~/.ssh/key` references work inside its private Linux home. No Windows Python/rsync installation is needed. Browser clients need no deploy tools.
+
+Docker Desktop is not supported on Windows Server: run WRM/Medium on a supported Linux host or Linux VM/container and access it from the Windows browser. A remote Docker daemon is not supported by this bind-mount/localhost bridge. Docker engine access must belong to the account running WRM; installing Docker for a different desktop account does not grant a Windows service access automatically.
+
+Back up the database/key and private `.medium` source/config/preferences **plus** Docker volumes named `wrm-medium-<instance>-runtime` and `wrm-medium-<instance>-u<user>`. Stop Medium before backing up user volumes. Runtime source/venv are read-only; user volumes retain native edits/history across restarts. Re-importing config/SSH replaces that profile explicitly without deleting deploy history. Existing native Linux runtime data is copied into a new user volume on its first Docker start. Source and SSH keys remain private.
+
+Linux keeps its native runtime when dependencies exist; use `WRM_MEDIUM_RUNTIME=docker` to select the managed runtime or `native` to select native explicitly. Windows always selects Docker. Custom Docker paths/images use `WRM_MEDIUM_DOCKER` and `WRM_MEDIUM_CONTAINER_IMAGE`. The Windows CLI is also discovered at standard Docker Desktop installation paths without requiring a PATH refresh. Additional build toolchains/users may require a trusted custom Linux image; the pinned image uses its unprivileged `wrm` account for builds. Unix host-agent forwarding remains a native-runtime option; managed Docker uses the private SSH profile.
+
 ## Upgrading from v12.4.0
 
 Replace the binary/AppImage or update the container. Additive migrations create `git_config_profiles` and add `folders.sort_order`. Existing folders retain alphabetical order until reordered. Back up the database, matching encryption key and adjacent `.medium` / `.bitwarden` directories; they contain private runtime/configuration data. Older binaries ignore the new fields, but cannot use the new features.
 
 Medium is enabled for administrators by default. Import the original deploy-tool ZIP once as an administrator, then each operator imports their deploy-config and optional SSH profile. The Docker image includes Python 3.12+, git, OpenSSH, rsync and the official Bitwarden CLI. Standalone binaries keep these dependencies optional: install them on the WRM host before enabling the corresponding feature. Medium uses the original engine's own plans, locks, backups and history; it does not import those into Simple/Advanced runs.
 
-The earlier client GitLab relay/replay and AI/navigation/color/icon requests remain in [ROADMAP.md](ROADMAP.md). The owner explicitly prioritized v12.4.3; these backlog items are not represented as delivered in this release.
+The earlier client GitLab relay/replay and AI/navigation/color/icon requests remain in [ROADMAP.md](ROADMAP.md). The owner explicitly prioritized v12.4.3b; these backlog items are not represented as delivered in this release.
 
 ## Upgrading from v12.3.6
 
@@ -990,7 +999,7 @@ The original tool runs unchanged behind WRM's authenticated `/medium/` bridge, e
 
 Use **Runtime settings** for the original `DEPLOY_CONFIG_REPO`, pull/check cadence, user email/hostname, SSH options, build user and timeout. Preferences are encrypted; stored command/credential values are masked on read. A config Git clone lives separately from the imported flat config. Git identity, keys, known-host verification and repository write access must be configured for native Git push. Uploaded SSH files use the user's private runtime home; a trusted administrator may provide `WRM_MEDIUM_SSH_AUTH_SOCK` for users allowed server-side keys.
 
-Medium needs Python 3.12+, git, OpenSSH and rsync on the WRM host (`WRM_MEDIUM_PYTHON` can select Python). Builds need their original toolchain and OS user permissions. Git and target hosts must be reachable from the runtime. **Grant Medium only to trusted operators:** editable configs/builds/deploy commands execute as the WRM OS account. Per-user directories/processes are not an OS sandbox. WRM checks authentication, `git_medium`, Git checks and action policies and records the action boundary; the original tool supplies its native review/locks/history. Simple and Advanced continue using WRM's existing engine and catalog.
+The native Linux runtime needs Python 3.12+, git, OpenSSH and rsync on the WRM host (`WRM_MEDIUM_PYTHON` can select Python). Windows uses the managed Docker runtime instead; those dependencies run in its Linux image. Builds need their original toolchain and OS user permissions. Git and target hosts must be reachable from the runtime. **Grant Medium only to trusted operators:** editable configs/builds/deploy commands execute as the WRM OS account. Per-user directories/processes are not an OS sandbox. WRM checks authentication, `git_medium`, Git checks and action policies and records the action boundary; the original tool supplies its native review/locks/history. Simple and Advanced continue using WRM's existing engine and catalog.
 
 ### Git workspace: every file and partial checks
 
@@ -1565,7 +1574,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 
 ## Configuration
 
-New optional runtime settings for v12.4.3:
+New optional runtime settings for v12.4.3b:
 
 | Setting / environment override | Default | Purpose |
 |---|---|---|
@@ -1573,6 +1582,9 @@ New optional runtime settings for v12.4.3:
 | `bitwarden` / `WRM_BITWARDEN` | `all` | `off`, `admins`, `all`; access to each user's own vault. |
 | `bitwarden_idle_minutes` / `WRM_BITWARDEN_IDLE_MINUTES` | `15` | Unlock inactivity, 1–240 minutes. |
 | `WRM_BITWARDEN_CLI` | `bw` on PATH | Official CLI executable override. |
+| `WRM_MEDIUM_RUNTIME` | `auto` | `docker` or `native` on Linux; Windows always uses Docker. |
+| `WRM_MEDIUM_DOCKER` | Docker on PATH/standard Desktop paths | CLI override, without shell arguments. |
+| `WRM_MEDIUM_CONTAINER_IMAGE` | Pinned published WRM Linux image | Trusted custom runtime image; source is still imported privately. |
 | `WRM_MEDIUM_PYTHON` | Python on PATH | Python 3.12+ executable for the private venv. |
 | `WRM_MEDIUM_SSH_AUTH_SOCK` | unset | Optional SSH agent socket, restricted to users allowed server-side keys. |
 
@@ -1749,9 +1761,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.4.3-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.4.3-linux-amd64 -service-status
-sudo ./wrm-pro-v12.4.3-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.4.3b-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.4.3b-linux-amd64 -service-status
+sudo ./wrm-pro-v12.4.3b-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1782,7 +1794,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.4.3-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.4.3b-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1910,7 +1922,7 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 
 ## API reference
 
-### v12.4.3 endpoints
+### v12.4.3b endpoints
 
 All endpoints require a WRM session and effective owner/policy access. Mutating `/api/` calls require WRM's normal CSRF header/origin.
 
@@ -1919,7 +1931,7 @@ All endpoints require a WRM session and effective owner/policy access. Mutating 
 | `GET /api/git/medium` | Runtime/import/dependency status and tool SHA-256. |
 | `POST /api/git/medium/{tool,config,ssh}?confirm=1` | Multipart ZIP in field `file`; tool is administrator-only; 20 MiB expanded limit. |
 | `GET, POST /api/git/medium/settings` | Read masked / save encrypted original runtime preferences. |
-| `POST /api/git/medium/{start,stop}` | Start original app / stop only when idle. |
+| `POST /api/git/medium/{start,stop,prepare}` | Start original app / stop only when idle / administrator retry of retained tool setup. |
 | `/medium/*` | Original UI and native actions behind WRM authentication, policy and origin checks. |
 | `GET, POST /api/git/config-profiles` | List / add reference `{name,app,path,operator,content}`. |
 | `DELETE /api/git/config-profiles/{id}` | Remove owned profile. |
@@ -2418,7 +2430,7 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 
 ## Troubleshooting
 
-For v12.4.3, **AI missing/unavailable** is diagnosed in Settings → AI assistant; check account policy/kill switch, provider availability and SSH/SFTP context. **Functionality unverified** means the remote account cannot inspect a service manager, no unit/probe is configured, or a check is incomplete; inspect its status message and configure the service's health endpoint if needed. **Media cannot play** can mean missing browser codec support or an FTP server without SIZE/REST; use Download. **Same-named servers** can be distinguished by full folder paths; choose Parent folder to build client/site nesting.
+For v12.4.3b, **AI missing/unavailable** is diagnosed in Settings → AI assistant; check account policy/kill switch, provider availability and SSH/SFTP context. **Functionality unverified** means the remote account cannot inspect a service manager, no unit/probe is configured, or a check is incomplete; inspect its status message and configure the service's health endpoint if needed. **Media cannot play** can mean missing browser codec support or an FTP server without SIZE/REST; use Download. **Same-named servers** can be distinguished by full folder paths; choose Parent folder to build client/site nesting.
 
 | Problem | Fix |
 |---|---|
@@ -2538,15 +2550,15 @@ If WRM is useful to you, consider supporting it on **[Ko-fi](https://ko-fi.com/v
 On x86_64 Linux with Go, curl and sha256sum installed:
 
 ```bash
-bash tools/build-appimage.sh v12.4.3 amd64
-bash tools/build-appimage.sh v12.4.3 arm64
+bash tools/build-appimage.sh v12.4.3b amd64
+bash tools/build-appimage.sh v12.4.3b arm64
 ```
 
 Outputs go to `dist/`. The script verifies pinned upstream AppImage tooling and runtimes, uses the existing WRM icon, and needs no FUSE during the build. GitHub releases remain drafts until all 16 packages and their checksums are verified and the Docker publication succeeds.
 
-## v12.4.3 runtime troubleshooting and source map
+## v12.4.3b runtime troubleshooting and source map
 
-- **Medium setup unavailable:** install Python 3.12+, git, OpenSSH and rsync, or use Docker. Dependency installation needs access to the original requirements' package registry. The import status reports failure without exposing arbitrary installer output.
+- **Medium setup unavailable:** on Windows start Docker Desktop in Linux-container mode and retry Prepare runtime; on Linux install native tools or select the managed Docker runtime. Dependency installation needs access to the original requirements' package registry. The import status reports failure without exposing arbitrary installer output.
 - **Medium SSH/Git fails:** check the private SSH profile, known hosts, Git identity, host reachability, native repository permissions, build dependencies and OS user privileges. WRM's own connection credentials are separate from this original engine's SSH configuration.
 - **Bitwarden login fails:** verify official CLI/server compatibility, HTTPS reachability, account credentials and MFA. Use personal API credentials with master password when interactive bot challenges prevent email login. Unlock again after inactivity/restart; no private key is returned by the key-list API.
 - **Config profile missing/unparsed:** verify the catalog service and relative path, remote read permissions and supported static syntax. A source expression is not its evaluated runtime value.
