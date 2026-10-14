@@ -60,6 +60,7 @@ jobs:
 
       - name: Web UI syntax, translations and Git Simple / AI regressions
         run: |
+          python3 tools/test-medium-wrapper.py
           node tools/check-ui.js
           node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js
 

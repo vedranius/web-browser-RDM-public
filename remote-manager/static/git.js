@@ -417,7 +417,7 @@ Object.assign(LANGS.hr, {
 
 // Simple mode of the Git workspace (v12.2.2)
 Object.assign(LANGS.en, {
-  gs_simple: 'Simple', gs_advanced: 'Advanced', gs_mode_h: 'Simple shows only deployment, versions, update, install and rollback. Advanced is the full Git workspace.',
+  gs_simple: 'Simple', gs_medium: 'Medium', gs_advanced: 'Advanced', gs_mode_h: 'Simple shows only deployment, versions, update, install and rollback. Advanced is the full Git workspace.',
   gs_intro: 'Pick an environment below. You see what runs on the server compared with the latest version on the branch, and you can install, update or roll back with one click. Everything else is in Advanced mode.',
   gs_none: 'Nothing found yet. Once a Git source is connected and your servers are reachable, services detected on the servers appear here automatically. Run a check to look for them.',
   gs_find: 'Find services on my servers',
@@ -447,7 +447,7 @@ Object.assign(LANGS.en, {
   gs_rb_q: 'Roll back {app} on {env} to {v}?', gs_rb_h: 'Files changed by the last deployment are restored from the backup.',
 });
 Object.assign(LANGS.hr, {
-  gs_simple: 'Jednostavno', gs_advanced: 'Napredno', gs_mode_h: 'Jednostavno prikazuje samo isporuku, verzije, nadogradnju, instalaciju i povratak. Napredno je cijeli Git radni prostor.',
+  gs_simple: 'Jednostavno', gs_medium: 'Srednje', gs_advanced: 'Napredno', gs_mode_h: 'Jednostavno prikazuje samo isporuku, verzije, nadogradnju, instalaciju i povratak. Napredno je cijeli Git radni prostor.',
   gs_intro: 'Odaberite okruženje ispod. Vidite što radi na serveru u usporedbi s najnovijom verzijom na grani i jednim klikom možete instalirati, nadograditi ili vratiti prethodnu verziju. Sve ostalo je u naprednom načinu.',
   gs_none: 'Još ništa nije pronađeno. Kad je Git izvor spojen i serveri dostupni, servisi pronađeni na serverima pojavljuju se ovdje automatski. Pokrenite provjeru da ih potražite.',
   gs_find: 'Pronađi servise na mojim serverima',
@@ -514,18 +514,38 @@ Object.assign(LANGS.hr, {
  gf_no_install:'Nema registrirane instalacije. Pronađite servise ili dodajte instalaciju.', gf_units:'Jedinice servisa (po retku: systemd:naziv.service ili supervisor:program)', gf_http:'HTTP URL provjere stanja (opcionalno)', gf_tcp:'TCP adresa provjere (opcionalno, host:port)', gf_files:'Konfiguracijske datoteke (opcionalne relativne putanje; inače automatsko pronalaženje)', gf_servers:'Provjere servera', gf_log:'Zapis greške', gf_never:'Pokrenite provjeru funkcionalnosti.', gf_source:'Repozitorij', gf_checks:'Provjere servisa', gf_all_workers:'Svi Supervisor workeri i neuspješne systemd jedinice',
 });
 
+
+Object.assign(LANGS.en, {
+ gm_settings:'Original runtime settings', gm_settings_hint:'Stop Medium before saving. These are the original deploy-tool environment options: config Git repository/pull/check interval, commit identity, SSH options, command timeout and build user. Empty fields use the original defaults. Masked values are preserved.', gm_title:'Original deploy tool', gm_intro:'Medium uses the original deploy-tool interface and deployment engine. Import your trusted tool ZIP and deploy-config ZIP, then start it. Each account has its own configuration, work files and SSH profile. Python 3.12+, git, SSH and rsync are required on the WRM server.',
+ gm_start:'Start', gm_stop:'Stop', gm_tool:'Import deploy-tool ZIP', gm_config:'Import deploy-config ZIP', gm_ssh:'Import SSH profile ZIP', gm_open:'Open full window', gm_running:'Running', gm_stopped:'Stopped', gm_tool_ready:'Tool ready', gm_tool_missing:'Tool not installed', gm_config_ready:'Config loaded', gm_config_missing:'Config not loaded', gm_missing:'Missing dependencies', gm_size:'ZIP exceeds 20 MiB', gm_trust:'This source/configuration can execute build and deployment commands on the server. Import only files you trust. Continue?', gm_stop_confirm:'Stop the original deploy tool? Wait for deployments to finish first.',
+});
+Object.assign(LANGS.hr, {
+ gm_settings:'Postavke izvornog runtimea', gm_settings_hint:'Zaustavite Srednje prije spremanja. Ovo su izvorne deploy-tool opcije: Git repo konfiguracije/povlačenje/interval provjere, autor commitova, SSH opcije, timeout naredbi i build korisnik. Prazna polja koriste izvorne zadane vrijednosti. Maskirane vrijednosti se zadržavaju.', gm_title:'Izvorni deploy tool', gm_intro:'Srednje koristi izvorno sučelje i deploy mehanizam deploy toola. Uvezite pouzdani tool ZIP i deploy-config ZIP, zatim ga pokrenite. Svaki račun ima vlastitu konfiguraciju, radne datoteke i SSH profil. Na WRM serveru potrebni su Python 3.12+, git, SSH i rsync.',
+ gm_start:'Pokreni', gm_stop:'Zaustavi', gm_tool:'Uvezi deploy-tool ZIP', gm_config:'Uvezi deploy-config ZIP', gm_ssh:'Uvezi SSH profil ZIP', gm_open:'Otvori cijeli prozor', gm_running:'Pokrenuto', gm_stopped:'Zaustavljeno', gm_tool_ready:'Tool spreman', gm_tool_missing:'Tool nije instaliran', gm_config_ready:'Config učitan', gm_config_missing:'Config nije učitan', gm_missing:'Nedostaju preduvjeti', gm_size:'ZIP prelazi 20 MiB', gm_trust:'Ovaj izvor/config može izvršavati build i deploy naredbe na serveru. Uvozite samo datoteke kojima vjerujete. Nastaviti?', gm_stop_confirm:'Zaustaviti izvorni deploy tool? Najprije pričekajte završetak deploya.',
+});
+
+
+Object.assign(LANGS.en, {
+ gcp_title:'Configuration profiles', gcp_intro:'Import a reference config/INI file and inspect the corresponding file on each installation. Selected installation checkboxes limit the check; otherwise all installations of the chosen service are checked (up to 50).', gcp_add:'Add config/INI profile', gcp_settings:'settings', gcp_check:'Inspect servers', gcp_path:'Relative path on the server', gcp_operator:'Operator / client (optional)', gcp_file:'Reference file', gcp_import_hint:'The reference defines settings and expected values. It is parsed without executing scripts; secrets are masked before storage. The server file must be inside the installation.', gcp_file_limit:'Choose a text configuration file up to 256 KiB.', gcp_delete:'Delete this configuration profile?', gcp_values_hint:'Actual values are read from servers now. Script expressions are shown as source, never executed. Secret values are masked and are not compared. INI sections can identify operators.', gcp_expected:'Reference value', gcp_missing:'Missing', gcp_masked:'Masked', gcp_extra:'Additional setting', gcp_same:'Matches reference', gcp_different:'Different from reference',
+});
+Object.assign(LANGS.hr, {
+ gcp_title:'Konfiguracijski profili', gcp_intro:'Uvezite referentni config/INI i pregledajte odgovarajuću datoteku na svakoj instalaciji. Označene instalacije ograničavaju provjeru; inače se provjeravaju sve instalacije odabranog servisa (do 50).', gcp_add:'Dodaj config/INI profil', gcp_settings:'postavki', gcp_check:'Pregledaj servere', gcp_path:'Relativna putanja na serveru', gcp_operator:'Operater / klijent (opcionalno)', gcp_file:'Referentna datoteka', gcp_import_hint:'Referenca definira postavke i očekivane vrijednosti. Parsira se bez izvršavanja skripti; tajne se maskiraju prije spremanja. Datoteka na serveru mora biti unutar instalacije.', gcp_file_limit:'Odaberite tekstualnu konfiguraciju do 256 KiB.', gcp_delete:'Obrisati ovaj konfiguracijski profil?', gcp_values_hint:'Stvarne vrijednosti čitaju se sada sa servera. Izrazi skripti prikazuju se kao izvor i ne izvršavaju se. Tajne su maskirane i ne uspoređuju se. INI sekcije mogu označavati operatere.', gcp_expected:'Referentna vrijednost', gcp_missing:'Nedostaje', gcp_masked:'Maskirano', gcp_extra:'Dodatna postavka', gcp_same:'Odgovara referenci', gcp_different:'Razlikuje se od reference',
+});
+
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const modeKey = () => 'wrm_git_mode:' + ((typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.username)) || '');
-  G.mode = (() => { try { return localStorage.getItem(modeKey()) === 'simple' ? 'simple' : 'advanced'; } catch (_) { return 'advanced'; } })();
+  G.mode = (() => { try { return ['simple', 'medium'].includes(localStorage.getItem(modeKey())) ? localStorage.getItem(modeKey()) : 'advanced'; } catch (_) { return 'advanced'; } })();
   const $ = id => document.getElementById(id);
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(b); return s; };
   const lines = s => String(s || '').split(/[\n,]/).map(x => x.trim()).filter(Boolean);
   const json = (method, body) => ({method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
 
   const css = `
-#git-ws { position: fixed; inset: 0; z-index: 900; background: var(--bg); color: var(--text); display: flex; flex-direction: column; font-size: 13px; }
+#git-ws { position: fixed; inset: 0; z-index: 8800; background: var(--bg); color: var(--text); display: flex; flex-direction: column; font-size: 13px; }
 #git-ws .g-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-wrap: wrap; }
+#git-ws #medium-status {overflow-wrap:anywhere;}
+#git-ws label.btn-sec {display:inline-flex;align-items:center;padding:6px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--bg3);}
 #git-ws .g-head h2 { font-size: 15px; margin: 0; white-space: nowrap; }
 #git-ws .g-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 #git-ws .g-tabs button { background: transparent; border: 1px solid transparent; color: var(--text2); padding: 6px 12px; border-radius: 8px; cursor: pointer; }
@@ -559,14 +579,15 @@ Object.assign(LANGS.hr, {
 #git-ws .g-conns { max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 6px; }
 #git-ws .g-conns label { display: flex; gap: 6px; align-items: center; padding: 2px 4px; }
 #git-ws .g-conns input { width: auto; }
-#git-modal { position: fixed; inset: 0; z-index: 950; background: rgba(0,0,0,.55); display: flex; align-items: flex-start; justify-content: center; padding: 30px 12px; overflow: auto; }
-#git-modal .g-dlg { background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px; width: min(980px, 100%); padding: 16px 18px; }
+#git-modal { position: fixed; inset: 0; z-index: 8900; background: rgba(0,0,0,.55); display: flex; align-items: flex-start; justify-content: center; padding: 30px 12px; overflow: auto; }
+#git-modal .g-dlg { min-width: 0; background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px; width: min(980px, 100%); padding: 16px 18px; }
 #git-modal .g-dlg h3 { margin: 0 0 10px; font-size: 14px; word-break: break-all; }
 #git-modal .g-diff { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-height: 60vh; }
 #git-modal .g-diff div { white-space: pre; padding: 0 8px; }
 #git-modal .g-diff .d-add { background: rgba(34,197,94,.13); color: #bbf7d0; }
 #git-modal .g-diff .d-del { background: rgba(239,68,68,.13); color: #fecaca; }
 #git-modal .g-diff .d-hunk { background: var(--accent-d); color: var(--text2); }
+#git-modal .g-scroll { overflow:auto; max-width:100%; }
 #git-modal table { border-collapse: collapse; width: 100%; font-size: 12px; }
 #git-modal td, #git-modal th { padding: 4px 6px; border-bottom: 1px solid var(--border); text-align: left; }
 #git-modal .g-st { display: inline-block; font-size: 10.5px; padding: 1px 7px; border-radius: 10px; font-weight: 600; }
@@ -740,7 +761,13 @@ Object.assign(LANGS.hr, {
 
   function render() {
     const s = G.state;
-    $('git-mode').innerHTML = ['simple', 'advanced'].map(m => `<button class="${G.mode === m ? 'on' : ''}" onclick="gitWorkspace.setGitMode('${m}')">${esc(t('gs_' + m))}</button>`).join('');
+    $('git-mode').innerHTML = ['simple', 'medium', 'advanced'].map(m => `<button class="${G.mode === m ? 'on' : ''}" onclick="gitWorkspace.setGitMode('${m}')">${esc(t('gs_' + m))}</button>`).join('');
+    if (G.mode === 'medium') {
+      $('git-tabs').innerHTML = '';
+      $('git-intro').style.display = 'none';
+      $('git-last').style.display = $('git-check').style.display = 'none';
+      paintMedium(); return;
+    }
     if (G.mode === 'simple') {
       $('git-tabs').innerHTML = '';
       $('git-intro').style.display = 'none';
@@ -1111,11 +1138,61 @@ Object.assign(LANGS.hr, {
   }
   function functionalityHTML() {
     const installs = G.state.installs || [], apps = G.state.catalog.apps || [];
-    return `<div class="hint-box">${esc(t('gf_intro'))}</div><div class="g-bar"><button class="btn-sec" ${G.state.can_check && !jobRunning() ? '' : 'disabled'} onclick="gitWorkspace.check()">↻ ${esc(t('git_check_now'))}</button></div>
+    return `<div class="hint-box">${esc(t('gf_intro'))}</div><div class="g-bar"><button class="btn-sec" ${G.state.can_check && !jobRunning() ? '' : 'disabled'} onclick="gitWorkspace.check()">↻ ${esc(t('git_check_now'))}</button><button class="btn-sec" onclick="gitWorkspace.configProfiles()">${esc(t('gcp_title'))}</button></div>
       <h3>${esc(t('gf_servers'))}</h3>${(G.state.server_health || []).map(h => `<details class="g-card"><summary>${functionalityBadge(h)} <b>${esc(h.name)}</b> · ${esc(t('gf_all_workers'))}</summary>${functionalityBody(h)}</details>`).join('')}
       ${apps.filter(a => !installs.some(i => i.app === a.name)).map(a => `<div class="g-card"><b>${esc(a.name)}</b> · <span class="g-mono">${esc(a.project)}</span><div class="hint-box warn">${esc(t('gf_no_install'))}</div></div>`).join('')}
       ${installs.map(i => { const a = apps.find(a => a.name === i.app) || {}; return `<div class="g-card"><div class="g-bar">${functionalityBadge(i.functionality)} <b>${esc(i.app)} · ${esc(hn(i.conn_name,i.hostname))}</b><span class="g-mut">${esc(i.env)}</span><span class="g-sp"></span><button class="btn-sec btn-sm" ${G.state.can_check ? '' : 'disabled'} onclick="gitWorkspace.configuration(${i.id})">${esc(t('gf_config'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.details(${i.id})">${esc(t('git_details'))}</button></div><div class="g-mono" style="overflow-wrap:anywhere">${esc(i.path)}</div><div class="g-mut">${esc(t('gf_source'))}: ${esc(a.project || '—')}</div>${functionalityBody(i.functionality)}</div>`; }).join('')}`;
   }
+
+  const CP = {profiles:[], result:null, seq:0};
+  async function configProfiles() {
+    const seq = ++CP.seq;
+    try {
+      const r = await fetch('/api/git/config-profiles'); if (!r.ok) throw new Error(await apiError(r));
+      CP.profiles = await r.json(); if (seq !== CP.seq) return;
+      modal(`<h3>${esc(t('gcp_title'))}</h3><p>${esc(t('gcp_intro'))}</p><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.configProfileNew()">＋ ${esc(t('gcp_add'))}</button><span class="g-sp"></span><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>
+      ${CP.profiles.map(p => `<div class="g-card"><b>${esc(p.name)}</b> · ${esc(p.app || t('git_all_services'))} · <span class="g-mono">${esc(p.path)}</span>${p.operator ? ' · ' + esc(p.operator) : ''}<div class="g-mut">${p.reference.entries.length} ${esc(t('gcp_settings'))}${p.reference.error ? ' · ' + esc(p.reference.error) : ''}${p.reference.unparsed ? ' · ' + esc(tf('gf_unparsed',{n:p.reference.unparsed})) : ''}</div><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.configProfileCheck(${p.id})">↻ ${esc(t('gcp_check'))}</button><button class="btn-sec" onclick="gitWorkspace.configProfileDelete(${p.id})">${esc(t('delete'))}</button></div></div>`).join('') || `<p>${esc(t('gf_no_config'))}</p>`}`);
+    } catch (e) { showToast(String(e),'error'); }
+  }
+  function configProfileNew() {
+    modal(`<h3>${esc(t('gcp_add'))}</h3><p>${esc(t('gcp_import_hint'))}</p><div class="g-grid"><div><label>${esc(t('name_lbl'))}</label><input id="cp-name" maxlength="120"></div><div><label>${esc(t('git_service'))}</label><select id="cp-app">${opt('',t('git_all_services'),'')}${G.state.catalog.apps.map(a=>opt(a.name,a.name,'')).join('')}</select></div><div><label>${esc(t('gcp_path'))}</label><input id="cp-path" placeholder="config.py"></div><div><label>${esc(t('gcp_operator'))}</label><input id="cp-operator" maxlength="120"></div><div><label>${esc(t('gcp_file'))}</label><input id="cp-file" type="file" accept=".ini,.conf,.cfg,.py,.json,.yaml,.yml,.env,text/*"></div></div><div class="g-bar" style="margin-top:12px"><button class="btn-sec" onclick="gitWorkspace.configProfileSave()">${esc(t('save'))}</button><button class="btn-sec" onclick="gitWorkspace.configProfiles()">${esc(t('cancel'))}</button></div>`);
+    $('cp-file').onchange = () => { const f = $('cp-file').files[0]; if (f) { if (!$('cp-name').value) $('cp-name').value = f.name; if (!$('cp-path').value) $('cp-path').value = f.name; } };
+  }
+  async function configProfileSave() {
+    const f = $('cp-file').files[0]; if (!f || f.size > 256 * 1024) { showToast(t('gcp_file_limit'),'error'); return; }
+    const body = {name:$('cp-name').value,app:$('cp-app').value,path:$('cp-path').value,operator:$('cp-operator').value,content:await f.text()};
+    try { const r = await fetch('/api/git/config-profiles',json('POST',body)); if (!r.ok) throw new Error(await apiError(r)); await configProfiles(); } catch (e) { showToast(String(e),'error'); }
+  }
+  async function configProfileDelete(id) {
+    if (!confirm(t('gcp_delete'))) return;
+    const r = await fetch('/api/git/config-profiles/'+id,{method:'DELETE'}); if (r.ok) configProfiles(); else showToast(await apiError(r),'error');
+  }
+  async function configProfileCheck(id) {
+    const seq = ++CP.seq;
+    modal(`<h3>${esc(t('gcp_title'))}</h3><p role="status">${esc(t('git_checking'))}</p><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button>`);
+    try {
+      const r = await fetch('/api/git/config-profiles/'+id+'/check',json('POST',{ids:[...G.sel]})); if (!r.ok) throw new Error(await apiError(r));
+      const result = await r.json(); if (seq !== CP.seq || !$('git-modal')) return; CP.result = result;
+      modal(`<h3>${esc(result.profile.name)}</h3><p>${esc(t('gcp_values_hint'))}</p><div class="g-bar" style="position:sticky;top:0;background:var(--bg2);z-index:1;padding:8px"><input type="search" aria-label="${esc(t('search'))}" placeholder="${esc(t('search'))}" oninput="gitWorkspace.configProfileFilter(this.value)"><span class="g-sp"></span><button class="btn-sec" onclick="gitWorkspace.configProfiles()">${esc(t('gcp_title'))}</button><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div><div id="cp-results"></div>`);
+      configProfileFilter('');
+    } catch (e) { if (seq === CP.seq && $('git-modal')) modal(`<h3>${esc(t('gcp_title'))}</h3><div class="hint-box bad">${esc(String(e))}</div><button class="btn-sec" onclick="gitWorkspace.configProfiles()">${esc(t('gcp_title'))}</button>`); }
+  }
+  function configProfileFilter(q) {
+    if (!CP.result || !$('cp-results')) return; q = String(q).toLowerCase();
+    const ref = new Map(CP.result.profile.reference.entries.map(e=>[e.section+'\u0000'+e.key,e]));
+    let count = 0;
+    const html = CP.result.rows.map(row => {
+      const metadata = [row.server,row.connection,row.app,row.environment,row.operator,row.installation_path].join(' ');
+      const actual = new Set(row.file.entries.map(e=>e.section+'\u0000'+e.key));
+      const entries = row.file.entries.map(e=>({entry:e,missing:false})).concat([...ref].filter(([key])=>!actual.has(key)).map(([,entry])=>({entry,missing:true})));
+      const filtered = entries.filter(({entry:e})=>!q || [metadata,e.section,e.key,e.value,e.description].join(' ').toLowerCase().includes(q));
+      if (!filtered.length && q && ![metadata,row.file.error].join(' ').toLowerCase().includes(q)) return '';
+      count += filtered.length;
+      return `<section class="g-card"><h3>${esc(row.server)} <span class="g-mut">${esc(row.connection)} · ${esc(row.app)} · ${esc(row.environment)}${row.operator ? ' · '+esc(row.operator) : ''}</span></h3><div class="g-mono g-mut">${esc(row.installation_path)} / ${esc(row.file.path)} · ${esc(fmtTime(row.checked_at))}</div>${row.file.error ? `<div class="hint-box warn">${esc(row.file.error)}</div>` : ''}${row.file.unparsed ? `<div class="hint-box warn">${esc(tf('gf_unparsed',{n:row.file.unparsed}))}</div>` : ''}<div class="g-scroll"><table><thead><tr><th>${esc(t('gcp_operator'))} / ${esc(t('gf_section'))}</th><th>${esc(t('gf_variable'))}</th><th>${esc(t('gf_value'))}</th><th>${esc(t('gcp_expected'))}</th><th>${esc(t('status'))}</th></tr></thead><tbody>${filtered.map(({entry:e,missing})=> {const expected=ref.get(e.section+'\u0000'+e.key);const status=missing ? t('gcp_missing') : e.secret ? t('gcp_masked') : !expected ? t('gcp_extra') : e.value===expected.value ? t('gcp_same') : t('gcp_different'); return `<tr><td>${esc([row.operator,e.section].filter(Boolean).join(' / ') || row.environment || '—')}</td><td title="${esc(e.description || '')}">${esc(e.key)}</td><td style="white-space:pre-wrap;overflow-wrap:anywhere;max-width:420px">${missing?'—':esc(e.value)}</td><td style="white-space:pre-wrap;overflow-wrap:anywhere;max-width:420px">${expected?esc(expected.value):'—'}</td><td>${esc(status)}</td></tr>`;}).join('')}</tbody></table></div></section>`;
+    }).join('');
+    $('cp-results').innerHTML = `<p>${count} ${esc(t('gcp_settings'))}</p>` + (html || `<p>${esc(t('none'))}</p>`);
+  }
+
   function showFunctionality() { G.mode = 'advanced'; G.tab = 'functionality'; render(); }
   async function configuration(id) {
     modal(`<div class="g-bar"><h3 style="flex:1">${esc(t('gf_config'))}</h3><button class="btn-sec" onclick="gitWorkspace.closeModal()" aria-label="${esc(t('git_close'))}">✕</button></div><div class="hint-box">${esc(t('loading'))}</div>`);
@@ -2655,10 +2732,67 @@ Object.assign(LANGS.hr, {
   const sh10 = c => String(c || '').slice(0, 10);
 
   function setGitMode(m) {
-    G.mode = m === 'simple' ? 'simple' : 'advanced';
+    G.mode = ['simple', 'medium'].includes(m) ? m : 'advanced';
     try { localStorage.setItem(modeKey(), G.mode); } catch (_) {}
     closeModal();
     if (G.mode === 'advanced') setTab(G.tab); else render();
+  }
+
+
+  // Medium renders the original deploy tool behind WRM authentication.
+  let mediumTimer = null;
+  async function paintMedium() {
+    const body = $('git-body');
+    if (!body || G.mode !== 'medium') return;
+    if (!body.querySelector('#medium-status')) {
+      body.innerHTML = `<div class="g-card"><h3>${esc(t('gm_title'))}</h3><p>${esc(t('gm_intro'))}</p><div id="medium-status" role="status">${esc(t('loading'))}</div><div class="g-bar" style="margin-top:10px">
+      <button class="btn-sec" onclick="gitWorkspace.mediumAction('start')">▶ ${esc(t('gm_start'))}</button><button class="btn-sec" onclick="gitWorkspace.mediumAction('stop')">■ ${esc(t('gm_stop'))}</button><button class="btn-sec" onclick="gitWorkspace.mediumRefresh()">↻ ${esc(t('git_refresh'))}</button>
+      <label class="btn-sec" id="medium-tool-label" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_tool'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('tool',this)"></label>
+      <label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_config'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('config',this)"></label>
+      <label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_ssh'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('ssh',this)"></label>
+      <button class="btn-sec" onclick="gitWorkspace.mediumSettings()">⚙ ${esc(t('gm_settings'))}</button><a class="btn-sec" href="/medium/" target="_blank" rel="noopener">↗ ${esc(t('gm_open'))}</a></div></div><div id="medium-frame"></div>`;
+    }
+    await mediumRefresh();
+  }
+  async function mediumRefresh() {
+    clearTimeout(mediumTimer);
+    if (G.mode !== 'medium' || !$('medium-status')) return;
+    try {
+      const r = await fetch('/api/git/medium');
+      if (!r.ok) { $('medium-status').textContent = await apiError(r); if ($('medium-frame')) $('medium-frame').replaceChildren(); return; }
+      const s = await r.json();
+      $('medium-tool-label').style.display = s.admin ? '' : 'none';
+      const deps = Object.entries(s.dependencies || {}).filter(([,ok]) => !ok).map(([n]) => n);
+      $('medium-status').textContent = [s.busy ? s.stage : s.running ? t('gm_running') : t('gm_stopped'), s.tool ? t('gm_tool_ready') : t('gm_tool_missing'), s.config ? t('gm_config_ready') : t('gm_config_missing'), deps.length ? t('gm_missing') + ': ' + deps.join(', ') : '', s.error || '', s.tool_digest ? 'SHA-256: ' + s.tool_digest : ''].filter(Boolean).join(' · ');
+      const host = $('medium-frame');
+      if (s.running && host && !host.firstChild) { const f = document.createElement('iframe'); f.title = t('gm_title'); f.src = '/medium/'; f.style.cssText = 'width:100%;height:calc(100vh - 250px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff'; host.appendChild(f); }
+      if (!s.running && host) host.replaceChildren();
+      if (s.busy) mediumTimer = setTimeout(mediumRefresh, 2000);
+    } catch (e) { if ($('medium-status')) $('medium-status').textContent = String(e); }
+  }
+
+  async function mediumSettings() {
+    const r=await fetch('/api/git/medium/settings'); if (!r.ok) {showToast(await apiError(r),'error');return;}
+    const values=await r.json();
+    const keys=['DEPLOY_CONFIG_REPO','DEPLOY_CONFIG_PULL','DEPLOY_CONFIG_CHECK_MINUTES','DEPLOY_USER_EMAIL','DEPLOY_HOSTNAME','DEPLOY_SSH_OPTIONS','DEPLOY_TIMEOUT','DEPLOY_BUILD_USER','GIT_SSH_COMMAND'];
+    modal(`<h3>${esc(t('gm_settings'))}</h3><p>${esc(t('gm_settings_hint'))}</p><div class="g-grid">${keys.map(k=>`<div><label>${esc(k)}</label><input data-medium-key="${k}" value="${esc(values[k] || '')}" autocomplete="off"></div>`).join('')}</div><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.mediumSaveSettings()">${esc(t('save'))}</button><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
+  }
+  async function mediumSaveSettings() {
+    const values=Object.fromEntries([...document.querySelectorAll('[data-medium-key]')].map(e=>[e.dataset.mediumKey,e.value]));
+    const r=await fetch('/api/git/medium/settings',json('POST',values)); if (!r.ok) {showToast(await apiError(r),'error');return;} closeModal();showToast(t('saved'),'success');
+  }
+
+  async function mediumUpload(kind, input) {
+    const file = input.files && input.files[0]; if (!file) return;
+    if (!confirm(t('gm_trust'))) { input.value = ''; return; }
+    if (file.size > 20 * 1024 * 1024) { showToast(t('gm_size'), 'error'); input.value = ''; return; }
+    const data = new FormData(); data.append('file', file);
+    try { const r = await fetch('/api/git/medium/' + kind + '?confirm=1', {method:'POST',body:data}); if (!r.ok) throw new Error(await apiError(r)); await mediumRefresh(); } catch (e) { showToast(String(e), 'error', 8000); }
+    input.value = '';
+  }
+  async function mediumAction(action) {
+    if (action === 'stop' && !confirm(t('gm_stop_confirm'))) return;
+    try { const r = await fetch('/api/git/medium/' + action, json('POST', {})); if (!r.ok) throw new Error(await apiError(r)); await mediumRefresh(); } catch (e) { showToast(String(e), 'error', 8000); }
   }
 
   function paintSimple() {
@@ -3019,7 +3153,7 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = {
-    open, close, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumUpload, mediumAction, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,

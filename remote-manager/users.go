@@ -323,6 +323,8 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"git_rollback":     gitActionAllowed(u.ID, "git_rollback"),
 			"git_restart":      gitActionAllowed(u.ID, "git_restart"),
 			"git_install":      gitActionAllowed(u.ID, "git_install"),
+			"bitwarden":        bitwardenAllowed(u.ID),
+			"git_medium":       mediumAllowed(u.ID),
 			"git_transfer":     gitActionAllowed(u.ID, "git_transfer"),
 			"git_gitignore_mr": gitActionAllowed(u.ID, "git_gitignore_mr"),
 			"ai":               aiAllowedFlag(u.ID),
@@ -574,6 +576,7 @@ func apiAuthLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if s, err := lookupSession(r); err == nil {
 		db.Exec("DELETE FROM auth_sessions WHERE id=?", s.ID)
 		auditLog(r, s.UserID, "auth.logout", "", nil)
+		lockBitwardenUser(s.UserID)
 	}
 	clearAuthCookie(w, r)
 	jsonOK(w, map[string]string{"status": "ok"})

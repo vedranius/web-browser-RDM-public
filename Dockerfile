@@ -11,12 +11,14 @@ COPY remote-manager/ ./
 ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.AppVersion=${VERSION}" -o /out/wrm .
 
-FROM alpine:3.20
+FROM node:22-alpine3.22
 LABEL org.opencontainers.image.title="Web Remote Manager PRO" \
       org.opencontainers.image.source="https://github.com/vedranius/web-browser-RDM-public" \
       org.opencontainers.image.licenses="PolyForm-Noncommercial-1.0.0 OR PolyForm-Internal-Use-1.0.0"
-RUN apk add --no-cache ca-certificates tzdata \
- && adduser -D -H -u 10001 wrm \
+RUN apk add --no-cache ca-certificates tzdata python3 py3-pip git openssh-client rsync \
+ && npm install --global --omit=dev @bitwarden/cli@2026.9.1 \
+ && npm cache clean --force \
+ && adduser -D -u 10001 wrm \
  && mkdir -p /data && chown wrm:wrm /data && chmod 700 /data
 COPY --from=build /out/wrm /usr/local/bin/wrm
 USER wrm

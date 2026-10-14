@@ -95,6 +95,7 @@ var settingSpecs = []settingSpec{
 	{Key: "git_rollback", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_restart", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_install", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "git_medium", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_transfer", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_gitignore_mr", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_schedule_grace_minutes", Default: "30", Kind: "int", Min: 1, Max: 1440},
@@ -103,6 +104,8 @@ var settingSpecs = []settingSpec{
 	{Key: "update_repo", Default: defaultUpdateRepo, Kind: "string"},
 	{Key: "update_proxy", Default: "", Kind: "string"},
 	{Key: "self_update", Default: "admins", Kind: "enum", Enum: []string{"off", "admins"}},
+	{Key: "bitwarden", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "bitwarden_idle_minutes", Default: "15", Kind: "int", Min: 1, Max: 240},
 	// AI assistant: who may use it, permission modes, providers, data handling, kill switch
 	{Key: "ai_assistant", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "ai_kill_switch", Default: "0", Kind: "bool"},

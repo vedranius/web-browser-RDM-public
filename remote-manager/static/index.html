@@ -1798,12 +1798,14 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <option value="KEY_AUTO" id="opt-key-auto">Auto (~/.ssh/ of the WRM server)</option>
         <option value="KEY_REF" id="opt-key-ref">🔑 SSH key from the key store</option>
         <option value="CREDENTIAL" id="opt-cred">🗝 Credential from the vault</option>
+        <option value="BITWARDEN" id="opt-bitwarden">🔐 Bitwarden SSH key</option>
       </select>
     </div>
     <div class="field" id="field-keyref" style="display:none;"><label data-i18n="vk_key">SSH key</label><select id="m-keyref"></select>
       <div class="muted-text" style="margin-top:5px;"><a href="#" onclick="openVault('keys'); return false;" data-i18n="vault_manage_keys">Manage keys…</a></div></div>
     <div class="field" id="field-cred" style="display:none;"><label data-i18n="vc_cred">Credential</label><select id="m-cred" onchange="onCredPick()"></select>
       <div class="muted-text" id="m-cred-info" style="margin-top:5px;line-height:1.5;"></div></div>
+    <div class="field" id="field-bitwarden" style="display:none;"><label data-i18n="bw_key">Bitwarden SSH key</label><select id="m-bitwarden"></select><div class="muted-text"><a href="#" onclick="openVault('bitwarden');return false;" data-i18n="bw_manage">Sign in / unlock Bitwarden</a> · <a href="#" onclick="loadBitwardenKeys();return false;" data-i18n="bw_refresh">Refresh</a></div></div>
     <div class="field" id="field-pass"><label data-i18n="password">Password</label><input type="password" id="m-pass" autocomplete="new-password">
       <div class="muted-text" id="m-pass-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span> <label style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;text-transform:none;letter-spacing:0;font-size:11px;font-weight:400;"><input type="checkbox" id="m-pass-clear" style="width:auto;"> <span data-i18n="remove_saved">remove saved</span></label></div></div>
     <div class="field" id="field-key" style="display:none;"><label data-i18n="private_key">Private Key</label><textarea id="m-key" rows="5" placeholder="Paste your private key here..." autocomplete="off" spellcheck="false"></textarea>
@@ -2341,6 +2343,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="tabs" id="vault-tabs">
       <button class="tab-btn active" data-tab="keys" onclick="setVaultTab('keys')">🔑 <span data-i18n="vault_keys">SSH keys</span></button>
       <button class="tab-btn" data-tab="creds" onclick="setVaultTab('creds')">🗝 <span data-i18n="vault_creds">Credentials</span> <span class="pill warn" id="vault-tab-due" style="display:none;"></span></button>
+      <button class="tab-btn" data-tab="bitwarden" onclick="setVaultTab('bitwarden')">🔐 Bitwarden</button>
       <button class="tab-btn" data-tab="proxies" onclick="setVaultTab('proxies')">🌐 <span data-i18n="vault_proxies">Proxies</span></button>
     </div>
     <div class="tab-pane active" id="vault-keys">
@@ -2357,6 +2360,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="vault-tools" style="margin-top:10px;"><button class="btn-sm" onclick="openCredModal(null)">＋ <span data-i18n="vc_new">New credential</span></button></div>
       <div id="vc-list"></div>
     </div>
+    <div class="tab-pane" id="vault-bitwarden"><div id="bw-body"></div></div>
     <div class="tab-pane" id="vault-proxies">
       <div class="muted-text" style="line-height:1.5;" data-i18n="vp_help">SOCKS5, SOCKS4/4a and HTTP CONNECT proxies, or a SOCKS tunnel (-D) of one of your connections that WRM starts when needed. Choose one in a connection (Proxy) or as a folder default. Share it with colleagues: they can use it but never see its login.</div>
       <div class="vault-tools" style="margin-top:10px;"><button class="btn-sm" id="vp-new-btn" onclick="openProxyModal(null)">＋ <span data-i18n="vp_new">New proxy</span></button></div>
@@ -4760,6 +4764,16 @@ Object.assign(LANGS.hr, {pv_open:'Pregled', pv_selected:'Pregled odabrane putanj
 Object.assign(LANGS.en, {stin_ai:'AI assistant status, setup and access for this account. The terminal assistant uses a configured provider; MCP connections are managed separately.'});
 Object.assign(LANGS.hr, {stin_ai:'Stanje AI asistenta, postavljanje i pristup za ovaj račun. Asistent u terminalu koristi postavljenog pružatelja; MCP veze se postavljaju zasebno.'});
 
+Object.assign(LANGS.en, {fd_up:'Move folder up',fd_down:'Move folder down'});
+Object.assign(LANGS.hr, {fd_up:'Pomakni folder gore',fd_down:'Pomakni folder dolje'});
+
+Object.assign(LANGS.en, {
+ po_git_medium_off:'Nobody', po_git_medium_admins:'Administrators', po_git_medium_all:'All accounts', po_bitwarden_off:'Nobody', po_bitwarden_admins:'Administrators', po_bitwarden_all:'All accounts', p_git_medium:'Original Medium deploy tool', p_git_medium_d:'Who may run the original deploy tool, including local builds and editable deployment commands. Grant only to trusted operators. Only administrators can install tool code.', p_bitwarden:'Bitwarden vault connections', p_bitwarden_d:'Who may sign in to their own Bitwarden vault and use its native SSH key items.', p_bitwarden_idle_minutes:'Bitwarden unlock inactivity (minutes)', p_bitwarden_idle_minutes_d:'Locks the WRM Bitwarden unlock session after inactivity. Master passwords and unlock sessions are never stored in the database.', bw_refresh:'Refresh keys', bw_key:'Bitwarden SSH key', bw_manage:'Sign in / unlock Bitwarden', bw_choose:'Choose an SSH key', bw_cli_missing:'Install the official Bitwarden CLI (bw) on the WRM server. Your account uses a separate encrypted CLI cache.', bw_docs:'Bitwarden CLI setup', bw_help:'Sign in with your Bitwarden account and unlock its vault. Connections fetch the selected native SSH key directly; WRM stores its item reference. Master passwords are not saved, and unlock sessions expire after inactivity or a WRM restart.', bw_unlocked:'Vault unlocked', bw_locked:'Vault locked', bw_signed_out:'Signed out', bw_server:'Bitwarden server (cloud/EU/self-hosted)', bw_email:'Email', bw_master:'Master password', bw_api_mfa:'Personal API credentials / two-step login', bw_api_hint:'Personal API credentials plus your master password can be used when email login requires a bot challenge or unsupported MFA.', bw_mfa_method:'Two-step login method', bw_mfa_code:'Two-step login code', bw_unlock:'Unlock', bw_login:'Sign in and unlock', bw_logout:'Sign out', bw_sync:'Sync vault', bw_lock:'Lock vault', bw_no_keys:'No native SSH key items found in this vault.',
+});
+Object.assign(LANGS.hr, {
+ po_git_medium_off:'Nitko', po_git_medium_admins:'Administratori', po_git_medium_all:'Svi računi', po_bitwarden_off:'Nitko', po_bitwarden_admins:'Administratori', po_bitwarden_all:'Svi računi', p_git_medium:'Izvorni Medium deploy tool', p_git_medium_d:'Tko smije koristiti izvorni deploy tool, uključujući lokalni build i uređivanje deploy naredbi. Dodijelite samo pouzdanim operaterima. Samo administratori mogu instalirati tool kod.', p_bitwarden:'Bitwarden vault konekcije', p_bitwarden_d:'Tko se smije prijaviti u vlastiti Bitwarden vault i koristiti njegove izvorne SSH key stavke.', p_bitwarden_idle_minutes:'Bitwarden neaktivnost otključavanja (minute)', p_bitwarden_idle_minutes_d:'Zaključava WRM Bitwarden sesiju nakon neaktivnosti. Master lozinke i otključane sesije ne spremaju se u bazu.', bw_refresh:'Osvježi ključeve', bw_key:'Bitwarden SSH ključ', bw_manage:'Prijava / otključavanje Bitwardena', bw_choose:'Odaberite SSH ključ', bw_cli_missing:'Instalirajte službeni Bitwarden CLI (bw) na WRM server. Vaš račun koristi odvojeni šifrirani CLI cache.', bw_docs:'Postavljanje Bitwarden CLI-ja', bw_help:'Prijavite se svojim Bitwarden računom i otključajte vault. Konekcije izravno dohvaćaju odabrani izvorni SSH ključ; WRM sprema njegovu referencu. Master lozinke se ne spremaju, a otključane sesije istječu nakon neaktivnosti ili restarta WRM-a.', bw_unlocked:'Vault otključan', bw_locked:'Vault zaključan', bw_signed_out:'Odjavljeno', bw_server:'Bitwarden server (cloud/EU/vlastiti)', bw_email:'E-mail', bw_master:'Master lozinka', bw_api_mfa:'Osobni API pristup / prijava u dva koraka', bw_api_hint:'Osobni API pristup i master lozinka mogu se koristiti kada e-mail prijava traži bot provjeru ili nepodržani MFA.', bw_mfa_method:'Način prijave u dva koraka', bw_mfa_code:'Kod prijave u dva koraka', bw_unlock:'Otključaj', bw_login:'Prijavi se i otključaj', bw_logout:'Odjavi se', bw_sync:'Sinkroniziraj vault', bw_lock:'Zaključaj vault', bw_no_keys:'U ovom vaultu nema izvornih SSH key stavki.',
+});
+
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5210,6 +5224,8 @@ function renderTree() {
   rootDrop.ondragleave = () => rootDrop.classList.remove('drag-over');
   rootDrop.ondrop = e => {
     e.preventDefault(); rootDrop.classList.remove('drag-over');
+    const fid = parseInt(e.dataTransfer.getData('folderId'));
+    if (fid) { reorderFolder({id:fid,parent_id:null}); return; }
     const cid = parseInt(e.dataTransfer.getData('connId'));
     if (cid) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:[cid], folder_id: null})}).then(loadData);
   };
@@ -5251,11 +5267,22 @@ function renderTree() {
     const row = document.createElement('div');
     row.className = 'folder-row';
     row.innerHTML = `<span class="folder-chevron ${filterActive || openFolderIds.has(f.id) ? 'open' : ''}">▶</span><span style="font-size:14px;">📁</span><span style="flex:1;">${esc(f.name)}</span>${f.jump_id || f.proxy_id ? `<span class="conn-route" title="${esc(t('fd_defaults') + ': ' + [f.jump_name, f.proxy_name].filter(Boolean).join(' → '))}">⤳</span>` : ''}${fDown ? `<span class="folder-down" title="${esc(t('st_folder_down').replace('{n}', fDown))}">${fDown}↓</span>` : ''}<button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
-    row.draggable = false;
+    row.draggable = true;
+    row.ondragstart = e => { e.stopPropagation(); e.dataTransfer.setData('folderId', String(f.id)); e.dataTransfer.effectAllowed = 'move'; };
+    row.ondragend = () => { document.querySelectorAll('.folder-row.drag-over').forEach(el => el.classList.remove('drag-over')); };
     row.ondragover = e => { e.preventDefault(); row.classList.add('drag-over'); };
     row.ondragleave = () => row.classList.remove('drag-over');
     row.ondrop = e => {
-      e.preventDefault(); row.classList.remove('drag-over');
+      e.preventDefault(); e.stopPropagation(); row.classList.remove('drag-over');
+      const fid = parseInt(e.dataTransfer.getData('folderId'));
+      if (fid) {
+        if (fid === f.id) return;
+        const bounds = row.getBoundingClientRect(), fraction = (e.clientY-bounds.top)/bounds.height;
+        if (fraction < .3) reorderFolder({id:fid,parent_id:f.parent_id,before_id:f.id});
+        else if (fraction > .7) reorderFolder({id:fid,parent_id:f.parent_id,after_id:f.id});
+        else reorderFolder({id:fid,parent_id:f.id});
+        return;
+      }
       const cid = parseInt(e.dataTransfer.getData('connId'));
       if (cid) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:[cid], folder_id: f.id})}).then(loadData);
     };
@@ -5541,6 +5568,7 @@ function applyPolicyToUI() {
   const os = document.getElementById('opt-serial');
   if (os) { os.hidden = !pol.serial; os.disabled = !pol.serial; }
   const aiHome = document.getElementById('btn-ai'); if (aiHome) aiHome.style.display = currentUser && !isCollabMode ? '' : 'none';
+  const bwOption = document.getElementById('opt-bitwarden'); if (bwOption) { bwOption.hidden = pol.bitwarden === false; bwOption.disabled = pol.bitwarden === false; bwOption.dataset.polHidden = pol.bitwarden === false ? '1' : '0'; }
   refreshAIButtons();
 }
 
@@ -5562,6 +5590,8 @@ function showFolderCtx(x, y) {
   menu.innerHTML = `
     <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(null, ctxFolderId)">＋ ${esc(t('fd_child'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(ctxFolderId)">✏ ${esc(t('fd_edit'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); moveFolderStep(ctxFolderId,-1)">↑ ${esc(t('fd_up'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); moveFolderStep(ctxFolderId,1)">↓ ${esc(t('fd_down'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openBookmarkModal(null, {scope: 'folder', scope_id: ctxFolderId, start_dir: true})">★ ${esc(t('bm_start_menu'))}</div>
@@ -5654,6 +5684,7 @@ function onAuthMethodChange() {
   document.getElementById('field-key-file').style.display = v === 'KEY_FILE' ? 'block' : 'none';
   document.getElementById('field-keyref').style.display = v === 'KEY_REF' ? 'block' : 'none';
   document.getElementById('field-cred').style.display = v === 'CREDENTIAL' ? 'block' : 'none';
+  document.getElementById('field-bitwarden').style.display = v === 'BITWARDEN' ? 'block' : 'none';
   onCredPick();
 }
 
@@ -5672,6 +5703,7 @@ function updateAuthOptions() {
 
 // Key store keys and vault credentials for the connection dialog.
 function fillAuthRefSelects(c) {
+  fillBitwardenSelect(c && c.options && c.options.bitwarden_item || '');
   const ks = document.getElementById('m-keyref');
   const pairs = vaultKeys.filter(k => k.has_private);
   ks.innerHTML = pairs.length ? pairs.map(k => `<option value="${k.id}">${esc(k.name)} · ${esc(keyTypeLabel(k))}</option>`).join('') : `<option value="">— ${esc(t('vk_none_yet'))} —</option>`;
@@ -5701,7 +5733,7 @@ function onCredPick() {
 
 function connFormPayload() {
   return {
-    options: DESK_PROTOCOLS.includes(document.getElementById('m-proto').value) || document.getElementById('m-proto').value === 'SERIAL' ? readDeskOptions() : undefined,
+    options: document.getElementById('m-auth').value === 'BITWARDEN' ? {bitwarden_item:document.getElementById('m-bitwarden').value} : DESK_PROTOCOLS.includes(document.getElementById('m-proto').value) || document.getElementById('m-proto').value === 'SERIAL' ? readDeskOptions() : undefined,
     monitor: document.getElementById('m-monitor').checked,
     name: document.getElementById('m-name').value.trim(),
     host: document.getElementById('m-host').value.trim(),
@@ -5765,7 +5797,7 @@ async function testConn() {
     const d = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(d.error || res.statusText);
     out.className = 'conn-test-result ' + (d.ok ? 'ok' : 'fail');
-    out.textContent = (d.ok ? '✅ ' : '❌ ') + (d.message || '') + ' · ' + d.latency_ms + ' ms';
+    out.textContent = (d.ok ? '✅ ' : '❌ ') + (d.message || d.error || '') + ' · ' + d.latency_ms + ' ms';
     if (d.hostkey) {
       const btn2 = document.createElement('button');
       btn2.className = 'btn-sm'; btn2.style.marginTop = '8px'; btn2.style.display = 'block';
@@ -5803,6 +5835,21 @@ async function deleteConn(id) {
   await fetch('/api/connections/' + id, {method: 'DELETE'});
   showToast(t('connection_deleted'), 'success');
   loadData();
+}
+
+
+async function reorderFolder(change) {
+  try {
+    const r = await fetch('/api/folders/reorder', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(change)});
+    if (!r.ok) throw new Error(await apiError(r));
+    folders = await r.json(); renderTree(); renderTabs();
+  } catch(e) { showToast(String(e),'error'); }
+}
+function moveFolderStep(id, direction) {
+  const f = folders.find(x=>x.id===id); if (!f) return;
+  const siblings = folders.filter(x=>(x.parent_id || null)===(f.parent_id || null));
+  const index=siblings.findIndex(x=>x.id===id), target=siblings[index+direction]; if (!target) return;
+  const change={id,parent_id:f.parent_id || null}; change[direction<0?'before_id':'after_id']=target.id; reorderFolder(change);
 }
 
 async function openFolderModal(id, parentId) {
@@ -6397,7 +6444,7 @@ async function adminShareDelete(id) {
 const POLICY_GROUPS = {
   policies: [
     ['pg_accounts', ['registration', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days']],
-    ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export']],
+    ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export', 'bitwarden', 'bitwarden_idle_minutes']],
     ['pg_sharing', ['allow_link_shares', 'chat_file_max_mb']],
     ['pg_terminal', ['broadcast_enabled']],
     ['pg_status', ['status_enabled', 'status_interval_seconds', 'status_jump_checks']],
@@ -6405,7 +6452,7 @@ const POLICY_GROUPS = {
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
     ['pg_proxies', ['proxies']],
-    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_check_parallel', 'git_check_per_server', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_transfer', 'git_gitignore_mr', 'git_schedule_grace_minutes']],
+    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_check_parallel', 'git_check_per_server', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_medium', 'git_transfer', 'git_gitignore_mr', 'git_schedule_grace_minutes']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_updates', ['update_check', 'update_repo', 'update_proxy', 'self_update']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
@@ -6466,7 +6513,7 @@ async function saveSetting(key, value, el) {
   const st = adminSettingsCache.find(x => x.key === key);
   if (st && d.changed && key in d.changed) st.value = d.changed[key];
   showToast(t('saved'), 'success', 1200);
-  if (key.startsWith('ai_')) await refreshUserPolicy();
+  if (key.startsWith('ai_') || ['bitwarden','git_medium'].includes(key)) await refreshUserPolicy();
   if (key.startsWith('turn_') || key === 'voice_enabled') setTimeout(() => { if (adminTab === 'voice') adminPolicies('voice'); }, 600);
 }
 
@@ -7961,6 +8008,47 @@ async function invImport() {
   } finally { go.disabled = false; }
 }
 
+
+let bitwardenKeys = [];
+function fillBitwardenSelect(selected) {
+  const el=document.getElementById('m-bitwarden'); if (!el) return;
+  const keep=selected || el.value;
+  el.innerHTML='<option value="">— '+esc(t('bw_choose'))+' —</option>'+bitwardenKeys.map(k=>`<option value="${esc(k.id)}">${esc(k.name)} · ${esc(k.fingerprint || '')}</option>`).join('');
+  if (keep && !bitwardenKeys.some(k=>k.id===keep)) el.insertAdjacentHTML('beforeend',`<option value="${esc(keep)}">${esc(keep)}</option>`);
+  el.value=keep;
+}
+async function loadBitwardenKeys() {
+  try { const r=await fetch('/api/bitwarden/keys'); if (!r.ok) throw new Error(await apiError(r)); bitwardenKeys=await r.json(); fillBitwardenSelect(); return true; } catch(e) { showToast(String(e),'error'); return false; }
+}
+async function bitwardenRefresh() {
+  const body=document.getElementById('bw-body'); if (!body) return;
+  body.textContent=t('loading');
+  try {
+    const r=await fetch('/api/bitwarden'); if (!r.ok) throw new Error(await apiError(r)); const s=await r.json();
+    if (!s.available) { body.innerHTML=`<p>${esc(t('bw_cli_missing'))}</p><a href="https://bitwarden.com/help/cli/" target="_blank" rel="noopener">${esc(t('bw_docs'))}</a>`; return; }
+    body.innerHTML=`<p>${esc(t('bw_help'))}</p><div class="hint-box" role="status">${esc(s.unlocked ? t('bw_unlocked') : s.status==='locked' ? t('bw_locked') : t('bw_signed_out'))}${s.userEmail ? ' · '+esc(s.userEmail) : ''}${s.serverUrl ? ' · '+esc(s.serverUrl) : ''}</div>`;
+    if (!s.unlocked) {
+      const locked=s.status==='locked';
+      body.insertAdjacentHTML('beforeend',`<div class="field-row"><div class="field"><label data-i18n="bw_server">${esc(t('bw_server'))}</label><input id="bw-server" type="url" value="${esc(s.serverUrl || 'https://vault.bitwarden.com')}" ${locked?'disabled':''}></div><div class="field"><label>${esc(t('bw_email'))}</label><input id="bw-email" type="email" autocomplete="username" value="${esc(s.userEmail || '')}" ${locked?'disabled':''}></div></div><div class="field"><label>${esc(t('bw_master'))}</label><input id="bw-password" type="password" autocomplete="off"></div>
+      ${locked?'':`<details><summary>${esc(t('bw_api_mfa'))}</summary><div class="field-row"><div class="field"><label>Client ID</label><input id="bw-client-id" autocomplete="off"></div><div class="field"><label>Client secret</label><input id="bw-client-secret" type="password" autocomplete="off"></div></div><p class="muted-text">${esc(t('bw_api_hint'))}</p><div class="field-row"><div class="field"><label>${esc(t('bw_mfa_method'))}</label><select id="bw-method"><option value="0">Authenticator</option><option value="1">Email</option><option value="3">YubiKey</option></select></div><div class="field"><label>${esc(t('bw_mfa_code'))}</label><input id="bw-code" autocomplete="one-time-code"></div></div></details>`}
+      <div class="vault-tools"><button id="bw-login" class="btn-sm" onclick="bitwardenLogin(${locked})">${esc(locked?t('bw_unlock'):t('bw_login'))}</button>${locked?`<button class="btn-sec btn-sm" onclick="bitwardenAction('logout')">${esc(t('bw_logout'))}</button>`:''}</div>`);
+    } else {
+      body.insertAdjacentHTML('beforeend',`<div class="vault-tools"><button class="btn-sm" onclick="bitwardenAction('sync')">↻ ${esc(t('bw_sync'))}</button><button class="btn-sec btn-sm" onclick="bitwardenAction('lock')">🔒 ${esc(t('bw_lock'))}</button><button class="btn-sec btn-sm" onclick="bitwardenAction('logout')">${esc(t('bw_logout'))}</button></div><div id="bw-keys"></div>`);
+      if (await loadBitwardenKeys()) { const host=document.getElementById('bw-keys'); if (host) host.innerHTML=bitwardenKeys.map(k=>`<div class="share-card"><b>${esc(k.name)}</b><div class="vk-fp">${esc(k.fingerprint || '')}</div><div class="muted-text">${esc(k.id)}</div></div>`).join('') || `<p>${esc(t('bw_no_keys'))}</p>`; }
+    }
+  } catch(e) { body.textContent=String(e); }
+}
+async function bitwardenLogin(unlock) {
+  const value=id=>document.getElementById(id)?.value || '';
+  const data={server:value('bw-server'),email:value('bw-email'),master_password:value('bw-password'),client_id:value('bw-client-id'),client_secret:value('bw-client-secret'),method:value('bw-method'),code:value('bw-code')};
+  const button=document.getElementById('bw-login'); button.disabled=true;
+  try { const r=await fetch('/api/bitwarden/'+(unlock?'unlock':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); if (!r.ok) throw new Error(await apiError(r)); await bitwardenRefresh(); } catch(e) { showToast(String(e),'error',8000); }
+  finally { ['bw-password','bw-client-secret','bw-code'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); if (button.isConnected) button.disabled=false; }
+}
+async function bitwardenAction(action) {
+  try { const r=await fetch('/api/bitwarden/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}); if (!r.ok) throw new Error(await apiError(r)); if (action!=='sync') {bitwardenKeys=[];fillBitwardenSelect();} await bitwardenRefresh(); } catch(e) { showToast(String(e),'error'); }
+}
+
 // ══ SSH KEY STORE & CREDENTIALS VAULT (v10.5) ═══════════
 
 let vaultKeys = [], vaultCreds = [], vaultProxies = [], vaultTab = 'keys', proxyCanDefine = true, proxyContainer = false;
@@ -8011,11 +8099,13 @@ async function openVault(tab) {
 }
 
 function setVaultTab(tab) {
-  vaultTab = ['creds', 'proxies'].includes(tab) ? tab : 'keys';
+  vaultTab = ['creds', 'proxies', 'bitwarden'].includes(tab) ? tab : 'keys';
   document.querySelectorAll('#vault-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === vaultTab));
   document.getElementById('vault-keys').classList.toggle('active', vaultTab === 'keys');
   document.getElementById('vault-creds').classList.toggle('active', vaultTab === 'creds');
   document.getElementById('vault-proxies').classList.toggle('active', vaultTab === 'proxies');
+  document.getElementById('vault-bitwarden').classList.toggle('active', vaultTab === 'bitwarden');
+  if (vaultTab === 'bitwarden') bitwardenRefresh();
 }
 
 function renderVault() {
@@ -9098,7 +9188,7 @@ function onSnipScopeChange(selected) {
   wrap.style.display = scope === 'all' ? 'none' : '';
   if (scope === 'folder') {
     document.getElementById('sn-scope-id-lbl').textContent = t('snip_folder_lbl');
-    sel.innerHTML = folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(folderPathLabel(f.id))}</option>`).join('');
+    sel.innerHTML = folders.map(f => `<option value="${f.id}">📁 ${esc(folderPathLabel(f.id))}</option>`).join('');
   } else if (scope === 'connection') {
     document.getElementById('sn-scope-id-lbl').textContent = t('snip_conn_lbl');
     sel.innerHTML = conns.filter(c => c.protocol === 'SSH' || c.protocol === 'SFTP').sort((a, b) => a.name.localeCompare(b.name))
@@ -9364,7 +9454,7 @@ async function termCdBookmark(winId, i, all, insert) {
 
 // ── editor ──
 function bmScopeTargets(scope) {
-  if (scope === 'folder') return folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(folderPathLabel(f.id))}</option>`).join('');
+  if (scope === 'folder') return folders.map(f => `<option value="${f.id}">📁 ${esc(folderPathLabel(f.id))}</option>`).join('');
   if (scope === 'connection') return conns.filter(c => ['SSH', 'SFTP', 'FTP', 'FTPS'].includes(c.protocol)).sort((a, b) => a.name.localeCompare(b.name))
     .map(c => `<option value="${c.id}">🖥 ${esc(connLabel(c))} (${esc(c.host)})</option>`).join('');
   return '';
