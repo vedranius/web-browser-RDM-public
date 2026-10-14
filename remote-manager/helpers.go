@@ -31,6 +31,9 @@ func loadConnectionRaw(connID int) (Connection, error) {
 	if uid != nil {
 		c.UserID = *uid
 	}
+	var options string
+	db.QueryRow("SELECT COALESCE(options,'') FROM connections WHERE id=?", connID).Scan(&options)
+	json.Unmarshal([]byte(options), &c.Options)
 	decryptConnectionSecrets(&c)
 	applyFolderDefaults(&c)
 	return c, nil
@@ -326,15 +329,15 @@ func isConnLostErr(err error) bool {
 // loadFolders lists a user's folders with their defaults and the names they point to.
 func loadFolders(userID int) []Folder {
 	out := []Folder{}
-	rows, err := db.Query(`SELECT f.id, f.name, f.parent_id, f.jump_conn_id, f.proxy_id, COALESCE(j.name,''), COALESCE(p.name,'') FROM folders f
-		LEFT JOIN connections j ON j.id=f.jump_conn_id LEFT JOIN proxies p ON p.id=f.proxy_id WHERE f.user_id=? ORDER BY f.name`, userID)
+	rows, err := db.Query(`SELECT f.id, f.name, f.parent_id, f.jump_conn_id, f.proxy_id, f.sort_order, COALESCE(j.name,''), COALESCE(p.name,'') FROM folders f
+		LEFT JOIN connections j ON j.id=f.jump_conn_id LEFT JOIN proxies p ON p.id=f.proxy_id WHERE f.user_id=? ORDER BY f.sort_order, f.name, f.id`, userID)
 	if err != nil {
 		return out
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var f Folder
-		if rows.Scan(&f.ID, &f.Name, &f.ParentID, &f.JumpID, &f.ProxyID, &f.JumpName, &f.ProxyName) == nil {
+		if rows.Scan(&f.ID, &f.Name, &f.ParentID, &f.JumpID, &f.ProxyID, &f.SortOrder, &f.JumpName, &f.ProxyName) == nil {
 			out = append(out, f)
 		}
 	}

@@ -138,6 +138,7 @@ func initEncryptionKey() {
 		encryptionKeySource = "file " + p
 	}
 	migrateStoredSecrets()
+	protectBitwardenProfilesAtStartup()
 }
 
 func getEncryptionKey() []byte { return encryptionKey }
@@ -356,6 +357,8 @@ func isImportPath(path string) bool {
 
 func bodyLimitFor(path string) int64 {
 	switch {
+	case strings.HasPrefix(path, "/api/git/medium/"):
+		return mediumArchiveLimit + (1 << 20)
 	case path == "/api/remote/upload":
 		return -1 // streamed; limited per file by the max_upload_mb policy
 	case path == "/api/git/bundles":

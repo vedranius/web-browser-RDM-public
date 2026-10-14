@@ -24,3 +24,11 @@ wrm-selfsigned.key
 
 # Session recordings (terminal output of real sessions — never commit!)
 recordings/
+
+# Private original deploy-tool/config/SSH runtimes and encrypted Bitwarden caches
+*.medium/
+*.bitwarden/
+
+# Python bridge bytecode
+__pycache__/
+*.py[cod]

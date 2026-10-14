@@ -31,6 +31,8 @@ import (
 // temporary directory (so ~/.ssh/authorized_keys is a real file); "passwd" is simulated
 // over the PTY like Linux passwd for a normal user.
 type fakeHost struct {
+	nativeExec atomic.Bool // native OpenSSH/rsync keeps stdin open until command exit
+
 	addr       string
 	home       string
 	user       string
@@ -161,6 +163,15 @@ func (h *fakeHost) serveSession(ch ssh.Channel, reqs <-chan *ssh.Request) {
 					cmd := exec.Command("sh", "-c", p.Cmd)
 					cmd.Env = []string{"HOME=" + h.home, "PATH=" + os.Getenv("PATH"), "USER=" + h.user}
 					cmd.Stdin, cmd.Stdout, cmd.Stderr = ch, ch, ch.Stderr()
+					if h.nativeExec.Load() {
+						cmd.Stdin = nil
+						input, err := cmd.StdinPipe()
+						if err != nil {
+							ch.Close()
+							return
+						}
+						go func() { io.Copy(input, ch); input.Close() }()
+					}
 					if err := cmd.Run(); err != nil {
 						code = 1
 						if ee, ok := err.(*exec.ExitError); ok {

@@ -576,7 +576,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return true
 	}
-	if apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitActivity(w, r, userID, rest) || apiGitWhere(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
+	if apiGitConfigProfiles(w, r, userID, rest) || apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitActivity(w, r, userID, rest) || apiGitWhere(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
 		return
 	}
 	switch {

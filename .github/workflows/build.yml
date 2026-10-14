@@ -17,7 +17,7 @@ permissions:
 
 env:
   # Version for branch builds. Tag builds use the tag name (e.g. v10.10.0) as version and in file names.
-  APP_VERSION: v12.4.0
+  APP_VERSION: v12.4.3
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -60,6 +60,7 @@ jobs:
 
       - name: Web UI syntax, translations and Git Simple / AI regressions
         run: |
+          python3 tools/test-medium-wrapper.py
           node tools/check-ui.js
           node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js
 
