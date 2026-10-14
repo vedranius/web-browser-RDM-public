@@ -284,7 +284,12 @@ func scanOn(cl *ssh.Client, dirs []string) (map[string]*gitScanResult, error) {
 		sb.WriteString("done\n")
 		fmt.Fprintf(&sb, "if [ -f %s/VERSION.md ]; then head -n 40 %s/VERSION.md | sed 's/^/V\t/'; fi\n", q, q)
 		fmt.Fprintf(&sb, "for u in %s; do [ -d \"$u\" ] && grep -lE -- %s \"$u\"/*.service 2>/dev/null; done | sort -u | while IFS= read -r f; do printf 'U\\tsystemd\\t%%s\\n' \"${f##*/}\"; done\n", strings.Join(sysd, " "), re)
-		fmt.Fprintf(&sb, "for u in %s; do [ -d \"$u\" ] && grep -lE -- %s \"$u\"/*.conf \"$u\"/*.ini 2>/dev/null; done | sort -u | while IFS= read -r f; do sed -n 's/^\\[program:\\(.*\\)\\][[:space:]]*$/\\1/p' \"$f\" | while IFS= read -r p; do printf 'U\\tsupervisor\\t%%s\\n' \"$p\"; done; done\n", strings.Join(sup, " "), re)
+		fmt.Fprintf(&sb, `for u in %s; do [ -d "$u" ] && grep -lE -- %s "$u"/*.conf "$u"/*.ini 2>/dev/null; done | sort -u | while IFS= read -r f; do
+awk -v dir=%s 'function emit() {if (name != "" && hit) printf "U\tsupervisor\t%%s\n", name}
+/^[[:space:]]*\[/ {emit(); name=""; hit=0; if ($0 ~ /^[[:space:]]*\[program:/) {name=$0; sub(/^[[:space:]]*\[program:/,"",name); sub(/\].*$/,"",name)}}
+{p=index($0,dir); c=substr($0,p+length(dir),1); if(p && (c=="" || c ~ /[\/ ":;=]/ || c==sprintf("%%c",39))) hit=1}
+END {emit()}' "$f"; done
+`, strings.Join(sup, " "), re, shellQuote(d))
 		sb.WriteString("fi\n")
 	}
 	sb.WriteString("echo WRM_DONE\n")
@@ -503,43 +508,45 @@ func compareInstall(t gitTarget, server map[string]string, ignore []string) ([]g
 // ─── installations ───────────────────────────────────
 
 type gitInstall struct {
-	ID           int            `json:"id"`
-	ConnID       int            `json:"conn_id"`
-	ConnName     string         `json:"conn_name"`
-	Host         string         `json:"host,omitempty"`
-	Hostname     string         `json:"hostname,omitempty"` // the server's real hostname (cached), "" = not read yet
-	FolderID     *int           `json:"folder_id,omitempty"`
-	Tags         []string       `json:"tags,omitempty"`
-	App          string         `json:"app"`
-	Path         string         `json:"path"`
-	Env          string         `json:"env"`
-	Manual       bool           `json:"manual"`
-	State        string         `json:"state"` // ok | update | review | error | gone | unknown
-	Counts       map[string]int `json:"counts"`
-	Behind       int            `json:"behind"`
-	Target       string         `json:"target"` // target version compared with
-	VersionMD    gitVersionInfo `json:"version_md"`
-	Units        []gitUnit      `json:"units"`
-	Error        string         `json:"error,omitempty"`
-	Capped       bool           `json:"capped,omitempty"`
-	CheckedAt    string         `json:"checked_at"`
-	DiscoveredAt string         `json:"discovered_at"`
-	LastOKAt     string         `json:"last_ok_at,omitempty"`    // last check that did not fail
-	LastOKState  string         `json:"last_ok_state,omitempty"` // and its state
-	Files        []gitFileState `json:"files,omitempty"`         // details only
+	Functionality *gitFunctionality `json:"functionality,omitempty"`
+	ID            int               `json:"id"`
+	ConnID        int               `json:"conn_id"`
+	ConnName      string            `json:"conn_name"`
+	Host          string            `json:"host,omitempty"`
+	Hostname      string            `json:"hostname,omitempty"` // the server's real hostname (cached), "" = not read yet
+	FolderID      *int              `json:"folder_id,omitempty"`
+	Tags          []string          `json:"tags,omitempty"`
+	App           string            `json:"app"`
+	Path          string            `json:"path"`
+	Env           string            `json:"env"`
+	Manual        bool              `json:"manual"`
+	State         string            `json:"state"` // ok | update | review | error | gone | unknown
+	Counts        map[string]int    `json:"counts"`
+	Behind        int               `json:"behind"`
+	Target        string            `json:"target"` // target version compared with
+	VersionMD     gitVersionInfo    `json:"version_md"`
+	Units         []gitUnit         `json:"units"`
+	Error         string            `json:"error,omitempty"`
+	Capped        bool              `json:"capped,omitempty"`
+	CheckedAt     string            `json:"checked_at"`
+	DiscoveredAt  string            `json:"discovered_at"`
+	LastOKAt      string            `json:"last_ok_at,omitempty"`    // last check that did not fail
+	LastOKState   string            `json:"last_ok_state,omitempty"` // and its state
+	Files         []gitFileState    `json:"files,omitempty"`         // details only
 	// time of the last update whose units were not restarted yet
 	RestartPending string `json:"restart_pending,omitempty"`
 }
 
 type gitInstallData struct {
-	Counts    map[string]int `json:"counts"`
-	Behind    int            `json:"behind"`
-	Target    string         `json:"target"`
-	VersionMD gitVersionInfo `json:"version_md"`
-	Units     []gitUnit      `json:"units"`
-	Error     string         `json:"error,omitempty"`
-	Capped    bool           `json:"capped,omitempty"`
-	Files     []gitFileState `json:"files"`
+	Functionality *gitFunctionality `json:"functionality,omitempty"`
+	Counts        map[string]int    `json:"counts"`
+	Behind        int               `json:"behind"`
+	Target        string            `json:"target"`
+	VersionMD     gitVersionInfo    `json:"version_md"`
+	Units         []gitUnit         `json:"units"`
+	Error         string            `json:"error,omitempty"`
+	Capped        bool              `json:"capped,omitempty"`
+	Files         []gitFileState    `json:"files"`
 }
 
 func loadGitInstalls(userID int, withFiles bool, where string, args ...interface{}) []gitInstall {
@@ -565,6 +572,7 @@ func loadGitInstalls(userID int, withFiles bool, where string, args ...interface
 		var d gitInstallData
 		jsonUnmarshalString(data, &d)
 		in.Counts, in.Behind, in.Target, in.VersionMD, in.Units, in.Error, in.Capped = d.Counts, d.Behind, d.Target, d.VersionMD, d.Units, d.Error, d.Capped
+		in.Functionality = d.Functionality
 		if in.Counts == nil {
 			in.Counts = map[string]int{}
 		}
@@ -648,6 +656,10 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 	now := nowStamp()
 	markUnreachable := func(msg string) {
 		sr.Error = msg
+		saveGitServerHealthError(userID, connID, msg)
+		for _, in := range loadGitInstalls(userID, true, "i.conn_id=?", connID) {
+			saveInstallError(in, msg)
+		}
 		wasErr := getNotifyState(fmt.Sprintf("git:unreach:%d:%d", userID, connID)) != ""
 		if !wasErr {
 			changes = append(changes, gitChange{Kind: "unreachable", Name: c.Name, Error: msg})
@@ -660,6 +672,7 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 		return sr, changes
 	}
 	defer cl.Close()
+	checkGitServerHealth(userID, connID, cl)
 	cacheServerHostname(connID, cl)
 	setNotifyState(fmt.Sprintf("git:unreach:%d:%d", userID, connID), "")
 	if discover {
@@ -682,7 +695,7 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 	if err != nil {
 		sr.Error = err.Error()
 		for _, in := range installs {
-			saveInstallResult(in.ID, "error", gitInstallData{Error: err.Error(), Units: in.Units, VersionMD: in.VersionMD})
+			saveInstallError(in, err.Error())
 		}
 		return sr, changes
 	}
@@ -692,6 +705,8 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 			t, ok = loadGitTarget(userID, in.App)
 		}
 		state, d := evalInstall(scans[in.Path], t, ok, cat.IgnoreDirs)
+		app, _ := cat.app(in.App)
+		checkGitFunctionality(cl, in, app, state, &d)
 		if state == "review" && in.State != "review" && in.State != "unknown" {
 			changes = append(changes, gitChange{Kind: "drift", Name: c.Name, App: in.App, Path: in.Path})
 		}
@@ -701,7 +716,7 @@ func checkServer(userID, connID int, cat *gitCatalog, apps []gitCatalogApp, disc
 }
 
 // discoverAndRegister finds the installations on one server and stores new ones; the ones that
-// are no longer found (and were not added by hand) are forgotten.
+// are no longer found remain registered so missing installations can be reported.
 func discoverAndRegister(userID, connID int, cl *ssh.Client, cat *gitCatalog, apps []gitCatalogApp, now string) (int, error) {
 	found, err := discoverOn(cl, cat, apps)
 	if err != nil {
@@ -716,11 +731,6 @@ func discoverAndRegister(userID, connID int, cl *ssh.Client, cat *gitCatalog, ap
 		} else {
 			db.Exec(`INSERT INTO git_installs (user_id, conn_id, app, path, env, manual, state, data, checked_at, discovered_at) VALUES (?,?,?,?,?,0,'unknown','','',?)`,
 				userID, connID, f.App, f.Path, f.Env, now)
-		}
-	}
-	for _, in := range loadGitInstalls(userID, false, "i.conn_id=? AND i.manual=0", connID) {
-		if !seen[in.Path] {
-			db.Exec(`DELETE FROM git_installs WHERE id=?`, in.ID)
 		}
 	}
 	return len(found), nil
@@ -776,7 +786,10 @@ func refreshInstallState(userID int, in gitInstall, cl *ssh.Client) {
 		return
 	}
 	t, ok := loadGitTarget(userID, in.App)
-	state, d := evalInstall(scans[in.Path], t, ok, loadGitCatalog(userID).IgnoreDirs)
+	cat := loadGitCatalog(userID)
+	state, d := evalInstall(scans[in.Path], t, ok, cat.IgnoreDirs)
+	app, _ := cat.app(in.App)
+	checkGitFunctionality(cl, in, app, state, &d)
 	saveInstallResult(in.ID, state, d)
 }
 
@@ -785,6 +798,7 @@ func saveInstallResult(id int, state string, d gitInstallData) {
 		d.Files = []gitFileState{}
 	}
 	now := nowStamp()
+	notifyGitFunctionality(id, d.Functionality)
 	if state == "error" || state == "gone" {
 		db.Exec(`UPDATE git_installs SET state=?, data=?, checked_at=? WHERE id=?`, state, string(jsonMarshal(d)), now, id)
 		return
@@ -799,6 +813,7 @@ func saveInstallError(in gitInstall, msg string) {
 	db.QueryRow(`SELECT data FROM git_installs WHERE id=?`, in.ID).Scan(&data)
 	var d gitInstallData
 	jsonUnmarshalString(data, &d)
-	d.Error = msg
+	d.Error = redactText(msg)
+	d.Functionality = &gitFunctionality{State: "failed", CheckedAt: nowStamp(), Checks: []gitRuntimeCheck{}, Warnings: []string{d.Error}}
 	saveInstallResult(in.ID, "error", d)
 }

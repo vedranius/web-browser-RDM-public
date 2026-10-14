@@ -98,6 +98,7 @@ func initGitSchema() {
 		last_ok_state TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "conn_id", "app", "path", "env", "manual", "state", "data", "checked_at", "discovered_at", "last_ok_at", "last_ok_state")
 	mustExec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_git_installs_path ON git_installs(user_id, conn_id, path)`)
+	initGitFunctionalitySchema()
 	initGitRunsSchema()
 	initGitCISchema()
 	initGitEnvSchema()
@@ -129,6 +130,7 @@ func deleteGitUserData(userID int) {
 	for _, s := range loadGitSources(userID) {
 		deleteGitSource(s.ID)
 	}
+	db.Exec(`DELETE FROM git_server_health WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_workspace WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_targets WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_installs WHERE user_id=?`, userID)
@@ -512,7 +514,7 @@ func gitState(userID int) map[string]interface{} {
 	}
 	return map[string]interface{}{
 		"catalog": cat, "settings": st, "sources": loadGitSources(userID), "targets": loadGitTargets(userID),
-		"installs": loadGitInstalls(userID, false, ""), "bundle_apps": fromBundle, "last_check_at": last,
+		"server_health": loadGitServerHealth(userID), "installs": loadGitInstalls(userID, false, ""), "bundle_apps": fromBundle, "last_check_at": last,
 		"can_check": gitChecksAllowed(userID), "interval_minutes": settingInt("git_check_interval_minutes"),
 		"notifications": settingBool("notifications_enabled"), "deploy": gitDeployPolicies(userID),
 		"grace_minutes": settingInt("git_schedule_grace_minutes"), "feeds": loadGitFeeds(userID), "pipelines": loadGitPipelines(userID), "hosts": hostLabels(userID),
@@ -975,6 +977,17 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		case len(parts) == 2 && r.Method == http.MethodDelete:
 			db.Exec(`DELETE FROM git_installs WHERE id=? AND user_id=?`, id, userID)
 			jsonOK(w, gitState(userID))
+		case len(parts) == 3 && parts[2] == "configuration" && r.Method == http.MethodGet:
+			if !needCheck() {
+				return
+			}
+			out, err := inspectGitConfigs(userID, in)
+			if err != nil {
+				jsonError(w, redactText(err.Error()), 502)
+				return
+			}
+			auditLogRef(r, userID, usernameOf(userID), "git.configuration_viewed", in.Path, map[string]interface{}{"app": in.App, "files": len(out)}, auditRef{ConnID: in.ConnID})
+			jsonOK(w, map[string]interface{}{"files": out, "read_at": nowStamp()})
 		case len(parts) == 3 && parts[2] == "diff" && r.Method == http.MethodGet:
 			if !needCheck() {
 				return
