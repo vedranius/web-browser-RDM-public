@@ -62,6 +62,9 @@ var aiRedactRules = func() []struct {
 		// password hashes (shadow lines and bare crypt hashes)
 		{regexp.MustCompile(`(?m)^([a-z_][a-z0-9_.-]*\$?):(\$(1|2[abxy]?|5|6|7|y|gy|sha1|md5)\$[^:\s]+|[!*]?[A-Za-z0-9./]{13,}):`), "${1}:" + aiRedacted + ":"},
 		{regexp.MustCompile(`\$(2[abxy]|5|6|y|gy|argon2id?)\$[A-Za-z0-9./$=,+-]{20,}`), aiRedacted},
+		// Quoted assignments can contain spaces; redact the complete value first.
+		{regexp.MustCompile(keyRe + `(\s*[:=]\s*|"\s*:\s*|'\s*:\s*)(")(?:\\.|[^"\\])*(")`), "${1}${2}${3}" + aiRedacted + "${4}"},
+		{regexp.MustCompile(keyRe + `(\s*[:=]\s*|"\s*:\s*|'\s*:\s*)(')(?:\\.|[^'\\])*(')`), "${1}${2}${3}" + aiRedacted + "${4}"},
 		// key = value, key: value, "key": "value", --key value
 		{regexp.MustCompile(keyRe + `(\s*[:=]\s*|"\s*:\s*"?|'\s*:\s*'?)(["']?)([^\s"',;}{]+)`), "${1}${2}${3}" + aiRedacted},
 		{regexp.MustCompile(`(?i)(--?(?:password|passwd|pass|token|secret|api-key|apikey|client-secret|access-key|secret-key)(?:[= ]))("?)([^\s"']+)`), "${1}${2}" + aiRedacted},
