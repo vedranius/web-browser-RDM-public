@@ -14,6 +14,12 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
+## Managed Medium runtime (v12.4.3b)
+
+`git_medium_runtime.go` selects Docker on Windows and optionally on Linux. Approved source imports are retained independently of preparation; a pending marker prevents false readiness and an administrator can retry setup. CLI discovery preserves host Docker context and supports standard Windows install locations. The pinned Linux image supplies runtime dependencies; a Linux volume holds its venv and per-user named Linux volumes retain native data/permissions. Only explicit config/SSH revisions are copied into an existing user volume. Runtime source/venv are read-only; no Docker socket or other users' volumes are mounted.
+
+Container environment aliases are translated by the embedded wrapper before original imports, leaving the Docker CLI's host HOME intact. A private SSH-home link makes OpenSSH's passwd-based tilde expansion work. Private files use a restrictive umask; original builds set their own build umask and drop to an unprivileged account. WRM records source/preparation state, owns random container names, checks readiness/busy and stops only its own processes. Backups include private host data/key plus the named volumes. A local Linux Docker engine is required; remote Docker/Windows Server Desktop are not represented as supported.
+
 ## Medium, configuration profiles, Bitwarden and order (v12.4.3)
 
 `git_medium.go` imports an administrator-approved original tool into `<DB_PATH>.medium/tool`, installs pinned Python dependencies in its venv, and starts per-user localhost ASGI processes. Embedded `medium_wrapper.py` authenticates a random private bridge key and exposes readiness/busy probes, then delegates to the unchanged original app. The reverse proxy strips WRM credentials, translates original URL/header roots into `/medium/`, permits same-origin embedding and checks auth/policy/CSRF on each request. Native plans, backups, locks and history remain the original engine's data, separate from existing WRM runs. Config/SSH/data directories are user-specific; preferences are encrypted. This is process/directory separation, not an OS sandbox; editable native commands run as the WRM OS user.
