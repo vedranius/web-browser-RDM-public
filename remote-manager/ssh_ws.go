@@ -173,7 +173,7 @@ func sshHandler(w http.ResponseWriter, r *http.Request) {
 		if cl, err = dialSSH(c, onNewKey); err == nil {
 			sshCl = cl
 			var command string
-			command, err = terminalDirectoryStart(cl, c, r.URL.Query().Get("cwd"))
+			command, err = terminalDirectoryStart(cl, c, r.URL.Query().Get("cwd"), r.URL.Query().Get("log_path"))
 			if err == nil {
 				tio, err = sshTerm(cl, cols, rows, term, command)
 			} else {

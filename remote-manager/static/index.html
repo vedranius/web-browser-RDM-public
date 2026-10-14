@@ -10524,6 +10524,7 @@ function setupSSH(wo) {
   fitTerm(wo);
   const qs = new URLSearchParams({id: wo.connId, cols: wo.term.cols, rows: wo.term.rows});
   if (wo.pendingCwd) {qs.set('cwd',wo.pendingCwd);wo.pendingCwd=null;}
+  if (wo.pendingLogPath) {qs.set('log_path',wo.pendingLogPath);wo.pendingLogPath=null;}
   if (wo.shareToken) qs.set('share_token', wo.shareToken);
   if (wo.console) qs.set('console', wo.console);
   if (wo.el) wo.el.classList.toggle('console', !!wo.console);

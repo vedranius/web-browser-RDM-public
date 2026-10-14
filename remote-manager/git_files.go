@@ -119,6 +119,9 @@ func openRepoView(userID int, t gitTarget) *gitRepoView {
 
 // content returns a repository file's content (blob cache, else the Git API).
 func (v *gitRepoView) content(rel string) ([]byte, error) {
+	if loadGitRelayMeta(v.t.SourceID).OwnerID > 0 && !relaySourceAllowed(v.userID, v.t.SourceID) {
+		return nil, fmt.Errorf("shared Git source access has been removed")
+	}
 	blob := v.files[rel]
 	if blob == "" {
 		return nil, fmt.Errorf("the content of this file is not available")

@@ -1003,8 +1003,8 @@ func apiGitCI(w http.ResponseWriter, r *http.Request, userID int, rest string, p
 		}
 		id, _ := strconv.Atoi(parts[1])
 		src, found := loadGitSource(userID, id)
-		if !found || src.Kind == "bundle" {
-			jsonError(w, "Source not found", 404)
+		if !found || !src.Owned || src.Kind == "bundle" || src.Relay != nil {
+			jsonError(w, "Source not found or client-cache source does not accept webhooks", 404)
 			return true
 		}
 		if r.Method == http.MethodDelete {

@@ -130,7 +130,9 @@ func restoreSetAsideGitSources() {
 
 func deleteGitUserData(userID int) {
 	for _, s := range loadGitSources(userID) {
-		deleteGitSource(s.ID)
+		if s.Owned {
+			deleteGitSource(s.ID)
+		}
 	}
 	db.Exec(`DELETE FROM git_server_health WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_workspace WHERE user_id=?`, userID)
@@ -731,27 +733,37 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 				jsonError(w, "Source not found", 404)
 				return
 			}
-			db.Exec(`UPDATE git_sources SET kind=?, name=?, url=? WHERE id=?`, in.Kind, truncateStr(in.Name, 100), in.URL, id)
+			tx, err := db.Begin()
+			if err != nil {
+				jsonError(w, "Cannot update source", 500)
+				return
+			}
+			defer tx.Rollback()
+			tx.Exec(`UPDATE git_sources SET kind=?, name=?, url=? WHERE id=?`, in.Kind, truncateStr(in.Name, 100), in.URL, id)
 			if in.Token != nil {
 				tok := ""
 				if t := strings.TrimSpace(*in.Token); t != "" {
 					tok = encryptValue(t)
 				}
-				db.Exec(`UPDATE git_sources SET token=? WHERE id=?`, tok, id)
+				tx.Exec(`UPDATE git_sources SET token=? WHERE id=?`, tok, id)
 			}
 			if in.WriteToken != nil {
 				wtok := ""
 				if t := strings.TrimSpace(*in.WriteToken); t != "" {
 					wtok = encryptValue(t)
 				}
-				db.Exec(`UPDATE git_sources SET write_token=? WHERE id=?`, wtok, id)
+				tx.Exec(`UPDATE git_sources SET write_token=? WHERE id=?`, wtok, id)
 			}
-			if in.URL != src.URL {
+			if in.URL != src.URL || in.Kind != src.Kind {
 				// a different server: cached trees and blobs belong to the old one
-				db.Exec(`UPDATE git_relay_meta SET published=0,error='Source address changed; synchronize again' WHERE source_id=?`, id)
-				db.Exec(`DELETE FROM git_relay_cache WHERE source_id=?`, id)
-				db.Exec(`DELETE FROM git_blobs WHERE source_id=?`, id)
-				db.Exec(`DELETE FROM git_trees WHERE source_id=?`, id)
+				tx.Exec(`UPDATE git_relay_meta SET enabled=CASE WHEN ?='gitlab' THEN enabled ELSE 0 END,published=0,error='Source address changed; synchronize again' WHERE source_id=?`, in.Kind, id)
+				tx.Exec(`DELETE FROM git_relay_cache WHERE source_id=?`, id)
+				tx.Exec(`DELETE FROM git_blobs WHERE source_id=?`, id)
+				tx.Exec(`DELETE FROM git_trees WHERE source_id=?`, id)
+			}
+			if err := tx.Commit(); err != nil {
+				jsonError(w, "Cannot update source", 500)
+				return
 			}
 			auditLog(r, userID, "git.source_changed", in.Name, map[string]interface{}{"kind": in.Kind, "url": in.URL, "source_id": id, "new_secret": in.Token != nil,
 				"new_write_secret": in.WriteToken != nil})
