@@ -202,3 +202,20 @@ func TestRemotePreviewNoSpecialFiles(t *testing.T) {
 		t.Fatal(res.StatusCode)
 	}
 }
+
+func TestRemotePreviewPDFNativeViewerPolicy(t *testing.T) {
+	h := startFakeHost(t, testSSHUser, testSSHPass)
+	srv := httptest.NewServer(newRouter())
+	defer srv.Close()
+	u := newTestUser(t, srv, "preview-pdf", false)
+	id := u.addConnection("documents", h.addr)
+	writeFile(t, h.home+"/document.pdf", "%PDF-1.4\n")
+	res, _ := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape(h.home+"/document.pdf")), "")
+	if res.StatusCode != 200 || res.Header.Get("Content-Type") != "application/pdf" || res.Header.Get("X-Content-Type-Options") != "nosniff" {
+		t.Fatalf("PDF headers: %d %v", res.StatusCode, res.Header)
+	}
+	policy := res.Header.Get("Content-Security-Policy")
+	if strings.Contains(policy, "sandbox") || !strings.Contains(policy, "default-src 'none'") {
+		t.Fatalf("PDF native viewer is blocked or unrestricted: %s", policy)
+	}
+}

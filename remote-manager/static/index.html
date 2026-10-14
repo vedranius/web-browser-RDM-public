@@ -12361,7 +12361,7 @@ async function openRemotePreview(winId, path) {
       body.innerHTML = `<${info.kind} controls preload="metadata" src="${esc(url)}" style="width:100%;max-height:65vh" aria-label="${esc(info.name)}"></${info.kind}><div class="muted-text" id="pv-media-note">${esc(t('pv_stream'))}</div>`;
       body.querySelector(info.kind).addEventListener('error', () => { const note = body.querySelector('#pv-media-note'); if (note) note.textContent = t('pv_media_error'); });
     } else if (info.kind === 'image') { body.innerHTML = `<img src="${esc(url)}" alt="${esc(info.name)}" style="display:block;max-width:100%;max-height:65vh;margin:auto">`; }
-    else if (info.kind === 'pdf') { body.innerHTML = `<iframe src="${esc(url)}" title="${esc(info.name)}" sandbox style="width:100%;height:65vh;border:0"></iframe>`; }
+    else if (info.kind === 'pdf') { body.innerHTML = `<iframe src="${esc(url)}" title="${esc(info.name)}" style="width:100%;height:65vh;border:0"></iframe>`; }
     body.insertAdjacentHTML('afterbegin', `<div class="muted-text" style="margin-bottom:8px">${esc(fmtBytes(info.size))} · ${esc(info.mime)}</div>`);
   } catch (e) { if (seq === previewSequence && modal.isConnected) body.innerHTML = `<div class="hint-box bad">${esc(e.message)}</div>`; }
 }
