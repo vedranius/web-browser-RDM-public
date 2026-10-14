@@ -188,10 +188,11 @@ test('filters combine hostname, status, branch and version using stable connecti
 test('AI availability matches owned and shared connection permissions and accepts legacy lowercase SSH protocols', () => {
   const ctx = vm.createContext({currentUser: {policy: {ai: true}}, winConn: w => w.conn, isCollabMode: false, collab: {}, winObjects: []});
   vm.runInContext(html.slice(html.indexOf('function winPerms('), html.indexOf('function guardWin(')), ctx);
-  vm.runInContext(html.slice(html.indexOf('function aiAvailable('), html.indexOf('function openAI(')), ctx);
+  vm.runInContext(html.slice(html.indexOf('function aiEligible('), html.indexOf('async function openAI(')), ctx);
   const owned = {conn: {protocol: 'SSH'}};
   assert.equal(ctx.aiAvailable(owned, 'ssh'), true); assert.equal(ctx.aiAvailable(owned, 'sftp'), true);
   assert.equal(ctx.aiAvailable({...owned, conn: {protocol: 'ssh'}}, 'ssh'), true);
+  assert.equal(ctx.aiAvailable({...owned, conn: {protocol: 'SFTP'}}, 'sftp'), true);
   assert.equal(ctx.aiAvailable({...owned, shareToken: 'share', perms: {terminal: true, files_write: false}}, 'ssh'), false);
   assert.equal(ctx.aiAvailable({...owned, shareToken: 'share', perms: {terminal: true, files_write: true}}, 'ssh'), true);
   assert.equal(ctx.aiAvailable({...owned, console: true}, 'ssh'), false);
@@ -201,7 +202,7 @@ test('AI availability matches owned and shared connection permissions and accept
 });
 
 test('enabling and disabling AI refreshes already-open terminal buttons without reconnecting', async () => {
-  const buttons = new Map([[1, {style: {display: 'none'}}], [2, {style: {display: 'none'}}]]);
+  const buttons = new Map([[1, {style: {display: 'none'}, classes: new Set(), classList: {toggle(name,on) { const item = [...buttons.values()].find(x => x.classList === this); if (on) item.classes.add(name); else item.classes.delete(name); }}}], [2, {style: {display: 'none'}, classes: new Set(), classList: {toggle(name,on) { const item = [...buttons.values()].find(x => x.classList === this); if (on) item.classes.add(name); else item.classes.delete(name); }}}]]);
   const terminal = {}, ctx = vm.createContext({currentUser: {id: 1, policy: {ai: false}}, isCollabMode: false, collab: {}, adminSettingsCache: [],
     winConn: w => w.conn, showToast() {}, t: k => k,
     document: {getElementById: id => buttons.get(Number(id.replace('wb-ai-', ''))) || null},
@@ -210,13 +211,15 @@ test('enabling and disabling AI refreshes already-open terminal buttons without 
   let enabled = true;
   ctx.fetch = async url => response(url === '/api/auth/me' ? {id: 1, policy: {ai: enabled}} : {changed: {ai_assistant: enabled ? 'all' : 'off'}});
   vm.runInContext(html.slice(html.indexOf('function winPerms('), html.indexOf('function guardWin(')), ctx);
-  vm.runInContext(html.slice(html.indexOf('function aiAvailable('), html.indexOf('function openAI(')), ctx);
+  vm.runInContext(html.slice(html.indexOf('function aiEligible('), html.indexOf('async function openAI(')), ctx);
   vm.runInContext(html.slice(html.indexOf('function applyPolicyToUI('), html.indexOf('function showFolderCtx(')), ctx);
   vm.runInContext(html.slice(html.indexOf('async function saveSetting('), html.indexOf('async function adminHosts(')), ctx);
   await ctx.saveSetting('ai_assistant', 'all');
   assert.equal(buttons.get(1).style.display, ''); assert.equal(buttons.get(2).style.display, 'none');
   assert.equal(ctx.winObjects[0].term, terminal);
-  enabled = false; await ctx.saveSetting('ai_assistant', 'off'); assert.equal(buttons.get(1).style.display, 'none');
+  assert.equal(buttons.get(1).classes.has('policy-off'), false);
+  enabled = false; await ctx.saveSetting('ai_assistant', 'off'); assert.equal(buttons.get(1).style.display, '');
+  assert.equal(buttons.get(1).classes.has('policy-off'), true); assert.equal(ctx.aiAvailable(ctx.winObjects[0], 'ssh'), false);
   let respond; ctx.fetch = () => new Promise(resolve => { respond = resolve; });
   const pending = ctx.refreshUserPolicy(); ctx.currentUser = null;
   respond(response({id: 1, policy: {ai: true}})); await pending;

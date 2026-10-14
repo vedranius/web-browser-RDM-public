@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.3.6</title>
+<title>Web Remote Manager PRO v12.4.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1208,7 +1208,14 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .sb-title .brand::before { display: none; }
 .win-rec { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; color: #fca5a5; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: default; animation: recPulse 2.4s ease-in-out infinite; }
 .win-ai { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; color: #c4b5fd; background: rgba(139,92,246,.14); border: 1px solid rgba(139,92,246,.45); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: pointer; animation: recPulse 2.4s ease-in-out infinite; }
+.remote-preview-overlay { position:fixed; inset:0; z-index:11000; background:rgba(0,0,0,.65); display:flex; align-items:center; justify-content:center; padding:12px; }
+.win.folder-hidden { visibility:hidden; pointer-events:none; }
+#folder-tab-bar { display:flex; gap:4px; overflow-x:auto; flex-shrink:0; padding:4px 8px; background:var(--bg2); border-bottom:1px solid var(--border); }
+#folder-tab-bar:empty { display:none; }
+#folder-tab-bar button { flex-shrink:0; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:4px 8px; font-size:11px; background:var(--bg3); color:var(--text2); }
+#folder-tab-bar button.active { color:var(--accent); background:var(--bg4); }
 .win-btn.ai { font-weight: 800; font-size: 10px; letter-spacing: .02em; width: auto; min-width: 24px; padding: 0 6px; }
+.win-btn.ai.policy-off { opacity:.6; }
 .win-btn.ai.on { color: #c4b5fd; background: rgba(139,92,246,.18); }
 @keyframes recPulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 .adm-toolbar input[type=date] { width: 138px; color-scheme: dark; }
@@ -1521,6 +1528,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <!-- ══ FILE BROWSER CONTEXT MENU ══ -->
 <div id="fm-ctx-menu">
   <div class="ctx-item" id="fm-ctx-open-btn" onclick="fmCtxOpen()">📂 <span data-i18n="fm_open">Open</span></div>
+  <div class="ctx-item" id="fm-ctx-preview-btn" onclick="fmCtxPreview()">▶ <span data-i18n="pv_open">Preview</span></div>
   <div class="ctx-item" id="fm-ctx-edit-btn" onclick="fmCtxEdit()">📝 <span data-i18n="fm_edit">Edit</span></div>
   <div class="ctx-item" id="fm-ctx-dl-btn" onclick="fmCtxDownload()">📥 Download</div>
   <div class="ctx-item" data-perm="write" onclick="fmCtxTransfer()">⚡ <span data-i18n="fm_transfer_to">Transfer to Server</span></div>
@@ -1538,7 +1546,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.3.6 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.4.0 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1618,7 +1626,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.3.6</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.4.0</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1626,6 +1634,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div id="auth-info">
       <span id="user-chip"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span></span>
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
+      <button class="btn-top" id="btn-ai" onclick="openAIHome()" data-i18n-title="ai_btn_t" title="AI assistant">✦ AI</button>
       <button class="btn-top" id="btn-mcp" style="display:none;" onclick="openMCPPop()" title="AI apps connected through MCP"><span>🤖</span><span class="lbl" data-i18n="mcp_connected_lbl">AI connected</span><span class="tun-badge" id="mcp-badge"></span></button>
       <button class="btn-top" id="btn-settings" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
       <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
@@ -1657,6 +1666,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="cb-btn leave" onclick="voiceLeave()" title="Leave the call"><span>📞</span><span class="lbl" data-i18n="leave">Leave</span></button>
     </div>
   </div>
+  <div id="folder-tab-bar" aria-label="Folders"></div>
   <div id="tab-bar-wrap">
     <button class="tab-scroll-btn" onclick="scrollTabBar(-120)" title="Scroll left">‹</button>
     <div id="tab-bar-scroll">
@@ -1858,6 +1868,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <h3 id="f-title">New Folder</h3>
     <input type="hidden" id="f-id">
     <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="f-name" placeholder="e.g. Production" onkeydown="if(event.key==='Enter') saveFolder()"></div>
+    <div class="field"><label data-i18n="fd_parent">Parent folder</label><select id="f-parent"></select></div>
     <div class="field"><label data-i18n="fd_jump">Default jump host</label><select id="f-jump"></select></div>
     <div class="field"><label data-i18n="fd_proxy">Default proxy</label><select id="f-proxy"></select></div>
     <div class="muted-text" style="line-height:1.5;" data-i18n="fd_help">Connections in this folder, also new ones, use these unless they choose their own jump host or proxy.</div>
@@ -2003,6 +2014,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="st-notify" id="st-notify-btn" onclick="showSettingsTab('st-notify')" data-i18n="tab_notify">Notifications</button>
       <button class="tab-btn" data-tab="st-audio" onclick="showSettingsTab('st-audio')" data-i18n="tab_audio">Voice &amp; audio</button>
       <button class="tab-btn" data-tab="st-history" id="st-history-btn" onclick="showSettingsTab('st-history')" data-i18n="tab_history">Session history</button>
+      <button class="tab-btn" data-tab="st-ai" id="st-ai-btn" onclick="showSettingsTab('st-ai')" data-i18n="adm_ai">AI assistant</button>
       <button class="tab-btn" data-tab="st-mcp" id="st-mcp-btn" onclick="showSettingsTab('st-mcp')" data-i18n="tab_mcp">AI connections</button>
       <button class="tab-btn" data-tab="st-data" id="st-data-btn" onclick="showSettingsTab('st-data')" data-i18n="tab_data">Data</button>
     </div>
@@ -2054,6 +2066,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="hint-box" data-i18n="history_help">Your terminal sessions and sessions of other people on your connections. Replay a recording or download it as an asciinema .cast file.</div>
       <div id="history-pane"></div>
     </div>
+    <div class="tab-pane" id="st-ai"><div id="ai-status-pane"></div></div>
     <div class="tab-pane" id="st-mcp"><div id="mcp-pane"></div></div>
     <div class="tab-pane" id="st-data">
       <div class="setting-row">
@@ -4564,6 +4577,8 @@ Object.assign(LANGS.hr, {
 });
 Object.assign(LANGS.en, {
   git_lbl: 'Git', git_load_failed: 'The Git workspace could not be loaded.',
+  ne_git_server_problem:'Git: server services need attention', ne_git_server_recovered:'Git: server services recovered',
+  ne_git_functionality_problem:'Git: service functionality needs attention', ne_git_functionality_recovered:'Git: service functionality recovered',
   ne_git_new_version: 'Git: a new version is available', ne_git_drift: 'Git: files changed by hand on a server', ne_git_unreachable: 'Git: a server is unreachable for checks',
   pg_git: 'Git workspace', p_git_enabled: 'Git workspace', p_git_enabled_d: 'Compare services on servers with GitLab / GitHub or offline bundles. Off hides the workspace completely.',
   p_git_checks: 'Git checks', p_git_checks_d: 'Who may run checks (discovery and file comparison over SSH, read-only).',
@@ -4589,6 +4604,8 @@ Object.assign(LANGS.en, {
 });
 Object.assign(LANGS.hr, {
   git_lbl: 'Git', git_load_failed: 'Git radni prostor nije se mogao učitati.',
+  ne_git_server_problem:'Git: servisi servera zahtijevaju pažnju', ne_git_server_recovered:'Git: servisi servera oporavljeni',
+  ne_git_functionality_problem:'Git: funkcionalnost servisa zahtijeva pažnju', ne_git_functionality_recovered:'Git: funkcionalnost servisa oporavljena',
   ne_git_new_version: 'Git: dostupna je nova verzija', ne_git_drift: 'Git: datoteke na serveru ručno su promijenjene', ne_git_unreachable: 'Git: server je nedostupan za provjere',
   pg_git: 'Git radni prostor', p_git_enabled: 'Git radni prostor', p_git_enabled_d: 'Usporedba servisa na serverima s GitLabom / GitHubom ili offline bundleovima. Isključeno potpuno skriva radni prostor.',
   p_git_checks: 'Git provjere', p_git_checks_d: 'Tko smije pokretati provjere (pretraga i usporedba datoteka preko SSH-a, samo čitanje).',
@@ -4734,6 +4751,15 @@ function setTabIntro(id, key) {
   el.setAttribute('data-i18n', key);
   el.textContent = t(key);
 }
+Object.assign(LANGS.en, {fd_parent:'Parent folder', fd_child:'New subfolder', fd_all_tabs:'All connections'});
+Object.assign(LANGS.hr, {fd_parent:'Nadređena mapa', fd_child:'Nova podmapa', fd_all_tabs:'Sve veze'});
+
+Object.assign(LANGS.en, {pv_open:'Preview', pv_selected:'Preview selected path', pv_download:'Download selected path', pv_select_path:'Select one file path in the terminal, then right-click it.', pv_need_cwd:'The terminal directory is unavailable. Select an absolute file path.', pv_truncated:'Showing the first 256 KiB. Download the file to read it in full.', pv_stream:'Media streams from the server. Seeking uses byte ranges.', pv_media_error:'The browser could not play this file. Check server access or download it to use a player that supports its codec.'});
+Object.assign(LANGS.hr, {pv_open:'Pregled', pv_selected:'Pregled odabrane putanje', pv_download:'Preuzmi odabranu putanju', pv_select_path:'Odaberite jednu putanju datoteke u terminalu i kliknite desnom tipkom.', pv_need_cwd:'Direktorij terminala nije dostupan. Odaberite apsolutnu putanju datoteke.', pv_truncated:'Prikazano je prvih 256 KiB. Preuzmite datoteku za cijeli sadržaj.', pv_stream:'Medij se učitava sa servera. Premotavanje koristi raspone bajtova.', pv_media_error:'Preglednik ne može reproducirati datoteku. Provjerite pristup serveru ili je preuzmite za reprodukciju u programu koji podržava njezin kodek.'});
+
+Object.assign(LANGS.en, {stin_ai:'AI assistant status, setup and access for this account. The terminal assistant uses a configured provider; MCP connections are managed separately.'});
+Object.assign(LANGS.hr, {stin_ai:'Stanje AI asistenta, postavljanje i pristup za ovaj račun. Asistent u terminalu koristi postavljenog pružatelja; MCP veze se postavljaju zasebno.'});
+
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5159,6 +5185,7 @@ async function loadData() {
     loadStatus();
     loadVault();
     refreshAIButtons();
+    renderTabs();
   } catch(e) { console.error('loadData', e); }
 }
 
@@ -5213,10 +5240,12 @@ function renderTree() {
   wrap.appendChild(myLabel);
 
   // Folders
-  folders.forEach(f => {
+  const appendFolder = (f, container, depth = 0) => {
+    if (depth >= 32) return;
     const fConns = conns.filter(c => c.folder_id === f.id && visible(c));
-    if (filterActive && fConns.length === 0) return;
-    const fDown = conns.filter(c => c.folder_id === f.id && (connStatusOf(c) || {}).state === 'down').length;
+    const descendants = folderDescendants(f.id);
+    if (filterActive && !conns.some(c => descendants.has(c.folder_id) && visible(c))) return;
+    const fDown = conns.filter(c => descendants.has(c.folder_id) && (connStatusOf(c) || {}).state === 'down').length;
 
     const folderWrap = document.createElement('div');
     const row = document.createElement('div');
@@ -5232,7 +5261,7 @@ function renderTree() {
     };
     row.onclick = () => {
       const ch = row.querySelector('.folder-chevron');
-      const children = folderWrap.querySelector('.folder-children');
+      const children = folderWrap.children[1];
       const open = children.classList.toggle('open');
       ch.classList.toggle('open', open);
       if (open) openFolderIds.add(f.id); else openFolderIds.delete(f.id);
@@ -5245,8 +5274,10 @@ function renderTree() {
     fConns.forEach(c => children.appendChild(makeConnItem(c)));
     folderWrap.appendChild(row);
     folderWrap.appendChild(children);
-    wrap.appendChild(folderWrap);
-  });
+    folders.filter(x => x.parent_id === f.id).forEach(x => appendFolder(x, children, depth + 1));
+    container.appendChild(folderWrap);
+  };
+  folders.filter(f => !f.parent_id || !folders.some(x => x.id === f.parent_id)).forEach(f => appendFolder(f, wrap));
 
   // Root connections
   const rootConns = conns.filter(c => !c.folder_id && !c.temporary && visible(c));
@@ -5321,7 +5352,7 @@ function connMatches(c, q) {
   // "#prod" or "env:prod" in the search box look at the tags; several words must all match
   return q.split(/\s+/).filter(Boolean).every(w => {
     if (w.startsWith('#')) return tags.some(x => x.includes(w.slice(1)));
-    return (c.name || '').toLowerCase().includes(w) || (c.host || '').toLowerCase().includes(w) || (c.username || '').toLowerCase().includes(w) ||
+    return connLabel(c).toLowerCase().includes(w) || (c.host || '').toLowerCase().includes(w) || (c.username || '').toLowerCase().includes(w) ||
       (c.protocol || '').toLowerCase() === w || tags.some(x => x.includes(w));
   });
 }
@@ -5368,12 +5399,38 @@ function makeConnItem(c) {
   return el;
 }
 
+function folderPathLabel(id) {
+  const f = folders.find(x => x.id === id);
+  if (!f) return '';
+  if (f.path) return f.path;
+  const parts = [], seen = new Set();
+  let cur = f;
+  while (cur && !seen.has(cur.id) && parts.length < 32) { seen.add(cur.id); parts.unshift(cur.name); cur = folders.find(x => x.id === cur.parent_id); }
+  return parts.join(' / ');
+}
+function folderDescendants(id) {
+  const out = new Set([id]);
+  for (let n = 0; n < 32; n++) { const before = out.size; folders.forEach(f => { if (out.has(f.parent_id)) out.add(f.id); }); if (out.size === before) break; }
+  return out;
+}
+function connLabel(c) { const path = folderPathLabel(c.folder_id) || c.folder_path || ''; return path ? path + ' / ' + c.name : c.name; }
+
+function refreshWindowConnectionTitle(wo) {
+  const c = winConn(wo), title = document.getElementById('wt-' + wo.id);
+  if (!c || !title) return;
+  if (wo.mode === 'ssh') {
+    const prefix = wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : (c.protocol || 'SSH');
+    title.textContent = prefix + ' — ' + connLabel(c);
+  } else if (wo.mode === 'sftp') title.textContent = 'Files — ' + connLabel(c);
+  else if (wo.mode === 'desk') title.textContent = c.protocol + ' — ' + connLabel(c);
+}
+
 function updateFolderSelects() {
   const selects = document.querySelectorAll('#m-folder');
   selects.forEach(sel => {
     const val = sel.value;
     sel.innerHTML = `<option value="">${t('no_folder')}</option>`;
-    folders.forEach(f => { sel.innerHTML += `<option value="${f.id}">${esc(f.name)}</option>`; });
+    folders.forEach(f => { sel.innerHTML += `<option value="${f.id}">${esc(folderPathLabel(f.id))}</option>`; });
     sel.value = val;
   });
 }
@@ -5483,6 +5540,7 @@ function applyPolicyToUI() {
   if (gb) gb.style.display = pol.git === false ? 'none' : '';
   const os = document.getElementById('opt-serial');
   if (os) { os.hidden = !pol.serial; os.disabled = !pol.serial; }
+  const aiHome = document.getElementById('btn-ai'); if (aiHome) aiHome.style.display = currentUser && !isCollabMode ? '' : 'none';
   refreshAIButtons();
 }
 
@@ -5502,11 +5560,12 @@ async function refreshUserPolicy() {
 function showFolderCtx(x, y) {
   const menu = document.getElementById('dyn-ctx-menu');
   menu.innerHTML = `
+    <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(null, ctxFolderId)">＋ ${esc(t('fd_child'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(ctxFolderId)">✏ ${esc(t('fd_edit'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openBookmarkModal(null, {scope: 'folder', scope_id: ctxFolderId, start_dir: true})">★ ${esc(t('bm_start_menu'))}</div>
-    <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow(conns.filter(c => c.folder_id === ctxFolderId).map(c => c.id))">🔄 ${esc(t('st_check_now'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow(conns.filter(c => folderDescendants(ctxFolderId).has(c.folder_id)).map(c => c.id))">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-hr"></div>
     <div class="ctx-item danger" onclick="closeAllCtx(); delFolder(${ctxFolderId})">🗑 ${t('delete_folder')}</div>
   `;
@@ -5746,15 +5805,19 @@ async function deleteConn(id) {
   loadData();
 }
 
-async function openFolderModal(id) {
+async function openFolderModal(id, parentId) {
   const f = id ? folders.find(x => x.id === id) : null;
   if (currentUser && !isCollabMode) await loadVault();
   document.getElementById('f-id').value = f ? f.id : '';
   document.getElementById('f-title').textContent = f ? '📁 ' + f.name : t('fd_new_folder');
   document.getElementById('f-name').value = f ? f.name : '';
+  const descendants = f ? folderDescendants(f.id) : new Set();
+  const parent = document.getElementById('f-parent');
+  parent.innerHTML = `<option value="">${esc(t('no_folder'))}</option>` + folders.filter(x => !descendants.has(x.id)).map(x => `<option value="${x.id}">${esc(folderPathLabel(x.id))}</option>`).join('');
+  parent.value = (f && f.parent_id) || parentId || '';
   const js = document.getElementById('f-jump');
   js.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP') && !x.temporary)
-    .sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+    .sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
   js.value = f && f.jump_id ? f.jump_id : '';
   const ps = document.getElementById('f-proxy');
   ps.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('');
@@ -5767,7 +5830,7 @@ async function saveFolder() {
   const id = Number(document.getElementById('f-id').value) || 0;
   const name = document.getElementById('f-name').value.trim();
   if (!name) return;
-  const body = {name, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
+  const body = {name, parent_id: Number(document.getElementById('f-parent').value) || null, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
   const res = await fetch('/api/folders' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   if (res.ok) { closeModal('modal-folder'); showToast(id ? t('saved') : t('folder_created'), 'success'); loadData(); }
   else showToast(await apiError(res), 'error', 6000);
@@ -5825,6 +5888,7 @@ async function loadUserDirectory() {
     .map(u => `<option value="${esc(u.username)}">${esc(u.display_name || '')}</option>`).join('');
 }
 
+function shareFolderCovers(id) { return id && [...shareDraft.folderIds].some(f => folderDescendants(f).has(id)); }
 function openShareModal(opts) {
   opts = opts || {};
   const edit = opts.share || null;
@@ -5869,11 +5933,11 @@ function renderShareConnList() {
   const box = document.getElementById('share-conn-list');
   let html = '';
   folders.forEach(f => {
-    const n = conns.filter(c => c.folder_id === f.id).length;
+    const n = conns.filter(c => folderDescendants(f.id).has(c.folder_id)).length;
     html += `<label><input type="checkbox" ${shareDraft.folderIds.has(f.id) ? 'checked' : ''} onchange="toggleShareItem('folder', ${f.id}, this.checked)"> 📁 <b>${esc(f.name)}</b> <span class="muted-text">(${n} · ${esc(t('whole_folder'))})</span></label>`;
   });
   conns.forEach(c => {
-    const viaFolder = c.folder_id && shareDraft.folderIds.has(c.folder_id);
+    const viaFolder = shareFolderCovers(c.folder_id);
     html += `<label style="${viaFolder ? 'opacity:.55;' : ''}"><input type="checkbox" ${shareDraft.connIds.has(c.id) || viaFolder ? 'checked' : ''} ${viaFolder ? 'disabled' : ''} onchange="toggleShareItem('conn', ${c.id}, this.checked)"> <span class="conn-proto-badge ${esc((c.protocol || 'ssh').toLowerCase())}">${esc(c.protocol)}</span> ${esc(c.name)} <span class="muted-text">${esc(c.host)}</span></label>`;
   });
   box.innerHTML = html || `<div class="muted-text" style="padding:8px;">${esc(t('no_connections'))}</div>`;
@@ -5882,7 +5946,7 @@ function renderShareConnList() {
 }
 
 function shareConnCount() {
-  return conns.filter(c => shareDraft.connIds.has(c.id) || (c.folder_id && shareDraft.folderIds.has(c.folder_id))).length;
+  return conns.filter(c => shareDraft.connIds.has(c.id) || (shareFolderCovers(c.folder_id))).length;
 }
 
 function toggleShareItem(kind, id, on) {
@@ -5956,7 +6020,7 @@ async function submitShare() {
     access_mode: shareDraft.mode,
     guest_role: document.getElementById('share-guest-role').value,
     public: shareDraft.mode !== 'members' && document.getElementById('share-public').checked,
-    connection_ids: [...shareDraft.connIds].filter(id => { const c = conns.find(x => x.id === id); return c && !(c.folder_id && shareDraft.folderIds.has(c.folder_id)); }),
+    connection_ids: [...shareDraft.connIds].filter(id => { const c = conns.find(x => x.id === id); return c && !(shareFolderCovers(c.folder_id)); }),
     folder_ids: [...shareDraft.folderIds],
     members: shareDraft.members.map(m => ({user_id: m.user_id || 0, username: m.username, role: m.role})),
   };
@@ -6871,7 +6935,7 @@ function fillJumpSelect(c, keep) {
   const inherited = f && f.jump_id && f.jump_id !== self;
   sel.innerHTML = (inherited ? `<option value="">— ${esc(t('fd_from_folder'))}: ${esc(f.jump_name || '#' + f.jump_id)} —</option><option value="-1">— ${esc(t('fd_jump_none'))} —</option>`
       : `<option value="">— ${esc(t('jump_direct'))} —</option>` + (choice === '-1' ? `<option value="-1">— ${esc(t('fd_jump_none'))} —</option>` : '')) +
-    opts.map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+    opts.map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
   sel.value = choice;
   if (sel.value !== choice) sel.value = '';
   sel.onchange = updateRoutePreview;
@@ -7201,7 +7265,7 @@ async function openQuickModal(target) {
   document.getElementById('qc-pass-f').style.display = '';
   const jump = document.getElementById('qc-jump');
   jump.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP') && !x.temporary).sort((a, b) => a.name.localeCompare(b.name))
-    .map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})</option>`).join('');
+    .map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})</option>`).join('');
   document.getElementById('modal-quick').classList.add('open');
   setTimeout(() => document.getElementById(target ? 'qc-pass' : 'qc-target').focus(), 50);
 }
@@ -7309,6 +7373,7 @@ let toolsTab = 'ports';
 // Git workspace: its code (static/git.js) is loaded the first time it is opened.
 let gitLoading = null;
 function openGit() {
+  closeDrawers();
   if (window.gitWorkspace) { window.gitWorkspace.open(); return; }
   if (!gitLoading) gitLoading = new Promise((ok, fail) => {
     const s = document.createElement('script');
@@ -7333,19 +7398,29 @@ function loadAI() {
   });
   return aiLoading;
 }
-function aiAvailable(wo, mode) {
+function aiEligible(wo, mode) {
   const c = winConn(wo);
-  return !!(currentUser && currentUser.policy && currentUser.policy.ai && c && String(c.protocol || 'SSH').toUpperCase() === 'SSH' && !wo.console &&
+  return !!(currentUser && c && ['SSH','SFTP'].includes(String(c.protocol || 'SSH').toUpperCase()) && !wo.console &&
     (mode === 'ssh' || mode === 'sftp') && winCan(wo, 'terminal') && winCan(wo, 'files_write'));
 }
+function aiAvailable(wo, mode) { return !!(currentUser && currentUser.policy && currentUser.policy.ai && aiEligible(wo, mode)); }
 function refreshAIButtons() {
   winObjects.forEach(wo => {
     const button = document.getElementById('wb-ai-' + wo.id);
-    if (button) button.style.display = aiAvailable(wo, wo.mode) ? '' : 'none';
+    if (button) { button.style.display = aiEligible(wo, wo.mode) ? '' : 'none'; button.classList.toggle('policy-off', !aiAvailable(wo,wo.mode)); }
   });
 }
-function openAI(id) {
-  loadAI().then(() => wrmAI.toggle(id), () => showToast(t('ai_load_failed'), 'error'));
+async function openAI(id) {
+  await refreshUserPolicy();
+  const wo = winObjects.find(w => w.id === id);
+  if (!wo || !aiEligible(wo,wo.mode)) { openAIHome(); return; }
+  loadAI().then(() => { if (aiAvailable(wo,wo.mode)) wrmAI.toggle(id); else openSettings('st-ai'); }, () => showToast(t('ai_load_failed'), 'error'));
+}
+async function openAIHome() {
+  await refreshUserPolicy();
+  const wo = winObjects.filter(w => aiAvailable(w,w.mode)).sort((a,b) => (b._lastFocus || 0) - (a._lastFocus || 0))[0];
+  if (wo) { loadAI().then(() => wrmAI.toggle(wo.id), () => showToast(t('ai_load_failed'),'error')); }
+  else openSettings('st-ai');
 }
 
 // AI desktop apps (MCP): static/mcp.js is loaded when there is something to show (an AI app
@@ -7390,7 +7465,7 @@ function openTools(opts) {
   opts = opts || {};
   const src = document.getElementById('tools-source');
   src.innerHTML = `<option value="0">🖥 ${esc(t('tools_wrm'))}</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP')).sort((a, b) => a.name.localeCompare(b.name))
-    .map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+    .map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
   if (opts.source) src.value = opts.source;
   if (opts.target) {
     const h = String(opts.target).replace(/:\d+$/, '');
@@ -9023,11 +9098,11 @@ function onSnipScopeChange(selected) {
   wrap.style.display = scope === 'all' ? 'none' : '';
   if (scope === 'folder') {
     document.getElementById('sn-scope-id-lbl').textContent = t('snip_folder_lbl');
-    sel.innerHTML = folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(f.name)}</option>`).join('');
+    sel.innerHTML = folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(folderPathLabel(f.id))}</option>`).join('');
   } else if (scope === 'connection') {
     document.getElementById('sn-scope-id-lbl').textContent = t('snip_conn_lbl');
     sel.innerHTML = conns.filter(c => c.protocol === 'SSH' || c.protocol === 'SFTP').sort((a, b) => a.name.localeCompare(b.name))
-      .map(c => `<option value="${c.id}">🖥 ${esc(c.name)} (${esc(c.host)})</option>`).join('');
+      .map(c => `<option value="${c.id}">🖥 ${esc(connLabel(c))} (${esc(c.host)})</option>`).join('');
   }
   if (selected) sel.value = String(selected);
 }
@@ -9289,9 +9364,9 @@ async function termCdBookmark(winId, i, all, insert) {
 
 // ── editor ──
 function bmScopeTargets(scope) {
-  if (scope === 'folder') return folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(f.name)}</option>`).join('');
+  if (scope === 'folder') return folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(folderPathLabel(f.id))}</option>`).join('');
   if (scope === 'connection') return conns.filter(c => ['SSH', 'SFTP', 'FTP', 'FTPS'].includes(c.protocol)).sort((a, b) => a.name.localeCompare(b.name))
-    .map(c => `<option value="${c.id}">🖥 ${esc(c.name)} (${esc(c.host)})</option>`).join('');
+    .map(c => `<option value="${c.id}">🖥 ${esc(connLabel(c))} (${esc(c.host)})</option>`).join('');
   return '';
 }
 
@@ -9939,7 +10014,7 @@ function renderConnPicker(winId) {
   list.slice(0, 8).forEach(c => {
     const btn = document.createElement('button');
     btn.className = 'conn-pick-btn';
-    btn.textContent = c.protocol + ' — ' + c.name;
+    btn.textContent = c.protocol + ' — ' + connLabel(c);
     btn.onclick = () => {
       const wo = winObjects.find(w => w.id === winId);
       if (!wo) return;
@@ -9986,8 +10061,7 @@ function setWinMode(id, mode) {
   if (fmBtn) fmBtn.style.display = mode === 'ssh' && !wo.console && c && (c.protocol || 'SSH') === 'SSH' && winCan(wo, 'files_read') ? '' : 'none';
   const ntBtn = document.getElementById('wb-nt-' + id);
   if (ntBtn) ntBtn.style.display = (mode === 'ssh' || mode === 'desk' || mode === 'sftp') && !isCollabMode && c && c.has_notes ? '' : 'none';
-  const aiBtn = document.getElementById('wb-ai-' + id);
-  if (aiBtn) aiBtn.style.display = aiAvailable(wo, mode) ? '' : 'none';
+  refreshAIButtons();
   if (mode !== 'ssh' && bcast.ids.has(id)) { bcast.ids.delete(id); renderBroadcastUI(); }
 
   if (mode === 'ssh') {
@@ -10005,7 +10079,7 @@ function setWinMode(id, mode) {
       </div>
       <div class="term-overlay" id="to-${id}" hidden></div>
     </div>`;
-    const title = c ? `${wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : c.protocol} — ${c.name}` : `Terminal ${id}`;
+    const title = c ? `${wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : c.protocol} — ${connLabel(c)}` : `Terminal ${id}`;
     const el = document.getElementById('wt-' + id);
     if (el) el.textContent = title;
     renderTabs();
@@ -10030,7 +10104,7 @@ function setWinMode(id, mode) {
   } else if (mode === 'desk') {
     wc.innerHTML = deskHTML(id);
     const el = document.getElementById('wt-' + id);
-    if (el) el.textContent = c ? `${c.protocol} — ${c.name}` : `Desktop ${id}`;
+    if (el) el.textContent = c ? `${c.protocol} — ${connLabel(c)}` : `Desktop ${id}`;
     renderTabs();
     requestAnimationFrame(() => startDesktop(wo));
   } else if (mode === 'sftp') {
@@ -10042,7 +10116,7 @@ function setWinMode(id, mode) {
     if (termBtn && isFtpConn(c)) termBtn.style.display = 'none';
     applyFmPermissions(wo);
     fmFirstLoad(id);
-    const title = c ? `Files — ${c.name}` : `Files ${id}`;
+    const title = c ? `Files — ${connLabel(c)}` : `Files ${id}`;
     const el = document.getElementById('wt-' + id);
     if (el) el.textContent = title;
     renderTabs();
@@ -10084,6 +10158,7 @@ function showFmCtx(e, winId, path, isDir, size) {
   const wo = winObjects.find(w => w.id === winId);
   const c = winConn(wo);
   const nSel = wo && wo.selected ? wo.selected.size : 1;
+  document.getElementById('fm-ctx-preview-btn').style.display = !isDir ? '' : 'none';
   document.getElementById('fm-ctx-open-btn').style.display = isDir ? '' : 'none';
   document.getElementById('fm-ctx-edit-btn').style.display = !isDir && isEditable({name: path.split('/').pop(), size: size || 0, is_dir: false}) ? '' : 'none';
   document.getElementById('fm-ctx-term-btn').style.display = isFtpConn(c) || !winCan(wo, 'terminal') ? 'none' : '';
@@ -10098,6 +10173,7 @@ function showFmCtx(e, winId, path, isDir, size) {
 }
 
 function hideFmCtx() { const m = document.getElementById('fm-ctx-menu'); if (m) m.style.display = 'none'; }
+function fmCtxPreview() { hideFmCtx(); openRemotePreview(fmCtxState.winId, fmCtxState.path); }
 function fmCtxEdit() { hideFmCtx(); openEditor(fmCtxState.winId, fmCtxState.path, fmCtxState.size || 0); }
 function fmCtxTerminal() { hideFmCtx(); openTerminalAt(fmCtxState.winId, fmCtxState.isDir ? fmCtxState.path : parentPath(fmCtxState.path)); }
 function fmCtxCopyPath() { hideFmCtx(); copyText(fmCtxState.path); addClip(fmCtxState.path); }
@@ -10200,6 +10276,7 @@ function createTerminal(wo, host) {
   if (window.WebLinksAddon) { try { term.loadAddon(new WebLinksAddon.WebLinksAddon()); } catch(_) {} }
   if (window.SerializeAddon) { try { wo.serializeAddon = new SerializeAddon.SerializeAddon(); term.loadAddon(wo.serializeAddon); } catch(_) {} }
   term.open(host);
+  host.addEventListener('contextmenu', e => showTerminalPathMenu(e, wo));
   wo.term = term; wo.fitAddon = fit;
   // Shells that report their directory (OSC 7, file://host/path) let the 📂 button open
   // the file manager in the terminal's current directory.
@@ -10640,7 +10717,7 @@ function connQS(wo) {
   return 'id=' + encodeURIComponent(wo.connId) + (wo.shareToken ? '&share_token=' + encodeURIComponent(wo.shareToken) : '');
 }
 function winConn(wo) {
-  const all = isCollabMode ? collabConns : conns;
+  const all = isCollabMode ? collabConns : (wo && wo.shareToken ? (sharedGroups.find(s => s.share && s.share.token === wo.shareToken) || {}).connections || [] : conns);
   return wo && wo.connId ? all.find(x => x.id === wo.connId) : null;
 }
 function isFtpConn(c) { return c && (c.protocol === 'FTP' || c.protocol === 'FTPS'); }
@@ -10961,7 +11038,7 @@ function makeFileRow(winId, wo, f, idx, q, isResult) {
       else loadFiles(winId, parentPath(f.path), {highlight: f.path});
     } else if (f.is_dir) loadFiles(winId, f.path);
     else if (isEditable(f)) openEditor(winId, f.path, f.size);
-    else downloadFile(winId, f.path);
+    else openRemotePreview(winId, f.path);
   };
   r.oncontextmenu = e => {
     if (!wo.selected.has(f.path)) { wo.selected = new Set([f.path]); wo.cursor = f.path; refreshRowStates(winId); }
@@ -11475,7 +11552,7 @@ function openTransferModal(winId, extraFiles) {
     if (c.id !== _transferSrcConnId && (c.protocol === 'SFTP' || c.protocol === 'SSH')) {
       const opt = document.createElement('option');
       opt.value = c.id;
-      opt.textContent = c.protocol + ' — ' + c.name + ' (' + c.host + ')';
+      opt.textContent = c.protocol + ' — ' + connLabel(c) + ' (' + c.host + ')';
       sel.appendChild(opt);
     }
   });
@@ -12259,12 +12336,86 @@ function downloadFile(winId, path) {
   a.download = ''; document.body.appendChild(a); a.click(); a.remove();
 }
 
+// Remote previews use authenticated URLs. Closing the viewer stops the stream.
+let previewSequence = 0;
+function closeRemotePreview() {
+  previewSequence++;
+  const modal = document.getElementById('remote-preview');
+  if (!modal) return;
+  modal.querySelectorAll('video,audio').forEach(el => { el.pause(); el.removeAttribute('src'); el.load(); });
+  modal.querySelectorAll('iframe,img').forEach(el => el.removeAttribute('src'));
+  modal.remove();
+}
+async function openRemotePreview(winId, path) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo || !wo.connId || !guardWin(wo, 'files_read')) return;
+  closeRemotePreview();
+  const seq = previewSequence;
+  const url = `/api/remote/preview?${connQS(wo)}&path=${encodeURIComponent(path)}`;
+  const download = `/api/remote/download?${connQS(wo)}&path=${encodeURIComponent(path)}`;
+  const modal = document.createElement('div'); modal.id = 'remote-preview'; modal.className = 'remote-preview-overlay';
+  modal.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(t('pv_open'))}" style="width:min(980px,calc(100vw - 24px));max-height:90vh"><div style="display:flex;gap:8px;align-items:center"><h3 style="flex:1;overflow-wrap:anywhere">${esc(path.split('/').pop())}</h3><a class="btn-sec" href="${esc(download)}" download>${esc(t('fm_download'))}</a><button class="icon-btn" onclick="closeRemotePreview()" aria-label="${esc(t('close'))}">✕</button></div><div id="remote-preview-body">${esc(t('loading'))}</div></div>`;
+  modal.addEventListener('mousedown', e => { if (e.target === modal) closeRemotePreview(); });
+  document.body.appendChild(modal); modal.querySelector('button').focus();
+  const body = modal.querySelector('#remote-preview-body');
+  try {
+    const res = await fetch(url + '&metadata=1');
+    if (!res.ok) throw new Error(await apiError(res));
+    const info = await res.json();
+    if (seq !== previewSequence || !modal.isConnected) return;
+    if (info.kind === 'text') {
+      const textRes = await fetch(url + '&text=1'); if (!textRes.ok) throw new Error(await apiError(textRes));
+      const data = await textRes.json(); if (seq !== previewSequence || !modal.isConnected) return;
+      body.innerHTML = `${data.truncated ? `<div class="hint-box warn">${esc(t('pv_truncated'))}</div>` : ''}<pre style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:65vh;overflow:auto;user-select:text">${esc(data.text || '')}</pre>`;
+    } else if (info.kind === 'video' || info.kind === 'audio') {
+      body.innerHTML = `<${info.kind} controls preload="metadata" src="${esc(url)}" style="width:100%;max-height:65vh" aria-label="${esc(info.name)}"></${info.kind}><div class="muted-text" id="pv-media-note">${esc(t('pv_stream'))}</div>`;
+      body.querySelector(info.kind).addEventListener('error', () => { const note = body.querySelector('#pv-media-note'); if (note) note.textContent = t('pv_media_error'); });
+    } else if (info.kind === 'image') { body.innerHTML = `<img src="${esc(url)}" alt="${esc(info.name)}" style="display:block;max-width:100%;max-height:65vh;margin:auto">`; }
+    else if (info.kind === 'pdf') { body.innerHTML = `<iframe src="${esc(url)}" title="${esc(info.name)}" style="width:100%;height:65vh;border:0"></iframe>`; }
+    body.insertAdjacentHTML('afterbegin', `<div class="muted-text" style="margin-bottom:8px">${esc(fmtBytes(info.size))} · ${esc(info.mime)}</div>`);
+  } catch (e) { if (seq === previewSequence && modal.isConnected) body.innerHTML = `<div class="hint-box bad">${esc(e.message)}</div>`; }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('remote-preview')) { e.preventDefault(); e.stopImmediatePropagation(); closeRemotePreview(); } }, true);
+
+function selectedTerminalPath(wo) {
+  let value = wo && wo.term ? wo.term.getSelection().trim() : '';
+  if (!value || value.length > 4096 || /[\r\n\x00]/.test(value)) return '';
+  if ((value[0] === "'" && value.at(-1) === "'") || (value[0] === '"' && value.at(-1) === '"')) value = value.slice(1,-1);
+  return value;
+}
+function showTerminalPathMenu(e, wo) {
+  const value = selectedTerminalPath(wo);
+  if (!value || wo.console || !winCan(wo,'files_read')) return;
+  e.preventDefault(); e.stopPropagation(); closeAllCtx(); wo._selectedPath = value;
+  const menu = document.getElementById('dyn-ctx-menu');
+  menu.innerHTML = `<div class="ctx-section" style="max-width:300px;overflow:hidden;text-overflow:ellipsis">${esc(value)}</div><div class="ctx-item" onclick="terminalPathAction(${wo.id},'preview')">▶ ${esc(t('pv_selected'))}</div><div class="ctx-item" onclick="terminalPathAction(${wo.id},'download')">📥 ${esc(t('pv_download'))}</div>`;
+  showCtx('dyn-ctx-menu',e.clientX,e.clientY);
+}
+async function terminalPathAction(winId, action) {
+  closeAllCtx();
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo || !guardWin(wo,'files_read')) return;
+  let path = wo._selectedPath || selectedTerminalPath(wo);
+  if (!path) { showToast(t('pv_select_path'),'warning'); return; }
+  if (path === '~' || path.startsWith('~/')) {
+    const res = await fetch(`/api/remote/list?${connQS(wo)}&path=~`);
+    if (!res.ok) { showToast(await apiError(res),'error'); return; }
+    const data = await res.json(); path = joinPath(data.path, path.slice(2));
+  } else if (!path.startsWith('/')) {
+    const cwd = wo.cwd ? {path:wo.cwd} : await termAskCwd(wo);
+    if (!cwd.path) { showToast(cwd.error || t('pv_need_cwd'),'warning'); return; }
+    path = joinPath(cwd.path,path);
+  }
+  if (action === 'preview') openRemotePreview(winId,path); else downloadFile(winId,path);
+}
+
 // ══ WINDOW MANAGEMENT ═════════════════════════════════
 
 function focusWindow(id) {
   winObjects.forEach(w => w.el && w.el.classList.remove('focused'));
   const w = winObjects.find(x => x.id === id);
   if (w && w.el) {
+    if (tabFolderFilter !== null && windowFolderKey(w) !== tabFolderFilter) tabFolderFilter = windowFolderKey(w);
     w.el.classList.add('focused');
     w.el.style.zIndex = ++topZ;
     w._lastFocus = Date.now();
@@ -12351,11 +12502,33 @@ function scrollTabBar(delta) {
   if (s) s.scrollLeft += delta;
 }
 
+let tabFolderFilter = null;
+function windowFolderKey(wo) { const c = winConn(wo); return c && c.folder_id ? String(c.folder_id) : 'root'; }
+function setTabFolder(value) {
+  tabFolderFilter = value;
+  const target = winObjects.filter(wo => value !== null && windowFolderKey(wo) === value).sort((a,b) => (b._lastFocus || 0) - (a._lastFocus || 0))[0];
+  if (target && target.el) { target.el.style.display = 'flex'; scheduleFit(target); focusWindow(target.id); } else renderTabs();
+}
 function renderTabs() {
   const bar = document.getElementById('tab-bar');
   bar.innerHTML = '';
+  const groupKey = windowFolderKey;
+  const groups = new Map();
+  winObjects.forEach(wo => { const c = winConn(wo); const key = groupKey(wo); if (!groups.has(key)) groups.set(key, folderPathLabel(c && c.folder_id) || (c && c.folder_path) || t('no_folder')); });
+  if (tabFolderFilter !== null && !groups.has(tabFolderFilter)) tabFolderFilter = null;
+  winObjects.forEach(wo => { refreshWindowConnectionTitle(wo); if (wo.el) wo.el.classList.toggle('folder-hidden', tabFolderFilter !== null && groupKey(wo) !== tabFolderFilter); });
+  const folderBar = document.getElementById('folder-tab-bar');
+  folderBar.innerHTML = '';
+  if (groups.size) {
+    [[null, t('fd_all_tabs')], ...groups].forEach(([key, label]) => {
+      const btn = document.createElement('button'); btn.textContent = key === null ? label : '📁 ' + label; btn.title = label;
+      btn.className = tabFolderFilter === key ? 'active' : '';
+      btn.onclick = () => setTabFolder(key); folderBar.appendChild(btn);
+    });
+  }
   tabOrder.filter(id => winObjects.find(w => w.id === id)).forEach(id => {
     const wo = winObjects.find(w => w.id === id);
+    if (tabFolderFilter !== null && groupKey(wo) !== tabFolderFilter) return;
     const isFocused = wo.el && wo.el.classList.contains('focused');
     const t2 = document.createElement('div');
     t2.className = 'tab-item' + (isFocused ? ' active' : '');
@@ -12365,18 +12538,16 @@ function renderTabs() {
     let icon = '□', title = 'Window ' + id;
     if (wo.mode === 'ssh') {
       icon = wo.console ? '📟' : '⚡';
-      const allConns = isCollabMode ? collabConns : conns;
-      const c = wo.connId ? allConns.find(x => x.id === wo.connId) : null;
-      title = c ? c.name + (wo.console ? ' — ' + t('bmc_console_tab') : '') : 'Terminal ' + id;
+      const c = winConn(wo);
+      title = c ? connLabel(c) + (wo.console ? ' — ' + t('bmc_console_tab') : '') : 'Terminal ' + id;
     } else if (wo.mode === 'sftp') {
       icon = '📂';
-      const allConns = isCollabMode ? collabConns : conns;
-      const c = wo.connId ? allConns.find(x => x.id === wo.connId) : null;
-      title = c ? 'Files — ' + c.name : 'Files ' + id;
+      const c = winConn(wo);
+      title = c ? 'Files — ' + connLabel(c) : 'Files ' + id;
     } else if (wo.mode === 'desk') {
       icon = '🖥';
       const c = winConn(wo);
-      title = c ? c.name : 'Desktop ' + id;
+      title = c ? connLabel(c) : 'Desktop ' + id;
     }
     if (wo.mode === 'screen-viewer' && wo.viewing) { icon = '👁'; title = wo.viewing.name + ' — ' + wo.viewing.title; }
     if (wo.el && wo.el.style.display === 'none') icon = '▪';
@@ -13065,6 +13236,7 @@ function openSettings(tab) {
   document.getElementById('st-data-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-history-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-notify-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
+  document.getElementById('st-ai-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-mcp-btn').style.display = signedIn && !isCollabMode && currentUser.policy && currentUser.policy.mcp_enabled ? '' : 'none';
   showSettingsTab(tab || 'st-general');
   updateInstallRow();
@@ -13078,6 +13250,7 @@ function showSettingsTab(id) {
   if (id === 'st-audio') renderAudioPane();
   if (id === 'st-notify') renderNotifyPane();
   if (id === 'st-history') renderTermSessions('history-pane', true);
+  if (id === 'st-ai') loadAI().then(() => wrmAI.statusPane(), () => showToast(t('ai_load_failed'),'error'));
   if (id === 'st-mcp') loadMCP().then(() => wrmMCP.settingsPane(), () => showToast(t('mcp_load_failed'), 'error'));
 }
 
@@ -14559,8 +14732,8 @@ let eventBusReconnectDelay = 1000;
 
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
-  ws.onopen = () => { eventBusReconnectDelay = 1000; };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); if (m.type === 'mcp_changed') mcpRefresh(); } catch(_) {} };
+  ws.onopen = () => { eventBusReconnectDelay = 1000; refreshUserPolicy(); };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); if (m.type === 'mcp_changed') mcpRefresh(); if (m.type === 'ai_policy_changed') { refreshUserPolicy(); if (window.wrmAI) wrmAI.policyChanged(); } } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();

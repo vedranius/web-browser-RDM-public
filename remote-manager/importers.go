@@ -25,7 +25,7 @@ import (
 
 // ─── IMPORT FROM mRemoteNG AND OpenSSH ───────────────
 //
-// mRemoteNG (confCons.xml): containers become folders ("Parent / Child"), SSH and HTTP(S)
+// mRemoteNG (confCons.xml): containers become nested folders ("Parent / Child"), SSH and HTTP(S)
 // connections are imported with their passwords, the "SSH tunnel" setting becomes the
 // jump host. Other protocols (RDP, VNC, Telnet…) are listed as skipped. Passwords are
 // decrypted with the mRemoteNG master password (default "mR3m"): AES-256-GCM with a
@@ -96,25 +96,41 @@ func (im *importer) note(name, reason string) {
 }
 
 func (im *importer) folderID(name string) (*int, error) {
-	name = truncateStr(strings.TrimSpace(name), 120)
+	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, nil
 	}
 	if id, ok := im.folders[name]; ok {
 		return &id, nil
 	}
-	var id int
-	if err := db.QueryRow(`SELECT id FROM folders WHERE name=? AND user_id=?`, name, im.userID).Scan(&id); err != nil {
-		res, err := db.Exec(`INSERT INTO folders (name, user_id) VALUES (?,?)`, name, im.userID)
-		if err != nil {
-			return nil, err
-		}
-		id64, _ := res.LastInsertId()
-		id = int(id64)
-		im.res.Folders++
+	parts := strings.Split(name, " / ")
+	if len(parts) > folderMaxDepth {
+		return nil, fmt.Errorf("at most %d nested folders", folderMaxDepth)
 	}
-	im.folders[name] = id
-	return &id, nil
+	folderHierarchyMu.Lock()
+	defer folderHierarchyMu.Unlock()
+	var parent *int
+	for _, part := range parts {
+		part = truncateStr(strings.TrimSpace(part), 120)
+		if part == "" {
+			continue
+		}
+		var id int
+		if err := db.QueryRow(`SELECT id FROM folders WHERE name=? AND user_id=? AND parent_id IS ? ORDER BY id LIMIT 1`, part, im.userID, parent).Scan(&id); err != nil {
+			res, err := db.Exec(`INSERT INTO folders(name,user_id,parent_id) VALUES(?,?,?)`, part, im.userID, parent)
+			if err != nil {
+				return nil, err
+			}
+			n, _ := res.LastInsertId()
+			id = int(n)
+			im.res.Folders++
+		}
+		parent = &id
+	}
+	if parent != nil {
+		im.folders[name] = *parent
+	}
+	return parent, nil
 }
 
 // commit creates the connections, links jump hosts by name and adds the tunnels.

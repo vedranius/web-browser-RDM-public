@@ -13,19 +13,18 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.3.6** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.4.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
-## What's new in v12.3.6
+## What's new in v12.4.0
 
-- **AI setup for server work:** add a cloud provider or local Ollama from the guided wizard, use model suggestions or the provider's model list, and connect the offered MCP agents with ready connection commands and configuration. Optional administrator-controlled Ollama installation, service startup and model download are available directly in WRM.
-- **Git Simple deployment review:** combined service, hostname, environment, status, branch and version filters; per-file review and exclusions; selected destination servers; comparison timestamps and each server's previous rollback version.
-- **Deployment checks:** reviewed plans are bound to the SSH destination, login and effective jump/proxy settings. Empty selections are refused, confirmation follows the current selection, and canceled or superseded comparisons cannot reopen a deployment review.
-- **AI reliability:** actual remote server date/time, immediate AI button refresh after policy changes, a processing indicator that follows the whole model turn, and complete offered-tool calls. Incomplete model JSON stays visible instead of being repaired into executable commands.
-- **Ollama setup completion:** each setup action releases its lock before reporting completion, allowing the next step to start immediately.
-- **Linux service installation:** SQLite access checks before changing service settings, clearer startup diagnostics, restart limits, correct handling of paths with spaces and special characters, and reinstalls that restart the newly configured binary.
-- **Portable releases:** 16 packages across Linux, Windows, macOS, Android, FreeBSD and OpenBSD, including **Linux x86_64 / ARM64 AppImages** and **macOS universal**, plus Docker. SHA-256 checksums cover every package; publication waits for the complete verified asset set.
+- **Service functionality:** GitLab/catalog services, every Supervisor worker, failed systemd units, installation problems, error logs and disk/memory warnings per server. Optional HTTP/TCP probes and problem/recovery notifications.
+- **Configuration visibility:** structured config/INI/environment/JSON settings with descriptions, masked secrets and explicit inspection limits.
+- **Nested folders and connection context:** recursive folders, hierarchy-preserving imports and a folder row above connection tabs. Full folder paths distinguish same-named servers. [Issue #57](https://github.com/vedranius/web-browser-RDM-public/issues/57).
+- **Remote previews:** embedded media streaming with byte-range seeking, image/PDF/text viewing, and preview/download actions on terminal-selected paths. [Issue #55](https://github.com/vedranius/web-browser-RDM-public/issues/55).
+- **AI availability:** visible SSH/SFTP entry points, account/setup diagnostics and policy refresh across browsers. OpenAI-compatible providers work independently of MCP. [Discussion #56](https://github.com/vedranius/web-browser-RDM-public/discussions/56).
+- **Portable releases:** 16 packages across Linux, Windows, macOS, Android, FreeBSD and OpenBSD, including AppImages and macOS universal, plus Docker. Checksums cover every package.
 
-See the [release summary](docs/RELEASE_SUMMARY_v12.3.6.md), [release notes](RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
+See the [release summary](docs/RELEASE_SUMMARY_v12.4.0.md), [release notes](RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
 
 ---
 
@@ -56,7 +55,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -78,6 +77,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Broadcast input](#broadcast-input)
    - [Live up/down status](#live-updown-status)
    - [Notifications (e-mail, chat, push, webhook)](#notifications-e-mail-chat-push-webhook)
+   - [Git workspace: service functionality and configuration](#git-workspace-service-functionality-and-configuration)
    - [Git workspace: compare services](#git-workspace-compare-services)
    - [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts)
    - [Git workspace: tab explanations](#git-workspace-tab-explanations)
@@ -155,21 +155,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.3.6-linux-amd64
-   ./wrm-pro-v12.3.6-linux-amd64
+   chmod +x wrm-pro-v12.4.0-linux-amd64
+   ./wrm-pro-v12.4.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.3.6-windows-amd64.exe
+   .\wrm-pro-v12.4.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.3.6-linux-amd64.AppImage
-   ./wrm-pro-v12.3.6-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.3.6-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.4.0-linux-amd64.AppImage
+   ./wrm-pro-v12.4.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.4.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -178,8 +178,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.3.6/wrm-pro-v12.3.6-android-arm64
-   chmod +x wrm-pro-v12.3.6-android-arm64 && ./wrm-pro-v12.3.6-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.0/wrm-pro-v12.4.0-android-arm64
+   chmod +x wrm-pro-v12.4.0-android-arm64 && ./wrm-pro-v12.4.0-android-arm64
    ```
 
    **Docker**
@@ -203,6 +203,12 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.3.6
+
+Replace the binary or use the in-app updater; update the AppImage/container as appropriate. Startup adds a nullable folder parent and the `git_server_health` cache table. Existing folders, catalogs and route defaults keep their settings; previous binaries ignore the new fields.
+
+The new **Functionality** view is available from Git Simple and Advanced. Run a Git check to populate it, and enable periodic monitoring/notification subscriptions if desired. Runtime commands read service state with the SSH login's permissions; no services are started or restarted. For AI availability, open **Settings → AI assistant**; provider connectivity and effective account permission are shown separately.
 
 ## Upgrading from v12.2.8
 
@@ -523,6 +529,8 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 - If your login expires while terminals or transfers are running, WRM shows a message instead of reloading the page.
 
 ### Connections & folders
+
+Folders can have a **Parent folder** (up to 32 levels); right-click a folder to create a subfolder or edit its parent. The sidebar renders the hierarchy, while connection pickers/window titles/tabs show the complete folder path. The row above connection tabs filters open tabs/windows by folder and focuses its most recently used window. Config export/import and new mRemoteNG imports preserve nesting. Deleting a folder moves its child folders to its former parent and keeps their connections. Sharing a folder includes descendants; jump/proxy defaults apply to the immediate folder only.
 
 Left sidebar ("PRO MANAGER"):
 
@@ -931,6 +939,27 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 - **Periodic checks** (*Settings → Periodic checks*): while WRM runs, the chosen servers are checked every `git_check_interval_minutes` (60). Checks never change anything. They notify (one digest per round) about **a new version** of a service, **drift** (an installation that turns to *review*) and **unreachable servers** — subscribe to the *Git* events in *Settings → Notifications*.
 - Everything is per user (sources, catalog, installations). Policies `git_enabled` (hides the workspace), `git_checks` (who may run checks: everyone), `git_check_interval_minutes`, `git_backup_words`. Checks, bundle imports / exports, source and catalog changes and viewed diffs are audited (`git.*`).
 
+### Git workspace: service functionality and configuration
+
+Open **Git → Functionality** in Advanced mode, or the **Functionality** button in Simple mode. It uses the existing service catalog and installations, including GitLab sources. Manual and periodic Git checks inspect all Supervisor workers on each selected server, failed systemd services, installation disk usage and Linux memory usage (90% warns). Each installation checks discovered/configured units and reports healthy, warning, failed or unverified state with timestamps and bounded error logs. A running Supervisor worker never hides a failed sibling. Missing installations remain visible. Read access failures, absent tools, no runtime check and incomplete scans cannot be reported as healthy.
+
+Edit a service to set optional runtime units, an HTTP health URL or a TCP `host:port`. HTTP accepts 2xx, follows no redirects and verifies TLS; probes originate through SSH from the selected server. Unit commands use the SSH account, without automatic sudo or restart. Commands are bounded by a 30-second runtime step (individual commands use a six-second timeout where available); endpoints use six seconds. The server inventory caps workers at 256 and failed systemd units at 64, with an explicit warning if incomplete. Logs are capped at 16 KiB per check and redacted before storage.
+
+**Configuration** reads configuration files on demand and displays section, variable/function, configured value and comment description. Explicit relative `config_files` paths take precedence; otherwise WRM discovers `.ini`, `.conf`, `.cfg`, `.env*` and config/settings files. JSON is flattened into setting paths; INI and assignment-style settings are parsed without executing source code. Unrecognized lines are counted. Secret-name values, credential URLs and known token formats are masked; configuration contents are not stored in the database. Up to 20 files of 256 KiB each and 2,000 entries per file are inspected. Symlink escapes, unreadable/missing files and limits are reported.
+
+Optional catalog fields (existing catalogs remain valid):
+
+```json
+"functionality": {
+  "units": [{"kind": "systemd", "name": "demo-api.service"}, {"kind": "supervisor", "name": "demo-workers"}],
+  "http": "http://127.0.0.1:8080/health",
+  "tcp": "127.0.0.1:8080",
+  "config_files": ["config.ini", ".env"]
+}
+```
+
+Subscribe in **Settings → Notifications** to `git.functionality_problem`, `git.functionality_recovered`, `git.server_problem` and `git.server_recovered`. The server events include workers with no catalog association. Notifications report transitions/changed warnings and do not repeat an identical result on each check.
+
 ### Git workspace: every file and partial checks
 
 **Every file of an installation.** The details of an installation (click it in the overview, or *Details*) read the server folder once and list **every file** — not only the ones the catalog tracks — together with every file of the repository at the target ref below the service's subdirectory:
@@ -1153,6 +1182,8 @@ WRM does not need Jenkins or GitLab CI; each of these is opt-in.
 
 ### AI assistant
 
+Use the top **AI** button or **Settings → AI assistant** to inspect effective account permission, provider availability and setup blockers. SSH and SSH-backed SFTP windows have an AI button; if access is disabled it opens the diagnostic view. Enabling/disabling policy refreshes open browsers, including after event-bus reconnect. A successful provider test confirms connectivity, and the setup result separately shows whether the account can use the assistant. Terminal AI does not depend on MCP settings.
+
 An AI assistant in a panel **next to the terminal** (also from the file manager). Click **AI** in the title bar of an SSH terminal or file manager window, choose the provider, model and mode, and ask in plain language: *why is nginx failing?*, *free some disk space*, *raise the worker count*. The assistant explains every step and works only through WRM:
 
 **Position and size (desktop):** the panel can be **docked** left, right, top or bottom with the ◧ ⬒ ⬓ ◨ buttons, shown as a **floating window** with ❐, **expanded** over the whole terminal window with ⛶ (or a double-click on the title bar; press again to restore) and **resized** by dragging its inner edge (the corner when floating). Drag the title bar to move it; a docked panel then starts floating. The terminal shrinks beside a docked panel and is refitted. Dock, size and floating position are remembered per user in the browser (`localStorage` key `wrm_ai_win_<user id>`). On compact windows (up to 760 px wide, e.g. phones) the panel keeps its full-window layout and these buttons are hidden.
@@ -1272,6 +1303,10 @@ Only your own connections can be used as a source; one check per user at a time;
 - **"Open terminal here"** from the file manager opens a new terminal and `cd`s into that folder.
 
 ### File manager (SFTP / FTP / FTPS)
+
+**Preview** in the file context menu opens video/audio, images, PDFs or text inside WRM. Large video/audio files stream with byte-range seeking over SFTP/FTP; browser codec support still applies. Text previews show at most 256 KiB, with a truncation notice and Download. HTML/SVG/source files render as escaped text. Closing the viewer stops playback. Every metadata/range/content request checks the same file-read/share permissions as downloads; FTP requires SIZE and REST support for seekable playback.
+
+In a terminal, select a single file path with the pointer and right-click for **Preview selected path** or **Download selected path**. Relative paths use the terminal's current directory; `~/` resolves the SSH file account's home. Paths are treated as filenames and never executed as shell commands.
 
 - **Breadcrumb path bar:** click any part to jump there, or click empty space to type a path (Enter). **↑ Up** and **⟳ Refresh** (F5).
 - **Columns:** name (with icons by file type, symlink marker), **Modified**, size (B … TB), type. Click a column header to sort (folders always first, natural sort).
@@ -1670,9 +1705,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.3.6-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.3.6-linux-amd64 -service-status
-sudo ./wrm-pro-v12.3.6-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.4.0-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.4.0-linux-amd64 -service-status
+sudo ./wrm-pro-v12.4.0-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1703,7 +1738,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.3.6-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.4.0-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1816,7 +1851,7 @@ See also **[SECURITY.md](SECURITY.md)** (how to report vulnerabilities, hardenin
 - Inventory import reads `.xlsx` and CSV, not old `.xls`; NetBox sync updates and reports, but never deletes connections.
 - Password rotation works for SSH logins that may run `passwd` (Linux, BSD, macOS) — not for Windows/RDP, network devices or IPMI. *Who has access* shows `~/.ssh/authorized_keys` of the login user only.
 - RDP, VNC and Telnet need **guacd** next to WRM (see [Remote desktop](#remote-desktop-rdp-vnc-telnet)); file transfer and printer redirection of RDP are not offered.
-- The AI assistant works with SSH connections (not RDP / VNC / Telnet or BMC consoles), runs non-interactive commands only (no editors, pagers or password prompts), and its read-only classifier is deliberately strict: a harmless command it does not know needs an approval. Consumer chat subscriptions (Claude.ai, ChatGPT) cannot be used; desktop AI apps over MCP come with v12.1.0.
+- The AI assistant works with SSH and SSH-backed SFTP connections (not RDP / VNC / Telnet or BMC consoles), runs non-interactive commands only (no editors, pagers or password prompts), and its read-only classifier is deliberately strict: a harmless command it does not know needs an approval. Consumer chat subscriptions (Claude.ai, ChatGPT) cannot be used; desktop AI apps over MCP come with v12.1.0.
 - AI connections (MCP) work with the user's **own** SSH connections (not connections shared with them); OAuth access is not refreshed — when it expires the user approves the app again. `/mcp` offers no standalone event stream (GET) and no resumption of an interrupted stream; a call interrupted while it waits for an approval is cancelled.
 - No **SSO/LDAP/SAML** yet (local accounts with 2FA).
 - Voice calls are a **mesh**: fine up to about 12 people; larger meetings would need an SFU.
@@ -1831,7 +1866,7 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 
 ## API reference
 
-All endpoints (except sign-in, `/api/auth/config`, version and share pages) need the session cookie. JSON in, JSON out, unless noted. **Every non-GET `/api` request must send `X-WRM-Request: 1`** (CSRF protection) and, if present, an `Origin` of this server.
+All endpoints (except sign-in, `/api/auth/config`, version and share pages) need the session cookie. JSON in, JSON out, unless noted. **Every unsafe `/api` request (POST/PUT/PATCH/DELETE) must send `X-WRM-Request: 1`** (CSRF protection) and, if present, an `Origin` of this server.
 
 **Accounts**
 
@@ -1858,7 +1893,7 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/connections/bulk` | `{action: "move"\|"delete", ids, folder_id}` |
 | POST | `/api/connections/test` | Test a connection (reports host key problems) |
 | POST | `/api/hostkeys/accept` | `{host, fingerprint}` accept a new/changed host key |
-| GET / POST | `/api/folders` · PUT / DELETE `/api/folders/{id}` | Folders: `{name, jump_id, proxy_id}` (defaults of its connections; views add `jump_name`, `proxy_name`) |
+| GET / POST | `/api/folders` · PUT / DELETE `/api/folders/{id}` | Folders: `{name, parent_id, jump_id, proxy_id}` (owner-scoped, no cycles, max 32 levels; views add full `path`) (defaults of its connections; views add `jump_name`, `proxy_name`) |
 | GET / POST | `/api/sessions` · PUT / DELETE `/api/sessions/{id}` | Workspace sessions |
 | GET | `/api/config/export` | Export without secrets (with jump hosts and tunnels) |
 | POST | `/api/config/export` | `{password}` export with secrets |
@@ -1996,6 +2031,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/installs` | `{conn_id, path, app, env}` (added by hand) |
 | GET / DELETE | `/api/git/installs/{id}` | Details with file states / forget |
 | GET | `/api/git/installs/{id}/diff?path=` | `{lines: [{op: " "\|"-"\|"+"\|"@", a, b, s}], state, tracked, informational, reason, pattern, same, binary, too_big, missing_on_server, truncated}` (server → target; any file in the repository except protected ones) |
+| GET | `/api/git/installs/{id}/configuration` | On-demand masked configuration/settings, owner and `git_checks` enforced |
 | GET | `/api/git/installs/{id}/files` | Every file of the folder and of the repository: `{files: [{path, kind, size, mtime, link, outside, on_server, in_git, tracked, state, reason, pattern, diffable, viewable}], truncated, git_partial, not_compared, target}` |
 | GET | `/api/git/installs/{id}/file?path=&side=server\|git` | One file for viewing: `{side, size, hash, text \| binary \| too_big}` |
 | GET | `/api/git/installs/{id}/commits` | `{from, to, count, commits: [{sha, title, author, date}]}` between `VERSION.md`'s commit and the target |
@@ -2053,6 +2089,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/api/remote/list?id&path` | List a folder |
 | GET | `/api/remote/list-recursive?id&path` | All files below a path |
 | GET | `/api/remote/search?id&path&q&mode=name\|content&max&hidden` | Search (NDJSON stream) |
+| GET / HEAD | `/api/remote/preview?id&path` | Inline allowlisted media with byte ranges; `metadata=1` returns kind/MIME/size, `text=1` returns bounded text |
 | GET | `/api/remote/download?id&path` | Download a file |
 | GET | `/api/remote/download-dir?id&path` | Download a folder as ZIP (SFTP) |
 | POST | `/api/remote/upload?id&path&overwrite` | Multipart upload, streamed |
@@ -2173,7 +2210,7 @@ Requirements: **Go** (version in `remote-manager/go.mod`). No C compiler is need
 ```bash
 git clone https://github.com/vedranius/web-browser-RDM-public.git
 cd web-browser-RDM-public/remote-manager
-go test ./...
+go test -race -count=1 -timeout 20m ./...
 go build -o wrm-server .
 ./wrm-server
 ```
@@ -2234,6 +2271,9 @@ remote-manager/
   git.go          Git workspace: storage, settings, targets, API, diff
   git_source.go   GitLab API v4 / GitHub REST client, tree and blob cache, ref resolution, suggestions
   git_bundle.go   offline bundles: import and export (bundle.json + payload)
+  folders.go      nested hierarchy, owner/cycle/depth validation and import ordering
+  preview.go      authenticated SFTP/FTP byte-range streaming and bounded previews
+  git_functionality.go runtime checks, redacted logs and configuration inspection
   git_scan.go     discovery and file hashing over SSH, VERSION.md, units, comparison
   git_monitor.go  periodic Git checks and their notifications
   git_deploy.go   deploy steps over SSH: backup, atomic writes, checks, rollback, VERSION.md, updates.jsonl, dangling imports, restarts
@@ -2269,6 +2309,10 @@ remote-manager/
   git_test.go          Git workspace: fake GitLab / GitHub / Gitea, branch-aware tags, blob cache, bundles, catalog, discovery and comparison on a fake SSH host, notifications
   git_deploy_test.go   Git deploy: VERSION.md / updates.jsonl formats, dangling imports; update, CRLF, protected files, stamp, rollback, failed check → rollback, scheduled restart (fake SSH host)
   git_gitignore_test.go  .gitignore helper: candidates from a check, preview, download, merge request only on explicit choice (fake GitLab), pull request (fake GitHub)
+  folders_test.go hierarchy, cycle/owner/depth checks and config round trips
+  git_functionality_test.go Supervisor group health, log/config redaction and symlink boundaries
+  preview_test.go SFTP/FTP ranges, safe text preview and share permissions
+  ai_availability_test.go SFTP providers without MCP and cross-window policy events
   git_files_test.go      every file of an installation (reasons, excluded file diff, symlinks, unreadable, quoting, commits) and check jobs (partial, stale, limits, cancel, last good result)
   git_ci_test.go         webhooks (GitLab token, GitHub HMAC, generic token / HMAC, replays, rate limit), artifact feed fetch and schedule, Jenkins job and GitLab pipeline runs
   git_env_test.go        environments: plan with CRLF-only files, dry run, typed confirmation, one-shot plans, fingerprint mismatch, lock contention, stale lock, own lock only, remembered and permanent exclusions, allowed_refs, nested paths, partial transfer, post_deploy failure, rollback (moved aside, symlinks skipped, removed directories, kept backups), doctor, drift
@@ -2310,6 +2354,8 @@ docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favic
 ---
 
 ## Troubleshooting
+
+For v12.4.0, **AI missing/unavailable** is diagnosed in Settings → AI assistant; check account policy/kill switch, provider availability and SSH/SFTP context. **Functionality unverified** means the remote account cannot inspect a service manager, no unit/probe is configured, or a check is incomplete; inspect its status message and configure the service's health endpoint if needed. **Media cannot play** can mean missing browser codec support or an FTP server without SIZE/REST; use Download. **Same-named servers** can be distinguished by full folder paths; choose Parent folder to build client/site nesting.
 
 | Problem | Fix |
 |---|---|
@@ -2429,8 +2475,8 @@ If WRM is useful to you, consider supporting it on **[Ko-fi](https://ko-fi.com/v
 On x86_64 Linux with Go, curl and sha256sum installed:
 
 ```bash
-bash tools/build-appimage.sh v12.3.6 amd64
-bash tools/build-appimage.sh v12.3.6 arm64
+bash tools/build-appimage.sh v12.4.0 amd64
+bash tools/build-appimage.sh v12.4.0 arm64
 ```
 
 Outputs go to `dist/`. The script verifies pinned upstream AppImage tooling and runtimes, uses the existing WRM icon, and needs no FUSE during the build. GitHub releases remain drafts until all 16 packages and their checksums are verified and the Docker publication succeeds.

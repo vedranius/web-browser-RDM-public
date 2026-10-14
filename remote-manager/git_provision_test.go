@@ -151,7 +151,7 @@ func TestGitInstallAndTransfer(t *testing.T) {
 	if !strings.Contains(readFile(t, v.Items[0].UpdateLog), `"install": "`+e.dir+`"`) || !strings.Contains(readFile(t, e.units+"/demo-api.service"), "WorkingDirectory="+e.dir+"\n") {
 		t.Fatal("updates.jsonl or unit")
 	}
-	if got := readFile(t, e.sysLog); got != "daemon-reload\nenable demo-api.service\nrestart demo-api.service\nis-active demo-api.service\n" {
+	if got := withoutFunctionalityReads(readFile(t, e.sysLog)); got != "daemon-reload\nenable demo-api.service\nrestart demo-api.service\nis-active demo-api.service\n" {
 		t.Fatalf("systemctl: %q", got)
 	}
 	if entries, _ := os.ReadDir(e.dir); len(entries) == 0 || strings.Contains(fmt.Sprint(entries), gitStagingPrefix) {

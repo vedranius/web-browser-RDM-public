@@ -199,6 +199,15 @@ Object.assign(LANGS.hr, {
   p_ai_idle_minutes: 'Neaktivnost (minute)', p_ai_idle_minutes_d: 'Neaktivna AI sesija završava nakon tog vremena.',
 });
 
+Object.assign(LANGS.en, {
+ ai_status_ready:'The assistant is enabled for this account.', ai_status_blocked:'The assistant is unavailable for this account.', ai_status_test:'A successful provider test confirms connectivity. The assistant also needs account permission and an SSH or SFTP server connection.',
+ ai_status_admin:'Administrators can enable the assistant in Admin → AI assistant. Environment-forced settings are shown there.', ai_status_open:'Open a terminal or file window on an SSH/SFTP connection, then click AI in its header.', ai_status_no_modes:'No AI permission mode is enabled.', ai_status_providers:'Available providers', ai_status_refresh:'Refresh status', ai_status_setup:'Open AI administration', ai_status_connections:'Open server windows', ai_status_config_error:'Availability could not be checked. Refresh status before using the assistant.',
+});
+Object.assign(LANGS.hr, {
+ ai_status_ready:'Asistent je omogućen za ovaj račun.', ai_status_blocked:'Asistent nije dostupan za ovaj račun.', ai_status_test:'Uspješan test pružatelja potvrđuje povezanost. Za asistenta su potrebni i dopuštenje računa te SSH ili SFTP veza prema serveru.',
+ ai_status_admin:'Administratori mogu omogućiti asistenta u Admin → AI asistent. Tamo su označene i postavke zadane varijablama okruženja.', ai_status_open:'Otvorite terminal ili datoteke na SSH/SFTP vezi pa kliknite AI u zaglavlju prozora.', ai_status_no_modes:'Nije omogućen nijedan način dopuštenja za AI.', ai_status_providers:'Dostupni pružatelji', ai_status_refresh:'Osvježi stanje', ai_status_setup:'Otvori AI administraciju', ai_status_connections:'Otvoreni prozori servera', ai_status_config_error:'Dostupnost nije provjerena. Osvježite stanje prije korištenja asistenta.',
+});
+
 (function () {
   const $ = id => document.getElementById(id);
   const S = {}; // per window: {sid, es, seq, view, cfg, pol, busy}
@@ -438,6 +447,29 @@ Object.assign(LANGS.hr, {
     const st = S[id];
     if (st && st.sid && !st.ended) { indicators(); return; }
     await renderSetup(wo);
+  }
+
+  function availabilityHTML(config) {
+    if (!config) return `<div class="hint-box warn">${esc(t('ai_status_config_error'))}</div>`;
+    const ready = config.enabled && (config.modes || []).length > 0;
+    return `<div class="hint-box ${ready ? 'ok' : 'warn'}">${esc(t(ready ? 'ai_status_ready' : 'ai_status_blocked'))}${config.reason ? `<div>${esc(config.reason)}</div>` : ''}${config.enabled && !(config.modes || []).length ? `<div>${esc(t('ai_status_no_modes'))}</div>` : ''}</div>
+      <div class="muted-text">${esc(t('ai_status_test'))}</div>${ready ? `<div class="setting-row"><b>${esc(t('ai_status_providers'))}</b><span>${(config.providers || []).length}</span></div><div>${esc((config.providers || []).length ? t('ai_status_open') : t('ai_no_providers'))}</div>` : `<div>${esc(t('ai_status_admin'))}</div>`}`;
+  }
+  async function statusPane() {
+    const pane = $('ai-status-pane'); if (!pane) return;
+    pane.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
+    try {
+      await loadCfg();
+      if (typeof refreshUserPolicy === 'function') await refreshUserPolicy();
+      pane.innerHTML = availabilityHTML(cfg) + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="btn-sec" onclick="wrmAI.statusPane()">${esc(t('ai_status_refresh'))}</button>${currentUser && currentUser.is_admin ? `<button onclick="closeModal('modal-settings'); adminTab='ai'; openAdminPanel()">${esc(t('ai_status_setup'))}</button>` : ''}</div>`;
+      const wins = winObjects.filter(wo => aiEligible(wo,wo.mode));
+      if (wins.length) pane.innerHTML += `<h4>${esc(t('ai_status_connections'))}</h4>` + wins.map(wo => `<button class="btn-sec" style="margin:4px" onclick="closeModal('modal-settings'); openAI(${wo.id})">${esc(connLabel(winConn(wo)))}</button>`).join('');
+    } catch(e) { pane.innerHTML = `<div class="hint-box bad">${esc(e.message)}</div><button onclick="wrmAI.statusPane()">${esc(t('ai_status_refresh'))}</button>`; }
+  }
+  async function policyChanged() {
+    await loadCfg().catch(() => {});
+    if (typeof refreshUserPolicy === 'function') await refreshUserPolicy();
+    if ($('ai-status-pane') && $('st-ai') && $('st-ai').classList.contains('active')) statusPane();
   }
 
   // setup: provider, model, mode, notes, automatic limits, what the AI sees
@@ -1060,7 +1092,7 @@ Object.assign(LANGS.hr, {
     } else {
       const r = AW.result;
       body = !r ? `<div class="ai-see">${esc(t('aiw_testing'))}</div>` : r.ok
-        ? `<div class="hint-box">✅ ${esc(tf('aiw_ok', {reply: r.reply ? ': ' + r.reply : ''}))}</div><div class="ai-see">${esc(t('aiw_use'))}</div>
+        ? `<div class="hint-box">✅ ${esc(tf('aiw_ok', {reply: r.reply ? ': ' + r.reply : ''}))}</div><div class="ai-see">${esc(t('aiw_use'))}</div>${availabilityHTML(AW.availability)}
           <div style="margin:8px 0;"><button class="btn-sec btn-sm" onclick="wrmAI.awLoadModels()">${esc(t('aiw_load_models'))}</button></div>${awAvailHTML()}`
         : `<div class="hint-box warn">❌ ${esc(tf('aiw_fail', {err: r.error}))}</div><div class="ai-see">${esc(t('aiw_fix'))}</div>`;
       nav = r && !r.ok ? `<button class="btn-sec" onclick="wrmAI.awGo(-1)">← ${esc(t('aiw_back'))}</button>` : '';
@@ -1123,7 +1155,7 @@ Object.assign(LANGS.hr, {
       }
       AW.result = AW.pid ? await api('POST', `${base}/${AW.pid}/test`, {}) : {ok: false, error: t('aiw_need')};
     } catch (e) { AW.result = {ok: false, error: e.message}; }
-    if (AW && AW.step === awSteps().length) awRender();
+    if (AW && AW.step === awSteps().length) { AW.availability = await loadCfg().catch(() => null); if (typeof refreshUserPolicy === 'function') await refreshUserPolicy(); awRender(); }
   }
   function awFinish() {
     closeAIModal();
@@ -1189,6 +1221,6 @@ Object.assign(LANGS.hr, {
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,
     myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); }; awOpen('user'); },
-    closeModal: closeAIModal, adminTab: adminAI, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
+    statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
   };
 })();

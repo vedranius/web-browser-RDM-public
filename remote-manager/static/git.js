@@ -499,6 +499,21 @@ Object.assign(LANGS.hr, {
   gtd_settings: 'Jednokratno podešavanje: Git serveri s kojih WRM čita, offline paketi za servere bez Git pristupa, odakle dolaze ciljevi, koje SSH servere provjeravati i hoće li se provjeravati periodički.',
 });
 
+Object.assign(LANGS.en, {
+ git_tab_functionality:'Functionality', gtd_functionality:'Service runtime, Supervisor workers, installation problems and configuration values on each server.',
+ gf_intro:'Checks are read only and run with manual and periodic Git checks. HTTP/TCP probes are optional per service. Healthy means the configured checks passed; missing or inaccessible checks remain unverified.',
+ gf_healthy:'Healthy', gf_warning:'Warning', gf_failed:'Failed', gf_unknown:'Unverified', gf_config:'Configuration', gf_no_config:'No configuration files found.', gf_config_hint:'Values are read now; secrets are masked. Comments describe settings where available. Lines that cannot be parsed are counted; source code is never executed.',
+ gf_section:'Section', gf_variable:'Variable / function', gf_value:'Configured value', gf_description:'Description', gf_unparsed:'{n} lines could not be parsed as settings.',
+ gf_no_install:'No installation registered. Discover services or add an installation.', gf_units:'Runtime units (one per line: systemd:name.service or supervisor:program)', gf_http:'HTTP health URL (optional)', gf_tcp:'TCP health address (optional, host:port)', gf_files:'Configuration files (optional relative paths; otherwise auto-discover)', gf_servers:'Server checks', gf_log:'Error log', gf_never:'Run a check to inspect functionality.', gf_source:'Repository', gf_checks:'Runtime checks', gf_all_workers:'All Supervisor workers and failed systemd services',
+});
+Object.assign(LANGS.hr, {
+ git_tab_functionality:'Funkcionalnost', gtd_functionality:'Stanje servisa, Supervisor workeri, problemi instalacije i vrijednosti konfiguracije na svakom serveru.',
+ gf_intro:'Provjere samo čitaju podatke i pokreću se pri ručnim i periodičnim Git provjerama. HTTP/TCP provjere su opcionalne po servisu. Uspješan status znači da su zadane provjere prošle; nedostupne ili nedostajuće provjere ostaju nepotvrđene.',
+ gf_healthy:'Ispravno', gf_warning:'Upozorenje', gf_failed:'Neispravno', gf_unknown:'Nepotvrđeno', gf_config:'Konfiguracija', gf_no_config:'Nisu pronađene konfiguracijske datoteke.', gf_config_hint:'Vrijednosti se čitaju sada; tajne su maskirane. Postavke su opisane komentarima gdje postoje. Neprepoznati redci se broje; izvorni kod se ne izvršava.',
+ gf_section:'Sekcija', gf_variable:'Varijabla / funkcija', gf_value:'Postavljena vrijednost', gf_description:'Opis', gf_unparsed:'{n} redaka nije prepoznato kao postavke.',
+ gf_no_install:'Nema registrirane instalacije. Pronađite servise ili dodajte instalaciju.', gf_units:'Jedinice servisa (po retku: systemd:naziv.service ili supervisor:program)', gf_http:'HTTP URL provjere stanja (opcionalno)', gf_tcp:'TCP adresa provjere (opcionalno, host:port)', gf_files:'Konfiguracijske datoteke (opcionalne relativne putanje; inače automatsko pronalaženje)', gf_servers:'Provjere servera', gf_log:'Zapis greške', gf_never:'Pokrenite provjeru funkcionalnosti.', gf_source:'Repozitorij', gf_checks:'Provjere servisa', gf_all_workers:'Svi Supervisor workeri i neuspješne systemd jedinice',
+});
+
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const modeKey = () => 'wrm_git_mode:' + ((typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.username)) || '');
@@ -734,7 +749,7 @@ Object.assign(LANGS.hr, {
       return;
     }
     $('git-last').style.display = $('git-check').style.display = '';
-    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'envs', 'runs', 'activity', 'gitignore', 'settings'].map(k =>
+    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'functionality', 'envs', 'runs', 'activity', 'gitignore', 'settings'].map(k =>
       `<button class="${G.tab === k ? 'on' : ''}" title="${esc(t('gtd_' + k))}" onclick="gitWorkspace.tab('${k}')">${esc(t('git_tab_' + k))}</button>`).join('');
     $('git-intro').style.display = '';
     $('git-intro').textContent = t('gtd_' + G.tab);
@@ -746,6 +761,7 @@ Object.assign(LANGS.hr, {
     if (G.tab === 'overview') body.innerHTML = overviewHTML();
     else if (G.tab === 'services') body.innerHTML = servicesHTML();
     else if (G.tab === 'installs') body.innerHTML = installsHTML();
+    else if (G.tab === 'functionality') body.innerHTML = functionalityHTML();
     else if (G.tab === 'runs') body.innerHTML = runsHTML();
     else if (G.tab === 'envs') { body.innerHTML = envsHTML(); if (E.ov) envCells(); }
     else if (G.tab === 'activity') body.innerHTML = activityHTML();
@@ -972,12 +988,14 @@ Object.assign(LANGS.hr, {
       ${f('branch', 'git_f_branch', a.branch, 'main')}${f('tag_filter', 'git_f_tag_filter', a.tag_filter, '^v\\d')}${f('subdir', 'git_f_subdir', a.subdir, 'linux')}
       <div><label>${esc(t('git_f_kind'))}</label><select id="ga-kind">${['app', 'library', 'tool'].map(k => `<option value="${k}" ${a.kind === k ? 'selected' : ''}>${esc(t('git_kind_' + k))}</option>`).join('')}</select></div></div>
       <div class="g-grid" style="margin-top:10px">${ta('fingerprint', 'git_f_fingerprint', a.fingerprint)}${ta('protected', 'git_f_protected', a.protected)}${ta('install_hint', 'git_f_hint', a.install_hint)}
-      ${ta('include', 'git_f_include', a.include)}${ta('exclude', 'git_f_exclude', a.exclude)}</div>`;
+      ${ta('include', 'git_f_include', a.include)}${ta('exclude', 'git_f_exclude', a.exclude)}</div>
+      <div class="g-card" style="margin-top:10px"><h3>${esc(t('git_tab_functionality'))}</h3><div class="g-grid">${f('health-http','gf_http',(a.functionality || {}).http)}${f('health-tcp','gf_tcp',(a.functionality || {}).tcp)}${ta('health-units','gf_units',((a.functionality || {}).units || []).map(u => u.kind + ':' + u.name))}${ta('health-files','gf_files',(a.functionality || {}).config_files)}</div></div>`;
   }
 
   function readAppForm() {
     const v = k => $('ga-' + k).value.trim();
     return {name: v('name'), project: v('project'), ref: v('ref'), branch: v('branch'), tag_filter: v('tag_filter'), subdir: v('subdir'), kind: v('kind'),
+      functionality: {http:v('health-http'),tcp:v('health-tcp'),config_files:lines(v('health-files')),units:lines(v('health-units')).map(value => { const at=value.indexOf(':'); return {kind:value.slice(0,at),name:value.slice(at+1)}; })},
       fingerprint: lines(v('fingerprint')), protected: lines(v('protected')), install_hint: lines(v('install_hint')), include: lines(v('include')), exclude: lines(v('exclude'))};
   }
 
@@ -1080,6 +1098,32 @@ Object.assign(LANGS.hr, {
     if (!(await uiConfirm(t('git_forget_q'), {danger: true, okText: t('git_forget')}))) return;
     const r = await fetch('/api/git/installs/' + id, {method: 'DELETE'});
     if (r.ok) { G.state = await r.json(); render(); }
+  }
+
+  function functionalityBadge(h) {
+    const state = h && h.state || 'unknown';
+    return `<span class="pill ${state === 'healthy' ? 'ok' : state === 'failed' ? 'bad' : 'warn'}">${esc(t('gf_' + state))}</span>`;
+  }
+  function functionalityBody(h) {
+    if (!h) return `<div class="g-mut">${esc(t('gf_never'))}</div>`;
+    return `<div class="g-mut">${esc(fmtTime(h.checked_at))}</div>${(h.warnings || []).map(w => `<div class="hint-box warn" style="overflow-wrap:anywhere">⚠ ${esc(w)}</div>`).join('')}
+      ${(h.checks || []).map(c => `<div class="g-card" style="margin-top:6px;overflow-wrap:anywhere">${functionalityBadge(c)} <b>${esc(c.kind)} · ${esc(c.name)}</b><pre style="white-space:pre-wrap;margin:4px 0">${esc(c.status)}</pre>${c.log ? `<details><summary>${esc(t('gf_log'))}</summary><pre style="white-space:pre-wrap;max-height:240px;overflow:auto">${esc(c.log)}</pre></details>` : ''}</div>`).join('')}`;
+  }
+  function functionalityHTML() {
+    const installs = G.state.installs || [], apps = G.state.catalog.apps || [];
+    return `<div class="hint-box">${esc(t('gf_intro'))}</div><div class="g-bar"><button class="btn-sec" ${G.state.can_check && !jobRunning() ? '' : 'disabled'} onclick="gitWorkspace.check()">↻ ${esc(t('git_check_now'))}</button></div>
+      <h3>${esc(t('gf_servers'))}</h3>${(G.state.server_health || []).map(h => `<details class="g-card"><summary>${functionalityBadge(h)} <b>${esc(h.name)}</b> · ${esc(t('gf_all_workers'))}</summary>${functionalityBody(h)}</details>`).join('')}
+      ${apps.filter(a => !installs.some(i => i.app === a.name)).map(a => `<div class="g-card"><b>${esc(a.name)}</b> · <span class="g-mono">${esc(a.project)}</span><div class="hint-box warn">${esc(t('gf_no_install'))}</div></div>`).join('')}
+      ${installs.map(i => { const a = apps.find(a => a.name === i.app) || {}; return `<div class="g-card"><div class="g-bar">${functionalityBadge(i.functionality)} <b>${esc(i.app)} · ${esc(hn(i.conn_name,i.hostname))}</b><span class="g-mut">${esc(i.env)}</span><span class="g-sp"></span><button class="btn-sec btn-sm" ${G.state.can_check ? '' : 'disabled'} onclick="gitWorkspace.configuration(${i.id})">${esc(t('gf_config'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.details(${i.id})">${esc(t('git_details'))}</button></div><div class="g-mono" style="overflow-wrap:anywhere">${esc(i.path)}</div><div class="g-mut">${esc(t('gf_source'))}: ${esc(a.project || '—')}</div>${functionalityBody(i.functionality)}</div>`; }).join('')}`;
+  }
+  function showFunctionality() { G.mode = 'advanced'; G.tab = 'functionality'; render(); }
+  async function configuration(id) {
+    modal(`<div class="g-bar"><h3 style="flex:1">${esc(t('gf_config'))}</h3><button class="btn-sec" onclick="gitWorkspace.closeModal()" aria-label="${esc(t('git_close'))}">✕</button></div><div class="hint-box">${esc(t('loading'))}</div>`);
+    const r = await fetch('/api/git/installs/' + id + '/configuration');
+    if (!r.ok) { modal(`<div class="g-bar"><h3 style="flex:1">${esc(t('gf_config'))}</h3><button class="btn-sec" onclick="gitWorkspace.closeModal()" aria-label="${esc(t('git_close'))}">✕</button></div><div class="hint-box warn">${esc(await apiError(r))}</div>`); return; }
+    const data = await r.json();
+    modal(`<div class="g-bar"><h3 style="flex:1">${esc(t('gf_config'))}</h3><button class="btn-sec" onclick="gitWorkspace.closeModal()" aria-label="${esc(t('git_close'))}">✕</button></div><div class="hint-box">${esc(t('gf_config_hint'))}</div><div class="g-mut">${esc(fmtTime(data.read_at))}</div>
+      ${(data.files || []).map(f => `<div class="g-card"><h3 class="g-mono" style="overflow-wrap:anywhere">${esc(f.path)}</h3>${f.error ? `<div class="hint-box warn">${esc(f.error)}</div>` : ''}${f.unparsed ? `<div class="hint-box warn">${esc(tf('gf_unparsed',{n:f.unparsed}))}</div>` : ''}<div class="g-scroll"><table class="g-table"><thead><tr><th>${esc(t('gf_section'))}</th><th>${esc(t('gf_variable'))}</th><th>${esc(t('gf_value'))}</th><th>${esc(t('gf_description'))}</th></tr></thead><tbody>${(f.entries || []).map(e => `<tr><td>${esc(e.section)}</td><td class="g-mono">${esc(e.key)}${e.kind === 'function' ? '()' : ''}${e.line ? `<div class="g-mut">L${e.line}</div>` : ''}</td><td class="g-mono" style="white-space:pre-wrap;overflow-wrap:anywhere">${e.secret ? '🔒 ' : ''}${esc(e.value)}</td><td>${esc(e.description || '')}</td></tr>`).join('')}</tbody></table></div></div>`).join('') || `<div class="hint-box">${esc(t('gf_no_config'))}</div>`}`);
   }
 
   // ── installation details: every file, diff, view, commits ──
@@ -2630,7 +2674,7 @@ Object.assign(LANGS.hr, {
   function simpleHTML() {
     const ov = E.ov;
     let html = `<div class="gs-wrap"><div class="hint-box">${esc(t('gs_intro'))}</div>
-      <div class="g-bar" style="margin-bottom:10px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleRefresh()">↻ ${esc(t('gs_refresh'))}</button></div>`;
+      <div class="g-bar" style="margin-bottom:10px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleRefresh()">↻ ${esc(t('gs_refresh'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.showFunctionality()">${esc(t('git_tab_functionality'))}</button></div>`;
     if (!ov) return html + `<div class="hint-box">⏳</div></div>`;
     if (ov.services.length) html += simpleFilterHTML();
     const cards = ov.services.flatMap(s => s.envs.map(e => `<div class="g-card gs-card" id="${sKey(s.app, e.name)}">${simpleCardHTML(s.app, e)}</div>`));
@@ -2975,7 +3019,7 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = {
-    open, close, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
