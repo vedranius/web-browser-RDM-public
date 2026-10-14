@@ -1,27 +1,45 @@
-<p align="center"><img src="https://raw.githubusercontent.com/vedranius/web-browser-RDM-public/v12.4.3/docs/brand/png/lockup/wrm-lockup-on-dark-664w.png" alt="WRM PRO — Web Remote Manager" width="332"></p>
+## Web Remote Manager PRO v12.4.3b — Windows Medium runtime fix
 
-## Web Remote Manager PRO v12.4.3 — Original Medium deployment, config profiles and Bitwarden
+### Fixed
 
-### Added
+Windows `.exe` installations run the original Medium deploy tool inside a managed Linux Docker runtime. Python, Git, OpenSSH and rsync are supplied by its pinned image; separate Windows installations are unnecessary. ZIP imports survive setup failure and can be prepared again without re-uploading. Private Linux volumes preserve deploy history, rollback state, permissions and config edits across restarts. Native Linux mode remains available.
+
+The original tool remains unchanged. Runtime source/venv are read-only, SSH/config are private and builds use an unprivileged user. Runtime environment forwarding preserves Docker CLI context and keeps secret values out of command arguments. Only owned containers are stopped.
+
+### Windows upgrade
+
+**Download the new Windows executable manually:** v12.4.3 cannot parse a `b` suffix; v12.4.3b supports it for later updates. Retain the DB/key. Start Docker Desktop with **Linux containers** on Windows 10/11, then use **Git → Medium → Prepare runtime / retry** for an existing tool import, or import your trusted tool ZIP first. Import deploy-config/SSH profile and start Medium. A browser client needs no deployment dependencies.
+
+Docker Desktop is not supported on Windows Server; use a supported Linux WRM host/VM/container for Medium. The Docker engine must be local and accessible to the WRM account. Back up private `.medium` files and the managed Linux runtime/user Docker volumes.
+
+### Validation and packages
+
+Real pinned-image setup, original comparison/build, two actual OpenSSH/rsync deployments, rollback and stop/start history persistence were exercised against a local fixture. The build user could not read private SSH/config. Browser layouts at 390/1100/1440/1920 px had no JavaScript errors. Windows is cross-compiled; no native Windows VM run is claimed. Full validation: [hotfix summary](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.3b/docs/RELEASE_SUMMARY_v12.4.3b.md).
+
+[Download v12.4.3b](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.4.3b): 16 platform packages plus checksums; Docker `ghcr.io/vedranius/wrm-pro:v12.4.3b` and `latest`. The remaining accepted work is planned for **v12.4.4** in ROADMAP, not included in this hotfix.
+
+### Included from v12.4.3 — Original Medium deployment, config profiles and Bitwarden
+
+#### Added
 
 - **Medium** uses the original supplied deploy tool and deploy-config format unchanged: original screens, comparisons, file selection/exclusions, builds, native plans/confirmations, deployment progress, backups, history, rollback and config Git controls. Import the private tool/config ZIPs in Git → Medium. WRM handles authenticated access, private directories, encrypted runtime preferences and setup status. [Original-tool parity record](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.3/docs/MEDIUM_PARITY_v12.4.3.md).
 - **Functionality config profiles** inspect uploaded reference settings across servers/operators and show searchable reference/actual values, differences, missing settings and masked secrets. INI/config/Python parsing is static; incomplete checks remain explicit.
 - **Bitwarden** account sign-in/unlock and direct native SSH item references for SSH/SFTP. Private key retrieval happens on the server during authentication. Master passwords and unlock sessions are not persisted; per-user CLI profiles are encrypted between commands.
 - **Folder order** persists after drag/drop, Move up/down and export/import, including nested folders.
 
-### Fixed and changed
+#### Fixed and changed
 
 - Git dialogs now stay visible above mobile drawers and keep wide tables within their scroll area.
 - The bridge supports original same-origin no-referrer forms and rejects cross-site submissions; stop refuses active original-tool operations.
 - Docker includes Python, git, OpenSSH, rsync and the official Bitwarden CLI. Standalone installations need these optional dependencies on the WRM host. Medium defaults to administrators; grant it only to trusted operators because its native build/config commands run as the WRM OS account.
 
-### Validation and packages
+#### Validation and packages
 
 Original tool: **1,581 tests passed, 9 skipped**. Real Chromium exercised private archive imports and native comparison, deploy, history and rollback against test Git/SSH destinations. Config profiles, folder persistence and layouts at 390/1100/1440/1920 px were checked without JavaScript errors. Bitwarden mock-account flows and direct real SSH authentication were tested; a real cloud account was not used. Full WRM race/vet/format/UI checks and platform builds are detailed in the [release summary](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.3/docs/RELEASE_SUMMARY_v12.4.3.md).
 
 Release packages: 13 standalone targets, macOS universal and Linux amd64/arm64 AppImages, plus `SHA256SUMS.txt`. Docker: `ghcr.io/vedranius/wrm-pro:v12.4.3` and `latest`. The pipeline publishes only after the complete package set and Docker succeed.
 
-### Upgrading from v12.4.0
+#### Upgrading from v12.4.0
 
 Replace the binary/AppImage or update Docker. Startup adds the config-profile table and folder order column. Preserve your database, encryption key and private adjacent `.medium`/`.bitwarden` directories. Tool and config archives are private imports, not public release assets. Git/SSH targets must be reachable from the runtime. The earlier client GitLab relay/replay, AI/navigation and icon/color requests remain accepted backlog, and were not included in this prioritized release.
 

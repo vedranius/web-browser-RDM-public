@@ -1,3 +1,15 @@
+## [12.4.3b] - 2026-10-14
+
+### Fixed
+- **Windows Medium dependencies:** automatic managed Linux Docker runtime; host Windows no longer needs Python, Git, SSH or rsync. Native Linux remains available, with optional automatic Docker fallback. CLI detection includes standard Docker Desktop paths and an explicit override; daemon/Linux-engine diagnostics explain what to start.
+- **Import recovery:** trusted tool archives are retained when setup fails. Administrator retry prepares the existing archive; failed/pending setup is never reported ready.
+- **Linux filesystem behavior on Windows:** per-user persistent Docker volumes preserve native permissions, symlinks, Git/deploy state and history. Source/venv are read-only; profiles synchronize only after explicit import. Standard `~/.ssh` references resolve to the private profile. Native builds use an unprivileged account; its access to SSH keys/config is rejected.
+- **Runtime cleanup/context:** only owned containers are stopped; runtime environment aliases preserve the host Docker CLI's HOME/context and keep secret values out of argv. Docker's inherited WRM healthcheck is replaced by the authenticated wrapper readiness/busy probes.
+- **Letter hotfix versions:** v12.4.3b is parsed/ordered after v12.4.3 and before v12.4.4, with executable/version identity checks. Earlier updater binaries require a manual download for this first letter-suffixed release.
+
+### Changed
+- Existing deferred requests and new monitoring/MCP/log/import/terminal requirements are consolidated into the accepted **v12.4.4** roadmap. They are not delivered in this urgent Medium hotfix.
+
 ## [12.4.3] - 2026-10-14
 
 ### Added
