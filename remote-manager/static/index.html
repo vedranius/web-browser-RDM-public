@@ -1208,6 +1208,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .sb-title .brand::before { display: none; }
 .win-rec { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; color: #fca5a5; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: default; animation: recPulse 2.4s ease-in-out infinite; }
 .win-ai { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; color: #c4b5fd; background: rgba(139,92,246,.14); border: 1px solid rgba(139,92,246,.45); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: pointer; animation: recPulse 2.4s ease-in-out infinite; }
+#folder-tab-bar { display:flex; gap:4px; overflow-x:auto; flex-shrink:0; padding:4px 8px; background:var(--bg2); border-bottom:1px solid var(--border); }
+#folder-tab-bar:empty { display:none; }
+#folder-tab-bar button { flex-shrink:0; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:4px 8px; font-size:11px; background:var(--bg3); color:var(--text2); }
+#folder-tab-bar button.active { color:var(--accent); background:var(--bg4); }
 .win-btn.ai { font-weight: 800; font-size: 10px; letter-spacing: .02em; width: auto; min-width: 24px; padding: 0 6px; }
 .win-btn.ai.on { color: #c4b5fd; background: rgba(139,92,246,.18); }
 @keyframes recPulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
@@ -1657,6 +1661,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="cb-btn leave" onclick="voiceLeave()" title="Leave the call"><span>📞</span><span class="lbl" data-i18n="leave">Leave</span></button>
     </div>
   </div>
+  <div id="folder-tab-bar" aria-label="Folders"></div>
   <div id="tab-bar-wrap">
     <button class="tab-scroll-btn" onclick="scrollTabBar(-120)" title="Scroll left">‹</button>
     <div id="tab-bar-scroll">
@@ -1858,6 +1863,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <h3 id="f-title">New Folder</h3>
     <input type="hidden" id="f-id">
     <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="f-name" placeholder="e.g. Production" onkeydown="if(event.key==='Enter') saveFolder()"></div>
+    <div class="field"><label data-i18n="fd_parent">Parent folder</label><select id="f-parent"></select></div>
     <div class="field"><label data-i18n="fd_jump">Default jump host</label><select id="f-jump"></select></div>
     <div class="field"><label data-i18n="fd_proxy">Default proxy</label><select id="f-proxy"></select></div>
     <div class="muted-text" style="line-height:1.5;" data-i18n="fd_help">Connections in this folder, also new ones, use these unless they choose their own jump host or proxy.</div>
@@ -4734,6 +4740,9 @@ function setTabIntro(id, key) {
   el.setAttribute('data-i18n', key);
   el.textContent = t(key);
 }
+Object.assign(LANGS.en, {fd_parent:'Parent folder', fd_child:'New subfolder', fd_all_tabs:'All connections'});
+Object.assign(LANGS.hr, {fd_parent:'Nadređena mapa', fd_child:'Nova podmapa', fd_all_tabs:'Sve veze'});
+
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5159,6 +5168,7 @@ async function loadData() {
     loadStatus();
     loadVault();
     refreshAIButtons();
+    renderTabs();
   } catch(e) { console.error('loadData', e); }
 }
 
@@ -5213,10 +5223,12 @@ function renderTree() {
   wrap.appendChild(myLabel);
 
   // Folders
-  folders.forEach(f => {
+  const appendFolder = (f, container, depth = 0) => {
+    if (depth >= 32) return;
     const fConns = conns.filter(c => c.folder_id === f.id && visible(c));
-    if (filterActive && fConns.length === 0) return;
-    const fDown = conns.filter(c => c.folder_id === f.id && (connStatusOf(c) || {}).state === 'down').length;
+    const descendants = folderDescendants(f.id);
+    if (filterActive && !conns.some(c => descendants.has(c.folder_id) && visible(c))) return;
+    const fDown = conns.filter(c => descendants.has(c.folder_id) && (connStatusOf(c) || {}).state === 'down').length;
 
     const folderWrap = document.createElement('div');
     const row = document.createElement('div');
@@ -5232,7 +5244,7 @@ function renderTree() {
     };
     row.onclick = () => {
       const ch = row.querySelector('.folder-chevron');
-      const children = folderWrap.querySelector('.folder-children');
+      const children = folderWrap.children[1];
       const open = children.classList.toggle('open');
       ch.classList.toggle('open', open);
       if (open) openFolderIds.add(f.id); else openFolderIds.delete(f.id);
@@ -5245,8 +5257,10 @@ function renderTree() {
     fConns.forEach(c => children.appendChild(makeConnItem(c)));
     folderWrap.appendChild(row);
     folderWrap.appendChild(children);
-    wrap.appendChild(folderWrap);
-  });
+    folders.filter(x => x.parent_id === f.id).forEach(x => appendFolder(x, children, depth + 1));
+    container.appendChild(folderWrap);
+  };
+  folders.filter(f => !f.parent_id || !folders.some(x => x.id === f.parent_id)).forEach(f => appendFolder(f, wrap));
 
   // Root connections
   const rootConns = conns.filter(c => !c.folder_id && !c.temporary && visible(c));
@@ -5321,7 +5335,7 @@ function connMatches(c, q) {
   // "#prod" or "env:prod" in the search box look at the tags; several words must all match
   return q.split(/\s+/).filter(Boolean).every(w => {
     if (w.startsWith('#')) return tags.some(x => x.includes(w.slice(1)));
-    return (c.name || '').toLowerCase().includes(w) || (c.host || '').toLowerCase().includes(w) || (c.username || '').toLowerCase().includes(w) ||
+    return connLabel(c).toLowerCase().includes(w) || (c.host || '').toLowerCase().includes(w) || (c.username || '').toLowerCase().includes(w) ||
       (c.protocol || '').toLowerCase() === w || tags.some(x => x.includes(w));
   });
 }
@@ -5368,12 +5382,28 @@ function makeConnItem(c) {
   return el;
 }
 
+function folderPathLabel(id) {
+  const f = folders.find(x => x.id === id);
+  if (!f) return '';
+  if (f.path) return f.path;
+  const parts = [], seen = new Set();
+  let cur = f;
+  while (cur && !seen.has(cur.id) && parts.length < 32) { seen.add(cur.id); parts.unshift(cur.name); cur = folders.find(x => x.id === cur.parent_id); }
+  return parts.join(' / ');
+}
+function folderDescendants(id) {
+  const out = new Set([id]);
+  for (let n = 0; n < 32; n++) { const before = out.size; folders.forEach(f => { if (out.has(f.parent_id)) out.add(f.id); }); if (out.size === before) break; }
+  return out;
+}
+function connLabel(c) { const path = folderPathLabel(c.folder_id) || c.folder_path || ''; return path ? path + ' / ' + c.name : c.name; }
+
 function updateFolderSelects() {
   const selects = document.querySelectorAll('#m-folder');
   selects.forEach(sel => {
     const val = sel.value;
     sel.innerHTML = `<option value="">${t('no_folder')}</option>`;
-    folders.forEach(f => { sel.innerHTML += `<option value="${f.id}">${esc(f.name)}</option>`; });
+    folders.forEach(f => { sel.innerHTML += `<option value="${f.id}">${esc(folderPathLabel(f.id))}</option>`; });
     sel.value = val;
   });
 }
@@ -5502,11 +5532,12 @@ async function refreshUserPolicy() {
 function showFolderCtx(x, y) {
   const menu = document.getElementById('dyn-ctx-menu');
   menu.innerHTML = `
+    <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(null, ctxFolderId)">＋ ${esc(t('fd_child'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(ctxFolderId)">✏ ${esc(t('fd_edit'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openBookmarkModal(null, {scope: 'folder', scope_id: ctxFolderId, start_dir: true})">★ ${esc(t('bm_start_menu'))}</div>
-    <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow(conns.filter(c => c.folder_id === ctxFolderId).map(c => c.id))">🔄 ${esc(t('st_check_now'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow(conns.filter(c => folderDescendants(ctxFolderId).has(c.folder_id)).map(c => c.id))">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-hr"></div>
     <div class="ctx-item danger" onclick="closeAllCtx(); delFolder(${ctxFolderId})">🗑 ${t('delete_folder')}</div>
   `;
@@ -5746,15 +5777,19 @@ async function deleteConn(id) {
   loadData();
 }
 
-async function openFolderModal(id) {
+async function openFolderModal(id, parentId) {
   const f = id ? folders.find(x => x.id === id) : null;
   if (currentUser && !isCollabMode) await loadVault();
   document.getElementById('f-id').value = f ? f.id : '';
   document.getElementById('f-title').textContent = f ? '📁 ' + f.name : t('fd_new_folder');
   document.getElementById('f-name').value = f ? f.name : '';
+  const descendants = f ? folderDescendants(f.id) : new Set();
+  const parent = document.getElementById('f-parent');
+  parent.innerHTML = `<option value="">${esc(t('no_folder'))}</option>` + folders.filter(x => !descendants.has(x.id)).map(x => `<option value="${x.id}">${esc(folderPathLabel(x.id))}</option>`).join('');
+  parent.value = (f && f.parent_id) || parentId || '';
   const js = document.getElementById('f-jump');
   js.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP') && !x.temporary)
-    .sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+    .sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
   js.value = f && f.jump_id ? f.jump_id : '';
   const ps = document.getElementById('f-proxy');
   ps.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('');
@@ -5767,7 +5802,7 @@ async function saveFolder() {
   const id = Number(document.getElementById('f-id').value) || 0;
   const name = document.getElementById('f-name').value.trim();
   if (!name) return;
-  const body = {name, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
+  const body = {name, parent_id: Number(document.getElementById('f-parent').value) || null, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
   const res = await fetch('/api/folders' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   if (res.ok) { closeModal('modal-folder'); showToast(id ? t('saved') : t('folder_created'), 'success'); loadData(); }
   else showToast(await apiError(res), 'error', 6000);
@@ -6871,7 +6906,7 @@ function fillJumpSelect(c, keep) {
   const inherited = f && f.jump_id && f.jump_id !== self;
   sel.innerHTML = (inherited ? `<option value="">— ${esc(t('fd_from_folder'))}: ${esc(f.jump_name || '#' + f.jump_id)} —</option><option value="-1">— ${esc(t('fd_jump_none'))} —</option>`
       : `<option value="">— ${esc(t('jump_direct'))} —</option>` + (choice === '-1' ? `<option value="-1">— ${esc(t('fd_jump_none'))} —</option>` : '')) +
-    opts.map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+    opts.map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
   sel.value = choice;
   if (sel.value !== choice) sel.value = '';
   sel.onchange = updateRoutePreview;
@@ -7201,7 +7236,7 @@ async function openQuickModal(target) {
   document.getElementById('qc-pass-f').style.display = '';
   const jump = document.getElementById('qc-jump');
   jump.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP') && !x.temporary).sort((a, b) => a.name.localeCompare(b.name))
-    .map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})</option>`).join('');
+    .map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})</option>`).join('');
   document.getElementById('modal-quick').classList.add('open');
   setTimeout(() => document.getElementById(target ? 'qc-pass' : 'qc-target').focus(), 50);
 }
@@ -7390,7 +7425,7 @@ function openTools(opts) {
   opts = opts || {};
   const src = document.getElementById('tools-source');
   src.innerHTML = `<option value="0">🖥 ${esc(t('tools_wrm'))}</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP')).sort((a, b) => a.name.localeCompare(b.name))
-    .map(x => `<option value="${x.id}">${esc(x.name)} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
+    .map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
   if (opts.source) src.value = opts.source;
   if (opts.target) {
     const h = String(opts.target).replace(/:\d+$/, '');
@@ -9023,11 +9058,11 @@ function onSnipScopeChange(selected) {
   wrap.style.display = scope === 'all' ? 'none' : '';
   if (scope === 'folder') {
     document.getElementById('sn-scope-id-lbl').textContent = t('snip_folder_lbl');
-    sel.innerHTML = folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(f.name)}</option>`).join('');
+    sel.innerHTML = folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(folderPathLabel(f.id))}</option>`).join('');
   } else if (scope === 'connection') {
     document.getElementById('sn-scope-id-lbl').textContent = t('snip_conn_lbl');
     sel.innerHTML = conns.filter(c => c.protocol === 'SSH' || c.protocol === 'SFTP').sort((a, b) => a.name.localeCompare(b.name))
-      .map(c => `<option value="${c.id}">🖥 ${esc(c.name)} (${esc(c.host)})</option>`).join('');
+      .map(c => `<option value="${c.id}">🖥 ${esc(connLabel(c))} (${esc(c.host)})</option>`).join('');
   }
   if (selected) sel.value = String(selected);
 }
@@ -9289,9 +9324,9 @@ async function termCdBookmark(winId, i, all, insert) {
 
 // ── editor ──
 function bmScopeTargets(scope) {
-  if (scope === 'folder') return folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(f.name)}</option>`).join('');
+  if (scope === 'folder') return folders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}">📁 ${esc(folderPathLabel(f.id))}</option>`).join('');
   if (scope === 'connection') return conns.filter(c => ['SSH', 'SFTP', 'FTP', 'FTPS'].includes(c.protocol)).sort((a, b) => a.name.localeCompare(b.name))
-    .map(c => `<option value="${c.id}">🖥 ${esc(c.name)} (${esc(c.host)})</option>`).join('');
+    .map(c => `<option value="${c.id}">🖥 ${esc(connLabel(c))} (${esc(c.host)})</option>`).join('');
   return '';
 }
 
@@ -9939,7 +9974,7 @@ function renderConnPicker(winId) {
   list.slice(0, 8).forEach(c => {
     const btn = document.createElement('button');
     btn.className = 'conn-pick-btn';
-    btn.textContent = c.protocol + ' — ' + c.name;
+    btn.textContent = c.protocol + ' — ' + connLabel(c);
     btn.onclick = () => {
       const wo = winObjects.find(w => w.id === winId);
       if (!wo) return;
@@ -10005,7 +10040,7 @@ function setWinMode(id, mode) {
       </div>
       <div class="term-overlay" id="to-${id}" hidden></div>
     </div>`;
-    const title = c ? `${wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : c.protocol} — ${c.name}` : `Terminal ${id}`;
+    const title = c ? `${wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : c.protocol} — ${connLabel(c)}` : `Terminal ${id}`;
     const el = document.getElementById('wt-' + id);
     if (el) el.textContent = title;
     renderTabs();
@@ -10030,7 +10065,7 @@ function setWinMode(id, mode) {
   } else if (mode === 'desk') {
     wc.innerHTML = deskHTML(id);
     const el = document.getElementById('wt-' + id);
-    if (el) el.textContent = c ? `${c.protocol} — ${c.name}` : `Desktop ${id}`;
+    if (el) el.textContent = c ? `${c.protocol} — ${connLabel(c)}` : `Desktop ${id}`;
     renderTabs();
     requestAnimationFrame(() => startDesktop(wo));
   } else if (mode === 'sftp') {
@@ -10042,7 +10077,7 @@ function setWinMode(id, mode) {
     if (termBtn && isFtpConn(c)) termBtn.style.display = 'none';
     applyFmPermissions(wo);
     fmFirstLoad(id);
-    const title = c ? `Files — ${c.name}` : `Files ${id}`;
+    const title = c ? `Files — ${connLabel(c)}` : `Files ${id}`;
     const el = document.getElementById('wt-' + id);
     if (el) el.textContent = title;
     renderTabs();
@@ -11475,7 +11510,7 @@ function openTransferModal(winId, extraFiles) {
     if (c.id !== _transferSrcConnId && (c.protocol === 'SFTP' || c.protocol === 'SSH')) {
       const opt = document.createElement('option');
       opt.value = c.id;
-      opt.textContent = c.protocol + ' — ' + c.name + ' (' + c.host + ')';
+      opt.textContent = c.protocol + ' — ' + connLabel(c) + ' (' + c.host + ')';
       sel.appendChild(opt);
     }
   });
@@ -12351,11 +12386,27 @@ function scrollTabBar(delta) {
   if (s) s.scrollLeft += delta;
 }
 
+let tabFolderFilter = null;
+function setTabFolder(value) { tabFolderFilter = value; renderTabs(); }
 function renderTabs() {
   const bar = document.getElementById('tab-bar');
   bar.innerHTML = '';
+  const groupKey = wo => { const c = winConn(wo); return c && c.folder_id ? String(c.folder_id) : 'root'; };
+  const groups = new Map();
+  winObjects.forEach(wo => { const c = winConn(wo); const key = groupKey(wo); if (!groups.has(key)) groups.set(key, folderPathLabel(c && c.folder_id) || (c && c.folder_path) || t('no_folder')); });
+  if (tabFolderFilter !== null && !groups.has(tabFolderFilter)) tabFolderFilter = null;
+  const folderBar = document.getElementById('folder-tab-bar');
+  folderBar.innerHTML = '';
+  if (groups.size) {
+    [[null, t('fd_all_tabs')], ...groups].forEach(([key, label]) => {
+      const btn = document.createElement('button'); btn.textContent = key === null ? label : '📁 ' + label; btn.title = label;
+      btn.className = tabFolderFilter === key ? 'active' : '';
+      btn.onclick = () => setTabFolder(key); folderBar.appendChild(btn);
+    });
+  }
   tabOrder.filter(id => winObjects.find(w => w.id === id)).forEach(id => {
     const wo = winObjects.find(w => w.id === id);
+    if (tabFolderFilter !== null && groupKey(wo) !== tabFolderFilter) return;
     const isFocused = wo.el && wo.el.classList.contains('focused');
     const t2 = document.createElement('div');
     t2.className = 'tab-item' + (isFocused ? ' active' : '');
@@ -12367,16 +12418,16 @@ function renderTabs() {
       icon = wo.console ? '📟' : '⚡';
       const allConns = isCollabMode ? collabConns : conns;
       const c = wo.connId ? allConns.find(x => x.id === wo.connId) : null;
-      title = c ? c.name + (wo.console ? ' — ' + t('bmc_console_tab') : '') : 'Terminal ' + id;
+      title = c ? connLabel(c) + (wo.console ? ' — ' + t('bmc_console_tab') : '') : 'Terminal ' + id;
     } else if (wo.mode === 'sftp') {
       icon = '📂';
       const allConns = isCollabMode ? collabConns : conns;
       const c = wo.connId ? allConns.find(x => x.id === wo.connId) : null;
-      title = c ? 'Files — ' + c.name : 'Files ' + id;
+      title = c ? 'Files — ' + connLabel(c) : 'Files ' + id;
     } else if (wo.mode === 'desk') {
       icon = '🖥';
       const c = winConn(wo);
-      title = c ? c.name : 'Desktop ' + id;
+      title = c ? connLabel(c) : 'Desktop ' + id;
     }
     if (wo.mode === 'screen-viewer' && wo.viewing) { icon = '👁'; title = wo.viewing.name + ' — ' + wo.viewing.title; }
     if (wo.el && wo.el.style.display === 'none') icon = '▪';
