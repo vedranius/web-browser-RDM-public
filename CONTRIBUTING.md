@@ -102,3 +102,9 @@ If you do not agree with these terms, please open an issue to discuss instead of
 ## Code of conduct
 
 Be respectful and constructive. Harassment or abusive behaviour is not tolerated.
+
+## v12.4.3 integration regressions
+
+Run `python3 tools/test-medium-wrapper.py` from the root in addition to the full Go race/vet/format/UI/Node checks. `v1243_test.go` covers Medium ZIP/proxy/origin boundaries, config profile ownership/masking/path rules, folder ordering/imports and mocked Bitwarden account isolation plus actual SSH authentication. The native SSH/rsync test requires those binaries; it skips when absent. Original-tool parity uses the privately supplied archive and its pinned suite; do not commit private source, configs, keys or screenshots containing real hostnames. Distinguish source-suite coverage from actions exercised through the bridge and mock Bitwarden login from a live cloud account.
+
+The optional original runtime is not a sandbox and must be described as trusted executable code. Keep its native modules/templates unchanged when verifying 1:1 behavior; bridge changes belong in WRM or the embedded wrapper. Runtime artifacts belong outside source control. Test responsive dialogs and folder-order persistence in a real browser.
