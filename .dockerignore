@@ -8,3 +8,9 @@
 **/wrm-server
 *.md
 !README.md
+
+**/*.medium
+**/*.bitwarden
+
+**/__pycache__
+**/*.pyc

@@ -242,6 +242,8 @@ func jumpHostsRaw(c Connection) []string {
 // failure the connection keeps its method and authErr explains why it cannot log in.
 func resolveConnectionAuth(c *Connection) {
 	switch c.AuthMethod {
+	case "BITWARDEN":
+		resolveBitwardenAuth(c)
 	case "KEY_REF":
 		p, err := storedKeyPEM(c.KeyID, c.UserID)
 		if err != nil {
@@ -283,6 +285,16 @@ func checkAuthRefs(c *Connection, userID int) error {
 		c.CredentialID = nil
 	}
 	switch c.AuthMethod {
+	case "BITWARDEN":
+		if !bitwardenAllowed(userID) {
+			return fmt.Errorf("Bitwarden access is disabled by policy")
+		}
+		if c.Protocol != "SSH" && c.Protocol != "SFTP" {
+			return fmt.Errorf("Bitwarden SSH keys require SSH or SFTP")
+		}
+		if !bitwardenItemIDRe.MatchString(c.Options["bitwarden_item"]) {
+			return fmt.Errorf("Choose a Bitwarden SSH key")
+		}
 	case "KEY_REF":
 		if c.KeyID == nil {
 			return fmt.Errorf("Choose an SSH key")

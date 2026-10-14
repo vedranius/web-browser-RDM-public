@@ -160,6 +160,7 @@ func (c Connection) view() connView {
 }
 
 type Folder struct {
+	SortOrder int    `json:"sort_order"`
 	ParentID  *int   `json:"parent_id"`
 	Path      string `json:"path,omitempty"`
 	ID        int    `json:"id"`
@@ -294,8 +295,11 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/sw.js", serviceWorkerHandler)
 	mux.HandleFunc("/api/connections/", apiConnectionByIDHandler)
 	mux.HandleFunc("/api/hostkeys/accept", apiHostKeyAcceptHandler)
+	mux.HandleFunc("/api/bitwarden", apiBitwardenHandler)
+	mux.HandleFunc("/api/bitwarden/", apiBitwardenHandler)
 	mux.HandleFunc("/api/folders", apiFoldersHandler)
 	mux.HandleFunc("/api/folders/", apiFolderByIDHandler)
+	mux.HandleFunc("/api/folders/reorder", apiFolderReorderHandler)
 	mux.HandleFunc("/api/sessions", apiSessionsHandler)
 	mux.HandleFunc("/api/sessions/", apiSessionByIDHandler)
 	mux.HandleFunc("/api/config/export", apiExportHandler)
@@ -322,6 +326,9 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/inventory/", apiInventoryHandler)
 	mux.HandleFunc("/api/git", apiGitHandler)
 	mux.HandleFunc("/api/git/", apiGitHandler)
+	mux.HandleFunc("/api/git/medium", apiMediumHandler)
+	mux.HandleFunc("/api/git/medium/", apiMediumHandler)
+	mux.HandleFunc("/medium/", mediumProxyHandler)
 	mux.HandleFunc("/api/hooks/git/", gitHookHandler)
 	mux.HandleFunc("/api/keys", apiKeysHandler)
 	mux.HandleFunc("/api/keys/", apiKeysHandler)
@@ -473,6 +480,7 @@ func serve(stop <-chan struct{}) int {
 	go runCredentialReminders()
 	go runQuickCleanup()
 	go runGitMonitor()
+	go runBitwardenJanitor()
 	go runGitScheduler()
 	go runUpdateChecker()
 	go runAIJanitor()
@@ -535,6 +543,7 @@ func serve(stop <-chan struct{}) int {
 			log.Printf("Restarting…")
 		}
 		stopTURN()
+		mediumStopAll()
 		tunnelMgr.stopAll("WRM was stopped")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -1093,6 +1102,7 @@ func initDB() {
 		// v10.9: proxies, and default jump host / proxy of a folder
 		`ALTER TABLE connections ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE folders ADD COLUMN parent_id INTEGER DEFAULT NULL`,
+		`ALTER TABLE folders ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE folders ADD COLUMN jump_conn_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE folders ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
 		// v10.9.1: the PuTTY session an imported mRemoteNG connection names (PuttySession)
@@ -1142,6 +1152,7 @@ func initDB() {
 
 	// v11.0: Git workspace (sources, blob cache, catalog, targets, installations)
 	initGitSchema()
+	initGitConfigProfiles()
 
 	// v12.0: AI assistant (providers, sessions, transcripts)
 	initAISchema()
@@ -1273,7 +1284,7 @@ func userOwnsSession(sessionID, userID int) bool {
 // ─── CONNECTIONS ─────────────────────────────────────
 
 var validProtocols = map[string]bool{"SSH": true, "SFTP": true, "FTP": true, "FTPS": true, "HTTP": true, "HTTPS": true, "RDP": true, "VNC": true, "TELNET": true, "SERIAL": true}
-var validAuthMethods = map[string]bool{"PASSWORD": true, "KEY": true, "KEY_FILE": true, "KEY_AUTO": true, "KEY_REF": true, "CREDENTIAL": true}
+var validAuthMethods = map[string]bool{"PASSWORD": true, "KEY": true, "KEY_FILE": true, "KEY_AUTO": true, "KEY_REF": true, "CREDENTIAL": true, "BITWARDEN": true}
 
 // serverKeysAllowed: "Key file" and "Auto (~/.ssh)" read private keys of the WRM server
 // itself, so only administrators may use them unless the policy allows it.
@@ -1283,7 +1294,7 @@ func serverKeysAllowed(userID int) bool {
 
 // usesStoredSecretRef: the connection logs in with a key of the key store or a vault credential.
 func usesStoredSecretRef(authMethod string) bool {
-	return authMethod == "KEY_REF" || authMethod == "CREDENTIAL"
+	return authMethod == "KEY_REF" || authMethod == "CREDENTIAL" || authMethod == "BITWARDEN"
 }
 
 func usesServerKeys(authMethod string) bool {
@@ -1348,6 +1359,8 @@ func normalizeConnection(c *Connection) error {
 			}
 			c.Options = opts
 		}
+	} else if c.AuthMethod == "BITWARDEN" {
+		c.Options = map[string]string{"bitwarden_item": strings.ToLower(strings.TrimSpace(c.Options["bitwarden_item"]))}
 	} else if c.Options != nil {
 		c.Options = map[string]string{}
 	}
@@ -1530,6 +1543,9 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		c := in.Connection
+		if strings.EqualFold(c.AuthMethod, "BITWARDEN") && c.Options == nil && cur.AuthMethod == "BITWARDEN" {
+			c.Options = cur.Options
+		}
 		// A client that does not send jump_id / proxy_id keeps the stored choices
 		// (null would mean "as the folder").
 		var keys map[string]json.RawMessage
@@ -1805,7 +1821,9 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
-		res, err := db.Exec("INSERT INTO folders (name,user_id,jump_conn_id,proxy_id,parent_id) VALUES (?,?,?,?,?)", f.Name, userID, f.JumpID, f.ProxyID, f.ParentID)
+		var rank int
+		db.QueryRow("SELECT COALESCE(MAX(sort_order),0)+1 FROM folders WHERE user_id=? AND parent_id IS ?", userID, f.ParentID).Scan(&rank)
+		res, err := db.Exec("INSERT INTO folders (name,user_id,jump_conn_id,proxy_id,parent_id,sort_order) VALUES (?,?,?,?,?,?)", f.Name, userID, f.JumpID, f.ProxyID, f.ParentID, rank)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -2083,7 +2101,7 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 			conns[i].ProxyID = nil
 		}
 		conns[i].KeyID, conns[i].CredentialID = nil, nil
-		if isDesktopProtocol(conns[i].Protocol) || conns[i].Protocol == "SERIAL" {
+		if isDesktopProtocol(conns[i].Protocol) || conns[i].Protocol == "SERIAL" || conns[i].AuthMethod == "BITWARDEN" {
 			conns[i].Options = loadDesktopOptions(conns[i].ID)
 		}
 		if b, ok := loadBMC(conns[i].ID); ok {
@@ -2151,7 +2169,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		var id int
 		if err := tx.QueryRow(`SELECT id FROM folders WHERE name=? AND user_id=? AND parent_id IS ? ORDER BY id LIMIT 1`, f.Name, userID, parent).Scan(&id); err != nil {
-			res, err := tx.Exec(`INSERT INTO folders (name, user_id, parent_id) VALUES (?,?,?)`, f.Name, userID, parent)
+			res, err := tx.Exec(`INSERT INTO folders (name, user_id, parent_id, sort_order) VALUES (?,?,?,?)`, f.Name, userID, parent, f.SortOrder)
 			if err != nil {
 				jsonError(w, err.Error(), 500)
 				return
