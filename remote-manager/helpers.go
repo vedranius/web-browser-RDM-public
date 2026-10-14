@@ -326,7 +326,7 @@ func isConnLostErr(err error) bool {
 // loadFolders lists a user's folders with their defaults and the names they point to.
 func loadFolders(userID int) []Folder {
 	out := []Folder{}
-	rows, err := db.Query(`SELECT f.id, f.name, f.jump_conn_id, f.proxy_id, COALESCE(j.name,''), COALESCE(p.name,'') FROM folders f
+	rows, err := db.Query(`SELECT f.id, f.name, f.parent_id, f.jump_conn_id, f.proxy_id, COALESCE(j.name,''), COALESCE(p.name,'') FROM folders f
 		LEFT JOIN connections j ON j.id=f.jump_conn_id LEFT JOIN proxies p ON p.id=f.proxy_id WHERE f.user_id=? ORDER BY f.name`, userID)
 	if err != nil {
 		return out
@@ -334,15 +334,21 @@ func loadFolders(userID int) []Folder {
 	defer rows.Close()
 	for rows.Next() {
 		var f Folder
-		if rows.Scan(&f.ID, &f.Name, &f.JumpID, &f.ProxyID, &f.JumpName, &f.ProxyName) == nil {
+		if rows.Scan(&f.ID, &f.Name, &f.ParentID, &f.JumpID, &f.ProxyID, &f.JumpName, &f.ProxyName) == nil {
 			out = append(out, f)
 		}
+	}
+	for i := range out {
+		out[i].Path = folderPath(out, out[i].ID)
 	}
 	return out
 }
 
 // validateFolderDefaults checks the default jump host and proxy of a folder.
 func validateFolderDefaults(userID int, f *Folder) error {
+	if err := validateFolderParent(userID, f); err != nil {
+		return err
+	}
 	if f.JumpID != nil && *f.JumpID <= 0 {
 		f.JumpID = nil
 	}
@@ -378,9 +384,15 @@ func validateFolderDefaults(userID int, f *Folder) error {
 // updateFolder implements PUT /api/folders/{id}: name and defaults.
 func updateFolder(w http.ResponseWriter, r *http.Request, userID, id int) {
 	var f Folder
-	if json.NewDecoder(r.Body).Decode(&f) != nil {
+	var raw map[string]json.RawMessage
+	if json.NewDecoder(r.Body).Decode(&raw) != nil || json.Unmarshal(jsonMarshal(raw), &f) != nil {
 		jsonError(w, "Bad JSON", 400)
 		return
+	}
+	var cur Folder
+	db.QueryRow(`SELECT name, parent_id, jump_conn_id, proxy_id FROM folders WHERE id=? AND user_id=?`, id, userID).Scan(&cur.Name, &cur.ParentID, &cur.JumpID, &cur.ProxyID)
+	if _, present := raw["parent_id"]; !present {
+		f.ParentID = cur.ParentID
 	}
 	f.ID = id
 	f.Name = truncateStr(strings.TrimSpace(f.Name), 120)
@@ -392,15 +404,16 @@ func updateFolder(w http.ResponseWriter, r *http.Request, userID, id int) {
 		jsonError(w, err.Error(), 400)
 		return
 	}
-	var cur Folder
-	db.QueryRow(`SELECT name, jump_conn_id, proxy_id FROM folders WHERE id=?`, id).Scan(&cur.Name, &cur.JumpID, &cur.ProxyID)
-	if _, err := db.Exec(`UPDATE folders SET name=?, jump_conn_id=?, proxy_id=? WHERE id=? AND user_id=?`, f.Name, f.JumpID, f.ProxyID, id, userID); err != nil {
+	if _, err := db.Exec(`UPDATE folders SET name=?, parent_id=?, jump_conn_id=?, proxy_id=? WHERE id=? AND user_id=?`, f.Name, f.ParentID, f.JumpID, f.ProxyID, id, userID); err != nil {
 		jsonError(w, err.Error(), 500)
 		return
 	}
 	changed := []string{}
 	if f.Name != cur.Name {
 		changed = append(changed, "name")
+	}
+	if !intPtrEq(f.ParentID, cur.ParentID) {
+		changed = append(changed, "parent")
 	}
 	routeChanged := !intPtrEq(f.JumpID, cur.JumpID) || !intPtrEq(f.ProxyID, cur.ProxyID)
 	var inheriting []int
@@ -415,7 +428,7 @@ func updateFolder(w http.ResponseWriter, r *http.Request, userID, id int) {
 		}
 		// The connections that inherit the new defaults must still have a valid route.
 		if err := validateRoutesOf(userID, inheriting); err != nil {
-			db.Exec(`UPDATE folders SET name=?, jump_conn_id=?, proxy_id=? WHERE id=? AND user_id=?`, cur.Name, cur.JumpID, cur.ProxyID, id, userID)
+			db.Exec(`UPDATE folders SET name=?, parent_id=?, jump_conn_id=?, proxy_id=? WHERE id=? AND user_id=?`, cur.Name, cur.ParentID, cur.JumpID, cur.ProxyID, id, userID)
 			jsonError(w, "Not saved: the folder defaults would break connection "+err.Error(), 400)
 			return
 		}

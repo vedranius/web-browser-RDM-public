@@ -85,6 +85,7 @@ type Connection struct {
 }
 
 type connView struct {
+	FolderPath  string            `json:"folder_path,omitempty"`
 	ID          int               `json:"id"`
 	Name        string            `json:"name"`
 	Protocol    string            `json:"protocol"`
@@ -131,6 +132,7 @@ func (c Connection) view() connView {
 	if c.ProxyID != nil && *c.ProxyID > 0 {
 		db.QueryRow(`SELECT name FROM proxies WHERE id=?`, *c.ProxyID).Scan(&v.ProxyName)
 	}
+	v.FolderPath = folderPathOf(c.UserID, c.FolderID)
 	v.Monitor = true
 	if c.ID > 0 {
 		var mon int
@@ -158,6 +160,8 @@ func (c Connection) view() connView {
 }
 
 type Folder struct {
+	ParentID  *int   `json:"parent_id"`
+	Path      string `json:"path,omitempty"`
 	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	JumpID    *int   `json:"jump_id"`  // default jump host of its connections
@@ -1087,6 +1091,7 @@ func initDB() {
 		`ALTER TABLE connections ADD COLUMN temp_until TEXT NOT NULL DEFAULT ''`,
 		// v10.9: proxies, and default jump host / proxy of a folder
 		`ALTER TABLE connections ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
+		`ALTER TABLE folders ADD COLUMN parent_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE folders ADD COLUMN jump_conn_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE folders ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
 		// v10.9.1: the PuTTY session an imported mRemoteNG connection names (PuttySession)
@@ -1783,8 +1788,13 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		jsonOK(w, loadFolders(userID))
 	case http.MethodPost:
+		folderHierarchyMu.Lock()
+		defer folderHierarchyMu.Unlock()
 		var f Folder
-		json.NewDecoder(r.Body).Decode(&f)
+		if json.NewDecoder(r.Body).Decode(&f) != nil {
+			jsonError(w, "Bad JSON", 400)
+			return
+		}
 		f.Name = truncateStr(strings.TrimSpace(f.Name), 120)
 		if f.Name == "" {
 			jsonError(w, "Name required", 400)
@@ -1794,7 +1804,7 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
-		res, err := db.Exec("INSERT INTO folders (name,user_id,jump_conn_id,proxy_id) VALUES (?,?,?,?)", f.Name, userID, f.JumpID, f.ProxyID)
+		res, err := db.Exec("INSERT INTO folders (name,user_id,jump_conn_id,proxy_id,parent_id) VALUES (?,?,?,?,?)", f.Name, userID, f.JumpID, f.ProxyID, f.ParentID)
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -1822,6 +1832,8 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	folderHierarchyMu.Lock()
+	defer folderHierarchyMu.Unlock()
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/folders/")
 	id, _ := strconv.Atoi(strings.TrimSpace(idStr))
 	if !userOwnsFolder(id, userID) {
@@ -1838,6 +1850,11 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tx, err := db.Begin()
 	if err != nil {
+		jsonError(w, err.Error(), 500)
+		return
+	}
+	if _, err := tx.Exec(`UPDATE folders SET parent_id=(SELECT parent_id FROM folders WHERE id=? AND user_id=?) WHERE parent_id=? AND user_id=?`, id, userID, id, userID); err != nil {
+		tx.Rollback()
 		jsonError(w, err.Error(), 500)
 		return
 	}
@@ -2104,6 +2121,13 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	if !decodeImportJSON(w, r, &payload) {
 		return
 	}
+	folderHierarchyMu.Lock()
+	defer folderHierarchyMu.Unlock()
+	order, err := folderImportOrder(payload.Folders)
+	if err != nil {
+		jsonError(w, err.Error(), 400)
+		return
+	}
 	// Proxies first (by name: an existing one of the same name is used), so connections can link to them.
 	proxiesImported := importProxies(r, userID, payload.Proxies, false, nil)
 	allowServerKeys := serverKeysAllowed(userID)
@@ -2114,24 +2138,27 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 	folderIDs := map[string]*int{}
-	for _, f := range payload.Folders {
+	for _, index := range order {
+		f := payload.Folders[index]
 		f.Name = truncateStr(strings.TrimSpace(f.Name), 120)
 		if f.Name == "" {
 			continue
 		}
-		var existingID int
-		if err := tx.QueryRow("SELECT id FROM folders WHERE name=? AND user_id=?", f.Name, userID).Scan(&existingID); err == nil {
-			id := existingID
-			folderIDs[f.Name] = &id
-			continue
+		var parent *int
+		if f.ParentID != nil {
+			parent = folderIDs[fmt.Sprintf("id:%d", *f.ParentID)]
 		}
-		res, err := tx.Exec("INSERT INTO folders (name, user_id) VALUES (?,?)", f.Name, userID)
-		if err != nil {
-			continue
+		var id int
+		if err := tx.QueryRow(`SELECT id FROM folders WHERE name=? AND user_id=? AND parent_id IS ? ORDER BY id LIMIT 1`, f.Name, userID, parent).Scan(&id); err != nil {
+			res, err := tx.Exec(`INSERT INTO folders (name, user_id, parent_id) VALUES (?,?,?)`, f.Name, userID, parent)
+			if err != nil {
+				jsonError(w, err.Error(), 500)
+				return
+			}
+			n, _ := res.LastInsertId()
+			id = int(n)
 		}
-		id, _ := res.LastInsertId()
-		i := int(id)
-		folderIDs[f.Name] = &i
+		folderIDs[folderImportKey(f)] = &id
 	}
 	imported, skipped := 0, 0
 	newIDs := map[int]int{} // exported connection id → new id
@@ -2179,8 +2206,8 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 		var folderID *int
 		if c.FolderID != nil {
 			for _, f := range payload.Folders {
-				if f.ID == *c.FolderID && folderIDs[strings.TrimSpace(f.Name)] != nil {
-					folderID = folderIDs[strings.TrimSpace(f.Name)]
+				if f.ID == *c.FolderID && folderIDs[folderImportKey(f)] != nil {
+					folderID = folderIDs[folderImportKey(f)]
 					break
 				}
 			}
@@ -2228,7 +2255,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Folder default jump hosts point to imported connections.
 	for _, f := range payload.Folders {
-		if nf := folderIDs[strings.TrimSpace(f.Name)]; nf != nil && f.JumpID != nil {
+		if nf := folderIDs[folderImportKey(f)]; nf != nil && f.JumpID != nil {
 			if nj, ok := newIDs[*f.JumpID]; ok {
 				tx.Exec(`UPDATE folders SET jump_conn_id=? WHERE id=? AND jump_conn_id IS NULL`, nj, *nf)
 			}
@@ -2258,7 +2285,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	// "WRM SOCKS tunnel" proxies need the imported tunnels; then the connections are linked.
 	proxiesImported += importProxies(r, userID, payload.Proxies, true, newTunnels)
 	for _, f := range payload.Folders {
-		if nf := folderIDs[strings.TrimSpace(f.Name)]; nf != nil && f.ProxyRef != "" {
+		if nf := folderIDs[folderImportKey(f)]; nf != nil && f.ProxyRef != "" {
 			if pid := proxyByName(userID, f.ProxyRef); pid > 0 {
 				db.Exec(`UPDATE folders SET proxy_id=? WHERE id=? AND proxy_id IS NULL`, pid, *nf)
 			}
@@ -2276,7 +2303,7 @@ func apiImportHandler(w http.ResponseWriter, r *http.Request) {
 	// Snippets are added after the commit, so their folder/connection checks see the new rows.
 	oldFolders := map[int]int{}
 	for _, f := range payload.Folders {
-		if nf := folderIDs[strings.TrimSpace(f.Name)]; nf != nil && f.ID > 0 {
+		if nf := folderIDs[folderImportKey(f)]; nf != nil && f.ID > 0 {
 			oldFolders[f.ID] = *nf
 		}
 	}
