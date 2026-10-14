@@ -150,7 +150,11 @@ func previewRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		pw.Header().Set("Content-Disposition", "inline")
 		pw.Header().Set("X-Content-Type-Options", "nosniff")
 		pw.Header().Set("Cache-Control", "private, no-store")
-		pw.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
+		if kind == "pdf" {
+			pw.Header().Set("Content-Security-Policy", "default-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'")
+		} else {
+			pw.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
+		}
 		pw.Header().Set("Accept-Ranges", "bytes")
 		started = true
 		http.ServeContent(pw, r, info.Name, mtime, reader)
