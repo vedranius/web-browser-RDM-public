@@ -347,6 +347,7 @@ func (j *gitCheckJob) server(connID int, s *gitJobServer, cat *gitCatalog, apps 
 	j.servers[connID] = sr
 	j.mu.Unlock()
 	failAll := func(msg string) {
+		saveGitServerHealthError(j.UserID, connID, msg)
 		j.mu.Lock()
 		sr.Error = msg
 		var ids []int
@@ -425,6 +426,7 @@ func (j *gitCheckJob) server(connID int, s *gitJobServer, cat *gitCatalog, apps 
 			installs = append(installs, i.ID)
 		}
 	}
+	checkGitServerHealth(j.UserID, connID, cl)
 	per := make(chan struct{}, settingInt("git_check_per_server"))
 	var wg sync.WaitGroup
 	for _, id := range installs {
@@ -475,6 +477,12 @@ func (j *gitCheckJob) server(connID int, s *gitJobServer, cat *gitCatalog, apps 
 				t, ok = loadGitTarget(j.UserID, in.App)
 			}
 			state, d := evalInstall(scans[in.Path], t, ok, cat.IgnoreDirs)
+			app, _ := cat.app(in.App)
+			checkGitFunctionality(cl, in, app, state, &d)
+			if j.isCancelled() {
+				j.set(in.ID, "cancelled", "")
+				return
+			}
 			saveInstallResult(in.ID, state, d)
 			j.set(in.ID, "done", "")
 		}()

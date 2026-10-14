@@ -92,3 +92,24 @@ func TestNestedFolderImportRoundTripAndDepth(t *testing.T) {
 }
 
 func folderTestPtr(n int) *int { return &n }
+
+func TestNestedFolderSharedSubtree(t *testing.T) {
+	srv := httptest.NewServer(newRouter())
+	defer srv.Close()
+	u := newTestUser(t, srv, "subtree-owner", false)
+	var root, child Folder
+	u.jsonDo("POST", "/api/folders", map[string]interface{}{"name": "Client"}, &root)
+	u.jsonDo("POST", "/api/folders", map[string]interface{}{"name": "Site", "parent_id": root.ID}, &child)
+	inside := u.addConnection("Backup", "example.com")
+	outside := u.addConnection("Backup", "example.net")
+	db.Exec(`UPDATE connections SET folder_id=? WHERE id=?`, child.ID, inside)
+	sh := mustShare(t, u.userID, "members", RoleViewer, "")
+	db.Exec(`INSERT INTO share_items(share_id,folder_id) VALUES(?,?)`, sh.ID, root.ID)
+	if !shareHasConnection(sh, inside) || shareHasConnection(sh, outside) {
+		t.Fatal("shared subtree membership incorrect")
+	}
+	list := sharedConnectionsFor(sh)
+	if len(list) != 1 || list[0].FolderPath != "Client / Site" {
+		t.Fatalf("shared labels: %+v", list)
+	}
+}

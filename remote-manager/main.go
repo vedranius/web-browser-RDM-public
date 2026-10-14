@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.3.6"
+var AppVersion = "v12.4.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -361,6 +361,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/remote/list", listRemoteFilesHandler)
 	mux.HandleFunc("/api/remote/list-recursive", listRemoteRecursiveHandler)
 	mux.HandleFunc("/api/remote/download", downloadRemoteFileHandler)
+	mux.HandleFunc("/api/remote/preview", previewRemoteFileHandler)
 	mux.HandleFunc("/api/remote/download-dir", downloadRemoteDirHandler)
 	mux.HandleFunc("/api/remote/upload", uploadRemoteFileHandler)
 	mux.HandleFunc("/api/remote/mkdir", mkdirRemoteHandler)

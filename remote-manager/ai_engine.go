@@ -189,7 +189,7 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connection not found")
 	}
-	if !strings.EqualFold(c.Protocol, "SSH") {
+	if !isSSHProtocol(c) {
 		return nil, fmt.Errorf("the AI assistant works with SSH connections")
 	}
 	var prov aiProvider

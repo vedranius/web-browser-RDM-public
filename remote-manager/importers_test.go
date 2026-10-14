@@ -106,7 +106,7 @@ func TestImportMRemoteNG(t *testing.T) {
 		t.Fatalf("bastion (inherited credentials): %+v folder %q", b, folderName(b.FolderID))
 	}
 	w := connByName(t, u.userID, "web01")
-	if w.Host != "10.0.0.5:2222" || w.Username != "admin" || w.Password != "pw2-č" || w.JumpID == nil || *w.JumpID != b.ID || folderName(w.FolderID) != "DC1 / Rack A" {
+	if w.Host != "10.0.0.5:2222" || w.Username != "admin" || w.Password != "pw2-č" || w.JumpID == nil || *w.JumpID != b.ID || folderPathOf(u.userID, w.FolderID) != "DC1 / Rack A" {
 		t.Fatalf("web01: %+v", w)
 	}
 	i := connByName(t, u.userID, "idrac")
