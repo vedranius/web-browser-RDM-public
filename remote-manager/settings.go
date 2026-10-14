@@ -458,6 +458,12 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
+		for key := range changed {
+			if strings.HasPrefix(key, "ai_") {
+				hub.sendAll([]byte(`{"type":"ai_policy_changed"}`))
+				break
+			}
+		}
 		jsonOK(w, map[string]interface{}{"ok": true, "changed": changed})
 	default:
 		jsonError(w, "Method not allowed", 405)

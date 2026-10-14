@@ -1,3 +1,21 @@
+## [12.4.0] - 2026-10-14
+
+### Added
+- **Service Functionality** in the Git workspace, also reachable from Simple mode: per-server Supervisor worker inventory, failed systemd units, disk/memory checks, per-installation runtime checks and bounded error logs. Manual and periodic checks use the existing Git catalog and GitLab/GitHub/Gitea/bundle installations. Services may specify additional runtime units, HTTP health URLs and TCP endpoints. Missing/inaccessible checks remain unverified.
+- **Configuration visibility** per installation: section/key/value/function tables, comments as descriptions, INI/config/environment files and JSON settings, automatic discovery or explicit relative catalog paths. Secrets, private-key blocks and secret continuation lines are masked before the API response; content is read on demand, not stored with comparison results. File/entry limits, parse gaps, missing/unreadable files and symlink escapes are explicit.
+- **Functionality notifications** for service/server problems and recovery, including workers not associated with a catalog service. Quoted secrets with spaces are redacted completely. Identical states do not repeatedly notify.
+- **Nested folders and connection context** ([#57](https://github.com/vedranius/web-browser-RDM-public/issues/57)): parent selection, recursive sidebar, full folder paths in pickers/titles/tabs, and a folder row that filters open connection tabs. Hierarchy survives config export/import and new mRemoteNG imports. Sharing a folder includes its descendants; route defaults stay scoped to the immediate folder. Owner, cycle and 32-level depth checks protect moves/imports; deleting a folder reparents its children without deleting their connections.
+- **Remote previews and streaming** ([#55](https://github.com/vedranius/web-browser-RDM-public/issues/55)): embedded video/audio playback with SFTP/FTP byte-range seeking, image/PDF previews and text previews capped at 256 KiB. Preview/download actions work on a path selected in a terminal; relative paths use its CWD. The file manager has a Preview action. Every request enforces connection/share permissions; active document formats render as text, and closing the viewer stops media playback.
+
+### Fixed
+- **AI assistant availability** ([discussion #56](https://github.com/vedranius/web-browser-RDM-public/discussions/56)): SSH-backed SFTP connections can use the assistant in both frontend and backend. A permanent AI entry point and Settings → AI assistant explain effective account/policy blockers. Provider setup shows availability separately from connectivity. Open connection titles refresh after folder changes, and shared tabs resolve the correct share. Policy changes broadcast to other open browsers, and reconnecting the event bus refreshes effective policy; shared connection resolution uses the matching share. The terminal assistant works independently of MCP settings.
+- **Missing installations** remain registered with a failed/gone warning instead of disappearing from discovery. Supervisor discovery associates only the program stanza that references the installation directory.
+- **Release version consistency**: Docker Compose now matches the application and release version.
+
+### Changed
+- Additive schema: `folders.parent_id` and `git_server_health`; existing catalogs, databases and route defaults remain compatible. New API: `GET|HEAD /api/remote/preview`, `GET /api/git/installs/{id}/configuration`; Git state includes server health and installation functionality.
+- Regression coverage for nested-folder ownership/imports, shared subtree access, Supervisor group failures/log redaction, configuration boundaries, SFTP/FTP ranges, preview permissions and cross-window AI policy refresh. UI checks include workspace-context regressions.
+
 ## [12.3.6] - 2026-10-13
 
 ### Added

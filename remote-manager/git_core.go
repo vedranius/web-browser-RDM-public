@@ -27,18 +27,19 @@ import (
 
 // gitCatalogApp is one service of the catalog (catalog JSON format).
 type gitCatalogApp struct {
-	Name        string   `json:"name"`
-	Project     string   `json:"project"`
-	Ref         string   `json:"ref"` // tag:latest | tag:vX | <branch>
-	Branch      string   `json:"branch"`
-	TagFilter   string   `json:"tag_filter"`
-	Subdir      string   `json:"subdir"`
-	Kind        string   `json:"kind"` // app | library | tool
-	Include     []string `json:"include"`
-	Exclude     []string `json:"exclude"`
-	Protected   []string `json:"protected"`
-	Fingerprint []string `json:"fingerprint"`
-	InstallHint []string `json:"install_hint"`
+	Functionality *gitFunctionalitySpec `json:"functionality,omitempty"`
+	Name          string                `json:"name"`
+	Project       string                `json:"project"`
+	Ref           string                `json:"ref"` // tag:latest | tag:vX | <branch>
+	Branch        string                `json:"branch"`
+	TagFilter     string                `json:"tag_filter"`
+	Subdir        string                `json:"subdir"`
+	Kind          string                `json:"kind"` // app | library | tool
+	Include       []string              `json:"include"`
+	Exclude       []string              `json:"exclude"`
+	Protected     []string              `json:"protected"`
+	Fingerprint   []string              `json:"fingerprint"`
+	InstallHint   []string              `json:"install_hint"`
 	// deploy environments (v11.5.0); a catalog without them works as before
 	Environments []gitEnvironment `json:"environments,omitempty"`
 }
@@ -128,6 +129,11 @@ func (a *gitCatalogApp) normalize() error {
 		}
 	}
 	a.Fingerprint = fp
+	if a.Functionality != nil {
+		if err := a.Functionality.normalize(); err != nil {
+			return fmt.Errorf("%s: %v", a.Name, err)
+		}
+	}
 	envs, err := normalizeEnvs(a.Name, a.Environments)
 	if err != nil {
 		return err

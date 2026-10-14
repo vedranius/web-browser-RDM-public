@@ -438,7 +438,7 @@ func TestGitDeployScheduledRestart(t *testing.T) {
 	if ev := events(); ev["git.deploy_started"] != 1 || ev["git.deploy_done"] != 1 || ev["git.restart_scheduled"] != 1 {
 		t.Fatalf("events: %v", ev)
 	}
-	if _, err := os.Stat(e.sysLog); err == nil {
+	if got, _ := os.ReadFile(e.sysLog); strings.Contains(string(got), "restart ") {
 		t.Fatal("restarted too early")
 	}
 	// a notice before, then the restart at its time (as after a WRM restart: it is stored)
@@ -453,7 +453,7 @@ func TestGitDeployScheduledRestart(t *testing.T) {
 	if r.State != "done" || len(r.Items) != 1 || len(r.Items[0].Health) != 1 || !r.Items[0].Health[0].OK {
 		t.Fatalf("restart: %+v", r)
 	}
-	if got := readFile(t, e.sysLog); got != "restart demo-api.service\nis-active demo-api.service\n" {
+	if got := withoutFunctionalityReads(readFile(t, e.sysLog)); got != "restart demo-api.service\nis-active demo-api.service\n" {
 		t.Fatalf("systemctl calls: %q", got)
 	}
 	if in = loadGitInstalls(e.u.userID, false, "i.id=?", in.ID)[0]; in.RestartPending != "" {
@@ -488,4 +488,17 @@ func TestGitDeployScheduledRestart(t *testing.T) {
 	if n == 0 {
 		t.Fatal("no git.restart audit entry")
 	}
+}
+
+// Runtime inspection is allowed before a scheduled restart. Keep assertions about
+// mutation ordering and the existing post-restart health check.
+func withoutFunctionalityReads(log string) string {
+	var out strings.Builder
+	for _, line := range strings.Split(log, "\n") {
+		if line == "" || strings.HasPrefix(line, "is-active -- ") || strings.HasPrefix(line, "list-units ") {
+			continue
+		}
+		out.WriteString(line + "\n")
+	}
+	return out.String()
 }

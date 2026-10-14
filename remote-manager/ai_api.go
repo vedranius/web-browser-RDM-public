@@ -128,7 +128,7 @@ func aiConnectionHandler(w http.ResponseWriter, r *http.Request, userID, connID 
 	var proto string
 	db.QueryRow(`SELECT notes, protocol FROM connections WHERE id=?`, connID).Scan(&notes, &proto)
 	jsonOK(w, map[string]interface{}{
-		"allowed_modes": allowed, "default_mode": aiDefaultMode(allowed), "rules": rules, "ssh": strings.EqualFold(proto, "SSH"),
+		"allowed_modes": allowed, "default_mode": aiDefaultMode(allowed), "rules": rules, "ssh": strings.EqualFold(proto, "SSH") || strings.EqualFold(proto, "SFTP"),
 		"has_notes": strings.TrimSpace(notes) != "", "share_notes_allowed": settingBool("ai_share_notes"),
 		"sees": aiVisibility(allowed),
 	})
@@ -503,6 +503,7 @@ func apiAdminAIHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			db.Exec(`UPDATE users SET ai_blocked=? WHERE id=?`, boolInt(in.Blocked), uid)
+			hub.sendTo(uid, []byte(`{"type":"ai_policy_changed"}`))
 			n := 0
 			if in.Blocked {
 				n = aiKillWhere(func(s *aiSession) bool { return s.UserID == uid }, adminID, "the AI assistant was turned off for the user (kill switch)")

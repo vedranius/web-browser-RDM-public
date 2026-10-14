@@ -297,19 +297,21 @@ func resolveShareToken(r *http.Request, token string) (*ShareAccess, *shareDenie
 // ─── CONNECTION AUTHORIZATION ────────────────────────
 
 type SharedConn struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Protocol string `json:"protocol"`
-	Host     string `json:"host"`
-	Username string `json:"username"`
-	FolderID *int   `json:"folder_id"`
+	FolderPath string `json:"folder_path,omitempty"`
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	Protocol   string `json:"protocol"`
+	Host       string `json:"host"`
+	Username   string `json:"username"`
+	FolderID   *int   `json:"folder_id"`
 }
 
 func sharedConnectionsFor(share ShareLink) []SharedConn {
+	folders := loadFolders(share.OwnerID)
 	rows, err := db.Query(`SELECT id, name, protocol, host, username, folder_id FROM connections
 		WHERE user_id=? AND (id IN (SELECT connection_id FROM share_items WHERE share_id=? AND connection_id IS NOT NULL)
-		OR folder_id IN (SELECT folder_id FROM share_items WHERE share_id=? AND folder_id IS NOT NULL)) ORDER BY name`,
-		share.OwnerID, share.ID, share.ID)
+		OR folder_id IN (`+shareFolderSubtreeSQL+`)) ORDER BY name`,
+		share.OwnerID, share.ID, share.ID, share.OwnerID, share.OwnerID)
 	out := []SharedConn{}
 	if err != nil {
 		return out
@@ -318,6 +320,9 @@ func sharedConnectionsFor(share ShareLink) []SharedConn {
 	for rows.Next() {
 		var c SharedConn
 		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.FolderID)
+		if c.FolderID != nil {
+			c.FolderPath = folderPath(folders, *c.FolderID)
+		}
 		out = append(out, c)
 	}
 	return out
@@ -326,7 +331,7 @@ func sharedConnectionsFor(share ShareLink) []SharedConn {
 func shareHasConnection(share ShareLink, connID int) bool {
 	var n int
 	db.QueryRow(`SELECT COUNT(1) FROM connections WHERE id=? AND user_id=? AND (id IN (SELECT connection_id FROM share_items WHERE share_id=? AND connection_id IS NOT NULL)
-		OR folder_id IN (SELECT folder_id FROM share_items WHERE share_id=? AND folder_id IS NOT NULL))`, connID, share.OwnerID, share.ID, share.ID).Scan(&n)
+		OR folder_id IN (`+shareFolderSubtreeSQL+`))`, connID, share.OwnerID, share.ID, share.ID, share.OwnerID, share.OwnerID).Scan(&n)
 	return n > 0
 }
 
@@ -1165,3 +1170,9 @@ func closeShareEverywhere(shareID int, reason string) {
 	killTerminals(func(t *termSession) bool { return t.ShareID == shareID }, reason)
 	closeRoom(shareID, reason)
 }
+
+// Owner-scoped recursion makes a shared folder include its nested folders.
+const shareFolderSubtreeSQL = `WITH RECURSIVE shared_folders(id) AS (
+ SELECT f.id FROM folders f JOIN share_items si ON si.folder_id=f.id WHERE si.share_id=? AND f.user_id=?
+ UNION SELECT f.id FROM folders f JOIN shared_folders sf ON f.parent_id=sf.id WHERE f.user_id=?
+) SELECT id FROM shared_folders`
