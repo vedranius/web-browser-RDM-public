@@ -251,3 +251,48 @@ func TestRuntimeRedactionOfQuotedSecrets(t *testing.T) {
 		t.Fatal("error context lost")
 	}
 }
+
+func TestConfigurationPrivateBlocksAndContinuations(t *testing.T) {
+	q := strings.Repeat(string(rune(34)), 3)
+	for _, data := range []string{
+		"[tls]\nprivate_key = -----BEGIN PRIVATE KEY-----\nPRIVATECHUNKMATERIAL=\n-----END PRIVATE KEY-----\nport = 8080\n",
+		"[main]\npassword = first\n  SECRETCONTINUATION=\nport = 8080\n",
+		"PASSWORD = " + q + "\nPRIVATECHUNKMATERIAL=\n" + q + "\nport = 8080\n",
+		"private_key = -----BEGIN PRIVATE KEY-----\nPRIVATECHUNKMATERIAL=\n",
+	} {
+		f := parseGitConfig("config.ini", []byte(data))
+		out := string(jsonMarshal(f))
+		if strings.Contains(out, "PRIVATECHUNKMATERIAL") || strings.Contains(out, "SECRETCONTINUATION") {
+			t.Fatalf("private material became a field name: %s", out)
+		}
+		if strings.Contains(data, "-----BEGIN PRIVATE KEY-----") && !strings.Contains(data, "-----END PRIVATE KEY-----") && f.Error == "" {
+			t.Fatal("unterminated private block not reported")
+		}
+		if strings.Contains(data, "8080") && !strings.Contains(out, "8080") {
+			t.Fatalf("ordinary settings lost: %s", out)
+		}
+	}
+	f := parseGitConfig("key.ini", []byte("PuTTY-User-Key-File-3: ssh-ed25519\nPrivate-Lines: 1\nPRIVATECHUNKMATERIAL=\nPrivate-MAC: example\n"))
+	if strings.Contains(string(jsonMarshal(f)), "PRIVATECHUNKMATERIAL") || len(f.Entries) != 1 || !f.Entries[0].Secret {
+		t.Fatalf("PuTTY key not masked: %+v", f)
+	}
+}
+
+func TestConfigurationEscapedQuotesAndEntryCap(t *testing.T) {
+	q := string(rune(34))
+	slash := string(rune(92))
+	data := "password = " + q + "first " + slash + q + " escaped quote\nPRIVATECHUNKMATERIAL=\n" + q + "\nport = 8080\n"
+	f := parseGitConfig("config.ini", []byte(data))
+	out := string(jsonMarshal(f))
+	if strings.Contains(out, "PRIVATECHUNKMATERIAL") || !strings.Contains(out, "8080") {
+		t.Fatalf("escaped quote ended masking early: %s", out)
+	}
+	f = parseGitConfig("config.ini", []byte(strings.Repeat("key=value\n", 2001)))
+	if len(f.Entries) != 2000 || f.Error == "" {
+		t.Fatalf("entry cap not explicit: %d %s", len(f.Entries), f.Error)
+	}
+	f = parseGitConfig("config.ini", []byte(strings.Repeat("-----BEGIN PRIVATE KEY-----MASKED-----END PRIVATE KEY-----\n", 2001)))
+	if len(f.Entries) != 2000 || f.Error == "" {
+		t.Fatalf("private block bypassed entry cap: %d %s", len(f.Entries), f.Error)
+	}
+}
