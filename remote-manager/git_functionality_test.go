@@ -143,3 +143,22 @@ func TestRuntimeResponsesAndProbeValidation(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRuntimeUnitLimitIsUnverified(t *testing.T) {
+	e := newDeployEnv(t, "runtime-limit")
+	writeFile(t, e.dir+"/run.py", runV110)
+	in := gitInstall{Path: e.dir, ConnID: e.conn, App: "demo-api"}
+	cl, err := dialInstall(e.u.userID, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cl.Close()
+	d := gitInstallData{}
+	for i := 0; i < 65; i++ {
+		d.Units = append(d.Units, gitUnit{Kind: "systemd", Name: fmt.Sprintf("demo-%d.service", i)})
+	}
+	checkGitFunctionality(cl, in, nil, "ok", &d)
+	if d.Functionality.State != "unknown" || !strings.Contains(strings.Join(d.Functionality.Warnings, " "), "limit reached") {
+		t.Fatalf("partial check reported healthy: %+v", d.Functionality)
+	}
+}

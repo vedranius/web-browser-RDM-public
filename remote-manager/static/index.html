@@ -1209,6 +1209,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .win-rec { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; color: #fca5a5; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: default; animation: recPulse 2.4s ease-in-out infinite; }
 .win-ai { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; color: #c4b5fd; background: rgba(139,92,246,.14); border: 1px solid rgba(139,92,246,.45); border-radius: 10px; padding: 0 6px; line-height: 15px; margin-right: 4px; cursor: pointer; animation: recPulse 2.4s ease-in-out infinite; }
 .remote-preview-overlay { position:fixed; inset:0; z-index:11000; background:rgba(0,0,0,.65); display:flex; align-items:center; justify-content:center; padding:12px; }
+.win.folder-hidden { visibility:hidden; pointer-events:none; }
 #folder-tab-bar { display:flex; gap:4px; overflow-x:auto; flex-shrink:0; padding:4px 8px; background:var(--bg2); border-bottom:1px solid var(--border); }
 #folder-tab-bar:empty { display:none; }
 #folder-tab-bar button { flex-shrink:0; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:4px 8px; font-size:11px; background:var(--bg3); color:var(--text2); }
@@ -7362,6 +7363,7 @@ let toolsTab = 'ports';
 // Git workspace: its code (static/git.js) is loaded the first time it is opened.
 let gitLoading = null;
 function openGit() {
+  closeDrawers();
   if (window.gitWorkspace) { window.gitWorkspace.open(); return; }
   if (!gitLoading) gitLoading = new Promise((ok, fail) => {
     const s = document.createElement('script');
@@ -12403,6 +12405,7 @@ function focusWindow(id) {
   winObjects.forEach(w => w.el && w.el.classList.remove('focused'));
   const w = winObjects.find(x => x.id === id);
   if (w && w.el) {
+    if (tabFolderFilter !== null && windowFolderKey(w) !== tabFolderFilter) tabFolderFilter = windowFolderKey(w);
     w.el.classList.add('focused');
     w.el.style.zIndex = ++topZ;
     w._lastFocus = Date.now();
@@ -12490,14 +12493,20 @@ function scrollTabBar(delta) {
 }
 
 let tabFolderFilter = null;
-function setTabFolder(value) { tabFolderFilter = value; renderTabs(); }
+function windowFolderKey(wo) { const c = winConn(wo); return c && c.folder_id ? String(c.folder_id) : 'root'; }
+function setTabFolder(value) {
+  tabFolderFilter = value;
+  const target = winObjects.filter(wo => value !== null && windowFolderKey(wo) === value).sort((a,b) => (b._lastFocus || 0) - (a._lastFocus || 0))[0];
+  if (target && target.el) { target.el.style.display = 'flex'; scheduleFit(target); focusWindow(target.id); } else renderTabs();
+}
 function renderTabs() {
   const bar = document.getElementById('tab-bar');
   bar.innerHTML = '';
-  const groupKey = wo => { const c = winConn(wo); return c && c.folder_id ? String(c.folder_id) : 'root'; };
+  const groupKey = windowFolderKey;
   const groups = new Map();
   winObjects.forEach(wo => { const c = winConn(wo); const key = groupKey(wo); if (!groups.has(key)) groups.set(key, folderPathLabel(c && c.folder_id) || (c && c.folder_path) || t('no_folder')); });
   if (tabFolderFilter !== null && !groups.has(tabFolderFilter)) tabFolderFilter = null;
+  winObjects.forEach(wo => { if (wo.el) wo.el.classList.toggle('folder-hidden', tabFolderFilter !== null && groupKey(wo) !== tabFolderFilter); });
   const folderBar = document.getElementById('folder-tab-bar');
   folderBar.innerHTML = '';
   if (groups.size) {
