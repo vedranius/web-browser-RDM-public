@@ -173,6 +173,14 @@ WRM is secure by default in most respects. For production and company use, also 
 - [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `bookmark.*`, `ssh_key.*` (deploy, revoke, export) `credential.*` (grants, reveal, rotation), `proxy.*` (created, shared, tested), `folder.updated` (default jump host / proxy), `admin.notify_channel_*` and `bmc.*` (power actions) events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.
 
+## Service inspection, hierarchy and remote previews (v12.4.0)
+
+Service configuration inspection requires ownership of the registered installation/SSH connection and `git_checks`. Paths cannot escape the installation through symlinks; files, entries and output have caps. Secrets are masked by conservative key-name checks and existing credential/token/URL redaction. Config contents are read on demand and are not stored in the database. Runtime logs are redacted before caching; unstructured remote logs should still avoid writing secrets in arbitrary prose. Runtime commands read state as the SSH account, without automatic sudo or restart. Optional HTTP/TCP probes run from that server, have short timeouts, reject URL credentials, follow no redirects and verify TLS.
+
+Remote previews require `files_read` on every metadata/range/content request, including shared viewer roles. Unknown binary types are refused; HTML/SVG and source formats render as text. Inline responses use `nosniff` and no-store; non-PDF previews have a sandbox CSP, while PDFs use the browser native viewer with a restrictive document CSP. Text previews are bounded; media ranges seek on the remote server. Preview actions never execute terminal selections or interpolate them into shell commands. Preview access is audited as `file.preview`.
+
+Folder parents must belong to the same user; hierarchy mutations are serialized and reject cycles/excess depth. Shared folder recursion is scoped to the owner. Sharing a parent folder includes existing and future descendant folders: check the folder tree before moving a connection into a shared subtree. Jump/proxy defaults apply only to the immediate folder. Deleting a parent reparents its children, preserving their connections.
+
 ## AI assistant: threat model
 
 The built-in assistant (v12.0.0) lets a language model act on a server. WRM treats the model as an **untrusted, possibly manipulated actor** and puts the decisions on the server:
