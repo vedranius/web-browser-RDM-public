@@ -4,6 +4,27 @@ import json
 import os
 import sys
 
+# Container aliases preserve the Docker CLI's host HOME/context. Translate only
+# the explicitly forwarded runtime values before loading the original app.
+container_runtime = False
+for key, value in list(os.environ.items()):
+    if key.startswith('WRM_MEDIUM_ENV_'):
+        container_runtime = True
+        os.umask(0o077)
+        os.environ[key[len('WRM_MEDIUM_ENV_'):]] = value
+        del os.environ[key]
+
+if container_runtime:
+    import pwd
+    # OpenSSH expands ~ against passwd, not HOME. Make standard ~/.ssh profiles
+    # resolve to this operator's private Linux volume without mounting host keys.
+    account_home = pwd.getpwuid(os.geteuid()).pw_dir
+    os.makedirs(account_home, mode=0o700, exist_ok=True)
+    os.chmod(account_home, 0o700)
+    ssh_home = os.path.join(account_home, '.ssh')
+    if not os.path.lexists(ssh_home):
+        os.symlink(os.path.join(os.environ['HOME'], '.ssh'), ssh_home)
+
 # The original application's modules and dependencies remain unchanged.
 sys.path.insert(0, os.environ['WRM_MEDIUM_TOOL'])
 from app.main import app as original_app

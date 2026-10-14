@@ -449,10 +449,11 @@ func loadEnvFile(path string) error {
 
 type semVersion struct {
 	Major, Minor, Patch int
+	Hotfix              string
 	Pre                 string
 }
 
-var semverRe = regexp.MustCompile(`^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$`)
+var semverRe = regexp.MustCompile(`^v?(\d+)\.(\d+)\.(\d+)([a-z]?)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$`)
 
 func parseVersion(s string) (semVersion, bool) {
 	m := semverRe.FindStringSubmatch(strings.TrimSpace(s))
@@ -462,10 +463,12 @@ func parseVersion(s string) (semVersion, bool) {
 	a, _ := strconv.Atoi(m[1])
 	b, _ := strconv.Atoi(m[2])
 	c, _ := strconv.Atoi(m[3])
-	return semVersion{a, b, c, m[4]}, true
+	return semVersion{Major: a, Minor: b, Patch: c, Hotfix: m[4], Pre: m[5]}, true
 }
 
-func (v semVersion) core() string { return fmt.Sprintf("v%d.%d.%d", v.Major, v.Minor, v.Patch) }
+func (v semVersion) core() string {
+	return fmt.Sprintf("v%d.%d.%d%s", v.Major, v.Minor, v.Patch, v.Hotfix)
+}
 
 // compareSemver orders semantic versions: -1 (a older), 0, 1. A pre-release (or a branch
 // build, v11.7.0-1a2b3c4) comes before its release. Unparsable versions compare equal.
@@ -482,6 +485,12 @@ func compareSemver(a, b string) int {
 			}
 			return 1
 		}
+	}
+	if va.Hotfix != vb.Hotfix {
+		if va.Hotfix < vb.Hotfix {
+			return -1
+		}
+		return 1
 	}
 	switch {
 	case va.Pre == vb.Pre:
@@ -519,7 +528,7 @@ func compareSemver(a, b string) int {
 
 // ─── release file names and the newest binary in the folder ──
 
-var binaryNameRe = regexp.MustCompile(`^wrm-pro-(v\d+\.\d+\.\d+)-([a-z0-9]+)-([a-z0-9]+)(\.exe)?$`)
+var binaryNameRe = regexp.MustCompile(`^wrm-pro-(v\d+\.\d+\.\d+[a-z]?)-([a-z0-9]+)-([a-z0-9]+)(\.exe)?$`)
 
 // buildGOARM is the GOARM the binary was built with ("" when unknown).
 var buildGOARM = func() string {

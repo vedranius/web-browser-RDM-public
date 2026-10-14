@@ -38,6 +38,8 @@ type mediumStatus struct {
 	Allowed      bool            `json:"allowed"`
 	Admin        bool            `json:"admin"`
 	Tool         bool            `json:"tool"`
+	Imported     bool            `json:"tool_imported"`
+	Backend      string          `json:"backend"`
 	Config       bool            `json:"config"`
 	Running      bool            `json:"running"`
 	Busy         bool            `json:"busy"`
@@ -92,7 +94,9 @@ func mediumState(uid int) mediumStatus {
 	defer mediumMgr.mu.Unlock()
 	s := mediumMgr.statuses[mediumUserDir(uid)]
 	s.Allowed, s.Admin = mediumAllowed(uid), isAdminUser(uid)
-	s.Tool = mediumFileExists(filepath.Join(mediumToolDir(), "app", "main.py")) && mediumFileExists(mediumVenvPython())
+	s.Backend = mediumBackend()
+	s.Imported = mediumFileExists(filepath.Join(mediumToolDir(), "app", "main.py"))
+	s.Tool = s.Imported && mediumRuntimeReady()
 	s.Config = mediumFileExists(filepath.Join(mediumConfigDir(uid), "servers.yaml")) || mediumPreferences(uid)["DEPLOY_CONFIG_REPO"] != ""
 	if p := mediumMgr.processes[mediumUserDir(uid)]; p != nil {
 		select {
@@ -105,6 +109,9 @@ func mediumState(uid int) mediumStatus {
 	for _, n := range []string{"git", "ssh", "rsync"} {
 		_, e := exec.LookPath(n)
 		s.Dependencies[n] = e == nil
+	}
+	if s.Backend == "docker" {
+		s.Dependencies = map[string]bool{"docker": mediumDockerCLI() != ""}
 	}
 	if b, e := os.ReadFile(filepath.Join(mediumRoot(), "tool.sha256")); e == nil {
 		s.Digest = strings.TrimSpace(string(b))
@@ -263,9 +270,15 @@ func mediumStart(uid int) error {
 	if !s.Tool || !s.Config {
 		return fmt.Errorf("import the deploy tool and deploy config first")
 	}
-	for _, n := range []string{"git", "ssh", "rsync"} {
-		if !s.Dependencies[n] {
-			return fmt.Errorf("required runtime dependency is missing: %s", n)
+	if s.Backend == "docker" {
+		if e := mediumDockerCheck(context.Background()); e != nil {
+			return e
+		}
+	} else {
+		for _, n := range []string{"git", "ssh", "rsync"} {
+			if !s.Dependencies[n] {
+				return fmt.Errorf("Install %s on the WRM host or use the managed Docker runtime (WRM_MEDIUM_RUNTIME=docker)", n)
+			}
 		}
 	}
 	dir := mediumUserDir(uid)
@@ -294,6 +307,13 @@ func mediumStart(uid int) error {
 	if e := os.WriteFile(wrapper, mediumWrapper, 0600); e != nil {
 		return e
 	}
+	if s.Backend == "docker" {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancel()
+		if e := mediumDockerSync(ctx, uid); e != nil {
+			return fmt.Errorf("Cannot synchronize private Linux runtime data; check Docker volume access and disk space")
+		}
+	}
 	l, e := net.Listen("tcp", "127.0.0.1:0")
 	if e != nil {
 		return e
@@ -316,6 +336,46 @@ func mediumStart(uid int) error {
 	if sock := os.Getenv("WRM_MEDIUM_SSH_AUTH_SOCK"); sock != "" && serverKeysAllowed(uid) {
 		cmd.Env = append(cmd.Env, "SSH_AUTH_SOCK="+sock)
 	}
+	if s.Backend == "docker" {
+		env := []string{}
+		// The pinned image's unprivileged wrm account also serves as the native
+		// build user. Original builds drop privileges and cannot read root's SSH profile.
+		env = append(env, "WRM_MEDIUM_ENV_DEPLOY_BUILD_USER=wrm")
+		for _, value := range cmd.Env {
+			key, val, _ := strings.Cut(value, "=")
+			if key == "PATH" || key == "SYSTEMROOT" || key == "WINDIR" || key == "TMP" || key == "TEMP" || key == "LD_LIBRARY_PATH" || key == "SSL_CERT_FILE" || key == "SSL_CERT_DIR" || key == "SSH_AUTH_SOCK" {
+				continue
+			}
+			switch key {
+			case "DEPLOY_PORT":
+				val = "8080"
+			case "DEPLOY_BIND":
+				val = "0.0.0.0"
+			case "DEPLOY_ALLOWED_HOSTS":
+				val = "127.0.0.1,localhost"
+			case "DEPLOY_BUILD_USER":
+				if val == "" {
+					val = "wrm"
+				}
+			default:
+				val = mediumContainerPath(val)
+				if key == "DEPLOY_SSH_OPTIONS" || key == "GIT_SSH_COMMAND" {
+					val = strings.ReplaceAll(val, mediumUserDir(uid), mediumContainerPath(mediumUserDir(uid)))
+				}
+			}
+			env = append(env, "WRM_MEDIUM_ENV_"+key+"="+val)
+		}
+		keys := []string{}
+		for _, value := range env {
+			key, _, _ := strings.Cut(value, "=")
+			keys = append(keys, key)
+		}
+		name := "wrm-medium-" + strconv.Itoa(uid) + "-" + randomToken(8)
+		cmd = exec.CommandContext(ctx, mediumDockerCLI(), mediumDockerStartArgs(uid, port, name, keys)...)
+		cmd.Env = append(os.Environ(), env...)
+		var stop sync.Once
+		p.cancel = func() { stop.Do(func() { mediumDockerStop(name); cancel() }) }
+	}
 	p.cmd = cmd
 	if e = cmd.Start(); e != nil {
 		cancel()
@@ -324,7 +384,7 @@ func mediumStart(uid int) error {
 	mediumMgr.processes[dir] = p
 	go func() { _ = cmd.Wait(); close(p.done) }()
 	client := &http.Client{Timeout: time.Second}
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 300; i++ {
 		select {
 		case <-p.done:
 			return fmt.Errorf("deploy tool failed to start; check its Python dependencies and config")
@@ -340,7 +400,7 @@ func mediumStart(uid int) error {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	cancel()
+	p.cancel()
 	return fmt.Errorf("deploy tool startup timed out")
 }
 
@@ -375,6 +435,39 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 			mediumOperation.Unlock()
 		}
 	}()
+	if action == "/prepare" {
+		if !isAdminUser(uid) || !mediumState(uid).Imported {
+			jsonError(w, "An administrator must import the trusted tool ZIP first", 403)
+			return
+		}
+		mediumMgr.mu.Lock()
+		active := false
+		for _, process := range mediumMgr.processes {
+			select {
+			case <-process.done:
+			default:
+				active = true
+			}
+		}
+		mediumMgr.mu.Unlock()
+		if active {
+			jsonError(w, "Stop all Medium instances before preparing the shared runtime", 409)
+			return
+		}
+		backgroundOperation = true
+		mediumSetStage(uid, "Preparing runtime", true, nil)
+		go func() {
+			defer mediumOperation.Unlock()
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			defer cancel()
+			e := mediumPrepareRuntime(ctx)
+			mediumSetStage(uid, "Ready", false, e)
+		}()
+		auditLog(r, uid, "git.medium_runtime_prepared", "", nil)
+		w.WriteHeader(202)
+		jsonOK(w, mediumState(uid))
+		return
+	}
 	if action == "/settings" {
 		var values map[string]string
 		if json.NewDecoder(r.Body).Decode(&values) != nil {
@@ -494,35 +587,27 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Stop all Medium instances before replacing the shared tool runtime", 409)
 			return
 		}
+		// Retain the approved source even if runtime setup is unavailable. A user
+		// can start Docker and retry preparation without uploading the ZIP again.
+		if e = mediumReplaceDir(stage, mediumToolDir()); e != nil {
+			jsonError(w, "Cannot save imported tool", 500)
+			return
+		}
+		if e = os.WriteFile(filepath.Join(mediumRoot(), "setup-pending"), []byte("pending"), 0600); e != nil {
+			jsonError(w, "Cannot prepare runtime state", 500)
+			return
+		}
 		backgroundOperation = true
-		mediumSetStage(uid, "Preparing Python environment", true, nil)
+		mediumSetStage(uid, "Preparing runtime", true, nil)
 		digest := sha256.Sum256(data)
 		go func() {
 			defer mediumOperation.Unlock()
 			defer os.RemoveAll(stage)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 			defer cancel()
-			e := os.MkdirAll(mediumRoot(), 0700)
-			if e == nil && mediumPython() == "" {
-				e = fmt.Errorf("Python 3.12+ is required; install it or set WRM_MEDIUM_PYTHON")
-			}
+			e := os.WriteFile(filepath.Join(mediumRoot(), "tool.sha256"), []byte(hex.EncodeToString(digest[:])), 0600)
 			if e == nil {
-				if err := mediumCommand(ctx, mediumRoot(), mediumPython(), "-c", "import sys;sys.exit(0 if sys.version_info >= (3,12) else 1)"); err != nil {
-					e = fmt.Errorf("Python 3.12+ is required for the original deploy tool")
-				}
-			}
-			if e == nil {
-				e = mediumCommand(ctx, mediumRoot(), mediumPython(), "-m", "venv", filepath.Join(mediumRoot(), "venv"))
-			}
-			if e == nil {
-				e = mediumCommand(ctx, mediumRoot(), mediumVenvPython(), "-m", "pip", "install", "--disable-pip-version-check", "-r", filepath.Join(stage, "requirements.lock"))
-			}
-			if e == nil {
-				mediumStopAll()
-				e = mediumReplaceDir(stage, mediumToolDir())
-			}
-			if e == nil {
-				e = os.WriteFile(filepath.Join(mediumRoot(), "tool.sha256"), []byte(hex.EncodeToString(digest[:])), 0600)
+				e = mediumPrepareRuntime(ctx)
 			}
 			mediumSetStage(uid, "Ready", false, e)
 		}()
@@ -545,9 +630,7 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
-		cmd := exec.CommandContext(ctx, mediumVenvPython(), "-c", "import sys; from pathlib import Path; from app.config import load_config; load_config(Path(sys.argv[1]))", stage)
-		cmd.Dir = mediumToolDir()
-		if e = cmd.Run(); e != nil {
+		if e = mediumValidateConfig(ctx, stage); e != nil {
 			jsonError(w, "Deploy config validation failed; inspect YAML and project/server references", 400)
 			return
 		}
@@ -556,6 +639,10 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if e = mediumReplaceDir(stage, dest); e != nil {
 		jsonError(w, "Cannot save runtime files", 500)
+		return
+	}
+	if e = os.WriteFile(filepath.Join(mediumUserDir(uid), kind+"-revision"), []byte(randomToken(16)), 0600); e != nil {
+		jsonError(w, "Cannot save runtime import revision", 500)
 		return
 	}
 	auditLog(r, uid, "git.medium_"+kind+"_imported", "", nil)
@@ -742,6 +829,10 @@ func mediumConfigDir(uid int) string {
 	return filepath.Join(mediumUserDir(uid), "config")
 }
 func mediumSSHCommand(uid int) string {
+	if mediumBackend() == "docker" {
+		dir := "/wrm-medium/users/" + strconv.Itoa(uid) + "/home/.ssh"
+		return "-o BatchMode=yes -o ConnectTimeout=15 -F " + shellQuote(dir+"/config") + " -o UserKnownHostsFile=" + shellQuote(dir+"/known_hosts")
+	}
 	dir := filepath.Join(mediumUserDir(uid), "home", ".ssh")
 	return "-o BatchMode=yes -o ConnectTimeout=15 -F " + shellQuote(filepath.Join(dir, "config")) + " -o UserKnownHostsFile=" + shellQuote(filepath.Join(dir, "known_hosts"))
 }

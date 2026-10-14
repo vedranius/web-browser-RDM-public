@@ -7,8 +7,10 @@ import os
 from pathlib import Path
 import sys
 import threading
+import tempfile
 import types
 import unittest
+from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 
@@ -48,6 +50,29 @@ class MediumWrapperTests(unittest.IsolatedAsyncioTestCase):
                 sys.modules[key] = old
         os.environ.clear()
         os.environ.update(self.old_env)
+
+    async def test_container_aliases_and_private_ssh_home(self):
+        import pwd
+        with tempfile.TemporaryDirectory() as directory:
+            account_home = str(Path(directory) / 'account')
+            private_home = str(Path(directory) / 'private-volume')
+            original_mask = os.umask(0o077)
+            os.umask(original_mask)
+            try:
+                with patch.object(pwd, 'getpwuid', return_value=types.SimpleNamespace(pw_dir=account_home)), patch.dict(os.environ, {
+                    'WRM_MEDIUM_ENV_HOME': private_home,
+                    'WRM_MEDIUM_ENV_WRM_MEDIUM_TOOL': '/not-used',
+                    'WRM_MEDIUM_ENV_WRM_MEDIUM_KEY': 'aliased-runtime-key',
+                }):
+                    spec = importlib.util.spec_from_file_location('wrm_alias_test', self.module.__file__)
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                    self.assertEqual(os.environ['HOME'], private_home)
+                    self.assertEqual(os.environ['WRM_MEDIUM_KEY'], 'aliased-runtime-key')
+                    self.assertNotIn('WRM_MEDIUM_ENV_WRM_MEDIUM_KEY', os.environ)
+                    self.assertEqual(os.readlink(Path(account_home) / '.ssh'), str(Path(private_home) / '.ssh'))
+            finally:
+                os.umask(original_mask)
 
     async def request(self, path, key='private-runtime-key'):
         output = []
