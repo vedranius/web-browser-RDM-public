@@ -152,15 +152,41 @@ func TestV1244GitLabClientCompanionSnapshotIsolationAndFailedRefresh(t *testing.
 	if loadGitRelayMeta(id).Published != newest.Generation {
 		t.Fatal("generation regressed")
 	}
+	if code := member.jsonDo("POST", fmt.Sprintf("/api/git/sources/%d/hook", id), nil, nil); code != 404 {
+		t.Fatal("shared member changed owner webhook", code)
+	}
+	if code := member.jsonDo("PUT", fmt.Sprintf("/api/git/sources/%d", id), map[string]interface{}{"kind": "gitlab", "name": "foreign mutation", "url": git.URL}, nil); code != 404 {
+		t.Fatal("active shared member edited owner source", code)
+	}
+	deleteGitUserData(member.userID)
+	if _, ok := loadGitSource(u.userID, id); !ok {
+		t.Fatal("member cleanup deleted owner source")
+	}
+	storeBlob(id, blob, []byte(content))
+	target := gitTarget{SourceID: id, Files: map[string]gitTargetFile{"run.py": {Blob: blob}}}
+	view := openRepoView(member.userID, target)
 	memberSource, _ := loadGitSource(member.userID, id)
 	memberProvider, _ := newGitProvider(memberSource)
 	if code := u.jsonDo("PUT", fmt.Sprintf("/api/git/client/%d", id), map[string]interface{}{"enabled": true, "members": []string{}}, nil); code != 200 {
 		t.Fatal(code)
+	}
+	if _, err := view.content("run.py"); err == nil {
+		t.Fatal("removed member read cached content")
+	}
+	var bundle bytes.Buffer
+	if _, err := writeBundle(&bundle, member.userID, cat, gitSettings{}, []gitTarget{target}); err == nil {
+		t.Fatal("removed member exported cached content")
 	}
 	if _, err := memberProvider.projects(nil); err == nil {
 		t.Fatal("removed member retained cached access")
 	}
 	if code := member.jsonDo("PUT", fmt.Sprintf("/api/git/sources/%d", id), map[string]interface{}{"kind": "gitlab", "name": "foreign mutation", "url": git.URL}, nil); code != 404 {
 		t.Fatal("shared member edited source", code)
+	}
+	if code := u.jsonDo("PUT", fmt.Sprintf("/api/git/sources/%d", id), map[string]interface{}{"kind": "github", "name": "changed origin", "url": git.URL}, nil); code != 200 {
+		t.Fatal(code)
+	}
+	if meta := loadGitRelayMeta(id); meta.Enabled || meta.Published != 0 {
+		t.Fatal("source kind change retained GitLab cache", meta)
 	}
 }

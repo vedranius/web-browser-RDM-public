@@ -193,3 +193,23 @@ func TestV1244TerminalLiteralDirectoryExecution(t *testing.T) {
 		t.Fatal("directory executed as code")
 	}
 }
+
+func TestV1244LogTerminalRootAndLiteralPath(t *testing.T) {
+	c := Connection{Options: map[string]string{"terminal_shell": "posix"}}
+	file := "/var/log/demo O'Brien;$(touch unexpected).log"
+	command, err := terminalDirectoryStart(nil, c, "/var/log", file)
+	if err != nil || !strings.Contains(command, "tail -n 100 -F --") {
+		t.Fatal(command, err)
+	}
+	if _, err := terminalDirectoryStart(nil, c, "", "/outside/demo.log"); err == nil {
+		t.Fatal("log root ignored")
+	}
+	if _, err := terminalDirectoryStart(nil, c, "", "/var/log/demo\ncommand"); err == nil {
+		t.Fatal("newline accepted")
+	}
+	c.Options["terminal_shell"] = "powershell"
+	command, err = terminalDirectoryStart(nil, c, "", file)
+	if err != nil || !strings.Contains(command, "-EncodedCommand") || strings.Contains(command, "touch") {
+		t.Fatal(command, err)
+	}
+}

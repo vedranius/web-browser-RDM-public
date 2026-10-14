@@ -328,6 +328,9 @@ func writeBundle(w io.Writer, userID int, cat *gitCatalog, st gitSettings, targe
 	contents := map[string][]byte{} // app/rel → content
 	providers := map[int]*gitProvider{}
 	for _, t := range targets {
+		if loadGitRelayMeta(t.SourceID).OwnerID > 0 && !relaySourceAllowed(userID, t.SourceID) {
+			return "", fmt.Errorf("shared Git source access has been removed")
+		}
 		if t.Error != "" {
 			return "", fmt.Errorf("%s: %s", t.App, t.Error)
 		}
