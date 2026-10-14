@@ -1917,7 +1917,7 @@ All endpoints require a WRM session and effective owner/policy access. Mutating 
 | Endpoint | Behavior |
 |---|---|
 | `GET /api/git/medium` | Runtime/import/dependency status and tool SHA-256. |
-| `POST /api/git/medium/{tool,config,ssh}?confirm=1` | Raw ZIP import; tool is administrator-only; 20 MiB expanded limit. |
+| `POST /api/git/medium/{tool,config,ssh}?confirm=1` | Multipart ZIP in field `file`; tool is administrator-only; 20 MiB expanded limit. |
 | `GET, POST /api/git/medium/settings` | Read masked / save encrypted original runtime preferences. |
 | `POST /api/git/medium/{start,stop}` | Start original app / stop only when idle. |
 | `/medium/*` | Original UI and native actions behind WRM authentication, policy and origin checks. |
