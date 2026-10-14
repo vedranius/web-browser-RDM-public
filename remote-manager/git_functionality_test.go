@@ -238,3 +238,16 @@ func TestUnsupportedRuntimeNamesRemainUnverified(t *testing.T) {
 		t.Fatalf("unsupported worker inventory hidden: %+v", list)
 	}
 }
+
+func TestRuntimeRedactionOfQuotedSecrets(t *testing.T) {
+	text := `worker failed: password="a full secret phrase"; API_KEY='another secret phrase'; {"token":"escaped \" secret value"}`
+	clean := redactText(text)
+	for _, value := range []string{"full secret phrase", "another secret phrase", "secret value"} {
+		if strings.Contains(clean, value) {
+			t.Fatalf("quoted secret partly leaked: %s", clean)
+		}
+	}
+	if !strings.Contains(clean, "worker failed") {
+		t.Fatal("error context lost")
+	}
+}

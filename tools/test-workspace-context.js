@@ -56,3 +56,11 @@ test('switching folder tabs focuses a window from the selected client/site', () 
   ctx.setTabFolder('2');assert.equal(focused,1);assert.equal(a.el.style.display,'flex');
   ctx.setTabFolder('4');assert.equal(focused,2);
 });
+
+test('open window headers refresh after a folder rename or reparent', () => {
+  const title={textContent:''},conn={name:'Backup',protocol:'SSH',folder_id:2};
+  const ctx=vm.createContext({folders:[{id:1,name:'Client-A'},{id:2,name:'Site-1',parent_id:1}],winConn:()=>conn,document:{getElementById:()=>title},t:k=>k});
+  vm.runInContext(slice('function folderPathLabel(', 'function updateFolderSelects('),ctx);
+  ctx.refreshWindowConnectionTitle({id:1,mode:'ssh'});assert.equal(title.textContent,'SSH — Client-A / Site-1 / Backup');
+  ctx.folders[0].name='Client-B';ctx.refreshWindowConnectionTitle({id:1,mode:'ssh'});assert.equal(title.textContent,'SSH — Client-B / Site-1 / Backup');
+});

@@ -5415,6 +5415,16 @@ function folderDescendants(id) {
 }
 function connLabel(c) { const path = folderPathLabel(c.folder_id) || c.folder_path || ''; return path ? path + ' / ' + c.name : c.name; }
 
+function refreshWindowConnectionTitle(wo) {
+  const c = winConn(wo), title = document.getElementById('wt-' + wo.id);
+  if (!c || !title) return;
+  if (wo.mode === 'ssh') {
+    const prefix = wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : (c.protocol || 'SSH');
+    title.textContent = prefix + ' — ' + connLabel(c);
+  } else if (wo.mode === 'sftp') title.textContent = 'Files — ' + connLabel(c);
+  else if (wo.mode === 'desk') title.textContent = c.protocol + ' — ' + connLabel(c);
+}
+
 function updateFolderSelects() {
   const selects = document.querySelectorAll('#m-folder');
   selects.forEach(sel => {
@@ -12506,7 +12516,7 @@ function renderTabs() {
   const groups = new Map();
   winObjects.forEach(wo => { const c = winConn(wo); const key = groupKey(wo); if (!groups.has(key)) groups.set(key, folderPathLabel(c && c.folder_id) || (c && c.folder_path) || t('no_folder')); });
   if (tabFolderFilter !== null && !groups.has(tabFolderFilter)) tabFolderFilter = null;
-  winObjects.forEach(wo => { if (wo.el) wo.el.classList.toggle('folder-hidden', tabFolderFilter !== null && groupKey(wo) !== tabFolderFilter); });
+  winObjects.forEach(wo => { refreshWindowConnectionTitle(wo); if (wo.el) wo.el.classList.toggle('folder-hidden', tabFolderFilter !== null && groupKey(wo) !== tabFolderFilter); });
   const folderBar = document.getElementById('folder-tab-bar');
   folderBar.innerHTML = '';
   if (groups.size) {
@@ -12528,13 +12538,11 @@ function renderTabs() {
     let icon = '□', title = 'Window ' + id;
     if (wo.mode === 'ssh') {
       icon = wo.console ? '📟' : '⚡';
-      const allConns = isCollabMode ? collabConns : conns;
-      const c = wo.connId ? allConns.find(x => x.id === wo.connId) : null;
+      const c = winConn(wo);
       title = c ? connLabel(c) + (wo.console ? ' — ' + t('bmc_console_tab') : '') : 'Terminal ' + id;
     } else if (wo.mode === 'sftp') {
       icon = '📂';
-      const allConns = isCollabMode ? collabConns : conns;
-      const c = wo.connId ? allConns.find(x => x.id === wo.connId) : null;
+      const c = winConn(wo);
       title = c ? 'Files — ' + connLabel(c) : 'Files ' + id;
     } else if (wo.mode === 'desk') {
       icon = '🖥';
