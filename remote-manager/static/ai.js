@@ -461,7 +461,7 @@ Object.assign(LANGS.hr, {
     try {
       await loadCfg();
       if (typeof refreshUserPolicy === 'function') await refreshUserPolicy();
-      pane.innerHTML = availabilityHTML(cfg) + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="btn-sec" onclick="wrmAI.statusPane()">${esc(t('ai_status_refresh'))}</button>${currentUser && currentUser.is_admin ? `<button onclick="closeModal('modal-settings'); openAdminPanel(); showAdminTab('ai')">${esc(t('ai_status_setup'))}</button>` : ''}</div>`;
+      pane.innerHTML = availabilityHTML(cfg) + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="btn-sec" onclick="wrmAI.statusPane()">${esc(t('ai_status_refresh'))}</button>${currentUser && currentUser.is_admin ? `<button onclick="closeModal('modal-settings'); adminTab='ai'; openAdminPanel()">${esc(t('ai_status_setup'))}</button>` : ''}</div>`;
       const wins = winObjects.filter(wo => aiEligible(wo,wo.mode));
       if (wins.length) pane.innerHTML += `<h4>${esc(t('ai_status_connections'))}</h4>` + wins.map(wo => `<button class="btn-sec" style="margin:4px" onclick="closeModal('modal-settings'); openAI(${wo.id})">${esc(connLabel(winConn(wo)))}</button>`).join('');
     } catch(e) { pane.innerHTML = `<div class="hint-box bad">${esc(e.message)}</div><button onclick="wrmAI.statusPane()">${esc(t('ai_status_refresh'))}</button>`; }

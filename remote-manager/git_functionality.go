@@ -237,7 +237,8 @@ func checkGitFunctionality(cl *ssh.Client, in gitInstall, app *gitCatalogApp, st
 		spec = *app.Functionality
 		units = append(units, spec.Units...)
 	}
-	if len(units) > 64 {
+	unitsCapped := len(units) > 64
+	if unitsCapped {
 		units = units[:64]
 	}
 	out, err := runRemoteScript(cl, runtimeUnitsScript(units, false, in.Path), "", 30*time.Second)
@@ -253,6 +254,9 @@ func checkGitFunctionality(cl *ssh.Client, in gitInstall, app *gitCatalogApp, st
 	}
 	if spec.TCP != "" {
 		checks = append(checks, checkRuntimeEndpoint(cl, "tcp", spec.TCP))
+	}
+	if unitsCapped {
+		checks = append(checks, gitRuntimeCheck{Kind: "runtime", Name: "unit-limit", State: "unknown", Status: "Runtime unit limit reached (64); additional units were not checked"})
 	}
 	h := runtimeSummary(checks)
 	if len(units) == 0 && spec.HTTP == "" && spec.TCP == "" {
