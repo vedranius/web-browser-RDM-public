@@ -1,15 +1,19 @@
 ## [12.5.2] - 2026-10-15
 
 ### Added
+- **Approve later:** over MCP, an approval nobody answered in time, that the AI app declined or stopped waiting for, stays in WRM for an hour (live panel, 🤖 menu and approval card with the full command). Once approved there, the same call runs once when the AI repeats it; the AI is told to say so and repeat the call instead of giving up. Audited as `ai.approved` / `ai.denied` with `later`.
+- **Reading files that may hold secrets with an approval:** keys, credentials and `ai_read_deny_paths` files are no longer refused outright; each read asks the user and secret-looking values are redacted for the AI. The new policy `ai_sensitive_reads` (`ask` default, `deny`) restores the old behaviour.
 - **Allow everything** for AI connections in automatic mode: one button fills the allow lists with `*` and `/**`, and **No time or action limit** keeps automatic mode on for as long as the AI connection is valid (`until_grant`). Administrators can turn the option off with the new policy `ai_auto_until_grant` (default on).
 
 ### Changed
 - `*` in the automatic allow list now allows every command, including chains with `&&`, variables, groups, command substitution and redirections. Blocked commands, the deny lists, sensitive files and commands WRM cannot parse still ask or are refused; the grant still covers only the chosen servers and its lifetime.
 - When WRM asks for an approval that is then denied or not answered, the AI is told which rule asked (for example the session's time limit or a command outside the allow list), what the user can change in WRM so it is not asked again, and to tell the user why WRM asked before trying again.
 - MCP sessions with no limit report `until_grant` and an `auto_note` in `open_session`.
+- Hard refusals (destructive or blocked commands, deny lists, read-only sessions, scopes) tell the AI that an approval cannot help and what the user can do instead. The approval question in the app says that an unanswered request stays open in WRM.
 
 ### Fixed
 - A long MCP session in automatic mode silently fell back to asking after the session time limit (at most `ai_auto_max_minutes`), and a command with a variable such as `$venv` asked even with `*` allowed. Both ended as "The user denied this action" when the app declined the question, although the user had allowed everything.
+- An MCP tool call whose approval the app stopped waiting for was reported to the AI as "the session was stopped".
 
 ## [12.5.1] - 2026-10-15
 
