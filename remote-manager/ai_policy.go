@@ -317,11 +317,29 @@ type aiAutoLimits struct {
 	UntilGrant bool `json:"until_grant,omitempty"`
 }
 
-// fullAccess reports whether the session's AI connection has full access (scope full_access,
-// while the administrator's ai_full_access allows it): nothing is refused outright any more,
-// but everything WRM would refuse needs the user's approval, every time, also in automatic mode.
+// fullAccess reports whether the session has full access: nothing is refused outright any
+// more, but everything WRM would refuse needs the user's approval, every time, also in
+// automatic mode. The administrator's switch ai_full_access turns it on; ai_full_access_mode
+// says for whom: every AI session (all, the default), AI connections with the full_access
+// scope (connection), or users who turned it on for themselves (user).
 func (s *aiSession) fullAccess() bool {
-	return s.Transport == "mcp" && oneOf("full_access", s.Scopes...) && settingBool("ai_full_access")
+	if !settingBool("ai_full_access") {
+		return false
+	}
+	switch getSetting("ai_full_access_mode") {
+	case "connection":
+		return s.Transport == "mcp" && oneOf("full_access", s.Scopes...)
+	case "user":
+		return aiUserFullAccess(s.UserID)
+	}
+	return true
+}
+
+// aiUserFullAccess: the user's own full-access switch (Settings → AI connections).
+func aiUserFullAccess(userID int) bool {
+	var on int
+	db.QueryRow(`SELECT ai_full_access FROM users WHERE id=?`, userID).Scan(&on)
+	return on == 1
 }
 
 // aiFullAccessDecision turns a refusal into an approval under full access. A read-only
