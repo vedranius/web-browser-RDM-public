@@ -1,5 +1,5 @@
 # Roadmap
 
-The accepted work through **v12.4.4** is delivered and recorded in [CHANGELOG.md](CHANGELOG.md), with setup/limits in the [v12.4.4 guide](docs/V12.4.4_GUIDE.md) and [release validation](docs/RELEASE_SUMMARY_v12.4.4.md).
+Accepted work through **v12.4.5** is delivered in [CHANGELOG.md](CHANGELOG.md). See the [v12.4.5 operation guide](docs/V12.4.5_GUIDE.md) and [validation](docs/RELEASE_SUMMARY_v12.4.5.md).
 
-No later version is currently assigned in this file.
+No later version is currently assigned.
