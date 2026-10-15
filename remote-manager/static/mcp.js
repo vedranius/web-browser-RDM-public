@@ -273,7 +273,7 @@ Object.assign(LANGS.hr, {
         <div class="field"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(c.max_hours))})</span></label>${lifetimeHTML(prefix + '-hours', c.default_hours)}</div></div>
       <div class="sub" id="${prefix}-mode-d" style="font-size:11px;color:var(--text3);">${esc(t('mcp_mode_read_only_d'))}</div>
       <div id="${prefix}-auto" style="display:none;">
-        <div class="mcp-row" style="align-items:center;"><button type="button" class="btn-sec btn-sm" onclick="wrmMCP.allowAll('${prefix}')">${esc(t('mcp_auto_all'))}</button>
+        <div style="display:flex;gap:10px;align-items:center;margin:6px 0 10px;"><button type="button" class="btn-sec btn-sm" style="flex:none;" onclick="wrmMCP.allowAll('${prefix}')">${esc(t('mcp_auto_all'))}</button>
           <span class="sub" style="font-size:11px;color:var(--text3);">${esc(t('mcp_auto_all_d'))}</span></div>
         <div class="field"><label>${esc(t('mcp_auto_allow'))}</label><textarea id="${prefix}-auto-allow" placeholder="systemctl restart nginx"></textarea></div>
         <div class="field"><label>${esc(t('mcp_auto_path_allow'))}</label><textarea id="${prefix}-auto-paths"></textarea></div>
