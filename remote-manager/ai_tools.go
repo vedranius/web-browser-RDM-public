@@ -200,6 +200,9 @@ type aiPlanned struct {
 	From     *aiSession
 	FromPath string
 	Size     int64
+	// set by the engine
+	Approved    bool // the user approved this call
+	ForceRedact bool // redact secret-looking values for the model whatever ai_redact_output says
 }
 
 func aiRequirePath(p string) (string, error) {

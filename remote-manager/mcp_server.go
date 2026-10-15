@@ -754,7 +754,7 @@ func mcpApprovalMessage(s *aiSession, a *aiApproval) string {
 	if a.Reason != "" {
 		b.WriteString("Reason given by the assistant: " + a.Reason + "\n")
 	}
-	fmt.Fprintf(&b, "\nUnanswered approvals are denied after %d seconds. You can also decide in WRM.", int(time.Until(a.Expires).Seconds()))
+	fmt.Fprintf(&b, "\nIf nobody answers within %d seconds the AI stops waiting; the request then stays open in WRM, where you can still approve it. You can also decide in WRM now.", int(time.Until(a.Expires).Seconds()))
 	return b.String()
 }
 

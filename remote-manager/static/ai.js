@@ -96,6 +96,7 @@ Object.assign(LANGS.en, {
   p_ai_auto_max_minutes: 'Automatic mode: max minutes', p_ai_auto_max_minutes_d: 'The longest time limit a user may choose.',
   p_ai_auto_max_actions: 'Automatic mode: max actions', p_ai_auto_max_actions_d: 'The largest number of automatic actions per opt-in.',
   p_ai_auto_until_grant: 'AI connections: automatic without limits', p_ai_auto_until_grant_d: 'Users may choose automatic mode with no time or action limit for an AI connection; it then lasts as long as the connection is valid.',
+  p_ai_sensitive_reads: 'Files that may hold secrets', p_ai_sensitive_reads_d: 'Keys, credentials and the paths of ai_read_deny_paths: readable after the user approves each read (secret-looking values are redacted), or always blocked.', po_ai_sensitive_reads_ask: 'With an approval', po_ai_sensitive_reads_deny: 'Always blocked',
   p_ai_allow_power: 'Shutdown and reboot', p_ai_allow_power_d: 'Blocked, or allowed with an approval of each command (never automatic).', po_ai_allow_power_off: 'Always blocked', po_ai_allow_power_ask: 'With an approval',
   p_ai_blocked_commands: 'Extra blocked commands', p_ai_blocked_commands_d: 'Comma-separated patterns refused in every mode, in addition to the built-in list.', p_ai_blocked_commands_ph: 'docker system prune*',
   p_ai_read_deny_paths: 'Extra unreadable files', p_ai_read_deny_paths_d: 'Comma-separated path patterns the assistant never reads (a pattern without / matches the file name).', p_ai_read_deny_paths_ph: '/srv/app/.env, *.p12',
@@ -195,6 +196,7 @@ Object.assign(LANGS.hr, {
   p_ai_auto_max_minutes: 'Automatski način: najviše minuta', p_ai_auto_max_minutes_d: 'Najdulje vremensko ograničenje koje korisnik smije izabrati.',
   p_ai_auto_max_actions: 'Automatski način: najviše akcija', p_ai_auto_max_actions_d: 'Najveći broj automatskih akcija po uključivanju.',
   p_ai_auto_until_grant: 'AI veze: automatski bez ograničenja', p_ai_auto_until_grant_d: 'Korisnici smiju za AI vezu odabrati automatski način bez ograničenja vremena i broja radnji; tada traje dok god veza vrijedi.',
+  p_ai_sensitive_reads: 'Datoteke koje mogu sadržavati tajne', p_ai_sensitive_reads_d: 'Ključevi, vjerodajnice i putanje iz ai_read_deny_paths: čitljive nakon što korisnik odobri svako čitanje (vrijednosti nalik tajnama se skrivaju) ili uvijek blokirane.', po_ai_sensitive_reads_ask: 'Uz odobrenje', po_ai_sensitive_reads_deny: 'Uvijek blokirano',
   p_ai_allow_power: 'Gašenje i ponovno pokretanje', p_ai_allow_power_d: 'Blokirano ili dopušteno uz odobrenje svake naredbe (nikad automatski).', po_ai_allow_power_off: 'Uvijek blokirano', po_ai_allow_power_ask: 'Uz odobrenje',
   p_ai_blocked_commands: 'Dodatno blokirane naredbe', p_ai_blocked_commands_d: 'Uzorci odvojeni zarezom, odbijeni u svakom načinu, uz ugrađeni popis.', p_ai_blocked_commands_ph: 'docker system prune*',
   p_ai_read_deny_paths: 'Dodatne nečitljive datoteke', p_ai_read_deny_paths_d: 'Uzorci putanja odvojeni zarezom koje asistent nikad ne čita (uzorak bez / odgovara nazivu datoteke).', p_ai_read_deny_paths_ph: '/srv/app/.env, *.p12',
@@ -1178,7 +1180,7 @@ Object.assign(LANGS.hr, {
 
   // ── admin tab ─────────────────────────────────────────
   const AI_POLICY_KEYS = ['ai_assistant', 'ai_kill_switch', 'ai_modes', 'ai_default_mode', 'ai_mode_rules', 'ai_personal_keys', 'ai_provider_kinds', 'ai_models', 'ai_ollama_manage',
-    'ai_redact_output', 'ai_share_notes', 'ai_allow_power', 'ai_blocked_commands', 'ai_read_deny_paths', 'ai_approval_timeout_seconds', 'ai_auto_max_minutes',
+    'ai_redact_output', 'ai_share_notes', 'ai_allow_power', 'ai_sensitive_reads', 'ai_blocked_commands', 'ai_read_deny_paths', 'ai_approval_timeout_seconds', 'ai_auto_max_minutes',
     'ai_auto_max_actions', 'ai_auto_until_grant', 'ai_provider_header_seconds', 'ai_provider_request_seconds', 'ai_provider_stream_idle_seconds', 'ai_command_timeout_seconds', 'ai_output_max_kb', 'ai_max_steps', 'ai_idle_minutes', 'ai_transcript_retention_days'];
 
   async function adminAI() {

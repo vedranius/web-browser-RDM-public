@@ -317,6 +317,10 @@ type aiAutoLimits struct {
 	UntilGrant bool `json:"until_grant,omitempty"`
 }
 
+// aiSensitiveReadsAsk reports whether reading a file that may hold secrets can be approved
+// by the user (ai_sensitive_reads = ask) instead of being refused.
+func aiSensitiveReadsAsk() bool { return getSetting("ai_sensitive_reads") != "deny" }
+
 // allowsAll reports whether a pattern list allows every command or path ("*" or "**").
 func allowsAll(pats []string) bool {
 	for _, p := range pats {
@@ -448,6 +452,10 @@ func aiEvaluate(mode string, auto *aiAutoLimits, act aiAction, home string, now 
 	switch act.Kind {
 	case "read":
 		if why := aiReadDenied(act.Path); why != "" {
+			if aiSensitiveReadsAsk() {
+				// the user may approve reading it once; secret-looking values are redacted
+				return aiDecision{Action: aiApprove, Rule: "sensitive_read", Reason: act.Path + " may hold secrets (" + why + "): reading it needs the user's approval, and secret-looking values are redacted"}
+			}
 			return aiDecision{Action: aiDeny, Rule: "sensitive_path", Reason: act.Path + " is not readable by the assistant (" + why + ")"}
 		}
 		return aiDecision{Action: aiAllow, Rule: "readonly", ReadOnly: true}

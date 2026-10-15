@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -111,5 +112,95 @@ func TestV1252PanelKeepsLimits(t *testing.T) {
 		"auto": map[string]interface{}{"allow": []string{"*"}, "until_grant": true}})
 	if code == 200 || !strings.Contains(fmt.Sprint(v), "only for AI connections") {
 		t.Fatalf("panel session without limits: %d %v", code, v)
+	}
+}
+
+// An approval the app declined (or nobody answered) is not lost: it stays in WRM, the user
+// approves it there later, and the same call then runs once without asking.
+func TestV1252ApproveLater(t *testing.T) {
+	e := newMCPEnv(t)
+	tok, _ := e.pat("ask", []string{"read_logs", "run_with_approval"}, nil)
+	c := e.client(tok)
+	c.initialize(true)
+	asked := 0
+	c.onRequest = func(method string, params map[string]interface{}) map[string]interface{} {
+		asked++
+		return map[string]interface{}{"action": "decline"}
+	}
+	sid := c.open("demo-api")
+	s := mcpSessionOf(sid)
+	args := map[string]interface{}{"session_id": sid, "command": "touch ~/later-ok", "reason": "test"}
+	text, isErr := c.call("run_command", args)
+	if !isErr || !strings.Contains(text, "Not run yet") || !strings.Contains(text, "exactly the same arguments") || !strings.Contains(text, "(rule ask)") || asked != 1 {
+		t.Fatalf("declined in the app: %v %s (asked %d)", isErr, text, asked)
+	}
+	a := pendingOf(s)
+	if a == nil || !a.Later || a.Command != "touch ~/later-ok" {
+		t.Fatalf("the request is not kept for later: %+v", a)
+	}
+	if code, v := e.user.aiDo("POST", fmt.Sprintf("/api/ai/sessions/%d/approvals/%s", s.ID, a.ID), map[string]interface{}{"decision": "approve"}); code != 200 {
+		t.Fatalf("approve later: %d %v", code, v)
+	}
+	if pendingOf(s) != nil {
+		t.Fatal("still pending after the approval")
+	}
+	// another command is not covered by it
+	if text, isErr := c.call("run_command", map[string]interface{}{"session_id": sid, "command": "touch ~/other", "reason": "x"}); !isErr || aiFileExists(filepath.Join(e.host.home, "other")) || asked != 2 {
+		t.Fatalf("another command ran: %s", text)
+	}
+	if text, isErr := c.call("run_command", args); isErr || !aiFileExists(filepath.Join(e.host.home, "later-ok")) || asked != 2 {
+		t.Fatalf("repeated after the approval: %v %s (asked %d)", isErr, text, asked)
+	}
+	if mcpAuditCount("ai.approved", `%"via":"later"%`) == 0 {
+		t.Error("the later approval is not audited")
+	}
+	// only once: the third time it asks again
+	c.call("run_command", args)
+	if asked != 3 {
+		t.Fatalf("a later approval was used twice (asked %d)", asked)
+	}
+	// a denial in WRM stays a denial
+	for i := 0; i < 2; i++ { // the other command and the third call wait for later
+		b := pendingOf(s)
+		if b == nil || !b.Later {
+			t.Fatalf("pending %d: %+v", i, b)
+		}
+		e.user.aiDo("POST", fmt.Sprintf("/api/ai/sessions/%d/approvals/%s", s.ID, b.ID), map[string]interface{}{"decision": "deny"})
+	}
+	if pendingOf(s) != nil {
+		t.Fatal("the denied request is still pending")
+	}
+	// hard blocks say that an approval cannot help
+	if text, _ := c.call("run_command", map[string]interface{}{"session_id": sid, "command": "rm -rf --no-preserve-root /", "reason": "x"}); !strings.Contains(text, "blocked in every mode") {
+		t.Fatalf("blocked command: %s", text)
+	}
+}
+
+// Files that may hold secrets are read after the user approves, with secrets redacted;
+// the policy can block them.
+func TestV1252SensitiveReadWithApproval(t *testing.T) {
+	e := newMCPEnv(t)
+	os.MkdirAll(filepath.Join(e.host.home, ".aws"), 0o700)
+	writeHostFile(t, e.host, ".aws/credentials", "[default]\nregion = eu-central-1\naws_secret_access_key = abcdEFGHsecret1234\n")
+	tok, _ := e.pat("read_only", []string{"read_logs", "run_readonly"}, nil)
+	c := e.client(tok)
+	c.initialize(true)
+	var msg string
+	c.onRequest = func(method string, params map[string]interface{}) map[string]interface{} {
+		msg = fmt.Sprint(params["message"])
+		return map[string]interface{}{"action": "accept", "content": map[string]interface{}{"decision": "approve"}}
+	}
+	sid := c.open("demo-api")
+	text, isErr := c.call("read_file", map[string]interface{}{"session_id": sid, "path": "~/.aws/credentials"})
+	if isErr || !strings.Contains(text, "eu-central-1") || strings.Contains(text, "abcdEFGHsecret1234") || !strings.Contains(text, "[REDACTED]") {
+		t.Fatalf("approved sensitive read: %v %s", isErr, text)
+	}
+	if !strings.Contains(msg, "credentials") || !strings.Contains(msg, "may hold secrets") {
+		t.Fatalf("the approval question: %s", msg)
+	}
+	t.Setenv("WRM_AI_SENSITIVE_READS", "deny")
+	msg = ""
+	if text, isErr := c.call("read_file", map[string]interface{}{"session_id": sid, "path": "~/.aws/credentials"}); !isErr || !strings.Contains(text, "ai_sensitive_reads") || msg != "" {
+		t.Fatalf("policy deny: %v %s", isErr, text)
 	}
 }
