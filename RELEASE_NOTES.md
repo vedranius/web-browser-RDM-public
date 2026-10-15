@@ -1,14 +1,32 @@
-## Web Remote Manager PRO v12.6.2 — Full access, but Claude still asks
+## Web Remote Manager PRO v12.6.3 — Full access with one switch
 
 ### Added
 
+- **The administrator chooses how full access applies** (`ai_full_access_mode`, *Admin panel → AI connections*):
+  - **Every AI session** (default): the **Full access for the AI** switch alone opens full access for every AI session, the WRM AI panel and every AI connection, without ticking a scope anywhere.
+  - **AI connections with the Full access scope**: as in v12.6.2, a user ticks **⚠ Full access** on an AI connection.
+  - **Users who turn it on themselves**: each user gets a **Full access for my AI sessions** switch in *Settings → AI connections*; it applies to all of that user's AI sessions.
+- *Settings → AI connections* shows whether full access is on and how it applies.
+
+Full access still never runs anything WRM would refuse on its own: such a command or file comes to you as an approval marked *FULL ACCESS*, every time, and read-only sessions stay read-only.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. One additive column (`users.ai_full_access`); a previous binary still starts on the database. **If you had already turned on `ai_full_access` in v12.6.2,** it now applies to every AI session (mode *Every AI session*); set `ai_full_access_mode` to *AI connections with the Full access scope* to keep the v12.6.2 behaviour.
+
+[Download v12.6.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.3) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.3/README.md#ai-desktop-apps-mcp)
+
+### Included from v12.6.2 — Full access, but Claude still asks
+
+#### Added
+
 - **Full access with approval:** an administrator turns on **Full access for AI connections** (`ai_full_access`, *Admin panel → AI connections*). After that, an AI connection can get the **⚠ Full access** scope. With it, WRM refuses nothing outright: destructive commands, blocked commands, your deny lists, shutdown and reboot, protected paths and secret files all come to you as an approval marked *FULL ACCESS*, with the full command and the rule WRM would otherwise apply. They are asked every time and never run automatically, even with "Allow everything". Ordinary commands keep working as the connection is set up.
 
-### Changed
+#### Changed
 
 A refused command now tells the AI that full access exists and that you or your administrator turn it on, so it can explain the choice to you.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. Nothing changes until an administrator turns on `ai_full_access` and you give a connection the *Full access* scope (edit the AI connection; open sessions end and are reopened). A read-only connection stays read-only even with full access.
 
