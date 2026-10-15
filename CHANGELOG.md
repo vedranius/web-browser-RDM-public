@@ -1,3 +1,16 @@
+## [12.6.0] - 2026-10-15
+
+### Added
+- **Medium native engine preview (read-only):** a *Native engine* panel in the Medium view reads the user's imported `deploy-config` as it is (`servers.yaml`, `environments.yaml`, `projects/*.yaml`) with a Go reader and validator that follows the original tool's rules (unknown keys, duplicate keys, YAML 1.1 booleans, `<<` merges, names, ports, `allowed_refs`, ignore rules, absolute paths, `source_dir`, state locations and overlapping destinations).
+- **Native plan:** for a project, environment and branch or tag, WRM prepares the source from the matching WRM Git source (GitLab, GitHub or Gitea API, `source_dir`, symlinks, SHA-256) and compares it with each destination over SFTP through a saved WRM connection. The diff follows `rsync -rlc --delete` with the project's exclusions, including directory-only, anchored, `**` and `***` patterns, kept directories that hold excluded items and the "cannot make way" error. Server state (`current.json`, the history tail, the lock owner) is read in the original format.
+- **Comparison with the original tool:** with Medium running, *Compare with the original tool* runs the original comparison (fetch, export, build, `rsync --dry-run`) through the authenticated bridge and shows, per server, whether the native plan is the same, with changes only in one engine or of a different type. The original tool's prepared source is used for projects with a build, and the WRM Git source is checked against the original export.
+- **Servers ↔ WRM connections:** each `servers.yaml` server is matched to a saved SSH connection by address and user, or linked explicitly (`medium_server_links`, audited as `git.medium_server_linked`). Previews are audited as `git.medium_native_preview`.
+- API: `GET /api/git/medium/native/config`, `POST /api/git/medium/native/link`, `GET /api/git/medium/native/refs`, `POST /api/git/medium/native/plan`, `GET /api/git/medium/native/plan/<id>`.
+
+### Changed
+- `medium_wrapper.py` exposes `POST /__wrm_plan` (behind the bridge key) that returns the original comparison and a manifest of its prepared source; the original tool is still unchanged.
+- The ROADMAP keeps v12.7.0 (native engine and build location) and v12.8.0 (switch-over).
+
 ## [12.5.1] - 2026-10-15
 
 ### Added

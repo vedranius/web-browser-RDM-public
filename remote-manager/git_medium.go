@@ -464,6 +464,10 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		jsonOK(w, mediumPublicPreferences(uid))
 		return
 	}
+	if strings.HasPrefix(action, "/native/") {
+		apiMediumNative(w, r, uid, strings.TrimPrefix(action, "/native"))
+		return
+	}
 	if !requireMethod(w, r, "POST") {
 		return
 	}
