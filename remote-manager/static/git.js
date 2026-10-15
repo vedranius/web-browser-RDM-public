@@ -523,6 +523,30 @@ Object.assign(LANGS.hr, {
  gm_settings:'Postavke izvornog runtimea', gm_settings_hint:'Zaustavite Srednje prije spremanja. Ovo su izvorne deploy-tool opcije: Git repo konfiguracije/povlačenje/interval provjere, autor commitova, SSH opcije, timeout naredbi i build korisnik. Prazna polja koriste izvorne zadane vrijednosti. Maskirane vrijednosti se zadržavaju.', gm_title:'Izvorni deploy tool', gm_intro:'Srednje pokreće neizmijenjeno izvorno sučelje i deploy mehanizam. Svaki račun zadržava privatnu konfiguraciju, radne datoteke i SSH podatke. Windows koristi upravljani Linux runtime; ne treba zasebno postavljanje rsynca/Pythona.',
  gm_prepare:'Pripremi runtime / pokušaj ponovno', gm_imported:'Tool ZIP učitan; runtime treba pripremiti', gm_docker_setup:'Docker postavljanje na Windowsu', gm_backend:'Runtime', gm_start:'Pokreni', gm_stop:'Zaustavi', gm_tool:'Uvezi deploy-tool ZIP', gm_config:'Uvezi deploy-config ZIP', gm_ssh:'Uvezi SSH profil ZIP', gm_open:'Otvori cijeli prozor', gm_running:'Pokrenuto', gm_stopped:'Zaustavljeno', gm_tool_ready:'Tool spreman', gm_tool_missing:'Tool nije instaliran', gm_config_ready:'Config učitan', gm_config_missing:'Config nije učitan', gm_missing:'Nedostaju preduvjeti', gm_size:'ZIP prelazi 20 MiB', gm_trust:'Ovaj izvor/config može izvršavati build i deploy naredbe na serveru. Uvozite samo datoteke kojima vjerujete. Nastaviti?', gm_stop_confirm:'Zaustaviti izvorni deploy tool? Najprije pričekajte završetak deploya.',
 });
+Object.assign(LANGS.en, {
+ mn_title:'Native engine (preview, read-only)', mn_intro:'WRM reads your deploy-config as it is, prepares the chosen branch or tag from a WRM Git source and compares it with each destination through the WRM connection linked to that server. Nothing is written to any server. Compare with the original tool runs the original comparison too and shows both change lists side by side.',
+ mn_servers:'Servers and WRM connections', mn_server:'Server', mn_address:'Address in servers.yaml', mn_connection:'WRM connection', mn_auto:'Automatic', mn_none:'None', mn_unlinked:'not linked', mn_linked:'Connection saved',
+ mn_plan:'Plan', mn_project:'Project', mn_env:'Environment', mn_ref:'Branch or tag', mn_preview:'Preview natively', mn_compare:'Compare with the original tool', mn_needs_running:'Start Medium (the original tool) first',
+ mn_build_note:'This project has a build step: only the comparison with the original tool (which builds it) is available until the native engine (v12.7.0).', mn_source_note:'Source: WRM Git source {0}', mn_no_source_note:'No WRM Git source serves this repository; add it under Git → Sources for the native preview.',
+ mn_stage_configuration:'Reading the configuration…', mn_stage_original:'The original tool is comparing (fetch, export, build, rsync)…', mn_stage_source:'Preparing the source…', mn_stage_servers:'Comparing with the servers…',
+ mn_same:'Same result as the original tool', mn_differs:'Differs from the original tool', mn_src_git_source:'WRM Git source', mn_src_original:'the original tool\'s prepared source', mn_files:'files',
+ mn_new:'new', mn_changed:'changed', mn_deleted:'deleted', mn_no_changes:'No changes: the server matches the source.', mn_missing_dir:'The application directory does not exist yet; everything is new.',
+ mn_only_ref:'Only in the original tool', mn_only_native:'Only in the native engine', mn_kind:'Type differs', mn_matched:'{0} of {1} changes match',
+ mn_current:'On the server', mn_lock:'Locked by {0} since {1}', mn_history:'Recent deployments', mn_changes:'Changes', mn_excludes:'Exclusions', mn_post_deploy:'After deployment', mn_ref_error:'Original tool',
+ mn_not_allowed:'not allowed for this environment', mn_confirm:'typing the environment name is required', mn_source_check:'Source check (WRM Git source vs. the original export)', mn_source_same:'identical', mn_source_missing:'missing in the Git source', mn_source_extra:'only in the Git source', mn_source_differs:'different content', mn_not_compared:'Not selected', mn_more:'… and {0} more',
+});
+Object.assign(LANGS.hr, {
+ mn_title:'Nativni engine (pregled, samo čitanje)', mn_intro:'WRM čita vaš deploy-config kakav jest, priprema odabranu granu ili tag iz WRM Git izvora i uspoređuje ga sa svakim odredištem preko WRM veze povezane s tim serverom. Ništa se ne zapisuje ni na jedan server. Usporedba s izvornim alatom pokreće i izvornu usporedbu i prikazuje oba popisa promjena jedan uz drugi.',
+ mn_servers:'Serveri i WRM veze', mn_server:'Server', mn_address:'Adresa u servers.yaml', mn_connection:'WRM veza', mn_auto:'Automatski', mn_none:'Nijedna', mn_unlinked:'nije povezan', mn_linked:'Veza spremljena',
+ mn_plan:'Plan', mn_project:'Projekt', mn_env:'Okolina', mn_ref:'Grana ili tag', mn_preview:'Nativni pregled', mn_compare:'Usporedi s izvornim alatom', mn_needs_running:'Prvo pokrenite Srednje (izvorni alat)',
+ mn_build_note:'Ovaj projekt ima build: do nativnog enginea (v12.7.0) dostupna je samo usporedba s izvornim alatom (koji ga builda).', mn_source_note:'Izvor: WRM Git izvor {0}', mn_no_source_note:'Nijedan WRM Git izvor ne poslužuje ovaj repozitorij; za nativni pregled dodajte ga pod Git → Izvori.',
+ mn_stage_configuration:'Čitam konfiguraciju…', mn_stage_original:'Izvorni alat uspoređuje (fetch, izvoz, build, rsync)…', mn_stage_source:'Pripremam izvor…', mn_stage_servers:'Uspoređujem sa serverima…',
+ mn_same:'Isti rezultat kao izvorni alat', mn_differs:'Razlikuje se od izvornog alata', mn_src_git_source:'WRM Git izvor', mn_src_original:'izvor koji je pripremio izvorni alat', mn_files:'datoteka',
+ mn_new:'novo', mn_changed:'promijenjeno', mn_deleted:'obrisano', mn_no_changes:'Nema promjena: server odgovara izvoru.', mn_missing_dir:'Direktorij aplikacije još ne postoji; sve je novo.',
+ mn_only_ref:'Samo u izvornom alatu', mn_only_native:'Samo u nativnom engineu', mn_kind:'Razlikuje se vrsta', mn_matched:'{0} od {1} promjena se poklapa',
+ mn_current:'Na serveru', mn_lock:'Zaključao {0} od {1}', mn_history:'Zadnji deployevi', mn_changes:'Promjene', mn_excludes:'Izuzeća', mn_post_deploy:'Nakon deploya', mn_ref_error:'Izvorni alat',
+ mn_not_allowed:'nije dopušten za ovu okolinu', mn_confirm:'potrebno je upisati ime okoline', mn_source_check:'Provjera izvora (WRM Git izvor naspram izvornog izvoza)', mn_source_same:'identično', mn_source_missing:'nedostaje u Git izvoru', mn_source_extra:'samo u Git izvoru', mn_source_differs:'drukčiji sadržaj', mn_not_compared:'Nije odabrano', mn_more:'… i još {0}',
+});
 
 
 Object.assign(LANGS.en, {
@@ -559,6 +583,15 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
 #git-ws { position: fixed; inset: 0; z-index: 8800; background: var(--bg); color: var(--text); display: flex; flex-direction: column; font-size: 13px; }
 #git-ws .g-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-wrap: wrap; }
 #git-ws #medium-status {overflow-wrap:anywhere;}
+#git-ws #mn-card .s-enew { background: rgba(34,197,94,.14); color: var(--green); }
+#git-ws #mn-card .s-echanged, #git-ws #mn-card .s-pending { background: rgba(245,158,11,.14); color: var(--yellow); }
+#git-ws #mn-card .s-eremoved, #git-ws #mn-card .s-error { background: rgba(239,68,68,.14); color: var(--red); white-space: normal; }
+#git-ws #mn-card .s-differs { background: rgba(139,92,246,.16); color: var(--purple); }
+#git-ws #mn-card table { width: auto; max-width: 100%; }
+#git-ws #mn-card td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+#git-ws #mn-card h4 { margin: 16px 0 6px; }
+#git-ws #mn-card .mn-dest { display: inline-flex; gap: 6px; align-items: center; margin-right: 14px; }
+#git-ws #mn-card > summary { cursor: pointer; }
 #git-ws label.btn-sec {display:inline-flex;align-items:center;padding:6px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--bg3);}
 #git-ws .g-head h2 { font-size: 15px; margin: 0; white-space: nowrap; }
 #git-ws .g-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -2818,7 +2851,7 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
       <label class="btn-sec" id="medium-tool-label" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_tool'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('tool',this)"></label>
       <label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_config'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('config',this)"></label>
       <label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_ssh'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('ssh',this)"></label>
-      <button class="btn-sec" id="medium-prepare" onclick="gitWorkspace.mediumAction('prepare')">${esc(t('gm_prepare'))}</button><a class="btn-sec" id="medium-docker-guide" href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener">${esc(t('gm_docker_setup'))}</a><button class="btn-sec" onclick="gitWorkspace.mediumSettings()">⚙ ${esc(t('gm_settings'))}</button><a class="btn-sec" href="/medium/" target="_blank" rel="noopener">↗ ${esc(t('gm_open'))}</a></div></details></div><div id="medium-frame"></div>`;
+      <button class="btn-sec" id="medium-prepare" onclick="gitWorkspace.mediumAction('prepare')">${esc(t('gm_prepare'))}</button><a class="btn-sec" id="medium-docker-guide" href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener">${esc(t('gm_docker_setup'))}</a><button class="btn-sec" onclick="gitWorkspace.mediumSettings()">⚙ ${esc(t('gm_settings'))}</button><a class="btn-sec" href="/medium/" target="_blank" rel="noopener">↗ ${esc(t('gm_open'))}</a></div></details></div><details class="g-card" id="mn-card" ontoggle="if(this.open)gitWorkspace.nativeLoad()"><summary><b>${esc(t('mn_title'))}</b></summary><div id="mn-body"></div></details><div id="medium-frame"></div>`;
     }
     await mediumRefresh();
   }
@@ -2850,6 +2883,137 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
     }
   }
 
+  // Native engine preview (read-only): WRM reads deploy-config, prepares the source and
+  // compares it with the servers through WRM connections; optionally side by side with the
+  // original tool's own comparison.
+  const MN = {cfg: null, timer: null};
+  const mnFmt = (k, ...a) => t(k).replace(/\{(\d)\}/g, (_, i) => a[+i] ?? '');
+  async function nativeLoad() {
+    const box = $('mn-body'); if (!box) return;
+    box.textContent = t('loading');
+    try {
+      const r = await fetch('/api/git/medium/native/config'); if (!r.ok) throw new Error(await apiError(r));
+      MN.cfg = await r.json(); nativePaint();
+    } catch (e) { box.textContent = String(e); }
+  }
+  function nativePaint() {
+    const c = MN.cfg, box = $('mn-body'); if (!box || !c) return;
+    const refresh = `<button class="btn-sec" onclick="gitWorkspace.nativeLoad()">↻ ${esc(t('git_refresh'))}</button>`;
+    if (!c.ok) { box.innerHTML = `<p><span class="g-st s-error">${esc(c.error)}</span></p><div class="g-bar">${refresh}</div>`; return; }
+    const conns = c.connections || [];
+    const rows = c.config.servers.map(s => {
+      const l = (c.links || {})[s.name];
+      const opts = `<option value="0">${esc(l && l.auto ? t('mn_auto') + ': ' + l.conn_name : t('mn_none'))}</option>` + conns.map(x => `<option value="${x.id}" ${l && !l.auto && l.conn_id === x.id ? 'selected' : ''}>${esc(x.name)} (${esc(x.user + '@' + x.host)})</option>`).join('');
+      return `<tr><td class="g-mono">${esc(s.name)}</td><td class="g-mono">${esc(s.user + '@' + s.host + ':' + s.port)}</td><td><select data-mn-server="${esc(s.name)}" aria-label="${esc(t('mn_connection') + ' ' + s.name)}" onchange="gitWorkspace.nativeLink(this)">${opts}</select>${l ? '' : ` <span class="g-st s-missing">${esc(t('mn_unlinked'))}</span>`}</td></tr>`;
+    }).join('');
+    const projects = c.projects.map(p => `<option value="${esc(p.name)}">${esc(p.name)}${p.build ? ' · build' : ''}</option>`).join('');
+    box.innerHTML = `<p class="g-mut">${esc(t('mn_intro'))}</p>
+      <h4>${esc(t('mn_servers'))}</h4><div class="g-scroll"><table><thead><tr><th>${esc(t('mn_server'))}</th><th>${esc(t('mn_address'))}</th><th>${esc(t('mn_connection'))}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <h4>${esc(t('mn_plan'))}</h4>
+      <div class="g-grid"><label>${esc(t('mn_project'))}<select id="mn-project" onchange="gitWorkspace.nativeProject()">${projects}</select></label><label>${esc(t('mn_env'))}<select id="mn-env" onchange="gitWorkspace.nativeEnv()"></select></label><label>${esc(t('mn_ref'))}<input id="mn-ref" list="mn-refs" placeholder="main" autocomplete="off"><datalist id="mn-refs"></datalist></label></div>
+      <div id="mn-dests" class="g-bar"></div><p id="mn-note" class="g-mut"></p>
+      <div class="g-bar"><button id="mn-preview" onclick="gitWorkspace.nativePlan(false)">${esc(t('mn_preview'))}</button><button class="btn-sec" id="mn-compare" onclick="gitWorkspace.nativePlan(true)" ${c.running ? '' : 'disabled'} title="${esc(c.running ? '' : t('mn_needs_running'))}">${esc(t('mn_compare'))}</button>${refresh}</div>
+      <div id="mn-result" role="status" aria-live="polite"></div>`;
+    nativeProject();
+  }
+  function mnProject() { const c = MN.cfg; const name = $('mn-project') && $('mn-project').value; return c && c.config.projects.find(p => p.name === name); }
+  async function nativeProject() {
+    const c = MN.cfg, p = mnProject(); if (!p) return;
+    const view = c.projects.find(x => x.name === p.name) || {};
+    $('mn-env').innerHTML = (view.environments || []).map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('');
+    $('mn-note').textContent = view.build ? t('mn_build_note') : view.source ? mnFmt('mn_source_note', view.source) : t('mn_no_source_note');
+    $('mn-preview').disabled = !!view.build || !view.source;
+    nativeEnv();
+    $('mn-refs').innerHTML = '';
+    if (!view.source) return;
+    try {
+      const r = await fetch('/api/git/medium/native/refs?project=' + encodeURIComponent(p.name)); if (!r.ok) return;
+      const v = await r.json(); if (mnProject() !== p) return;
+      $('mn-refs').innerHTML = [...(v.branches || []), ...(v.tags || [])].map(x => `<option value="${esc(x)}">`).join('');
+    } catch (_) {}
+  }
+  function nativeEnv() {
+    const p = mnProject(), env = $('mn-env') && $('mn-env').value;
+    const tg = p && (p.targets || []).find(x => x.name === env);
+    $('mn-dests').innerHTML = tg ? tg.destinations.map(d => `<label class="mn-dest"><input type="checkbox" data-mn-dest="${esc(d.server)}" checked><span class="g-mono">${esc(d.server + ':' + d.path)}</span></label>`).join('') : '';
+  }
+  async function nativeLink(sel) {
+    const r = await fetch('/api/git/medium/native/link', json('POST', {server: sel.dataset.mnServer, conn_id: +sel.value}));
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    showToast(t('mn_linked'), 'success'); await nativeLoad();
+  }
+  async function nativePlan(compare) {
+    const p = mnProject(); if (!p) return;
+    const servers = [...document.querySelectorAll('[data-mn-dest]')].filter(x => x.checked).map(x => x.dataset.mnDest);
+    const body = {project: p.name, environment: $('mn-env').value, ref: $('mn-ref').value.trim(), servers, compare};
+    if (!body.ref || !servers.length) { showToast(t(!body.ref ? 'mn_ref' : 'mn_server') + '?', 'error'); return; }
+    $('mn-preview').disabled = $('mn-compare').disabled = true;
+    try {
+      const r = await fetch('/api/git/medium/native/plan', json('POST', body)); if (!r.ok) throw new Error(await apiError(r));
+      const {id} = await r.json(); nativePoll(id);
+    } catch (e) { showToast(String(e), 'error', 8000); nativeProject(); $('mn-compare').disabled = !MN.cfg.running; }
+  }
+  async function nativePoll(id) {
+    clearTimeout(MN.timer);
+    const out = $('mn-result'); if (!out) return;
+    try {
+      const r = await fetch('/api/git/medium/native/plan/' + encodeURIComponent(id)); if (!r.ok) throw new Error(await apiError(r));
+      const run = await r.json();
+      if (!run.done) { out.innerHTML = `<p><span class="g-spin"></span> ${esc(t('mn_stage_' + run.stage) || run.stage)}</p>`; MN.timer = setTimeout(() => nativePoll(id), 1500); return; }
+      nativeRender(run);
+    } catch (e) { out.textContent = String(e); }
+    if ($('mn-compare')) { nativeProject(); $('mn-compare').disabled = !MN.cfg.running; }
+  }
+  function mnChanges(list, limit) {
+    const shown = list.slice(0, limit);
+    const rows = shown.map(c => `<tr><td><span class="g-st s-e${c.action === 'deleted' ? 'removed' : c.action}">${esc(t('mn_' + c.action))}</span></td><td class="g-mono">${esc(c.path)}${c.link_target ? ' → ' + esc(c.link_target) : ''}</td><td class="g-mut">${esc(c.kind)}${c.server_kind && c.server_kind !== c.kind ? ' (' + esc(c.server_kind) + ')' : ''}</td></tr>`).join('');
+    return `<div class="g-scroll"><table><tbody>${rows}</tbody></table></div>${list.length > limit ? `<p class="g-mut">${esc(mnFmt('mn_more', list.length - limit))}</p>` : ''}`;
+  }
+  function nativeRender(run) {
+    const out = $('mn-result'); if (!out) return;
+    if (!run.result) { out.innerHTML = `<p><span class="g-st s-error">${esc(run.error || 'error')}</span></p>`; return; }
+    const r = run.result;
+    const head = [`<b>${esc(r.project)}</b> · ${esc(r.environment)}`, `<span class="g-mono">${esc(r.ref)}</span> <span class="g-mono g-mut">${esc((r.commit || '').slice(0, 10))}</span>${r.version ? ' · ' + esc(r.version) : ''}`,
+      `${esc(t('mn_src_' + r.source_from))}${r.source_name ? ' (' + esc(r.source_name) + ')' : ''} · ${r.files} ${esc(t('mn_files'))}`,
+      !r.ref_allowed ? `<span class="g-st s-error">${esc(t('mn_not_allowed'))}</span>` : '', r.confirm ? `<span class="g-st s-pending">${esc(t('mn_confirm'))}</span>` : ''].filter(Boolean).join(' · ');
+    let html = `<div class="g-card"><p>${head}</p>`;
+    if (r.compared) html += `<p><span class="g-st ${r.same ? 's-ok' : 's-differs'}">${esc(t(r.same ? 'mn_same' : 'mn_differs'))}</span></p>`;
+    if (r.warnings && r.warnings.length) html += `<ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>`;
+    if (r.source_check) {
+      const sc = r.source_check;
+      html += `<p><b>${esc(t('mn_source_check'))}:</b> ${sc.error ? `<span class="g-st s-error">${esc(sc.error)}</span>` : sc.same ? `<span class="g-st s-ok">${esc(t('mn_source_same'))}</span>` : [['missing', sc.missing], ['extra', sc.extra], ['differs', sc.differs]].filter(x => x[1].length).map(([k, l]) => `${esc(t('mn_source_' + k))}: <span class="g-mono">${esc(l.slice(0, 20).join(', '))}</span>`).join(' · ')}</p>`;
+    }
+    if (r.not_compared && r.not_compared.length) html += `<p class="g-mut">${esc(t('mn_not_compared'))}: ${esc(r.not_compared.join(', '))}</p>`;
+    html += '</div>';
+    for (const s of r.servers) {
+      html += `<div class="g-card"><h4 class="g-mono">${esc(s.label)}</h4><p class="g-mut">${esc(t('mn_connection'))}: ${esc(s.connection || '—')}${s.post_deploy ? ` · ${esc(t('mn_post_deploy'))}: <span class="g-mono">${esc(s.post_deploy)}</span>` : ''}</p>`;
+      if (s.error) html += `<p><span class="g-st s-error">${esc(s.error)}</span></p>`;
+      else {
+        html += `<p>${['new', 'changed', 'deleted'].map(a => `<span class="g-st s-e${a === 'deleted' ? 'removed' : a}">${s.counts[a]} ${esc(t('mn_' + a))}</span>`).join(' ')}</p>`;
+        if (!s.exists) html += `<p class="g-mut">${esc(t('mn_missing_dir'))}</p>`;
+      }
+      if (s.reference_error) html += `<p>${esc(t('mn_ref_error'))}: <span class="g-st s-error">${esc(s.reference_error)}</span></p>`;
+      if (s.compare) {
+        const cmp = s.compare;
+        html += `<p><span class="g-st ${cmp.same ? 's-ok' : 's-differs'}">${esc(t(cmp.same ? 'mn_same' : 'mn_differs'))}</span> <span class="g-mut">${esc(mnFmt('mn_matched', cmp.matched, Math.max(s.reference_count, s.changes.length)))}</span></p>`;
+        if (cmp.only_reference.length) html += `<p><b>${esc(t('mn_only_ref'))}</b></p>${mnChanges(cmp.only_reference, 100)}`;
+        if (cmp.only_native.length) html += `<p><b>${esc(t('mn_only_native'))}</b></p>${mnChanges(cmp.only_native, 100)}`;
+        if (cmp.kind_differs.length) html += `<p><b>${esc(t('mn_kind'))}:</b> <span class="g-mono">${esc(cmp.kind_differs.join(', '))}</span></p>`;
+      }
+      if (s.warnings && s.warnings.length) html += `<ul>${s.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>`;
+      const st = s.state;
+      if (st) {
+        const cur = st.current;
+        if (cur) html += `<p>${esc(t('mn_current'))}: <b class="g-mono">${esc(cur.version || cur.branch || '?')}</b> <span class="g-mut">${esc([cur.branch, (cur.commit || '').slice(0, 10), cur.deployed_at, cur.deployed_by].filter(Boolean).join(' · '))}</span></p>`;
+        if (st.lock) html += `<p><span class="g-st s-pending">${esc(mnFmt('mn_lock', st.lock.user || '?', st.lock.since || '?'))}</span></p>`;
+        if (st.history && st.history.length) html += `<details><summary>${esc(t('mn_history'))} (${st.history.length})</summary><div class="g-scroll"><table><tbody>${st.history.slice(0, 20).map(h => `<tr><td class="g-mono">${esc(h.deployed_at || '')}</td><td>${esc(h.action || 'DEPLOY')}</td><td class="g-mono">${esc(h.version || h.branch || '')}</td><td>${esc(h.deployed_by || '')}</td><td class="g-mut">${esc(h.server || '')}</td></tr>`).join('')}</tbody></table></div></details>`;
+      }
+      if (s.changes.length) html += `<details${s.changes.length <= 30 ? ' open' : ''}><summary>${esc(t('mn_changes'))} (${s.changes.length})</summary>${mnChanges(s.changes, 500)}</details>`;
+      else if (!s.error) html += `<p class="g-mut">${esc(t('mn_no_changes'))}</p>`;
+      html += `<details><summary>${esc(t('mn_excludes'))} (${s.excludes.length})</summary><p class="g-mono">${esc(s.excludes.join('  '))}</p></details></div>`;
+    }
+    out.innerHTML = html;
+  }
   async function mediumQuickSetup(){
     const data=new FormData();for(const kind of ['tool','config','ssh']){const f=$('medium-quick-'+kind)?.files?.[0];if(f){if(f.size>20*1024*1024){showToast(t('gm_size'),'error');return}data.append(kind,f)}}
     const button=$('medium-quick-go');button.disabled=true;
@@ -3285,7 +3449,7 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
