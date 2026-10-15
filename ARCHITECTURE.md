@@ -14,6 +14,14 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
+## Medium setup and log workflows (v12.4.5)
+
+`git_medium_setup.go` handles a single bounded multipart setup request. ZIPs are extracted/validated before replacement, retained privately, and a serialized background job starts Docker, prepares the original runtime, validates pending config/SSH, records revisions and launches the original proxy. Runtime errors preserve pending imports; an explicitly uploaded local config clears its older config-Git override. Interactive Windows dependency installation downloads only from HTTPS Docker domains, bounds size and verifies Authenticode/Docker publisher before running the vendor installer. No license acceptance, reboot, Docker context change or container-engine switch is performed. Existing individual setup routes remain.
+
+`monitoring_discovery.go` combines configured roots, stored installation log folders, bounded service/operator-directory metadata and bounded Supervisor metadata. A one-hour owner/config-bound memory catalog permits reads of discovered roots; current connection permissions and safe paths remain checked on every read. Directory entries identify regular log-like files without per-file REALPATH calls; content reads still reject every symlink component. Root changes invalidate prior catalogs. No discovery executes scripts or full Git comparisons.
+
+Monitoring UI publishes each server independently with cancellation/version guards. Cross-file search uses the existing historical byte cursor with three workers, per-file 32 MiB/64-request and round 90-second limits, explicit continuation and 256 KiB excerpts. File modification/event-range metadata remains distinct. Sticky stacks contain filters plus check/action controls; Environment filters share cached/deduplicated cell reads.
+
 ## Managed Medium runtime (v12.4.3b)
 
 `git_medium_runtime.go` selects Docker on Windows and optionally on Linux. Approved source imports are retained independently of preparation; a pending marker prevents false readiness and an administrator can retry setup. CLI discovery preserves host Docker context and supports standard Windows install locations. The pinned Linux image supplies runtime dependencies; a Linux volume holds its venv and per-user named Linux volumes retain native data/permissions. Only explicit config/SSH revisions are copied into an existing user volume. Runtime source/venv are read-only; no Docker socket or other users' volumes are mounted.

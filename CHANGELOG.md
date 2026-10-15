@@ -1,3 +1,18 @@
+## [12.4.5] - 2026-10-15
+
+### Added
+- **One-click Medium setup:** combined trusted tool/config/optional SSH ZIP upload, retained imports, background dependency preparation, config validation/profile synchronization and automatic launch of the unchanged original deploy tool. Installed Docker is started automatically; first interactive Windows setup can download and verify the official signed Docker installer. Vendor/OS prompts and restart requirements remain explicit.
+- **Cross-log search:** combined server/operator/service/date/timezone/keyword filtering, historical scanning across matching files, incremental per-file results, highlighted excerpts, counts, event ranges, open/follow actions, cancellation and continuation of bounded scans.
+- **Environment filters:** combined text/service/environment/server filters, preserved values and a sticky control area.
+
+### Fixed
+- Logs start discovery automatically, update as each server finishes and show persistent progress/errors/empty states. Known installation log folders, bounded service/operator folders and Supervisor log paths supplement configured roots; non-log files and symlinks are excluded. Metadata discovery avoids repeated remote per-file realpath round trips.
+- Log cards show file modification times; excerpts show matching event times and last-read time in the selected timezone, including timestamp inheritance for continuation matches. Time-only searches count matching records correctly.
+- Late discovery/Functionality responses cannot paint into a different Monitoring tab. Host-metric versus service/log prerequisites are explained in the UI.
+- Overview and Installations pin the complete filter/check/action stack while scrolling. Environment cell requests are deduplicated during filter changes.
+
+[Operation guide](docs/V12.4.5_GUIDE.md) · [Validation](docs/RELEASE_SUMMARY_v12.4.5.md).
+
 ## [12.4.4] - 2026-10-15
 
 ### Added
