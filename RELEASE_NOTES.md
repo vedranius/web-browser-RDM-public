@@ -1,4 +1,4 @@
-## Web Remote Manager PRO v12.5.2 — "Allow everything" means everything, and nothing ends in a dead refusal
+## Web Remote Manager PRO v12.6.1 — "Allow everything" means everything, and nothing ends in a dead refusal
 
 ### Added
 
@@ -21,7 +21,25 @@ A long automatic session switched back to asking once its time limit (at most 60
 
 Replace the executable/container and keep the database and encryption key. No database change. Reading files that may hold secrets now asks instead of being refused; set `ai_sensitive_reads` to `deny` in *Admin panel → AI assistant* to keep the old behaviour. Existing AI connections keep their limits: to allow everything without limits, edit the connection, press **Allow everything**, confirm and save (open sessions end; the AI opens them again with the new rules).
 
-[Download v12.5.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.5.2) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.5.2/README.md#ai-desktop-apps-mcp)
+[Download v12.6.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.1) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.1/README.md#ai-desktop-apps-mcp)
+
+### Included from v12.6.0 — Medium's native engine, side by side with the original tool
+
+#### Added
+
+- **Native engine preview (read-only):** open **Medium** in the Git workspace and expand *Native engine (preview, read-only)*. WRM reads your `deploy-config` as it is, with the same validation as the original tool, and lists every server of `servers.yaml` with the WRM connection it will use. Connections are matched by address and user; pick another one where needed.
+- **Plan:** choose a project, an environment and a branch or tag, then **Preview natively**. WRM prepares the source from your WRM Git source and compares it with each destination over SSH, the way `rsync -rlc --delete` with the project's exclusions would, and shows new, changed and deleted files, the exclusions, what is on the server (version, ref, lock, recent deployments) and the `post_deploy` command. Nothing is written to any server.
+- **Compare with the original tool:** with Medium running, **Compare with the original tool** runs the original comparison and the native one on the same source and says per server whether they give the same result, listing any change found by only one of them. Projects with a build step use the original tool's built source until the native engine arrives.
+
+#### Changed
+
+The Medium bridge has one more authenticated endpoint for the comparison; the original tool itself is not modified.
+
+#### Upgrade
+
+Replace the executable/AppImage/container and keep the database, encryption key and Medium directories. One additive table (`medium_server_links`); a previous binary still starts on the database. The preview needs a WRM Git source (GitLab, GitHub or Gitea API) for the repositories named in `projects/*.yaml` and saved SSH connections for the servers. Deploying is still done by the original tool; the native deploy, build location and rollback follow in v12.7.0 ([roadmap](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.0/ROADMAP.md)).
+
+[Download v12.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.0) · [Medium native engine](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.0/README.md#medium-native-engine-preview)
 
 ### Included from v12.5.1 — Claude Desktop and Claude Code in one step
 
