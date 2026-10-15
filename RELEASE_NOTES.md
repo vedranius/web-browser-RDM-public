@@ -1,16 +1,34 @@
-## Web Remote Manager PRO v12.4.5 — One-click Medium and usable log search
+## Web Remote Manager PRO v12.5.1 — Claude Desktop and Claude Code in one step
 
 ### Added
+
+- **Claude Desktop extension:** in *Settings → AI connections* pick **Claude Desktop**, choose the servers and how long the token is valid, then **Download Claude Desktop extension**. Open `wrm-pro.mcpb` and press **Install**: the WRM address and token are already filled in. The extension runs on your computer with Claude Desktop's built-in Node.js, so it reaches a WRM on your own network and over plain HTTP; a self-signed HTTPS certificate can be trusted with a CA file in the extension's settings. Approvals still appear in WRM and, where supported, in Claude.
+- **Claude Code plugin:** `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…` (Claude Code 2.1.275 or later). The wizard prints the command with your values; the token is kept in Claude Code's secure storage.
+- **Token lifetime in the wizard:** choose how many hours the token is valid, up to `ai_mcp_max_token_hours`.
+
+### Fixed
+
+Claude Desktop could not be connected to a WRM on a private network: the wizard offered only the claude.ai custom connector, which connects from Anthropic's cloud and needs a public HTTPS address, and `claude_desktop_config.json` does not accept HTTP entries. The wizard now names that option *Claude.ai (cloud connector, public HTTPS)* and offers the extension for Claude Desktop. README troubleshooting explains an empty `mcpServers` block.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. MCP stays off by default (`ai_mcp_enabled`). The default token lifetime limit is unchanged (24 hours at most); an administrator can raise `ai_mcp_max_token_hours` so a desktop app keeps access longer. The extension contains the token: delete the downloaded file after installing. Windows packages are cross-compiled; the extension was validated with the official MCP bundle tool and its bridge was run against WRM, but not inside a native Windows Claude Desktop in this release's validation.
+
+[Download v12.5.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.5.1) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.5.1/README.md#ai-desktop-apps-mcp)
+
+### Included from v12.4.5 — One-click Medium and usable log search
+
+#### Added
 
 - **Medium:** add the original trusted tool/config ZIPs and optional SSH ZIP, then **Prepare and run**. WRM starts Docker, prepares the original dependencies, validates configuration, synchronizes profiles and opens the unchanged tool. Approved imports survive setup failure and can be resumed without re-uploading.
 - **Logs:** automatic discovery from manual roots, service log folders and Supervisor metadata; progressive server results, visible errors, operator/service filters and historical cross-file keyword/date search. Tiles show modification/event times, highlighted excerpts and open/follow actions. Search can be canceled or continued when a bound is reached.
 - **Environments:** combined text/service/environment/server filters with sticky controls.
 
-### Fixed
+#### Fixed
 
 The whole Overview/Installations filter/check/action area stays at the top during scroll. Monitoring tab responses are isolated. Date-only searches and continuation-event timestamps are handled. Discovery avoids repeated per-file metadata round trips; host metric versus log prerequisites are explained.
 
-### Upgrade
+#### Upgrade
 
 Retain the database/key and private runtime directories/volumes, then replace the executable/container. No schema migration. Windows setup may display the official Docker installer and vendor/OS prompts; required license choices, WSL/virtualization setup and restarts remain user actions. A Windows service needs a preinstalled Docker account; other Windows containers are never stopped or switched automatically. Linux without installed Docker/native prerequisites needs its administrator's initial package setup. Windows builds are cross-compiled, without a native Windows VM run.
 

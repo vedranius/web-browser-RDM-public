@@ -1,3 +1,16 @@
+## [12.5.1] - 2026-10-15
+
+### Added
+- **Claude Desktop extension (`wrm-pro.mcpb`):** *Settings → AI connections → Claude Desktop* downloads an MCP bundle with the WRM address and the new token filled in; Claude Desktop installs it with one click. Its dependency-free Node.js bridge (`remote-manager/mcpb/server/index.js`) runs on the user's computer, so a WRM on a private network or over plain HTTP works; optional CA file for self-signed HTTPS. Endpoint `POST /api/mcp/claude-desktop`, audited as `mcp.desktop_extension`.
+- **Claude Code plugin `wrm-pro`:** the repository is a Claude Code plugin marketplace (`.claude-plugin/marketplace.json`, plugin in `packaging/claude-plugin/wrm-pro`); one `claude plugin install … --config` command connects Claude Code to WRM over HTTP with the token in secure storage. The wizard shows the command.
+- The MCP setup wizard lets the user choose the token lifetime (up to `ai_mcp_max_token_hours`).
+
+### Changed
+- The wizard's cloud connector option is named *Claude.ai (cloud connector, public HTTPS)* so it is no longer mistaken for the Claude Desktop setup.
+
+### Fixed
+- Claude Desktop could not be connected to a WRM that is not reachable from the internet over HTTPS: the only offered route was the cloud connector, and `claude_desktop_config.json` ignores HTTP server entries.
+
 ## [12.4.5] - 2026-10-15
 
 ### Added
