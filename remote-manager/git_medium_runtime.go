@@ -128,7 +128,7 @@ func mediumPrepareRuntime(ctx context.Context) error {
 		return e
 	}
 	if mediumBackend() == "docker" {
-		if e := mediumDockerCheck(ctx); e != nil {
+		if e := mediumEnsureDocker(ctx); e != nil {
 			return e
 		}
 		// Docker pulls the pinned image automatically on the first invocation.

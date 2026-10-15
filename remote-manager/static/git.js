@@ -516,11 +516,11 @@ Object.assign(LANGS.hr, {
 
 
 Object.assign(LANGS.en, {
- gm_settings:'Original runtime settings', gm_settings_hint:'Stop Medium before saving. These are the original deploy-tool environment options: config Git repository/pull/check interval, commit identity, SSH options, command timeout and build user. Empty fields use the original defaults. Masked values are preserved.', gm_title:'Original deploy tool', gm_intro:'Medium uses the original deploy-tool interface and deployment engine. Import your trusted tool ZIP and deploy-config ZIP, then start it. Each account has its own configuration, work files and SSH profile. Windows WRM uses a managed Linux Docker runtime; rsync/Python are not required in Windows PATH. Start Docker Desktop with Linux containers on the WRM host. A browser client needs no deployment tools. Linux can also use its native runtime.',
+ gm_settings:'Original runtime settings', gm_settings_hint:'Stop Medium before saving. These are the original deploy-tool environment options: config Git repository/pull/check interval, commit identity, SSH options, command timeout and build user. Empty fields use the original defaults. Masked values are preserved.', gm_title:'Original deploy tool', gm_intro:'Medium runs the unchanged original deploy-tool interface and engine. Each account keeps private configuration, work files and SSH data. Windows uses a managed Linux runtime; no Windows rsync/Python setup is needed.',
  gm_prepare:'Prepare runtime / retry', gm_imported:'Tool ZIP imported; runtime needs preparation', gm_docker_setup:'Docker setup on Windows', gm_backend:'Runtime', gm_start:'Start', gm_stop:'Stop', gm_tool:'Import deploy-tool ZIP', gm_config:'Import deploy-config ZIP', gm_ssh:'Import SSH profile ZIP', gm_open:'Open full window', gm_running:'Running', gm_stopped:'Stopped', gm_tool_ready:'Tool ready', gm_tool_missing:'Tool not installed', gm_config_ready:'Config loaded', gm_config_missing:'Config not loaded', gm_missing:'Missing dependencies', gm_size:'ZIP exceeds 20 MiB', gm_trust:'This source/configuration can execute build and deployment commands on the server. Import only files you trust. Continue?', gm_stop_confirm:'Stop the original deploy tool? Wait for deployments to finish first.',
 });
 Object.assign(LANGS.hr, {
- gm_settings:'Postavke izvornog runtimea', gm_settings_hint:'Zaustavite Srednje prije spremanja. Ovo su izvorne deploy-tool opcije: Git repo konfiguracije/povlačenje/interval provjere, autor commitova, SSH opcije, timeout naredbi i build korisnik. Prazna polja koriste izvorne zadane vrijednosti. Maskirane vrijednosti se zadržavaju.', gm_title:'Izvorni deploy tool', gm_intro:'Srednje koristi izvorno sučelje i deploy mehanizam deploy toola. Uvezite pouzdani tool ZIP i deploy-config ZIP, zatim ga pokrenite. Svaki račun ima vlastitu konfiguraciju, radne datoteke i SSH profil. Windows WRM koristi upravljani Linux Docker runtime; rsync/Python nisu potrebni u Windows PATH-u. Pokrenite Docker Desktop s Linux kontejnerima na WRM računalu. Browser klijent ne treba deploy alate. Linux može koristiti i izvorni runtime.',
+ gm_settings:'Postavke izvornog runtimea', gm_settings_hint:'Zaustavite Srednje prije spremanja. Ovo su izvorne deploy-tool opcije: Git repo konfiguracije/povlačenje/interval provjere, autor commitova, SSH opcije, timeout naredbi i build korisnik. Prazna polja koriste izvorne zadane vrijednosti. Maskirane vrijednosti se zadržavaju.', gm_title:'Izvorni deploy tool', gm_intro:'Srednje pokreće neizmijenjeno izvorno sučelje i deploy mehanizam. Svaki račun zadržava privatnu konfiguraciju, radne datoteke i SSH podatke. Windows koristi upravljani Linux runtime; ne treba zasebno postavljanje rsynca/Pythona.',
  gm_prepare:'Pripremi runtime / pokušaj ponovno', gm_imported:'Tool ZIP učitan; runtime treba pripremiti', gm_docker_setup:'Docker postavljanje na Windowsu', gm_backend:'Runtime', gm_start:'Pokreni', gm_stop:'Zaustavi', gm_tool:'Uvezi deploy-tool ZIP', gm_config:'Uvezi deploy-config ZIP', gm_ssh:'Uvezi SSH profil ZIP', gm_open:'Otvori cijeli prozor', gm_running:'Pokrenuto', gm_stopped:'Zaustavljeno', gm_tool_ready:'Tool spreman', gm_tool_missing:'Tool nije instaliran', gm_config_ready:'Config učitan', gm_config_missing:'Config nije učitan', gm_missing:'Nedostaju preduvjeti', gm_size:'ZIP prelazi 20 MiB', gm_trust:'Ovaj izvor/config može izvršavati build i deploy naredbe na serveru. Uvozite samo datoteke kojima vjerujete. Nastaviti?', gm_stop_confirm:'Zaustaviti izvorni deploy tool? Najprije pričekajte završetak deploya.',
 });
 
@@ -532,6 +532,8 @@ Object.assign(LANGS.hr, {
  gcp_title:'Konfiguracijski profili', gcp_intro:'Uvezite referentni config/INI i pregledajte odgovarajuću datoteku na svakoj instalaciji. Označene instalacije ograničavaju provjeru; inače se provjeravaju sve instalacije odabranog servisa (do 50).', gcp_add:'Dodaj config/INI profil', gcp_settings:'postavki', gcp_check:'Pregledaj servere', gcp_path:'Relativna putanja na serveru', gcp_operator:'Operater / klijent (opcionalno)', gcp_file:'Referentna datoteka', gcp_import_hint:'Referenca definira postavke i očekivane vrijednosti. Parsira se bez izvršavanja skripti; tajne se maskiraju prije spremanja. Datoteka na serveru mora biti unutar instalacije.', gcp_file_limit:'Odaberite tekstualnu konfiguraciju do 256 KiB.', gcp_delete:'Obrisati ovaj konfiguracijski profil?', gcp_values_hint:'Stvarne vrijednosti čitaju se sada sa servera. Izrazi skripti prikazuju se kao izvor i ne izvršavaju se. Tajne su maskirane i ne uspoređuju se. INI sekcije mogu označavati operatere.', gcp_expected:'Referentna vrijednost', gcp_missing:'Nedostaje', gcp_masked:'Maskirano', gcp_extra:'Dodatna postavka', gcp_same:'Odgovara referenci', gcp_different:'Razlikuje se od reference',
 });
 
+Object.assign(LANGS.en, {"gm_quick": "Prepare and run trusted ZIPs", "gm_quick_hint": "Add deploy-tool and deploy-config ZIPs (SSH profile optional), then click once. WRM starts Docker, prepares dependencies, validates config and opens the original tool. Approved imports are retained if setup needs a retry. First Windows installation can show Docker/WSL/license prompts on the WRM host.", "gm_quick_files": "ZIPs are trusted executable/configuration imports. Leave a file empty to keep its existing import.", "gm_setup_docker": "Starting Docker / waiting for first-install prompts", "gm_setup_dependencies": "Preparing original dependencies", "gm_setup_configuration": "Checking configuration and SSH profile", "gm_setup_starting": "Starting original deploy tool", "gm_setup_ready": "Ready", "gm_advanced_setup": "Advanced setup / individual imports"});
+Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_quick_hint": "Dodajte deploy-tool i deploy-config ZIP (SSH profil po želji), zatim kliknite jednom. WRM pokreće Docker, priprema ovisnosti, provjerava config i otvara izvorni alat. Uvezeni ZIP-ovi ostaju spremljeni ako treba ponoviti pripremu. Prva Windows instalacija može prikazati Docker/WSL/licencne upite na WRM računalu.", "gm_quick_files": "ZIP-ovi su pouzdani uvozi izvršnog koda/postavki. Prazno polje zadržava postojeći uvoz.", "gm_setup_docker": "Pokretanje Dockera / čekanje upita prve instalacije", "gm_setup_dependencies": "Priprema ovisnosti izvornog alata", "gm_setup_configuration": "Provjera konfiguracije i SSH profila", "gm_setup_starting": "Pokretanje izvornog deploy alata", "gm_setup_ready": "Spremno", "gm_advanced_setup": "Napredne postavke / pojedinačni uvozi"});
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const modeKey = () => 'wrm_git_mode:' + ((typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.username)) || '');
@@ -558,6 +560,8 @@ Object.assign(LANGS.hr, {
 #git-ws .g-sticky { position:sticky;top:0;z-index:20;background:var(--bg2);padding:8px 0;max-height:40vh;overflow-y:auto; }
 #git-ws .g-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; }
 #git-ws .g-bar select, #git-ws .g-bar input { width: auto; min-width: 120px; flex: 0 1 auto; }
+#git-ws .g-control-stack {position:sticky;top:0;z-index:25;background:var(--bg2);padding:8px;border-bottom:1px solid var(--border);max-height:48vh;overflow:auto;}
+#git-ws .g-control-stack .g-bar {position:static!important;max-height:none;overflow:visible;margin-bottom:6px;}
 #git-ws .g-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
 #git-ws .g-card h3 { margin: 0 0 10px; font-size: 13px; }
 #git-ws .g-scroll { overflow: auto; max-width: 100%; }
@@ -846,7 +850,7 @@ Object.assign(LANGS.hr, {
       (apps.length ? apps.map(a => { const x = targets[a]; return `<tr><td><b>${esc(a)}</b></td><td>${x ? `<span class="g-mono">${esc(x.version || '—')}</span> <span class="g-mut">${esc(x.branch || '')} · ${esc(x.commit_date || '')}</span>` : `<span class="g-mut">${esc(t('git_no_target'))}</span>`}</td>
         <td class="g-mono">${esc((x && x.latest_tag) || '—')}</td><td class="g-mut">${esc(x ? x.source : '')}</td><td>${x && x.error ? `<span class="g-st s-error">${esc(x.error)}</span>` : esc(((x && x.warnings) || []).join('; '))}</td></tr>`; }).join('')
         : `<tr><td colspan="5" class="g-mut">${esc(t('git_empty_overview'))}</td></tr>`) + '</table></div></div>';
-    html += `<div class="g-bar g-sticky">${filterBar()}</div>${checkBar(list)}`;
+    html += `<div class="g-control-stack"><div class="g-bar">${filterBar()}</div>${checkBar(list)}</div>`;
     const servers = [...new Map(list.map(i => [i.conn_id, i])).entries()].sort((a, b) => a[1].conn_name.localeCompare(b[1].conn_name));
     if (!servers.length) return html + `<div class="hint-box">${esc(t('git_empty_overview'))}</div>`;
     const cols = [...apps, ...new Set(list.map(i => i.app))].filter((a, k, arr) => arr.indexOf(a) === k && list.some(i => i.app === a));
@@ -910,7 +914,7 @@ Object.assign(LANGS.hr, {
 
   // keepView re-renders the tab and keeps the focus, the caret and the scroll positions
   function keepView() {
-    if (!$('git-ws') || $('git-ws').style.display === 'none') return;
+    if (!$('git-ws') || $('git-ws').style.display === 'none') {paintFunctionality();return;}
     const ae = document.activeElement, id = ae && ae.id, pos = ae && typeof ae.selectionStart === 'number' ? ae.selectionStart : null;
     const scr = [...document.querySelectorAll('#git-body .g-scroll')].map(e => [e.scrollLeft, e.scrollTop]);
     const top = $('git-body') ? $('git-body').scrollTop : 0;
@@ -1106,9 +1110,9 @@ Object.assign(LANGS.hr, {
     const list = filtered();
     const sshConns = (conns || []).filter(c => c.protocol === 'SSH').sort((a, b) => a.name.localeCompare(b.name));
     const apps = [...G.state.catalog.apps.map(a => a.name), ...(G.state.bundle_apps || [])];
-    return `<div class="g-bar g-sticky">${filterBar()}<button class="btn-sec" onclick="gitWorkspace.check(true)" ${G.state.can_check && !jobRunning() ? '' : 'disabled'}>🔎 ${esc(t('git_discover'))}</button>
+    return `<div class="g-control-stack"><div class="g-bar">${filterBar()}<button class="btn-sec" onclick="gitWorkspace.check(true)" ${G.state.can_check && !jobRunning() ? '' : 'disabled'}>🔎 ${esc(t('git_discover'))}</button>
       <button class="btn-sm" onclick="gitWorkspace.install()" ${can('install') ? '' : `disabled title="${esc(t('git_no_permission'))}"`}>＋ ${esc(t('git_install'))}</button></div>
-      ${checkBar(list)}<div class="g-bar g-actions">${actionButtons('')}</div>
+      ${checkBar(list)}<div class="g-bar g-actions">${actionButtons('')}</div></div>
       <div class="g-card g-scroll"><table><tr><th>${selBox(list.map(i => i.id), t('git_sel_all'))}</th><th>${esc(t('git_server'))}</th><th>${esc(t('git_service'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_env'))}</th><th>${esc(t('git_state'))}</th>
       <th>${esc(t('git_version_md'))}</th><th>${esc(t('git_target'))}</th><th>${esc(t('git_checked'))}</th><th></th></tr>
       ${list.map(i => `<tr><td><input type="checkbox" class="git-isel g-cb" value="${i.id}" ${G.sel.has(i.id) ? 'checked' : ''} onchange="gitWorkspace.sel([${i.id}], this.checked)"></td><td>${esc(hn(i.conn_name, i.hostname))}${i.host ? `<div class="g-hostname g-mono">${esc(i.host)}</div>` : ''}</td><td><b>${esc(i.app)}</b>${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}</td><td class="g-mono">${esc(i.path)}</td><td>${esc(i.env || '')}</td>
@@ -1175,7 +1179,7 @@ Object.assign(LANGS.hr, {
   function functionalityReset(){for(const k of ['q','server','app','env','kind','health','age','problem'])HF[k]='';paintFunctionality();}
   function functionalityToggle(id,open){if(open)HF.collapsed.delete(id);else HF.collapsed.add(id);}
   function functionalityExpand(open){if(open)HF.collapsed.clear();else for(const i of G.state.installs||[])HF.collapsed.add(i.conn_id);paintFunctionality();}
-  async function monitoringMount(el){if(!$('git-style')){const s=document.createElement('style');s.id='git-style';s.textContent=css;document.head.appendChild(s)}if(!$('monitor-git-style')){const s=document.createElement('style');s.id='monitor-git-style';s.textContent=css.replaceAll('#git-ws','#monitor-service-view')+'\n#monitor-service-view {position:static;inset:auto;z-index:auto;display:block;background:inherit;font-size:13px;}';document.head.appendChild(s)}if(await load())el.innerHTML=functionalityHTML();}
+  async function monitoringMount(el){if(!$('git-style')){const s=document.createElement('style');s.id='git-style';s.textContent=css;document.head.appendChild(s)}if(!$('monitor-git-style')){const s=document.createElement('style');s.id='monitor-git-style';s.textContent=css.replaceAll('#git-ws','#monitor-service-view')+'\n#monitor-service-view {position:static;inset:auto;z-index:auto;display:block;background:inherit;font-size:13px;}';document.head.appendChild(s)}if(el&&await load()&&el.isConnected&&document.getElementById('monitor-service-view')===el)el.innerHTML=functionalityHTML();}
 
   const CP = {profiles:[], result:null, seq:0};
   async function configProfiles() {
@@ -2227,18 +2231,18 @@ Object.assign(LANGS.hr, {
   function envRefresh() { E.cells = {}; E.ov = null; if ($('git-body')) $('git-body').innerHTML = envsHTML(); envLoad(); }
   function envOf(app, env) { const s = ((E.ov || {}).services || []).find(x => x.app === app); return (s && s.envs.find(x => x.name === env)) || null; }
 
+  const EF={q:'',app:'',env:'',server:''};
+  function envFilter(k,v){EF[k]=v;const body=$('git-body'),focus=document.activeElement?.id,pos=document.activeElement?.selectionStart;body.innerHTML=envsHTML();envCells();if(focus&&$(focus)){$(focus).focus();if(pos!=null)$(focus).setSelectionRange(pos,pos)}}
   function envsHTML() {
-    const ov = E.ov;
-    if (!ov) return `<div class="hint-box">⏳</div>`;
-    let html = `<div class="g-bar"><button class="btn-sec btn-sm" onclick="gitWorkspace.envRefresh()">↻ ${esc(t('git_refresh'))}</button><span class="g-mut">${esc(t('genv_lazy_h'))}</span></div>`;
-    if (!ov.services.length) html += `<div class="hint-box">${esc(t('genv_none'))}</div>`;
-    else html += `<div class="g-card g-scroll"><table class="g-matrix"><tr><th>${esc(t('git_service'))}</th>${ov.envs.map(n => `<th>${esc(n)}</th>`).join('')}</tr>` +
-      ov.services.map(s => `<tr><td><b>${esc(s.app)}</b><div><button class="g-cellbtn" onclick="gitWorkspace.envEdit('${esc(s.app)}')">✎ ${esc(t('genv_edit'))}</button></div></td>${ov.envs.map(n => {
-        const e = s.envs.find(x => x.name === n);
-        return e ? `<td class="g-cell g-envcell" data-app="${esc(s.app)}" data-env="${esc(n)}">${envCellHTML(s.app, e)}</td>` : '<td class="g-mut">—</td>'; }).join('')}</tr>`).join('') + '</table></div>';
-    const apps = G.state.catalog.apps;
-    html += `<div class="g-card"><h3>${esc(t('genv_services'))}</h3><div class="g-mut">${esc(t('genv_services_h'))}</div><div class="g-actions" style="margin-top:8px">${apps.map(a =>
-      `<button class="btn-sec btn-sm" onclick="gitWorkspace.envEdit('${esc(a.name)}')">✎ ${esc(a.name)} (${(a.environments || []).length})</button>`).join('') || `<span class="g-mut">${esc(t('git_empty_overview'))}</span>`}</div></div>`;
+    const ov=E.ov;if(!ov)return `<div class="hint-box">⏳</div>`;
+    const servers=[...new Set(ov.services.flatMap(s=>s.envs.flatMap(e=>e.destinations.map(d=>d.server))))].sort();
+    const choose=(k,label,values)=>`<select aria-label="${esc(t(label))}" onchange="gitWorkspace.envFilter('${k}',this.value)">${opt('',t(label),EF[k])}${values.map(v=>opt(v,k==='server'?hn(v)+' · '+v:v,EF[k])).join('')}</select>`;
+    const services=ov.services.filter(s=>!EF.app||s.app===EF.app).map(s=>({...s,envs:s.envs.filter(e=>(!EF.env||e.name===EF.env)&&(!EF.server||e.destinations.some(d=>d.server===EF.server))&&JSON.stringify([s.app,e.name,e.destinations.map(d=>[d.server,hn(d.server),d.path])]).toLowerCase().includes(EF.q.toLowerCase())).map(e=>({...e,destinations:e.destinations.filter(d=>!EF.server||d.server===EF.server)}))})).filter(s=>s.envs.length);
+    const envs=ov.envs.filter(n=>services.some(s=>s.envs.some(e=>e.name===n)));
+    let html=`<div class="g-control-stack"><div class="g-bar"><input id="genv-q" type="search" placeholder="${esc(t('git_search_srv'))}" value="${esc(EF.q)}" oninput="gitWorkspace.envFilter('q',this.value)">${choose('app','git_all_services',ov.services.map(s=>s.app))}${choose('env','git_all_envs',ov.envs)}${choose('server','git_all_servers',servers)}<button class="btn-sec btn-sm" onclick="gitWorkspace.envReset()">${esc(t('hf_reset'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.envRefresh()">↻ ${esc(t('git_refresh'))}</button></div><div class="g-mut">${esc(t('genv_lazy_h'))} · ${services.length} / ${ov.services.length}</div></div>`;
+    if(!services.length)html+=`<div class="hint-box">${esc(t('genv_none'))}</div>`;
+    else html+=`<div class="g-card g-scroll"><table class="g-matrix"><tr><th>${esc(t('git_service'))}</th>${envs.map(n=>`<th>${esc(n)}</th>`).join('')}</tr>`+services.map(s=>`<tr><td><b>${esc(s.app)}</b><div><button class="g-cellbtn" onclick="gitWorkspace.envEdit('${esc(s.app)}')">✎ ${esc(t('genv_edit'))}</button></div></td>${envs.map(n=>{const e=s.envs.find(x=>x.name===n);return e?`<td class="g-cell g-envcell" data-app="${esc(s.app)}" data-env="${esc(n)}">${envCellHTML(s.app,e)}</td>`:'<td>—</td>'}).join('')}</tr>`).join('')+'</table></div>';
+    html+=`<div class="g-card"><h3>${esc(t('genv_services'))}</h3><div class="g-actions">${G.state.catalog.apps.filter(a=>(!EF.app||a.name===EF.app)&&a.name.toLowerCase().includes(EF.q.toLowerCase())).map(a=>`<button class="btn-sec btn-sm" onclick="gitWorkspace.envEdit('${esc(a.name)}')">✎ ${esc(a.name)} (${(a.environments||[]).length})</button>`).join('')}</div></div>`;
     return html;
   }
 
@@ -2247,10 +2251,10 @@ Object.assign(LANGS.hr, {
     const a = `'${esc(app)}','${esc(e.name)}'`;
     const btns = `<div class="g-actions" style="margin-top:4px">${can('update') ? `<button class="g-cellbtn" onclick="gitWorkspace.envPlan(${a})">▶ ${esc(t('genv_deploy'))}</button>` : ''}
       <button class="g-cellbtn" onclick="gitWorkspace.envHistory(${a})">🕘 ${esc(t('genv_history'))}</button><button class="g-cellbtn" onclick="gitWorkspace.envDoctor(${a})">🩺 ${esc(t('genv_doctor'))}</button></div>`;
-    if (!c) return `<div class="g-mut"><span class="g-spin"></span> ${esc(tf('genv_n_dests', {n: e.destinations.length}))}</div>${btns}`;
+    if (!c || c.loading) return `<div class="g-mut"><span class="g-spin"></span> ${esc(tf('genv_n_dests', {n: e.destinations.length}))}</div>${btns}`;
     if (c.error) return `<div class="hint-box bad">${esc(c.error)}</div>${btns}`;
     const d = c.data;
-    return (d.drift ? `<div><span class="g-st s-review">⚠ ${esc(t('genv_drift'))}</span></div>` : '') + d.dests.map(x => {
+    return (d.drift ? `<div><span class="g-st s-review">⚠ ${esc(t('genv_drift'))}</span></div>` : '') + d.dests.filter(x=>!EF.server||G.mode==='simple'||x.server===EF.server).map(x => {
       const cur = x.current;
       const ver = cur ? cur.version : x.version_md;
       const commit = cur ? String(cur.commit || '').slice(0, 10) : x.commit_md;
@@ -2269,6 +2273,7 @@ Object.assign(LANGS.hr, {
     const next = async () => {
       if (i >= todo.length) return;
       const td = todo[i++], app = td.dataset.app, env = td.dataset.env;
+      E.cells[envKey(app,env)]={loading:true};
       try {
         const r = await fetch('/api/git/env/cell?' + envEnc(app, env));
         E.cells[envKey(app, env)] = r.ok ? {data: await r.json()} : {error: await apiError(r)};
@@ -2779,12 +2784,12 @@ Object.assign(LANGS.hr, {
     const body = $('git-body');
     if (!body || G.mode !== 'medium') return;
     if (!body.querySelector('#medium-status')) {
-      body.innerHTML = `<div class="g-card"><h3>${esc(t('gm_title'))}</h3><p>${esc(t('gm_intro'))}</p><div id="medium-status" role="status">${esc(t('loading'))}</div><div class="g-bar" style="margin-top:10px">
+      body.innerHTML = `<div class="g-card"><h3>${esc(t('gm_title'))}</h3><p>${esc(t('gm_intro'))}</p><p>${esc(t('gm_quick_hint'))}</p><p class="g-mut">${esc(t('gm_quick_files'))}</p><div class="g-grid" id="medium-quick-inputs"><label id="medium-quick-tool-label">${esc(t('gm_tool'))}<input id="medium-quick-tool" type="file" accept=".zip"></label><label>${esc(t('gm_config'))}<input id="medium-quick-config" type="file" accept=".zip"></label><label>${esc(t('gm_ssh'))}<input id="medium-quick-ssh" type="file" accept=".zip"></label></div><div class="g-bar"><button id="medium-quick-go" onclick="gitWorkspace.mediumQuickSetup()">▶ ${esc(t('gm_quick'))}</button></div><div id="medium-status" role="status" aria-live="polite">${esc(t('loading'))}</div><details><summary>${esc(t('gm_advanced_setup'))}</summary><div class="g-bar" style="margin-top:10px">
       <button class="btn-sec" onclick="gitWorkspace.mediumAction('start')">▶ ${esc(t('gm_start'))}</button><button class="btn-sec" onclick="gitWorkspace.mediumAction('stop')">■ ${esc(t('gm_stop'))}</button><button class="btn-sec" onclick="gitWorkspace.mediumRefresh()">↻ ${esc(t('git_refresh'))}</button>
       <label class="btn-sec" id="medium-tool-label" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_tool'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('tool',this)"></label>
       <label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_config'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('config',this)"></label>
       <label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_ssh'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('ssh',this)"></label>
-      <button class="btn-sec" id="medium-prepare" onclick="gitWorkspace.mediumAction('prepare')">${esc(t('gm_prepare'))}</button><a class="btn-sec" id="medium-docker-guide" href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener">${esc(t('gm_docker_setup'))}</a><button class="btn-sec" onclick="gitWorkspace.mediumSettings()">⚙ ${esc(t('gm_settings'))}</button><a class="btn-sec" href="/medium/" target="_blank" rel="noopener">↗ ${esc(t('gm_open'))}</a></div></div><div id="medium-frame"></div>`;
+      <button class="btn-sec" id="medium-prepare" onclick="gitWorkspace.mediumAction('prepare')">${esc(t('gm_prepare'))}</button><a class="btn-sec" id="medium-docker-guide" href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener">${esc(t('gm_docker_setup'))}</a><button class="btn-sec" onclick="gitWorkspace.mediumSettings()">⚙ ${esc(t('gm_settings'))}</button><a class="btn-sec" href="/medium/" target="_blank" rel="noopener">↗ ${esc(t('gm_open'))}</a></div></details></div><div id="medium-frame"></div>`;
     }
     await mediumRefresh();
   }
@@ -2796,11 +2801,14 @@ Object.assign(LANGS.hr, {
       if (!r.ok) { $('medium-status').textContent = await apiError(r); if ($('medium-frame')) $('medium-frame').replaceChildren(); return; }
       const s = await r.json();
       $('medium-tool-label').style.display = s.admin ? '' : 'none';
+      $('medium-quick-tool-label').style.display=s.admin?'':'none';
+      $('medium-quick-go').disabled=!!s.busy||!!s.running;
+      document.querySelectorAll('#medium-quick-inputs input').forEach(i=>i.disabled=!!s.busy);
       $('medium-prepare').style.display = s.admin && s.tool_imported && !s.running ? '' : 'none';
       $('medium-prepare').disabled = !!s.busy;
       $('medium-docker-guide').style.display = s.backend === 'docker' ? '' : 'none';
       const deps = Object.entries(s.dependencies || {}).filter(([,ok]) => !ok).map(([n]) => n);
-      $('medium-status').textContent = [t('gm_backend') + ': ' + (s.backend || 'native'), s.busy ? s.stage : s.running ? t('gm_running') : t('gm_stopped'), s.tool ? t('gm_tool_ready') : s.tool_imported ? t('gm_imported') : t('gm_tool_missing'), s.config ? t('gm_config_ready') : t('gm_config_missing'), deps.length ? t('gm_missing') + ': ' + deps.join(', ') : '', s.error || '', s.tool_digest ? 'SHA-256: ' + s.tool_digest : ''].filter(Boolean).join(' · ');
+      $('medium-status').textContent = [t('gm_backend') + ': ' + (s.backend || 'native'), s.busy ? (['docker','dependencies','configuration','starting','ready'].includes(s.stage)?t('gm_setup_'+s.stage):s.stage) : s.running ? t('gm_running') : t('gm_stopped'), s.tool ? t('gm_tool_ready') : s.tool_imported ? t('gm_imported') : t('gm_tool_missing'), s.config ? t('gm_config_ready') : t('gm_config_missing'), deps.length ? t('gm_missing') + ': ' + deps.join(', ') : '', s.error || '', s.tool_digest ? 'SHA-256: ' + s.tool_digest : ''].filter(Boolean).join(' · ');
       const host = $('medium-frame');
       if (s.running && host && !host.firstChild) { const f = document.createElement('iframe'); f.title = t('gm_title'); f.src = '/medium/'; f.style.cssText = 'width:100%;height:calc(100vh - 250px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff'; host.appendChild(f); }
       if (!s.running && host) host.replaceChildren();
@@ -2808,6 +2816,11 @@ Object.assign(LANGS.hr, {
     } catch (e) { if ($('medium-status')) $('medium-status').textContent = String(e); }
   }
 
+  async function mediumQuickSetup(){
+    const data=new FormData();for(const kind of ['tool','config','ssh']){const f=$('medium-quick-'+kind)?.files?.[0];if(f){if(f.size>20*1024*1024){showToast(t('gm_size'),'error');return}data.append(kind,f)}}
+    const button=$('medium-quick-go');button.disabled=true;
+    try{const r=await fetch('/api/git/medium/setup?confirm=1',{method:'POST',body:data});if(!r.ok)throw new Error(await apiError(r));for(const kind of ['tool','config','ssh'])$('medium-quick-'+kind).value='';await mediumRefresh()}catch(e){showToast(String(e),'error',10000);button.disabled=false}
+  }
   async function mediumSettings() {
     const r=await fetch('/api/git/medium/settings'); if (!r.ok) {showToast(await apiError(r),'error');return;}
     const values=await r.json();
@@ -3190,11 +3203,11 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumUpload, mediumAction, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
-    envRefresh, envEdit, envEditAdd, envEditDel, envPlan, envRecompare, envShowAll, envToggle, envExclude, envClearExcl, envUnlock, envGo, envBack, envHistory, envRollback, envDoctor, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
+    envRefresh, envFilter, envReset(){for(const k of Object.keys(EF))EF[k]='';envFilter('q','')}, envEdit, envEditAdd, envEditDel, envPlan, envRecompare, envShowAll, envToggle, envExclude, envClearExcl, envUnlock, envGo, envBack, envHistory, envRollback, envDoctor, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
     ignoreLoad, ignoreMark, ignorePreview, ignoreDownload, ignoreSaveLists, ignoreMR, webhook, hookSet, editFeed, feedFetch, delFeed, pipelineKind,
     editSource, testSource, delSource, importBundle, saveSettings, saveCatalogSettings, setRef, filterConns, selConns, closeModal,
     filter(k, v, debounce) { G.f[k] = v; clearTimeout(qTimer); if (debounce) qTimer = setTimeout(() => { render(); const i = document.querySelector('#git-body input[type=search]'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); else render(); },

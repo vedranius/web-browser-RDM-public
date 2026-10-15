@@ -13,7 +13,17 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.4.4** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.4.5** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.4.5
+
+**Medium:** select the trusted tool/config ZIPs and click **Prepare and run**. WRM retains the imports, starts Docker, prepares the original dependencies, validates config, synchronizes the private profile and opens the unchanged original tool. First Windows setup can invoke the signed official Docker installer; OS/vendor prompts and required restarts remain visible. Existing custom configuration Git settings are replaced by the explicitly uploaded local config ZIP.
+
+**Monitoring → Logs:** discovery starts automatically and streams results by server. Service log folders and Supervisor paths supplement manual roots. Filter by server/operator/service and event time, then search a keyword across all matching files from their beginning. Results show file modification time, matching event range, highlighted excerpts and open/follow actions. Progress, permission errors and partial searches remain visible; continue a bounded scan when necessary. Host metrics, service checks and SSH logs have separate setup requirements.
+
+Overview/Installations keep filters, check controls and actions together while scrolling. Environments adds combined search/service/environment/server filters.
+
+[Operation and limits](docs/V12.4.5_GUIDE.md) · [Validation](docs/RELEASE_SUMMARY_v12.4.5.md).
 
 ## What's new in v12.4.4
 
@@ -48,7 +58,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -148,21 +158,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.4.4-linux-amd64
-   ./wrm-pro-v12.4.4-linux-amd64
+   chmod +x wrm-pro-v12.4.5-linux-amd64
+   ./wrm-pro-v12.4.5-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.4.4-windows-amd64.exe
+   .\wrm-pro-v12.4.5-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.4.4-linux-amd64.AppImage
-   ./wrm-pro-v12.4.4-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.4.4-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.4.5-linux-amd64.AppImage
+   ./wrm-pro-v12.4.5-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.4.5-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -171,8 +181,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.4/wrm-pro-v12.4.4-android-arm64
-   chmod +x wrm-pro-v12.4.4-android-arm64 && ./wrm-pro-v12.4.4-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.5/wrm-pro-v12.4.5-android-arm64
+   chmod +x wrm-pro-v12.4.5-android-arm64 && ./wrm-pro-v12.4.5-android-arm64
    ```
 
    **Docker**
@@ -196,6 +206,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.4.4
+
+Replace the executable/AppImage/container, preserving your database, encryption key and private runtime directories/volumes. No database migration is needed. In Medium use the combined ZIP fields and **Prepare and run**; empty fields reuse existing imports. Setup failure retains approved archives for retry. Existing original-tool deployment history and behavior are retained.
+
+In Monitoring select **Logs** and a server. Discovery uses the same SSH account without sudo; it finds known service `log`/`logs` directories, bounded configured service roots and Supervisor log directories. Manual roots remain editable from the log toolbar. Date/timezone filters and keyword search read historical segments across matching logs, rather than only their recent tail. Progress and bounds remain visible. Zabbix is needed for host metrics, not SSH logs.
+
+Windows first setup can require Docker/WSL license, OS permissions, virtualization setup or a restart on the WRM host. A Windows service cannot display a desktop installer: install Docker once for its account, then resume. Docker in Windows-container mode is not switched automatically because other containers may be using it. See the [guide](docs/V12.4.5_GUIDE.md).
 
 ## Upgrading from v12.4.3b
 
@@ -997,7 +1015,7 @@ Profiles use the existing static parser: Python expressions are displayed as sou
 
 ### Git workspace: Medium original deploy tool
 
-Select **Medium** next to Simple and Advanced. The original tool is required as a private ZIP and is not bundled in this public repository. An administrator imports the approved tool ZIP; WRM creates its Python virtual environment and installs the archive's pinned `requirements.lock`. Setup may take several minutes and reports status. Each user imports their deploy-config ZIP (`servers.yaml`, `environments.yaml`, `projects/*.yaml`) and optional SSH ZIP (`config`, keys and `known_hosts`). Confirm executable-code/config imports in the UI. Stop the runtime before replacing its config/profile/settings; stopping is refused while a comparison or background deployment is active.
+Select **Medium** next to Simple and Advanced. Use the combined ZIP fields and **Prepare and run trusted ZIPs** for retained dependency setup and automatic launch; [setup guide](docs/V12.4.5_GUIDE.md). Advanced individual import controls remain available. The original tool is required as a private ZIP and is not bundled in this public repository. An administrator imports the approved tool ZIP; WRM creates its Python virtual environment and installs the archive's pinned `requirements.lock`. Setup may take several minutes and reports status. Each user imports their deploy-config ZIP (`servers.yaml`, `environments.yaml`, `projects/*.yaml`) and optional SSH ZIP (`config`, keys and `known_hosts`). Confirm executable-code/config imports in the UI. Stop the runtime before replacing its config/profile/settings; stopping is refused while a comparison or background deployment is active.
 
 The original tool runs unchanged behind WRM's authenticated `/medium/` bridge, embedded in the workspace or opened in a full window. Its own project editor, server/tag/branch selection, comparison, exclusions, local build, dry run, confirmation, deploy, per-server progress, backups, rollback, history and config Git controls remain available. See the [parity record](docs/MEDIUM_PARITY_v12.4.3.md). Closing the Git window leaves the process running; restarting WRM stops it. Runtime data remains on disk.
 
@@ -1768,9 +1786,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.4.4-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.4.4-linux-amd64 -service-status
-sudo ./wrm-pro-v12.4.4-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.4.5-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.4.5-linux-amd64 -service-status
+sudo ./wrm-pro-v12.4.5-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1801,7 +1819,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.4.4-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.4.5-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1929,12 +1947,15 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 
 ## API reference
 
-### v12.4.4 endpoints
+### v12.4.4–v12.4.5 endpoints
 
 All endpoints require a WRM session and effective owner/policy access. Mutating `/api/` calls require WRM's normal CSRF header/origin.
 
 | Endpoint | Behavior |
 |---|---|
+| `POST /api/git/medium/setup?confirm=1` | Combined multipart `tool`, `config`, optional `ssh` ZIPs (20 MiB each); retained background setup and automatic launch. Empty fields resume/reuse imports. |
+| `GET /api/monitoring/logs?id=…` | Bounded automatic/manual root discovery; progressive UI aggregates files/roots/warnings per server. |
+| `GET /api/monitoring/log?id=…&root_path=…&path=…` | Authorized historical/live chunk, optional `scan=1`, byte `offset`, date/timezone/keyword; modification/event-range/record-count metadata. |
 | `GET /api/git/medium` | Runtime/import/dependency status and tool SHA-256. |
 | `POST /api/git/medium/{tool,config,ssh}?confirm=1` | Multipart ZIP in field `file`; tool is administrator-only; 20 MiB expanded limit. |
 | `GET, POST /api/git/medium/settings` | Read masked / save encrypted original runtime preferences. |
@@ -2565,7 +2586,7 @@ Outputs go to `dist/`. The script verifies pinned upstream AppImage tooling and 
 
 ## v12.4.4 runtime troubleshooting and source map
 
-- **Medium setup unavailable:** on Windows start Docker Desktop in Linux-container mode and retry Prepare runtime; on Linux install native tools or select the managed Docker runtime. Dependency installation needs access to the original requirements' package registry. The import status reports failure without exposing arbitrary installer output.
+- **Medium setup unavailable:** use the combined Prepare and run button to resume retained imports. Complete any Docker/WSL/license/restart prompt on the WRM host; Windows-container mode requires an explicit switch. Advanced Prepare runtime remains available; on Linux install native tools or select the managed Docker runtime. Dependency installation needs access to the original requirements' package registry. The import status reports failure without exposing arbitrary installer output.
 - **Medium SSH/Git fails:** check the private SSH profile, known hosts, Git identity, host reachability, native repository permissions, build dependencies and OS user privileges. WRM's own connection credentials are separate from this original engine's SSH configuration.
 - **Bitwarden login fails:** verify official CLI/server compatibility, HTTPS reachability, account credentials and MFA. Use personal API credentials with master password when interactive bot challenges prevent email login. Unlock again after inactivity/restart; no private key is returned by the key-list API.
 - **Config profile missing/unparsed:** verify the catalog service and relative path, remote read permissions and supported static syntax. A source expression is not its evaluated runtime value.
@@ -2574,7 +2595,7 @@ Implementation: `remote-manager/git_medium.go`, embedded `medium_wrapper.py`, `g
 
 ## v12.4.4 workspaces, API and regression coverage
 
-See [the operation guide](docs/V12.4.4_GUIDE.md) for Monitoring/Zabbix transports, log roots/search/live panels, client GitLab cache/companion, MCP app setup and commands, editable grant scopes, selected AI context, terminal directory startup, visual labels, import routing and their exact API/bounds. [Validation and platform limits](docs/RELEASE_SUMMARY_v12.4.4.md) distinguish actual agents/browser/local-provider checks from fixtures and cross-compilation.
+See [the v12.4.5 guide](docs/V12.4.5_GUIDE.md) for one-click Medium setup, automatic discovery, cross-log time/keyword search and sticky/filter changes. See [the v12.4.4 operation guide](docs/V12.4.4_GUIDE.md) for Monitoring/Zabbix transports, log roots/search/live panels, client GitLab cache/companion, MCP app setup and commands, editable grant scopes, selected AI context, terminal directory startup, visual labels, import routing and their exact API/bounds. [Validation and platform limits](docs/RELEASE_SUMMARY_v12.4.4.md) distinguish actual agents/browser/local-provider checks from fixtures and cross-compilation.
 
 New backend modules: `monitoring.go`, `monitoring_zabbix.go`, `monitoring_logs.go`, `git_relay.go`, `git_relay_client.go`, `git_review.go`, `mcp_edit.go`, `mcp_prompts.go`, `mcp_picker.go`, `ai_inventory.go`, `ai_context.go`, `ai_idle.go`, `terminal_directory.go`, `visual_labels.go`. On-demand UI modules: `static/monitoring.js` and `static/git_client.js`.
 

@@ -51,7 +51,7 @@ func terminalDirectoryStart(cl *ssh.Client, c Connection, directory string, logF
 		}
 		file = path.Clean(file)
 		allowed := false
-		for _, root := range loadMonitorConfig(c.ID).Roots {
+		for _, root := range monitorAvailableRoots(c) {
 			r := path.Clean(root.Path)
 			if strings.HasPrefix(file, r+"/") {
 				allowed = true
