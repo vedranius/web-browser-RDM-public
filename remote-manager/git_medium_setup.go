@@ -96,8 +96,8 @@ func apiMediumSetup(w http.ResponseWriter, r *http.Request, uid int) {
 		sum := sha256.Sum256(data)
 		digests[kind] = hex.EncodeToString(sum[:])
 	}
-	if mediumAnyRunning() && len(staged) > 0 {
-		jsonError(w, "Stop active Medium instances before replacing tool/configuration", 409)
+	if mediumAnyRunning() {
+		jsonError(w, "Stop active Medium instances before combined setup, including retained pending imports", 409)
 		return
 	}
 	if staged["tool"] == "" && !mediumState(uid).Imported {
