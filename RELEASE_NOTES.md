@@ -1,21 +1,39 @@
-## Web Remote Manager PRO v12.5.1 — Claude Desktop and Claude Code in one step
+## Web Remote Manager PRO v12.6.0 — Medium's native engine, side by side with the original tool
 
 ### Added
+
+- **Native engine preview (read-only):** open **Medium** in the Git workspace and expand *Native engine (preview, read-only)*. WRM reads your `deploy-config` as it is, with the same validation as the original tool, and lists every server of `servers.yaml` with the WRM connection it will use. Connections are matched by address and user; pick another one where needed.
+- **Plan:** choose a project, an environment and a branch or tag, then **Preview natively**. WRM prepares the source from your WRM Git source and compares it with each destination over SSH, the way `rsync -rlc --delete` with the project's exclusions would, and shows new, changed and deleted files, the exclusions, what is on the server (version, ref, lock, recent deployments) and the `post_deploy` command. Nothing is written to any server.
+- **Compare with the original tool:** with Medium running, **Compare with the original tool** runs the original comparison and the native one on the same source and says per server whether they give the same result, listing any change found by only one of them. Projects with a build step use the original tool's built source until the native engine arrives.
+
+### Changed
+
+The Medium bridge has one more authenticated endpoint for the comparison; the original tool itself is not modified.
+
+### Upgrade
+
+Replace the executable/AppImage/container and keep the database, encryption key and Medium directories. One additive table (`medium_server_links`); a previous binary still starts on the database. The preview needs a WRM Git source (GitLab, GitHub or Gitea API) for the repositories named in `projects/*.yaml` and saved SSH connections for the servers. Deploying is still done by the original tool; the native deploy, build location and rollback follow in v12.7.0 ([roadmap](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.0/ROADMAP.md)).
+
+[Download v12.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.0) · [Medium native engine](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.0/README.md#medium-native-engine-preview)
+
+### Included from v12.5.1 — Claude Desktop and Claude Code in one step
+
+#### Added
 
 - **Claude Desktop extension:** in *Settings → AI connections* pick **Claude Desktop**, choose the servers and how long the token is valid, then **Download Claude Desktop extension**. Open `wrm-pro.mcpb` and press **Install**: the WRM address and token are already filled in. The extension runs on your computer with Claude Desktop's built-in Node.js, so it reaches a WRM on your own network and over plain HTTP; a self-signed HTTPS certificate can be trusted with a CA file in the extension's settings. Approvals still appear in WRM and, where supported, in Claude.
 - **Claude Code plugin:** `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…` (Claude Code 2.1.275 or later). The wizard prints the command with your values; the token is kept in Claude Code's secure storage.
 - **See what the AI does:** when an AI app works on a server through WRM, a live panel shows each command, WRM's decision, the approval buttons, the exit code and the output. *Watch live* in the 🤖 menu reopens it; the automatic opening can be turned off there.
 - **Lifetime in hours or days:** the wizard, the advanced form and the OAuth approval dialog take the token lifetime in hours or days, so apps need not be approved again every day.
 
-### Changed
+#### Changed
 
 When you deny a command, or nobody answers in time, the AI is told where it was refused and to ask you whether to continue, change the command or stop, rather than trying again on its own. Default AI connection lifetime is 7 days (`ai_mcp_token_hours` 168), at most 30 days (`ai_mcp_max_token_hours` 720).
 
-### Fixed
+#### Fixed
 
 Claude Desktop could not be connected to a WRM on a private network: the wizard offered only the claude.ai custom connector, which connects from Anthropic's cloud and needs a public HTTPS address, and `claude_desktop_config.json` does not accept HTTP entries. The wizard now names that option *Claude.ai (cloud connector, public HTTPS)* and offers the extension for Claude Desktop. README troubleshooting explains an empty `mcpServers` block.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. MCP stays off by default (`ai_mcp_enabled`). Token lifetimes default to **7 days, at most 30 days** (were 8 hours, at most 24); values an administrator saved explicitly stay in force and can be changed in *Admin panel → AI connections*. The extension contains the token: delete the downloaded file after installing. Windows packages are cross-compiled; the extension was validated with the official MCP bundle tool and its bridge was run against WRM, but not inside a native Windows Claude Desktop in this release's validation.
 

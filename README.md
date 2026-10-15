@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.5.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.0
+
+**Medium's native engine, first step.** The Medium view has a read-only *Native engine* panel: WRM reads your `deploy-config` as it is, matches its servers to your saved WRM connections, prepares the chosen branch or tag from your WRM Git source and shows what a deployment would change on each server, without Docker and without writing anything. **Compare with the original tool** runs the original comparison next to it and shows whether both give the same result. Deploying natively, build location and rollback follow in v12.7.0 ([roadmap](ROADMAP.md)). See [Medium native engine (preview)](#medium-native-engine-preview).
 
 ## What's new in v12.5.1
 
@@ -68,7 +72,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -168,21 +172,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.5.1-linux-amd64
-   ./wrm-pro-v12.5.1-linux-amd64
+   chmod +x wrm-pro-v12.6.0-linux-amd64
+   ./wrm-pro-v12.6.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.5.1-windows-amd64.exe
+   .\wrm-pro-v12.6.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.5.1-linux-amd64.AppImage
-   ./wrm-pro-v12.5.1-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.5.1-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.6.0-linux-amd64.AppImage
+   ./wrm-pro-v12.6.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.6.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -191,8 +195,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.5.1/wrm-pro-v12.5.1-android-arm64
-   chmod +x wrm-pro-v12.5.1-android-arm64 && ./wrm-pro-v12.5.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.0/wrm-pro-v12.6.0-android-arm64
+   chmod +x wrm-pro-v12.6.0-android-arm64 && ./wrm-pro-v12.6.0-android-arm64
    ```
 
    **Docker**
@@ -216,6 +220,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.5.1
+
+Replace the executable/AppImage/container and keep the database, encryption key and Medium directories. One additive table (`medium_server_links`) is created at start; a previous binary still starts on the database. The native preview uses your existing WRM Git sources and SSH connections and writes nothing to servers. Medium deployments keep running through the original tool.
 
 ## Upgrading from v12.5.0
 
@@ -1041,6 +1049,17 @@ Use **Runtime settings** for the original `DEPLOY_CONFIG_REPO`, pull/check caden
 
 The native Linux runtime needs Python 3.12+, git, OpenSSH and rsync on the WRM host (`WRM_MEDIUM_PYTHON` can select Python). Windows uses the managed Docker runtime instead; those dependencies run in its Linux image. Builds need their original toolchain and OS user permissions. Git and target hosts must be reachable from the runtime. **Grant Medium only to trusted operators:** editable configs/builds/deploy commands execute as the WRM OS account. Per-user directories/processes are not an OS sandbox. WRM checks authentication, `git_medium`, Git checks and action policies and records the action boundary; the original tool supplies its native review/locks/history. Simple and Advanced continue using WRM's existing engine and catalog.
 
+### Medium native engine (preview)
+
+The Medium view has a collapsible **Native engine (preview, read-only)** panel. It is the first step of running Medium on WRM's own engine ([roadmap](ROADMAP.md)) and writes nothing to any server.
+
+- **Configuration:** the imported `deploy-config` (`servers.yaml`, `environments.yaml`, `projects/*.yaml`) is read as it is by a Go reader with the original tool's validation: unknown and duplicate keys, YAML 1.1 booleans and `<<` merges, names, hosts, ports, `allowed_refs`, ignore rules, absolute paths, `source_dir`, state locations (`.deploy/<app>` or `state_dir`) and destinations that overlap or nest. Errors name the file and the key.
+- **Servers and WRM connections:** each server is matched to a saved SSH connection with the same address and user (*Automatic*), or linked to a chosen one. The link is stored per user and audited (`git.medium_server_linked`). Keys stay in WRM.
+- **Source:** the repository of a project is served by the WRM Git source (GitLab, GitHub or Gitea API) on the same host. Branches, tags, full refs and commits are resolved there; files below `source_dir` are fetched through the blob cache, symlinks keep their targets.
+- **Plan:** for each destination of the environment, WRM walks the application directory over SFTP and computes what `rsync -rlc --delete` with the project's exclusions would do: new, changed (SHA-256, computed on the server with `sha256sum` where available), deleted, type changes, kept directories that hold excluded items and the "cannot make way" error. It shows the server state in the original format (`current.json`, recent `history.jsonl` entries, the lock owner), `allowed_refs` and confirmation rules, and the `post_deploy` command.
+- **Compare with the original tool:** with Medium running, the original comparison (fetch, export, build, `rsync --dry-run`) runs through the authenticated bridge and the native plan is computed on the same prepared source. Each server shows *Same result as the original tool* or the changes found by only one engine. The WRM Git source is also checked against the original export. Projects with a build step can only be compared until v12.7.0.
+- Previews run in the background, one per user, and are audited (`git.medium_native_preview`). They need the `git_medium` policy like the rest of Medium.
+
 ### Git workspace: every file and partial checks
 
 **Every file of an installation.** The details of an installation (click it in the overview, or *Details*) read the server folder once and list **every file** — not only the ones the catalog tracks — together with every file of the repository at the target ref below the service's subdirectory:
@@ -1812,9 +1831,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.5.1-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.5.1-linux-amd64 -service-status
-sudo ./wrm-pro-v12.5.1-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.6.0-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.6.0-linux-amd64 -service-status
+sudo ./wrm-pro-v12.6.0-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1845,7 +1864,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.5.1-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.6.0-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1986,6 +2005,11 @@ All endpoints require a WRM session and effective owner/policy access. Mutating 
 | `POST /api/git/medium/{tool,config,ssh}?confirm=1` | Multipart ZIP in field `file`; tool is administrator-only; 20 MiB expanded limit. |
 | `GET, POST /api/git/medium/settings` | Read masked / save encrypted original runtime preferences. |
 | `POST /api/git/medium/{start,stop,prepare}` | Start original app / stop only when idle (`stop?force=1` stops a tool whose state cannot be read or that reports work, after a second confirmation in the UI) / administrator retry of retained tool setup. |
+| `GET /api/git/medium/native/config` | Native preview: validated deploy-config summary (projects, environments, servers with their WRM connection links) or the validation errors. |
+| `POST /api/git/medium/native/link` | Link a `servers.yaml` server to a saved SSH connection (`{"server","conn_id"}`, `conn_id` 0 = automatic). |
+| `GET /api/git/medium/native/refs?project=` | Branches and tags of the project's WRM Git source. |
+| `POST /api/git/medium/native/plan` | Start a read-only native preview (`project`, `environment`, `ref`, optional `servers`, `compare`). Returns the run id. |
+| `GET /api/git/medium/native/plan/<id>` | Stage, per-server plans, comparison with the original tool and source check of a preview. |
 | `/medium/*` | Original UI and native actions behind WRM authentication, policy and origin checks. |
 | `GET, POST /api/git/config-profiles` | List / add reference `{name,app,path,operator,content}`. |
 | `DELETE /api/git/config-profiles/{id}` | Remove owned profile. |
@@ -2418,6 +2442,10 @@ remote-manager/
   git_env.go        environments: validation, plans with fingerprints, locks, server-side state, overview, history, doctor, API
   git_env_run.go    environment deploy and rollback runs: dry run, staged transfer, backup, manifest, history, post_deploy
   git_activity.go   Git activity: pushes and commits per branch and author, paging with rate limits, short cache, web links, CSV
+  medium_config.go  Medium native: deploy-config reader and validator (the original tool's rules)
+  medium_filter.go  Medium native: rsync exclude rules, allowed_refs matching
+  medium_engine.go  Medium native: rsync-compatible diff over SFTP, server state, comparison with the original plan
+  medium_native.go  Medium native: WRM Git source, server ↔ connection links, background previews, API
   git_where.go      deploy history (server history + WRM runs) and the "what is where" matrix with commits behind the branch head
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
@@ -2448,6 +2476,7 @@ remote-manager/
   git_ci_test.go         webhooks (GitLab token, GitHub HMAC, generic token / HMAC, replays, rate limit), artifact feed fetch and schedule, Jenkins job and GitLab pipeline runs
   git_env_test.go        environments: plan with CRLF-only files, dry run, typed confirmation, one-shot plans, fingerprint mismatch, lock contention, stale lock, own lock only, remembered and permanent exclusions, allowed_refs, nested paths, partial transfer, post_deploy failure, rollback (moved aside, symlinks skipped, removed directories, kept backups), doctor, drift
   git_activity_test.go   Git activity against fake GitLab / GitHub / Gitea: paging (X-Next-Page, Link, cursors), tracked branches, filters, author / branch summaries, links, cache, rate limits and 429, CSV escaping
+  medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)
   git_provision_test.go  Git install / transfer: templates, exclusions, units; install from the fake GitLab and from a bundle, vault values, overwrite refusal and backup, transfer A → B, policies
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
