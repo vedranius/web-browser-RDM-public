@@ -21,6 +21,7 @@ func TestV1262FullAccessAlwaysAsks(t *testing.T) {
 		t.Fatalf("full access without the policy: %v", v)
 	}
 	t.Setenv("WRM_AI_FULL_ACCESS", "1")
+	t.Setenv("WRM_AI_FULL_ACCESS_MODE", "connection")
 	tok, _ := e.pat("auto", scopes, map[string]interface{}{"confirm_auto": true,
 		"auto": map[string]interface{}{"allow": []string{"*"}, "path_allow": []string{"/**"}, "until_grant": true}})
 	c := e.client(tok)
@@ -71,6 +72,7 @@ func TestV1262FullAccessAlwaysAsks(t *testing.T) {
 func TestV1262FullAccessReadOnly(t *testing.T) {
 	e := newMCPEnv(t)
 	t.Setenv("WRM_AI_FULL_ACCESS", "1")
+	t.Setenv("WRM_AI_FULL_ACCESS_MODE", "connection")
 	tok, _ := e.pat("read_only", []string{"read_logs", "run_readonly", "full_access"}, nil)
 	c := e.client(tok)
 	c.initialize(true)

@@ -60,7 +60,11 @@ Object.assign(LANGS.en, {
   p_ai_mcp_redirect_uris: 'Allowed redirect addresses', p_ai_mcp_redirect_uris_d: 'OAuth apps may only send users back to these addresses (* = any text; https, or http on localhost).', p_ai_mcp_redirect_uris_ph: 'https://claude.ai/api/mcp/auth_callback',
   p_ai_mcp_allowed_origins: 'Allowed browser origins', p_ai_mcp_allowed_origins_d: 'Web pages (besides WRM) that may call /mcp from a browser (CORS). Empty: none.', p_ai_mcp_allowed_origins_ph: 'https://app.example.com',
   p_ai_mcp_public_url: 'Public address', p_ai_mcp_public_url_d: 'The address AI apps use for WRM, when it differs from what WRM sees (reverse proxy).', p_ai_mcp_public_url_ph: 'https://wrm.example.com',
-  p_ai_full_access: 'Full access for AI connections', p_ai_full_access_d: 'Users may give an AI connection full access: commands and files WRM normally refuses are asked for instead (each time, never automatically). Read-only connections stay read-only.',
+  p_ai_full_access: 'Full access for the AI', p_ai_full_access_d: 'One switch: commands and files WRM normally refuses (destructive and blocked commands, deny lists, shutdown, secret files) are asked for instead, each time, never automatically. Read-only sessions stay read-only.',
+  p_ai_full_access_mode: 'Full access applies to', p_ai_full_access_mode_d: 'Every AI session (the switch alone), only AI connections with the Full access scope, or users who turn it on for themselves in Settings → AI connections.',
+  po_ai_full_access_mode_all: 'Every AI session', po_ai_full_access_mode_connection: 'AI connections with the Full access scope', po_ai_full_access_mode_user: 'Users who turn it on themselves',
+  mcp_fa_all: '⚠ Full access is on for all AI sessions: nothing is refused outright, but everything WRM would block asks you first, every time.', mcp_fa_conn: '⚠ Full access is available: tick "Full access" on an AI connection (Edit) to have everything WRM would block asked instead of refused.',
+  mcp_fa_user: '⚠ Full access for my AI sessions: nothing is refused outright, but everything WRM would block (destructive commands, deny lists, shutdown, secret files) asks me first, every time.',
   p_ai_mcp_elicitation: 'Approvals in the AI app', p_ai_mcp_elicitation_d: 'Ask for approvals also in the AI app (MCP elicitation) when it supports it. Approvals in WRM always work.',
   p_ai_mcp_transfer_max_mb: 'Transfer limit (MB)', p_ai_mcp_transfer_max_mb_d: 'The largest file the transfer scope copies.',
   mcpw_title: 'Connect an AI app (step by step)', mcpw_intro: 'WRM prepares the token and the exact setting for your app. You only copy it.',
@@ -147,7 +151,11 @@ Object.assign(LANGS.hr, {
   p_ai_mcp_redirect_uris: 'Dopuštene adrese za povratak', p_ai_mcp_redirect_uris_d: 'OAuth aplikacije smiju korisnike vratiti samo na ove adrese (* = bilo koji tekst; https, ili http na localhostu).', p_ai_mcp_redirect_uris_ph: 'https://claude.ai/api/mcp/auth_callback',
   p_ai_mcp_allowed_origins: 'Dopušteni izvori preglednika', p_ai_mcp_allowed_origins_d: 'Web stranice (osim WRM-a) koje smiju pozivati /mcp iz preglednika (CORS). Prazno: nijedna.', p_ai_mcp_allowed_origins_ph: 'https://app.example.com',
   p_ai_mcp_public_url: 'Javna adresa', p_ai_mcp_public_url_d: 'Adresa kojom AI aplikacije pristupaju WRM-u, kad se razlikuje od one koju WRM vidi (obrnuti proxy).', p_ai_mcp_public_url_ph: 'https://wrm.example.com',
-  p_ai_full_access: 'Potpuni pristup za AI veze', p_ai_full_access_d: 'Korisnici smiju AI vezi dati potpuni pristup: naredbe i datoteke koje WRM inače odbija umjesto toga traže odobrenje (svaki put, nikad automatski). Veze samo za čitanje ostaju samo za čitanje.',
+  p_ai_full_access: 'Potpuni pristup za AI', p_ai_full_access_d: 'Jedan prekidač: naredbe i datoteke koje WRM inače odbija (destruktivne i blokirane naredbe, liste zabrana, gašenje, tajne datoteke) umjesto toga traže odobrenje, svaki put, nikad automatski. Sesije samo za čitanje ostaju samo za čitanje.',
+  p_ai_full_access_mode: 'Potpuni pristup vrijedi za', p_ai_full_access_mode_d: 'Sve AI sesije (samo prekidač), samo AI veze s opsegom Potpuni pristup ili korisnike koji ga sami uključe u Postavke → AI veze.',
+  po_ai_full_access_mode_all: 'Sve AI sesije', po_ai_full_access_mode_connection: 'AI veze s opsegom Potpuni pristup', po_ai_full_access_mode_user: 'Korisnike koji ga sami uključe',
+  mcp_fa_all: '⚠ Potpuni pristup je uključen za sve AI sesije: ništa se ne odbija, ali sve što bi WRM blokirao prvo pita tebe, svaki put.', mcp_fa_conn: '⚠ Potpuni pristup je dostupan: označi "Potpuni pristup" na AI vezi (Uredi) pa će se sve što bi WRM blokirao pitati umjesto odbiti.',
+  mcp_fa_user: '⚠ Potpuni pristup za moje AI sesije: ništa se ne odbija, ali sve što bi WRM blokirao (destruktivne naredbe, liste zabrana, gašenje, tajne datoteke) prvo pita mene, svaki put.',
   p_ai_mcp_elicitation: 'Odobrenja u AI aplikaciji', p_ai_mcp_elicitation_d: 'Traži odobrenja i u AI aplikaciji (MCP elicitation) kad je podržava. Odobrenja u WRM-u uvijek rade.',
   p_ai_mcp_transfer_max_mb: 'Ograničenje prijenosa (MB)', p_ai_mcp_transfer_max_mb_d: 'Najveća datoteka koju opseg transfer kopira.',
   mcpw_title: 'Povezivanje AI aplikacije (korak po korak)', mcpw_intro: 'WRM priprema token i točnu postavku za vašu aplikaciju. Vi je samo kopirate.',
@@ -526,11 +534,12 @@ Object.assign(LANGS.hr, {
     let grants;
     try { [cfg, grants] = await Promise.all([api('GET', '/api/mcp/config'), api('GET', '/api/mcp/grants')]); }
     catch (e) { pane.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
-    if (!cfg.enabled) { pane.innerHTML = `<div class="hint-box warn">${esc(t('mcp_off'))}: ${esc(cfg.reason)}</div>`; return; }
+    if (!cfg.enabled) { pane.innerHTML = `<div class="hint-box warn">${esc(t('mcp_off'))}: ${esc(cfg.reason)}</div>${fullAccessHTML(cfg.full_access)}`; return; }
     pane.innerHTML = `<div class="hint-box">${esc(t('mcp_intro'))}</div>
       <div id="mcpw" class="mcpw"></div>
       <div class="field" style="margin:8px 0;"><label style="font-size:11px;color:var(--text2);">${esc(t('mcp_url'))}</label><div class="mcp-snip"><pre id="mcp-url">${esc(cfg.url)}</pre><button class="btn-sec btn-sm" onclick="wrmMCP.copy('mcp-url')">${esc(t('mcp_copy'))}</button></div>
         <div class="sub" style="font-size:11px;color:var(--text3);">${esc(cfg.oauth ? t('mcp_oauth_box') : t('mcp_oauth_off'))}</div></div>
+      ${fullAccessHTML(cfg.full_access)}
       <div style="display:flex;align-items:center;gap:8px;"><div class="adm-h" style="flex:1;">🔌 ${esc(t('mcp_title'))}</div>${grants.some(g => g.state === 'active') ? `<button class="btn-danger btn-sm" onclick="wrmMCP.revokeAll()">${esc(t('mcp_revoke_all'))}</button>` : ''}</div>
       <div id="mcp-grants">${grantsHTML(grants)}</div>
       <details class="mcpw-adv"><summary>${esc(t('mcpw_advanced'))}</summary>
@@ -538,6 +547,16 @@ Object.assign(LANGS.hr, {
       <div style="margin-top:8px;"><button onclick="wrmMCP.create()">${esc(t('mcp_create'))}</button></div>
       <div id="mcp-created"></div></details>`;
     wizRender();
+  }
+  // full access as the administrator set it up: on for everyone, per AI connection, or per user
+  function fullAccessHTML(fa) {
+    if (!fa || !fa.on) return '';
+    if (fa.mode === 'user') return `<label class="mcp-check hint-box warn" style="margin:8px 0;"><input type="checkbox" ${fa.mine ? 'checked' : ''} onchange="wrmMCP.setFullAccess(this.checked)"><span>${esc(t('mcp_fa_user'))}</span></label>`;
+    return `<div class="hint-box warn" style="margin:8px 0;">${esc(t(fa.mode === 'connection' ? 'mcp_fa_conn' : 'mcp_fa_all'))}</div>`;
+  }
+  async function setFullAccess(on) {
+    try { await api('POST', '/api/mcp/full-access', {on}); } catch (e) { showToast(e.message, 'error', 6000); }
+    settingsPane();
   }
   let grantViews = [];
   function grantsHTML(list) {
@@ -831,7 +850,7 @@ Object.assign(LANGS.hr, {
   function closeModal() { const m = $('mcp-modal'); if (m) m.classList.remove('open'); }
 
   // ── Admin panel → AI connections ──────────────────────
-  const MCP_POLICY_KEYS = ['ai_mcp_enabled', 'ai_mcp', 'ai_mcp_modes', 'ai_mcp_scopes', 'ai_full_access', 'ai_mcp_token_hours', 'ai_mcp_max_token_hours', 'ai_mcp_oauth',
+  const MCP_POLICY_KEYS = ['ai_mcp_enabled', 'ai_mcp', 'ai_mcp_modes', 'ai_mcp_scopes', 'ai_full_access', 'ai_full_access_mode', 'ai_mcp_token_hours', 'ai_mcp_max_token_hours', 'ai_mcp_oauth',
     'ai_mcp_elicitation', 'ai_mcp_redirect_uris', 'ai_mcp_allowed_origins', 'ai_mcp_public_url', 'ai_mcp_transfer_max_mb'];
   async function adminMCP() {
     const body = $('admin-body');
@@ -875,7 +894,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmMCP = {
-    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto,
+    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto,
     installer, cursorInstall, desktopExtension, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,
   };

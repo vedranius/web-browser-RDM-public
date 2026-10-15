@@ -353,7 +353,7 @@ func aiDenyHint(dec aiDecision) string {
 	case dec.Rule == "sensitive_path":
 		return " The administrator's policy (ai_sensitive_reads) blocks reading such files; an approval cannot change that."
 	case strings.HasPrefix(dec.Reason, "blocked: "):
-		return " This command is on WRM's list of destructive or forbidden commands, which is blocked in every mode; an approval cannot run it. If it is really needed, the user runs it themselves in a terminal, or gives this AI connection full access in WRM (the administrator allows ai_full_access, then the connection gets the \"Full access\" scope): WRM then asks the user before such commands instead of refusing them."
+		return " This command is on WRM's list of destructive or forbidden commands, which is blocked in every mode; an approval cannot run it. If it is really needed, the user runs it themselves in a terminal, or the administrator turns on full access in WRM (Admin panel → AI connections → Full access, ai_full_access): WRM then asks the user before such commands instead of refusing them."
 	}
 	return ""
 }
@@ -383,7 +383,7 @@ func aiApprovalWhy(dec aiDecision, mcp bool) string {
 	case "ask":
 		return why + " The connection is in ask mode; for commands without asking the user can " + edit + " and choose automatic mode."
 	case "full_access":
-		return why + " This AI connection has full access: WRM asks the user before everything it would otherwise refuse, every time, never automatically."
+		return why + " This session has full access: WRM asks the user before everything it would otherwise refuse, every time, never automatically."
 	case "sensitive_read":
 		return why + " Reading a file that may hold secrets always asks the user once per read (secret-looking values are redacted); the administrator can block such reads with ai_sensitive_reads."
 	case "power":
