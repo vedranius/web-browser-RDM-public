@@ -1148,6 +1148,26 @@ func apiAdminSharesHandler(w http.ResponseWriter, r *http.Request) {
 
 // revalidateShare re-checks everyone who is currently connected through the share (room
 // and terminals) after its settings, members or roles changed.
+// revalidateFolderShares rechecks the owner's folder shares after a folder moved or was
+// deleted: a connection that left a shared subtree loses its shared terminals.
+func revalidateFolderShares(ownerID int) {
+	rows, err := db.Query(`SELECT DISTINCT l.id FROM share_links l JOIN share_items i ON i.share_id=l.id WHERE l.owner_id=? AND i.folder_id IS NOT NULL`, ownerID)
+	if err != nil {
+		return
+	}
+	var ids []int
+	for rows.Next() {
+		var id int
+		if rows.Scan(&id) == nil {
+			ids = append(ids, id)
+		}
+	}
+	rows.Close()
+	for _, id := range ids {
+		go revalidateShare(id)
+	}
+}
+
 func revalidateShare(shareID int) {
 	share, err := getShareByID(shareID)
 	if err != nil {

@@ -280,11 +280,22 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 		return
 	}
 	text := string(b)
-	if !scan {
+	if scan {
+		// Offsets count raw bytes, so a scan keeps the bytes as they are (invalid UTF-8,
+		// such as a CP1250 letter, is replaced only in the returned lines). A segment
+		// that does not reach the end of the file stops after its last complete line, so
+		// the next segment starts at a line; without any newline, only a rune split at
+		// the end is left for the next segment.
+		if offset+int64(n) < st.Size() {
+			if i := strings.LastIndexByte(text, '\n'); i >= 0 {
+				text = text[:i+1]
+			} else {
+				text = trimSplitRune(text)
+			}
+		}
+		n = len(text)
+	} else {
 		text = strings.ToValidUTF8(text, "�")
-	}
-	for len(text) > 0 && !utf8.ValidString(text) {
-		text = text[:len(text)-1]
 	}
 	tz := r.URL.Query().Get("timezone")
 	if tz == "" {
@@ -437,6 +448,19 @@ func filterMonitorLog(text, q string, from, to time.Time, loc *time.Location) (s
 	return strings.Join(out, "\n"), unknown, matches
 }
 
+// trimSplitRune drops an incomplete UTF-8 sequence at the end of text (at most 3 bytes).
+func trimSplitRune(text string) string {
+	for i := len(text) - 1; i >= 0 && i >= len(text)-utf8.UTFMax; i-- {
+		if utf8.RuneStart(text[i]) {
+			if !utf8.FullRuneInString(text[i:]) {
+				return text[:i]
+			}
+			break
+		}
+	}
+	return text
+}
+
 // Search advances a bounded byte segment. Stop before an undisplayed matching
 // line when the output cap is reached, so Next segment can resume at that line.
 func filterMonitorLogSegment(text, q string, from, to time.Time, loc *time.Location, eventTime time.Time) (string, int, int, int, time.Time) {
@@ -462,7 +486,7 @@ func filterMonitorLogSegment(text, q string, from, to time.Time, loc *time.Locat
 			unknown++
 		}
 		if keep {
-			out.WriteString(raw)
+			out.WriteString(strings.ToValidUTF8(raw, "�"))
 			rows++
 			if q != "" {
 				matches += strings.Count(strings.ToLower(line), strings.ToLower(q))

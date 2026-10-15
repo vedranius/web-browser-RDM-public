@@ -650,6 +650,11 @@ type versionRow struct{ Path, Version, Date string }
 
 // versionMD builds VERSION.md like the deploy tool (Croatian labels on purpose).
 func versionMD(t gitTarget, rows []versionRow, updated time.Time, host, user, bundle string, crlf bool) []byte {
+	return versionMDNote(t, rows, updated, host, user, bundle, "", crlf)
+}
+
+// versionMDNote is versionMD with an optional "Napomena" field (a partial stamp).
+func versionMDNote(t gitTarget, rows []versionRow, updated time.Time, host, user, bundle, note string, crlf bool) []byte {
 	ver := t.Version
 	if ver == "" {
 		ver = short10(t.Commit)
@@ -669,6 +674,9 @@ func versionMD(t gitTarget, rows []versionRow, updated time.Time, host, user, bu
 	field("Host", host)
 	field("Korisnik", user)
 	field("Bundle", bundle)
+	if note != "" {
+		field("Napomena", note)
+	}
 	fmt.Fprintf(&b, "\n## Skripte (%d)\n\n", len(rows))
 	w := [3]int{utf8.RuneCountInString("Datoteka"), utf8.RuneCountInString("Verzija"), utf8.RuneCountInString("Datum")}
 	for _, r := range rows {

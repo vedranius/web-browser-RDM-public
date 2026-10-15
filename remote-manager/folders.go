@@ -234,6 +234,7 @@ func apiFolderReorderHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Cannot change folder order", 500)
 		return
 	}
+	revalidateFolderShares(uid)
 	auditLog(r, uid, "folder.reordered", moved.Name, map[string]interface{}{"folder_id": in.ID, "parent_id": moved.ParentID})
 	jsonOK(w, loadFolders(uid))
 }
