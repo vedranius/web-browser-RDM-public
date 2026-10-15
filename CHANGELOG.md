@@ -1,3 +1,13 @@
+## [12.6.3] - 2026-10-15
+
+### Added
+- **Full access modes** (`ai_full_access_mode`, default `all`): the administrator decides how `ai_full_access` applies. `all` gives every AI session (the WRM AI panel and every AI connection) full access with the switch alone; `connection` keeps the v12.6.2 behaviour (only AI connections with the `full_access` scope, which is offered only in this mode); `user` lets each user turn it on for their own AI sessions in *Settings → AI connections* (`POST /api/mcp/full-access`, column `users.ai_full_access`, audited as `mcp.full_access`).
+- *Settings → AI connections* shows whether full access is on and how it applies.
+
+### Changed
+- `GET /api/mcp/config` returns `full_access` (`on`, `mode`, `mine`). The refusal hint for blocked commands names where the administrator turns on full access.
+- An installation that had `ai_full_access` on now applies it to every AI session; set `ai_full_access_mode` = `connection` for the previous behaviour.
+
 ## [12.6.2] - 2026-10-15
 
 ### Added
