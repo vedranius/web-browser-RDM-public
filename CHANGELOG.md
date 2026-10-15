@@ -1,3 +1,16 @@
+## [12.5.2] - 2026-10-15
+
+### Added
+- **Allow everything** for AI connections in automatic mode: one button fills the allow lists with `*` and `/**`, and **No time or action limit** keeps automatic mode on for as long as the AI connection is valid (`until_grant`). Administrators can turn the option off with the new policy `ai_auto_until_grant` (default on).
+
+### Changed
+- `*` in the automatic allow list now allows every command, including chains with `&&`, variables, groups, command substitution and redirections. Blocked commands, the deny lists, sensitive files and commands WRM cannot parse still ask or are refused; the grant still covers only the chosen servers and its lifetime.
+- When WRM asks for an approval that is then denied or not answered, the AI is told which rule asked (for example the session's time limit or a command outside the allow list), what the user can change in WRM so it is not asked again, and to tell the user why WRM asked before trying again.
+- MCP sessions with no limit report `until_grant` and an `auto_note` in `open_session`.
+
+### Fixed
+- A long MCP session in automatic mode silently fell back to asking after the session time limit (at most `ai_auto_max_minutes`), and a command with a variable such as `$venv` asked even with `*` allowed. Both ended as "The user denied this action" when the app declined the question, although the user had allowed everything.
+
 ## [12.5.1] - 2026-10-15
 
 ### Added

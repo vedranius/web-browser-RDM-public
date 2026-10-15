@@ -1,21 +1,42 @@
-## Web Remote Manager PRO v12.5.1 — Claude Desktop and Claude Code in one step
+## Web Remote Manager PRO v12.5.2 — "Allow everything" means everything
 
 ### Added
+
+- **Allow everything:** when you create or edit an AI connection in automatic mode, **Allow everything** fills in `*` for commands and `/**` for files, and **No time or action limit** keeps the connection automatic for as long as it is valid (up to the lifetime you chose). The AI then runs commands on the chosen servers without asking, also backups such as `cp -a a a.bak && cp -a b b.bak && ls -la`. Administrators can switch this option off with `ai_auto_until_grant`.
+
+### Changed
+
+- `*` in the allow list now covers chains, variables, groups and redirections. Blocked commands (`ai_blocked_commands` and the built-in destructive list), your deny lists, sensitive files and commands WRM cannot read still ask or are refused, and the AI connection still reaches only the servers you chose, until it expires.
+- When WRM does ask and the answer is no (or nobody answers), the AI is told which rule asked, for example "the automatic mode time limit is over" or "not in the session's allow list", what you can change in *Settings → AI connections* so it is not asked again, and that it must tell you this and ask before trying again.
+
+### Fixed
+
+A long automatic session switched back to asking once its time limit (at most 60 minutes by default) was over, and commands with variables asked even with `*` allowed. When the AI app declined that question, the AI only saw "The user denied this action" although you had allowed everything.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. Existing AI connections keep their limits: to allow everything without limits, edit the connection, press **Allow everything**, confirm and save (open sessions end; the AI opens them again with the new rules).
+
+[Download v12.5.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.5.2) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.5.2/README.md#ai-desktop-apps-mcp)
+
+### Included from v12.5.1 — Claude Desktop and Claude Code in one step
+
+#### Added
 
 - **Claude Desktop extension:** in *Settings → AI connections* pick **Claude Desktop**, choose the servers and how long the token is valid, then **Download Claude Desktop extension**. Open `wrm-pro.mcpb` and press **Install**: the WRM address and token are already filled in. The extension runs on your computer with Claude Desktop's built-in Node.js, so it reaches a WRM on your own network and over plain HTTP; a self-signed HTTPS certificate can be trusted with a CA file in the extension's settings. Approvals still appear in WRM and, where supported, in Claude.
 - **Claude Code plugin:** `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…` (Claude Code 2.1.275 or later). The wizard prints the command with your values; the token is kept in Claude Code's secure storage.
 - **See what the AI does:** when an AI app works on a server through WRM, a live panel shows each command, WRM's decision, the approval buttons, the exit code and the output. *Watch live* in the 🤖 menu reopens it; the automatic opening can be turned off there.
 - **Lifetime in hours or days:** the wizard, the advanced form and the OAuth approval dialog take the token lifetime in hours or days, so apps need not be approved again every day.
 
-### Changed
+#### Changed
 
 When you deny a command, or nobody answers in time, the AI is told where it was refused and to ask you whether to continue, change the command or stop, rather than trying again on its own. Default AI connection lifetime is 7 days (`ai_mcp_token_hours` 168), at most 30 days (`ai_mcp_max_token_hours` 720).
 
-### Fixed
+#### Fixed
 
 Claude Desktop could not be connected to a WRM on a private network: the wizard offered only the claude.ai custom connector, which connects from Anthropic's cloud and needs a public HTTPS address, and `claude_desktop_config.json` does not accept HTTP entries. The wizard now names that option *Claude.ai (cloud connector, public HTTPS)* and offers the extension for Claude Desktop. README troubleshooting explains an empty `mcpServers` block.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. MCP stays off by default (`ai_mcp_enabled`). Token lifetimes default to **7 days, at most 30 days** (were 8 hours, at most 24); values an administrator saved explicitly stay in force and can be changed in *Admin panel → AI connections*. The extension contains the token: delete the downloaded file after installing. Windows packages are cross-compiled; the extension was validated with the official MCP bundle tool and its bridge was run against WRM, but not inside a native Windows Claude Desktop in this release's validation.
 
