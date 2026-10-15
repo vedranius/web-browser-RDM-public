@@ -20,6 +20,7 @@ Object.assign(LANGS.en, {
   mcp_mode_auto_d: 'Changes on your allow list run without asking, within a time and action limit per session. Everything else still asks.',
   mcp_sc_read_logs: 'Read logs, files and system information', mcp_sc_run_readonly: 'Run read-only commands', mcp_sc_run_with_approval: 'Run commands that change something (with approval)',
   mcp_sc_edit_file_with_approval: 'Edit files (with approval, shown as a diff)', mcp_sc_transfer: 'Copy files between the chosen servers (with approval)',
+  mcp_sc_full_access: '⚠ Full access: nothing is refused, but everything WRM would block (destructive commands, deny lists, secret files, shutdown) asks you first, every time',
   mcp_auto_allow: 'Commands that may run without asking (one pattern per line)', mcp_auto_path_allow: 'Files that may be changed without asking (/etc/nginx/**)',
   mcp_auto_minutes: 'Time limit per session (minutes)', mcp_auto_actions: 'Maximum actions per session', mcp_auto_confirm: 'I allow these changes without asking, within these limits.',
   mcp_auto_all: 'Allow everything', mcp_auto_all_d: 'Every command and file on the chosen servers, without asking. Blocked commands and sensitive files still stay blocked.',
@@ -59,6 +60,7 @@ Object.assign(LANGS.en, {
   p_ai_mcp_redirect_uris: 'Allowed redirect addresses', p_ai_mcp_redirect_uris_d: 'OAuth apps may only send users back to these addresses (* = any text; https, or http on localhost).', p_ai_mcp_redirect_uris_ph: 'https://claude.ai/api/mcp/auth_callback',
   p_ai_mcp_allowed_origins: 'Allowed browser origins', p_ai_mcp_allowed_origins_d: 'Web pages (besides WRM) that may call /mcp from a browser (CORS). Empty: none.', p_ai_mcp_allowed_origins_ph: 'https://app.example.com',
   p_ai_mcp_public_url: 'Public address', p_ai_mcp_public_url_d: 'The address AI apps use for WRM, when it differs from what WRM sees (reverse proxy).', p_ai_mcp_public_url_ph: 'https://wrm.example.com',
+  p_ai_full_access: 'Full access for AI connections', p_ai_full_access_d: 'Users may give an AI connection full access: commands and files WRM normally refuses are asked for instead (each time, never automatically). Read-only connections stay read-only.',
   p_ai_mcp_elicitation: 'Approvals in the AI app', p_ai_mcp_elicitation_d: 'Ask for approvals also in the AI app (MCP elicitation) when it supports it. Approvals in WRM always work.',
   p_ai_mcp_transfer_max_mb: 'Transfer limit (MB)', p_ai_mcp_transfer_max_mb_d: 'The largest file the transfer scope copies.',
   mcpw_title: 'Connect an AI app (step by step)', mcpw_intro: 'WRM prepares the token and the exact setting for your app. You only copy it.',
@@ -108,6 +110,7 @@ Object.assign(LANGS.hr, {
   mcp_mode_auto_d: 'Promjene s vašeg popisa dopuštenih izvršavaju se bez pitanja, unutar vremenskog ograničenja i ograničenja broja radnji po sesiji. Sve ostalo i dalje pita.',
   mcp_sc_read_logs: 'Čitanje zapisa, datoteka i podataka o sustavu', mcp_sc_run_readonly: 'Izvršavanje naredbi koje samo čitaju', mcp_sc_run_with_approval: 'Izvršavanje naredbi koje nešto mijenjaju (uz odobrenje)',
   mcp_sc_edit_file_with_approval: 'Uređivanje datoteka (uz odobrenje, prikazano kao razlike)', mcp_sc_transfer: 'Kopiranje datoteka između odabranih poslužitelja (uz odobrenje)',
+  mcp_sc_full_access: '⚠ Potpuni pristup: ništa se ne odbija, ali sve što bi WRM blokirao (destruktivne naredbe, liste zabrana, tajne datoteke, gašenje) prvo pita tebe, svaki put',
   mcp_auto_allow: 'Naredbe koje se smiju izvršiti bez pitanja (jedan uzorak po retku)', mcp_auto_path_allow: 'Datoteke koje se smiju mijenjati bez pitanja (/etc/nginx/**)',
   mcp_auto_minutes: 'Vremensko ograničenje po sesiji (minute)', mcp_auto_actions: 'Najviše radnji po sesiji', mcp_auto_confirm: 'Dopuštam ove promjene bez pitanja, unutar ovih ograničenja.',
   mcp_auto_all: 'Dopusti sve', mcp_auto_all_d: 'Sve naredbe i datoteke na odabranim serverima, bez pitanja. Blokirane naredbe i osjetljive datoteke i dalje ostaju blokirane.',
@@ -144,6 +147,7 @@ Object.assign(LANGS.hr, {
   p_ai_mcp_redirect_uris: 'Dopuštene adrese za povratak', p_ai_mcp_redirect_uris_d: 'OAuth aplikacije smiju korisnike vratiti samo na ove adrese (* = bilo koji tekst; https, ili http na localhostu).', p_ai_mcp_redirect_uris_ph: 'https://claude.ai/api/mcp/auth_callback',
   p_ai_mcp_allowed_origins: 'Dopušteni izvori preglednika', p_ai_mcp_allowed_origins_d: 'Web stranice (osim WRM-a) koje smiju pozivati /mcp iz preglednika (CORS). Prazno: nijedna.', p_ai_mcp_allowed_origins_ph: 'https://app.example.com',
   p_ai_mcp_public_url: 'Javna adresa', p_ai_mcp_public_url_d: 'Adresa kojom AI aplikacije pristupaju WRM-u, kad se razlikuje od one koju WRM vidi (obrnuti proxy).', p_ai_mcp_public_url_ph: 'https://wrm.example.com',
+  p_ai_full_access: 'Potpuni pristup za AI veze', p_ai_full_access_d: 'Korisnici smiju AI vezi dati potpuni pristup: naredbe i datoteke koje WRM inače odbija umjesto toga traže odobrenje (svaki put, nikad automatski). Veze samo za čitanje ostaju samo za čitanje.',
   p_ai_mcp_elicitation: 'Odobrenja u AI aplikaciji', p_ai_mcp_elicitation_d: 'Traži odobrenja i u AI aplikaciji (MCP elicitation) kad je podržava. Odobrenja u WRM-u uvijek rade.',
   p_ai_mcp_transfer_max_mb: 'Ograničenje prijenosa (MB)', p_ai_mcp_transfer_max_mb_d: 'Najveća datoteka koju opseg transfer kopira.',
   mcpw_title: 'Povezivanje AI aplikacije (korak po korak)', mcpw_intro: 'WRM priprema token i točnu postavku za vašu aplikaciju. Vi je samo kopirate.',
@@ -827,7 +831,7 @@ Object.assign(LANGS.hr, {
   function closeModal() { const m = $('mcp-modal'); if (m) m.classList.remove('open'); }
 
   // ── Admin panel → AI connections ──────────────────────
-  const MCP_POLICY_KEYS = ['ai_mcp_enabled', 'ai_mcp', 'ai_mcp_modes', 'ai_mcp_scopes', 'ai_mcp_token_hours', 'ai_mcp_max_token_hours', 'ai_mcp_oauth',
+  const MCP_POLICY_KEYS = ['ai_mcp_enabled', 'ai_mcp', 'ai_mcp_modes', 'ai_mcp_scopes', 'ai_full_access', 'ai_mcp_token_hours', 'ai_mcp_max_token_hours', 'ai_mcp_oauth',
     'ai_mcp_elicitation', 'ai_mcp_redirect_uris', 'ai_mcp_allowed_origins', 'ai_mcp_public_url', 'ai_mcp_transfer_max_mb'];
   async function adminMCP() {
     const body = $('admin-body');

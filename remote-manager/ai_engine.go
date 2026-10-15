@@ -353,7 +353,7 @@ func aiDenyHint(dec aiDecision) string {
 	case dec.Rule == "sensitive_path":
 		return " The administrator's policy (ai_sensitive_reads) blocks reading such files; an approval cannot change that."
 	case strings.HasPrefix(dec.Reason, "blocked: "):
-		return " This command is on WRM's list of destructive or forbidden commands, which is blocked in every mode; an approval cannot run it. If it is really needed, the user runs it themselves in a terminal."
+		return " This command is on WRM's list of destructive or forbidden commands, which is blocked in every mode; an approval cannot run it. If it is really needed, the user runs it themselves in a terminal, or gives this AI connection full access in WRM (the administrator allows ai_full_access, then the connection gets the \"Full access\" scope): WRM then asks the user before such commands instead of refusing them."
 	}
 	return ""
 }
@@ -382,6 +382,8 @@ func aiApprovalWhy(dec aiDecision, mcp bool) string {
 		return why + " To run such commands without asking, the user can " + edit + " and add the command or path to the allow list, or choose \"Allow everything\"."
 	case "ask":
 		return why + " The connection is in ask mode; for commands without asking the user can " + edit + " and choose automatic mode."
+	case "full_access":
+		return why + " This AI connection has full access: WRM asks the user before everything it would otherwise refuse, every time, never automatically."
 	case "sensitive_read":
 		return why + " Reading a file that may hold secrets always asks the user once per read (secret-looking values are redacted); the administrator can block such reads with ai_sensitive_reads."
 	case "power":
@@ -747,7 +749,7 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		s.mu.Unlock()
 		return fail("Denied by WRM: the session is read-only, files cannot be changed.")
 	}
-	if spec.Kind == "write" {
+	if spec.Kind == "write" && !(s.fullAccess() && mode != aiModeReadOnly) {
 		if b := aiDestructivePath(aiExpandHome(strings.TrimSpace(in.Path), home)); b != nil {
 			s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": call.Name, "rule": b.Rule, "path": in.Path})
 			s.mu.Lock()
@@ -765,6 +767,10 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		return fail(err.Error())
 	}
 	dec := aiEvaluate(mode, auto, pl.Act, home, time.Now())
+	full := s.fullAccess()
+	if full {
+		dec = aiFullAccessDecision(dec, mode)
+	}
 	if s.Scopes != nil && spec.Kind == "command" && dec.Action != aiDeny && !dec.ReadOnly && !oneOf("run_with_approval", s.Scopes...) {
 		dec = aiDecision{Action: aiDeny, Rule: "scope", Reason: "the AI connection only allows read-only commands (scope run_readonly)"}
 	}
@@ -858,7 +864,12 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 			s.mu.Lock()
 			mode = s.Mode
 			s.mu.Unlock()
-			if again := aiEvaluate(mode, nil, pl.Act, home, time.Now()); again.Action == aiDeny {
+			again := aiEvaluate(mode, nil, pl.Act, home, time.Now())
+			if full {
+				// the user approved exactly this edited command
+				again = aiFullAccessDecision(again, mode)
+			}
+			if again.Action == aiDeny {
 				s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": call.Name, "rule": again.Rule, "reason": again.Reason, "edited": true})
 				return fail("Denied by WRM after the user's edit: " + again.Reason)
 			}
@@ -908,7 +919,7 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 			out = out[i+1:]
 		}
 		if why := aiReadDenied(real); why != "" {
-			if pl.Approved && aiSensitiveReadsAsk() {
+			if pl.Approved && (aiSensitiveReadsAsk() || s.fullAccess()) {
 				// the user approved reading this file: secret-looking values are still redacted
 				pl.ForceRedact = true
 			} else {
