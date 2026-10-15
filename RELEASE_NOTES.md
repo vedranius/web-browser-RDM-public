@@ -1,6 +1,24 @@
-## Web Remote Manager PRO v12.4.4 — Monitoring, logs and AI workflows
+## Web Remote Manager PRO v12.4.5 — One-click Medium and usable log search
 
 ### Added
+
+- **Medium:** add the original trusted tool/config ZIPs and optional SSH ZIP, then **Prepare and run**. WRM starts Docker, prepares the original dependencies, validates configuration, synchronizes profiles and opens the unchanged tool. Approved imports survive setup failure and can be resumed without re-uploading.
+- **Logs:** automatic discovery from manual roots, service log folders and Supervisor metadata; progressive server results, visible errors, operator/service filters and historical cross-file keyword/date search. Tiles show modification/event times, highlighted excerpts and open/follow actions. Search can be canceled or continued when a bound is reached.
+- **Environments:** combined text/service/environment/server filters with sticky controls.
+
+### Fixed
+
+The whole Overview/Installations filter/check/action area stays at the top during scroll. Monitoring tab responses are isolated. Date-only searches and continuation-event timestamps are handled. Discovery avoids repeated per-file metadata round trips; host metric versus log prerequisites are explained.
+
+### Upgrade
+
+Retain the database/key and private runtime directories/volumes, then replace the executable/container. No schema migration. Windows setup may display the official Docker installer and vendor/OS prompts; required license choices, WSL/virtualization setup and restarts remain user actions. A Windows service needs a preinstalled Docker account; other Windows containers are never stopped or switched automatically. Linux without installed Docker/native prerequisites needs its administrator's initial package setup. Windows builds are cross-compiled, without a native Windows VM run.
+
+Search is bounded per file/round and excerpts; incomplete results show Continue. Compressed/binary logs remain explicit unsupported text inputs. See [guide](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.5/docs/V12.4.5_GUIDE.md), [validation](https://github.com/vedranius/web-browser-RDM-public/blob/v12.4.5/docs/RELEASE_SUMMARY_v12.4.5.md) and [downloads](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.4.5).
+
+### Included from v12.4.4 — Monitoring, logs and AI workflows
+
+#### Added
 
 - **Monitoring** brings Zabbix server metrics, history, agent detection and service Functionality into one workspace. Use passive agent/agent 2 over SSH or your configured network route, verified certificate TLS, PSK through the existing remote `zabbix_get`, or an existing HTTPS Zabbix server API for active-only agents. Unavailable metrics are unknown and diagnostics remain visible.
 - **Logs** supports multiple roots/operators/services, historical segmented search and date/timezone/keyword filters, highlighted results, copying/downloads, terminal actions and up to 16 movable/resizable live windows with tiling/cascade/pause/rotation handling.
@@ -8,11 +26,11 @@
 - **MCP onboarding and permissions:** CLI setup scripts, OAuth/cloud guidance, Cursor install link, `wrm` prompt and authorized server picker, native assistant `/wrm`, safe structured configuration inventory, visible Automatic within limits and editable existing grants. Grant edits retain bearer/expiry and terminate old sessions/approvals.
 - **Terminal and navigation:** previewed/redacted selection-to-AI context, Open terminal here for POSIX/PowerShell, Copy/Paste/native-menu fallback, hostname groups/combined Functionality filters and folder/connection colors/icons.
 
-### Fixed
+#### Fixed
 
 General import recognizes mRemoteNG XML/PuTTY `.reg` ([issue #5](https://github.com/vedranius/web-browser-RDM-public/issues/5)); synthetic 4 MiB XML and UTF-16 registry exports were exercised in the browser. Provider header/request/idle timeouts are configurable for longer local AI requests. Wide replay fits phone/desktop widths. Search/filter bars remain at the top of supported scroll areas, and MCP wizard controls align correctly on narrow screens.
 
-### Upgrade and operation
+#### Upgrade and operation
 
 Replace the executable/container and retain the database, encryption key and private runtime files. Migrations are additive. Functionality is now **Monitoring → Functionality**. Configure each server's installed Zabbix agent and log roots in Monitoring settings; automatic polling is opt-in. MCP stays disabled by default and existing explicit administrator policies remain in force.
 
