@@ -4,11 +4,12 @@
 
 - **Claude Desktop extension:** in *Settings → AI connections* pick **Claude Desktop**, choose the servers and how long the token is valid, then **Download Claude Desktop extension**. Open `wrm-pro.mcpb` and press **Install**: the WRM address and token are already filled in. The extension runs on your computer with Claude Desktop's built-in Node.js, so it reaches a WRM on your own network and over plain HTTP; a self-signed HTTPS certificate can be trusted with a CA file in the extension's settings. Approvals still appear in WRM and, where supported, in Claude.
 - **Claude Code plugin:** `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…` (Claude Code 2.1.275 or later). The wizard prints the command with your values; the token is kept in Claude Code's secure storage.
+- **See what the AI does:** when an AI app works on a server through WRM, a live panel shows each command, WRM's decision, the approval buttons, the exit code and the output. *Watch live* in the 🤖 menu reopens it; the automatic opening can be turned off there.
 - **Lifetime in hours or days:** the wizard, the advanced form and the OAuth approval dialog take the token lifetime in hours or days, so apps need not be approved again every day.
 
 ### Changed
 
-Default AI connection lifetime is 7 days (`ai_mcp_token_hours` 168), at most 30 days (`ai_mcp_max_token_hours` 720).
+When you deny a command, or nobody answers in time, the AI is told where it was refused and to ask you whether to continue, change the command or stop, rather than trying again on its own. Default AI connection lifetime is 7 days (`ai_mcp_token_hours` 168), at most 30 days (`ai_mcp_max_token_hours` 720).
 
 ### Fixed
 
