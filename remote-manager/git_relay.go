@@ -435,7 +435,8 @@ func (j *gitRelayJob) publish() error {
 		return err
 	}
 	// Immutable trees/blobs used by reviewed deployments retain their existing cache.
-	db.Exec(`DELETE FROM git_relay_cache WHERE source_id=? AND generation<>? AND generation<> (SELECT MAX(generation) FROM git_relay_cache WHERE source_id=? AND generation<?)`, j.Source.ID, j.Generation, j.Source.ID, j.Generation)
+	// Only older generations: a newer snapshot published meanwhile by another member stays.
+	db.Exec(`DELETE FROM git_relay_cache WHERE source_id=? AND generation<? AND generation<> (SELECT MAX(generation) FROM git_relay_cache WHERE source_id=? AND generation<?)`, j.Source.ID, j.Generation, j.Source.ID, j.Generation)
 	return nil
 }
 func (j *gitRelayJob) view() map[string]interface{} {

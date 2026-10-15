@@ -285,6 +285,21 @@ func TestGitDeployUpdateRollbackStamp(t *testing.T) {
 	if vmd := readFile(t, e.dir+"/VERSION.md"); !strings.Contains(vmd, "# demo-api - v1.10\n") || !strings.Contains(vmd, "| run.py      | v1.10      | 2026-09-10 |") {
 		t.Fatalf("stamped VERSION.md:\n%s", vmd)
 	}
+	// a file changed by hand: stamp skips it, unless the stamp is "as it is"
+	runPy := readFile(t, e.dir+"/run.py")
+	os.WriteFile(e.dir+"/run.py", []byte(runPy+"# local\n"), 0644)
+	stampAll := map[string]interface{}{"kind": "stamp", "force": true, "items": []map[string]interface{}{{"install_id": in.ID}}, "confirm": map[string]string{fmt.Sprint(in.ID): "app-01"}}
+	if v, _ := e.run(t, stampAll); v.Items[0].State != "skipped" || !strings.Contains(v.Items[0].Error, "not up to date") {
+		t.Fatalf("stamp of a changed installation: %+v", v.Items[0])
+	}
+	stampAll["stamp_partial"] = true
+	if v, _ := e.run(t, stampAll); v.State != "done" || v.Items[0].State != "ok" {
+		t.Fatalf("partial stamp: %+v", v.Items[0])
+	}
+	if vmd := readFile(t, e.dir+"/VERSION.md"); !strings.Contains(vmd, "- **Napomena**:") || !strings.Contains(vmd, "| run.py      | (local)") || !strings.Contains(vmd, "| lib/util.py | v1.10") {
+		t.Fatalf("partially stamped VERSION.md:\n%s", vmd)
+	}
+	os.WriteFile(e.dir+"/run.py", []byte(runPy), 0644)
 
 	// rollback to the backup: run.py comes back, the new file and VERSION.md go away
 	var bl struct {

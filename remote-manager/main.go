@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.4.5"
+var AppVersion = "v12.5.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -1908,6 +1908,7 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	tx.Exec("DELETE FROM snippets WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
 	tx.Exec("DELETE FROM bookmarks WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
 	tx.Commit()
+	revalidateFolderShares(userID)
 	jsonOK(w, map[string]bool{"ok": true})
 }
 
