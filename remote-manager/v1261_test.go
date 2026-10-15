@@ -12,7 +12,7 @@ import (
 // "*" in the automatic allow list allows every command, also chains, variables and
 // redirections that a narrower list cannot check; blocked commands, deny lists, sensitive
 // files and unparseable commands still apply.
-func TestV1252AllowEverything(t *testing.T) {
+func TestV1261AllowEverything(t *testing.T) {
 	home := "/home/demo"
 	now := time.Now()
 	all := &aiAutoLimits{Allow: []string{"*"}, PathAllow: []string{"/**"}, PathDeny: []string{"/etc/shadow"}, Deny: []string{"shutdown*"}, UntilGrant: true}
@@ -60,7 +60,7 @@ func TestV1252AllowEverything(t *testing.T) {
 // An AI connection with "Allow everything" and no limits: commands run without asking for
 // as long as the connection is valid, the janitor never switches it back to ask, and only
 // the administrator's policy and AI connections can use it.
-func TestV1252AutoUntilGrantMCP(t *testing.T) {
+func TestV1261AutoUntilGrantMCP(t *testing.T) {
 	e := newMCPEnv(t)
 	auto := map[string]interface{}{"allow": []string{"*"}, "path_allow": []string{"/**"}, "until_grant": true}
 	tok, gid := e.pat("auto", []string{"read_logs", "run_with_approval", "edit_file_with_approval"}, map[string]interface{}{"auto": auto, "confirm_auto": true, "hours": 48})
@@ -106,7 +106,7 @@ func TestV1252AutoUntilGrantMCP(t *testing.T) {
 }
 
 // The browser panel's sessions keep their time and action limits.
-func TestV1252PanelKeepsLimits(t *testing.T) {
+func TestV1261PanelKeepsLimits(t *testing.T) {
 	e := newAIEnv(t, func(n int, body map[string]interface{}) fakeTurn { return fakeTurn{Text: "ok"} })
 	code, v := e.user.aiDo("POST", "/api/ai/sessions", map[string]interface{}{"conn_id": e.connID, "provider_id": e.provID, "mode": "auto", "confirm_auto": true,
 		"auto": map[string]interface{}{"allow": []string{"*"}, "until_grant": true}})
@@ -117,7 +117,7 @@ func TestV1252PanelKeepsLimits(t *testing.T) {
 
 // An approval the app declined (or nobody answered) is not lost: it stays in WRM, the user
 // approves it there later, and the same call then runs once without asking.
-func TestV1252ApproveLater(t *testing.T) {
+func TestV1261ApproveLater(t *testing.T) {
 	e := newMCPEnv(t)
 	tok, _ := e.pat("ask", []string{"read_logs", "run_with_approval"}, nil)
 	c := e.client(tok)
@@ -178,7 +178,7 @@ func TestV1252ApproveLater(t *testing.T) {
 
 // Files that may hold secrets are read after the user approves, with secrets redacted;
 // the policy can block them.
-func TestV1252SensitiveReadWithApproval(t *testing.T) {
+func TestV1261SensitiveReadWithApproval(t *testing.T) {
 	e := newMCPEnv(t)
 	os.MkdirAll(filepath.Join(e.host.home, ".aws"), 0o700)
 	writeHostFile(t, e.host, ".aws/credentials", "[default]\nregion = eu-central-1\naws_secret_access_key = abcdEFGHsecret1234\n")

@@ -102,6 +102,7 @@ func initGitSchema() {
 	initGitReview()
 	initGitFunctionalitySchema()
 	initGitRunsSchema()
+	initMediumNativeSchema()
 	initGitCISchema()
 	initGitEnvSchema()
 }
