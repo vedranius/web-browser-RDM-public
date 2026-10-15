@@ -29,6 +29,10 @@ type monitorLogFile struct {
 }
 type monitorLogChunk struct {
 	Text         string `json:"text"`
+	Modified     int64  `json:"modified"`
+	Rows         int    `json:"rows"`
+	FirstTime    string `json:"first_time,omitempty"`
+	LastTime     string `json:"last_time,omitempty"`
 	Start        int64  `json:"start"`
 	EventTime    string `json:"event_time,omitempty"`
 	Offset       int64  `json:"offset"`
@@ -103,6 +107,7 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 		return
 	}
 	cfg := loadMonitorConfig(c.ID)
+	cfg.Roots = monitorAvailableRoots(c)
 	ctx, cancel := context.WithTimeout(r.Context(), 45*time.Second)
 	defer cancel()
 	fs, closeFS, err := openMonitorSFTP(ctx, c)
@@ -112,9 +117,12 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 	}
 	defer closeFS()
 	if rest == "logs" {
+		roots, rootWarnings := monitorDiscoverRoots(ctx, fs, c)
+		cfg.Roots = roots
 		files := []monitorLogFile{}
-		warnings := []string{}
+		warnings := rootWarnings
 		visited := 0
+		seenFiles := map[string]bool{}
 		capped := false
 		type dir struct {
 			name        string
@@ -155,12 +163,13 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 						}
 						continue
 					}
-					if !f.Mode().IsRegular() || aiReadDenied(p) != "" {
+					if !f.Mode().IsRegular() || !monitorLogName(f.Name()) || aiReadDenied(p) != "" {
 						continue
 					}
-					if _, err := monitorSafePath(fs, x.Path, p); err != nil {
+					if seenFiles[p] {
 						continue
 					}
+					seenFiles[p] = true
 					files = append(files, monitorLogFile{Root: root, Path: p, Service: x.Service, Operator: x.Operator, Size: f.Size(), Modified: f.ModTime().Unix()})
 				}
 			}
@@ -168,10 +177,20 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 				capped = true
 			}
 		}
-		jsonOK(w, map[string]interface{}{"files": files, "warnings": warnings, "incomplete": capped, "limits": map[string]int{"files": 2000, "entries": 10000, "depth": 8}})
+		jsonOK(w, map[string]interface{}{"files": files, "roots": cfg.Roots, "warnings": warnings, "incomplete": capped, "limits": map[string]int{"files": 2000, "entries": 10000, "depth": 8}})
 		return
 	}
 	root, err := strconv.Atoi(r.URL.Query().Get("root"))
+	if rp := r.URL.Query().Get("root_path"); rp != "" {
+		root = -1
+		for i, x := range cfg.Roots {
+			if x.Path == rp {
+				root = i
+				err = nil
+				break
+			}
+		}
+	}
 	if err != nil || root < 0 || root >= len(cfg.Roots) {
 		jsonError(w, "Choose a configured log root", 400)
 		return
@@ -289,7 +308,11 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 		jsonError(w, "Invalid to date/time", 400)
 		return
 	}
-	chunk := monitorLogChunk{Start: offset, Offset: offset + int64(n), Signature: signature, Size: st.Size(), Reset: reset, Truncated: offset > 0 || offset+int64(n) < st.Size(), Timezone: tz, Note: "Bounded text chunk; timestamp-less lines are retained. Syslog dates use the current year in the selected timezone. Live offsets refer to raw bytes."}
+	if !from.IsZero() && !to.IsZero() && from.After(to) {
+		jsonError(w, "From must not be after until", 400)
+		return
+	}
+	chunk := monitorLogChunk{Modified: st.ModTime().Unix(), Start: offset, Offset: offset + int64(n), Signature: signature, Size: st.Size(), Reset: reset, Truncated: offset > 0 || offset+int64(n) < st.Size(), Timezone: tz, Note: "Bounded text chunk; timestamp-less lines are retained. Syslog dates use the current year in the selected timezone. Live offsets refer to raw bytes."}
 	if q != "" || !from.IsZero() || !to.IsZero() {
 		if scan {
 			initialTime, _ := time.Parse(time.RFC3339, r.URL.Query().Get("event_time"))
@@ -333,6 +356,20 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 			chunk.Truncated = true
 		}
 	}
+	for _, line := range strings.Split(chunk.Text, "\n") {
+		if strings.TrimSpace(line) != "" {
+			chunk.Rows++
+		}
+	}
+	if q == "" {
+		chunk.Matches = chunk.Rows
+	}
+	initial, _ := time.Parse(time.RFC3339, r.URL.Query().Get("event_time"))
+	if !scan {
+		initial = time.Time{}
+	}
+	chunk.FirstTime, chunk.LastTime = monitorEventRange(text[:min(len(text), int(chunk.Offset-offset))], q, from, to, location, initial)
+
 	if r.URL.Query().Get("download") == "1" {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -431,4 +468,23 @@ func filterMonitorLogSegment(text, q string, from, to time.Time, loc *time.Locat
 		}
 	}
 	return out.String(), unknown, matches, consumed, eventTime
+}
+
+// Matching continuation lines inherit their event timestamp even when the
+// keyword appears only on the continuation, not on the timestamped header.
+func monitorEventRange(text, q string, from, to time.Time, loc *time.Location, at time.Time) (string, string) {
+	first, last := "", ""
+	for _, line := range strings.Split(text, "\n") {
+		if v, ok := parseMonitorLogTime(line, loc); ok {
+			at = v
+		}
+		if at.IsZero() || strings.TrimSpace(line) == "" || (!from.IsZero() && at.Before(from)) || (!to.IsZero() && at.After(to)) || (q != "" && !strings.Contains(strings.ToLower(line), strings.ToLower(q))) {
+			continue
+		}
+		if first == "" {
+			first = at.Format(time.RFC3339Nano)
+		}
+		last = at.Format(time.RFC3339Nano)
+	}
+	return first, last
 }
