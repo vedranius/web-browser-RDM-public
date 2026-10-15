@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.4.5</title>
+<title>Web Remote Manager PRO v12.5.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -105,6 +105,7 @@ button:hover { background: var(--accent-h); }
   box-shadow: 0 24px 64px rgba(0,0,0,.8);
 }
 .modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 18px; color: var(--text); }
+.modal .modal-back { margin-bottom: 10px; }
 .field { margin-bottom: 13px; }
 .field label {
   display: block;
@@ -1547,7 +1548,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.4.5 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.5.0 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1627,7 +1628,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.4.5</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.5.0</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -2087,7 +2088,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="import_inventory">Import inventory (CSV, Excel, NetBox)</div><div class="setting-desc" data-i18n="import_inventory_desc">Server lists from a CSV or .xlsx file (you check the columns) or from NetBox, with tags for environment, site and rack, folders and a login from the vault.</div></div>
-        <div class="setting-control"><button class="btn-sec btn-sm" onclick="closeModal('modal-settings'); openInventory()" data-i18n="import">Import</button></div>
+        <div class="setting-control"><button class="btn-sec btn-sm" onclick="const tab = settingsTabNow(); openInsteadOf('modal-settings', () => openInventory(), () => openSettings(tab))" data-i18n="import">Import</button></div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="import_mrng">Import from mRemoteNG</div><div class="setting-desc" data-i18n="import_mrng_desc">confCons.xml: folders, SSH, RDP, VNC, Telnet and web connections with passwords, SSH tunnel → jump host.</div></div>
@@ -2103,7 +2104,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-sec" id="admin-settings-row" style="display:none;margin-right:auto;" onclick="closeModal('modal-settings'); openAdminPanel()">🛡 <span data-i18n="admin_panel">Admin panel</span></button>
+      <button class="btn-sec" id="admin-settings-row" style="display:none;margin-right:auto;" onclick="const tab = settingsTabNow(); openInsteadOf('modal-settings', () => openAdminPanel(), () => openSettings(tab))">🛡 <span data-i18n="admin_panel">Admin panel</span></button>
       <button onclick="closeModal('modal-settings')" data-i18n="close">Close</button>
     </div>
   </div>
@@ -4778,6 +4779,8 @@ Object.assign(LANGS.hr, {
 
 Object.assign(LANGS.en, {ne_monitor_problem:'Monitoring: server needs attention',ne_monitor_recovered:'Monitoring: server recovered',ctx_ai:'Send selection to AI',ctx_review:'Review context before sending',ctx_question:'Question for the assistant',ctx_native:'Shift + right-click opens the browser menu. Clipboard shortcuts remain available.',ctx_paste_failed:'Clipboard unavailable; use Ctrl+Shift+V or the browser menu.',wrm_command_help:'Choose a server for WRM. The assistant uses its configured permissions; MCP apps use the servers in their own grant.',mon_title:'Monitoring',vl_title:'Color and icon', vl_color:'Color', vl_icon:'Icon', vl_default:'Default', vl_preview:'Preview', vl_server:'Server', vl_rack:'Rack', vl_network:'Network', vl_router:'Router', vl_switch:'Switch', vl_database:'Database', vl_storage:'Storage', vl_backup:'Backup', vl_security:'Security', vl_cloud:'Cloud', vl_monitoring:'Monitoring', vl_video:'Video / OTT', vl_broadcast:'Live broadcast', vl_encoder:'Encoder', vl_audio:'Audio', vl_terminal:'Terminal', vl_linux:'Linux', vl_windows:'Windows'});
 Object.assign(LANGS.hr, {ne_monitor_problem:'Monitoring: poslužitelj zahtijeva pažnju',ne_monitor_recovered:'Monitoring: poslužitelj oporavljen',ctx_ai:'Pošalji označeno AI-u',ctx_review:'Pregledaj kontekst prije slanja',ctx_question:'Upit za asistenta',ctx_native:'Shift + desni klik otvara izbornik preglednika. Tipkovnički prečaci ostaju dostupni.',ctx_paste_failed:'Međuspremnik nije dostupan; koristite Ctrl+Shift+V ili izbornik preglednika.',wrm_command_help:'Odaberite poslužitelj za WRM. Asistent koristi svoje ovlasti; MCP aplikacije koriste samo servere svojeg odobrenja.',mon_title:'Monitoring',vl_title:'Boja i ikona', vl_color:'Boja', vl_icon:'Ikona', vl_default:'Zadano', vl_preview:'Pregled', vl_server:'Poslužitelj', vl_rack:'Ormar', vl_network:'Mreža', vl_router:'Usmjerivač', vl_switch:'Preklopnik', vl_database:'Baza podataka', vl_storage:'Pohrana', vl_backup:'Sigurnosna kopija', vl_security:'Sigurnost', vl_cloud:'Oblak', vl_monitoring:'Nadzor', vl_video:'Video / OTT', vl_broadcast:'Prijenos uživo', vl_encoder:'Enkoder', vl_audio:'Zvuk', vl_terminal:'Terminal', vl_linux:'Linux', vl_windows:'Windows'});
+Object.assign(LANGS.en, { dlg_back: 'Back' });
+Object.assign(LANGS.hr, { dlg_back: 'Natrag' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4834,7 +4837,29 @@ function showToast(msg, type = 'info', dur = 3000) {
   setTimeout(() => { d.style.animation = 'fadeOut .3s ease forwards'; setTimeout(() => d.remove(), 300); }, dur);
 }
 
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) {
+  const m = document.getElementById(id);
+  m.classList.remove('open');
+  const back = m.querySelector('.modal-back');
+  if (back) back.remove();
+}
+// openInsteadOf replaces dialog fromId with the one open() shows, which then gets a "Back"
+// button: it closes that dialog and calls reopen() to show the previous one again.
+function openInsteadOf(fromId, open, reopen) {
+  const before = new Set([...document.querySelectorAll('.modal-overlay.open')].map(m => m.id));
+  closeModal(fromId);
+  return Promise.resolve(open()).finally(() => {
+    const opened = [...document.querySelectorAll('.modal-overlay.open')].find(m => m.id && !before.has(m.id));
+    const box = opened && opened.querySelector('.modal');
+    if (!box) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn-sec btn-sm modal-back';
+    b.textContent = '← ' + t('dlg_back');
+    b.onclick = () => { closeModal(opened.id); reopen(); };
+    box.prepend(b);
+  });
+}
+function settingsTabNow() { const b = document.querySelector('#settings-tabs .tab-btn.active'); return b ? b.dataset.tab : ''; }
 function closeAllCtx() { document.querySelectorAll('.ctx-menu').forEach(m => m.classList.remove('open', 'bm-menu')); }
 
 function showCtx(menuId, x, y) {
@@ -7190,7 +7215,7 @@ async function renderTunnelsPanel() {
   box.innerHTML = Object.keys(groups).sort().map(g => {
     const first = groups[g][0];
     return `<div class="tun-group"><div class="tun-group-h">🖥 ${esc(g)} <span class="sub mono">${esc(first.connection_host || '')}${first.route ? ' ⤳ ' + esc(first.route) : ''}</span>
-      ${!all && tunnelPanelConn === null && first.conn_id && !first.ephemeral ? `<button class="btn-sec btn-sm" style="margin-left:auto;" onclick="closeModal('modal-tunnels'); openConnModal(${Number(first.conn_id)}, true)">✏ ${esc(t('edit'))}</button>` : ''}</div>` +
+      ${!all && tunnelPanelConn === null && first.conn_id && !first.ephemeral ? `<button class="btn-sec btn-sm" style="margin-left:auto;" onclick="openInsteadOf('modal-tunnels', () => openConnModal(${Number(first.conn_id)}, true), () => openTunnelsPanel())">✏ ${esc(t('edit'))}</button>` : ''}</div>` +
       groups[g].map(v => {
         const url = tunnelURL(v);
         const state = v.running ? v.state : 'stopped';

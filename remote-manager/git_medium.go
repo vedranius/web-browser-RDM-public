@@ -62,6 +62,22 @@ type mediumManager struct {
 
 var mediumOperation sync.Mutex
 
+// mediumStarts serializes starts of one user's instance without holding mediumMgr.mu
+// (a start can wait minutes for Docker and readiness; status and proxy calls must not).
+var mediumStarts = struct {
+	sync.Mutex
+	m map[string]*sync.Mutex
+}{m: map[string]*sync.Mutex{}}
+
+func mediumStartLock(dir string) *sync.Mutex {
+	mediumStarts.Lock()
+	defer mediumStarts.Unlock()
+	if mediumStarts.m[dir] == nil {
+		mediumStarts.m[dir] = &sync.Mutex{}
+	}
+	return mediumStarts.m[dir]
+}
+
 var mediumMgr = mediumManager{processes: map[string]*mediumProcess{}, statuses: map[string]mediumStatus{}}
 
 func mediumRoot() string {
@@ -185,10 +201,14 @@ func mediumExtract(data []byte, dest, kind string) error {
 		if !allowed {
 			continue
 		}
-		if seen[rel] {
+		if rel == "." || rel == ".." {
+			continue
+		}
+		// case-insensitive: Windows and macOS file systems would overwrite one with the other
+		if seen[strings.ToLower(rel)] {
 			return fmt.Errorf("duplicate ZIP path")
 		}
-		seen[rel] = true
+		seen[strings.ToLower(rel)] = true
 		total += f.UncompressedSize64
 		if total > mediumArchiveLimit || f.UncompressedSize64 > mediumArchiveLimit {
 			return fmt.Errorf("expanded ZIP exceeds 20 MiB")
@@ -283,21 +303,28 @@ func mediumStartForSetup(uid int, setup bool) error {
 		}
 	}
 	dir := mediumUserDir(uid)
+	startLock := mediumStartLock(dir)
+	startLock.Lock()
+	defer startLock.Unlock()
 	mediumMgr.mu.Lock()
-	defer mediumMgr.mu.Unlock()
 	if p := mediumMgr.processes[dir]; p != nil {
 		select {
 		case <-p.done:
 			delete(mediumMgr.processes, dir)
 		default:
+			mediumMgr.mu.Unlock()
 			return nil
 		}
 	}
+	mediumMgr.mu.Unlock()
 	for _, d := range []string{dir, filepath.Join(dir, "data"), filepath.Join(dir, "home", ".ssh")} {
 		if e := os.MkdirAll(d, 0700); e != nil {
 			return e
 		}
 	}
+	// earlier versions kept replaced profiles (and their keys) next to the current ones
+	os.RemoveAll(filepath.Join(dir, "home", ".ssh.previous"))
+	os.RemoveAll(filepath.Join(dir, "config.previous"))
 	sshConfig := filepath.Join(dir, "home", ".ssh", "config")
 	if !mediumFileExists(sshConfig) {
 		if e := os.WriteFile(sshConfig, []byte("Host *\n  BatchMode yes\n  StrictHostKeyChecking yes\n"), 0600); e != nil {
@@ -332,6 +359,9 @@ func mediumStartForSetup(uid int, setup bool) error {
 		}
 	}
 	for k, v := range mediumPreferences(uid) {
+		if v == "" {
+			continue // an empty preference means the original default (and keeps WRM's SSH options)
+		}
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	if sock := os.Getenv("WRM_MEDIUM_SSH_AUTH_SOCK"); sock != "" && serverKeysAllowed(uid) {
@@ -382,12 +412,23 @@ func mediumStartForSetup(uid int, setup bool) error {
 		cancel()
 		return e
 	}
+	mediumMgr.mu.Lock()
 	mediumMgr.processes[dir] = p
+	mediumMgr.mu.Unlock()
 	go func() { _ = cmd.Wait(); close(p.done) }()
+	forget := func() {
+		p.cancel()
+		mediumMgr.mu.Lock()
+		if mediumMgr.processes[dir] == p {
+			delete(mediumMgr.processes, dir)
+		}
+		mediumMgr.mu.Unlock()
+	}
 	client := &http.Client{Timeout: time.Second}
 	for i := 0; i < 300; i++ {
 		select {
 		case <-p.done:
+			forget()
 			return fmt.Errorf("deploy tool failed to start; check its Python dependencies and config")
 		default:
 		}
@@ -401,7 +442,7 @@ func mediumStartForSetup(uid int, setup bool) error {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	p.cancel()
+	forget()
 	return fmt.Errorf("deploy tool startup timed out")
 }
 
@@ -428,6 +469,18 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if action == "/setup" {
 		apiMediumSetup(w, r, uid)
+		return
+	}
+	if action == "/stop" {
+		// Stopping one's own instance never waits for another user's setup or start.
+		// force=1 stops it even when its state cannot be read (a hung or crashed tool).
+		if e := mediumCanStop(uid); e != nil && r.URL.Query().Get("force") != "1" {
+			jsonError(w, e.Error(), 409)
+			return
+		}
+		mediumStop(uid)
+		auditLog(r, uid, "git.medium_stopped", "", map[string]interface{}{"forced": r.URL.Query().Get("force") == "1"})
+		jsonOK(w, mediumState(uid))
 		return
 	}
 	if !mediumOperation.TryLock() {
@@ -460,13 +513,13 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		backgroundOperation = true
-		mediumSetStage(uid, "Preparing runtime", true, nil)
+		mediumSetStage(uid, "dependencies", true, nil)
 		go func() {
 			defer mediumOperation.Unlock()
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 			defer cancel()
 			e := mediumPrepareRuntime(ctx)
-			mediumSetStage(uid, "Ready", false, e)
+			mediumSetStage(uid, "ready", false, e)
 		}()
 		auditLog(r, uid, "git.medium_runtime_prepared", "", nil)
 		w.WriteHeader(202)
@@ -489,7 +542,9 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 				jsonError(w, "Unsupported runtime setting", 400)
 				return
 			}
-			if v != "[REDACTED]" {
+			if v == "" {
+				delete(saved, k) // empty: the original default
+			} else if v != "[REDACTED]" {
 				saved[k] = v
 			}
 		}
@@ -513,18 +568,10 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		if e := mediumStart(uid); e != nil {
 			jsonError(w, e.Error(), 400)
 		} else {
+			mediumSetStage(uid, "", false, nil)
 			auditLog(r, uid, "git.medium_started", "", nil)
 			jsonOK(w, mediumState(uid))
 		}
-		return
-	}
-	if action == "/stop" {
-		if e := mediumCanStop(uid); e != nil {
-			jsonError(w, e.Error(), 409)
-			return
-		}
-		mediumStop(uid)
-		jsonOK(w, mediumState(uid))
 		return
 	}
 	if action != "/tool" && action != "/config" && action != "/ssh" {
@@ -603,7 +650,7 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		backgroundOperation = true
-		mediumSetStage(uid, "Preparing runtime", true, nil)
+		mediumSetStage(uid, "dependencies", true, nil)
 		digest := sha256.Sum256(data)
 		go func() {
 			defer mediumOperation.Unlock()
@@ -614,7 +661,7 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 			if e == nil {
 				e = mediumPrepareRuntime(ctx)
 			}
-			mediumSetStage(uid, "Ready", false, e)
+			mediumSetStage(uid, "ready", false, e)
 		}()
 		auditLog(r, uid, "git.medium_tool_imported", "", map[string]interface{}{"sha256": hex.EncodeToString(digest[:])})
 		w.WriteHeader(202)
@@ -650,6 +697,19 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Cannot save runtime import revision", 500)
 		return
 	}
+	// This import replaces a pending one from an earlier one-click setup, and an imported
+	// config replaces a config repository (as in one-click setup).
+	os.RemoveAll(filepath.Join(mediumUserDir(uid), "pending-"+kind))
+	if kind == "config" {
+		if prefs := mediumPreferences(uid); prefs["DEPLOY_CONFIG_REPO"] != "" {
+			delete(prefs, "DEPLOY_CONFIG_REPO")
+			if e = os.WriteFile(filepath.Join(mediumUserDir(uid), "preferences.enc"), []byte(encryptValue(string(jsonMarshal(prefs)))), 0600); e != nil {
+				jsonError(w, "Cannot save runtime settings", 500)
+				return
+			}
+		}
+	}
+	mediumSetStage(uid, "", false, nil)
 	auditLog(r, uid, "git.medium_"+kind+"_imported", "", nil)
 	jsonOK(w, mediumState(uid))
 }
@@ -674,7 +734,8 @@ func mediumReplaceDir(src, dst string) error {
 		}
 		return e
 	}
-	return nil
+	// A replaced SSH profile holds private keys: do not keep it on disk.
+	return os.RemoveAll(backup)
 }
 
 var mediumURLAttr = regexp.MustCompile(`(?i)((?:href|src|action|hx-[a-z-]+|sse-connect)\s*=\s*["'])(/[^"']*)`)

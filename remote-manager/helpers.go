@@ -457,6 +457,7 @@ func updateFolder(w http.ResponseWriter, r *http.Request, userID, id int) {
 		}
 		statusMon.poke()
 	}
+	revalidateFolderShares(userID) // the folder may have left a shared subtree
 	for _, x := range loadFolders(userID) {
 		if x.ID == id {
 			jsonOK(w, x)

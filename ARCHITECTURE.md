@@ -14,6 +14,14 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
+## Dialog history, partial stamps and Medium locking (v12.5.0)
+
+`static/git.js` `modal()` keeps the dialog element it replaces (DOM, values and handlers) on a bounded trail when the new dialog has a different title and the old one has content; transient loading/error dialogs and re-renders of the same dialog are not kept. `modalBack()` reattaches the previous element; `closeModal()` clears the trail. `index.html` `openInsteadOf(from, open, reopen)` gives a dialog opened in place of another a Back button that reopens the opener (Settings keeps its tab).
+
+Stamp (`stampItem`) refuses installations that are not up to date unless `stamp_partial` is set; VERSION.md then uses `versionRows` (older files carry their matching version, changed files `(local)`, missing files are left out) and an extra `Napomena` field that `parseVersionMD` ignores.
+
+Medium starts are serialized per user (`mediumStartLock`); `mediumMgr.mu` only guards the process map, so status, proxy and Stop do not wait for Docker sync or readiness. `/stop` runs before the global setup lock. Log scans keep raw bytes for offsets, end at the last complete line and replace invalid UTF-8 only in returned lines.
+
 ## Medium setup and log workflows (v12.4.5)
 
 `git_medium_setup.go` handles a single bounded multipart setup request. ZIPs are extracted/validated before replacement, retained privately, and a serialized background job starts Docker, prepares the original runtime, validates pending config/SSH, records revisions and launches the original proxy. Runtime errors preserve pending imports; an explicitly uploaded local config clears its older config-Git override. Interactive Windows dependency installation downloads only from HTTPS Docker domains, bounds size and verifies Authenticode/Docker publisher before running the vendor installer. No license acceptance, reboot, Docker context change or container-engine switch is performed. Existing individual setup routes remain.

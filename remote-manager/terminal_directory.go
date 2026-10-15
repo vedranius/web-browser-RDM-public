@@ -67,7 +67,9 @@ func terminalDirectoryStart(cl *ssh.Client, c Connection, directory string, logF
 			}
 			return powershellEncoded("Set-Location -LiteralPath '" + strings.ReplaceAll(path.Dir(file), "'", "''") + "'; Get-Content -LiteralPath '" + strings.ReplaceAll(file, "'", "''") + "' -Tail 100 -Wait"), nil
 		}
-		script := "cd -- " + shellQuote(path.Dir(file)) + " && tail -n 100 -F -- " + shellQuote(file) + `; exec "${SHELL:-/bin/sh}" -l`
+		// Ctrl+C stops tail only (the trap keeps this shell alive), then a login shell
+		// stays open in the log folder.
+		script := "cd -- " + shellQuote(path.Dir(file)) + " && { trap : INT; tail -n 100 -F -- " + shellQuote(file) + `; trap - INT; }; exec "${SHELL:-/bin/sh}" -l`
 		return "sh -c " + shellQuote(script), nil
 	}
 	return terminalDirectoryCommand(directory, windows)

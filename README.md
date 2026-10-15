@@ -13,7 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.4.5** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.5.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.5.0
+
+**Stamp as it is:** the Stamp dialog shows which files differ and why an installation cannot be stamped. Tick **Also stamp installations that are not up to date** to write VERSION.md with each file's actual version and a note that the installation is partial.
+
+**Back in dialogs:** dialogs opened from another dialog (for example Details → Update → confirmation) have **← Back** (Alt+←) and keep what you ticked or typed. A code review of the v12.4.x features fixed production confirmations, Medium start/stop/settings and imports, log search with non-UTF-8 bytes and special characters, and the client GitLab cache. The next versions run Medium without Docker on WRM's own engine ([roadmap](ROADMAP.md)).
 
 ## What's new in v12.4.5
 
@@ -58,7 +64,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -158,21 +164,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.4.5-linux-amd64
-   ./wrm-pro-v12.4.5-linux-amd64
+   chmod +x wrm-pro-v12.5.0-linux-amd64
+   ./wrm-pro-v12.5.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.4.5-windows-amd64.exe
+   .\wrm-pro-v12.5.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.4.5-linux-amd64.AppImage
-   ./wrm-pro-v12.4.5-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.4.5-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.5.0-linux-amd64.AppImage
+   ./wrm-pro-v12.5.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.5.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -181,8 +187,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.5/wrm-pro-v12.4.5-android-arm64
-   chmod +x wrm-pro-v12.4.5-android-arm64 && ./wrm-pro-v12.4.5-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.5.0/wrm-pro-v12.5.0-android-arm64
+   chmod +x wrm-pro-v12.5.0-android-arm64 && ./wrm-pro-v12.5.0-android-arm64
    ```
 
    **Docker**
@@ -206,6 +212,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.4.5
+
+Replace the executable/AppImage/container and keep the database, encryption key and private Medium directories/volumes. No database migration. Medium settings saved empty now mean "original default" and are no longer passed to the tool; earlier `.previous` copies of replaced SSH profiles are deleted at the next Medium start. Stamp no longer refuses silently: choose **Also stamp installations that are not up to date** to stamp an installation as it is.
 
 ## Upgrading from v12.4.4
 
@@ -1048,7 +1058,7 @@ The native Linux runtime needs Python 3.12+, git, OpenSSH and rsync on the WRM h
 
 Runs change servers only when you start or schedule them. Select installations on the *Installations* tab (or open one) and choose an action; a run works on the installations **one after another** and **stops at the first failure** (*rolling*). Everything goes over SSH with POSIX tools (`sh`, `cp`, `mv`, `find`, `awk`, `tr`, `sha256sum`).
 
-- **Update** — the newest version of the ref the installation follows. **Upgrade…** — another branch or tag (`main`, `tag:v2`, `tag:latest`), with a warning and a summary per installation: files to change, new files, files changed locally, and files that the new version no longer has (they stay on the server). *Follow this ref from now on* sets the services' ref override, so later comparisons use it. **Rollback…** — restore a backup from `.deploy-bak/`. **Stamp** — write `VERSION.md` where an installation is up to date and has none (*Overwrite an existing VERSION.md* forces it).
+- **Update** — the newest version of the ref the installation follows. **Upgrade…** — another branch or tag (`main`, `tag:v2`, `tag:latest`), with a warning and a summary per installation: files to change, new files, files changed locally, and files that the new version no longer has (they stay on the server). *Follow this ref from now on* sets the services' ref override, so later comparisons use it. **Rollback…** — restore a backup from `.deploy-bak/`. **Stamp** — write `VERSION.md` where an installation is up to date and has none (*Overwrite an existing VERSION.md* forces it). The dialog lists the files that differ; *Also stamp installations that are not up to date* writes it anyway with each file's actual version (older files their matching version, hand-changed files `(local)`) and a `Napomena` line saying the installation is partial. Dialogs opened from another one have **← Back** (Alt+←).
 - **Choosing files:** *old* and *missing* files are ticked. A file **changed by hand** is written only when you tick it, with a warning (its content stays in the backup). **Protected** files are never written. *Show all files* lists the current ones too.
 - **Confirmation:** a summary, and for **production** installations — tag `env:prod` (or `prod`, `production`, `prd`, `live`) or an environment directory with that name — you type the server name. The server checks it again.
 - **Steps per installation**, shown live in the run's details:
@@ -1786,9 +1796,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.4.5-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.4.5-linux-amd64 -service-status
-sudo ./wrm-pro-v12.4.5-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.5.0-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.5.0-linux-amd64 -service-status
+sudo ./wrm-pro-v12.5.0-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1819,7 +1829,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.4.5-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.5.0-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -1959,7 +1969,7 @@ All endpoints require a WRM session and effective owner/policy access. Mutating 
 | `GET /api/git/medium` | Runtime/import/dependency status and tool SHA-256. |
 | `POST /api/git/medium/{tool,config,ssh}?confirm=1` | Multipart ZIP in field `file`; tool is administrator-only; 20 MiB expanded limit. |
 | `GET, POST /api/git/medium/settings` | Read masked / save encrypted original runtime preferences. |
-| `POST /api/git/medium/{start,stop,prepare}` | Start original app / stop only when idle / administrator retry of retained tool setup. |
+| `POST /api/git/medium/{start,stop,prepare}` | Start original app / stop only when idle (`stop?force=1` stops a tool whose state cannot be read or that reports work, after a second confirmation in the UI) / administrator retry of retained tool setup. |
 | `/medium/*` | Original UI and native actions behind WRM authentication, policy and origin checks. |
 | `GET, POST /api/git/config-profiles` | List / add reference `{name,app,path,operator,content}`. |
 | `DELETE /api/git/config-profiles/{id}` | Remove owned profile. |
@@ -2143,7 +2153,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/git/check/jobs/current/cancel` | Cancel the running check job |
 | POST | `/api/git/plan` | `{kind: "update"\|"upgrade"\|"stamp", ref, install_ids}` → `{items: [{install_id, prod, units, from_version, target, current, files: [{path, state, selected, local}], removed, counts, eligible}]}` |
 | GET | `/api/git/installs/{id}/backups` | Backups in `.deploy-bak` with their files, `VERSION.md` and `updates.jsonl` line (policy `git_rollback`) |
-| POST | `/api/git/runs` | Start or schedule a run: `{kind: "update"\|"upgrade"\|"rollback"\|"stamp"\|"restart", ref, items: [{install_id, files, modified_ok, backup}], restart: {mode: "none"\|"now"\|"at"\|"delay", at, delay_minutes}, schedule_at, checks: {service: command}, ignore_imports, force, set_ref_override, confirm: {install_id: server name}}`. Install / transfer (right away): `{kind: "install"\|"transfer", provision: {conn_id, services: [{app, ref: ""\|"bundle:<id>"\|branch\|"tag:…", path, env, files: [{path, mode: "template"\|"copy"\|"manual"\|"skip", template, values: {field id: {value} \| {cred_id, part}}, from_install, content}], unit: {kind: "systemd"\|"supervisor", name, user, command, work_dir, enable}}], source_install, path, env, unit, overwrite, confirm: server name}, restart: {mode: "none"\|"now"}, checks}` |
+| POST | `/api/git/runs` | Start or schedule a run: `{kind: "update"\|"upgrade"\|"rollback"\|"stamp"\|"restart", ref, items: [{install_id, files, modified_ok, backup}], restart: {mode: "none"\|"now"\|"at"\|"delay", at, delay_minutes}, schedule_at, checks: {service: command}, ignore_imports, force, stamp_partial, set_ref_override, confirm: {install_id: server name}}`. Install / transfer (right away): `{kind: "install"\|"transfer", provision: {conn_id, services: [{app, ref: ""\|"bundle:<id>"\|branch\|"tag:…", path, env, files: [{path, mode: "template"\|"copy"\|"manual"\|"skip", template, values: {field id: {value} \| {cred_id, part}}, from_install, content}], unit: {kind: "systemd"\|"supervisor", name, user, command, work_dir, enable}}], source_install, path, env, unit, overwrite, confirm: server name}, restart: {mode: "none"\|"now"}, checks}` |
 | POST | `/api/git/provision/prepare` | `{kind: "install", conn_id, services: [{app, ref, path}], overwrite}` → `{roots, prod, services: [{target, files, bytes, check: {exists, existing, files, version, parent, writable, free_kb, need_kb, tools, needs, errors, warnings}, slots: [{path, protected, in_repo, templates: [{path, available, fields: [{id, name, kind, default, secret}]}], copies}]}]}`; `{kind: "transfer", conn_id, source_install, path, overwrite}` → `{source: {files, bytes, excluded, excluded_list, units, version}, check}` |
 | GET | `/api/git/runs` | History and scheduled runs |
 | GET | `/api/git/runs/{id}` | A run with live progress: items with `state`, `step`, `log`, `written`, `deleted`, `made_backup`, `dangling`, `health` |
@@ -2599,4 +2609,4 @@ See [the v12.4.5 guide](docs/V12.4.5_GUIDE.md) for one-click Medium setup, autom
 
 New backend modules: `monitoring.go`, `monitoring_zabbix.go`, `monitoring_logs.go`, `git_relay.go`, `git_relay_client.go`, `git_review.go`, `mcp_edit.go`, `mcp_prompts.go`, `mcp_picker.go`, `ai_inventory.go`, `ai_context.go`, `ai_idle.go`, `terminal_directory.go`, `visual_labels.go`. On-demand UI modules: `static/monitoring.js` and `static/git_client.js`.
 
-`v1244_test.go`, `v1244_extra_test.go` and `git_relay_test.go` cover grant edits/session invalidation, inventories, labels/ownership/import, provider HTTP cancellation/idle/header limits, Zabbix framing/API TLS/items, log roots/symlinks/timestamps/rotation, literal terminal paths, client-cache token/scope/failure/generation isolation and reviewed targets surviving a changed/failed refresh. Run the full race/vet/format/UI/Node/Python checks described in CONTRIBUTING.
+`v1250_test.go` covers v12.5.0 scan UTF-8 handling, Medium SSH ZIP duplicates/replaced profiles and the partial-stamp note; `git_deploy_test.go` covers partial stamps over SSH. `v1244_test.go`, `v1244_extra_test.go` and `git_relay_test.go` cover grant edits/session invalidation, inventories, labels/ownership/import, provider HTTP cancellation/idle/header limits, Zabbix framing/API TLS/items, log roots/symlinks/timestamps/rotation, literal terminal paths, client-cache token/scope/failure/generation isolation and reviewed targets surviving a changed/failed refresh. Run the full race/vet/format/UI/Node/Python checks described in CONTRIBUTING.
