@@ -1,6 +1,6 @@
 # Roadmap
 
-Accepted work through **v12.5.0** is delivered in [CHANGELOG.md](CHANGELOG.md).
+Accepted work through **v12.6.0** is delivered in [CHANGELOG.md](CHANGELOG.md).
 
 ## Medium without Docker (accepted direction, versions to follow)
 
@@ -18,7 +18,6 @@ Agreed design:
   Platform and architecture of the build server are checked against the destinations.
 - **Trust:** build and `post_deploy` commands still run code from the project/config; Medium stays limited to trusted operators.
 
-Delivery plan:
-1. **v12.6.0 – compatibility layer:** Go reader/validator for `deploy-config`, native plan computation and a side-by-side comparison of the native plan with the original tool's plan (read-only, nothing written to servers). Needs the original deploy tool source as the reference (owner supplies it privately; it is never committed).
-2. **v12.7.0 – native engine:** deploy, dry run, lock, backup, history and rollback through WRM connections; build location choice; per-project switch between the Docker runtime and the native engine. The Docker path keeps working until the native engine matches it.
-3. **v12.8.0 – switch-over:** native engine as the default on Linux and Windows; the Docker runtime becomes optional and is then retired.
+Delivery plan (v12.6.0 delivered the deploy-config reader/validator, the native plan and the comparison with the original tool; see [CHANGELOG.md](CHANGELOG.md)):
+1. **v12.7.0 – native engine:** deploy, dry run, lock, backup, history and rollback through WRM connections; build location choice; per-project switch between the Docker runtime and the native engine. The Docker path keeps working until the native engine matches it.
+2. **v12.8.0 – switch-over:** native engine as the default on Linux and Windows; the Docker runtime becomes optional and is then retired.
