@@ -1908,6 +1908,7 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	tx.Exec("DELETE FROM snippets WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
 	tx.Exec("DELETE FROM bookmarks WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
 	tx.Commit()
+	revalidateFolderShares(userID)
 	jsonOK(w, map[string]bool{"ok": true})
 }
 
