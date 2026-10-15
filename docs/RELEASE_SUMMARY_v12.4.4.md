@@ -11,7 +11,7 @@ Monitoring/Zabbix/history and migrated hostname-grouped Functionality; bounded h
 | Area | Exercised |
 |---|---|
 | Backend | Full `go test -race -count=1 -timeout 20m ./...`, `go vet ./...`, empty gofmt output; existing suites plus new v12.4.4 regressions. |
-| UI/source | `tools/check-ui.js`, all four existing Node suites, four Python Medium-wrapper regressions; en/hr syntax/translation coverage. |
+| UI/source | `tools/check-ui.js`, the four existing Node suites plus streamed client response-limit regressions, four Python Medium-wrapper regressions; en/hr syntax/translation coverage. |
 | Browser | Real Chromium at 390/1100/1440/1920: Monitoring cards/filter, duplicate-hostname Functionality groups, combined filters/query persistence and real sticky scrolling with 160 generic installations; two simultaneous live logs/highlights/history/layouts, MCP automatic-mode opt-in/CLI downloads/endpoint test and a 500-column xterm replay fitted without horizontal scrolling. Screenshots inspected; no application JavaScript errors. |
 | Import | Actual general import path with synthetic 4,194,304-byte mRemoteNG XML and UTF-16 PuTTY registry session. Existing encrypted/nested/proxy import tests remain in the full suite. The reporter subsequently confirmed imports work; their actual tunneled proxy endpoints/export were not supplied or tested. |
 | Zabbix | Official agent and agent 2 Linux 7.4.15 containers, real passive metrics; real agent 2 PSK via SSH-executed `zabbix_get`, plus wrong-identity rejection. API tests verify trusted/untrusted TLS CA, bearer rejection, supported active-template items and network rates. JSON/legacy framing and metric derivation have fixtures. Initial agent warm-up can produce unknown/warning metrics; it is not reported as zero. |

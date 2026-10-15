@@ -62,7 +62,7 @@ jobs:
         run: |
           python3 tools/test-medium-wrapper.py
           node tools/check-ui.js
-          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js
+          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js tools/test-git-client.js
 
   # ─────────────────────────────────────────────
   #  Create the release (tags only) as a draft before the binaries are uploaded
