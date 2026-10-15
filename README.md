@@ -17,7 +17,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 ## What's new in v12.5.1
 
-**Claude Desktop and Claude Code in one step.** *Settings → AI connections → Claude Desktop* now downloads a **WRM PRO extension** (`wrm-pro.mcpb`) with your WRM address and token already filled in: open it, press **Install**, done. It works with a WRM on your own network and over plain HTTP, because Claude Desktop talks to WRM from your computer (a claude.ai custom connector connects from Anthropic's cloud and needs a public HTTPS address). For Claude Code there is a **WRM PRO plugin**: `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…`. The wizard also lets you choose how long the token is valid. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
+**Claude Desktop and Claude Code in one step.** *Settings → AI connections → Claude Desktop* now downloads a **WRM PRO extension** (`wrm-pro.mcpb`) with your WRM address and token already filled in: open it, press **Install**, done. It works with a WRM on your own network and over plain HTTP, because Claude Desktop talks to WRM from your computer (a claude.ai custom connector connects from Anthropic's cloud and needs a public HTTPS address). For Claude Code there is a **WRM PRO plugin**: `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…`. Token lifetimes are entered in hours or days and default to 7 days (at most 30), so you are not asked to approve again every day. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 
 ## What's new in v12.4.5
 
@@ -213,7 +213,7 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ## Upgrading from v12.4.5
 
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. AI connections (MCP) stay off by default; once an administrator turns them on (*Admin panel → AI connections*), **Claude Desktop** users pick *Claude Desktop* in *Settings → AI connections*, download the extension and install it. An old `claude_desktop_config.json` entry with the stdio bridge keeps working. The token lifetime is still limited by `ai_mcp_max_token_hours` (default 24 hours): raise it if a desktop app should keep its access longer.
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. AI connections (MCP) stay off by default; once an administrator turns them on (*Admin panel → AI connections*), **Claude Desktop** users pick *Claude Desktop* in *Settings → AI connections*, download the extension and install it. An old `claude_desktop_config.json` entry with the stdio bridge keeps working. Token lifetimes can now be chosen in **hours or days**. The defaults change from 8 hours (at most 24) to **7 days (at most 30 days)**: `ai_mcp_token_hours` 168, `ai_mcp_max_token_hours` 720. A value an administrator saved explicitly stays in force; lower them again in *Admin panel → AI connections* if your policy needs short lifetimes.
 
 ## Upgrading from v12.4.4
 
@@ -323,7 +323,7 @@ Replace the binary. There are no database changes; v12.1.0 still starts on the s
 ## Upgrading from v12.0.0
 Replace the binary. The database gets new tables (`mcp_tokens`, `mcp_clients`) and the column `ai_sessions.mcp_token_id`; v12.0.0 still starts on it and ignores them.
 
-- **AI desktop apps (MCP)** are **off by default**. An administrator turns them on in *Admin panel → AI connections* (`ai_mcp_enabled`); by default only administrators may create AI connections (`ai_mcp` = `admins`), with the modes `read_only,ask,auto` (`ai_mcp_modes`), a default lifetime of 8 hours (`ai_mcp_token_hours`) and at most 24 hours (`ai_mcp_max_token_hours`). Users then find *Settings → AI connections*. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
+- **AI desktop apps (MCP)** are **off by default**. An administrator turns them on in *Admin panel → AI connections* (`ai_mcp_enabled`); by default only administrators may create AI connections (`ai_mcp` = `admins`), with the modes `read_only,ask,auto` (`ai_mcp_modes`), a default lifetime of 8 hours (`ai_mcp_token_hours`) and at most 24 hours (`ai_mcp_max_token_hours`; since v12.5.1 the defaults are 7 and 30 days). Users then find *Settings → AI connections*. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 - MCP clients reach WRM at `https://<your WRM>/mcp`. Hosted connectors (claude.ai, ChatGPT) connect **from the provider's cloud**: WRM must be reachable from the internet over HTTPS for them. Behind a reverse proxy set `ai_mcp_public_url` (the address the apps use) and pass `/mcp`, `/oauth/` and `/.well-known/` through. Desktop apps with the stdio bridge only need to reach WRM from your computer.
 - The kill switch of the AI assistant (`ai_kill_switch`) also stops every AI connection. Turning off the built-in assistant (`ai_assistant`) does not turn off MCP, and the other way round.
 - The top bar shows **🤖 AI connected** while an AI app is connected; at narrower widths the top-bar labels hide a little earlier than before so nothing overlaps.
@@ -1298,7 +1298,7 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
 
 **How it works**
 
-- An **AI connection** binds **you**, the **servers** you pick (your own SSH connections), one **mode** (read-only, ask before every change, or automatic within limits), the **scopes** and a **lifetime** (default 8 hours, at most what the policy allows). It is a **personal access token** you create in *Settings → AI connections*, or an **OAuth approval** you give when an app connects. Tokens are shown once and stored only as a hash; they can be revoked at any time.
+- An **AI connection** binds **you**, the **servers** you pick (your own SSH connections), one **mode** (read-only, ask before every change, or automatic within limits), the **scopes** and a **lifetime** in hours or days (default 7 days, at most what the policy allows, by default 30 days). It is a **personal access token** you create in *Settings → AI connections*, or an **OAuth approval** you give when an app connects. Tokens are shown once and stored only as a hash; they can be revoked at any time.
 - The app sees these tools: `list_connections` (the servers of the AI connection and the mode WRM applies there), `open_session` / `close_session`, and the WRM tools the scopes allow, each with the `session_id` of an open session:
 
 | Scope | Tools | What WRM does |
@@ -1734,7 +1734,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_provider_request_seconds` | `3600` | total provider request, 60–14400 seconds |
 | `ai_provider_stream_idle_seconds` | `600` | provider stream inactivity, 30–7200 seconds |
 | `ai_mcp_modes` | `read_only,ask,auto` | allowed modes of AI connections (the mode rules narrow them per connection) |
-| `ai_mcp_token_hours` / `ai_mcp_max_token_hours` | `8` / `24` | default and maximum lifetime of a token or OAuth approval |
+| `ai_mcp_token_hours` / `ai_mcp_max_token_hours` | `168` / `720` | default and maximum lifetime of a token or OAuth approval |
 | `ai_mcp_oauth` | `1` | OAuth 2.1 (PKCE, dynamic client registration) for AI apps; `0` = tokens only |
 | `ai_mcp_redirect_uris` | claude.ai, claude.com, ChatGPT, `http://localhost:*` | OAuth redirect URI allowlist (`*` = any text; https, or http on loopback) |
 | `ai_mcp_allowed_origins` | – | browser origins (besides WRM) allowed to call `/mcp` (CORS) |
