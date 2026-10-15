@@ -1,3 +1,11 @@
+## [12.6.2] - 2026-10-15
+
+### Added
+- **Full access with approval** for AI connections: the new scope `full_access` (offered only while the administrator turns on `ai_full_access`, default off) means nothing is refused outright any more. Commands on the destructive list or `ai_blocked_commands`, the connection's deny lists, power commands, protected file paths and secret files (also with `ai_sensitive_reads` = deny) ask the user instead, every time and never automatically, even with "Allow everything". The approval is marked *FULL ACCESS* and names the rule WRM would have applied. A read-only connection stays read-only, other scopes still apply, and the decision is re-checked at every call, so turning the policy off restores the refusals at once.
+
+### Changed
+- A refusal of a blocked command tells the AI that full access exists and who can turn it on.
+
 ## [12.6.1] - 2026-10-15
 
 ### Added
