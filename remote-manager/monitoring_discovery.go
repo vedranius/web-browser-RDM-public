@@ -54,10 +54,9 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 		if len(roots) >= 100 || seen[p] || !strings.HasPrefix(p, "/") || p == "/" || aiReadDenied(p) != "" || strings.ContainsAny(p, "\x00\r\n") {
 			return
 		}
-		if _, err := monitorSafePath(fs, p, p); err != nil {
-			return
-		}
-		st, err := fs.Stat(p)
+		// Candidate metadata is cheap. Full ancestor/REALPATH validation runs
+		// before directory listing and again before every content read.
+		st, err := fs.Lstat(p)
 		if err != nil || !st.IsDir() {
 			return
 		}
@@ -217,6 +216,9 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 				queue = append(queue, candidate{p, service, operator, d.depth + 1})
 			}
 		}
+	}
+	if ctx.Err() != nil {
+		warnings = append(warnings, "Automatic folder discovery time budget reached; readable known roots are listed below")
 	}
 	if len(queue) > 0 || len(roots) >= 100 {
 		warnings = append(warnings, "Automatic root discovery reached its directory/root limit")

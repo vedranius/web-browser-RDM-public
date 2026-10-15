@@ -117,7 +117,9 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 	}
 	defer closeFS()
 	if rest == "logs" {
-		roots, rootWarnings := monitorDiscoverRoots(ctx, fs, c)
+		rootCtx, stopRoots := context.WithTimeout(ctx, 10*time.Second)
+		roots, rootWarnings := monitorDiscoverRoots(rootCtx, fs, c)
+		stopRoots()
 		cfg.Roots = roots
 		files := []monitorLogFile{}
 		warnings := rootWarnings
