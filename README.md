@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.4.5** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.5.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.5.1
+
+**Claude Desktop and Claude Code in one step.** *Settings → AI connections → Claude Desktop* now downloads a **WRM PRO extension** (`wrm-pro.mcpb`) with your WRM address and token already filled in: open it, press **Install**, done. It works with a WRM on your own network and over plain HTTP, because Claude Desktop talks to WRM from your computer (a claude.ai custom connector connects from Anthropic's cloud and needs a public HTTPS address). For Claude Code there is a **WRM PRO plugin**: `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…`. The wizard also lets you choose how long the token is valid. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 
 ## What's new in v12.4.5
 
@@ -58,7 +62,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -158,21 +162,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.4.5-linux-amd64
-   ./wrm-pro-v12.4.5-linux-amd64
+   chmod +x wrm-pro-v12.5.1-linux-amd64
+   ./wrm-pro-v12.5.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.4.5-windows-amd64.exe
+   .\wrm-pro-v12.5.1-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.4.5-linux-amd64.AppImage
-   ./wrm-pro-v12.4.5-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.4.5-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.5.1-linux-amd64.AppImage
+   ./wrm-pro-v12.5.1-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.5.1-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -181,8 +185,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.4.5/wrm-pro-v12.4.5-android-arm64
-   chmod +x wrm-pro-v12.4.5-android-arm64 && ./wrm-pro-v12.4.5-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.5.1/wrm-pro-v12.5.1-android-arm64
+   chmod +x wrm-pro-v12.5.1-android-arm64 && ./wrm-pro-v12.5.1-android-arm64
    ```
 
    **Docker**
@@ -206,6 +210,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.4.5
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. AI connections (MCP) stay off by default; once an administrator turns them on (*Admin panel → AI connections*), **Claude Desktop** users pick *Claude Desktop* in *Settings → AI connections*, download the extension and install it. An old `claude_desktop_config.json` entry with the stdio bridge keeps working. The token lifetime is still limited by `ai_mcp_max_token_hours` (default 24 hours): raise it if a desktop app should keep its access longer.
 
 ## Upgrading from v12.4.4
 
@@ -1282,7 +1290,7 @@ WRM is an **MCP server** (Model Context Protocol). AI apps that speak MCP — **
 
 **Connect an AI app (wizard)**
 
-*Settings → AI connections* opens with a step-by-step wizard: **1.** pick the app (Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code / other, or Claude / ChatGPT through sign-in); **2.** pick the servers and what the app may do (*look only*, or *look and change with your approval* when the policy allows `ask`); **3.** copy or download the ready command or config file; **4.** press *Test*, which runs `initialize` and `tools/list` against the MCP address with the new token. The token is created by the audited `POST /api/mcp/grants` and shown once; the old form is under *Advanced*. For Codex CLI: `codex mcp add wrm --url <address> --bearer-token-env-var WRM_MCP_TOKEN`; for Claude Code: `claude mcp add --transport http wrm <address> --header "Authorization: Bearer …"`; for Gemini CLI: `gemini mcp add --transport http wrm <address> -H "Authorization: Bearer …"`.
+*Settings → AI connections* opens with a step-by-step wizard: **1.** pick the app (Codex CLI, **Claude Desktop**, Claude Code, Gemini CLI, Cursor / VS Code / other, or claude.ai / ChatGPT through sign-in); **2.** pick the servers, how long the token is valid and what the app may do (*look only*, or *look and change with your approval* when the policy allows `ask`); **3.** copy or download the ready command or config file; **4.** press *Test*, which runs `initialize` and `tools/list` against the MCP address with the new token. The token is created by the audited `POST /api/mcp/grants` and shown once; the old form is under *Advanced*. For Codex CLI: `codex mcp add wrm --url <address> --bearer-token-env-var WRM_MCP_TOKEN`; for Claude Code: `claude mcp add --transport http wrm <address> --header "Authorization: Bearer …"`; for Gemini CLI: `gemini mcp add --transport http wrm <address> -H "Authorization: Bearer …"`.
 
 The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that explains to the agent that **"wrm" is the WRM PRO MCP server**; the server sends the same explanation in `instructions` during `initialize`, so clients no longer ask what *wrm* is.
 
@@ -1309,9 +1317,15 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
 
 **Set up your app** — *Settings → AI connections* shows the address (`https://<your WRM>/mcp`) and, after you create a token, ready-to-copy snippets:
 
-1. **Claude (claude.ai or the desktop app) — custom connector with OAuth.** *Settings → Connectors → Add custom connector*, enter `https://<your WRM>/mcp`. Claude registers itself (dynamic client registration), opens WRM in the browser, you sign in (with 2FA) and choose the servers, the mode, the scopes and the lifetime; Claude then gets a token for exactly that. claude.ai connects from Anthropic's cloud, so WRM must be reachable from the internet over HTTPS (put it behind a reverse proxy with a real certificate, and keep the other hardening of [SECURITY.md](SECURITY.md)).
-2. **ChatGPT — connector.** *Settings → Apps & Connectors → Advanced settings → Developer mode*, then *Create* (*Add custom connector*): the MCP server URL `https://<your WRM>/mcp`, authentication **OAuth**. ChatGPT opens WRM for your approval, as above. ChatGPT also connects from its cloud: WRM must be reachable over HTTPS.
-3. **Claude Desktop — local stdio bridge** (no inbound access from the internet needed). Copy the WRM binary for your computer's system (the same release file as the server) to your computer, create a token, and add to `claude_desktop_config.json` (*Claude → Settings → Developer → Edit config*):
+1. **Claude Desktop — one-click extension (recommended for Claude Desktop).** In the wizard pick *Claude Desktop*, choose the servers and press *Create token*, then **Download Claude Desktop extension**. Open the downloaded `wrm-pro.mcpb` (or *Claude → Settings → Extensions → Advanced settings → Install extension…*) and press **Install**: the WRM address and the token are already filled in. The extension is an [MCP bundle](https://github.com/modelcontextprotocol/mcpb) with a small Node.js bridge (`remote-manager/mcpb/server/index.js`, no dependencies) that Claude Desktop runs with its own built-in Node.js; it passes MCP messages, including approval questions, between Claude and WRM's `/mcp`. It runs on your computer, so it reaches a WRM on your own network and over plain HTTP; for a self-signed HTTPS certificate choose the CA file in the extension's settings. Claude Desktop keeps the token in the operating system's secure storage; delete the downloaded file after installing, since it contains the token. When the token expires or is revoked, Claude shows *HTTP 401 … create a new one in WRM*: download the extension again with a new token. `POST /api/mcp/claude-desktop` builds the bundle; downloads are audited (`mcp.desktop_extension`).
+2. **Claude Code — WRM PRO plugin.** This repository is a Claude Code plugin marketplace. One command installs the plugin and stores the address and token (the token in Claude Code's secure storage); the wizard prints it with your values:
+   ```
+   claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=https://wrm.example.com/mcp --config wrm_token=wrm_pat_…
+   ```
+   Inside Claude Code: `/plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public`, then `/plugin configure wrm-pro@wrm-pro`. Needs Claude Code 2.1.275 or later; `claude mcp add` (below) works with any version. The plugin lives in `packaging/claude-plugin/wrm-pro`.
+3. **claude.ai — custom connector with OAuth.** *Settings → Connectors → Add custom connector*, enter `https://<your WRM>/mcp`. Claude registers itself (dynamic client registration), opens WRM in the browser, you sign in (with 2FA) and choose the servers, the mode, the scopes and the lifetime; Claude then gets a token for exactly that. claude.ai connects from Anthropic's cloud, so WRM must be reachable from the internet over HTTPS (put it behind a reverse proxy with a real certificate, and keep the other hardening of [SECURITY.md](SECURITY.md)).
+4. **ChatGPT — connector.** *Settings → Apps & Connectors → Advanced settings → Developer mode*, then *Create* (*Add custom connector*): the MCP server URL `https://<your WRM>/mcp`, authentication **OAuth**. ChatGPT opens WRM for your approval, as above. ChatGPT also connects from its cloud: WRM must be reachable over HTTPS.
+5. **Any stdio client — the bridge in the WRM binary** (no inbound access from the internet needed; Claude Desktop users prefer the extension above). Copy the WRM binary for your computer's system (the same release file as the server) to your computer, create a token, and add to `claude_desktop_config.json` (*Claude → Settings → Developer → Edit config*):
    ```json
    {
      "mcpServers": {
@@ -1324,7 +1338,7 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
    }
    ```
    The bridge (`wrm -mcp-stdio -url … -token …`, or the token from `WRM_MCP_TOKEN` / `-token-file`) passes MCP messages between stdin/stdout and WRM's `/mcp`, including approval questions; `-ca-file` trusts a private CA or a self-signed WRM certificate. Use it for any client that only starts local (stdio) servers.
-4. **Other MCP clients** (Claude Code, IDE agents, your own scripts) with streamable HTTP and a header:
+6. **Other MCP clients** (Claude Code, IDE agents, your own scripts) with streamable HTTP and a header:
    ```json
    { "mcpServers": { "wrm": { "type": "http", "url": "https://wrm.example.com/mcp", "headers": { "Authorization": "Bearer wrm_pat_…" } } } }
    ```
@@ -1786,9 +1800,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.4.5-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.4.5-linux-amd64 -service-status
-sudo ./wrm-pro-v12.4.5-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.5.1-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.5.1-linux-amd64 -service-status
+sudo ./wrm-pro-v12.5.1-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1819,7 +1833,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.4.5-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.5.1-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -2275,6 +2289,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | DELETE | `/api/mcp/grants/{id}` | Revoke (ends its sessions) |
 | POST | `/api/mcp/revoke-all` | Revoke every own AI connection |
 | GET | `/api/mcp/active` | `{live: [AI connections with open sessions], pending: [approvals]}` for the indicator; decide with `/api/ai/sessions/{id}/approvals/{approval}` |
+| POST | `/api/mcp/claude-desktop` | The Claude Desktop extension `wrm-pro.mcpb` for this WRM `{token}` (optional; only a `wrm_pat_…` token is accepted) → `application/zip`. Audited as `mcp.desktop_extension` |
 | GET / POST | `/api/mcp/authorize/{id}` | The consent dialog: the request (`client_name`, `redirect_host`, `scopes`) / `{decision: "approve"\|"deny", conn_ids, mode, scopes, hours}` → `{redirect}` |
 | GET / DELETE | `/api/admin/mcp/grants[/{id}]`, POST `/api/admin/mcp/revoke-all` | Every AI connection; revoke one or all (administrators) |
 | GET / DELETE | `/api/admin/mcp/clients[/{id}]` | Registered OAuth apps; removing one revokes its AI connections |
@@ -2358,6 +2373,7 @@ remote-manager/
   mcp_tokens.go   AI connections (hashed tokens, scopes, expiry, revoke), policies, /api/mcp and /api/admin/mcp
   mcp_oauth.go    OAuth 2.1 for MCP clients: metadata, dynamic client registration, consent, PKCE, token, revoke
   mcp_stdio.go    the stdio bridge (wrm -mcp-stdio) for clients that only start local servers
+  mcp_bundle.go   the Claude Desktop extension (wrm-pro.mcpb): manifest, the Node.js bridge in mcpb/server/index.js, the icon
   files.go        file API: list, download, ZIP, streamed upload, mkdir, rename, delete
   search.go       recursive name / content search (NDJSON stream)
   sftp_pool.go    pooled SFTP connections with liveness checks
@@ -2438,6 +2454,7 @@ remote-manager/
   ai_policy_test.go    read-only classifier (many cases), destructive patterns (every rule, false positives), admin patterns, globs
   ai_engine_test.go    AI sessions against a fake Anthropic / OpenAI-compatible server and the fake SSH host: approve, edit, deny, timeout, read-only, destructive in every mode, automatic-mode limits, file edits with diffs, kill switch, most restrictive policy, keys never returned, redaction, audit, transcript and recording, prompt injection, the event stream
   mcp_test.go          an MCP client harness: initialize, tools/list, tools/call, elicitation; OAuth with PKCE failure and code reuse; token scopes and expiry; revoke and kill switch; approval round trip; read-only and scope enforcement; destructive block; prompt injection; audit; transfer; the stdio bridge; origin and CORS checks
+  mcp_bundle_test.go   the Claude Desktop extension: download, manifest, token checks; its Node.js bridge end to end with an approval
   ai_provider_test.go  SigV4 test vector, Bedrock Converse event stream, Vertex token exchange, Azure / OpenAI, Anthropic request shape, refusal, cancel, cost
   termcwd_test.go      the shell's working directory over SSH against the fake SSH host (a real sh on a PTY): start directory, after cd, a foreground job
   static/index.html          the entire web UI (embedded into the binary)
@@ -2446,6 +2463,9 @@ remote-manager/
   static/mcp.js              AI connections (MCP): settings, indicator, approval cards, OAuth consent, admin tab (loaded when used)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
+  mcpb/server/index.js       the Node.js bridge of the Claude Desktop extension (embedded; mcp_bundle.go)
+.claude-plugin/marketplace.json  Claude Code plugin marketplace of this repository
+packaging/claude-plugin/wrm-pro/  the WRM PRO plugin for Claude Code (MCP over HTTP with a token)
 .github/workflows/build.yml  CI: vet, gofmt, tests (race), JS syntax check, builds all platforms, Docker image, releases on tags
 Dockerfile, docker-compose.yml  container image and one-command deployment
 ARCHITECTURE.md              how WRM is built; extension plan status and touch points
@@ -2471,6 +2491,7 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 | AI: *HTTP 413* / *request too large* (Groq and other providers with token-per-minute limits) | Since v12.2.0 WRM shortens the long command output of the conversation and retries; if the provider's limit is still too small for the system prompt and tools, pick a model with a larger limit |
 | AI: Gemini answers *missing a thought_signature* | Fixed in v12.2.0: WRM sends the provider's `extra_content` of tool calls back unchanged. Update WRM |
 | AI: a Claude.ai / ChatGPT subscription does not work | Consumer chat subscriptions cannot be used by other applications: use an API key or your company's gateway — or connect the chat app to WRM over MCP ([AI desktop apps](#ai-desktop-apps-mcp)) |
+| MCP: Claude Desktop shows no WRM tools; `claude_desktop_config.json` has an empty `mcpServers` | Claude Desktop does not read HTTP entries from that file, and a custom connector connects from Anthropic's cloud, which cannot reach a WRM on your network. Install the WRM PRO extension instead (*Settings → AI connections → Claude Desktop*); extensions are listed under *Claude → Settings → Extensions*, not in `mcpServers` |
 | MCP: no *AI connections* tab in Settings | MCP is off (`ai_mcp_enabled`); the tab says why when the policy `ai_mcp` does not include you or the kill switch is on |
 | MCP: claude.ai / ChatGPT cannot connect (*couldn't reach the server*, timeout) | Hosted connectors connect from the provider's cloud: WRM must be reachable from the internet over HTTPS with a trusted certificate. Behind a reverse proxy pass `/mcp`, `/oauth/` and `/.well-known/` through, turn off response buffering for `/mcp` (server-sent events) and set `ai_mcp_public_url` |
 | MCP: *the redirect URI … is not allowed* | The app's OAuth callback is not in `ai_mcp_redirect_uris`; an administrator adds it (*Admin panel → AI connections*) |
