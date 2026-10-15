@@ -414,7 +414,8 @@ func TestMCPApprovalRoundTripAndDestructiveBlock(t *testing.T) {
 		t.Fatalf("a denied command ran: %s", out)
 	}
 	// the AI is told where it was refused and to ask the user before trying again
-	if !strings.Contains(out, "denied this action in WRM") || !strings.Contains(out, "ask whether to continue") {
+	if !strings.Contains(out, "denied this action in WRM") || !strings.Contains(out, "ask whether to continue") || !strings.Contains(out, "WRM asked the user because") ||
+		!strings.Contains(out, "(rule ask)") || !strings.Contains(out, "Settings → AI connections") {
 		t.Fatalf("denial message: %s", out)
 	}
 }
@@ -452,7 +453,7 @@ func TestMCPElicitationApproval(t *testing.T) {
 	decision = "decline"
 	writeHostFile(t, e.host, "notes.txt", "a\n")
 	text, isErr = c.call("write_file", map[string]interface{}{"session_id": sid, "path": "~/notes.txt", "content": "b\n", "reason": "test"})
-	if !isErr || !strings.Contains(text, "denied") {
+	if !isErr || !strings.Contains(text, "Not run yet") {
 		t.Fatalf("elicitation decline: %s", text)
 	}
 	if b, _ := os.ReadFile(filepath.Join(e.host.home, "notes.txt")); string(b) != "a\n" {

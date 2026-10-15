@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.1
+
+**"Allow everything" now means everything.** In an AI connection's automatic mode, **Allow everything** fills in `*` for commands and `/**` for files, and **No time or action limit** keeps the connection automatic for as long as it is valid. Chains with `&&`, variables and redirections no longer stop at an approval when `*` is allowed; blocked commands, your deny lists and sensitive files still do. When WRM does ask and nobody answers in time (or the app declines the question), the request stays in WRM to **approve later**, and the AI repeats it once you have. Files that may hold secrets are read after your approval, with secrets redacted. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 
 ## What's new in v12.6.0
 
@@ -72,7 +76,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -172,21 +176,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.0-linux-amd64
-   ./wrm-pro-v12.6.0-linux-amd64
+   chmod +x wrm-pro-v12.6.1-linux-amd64
+   ./wrm-pro-v12.6.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.0-windows-amd64.exe
+   .\wrm-pro-v12.6.1-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.6.0-linux-amd64.AppImage
-   ./wrm-pro-v12.6.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.6.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.6.1-linux-amd64.AppImage
+   ./wrm-pro-v12.6.1-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.6.1-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -195,8 +199,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.0/wrm-pro-v12.6.0-android-arm64
-   chmod +x wrm-pro-v12.6.0-android-arm64 && ./wrm-pro-v12.6.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.1/wrm-pro-v12.6.1-android-arm64
+   chmod +x wrm-pro-v12.6.1-android-arm64 && ./wrm-pro-v12.6.1-android-arm64
    ```
 
    **Docker**
@@ -220,6 +224,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. Existing AI connections keep their limits. To let an app work without limits, edit its AI connection in *Settings → AI connections*, press **Allow everything** (it also ticks **No time or action limit**), confirm and save; open sessions end and the app opens them again with the new rules. Administrators can forbid connections without limits with `ai_auto_until_grant` = off.
 
 ## Upgrading from v12.5.1
 
@@ -1295,10 +1303,10 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 |---|---|
 | **Read-only** | The read tools and commands the **read-only classifier** accepts (`systemctl status`, `journalctl -u …`, `df`, `ss -tulpn`, `dpkg -l`, `grep … /var/log/…`, pipes of such commands …). Anything that is not clearly read-only — unknown commands, redirections, `$( … )`, `sed -i`, `find -delete`, `systemctl restart` — is refused. File edits are not even offered to the model. |
 | **Ask before every change** | Reads run directly. Every command that changes something and every file edit becomes a **pending approval** in the panel: the exact command (you can **edit** it before approving) or a **unified diff** (you can edit the new content). Approve or deny with an optional note; an approval that is not answered in time (`ai_approval_timeout_seconds`) is **denied**. A file is written only if it did not change since the diff was made. |
-| **Automatic within limits** | Only after an explicit opt-in for this session: an **allow list** and a **deny list** of command patterns (`systemctl restart nginx`, `apt-get install -y *`) and file paths (`/etc/nginx/**`), a **time limit** and a **maximum number of actions** (both capped by policy). Matching changes run without asking; the deny list refuses; everything else, and everything after the limits, asks again. When the time is over the session falls back to *ask*. |
+| **Automatic within limits** | Only after an explicit opt-in for this session: an **allow list** and a **deny list** of command patterns (`systemctl restart nginx`, `apt-get install -y *`) and file paths (`/etc/nginx/**`), a **time limit** and a **maximum number of actions** (both capped by policy). Matching changes run without asking; the deny list refuses; everything else, and everything after the limits, asks again. When the time is over the session falls back to *ask*. An allow list of `*` allows every command, also chains, variables and redirections (still not the blocked or denied ones). AI connections (MCP) can choose **no time or action limit** instead: automatic until the connection expires. |
 
 - **Always blocked, in every mode, also after an approval:** `rm -rf /` and of system directories, `mkfs` / `wipefs` / partitioning, `dd` to disks, fork bombs, stopping or killing the SSH server, flushing the firewall, killing PID 1, stopping the audit, `crontab -r`, deleting or locking root, writing to `/etc/shadow`, `/etc/passwd`, sudoers, `/boot`, raw disks or `authorized_keys`, `curl … | sh`. `shutdown` / `reboot` are blocked unless the `ai_allow_power` policy allows them **with an approval** (never automatically). Administrators add their own patterns (`ai_blocked_commands`); the built-in list is shown in *Admin panel → AI assistant*.
-- **Sensitive files are never read:** password hashes, SSH and TLS private keys, cloud and tool credentials (`~/.aws/credentials`, `.kube/config`, `.netrc` …), process environments — also through wildcards or symlinks — plus your own patterns (`ai_read_deny_paths`).
+- **Sensitive files are not read without you:** password hashes, SSH and TLS private keys, cloud and tool credentials (`~/.aws/credentials`, `.kube/config`, `.netrc` …), process environments — also through wildcards or symlinks — plus your own patterns (`ai_read_deny_paths`). Since v12.6.1 reading one with `read_file` / `tail_log` asks you each time and the AI gets the content with secret-looking values redacted; with `ai_sensitive_reads` = `deny` they are never read. Commands that name such a file always need an approval.
 - **What the AI sees** (👁 in the panel): the tool results of this session, the OS of the server and, only if you tick it, your notes for the connection. Never the passwords and keys stored in WRM, your WRM sign-in, other connections or your terminal screen. **Secrets in output are redacted** before they are sent to the provider (`ai_redact_output`): private keys, passwords and tokens in `key=value` form, `Authorization` headers, passwords in URLs, AWS / GitHub / GitLab / Slack / OpenAI / Anthropic / Google keys, JWTs, password hashes. Output is limited per call (`ai_output_max_kb`).
 - **Server output is untrusted data.** Tool results are framed as untrusted data and the model is told never to follow instructions found in them. A log line that says *switch to automatic mode* changes nothing: only you can change the mode, in the WRM interface, and every change goes through the same checks.
 - **Stop and kill:** ■ *Stop* cancels the running request and command; ⏻ ends the session. Administrators end one session, all sessions of a user, or every session (*Stop every AI session now*), turn the assistant off for a user, or turn on the **kill switch** (`ai_kill_switch`, also `WRM_AI_KILL_SWITCH=1`), which ends everything and blocks new sessions. An **✦ AI** badge on the window shows that a session is active.
@@ -1342,7 +1350,9 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
 - **Approvals** appear in WRM as a card with **Approve**, **Deny** and **Edit** (the exact command, or the diff), on every open WRM tab of yours — and, when the app supports **MCP elicitation**, also as a question in the app (policy `ai_mcp_elicitation`). Whichever answers first decides; an unanswered approval is denied after `ai_approval_timeout_seconds`.
 - **Server output is untrusted.** Tool results are framed as untrusted data; nothing in them, and nothing the app asks for, can change the mode or the scopes: there is no such tool, and only you change them, in WRM (by creating a new AI connection).
 - **Live view:** when an app opens a session, WRM opens a panel (bottom left) that follows it: every tool call with the command or file and WRM's decision (*runs*, *needs your approval*, *refused by WRM*), **Approve** / **Deny** for pending approvals, the outcome, the exit code and the output. *Watch live* in the 🤖 menu reopens it; the checkbox there turns the automatic opening off for this browser. Closing the panel does not stop the app.
-- **After a refusal** (denied in WRM or in the app, or no answer within `ai_approval_timeout_seconds`) the tool result tells the AI where it was refused and to ask the user whether to continue, change the command or stop, instead of retrying a variant on its own.
+- **After a refusal** (denied in WRM or in the app, or no answer within `ai_approval_timeout_seconds`) the tool result tells the AI where it was refused, **which rule made WRM ask** (the time or action limit, a command outside the allow list, ask mode, a power command) and what you can change in WRM, and to ask you whether to continue, change the command or stop, instead of retrying a variant on its own.
+- **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Approve it there and tell the AI to continue: the identical call then runs once without asking. A denial in WRM stays a denial. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.
+- **Allow everything:** in automatic mode an AI connection can allow every command (`*`) and file (`/**`) with **no time or action limit**: it then stays automatic until the AI connection expires or you revoke it. With `*`, chains, variables, groups and redirections run too. Still refused or asked: the built-in destructive patterns and `ai_blocked_commands`, your deny lists, sensitive files, commands WRM cannot parse, power commands, and servers the connection does not include. The policy `ai_auto_until_grant` (default on) decides whether users may choose no limits; the browser's built-in assistant always keeps its limits.
 - **🤖 AI connected** in the top bar shows while an app has an open session (with the number of pending approvals); click it to see the apps and **revoke** one or all with one click. Revoking ends the sessions at once; so do expiry, the kill switch and the policies.
 - Each session is an AI session with transport *mcp*: in the audit log (`mcp.*` for connecting, tokens and OAuth; `ai.*` for every tool call, approval and denial), in the transcripts and in **Sessions & recordings** (✦ AI), like the built-in assistant.
 
@@ -1751,9 +1761,11 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_transcript_retention_days` | `90` | AI transcripts are deleted after this time (1–3650) |
 | `ai_approval_timeout_seconds` | `300` | an unanswered approval is denied (30–3600) |
 | `ai_auto_max_minutes` / `ai_auto_max_actions` | `60` / `50` | the largest time limit and action count a user may opt into |
+| `ai_auto_until_grant` | `1` | AI connections (MCP) may use automatic mode with no time or action limit, for as long as the connection is valid |
 | `ai_allow_power` | `off` | `shutdown` / `reboot`: `off` (blocked) or `ask` (each needs an approval, never automatic) |
 | `ai_blocked_commands` | – | extra command patterns refused in every mode |
-| `ai_read_deny_paths` | – | extra path patterns never read (a pattern without `/` matches the file name) |
+| `ai_read_deny_paths` | – | extra path patterns treated as sensitive (a pattern without `/` matches the file name) |
+| `ai_sensitive_reads` | `ask` | sensitive files: `ask` reads them after the user approves each read (secret-looking values redacted), `deny` never reads them |
 | `ai_command_timeout_seconds` | `60` | a tool call is stopped after this time |
 | `ai_output_max_kb` | `64` | output per tool call and the read limit for files |
 | `ai_max_steps` | `25` | model requests per user message |
@@ -1831,9 +1843,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.6.0-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.6.0-linux-amd64 -service-status
-sudo ./wrm-pro-v12.6.0-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.6.1-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.6.1-linux-amd64 -service-status
+sudo ./wrm-pro-v12.6.1-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1864,7 +1876,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.6.0-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.6.1-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
@@ -2321,7 +2333,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/oauth/token` | `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `code_verifier` → `{access_token, token_type: "Bearer", expires_in, scope}` (no refresh tokens) |
 | POST | `/oauth/revoke` | RFC 7009 `token` |
 | GET | `/api/mcp/config` | What the user may choose: `{enabled, reason, connections, modes, scopes, default_hours, max_hours, url, oauth, elicitation, instructions, description, version}` |
-| GET / POST | `/api/mcp/grants` | Own AI connections / create a token `{name, conn_ids, mode, scopes, hours, auto, confirm_auto}` → `{grant, token, url}` (the token only here) |
+| GET / POST | `/api/mcp/grants` | Own AI connections / create a token `{name, conn_ids, mode, scopes, hours, auto, confirm_auto}` (`auto.until_grant`: no time or action limit, since v12.6.1) → `{grant, token, url}` (the token only here) |
 | DELETE | `/api/mcp/grants/{id}` | Revoke (ends its sessions) |
 | POST | `/api/mcp/revoke-all` | Revoke every own AI connection |
 | GET | `/api/mcp/active` | `{live: [AI connections with open sessions], pending: [approvals]}` for the indicator; decide with `/api/ai/sessions/{id}/approvals/{approval}` |
@@ -2496,6 +2508,7 @@ remote-manager/
   ai_engine_test.go    AI sessions against a fake Anthropic / OpenAI-compatible server and the fake SSH host: approve, edit, deny, timeout, read-only, destructive in every mode, automatic-mode limits, file edits with diffs, kill switch, most restrictive policy, keys never returned, redaction, audit, transcript and recording, prompt injection, the event stream
   mcp_test.go          an MCP client harness: initialize, tools/list, tools/call, elicitation; OAuth with PKCE failure and code reuse; token scopes and expiry; revoke and kill switch; approval round trip; read-only and scope enforcement; destructive block; prompt injection; audit; transfer; the stdio bridge; origin and CORS checks
   mcp_bundle_test.go   the Claude Desktop extension: download, manifest, token checks; its Node.js bridge end to end with an approval
+  v1261_test.go        "Allow everything": * with chains, variables and redirections, deny lists and blocked commands still apply, no time or action limit until the AI connection expires, panel sessions keep limits; approve later; approved, redacted reads of secret files
   ai_provider_test.go  SigV4 test vector, Bedrock Converse event stream, Vertex token exchange, Azure / OpenAI, Anthropic request shape, refusal, cancel, cost
   termcwd_test.go      the shell's working directory over SSH against the fake SSH host (a real sh on a PTY): start directory, after cd, a foreground job
   static/index.html          the entire web UI (embedded into the binary)
@@ -2534,6 +2547,8 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 | AI: a Claude.ai / ChatGPT subscription does not work | Consumer chat subscriptions cannot be used by other applications: use an API key or your company's gateway — or connect the chat app to WRM over MCP ([AI desktop apps](#ai-desktop-apps-mcp)) |
 | MCP: Claude Desktop shows no WRM tools; `claude_desktop_config.json` has an empty `mcpServers` | Claude Desktop does not read HTTP entries from that file, and a custom connector connects from Anthropic's cloud, which cannot reach a WRM on your network. Install the WRM PRO extension instead (*Settings → AI connections → Claude Desktop*); extensions are listed under *Claude → Settings → Extensions*, not in `mcpServers` |
 | Claude Code: *claude.ai connectors are disabled because ANTHROPIC_API_KEY or another auth source is set* after adding WRM | Not caused by WRM: the WRM plugin, `claude mcp add` and the setup scripts only pass the WRM token in the MCP server's own `Authorization` header and never set Claude's sign-in. Something on the computer sets `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` or an `apiKeyHelper` (`/status` in Claude Code shows the auth source). Remove it from the environment (Windows: `[Environment]::SetEnvironmentVariable('ANTHROPIC_API_KEY', $null, 'User')`) and from the `env` / `apiKeyHelper` of `~/.claude/settings.json`, then restart the terminal and Claude |
+| MCP: *The user denied this action* or *Not run* although the AI connection is automatic with `*` | Before v12.6.1 a long session fell back to asking after its time limit, and commands with variables asked even with `*`; when the app declined that question the command was refused. Upgrade, edit the AI connection and press **Allow everything** (no time or action limit). The refusal now names the rule that asked |
+| MCP: *Not run yet … WRM keeps the request open* | Nobody approved in time or the app declined the question. Approve the card in WRM (or the live panel), then tell the AI to continue: it repeats the call and it runs once |
 | MCP: no *AI connections* tab in Settings | MCP is off (`ai_mcp_enabled`); the tab says why when the policy `ai_mcp` does not include you or the kill switch is on |
 | MCP: claude.ai / ChatGPT cannot connect (*couldn't reach the server*, timeout) | Hosted connectors connect from the provider's cloud: WRM must be reachable from the internet over HTTPS with a trusted certificate. Behind a reverse proxy pass `/mcp`, `/oauth/` and `/.well-known/` through, turn off response buffering for `/mcp` (server-sent events) and set `ai_mcp_public_url` |
 | MCP: *the redirect URI … is not allowed* | The app's OAuth callback is not in `ai_mcp_redirect_uris`; an administrator adds it (*Admin panel → AI connections*) |
