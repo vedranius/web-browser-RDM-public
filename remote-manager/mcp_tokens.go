@@ -31,6 +31,7 @@ import (
 //   POST   revoke-all             revoke every own AI connection
 //   GET    active                 live AI connections and pending approvals (top bar)
 //   POST   claude-desktop         the Claude Desktop extension wrm-pro.mcpb {token} (mcp_bundle.go)
+//   POST   full-access            the user's own full access {on} (policy ai_full_access_mode = user)
 //   GET|POST authorize/{id}        OAuth consent (mcp_oauth.go)
 // Admin API (/api/admin/mcp/…):
 //   GET grants, DELETE grants/{id}, POST revoke-all, GET clients, DELETE clients/{id}
@@ -52,6 +53,7 @@ const mcpDefaultRedirectURIs = "https://claude.ai/api/mcp/auth_callback,https://
 	"http://localhost:*,http://127.0.0.1:*,http://[::1]:*"
 
 func initMCPSchema() {
+	db.Exec(`ALTER TABLE users ADD COLUMN ai_full_access INTEGER NOT NULL DEFAULT 0`) // v12.6.3: the user's own full-access switch
 	ensureTable("mcp_tokens", `CREATE TABLE IF NOT EXISTS mcp_tokens (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL DEFAULT 0,
@@ -150,7 +152,8 @@ func normalizeMCPScopes(v string) (string, error) {
 }
 
 // mcpAllowedScopes: the policy's scopes; full_access only while the administrator allows it
-// (ai_full_access), whatever ai_mcp_scopes says.
+// per AI connection (ai_full_access on, ai_full_access_mode = connection), whatever
+// ai_mcp_scopes says.
 func mcpAllowedScopes() []string {
 	v, _ := normalizeMCPScopes(getSetting("ai_mcp_scopes"))
 	var out []string
@@ -159,7 +162,7 @@ func mcpAllowedScopes() []string {
 			out = append(out, s)
 		}
 	}
-	if settingBool("ai_full_access") {
+	if settingBool("ai_full_access") && getSetting("ai_full_access_mode") == "connection" {
 		out = append(out, "full_access")
 	}
 	return out
@@ -611,6 +614,8 @@ func apiMCPHandler(w http.ResponseWriter, r *http.Request) {
 		mcpActiveHandler(w, userID)
 	case "claude-desktop":
 		mcpClaudeDesktopHandler(w, r, userID)
+	case "full-access":
+		mcpFullAccessHandler(w, r, userID)
 	case "authorize":
 		if len(parts) != 2 {
 			jsonError(w, "Not found", 404)
@@ -642,6 +647,7 @@ func mcpConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		"default_hours": min(settingInt("ai_mcp_token_hours"), settingInt("ai_mcp_max_token_hours")), "max_hours": settingInt("ai_mcp_max_token_hours"),
 		"url": base + "/mcp", "base_url": base, "instructions": mcpInstructions, "description": mcpServerDescription, "version": AppVersion, "oauth": settingBool("ai_mcp_oauth"), "elicitation": settingBool("ai_mcp_elicitation"),
 		"auto_max_minutes": settingInt("ai_auto_max_minutes"), "auto_max_actions": settingInt("ai_auto_max_actions"), "auto_until_grant": settingBool("ai_auto_until_grant"),
+		"full_access": map[string]interface{}{"on": settingBool("ai_full_access"), "mode": getSetting("ai_full_access_mode"), "mine": aiUserFullAccess(userID)},
 	})
 }
 
@@ -778,4 +784,28 @@ func apiAdminMCPHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		jsonError(w, "Not found", 404)
 	}
+}
+
+// mcpFullAccessHandler: POST /api/mcp/full-access {on} turns the user's own full access on or
+// off, when the administrator lets users decide (ai_full_access on, mode user). Open AI
+// sessions follow it at their next tool call.
+func mcpFullAccessHandler(w http.ResponseWriter, r *http.Request, userID int) {
+	if r.Method != http.MethodPost {
+		jsonError(w, "Method not allowed", 405)
+		return
+	}
+	var in struct {
+		On bool `json:"on"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		jsonError(w, "Bad JSON", 400)
+		return
+	}
+	if in.On && (!settingBool("ai_full_access") || getSetting("ai_full_access_mode") != "user") {
+		jsonError(w, "The administrator does not let users turn on full access", 403)
+		return
+	}
+	db.Exec(`UPDATE users SET ai_full_access=? WHERE id=?`, boolInt(in.On), userID)
+	auditLog(r, userID, "mcp.full_access", "", map[string]interface{}{"on": in.On})
+	jsonOK(w, map[string]bool{"on": in.On})
 }
