@@ -317,6 +317,22 @@ type aiAutoLimits struct {
 	UntilGrant bool `json:"until_grant,omitempty"`
 }
 
+// fullAccess reports whether the session's AI connection has full access (scope full_access,
+// while the administrator's ai_full_access allows it): nothing is refused outright any more,
+// but everything WRM would refuse needs the user's approval, every time, also in automatic mode.
+func (s *aiSession) fullAccess() bool {
+	return s.Transport == "mcp" && oneOf("full_access", s.Scopes...) && settingBool("ai_full_access")
+}
+
+// aiFullAccessDecision turns a refusal into an approval under full access. A read-only
+// session stays read-only (the user chose that mode) and the connection's scopes still apply.
+func aiFullAccessDecision(dec aiDecision, mode string) aiDecision {
+	if dec.Action != aiDeny || mode == aiModeReadOnly || oneOf(dec.Rule, "mode", "scope") {
+		return dec
+	}
+	return aiDecision{Action: aiApprove, Rule: "full_access", Reason: "⚠ FULL ACCESS: WRM normally refuses this (" + dec.Reason + "); it runs only if the user approves it"}
+}
+
 // aiSensitiveReadsAsk reports whether reading a file that may hold secrets can be approved
 // by the user (ai_sensitive_reads = ask) instead of being refused.
 func aiSensitiveReadsAsk() bool { return getSetting("ai_sensitive_reads") != "deny" }

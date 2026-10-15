@@ -124,6 +124,7 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_auto_max_actions", Default: "50", Kind: "int", Min: 1, Max: 1000},
 	{Key: "ai_auto_until_grant", Default: "1", Kind: "bool"},
 	{Key: "ai_sensitive_reads", Default: "ask", Kind: "enum", Enum: []string{"ask", "deny"}},
+	{Key: "ai_full_access", Default: "0", Kind: "bool"},
 	{Key: "ai_allow_power", Default: "off", Kind: "enum", Enum: []string{"off", "ask"}},
 	{Key: "ai_blocked_commands", Default: "", Kind: "string"},
 	{Key: "ai_read_deny_paths", Default: "", Kind: "string"},
