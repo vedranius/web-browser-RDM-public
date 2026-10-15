@@ -13,7 +13,7 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.5.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.5.2** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 ## What's new in v12.5.1
 
@@ -168,21 +168,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.5.1-linux-amd64
-   ./wrm-pro-v12.5.1-linux-amd64
+   chmod +x wrm-pro-v12.5.2-linux-amd64
+   ./wrm-pro-v12.5.2-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.5.1-windows-amd64.exe
+   .\wrm-pro-v12.5.2-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.5.1-linux-amd64.AppImage
-   ./wrm-pro-v12.5.1-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.5.1-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.5.2-linux-amd64.AppImage
+   ./wrm-pro-v12.5.2-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.5.2-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -191,8 +191,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.5.1/wrm-pro-v12.5.1-android-arm64
-   chmod +x wrm-pro-v12.5.1-android-arm64 && ./wrm-pro-v12.5.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.5.2/wrm-pro-v12.5.2-android-arm64
+   chmod +x wrm-pro-v12.5.2-android-arm64 && ./wrm-pro-v12.5.2-android-arm64
    ```
 
    **Docker**
@@ -1812,9 +1812,9 @@ Install it as a service now? [y]es / [n]o / [d]on't ask again (default: no):
 *Yes* installs and starts the service and ends the console process; *No* asks again next time; *Don't ask again* is remembered in `<DB_PATH>.service.json`. The question is not asked when stdin is not a terminal, in a container, as a service, with `-no-service-prompt` or `WRM_NO_SERVICE_PROMPT=1`, or when the service already exists. Scripts and administrators use the flags directly:
 
 ```bash
-sudo ./wrm-pro-v12.5.1-linux-amd64 -install-service          # systemd unit, enabled and started
-./wrm-pro-v12.5.1-linux-amd64 -service-status
-sudo ./wrm-pro-v12.5.1-linux-amd64 -uninstall-service        # the data stays
+sudo ./wrm-pro-v12.5.2-linux-amd64 -install-service          # systemd unit, enabled and started
+./wrm-pro-v12.5.2-linux-amd64 -service-status
+sudo ./wrm-pro-v12.5.2-linux-amd64 -uninstall-service        # the data stays
 ```
 
 The service uses the **same data directory and settings** as the interactive start: the working directory, `DB_PATH` (made absolute), `PORT` / `LISTEN_ADDR`, key and certificate files, proxies and every `WRM_*` variable are written to `<data dir>/wrm.env` (mode `0600`). The installer checks that the service account can write the database and its directory, and prints the database path it selected. Edit `DB_PATH` in that file and restart the service to point it at another WRM installation's database.
@@ -1845,7 +1845,7 @@ WorkingDirectory=/opt/wrm
 Environment=LISTEN_ADDR=127.0.0.1:8080
 Environment=WRM_TRUST_PROXY=1
 Environment=ENCRYPTION_KEY_FILE=/etc/wrm/encryption.key
-ExecStart=/opt/wrm/wrm-pro-v12.5.1-linux-amd64 -service=systemd
+ExecStart=/opt/wrm/wrm-pro-v12.5.2-linux-amd64 -service=systemd
 Restart=on-failure
 RestartForceExitStatus=75
 SuccessExitStatus=75
