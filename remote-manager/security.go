@@ -332,7 +332,7 @@ func contentSecurityPolicy(r *http.Request) string {
 		"img-src 'self' data: blob:",
 		"font-src 'self' data:",
 		"media-src 'self' blob: data:",
-		"connect-src 'self' ws://" + host + " wss://" + host,
+		"connect-src 'self' ws://" + host + " wss://" + host + gitRelayBrowserOrigins(r),
 		"worker-src 'self' blob:",
 		"object-src 'none'",
 		"base-uri 'none'",

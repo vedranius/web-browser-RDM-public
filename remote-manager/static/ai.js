@@ -98,6 +98,9 @@ Object.assign(LANGS.en, {
   p_ai_allow_power: 'Shutdown and reboot', p_ai_allow_power_d: 'Blocked, or allowed with an approval of each command (never automatic).', po_ai_allow_power_off: 'Always blocked', po_ai_allow_power_ask: 'With an approval',
   p_ai_blocked_commands: 'Extra blocked commands', p_ai_blocked_commands_d: 'Comma-separated patterns refused in every mode, in addition to the built-in list.', p_ai_blocked_commands_ph: 'docker system prune*',
   p_ai_read_deny_paths: 'Extra unreadable files', p_ai_read_deny_paths_d: 'Comma-separated path patterns the assistant never reads (a pattern without / matches the file name).', p_ai_read_deny_paths_ph: '/srv/app/.env, *.p12',
+  p_ai_provider_header_seconds: 'Provider header wait (seconds)', p_ai_provider_header_seconds_d: 'Allows model loading, prompt evaluation and queued requests before the first response.',
+  p_ai_provider_request_seconds: 'Provider request limit (seconds)', p_ai_provider_request_seconds_d: 'Total time for one model request, including streaming. Stop still cancels immediately.',
+  p_ai_provider_stream_idle_seconds: 'Provider stream idle limit (seconds)', p_ai_provider_stream_idle_seconds_d: 'Stop a stream that sends no data for this long; requests and tool actions are never repeated automatically.',
   p_ai_command_timeout_seconds: 'Command time limit (seconds)', p_ai_command_timeout_seconds_d: 'A tool call is stopped after this time.',
   p_ai_output_max_kb: 'Output limit (KB)', p_ai_output_max_kb_d: 'Per tool call, also the size limit for reading files.',
   p_ai_max_steps: 'Steps per request', p_ai_max_steps_d: 'Model requests per user message.',
@@ -193,6 +196,9 @@ Object.assign(LANGS.hr, {
   p_ai_allow_power: 'Gašenje i ponovno pokretanje', p_ai_allow_power_d: 'Blokirano ili dopušteno uz odobrenje svake naredbe (nikad automatski).', po_ai_allow_power_off: 'Uvijek blokirano', po_ai_allow_power_ask: 'Uz odobrenje',
   p_ai_blocked_commands: 'Dodatno blokirane naredbe', p_ai_blocked_commands_d: 'Uzorci odvojeni zarezom, odbijeni u svakom načinu, uz ugrađeni popis.', p_ai_blocked_commands_ph: 'docker system prune*',
   p_ai_read_deny_paths: 'Dodatne nečitljive datoteke', p_ai_read_deny_paths_d: 'Uzorci putanja odvojeni zarezom koje asistent nikad ne čita (uzorak bez / odgovara nazivu datoteke).', p_ai_read_deny_paths_ph: '/srv/app/.env, *.p12',
+  p_ai_provider_header_seconds: 'Čekanje odgovora pružatelja (sekunde)', p_ai_provider_header_seconds_d: 'Vrijeme za učitavanje modela, obradu upita i čekanje u redu prije prvog odgovora.',
+  p_ai_provider_request_seconds: 'Ograničenje zahtjeva pružatelju (sekunde)', p_ai_provider_request_seconds_d: 'Ukupno trajanje zahtjeva uključujući prijenos odgovora. Zaustavljanje i dalje odmah prekida zahtjev.',
+  p_ai_provider_stream_idle_seconds: 'Ograničenje mirovanja odgovora (sekunde)', p_ai_provider_stream_idle_seconds_d: 'Prekida odgovor koji ne šalje podatke. Zahtjevi i radnje ne ponavljaju se automatski.',
   p_ai_command_timeout_seconds: 'Vremensko ograničenje naredbe (sekunde)', p_ai_command_timeout_seconds_d: 'Poziv alata zaustavlja se nakon tog vremena.',
   p_ai_output_max_kb: 'Ograničenje izlaza (KB)', p_ai_output_max_kb_d: 'Po pozivu alata, ujedno ograničenje veličine za čitanje datoteka.',
   p_ai_max_steps: 'Koraka po zahtjevu', p_ai_max_steps_d: 'Zahtjeva prema modelu po poruci korisnika.',
@@ -431,6 +437,7 @@ Object.assign(LANGS.hr, {
     src.addEventListener('pointermove', mv); src.addEventListener('pointerup', up); src.addEventListener('pointercancel', up);
   }
 
+  async function queueContext(id,text){const wo=winOf(id);if(!wo)return;if(!wo.el.classList.contains('ai-open'))await toggle(id);const input=$('ai-in-'+id);if(input){input.value=text;input.focus()}else wo.pendingAIContext=text;}
   async function toggle(id) {
     const wo = winOf(id);
     if (!wo) return;
@@ -586,6 +593,7 @@ Object.assign(LANGS.hr, {
     foot.innerHTML = `<textarea id="ai-in-${id}" rows="2" placeholder="${esc(t('ai_placeholder'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();wrmAI.send(${id});}"></textarea>
       <button id="ai-send-${id}" onclick="wrmAI.send(${id})">${esc(t('ai_send'))}</button>
       <button id="ai-stop-${id}" class="btn-sec" style="display:none;" onclick="wrmAI.stop(${id})">■ ${esc(t('ai_stop'))}</button>`;
+    if(wo.pendingAIContext){$('ai-in-'+id).value=wo.pendingAIContext;wo.pendingAIContext='';}
     const es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
     S[id].es = es;
     ['session', 'user', 'assistant_start', 'text', 'assistant_done', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'mode', 'usage', 'busy', 'error', 'notice', 'ended']
@@ -750,6 +758,7 @@ Object.assign(LANGS.hr, {
   async function send(id) {
     const wo = winOf(id), st = S[id], inp = $('ai-in-' + id), btn = $('ai-send-' + id);
     let text = (inp.value || '').trim();
+    if (/^\/wrm(?:\s+server)?$/i.test(text)) { inp.value='';openWRMCommand();return; }
     if (!text || !st || !st.sid || st.busy) return;
     if (wo.mode === 'sftp' && wo.path) text = `[${t('ai_fm_ctx')}: ${wo.path}]\n` + text;
     
@@ -1168,7 +1177,7 @@ Object.assign(LANGS.hr, {
   // ── admin tab ─────────────────────────────────────────
   const AI_POLICY_KEYS = ['ai_assistant', 'ai_kill_switch', 'ai_modes', 'ai_default_mode', 'ai_mode_rules', 'ai_personal_keys', 'ai_provider_kinds', 'ai_models', 'ai_ollama_manage',
     'ai_redact_output', 'ai_share_notes', 'ai_allow_power', 'ai_blocked_commands', 'ai_read_deny_paths', 'ai_approval_timeout_seconds', 'ai_auto_max_minutes',
-    'ai_auto_max_actions', 'ai_command_timeout_seconds', 'ai_output_max_kb', 'ai_max_steps', 'ai_idle_minutes', 'ai_transcript_retention_days'];
+    'ai_auto_max_actions', 'ai_provider_header_seconds', 'ai_provider_request_seconds', 'ai_provider_stream_idle_seconds', 'ai_command_timeout_seconds', 'ai_output_max_kb', 'ai_max_steps', 'ai_idle_minutes', 'ai_transcript_retention_days'];
 
   async function adminAI() {
     const body = $('admin-body');
@@ -1216,7 +1225,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmAI = {
-    toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession,
+    queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession,
     myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); }),
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,

@@ -44,6 +44,7 @@ const (
 type mcpElicit struct {
 	sessionID  int64
 	approvalID string
+	selection  chan json.RawMessage
 }
 
 // mcpConn is one MCP session (Mcp-Session-Id).
@@ -353,7 +354,16 @@ func mcpInitialize(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg
 	if name == "" {
 		name = nonEmpty(g.ClientName, "MCP client")
 	}
-	_, elicit := p.Capabilities["elicitation"]
+	rawElicit, elicit := p.Capabilities["elicitation"]
+	if elicit && ver == "2025-11-25" {
+		var modes map[string]json.RawMessage
+		if json.Unmarshal(rawElicit, &modes) != nil {
+			elicit = false
+		} else if _, form := modes["form"]; !form {
+			_, urlOnly := modes["url"]
+			elicit = !urlOnly
+		}
+	}
 	mcpConns.Lock()
 	n := 0
 	var oldest *mcpConn
@@ -381,7 +391,7 @@ func mcpInitialize(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg
 	w.Header().Set("Mcp-Session-Id", c.id)
 	writeRPC(w, 200, rpcResult(m.ID, map[string]interface{}{
 		"protocolVersion": ver,
-		"capabilities":    map[string]interface{}{"tools": map[string]interface{}{"listChanged": false}},
+		"capabilities":    map[string]interface{}{"tools": map[string]interface{}{"listChanged": false}, "prompts": map[string]interface{}{"listChanged": false}},
 		"serverInfo":      map[string]interface{}{"name": "wrm-pro", "title": "WRM PRO (Remote Manager)", "version": AppVersion, "description": mcpServerDescription},
 		"instructions":    mcpInstructions,
 	}))
@@ -392,7 +402,7 @@ const mcpServerDescription = "WRM PRO (\"wrm\") is the user's self-hosted Remote
 // mcpInstructions tells an MCP client what "wrm" is and how to use it; the same text is
 // offered in the settings wizard as ready-made agent instructions.
 const mcpInstructions = "\"wrm\" (WRM PRO) is this MCP server: the user's self-hosted Remote Manager. When the user mentions wrm, they mean this connection, not a file or a project: " +
-	"use its tools to work on their servers. It gives you controlled SSH access to the servers the user chose. Start with list_connections, then open_session for one server, " +
+	"use its tools to work on their servers. It gives you controlled SSH access to the servers the user chose. The /wrm prompt introduces WRM; /wrm server lists authorized targets. Use select_server to offer an authorized picker when the client supports elicitation, otherwise list_connections. Use inventory_files for recursive .ini/.py inventories and literal searches. Start with list_connections, then open_session for one server, " +
 	"and use the returned session_id with the other tools. WRM checks every call against the user's permission mode and scopes; changes may wait " +
 	"for the user's approval in WRM. If a tool is missing or a call is denied, the cause is the mode or the scopes of this connection (the answer names it): " +
 	"tell the user which scope or mode to change in WRM (Settings → AI connections) instead of retrying. " +
@@ -443,6 +453,13 @@ func mcpOnResponse(c *mcpConn, g *mcpGrant, m rpcMsg) {
 	e, ok := c.elicits[id]
 	delete(c.elicits, id)
 	c.mu.Unlock()
+	if ok && e.selection != nil {
+		select {
+		case e.selection <- m.Result:
+		default:
+		}
+		return
+	}
 	if !ok || m.Error != nil {
 		return
 	}
@@ -475,6 +492,8 @@ func mcpOnRequest(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		writeRPC(w, 200, rpcResult(m.ID, map[string]interface{}{}))
 	case "tools/list":
 		writeRPC(w, 200, rpcResult(m.ID, map[string]interface{}{"tools": mcpToolList(g)}))
+	case "prompts/list", "prompts/get":
+		mcpPrompts(w, r, g, m)
 	case "tools/call":
 		mcpToolsCall(w, r, c, g, m)
 	default:
@@ -495,6 +514,7 @@ func cloneSchema(s map[string]interface{}) map[string]interface{} {
 func mcpToolList(g *mcpGrant) []map[string]interface{} {
 	sid := strProp("The session_id returned by open_session")
 	out := []map[string]interface{}{
+		{"name": "select_server", "title": "Choose a WRM server", "description": "Offer the authorized WRM servers in a picker when the client supports elicitation, otherwise as a list. Does not open SSH or expand scope.", "inputSchema": obj(map[string]interface{}{}), "annotations": map[string]interface{}{"readOnlyHint": true, "openWorldHint": false}},
 		{"name": "list_connections", "title": "List servers", "description": "List the servers this AI connection may use, with the permission mode WRM applies and any open session.",
 			"inputSchema": obj(map[string]interface{}{}), "annotations": map[string]interface{}{"readOnlyHint": true, "openWorldHint": false}},
 		{"name": "open_session", "title": "Open a session", "description": "Open a WRM session to one server (by id or name from list_connections). Returns the session_id for the other tools, the mode, the scopes and the system.",
@@ -575,6 +595,9 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		p.Arguments = map[string]interface{}{}
 	}
 	switch p.Name {
+	case "select_server":
+		mcpSelectServer(w, r, c, g, m)
+		return
 	case "list_connections":
 		writeRPC(w, 200, rpcResult(m.ID, mcpListConnections(g)))
 		return
@@ -778,6 +801,11 @@ func mcpModeFor(g *mcpGrant, connID int) (string, string) {
 }
 
 func mcpOpenSession(r *http.Request, c *mcpConn, g *mcpGrant, args map[string]interface{}) map[string]interface{} {
+	fresh, err := loadGrant(g.ID)
+	if err != nil || !fresh.active(time.Now()) {
+		return toolText("AI connection no longer active", true)
+	}
+	g = fresh
 	want := strings.TrimSpace(fmt.Sprint(args["connection"]))
 	if f, ok := args["connection"].(float64); ok {
 		want = strconv.Itoa(int(f))
@@ -815,7 +843,7 @@ func mcpOpenSession(r *http.Request, c *mcpConn, g *mcpGrant, args map[string]in
 		mode = aiModeAsk
 	}
 	s, err := aiStart(aiStartParams{UserID: g.UserID, Username: usernameOf(g.UserID), ConnID: connID, Mode: mode, Auto: auto, ConfirmAut: auto != nil,
-		Transport: "mcp", Request: r, ClientName: c.clientName, TokenID: g.ID, Scopes: g.Scopes})
+		Transport: "mcp", GrantPolicy: mcpPolicySignature(g), Request: r, ClientName: c.clientName, TokenID: g.ID, Scopes: g.Scopes})
 	if err != nil {
 		auditLog(r, g.UserID, "ai.session_refused", "", map[string]interface{}{"conn_id": connID, "reason": err.Error(), "mcp_grant": g.ID})
 		return toolText("WRM refused the session: "+err.Error(), true)

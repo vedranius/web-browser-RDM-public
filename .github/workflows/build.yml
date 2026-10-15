@@ -17,7 +17,7 @@ permissions:
 
 env:
   # Version for branch builds. Tag builds use the tag name (e.g. v10.10.0) as version and in file names.
-  APP_VERSION: v12.4.3b
+  APP_VERSION: v12.4.4
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -62,7 +62,7 @@ jobs:
         run: |
           python3 tools/test-medium-wrapper.py
           node tools/check-ui.js
-          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js
+          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js tools/test-git-client.js
 
   # ─────────────────────────────────────────────
   #  Create the release (tags only) as a draft before the binaries are uploaded

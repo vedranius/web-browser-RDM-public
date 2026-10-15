@@ -1,3 +1,25 @@
+## [12.4.4] - 2026-10-15
+
+### Added
+- **Monitoring workspace:** server overview with Zabbix agent/agent 2 metrics, freshness, CPU/RAM/load/uptime, filesystem usage, network rates, history charts and problem/recovery notifications. Supports passive checks through SSH or a network route, verified TLS certificates, existing remote `zabbix_get` for PSK, and existing HTTPS Zabbix server API items for active-only installations. Includes OS/installed-agent detection and setup guidance.
+- **Logs:** multiple per-server roots with service/operator labels, bounded discovery and segmented historical search, server/service/operator/time/timezone/keyword filters, highlighted matches and navigation, copy/download excerpts and terminal actions. Up to 16 movable/resizable live panels support pause, recent-line counts, autoscroll, vertical/horizontal/cascade layout, rotation/truncation detection, reconnect diagnostics and request cancellation.
+- **Client GitLab access:** a browser token or WRM companion on the computer with GitLab access supplies repository API data. Tokens stay on that computer. Complete bounded snapshots are encrypted and atomically published on WRM; the latest successful generation survives disconnect/restart and failed/out-of-order refreshes. Explicit cache members, contributor/freshness/progress and live uncached reads are supported. Reviewed deployment manifests preserve the reviewed target across refreshes.
+- **MCP workflows:** downloadable CLI setup scripts, Codex OAuth instructions, Cursor install link and cloud HTTPS guidance; `wrm` MCP prompt, `select_server` picker where supported, native assistant `/wrm` / `/wrm server`, and structured SFTP `inventory_files` for permitted `.ini`/`.py` searches. Existing MCP grants can change servers/modes/limits without replacing their bearer token or expiry; old sessions and approvals are canceled immediately.
+- **Terminal context:** Copy/Paste and native Shift + right-click fallback; preview/redact selected text or file context before queuing an AI question. Open terminal here starts in the safely quoted directory on the same authorized connection, with POSIX/PowerShell startup handling.
+- **Visual connection labels:** validated colors and 18 curated IT/streaming icons for folders and connections, defaults/reset/preview, persistence, duplication and configuration export/import.
+
+### Changed
+- **Functionality moves into Monitoring**, preserving Git catalog/config associations. Hostname groups show connection context, counts and collapse controls; search and combined server/service/environment/runtime/health/freshness/problem filters preserve state. Search/filter bars stay visible while scrolling Git overview, installations, activity, Simple, Functionality, Monitoring and existing search dialogs/admin lists.
+- **MCP Automatic within limits** is visible alongside read-only and approval modes, with explicit opt-in, command/path allowlists, time/action budgets and existing policy/approval checks. Enabling this mode never enables MCP globally.
+- **AI provider timeouts:** configurable response-header wait (900 s default), total request (3600 s) and stream inactivity (600 s), with cancellation and distinct diagnostics. A slow local provider is not retried automatically, avoiding duplicate tool execution.
+
+### Fixed
+- **Issue [#5](https://github.com/vedranius/web-browser-RDM-public/issues/5):** the general configuration import recognizes mRemoteNG XML and PuTTY registry exports rather than reporting invalid JSON. Real-browser synthetic 4 MiB XML and UTF-16 PuTTY imports pass; existing encrypted/nested/proxy import regressions remain supported. The reporter's original file was not supplied.
+- **Replay fit:** very wide terminal recordings scale to the available width without horizontal scrolling; graphical replay accounts for padding and existing resize/fullscreen/font handling remains active.
+- **MCP wizard checkbox/radio alignment:** controls retain their natural width beside wrapped labels at phone and desktop sizes.
+
+Full operation limits, setup and validation: [v12.4.4 guide](docs/V12.4.4_GUIDE.md) and [release validation](docs/RELEASE_SUMMARY_v12.4.4.md). The original private Medium tool and deploy-config integration remain as delivered in v12.4.3/v12.4.3b.
+
 ## [12.4.3b] - 2026-10-14
 
 ### Fixed

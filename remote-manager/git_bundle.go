@@ -223,6 +223,9 @@ func importBundle(userID int, r io.Reader) (*bundleImportResult, error) {
 }
 
 func deleteGitSource(id int) {
+	for _, table := range []string{"git_relay_cache", "git_relay_members", "git_relay_meta"} {
+		db.Exec(`DELETE FROM `+table+` WHERE source_id=?`, id)
+	}
 	db.Exec(`DELETE FROM git_blobs WHERE source_id=?`, id)
 	db.Exec(`DELETE FROM git_trees WHERE source_id=?`, id)
 	db.Exec(`DELETE FROM git_sources WHERE id=?`, id)
@@ -325,6 +328,9 @@ func writeBundle(w io.Writer, userID int, cat *gitCatalog, st gitSettings, targe
 	contents := map[string][]byte{} // app/rel → content
 	providers := map[int]*gitProvider{}
 	for _, t := range targets {
+		if loadGitRelayMeta(t.SourceID).OwnerID > 0 && !relaySourceAllowed(userID, t.SourceID) {
+			return "", fmt.Errorf("shared Git source access has been removed")
+		}
 		if t.Error != "" {
 			return "", fmt.Errorf("%s: %s", t.App, t.Error)
 		}

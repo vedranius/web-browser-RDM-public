@@ -1084,11 +1084,15 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM notify_subscriptions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_prefs WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM notify_pending WHERE user_id=?`, id)
-	for _, t := range []string{"git_workspace", "git_targets", "git_installs", "git_runs", "git_pending_restarts", "git_feeds", "git_pipelines"} {
+	for _, t := range []string{"git_workspace", "git_targets", "git_installs", "git_runs", "git_pending_restarts", "git_feeds", "git_pipelines", "visual_labels", "monitor_profiles", "monitor_samples", "git_review_tickets", "git_review_manifests"} {
 		tx.Exec(`DELETE FROM `+t+` WHERE user_id=?`, id)
 	}
 	tx.Exec(`DELETE FROM git_blobs WHERE source_id IN (SELECT id FROM git_sources WHERE user_id=?)`, id)
 	tx.Exec(`DELETE FROM git_trees WHERE source_id IN (SELECT id FROM git_sources WHERE user_id=?)`, id)
+	for _, table := range []string{"git_relay_cache", "git_relay_members", "git_relay_meta"} {
+		tx.Exec(`DELETE FROM `+table+` WHERE source_id IN(SELECT id FROM git_sources WHERE user_id=?)`, id)
+	}
+	tx.Exec(`DELETE FROM git_relay_members WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM git_sources WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM auth_sessions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM users WHERE id=?`, id)
