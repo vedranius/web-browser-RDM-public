@@ -1,12 +1,35 @@
-## Web Remote Manager PRO v12.5.0 — Stamping as it is, Back in dialogs and reviewed fixes
+## Web Remote Manager PRO v12.5.1 — Claude Desktop and Claude Code in one step
 
 ### Added
+
+- **Claude Desktop extension:** in *Settings → AI connections* pick **Claude Desktop**, choose the servers and how long the token is valid, then **Download Claude Desktop extension**. Open `wrm-pro.mcpb` and press **Install**: the WRM address and token are already filled in. The extension runs on your computer with Claude Desktop's built-in Node.js, so it reaches a WRM on your own network and over plain HTTP; a self-signed HTTPS certificate can be trusted with a CA file in the extension's settings. Approvals still appear in WRM and, where supported, in Claude.
+- **Claude Code plugin:** `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…` (Claude Code 2.1.275 or later). The wizard prints the command with your values; the token is kept in Claude Code's secure storage.
+- **See what the AI does:** when an AI app works on a server through WRM, a live panel shows each command, WRM's decision, the approval buttons, the exit code and the output. *Watch live* in the 🤖 menu reopens it; the automatic opening can be turned off there.
+- **Lifetime in hours or days:** the wizard, the advanced form and the OAuth approval dialog take the token lifetime in hours or days, so apps need not be approved again every day.
+
+### Changed
+
+When you deny a command, or nobody answers in time, the AI is told where it was refused and to ask you whether to continue, change the command or stop, rather than trying again on its own. Default AI connection lifetime is 7 days (`ai_mcp_token_hours` 168), at most 30 days (`ai_mcp_max_token_hours` 720).
+
+### Fixed
+
+Claude Desktop could not be connected to a WRM on a private network: the wizard offered only the claude.ai custom connector, which connects from Anthropic's cloud and needs a public HTTPS address, and `claude_desktop_config.json` does not accept HTTP entries. The wizard now names that option *Claude.ai (cloud connector, public HTTPS)* and offers the extension for Claude Desktop. README troubleshooting explains an empty `mcpServers` block.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. MCP stays off by default (`ai_mcp_enabled`). Token lifetimes default to **7 days, at most 30 days** (were 8 hours, at most 24); values an administrator saved explicitly stay in force and can be changed in *Admin panel → AI connections*. The extension contains the token: delete the downloaded file after installing. Windows packages are cross-compiled; the extension was validated with the official MCP bundle tool and its bridge was run against WRM, but not inside a native Windows Claude Desktop in this release's validation.
+
+[Download v12.5.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.5.1) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.5.1/README.md#ai-desktop-apps-mcp)
+
+### Included from v12.5.0 — Stamping as it is, Back in dialogs and reviewed fixes
+
+#### Added
 
 - **Stamp as it is:** the Stamp dialog lists each installation's differing files and says why it cannot be stamped instead of "No files are selected". **Also stamp installations that are not up to date** writes VERSION.md with each file's actual version (older files their matching version, hand-changed files `(local)`) and a `Napomena` note that the installation is partial.
 - **Back in dialogs:** a Git dialog opened from another one (Details → Update, Upgrade → file selection → confirmation, Rollback …) has **← Back** (Alt+←), which returns to the previous dialog with its ticks and typed values. Settings → Import inventory, Settings → Admin panel and Tunnels → Edit connection return to where they were opened.
 - **Medium forced stop:** when the original tool cannot report its state, Stop can be confirmed a second time and stops it anyway.
 
-### Fixed
+#### Fixed
 
 - **Production confirmation** in the Git workspace compares the typed connection name (it compared a hostname, so production updates could not start).
 - **Medium:** one user's start or setup no longer blocks other users' status, proxy and Stop; empty settings keep the original defaults and WRM's SSH options; a successful start or import clears an earlier setup error and older pending imports; an imported config replaces a config repository; replaced SSH profiles (and their keys) are deleted; ZIP names that differ only in case are rejected; status polling continues after a network error; stage texts are translated.
@@ -14,7 +37,7 @@
 - **Client GitLab cache:** a newer snapshot published by another member is not deleted; WRM relay errors are no longer reported as GitLab CORS problems; one failed status poll no longer blocks later refreshes.
 - Following a log in a terminal keeps the shell after Ctrl+C; moving or deleting a folder rechecks folder shares, so shared terminals outside the shared subtree end.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database, encryption key and private runtime directories/volumes. No schema migration. Earlier Medium versions kept replaced SSH profiles as `.previous` directories; they are removed at the next start.
 

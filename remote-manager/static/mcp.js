@@ -11,7 +11,7 @@ Object.assign(LANGS.en, {
   mcp_edit_note: 'The token and expiry stay the same. Current sessions and pending approvals stop; reopen them with the updated permissions.',
   mcp_title: 'AI connections', mcp_intro: 'Let an AI app on your computer or in the browser (Claude, ChatGPT and other MCP clients) work on servers you choose. WRM checks every action against the mode and the scopes below, asks you before changes, and records everything.',
   mcp_off: 'AI connections are not available', mcp_new: 'New AI connection', mcp_name: 'Name', mcp_name_ph: 'e.g. Claude Desktop on my laptop',
-  mcp_conns: 'Servers', mcp_conns_filter: 'Filter servers…', mcp_mode: 'Mode', mcp_scopes: 'Scopes', mcp_hours: 'Valid for (hours)', mcp_hours_max: 'at most {n}',
+  mcp_conns: 'Servers', mcp_conns_filter: 'Filter servers…', mcp_mode: 'Mode', mcp_scopes: 'Scopes', mcp_hours: 'Valid for (hours)', mcp_hours_max: 'at most {n} hours',
   mcp_create: 'Create token', mcp_none: 'No AI connections yet.', mcp_revoke: 'Revoke', mcp_revoke_all: 'Revoke all', mcp_revoke_q: 'Revoke this AI connection? Its sessions end at once.',
   mcp_revoke_all_q: 'Revoke every AI connection? All AI apps lose access at once.', mcp_revoked_n: '{n} revoked',
   mcp_mode_read_only: 'Read-only', mcp_mode_ask: 'Ask before every change', mcp_mode_auto: 'Automatic within limits',
@@ -62,7 +62,7 @@ Object.assign(LANGS.en, {
   mcpw_title: 'Connect an AI app (step by step)', mcpw_intro: 'WRM prepares the token and the exact setting for your app. You only copy it.',
   mcpw_s_client: 'App', mcpw_s_access: 'Servers and access', mcpw_s_connect: 'Connect', mcpw_s_test: 'Test',
   mcpw_pick: 'Which app do you want to connect?', mcpw_via_token: 'with a token (WRM creates it)', mcpw_via_oauth: 'sign in through WRM (no token)',
-  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / other', mcpw_c_claude_connector: 'Claude (claude.ai or desktop)', mcpw_c_chatgpt: 'ChatGPT',
+  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / other', mcpw_c_claude_connector: 'Claude.ai (cloud connector, public HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
   mcpw_access: 'What may the app do?', mcpw_p_read: 'Look only (recommended)', mcpw_p_read_d: 'Read logs, files and system information and run read-only commands. Nothing is changed.',
   mcpw_p_ask: 'Look and change, with your approval', mcpw_p_ask_d: 'Also run commands and edit files, but every change waits for your approval in WRM.',
   mcpw_valid: 'The token is valid for {n} hours. You can revoke it at any time below.',
@@ -77,12 +77,25 @@ Object.assign(LANGS.en, {
   mcpw_create: 'Create token', mcpw_next: 'Next', mcpw_back: 'Back', mcpw_done: 'Done', mcpw_pick_server: 'Choose at least one server.', mcpw_grant_name: '{client} (setup wizard)',
   mcpw_advanced: 'Advanced: create a token with custom mode and scopes',
 });
+Object.assign(LANGS.en, {
+  mcpw_c_claude_desktop: 'Claude Desktop', mcpw_via_extension: 'one-click extension (works on your network)',
+  mcpw_desk_h: 'Download the WRM PRO extension and open it: Claude Desktop shows an Install button. The address and the token are already filled in, so there is nothing to type. Works with WRM on your own network and over plain HTTP, because Claude Desktop talks to WRM from this computer.',
+  mcpw_desk_dl: 'Download Claude Desktop extension (wrm-pro.mcpb)', mcpw_desk_dl_note: 'The file contains your token. Delete it after installing.',
+  mcpw_desk_steps: '1. Open the downloaded wrm-pro.mcpb (double-click). If it does not open Claude: Claude → Settings → Extensions → Advanced settings → Install extension… and choose the file.\n2. Press Install, then turn the extension on. Leave the settings as they are.\n3. In a new chat, ask for example: “wrm: list my servers”.',
+  mcpw_desk_token: 'Only if Claude asks for the token:', mcpw_desk_noapp: 'Claude Desktop does not need the WRM program on your computer; it brings its own runtime for the extension.',
+  mcpw_cc_plugin: 'Or install the WRM PRO plugin for Claude Code with one command (Claude Code 2.1.275 or later):',
+  mcp_w_watch: 'Watch live', mcp_w_auto: 'Open the live view when an AI app starts working on a server', mcp_w_title: '{client} on {server}',
+  mcp_w_empty: 'Connected. What the AI runs on the server and its output appear here.', mcp_w_wait: 'Waiting for your approval', mcp_w_runs: 'runs', mcp_w_refused: 'refused by WRM', mcp_w_ask: 'needs your approval',
+  mcp_w_o_approved: 'approved', mcp_w_o_denied: 'denied: not run', mcp_w_o_timeout: 'no answer: not run', mcp_w_o_cancelled: 'cancelled', mcp_w_exit: 'exit code {code}', mcp_w_output: 'Output',
+  mcp_w_ended: 'Session ended: {reason}', mcp_w_min: 'Minimize', mcp_w_close: 'Close (the AI keeps working; reopen it from the 🤖 button)', mcp_w_reason: 'Why',
+  mcp_valid_for: 'Valid for', mcp_unit_hours: 'hours', mcp_unit_days: 'days', mcp_max_days: 'at most {n} days', mcpw_hours_d: 'When the token expires the app loses access until you create a new one. You can revoke it at any time below. An administrator sets the longest lifetime (Admin panel → AI connections).',
+});
 Object.assign(LANGS.hr, {
   mcpw_public_needed:'Ova aplikacija u oblaku treba dostupnu HTTPS WRM adresu. Administrator treba postaviti javnu MCP adresu i reverse proxy; localhost ili privatna adresa nisu dostupni iz oblaka.', mcpw_local_url:'Localhost adresa radi samo kad je AI aplikacija na WRM računalu. Na drugom računalu koristite adresu servera.', mcpw_installer:'Preuzmi skriptu za postavljanje', mcpw_installer_d:'Pokrenite na računalu s AI aplikacijom. Skripta pronalazi CLI, radi kopiju postojećih postavki gdje je dostupno, dodaje WRM i prikazuje rezultat. Token unosite kad ga traži; nije ugrađen u skriptu.', mcpw_oauth_cli:'Koristi OAuth prijavu (bez kopiranja tokena)', mcpw_cursor_install:'Dodaj u Cursor', mcpw_slash:'U WRM asistentu koristite /wrm ili /wrm server. MCP klijenti nude wrm prompt u svojim izbornicima; ako nije podržano, upišite “wrm server” u chat za popis odobrenih servera.',
   mcp_edit_note: 'Token i istek ostaju isti. Aktivne sesije i odobrenja se prekidaju; ponovno ih otvorite s novim ovlastima.',
   mcp_title: 'AI veze', mcp_intro: 'Dopustite AI aplikaciji na računalu ili u pregledniku (Claude, ChatGPT i drugi MCP klijenti) da radi na poslužiteljima koje odaberete. WRM provjerava svaku radnju prema načinu rada i opsezima u nastavku, pita vas prije promjena i sve bilježi.',
   mcp_off: 'AI veze nisu dostupne', mcp_new: 'Nova AI veza', mcp_name: 'Naziv', mcp_name_ph: 'npr. Claude Desktop na mom laptopu',
-  mcp_conns: 'Poslužitelji', mcp_conns_filter: 'Filtriraj poslužitelje…', mcp_mode: 'Način rada', mcp_scopes: 'Opsezi', mcp_hours: 'Vrijedi (sati)', mcp_hours_max: 'najviše {n}',
+  mcp_conns: 'Poslužitelji', mcp_conns_filter: 'Filtriraj poslužitelje…', mcp_mode: 'Način rada', mcp_scopes: 'Opsezi', mcp_hours: 'Vrijedi (sati)', mcp_hours_max: 'najviše {n} sati',
   mcp_create: 'Stvori token', mcp_none: 'Još nema AI veza.', mcp_revoke: 'Opozovi', mcp_revoke_all: 'Opozovi sve', mcp_revoke_q: 'Opozvati ovu AI vezu? Njezine sesije odmah završavaju.',
   mcp_revoke_all_q: 'Opozvati sve AI veze? Sve AI aplikacije odmah gube pristup.', mcp_revoked_n: 'Opozvano: {n}',
   mcp_mode_read_only: 'Samo čitanje', mcp_mode_ask: 'Pitaj prije svake promjene', mcp_mode_auto: 'Automatski u granicama',
@@ -130,7 +143,7 @@ Object.assign(LANGS.hr, {
   mcpw_title: 'Povezivanje AI aplikacije (korak po korak)', mcpw_intro: 'WRM priprema token i točnu postavku za vašu aplikaciju. Vi je samo kopirate.',
   mcpw_s_client: 'Aplikacija', mcpw_s_access: 'Poslužitelji i pristup', mcpw_s_connect: 'Povezivanje', mcpw_s_test: 'Test',
   mcpw_pick: 'Koju aplikaciju želite povezati?', mcpw_via_token: 'tokenom (WRM ga stvara)', mcpw_via_oauth: 'prijava preko WRM-a (bez tokena)',
-  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / ostalo', mcpw_c_claude_connector: 'Claude (claude.ai ili aplikacija)', mcpw_c_chatgpt: 'ChatGPT',
+  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / ostalo', mcpw_c_claude_connector: 'Claude.ai (konektor u oblaku, javni HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
   mcpw_access: 'Što aplikacija smije raditi?', mcpw_p_read: 'Samo pregled (preporučeno)', mcpw_p_read_d: 'Čita zapise, datoteke i podatke o sustavu te izvršava naredbe koje samo čitaju. Ništa se ne mijenja.',
   mcpw_p_ask: 'Pregled i promjene, uz vaše odobrenje', mcpw_p_ask_d: 'Može i izvršavati naredbe i uređivati datoteke, ali svaka promjena čeka vaše odobrenje u WRM-u.',
   mcpw_valid: 'Token vrijedi {n} sati. Možete ga opozvati bilo kada u nastavku.',
@@ -144,6 +157,19 @@ Object.assign(LANGS.hr, {
   mcpw_test_ok: '{name} je odgovorio. Aplikaciji je dostupno alata: {n}.', mcpw_test_fail: 'Test nije uspio: {err}. Ako je WRM iza proxyja ili ima drugu javnu adresu, provjerite adresu i isprobajte samu aplikaciju.',
   mcpw_create: 'Stvori token', mcpw_next: 'Dalje', mcpw_back: 'Natrag', mcpw_done: 'Gotovo', mcpw_pick_server: 'Odaberite barem jedan poslužitelj.', mcpw_grant_name: '{client} (čarobnjak za postavljanje)',
   mcpw_advanced: 'Napredno: stvori token s vlastitim načinom rada i opsezima',
+});
+Object.assign(LANGS.hr, {
+  mcpw_c_claude_desktop: 'Claude Desktop', mcpw_via_extension: 'proširenje u jednom kliku (radi u vašoj mreži)',
+  mcpw_desk_h: 'Preuzmite WRM PRO proširenje i otvorite ga: Claude Desktop pokazuje gumb Install. Adresa i token već su upisani, pa ništa ne trebate tipkati. Radi i s WRM-om u vlastitoj mreži i preko običnog HTTP-a jer Claude Desktop s WRM-om razgovara s ovog računala.',
+  mcpw_desk_dl: 'Preuzmi proširenje za Claude Desktop (wrm-pro.mcpb)', mcpw_desk_dl_note: 'Datoteka sadrži vaš token. Obrišite je nakon instalacije.',
+  mcpw_desk_steps: '1. Otvorite preuzetu datoteku wrm-pro.mcpb (dvoklik). Ako se Claude ne otvori: Claude → Settings → Extensions → Advanced settings → Install extension… i odaberite datoteku.\n2. Pritisnite Install, zatim uključite proširenje. Postavke ostavite kakve jesu.\n3. U novom razgovoru zatražite na primjer: „wrm: popiši moje poslužitelje”.',
+  mcpw_desk_token: 'Samo ako Claude zatraži token:', mcpw_desk_noapp: 'Claude Desktopu ne treba WRM program na računalu; za proširenje donosi vlastito okruženje.',
+  mcpw_cc_plugin: 'Ili instalirajte WRM PRO dodatak za Claude Code jednom naredbom (Claude Code 2.1.275 ili noviji):',
+  mcp_w_watch: 'Prati uživo', mcp_w_auto: 'Otvori prikaz uživo kad AI aplikacija počne raditi na poslužitelju', mcp_w_title: '{client} na {server}',
+  mcp_w_empty: 'Povezano. Ovdje se vidi što AI pokreće na poslužitelju i što dobiva kao izlaz.', mcp_w_wait: 'Čeka vaše odobrenje', mcp_w_runs: 'pokreće se', mcp_w_refused: 'WRM je odbio', mcp_w_ask: 'treba vaše odobrenje',
+  mcp_w_o_approved: 'odobreno', mcp_w_o_denied: 'odbijeno: nije pokrenuto', mcp_w_o_timeout: 'bez odgovora: nije pokrenuto', mcp_w_o_cancelled: 'otkazano', mcp_w_exit: 'izlazni kod {code}', mcp_w_output: 'Izlaz',
+  mcp_w_ended: 'Sesija je završila: {reason}', mcp_w_min: 'Smanji', mcp_w_close: 'Zatvori (AI nastavlja raditi; ponovno otvori preko gumba 🤖)', mcp_w_reason: 'Zašto',
+  mcp_valid_for: 'Vrijedi', mcp_unit_hours: 'sati', mcp_unit_days: 'dana', mcp_max_days: 'najviše {n} dana', mcpw_hours_d: 'Kad token istekne, aplikacija gubi pristup dok ne stvorite novi. Možete ga opozvati bilo kada u nastavku. Najdulje trajanje postavlja administrator (Admin panel → AI veze).',
 });
 
 (function () {
@@ -194,6 +220,13 @@ Object.assign(LANGS.hr, {
 .mcp-card textarea { min-height: 70px; }
 #mcp-pop { position: fixed; z-index: 9650; top: 52px; right: 12px; width: min(420px, calc(100vw - 24px)); background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 14px; box-shadow: 0 12px 34px rgba(0,0,0,.5); display: none; }
 #mcp-pop.open { display: block; }
+#mcp-watch { position: fixed; left: 16px; bottom: 16px; z-index: 9690; display: flex; flex-direction: column; gap: 10px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 80px); }
+.mcp-wbox { background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 12px; color: var(--text2); display: flex; flex-direction: column; min-height: 0; }
+.mcp-wbox .wh { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border2); } .mcp-wbox .wh b { flex: 1; color: var(--text); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcp-wbox .wb { overflow: auto; max-height: 340px; padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; } .mcp-wbox.min .wb { display: none; }
+.mcp-wbox .we { border-left: 3px solid var(--border2); padding-left: 8px; } .mcp-wbox .we.ask { border-color: var(--yellow, #f59e0b); } .mcp-wbox .we.bad { border-color: #ef4444; } .mcp-wbox .we.ok { border-color: #22c55e; }
+.mcp-wbox pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 8px; font: 11px 'JetBrains Mono', monospace; white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: auto; margin: 4px 0; }
+.mcp-wbox .acts { display: flex; gap: 6px; margin-top: 4px; }
 @media (max-width: 480px) { .mcp-row { flex-direction: column; gap: 0; } #mcp-cards { right: 8px; left: 8px; bottom: 8px; max-width: none; } }
 `;
   if (!$('mcp-style')) { const s = document.createElement('style'); s.id = 'mcp-style'; s.textContent = css; document.head.appendChild(s); }
@@ -212,6 +245,17 @@ Object.assign(LANGS.hr, {
   }
 
   // ── the grant form (settings and consent) ─────────────
+  // token lifetime: a number with a unit (hours or days); the API always takes hours
+  function lifetimeHTML(id, hours) {
+    const days = hours >= 24 && hours % 24 === 0;
+    return `<div style="display:flex;gap:6px;"><input type="number" id="${id}" min="1" value="${days ? hours / 24 : hours}" style="flex:1;min-width:70px;">
+      <select id="${id}-unit" style="width:auto;"><option value="1" ${days ? '' : 'selected'}>${esc(t('mcp_unit_hours'))}</option><option value="24" ${days ? 'selected' : ''}>${esc(t('mcp_unit_days'))}</option></select></div>`;
+  }
+  function lifetimeValue(id) {
+    const n = parseInt(($(id) || {}).value, 10), u = +(($(id + '-unit') || {}).value || 1);
+    return n > 0 ? n * u : 0;
+  }
+  function lifetimeMax(h) { return h >= 24 && h % 24 === 0 ? tf('mcp_max_days', {n: h / 24}) : tf('mcp_hours_max', {n: h}); }
   function formHTML(prefix, c, pre) {
     pre = pre || {};
     const scopes = pre.scopes && pre.scopes.length ? pre.scopes : c.scopes.filter(s => s === 'read_logs' || s === 'run_readonly');
@@ -222,7 +266,7 @@ Object.assign(LANGS.hr, {
       <div class="field"><label>${esc(t('mcp_conns'))}</label>${c.connections.length > 8 ? `<input type="text" id="${prefix}-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('${prefix}')">` : ''}
         <div class="mcp-conns" id="${prefix}-conns">${conns || `<div class="sub">${esc(t('none'))}</div>`}</div></div>
       <div class="mcp-row"><div class="field"><label>${esc(t('mcp_mode'))}</label><select id="${prefix}-mode" onchange="wrmMCP.modeChanged('${prefix}')">${c.modes.map(m => `<option value="${m}" ${m === 'read_only' ? 'selected' : ''}>${esc(t('mcp_mode_' + m))}</option>`).join('')}</select></div>
-        <div class="field"><label>${esc(t('mcp_hours'))} <span class="sub">(${esc(tf('mcp_hours_max', {n: c.max_hours}))})</span></label><input type="number" id="${prefix}-hours" min="1" max="${c.max_hours}" value="${c.default_hours}"></div></div>
+        <div class="field"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(c.max_hours))})</span></label>${lifetimeHTML(prefix + '-hours', c.default_hours)}</div></div>
       <div class="sub" id="${prefix}-mode-d" style="font-size:11px;color:var(--text3);">${esc(t('mcp_mode_read_only_d'))}</div>
       <div id="${prefix}-auto" style="display:none;">
         <div class="field"><label>${esc(t('mcp_auto_allow'))}</label><textarea id="${prefix}-auto-allow" placeholder="systemctl restart nginx"></textarea></div>
@@ -248,7 +292,7 @@ Object.assign(LANGS.hr, {
     const lines = id => ($(id).value || '').split('\n').map(x => x.trim()).filter(Boolean);
     const body = {
       conn_ids: [...document.querySelectorAll(`.${prefix}-conn:checked`)].map(x => +x.value),
-      mode: $(prefix + '-mode').value, hours: +$(prefix + '-hours').value || 0,
+      mode: $(prefix + '-mode').value, hours: lifetimeValue(prefix + '-hours'),
       scopes: [...document.querySelectorAll(`.${prefix}-scope:checked`)].map(x => x.value),
     };
     if ($(prefix + '-name')) body.name = $(prefix + '-name').value.trim();
@@ -290,7 +334,7 @@ Object.assign(LANGS.hr, {
   // exact command or file for the chosen app, the instructions that explain "wrm" to the AI,
   // and a test that talks to the MCP endpoint like the app will.
   const WCLIENTS = [
-    {id:'codex_oauth',icon:'⌨️',token:false}, {id: 'codex', icon: '⌨️', token: true}, {id: 'claude_code', icon: '🟠', token: true}, {id: 'gemini', icon: '✨', token: true},
+    {id:'codex_oauth',icon:'⌨️',token:false}, {id: 'codex', icon: '⌨️', token: true}, {id: 'claude_desktop', icon: '🖥️', token: true, via: 'mcpw_via_extension'}, {id: 'claude_code', icon: '🟠', token: true}, {id: 'gemini', icon: '✨', token: true},
     {id: 'cursor', icon: '🧩', token: true}, {id: 'claude_connector', icon: '🟠', token: false}, {id: 'chatgpt', icon: '💬', token: false},
   ];
   const WINSTR = {codex: 'AGENTS.md', claude_code: 'CLAUDE.md', gemini: 'GEMINI.md', cursor: 'AGENTS.md'};
@@ -308,7 +352,9 @@ Object.assign(LANGS.hr, {
       {h: 'mcpw_h_codex_cmd', code: `codex mcp add wrm --url ${url} --bearer-token-env-var WRM_MCP_TOKEN`},
       {h: 'mcpw_h_codex_toml', code: `[mcp_servers.wrm]\nurl = "${url}"\nbearer_token_env_var = "WRM_MCP_TOKEN"\ntool_timeout_sec = 1200`, file: 'config.toml'},
     ];
-    out.claude_code = [{h: 'mcpw_h_claude_cmd', code: `claude mcp add --transport http wrm ${url} --header "Authorization: Bearer ${tk}"`}];
+    out.claude_code = [{h: 'mcpw_h_claude_cmd', code: `claude mcp add --transport http wrm ${url} --header "Authorization: Bearer ${tk}"`},
+      {h: 'mcpw_cc_plugin', code: `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=${url} --config wrm_token=${tk}`}];
+    out.claude_desktop = [{h: 'mcpw_desk_token', code: tk}];
     out.gemini = [
       {h: 'mcpw_h_gemini_cmd', code: `gemini mcp add --scope user --transport http wrm ${url} -H "Authorization: Bearer ${tk}"`},
       {h: 'mcpw_h_gemini_json', code: JSON.stringify({mcpServers: {wrm: {httpUrl: url, headers: hdr, description: cfg.description, trust: false}}}, null, 2), file: 'settings.json'},
@@ -318,6 +364,16 @@ Object.assign(LANGS.hr, {
     out.claude_connector = [{h: 'mcpw_h_remote', code: url}];
     out.chatgpt = [{h: 'mcpw_h_chatgpt', code: url}];
     return out[client] || [];
+  }
+  // Claude Desktop: WRM builds the extension (manifest, bridge, icon) with this address and token
+  async function desktopExtension() {
+    try {
+      const res = await fetch('/api/mcp/claude-desktop', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-WRM-Request': '1'}, body: JSON.stringify({token: W.token})});
+      if (!res.ok) { let m = 'HTTP ' + res.status; try { m = (await res.json()).error || m; } catch (e) {} throw new Error(m); }
+      const blob = await res.blob(), a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'wrm-pro.mcpb'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    } catch (e) { showToast(e.message, 'error', 6000); }
   }
   function downloadSetup(name,text){const blob=new Blob([text],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
   function cursorInstall(){const config={url:cfg.url,headers:{Authorization:'Bearer '+W.token}};location.href='cursor://anysphere.cursor-deeplink/mcp/install?name=wrm&config='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(config)))));}
@@ -345,7 +401,7 @@ Object.assign(LANGS.hr, {
     let body = '';
     if (key === 'mcpw_s_client') {
       body = `<div class="sub">${esc(t('mcpw_pick'))}</div><div class="mcpw-grid">${WCLIENTS.map(c => `<button class="btn-sec mcpw-card ${W.client === c.id ? 'active' : ''}" onclick="wrmMCP.wizClient('${c.id}')">
-        <span>${c.icon} <b>${esc(t('mcpw_c_' + c.id))}</b></span><span class="sub">${esc(t(c.token ? 'mcpw_via_token' : 'mcpw_via_oauth'))}</span></button>`).join('')}</div>`;
+        <span>${c.icon} <b>${esc(t('mcpw_c_' + c.id))}</b></span><span class="sub">${esc(t(c.via || (c.token ? 'mcpw_via_token' : 'mcpw_via_oauth')))}</span></button>`).join('')}</div>`;
     } else if (key === 'mcpw_s_access') {
       const can = cfg.modes.includes('ask');
       body = `<div class="field"><label>${esc(t('mcp_conns'))}</label>${cfg.connections.length > 8 ? `<input type="text" id="mcpw-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('mcpw')">` : ''}
@@ -356,13 +412,15 @@ Object.assign(LANGS.hr, {
           ${cfg.modes.includes('auto') ? `<label class="mcp-check"><input type="radio" name="mcpw-preset" value="auto" onchange="wrmMCP.wizPreset(this.value)" ${W.preset === 'auto' ? 'checked' : ''}><span>${esc(t('mcp_mode_auto'))} <span class="sub">${esc(t('mcp_mode_auto_d'))}</span></span></label>` : ''}
           ${can ? `<label class="mcp-check"><input type="radio" name="mcpw-preset" value="ask" onchange="wrmMCP.wizPreset(this.value)" ${W.preset === 'ask' ? 'checked' : ''}><span>${esc(t('mcpw_p_ask'))} <span class="sub">${esc(t('mcpw_p_ask_d'))}</span></span></label>` : ''}</div>
         <div id="mcpw-auto-form" style="display:none;">${formHTML('mcpwa', cfg, {noName:true})}</div>
-        <div class="sub">${esc(tf('mcpw_valid', {n: W.hours || cfg.default_hours}))}</div>`;
+        <div class="field" style="max-width:260px;"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(cfg.max_hours))})</span></label>${lifetimeHTML('mcpw-hours', W.hours || cfg.default_hours)}</div>
+        <div class="sub">${esc(t('mcpw_hours_d'))}</div>`;
     } else if (key === 'mcpw_s_connect') {
       const c = WCLIENTS.find(x => x.id === W.client);
       const parts = wizConfig(W.client, cfg.url, W.token);
       const cloud=['chatgpt','claude_connector'].includes(W.client), host=new URL(cfg.url).hostname, local=/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(host)||host==='[::1]'||host.endsWith('.local');
       const warning=cloud&&(new URL(cfg.url).protocol!=='https:'||local)?'mcpw_public_needed':local?'mcpw_local_url':'';
       body = `${warning?`<div class="hint-box warn">${esc(t(warning))}</div>`:''}<div class="hint-box">${esc(t('mcpw_h_' + (c.token ? 'token' : 'oauth')))}</div>${c.token ? `<div class="hint-box warn">${esc(t('mcp_token_once'))}</div>` : ''}` +
+        (W.client === 'claude_desktop' ? `<div class="hint-box">${esc(t('mcpw_desk_h'))}</div><div style="margin:8px 0;"><button id="mcpw-desk-dl" onclick="wrmMCP.desktopExtension()">⬇ ${esc(t('mcpw_desk_dl'))}</button></div><div class="sub">${esc(t('mcpw_desk_dl_note'))}</div><div class="hint-box" style="white-space:pre-line;">${esc(t('mcpw_desk_steps'))}</div><div class="sub">${esc(t('mcpw_desk_noapp'))}</div>` : '') +
         parts.map((p, i) => `<div class="sub" style="margin-top:8px;">${esc(t(p.h))}</div>${wizPre(i, p.code)}${p.file ? `<button class="btn-sec btn-sm" onclick="wrmMCP.wizDownload(${i})">⬇ ${esc(t('mcpw_download'))} ${esc(p.file)}</button>` : ''}`).join('') +
         (['codex','codex_oauth','claude_code','gemini'].includes(W.client)?`<div class="hint-box">${esc(t('mcpw_installer_d'))}</div><button class="btn-sec btn-sm" onclick="wrmMCP.installer('sh')">${esc(t('mcpw_installer'))} (.sh)</button> <button class="btn-sec btn-sm" onclick="wrmMCP.installer('ps1')">${esc(t('mcpw_installer'))} (.ps1)</button>`:'')+
         (W.client==='cursor'?`<button class="btn-sec" onclick="wrmMCP.cursorInstall()">${esc(t('mcpw_cursor_install'))}</button>`:'')+`<div class="hint-box">${esc(t('mcpw_slash'))}</div>`+
@@ -376,7 +434,7 @@ Object.assign(LANGS.hr, {
       ${last ? `<button class="btn-sm" onclick="wrmMCP.wizReset()">✓ ${esc(t('mcpw_done'))}</button>` : key === 'mcpw_s_client' ? '' : `<button class="btn-sm" onclick="wrmMCP.wizNext()">${esc(nextLabel)} →</button>`}</div>`;
     return `<div class="adm-h">🧭 ${esc(t('mcpw_title'))}</div><div class="sub" style="margin-bottom:6px;">${esc(t('mcpw_intro'))}</div>${bar}${body}${nav}`;
   }
-  function wizRender() { const el = $('mcpw'); if (el) el.innerHTML = wizHTML(); if($('mcpwa-mode')){$('mcpwa-mode').value='auto';modeChanged('mcpwa');} }
+  function wizRender() { const el = $('mcpw'); if (el) el.innerHTML = wizHTML(); if($('mcpwa-mode')){$('mcpwa-mode').value='auto';modeChanged('mcpwa');const h=$('mcpwa-hours');if(h)h.closest('.field').style.display='none';} }
   function wizPreset(mode){W.preset=mode;$('mcpw-auto-form').style.display=mode==='auto'?'':'none';}
   function wizClient(id) { W.client = id; W.step = 2; W.token = ''; wizRender(); }
   function wizGo(d) { W.step = Math.max(1, W.step + d); wizRender(); }
@@ -387,12 +445,13 @@ Object.assign(LANGS.hr, {
       W.conn_ids = [...document.querySelectorAll('.mcpw-conn:checked')].map(x => +x.value);
       const pr = document.querySelector('input[name=mcpw-preset]:checked');
       W.preset = pr ? pr.value : 'read';
+      if ($('mcpw-hours')) W.hours = Math.min(lifetimeValue('mcpw-hours') || cfg.default_hours, cfg.max_hours);
       if (!W.conn_ids.length) { showToast(t('mcpw_pick_server'), 'error'); return; }
       const scopes = (W.preset !== 'read' ? ['read_logs', 'run_readonly', 'run_with_approval', 'edit_file_with_approval'] : ['read_logs', 'run_readonly']).filter(s => cfg.scopes.includes(s));
       const c = WCLIENTS.find(x => x.id === W.client);
       let r;
       if (W.preset === 'auto') { $('mcpwa-mode').value = 'auto'; modeChanged('mcpwa'); }
-      try { r = await api('POST', '/api/mcp/grants', { ...(W.preset === 'auto' ? formValue('mcpwa') : {}), name: tf('mcpw_grant_name', {client: t('mcpw_c_' + c.id)}), conn_ids: W.conn_ids, mode: W.preset === 'auto' ? 'auto' : W.preset === 'ask' ? 'ask' : 'read_only', scopes}); }
+      try { r = await api('POST', '/api/mcp/grants', { ...(W.preset === 'auto' ? formValue('mcpwa') : {}), name: tf('mcpw_grant_name', {client: t('mcpw_c_' + c.id)}), conn_ids: W.conn_ids, mode: W.preset === 'auto' ? 'auto' : W.preset === 'ask' ? 'ask' : 'read_only', scopes, hours: W.hours || cfg.default_hours}); }
       catch (e) { showToast(e.message, 'error', 6000); return; }
       W.token = r.token;
     }
@@ -525,6 +584,107 @@ Object.assign(LANGS.hr, {
     }
     if ($('mcp-pop') && $('mcp-pop').classList.contains('open')) renderPop();
     cards(d.pending);
+    // a new MCP session opens its live view once (closing it is respected)
+    for (const g of d.live) for (const x of g.sessions || []) {
+      if (seenSess[x.id]) continue;
+      seenSess[x.id] = true;
+      if (watchAuto()) watch(x.id, false, g.client_name || g.name);
+    }
+  }
+
+  // ── live view of MCP sessions: what the AI runs on the server, approvals and output ──
+  const seenSess = {}, W8 = {};
+  function watchAuto(on) {
+    try {
+      if (on === undefined) return localStorage.getItem('wrm_mcp_watch') !== '0';
+      localStorage.setItem('wrm_mcp_watch', on ? '1' : '0');
+    } catch (e) { /* storage unavailable: default on */ }
+    return true;
+  }
+  function watch(sid, focus, client) {
+    let box = $('mcp-watch');
+    if (!box) { box = document.createElement('div'); box.id = 'mcp-watch'; document.body.appendChild(box); }
+    if (W8[sid]) { W8[sid].el.classList.remove('min'); if (focus) W8[sid].el.scrollIntoView({block: 'nearest'}); return; }
+    const el = document.createElement('div');
+    el.className = 'mcp-wbox'; el.id = 'mcp-w-' + sid;
+    el.innerHTML = `<div class="wh"><span>🤖</span><b id="mcp-wt-${sid}">${esc(client || 'AI')}</b>
+      <button class="icon-btn" title="${esc(t('mcp_w_min'))}" onclick="this.closest('.mcp-wbox').classList.toggle('min')">▁</button>
+      <button class="icon-btn" title="${esc(t('mcp_w_close'))}" onclick="wrmMCP.unwatch(${sid})">✕</button></div>
+      <div class="wb" id="mcp-wb-${sid}"><div class="sub">${esc(t('mcp_w_empty'))}</div></div>`;
+    box.appendChild(el);
+    const st = W8[sid] = {el, seq: 0, calls: {}, client: client || 'AI'};
+    const es = st.es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
+    ['session', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'error', 'ended']
+      .forEach(ty => es.addEventListener(ty, ev => { try { watchEvent(sid, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));
+    es.onerror = () => { if (st.ended) es.close(); };
+  }
+  function unwatch(sid) {
+    const st = W8[sid];
+    if (!st) return;
+    if (st.es) st.es.close();
+    st.el.remove();
+    delete W8[sid];
+  }
+  function wAdd(sid, html) {
+    const b = $('mcp-wb-' + sid);
+    if (!b) return null;
+    const near = b.scrollHeight - b.scrollTop - b.clientHeight < 120;
+    b.insertAdjacentHTML('beforeend', html);
+    if (near) b.scrollTop = b.scrollHeight;
+    return b.lastElementChild;
+  }
+  function watchEvent(sid, ev) {
+    const st = W8[sid];
+    if (!st || ev.seq <= st.seq) return;
+    st.seq = ev.seq;
+    const d = ev.data || {};
+    switch (ev.type) {
+      case 'session': {
+        const tt = $('mcp-wt-' + sid);
+        if (tt) tt.textContent = tf('mcp_w_title', {client: st.client, server: d.connection || ''}) + (d.mode ? ' · ' + t('mcp_mode_' + d.mode) : '');
+        if (d.ended) st.ended = true;
+        break;
+      }
+      case 'tool_call': {
+        const cls = d.decision === 'deny' ? 'bad' : d.decision === 'approve' ? 'ask' : '';
+        const lbl = d.decision === 'deny' ? t('mcp_w_refused') : d.decision === 'approve' ? t('mcp_w_ask') : t('mcp_w_runs');
+        st.calls[d.call_id] = wAdd(sid, `<div class="we ${cls}"><div><b>${esc(d.tool)}</b> · <span class="sub">${esc(lbl)}</span></div>
+          ${d.display ? `<pre>${esc(d.display)}</pre>` : ''}${d.diff && d.decision !== 'approve' ? `<pre>${diffHTML(d.diff)}</pre>` : ''}
+          ${d.reason ? `<div class="sub">${esc(t('mcp_ap_reason'))}: ${esc(d.reason)}</div>` : ''}${d.why && d.decision !== 'allow' ? `<div class="sub">${esc(t('mcp_w_reason'))}: ${esc(d.why)}</div>` : ''}
+          <div class="wa"></div><div class="wr"></div></div>`);
+        break;
+      }
+      case 'approval_required': {
+        const a = d.approval || {}, el = st.calls[a.call_id];
+        if (el) el.querySelector('.wa').innerHTML = `<div class="sub">⏳ ${esc(t('mcp_w_wait'))}</div><div class="acts">
+          <button class="btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', true)">✔ ${esc(t('mcp_ap_approve'))}</button>
+          <button class="btn-danger btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', false)">✕ ${esc(t('mcp_ap_deny'))}</button></div>`;
+        st.el.classList.remove('min');
+        break;
+      }
+      case 'approval_resolved': {
+        const el = st.calls[d.call_id];
+        if (el) {
+          el.classList.remove('ask'); el.classList.add(d.outcome === 'approved' ? 'ok' : 'bad');
+          el.querySelector('.wa').innerHTML = `<div class="sub">${d.outcome === 'approved' ? '✔' : '✕'} ${esc(t('mcp_w_o_' + d.outcome))}${d.by ? ' · ' + esc(d.by) : ''}</div>`;
+        }
+        break;
+      }
+      case 'tool_result': {
+        const out = d.output != null ? String(d.output) : '';
+        const html = d.error ? `<div class="sub" style="color:#fca5a5;">${esc(d.error)}</div>`
+          : `<div class="sub">${esc(tf('mcp_w_exit', {code: d.exit_code}))}</div>${out ? `<details ${out.length < 800 ? 'open' : ''}><summary>${esc(t('mcp_w_output'))} (${out.length} B)</summary><pre>${esc(out.length > 20000 ? out.slice(0, 20000) + '\n…' : out)}</pre></details>` : ''}`;
+        const el = st.calls[d.call_id];
+        if (el) el.querySelector('.wr').innerHTML = html; else wAdd(sid, `<div class="we">${html}</div>`);
+        break;
+      }
+      case 'error': wAdd(sid, `<div class="we bad"><div class="sub">${esc(d.text || d.error || '')}</div></div>`); break;
+      case 'ended':
+        st.ended = true;
+        if (st.es) st.es.close();
+        wAdd(sid, `<div class="sub">⏻ ${esc(tf('mcp_w_ended', {reason: d.reason || ''}))}</div>`);
+        break;
+    }
   }
   function renderPop() {
     const d = lastActive;
@@ -532,8 +692,10 @@ Object.assign(LANGS.hr, {
       ${d.live.length ? `<button class="btn-danger btn-sm" onclick="wrmMCP.revokeAll()">⏻ ${esc(t('mcp_revoke_all'))}</button>` : ''}<button class="icon-btn" onclick="wrmMCP.togglePop(false)">✕</button></div>` +
       (d.live.length ? d.live.map(g => `<div class="mcp-grant"><div class="g-main"><b>${esc(g.client_name || g.name)}</b> <span class="pill ok">● ${esc(t('mcp_live'))}</span>
         <div class="sub">${esc(tf('mcp_on', {servers: (g.sessions.length ? g.sessions.map(s => s.connection) : g.connections.map(c => c.name)).join(', ')}))} · ${esc(t('mcp_mode_' + g.mode))}</div>
-        <div class="sub">${esc(tf('mcp_expires', {time: rel(g.expires_at)}))}</div></div><button class="btn-danger btn-sm" onclick="wrmMCP.revoke(${g.id})">${esc(t('mcp_revoke'))}</button></div>`).join('')
+        <div class="sub">${esc(tf('mcp_expires', {time: rel(g.expires_at)}))}</div>
+        ${(g.sessions || []).map(x => `<button class="btn-sec btn-sm" style="margin-top:4px;" onclick="wrmMCP.watch(${x.id}, true)">👁 ${esc(t('mcp_w_watch'))}: ${esc(x.connection)}</button>`).join(' ')}</div><button class="btn-danger btn-sm" onclick="wrmMCP.revoke(${g.id})">${esc(t('mcp_revoke'))}</button></div>`).join('')
         : `<div class="sub" style="font-size:11.5px;color:var(--text3);">${esc(t('mcp_none'))}</div>`) +
+      `<label class="mcp-check" style="margin-top:8px;"><input type="checkbox" ${watchAuto() ? 'checked' : ''} onchange="wrmMCP.watchAuto(this.checked)"><span>${esc(t('mcp_w_auto'))}</span></label>` +
       `<div style="margin-top:8px;"><button class="btn-sec btn-sm" onclick="wrmMCP.togglePop(false); openSettings('st-mcp')">⚙ ${esc(t('mcp_title'))}</button></div>`;
   }
   function togglePop(open) {
@@ -673,8 +835,8 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmMCP = {
-    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, snip, copy, refresh, indicator, togglePop, decide, edit,
-    installer, cursorInstall, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
+    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto,
+    installer, cursorInstall, desktopExtension, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,
   };
 })();

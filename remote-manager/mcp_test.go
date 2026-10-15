@@ -413,6 +413,10 @@ func TestMCPApprovalRoundTripAndDestructiveBlock(t *testing.T) {
 	if !isErr || aiFileExists(filepath.Join(e.host.home, "x2")) {
 		t.Fatalf("a denied command ran: %s", out)
 	}
+	// the AI is told where it was refused and to ask the user before trying again
+	if !strings.Contains(out, "denied this action in WRM") || !strings.Contains(out, "ask whether to continue") {
+		t.Fatalf("denial message: %s", out)
+	}
 }
 
 // Approvals as MCP elicitation: accept runs the command, decline denies it.
@@ -523,7 +527,8 @@ func TestMCPTokenExpiryRevokeAndKillSwitch(t *testing.T) {
 	}
 	tok, gid := e.pat("read_only", []string{"read_logs"}, nil)
 	g, _ := loadGrant(gid)
-	if d := time.Until(g.ExpiresAt); d < 7*time.Hour || d > 8*time.Hour+time.Minute {
+	want := time.Duration(min(settingInt("ai_mcp_token_hours"), settingInt("ai_mcp_max_token_hours"))) * time.Hour
+	if d := time.Until(g.ExpiresAt); d < want-time.Minute || d > want+time.Minute {
 		t.Fatalf("default lifetime: %s", d)
 	}
 	c := e.client(tok)
