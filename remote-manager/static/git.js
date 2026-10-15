@@ -3,7 +3,7 @@
 // uiConfirm, fmtTime, conns, folders, currentUser).
 'use strict';
 
-Object.assign(LANGS.en, {
+Object.assign(LANGS.en, { hf_runtime:'Runtime', hf_freshness:'Freshness', hf_stale:'Older than 30 minutes', hf_installation:'Installation', hf_problems:'Installation problems', hf_reset:'Reset filters', hf_matches:'Matching results',
   git_title: 'Git workspace', git_close: 'Close', git_tab_overview: 'Overview', git_tab_services: 'Services', git_tab_installs: 'Installations', git_tab_settings: 'Settings',
   git_check_now: 'Check now', git_checking: 'Checking…', git_last_check: 'Last check', git_never: 'never', git_no_checks: 'Checks are not allowed for your account.',
   git_st_ok: 'Up to date', git_st_update: 'Needs update', git_st_review: 'Review', git_st_error: 'Error', git_st_gone: 'Gone', git_st_unknown: 'Not checked',
@@ -35,7 +35,7 @@ Object.assign(LANGS.en, {
   git_monitor_h: 'Choose the channels for "Git" events in Settings → Notifications. Checks never update anything.', git_saved: 'Saved',
   git_n_installs: '{n} installations', git_none: '—', git_api_calls: '{n} API calls', git_from: 'from', git_bundle_only: 'bundle',
 });
-Object.assign(LANGS.hr, {
+Object.assign(LANGS.hr, { hf_runtime:'Izvršavanje', hf_freshness:'Svježina', hf_stale:'Starije od 30 minuta', hf_installation:'Instalacija', hf_problems:'Problemi instalacije', hf_reset:'Poništi filtre', hf_matches:'Pronađeni rezultati',
   git_title: 'Git radni prostor', git_close: 'Zatvori', git_tab_overview: 'Pregled', git_tab_services: 'Servisi', git_tab_installs: 'Instalacije', git_tab_settings: 'Postavke',
   git_check_now: 'Provjeri sada', git_checking: 'Provjera…', git_last_check: 'Zadnja provjera', git_never: 'nikad', git_no_checks: 'Provjere nisu dopuštene vašem računu.',
   git_st_ok: 'Ažurno', git_st_update: 'Treba ažurirati', git_st_review: 'Pregledati', git_st_error: 'Greška', git_st_gone: 'Nema je', git_st_unknown: 'Nije provjereno',
@@ -554,6 +554,8 @@ Object.assign(LANGS.hr, {
 #git-ws .g-body { flex: 1; overflow: auto; padding: 14px 16px 40px; }
 #git-ws .g-intro { padding: 8px 16px; font-size: 12px; line-height: 1.5; color: var(--text2); background: var(--bg2); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 #git-ws .g-intro::before { content: 'ℹ '; color: var(--accent); }
+#git-ws .g-bar:has(>input[type=search]), #git-ws .gs-filters, #git-modal .g-bar:has(>input[type=search]),
+#git-ws .g-sticky { position:sticky;top:0;z-index:20;background:var(--bg2);padding:8px 0;max-height:40vh;overflow-y:auto; }
 #git-ws .g-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; }
 #git-ws .g-bar select, #git-ws .g-bar input { width: auto; min-width: 120px; flex: 0 1 auto; }
 #git-ws .g-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
@@ -760,6 +762,7 @@ Object.assign(LANGS.hr, {
   function close() { const ws = $('git-ws'); if (ws) ws.style.display = 'none'; closeModal(); }
 
   function render() {
+    if(!$('git-ws')){paintFunctionality();return;}
     const s = G.state;
     $('git-mode').innerHTML = ['simple', 'medium', 'advanced'].map(m => `<button class="${G.mode === m ? 'on' : ''}" onclick="gitWorkspace.setGitMode('${m}')">${esc(t('gs_' + m))}</button>`).join('');
     if (G.mode === 'medium') {
@@ -776,7 +779,7 @@ Object.assign(LANGS.hr, {
       return;
     }
     $('git-last').style.display = $('git-check').style.display = '';
-    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'functionality', 'envs', 'runs', 'activity', 'gitignore', 'settings'].map(k =>
+    $('git-tabs').innerHTML = ['overview', 'services', 'installs', 'envs', 'runs', 'activity', 'gitignore', 'settings'].map(k =>
       `<button class="${G.tab === k ? 'on' : ''}" title="${esc(t('gtd_' + k))}" onclick="gitWorkspace.tab('${k}')">${esc(t('git_tab_' + k))}</button>`).join('');
     $('git-intro').style.display = '';
     $('git-intro').textContent = t('gtd_' + G.tab);
@@ -794,6 +797,7 @@ Object.assign(LANGS.hr, {
     else if (G.tab === 'activity') body.innerHTML = activityHTML();
     else if (G.tab === 'gitignore') body.innerHTML = ignoreHTML();
     else body.innerHTML = settingsHTML();
+    if(document.getElementById('monitor-service-view'))paintFunctionality();
   }
 
   function setTab(k) { G.tab = k; render(); if (k === 'runs') loadRuns(); if (k === 'envs' && !E.ov) envLoad(); if (k === 'gitignore' && !I.info && !I.loading) ignoreLoad(); if (k === 'activity') actStart(); }
@@ -842,7 +846,7 @@ Object.assign(LANGS.hr, {
       (apps.length ? apps.map(a => { const x = targets[a]; return `<tr><td><b>${esc(a)}</b></td><td>${x ? `<span class="g-mono">${esc(x.version || '—')}</span> <span class="g-mut">${esc(x.branch || '')} · ${esc(x.commit_date || '')}</span>` : `<span class="g-mut">${esc(t('git_no_target'))}</span>`}</td>
         <td class="g-mono">${esc((x && x.latest_tag) || '—')}</td><td class="g-mut">${esc(x ? x.source : '')}</td><td>${x && x.error ? `<span class="g-st s-error">${esc(x.error)}</span>` : esc(((x && x.warnings) || []).join('; '))}</td></tr>`; }).join('')
         : `<tr><td colspan="5" class="g-mut">${esc(t('git_empty_overview'))}</td></tr>`) + '</table></div></div>';
-    html += `<div class="g-bar">${filterBar()}</div>${checkBar(list)}`;
+    html += `<div class="g-bar g-sticky">${filterBar()}</div>${checkBar(list)}`;
     const servers = [...new Map(list.map(i => [i.conn_id, i])).entries()].sort((a, b) => a[1].conn_name.localeCompare(b[1].conn_name));
     if (!servers.length) return html + `<div class="hint-box">${esc(t('git_empty_overview'))}</div>`;
     const cols = [...apps, ...new Set(list.map(i => i.app))].filter((a, k, arr) => arr.indexOf(a) === k && list.some(i => i.app === a));
@@ -936,7 +940,8 @@ Object.assign(LANGS.hr, {
   }
 
   async function startJob(body) {
-    if (jobRunning()) return;
+    if (jobRunning() || G.busy) return;
+    if(body.refresh){G.busy=true;render();try{await gitClient.refreshConnected()}catch(e){showToast(e.message,'error');G.busy=false;render();return}G.busy=false;}
     const r = await fetch('/api/git/check/jobs', json('POST', body));
     if (!r.ok) { showToast(await apiError(r), 'error'); return; }
     J.seq = 0;
@@ -1101,7 +1106,7 @@ Object.assign(LANGS.hr, {
     const list = filtered();
     const sshConns = (conns || []).filter(c => c.protocol === 'SSH').sort((a, b) => a.name.localeCompare(b.name));
     const apps = [...G.state.catalog.apps.map(a => a.name), ...(G.state.bundle_apps || [])];
-    return `<div class="g-bar">${filterBar()}<button class="btn-sec" onclick="gitWorkspace.check(true)" ${G.state.can_check && !jobRunning() ? '' : 'disabled'}>🔎 ${esc(t('git_discover'))}</button>
+    return `<div class="g-bar g-sticky">${filterBar()}<button class="btn-sec" onclick="gitWorkspace.check(true)" ${G.state.can_check && !jobRunning() ? '' : 'disabled'}>🔎 ${esc(t('git_discover'))}</button>
       <button class="btn-sm" onclick="gitWorkspace.install()" ${can('install') ? '' : `disabled title="${esc(t('git_no_permission'))}"`}>＋ ${esc(t('git_install'))}</button></div>
       ${checkBar(list)}<div class="g-bar g-actions">${actionButtons('')}</div>
       <div class="g-card g-scroll"><table><tr><th>${selBox(list.map(i => i.id), t('git_sel_all'))}</th><th>${esc(t('git_server'))}</th><th>${esc(t('git_service'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_env'))}</th><th>${esc(t('git_state'))}</th>
@@ -1136,13 +1141,41 @@ Object.assign(LANGS.hr, {
     return `<div class="g-mut">${esc(fmtTime(h.checked_at))}</div>${(h.warnings || []).map(w => `<div class="hint-box warn" style="overflow-wrap:anywhere">⚠ ${esc(w)}</div>`).join('')}
       ${(h.checks || []).map(c => `<div class="g-card" style="margin-top:6px;overflow-wrap:anywhere">${functionalityBadge(c)} <b>${esc(c.kind)} · ${esc(c.name)}</b><pre style="white-space:pre-wrap;margin:4px 0">${esc(c.status)}</pre>${c.log ? `<details><summary>${esc(t('gf_log'))}</summary><pre style="white-space:pre-wrap;max-height:240px;overflow:auto">${esc(c.log)}</pre></details>` : ''}</div>`).join('')}`;
   }
+  const HF = {q:'',server:'',app:'',env:'',kind:'',health:'',age:'',problem:'',collapsed:new Set()};
   function functionalityHTML() {
-    const installs = G.state.installs || [], apps = G.state.catalog.apps || [];
-    return `<div class="hint-box">${esc(t('gf_intro'))}</div><div class="g-bar"><button class="btn-sec" ${G.state.can_check && !jobRunning() ? '' : 'disabled'} onclick="gitWorkspace.check()">↻ ${esc(t('git_check_now'))}</button><button class="btn-sec" onclick="gitWorkspace.configProfiles()">${esc(t('gcp_title'))}</button></div>
-      <h3>${esc(t('gf_servers'))}</h3>${(G.state.server_health || []).map(h => `<details class="g-card"><summary>${functionalityBadge(h)} <b>${esc(h.name)}</b> · ${esc(t('gf_all_workers'))}</summary>${functionalityBody(h)}</details>`).join('')}
-      ${apps.filter(a => !installs.some(i => i.app === a.name)).map(a => `<div class="g-card"><b>${esc(a.name)}</b> · <span class="g-mono">${esc(a.project)}</span><div class="hint-box warn">${esc(t('gf_no_install'))}</div></div>`).join('')}
-      ${installs.map(i => { const a = apps.find(a => a.name === i.app) || {}; return `<div class="g-card"><div class="g-bar">${functionalityBadge(i.functionality)} <b>${esc(i.app)} · ${esc(hn(i.conn_name,i.hostname))}</b><span class="g-mut">${esc(i.env)}</span><span class="g-sp"></span><button class="btn-sec btn-sm" ${G.state.can_check ? '' : 'disabled'} onclick="gitWorkspace.configuration(${i.id})">${esc(t('gf_config'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.details(${i.id})">${esc(t('git_details'))}</button></div><div class="g-mono" style="overflow-wrap:anywhere">${esc(i.path)}</div><div class="g-mut">${esc(t('gf_source'))}: ${esc(a.project || '—')}</div>${functionalityBody(i.functionality)}</div>`; }).join('')}`;
+    const installs=G.state.installs || [], apps=G.state.catalog.apps || [], servers=G.state.server_health || [];
+    const groups=new Map();
+    for (const i of installs) { if (!groups.has(i.conn_id)) groups.set(i.conn_id,{id:i.conn_id,name:i.conn_name,hostname:i.hostname,items:[],health:null}); groups.get(i.conn_id).items.push(i); }
+    for (const h of servers) { if (!groups.has(h.conn_id)) groups.set(h.conn_id,{id:h.conn_id,name:h.name,hostname:h.hostname||'',folder:h.folder||'',items:[]}); groups.get(h.conn_id).health=h; }
+    const option=(v,label,cur)=>`<option value="${esc(v)}" ${String(cur)===String(v)?'selected':''}>${esc(label)}</option>`;
+    const choose=(key,label,values)=>`<select aria-label="${esc(label)}" onchange="gitWorkspace.functionalityFilter('${key}',this.value)">${option('',label,HF[key])}${values.map(([v,l])=>option(v,l,HF[key])).join('')}</select>`;
+    const control=`<div class="g-bar g-sticky"><input id="health-q" type="search" placeholder="${esc(t('git_search_srv'))}" value="${esc(HF.q)}" oninput="gitWorkspace.functionalityFilter('q',this.value)">${choose('server',t('git_all_servers'),[...groups.values()].map(g=>[g.id,hn(g.name,g.hostname)+' · '+g.name+' #'+g.id]))}${choose('app',t('git_all_services'),apps.map(a=>[a.name,a.name]))}${choose('env',t('git_all_envs'),[...new Set(installs.map(i=>i.env).filter(Boolean))].map(x=>[x,x]))}${choose('kind',t('hf_runtime'),['systemd','supervisor','http','tcp','resource'].map(x=>[x,x]))}${choose('health',t('git_all_states'),['healthy','warning','failed','unknown'].map(x=>[x,t('gf_'+x)]))}${choose('age',t('hf_freshness'),[['never',t('gf_never')],['stale',t('hf_stale')]])}${choose('problem',t('hf_installation'),[['yes',t('hf_problems')]])}<button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityReset()">${esc(t('hf_reset'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityExpand(true)">＋</button><button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityExpand(false)">−</button><button class="btn-sec" ${G.state.can_check&&!jobRunning()?'':'disabled'} onclick="gitWorkspace.check()">↻ ${esc(t('git_check_now'))}</button><button class="btn-sec" onclick="gitWorkspace.configProfiles()">${esc(t('gcp_title'))}</button></div>`;
+    function matches(health,data) {
+      if (HF.q&&!JSON.stringify(data).toLowerCase().includes(HF.q.toLowerCase())) return false;
+      if (HF.health&&(health?.state || 'unknown')!==HF.health) return false;
+      if (HF.kind&&!(health?.checks || []).some(x=>x.kind===HF.kind)) return false;
+      if (HF.age==='never'&&health?.checked_at) return false;
+      if (HF.age==='stale'&&(!health?.checked_at||Date.now()-new Date(health.checked_at).getTime()<30*60000)) return false;
+      return true;
+    }
+    let count=0;
+    const body=[...groups.values()].sort((a,b)=>hn(a.name,a.hostname).localeCompare(hn(b.name,b.hostname))).map(g=>{
+      if (HF.server&&String(g.id)!==HF.server) return '';
+      const items=g.items.filter(i=>(!HF.app||i.app===HF.app)&&(!HF.env||i.env===HF.env)&&(!HF.problem||i.error||['error','gone','unknown'].includes(i.state)||i.functionality?.warnings?.length)&&matches(i.functionality,{...i,repository:apps.find(a=>a.name===i.app)?.project}));
+      const hostMatch=!HF.app&&!HF.env&&!HF.problem&&matches(g.health,g);
+      if (!items.length&&!hostMatch) return '';count+=items.length+(hostMatch?1:0);
+      const states=g.items.map(i=>i.functionality?.state || 'unknown');if(g.health)states.push(g.health.state);
+      const totals=['healthy','warning','failed','unknown'].map(x=>`${t('gf_'+x)}: ${states.filter(s=>s===x).length}`).join(' · ');
+      return `<details class="g-card hf-group" data-server="${g.id}" ${HF.collapsed.has(g.id)?'':'open'} ontoggle="gitWorkspace.functionalityToggle(${g.id},this.open)"><summary><b>${esc(hn(g.name,g.hostname))}</b> · ${esc(g.name)} #${g.id} · ${esc(g.folder||'')}<div class="g-mut">${esc(totals)}</div></summary>${hostMatch?functionalityBody(g.health):''}${items.map(i=>{const a=apps.find(a=>a.name===i.app)||{};return `<div class="g-card"><div class="g-bar">${functionalityBadge(i.functionality)}<b>${esc(i.app)}</b><span>${esc(i.env)}</span><span class="g-sp"></span><button class="btn-sec btn-sm" onclick="gitWorkspace.configuration(${i.id})">${esc(t('gf_config'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.details(${i.id})">${esc(t('git_details'))}</button></div><div class="g-mono">${esc(i.path)}</div><div class="g-mut">${esc(t('gf_source'))}: ${esc(a.project||'—')}</div>${i.error?`<div class="hint-box bad">${esc(i.error)}</div>`:''}${functionalityBody(i.functionality)}</div>`}).join('')}</details>`;
+    }).join('');
+    return control+`<div class="g-mut">${esc(t('hf_matches'))}: ${count}</div>`+(body||`<div class="hint-box">${esc(t('none'))}</div>`)+apps.filter(a=>!installs.some(i=>i.app===a.name)).map(a=>`<div class="g-card"><b>${esc(a.name)}</b><div class="hint-box warn">${esc(t('gf_no_install'))}</div></div>`).join('');
   }
+  function paintFunctionality() { const body=document.getElementById('monitor-service-view') || (G.tab==='functionality'&&$('git-body'));if(!body)return;const focus=document.activeElement?.id, pos=document.activeElement?.selectionStart, top=body.scrollTop;body.innerHTML=functionalityHTML();body.scrollTop=top;if(focus==='health-q'){const q=document.getElementById(focus);q.focus();if(pos!=null)q.setSelectionRange(pos,pos)} }
+  function functionalityFilter(key,value) {HF[key]=value;paintFunctionality();}
+  function functionalityReset(){for(const k of ['q','server','app','env','kind','health','age','problem'])HF[k]='';paintFunctionality();}
+  function functionalityToggle(id,open){if(open)HF.collapsed.delete(id);else HF.collapsed.add(id);}
+  function functionalityExpand(open){if(open)HF.collapsed.clear();else for(const i of G.state.installs||[])HF.collapsed.add(i.conn_id);paintFunctionality();}
+  async function monitoringMount(el){if(!$('git-style')){const s=document.createElement('style');s.id='git-style';s.textContent=css;document.head.appendChild(s)}if(!$('monitor-git-style')){const s=document.createElement('style');s.id='monitor-git-style';s.textContent=css.replaceAll('#git-ws','#monitor-service-view')+'\n#monitor-service-view {position:static;inset:auto;z-index:auto;display:block;background:inherit;font-size:13px;}';document.head.appendChild(s)}if(await load())el.innerHTML=functionalityHTML();}
 
   const CP = {profiles:[], result:null, seq:0};
   async function configProfiles() {
@@ -1193,7 +1226,7 @@ Object.assign(LANGS.hr, {
     $('cp-results').innerHTML = `<p>${count} ${esc(t('gcp_settings'))}</p>` + (html || `<p>${esc(t('none'))}</p>`);
   }
 
-  function showFunctionality() { G.mode = 'advanced'; G.tab = 'functionality'; render(); }
+  function showFunctionality() { openMonitoring('services'); }
   async function configuration(id) {
     modal(`<div class="g-bar"><h3 style="flex:1">${esc(t('gf_config'))}</h3><button class="btn-sec" onclick="gitWorkspace.closeModal()" aria-label="${esc(t('git_close'))}">✕</button></div><div class="hint-box">${esc(t('loading'))}</div>`);
     const r = await fetch('/api/git/installs/' + id + '/configuration');
@@ -1394,8 +1427,8 @@ Object.assign(LANGS.hr, {
     const sshConns = (conns || []).filter(c => c.protocol === 'SSH').sort((a, b) => a.name.localeCompare(b.name));
     const sel = new Set(st.conn_ids || []);
     return `<div class="g-card"><h3>${esc(t('git_sources'))}</h3>
-      ${apiSources.length ? `<table>${apiSources.map(x => `<tr><td><b>${esc(x.name)}</b> <span class="g-mut">${esc(x.kind)}</span><div class="g-mono g-mut">${esc(x.url)}</div>${x.last_error ? `<div class="g-st s-error">${esc(x.last_error)}</div>` : ''}</td>
-        <td style="white-space:nowrap"><button class="btn-sec btn-sm" onclick="gitWorkspace.testSource(${x.id})">${esc(t('git_test'))}</button> <button class="btn-sec btn-sm" ${s.can_check ? '' : 'disabled'} onclick="gitWorkspace.webhook(${x.id})">${x.hook_id ? '🔔 ' : ''}${esc(t('git_webhook'))}</button> <button class="btn-sec btn-sm" onclick="gitWorkspace.editSource(${x.id})">${esc(t('git_edit'))}</button> <button class="btn-danger btn-sm" onclick="gitWorkspace.delSource(${x.id})">✕</button></td></tr>`).join('')}</table>` : ''}
+      ${apiSources.length ? `<table>${apiSources.map(x => `<tr><td><b>${esc(x.name)}</b> <span class="g-mut">${esc(x.kind)}</span><div class="g-mono g-mut">${esc(x.url)}</div>${x.client_cache?`<div class="g-mut">${esc(t(x.client_cache.complete?'gc_cached':'gc_missing'))} · #${x.client_cache.published||0} · ${esc(x.client_cache.at?fmtTime(x.client_cache.at):'—')}</div>`:''}${x.last_error ? `<div class="g-st s-error">${esc(x.last_error)}</div>` : ''}</td>
+        <td style="white-space:normal">${x.kind==='gitlab'?`<button class="btn-sec btn-sm" onclick="gitClient.open(${x.id})">${esc(t('gc_title'))}</button>`:''}<button class="btn-sec btn-sm" onclick="gitWorkspace.testSource(${x.id})">${esc(t('git_test'))}</button> <button class="btn-sec btn-sm" ${s.can_check ? '' : 'disabled'} ${x.owned&&!x.client_cache?'':'disabled'} onclick="gitWorkspace.webhook(${x.id})">${x.hook_id ? '🔔 ' : ''}${esc(t('git_webhook'))}</button> <button class="btn-sec btn-sm" ${x.owned?'':'disabled'} onclick="gitWorkspace.editSource(${x.id})">${esc(t('git_edit'))}</button> <button class="btn-danger btn-sm" ${x.owned?'':'disabled'} onclick="gitWorkspace.delSource(${x.id})">✕</button></td></tr>`).join('')}</table>` : ''}
       <div class="g-bar" style="margin-top:8px"><button class="btn-sec" onclick="gitWorkspace.editSource(0)">＋ ${esc(t('git_add_source'))}</button></div></div>
       <div class="g-card"><h3>${esc(t('git_bundles'))}</h3>
       ${bundles.length ? `<table>${bundles.map(x => `<tr><td><b>${esc(x.bundle_id || x.name)}</b> <span class="g-mut">${esc(tf('git_bundle_age', {d: x.created || '?'}))} · ${esc(x.created_by || '')}</span><div class="g-mono g-mut">${esc(x.origin || '')}</div><div class="g-mut">${esc((x.apps || []).join(', '))}</div></td>
@@ -1509,10 +1542,11 @@ Object.assign(LANGS.hr, {
     if (G.busy) return;
     G.busy = true; render();
     try {
+      await gitClient.refreshConnected();
       const r = await fetch('/api/git/targets/refresh', json('POST', {}));
       if (!r.ok) { showToast(await apiError(r), 'error'); return; }
       G.state = (await r.json()).state;
-    } finally { G.busy = false; render(); }
+    } catch(e) {showToast(e.message,'error');} finally { G.busy = false; render(); }
   }
 
   // ── deploy: update, upgrade, rollback, stamp, restart ──
@@ -1617,11 +1651,11 @@ Object.assign(LANGS.hr, {
     const items = [];
     D.plan.forEach((i, idx) => {
       if (i.error) return;
-      if (kind === 'stamp') { if (i.eligible) items.push({install_id: i.install_id}); return; }
-      if (i.pipeline) { items.push({install_id: i.install_id}); return; }
+      if (kind === 'stamp') { if (i.eligible) items.push({install_id: i.install_id, review_id:i.review_id}); return; }
+      if (i.pipeline) { items.push({install_id: i.install_id, review_id:i.review_id}); return; }
       const boxes = [...document.querySelectorAll(`.gd-f[data-i="${idx}"]:checked`)];
       if (!boxes.length) return;
-      items.push({install_id: i.install_id, files: boxes.map(b => b.dataset.p), modified_ok: boxes.filter(b => b.dataset.local === '1').map(b => b.dataset.p)});
+      items.push({install_id: i.install_id, review_id:i.review_id, files: boxes.map(b => b.dataset.p), modified_ok: boxes.filter(b => b.dataset.local === '1').map(b => b.dataset.p)});
     });
     if (!items.length) { showToast(t('git_nothing_selected'), 'warning'); return; }
     const body = {kind, ref: D.ref || '', items};
@@ -3155,7 +3189,7 @@ Object.assign(LANGS.hr, {
   function closeModal() { const m = $('git-modal'); if (m) m.remove(); clearTimeout(runTimer); }
 
   let qTimer = null;
-  window.gitWorkspace = {
+  window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
     open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumUpload, mediumAction, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,

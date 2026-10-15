@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.4.3b</title>
+<title>Web Remote Manager PRO v12.4.4</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1106,7 +1106,7 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 #modal-settings .modal { width: 560px; }
 #modal-admin .modal { width: min(1080px, 96vw); height: min(88vh, 900px); display: flex; flex-direction: column; }
 #modal-admin .adm-body { flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px; }
-.adm-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.adm-toolbar { position:sticky;top:0;z-index:20;background:var(--bg2);max-height:40vh;overflow-y:auto;padding:6px 0;display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .adm-toolbar input, .adm-toolbar select { background: var(--bg); border: 1px solid var(--border2); color: var(--text); border-radius: 7px; padding: 6px 9px; font-size: 12px; outline: none; }
 .adm-toolbar .grow { flex: 1; }
 .admin-table td, .admin-table th { padding: 7px 8px; vertical-align: middle; }
@@ -1227,7 +1227,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .rp-head-btns { display: flex; gap: 4px; flex: none; }
 .rp-meta { font-size: 11.5px; color: var(--text2); display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .rp-meta b { color: var(--text); font-weight: 600; }
-.rp-screen { background: #0b0d12; border: 1px solid var(--border2); border-radius: 8px; padding: 8px; overflow: auto; min-height: 120px; flex: 1 1 auto; }
+.rp-screen { background: #0b0d12; border: 1px solid var(--border2); border-radius: 8px; padding: 8px; overflow: hidden auto; min-width: 0; min-height: 120px; flex: 1 1 auto; }
 .rp-screen .xterm { display: inline-block; transform-origin: 0 0; }
 .rp-screen .rp-scale { margin: 0 auto; position: relative; overflow: hidden; }
 .rp-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -1532,6 +1532,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="ctx-item" id="fm-ctx-edit-btn" onclick="fmCtxEdit()">📝 <span data-i18n="fm_edit">Edit</span></div>
   <div class="ctx-item" id="fm-ctx-dl-btn" onclick="fmCtxDownload()">📥 Download</div>
   <div class="ctx-item" data-perm="write" onclick="fmCtxTransfer()">⚡ <span data-i18n="fm_transfer_to">Transfer to Server</span></div>
+  <div class="ctx-item" id="fm-ctx-ai-btn" onclick="hideFmCtx();sendSelectionToAI(fmCtxState.winId,fmCtxState.path)">✦ <span data-i18n="ctx_ai">Send selection to AI</span></div>
   <div class="ctx-item" id="fm-ctx-term-btn" onclick="fmCtxTerminal()">⌨ <span data-i18n="fm_open_term_here">Open terminal here</span></div>
   <div class="ctx-item" onclick="fmCtxCopyPath()">📋 <span data-i18n="fm_copy_path">Copy path</span></div>
   <div class="ctx-sep"></div>
@@ -1546,7 +1547,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.4.3b · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.4.4 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1626,7 +1627,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.4.3b</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.4.4</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1640,6 +1641,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-tools" onclick="openTools()" title="Network tools"><span>🧰</span><span class="lbl" data-i18n="tools_lbl">Tools</span></button>
+      <button class="btn-top" id="btn-monitoring" onclick="openMonitoring()" title="Monitoring"><span>📊</span><span class="lbl" data-i18n="mon_title">Monitoring</span></button>
       <button class="btn-top" id="btn-git" onclick="openGit()" title="Git"><span>⎇</span><span class="lbl" data-i18n="git_lbl">Git</span></button>
       <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
@@ -2081,7 +2083,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="import_config">Import connections</div><div class="setting-desc" data-i18n="import_config_desc">Import from a JSON export</div></div>
-        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".json" onchange="importConfig(this)" style="display:none;"></label></div>
+        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".json,.xml,.config,.reg" onchange="importConfig(this)" style="display:none;"></label></div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="import_inventory">Import inventory (CSV, Excel, NetBox)</div><div class="setting-desc" data-i18n="import_inventory_desc">Server lists from a CSV or .xlsx file (you check the columns) or from NetBox, with tags for environment, site and rack, folders and a login from the vault.</div></div>
@@ -2089,7 +2091,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="import_mrng">Import from mRemoteNG</div><div class="setting-desc" data-i18n="import_mrng_desc">confCons.xml: folders, SSH, RDP, VNC, Telnet and web connections with passwords, SSH tunnel → jump host.</div></div>
-        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".xml" onchange="importExternal(this, 'mremoteng')" style="display:none;"></label></div>
+        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".xml,.config" onchange="importExternal(this, 'mremoteng')" style="display:none;"></label></div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="import_sshcfg">Import OpenSSH config</div><div class="setting-desc" data-i18n="import_sshcfg_desc">~/.ssh/config: hosts, users, ports, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.</div></div>
@@ -4774,6 +4776,8 @@ Object.assign(LANGS.hr, {
  po_git_medium_off:'Nitko', po_git_medium_admins:'Administratori', po_git_medium_all:'Svi računi', po_bitwarden_off:'Nitko', po_bitwarden_admins:'Administratori', po_bitwarden_all:'Svi računi', p_git_medium:'Izvorni Medium deploy tool', p_git_medium_d:'Tko smije koristiti izvorni deploy tool, uključujući lokalni build i uređivanje deploy naredbi. Dodijelite samo pouzdanim operaterima. Samo administratori mogu instalirati tool kod.', p_bitwarden:'Bitwarden vault konekcije', p_bitwarden_d:'Tko se smije prijaviti u vlastiti Bitwarden vault i koristiti njegove izvorne SSH key stavke.', p_bitwarden_idle_minutes:'Bitwarden neaktivnost otključavanja (minute)', p_bitwarden_idle_minutes_d:'Zaključava WRM Bitwarden sesiju nakon neaktivnosti. Master lozinke i otključane sesije ne spremaju se u bazu.', bw_refresh:'Osvježi ključeve', bw_key:'Bitwarden SSH ključ', bw_manage:'Prijava / otključavanje Bitwardena', bw_choose:'Odaberite SSH ključ', bw_cli_missing:'Instalirajte službeni Bitwarden CLI (bw) na WRM server. Vaš račun koristi odvojeni šifrirani CLI cache.', bw_docs:'Postavljanje Bitwarden CLI-ja', bw_help:'Prijavite se svojim Bitwarden računom i otključajte vault. Konekcije izravno dohvaćaju odabrani izvorni SSH ključ; WRM sprema njegovu referencu. Master lozinke se ne spremaju, a otključane sesije istječu nakon neaktivnosti ili restarta WRM-a.', bw_unlocked:'Vault otključan', bw_locked:'Vault zaključan', bw_signed_out:'Odjavljeno', bw_server:'Bitwarden server (cloud/EU/vlastiti)', bw_email:'E-mail', bw_master:'Master lozinka', bw_api_mfa:'Osobni API pristup / prijava u dva koraka', bw_api_hint:'Osobni API pristup i master lozinka mogu se koristiti kada e-mail prijava traži bot provjeru ili nepodržani MFA.', bw_mfa_method:'Način prijave u dva koraka', bw_mfa_code:'Kod prijave u dva koraka', bw_unlock:'Otključaj', bw_login:'Prijavi se i otključaj', bw_logout:'Odjavi se', bw_sync:'Sinkroniziraj vault', bw_lock:'Zaključaj vault', bw_no_keys:'U ovom vaultu nema izvornih SSH key stavki.',
 });
 
+Object.assign(LANGS.en, {ne_monitor_problem:'Monitoring: server needs attention',ne_monitor_recovered:'Monitoring: server recovered',ctx_ai:'Send selection to AI',ctx_review:'Review context before sending',ctx_question:'Question for the assistant',ctx_native:'Shift + right-click opens the browser menu. Clipboard shortcuts remain available.',ctx_paste_failed:'Clipboard unavailable; use Ctrl+Shift+V or the browser menu.',wrm_command_help:'Choose a server for WRM. The assistant uses its configured permissions; MCP apps use the servers in their own grant.',mon_title:'Monitoring',vl_title:'Color and icon', vl_color:'Color', vl_icon:'Icon', vl_default:'Default', vl_preview:'Preview', vl_server:'Server', vl_rack:'Rack', vl_network:'Network', vl_router:'Router', vl_switch:'Switch', vl_database:'Database', vl_storage:'Storage', vl_backup:'Backup', vl_security:'Security', vl_cloud:'Cloud', vl_monitoring:'Monitoring', vl_video:'Video / OTT', vl_broadcast:'Live broadcast', vl_encoder:'Encoder', vl_audio:'Audio', vl_terminal:'Terminal', vl_linux:'Linux', vl_windows:'Windows'});
+Object.assign(LANGS.hr, {ne_monitor_problem:'Monitoring: poslužitelj zahtijeva pažnju',ne_monitor_recovered:'Monitoring: poslužitelj oporavljen',ctx_ai:'Pošalji označeno AI-u',ctx_review:'Pregledaj kontekst prije slanja',ctx_question:'Upit za asistenta',ctx_native:'Shift + desni klik otvara izbornik preglednika. Tipkovnički prečaci ostaju dostupni.',ctx_paste_failed:'Međuspremnik nije dostupan; koristite Ctrl+Shift+V ili izbornik preglednika.',wrm_command_help:'Odaberite poslužitelj za WRM. Asistent koristi svoje ovlasti; MCP aplikacije koriste samo servere svojeg odobrenja.',mon_title:'Monitoring',vl_title:'Boja i ikona', vl_color:'Boja', vl_icon:'Ikona', vl_default:'Zadano', vl_preview:'Pregled', vl_server:'Poslužitelj', vl_rack:'Ormar', vl_network:'Mreža', vl_router:'Usmjerivač', vl_switch:'Preklopnik', vl_database:'Baza podataka', vl_storage:'Pohrana', vl_backup:'Sigurnosna kopija', vl_security:'Sigurnost', vl_cloud:'Oblak', vl_monitoring:'Nadzor', vl_video:'Video / OTT', vl_broadcast:'Prijenos uživo', vl_encoder:'Enkoder', vl_audio:'Zvuk', vl_terminal:'Terminal', vl_linux:'Linux', vl_windows:'Windows'});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5266,8 +5270,9 @@ function renderTree() {
     const folderWrap = document.createElement('div');
     const row = document.createElement('div');
     row.className = 'folder-row';
-    row.innerHTML = `<span class="folder-chevron ${filterActive || openFolderIds.has(f.id) ? 'open' : ''}">▶</span><span style="font-size:14px;">📁</span><span style="flex:1;">${esc(f.name)}</span>${f.jump_id || f.proxy_id ? `<span class="conn-route" title="${esc(t('fd_defaults') + ': ' + [f.jump_name, f.proxy_name].filter(Boolean).join(' → '))}">⤳</span>` : ''}${fDown ? `<span class="folder-down" title="${esc(t('st_folder_down').replace('{n}', fDown))}">${fDown}↓</span>` : ''}<button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
+    row.innerHTML = `<span class="folder-chevron ${filterActive || openFolderIds.has(f.id) ? 'open' : ''}">▶</span>${visualIconHTML(f.label,'📁')}<span style="flex:1;">${esc(f.name)}</span>${f.jump_id || f.proxy_id ? `<span class="conn-route" title="${esc(t('fd_defaults') + ': ' + [f.jump_name, f.proxy_name].filter(Boolean).join(' → '))}">⤳</span>` : ''}${fDown ? `<span class="folder-down" title="${esc(t('st_folder_down').replace('{n}', fDown))}">${fDown}↓</span>` : ''}<button class="folder-del" onclick="event.stopPropagation();delFolder(${f.id})">✕</button>`;
     row.draggable = true;
+    row.style.cssText += visualColorStyle(f.label);
     row.ondragstart = e => { e.stopPropagation(); e.dataTransfer.setData('folderId', String(f.id)); e.dataTransfer.effectAllowed = 'move'; };
     row.ondragend = () => { document.querySelectorAll('.folder-row.drag-over').forEach(el => el.classList.remove('drag-over')); };
     row.ondragover = e => { e.preventDefault(); row.classList.add('drag-over'); };
@@ -5359,7 +5364,7 @@ function renderTree() {
         const item = document.createElement('div');
         item.className = 'shared-conn-item';
         const proto = (c.protocol || 'SSH').toLowerCase();
-        item.innerHTML = `<span class="conn-proto-badge ${proto}">${esc(c.protocol)}</span><span class="conn-name">${esc(c.name)}</span>`;
+        item.innerHTML = `<span class="conn-proto-badge ${proto}">${esc(c.protocol)}</span>${visualIconHTML(c.label)}<span class="conn-name">${esc(c.name)}</span>`;
         item.title = (c.username ? c.username + '@' : '') + c.host;
         item.ondblclick = () => { closeDrawers(); openSharedConnection(c, sh.token, perms); };
         item.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = sh.token; showSharedCtx(e.clientX, e.clientY, c, perms); };
@@ -5388,10 +5393,11 @@ function makeConnItem(c) {
   const el = document.createElement('div');
   el.className = 'conn-item' + (selectedConns.has(c.id) ? ' selected' : '');
   el.draggable = true;
+  el.style.cssText += visualColorStyle(c.label);
   const proto = (c.protocol || 'SSH').toLowerCase();
   const tunRun = tunnelState.tunnels.filter(x => x.conn_id === c.id && x.running && !x.ephemeral).length;
   const st = connStatusOf(c);
-  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : (c.protocol === 'TELNET' ? 'TEL' : (c.protocol === 'SERIAL' ? 'COM' : c.protocol)))}</span><span class="conn-name">${esc(c.name)}</span>` + envPill(c) +
+  el.innerHTML = (st ? `<span class="conn-st ${statusClass(st)}"></span>` : '') + `<span class="conn-proto-badge ${proto}">${esc(isWebConn(c) ? 'WEB' : (c.protocol === 'TELNET' ? 'TEL' : (c.protocol === 'SERIAL' ? 'COM' : c.protocol)))}</span>${visualIconHTML(c.label)}<span class="conn-name">${esc(c.name)}</span>` + envPill(c) +
     (c.has_notes ? `<span class="conn-note" title="${esc(t('notes_title'))}" onclick="event.stopPropagation(); openNotes(${c.id})">📝</span>` : '') +
     (c.temporary ? `<span class="quick-act" title="${esc(t('quick_save'))}" onclick="event.stopPropagation(); openConnModal(${c.id})">💾</span><span class="quick-act" title="${esc(t('quick_remove'))}" onclick="event.stopPropagation(); removeQuick(${c.id})">✕</span>` : '') +
     (c.route ? `<span class="conn-route" title="${esc(t('via') + ' ' + c.route)}">⤳</span>` : '') +
@@ -5440,7 +5446,18 @@ function folderDescendants(id) {
   for (let n = 0; n < 32; n++) { const before = out.size; folders.forEach(f => { if (out.has(f.parent_id)) out.add(f.id); }); if (out.size === before) break; }
   return out;
 }
-function connLabel(c) { const path = folderPathLabel(c.folder_id) || c.folder_path || ''; return path ? path + ' / ' + c.name : c.name; }
+const visualGlyphs = {server:'🖥',rack:'🗄',network:'🌐',router:'🔀',switch:'🔗',database:'🛢',storage:'💾',backup:'📦',security:'🛡',cloud:'☁',monitoring:'📊',video:'🎬',broadcast:'📡',encoder:'⚙',audio:'🎧',terminal:'⌨',linux:'🐧',windows:'⊞'};
+function visualIconHTML(label, fallback) { const icon = label && visualGlyphs[label.icon]; return `<span title="${esc(icon ? t('vl_' + label.icon) : t('vl_default'))}" aria-label="${esc(icon ? t('vl_' + label.icon) : t('vl_default'))}">${icon || fallback || ''}</span>`; }
+function visualColorStyle(label) { return label && /^#[0-9a-f]{6}$/i.test(label.color) ? `border-left:4px solid ${label.color};` : ''; }
+function visualPicker(prefix, label) {
+  let box = document.getElementById(prefix + '-visual');
+  if (!box) { box = document.createElement('div'); box.id = prefix + '-visual'; box.className='field'; document.getElementById(prefix + '-name').closest('.field').after(box); }
+  box.innerHTML = `<label>${esc(t('vl_title'))}</label><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input type="color" id="${prefix}-color" aria-label="${esc(t('vl_color'))}" value="${label?.color || '#64748b'}" style="width:44px" oninput="document.getElementById('${prefix}-color-set').checked=true;visualPreview('${prefix}')"><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="${prefix}-color-set" ${label?.color ? 'checked':''} onchange="visualPreview('${prefix}')">${esc(t('vl_color'))}</label><select id="${prefix}-icon" style="flex:1;min-width:140px" onchange="visualPreview('${prefix}')"><option value="">${esc(t('vl_default'))}</option>${Object.entries(visualGlyphs).map(([k,v])=>`<option value="${k}" ${label?.icon===k?'selected':''}>${v} ${esc(t('vl_'+k))}</option>`).join('')}</select><button type="button" class="btn-sec" onclick="document.getElementById('${prefix}-color-set').checked=false;document.getElementById('${prefix}-icon').value='';visualPreview('${prefix}')">${esc(t('vl_default'))}</button></div><div id="${prefix}-visual-preview" style="margin-top:6px;padding:8px"></div>`;
+  visualPreview(prefix);
+}
+function visualValue(prefix) { return {color:document.getElementById(prefix+'-color-set').checked?document.getElementById(prefix+'-color').value:'',icon:document.getElementById(prefix+'-icon').value}; }
+function visualPreview(prefix) { const el=document.getElementById(prefix+'-visual-preview'), v=visualValue(prefix); el.style.cssText='margin-top:6px;padding:8px;'+visualColorStyle(v); el.innerHTML=visualIconHTML(v,'📁')+' '+esc(t('vl_preview')); }
+function connLabel(c) { const icon = c.label && visualGlyphs[c.label.icon] ? visualGlyphs[c.label.icon] + ' ' : ''; const path = folderPathLabel(c.folder_id) || c.folder_path || ''; return icon + (path ? path + ' / ' + c.name : c.name); }
 
 function refreshWindowConnectionTitle(wo) {
   const c = winConn(wo), title = document.getElementById('wt-' + wo.id);
@@ -5624,6 +5641,7 @@ function openConnModal(id, focusTunnels) {
   const c = id ? conns.find(x => x.id === id) : null;
   if (id && !c) return;
   document.getElementById('m-name').value = c ? c.name : '';
+ visualPicker('m',c?.label);
   document.getElementById('m-host').value = c ? c.host : '';
   document.getElementById('m-user').value = c ? c.username : '';
   document.getElementById('m-proto').value = c ? c.protocol : 'SSH';
@@ -5732,7 +5750,7 @@ function onCredPick() {
 }
 
 function connFormPayload() {
-  return {
+  return {label:visualValue('m'),
     options: document.getElementById('m-auth').value === 'BITWARDEN' ? {bitwarden_item:document.getElementById('m-bitwarden').value} : DESK_PROTOCOLS.includes(document.getElementById('m-proto').value) || document.getElementById('m-proto').value === 'SERIAL' ? readDeskOptions() : undefined,
     monitor: document.getElementById('m-monitor').checked,
     name: document.getElementById('m-name').value.trim(),
@@ -5858,6 +5876,7 @@ async function openFolderModal(id, parentId) {
   document.getElementById('f-id').value = f ? f.id : '';
   document.getElementById('f-title').textContent = f ? '📁 ' + f.name : t('fd_new_folder');
   document.getElementById('f-name').value = f ? f.name : '';
+ visualPicker('f',f?.label);
   const descendants = f ? folderDescendants(f.id) : new Set();
   const parent = document.getElementById('f-parent');
   parent.innerHTML = `<option value="">${esc(t('no_folder'))}</option>` + folders.filter(x => !descendants.has(x.id)).map(x => `<option value="${x.id}">${esc(folderPathLabel(x.id))}</option>`).join('');
@@ -5877,7 +5896,7 @@ async function saveFolder() {
   const id = Number(document.getElementById('f-id').value) || 0;
   const name = document.getElementById('f-name').value.trim();
   if (!name) return;
-  const body = {name, parent_id: Number(document.getElementById('f-parent').value) || null, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
+  const body = {name, label:visualValue('f'), parent_id: Number(document.getElementById('f-parent').value) || null, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
   const res = await fetch('/api/folders' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   if (res.ok) { closeModal('modal-folder'); showToast(id ? t('saved') : t('folder_created'), 'success'); loadData(); }
   else showToast(await apiError(res), 'error', 6000);
@@ -6831,7 +6850,7 @@ function replayFit() {
   const fs = document.querySelector('#modal-replay .replay-modal').classList.contains('rp-fs');
   let s = availW / w;
   s = fs ? Math.min(s, availH / h, 4) : Math.min(s, 1);
-  s = Math.max(s, 0.1);
+  s = Math.max(s, Number.EPSILON);
   replay.term.element.style.transform = `scale(${s})`;
   wrap.style.width = Math.floor(w * s) + 'px';
   wrap.style.height = Math.floor(h * s) + 'px';
@@ -7274,7 +7293,7 @@ async function importExternal(input, kind, password) {
     let bin = '';
     for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
     text = btoa(bin);
-  } else if (file) text = await file.text();
+  } else if (file) { const bytes=new Uint8Array(await file.arrayBuffer()); text=new TextDecoder(bytes[0]===255&&bytes[1]===254?'utf-16le':'utf-8').decode(bytes).replace(/^\uFEFF/,''); }
   if (input.files) input.value = '';
   if (!text) return;
   const body = kind === 'mremoteng' ? {xml: text, password: password || ''} : kind === 'putty' ? {data: text} : {text, folder: ''};
@@ -7419,18 +7438,20 @@ let toolsTab = 'ports';
 
 // Git workspace: its code (static/git.js) is loaded the first time it is opened.
 let gitLoading = null;
-function openGit() {
-  closeDrawers();
-  if (window.gitWorkspace) { window.gitWorkspace.open(); return; }
-  if (!gitLoading) gitLoading = new Promise((ok, fail) => {
-    const s = document.createElement('script');
-    s.src = '/static/git.js';
-    s.onload = ok;
-    s.onerror = () => { gitLoading = null; fail(); };
-    document.head.appendChild(s);
-  });
-  gitLoading.then(() => window.gitWorkspace.open(), () => showToast(t('git_load_failed'), 'error'));
+function loadGitModule() {
+ if (window.gitWorkspace && window.gitClient) return Promise.resolve();
+ if (!gitLoading) gitLoading=new Promise((ok,fail)=>{const script=document.createElement('script');script.src='/static/git.js';script.onload=()=>{const client=document.createElement('script');client.src='/static/git_client.js';client.onload=ok;client.onerror=fail;document.head.appendChild(client)};script.onerror=()=>{gitLoading=null;fail(new Error(t('git_load_failed')))};document.head.appendChild(script)});
+ return gitLoading;
 }
+let monitoringLoading=null;
+function openMonitoring(tab) {
+ window.gitWorkspace?.close();
+ closeDrawers();
+ if (window.wrmMonitoring) return window.wrmMonitoring.open(tab);
+ if(!monitoringLoading)monitoringLoading=new Promise((ok,fail)=>{const script=document.createElement('script');script.src='/static/monitoring.js';script.onload=ok;script.onerror=()=>{monitoringLoading=null;fail(new Error(t('git_load_failed')))};document.head.appendChild(script)});
+ monitoringLoading.then(()=>window.wrmMonitoring.open(tab)).catch(e=>showToast(e.message,'error'));
+}
+function openGit(){closeDrawers();loadGitModule().then(()=>window.gitWorkspace.open()).catch(e=>showToast(e.message,'error'));}
 
 // AI assistant: its code (static/ai.js) is loaded the first time it is used.
 let aiLoading = null;
@@ -8861,7 +8882,7 @@ async function openGuacReplay(id, meta) {
     const disp = rec.getDisplay();
     screen.innerHTML = '<div class="guac-holder"></div>';
     screen.firstChild.appendChild(disp.getElement());
-    const fit = () => { const w = disp.getWidth(), h = disp.getHeight(); if (w && h) disp.scale(Math.min(screen.clientWidth / w, (screen.clientHeight || 480) / h, 1)); };
+    const fit = () => { const w=disp.getWidth(),h=disp.getHeight(),cs=getComputedStyle(screen),aw=screen.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),ah=screen.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);if(w&&h)disp.scale(Math.min(aw/w,(ah||480)/h,1)); };
     disp.onresize = fit;
     replay.guacFit = fit;
     const upd = () => {
@@ -10240,6 +10261,7 @@ function updateSortBar(winId) {
 let fmCtxState = {winId: null, path: null, isDir: false};
 
 function showFmCtx(e, winId, path, isDir, size) {
+  if(e.shiftKey)return;
   e.preventDefault(); e.stopPropagation();
   closeAllCtx();
   fmCtxState = {winId, path, isDir, size: size || 0};
@@ -10248,6 +10270,7 @@ function showFmCtx(e, winId, path, isDir, size) {
   const wo = winObjects.find(w => w.id === winId);
   const c = winConn(wo);
   const nSel = wo && wo.selected ? wo.selected.size : 1;
+  document.getElementById('fm-ctx-ai-btn').style.display=!isDir&&aiAvailable(wo,wo.mode)?'':'none';
   document.getElementById('fm-ctx-preview-btn').style.display = !isDir ? '' : 'none';
   document.getElementById('fm-ctx-open-btn').style.display = isDir ? '' : 'none';
   document.getElementById('fm-ctx-edit-btn').style.display = !isDir && isEditable({name: path.split('/').pop(), size: size || 0, is_dir: false}) ? '' : 'none';
@@ -10500,6 +10523,8 @@ function setupSSH(wo) {
   hideTermOverlay(wo);
   fitTerm(wo);
   const qs = new URLSearchParams({id: wo.connId, cols: wo.term.cols, rows: wo.term.rows});
+  if (wo.pendingCwd) {qs.set('cwd',wo.pendingCwd);wo.pendingCwd=null;}
+  if (wo.pendingLogPath) {qs.set('log_path',wo.pendingLogPath);wo.pendingLogPath=null;}
   if (wo.shareToken) qs.set('share_token', wo.shareToken);
   if (wo.console) qs.set('console', wo.console);
   if (wo.el) wo.el.classList.toggle('console', !!wo.console);
@@ -10535,10 +10560,7 @@ function handleTermControl(wo, m) {
     // PTY might have been created before the last fit — make sure the server knows.
     fitTerm(wo);
     sendTermResize(wo, wo.term.cols, wo.term.rows, true);
-    if (wo.pendingCwd) {
-      termSend(wo, 'cd -- ' + shellQuoteJS(wo.pendingCwd) + '\r');
-      wo.pendingCwd = null;
-    }
+
     if (bcast.on && bcast.ids.has(wo.id)) { sendTermCtl(wo, {type: 'broadcast', on: true, peers: bcast.ids.size}); renderBroadcastUI(); }
     try { if (wo.el.classList.contains('focused')) wo.term.focus(); } catch(_) {}
   } else if (m.type === 'status' && m.state === 'connecting') {
@@ -12474,13 +12496,21 @@ function selectedTerminalPath(wo) {
   return value;
 }
 function showTerminalPathMenu(e, wo) {
-  const value = selectedTerminalPath(wo);
-  if (!value || wo.console || !winCan(wo,'files_read')) return;
-  e.preventDefault(); e.stopPropagation(); closeAllCtx(); wo._selectedPath = value;
-  const menu = document.getElementById('dyn-ctx-menu');
-  menu.innerHTML = `<div class="ctx-section" style="max-width:300px;overflow:hidden;text-overflow:ellipsis">${esc(value)}</div><div class="ctx-item" onclick="terminalPathAction(${wo.id},'preview')">▶ ${esc(t('pv_selected'))}</div><div class="ctx-item" onclick="terminalPathAction(${wo.id},'download')">📥 ${esc(t('pv_download'))}</div>`;
+  if(e.shiftKey || e.target.closest('input,textarea,[contenteditable=true]'))return;
+  if(wo.console)return;
+  const value=selectedTerminalPath(wo),selection=(wo.term?.getSelection()||'').slice(0,8192);
+  e.preventDefault();e.stopPropagation();closeAllCtx();wo._selectedPath=value;
+  const menu=document.getElementById('dyn-ctx-menu');
+  menu.innerHTML=`${value&&winCan(wo,'files_read')?`<div class="ctx-item" onclick="terminalPathAction(${wo.id},'preview')">▶ ${esc(t('pv_selected'))}</div><div class="ctx-item" onclick="terminalPathAction(${wo.id},'download')">📥 ${esc(t('pv_download'))}</div>`:''}<div class="ctx-item" onclick="closeAllCtx();terminalClipboard(${wo.id},'copy')">${esc(t('copy'))}</div><div class="ctx-item" onclick="closeAllCtx();terminalClipboard(${wo.id},'paste')">${esc(t('paste'))}</div><div class="ctx-item" onclick="closeAllCtx();terminalHere(${wo.id})">⌨ ${esc(t('fm_open_term_here'))}</div>${selection&&aiAvailable(wo,wo.mode)?`<div class="ctx-item" onclick="closeAllCtx();sendSelectionToAI(${wo.id})">✦ ${esc(t('ctx_ai'))}</div>`:''}<div class="ctx-section" style="max-width:260px;white-space:normal">${esc(t('ctx_native'))}</div>`;
   showCtx('dyn-ctx-menu',e.clientX,e.clientY);
 }
+async function terminalClipboard(id,action){const wo=winObjects.find(x=>x.id===id);if(!wo)return;if(action==='copy'){copyText(wo.term?.getSelection()||'');return}try{const text=await navigator.clipboard.readText();if(text&&winCan(wo,'terminal')){wo.term.paste(text);wo.term.focus()}}catch(e){showToast(t('ctx_paste_failed'),'warning')}}
+async function terminalHere(id){const wo=winObjects.find(x=>x.id===id);if(!wo||!guardWin(wo,'terminal'))return;let path=wo.cwd;const selection=selectedTerminalPath(wo);if(selection){let candidate=selection;if(!candidate.startsWith('/')){const cwd=await termAskCwd(wo);candidate=joinPath(cwd.path||wo.cwd||'/',candidate)}const r=await fetch('/api/remote/list?'+connQS(wo)+'&path='+encodeURIComponent(candidate));if(r.ok)path=candidate;}if(!path){const cwd=await termAskCwd(wo);path=cwd.path}if(!path){showToast(t('pv_select_path'),'warning');return}openTerminalAt(id,path)}
+async function sendSelectionToAI(id,filePath){const wo=winObjects.find(x=>x.id===id);if(!wo||!aiAvailable(wo,wo.mode))return;const selection=(wo.term?.getSelection()||'').slice(0,8192);const res=await fetch('/api/ai/context?'+connQS(wo),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(filePath?{path:filePath}:{text:selection})});if(!res.ok){showToast(await apiError(res),'error');return}const context=await res.json();if(!context.text)return;const question=await uiPrompt(t('ctx_question'),'',{message:t('ctx_review')+'\n'+connLabel(winConn(wo))+'\n'+(context.path||wo.cwd||'')+'\n\n'+context.text,okText:t('ctx_ai')});if(!question)return;await loadAI();await wrmAI.queueContext(id,question+'\n<untrusted_selected_context>\n'+JSON.stringify({server:connLabel(winConn(wo)),directory:wo.cwd||wo.path||'',path:context.path,text:context.text})+'\n</untrusted_selected_context>');}
+
+async function openWRMCommand(){const candidates=(isCollabMode?collabConns:conns).filter(c=>['SSH','SFTP'].includes(c.protocol));const response=await fetch('/api/ai/servers'+(isCollabMode?'?share_token='+encodeURIComponent(collab.token):''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conn_ids:candidates.map(c=>c.id)})});if(!response.ok){showToast(await apiError(response),'error');return;}const list=await response.json();document.getElementById('wrm-command-modal')?.remove();const m=document.createElement('div');m.id='wrm-command-modal';m.className='modal-overlay open';m.style.zIndex=9800;m.innerHTML=`<div class="modal" style="width:min(560px,calc(100vw - 24px))"><h3>/wrm server</h3><p>${esc(t('wrm_command_help'))}</p><select id="wrm-command-server" style="width:100%">${list.map(c=>`<option value="${c.id}">${esc(connLabel(c))} · ${esc(c.host)}</option>`).join('')}</select><div class="modal-footer"><button class="btn-sec" onclick="document.getElementById('wrm-command-modal').remove()">${esc(t('cancel'))}</button><button onclick="chooseWRMServer()">${esc(t('ok'))}</button></div></div>`;document.body.appendChild(m)}
+function chooseWRMServer(){const id=Number(document.getElementById('wrm-command-server').value);if(!id)return;document.getElementById('wrm-command-modal').remove();const wo=addWindow();wo.connId=id;if(isCollabMode){wo.shareToken=collab.token;wo.perms=collab.perms}setWinMode(wo.id,'ssh');loadAI().then(()=>wrmAI.toggle(wo.id))}
+
 async function terminalPathAction(winId, action) {
   closeAllCtx();
   const wo = winObjects.find(w => w.id === winId);
@@ -13514,7 +13544,11 @@ async function importConfig(input) {
   const file = input.files[0];
   if (!file) return;
   if (importFileTooBig(file)) { input.value = ''; return; }
-  const text = await file.text();
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const utf16 = bytes[0] === 255 && bytes[1] === 254;
+  const text = new TextDecoder(utf16 ? 'utf-16le' : 'utf-8').decode(bytes).replace(/^\uFEFF/, '');
+  if (/^\s*(?:<\?xml[^>]*>\s*)?<(?:[A-Za-z_][\w.-]*:)?Connections\b/i.test(text)) return importExternal(input, 'mremoteng');
+  if (/^\s*(?:Windows Registry Editor|REGEDIT4)/i.test(text) || /\.reg$/i.test(file.name)) return importExternal(input, 'putty');
   input.value = '';
   let data; try { data = JSON.parse(text); } catch(_) { showToast(t('invalid_json'), 'error'); return; }
   const res = await fetch('/api/config/import', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
@@ -13640,7 +13674,7 @@ function renderCollabTree() {
     const item = document.createElement('div');
     item.className = 'conn-item';
     const proto = (c.protocol || 'SSH').toLowerCase();
-    item.innerHTML = `<span class="conn-proto-badge ${proto}">${esc(c.protocol)}</span><span class="conn-name">${esc(c.name)}</span><span class="conn-host">${esc(c.host)}</span>`;
+    item.innerHTML = `<span class="conn-proto-badge ${proto}">${esc(c.protocol)}</span>${visualIconHTML(c.label)}<span class="conn-name">${esc(c.name)}</span><span class="conn-host">${esc(c.host)}</span>`;
     item.title = (c.username ? c.username + '@' : '') + c.host;
     item.ondblclick = () => { closeDrawers(); openSharedConnection(c, collabToken, collab.perms); };
     item.onclick = () => { if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) item.ondblclick(); };

@@ -44,8 +44,10 @@ type gitFunctionality struct {
 }
 
 type gitServerHealth struct {
-	ConnID int    `json:"conn_id"`
-	Name   string `json:"name"`
+	Hostname string `json:"hostname"`
+	Folder   string `json:"folder"`
+	ConnID   int    `json:"conn_id"`
+	Name     string `json:"name"`
 	gitFunctionality
 }
 
@@ -357,7 +359,7 @@ func checkGitServerHealth(userID, connID int, cl *ssh.Client) {
 }
 func loadGitServerHealth(userID int) []gitServerHealth {
 	out := []gitServerHealth{}
-	rows, err := db.Query(`SELECT h.conn_id,c.name,h.data FROM git_server_health h JOIN connections c ON c.id=h.conn_id AND c.user_id=h.user_id WHERE h.user_id=? ORDER BY c.name`, userID)
+	rows, err := db.Query(`SELECT h.conn_id,c.name,h.data,COALESCE((SELECT hostname FROM git_hostnames WHERE conn_id=c.id),c.host),c.folder_id FROM git_server_health h JOIN connections c ON c.id=h.conn_id AND c.user_id=h.user_id WHERE h.user_id=? ORDER BY c.name`, userID)
 	if err != nil {
 		return out
 	}
@@ -365,7 +367,9 @@ func loadGitServerHealth(userID int) []gitServerHealth {
 	for rows.Next() {
 		var h gitServerHealth
 		var data string
-		if rows.Scan(&h.ConnID, &h.Name, &data) == nil {
+		var folder *int
+		if rows.Scan(&h.ConnID, &h.Name, &data, &h.Hostname, &folder) == nil {
+			h.Folder = folderPathOf(userID, folder)
 			json.Unmarshal([]byte(data), &h.gitFunctionality)
 			out = append(out, h)
 		}

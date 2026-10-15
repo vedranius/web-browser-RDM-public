@@ -108,6 +108,7 @@ type gitStepLog struct {
 // gitRunItem is one installation of a run: the request (install_id, files, modified_ok,
 // backup) and its result.
 type gitRunItem struct {
+	ReviewID    string       `json:"review_id,omitempty"`
 	InstallID   int          `json:"install_id"`
 	Files       []string     `json:"files,omitempty"`
 	ModifiedOK  []string     `json:"modified_ok,omitempty"`
@@ -436,14 +437,41 @@ func createGitRun(r *http.Request, userID int, p gitRunParams) (int, int, error)
 		for app := range apps {
 			var t gitTarget
 			var ok bool
-			if p.Kind == "upgrade" {
-				var err error
-				if t, err = upgradeTarget(userID, cat, st, app, p.Ref); err != nil {
-					return 0, 400, err
+
+			var reviewed *gitTarget
+			for _, item := range p.Items {
+				if item.App != app {
+					continue
 				}
+				if item.ReviewID == "" {
+					current, _ := loadGitTarget(userID, app)
+					if loadGitRelayMeta(current.SourceID).Enabled || loadGitRelayMeta(st.SourceID).Enabled {
+						return 0, 409, fmt.Errorf("client-cache deployment requires a reviewed plan; review again")
+					}
+					continue
+				}
+				original, err := loadGitReview(userID, item.InstallID, p.Kind, p.Ref, item.ReviewID)
+				if err != nil {
+					return 0, 409, err
+				}
+				if reviewed != nil && reviewedContentHash(*reviewed) != reviewedContentHash(original) {
+					return 0, 409, fmt.Errorf("installations were reviewed against different targets; review together again")
+				}
+				reviewed = &original
+			}
+			if reviewed != nil {
+				t = *reviewed
 				ok = true
 			} else {
-				t, ok = loadGitTarget(userID, app)
+				if p.Kind == "upgrade" {
+					var err error
+					if t, err = upgradeTarget(userID, cat, st, app, p.Ref); err != nil {
+						return 0, 400, err
+					}
+					ok = true
+				} else {
+					t, ok = loadGitTarget(userID, app)
+				}
 			}
 			if !ok || t.Error != "" || len(t.Files) == 0 {
 				return 0, 400, fmt.Errorf("%s: no target yet (refresh the targets)", app)
@@ -600,6 +628,7 @@ func upgradeTarget(userID int, cat *gitCatalog, st gitSettings, app, ref string)
 // ─── plan ────────────────────────────────────────────
 
 type gitPlanItem struct {
+	ReviewID       string          `json:"review_id,omitempty"`
 	InstallID      int             `json:"install_id"`
 	ConnName       string          `json:"conn_name"`
 	App            string          `json:"app"`
@@ -676,6 +705,11 @@ func gitPlan(userID int, kind, ref string, ids []int) ([]gitPlanItem, error) {
 		}
 		b := t.brief()
 		pi.Target = &b
+		review, reviewErr := storeGitReview(userID, in.ID, kind, ref, t)
+		if reviewErr != nil {
+			return nil, reviewErr
+		}
+		pi.ReviewID = review
 		if kind != "stamp" {
 			if pl, ci := loadGitPipeline(userID, in.App); ci {
 				pi.Pipeline = &pl

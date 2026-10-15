@@ -36,16 +36,19 @@ const (
 )
 
 type gitSource struct {
-	ID            int    `json:"id"`
-	Kind          string `json:"kind"` // gitlab | github | gitea | bundle
-	Name          string `json:"name"`
-	URL           string `json:"url"`
-	HasToken      bool   `json:"has_token"`
-	HasWriteToken bool   `json:"has_write_token"`
-	HookID        string `json:"hook_id,omitempty"` // incoming webhook: /api/hooks/git/<hook_id>
-	HookAt        string `json:"hook_at,omitempty"` // last accepted webhook
-	CreatedAt     string `json:"created_at"`
-	LastError     string `json:"last_error,omitempty"`
+	ViewerID      int           `json:"-"`
+	Owned         bool          `json:"owned"`
+	Relay         *gitRelayMeta `json:"client_cache,omitempty"`
+	ID            int           `json:"id"`
+	Kind          string        `json:"kind"` // gitlab | github | gitea | bundle
+	Name          string        `json:"name"`
+	URL           string        `json:"url"`
+	HasToken      bool          `json:"has_token"`
+	HasWriteToken bool          `json:"has_write_token"`
+	HookID        string        `json:"hook_id,omitempty"` // incoming webhook: /api/hooks/git/<hook_id>
+	HookAt        string        `json:"hook_at,omitempty"` // last accepted webhook
+	CreatedAt     string        `json:"created_at"`
+	LastError     string        `json:"last_error,omitempty"`
 	// bundles
 	BundleID   string   `json:"bundle_id,omitempty"`
 	Created    string   `json:"created,omitempty"`
@@ -58,7 +61,7 @@ type gitSource struct {
 
 func loadGitSources(userID int) []gitSource {
 	out := []gitSource{}
-	rows, err := db.Query(`SELECT id, kind, name, url, token, info, created_at, last_error, write_token, hook_id, hook_at FROM git_sources WHERE user_id=? ORDER BY kind='bundle', id`, userID)
+	rows, err := db.Query(`SELECT id, kind, name, url, token, info, created_at, last_error, write_token, hook_id, hook_at, user_id FROM git_sources s WHERE user_id=? OR EXISTS(SELECT 1 FROM git_relay_members m JOIN git_relay_meta r ON r.source_id=m.source_id WHERE m.source_id=s.id AND m.user_id=? AND r.enabled=1) ORDER BY kind='bundle', id`, userID, userID)
 	if err != nil {
 		return out
 	}
@@ -66,10 +69,22 @@ func loadGitSources(userID int) []gitSource {
 	for rows.Next() {
 		var s gitSource
 		var tok, info string
-		rows.Scan(&s.ID, &s.Kind, &s.Name, &s.URL, &tok, &info, &s.CreatedAt, &s.LastError, &s.writeToken, &s.HookID, &s.HookAt)
+		var owner int
+		rows.Scan(&s.ID, &s.Kind, &s.Name, &s.URL, &tok, &info, &s.CreatedAt, &s.LastError, &s.writeToken, &s.HookID, &s.HookAt, &owner)
 		s.HasToken = tok != ""
 		s.HasWriteToken = s.writeToken != ""
 		s.token = tok
+		s.Owned = owner == userID
+		s.ViewerID = userID
+		meta := loadGitRelayMeta(s.ID)
+		if meta.Enabled {
+			meta.Live = liveGitRelay(s.ID, meta.Published) != nil
+			s.Relay = &meta
+			s.token = ""
+			s.writeToken = ""
+			s.HasToken = false
+			s.HasWriteToken = false
+		}
 		if s.Kind == "bundle" {
 			var m gitBundleManifest
 			if json.Unmarshal([]byte(info), &m) == nil {
@@ -122,7 +137,7 @@ type gitProvider struct {
 func gitAPIBase(kind, raw string) (string, error) {
 	raw = strings.TrimRight(strings.TrimSpace(raw), "/")
 	u, err := url.Parse(raw)
-	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
+	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
 		return "", fmt.Errorf("enter the address of the Git server (https://…)")
 	}
 	if strings.Contains(u.Path, "/api/") {
@@ -147,6 +162,10 @@ func newGitProvider(s gitSource) (*gitProvider, error) {
 	api, err := gitAPIBase(s.Kind, s.URL)
 	if err != nil {
 		return nil, err
+	}
+	meta := loadGitRelayMeta(s.ID)
+	if meta.Enabled {
+		return &gitProvider{kind: s.Kind, api: api, client: &http.Client{Transport: &gitRelayTransport{Source: s.ID, UserID: s.ViewerID, Generation: meta.Published, API: api}}}, nil
 	}
 	u, _ := url.Parse(api)
 	tr := http.DefaultTransport.(*http.Transport).Clone()
@@ -210,6 +229,12 @@ func (p *gitProvider) do(req *http.Request, accept string) (*http.Response, erro
 	p.mu.Unlock()
 	resp, err := p.client.Do(req)
 	if err != nil {
+		if _, relay := p.client.Transport.(*gitRelayTransport); relay {
+			if wrapped, ok := err.(*url.Error); ok {
+				err = wrapped.Err
+			}
+			return nil, fmt.Errorf("Client GitLab cache: %s", truncateStr(err.Error(), 500))
+		}
 		return nil, fmt.Errorf("cannot reach the Git server: %s", shortNetError(err))
 	}
 	if resp.StatusCode/100 != 2 {
@@ -558,6 +583,32 @@ func (p *gitProvider) blob(project, sha string) ([]byte, error) {
 // projects lists the projects of groups (GitLab, with subgroups) or organisations / users
 // (GitHub). Without groups: the projects the token is a member of.
 func (p *gitProvider) projects(groups []string) ([]string, error) {
+	if relay, ok := p.client.Transport.(*gitRelayTransport); ok && relay.Job == nil {
+		if !relaySourceAllowed(relay.UserID, relay.Source) {
+			return nil, fmt.Errorf("shared source access removed")
+		}
+		meta := loadGitRelayMeta(relay.Source)
+		res, found := relayCached(relay.Source, meta.Published, "/_wrm/projects")
+		if !found {
+			return nil, fmt.Errorf("connect a client to synchronize catalog repositories first")
+		}
+		var projects []string
+		json.Unmarshal(res.Body, &projects)
+		if len(groups) == 0 {
+			return projects, nil
+		}
+		out := []string{}
+		for _, p := range projects {
+			for _, g := range groups {
+				if strings.HasPrefix(p, strings.TrimSuffix(g, "/")+"/") {
+					out = append(out, p)
+					break
+				}
+			}
+		}
+		return out, nil
+	}
+
 	seen := map[string]bool{}
 	out := []string{}
 	add := func(raw json.RawMessage) (int, error) {
@@ -792,6 +843,9 @@ func computeTarget(p *gitProvider, src gitSource, cat *gitCatalog, a gitCatalogA
 	t := gitTarget{App: a.Name, SourceID: src.ID, Source: src.Kind + ":" + src.URL, Project: a.Project, Subdir: a.Subdir, Kind: a.Kind,
 		Protected: a.Protected, Fingerprint: a.Fingerprint, InstallHint: a.InstallHint, Exclude: a.Exclude, Include: a.Include,
 		Files: map[string]gitTargetFile{}, Warnings: []string{}, ComputedAt: nowStamp()}
+	if src.Relay != nil {
+		t.Warnings = append(t.Warnings, fmt.Sprintf("Client GitLab snapshot #%d, refreshed %s by %s. %s", src.Relay.Published, src.Relay.At, src.Relay.Contributor, map[bool]string{true: "Cache is older than 24 hours; refresh from an authorized client before choosing a newer deployment.", false: "Deployments use the reviewed immutable content; live GitLab writes require a direct source."}[src.Relay.Stale]))
+	}
 	fail := func(err error) gitTarget {
 		t.Error = err.Error()
 		t.APICalls = p.calls

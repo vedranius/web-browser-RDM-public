@@ -98,6 +98,8 @@ func initGitSchema() {
 		last_ok_state TEXT NOT NULL DEFAULT '')`,
 		"id", "user_id", "conn_id", "app", "path", "env", "manual", "state", "data", "checked_at", "discovered_at", "last_ok_at", "last_ok_state")
 	mustExec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_git_installs_path ON git_installs(user_id, conn_id, path)`)
+	initGitRelay()
+	initGitReview()
 	initGitFunctionalitySchema()
 	initGitRunsSchema()
 	initGitCISchema()
@@ -128,7 +130,9 @@ func restoreSetAsideGitSources() {
 
 func deleteGitUserData(userID int) {
 	for _, s := range loadGitSources(userID) {
-		deleteGitSource(s.ID)
+		if s.Owned {
+			deleteGitSource(s.ID)
+		}
 	}
 	db.Exec(`DELETE FROM git_server_health WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_workspace WHERE user_id=?`, userID)
@@ -576,7 +580,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return true
 	}
-	if apiGitConfigProfiles(w, r, userID, rest) || apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitActivity(w, r, userID, rest) || apiGitWhere(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
+	if apiGitRelay(w, r, userID, rest) || apiGitConfigProfiles(w, r, userID, rest) || apiGitJobs(w, r, userID, rest) || apiGitEnv(w, r, userID, rest) || apiGitActivity(w, r, userID, rest) || apiGitWhere(w, r, userID, rest) || apiGitDeploy(w, r, userID, rest, parts) || apiGitIgnore(w, r, userID, rest, parts) || apiGitCI(w, r, userID, rest, parts) {
 		return
 	}
 	switch {
@@ -725,29 +729,41 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			id, _ := strconv.Atoi(parts[1])
 			src, found := loadGitSource(userID, id)
-			if !found || src.Kind == "bundle" {
+			if !found || !src.Owned || src.Kind == "bundle" {
 				jsonError(w, "Source not found", 404)
 				return
 			}
-			db.Exec(`UPDATE git_sources SET kind=?, name=?, url=? WHERE id=?`, in.Kind, truncateStr(in.Name, 100), in.URL, id)
+			tx, err := db.Begin()
+			if err != nil {
+				jsonError(w, "Cannot update source", 500)
+				return
+			}
+			defer tx.Rollback()
+			tx.Exec(`UPDATE git_sources SET kind=?, name=?, url=? WHERE id=?`, in.Kind, truncateStr(in.Name, 100), in.URL, id)
 			if in.Token != nil {
 				tok := ""
 				if t := strings.TrimSpace(*in.Token); t != "" {
 					tok = encryptValue(t)
 				}
-				db.Exec(`UPDATE git_sources SET token=? WHERE id=?`, tok, id)
+				tx.Exec(`UPDATE git_sources SET token=? WHERE id=?`, tok, id)
 			}
 			if in.WriteToken != nil {
 				wtok := ""
 				if t := strings.TrimSpace(*in.WriteToken); t != "" {
 					wtok = encryptValue(t)
 				}
-				db.Exec(`UPDATE git_sources SET write_token=? WHERE id=?`, wtok, id)
+				tx.Exec(`UPDATE git_sources SET write_token=? WHERE id=?`, wtok, id)
 			}
-			if in.URL != src.URL {
+			if in.URL != src.URL || in.Kind != src.Kind {
 				// a different server: cached trees and blobs belong to the old one
-				db.Exec(`DELETE FROM git_blobs WHERE source_id=?`, id)
-				db.Exec(`DELETE FROM git_trees WHERE source_id=?`, id)
+				tx.Exec(`UPDATE git_relay_meta SET enabled=CASE WHEN ?='gitlab' THEN enabled ELSE 0 END,published=0,error='Source address changed; synchronize again' WHERE source_id=?`, in.Kind, id)
+				tx.Exec(`DELETE FROM git_relay_cache WHERE source_id=?`, id)
+				tx.Exec(`DELETE FROM git_blobs WHERE source_id=?`, id)
+				tx.Exec(`DELETE FROM git_trees WHERE source_id=?`, id)
+			}
+			if err := tx.Commit(); err != nil {
+				jsonError(w, "Cannot update source", 500)
+				return
 			}
 			auditLog(r, userID, "git.source_changed", in.Name, map[string]interface{}{"kind": in.Kind, "url": in.URL, "source_id": id, "new_secret": in.Token != nil,
 				"new_write_secret": in.WriteToken != nil})
@@ -757,7 +773,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 	case len(parts) == 2 && parts[0] == "sources" && r.Method == http.MethodDelete:
 		id, _ := strconv.Atoi(parts[1])
 		src, found := loadGitSource(userID, id)
-		if !found {
+		if !found || !src.Owned {
 			jsonError(w, "Source not found", 404)
 			return
 		}
