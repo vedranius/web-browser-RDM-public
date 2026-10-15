@@ -414,7 +414,8 @@ func TestMCPApprovalRoundTripAndDestructiveBlock(t *testing.T) {
 		t.Fatalf("a denied command ran: %s", out)
 	}
 	// the AI is told where it was refused and to ask the user before trying again
-	if !strings.Contains(out, "denied this action in WRM") || !strings.Contains(out, "ask whether to continue") {
+	if !strings.Contains(out, "denied this action in WRM") || !strings.Contains(out, "ask whether to continue") || !strings.Contains(out, "WRM asked the user because") ||
+		!strings.Contains(out, "(rule ask)") || !strings.Contains(out, "Settings → AI connections") {
 		t.Fatalf("denial message: %s", out)
 	}
 }
