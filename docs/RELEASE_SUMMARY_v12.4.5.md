@@ -8,7 +8,7 @@ Combined retained ZIP setup and automatic original Medium launch; installed-Dock
 
 ## Evidence
 
-- Go regressions: automatic service/operator discovery through real SFTP, non-log/symlink exclusion, modification/event times, invalid time ranges, settings-bound catalog invalidation, continuation timestamps, retained ZIPs after setup failure, lock release and ready Docker requiring no host changes.
+- Go regressions: automatic service/operator discovery through real SFTP, non-log/symlink exclusion, modification/event times, invalid time ranges, settings-bound catalog invalidation, continuation timestamps, retained ZIPs after setup failure, lock release, active-runtime setup protection and ready Docker requiring no host changes.
 - Node regressions: progressive discovery/errors, multi-segment cross-file search, bounded continuation, zero-progress/incomplete events, cancellation/tab isolation and combined environment filters; existing UI/Git/AI/wrapper checks.
 - Real Chromium: automatic discovery from three fake SSH servers, date/keyword search across two files, visible modification/event times, result panel/tab isolation, complete sticky Overview/Installations controls at 390/1100/1440/1920, combined environment filters.
 - Original private tool ZIP plus generic config ZIP through the combined form: one click prepared the pinned Linux Docker runtime, validated config, synchronized user volume and started the original authenticated application/iframe. No original source was changed/published.
