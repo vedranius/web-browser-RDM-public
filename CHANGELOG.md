@@ -1,3 +1,17 @@
+## [12.5.0] - 2026-10-15
+
+### Added
+- **Stamp as it is:** the Stamp dialog lists differing files per installation and explains why nothing can be stamped (instead of "No files are selected"). An option stamps installations that are not up to date: VERSION.md records each file's actual version and a `Napomena` note.
+- **Back navigation in dialogs:** Git dialogs opened from another dialog return to it with **← Back** (Alt+←), keeping ticks and typed values. Settings → Inventory/Admin panel and Tunnels → Edit connection return to their opener.
+- **Medium forced stop** after a second confirmation when the original tool's state cannot be read.
+
+### Fixed
+- Production confirmation in Git workspace runs compared the typed text with a hostname instead of the connection name.
+- Medium: starts no longer hold the global process lock while waiting for Docker/readiness; Stop no longer waits for another user's setup; empty settings no longer override WRM's SSH options and original defaults; successful starts/imports clear stale setup errors and pending imports; Advanced config imports replace a config repository; replaced SSH profiles are deleted; case-only duplicate ZIP entries are rejected; status polling survives errors; stage texts are translated.
+- Logs: invalid UTF-8 in scanned segments (quadratic trimming and a stuck Continue); segments split mid-line; regex errors and wrong highlights for keywords with special characters; empty files reported as incomplete; Previous segment skipping 192 KiB; discovered roots rejected after settings changes; a closed tab during Check now recording a failed sample and notification; late checks repainting another tab; untranslated Zabbix link.
+- Client GitLab cache: cleanup could delete a newer published generation; relay POST errors were shown as CORS problems; a failed status poll blocked later refreshes; untranslated pagination error.
+- Following a log kept no shell after Ctrl+C; folder moves/deletes did not recheck folder shares.
+
 ## [12.4.5] - 2026-10-15
 
 ### Added
