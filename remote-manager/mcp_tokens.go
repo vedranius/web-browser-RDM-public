@@ -36,7 +36,7 @@ import (
 //   GET grants, DELETE grants/{id}, POST revoke-all, GET clients, DELETE clients/{id}
 
 const (
-	mcpAllScopes        = "read_logs,run_readonly,run_with_approval,edit_file_with_approval,transfer"
+	mcpAllScopes        = "read_logs,run_readonly,run_with_approval,edit_file_with_approval,transfer,full_access"
 	mcpMaxGrantsPerUser = 25
 	mcpMaxConnsPerGrant = 50
 	mcpPATPrefix        = "wrm_pat_"
@@ -149,9 +149,20 @@ func normalizeMCPScopes(v string) (string, error) {
 	return strings.Join(out, ","), nil
 }
 
+// mcpAllowedScopes: the policy's scopes; full_access only while the administrator allows it
+// (ai_full_access), whatever ai_mcp_scopes says.
 func mcpAllowedScopes() []string {
 	v, _ := normalizeMCPScopes(getSetting("ai_mcp_scopes"))
-	return splitPatterns(v)
+	var out []string
+	for _, s := range splitPatterns(v) {
+		if s != "full_access" {
+			out = append(out, s)
+		}
+	}
+	if settingBool("ai_full_access") {
+		out = append(out, "full_access")
+	}
+	return out
 }
 
 func mcpAllowedModes() []string {
