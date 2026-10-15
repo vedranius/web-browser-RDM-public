@@ -90,7 +90,7 @@ Object.assign(LANGS.en, {
   git_nothing_selected: 'No files are selected.', git_time_past: 'Choose a time in the future.', git_progress: 'Run {label}', git_stop: 'Stop after the current server',
   git_cancel_run: 'Cancel run', git_cancel_q: 'Cancel this run?', git_dangling: 'Dangling imports', git_health: 'Health check', git_backup: 'Backup',
   git_backups: 'Backups on the server', git_no_backups: 'No backups in .deploy-bak.', git_backup_files: '{n} files', git_backup_unknown: 'No record of this backup: only the files in it are restored.',
-  git_force_stamp: 'Overwrite an existing VERSION.md', git_stamp_h: 'Stamp writes VERSION.md where an installation is up to date (and the file is missing).',
+  git_force_stamp: 'Overwrite an existing VERSION.md', git_stamp_h: 'Stamp writes VERSION.md where an installation is up to date (and the file is missing). Tick the options below to overwrite an existing file or to stamp an installation as it is.',
   git_not_current: 'not up to date', git_has_vmd: 'VERSION.md exists', git_runs_empty: 'No runs yet.', git_created: 'Created', git_scheduled_for: 'Scheduled for',
   git_run: 'Run', git_kind_col: 'Action', git_items: 'Installations', git_written: '{n} written', git_deleted: '{n} deleted', git_waits_update: 'after the update',
   git_restore_hint: 'Restores the files of this backup; files that did not exist then are deleted. The current files are backed up first.', git_versions: 'Versions',
@@ -120,7 +120,7 @@ Object.assign(LANGS.hr, {
   git_nothing_selected: 'Nije odabrana nijedna datoteka.', git_time_past: 'Odaberite vrijeme u budućnosti.', git_progress: 'Izvođenje {label}', git_stop: 'Zaustavi nakon trenutnog servera',
   git_cancel_run: 'Otkaži izvođenje', git_cancel_q: 'Otkazati ovo izvođenje?', git_dangling: 'Viseći importi', git_health: 'Provjera stanja', git_backup: 'Sigurnosna kopija',
   git_backups: 'Sigurnosne kopije na serveru', git_no_backups: 'U .deploy-bak nema sigurnosnih kopija.', git_backup_files: '{n} datoteka', git_backup_unknown: 'Nema zapisa o ovoj kopiji: vraćaju se samo datoteke u njoj.',
-  git_force_stamp: 'Prepiši postojeći VERSION.md', git_stamp_h: 'Označavanje upisuje VERSION.md gdje je instalacija ažurna (a datoteka nedostaje).',
+  git_force_stamp: 'Prepiši postojeći VERSION.md', git_stamp_h: 'Označavanje upisuje VERSION.md gdje je instalacija ažurna (a datoteka nedostaje). Opcijama ispod možete prepisati postojeću datoteku ili označiti instalaciju kakva jest.',
   git_not_current: 'nije ažurno', git_has_vmd: 'VERSION.md postoji', git_runs_empty: 'Još nema izvođenja.', git_created: 'Izrađeno', git_scheduled_for: 'Zakazano za',
   git_run: 'Izvođenje', git_kind_col: 'Akcija', git_items: 'Instalacije', git_written: 'zapisano: {n}', git_deleted: 'obrisano: {n}', git_waits_update: 'nakon ažuriranja',
   git_restore_hint: 'Vraća datoteke iz ove kopije; datoteke koje tada nisu postojale brišu se. Trenutne datoteke najprije se spremaju u novu kopiju.', git_versions: 'Verzije',
@@ -532,6 +532,18 @@ Object.assign(LANGS.hr, {
  gcp_title:'Konfiguracijski profili', gcp_intro:'Uvezite referentni config/INI i pregledajte odgovarajuću datoteku na svakoj instalaciji. Označene instalacije ograničavaju provjeru; inače se provjeravaju sve instalacije odabranog servisa (do 50).', gcp_add:'Dodaj config/INI profil', gcp_settings:'postavki', gcp_check:'Pregledaj servere', gcp_path:'Relativna putanja na serveru', gcp_operator:'Operater / klijent (opcionalno)', gcp_file:'Referentna datoteka', gcp_import_hint:'Referenca definira postavke i očekivane vrijednosti. Parsira se bez izvršavanja skripti; tajne se maskiraju prije spremanja. Datoteka na serveru mora biti unutar instalacije.', gcp_file_limit:'Odaberite tekstualnu konfiguraciju do 256 KiB.', gcp_delete:'Obrisati ovaj konfiguracijski profil?', gcp_values_hint:'Stvarne vrijednosti čitaju se sada sa servera. Izrazi skripti prikazuju se kao izvor i ne izvršavaju se. Tajne su maskirane i ne uspoređuju se. INI sekcije mogu označavati operatere.', gcp_expected:'Referentna vrijednost', gcp_missing:'Nedostaje', gcp_masked:'Maskirano', gcp_extra:'Dodatna postavka', gcp_same:'Odgovara referenci', gcp_different:'Razlikuje se od reference',
 });
 
+Object.assign(LANGS.en, { gm_force_stop: 'Stop it anyway? A comparison or deployment that is still running is interrupted; the original tool\'s lock and history then show where it stopped.' });
+Object.assign(LANGS.hr, { gm_force_stop: 'Ipak zaustaviti? Usporedba ili deploy koji još radi bit će prekinut; zaključavanje i povijest izvornog alata tada pokazuju gdje je stao.' });
+Object.assign(LANGS.en, { git_back: 'Back', git_back_to: 'Back to “{name}”' });
+Object.assign(LANGS.hr, { git_back: 'Natrag', git_back_to: 'Natrag na “{name}”' });
+Object.assign(LANGS.en, { git_stamp_differ: '{n} file(s) differ from the target', git_stamp_more: '… and {n} more', git_stamp_partial: 'Also stamp installations that are not up to date (as they are)',
+  git_stamp_partial_h: 'VERSION.md then records each file\'s actual version: older files their matching version, files changed by hand "(local)", and a note that the installation is partial. Nothing else is written.',
+  git_stamp_none: 'None of these installations is up to date. Update them first, or tick “Also stamp installations that are not up to date”.', git_stamp_vmd_exists: 'VERSION.md already exists on every chosen installation. Tick “Overwrite an existing VERSION.md” to replace it.',
+  git_nothing_usable: 'None of these installations can be used: see the message under each one (for example, check it first).' });
+Object.assign(LANGS.hr, { git_stamp_differ: '{n} datoteka se razlikuje od cilja', git_stamp_more: '… i još {n}', git_stamp_partial: 'Označi i instalacije koje nisu ažurne (kakve jesu)',
+  git_stamp_partial_h: 'VERSION.md tada bilježi stvarnu verziju svake datoteke: starije datoteke njihovu verziju, ručno mijenjane "(local)", uz napomenu da je instalacija djelomična. Ništa drugo se ne upisuje.',
+  git_stamp_none: 'Nijedna od ovih instalacija nije ažurna. Najprije ih ažurirajte ili označite “Označi i instalacije koje nisu ažurne”.', git_stamp_vmd_exists: 'VERSION.md već postoji na svim odabranim instalacijama. Označite “Prepiši postojeći VERSION.md” da ga zamijenite.',
+  git_nothing_usable: 'Nijedna od ovih instalacija se ne može koristiti: pogledajte poruku ispod svake (npr. najprije je provjerite).' });
 Object.assign(LANGS.en, {"gm_quick": "Prepare and run trusted ZIPs", "gm_quick_hint": "Add deploy-tool and deploy-config ZIPs (SSH profile optional), then click once. WRM starts Docker, prepares dependencies, validates config and opens the original tool. Approved imports are retained if setup needs a retry. First Windows installation can show Docker/WSL/license prompts on the WRM host.", "gm_quick_files": "ZIPs are trusted executable/configuration imports. Leave a file empty to keep its existing import.", "gm_setup_docker": "Starting Docker / waiting for first-install prompts", "gm_setup_dependencies": "Preparing original dependencies", "gm_setup_configuration": "Checking configuration and SSH profile", "gm_setup_starting": "Starting original deploy tool", "gm_setup_ready": "Ready", "gm_advanced_setup": "Advanced setup / individual imports"});
 Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_quick_hint": "Dodajte deploy-tool i deploy-config ZIP (SSH profil po želji), zatim kliknite jednom. WRM pokreće Docker, priprema ovisnosti, provjerava config i otvara izvorni alat. Uvezeni ZIP-ovi ostaju spremljeni ako treba ponoviti pripremu. Prva Windows instalacija može prikazati Docker/WSL/licencne upite na WRM računalu.", "gm_quick_files": "ZIP-ovi su pouzdani uvozi izvršnog koda/postavki. Prazno polje zadržava postojeći uvoz.", "gm_setup_docker": "Pokretanje Dockera / čekanje upita prve instalacije", "gm_setup_dependencies": "Priprema ovisnosti izvornog alata", "gm_setup_configuration": "Provjera konfiguracije i SSH profila", "gm_setup_starting": "Pokretanje izvornog deploy alata", "gm_setup_ready": "Spremno", "gm_advanced_setup": "Napredne postavke / pojedinačni uvozi"});
 (function () {
@@ -605,6 +617,8 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
 #git-modal .g-grid label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 3px; }
 #git-modal textarea { width: 100%; min-height: 48px; font-family: inherit; }
 #git-modal .g-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap; }
+#git-modal .g-btns .g-back { margin-right: auto; }
+#git-modal .g-backbar { display: flex; margin-bottom: 8px; }
 #git-ws input:not([type=checkbox]), #git-ws select, #git-ws textarea, #git-modal input:not([type=checkbox]), #git-modal select, #git-modal textarea {
   background: var(--bg3); color: var(--text); border: 1px solid var(--border2); border-radius: 7px; padding: 6px 9px; font-size: 12.5px; box-sizing: border-box; outline: none; }
 #git-ws .g-grid input, #git-ws .g-grid select, #git-modal .g-grid input, #git-modal .g-grid select { width: 100%; }
@@ -1612,7 +1626,11 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
       if (i.error) return `<div class="g-item">${head}<div class="hint-box bad">${esc(i.error)}</div></div>`;
       const ver = `<div class="g-mut">${esc(t('git_version_md'))}: <span class="g-mono">${esc(i.from_version || t('git_vmd_missing'))}</span> → ${esc(t('git_target'))}: <span class="g-mono">${esc(i.target ? i.target.version : '—')}</span> ${i.target ? `<span class="g-mut">${esc(i.target.branch)} · ${esc(i.target.commit_date || '')}</span>` : ''}${kind === 'upgrade' && i.current ? ` <span class="g-mut">(${esc(t('git_from'))} ${esc(i.current.version)} · ${esc(i.current.branch)})</span>` : ''}</div>`;
       if (i.pipeline) return `<div class="g-item">${head}${ver}<div class="hint-box">🔧 ${esc(tf('git_ci_item', {kind: i.pipeline.kind === 'gitlab' ? 'GitLab' : 'Jenkins'}))}<div class="g-mono g-mut">${esc(i.pipeline.url)}</div></div></div>`;
-      if (kind === 'stamp') return `<div class="g-item">${head}${ver}<div>${i.eligible ? fsBadge('ok') : `<span class="g-st s-review">${esc(t('git_not_current'))}</span>`} ${i.has_version_md ? `<span class="g-mut">${esc(t('git_has_vmd'))}</span>` : ''}</div></div>`;
+      if (kind === 'stamp') {
+        const differ = (i.files || []).filter(f => f.state !== 'ok' && f.state !== 'protected');
+        const list = differ.length ? `<div class="g-files"><table>${differ.slice(0, 50).map(f => `<tr><td class="g-mono">${esc(f.path)}</td><td>${fsBadge(f.state)}</td></tr>`).join('')}</table>${differ.length > 50 ? `<div class="g-mut">${esc(tf('git_stamp_more', {n: differ.length - 50}))}</div>` : ''}</div>` : '';
+        return `<div class="g-item">${head}${ver}<div>${i.eligible ? fsBadge('ok') : `<span class="g-st s-review">${esc(t('git_not_current'))}</span> <span class="g-mut">${esc(tf('git_stamp_differ', {n: differ.length}))}</span>`} ${i.has_version_md ? `<span class="g-mut">${esc(t('git_has_vmd'))}</span>` : ''}</div>${list}</div>`;
+      }
       const c = i.counts || {};
       const sum = kind === 'upgrade' ? `<div class="hint-box warn">${esc(tf('git_changes_summary', {changed: (c.changed || 0) + (c.old || 0), missing: c.missing || 0, local: c.modified || 0, removed: (i.removed || []).length}))}${(i.removed || []).length ? `<div class="g-mono g-mut">${(i.removed || []).map(esc).join(', ')}</div>` : ''}</div>` : '';
       return `<div class="g-item">${head}${ver}${sum}${changes.length ? '' : `<div class="g-mut">${esc(t('git_files_none'))}</div>`}
@@ -1635,7 +1653,8 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
       ${kind === 'stamp' ? `<div class="g-mut">${esc(t('git_stamp_h'))}</div>` : `<label class="g-opt"><input type="checkbox" onchange="document.getElementById('gd-items').classList.toggle('g-hideok', !this.checked)"><span>${esc(t('git_show_all'))}</span></label>`}
       <div id="gd-items" class="g-hideok">${items.map(itemHTML).join('')}</div>
       <div id="gd-lwarn" class="hint-box bad" style="display:none">${esc(t('git_local_warn'))}</div>
-      ${kind === 'stamp' ? `<label class="g-opt"><input type="checkbox" id="gd-force"><span>${esc(t('git_force_stamp'))}</span></label>` : `<div class="g-card"><div class="g-grid">${apps.map(a => `<div><label>${esc(tf('git_check_cmd', {app: a}))}</label><input class="gd-check" data-app="${esc(a)}" value="${esc((st.check_commands || {})[a] || '')}" placeholder="./run.py --selftest"></div>`).join('')}</div>
+      ${kind === 'stamp' ? `<label class="g-opt"><input type="checkbox" id="gd-force" ${items.some(i => !i.error && i.has_version_md) ? '' : 'disabled'}><span>${esc(t('git_force_stamp'))}</span></label>
+        ${items.some(i => !i.error && !i.eligible) ? `<label class="g-opt"><input type="checkbox" id="gd-partial"><span>${esc(t('git_stamp_partial'))}</span></label><div class="g-mut">${esc(t('git_stamp_partial_h'))}</div>` : ''}` : `<div class="g-card"><div class="g-grid">${apps.map(a => `<div><label>${esc(tf('git_check_cmd', {app: a}))}</label><input class="gd-check" data-app="${esc(a)}" value="${esc((st.check_commands || {})[a] || '')}" placeholder="./run.py --selftest"></div>`).join('')}</div>
         <label class="g-opt"><input type="checkbox" id="gd-noimports"><span>${esc(t('git_ignore_imports'))}</span></label>
         ${kind === 'upgrade' ? `<label class="g-opt"><input type="checkbox" id="gd-override"><span>${esc(t('git_set_override'))}</span></label>` : ''}</div>`}
       ${restartHTML()}
@@ -1655,15 +1674,25 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
     const items = [];
     D.plan.forEach((i, idx) => {
       if (i.error) return;
-      if (kind === 'stamp') { if (i.eligible) items.push({install_id: i.install_id, review_id:i.review_id}); return; }
+      if (kind === 'stamp') { if (i.eligible || ($('gd-partial') && $('gd-partial').checked)) items.push({install_id: i.install_id, review_id:i.review_id}); return; }
       if (i.pipeline) { items.push({install_id: i.install_id, review_id:i.review_id}); return; }
       const boxes = [...document.querySelectorAll(`.gd-f[data-i="${idx}"]:checked`)];
       if (!boxes.length) return;
       items.push({install_id: i.install_id, review_id:i.review_id, files: boxes.map(b => b.dataset.p), modified_ok: boxes.filter(b => b.dataset.local === '1').map(b => b.dataset.p)});
     });
-    if (!items.length) { showToast(t('git_nothing_selected'), 'warning'); return; }
+    if (!items.length) {
+      // say why nothing can run instead of a generic "no files" (stamp has no file list)
+      const usable = D.plan.filter(i => !i.error);
+      const msg = !usable.length ? 'git_nothing_usable' : kind === 'stamp' ? 'git_stamp_none' : 'git_nothing_selected';
+      showToast(t(msg), 'warning', 6000); return;
+    }
     const body = {kind, ref: D.ref || '', items};
-    if (kind === 'stamp') body.force = $('gd-force').checked;
+    if (kind === 'stamp') {
+      body.force = $('gd-force').checked;
+      body.stamp_partial = !!($('gd-partial') && $('gd-partial').checked);
+      const chosen = D.plan.filter(i => items.some(x => x.install_id === i.install_id));
+      if (!body.force && chosen.every(i => i.has_version_md)) { showToast(t('git_stamp_vmd_exists'), 'warning', 6000); return; }
+    }
     else {
       body.checks = Object.fromEntries([...document.querySelectorAll('.gd-check')].map(x => [x.dataset.app, x.value.trim()]));
       body.ignore_imports = $('gd-noimports').checked;
@@ -1694,7 +1723,7 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
       ${body.kind === 'upgrade' ? `<div class="hint-box warn">${esc(t('git_upgrade_warn'))} → <b class="g-mono">${esc(body.ref)}</b></div>` : ''}
       ${rm && rm !== 'none' && units.length ? `<div class="hint-box warn">${esc(tf('git_restart_warn', {list: units.map(i => i.conn_name + ': ' + i.units.map(u => u.name).join(', ')).join('; ')}))}${body.restart.at ? ' · ' + esc(fmtTime(body.restart.at)) : ''}${body.restart.delay_minutes ? ' · +' + body.restart.delay_minutes + ' min' : ''}</div>` : ''}
       ${body.schedule_at ? `<div class="hint-box">⏰ ${esc(tf('git_scheduled_ok', {t: fmtTime(body.schedule_at)}))}</div>` : ''}
-      ${prod.map(i => `<div class="g-conf"><label>${esc(tf('git_type_host', {name: i.conn_name}))}</label><input class="gd-conf" data-name="${esc(hn(i.conn_name, i.hostname))}" autocomplete="off" oninput="gitWorkspace.confirmCheck()"></div>`).join('')}
+      ${prod.map(i => `<div class="g-conf"><label>${esc(tf('git_type_host', {name: i.conn_name}))}</label><input class="gd-conf" data-name="${esc(i.conn_name)}" autocomplete="off" oninput="gitWorkspace.confirmCheck()"></div>`).join('')}
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gd-go" class="${body.kind === 'stamp' ? '' : 'btn-danger'}" ${prod.length ? 'disabled' : ''}>${esc(t(body.schedule_at || (body.kind === 'restart' && rm !== 'now') ? 'git_schedule' : 'git_start'))}</button></div>`);
     D.items = list;
     $('gd-go').onclick = startRun;
@@ -2798,7 +2827,7 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
     if (G.mode !== 'medium' || !$('medium-status')) return;
     try {
       const r = await fetch('/api/git/medium');
-      if (!r.ok) { $('medium-status').textContent = await apiError(r); if ($('medium-frame')) $('medium-frame').replaceChildren(); return; }
+      if (!r.ok) { $('medium-status').textContent = await apiError(r); if ($('medium-frame')) $('medium-frame').replaceChildren(); if (G.mediumBusy) mediumTimer = setTimeout(mediumRefresh, 5000); return; }
       const s = await r.json();
       $('medium-tool-label').style.display = s.admin ? '' : 'none';
       $('medium-quick-tool-label').style.display=s.admin?'':'none';
@@ -2812,8 +2841,13 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
       const host = $('medium-frame');
       if (s.running && host && !host.firstChild) { const f = document.createElement('iframe'); f.title = t('gm_title'); f.src = '/medium/'; f.style.cssText = 'width:100%;height:calc(100vh - 250px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff'; host.appendChild(f); }
       if (!s.running && host) host.replaceChildren();
+      G.mediumBusy = !!s.busy;
       if (s.busy) mediumTimer = setTimeout(mediumRefresh, 2000);
-    } catch (e) { if ($('medium-status')) $('medium-status').textContent = String(e); }
+    } catch (e) {
+      if ($('medium-status')) $('medium-status').textContent = String(e);
+      // a network blip during a long background setup must not freeze the status
+      if (G.mediumBusy) mediumTimer = setTimeout(mediumRefresh, 5000);
+    }
   }
 
   async function mediumQuickSetup(){
@@ -2842,7 +2876,17 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
   }
   async function mediumAction(action) {
     if (action === 'stop' && !confirm(t('gm_stop_confirm'))) return;
-    try { const r = await fetch('/api/git/medium/' + action, json('POST', {})); if (!r.ok) throw new Error(await apiError(r)); await mediumRefresh(); } catch (e) { showToast(String(e), 'error', 8000); }
+    try {
+      let r = await fetch('/api/git/medium/' + action, json('POST', {}));
+      // the tool's state cannot be read (hung or crashed) or it reports work: stopping anyway needs a second confirmation
+      if (!r.ok && action === 'stop' && r.status === 409) {
+        const why = await apiError(r);
+        if (!confirm(why + '\n\n' + t('gm_force_stop'))) return;
+        r = await fetch('/api/git/medium/stop?force=1', json('POST', {}));
+      }
+      if (!r.ok) throw new Error(await apiError(r));
+      await mediumRefresh();
+    } catch (e) { showToast(String(e), 'error', 8000); }
   }
 
   function paintSimple() {
@@ -3188,18 +3232,56 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
     go.disabled = S.submitting || S.rollbackDestinations.size === 0 || (needsConfirm && (!$('gs-rbconf') || $('gs-rbconf').value.trim().toLowerCase() !== S.ctx.env.toLowerCase()));
   }
 
+  // Dialog history: a dialog opened from another one keeps the previous dialog (its DOM, typed
+  // values and handlers) so that "Back" returns to it. A new render of the same dialog (same
+  // title) replaces it, and transient dialogs (loading, errors) are not kept.
+  const modalTrail = [];
+  const dlgTitle = d => { const h = d && d.querySelector('h3'); return h ? h.textContent.trim() : ''; };
+  const dlgKeep = d => !!d.querySelector('input, select, textarea, table, pre, .g-item, .g-card, button:not(.btn-sec)');
   function modal(html) {
-    closeModal();
+    const old = $('git-modal'), prev = old && old.querySelector('.g-dlg');
+    clearTimeout(runTimer);
     const m = document.createElement('div');
     m.id = 'git-modal';
     m.innerHTML = `<div class="g-dlg">${html}</div>`;
+    const dlg = m.firstElementChild;
+    if (prev && dlgKeep(prev) && dlgTitle(prev) !== dlgTitle(dlg)) {
+      prev.remove();
+      modalTrail.push(prev);
+      if (modalTrail.length > 20) modalTrail.shift();
+    }
+    if (old) old.remove();
+    if (modalTrail.length) addBack(dlg);
     m.addEventListener('mousedown', e => { if (e.target === m) closeModal(); });
-    m.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeModal(); } });
+    m.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { e.stopPropagation(); closeModal(); }
+      else if (e.altKey && e.key === 'ArrowLeft' && modalTrail.length) { e.preventDefault(); e.stopPropagation(); modalBack(); }
+    });
     document.body.appendChild(m);
     const first = m.querySelector('input, select, textarea');
     if (first) first.focus();
   }
-  function closeModal() { const m = $('git-modal'); if (m) m.remove(); clearTimeout(runTimer); }
+  // addBack puts a "Back" button first in the dialog's last button row (or above the dialog).
+  function addBack(dlg) {
+    if (dlg.querySelector('.g-back')) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn-sec g-back';
+    b.textContent = '← ' + t('git_back');
+    b.title = tf('git_back_to', {name: dlgTitle(modalTrail[modalTrail.length - 1]) || t('git_back')}) + ' (Alt+←)';
+    b.onclick = modalBack;
+    const rows = dlg.querySelectorAll('.g-btns');
+    if (rows.length) rows[rows.length - 1].prepend(b);
+    else { const bar = document.createElement('div'); bar.className = 'g-backbar'; bar.append(b); dlg.prepend(bar); }
+  }
+  function modalBack() {
+    const prev = modalTrail.pop(), m = $('git-modal');
+    if (!prev || !m) { closeModal(); return; }
+    clearTimeout(runTimer);
+    m.querySelector('.g-dlg').replaceWith(prev);
+    const first = prev.querySelector('input, select, textarea, button');
+    if (first) first.focus();
+  }
+  function closeModal() { const m = $('git-modal'); if (m) m.remove(); modalTrail.length = 0; clearTimeout(runTimer); }
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
@@ -3209,7 +3291,7 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
     envRefresh, envFilter, envReset(){for(const k of Object.keys(EF))EF[k]='';envFilter('q','')}, envEdit, envEditAdd, envEditDel, envPlan, envRecompare, envShowAll, envToggle, envExclude, envClearExcl, envUnlock, envGo, envBack, envHistory, envRollback, envDoctor, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,
     ignoreLoad, ignoreMark, ignorePreview, ignoreDownload, ignoreSaveLists, ignoreMR, webhook, hookSet, editFeed, feedFetch, delFeed, pipelineKind,
-    editSource, testSource, delSource, importBundle, saveSettings, saveCatalogSettings, setRef, filterConns, selConns, closeModal,
+    editSource, testSource, delSource, importBundle, saveSettings, saveCatalogSettings, setRef, filterConns, selConns, closeModal, modalBack,
     filter(k, v, debounce) { G.f[k] = v; clearTimeout(qTimer); if (debounce) qTimer = setTimeout(() => { render(); const i = document.querySelector('#git-body input[type=search]'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); else render(); },
     toggleChanges(on) { G.onlyChanges = on; if (G.detail) details(G.detail.id); },
   };

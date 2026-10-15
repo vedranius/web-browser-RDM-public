@@ -167,7 +167,8 @@ type gitRunParams struct {
 	Restart        gitRestartChoice     `json:"restart"`
 	Checks         map[string]string    `json:"checks,omitempty"` // service → custom check command
 	IgnoreImports  bool                 `json:"ignore_imports,omitempty"`
-	Force          bool                 `json:"force,omitempty"` // stamp: overwrite VERSION.md
+	Force          bool                 `json:"force,omitempty"`         // stamp: overwrite VERSION.md
+	StampPartial   bool                 `json:"stamp_partial,omitempty"` // stamp: also installations that are not up to date
 	ScheduleAt     string               `json:"schedule_at,omitempty"`
 	Confirm        map[string]string    `json:"confirm,omitempty"` // install id → typed host name
 	SetRefOverride bool                 `json:"set_ref_override,omitempty"`
@@ -1393,12 +1394,25 @@ func (run *gitRun) stampItem(it *gitRunItem) error {
 	cat := loadGitCatalog(run.UserID)
 	plan := planFiles("update", t, sr.Files, nil, cat.IgnoreDirs)
 	run.set(func() { it.FromVersion, it.ToVersion = parseVersionMD(sr.Version).Version, t.Version })
+	differ := 0
 	for _, p := range plan {
 		if p.State != "ok" && p.State != "protected" {
-			c.log("scan", "skip", "not up to date: "+p.Path+" is "+p.State)
-			run.set(func() { it.State, it.Step, it.Error = "skipped", "", "not up to date (update it first)" })
-			return nil
+			if !run.P.StampPartial {
+				c.log("scan", "skip", "not up to date: "+p.Path+" is "+p.State)
+				run.set(func() {
+					it.State, it.Step, it.Error = "skipped", "", "not up to date (update it first, or stamp it as it is)"
+				})
+				return nil
+			}
+			differ++
 		}
+	}
+	note := ""
+	if differ > 0 {
+		// VERSION.md then records each file's actual version; the note says the header
+		// version is not complete on this server.
+		note = fmt.Sprintf("djelomicno: %d datoteka se razlikuje od verzije %s", differ, t.Version)
+		c.log("scan", "ok", fmt.Sprintf("stamping as it is: %d file(s) differ from the target", differ))
 	}
 	_, vmdExists := sr.Files["VERSION.md"]
 	if vmdExists && !run.P.Force {
@@ -1418,7 +1432,7 @@ func (run *gitRun) stampItem(it *gitRunItem) error {
 	if c, known := s.crlf["VERSION.md"]; known {
 		vcrlf = c
 	}
-	content := versionMD(t, versionRows(t, plan, nil), time.Now(), s.host, s.user, bundleOf(t, run.Label), vcrlf)
+	content := versionMDNote(t, versionRows(t, plan, nil), time.Now(), s.host, s.user, bundleOf(t, run.Label), note, vcrlf)
 	c.step("version")
 	vop := &deployOp{Rel: "VERSION.md", Content: content, Existed: vmdExists, Mode: "644"}
 	if err := s.stage([]*deployOp{vop}); err != nil {

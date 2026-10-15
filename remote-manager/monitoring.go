@@ -227,7 +227,9 @@ func apiMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Only the owner can request a metrics poll", 403)
 			return
 		}
-		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute)
+		// A closed browser tab must not turn into a "failed" sample and a problem
+		// notification: the poll finishes on its own deadline.
+		ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 2*time.Minute)
 		defer cancel()
 		s, err := pollMonitor(ctx, c)
 		if err != nil {
