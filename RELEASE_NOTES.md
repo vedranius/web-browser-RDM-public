@@ -4,7 +4,11 @@
 
 - **Claude Desktop extension:** in *Settings → AI connections* pick **Claude Desktop**, choose the servers and how long the token is valid, then **Download Claude Desktop extension**. Open `wrm-pro.mcpb` and press **Install**: the WRM address and token are already filled in. The extension runs on your computer with Claude Desktop's built-in Node.js, so it reaches a WRM on your own network and over plain HTTP; a self-signed HTTPS certificate can be trusted with a CA file in the extension's settings. Approvals still appear in WRM and, where supported, in Claude.
 - **Claude Code plugin:** `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…` (Claude Code 2.1.275 or later). The wizard prints the command with your values; the token is kept in Claude Code's secure storage.
-- **Token lifetime in the wizard:** choose how many hours the token is valid, up to `ai_mcp_max_token_hours`.
+- **Lifetime in hours or days:** the wizard, the advanced form and the OAuth approval dialog take the token lifetime in hours or days, so apps need not be approved again every day.
+
+### Changed
+
+Default AI connection lifetime is 7 days (`ai_mcp_token_hours` 168), at most 30 days (`ai_mcp_max_token_hours` 720).
 
 ### Fixed
 
@@ -12,7 +16,7 @@ Claude Desktop could not be connected to a WRM on a private network: the wizard 
 
 ### Upgrade
 
-Replace the executable/container and keep the database and encryption key. No database change. MCP stays off by default (`ai_mcp_enabled`). The default token lifetime limit is unchanged (24 hours at most); an administrator can raise `ai_mcp_max_token_hours` so a desktop app keeps access longer. The extension contains the token: delete the downloaded file after installing. Windows packages are cross-compiled; the extension was validated with the official MCP bundle tool and its bridge was run against WRM, but not inside a native Windows Claude Desktop in this release's validation.
+Replace the executable/container and keep the database and encryption key. No database change. MCP stays off by default (`ai_mcp_enabled`). Token lifetimes default to **7 days, at most 30 days** (were 8 hours, at most 24); values an administrator saved explicitly stay in force and can be changed in *Admin panel → AI connections*. The extension contains the token: delete the downloaded file after installing. Windows packages are cross-compiled; the extension was validated with the official MCP bundle tool and its bridge was run against WRM, but not inside a native Windows Claude Desktop in this release's validation.
 
 [Download v12.5.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.5.1) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.5.1/README.md#ai-desktop-apps-mcp)
 

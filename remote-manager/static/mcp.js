@@ -11,7 +11,7 @@ Object.assign(LANGS.en, {
   mcp_edit_note: 'The token and expiry stay the same. Current sessions and pending approvals stop; reopen them with the updated permissions.',
   mcp_title: 'AI connections', mcp_intro: 'Let an AI app on your computer or in the browser (Claude, ChatGPT and other MCP clients) work on servers you choose. WRM checks every action against the mode and the scopes below, asks you before changes, and records everything.',
   mcp_off: 'AI connections are not available', mcp_new: 'New AI connection', mcp_name: 'Name', mcp_name_ph: 'e.g. Claude Desktop on my laptop',
-  mcp_conns: 'Servers', mcp_conns_filter: 'Filter servers…', mcp_mode: 'Mode', mcp_scopes: 'Scopes', mcp_hours: 'Valid for (hours)', mcp_hours_max: 'at most {n}',
+  mcp_conns: 'Servers', mcp_conns_filter: 'Filter servers…', mcp_mode: 'Mode', mcp_scopes: 'Scopes', mcp_hours: 'Valid for (hours)', mcp_hours_max: 'at most {n} hours',
   mcp_create: 'Create token', mcp_none: 'No AI connections yet.', mcp_revoke: 'Revoke', mcp_revoke_all: 'Revoke all', mcp_revoke_q: 'Revoke this AI connection? Its sessions end at once.',
   mcp_revoke_all_q: 'Revoke every AI connection? All AI apps lose access at once.', mcp_revoked_n: '{n} revoked',
   mcp_mode_read_only: 'Read-only', mcp_mode_ask: 'Ask before every change', mcp_mode_auto: 'Automatic within limits',
@@ -84,14 +84,14 @@ Object.assign(LANGS.en, {
   mcpw_desk_steps: '1. Open the downloaded wrm-pro.mcpb (double-click). If it does not open Claude: Claude → Settings → Extensions → Advanced settings → Install extension… and choose the file.\n2. Press Install, then turn the extension on. Leave the settings as they are.\n3. In a new chat, ask for example: “wrm: list my servers”.',
   mcpw_desk_token: 'Only if Claude asks for the token:', mcpw_desk_noapp: 'Claude Desktop does not need the WRM program on your computer; it brings its own runtime for the extension.',
   mcpw_cc_plugin: 'Or install the WRM PRO plugin for Claude Code with one command (Claude Code 2.1.275 or later):',
-  mcpw_hours: 'Valid for (hours, at most {n})', mcpw_hours_d: 'When the token expires the app loses access until you create a new one. You can revoke it at any time below. An administrator sets the longest lifetime (Admin panel → AI connections).',
+  mcp_valid_for: 'Valid for', mcp_unit_hours: 'hours', mcp_unit_days: 'days', mcp_max_days: 'at most {n} days', mcpw_hours_d: 'When the token expires the app loses access until you create a new one. You can revoke it at any time below. An administrator sets the longest lifetime (Admin panel → AI connections).',
 });
 Object.assign(LANGS.hr, {
   mcpw_public_needed:'Ova aplikacija u oblaku treba dostupnu HTTPS WRM adresu. Administrator treba postaviti javnu MCP adresu i reverse proxy; localhost ili privatna adresa nisu dostupni iz oblaka.', mcpw_local_url:'Localhost adresa radi samo kad je AI aplikacija na WRM računalu. Na drugom računalu koristite adresu servera.', mcpw_installer:'Preuzmi skriptu za postavljanje', mcpw_installer_d:'Pokrenite na računalu s AI aplikacijom. Skripta pronalazi CLI, radi kopiju postojećih postavki gdje je dostupno, dodaje WRM i prikazuje rezultat. Token unosite kad ga traži; nije ugrađen u skriptu.', mcpw_oauth_cli:'Koristi OAuth prijavu (bez kopiranja tokena)', mcpw_cursor_install:'Dodaj u Cursor', mcpw_slash:'U WRM asistentu koristite /wrm ili /wrm server. MCP klijenti nude wrm prompt u svojim izbornicima; ako nije podržano, upišite “wrm server” u chat za popis odobrenih servera.',
   mcp_edit_note: 'Token i istek ostaju isti. Aktivne sesije i odobrenja se prekidaju; ponovno ih otvorite s novim ovlastima.',
   mcp_title: 'AI veze', mcp_intro: 'Dopustite AI aplikaciji na računalu ili u pregledniku (Claude, ChatGPT i drugi MCP klijenti) da radi na poslužiteljima koje odaberete. WRM provjerava svaku radnju prema načinu rada i opsezima u nastavku, pita vas prije promjena i sve bilježi.',
   mcp_off: 'AI veze nisu dostupne', mcp_new: 'Nova AI veza', mcp_name: 'Naziv', mcp_name_ph: 'npr. Claude Desktop na mom laptopu',
-  mcp_conns: 'Poslužitelji', mcp_conns_filter: 'Filtriraj poslužitelje…', mcp_mode: 'Način rada', mcp_scopes: 'Opsezi', mcp_hours: 'Vrijedi (sati)', mcp_hours_max: 'najviše {n}',
+  mcp_conns: 'Poslužitelji', mcp_conns_filter: 'Filtriraj poslužitelje…', mcp_mode: 'Način rada', mcp_scopes: 'Opsezi', mcp_hours: 'Vrijedi (sati)', mcp_hours_max: 'najviše {n} sati',
   mcp_create: 'Stvori token', mcp_none: 'Još nema AI veza.', mcp_revoke: 'Opozovi', mcp_revoke_all: 'Opozovi sve', mcp_revoke_q: 'Opozvati ovu AI vezu? Njezine sesije odmah završavaju.',
   mcp_revoke_all_q: 'Opozvati sve AI veze? Sve AI aplikacije odmah gube pristup.', mcp_revoked_n: 'Opozvano: {n}',
   mcp_mode_read_only: 'Samo čitanje', mcp_mode_ask: 'Pitaj prije svake promjene', mcp_mode_auto: 'Automatski u granicama',
@@ -161,7 +161,7 @@ Object.assign(LANGS.hr, {
   mcpw_desk_steps: '1. Otvorite preuzetu datoteku wrm-pro.mcpb (dvoklik). Ako se Claude ne otvori: Claude → Settings → Extensions → Advanced settings → Install extension… i odaberite datoteku.\n2. Pritisnite Install, zatim uključite proširenje. Postavke ostavite kakve jesu.\n3. U novom razgovoru zatražite na primjer: „wrm: popiši moje poslužitelje”.',
   mcpw_desk_token: 'Samo ako Claude zatraži token:', mcpw_desk_noapp: 'Claude Desktopu ne treba WRM program na računalu; za proširenje donosi vlastito okruženje.',
   mcpw_cc_plugin: 'Ili instalirajte WRM PRO dodatak za Claude Code jednom naredbom (Claude Code 2.1.275 ili noviji):',
-  mcpw_hours: 'Vrijedi (sati, najviše {n})', mcpw_hours_d: 'Kad token istekne, aplikacija gubi pristup dok ne stvorite novi. Možete ga opozvati bilo kada u nastavku. Najdulje trajanje postavlja administrator (Admin panel → AI veze).',
+  mcp_valid_for: 'Vrijedi', mcp_unit_hours: 'sati', mcp_unit_days: 'dana', mcp_max_days: 'najviše {n} dana', mcpw_hours_d: 'Kad token istekne, aplikacija gubi pristup dok ne stvorite novi. Možete ga opozvati bilo kada u nastavku. Najdulje trajanje postavlja administrator (Admin panel → AI veze).',
 });
 
 (function () {
@@ -230,6 +230,17 @@ Object.assign(LANGS.hr, {
   }
 
   // ── the grant form (settings and consent) ─────────────
+  // token lifetime: a number with a unit (hours or days); the API always takes hours
+  function lifetimeHTML(id, hours) {
+    const days = hours >= 24 && hours % 24 === 0;
+    return `<div style="display:flex;gap:6px;"><input type="number" id="${id}" min="1" value="${days ? hours / 24 : hours}" style="flex:1;min-width:70px;">
+      <select id="${id}-unit" style="width:auto;"><option value="1" ${days ? '' : 'selected'}>${esc(t('mcp_unit_hours'))}</option><option value="24" ${days ? 'selected' : ''}>${esc(t('mcp_unit_days'))}</option></select></div>`;
+  }
+  function lifetimeValue(id) {
+    const n = parseInt(($(id) || {}).value, 10), u = +(($(id + '-unit') || {}).value || 1);
+    return n > 0 ? n * u : 0;
+  }
+  function lifetimeMax(h) { return h >= 24 && h % 24 === 0 ? tf('mcp_max_days', {n: h / 24}) : tf('mcp_hours_max', {n: h}); }
   function formHTML(prefix, c, pre) {
     pre = pre || {};
     const scopes = pre.scopes && pre.scopes.length ? pre.scopes : c.scopes.filter(s => s === 'read_logs' || s === 'run_readonly');
@@ -240,7 +251,7 @@ Object.assign(LANGS.hr, {
       <div class="field"><label>${esc(t('mcp_conns'))}</label>${c.connections.length > 8 ? `<input type="text" id="${prefix}-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('${prefix}')">` : ''}
         <div class="mcp-conns" id="${prefix}-conns">${conns || `<div class="sub">${esc(t('none'))}</div>`}</div></div>
       <div class="mcp-row"><div class="field"><label>${esc(t('mcp_mode'))}</label><select id="${prefix}-mode" onchange="wrmMCP.modeChanged('${prefix}')">${c.modes.map(m => `<option value="${m}" ${m === 'read_only' ? 'selected' : ''}>${esc(t('mcp_mode_' + m))}</option>`).join('')}</select></div>
-        <div class="field"><label>${esc(t('mcp_hours'))} <span class="sub">(${esc(tf('mcp_hours_max', {n: c.max_hours}))})</span></label><input type="number" id="${prefix}-hours" min="1" max="${c.max_hours}" value="${c.default_hours}"></div></div>
+        <div class="field"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(c.max_hours))})</span></label>${lifetimeHTML(prefix + '-hours', c.default_hours)}</div></div>
       <div class="sub" id="${prefix}-mode-d" style="font-size:11px;color:var(--text3);">${esc(t('mcp_mode_read_only_d'))}</div>
       <div id="${prefix}-auto" style="display:none;">
         <div class="field"><label>${esc(t('mcp_auto_allow'))}</label><textarea id="${prefix}-auto-allow" placeholder="systemctl restart nginx"></textarea></div>
@@ -266,7 +277,7 @@ Object.assign(LANGS.hr, {
     const lines = id => ($(id).value || '').split('\n').map(x => x.trim()).filter(Boolean);
     const body = {
       conn_ids: [...document.querySelectorAll(`.${prefix}-conn:checked`)].map(x => +x.value),
-      mode: $(prefix + '-mode').value, hours: +$(prefix + '-hours').value || 0,
+      mode: $(prefix + '-mode').value, hours: lifetimeValue(prefix + '-hours'),
       scopes: [...document.querySelectorAll(`.${prefix}-scope:checked`)].map(x => x.value),
     };
     if ($(prefix + '-name')) body.name = $(prefix + '-name').value.trim();
@@ -386,7 +397,7 @@ Object.assign(LANGS.hr, {
           ${cfg.modes.includes('auto') ? `<label class="mcp-check"><input type="radio" name="mcpw-preset" value="auto" onchange="wrmMCP.wizPreset(this.value)" ${W.preset === 'auto' ? 'checked' : ''}><span>${esc(t('mcp_mode_auto'))} <span class="sub">${esc(t('mcp_mode_auto_d'))}</span></span></label>` : ''}
           ${can ? `<label class="mcp-check"><input type="radio" name="mcpw-preset" value="ask" onchange="wrmMCP.wizPreset(this.value)" ${W.preset === 'ask' ? 'checked' : ''}><span>${esc(t('mcpw_p_ask'))} <span class="sub">${esc(t('mcpw_p_ask_d'))}</span></span></label>` : ''}</div>
         <div id="mcpw-auto-form" style="display:none;">${formHTML('mcpwa', cfg, {noName:true})}</div>
-        <div class="field"><label>${esc(tf('mcpw_hours', {n: cfg.max_hours}))}</label><input type="number" id="mcpw-hours" min="1" max="${cfg.max_hours}" value="${W.hours || cfg.default_hours}" style="max-width:120px;"></div>
+        <div class="field" style="max-width:260px;"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(cfg.max_hours))})</span></label>${lifetimeHTML('mcpw-hours', W.hours || cfg.default_hours)}</div>
         <div class="sub">${esc(t('mcpw_hours_d'))}</div>`;
     } else if (key === 'mcpw_s_connect') {
       const c = WCLIENTS.find(x => x.id === W.client);
@@ -419,8 +430,7 @@ Object.assign(LANGS.hr, {
       W.conn_ids = [...document.querySelectorAll('.mcpw-conn:checked')].map(x => +x.value);
       const pr = document.querySelector('input[name=mcpw-preset]:checked');
       W.preset = pr ? pr.value : 'read';
-      const hEl = $('mcpw-hours');
-      if (hEl) W.hours = Math.min(Math.max(1, parseInt(hEl.value, 10) || cfg.default_hours), cfg.max_hours);
+      if ($('mcpw-hours')) W.hours = Math.min(lifetimeValue('mcpw-hours') || cfg.default_hours, cfg.max_hours);
       if (!W.conn_ids.length) { showToast(t('mcpw_pick_server'), 'error'); return; }
       const scopes = (W.preset !== 'read' ? ['read_logs', 'run_readonly', 'run_with_approval', 'edit_file_with_approval'] : ['read_logs', 'run_readonly']).filter(s => cfg.scopes.includes(s));
       const c = WCLIENTS.find(x => x.id === W.client);
