@@ -312,6 +312,19 @@ type aiAutoLimits struct {
 	MaxActions int       `json:"max_actions"` // 0 = up to the policy limit
 	Until      time.Time `json:"until"`
 	Used       int       `json:"used"`
+	// UntilGrant (AI connections only): no time or action limit; automatic mode lasts as
+	// long as the AI connection itself (Until is the connection's expiry).
+	UntilGrant bool `json:"until_grant,omitempty"`
+}
+
+// allowsAll reports whether a pattern list allows every command or path ("*" or "**").
+func allowsAll(pats []string) bool {
+	for _, p := range pats {
+		if p == "*" || p == "**" || p == "/**" {
+			return true
+		}
+	}
+	return false
 }
 
 func cleanPatternList(in []string, max int) ([]string, error) {
@@ -356,6 +369,15 @@ func normalizeAutoLimits(a *aiAutoLimits) error {
 			return fmt.Errorf("path patterns must be absolute: %s", p)
 		}
 	}
+	a.Used = 0
+	if a.UntilGrant {
+		if !settingBool("ai_auto_until_grant") {
+			return fmt.Errorf("the policy does not allow automatic mode without a time limit")
+		}
+		// the caller sets Until to the AI connection's expiry
+		a.Minutes, a.MaxActions, a.Until = 0, 0, time.Time{}
+		return nil
+	}
 	maxMin := settingInt("ai_auto_max_minutes")
 	if a.Minutes <= 0 || a.Minutes > maxMin {
 		return fmt.Errorf("the time limit must be between 1 and %d minutes", maxMin)
@@ -365,7 +387,6 @@ func normalizeAutoLimits(a *aiAutoLimits) error {
 		a.MaxActions = maxAct
 	}
 	a.Until = time.Now().Add(time.Duration(a.Minutes) * time.Minute)
-	a.Used = 0
 	return nil
 }
 
@@ -373,6 +394,12 @@ func normalizeAutoLimits(a *aiAutoLimits) error {
 func (a *aiAutoLimits) active(now time.Time) (bool, string) {
 	if a == nil {
 		return false, "automatic mode is off"
+	}
+	if a.UntilGrant {
+		if !a.Until.IsZero() && now.After(a.Until) {
+			return false, "the AI connection has expired"
+		}
+		return true, ""
 	}
 	if now.After(a.Until) {
 		return false, "the automatic mode time limit is over"
@@ -487,7 +514,11 @@ func aiEvaluateAuto(auto *aiAutoLimits, cmd, home string, now time.Time, v roVer
 	if ok, why := auto.active(now); !ok {
 		return aiDecision{Action: aiApprove, Rule: "auto_limit", Reason: why}
 	}
-	if p.opaque() || p.Vars {
+	// "*" in the allow list means the user allowed every command: variables, chains, groups and
+	// substitutions run too. The blocked commands, the deny lists and sensitive files still apply;
+	// only a command WRM cannot parse at all still asks.
+	all := allowsAll(auto.Allow)
+	if p.Err != "" || (!all && (p.opaque() || p.Vars)) {
 		return aiDecision{Action: aiApprove, Rule: "auto_outside", Reason: "the command cannot be checked against the allow list (" + v.Reason + ")"}
 	}
 	for _, s := range p.Segs {
@@ -497,7 +528,7 @@ func aiEvaluateAuto(auto *aiAutoLimits, cmd, home string, now time.Time, v roVer
 				if m := matchAny(expandAll(auto.PathDeny, home), t, true); m != "" {
 					return aiDecision{Action: aiDeny, Rule: "auto_deny", Reason: "writes to a path on the session's deny list (" + m + ")"}
 				}
-				if matchAny(expandAll(auto.PathAllow, home), t, true) == "" {
+				if !all && matchAny(expandAll(auto.PathAllow, home), t, true) == "" {
 					return aiDecision{Action: aiApprove, Rule: "auto_outside", Reason: "writes to " + r.Target + ", which is not in the allow list"}
 				}
 			}
@@ -513,6 +544,9 @@ func aiEvaluateAuto(auto *aiAutoLimits, cmd, home string, now time.Time, v roVer
 		if matchAny(auto.Allow, strings.Join(s.Words, " "), false) == "" {
 			return aiDecision{Action: aiApprove, Rule: "auto_outside", Reason: "\"" + truncateStr(strings.Join(s.Words, " "), 80) + "\" is not in the session's allow list"}
 		}
+	}
+	if all {
+		return aiDecision{Action: aiAllow, Rule: "auto", Auto: true, Reason: "allowed: the session allows every command (*)"}
 	}
 	return aiDecision{Action: aiAllow, Rule: "auto", Auto: true, Reason: "allowed by the session's allow list"}
 }

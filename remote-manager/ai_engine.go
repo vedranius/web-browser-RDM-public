@@ -246,6 +246,9 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		if err := normalizeAutoLimits(&a); err != nil {
 			return nil, err
 		}
+		if a.UntilGrant && (p.Transport != "mcp" || p.TokenID <= 0) {
+			return nil, fmt.Errorf("automatic mode without a time limit is only for AI connections")
+		}
 		auto = &a
 	}
 	if len(aiActiveSessions(func(s *aiSession) bool { return s.UserID == p.UserID && (s.Transport == "mcp") == mcp })) >= aiMaxSessionsPerUser {
@@ -267,6 +270,9 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 			return nil, fmt.Errorf("AI connection is no longer authorized")
 		}
 		s.grantPolicy = mcpPolicySignature(g)
+		if auto != nil && auto.UntilGrant {
+			auto.Until = g.ExpiresAt // automatic mode ends with the AI connection
+		}
 		if p.GrantPolicy != "" && s.grantPolicy != p.GrantPolicy {
 			return nil, fmt.Errorf("AI connection permissions changed; reopen the session")
 		}
@@ -310,12 +316,49 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 	return s, nil
 }
 
+// aiApprovalWhy tells the AI which rule made WRM ask the user and what the user can change
+// so that it is not asked again, for the message after a refusal or a timeout.
+func aiApprovalWhy(dec aiDecision, mcp bool) string {
+	why := "WRM asked the user because "
+	if dec.Reason != "" {
+		why += dec.Reason
+	} else {
+		why += "the session asks before every change"
+	}
+	why += " (rule " + dec.Rule + ")."
+	edit := "edit the AI connection in WRM (Settings → AI connections)"
+	if !mcp {
+		edit = "change the session mode or its automatic mode limits in WRM"
+	}
+	switch dec.Rule {
+	case "auto_limit":
+		if mcp {
+			return why + " To run such commands without asking, the user can " + edit + " and choose \"Allow everything\" with no time or action limit, or open a new session."
+		}
+		return why + " The user can switch automatic mode on again with new limits."
+	case "auto_outside":
+		return why + " To run such commands without asking, the user can " + edit + " and add the command or path to the allow list, or choose \"Allow everything\"."
+	case "ask":
+		return why + " The connection is in ask mode; for commands without asking the user can " + edit + " and choose automatic mode."
+	case "power":
+		return why + " Power commands (reboot, shutdown) always ask; only the administrator's policy can change that."
+	}
+	return why
+}
+
 func aiAutoSummary(a *aiAutoLimits) map[string]interface{} {
 	if a == nil {
 		return nil
 	}
-	return map[string]interface{}{"allow": a.Allow, "deny": a.Deny, "path_allow": a.PathAllow, "path_deny": a.PathDeny,
+	m := map[string]interface{}{"allow": a.Allow, "deny": a.Deny, "path_allow": a.PathAllow, "path_deny": a.PathDeny,
 		"minutes": a.Minutes, "max_actions": a.MaxActions, "until": a.Until.UTC().Format(time.RFC3339), "used": a.Used}
+	if a.UntilGrant {
+		m["until_grant"] = true
+		if a.Until.IsZero() {
+			delete(m, "until")
+		}
+	}
+	return m
 }
 
 // view is the session as the browser sees it (no secrets).
@@ -717,7 +760,7 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 			s.denials++
 			s.mu.Unlock()
 			// the AI must not silently retry or work around a refusal: it asks the user how to go on
-			const askNext = " Do not run it or a variant of it again on your own: tell the user what you wanted to run and why, and ask whether to continue, change the command or stop."
+			askNext := " " + aiApprovalWhy(dec, s.Transport == "mcp") + " Do not run it or a variant of it again on your own: tell the user what you wanted to run, why, and why WRM asked, and ask whether to continue, change the command or stop."
 			switch r.Outcome {
 			case "timeout":
 				return fail("Not run: the approval timed out, nobody answered within " + aiApprovalTimeout().String() + " (in WRM or in the app), so WRM refused it." + askNext + " If the user agrees, call the tool again and they approve it when it is asked.")
@@ -1003,6 +1046,9 @@ func (s *aiSession) SetMode(r *http.Request, userID int, mode string, auto *aiAu
 		cp := *auto
 		if err := normalizeAutoLimits(&cp); err != nil {
 			return err
+		}
+		if cp.UntilGrant {
+			return fmt.Errorf("automatic mode without a time limit is only for AI connections")
 		}
 		a = &cp
 	}
@@ -1370,7 +1416,7 @@ func aiJanitorTick(now time.Time) {
 		s.mu.Lock()
 		busy, last, pending := s.busy, s.lastActive, len(s.pending)
 		var expired bool
-		if s.Mode == aiModeAuto && s.Auto != nil && now.After(s.Auto.Until) {
+		if s.Mode == aiModeAuto && s.Auto != nil && !s.Auto.UntilGrant && now.After(s.Auto.Until) {
 			expired = true
 		}
 		s.mu.Unlock()

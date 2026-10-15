@@ -22,6 +22,8 @@ Object.assign(LANGS.en, {
   mcp_sc_edit_file_with_approval: 'Edit files (with approval, shown as a diff)', mcp_sc_transfer: 'Copy files between the chosen servers (with approval)',
   mcp_auto_allow: 'Commands that may run without asking (one pattern per line)', mcp_auto_path_allow: 'Files that may be changed without asking (/etc/nginx/**)',
   mcp_auto_minutes: 'Time limit per session (minutes)', mcp_auto_actions: 'Maximum actions per session', mcp_auto_confirm: 'I allow these changes without asking, within these limits.',
+  mcp_auto_all: 'Allow everything', mcp_auto_all_d: 'Every command and file on the chosen servers, without asking. Blocked commands and sensitive files still stay blocked.',
+  mcp_auto_grant: 'No time or action limit: automatic for as long as this AI connection is valid',
   mcp_token_once: 'Copy the token now. WRM stores only a hash and cannot show it again.', mcp_token: 'Token', mcp_copy: 'Copy', mcp_url: 'MCP server address',
   mcp_setup: 'Set up your app', mcp_setup_claude_desktop: 'Claude Desktop (local bridge)', mcp_setup_remote: 'Claude (custom connector)', mcp_setup_chatgpt: 'ChatGPT (connector)',
   mcp_setup_generic: 'Other MCP clients', mcp_setup_cli: 'Test from a shell',
@@ -106,6 +108,8 @@ Object.assign(LANGS.hr, {
   mcp_sc_edit_file_with_approval: 'Uređivanje datoteka (uz odobrenje, prikazano kao razlike)', mcp_sc_transfer: 'Kopiranje datoteka između odabranih poslužitelja (uz odobrenje)',
   mcp_auto_allow: 'Naredbe koje se smiju izvršiti bez pitanja (jedan uzorak po retku)', mcp_auto_path_allow: 'Datoteke koje se smiju mijenjati bez pitanja (/etc/nginx/**)',
   mcp_auto_minutes: 'Vremensko ograničenje po sesiji (minute)', mcp_auto_actions: 'Najviše radnji po sesiji', mcp_auto_confirm: 'Dopuštam ove promjene bez pitanja, unutar ovih ograničenja.',
+  mcp_auto_all: 'Dopusti sve', mcp_auto_all_d: 'Sve naredbe i datoteke na odabranim serverima, bez pitanja. Blokirane naredbe i osjetljive datoteke i dalje ostaju blokirane.',
+  mcp_auto_grant: 'Bez ograničenja vremena i broja radnji: automatski dok god vrijedi ova AI veza',
   mcp_token_once: 'Kopirajte token sada. WRM sprema samo sažetak i ne može ga ponovno prikazati.', mcp_token: 'Token', mcp_copy: 'Kopiraj', mcp_url: 'Adresa MCP poslužitelja',
   mcp_setup: 'Postavljanje aplikacije', mcp_setup_claude_desktop: 'Claude Desktop (lokalni most)', mcp_setup_remote: 'Claude (prilagođeni konektor)', mcp_setup_chatgpt: 'ChatGPT (konektor)',
   mcp_setup_generic: 'Drugi MCP klijenti', mcp_setup_cli: 'Provjera iz ljuske',
@@ -269,10 +273,13 @@ Object.assign(LANGS.hr, {
         <div class="field"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(c.max_hours))})</span></label>${lifetimeHTML(prefix + '-hours', c.default_hours)}</div></div>
       <div class="sub" id="${prefix}-mode-d" style="font-size:11px;color:var(--text3);">${esc(t('mcp_mode_read_only_d'))}</div>
       <div id="${prefix}-auto" style="display:none;">
+        <div class="mcp-row" style="align-items:center;"><button type="button" class="btn-sec btn-sm" onclick="wrmMCP.allowAll('${prefix}')">${esc(t('mcp_auto_all'))}</button>
+          <span class="sub" style="font-size:11px;color:var(--text3);">${esc(t('mcp_auto_all_d'))}</span></div>
         <div class="field"><label>${esc(t('mcp_auto_allow'))}</label><textarea id="${prefix}-auto-allow" placeholder="systemctl restart nginx"></textarea></div>
         <div class="field"><label>${esc(t('mcp_auto_path_allow'))}</label><textarea id="${prefix}-auto-paths"></textarea></div>
         <div class="mcp-row"><div class="field"><label>${esc(t('mcp_auto_minutes'))}</label><input type="number" id="${prefix}-auto-min" min="1" max="${c.auto_max_minutes}" value="${Math.min(30, c.auto_max_minutes)}"></div>
           <div class="field"><label>${esc(t('mcp_auto_actions'))}</label><input type="number" id="${prefix}-auto-act" min="1" max="${c.auto_max_actions}" value="${Math.min(20, c.auto_max_actions)}"></div></div>
+        ${c.auto_until_grant ? `<label class="mcp-check"><input type="checkbox" id="${prefix}-auto-grant" onchange="wrmMCP.untilGrant('${prefix}')"><span>${esc(t('mcp_auto_grant'))}</span></label>` : ''}
         <label class="mcp-check"><input type="checkbox" id="${prefix}-auto-ok"><span>${esc(t('mcp_auto_confirm'))}</span></label>
       </div>
       <div class="field"><label>${esc(t('mcp_scopes'))}</label>${c.scopes.map(s => `<label class="mcp-check"><input type="checkbox" class="${prefix}-scope" value="${s}" ${scopes.includes(s) ? 'checked' : ''}>
@@ -288,6 +295,16 @@ Object.assign(LANGS.hr, {
     $(prefix + '-mode-d').textContent = t('mcp_mode_' + m + '_d');
     $(prefix + '-auto').style.display = m === 'auto' ? '' : 'none';
   }
+  // "Allow everything": every command and file without asking, for as long as the AI connection
+  // is valid. The blocked commands, sensitive files and the chosen servers still apply.
+  function allowAll(prefix) {
+    $(prefix + '-auto-allow').value = '*'; $(prefix + '-auto-paths').value = '/**';
+    const g = $(prefix + '-auto-grant'); if (g) { g.checked = true; untilGrant(prefix); }
+  }
+  function untilGrant(prefix) {
+    const on = !!($(prefix + '-auto-grant') || {}).checked;
+    [prefix + '-auto-min', prefix + '-auto-act'].forEach(id => { const el = $(id); if (el) { el.disabled = on; el.closest('.field').style.opacity = on ? .5 : ''; } });
+  }
   function formValue(prefix) {
     const lines = id => ($(id).value || '').split('\n').map(x => x.trim()).filter(Boolean);
     const body = {
@@ -298,6 +315,7 @@ Object.assign(LANGS.hr, {
     if ($(prefix + '-name')) body.name = $(prefix + '-name').value.trim();
     if (body.mode === 'auto') {
       body.auto = {allow: lines(prefix + '-auto-allow'), path_allow: lines(prefix + '-auto-paths'), minutes: +$(prefix + '-auto-min').value, max_actions: +$(prefix + '-auto-act').value};
+      if (($(prefix + '-auto-grant') || {}).checked) body.auto.until_grant = true;
       body.confirm_auto = $(prefix + '-auto-ok').checked;
     }
     return body;
@@ -544,6 +562,7 @@ Object.assign(LANGS.hr, {
     document.querySelectorAll('.mcpe-conn').forEach(x => x.checked = g.connections.some(c => c.id === +x.value));
     $('mcpe-auto-allow').value = (g.auto?.allow || []).join('\n'); $('mcpe-auto-paths').value = (g.auto?.path_allow || []).join('\n');
     if (g.auto) { $('mcpe-auto-min').value = g.auto.minutes || 30; $('mcpe-auto-act').value = g.auto.max_actions || 20; }
+    if (g.auto?.until_grant && $('mcpe-auto-grant')) { $('mcpe-auto-grant').checked = true; untilGrant('mcpe'); }
     $('mcpe-hours').closest('.field').style.display = 'none'; modeChanged('mcpe');
   }
   async function saveGrant(id) {
@@ -835,7 +854,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmMCP = {
-    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto,
+    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto,
     installer, cursorInstall, desktopExtension, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,
   };
