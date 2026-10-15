@@ -22,6 +22,8 @@ Object.assign(LANGS.en, {
   mcp_sc_edit_file_with_approval: 'Edit files (with approval, shown as a diff)', mcp_sc_transfer: 'Copy files between the chosen servers (with approval)',
   mcp_auto_allow: 'Commands that may run without asking (one pattern per line)', mcp_auto_path_allow: 'Files that may be changed without asking (/etc/nginx/**)',
   mcp_auto_minutes: 'Time limit per session (minutes)', mcp_auto_actions: 'Maximum actions per session', mcp_auto_confirm: 'I allow these changes without asking, within these limits.',
+  mcp_auto_all: 'Allow everything', mcp_auto_all_d: 'Every command and file on the chosen servers, without asking. Blocked commands and sensitive files still stay blocked.',
+  mcp_auto_grant: 'No time or action limit: automatic for as long as this AI connection is valid',
   mcp_token_once: 'Copy the token now. WRM stores only a hash and cannot show it again.', mcp_token: 'Token', mcp_copy: 'Copy', mcp_url: 'MCP server address',
   mcp_setup: 'Set up your app', mcp_setup_claude_desktop: 'Claude Desktop (local bridge)', mcp_setup_remote: 'Claude (custom connector)', mcp_setup_chatgpt: 'ChatGPT (connector)',
   mcp_setup_generic: 'Other MCP clients', mcp_setup_cli: 'Test from a shell',
@@ -86,6 +88,8 @@ Object.assign(LANGS.en, {
   mcpw_cc_plugin: 'Or install the WRM PRO plugin for Claude Code with one command (Claude Code 2.1.275 or later):',
   mcp_w_watch: 'Watch live', mcp_w_auto: 'Open the live view when an AI app starts working on a server', mcp_w_title: '{client} on {server}',
   mcp_w_empty: 'Connected. What the AI runs on the server and its output appear here.', mcp_w_wait: 'Waiting for your approval', mcp_w_runs: 'runs', mcp_w_refused: 'refused by WRM', mcp_w_ask: 'needs your approval',
+  mcp_w_later: 'Not approved in time, or the app declined the question: the AI no longer waits, but you can still approve it here. The AI then repeats it and it runs once.', mcp_w_later_ok: 'runs when the AI repeats it',
+  mcp_ap_later: 'Not approved in time, or the app declined the question. Approve it to let the AI run exactly this once when it repeats it (valid for an hour).',
   mcp_w_o_approved: 'approved', mcp_w_o_denied: 'denied: not run', mcp_w_o_timeout: 'no answer: not run', mcp_w_o_cancelled: 'cancelled', mcp_w_exit: 'exit code {code}', mcp_w_output: 'Output',
   mcp_w_ended: 'Session ended: {reason}', mcp_w_min: 'Minimize', mcp_w_close: 'Close (the AI keeps working; reopen it from the 🤖 button)', mcp_w_reason: 'Why',
   mcp_valid_for: 'Valid for', mcp_unit_hours: 'hours', mcp_unit_days: 'days', mcp_max_days: 'at most {n} days', mcpw_hours_d: 'When the token expires the app loses access until you create a new one. You can revoke it at any time below. An administrator sets the longest lifetime (Admin panel → AI connections).',
@@ -106,6 +110,8 @@ Object.assign(LANGS.hr, {
   mcp_sc_edit_file_with_approval: 'Uređivanje datoteka (uz odobrenje, prikazano kao razlike)', mcp_sc_transfer: 'Kopiranje datoteka između odabranih poslužitelja (uz odobrenje)',
   mcp_auto_allow: 'Naredbe koje se smiju izvršiti bez pitanja (jedan uzorak po retku)', mcp_auto_path_allow: 'Datoteke koje se smiju mijenjati bez pitanja (/etc/nginx/**)',
   mcp_auto_minutes: 'Vremensko ograničenje po sesiji (minute)', mcp_auto_actions: 'Najviše radnji po sesiji', mcp_auto_confirm: 'Dopuštam ove promjene bez pitanja, unutar ovih ograničenja.',
+  mcp_auto_all: 'Dopusti sve', mcp_auto_all_d: 'Sve naredbe i datoteke na odabranim serverima, bez pitanja. Blokirane naredbe i osjetljive datoteke i dalje ostaju blokirane.',
+  mcp_auto_grant: 'Bez ograničenja vremena i broja radnji: automatski dok god vrijedi ova AI veza',
   mcp_token_once: 'Kopirajte token sada. WRM sprema samo sažetak i ne može ga ponovno prikazati.', mcp_token: 'Token', mcp_copy: 'Kopiraj', mcp_url: 'Adresa MCP poslužitelja',
   mcp_setup: 'Postavljanje aplikacije', mcp_setup_claude_desktop: 'Claude Desktop (lokalni most)', mcp_setup_remote: 'Claude (prilagođeni konektor)', mcp_setup_chatgpt: 'ChatGPT (konektor)',
   mcp_setup_generic: 'Drugi MCP klijenti', mcp_setup_cli: 'Provjera iz ljuske',
@@ -167,6 +173,8 @@ Object.assign(LANGS.hr, {
   mcpw_cc_plugin: 'Ili instalirajte WRM PRO dodatak za Claude Code jednom naredbom (Claude Code 2.1.275 ili noviji):',
   mcp_w_watch: 'Prati uživo', mcp_w_auto: 'Otvori prikaz uživo kad AI aplikacija počne raditi na poslužitelju', mcp_w_title: '{client} na {server}',
   mcp_w_empty: 'Povezano. Ovdje se vidi što AI pokreće na poslužitelju i što dobiva kao izlaz.', mcp_w_wait: 'Čeka vaše odobrenje', mcp_w_runs: 'pokreće se', mcp_w_refused: 'WRM je odbio', mcp_w_ask: 'treba vaše odobrenje',
+  mcp_w_later: 'Nije odobreno na vrijeme ili je aplikacija odbila pitanje: AI više ne čeka, ali i dalje to možeš odobriti ovdje. AI će to ponoviti i izvršit će se jednom.', mcp_w_later_ok: 'izvršit će se kad AI ponovi',
+  mcp_ap_later: 'Nije odobreno na vrijeme ili je aplikacija odbila pitanje. Odobri da AI točno ovo izvrši jednom kad ponovi zahtjev (vrijedi sat vremena).',
   mcp_w_o_approved: 'odobreno', mcp_w_o_denied: 'odbijeno: nije pokrenuto', mcp_w_o_timeout: 'bez odgovora: nije pokrenuto', mcp_w_o_cancelled: 'otkazano', mcp_w_exit: 'izlazni kod {code}', mcp_w_output: 'Izlaz',
   mcp_w_ended: 'Sesija je završila: {reason}', mcp_w_min: 'Smanji', mcp_w_close: 'Zatvori (AI nastavlja raditi; ponovno otvori preko gumba 🤖)', mcp_w_reason: 'Zašto',
   mcp_valid_for: 'Vrijedi', mcp_unit_hours: 'sati', mcp_unit_days: 'dana', mcp_max_days: 'najviše {n} dana', mcpw_hours_d: 'Kad token istekne, aplikacija gubi pristup dok ne stvorite novi. Možete ga opozvati bilo kada u nastavku. Najdulje trajanje postavlja administrator (Admin panel → AI veze).',
@@ -269,10 +277,13 @@ Object.assign(LANGS.hr, {
         <div class="field"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(c.max_hours))})</span></label>${lifetimeHTML(prefix + '-hours', c.default_hours)}</div></div>
       <div class="sub" id="${prefix}-mode-d" style="font-size:11px;color:var(--text3);">${esc(t('mcp_mode_read_only_d'))}</div>
       <div id="${prefix}-auto" style="display:none;">
+        <div style="display:flex;gap:10px;align-items:center;margin:6px 0 10px;"><button type="button" class="btn-sec btn-sm" style="flex:none;" onclick="wrmMCP.allowAll('${prefix}')">${esc(t('mcp_auto_all'))}</button>
+          <span class="sub" style="font-size:11px;color:var(--text3);">${esc(t('mcp_auto_all_d'))}</span></div>
         <div class="field"><label>${esc(t('mcp_auto_allow'))}</label><textarea id="${prefix}-auto-allow" placeholder="systemctl restart nginx"></textarea></div>
         <div class="field"><label>${esc(t('mcp_auto_path_allow'))}</label><textarea id="${prefix}-auto-paths"></textarea></div>
         <div class="mcp-row"><div class="field"><label>${esc(t('mcp_auto_minutes'))}</label><input type="number" id="${prefix}-auto-min" min="1" max="${c.auto_max_minutes}" value="${Math.min(30, c.auto_max_minutes)}"></div>
           <div class="field"><label>${esc(t('mcp_auto_actions'))}</label><input type="number" id="${prefix}-auto-act" min="1" max="${c.auto_max_actions}" value="${Math.min(20, c.auto_max_actions)}"></div></div>
+        ${c.auto_until_grant ? `<label class="mcp-check"><input type="checkbox" id="${prefix}-auto-grant" onchange="wrmMCP.untilGrant('${prefix}')"><span>${esc(t('mcp_auto_grant'))}</span></label>` : ''}
         <label class="mcp-check"><input type="checkbox" id="${prefix}-auto-ok"><span>${esc(t('mcp_auto_confirm'))}</span></label>
       </div>
       <div class="field"><label>${esc(t('mcp_scopes'))}</label>${c.scopes.map(s => `<label class="mcp-check"><input type="checkbox" class="${prefix}-scope" value="${s}" ${scopes.includes(s) ? 'checked' : ''}>
@@ -288,6 +299,16 @@ Object.assign(LANGS.hr, {
     $(prefix + '-mode-d').textContent = t('mcp_mode_' + m + '_d');
     $(prefix + '-auto').style.display = m === 'auto' ? '' : 'none';
   }
+  // "Allow everything": every command and file without asking, for as long as the AI connection
+  // is valid. The blocked commands, sensitive files and the chosen servers still apply.
+  function allowAll(prefix) {
+    $(prefix + '-auto-allow').value = '*'; $(prefix + '-auto-paths').value = '/**';
+    const g = $(prefix + '-auto-grant'); if (g) { g.checked = true; untilGrant(prefix); }
+  }
+  function untilGrant(prefix) {
+    const on = !!($(prefix + '-auto-grant') || {}).checked;
+    [prefix + '-auto-min', prefix + '-auto-act'].forEach(id => { const el = $(id); if (el) { el.disabled = on; el.closest('.field').style.opacity = on ? .5 : ''; } });
+  }
   function formValue(prefix) {
     const lines = id => ($(id).value || '').split('\n').map(x => x.trim()).filter(Boolean);
     const body = {
@@ -298,6 +319,7 @@ Object.assign(LANGS.hr, {
     if ($(prefix + '-name')) body.name = $(prefix + '-name').value.trim();
     if (body.mode === 'auto') {
       body.auto = {allow: lines(prefix + '-auto-allow'), path_allow: lines(prefix + '-auto-paths'), minutes: +$(prefix + '-auto-min').value, max_actions: +$(prefix + '-auto-act').value};
+      if (($(prefix + '-auto-grant') || {}).checked) body.auto.until_grant = true;
       body.confirm_auto = $(prefix + '-auto-ok').checked;
     }
     return body;
@@ -544,6 +566,7 @@ Object.assign(LANGS.hr, {
     document.querySelectorAll('.mcpe-conn').forEach(x => x.checked = g.connections.some(c => c.id === +x.value));
     $('mcpe-auto-allow').value = (g.auto?.allow || []).join('\n'); $('mcpe-auto-paths').value = (g.auto?.path_allow || []).join('\n');
     if (g.auto) { $('mcpe-auto-min').value = g.auto.minutes || 30; $('mcpe-auto-act').value = g.auto.max_actions || 20; }
+    if (g.auto?.until_grant && $('mcpe-auto-grant')) { $('mcpe-auto-grant').checked = true; untilGrant('mcpe'); }
     $('mcpe-hours').closest('.field').style.display = 'none'; modeChanged('mcpe');
   }
   async function saveGrant(id) {
@@ -614,7 +637,7 @@ Object.assign(LANGS.hr, {
     box.appendChild(el);
     const st = W8[sid] = {el, seq: 0, calls: {}, client: client || 'AI'};
     const es = st.es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
-    ['session', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'error', 'ended']
+    ['session', 'tool_call', 'approval_required', 'approval_resolved', 'approval_deferred', 'tool_result', 'error', 'ended']
       .forEach(ty => es.addEventListener(ty, ev => { try { watchEvent(sid, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));
     es.onerror = () => { if (st.ended) es.close(); };
   }
@@ -662,11 +685,24 @@ Object.assign(LANGS.hr, {
         st.el.classList.remove('min');
         break;
       }
+      case 'approval_deferred': {
+        // nobody answered in time (or the app declined): it can still be approved here
+        const a = d.approval || {}, el = st.calls[a.call_id];
+        if (el) {
+          el.classList.remove('bad'); el.classList.add('ask');
+          el.querySelector('.wa').innerHTML = `<div class="sub">⏳ ${esc(t('mcp_w_later'))}</div><div class="acts">
+          <button class="btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', true)">✔ ${esc(t('mcp_ap_approve'))}</button>
+          <button class="btn-danger btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', false)">✕ ${esc(t('mcp_ap_deny'))}</button></div>`;
+        }
+        st.el.classList.remove('min');
+        break;
+      }
       case 'approval_resolved': {
         const el = st.calls[d.call_id];
+        if (d.later && d.outcome !== 'approved' && d.outcome !== 'denied') break; // approval_deferred follows
         if (el) {
           el.classList.remove('ask'); el.classList.add(d.outcome === 'approved' ? 'ok' : 'bad');
-          el.querySelector('.wa').innerHTML = `<div class="sub">${d.outcome === 'approved' ? '✔' : '✕'} ${esc(t('mcp_w_o_' + d.outcome))}${d.by ? ' · ' + esc(d.by) : ''}</div>`;
+          el.querySelector('.wa').innerHTML = `<div class="sub">${d.outcome === 'approved' ? '✔' : '✕'} ${esc(t('mcp_w_o_' + d.outcome))}${d.by ? ' · ' + esc(d.by) : ''}${d.later && d.outcome === 'approved' ? ' · ' + esc(t('mcp_w_later_ok')) : ''}</div>`;
         }
         break;
       }
@@ -721,13 +757,13 @@ Object.assign(LANGS.hr, {
       const what = a.transfer ? `<div>${esc(t('mcp_ap_transfer'))}</div><pre>${esc(a.transfer)}</pre>`
         : a.command ? `<div>${esc(t('mcp_ap_cmd'))}</div><pre id="mcp-cmd-${a.id}">${esc(a.command)}</pre>`
         : `<div>${esc(tf('mcp_ap_edit_file', {path: a.path}))}</div><pre>${diffHTML(a.diff)}</pre>`;
-      el.innerHTML = `<h4>🤖 ${esc(tf('mcp_ap_title', {client: p.client, server: p.connection}))}</h4>${what}
+      el.innerHTML = `<h4>🤖 ${esc(tf('mcp_ap_title', {client: p.client, server: p.connection}))}</h4>${a.later ? `<div class="hint-box warn" style="margin:4px 0;">${esc(t('mcp_ap_later'))}</div>` : ''}${what}
         ${a.why ? `<div class="sub">${esc(t('mcp_ap_why'))}: ${esc(a.why)}</div>` : ''}${a.reason ? `<div class="sub">${esc(t('mcp_ap_reason'))}: ${esc(a.reason)}</div>` : ''}
         <div id="mcp-edit-${a.id}"></div>
         <input type="text" id="mcp-note-${a.id}" maxlength="500" placeholder="${esc(t('mcp_ap_note'))}" style="margin-top:6px;">
         <div class="acts"><button class="btn-sm" onclick="wrmMCP.decide(${p.session}, '${a.id}', true)">✔ ${esc(t('mcp_ap_approve'))}</button>
           <button class="btn-danger btn-sm" onclick="wrmMCP.decide(${p.session}, '${a.id}', false)">✕ ${esc(t('mcp_ap_deny'))}</button>
-          ${a.transfer ? '' : `<button class="btn-sec btn-sm" onclick="wrmMCP.edit('${a.id}')">✎ ${esc(t('mcp_ap_edit'))}</button>`}
+          ${a.transfer || a.later ? '' : `<button class="btn-sec btn-sm" onclick="wrmMCP.edit('${a.id}')">✎ ${esc(t('mcp_ap_edit'))}</button>`}
           <span class="sub" style="margin-left:auto;align-self:center;" data-exp="${esc(a.expires)}"></span></div>`;
       box.appendChild(el);
     }
@@ -835,7 +871,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmMCP = {
-    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto,
+    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto,
     installer, cursorInstall, desktopExtension, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,
   };

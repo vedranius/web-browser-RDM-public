@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -43,7 +45,8 @@ type aiApprovalResult struct {
 	Edited   bool
 	Note     string
 	Outcome  string // approved | denied | timeout | cancelled
-	Via      string // "mcp" when answered through MCP elicitation
+	Via      string // "mcp" when answered through MCP elicitation, "later" when approved earlier in WRM
+	Deferred bool   // not answered in time (or declined by the app): kept in WRM to approve later
 }
 
 type aiApproval struct {
@@ -59,7 +62,28 @@ type aiApproval struct {
 	Why      string    `json:"why,omitempty"`      // why WRM asks
 	Created  time.Time `json:"created"`
 	Expires  time.Time `json:"expires"`
-	ch       chan aiApprovalResult
+	// Later: the AI call no longer waits; the user can still approve it in WRM, and the
+	// same call then runs once without asking (approvedLater)
+	Later bool `json:"later,omitempty"`
+	key   string
+	ch    chan aiApprovalResult
+}
+
+// aiLaterTTL is how long a request nobody answered stays in WRM to be approved later, and
+// how long such an approval waits for the AI to repeat the call.
+const aiLaterTTL = time.Hour
+
+// aiApprovalKey identifies a call exactly (tool and command, file and content, or transfer)
+// so that a later approval covers that call and nothing else.
+func aiApprovalKey(tool string, pl *aiPlanned) string {
+	switch {
+	case pl.Transfer:
+		return tool + "\x00" + pl.Display
+	case pl.Write:
+		sum := sha256.Sum256([]byte(pl.NewText))
+		return tool + "\x00" + pl.Path + "\x00" + pl.OldHash + "\x00" + hex.EncodeToString(sum[:])
+	}
+	return tool + "\x00" + pl.Act.Command + "\x00" + pl.Act.Path + "\x00" + pl.Script
 }
 
 type aiSession struct {
@@ -95,29 +119,30 @@ type aiSession struct {
 	notes    string
 	gathered bool
 
-	history     []aiMsg
-	modeNotice  string
-	busy        bool
-	turnCancel  context.CancelFunc
-	ctx         context.Context
-	cancel      context.CancelFunc
-	pending     map[string]*aiApproval
-	ended       bool
-	endReason   string
-	events      []aiEvent
-	seq         int64
-	tseq        int64
-	notify      chan struct{}
-	requests    int
-	toolCalls   int
-	approvalsN  int
-	denials     int
-	tokensIn    int
-	tokensOut   int
-	cost        float64
-	termID      int64
-	rec         *recorder
-	pendingText strings.Builder
+	history       []aiMsg
+	modeNotice    string
+	busy          bool
+	turnCancel    context.CancelFunc
+	ctx           context.Context
+	cancel        context.CancelFunc
+	pending       map[string]*aiApproval
+	approvedLater map[string]time.Time // aiApprovalKey → until when a later approval is valid
+	ended         bool
+	endReason     string
+	events        []aiEvent
+	seq           int64
+	tseq          int64
+	notify        chan struct{}
+	requests      int
+	toolCalls     int
+	approvalsN    int
+	denials       int
+	tokensIn      int
+	tokensOut     int
+	cost          float64
+	termID        int64
+	rec           *recorder
+	pendingText   strings.Builder
 }
 
 // aiApprovalTimeout is a variable so tests can shorten it.
@@ -246,6 +271,9 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		if err := normalizeAutoLimits(&a); err != nil {
 			return nil, err
 		}
+		if a.UntilGrant && (p.Transport != "mcp" || p.TokenID <= 0) {
+			return nil, fmt.Errorf("automatic mode without a time limit is only for AI connections")
+		}
 		auto = &a
 	}
 	if len(aiActiveSessions(func(s *aiSession) bool { return s.UserID == p.UserID && (s.Transport == "mcp") == mcp })) >= aiMaxSessionsPerUser {
@@ -267,6 +295,9 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 			return nil, fmt.Errorf("AI connection is no longer authorized")
 		}
 		s.grantPolicy = mcpPolicySignature(g)
+		if auto != nil && auto.UntilGrant {
+			auto.Until = g.ExpiresAt // automatic mode ends with the AI connection
+		}
 		if p.GrantPolicy != "" && s.grantPolicy != p.GrantPolicy {
 			return nil, fmt.Errorf("AI connection permissions changed; reopen the session")
 		}
@@ -310,12 +341,68 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 	return s, nil
 }
 
+// aiDenyHint says why an approval cannot help with a refusal, and what can.
+func aiDenyHint(dec aiDecision) string {
+	switch {
+	case dec.Rule == "mode":
+		return " The session is read-only, so WRM cannot ask the user to approve changes. The user can create an AI connection in ask or automatic mode in WRM (Settings → AI connections)."
+	case dec.Rule == "auto_deny":
+		return " The user put this on the AI connection's deny list; only they can change that list in WRM (Settings → AI connections)."
+	case dec.Rule == "scope":
+		return " This AI connection does not allow changes; the user can edit it in WRM (Settings → AI connections) and enable running commands with approval."
+	case dec.Rule == "sensitive_path":
+		return " The administrator's policy (ai_sensitive_reads) blocks reading such files; an approval cannot change that."
+	case strings.HasPrefix(dec.Reason, "blocked: "):
+		return " This command is on WRM's list of destructive or forbidden commands, which is blocked in every mode; an approval cannot run it. If it is really needed, the user runs it themselves in a terminal."
+	}
+	return ""
+}
+
+// aiApprovalWhy tells the AI which rule made WRM ask the user and what the user can change
+// so that it is not asked again, for the message after a refusal or a timeout.
+func aiApprovalWhy(dec aiDecision, mcp bool) string {
+	why := "WRM asked the user because "
+	if dec.Reason != "" {
+		why += dec.Reason
+	} else {
+		why += "the session asks before every change"
+	}
+	why += " (rule " + dec.Rule + ")."
+	edit := "edit the AI connection in WRM (Settings → AI connections)"
+	if !mcp {
+		edit = "change the session mode or its automatic mode limits in WRM"
+	}
+	switch dec.Rule {
+	case "auto_limit":
+		if mcp {
+			return why + " To run such commands without asking, the user can " + edit + " and choose \"Allow everything\" with no time or action limit, or open a new session."
+		}
+		return why + " The user can switch automatic mode on again with new limits."
+	case "auto_outside":
+		return why + " To run such commands without asking, the user can " + edit + " and add the command or path to the allow list, or choose \"Allow everything\"."
+	case "ask":
+		return why + " The connection is in ask mode; for commands without asking the user can " + edit + " and choose automatic mode."
+	case "sensitive_read":
+		return why + " Reading a file that may hold secrets always asks the user once per read (secret-looking values are redacted); the administrator can block such reads with ai_sensitive_reads."
+	case "power":
+		return why + " Power commands (reboot, shutdown) always ask; only the administrator's policy can change that."
+	}
+	return why
+}
+
 func aiAutoSummary(a *aiAutoLimits) map[string]interface{} {
 	if a == nil {
 		return nil
 	}
-	return map[string]interface{}{"allow": a.Allow, "deny": a.Deny, "path_allow": a.PathAllow, "path_deny": a.PathDeny,
+	m := map[string]interface{}{"allow": a.Allow, "deny": a.Deny, "path_allow": a.PathAllow, "path_deny": a.PathDeny,
 		"minutes": a.Minutes, "max_actions": a.MaxActions, "until": a.Until.UTC().Format(time.RFC3339), "used": a.Used}
+	if a.UntilGrant {
+		m["until_grant"] = true
+		if a.Until.IsZero() {
+			delete(m, "until")
+		}
+	}
+	return m
 }
 
 // view is the session as the browser sees it (no secrets).
@@ -709,15 +796,34 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		s.denials++
 		s.mu.Unlock()
 		s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": call.Name, "rule": dec.Rule, "reason": dec.Reason})
-		return fail("Denied by WRM: " + dec.Reason + ". Do not try to work around this; explain to the user what you would need.")
+		return fail("Denied by WRM: " + dec.Reason + "." + aiDenyHint(dec) + " Do not try to work around this; explain to the user what you would need.")
 	case aiApprove:
-		r := s.requestApproval(ctx, call, pl, in.Reason, dec.Reason)
+		var r aiApprovalResult
+		if s.takeLaterApproval(aiApprovalKey(call.Name, pl)) {
+			r = aiApprovalResult{Approved: true, Outcome: "approved", Via: "later"}
+			s.audit(nil, "ai.approved", map[string]interface{}{"tool": call.Name, "via": "later", "rule": dec.Rule})
+			s.emit("approval_resolved", map[string]interface{}{"call_id": call.ID, "outcome": "approved", "via": "later", "by": s.Username})
+		} else {
+			r = s.requestApproval(ctx, call, pl, in.Reason, dec.Reason)
+		}
+		if r.Approved {
+			pl.Approved = true
+			pl.ForceRedact = pl.ForceRedact || dec.Rule == "sensitive_read"
+		}
 		if !r.Approved {
 			s.mu.Lock()
 			s.denials++
 			s.mu.Unlock()
 			// the AI must not silently retry or work around a refusal: it asks the user how to go on
-			const askNext = " Do not run it or a variant of it again on your own: tell the user what you wanted to run and why, and ask whether to continue, change the command or stop."
+			askNext := " " + aiApprovalWhy(dec, s.Transport == "mcp") + " Do not run it or a variant of it again on your own: tell the user what you wanted to run, why, and why WRM asked, and ask whether to continue, change the command or stop."
+			if r.Deferred {
+				what := map[string]string{"timeout": "nobody answered the approval within " + aiApprovalTimeout().String(),
+					"cancelled": "the app stopped waiting for the approval", "denied": "the AI app declined the approval question"}[r.Outcome]
+				return fail("Not run yet: " + what + ". WRM keeps the request open in the user's WRM (the live panel and the 🤖 menu show the full " +
+					"command with Approve / Deny) for " + aiLaterTTL.String() + "." + " " + aiApprovalWhy(dec, true) +
+					" Tell the user exactly what you want to run, why, and that they can approve it in WRM. When they say they approved it, call this tool again " +
+					"with exactly the same arguments: it then runs once without asking again. Do not run a variant of it on your own.")
+			}
 			switch r.Outcome {
 			case "timeout":
 				return fail("Not run: the approval timed out, nobody answered within " + aiApprovalTimeout().String() + " (in WRM or in the app), so WRM refused it." + askNext + " If the user agrees, call the tool again and they approve it when it is asked.")
@@ -802,11 +908,22 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 			out = out[i+1:]
 		}
 		if why := aiReadDenied(real); why != "" {
-			s.mu.Lock()
-			s.denials++
-			s.mu.Unlock()
-			s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": call.Name, "rule": "sensitive_path", "path": real})
-			out, code = "Denied by WRM: "+real+" is not readable by the assistant ("+why+").", 1
+			if pl.Approved && aiSensitiveReadsAsk() {
+				// the user approved reading this file: secret-looking values are still redacted
+				pl.ForceRedact = true
+			} else {
+				s.mu.Lock()
+				s.denials++
+				s.mu.Unlock()
+				s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": call.Name, "rule": "sensitive_path", "path": real})
+				msg := "Denied by WRM: " + real + " is not readable by the assistant (" + why + ")."
+				if aiSensitiveReadsAsk() {
+					msg += " The path you gave leads to that file. Call " + call.Name + " again with the path " + real + ": WRM then asks the user to approve reading it (secret-looking values are redacted)."
+				} else {
+					msg += " The administrator's policy (ai_sensitive_reads) blocks such files; an approval cannot change that. Tell the user."
+				}
+				out, code = msg, 1
+			}
 		}
 	}
 	if (call.Name == "read_file" || call.Name == "tail_log") && strings.HasPrefix(out, "WRM-SIZE ") {
@@ -824,7 +941,7 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 	}
 	redacted, n := redactSecrets(out)
 	forModel := out
-	if settingBool("ai_redact_output") {
+	if settingBool("ai_redact_output") || pl.ForceRedact {
 		forModel = redacted
 	}
 	limit := int(aiReadMax()) + 4096
@@ -868,10 +985,19 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 		a.Path, a.Transfer = pl.Path, pl.Display
 	} else if pl.Write {
 		a.Path, a.Diff, a.Content = pl.Path, pl.Diff, pl.NewText
+	} else if pl.Act.Kind == "read" {
+		a.Command, a.Path = pl.Display, pl.Act.Path
 	} else {
 		a.Command = pl.Act.Command
 	}
+	a.key = aiApprovalKey(call.Name, pl)
 	s.mu.Lock()
+	for id, old := range s.pending {
+		// the AI repeats a call that is still waiting to be approved later: ask once, here
+		if old.Later && old.key == a.key {
+			delete(s.pending, id)
+		}
+	}
 	s.pending[a.ID] = a
 	s.emitLocked("approval_required", map[string]interface{}{"approval": a})
 	s.mu.Unlock()
@@ -891,8 +1017,18 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	}
 	s.mu.Lock()
 	delete(s.pending, a.ID)
+	// over MCP nothing answered is lost: a timeout, an app that stops waiting or declines
+	// the question on its own leaves the request in WRM, to be approved later
+	if s.Transport == "mcp" && !s.ended && (r.Outcome == "timeout" || r.Outcome == "cancelled" || r.Outcome == "denied" && r.Via == "mcp") {
+		a.Later, a.Expires, a.ch = true, time.Now().Add(aiLaterTTL), make(chan aiApprovalResult, 1)
+		s.pending[a.ID] = a
+		r.Deferred = true
+	}
 	s.mu.Unlock()
 	d := map[string]interface{}{"approval": a.ID, "tool": call.Name, "outcome": r.Outcome}
+	if r.Deferred {
+		d["kept_for_later"] = true
+	}
 	if r.Edited {
 		d["edited"] = true
 		if pl.Write {
@@ -912,10 +1048,24 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 		d["via"] = r.Via
 	}
 	s.audit(nil, action, d)
-	s.emit("approval_resolved", map[string]interface{}{"approval_id": a.ID, "call_id": call.ID, "outcome": r.Outcome, "edited": r.Edited, "by": r.ByName, "via": r.Via})
+	s.emit("approval_resolved", map[string]interface{}{"approval_id": a.ID, "call_id": call.ID, "outcome": r.Outcome, "edited": r.Edited, "by": r.ByName, "via": r.Via, "later": r.Deferred})
+	if r.Deferred {
+		s.emit("approval_deferred", map[string]interface{}{"approval": a})
+	}
 	s.notifyMCP()
 	s.transcript("decision", nonEmpty(r.ByName, "WRM"), r.Outcome+map[bool]string{true: " (edited)", false: ""}[r.Edited], d)
 	return r
+}
+
+// takeLaterApproval uses up an approval the user gave in WRM after the call stopped waiting.
+func (s *aiSession) takeLaterApproval(key string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	until, ok := s.approvedLater[key]
+	if ok {
+		delete(s.approvedLater, key)
+	}
+	return ok && time.Now().Before(until)
 }
 
 // Resolve applies a decision on a pending approval. Only the session's user decides.
@@ -935,6 +1085,28 @@ func (s *aiSession) resolveVia(approvalID string, userID int, approve bool, comm
 	s.mu.Unlock()
 	if a == nil {
 		return fmt.Errorf("the approval is no longer pending")
+	}
+	if a.Later {
+		// the AI no longer waits: an approval lets the same call run once when it is repeated
+		outcome := "denied"
+		if approve {
+			outcome = "approved"
+			s.mu.Lock()
+			if s.approvedLater == nil {
+				s.approvedLater = map[string]time.Time{}
+			}
+			s.approvedLater[a.key] = time.Now().Add(aiLaterTTL)
+			s.mu.Unlock()
+		}
+		d := map[string]interface{}{"approval": a.ID, "tool": a.Tool, "outcome": outcome, "by": usernameOf(userID), "later": true}
+		if via != "" {
+			d["via"] = via
+		}
+		s.audit(nil, map[bool]string{true: "ai.approved", false: "ai.denied"}[approve], d)
+		s.emit("approval_resolved", map[string]interface{}{"approval_id": a.ID, "call_id": a.CallID, "outcome": outcome, "by": usernameOf(userID), "via": via, "later": true})
+		s.transcript("decision", usernameOf(userID), outcome+" (later)", d)
+		s.notifyMCP()
+		return nil
 	}
 	r := aiApprovalResult{Approved: approve, By: userID, ByName: usernameOf(userID), Note: note, Outcome: "denied", Via: via}
 	if a.Transfer != "" {
@@ -1003,6 +1175,9 @@ func (s *aiSession) SetMode(r *http.Request, userID int, mode string, auto *aiAu
 		cp := *auto
 		if err := normalizeAutoLimits(&cp); err != nil {
 			return err
+		}
+		if cp.UntilGrant {
+			return fmt.Errorf("automatic mode without a time limit is only for AI connections")
 		}
 		a = &cp
 	}
@@ -1368,9 +1543,22 @@ func aiJanitorTick(now time.Time) {
 	idle := time.Duration(settingInt("ai_idle_minutes")) * time.Minute
 	for _, s := range aiActiveSessions(nil) {
 		s.mu.Lock()
-		busy, last, pending := s.busy, s.lastActive, len(s.pending)
+		pending := 0
+		for id, a := range s.pending {
+			if !a.Later {
+				pending++
+			} else if now.After(a.Expires) {
+				delete(s.pending, id)
+			}
+		}
+		for k, until := range s.approvedLater {
+			if now.After(until) {
+				delete(s.approvedLater, k)
+			}
+		}
+		busy, last := s.busy, s.lastActive
 		var expired bool
-		if s.Mode == aiModeAuto && s.Auto != nil && now.After(s.Auto.Until) {
+		if s.Mode == aiModeAuto && s.Auto != nil && !s.Auto.UntilGrant && now.After(s.Auto.Until) {
 			expired = true
 		}
 		s.mu.Unlock()

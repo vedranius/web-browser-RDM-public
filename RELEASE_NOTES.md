@@ -1,16 +1,41 @@
-## Web Remote Manager PRO v12.6.0 — Medium's native engine, side by side with the original tool
+## Web Remote Manager PRO v12.6.1 — "Allow everything" means everything, and nothing ends in a dead refusal
 
 ### Added
+
+- **Approve later:** when the AI app declines WRM's question, stops waiting, or nobody answers in time, the request is no longer lost. It stays in WRM for an hour as a card with the full command and **Approve** / **Deny** (also in the live panel). Approve it, tell the AI to continue, and the same command runs once without asking again.
+- **Files that may hold secrets:** reading a configuration or credentials file WRM treats as sensitive now asks you instead of failing; after you approve, the AI gets the file with passwords, keys and tokens replaced by `[REDACTED]`. Administrators can keep such files blocked with `ai_sensitive_reads` = deny.
+
+- **Allow everything:** when you create or edit an AI connection in automatic mode, **Allow everything** fills in `*` for commands and `/**` for files, and **No time or action limit** keeps the connection automatic for as long as it is valid (up to the lifetime you chose). The AI then runs commands on the chosen servers without asking, also backups such as `cp -a a a.bak && cp -a b b.bak && ls -la`. Administrators can switch this option off with `ai_auto_until_grant`.
+
+### Changed
+
+- `*` in the allow list now covers chains, variables, groups and redirections. Blocked commands (`ai_blocked_commands` and the built-in destructive list), your deny lists, sensitive files and commands WRM cannot read still ask or are refused, and the AI connection still reaches only the servers you chose, until it expires.
+- Commands that stay blocked (the destructive list, your deny lists, read-only sessions) now say so: the AI is told that an approval cannot help and what you can do instead.
+- When WRM does ask and the answer is no (or nobody answers), the AI is told which rule asked, for example "the automatic mode time limit is over" or "not in the session's allow list", what you can change in *Settings → AI connections* so it is not asked again, and that it must tell you this and ask before trying again.
+
+### Fixed
+
+A long automatic session switched back to asking once its time limit (at most 60 minutes by default) was over, and commands with variables asked even with `*` allowed. When the AI app declined that question, the AI only saw "The user denied this action" although you had allowed everything, and there was nowhere to approve it afterwards.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. Reading files that may hold secrets now asks instead of being refused; set `ai_sensitive_reads` to `deny` in *Admin panel → AI assistant* to keep the old behaviour. Existing AI connections keep their limits: to allow everything without limits, edit the connection, press **Allow everything**, confirm and save (open sessions end; the AI opens them again with the new rules).
+
+[Download v12.6.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.1) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.1/README.md#ai-desktop-apps-mcp)
+
+### Included from v12.6.0 — Medium's native engine, side by side with the original tool
+
+#### Added
 
 - **Native engine preview (read-only):** open **Medium** in the Git workspace and expand *Native engine (preview, read-only)*. WRM reads your `deploy-config` as it is, with the same validation as the original tool, and lists every server of `servers.yaml` with the WRM connection it will use. Connections are matched by address and user; pick another one where needed.
 - **Plan:** choose a project, an environment and a branch or tag, then **Preview natively**. WRM prepares the source from your WRM Git source and compares it with each destination over SSH, the way `rsync -rlc --delete` with the project's exclusions would, and shows new, changed and deleted files, the exclusions, what is on the server (version, ref, lock, recent deployments) and the `post_deploy` command. Nothing is written to any server.
 - **Compare with the original tool:** with Medium running, **Compare with the original tool** runs the original comparison and the native one on the same source and says per server whether they give the same result, listing any change found by only one of them. Projects with a build step use the original tool's built source until the native engine arrives.
 
-### Changed
+#### Changed
 
 The Medium bridge has one more authenticated endpoint for the comparison; the original tool itself is not modified.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/AppImage/container and keep the database, encryption key and Medium directories. One additive table (`medium_server_links`); a previous binary still starts on the database. The preview needs a WRM Git source (GitLab, GitHub or Gitea API) for the repositories named in `projects/*.yaml` and saved SSH connections for the servers. Deploying is still done by the original tool; the native deploy, build location and rollback follow in v12.7.0 ([roadmap](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.0/ROADMAP.md)).
 
