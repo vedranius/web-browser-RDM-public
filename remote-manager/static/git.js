@@ -2802,7 +2802,7 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
       const s = await r.json();
       $('medium-tool-label').style.display = s.admin ? '' : 'none';
       $('medium-quick-tool-label').style.display=s.admin?'':'none';
-      $('medium-quick-go').disabled=!!s.busy;
+      $('medium-quick-go').disabled=!!s.busy||!!s.running;
       document.querySelectorAll('#medium-quick-inputs input').forEach(i=>i.disabled=!!s.busy);
       $('medium-prepare').style.display = s.admin && s.tool_imported && !s.running ? '' : 'none';
       $('medium-prepare').disabled = !!s.busy;

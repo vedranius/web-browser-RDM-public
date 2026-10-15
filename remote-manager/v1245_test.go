@@ -156,3 +156,29 @@ func TestV1245ContinuationEventTime(t *testing.T) {
 		t.Fatal(first, last)
 	}
 }
+
+func TestV1245CombinedSetupRejectsActiveRuntimeWithoutNewUploads(t *testing.T) {
+	srv := newTestServer(t)
+	u := newTestUser(t, srv, "medium-active", true)
+	key := mediumUserDir(u.userID)
+	mediumMgr.mu.Lock()
+	mediumMgr.processes[key] = &mediumProcess{done: make(chan struct{})}
+	mediumMgr.mu.Unlock()
+	defer func() { mediumMgr.mu.Lock(); delete(mediumMgr.processes, key); mediumMgr.mu.Unlock() }()
+	var body bytes.Buffer
+	mp := multipart.NewWriter(&body)
+	mp.Close()
+	req, _ := http.NewRequest("POST", srv.URL+"/api/git/medium/setup?confirm=1", &body)
+	req.AddCookie(u.cookie)
+	req.Header.Set("Content-Type", mp.FormDataContentType())
+	req.Header.Set("X-WRM-Request", "1")
+	req.Header.Set("Origin", srv.URL)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 409 {
+		t.Fatalf("active runtime was not protected: %d", resp.StatusCode)
+	}
+}
