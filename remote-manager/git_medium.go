@@ -259,12 +259,13 @@ func mediumStopAll() {
 		p.cancel()
 	}
 }
-func mediumStart(uid int) error {
+func mediumStart(uid int) error { return mediumStartForSetup(uid, false) }
+func mediumStartForSetup(uid int, setup bool) error {
 	if !mediumAllowed(uid) {
 		return fmt.Errorf("Medium access is not allowed")
 	}
 	s := mediumState(uid)
-	if s.Busy {
+	if s.Busy && !setup {
 		return fmt.Errorf("runtime setup is still running")
 	}
 	if !s.Tool || !s.Config {
@@ -423,6 +424,10 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !requireMethod(w, r, "POST") {
+		return
+	}
+	if action == "/setup" {
+		apiMediumSetup(w, r, uid)
 		return
 	}
 	if !mediumOperation.TryLock() {
