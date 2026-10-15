@@ -88,6 +88,8 @@ Object.assign(LANGS.en, {
   mcpw_cc_plugin: 'Or install the WRM PRO plugin for Claude Code with one command (Claude Code 2.1.275 or later):',
   mcp_w_watch: 'Watch live', mcp_w_auto: 'Open the live view when an AI app starts working on a server', mcp_w_title: '{client} on {server}',
   mcp_w_empty: 'Connected. What the AI runs on the server and its output appear here.', mcp_w_wait: 'Waiting for your approval', mcp_w_runs: 'runs', mcp_w_refused: 'refused by WRM', mcp_w_ask: 'needs your approval',
+  mcp_w_later: 'Not approved in time, or the app declined the question: the AI no longer waits, but you can still approve it here. The AI then repeats it and it runs once.', mcp_w_later_ok: 'runs when the AI repeats it',
+  mcp_ap_later: 'Not approved in time, or the app declined the question. Approve it to let the AI run exactly this once when it repeats it (valid for an hour).',
   mcp_w_o_approved: 'approved', mcp_w_o_denied: 'denied: not run', mcp_w_o_timeout: 'no answer: not run', mcp_w_o_cancelled: 'cancelled', mcp_w_exit: 'exit code {code}', mcp_w_output: 'Output',
   mcp_w_ended: 'Session ended: {reason}', mcp_w_min: 'Minimize', mcp_w_close: 'Close (the AI keeps working; reopen it from the 🤖 button)', mcp_w_reason: 'Why',
   mcp_valid_for: 'Valid for', mcp_unit_hours: 'hours', mcp_unit_days: 'days', mcp_max_days: 'at most {n} days', mcpw_hours_d: 'When the token expires the app loses access until you create a new one. You can revoke it at any time below. An administrator sets the longest lifetime (Admin panel → AI connections).',
@@ -171,6 +173,8 @@ Object.assign(LANGS.hr, {
   mcpw_cc_plugin: 'Ili instalirajte WRM PRO dodatak za Claude Code jednom naredbom (Claude Code 2.1.275 ili noviji):',
   mcp_w_watch: 'Prati uživo', mcp_w_auto: 'Otvori prikaz uživo kad AI aplikacija počne raditi na poslužitelju', mcp_w_title: '{client} na {server}',
   mcp_w_empty: 'Povezano. Ovdje se vidi što AI pokreće na poslužitelju i što dobiva kao izlaz.', mcp_w_wait: 'Čeka vaše odobrenje', mcp_w_runs: 'pokreće se', mcp_w_refused: 'WRM je odbio', mcp_w_ask: 'treba vaše odobrenje',
+  mcp_w_later: 'Nije odobreno na vrijeme ili je aplikacija odbila pitanje: AI više ne čeka, ali i dalje to možeš odobriti ovdje. AI će to ponoviti i izvršit će se jednom.', mcp_w_later_ok: 'izvršit će se kad AI ponovi',
+  mcp_ap_later: 'Nije odobreno na vrijeme ili je aplikacija odbila pitanje. Odobri da AI točno ovo izvrši jednom kad ponovi zahtjev (vrijedi sat vremena).',
   mcp_w_o_approved: 'odobreno', mcp_w_o_denied: 'odbijeno: nije pokrenuto', mcp_w_o_timeout: 'bez odgovora: nije pokrenuto', mcp_w_o_cancelled: 'otkazano', mcp_w_exit: 'izlazni kod {code}', mcp_w_output: 'Izlaz',
   mcp_w_ended: 'Sesija je završila: {reason}', mcp_w_min: 'Smanji', mcp_w_close: 'Zatvori (AI nastavlja raditi; ponovno otvori preko gumba 🤖)', mcp_w_reason: 'Zašto',
   mcp_valid_for: 'Vrijedi', mcp_unit_hours: 'sati', mcp_unit_days: 'dana', mcp_max_days: 'najviše {n} dana', mcpw_hours_d: 'Kad token istekne, aplikacija gubi pristup dok ne stvorite novi. Možete ga opozvati bilo kada u nastavku. Najdulje trajanje postavlja administrator (Admin panel → AI veze).',
@@ -633,7 +637,7 @@ Object.assign(LANGS.hr, {
     box.appendChild(el);
     const st = W8[sid] = {el, seq: 0, calls: {}, client: client || 'AI'};
     const es = st.es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
-    ['session', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'error', 'ended']
+    ['session', 'tool_call', 'approval_required', 'approval_resolved', 'approval_deferred', 'tool_result', 'error', 'ended']
       .forEach(ty => es.addEventListener(ty, ev => { try { watchEvent(sid, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));
     es.onerror = () => { if (st.ended) es.close(); };
   }
@@ -681,11 +685,24 @@ Object.assign(LANGS.hr, {
         st.el.classList.remove('min');
         break;
       }
+      case 'approval_deferred': {
+        // nobody answered in time (or the app declined): it can still be approved here
+        const a = d.approval || {}, el = st.calls[a.call_id];
+        if (el) {
+          el.classList.remove('bad'); el.classList.add('ask');
+          el.querySelector('.wa').innerHTML = `<div class="sub">⏳ ${esc(t('mcp_w_later'))}</div><div class="acts">
+          <button class="btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', true)">✔ ${esc(t('mcp_ap_approve'))}</button>
+          <button class="btn-danger btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', false)">✕ ${esc(t('mcp_ap_deny'))}</button></div>`;
+        }
+        st.el.classList.remove('min');
+        break;
+      }
       case 'approval_resolved': {
         const el = st.calls[d.call_id];
+        if (d.later && d.outcome !== 'approved' && d.outcome !== 'denied') break; // approval_deferred follows
         if (el) {
           el.classList.remove('ask'); el.classList.add(d.outcome === 'approved' ? 'ok' : 'bad');
-          el.querySelector('.wa').innerHTML = `<div class="sub">${d.outcome === 'approved' ? '✔' : '✕'} ${esc(t('mcp_w_o_' + d.outcome))}${d.by ? ' · ' + esc(d.by) : ''}</div>`;
+          el.querySelector('.wa').innerHTML = `<div class="sub">${d.outcome === 'approved' ? '✔' : '✕'} ${esc(t('mcp_w_o_' + d.outcome))}${d.by ? ' · ' + esc(d.by) : ''}${d.later && d.outcome === 'approved' ? ' · ' + esc(t('mcp_w_later_ok')) : ''}</div>`;
         }
         break;
       }
@@ -740,13 +757,13 @@ Object.assign(LANGS.hr, {
       const what = a.transfer ? `<div>${esc(t('mcp_ap_transfer'))}</div><pre>${esc(a.transfer)}</pre>`
         : a.command ? `<div>${esc(t('mcp_ap_cmd'))}</div><pre id="mcp-cmd-${a.id}">${esc(a.command)}</pre>`
         : `<div>${esc(tf('mcp_ap_edit_file', {path: a.path}))}</div><pre>${diffHTML(a.diff)}</pre>`;
-      el.innerHTML = `<h4>🤖 ${esc(tf('mcp_ap_title', {client: p.client, server: p.connection}))}</h4>${what}
+      el.innerHTML = `<h4>🤖 ${esc(tf('mcp_ap_title', {client: p.client, server: p.connection}))}</h4>${a.later ? `<div class="hint-box warn" style="margin:4px 0;">${esc(t('mcp_ap_later'))}</div>` : ''}${what}
         ${a.why ? `<div class="sub">${esc(t('mcp_ap_why'))}: ${esc(a.why)}</div>` : ''}${a.reason ? `<div class="sub">${esc(t('mcp_ap_reason'))}: ${esc(a.reason)}</div>` : ''}
         <div id="mcp-edit-${a.id}"></div>
         <input type="text" id="mcp-note-${a.id}" maxlength="500" placeholder="${esc(t('mcp_ap_note'))}" style="margin-top:6px;">
         <div class="acts"><button class="btn-sm" onclick="wrmMCP.decide(${p.session}, '${a.id}', true)">✔ ${esc(t('mcp_ap_approve'))}</button>
           <button class="btn-danger btn-sm" onclick="wrmMCP.decide(${p.session}, '${a.id}', false)">✕ ${esc(t('mcp_ap_deny'))}</button>
-          ${a.transfer ? '' : `<button class="btn-sec btn-sm" onclick="wrmMCP.edit('${a.id}')">✎ ${esc(t('mcp_ap_edit'))}</button>`}
+          ${a.transfer || a.later ? '' : `<button class="btn-sec btn-sm" onclick="wrmMCP.edit('${a.id}')">✎ ${esc(t('mcp_ap_edit'))}</button>`}
           <span class="sub" style="margin-left:auto;align-self:center;" data-exp="${esc(a.expires)}"></span></div>`;
       box.appendChild(el);
     }

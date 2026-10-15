@@ -453,7 +453,7 @@ func TestMCPElicitationApproval(t *testing.T) {
 	decision = "decline"
 	writeHostFile(t, e.host, "notes.txt", "a\n")
 	text, isErr = c.call("write_file", map[string]interface{}{"session_id": sid, "path": "~/notes.txt", "content": "b\n", "reason": "test"})
-	if !isErr || !strings.Contains(text, "denied") {
+	if !isErr || !strings.Contains(text, "Not run yet") {
 		t.Fatalf("elicitation decline: %s", text)
 	}
 	if b, _ := os.ReadFile(filepath.Join(e.host.home, "notes.txt")); string(b) != "a\n" {
