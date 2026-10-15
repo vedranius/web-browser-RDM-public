@@ -241,6 +241,10 @@ Runtime credentials/bridge keys are forwarded through environment aliases; argv 
 - Structured inventory never bypasses sensitive-path denial or grants unrestricted commands. Selected terminal/file context is bounded, redacted and previewed before being queued as untrusted AI data under the same server/share/provider policy. Directory startup uses literal quoting/encoding and rejects command separators expressed as NUL/newline data; file names are not executed.
 - Provider timeout cancellation closes HTTP requests without automatic assistant/tool replay. Visual labels accept only a curated icon identifier and a validated hex color, preserving owner checks and escaped display text.
 
+## v12.5.0
+
+Replaced Medium SSH profiles are deleted instead of being kept as `.previous` directories (leftovers are removed at the next start), and SSH ZIP entries that differ only in case are rejected. A forced Medium stop is audited (`git.medium_stopped` with `forced`). Production confirmations compare the typed connection name on the client as the server already did. Moving or deleting folders rechecks the owner's folder shares, ending shared terminals on connections that left a shared subtree. A partial stamp only writes VERSION.md, under the existing `git_update` policy and confirmation.
+
 ## v12.4.5 setup/discovery
 
 Combined Medium setup remains a trusted executable/configuration import. New tool source and shared runtime preparation require an administrator. Imports/pending files remain private, sized, path-validated and retained on dependency failure. First Windows installation uses an HTTPS Docker download with size/redirect bounds plus valid Authenticode/Docker publisher; it leaves license/UAC/WSL/reboot decisions to the user. Service sessions do not launch an interactive installer. Docker context/engine and unrelated containers are preserved.

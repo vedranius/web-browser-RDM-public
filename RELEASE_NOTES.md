@@ -21,6 +21,28 @@ Replace the executable/container and keep the database and encryption key. No da
 
 [Download v12.5.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.5.1) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.5.1/README.md#ai-desktop-apps-mcp)
 
+### Included from v12.5.0 — Stamping as it is, Back in dialogs and reviewed fixes
+
+#### Added
+
+- **Stamp as it is:** the Stamp dialog lists each installation's differing files and says why it cannot be stamped instead of "No files are selected". **Also stamp installations that are not up to date** writes VERSION.md with each file's actual version (older files their matching version, hand-changed files `(local)`) and a `Napomena` note that the installation is partial.
+- **Back in dialogs:** a Git dialog opened from another one (Details → Update, Upgrade → file selection → confirmation, Rollback …) has **← Back** (Alt+←), which returns to the previous dialog with its ticks and typed values. Settings → Import inventory, Settings → Admin panel and Tunnels → Edit connection return to where they were opened.
+- **Medium forced stop:** when the original tool cannot report its state, Stop can be confirmed a second time and stops it anyway.
+
+#### Fixed
+
+- **Production confirmation** in the Git workspace compares the typed connection name (it compared a hostname, so production updates could not start).
+- **Medium:** one user's start or setup no longer blocks other users' status, proxy and Stop; empty settings keep the original defaults and WRM's SSH options; a successful start or import clears an earlier setup error and older pending imports; an imported config replaces a config repository; replaced SSH profiles (and their keys) are deleted; ZIP names that differ only in case are rejected; status polling continues after a network error; stage texts are translated.
+- **Logs:** a non-UTF-8 byte no longer stalls a search; search segments end at a complete line; keyword highlighting is literal (`foo(`, `c++`, `[ERROR]`); empty files complete; Previous segment no longer skips data; logs are discovered again after Monitoring settings change; a closed tab during Check now no longer records a failed sample or a problem notification; a late check does not repaint another tab.
+- **Client GitLab cache:** a newer snapshot published by another member is not deleted; WRM relay errors are no longer reported as GitLab CORS problems; one failed status poll no longer blocks later refreshes.
+- Following a log in a terminal keeps the shell after Ctrl+C; moving or deleting a folder rechecks folder shares, so shared terminals outside the shared subtree end.
+
+#### Upgrade
+
+Replace the executable/container and keep the database, encryption key and private runtime directories/volumes. No schema migration. Earlier Medium versions kept replaced SSH profiles as `.previous` directories; they are removed at the next start.
+
+The next versions replace Medium's Docker runtime with WRM's native engine (same original interface and deploy-config, WRM connections and keys, chosen build location); see [ROADMAP.md](https://github.com/vedranius/web-browser-RDM-public/blob/v12.5.0/ROADMAP.md). [Downloads](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.5.0).
+
 ### Included from v12.4.5 — One-click Medium and usable log search
 
 #### Added
