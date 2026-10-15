@@ -716,17 +716,25 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 			s.mu.Lock()
 			s.denials++
 			s.mu.Unlock()
+			// the AI must not silently retry or work around a refusal: it asks the user how to go on
+			const askNext = " Do not run it or a variant of it again on your own: tell the user what you wanted to run and why, and ask whether to continue, change the command or stop."
 			switch r.Outcome {
 			case "timeout":
-				return fail("Not run: the approval timed out (counts as a denial).")
+				return fail("Not run: the approval timed out, nobody answered within " + aiApprovalTimeout().String() + " (in WRM or in the app), so WRM refused it." + askNext + " If the user agrees, call the tool again and they approve it when it is asked.")
 			case "cancelled":
 				return fail("Not run: the session was stopped.")
 			}
-			msg := "The user denied this action."
+			msg := "Not run: the user denied this action"
+			if r.Via == "mcp" {
+				msg += " in the AI app"
+			} else {
+				msg += " in WRM"
+			}
+			msg += "."
 			if r.Note != "" {
 				msg += " The user's note: " + truncateStr(r.Note, 500)
 			}
-			return fail(msg)
+			return fail(msg + askNext)
 		}
 		s.mu.Lock()
 		s.approvalsN++

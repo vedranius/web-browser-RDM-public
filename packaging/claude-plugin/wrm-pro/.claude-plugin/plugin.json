@@ -1,0 +1,38 @@
+{
+  "name": "wrm-pro",
+  "displayName": "WRM PRO",
+  "version": "1.0.0",
+  "description": "Work on your servers through WRM PRO over MCP: logs, files, services and commands, under WRM's permissions and approvals.",
+  "author": {
+    "name": "vedranius",
+    "url": "https://github.com/vedranius"
+  },
+  "homepage": "https://github.com/vedranius/web-browser-RDM-public#ai-desktop-apps-mcp",
+  "repository": "https://github.com/vedranius/web-browser-RDM-public",
+  "license": "LicenseRef-WRM-PRO",
+  "keywords": ["wrm", "mcp", "ssh", "servers", "devops"],
+  "mcpServers": {
+    "wrm": {
+      "type": "http",
+      "url": "${user_config.wrm_url}",
+      "headers": {
+        "Authorization": "Bearer ${user_config.wrm_token}"
+      }
+    }
+  },
+  "userConfig": {
+    "wrm_url": {
+      "type": "string",
+      "title": "WRM MCP address",
+      "description": "The MCP address shown in WRM → Settings → AI connections, for example https://wrm.example.com/mcp",
+      "required": true
+    },
+    "wrm_token": {
+      "type": "string",
+      "title": "WRM token",
+      "description": "The token of an AI connection (wrm_pat_…), created in WRM → Settings → AI connections",
+      "required": true,
+      "sensitive": true
+    }
+  }
+}

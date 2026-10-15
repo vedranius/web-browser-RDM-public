@@ -1,3 +1,19 @@
+## [12.5.1] - 2026-10-15
+
+### Added
+- **Claude Desktop extension (`wrm-pro.mcpb`):** *Settings → AI connections → Claude Desktop* downloads an MCP bundle with the WRM address and the new token filled in; Claude Desktop installs it with one click. Its dependency-free Node.js bridge (`remote-manager/mcpb/server/index.js`) runs on the user's computer, so a WRM on a private network or over plain HTTP works; optional CA file for self-signed HTTPS. Endpoint `POST /api/mcp/claude-desktop`, audited as `mcp.desktop_extension`.
+- **Claude Code plugin `wrm-pro`:** the repository is a Claude Code plugin marketplace (`.claude-plugin/marketplace.json`, plugin in `packaging/claude-plugin/wrm-pro`); one `claude plugin install … --config` command connects Claude Code to WRM over HTTP with the token in secure storage. The wizard shows the command.
+- **Live view of AI sessions:** when an AI app starts working on a server over MCP, WRM opens a live panel with every command or file action, WRM's decision, the approval with **Approve** / **Deny**, the exit code and the output. Reopen it with *Watch live* in the 🤖 menu; the automatic opening can be turned off there (per browser).
+- The token lifetime of AI connections can be entered in hours or days (setup wizard, advanced form, OAuth approval dialog).
+
+### Changed
+- After a denied or unanswered approval the AI is told where it was refused (in WRM or in the app) and to ask the user whether to continue, change the command or stop, instead of only "The user denied this action".
+- Default AI connection lifetime is 7 days (`ai_mcp_token_hours` 168, was 8 hours), at most 30 days (`ai_mcp_max_token_hours` 720, was 24 hours). Explicitly saved values are kept.
+- The wizard's cloud connector option is named *Claude.ai (cloud connector, public HTTPS)* so it is no longer mistaken for the Claude Desktop setup.
+
+### Fixed
+- Claude Desktop could not be connected to a WRM that is not reachable from the internet over HTTPS: the only offered route was the cloud connector, and `claude_desktop_config.json` ignores HTTP server entries.
+
 ## [12.5.0] - 2026-10-15
 
 ### Added
