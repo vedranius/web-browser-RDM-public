@@ -30,6 +30,7 @@ import (
 //   DELETE grants/{id}            revoke
 //   POST   revoke-all             revoke every own AI connection
 //   GET    active                 live AI connections and pending approvals (top bar)
+//   POST   claude-desktop         the Claude Desktop extension wrm-pro.mcpb {token} (mcp_bundle.go)
 //   GET|POST authorize/{id}        OAuth consent (mcp_oauth.go)
 // Admin API (/api/admin/mcp/…):
 //   GET grants, DELETE grants/{id}, POST revoke-all, GET clients, DELETE clients/{id}
@@ -597,6 +598,8 @@ func apiMCPHandler(w http.ResponseWriter, r *http.Request) {
 		jsonOK(w, map[string]int{"revoked": n})
 	case "active":
 		mcpActiveHandler(w, userID)
+	case "claude-desktop":
+		mcpClaudeDesktopHandler(w, r, userID)
 	case "authorize":
 		if len(parts) != 2 {
 			jsonError(w, "Not found", 404)
