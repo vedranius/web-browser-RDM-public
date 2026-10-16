@@ -1,6 +1,28 @@
-## Web Remote Manager PRO v12.6.5 — Medium tells you what it is doing
+## Web Remote Manager PRO v12.6.6 — Docker everywhere, installed by WRM
 
 ### Added
+
+- **Medium installs Docker itself.** When Docker is missing on the WRM host, step 2 of the Medium guide says which Docker WRM will install and how. An administrator presses **Install Docker** once; on Windows and macOS that also accepts Docker Desktop's licence (shown with its terms). From then on importing the tool ZIP or pressing *Prepare runtime* installs Docker, starts it, waits for it and prepares the runtime, with no manual steps.
+  - **Linux:** Docker Engine from your distribution's packages, its service enabled and started.
+  - **macOS:** Docker Desktop from docker.com, signature checked, installed for the user signed in on the Mac.
+  - **Windows:** Docker Desktop from docker.com, signature checked, installed quietly for the signed-in user. The first time Windows may ask once to enable WSL and to restart.
+- **Every step is visible:** installing, downloading, checking the signature, starting and waiting for Docker, each with its time, the command output and what to do when it fails, also in the activity log.
+- **One command when WRM has no rights:** if WRM runs as a normal Linux account, step 2 shows `sudo wrm -setup-docker -service-user <account>`. It installs Docker, lets WRM use it and restarts WRM.
+- **New policy** *Install Docker for Medium* (`medium_docker_install`, on by default) and *Medium command output* in *Administration → Policies → Git*.
+
+### Changed
+
+- The original deploy tool now runs in the same Docker runtime on Linux, macOS and Windows. A host runtime you already prepared on Linux keeps working while Docker is not installed; `WRM_MEDIUM_RUNTIME=native` keeps it for good.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. Nothing is installed until an administrator presses **Install Docker**. Docker Desktop is free for personal use, education, non-commercial open source and small businesses; larger organisations need a paid Docker subscription.
+
+[Download v12.6.6](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.6) · [Docker for Medium](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.6/README.md#docker-for-medium-installed-by-wrm)
+
+### Included from v12.6.5 — Medium tells you what it is doing
+
+#### Added
 
 - **Step by step:** the original deploy tool's card in Medium is a numbered guide: 1 import the deploy-tool ZIP, 2 prepare its runtime, 3 your deploy-config, 4 your SSH profile (optional), 5 start/stop. Each step shows whether it is done, running, waiting or failed, why a button is disabled and what to do when something fails.
 - **Signals:** a light for the original tool (off, working, running, needs attention) and one for the read-only WRM preview, which is now a separate panel.
@@ -8,17 +30,17 @@
 - **Activity log:** every Medium action with time, user, result and duration; click a row for its steps and output. Secrets in the output are redacted. Administrators decide who sees output with `medium_log_output` (everyone, administrators, nobody).
 - WRM's console logs each Medium operation and step.
 
-### Changed
+#### Changed
 
 - Your deploy-config ZIP is checked by WRM immediately and, while the runtime is still being prepared, kept and applied at your next start, so you no longer wait to upload it.
 - Start and the tool import run in the background and the page follows them; a failure stays shown with the failed step and the last lines of the output.
 
-### Fixed
+#### Fixed
 
 - **Approve later after the AI app closed its session:** approving such a request in WRM failed with "AI session not found". It now works for the request's hour, and the AI runs the same command once when it repeats it in a new session.
 - **Search patterns are not files:** a `grep` regular expression, a `sed` or `awk` script and `find -name` patterns no longer count as file names, so a pattern such as `'^[[:space:]]*command=.*'` is not taken for a PuTTY key and does not ask for approval.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. One additive table (`medium_activity`); a previous binary still starts on the database. API clients: `POST /api/git/medium/start` now answers `202` (poll `GET /api/git/medium`).
 

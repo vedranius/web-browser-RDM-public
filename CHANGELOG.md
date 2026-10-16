@@ -1,3 +1,19 @@
+## [12.6.6] - 2026-10-16
+
+### Added
+- **Docker for Medium, installed by WRM** on Linux, macOS and Windows. When Docker is missing, Medium step 2 says which Docker WRM installs and how; an administrator presses **Install Docker** once (`POST /api/git/medium/docker`), accepting Docker Desktop's licence on Windows and macOS. The consent is stored and audited (`git.medium_docker_consent`); afterwards a tool ZIP import or *Prepare runtime* installs, starts and prepares everything by itself.
+  - Linux: Docker Engine from the distribution's packages (apt `docker.io`, Fedora `moby-engine`, Docker's `docker-ce` repository on RHEL-like systems, zypper/pacman/apk `docker`) and its service, as root, through `systemd-run` from WRM's sandboxed service, or with passwordless `sudo` (then WRM's account joins the `docker` group).
+  - macOS: `Docker.dmg` from docker.com, Docker Inc.'s code signature checked, installed with the accepted licence for the signed-in user; without administrator rights copied to `~/Applications` and started.
+  - Windows: the Docker Desktop installer from docker.com, its Authenticode signature checked, installed quietly with the accepted licence (`install --user --quiet --accept-license --backend=wsl-2`).
+- New steps *Installing Docker*, *Downloading Docker Desktop*, *Checking the installer's signature*, *Starting Docker* and *Waiting for the Docker engine*, each with output and what to do when it fails.
+- **`wrm -setup-docker [-service-user ACCOUNT]`** (Linux, as root): installs and starts Docker Engine, adds the WRM account to the `docker` group and restarts the WRM service. Medium shows this command when WRM has no administrator rights or Docker refuses WRM's account (*permission denied*).
+- Policy **`medium_docker_install`** (default on) and `medium_log_output` in *Administration → Policies → Git*.
+
+### Changed
+- Medium uses the managed Docker runtime by default on Linux and macOS too (`WRM_MEDIUM_RUNTIME=auto`); a host runtime prepared earlier stays while Docker is not installed, `native` keeps it, and systems without Docker (FreeBSD, OpenBSD) use the host runtime.
+- The Docker CLI is also found at Docker Desktop's standard macOS locations, and Docker commands get its directory on `PATH` (Docker Desktop's credential helper).
+- Clearer Docker errors: what failed, why (the output) and what to run, for each operating system.
+
 ## [12.6.5] - 2026-10-16
 
 ### Added
