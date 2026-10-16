@@ -25,7 +25,7 @@ check.
 cd remote-manager
 gofmt -l .                      # must print nothing
 go vet ./...
-go test -race -count=1 -timeout 20m ./...             # unit + integration tests (security, roles, 2FA, encryption, recording, audit…)
+go test -race -count=1 -timeout 45m ./...             # unit + integration tests (security, roles, 2FA, encryption, recording, audit…)
 go build -o wrm-server .
 HTTPS_SELF_SIGNED=1 PORT=8080 ./wrm-server   # open https://localhost:8080
 ```

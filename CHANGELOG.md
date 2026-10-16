@@ -8,6 +8,7 @@
 ### Changed
 - The top bar measures itself (`ResizeObserver`) and steps through compact levels (labels hidden, smaller gaps) before moving the less used buttons into the ⋯ menu, so buttons no longer overlap at 1100–1920 px or at browser zoom.
 - The right panel remembers its width (`wrm_rp_widths`), separately for the AI tab (default 400 px, up to half the window).
+- CI and the documented test command allow the full race test suite 45 minutes (it now takes about 20).
 
 ### Fixed
 - Text on the page could not be selected or copied (the page set `user-select: none` everywhere); now every text can, and only buttons, tabs, title bars, tree rows and resize handles stay unselectable.

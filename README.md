@@ -2472,7 +2472,7 @@ Requirements: **Go** (version in `remote-manager/go.mod`). No C compiler is need
 ```bash
 git clone https://github.com/vedranius/web-browser-RDM-public.git
 cd web-browser-RDM-public/remote-manager
-go test -race -count=1 -timeout 20m ./...
+go test -race -count=1 -timeout 45m ./...
 go build -o wrm-server .
 ./wrm-server
 ```

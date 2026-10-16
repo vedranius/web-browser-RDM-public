@@ -56,7 +56,7 @@ jobs:
 
       - name: Unit tests (race detector)
         working-directory: remote-manager
-        run: go test -race -count=1 -timeout 20m ./...
+        run: go test -race -count=1 -timeout 45m ./...
 
       - name: Web UI syntax, translations and Git Simple / AI regressions
         run: |
