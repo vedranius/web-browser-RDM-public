@@ -13,11 +13,15 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.9** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.10** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.10
+
+**One canvas, arranged your way.** The window area is one canvas: terminals, file managers, desktops, Workboard addons and panels share it. Addons are windows you move, resize, snap, pin or dock; panels can be placed anywhere on the canvas, not only at the edges. The **▤ Workboard** menu adds addons and holds the canvas tools: grid, tile and cascade, lock, saved layouts (optionally with your terminals) and export / import. New addons: links, saved sessions and a timer. The top bar is tidier: *Broadcast* is in **🧰 Tools**, *Shares* is an icon, and **Settings · Panels · Workboard** sit together. A closed terminal's banner has a **✕ Close window** button. See [Workboard: the shared canvas and addons](#workboard-the-shared-canvas-and-addons).
 
 ## What's new in v12.6.9
 
-**Workboard: what matters, at a glance.** **▤ Workboard** in the top bar opens a page of tiles you put together yourself from an addon catalog, so nothing appears until you add it: server status, CPU / RAM / disk bars of chosen servers (from Monitoring, or read over SSH), WRM's notifications inside WRM, clocks for your time zones, the last commits of a Git service, running tunnels, quick connect buttons and notes. Any tile can be pulled out into a panel and docked, stacked or floated like the other panels. See [Workboard and addons](#workboard-and-addons).
+**Workboard: what matters, at a glance.** **▤ Workboard** in the top bar opens a page of tiles you put together yourself from an addon catalog, so nothing appears until you add it: server status, CPU / RAM / disk bars of chosen servers (from Monitoring, or read over SSH), WRM's notifications inside WRM, clocks for your time zones, the last commits of a Git service, running tunnels, quick connect buttons and notes. Any tile can be pulled out into a panel and docked, stacked or floated like the other panels. See [Workboard and addons](#workboard-the-shared-canvas-and-addons).
 
 ## What's new in v12.6.8
 
@@ -108,7 +112,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -123,7 +127,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [Panel layout: dock, stack, float and lock](#panel-layout-dock-stack-float-and-lock)
-   - [Workboard and addons](#workboard-and-addons)
+   - [Workboard: the shared canvas and addons](#workboard-the-shared-canvas-and-addons)
    - [SSH terminal](#ssh-terminal)
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
    - [Out-of-band management, consoles & serial ports](#out-of-band-management-consoles--serial-ports)
@@ -210,14 +214,14 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.9-linux-amd64
-   ./wrm-pro-v12.6.9-linux-amd64
+   chmod +x wrm-pro-v12.6.10-linux-amd64
+   ./wrm-pro-v12.6.10-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.9-windows-amd64.exe
+   .\wrm-pro-v12.6.10-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
@@ -258,6 +262,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.9
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. The Workboard is now the canvas itself: your v12.6.9 tiles open as addon windows beside your terminals the first time (from the top right), and tiles you pulled out into panels stay where they are. *Broadcast* moved from the top bar into **🧰 Tools**. `/api/me/ui/{key}` now accepts values up to 256 KiB.
 
 ## Upgrading from v12.6.8
 
@@ -920,43 +928,56 @@ Every opened connection is a **window** inside the workspace. There is also a **
 
 ### Panel layout: dock, stack, float and lock
 
-The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view (while an AI app works) are **panels**, each with a tab. Panels share a tab bar in a **group**; groups sit in a **dock zone** (left, right, or at the bottom under the windows) or in a **floating window**.
+The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view (while an AI app works) are **panels**, each with a tab. Panels share a tab bar in a **group**; groups sit in a **dock zone** (left, right, or at the bottom under the windows) or **on the canvas**, anywhere between your windows (v12.6.10).
 
 - **Drag a panel by its tab** (a blue frame shows where it lands):
   - onto another tab bar: the panels share it as tabs (dropped between two tabs, it goes there);
   - onto the top or bottom 30 % of a panel: that column is split, the dragged panel above or below (left or right part in the bottom zone);
   - onto the **Left**, **Right** or **Bottom** strip at the edges of the workspace: it docks there as a new group;
-  - anywhere else: it becomes a floating window.
-- **Resize:** the line between two groups, the inner edge of the left and right zones and the top edge of the bottom zone. A floating window moves by the empty part of its tab bar and resizes by its bottom right corner.
-- **⋯ on every group:** *Dock on the left*, *Dock on the right*, *Dock at the bottom* (as a tab of the zone's first group), *Floating window*, *Hide*, *Lock the layout*, *Panels…*, *Reset the layout*.
-- **Panels** (▦ in the top bar, or in its ⋯ menu when the bar is narrow) lists every panel and where it is (left, right, bottom, floating, hidden). Tick a panel to show it again where it was, untick to hide it. The AI live view is listed but appears only while an AI app works on a server.
-- **Lock the layout** (in *Panels* or any ⋯ menu): nothing can be dragged, split, resized or moved, and the top bar button shows 🔒. Switching tabs, collapsing the side panels and showing or hiding panels still work. Dragging a tab while locked says how to unlock.
+  - anywhere else on the canvas: it is placed right there, between your windows. It shares their stacking order (click it to bring it to the front), stays inside the canvas when the browser or the side panels change size, and lands on the grid when *Snap to the grid* is on.
+- **Resize:** the line between two groups, the inner edge of the left and right zones and the top edge of the bottom zone. A panel on the canvas moves by the empty part of its tab bar and resizes by its bottom right corner.
+- **⋯ on every group:** *Dock on the left*, *Dock on the right*, *Dock at the bottom* (as a tab of the zone's first group), *On the canvas (anywhere)*, *Hide*, *Lock the layout*, *Panels…*, *Reset the layout*.
+- **Panels** (▦ in the top bar, or in its ⋯ menu when the bar is narrow) lists every panel and where it is (left, right, bottom, on the canvas, hidden). Tick a panel to show it again where it was, untick to hide it. The AI live view is listed but appears only while an AI app works on a server.
+- **Lock the layout** (in *Panels*, the ▤ Workboard menu or any ⋯ menu): no panel or window can be dragged, split, resized or moved (the snap and maximize buttons still work), and the ▦ button shows 🔒. Switching tabs, collapsing the side panels and showing or hiding panels still work. Dragging a tab while locked says how to unlock.
 - **Reset the layout** puts every panel back: *Connections* left; *Sessions*, *Snippets* and the AI live view as tabs on the right with *Clipboard* under them.
 - **Saved per user on the server** (`/api/me/ui/layout`), so the layout follows you to every browser, with a copy in the browser for an instant start. A zone without panels disappears. While the AI live view is shown in a side zone, that zone keeps its own width (up to half the window).
 - **Phones** (below 760 px) keep the fixed layout: the connection list and the Sessions/Snippets/Clipboard drawer; the AI live view is a sheet at the bottom.
-- **Workboard tiles** pulled out into a panel (v12.6.9) are panels too; *Panels* lists them under *Pulled out of the Workboard*, and hiding one puts it back on the [Workboard](#workboard-and-addons).
+- **Workboard addons** docked as a panel are panels too; *Panels* lists them under *Workboard addons*, and hiding one puts it back onto the canvas as a window (see [the canvas](#workboard-the-shared-canvas-and-addons)).
 
-### Workboard and addons
+### Workboard: the shared canvas and addons
 
-**▤ Workboard** in the top bar (v12.6.9; in its ⋯ menu when the bar is narrow) opens a page of tiles over the window area; ✕ or Esc closes it, and your windows stay as they were. The Workboard starts **empty**: you add only the addons you want from the catalog (**＋ Add addon**), up to 24 tiles, the same addon several times if you like (for example two *Server load* tiles for two groups of servers).
+The window area is **one canvas** (v12.6.10): terminals, file managers, desktops, **Workboard addons** and the panels you place on it share it, and you arrange it as you like. **▤ Workboard** (in the *Settings · Panels · Workboard* group of the top bar, or its ⋯ menu when the bar is narrow) opens the canvas menu. Addons start **empty**: you add only what you want from the catalog (**＋ Add addon**, also on the empty canvas), up to 24, the same addon several times if you like (for example two *Server load* addons for two groups of servers).
 
-- **Every tile:** drag its title bar onto another tile to reorder, **⇥ / ⇤** wide or narrow, **⤢** pull out into a panel, **⚙** settings (your own title, the width and the addon's options), **✕** remove. ↻ reloads tiles that fetch data, and the title bar says how old the data is.
-- **Pull out:** the tile becomes a panel of the [panel layout](#panel-layout-dock-stack-float-and-lock), floating at first; drag its tab to dock it left, right or at the bottom, stack it with *Sessions* or split a column. It keeps its ↻ and ⚙ and stays where it is after a reload. The Workboard shows a placeholder with *Bring it back*; the panel's ⋯ → *Back to the Workboard* does the same. With the layout locked, tiles cannot be pulled out, reordered or resized. On a phone every tile stays on the Workboard.
-- **Saved per user on the server** (`/api/me/ui/workboard`, with a copy in the browser), so the Workboard follows you to every browser.
-- Tiles load and refresh **only while visible** (on the open Workboard or as a shown panel).
+- **Addons are windows:** move by the title bar, resize from any edge or corner, snap by dragging to an edge or with the snap buttons, double-click to maximize, minimize, switch with the tabs. Title bar buttons: **↻** refresh (addons that fetch data; hover the title to see how old the data is), **⚙** settings, **⇥** dock as a panel, and the usual minimize, maximize and **✕ remove** (it asks first when settings or a note would be lost). Addons stay visible with any connection folder tab chosen. A new addon finds a free spot beside your windows.
+- **Window menu** (right-click a title bar or a tab), for every window: snap layouts, **📌 Pin in place** (no moving or resizing until unpinned; 📌 shows in the title bar) and **Always on top**; for addons also *Settings*, *Refresh now* and *Dock on the right / left / at the bottom*.
+- **Docked as a panel**, an addon is a panel of the [panel layout](#panel-layout-dock-stack-float-and-lock): stack it with *Sessions*, split a column, move it to another edge or anywhere on the canvas. Its bar keeps ↻, ⚙ and **⧉ Back onto the canvas as a window**, which returns it to its last place.
+- **The ▤ Workboard menu:**
+  - *Add addon…*
+  - **Canvas:** *Snap to the grid* (windows and panels land on grid lines when moved, and moved edges when resized), *Grid size* 10 / 20 / 40 px, *Canvas background* (*only with the grid* shows dots while snapping is on; or always dots, lines, plain).
+  - *Tile the windows* (a grid of all shown, unpinned windows), *Cascade the windows*, *Minimize all windows*, *Show all minimized windows*, *Minimize / Show the addons*, *Lock the layout*.
+  - **Saved layouts:** *Save this layout…* stores the addons with their places and settings, the panel layout and the canvas settings under a name (up to 10); tick *Also the open terminals, file managers and desktops* to keep those windows too (like a [workspace session](#workspace-sessions)). Choosing a saved layout replaces your addons and panel layout; with windows in it, WRM asks whether to replace or add to your open windows. *Manage saved layouts…* applies or deletes them.
+  - *Export the layout (JSON)* downloads the addons, canvas settings, panel layout and saved layouts as `wrm-workboard-<date>.json`; *Import a layout…* reads such a file (up to 512 KiB, everything checked as when loading), replaces your addons and panel layout and adds its saved layouts to yours. Exported files contain addon settings and notes, but no secrets.
+  - *Panels…* and a short help text.
+- **Every addon's settings:** your own title, *Colour* (a coloured edge on the title bar), *Text size* (small to extra large), the addon's own options, and *Remove*.
+- **Saved per user on the server** (`/api/me/ui/workboard`, with a copy in the browser), so the canvas follows you to every browser. Places are kept as fractions of the canvas, so they fit other screen sizes.
+- Addons load and refresh **only while visible**: not minimized and not completely covered by other windows (a countdown still ends on time).
+- **Phones** (below 760 px): every window, addons included, is full screen and switched with the tabs; addons are not docked as panels there.
 
 | Addon | Shows | Settings |
 |---|---|---|
 | 🟢 **Server status** | Down, slow (over 300 ms), unknown and up connections from the [live status](#live-updown-status), problems first, with latency or since when; a click opens the connection | connections (none chosen: all with a status), *only problems* |
 | 📈 **Server load** | Per server: CPU, RAM (with total), load per CPU, uptime and disks (fullest first; more in a tooltip). Bars turn yellow at 75 % and red at 90 %. Each server names its source, *Monitoring (Zabbix agent)* or *read over SSH*, and the age of the values; errors (SSH refused, not Linux …) are shown as they are | up to 8 SSH/SFTP connections |
-| 🔔 **Notifications** | Everything WRM notified you about, newest first, unread marked; *Mark all read*, *Clear*; the ▤ button counts unread ones | — |
+| 🔔 **Notifications** | Everything WRM notified you about, newest first, unread marked; *Mark all read*, *Clear*; the ▤ Workboard button counts unread ones | — |
 | 🕒 **Clock** | Local time and date, and other time zones | IANA time zones (`UTC`, `Europe/London` …), seconds |
 | ⎇ **Recent commits** | The last commits and pushes of a Git service (author, branch, short SHA, age, link to the commit on the Git server), refreshed every 5 minutes | service of the Git catalog, branch (empty: the branches the service tracks), 5 / 10 / 20 |
 | 🔀 **Running tunnels** | Running tunnels with their local address; *Tunnels…* opens the tunnel panel | — |
 | ⚡ **Quick connect** | Buttons with a status light that open the connection | up to 12 connections |
-| 📝 **Notes** | A note to yourself (up to 2000 characters), saved with the tiles | — |
+| 📝 **Notes** | A note to yourself (up to 2000 characters), saved with the addon | — |
+| 🗂 **Saved sessions** | Your saved sessions with their number of windows; a click opens one | — |
+| 🔗 **Links** | Your links to web pages (dashboards, wikis, tickets), opened in a new tab | up to 30 lines `Name \| https://address` (only http and https) |
+| ⏱ **Timer** | A countdown with a progress bar that blinks and notifies (toast and, when allowed, a browser notification) when time is up, or a stopwatch; *Start* / *Pause* / *Reset*; keeps running across reloads | countdown or stopwatch, minutes (1–1440) |
 
-**Where the values of *Server load* come from:** when the server has Monitoring (📊 in the top bar, Zabbix agent) on and its last sample is younger than 5 minutes, WRM uses that sample and does not log in. Otherwise WRM logs in over SSH with the connection's own credentials and runs one read-only command (`uname -s`, `/proc/loadavg`, `/proc/stat` twice one second apart, `MemTotal`/`MemAvailable` from `/proc/meminfo`, `df -P -k` without tmpfs/overlay mounts, `/proc/uptime`, `nproc`): at most once a minute per server while the tile is visible, one login per server at a time, results cached for 25 s. Reading over SSH works on Linux and can be turned off by an administrator (`workboard_ssh_metrics`); then only servers with Monitoring show values. Only your own SSH/SFTP connections can be chosen.
+**Where the values of *Server load* come from:** when the server has Monitoring (📊 in the top bar, Zabbix agent) on and its last sample is younger than 5 minutes, WRM uses that sample and does not log in. Otherwise WRM logs in over SSH with the connection's own credentials and runs one read-only command (`uname -s`, `/proc/loadavg`, `/proc/stat` twice one second apart, `MemTotal`/`MemAvailable` from `/proc/meminfo`, `df -P -k` without tmpfs/overlay mounts, `/proc/uptime`, `nproc`): at most once a minute per server while the addon is visible, one login per server at a time, results cached for 25 s. Reading over SSH works on Linux and can be turned off by an administrator (`workboard_ssh_metrics`); then only servers with Monitoring show values. Only your own SSH/SFTP connections can be chosen.
 
 **Notifications in WRM:** every notification WRM sends you is also kept in your in-app list (newest 200), whatever channels or events you chose in *Settings → Notifications*, and even when an administrator turned sending off (`notifications_enabled`). Repeated reminders (expiring keys and credentials, a new version, upcoming Git jobs) are kept once a day.
 
@@ -1059,7 +1080,7 @@ Bookmarks are named remote directories, like WinSCP's: the same deep folders (`/
 Type the same command into many servers at once — like *MultiSSH*, *cssh* or mRemoteNG's multi-SSH.
 
 1. Open the terminals (e.g. all web servers of a cluster).
-2. Top bar → **📣 Broadcast** → select the terminals → **Start broadcast** (asks once).
+2. Top bar → **🧰 Tools** → **📣 Broadcast…** → select the terminals → **Start broadcast** (asks once).
 3. Everything you type in one of them now goes to all of them. An orange bar shows how many terminals receive it; included windows get an orange frame. **📣** in a window's title bar adds or removes that terminal; **■ Stop** ends it.
 
 Safety:
@@ -1555,7 +1576,7 @@ Only your own connections can be used as a source; one check per user at a time;
 - **Large output is safe:** binary WebSocket frames plus flow control, so there are no disconnects on big `cat`/`tail`/`journalctl` output.
 - **Reconnect:**
   - **↻** button in the title bar (also while connected, e.g. when a session hangs), **Ctrl+Shift+R**, or the tab menu.
-  - When a terminal is closed, a banner offers **Reconnect**, and **Enter** reconnects too.
+  - When a terminal is closed, a banner offers **↻ Reconnect** (or press **Enter**) and a red **✕ Close window**; **–** hides the banner and stops the automatic reconnect.
   - **Automatic reconnect** when the SSH connection or the connection to the web server drops (backoff 1 s → 30 s, up to 10 attempts), and immediately when the network comes back. It can be turned off in Settings. If the shell simply exits (`exit`), it does not reconnect automatically.
 - **Keepalive:** WRM pings the browser every 25 s and the SSH server every 30 s and detects dead connections.
 - **Copy on select:** selecting text copies it to the clipboard and adds it to the [Clipboard panel](#clipboard-panel). **Ctrl+Shift+C** copies too, and **Ctrl+Shift+V** / normal paste pastes.
@@ -2672,6 +2693,7 @@ remote-manager/
   mcp_bundle_test.go   the Claude Desktop extension: download, manifest, token checks; its Node.js bridge end to end with an approval
   v1265_test.go        Medium step by step: tool import steps with output, deploy-config checked at once and kept while preparing, failed start keeps its step, error and redacted output, activity log; 409 names the running operation and its user, visibility and medium_log_output; approve later after the AI app closed its session; grep/sed/find patterns are not taken for files
   v1266_test.go        Docker for Medium: backend choice, Linux packages after consent with steps and output, no rights shows -setup-docker, policy off, Windows and macOS Docker Desktop with download, signature and licence, permission denied, wrm -setup-docker
+  v12610_test.go       the canvas is wired (addon windows, floating panels on the canvas, Tools menu, top bar group and order, sessions keep addons); /api/me/ui takes 256 KiB
   v1269_test.go        in-app notifications (recorded without channels, per user, reminders once a day, mark read, clear, newest 200 kept, removed with the user); metrics parser; /api/workboard/metrics (own connections only, SSH error in the result, policy off, fresh and stale Monitoring sample); the page loads static/workboard.js
   v1268_test.go        /api/me/ui: per-user layout store (put, overwrite, reset, objects only, 64 KiB limit, unknown keys, signed out, removed with the user); the page loads static/layout.js and has every panel
   v1267_test.go        Medium certificates: host CA bundle and extra PEM file reach every container (mount, environment, image roots kept), expired and duplicate certificates left out, bad or missing file named
@@ -2686,7 +2708,7 @@ remote-manager/
   static/ai.js               the AI assistant panel and the admin AI tab (loaded when used)
   static/mcp.js              AI connections (MCP): settings, indicator, approval cards, OAuth consent, admin tab (loaded when used)
   static/layout.js           panel layout: dock zones, tab groups, splitters, floating windows, lock, Panels menu, per-user storage
-  static/workboard.js        the Workboard: tiles, addon catalog, settings, pulling tiles out into panels
+  static/workboard.js        the Workboard: addon windows on the canvas, addon catalog, settings, docking addons as panels, canvas menu (grid, arrange, saved layouts, export/import)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
   mcpb/server/index.js       the Node.js bridge of the Claude Desktop extension (embedded; mcp_bundle.go)
