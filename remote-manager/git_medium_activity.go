@@ -198,13 +198,24 @@ func mediumEndOp(h *mediumOpInfo, err error) {
 	mediumMgr.mu.Lock()
 	s := mediumMgr.statuses[key]
 	mediumCloseStep(&s, err)
+	steps := append([]mediumStep{}, s.Steps...)
+	mediumMgr.statuses[key] = s
+	mediumMgr.mu.Unlock()
+	status, msg := "ok", ""
+	if err != nil {
+		status, msg = "error", truncateStr(redactText(err.Error()), 2000)
+	}
+	// the row is complete before the status says the operation ended, so a client that
+	// sees it end finds its result, steps and output in the activity log
+	db.Exec(`UPDATE medium_activity SET status=?, ms=?, error=?, steps=?, output=? WHERE id=?`, status, time.Since(h.at).Milliseconds(), msg, string(jsonMarshal(steps)), encryptValue(h.out.Tail()), h.ID)
+	mediumMgr.mu.Lock()
+	s = mediumMgr.statuses[key]
 	s.Busy = false
 	if err != nil {
-		s.Stage, s.Error = "error", truncateStr(redactText(err.Error()), 2000)
+		s.Stage, s.Error = "error", msg
 	} else if s.Stage != "" {
 		s.Stage = "ready"
 	}
-	steps := append([]mediumStep{}, s.Steps...)
 	mediumMgr.statuses[key] = s
 	mediumMgr.mu.Unlock()
 	mediumOps.Lock()
@@ -212,11 +223,6 @@ func mediumEndOp(h *mediumOpInfo, err error) {
 		mediumOps.holder = nil
 	}
 	mediumOps.Unlock()
-	status, msg := "ok", ""
-	if err != nil {
-		status, msg = "error", truncateStr(redactText(err.Error()), 2000)
-	}
-	db.Exec(`UPDATE medium_activity SET status=?, ms=?, error=?, steps=?, output=? WHERE id=?`, status, time.Since(h.at).Milliseconds(), msg, string(jsonMarshal(steps)), encryptValue(h.out.Tail()), h.ID)
 	mediumPruneActivity()
 }
 
