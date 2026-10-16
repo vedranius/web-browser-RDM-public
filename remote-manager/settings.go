@@ -80,6 +80,8 @@ var settingSpecs = []settingSpec{
 	{Key: "status_enabled", Default: "1", Kind: "bool", Alias: "STATUS_ENABLED"},
 	{Key: "status_interval_seconds", Default: "60", Kind: "int", Min: 15, Max: 3600},
 	{Key: "status_jump_checks", Default: "0", Kind: "bool"},
+	// Workboard: disk, CPU and RAM read over SSH for servers without a fresh Monitoring sample
+	{Key: "workboard_ssh_metrics", Default: "1", Kind: "bool"},
 	// Notifications (e-mail, chat and push channels)
 	{Key: "notifications_enabled", Default: "1", Kind: "bool", Alias: "NOTIFICATIONS_ENABLED"},
 	{Key: "notify_min_interval_seconds", Default: "60", Kind: "int", Min: 0, Max: 86400},

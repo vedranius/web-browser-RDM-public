@@ -1,3 +1,25 @@
+## [12.6.9] - 2026-10-16
+
+### Added
+- **Workboard** (`static/workboard.js`, **▤ Workboard** in the top bar): a page of tiles over the window area. It starts empty; tiles are added from the **addon catalog** (*＋ Add addon*), at most 24. Every tile has: drag its title bar to reorder, **⇥ / ⇤** wide or narrow, **⤢** pull out into a panel, **⚙** settings (own title, width and the addon's options), **✕** remove. The tiles are stored per user (`PUT /api/me/ui/workboard`, copy in `localStorage` `wrm_workboard_<user id>`; the newer wins), so they follow the user to every browser. Tiles load and refresh only while they are visible.
+- **Addons:**
+  - *Server status*: up, down, slow and unknown connections from the live status with latency and since when, problems first; all connections with a status or a chosen list; option *only problems*; a click opens the connection.
+  - *Server load*: CPU, RAM (with total), load per CPU, uptime and disk usage (fullest first; 3 disks narrow, 6 wide, the rest in a tooltip) of up to 8 chosen SSH/SFTP servers, bars yellow from 75 % and red from 90 %, with the source (*Monitoring (Zabbix agent)* or *read over SSH*) and age; refreshed every minute and with ↻.
+  - *Notifications*: the user's WRM events (newest 50) with unread marked; *Mark all read*, *Clear*; a click marks one read. The ▤ button shows the unread count while the tile exists.
+  - *Clock*: local time and date (seconds optional) and up to 8 IANA time zones (checked when saved).
+  - *Recent commits*: the last 5, 10 or 20 commits and pushes of a service of the Git catalog (optionally one branch) from `/api/git/activity`, with author, branch, short SHA, age and a link to the commit; refreshed every 5 minutes and with ↻ (fresh from the Git server).
+  - *Running tunnels*: running tunnels with their local address, and *Tunnels…*.
+  - *Quick connect*: buttons with a status light for up to 12 chosen connections.
+  - *Notes*: a note of up to 2000 characters, saved with the tiles.
+- **Pull a tile out into a panel:** a pulled-out tile becomes a panel of the panel layout (id `wb:<tile id>`): it floats first and can be docked, stacked, split or floated like *Sessions* or *Snippets*, keeps its ↻ and ⚙, and stays where it is after a reload. *Panels* lists it under *Pulled out of the Workboard*; hiding it (⋯ → *Back to the Workboard*, or *Bring it back* on its Workboard placeholder) puts it back on the Workboard. With the layout locked, tiles cannot be pulled out, reordered or resized. Phones show every tile on the Workboard.
+- **In-app notifications:** table `user_events` (newest 200 per user, removed with the user). Every notification WRM sends a user (`notifyUser`: status changes, monitoring problems, expiring keys and credentials, new versions, Git jobs …) is also kept there, whatever the user's channels, subscriptions and `notifications_enabled`; repeated reminders (`credential.*`, `git.new_version`, `git.job_upcoming`) at most once a day. The page gets `events_changed`. API: `GET /api/me/events?limit=` → `{events, unread}`, `POST /api/me/events/read` `{ids}` or `{all: true}`, `DELETE /api/me/events`.
+- **Server metrics endpoint** `GET /api/workboard/metrics?id=` (own SSH/SFTP connections only): a Monitoring (Zabbix) sample younger than 5 minutes when the server has Monitoring on; otherwise one read-only SSH command (`uname -s`, `/proc/loadavg`, `/proc/stat` twice a second apart, `MemTotal`/`MemAvailable` of `/proc/meminfo`, `df -P -k` without tmpfs/devtmpfs/squashfs/overlay, `/proc/uptime`, `nproc`; Linux only), one collection per server at a time, cached 25 s (`refresh=1` reads again), 25 s timeout; errors are returned in the result.
+- Policy **`workboard_ssh_metrics`** (on; *Admin panel → Policies → Live status*): allow reading server load over SSH. Off: only servers with Monitoring show values (403 with a hint otherwise).
+
+### Changed
+- `static/layout.js` supports dynamic panels (`wrmLayout.register`, `remove`, `placed`); a stored layout keeps their place until the Workboard registers them. The active tab is scrolled into view when a tab bar is too narrow for all tabs.
+- The top bar has the **▤ Workboard** button (into the ⋯ menu when the bar is narrow).
+
 ## [12.6.8] - 2026-10-16
 
 ### Added

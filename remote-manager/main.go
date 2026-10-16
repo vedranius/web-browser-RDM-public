@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.6.8"
+var AppVersion = "v12.6.9"
 
 const sessionCookieName = "wrm_session"
 
@@ -345,6 +345,9 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/proxies/", apiProxiesHandler)
 	mux.HandleFunc("/api/snippets", apiSnippetsHandler)
 	mux.HandleFunc("/api/me/ui/", apiUserUIHandler)
+	mux.HandleFunc("/api/me/events", apiUserEventsHandler)
+	mux.HandleFunc("/api/me/events/", apiUserEventsHandler)
+	mux.HandleFunc("/api/workboard/metrics", apiWorkboardMetrics)
 	mux.HandleFunc("/api/snippets/", apiSnippetsHandler)
 	mux.HandleFunc("/api/bookmarks", apiBookmarksHandler)
 	mux.HandleFunc("/api/bookmarks/", apiBookmarksHandler)
@@ -1007,6 +1010,16 @@ func initDB() {
 		address TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (user_id, event, channel_id))`,
 		"user_id", "event", "channel_id", "address")
+	ensureTable("user_events", `CREATE TABLE IF NOT EXISTS user_events (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		event TEXT NOT NULL DEFAULT '',
+		title TEXT NOT NULL DEFAULT '',
+		body TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '',
+		read INTEGER NOT NULL DEFAULT 0)`,
+		"user_id", "event", "title", "body", "created_at", "read")
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_user_events_user ON user_events(user_id, id)`)
 	ensureTable("user_ui", `CREATE TABLE IF NOT EXISTS user_ui (
 		user_id INTEGER NOT NULL,
 		key TEXT NOT NULL,
