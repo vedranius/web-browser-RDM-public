@@ -651,6 +651,42 @@ Object.assign(LANGS.hr, {
   gm_hint_config_wrm: 'WRM-ova provjera u poruci iznad navodi datoteku i problem. Ispravi deploy-config ZIP i uvezi ga ponovno.',
   gm_hint_upload: 'Provjeri ZIP datoteke (najviše 20 MiB svaka, s očekivanim datotekama unutra) i pokušaj ponovno.'
 });
+Object.assign(LANGS.en, {
+  gm_op_docker: 'Docker installation', gm_dk_install: 'Install Docker',
+  gm_st_docker_install: 'Installing Docker', gm_st_docker_download: 'Downloading Docker Desktop (docker.com)', gm_st_docker_verify: 'Checking the installer\'s signature (Docker Inc.)', gm_st_docker_start: 'Starting Docker', gm_st_docker_wait: 'Waiting for the Docker engine to answer',
+  gm_s2_dk_consent: '{product} is not installed on the WRM host. WRM installs it itself ({how}), starts it and prepares the runtime, after an administrator allows it once with "Install Docker".',
+  gm_s2_dk_wait_admin: '{product} is not installed on the WRM host yet. An administrator installs it from here once; then everything continues automatically.',
+  gm_s2_dk_auto: '{product} is not installed yet. WRM installs it ({how}) automatically at the next preparation or tool import; allowed by {user} on {at}. Press "Install Docker" to do it now.',
+  gm_s2_dk_off: '{product} is not installed, and automatic installation is switched off (Administration → Policies → Git: "Install Docker for Medium"). Switch it on, or install {product} on the WRM host yourself.',
+  gm_s2_dk_manual: '{product} is not installed, and WRM cannot install it here: {why}.', gm_s2_dk_cmd: 'Run once on the WRM host as administrator; then press "Prepare runtime / retry" (or import the deploy-tool ZIP):',
+  gm_s2_dk_run: 'In progress: {step}. Downloading and installing Docker can take several minutes; every step and its output are shown here and in the activity log.',
+  gm_dk_license: 'Docker Desktop is free for personal use, education, non-commercial open source and small businesses (fewer than 250 employees and less than USD 10 million annual revenue); larger organisations need a paid Docker subscription.', gm_dk_license_link: 'Docker Subscription Service Agreement',
+  gm_dk_confirm: 'Install {product} on the WRM host ({how})? WRM downloads and installs it, starts it and then prepares the runtime of the original deploy tool.',
+  gm_dk_confirm_license: 'By continuing you accept the Docker Subscription Service Agreement ({url}) for your organisation. Your name and the time are recorded in the audit log.',
+  gm_dk_ok_license: 'Accept the licence and install', gm_dk_ok: 'Install',
+  gm_dk_how_desktop: 'official installer from docker.com, signature checked', gm_dk_how_pkg: 'packages of this Linux distribution: {method}',
+  gm_hint_dk_error: 'Do what the error above says, then press "Prepare runtime / retry". Your ZIPs are kept.', gm_hint_dk_error_new: 'Do what the error above says, then press "Install Docker" again; after that import the deploy-tool ZIP (step 1).',
+  gm_hint_docker_install: 'The output (Show output) says why the Docker installation failed; fix that and press "Install Docker" again. Your ZIPs are kept.',
+  gm_hint_docker: 'Docker did not answer; the step\'s error above says why and what to do. When Docker is missing, an administrator presses "Install Docker" in step 2. Then press "Prepare runtime / retry"; your ZIPs are kept.'
+});
+Object.assign(LANGS.hr, {
+  gm_op_docker: 'Instalacija Dockera', gm_dk_install: 'Instaliraj Docker',
+  gm_st_docker_install: 'Instalacija Dockera', gm_st_docker_download: 'Preuzimanje Docker Desktopa (docker.com)', gm_st_docker_verify: 'Provjera potpisa instalacije (Docker Inc.)', gm_st_docker_start: 'Pokretanje Dockera', gm_st_docker_wait: 'Čekanje da se Docker engine javi',
+  gm_s2_dk_consent: '{product} nije instaliran na WRM računalu. WRM ga sam instalira ({how}), pokreće i priprema okruženje kad to administrator jednom dopusti gumbom "Instaliraj Docker".',
+  gm_s2_dk_wait_admin: '{product} još nije instaliran na WRM računalu. Administrator ga jednom instalira odavde; nakon toga sve ide automatski.',
+  gm_s2_dk_auto: '{product} još nije instaliran. WRM ga instalira ({how}) automatski pri sljedećoj pripremi ili uvozu alata; dopustio {user}, {at}. Klikni "Instaliraj Docker" za instalaciju odmah.',
+  gm_s2_dk_off: '{product} nije instaliran, a automatska instalacija je isključena (Administracija → Pravila → Git: "Instalacija Dockera za Medium"). Uključi je ili sam instaliraj {product} na WRM računalo.',
+  gm_s2_dk_manual: '{product} nije instaliran, a WRM ga ovdje ne može instalirati: {why}.', gm_s2_dk_cmd: 'Pokreni jednom na WRM računalu kao administrator; zatim klikni "Pripremi runtime / pokušaj ponovno" (ili uvezi deploy-tool ZIP):',
+  gm_s2_dk_run: 'U tijeku: {step}. Preuzimanje i instalacija Dockera mogu trajati nekoliko minuta; svaki korak i njegov izlaz vide se ovdje i u dnevniku aktivnosti.',
+  gm_dk_license: 'Docker Desktop je besplatan za osobnu upotrebu, obrazovanje, nekomercijalni open source i male tvrtke (manje od 250 zaposlenih i manje od 10 milijuna USD godišnjeg prihoda); veće organizacije trebaju plaćenu Docker pretplatu.', gm_dk_license_link: 'Docker Subscription Service Agreement',
+  gm_dk_confirm: 'Instalirati {product} na WRM računalo ({how})? WRM ga preuzima i instalira, pokreće i zatim priprema okruženje izvornog deploy-toola.',
+  gm_dk_confirm_license: 'Nastavkom prihvaćaš Docker Subscription Service Agreement ({url}) za svoju organizaciju. Tvoje ime i vrijeme bilježe se u revizijski zapis.',
+  gm_dk_ok_license: 'Prihvati licencu i instaliraj', gm_dk_ok: 'Instaliraj',
+  gm_dk_how_desktop: 'službeni instalacijski program s docker.com, uz provjeru potpisa', gm_dk_how_pkg: 'paketi ove Linux distribucije: {method}',
+  gm_hint_dk_error: 'Napravi ono što kaže greška iznad, zatim klikni "Pripremi runtime / pokušaj ponovno". Tvoji ZIP-ovi ostaju spremljeni.', gm_hint_dk_error_new: 'Napravi ono što kaže greška iznad, zatim ponovno klikni "Instaliraj Docker"; nakon toga uvezi deploy-tool ZIP (korak 1).',
+  gm_hint_docker_install: 'Izlaz (Prikaži izlaz) pokazuje zašto instalacija Dockera nije uspjela; ispravi to i ponovno klikni "Instaliraj Docker". Tvoji ZIP-ovi ostaju spremljeni.',
+  gm_hint_docker: 'Docker se nije javio; greška koraka iznad kaže zašto i što napraviti. Ako Docker nedostaje, administrator u koraku 2 klikne "Instaliraj Docker". Zatim klikni "Pripremi runtime / pokušaj ponovno"; tvoji ZIP-ovi ostaju spremljeni.'
+});
 Object.assign(LANGS.en, { mn_title: 'WRM preview (read-only)', mn_needs_running: 'Start the original deploy tool first (step 5)', gm_quick_title: 'Or everything at once: prepare and start in one click', gm_prepare: 'Prepare runtime / retry', gm_settings_hint: 'Stop the original deploy tool before saving; the settings apply at its next start. These are the original deploy-tool environment options: config Git repository/pull/check interval, commit identity, SSH options, command timeout and build user. Empty fields use the original defaults. Masked values are preserved.' });
 Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_running: 'Prvo pokreni izvorni deploy-tool (korak 5)', gm_quick_title: 'Ili sve odjednom: pripremi i pokreni jednim klikom', gm_prepare: 'Pripremi okruženje / pokušaj ponovno', gm_title: 'Izvorni deploy-tool', gm_settings: 'Postavke izvornog alata', gm_settings_hint: 'Zaustavi izvorni deploy-tool prije spremanja; postavke vrijede od sljedećeg pokretanja. Ovo su izvorne deploy-tool opcije: Git repo konfiguracije/povlačenje/interval provjere, autor commitova, SSH opcije, timeout naredbi i build korisnik. Prazna polja koriste izvorne zadane vrijednosti. Maskirane vrijednosti se zadržavaju.', gm_quick: 'Pripremi i pokreni pouzdane ZIP-ove', gm_stop_confirm: 'Zaustaviti izvorni deploy-tool? Najprije pričekaj da deployi završe.' });
 (function () {
@@ -693,6 +729,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
 #git-ws .gm-err {color:var(--red);white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0 2px 18px;}
 #git-ws .gm-bad {border-color:var(--red);}
 #git-ws .gm-out {max-height:300px;overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11.5px;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0 0;}
+#git-ws .gm-cmd {background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0 0;user-select:all;}
 #git-ws .gm-log {width:100%;border-collapse:collapse;}
 #git-ws .gm-log th {text-align:left;color:var(--text3);font-weight:500;padding:4px 8px 4px 0;}
 #git-ws .gm-log td {padding:5px 8px 5px 0;border-top:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere;}
@@ -2983,7 +3020,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
         <div id="gm-op"></div>
         <ol class="gm-steps" id="gm-steps">
           <li id="gm-s1"><div class="gm-sh"><span class="gm-ico"></span><b>1. ${esc(t('gm_s1'))}</b><span class="gm-act">${fileBtn('tool', 'medium-tool-label')}</span></div><div class="gm-sd"></div></li>
-          <li id="gm-s2"><div class="gm-sh"><span class="gm-ico"></span><b>2. ${esc(t('gm_s2'))}</b><span class="gm-act"><button class="btn-sec btn-sm" id="medium-prepare" onclick="gitWorkspace.mediumAction('prepare')">${esc(t('gm_prepare'))}</button><a class="btn-sec btn-sm" id="medium-docker-guide" href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener">${esc(t('gm_docker_setup'))}</a></span></div><div class="gm-sd"></div></li>
+          <li id="gm-s2"><div class="gm-sh"><span class="gm-ico"></span><b>2. ${esc(t('gm_s2'))}</b><span class="gm-act"><button class="btn-sec btn-sm" id="medium-prepare" onclick="gitWorkspace.mediumAction('prepare')">${esc(t('gm_prepare'))}</button><button class="btn-sm" id="medium-docker-install" onclick="gitWorkspace.mediumDockerInstall()">🐳 ${esc(t('gm_dk_install'))}</button></span></div><div class="gm-sd"></div></li>
           <li id="gm-s3"><div class="gm-sh"><span class="gm-ico"></span><b>3. ${esc(t('gm_s3'))}</b><span class="gm-act">${fileBtn('config')}</span></div><div class="gm-sd"></div></li>
           <li id="gm-s4"><div class="gm-sh"><span class="gm-ico"></span><b>4. ${esc(t('gm_s4'))}</b><span class="gm-act">${fileBtn('ssh')}</span></div><div class="gm-sd"></div></li>
           <li id="gm-s5"><div class="gm-sh"><span class="gm-ico"></span><b>5. ${esc(t('gm_s5'))}</b><span class="gm-act"><button class="btn-sm" id="gm-start" onclick="gitWorkspace.mediumAction('start')">▶ ${esc(t('gm_start'))}</button><button class="btn-sec btn-sm" id="gm-stop" onclick="gitWorkspace.mediumAction('stop')">■ ${esc(t('gm_stop'))}</button><a class="btn-sec btn-sm" id="gm-open" href="/medium/" target="_blank" rel="noopener">↗ ${esc(t('gm_open'))}</a></span></div><div class="gm-sd"></div></li>
@@ -3002,6 +3039,8 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
   function mediumHint(step, err) {
     step = step || '';
     if (step === 'docker') return t('gm_hint_docker');
+    if (['docker_install', 'docker_download', 'docker_verify'].includes(step)) return t('gm_hint_docker_install');
+    if (step === 'docker_start' || step === 'docker_wait') return (MS.s || {}).tool_imported ? t('gm_hint_dk_error') : t('gm_hint_dk_error_new');
     if (step === 'image') return t('gm_hint_image');
     if (step === 'packages') return t('gm_hint_packages');
     if (step === 'python' || step === 'venv') return t('gm_hint_python');
@@ -3037,12 +3076,16 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     // 2. its runtime (Docker or Python on the WRM host)
     const where = s.backend === 'docker' ? t('gm_rt_docker') : t('gm_rt_host');
     const holder = s.operation && !s.operation.mine ? s.operation : null;
-    if (holder && ['prepare', 'tool_import'].includes(holder.op)) set(2, 'run', tf('gm_s2_run_other', {where, user: holder.user, at: mClock(holder.started)}));
-    else if (['prepare', 'tool_import'].includes(runningOp) || (runningOp === 'setup' && ['docker', 'image', 'packages', 'python', 'venv'].includes(s.stage))) set(2, 'run', tf('gm_s2_run', {where, step: mStep(s.stage)}));
+    const rtSteps = ['docker', 'docker_install', 'docker_download', 'docker_verify', 'docker_start', 'docker_wait', 'image', 'packages', 'python', 'venv'];
+    const dk = s.docker && !s.docker.installed ? s.docker : null;
+    if (holder && ['prepare', 'tool_import', 'docker'].includes(holder.op)) set(2, 'run', tf('gm_s2_run_other', {where, user: holder.user, at: mClock(holder.started)}));
+    else if (/^docker_/.test(s.stage || '') && s.busy) set(2, 'run', tf('gm_s2_dk_run', {step: mStep(s.stage)}));
+    else if (['prepare', 'tool_import', 'docker'].includes(runningOp) || (runningOp === 'setup' && rtSteps.includes(s.stage))) set(2, 'run', tf('gm_s2_run', {where, step: mStep(s.stage)}));
     else if (s.tool) set(2, 'ok', tf('gm_s2_ok', {where}));
+    else if (dk) mediumPaintDocker(dk, failedStep, set, s.admin);
+    else if (failedStep && rtSteps.includes(failedStep.step)) set(2, 'bad', tf('gm_s2_failed', {where}), `<div class="gm-todo">${esc(mediumHint(failedStep.step, failedStep.error))}</div>`);
     else if (!s.tool_imported) set(2, 'wait', tf('gm_s2_after1', {where}));
     else if (deps.length) set(2, 'bad', tf('gm_s2_missing', {where, deps: deps.join(', ')}));
-    else if (failedStep && ['docker', 'image', 'packages', 'python', 'venv'].includes(failedStep.step)) set(2, 'bad', tf('gm_s2_failed', {where}), `<div class="gm-todo">${esc(mediumHint(failedStep.step, failedStep.error))}</div>`);
     else set(2, 'wait', s.admin ? tf('gm_s2_todo_admin', {where}) : t('gm_s2_todo_user'));
     // 3. deploy-config (each user's own)
     if (s.pending_config) set(3, 'pend', t('gm_s3_pending'));
@@ -3080,8 +3123,36 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     $('medium-prepare').style.display = s.admin && s.tool_imported ? '' : 'none';
     $('medium-prepare').disabled = busy || !!s.running;
     $('medium-prepare').title = s.running ? t('gm_why_prepare_running') : busy ? t('gm_why_busy') : '';
-    $('medium-docker-guide').style.display = s.backend === 'docker' && !s.tool ? '' : 'none';
+    const dkBtn = $('medium-docker-install'), dki = s.docker || {};
+    const dkFailed = failedStep && /^docker/.test(failedStep.step) && !s.tool_imported;
+    dkBtn.style.display = s.admin && s.backend === 'docker' && dki.os && dki.allowed && ((!dki.installed && dki.auto) || (dkFailed && dki.consent)) ? '' : 'none';
+    dkBtn.disabled = busy;
+    dkBtn.title = busy ? t('gm_why_busy') : '';
     return other;
+  }
+  // step 2 while Docker is missing: what WRM will do, what it needs, or what to run by hand
+  function mDockerHow(dk) { return dk.method === 'desktop' ? t('gm_dk_how_desktop') : tf('gm_dk_how_pkg', {method: dk.method || '?'}); }
+  function mediumPaintDocker(dk, failedStep, set, admin) {
+    const license = dk.needs_license ? `<div class="g-mut">${esc(t('gm_dk_license'))} <a href="${esc(dk.license_url)}" target="_blank" rel="noopener">${esc(t('gm_dk_license_link'))}</a></div>` : '';
+    const note = dk.note ? `<div class="g-mut">${esc(dk.note)}</div>` : '';
+    const failed = failedStep && /^docker/.test(failedStep.step) ? `<div class="gm-todo">${esc(mediumHint(failedStep.step, failedStep.error))}</div>` : '';
+    if (!dk.allowed) set(2, 'bad', tf('gm_s2_dk_off', {product: dk.product}));
+    else if (!dk.auto) set(2, 'bad', tf('gm_s2_dk_manual', {product: dk.product, why: dk.why || '?'}), dk.command ? `<div class="gm-todo">${esc(t('gm_s2_dk_cmd'))}<pre class="gm-cmd">${esc(dk.command)}</pre></div>` : '');
+    else if (!dk.consent) set(2, failed ? 'bad' : 'wait', admin ? tf('gm_s2_dk_consent', {product: dk.product, how: mDockerHow(dk)}) : tf('gm_s2_dk_wait_admin', {product: dk.product}), (admin ? license + note : '') + failed);
+    else set(2, failed ? 'bad' : 'wait', tf('gm_s2_dk_auto', {product: dk.product, how: mDockerHow(dk), user: dk.consent.user, at: mClock(dk.consent.at)}), note + failed);
+  }
+  async function mediumDockerInstall() {
+    const dk = (MS.s || {}).docker || {};
+    let msg = tf('gm_dk_confirm', {product: dk.product || 'Docker', how: mDockerHow(dk)});
+    if (dk.note) msg += '\n\n' + dk.note;
+    if (dk.needs_license) msg += '\n\n' + t('gm_dk_license') + '\n\n' + tf('gm_dk_confirm_license', {url: dk.license_url});
+    if (!(await uiConfirm(msg, {okText: dk.needs_license ? t('gm_dk_ok_license') : t('gm_dk_ok')}))) return;
+    try {
+      const r = await fetch('/api/git/medium/docker', json('POST', {accept: true, accept_license: !!dk.needs_license}));
+      if (!r.ok) throw new Error(await apiError(r));
+      MS.showLog = true; MS.logText = null;
+      await mediumRefresh(); mediumActivity(false);
+    } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 12000); mediumRefresh(); }
   }
   // re-rendered output keeps its place; new output opens at its end, where errors are
   function mRender(box, html) {
@@ -3106,7 +3177,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
       // its output, from the activity log
       const row = MS.rows.find(x => x.op === s.op && x.at === s.op_started);
       const out = row && row.output != null ? `<details class="gm-lastout" data-k="${esc(s.op + '@' + s.op_started)}"${failed ? ' open' : ''} ${mOutEnd}><summary>${esc(t('gm_show_output'))}</summary><pre class="gm-out">${esc(row.output || t('gm_no_output'))}</pre></details>` : '';
-      html += `<div class="hint-box ${failed ? 'gm-bad' : ''}"><b>${esc(tf(failed ? 'gm_last_failed' : 'gm_last_ok', {op: mOp(s.op), at: mClock(s.op_started)}))}</b>${mediumStepsHTML(s.steps, false)}${failed ? `<div class="gm-todo">${esc(mediumHint(failed.step, s.error || failed.error))}</div>` : ''}${out}<div class="g-mut">${esc(t('gm_last_more'))}</div></div>`;
+      html += `<div class="hint-box ${failed ? 'gm-bad' : ''}"><b>${esc(tf(failed ? 'gm_last_failed' : 'gm_last_ok', {op: mOp(s.op), at: mClock(s.op_started)}))}</b>${mediumStepsHTML(s.steps, false)}${failed && mediumHint(failed.step, s.error || failed.error) ? `<div class="gm-todo">${esc(mediumHint(failed.step, s.error || failed.error))}</div>` : ''}${out}<div class="g-mut">${esc(t('gm_last_more'))}</div></div>`;
     } else if (s.error) {
       html += `<div class="hint-box gm-bad">${esc(s.error)}</div>`;
     }
@@ -3745,7 +3816,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
