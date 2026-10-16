@@ -1072,6 +1072,7 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM folders WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM snippets WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM user_ui WHERE user_id=?`, id)
+	tx.Exec(`DELETE FROM user_events WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM bookmarks WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM connection_tunnels WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM ssh_keys WHERE user_id=?`, id)
