@@ -125,7 +125,7 @@ var mediumOps = struct {
 }{}
 
 // mediumOpShared: operations on the runtime every user shares (shown to everyone).
-func mediumOpShared(op string) bool { return op == "prepare" || op == "tool_import" }
+func mediumOpShared(op string) bool { return op == "prepare" || op == "tool_import" || op == "docker" }
 
 // mediumBusyError says which operation holds the shared lock.
 func mediumBusyError() error {
@@ -152,6 +152,8 @@ func mediumOpLabel(op string) string {
 		return "deploy-config check"
 	case "ssh_import":
 		return "SSH profile import"
+	case "docker":
+		return "Docker installation"
 	}
 	return op
 }
