@@ -344,6 +344,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/proxies", apiProxiesHandler)
 	mux.HandleFunc("/api/proxies/", apiProxiesHandler)
 	mux.HandleFunc("/api/snippets", apiSnippetsHandler)
+	mux.HandleFunc("/api/me/ui/", apiUserUIHandler)
 	mux.HandleFunc("/api/snippets/", apiSnippetsHandler)
 	mux.HandleFunc("/api/bookmarks", apiBookmarksHandler)
 	mux.HandleFunc("/api/bookmarks/", apiBookmarksHandler)
@@ -1006,6 +1007,13 @@ func initDB() {
 		address TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (user_id, event, channel_id))`,
 		"user_id", "event", "channel_id", "address")
+	ensureTable("user_ui", `CREATE TABLE IF NOT EXISTS user_ui (
+		user_id INTEGER NOT NULL,
+		key TEXT NOT NULL,
+		value TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (user_id, key))`,
+		"user_id", "key", "value", "updated_at")
 	ensureTable("notify_prefs", `CREATE TABLE IF NOT EXISTS notify_prefs (
 		user_id INTEGER PRIMARY KEY,
 		quiet_enabled INTEGER NOT NULL DEFAULT 0,
