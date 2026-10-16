@@ -1,3 +1,22 @@
+## [12.6.5] - 2026-10-16
+
+### Added
+- **Medium step-by-step guide** for the original deploy tool (tool ZIP, runtime preparation, deploy-config, SSH profile, start/stop) with a state, a reason when a step cannot run yet (also as the disabled button's tooltip) and what to do when it fails. The original tool and the read-only WRM preview are separate, labelled panels, each with a status light.
+- **Running operation and steps:** `GET /api/git/medium` names the running operation, its user and start time, and lists the caller's steps with start time, duration and error. A busy Medium answers `409` naming them instead of a bare "busy".
+- **Medium activity log** (`medium_activity`, `GET /api/git/medium/activity`): imports, preparation, starts, stops, unexpected exits, settings, WRM preview runs and requests to the original tool with time, user, result, duration, steps and output. Users see their own and the shared runtime's rows, administrators all.
+- **Command output** of Docker, pip, the config check and the original tool's process (`GET /api/git/medium/log` live, kept per operation, at most 200 lines), redacted and stored encrypted. New setting `medium_log_output` (`all` default, `admins`, `none`).
+- WRM's console logs each Medium operation and step (`Medium (user): …`).
+
+### Changed
+- A deploy-config ZIP is checked by WRM's own reader at once (`400` with file and key). Uploaded while the runtime is being prepared, before it exists or while another operation runs, a deploy-config or SSH ZIP is kept (`202`, `pending`) and checked by the original tool and applied at the next start instead of being refused.
+- `POST /api/git/medium/start` and the tool import run in the background (`202`); the UI follows them every 2 seconds and shows the tool as running only when it answers (`ready`). An error stays shown until the next operation, with the failed step.
+- A deploy-config the original tool rejects is discarded (the previous one stays in use); a check that could not run (Docker not running, timeout) keeps the ZIP and says so. The WRM preview uses a kept deploy-config. Actions in the original tool are logged with its answer.
+
+### Fixed
+- **AI connections:** a request kept to approve later could not be approved once the AI app had closed its session (404 "AI session not found or ended"). Such requests now stay listed and approvable for their hour, and the approval covers the same call once in the user's next session on that connection.
+- **AI read checks:** a `grep` pattern (also `-e` values), a `sed`/`awk` script and `find -name`/`-path` patterns were checked as if they were files, so a regular expression such as `'^[[:space:]]*command=.*'` was reported as a PuTTY private key and asked for approval. Only file operands are checked now.
+- An administrator's runtime preparation blocked every other Medium action for several minutes with "Medium is busy" and no way to see what ran or how far it was.
+
 ## [12.6.4] - 2026-10-16
 
 ### Added

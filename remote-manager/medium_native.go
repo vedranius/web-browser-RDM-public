@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -624,8 +625,33 @@ func mdStartRun(uid int, req mdPlanRequest) (*mdRun, error) {
 				run.Error = err.Error()
 			}
 		})
+		// the activity log: what was previewed, when, and the outcome
+		op, status, msg := "preview", "ok", ""
+		if req.Compare {
+			op = "compare"
+		}
+		if err != nil {
+			status, msg = "error", err.Error()
+		}
+		mediumRecord(uid, op, status, time.Since(run.at).Milliseconds(), mdRunSummary(req, res), msg, "")
 	}()
 	return run, nil
+}
+
+// mdRunSummary: project, environment, ref and per-server change counts for the log.
+func mdRunSummary(req mdPlanRequest, res *mdPlanResult) string {
+	s := req.Project + " / " + req.Environment + " @ " + req.Ref
+	if res == nil {
+		return s
+	}
+	for _, sp := range res.Servers {
+		if sp.Error != "" {
+			s += fmt.Sprintf("; %s: error", sp.Server)
+			continue
+		}
+		s += fmt.Sprintf("; %s: +%d ~%d -%d", sp.Server, sp.Counts["new"], sp.Counts["changed"], sp.Counts["deleted"])
+	}
+	return s
 }
 
 func mdGetRun(uid int, id string) (mdRun, bool) {
@@ -660,7 +686,7 @@ var mdOpenDestination = func(uid int, cfg *mdConfig, server string, fn func(mdRe
 }
 
 func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, error) {
-	cfg, err := mdLoadConfig(mediumConfigDir(uid))
+	cfg, err := mdLoadConfig(mdConfigDir(uid))
 	if err != nil {
 		return nil, err
 	}
@@ -904,7 +930,7 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 	switch {
 	case action == "/config" && r.Method == "GET":
 		out := map[string]interface{}{"running": mdMediumProcess(uid) != nil}
-		cfg, err := mdLoadConfig(mediumConfigDir(uid))
+		cfg, err := mdLoadConfig(mdConfigDir(uid))
 		if err != nil {
 			out["ok"], out["error"] = false, err.Error()
 			jsonOK(w, out)
@@ -951,7 +977,7 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 		auditLog(r, uid, "git.medium_server_linked", in.Server, map[string]interface{}{"conn_id": in.ConnID})
 		jsonOK(w, map[string]bool{"ok": true})
 	case action == "/refs" && r.Method == "GET":
-		cfg, err := mdLoadConfig(mediumConfigDir(uid))
+		cfg, err := mdLoadConfig(mdConfigDir(uid))
 		if err != nil {
 			jsonError(w, err.Error(), 400)
 			return
@@ -1011,4 +1037,15 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 	default:
 		jsonError(w, "not found", 404)
 	}
+}
+
+// mdConfigDir is the deploy-config the preview reads: a kept ZIP (already checked by WRM's
+// reader, waiting for the original tool) is the user's newest one, else the applied one.
+func mdConfigDir(uid int) string {
+	for _, d := range []string{"pending-config", "pending-config.applying"} {
+		if p := filepath.Join(mediumUserDir(uid), d); mediumFileExists(filepath.Join(p, "servers.yaml")) {
+			return p
+		}
+	}
+	return mediumConfigDir(uid)
 }

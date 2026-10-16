@@ -710,6 +710,7 @@ func mcpActiveHandler(w http.ResponseWriter, userID int) {
 			pending = append(pending, map[string]interface{}{"session": s.ID, "connection": s.ConnName, "host": s.Host, "client": s.Model, "approval": a})
 		}
 	}
+	pending = append(pending, aiStoredLaterFor(userID)...)
 	jsonOK(w, map[string]interface{}{"live": live, "pending": pending})
 }
 
