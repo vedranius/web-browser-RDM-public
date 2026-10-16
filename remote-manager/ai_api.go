@@ -201,6 +201,27 @@ func aiSessionsHandler(w http.ResponseWriter, r *http.Request, userID int, parts
 		jsonError(w, "Method not allowed", 405)
 		return
 	}
+	if parts[1] == "approvals" && len(parts) == 3 && aiGet(parseID(parts[0])) == nil {
+		// a request kept for later whose session has ended (the AI app closed it)
+		var in struct {
+			Decision string `json:"decision"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil || (in.Decision != "approve" && in.Decision != "deny") {
+			jsonError(w, "decision must be approve or deny", 400)
+			return
+		}
+		found, err := aiResolveStoredLater(parseID(parts[0]), parts[2], userID, in.Decision == "approve")
+		if !found {
+			jsonError(w, "AI session not found or ended", 404)
+			return
+		}
+		if err != nil {
+			jsonError(w, err.Error(), 409)
+			return
+		}
+		jsonOK(w, map[string]interface{}{"ok": true, "session_ended": true})
+		return
+	}
 	s := aiSessionByID(w, parts[0], userID)
 	if s == nil {
 		return

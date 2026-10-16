@@ -583,7 +583,8 @@ func aiEvaluateAuto(auto *aiAutoLimits, cmd, home string, now time.Time, v roVer
 		if classifySegment(shSegment{Words: s.Words}).ReadOnly {
 			continue
 		}
-		for _, w := range s.Words[1:] {
+		name, _ := cmdName(s.Words[0])
+		for _, w := range aiPathOperands(name, s.Words[1:]) {
 			if why := aiReadDenied(w); why != "" {
 				return aiDecision{Action: aiApprove, Rule: "auto_outside", Reason: w + " is a sensitive file (" + why + ")"}
 			}

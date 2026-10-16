@@ -13,6 +13,8 @@
 - A deploy-config the original tool rejects is discarded (the previous one stays in use); a check that could not run (Docker not running, timeout) keeps the ZIP and says so. The WRM preview uses a kept deploy-config. Actions in the original tool are logged with its answer.
 
 ### Fixed
+- **AI connections:** a request kept to approve later could not be approved once the AI app had closed its session (404 "AI session not found or ended"). Such requests now stay listed and approvable for their hour, and the approval covers the same call once in the user's next session on that connection.
+- **AI read checks:** a `grep` pattern (also `-e` values), a `sed`/`awk` script and `find -name`/`-path` patterns were checked as if they were files, so a regular expression such as `'^[[:space:]]*command=.*'` was reported as a PuTTY private key and asked for approval. Only file operands are checked now.
 - An administrator's runtime preparation blocked every other Medium action for several minutes with "Medium is busy" and no way to see what ran or how far it was.
 
 ## [12.6.4] - 2026-10-16

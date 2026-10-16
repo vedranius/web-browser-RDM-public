@@ -831,7 +831,7 @@ func classifySegment(seg shSegment) roVerdict {
 	if aiNoContentCommands[name] {
 		return roVerdict{true, ""}
 	}
-	for _, a := range inner[1:] {
+	for _, a := range aiPathOperands(name, inner[1:]) {
 		v := a
 		if i := strings.Index(a, "="); strings.HasPrefix(a, "-") && i > 0 {
 			v = a[i+1:]
@@ -841,6 +841,84 @@ func classifySegment(seg shSegment) roVerdict {
 		}
 	}
 	return roVerdict{true, ""}
+}
+
+// aiPathOperands drops the arguments that are patterns or programs, not files: grep's
+// pattern (and -e values), sed's and awk's script, find's name/path patterns. A regular
+// expression such as '^command=.*' is then not mistaken for a file name.
+func aiPathOperands(name string, args []string) []string {
+	out := []string{}
+	switch name {
+	case "grep", "egrep", "fgrep", "zgrep", "rg":
+		explicit := false
+		for i := 0; i < len(args); i++ {
+			if a := args[i]; a == "-e" || a == "--regexp" || a == "-f" || a == "--file" {
+				explicit = true
+				if a == "-f" || a == "--file" {
+					out = append(out, args[min(i+1, len(args)-1)])
+				}
+				i++
+			} else if strings.HasPrefix(a, "--regexp=") || (strings.HasPrefix(a, "-e") && len(a) > 2 && !strings.HasPrefix(a, "--")) {
+				explicit = true
+			}
+		}
+		pattern := !explicit
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			switch {
+			case a == "-e" || a == "--regexp" || a == "-f" || a == "--file" || a == "-m" || a == "-A" || a == "-B" || a == "-C" || a == "--max-count" || a == "-g" || a == "-t" || a == "-T":
+				i++ // the option's value
+			case a == "--":
+				for _, r := range args[i+1:] {
+					if pattern {
+						pattern = false
+						continue
+					}
+					out = append(out, r)
+				}
+				return out
+			case strings.HasPrefix(a, "-"):
+			case pattern:
+				pattern = false
+			default:
+				out = append(out, a)
+			}
+		}
+		return out
+	case "sed", "awk", "gawk", "mawk":
+		script := true
+		for _, a := range args {
+			if a == "-e" || a == "-f" || strings.HasPrefix(a, "--expression") || strings.HasPrefix(a, "--file") {
+				script = false
+			}
+		}
+		skip := false
+		for _, a := range args {
+			switch {
+			case skip:
+				skip = false
+			case a == "-e" || a == "-v" || a == "-F":
+				skip = true
+			case strings.HasPrefix(a, "-"):
+			case script:
+				script = false
+			default:
+				out = append(out, a)
+			}
+		}
+		return out
+	case "find":
+		for i := 0; i < len(args); i++ {
+			switch args[i] {
+			case "-name", "-iname", "-path", "-ipath", "-wholename", "-iwholename", "-regex", "-iregex", "-lname", "-ilname":
+				i++
+			default:
+				out = append(out, args[i])
+			}
+		}
+		return out
+	}
+	return args
 }
 
 // classifyReadOnly classifies a whole command line.
