@@ -74,7 +74,7 @@ func TestMediumMissingDockerPreservesImportedSource(t *testing.T) {
 	if e := os.WriteFile(filepath.Join(mediumToolDir(), "approved-source"), []byte("original"), 0600); e != nil {
 		t.Fatal(e)
 	}
-	e := mediumPrepareRuntime(context.Background())
+	e := mediumPrepareRuntime(context.Background(), nil)
 	if e == nil || !strings.Contains(e.Error(), "Docker Desktop") {
 		t.Fatal(e)
 	}

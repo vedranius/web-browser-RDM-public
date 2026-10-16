@@ -624,8 +624,33 @@ func mdStartRun(uid int, req mdPlanRequest) (*mdRun, error) {
 				run.Error = err.Error()
 			}
 		})
+		// the activity log: what was previewed, when, and the outcome
+		op, status, msg := "preview", "ok", ""
+		if req.Compare {
+			op = "compare"
+		}
+		if err != nil {
+			status, msg = "error", err.Error()
+		}
+		mediumRecord(uid, op, status, time.Since(run.at).Milliseconds(), mdRunSummary(req, res), msg, "")
 	}()
 	return run, nil
+}
+
+// mdRunSummary: project, environment, ref and per-server change counts for the log.
+func mdRunSummary(req mdPlanRequest, res *mdPlanResult) string {
+	s := req.Project + " / " + req.Environment + " @ " + req.Ref
+	if res == nil {
+		return s
+	}
+	for _, sp := range res.Servers {
+		if sp.Error != "" {
+			s += fmt.Sprintf("; %s: error", sp.Server)
+			continue
+		}
+		s += fmt.Sprintf("; %s: +%d ~%d -%d", sp.Server, sp.Counts["new"], sp.Counts["changed"], sp.Counts["deleted"])
+	}
+	return s
 }
 
 func mdGetRun(uid int, id string) (mdRun, bool) {

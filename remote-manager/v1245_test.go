@@ -94,7 +94,7 @@ func TestV1245MediumCombinedUploadRetainedOnDependencyFailure(t *testing.T) {
 	t.Setenv("WRM_MEDIUM_DOCKER", "")
 	var body bytes.Buffer
 	mp := multipart.NewWriter(&body)
-	for kind, files := range map[string]map[string]string{"tool": {"app/main.py": "# demo", "app/config.py": "# demo", "app/__init__.py": "", "requirements.lock": "# empty"}, "config": {"servers.yaml": "servers: []", "environments.yaml": "environments: []"}} {
+	for kind, files := range map[string]map[string]string{"tool": {"app/main.py": "# demo", "app/config.py": "# demo", "app/__init__.py": "", "requirements.lock": "# empty"}, "config": {"servers.yaml": mdServersYAML, "environments.yaml": mdEnvsYAML}} {
 		part, _ := mp.CreateFormFile(kind, kind+".zip")
 		part.Write(mediumTestZip(t, files))
 	}
