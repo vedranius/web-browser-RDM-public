@@ -449,7 +449,7 @@ button:hover { background: var(--accent-h); }
 .tab-close:hover { color: var(--red); background: rgba(239,68,68,.15); }
 
 /* ══ WINDOW CONTAINER ══ */
-#win-container { flex: 1; position: relative; overflow: hidden; background: var(--bg); }
+#win-container { flex: 1; position: relative; overflow: hidden; background: var(--bg); isolation: isolate; }
 .no-windows-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--text3); font-size: 12px; pointer-events: none; }
 .no-windows-hint .hint-icon { font-size: 40px; opacity: .2; }
 
@@ -900,6 +900,11 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 
 /* Snap buttons, snap-layout popover and drag-to-edge preview */
 .win.snapped { min-width: 0; min-height: 0; }
+.win.addon { min-width: 180px; min-height: 110px; }
+.win-pin { font-size: 11px; cursor: pointer; flex: none; }
+.win.pinned .win-header { cursor: default; }
+.win.on-top { box-shadow: 0 0 0 1px var(--accent-b), var(--shadow-lg); }
+.hint-add-addon { margin-top: 6px; }
 .snap-ico { width: 13px; height: 13px; display: block; }
 .snap-ico .frame { fill: none; stroke: currentColor; stroke-width: 1.1; opacity: .75; }
 .snap-ico .part { fill: currentColor; }
@@ -1374,7 +1379,15 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .win.bc-on { box-shadow: 0 0 0 2px rgba(234,88,12,.9), 0 8px 30px rgba(0,0,0,.45) !important; }
 .win.bc-on .win-header { background: linear-gradient(90deg, rgba(234,88,12,.22), transparent 70%); }
 .win-btn.bc.active { color: #fb923c; background: rgba(234,88,12,.2); }
-#btn-broadcast.active { background: rgba(234,88,12,.24); border-color: rgba(234,88,12,.65); color: #fed7aa; }
+#btn-tools.bc-active { background: rgba(234,88,12,.24); border-color: rgba(234,88,12,.65); color: #fed7aa; }
+.tools-bc { font-size: 11px; }
+#btn-shares.icon-only .lbl { display: none; }
+.tb-group { display: inline-flex; align-items: stretch; flex-shrink: 0; }
+.tb-group > .btn-top { border-radius: 0; margin-left: -1px; }
+.tb-group > .btn-top.g-first { border-radius: 8px 0 0 8px; margin-left: 0; }
+.tb-group > .btn-top.g-last { border-radius: 0 8px 8px 0; }
+.tb-group > .btn-top.g-first.g-last { border-radius: 8px; }
+.tb-group > .btn-top:hover { position: relative; z-index: 1; }
 .bc-row { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 7px; margin-bottom: 5px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 12.5px; color: var(--text); }
 .bc-row input { width: auto; }
 .bc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex: none; }
@@ -1658,16 +1671,17 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
       <button class="btn-top" id="btn-ai" onclick="openAIHome()" data-i18n-title="ai_btn_t" title="AI assistant">✦ AI</button>
       <button class="btn-top" id="btn-mcp" style="display:none;" onclick="openMCPPop()" title="AI apps connected through MCP"><span>🤖</span><span class="lbl" data-i18n="mcp_connected_lbl">AI connected</span><span class="tun-badge" id="mcp-badge"></span></button>
-      <button class="btn-top" id="btn-workboard" onclick="wrmWorkboard.toggle()" data-i18n-title="wb_title_t" title="Workboard"><span>▤</span><span class="lbl" data-i18n="wb_title">Workboard</span><span class="tun-badge" id="wb-badge" style="display:none;"></span></button>
-      <button class="btn-top" id="btn-panels" onclick="wrmLayout.openPanels(this)" data-i18n-title="dk_panels_t" title="Panels" aria-haspopup="menu"><span>▦</span><span class="lbl" data-i18n="dk_panels">Panels</span></button>
-      <button class="btn-top" id="btn-settings" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
-      <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
-      <button class="btn-top" id="btn-tools" onclick="openTools()" title="Network tools"><span>🧰</span><span class="lbl" data-i18n="tools_lbl">Tools</span></button>
+      <button class="btn-top" id="btn-tools" onclick="openToolsMenu(this)" data-i18n-title="tools_menu_t" title="Tools: network tools and broadcast input" aria-haspopup="menu"><span>🧰</span><span class="lbl" data-i18n="tools_lbl">Tools</span><span class="tools-bc" id="tools-bc" style="display:none;">📣</span></button>
       <button class="btn-top" id="btn-monitoring" onclick="openMonitoring()" title="Monitoring"><span>📊</span><span class="lbl" data-i18n="mon_title">Monitoring</span></button>
       <button class="btn-top" id="btn-git" onclick="openGit()" title="Git"><span>⎇</span><span class="lbl" data-i18n="git_lbl">Git</span></button>
+      <button class="btn-top icon-only" id="btn-shares" onclick="openManageShares()" data-i18n-title="shares_lbl" title="Shares" aria-label="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
-      <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
+      <span class="tb-group" id="tb-canvas-grp" role="group">
+        <button class="btn-top" id="btn-settings" onclick="openSettings()" data-i18n-title="settings_lbl" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
+        <button class="btn-top" id="btn-panels" onclick="wrmLayout.openPanels(this)" data-i18n-title="dk_panels_t" title="Panels" aria-haspopup="menu"><span>▦</span><span class="lbl" data-i18n="dk_panels">Panels</span></button>
+        <button class="btn-top" id="btn-workboard" onclick="wrmWorkboard.menu(this)" data-i18n-title="wb_title_t" title="Workboard" aria-haspopup="menu"><span>▤</span><span class="lbl" data-i18n="wb_title">Workboard</span><span class="tun-badge" id="wb-badge" style="display:none;"></span></button>
+      </span>
       <button class="btn-top" id="btn-more" style="display:none;" onclick="toggleTopMore(event)" data-i18n-title="tb_more_t" title="More" aria-haspopup="menu" aria-expanded="false"><span>⋯</span><span class="more-dot"></span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
       <button class="btn-top" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
@@ -1706,6 +1720,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <span class="hint-icon">⚡</span>
       <span class="hint-title" data-i18n="hint_title">Open a connection to get started</span>
       <span data-i18n="hint_text">Double-click a connection in the sidebar, or click “New Window”.</span>
+      <button type="button" class="btn-sec btn-sm hint-add-addon" id="hint-add-addon" style="display:none;" onclick="wrmWorkboard.catalog()" data-i18n-title="cv_hint_add_t" title="Add an addon">▤ <span data-i18n="cv_hint_add">Add an addon</span></button>
       <div class="hint-keys"><span><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> <span data-i18n="hint_term_search">search in terminal</span></span><span><kbd>Enter</kbd> <span data-i18n="hint_reconnect">reconnect a closed terminal</span></span><span><kbd>Ctrl</kbd>+<kbd>F</kbd> <span data-i18n="hint_fm_search">search files</span></span></div>
     </div>
   </div>
@@ -2945,7 +2960,7 @@ const LANGS = {
     sess_replace_q:'Open session', sess_replace_msg:'Close the current windows and open the saved ones, or add them next to the current windows?',
     sess_replace:'Replace', sess_add:'Add', sess_opened:'Session opened', sess_missing:'connection(s) from this session no longer exist',
     sess_updated:'Session windows saved', sess_locked:'Session is locked — unlock it first', sess_empty_warn:'No connection windows are open — the session will be saved without windows.',
-    saved_sessions:'Saved sessions', duplicate_window:'Duplicate window', close_window:'Close window',
+    saved_sessions:'Saved sessions', duplicate_window:'Duplicate window', close_window:'Close window', to_dismiss_t:'Hide this message and stop the automatic reconnect (the window stays open)',
     edit_connection_title:'Edit Connection', new_connection_title:'New Connection', pick_connection:'Select a connection', fm_select_first:'Select files or folders first',
     settings_lbl:'Settings', shares_lbl:'Shares', new_window_lbl:'New Window', rename_plain:'Rename',
     hint_title:'Open a connection to get started', hint_text:'Double-click a connection in the sidebar, or click “New Window”.',
@@ -3030,7 +3045,7 @@ const LANGS = {
     sess_replace_q:'Otvori sesiju', sess_replace_msg:'Zatvoriti trenutne prozore i otvoriti spremljene, ili ih dodati uz postojeće?',
     sess_replace:'Zamijeni', sess_add:'Dodaj', sess_opened:'Sesija otvorena', sess_missing:'veza iz ove sesije više ne postoji',
     sess_updated:'Prozori sesije spremljeni', sess_locked:'Sesija je zaključana — najprije je otključaj', sess_empty_warn:'Nema otvorenih prozora s vezama — sesija će se spremiti bez prozora.',
-    saved_sessions:'Spremljene sesije', duplicate_window:'Dupliciraj prozor', close_window:'Zatvori prozor',
+    saved_sessions:'Spremljene sesije', duplicate_window:'Dupliciraj prozor', close_window:'Zatvori prozor', to_dismiss_t:'Sakrij ovu poruku i zaustavi automatsko ponovno spajanje (prozor ostaje otvoren)',
     edit_connection_title:'Uredi vezu', new_connection_title:'Nova veza', pick_connection:'Odaberi vezu', fm_select_first:'Najprije odaberi datoteke ili mape',
     settings_lbl:'Postavke', shares_lbl:'Dijeljenja', new_window_lbl:'Novi prozor', rename_plain:'Preimenuj',
     hint_title:'Otvori vezu za početak', hint_text:'Dvoklikni vezu u bočnoj traci ili klikni „Novi prozor“.',
@@ -4813,6 +4828,16 @@ Object.assign(LANGS.en, { p_medium_host_ca: 'Medium trusts this computer\'s cert
 Object.assign(LANGS.hr, { p_medium_host_ca: 'Medium vjeruje certifikatima ovog računala', p_medium_host_ca_d: 'Docker okruženje izvornog deploy toola vjeruje i root certifikatima kojima vjeruje WRM računalo (Windows spremište certifikata, macOS keychain, Linux CA paket). Potrebno iza proxyja ili antivirusa koji pregledava HTTPS, gdje pip inače javlja "self-signed certificate in certificate chain".', p_medium_ca_file: 'Dodatna CA datoteka za Medium', p_medium_ca_file_d: 'Putanja na WRM računalu do PEM datoteke s dodatnim root certifikatima za Docker okruženje, npr. root CA tvog proxyja. Prazno: nema.', p_medium_ca_file_ph: 'C:\\certs\\proxy-root.pem ili /etc/ssl/proxy-root.pem' });
 Object.assign(LANGS.en, { p_medium_docker_install: 'Install Docker for Medium', p_medium_docker_install_d: 'WRM may install and start Docker on its own host for the original deploy tool (Docker Engine from the Linux distribution, Docker Desktop on Windows and macOS). An administrator still allows it once in Medium, accepting Docker Desktop\'s licence where it applies.', p_medium_log_output: 'Medium command output', p_medium_log_output_d: 'Who sees the (redacted) output of Medium commands: everyone for their own operations, only administrators, or nobody.', po_medium_log_output_all: 'Everyone (own operations)', po_medium_log_output_admins: 'Administrators', po_medium_log_output_none: 'Nobody' });
 Object.assign(LANGS.hr, { p_medium_docker_install: 'Instalacija Dockera za Medium', p_medium_docker_install_d: 'WRM smije sam instalirati i pokrenuti Docker na svom računalu za izvorni deploy tool (Docker Engine iz Linux distribucije, Docker Desktop na Windowsima i macOS-u). Administrator to i dalje jednom dopušta u Mediumu i prihvaća licencu Docker Desktopa gdje vrijedi.', p_medium_log_output: 'Izlaz Medium naredbi', p_medium_log_output_d: 'Tko vidi (redigirani) izlaz Medium naredbi: svatko za svoje radnje, samo administratori ili nitko.', po_medium_log_output_all: 'Svi (vlastite radnje)', po_medium_log_output_admins: 'Administratori', po_medium_log_output_none: 'Nitko' });
+Object.assign(LANGS.en, {
+  tools_menu_t: 'Tools: network tools and broadcast input', tools_net: 'Network tools…', tools_net_t: 'Ping, port check, DNS, traceroute and more, from WRM or a server', tools_bc_on: 'on', tools_bc_t: 'Type into several terminals at once',
+  cv_pin: 'Pin in place', cv_unpin: 'Unpin', cv_pinned_t: 'Pinned: this window does not move or resize. Unpin it from its menu (right-click the title bar).',
+  cv_ontop: 'Always on top', cv_hint_add: 'Add an addon', cv_hint_add_t: 'Put addons such as server status, load, clock or notes on the canvas next to your terminals',
+});
+Object.assign(LANGS.hr, {
+  tools_menu_t: 'Alati: mrežni alati i istovremeni unos', tools_net: 'Mrežni alati…', tools_net_t: 'Ping, provjera portova, DNS, traceroute i drugo, s WRM-a ili s poslužitelja', tools_bc_on: 'uključen', tools_bc_t: 'Tipkaj u više terminala odjednom',
+  cv_pin: 'Prikvači na mjesto', cv_unpin: 'Otkvači', cv_pinned_t: 'Prikvačeno: ovaj se prozor ne miče i ne mijenja veličinu. Otkvači ga iz njegovog izbornika (desni klik na naslovnu traku).',
+  cv_ontop: 'Uvijek na vrhu', cv_hint_add: 'Dodaj addon', cv_hint_add_t: 'Stavi addone poput stanja poslužitelja, opterećenja, sata ili bilješki na canvas pored terminala',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5636,10 +5661,9 @@ function applyPolicyToUI() {
   ['opt-key-file', 'opt-key-auto'].forEach(id => { const o = document.getElementById(id); if (o) { o.hidden = !pol.server_keys; o.disabled = !pol.server_keys; o.dataset.polHidden = pol.server_keys ? '0' : '1'; } });
   const ex = document.getElementById('export-secrets-row');
   if (ex) ex.style.display = pol.secret_export ? '' : 'none';
-  const bc = document.getElementById('btn-broadcast');
-  if (bc) bc.style.display = pol.broadcast === false ? 'none' : '';
+  // Tools holds the network tools and broadcast input; it is hidden only when both are off.
   const tb = document.getElementById('btn-tools');
-  if (tb) tb.style.display = pol.network_tools === false ? 'none' : '';
+  if (tb) tb.style.display = pol.network_tools === false && pol.broadcast === false ? 'none' : '';
   const gb = document.getElementById('btn-git');
   if (gb) gb.style.display = pol.git === false ? 'none' : '';
   const os = document.getElementById('opt-serial');
@@ -8802,7 +8826,7 @@ async function startDesktop(wo) {
       try { wrap.focus(); } catch (_) {}
     } else if (st === 5) { // DISCONNECTED
       setTermState(wo, 'disconnected');
-      if (!desk.error) deskOverlay(wo, `<div class="big">${esc(t('desk_disconnected'))}</div><button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button>`);
+      if (!desk.error) deskOverlay(wo, `<div class="big">${esc(t('desk_disconnected'))}</div><button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button> <button class="btn-danger btn-sm" onclick="handleCloseWindow(${wo.id})">✕ ${esc(t('close_window'))}</button>`);
     }
   };
   client.onerror = status => {
@@ -8810,7 +8834,7 @@ async function startDesktop(wo) {
     setTermState(wo, 'disconnected');
     const msg = (status && status.message) || t('desk_failed');
     const hint = /guacd/i.test(msg) ? t('desk_guacd_hint') : (status && status.code === 769 ? t('desk_login_hint') : '');
-    deskOverlay(wo, `<div class="big">⚠ ${esc(msg)}</div>${hint ? `<div class="hint">${esc(hint)}</div>` : ''}<button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button>`);
+    deskOverlay(wo, `<div class="big">⚠ ${esc(msg)}</div>${hint ? `<div class="hint">${esc(hint)}</div>` : ''}<button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button> <button class="btn-danger btn-sm" onclick="handleCloseWindow(${wo.id})">✕ ${esc(t('close_window'))}</button>`);
   };
   client.onclipboard = (stream, mimetype) => {
     if (!/^text\//.test(mimetype)) return;
@@ -9734,8 +9758,22 @@ function renderBroadcastUI() {
     const b = document.getElementById('wb-bc-' + w.id);
     if (b) { b.style.display = bcast.on && w.mode === 'ssh' ? '' : 'none'; b.classList.toggle('active', inGroup); b.title = inGroup ? t('bc_leave') : t('bc_join'); }
   });
-  const tb = document.getElementById('btn-broadcast');
-  if (tb) tb.classList.toggle('active', bcast.on);
+  const tb = document.getElementById('btn-tools');
+  if (tb) { tb.classList.toggle('bc-active', bcast.on); const i = document.getElementById('tools-bc'); if (i) i.style.display = bcast.on ? '' : 'none'; }
+}
+
+// The Tools button opens a small menu: network tools and broadcast input (a broadcast that is
+// on is shown on the button and can be changed or stopped from here).
+function openToolsMenu(anchor) {
+  const pol = (currentUser && currentUser.policy) || {};
+  const items = [{head: '🧰 ' + t('tools_lbl')}];
+  if (pol.network_tools !== false) items.push({ico: '🛠', label: t('tools_net'), title: t('tools_net_t'), do: () => openTools()});
+  if (pol.broadcast !== false) {
+    items.push({ico: '📣', label: t('broadcast_lbl') + '…', side: bcast.on ? t('tools_bc_on') : '', title: t('tools_bc_t'), do: () => openBroadcastModal()});
+    if (bcast.on) items.push({ico: '■', label: t('bc_stop'), do: () => stopBroadcast()});
+  }
+  if (window.wrmLayout && wrmLayout.menu) wrmLayout.menu(anchor, items);
+  else openTools();
 }
 
 function bcastTrackLine(d) {
@@ -9847,7 +9885,7 @@ async function openSession(id, how) {
   currentSessionId = sv.id; updateSessionBar(sv); renderSessions(); loadClipboardForSession(sv.id);
   closeDrawers();
   if (!lay.windows.length) { showToast(t('sess_no_layout'), 'warning', 6000); return; }
-  const busy = winObjects.filter(w => w.mode);
+  const busy = winObjects.filter(w => w.mode && w.mode !== 'addon');
   if (!how) {
     if (busy.length) {
       const r = await uiDialog({title: t('sess_replace_q') + ' “' + sv.name + '”', message: t('sess_replace_msg'), okText: t('sess_replace'), altText: t('sess_add')});
@@ -9855,8 +9893,15 @@ async function openSession(id, how) {
       how = r === 'alt' ? 'add' : 'replace';
     } else how = 'replace';
   }
-  // Empty placeholder windows are always replaced; with "replace" everything is closed.
-  winObjects.filter(w => how === 'replace' || !w.mode).map(w => w.id).forEach(closeWindow);
+  const missing = restoreWindowLayout(lay, how);
+  showToast(t('sess_opened') + ': ' + sv.name + (missing ? ` — ${missing} ${t('sess_missing')}` : ''), missing ? 'warning' : 'success', missing ? 6000 : 2500);
+}
+
+// restoreWindowLayout opens the windows of a session layout (captureLayout) and returns how
+// many connections were missing. Empty placeholder windows are always replaced; with "replace"
+// every connection window is closed first. Workboard addons stay on the canvas.
+function restoreWindowLayout(lay, how) {
+  winObjects.filter(w => w.mode !== 'addon' && (how === 'replace' || !w.mode)).map(w => w.id).forEach(closeWindow);
   const cont = document.getElementById('win-container');
   const cw = cont.clientWidth, ch = cont.clientHeight;
   let missing = 0, focusId = null;
@@ -9881,7 +9926,7 @@ async function openSession(id, how) {
   });
   if (focusId) focusWindow(focusId);
   renderTabs(); updateNoWindowsHint();
-  showToast(t('sess_opened') + ': ' + sv.name + (missing ? ` — ${missing} ${t('sess_missing')}` : ''), missing ? 'warning' : 'success', missing ? 6000 : 2500);
+  return missing;
 }
 
 function ctxOpenSession(how) { closeAllCtx(); openSession(ctxSessId, how); }
@@ -10040,7 +10085,7 @@ function clearClipboard() {
 
 function addWindow(opts) {
   const id = nextWinId++;
-  const wo = { id, connId: null, shareToken: null, mode: null, path: '.', term: null, fitAddon: null, socket: null, el: null, maximized: false, savedPos: null, snap: null, connState: null };
+  const wo = { id, connId: null, shareToken: null, mode: (opts && opts.mode) || null, path: '.', term: null, fitAddon: null, socket: null, el: null, maximized: false, savedPos: null, snap: null, connState: null };
   winObjects.push(wo);
   tabOrder.push(id);
 
@@ -10059,6 +10104,7 @@ function addWindow(opts) {
     <div class="win-header" id="wh-${id}">
       <div class="win-dot"></div>
       <span class="win-title" id="wt-${id}">Window ${id}</span>
+      <span class="win-pin" id="wpin-${id}" style="display:none;" title="${esc(t('cv_pinned_t'))}" onclick="event.stopPropagation(); toggleWinPin(${id})">📌</span>
       <span class="win-rec" id="wrec-${id}" style="display:none;" title="${esc(t('rec_badge_title'))}">● REC</span>
       <span class="win-ai" id="wai-${id}" style="display:none;" title="${esc(t('ai_active_t'))}" onclick="openAI(${id})">✦ AI</span>
       <div class="win-corner-btns" title="${t('snap_layouts')}">
@@ -10108,12 +10154,13 @@ function addWindow(opts) {
     startWinDrag(e, id);
   });
   hdr.addEventListener('dblclick', e => { if (!e.target.closest('button')) toggleMaximize(id); });
+  hdr.addEventListener('contextmenu', e => { if (e.target.closest('button') || isCollabMode) return; e.preventDefault(); showTabCtx(e.clientX, e.clientY, id); });
 
   el.addEventListener('mousedown', () => focusWindow(id));
   focusWindow(id);
   renderTabs();
   updateNoWindowsHint();
-  renderConnPicker(id);
+  if (!wo.mode) renderConnPicker(id);
   return wo;
 }
 
@@ -10168,6 +10215,7 @@ function snapWindow(id, dir) {
   applySnapGeometry(wo);
   scheduleFit(wo);
   focusWindow(id);
+  winLayoutChanged(id);
 }
 
 function renderConnPicker(winId) {
@@ -10711,7 +10759,8 @@ function showTermOverlay(wo, reason, delayMs) {
   const render = left => {
     ov.innerHTML = `<span style="font-size:15px;">⚠</span><span class="msg"><b>${esc(t('disconnected'))}</b> · ${esc(reason)}${left ? ' · ' + esc(t('auto_reconnect_in')) + ' ' + left + 's' : ''}</span>
       <button class="btn-sm" onclick="reconnectTermById(${wo.id})">↻ ${esc(t('reconnect'))}</button>
-      <button class="icon-btn" title="${esc(t('close'))}" onclick="cancelAutoReconnect(${wo.id})">✕</button>`;
+      <button class="btn-danger btn-sm" onclick="handleCloseWindow(${wo.id})">✕ ${esc(t('close_window'))}</button>
+      <button class="icon-btn" title="${esc(t('to_dismiss_t'))}" onclick="cancelAutoReconnect(${wo.id})">–</button>`;
   };
   if (delayMs > 0) {
     let left = Math.ceil(delayMs / 1000);
@@ -12588,9 +12637,10 @@ function focusWindow(id) {
   winObjects.forEach(w => w.el && w.el.classList.remove('focused'));
   const w = winObjects.find(x => x.id === id);
   if (w && w.el) {
-    if (tabFolderFilter !== null && windowFolderKey(w) !== tabFolderFilter) tabFolderFilter = windowFolderKey(w);
+    if (tabFolderFilter !== null && w.mode !== 'addon' && windowFolderKey(w) !== tabFolderFilter) tabFolderFilter = windowFolderKey(w);
     w.el.classList.add('focused');
     w.el.style.zIndex = ++topZ;
+    raiseOnTop(w);
     w._lastFocus = Date.now();
     if (w.term && document.activeElement && !w.el.contains(document.activeElement)) { try { w.term.focus(); } catch(_) {} }
   }
@@ -12606,6 +12656,7 @@ function shouldConfirmClose(wo) {
 function handleCloseWindow(id) {
   const wo = winObjects.find(x => x.id === id);
   if (!wo) return;
+  if (wo.mode === 'addon' && window.wrmWorkboard) { wrmWorkboard.closeAddon(wo); return; }
   if (shouldConfirmClose(wo)) {
     document.getElementById('confirm-close-msg').textContent = wo.socket && wo.socket.readyState === 1
       ? 'This window has an active connection. Close anyway?' : 'Close this window?';
@@ -12620,6 +12671,7 @@ function closeWindow(id) {
   if (wo.screenSharing) { wo.screenSharing = false; collabSend({type: 'screen', action: 'stop', sid: 'w' + wo.id}); }
   if (wo.viewing) closeViewerWindow(wo);
   if (window.wrmAI) wrmAI.onWinClose(wo);
+  if (wo.mode === 'addon' && window.wrmWorkboard) wrmWorkboard.windowGone(wo);
   disposeWinTerminal(wo);
   if (wo._searchCtrl) { try { wo._searchCtrl.abort(); } catch(_) {} }
   if (wo._uploading) { try { wo._uploading.abort(); } catch(_) {} }
@@ -12641,6 +12693,7 @@ function minimizeWindow(id) {
   const hidden = wo.el.style.display === 'none';
   wo.el.style.display = hidden ? 'flex' : 'none';
   if (hidden) { focusWindow(id); scheduleFit(wo); } else renderTabs();
+  winLayoutChanged(id);
 }
 
 function toggleMaximize(id) {
@@ -12654,6 +12707,7 @@ function toggleMaximize(id) {
   }
   scheduleFit(wo);
   focusWindow(id);
+  winLayoutChanged(id);
 }
 
 function restoreWindowGeometry(wo) {
@@ -12668,6 +12722,71 @@ function updateNoWindowsHint() {
   if (hint) hint.style.display = winObjects.length === 0 ? 'flex' : 'none';
 }
 
+// ══ CANVAS ════════════════════════════════════════════
+// The window area is one canvas: terminals, file managers, desktops, Workboard addons
+// (static/workboard.js) and floating panels (static/layout.js) share it and its z-order.
+function winLayoutChanged(id) {
+  const wo = winObjects.find(w => w.id === id);
+  if (wo && wo.mode === 'addon' && window.wrmWorkboard) wrmWorkboard.windowMoved(wo);
+}
+function canvasGrid() { return window.wrmWorkboard && wrmWorkboard.grid ? wrmWorkboard.grid() : 0; }
+const snapToGrid = (v, g) => (g ? Math.round(v / g) * g : v);
+// Windows marked "always on top" stay above the others (and above floating panels).
+function raiseOnTop(except) {
+  winObjects.forEach(o => { if (o.onTop && o !== except && o.el) o.el.style.zIndex = ++topZ; });
+  if (except && except.onTop && except.el) except.el.style.zIndex = ++topZ;
+}
+// Why a window cannot be moved or resized now ('' when it can).
+function winMoveBlocked(wo) {
+  if (wo && wo.pinned) return t('cv_pinned_t');
+  if (window.wrmLayout && wrmLayout.locked()) return t('dk_locked_t');
+  return '';
+}
+function setWinPinned(wo, on) {
+  if (!wo || !wo.el) return;
+  wo.pinned = !!on;
+  wo.el.classList.toggle('pinned', wo.pinned);
+  const p = document.getElementById('wpin-' + wo.id); if (p) p.style.display = wo.pinned ? '' : 'none';
+}
+function toggleWinPin(id) { const wo = winObjects.find(w => w.id === id); if (wo) { setWinPinned(wo, !wo.pinned); winLayoutChanged(id); } }
+function setWinOnTop(wo, on) {
+  if (!wo || !wo.el) return;
+  wo.onTop = !!on;
+  wo.el.classList.toggle('on-top', wo.onTop);
+  if (wo.onTop) wo.el.style.zIndex = ++topZ;
+}
+function toggleWinOnTop(id) { const wo = winObjects.find(w => w.id === id); if (wo) { setWinOnTop(wo, !wo.onTop); winLayoutChanged(id); } }
+// Arranges the windows that are shown: 'tile' (a grid), 'cascade', 'min' (minimize all),
+// 'show' (bring back the minimized ones). Pinned windows stay where they are.
+function arrangeWindows(how, filter) {
+  const list = winObjects.filter(w => w.el && !w.el.classList.contains('folder-hidden') && (!filter || filter(w)));
+  if (how === 'min' || how === 'show') {
+    list.forEach(w => { const hidden = w.el.style.display === 'none'; if (how === 'min' ? !hidden : hidden) minimizeWindow(w.id); });
+    return;
+  }
+  if (isCompact()) return;
+  const cont = document.getElementById('win-container'), cw = cont.clientWidth, ch = cont.clientHeight;
+  const vis = list.filter(w => w.el.style.display !== 'none' && !w.pinned).sort((a, b) => (Number(a.el.style.zIndex) || 0) - (Number(b.el.style.zIndex) || 0));
+  if (!vis.length) return;
+  const place = (w, l, tp, ww, hh) => {
+    if (w.snap) { w.snap = null; w.maximized = false; w.el.classList.remove('snapped-full', 'snapped'); }
+    Object.assign(w.el.style, {left: Math.round(l) + 'px', top: Math.round(tp) + 'px', width: Math.round(ww) + 'px', height: Math.round(hh) + 'px'});
+    clampWinToBounds(w.el); scheduleFit(w); winLayoutChanged(w.id);
+  };
+  if (how === 'tile') {
+    const cols = Math.ceil(Math.sqrt(vis.length * cw / Math.max(1, ch) / 1.4)) || 1, rows = Math.ceil(vis.length / cols);
+    const gw = cw / cols, gh = ch / rows;
+    vis.forEach((w, i) => { const r = Math.floor(i / cols), c = i % cols, last = r === rows - 1, n = last ? vis.length - r * cols : cols, wi = cw / n; place(w, (last ? c * wi : c * gw), r * gh, last ? wi : gw, gh); });
+  } else if (how === 'cascade') {
+    const ww = Math.max(320, cw * .6), hh = Math.max(220, ch * .6), step = 30;
+    const n = Math.max(1, Math.floor(Math.min(cw - ww, ch - hh) / step) + 1);
+    vis.forEach((w, i) => place(w, (i % n) * step, (i % n) * step, ww, hh));
+  }
+  vis.forEach(w => { w.el.style.zIndex = ++topZ; });
+  raiseOnTop();
+  renderTabs();
+}
+
 // ══ TABS ═════════════════════════════════════════════
 
 function scrollTabBar(delta) {
@@ -12680,16 +12799,18 @@ function windowFolderKey(wo) { const c = winConn(wo); return c && c.folder_id ? 
 function setTabFolder(value) {
   tabFolderFilter = value;
   const target = winObjects.filter(wo => value !== null && windowFolderKey(wo) === value).sort((a,b) => (b._lastFocus || 0) - (a._lastFocus || 0))[0];
-  if (target && target.el) { target.el.style.display = 'flex'; scheduleFit(target); focusWindow(target.id); } else renderTabs();
+  if (target && target.el) { target.el.style.display = 'flex'; scheduleFit(target); focusWindow(target.id); winLayoutChanged(target.id); } else renderTabs();
 }
 function renderTabs() {
   const bar = document.getElementById('tab-bar');
   bar.innerHTML = '';
   const groupKey = windowFolderKey;
   const groups = new Map();
-  winObjects.forEach(wo => { const c = winConn(wo); const key = groupKey(wo); if (!groups.has(key)) groups.set(key, folderPathLabel(c && c.folder_id) || (c && c.folder_path) || t('no_folder')); });
+  // Addons belong to the canvas, not to a connection folder: they are never filtered out.
+  const inFolder = wo => wo.mode === 'addon' || tabFolderFilter === null || groupKey(wo) === tabFolderFilter;
+  winObjects.forEach(wo => { if (wo.mode === 'addon') return; const c = winConn(wo); const key = groupKey(wo); if (!groups.has(key)) groups.set(key, folderPathLabel(c && c.folder_id) || (c && c.folder_path) || t('no_folder')); });
   if (tabFolderFilter !== null && !groups.has(tabFolderFilter)) tabFolderFilter = null;
-  winObjects.forEach(wo => { refreshWindowConnectionTitle(wo); if (wo.el) wo.el.classList.toggle('folder-hidden', tabFolderFilter !== null && groupKey(wo) !== tabFolderFilter); });
+  winObjects.forEach(wo => { refreshWindowConnectionTitle(wo); if (wo.el) wo.el.classList.toggle('folder-hidden', !inFolder(wo)); });
   const folderBar = document.getElementById('folder-tab-bar');
   folderBar.innerHTML = '';
   if (groups.size) {
@@ -12701,7 +12822,7 @@ function renderTabs() {
   }
   tabOrder.filter(id => winObjects.find(w => w.id === id)).forEach(id => {
     const wo = winObjects.find(w => w.id === id);
-    if (tabFolderFilter !== null && groupKey(wo) !== tabFolderFilter) return;
+    if (!inFolder(wo)) return;
     const isFocused = wo.el && wo.el.classList.contains('focused');
     const t2 = document.createElement('div');
     t2.className = 'tab-item' + (isFocused ? ' active' : '');
@@ -12723,6 +12844,7 @@ function renderTabs() {
       title = c ? connLabel(c) : 'Desktop ' + id;
     }
     if (wo.mode === 'screen-viewer' && wo.viewing) { icon = '👁'; title = wo.viewing.name + ' — ' + wo.viewing.title; }
+    if (wo.mode === 'addon' && window.wrmWorkboard) { const ai = wrmWorkboard.tabInfo(wo); icon = ai.ico; title = ai.title; }
     if (wo.el && wo.el.style.display === 'none') icon = '▪';
 
     const stateDot = wo.mode === 'ssh' || wo.mode === 'desk' ? `<span class="tab-state state-${wo.connState || 'connecting'}" title="${esc(wo.connState || '')}"></span>` : '';
@@ -12730,7 +12852,7 @@ function renderTabs() {
     t2.querySelector('.tab-close').onclick = e => { e.stopPropagation(); handleCloseWindow(id); };
     t2.onclick = e => {
       if (e.target.classList.contains('tab-close')) return;
-      if (wo.el && wo.el.style.display === 'none') { wo.el.style.display = 'flex'; scheduleFit(wo); }
+      if (wo.el && wo.el.style.display === 'none') { wo.el.style.display = 'flex'; scheduleFit(wo); winLayoutChanged(id); }
       focusWindow(id);
     };
     t2.onauxclick = e => { if (e.button === 1) { e.preventDefault(); handleCloseWindow(id); } };
@@ -12764,7 +12886,11 @@ function showTabCtx(x, y, id) {
     <div class="ctx-section">${t('snap_layouts')}</div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:4px 8px 6px;">${SNAP_ORDER.map(d => `<button class="win-corner-btn" title="${snapTitle(d)}" onclick="closeAllCtx(); snapWindow(${id},'${d}')">${snapIcon(d)}</button>`).join('')}</div>
     <div class="ctx-hr"></div>
-    <div class="ctx-item danger" onclick="closeAllCtx(); handleCloseWindow(${id})">✕ ${t('close_window')}</div>`;
+    ${wo.mode === 'addon' && window.wrmWorkboard ? wrmWorkboard.ctxItems(wo) : ''}
+    <div class="ctx-item" onclick="closeAllCtx(); toggleWinPin(${id})">📌 ${esc(t(wo.pinned ? 'cv_unpin' : 'cv_pin'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); toggleWinOnTop(${id})">${wo.onTop ? '☑' : '☐'} ${esc(t('cv_ontop'))}</div>
+    <div class="ctx-hr"></div>
+    <div class="ctx-item danger" onclick="closeAllCtx(); handleCloseWindow(${id})">✕ ${esc(wo.mode === 'addon' ? t('wb_t_remove') : t('close_window'))}</div>`;
   showCtx('dyn-ctx-menu', x, y);
 }
 
@@ -12787,6 +12913,9 @@ function startWinDrag(e, id) {
   focusWindow(id);
   const el = document.getElementById('win-' + id);
   const wo0 = winObjects.find(w => w.id === id);
+  // A pinned window or a locked layout: the title bar still focuses, a real drag explains why not.
+  const why = winMoveBlocked(wo0);
+  if (why) { winDragState = {id, sx: e.clientX, sy: e.clientY, blocked: why}; return; }
   winDragState = { id, sx: e.clientX, sy: e.clientY, l: parseInt(el.style.left) || 0, t: parseInt(el.style.top) || 0, armed: !snapZoneAt(e.clientX, e.clientY), zone: null,
     // A snapped / maximized window is restored only once the pointer really moves, so a plain
     // click or a double-click on the title bar never changes its size by accident.
@@ -12815,6 +12944,8 @@ function startWinResize(e, id, handle) {
   focusWindow(id);
   const el = document.getElementById('win-' + id);
   const wo0 = winObjects.find(w => w.id === id);
+  const why = winMoveBlocked(wo0);
+  if (why) { showToast(why, 'warning', 3500); return; }
   if (wo0 && wo0.snap) { wo0.snap = null; wo0.maximized = false; el.classList.remove('snapped-full', 'snapped'); }
   winResizeState = { id, handle, sx: e.clientX, sy: e.clientY, l: parseInt(el.style.left) || 0, t: parseInt(el.style.top) || 0, w: el.offsetWidth, h: el.offsetHeight };
   document.body.style.cursor = {n:'n-resize',s:'s-resize',e:'e-resize',w:'w-resize',ne:'ne-resize',nw:'nw-resize',se:'se-resize',sw:'sw-resize'}[handle] || 'default';
@@ -12888,6 +13019,10 @@ function showSnapPreview(zone) {
 }
 
 document.addEventListener('mousemove', e => {
+  if (winDragState && winDragState.blocked) {
+    if (Math.abs(e.clientX - winDragState.sx) + Math.abs(e.clientY - winDragState.sy) >= 6) { showToast(winDragState.blocked, 'warning', 3500); winDragState = null; }
+    return;
+  }
   if (winDragState) {
     if (winDragState.pendingUnsnap) {
       if (Math.abs(e.clientX - winDragState.sx) + Math.abs(e.clientY - winDragState.sy) < 5) return;
@@ -12897,8 +13032,9 @@ document.addEventListener('mousemove', e => {
     if (!el) return;
     const cont = document.getElementById('win-container');
     const cw = cont.clientWidth, ch = cont.clientHeight;
-    let newL = winDragState.l + e.clientX - winDragState.sx;
-    let newT = winDragState.t + e.clientY - winDragState.sy;
+    const g = canvasGrid();
+    let newL = snapToGrid(winDragState.l + e.clientX - winDragState.sx, g);
+    let newT = snapToGrid(winDragState.t + e.clientY - winDragState.sy, g);
     // Keep the whole window inside the window area on all four sides.
     newL = Math.max(0, Math.min(cw - el.offsetWidth, newL));
     newT = Math.max(0, Math.min(ch - el.offsetHeight, newT));
@@ -12916,8 +13052,17 @@ document.addEventListener('mousemove', e => {
     const { id, handle, sx, sy, l, t, w, h } = winResizeState;
     const el = document.getElementById('win-' + id);
     if (!el) return;
-    const dx = e.clientX - sx, dy = e.clientY - sy;
-    const MIN_W = 280, MIN_H = 180;
+    const g = canvasGrid();
+    let dx = e.clientX - sx, dy = e.clientY - sy;
+    // On the grid the moving edge lands on a grid line.
+    if (g) {
+      if (handle.includes('e')) dx = snapToGrid(l + w + dx, g) - l - w;
+      if (handle.includes('w')) dx = snapToGrid(l + dx, g) - l;
+      if (handle.includes('s')) dy = snapToGrid(t + h + dy, g) - t - h;
+      if (handle.includes('n')) dy = snapToGrid(t + dy, g) - t;
+    }
+    const small = el.classList.contains('addon');
+    const MIN_W = small ? 180 : 280, MIN_H = small ? 110 : 180;
     const cont = document.getElementById('win-container');
     const cw = cont.clientWidth, ch = cont.clientHeight;
     let nL = l, nT = t, nW = w, nH = h;
@@ -12947,10 +13092,12 @@ document.addEventListener('mousemove', e => {
 });
 
 document.addEventListener('mouseup', () => {
-  if (winDragState) {
+  if (winDragState && !winDragState.blocked) {
     showSnapPreview(null);
     if (winDragState.zone && !winDragState.pendingUnsnap) snapWindow(winDragState.id, winDragState.zone);
+    else winLayoutChanged(winDragState.id);
   }
+  if (winResizeState) winLayoutChanged(winResizeState.id);
   winDragState = null;
   winResizeState = null;
   if (sidebarResizeState && sidebarResizeState.nw && window.wrmLayout) wrmLayout.zoneResized('left', sidebarResizeState.nw);
@@ -12974,6 +13121,7 @@ function relayoutWindows() {
   });
   const tf = document.getElementById('transfer-float');
   if (tf && tf.style.display !== 'none' && tf.style.left) clampFixedToViewport(tf);
+  if (window.wrmLayout && wrmLayout.clampFloats) wrmLayout.clampFloats();
 }
 function scheduleRelayout() { clearTimeout(_containerRelayoutT); _containerRelayoutT = setTimeout(relayoutWindows, 30); }
 const resizeObserver = new ResizeObserver(scheduleRelayout);
@@ -15074,7 +15222,7 @@ window.addEventListener('load', async () => {
 // (tb1..tb6), then the less used buttons move into the ⋯ menu. It is measured, so any
 // language, browser zoom, badge or administrator button fits.
 const TB_LEVELS = 6;
-const TB_OVERFLOW = ['btn-panels', 'btn-shares', 'btn-broadcast', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-workboard', 'btn-settings'];
+const TB_OVERFLOW = ['btn-shares', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-panels', 'btn-settings', 'btn-workboard'];
 let _tbObserver = null, _tbPending = 0;
 function topBarOverflows() {
   const tb = document.getElementById('top-bar'), a = document.getElementById('auth-info');
@@ -15103,6 +15251,12 @@ function fitTopBar() {
   more.classList.toggle('has-badge', moved.some(b => { const g = b.querySelector('.tun-badge'); return g && g.style.display !== 'none' && g.textContent.trim(); }));
   const menu = document.getElementById('tb-more-menu');
   if (menu && menu.classList.contains('open') && !moved.length) closeTopMore();
+  // Settings, Panels and Workboard are one joined group: round only its outer visible corners.
+  const grp = document.getElementById('tb-canvas-grp');
+  if (grp) {
+    const kids = [...grp.children], shown = kids.filter(b => getComputedStyle(b).display !== 'none');
+    kids.forEach(b => { b.classList.toggle('g-first', b === shown[0]); b.classList.toggle('g-last', b === shown[shown.length - 1]); });
+  }
   if (_tbObserver) { _tbObserver.takeRecords(); _tbObserver.observe(tb, {subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class', 'hidden']}); }
 }
 function scheduleFitTopBar() { if (!_tbPending) _tbPending = requestAnimationFrame(fitTopBar); }
