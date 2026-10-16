@@ -1,3 +1,8 @@
+## [12.6.4] - 2026-10-16
+
+### Added
+- **`ai_full_access_blocked`** (`ask` default, `deny`): with `deny`, commands matching the administrator's `ai_blocked_commands` (rule `admin_pattern`) stay refused under full access, also after the user edits a command in the approval. The refusal tells the AI that an approval cannot help and that the administrator can change the list or the setting. The built-in destructive list, deny lists, power commands and secret files still become approvals under full access.
+
 ## [12.6.3] - 2026-10-15
 
 ### Added
