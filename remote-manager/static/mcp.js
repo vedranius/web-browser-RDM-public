@@ -62,6 +62,8 @@ Object.assign(LANGS.en, {
   p_ai_mcp_public_url: 'Public address', p_ai_mcp_public_url_d: 'The address AI apps use for WRM, when it differs from what WRM sees (reverse proxy).', p_ai_mcp_public_url_ph: 'https://wrm.example.com',
   p_ai_full_access: 'Full access for the AI', p_ai_full_access_d: 'One switch: commands and files WRM normally refuses (destructive and blocked commands, deny lists, shutdown, secret files) are asked for instead, each time, never automatically. Read-only sessions stay read-only.',
   p_ai_full_access_mode: 'Full access applies to', p_ai_full_access_mode_d: 'Every AI session (the switch alone), only AI connections with the Full access scope, or users who turn it on for themselves in Settings → AI connections.',
+  p_ai_full_access_blocked: 'Blocked commands with full access', p_ai_full_access_blocked_d: 'Your own list of blocked commands (ai_blocked_commands) under full access: ask for approval like everything else, or stay blocked even with full access. The built-in destructive list always asks.',
+  po_ai_full_access_blocked_ask: 'Ask for approval', po_ai_full_access_blocked_deny: 'Stay blocked',
   po_ai_full_access_mode_all: 'Every AI session', po_ai_full_access_mode_connection: 'AI connections with the Full access scope', po_ai_full_access_mode_user: 'Users who turn it on themselves',
   mcp_fa_all: '⚠ Full access is on for all AI sessions: nothing is refused outright, but everything WRM would block asks you first, every time.', mcp_fa_conn: '⚠ Full access is available: tick "Full access" on an AI connection (Edit) to have everything WRM would block asked instead of refused.',
   mcp_fa_user: '⚠ Full access for my AI sessions: nothing is refused outright, but everything WRM would block (destructive commands, deny lists, shutdown, secret files) asks me first, every time.',
@@ -153,6 +155,8 @@ Object.assign(LANGS.hr, {
   p_ai_mcp_public_url: 'Javna adresa', p_ai_mcp_public_url_d: 'Adresa kojom AI aplikacije pristupaju WRM-u, kad se razlikuje od one koju WRM vidi (obrnuti proxy).', p_ai_mcp_public_url_ph: 'https://wrm.example.com',
   p_ai_full_access: 'Potpuni pristup za AI', p_ai_full_access_d: 'Jedan prekidač: naredbe i datoteke koje WRM inače odbija (destruktivne i blokirane naredbe, liste zabrana, gašenje, tajne datoteke) umjesto toga traže odobrenje, svaki put, nikad automatski. Sesije samo za čitanje ostaju samo za čitanje.',
   p_ai_full_access_mode: 'Potpuni pristup vrijedi za', p_ai_full_access_mode_d: 'Sve AI sesije (samo prekidač), samo AI veze s opsegom Potpuni pristup ili korisnike koji ga sami uključe u Postavke → AI veze.',
+  p_ai_full_access_blocked: 'Blokirane naredbe uz potpuni pristup', p_ai_full_access_blocked_d: 'Tvoja lista blokiranih naredbi (ai_blocked_commands) uz potpuni pristup: traže odobrenje kao sve ostalo ili ostaju blokirane i uz potpuni pristup. Ugrađena lista destruktivnih naredbi uvijek pita.',
+  po_ai_full_access_blocked_ask: 'Traže odobrenje', po_ai_full_access_blocked_deny: 'Ostaju blokirane',
   po_ai_full_access_mode_all: 'Sve AI sesije', po_ai_full_access_mode_connection: 'AI veze s opsegom Potpuni pristup', po_ai_full_access_mode_user: 'Korisnike koji ga sami uključe',
   mcp_fa_all: '⚠ Potpuni pristup je uključen za sve AI sesije: ništa se ne odbija, ali sve što bi WRM blokirao prvo pita tebe, svaki put.', mcp_fa_conn: '⚠ Potpuni pristup je dostupan: označi "Potpuni pristup" na AI vezi (Uredi) pa će se sve što bi WRM blokirao pitati umjesto odbiti.',
   mcp_fa_user: '⚠ Potpuni pristup za moje AI sesije: ništa se ne odbija, ali sve što bi WRM blokirao (destruktivne naredbe, liste zabrana, gašenje, tajne datoteke) prvo pita mene, svaki put.',
@@ -850,7 +854,7 @@ Object.assign(LANGS.hr, {
   function closeModal() { const m = $('mcp-modal'); if (m) m.classList.remove('open'); }
 
   // ── Admin panel → AI connections ──────────────────────
-  const MCP_POLICY_KEYS = ['ai_mcp_enabled', 'ai_mcp', 'ai_mcp_modes', 'ai_mcp_scopes', 'ai_full_access', 'ai_full_access_mode', 'ai_mcp_token_hours', 'ai_mcp_max_token_hours', 'ai_mcp_oauth',
+  const MCP_POLICY_KEYS = ['ai_mcp_enabled', 'ai_mcp', 'ai_mcp_modes', 'ai_mcp_scopes', 'ai_full_access', 'ai_full_access_mode', 'ai_full_access_blocked', 'ai_mcp_token_hours', 'ai_mcp_max_token_hours', 'ai_mcp_oauth',
     'ai_mcp_elicitation', 'ai_mcp_redirect_uris', 'ai_mcp_allowed_origins', 'ai_mcp_public_url', 'ai_mcp_transfer_max_mb'];
   async function adminMCP() {
     const body = $('admin-body');
