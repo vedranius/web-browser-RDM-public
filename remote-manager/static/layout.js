@@ -6,6 +6,8 @@
 // float. The layout can be locked so nothing moves by accident. It is stored per user on the
 // server (/api/me/ui/layout) with a copy in this browser for an instant first paint, so it
 // follows the user to every browser. Phones keep the fixed layout with the two drawers.
+// Workboard tiles pulled out of the Workboard (static/workboard.js, v12.6.9) are dynamic panels
+// with ids "wb:<tile>": they are registered at run time and go back to the Workboard when hidden.
 (function () {
   'use strict';
 
@@ -21,6 +23,7 @@
     dk_panels_hint: 'Drag a panel by its tab: onto another tab bar to stack them, onto the top or bottom part of a panel to split the column, onto an edge strip to dock it, anywhere else to let it float. The layout follows you to every browser.',
     dk_locked_hint: 'Locked: panels cannot be dragged, split or resized. Showing and hiding still works.',
     dk_drop_left: 'Left', dk_drop_right: 'Right', dk_drop_bottom: 'Bottom', dk_drop_float: 'Floating window',
+    dk_wb_back: 'Back to the Workboard', dk_wb_head: 'Pulled out of the Workboard',
   });
   Object.assign(LANGS.hr, {
     pn_conn: 'Veze', dk_panels: 'Paneli', dk_panels_t: 'Paneli: prikaži, sakrij i premjesti dijelove stranice, zaključaj raspored',
@@ -34,6 +37,7 @@
     dk_panels_hint: 'Panel povuci za karticu: na drugu traku kartica da ih složiš zajedno, na gornji ili donji dio panela da podijeliš stupac, na rubnu traku da ga usidriš, bilo gdje drugdje da pluta. Raspored te prati u svakom pregledniku.',
     dk_locked_hint: 'Zaključano: panele se ne može povlačiti, dijeliti ni mijenjati im veličinu. Prikazivanje i skrivanje i dalje radi.',
     dk_drop_left: 'Lijevo', dk_drop_right: 'Desno', dk_drop_bottom: 'Dolje', dk_drop_float: 'Plutajući prozor',
+    dk_wb_back: 'Vrati na Workboard', dk_wb_head: 'Izvučeno s Workboarda',
   });
 
   const $ = id => document.getElementById(id);
@@ -48,6 +52,12 @@
   };
   const IDS = Object.keys(P);
   const HOME = {conn: 'left', sess: 'right', snip: 'right', ai: 'right', clip: 'right'};
+  // Dynamic panels: a stored layout keeps their place even before the Workboard has registered
+  // them (they are just not shown until then).
+  const DYN = /^wb:[a-z0-9]{1,16}$/;
+  const known = id => typeof id === 'string' && (!!P[id] || DYN.test(id));
+  const allIds = () => Object.keys(P);
+  const nameOf = id => (P[id] ? (P[id].label ? P[id].label() : t(P[id].key)) : id);
 
   function def() {
     return {v: 1, locked: false, t: 0,
@@ -72,7 +82,7 @@
     const seen = new Set();
     const grp = g => {
       if (!g || !Array.isArray(g.p)) return null;
-      const p = g.p.filter(id => P[id] && !seen.has(id) && seen.add(id));
+      const p = g.p.filter(id => known(id) && !seen.has(id) && seen.add(id));
       return p.length ? {p, a: p.includes(g.a) ? g.a : p[0], s: num(g.s, 0.05, 100, 1)} : null;
     };
     const z = n => (x.zones[n] && typeof x.zones[n] === 'object' ? x.zones[n] : {});
@@ -87,8 +97,12 @@
       const g = grp(f);
       if (g) out.floats.push(Object.assign(g, {x: num(f.x, -4000, 10000, 80), y: num(f.y, 0, 10000, 80), w: num(f.w, 220, 4000, 380), h: num(f.h, 140, 4000, 420)}));
     }
-    for (const id of Array.isArray(x.hidden) ? x.hidden : []) if (P[id] && !seen.has(id)) { seen.add(id); out.hidden.push(id); }
+    for (const id of Array.isArray(x.hidden) ? x.hidden : []) if (IDS.includes(id) && !seen.has(id)) { seen.add(id); out.hidden.push(id); }
     if (x.last && typeof x.last === 'object') for (const id of IDS) if (ZONES.includes(x.last[id])) out.last[id] = x.last[id];
+    if (x.fsize && typeof x.fsize === 'object') for (const id of Object.keys(x.fsize)) {
+      const f = x.fsize[id];
+      if (known(id) && f && typeof f === 'object') (out.fsize = out.fsize || {})[id] = {w: num(f.w, 220, 4000, 380), h: num(f.h, 140, 4000, 420)};
+    }
     for (const id of IDS) if (!seen.has(id)) addTo(out, id, HOME[id]);
     return out;
   }
@@ -174,6 +188,7 @@
         S = sanitize(v); sig = '';
         try { localStorage.setItem(lsKey(), JSON.stringify(S)); } catch (e) { /* not cached */ }
         render();
+        document.dispatchEvent(new CustomEvent('wrm-layout-loaded'));
       } else if (local && (S.t || 0) > vt) push();
     } catch (e) { /* offline: the copy in this browser */ }
   }
@@ -181,7 +196,8 @@
   // ── rendering ──
   function avail(id) {
     const p = P[id];
-    if (!$(p.el)) return false;
+    if (!p || !$(p.el)) return false;
+    if (p.dyn && compact()) return false;
     if (p.auto && compact()) return false;
     return !p.avail || !!p.avail();
   }
@@ -194,12 +210,13 @@
     return p;
   }
   function signature(L) {
-    return JSON.stringify([ZONES.map(z => L.zones[z].groups.map(vis)), L.floats.map(vis), compact(), typeof currentLang !== 'undefined' ? currentLang : '']);
+    const nm = g => vis(g).map(id => id + '|' + nameOf(id) + '|' + (P[id].ico || ''));
+    return JSON.stringify([ZONES.map(z => L.zones[z].groups.map(nm)), L.floats.map(nm), compact(), typeof currentLang !== 'undefined' ? currentLang : '']);
   }
 
   function build(L) {
     const pk = park();
-    IDS.forEach(id => { const e = $(P[id].el); if (e) { e.classList.add('dk-pnl'); e.classList.remove('dk-on'); pk.appendChild(e); } });
+    allIds().forEach(id => { const e = $(P[id].el); if (e) { e.classList.add('dk-pnl'); e.classList.remove('dk-on'); pk.appendChild(e); } });
     document.querySelectorAll('.dk-float').forEach(e => e.remove());
     for (const z of ZONES) {
       const host = zoneHost(z);
@@ -241,7 +258,7 @@
       const p = P[id], b = document.createElement('button');
       b.type = 'button'; b.className = 'dk-tab'; b.dataset.p = id; b.setAttribute('role', 'tab');
       b.title = t('dk_drag_t');
-      b.innerHTML = `<span class="ico">${p.ico}</span><span class="nm">${esc(t(p.key))}</span>${p.badge ? `<span class="rp-badge" id="${p.badge}"></span>` : ''}`;
+      b.innerHTML = `<span class="ico">${esc(p.ico)}</span><span class="nm">${esc(nameOf(id))}</span>${p.badge ? `<span class="rp-badge" id="${p.badge}"></span>` : ''}`;
       b.addEventListener('click', () => { if (suppressClick) return; activate(id); });
       b.addEventListener('pointerdown', e => tabDown(e, id, el));
       list.appendChild(b);
@@ -273,6 +290,11 @@
     document.querySelectorAll('.dk-group').forEach(el => {
       const g = el._g, a = activeOf(g);
       el.querySelectorAll('.dk-tab').forEach(b => { const on = b.dataset.p === a; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      const on = el.querySelector('.dk-tab.on'), tl = el.querySelector('.dk-tl');
+      if (on && tl && tl.scrollWidth > tl.clientWidth) {
+        if (on.offsetLeft < tl.scrollLeft) tl.scrollLeft = on.offsetLeft;
+        else if (on.offsetLeft + on.offsetWidth > tl.scrollLeft + tl.clientWidth) tl.scrollLeft = on.offsetLeft + on.offsetWidth - tl.clientWidth;
+      }
       vis(g).forEach(id => $(P[id].el).classList.toggle('dk-on', id === a));
       if (!el._loc.f) el.style.flex = g.s + ' 1 0';
     });
@@ -286,7 +308,7 @@
       if (sp) sp.style.width = zoneW('right') + 'px';
       if (bt) bt.style.height = Math.min(L.zones.bottom.h, bottomMax()) + 'px';
     }
-    IDS.forEach(id => {
+    allIds().forEach(id => {
       const s = isShown(id);
       if (s && !lastShown[id] && P[id].shown) P[id].shown();
       lastShown[id] = s;
@@ -315,7 +337,7 @@
   function zoneW(z) { const zn = S.zones[z]; return shownIn(z).includes('ai') ? zn.wa : zn.w; }
   function zoneMax(z) { return shownIn(z).includes('ai') ? Math.max(420, Math.min(1200, Math.round(window.innerWidth * 0.5))) : 520; }
   function bottomMax() { const c = $('center'); return Math.max(140, Math.round((c ? c.clientHeight : window.innerHeight) * 0.75)); }
-  function isShown(id) { const e = $(P[id].el); return !!e && e.classList.contains('dk-on') && !!e.closest('.dk-group'); }
+  function isShown(id) { const e = P[id] && $(P[id].el); return !!e && e.classList.contains('dk-on') && !!e.closest('.dk-group'); }
 
   // ── actions ──
   function activate(id, o) {
@@ -355,6 +377,7 @@
   // Showing and hiding change what is visible, not where things are, so they work while locked.
   function hide(id) {
     if (!S || compact()) return;
+    if (P[id] && P[id].dyn) { const cb = P[id].closed; remove(id); if (cb) cb(); return; }
     const from = where(id);
     if (from === 'hidden') return;
     rememberZone(id, from);
@@ -366,7 +389,7 @@
   function show(id) {
     if (!S || compact() || where(id) !== 'hidden') return;
     detach(S, id);
-    addTo(S, id, S.last[id] || HOME[id]);
+    addTo(S, id, S.last[id] || HOME[id] || 'right');
     const l = locate(S, id);
     if (l.g) l.g.a = id;
     saveSoon(); render();
@@ -382,6 +405,50 @@
     if (!S || !await uiConfirm(t('dk_reset_q'), {okText: t('dk_reset')})) return;
     S = sanitize(def()); sig = '';
     saveSoon(); render();
+    document.dispatchEvent(new CustomEvent('wrm-layout-loaded'));
+  }
+  // register adds a dynamic panel: def {ico, label(), el (its id), node (the element, when it
+  // is not in the page yet), shown(), closed()}. With place it is
+  // also put into the layout ('float' or a zone); without it, it only shows where the stored
+  // layout already has it.
+  function register(id, d, place) {
+    if (!DYN.test(id) || !d || !d.el) return false;
+    P[id] = Object.assign({}, d, {dyn: true});
+    delete P[id].node;
+    const e = d.node || $(d.el);
+    if (e && !e.closest('.dk-group')) park().appendChild(e);
+    if (place && S && where(id) === 'hidden') {
+      if (place === 'float') {
+        const n = S.floats.length % 6, sz = (S.fsize && S.fsize[id]) || {};
+        floatAt(id, Math.max(0, Math.round(window.innerWidth / 2 - (sz.w || 340) / 2) + 28 * n), 110 + 28 * n);
+      } else addTo(S, id, ZONES.includes(place) ? place : 'right');
+      const l = locate(S, id);
+      if (l.g) l.g.a = id;
+      saveSoon();
+    }
+    sig = ''; render();
+    return true;
+  }
+  // remove takes a dynamic panel out of the layout (its element is the caller's to reuse).
+  function remove(id) {
+    if (!DYN.test(id)) return;
+    const el = P[id] && $(P[id].el);
+    if (S) {
+      const l = locate(S, id);
+      if (l.f) { S.fsize = S.fsize || {}; S.fsize[id] = {w: l.f.w, h: l.f.h}; }
+      if (!l.hidden) { detach(S, id); prune(S); saveSoon(); }
+    }
+    delete P[id]; delete lastShown[id];
+    if (el) { el.classList.remove('dk-on'); park().appendChild(el); }
+    sig = ''; render();
+  }
+  // Dynamic panel ids the current layout places (registered or not).
+  function placed() {
+    if (!S) return [];
+    const out = [];
+    ZONES.forEach(z => S.zones[z].groups.forEach(g => g.p.forEach(id => { if (DYN.test(id)) out.push(id); })));
+    S.floats.forEach(f => f.p.forEach(id => { if (DYN.test(id)) out.push(id); }));
+    return out;
   }
   function zoneResized(z, px) {
     if (!S || compact() || !px) return;
@@ -457,7 +524,7 @@
         document.body.classList.add('dk-dragging');
         st.strips = strips();
         st.ghost = document.createElement('div'); st.ghost.className = 'dk-ghost';
-        st.ghost.textContent = P[id].ico + ' ' + t(P[id].key);
+        st.ghost.textContent = P[id].ico + ' ' + nameOf(id);
         st.ind = document.createElement('div'); st.ind.className = 'dk-ind';
         document.body.append(st.ind, st.ghost);
       }
@@ -599,12 +666,13 @@
   }
   function groupMenu(anchor, g) {
     if (!S) return;
-    const id = activeOf(g) || g.a, w = where(id), lk = S.locked, name = t(P[id].key);
+    const id = activeOf(g) || g.a, w = where(id), lk = S.locked, name = nameOf(id), dyn = !!(P[id] && P[id].dyn);
+    if (!P[id]) return;
     const items = [{head: P[id].ico + ' ' + name}];
     if (!compact()) {
       [['left', '⇤', 'dk_move_left'], ['right', '⇥', 'dk_move_right'], ['bottom', '⤓', 'dk_move_bottom'], ['float', '⧉', 'dk_float']].forEach(([z, ico, k]) =>
         items.push({ico, label: t(k), off: lk || (w === z && z !== 'float') || (w === 'float' && z === 'float'), title: lk ? t('dk_locked_t') : '', do: () => moveTo(id, z)}));
-      items.push({ico: '–', label: tn('dk_hide', {name}), do: () => hide(id)});
+      items.push(dyn ? {ico: '▤', label: t('dk_wb_back'), do: () => hide(id)} : {ico: '–', label: tn('dk_hide', {name}), do: () => hide(id)});
       items.push('-');
     }
     items.push({ico: lk ? '🔓' : '🔒', label: t(lk ? 'dk_unlock' : 'dk_lock'), off: compact(), do: () => setLocked(!lk)});
@@ -621,6 +689,12 @@
       items.push({check: on, label: P[id].ico + ' ' + t(P[id].key), side: !avail(id) && on && P[id].auto ? t('dk_hint_auto') : t('dk_where_' + w),
         off: compact() || (!ok && !P[id].auto), do: () => (on ? hide(id) : show(id)), again: () => openPanels(anchor)});
     });
+    const dyn = allIds().filter(id => P[id].dyn && where(id) !== 'hidden');
+    if (dyn.length) {
+      items.push({head: t('dk_wb_head')});
+      dyn.forEach(id => items.push({check: true, label: P[id].ico + ' ' + nameOf(id), side: t('dk_where_' + where(id)), title: t('dk_wb_back'),
+        off: compact(), do: () => hide(id), again: () => openPanels(anchor)}));
+    }
     items.push('-');
     items.push({ico: S.locked ? '🔓' : '🔒', label: t(S.locked ? 'dk_unlock' : 'dk_lock'), off: compact(), do: () => setLocked(!S.locked), again: () => openPanels(anchor)});
     items.push({ico: '↺', label: t('dk_reset'), off: compact() || S.locked, do: reset});
@@ -644,7 +718,7 @@
 #dz-bottom-g .dk-group { min-width: 180px; min-height: 0; }
 #dz-bottom-g .dk-group + .dk-split + .dk-group, #dz-bottom-g .dk-group { border: 0; }
 .dk-tabs { display: flex; align-items: center; gap: 2px; padding: 5px 6px; border-bottom: 1px solid var(--border); flex: none; min-height: 32px; }
-.dk-tl { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; align-self: stretch; }
+.dk-tl { position: relative; display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; align-self: stretch; }
 .dk-tl::-webkit-scrollbar { display: none; }
 #dz-left > .dk-group:first-child > .dk-tabs { padding-right: 34px; }
 #dz-right > .dk-group:first-child > .dk-tabs { padding-left: 34px; }
@@ -719,6 +793,7 @@ body.dk-resizing, body.dk-resizing * { user-select: none !important; }
   window.wrmLayout = {
     init, refresh: render, activate, moveTo, hide, show, reset, openPanels, closeMenu, zoneResized, zoneMax, where, isShown,
     isHidden: id => where(id) === 'hidden', locked: () => !!(S && S.locked && !compact()), setLocked, ready: () => !!S,
+    register, remove, placed,
     _state: () => S, _sanitize: sanitize,
   };
 })();

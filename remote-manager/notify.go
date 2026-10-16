@@ -487,6 +487,11 @@ func (p notifyPrefs) inQuietHours(t time.Time) bool {
 // notifyUser queues an event for a user on every channel they subscribed it to. text
 // builds the title and body in the user's language. It reports whether anything was queued.
 func notifyUser(userID int, event string, text func(lang string) (string, string)) bool {
+	if userID > 0 {
+		// the in-app list (Workboard) keeps every event, subscribed or not
+		t, b := text(loadNotifyPrefs(userID).Lang)
+		recordUserEvent(userID, event, t, b)
+	}
 	if userID <= 0 || !settingBool("notifications_enabled") {
 		return false
 	}
