@@ -160,10 +160,6 @@ func mediumState(uid int) mediumStatus {
 	}
 	if s.Backend == "docker" {
 		s.Dependencies = map[string]bool{"docker": mediumDockerCLI() != ""}
-		if !s.Dependencies["docker"] || mediumDockerConsentGet() != nil {
-			d := mediumDockerInfoCached()
-			s.Docker = &d
-		}
 	}
 	if b, e := os.ReadFile(filepath.Join(mediumRoot(), "tool.sha256")); e == nil {
 		s.Digest = strings.TrimSpace(string(b))
@@ -180,6 +176,11 @@ func mediumState(uid int) mediumStatus {
 func mediumStateFull(uid int) mediumStatus {
 	s := mediumState(uid)
 	s.Operation = mediumHolder(uid)
+	// outside mediumMgr.mu: finding out the privileges can run sudo
+	if s.Backend == "docker" && (!s.Dependencies["docker"] || mediumDockerConsentGet() != nil) {
+		d := mediumDockerInfoCached()
+		s.Docker = &d
+	}
 	return s
 }
 
@@ -651,7 +652,7 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
 			defer cancel()
 			mediumEndOp(h, mediumPrepareRuntime(ctx, func(step string) { mediumSetStage(uid, step, true, nil) }))
 		}()
@@ -897,7 +898,7 @@ func mediumImportTool(w http.ResponseWriter, r *http.Request, uid int) {
 	handed = true
 	go func() {
 		defer os.RemoveAll(stage)
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
 		defer cancel()
 		e := os.WriteFile(filepath.Join(mediumRoot(), "tool.sha256"), []byte(hex.EncodeToString(digest[:])), 0600)
 		if e == nil {

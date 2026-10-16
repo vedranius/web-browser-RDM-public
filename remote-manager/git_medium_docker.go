@@ -139,6 +139,8 @@ func mediumDockerInfoNow(ctx context.Context) mediumDockerInfo {
 		info.Product, info.Method, info.NeedsLicense, info.LicenseURL, info.Auto = "Docker Desktop", "desktop", true, mediumDockerLicenseURL, true
 		if mediumPrivilege(ctx) == "" {
 			info.Note = "WRM has no administrator rights here, so Docker Desktop goes to ~/Applications; confirm its first-start window on the Mac once"
+		} else if mediumEUID() == 0 {
+			info.Note = "Docker Desktop is installed for the user signed in on the Mac and runs in that user's session: someone must be signed in"
 		}
 	case "windows":
 		info.Product, info.Method, info.NeedsLicense, info.LicenseURL = "Docker Desktop", "desktop", true, mediumDockerLicenseURL
@@ -157,6 +159,15 @@ func mediumDockerInfoNow(ctx context.Context) mediumDockerInfo {
 	return info
 }
 
+// mediumConsoleUser: the user signed in on the Mac's screen ("" when nobody or root).
+func mediumConsoleUser(ctx context.Context) string {
+	b, err := exec.CommandContext(ctx, "stat", "-f", "%Su", "/dev/console").Output()
+	if u := strings.TrimSpace(string(b)); err == nil && u != "root" {
+		return u
+	}
+	return ""
+}
+
 func mediumCurrentUser() string {
 	if u, err := user.Current(); err == nil && u.Username != "" {
 		return u.Username
@@ -169,6 +180,9 @@ func mediumSetupCommand() string {
 	exe, err := os.Executable()
 	if err != nil {
 		exe = "wrm"
+	}
+	if p := os.Getenv("APPIMAGE"); os.Getenv("WRM_APPIMAGE") == "1" && p != "" {
+		exe = p // the binary inside the AppImage's mount is not reachable for root
 	}
 	return "sudo " + shellQuote(exe) + " -setup-docker -service-user " + shellQuote(mediumCurrentUser())
 }
@@ -191,20 +205,54 @@ func mediumPrivilege(ctx context.Context) string {
 	if _, err := exec.LookPath("sudo"); err != nil {
 		return ""
 	}
-	cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	if exec.CommandContext(cctx, "sudo", "-n", "true").Run() == nil {
+	// sudo logs (and may mail) every refused attempt: probe it once, not on every status poll
+	mediumSudo.Lock()
+	defer mediumSudo.Unlock()
+	if !mediumSudo.known {
+		cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		mediumSudo.ok = exec.CommandContext(cctx, "sudo", "-n", "true").Run() == nil
+		cancel()
+		mediumSudo.known = true
+	}
+	if mediumSudo.ok {
 		return "sudo"
 	}
 	return ""
 }
 
+var mediumSudo struct {
+	sync.Mutex
+	known, ok bool
+}
+
+// mediumSudoReprobe: an administrator asks to install, so passwordless sudo set up since is found.
+func mediumSudoReprobe() {
+	mediumSudo.Lock()
+	mediumSudo.known = false
+	mediumSudo.Unlock()
+}
+
 func mediumAsRoot(priv string, argv ...string) []string {
+	// systemd-run starts with a clean environment and sudo resets it: pass WRM's proxy on
+	var proxy []string
+	for _, k := range []string{"http_proxy", "https_proxy", "no_proxy", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY"} {
+		if v := os.Getenv(k); v != "" {
+			proxy = append(proxy, k+"="+v)
+		}
+	}
 	switch priv {
 	case "systemd-run":
-		return append([]string{"systemd-run", "--wait", "--pipe", "--collect", "--quiet", "--"}, argv...)
+		out := []string{"systemd-run", "--wait", "--pipe", "--collect", "--quiet"}
+		for _, kv := range proxy {
+			out = append(out, "--setenv="+kv)
+		}
+		return append(append(out, "--"), argv...)
 	case "sudo":
-		return append([]string{"sudo", "-n", "--"}, argv...)
+		out := []string{"sudo", "-n", "--"}
+		if len(proxy) > 0 {
+			out = append(append(out, "env"), proxy...)
+		}
+		return append(out, argv...)
 	}
 	return argv
 }
@@ -251,6 +299,12 @@ func mediumLinuxPlan() (method string, install, start [][]string, why string) {
 		return "apt", [][]string{append(append([]string{}, apt...), "update"), append(append([]string{}, apt...), "install", "-y", "docker.io")}, start, ""
 	case has("dnf") && id == "fedora":
 		return "dnf", [][]string{{"dnf", "install", "-y", "moby-engine"}}, start, ""
+	case id == "amzn" && (has("dnf") || has("yum")):
+		pm := "dnf"
+		if !has("dnf") {
+			pm = "yum"
+		}
+		return pm, [][]string{{pm, "install", "-y", "docker"}}, start, ""
 	case has("dnf") || has("yum"):
 		pm := "dnf"
 		if !has("dnf") {
@@ -260,7 +314,7 @@ func mediumLinuxPlan() (method string, install, start [][]string, why string) {
 		if id == "rhel" {
 			dist = "rhel"
 		} else if !strings.Contains(" "+like+" ", " rhel ") && !strings.Contains(" "+like+" ", " centos ") && !strings.Contains(" "+like+" ", " fedora ") && id != "centos" {
-			return "", nil, nil, "Docker Engine packages are not known for this distribution (" + id + ")"
+			return "", nil, start, "Docker Engine packages are not known for this distribution (" + id + ")"
 		}
 		return "docker-ce", [][]string{
 			{"curl", "-fsSL", "-o", "/etc/yum.repos.d/docker-ce.repo", "https://download.docker.com/linux/" + dist + "/docker-ce.repo"},
@@ -273,7 +327,7 @@ func mediumLinuxPlan() (method string, install, start [][]string, why string) {
 	case has("apk"):
 		return "apk", [][]string{{"apk", "add", "docker"}}, start, ""
 	}
-	return "", nil, nil, "No supported package manager was found (apt, dnf, yum, zypper, pacman or apk)"
+	return "", nil, start, "No supported package manager was found (apt, dnf, yum, zypper, pacman or apk)"
 }
 
 // mediumInstallDocker installs Docker on this host, if the policy, the host and the
@@ -282,14 +336,14 @@ func mediumInstallDocker(ctx context.Context, step func(string)) error {
 	info := mediumDockerInfoNow(ctx)
 	defer mediumDockerInfoReset()
 	if !info.Allowed {
-		return fmt.Errorf("Docker is not installed on the WRM host, and the administrator switched automatic installation off (policy medium_docker_install). Install %s yourself, then press Prepare; your ZIPs are kept", info.Product)
+		return fmt.Errorf("Docker is not installed on the WRM host, and the administrator switched automatic installation off (policy medium_docker_install). Install %s yourself, then press Install Docker or Prepare runtime; your ZIPs are kept", info.Product)
 	}
 	if !info.Auto {
 		msg := "Docker is not installed on the WRM host, and WRM cannot install it here: " + info.Why
 		if info.Command != "" {
 			msg += ". Run once: " + info.Command
 		}
-		return errors.New(msg + ". Then press Prepare; your ZIPs are kept")
+		return errors.New(msg + ". Then press Prepare runtime (or import the tool ZIP); your ZIPs are kept")
 	}
 	if info.Consent == nil {
 		return errMediumDockerConsent
@@ -327,7 +381,11 @@ func mediumInstallLinux(ctx context.Context, step func(string)) error {
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
-			return fmt.Errorf("Installing Docker Engine (%s) failed. The output shows why (package mirror or internet access, disk space, another package manager running); fix it and press Prepare again. Your ZIPs are kept", method)
+			hint := ""
+			if method == "docker-ce" {
+				hint = "; on RHEL-like systems podman/runc conflict with containerd.io: remove them first (dnf remove podman runc) if the output names them"
+			}
+			return fmt.Errorf("Installing Docker Engine (%s) failed. The output shows why (package mirror or internet access, a proxy, disk space, another package manager running%s); fix it and press Install Docker again. Your ZIPs are kept", method, hint)
 		}
 	}
 	step("docker_start")
@@ -336,15 +394,15 @@ func mediumInstallLinux(ctx context.Context, step func(string)) error {
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
-			return fmt.Errorf("Docker Engine is installed, but its service did not start (%s). The output shows why; start it (for example: sudo %s), then press Prepare. Your ZIPs are kept", strings.Join(c, " "), strings.Join(c, " "))
+			return fmt.Errorf("Docker Engine is installed, but its service did not start (%s). The output shows why; start it (for example: sudo %s), then press Install Docker or Prepare runtime. Your ZIPs are kept", strings.Join(c, " "), strings.Join(c, " "))
 		}
 	}
 	if mediumEUID() != 0 && mediumDockerCheck(ctx) != nil {
 		u := mediumCurrentUser()
 		if err := mediumRunArgv(ctx, mediumAsRoot(priv, "usermod", "-aG", "docker", u)); err != nil {
-			return fmt.Errorf("Docker Engine is installed and running, but WRM could not add its account %s to the docker group: run sudo usermod -aG docker %s, restart WRM and press Prepare", u, u)
+			return fmt.Errorf("Docker Engine is installed and running, but WRM could not add its account %s to the docker group: run sudo usermod -aG docker %s, restart WRM and press Install Docker or Prepare runtime", u, u)
 		}
-		return fmt.Errorf("Docker Engine is installed and running. WRM's account %s was added to the docker group: restart WRM once so it gets access, then press Prepare. Your ZIPs are kept", u)
+		return fmt.Errorf("Docker Engine is installed and running. WRM's account %s was added to the docker group: restart WRM once so it gets access, then press Install Docker or Prepare runtime. Your ZIPs are kept", u)
 	}
 	return nil
 }
@@ -367,11 +425,11 @@ func mediumDownload(ctx context.Context, url, dest string) error {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Cannot download the official Docker Desktop installer from %s; check the WRM host's outbound HTTPS (proxy, firewall), then press Prepare. Your ZIPs are kept", url)
+		return fmt.Errorf("Cannot download the official Docker Desktop installer from %s; check the WRM host's outbound HTTPS (proxy, firewall), then press Install Docker or Prepare runtime. Your ZIPs are kept", url)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("The Docker Desktop download returned HTTP %d; press Prepare again later. Your ZIPs are kept", resp.StatusCode)
+		return fmt.Errorf("The Docker Desktop download returned HTTP %d; press Install Docker or Prepare runtime again later. Your ZIPs are kept", resp.StatusCode)
 	}
 	f, err := os.OpenFile(dest, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
@@ -380,7 +438,7 @@ func mediumDownload(ctx context.Context, url, dest string) error {
 	n, err := io.Copy(f, io.LimitReader(resp.Body, 2<<30+1))
 	closeErr := f.Close()
 	if err != nil || closeErr != nil || n > 2<<30 {
-		return fmt.Errorf("The Docker Desktop download failed or exceeds 2 GiB; check free disk space and press Prepare again. Your ZIPs are kept")
+		return fmt.Errorf("The Docker Desktop download failed or exceeds 2 GiB; check free disk space and press Install Docker or Prepare runtime again. Your ZIPs are kept")
 	}
 	if out != nil {
 		out.Note("downloaded %d MiB", n>>20)
@@ -428,8 +486,9 @@ func mediumInstallMac(ctx context.Context, step func(string)) error {
 		who := mediumCurrentUser()
 		if mediumEUID() == 0 {
 			// Docker Desktop belongs to the user signed in on the Mac
-			if b, err := exec.CommandContext(ctx, "stat", "-f", "%Su", "/dev/console").Output(); err == nil && strings.TrimSpace(string(b)) != "" && strings.TrimSpace(string(b)) != "root" {
-				who = strings.TrimSpace(string(b))
+			who = mediumConsoleUser(ctx)
+			if who == "" {
+				return fmt.Errorf("Nobody is signed in on the Mac: Docker Desktop is installed for, and runs in the session of, the signed-in user. Sign in on the Mac, then press Install Docker again. Your ZIPs are kept")
 			}
 		}
 		if err := mediumRunArgv(ctx, mediumAsRoot(priv, filepath.Join(app, "Contents", "MacOS", "install"), "--accept-license", "--user="+who)); err != nil {
@@ -474,7 +533,7 @@ func mediumInstallDesktop(ctx context.Context, step func(string)) error {
 	step("docker_install")
 	install := "$ErrorActionPreference='Stop'; $x=Start-Process -FilePath " + quoted + " -ArgumentList 'install','--user','--quiet','--accept-license','--backend=wsl-2' -Wait -PassThru; 'installer exit code ' + $x.ExitCode; exit $x.ExitCode"
 	if err := mediumCommand(ctx, dir, "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", install); err != nil {
-		return fmt.Errorf("The Docker Desktop installer did not finish. If Windows asked to enable WSL or to restart, do that, then press Prepare; your ZIPs are kept")
+		return fmt.Errorf("The Docker Desktop installer did not finish. If Windows asked to enable WSL or to restart, do that, then press Install Docker or Prepare runtime; your ZIPs are kept")
 	}
 	return nil
 }
@@ -500,6 +559,7 @@ func apiMediumDocker(w http.ResponseWriter, r *http.Request, uid int) {
 		jsonOK(w, mediumStateFull(uid))
 		return
 	}
+	mediumSudoReprobe()
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	info := mediumDockerInfoNow(ctx)
 	cancel()
@@ -592,7 +652,7 @@ func runSetupDocker(account, svcName string, stdout io.Writer) int {
 	} else if account != "" && account != "root" {
 		fmt.Fprintf(stdout, "Restart WRM (running as %s) so it can use Docker.\n", account)
 	}
-	fmt.Fprintln(stdout, "Done. In WRM, open Git workspace → Medium and press Prepare.")
+	fmt.Fprintln(stdout, "Done. In WRM, open Git workspace → Medium and press Install Docker or Prepare runtime.")
 	return 0
 }
 

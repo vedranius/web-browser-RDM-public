@@ -658,14 +658,14 @@ Object.assign(LANGS.en, {
   gm_s2_dk_wait_admin: '{product} is not installed on the WRM host yet. An administrator installs it from here once; then everything continues automatically.',
   gm_s2_dk_auto: '{product} is not installed yet. WRM installs it ({how}) automatically at the next preparation or tool import; allowed by {user} on {at}. Press "Install Docker" to do it now.',
   gm_s2_dk_off: '{product} is not installed, and automatic installation is switched off (Administration → Policies → Git: "Install Docker for Medium"). Switch it on, or install {product} on the WRM host yourself.',
-  gm_s2_dk_manual: '{product} is not installed, and WRM cannot install it here: {why}.', gm_s2_dk_cmd: 'Run once on the WRM host, then press "Prepare runtime / retry":',
+  gm_s2_dk_manual: '{product} is not installed, and WRM cannot install it here: {why}.', gm_s2_dk_cmd: 'Run once on the WRM host as administrator; then press "Prepare runtime / retry" (or import the deploy-tool ZIP):',
   gm_s2_dk_run: 'In progress: {step}. Downloading and installing Docker can take several minutes; every step and its output are shown here and in the activity log.',
   gm_dk_license: 'Docker Desktop is free for personal use, education, non-commercial open source and small businesses (fewer than 250 employees and less than USD 10 million annual revenue); larger organisations need a paid Docker subscription.', gm_dk_license_link: 'Docker Subscription Service Agreement',
   gm_dk_confirm: 'Install {product} on the WRM host ({how})? WRM downloads and installs it, starts it and then prepares the runtime of the original deploy tool.',
   gm_dk_confirm_license: 'By continuing you accept the Docker Subscription Service Agreement ({url}) for your organisation. Your name and the time are recorded in the audit log.',
   gm_dk_ok_license: 'Accept the licence and install', gm_dk_ok: 'Install',
   gm_dk_how_desktop: 'official installer from docker.com, signature checked', gm_dk_how_pkg: 'packages of this Linux distribution: {method}',
-  gm_hint_dk_error: 'Do what the error above says, then press "Prepare runtime / retry". Your ZIPs are kept.',
+  gm_hint_dk_error: 'Do what the error above says, then press "Prepare runtime / retry". Your ZIPs are kept.', gm_hint_dk_error_new: 'Do what the error above says, then press "Install Docker" again; after that import the deploy-tool ZIP (step 1).',
   gm_hint_docker_install: 'The output (Show output) says why the Docker installation failed; fix that and press "Install Docker" again. Your ZIPs are kept.',
   gm_hint_docker: 'Docker did not answer; the step\'s error above says why and what to do. When Docker is missing, an administrator presses "Install Docker" in step 2. Then press "Prepare runtime / retry"; your ZIPs are kept.'
 });
@@ -676,14 +676,14 @@ Object.assign(LANGS.hr, {
   gm_s2_dk_wait_admin: '{product} još nije instaliran na WRM računalu. Administrator ga jednom instalira odavde; nakon toga sve ide automatski.',
   gm_s2_dk_auto: '{product} još nije instaliran. WRM ga instalira ({how}) automatski pri sljedećoj pripremi ili uvozu alata; dopustio {user}, {at}. Klikni "Instaliraj Docker" za instalaciju odmah.',
   gm_s2_dk_off: '{product} nije instaliran, a automatska instalacija je isključena (Administracija → Pravila → Git: "Instalacija Dockera za Medium"). Uključi je ili sam instaliraj {product} na WRM računalo.',
-  gm_s2_dk_manual: '{product} nije instaliran, a WRM ga ovdje ne može instalirati: {why}.', gm_s2_dk_cmd: 'Pokreni jednom na WRM računalu, zatim klikni "Pripremi runtime / pokušaj ponovno":',
+  gm_s2_dk_manual: '{product} nije instaliran, a WRM ga ovdje ne može instalirati: {why}.', gm_s2_dk_cmd: 'Pokreni jednom na WRM računalu kao administrator; zatim klikni "Pripremi runtime / pokušaj ponovno" (ili uvezi deploy-tool ZIP):',
   gm_s2_dk_run: 'U tijeku: {step}. Preuzimanje i instalacija Dockera mogu trajati nekoliko minuta; svaki korak i njegov izlaz vide se ovdje i u dnevniku aktivnosti.',
   gm_dk_license: 'Docker Desktop je besplatan za osobnu upotrebu, obrazovanje, nekomercijalni open source i male tvrtke (manje od 250 zaposlenih i manje od 10 milijuna USD godišnjeg prihoda); veće organizacije trebaju plaćenu Docker pretplatu.', gm_dk_license_link: 'Docker Subscription Service Agreement',
   gm_dk_confirm: 'Instalirati {product} na WRM računalo ({how})? WRM ga preuzima i instalira, pokreće i zatim priprema okruženje izvornog deploy-toola.',
   gm_dk_confirm_license: 'Nastavkom prihvaćaš Docker Subscription Service Agreement ({url}) za svoju organizaciju. Tvoje ime i vrijeme bilježe se u revizijski zapis.',
   gm_dk_ok_license: 'Prihvati licencu i instaliraj', gm_dk_ok: 'Instaliraj',
   gm_dk_how_desktop: 'službeni instalacijski program s docker.com, uz provjeru potpisa', gm_dk_how_pkg: 'paketi ove Linux distribucije: {method}',
-  gm_hint_dk_error: 'Napravi ono što kaže greška iznad, zatim klikni "Pripremi runtime / pokušaj ponovno". Tvoji ZIP-ovi ostaju spremljeni.',
+  gm_hint_dk_error: 'Napravi ono što kaže greška iznad, zatim klikni "Pripremi runtime / pokušaj ponovno". Tvoji ZIP-ovi ostaju spremljeni.', gm_hint_dk_error_new: 'Napravi ono što kaže greška iznad, zatim ponovno klikni "Instaliraj Docker"; nakon toga uvezi deploy-tool ZIP (korak 1).',
   gm_hint_docker_install: 'Izlaz (Prikaži izlaz) pokazuje zašto instalacija Dockera nije uspjela; ispravi to i ponovno klikni "Instaliraj Docker". Tvoji ZIP-ovi ostaju spremljeni.',
   gm_hint_docker: 'Docker se nije javio; greška koraka iznad kaže zašto i što napraviti. Ako Docker nedostaje, administrator u koraku 2 klikne "Instaliraj Docker". Zatim klikni "Pripremi runtime / pokušaj ponovno"; tvoji ZIP-ovi ostaju spremljeni.'
 });
@@ -3040,7 +3040,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     step = step || '';
     if (step === 'docker') return t('gm_hint_docker');
     if (['docker_install', 'docker_download', 'docker_verify'].includes(step)) return t('gm_hint_docker_install');
-    if (step === 'docker_start' || step === 'docker_wait') return t('gm_hint_dk_error');
+    if (step === 'docker_start' || step === 'docker_wait') return (MS.s || {}).tool_imported ? t('gm_hint_dk_error') : t('gm_hint_dk_error_new');
     if (step === 'image') return t('gm_hint_image');
     if (step === 'packages') return t('gm_hint_packages');
     if (step === 'python' || step === 'venv') return t('gm_hint_python');
