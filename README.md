@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.6** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.7** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.7
+
+**A top bar that fits and an AI panel that docks.** The top bar now fits at any width and browser zoom: labels go first, then less used buttons move into a **⋯** menu, so nothing overlaps. The AI live view (what an AI app runs on your servers, with approvals and output) no longer covers your windows: it is a **🤖 AI** tab next to *Sessions* and *Snippets*, a dock under the windows, a floating window, or hidden, chosen with its title bar buttons or by dragging it to an edge, and remembered per user. Approval cards still always pop up. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 
 ## What's new in v12.6.6
 
@@ -96,7 +100,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -196,14 +200,14 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.6-linux-amd64
-   ./wrm-pro-v12.6.6-linux-amd64
+   chmod +x wrm-pro-v12.6.7-linux-amd64
+   ./wrm-pro-v12.6.7-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.6-windows-amd64.exe
+   .\wrm-pro-v12.6.7-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
@@ -244,6 +248,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.6
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database or API change. The AI live view now opens as a **🤖 AI** tab in the right panel instead of a box at the bottom left; pick *Floating* in its title bar (or the 🤖 menu) for the old behaviour.
 
 ## Upgrading from v12.6.5
 
@@ -1417,7 +1425,13 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
 - **Every call goes through the v12.0.0 permission engine**: the read-only classifier, the always-blocked destructive patterns, the approvals, the automatic-mode limits (per session), the mode rules per tag / folder / connection / host (the most restrictive wins — a production server can be read-only for apps even when the AI connection allows *ask*), redaction of secrets in output, and the audit.
 - **Approvals** appear in WRM as a card with **Approve**, **Deny** and **Edit** (the exact command, or the diff), on every open WRM tab of yours — and, when the app supports **MCP elicitation**, also as a question in the app (policy `ai_mcp_elicitation`). Whichever answers first decides; an unanswered approval is denied after `ai_approval_timeout_seconds`.
 - **Server output is untrusted.** Tool results are framed as untrusted data; nothing in them, and nothing the app asks for, can change the mode or the scopes: there is no such tool, and only you change them, in WRM (by creating a new AI connection).
-- **Live view:** when an app opens a session, WRM opens a panel (bottom left) that follows it: every tool call with the command or file and WRM's decision (*runs*, *needs your approval*, *refused by WRM*), **Approve** / **Deny** for pending approvals, the outcome, the exit code and the output. *Watch live* in the 🤖 menu reopens it; the checkbox there turns the automatic opening off for this browser. Closing the panel does not stop the app.
+- **Live view:** when an app opens a session, WRM opens a panel that follows it: every tool call with the command or file and WRM's decision (*runs*, *needs your approval*, *refused by WRM*), **Approve** / **Deny** for pending approvals, the outcome, the exit code and the output. *Watch live* in the 🤖 menu reopens it; the checkbox there turns the automatic opening off for this browser. Closing a session's box does not stop the app.
+- **Where the live view sits:** choose with the buttons in its title bar (▕ right, ▁ bottom, ⧉ floating, – hide), with *Layout* in the 🤖 menu, or by dragging the title bar onto the *Dock on the right* or *Dock at the bottom* zone that appears while you drag.
+  - *Right* (default): a **🤖 AI** tab next to *Sessions* and *Snippets*. The tab shows how many AI sessions are open and turns yellow while one waits for your approval; the panel keeps its own width for this tab (drag its left edge).
+  - *Bottom*: a dock under the windows; drag its top edge to resize it. Several sessions sit side by side.
+  - *Floating*: drag the title bar to move it and its corner to resize it.
+  - *Hidden*: a *Show the AI panel* chip at the bottom left brings it back; it pulses while an approval waits.
+  - WRM remembers the layout, position and sizes for each user in this browser. Approval cards always pop up at the bottom right, whatever the layout. On a phone the live view is a sheet at the bottom of the screen.
 - **After a refusal** (denied in WRM or in the app, or no answer within `ai_approval_timeout_seconds`) the tool result tells the AI where it was refused, **which rule made WRM ask** (the time or action limit, a command outside the allow list, ask mode, a power command) and what you can change in WRM, and to ask you whether to continue, change the command or stop, instead of retrying a variant on its own.
 - **Full access (v12.6.2, modes v12.6.3):** the administrator's `ai_full_access` switch applies, depending on `ai_full_access_mode`, to every AI session (`all`, the default: the WRM AI panel and every AI connection), only to AI connections with the scope `full_access` (`connection`; the scope is offered only in this mode), or to users who turn on **Full access for my AI sessions** in *Settings → AI connections* (`user`). Then nothing is refused outright: commands on the destructive list or `ai_blocked_commands`, the connection's deny lists, power commands, protected paths and secret files (also with `ai_sensitive_reads` = `deny`) become approvals marked *FULL ACCESS*, asked every time and never automatic, even with "Allow everything". A read-only connection stays read-only and the other scopes still apply. With `ai_full_access_blocked` = `deny` (v12.6.4) the administrator's `ai_blocked_commands` stay refused even under full access. Turning the policy off restores the refusals at the next call.
 - **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Approve it there and tell the AI to continue: the identical call then runs once without asking. This also works after the AI app closed its session (v12.6.5): the approval covers the same call once in your next session on that connection. A denial in WRM stays a denial. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.

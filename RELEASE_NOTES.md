@@ -1,6 +1,33 @@
-## Web Remote Manager PRO v12.6.6 — Docker everywhere, installed by WRM
+## Web Remote Manager PRO v12.6.7 — A top bar that fits, an AI panel that docks
 
 ### Added
+
+- **The AI live view docks where you want it.** What an AI app runs on your servers (commands, files, WRM's decision, approvals and output) is no longer a box over your windows. Choose with the buttons in its title bar, in the 🤖 menu, or by dragging the title bar onto the right or bottom edge:
+  - **Right** (default): a **🤖 AI** tab next to *Sessions* and *Snippets*, with its own width; the tab counts the open AI sessions and turns yellow while one waits for you.
+  - **Bottom**: a dock under the windows, resizable by its top edge; several AI sessions sit side by side.
+  - **Floating**: a window you move by its title bar and resize by its corner.
+  - **Hidden**: a small *Show the AI panel* chip at the bottom left, which pulses while an approval waits.
+- WRM remembers the layout, the floating position and size and the dock height for each user in this browser.
+- Approval cards still always pop up, whatever the layout, so no request is missed. On a phone the live view is a sheet at the bottom of the screen.
+
+### Changed
+
+- **The top bar fits at any width and browser zoom.** It measures itself and first drops the labels of less used buttons; buttons that still do not fit move into a **⋯** menu (with their badges), so no button covers another at 1100–1920 px or at 125–150 % zoom.
+- The right panel remembers its width, separately for the AI tab.
+
+### Fixed
+
+- The *Snippets* tab no longer looks selected while *Sessions* is open.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database or API change.
+
+[Download v12.6.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.7) · [AI live view layout](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.7/README.md#ai-desktop-apps-mcp)
+
+### Included from v12.6.6 — Docker everywhere, installed by WRM
+
+#### Added
 
 - **Medium installs Docker itself.** When Docker is missing on the WRM host, step 2 of the Medium guide says which Docker WRM will install and how. An administrator presses **Install Docker** once; on Windows and macOS that also accepts Docker Desktop's licence (shown with its terms). From then on importing the tool ZIP or pressing *Prepare runtime* installs Docker, starts it, waits for it and prepares the runtime, with no manual steps.
   - **Linux:** Docker Engine from your distribution's packages, its service enabled and started.
@@ -10,11 +37,11 @@
 - **One command when WRM has no rights:** if WRM runs as a normal Linux account, step 2 shows `sudo wrm -setup-docker -service-user <account>`. It installs Docker, lets WRM use it and restarts WRM.
 - **New policy** *Install Docker for Medium* (`medium_docker_install`, on by default) and *Medium command output* in *Administration → Policies → Git*.
 
-### Changed
+#### Changed
 
 - The original deploy tool now runs in the same Docker runtime on Linux, macOS and Windows. A host runtime you already prepared on Linux or macOS keeps working; `WRM_MEDIUM_RUNTIME=docker` moves it to Docker.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. Nothing is installed until an administrator presses **Install Docker**. Docker Desktop is free for personal use, education, non-commercial open source and small businesses; larger organisations need a paid Docker subscription.
 
