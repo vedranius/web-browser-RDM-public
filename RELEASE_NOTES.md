@@ -9,6 +9,7 @@
   - **Hidden**: a small *Show the AI panel* chip at the bottom left, which pulses while an approval waits.
 - WRM remembers the layout, the floating position and size and the dock height for each user in this browser.
 - Approval cards still always pop up, whatever the layout, so no request is missed. On a phone the live view is a sheet at the bottom of the screen.
+- **Medium works behind proxies and antivirus that inspect HTTPS.** The original deploy tool's Docker runtime now trusts the certificates your WRM computer trusts (the Windows certificate store, the macOS keychains or the Linux CA bundle), so pip no longer fails with *self-signed certificate in certificate chain*. New policy *Medium trusts this computer's certificates* (on by default) and *Extra CA file for Medium* for a proxy root that is not in the computer's store, in *Administration → Policies → Git*.
 
 ### Changed
 
@@ -17,11 +18,13 @@
 
 ### Fixed
 
+- **You can select and copy every text on the page again**, for example Medium's command output, error messages and hints. Only buttons, tabs, title bars and drag handles stay unselectable.
 - The *Snippets* tab no longer looks selected while *Sessions* is open.
+- When pip fails because of an untrusted certificate, Medium says so and what to do.
 
 ### Upgrade
 
-Replace the executable/container and keep the database and encryption key. No database or API change.
+Replace the executable/container and keep the database and encryption key. No database or API change. If Medium's runtime preparation failed with a certificate error, press *Prepare runtime* again after the upgrade.
 
 [Download v12.6.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.7) · [AI live view layout](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.7/README.md#ai-desktop-apps-mcp)
 
