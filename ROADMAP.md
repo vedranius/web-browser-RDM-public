@@ -1,6 +1,20 @@
 # Roadmap
 
-Accepted work through **v12.6.0** is delivered in [CHANGELOG.md](CHANGELOG.md).
+Accepted work through **v12.6.8** is delivered in [CHANGELOG.md](CHANGELOG.md).
+
+## v12.6.9 – Workboard and addons (agreed, next)
+
+Goal: a **Workboard** page of small tiles (addons) for a better overview, where each tile can also be pulled out as a panel of the v12.6.8 panel layout (docked, stacked or floating). Everything is off by default and added from an addon catalog, so nobody is flooded with tiles.
+
+First addons:
+- **Server status:** up/down and latency of chosen connections (from the live status).
+- **Disk, CPU and RAM:** bars and short history for chosen servers (from Monitoring / host metrics).
+- **Notifications:** the latest WRM notifications and events.
+- **Clock:** local time and chosen time zones.
+- **Latest commits:** the last ~10 commits pushed to chosen GitLab / GitHub projects of the Git workspace sources.
+- More where useful and quiet (for example tunnels and transfers in progress, certificate expiry of HTTPS connections, notes).
+
+The Workboard and tile settings are stored per user (`/api/me/ui/workboard`).
 
 ## Medium without Docker (accepted direction, versions to follow)
 
