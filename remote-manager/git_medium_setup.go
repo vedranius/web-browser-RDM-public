@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -159,8 +158,9 @@ func apiMediumSetup(w http.ResponseWriter, r *http.Request, uid int) {
 }
 func mediumSetup(ctx context.Context, uid int) error {
 	if mediumBackend() == "docker" {
-		mediumSetStage(uid, "docker", true, nil)
-		if err := mediumEnsureDocker(ctx); err != nil {
+		step := func(st string) { mediumSetStage(uid, st, true, nil) }
+		step("docker")
+		if err := mediumEnsureDocker(ctx, step); err != nil {
 			return err
 		}
 	}
@@ -301,30 +301,40 @@ func (m *mediumFailWriter) Write(b []byte) (int, error) {
 	return m.ResponseWriter.Write(b)
 }
 
-func mediumEnsureDocker(ctx context.Context) error {
+// mediumEnsureDocker makes Docker answer with Linux containers: it installs Docker when
+// it is missing (mediumInstallDocker), starts it and waits for its engine.
+func mediumEnsureDocker(ctx context.Context, step func(string)) error {
+	if step == nil {
+		step = func(string) {}
+	}
 	if mediumDockerCheck(ctx) == nil {
 		return nil
 	}
 	if mediumDockerCLI() == "" {
-		if runtime.GOOS != "windows" {
-			return fmt.Errorf("Docker Desktop/Engine is not installed. Install it once on the WRM host, then resume; your ZIPs are retained")
-		}
-		if serviceMode == "windows" {
-			return fmt.Errorf("Install Docker Desktop for the WRM service account once in an interactive Windows session, then resume; ZIPs are retained")
-		}
-		if err := mediumInstallDesktop(ctx); err != nil {
+		if err := mediumInstallDocker(ctx, step); err != nil {
 			return err
+		}
+		if mediumDockerCheck(ctx) == nil {
+			return nil
 		}
 	}
 	cli := mediumDockerCLI()
 	if cli == "" {
-		return fmt.Errorf("Docker Desktop installation did not finish. Complete its Windows installer, license/WSL prompts or restart, then resume; ZIPs are retained")
+		return fmt.Errorf("The Docker installation did not finish: no docker command was found afterwards. The output shows the installer's messages; press Prepare again. Your ZIPs are kept")
 	}
-	startCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
-	err := exec.CommandContext(startCtx, cli, "desktop", "start", "--timeout", "50").Run()
-	cancel()
+	if err := mediumDockerAccess(ctx); err != nil {
+		return err
+	}
+	step("docker_start")
+	// Docker Desktop starts with its own command; Docker Engine is a service
+	err := fmt.Errorf("linux")
+	if mediumHostOS() != "linux" {
+		startCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		err = mediumCommand(startCtx, mediumRoot(), cli, "desktop", "start", "--timeout", "50")
+		cancel()
+	}
 	if err != nil {
-		switch runtime.GOOS {
+		switch mediumHostOS() {
 		case "windows":
 			for _, base := range []string{filepath.Join(os.Getenv("ProgramFiles"), "Docker", "Docker"), filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "DockerDesktop")} {
 				p := filepath.Join(base, "Docker Desktop.exe")
@@ -335,11 +345,12 @@ func mediumEnsureDocker(ctx context.Context) error {
 				}
 			}
 		case "darwin":
-			_ = exec.CommandContext(ctx, "open", "-a", "Docker").Run()
+			_ = mediumCommand(ctx, mediumRoot(), "open", "-a", "Docker")
 		case "linux":
-			for _, args := range [][]string{{"--user", "start", "docker"}, {"start", "docker"}} {
-				cctx, stop := context.WithTimeout(ctx, 15*time.Second)
-				_ = exec.CommandContext(cctx, "systemctl", args...).Run()
+			priv := mediumPrivilege(ctx)
+			for _, args := range [][]string{{"systemctl", "--user", "start", "docker"}, mediumAsRoot(priv, "systemctl", "start", "docker")} {
+				cctx, stop := context.WithTimeout(ctx, 30*time.Second)
+				_ = mediumRunArgv(cctx, args)
 				stop()
 				if mediumDockerCheck(ctx) == nil {
 					return nil
@@ -355,7 +366,8 @@ func mediumEnsureDocker(ctx context.Context) error {
 	if strings.TrimSpace(string(b)) == "windows" {
 		return fmt.Errorf("Docker is using Windows containers. Switch to Linux containers in Docker Desktop, then resume; no existing containers were stopped")
 	}
-	deadline := time.NewTimer(3 * time.Minute)
+	step("docker_wait")
+	deadline := time.NewTimer(mediumDockerWait)
 	defer deadline.Stop()
 	tick := time.NewTicker(2 * time.Second)
 	defer tick.Stop()
@@ -367,55 +379,28 @@ func mediumEnsureDocker(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-deadline.C:
-			return fmt.Errorf("Docker Linux engine did not become ready. Complete Docker Desktop license/WSL/virtualization prompts or restart Windows, then resume; ZIPs are retained")
+			switch mediumHostOS() {
+			case "linux":
+				return fmt.Errorf("The Docker engine did not answer within %s. Check its service (sudo systemctl status docker; on WSL without systemd: sudo service docker start), then press Prepare. Your ZIPs are kept", mediumDockerWait)
+			case "darwin":
+				return fmt.Errorf("Docker Desktop did not become ready within %s. On the Mac, finish Docker Desktop's first-start window if it is open, then press Prepare. Your ZIPs are kept", mediumDockerWait)
+			}
+			return fmt.Errorf("The Docker Linux engine did not become ready within %s. Finish Docker Desktop's prompts on this PC (WSL, virtualisation) or restart Windows if it asked, then press Prepare. Your ZIPs are kept", mediumDockerWait)
 		case <-tick.C:
 		}
 	}
 }
 
-func mediumInstallDesktop(ctx context.Context) error {
-	arch := "amd64"
-	if runtime.GOARCH == "arm64" {
-		arch = "arm64"
-	}
-	url := "https://desktop.docker.com/win/main/" + arch + "/Docker%20Desktop%20Installer.exe"
-	dir, err := os.MkdirTemp(mediumRoot(), "docker-install-")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(dir)
-	p := filepath.Join(dir, "Docker Desktop Installer.exe")
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return err
-	}
-	client := &http.Client{Timeout: 15 * time.Minute, CheckRedirect: func(r *http.Request, via []*http.Request) error {
-		if len(via) > 5 || r.URL.Scheme != "https" || !(r.URL.Hostname() == "docker.com" || strings.HasSuffix(r.URL.Hostname(), ".docker.com")) {
-			return fmt.Errorf("Unexpected Docker download redirect")
-		}
+var mediumDockerWait = 3 * time.Minute
+
+// mediumDockerAccess reports a Docker that runs but refuses WRM's account.
+func mediumDockerAccess(ctx context.Context) error {
+	cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	b, _ := exec.CommandContext(cctx, mediumDockerCLI(), "version", "--format", "{{.Server.Os}}").CombinedOutput()
+	if !strings.Contains(strings.ToLower(string(b)), "permission denied") {
 		return nil
-	}}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("Cannot download official Docker Desktop installer; check outbound HTTPS, then resume")
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Docker installer download returned HTTP %d", resp.StatusCode)
-	}
-	f, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-	if err != nil {
-		return err
-	}
-	n, err := io.Copy(f, io.LimitReader(resp.Body, 1<<30+1))
-	closeErr := f.Close()
-	if err != nil || closeErr != nil || n > 1<<30 {
-		return fmt.Errorf("Docker installer download failed or exceeds 1 GiB")
-	}
-	quoted := "'" + strings.ReplaceAll(p, "'", "''") + "'"
-	script := "$ErrorActionPreference='Stop'; $p=" + quoted + "; $s=Get-AuthenticodeSignature -LiteralPath $p; if($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notmatch '(^|,\\s*)O=Docker Inc\\.?(,|$)'){throw 'Docker installer signature rejected'}; $x=Start-Process -FilePath $p -ArgumentList 'install','--user','--backend=wsl-2' -Wait -PassThru; if($x.ExitCode -ne 0){exit $x.ExitCode}"
-	if err := exec.CommandContext(ctx, "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script).Run(); err != nil {
-		return fmt.Errorf("Docker Desktop installer did not complete. Finish its Windows prompts or restart if requested, then resume; ZIPs are retained")
-	}
-	return nil
+	u := mediumCurrentUser()
+	return fmt.Errorf("Docker runs, but WRM's account %s may not use it (permission denied on the Docker socket). Run once: %s (adds %s to the docker group and restarts WRM), then press Prepare. Your ZIPs are kept", u, mediumSetupCommand(), u)
 }

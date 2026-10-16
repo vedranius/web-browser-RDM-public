@@ -8,25 +8,6 @@ import (
 	"testing"
 )
 
-func TestMediumRuntimeBackendSelection(t *testing.T) {
-	for _, c := range []struct {
-		platform, configured string
-		native, docker       bool
-		want                 string
-	}{
-		{"windows", "", false, true, "docker"},
-		{"windows", "native", true, false, "docker"},
-		{"linux", "", true, true, "native"},
-		{"linux", "", false, true, "docker"},
-		{"linux", "docker", true, true, "docker"},
-		{"linux", "native", false, true, "native"},
-	} {
-		if got := mediumSelectBackend(c.platform, c.configured, c.native, c.docker); got != c.want {
-			t.Fatalf("%+v: %s", c, got)
-		}
-	}
-}
-
 func TestMediumDockerArgumentsAndReadiness(t *testing.T) {
 	t.Setenv("DB_PATH", filepath.Join(t.TempDir(), "with spaces", "test.db"))
 	t.Setenv("WRM_MEDIUM_RUNTIME", "docker")
@@ -75,7 +56,7 @@ func TestMediumMissingDockerPreservesImportedSource(t *testing.T) {
 		t.Fatal(e)
 	}
 	e := mediumPrepareRuntime(context.Background(), nil)
-	if e == nil || !strings.Contains(e.Error(), "Docker Desktop") {
+	if e == nil || !strings.Contains(e.Error(), "Docker") {
 		t.Fatal(e)
 	}
 	if !mediumFileExists(filepath.Join(mediumToolDir(), "approved-source")) || mediumRuntimeReady() {

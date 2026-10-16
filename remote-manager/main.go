@@ -411,6 +411,7 @@ func main() {
 	mcpToken := flag.String("token", "", "with -mcp-stdio: the AI connection `TOKEN` from Settings → AI connections (or -token-file, WRM_MCP_TOKEN)")
 	mcpTokenFile := flag.String("token-file", "", "with -mcp-stdio: read the token from `FILE`")
 	mcpCA := flag.String("ca-file", "", "with -mcp-stdio: trust the CA or self-signed certificate in `FILE` (PEM) for the WRM server")
+	setupDocker := flag.Bool("setup-docker", false, "Linux, as root: install Docker Engine for Medium, let the WRM account (-service-user, default: the WRM service's user) use it, restart the WRM service and exit")
 	gitlabRelay := flag.Bool("gitlab-relay", false, "run a client GitLab relay on this computer, using the exact -url relay job URL from WRM")
 	gitlabURL := flag.String("gitlab-url", "", "the selected GitLab origin for the client relay")
 	relayKeyFile := flag.String("relay-key-file", "", "read the short-lived WRM relay job key from FILE")
@@ -441,6 +442,9 @@ func main() {
 		os.Exit(runHealthcheck())
 	}
 	currentServiceName = *svcName
+	if *setupDocker {
+		os.Exit(runSetupDocker(*svcUser, *svcName, os.Stdout))
+	}
 	opts := serviceOptions{Name: *svcName, Scope: *svcScope, User: *svcUser}
 	if *installSvc && os.Getenv("WRM_APPIMAGE") == "1" {
 		fmt.Fprintln(os.Stderr, "For boot services, download the standalone Linux binary and run -install-service from its permanent location.")

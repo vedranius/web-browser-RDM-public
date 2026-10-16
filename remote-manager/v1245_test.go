@@ -145,7 +145,7 @@ func TestV1245MediumReadyDockerNeedsNoHostChanges(t *testing.T) {
 	writeFile(t, script, "#!/bin/sh\n[ \"$1\" = version ] && echo linux && exit 0\nexit 99\n")
 	os.Chmod(script, 0700)
 	t.Setenv("WRM_MEDIUM_DOCKER", script)
-	if err := mediumEnsureDocker(context.Background()); err != nil {
+	if err := mediumEnsureDocker(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
 }
