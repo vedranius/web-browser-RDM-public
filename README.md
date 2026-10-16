@@ -17,7 +17,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 ## What's new in v12.6.7
 
-**A top bar that fits and an AI panel that docks.** The top bar now fits at any width and browser zoom: labels go first, then less used buttons move into a **⋯** menu, so nothing overlaps. The AI live view (what an AI app runs on your servers, with approvals and output) no longer covers your windows: it is a **🤖 AI** tab next to *Sessions* and *Snippets*, a dock under the windows, a floating window, or hidden, chosen with its title bar buttons or by dragging it to an edge, and remembered per user. Approval cards still always pop up. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
+**A top bar that fits and an AI panel that docks.** The top bar now fits at any width and browser zoom: labels go first, then less used buttons move into a **⋯** menu, so nothing overlaps. The AI live view (what an AI app runs on your servers, with approvals and output) no longer covers your windows: it is a **🤖 AI** tab next to *Sessions* and *Snippets*, a dock under the windows, a floating window, or hidden, chosen with its title bar buttons or by dragging it to an edge, and remembered per user. Approval cards still always pop up. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp). Every text on the page can be selected and copied again, and Medium's Docker runtime trusts your computer's certificates, so it works behind proxies and antivirus that inspect HTTPS (see [Docker for Medium](#docker-for-medium-installed-by-wrm)).
 
 ## What's new in v12.6.6
 
@@ -251,7 +251,7 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ## Upgrading from v12.6.6
 
-Replace the executable/AppImage/container and keep the database and encryption key. No database or API change. The AI live view now opens as a **🤖 AI** tab in the right panel instead of a box at the bottom left; pick *Floating* in its title bar (or the 🤖 menu) for the old behaviour.
+Replace the executable/AppImage/container and keep the database and encryption key. No database or API change. The AI live view now opens as a **🤖 AI** tab in the right panel instead of a box at the bottom left; pick *Floating* in its title bar (or the 🤖 menu) for the old behaviour. Medium's Docker runtime now trusts the WRM host's root certificates (policy `medium_host_ca`, default on); if runtime preparation failed with *certificate verify failed*, press *Prepare runtime* again.
 
 ## Upgrading from v12.6.5
 
@@ -1119,6 +1119,8 @@ Medium uses the same Docker runtime on every operating system (v12.6.6). When Do
 
 Docker Desktop (Windows, macOS) is free for personal use, education, non-commercial open source and small businesses (fewer than 250 employees and less than USD 10 million annual revenue); larger organisations need a paid subscription. WRM shows this and the [Docker Subscription Service Agreement](https://www.docker.com/legal/docker-subscription-service-agreement/) and installs Docker Desktop only after the administrator accepts it. Docker Engine on Linux is open source and needs no licence acceptance. The policy `medium_docker_install` switches automatic installation off; the administrator's consent can be withdrawn with `POST /api/git/medium/docker` `{"accept": false}`. A running Docker that refuses WRM's account (*permission denied*) is reported with the same `-setup-docker` command.
 
+**Proxies and antivirus that inspect HTTPS.** Medium's Docker runtime trusts the root certificates the WRM host trusts, in addition to the image's own: the Windows certificate stores (user, machine, group policy, enterprise), the macOS keychains or the Linux/BSD CA bundle. WRM writes them to `<database>.medium/host-ca.pem` (public certificates only) and mounts it read-only into each Medium container, where pip, Python, git and curl use the combined bundle. Without this, pip inside Docker fails with *self-signed certificate in certificate chain* on networks whose proxy or antivirus inspects HTTPS. Turn it off with the policy `medium_host_ca`; when the proxy's root is not in the host's store, export it as PEM and set its path in `medium_ca_file`.
+
 ### Medium step by step, status and activity log
 
 The Medium view (v12.6.5) separates its two parts: the **original deploy tool** (it deploys and rolls back) and the **WRM preview** (read-only, see below). The original tool's card has a light (*off*, *working*, *running*, *needs attention*) and a numbered guide:
@@ -1739,6 +1741,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | Setting / environment override | Default | Purpose |
 |---|---|---|
 | `git_medium` / `WRM_GIT_MEDIUM` | `admins` | `off`, `admins`, `all`; trusted original-tool operators. Tool code imports always require administrator access. |
+| `medium_host_ca` / `WRM_MEDIUM_HOST_CA` | `1` | Medium's Docker runtime also trusts the root certificates the WRM host trusts (needed behind proxies or antivirus that inspect HTTPS). |
+| `medium_ca_file` / `WRM_MEDIUM_CA_FILE` | – | Path to a PEM file with extra root certificates for Medium's Docker runtime, e.g. a proxy's root CA. |
 | `medium_docker_install` / `WRM_MEDIUM_DOCKER_INSTALL` | `1` | WRM may install and start Docker for Medium on its own host after an administrator allows it once in Medium step 2 (accepting Docker Desktop's licence on Windows and macOS). `0` hides **Install Docker** and stops automatic installation. |
 | `medium_log_output` / `WRM_MEDIUM_LOG_OUTPUT` | `all` | Who sees command output in the Medium activity log: `all` (the user who ran it, administrators, everyone for the shared runtime), `admins`, `none`. Steps, results and errors are always shown. |
 | `bitwarden` / `WRM_BITWARDEN` | `all` | `off`, `admins`, `all`; access to each user's own vault. |
@@ -2551,6 +2555,7 @@ remote-manager/
   medium_engine.go  Medium native: rsync-compatible diff over SFTP, server state, comparison with the original plan
   medium_native.go  Medium native: WRM Git source, server ↔ connection links, background previews, API
   git_medium_docker.go  Medium Docker: per-OS installation (Linux packages, Docker Desktop with signature and licence), consent, -setup-docker
+  git_medium_ca.go      Medium certificates: the host's trusted roots (Windows stores, macOS keychains, CA bundle) and medium_ca_file for the Docker runtime
   git_where.go      deploy history (server history + WRM runs) and the "what is where" matrix with commits behind the branch head
   bmc.go          out-of-band management: Redfish and IPMI status and power, certificate pinning
   quick.go        quick connect (temporary connections and their cleanup), connection notes
@@ -2603,6 +2608,7 @@ remote-manager/
   mcp_bundle_test.go   the Claude Desktop extension: download, manifest, token checks; its Node.js bridge end to end with an approval
   v1265_test.go        Medium step by step: tool import steps with output, deploy-config checked at once and kept while preparing, failed start keeps its step, error and redacted output, activity log; 409 names the running operation and its user, visibility and medium_log_output; approve later after the AI app closed its session; grep/sed/find patterns are not taken for files
   v1266_test.go        Docker for Medium: backend choice, Linux packages after consent with steps and output, no rights shows -setup-docker, policy off, Windows and macOS Docker Desktop with download, signature and licence, permission denied, wrm -setup-docker
+  v1267_test.go        Medium certificates: host CA bundle and extra PEM file reach every container (mount, environment, image roots kept), expired and duplicate certificates left out, bad or missing file named
   v1264_test.go        ai_full_access_blocked: deny keeps the administrator's blocked commands refused under full access, the destructive list still asks; ask asks
   v1263_test.go        full access modes: every AI session with the switch alone (default), only connections with the scope, each user's own switch (403 when not allowed, audited)
   v1262_test.go        full access: blocked and destructive commands and secret files ask (also in automatic mode with *), policy off refuses again, read-only stays read-only
@@ -2634,6 +2640,7 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 
 | Problem | Fix |
 |---|---|
+| Medium: pip fails with *certificate verify failed: self-signed certificate in certificate chain* | A proxy or antivirus inspects HTTPS. Keep `medium_host_ca` on (default) and press *Prepare runtime* again; if its root certificate is not in the WRM host's store, export it as PEM and set `medium_ca_file` |
 | *Request blocked by CSRF protection* / terminals do not connect behind a proxy | Pass the `Host` header (`proxy_set_header Host $host;`) and WebSocket upgrade headers, or set `WRM_ALLOWED_ORIGINS` |
 | AI: no **AI** button on a terminal | The assistant is off (`ai_assistant`), not for your account, the kill switch is on, the connection is not SSH, or your share role does not allow terminals and file changes |
 | AI: *the policy does not allow the AI assistant on this connection* | A mode rule for its tag, folder, host or id leaves no mode; ask an administrator (*Admin panel → AI assistant → Mode rules*) |
