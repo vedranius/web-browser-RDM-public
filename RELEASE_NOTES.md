@@ -1,6 +1,27 @@
-## Web Remote Manager PRO v12.6.4 — Your blocked commands, your choice
+## Web Remote Manager PRO v12.6.5 — Medium tells you what it is doing
 
 ### Added
+
+- **Step by step:** the original deploy tool's card in Medium is a numbered guide: 1 import the deploy-tool ZIP, 2 prepare its runtime, 3 your deploy-config, 4 your SSH profile (optional), 5 start/stop. Each step shows whether it is done, running, waiting or failed, why a button is disabled and what to do when something fails.
+- **Signals:** a light for the original tool (off, working, running, needs attention) and one for the read-only WRM preview, which is now a separate panel.
+- **What runs, who and since when:** while an operation runs, everyone sees it, and its starter sees every step with its time and the live output of Docker, pip and the original tool. A second click is answered with the operation, the user and the start time instead of "busy".
+- **Activity log:** every Medium action with time, user, result and duration; click a row for its steps and output. Secrets in the output are redacted. Administrators decide who sees output with `medium_log_output` (everyone, administrators, nobody).
+- WRM's console logs each Medium operation and step.
+
+### Changed
+
+- Your deploy-config ZIP is checked by WRM immediately and, while the runtime is still being prepared, kept and applied at your next start, so you no longer wait to upload it.
+- Start and the tool import run in the background and the page follows them; a failure stays shown with the failed step and the last lines of the output.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. One additive table (`medium_activity`); a previous binary still starts on the database. API clients: `POST /api/git/medium/start` now answers `202` (poll `GET /api/git/medium`).
+
+[Download v12.6.5](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.5) · [Medium step by step](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.5/README.md#medium-step-by-step-status-and-activity-log)
+
+### Included from v12.6.4 — Your blocked commands, your choice
+
+#### Added
 
 - **Blocked commands with full access** (`ai_full_access_blocked`, *Admin panel → AI connections*): the administrator decides what happens to their own list of blocked commands (`ai_blocked_commands`) when full access is on.
   - **Ask for approval** (default): as in v12.6.3, such a command comes to you as an approval marked *FULL ACCESS*.
@@ -8,7 +29,7 @@
 
 The built-in list of destructive commands, deny lists, shutdown and secret files keep asking under full access either way.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. Nothing changes until an administrator sets *Blocked commands with full access* to *Stay blocked*.
 
