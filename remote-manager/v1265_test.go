@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -233,5 +234,65 @@ func TestV1265RejectedConfigAndKeptZip(t *testing.T) {
 	}
 	if !mediumState(admin.userID).PendingConfig {
 		t.Fatal("a config whose check could not run must stay kept")
+	}
+}
+
+// A request kept for later can still be approved after the AI app closed its session; the
+// approval then covers the same call once in the next session on that connection.
+func TestV1265ApproveLaterAfterSessionClosed(t *testing.T) {
+	e := newMCPEnv(t)
+	tok, _ := e.pat("ask", []string{"read_logs", "run_with_approval"}, nil)
+	c := e.client(tok)
+	c.initialize(true)
+	asked := 0
+	c.onRequest = func(method string, params map[string]interface{}) map[string]interface{} {
+		asked++
+		return map[string]interface{}{"action": "decline"}
+	}
+	sid := c.open("demo-api")
+	s := mcpSessionOf(sid)
+	args := map[string]interface{}{"session_id": sid, "command": "touch ~/after-close", "reason": "test"}
+	if _, isErr := c.call("run_command", args); !isErr {
+		t.Fatal("declined call ran")
+	}
+	a := pendingOf(s)
+	if a == nil || !a.Later {
+		t.Fatalf("not kept for later: %+v", a)
+	}
+	c.call("close_session", map[string]interface{}{"session_id": sid})
+	code, v := e.user.aiDo("GET", "/api/mcp/active", nil)
+	if code != 200 || !strings.Contains(fmt.Sprint(v), a.ID) {
+		t.Fatalf("the kept request of the closed session is not listed: %d %v", code, v)
+	}
+	if code, v := e.user.aiDo("POST", fmt.Sprintf("/api/ai/sessions/%d/approvals/%s", s.ID, a.ID), map[string]interface{}{"decision": "approve"}); code != 200 {
+		t.Fatalf("approve after the session closed: %d %v", code, v)
+	}
+	sid2 := c.open("demo-api")
+	args["session_id"] = sid2
+	if text, isErr := c.call("run_command", args); isErr || !aiFileExists(filepath.Join(e.host.home, "after-close")) || asked != 1 {
+		t.Fatalf("repeated in a new session: %v %s (asked %d)", isErr, text, asked)
+	}
+	// used once
+	c.call("run_command", args)
+	if asked != 2 {
+		t.Fatalf("the approval was used twice (asked %d)", asked)
+	}
+}
+
+// Patterns are not files: a grep regular expression must not look like a key file.
+func TestV1265PatternsAreNotFiles(t *testing.T) {
+	for cmd, ro := range map[string]bool{
+		`grep -RhoE '^[[:space:]]*command[[:space:]]*=.*' /etc/supervisor`:     true,
+		`grep -RIl --include='*.ini' 'storage_backend' /etc/supervisor /home`:  true,
+		`find /home -maxdepth 5 -iname '*storage*backend*.ini' -printf '%p\n'`: true,
+		`sed -n '1,20p' /etc/supervisor/supervisord.conf`:                      true,
+		`grep -e 'x' ~/.ssh/id_rsa`:                                            false,
+		`grep PRIVATE ~/.ssh/id_rsa`:                                           false,
+		`cat /home/u/key.ppk`:                                                  false,
+		`grep -f ~/.ssh/id_rsa /etc/hosts`:                                     false,
+	} {
+		if got := classifyReadOnly(cmd); got.ReadOnly != ro {
+			t.Errorf("%s: read-only %v, want %v (%s)", cmd, got.ReadOnly, ro, got.Reason)
+		}
 	}
 }

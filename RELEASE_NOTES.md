@@ -13,6 +13,11 @@
 - Your deploy-config ZIP is checked by WRM immediately and, while the runtime is still being prepared, kept and applied at your next start, so you no longer wait to upload it.
 - Start and the tool import run in the background and the page follows them; a failure stays shown with the failed step and the last lines of the output.
 
+### Fixed
+
+- **Approve later after the AI app closed its session:** approving such a request in WRM failed with "AI session not found". It now works for the request's hour, and the AI runs the same command once when it repeats it in a new session.
+- **Search patterns are not files:** a `grep` regular expression, a `sed` or `awk` script and `find -name` patterns no longer count as file names, so a pattern such as `'^[[:space:]]*command=.*'` is not taken for a PuTTY key and does not ask for approval.
+
 ### Upgrade
 
 Replace the executable/container and keep the database and encryption key. One additive table (`medium_activity`); a previous binary still starts on the database. API clients: `POST /api/git/medium/start` now answers `202` (poll `GET /api/git/medium`).
