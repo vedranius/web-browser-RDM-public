@@ -1701,6 +1701,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="hint-keys"><span><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> <span data-i18n="hint_term_search">search in terminal</span></span><span><kbd>Enter</kbd> <span data-i18n="hint_reconnect">reconnect a closed terminal</span></span><span><kbd>Ctrl</kbd>+<kbd>F</kbd> <span data-i18n="hint_fm_search">search files</span></span></div>
     </div>
   </div>
+  <div id="ai-dock-bottom"><div class="adb-resize"></div></div>
 </div>
 
 <!-- SESSION / RIGHT PANEL -->
@@ -1712,14 +1713,15 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="sess-panel-inner">
     <div class="sess-hdr">
       <div class="sess-hdr-top">
-        <div class="rp-tabs"><button id="rp-tab-sess" class="active" onclick="setRightTab('sessions')" data-i18n="sessions">Sessions</button><button id="rp-tab-snip" onclick="setRightTab('snippets')" title="Ctrl+Shift+Space">⚡ <span data-i18n="snippets">Snippets</span></button></div>
+        <div class="rp-tabs"><button id="rp-tab-sess" class="rp-tab active" onclick="setRightTab('sessions')" data-i18n="sessions">Sessions</button><button id="rp-tab-snip" class="rp-tab" onclick="setRightTab('snippets')" title="Ctrl+Shift+Space">⚡ <span data-i18n="snippets">Snippets</span></button><button id="rp-tab-ai" class="rp-tab" style="display:none;" onclick="setRightTab('ai')" data-i18n-title="rp_ai_t" title="What AI apps run on your servers, live">🤖 <span data-i18n="rp_ai">AI</span><span class="rp-badge" id="rp-ai-badge"></span></button></div>
       </div>
       <button class="btn-save-sess" id="rp-sess-save" onclick="saveCurrentSession()" data-i18n="save_session">+ Save Session</button>
       <div id="snip-tools" style="display:none;"><input type="text" id="snip-search" data-i18n-placeholder="snip_search" placeholder="Search snippets…" oninput="renderSnippets()"><button class="btn-sm" onclick="openSnippetModal(null)" title="New snippet">＋</button></div>
     </div>
     <div id="sess-list"></div>
     <div id="snip-list" style="display:none;"></div>
-    <div class="clip-panel">
+    <div id="rp-ai"></div>
+    <div class="clip-panel" id="clip-panel">
       <div class="clip-header">
         <span data-i18n="clipboard">Clipboard</span>
         <button class="btn-sec btn-sm" onclick="clearClipboard()" style="font-size:10px;padding:2px 7px;" data-i18n="clear">Clear</button>
@@ -4796,8 +4798,8 @@ Object.assign(LANGS.en, {ne_monitor_problem:'Monitoring: server needs attention'
 Object.assign(LANGS.hr, {ne_monitor_problem:'Monitoring: poslužitelj zahtijeva pažnju',ne_monitor_recovered:'Monitoring: poslužitelj oporavljen',ctx_ai:'Pošalji označeno AI-u',ctx_review:'Pregledaj kontekst prije slanja',ctx_question:'Upit za asistenta',ctx_native:'Shift + desni klik otvara izbornik preglednika. Tipkovnički prečaci ostaju dostupni.',ctx_paste_failed:'Međuspremnik nije dostupan; koristite Ctrl+Shift+V ili izbornik preglednika.',wrm_command_help:'Odaberite poslužitelj za WRM. Asistent koristi svoje ovlasti; MCP aplikacije koriste samo servere svojeg odobrenja.',mon_title:'Monitoring',vl_title:'Boja i ikona', vl_color:'Boja', vl_icon:'Ikona', vl_default:'Zadano', vl_preview:'Pregled', vl_server:'Poslužitelj', vl_rack:'Ormar', vl_network:'Mreža', vl_router:'Usmjerivač', vl_switch:'Preklopnik', vl_database:'Baza podataka', vl_storage:'Pohrana', vl_backup:'Sigurnosna kopija', vl_security:'Sigurnost', vl_cloud:'Oblak', vl_monitoring:'Nadzor', vl_video:'Video / OTT', vl_broadcast:'Prijenos uživo', vl_encoder:'Enkoder', vl_audio:'Zvuk', vl_terminal:'Terminal', vl_linux:'Linux', vl_windows:'Windows'});
 Object.assign(LANGS.en, { dlg_back: 'Back' });
 Object.assign(LANGS.hr, { dlg_back: 'Natrag' });
-Object.assign(LANGS.en, { tb_more_t: 'More' });
-Object.assign(LANGS.hr, { tb_more_t: 'Više' });
+Object.assign(LANGS.en, { tb_more_t: 'More', rp_ai: 'AI', rp_ai_t: 'What AI apps run on your servers, live' });
+Object.assign(LANGS.hr, { tb_more_t: 'Više', rp_ai: 'AI', rp_ai_t: 'Što AI aplikacije pokreću na tvojim poslužiteljima, uživo' });
 Object.assign(LANGS.en, { p_medium_docker_install: 'Install Docker for Medium', p_medium_docker_install_d: 'WRM may install and start Docker on its own host for the original deploy tool (Docker Engine from the Linux distribution, Docker Desktop on Windows and macOS). An administrator still allows it once in Medium, accepting Docker Desktop\'s licence where it applies.', p_medium_log_output: 'Medium command output', p_medium_log_output_d: 'Who sees the (redacted) output of Medium commands: everyone for their own operations, only administrators, or nobody.', po_medium_log_output_all: 'Everyone (own operations)', po_medium_log_output_admins: 'Administrators', po_medium_log_output_none: 'Nobody' });
 Object.assign(LANGS.hr, { p_medium_docker_install: 'Instalacija Dockera za Medium', p_medium_docker_install_d: 'WRM smije sam instalirati i pokrenuti Docker na svom računalu za izvorni deploy tool (Docker Engine iz Linux distribucije, Docker Desktop na Windowsima i macOS-u). Administrator to i dalje jednom dopušta u Mediumu i prihvaća licencu Docker Desktopa gdje vrijedi.', p_medium_log_output: 'Izlaz Medium naredbi', p_medium_log_output_d: 'Tko vidi (redigirani) izlaz Medium naredbi: svatko za svoje radnje, samo administratori ili nitko.', po_medium_log_output_all: 'Svi (vlastite radnje)', po_medium_log_output_admins: 'Administratori', po_medium_log_output_none: 'Nitko' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
@@ -9046,20 +9048,41 @@ async function loadSnippets() {
   if (snipPicker) renderSnippetPicker();
 }
 
-function setRightTab(tab) {
+// The right panel's tabs: Sessions, Snippets and, while an AI app works and its live view is
+// docked on the right (mcp.js), AI. noSave: a programmatic switch keeps the user's last choice.
+function setRightTab(tab, noSave) {
   if (!currentUser) tab = 'sessions';
-  rightTab = tab === 'snippets' ? 'snippets' : 'sessions';
-  try { localStorage.setItem('wrm_right_tab', rightTab); } catch (_) {}
-  const sn = rightTab === 'snippets';
+  const aiOK = !!(window.wrmMCP && wrmMCP.dockRight && wrmMCP.dockRight());
+  rightTab = tab === 'snippets' ? 'snippets' : tab === 'ai' && aiOK ? 'ai' : 'sessions';
+  if (!noSave) try { localStorage.setItem('wrm_right_tab', rightTab); } catch (_) {}
+  const sn = rightTab === 'snippets', ai = rightTab === 'ai';
   const el = id => document.getElementById(id);
-  el('rp-tab-sess').classList.toggle('active', !sn);
+  el('rp-tab-sess').classList.toggle('active', !sn && !ai);
   el('rp-tab-snip').classList.toggle('active', sn);
   el('rp-tab-snip').style.display = currentUser ? '' : 'none';
-  el('sess-list').style.display = sn ? 'none' : '';
-  el('rp-sess-save').style.display = sn || isCollabMode ? 'none' : '';
+  el('rp-tab-ai').classList.toggle('active', ai);
+  el('rp-tab-ai').style.display = aiOK ? '' : 'none';
+  el('sess-list').style.display = sn || ai ? 'none' : '';
+  el('rp-sess-save').style.display = sn || ai || isCollabMode ? 'none' : '';
   el('snip-tools').style.display = sn ? 'flex' : 'none';
   el('snip-list').style.display = sn ? '' : 'none';
+  el('rp-ai').style.display = ai ? 'flex' : 'none';
+  el('clip-panel').style.display = ai ? 'none' : '';
+  applyRightWidth();
   if (sn) renderSnippets();
+}
+
+// The right panel keeps its own width for the AI tab (the live view needs more room) and for
+// the other tabs; both are remembered in this browser.
+let rpWidths = {};
+try { rpWidths = JSON.parse(localStorage.getItem('wrm_rp_widths') || '{}') || {}; } catch (_) {}
+function rightWidthKey() { return rightTab === 'ai' ? 'ai' : 'main'; }
+function rightWidthMax() { return rightTab === 'ai' ? Math.max(420, Math.min(820, Math.round(window.innerWidth * 0.5))) : 420; }
+function applyRightWidth() {
+  const sp = document.getElementById('sess-panel');
+  if (!sp || isCompact()) return;
+  const w = rpWidths[rightWidthKey()] || (rightTab === 'ai' ? 400 : 0);
+  sp.style.width = w ? Math.max(140, Math.min(rightWidthMax(), w)) + 'px' : '';
 }
 
 function snippetHostPort(c) {
@@ -12928,8 +12951,9 @@ document.addEventListener('mousemove', e => {
 
   if (sessResizeState) {
     const sp = document.getElementById('sess-panel');
-    const nw = Math.max(140, Math.min(420, sessResizeState.sw - (e.clientX - sessResizeState.sx)));
+    const nw = Math.max(140, Math.min(rightWidthMax(), sessResizeState.sw - (e.clientX - sessResizeState.sx)));
     sp.style.width = nw + 'px';
+    sessResizeState.nw = nw;
   }
 });
 
@@ -12941,6 +12965,10 @@ document.addEventListener('mouseup', () => {
   winDragState = null;
   winResizeState = null;
   sidebarResizeState = null;
+  if (sessResizeState && sessResizeState.nw) {
+    rpWidths[rightWidthKey()] = sessResizeState.nw;
+    try { localStorage.setItem('wrm_rp_widths', JSON.stringify(rpWidths)); } catch (_) {}
+  }
   sessResizeState = null;
   document.body.style.cursor = '';
 });
