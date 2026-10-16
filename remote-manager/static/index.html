@@ -1513,18 +1513,32 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .port-row { display: inline-flex; align-items: center; gap: 6px; margin: 3px 10px 3px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 #tools-result .kv .v { word-break: normal; overflow-wrap: anywhere; }
 #tools-tabs { flex-wrap: wrap; row-gap: 2px; }
-/* Top bar: give way step by step instead of overlapping (it reacts to the width of #center) */
-.btn-top, .add-win-btn { white-space: nowrap; flex-shrink: 0; }
-@container (max-width: 1260px) { .app-ver .ver-txt, .top-sep, .sess-lbl, #btn-settings .lbl, #btn-logout .lbl { display: none; } }
-@container (max-width: 1400px) { #btn-mcp .lbl { display: none; } }
-@container (max-width: 1200px) { .upd-badge .lbl { display: none; } .upd-badge { margin-left: 4px; padding: 2px 7px; } }
-@container (max-width: 1040px) { .btn-top .lbl { display: none; } }
-@container (max-width: 700px) { .add-win-btn .lbl, #user-chip .name { display: none; } }
-@container (max-width: 600px) { #top-bar.mcp-on #sess-bar-name { display: none; } }
+/* Top bar: fitTopBar() gives way step by step (tb1..tb6: labels, then less used buttons
+   into the ⋯ menu) whenever it would overflow, whatever the language, zoom or badges */
+.btn-top, .add-win-btn, .upd-badge { white-space: nowrap; flex-shrink: 0; }
+#top-bar.tb1 .app-ver .ver-txt, #top-bar.tb1 .top-sep, #top-bar.tb1 .sess-lbl { display: none; }
+#top-bar.tb2 #btn-mcp .lbl, #top-bar.tb2 .upd-badge .lbl { display: none; }
+#top-bar.tb2 .upd-badge { margin-left: 4px; padding: 2px 7px; }
+#top-bar.tb3 .btn-top .lbl { display: none; }
+#top-bar.tb4 .add-win-btn .lbl, #top-bar.tb4 #user-chip .name { display: none; }
+#top-bar.tb5 #sess-bar-name { max-width: 70px; }
+#top-bar.tb5, #top-bar.tb5 #auth-info { gap: 4px; }
+#top-bar.tb6 #admin-badge, #top-bar.tb6 #sess-bar-name { display: none; }
+#top-bar .tb-moved { display: none !important; }
+#btn-more { position: relative; }
+#btn-more .more-dot { position: absolute; top: 2px; right: 2px; width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: none; }
+#btn-more.has-badge .more-dot { display: block; }
+#tb-more-menu { position: fixed; z-index: 9500; display: none; flex-direction: column; min-width: 190px; padding: 6px; background: rgba(22,26,35,.98); border: 1px solid var(--border2); border-radius: 10px; box-shadow: var(--shadow-lg); }
+#tb-more-menu.open { display: flex; }
+#tb-more-menu button { display: flex; align-items: center; gap: 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; color: var(--text); padding: 8px 10px; font-size: 13px; cursor: pointer; box-shadow: none; }
+#tb-more-menu button:hover, #tb-more-menu button:focus-visible { background: var(--bg4); }
+#tb-more-menu .ico { width: 18px; text-align: center; }
+#tb-more-menu .tun-badge { margin-left: auto; }
 </style>
 </head>
 <body>
 <div id="toast-container"></div>
+<div id="tb-more-menu" role="menu"></div>
 
 <!-- ══ FILE BROWSER CONTEXT MENU ══ -->
 <div id="fm-ctx-menu">
@@ -1646,6 +1660,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-top" id="btn-git" onclick="openGit()" title="Git"><span>⎇</span><span class="lbl" data-i18n="git_lbl">Git</span></button>
       <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
+      <button class="btn-top" id="btn-more" style="display:none;" onclick="toggleTopMore(event)" data-i18n-title="tb_more_t" title="More" aria-haspopup="menu" aria-expanded="false"><span>⋯</span><span class="more-dot"></span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
       <button class="btn-top" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
     </div>
@@ -4781,6 +4796,8 @@ Object.assign(LANGS.en, {ne_monitor_problem:'Monitoring: server needs attention'
 Object.assign(LANGS.hr, {ne_monitor_problem:'Monitoring: poslužitelj zahtijeva pažnju',ne_monitor_recovered:'Monitoring: poslužitelj oporavljen',ctx_ai:'Pošalji označeno AI-u',ctx_review:'Pregledaj kontekst prije slanja',ctx_question:'Upit za asistenta',ctx_native:'Shift + desni klik otvara izbornik preglednika. Tipkovnički prečaci ostaju dostupni.',ctx_paste_failed:'Međuspremnik nije dostupan; koristite Ctrl+Shift+V ili izbornik preglednika.',wrm_command_help:'Odaberite poslužitelj za WRM. Asistent koristi svoje ovlasti; MCP aplikacije koriste samo servere svojeg odobrenja.',mon_title:'Monitoring',vl_title:'Boja i ikona', vl_color:'Boja', vl_icon:'Ikona', vl_default:'Zadano', vl_preview:'Pregled', vl_server:'Poslužitelj', vl_rack:'Ormar', vl_network:'Mreža', vl_router:'Usmjerivač', vl_switch:'Preklopnik', vl_database:'Baza podataka', vl_storage:'Pohrana', vl_backup:'Sigurnosna kopija', vl_security:'Sigurnost', vl_cloud:'Oblak', vl_monitoring:'Nadzor', vl_video:'Video / OTT', vl_broadcast:'Prijenos uživo', vl_encoder:'Enkoder', vl_audio:'Zvuk', vl_terminal:'Terminal', vl_linux:'Linux', vl_windows:'Windows'});
 Object.assign(LANGS.en, { dlg_back: 'Back' });
 Object.assign(LANGS.hr, { dlg_back: 'Natrag' });
+Object.assign(LANGS.en, { tb_more_t: 'More' });
+Object.assign(LANGS.hr, { tb_more_t: 'Više' });
 Object.assign(LANGS.en, { p_medium_docker_install: 'Install Docker for Medium', p_medium_docker_install_d: 'WRM may install and start Docker on its own host for the original deploy tool (Docker Engine from the Linux distribution, Docker Desktop on Windows and macOS). An administrator still allows it once in Medium, accepting Docker Desktop\'s licence where it applies.', p_medium_log_output: 'Medium command output', p_medium_log_output_d: 'Who sees the (redacted) output of Medium commands: everyone for their own operations, only administrators, or nobody.', po_medium_log_output_all: 'Everyone (own operations)', po_medium_log_output_admins: 'Administrators', po_medium_log_output_none: 'Nobody' });
 Object.assign(LANGS.hr, { p_medium_docker_install: 'Instalacija Dockera za Medium', p_medium_docker_install_d: 'WRM smije sam instalirati i pokrenuti Docker na svom računalu za izvorni deploy tool (Docker Engine iz Linux distribucije, Docker Desktop na Windowsima i macOS-u). Administrator to i dalje jednom dopušta u Mediumu i prihvaća licencu Docker Desktopa gdje vrijedi.', p_medium_log_output: 'Izlaz Medium naredbi', p_medium_log_output_d: 'Tko vidi (redigirani) izlaz Medium naredbi: svatko za svoje radnje, samo administratori ili nitko.', po_medium_log_output_all: 'Svi (vlastite radnje)', po_medium_log_output_admins: 'Administratori', po_medium_log_output_none: 'Nitko' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
@@ -15036,6 +15053,78 @@ window.addEventListener('load', async () => {
     checkAuth();
   }
 });
+
+// ══ TOP BAR FIT ══
+// The top bar gives way step by step instead of overlapping: first texts and labels
+// (tb1..tb6), then the less used buttons move into the ⋯ menu. It is measured, so any
+// language, browser zoom, badge or administrator button fits.
+const TB_LEVELS = 6;
+const TB_OVERFLOW = ['btn-shares', 'btn-broadcast', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-settings'];
+let _tbObserver = null, _tbPending = 0;
+function topBarOverflows() {
+  const tb = document.getElementById('top-bar'), a = document.getElementById('auth-info');
+  return tb.scrollWidth > tb.clientWidth + 1 || (a && a.scrollWidth > a.clientWidth + 1);
+}
+function fitTopBar() {
+  _tbPending = 0;
+  const tb = document.getElementById('top-bar'), more = document.getElementById('btn-more');
+  if (!tb || !more || !tb.offsetParent) return;
+  if (_tbObserver) _tbObserver.disconnect();
+  for (let i = 1; i <= TB_LEVELS; i++) tb.classList.remove('tb' + i);
+  TB_OVERFLOW.forEach(id => { const b = document.getElementById(id); if (b) b.classList.remove('tb-moved'); });
+  more.style.display = 'none';
+  for (let i = 1; i <= TB_LEVELS && topBarOverflows(); i++) tb.classList.add('tb' + i);
+  if (topBarOverflows()) {
+    more.style.display = '';
+    for (const id of TB_OVERFLOW) {
+      const b = document.getElementById(id);
+      if (!b || getComputedStyle(b).display === 'none') continue;
+      b.classList.add('tb-moved');
+      if (!topBarOverflows()) break;
+    }
+  }
+  const moved = [...tb.querySelectorAll('.tb-moved')];
+  if (!moved.length) more.style.display = 'none';
+  more.classList.toggle('has-badge', moved.some(b => { const g = b.querySelector('.tun-badge'); return g && g.style.display !== 'none' && g.textContent.trim(); }));
+  const menu = document.getElementById('tb-more-menu');
+  if (menu && menu.classList.contains('open') && !moved.length) closeTopMore();
+  if (_tbObserver) { _tbObserver.takeRecords(); _tbObserver.observe(tb, {subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class', 'hidden']}); }
+}
+function scheduleFitTopBar() { if (!_tbPending) _tbPending = requestAnimationFrame(fitTopBar); }
+function closeTopMore() {
+  const m = document.getElementById('tb-more-menu'); if (m) m.classList.remove('open');
+  const b = document.getElementById('btn-more'); if (b) b.setAttribute('aria-expanded', 'false');
+}
+function toggleTopMore(ev) {
+  if (ev) ev.stopPropagation();
+  const m = document.getElementById('tb-more-menu'), btn = document.getElementById('btn-more');
+  if (m.classList.contains('open')) { closeTopMore(); return; }
+  m.innerHTML = '';
+  document.querySelectorAll('#top-bar .tb-moved').forEach(b => {
+    const it = document.createElement('button');
+    it.type = 'button'; it.setAttribute('role', 'menuitem');
+    const ico = b.querySelector('span'), lbl = b.querySelector('.lbl'), badge = b.querySelector('.tun-badge');
+    const count = badge && badge.style.display !== 'none' ? badge.textContent.trim() : '';
+    it.innerHTML = `<span class="ico">${esc(ico ? ico.textContent : '')}</span><span>${esc((lbl && lbl.textContent.trim()) || b.title)}</span>${count ? `<span class="tun-badge">${esc(count)}</span>` : ''}`;
+    it.onclick = () => { closeTopMore(); b.click(); };
+    m.appendChild(it);
+  });
+  const r = btn.getBoundingClientRect();
+  m.style.top = Math.round(r.bottom + 6) + 'px';
+  m.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + 'px';
+  m.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
+  const first = m.querySelector('button'); if (first) first.focus();
+}
+document.addEventListener('click', e => { const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open') && !m.contains(e.target)) closeTopMore(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open')) { closeTopMore(); document.getElementById('btn-more').focus(); } } });
+(function initTopBarFit() {
+  const tb = document.getElementById('top-bar'); if (!tb) return;
+  if (window.ResizeObserver) new ResizeObserver(scheduleFitTopBar).observe(tb);
+  else window.addEventListener('resize', scheduleFitTopBar);
+  if (window.MutationObserver) _tbObserver = new MutationObserver(scheduleFitTopBar);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFitTopBar);
+  scheduleFitTopBar();
+})();
 </script>
 </body>
 </html>
