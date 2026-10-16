@@ -556,6 +556,14 @@ Object.assign(LANGS.hr, {
  gcp_title:'Konfiguracijski profili', gcp_intro:'Uvezite referentni config/INI i pregledajte odgovarajuću datoteku na svakoj instalaciji. Označene instalacije ograničavaju provjeru; inače se provjeravaju sve instalacije odabranog servisa (do 50).', gcp_add:'Dodaj config/INI profil', gcp_settings:'postavki', gcp_check:'Pregledaj servere', gcp_path:'Relativna putanja na serveru', gcp_operator:'Operater / klijent (opcionalno)', gcp_file:'Referentna datoteka', gcp_import_hint:'Referenca definira postavke i očekivane vrijednosti. Parsira se bez izvršavanja skripti; tajne se maskiraju prije spremanja. Datoteka na serveru mora biti unutar instalacije.', gcp_file_limit:'Odaberite tekstualnu konfiguraciju do 256 KiB.', gcp_delete:'Obrisati ovaj konfiguracijski profil?', gcp_values_hint:'Stvarne vrijednosti čitaju se sada sa servera. Izrazi skripti prikazuju se kao izvor i ne izvršavaju se. Tajne su maskirane i ne uspoređuju se. INI sekcije mogu označavati operatere.', gcp_expected:'Referentna vrijednost', gcp_missing:'Nedostaje', gcp_masked:'Maskirano', gcp_extra:'Dodatna postavka', gcp_same:'Odgovara referenci', gcp_different:'Razlikuje se od reference',
 });
 
+Object.assign(LANGS.en, {
+  gm_s2_run_other: 'In progress ({where}): {user} is preparing the shared runtime since {at}. Wait until it finishes; you can import your deploy-config meanwhile.',
+  gm_hint_start_noout: 'The original tool stopped while starting. Its output is shown only to administrators: ask one to look at it in the activity log, fix the cause and press Start again.',
+});
+Object.assign(LANGS.hr, {
+  gm_s2_run_other: 'U tijeku ({where}): {user} priprema zajedničko okruženje od {at}. Pričekaj da završi; u međuvremenu možeš uvesti svoj deploy-config.',
+  gm_hint_start_noout: 'Izvorni alat je stao tijekom pokretanja. Njegov izlaz vide samo administratori: zamoli jednog da ga pogleda u dnevniku aktivnosti, ispravi uzrok i ponovno klikni Pokreni.',
+});
 Object.assign(LANGS.en, { gm_force_stop: 'Stop it anyway? A comparison or deployment that is still running is interrupted; the original tool\'s lock and history then show where it stopped.' });
 Object.assign(LANGS.hr, { gm_force_stop: 'Ipak zaustaviti? Usporedba ili deploy koji još radi bit će prekinut; zaključavanje i povijest izvornog alata tada pokazuju gdje je stao.' });
 Object.assign(LANGS.en, { git_back: 'Back', git_back_to: 'Back to “{name}”' });
@@ -570,6 +578,81 @@ Object.assign(LANGS.hr, { git_stamp_differ: '{n} datoteka se razlikuje od cilja'
   git_nothing_usable: 'Nijedna od ovih instalacija se ne može koristiti: pogledajte poruku ispod svake (npr. najprije je provjerite).' });
 Object.assign(LANGS.en, {"gm_quick": "Prepare and run trusted ZIPs", "gm_quick_hint": "Add deploy-tool and deploy-config ZIPs (SSH profile optional), then click once. WRM starts Docker, prepares dependencies, validates config and opens the original tool. Approved imports are retained if setup needs a retry. First Windows installation can show Docker/WSL/license prompts on the WRM host.", "gm_quick_files": "ZIPs are trusted executable/configuration imports. Leave a file empty to keep its existing import.", "gm_setup_docker": "Starting Docker / waiting for first-install prompts", "gm_setup_dependencies": "Preparing original dependencies", "gm_setup_configuration": "Checking configuration and SSH profile", "gm_setup_starting": "Starting original deploy tool", "gm_setup_ready": "Ready", "gm_advanced_setup": "Advanced setup / individual imports"});
 Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_quick_hint": "Dodajte deploy-tool i deploy-config ZIP (SSH profil po želji), zatim kliknite jednom. WRM pokreće Docker, priprema ovisnosti, provjerava config i otvara izvorni alat. Uvezeni ZIP-ovi ostaju spremljeni ako treba ponoviti pripremu. Prva Windows instalacija može prikazati Docker/WSL/licencne upite na WRM računalu.", "gm_quick_files": "ZIP-ovi su pouzdani uvozi izvršnog koda/postavki. Prazno polje zadržava postojeći uvoz.", "gm_setup_docker": "Pokretanje Dockera / čekanje upita prve instalacije", "gm_setup_dependencies": "Priprema ovisnosti izvornog alata", "gm_setup_configuration": "Provjera konfiguracije i SSH profila", "gm_setup_starting": "Pokretanje izvornog deploy alata", "gm_setup_ready": "Spremno", "gm_advanced_setup": "Napredne postavke / pojedinačni uvozi"});
+// v12.6.5: Medium step by step, status lights, steps with times and the activity log
+Object.assign(LANGS.en, {
+  gm_two_title: 'Medium has two separate parts', gm_import: 'Import ZIP',
+  gm_two_original: 'Your original deploy tool, run unchanged from its ZIP (in Docker or with Python on the WRM host). It is the only part that deploys and rolls back. Set it up with steps 1 to 5 below; once it runs, it opens below its card.',
+  gm_two_preview: 'WRM\'s own engine. It only reads: it shows what a deployment would change on each server, through your WRM connections. It needs only your deploy-config, not Docker and not the original tool. Only "Compare with the original tool" needs the original tool running.',
+  gm_s1: 'Deploy-tool ZIP (administrator, once for everyone)', gm_s2: 'Prepare the runtime (administrator)', gm_s3: 'Your deploy-config ZIP', gm_s4: 'Your SSH profile ZIP (optional)', gm_s5: 'Start the original deploy tool',
+  gm_s1_ok: 'Imported (SHA-256 {sha}…).', gm_s1_todo_admin: 'Import the deploy-tool ZIP. WRM keeps it and prepares its runtime right after (step 2).', gm_s1_todo_user: 'Waiting for an administrator to import the deploy-tool ZIP.',
+  gm_rt_docker: 'Docker (managed Linux container)', gm_rt_host: 'Python on the WRM host',
+  gm_s2_run: 'In progress ({where}): {step}. The first time this downloads the Docker image and installs Python packages, which can take several minutes. You can import your deploy-config meanwhile.',
+  gm_s2_ok: 'Ready ({where}).', gm_s2_after1: 'Follows step 1 ({where}).', gm_s2_missing: 'Missing on the WRM host for {where}: {deps}.', gm_s2_failed: 'The last preparation failed ({where}).',
+  gm_s2_todo_admin: 'Not prepared yet ({where}): press "Prepare runtime / retry".', gm_s2_todo_user: 'Waiting for an administrator to prepare the runtime.',
+  gm_s3_pending: 'Received and checked by WRM. The original tool checks and applies it at the next start (step 5).', gm_s3_ok: 'Loaded and checked by the original tool.', gm_s3_todo: 'Import your deploy-config ZIP (servers.yaml, environments.yaml, projects/). You can do this while the runtime is being prepared.', gm_s3_rejected: 'The original tool rejected your deploy-config.',
+  gm_s4_pending: 'Received; applied at the next start.', gm_s4_text: 'Only if the servers need your own SSH keys or known_hosts. Without it the original tool uses WRM\'s SSH options.',
+  gm_s5_running: 'Running since {since} ({took})', gm_s5_starting: 'Starting: {step}', gm_s5_failed: 'The last start failed.', gm_s5_exited: 'It stopped unexpectedly at {at} (exit code {code}).', gm_s5_ready: 'Ready to start. Start runs the original tool for you only (each user has their own); Stop ends it.', gm_s5_todo: 'Steps 1 to 3 are needed first.',
+  gm_why_running: 'It is already running', gm_why_busy: 'Another Medium operation is running; wait for it to finish', gm_why_prepare_running: 'Stop every running original tool first',
+  gm_now_mine: 'In progress: {op}, started at {at} ({took})', gm_now_other: 'In progress: {op} by {user}, started at {at} ({took})', gm_now_other_wait: 'Medium runs one setup or start at a time. Buttons that would collide are disabled until it finishes.', gm_now_other_short: 'another user\'s operation is running',
+  gm_show_output: 'Show output', gm_hide_output: 'Hide output', gm_no_output: '(no output yet)', gm_output_policy: 'The administrator does not show command output to users (medium_log_output).',
+  gm_last_failed: 'Last operation failed: {op}, started at {at}', gm_last_ok: 'Last operation: {op}, started at {at}', gm_last_more: 'The activity log below keeps every operation with its steps and output.',
+  gm_conn_lost: 'Cannot reach WRM; retrying…',
+  gm_l_running: 'Running', gm_l_working: 'Working: {op}', gm_l_other: 'Busy ({user})', gm_l_error: 'Needs attention', gm_l_stopped: 'Not running', gm_runtime_is: 'Runtime: {where}',
+  gm_p_ready: 'Available', gm_p_needs_config: 'Needs deploy-config',
+  gm_log_title: 'Activity log', gm_log_hint: 'Who started what in Medium, when, the result and how long it took. Click a row for its steps and output.', gm_log_empty: 'Nothing has run yet.',
+  gm_log_when: 'When', gm_log_who: 'Who', gm_log_what: 'What', gm_log_result: 'Result', gm_log_took: 'Duration',
+  gm_r_ok: 'Done', gm_r_error: 'Failed', gm_r_running: 'Running', gm_r_interrupted: 'Interrupted (WRM restarted)',
+  gm_kept_config: 'deploy-config received and checked by WRM. The original tool checks and applies it at the next start.', gm_kept_ssh: 'SSH profile received; it is applied at the next start.',
+  gm_imported_tool: 'Deploy tool imported; its runtime is being prepared (step 2).', gm_imported_config: 'deploy-config checked by the original tool and loaded.', gm_imported_ssh: 'SSH profile loaded.',
+  gm_op_setup: 'Prepare and start', gm_op_prepare: 'Prepare runtime', gm_op_tool_import: 'Deploy-tool import', gm_op_start: 'Start', gm_op_config_import: 'deploy-config import', gm_op_ssh_import: 'SSH profile import', gm_op_stop: 'Stop', gm_op_settings: 'Runtime settings saved', gm_op_preview: 'WRM preview', gm_op_compare: 'Comparison with the original tool', gm_op_tool_request: 'Action in the original tool', gm_op_exited: 'The original tool stopped',
+  gm_st_upload: 'Receiving and checking the ZIPs', gm_st_tool_unpack: 'Unpacking the deploy tool', gm_st_docker: 'Checking Docker (starting it if needed)', gm_st_image: 'Docker image and Python environment', gm_st_packages: 'Installing the tool\'s Python packages', gm_st_python: 'Checking Python on the WRM host', gm_st_venv: 'Creating the Python environment', gm_st_config_check: 'The original tool checks deploy-config', gm_st_ssh_apply: 'Applying the SSH profile', gm_st_start_checks: 'Checking what the start needs', gm_st_start_sync: 'Copying your files into the container', gm_st_start_process: 'Starting the process', gm_st_start_ready: 'Waiting for the tool to answer',
+  gm_hint_docker: 'Start Docker Desktop on the WRM host and accept its prompts (WSL, licence) the first time. If it is not installed, install it once (link above). Then press "Prepare runtime / retry"; your ZIPs are kept.',
+  gm_hint_image: 'Docker could not download or run its image. Check the WRM host\'s internet or registry access and free disk space, then retry.',
+  gm_hint_packages: 'pip could not install the tool\'s Python packages. Check access to pypi.org (or your mirror) from the WRM host and the requirements.lock in the deploy-tool ZIP; the output shows which package failed.',
+  gm_hint_python: 'Install Python 3.12+ with git, ssh and rsync on the WRM host, or use the managed Docker runtime (WRM_MEDIUM_RUNTIME=docker).',
+  gm_hint_config: 'Open the output in the activity log: it names the file and the line. Fix the deploy-config ZIP and import it again.',
+  gm_hint_start: 'The last lines of the output show why the original tool stopped (often a missing package or a deploy-config error). Fix it and press Start again.',
+  gm_hint_config_wrm: 'WRM\'s check names the file and the problem in the message above. Fix the deploy-config ZIP and import it again.',
+  gm_hint_upload: 'Check the ZIP files (at most 20 MiB each, the expected files inside) and try again.'
+});
+Object.assign(LANGS.hr, {
+  gm_two_title: 'Medium ima dva odvojena dijela', gm_import: 'Uvezi ZIP',
+  gm_two_original: 'Tvoj izvorni deploy-tool, pokrenut neizmijenjen iz ZIP-a (u Dockeru ili s Pythonom na WRM računalu). Jedini dio koji deploya i radi rollback. Postavljaš ga koracima 1 do 5 ispod; kad radi, otvara se ispod svoje kartice.',
+  gm_two_preview: 'WRM-ov vlastiti engine. Samo čita: pokazuje što bi deploy promijenio na svakom serveru, preko tvojih WRM veza. Treba mu samo tvoj deploy-config, ne treba Docker ni izvorni alat. Samo "Usporedi s izvornim alatom" traži da izvorni alat radi.',
+  gm_s1: 'Deploy-tool ZIP (administrator, jednom za sve)', gm_s2: 'Priprema okruženja (administrator)', gm_s3: 'Tvoj deploy-config ZIP', gm_s4: 'Tvoj SSH profil ZIP (neobavezno)', gm_s5: 'Pokretanje izvornog deploy-toola',
+  gm_s1_ok: 'Uvezen (SHA-256 {sha}…).', gm_s1_todo_admin: 'Uvezi deploy-tool ZIP. WRM ga sprema i odmah zatim priprema okruženje (korak 2).', gm_s1_todo_user: 'Čeka se da administrator uveze deploy-tool ZIP.',
+  gm_rt_docker: 'Docker (upravljani Linux kontejner)', gm_rt_host: 'Python na WRM računalu',
+  gm_s2_run: 'U tijeku ({where}): {step}. Prvi put se preuzima Docker slika i instaliraju Python paketi, što može trajati nekoliko minuta. U međuvremenu možeš uvesti svoj deploy-config.',
+  gm_s2_ok: 'Spremno ({where}).', gm_s2_after1: 'Slijedi nakon koraka 1 ({where}).', gm_s2_missing: 'Na WRM računalu za {where} nedostaje: {deps}.', gm_s2_failed: 'Zadnja priprema nije uspjela ({where}).',
+  gm_s2_todo_admin: 'Još nije pripremljeno ({where}): klikni "Pripremi okruženje / pokušaj ponovno".', gm_s2_todo_user: 'Čeka se da administrator pripremi okruženje.',
+  gm_s3_pending: 'Primljen i provjeren u WRM-u. Izvorni alat ga provjerava i primjenjuje pri sljedećem pokretanju (korak 5).', gm_s3_ok: 'Učitan i provjeren u izvornom alatu.', gm_s3_todo: 'Uvezi svoj deploy-config ZIP (servers.yaml, environments.yaml, projects/). Možeš i dok se okruženje priprema.', gm_s3_rejected: 'Izvorni alat je odbio tvoj deploy-config.',
+  gm_s4_pending: 'Primljen; primjenjuje se pri sljedećem pokretanju.', gm_s4_text: 'Samo ako serveri traže tvoje SSH ključeve ili known_hosts. Bez njega izvorni alat koristi WRM-ove SSH opcije.',
+  gm_s5_running: 'Radi od {since} ({took})', gm_s5_starting: 'Pokreće se: {step}', gm_s5_failed: 'Zadnje pokretanje nije uspjelo.', gm_s5_exited: 'Neočekivano se zaustavio u {at} (izlazni kod {code}).', gm_s5_ready: 'Spremno za pokretanje. Pokreni pokreće izvorni alat samo za tebe (svaki korisnik ima svoj); Zaustavi ga gasi.', gm_s5_todo: 'Prvo trebaju koraci 1 do 3.',
+  gm_why_running: 'Već radi', gm_why_busy: 'U tijeku je druga Medium radnja; pričekaj da završi', gm_why_prepare_running: 'Prvo zaustavi sve pokrenute izvorne alate',
+  gm_now_mine: 'U tijeku: {op}, pokrenuto u {at} ({took})', gm_now_other: 'U tijeku: {op}, pokrenuo {user} u {at} ({took})', gm_now_other_wait: 'Medium radi jednu pripremu ili pokretanje odjednom. Gumbi koji bi se sudarili onemogućeni su dok ne završi.', gm_now_other_short: 'u tijeku je radnja drugog korisnika',
+  gm_show_output: 'Prikaži izlaz', gm_hide_output: 'Sakrij izlaz', gm_no_output: '(još nema izlaza)', gm_output_policy: 'Administrator ne prikazuje izlaz naredbi korisnicima (medium_log_output).',
+  gm_last_failed: 'Zadnja radnja nije uspjela: {op}, pokrenuta u {at}', gm_last_ok: 'Zadnja radnja: {op}, pokrenuta u {at}', gm_last_more: 'Dnevnik aktivnosti ispod čuva svaku radnju s koracima i izlazom.',
+  gm_conn_lost: 'WRM trenutno nije dostupan; pokušavam ponovno…',
+  gm_l_running: 'Radi', gm_l_working: 'Radi se: {op}', gm_l_other: 'Zauzeto ({user})', gm_l_error: 'Treba pažnju', gm_l_stopped: 'Ne radi', gm_runtime_is: 'Okruženje: {where}',
+  gm_p_ready: 'Dostupno', gm_p_needs_config: 'Treba deploy-config',
+  gm_log_title: 'Dnevnik aktivnosti', gm_log_hint: 'Tko je što pokrenuo u Mediumu, kada, s kojim rezultatom i koliko je trajalo. Klikni redak za korake i izlaz.', gm_log_empty: 'Još ništa nije pokrenuto.',
+  gm_log_when: 'Kada', gm_log_who: 'Tko', gm_log_what: 'Što', gm_log_result: 'Rezultat', gm_log_took: 'Trajanje',
+  gm_r_ok: 'Gotovo', gm_r_error: 'Neuspjelo', gm_r_running: 'U tijeku', gm_r_interrupted: 'Prekinuto (WRM ponovno pokrenut)',
+  gm_kept_config: 'deploy-config je primljen i provjeren u WRM-u. Izvorni alat ga provjerava i primjenjuje pri sljedećem pokretanju.', gm_kept_ssh: 'SSH profil je primljen; primjenjuje se pri sljedećem pokretanju.',
+  gm_imported_tool: 'Deploy-tool je uvezen; okruženje se priprema (korak 2).', gm_imported_config: 'Izvorni alat je provjerio i učitao deploy-config.', gm_imported_ssh: 'SSH profil je učitan.',
+  gm_op_setup: 'Pripremi i pokreni', gm_op_prepare: 'Priprema okruženja', gm_op_tool_import: 'Uvoz deploy-toola', gm_op_start: 'Pokretanje', gm_op_config_import: 'Uvoz deploy-configa', gm_op_ssh_import: 'Uvoz SSH profila', gm_op_stop: 'Zaustavljanje', gm_op_settings: 'Spremljene postavke okruženja', gm_op_preview: 'WRM pregled', gm_op_compare: 'Usporedba s izvornim alatom', gm_op_tool_request: 'Radnja u izvornom alatu', gm_op_exited: 'Izvorni alat se zaustavio',
+  gm_st_upload: 'Primanje i provjera ZIP-ova', gm_st_tool_unpack: 'Raspakiravanje deploy-toola', gm_st_docker: 'Provjera Dockera (pokretanje ako treba)', gm_st_image: 'Docker slika i Python okruženje', gm_st_packages: 'Instalacija Python paketa alata', gm_st_python: 'Provjera Pythona na WRM računalu', gm_st_venv: 'Izrada Python okruženja', gm_st_config_check: 'Izvorni alat provjerava deploy-config', gm_st_ssh_apply: 'Primjena SSH profila', gm_st_start_checks: 'Provjera što pokretanje treba', gm_st_start_sync: 'Kopiranje tvojih datoteka u kontejner', gm_st_start_process: 'Pokretanje procesa', gm_st_start_ready: 'Čekanje da se alat javi',
+  gm_hint_docker: 'Pokreni Docker Desktop na WRM računalu i prvi put prihvati njegove upite (WSL, licenca). Ako nije instaliran, instaliraj ga jednom (poveznica gore). Zatim klikni "Pripremi okruženje / pokušaj ponovno"; tvoji ZIP-ovi ostaju spremljeni.',
+  gm_hint_image: 'Docker nije mogao preuzeti ili pokrenuti sliku. Provjeri pristup internetu ili registryju s WRM računala i slobodan prostor na disku, pa pokušaj ponovno.',
+  gm_hint_packages: 'pip nije mogao instalirati Python pakete alata. Provjeri pristup pypi.org (ili tvom mirroru) s WRM računala i requirements.lock u deploy-tool ZIP-u; izlaz pokazuje koji paket nije prošao.',
+  gm_hint_python: 'Instaliraj Python 3.12+ te git, ssh i rsync na WRM računalo ili koristi upravljani Docker (WRM_MEDIUM_RUNTIME=docker).',
+  gm_hint_config: 'Otvori izlaz u dnevniku aktivnosti: navodi datoteku i redak. Ispravi deploy-config ZIP i uvezi ga ponovno.',
+  gm_hint_start: 'Zadnji redovi izlaza pokazuju zašto je izvorni alat stao (često nedostaje paket ili je greška u deploy-configu). Ispravi to i ponovno klikni Pokreni.',
+  gm_hint_config_wrm: 'WRM-ova provjera u poruci iznad navodi datoteku i problem. Ispravi deploy-config ZIP i uvezi ga ponovno.',
+  gm_hint_upload: 'Provjeri ZIP datoteke (najviše 20 MiB svaka, s očekivanim datotekama unutra) i pokušaj ponovno.'
+});
+Object.assign(LANGS.en, { mn_title: 'WRM preview (read-only)', mn_needs_running: 'Start the original deploy tool first (step 5)', gm_quick_title: 'Or everything at once: prepare and start in one click', gm_prepare: 'Prepare runtime / retry', gm_settings_hint: 'Stop the original deploy tool before saving; the settings apply at its next start. These are the original deploy-tool environment options: config Git repository/pull/check interval, commit identity, SSH options, command timeout and build user. Empty fields use the original defaults. Masked values are preserved.' });
+Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_running: 'Prvo pokreni izvorni deploy-tool (korak 5)', gm_quick_title: 'Ili sve odjednom: pripremi i pokreni jednim klikom', gm_prepare: 'Pripremi okruženje / pokušaj ponovno', gm_title: 'Izvorni deploy-tool', gm_settings: 'Postavke izvornog alata', gm_settings_hint: 'Zaustavi izvorni deploy-tool prije spremanja; postavke vrijede od sljedećeg pokretanja. Ovo su izvorne deploy-tool opcije: Git repo konfiguracije/povlačenje/interval provjere, autor commitova, SSH opcije, timeout naredbi i build korisnik. Prazna polja koriste izvorne zadane vrijednosti. Maskirane vrijednosti se zadržavaju.', gm_quick: 'Pripremi i pokreni pouzdane ZIP-ove', gm_stop_confirm: 'Zaustaviti izvorni deploy-tool? Najprije pričekaj da deployi završe.' });
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const modeKey = () => 'wrm_git_mode:' + ((typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.username)) || '');
@@ -582,7 +665,39 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
   const css = `
 #git-ws { position: fixed; inset: 0; z-index: 8800; background: var(--bg); color: var(--text); display: flex; flex-direction: column; font-size: 13px; }
 #git-ws .g-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-wrap: wrap; }
-#git-ws #medium-status {overflow-wrap:anywhere;}
+#git-ws #medium-status {overflow-wrap:anywhere;color:var(--text2);margin:2px 0 8px;}
+#git-ws .gm-two {display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+#git-ws .gm-two p {margin:4px 0 0;color:var(--text2);}
+@media (max-width: 700px) { #git-ws .gm-two {grid-template-columns:1fr;} #git-ws .gm-log td:nth-child(5), #git-ws .gm-log th:nth-child(5) {display:none;} }
+#git-ws .gm-head {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+#git-ws .gm-head h3 {margin:0;flex:1;}
+#git-ws .gm-light {display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--bg3);white-space:nowrap;}
+#git-ws .gm-light i {width:9px;height:9px;border-radius:50%;background:var(--text3);display:inline-block;}
+#git-ws .gm-light.gm-ok i {background:var(--green);box-shadow:0 0 6px var(--green);} #git-ws .gm-light.gm-ok {color:var(--green);}
+#git-ws .gm-light.gm-run i {background:var(--yellow);animation:gmPulse 1.2s infinite;} #git-ws .gm-light.gm-run {color:var(--yellow);}
+#git-ws .gm-light.gm-bad i {background:var(--red);} #git-ws .gm-light.gm-bad {color:var(--red);}
+@keyframes gmPulse {50% {opacity:.3;}}
+#git-ws .gm-steps {list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px;}
+#git-ws .gm-steps > li {border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--bg2);}
+#git-ws .gm-steps > li.gm-ok {border-left:4px solid var(--green);} #git-ws .gm-steps > li.gm-run, #git-ws .gm-steps > li.gm-pend {border-left:4px solid var(--yellow);} #git-ws .gm-steps > li.gm-bad {border-left:4px solid var(--red);} #git-ws .gm-steps > li.gm-wait {border-left:4px solid var(--accent);} #git-ws .gm-steps > li.gm-opt {border-left:4px solid var(--border);}
+#git-ws .gm-sh {display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#git-ws .gm-sh b {flex:1;min-width:150px;}
+#git-ws .gm-ico {width:18px;text-align:center;font-weight:700;}
+#git-ws .gm-act {display:flex;gap:6px;flex-wrap:wrap;}
+#git-ws .gm-sd {color:var(--text2);margin:4px 0 0 26px;overflow-wrap:anywhere;}
+#git-ws .gm-todo {margin-top:4px;color:var(--text);font-weight:500;}
+#git-ws .gm-todo::before {content:'→ ';}
+#git-ws .gm-tl {list-style:none;margin:6px 0;padding:0;}
+#git-ws .gm-tl li {padding:2px 0;}
+#git-ws .gm-tl li.gm-error {color:var(--red);} #git-ws .gm-tl li.gm-ok > span:first-child {color:var(--green);}
+#git-ws .gm-err {color:var(--red);white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0 2px 18px;}
+#git-ws .gm-bad {border-color:var(--red);}
+#git-ws .gm-out {max-height:300px;overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11.5px;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0 0;}
+#git-ws .gm-log {width:100%;border-collapse:collapse;}
+#git-ws .gm-log th {text-align:left;color:var(--text3);font-weight:500;padding:4px 8px 4px 0;}
+#git-ws .gm-log td {padding:5px 8px 5px 0;border-top:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere;}
+#git-ws .gm-log tr.gm-click {cursor:pointer;} #git-ws .gm-log tr.gm-click:hover td {background:var(--bg3);}
+#git-ws .gm-quick > summary {cursor:pointer;font-weight:600;margin-top:6px;}
 #git-ws #mn-card .s-enew { background: rgba(34,197,94,.14); color: var(--green); }
 #git-ws #mn-card .s-echanged, #git-ws #mn-card .s-pending { background: rgba(245,158,11,.14); color: var(--yellow); }
 #git-ws #mn-card .s-eremoved, #git-ws #mn-card .s-error { background: rgba(239,68,68,.14); color: var(--red); white-space: normal; }
@@ -2840,48 +2955,223 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
   }
 
 
-  // Medium renders the original deploy tool behind WRM authentication.
+  // Medium (v12.6.5): a step-by-step guide for the original deploy tool with a status light
+  // per part, the running operation's steps and output, and the activity log; WRM's
+  // read-only preview is a separate card. The original tool itself opens below its card.
   let mediumTimer = null;
+  const MS = {s: null, rows: [], openRow: null, showLog: false, logText: null, lastOp: ''};
+  const mClock = iso => {
+    if (!iso) return ''; const d = new Date(iso); if (isNaN(d)) return iso;
+    const time = d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false});
+    return d.toDateString() === new Date().toDateString() ? time : d.toLocaleDateString([], {day: '2-digit', month: '2-digit'}) + ' ' + time;
+  };
+  const mDur = ms => { ms = Math.max(0, +ms || 0); if (ms < 1000) return '< 1 s'; const s = Math.round(ms / 1000); if (s < 60) return s + ' s'; const m = Math.floor(s / 60); return m < 60 ? m + ' min ' + (s % 60) + ' s' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; };
+  const mSince = iso => iso ? mDur(Date.now() - new Date(iso).getTime()) : '';
+  const mLight = (kind, text) => `<span class="gm-light gm-${kind}"><i></i>${esc(text)}</span>`;
+  const mOp = op => t('gm_op_' + op) !== 'gm_op_' + op ? t('gm_op_' + op) : op;
+  const mStep = st => t('gm_st_' + st) !== 'gm_st_' + st ? t('gm_st_' + st) : st;
   async function paintMedium() {
     const body = $('git-body');
     if (!body || G.mode !== 'medium') return;
     if (!body.querySelector('#medium-status')) {
-      body.innerHTML = `<div class="g-card"><h3>${esc(t('gm_title'))}</h3><p>${esc(t('gm_intro'))}</p><p>${esc(t('gm_quick_hint'))}</p><p class="g-mut">${esc(t('gm_quick_files'))}</p><div class="g-grid" id="medium-quick-inputs"><label id="medium-quick-tool-label">${esc(t('gm_tool'))}<input id="medium-quick-tool" type="file" accept=".zip"></label><label>${esc(t('gm_config'))}<input id="medium-quick-config" type="file" accept=".zip"></label><label>${esc(t('gm_ssh'))}<input id="medium-quick-ssh" type="file" accept=".zip"></label></div><div class="g-bar"><button id="medium-quick-go" onclick="gitWorkspace.mediumQuickSetup()">▶ ${esc(t('gm_quick'))}</button></div><div id="medium-status" role="status" aria-live="polite">${esc(t('loading'))}</div><details><summary>${esc(t('gm_advanced_setup'))}</summary><div class="g-bar" style="margin-top:10px">
-      <button class="btn-sec" onclick="gitWorkspace.mediumAction('start')">▶ ${esc(t('gm_start'))}</button><button class="btn-sec" onclick="gitWorkspace.mediumAction('stop')">■ ${esc(t('gm_stop'))}</button><button class="btn-sec" onclick="gitWorkspace.mediumRefresh()">↻ ${esc(t('git_refresh'))}</button>
-      <label class="btn-sec" id="medium-tool-label" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_tool'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('tool',this)"></label>
-      <label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_config'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('config',this)"></label>
-      <label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">${esc(t('gm_ssh'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('ssh',this)"></label>
-      <button class="btn-sec" id="medium-prepare" onclick="gitWorkspace.mediumAction('prepare')">${esc(t('gm_prepare'))}</button><a class="btn-sec" id="medium-docker-guide" href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener">${esc(t('gm_docker_setup'))}</a><button class="btn-sec" onclick="gitWorkspace.mediumSettings()">⚙ ${esc(t('gm_settings'))}</button><a class="btn-sec" href="/medium/" target="_blank" rel="noopener">↗ ${esc(t('gm_open'))}</a></div></details></div><details class="g-card" id="mn-card" ontoggle="if(this.open)gitWorkspace.nativeLoad()"><summary><b>${esc(t('mn_title'))}</b></summary><div id="mn-body"></div></details><div id="medium-frame"></div>`;
+      const fileBtn = (kind, id) => `<label class="btn-sec btn-sm"${id ? ` id="${id}"` : ''} tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">⇪ ${esc(t('gm_import'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('${kind}',this)"></label>`;
+      body.innerHTML = `<div class="g-card gm-overview"><h3>${esc(t('gm_two_title'))}</h3><div class="gm-two">
+        <div><b>🛠 ${esc(t('gm_title'))}</b><p>${esc(t('gm_two_original'))}</p></div>
+        <div><b>🔎 ${esc(t('mn_title'))}</b><p>${esc(t('gm_two_preview'))}</p></div></div></div>
+      <div class="g-card" id="gm-original"><div class="gm-head"><h3>🛠 ${esc(t('gm_title'))}</h3><span id="gm-light"></span></div>
+        <div id="medium-status" role="status" aria-live="polite">${esc(t('loading'))}</div>
+        <div id="gm-op"></div>
+        <ol class="gm-steps" id="gm-steps">
+          <li id="gm-s1"><div class="gm-sh"><span class="gm-ico"></span><b>1. ${esc(t('gm_s1'))}</b><span class="gm-act">${fileBtn('tool', 'medium-tool-label')}</span></div><div class="gm-sd"></div></li>
+          <li id="gm-s2"><div class="gm-sh"><span class="gm-ico"></span><b>2. ${esc(t('gm_s2'))}</b><span class="gm-act"><button class="btn-sec btn-sm" id="medium-prepare" onclick="gitWorkspace.mediumAction('prepare')">${esc(t('gm_prepare'))}</button><a class="btn-sec btn-sm" id="medium-docker-guide" href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener">${esc(t('gm_docker_setup'))}</a></span></div><div class="gm-sd"></div></li>
+          <li id="gm-s3"><div class="gm-sh"><span class="gm-ico"></span><b>3. ${esc(t('gm_s3'))}</b><span class="gm-act">${fileBtn('config')}</span></div><div class="gm-sd"></div></li>
+          <li id="gm-s4"><div class="gm-sh"><span class="gm-ico"></span><b>4. ${esc(t('gm_s4'))}</b><span class="gm-act">${fileBtn('ssh')}</span></div><div class="gm-sd"></div></li>
+          <li id="gm-s5"><div class="gm-sh"><span class="gm-ico"></span><b>5. ${esc(t('gm_s5'))}</b><span class="gm-act"><button class="btn-sm" id="gm-start" onclick="gitWorkspace.mediumAction('start')">▶ ${esc(t('gm_start'))}</button><button class="btn-sec btn-sm" id="gm-stop" onclick="gitWorkspace.mediumAction('stop')">■ ${esc(t('gm_stop'))}</button><a class="btn-sec btn-sm" id="gm-open" href="/medium/" target="_blank" rel="noopener">↗ ${esc(t('gm_open'))}</a></span></div><div class="gm-sd"></div></li>
+        </ol>
+        <details class="gm-quick"><summary>${esc(t('gm_quick_title'))}</summary><p>${esc(t('gm_quick_hint'))}</p><p class="g-mut">${esc(t('gm_quick_files'))}</p><div class="g-grid" id="medium-quick-inputs"><label id="medium-quick-tool-label">${esc(t('gm_tool'))}<input id="medium-quick-tool" type="file" accept=".zip"></label><label>${esc(t('gm_config'))}<input id="medium-quick-config" type="file" accept=".zip"></label><label>${esc(t('gm_ssh'))}<input id="medium-quick-ssh" type="file" accept=".zip"></label></div><div class="g-bar"><button id="medium-quick-go" onclick="gitWorkspace.mediumQuickSetup()">▶ ${esc(t('gm_quick'))}</button></div></details>
+        <div class="g-bar" style="margin-top:8px"><button class="btn-sec btn-sm" onclick="gitWorkspace.mediumRefresh()">↻ ${esc(t('git_refresh'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.mediumSettings()">⚙ ${esc(t('gm_settings'))}</button></div>
+      </div>
+      <div id="medium-frame"></div>
+      <details class="g-card" id="mn-card" ontoggle="if(this.open)gitWorkspace.nativeLoad()"><summary><b>🔎 ${esc(t('mn_title'))}</b> <span id="gm-preview-light"></span></summary><div id="mn-body"></div></details>
+      <div class="g-card" id="gm-activity"><div class="gm-head"><h3>📜 ${esc(t('gm_log_title'))}</h3><button class="btn-sec btn-sm" onclick="gitWorkspace.mediumActivity(true)">↻</button></div><p class="g-mut">${esc(t('gm_log_hint'))}</p><div id="gm-rows"></div></div>`;
+      MS.lastOp = '';
     }
     await mediumRefresh();
   }
+  // what the user must do next, for the step that failed
+  function mediumHint(step, err) {
+    step = step || '';
+    if (step === 'docker') return t('gm_hint_docker');
+    if (step === 'image') return t('gm_hint_image');
+    if (step === 'packages') return t('gm_hint_packages');
+    if (step === 'python' || step === 'venv') return t('gm_hint_python');
+    if (step === 'config_check') return /rejected/.test(String(err || '')) ? t('gm_hint_config') : '';
+    if (step === 'start_process' || step === 'start_ready') return /cancelled/.test(String(err || '')) ? '' : mOutHidden() ? t('gm_hint_start_noout') : t('gm_hint_start');
+    if (step === 'start_sync') return /docker/i.test(String(err || '')) ? t('gm_hint_docker') : '';
+    if (step === 'upload' || step === 'tool_unpack') return /deploy-config is not valid/.test(String(err || '')) ? t('gm_hint_config_wrm') : /ZIP|MiB|missing|expected/i.test(String(err || '')) ? t('gm_hint_upload') : '';
+    return '';
+  }
+  // the administrator hides command output from this user (medium_log_output)
+  function mOutHidden() { const s = MS.s || {}; return s.output_policy === 'none' || (s.output_policy === 'admins' && !s.admin); }
+  function mediumStepsHTML(steps, live) {
+    if (!steps || !steps.length) return '';
+    return `<ul class="gm-tl">${steps.map(x => {
+      const ico = x.status === 'ok' ? '✓' : x.status === 'error' ? '✗' : '⏳';
+      const took = x.status === 'running' ? (live ? mSince(x.started) : '') : mDur(x.ms);
+      return `<li class="gm-${x.status}"><span>${ico}</span> ${esc(mStep(x.step))} <span class="g-mut">${esc(mClock(x.started))}${took ? ' · ' + esc(took) : ''}</span>${x.error ? `<div class="gm-err">${esc(x.error)}</div>` : ''}</li>`;
+    }).join('')}</ul>`;
+  }
+  function mediumPaintSteps(s) {
+    const deps = Object.entries(s.dependencies || {}).filter(([, ok]) => !ok).map(([n]) => n);
+    const runningOp = s.busy ? s.op : '';
+    const failedStep = (s.steps || []).find(x => x.status === 'error');
+    const set = (n, state, text, extra) => {
+      const li = $('gm-s' + n); if (!li) return;
+      li.className = 'gm-' + state;
+      li.querySelector('.gm-ico').textContent = {ok: '✓', run: '⏳', pend: '◔', wait: '○', bad: '✗', opt: '–'}[state] || '○';
+      li.querySelector('.gm-sd').innerHTML = esc(text) + (extra || '');
+    };
+    // 1. the deploy tool (an administrator imports it once for everyone)
+    if (s.tool_imported) set(1, 'ok', tf('gm_s1_ok', {sha: (s.tool_digest || '').slice(0, 12)}));
+    else set(1, 'wait', s.admin ? t('gm_s1_todo_admin') : t('gm_s1_todo_user'));
+    // 2. its runtime (Docker or Python on the WRM host)
+    const where = s.backend === 'docker' ? t('gm_rt_docker') : t('gm_rt_host');
+    const holder = s.operation && !s.operation.mine ? s.operation : null;
+    if (holder && ['prepare', 'tool_import'].includes(holder.op)) set(2, 'run', tf('gm_s2_run_other', {where, user: holder.user, at: mClock(holder.started)}));
+    else if (['prepare', 'tool_import'].includes(runningOp) || (runningOp === 'setup' && ['docker', 'image', 'packages', 'python', 'venv'].includes(s.stage))) set(2, 'run', tf('gm_s2_run', {where, step: mStep(s.stage)}));
+    else if (s.tool) set(2, 'ok', tf('gm_s2_ok', {where}));
+    else if (!s.tool_imported) set(2, 'wait', tf('gm_s2_after1', {where}));
+    else if (deps.length) set(2, 'bad', tf('gm_s2_missing', {where, deps: deps.join(', ')}));
+    else if (failedStep && ['docker', 'image', 'packages', 'python', 'venv'].includes(failedStep.step)) set(2, 'bad', tf('gm_s2_failed', {where}), `<div class="gm-todo">${esc(mediumHint(failedStep.step, failedStep.error))}</div>`);
+    else set(2, 'wait', s.admin ? tf('gm_s2_todo_admin', {where}) : t('gm_s2_todo_user'));
+    // 3. deploy-config (each user's own)
+    if (s.pending_config) set(3, 'pend', t('gm_s3_pending'));
+    else if (s.config) set(3, 'ok', t('gm_s3_ok'));
+    else set(3, 'wait', t('gm_s3_todo'));
+    if (failedStep && failedStep.step === 'config_check' && !s.pending_config) set(3, 'bad', t('gm_s3_rejected'), `<div class="gm-todo">${esc(t('gm_hint_config'))}</div>`);
+    // 4. SSH profile (optional)
+    if (s.pending_ssh) set(4, 'pend', t('gm_s4_pending'));
+    else set(4, 'opt', t('gm_s4_text'));
+    // 5. start
+    const ready = s.tool && (s.config || s.pending_config);
+    if (s.running && s.ready) set(5, 'ok', tf('gm_s5_running', {since: mClock(s.running_since), took: mSince(s.running_since)}));
+    else if (runningOp === 'start' || (runningOp === 'setup' && (s.stage || '').startsWith('start_'))) set(5, 'run', tf('gm_s5_starting', {step: mStep(s.stage)}));
+    else if (failedStep && failedStep.step.startsWith('start_')) { const h = mediumHint(failedStep.step, failedStep.error); set(5, 'bad', t('gm_s5_failed'), h ? `<div class="gm-todo">${esc(h)}</div>` : ''); }
+    else if (s.last_exit && !s.last_exit.expected) set(5, 'bad', tf('gm_s5_exited', {at: mClock(s.last_exit.at), code: s.last_exit.code}), `<div class="gm-todo">${esc(mOutHidden() ? t('gm_hint_start_noout') : t('gm_hint_start'))}</div>`);
+    else if (ready) set(5, 'wait', t('gm_s5_ready'));
+    else set(5, 'wait', t('gm_s5_todo'));
+    // buttons: only what can work now; the reason is in the title
+    const other = s.operation && !s.operation.mine;
+    const busy = !!s.busy || !!s.operation;
+    const startBtn = $('gm-start'), stopBtn = $('gm-stop');
+    startBtn.disabled = busy || s.running || !ready;
+    startBtn.title = s.running ? t('gm_why_running') : busy ? t('gm_why_busy') : !ready ? t('gm_s5_todo') : '';
+    stopBtn.disabled = !s.running;
+    $('gm-open').style.display = s.running && s.ready ? '' : 'none';
+    $('medium-tool-label').style.display = s.admin ? '' : 'none';
+    // a new deploy tool needs an idle Medium and no running tool (all users)
+    const toolIn = $('medium-tool-label').querySelector('input');
+    if (toolIn) toolIn.disabled = busy || !!s.running;
+    $('medium-tool-label').title = busy ? t('gm_why_busy') : s.running ? t('gm_why_prepare_running') : '';
+    $('medium-quick-tool-label').style.display = s.admin ? '' : 'none';
+    $('medium-quick-go').disabled = busy || !!s.running;
+    $('medium-quick-go').title = busy ? t('gm_why_busy') : s.running ? t('gm_why_running') : '';
+    document.querySelectorAll('#medium-quick-inputs input').forEach(i => i.disabled = busy);
+    $('medium-prepare').style.display = s.admin && s.tool_imported ? '' : 'none';
+    $('medium-prepare').disabled = busy || !!s.running;
+    $('medium-prepare').title = s.running ? t('gm_why_prepare_running') : busy ? t('gm_why_busy') : '';
+    $('medium-docker-guide').style.display = s.backend === 'docker' && !s.tool ? '' : 'none';
+    return other;
+  }
+  // re-rendered output keeps its place; new output opens at its end, where errors are
+  function mRender(box, html) {
+    const was = [...box.querySelectorAll('pre.gm-out')].map(p => p.scrollTop + p.clientHeight >= p.scrollHeight - 8 ? -1 : p.scrollTop);
+    const det = {};
+    box.querySelectorAll('details[data-k]').forEach(d => { det[d.dataset.k] = d.open; });
+    box.innerHTML = html;
+    box.querySelectorAll('details[data-k]').forEach(d => { if (d.dataset.k in det) d.open = det[d.dataset.k]; });
+    box.querySelectorAll('pre.gm-out').forEach((p, i) => { p.scrollTop = was[i] == null || was[i] < 0 ? p.scrollHeight : was[i]; });
+  }
+  const mOutEnd = `ontoggle="if(this.open){const p=this.querySelector('pre');if(p)p.scrollTop=p.scrollHeight}"`;
+  function mediumPaintOp(s) {
+    const box = $('gm-op'); if (!box) return;
+    const op = s.operation;
+    let html = '';
+    if (op) {
+      html += `<div class="hint-box gm-now">⏳ <b>${esc(tf(op.mine ? 'gm_now_mine' : 'gm_now_other', {op: mOp(op.op), user: op.user, at: mClock(op.started), took: mSince(op.started)}))}</b>${op.mine ? '' : `<div>${esc(t('gm_now_other_wait'))}</div>`}`;
+      if (op.mine) html += mediumStepsHTML(s.steps, true);
+      html += `<div class="g-bar"><button class="btn-sec btn-sm" onclick="gitWorkspace.mediumToggleLog()">${esc(MS.showLog ? t('gm_hide_output') : t('gm_show_output'))}</button></div>${MS.showLog ? `<pre class="gm-out" id="gm-out">${esc(MS.logText == null ? t('loading') : MS.logText || t('gm_no_output'))}</pre>` : ''}</div>`;
+    } else if (s.op && s.steps && s.steps.length) {
+      const failed = s.steps.find(x => x.status === 'error');
+      // its output, from the activity log
+      const row = MS.rows.find(x => x.op === s.op && x.at === s.op_started);
+      const out = row && row.output != null ? `<details class="gm-lastout" data-k="${esc(s.op + '@' + s.op_started)}"${failed ? ' open' : ''} ${mOutEnd}><summary>${esc(t('gm_show_output'))}</summary><pre class="gm-out">${esc(row.output || t('gm_no_output'))}</pre></details>` : '';
+      html += `<div class="hint-box ${failed ? 'gm-bad' : ''}"><b>${esc(tf(failed ? 'gm_last_failed' : 'gm_last_ok', {op: mOp(s.op), at: mClock(s.op_started)}))}</b>${mediumStepsHTML(s.steps, false)}${failed ? `<div class="gm-todo">${esc(mediumHint(failed.step, s.error || failed.error))}</div>` : ''}${out}<div class="g-mut">${esc(t('gm_last_more'))}</div></div>`;
+    } else if (s.error) {
+      html += `<div class="hint-box gm-bad">${esc(s.error)}</div>`;
+    }
+    mRender(box, html);
+  }
   async function mediumRefresh() {
     clearTimeout(mediumTimer);
-    if (G.mode !== 'medium' || !$('medium-status')) return;
+    if (G.mode !== 'medium' || !$('medium-status') || !$('git-ws') || $('git-ws').style.display === 'none') return;
+    let s;
     try {
       const r = await fetch('/api/git/medium');
-      if (!r.ok) { $('medium-status').textContent = await apiError(r); if ($('medium-frame')) $('medium-frame').replaceChildren(); if (G.mediumBusy) mediumTimer = setTimeout(mediumRefresh, 5000); return; }
-      const s = await r.json();
-      $('medium-tool-label').style.display = s.admin ? '' : 'none';
-      $('medium-quick-tool-label').style.display=s.admin?'':'none';
-      $('medium-quick-go').disabled=!!s.busy||!!s.running;
-      document.querySelectorAll('#medium-quick-inputs input').forEach(i=>i.disabled=!!s.busy);
-      $('medium-prepare').style.display = s.admin && s.tool_imported && !s.running ? '' : 'none';
-      $('medium-prepare').disabled = !!s.busy;
-      $('medium-docker-guide').style.display = s.backend === 'docker' ? '' : 'none';
-      const deps = Object.entries(s.dependencies || {}).filter(([,ok]) => !ok).map(([n]) => n);
-      $('medium-status').textContent = [t('gm_backend') + ': ' + (s.backend || 'native'), s.busy ? (['docker','dependencies','configuration','starting','ready'].includes(s.stage)?t('gm_setup_'+s.stage):s.stage) : s.running ? t('gm_running') : t('gm_stopped'), s.tool ? t('gm_tool_ready') : s.tool_imported ? t('gm_imported') : t('gm_tool_missing'), s.config ? t('gm_config_ready') : t('gm_config_missing'), deps.length ? t('gm_missing') + ': ' + deps.join(', ') : '', s.error || '', s.tool_digest ? 'SHA-256: ' + s.tool_digest : ''].filter(Boolean).join(' · ');
-      const host = $('medium-frame');
-      if (s.running && host && !host.firstChild) { const f = document.createElement('iframe'); f.title = t('gm_title'); f.src = '/medium/'; f.style.cssText = 'width:100%;height:calc(100vh - 250px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff'; host.appendChild(f); }
-      if (!s.running && host) host.replaceChildren();
-      G.mediumBusy = !!s.busy;
-      if (s.busy) mediumTimer = setTimeout(mediumRefresh, 2000);
+      if (!r.ok) { $('medium-status').textContent = await apiError(r); if ($('medium-frame')) $('medium-frame').replaceChildren(); mediumTimer = setTimeout(mediumRefresh, 10000); return; }
+      s = await r.json();
     } catch (e) {
-      if ($('medium-status')) $('medium-status').textContent = String(e);
       // a network blip during a long background setup must not freeze the status
-      if (G.mediumBusy) mediumTimer = setTimeout(mediumRefresh, 5000);
+      if ($('medium-status')) $('medium-status').textContent = t('gm_conn_lost');
+      mediumTimer = setTimeout(mediumRefresh, 5000);
+      return;
     }
+    MS.s = s;
+    const other = mediumPaintSteps(s);
+    const op = s.operation;
+    let light;
+    if (s.running && s.ready) light = mLight('ok', t('gm_l_running'));
+    else if (op && op.mine) light = mLight('run', tf('gm_l_working', {op: mOp(op.op)}));
+    else if (op) light = mLight('run', tf('gm_l_other', {user: op.user}));
+    else if ((s.steps || []).some(x => x.status === 'error') || (s.last_exit && !s.last_exit.expected)) light = mLight('bad', t('gm_l_error'));
+    else light = mLight('off', t('gm_l_stopped'));
+    $('gm-light').innerHTML = light;
+    const where = s.backend === 'docker' ? t('gm_rt_docker') : t('gm_rt_host');
+    $('medium-status').innerHTML = esc([tf('gm_runtime_is', {where}), s.running ? tf('gm_s5_running', {since: mClock(s.running_since), took: mSince(s.running_since)}) : '', other ? t('gm_now_other_short') : ''].filter(Boolean).join(' · '));
+    $('gm-preview-light').innerHTML = s.config || s.pending_config ? mLight('ok', t('gm_p_ready')) : mLight('off', t('gm_p_needs_config'));
+    mediumPaintOp(s);
+    if (MS.showLog && op) mediumLoadLog();
+    const host = $('medium-frame');
+    if (s.running && s.ready && host && !host.firstChild) { const f = document.createElement('iframe'); f.title = t('gm_title'); f.src = '/medium/'; f.style.cssText = 'width:100%;height:calc(100vh - 250px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff'; host.appendChild(f); }
+    if (!(s.running && s.ready) && host) host.replaceChildren();
+    // the preview card's "Compare with the original tool" follows the tool's state
+    const up = !!(s.running && s.ready);
+    if (MN.cfg) MN.cfg.running = up;
+    if ($('mn-compare') && $('mn-preview') && !$('mn-preview').disabled) { $('mn-compare').disabled = !up; $('mn-compare').title = up ? '' : t('mn_needs_running'); }
+    const opKey = (op ? op.id + ':' + (s.stage || '') : '') + '|' + (s.op_started || '') + '|' + s.running + '|' + s.ready;
+    if (opKey !== MS.lastOp) { MS.lastOp = opKey; mediumActivity(false).then(() => { if (MS.s === s && !s.operation) mediumPaintOp(s); }); }
+    G.mediumBusy = !!op || !!s.busy;
+    mediumTimer = setTimeout(mediumRefresh, G.mediumBusy ? 2000 : 10000);
   }
+  async function mediumLoadLog() {
+    try { const r = await fetch('/api/git/medium/log'); if (!r.ok) return; const v = await r.json(); MS.logText = v.operation || v.process || ''; if (v.policy === 'none' || (v.policy === 'admins' && !(MS.s && MS.s.admin))) MS.logText = t('gm_output_policy'); const pre = $('gm-out'); if (pre) { const end = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 8; pre.textContent = MS.logText || t('gm_no_output'); if (end) pre.scrollTop = pre.scrollHeight; } } catch (_) {}
+  }
+  function mediumToggleLog() { MS.showLog = !MS.showLog; MS.logText = null; if (MS.s) mediumPaintOp(MS.s); if (MS.showLog) mediumLoadLog(); }
+  async function mediumActivity(force) {
+    const box = $('gm-rows'); if (!box) return;
+    try {
+      const r = await fetch('/api/git/medium/activity?limit=50&output=1'); if (!r.ok) throw new Error(await apiError(r));
+      const v = await r.json(); MS.rows = v.rows || [];
+    } catch (e) { if (force) box.textContent = String(e); return; }
+    if (!MS.rows.length) { box.innerHTML = `<div class="g-mut">${esc(t('gm_log_empty'))}</div>`; return; }
+    mRender(box, `<table class="gm-log"><thead><tr><th>${esc(t('gm_log_when'))}</th><th>${esc(t('gm_log_who'))}</th><th>${esc(t('gm_log_what'))}</th><th>${esc(t('gm_log_result'))}</th><th>${esc(t('gm_log_took'))}</th></tr></thead><tbody>${MS.rows.map(x => {
+      const res = x.status === 'ok' ? mLight('ok', t('gm_r_ok')) : x.status === 'error' ? mLight('bad', t('gm_r_error')) : x.status === 'running' ? mLight('run', t('gm_r_running')) : mLight('off', t('gm_r_' + x.status) !== 'gm_r_' + x.status ? t('gm_r_' + x.status) : x.status);
+      const open = MS.openRow === x.id;
+      const more = x.detail || x.error || (x.steps && x.steps.length) || x.output != null;
+      return `<tr class="${more ? 'gm-click' : ''}" ${more ? `onclick="gitWorkspace.mediumRow(${x.id})"` : ''}><td>${esc(mClock(x.at))}</td><td>${esc(x.user)}</td><td>${more ? (open ? '▾ ' : '▸ ') : ''}${esc(mOp(x.op))}${x.detail ? `<div class="g-mut">${esc(x.detail)}</div>` : ''}</td><td>${res}</td><td>${x.status === 'running' ? '' : esc(x.ms ? mDur(x.ms) : '–')}</td></tr>` + (open ? `<tr><td colspan="5">${x.error && !(x.steps || []).some(st => st.error) ? `<div class="gm-err">${esc(x.error)}</div>` : ''}${mediumStepsHTML(x.steps, false)}${x.output != null ? `<pre class="gm-out">${esc(x.output || t('gm_no_output'))}</pre>` : ''}</td></tr>` : '');
+    }).join('')}</tbody></table>`);
+  }
+  function mediumRow(id) { MS.openRow = MS.openRow === id ? null : id; mediumActivity(false); }
 
   // Native engine preview (read-only): WRM reads deploy-config, prepares the source and
   // compares it with the servers through WRM connections; optionally side by side with the
@@ -3017,7 +3307,7 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
   async function mediumQuickSetup(){
     const data=new FormData();for(const kind of ['tool','config','ssh']){const f=$('medium-quick-'+kind)?.files?.[0];if(f){if(f.size>20*1024*1024){showToast(t('gm_size'),'error');return}data.append(kind,f)}}
     const button=$('medium-quick-go');button.disabled=true;
-    try{const r=await fetch('/api/git/medium/setup?confirm=1',{method:'POST',body:data});if(!r.ok)throw new Error(await apiError(r));for(const kind of ['tool','config','ssh'])$('medium-quick-'+kind).value='';await mediumRefresh()}catch(e){showToast(String(e),'error',10000);button.disabled=false}
+    try{const r=await fetch('/api/git/medium/setup?confirm=1',{method:'POST',body:data});if(!r.ok)throw new Error(await apiError(r));for(const kind of ['tool','config','ssh'])$('medium-quick-'+kind).value='';await mediumRefresh();mediumActivity(false)}catch(e){showToast(String(e).replace(/^Error: /,''),'error',12000);button.disabled=false;mediumActivity(false)}
   }
   async function mediumSettings() {
     const r=await fetch('/api/git/medium/settings'); if (!r.ok) {showToast(await apiError(r),'error');return;}
@@ -3035,7 +3325,13 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
     if (!confirm(t('gm_trust'))) { input.value = ''; return; }
     if (file.size > 20 * 1024 * 1024) { showToast(t('gm_size'), 'error'); input.value = ''; return; }
     const data = new FormData(); data.append('file', file);
-    try { const r = await fetch('/api/git/medium/' + kind + '?confirm=1', {method:'POST',body:data}); if (!r.ok) throw new Error(await apiError(r)); await mediumRefresh(); } catch (e) { showToast(String(e), 'error', 8000); }
+    try {
+      const r = await fetch('/api/git/medium/' + kind + '?confirm=1', {method:'POST',body:data}); if (!r.ok) throw new Error(await apiError(r));
+      // 202: kept and checked by WRM; the original tool checks and applies it at the next start
+      if (r.status === 202 && kind !== 'tool') showToast(t('gm_kept_' + kind), 'success', 9000);
+      else showToast(t('gm_imported_' + kind), 'success');
+      await mediumRefresh(); mediumActivity(false);
+    } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 12000); mediumActivity(false); }
     input.value = '';
   }
   async function mediumAction(action) {
@@ -3049,8 +3345,8 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
         r = await fetch('/api/git/medium/stop?force=1', json('POST', {}));
       }
       if (!r.ok) throw new Error(await apiError(r));
-      await mediumRefresh();
-    } catch (e) { showToast(String(e), 'error', 8000); }
+      await mediumRefresh(); mediumActivity(false);
+    } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 12000); mediumRefresh(); }
   }
 
   function paintSimple() {
@@ -3449,7 +3745,7 @@ Object.assign(LANGS.hr, {"gm_quick": "Pripremi i pokreni pouzdane ZIP-ove", "gm_
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,

@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -38,16 +41,21 @@ func apiMediumSetup(w http.ResponseWriter, r *http.Request, uid int) {
 		jsonError(w, "Confirm that you trust the deploy tool/configuration", 400)
 		return
 	}
-	if !mediumOperation.TryLock() {
-		jsonError(w, "Another Medium operation is running", 409)
+	h, err := mediumBeginOp(uid, "setup", "")
+	if err != nil {
+		jsonError(w, err.Error(), 409)
 		return
 	}
 	handed := false
+	var failure error
 	defer func() {
 		if !handed {
-			mediumOperation.Unlock()
+			mediumEndOp(h, failure)
 		}
 	}()
+	// every refusal before the background job is the operation's outcome too
+	w = &mediumFailWriter{ResponseWriter: w, fail: &failure}
+	mediumSetStage(uid, "upload", true, nil)
 	if err := r.ParseMultipartForm(64 << 20); err != nil {
 		jsonError(w, "Cannot read ZIP uploads (20 MiB each)", 400)
 		return
@@ -93,6 +101,14 @@ func apiMediumSetup(w http.ResponseWriter, r *http.Request, uid int) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
+		if kind == "config" {
+			// WRM's own reader checks deploy-config at once; the original tool checks it
+			// again before it is used
+			if _, err := mdLoadConfig(p); err != nil {
+				jsonError(w, "deploy-config is not valid: "+err.Error(), 400)
+				return
+			}
+		}
 		sum := sha256.Sum256(data)
 		digests[kind] = hex.EncodeToString(sum[:])
 	}
@@ -114,11 +130,13 @@ func apiMediumSetup(w http.ResponseWriter, r *http.Request, uid int) {
 	}
 	for _, kind := range []string{"tool", "config", "ssh"} {
 		if p := staged[kind]; p != "" {
-			dest := filepath.Join(mediumUserDir(uid), "pending-"+kind)
+			var err error
 			if kind == "tool" {
-				dest = mediumToolDir()
+				err = mediumReplaceDir(p, mediumToolDir())
+			} else {
+				err = mediumKeepPending(uid, kind, p)
 			}
-			if err := mediumReplaceDir(p, dest); err != nil {
+			if err != nil {
 				jsonError(w, "Cannot retain approved ZIP files", 500)
 				return
 			}
@@ -129,18 +147,11 @@ func apiMediumSetup(w http.ResponseWriter, r *http.Request, uid int) {
 			}
 		}
 	}
-	mediumSetStage(uid, "docker", true, nil)
 	handed = true
 	go func() {
-		defer mediumOperation.Unlock()
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 		defer cancel()
-		err := mediumSetup(ctx, uid)
-		if err != nil {
-			mediumSetStage(uid, "error", false, err)
-		} else {
-			mediumSetStage(uid, "ready", false, nil)
-		}
+		mediumEndOp(h, mediumSetup(ctx, uid))
 	}()
 	auditLog(r, uid, "git.medium_setup_started", "", map[string]interface{}{"archives": len(digests)})
 	w.WriteHeader(http.StatusAccepted)
@@ -154,41 +165,140 @@ func mediumSetup(ctx context.Context, uid int) error {
 		}
 	}
 	if !mediumRuntimeReady() {
-		mediumSetStage(uid, "dependencies", true, nil)
-		if err := mediumPrepareRuntime(ctx); err != nil {
+		if err := mediumPrepareRuntime(ctx, func(step string) { mediumSetStage(uid, step, true, nil) }); err != nil {
 			return err
 		}
 	}
-	mediumSetStage(uid, "configuration", true, nil)
+	if err := mediumApplyPending(ctx, uid); err != nil {
+		return err
+	}
+	return mediumStartForSetup(uid, true)
+}
+
+// mediumPendingMu serializes the renames of kept ZIPs (pending-<kind>): an upload that
+// is kept while an operation runs never mixes with the operation taking its snapshot.
+var mediumPendingMu sync.Mutex
+
+// mediumKeepPending makes stage the user's kept <kind> ZIP (replacing an older one).
+func mediumKeepPending(uid int, kind, stage string) error {
+	mediumPendingMu.Lock()
+	defer mediumPendingMu.Unlock()
+	return mediumReplaceDir(stage, filepath.Join(mediumUserDir(uid), "pending-"+kind))
+}
+
+// mediumApplyPending checks kept deploy-config with the original tool and applies kept
+// deploy-config and SSH profile ZIPs (setup, start, or an import when nothing else runs).
+// It works on a snapshot, so a ZIP kept meanwhile waits for the next start. A deploy-config
+// the original tool rejects is discarded (the previous one stays in use); a check that
+// could not run keeps the ZIP for a retry.
+func mediumApplyPending(ctx context.Context, uid int) error {
 	for _, kind := range []string{"config", "ssh"} {
 		pending := filepath.Join(mediumUserDir(uid), "pending-"+kind)
 		if st, e := os.Stat(pending); e != nil || !st.IsDir() {
 			continue
 		}
+		if !mediumRuntimeReady() {
+			return fmt.Errorf("The original tool's runtime is not prepared yet, so the imported %s cannot be checked; an administrator runs \"Prepare runtime\" first", kind)
+		}
+		snap := pending + ".applying"
+		mediumPendingMu.Lock()
+		os.RemoveAll(snap)
+		e := os.Rename(pending, snap)
+		mediumPendingMu.Unlock()
+		if e != nil {
+			continue // replaced or taken meanwhile
+		}
+		// keepForRetry puts the snapshot back unless a newer ZIP was kept meanwhile
+		keepForRetry := func() {
+			mediumPendingMu.Lock()
+			defer mediumPendingMu.Unlock()
+			if _, e := os.Stat(pending); e == nil || os.Rename(snap, pending) != nil {
+				os.RemoveAll(snap)
+			}
+		}
 		dest := filepath.Join(mediumUserDir(uid), "config")
 		if kind == "config" {
-			if err := mediumValidateConfig(ctx, pending); err != nil {
-				return fmt.Errorf("Config validation failed; approved ZIP is retained for retry. Check environments.yaml/servers.yaml and project and references")
+			if mediumBackend() == "docker" {
+				mediumSetStage(uid, "docker", true, nil)
+				if err := mediumDockerCheck(ctx); err != nil {
+					keepForRetry()
+					return err
+				}
+			}
+			mediumSetStage(uid, "config_check", true, nil)
+			if err := mediumValidateConfig(ctx, snap); err != nil {
+				if ctx.Err() != nil || !mediumToolRejected(err) {
+					keepForRetry()
+					if ctx.Err() != nil {
+						return fmt.Errorf("The deploy-config check was cancelled or took too long; your ZIP is kept, try again")
+					}
+					return fmt.Errorf("The original tool's deploy-config check could not run (%s); your ZIP is kept, try again", truncateStr(err.Error(), 300))
+				}
+				os.RemoveAll(snap)
+				return fmt.Errorf("The original tool rejected deploy-config (its output in the Medium log names the file and the problem). Fix the ZIP and import it again; the previous deploy-config stays in use")
 			}
 		} else {
+			mediumSetStage(uid, "ssh_apply", true, nil)
 			dest = filepath.Join(mediumUserDir(uid), "home", ".ssh")
 		}
-		if err := mediumReplaceDir(pending, dest); err != nil {
+		if mediumState(uid).Running {
+			keepForRetry()
+			return fmt.Errorf("Stop the original deploy tool before its %s is replaced", kind)
+		}
+		if err := mediumReplaceDir(snap, dest); err != nil {
+			keepForRetry()
 			return err
 		}
 		if kind == "config" {
-			prefs := mediumPreferences(uid)
-			delete(prefs, "DEPLOY_CONFIG_REPO")
-			if err := os.WriteFile(filepath.Join(mediumUserDir(uid), "preferences.enc"), []byte(encryptValue(string(jsonMarshal(prefs)))), 0600); err != nil {
-				return err
+			if prefs := mediumPreferences(uid); prefs["DEPLOY_CONFIG_REPO"] != "" {
+				delete(prefs, "DEPLOY_CONFIG_REPO")
+				if err := os.WriteFile(filepath.Join(mediumUserDir(uid), "preferences.enc"), []byte(encryptValue(string(jsonMarshal(prefs)))), 0600); err != nil {
+					return err
+				}
 			}
 		}
 		if err := os.WriteFile(filepath.Join(mediumUserDir(uid), kind+"-revision"), []byte(randomToken(16)), 0600); err != nil {
 			return err
 		}
 	}
-	mediumSetStage(uid, "starting", true, nil)
-	return mediumStartForSetup(uid, true)
+	return nil
+}
+
+// mediumToolRejected: did the check run and the original tool's Python exit non-zero
+// (not Docker or the runtime failing to start it)?
+func mediumToolRejected(err error) bool {
+	var x *exec.ExitError
+	if !errors.As(err, &x) {
+		return false
+	}
+	switch x.ExitCode() {
+	case 125, 126, 127, -1: // docker run's own errors, not executable, not found, killed
+		return false
+	}
+	return true
+}
+
+// mediumFailWriter remembers the message of an error response as the operation's outcome.
+type mediumFailWriter struct {
+	http.ResponseWriter
+	fail   *error
+	status int
+}
+
+func (m *mediumFailWriter) WriteHeader(code int) {
+	m.status = code
+	m.ResponseWriter.WriteHeader(code)
+}
+func (m *mediumFailWriter) Write(b []byte) (int, error) {
+	if m.status >= 400 && *m.fail == nil {
+		var v struct {
+			Error string `json:"error"`
+		}
+		if json.Unmarshal(b, &v) == nil && v.Error != "" {
+			*m.fail = fmt.Errorf("%s", v.Error)
+		}
+	}
+	return m.ResponseWriter.Write(b)
 }
 
 func mediumEnsureDocker(ctx context.Context) error {

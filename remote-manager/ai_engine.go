@@ -807,7 +807,7 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		return fail("Denied by WRM: " + dec.Reason + "." + aiDenyHint(dec) + " Do not try to work around this; explain to the user what you would need.")
 	case aiApprove:
 		var r aiApprovalResult
-		if s.takeLaterApproval(aiApprovalKey(call.Name, pl)) {
+		if key := aiApprovalKey(call.Name, pl); s.takeLaterApproval(key) || aiTakeStoredLater(s.UserID, s.ConnID, key) {
 			r = aiApprovalResult{Approved: true, Outcome: "approved", Via: "later"}
 			s.audit(nil, "ai.approved", map[string]interface{}{"tool": call.Name, "via": "later", "rule": dec.Rule})
 			s.emit("approval_resolved", map[string]interface{}{"call_id": call.ID, "outcome": "approved", "via": "later", "by": s.Username})
@@ -1240,6 +1240,7 @@ func (s *aiSession) Kill(by int, reason string) {
 	s.ended = true
 	s.endReason = reason
 	s.cancel()
+	s.aiKeepLater(time.Now())
 	for id, a := range s.pending {
 		delete(s.pending, id)
 		select {
@@ -1553,6 +1554,7 @@ func runAIJanitor() {
 }
 
 func aiJanitorTick(now time.Time) {
+	aiLaterJanitor(now)
 	idle := time.Duration(settingInt("ai_idle_minutes")) * time.Minute
 	for _, s := range aiActiveSessions(nil) {
 		s.mu.Lock()
