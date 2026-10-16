@@ -51,7 +51,7 @@ test('shared windows resolve their connection from the correct share', () => {
 test('switching folder tabs focuses a window from the selected client/site', () => {
   const a={id:1,conn:{folder_id:2},_lastFocus:10,el:{style:{display:'none'}}},b={id:2,conn:{folder_id:4},_lastFocus:20,el:{style:{display:'flex'}}};
   let focused=0;
-  const ctx=vm.createContext({winObjects:[a,b],winConn:wo=>wo.conn,scheduleFit(){},focusWindow:id=>{focused=id},renderTabs(){}});
+  const ctx=vm.createContext({winObjects:[a,b],winConn:wo=>wo.conn,scheduleFit(){},focusWindow:id=>{focused=id},renderTabs(){},winLayoutChanged(){}});
   vm.runInContext(slice('let tabFolderFilter = null;', 'function renderTabs()'),ctx);
   ctx.setTabFolder('2');assert.equal(focused,1);assert.equal(a.el.style.display,'flex');
   ctx.setTabFolder('4');assert.equal(focused,2);
