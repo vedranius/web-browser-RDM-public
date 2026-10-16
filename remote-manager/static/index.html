@@ -51,8 +51,12 @@ body {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  user-select: none;
+  user-select: text;
 }
+/* Every text on the page can be selected and copied. Only controls that are dragged or
+   clicked (buttons, tabs, title bars, tree rows, resize handles) stay unselectable. */
+button, .btn-top, .tab-item, .rp-tabs, .win-header, .win-btns, .folder-row, .conn-item, .tree-section-label,
+.sess-resize-handle, .sidebar-resize-handle, .adb-resize, #mcp-watch .ad-head, .collapse-btn, .tab-scroll-btn { user-select: none; }
 
 /* ══ BUTTONS ══ */
 button {
@@ -4800,6 +4804,8 @@ Object.assign(LANGS.en, { dlg_back: 'Back' });
 Object.assign(LANGS.hr, { dlg_back: 'Natrag' });
 Object.assign(LANGS.en, { tb_more_t: 'More', rp_ai: 'AI', rp_ai_t: 'What AI apps run on your servers, live' });
 Object.assign(LANGS.hr, { tb_more_t: 'Više', rp_ai: 'AI', rp_ai_t: 'Što AI aplikacije pokreću na tvojim poslužiteljima, uživo' });
+Object.assign(LANGS.en, { p_medium_host_ca: 'Medium trusts this computer\'s certificates', p_medium_host_ca_d: 'The original deploy tool\'s Docker runtime also trusts the root certificates the WRM host trusts (Windows certificate store, macOS keychains, the Linux CA bundle). Needed behind a proxy or antivirus that inspects HTTPS, where pip otherwise fails with "self-signed certificate in certificate chain".', p_medium_ca_file: 'Extra CA file for Medium', p_medium_ca_file_d: 'Path on the WRM host to a PEM file with more root certificates for the Docker runtime, for example your proxy\'s root CA. Empty: none.', p_medium_ca_file_ph: 'C:\\certs\\proxy-root.pem or /etc/ssl/proxy-root.pem' });
+Object.assign(LANGS.hr, { p_medium_host_ca: 'Medium vjeruje certifikatima ovog računala', p_medium_host_ca_d: 'Docker okruženje izvornog deploy toola vjeruje i root certifikatima kojima vjeruje WRM računalo (Windows spremište certifikata, macOS keychain, Linux CA paket). Potrebno iza proxyja ili antivirusa koji pregledava HTTPS, gdje pip inače javlja "self-signed certificate in certificate chain".', p_medium_ca_file: 'Dodatna CA datoteka za Medium', p_medium_ca_file_d: 'Putanja na WRM računalu do PEM datoteke s dodatnim root certifikatima za Docker okruženje, npr. root CA tvog proxyja. Prazno: nema.', p_medium_ca_file_ph: 'C:\\certs\\proxy-root.pem ili /etc/ssl/proxy-root.pem' });
 Object.assign(LANGS.en, { p_medium_docker_install: 'Install Docker for Medium', p_medium_docker_install_d: 'WRM may install and start Docker on its own host for the original deploy tool (Docker Engine from the Linux distribution, Docker Desktop on Windows and macOS). An administrator still allows it once in Medium, accepting Docker Desktop\'s licence where it applies.', p_medium_log_output: 'Medium command output', p_medium_log_output_d: 'Who sees the (redacted) output of Medium commands: everyone for their own operations, only administrators, or nobody.', po_medium_log_output_all: 'Everyone (own operations)', po_medium_log_output_admins: 'Administrators', po_medium_log_output_none: 'Nobody' });
 Object.assign(LANGS.hr, { p_medium_docker_install: 'Instalacija Dockera za Medium', p_medium_docker_install_d: 'WRM smije sam instalirati i pokrenuti Docker na svom računalu za izvorni deploy tool (Docker Engine iz Linux distribucije, Docker Desktop na Windowsima i macOS-u). Administrator to i dalje jednom dopušta u Mediumu i prihvaća licencu Docker Desktopa gdje vrijedi.', p_medium_log_output: 'Izlaz Medium naredbi', p_medium_log_output_d: 'Tko vidi (redigirani) izlaz Medium naredbi: svatko za svoje radnje, samo administratori ili nitko.', po_medium_log_output_all: 'Svi (vlastite radnje)', po_medium_log_output_admins: 'Administratori', po_medium_log_output_none: 'Nitko' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
@@ -6517,7 +6523,7 @@ const POLICY_GROUPS = {
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
     ['pg_proxies', ['proxies']],
-    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_check_parallel', 'git_check_per_server', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_medium', 'medium_docker_install', 'medium_log_output', 'git_transfer', 'git_gitignore_mr', 'git_schedule_grace_minutes']],
+    ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_check_parallel', 'git_check_per_server', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_medium', 'medium_docker_install', 'medium_host_ca', 'medium_ca_file', 'medium_log_output', 'git_transfer', 'git_gitignore_mr', 'git_schedule_grace_minutes']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_updates', ['update_check', 'update_repo', 'update_proxy', 'self_update']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],

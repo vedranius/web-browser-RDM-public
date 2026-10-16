@@ -427,6 +427,9 @@ func mediumStartForSetup(uid int, setup bool) error {
 		if e := mediumDockerSync(ctx, uid); e != nil {
 			return fmt.Errorf("Cannot synchronize private Linux runtime data; check Docker volume access and disk space")
 		}
+		if _, e := mediumWriteCABundle(); e != nil {
+			return e
+		}
 	}
 	l, e := net.Listen("tcp", "127.0.0.1:0")
 	if e != nil {

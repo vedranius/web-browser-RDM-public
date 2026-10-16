@@ -121,13 +121,17 @@ func mediumContainerPath(host string) string {
 func mediumDockerPython(ctx context.Context, python string, args ...string) error {
 	name := "wrm-medium-setup-" + randomToken(8)
 	defer mediumDockerStop(name)
-	argv := []string{"run", "--rm", "--init", "--no-healthcheck", "--env", "PYTHONDONTWRITEBYTECODE=1", "--name", name, "--platform", "linux/amd64", "--user", "0:0", "--volume", mediumRoot() + ":/wrm-medium", "--volume", mediumDockerRuntimeVolume() + ":/wrm-medium/docker-venv", "--workdir", "/wrm-medium/tool", "--entrypoint", python, mediumImage()}
+	argv := []string{"run", "--rm", "--init", "--no-healthcheck", "--env", "PYTHONDONTWRITEBYTECODE=1", "--name", name, "--platform", "linux/amd64", "--user", "0:0", "--volume", mediumRoot() + ":/wrm-medium", "--volume", mediumDockerRuntimeVolume() + ":/wrm-medium/docker-venv", "--workdir", "/wrm-medium/tool"}
+	argv = append(argv, mediumCAArgs()...)
+	cargs := make([]string, 0, len(args))
 	for _, arg := range args {
 		if filepath.IsAbs(arg) {
 			arg = mediumContainerPath(arg)
 		}
-		argv = append(argv, arg)
+		cargs = append(cargs, arg)
 	}
+	entry, cargs := mediumCACommand(python, cargs)
+	argv = append(append(argv, "--entrypoint", entry, mediumImage()), cargs...)
 	return mediumCommand(ctx, mediumRoot(), mediumDockerCLI(), argv...)
 }
 
@@ -145,6 +149,12 @@ func mediumPrepareRuntime(ctx context.Context, step func(string)) error {
 		if e := mediumEnsureDocker(ctx, step); e != nil {
 			return e
 		}
+		// the host's trusted certificates (proxies and antivirus that inspect HTTPS)
+		if n, e := mediumWriteCABundle(); e != nil {
+			return e
+		} else if out := mediumOpOutput(); out != nil && n > 0 {
+			out.Note("the runtime trusts %d certificates of the WRM host besides its own (policy medium_host_ca, setting medium_ca_file)", n)
+		}
 		// Docker pulls the pinned image automatically on the first invocation.
 		step("image")
 		if e := mediumDockerPython(ctx, "python3", "-m", "venv", "/wrm-medium/docker-venv"); e != nil {
@@ -152,6 +162,9 @@ func mediumPrepareRuntime(ctx context.Context, step func(string)) error {
 		}
 		step("packages")
 		if e := mediumDockerPython(ctx, "/wrm-medium/docker-venv/bin/python", "-m", "pip", "install", "--disable-pip-version-check", "-r", filepath.Join(mediumToolDir(), "requirements.lock")); e != nil {
+			if out := mediumOpOutput(); out != nil && strings.Contains(out.Tail(), "CERTIFICATE_VERIFY_FAILED") {
+				return fmt.Errorf("pip inside Docker does not trust the certificate it gets for the package registry (certificate verify failed): a proxy or antivirus on this network inspects HTTPS. Turn on the policy medium_host_ca (trust the WRM host's certificates) or set medium_ca_file to the proxy's root certificate (PEM), then press Prepare runtime again")
+			}
 			return fmt.Errorf("Cannot install the original tool's Python packages inside Docker; check access to the package registry (pypi.org or your mirror) and the imported requirements.lock")
 		}
 		if e := os.WriteFile(filepath.Join(mediumRoot(), "docker-ready"), []byte(mediumImage()), 0600); e != nil {
@@ -186,11 +199,13 @@ func mediumValidateConfig(ctx context.Context, stage string) error {
 }
 
 func mediumDockerStartArgs(uid, port int, name string, envNames []string) []string {
-	args := []string{"run", "--rm", "--init", "--no-healthcheck", "--env", "PYTHONDONTWRITEBYTECODE=1", "--platform", "linux/amd64", "--name", name, "--label", "wrm.medium=true", "--user", "0:0", "--publish", fmt.Sprintf("127.0.0.1:%d:8080", port), "--volume", mediumToolDir() + ":/wrm-medium/tool:ro", "--volume", mediumDockerRuntimeVolume() + ":/wrm-medium/docker-venv:ro", "--volume", mediumDockerVolume(uid) + ":/wrm-medium/users/" + strconv.Itoa(uid), "--workdir", "/wrm-medium/users/" + strconv.Itoa(uid), "--entrypoint", "/wrm-medium/docker-venv/bin/python"}
+	args := []string{"run", "--rm", "--init", "--no-healthcheck", "--env", "PYTHONDONTWRITEBYTECODE=1", "--platform", "linux/amd64", "--name", name, "--label", "wrm.medium=true", "--user", "0:0", "--publish", fmt.Sprintf("127.0.0.1:%d:8080", port), "--volume", mediumToolDir() + ":/wrm-medium/tool:ro", "--volume", mediumDockerRuntimeVolume() + ":/wrm-medium/docker-venv:ro", "--volume", mediumDockerVolume(uid) + ":/wrm-medium/users/" + strconv.Itoa(uid), "--workdir", "/wrm-medium/users/" + strconv.Itoa(uid)}
+	args = append(args, mediumCAArgs()...)
 	for _, key := range envNames {
 		args = append(args, "--env", key) // values/bridge secret stay out of argv
 	}
-	return append(args, mediumImage(), "-m", "uvicorn", "medium_wrapper:app", "--host", "0.0.0.0", "--port", "8080", "--no-proxy-headers", "--no-access-log")
+	entry, cargs := mediumCACommand("/wrm-medium/docker-venv/bin/python", []string{"-m", "uvicorn", "medium_wrapper:app", "--host", "0.0.0.0", "--port", "8080", "--no-proxy-headers", "--no-access-log"})
+	return append(append(args, "--entrypoint", entry, mediumImage()), cargs...)
 }
 
 func mediumDockerVolume(uid int) string {
