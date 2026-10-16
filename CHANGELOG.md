@@ -9,7 +9,8 @@
 
 ### Changed
 - A deploy-config ZIP is checked by WRM's own reader at once (`400` with file and key). Uploaded while the runtime is being prepared, before it exists or while another operation runs, a deploy-config or SSH ZIP is kept (`202`, `pending`) and checked by the original tool and applied at the next start instead of being refused.
-- `POST /api/git/medium/start` and the tool import run in the background (`202`); the UI follows them every 2 seconds. An error stays shown until the next operation, with the failed step.
+- `POST /api/git/medium/start` and the tool import run in the background (`202`); the UI follows them every 2 seconds and shows the tool as running only when it answers (`ready`). An error stays shown until the next operation, with the failed step.
+- A deploy-config the original tool rejects is discarded (the previous one stays in use); a check that could not run (Docker not running, timeout) keeps the ZIP and says so. The WRM preview uses a kept deploy-config. Actions in the original tool are logged with its answer.
 
 ### Fixed
 - An administrator's runtime preparation blocked every other Medium action for several minutes with "Medium is busy" and no way to see what ran or how far it was.

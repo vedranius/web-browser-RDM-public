@@ -41,7 +41,7 @@ case "$1" in
  run)
    case "$*" in
      *"pip install"*) echo "Collecting demo-package"; echo "token=zzSECRETzz99"; echo "Successfully installed demo-package"; exit 0;;
-     *load_config*) echo "config OK"; exit 0;;
+     *load_config*) if [ -n "$WRM_TEST_REJECT" ]; then echo "ValueError: servers.yaml: bad"; exit 1; fi; echo "config OK"; exit 0;;
      *uvicorn*) echo "Traceback (most recent call last):"; echo "ModuleNotFoundError: No module named 'app.deploy'"; exit 1;;
    esac;;
 esac
@@ -116,7 +116,7 @@ func TestV1265MediumStepsActivityAndOutput(t *testing.T) {
 		t.Fatalf("failed start: %+v", s)
 	}
 	last := s.Steps[len(s.Steps)-1]
-	if last.Status != "error" || !strings.HasPrefix(last.Step, "start_") || s.Steps[0].Step != "config_check" {
+	if last.Status != "error" || !strings.HasPrefix(last.Step, "start_") || s.Steps[0].Step != "docker" || s.Steps[1].Step != "config_check" {
 		t.Fatalf("start steps: %+v", s.Steps)
 	}
 	// the activity log: newest first, with steps and redacted output
@@ -199,5 +199,39 @@ func TestV1265MediumBusyNamesHolder(t *testing.T) {
 		if r.Op == "start" && (r.Output == nil || strings.Contains(*r.Output, "hidden-value-1")) {
 			t.Fatalf("admin output: %+v", r)
 		}
+	}
+}
+
+// A deploy-config the original tool rejects is discarded and the previous one stays in use;
+// a check that cannot run keeps the ZIP. Actions in the original tool are logged with its answer.
+func TestV1265RejectedConfigAndKeptZip(t *testing.T) {
+	t.Setenv("DB_PATH", filepath.Join(t.TempDir(), "medium.db"))
+	srv := newTestServer(t)
+	admin := newTestUser(t, srv, "medium-reject-admin", true)
+	mediumFakeDocker(t)
+	if code, _ := mediumUploadZip(t, admin, "tool", mediumTool); code != 202 {
+		t.Fatalf("tool: %d", code)
+	}
+	mediumWaitIdle(t, admin.userID)
+	if code, v := mediumUploadZip(t, admin, "config", mediumGoodConfig); code != 200 {
+		t.Fatalf("config with a ready runtime: %d %v", code, v)
+	}
+	t.Setenv("WRM_TEST_REJECT", "1")
+	code, v := mediumUploadZip(t, admin, "config", mediumGoodConfig)
+	if code != 400 || !strings.Contains(v["error"].(string), "previous deploy-config stays in use") {
+		t.Fatalf("rejected config: %d %v", code, v)
+	}
+	if s := mediumState(admin.userID); s.PendingConfig || !s.Config {
+		t.Fatalf("a rejected config must be discarded, the applied one kept: %+v", s)
+	}
+	// Docker unavailable: the check cannot run, the ZIP is kept for a retry
+	t.Setenv("WRM_TEST_REJECT", "")
+	t.Setenv("WRM_MEDIUM_DOCKER", filepath.Join(t.TempDir(), "missing-docker"))
+	code, v = mediumUploadZip(t, admin, "config", mediumGoodConfig)
+	if code != 400 || strings.Contains(v["error"].(string), "rejected") {
+		t.Fatalf("check without Docker: %d %v", code, v)
+	}
+	if !mediumState(admin.userID).PendingConfig {
+		t.Fatal("a config whose check could not run must stay kept")
 	}
 }

@@ -185,7 +185,6 @@ func mediumEndOp(h *mediumOpInfo, err error) {
 	if h == nil {
 		return
 	}
-	defer mediumOperation.Unlock()
 	took := time.Since(h.at).Round(time.Second)
 	if err != nil {
 		h.out.Note("failed: %s", err.Error())
@@ -208,6 +207,9 @@ func mediumEndOp(h *mediumOpInfo, err error) {
 	// the row is complete before the status says the operation ended, so a client that
 	// sees it end finds its result, steps and output in the activity log
 	db.Exec(`UPDATE medium_activity SET status=?, ms=?, error=?, steps=?, output=? WHERE id=?`, status, time.Since(h.at).Milliseconds(), msg, string(jsonMarshal(steps)), encryptValue(h.out.Tail()), h.ID)
+	mediumPruneActivity()
+	// Busy is cleared while the lock is still held (the holder still shows the operation),
+	// then the holder and the lock are released together, with no I/O in between.
 	mediumMgr.mu.Lock()
 	s = mediumMgr.statuses[key]
 	s.Busy = false
@@ -222,8 +224,8 @@ func mediumEndOp(h *mediumOpInfo, err error) {
 	if mediumOps.holder == h {
 		mediumOps.holder = nil
 	}
+	mediumOperation.Unlock()
 	mediumOps.Unlock()
-	mediumPruneActivity()
 }
 
 // mediumCloseStep ends the running step (ok, or error with err); mediumMgr.mu is held.
@@ -267,8 +269,10 @@ func mediumRecord(uid int, op, status string, ms int64, detail, errText, output 
 	mediumPruneActivity()
 }
 
+// The newest rows are kept per user, and the shared runtime's rows separately, so one
+// user's activity cannot push out everyone else's history.
 func mediumPruneActivity() {
-	db.Exec(`DELETE FROM medium_activity WHERE id <= (SELECT id FROM medium_activity ORDER BY id DESC LIMIT 1 OFFSET ?)`, mediumActivityKeep)
+	db.Exec(`DELETE FROM medium_activity WHERE status != 'running' AND id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY CASE WHEN shared = 1 THEN -1 ELSE user_id END ORDER BY id DESC) AS n FROM medium_activity) WHERE n > ?)`, mediumActivityKeep)
 }
 
 // mediumOutputVisible: may this user read the output of that row (policy medium_log_output)?
@@ -350,12 +354,8 @@ func apiMediumActivity(w http.ResponseWriter, r *http.Request, uid int, action s
 	}
 	if action == "/log" {
 		out := map[string]interface{}{"policy": getSetting("medium_log_output")}
-		if h := mediumHolder(uid); h != nil && mediumOutputVisible(uid, h.UserID, h.shared) {
-			mediumOps.Lock()
-			if mediumOps.holder != nil {
-				out["operation"] = mediumOps.holder.out.Tail()
-			}
-			mediumOps.Unlock()
+		if h := mediumHolder(uid); h != nil && h.out != nil && mediumOutputVisible(uid, h.UserID, h.shared) {
+			out["operation"] = h.out.Tail()
 		}
 		if mediumOutputVisible(uid, uid, false) {
 			mediumMgr.mu.Lock()

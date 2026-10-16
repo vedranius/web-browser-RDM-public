@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -128,11 +130,13 @@ func apiMediumSetup(w http.ResponseWriter, r *http.Request, uid int) {
 	}
 	for _, kind := range []string{"tool", "config", "ssh"} {
 		if p := staged[kind]; p != "" {
-			dest := filepath.Join(mediumUserDir(uid), "pending-"+kind)
+			var err error
 			if kind == "tool" {
-				dest = mediumToolDir()
+				err = mediumReplaceDir(p, mediumToolDir())
+			} else {
+				err = mediumKeepPending(uid, kind, p)
 			}
-			if err := mediumReplaceDir(p, dest); err != nil {
+			if err != nil {
 				jsonError(w, "Cannot retain approved ZIP files", 500)
 				return
 			}
@@ -171,9 +175,22 @@ func mediumSetup(ctx context.Context, uid int) error {
 	return mediumStartForSetup(uid, true)
 }
 
+// mediumPendingMu serializes the renames of kept ZIPs (pending-<kind>): an upload that
+// is kept while an operation runs never mixes with the operation taking its snapshot.
+var mediumPendingMu sync.Mutex
+
+// mediumKeepPending makes stage the user's kept <kind> ZIP (replacing an older one).
+func mediumKeepPending(uid int, kind, stage string) error {
+	mediumPendingMu.Lock()
+	defer mediumPendingMu.Unlock()
+	return mediumReplaceDir(stage, filepath.Join(mediumUserDir(uid), "pending-"+kind))
+}
+
 // mediumApplyPending checks kept deploy-config with the original tool and applies kept
 // deploy-config and SSH profile ZIPs (setup, start, or an import when nothing else runs).
-// A ZIP the original tool rejects stays kept, so a corrected one or a retry can follow.
+// It works on a snapshot, so a ZIP kept meanwhile waits for the next start. A deploy-config
+// the original tool rejects is discarded (the previous one stays in use); a check that
+// could not run keeps the ZIP for a retry.
 func mediumApplyPending(ctx context.Context, uid int) error {
 	for _, kind := range []string{"config", "ssh"} {
 		pending := filepath.Join(mediumUserDir(uid), "pending-"+kind)
@@ -183,20 +200,53 @@ func mediumApplyPending(ctx context.Context, uid int) error {
 		if !mediumRuntimeReady() {
 			return fmt.Errorf("The original tool's runtime is not prepared yet, so the imported %s cannot be checked; an administrator runs \"Prepare runtime\" first", kind)
 		}
+		snap := pending + ".applying"
+		mediumPendingMu.Lock()
+		os.RemoveAll(snap)
+		e := os.Rename(pending, snap)
+		mediumPendingMu.Unlock()
+		if e != nil {
+			continue // replaced or taken meanwhile
+		}
+		// keepForRetry puts the snapshot back unless a newer ZIP was kept meanwhile
+		keepForRetry := func() {
+			mediumPendingMu.Lock()
+			defer mediumPendingMu.Unlock()
+			if _, e := os.Stat(pending); e == nil || os.Rename(snap, pending) != nil {
+				os.RemoveAll(snap)
+			}
+		}
 		dest := filepath.Join(mediumUserDir(uid), "config")
 		if kind == "config" {
+			if mediumBackend() == "docker" {
+				mediumSetStage(uid, "docker", true, nil)
+				if err := mediumDockerCheck(ctx); err != nil {
+					keepForRetry()
+					return err
+				}
+			}
 			mediumSetStage(uid, "config_check", true, nil)
-			if err := mediumValidateConfig(ctx, pending); err != nil {
-				return fmt.Errorf("The original tool rejected deploy-config (its output in the Medium log names the file and the problem). Fix the ZIP and import it again; the rejected one is kept until then")
+			if err := mediumValidateConfig(ctx, snap); err != nil {
+				if ctx.Err() != nil || !mediumToolRejected(err) {
+					keepForRetry()
+					if ctx.Err() != nil {
+						return fmt.Errorf("The deploy-config check was cancelled or took too long; your ZIP is kept, try again")
+					}
+					return fmt.Errorf("The original tool's deploy-config check could not run (%s); your ZIP is kept, try again", truncateStr(err.Error(), 300))
+				}
+				os.RemoveAll(snap)
+				return fmt.Errorf("The original tool rejected deploy-config (its output in the Medium log names the file and the problem). Fix the ZIP and import it again; the previous deploy-config stays in use")
 			}
 		} else {
 			mediumSetStage(uid, "ssh_apply", true, nil)
 			dest = filepath.Join(mediumUserDir(uid), "home", ".ssh")
 		}
 		if mediumState(uid).Running {
+			keepForRetry()
 			return fmt.Errorf("Stop the original deploy tool before its %s is replaced", kind)
 		}
-		if err := mediumReplaceDir(pending, dest); err != nil {
+		if err := mediumReplaceDir(snap, dest); err != nil {
+			keepForRetry()
 			return err
 		}
 		if kind == "config" {
@@ -212,6 +262,20 @@ func mediumApplyPending(ctx context.Context, uid int) error {
 		}
 	}
 	return nil
+}
+
+// mediumToolRejected: did the check run and the original tool's Python exit non-zero
+// (not Docker or the runtime failing to start it)?
+func mediumToolRejected(err error) bool {
+	var x *exec.ExitError
+	if !errors.As(err, &x) {
+		return false
+	}
+	switch x.ExitCode() {
+	case 125, 126, 127, -1: // docker run's own errors, not executable, not found, killed
+		return false
+	}
+	return true
 }
 
 // mediumFailWriter remembers the message of an error response as the operation's outcome.

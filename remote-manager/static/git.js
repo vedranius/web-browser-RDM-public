@@ -556,6 +556,14 @@ Object.assign(LANGS.hr, {
  gcp_title:'Konfiguracijski profili', gcp_intro:'Uvezite referentni config/INI i pregledajte odgovarajuću datoteku na svakoj instalaciji. Označene instalacije ograničavaju provjeru; inače se provjeravaju sve instalacije odabranog servisa (do 50).', gcp_add:'Dodaj config/INI profil', gcp_settings:'postavki', gcp_check:'Pregledaj servere', gcp_path:'Relativna putanja na serveru', gcp_operator:'Operater / klijent (opcionalno)', gcp_file:'Referentna datoteka', gcp_import_hint:'Referenca definira postavke i očekivane vrijednosti. Parsira se bez izvršavanja skripti; tajne se maskiraju prije spremanja. Datoteka na serveru mora biti unutar instalacije.', gcp_file_limit:'Odaberite tekstualnu konfiguraciju do 256 KiB.', gcp_delete:'Obrisati ovaj konfiguracijski profil?', gcp_values_hint:'Stvarne vrijednosti čitaju se sada sa servera. Izrazi skripti prikazuju se kao izvor i ne izvršavaju se. Tajne su maskirane i ne uspoređuju se. INI sekcije mogu označavati operatere.', gcp_expected:'Referentna vrijednost', gcp_missing:'Nedostaje', gcp_masked:'Maskirano', gcp_extra:'Dodatna postavka', gcp_same:'Odgovara referenci', gcp_different:'Razlikuje se od reference',
 });
 
+Object.assign(LANGS.en, {
+  gm_s2_run_other: 'In progress ({where}): {user} is preparing the shared runtime since {at}. Wait until it finishes; you can import your deploy-config meanwhile.',
+  gm_hint_start_noout: 'The original tool stopped while starting. Its output is shown only to administrators: ask one to look at it in the activity log, fix the cause and press Start again.',
+});
+Object.assign(LANGS.hr, {
+  gm_s2_run_other: 'U tijeku ({where}): {user} priprema zajedničko okruženje od {at}. Pričekaj da završi; u međuvremenu možeš uvesti svoj deploy-config.',
+  gm_hint_start_noout: 'Izvorni alat je stao tijekom pokretanja. Njegov izlaz vide samo administratori: zamoli jednog da ga pogleda u dnevniku aktivnosti, ispravi uzrok i ponovno klikni Pokreni.',
+});
 Object.assign(LANGS.en, { gm_force_stop: 'Stop it anyway? A comparison or deployment that is still running is interrupted; the original tool\'s lock and history then show where it stopped.' });
 Object.assign(LANGS.hr, { gm_force_stop: 'Ipak zaustaviti? Usporedba ili deploy koji još radi bit će prekinut; zaključavanje i povijest izvornog alata tada pokazuju gdje je stao.' });
 Object.assign(LANGS.en, { git_back: 'Back', git_back_to: 'Back to “{name}”' });
@@ -2986,6 +2994,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
       <div id="medium-frame"></div>
       <details class="g-card" id="mn-card" ontoggle="if(this.open)gitWorkspace.nativeLoad()"><summary><b>🔎 ${esc(t('mn_title'))}</b> <span id="gm-preview-light"></span></summary><div id="mn-body"></div></details>
       <div class="g-card" id="gm-activity"><div class="gm-head"><h3>📜 ${esc(t('gm_log_title'))}</h3><button class="btn-sec btn-sm" onclick="gitWorkspace.mediumActivity(true)">↻</button></div><p class="g-mut">${esc(t('gm_log_hint'))}</p><div id="gm-rows"></div></div>`;
+      MS.lastOp = '';
     }
     await mediumRefresh();
   }
@@ -2996,11 +3005,14 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     if (step === 'image') return t('gm_hint_image');
     if (step === 'packages') return t('gm_hint_packages');
     if (step === 'python' || step === 'venv') return t('gm_hint_python');
-    if (step === 'config_check') return t('gm_hint_config');
-    if (step.startsWith('start_')) return t('gm_hint_start');
-    if (step === 'upload' || step === 'tool_unpack') return /deploy-config is not valid/.test(String(err || '')) ? t('gm_hint_config_wrm') : t('gm_hint_upload');
+    if (step === 'config_check') return /rejected/.test(String(err || '')) ? t('gm_hint_config') : '';
+    if (step === 'start_process' || step === 'start_ready') return /cancelled/.test(String(err || '')) ? '' : mOutHidden() ? t('gm_hint_start_noout') : t('gm_hint_start');
+    if (step === 'start_sync') return /docker/i.test(String(err || '')) ? t('gm_hint_docker') : '';
+    if (step === 'upload' || step === 'tool_unpack') return /deploy-config is not valid/.test(String(err || '')) ? t('gm_hint_config_wrm') : /ZIP|MiB|missing|expected/i.test(String(err || '')) ? t('gm_hint_upload') : '';
     return '';
   }
+  // the administrator hides command output from this user (medium_log_output)
+  function mOutHidden() { const s = MS.s || {}; return s.output_policy === 'none' || (s.output_policy === 'admins' && !s.admin); }
   function mediumStepsHTML(steps, live) {
     if (!steps || !steps.length) return '';
     return `<ul class="gm-tl">${steps.map(x => {
@@ -3024,7 +3036,9 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     else set(1, 'wait', s.admin ? t('gm_s1_todo_admin') : t('gm_s1_todo_user'));
     // 2. its runtime (Docker or Python on the WRM host)
     const where = s.backend === 'docker' ? t('gm_rt_docker') : t('gm_rt_host');
-    if (['prepare', 'tool_import'].includes(runningOp) || (runningOp === 'setup' && ['docker', 'image', 'packages', 'python', 'venv'].includes(s.stage))) set(2, 'run', tf('gm_s2_run', {where, step: mStep(s.stage)}));
+    const holder = s.operation && !s.operation.mine ? s.operation : null;
+    if (holder && ['prepare', 'tool_import'].includes(holder.op)) set(2, 'run', tf('gm_s2_run_other', {where, user: holder.user, at: mClock(holder.started)}));
+    else if (['prepare', 'tool_import'].includes(runningOp) || (runningOp === 'setup' && ['docker', 'image', 'packages', 'python', 'venv'].includes(s.stage))) set(2, 'run', tf('gm_s2_run', {where, step: mStep(s.stage)}));
     else if (s.tool) set(2, 'ok', tf('gm_s2_ok', {where}));
     else if (!s.tool_imported) set(2, 'wait', tf('gm_s2_after1', {where}));
     else if (deps.length) set(2, 'bad', tf('gm_s2_missing', {where, deps: deps.join(', ')}));
@@ -3034,16 +3048,16 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     if (s.pending_config) set(3, 'pend', t('gm_s3_pending'));
     else if (s.config) set(3, 'ok', t('gm_s3_ok'));
     else set(3, 'wait', t('gm_s3_todo'));
-    if (failedStep && failedStep.step === 'config_check') set(3, 'bad', t('gm_s3_rejected'), `<div class="gm-todo">${esc(t('gm_hint_config'))}</div>`);
+    if (failedStep && failedStep.step === 'config_check' && !s.pending_config) set(3, 'bad', t('gm_s3_rejected'), `<div class="gm-todo">${esc(t('gm_hint_config'))}</div>`);
     // 4. SSH profile (optional)
     if (s.pending_ssh) set(4, 'pend', t('gm_s4_pending'));
     else set(4, 'opt', t('gm_s4_text'));
     // 5. start
     const ready = s.tool && (s.config || s.pending_config);
-    if (s.running) set(5, 'ok', tf('gm_s5_running', {since: mClock(s.running_since), took: mSince(s.running_since)}));
+    if (s.running && s.ready) set(5, 'ok', tf('gm_s5_running', {since: mClock(s.running_since), took: mSince(s.running_since)}));
     else if (runningOp === 'start' || (runningOp === 'setup' && (s.stage || '').startsWith('start_'))) set(5, 'run', tf('gm_s5_starting', {step: mStep(s.stage)}));
-    else if (failedStep && failedStep.step.startsWith('start_')) set(5, 'bad', t('gm_s5_failed'), `<div class="gm-todo">${esc(t('gm_hint_start'))}</div>`);
-    else if (s.last_exit && !s.last_exit.expected) set(5, 'bad', tf('gm_s5_exited', {at: mClock(s.last_exit.at), code: s.last_exit.code}), `<div class="gm-todo">${esc(t('gm_hint_start'))}</div>`);
+    else if (failedStep && failedStep.step.startsWith('start_')) { const h = mediumHint(failedStep.step, failedStep.error); set(5, 'bad', t('gm_s5_failed'), h ? `<div class="gm-todo">${esc(h)}</div>` : ''); }
+    else if (s.last_exit && !s.last_exit.expected) set(5, 'bad', tf('gm_s5_exited', {at: mClock(s.last_exit.at), code: s.last_exit.code}), `<div class="gm-todo">${esc(mOutHidden() ? t('gm_hint_start_noout') : t('gm_hint_start'))}</div>`);
     else if (ready) set(5, 'wait', t('gm_s5_ready'));
     else set(5, 'wait', t('gm_s5_todo'));
     // buttons: only what can work now; the reason is in the title
@@ -3053,8 +3067,12 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     startBtn.disabled = busy || s.running || !ready;
     startBtn.title = s.running ? t('gm_why_running') : busy ? t('gm_why_busy') : !ready ? t('gm_s5_todo') : '';
     stopBtn.disabled = !s.running;
-    $('gm-open').style.display = s.running ? '' : 'none';
+    $('gm-open').style.display = s.running && s.ready ? '' : 'none';
     $('medium-tool-label').style.display = s.admin ? '' : 'none';
+    // a new deploy tool needs an idle Medium and no running tool (all users)
+    const toolIn = $('medium-tool-label').querySelector('input');
+    if (toolIn) toolIn.disabled = busy || !!s.running;
+    $('medium-tool-label').title = busy ? t('gm_why_busy') : s.running ? t('gm_why_prepare_running') : '';
     $('medium-quick-tool-label').style.display = s.admin ? '' : 'none';
     $('medium-quick-go').disabled = busy || !!s.running;
     $('medium-quick-go').title = busy ? t('gm_why_busy') : s.running ? t('gm_why_running') : '';
@@ -3068,7 +3086,10 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
   // re-rendered output keeps its place; new output opens at its end, where errors are
   function mRender(box, html) {
     const was = [...box.querySelectorAll('pre.gm-out')].map(p => p.scrollTop + p.clientHeight >= p.scrollHeight - 8 ? -1 : p.scrollTop);
+    const det = {};
+    box.querySelectorAll('details[data-k]').forEach(d => { det[d.dataset.k] = d.open; });
     box.innerHTML = html;
+    box.querySelectorAll('details[data-k]').forEach(d => { if (d.dataset.k in det) d.open = det[d.dataset.k]; });
     box.querySelectorAll('pre.gm-out').forEach((p, i) => { p.scrollTop = was[i] == null || was[i] < 0 ? p.scrollHeight : was[i]; });
   }
   const mOutEnd = `ontoggle="if(this.open){const p=this.querySelector('pre');if(p)p.scrollTop=p.scrollHeight}"`;
@@ -3084,7 +3105,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
       const failed = s.steps.find(x => x.status === 'error');
       // its output, from the activity log
       const row = MS.rows.find(x => x.op === s.op && x.at === s.op_started);
-      const out = row && row.output != null ? `<details class="gm-lastout"${failed ? ' open' : ''} ${mOutEnd}><summary>${esc(t('gm_show_output'))}</summary><pre class="gm-out">${esc(row.output || t('gm_no_output'))}</pre></details>` : '';
+      const out = row && row.output != null ? `<details class="gm-lastout" data-k="${esc(s.op + '@' + s.op_started)}"${failed ? ' open' : ''} ${mOutEnd}><summary>${esc(t('gm_show_output'))}</summary><pre class="gm-out">${esc(row.output || t('gm_no_output'))}</pre></details>` : '';
       html += `<div class="hint-box ${failed ? 'gm-bad' : ''}"><b>${esc(tf(failed ? 'gm_last_failed' : 'gm_last_ok', {op: mOp(s.op), at: mClock(s.op_started)}))}</b>${mediumStepsHTML(s.steps, false)}${failed ? `<div class="gm-todo">${esc(mediumHint(failed.step, s.error || failed.error))}</div>` : ''}${out}<div class="g-mut">${esc(t('gm_last_more'))}</div></div>`;
     } else if (s.error) {
       html += `<div class="hint-box gm-bad">${esc(s.error)}</div>`;
@@ -3093,7 +3114,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
   }
   async function mediumRefresh() {
     clearTimeout(mediumTimer);
-    if (G.mode !== 'medium' || !$('medium-status')) return;
+    if (G.mode !== 'medium' || !$('medium-status') || !$('git-ws') || $('git-ws').style.display === 'none') return;
     let s;
     try {
       const r = await fetch('/api/git/medium');
@@ -3109,7 +3130,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     const other = mediumPaintSteps(s);
     const op = s.operation;
     let light;
-    if (s.running) light = mLight('ok', t('gm_l_running'));
+    if (s.running && s.ready) light = mLight('ok', t('gm_l_running'));
     else if (op && op.mine) light = mLight('run', tf('gm_l_working', {op: mOp(op.op)}));
     else if (op) light = mLight('run', tf('gm_l_other', {user: op.user}));
     else if ((s.steps || []).some(x => x.status === 'error') || (s.last_exit && !s.last_exit.expected)) light = mLight('bad', t('gm_l_error'));
@@ -3117,16 +3138,17 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     $('gm-light').innerHTML = light;
     const where = s.backend === 'docker' ? t('gm_rt_docker') : t('gm_rt_host');
     $('medium-status').innerHTML = esc([tf('gm_runtime_is', {where}), s.running ? tf('gm_s5_running', {since: mClock(s.running_since), took: mSince(s.running_since)}) : '', other ? t('gm_now_other_short') : ''].filter(Boolean).join(' · '));
-    $('gm-preview-light').innerHTML = s.config ? mLight('ok', t('gm_p_ready')) : mLight('off', t('gm_p_needs_config'));
+    $('gm-preview-light').innerHTML = s.config || s.pending_config ? mLight('ok', t('gm_p_ready')) : mLight('off', t('gm_p_needs_config'));
     mediumPaintOp(s);
     if (MS.showLog && op) mediumLoadLog();
     const host = $('medium-frame');
-    if (s.running && host && !host.firstChild) { const f = document.createElement('iframe'); f.title = t('gm_title'); f.src = '/medium/'; f.style.cssText = 'width:100%;height:calc(100vh - 250px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff'; host.appendChild(f); }
-    if (!s.running && host) host.replaceChildren();
+    if (s.running && s.ready && host && !host.firstChild) { const f = document.createElement('iframe'); f.title = t('gm_title'); f.src = '/medium/'; f.style.cssText = 'width:100%;height:calc(100vh - 250px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff'; host.appendChild(f); }
+    if (!(s.running && s.ready) && host) host.replaceChildren();
     // the preview card's "Compare with the original tool" follows the tool's state
-    if (MN.cfg) MN.cfg.running = !!s.running;
-    if ($('mn-compare') && $('mn-preview') && !$('mn-preview').disabled) { $('mn-compare').disabled = !s.running; $('mn-compare').title = s.running ? '' : t('mn_needs_running'); }
-    const opKey = (op ? op.id + ':' + (s.stage || '') : '') + '|' + (s.op_started || '') + '|' + s.running;
+    const up = !!(s.running && s.ready);
+    if (MN.cfg) MN.cfg.running = up;
+    if ($('mn-compare') && $('mn-preview') && !$('mn-preview').disabled) { $('mn-compare').disabled = !up; $('mn-compare').title = up ? '' : t('mn_needs_running'); }
+    const opKey = (op ? op.id + ':' + (s.stage || '') : '') + '|' + (s.op_started || '') + '|' + s.running + '|' + s.ready;
     if (opKey !== MS.lastOp) { MS.lastOp = opKey; mediumActivity(false).then(() => { if (MS.s === s && !s.operation) mediumPaintOp(s); }); }
     G.mediumBusy = !!op || !!s.busy;
     mediumTimer = setTimeout(mediumRefresh, G.mediumBusy ? 2000 : 10000);
