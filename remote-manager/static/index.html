@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.6.8</title>
+<title>Web Remote Manager PRO v12.6.9</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1566,7 +1566,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.6.8 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.6.9 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1648,7 +1648,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.8</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.9</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1658,6 +1658,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
       <button class="btn-top" id="btn-ai" onclick="openAIHome()" data-i18n-title="ai_btn_t" title="AI assistant">✦ AI</button>
       <button class="btn-top" id="btn-mcp" style="display:none;" onclick="openMCPPop()" title="AI apps connected through MCP"><span>🤖</span><span class="lbl" data-i18n="mcp_connected_lbl">AI connected</span><span class="tun-badge" id="mcp-badge"></span></button>
+      <button class="btn-top" id="btn-workboard" onclick="wrmWorkboard.toggle()" data-i18n-title="wb_title_t" title="Workboard"><span>▤</span><span class="lbl" data-i18n="wb_title">Workboard</span><span class="tun-badge" id="wb-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-panels" onclick="wrmLayout.openPanels(this)" data-i18n-title="dk_panels_t" title="Panels" aria-haspopup="menu"><span>▦</span><span class="lbl" data-i18n="dk_panels">Panels</span></button>
       <button class="btn-top" id="btn-settings" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
       <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
@@ -4153,6 +4154,7 @@ Object.assign(LANGS.en, {
   pg_status:'Live status', p_status_enabled:'Live up/down status', p_status_enabled_d:'WRM checks every saved connection regularly: a TCP connection to its port; SSH and FTP read the greeting, like Nagios check_ssh. Each host:port once per round.',
   p_status_interval_seconds:'Check interval (seconds)', p_status_interval_seconds_d:'15–3600. Shorter intervals notice outages sooner and open more connections.',
   p_status_jump_checks:'Check through jump hosts', p_status_jump_checks_d:'Log in to jump hosts to check the connections behind them (one SSH login per jump host and round, visible in its auth log). Off: they show the state of their jump host.',
+  p_workboard_ssh_metrics:'Workboard: read server load over SSH', p_workboard_ssh_metrics_d:'The Server load addon of the Workboard reads CPU, RAM, load and disks over SSH (Linux /proc and df, one short login per refresh, at most once a minute per server while the tile is visible) when the server has no Monitoring. Off: only servers with Monitoring (Zabbix agent) show values.',
 });
 Object.assign(LANGS.hr, {
   st_up:'Dostupan', st_down:'Nedostupan', st_unknown:'Još nije provjereno', st_via:'Iza jump hosta {name} ({state})', st_check_now:'Provjeri status sada', st_checking:'Provjeravam…',
@@ -4162,6 +4164,7 @@ Object.assign(LANGS.hr, {
   pg_status:'Status uživo', p_status_enabled:'Status dostupnosti uživo', p_status_enabled_d:'WRM redovito provjerava svaku spremljenu vezu: TCP spajanje na port; SSH i FTP čitaju pozdrav, kao Nagios check_ssh. Svaki host:port jednom po krugu.',
   p_status_interval_seconds:'Interval provjere (sekundi)', p_status_interval_seconds_d:'15–3600. Kraći interval prije primijeti ispad i otvara više veza.',
   p_status_jump_checks:'Provjere kroz jump hostove', p_status_jump_checks_d:'Prijava na jump hostove radi provjere veza iza njih (jedna SSH prijava po jump hostu i krugu, vidljiva u njegovom auth logu). Isključeno: prikazuju stanje svog jump hosta.',
+  p_workboard_ssh_metrics:'Workboard: opterećenje preko SSH-a', p_workboard_ssh_metrics_d:'Addon Opterećenje poslužitelja na Workboardu čita CPU, RAM, opterećenje i diskove preko SSH-a (Linux /proc i df, jedna kratka prijava po osvježavanju, najviše jednom u minuti po poslužitelju dok je pločica vidljiva) kad poslužitelj nema Nadzor. Isključeno: vrijednosti prikazuju samo poslužitelji s Nadzorom (Zabbix agent).',
 });
 Object.assign(LANGS.en, {
   desk_options:'Remote desktop options', desk_help:'Remote desktops run through guacd (the Apache Guacamole proxy) next to WRM. The browser shows the screen; keyboard, mouse, clipboard and audio are passed through.',
@@ -4822,6 +4825,7 @@ function applyLang() {
   if (typeof updateInstallRow === 'function') updateInstallRow();
   if (typeof updateReplayFsBtn === 'function') updateReplayFsBtn();
   if (window.wrmLayout) wrmLayout.refresh();
+  if (window.wrmWorkboard) wrmWorkboard.langChanged();
 }
 function changeLang(l) {
   currentLang = l;
@@ -5228,6 +5232,7 @@ function initApp() {
     applyPolicyToUI();
   }
   if (window.wrmLayout) wrmLayout.init();
+  if (window.wrmWorkboard) wrmWorkboard.init();
   if (enforceRestrictions()) return;
   setupResize();
   loadClipboard();
@@ -6521,7 +6526,7 @@ const POLICY_GROUPS = {
     ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export', 'bitwarden', 'bitwarden_idle_minutes']],
     ['pg_sharing', ['allow_link_shares', 'chat_file_max_mb']],
     ['pg_terminal', ['broadcast_enabled']],
-    ['pg_status', ['status_enabled', 'status_interval_seconds', 'status_jump_checks']],
+    ['pg_status', ['status_enabled', 'status_interval_seconds', 'status_jump_checks', 'workboard_ssh_metrics']],
     ['pg_desktop', ['desktop_enabled', 'guacd_address', 'desktop_tunnel_bind']],
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
@@ -14911,7 +14916,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; refreshUserPolicy(); };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); if (m.type === 'mcp_changed') mcpRefresh(); if (m.type === 'ai_policy_changed') { refreshUserPolicy(); if (window.wrmAI) wrmAI.policyChanged(); } } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); if (m.type === 'mcp_changed') mcpRefresh(); if (m.type === 'ai_policy_changed') { refreshUserPolicy(); if (window.wrmAI) wrmAI.policyChanged(); } if (window.wrmWorkboard) wrmWorkboard.bus(m.type); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();
@@ -15069,7 +15074,7 @@ window.addEventListener('load', async () => {
 // (tb1..tb6), then the less used buttons move into the ⋯ menu. It is measured, so any
 // language, browser zoom, badge or administrator button fits.
 const TB_LEVELS = 6;
-const TB_OVERFLOW = ['btn-panels', 'btn-shares', 'btn-broadcast', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-settings'];
+const TB_OVERFLOW = ['btn-panels', 'btn-shares', 'btn-broadcast', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-workboard', 'btn-settings'];
 let _tbObserver = null, _tbPending = 0;
 function topBarOverflows() {
   const tb = document.getElementById('top-bar'), a = document.getElementById('auth-info');
@@ -15137,5 +15142,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 })();
 </script>
 <script src="/static/layout.js"></script>
+<script src="/static/workboard.js"></script>
 </body>
 </html>

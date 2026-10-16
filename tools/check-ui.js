@@ -18,7 +18,7 @@ let problems = 0;
 try { new vm.Script(js, { filename: 'index.html <script>' }); }
 catch (e) { console.error('JavaScript syntax error:', e.message); process.exit(1); }
 // Scripts loaded on demand (static/git.js, static/ai.js, static/mcp.js): syntax, and their translations and keys are checked with the page.
-for (const extra of ['git.js', 'ai.js', 'mcp.js', 'monitoring.js', 'git_client.js', 'layout.js']) {
+for (const extra of ['git.js', 'ai.js', 'mcp.js', 'monitoring.js', 'git_client.js', 'layout.js', 'workboard.js']) {
   const f = path.join(path.dirname(file), extra);
   if (!fs.existsSync(f)) continue;
   const src = fs.readFileSync(f, 'utf8');
