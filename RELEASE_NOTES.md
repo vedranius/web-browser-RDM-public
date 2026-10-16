@@ -1,6 +1,22 @@
-## Web Remote Manager PRO v12.6.3 — Full access with one switch
+## Web Remote Manager PRO v12.6.4 — Your blocked commands, your choice
 
 ### Added
+
+- **Blocked commands with full access** (`ai_full_access_blocked`, *Admin panel → AI connections*): the administrator decides what happens to their own list of blocked commands (`ai_blocked_commands`) when full access is on.
+  - **Ask for approval** (default): as in v12.6.3, such a command comes to you as an approval marked *FULL ACCESS*.
+  - **Stay blocked**: such a command is refused even with full access, and the AI is told that an approval cannot help and what you can change instead.
+
+The built-in list of destructive commands, deny lists, shutdown and secret files keep asking under full access either way.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. Nothing changes until an administrator sets *Blocked commands with full access* to *Stay blocked*.
+
+[Download v12.6.4](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.4) · [MCP setup](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.4/README.md#ai-desktop-apps-mcp)
+
+### Included from v12.6.3 — Full access with one switch
+
+#### Added
 
 - **The administrator chooses how full access applies** (`ai_full_access_mode`, *Admin panel → AI connections*):
   - **Every AI session** (default): the **Full access for the AI** switch alone opens full access for every AI session, the WRM AI panel and every AI connection, without ticking a scope anywhere.
@@ -10,7 +26,7 @@
 
 Full access still never runs anything WRM would refuse on its own: such a command or file comes to you as an approval marked *FULL ACCESS*, every time, and read-only sessions stay read-only.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. One additive column (`users.ai_full_access`); a previous binary still starts on the database. **If you had already turned on `ai_full_access` in v12.6.2,** it now applies to every AI session (mode *Every AI session*); set `ai_full_access_mode` to *AI connections with the Full access scope* to keep the v12.6.2 behaviour.
 
