@@ -1,6 +1,31 @@
-## Web Remote Manager PRO v12.6.8 — Your panels, where you want them
+## Web Remote Manager PRO v12.6.9 — Workboard: what matters, at a glance
 
 ### Added
+
+- **Workboard** (▤ in the top bar): a page of tiles over your windows, empty until you add something. Pick addons from the catalog and arrange them: drag a tile by its title to move it, make it wide or narrow, give it your own title, remove it again. Your Workboard follows you to every browser.
+- **Addons to start with:**
+  - **Server status:** which servers are down, slow or up, with latency and since when; problems first, or only problems. Click a server to open it.
+  - **Server load:** CPU, RAM, load, uptime and disk usage of the servers you choose, as bars that turn yellow at 75 % and red at 90 %. Values come from Monitoring when the server has it, otherwise WRM reads them over SSH (Linux) once a minute while the tile is visible. Each server says where its values come from and how old they are; errors are shown as they are.
+  - **Notifications:** everything WRM told you (servers down and back, expiring keys, new versions, Git jobs) in WRM itself, also when no e-mail or chat channel is set up. Unread ones are marked and counted on the ▤ button.
+  - **Clock:** your local time and the time zones you work with.
+  - **Recent commits:** the last 10 (or 5, 20) commits and pushes of a service from your Git workspace (GitLab, GitHub or Gitea), with author, branch and a link.
+  - **Running tunnels**, **Quick connect** buttons for your most used servers, and **Notes**.
+- **Pull a tile out:** **⤢** turns a tile into a panel you can dock left, right or at the bottom, stack with *Sessions*, or let float, like every other panel. It stays there after a reload; *Back to the Workboard* returns it. A locked layout keeps tiles in place too.
+- **Administrators** decide whether server load may be read over SSH: *Workboard: read server load over SSH* in *Admin panel → Policies → Live status* (on by default).
+
+### Changed
+
+- A tab bar that is too narrow for all its tabs scrolls to the open one.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets one new table (`user_events`); a previous version still starts on it. Nothing new appears until you open the Workboard and add an addon. New endpoints: `/api/me/events`, `/api/workboard/metrics`.
+
+[Download v12.6.9](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.9) · [Workboard](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.9/README.md#workboard-and-addons)
+
+### Included from v12.6.8 — Your panels, where you want them
+
+#### Added
 
 - **Arrange the page yourself.** *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view are now panels with a tab. Drag a panel by its tab:
   - onto another panel's tab bar, and they share it as tabs;
@@ -12,12 +37,12 @@
 - **Lock the layout** so nothing moves by accident: no dragging, splitting or resizing while locked (the button shows 🔒). Tabs, collapsing the side panels, showing and hiding still work.
 - **Your layout follows you:** it is stored for your account on the WRM server, so every browser and computer you sign in on shows the same arrangement.
 
-### Changed
+#### Changed
 
 - The AI live view is a panel like the others: dock it left, right or at the bottom, stack it with *Sessions*, let it float or hide it. Its title bar buttons and the 🤖 menu still work.
 - On a phone the page keeps its fixed layout with the two drawers.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets one new table (`user_ui`); a previous version still starts on it. Your first layout is built from what this browser remembered in v12.6.7 (the right panel's tab and width, where the AI live view was).
 

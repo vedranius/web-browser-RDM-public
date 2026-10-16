@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.8** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.9** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.9
+
+**Workboard: what matters, at a glance.** **▤ Workboard** in the top bar opens a page of tiles you put together yourself from an addon catalog, so nothing appears until you add it: server status, CPU / RAM / disk bars of chosen servers (from Monitoring, or read over SSH), WRM's notifications inside WRM, clocks for your time zones, the last commits of a Git service, running tunnels, quick connect buttons and notes. Any tile can be pulled out into a panel and docked, stacked or floated like the other panels. See [Workboard and addons](#workboard-and-addons).
 
 ## What's new in v12.6.8
 
@@ -104,7 +108,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -119,6 +123,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [Panel layout: dock, stack, float and lock](#panel-layout-dock-stack-float-and-lock)
+   - [Workboard and addons](#workboard-and-addons)
    - [SSH terminal](#ssh-terminal)
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
    - [Out-of-band management, consoles & serial ports](#out-of-band-management-consoles--serial-ports)
@@ -205,14 +210,14 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.8-linux-amd64
-   ./wrm-pro-v12.6.8-linux-amd64
+   chmod +x wrm-pro-v12.6.9-linux-amd64
+   ./wrm-pro-v12.6.9-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.8-windows-amd64.exe
+   .\wrm-pro-v12.6.9-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
@@ -253,6 +258,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.8
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new table, `user_events` (each user's in-app notifications, newest 200); a previous version still starts on it and ignores it. Nothing changes on the page until you open **▤ Workboard** and add an addon. New policy `workboard_ssh_metrics` (on): turn it off if the *Server load* addon must not log in to servers over SSH; servers with Monitoring still show their values. New endpoints `/api/me/events` and `/api/workboard/metrics`.
 
 ## Upgrading from v12.6.7
 
@@ -925,6 +934,31 @@ The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snip
 - **Reset the layout** puts every panel back: *Connections* left; *Sessions*, *Snippets* and the AI live view as tabs on the right with *Clipboard* under them.
 - **Saved per user on the server** (`/api/me/ui/layout`), so the layout follows you to every browser, with a copy in the browser for an instant start. A zone without panels disappears. While the AI live view is shown in a side zone, that zone keeps its own width (up to half the window).
 - **Phones** (below 760 px) keep the fixed layout: the connection list and the Sessions/Snippets/Clipboard drawer; the AI live view is a sheet at the bottom.
+- **Workboard tiles** pulled out into a panel (v12.6.9) are panels too; *Panels* lists them under *Pulled out of the Workboard*, and hiding one puts it back on the [Workboard](#workboard-and-addons).
+
+### Workboard and addons
+
+**▤ Workboard** in the top bar (v12.6.9; in its ⋯ menu when the bar is narrow) opens a page of tiles over the window area; ✕ or Esc closes it, and your windows stay as they were. The Workboard starts **empty**: you add only the addons you want from the catalog (**＋ Add addon**), up to 24 tiles, the same addon several times if you like (for example two *Server load* tiles for two groups of servers).
+
+- **Every tile:** drag its title bar onto another tile to reorder, **⇥ / ⇤** wide or narrow, **⤢** pull out into a panel, **⚙** settings (your own title, the width and the addon's options), **✕** remove. ↻ reloads tiles that fetch data, and the title bar says how old the data is.
+- **Pull out:** the tile becomes a panel of the [panel layout](#panel-layout-dock-stack-float-and-lock), floating at first; drag its tab to dock it left, right or at the bottom, stack it with *Sessions* or split a column. It keeps its ↻ and ⚙ and stays where it is after a reload. The Workboard shows a placeholder with *Bring it back*; the panel's ⋯ → *Back to the Workboard* does the same. With the layout locked, tiles cannot be pulled out, reordered or resized. On a phone every tile stays on the Workboard.
+- **Saved per user on the server** (`/api/me/ui/workboard`, with a copy in the browser), so the Workboard follows you to every browser.
+- Tiles load and refresh **only while visible** (on the open Workboard or as a shown panel).
+
+| Addon | Shows | Settings |
+|---|---|---|
+| 🟢 **Server status** | Down, slow (over 300 ms), unknown and up connections from the [live status](#live-updown-status), problems first, with latency or since when; a click opens the connection | connections (none chosen: all with a status), *only problems* |
+| 📈 **Server load** | Per server: CPU, RAM (with total), load per CPU, uptime and disks (fullest first; more in a tooltip). Bars turn yellow at 75 % and red at 90 %. Each server names its source, *Monitoring (Zabbix agent)* or *read over SSH*, and the age of the values; errors (SSH refused, not Linux …) are shown as they are | up to 8 SSH/SFTP connections |
+| 🔔 **Notifications** | Everything WRM notified you about, newest first, unread marked; *Mark all read*, *Clear*; the ▤ button counts unread ones | — |
+| 🕒 **Clock** | Local time and date, and other time zones | IANA time zones (`UTC`, `Europe/London` …), seconds |
+| ⎇ **Recent commits** | The last commits and pushes of a Git service (author, branch, short SHA, age, link to the commit on the Git server), refreshed every 5 minutes | service of the Git catalog, branch (empty: the branches the service tracks), 5 / 10 / 20 |
+| 🔀 **Running tunnels** | Running tunnels with their local address; *Tunnels…* opens the tunnel panel | — |
+| ⚡ **Quick connect** | Buttons with a status light that open the connection | up to 12 connections |
+| 📝 **Notes** | A note to yourself (up to 2000 characters), saved with the tiles | — |
+
+**Where the values of *Server load* come from:** when the server has Monitoring (📊 in the top bar, Zabbix agent) on and its last sample is younger than 5 minutes, WRM uses that sample and does not log in. Otherwise WRM logs in over SSH with the connection's own credentials and runs one read-only command (`uname -s`, `/proc/loadavg`, `/proc/stat` twice one second apart, `MemTotal`/`MemAvailable` from `/proc/meminfo`, `df -P -k` without tmpfs/overlay mounts, `/proc/uptime`, `nproc`): at most once a minute per server while the tile is visible, one login per server at a time, results cached for 25 s. Reading over SSH works on Linux and can be turned off by an administrator (`workboard_ssh_metrics`); then only servers with Monitoring show values. Only your own SSH/SFTP connections can be chosen.
+
+**Notifications in WRM:** every notification WRM sends you is also kept in your in-app list (newest 200), whatever channels or events you chose in *Settings → Notifications*, and even when an administrator turned sending off (`notifications_enabled`). Repeated reminders (expiring keys and credentials, a new version, upcoming Git jobs) are kept once a day.
 
 ### Remote desktop: RDP, VNC, Telnet
 
@@ -1840,6 +1874,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `status_enabled` | `1` | live up/down status of connections. Also `STATUS_ENABLED` |
 | `status_interval_seconds` | `60` | seconds between status rounds (15–3600) |
 | `status_jump_checks` | `0` | check connections behind jump hosts by logging in to the jump host |
+| `workboard_ssh_metrics` | `1` | the Workboard's *Server load* addon may read CPU, RAM, load and disks over SSH (Linux) for servers without Monitoring |
 | `desktop_enabled` | `1` | RDP / VNC / Telnet in the browser. Also `REMOTE_DESKTOP_ENABLED` |
 | `guacd_address` | `127.0.0.1:4822` | host:port of guacd. Also `GUACD_ADDRESS` |
 | `bmc_enabled` | `1` | out-of-band management (BMC power, status, consoles). Also `BMC_ENABLED` |
@@ -2164,6 +2199,8 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/auth/mfa` | `{mfa_token, code}` (TOTP or recovery code) |
 | POST | `/api/auth/logout` | Sign out |
 | GET | `/api/auth/me` | Current user, restrictions and policies |
+| GET / POST / DELETE | `/api/me/events` · `/api/me/events/read` | Your in-app notifications: `GET ?limit=` (default 50, at most 200) → `{events: [{id, event, title, body, at, read}], unread}`; `POST /api/me/events/read` `{ids: […]}` or `{all: true}`; `DELETE /api/me/events` clears the list |
+| GET | `/api/workboard/metrics?id=` | CPU, RAM, load, uptime and disks of one of your SSH/SFTP connections: `{conn_id, at, source: zabbix\|ssh, cpu_percent, memory_percent, memory_total, load, cpu_count, uptime, disks: [{mount, percent, size_kb}], error}`; `refresh=1` skips the 25 s cache; 403 when reading over SSH is off and there is no fresh Monitoring sample |
 | GET / PUT / DELETE | `/api/me/ui/{key}` | Your interface state, `key` = `layout` (panel layout) or `workboard`: `GET` → `{value, updated_at}` (`value` null when nothing is stored), `PUT {value: {…}}` (a JSON object, at most 64 KiB), `DELETE` resets |
 | POST | `/api/auth/password` | `{current_password, new_password}` |
 | POST | `/api/auth/2fa/setup` · `enable` · `disable` · `recovery` | Two-factor management |
@@ -2635,6 +2672,7 @@ remote-manager/
   mcp_bundle_test.go   the Claude Desktop extension: download, manifest, token checks; its Node.js bridge end to end with an approval
   v1265_test.go        Medium step by step: tool import steps with output, deploy-config checked at once and kept while preparing, failed start keeps its step, error and redacted output, activity log; 409 names the running operation and its user, visibility and medium_log_output; approve later after the AI app closed its session; grep/sed/find patterns are not taken for files
   v1266_test.go        Docker for Medium: backend choice, Linux packages after consent with steps and output, no rights shows -setup-docker, policy off, Windows and macOS Docker Desktop with download, signature and licence, permission denied, wrm -setup-docker
+  v1269_test.go        in-app notifications (recorded without channels, per user, reminders once a day, mark read, clear, newest 200 kept, removed with the user); metrics parser; /api/workboard/metrics (own connections only, SSH error in the result, policy off, fresh and stale Monitoring sample); the page loads static/workboard.js
   v1268_test.go        /api/me/ui: per-user layout store (put, overwrite, reset, objects only, 64 KiB limit, unknown keys, signed out, removed with the user); the page loads static/layout.js and has every panel
   v1267_test.go        Medium certificates: host CA bundle and extra PEM file reach every container (mount, environment, image roots kept), expired and duplicate certificates left out, bad or missing file named
   v1264_test.go        ai_full_access_blocked: deny keeps the administrator's blocked commands refused under full access, the destructive list still asks; ask asks
@@ -2648,6 +2686,7 @@ remote-manager/
   static/ai.js               the AI assistant panel and the admin AI tab (loaded when used)
   static/mcp.js              AI connections (MCP): settings, indicator, approval cards, OAuth consent, admin tab (loaded when used)
   static/layout.js           panel layout: dock zones, tab groups, splitters, floating windows, lock, Panels menu, per-user storage
+  static/workboard.js        the Workboard: tiles, addon catalog, settings, pulling tiles out into panels
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
   mcpb/server/index.js       the Node.js bridge of the Claude Desktop extension (embedded; mcp_bundle.go)
@@ -2752,6 +2791,8 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 | Git: a scheduled run was *skipped* | WRM was not running at its time for longer than `git_schedule_grace_minutes`, the update it waited for failed, or the action is no longer allowed for the account |
 | Git: `HTTP 401` / `403` from the Git server | Check the token (read access to the API and repositories) in *Settings → Git sources*; 403 can also be the API rate limit |
 | Notifications: nothing arrives | Check *Admin panel → Notifications* (channel enabled, last error, *Send test*), *Settings → Notifications* (events ticked, quiet hours) and the policy `notifications_enabled`. Messages of one round arrive together after a few seconds, at most one per `notify_min_interval_seconds` |
+| Workboard: *Server load* shows an error | *SSH: …*: WRM could not log in with the connection's credentials (check the connection itself). *needs Linux*: set up Monitoring (📊 in the top bar, Zabbix agent) for that server. *turned off by the administrator*: the policy `workboard_ssh_metrics` is off; only servers with Monitoring show values |
+| Workboard: *Recent commits* shows an error | The Git workspace needs a GitLab, GitHub or Gitea source for the service (*Git → Sources*); the message is the Git server's answer |
 | Notifications: *SMTP login: … unencrypted connection* | Go's SMTP client sends a password only over TLS (or to localhost): choose STARTTLS or TLS |
 | Network tools: *ping is not installed* | Install `iputils-ping` / `traceroute` on the WRM server (or on the source server), or use the port check — it needs nothing |
 | A quick connection disappeared | Quick connections are deleted 24 hours after their last use. Save the ones you need (💾) |
