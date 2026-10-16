@@ -97,6 +97,7 @@ var settingSpecs = []settingSpec{
 	{Key: "git_install", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_medium", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "medium_log_output", Default: "all", Kind: "enum", Enum: []string{"none", "admins", "all"}},
+	{Key: "medium_docker_install", Default: "1", Kind: "bool"},
 	{Key: "git_transfer", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_gitignore_mr", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_schedule_grace_minutes", Default: "30", Kind: "int", Min: 1, Max: 1440},

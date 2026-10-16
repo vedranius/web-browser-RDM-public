@@ -26,11 +26,18 @@ func mediumDockerCLI() string {
 	if s, e := exec.LookPath("docker"); e == nil {
 		return s
 	}
-	if runtime.GOOS == "windows" {
-		for _, p := range []string{filepath.Join(os.Getenv("ProgramFiles"), "Docker", "Docker", "resources", "bin", "docker.exe"), filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "DockerDesktop", "resources", "bin", "docker.exe")} {
-			if mediumFileExists(p) {
-				return p
-			}
+	var candidates []string
+	switch runtime.GOOS {
+	case "windows":
+		candidates = []string{filepath.Join(os.Getenv("ProgramFiles"), "Docker", "Docker", "resources", "bin", "docker.exe"), filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "DockerDesktop", "resources", "bin", "docker.exe")}
+	case "darwin":
+		// a service's PATH often lacks these
+		home, _ := os.UserHomeDir()
+		candidates = []string{"/usr/local/bin/docker", "/opt/homebrew/bin/docker", "/Applications/Docker.app/Contents/Resources/bin/docker", filepath.Join(home, "Applications", "Docker.app", "Contents", "Resources", "bin", "docker"), filepath.Join(home, ".docker", "bin", "docker")}
+	}
+	for _, p := range candidates {
+		if mediumFileExists(p) {
+			return p
 		}
 	}
 	return ""
@@ -43,23 +50,24 @@ func mediumImage() string {
 	return mediumDefaultImage
 }
 
-func mediumSelectBackend(goos, configured string, nativeReady, dockerInstalled bool) string {
-	if configured == "docker" || goos == "windows" {
+// mediumSelectBackend: Docker on every system that has it (the same runtime everywhere,
+// installed by WRM when missing). The host runtime stays when chosen (WRM_MEDIUM_RUNTIME=
+// native), on systems without Docker, and for a host runtime prepared before while Docker
+// is still missing, so an existing installation keeps working.
+func mediumSelectBackend(goos, configured string, nativePrepared, dockerInstalled bool) string {
+	switch {
+	case configured == "docker" || goos == "windows":
 		return "docker"
-	}
-	if configured == "native" || nativeReady || !dockerInstalled {
+	case configured == "native" || (goos != "linux" && goos != "darwin"):
+		return "native"
+	case nativePrepared && !dockerInstalled:
 		return "native"
 	}
 	return "docker"
 }
 
 func mediumBackend() string {
-	ready := mediumPython() != ""
-	for _, name := range []string{"git", "ssh", "rsync"} {
-		_, e := exec.LookPath(name)
-		ready = ready && e == nil
-	}
-	return mediumSelectBackend(runtime.GOOS, os.Getenv("WRM_MEDIUM_RUNTIME"), ready, mediumDockerCLI() != "")
+	return mediumSelectBackend(runtime.GOOS, os.Getenv("WRM_MEDIUM_RUNTIME"), mediumFileExists(mediumVenvPython()), mediumDockerCLI() != "")
 }
 
 func mediumRuntimeReady() bool {
@@ -134,7 +142,7 @@ func mediumPrepareRuntime(ctx context.Context, step func(string)) error {
 	}
 	if mediumBackend() == "docker" {
 		step("docker")
-		if e := mediumEnsureDocker(ctx); e != nil {
+		if e := mediumEnsureDocker(ctx, step); e != nil {
 			return e
 		}
 		// Docker pulls the pinned image automatically on the first invocation.

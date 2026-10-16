@@ -53,15 +53,16 @@ type mediumStatus struct {
 	// v12.6.5: the user's current or last operation and its steps, the operation holding
 	// the shared lock (any user's), the original tool's process and imports waiting to be
 	// applied at the next start
-	Op            string        `json:"op,omitempty"`
-	OpStarted     string        `json:"op_started,omitempty"`
-	Steps         []mediumStep  `json:"steps"`
-	Operation     *mediumOpInfo `json:"operation"`
-	RunningSince  string        `json:"running_since,omitempty"`
-	LastExit      *mediumExit   `json:"last_exit,omitempty"`
-	PendingConfig bool          `json:"pending_config"`
-	PendingSSH    bool          `json:"pending_ssh"`
-	OutputPolicy  string        `json:"output_policy"`
+	Op            string            `json:"op,omitempty"`
+	OpStarted     string            `json:"op_started,omitempty"`
+	Steps         []mediumStep      `json:"steps"`
+	Operation     *mediumOpInfo     `json:"operation"`
+	RunningSince  string            `json:"running_since,omitempty"`
+	LastExit      *mediumExit       `json:"last_exit,omitempty"`
+	PendingConfig bool              `json:"pending_config"`
+	PendingSSH    bool              `json:"pending_ssh"`
+	Docker        *mediumDockerInfo `json:"docker,omitempty"`
+	OutputPolicy  string            `json:"output_policy"`
 }
 
 // mediumExit is how the original tool's process last ended.
@@ -159,6 +160,10 @@ func mediumState(uid int) mediumStatus {
 	}
 	if s.Backend == "docker" {
 		s.Dependencies = map[string]bool{"docker": mediumDockerCLI() != ""}
+		if !s.Dependencies["docker"] || mediumDockerConsentGet() != nil {
+			d := mediumDockerInfoCached()
+			s.Docker = &d
+		}
 	}
 	if b, e := os.ReadFile(filepath.Join(mediumRoot(), "tool.sha256")); e == nil {
 		s.Digest = strings.TrimSpace(string(b))
@@ -211,6 +216,10 @@ func mediumCommand(ctx context.Context, dir, binary string, args ...string) erro
 	cmd := exec.CommandContext(ctx, binary, args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "PIP_DISABLE_PIP_VERSION_CHECK=1")
+	if strings.HasPrefix(filepath.Base(binary), "docker") && filepath.IsAbs(binary) {
+		// Docker Desktop's credential helper sits next to its docker command
+		cmd.Env = append(cmd.Env, "PATH="+filepath.Dir(binary)+string(os.PathListSeparator)+os.Getenv("PATH"))
+	}
 	cmd.WaitDelay = 5 * time.Second
 	if out := mediumOpOutput(); out != nil {
 		out.Note("$ %s %s", filepath.Base(binary), truncateStr(strings.Join(args, " "), 400))
@@ -480,7 +489,7 @@ func mediumStartForSetup(uid int, setup bool) error {
 		}
 		name := "wrm-medium-" + strconv.Itoa(uid) + "-" + randomToken(8)
 		cmd = exec.CommandContext(ctx, mediumDockerCLI(), mediumDockerStartArgs(uid, port, name, keys)...)
-		cmd.Env = append(os.Environ(), env...)
+		cmd.Env = append(append(os.Environ(), env...), "PATH="+filepath.Dir(mediumDockerCLI())+string(os.PathListSeparator)+os.Getenv("PATH"))
 		var stop sync.Once
 		p.cancel = func() { stop.Do(func() { mediumDockerStop(name); cancel() }) }
 	}
@@ -597,6 +606,10 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if action == "/setup" {
 		apiMediumSetup(w, r, uid)
+		return
+	}
+	if action == "/docker" {
+		apiMediumDocker(w, r, uid)
 		return
 	}
 	if action == "/stop" {
