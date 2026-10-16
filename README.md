@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.7** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.8** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.8
+
+**Your panels, where you want them.** *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view are panels with a tab you can drag: onto another panel's tab bar to stack them as tabs, onto the top or bottom part of a panel to split the column, onto an edge strip to dock it left, right or under the windows, or anywhere else to let it float. **Panels** (▦) in the top bar shows and hides them, and **Lock the layout** keeps everything in place. The layout is stored for your account on the server, so it follows you to every browser. See [Panel layout](#panel-layout-dock-stack-float-and-lock).
 
 ## What's new in v12.6.7
 
@@ -100,7 +104,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -114,6 +118,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Tags & inventory import (CSV, Excel, NetBox)](#tags--inventory-import-csv-excel-netbox)
    - [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
+   - [Panel layout: dock, stack, float and lock](#panel-layout-dock-stack-float-and-lock)
    - [SSH terminal](#ssh-terminal)
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
    - [Out-of-band management, consoles & serial ports](#out-of-band-management-consoles--serial-ports)
@@ -200,14 +205,14 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.7-linux-amd64
-   ./wrm-pro-v12.6.7-linux-amd64
+   chmod +x wrm-pro-v12.6.8-linux-amd64
+   ./wrm-pro-v12.6.8-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.7-windows-amd64.exe
+   .\wrm-pro-v12.6.8-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
@@ -248,6 +253,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.7
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new table, `user_ui` (your panel layout); a previous version still starts on it and ignores it. Nothing moves: your first layout is built from what the browser remembered in v12.6.7 (the right panel's tab and width, where the AI live view was docked, floating or hidden). New endpoint `/api/me/ui/{key}`.
 
 ## Upgrading from v12.6.6
 
@@ -900,6 +909,23 @@ Every opened connection is a **window** inside the workspace. There is also a **
 - **Close confirmation** can be *Always*, *Never* or *Only when connected* (Settings).
 - The browser warns you before leaving the page while terminals are connected or a transfer is running.
 
+### Panel layout: dock, stack, float and lock
+
+The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view (while an AI app works) are **panels**, each with a tab. Panels share a tab bar in a **group**; groups sit in a **dock zone** (left, right, or at the bottom under the windows) or in a **floating window**.
+
+- **Drag a panel by its tab** (a blue frame shows where it lands):
+  - onto another tab bar: the panels share it as tabs (dropped between two tabs, it goes there);
+  - onto the top or bottom 30 % of a panel: that column is split, the dragged panel above or below (left or right part in the bottom zone);
+  - onto the **Left**, **Right** or **Bottom** strip at the edges of the workspace: it docks there as a new group;
+  - anywhere else: it becomes a floating window.
+- **Resize:** the line between two groups, the inner edge of the left and right zones and the top edge of the bottom zone. A floating window moves by the empty part of its tab bar and resizes by its bottom right corner.
+- **⋯ on every group:** *Dock on the left*, *Dock on the right*, *Dock at the bottom* (as a tab of the zone's first group), *Floating window*, *Hide*, *Lock the layout*, *Panels…*, *Reset the layout*.
+- **Panels** (▦ in the top bar, or in its ⋯ menu when the bar is narrow) lists every panel and where it is (left, right, bottom, floating, hidden). Tick a panel to show it again where it was, untick to hide it. The AI live view is listed but appears only while an AI app works on a server.
+- **Lock the layout** (in *Panels* or any ⋯ menu): nothing can be dragged, split, resized or moved, and the top bar button shows 🔒. Switching tabs, collapsing the side panels and showing or hiding panels still work. Dragging a tab while locked says how to unlock.
+- **Reset the layout** puts every panel back: *Connections* left; *Sessions*, *Snippets* and the AI live view as tabs on the right with *Clipboard* under them.
+- **Saved per user on the server** (`/api/me/ui/layout`), so the layout follows you to every browser, with a copy in the browser for an instant start. A zone without panels disappears. While the AI live view is shown in a side zone, that zone keeps its own width (up to half the window).
+- **Phones** (below 760 px) keep the fixed layout: the connection list and the Sessions/Snippets/Clipboard drawer; the AI live view is a sheet at the bottom.
+
 ### Remote desktop: RDP, VNC, Telnet
 
 Windows servers (RDP), Linux desktops and KVM/IPMI consoles (VNC) and old network gear (Telnet) open in a WRM window next to your SSH terminals — no RDP client, no plug-in.
@@ -1428,12 +1454,12 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
 - **Approvals** appear in WRM as a card with **Approve**, **Deny** and **Edit** (the exact command, or the diff), on every open WRM tab of yours — and, when the app supports **MCP elicitation**, also as a question in the app (policy `ai_mcp_elicitation`). Whichever answers first decides; an unanswered approval is denied after `ai_approval_timeout_seconds`.
 - **Server output is untrusted.** Tool results are framed as untrusted data; nothing in them, and nothing the app asks for, can change the mode or the scopes: there is no such tool, and only you change them, in WRM (by creating a new AI connection).
 - **Live view:** when an app opens a session, WRM opens a panel that follows it: every tool call with the command or file and WRM's decision (*runs*, *needs your approval*, *refused by WRM*), **Approve** / **Deny** for pending approvals, the outcome, the exit code and the output. *Watch live* in the 🤖 menu reopens it; the checkbox there turns the automatic opening off for this browser. Closing a session's box does not stop the app.
-- **Where the live view sits:** choose with the buttons in its title bar (▕ right, ▁ bottom, ⧉ floating, – hide), with *Layout* in the 🤖 menu, or by dragging the title bar onto the *Dock on the right* or *Dock at the bottom* zone that appears while you drag.
-  - *Right* (default): a **🤖 AI** tab next to *Sessions* and *Snippets*. The tab shows how many AI sessions are open and turns yellow while one waits for your approval; the panel keeps its own width for this tab (drag its left edge).
-  - *Bottom*: a dock under the windows; drag its top edge to resize it. Several sessions sit side by side.
-  - *Floating*: drag the title bar to move it and its corner to resize it.
+- **Where the live view sits:** it is a panel of the [panel layout](#panel-layout-dock-stack-float-and-lock) (v12.6.8): drag its **🤖 AI** tab anywhere, or use the buttons in its title bar (▕ right, ▁ bottom, ⧉ floating, – hide) or *Layout* in the 🤖 menu.
+  - *Right* (default): a **🤖 AI** tab next to *Sessions* and *Snippets*. The tab shows how many AI sessions are open and turns yellow while one waits for your approval; the zone keeps its own width while it shows the live view (drag its left edge).
+  - *Bottom*: under the windows; drag its top edge to resize it. Several sessions sit side by side.
+  - *Floating*: move it by the empty part of its tab bar, resize it by its corner.
   - *Hidden*: a *Show the AI panel* chip at the bottom left brings it back; it pulses while an approval waits.
-  - WRM remembers the layout, position and sizes for each user in this browser. Approval cards always pop up at the bottom right, whatever the layout. On a phone the live view is a sheet at the bottom of the screen.
+  - The layout is stored for your account. Approval cards always pop up at the bottom right, whatever the layout. On a phone the live view is a sheet at the bottom of the screen.
 - **After a refusal** (denied in WRM or in the app, or no answer within `ai_approval_timeout_seconds`) the tool result tells the AI where it was refused, **which rule made WRM ask** (the time or action limit, a command outside the allow list, ask mode, a power command) and what you can change in WRM, and to ask you whether to continue, change the command or stop, instead of retrying a variant on its own.
 - **Full access (v12.6.2, modes v12.6.3):** the administrator's `ai_full_access` switch applies, depending on `ai_full_access_mode`, to every AI session (`all`, the default: the WRM AI panel and every AI connection), only to AI connections with the scope `full_access` (`connection`; the scope is offered only in this mode), or to users who turn on **Full access for my AI sessions** in *Settings → AI connections* (`user`). Then nothing is refused outright: commands on the destructive list or `ai_blocked_commands`, the connection's deny lists, power commands, protected paths and secret files (also with `ai_sensitive_reads` = `deny`) become approvals marked *FULL ACCESS*, asked every time and never automatic, even with "Allow everything". A read-only connection stays read-only and the other scopes still apply. With `ai_full_access_blocked` = `deny` (v12.6.4) the administrator's `ai_blocked_commands` stay refused even under full access. Turning the policy off restores the refusals at the next call.
 - **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Approve it there and tell the AI to continue: the identical call then runs once without asking. This also works after the AI app closed its session (v12.6.5): the approval covers the same call once in your next session on that connection. A denial in WRM stays a denial. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.
@@ -1563,7 +1589,7 @@ Copy files and folders **directly from one SSH/SFTP server to another**. The dat
 
 ### Workspace sessions
 
-Right panel → **Sessions**:
+The **Sessions** panel (right by default; see [Panel layout](#panel-layout-dock-stack-float-and-lock)):
 
 - **+ Save Session** saves **all open windows**: connection, terminal or file manager, current folder, snap slot or position (stored relative to the workspace size, so it fits other screens), minimized and focused state. The suggested name is built from the connections.
 - **Click a saved session to open it.** If windows are already open, choose **Replace** (close them) or **Add** (open next to them). Saved sessions are also offered in every empty *New Window*.
@@ -1572,7 +1598,7 @@ Right panel → **Sessions**:
 
 ### Clipboard panel
 
-Right panel → **Clipboard**: the last 20 texts you copied from terminals (and copied paths).
+The **Clipboard** panel (right by default): the last 20 texts you copied from terminals (and copied paths).
 
 - Click an entry to copy it again. **Paste** sends it to the focused terminal.
 - The history is kept per workspace session and **per user** in your browser (local storage), not on the server. Another account signing in on the same browser does not see it, and **signing out removes it**. Use **Clear** to empty it.
@@ -1705,7 +1731,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 
 - The top bar and the collaboration bar adapt to the available width (labels collapse into icons, step by step).
 - **Installable app (PWA):** *Settings → General → Install as an app* (or the install icon in the address bar; on iPhone/iPad: *Share → Add to Home Screen*) opens WRM in its own window, from the dock, start menu or home screen. The app caches only its own scripts and fonts (per version); connections and data always come live from the server, and without the server it shows an offline page. Browsers allow this only over **HTTPS with a trusted certificate** (or on `localhost`). The *Install as an app* row shows the steps for the current browser, or why installing is not possible (plain `http://`, an untrusted certificate, Firefox on the desktop); the *Install* button appears only when the browser can install right away.
-- On phones (< 760 px): the connection list and the Sessions/Clipboard panel become **slide-in drawers** (☰ and 🗂 buttons), windows open **full screen**, and a single tap opens a connection. Chat and People open as full-width panels.
+- On phones (< 760 px): the connection list and the Sessions/Snippets/Clipboard panel become **slide-in drawers** (in the fixed start layout, whatever you arranged on a larger screen) (☰ and 🗂 buttons), windows open **full screen**, and a single tap opens a connection. Chat and People open as full-width panels.
 
 ---
 
@@ -2138,6 +2164,7 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/auth/mfa` | `{mfa_token, code}` (TOTP or recovery code) |
 | POST | `/api/auth/logout` | Sign out |
 | GET | `/api/auth/me` | Current user, restrictions and policies |
+| GET / PUT / DELETE | `/api/me/ui/{key}` | Your interface state, `key` = `layout` (panel layout) or `workboard`: `GET` → `{value, updated_at}` (`value` null when nothing is stored), `PUT {value: {…}}` (a JSON object, at most 64 KiB), `DELETE` resets |
 | POST | `/api/auth/password` | `{current_password, new_password}` |
 | POST | `/api/auth/2fa/setup` · `enable` · `disable` · `recovery` | Two-factor management |
 | GET / DELETE | `/api/auth/sessions[/{id}]` | Signed-in devices / sign out one or all others |
@@ -2608,6 +2635,7 @@ remote-manager/
   mcp_bundle_test.go   the Claude Desktop extension: download, manifest, token checks; its Node.js bridge end to end with an approval
   v1265_test.go        Medium step by step: tool import steps with output, deploy-config checked at once and kept while preparing, failed start keeps its step, error and redacted output, activity log; 409 names the running operation and its user, visibility and medium_log_output; approve later after the AI app closed its session; grep/sed/find patterns are not taken for files
   v1266_test.go        Docker for Medium: backend choice, Linux packages after consent with steps and output, no rights shows -setup-docker, policy off, Windows and macOS Docker Desktop with download, signature and licence, permission denied, wrm -setup-docker
+  v1268_test.go        /api/me/ui: per-user layout store (put, overwrite, reset, objects only, 64 KiB limit, unknown keys, signed out, removed with the user); the page loads static/layout.js and has every panel
   v1267_test.go        Medium certificates: host CA bundle and extra PEM file reach every container (mount, environment, image roots kept), expired and duplicate certificates left out, bad or missing file named
   v1264_test.go        ai_full_access_blocked: deny keeps the administrator's blocked commands refused under full access, the destructive list still asks; ask asks
   v1263_test.go        full access modes: every AI session with the switch alone (default), only connections with the scope, each user's own switch (403 when not allowed, audited)
@@ -2619,6 +2647,7 @@ remote-manager/
   static/git.js              the Git workspace (loaded when it is opened)
   static/ai.js               the AI assistant panel and the admin AI tab (loaded when used)
   static/mcp.js              AI connections (MCP): settings, indicator, approval cards, OAuth consent, admin tab (loaded when used)
+  static/layout.js           panel layout: dock zones, tab groups, splitters, floating windows, lock, Panels menu, per-user storage
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)
   mcpb/server/index.js       the Node.js bridge of the Claude Desktop extension (embedded; mcp_bundle.go)
@@ -2640,6 +2669,7 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 
 | Problem | Fix |
 |---|---|
+| A panel is gone, or tabs cannot be dragged | *Panels* (▦ in the top bar, or in its ⋯ menu) shows and hides every panel; 🔒 on that button means the layout is locked: unlock it there. *Reset the layout* puts every panel back where it started |
 | Medium: pip fails with *certificate verify failed: self-signed certificate in certificate chain* | A proxy or antivirus inspects HTTPS. Keep `medium_host_ca` on (default) and press *Prepare runtime* again; if its root certificate is not in the WRM host's store, export it as PEM and set `medium_ca_file` |
 | *Request blocked by CSRF protection* / terminals do not connect behind a proxy | Pass the `Host` header (`proxy_set_header Host $host;`) and WebSocket upgrade headers, or set `WRM_ALLOWED_ORIGINS` |
 | AI: no **AI** button on a terminal | The assistant is off (`ai_assistant`), not for your account, the kill switch is on, the connection is not SSH, or your share role does not allow terminals and file changes |

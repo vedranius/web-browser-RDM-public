@@ -1,6 +1,31 @@
-## Web Remote Manager PRO v12.6.7 — A top bar that fits, an AI panel that docks
+## Web Remote Manager PRO v12.6.8 — Your panels, where you want them
 
 ### Added
+
+- **Arrange the page yourself.** *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view are now panels with a tab. Drag a panel by its tab:
+  - onto another panel's tab bar, and they share it as tabs;
+  - onto the top or bottom part of a panel, and the column is split between them;
+  - onto the *Left*, *Right* or *Bottom* strip that appears at the edges while you drag, and it docks there (the bottom zone sits under your windows);
+  - anywhere else, and it becomes a floating window you move by its tab bar and resize by its corner.
+  Drag the line between two panels, or a zone's edge, to resize. Every panel's **⋯** menu also moves it, hides it, locks the layout or resets it.
+- **Panels** (▦ in the top bar): every panel with where it is; show or hide it, lock the layout, or go back to the start layout.
+- **Lock the layout** so nothing moves by accident: no dragging, splitting or resizing while locked (the button shows 🔒). Tabs, collapsing the side panels, showing and hiding still work.
+- **Your layout follows you:** it is stored for your account on the WRM server, so every browser and computer you sign in on shows the same arrangement.
+
+### Changed
+
+- The AI live view is a panel like the others: dock it left, right or at the bottom, stack it with *Sessions*, let it float or hide it. Its title bar buttons and the 🤖 menu still work.
+- On a phone the page keeps its fixed layout with the two drawers.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets one new table (`user_ui`); a previous version still starts on it. Your first layout is built from what this browser remembered in v12.6.7 (the right panel's tab and width, where the AI live view was).
+
+[Download v12.6.8](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.8) · [Panel layout](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.8/README.md#panel-layout-dock-stack-float-and-lock)
+
+### Included from v12.6.7 — A top bar that fits, an AI panel that docks
+
+#### Added
 
 - **The AI live view docks where you want it.** What an AI app runs on your servers (commands, files, WRM's decision, approvals and output) is no longer a box over your windows. Choose with the buttons in its title bar, in the 🤖 menu, or by dragging the title bar onto the right or bottom edge:
   - **Right** (default): a **🤖 AI** tab next to *Sessions* and *Snippets*, with its own width; the tab counts the open AI sessions and turns yellow while one waits for you.
@@ -11,18 +36,18 @@
 - Approval cards still always pop up, whatever the layout, so no request is missed. On a phone the live view is a sheet at the bottom of the screen.
 - **Medium works behind proxies and antivirus that inspect HTTPS.** The original deploy tool's Docker runtime now trusts the certificates your WRM computer trusts (the Windows certificate store, the macOS keychains or the Linux CA bundle), so pip no longer fails with *self-signed certificate in certificate chain*. New policy *Medium trusts this computer's certificates* (on by default) and *Extra CA file for Medium* for a proxy root that is not in the computer's store, in *Administration → Policies → Git*.
 
-### Changed
+#### Changed
 
 - **The top bar fits at any width and browser zoom.** It measures itself and first drops the labels of less used buttons; buttons that still do not fit move into a **⋯** menu (with their badges), so no button covers another at 1100–1920 px or at 125–150 % zoom.
 - The right panel remembers its width, separately for the AI tab.
 
-### Fixed
+#### Fixed
 
 - **You can select and copy every text on the page again**, for example Medium's command output, error messages and hints. Only buttons, tabs, title bars and drag handles stay unselectable.
 - The *Snippets* tab no longer looks selected while *Sessions* is open.
 - When pip fails because of an untrusted certificate, Medium says so and what to do.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database or API change. If Medium's runtime preparation failed with a certificate error, press *Prepare runtime* again after the upgrade.
 

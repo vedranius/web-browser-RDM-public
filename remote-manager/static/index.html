@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.6.7</title>
+<title>Web Remote Manager PRO v12.6.8</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -364,7 +364,7 @@ button:hover { background: var(--accent-h); }
   height: 100%;
   overflow: hidden;
 }
-#sidebar.collapsed .sidebar-inner { opacity: 0; pointer-events: none; }
+#sidebar.collapsed #dz-left { opacity: 0; pointer-events: none; }
 
 /* ══ SIDEBAR HEADER ══ */
 .sb-header { padding: 10px 10px 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -936,7 +936,7 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
   .btn-menu { display: inline-flex; }
   #sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 8500; width: min(86vw, 320px) !important; transform: translateX(-102%); transition: transform .22s ease; box-shadow: var(--shadow-lg); }
   #sidebar.collapsed { width: min(86vw, 320px) !important; }
-  #sidebar.collapsed .sidebar-inner { opacity: 1; pointer-events: auto; }
+  #sidebar.collapsed #dz-left { opacity: 1; pointer-events: auto; }
   #sidebar.collapsed .sb-collapsed-strip { display: none !important; }
   #sidebar.mobile-open { transform: none; }
   .sidebar-toggle-wrap, .sidebar-resize-handle { display: none; }
@@ -1566,7 +1566,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.6.7 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.6.8 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1617,7 +1617,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <button class="sb-icon-btn" onclick="openConnModal(null)" title="New Connection">+</button>
     <button class="sb-icon-btn" onclick="openFolderModal()" title="New Folder">📁</button>
   </div>
-  <div class="sidebar-inner">
+  <div id="dz-left">
+  <div class="sidebar-inner" id="pnl-conn">
     <div class="sb-header">
       <div class="sb-title">
         <span class="brand"><img class="brand-mark" src="/static/brand/mark-on-dark.svg" alt="" width="16" height="16">WRM PRO</span>
@@ -1639,6 +1640,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div id="root-drop" title="Drop here to remove from folder">↓ Drop here</div>
     </div>
   </div>
+  </div>
   <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
 </div>
 
@@ -1646,7 +1648,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.7</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.8</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1656,6 +1658,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
       <button class="btn-top" id="btn-ai" onclick="openAIHome()" data-i18n-title="ai_btn_t" title="AI assistant">✦ AI</button>
       <button class="btn-top" id="btn-mcp" style="display:none;" onclick="openMCPPop()" title="AI apps connected through MCP"><span>🤖</span><span class="lbl" data-i18n="mcp_connected_lbl">AI connected</span><span class="tun-badge" id="mcp-badge"></span></button>
+      <button class="btn-top" id="btn-panels" onclick="wrmLayout.openPanels(this)" data-i18n-title="dk_panels_t" title="Panels" aria-haspopup="menu"><span>▦</span><span class="lbl" data-i18n="dk_panels">Panels</span></button>
       <button class="btn-top" id="btn-settings" onclick="openSettings()" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
       <button class="btn-top" id="btn-broadcast" onclick="openBroadcastModal()" title="Broadcast input"><span>📣</span><span class="lbl" data-i18n="broadcast_lbl">Broadcast</span></button>
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
@@ -1705,7 +1708,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="hint-keys"><span><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> <span data-i18n="hint_term_search">search in terminal</span></span><span><kbd>Enter</kbd> <span data-i18n="hint_reconnect">reconnect a closed terminal</span></span><span><kbd>Ctrl</kbd>+<kbd>F</kbd> <span data-i18n="hint_fm_search">search files</span></span></div>
     </div>
   </div>
-  <div id="ai-dock-bottom"><div class="adb-resize"></div></div>
+  <div id="dz-bottom"><div class="dz-resize"></div><div id="dz-bottom-g"></div></div>
 </div>
 
 <!-- SESSION / RIGHT PANEL -->
@@ -1714,16 +1717,15 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="sess-toggle-wrap">
     <button class="collapse-btn" id="sess-toggle-btn" onclick="toggleSessPanel()" title="Collapse panel">▶</button>
   </div>
-  <div class="sess-panel-inner">
-    <div class="sess-hdr">
-      <div class="sess-hdr-top">
-        <div class="rp-tabs"><button id="rp-tab-sess" class="rp-tab active" onclick="setRightTab('sessions')" data-i18n="sessions">Sessions</button><button id="rp-tab-snip" class="rp-tab" onclick="setRightTab('snippets')" title="Ctrl+Shift+Space">⚡ <span data-i18n="snippets">Snippets</span></button><button id="rp-tab-ai" class="rp-tab" style="display:none;" onclick="setRightTab('ai')" data-i18n-title="rp_ai_t" title="What AI apps run on your servers, live">🤖 <span data-i18n="rp_ai">AI</span><span class="rp-badge" id="rp-ai-badge"></span></button></div>
-      </div>
-      <button class="btn-save-sess" id="rp-sess-save" onclick="saveCurrentSession()" data-i18n="save_session">+ Save Session</button>
-      <div id="snip-tools" style="display:none;"><input type="text" id="snip-search" data-i18n-placeholder="snip_search" placeholder="Search snippets…" oninput="renderSnippets()"><button class="btn-sm" onclick="openSnippetModal(null)" title="New snippet">＋</button></div>
+  <div class="sess-panel-inner" id="dz-right">
+    <div id="pnl-sess">
+      <div class="pnl-pad"><button class="btn-save-sess" id="rp-sess-save" onclick="saveCurrentSession()" data-i18n="save_session">+ Save Session</button></div>
+      <div id="sess-list"></div>
     </div>
-    <div id="sess-list"></div>
-    <div id="snip-list" style="display:none;"></div>
+    <div id="pnl-snip">
+      <div class="pnl-pad"><div id="snip-tools"><input type="text" id="snip-search" data-i18n-placeholder="snip_search" placeholder="Search snippets…" oninput="renderSnippets()"><button class="btn-sm" onclick="openSnippetModal(null)" title="New snippet">＋</button></div></div>
+      <div id="snip-list"></div>
+    </div>
     <div id="rp-ai"></div>
     <div class="clip-panel" id="clip-panel">
       <div class="clip-header">
@@ -4819,6 +4821,7 @@ function applyLang() {
   if (typeof renderSnippets === 'function') { renderSnippets(); renderBroadcastUI(); }
   if (typeof updateInstallRow === 'function') updateInstallRow();
   if (typeof updateReplayFsBtn === 'function') updateReplayFsBtn();
+  if (window.wrmLayout) wrmLayout.refresh();
 }
 function changeLang(l) {
   currentLang = l;
@@ -5223,8 +5226,8 @@ function initApp() {
     document.getElementById('admin-badge').style.display = currentUser.is_admin ? 'inline' : 'none';
     document.getElementById('admin-settings-row').style.display = currentUser.is_admin ? '' : 'none';
     applyPolicyToUI();
-    setRightTab(rightTab);
   }
+  if (window.wrmLayout) wrmLayout.init();
   if (enforceRestrictions()) return;
   setupResize();
   loadClipboard();
@@ -9054,42 +9057,14 @@ async function loadSnippets() {
   if (snipPicker) renderSnippetPicker();
 }
 
-// The right panel's tabs: Sessions, Snippets and, while an AI app works and its live view is
-// docked on the right (mcp.js), AI. noSave: a programmatic switch keeps the user's last choice.
+// Sessions, Snippets and the AI live view are panels of the page layout (static/layout.js):
+// setRightTab brings one to the front wherever the user has put it. noSave: a programmatic
+// switch that does not expand a collapsed side panel.
 function setRightTab(tab, noSave) {
-  if (!currentUser) tab = 'sessions';
-  const aiOK = !!(window.wrmMCP && wrmMCP.dockRight && wrmMCP.dockRight());
-  rightTab = tab === 'snippets' ? 'snippets' : tab === 'ai' && aiOK ? 'ai' : 'sessions';
-  if (!noSave) try { localStorage.setItem('wrm_right_tab', rightTab); } catch (_) {}
-  const sn = rightTab === 'snippets', ai = rightTab === 'ai';
-  const el = id => document.getElementById(id);
-  el('rp-tab-sess').classList.toggle('active', !sn && !ai);
-  el('rp-tab-snip').classList.toggle('active', sn);
-  el('rp-tab-snip').style.display = currentUser ? '' : 'none';
-  el('rp-tab-ai').classList.toggle('active', ai);
-  el('rp-tab-ai').style.display = aiOK ? '' : 'none';
-  el('sess-list').style.display = sn || ai ? 'none' : '';
-  el('rp-sess-save').style.display = sn || ai || isCollabMode ? 'none' : '';
-  el('snip-tools').style.display = sn ? 'flex' : 'none';
-  el('snip-list').style.display = sn ? '' : 'none';
-  el('rp-ai').style.display = ai ? 'flex' : 'none';
-  el('clip-panel').style.display = ai ? 'none' : '';
-  applyRightWidth();
-  if (sn) renderSnippets();
+  rightTab = tab === 'snippets' ? 'snippets' : tab === 'ai' ? 'ai' : 'sessions';
+  if (window.wrmLayout) wrmLayout.activate(rightTab === 'snippets' ? 'snip' : rightTab === 'ai' ? 'ai' : 'sess', {reveal: !noSave});
 }
-
-// The right panel keeps its own width for the AI tab (the live view needs more room) and for
-// the other tabs; both are remembered in this browser.
-let rpWidths = {};
-try { rpWidths = JSON.parse(localStorage.getItem('wrm_rp_widths') || '{}') || {}; } catch (_) {}
-function rightWidthKey() { return rightTab === 'ai' ? 'ai' : 'main'; }
-function rightWidthMax() { return rightTab === 'ai' ? Math.max(420, Math.min(820, Math.round(window.innerWidth * 0.5))) : 420; }
-function applyRightWidth() {
-  const sp = document.getElementById('sess-panel');
-  if (!sp || isCompact()) return;
-  const w = rpWidths[rightWidthKey()] || (rightTab === 'ai' ? 400 : 0);
-  sp.style.width = w ? Math.max(140, Math.min(rightWidthMax(), w)) + 'px' : '';
-}
+function rightWidthMax() { return window.wrmLayout ? wrmLayout.zoneMax('right') : 420; }
 
 function snippetHostPort(c) {
   const h = (c && c.host) || '';
@@ -9139,7 +9114,7 @@ function snippetTargetWin() {
 
 function renderSnippets() {
   const list = document.getElementById('snip-list');
-  if (!list || rightTab !== 'snippets') return;
+  if (!list || !(window.wrmLayout ? wrmLayout.isShown('snip') : rightTab === 'snippets')) return;
   const q = (document.getElementById('snip-search').value || '').toLowerCase().trim();
   if (!snippets.length) {
     list.innerHTML = `<div class="snip-empty">${esc(t('snip_empty'))}<button class="btn-sec btn-sm" onclick="addExampleSnippets()">✨ ${esc(t('snip_examples'))}</button></div>`;
@@ -12841,6 +12816,7 @@ function startWinResize(e, id, handle) {
 }
 
 function startSidebarResize(e) {
+  if (window.wrmLayout && wrmLayout.locked()) return;
   e.preventDefault();
   const sb = document.getElementById('sidebar');
   sidebarResizeState = { sx: e.clientX, sw: sb.offsetWidth };
@@ -12848,6 +12824,7 @@ function startSidebarResize(e) {
 }
 
 function startSessResize(e) {
+  if (window.wrmLayout && wrmLayout.locked()) return;
   e.preventDefault();
   const sp = document.getElementById('sess-panel');
   sessResizeState = { sx: e.clientX, sw: sp.offsetWidth };
@@ -12951,8 +12928,9 @@ document.addEventListener('mousemove', e => {
 
   if (sidebarResizeState) {
     const sb = document.getElementById('sidebar');
-    const nw = Math.max(140, Math.min(520, sidebarResizeState.sw + e.clientX - sidebarResizeState.sx));
+    const nw = Math.max(140, Math.min(window.wrmLayout ? wrmLayout.zoneMax('left') : 520, sidebarResizeState.sw + e.clientX - sidebarResizeState.sx));
     sb.style.width = nw + 'px';
+    sidebarResizeState.nw = nw;
   }
 
   if (sessResizeState) {
@@ -12970,11 +12948,9 @@ document.addEventListener('mouseup', () => {
   }
   winDragState = null;
   winResizeState = null;
+  if (sidebarResizeState && sidebarResizeState.nw && window.wrmLayout) wrmLayout.zoneResized('left', sidebarResizeState.nw);
   sidebarResizeState = null;
-  if (sessResizeState && sessResizeState.nw) {
-    rpWidths[rightWidthKey()] = sessResizeState.nw;
-    try { localStorage.setItem('wrm_rp_widths', JSON.stringify(rpWidths)); } catch (_) {}
-  }
+  if (sessResizeState && sessResizeState.nw && window.wrmLayout) wrmLayout.zoneResized('right', sessResizeState.nw);
   sessResizeState = null;
   document.body.style.cursor = '';
 });
@@ -15093,7 +15069,7 @@ window.addEventListener('load', async () => {
 // (tb1..tb6), then the less used buttons move into the ⋯ menu. It is measured, so any
 // language, browser zoom, badge or administrator button fits.
 const TB_LEVELS = 6;
-const TB_OVERFLOW = ['btn-shares', 'btn-broadcast', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-settings'];
+const TB_OVERFLOW = ['btn-panels', 'btn-shares', 'btn-broadcast', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-settings'];
 let _tbObserver = null, _tbPending = 0;
 function topBarOverflows() {
   const tb = document.getElementById('top-bar'), a = document.getElementById('auth-info');
@@ -15160,5 +15136,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
   scheduleFitTopBar();
 })();
 </script>
+<script src="/static/layout.js"></script>
 </body>
 </html>
