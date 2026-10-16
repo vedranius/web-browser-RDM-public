@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -23,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -47,12 +49,35 @@ type mediumStatus struct {
 	Error        string          `json:"error,omitempty"`
 	Digest       string          `json:"tool_digest,omitempty"`
 	Dependencies map[string]bool `json:"dependencies"`
+	// v12.6.5: the user's current or last operation and its steps, the operation holding
+	// the shared lock (any user's), the original tool's process and imports waiting to be
+	// applied at the next start
+	Op            string        `json:"op,omitempty"`
+	OpStarted     string        `json:"op_started,omitempty"`
+	Steps         []mediumStep  `json:"steps"`
+	Operation     *mediumOpInfo `json:"operation"`
+	RunningSince  string        `json:"running_since,omitempty"`
+	LastExit      *mediumExit   `json:"last_exit,omitempty"`
+	PendingConfig bool          `json:"pending_config"`
+	PendingSSH    bool          `json:"pending_ssh"`
+	OutputPolicy  string        `json:"output_policy"`
+}
+
+// mediumExit is how the original tool's process last ended.
+type mediumExit struct {
+	At       string `json:"at"`
+	Code     int    `json:"code"`
+	Expected bool   `json:"expected"` // stopped from WRM
 }
 type mediumProcess struct {
 	cmd          *exec.Cmd
 	cancel       context.CancelFunc
 	base, secret string
 	done         chan struct{}
+	log          *mediumRing // the process's own output (v12.6.5)
+	started      time.Time
+	stopping     atomic.Bool // stopped from WRM: the exit is expected
+	ready        atomic.Bool
 }
 type mediumManager struct {
 	mu        sync.Mutex
@@ -119,8 +144,12 @@ func mediumState(uid int) mediumStatus {
 		case <-p.done:
 		default:
 			s.Running = true
+			if !p.started.IsZero() {
+				s.RunningSince = p.started.UTC().Format(time.RFC3339)
+			}
 		}
 	}
+	s.Steps = append([]mediumStep{}, s.Steps...)
 	s.Dependencies = map[string]bool{"python": mediumPython() != "", "git": false, "ssh": false, "rsync": false}
 	for _, n := range []string{"git", "ssh", "rsync"} {
 		_, e := exec.LookPath(n)
@@ -132,24 +161,58 @@ func mediumState(uid int) mediumStatus {
 	if b, e := os.ReadFile(filepath.Join(mediumRoot(), "tool.sha256")); e == nil {
 		s.Digest = strings.TrimSpace(string(b))
 	}
+	s.PendingConfig = mediumFileExists(filepath.Join(mediumUserDir(uid), "pending-config", "servers.yaml"))
+	if st, e := os.Stat(filepath.Join(mediumUserDir(uid), "pending-ssh")); e == nil && st.IsDir() {
+		s.PendingSSH = true
+	}
+	s.OutputPolicy = getSetting("medium_log_output")
 	return s
 }
+
+// mediumStateFull adds the operation that holds the shared lock (any user's).
+func mediumStateFull(uid int) mediumStatus {
+	s := mediumState(uid)
+	s.Operation = mediumHolder(uid)
+	return s
+}
+
+// mediumSetStage moves the user's operation to a step: the running step ends (ok, or with
+// err) and a new one starts while busy. The last error stays until the next operation.
 func mediumSetStage(uid int, stage string, busy bool, err error) {
+	out, who := mediumOpOutput(), usernameOf(uid)
 	mediumMgr.mu.Lock()
 	defer mediumMgr.mu.Unlock()
 	s := mediumMgr.statuses[mediumUserDir(uid)]
+	n := len(s.Steps)
+	same := n > 0 && s.Steps[n-1].Step == stage && s.Steps[n-1].Status == "running"
+	if !same || err != nil || !busy {
+		mediumCloseStep(&s, err)
+	}
+	if busy && stage != "" && (!same || err != nil) {
+		now := time.Now()
+		s.Steps = append(s.Steps, mediumStep{Step: stage, Status: "running", Started: now.UTC().Format(time.RFC3339), at: now})
+		if out != nil {
+			out.Note("step: %s", stage)
+		}
+		log.Printf("Medium (%s): step %s", who, stage)
+	}
 	s.Stage, s.Busy = stage, busy
-	s.Error = ""
 	if err != nil {
 		s.Error = truncateStr(redactText(err.Error()), 2000)
 	}
 	mediumMgr.statuses[mediumUserDir(uid)] = s
 }
+
+// mediumCommand runs a runtime command. Its output goes to the running operation's log
+// (redacted when shown; who may read it is the policy medium_log_output).
 func mediumCommand(ctx context.Context, dir, binary string, args ...string) error {
 	cmd := exec.CommandContext(ctx, binary, args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "PIP_DISABLE_PIP_VERSION_CHECK=1")
-	// Never return package output or arbitrary source code to the browser.
+	if out := mediumOpOutput(); out != nil {
+		out.Note("$ %s %s", filepath.Base(binary), truncateStr(strings.Join(args, " "), 400))
+		cmd.Stdout, cmd.Stderr = out, out
+	}
 	if e := cmd.Run(); e != nil {
 		return fmt.Errorf("runtime command failed (%s): %w", filepath.Base(binary), e)
 	}
@@ -260,6 +323,7 @@ func mediumStop(uid int) {
 	delete(mediumMgr.processes, mediumUserDir(uid))
 	mediumMgr.mu.Unlock()
 	if p != nil {
+		p.stopping.Store(true)
 		p.cancel()
 		select {
 		case <-p.done:
@@ -276,6 +340,7 @@ func mediumStopAll() {
 	}
 	mediumMgr.mu.Unlock()
 	for _, p := range ps {
+		p.stopping.Store(true)
 		p.cancel()
 	}
 }
@@ -288,8 +353,15 @@ func mediumStartForSetup(uid int, setup bool) error {
 	if s.Busy && !setup {
 		return fmt.Errorf("runtime setup is still running")
 	}
-	if !s.Tool || !s.Config {
-		return fmt.Errorf("import the deploy tool and deploy config first")
+	mediumSetStage(uid, "start_checks", true, nil)
+	if !s.Imported {
+		return fmt.Errorf("The deploy tool is not imported yet: an administrator imports the deploy-tool ZIP (step 1)")
+	}
+	if !s.Tool {
+		return fmt.Errorf("The deploy tool's runtime is not prepared yet: an administrator runs \"Prepare runtime\" (step 2)")
+	}
+	if !s.Config {
+		return fmt.Errorf("No deploy-config yet: import your deploy-config ZIP (step 3)")
 	}
 	if s.Backend == "docker" {
 		if e := mediumDockerCheck(context.Background()); e != nil {
@@ -336,6 +408,7 @@ func mediumStartForSetup(uid int, setup bool) error {
 		return e
 	}
 	if s.Backend == "docker" {
+		mediumSetStage(uid, "start_sync", true, nil)
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
 		if e := mediumDockerSync(ctx, uid); e != nil {
@@ -348,8 +421,9 @@ func mediumStartForSetup(uid int, setup bool) error {
 	}
 	port := l.Addr().(*net.TCPAddr).Port
 	l.Close()
+	mediumSetStage(uid, "start_process", true, nil)
 	ctx, cancel := context.WithCancel(context.Background())
-	p := &mediumProcess{cancel: cancel, base: fmt.Sprintf("http://127.0.0.1:%d", port), secret: randomToken(32), done: make(chan struct{})}
+	p := &mediumProcess{cancel: cancel, base: fmt.Sprintf("http://127.0.0.1:%d", port), secret: randomToken(32), done: make(chan struct{}), log: &mediumRing{}, started: time.Now()}
 	cmd := exec.CommandContext(ctx, mediumVenvPython(), "-m", "uvicorn", "medium_wrapper:app", "--host", "127.0.0.1", "--port", strconv.Itoa(port), "--no-proxy-headers", "--no-access-log")
 	cmd.Dir = dir
 	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), "HOME=" + filepath.Join(dir, "home"), "USERPROFILE=" + filepath.Join(dir, "home"), "LANG=C.UTF-8", "PYTHONUNBUFFERED=1", "WRM_MEDIUM_TOOL=" + mediumToolDir(), "WRM_MEDIUM_KEY=" + p.secret, "DEPLOY_DATA_DIR=" + filepath.Join(dir, "data"), "DEPLOY_CONFIG_DIR=" + mediumConfigDir(uid), "DEPLOY_BIND=127.0.0.1", "DEPLOY_PORT=" + strconv.Itoa(port), "DEPLOY_USER=" + usernameOf(uid), "DEPLOY_ALLOWED_HOSTS=127.0.0.1,localhost", "DEPLOY_SSH_OPTIONS=" + mediumSSHCommand(uid), "GIT_SSH_COMMAND=ssh " + mediumSSHCommand(uid)}
@@ -408,6 +482,7 @@ func mediumStartForSetup(uid int, setup bool) error {
 		p.cancel = func() { stop.Do(func() { mediumDockerStop(name); cancel() }) }
 	}
 	p.cmd = cmd
+	cmd.Stdout, cmd.Stderr = p.log, p.log
 	if e = cmd.Start(); e != nil {
 		cancel()
 		return e
@@ -415,21 +490,54 @@ func mediumStartForSetup(uid int, setup bool) error {
 	mediumMgr.mu.Lock()
 	mediumMgr.processes[dir] = p
 	mediumMgr.mu.Unlock()
-	go func() { _ = cmd.Wait(); close(p.done) }()
+	go func() {
+		e := cmd.Wait()
+		code := 0
+		if e != nil {
+			code = -1
+			if x, ok := e.(*exec.ExitError); ok {
+				code = x.ExitCode()
+			}
+		}
+		expected := p.stopping.Load()
+		mediumMgr.mu.Lock()
+		st := mediumMgr.statuses[dir]
+		st.LastExit = &mediumExit{At: nowStamp(), Code: code, Expected: expected}
+		mediumMgr.statuses[dir] = st
+		mediumMgr.mu.Unlock()
+		close(p.done)
+		if !expected && p.ready.Load() {
+			log.Printf("Medium (%s): the original deploy tool stopped unexpectedly (exit code %d)", usernameOf(uid), code)
+			mediumRecord(uid, "exited", "error", time.Since(p.started).Milliseconds(), fmt.Sprintf("exit code %d", code), fmt.Sprintf("The original deploy tool stopped unexpectedly (exit code %d); start it again, and look at its output if it keeps stopping", code), p.log.Tail())
+		}
+	}()
 	forget := func() {
+		p.stopping.Store(true)
 		p.cancel()
 		mediumMgr.mu.Lock()
 		if mediumMgr.processes[dir] == p {
 			delete(mediumMgr.processes, dir)
 		}
 		mediumMgr.mu.Unlock()
+		// the failed start's log shows why the tool did not come up
+		if out := mediumOpOutput(); out != nil {
+			select {
+			case <-p.done:
+			case <-time.After(2 * time.Second):
+			}
+			if t := p.log.Tail(); t != "" {
+				out.Note("output of the original deploy tool:")
+				out.Write([]byte(t + "\n"))
+			}
+		}
 	}
+	mediumSetStage(uid, "start_ready", true, nil)
 	client := &http.Client{Timeout: time.Second}
 	for i := 0; i < 300; i++ {
 		select {
 		case <-p.done:
 			forget()
-			return fmt.Errorf("deploy tool failed to start; check its Python dependencies and config")
+			return fmt.Errorf("The original deploy tool stopped while starting; its output in the Medium log shows why (often a missing Python package or an error in deploy-config)")
 		default:
 		}
 		req, _ := http.NewRequest("GET", p.base+"/__wrm_ready", nil)
@@ -437,13 +545,14 @@ func mediumStartForSetup(uid int, setup bool) error {
 		if r, e := client.Do(req); e == nil {
 			r.Body.Close()
 			if r.StatusCode == 200 {
+				p.ready.Store(true)
 				return nil
 			}
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
 	forget()
-	return fmt.Errorf("deploy tool startup timed out")
+	return fmt.Errorf("The original deploy tool did not become ready in time; its output in the Medium log shows what it was doing")
 }
 
 func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
@@ -457,11 +566,15 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	action := strings.TrimPrefix(r.URL.Path, "/api/git/medium")
 	if action == "" && r.Method == "GET" {
-		jsonOK(w, mediumState(uid))
+		jsonOK(w, mediumStateFull(uid))
 		return
 	}
 	if action == "/settings" && r.Method == "GET" {
 		jsonOK(w, mediumPublicPreferences(uid))
+		return
+	}
+	if action == "/activity" || action == "/log" {
+		apiMediumActivity(w, r, uid, action)
 		return
 	}
 	if strings.HasPrefix(action, "/native/") {
@@ -478,66 +591,62 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 	if action == "/stop" {
 		// Stopping one's own instance never waits for another user's setup or start.
 		// force=1 stops it even when its state cannot be read (a hung or crashed tool).
-		if e := mediumCanStop(uid); e != nil && r.URL.Query().Get("force") != "1" {
+		forced := r.URL.Query().Get("force") == "1"
+		if e := mediumCanStop(uid); e != nil && !forced {
 			jsonError(w, e.Error(), 409)
 			return
 		}
+		was := mediumState(uid).Running
+		at := time.Now()
 		mediumStop(uid)
-		auditLog(r, uid, "git.medium_stopped", "", map[string]interface{}{"forced": r.URL.Query().Get("force") == "1"})
-		jsonOK(w, mediumState(uid))
-		return
-	}
-	if !mediumOperation.TryLock() {
-		jsonError(w, "Another Medium setup/start operation is running", 409)
-		return
-	}
-	backgroundOperation := false
-	defer func() {
-		if !backgroundOperation {
-			mediumOperation.Unlock()
+		if was {
+			detail := ""
+			if forced {
+				detail = "forced"
+			}
+			log.Printf("Medium (%s): the original deploy tool was stopped", usernameOf(uid))
+			mediumRecord(uid, "stop", "ok", time.Since(at).Milliseconds(), detail, "", "")
 		}
-	}()
-	if action == "/prepare" {
+		auditLog(r, uid, "git.medium_stopped", "", map[string]interface{}{"forced": forced})
+		jsonOK(w, mediumStateFull(uid))
+		return
+	}
+	switch action {
+	case "/prepare":
 		if !isAdminUser(uid) || !mediumState(uid).Imported {
 			jsonError(w, "An administrator must import the trusted tool ZIP first", 403)
 			return
 		}
-		mediumMgr.mu.Lock()
-		active := false
-		for _, process := range mediumMgr.processes {
-			select {
-			case <-process.done:
-			default:
-				active = true
-			}
-		}
-		mediumMgr.mu.Unlock()
-		if active {
-			jsonError(w, "Stop all Medium instances before preparing the shared runtime", 409)
+		if mediumAnyRunning() {
+			jsonError(w, "Stop every running original deploy tool (all users) before preparing the shared runtime again", 409)
 			return
 		}
-		backgroundOperation = true
-		mediumSetStage(uid, "dependencies", true, nil)
+		h, e := mediumBeginOp(uid, "prepare", "")
+		if e != nil {
+			jsonError(w, e.Error(), 409)
+			return
+		}
 		go func() {
-			defer mediumOperation.Unlock()
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 			defer cancel()
-			e := mediumPrepareRuntime(ctx)
-			mediumSetStage(uid, "ready", false, e)
+			mediumEndOp(h, mediumPrepareRuntime(ctx, func(step string) { mediumSetStage(uid, step, true, nil) }))
 		}()
 		auditLog(r, uid, "git.medium_runtime_prepared", "", nil)
 		w.WriteHeader(202)
-		jsonOK(w, mediumState(uid))
+		jsonOK(w, mediumStateFull(uid))
 		return
-	}
-	if action == "/settings" {
+	case "/settings":
 		var values map[string]string
 		if json.NewDecoder(r.Body).Decode(&values) != nil {
 			jsonError(w, "Bad JSON", 400)
 			return
 		}
 		if mediumState(uid).Running {
-			jsonError(w, "Stop Medium before changing runtime settings", 409)
+			jsonError(w, "Stop the original deploy tool before changing its runtime settings (they apply at the next start)", 409)
+			return
+		}
+		if h := mediumHolder(uid); h != nil && h.Mine {
+			jsonError(w, mediumBusyError().Error(), 409)
 			return
 		}
 		saved := mediumPreferences(uid)
@@ -564,21 +673,37 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Cannot save runtime settings", 500)
 			return
 		}
+		mediumRecord(uid, "settings", "ok", 0, "", "", "")
 		auditLog(r, uid, "git.medium_settings_saved", "", nil)
 		jsonOK(w, map[string]bool{"ok": true})
 		return
-	}
-	if action == "/start" {
-		if e := mediumStart(uid); e != nil {
-			jsonError(w, e.Error(), 400)
-		} else {
-			mediumSetStage(uid, "", false, nil)
-			auditLog(r, uid, "git.medium_started", "", nil)
-			jsonOK(w, mediumState(uid))
+	case "/start":
+		if mediumState(uid).Running {
+			jsonOK(w, mediumStateFull(uid))
+			return
 		}
+		h, e := mediumBeginOp(uid, "start", "")
+		if e != nil {
+			jsonError(w, e.Error(), 409)
+			return
+		}
+		// in the background: a start can wait for Docker, the data sync and readiness;
+		// its steps are in the status and the activity log
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			e := mediumApplyPending(ctx, uid)
+			if e == nil {
+				e = mediumStartForSetup(uid, true)
+			}
+			mediumEndOp(h, e)
+		}()
+		auditLog(r, uid, "git.medium_started", "", nil)
+		w.WriteHeader(202)
+		jsonOK(w, mediumStateFull(uid))
 		return
-	}
-	if action != "/tool" && action != "/config" && action != "/ssh" {
+	case "/tool", "/config", "/ssh":
+	default:
 		jsonError(w, "Not found", 404)
 		return
 	}
@@ -591,9 +716,9 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Confirm that you trust this deploy tool/configuration", 400)
 		return
 	}
-	s := mediumState(uid)
-	if s.Busy {
-		jsonError(w, "Runtime setup is already running", 409)
+	kind := strings.TrimPrefix(action, "/")
+	if kind == "tool" {
+		mediumImportTool(w, r, uid)
 		return
 	}
 	if e := r.ParseMultipartForm(mediumArchiveLimit); e != nil {
@@ -601,18 +726,12 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.MultipartForm.RemoveAll()
-	f, _, e := r.FormFile("file")
+	data, e := mediumUploadedZip(r)
 	if e != nil {
-		jsonError(w, "Choose a ZIP file", 400)
+		jsonError(w, e.Error(), 400)
 		return
 	}
-	defer f.Close()
-	data, e := io.ReadAll(io.LimitReader(f, mediumArchiveLimit+1))
-	if e != nil || len(data) > mediumArchiveLimit {
-		jsonError(w, "ZIP exceeds 20 MiB", 413)
-		return
-	}
-	if e = os.MkdirAll(mediumRoot(), 0700); e != nil {
+	if e = os.MkdirAll(mediumUserDir(uid), 0700); e != nil {
 		jsonError(w, "Cannot create runtime directory", 500)
 		return
 	}
@@ -621,101 +740,151 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Cannot prepare import", 500)
 		return
 	}
-	kind := strings.TrimPrefix(action, "/")
+	defer os.RemoveAll(stage)
 	if e = mediumExtract(data, stage, kind); e != nil {
-		os.RemoveAll(stage)
+		mediumRecord(uid, kind+"_import", "error", 0, "", e.Error(), "")
 		jsonError(w, e.Error(), 400)
 		return
 	}
-	if kind == "tool" {
-		mediumMgr.mu.Lock()
-		active := false
-		for _, p := range mediumMgr.processes {
-			select {
-			case <-p.done:
-			default:
-				active = true
-			}
-		}
-		mediumMgr.mu.Unlock()
-		if active {
-			os.RemoveAll(stage)
-			jsonError(w, "Stop all Medium instances before replacing the shared tool runtime", 409)
+	// WRM's own reader checks deploy-config at once, also while the runtime is still
+	// being prepared; the original tool checks it again before it is used.
+	if kind == "config" {
+		if _, e := mdLoadConfig(stage); e != nil {
+			msg := "deploy-config is not valid: " + e.Error()
+			mediumRecord(uid, "config_import", "error", 0, "", msg, "")
+			jsonError(w, msg, 400)
 			return
 		}
-		// Retain the approved source even if runtime setup is unavailable. A user
-		// can start Docker and retry preparation without uploading the ZIP again.
-		if e = mediumReplaceDir(stage, mediumToolDir()); e != nil {
-			jsonError(w, "Cannot save imported tool", 500)
+	}
+	s := mediumState(uid)
+	h, busy := (*mediumOpInfo)(nil), error(nil)
+	if s.Tool && !s.Running {
+		h, busy = mediumBeginOp(uid, kind+"_import", "")
+	}
+	if h == nil {
+		// keep it for the next start: the runtime is not ready, another operation holds
+		// the lock or the tool is running
+		why := "the original tool is running; it is applied at the next start"
+		switch {
+		case !s.Tool:
+			why = "the original tool's runtime is not prepared yet; it is checked and applied at the first start"
+		case busy != nil:
+			why = "another Medium operation is running; it is checked and applied at the next start"
+		}
+		if e := mediumReplaceDir(stage, filepath.Join(mediumUserDir(uid), "pending-"+kind)); e != nil {
+			jsonError(w, "Cannot keep the imported ZIP", 500)
 			return
 		}
-		if e = os.WriteFile(filepath.Join(mediumRoot(), "setup-pending"), []byte("pending"), 0600); e != nil {
-			jsonError(w, "Cannot prepare runtime state", 500)
-			return
-		}
-		backgroundOperation = true
-		mediumSetStage(uid, "dependencies", true, nil)
-		digest := sha256.Sum256(data)
-		go func() {
-			defer mediumOperation.Unlock()
-			defer os.RemoveAll(stage)
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-			defer cancel()
-			e := os.WriteFile(filepath.Join(mediumRoot(), "tool.sha256"), []byte(hex.EncodeToString(digest[:])), 0600)
-			if e == nil {
-				e = mediumPrepareRuntime(ctx)
-			}
-			mediumSetStage(uid, "ready", false, e)
-		}()
-		auditLog(r, uid, "git.medium_tool_imported", "", map[string]interface{}{"sha256": hex.EncodeToString(digest[:])})
+		mediumRecord(uid, kind+"_import", "ok", 0, "saved: "+why, "", "")
+		auditLog(r, uid, "git.medium_"+kind+"_imported", "", map[string]interface{}{"pending": true})
 		w.WriteHeader(202)
-		jsonOK(w, mediumState(uid))
+		jsonOK(w, map[string]interface{}{"pending": true, "note": why, "state": mediumStateFull(uid)})
 		return
 	}
-	defer os.RemoveAll(stage)
-	if s.Running {
-		jsonError(w, "Stop Medium before replacing its configuration or SSH profile", 409)
+	pending := filepath.Join(mediumUserDir(uid), "pending-"+kind)
+	if e := mediumReplaceDir(stage, pending); e != nil {
+		mediumEndOp(h, fmt.Errorf("Cannot keep the imported ZIP"))
+		jsonError(w, "Cannot keep the imported ZIP", 500)
 		return
 	}
-	mediumStop(uid)
-	dest := filepath.Join(mediumUserDir(uid), "config")
-	if kind == "config" {
-		if !s.Tool {
-			jsonError(w, "Prepare the deploy tool first", 400)
-			return
-		}
-		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
-		defer cancel()
-		if e = mediumValidateConfig(ctx, stage); e != nil {
-			jsonError(w, "Deploy config validation failed; inspect YAML and project/server references", 400)
-			return
-		}
-	} else {
-		dest = filepath.Join(mediumUserDir(uid), "home", ".ssh")
-	}
-	if e = mediumReplaceDir(stage, dest); e != nil {
-		jsonError(w, "Cannot save runtime files", 500)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute)
+	defer cancel()
+	e = mediumApplyPending(ctx, uid)
+	mediumEndOp(h, e)
+	if e != nil {
+		jsonError(w, e.Error(), 400)
 		return
 	}
-	if e = os.WriteFile(filepath.Join(mediumUserDir(uid), kind+"-revision"), []byte(randomToken(16)), 0600); e != nil {
-		jsonError(w, "Cannot save runtime import revision", 500)
-		return
-	}
-	// This import replaces a pending one from an earlier one-click setup, and an imported
-	// config replaces a config repository (as in one-click setup).
-	os.RemoveAll(filepath.Join(mediumUserDir(uid), "pending-"+kind))
-	if kind == "config" {
-		if prefs := mediumPreferences(uid); prefs["DEPLOY_CONFIG_REPO"] != "" {
-			delete(prefs, "DEPLOY_CONFIG_REPO")
-			if e = os.WriteFile(filepath.Join(mediumUserDir(uid), "preferences.enc"), []byte(encryptValue(string(jsonMarshal(prefs)))), 0600); e != nil {
-				jsonError(w, "Cannot save runtime settings", 500)
-				return
-			}
-		}
-	}
-	mediumSetStage(uid, "", false, nil)
 	auditLog(r, uid, "git.medium_"+kind+"_imported", "", nil)
-	jsonOK(w, mediumState(uid))
+	jsonOK(w, mediumStateFull(uid))
+}
+
+// mediumUploadedZip reads the "file" field of a ZIP upload.
+func mediumUploadedZip(r *http.Request) ([]byte, error) {
+	f, _, e := r.FormFile("file")
+	if e != nil {
+		return nil, fmt.Errorf("Choose a ZIP file")
+	}
+	defer f.Close()
+	data, e := io.ReadAll(io.LimitReader(f, mediumArchiveLimit+1))
+	if e != nil || len(data) > mediumArchiveLimit {
+		return nil, fmt.Errorf("ZIP exceeds 20 MiB")
+	}
+	return data, nil
+}
+
+// mediumImportTool replaces the shared deploy tool and prepares its runtime in the
+// background (administrators only).
+func mediumImportTool(w http.ResponseWriter, r *http.Request, uid int) {
+	if mediumAnyRunning() {
+		jsonError(w, "Stop every running original deploy tool (all users) before replacing the shared deploy tool", 409)
+		return
+	}
+	h, e := mediumBeginOp(uid, "tool_import", "")
+	if e != nil {
+		jsonError(w, e.Error(), 409)
+		return
+	}
+	handed := false
+	var failure error
+	defer func() {
+		if !handed {
+			mediumEndOp(h, failure)
+		}
+	}()
+	fail := func(msg string, code int) { failure = fmt.Errorf("%s", msg); jsonError(w, msg, code) }
+	mediumSetStage(uid, "tool_unpack", true, nil)
+	if e := r.ParseMultipartForm(mediumArchiveLimit); e != nil {
+		fail("Cannot read ZIP upload (20 MiB maximum)", 400)
+		return
+	}
+	defer r.MultipartForm.RemoveAll()
+	data, e := mediumUploadedZip(r)
+	if e != nil {
+		fail(e.Error(), 400)
+		return
+	}
+	if e = os.MkdirAll(mediumRoot(), 0700); e != nil {
+		fail("Cannot create runtime directory", 500)
+		return
+	}
+	stage, e := os.MkdirTemp(mediumRoot(), "import-")
+	if e != nil {
+		fail("Cannot prepare import", 500)
+		return
+	}
+	if e = mediumExtract(data, stage, "tool"); e != nil {
+		os.RemoveAll(stage)
+		fail(e.Error(), 400)
+		return
+	}
+	// Retain the approved source even if runtime setup is unavailable. A user
+	// can start Docker and retry preparation without uploading the ZIP again.
+	if e = mediumReplaceDir(stage, mediumToolDir()); e != nil {
+		os.RemoveAll(stage)
+		fail("Cannot save imported tool", 500)
+		return
+	}
+	if e = os.WriteFile(filepath.Join(mediumRoot(), "setup-pending"), []byte("pending"), 0600); e != nil {
+		os.RemoveAll(stage)
+		fail("Cannot prepare runtime state", 500)
+		return
+	}
+	digest := sha256.Sum256(data)
+	handed = true
+	go func() {
+		defer os.RemoveAll(stage)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+		e := os.WriteFile(filepath.Join(mediumRoot(), "tool.sha256"), []byte(hex.EncodeToString(digest[:])), 0600)
+		if e == nil {
+			e = mediumPrepareRuntime(ctx, func(step string) { mediumSetStage(uid, step, true, nil) })
+		}
+		mediumEndOp(h, e)
+	}()
+	auditLog(r, uid, "git.medium_tool_imported", "", map[string]interface{}{"sha256": hex.EncodeToString(digest[:])})
+	w.WriteHeader(202)
+	jsonOK(w, mediumStateFull(uid))
 }
 func mediumReplaceDir(src, dst string) error {
 	if e := os.MkdirAll(filepath.Dir(dst), 0700); e != nil {
@@ -787,6 +956,7 @@ func mediumProxyHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		auditLog(r, uid, "git.medium_action", route, nil)
+		mediumRecord(uid, "tool_request", "ok", 0, r.Method+" "+route, "", "")
 	}
 	if !gitChecksAllowed(uid) {
 		jsonError(w, "Git check permission is required", 403)

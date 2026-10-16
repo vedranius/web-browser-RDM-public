@@ -123,37 +123,48 @@ func mediumDockerPython(ctx context.Context, python string, args ...string) erro
 	return mediumCommand(ctx, mediumRoot(), mediumDockerCLI(), argv...)
 }
 
-func mediumPrepareRuntime(ctx context.Context) error {
+// mediumPrepareRuntime prepares the original tool's Python environment; step names each
+// step as it starts (shown with its time in Medium).
+func mediumPrepareRuntime(ctx context.Context, step func(string)) error {
+	if step == nil {
+		step = func(string) {}
+	}
 	if e := os.WriteFile(filepath.Join(mediumRoot(), "setup-pending"), []byte("pending"), 0600); e != nil {
 		return e
 	}
 	if mediumBackend() == "docker" {
+		step("docker")
 		if e := mediumEnsureDocker(ctx); e != nil {
 			return e
 		}
 		// Docker pulls the pinned image automatically on the first invocation.
+		step("image")
 		if e := mediumDockerPython(ctx, "python3", "-m", "venv", "/wrm-medium/docker-venv"); e != nil {
-			return fmt.Errorf("Cannot prepare Linux runtime; check Docker image access, free disk space and the WRM data directory permissions")
+			return fmt.Errorf("Cannot prepare the Linux runtime (Docker image %s); check that Docker can download images (internet or registry access), free disk space and the WRM data directory permissions", mediumImage())
 		}
+		step("packages")
 		if e := mediumDockerPython(ctx, "/wrm-medium/docker-venv/bin/python", "-m", "pip", "install", "--disable-pip-version-check", "-r", filepath.Join(mediumToolDir(), "requirements.lock")); e != nil {
-			return fmt.Errorf("Cannot install original tool dependencies inside Docker; check package-registry access and the imported requirements.lock")
+			return fmt.Errorf("Cannot install the original tool's Python packages inside Docker; check access to the package registry (pypi.org or your mirror) and the imported requirements.lock")
 		}
 		if e := os.WriteFile(filepath.Join(mediumRoot(), "docker-ready"), []byte(mediumImage()), 0600); e != nil {
 			return e
 		}
 		return os.Remove(filepath.Join(mediumRoot(), "setup-pending"))
 	}
+	step("python")
 	if mediumPython() == "" {
 		return fmt.Errorf("Install Python 3.12+, git, SSH and rsync on the WRM host, or use the managed Docker runtime (WRM_MEDIUM_RUNTIME=docker)")
 	}
 	if e := mediumCommand(ctx, mediumRoot(), mediumPython(), "-c", "import sys;sys.exit(0 if sys.version_info >= (3,12) else 1)"); e != nil {
 		return fmt.Errorf("Python 3.12+ is required; select it with WRM_MEDIUM_PYTHON or use the managed Docker runtime")
 	}
+	step("venv")
 	if e := mediumCommand(ctx, mediumRoot(), mediumPython(), "-m", "venv", filepath.Join(mediumRoot(), "venv")); e != nil {
 		return e
 	}
+	step("packages")
 	if e := mediumCommand(ctx, mediumRoot(), mediumVenvPython(), "-m", "pip", "install", "--disable-pip-version-check", "-r", filepath.Join(mediumToolDir(), "requirements.lock")); e != nil {
-		return e
+		return fmt.Errorf("Cannot install the original tool's Python packages; check access to the package registry (pypi.org or your mirror) and the imported requirements.lock")
 	}
 	return os.Remove(filepath.Join(mediumRoot(), "setup-pending"))
 }
