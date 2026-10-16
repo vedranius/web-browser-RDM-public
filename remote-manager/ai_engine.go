@@ -352,6 +352,8 @@ func aiDenyHint(dec aiDecision) string {
 		return " This AI connection does not allow changes; the user can edit it in WRM (Settings → AI connections) and enable running commands with approval."
 	case dec.Rule == "sensitive_path":
 		return " The administrator's policy (ai_sensitive_reads) blocks reading such files; an approval cannot change that."
+	case dec.Rule == "admin_pattern" && aiBlockedStaysDenied():
+		return " The administrator blocked this command (ai_blocked_commands) and keeps that list blocked even with full access (ai_full_access_blocked = deny); an approval cannot run it. If it is really needed, the user runs it themselves in a terminal, or the administrator changes the list or that setting in WRM (Admin panel → AI connections)."
 	case strings.HasPrefix(dec.Reason, "blocked: "):
 		return " This command is on WRM's list of destructive or forbidden commands, which is blocked in every mode; an approval cannot run it. If it is really needed, the user runs it themselves in a terminal, or the administrator turns on full access in WRM (Admin panel → AI connections → Full access, ai_full_access): WRM then asks the user before such commands instead of refusing them."
 	}

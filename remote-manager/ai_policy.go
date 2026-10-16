@@ -335,6 +335,9 @@ func (s *aiSession) fullAccess() bool {
 	return true
 }
 
+// aiBlockedStaysDenied: the administrator's blocked commands stay a hard block under full access.
+func aiBlockedStaysDenied() bool { return getSetting("ai_full_access_blocked") == "deny" }
+
 // aiUserFullAccess: the user's own full-access switch (Settings → AI connections).
 func aiUserFullAccess(userID int) bool {
 	var on int
@@ -344,8 +347,10 @@ func aiUserFullAccess(userID int) bool {
 
 // aiFullAccessDecision turns a refusal into an approval under full access. A read-only
 // session stays read-only (the user chose that mode) and the connection's scopes still apply.
+// The administrator's own blocked commands (ai_blocked_commands, rule admin_pattern) stay
+// refused when ai_full_access_blocked = deny.
 func aiFullAccessDecision(dec aiDecision, mode string) aiDecision {
-	if dec.Action != aiDeny || mode == aiModeReadOnly || oneOf(dec.Rule, "mode", "scope") {
+	if dec.Action != aiDeny || mode == aiModeReadOnly || oneOf(dec.Rule, "mode", "scope") || dec.Rule == "admin_pattern" && aiBlockedStaysDenied() {
 		return dec
 	}
 	return aiDecision{Action: aiApprove, Rule: "full_access", Reason: "⚠ FULL ACCESS: WRM normally refuses this (" + dec.Reason + "); it runs only if the user approves it"}
