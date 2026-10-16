@@ -44,6 +44,7 @@ type mediumStatus struct {
 	Backend      string          `json:"backend"`
 	Config       bool            `json:"config"`
 	Running      bool            `json:"running"`
+	Ready        bool            `json:"ready"`
 	Busy         bool            `json:"busy"`
 	Stage        string          `json:"stage"`
 	Error        string          `json:"error,omitempty"`
@@ -144,6 +145,7 @@ func mediumState(uid int) mediumStatus {
 		case <-p.done:
 		default:
 			s.Running = true
+			s.Ready = p.ready.Load()
 			if !p.started.IsZero() {
 				s.RunningSince = p.started.UTC().Format(time.RFC3339)
 			}
@@ -161,7 +163,7 @@ func mediumState(uid int) mediumStatus {
 	if b, e := os.ReadFile(filepath.Join(mediumRoot(), "tool.sha256")); e == nil {
 		s.Digest = strings.TrimSpace(string(b))
 	}
-	s.PendingConfig = mediumFileExists(filepath.Join(mediumUserDir(uid), "pending-config", "servers.yaml"))
+	s.PendingConfig = mediumFileExists(filepath.Join(mediumUserDir(uid), "pending-config", "servers.yaml")) || mediumFileExists(filepath.Join(mediumUserDir(uid), "pending-config.applying", "servers.yaml"))
 	if st, e := os.Stat(filepath.Join(mediumUserDir(uid), "pending-ssh")); e == nil && st.IsDir() {
 		s.PendingSSH = true
 	}
@@ -209,6 +211,7 @@ func mediumCommand(ctx context.Context, dir, binary string, args ...string) erro
 	cmd := exec.CommandContext(ctx, binary, args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "PIP_DISABLE_PIP_VERSION_CHECK=1")
+	cmd.WaitDelay = 5 * time.Second
 	if out := mediumOpOutput(); out != nil {
 		out.Note("$ %s %s", filepath.Base(binary), truncateStr(strings.Join(args, " "), 400))
 		cmd.Stdout, cmd.Stderr = out, out
@@ -483,6 +486,8 @@ func mediumStartForSetup(uid int, setup bool) error {
 	}
 	p.cmd = cmd
 	cmd.Stdout, cmd.Stderr = p.log, p.log
+	// output goes through a pipe: do not wait for descendants that keep it open
+	cmd.WaitDelay = 5 * time.Second
 	if e = cmd.Start(); e != nil {
 		cancel()
 		return e
@@ -501,8 +506,10 @@ func mediumStartForSetup(uid int, setup bool) error {
 		}
 		expected := p.stopping.Load()
 		mediumMgr.mu.Lock()
+		// an exit before readiness is reported by the start itself
+		st0 := expected || !p.ready.Load()
 		st := mediumMgr.statuses[dir]
-		st.LastExit = &mediumExit{At: nowStamp(), Code: code, Expected: expected}
+		st.LastExit = &mediumExit{At: nowStamp(), Code: code, Expected: st0}
 		mediumMgr.statuses[dir] = st
 		mediumMgr.mu.Unlock()
 		close(p.done)
@@ -536,7 +543,11 @@ func mediumStartForSetup(uid int, setup bool) error {
 	for i := 0; i < 300; i++ {
 		select {
 		case <-p.done:
+			stopped := p.stopping.Load()
 			forget()
+			if stopped {
+				return fmt.Errorf("The start was cancelled: the original deploy tool was stopped from WRM while it was starting")
+			}
 			return fmt.Errorf("The original deploy tool stopped while starting; its output in the Medium log shows why (often a missing Python package or an error in deploy-config)")
 		default:
 		}
@@ -771,7 +782,7 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		case busy != nil:
 			why = "another Medium operation is running; it is checked and applied at the next start"
 		}
-		if e := mediumReplaceDir(stage, filepath.Join(mediumUserDir(uid), "pending-"+kind)); e != nil {
+		if e := mediumKeepPending(uid, kind, stage); e != nil {
 			jsonError(w, "Cannot keep the imported ZIP", 500)
 			return
 		}
@@ -781,8 +792,7 @@ func apiMediumHandler(w http.ResponseWriter, r *http.Request) {
 		jsonOK(w, map[string]interface{}{"pending": true, "note": why, "state": mediumStateFull(uid)})
 		return
 	}
-	pending := filepath.Join(mediumUserDir(uid), "pending-"+kind)
-	if e := mediumReplaceDir(stage, pending); e != nil {
+	if e := mediumKeepPending(uid, kind, stage); e != nil {
 		mediumEndOp(h, fmt.Errorf("Cannot keep the imported ZIP"))
 		jsonError(w, "Cannot keep the imported ZIP", 500)
 		return
@@ -956,7 +966,6 @@ func mediumProxyHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		auditLog(r, uid, "git.medium_action", route, nil)
-		mediumRecord(uid, "tool_request", "ok", 0, r.Method+" "+route, "", "")
 	}
 	if !gitChecksAllowed(uid) {
 		jsonError(w, "Git check permission is required", 403)
@@ -975,6 +984,26 @@ func mediumProxyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	default:
 	}
+	// actions in the original tool go to the activity log with the tool's answer
+	record := func(status int, errText string) {}
+	if !safeMethod(r.Method) {
+		started, detail := time.Now(), r.Method+" "+route
+		recorded := false
+		record = func(status int, errText string) {
+			if recorded {
+				return
+			}
+			recorded = true
+			result := "ok"
+			if status >= 400 {
+				result = "error"
+				if errText == "" {
+					errText = "HTTP " + strconv.Itoa(status)
+				}
+			}
+			mediumRecord(uid, "tool_request", result, time.Since(started).Milliseconds(), detail, errText, "")
+		}
+	}
 	target, _ := url.Parse(p.base)
 	proxy := httputil.NewSingleHostReverseProxy(target)
 	original := proxy.Director
@@ -992,6 +1021,7 @@ func mediumProxyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	proxy.Transport = mediumTransport
 	proxy.ModifyResponse = func(resp *http.Response) error {
+		record(resp.StatusCode, "")
 		for _, h := range []string{"Location", "HX-Redirect", "HX-Push-Url", "HX-Replace-Url"} {
 			v := resp.Header.Get(h)
 			v = strings.TrimPrefix(v, p.base)
@@ -1021,6 +1051,7 @@ func mediumProxyHandler(w http.ResponseWriter, r *http.Request) {
 		return nil
 	}
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, e error) {
+		record(502, "the original tool did not answer")
 		jsonError(w, "Medium runtime did not answer; inspect its status and try again", 502)
 	}
 	w.Header().Del("X-Frame-Options")
