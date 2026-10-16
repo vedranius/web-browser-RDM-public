@@ -12,7 +12,7 @@
 
 ### Changed
 
-- The original deploy tool now runs in the same Docker runtime on Linux, macOS and Windows. A host runtime you already prepared on Linux keeps working while Docker is not installed; `WRM_MEDIUM_RUNTIME=native` keeps it for good.
+- The original deploy tool now runs in the same Docker runtime on Linux, macOS and Windows. A host runtime you already prepared on Linux or macOS keeps working; `WRM_MEDIUM_RUNTIME=docker` moves it to Docker.
 
 ### Upgrade
 

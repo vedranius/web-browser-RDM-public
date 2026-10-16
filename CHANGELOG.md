@@ -10,7 +10,8 @@
 - Policy **`medium_docker_install`** (default on) and `medium_log_output` in *Administration → Policies → Git*.
 
 ### Changed
-- Medium uses the managed Docker runtime by default on Linux and macOS too (`WRM_MEDIUM_RUNTIME=auto`); a host runtime prepared earlier stays while Docker is not installed, `native` keeps it, and systems without Docker (FreeBSD, OpenBSD) use the host runtime.
+- Medium uses the managed Docker runtime by default on Linux and macOS too (`WRM_MEDIUM_RUNTIME=auto`); a host runtime prepared earlier stays until the Docker runtime is prepared (`docker` moves it, `native` keeps it), and systems without Docker (FreeBSD, OpenBSD) use the host runtime.
+- Medium preparation and tool import may run for 60 minutes (was 10), the combined setup too (was 30); a Docker installation has its own 45-minute budget.
 - The Docker CLI is also found at Docker Desktop's standard macOS locations, and Docker commands get its directory on `PATH` (Docker Desktop's credential helper).
 - Clearer Docker errors: what failed, why (the output) and what to run, for each operating system.
 

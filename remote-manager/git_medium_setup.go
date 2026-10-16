@@ -148,7 +148,7 @@ func apiMediumSetup(w http.ResponseWriter, r *http.Request, uid int) {
 	}
 	handed = true
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
 		defer cancel()
 		mediumEndOp(h, mediumSetup(ctx, uid))
 	}()
@@ -311,7 +311,12 @@ func mediumEnsureDocker(ctx context.Context, step func(string)) error {
 		return nil
 	}
 	if mediumDockerCLI() == "" {
-		if err := mediumInstallDocker(ctx, step); err != nil {
+		// a package manager killed mid-transaction leaves the host broken: the installation
+		// has its own time budget and is not cut by the operation's deadline
+		ictx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 45*time.Minute)
+		err := mediumInstallDocker(ictx, step)
+		cancel()
+		if err != nil {
 			return err
 		}
 		if mediumDockerCheck(ctx) == nil {
@@ -320,7 +325,7 @@ func mediumEnsureDocker(ctx context.Context, step func(string)) error {
 	}
 	cli := mediumDockerCLI()
 	if cli == "" {
-		return fmt.Errorf("The Docker installation did not finish: no docker command was found afterwards. The output shows the installer's messages; press Prepare again. Your ZIPs are kept")
+		return fmt.Errorf("The Docker installation did not finish: no docker command was found afterwards. The output shows the installer's messages; press Install Docker or Prepare runtime again. Your ZIPs are kept")
 	}
 	if err := mediumDockerAccess(ctx); err != nil {
 		return err
@@ -345,7 +350,16 @@ func mediumEnsureDocker(ctx context.Context, step func(string)) error {
 				}
 			}
 		case "darwin":
-			_ = mediumCommand(ctx, mediumRoot(), "open", "-a", "Docker")
+			if mediumEUID() == 0 {
+				// a root daemon has no screen session: open Docker Desktop in the signed-in user's
+				if who := mediumConsoleUser(ctx); who != "" {
+					if b, err := exec.CommandContext(ctx, "id", "-u", who).Output(); err == nil {
+						_ = mediumCommand(ctx, mediumRoot(), "launchctl", "asuser", strings.TrimSpace(string(b)), "sudo", "-u", who, "open", "-a", "Docker")
+					}
+				}
+			} else {
+				_ = mediumCommand(ctx, mediumRoot(), "open", "-a", "Docker")
+			}
 		case "linux":
 			priv := mediumPrivilege(ctx)
 			for _, args := range [][]string{{"systemctl", "--user", "start", "docker"}, mediumAsRoot(priv, "systemctl", "start", "docker")} {
@@ -381,11 +395,11 @@ func mediumEnsureDocker(ctx context.Context, step func(string)) error {
 		case <-deadline.C:
 			switch mediumHostOS() {
 			case "linux":
-				return fmt.Errorf("The Docker engine did not answer within %s. Check its service (sudo systemctl status docker; on WSL without systemd: sudo service docker start), then press Prepare. Your ZIPs are kept", mediumDockerWait)
+				return fmt.Errorf("The Docker engine did not answer within %s. Check its service (sudo systemctl status docker; on WSL without systemd: sudo service docker start), then press Install Docker or Prepare runtime. Your ZIPs are kept", mediumDockerWait)
 			case "darwin":
-				return fmt.Errorf("Docker Desktop did not become ready within %s. On the Mac, finish Docker Desktop's first-start window if it is open, then press Prepare. Your ZIPs are kept", mediumDockerWait)
+				return fmt.Errorf("Docker Desktop did not become ready within %s. On the Mac, finish Docker Desktop's first-start window if it is open, then press Install Docker or Prepare runtime. Your ZIPs are kept", mediumDockerWait)
 			}
-			return fmt.Errorf("The Docker Linux engine did not become ready within %s. Finish Docker Desktop's prompts on this PC (WSL, virtualisation) or restart Windows if it asked, then press Prepare. Your ZIPs are kept", mediumDockerWait)
+			return fmt.Errorf("The Docker Linux engine did not become ready within %s. Finish Docker Desktop's prompts on this PC (WSL, virtualisation) or restart Windows if it asked, then press Install Docker or Prepare runtime. Your ZIPs are kept", mediumDockerWait)
 		case <-tick.C:
 		}
 	}
@@ -402,5 +416,5 @@ func mediumDockerAccess(ctx context.Context) error {
 		return nil
 	}
 	u := mediumCurrentUser()
-	return fmt.Errorf("Docker runs, but WRM's account %s may not use it (permission denied on the Docker socket). Run once: %s (adds %s to the docker group and restarts WRM), then press Prepare. Your ZIPs are kept", u, mediumSetupCommand(), u)
+	return fmt.Errorf("Docker runs, but WRM's account %s may not use it (permission denied on the Docker socket). Run once: %s (adds %s to the docker group and restarts WRM), then press Install Docker or Prepare runtime. Your ZIPs are kept", u, mediumSetupCommand(), u)
 }

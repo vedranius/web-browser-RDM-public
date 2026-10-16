@@ -50,24 +50,24 @@ func mediumImage() string {
 	return mediumDefaultImage
 }
 
-// mediumSelectBackend: Docker on every system that has it (the same runtime everywhere,
-// installed by WRM when missing). The host runtime stays when chosen (WRM_MEDIUM_RUNTIME=
-// native), on systems without Docker, and for a host runtime prepared before while Docker
-// is still missing, so an existing installation keeps working.
-func mediumSelectBackend(goos, configured string, nativePrepared, dockerInstalled bool) string {
+// mediumSelectBackend: Docker on every system that can run it (the same runtime
+// everywhere, installed by WRM when missing). The host runtime stays when chosen
+// (WRM_MEDIUM_RUNTIME=native), on systems without Docker, and where it was prepared
+// before and the Docker runtime never was, so an existing installation keeps working.
+func mediumSelectBackend(goos, configured string, nativePrepared, dockerPrepared bool) string {
 	switch {
 	case configured == "docker" || goos == "windows":
 		return "docker"
 	case configured == "native" || (goos != "linux" && goos != "darwin"):
 		return "native"
-	case nativePrepared && !dockerInstalled:
+	case nativePrepared && !dockerPrepared:
 		return "native"
 	}
 	return "docker"
 }
 
 func mediumBackend() string {
-	return mediumSelectBackend(runtime.GOOS, os.Getenv("WRM_MEDIUM_RUNTIME"), mediumFileExists(mediumVenvPython()), mediumDockerCLI() != "")
+	return mediumSelectBackend(runtime.GOOS, os.Getenv("WRM_MEDIUM_RUNTIME"), mediumFileExists(mediumVenvPython()), mediumFileExists(filepath.Join(mediumRoot(), "docker-ready")))
 }
 
 func mediumRuntimeReady() bool {

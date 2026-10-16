@@ -81,7 +81,7 @@ func TestV1266BackendIsDockerEverywhere(t *testing.T) {
 	}{
 		{"linux", "", false, false, "docker"}, // WRM installs Docker
 		{"linux", "", false, true, "docker"},
-		{"linux", "", true, true, "docker"},
+		{"linux", "", true, true, "docker"},  // both prepared: Docker
 		{"linux", "", true, false, "native"}, // an existing host runtime keeps working
 		{"darwin", "", false, false, "docker"},
 		{"windows", "native", true, false, "docker"},
