@@ -1,3 +1,20 @@
+## [12.6.7] - 2026-10-16
+
+### Added
+- **Dockable AI live view** (`static/mcp.js`): the live view of MCP sessions is a **🤖 AI** tab in the right panel next to Sessions and Snippets (default), a dock under the windows (`#ai-dock-bottom`, resizable by its top edge, sessions side by side), a floating window (moved by its title bar, resized by its corner) or hidden behind a chip that pulses while an approval waits. The layout is chosen with the title bar buttons, in the 🤖 menu (*Layout*) or by dragging the title bar onto the right or bottom drop zone, and is remembered per user in this browser (`localStorage` `wrm_ai_dock_<user id>`: mode, hidden, floating position and size, dock height). The AI tab counts the open sessions and turns yellow while one waits for approval. On phones the live view is a sheet at the bottom. Approval cards still always pop up.
+- **⋯ menu in the top bar** for buttons that do not fit, with their badges.
+- **Medium's Docker runtime trusts the WRM host's certificates** (`git_medium_ca.go`): the host's trusted roots (Windows certificate stores of the user, the machine, group policy and the enterprise; macOS keychains; the Linux/BSD CA bundle) and an optional PEM file go to `<DB>.medium/host-ca.pem`, mounted read-only into every Medium container and added to the image's own roots at start; `PIP_CERT`, `SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`, `GIT_SSL_CAINFO` and `CURL_CA_BUNDLE` point at the combined bundle. Behind a proxy or antivirus that inspects HTTPS, pip failed with *self-signed certificate in certificate chain*. New policy `medium_host_ca` (default on) and setting `medium_ca_file`.
+
+### Changed
+- The top bar measures itself (`ResizeObserver`) and steps through compact levels (labels hidden, smaller gaps) before moving the less used buttons into the ⋯ menu, so buttons no longer overlap at 1100–1920 px or at browser zoom.
+- The right panel remembers its width (`wrm_rp_widths`), separately for the AI tab (default 400 px, up to half the window).
+- CI and the documented test command allow the full race test suite 45 minutes (it now takes about 20).
+
+### Fixed
+- Text on the page could not be selected or copied (the page set `user-select: none` everywhere); now every text can, and only buttons, tabs, title bars, tree rows and resize handles stay unselectable.
+- The Snippets tab of the right panel looked selected (styled as a primary button) while Sessions was open.
+- A pip failure caused by an untrusted certificate now says so and what to do, instead of the generic "check access to the package registry".
+
 ## [12.6.6] - 2026-10-16
 
 ### Added
