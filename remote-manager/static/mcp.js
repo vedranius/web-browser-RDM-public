@@ -97,6 +97,11 @@ Object.assign(LANGS.en, {
   mcp_w_watch: 'Watch live', mcp_w_auto: 'Open the live view when an AI app starts working on a server', mcp_w_title: '{client} on {server}',
   mcp_w_empty: 'Connected. What the AI runs on the server and its output appear here.', mcp_w_wait: 'Waiting for your approval', mcp_w_runs: 'runs', mcp_w_refused: 'refused by WRM', mcp_w_ask: 'needs your approval',
   mcp_w_later: 'Not approved in time, or the app declined the question: the AI no longer waits, but you can still approve it here. The AI then repeats it and it runs once.', mcp_w_later_ok: 'runs when the AI repeats it',
+  ad_title: 'AI live view', ad_layout: 'Layout', ad_right: 'Right', ad_bottom: 'Bottom', ad_float: 'Floating',
+  ad_right_t: 'Dock on the right, as a tab next to Sessions and Snippets', ad_bottom_t: 'Dock at the bottom, under the windows',
+  ad_float_t: 'Floating window: drag it by the title bar, drop it on the right or bottom edge to dock it', ad_min_t: 'Hide the panel (approvals still pop up)',
+  ad_show: 'Show the AI panel', ad_chip_t: 'The AI live view is hidden. Click to show it.', ad_drop_right: 'Dock on the right', ad_drop_bottom: 'Dock at the bottom',
+  ad_waiting: '{n} waiting for your approval', ad_box_min: 'Collapse this session', ad_resize_t: 'Drag to resize',
   mcp_ap_later: 'Not approved in time, or the app declined the question. Approve it to let the AI run exactly this once when it repeats it (valid for an hour).',
   mcp_w_o_approved: 'approved', mcp_w_o_denied: 'denied: not run', mcp_w_o_timeout: 'no answer: not run', mcp_w_o_cancelled: 'cancelled', mcp_w_exit: 'exit code {code}', mcp_w_output: 'Output',
   mcp_w_ended: 'Session ended: {reason}', mcp_w_min: 'Minimize', mcp_w_close: 'Close (the AI keeps working; reopen it from the 🤖 button)', mcp_w_reason: 'Why',
@@ -190,6 +195,11 @@ Object.assign(LANGS.hr, {
   mcp_w_watch: 'Prati uživo', mcp_w_auto: 'Otvori prikaz uživo kad AI aplikacija počne raditi na poslužitelju', mcp_w_title: '{client} na {server}',
   mcp_w_empty: 'Povezano. Ovdje se vidi što AI pokreće na poslužitelju i što dobiva kao izlaz.', mcp_w_wait: 'Čeka vaše odobrenje', mcp_w_runs: 'pokreće se', mcp_w_refused: 'WRM je odbio', mcp_w_ask: 'treba vaše odobrenje',
   mcp_w_later: 'Nije odobreno na vrijeme ili je aplikacija odbila pitanje: AI više ne čeka, ali i dalje to možeš odobriti ovdje. AI će to ponoviti i izvršit će se jednom.', mcp_w_later_ok: 'izvršit će se kad AI ponovi',
+  ad_title: 'AI uživo', ad_layout: 'Raspored', ad_right: 'Desno', ad_bottom: 'Dolje', ad_float: 'Plutajući',
+  ad_right_t: 'Usidri desno, kao karticu uz Sesije i Snippete', ad_bottom_t: 'Usidri dolje, ispod prozora',
+  ad_float_t: 'Plutajući prozor: povuci ga za naslovnu traku, pusti ga uz desni ili donji rub da se usidri', ad_min_t: 'Sakrij panel (odobrenja i dalje iskaču)',
+  ad_show: 'Prikaži AI panel', ad_chip_t: 'AI prikaz uživo je skriven. Klikni da ga prikažeš.', ad_drop_right: 'Usidri desno', ad_drop_bottom: 'Usidri dolje',
+  ad_waiting: 'Čeka tvoje odobrenje: {n}', ad_box_min: 'Smanji ovu sesiju', ad_resize_t: 'Povuci za promjenu veličine',
   mcp_ap_later: 'Nije odobreno na vrijeme ili je aplikacija odbila pitanje. Odobri da AI točno ovo izvrši jednom kad ponovi zahtjev (vrijedi sat vremena).',
   mcp_w_o_approved: 'odobreno', mcp_w_o_denied: 'odbijeno: nije pokrenuto', mcp_w_o_timeout: 'bez odgovora: nije pokrenuto', mcp_w_o_cancelled: 'otkazano', mcp_w_exit: 'izlazni kod {code}', mcp_w_output: 'Izlaz',
   mcp_w_ended: 'Sesija je završila: {reason}', mcp_w_min: 'Smanji', mcp_w_close: 'Zatvori (AI nastavlja raditi; ponovno otvori preko gumba 🤖)', mcp_w_reason: 'Zašto',
@@ -244,7 +254,43 @@ Object.assign(LANGS.hr, {
 .mcp-card textarea { min-height: 70px; }
 #mcp-pop { position: fixed; z-index: 9650; top: 52px; right: 12px; width: min(420px, calc(100vw - 24px)); background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 14px; box-shadow: 0 12px 34px rgba(0,0,0,.5); display: none; }
 #mcp-pop.open { display: block; }
-#mcp-watch { position: fixed; left: 16px; bottom: 16px; z-index: 9690; display: flex; flex-direction: column; gap: 10px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 80px); }
+#mcp-watch { display: none; flex-direction: column; min-height: 0; min-width: 0; font-size: 12px; color: var(--text2); }
+#mcp-watch.on { display: flex; }
+#mcp-watch .ad-head { display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-bottom: 1px solid var(--border2); user-select: none; flex: none; touch-action: none; }
+#mcp-watch .ad-head .ad-t { flex: 1; min-width: 0; font-weight: 700; color: var(--text); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#mcp-watch .ad-head .ad-t .ad-wait { color: var(--yellow, #f59e0b); font-weight: 600; margin-left: 6px; }
+#mcp-watch .ad-head .icon-btn { width: 24px; height: 22px; padding: 0; font-size: 12px; }
+#mcp-watch .ad-head .icon-btn.on { color: var(--accent); border-color: var(--accent); }
+#mcp-watch .ad-body { flex: 1; min-height: 0; overflow: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+#mcp-watch.m-float { position: fixed; left: 16px; bottom: 16px; z-index: 9690; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 80px); min-width: 280px; min-height: 120px; background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 14px 40px rgba(0,0,0,.5); resize: both; overflow: hidden; }
+#mcp-watch.m-float .ad-head { cursor: move; }
+#mcp-watch.m-right, #mcp-watch.m-bottom { flex: 1; }
+#mcp-watch.m-right .ad-head, #mcp-watch.m-bottom .ad-head { cursor: grab; }
+#mcp-watch.m-right .mcp-wbox, #mcp-watch.m-bottom .mcp-wbox { box-shadow: none; }
+#mcp-watch .mcp-wbox:only-child:not(.min) { flex: 1; } #mcp-watch .mcp-wbox:only-child .wb { max-height: none; flex: 1; }
+#mcp-watch.m-float .mcp-wbox:only-child { flex: 1 1 auto; }
+#mcp-watch.m-bottom .ad-body { flex-direction: row; align-items: stretch; }
+#mcp-watch.m-bottom .mcp-wbox { flex: 1 1 340px; min-width: 300px; } #mcp-watch.m-bottom .mcp-wbox .wb { max-height: none; flex: 1; }
+#mcp-watch.m-bottom .mcp-wbox.min { flex: 0 0 auto; min-width: 180px; }
+#rp-ai { flex: 1; min-height: 0; display: none; flex-direction: column; }
+#ai-dock-bottom { display: none; flex: none; position: relative; height: 260px; min-height: 120px; max-height: 70%; border-top: 1px solid var(--border2); background: var(--bg2); flex-direction: column; }
+#ai-dock-bottom.on { display: flex; }
+#ai-dock-bottom .adb-resize { position: absolute; left: 0; right: 0; top: -3px; height: 6px; cursor: ns-resize; z-index: 5; }
+#ai-dock-bottom .adb-resize:hover { background: var(--accent); }
+#ai-dock-chip { position: fixed; left: 16px; bottom: 16px; z-index: 9690; display: none; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--border2); box-shadow: 0 6px 20px rgba(0,0,0,.4); color: var(--text); font-size: 12px; cursor: pointer; }
+#ai-dock-chip.on { display: flex; } #ai-dock-chip.wait { border-color: var(--yellow, #f59e0b); animation: adPulse 1.6s ease-in-out infinite; }
+@keyframes adPulse { 50% { box-shadow: 0 0 0 4px rgba(245,158,11,.25); } }
+.ad-zone { position: fixed; z-index: 9695; display: none; align-items: center; justify-content: center; border: 2px dashed var(--accent); background: rgba(79,140,255,.10); color: var(--text); font-size: 12px; font-weight: 700; border-radius: 10px; pointer-events: none; }
+.ad-zone.show { display: flex; } .ad-zone.hot { background: rgba(79,140,255,.28); }
+.rp-badge { display: inline-block; min-width: 14px; padding: 0 4px; margin-left: 3px; border-radius: 7px; background: var(--bg4); color: var(--text2); font-size: 9px; line-height: 14px; text-align: center; }
+.rp-badge.wait { background: var(--yellow, #f59e0b); color: #111; }
+.ad-seg { display: inline-flex; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 2px; }
+.ad-seg button { background: transparent; border: none; color: var(--text3); font-size: 11px; padding: 3px 8px; border-radius: 5px; cursor: pointer; } .ad-seg button.active { background: var(--bg3); color: var(--text); }
+@media (max-width: 759px) {
+  #mcp-watch.m-float { left: 8px !important; right: 8px; top: auto !important; bottom: 8px !important; width: auto !important; height: auto !important; max-height: 55vh; resize: none; }
+  #mcp-watch.m-float .ad-head { cursor: default; }
+  #ai-dock-chip { left: 8px; bottom: 8px; }
+}
 .mcp-wbox { background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 12px; color: var(--text2); display: flex; flex-direction: column; min-height: 0; }
 .mcp-wbox .wh { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border2); } .mcp-wbox .wh b { flex: 1; color: var(--text); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mcp-wbox .wb { overflow: auto; max-height: 340px; padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; } .mcp-wbox.min .wb { display: none; }
@@ -651,18 +697,210 @@ Object.assign(LANGS.hr, {
     } catch (e) { /* storage unavailable: default on */ }
     return true;
   }
+  // ── AI panel layout (Premiere/Resolve style): a tab on the right next to Sessions and
+  // Snippets, a dock at the bottom under the windows, a floating window, or hidden. Chosen
+  // with the header buttons or by dragging the header to an edge; remembered per user in
+  // this browser. Approval cards (#mcp-cards) always pop up, whatever the layout.
+  const DOCK_DEF = {mode: 'right', min: false, bottomH: 260, float: null};
+  let dock = null;
+  function dockKey() { return 'wrm_ai_dock_' + ((typeof currentUser !== 'undefined' && currentUser && currentUser.id) || 0); }
+  function dockState() {
+    if (dock && dock.key === dockKey()) return dock;
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(dockKey()) || '{}') || {}; } catch (e) { /* storage unavailable: defaults */ }
+    dock = Object.assign({}, DOCK_DEF, saved, {key: dockKey()});
+    if (!['right', 'bottom', 'float'].includes(dock.mode)) dock.mode = DOCK_DEF.mode;
+    return dock;
+  }
+  function dockSave() {
+    const d = dockState();
+    try { localStorage.setItem(d.key, JSON.stringify({mode: d.mode, min: d.min, bottomH: d.bottomH, float: d.float})); } catch (e) { /* not remembered */ }
+  }
+  function dockRoot() {
+    let root = $('mcp-watch');
+    if (root) return root;
+    root = document.createElement('div'); root.id = 'mcp-watch';
+    root.innerHTML = `<div class="ad-head" id="ad-head"><span>🤖</span><span class="ad-t" id="ad-title"></span>
+      <button class="icon-btn" data-mode="right" title="${esc(t('ad_right_t'))}" aria-label="${esc(t('ad_right_t'))}" onclick="wrmMCP.dockMode('right')">▕</button>
+      <button class="icon-btn" data-mode="bottom" title="${esc(t('ad_bottom_t'))}" aria-label="${esc(t('ad_bottom_t'))}" onclick="wrmMCP.dockMode('bottom')">▁</button>
+      <button class="icon-btn" data-mode="float" title="${esc(t('ad_float_t'))}" aria-label="${esc(t('ad_float_t'))}" onclick="wrmMCP.dockMode('float')">⧉</button>
+      <button class="icon-btn" title="${esc(t('ad_min_t'))}" aria-label="${esc(t('ad_min_t'))}" onclick="wrmMCP.dockHide(true)">–</button></div>
+      <div class="ad-body" id="ad-body"></div>`;
+    document.body.appendChild(root);
+    $('ad-head').addEventListener('pointerdown', dockDragStart);
+    if (window.ResizeObserver) new ResizeObserver(() => {
+      const d = dockState();
+      if (d.mode !== 'float' || !root.classList.contains('on') || !root.style.height) return;
+      d.float = Object.assign(d.float || {}, {w: root.offsetWidth, h: root.offsetHeight});
+      clearTimeout(root._st); root._st = setTimeout(dockSave, 300);
+    }).observe(root);
+    return root;
+  }
+  function dockCount() { return Object.keys(W8).length; }
+  function dockWaiting() { return document.querySelectorAll('#mcp-watch .wa .acts').length; }
+  // dockPlace puts the panel where the layout says. fresh: a session was just added or the
+  // layout changed, so a docked panel is brought into view (right tab selected, side panel expanded).
+  function dockPlace(fresh) {
+    const d = dockState(), root = dockRoot(), n = dockCount();
+    const right = $('rp-ai'), bottom = $('ai-dock-bottom');
+    let mode = d.mode;
+    // on a phone the right panel is a drawer: the live view shows as a sheet at the bottom instead
+    if (mode === 'right' && typeof isCompact === 'function' && isCompact()) mode = 'float';
+    if (mode === 'right' && !right) mode = 'float';
+    if (mode === 'bottom' && !bottom) mode = 'float';
+    const show = n > 0 && !d.min;
+    root.classList.remove('m-right', 'm-bottom', 'm-float');
+    root.classList.add('m-' + mode);
+    root.classList.toggle('on', show);
+    const host = mode === 'right' ? right : mode === 'bottom' ? bottom : document.body;
+    if (root.parentElement !== host) host.appendChild(root);
+    root.querySelectorAll('.ad-head [data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+    if (bottom) { bottom.classList.toggle('on', show && mode === 'bottom'); bottom.style.height = Math.max(120, d.bottomH || 260) + 'px'; }
+    if (mode === 'float') {
+      const f = d.float;
+      if (f && f.x != null) { root.style.left = f.x + 'px'; root.style.top = f.y + 'px'; root.style.bottom = 'auto'; }
+      else { root.style.left = ''; root.style.top = ''; root.style.bottom = ''; }
+      if (f && f.w) { root.style.width = f.w + 'px'; root.style.height = f.h + 'px'; } else { root.style.width = ''; root.style.height = ''; }
+      if (show && f && f.x != null) requestAnimationFrame(() => dockClamp(root));
+    } else { root.style.left = root.style.top = root.style.bottom = root.style.width = root.style.height = ''; }
+    if (typeof setRightTab === 'function' && typeof rightTab !== 'undefined') {
+      const docked = show && mode === 'right';
+      if (docked && fresh) {
+        setRightTab('ai');
+        const sp = $('sess-panel');
+        if (sp && sp.classList.contains('collapsed') && !(typeof isCompact === 'function' && isCompact())) toggleSessPanel();
+      } else if (!docked && rightTab === 'ai') setRightTab('sessions', true);
+      else setRightTab(rightTab, true);
+    }
+    dockBadges();
+    if (typeof scheduleRelayout === 'function') scheduleRelayout();
+  }
+  function dockBadges() {
+    const n = dockCount(), w = dockWaiting(), d = dockState();
+    const title = $('ad-title');
+    if (title) title.innerHTML = `${esc(t('ad_title'))} · ${n}${w ? `<span class="ad-wait">⏳ ${esc(tf('ad_waiting', {n: w}))}</span>` : ''}`;
+    const b = $('rp-ai-badge');
+    if (b) { b.textContent = n; b.classList.toggle('wait', w > 0); b.title = w ? tf('ad_waiting', {n: w}) : ''; }
+    let chip = $('ai-dock-chip');
+    if (!chip) {
+      chip = document.createElement('button'); chip.id = 'ai-dock-chip'; chip.type = 'button';
+      chip.onclick = () => dockHide(false);
+      document.body.appendChild(chip);
+    }
+    chip.title = t('ad_chip_t');
+    chip.innerHTML = `🤖 <span>${esc(t('ad_show'))}</span> <span class="rp-badge${w ? ' wait' : ''}">${w || n}</span>`;
+    chip.classList.toggle('on', n > 0 && d.min);
+    chip.classList.toggle('wait', w > 0);
+  }
+  function dockMode(mode) {
+    const d = dockState();
+    if (!['right', 'bottom', 'float'].includes(mode)) return;
+    d.mode = mode; d.min = false; dockSave(); dockPlace(true);
+    if ($('mcp-pop') && $('mcp-pop').classList.contains('open')) renderPop();
+  }
+  function dockHide(min) {
+    const d = dockState();
+    d.min = !!min; dockSave(); dockPlace(!min);
+    if ($('mcp-pop') && $('mcp-pop').classList.contains('open')) renderPop();
+  }
+  function dockClamp(el) {
+    const r = el.getBoundingClientRect();
+    const x = Math.max(0, Math.min(window.innerWidth - Math.min(r.width, window.innerWidth), r.left));
+    const y = Math.max(0, Math.min(window.innerHeight - 40, r.top));
+    el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.bottom = 'auto';
+    return {x, y};
+  }
+  // Dragging the header: a floating panel moves; a docked one comes loose after a few pixels.
+  // Dropping it on the right or bottom zone docks it there.
+  function dockZones() {
+    let zr = $('ad-zone-right'), zb = $('ad-zone-bottom');
+    if (!zr) { zr = document.createElement('div'); zr.id = 'ad-zone-right'; zr.className = 'ad-zone'; document.body.appendChild(zr); }
+    if (!zb) { zb = document.createElement('div'); zb.id = 'ad-zone-bottom'; zb.className = 'ad-zone'; document.body.appendChild(zb); }
+    zr.textContent = t('ad_drop_right'); zb.textContent = t('ad_drop_bottom');
+    const sp = $('sess-panel'), wc = $('win-container');
+    const rr = sp && sp.offsetWidth > 60 ? sp.getBoundingClientRect() : {left: window.innerWidth - 120, top: 60, width: 120, height: window.innerHeight - 70};
+    const cr = wc ? wc.getBoundingClientRect() : {left: 0, width: window.innerWidth, bottom: window.innerHeight};
+    Object.assign(zr.style, {left: (rr.left + 6) + 'px', top: (rr.top + 40) + 'px', width: Math.max(80, rr.width - 12) + 'px', height: Math.max(120, rr.height - 50) + 'px'});
+    Object.assign(zb.style, {left: (cr.left + 12) + 'px', top: (cr.bottom - 100) + 'px', width: Math.max(120, cr.width - 24) + 'px', height: '88px'});
+    return {zr, zb};
+  }
+  function inRect(el, x, y) { const r = el.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; }
+  function dockDragStart(ev) {
+    if (ev.button !== 0 || ev.target.closest('button') || (typeof isCompact === 'function' && isCompact())) return;
+    const root = dockRoot(), d = dockState();
+    const r0 = root.getBoundingClientRect();
+    const st = {sx: ev.clientX, sy: ev.clientY, dx: ev.clientX - r0.left, dy: ev.clientY - r0.top, loose: d.mode === 'float', zones: null};
+    ev.preventDefault();
+    const move = e => {
+      if (!st.loose) {
+        if (Math.abs(e.clientX - st.sx) + Math.abs(e.clientY - st.sy) < 8) return;
+        // undock: it becomes a floating window under the pointer, at its last floating size
+        st.loose = true;
+        const f = d.float || {};
+        const w = f.w || Math.min(560, window.innerWidth - 32), h = f.h || Math.min(380, window.innerHeight - 100);
+        d.mode = 'float'; d.float = Object.assign(f, {w, h, x: e.clientX - 60, y: e.clientY - 14});
+        dockPlace(false);
+        st.dx = 60; st.dy = 14;
+      }
+      if (!st.zones) { st.zones = dockZones(); st.zones.zr.classList.add('show'); st.zones.zb.classList.add('show'); }
+      root.style.left = (e.clientX - st.dx) + 'px'; root.style.top = (e.clientY - st.dy) + 'px'; root.style.bottom = 'auto';
+      const hotR = inRect(st.zones.zr, e.clientX, e.clientY);
+      st.zones.zr.classList.toggle('hot', hotR);
+      st.zones.zb.classList.toggle('hot', !hotR && inRect(st.zones.zb, e.clientX, e.clientY));
+    };
+    const up = () => {
+      document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+      if (!st.zones) return;
+      const toRight = st.zones.zr.classList.contains('hot'), toBottom = st.zones.zb.classList.contains('hot');
+      st.zones.zr.classList.remove('show', 'hot'); st.zones.zb.classList.remove('show', 'hot');
+      if (toRight) { dockMode('right'); return; }
+      if (toBottom) { dockMode('bottom'); return; }
+      const p = dockClamp(root);
+      d.mode = 'float'; d.float = Object.assign(d.float || {}, {x: p.x, y: p.y, w: root.offsetWidth, h: root.offsetHeight});
+      dockSave(); dockPlace(false);
+      if ($('mcp-pop') && $('mcp-pop').classList.contains('open')) renderPop();
+    };
+    document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+  }
+  // the bottom dock's top edge resizes it
+  function dockBottomResize(ev) {
+    const bottom = $('ai-dock-bottom'), d = dockState();
+    if (!bottom || ev.button !== 0) return;
+    ev.preventDefault();
+    const sy = ev.clientY, sh = bottom.offsetHeight;
+    const max = Math.max(160, (bottom.parentElement ? bottom.parentElement.clientHeight : window.innerHeight) * 0.7);
+    const move = e => { d.bottomH = Math.round(Math.max(120, Math.min(max, sh - (e.clientY - sy)))); bottom.style.height = d.bottomH + 'px'; };
+    const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); dockSave(); if (typeof scheduleRelayout === 'function') scheduleRelayout(); };
+    document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
+  }
+  (function dockInit() {
+    const h = $('ai-dock-bottom') && $('ai-dock-bottom').querySelector('.adb-resize');
+    if (h && !h._wired) { h._wired = true; h.title = t('ad_resize_t'); h.addEventListener('pointerdown', dockBottomResize); }
+    let compact = typeof isCompact === 'function' && isCompact();
+    window.addEventListener('resize', () => {
+      const c = typeof isCompact === 'function' && isCompact();
+      if (c !== compact) { compact = c; if (dockCount()) dockPlace(false); return; }
+      const r = $('mcp-watch'); if (r && r.classList.contains('m-float') && r.classList.contains('on') && r.style.left) dockClamp(r);
+    });
+  })();
+
   function watch(sid, focus, client) {
-    let box = $('mcp-watch');
-    if (!box) { box = document.createElement('div'); box.id = 'mcp-watch'; document.body.appendChild(box); }
-    if (W8[sid]) { W8[sid].el.classList.remove('min'); if (focus) W8[sid].el.scrollIntoView({block: 'nearest'}); return; }
+    dockRoot();
+    if (W8[sid]) {
+      W8[sid].el.classList.remove('min');
+      if (focus) { const d = dockState(); d.min = false; dockSave(); dockPlace(true); W8[sid].el.scrollIntoView({block: 'nearest'}); }
+      return;
+    }
     const el = document.createElement('div');
     el.className = 'mcp-wbox'; el.id = 'mcp-w-' + sid;
     el.innerHTML = `<div class="wh"><span>🤖</span><b id="mcp-wt-${sid}">${esc(client || 'AI')}</b>
-      <button class="icon-btn" title="${esc(t('mcp_w_min'))}" onclick="this.closest('.mcp-wbox').classList.toggle('min')">▁</button>
+      <button class="icon-btn" title="${esc(t('ad_box_min'))}" onclick="this.closest('.mcp-wbox').classList.toggle('min')">▾</button>
       <button class="icon-btn" title="${esc(t('mcp_w_close'))}" onclick="wrmMCP.unwatch(${sid})">✕</button></div>
       <div class="wb" id="mcp-wb-${sid}"><div class="sub">${esc(t('mcp_w_empty'))}</div></div>`;
-    box.appendChild(el);
+    $('ad-body').appendChild(el);
     const st = W8[sid] = {el, seq: 0, calls: {}, client: client || 'AI'};
+    if (focus) { const d = dockState(); d.min = false; dockSave(); }
+    dockPlace(true);
     const es = st.es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
     ['session', 'tool_call', 'approval_required', 'approval_resolved', 'approval_deferred', 'tool_result', 'error', 'ended']
       .forEach(ty => es.addEventListener(ty, ev => { try { watchEvent(sid, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));
@@ -674,6 +912,7 @@ Object.assign(LANGS.hr, {
     if (st.es) st.es.close();
     st.el.remove();
     delete W8[sid];
+    dockPlace(false);
   }
   function wAdd(sid, html) {
     const b = $('mcp-wb-' + sid);
@@ -710,6 +949,7 @@ Object.assign(LANGS.hr, {
           <button class="btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', true)">✔ ${esc(t('mcp_ap_approve'))}</button>
           <button class="btn-danger btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', false)">✕ ${esc(t('mcp_ap_deny'))}</button></div>`;
         st.el.classList.remove('min');
+        dockBadges();
         break;
       }
       case 'approval_deferred': {
@@ -722,6 +962,7 @@ Object.assign(LANGS.hr, {
           <button class="btn-danger btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', false)">✕ ${esc(t('mcp_ap_deny'))}</button></div>`;
         }
         st.el.classList.remove('min');
+        dockBadges();
         break;
       }
       case 'approval_resolved': {
@@ -731,6 +972,7 @@ Object.assign(LANGS.hr, {
           el.classList.remove('ask'); el.classList.add(d.outcome === 'approved' ? 'ok' : 'bad');
           el.querySelector('.wa').innerHTML = `<div class="sub">${d.outcome === 'approved' ? '✔' : '✕'} ${esc(t('mcp_w_o_' + d.outcome))}${d.by ? ' · ' + esc(d.by) : ''}${d.later && d.outcome === 'approved' ? ' · ' + esc(t('mcp_w_later_ok')) : ''}</div>`;
         }
+        dockBadges();
         break;
       }
       case 'tool_result': {
@@ -759,6 +1001,8 @@ Object.assign(LANGS.hr, {
         ${(g.sessions || []).map(x => `<button class="btn-sec btn-sm" style="margin-top:4px;" onclick="wrmMCP.watch(${x.id}, true)">👁 ${esc(t('mcp_w_watch'))}: ${esc(x.connection)}</button>`).join(' ')}</div><button class="btn-danger btn-sm" onclick="wrmMCP.revoke(${g.id})">${esc(t('mcp_revoke'))}</button></div>`).join('')
         : `<div class="sub" style="font-size:11.5px;color:var(--text3);">${esc(t('mcp_none'))}</div>`) +
       `<label class="mcp-check" style="margin-top:8px;"><input type="checkbox" ${watchAuto() ? 'checked' : ''} onchange="wrmMCP.watchAuto(this.checked)"><span>${esc(t('mcp_w_auto'))}</span></label>` +
+      (() => { const dk = dockState(); return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;"><span class="sub" style="font-size:11.5px;">${esc(t('ad_layout'))}:</span><span class="ad-seg">${['right', 'bottom', 'float'].map(m =>
+        `<button type="button" class="${dk.mode === m ? 'active' : ''}" title="${esc(t('ad_' + m + '_t'))}" onclick="wrmMCP.dockMode('${m}')">${esc(t('ad_' + m))}</button>`).join('')}</span>${dk.min && dockCount() ? `<button class="btn-sec btn-sm" onclick="wrmMCP.dockHide(false)">🤖 ${esc(t('ad_show'))}</button>` : ''}</div>`; })() +
       `<div style="margin-top:8px;"><button class="btn-sec btn-sm" onclick="wrmMCP.togglePop(false); openSettings('st-mcp')">⚙ ${esc(t('mcp_title'))}</button></div>`;
   }
   function togglePop(open) {
@@ -898,7 +1142,8 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmMCP = {
-    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto,
+    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto, dockMode, dockHide, dockPlace,
+    dockRight: () => { const d = dockState(); return d.mode === 'right' && !d.min && dockCount() > 0 && !(typeof isCompact === 'function' && isCompact()); },
     installer, cursorInstall, desktopExtension, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,
   };
