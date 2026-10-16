@@ -1,3 +1,27 @@
+## [12.6.10] - 2026-10-16
+
+### Added
+- **One canvas for everything:** the window area is a shared canvas. Workboard addons are **windows on it** next to terminals, file managers and desktops (`mode: 'addon'`, created through `addWindow({mode: 'addon'})`): they move by the title bar, resize from every edge, snap to halves and quarters, minimize, maximize, appear as tabs, stack in the window z-order and can be docked as a panel (⇥ in the title bar or the title bar menu: right, left or bottom). Hiding that panel (⧉ in its bar, or ⋯ → *Back onto the canvas as a window*) brings the window back where it was. ✕ removes an addon (it asks first when the addon has settings or a note that would be lost). An addon's place is kept as fractions of the canvas (or its snap), minimized, pinned and on-top state, per user on the server. Addons of v12.6.9 are placed beside the terminals the first time.
+- **Panels anywhere on the canvas:** a floating panel (*On the canvas (anywhere)*, or dropped anywhere on the canvas while dragging its tab) is part of the canvas: it lives in `#win-container`, shares the window z-order, stays inside the canvas when the window or the side panels change size, follows the grid, and comes to the front when chosen in *Panels*.
+- **▤ Workboard menu** (the canvas tools): *Add addon…*; *Snap to the grid* with grid size 10 / 20 / 40 px and canvas background (only with the grid, dots, lines, plain); *Tile the windows*, *Cascade the windows*, *Minimize all windows*, *Show all minimized windows*, *Minimize / Show the addons*; *Lock the layout*; **saved layouts** (name, addons, panel layout, canvas settings and, when ticked, the open terminal, file and desktop windows; up to 10; apply from the menu, manage in *Manage saved layouts…*); *Export the layout (JSON)* and *Import a layout…*; *Panels…*.
+- **Window menu** (right-click a title bar or a tab): *Pin in place* (📌 in the title bar; a pinned window does not move or resize) and *Always on top*, for every window; for addons also *Settings*, *Refresh now* and *Dock on the right / left / at the bottom*.
+- **Grid:** with *Snap to the grid* windows and panels land on grid lines when moved, and the moved edges when resized.
+- **New addons:** *Links* (up to 30 `Name | https://…` bookmarks to web pages), *Saved sessions* (open a saved session with one click) and *Timer* (countdown with progress bar and a notification when time is up, or stopwatch; keeps running across reloads).
+- **Addon settings** gain *Colour* (a coloured title bar edge) and *Text size* (small, normal, large, extra large), and a *Remove* button.
+- The empty canvas offers **▤ Add an addon** next to the connection hint.
+- **Reconnect banner** of a closed or failed terminal (and desktop) has a red **✕ Close window** button next to **↻ Reconnect**; the small – button hides the banner and stops the automatic reconnect (#70).
+
+### Changed
+- **Top bar:** *Broadcast* moved into a **🧰 Tools** menu with the network tools (the Tools button turns orange with 📣 while a broadcast is on, and the menu can stop it); *Shares* shows only its icon (name as tooltip); **⚙ Settings, ▦ Panels and ▤ Workboard** are one joined group right of *Keys*. Tools is hidden only when both network tools and broadcast are off for the user.
+- Locking the layout also locks windows on the canvas (moving and resizing; the snap and maximize buttons still work). Trying to drag explains how to unlock.
+- *Back to the Workboard* is now *Back onto the canvas as a window*; *Floating window* is *On the canvas (anywhere)*.
+- Opening a saved session never closes addon windows; `restoreWindowLayout` is shared by sessions and saved canvas layouts.
+- `/api/me/ui/{key}` values may be up to **256 KiB** (was 64 KiB) for saved layouts.
+- Addon windows are minimum 180 × 110 px; terminals stay at 280 × 180.
+
+### Fixed
+- Windows on the canvas no longer share a stacking level with page menus and dialogs (`#win-container` is isolated), so a window raised many times can never cover a menu.
+
 ## [12.6.9] - 2026-10-16
 
 ### Added

@@ -1,6 +1,6 @@
 # Roadmap
 
-Accepted work through **v12.6.9** is delivered in [CHANGELOG.md](CHANGELOG.md).
+Accepted work through **v12.6.10** is delivered in [CHANGELOG.md](CHANGELOG.md).
 
 ## Medium without Docker (accepted direction, versions to follow)
 

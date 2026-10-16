@@ -16,7 +16,8 @@ import (
 
 var userUIKeys = map[string]bool{"layout": true, "workboard": true}
 
-const userUIMaxBytes = 64 << 10
+// v12.6.10: 256 KiB, the Workboard also keeps saved canvas layouts.
+const userUIMaxBytes = 256 << 10
 
 func apiUserUIHandler(w http.ResponseWriter, r *http.Request) {
 	uid, ok := requireAuth(w, r)
@@ -40,7 +41,7 @@ func apiUserUIHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		body, err := io.ReadAll(io.LimitReader(r.Body, userUIMaxBytes+1))
 		if err != nil || len(body) > userUIMaxBytes {
-			jsonError(w, "Too large (64 KiB at most)", 400)
+			jsonError(w, "Too large (256 KiB at most)", 400)
 			return
 		}
 		var req struct {
