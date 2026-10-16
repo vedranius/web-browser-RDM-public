@@ -1,3 +1,21 @@
+## [12.6.8] - 2026-10-16
+
+### Added
+- **Panel layout** (`static/layout.js`): *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view are tabs in groups that sit in a dock zone (left, right, or at the bottom under the windows) or in a floating window. Drag a tab:
+  - onto another tab bar to stack it there (dropped between tabs, it reorders them);
+  - onto the top or bottom 30 % of a panel to split that column (left or right part in the bottom zone);
+  - onto the *Left*, *Right* or *Bottom* strip that appears at the edges of the workspace while dragging, to dock it there;
+  - anywhere else to let it float.
+  Splitters between groups and the zone edges resize; a floating window moves by the empty part of its tab bar and resizes by its corner. Each group has a **⋯** menu: dock left, right or at the bottom, floating window, hide the panel, lock the layout, *Panels…* and reset.
+- **Panels** (▦ in the top bar, 🔒 while locked; in the ⋯ overflow menu when the bar is narrow): shows every panel with where it is, shows or hides it, locks or unlocks the layout and resets it.
+- **Lock the layout:** panels can no longer be dragged, split, resized or moved; switching tabs, collapsing the side panels, showing and hiding still work. A drag attempt says how to unlock.
+- **Layout per user on the server:** `GET` / `PUT` / `DELETE /api/me/ui/{key}` (keys `layout` and `workboard`, a JSON object of at most 64 KiB), table `user_ui` (removed with the user). The browser keeps a copy (`localStorage` `wrm_layout_<user id>`) for an instant first paint; the newer of the two wins, so the layout follows the user to every browser.
+
+### Changed
+- The AI live view is a panel of the layout: its title bar buttons and the 🤖 menu dock it right or at the bottom, let it float or hide it, and its tab can be dragged like any other. The v12.6.7 settings (`wrm_ai_dock_<user id>`, `wrm_right_tab`, `wrm_rp_widths`) become the first layout. The title bar drag zones and `#ai-dock-bottom` are replaced by the panel drag and the bottom zone `#dz-bottom`.
+- The side zones remember their width per user; while the AI live view is shown in a zone it has its own width (default 400 px, up to half the window). A zone without panels disappears.
+- Phones (below 760 px) keep the fixed layout with the two drawers; the AI live view stays a sheet at the bottom.
+
 ## [12.6.7] - 2026-10-16
 
 ### Added
