@@ -1,6 +1,30 @@
-## Web Remote Manager PRO v12.6.9 — Workboard: what matters, at a glance
+## Web Remote Manager PRO v12.6.10 — One canvas, arranged your way
 
 ### Added
+
+- **One canvas:** the Workboard is no longer a page over your windows. Everything in the window area shares one canvas: terminals, file managers, desktops, Workboard addons and panels you place on it. Put a server-load addon next to the terminal of that server, a clock in a corner, notes under a file manager, and it stays like that.
+- **Addons are windows:** move them, resize them, snap them to halves and quarters, minimize, maximize, switch with the tabs, or dock one as a panel at the left, right or bottom. They come back exactly where you left them, in every browser.
+- **Panels anywhere:** drag a panel's tab anywhere on the canvas (or pick *On the canvas (anywhere)* in its ⋯ menu) and it stays there between your windows, not only in the docks at the edges.
+- **The ▤ Workboard menu** holds the canvas tools: add addons, **snap to a grid** (10, 20 or 40 px, with dots or lines on the canvas), **tile** or **cascade** all windows, minimize and show them, show or hide the addons, **lock** the whole layout, **saved layouts** (for example *Morning check* and *Deploy day*, optionally with the open terminals), and **export / import** a layout as a file to share it or move it to another WRM.
+- **Pin and always on top:** right-click any window's title bar or tab to pin it in place or keep it above the others.
+- **New addons:** *Links* to your dashboards and wikis, *Saved sessions* to open one with a click, and a *Timer* (countdown with a notification, or stopwatch). Every addon can get a colour and a text size.
+- **Close from the reconnect banner:** when a terminal or desktop connection closes or fails, the banner has a red **✕ Close window** button next to **↻ Reconnect** (#70).
+
+### Changed
+
+- **Top bar:** *Broadcast* is in the **🧰 Tools** menu with the network tools (the button turns orange while a broadcast is on); *Shares* is only its icon; **Settings, Panels and Workboard** sit together right of *Keys*.
+- **Lock the layout** now also keeps windows from being moved or resized.
+- Folder bookmarks in the file manager (#17) have been in WRM since v10.10: ★ next to the path bar, per connection, folder, tag or for all connections, with WinSCP import.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. Your v12.6.9 Workboard tiles appear as addon windows beside your terminals the first time; panels you pulled out stay where they are. The per-user interface store accepts up to 256 KiB.
+
+[Download v12.6.10](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.10) · [The canvas](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.10/README.md#workboard-the-shared-canvas-and-addons)
+
+### Included from v12.6.9 — Workboard: what matters, at a glance
+
+#### Added
 
 - **Workboard** (▤ in the top bar): a page of tiles over your windows, empty until you add something. Pick addons from the catalog and arrange them: drag a tile by its title to move it, make it wide or narrow, give it your own title, remove it again. Your Workboard follows you to every browser.
 - **Addons to start with:**
@@ -13,11 +37,11 @@
 - **Pull a tile out:** **⤢** turns a tile into a panel you can dock left, right or at the bottom, stack with *Sessions*, or let float, like every other panel. It stays there after a reload; *Back to the Workboard* returns it. A locked layout keeps tiles in place too.
 - **Administrators** decide whether server load may be read over SSH: *Workboard: read server load over SSH* in *Admin panel → Policies → Live status* (on by default).
 
-### Changed
+#### Changed
 
 - A tab bar that is too narrow for all its tabs scrolls to the open one.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets one new table (`user_events`); a previous version still starts on it. Nothing new appears until you open the Workboard and add an addon. New endpoints: `/api/me/events`, `/api/workboard/metrics`.
 

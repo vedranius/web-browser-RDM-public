@@ -6,38 +6,40 @@
 // float. The layout can be locked so nothing moves by accident. It is stored per user on the
 // server (/api/me/ui/layout) with a copy in this browser for an instant first paint, so it
 // follows the user to every browser. Phones keep the fixed layout with the two drawers.
-// Workboard tiles pulled out of the Workboard (static/workboard.js, v12.6.9) are dynamic panels
-// with ids "wb:<tile>": they are registered at run time and go back to the Workboard when hidden.
+// Workboard addons docked as panels (static/workboard.js) are dynamic panels with ids
+// "wb:<tile>": they are registered at run time and go back onto the canvas when hidden.
+// v12.6.10: a floating panel lives on the canvas (#win-container) next to the terminals and
+// addon windows, shares their z-order, stays inside the canvas and follows the canvas grid.
 (function () {
   'use strict';
 
   Object.assign(LANGS.en, {
     pn_conn: 'Connections', dk_panels: 'Panels', dk_panels_t: 'Panels: show, hide and move the parts of the page, lock the layout',
-    dk_move_left: 'Dock on the left', dk_move_right: 'Dock on the right', dk_move_bottom: 'Dock at the bottom', dk_float: 'Floating window',
+    dk_move_left: 'Dock on the left', dk_move_right: 'Dock on the right', dk_move_bottom: 'Dock at the bottom', dk_float: 'On the canvas (anywhere)',
     dk_hide: 'Hide {name}', dk_lock: 'Lock the layout', dk_unlock: 'Unlock the layout', dk_reset: 'Reset the layout',
     dk_reset_q: 'Put every panel back where it was at the start? Your current layout is replaced.',
-    dk_locked_t: 'The layout is locked. Unlock it with the 🔒 button in the top bar to move panels.', dk_locked_on: 'Layout locked: panels stay where they are', dk_unlocked: 'Layout unlocked',
+    dk_locked_t: 'The layout is locked. Unlock it in the ▤ Workboard or ▦ Panels menu to move windows and panels.', dk_locked_on: 'Layout locked: windows and panels stay where they are', dk_unlocked: 'Layout unlocked',
     dk_drag_t: 'Drag the tab to move this panel', dk_menu_t: 'Panel options',
-    dk_where_left: 'left', dk_where_right: 'right', dk_where_bottom: 'bottom', dk_where_float: 'floating', dk_where_hidden: 'hidden',
+    dk_where_left: 'left', dk_where_right: 'right', dk_where_bottom: 'bottom', dk_where_float: 'on the canvas', dk_where_hidden: 'hidden',
     dk_hint_auto: 'appears while an AI app works on a server',
-    dk_panels_hint: 'Drag a panel by its tab: onto another tab bar to stack them, onto the top or bottom part of a panel to split the column, onto an edge strip to dock it, anywhere else to let it float. The layout follows you to every browser.',
-    dk_locked_hint: 'Locked: panels cannot be dragged, split or resized. Showing and hiding still works.',
-    dk_drop_left: 'Left', dk_drop_right: 'Right', dk_drop_bottom: 'Bottom', dk_drop_float: 'Floating window',
-    dk_wb_back: 'Back to the Workboard', dk_wb_head: 'Pulled out of the Workboard',
+    dk_panels_hint: 'Drag a panel by its tab: onto another tab bar to stack them, onto the top or bottom part of a panel to split the column, onto an edge strip to dock it, anywhere else on the canvas to place it there next to your terminals. The layout follows you to every browser.',
+    dk_locked_hint: 'Locked: windows and panels cannot be dragged, split or resized. Showing and hiding still works.',
+    dk_drop_left: 'Left', dk_drop_right: 'Right', dk_drop_bottom: 'Bottom', dk_drop_float: 'On the canvas',
+    dk_wb_back: 'Back onto the canvas as a window', dk_wb_head: 'Workboard addons',
   });
   Object.assign(LANGS.hr, {
     pn_conn: 'Veze', dk_panels: 'Paneli', dk_panels_t: 'Paneli: prikaži, sakrij i premjesti dijelove stranice, zaključaj raspored',
-    dk_move_left: 'Usidri lijevo', dk_move_right: 'Usidri desno', dk_move_bottom: 'Usidri dolje', dk_float: 'Plutajući prozor',
+    dk_move_left: 'Usidri lijevo', dk_move_right: 'Usidri desno', dk_move_bottom: 'Usidri dolje', dk_float: 'Na canvas (bilo gdje)',
     dk_hide: 'Sakrij: {name}', dk_lock: 'Zaključaj raspored', dk_unlock: 'Otključaj raspored', dk_reset: 'Vrati početni raspored',
     dk_reset_q: 'Vratiti sve panele na početna mjesta? Trenutni raspored se zamjenjuje.',
-    dk_locked_t: 'Raspored je zaključan. Otključaj ga gumbom 🔒 u gornjoj traci da bi micao panele.', dk_locked_on: 'Raspored zaključan: paneli ostaju gdje jesu', dk_unlocked: 'Raspored otključan',
+    dk_locked_t: 'Raspored je zaključan. Otključaj ga u izborniku ▤ Workboard ili ▦ Paneli da bi micao prozore i panele.', dk_locked_on: 'Raspored zaključan: prozori i paneli ostaju gdje jesu', dk_unlocked: 'Raspored otključan',
     dk_drag_t: 'Povuci karticu da premjestiš ovaj panel', dk_menu_t: 'Opcije panela',
-    dk_where_left: 'lijevo', dk_where_right: 'desno', dk_where_bottom: 'dolje', dk_where_float: 'plutajući', dk_where_hidden: 'skriven',
+    dk_where_left: 'lijevo', dk_where_right: 'desno', dk_where_bottom: 'dolje', dk_where_float: 'na canvasu', dk_where_hidden: 'skriven',
     dk_hint_auto: 'pojavi se dok AI aplikacija radi na poslužitelju',
-    dk_panels_hint: 'Panel povuci za karticu: na drugu traku kartica da ih složiš zajedno, na gornji ili donji dio panela da podijeliš stupac, na rubnu traku da ga usidriš, bilo gdje drugdje da pluta. Raspored te prati u svakom pregledniku.',
-    dk_locked_hint: 'Zaključano: panele se ne može povlačiti, dijeliti ni mijenjati im veličinu. Prikazivanje i skrivanje i dalje radi.',
-    dk_drop_left: 'Lijevo', dk_drop_right: 'Desno', dk_drop_bottom: 'Dolje', dk_drop_float: 'Plutajući prozor',
-    dk_wb_back: 'Vrati na Workboard', dk_wb_head: 'Izvučeno s Workboarda',
+    dk_panels_hint: 'Panel povuci za karticu: na drugu traku kartica da ih složiš zajedno, na gornji ili donji dio panela da podijeliš stupac, na rubnu traku da ga usidriš, bilo gdje drugdje na canvasu da ga tamo postaviš uz terminale. Raspored te prati u svakom pregledniku.',
+    dk_locked_hint: 'Zaključano: prozore i panele se ne može povlačiti, dijeliti ni mijenjati im veličinu. Prikazivanje i skrivanje i dalje radi.',
+    dk_drop_left: 'Lijevo', dk_drop_right: 'Desno', dk_drop_bottom: 'Dolje', dk_drop_float: 'Na canvas',
+    dk_wb_back: 'Vrati na canvas kao prozor', dk_wb_head: 'Workboard addoni',
   });
 
   const $ = id => document.getElementById(id);
@@ -67,7 +69,14 @@
       floats: [], hidden: [], last: {}};
   }
 
-  let S = null, compactL = null, sig = '', saveT = 0, suppressClick = false, floatZ = 8000;
+  let S = null, compactL = null, sig = '', saveT = 0, suppressClick = false;
+  const canvas = () => $('win-container');
+  // Floating panels share the window z-order of the canvas (topZ in index.html).
+  const raise = w => { if (typeof topZ !== 'undefined') { w.style.zIndex = ++topZ; if (typeof raiseOnTop === 'function') raiseOnTop(); } };
+  const grid = () => (typeof canvasGrid === 'function' ? canvasGrid() : 0);
+  const gsnap = v => { const g = grid(); return g ? Math.round(v / g) * g : v; };
+  // Viewport point → canvas coordinates.
+  const toCanvas = (x, y) => { const c = canvas(), r = c ? c.getBoundingClientRect() : {left: 0, top: 0}; return {x: x - r.left, y: y - r.top}; };
   const lastShown = {};
 
   const compact = () => typeof isCompact === 'function' && isCompact();
@@ -233,10 +242,11 @@
       const w = document.createElement('div');
       w.className = 'dk-float';
       w._f = f;
-      Object.assign(w.style, {left: f.x + 'px', top: f.y + 'px', width: f.w + 'px', height: f.h + 'px', zIndex: ++floatZ});
+      Object.assign(w.style, {left: f.x + 'px', top: f.y + 'px', width: f.w + 'px', height: f.h + 'px'});
+      raise(w);
       w.appendChild(groupEl(f, {f}));
-      w.addEventListener('pointerdown', () => { if (floatZ > 8800) floatZ = 8000; w.style.zIndex = ++floatZ; }, true);
-      document.body.appendChild(w);
+      w.addEventListener('pointerdown', () => raise(w), true);
+      (canvas() || document.body).appendChild(w);
       clampFloat(w);
       if (window.ResizeObserver) new ResizeObserver(() => {
         if (!w.isConnected || S.locked) return;
@@ -345,6 +355,8 @@
     const L = cur(), loc = locate(L, id);
     if (loc.g && loc.g.a !== id) { loc.g.a = id; if (L === S) saveSoon(); }
     render();
+    // a panel on the canvas comes to the front, above the windows that cover it
+    if (loc.f) { const e = P[id] && $(P[id].el), w = e && e.closest('.dk-float'); if (w) raise(w); }
     if (o && o.reveal && !compact()) {
       if (loc.z === 'left' && $('sidebar').classList.contains('collapsed') && typeof toggleSidebar === 'function') toggleSidebar();
       if (loc.z === 'right' && $('sess-panel').classList.contains('collapsed') && typeof toggleSessPanel === 'function') toggleSessPanel();
@@ -355,10 +367,17 @@
     if (S.locked) { showToast(t('dk_locked_t'), 'warning', 3500); return true; }
     return false;
   }
+  // floatAt places a panel on the canvas at canvas coordinates x, y.
   function floatAt(id, x, y) {
     const sz = (S.fsize && S.fsize[id]) || {};
     const w = sz.w || (id === 'ai' ? 520 : 340), h = sz.h || (id === 'ai' ? 380 : 420);
-    S.floats.push({p: [id], a: id, x: Math.round(x), y: Math.round(y), w, h});
+    S.floats.push({p: [id], a: id, x: Math.round(gsnap(x)), y: Math.round(gsnap(y)), w, h});
+  }
+  // The next free-ish spot for a panel put on the canvas from a menu.
+  function canvasSpot(id) {
+    const c = canvas(), n = S.floats.length % 6, sz = (S.fsize && S.fsize[id]) || {};
+    const cw = c ? c.clientWidth : window.innerWidth;
+    return {x: Math.max(0, Math.round(cw / 2 - (sz.w || 340) / 2) + 28 * n), y: 40 + 28 * n};
   }
   function rememberZone(id, from) { if (ZONES.includes(from)) S.last[id] = from; }
   function moveTo(id, z) {
@@ -366,7 +385,7 @@
     const from = where(id);
     if (z === from && z !== 'float') return;
     detach(S, id);
-    if (z === 'float') { floatAt(id, 120 + 28 * (S.floats.length % 6), 110 + 28 * (S.floats.length % 6)); rememberZone(id, from); }
+    if (z === 'float') { const p = canvasSpot(id); floatAt(id, p.x, p.y); rememberZone(id, from); }
     else if (ZONES.includes(z)) {
       const gs = S.zones[z].groups;
       if (gs.length) { gs[0].p.push(id); gs[0].a = id; } else gs.push({p: [id], a: id, s: 1});
@@ -400,6 +419,16 @@
     S.locked = !!on;
     saveSoon(); render();
     showToast(t(S.locked ? 'dk_locked_on' : 'dk_unlocked'), 'success', 2200);
+    document.dispatchEvent(new CustomEvent('wrm-layout-locked'));
+  }
+  // snapshot / apply carry a whole layout for the Workboard's saved layouts, export and import.
+  function snapshot() { return S ? JSON.parse(JSON.stringify(S)) : null; }
+  function apply(x) {
+    if (!x || typeof x !== 'object') return false;
+    S = sanitize(x); sig = '';
+    saveSoon(); render();
+    document.dispatchEvent(new CustomEvent('wrm-layout-loaded'));
+    return true;
   }
   async function reset() {
     if (!S || !await uiConfirm(t('dk_reset_q'), {okText: t('dk_reset')})) return;
@@ -418,10 +447,8 @@
     const e = d.node || $(d.el);
     if (e && !e.closest('.dk-group')) park().appendChild(e);
     if (place && S && where(id) === 'hidden') {
-      if (place === 'float') {
-        const n = S.floats.length % 6, sz = (S.fsize && S.fsize[id]) || {};
-        floatAt(id, Math.max(0, Math.round(window.innerWidth / 2 - (sz.w || 340) / 2) + 28 * n), 110 + 28 * n);
-      } else addTo(S, id, ZONES.includes(place) ? place : 'right');
+      if (place === 'float') { const p = canvasSpot(id); floatAt(id, p.x, p.y); }
+      else addTo(S, id, ZONES.includes(place) ? place : 'right');
       const l = locate(S, id);
       if (l.g) l.g.a = id;
       saveSoon();
@@ -561,7 +588,8 @@
       const gs = S.zones[tgt.z].groups;
       gs.push({p: [id], a: id, s: gs.length ? gs.reduce((a, g) => a + g.s, 0) / gs.length : 1});
     } else {
-      floatAt(id, Math.max(0, Math.min(window.innerWidth - 120, tgt.x)), Math.max(0, Math.min(window.innerHeight - 60, tgt.y)));
+      const p = toCanvas(tgt.x, tgt.y);
+      floatAt(id, Math.max(0, p.x), Math.max(0, p.y));
       rememberZone(id, from);
     }
     prune(S); saveSoon(); render();
@@ -588,21 +616,27 @@
     };
     document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up);
   }
+  // A panel on the canvas stays completely inside it, like the windows (it shrinks to fit).
   function clampFloat(w) {
-    const f = w._f, r = w.getBoundingClientRect();
-    const x = Math.max(Math.min(0, 80 - r.width), Math.min(window.innerWidth - 80, r.left));
-    const y = Math.max(0, Math.min(window.innerHeight - 36, r.top));
+    const f = w._f, c = canvas();
+    if (!c || !c.clientWidth || !c.clientHeight) return;
+    const cw = c.clientWidth, ch = c.clientHeight;
+    if (w.offsetWidth > cw) w.style.width = cw + 'px';
+    if (w.offsetHeight > ch) w.style.height = ch + 'px';
+    const x = Math.max(0, Math.min(cw - w.offsetWidth, parseInt(w.style.left, 10) || 0));
+    const y = Math.max(0, Math.min(ch - w.offsetHeight, parseInt(w.style.top, 10) || 0));
     w.style.left = x + 'px'; w.style.top = y + 'px';
     if (f) { f.x = Math.round(x); f.y = Math.round(y); }
   }
+  function clampFloats() { document.querySelectorAll('.dk-float').forEach(clampFloat); }
   function floatMove(ev, gel) {
     const w = gel.parentElement;
     if (ev.button !== 0 || !w || !w._f || compact()) return;
-    if (S.locked) return;
+    if (S.locked) { showToast(t('dk_locked_t'), 'warning', 3500); return; }
     ev.preventDefault();
     const sx = ev.clientX - w.offsetLeft, sy = ev.clientY - w.offsetTop;
     document.body.classList.add('dk-dragging');
-    const mv = e => { w.style.left = (e.clientX - sx) + 'px'; w.style.top = (e.clientY - sy) + 'px'; };
+    const mv = e => { w.style.left = gsnap(e.clientX - sx) + 'px'; w.style.top = gsnap(e.clientY - sy) + 'px'; clampFloat(w); };
     const up = () => {
       document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up);
       document.body.classList.remove('dk-dragging');
@@ -657,7 +691,10 @@
       m.appendChild(b);
     });
     m.classList.add('open');
-    const r = anchor.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
+    // An anchor moved into the top bar's ⋯ menu has no box: open under ⋯ instead.
+    let ar = anchor;
+    if (!ar.getClientRects().length) ar = $('btn-more') && $('btn-more').getClientRects().length ? $('btn-more') : document.body;
+    const r = ar === document.body ? {left: window.innerWidth / 2, right: window.innerWidth / 2 + 120, top: 60, bottom: 60} : ar.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
     let x = Math.min(window.innerWidth - mw - 8, Math.max(8, r.right - mw)), y = r.bottom + 4;
     if (y + mh > window.innerHeight - 8) y = Math.max(8, r.top - mh - 4);
     m.style.left = Math.max(8, x) + 'px'; m.style.top = y + 'px';
@@ -745,7 +782,7 @@
 .dk-split:hover { background: var(--accent); }
 body.dk-locked .dk-split { cursor: default; pointer-events: none; }
 body.dk-locked .sidebar-resize-handle, body.dk-locked .sess-resize-handle, body.dk-locked #dz-bottom .dz-resize { display: none; }
-.dk-float { position: fixed; display: flex; flex-direction: column; background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 16px 44px rgba(0,0,0,.55); resize: both; overflow: hidden; min-width: 220px; min-height: 140px; max-width: 100vw; max-height: 100vh; }
+.dk-float { position: absolute; display: flex; flex-direction: column; background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 16px 44px rgba(0,0,0,.55); resize: both; overflow: hidden; min-width: 220px; min-height: 140px; max-width: 100%; max-height: 100%; }
 .dk-float > .dk-group { flex: 1; }
 body.dk-locked .dk-float { resize: none; }
 body.dk-locked .dk-float .dk-fill { cursor: default; }
@@ -784,7 +821,7 @@ body.dk-resizing, body.dk-resizing * { user-select: none !important; }
       rt = setTimeout(() => {
         if (!S) return;
         if (compact() !== wasCompact) { wasCompact = compact(); compactL = null; render(); return; }
-        document.querySelectorAll('.dk-float').forEach(clampFloat);
+        clampFloats();
         update(cur());
       }, 60);
     });
@@ -793,7 +830,7 @@ body.dk-resizing, body.dk-resizing * { user-select: none !important; }
   window.wrmLayout = {
     init, refresh: render, activate, moveTo, hide, show, reset, openPanels, closeMenu, zoneResized, zoneMax, where, isShown,
     isHidden: id => where(id) === 'hidden', locked: () => !!(S && S.locked && !compact()), setLocked, ready: () => !!S,
-    register, remove, placed,
+    register, remove, placed, clampFloats, snapshot, apply, menu: openMenu,
     _state: () => S, _sanitize: sanitize,
   };
 })();
