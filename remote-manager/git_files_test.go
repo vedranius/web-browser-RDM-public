@@ -354,8 +354,14 @@ func TestGitCheckJobs(t *testing.T) {
 		before[in.ID] = in
 	}
 	setSetting("git_check_per_server", "1")
-	u.jsonDo("POST", "/api/git/check/jobs", map[string]interface{}{"conn_ids": []int{conn}}, nil)
-	<-started
+	if code := u.jsonDo("POST", "/api/git/check/jobs", map[string]interface{}{"conn_ids": []int{conn}}, nil); code != 200 {
+		t.Fatalf("start right after the previous job ended: %d", code)
+	}
+	select {
+	case <-started:
+	case <-time.After(30 * time.Second):
+		t.Fatal("the scan did not start")
+	}
 	if code := u.jsonDo("POST", "/api/git/check/jobs/current/cancel", nil, nil); code != 200 {
 		t.Fatalf("cancel: %d", code)
 	}
