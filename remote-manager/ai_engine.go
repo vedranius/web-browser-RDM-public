@@ -210,7 +210,11 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 	mcp := p.Transport == "mcp"
 	userOK, why := aiUserAllowed(p.UserID)
 	if mcp {
-		userOK, why = mcpUserAllowed(p.UserID)
+		kind := ""
+		if g, err := loadGrant(p.TokenID); err == nil {
+			kind = g.Kind
+		}
+		userOK, why = mcpUserAllowedKind(p.UserID, kind)
 	}
 	if !userOK {
 		return nil, errors.New(why)

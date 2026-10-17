@@ -129,6 +129,22 @@ func mcpUserAllowed(userID int) (bool, string) {
 	return true, ""
 }
 
+// mcpUserAllowedKind applies the policy of an AI connection's kind: the internal ones of
+// OpenCode agents (kind opencode) follow the assistant and ai_opencode policies, not the
+// policies for external MCP clients.
+func mcpUserAllowedKind(userID int, kind string) (bool, string) {
+	if kind == "opencode" {
+		if ok, why := aiUserAllowed(userID); !ok {
+			return false, why
+		}
+		if getSetting("ai_opencode") == "off" || (getSetting("ai_opencode") == "admins" && !isAdminUser(userID)) {
+			return false, "OpenCode agents are not allowed (policy ai_opencode)"
+		}
+		return true, ""
+	}
+	return mcpUserAllowed(userID)
+}
+
 func mcpAllowedFlag(userID int) bool {
 	ok, _ := mcpUserAllowed(userID)
 	return ok
@@ -307,11 +323,12 @@ type mcpGrantRequest struct {
 	Auto    *aiAutoLimits `json:"auto"`
 	Confirm bool          `json:"confirm_auto"`
 	editing bool
+	kind    string // "" (pat, oauth) | opencode
 }
 
 // validate checks a request against the policies and the user's connections.
 func (q *mcpGrantRequest) validate(userID int) error {
-	if ok, why := mcpUserAllowed(userID); !ok {
+	if ok, why := mcpUserAllowedKind(userID, q.kind); !ok {
 		return fmt.Errorf("%s", why)
 	}
 	q.Name = strings.TrimSpace(q.Name)
@@ -384,8 +401,8 @@ func (q *mcpGrantRequest) validate(userID int) error {
 		return fmt.Errorf("the lifetime can be at most %d hours (policy)", maxH)
 	}
 	var n int
-	db.QueryRow(`SELECT COUNT(*) FROM mcp_tokens WHERE user_id=? AND revoked_at='' AND expires_at > ?`, userID, nowRFC()).Scan(&n)
-	if n >= mcpMaxGrantsPerUser && !q.editing {
+	db.QueryRow(`SELECT COUNT(*) FROM mcp_tokens WHERE user_id=? AND revoked_at='' AND expires_at > ? AND kind<>'opencode'`, userID, nowRFC()).Scan(&n)
+	if n >= mcpMaxGrantsPerUser && !q.editing && q.kind != "opencode" {
 		return fmt.Errorf("you have %d active AI connections; revoke one first", n)
 	}
 	return nil
@@ -516,9 +533,10 @@ func mcpNotifyUser(userID int) {
 	hub.sendTo(userID, jsonMarshal(map[string]interface{}{"type": "mcp_changed"}))
 }
 
-// mcpShutdown ends every MCP session (MCP turned off, policy changes).
+// mcpShutdown ends every MCP session (MCP turned off, policy changes); the internal ones of
+// OpenCode agents follow their own policy.
 func mcpShutdown(byID int, reason string, pred func(userID int) bool) int {
-	n := aiKillWhere(func(s *aiSession) bool { return s.Transport == "mcp" && (pred == nil || pred(s.UserID)) }, byID, reason)
+	n := aiKillWhere(func(s *aiSession) bool { return s.Transport == "mcp" && !ocIsChild(s) && (pred == nil || pred(s.UserID)) }, byID, reason)
 	mcpDropConns(func(c *mcpConn) bool { return pred == nil || pred(c.userID) })
 	return n
 }

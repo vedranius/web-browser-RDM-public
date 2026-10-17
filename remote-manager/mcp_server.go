@@ -170,7 +170,7 @@ func writeRPC(w http.ResponseWriter, status int, v interface{}) {
 // ─── the handler ─────────────────────────────────────
 
 func mcpHandler(w http.ResponseWriter, r *http.Request) {
-	if !settingBool("ai_mcp_enabled") {
+	if !settingBool("ai_mcp_enabled") && !ocLoopback(r) {
 		http.NotFound(w, r)
 		return
 	}
@@ -242,7 +242,13 @@ func mcpAuthenticate(w http.ResponseWriter, r *http.Request) (*mcpGrant, bool) {
 		writeRPC(w, 401, rpcErr(nil, -32001, why))
 		return nil, false
 	}
-	if ok, why := mcpUserAllowed(g.UserID); !ok {
+	// OpenCode's internal AI connections work only on the loopback listener, and that
+	// listener serves nothing else
+	if (g.Kind == "opencode") != ocLoopback(r) {
+		writeRPC(w, 401, rpcErr(nil, -32001, "this token is not valid here"))
+		return nil, false
+	}
+	if ok, why := mcpUserAllowedKind(g.UserID, g.Kind); !ok {
 		writeRPC(w, 403, rpcErr(nil, -32001, why))
 		return nil, false
 	}
