@@ -1,6 +1,26 @@
-## Web Remote Manager PRO v12.6.10 — One canvas, arranged your way
+## Web Remote Manager PRO v12.6.11 — OpenCode inside WRM
 
 ### Added
+
+- **OpenCode Zen, free models without a key:** add the **OpenCode Zen** provider (a preset in the wizard) and use OpenCode's free models in the AI assistant without an account. With an OpenCode account, paste its Zen API key (org-wide by an administrator, or for yourself under *My API keys*) and every model of the account is available. Free models are marked in the model lists.
+- **OpenCode agents in the assistant:** choose **OpenCode agent** as the engine and its **build** or **plan** agent. WRM downloads OpenCode itself (an administrator presses *Download and install* once; the file is checked against the registry's sha512) and runs it on the WRM host, one private process per session. OpenCode's own shell, file and web tools are switched off: it works on your server **only through WRM**, so every command and edit shows up in the chat and waits for your approval exactly like the WRM assistant (unless full access is on).
+- **Helper models, picked automatically:** the assistant can hand a self-contained text job (summarise a long log, explain an error, draft a snippet) to a cheaper or free helper model. WRM chooses the model by the kind of job, free ones first, and tries the next one if a model fails. Each delegation is a card in the chat with the model, size, tokens, cost and how that model treats your data.
+- **Clear data-use labels:** 🛡 zero retention, ⚠ may use prompts for training, ❔ unknown terms, 💳 paid. Models that may train on prompts are **off by default**; each user can switch them all on for themselves in the assistant (administrators can also allow them for everyone or never).
+- **OpenCode on your computer** can connect to WRM too: the MCP wizard has an OpenCode entry with the `opencode.json` snippet or the OAuth login.
+
+### Fixed
+
+- Stopping WRM also stops every running OpenCode agent; after a crash WRM cleans up what was left on its next start.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets one new column (`users.ai_delegate_training`); a previous version still starts on it. Nothing changes until an administrator adds an OpenCode Zen provider, turns on delegation (`ai_delegate`) or installs OpenCode (*Admin panel → AI assistant → OpenCode agents*). New settings: `ai_delegate*`, `ai_opencode*`. New endpoints: `/api/ai/delegate`, `/api/admin/opencode`.
+
+[Download v12.6.11](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.11) · [OpenCode in WRM](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.11/README.md#opencode-zen-agents-and-helper-models)
+
+### Included from v12.6.10 — One canvas, arranged your way
+
+#### Added
 
 - **One canvas:** the Workboard is no longer a page over your windows. Everything in the window area shares one canvas: terminals, file managers, desktops, Workboard addons and panels you place on it. Put a server-load addon next to the terminal of that server, a clock in a corner, notes under a file manager, and it stays like that.
 - **Addons are windows:** move them, resize them, snap them to halves and quarters, minimize, maximize, switch with the tabs, or dock one as a panel at the left, right or bottom. They come back exactly where you left them, in every browser.
@@ -10,13 +30,13 @@
 - **New addons:** *Links* to your dashboards and wikis, *Saved sessions* to open one with a click, and a *Timer* (countdown with a notification, or stopwatch). Every addon can get a colour and a text size.
 - **Close from the reconnect banner:** when a terminal or desktop connection closes or fails, the banner has a red **✕ Close window** button next to **↻ Reconnect** (#70).
 
-### Changed
+#### Changed
 
 - **Top bar:** *Broadcast* is in the **🧰 Tools** menu with the network tools (the button turns orange while a broadcast is on); *Shares* is only its icon; **Settings, Panels and Workboard** sit together right of *Keys*.
 - **Lock the layout** now also keeps windows from being moved or resized.
 - Folder bookmarks in the file manager (#17) have been in WRM since v10.10: ★ next to the path bar, per connection, folder, tag or for all connections, with WinSCP import.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. Your v12.6.9 Workboard tiles appear as addon windows beside your terminals the first time; panels you pulled out stay where they are. The per-user interface store accepts up to 256 KiB.
 
