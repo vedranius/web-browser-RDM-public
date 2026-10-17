@@ -22,8 +22,9 @@ weekly or per-release deep review.
    From the repository root: `gitleaks git --config .gitleaks.toml --log-opts="origin/main..HEAD" .`
    and `zizmor --offline .github/workflows`.
 4. Fix real findings in the same branch. A new gosec finding that is reviewed and not
-   exploitable is added with `node tools/gosec-baseline.js remote-manager/gosec.json --update`,
-   with the reason in the pull request description.
+   exploitable is added with `--update`, with the reason in the pull request description.
+   gosec's taint rules are not deterministic, so run gosec about 20 times (into different
+   files) and pass every report: `node tools/gosec-baseline.js g1.json … g20.json --update`.
 5. Write the result in the pull request description under "How was it tested?": what was
    reviewed, which scanners ran, and what was fixed or accepted and why.
 
