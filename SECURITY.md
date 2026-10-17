@@ -77,6 +77,15 @@ Since v12.6.22 an administrator chooses a **security level**: *Home* (WRM's earl
 - **HTTPS for sign-in** (`require_https`): password sign-in, registration and the 2FA step are refused over plain HTTP, except from localhost, so a password never travels unencrypted. Behind a reverse proxy, set `TRUST_PROXY` so WRM sees the original scheme.
 - **Security posture:** *Admin panel → Security* checks the installation against the level (transport, every rule, 2FA set up, where the encryption key lives, `WRM_ALLOW_ANY_ORIGIN`, guest links without expiry, signed updates, current version, audit hash chain) and exports the result as JSON or a printable report. It contains no secrets.
 
+## Roles, step-up and break-glass
+
+Since v12.6.23 (`remote-manager/roles.go`, `teams.go`):
+
+- **Least privilege by role:** a *Security auditor* reads the audit log, terminal sessions and recordings, file transfers and the security posture (`GET` only, `requireAuditRead`) and is refused connections (`authorizeConnection`), the AI assistant and AI connections. *Operators* pass only the policies set to `operators`. Who-policies can also name teams (`teams:<names>`); team names are checked against existing teams, and a team named in a policy cannot be deleted or renamed, so a policy never silently points at nothing.
+- **Step-up re-authentication** (`require_step_up`, required by the Business and Enterprise levels): changing policies, the security level or roles, creating administrators or auditors, disabling or deleting users, break-glass changes, password and 2FA resets, revealing a stored credential password, exporting a private key and exporting connections with secrets need a password (and TOTP or recovery code) confirmation no older than `step_up_minutes`. The confirmation is bound to the sign-in session (`auth_sessions.step_up_at`), wrong passwords count toward the sign-in rate limit, and every attempt is audited (`auth.step_up`, `auth.step_up_failed`). A stolen session cookie alone therefore cannot change security settings once the window has passed.
+- **Break-glass administrator** (`users.break_glass`): a local emergency account that must use 2FA (its sessions end until 2FA is set up), may be limited to `break_glass_ips`, and whose every sign-in is audited (`auth.break_glass_login`) and notified to all other administrators.
+- **Deprovisioning:** deleting a user can hand their connections, folders, credentials, SSH keys, shares and proxies to another active, non-auditor account in one transaction (`handOver`, audited `admin.user_handover`). Disabling a user ends their sign-in sessions, terminals, AI sessions and AI connections.
+
 ## Hardening checklist
 
 WRM is secure by default in most respects. For production and company use, also check the items below. The admin panel (*Overview*) warns about several of them.
