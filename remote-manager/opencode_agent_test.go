@@ -24,7 +24,7 @@ import (
 func TestOpencodeConfig(t *testing.T) {
 	p := aiProvider{Kind: "openai_compatible", Name: "Local", BaseURL: "http://127.0.0.1:1/v1"}
 	p.secret.APIKey = "sk-local-secret"
-	b, pid, model, env, err := opencodeConfig(p, "local-model", "http://127.0.0.1:2/mcp", "wrm_pat_abc")
+	b, pid, model, env, err := opencodeConfig(p, "local-model", "http://127.0.0.1:2/mcp", "wrm_pat_abc", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestOpencodeConfig(t *testing.T) {
 	if !strings.Contains(joined, "WRM_OPENCODE_KEY=sk-local-secret") || !strings.Contains(joined, "WRM_OPENCODE_MCP_TOKEN=wrm_pat_abc") {
 		t.Fatalf("env: %v", env)
 	}
-	if _, _, _, _, err := opencodeConfig(aiProvider{Kind: "bedrock"}, "x", "u", "t"); err == nil {
+	if _, _, _, _, err := opencodeConfig(aiProvider{Kind: "bedrock"}, "x", "u", "t", false); err == nil {
 		t.Fatal("bedrock should be refused")
 	}
 	// the base environment carries nothing of WRM's own
