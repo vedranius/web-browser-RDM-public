@@ -56,7 +56,7 @@ node ../tools/check-ui.js       # UI: JS syntax + en/hr translation keys
   - Leave the contributor-terms checkbox **unchecked** and add the note "The project owner decides on the contributor terms checkbox."
 - Then watch the PR's CI. Fix failures and push again.
 - When every check is green (success or skipped) and the PR is mergeable, **merge it** (merge method `merge`, expected head SHA = the full 40-character SHA). Then stop watching it.
-- **Tags and releases cannot be pushed from these sessions** (HTTP 403). After the merge, tell the owner to create the release `vX.Y.Z` at https://github.com/vedranius/web-browser-RDM-public/releases/new from `main`.
+- **Releases are automatic:** when a push to `main` carries a new version (`APP_VERSION` in `build.yml`, `AppVersion` in `main.go` and the top `## [X.Y.Z]` of CHANGELOG.md all equal) and the builds pass, the `Tag new version` job tags the commit and runs the release on the tag (signed with `RELEASE_SIGNING_KEY`). Sessions cannot push tags themselves (HTTP 403). After the merge, check that the release run on the tag succeeded and tell the owner the release link; if the job reports a version mismatch, fix the version and merge again.
 
 ## Public repository: what must never be committed
 This repository is public.
@@ -68,4 +68,4 @@ End with a short report to the owner **in Croatian**:
 - what the version contains;
 - how it was tested;
 - the PR link and its merge state;
-- the reminder to create the release.
+- the release link (or what blocked the automatic release).

@@ -65,6 +65,7 @@ Every release has `SHA256SUMS.txt` (the SHA-256 of each file) and, since v12.6.2
 - **By hand:** `wrm -release-verify SHA256SUMS.txt` with `SHA256SUMS.txt.sig` next to it checks the signature and the SHA-256 of every listed file in the same folder. `-release-public-key wrm-ed25519:…` adds a key.
 - **SBOM and provenance:** each release has a CycloneDX SBOM (`sbom-vX.Y.Z.cdx.json`) and GitHub build provenance (SLSA, signed with Sigstore). `gh attestation verify <file> --repo vedranius/web-browser-RDM-public` shows the workflow and commit that built a file.
 - **The key:** a maintainer creates it once with `wrm -release-keygen release.key` on their own computer. The content of `release.key` goes into the repository secret `RELEASE_SIGNING_KEY`, then the file is kept offline or deleted. The printed public key goes into `builtinReleaseKeys` (`remote-manager/releasesign.go`). A new key is added at the top of that list while releases signed with the old one are still offered. Once a build has a built-in key, the release workflow fails rather than publish an unsigned release.
+- **Automatic releases:** a push to `main` whose version is new (the same in `APP_VERSION`, `AppVersion` and the top CHANGELOG section) is tagged by the `Tag new version` job of `build.yml` after every build passed, which then starts the release run on that tag. The job needs `contents: write` and `actions: write` only for itself; nobody has to create releases by hand.
 
 ## Security levels
 
