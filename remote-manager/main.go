@@ -357,6 +357,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/ai/", apiAdminAIHandler)
 	mux.HandleFunc("/api/mcp/", apiMCPHandler)
 	mux.HandleFunc("/api/admin/mcp/", apiAdminMCPHandler)
+	mux.HandleFunc("/api/admin/opencode", apiAdminOpencodeHandler)
+	mux.HandleFunc("/api/admin/opencode/", apiAdminOpencodeHandler)
 	mux.HandleFunc("/mcp", mcpHandler)
 	mux.HandleFunc("/.well-known/oauth-protected-resource", mcpProtectedResourceHandler)
 	mux.HandleFunc("/.well-known/oauth-protected-resource/mcp", mcpProtectedResourceHandler)
@@ -509,6 +511,7 @@ func serve(stop <-chan struct{}) int {
 	go runUpdateChecker()
 	go runAIJanitor()
 	go runMCPJanitor()
+	go opencodeCleanup()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -568,6 +571,7 @@ func serve(stop <-chan struct{}) int {
 		}
 		stopTURN()
 		mediumStopAll()
+		opencodeStopAll()
 		tunnelMgr.stopAll("WRM was stopped")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()

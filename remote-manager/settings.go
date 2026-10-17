@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -122,6 +124,16 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_provider_kinds", Default: aiAllProviderKinds, Kind: "string"},
 	{Key: "ai_models", Default: "", Kind: "string"},
 	{Key: "ai_ollama_manage", Default: "0", Kind: "bool"},
+	{Key: "ai_delegate", Default: "0", Kind: "bool"},
+	{Key: "ai_delegate_provider", Default: "0", Kind: "int", Min: 0, Max: 2147483647},
+	{Key: "ai_delegate_models", Default: "", Kind: "string"},
+	{Key: "ai_delegate_max_kb", Default: "64", Kind: "int", Min: 1, Max: 1024},
+	{Key: "ai_delegate_training", Default: "user", Kind: "enum", Enum: []string{"off", "user", "all"}},
+	{Key: "ai_opencode", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "ai_opencode_version", Default: opencodeDefaultVersion, Kind: "string"},
+	{Key: "ai_opencode_registry", Default: "https://registry.npmjs.org", Kind: "string"},
+	{Key: "ai_opencode_path", Default: "", Kind: "string"},
+	{Key: "ai_opencode_max_sessions", Default: "4", Kind: "int", Min: 1, Max: 50},
 	{Key: "ai_redact_output", Default: "1", Kind: "bool"},
 	{Key: "ai_share_notes", Default: "1", Kind: "bool"},
 	{Key: "ai_transcript_retention_days", Default: "90", Kind: "int", Min: 1, Max: 3650},
@@ -332,6 +344,29 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		}
 	case "ai_provider_kinds":
 		return normalizeAIKinds(v)
+	case "ai_opencode_version":
+		if !regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$`).MatchString(v) {
+			return "", fmt.Errorf("use a version such as %s", opencodeDefaultVersion)
+		}
+	case "ai_opencode_registry":
+		u, err := url.Parse(v)
+		if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" {
+			return "", fmt.Errorf("use an https registry URL such as https://registry.npmjs.org")
+		}
+		return strings.TrimRight(v, "/"), nil
+	case "ai_opencode_path":
+		if v != "" && !filepath.IsAbs(v) {
+			return "", fmt.Errorf("use an absolute path to the opencode binary")
+		}
+	case "ai_delegate_models":
+		var out []string
+		for _, m := range splitPatterns(v) {
+			if len(m) > 200 || strings.ContainsAny(m, " \t\"'<>") {
+				return "", fmt.Errorf("invalid model name %q", m)
+			}
+			out = append(out, m)
+		}
+		return strings.Join(out, ","), nil
 	case "update_repo":
 		if !updateRepoRe.MatchString(v) {
 			return "", fmt.Errorf("use the form owner/repository")
@@ -465,6 +500,11 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if v, ok := changed["ai_mcp_enabled"]; ok && v == "0" {
 			mcpShutdown(adminID, "AI connections (MCP) were turned off", nil)
+		}
+		if v, ok := changed["ai_opencode"]; ok && v != "all" {
+			aiKillWhere(func(s *aiSession) bool {
+				return s.Transport == "opencode" && (v == "off" || !isAdminUser(s.UserID))
+			}, adminID, "the policy no longer allows OpenCode agents")
 		}
 		if _, ok := changed["ai_mcp"]; ok {
 			mcpShutdown(adminID, "the policy no longer allows AI connections for the user", func(uid int) bool { ok, _ := mcpUserAllowed(uid); return !ok })

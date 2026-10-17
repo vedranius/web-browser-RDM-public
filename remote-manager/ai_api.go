@@ -53,6 +53,8 @@ func apiAIHandler(w http.ResponseWriter, r *http.Request) {
 		aiContextHandler(w, r, userID)
 	case "config":
 		aiConfigHandler(w, r, userID)
+	case "delegate":
+		aiDelegateHandler(w, r, userID)
 	case "connections":
 		if len(parts) != 2 {
 			jsonError(w, "Not found", 404)
@@ -92,6 +94,9 @@ func aiConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 	}
 	if allowed {
 		out["providers"] = providersFor(userID)
+		out["delegate"] = aiDelegateView(r.Context(), userID)
+		ocOK, ocWhy := opencodeAllowed(userID)
+		out["opencode"] = map[string]interface{}{"available": ocOK, "reason": ocWhy, "kinds": opencodeProviderKinds, "agents": []string{"build", "plan"}}
 	}
 	active := []map[string]interface{}{}
 	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.UserID == userID && s.Transport != "mcp" }) {
@@ -305,10 +310,20 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		Auto        *aiAutoLimits `json:"auto"`
 		ConfirmAuto bool          `json:"confirm_auto"`
 		ShareNotes  bool          `json:"share_notes"`
+		Engine      string        `json:"engine"` // "" (WRM) | opencode
+		Agent       string        `json:"agent"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		jsonError(w, "Bad JSON", 400)
 		return
+	}
+	transport := "panel"
+	if in.Engine == "opencode" {
+		transport = "opencode"
+		if !reOCAgent.MatchString(nonEmpty(in.Agent, "build")) {
+			jsonError(w, "Invalid agent name", 400)
+			return
+		}
 	}
 	shareID, code, msg := aiConnAccess(r, userID, in.ConnID)
 	if code != 0 {
@@ -319,11 +334,19 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		in.ShareNotes = false // notes belong to the owner of the connection
 	}
 	s, err := aiStart(aiStartParams{UserID: userID, Username: usernameOf(userID), ConnID: in.ConnID, ShareID: shareID, ProviderID: in.ProviderID,
-		Model: in.Model, Mode: in.Mode, Auto: in.Auto, ConfirmAut: in.ConfirmAuto, ShareNotes: in.ShareNotes, Transport: "panel", Request: r})
+		Model: in.Model, Mode: in.Mode, Auto: in.Auto, ConfirmAut: in.ConfirmAuto, ShareNotes: in.ShareNotes, Transport: transport, Request: r, Agent: in.Agent})
 	if err != nil {
 		auditLog(r, userID, "ai.session_refused", "", map[string]interface{}{"conn_id": in.ConnID, "reason": err.Error()})
 		jsonError(w, err.Error(), 403)
 		return
+	}
+	if transport == "opencode" {
+		if err := s.ocStart(r, in.Agent); err != nil {
+			s.Kill(0, "OpenCode did not start")
+			auditLog(r, userID, "ai.session_refused", "", map[string]interface{}{"conn_id": in.ConnID, "engine": "opencode", "reason": truncateStr(err.Error(), 500)})
+			jsonError(w, err.Error(), 502)
+			return
+		}
 	}
 	hub.sendTo(userID, jsonMarshal(map[string]interface{}{"type": "ai_sessions_changed"}))
 	jsonOK(w, s.view())
