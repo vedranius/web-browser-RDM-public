@@ -36,7 +36,9 @@ type settingSpec struct {
 
 var settingSpecs = []settingSpec{
 	// Accounts & sign-in
+	{Key: "security_level", Default: "home", Kind: "enum", Enum: securityLevels},
 	{Key: "registration", Default: "closed", Kind: "enum", Enum: []string{"closed", "open"}},
+	{Key: "require_https", Default: "0", Kind: "bool"},
 	{Key: "require_2fa", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "password_min_length", Default: "8", Kind: "int", Min: 6, Max: 128},
 	{Key: "session_idle_hours", Default: "168", Kind: "int", Min: 1, Max: 8760},
@@ -49,6 +51,7 @@ var settingSpecs = []settingSpec{
 	{Key: "allow_secret_export", Default: "1", Kind: "bool"},
 	// Sharing & collaboration
 	{Key: "allow_link_shares", Default: "1", Kind: "bool"},
+	{Key: "link_share_max_days", Default: "0", Kind: "int", Min: 0, Max: 3650},
 	{Key: "chat_file_max_mb", Default: "5", Kind: "int", Min: 0, Max: 25},
 	{Key: "voice_enabled", Default: "1", Kind: "bool"},
 	{Key: "voice_max_participants", Default: "12", Kind: "int", Min: 2, Max: 50},
@@ -461,16 +464,24 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		out := []map[string]interface{}{}
+		devs := securityDeviations()
 		for _, s := range settingSpecs {
 			envName := settingEnvName(s.Key)
 			if _, name := settingEnv(s.Key); name != "" {
 				envName = name
 			}
-			out = append(out, map[string]interface{}{
+			item := map[string]interface{}{
 				"key": s.Key, "value": getSetting(s.Key), "default": s.Default, "kind": s.Kind,
 				"enum": s.Enum, "min": s.Min, "max": s.Max, "locked": settingLocked(s.Key),
 				"env": envName, "restart": s.Restart,
-			})
+			}
+			if need := levelNeed(securityLevel(), s.Key); need != "" {
+				item["required"] = need
+			}
+			if d, ok := devs[s.Key]; ok {
+				item["deviation"] = d
+			}
+			out = append(out, item)
 		}
 		jsonOK(w, out)
 	case http.MethodPut:
@@ -479,8 +490,21 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Bad JSON", 400)
 			return
 		}
-		changed := map[string]string{}
-		turnChanged := false
+		// A value looser than the security level needs a note: {"_deviation_notes": {"key": "why"}}.
+		notes := map[string]string{}
+		if raw, ok := payload["_deviation_notes"].(map[string]interface{}); ok {
+			for k, v := range raw {
+				if s, ok := v.(string); ok {
+					notes[k] = strings.TrimSpace(s)
+				}
+			}
+		}
+		delete(payload, "_deviation_notes")
+		if _, ok := payload["security_level"]; ok {
+			jsonError(w, "Change the security level in Admin → Security, which first shows what changes", 400)
+			return
+		}
+		values := map[string]string{}
 		for k, raw := range payload {
 			var v string
 			switch x := raw.(type) {
@@ -497,61 +521,95 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 			if getSetting(k) == strings.TrimSpace(v) {
 				continue
 			}
+			spec, ok := settingSpecFor(k)
+			if !ok {
+				jsonError(w, fmt.Sprintf("unknown setting %q", k), 400)
+				return
+			}
+			nv, err := validateSetting(spec, v)
+			if err != nil {
+				jsonError(w, fmt.Sprintf("%s: %v", k, err), 400)
+				return
+			}
+			if need := levelNeed(securityLevel(), k); need != "" && !levelMeets(k, nv, need) && len(notes[k]) < 3 && deviationNote(k) == "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(400)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"error":     fmt.Sprintf("%s: the security level %s requires %s; a looser value is a deviation and needs a note", k, securityLevel(), need),
+					"deviation": map[string]string{"key": k, "value": nv, "required": need, "level": securityLevel()},
+				})
+				return
+			}
+			values[k] = v
+		}
+		changed := map[string]string{}
+		for k, v := range values {
 			nv, err := setSetting(k, v)
 			if err != nil {
 				jsonError(w, err.Error(), 400)
 				return
 			}
 			changed[k] = nv
-			if s, _ := settingSpecFor(k); strings.HasPrefix(s.Key, "turn_") {
-				turnChanged = true
-			}
 		}
 		if len(changed) > 0 {
 			auditLog(r, adminID, "admin.settings", "", changed)
 		}
-		if turnChanged {
-			restartTURN()
-		}
-		if v, ok := changed["ai_kill_switch"]; ok && v == "1" {
-			aiKillAll(adminID, "kill switch turned on by an administrator")
-		}
-		if v, ok := changed["ai_assistant"]; ok && v == "off" {
-			aiKillWhere(func(s *aiSession) bool { return s.Transport != "mcp" }, adminID, "the AI assistant was turned off")
-		}
-		if v, ok := changed["ai_mcp_enabled"]; ok && v == "0" {
-			mcpShutdown(adminID, "AI connections (MCP) were turned off", nil)
-		}
-		if v, ok := changed["ai_opencode"]; ok && v != "all" {
-			aiKillWhere(func(s *aiSession) bool {
-				return s.Transport == "opencode" && (v == "off" || !isAdminUser(s.UserID))
-			}, adminID, "the policy no longer allows OpenCode agents")
-		}
-		if v, ok := changed["ai_opencode_sandbox"]; ok && v != "all" {
-			aiKillWhere(func(s *aiSession) bool {
-				s.mu.Lock()
-				sb := s.oc != nil && s.oc.sandbox
-				s.mu.Unlock()
-				return sb && (v == "off" || !isAdminUser(s.UserID))
-			}, adminID, "the policy no longer allows OpenCode's Docker sandbox")
-		}
-		if _, ok := changed["ai_mcp"]; ok {
-			mcpShutdown(adminID, "the policy no longer allows AI connections for the user", func(uid int) bool { ok, _ := mcpUserAllowed(uid); return !ok })
-		}
 		for k := range changed {
-			if strings.HasPrefix(k, "tunnel") {
-				tunnelMgr.applyPolicy()
-				break
-			}
+			syncDeviation(r, adminID, k, notes[k])
 		}
-		for key := range changed {
-			if strings.HasPrefix(key, "ai_") {
-				hub.sendAll([]byte(`{"type":"ai_policy_changed"}`))
-				break
-			}
-		}
+		settingsChanged(adminID, changed)
 		jsonOK(w, map[string]interface{}{"ok": true, "changed": changed})
 	default:
 		jsonError(w, "Method not allowed", 405)
+	}
+}
+
+// settingsChanged applies what changed settings mean for running sessions, tunnels and AI.
+func settingsChanged(adminID int, changed map[string]string) {
+	turnChanged := false
+	for k := range changed {
+		if strings.HasPrefix(k, "turn_") {
+			turnChanged = true
+		}
+	}
+	if turnChanged {
+		restartTURN()
+	}
+	if v, ok := changed["ai_kill_switch"]; ok && v == "1" {
+		aiKillAll(adminID, "kill switch turned on by an administrator")
+	}
+	if v, ok := changed["ai_assistant"]; ok && v == "off" {
+		aiKillWhere(func(s *aiSession) bool { return s.Transport != "mcp" }, adminID, "the AI assistant was turned off")
+	}
+	if v, ok := changed["ai_mcp_enabled"]; ok && v == "0" {
+		mcpShutdown(adminID, "AI connections (MCP) were turned off", nil)
+	}
+	if v, ok := changed["ai_opencode"]; ok && v != "all" {
+		aiKillWhere(func(s *aiSession) bool {
+			return s.Transport == "opencode" && (v == "off" || !isAdminUser(s.UserID))
+		}, adminID, "the policy no longer allows OpenCode agents")
+	}
+	if v, ok := changed["ai_opencode_sandbox"]; ok && v != "all" {
+		aiKillWhere(func(s *aiSession) bool {
+			s.mu.Lock()
+			sb := s.oc != nil && s.oc.sandbox
+			s.mu.Unlock()
+			return sb && (v == "off" || !isAdminUser(s.UserID))
+		}, adminID, "the policy no longer allows OpenCode's Docker sandbox")
+	}
+	if _, ok := changed["ai_mcp"]; ok {
+		mcpShutdown(adminID, "the policy no longer allows AI connections for the user", func(uid int) bool { ok, _ := mcpUserAllowed(uid); return !ok })
+	}
+	for k := range changed {
+		if strings.HasPrefix(k, "tunnel") {
+			tunnelMgr.applyPolicy()
+			break
+		}
+	}
+	for key := range changed {
+		if strings.HasPrefix(key, "ai_") {
+			hub.sendAll([]byte(`{"type":"ai_policy_changed"}`))
+			break
+		}
 	}
 }

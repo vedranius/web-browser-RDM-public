@@ -66,6 +66,17 @@ Every release has `SHA256SUMS.txt` (the SHA-256 of each file) and, since v12.6.2
 - **SBOM and provenance:** each release has a CycloneDX SBOM (`sbom-vX.Y.Z.cdx.json`) and GitHub build provenance (SLSA, signed with Sigstore). `gh attestation verify <file> --repo vedranius/web-browser-RDM-public` shows the workflow and commit that built a file.
 - **The key:** a maintainer creates it once with `wrm -release-keygen release.key` on their own computer. The content of `release.key` goes into the repository secret `RELEASE_SIGNING_KEY`, then the file is kept offline or deleted. The printed public key goes into `builtinReleaseKeys` (`remote-manager/releasesign.go`). A new key is added at the top of that list while releases signed with the old one are still offered. Once a build has a built-in key, the release workflow fails rather than publish an unsigned release.
 
+## Security levels
+
+Since v12.6.22 an administrator chooses a **security level**: *Home* (WRM's earlier defaults), *Business* or *Enterprise*. The level is a floor for the settings in `levelRules` (`remote-manager/security_level.go`): HTTPS for sign-in, required 2FA, password length, session lifetime and idle time, lockout, registration, host-key policy, server-side keys, secret export, guest links and their lifetime, AI full access, audit and recording with their retention. The full table is in the [README](README.md#security-levels-and-posture).
+
+- **Chosen at install or later:** on the first-run screen, with `wrm -security-level` / `WRM_INITIAL_SECURITY_LEVEL` (applied once) or forced with `WRM_SECURITY_LEVEL` (locked in the UI), or in *Admin panel → Security*.
+- **Raised, never loosened:** applying a level only raises settings that are weaker than it; stronger settings stay. An environment variable that forces a weaker value is shown as a problem, not overridden.
+- **Preview first:** the preview lists changes, blockers (for example HTTPS while the administrator's own browser uses plain HTTP, which would lock them out) and the people affected. *Sign out other sessions* makes new session limits and required 2FA apply at once.
+- **Deviations need a reason:** a setting may stay below the level only with a written reason. Who recorded it and when is stored in `security_deviations` and audited (`security.deviation`, `security.deviation_removed`, `security.level_changed`, `security.level_enforced`).
+- **HTTPS for sign-in** (`require_https`): password sign-in, registration and the 2FA step are refused over plain HTTP, except from localhost, so a password never travels unencrypted. Behind a reverse proxy, set `TRUST_PROXY` so WRM sees the original scheme.
+- **Security posture:** *Admin panel → Security* checks the installation against the level (transport, every rule, 2FA set up, where the encryption key lives, `WRM_ALLOW_ANY_ORIGIN`, guest links without expiry, signed updates, current version, audit hash chain) and exports the result as JSON or a printable report. It contains no secrets.
+
 ## Hardening checklist
 
 WRM is secure by default in most respects. For production and company use, also check the items below. The admin panel (*Overview*) warns about several of them.

@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.21** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.22** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.22
+
+**Security levels: Home, Business, Enterprise.** Pick how strict WRM is on the first-run screen, at install (`-security-level`, `WRM_INITIAL_SECURITY_LEVEL`, forced with `WRM_SECURITY_LEVEL`) or later in **Admin panel → Security**. A level sets minimums for HTTPS, two-factor authentication, passwords, sessions, registration, host keys, secret export, guest links, AI full access, audit and session recording. Before you switch, a preview shows every change, what blocks it and whom it affects; a setting you keep below the level is a **deviation** with a written reason, on record and audited. The **security posture** page grades the installation item by item with the exact fix, and exports a report for auditors (JSON or PDF). See [Security levels and posture](#security-levels-and-posture).
 
 ## What's new in v12.6.21
 
@@ -124,7 +128,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -174,6 +178,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Settings](#settings)
    - [Audit log, session recording & file transfers](#audit-log-session-recording--file-transfers)
    - [Admin panel](#admin-panel)
+   - [Security levels and posture](#security-levels-and-posture)
    - [Updates & self-update](#updates--self-update)
    - [Mobile, responsive UI & installable app](#mobile-responsive-ui--installable-app)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
@@ -226,21 +231,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.21-linux-amd64
-   ./wrm-pro-v12.6.21-linux-amd64
+   chmod +x wrm-pro-v12.6.22-linux-amd64
+   ./wrm-pro-v12.6.22-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.21-windows-amd64.exe
+   .\wrm-pro-v12.6.22-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.6.21-linux-amd64.AppImage
-   ./wrm-pro-v12.6.21-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.6.21-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.6.22-linux-amd64.AppImage
+   ./wrm-pro-v12.6.22-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.6.22-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -249,8 +254,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.21/wrm-pro-v12.6.21-android-arm64
-   chmod +x wrm-pro-v12.6.21-android-arm64 && ./wrm-pro-v12.6.21-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.22/wrm-pro-v12.6.22-android-arm64
+   chmod +x wrm-pro-v12.6.22-android-arm64 && ./wrm-pro-v12.6.22-android-arm64
    ```
 
    **Docker**
@@ -274,6 +279,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.21
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new table, `security_deviations`; a previous version still starts on it. Existing installations stay at the **Home** level and no setting changes until an administrator picks another level in *Admin panel → Security* (or sets `WRM_INITIAL_SECURITY_LEVEL` / `WRM_SECURITY_LEVEL`). New settings `security_level`, `require_https` and `link_share_max_days`; new endpoints `GET /api/admin/security` and `POST /api/admin/security/level`. Loosening a policy below the chosen level now needs a reason (`_deviation_notes` in `PUT /api/admin/settings`); scripts that set settings at the Home level are not affected.
 
 ## Upgrading from v12.6.20
 
@@ -1809,6 +1818,7 @@ Personal preferences are stored per browser; everything security-related is stor
 - **Overview:** version, uptime, users (admins, 2FA), HTTPS, voice relay status, encryption key source, **security warnings** (no HTTPS, open registration, admins without 2FA, host keys off…), **open terminals** (who, which server, from which IP — with *End*), **active SSH tunnels** (owner, connection and route, listen → target, traffic — with *Stop*), **live rooms** (participants, voice, shared terminals).
 - **Users:** create users (temporary password generated if you leave it empty), display name, make/remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete (with everything the user owns). The last active administrator cannot be removed.
 - **Shares:** every share on the server — pause/resume or delete.
+- **Security:** the security level (Home / Business / Enterprise), its preview, deviations and the security posture report (see [Security levels and posture](#security-levels-and-posture)).
 - **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit), **broadcast input**, **live status** (on/off, interval, checks through jump hosts), **SSH tunnels** (on/off, who may use them, listening on network addresses, remote forwarding, idle stop), **proxies** (who may define them).
 - **Notifications:** notification channels (e-mail, Telegram, Slack / Mattermost / Rocket.Chat, Teams, Discord, ntfy, Gotify, Pushover, webhook) with *Send test*, last delivery and error; notifications on/off and the minimum interval.
 - **Voice & network:** voice on/off, participants per call, built-in TURN relay (port, public IP, host name, relay ports, private networks), additional STUN/TURN servers.
@@ -1820,6 +1830,30 @@ Personal preferences are stored per browser; everything security-related is stor
 - **File transfers:** every transferred file with size and SHA-256, CSV export.
 
 Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g. for configuration management; it is then shown locked in the admin panel.
+
+### Security levels and posture
+
+A **security level** sets minimums for the settings that matter. Pick it on the first-run screen (the first administrator), at install with `wrm -security-level home|business|enterprise` (kept by `-install-service`) or `WRM_INITIAL_SECURITY_LEVEL` (applied once, while no level was chosen), force it with `WRM_SECURITY_LEVEL`, or change it later in *Admin panel → Security*.
+
+| Setting | Home | Business | Enterprise |
+|---|---|---|---|
+| `require_https` (sign-in only over HTTPS or from localhost) | – | on | on |
+| `require_2fa` | (recommended: admins) | all | all |
+| `password_min_length` | – | 12 | 14 |
+| `session_idle_hours` / `session_max_days` | – | 12 / 7 | 8 / 1 |
+| `login_max_failures` | – | 5 | 5 |
+| `registration` | (recommended: closed) | closed | closed |
+| `host_key_policy` | (recommended: tofu) | tofu | strict |
+| `allow_server_keys`, `allow_secret_export`, `ai_full_access` | – | off | off |
+| `allow_link_shares` | – | – | off |
+| `link_share_max_days` | – | 30 | 7 |
+| `audit_enabled` / `audit_retention_days` | (recommended: on) | on / 365 | on / 730 |
+| `session_recording` / `recording_retention_days` | – | on / – | on / 365 |
+
+- **Home** is WRM's previous behaviour; existing installations start there with nothing changed.
+- A higher level **raises** weaker settings and leaves stronger ones as they are. Before applying, *Preview* lists every change, settings an environment variable keeps, what blocks the change (HTTPS while this browser uses plain HTTP) and whom it affects: users who must set up 2FA at their next sign-in, sessions that end, guest links that are too long or blocked, passwords checked at the next change. *Apply* can also sign out every other session.
+- **Deviations:** a setting may stay below the level only with a written reason (in the preview, or when you change a policy). The *Security* tab lists each deviation with who recorded it and when; it is audited (`security.deviation`, `security.deviation_removed`) and removed once the setting meets the level again. Choosing a level over plain HTTP on the first-run screen records the HTTPS deviation by itself, so you can turn HTTPS on afterwards.
+- **Security posture:** the same tab grades the installation item by item (✅ / ⚠ / ⛔): HTTPS for this browser, every rule of the level, administrators and users without 2FA, where the encryption key lives (next to the database or separate), `WRM_ALLOW_ANY_ORIGIN`, guest links without expiry, signed updates, the current version and the audit hash chain. Every item says why it matters and how to fix it. *Export JSON* and *Print / PDF* produce a report for auditors.
 
 ### Updates & self-update
 
@@ -1909,12 +1943,15 @@ Medium runtime settings (introduced in v12.4.3b):
 | `WRM_TRUST_PROXY` | – | `1` = trust `X-Real-IP` / `X-Forwarded-For` / `X-Forwarded-Proto` / `X-Forwarded-Host` from your reverse proxy (client IPs in rate limits and audit, secure cookies). Only when WRM is reachable **only** through that proxy. |
 | `WRM_ALLOWED_ORIGINS` | – | Extra hostnames allowed as `Origin` (comma-separated), e.g. when a proxy rewrites the `Host` header |
 | `WRM_ALLOW_ANY_ORIGIN` | – | `1` disables the origin check (not recommended) |
+| `WRM_INITIAL_SECURITY_LEVEL` | – | `home` / `business` / `enterprise`: applied once at start while no security level was chosen (for installers); `WRM_SECURITY_LEVEL` forces and locks it |
 | `WRM_<POLICY>` | – | Forces a policy from the admin panel, e.g. `WRM_REGISTRATION=open`, `WRM_REQUIRE_2FA=all`, `WRM_TURN_PUBLIC_IP=203.0.113.10`, `WRM_TURN_ENABLED=0`, `WRM_HOST_KEY_POLICY=strict`. |
 
 **Policies** (*Admin panel*, or `WRM_<KEY>` in upper case)
 
 | Key | Default | Meaning |
 |---|---|---|
+| `security_level` | `home` | `home` / `business` / `enterprise`, see [Security levels and posture](#security-levels-and-posture); changed in *Admin panel → Security*, not here |
+| `require_https` | `0` | sign-in, registration and 2FA only over HTTPS (or from localhost) |
 | `registration` | `closed` | `closed` / `open` self-registration |
 | `require_2fa` | `off` | `off` / `admins` / `all` |
 | `password_min_length` | `8` | 6–128 |
@@ -1926,6 +1963,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `max_upload_mb` | `0` | server-side upload limit per file (0 = unlimited) |
 | `allow_secret_export` | `1` | allow users to export their secrets, export private keys of the key store and show vault passwords (after re-entering the password) |
 | `allow_link_shares` | `1` | allow “anyone with the link” shares for guests |
+| `link_share_max_days` | `0` | longest lifetime of a guest link in days (0 = no limit); a link without expiry is refused when set |
 | `chat_file_max_mb` | `5` | file size in collaboration chat (0 = off) |
 | `voice_enabled` | `1` | voice calls on/off |
 | `voice_max_participants` | `12` | people per call |
@@ -2037,6 +2075,7 @@ wrm -reset-password USER           set a new temporary password (must be changed
 wrm -reset-password USER -reset-2fa  … and turn off two-factor authentication
 wrm -healthcheck                   check /healthz of the local server (exit code 0 = healthy; for containers)
 wrm -install-service               install WRM as a service that starts at boot, start it (see Service)
+    -security-level LEVEL          home, business or enterprise on first start (kept in the service environment)
 wrm -uninstall-service             stop and remove the service (the data stays)
 wrm -service-status                is the service installed and running?
     -service-name NAME             service name (default wrm)
@@ -2287,8 +2326,8 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/auth/config` | `{first_run, registration_open, version}`; with an available update also `update`, `update_url` |
-| POST | `/api/auth/register` | Create account (first user = admin; afterwards only if registration is open) |
+| GET | `/api/auth/config` | `{first_run, registration_open, version}`; on first run also `security_level`, `security_level_fixed`, `secure_transport`; `https_required` when sign-in needs HTTPS; with an available update also `update`, `update_url` |
+| POST | `/api/auth/register` | Create account (first user = admin; afterwards only if registration is open); the first user may send `security_level` |
 | POST | `/api/auth/login` | `{username, password}` → user, or `{mfa_required, mfa_token}` |
 | POST | `/api/auth/mfa` | `{mfa_token, code}` (TOTP or recovery code) |
 | POST | `/api/auth/logout` | Sign out |
@@ -2536,7 +2575,9 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET / POST | `/api/admin/users` | Users / create |
 | PUT / DELETE | `/api/admin/users/{id}` | `{is_admin, disabled, display_name}` / delete |
 | POST | `/api/admin/users/{id}/reset-password` · `reset-2fa` · `revoke-sessions` · `unlock` | Account actions |
-| GET / PUT | `/api/admin/settings` | Policies |
+| GET / PUT | `/api/admin/settings` | Policies; `GET` adds each setting's `required` value and `deviation`; `PUT` takes `_deviation_notes: {key: reason}`, without a reason a value below the level → 400 `{error, deviation: {key, value, required, level}}` |
+| GET | `/api/admin/security` | Security posture: `{level, level_locked, level_env, levels, rules, deviations, checks: [{id, kind, status: ok\|warn\|bad\|info, value, required, recommended, env, count, deviation}], summary, version, host, generated_at}` |
+| POST | `/api/admin/security/level` | `{level, preview, keep: {key: reason}, apply_now}` → the plan `{from, to, changes, forced, kept, blockers, removed, affected}`; 409 when the level is forced or a blocker is not kept |
 | GET | `/api/admin/status` | Status, open terminals, rooms, relay |
 | POST | `/api/admin/terminals/{id}/kill` | End a terminal |
 | GET | `/api/admin/shares` | All shares |
@@ -2661,6 +2702,8 @@ remote-manager/
   service.go      run as a service: prompt, env file, service files, versions, newest binary in the folder, restarts
   service_unix.go / service_windows.go  systemd, launchd, rc.d installers / Windows service (SCM)
   update.go       update check against GitHub releases, verified self-update, rollback, restart
+  security_level.go  security levels: rules, preview and apply, deviations, the first-run and start-up level, HTTPS for sign-in
+  security_posture.go  the security posture checks for Admin → Security
   releasesign.go  release signatures (ed25519 over SHA256SUMS.txt): verification for the self-update, -release-keygen/-sign/-verify
   ai_engine.go    AI sessions: tool calls through the permission engine, approvals, kill switch, transcript, recording, the agent loop
   ai_policy.go    AI modes, mode rules (most restrictive wins), automatic-mode limits, the decision
@@ -2768,6 +2811,7 @@ remote-manager/
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
   releasesign_test.go  release signatures: round trip, tampering, wrong key or file, WRM context, key parsing, the command-line tools, self-update refusing unsigned or wrongly signed releases
+  v12622_test.go       security levels: rule comparison, preview, blockers and deviations, apply and sign-out, env lock, HTTPS for sign-in, level at start and first run, guest link lifetime
   fuzz_test.go         fuzz targets for the import parsers (mRemoteNG, SSH config, CSV/XLSX, PuTTY, WinSCP, configuration files, deploy-config YAML); seeds run with every go test
   update_test.go       self-update against a fake GitHub releases server: success and rollback, checksum mismatch, missing checksums file or line, missing asset, wrong -version, policy, Docker, local binary
   ai_policy_test.go    read-only classifier (many cases), destructive patterns (every rule, false positives), admin patterns, globs
