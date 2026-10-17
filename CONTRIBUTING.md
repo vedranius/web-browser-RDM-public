@@ -30,6 +30,8 @@ go build -o wrm-server .
 HTTPS_SELF_SIGNED=1 PORT=8080 ./wrm-server   # open https://localhost:8080
 ```
 
+Pull requests also run the [security checks](SECURITY.md#continuous-security-checks) (govulncheck, CodeQL, gosec against its baseline, staticcheck, gitleaks, workflow checks, dependency review). To run the main ones locally, see `.claude/skills/wrm-security-review/SKILL.md`. Do not add gosec findings to the baseline, or entries to `.gitleaks.toml`, without explaining why in the pull request; never commit real secrets, also not in tests.
+
 Use a separate `DB_PATH` for development so you do not touch your real database. Voice calls need
 HTTPS (or `localhost`) and two browser profiles or devices to test.
 

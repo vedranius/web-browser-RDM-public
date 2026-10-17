@@ -12,7 +12,7 @@ every phase of that plan to the code that it touches.
 | Libraries | `golang.org/x/crypto/ssh` (SSH client), `github.com/pkg/sftp`, `github.com/jlaffaye/ftp`, `github.com/gorilla/websocket`, `github.com/pion/turn/v4` (TURN relay for voice), `modernc.org/sqlite` (pure-Go SQLite, no CGO), `rsc.io/qr` |
 | Frontend | One page, `remote-manager/static/index.html`: plain JavaScript, no framework, no build step. `xterm.js` and fonts are vendored in `static/vendor/`. Everything under `static/` is embedded into the binary with `go:embed`. |
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
-| Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. `Dockerfile` + `docker-compose.yml` for container deployments. |
+| Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. Security checks (v12.6.12): `security.yml` (govulncheck, staticcheck, gosec against `.github/security/gosec-baseline.json`, gitleaks, actionlint/zizmor, dependency review), `codeql.yml`, `scorecard.yml`, `claude-security-review.yml`, Trivy in the Docker job, Dependabot; all actions pinned to commit SHAs with read-only tokens by default. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
 ## Docker for Medium (v12.6.6)
 

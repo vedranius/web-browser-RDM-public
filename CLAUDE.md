@@ -27,6 +27,8 @@ go test -race -count=1 -timeout 45m ./...   # full suite, about 20 minutes (shor
 node ../tools/check-ui.js       # UI: JS syntax + en/hr translation keys
 ```
 
+- **Security review:** run the `wrm-security-review` skill (`.claude/skills/wrm-security-review/`): `/security-review`, the WRM checklist and the scanners CI runs (govulncheck, staticcheck, gosec against its baseline, gitleaks, zizmor). Fix real findings; put the result in the PR description. CI's `Security checks`, `CodeQL` and Claude security review jobs must be green too.
+
 - Cross-build at least `GOOS=windows`, `GOOS=darwin GOARCH=arm64`, `GOOS=freebsd` and `GOARCH=arm` for code that touches OS-specific parts.
 - **Test UI changes in a real browser.** Playwright with a preinstalled Chromium is available in the cloud environment. Build the binary, start it with `PORT=… DB_PATH=<scratch dir>/wrm.db`, and drive it.
   - Check: no console errors, Croatian texts, phone width (390 px), and that the top bar does not overlap at 1100–1920 px.

@@ -1,6 +1,31 @@
-## Web Remote Manager PRO v12.6.10 — One canvas, arranged your way
+## Web Remote Manager PRO v12.6.12 — Security checked on every change
 
 ### Added
+
+- **Automatic security checks on every change** to WRM, before it reaches a release:
+  - known vulnerabilities in Go and in the libraries WRM uses, limited to code WRM actually calls (govulncheck);
+  - GitHub **CodeQL** code scanning of the server and the web UI;
+  - Go security patterns (gosec) and bug checks (staticcheck); every existing gosec finding was reviewed, and a new one stops the change until it is fixed or explained;
+  - secrets such as tokens and private keys in commits (gitleaks);
+  - the build workflows themselves (actionlint, zizmor), a review of new dependencies, a vulnerability scan of the Docker image (Trivy) and the OpenSSF Scorecard.
+- **Claude security review** of pull requests with WRM's own checklist (who could attack, what they could reach), and the same review in every development session before a push.
+- **Dependabot** proposes updates of Go libraries, GitHub Actions and the Docker base images every week.
+
+### Changed
+
+- WRM is built with **Go 1.27** (Go 1.23, used until now, no longer receives security fixes), and all libraries are updated, among them `golang.org/x/crypto`, `golang.org/x/sys`, the SQLite driver, SFTP and FTP.
+- The build workflows run with read-only tokens unless a job publishes release files, every action is pinned to an exact commit, and checkouts no longer keep credentials.
+- The Medium proxy uses Go's safer `Rewrite` hook, so a request can no longer drop the headers WRM adds by naming them in its `Connection` header.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database or setting change. Building from source needs Go 1.26 or newer. What comes next for security (signed releases, security levels for home, business and enterprise, roles and teams, sign-in with Microsoft Entra ID / Active Directory, LDAP and SCIM, SIEM export) is in the [roadmap](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.12/ROADMAP.md).
+
+[Download v12.6.12](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.12) · [Continuous security checks](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.12/SECURITY.md#continuous-security-checks)
+
+### Included from v12.6.10 — One canvas, arranged your way
+
+#### Added
 
 - **One canvas:** the Workboard is no longer a page over your windows. Everything in the window area shares one canvas: terminals, file managers, desktops, Workboard addons and panels you place on it. Put a server-load addon next to the terminal of that server, a clock in a corner, notes under a file manager, and it stays like that.
 - **Addons are windows:** move them, resize them, snap them to halves and quarters, minimize, maximize, switch with the tabs, or dock one as a panel at the left, right or bottom. They come back exactly where you left them, in every browser.
@@ -10,13 +35,13 @@
 - **New addons:** *Links* to your dashboards and wikis, *Saved sessions* to open one with a click, and a *Timer* (countdown with a notification, or stopwatch). Every addon can get a colour and a text size.
 - **Close from the reconnect banner:** when a terminal or desktop connection closes or fails, the banner has a red **✕ Close window** button next to **↻ Reconnect** (#70).
 
-### Changed
+#### Changed
 
 - **Top bar:** *Broadcast* is in the **🧰 Tools** menu with the network tools (the button turns orange while a broadcast is on); *Shares* is only its icon; **Settings, Panels and Workboard** sit together right of *Keys*.
 - **Lock the layout** now also keeps windows from being moved or resized.
 - Folder bookmarks in the file manager (#17) have been in WRM since v10.10: ★ next to the path bar, per connection, folder, tag or for all connections, with WinSCP import.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. Your v12.6.9 Workboard tiles appear as addon windows beside your terminals the first time; panels you pulled out stay where they are. The per-user interface store accepts up to 256 KiB.
 
