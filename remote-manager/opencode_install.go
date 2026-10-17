@@ -92,6 +92,9 @@ type opencodeInstallState struct {
 	SHA512      string `json:"sha512"`
 	InstalledAt string `json:"installed_at"`
 	InstalledBy string `json:"installed_by"`
+	// Sandbox: the Linux build for OpenCode's Docker sandbox, by package (when it differs
+	// from the host's own build)
+	Sandbox map[string]string `json:"sandbox,omitempty"`
 }
 
 var opencodeInst struct {
@@ -156,20 +159,81 @@ func opencodeStatus() map[string]interface{} {
 	if p, src, err := opencodeBinary(); err == nil {
 		out["binary"], out["source"] = p, src
 	}
+	if getSetting("ai_opencode_sandbox") != "off" {
+		sb := map[string]interface{}{"image": opencodeSandboxImage()}
+		if dos, arch, err := opencodeDockerServer(); err != nil {
+			sb["error"] = err.Error()
+		} else {
+			sb["docker"], sb["package"] = dos+"/"+arch, opencodeSandboxPackage(arch)
+			if bin, err := opencodeSandboxBinary(); err != nil {
+				sb["error"] = err.Error()
+			} else {
+				sb["binary"] = bin
+			}
+		}
+		out["sandbox"] = sb
+	}
 	return out
 }
 
-// opencodeInstall downloads, verifies and unpacks OpenCode (runs in the background).
+// opencodeInstall downloads, verifies and unpacks OpenCode (runs in the background), and
+// the Linux build for the Docker sandbox when the sandbox is allowed (ai_opencode_sandbox).
 func opencodeInstall(by string) error {
 	pkg := opencodePackage()
-	if pkg == "" {
+	if pkg == "" && strings.TrimSpace(getSetting("ai_opencode_path")) == "" {
 		return fmt.Errorf("OpenCode has no build for %s/%s; set ai_opencode_path to an OpenCode binary instead", runtime.GOOS, runtime.GOARCH)
 	}
 	version := nonEmpty(strings.TrimSpace(getSetting("ai_opencode_version")), opencodeDefaultVersion)
-	registry := strings.TrimRight(nonEmpty(getSetting("ai_opencode_registry"), "https://registry.npmjs.org"), "/")
-	opencodeLogf("Installing OpenCode %s (%s) from %s", version, pkg, registry)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
+	st, _ := opencodeLoadState()
+	if pkg != "" {
+		opencodeLogf("Installing OpenCode %s (%s)", version, pkg)
+		dir := filepath.Join(opencodeRoot(), "bin", version)
+		bin := filepath.Join(dir, opencodeBinName())
+		got, err := opencodeFetch(ctx, pkg, version, bin)
+		if err != nil {
+			return err
+		}
+		vctx, vcancel := context.WithTimeout(ctx, 60*time.Second)
+		defer vcancel()
+		cmd := exec.CommandContext(vctx, bin, "--version")
+		cmd.Env = opencodeBaseEnv(filepath.Join(opencodeRoot(), "check"))
+		os.MkdirAll(filepath.Join(opencodeRoot(), "check"), 0o700)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("the installed binary does not start: %v %s", err, truncateStr(string(out), 300))
+		}
+		opencodeLogf("opencode --version: %s", strings.TrimSpace(truncateStr(string(out), 100)))
+		if st.Version != version {
+			st.Sandbox = nil
+		}
+		st.Version, st.Path, st.Package, st.SHA512, st.InstalledAt, st.InstalledBy = version, bin, pkg, got, nowRFC(), by
+		if err := opencodeSaveState(st); err != nil {
+			return err
+		}
+		opencodeLogf("OpenCode %s is ready at %s", version, bin)
+	}
+	if getSetting("ai_opencode_sandbox") != "off" {
+		if err := opencodeInstallSandbox(ctx, version); err != nil {
+			opencodeLogf("Docker sandbox: %v", err)
+			if pkg == "" {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func opencodeSaveState(st opencodeInstallState) error {
+	b, _ := json.MarshalIndent(st, "", "  ")
+	return os.WriteFile(filepath.Join(opencodeRoot(), "installed.json"), b, 0o600)
+}
+
+// opencodeFetch downloads one OpenCode package of the registry, checks it against the
+// registry's sha512 integrity and writes its binary to dst. It returns the checksum.
+func opencodeFetch(ctx context.Context, pkg, version, dst string) (string, error) {
+	registry := strings.TrimRight(nonEmpty(getSetting("ai_opencode_registry"), "https://registry.npmjs.org"), "/")
 	get := func(u string) (*http.Response, error) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 		if err != nil {
@@ -188,7 +252,7 @@ func opencodeInstall(by string) error {
 	}
 	resp, err := get(registry + "/" + pkg + "/" + version)
 	if err != nil {
-		return fmt.Errorf("cannot read the package metadata: %v (check the network, a proxy, or set ai_opencode_registry to a mirror)", err)
+		return "", fmt.Errorf("cannot read the package metadata: %v (check the network, a proxy, or set ai_opencode_registry to a mirror)", err)
 	}
 	var meta struct {
 		Version string `json:"version"`
@@ -201,63 +265,49 @@ func opencodeInstall(by string) error {
 	err = json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&meta)
 	resp.Body.Close()
 	if err != nil || meta.Dist.Tarball == "" {
-		return fmt.Errorf("the registry returned unexpected package metadata")
+		return "", fmt.Errorf("the registry returned unexpected package metadata")
 	}
 	want, ok := strings.CutPrefix(meta.Dist.Integrity, "sha512-")
 	if !ok {
-		return fmt.Errorf("the registry gave no sha512 integrity for the package")
+		return "", fmt.Errorf("the registry gave no sha512 integrity for the package")
 	}
 	lic := ""
 	if meta.License != "" {
 		lic = ", licence " + meta.License
 	}
-	opencodeLogf("Package %s %s%s; downloading %s", pkg, meta.Version, lic, meta.Dist.Tarball)
+	opencodeLogf("Package %s %s%s from %s; downloading %s", pkg, meta.Version, lic, registry, meta.Dist.Tarball)
 	resp, err = get(meta.Dist.Tarball)
 	if err != nil {
-		return fmt.Errorf("download failed: %v", err)
+		return "", fmt.Errorf("download failed: %v", err)
 	}
 	defer resp.Body.Close()
-	dir := filepath.Join(opencodeRoot(), "bin", meta.Version)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return "", err
 	}
 	tmp, err := os.CreateTemp(opencodeRoot(), "download-*.tgz")
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer os.Remove(tmp.Name())
 	h := sha512.New()
 	n, err := io.Copy(io.MultiWriter(tmp, h), io.LimitReader(resp.Body, 600<<20))
 	tmp.Close()
 	if err != nil {
-		return fmt.Errorf("download failed: %v", err)
+		return "", fmt.Errorf("download failed: %v", err)
 	}
 	got := base64.StdEncoding.EncodeToString(h.Sum(nil))
 	if got != want {
-		return fmt.Errorf("the download does not match the registry's sha512 integrity; nothing was installed")
+		return "", fmt.Errorf("the download does not match the registry's sha512 integrity; nothing was installed")
 	}
 	opencodeLogf("Downloaded %d MB, sha512 verified", n>>20)
-	bin := filepath.Join(dir, opencodeBinName())
-	if err := opencodeExtract(tmp.Name(), "package/bin/"+opencodeBinName(), bin); err != nil {
-		return err
+	name := "package/bin/opencode"
+	if strings.Contains(pkg, "-windows-") {
+		name += ".exe"
 	}
-	vctx, vcancel := context.WithTimeout(ctx, 60*time.Second)
-	defer vcancel()
-	cmd := exec.CommandContext(vctx, bin, "--version")
-	cmd.Env = opencodeBaseEnv(filepath.Join(opencodeRoot(), "check"))
-	os.MkdirAll(filepath.Join(opencodeRoot(), "check"), 0o700)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("the installed binary does not start: %v %s", err, truncateStr(string(out), 300))
+	if err := opencodeExtract(tmp.Name(), name, dst); err != nil {
+		return "", err
 	}
-	opencodeLogf("opencode --version: %s", strings.TrimSpace(truncateStr(string(out), 100)))
-	st := opencodeInstallState{Version: meta.Version, Path: bin, Package: pkg, SHA512: got, InstalledAt: nowRFC(), InstalledBy: by}
-	b, _ := json.MarshalIndent(st, "", "  ")
-	if err := os.WriteFile(filepath.Join(opencodeRoot(), "installed.json"), b, 0o600); err != nil {
-		return err
-	}
-	opencodeLogf("OpenCode %s is ready at %s", meta.Version, bin)
-	return nil
+	return got, nil
 }
 
 // opencodeExtract writes one file of a .tgz to dst (atomically, executable).

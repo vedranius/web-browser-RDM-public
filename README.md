@@ -13,9 +13,9 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.12** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.20** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
-## What's new in v12.6.12
+## What's new in v12.6.20
 
 **Security checked on every change.** WRM is now built with a supported Go release (1.27) and up-to-date libraries, and every push and pull request runs automatic security checks: known vulnerabilities in Go and the libraries WRM uses (govulncheck), GitHub CodeQL for the server and the web UI, gosec and staticcheck, secret scanning (gitleaks), checks of the build workflows themselves, a dependency review, a vulnerability scan of the Docker image and the OpenSSF Scorecard. Dependabot proposes library updates every week, and Claude can review pull requests for security problems. The Medium proxy uses Go's safer `Rewrite` hook. No change for users; see [Continuous security checks](SECURITY.md#continuous-security-checks) and the [security roadmap](ROADMAP.md) (signed releases, security levels for home, business and enterprise, roles and teams, sign-in with Microsoft Entra ID / AD, LDAP and SCIM, SIEM export).
 
@@ -120,7 +120,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -222,14 +222,14 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.12-linux-amd64
-   ./wrm-pro-v12.6.12-linux-amd64
+   chmod +x wrm-pro-v12.6.20-linux-amd64
+   ./wrm-pro-v12.6.20-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.12-windows-amd64.exe
+   .\wrm-pro-v12.6.20-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
@@ -271,9 +271,13 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
-## Upgrading from v12.6.11
+## Upgrading from v12.6.19
 
 Replace the executable/AppImage/container and keep the database and encryption key. No database or setting change. Building from source now needs **Go 1.26 or newer** (`go.mod` asks for the Go 1.27.2 toolchain, which `go` downloads by itself when `GOTOOLCHAIN` allows it).
+
+## Upgrading from v12.6.11
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. Nothing changes until an administrator sets `ai_opencode_sandbox` (`admins` or `all`) and presses **Download and install** again in *Admin panel → AI assistant → OpenCode agents*, which prepares the Docker sandbox. New settings `ai_opencode_sandbox` and `ai_opencode_sandbox_image`; `POST /api/ai/sessions` takes `sandbox: true`.
 
 ## Upgrading from v12.6.10
 
@@ -1513,6 +1517,11 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 - **Installed by WRM, once.** *Admin panel → AI assistant → OpenCode agents* shows the state. **Download and install** asks for confirmation, then downloads the official package for the WRM host from the npm registry (`ai_opencode_registry`, an HTTPS mirror also works), checks its **sha512** against the registry, unpacks only the `opencode` binary into `<DB>.opencode/bin/<version>/` and runs `--version`. The log is shown live; who installed which version is recorded and audited (`opencode.install_started`, `opencode.installed`). Or point `ai_opencode_path` at an OpenCode binary you installed yourself.
 - **How it runs:** one `opencode serve` process per session on `127.0.0.1`, in its own folder under `<DB>.opencode/run/`, with a configuration WRM writes: one provider (OpenCode Zen, Anthropic, OpenAI or OpenAI-compatible providers of WRM; the key is passed in the process environment, never written to disk), **all of OpenCode's own tools switched off** (shell, file read and edit, web fetch and search, LSP, questions) and **WRM as its only tool server** (MCP over a loopback-only listener). The process gets a minimal environment without WRM's variables.
 - **It works through WRM.** The agent uses WRM's server tools in a WRM session opened for it, so every command and file edit goes through WRM's permission engine and appears in the chat with the same **approval cards**; nothing changes on a server without your approval unless full access is on. OpenCode's own steps are shown too. If OpenCode asks for a permission or a question, WRM refuses it and audits `ai.opencode_refused`.
+- **Option: OpenCode's own tools in a Docker sandbox** (`ai_opencode_sandbox` = `admins` or `all`; `off` by default). The setup then offers **🐳 OpenCode's own tools, in a Docker sandbox**. The agent runs in a container on the WRM host and may use its shell, file and web tools there, for scratch work such as scripts, parsing output it got through WRM, or downloads; servers are still reached only through WRM's tools.
+  - **Every use asks:** OpenCode's `bash`, file changes and `webfetch` are set to *ask*, and each request is a WRM approval card with the exact command, the diff (secrets redacted) or the URL. It cannot be edited: approve it once or refuse it, with an optional note. No mode, full access included, approves it automatically. Reading files inside the sandbox folder needs no approval; any other permission is refused.
+  - **The container:** image `ai_opencode_sandbox_image` (default `debian:stable-slim`; any image with a shell), WRM's own user ID, no capabilities, `no-new-privileges`, read-only root file system, `/tmp` as tmpfs, 2 GB memory, 2 CPUs, 512 processes. Only the session's folder is mounted (`/work`, working folder `/work/work`) plus the OpenCode binary read-only; OpenCode's port is published on `127.0.0.1` only. Containers are labelled per WRM installation and removed when the session ends, when WRM stops and after a crash on the next start.
+  - **Setup:** Docker on the WRM host (Linux engine or Docker Desktop with Linux containers; Medium's step 2 can install it) and WRM not running in a container itself. *Download and install* then also fetches the Linux build of OpenCode for the Docker server (sha512-checked), pulls the image and runs OpenCode once in it; the admin page shows *Docker sandbox ready* or what is missing.
+  - **Network:** the container has normal outbound network access (web fetches still ask). It reaches WRM's MCP listener through `host.docker.internal` (on Linux WRM listens on the Docker bridge gateway for this, token-protected); an AI provider on the WRM host's loopback address is forwarded to that one container. Tested with Docker Engine on Linux; Docker Desktop on Windows and macOS uses its own `host.docker.internal`.
 - **Lifetime:** the session's AI connection (kind `opencode`) works only from `127.0.0.1` and only while the agent runs; ending the session, a kill, the kill switch, an idle timeout or stopping WRM stops the process and removes its folder. At most `ai_opencode_max_sessions` agents run at once; `ai_opencode` decides who may use them (`off`, `admins`, `all`).
 
 **OpenCode on your own computer** can also use WRM as an MCP server: *Settings → AI connections → Connect an AI app → OpenCode* gives the `opencode.json` snippet (token in `WRM_MCP_TOKEN`) or the OAuth login (`opencode mcp auth wrm`).
@@ -1985,6 +1994,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_opencode_registry` | `https://registry.npmjs.org` | npm registry (HTTPS) WRM downloads OpenCode from |
 | `ai_opencode_path` | – | absolute path of your own OpenCode binary instead of the one WRM installs |
 | `ai_opencode_max_sessions` | `4` | OpenCode agents running at the same time (1–50) |
+| `ai_opencode_sandbox` | `off` | OpenCode's own tools in a Docker sandbox on the WRM host, every use approved: `off`, `admins`, `all` |
+| `ai_opencode_sandbox_image` | `debian:stable-slim` | Docker image of the sandbox (any image with a shell) |
 | `ai_full_access` | `0` | Full access for the AI: everything WRM would refuse is asked instead (each time, never automatically); read-only stays read-only |
 | `ai_full_access_mode` | `all` | Where full access applies: `all` (every AI session), `connection` (AI connections with the `full_access` scope), `user` (users who turn it on themselves) |
 | `ai_full_access_blocked` | `ask` | Under full access, commands on `ai_blocked_commands` ask for approval (`ask`) or stay refused (`deny`); the built-in destructive list always asks |
@@ -2541,7 +2552,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/api/ai/connections/{id}` | `{allowed_modes, default_mode, rules, has_notes, sees}` for a connection (most restrictive rule wins) |
 | GET / POST / PUT / DELETE | `/api/ai/providers[/{id}]` | Personal providers (policy `ai_personal_keys`); secrets are write-only (`api_key`, `access_key_id`, `secret_access_key`, `session_token`, `service_account`; omitted = unchanged, `""` = removed), responses carry `has_api_key` / `has_access_key` / `has_service_account` |
 | POST | `/api/ai/providers/{id}/test` | One tiny request `{model}` → `{ok, reply \| error}` |
-| GET / POST | `/api/ai/sessions` | Own sessions / start `{conn_id, provider_id, model, mode, auto: {allow, deny, path_allow, path_deny, minutes, max_actions}, confirm_auto, share_notes, engine?: "opencode", agent?: "build"\|"plan"}` |
+| GET / POST | `/api/ai/sessions` | Own sessions / start `{conn_id, provider_id, model, mode, auto: {allow, deny, path_allow, path_deny, minutes, max_actions}, confirm_auto, share_notes, engine?: "opencode", sandbox?: true, agent?: "build"\|"plan"}` |
 | GET | `/api/ai/sessions/{id}` | Session and its (redacted) transcript |
 | GET | `/api/ai/sessions/{id}/events?since=N` | Server-sent events: `session`, `user`, `assistant_start`, `text`, `assistant_done`, `tool_call`, `approval_required`, `approval_resolved`, `tool_result`, `mode`, `usage`, `busy`, `notice`, `error`, `ended` |
 | POST | `/api/ai/sessions/{id}/prompt` | `{text}` |
@@ -2751,6 +2762,7 @@ remote-manager/
   v1266_test.go        Docker for Medium: backend choice, Linux packages after consent with steps and output, no rights shows -setup-docker, policy off, Windows and macOS Docker Desktop with download, signature and licence, permission denied, wrm -setup-docker
   ai_opencode_test.go  OpenCode Zen: catalog parsing, free and deprecated models, keyless use only of free models, API family routing, fallback without the catalog; delegation off, automatic choice, training opt-in, redaction, audit
   opencode_agent_test.go  OpenCode configuration (own tools off, WRM as MCP server), install with sha512 check against a fake registry, loopback-only tokens; with WRM_TEST_OPENCODE set, the real OpenCode binary end to end (WRM tools, approval in the chat, cleanup)
+  opencode_sandbox_test.go  OpenCode sandbox: configuration (own tools on, shell/edit/web fetch ask, local provider rewritten), locked-down docker arguments without secrets, settings, a permission request becoming a WRM approval that cannot be edited (approve, deny with a note, other permissions refused); with WRM_TEST_OPENCODE and WRM_TEST_OPENCODE_SANDBOX=<image>, a real container end to end
   v12610_test.go       the canvas is wired (addon windows, floating panels on the canvas, Tools menu, top bar group and order, sessions keep addons); /api/me/ui takes 256 KiB
   v1269_test.go        in-app notifications (recorded without channels, per user, reminders once a day, mark read, clear, newest 200 kept, removed with the user); metrics parser; /api/workboard/metrics (own connections only, SSH error in the result, policy off, fresh and stale Monitoring sample); the page loads static/workboard.js
   v1268_test.go        /api/me/ui: per-user layout store (put, overwrite, reset, objects only, 64 KiB limit, unknown keys, signed out, removed with the user); the page loads static/layout.js and has every panel

@@ -283,6 +283,25 @@ Object.assign(LANGS.hr, {
  p_ai_opencode_max_sessions: 'Agenata istovremeno', p_ai_opencode_max_sessions_d: 'Najviše OpenCode agenata koji istovremeno rade na ovom WRM hostu (svaki je zaseban proces).',
 });
 
+Object.assign(LANGS.en, {
+ ai_oc_sandbox: 'Also OpenCode\'s own tools, in a Docker sandbox',
+ ai_oc_sandbox_d: 'OpenCode can then also use its own shell, files and web fetch, but only in an isolated Docker container on the WRM host ({image}; only this session\'s folder, no root, limited memory and CPU). Every command, file change and web fetch there waits for your approval and cannot be edited, only approved or refused. The server is still reached only through WRM.',
+ ai_oc_sandbox_off: 'Docker sandbox unavailable', ai_oc_sb_on: 'Docker sandbox', ai_oc_noedit: 'OpenCode runs it exactly as shown: approve or refuse.',
+ ai_oc_sb_h: 'Docker sandbox', ai_oc_sb_ok: 'Docker {docker} · image {image} · OpenCode for the sandbox: ready', ai_oc_sb_err: 'Docker sandbox not ready: {e}',
+ p_ai_opencode_sandbox: 'OpenCode\'s own tools in a Docker sandbox', p_ai_opencode_sandbox_d: 'Who may start an OpenCode agent that also uses its own shell, files and web fetch inside a Docker container on the WRM host. Each use asks the user. Needs Docker; Install then also prepares the sandbox.',
+ po_ai_opencode_sandbox_off: 'Nobody', po_ai_opencode_sandbox_admins: 'Administrators', po_ai_opencode_sandbox_all: 'Everyone allowed to use OpenCode agents',
+ p_ai_opencode_sandbox_image: 'Sandbox image', p_ai_opencode_sandbox_image_d: 'The Docker image the sandbox runs (glibc Linux). A minimal one is safest; add tools the agent may use.', p_ai_opencode_sandbox_image_ph: 'debian:stable-slim',
+});
+Object.assign(LANGS.hr, {
+ ai_oc_sandbox: 'I vlastiti alati OpenCodea, u Docker sandboxu',
+ ai_oc_sandbox_d: 'OpenCode tada može koristiti i svoju ljusku, datoteke i dohvat weba, ali samo u izoliranom Docker kontejneru na WRM hostu ({image}; samo mapa ove sesije, bez roota, ograničena memorija i CPU). Svaka naredba, promjena datoteke i dohvat weba ondje čeka tvoje odobrenje i ne može se uređivati, samo odobriti ili odbiti. Do servera i dalje dolazi samo preko WRM-a.',
+ ai_oc_sandbox_off: 'Docker sandbox nije dostupan', ai_oc_sb_on: 'Docker sandbox', ai_oc_noedit: 'OpenCode pokreće točno ovo što vidiš: odobri ili odbij.',
+ ai_oc_sb_h: 'Docker sandbox', ai_oc_sb_ok: 'Docker {docker} · slika {image} · OpenCode za sandbox: spreman', ai_oc_sb_err: 'Docker sandbox nije spreman: {e}',
+ p_ai_opencode_sandbox: 'Vlastiti alati OpenCodea u Docker sandboxu', p_ai_opencode_sandbox_d: 'Tko smije pokrenuti OpenCode agenta koji koristi i svoju ljusku, datoteke i dohvat weba unutar Docker kontejnera na WRM hostu. Svaka upotreba pita korisnika. Treba Docker; Instaliraj tada pripremi i sandbox.',
+ po_ai_opencode_sandbox_off: 'Nitko', po_ai_opencode_sandbox_admins: 'Administratori', po_ai_opencode_sandbox_all: 'Svi kojima su OpenCode agenti dopušteni',
+ p_ai_opencode_sandbox_image: 'Slika sandboxa', p_ai_opencode_sandbox_image_d: 'Docker slika koju sandbox pokreće (glibc Linux). Minimalna je najsigurnija; dodaj alate koje agent smije koristiti.', p_ai_opencode_sandbox_image_ph: 'debian:stable-slim',
+});
+
 (function () {
   const $ = id => document.getElementById(id);
   const S = {}; // per window: {sid, es, seq, view, cfg, pol, busy}
@@ -594,6 +613,8 @@ Object.assign(LANGS.hr, {
         <option value="wrm">✦ ${esc(t('ai_engine_wrm'))}</option>
         <option value="opencode" ${oc.available ? '' : 'disabled'} title="${esc(oc.reason || '')}">⬛ ${esc(t('ai_engine_oc'))}${oc.available ? '' : ' (' + esc(t('ai_oc_unavail')) + ')'}</option></select></div>
       <div id="ai-agent-w-${id}" style="display:none;"><label>${esc(t('ai_oc_agent'))}</label><select id="ai-agent-${id}">${(oc.agents || ['build']).map(a => `<option value="${esc(a)}">${esc(t('ai_oc_agent_' + a))}</option>`).join('')}</select></div></div>
+      ${oc.sandbox && oc.sandbox.offered ? `<div id="ai-sb-w-${id}" style="display:none;"><label class="ai-check" title="${esc(oc.sandbox.reason || '')}"><input type="checkbox" id="ai-sb-${id}" ${oc.sandbox.available ? '' : 'disabled'}> 🐳 ${esc(t('ai_oc_sandbox'))}${oc.sandbox.available ? '' : ' (' + esc(t('ai_oc_sandbox_off')) + ': ' + esc(oc.sandbox.reason || '') + ')'}</label>
+        <div class="ai-see">${esc(tf('ai_oc_sandbox_d', {image: oc.sandbox.image || ''}))}</div></div>` : ''}
       <div class="ai-see" id="ai-eng-d-${id}"></div>`;
   }
   function engine(id) {
@@ -601,6 +622,7 @@ Object.assign(LANGS.hr, {
     if (!sel || !oc) return;
     const on = sel.value === 'opencode', kinds = oc.kinds || [];
     $('ai-agent-w-' + id).style.display = on ? '' : 'none';
+    if ($('ai-sb-w-' + id)) $('ai-sb-w-' + id).style.display = on ? '' : 'none';
     const d = $('ai-eng-d-' + id);
     d.textContent = on ? t('ai_engine_oc_d') : t('ai_engine_wrm_d') + (oc.available ? '' : ' · ' + t('ai_oc_unavail') + ': ' + (oc.reason || ''));
     const ps = $('ai-prov-' + id);
@@ -669,7 +691,7 @@ Object.assign(LANGS.hr, {
     const body = {conn_id: wo.connId, provider_id: Number($('ai-prov-' + id).value), model: $('ai-model-' + id).value, mode,
       share_notes: !!($('ai-notes-' + id) && $('ai-notes-' + id).checked)};
     const eng = $('ai-eng-' + id);
-    if (eng && eng.value === 'opencode') { body.engine = 'opencode'; body.agent = $('ai-agent-' + id).value; showToast(t('ai_oc_starting'), 'info', 3000); }
+    if (eng && eng.value === 'opencode') { body.engine = 'opencode'; body.agent = $('ai-agent-' + id).value; body.sandbox = !!($('ai-sb-' + id) && $('ai-sb-' + id).checked); showToast(t('ai_oc_starting'), 'info', 3000); }
     if (mode === 'auto') {
       const a = readAuto('ai-a-' + id);
       if (!a.ok) { showToast(t('ai_auto_need_confirm'), 'warning', 4000); return; }
@@ -716,7 +738,7 @@ Object.assign(LANGS.hr, {
     const auto = v.auto ? ` · ${esc(tf('ai_auto_until', {time: new Date(v.auto.until).toLocaleTimeString(), used: v.auto.used, max: v.auto.max_actions}))}` : '';
     const oc = v.transport === 'opencode';
     el.innerHTML = `<select onchange="wrmAI.setMode(${id}, this.value)" ${st.ended || oc ? 'disabled' : ''} ${oc ? `title="${esc(t('ai_oc_mode_fixed'))}"` : ''}>${MODES.filter(m => allowed.includes(m) || m === v.mode).map(m => `<option value="${m}" ${m === v.mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
-      <span>${oc ? `⬛ OpenCode · ${esc(v.agent || 'build')} · ` : ''}${esc(v.provider)} · ${esc(v.model)}${auto}</span><span style="margin-left:auto;" id="ai-use-${id}"></span>`;
+      <span>${oc ? `⬛ OpenCode · ${esc(v.agent || 'build')}${v.sandbox ? ' · 🐳 ' + esc(t('ai_oc_sb_on')) : ''} · ` : ''}${esc(v.provider)} · ${esc(v.model)}${auto}</span><span style="margin-left:auto;" id="ai-use-${id}"></span>`;
     usage(id);
     const pm = $('aipm-' + id);
     pm.style.display = ''; pm.textContent = t('ai_mode_' + v.mode);
@@ -834,7 +856,8 @@ Object.assign(LANGS.hr, {
     const box = card.querySelector('.ai-appr');
     const isWrite = !!a.path;
     box.innerHTML = `<div class="ai-why"><b>⏳ ${esc(t('ai_wait_approval'))}</b> · <span data-exp="${new Date(a.expires).getTime()}"></span></div>
-      ${isWrite ? diffHTML(a.diff) + `<details><summary>✏️ ${esc(t('ai_edit'))}</summary><textarea id="ai-ed-${id}-${esc(a.id)}">${esc(a.content)}</textarea></details>`
+      ${a.no_edit ? (isWrite ? diffHTML(a.diff) : `<pre class="ai-cmd">${esc(a.command)}</pre>`) + `<div class="ai-why">🐳 ${esc(t('ai_oc_noedit'))}</div>`
+        : isWrite ? diffHTML(a.diff) + `<details><summary>✏️ ${esc(t('ai_edit'))}</summary><textarea id="ai-ed-${id}-${esc(a.id)}">${esc(a.content)}</textarea></details>`
         : `<textarea id="ai-ed-${id}-${esc(a.id)}" spellcheck="false">${esc(a.command)}</textarea>`}
       <div class="ai-acts"><input type="text" id="ai-nt-${id}-${esc(a.id)}" placeholder="${esc(t('ai_note_ph'))}">
         <button class="btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', true, ${isWrite})">✓ ${esc(t('ai_approve'))}</button>
@@ -1317,7 +1340,7 @@ Object.assign(LANGS.hr, {
       <div class="adm-h">⛔ ${esc(t('ai_destructive'))}</div><ul class="ai-see">${sum.destructive_rules.map(r => `<li><span class="mono">${esc(r.id)}</span> — ${esc(r.what)}</li>`).join('')}</ul>`;
   }
   // OpenCode on the WRM host: state, one-click install (with consent), its log
-  const OC_KEYS = ['ai_opencode', 'ai_opencode_version', 'ai_opencode_registry', 'ai_opencode_path', 'ai_opencode_max_sessions'];
+  const OC_KEYS = ['ai_opencode', 'ai_opencode_version', 'ai_opencode_registry', 'ai_opencode_path', 'ai_opencode_max_sessions', 'ai_opencode_sandbox', 'ai_opencode_sandbox_image'];
   let ocState = null, ocTimer = null;
   function ocBoxHTML(s) {
     ocState = s || {};
@@ -1330,6 +1353,7 @@ Object.assign(LANGS.hr, {
     const log = (s.log || []).length ? `<details ${busy || s.error ? 'open' : ''}><summary class="ai-see">${esc(t('ai_oc_log'))}</summary><pre class="mono" style="max-height:220px;overflow:auto;white-space:pre-wrap;font-size:11px;">${esc(s.log.join('\n'))}</pre></details>` : '';
     return `<div class="hint-box ${ok ? '' : 'warn'}" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><span style="flex:1;min-width:200px;">${ok ? '✅' : '⚪'} ${esc(state)}${ok ? ' · ' + esc(tf('ai_oc_sessions', {n: s.sessions || 0, max: s.max_sessions || 0})) : ''}</span>
       ${btn}<button class="btn-sec btn-sm" onclick="wrmAI.ocRefresh()">↻ ${esc(t('ai_oc_refresh'))}</button></div>
+      ${s.sandbox ? `<div class="hint-box ${s.sandbox.error ? 'warn' : ''}">🐳 ${esc(s.sandbox.error ? tf('ai_oc_sb_err', {e: s.sandbox.error}) : tf('ai_oc_sb_ok', {docker: s.sandbox.docker || '', image: s.sandbox.image || ''}))}</div>` : ''}
       ${s.error ? `<div class="hint-box warn">⚠ ${esc(t('ai_oc_failed'))}: ${esc(s.error)}</div>` : ''}${log}`;
   }
   async function ocRefresh() {
