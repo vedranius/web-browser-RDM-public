@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.6.20"
+var AppVersion = "v12.6.21"
 
 const sessionCookieName = "wrm_session"
 
@@ -423,7 +423,20 @@ func main() {
 	relayKeyFile := flag.String("relay-key-file", "", "read the short-lived WRM relay job key from FILE")
 	relayLive := flag.Bool("relay-live", true, "keep the GitLab client relay online for uncached read-only API operations until the job expires")
 	gitlabTokenFile := flag.String("gitlab-token-file", "", "read the client GitLab access token from FILE (or WRM_GITLAB_TOKEN)")
+	releaseKeygen := flag.String("release-keygen", "", "create a release signing key pair: write the private key to `FILE`, print the public key, and exit")
+	releaseSign := flag.String("release-sign", "", "sign `FILE` (SHA256SUMS.txt) with the release key from "+releaseSigningKeyEnv+" or -release-key-file, write FILE.sig and exit")
+	releaseKeyFile := flag.String("release-key-file", "", "with -release-sign: read the private release key from `FILE`")
+	releaseVerify := flag.String("release-verify", "", "check the signature FILE.sig of `FILE` (a downloaded SHA256SUMS.txt) and the SHA-256 of the listed files next to it, and exit")
+	releasePublicKey := flag.String("release-public-key", "", "with -release-verify: also trust this public `KEY` (wrm-ed25519:…)")
 	flag.Parse()
+	switch {
+	case *releaseKeygen != "":
+		os.Exit(runReleaseKeygen(*releaseKeygen, os.Stdout))
+	case *releaseSign != "":
+		os.Exit(runReleaseSign(*releaseSign, *releaseKeyFile, os.Stdout))
+	case *releaseVerify != "":
+		os.Exit(runReleaseVerify(*releaseVerify, *releasePublicKey, os.Stdout))
+	}
 	if *gitlabRelay {
 		os.Exit(runGitLabRelayClient(*mcpURL, *gitlabURL, *relayKeyFile, *gitlabTokenFile, *mcpCA, os.Stdout, *relayLive))
 	}

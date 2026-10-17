@@ -82,7 +82,9 @@ func parsePuttyReg(text string) ([]*puttySession, error) {
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			cur = nil
 			key := line[1 : len(line)-1]
-			i := strings.Index(strings.ToLower(key), puttySessionsKey)
+			// ASCII-only lowering keeps the byte offsets of key (strings.ToLower replaces invalid
+			// UTF-8 with a longer rune, and the index would then not fit key)
+			i := strings.Index(asciiLower(key), puttySessionsKey)
 			if strings.HasPrefix(key, "-") || i < 0 {
 				continue
 			}
@@ -338,4 +340,15 @@ func puttyProxy(userID int, session string) int {
 		return 0
 	}
 	return *pid
+}
+
+// asciiLower lowers A-Z only, so the result has the same length as s.
+func asciiLower(s string) string {
+	b := []byte(s)
+	for i, c := range b {
+		if 'A' <= c && c <= 'Z' {
+			b[i] = c + ('a' - 'A')
+		}
+	}
+	return string(b)
 }

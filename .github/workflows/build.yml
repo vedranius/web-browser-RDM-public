@@ -18,7 +18,7 @@ permissions:
 
 env:
   # Version for branch builds. Tag builds use the tag name (e.g. v10.10.0) as version and in file names.
-  APP_VERSION: v12.6.20
+  APP_VERSION: v12.6.21
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -285,6 +285,8 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      id-token: write      # build provenance: a short-lived Sigstore certificate for this workflow
+      attestations: write
     needs: [build, appimage, docker]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
@@ -325,6 +327,51 @@ jobs:
           sha256sum wrm-pro-* | sort > SHA256SUMS.txt
           cat SHA256SUMS.txt
           gh release upload "${GITHUB_REF_NAME}" SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
+
+      # ed25519 signature of SHA256SUMS.txt with the release key (repository secret
+      # RELEASE_SIGNING_KEY, made with `wrm -release-keygen`). WRM's self-update refuses an
+      # unsigned release once its public key is built in, so a build with a built-in key and no
+      # secret fails here instead of publishing a release nobody can update to.
+      - name: Sign SHA256SUMS.txt
+        env:
+          WRM_RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          cd dist
+          WRM="./wrm-pro-${GITHUB_REF_NAME}-linux-amd64"
+          chmod +x "$WRM"
+          builtin=1
+          if "$WRM" -release-verify /dev/null 2>&1 | grep -q 'has no release key'; then builtin=0; fi
+          if [ -z "$WRM_RELEASE_SIGNING_KEY" ]; then
+            if [ "$builtin" = 1 ]; then
+              echo "::error::RELEASE_SIGNING_KEY is not set, but this WRM has a built-in release key: its self-update would refuse this release."
+              exit 1
+            fi
+            echo "::warning::Release not signed: the repository secret RELEASE_SIGNING_KEY is not set (see SECURITY.md, Signed releases)."
+            exit 0
+          fi
+          "$WRM" -release-sign SHA256SUMS.txt
+          if [ "$builtin" = 1 ]; then
+            "$WRM" -release-verify SHA256SUMS.txt
+          fi
+          gh release upload "${GITHUB_REF_NAME}" SHA256SUMS.txt.sig --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: SBOM (CycloneDX)
+        run: |
+          set -euo pipefail
+          cd remote-manager
+          go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.12.0 app -json -licenses=false \
+            -output "../dist/sbom-${GITHUB_REF_NAME}.cdx.json" .
+          gh release upload "${GITHUB_REF_NAME}" "../dist/sbom-${GITHUB_REF_NAME}.cdx.json" --repo "$GITHUB_REPOSITORY" --clobber
+
+      # GitHub build provenance (SLSA, signed with Sigstore): `gh attestation verify <file>
+      # --repo vedranius/web-browser-RDM-public` shows which workflow and commit built a file.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/wrm-pro-*
+            dist/SHA256SUMS.txt
+            dist/sbom-*.cdx.json
 
       - name: Verify complete asset set and publish
         run: |
