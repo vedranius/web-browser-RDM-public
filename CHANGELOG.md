@@ -1,3 +1,8 @@
+## [Unreleased]
+
+### Added
+- The project's release public key is built in (`builtinReleaseKeys`): from the next release on, self-update refuses a release whose `SHA256SUMS.txt.sig` is missing or does not verify, and the release workflow signs with the `RELEASE_SIGNING_KEY` secret. A test checks that every built-in key parses.
+
 ## [12.6.23] - 2026-10-17
 
 ### Added
