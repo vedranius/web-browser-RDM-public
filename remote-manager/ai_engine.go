@@ -143,6 +143,7 @@ type aiSession struct {
 	termID        int64
 	rec           *recorder
 	pendingText   strings.Builder
+	oc            *ocProc // transport opencode: the OpenCode process (opencode_agent.go)
 }
 
 // aiApprovalTimeout is a variable so tests can shorten it.
@@ -200,6 +201,8 @@ type aiStartParams struct {
 	ClientName  string
 	TokenID     int64
 	Scopes      []string
+	// OpenCode (transport "opencode", opencode_agent.go): the agent to run
+	Agent string
 }
 
 // aiStart opens a session after every policy check.
@@ -249,6 +252,14 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		}
 		if !aiModelAllowed(model) {
 			return nil, fmt.Errorf("the policy does not allow the model %q", model)
+		}
+		if p.Transport == "opencode" {
+			if ok, why := opencodeAllowed(p.UserID); !ok {
+				return nil, errors.New(why)
+			}
+			if !oneOf(prov.Kind, opencodeProviderKinds...) {
+				return nil, fmt.Errorf("OpenCode agents can use OpenCode Zen, Anthropic, OpenAI and OpenAI-compatible providers, not %s", prov.Kind)
+			}
 		}
 	}
 	allowed := aiModesFor(p.Transport, p.ConnID)
@@ -444,6 +455,7 @@ func (s *aiSession) emitLocked(typ string, data map[string]interface{}) {
 	}
 	close(s.notify)
 	s.notify = make(chan struct{})
+	ocForward(s, typ, data)
 }
 
 // eventsSince returns the events after seq and a channel closed on the next event.
@@ -1257,6 +1269,9 @@ func (s *aiSession) Kill(by int, reason string) {
 	if cl != nil {
 		cl.Close()
 	}
+	if s.Transport == "opencode" {
+		go s.ocStop(reason)
+	}
 	aiReg.Lock()
 	delete(aiReg.m, s.ID)
 	aiReg.Unlock()
@@ -1409,6 +1424,10 @@ func (s *aiSession) Prompt(r *http.Request, userID int, text string) error {
 	s.transcript("user", s.Username, text, nil)
 	s.emit("user", map[string]interface{}{"text": text})
 	s.emit("busy", map[string]interface{}{"busy": true})
+	if s.Transport == "opencode" {
+		go s.ocTurn(ctx, cancel, content)
+		return nil
+	}
 	go s.runTurn(ctx, cancel)
 	return nil
 }
