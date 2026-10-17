@@ -83,7 +83,7 @@ type gitWeb struct {
 
 func newGitWeb(src gitSource, project string) gitWeb {
 	base := strings.TrimRight(strings.TrimSpace(src.URL), "/")
-	if i := strings.Index(strings.ToLower(base), "/api/"); i >= 0 {
+	if i := strings.Index(asciiLower(base), "/api/"); i >= 0 {
 		base = base[:i]
 	}
 	u, err := url.Parse(base)

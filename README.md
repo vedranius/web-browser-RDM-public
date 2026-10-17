@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.20** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.21** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.21
+
+**Signed releases.** Every release from now on carries an ed25519 signature of its `SHA256SUMS.txt`, a software bill of materials (CycloneDX) and GitHub build provenance. Once the project's public key is built in, the one-click update refuses a release whose signature is missing or wrong, so a changed file on the release page cannot be installed. `wrm -release-verify SHA256SUMS.txt` checks a download by hand. Every night, fuzz tests feed random input to the import parsers (mRemoteNG, SSH config, CSV/XLSX, PuTTY, WinSCP, configuration files, deploy-config YAML) and OWASP ZAP scans a running WRM, signed out and as an administrator. The fuzz tests already found and fixed a crash in the PuTTY import.
 
 ## What's new in v12.6.20
 
@@ -120,7 +124,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -217,26 +221,26 @@ Everything is stored in one local **SQLite** file. There is no external database
 
 ## Quick start
 
-1. Download the binary for your system from **[Releases](https://github.com/vedranius/web-browser-RDM-public/releases/latest)** and optionally verify it with `SHA256SUMS.txt`.
+1. Download the binary for your system from **[Releases](https://github.com/vedranius/web-browser-RDM-public/releases/latest)** and optionally verify it: put `SHA256SUMS.txt` and `SHA256SUMS.txt.sig` next to it and run `wrm-pro-… -release-verify SHA256SUMS.txt` (signature and SHA-256), or compare the SHA-256 yourself. `gh attestation verify <file> --repo vedranius/web-browser-RDM-public` shows which workflow and commit built it.
 2. Run it:
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.20-linux-amd64
-   ./wrm-pro-v12.6.20-linux-amd64
+   chmod +x wrm-pro-v12.6.21-linux-amd64
+   ./wrm-pro-v12.6.21-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.20-windows-amd64.exe
+   .\wrm-pro-v12.6.21-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.6.6-linux-amd64.AppImage
-   ./wrm-pro-v12.6.6-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.6.6-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.6.21-linux-amd64.AppImage
+   ./wrm-pro-v12.6.21-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.6.21-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -245,8 +249,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.6/wrm-pro-v12.6.6-android-arm64
-   chmod +x wrm-pro-v12.6.6-android-arm64 && ./wrm-pro-v12.6.6-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.21/wrm-pro-v12.6.21-android-arm64
+   chmod +x wrm-pro-v12.6.21-android-arm64 && ./wrm-pro-v12.6.21-android-arm64
    ```
 
    **Docker**
@@ -270,6 +274,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.20
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. New setting `update_signing_keys` (empty: only the built-in key). This version has no built-in release key yet, so its self-update still verifies the SHA-256 only and the update dialog says *Signature: not checked*; the version that adds the key turns the signature check on. New command-line options `-release-keygen`, `-release-sign`, `-release-verify`.
 
 ## Upgrading from v12.6.19
 
@@ -1819,7 +1827,7 @@ Any policy can also be **forced by an environment variable** (`WRM_<KEY>`), e.g.
 - **Version badge:** when a newer release exists, the top bar shows **⬆ Update vX.Y.Z** (only ⬆ on narrow screens) and the sign-in page shows *update available vX.Y.Z*. The badge opens the release notes and the release page.
 - **One-click update** (administrators, policy `self_update`):
   1. downloads `wrm-pro-vX.Y.Z-<os>-<arch>[.exe]` of the release next to the binary (with progress);
-  2. verifies its **SHA-256 against the release's `SHA256SUMS.txt`** and refuses the update when the checksums file, its line or the hash does not match;
+  2. verifies the **signature `SHA256SUMS.txt.sig`** (ed25519) of the release's `SHA256SUMS.txt` with the release key built into WRM (plus `update_signing_keys`, for example the key of your own fork), then the file's **SHA-256 against `SHA256SUMS.txt`**. It refuses the update when the signature is missing or wrong (once a key is known), or when the checksums file, its line or the hash does not match. Without any known key the dialog shows *Signature: not checked* and only the SHA-256 is verified;
   3. runs the new file with `-version`, which must answer the release's version;
   4. replaces the binary **atomically**: a rename over the old file (Linux, macOS, BSD), or on Windows a rename of the running `.exe` to `.exe.old` and the new file in its place (the `.old` file becomes the rollback copy on the next start);
   5. restarts: a service through its service manager (exit code 75: systemd, launchd, FreeBSD `daemon(8)`, Windows recovery), otherwise WRM starts itself again in place. The page waits and reconnects by itself.
@@ -1964,6 +1972,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `git_schedule_grace_minutes` | `30` | a scheduled Git run or restart is skipped when WRM was not running at its time for longer than this (1–1440) |
 | `update_check` | `1` | check the GitHub releases of `update_repo` once a day (no user data is sent); `WRM_UPDATE_CHECK=off` for air-gapped installations |
 | `update_repo` | `vedranius/web-browser-RDM-public` | GitHub repository (`owner/name`) whose releases are checked and installed |
+| `update_signing_keys` | – | extra release public keys (`wrm-ed25519:…`, comma-separated) whose signature of `SHA256SUMS.txt` an update must carry, e.g. for your own fork in `update_repo`; this project's key is built in |
 | `update_proxy` | – | HTTP proxy for the update check and download (e.g. `http://proxy.example.com:3128`); empty = `HTTPS_PROXY` / `HTTP_PROXY` |
 | `self_update` | `admins` | who may update, roll back and restart WRM from the version badge: `off`, `admins` (never in Docker) |
 | `ai_assistant` | `off` | who may use the AI assistant: `off`, `admins`, `all` |
@@ -2039,6 +2048,10 @@ wrm -workdir DIR                   change to DIR before starting
 wrm -mcp-stdio -url URL -token T   stdio bridge for MCP clients to the WRM server at URL (see AI desktop apps)
     -token-file FILE               read the token from FILE (or WRM_MCP_TOKEN; the URL also from WRM_MCP_URL)
     -ca-file FILE                  trust this CA / self-signed certificate (PEM) for the WRM server
+wrm -release-verify SHA256SUMS.txt check SHA256SUMS.txt.sig with the built-in release key, and the SHA-256 of the listed files next to it
+    -release-public-key KEY        also trust this public key (wrm-ed25519:…)
+wrm -release-keygen FILE           (maintainers) new release key pair: private key to FILE (0600), public key printed
+wrm -release-sign FILE             (maintainers) write FILE.sig; key from WRM_RELEASE_SIGNING_KEY or -release-key-file FILE
 ```
 
 `-service=…` is set by the service definitions WRM writes; it is not for interactive use.
@@ -2538,9 +2551,9 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/update` | `{current, latest, available, name, notes, url, published_at, checked_at, check_enabled, docker}`; administrators also `{repo, error, service, platform, policy, can_update, blocked: ""\|"docker"\|"not_writable", docker_image, local: {file, version}, rollback, progress: {state: "idle"\|"downloading"\|"verifying"\|"installing"\|"restarting"\|"failed", version, done, total, error}}` |
+| GET | `/api/update` | `{current, latest, available, name, notes, url, published_at, checked_at, check_enabled, docker}`; administrators also `{repo, error, service, platform, policy, can_update, blocked: ""\|"docker"\|"not_writable", docker_image, signature_keys (trusted release keys; 0 = signature not checked), local: {file, version}, rollback, progress: {state: "idle"\|"downloading"\|"verifying"\|"installing"\|"restarting"\|"failed", version, done, total, error}}` |
 | POST | `/api/update/check` | Check the GitHub releases now → the status |
-| POST | `/api/update/apply` | `{version}`: download, verify (SHA-256 against `SHA256SUMS.txt`, `-version`), replace and restart in the background; follow `progress` |
+| POST | `/api/update/apply` | `{version}`: download, verify (signature `SHA256SUMS.txt.sig` once a release key is known, SHA-256 against `SHA256SUMS.txt`, `-version`), replace and restart in the background; follow `progress` |
 | POST | `/api/update/rollback` | Swap back to `<binary>.previous` and restart |
 | POST | `/api/update/restart` | `{local: true}`: restart with the newest valid binary in the folder (or the same one without `local`) |
 
@@ -2648,6 +2661,7 @@ remote-manager/
   service.go      run as a service: prompt, env file, service files, versions, newest binary in the folder, restarts
   service_unix.go / service_windows.go  systemd, launchd, rc.d installers / Windows service (SCM)
   update.go       update check against GitHub releases, verified self-update, rollback, restart
+  releasesign.go  release signatures (ed25519 over SHA256SUMS.txt): verification for the self-update, -release-keygen/-sign/-verify
   ai_engine.go    AI sessions: tool calls through the permission engine, approvals, kill switch, transcript, recording, the agent loop
   ai_policy.go    AI modes, mode rules (most restrictive wins), automatic-mode limits, the decision
   ai_classify.go  read-only command classifier and unreadable sensitive files
@@ -2753,6 +2767,8 @@ remote-manager/
   notify_test.go       notification channels against fake HTTP endpoints and a fake SMTP server, digests, rate limit, quiet hours, status and rotation events
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
+  releasesign_test.go  release signatures: round trip, tampering, wrong key or file, WRM context, key parsing, the command-line tools, self-update refusing unsigned or wrongly signed releases
+  fuzz_test.go         fuzz targets for the import parsers (mRemoteNG, SSH config, CSV/XLSX, PuTTY, WinSCP, configuration files, deploy-config YAML); seeds run with every go test
   update_test.go       self-update against a fake GitHub releases server: success and rollback, checksum mismatch, missing checksums file or line, missing asset, wrong -version, policy, Docker, local binary
   ai_policy_test.go    read-only classifier (many cases), destructive patterns (every rule, false positives), admin patterns, globs
   ai_engine_test.go    AI sessions against a fake Anthropic / OpenAI-compatible server and the fake SSH host: approve, edit, deny, timeout, read-only, destructive in every mode, automatic-mode limits, file edits with diffs, kill switch, most restrictive policy, keys never returned, redaction, audit, transcript and recording, prompt injection, the event stream
@@ -2789,6 +2805,7 @@ packaging/claude-plugin/wrm-pro/  the WRM PRO plugin for Claude Code (MCP over H
 .github/workflows/codeql.yml  CodeQL code scanning (Go and JavaScript)
 .github/workflows/scorecard.yml  OpenSSF Scorecard
 .github/workflows/claude-security-review.yml  Claude security review of pull requests (needs the ANTHROPIC_API_KEY secret)
+.github/workflows/nightly.yml  nightly fuzzing of the import parsers and an OWASP ZAP scan (signed out and as an administrator)
 .github/security/            gosec baseline and the WRM checklist for the Claude review
 .github/dependabot.yml       weekly Go module, GitHub Actions and Docker updates
 .gitleaks.toml, remote-manager/staticcheck.conf  scanner settings
@@ -2799,7 +2816,7 @@ ARCHITECTURE.md              how WRM is built; extension plan status and touch p
 docs/brand/                  logo kit (SVG + PNG: mark, lockup, app icons, favicon, social preview)
 ```
 
-**CI/CD:** every push builds all 13 targets and the Docker image and runs the [security checks](SECURITY.md#continuous-security-checks). Pushing a tag `v*` creates a GitHub Release with all binaries, a macOS universal binary, Linux x86_64 / ARM64 AppImages and `SHA256SUMS.txt`, and publishes the image `ghcr.io/vedranius/wrm-pro`.
+**CI/CD:** every push builds all 13 targets and the Docker image and runs the [security checks](SECURITY.md#continuous-security-checks). Pushing a tag `v*` creates a GitHub Release with all binaries, a macOS universal binary, Linux x86_64 / ARM64 AppImages `SHA256SUMS.txt` with its signature `SHA256SUMS.txt.sig` (repository secret `RELEASE_SIGNING_KEY`), a CycloneDX SBOM and GitHub build provenance, and publishes the image `ghcr.io/vedranius/wrm-pro`.
 
 ---
 

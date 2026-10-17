@@ -1,3 +1,15 @@
+## [12.6.21] - 2026-10-17
+
+### Added
+- **Signed releases** (`releasesign.go`): the release workflow signs `SHA256SUMS.txt` with ed25519 (`SHA256SUMS.txt.sig`; repository secret `RELEASE_SIGNING_KEY`). The signed message is the fixed context `WRM release signature v1`, the file name and the file's bytes. Public keys look like `wrm-ed25519:<base64>`; built-in keys live in `builtinReleaseKeys` (empty in this version), extra keys in the new setting `update_signing_keys` (validated and normalized).
+- **Self-update checks the signature:** with a known release key a missing or invalid `SHA256SUMS.txt.sig` refuses the update (`system.update_failed`, step `signature`); `system.update_verified` records the signing key. Without a key the update verifies the SHA-256 only. `GET /api/update` returns `signature_keys` for administrators, and the update dialog shows *Signature: required* or *not checked*.
+- **Command line:** `-release-keygen FILE` (new key pair; private key 0600, never overwritten; public key printed), `-release-sign FILE` (key from `WRM_RELEASE_SIGNING_KEY` or `-release-key-file`), `-release-verify FILE` (signature plus the SHA-256 of the listed files next to it; `-release-public-key` adds a key).
+- **SBOM and build provenance** in the release workflow: a CycloneDX SBOM (`sbom-vX.Y.Z.cdx.json`, cyclonedx-gomod v1.12.0) and `actions/attest-build-provenance` for the binaries, `SHA256SUMS.txt` and the SBOM (`id-token: write`, `attestations: write` for that job only). With a built-in key and no `RELEASE_SIGNING_KEY` the release fails instead of publishing an unsigned release.
+- **Nightly security tests** `.github/workflows/nightly.yml` (daily, on demand, and briefly on pull requests that change them): Go fuzzing of seven parsers (`fuzz_test.go`: mRemoteNG XML, SSH config, CSV/XLSX, PuTTY `.reg`, WinSCP bookmarks, Git configuration files, deploy-config YAML; a crashing input is kept as an artifact) and an OWASP ZAP baseline scan of a running WRM with HTTPS, signed out and with an administrator's session (reports as an artifact).
+
+### Fixed
+- PuTTY import: a `.reg` key with invalid UTF-8 before the `Sessions` path made the parser panic (found by the fuzz test; the input is kept in `testdata/fuzz`). The same byte-offset mistake is fixed in the Git web link of a source URL.
+
 ## [12.6.20] - 2026-10-17
 
 ### Added

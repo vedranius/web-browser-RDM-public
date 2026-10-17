@@ -111,6 +111,7 @@ var settingSpecs = []settingSpec{
 	{Key: "update_check", Default: "1", Kind: "bool"},
 	{Key: "update_repo", Default: defaultUpdateRepo, Kind: "string"},
 	{Key: "update_proxy", Default: "", Kind: "string"},
+	{Key: "update_signing_keys", Default: "", Kind: "string"},
 	{Key: "self_update", Default: "admins", Kind: "enum", Enum: []string{"off", "admins"}},
 	{Key: "bitwarden", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "bitwarden_idle_minutes", Default: "15", Kind: "int", Min: 1, Max: 240},
@@ -381,6 +382,16 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		if !updateRepoRe.MatchString(v) {
 			return "", fmt.Errorf("use the form owner/repository")
 		}
+	case "update_signing_keys":
+		keys, err := parseReleaseKeyList(v)
+		if err != nil {
+			return "", err
+		}
+		var out []string
+		for _, k := range keys {
+			out = append(out, formatReleasePublicKey(k))
+		}
+		return strings.Join(out, ","), nil
 	case "update_proxy":
 		if v != "" {
 			u, err := url.Parse(v)
