@@ -620,7 +620,11 @@ func expandAll(pats []string, home string) []string {
 // userAllowed checks the session's user against the policy of its transport.
 func (s *aiSession) userAllowed() (bool, string) {
 	if s.Transport == "mcp" {
-		if ok, why := mcpUserAllowed(s.UserID); !ok {
+		kind := ""
+		if ocIsChild(s) {
+			kind = "opencode"
+		}
+		if ok, why := mcpUserAllowedKind(s.UserID, kind); !ok {
 			return false, why
 		}
 		if s.TokenID > 0 {

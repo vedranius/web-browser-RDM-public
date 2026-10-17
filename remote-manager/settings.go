@@ -501,6 +501,11 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		if v, ok := changed["ai_mcp_enabled"]; ok && v == "0" {
 			mcpShutdown(adminID, "AI connections (MCP) were turned off", nil)
 		}
+		if v, ok := changed["ai_opencode"]; ok && v != "all" {
+			aiKillWhere(func(s *aiSession) bool {
+				return s.Transport == "opencode" && (v == "off" || !isAdminUser(s.UserID))
+			}, adminID, "the policy no longer allows OpenCode agents")
+		}
 		if _, ok := changed["ai_mcp"]; ok {
 			mcpShutdown(adminID, "the policy no longer allows AI connections for the user", func(uid int) bool { ok, _ := mcpUserAllowed(uid); return !ok })
 		}
