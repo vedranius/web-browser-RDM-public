@@ -96,7 +96,12 @@ func aiConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		out["providers"] = providersFor(userID)
 		out["delegate"] = aiDelegateView(r.Context(), userID)
 		ocOK, ocWhy := opencodeAllowed(userID)
-		out["opencode"] = map[string]interface{}{"available": ocOK, "reason": ocWhy, "kinds": opencodeProviderKinds, "agents": []string{"build", "plan"}}
+		sbOK, sbWhy := false, ""
+		if ocOK && getSetting("ai_opencode_sandbox") != "off" {
+			sbOK, sbWhy = opencodeSandboxAllowed(userID)
+		}
+		out["opencode"] = map[string]interface{}{"available": ocOK, "reason": ocWhy, "kinds": opencodeProviderKinds, "agents": []string{"build", "plan"},
+			"sandbox": map[string]interface{}{"offered": getSetting("ai_opencode_sandbox") != "off", "available": sbOK, "reason": sbWhy, "image": opencodeSandboxImage()}}
 	}
 	active := []map[string]interface{}{}
 	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.UserID == userID && s.Transport != "mcp" }) {
@@ -312,6 +317,7 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		ShareNotes  bool          `json:"share_notes"`
 		Engine      string        `json:"engine"` // "" (WRM) | opencode
 		Agent       string        `json:"agent"`
+		Sandbox     bool          `json:"sandbox"` // OpenCode with its own tools in a Docker sandbox
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		jsonError(w, "Bad JSON", 400)
@@ -341,7 +347,7 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		return
 	}
 	if transport == "opencode" {
-		if err := s.ocStart(r, in.Agent); err != nil {
+		if err := s.ocStart(r, in.Agent, in.Sandbox); err != nil {
 			s.Kill(0, "OpenCode did not start")
 			auditLog(r, userID, "ai.session_refused", "", map[string]interface{}{"conn_id": in.ConnID, "engine": "opencode", "reason": truncateStr(err.Error(), 500)})
 			jsonError(w, err.Error(), 502)

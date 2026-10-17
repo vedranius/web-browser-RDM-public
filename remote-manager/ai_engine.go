@@ -65,8 +65,10 @@ type aiApproval struct {
 	// Later: the AI call no longer waits; the user can still approve it in WRM, and the
 	// same call then runs once without asking (approvedLater)
 	Later bool `json:"later,omitempty"`
-	key   string
-	ch    chan aiApprovalResult
+	// NoEdit: the command or change is approved or refused as it is (OpenCode's sandbox)
+	NoEdit bool `json:"no_edit,omitempty"`
+	key    string
+	ch     chan aiApprovalResult
 }
 
 // aiLaterTTL is how long a request nobody answered stays in WRM to be approved later, and
@@ -439,7 +441,7 @@ func (s *aiSession) view() map[string]interface{} {
 		"end_reason": s.endReason, "started_at": s.Started.UTC().Format(time.RFC3339), "share_notes": s.ShareNotes, "transport": s.Transport,
 		"requests": s.requests, "tool_calls": s.toolCalls, "approvals": s.approvalsN, "denials": s.denials, "tokens_in": s.tokensIn,
 		"tokens_out": s.tokensOut, "cost_usd": s.cost, "pending": pend, "user": s.Username, "seq": s.seq,
-		"mcp_grant": s.TokenID, "scopes": s.Scopes, "agent": s.ocAgent(),
+		"mcp_grant": s.TokenID, "scopes": s.Scopes, "agent": s.ocAgent(), "sandbox": s.oc != nil && s.oc.sandbox,
 	}
 }
 
@@ -1030,7 +1032,7 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	} else {
 		a.Command = pl.Act.Command
 	}
-	a.key = aiApprovalKey(call.Name, pl)
+	a.key, a.NoEdit = aiApprovalKey(call.Name, pl), pl.NoEdit
 	s.mu.Lock()
 	for id, old := range s.pending {
 		// the AI repeats a call that is still waiting to be approved later: ask once, here
@@ -1149,8 +1151,8 @@ func (s *aiSession) resolveVia(approvalID string, userID int, approve bool, comm
 		return nil
 	}
 	r := aiApprovalResult{Approved: approve, By: userID, ByName: usernameOf(userID), Note: note, Outcome: "denied", Via: via}
-	if a.Transfer != "" {
-		command, content = nil, nil // a transfer is approved or denied as it is
+	if a.Transfer != "" || a.NoEdit {
+		command, content = nil, nil // a transfer or an OpenCode sandbox request is approved or denied as it is
 	}
 	if approve {
 		r.Outcome = "approved"
