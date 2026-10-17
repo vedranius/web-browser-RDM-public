@@ -1,3 +1,17 @@
+## [12.6.23] - 2026-10-17
+
+### Added
+- **Roles** (`roles.go`): every account is an *Administrator*, *Security auditor*, *Operator* or *User* (`users.role`; administrators stay `is_admin=1`, so a previous binary sees the same administrators). Auditors may `GET` the audit log, terminal sessions and recordings, file transfers and the security posture (`requireAuditRead`), and are refused connections, the AI assistant and AI connections. Roles are set on create (`role`) and with `PUT /api/admin/users/{id}` (`role`); switching to auditor ends the user's terminals and AI sessions.
+- **Teams** (`teams.go`, tables `teams`, `team_members`, `share_teams`): *Admin panel → Teams* with members and leads (`GET/POST /api/admin/teams`, `PUT/DELETE /api/admin/teams/{id}`, audited `admin.team_*`), `GET /api/teams` for the share dialog. Shares in *Members only* mode take teams with a role (`teams: [{team_id, role}]`); members get the best of their team and direct roles, and leaving a team revalidates open share connections.
+- **Who-policies accept `operators` and `teams:<names>`** besides `off`, `admins` and `all` (`whoPolicies`, `policyAllows`): tunnels, remote forwarding, serial ports, network tools, proxies, the Git actions, Medium, Bitwarden, the AI assistant, personal AI keys, OpenCode, the OpenCode sandbox and AI connections. Team names are validated against existing teams; a team named in a policy cannot be deleted or renamed.
+- **Step-up re-authentication** (`require_step_up`, `step_up_minutes`, `POST /api/auth/step-up`): changing policies or the security level, creating administrators or auditors, changing roles, disabling or deleting users, break-glass changes, password and 2FA resets, revealing a credential password, exporting a private key and exporting connections with secrets answer `403 {step_up: true}` until the session confirms with the password (and TOTP or a recovery code). Signing in counts as a confirmation. The UI asks and repeats the request by itself. Required by the Business and Enterprise security levels. Audited `auth.step_up`, `auth.step_up_failed`.
+- **Break-glass administrator** (`users.break_glass`, `break_glass_ips`): must use 2FA, may only sign in from the allowed networks, and every sign-in is audited (`auth.break_glass_login`) and notified to the other administrators (event `security.break_glass_login`).
+- **Handover on delete:** `GET /api/admin/users/{id}/handover` lists what a user owns and suggests their team lead; `DELETE /api/admin/users/{id}?transfer_to=<id>` moves connections, folders, credentials, SSH keys, shares and proxies to that account first (audited `admin.user_handover`). The delete dialog offers it.
+
+### Changed
+- `/api/auth/me` returns `role`, `is_auditor`, `break_glass`, `teams` and `step_up`; the admin user list returns `role`, `break_glass` and `teams`. Disabling a user also ends their AI sessions and AI connections.
+- The share dialog shows a hint text when no members were added (the keys were missing).
+
 ## [12.6.22] - 2026-10-17
 
 ### Added

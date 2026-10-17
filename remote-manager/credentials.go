@@ -881,6 +881,9 @@ func apiCredentialsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Showing stored passwords is disabled by the administrator", 403)
 			return
 		}
+		if !requireStepUp(w, r, "credential_reveal") {
+			return
+		}
 		auditLog(r, userID, "credential.revealed", cr.Name, map[string]interface{}{"cred_id": id})
 		jsonOK(w, map[string]string{"password": decryptValue(cr.password), "pending_password": decryptValue(cr.pending)})
 	case action == "rotate" && r.Method == http.MethodPost:

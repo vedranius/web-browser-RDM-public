@@ -40,6 +40,9 @@ var settingSpecs = []settingSpec{
 	{Key: "registration", Default: "closed", Kind: "enum", Enum: []string{"closed", "open"}},
 	{Key: "require_https", Default: "0", Kind: "bool"},
 	{Key: "require_2fa", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "require_step_up", Default: "0", Kind: "bool"},
+	{Key: "step_up_minutes", Default: "10", Kind: "int", Min: 1, Max: 240},
+	{Key: "break_glass_ips", Default: "", Kind: "string"},
 	{Key: "password_min_length", Default: "8", Kind: "int", Min: 6, Max: 128},
 	{Key: "session_idle_hours", Default: "168", Kind: "int", Min: 1, Max: 8760},
 	{Key: "session_max_days", Default: "30", Kind: "int", Min: 1, Max: 365},
@@ -298,6 +301,14 @@ func validateSetting(s settingSpec, v string) (string, error) {
 				return e, nil
 			}
 		}
+		if whoPolicies[s.Key] {
+			if w, err := validateWhoValue(v); err == nil {
+				return w, nil
+			} else if strings.HasPrefix(strings.ToLower(v), "teams:") {
+				return "", err
+			}
+			return "", fmt.Errorf("must be one of %s, operators or teams:<name>,<name>", strings.Join(s.Enum, ", "))
+		}
 		return "", fmt.Errorf("must be one of %s", strings.Join(s.Enum, ", "))
 	case "json":
 		if v == "" {
@@ -316,6 +327,8 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		return "", fmt.Errorf("value too long")
 	}
 	switch s.Key {
+	case "break_glass_ips":
+		return validateIPList(v)
 	case "turn_public_ip":
 		if v != "" && net.ParseIP(v) == nil {
 			return "", fmt.Errorf("not an IP address")
@@ -475,6 +488,9 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 				"enum": s.Enum, "min": s.Min, "max": s.Max, "locked": settingLocked(s.Key),
 				"env": envName, "restart": s.Restart,
 			}
+			if whoPolicies[s.Key] {
+				item["who"] = true // also accepts operators and teams:<names>
+			}
 			if need := levelNeed(securityLevel(), s.Key); need != "" {
 				item["required"] = need
 			}
@@ -485,6 +501,9 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		jsonOK(w, out)
 	case http.MethodPut:
+		if !requireStepUp(w, r, "settings") {
+			return
+		}
 		var payload map[string]interface{}
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			jsonError(w, "Bad JSON", 400)
@@ -580,13 +599,15 @@ func settingsChanged(adminID int, changed map[string]string) {
 	}
 	if v, ok := changed["ai_assistant"]; ok && v == "off" {
 		aiKillWhere(func(s *aiSession) bool { return s.Transport != "mcp" }, adminID, "the AI assistant was turned off")
+	} else if ok && v != "all" {
+		aiKillWhere(func(s *aiSession) bool { return s.Transport != "mcp" && !policyAllows(s.UserID, v) }, adminID, "the policy no longer allows the AI assistant for the user")
 	}
 	if v, ok := changed["ai_mcp_enabled"]; ok && v == "0" {
 		mcpShutdown(adminID, "AI connections (MCP) were turned off", nil)
 	}
 	if v, ok := changed["ai_opencode"]; ok && v != "all" {
 		aiKillWhere(func(s *aiSession) bool {
-			return s.Transport == "opencode" && (v == "off" || !isAdminUser(s.UserID))
+			return s.Transport == "opencode" && !policyAllows(s.UserID, v)
 		}, adminID, "the policy no longer allows OpenCode agents")
 	}
 	if v, ok := changed["ai_opencode_sandbox"]; ok && v != "all" {
@@ -594,7 +615,7 @@ func settingsChanged(adminID int, changed map[string]string) {
 			s.mu.Lock()
 			sb := s.oc != nil && s.oc.sandbox
 			s.mu.Unlock()
-			return sb && (v == "off" || !isAdminUser(s.UserID))
+			return sb && !policyAllows(s.UserID, v)
 		}, adminID, "the policy no longer allows OpenCode's Docker sandbox")
 	}
 	if _, ok := changed["ai_mcp"]; ok {

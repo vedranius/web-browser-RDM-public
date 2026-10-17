@@ -1,6 +1,23 @@
-## Web Remote Manager PRO v12.6.22 — Security levels
+## Web Remote Manager PRO v12.6.23 — Roles, teams and step-up
 
 ### Added
+
+- **Roles:** *Administrator*, *Security auditor*, *Operator* and *User*. A security auditor reads the audit log, terminal sessions, recordings, file transfers and the security posture and changes nothing; auditors cannot open connections or use the AI assistant. Operators pass policies set to *operators*.
+- **Teams:** *Admin panel → Teams* with members and team leads. Add a whole team to a share with one role; people who join the team later get it too, and leaving the team closes what they opened through the share.
+- **Policies by role or team:** every *who may use it* policy (tunnels, serial ports, network tools, proxies, Git actions, Medium, Bitwarden, AI assistant, OpenCode, AI connections and more) now accepts *operators* and chosen teams besides *off / admins / all*.
+- **Confirm risky actions (step-up):** with *Step-up confirmation* on (required from the Business level), changing policies, roles or the security level, deleting or disabling users, resetting passwords or 2FA and revealing stored secrets ask for your password (and 2FA code) again. One confirmation lasts 10 minutes by default; signing in counts as one.
+- **Break-glass administrator:** an emergency administrator account that must use 2FA, can be limited to chosen networks, and whose every sign-in is audited and sent to the other administrators.
+- **Handover when a user leaves:** deleting a user can hand their connections, folders, credentials, keys, shares and proxies to their team lead or another account, so the team keeps its access.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets three new tables (`teams`, `team_members`, `share_teams`) and three columns; a previous version still starts on it. Existing administrators stay administrators and everyone else becomes a *User*; nothing changes until an administrator assigns roles or teams. With step-up on, scripts that change settings or users need `POST /api/auth/step-up` first.
+
+[Download v12.6.23](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.23) · [Roles, teams, step-up and break-glass](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.23/README.md#roles-teams-step-up-and-break-glass)
+
+### Included from v12.6.22 — Security levels
+
+#### Added
 
 - **Choose how strict WRM is:** *Home* (as before), *Business* or *Enterprise*. The level sets minimums for HTTPS, two-factor authentication, password length, session lifetime, failed sign-ins, registration, host keys, secret export, guest links, AI full access, audit and session recording. A higher level raises weaker settings and never loosens stronger ones.
 - **At install or later:** the first administrator picks the level on the first-run screen; `wrm -security-level business` (also with `-install-service`) or `WRM_INITIAL_SECURITY_LEVEL` sets it at install, `WRM_SECURITY_LEVEL` forces it. Later it changes in **Admin panel → Security**.
@@ -9,7 +26,7 @@
 - **Security posture page:** a checklist of this installation against the level (HTTPS, every level rule, administrators and users without 2FA, where the encryption key lives, open origins, guest links without expiry, signed updates, the current version, the audit hash chain), each with the explanation and the exact fix. Export it as JSON or print it to PDF for an auditor.
 - **New policies:** *HTTPS required for sign-in* (`require_https`, localhost always allowed) and *Longest guest link* (`link_share_max_days`).
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets one new table (`security_deviations`); a previous version still starts on it. Existing installations stay at *Home* with all their settings unchanged until an administrator picks another level.
 

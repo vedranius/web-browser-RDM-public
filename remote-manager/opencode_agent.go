@@ -102,13 +102,11 @@ func opencodeSessionCount() int {
 
 // opencodeAllowed applies the policy ai_opencode (off, admins, all).
 func opencodeAllowed(userID int) (bool, string) {
-	switch getSetting("ai_opencode") {
-	case "off":
+	switch v := getSetting("ai_opencode"); {
+	case v == "off":
 		return false, "OpenCode agents are turned off (policy ai_opencode)"
-	case "admins":
-		if !isAdminUser(userID) {
-			return false, "OpenCode agents are limited to administrators"
-		}
+	case !policyAllows(userID, v):
+		return false, "OpenCode agents are limited to " + policyLimitText(v)
 	}
 	if _, _, err := opencodeBinary(); err != nil {
 		return false, err.Error()

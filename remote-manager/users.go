@@ -41,8 +41,9 @@ func createAuthSession(w http.ResponseWriter, r *http.Request, userID int, restr
 	raw := randomToken(32)
 	now := time.Now().UTC()
 	exp := now.AddDate(0, 0, settingInt("session_max_days"))
-	_, err := db.Exec(`INSERT INTO auth_sessions (user_id, token, expires_at, last_active_at, created_at, ip, user_agent, restricted) VALUES (?,?,?,?,?,?,?,?)`,
-		userID, tokenHash(raw), exp.Format(time.RFC3339), now.Format(time.RFC3339), now.Format(time.RFC3339), clientIP(r), truncateStr(r.UserAgent(), 300), restricted)
+	// Signing in counts as a fresh re-authentication for the step-up window.
+	_, err := db.Exec(`INSERT INTO auth_sessions (user_id, token, expires_at, last_active_at, created_at, ip, user_agent, restricted, step_up_at) VALUES (?,?,?,?,?,?,?,?,?)`,
+		userID, tokenHash(raw), exp.Format(time.RFC3339), now.Format(time.RFC3339), now.Format(time.RFC3339), clientIP(r), truncateStr(r.UserAgent(), 300), restricted, now.Format(time.RFC3339))
 	if err != nil {
 		return err
 	}
@@ -256,20 +257,24 @@ type userRow struct {
 	LastLoginAt   string
 	LastLoginIP   string
 	PasswordSetAt string
+	Role          string // admin, auditor, operator or user
+	BreakGlass    bool
 }
 
 func loadUser(where string, arg interface{}) (*userRow, error) {
 	var u userRow
-	var isAdmin, disabled, totpEnabled, mustChange int
+	var isAdmin, disabled, totpEnabled, mustChange, breakGlass int
+	var role string
 	err := db.QueryRow(`SELECT id, username, password_hash, is_admin, disabled, totp_enabled, COALESCE(totp_secret,''), totp_last_step,
 		COALESCE(recovery_codes,''), must_change_password, failed_logins, COALESCE(locked_until,''), COALESCE(display_name,''),
-		created_at, COALESCE(last_login_at,''), COALESCE(last_login_ip,''), COALESCE(password_changed_at,'')
+		created_at, COALESCE(last_login_at,''), COALESCE(last_login_ip,''), COALESCE(password_changed_at,''), COALESCE(role,''), COALESCE(break_glass,0)
 		FROM users WHERE `+where, arg).Scan(&u.ID, &u.Username, &u.Hash, &isAdmin, &disabled, &totpEnabled, &u.TOTPSecret, &u.TOTPLastStep,
-		&u.Recovery, &mustChange, &u.FailedLogins, &u.LockedUntil, &u.DisplayName, &u.CreatedAt, &u.LastLoginAt, &u.LastLoginIP, &u.PasswordSetAt)
+		&u.Recovery, &mustChange, &u.FailedLogins, &u.LockedUntil, &u.DisplayName, &u.CreatedAt, &u.LastLoginAt, &u.LastLoginIP, &u.PasswordSetAt, &role, &breakGlass)
 	if err != nil {
 		return nil, err
 	}
 	u.IsAdmin, u.Disabled, u.TOTPEnabled, u.MustChange = isAdmin == 1, disabled == 1, totpEnabled == 1, mustChange == 1
+	u.Role, u.BreakGlass = roleOf(u.IsAdmin, role), breakGlass == 1 && u.IsAdmin
 	return &u, nil
 }
 
@@ -287,7 +292,7 @@ func restrictionFor(u *userRow) string {
 	if u.MustChange {
 		return "password"
 	}
-	if !u.TOTPEnabled && mfaRequiredByPolicy(u.IsAdmin) {
+	if !u.TOTPEnabled && (mfaRequiredByPolicy(u.IsAdmin) || u.BreakGlass) {
 		return "mfa"
 	}
 	return ""
@@ -301,7 +306,9 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 	return map[string]interface{}{
 		"id": u.ID, "username": u.Username, "display_name": u.DisplayName, "created_at": u.CreatedAt,
 		"is_admin": u.IsAdmin, "totp_enabled": u.TOTPEnabled, "must_change_password": u.MustChange,
-		"restricted": restricted, "mfa_required": mfaRequiredByPolicy(u.IsAdmin),
+		"restricted": restricted, "mfa_required": mfaRequiredByPolicy(u.IsAdmin) || u.BreakGlass,
+		"role": u.Role, "is_auditor": u.Role == userRoleAuditor, "break_glass": u.BreakGlass, "teams": userTeams(u.ID),
+		"step_up":             map[string]interface{}{"required": settingBool("require_step_up"), "minutes": settingInt("step_up_minutes"), "totp": u.TOTPEnabled},
 		"recovery_codes_left": recoveryCodesLeft(u.Recovery),
 		"password_min_length": settingInt("password_min_length"),
 		"policy": map[string]interface{}{
@@ -345,6 +352,9 @@ func finishLogin(w http.ResponseWriter, r *http.Request, u *userRow, method stri
 	db.Exec(`UPDATE users SET last_login_at=?, last_login_ip=?, failed_logins=0, locked_until='' WHERE id=?`,
 		time.Now().UTC().Format(time.RFC3339), clientIP(r), u.ID)
 	auditLogAs(r, u.ID, u.Username, "auth.login", "", map[string]string{"method": method, "user_agent": truncateStr(r.UserAgent(), 160)})
+	if u.BreakGlass {
+		breakGlassSignedIn(r, u)
+	}
 	jsonOK(w, mePayload(u.ID, restricted))
 }
 
@@ -527,6 +537,11 @@ func apiAuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if u.Disabled {
 		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"reason": "account disabled"})
 		jsonError(w, "This account is disabled. Contact an administrator.", 403)
+		return
+	}
+	if u.BreakGlass && !breakGlassIPAllowed(ip) {
+		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"reason": "break-glass account from a network not in break_glass_ips"})
+		jsonError(w, "This emergency (break-glass) account may only sign in from the networks the administrator allowed.", 403)
 		return
 	}
 	recordLoginResult(ip, true)
@@ -880,7 +895,7 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case http.MethodGet:
-		rows, err := db.Query(`SELECT u.id, u.username, COALESCE(u.display_name,''), u.is_admin, u.disabled, u.totp_enabled, u.created_at,
+		rows, err := db.Query(`SELECT u.id, u.username, COALESCE(u.display_name,''), u.is_admin, COALESCE(u.role,''), COALESCE(u.break_glass,0), u.disabled, u.totp_enabled, u.created_at,
 			COALESCE(u.last_login_at,''), COALESCE(u.last_login_ip,''), COALESCE(u.locked_until,''), u.must_change_password,
 			(SELECT COUNT(*) FROM connections c WHERE c.user_id=u.id),
 			(SELECT COUNT(*) FROM share_links s WHERE s.owner_id=u.id),
@@ -894,9 +909,9 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		users := []map[string]interface{}{}
 		for rows.Next() {
-			var id, isAdmin, disabled, totp, mustChange, nConn, nShares, nSess int
-			var username, dn, created, lastLogin, lastIP, lockedUntil string
-			rows.Scan(&id, &username, &dn, &isAdmin, &disabled, &totp, &created, &lastLogin, &lastIP, &lockedUntil, &mustChange, &nConn, &nShares, &nSess)
+			var id, isAdmin, breakGlass, disabled, totp, mustChange, nConn, nShares, nSess int
+			var username, dn, role, created, lastLogin, lastIP, lockedUntil string
+			rows.Scan(&id, &username, &dn, &isAdmin, &role, &breakGlass, &disabled, &totp, &created, &lastLogin, &lastIP, &lockedUntil, &mustChange, &nConn, &nShares, &nSess)
 			locked := false
 			if t, ok := parseTS(lockedUntil); ok && now.Before(t) {
 				locked = true
@@ -906,7 +921,12 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 				"totp_enabled": totp == 1, "created_at": created, "last_login_at": lastLogin, "last_login_ip": lastIP,
 				"locked": locked, "must_change_password": mustChange == 1, "connections": nConn, "shares": nShares,
 				"sessions": nSess, "online": userOnline(id),
+				"role": roleOf(isAdmin == 1, role), "break_glass": breakGlass == 1 && isAdmin == 1,
 			})
+		}
+		rows.Close()
+		for _, u := range users {
+			u["teams"] = userTeams(u["id"].(int))
 		}
 		jsonOK(w, users)
 	case http.MethodPost:
@@ -915,6 +935,7 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 			DisplayName string `json:"display_name"`
 			Password    string `json:"password"`
 			IsAdmin     bool   `json:"is_admin"`
+			Role        string `json:"role"`
 			MustChange  *bool  `json:"must_change_password"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
@@ -924,6 +945,22 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		p.Username = strings.TrimSpace(p.Username)
 		if err := validUsername(p.Username); err != nil {
 			jsonError(w, err.Error(), 400)
+			return
+		}
+		role := userRoleUser
+		if p.IsAdmin {
+			role = userRoleAdmin
+		}
+		if p.Role != "" {
+			rv, ok := validUserRole(p.Role)
+			if !ok {
+				jsonError(w, "Unknown role (admin, auditor, operator or user)", 400)
+				return
+			}
+			role = rv
+		}
+		p.IsAdmin = role == userRoleAdmin
+		if (p.IsAdmin || role == userRoleAuditor) && !requireStepUp(w, r, "user_create_privileged") {
 			return
 		}
 		generated := ""
@@ -941,14 +978,14 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		now := time.Now().UTC().Format(time.RFC3339)
-		res, err := db.Exec(`INSERT INTO users (username, display_name, password_hash, is_admin, must_change_password, created_at, password_changed_at) VALUES (?,?,?,?,?,?,?)`,
-			p.Username, truncateStr(strings.TrimSpace(p.DisplayName), 80), hash, boolToInt(p.IsAdmin), boolToInt(mustChange), now, now)
+		res, err := db.Exec(`INSERT INTO users (username, display_name, password_hash, is_admin, role, must_change_password, created_at, password_changed_at) VALUES (?,?,?,?,?,?,?,?)`,
+			p.Username, truncateStr(strings.TrimSpace(p.DisplayName), 80), hash, boolToInt(p.IsAdmin), storedRole(role), boolToInt(mustChange), now, now)
 		if err != nil {
 			jsonError(w, "Username already exists", 400)
 			return
 		}
 		id, _ := res.LastInsertId()
-		auditLog(r, adminID, "admin.user_created", p.Username, map[string]bool{"admin": p.IsAdmin, "must_change_password": mustChange})
+		auditLog(r, adminID, "admin.user_created", p.Username, map[string]interface{}{"admin": p.IsAdmin, "role": role, "must_change_password": mustChange})
 		jsonOK(w, map[string]interface{}{"id": id, "username": p.Username, "generated_password": generated})
 	default:
 		jsonError(w, "Method not allowed", 405)
@@ -985,6 +1022,8 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case action == "" && r.Method == http.MethodPut:
 		var p struct {
 			IsAdmin     *bool   `json:"is_admin"`
+			Role        *string `json:"role"`
+			BreakGlass  *bool   `json:"break_glass"`
 			Disabled    *bool   `json:"disabled"`
 			DisplayName *string `json:"display_name"`
 		}
@@ -992,14 +1031,51 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Bad JSON", 400)
 			return
 		}
-		changes := map[string]interface{}{}
+		newRole := target.Role
 		if p.IsAdmin != nil && *p.IsAdmin != target.IsAdmin {
-			if !*p.IsAdmin && (id == adminID || lastAdmin) {
+			newRole = map[bool]string{true: userRoleAdmin, false: userRoleUser}[*p.IsAdmin]
+		}
+		if p.Role != nil {
+			rv, ok := validUserRole(*p.Role)
+			if !ok {
+				jsonError(w, "Unknown role (admin, auditor, operator or user)", 400)
+				return
+			}
+			newRole = rv
+		}
+		privileged := newRole != target.Role || (p.Disabled != nil && *p.Disabled != target.Disabled) || (p.BreakGlass != nil && *p.BreakGlass != target.BreakGlass)
+		if privileged && !requireStepUp(w, r, "user_update") {
+			return
+		}
+		if p.BreakGlass != nil && *p.BreakGlass && newRole != userRoleAdmin {
+			jsonError(w, "Only an administrator can be a break-glass account", 400)
+			return
+		}
+		changes := map[string]interface{}{}
+		if newRole != target.Role {
+			if target.IsAdmin && newRole != userRoleAdmin && (id == adminID || lastAdmin) {
 				jsonError(w, "You cannot remove admin rights from yourself or from the last administrator", 400)
 				return
 			}
-			db.Exec(`UPDATE users SET is_admin=? WHERE id=?`, boolToInt(*p.IsAdmin), id)
-			changes["is_admin"] = *p.IsAdmin
+			isAdmin := newRole == userRoleAdmin
+			db.Exec(`UPDATE users SET is_admin=?, role=?, break_glass=CASE WHEN ?=1 THEN break_glass ELSE 0 END WHERE id=?`, boolToInt(isAdmin), storedRole(newRole), boolToInt(isAdmin), id)
+			changes["role"] = newRole
+			if isAdmin != target.IsAdmin {
+				changes["is_admin"] = isAdmin
+			}
+			// Auditors cannot keep terminals or AI sessions open.
+			if newRole == userRoleAuditor {
+				disconnectUserEverywhere(id, "Your role changed to security auditor")
+				aiKillWhere(func(s *aiSession) bool { return s.UserID == id }, adminID, "the account's role changed to security auditor")
+			}
+			hub.sendAll([]byte(`{"type":"ai_policy_changed"}`))
+		}
+		if p.BreakGlass != nil && *p.BreakGlass != target.BreakGlass {
+			db.Exec(`UPDATE users SET break_glass=? WHERE id=?`, boolToInt(*p.BreakGlass), id)
+			changes["break_glass"] = *p.BreakGlass
+			if *p.BreakGlass && !target.TOTPEnabled {
+				revokeUserSessions(id, 0) // the next sign-in must set up 2FA
+			}
 		}
 		if p.Disabled != nil && *p.Disabled != target.Disabled {
 			if *p.Disabled && (id == adminID || lastAdmin) {
@@ -1011,6 +1087,8 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 			if *p.Disabled {
 				revokeUserSessions(id, 0)
 				disconnectUserEverywhere(id, "Your account was disabled")
+				changes["ai_sessions_ended"] = aiKillWhere(func(s *aiSession) bool { return s.UserID == id }, adminID, "the account was disabled")
+				mcpShutdown(adminID, "the account was disabled", func(uid int) bool { return uid == id })
 			}
 		}
 		if p.DisplayName != nil {
@@ -1019,15 +1097,38 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		auditLog(r, adminID, "admin.user_updated", target.Username, changes)
 		jsonOK(w, map[string]bool{"ok": true})
+	case action == "handover" && r.Method == http.MethodGet:
+		to, why := suggestedHandover(id)
+		jsonOK(w, map[string]interface{}{"owned": ownedCounts(id), "suggested_user_id": to, "suggested_username": usernameOf(to), "suggested_reason": why, "teams": userTeams(id)})
 	case action == "" && r.Method == http.MethodDelete:
 		if id == adminID || lastAdmin {
 			jsonError(w, "You cannot delete your own account or the last administrator", 400)
 			return
 		}
+		if !requireStepUp(w, r, "user_delete") {
+			return
+		}
+		details := map[string]interface{}{}
+		if to := atoiOr(r.URL.Query().Get("transfer_to"), 0); to > 0 {
+			if to == id || userRole(to) == "" || userRole(to) == userRoleAuditor {
+				jsonError(w, "Choose an active account (not a security auditor) to receive the connections", 400)
+				return
+			}
+			moved, err := handOver(id, to)
+			if err != nil {
+				jsonError(w, "Handover failed: "+err.Error(), 500)
+				return
+			}
+			details["transferred_to"], details["moved"] = usernameOf(to), moved
+			auditLog(r, adminID, "admin.user_handover", target.Username, details)
+		}
 		deleteUserCompletely(id)
-		auditLog(r, adminID, "admin.user_deleted", target.Username, nil)
-		jsonOK(w, map[string]bool{"ok": true})
+		auditLog(r, adminID, "admin.user_deleted", target.Username, details)
+		jsonOK(w, map[string]interface{}{"ok": true, "moved": details["moved"]})
 	case action == "reset-password" && r.Method == http.MethodPost:
+		if !requireStepUp(w, r, "user_reset_password") {
+			return
+		}
 		var p struct {
 			Password   string `json:"password"`
 			MustChange *bool  `json:"must_change_password"`
@@ -1049,6 +1150,9 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 		auditLog(r, adminID, "admin.user_password_reset", target.Username, map[string]bool{"must_change_password": mustChange})
 		jsonOK(w, map[string]interface{}{"ok": true, "generated_password": generated})
 	case action == "reset-2fa" && r.Method == http.MethodPost:
+		if !requireStepUp(w, r, "user_reset_2fa") {
+			return
+		}
 		db.Exec(`UPDATE users SET totp_secret='', totp_enabled=0, totp_pending='', recovery_codes='' WHERE id=?`, id)
 		revokeUserSessions(id, 0)
 		auditLog(r, adminID, "admin.user_2fa_reset", target.Username, nil)
@@ -1089,6 +1193,8 @@ func deleteUserCompletely(id int) {
 		return
 	}
 	defer tx.Rollback()
+	tx.Exec(`DELETE FROM share_teams WHERE share_id IN (SELECT id FROM share_links WHERE owner_id=?)`, id)
+	tx.Exec(`DELETE FROM team_members WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM share_links WHERE owner_id=?`, id)
 	tx.Exec(`DELETE FROM sessions WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM ssh_key_deployments WHERE conn_id IN (SELECT id FROM connections WHERE user_id=?) OR key_id IN (SELECT id FROM ssh_keys WHERE user_id=?)`, id, id)

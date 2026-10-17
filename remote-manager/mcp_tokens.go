@@ -115,13 +115,13 @@ func mcpUserAllowed(userID int) (bool, string) {
 	if err := db.QueryRow(`SELECT disabled, COALESCE(ai_blocked,0) FROM users WHERE id=?`, userID).Scan(&disabled, &blocked); err != nil || disabled == 1 {
 		return false, "the account is disabled"
 	}
-	switch getSetting("ai_mcp") {
-	case "off":
+	switch v := getSetting("ai_mcp"); {
+	case v == "off":
 		return false, "AI connections are not allowed (policy ai_mcp)"
-	case "admins":
-		if !isAdminUser(userID) {
-			return false, "AI connections are limited to administrators"
-		}
+	case isAuditorUser(userID):
+		return false, "security auditors cannot use AI connections"
+	case !policyAllows(userID, v):
+		return false, "AI connections are limited to " + policyLimitText(v)
 	}
 	if blocked == 1 {
 		return false, "an administrator turned the AI assistant off for your account"
@@ -137,7 +137,7 @@ func mcpUserAllowedKind(userID int, kind string) (bool, string) {
 		if ok, why := aiUserAllowed(userID); !ok {
 			return false, why
 		}
-		if getSetting("ai_opencode") == "off" || (getSetting("ai_opencode") == "admins" && !isAdminUser(userID)) {
+		if !policyWhoAllows(userID, "ai_opencode") {
 			return false, "OpenCode agents are not allowed (policy ai_opencode)"
 		}
 		return true, ""
