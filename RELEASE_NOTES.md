@@ -1,4 +1,4 @@
-## Web Remote Manager PRO v12.6.12 — Security checked on every change
+## Web Remote Manager PRO v12.6.20 — Security checked on every change
 
 ### Added
 
@@ -19,9 +19,24 @@
 
 ### Upgrade
 
-Replace the executable/container and keep the database and encryption key. No database or setting change. Building from source needs Go 1.26 or newer. What comes next for security (signed releases, security levels for home, business and enterprise, roles and teams, sign-in with Microsoft Entra ID / Active Directory, LDAP and SCIM, SIEM export) is in the [roadmap](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.12/ROADMAP.md).
+Replace the executable/container and keep the database and encryption key. No database or setting change. Building from source needs Go 1.26 or newer. What comes next for security (signed releases, security levels for home, business and enterprise, roles and teams, sign-in with Microsoft Entra ID / Active Directory, LDAP and SCIM, SIEM export) is in the [roadmap](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.20/ROADMAP.md).
 
-[Download v12.6.12](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.12) · [Continuous security checks](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.12/SECURITY.md#continuous-security-checks)
+[Download v12.6.20](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.20) · [Continuous security checks](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.20/SECURITY.md#continuous-security-checks)
+
+### Included from v12.6.19 — OpenCode with its own tools, in a sandbox
+
+#### Added
+
+- **Both ways to run OpenCode:** next to the contained OpenCode agent (its own tools off, everything through WRM), an administrator can now allow **🐳 OpenCode's own tools, in a Docker sandbox** (`ai_opencode_sandbox`: off by default, administrators only, or everyone). The agent then gets its own shell, file and web tools, but only inside a container on the WRM host. Your servers are still reached only through WRM.
+- **Every use asks you:** each shell command, file change and web fetch in the sandbox appears as an approval card with the exact command, diff or address. You approve it once or refuse it, with a note if you like; it cannot be edited and is never approved automatically, not even with full access.
+- **A locked-down container:** no capabilities, no privilege escalation, read-only system, memory, CPU and process limits, only the session's own folder mounted, the port open on `127.0.0.1` only. It is removed when the session ends or WRM stops. The image is your choice (`ai_opencode_sandbox_image`, default `debian:stable-slim`).
+- **Set up with the same one click:** *Download and install* also prepares the sandbox (the Linux build of OpenCode for Docker, the image, a test run). The admin page shows whether the sandbox is ready and what is missing.
+
+#### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. Nothing changes until an administrator sets `ai_opencode_sandbox` and presses *Download and install* again under *Admin panel → AI assistant → OpenCode agents*. The sandbox needs Docker on the WRM host (Medium's step 2 can install it) and WRM itself not running in a container.
+
+[Download v12.6.19](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.19) · [OpenCode in WRM](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.19/README.md#opencode-zen-agents-and-helper-models)
 
 ### Included from v12.6.11 — OpenCode inside WRM
 
