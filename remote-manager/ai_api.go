@@ -95,6 +95,8 @@ func aiConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 	if allowed {
 		out["providers"] = providersFor(userID)
 		out["delegate"] = aiDelegateView(r.Context(), userID)
+		ocOK, ocWhy := opencodeAllowed(userID)
+		out["opencode"] = map[string]interface{}{"available": ocOK, "reason": ocWhy, "kinds": opencodeProviderKinds, "agents": []string{"build", "plan"}}
 	}
 	active := []map[string]interface{}{}
 	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.UserID == userID && s.Transport != "mcp" }) {

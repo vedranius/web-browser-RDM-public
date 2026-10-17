@@ -536,8 +536,10 @@ func mcpNotifyUser(userID int) {
 // mcpShutdown ends every MCP session (MCP turned off, policy changes); the internal ones of
 // OpenCode agents follow their own policy.
 func mcpShutdown(byID int, reason string, pred func(userID int) bool) int {
-	n := aiKillWhere(func(s *aiSession) bool { return s.Transport == "mcp" && !ocIsChild(s) && (pred == nil || pred(s.UserID)) }, byID, reason)
-	mcpDropConns(func(c *mcpConn) bool { return pred == nil || pred(c.userID) })
+	n := aiKillWhere(func(s *aiSession) bool {
+		return s.Transport == "mcp" && !ocIsChild(s) && (pred == nil || pred(s.UserID))
+	}, byID, reason)
+	mcpDropConns(func(c *mcpConn) bool { return !ocGrantLive(c.grantID) && (pred == nil || pred(c.userID)) })
 	return n
 }
 

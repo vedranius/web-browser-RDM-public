@@ -439,8 +439,16 @@ func (s *aiSession) view() map[string]interface{} {
 		"end_reason": s.endReason, "started_at": s.Started.UTC().Format(time.RFC3339), "share_notes": s.ShareNotes, "transport": s.Transport,
 		"requests": s.requests, "tool_calls": s.toolCalls, "approvals": s.approvalsN, "denials": s.denials, "tokens_in": s.tokensIn,
 		"tokens_out": s.tokensOut, "cost_usd": s.cost, "pending": pend, "user": s.Username, "seq": s.seq,
-		"mcp_grant": s.TokenID, "scopes": s.Scopes,
+		"mcp_grant": s.TokenID, "scopes": s.Scopes, "agent": s.ocAgent(),
 	}
+}
+
+// ocAgent is the OpenCode agent of the session ("" for other transports). s.mu is held.
+func (s *aiSession) ocAgent() string {
+	if s.oc == nil {
+		return ""
+	}
+	return s.oc.agent
 }
 
 // ─── events, transcript, audit, recording ────────────
@@ -1194,6 +1202,9 @@ func (s *aiSession) SetMode(r *http.Request, userID int, mode string, auto *aiAu
 	}
 	if s.Transport == "mcp" {
 		return fmt.Errorf("the mode of an AI connection is chosen when it is created; create a new one for another mode")
+	}
+	if s.Transport == "opencode" {
+		return fmt.Errorf("the mode of an OpenCode agent is chosen when it starts; start a new AI session for another mode")
 	}
 	allowed := aiModesFor(s.Transport, s.ConnID)
 	if !oneOf(mode, allowed...) {

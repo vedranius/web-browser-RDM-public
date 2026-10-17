@@ -244,6 +244,45 @@ Object.assign(LANGS.hr, {
  ai_status_admin:'Administratori mogu omogućiti asistenta u Admin → AI asistent. Tamo su označene i postavke zadane varijablama okruženja.', ai_status_open:'Otvorite terminal ili datoteke na SSH/SFTP vezi pa kliknite AI u zaglavlju prozora.', ai_status_no_modes:'Nije omogućen nijedan način dopuštenja za AI.', ai_status_providers:'Dostupni pružatelji', ai_status_refresh:'Osvježi stanje', ai_status_setup:'Otvori AI administraciju', ai_status_connections:'Otvoreni prozori servera', ai_status_config_error:'Dostupnost nije provjerena. Osvježite stanje prije korištenja asistenta.',
 });
 
+Object.assign(LANGS.en, {
+ ai_engine: 'Engine', ai_engine_wrm: 'WRM assistant', ai_engine_oc: 'OpenCode agent',
+ ai_engine_wrm_d: 'The built-in assistant: WRM talks to the model and runs every tool itself.',
+ ai_engine_oc_d: 'OpenCode runs on the WRM host as a managed helper with its own agent loop and prompts. Its own shell, file and web tools are switched off: it reaches the server only through WRM tools, so every command is shown and approved here like with the WRM assistant (unless full access is on). Works with OpenCode Zen, Anthropic, OpenAI and OpenAI-compatible providers.',
+ ai_oc_agent: 'OpenCode agent', ai_oc_agent_build: 'build (does the work)', ai_oc_agent_plan: 'plan (looks and plans, changes nothing)',
+ ai_oc_unavail: 'OpenCode is not available', ai_oc_starting: 'Starting OpenCode…', ai_oc_mode_fixed: 'The mode of an OpenCode agent is chosen when it starts.',
+ ai_oc_kind_off: 'not usable with OpenCode', ai_n_delegate_retry: 'The helper model failed; trying the next one.',
+ ai_oc_h: 'OpenCode agents', ai_oc_help: 'Users can pick OpenCode as the engine of the assistant. WRM downloads the official OpenCode build once (from the npm registry, MIT licence, about 50 to 150 MB), checks its sha512 against the registry and keeps it next to the database. Each agent runs as a local helper on 127.0.0.1 with its own folder; its shell, file and web tools are off and WRM is its only tool server.',
+ ai_oc_installed: 'Installed: OpenCode {v}', ai_oc_custom: 'Using the binary from ai_opencode_path: {p}', ai_oc_missing: 'Not installed yet.', ai_oc_unsupported: 'OpenCode has no build for {os}; set a binary path instead.',
+ ai_oc_installing: 'Installing…', ai_oc_install: 'Download and install', ai_oc_reinstall: 'Install the selected version', ai_oc_refresh: 'Refresh',
+ ai_oc_install_q: 'Download OpenCode {v} ({pkg}) from {reg}? WRM checks the sha512 checksum from the registry before using it. OpenCode is MIT licensed. The file stays in {root}.',
+ ai_oc_by: 'by {u}, {t}', ai_oc_sessions: 'Running agents: {n} of {max}', ai_oc_log: 'Installation log', ai_oc_failed: 'Installation failed',
+ p_ai_opencode: 'OpenCode agents', p_ai_opencode_d: 'Who may use OpenCode as the engine of the assistant. The normal AI assistant permissions still apply.',
+ po_ai_opencode_off: 'Nobody', po_ai_opencode_admins: 'Administrators', po_ai_opencode_all: 'Everyone allowed to use the assistant',
+ p_ai_opencode_version: 'OpenCode version', p_ai_opencode_version_d: 'The version WRM installs. After a change press Install again.', p_ai_opencode_version_ph: '1.19.3',
+ p_ai_opencode_registry: 'Download registry', p_ai_opencode_registry_d: 'An npm registry over HTTPS (a mirror or proxy in closed networks).', p_ai_opencode_registry_ph: 'https://registry.npmjs.org',
+ p_ai_opencode_path: 'OpenCode binary', p_ai_opencode_path_d: 'Absolute path of an OpenCode binary you installed yourself. Empty: the one WRM installed.', p_ai_opencode_path_ph: '/usr/local/bin/opencode',
+ p_ai_opencode_max_sessions: 'Agents at the same time', p_ai_opencode_max_sessions_d: 'The most OpenCode agents running at once on this WRM host (each one is a separate process).',
+});
+Object.assign(LANGS.hr, {
+ ai_engine: 'Pogon', ai_engine_wrm: 'WRM asistent', ai_engine_oc: 'OpenCode agent',
+ ai_engine_wrm_d: 'Ugrađeni asistent: WRM razgovara s modelom i sam pokreće svaki alat.',
+ ai_engine_oc_d: 'OpenCode radi na WRM hostu kao upravljani pomoćni program sa svojom petljom agenta i uputama. Njegovi vlastiti alati za ljusku, datoteke i web su isključeni: do servera dolazi samo preko WRM alata, pa se svaka naredba prikazuje i odobrava ovdje kao kod WRM asistenta (osim ako je uključen puni pristup). Radi s OpenCode Zen, Anthropic, OpenAI i OpenAI-kompatibilnim pružateljima.',
+ ai_oc_agent: 'OpenCode agent', ai_oc_agent_build: 'build (obavlja posao)', ai_oc_agent_plan: 'plan (gleda i planira, ništa ne mijenja)',
+ ai_oc_unavail: 'OpenCode nije dostupan', ai_oc_starting: 'Pokrećem OpenCode…', ai_oc_mode_fixed: 'Način rada OpenCode agenta bira se pri pokretanju.',
+ ai_oc_kind_off: 'ne radi s OpenCodeom', ai_n_delegate_retry: 'Pomoćni model nije uspio; pokušavam sljedeći.',
+ ai_oc_h: 'OpenCode agenti', ai_oc_help: 'Korisnici mogu odabrati OpenCode kao pogon asistenta. WRM jednom preuzme službenu OpenCode verziju (iz npm registra, MIT licenca, oko 50 do 150 MB), provjeri njen sha512 prema registru i čuva je pokraj baze. Svaki agent radi kao lokalni pomoćni program na 127.0.0.1 sa svojom mapom; alati za ljusku, datoteke i web su mu isključeni, a WRM mu je jedini poslužitelj alata.',
+ ai_oc_installed: 'Instalirano: OpenCode {v}', ai_oc_custom: 'Koristi se program iz ai_opencode_path: {p}', ai_oc_missing: 'Još nije instaliran.', ai_oc_unsupported: 'OpenCode nema verziju za {os}; postavite putanju do programa.',
+ ai_oc_installing: 'Instaliram…', ai_oc_install: 'Preuzmi i instaliraj', ai_oc_reinstall: 'Instaliraj odabranu verziju', ai_oc_refresh: 'Osvježi',
+ ai_oc_install_q: 'Preuzeti OpenCode {v} ({pkg}) s {reg}? WRM prije korištenja provjerava sha512 kontrolni zbroj iz registra. OpenCode ima MIT licencu. Datoteka ostaje u {root}.',
+ ai_oc_by: '{u}, {t}', ai_oc_sessions: 'Pokrenuti agenti: {n} od {max}', ai_oc_log: 'Zapis instalacije', ai_oc_failed: 'Instalacija nije uspjela',
+ p_ai_opencode: 'OpenCode agenti', p_ai_opencode_d: 'Tko smije koristiti OpenCode kao pogon asistenta. Obična dopuštenja AI asistenta i dalje vrijede.',
+ po_ai_opencode_off: 'Nitko', po_ai_opencode_admins: 'Administratori', po_ai_opencode_all: 'Svi kojima je asistent dopušten',
+ p_ai_opencode_version: 'Verzija OpenCodea', p_ai_opencode_version_d: 'Verzija koju WRM instalira. Nakon promjene ponovno pritisnite Instaliraj.', p_ai_opencode_version_ph: '1.19.3',
+ p_ai_opencode_registry: 'Registar za preuzimanje', p_ai_opencode_registry_d: 'npm registar preko HTTPS-a (zrcalo ili proxy u zatvorenim mrežama).', p_ai_opencode_registry_ph: 'https://registry.npmjs.org',
+ p_ai_opencode_path: 'OpenCode program', p_ai_opencode_path_d: 'Apsolutna putanja do OpenCode programa koji ste sami instalirali. Prazno: onaj koji je instalirao WRM.', p_ai_opencode_path_ph: '/usr/local/bin/opencode',
+ p_ai_opencode_max_sessions: 'Agenata istovremeno', p_ai_opencode_max_sessions_d: 'Najviše OpenCode agenata koji istovremeno rade na ovom WRM hostu (svaki je zaseban proces).',
+});
+
 (function () {
   const $ = id => document.getElementById(id);
   const S = {}; // per window: {sid, es, seq, view, cfg, pol, busy}
@@ -533,6 +572,7 @@ Object.assign(LANGS.hr, {
     const shared = !!wo.shareToken;
     body.innerHTML = `<div class="ai-setup">
       ${resume.map(s => `<button class="btn-sec btn-sm" onclick="wrmAI.attach(${id}, ${s.id})">↪ ${esc(t('ai_continue'))} #${s.id} · ${esc(t('ai_mode_' + s.mode))} · ${esc(s.model)}</button>`).join('')}
+      ${engineHTML(id)}
       <div class="ai-row"><div><label>${esc(t('ai_provider'))}</label><select id="ai-prov-${id}" onchange="wrmAI.models(${id})">${provs.map(p => `<option value="${p.id}">${esc(p.name)}${p.scope === 'user' ? ' (🔑)' : ''}</option>`).join('')}</select></div>
         <div><label>${esc(t('ai_model'))}</label><select id="ai-model-${id}"></select></div></div>
       <div><label>${esc(t('ai_mode'))}</label><select id="ai-mode-${id}" onchange="wrmAI.modeHelp(${id})">${pol.allowed_modes.map(m => `<option value="${m}" ${m === pol.default_mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
@@ -543,7 +583,37 @@ Object.assign(LANGS.hr, {
       ${delegSetupHTML(id)}
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button onclick="wrmAI.start(${id})">✦ ${esc(t('ai_start'))}</button>${own}</div>
       <div class="ai-see">${esc(t('ai_subscriptions_note'))}</div></div>`;
-    models(id); modeHelp(id);
+    models(id); modeHelp(id); engine(id);
+  }
+
+  // engine: the WRM assistant or an OpenCode agent (cfg.opencode says whether it can run)
+  function engineHTML(id) {
+    const oc = cfg && cfg.opencode;
+    if (!oc) return '';
+    return `<div class="ai-row"><div><label>${esc(t('ai_engine'))}</label><select id="ai-eng-${id}" onchange="wrmAI.engine(${id})">
+        <option value="wrm">✦ ${esc(t('ai_engine_wrm'))}</option>
+        <option value="opencode" ${oc.available ? '' : 'disabled'} title="${esc(oc.reason || '')}">⬛ ${esc(t('ai_engine_oc'))}${oc.available ? '' : ' (' + esc(t('ai_oc_unavail')) + ')'}</option></select></div>
+      <div id="ai-agent-w-${id}" style="display:none;"><label>${esc(t('ai_oc_agent'))}</label><select id="ai-agent-${id}">${(oc.agents || ['build']).map(a => `<option value="${esc(a)}">${esc(t('ai_oc_agent_' + a))}</option>`).join('')}</select></div></div>
+      <div class="ai-see" id="ai-eng-d-${id}"></div>`;
+  }
+  function engine(id) {
+    const sel = $('ai-eng-' + id), oc = cfg && cfg.opencode;
+    if (!sel || !oc) return;
+    const on = sel.value === 'opencode', kinds = oc.kinds || [];
+    $('ai-agent-w-' + id).style.display = on ? '' : 'none';
+    const d = $('ai-eng-d-' + id);
+    d.textContent = on ? t('ai_engine_oc_d') : t('ai_engine_wrm_d') + (oc.available ? '' : ' · ' + t('ai_oc_unavail') + ': ' + (oc.reason || ''));
+    const ps = $('ai-prov-' + id);
+    if (!ps) return;
+    let first = null;
+    [...ps.options].forEach(o => {
+      const p = (cfg.providers || []).find(x => String(x.id) === o.value);
+      const bad = on && p && !kinds.includes(p.kind);
+      o.disabled = bad;
+      o.textContent = p.name + (p.scope === 'user' ? ' (🔑)' : '') + (bad ? ' · ' + t('ai_oc_kind_off') : '');
+      if (!bad && first === null) first = o.value;
+    });
+    if (ps.selectedOptions[0] && ps.selectedOptions[0].disabled && first !== null) { ps.value = first; models(id); }
   }
 
   function autoForm(p) {
@@ -598,6 +668,8 @@ Object.assign(LANGS.hr, {
     const mode = $('ai-mode-' + id).value;
     const body = {conn_id: wo.connId, provider_id: Number($('ai-prov-' + id).value), model: $('ai-model-' + id).value, mode,
       share_notes: !!($('ai-notes-' + id) && $('ai-notes-' + id).checked)};
+    const eng = $('ai-eng-' + id);
+    if (eng && eng.value === 'opencode') { body.engine = 'opencode'; body.agent = $('ai-agent-' + id).value; showToast(t('ai_oc_starting'), 'info', 3000); }
     if (mode === 'auto') {
       const a = readAuto('ai-a-' + id);
       if (!a.ok) { showToast(t('ai_auto_need_confirm'), 'warning', 4000); return; }
@@ -642,8 +714,9 @@ Object.assign(LANGS.hr, {
     if (!el || !v) return;
     const allowed = (st.pol && st.pol.allowed_modes) || [v.mode];
     const auto = v.auto ? ` · ${esc(tf('ai_auto_until', {time: new Date(v.auto.until).toLocaleTimeString(), used: v.auto.used, max: v.auto.max_actions}))}` : '';
-    el.innerHTML = `<select onchange="wrmAI.setMode(${id}, this.value)" ${st.ended ? 'disabled' : ''}>${MODES.filter(m => allowed.includes(m) || m === v.mode).map(m => `<option value="${m}" ${m === v.mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
-      <span>${esc(v.provider)} · ${esc(v.model)}${auto}</span><span style="margin-left:auto;" id="ai-use-${id}"></span>`;
+    const oc = v.transport === 'opencode';
+    el.innerHTML = `<select onchange="wrmAI.setMode(${id}, this.value)" ${st.ended || oc ? 'disabled' : ''} ${oc ? `title="${esc(t('ai_oc_mode_fixed'))}"` : ''}>${MODES.filter(m => allowed.includes(m) || m === v.mode).map(m => `<option value="${m}" ${m === v.mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
+      <span>${oc ? `⬛ OpenCode · ${esc(v.agent || 'build')} · ` : ''}${esc(v.provider)} · ${esc(v.model)}${auto}</span><span style="margin-left:auto;" id="ai-use-${id}"></span>`;
     usage(id);
     const pm = $('aipm-' + id);
     pm.style.display = ''; pm.textContent = t('ai_mode_' + v.mode);
@@ -707,7 +780,7 @@ Object.assign(LANGS.hr, {
           <div class="ai-appr"></div><div class="ai-res"></div></div>`);
         st.cards[d.call_id] = el; break;
       }
-      case 'approval_required': approvalUI(id, d.approval); break;
+      case 'approval_required': approvalUI(id, d.session_id ? Object.assign({}, d.approval, {session_id: d.session_id}) : d.approval); break;
       case 'approval_resolved': {
         const card = st.cards[d.call_id];
         if (card) {
@@ -756,6 +829,7 @@ Object.assign(LANGS.hr, {
   function approvalUI(id, a) {
     const st = S[id], card = st.cards[a.call_id];
     if (!card) return;
+    if (a.session_id) (st.apprSess = st.apprSess || {})[a.id] = a.session_id;
     card.classList.add('wait');
     const box = card.querySelector('.ai-appr');
     const isWrite = !!a.path;
@@ -782,7 +856,8 @@ Object.assign(LANGS.hr, {
     const ed = $(`ai-ed-${id}-${aid}`), note = $(`ai-nt-${id}-${aid}`);
     const body = {decision: ok ? 'approve' : 'deny', note: note ? note.value : ''};
     if (ok && ed) { if (isWrite) body.content = ed.value; else body.command = ed.value; }
-    try { await api('POST', `/api/ai/sessions/${st.sid}/approvals/${encodeURIComponent(aid)}${shareQ(wo)}`, body); }
+    const sid = (st.apprSess && st.apprSess[aid]) || st.sid;
+    try { await api('POST', `/api/ai/sessions/${sid}/approvals/${encodeURIComponent(aid)}${shareQ(wo)}`, body); }
     catch (e) { showToast(e.message, 'error', 5000); }
   }
 
@@ -1213,10 +1288,10 @@ Object.assign(LANGS.hr, {
 
   async function adminAI() {
     const body = $('admin-body');
-    let sum, provs, sessions, settings;
+    let sum, provs, sessions, settings, ocs;
     try {
-      [sum, provs, sessions, settings] = await Promise.all([api('GET', '/api/admin/ai/summary'), api('GET', '/api/admin/ai/providers'),
-        api('GET', '/api/admin/ai/sessions?limit=100'), api('GET', '/api/admin/settings')]);
+      [sum, provs, sessions, settings, ocs] = await Promise.all([api('GET', '/api/admin/ai/summary'), api('GET', '/api/admin/ai/providers'),
+        api('GET', '/api/admin/ai/sessions?limit=100'), api('GET', '/api/admin/settings'), api('GET', '/api/admin/opencode').catch(e => ({error: e.message, log: []}))]);
     } catch (e) { body.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
     adminSettingsCache = settings;
     const ks = sum.kill_switch;
@@ -1228,6 +1303,8 @@ Object.assign(LANGS.hr, {
       <div class="hint-box">${esc(t('ai_subscriptions_note'))}</div>
       ${provList(provs, 'org')}<div style="margin:8px 0 4px;"><button class="btn-sm" onclick="wrmAI.editProv('org', 0)">＋ ${esc(t('ai_prov_add'))}</button></div>
       ${delegateHTML(provs)}
+      <div class="adm-h">⬛ ${esc(t('ai_oc_h'))}</div><div class="hint-box">${esc(t('ai_oc_help'))}</div><div id="ai-oc-box">${ocBoxHTML(ocs)}</div>
+      <div class="policy-group">${OC_KEYS.map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
       <div class="adm-h">✦ ${esc(t('ai_sessions'))}</div>${sessionsTable(sessions, true)}
       <div class="adm-h">📊 ${esc(t('ai_usage_users'))}</div>
       <div class="tbl-scroll"><table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('ai_sessions'))}</th><th>${esc(t('ai_tokens'))}</th><th>${esc(t('ai_cost'))}</th><th></th></tr></thead><tbody>` +
@@ -1239,6 +1316,40 @@ Object.assign(LANGS.hr, {
       <div class="policy-group">${AI_POLICY_KEYS.map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
       <div class="adm-h">⛔ ${esc(t('ai_destructive'))}</div><ul class="ai-see">${sum.destructive_rules.map(r => `<li><span class="mono">${esc(r.id)}</span> — ${esc(r.what)}</li>`).join('')}</ul>`;
   }
+  // OpenCode on the WRM host: state, one-click install (with consent), its log
+  const OC_KEYS = ['ai_opencode', 'ai_opencode_version', 'ai_opencode_registry', 'ai_opencode_path', 'ai_opencode_max_sessions'];
+  let ocState = null, ocTimer = null;
+  function ocBoxHTML(s) {
+    ocState = s || {};
+    s = ocState;
+    const ok = !!s.binary, custom = s.source === 'path';
+    const state = custom ? tf('ai_oc_custom', {p: s.binary}) : s.installed ? tf('ai_oc_installed', {v: s.version}) + (s.installed_by ? ' · ' + tf('ai_oc_by', {u: s.installed_by, t: s.installed_at ? new Date(s.installed_at).toLocaleString() : ''}) : '')
+      : s.supported === false ? tf('ai_oc_unsupported', {os: s.os || ''}) : t('ai_oc_missing');
+    const busy = !!s.installing;
+    const btn = s.supported === false ? '' : `<button class="btn-sm" ${busy ? 'disabled' : ''} onclick="wrmAI.ocInstall()">⬇ ${esc(busy ? t('ai_oc_installing') : s.installed ? t('ai_oc_reinstall') : t('ai_oc_install'))}</button>`;
+    const log = (s.log || []).length ? `<details ${busy || s.error ? 'open' : ''}><summary class="ai-see">${esc(t('ai_oc_log'))}</summary><pre class="mono" style="max-height:220px;overflow:auto;white-space:pre-wrap;font-size:11px;">${esc(s.log.join('\n'))}</pre></details>` : '';
+    return `<div class="hint-box ${ok ? '' : 'warn'}" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><span style="flex:1;min-width:200px;">${ok ? '✅' : '⚪'} ${esc(state)}${ok ? ' · ' + esc(tf('ai_oc_sessions', {n: s.sessions || 0, max: s.max_sessions || 0})) : ''}</span>
+      ${btn}<button class="btn-sec btn-sm" onclick="wrmAI.ocRefresh()">↻ ${esc(t('ai_oc_refresh'))}</button></div>
+      ${s.error ? `<div class="hint-box warn">⚠ ${esc(t('ai_oc_failed'))}: ${esc(s.error)}</div>` : ''}${log}`;
+  }
+  async function ocRefresh() {
+    let s;
+    try { s = await api('GET', '/api/admin/opencode'); } catch (e) { s = {error: e.message, log: []}; }
+    const box = $('ai-oc-box');
+    if (box) box.innerHTML = ocBoxHTML(s);
+    if (ocTimer) { clearTimeout(ocTimer); ocTimer = null; }
+    if (s.installing && box) ocTimer = setTimeout(ocRefresh, 1500);
+    return s;
+  }
+  async function ocInstall() {
+    const s = ocState || {};
+    const st = k => (adminSettingsCache.find(x => x.key === k) || {}).value || '';
+    const q = tf('ai_oc_install_q', {v: st('ai_opencode_version') || s.version_wanted || '', pkg: s.package || '', reg: st('ai_opencode_registry') || 'https://registry.npmjs.org', root: s.root || ''});
+    if (!(await uiConfirm(q, {okText: t('ai_oc_install')}))) return;
+    try { await api('POST', '/api/admin/opencode/install', {confirm: true}); } catch (e) { showToast(e.message, 'error', 6000); }
+    await ocRefresh();
+  }
+
   // what the assistant may hand to helper models, and the user's own training choice
   const DATA_USE_ICON = {zero_retention: '🛡', trains: '⚠', unknown: '❔', paid: '💳', provider: '🔑'};
   function dataUseTag(m) { return `<span class="pill ${m.data_use === 'trains' || m.data_use === 'unknown' ? 'warn' : ''}" title="${esc(t('ai_du_' + m.data_use + '_d'))}">${DATA_USE_ICON[m.data_use] || ''} ${esc(t('ai_du_' + m.data_use))}</span>`; }
@@ -1318,6 +1429,6 @@ Object.assign(LANGS.hr, {
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,
     myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); }; awOpen('user'); },
-    statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, delegProv, delegLoad, delegAdd, delegTraining, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
+    statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, engine, ocInstall, ocRefresh, delegProv, delegLoad, delegAdd, delegTraining, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
   };
 })();

@@ -376,6 +376,7 @@ func (s *aiSession) ocStart(r *http.Request, agent string) error {
 	ocRegistry.Lock()
 	ocRegistry.byGrant[g.ID] = s
 	ocRegistry.Unlock()
+	s.emit("session", s.view())
 	go s.ocPump()
 	go func() {
 		<-o.exited
@@ -804,9 +805,7 @@ func ocIsChild(s *aiSession) bool {
 	if s.TokenID <= 0 {
 		return false
 	}
-	ocRegistry.Lock()
-	defer ocRegistry.Unlock()
-	return ocRegistry.byGrant[s.TokenID] != nil
+	return ocGrantLive(s.TokenID)
 }
 
 // ocFreePort finds a free loopback port for an OpenCode server.
@@ -817,4 +816,11 @@ func ocFreePort() (int, error) {
 	}
 	defer ln.Close()
 	return ln.Addr().(*net.TCPAddr).Port, nil
+}
+
+// ocGrantLive reports an AI connection that belongs to a running OpenCode agent.
+func ocGrantLive(id int64) bool {
+	ocRegistry.Lock()
+	defer ocRegistry.Unlock()
+	return ocRegistry.byGrant[id] != nil
 }
