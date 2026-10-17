@@ -63,6 +63,11 @@ func TestReleaseSignatureRoundTrip(t *testing.T) {
 }
 
 func TestReleaseKeyParsing(t *testing.T) {
+	for _, s := range builtinReleaseKeys { // a typo here would turn signature checks off
+		if _, err := parseReleasePublicKey(s); err != nil {
+			t.Fatalf("built-in key %q: %v", s, err)
+		}
+	}
 	pub, priv := testReleaseKey(t)
 	s := formatReleasePublicKey(pub)
 	if k, err := parseReleasePublicKey(" " + s + "\n"); err != nil || !k.Equal(pub) {

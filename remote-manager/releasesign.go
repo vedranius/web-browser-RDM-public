@@ -44,7 +44,9 @@ const (
 
 // builtinReleaseKeys are the public keys that sign this project's releases (newest first; an
 // old key stays listed while releases signed with it are still offered).
-var builtinReleaseKeys = []string{}
+var builtinReleaseKeys = []string{
+	"wrm-ed25519:dDQxQPC0rcL16tuoDJ35/XC9b0p73Vdy6XB4mcL3+/w=", // project release key, 2026-10-17
+}
 
 // releaseSignedMessage is what the key signs: a fixed context and the exact file bytes, so a
 // signature made for something else cannot be passed off as a release signature.
