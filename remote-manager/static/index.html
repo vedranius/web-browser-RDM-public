@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.6.22</title>
+<title>Web Remote Manager PRO v12.6.23</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1585,6 +1585,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 #tb-more-menu button:hover, #tb-more-menu button:focus-visible { background: var(--bg4); }
 #tb-more-menu .ico { width: 18px; text-align: center; }
 #tb-more-menu .tun-badge { margin-left: auto; }
+/* v12.6.23: team editor */
+.team-members-box { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; margin-top: 6px; }
+.team-member-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.team-member-row:last-child { border-bottom: none; }
+.team-member-row label { white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; text-transform: none; letter-spacing: normal; font-size: 13px; font-weight: 400; color: var(--text); }
+.team-member-row label.muted-text { color: var(--text2); }
 </style>
 </head>
 <body>
@@ -1613,7 +1619,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.6.22 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.6.23 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1701,7 +1707,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.22</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.23</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1991,6 +1997,15 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <button class="btn-sec" onclick="addShareMember()" data-i18n="add">Add</button>
       </div>
       <div class="member-list" id="share-member-list"></div>
+    </div>
+    <div class="field" id="share-teams-field" style="display:none;">
+      <label data-i18n="share_teams">Teams</label>
+      <div class="member-add">
+        <select id="share-team-add" style="flex:1;min-width:0;"></select>
+        <select id="share-team-role"></select>
+        <button class="btn-sec" onclick="addShareTeam()" data-i18n="add">Add</button>
+      </div>
+      <div class="member-list" id="share-team-list"></div>
     </div>
     <div id="share-others-block">
       <div class="field">
@@ -2672,6 +2687,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn active" data-tab="overview" onclick="showAdminTab('overview')" data-i18n="adm_overview">Overview</button>
       <button class="tab-btn" data-tab="security" onclick="showAdminTab('security')" data-i18n="adm_security">Security</button>
       <button class="tab-btn" data-tab="users" onclick="showAdminTab('users')" data-i18n="adm_users">Users</button>
+      <button class="tab-btn" data-tab="teams" onclick="showAdminTab('teams')" data-i18n="adm_teams">Teams</button>
       <button class="tab-btn" data-tab="shares" onclick="showAdminTab('shares')" data-i18n="adm_shares">Shares</button>
       <button class="tab-btn" data-tab="policies" onclick="showAdminTab('policies')" data-i18n="adm_policies">Security policies</button>
       <button class="tab-btn" data-tab="ai" onclick="showAdminTab('ai')" data-i18n="adm_ai">AI assistant</button>
@@ -2730,7 +2746,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="field"><label data-i18n="display_name">Display name (optional)</label><input type="text" id="nu-display" maxlength="80"></div>
     <div class="field"><label data-i18n="password">Password</label><input type="password" id="nu-password" autocomplete="new-password" placeholder=""><div class="muted-text" style="margin-top:4px;" data-i18n="nu_pw_hint">Leave empty to generate a secure temporary password.</div></div>
     <div class="field field-check"><input type="checkbox" id="nu-must-change" checked><label for="nu-must-change" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="must_change_pw">Must change the password at first sign-in</label></div>
-    <div class="field field-check"><input type="checkbox" id="nu-admin"><label for="nu-admin" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="administrator">Administrator</label></div>
+    <div class="field"><label data-i18n="role_lbl">Role</label><select id="nu-role">
+      <option value="user" data-i18n="urole_user">User</option><option value="operator" data-i18n="urole_operator">Operator</option>
+      <option value="auditor" data-i18n="urole_auditor">Security auditor</option><option value="admin" data-i18n="urole_admin">Administrator</option></select>
+      <div class="muted-text" style="margin-top:4px;" id="nu-role-hint"></div></div>
     <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-user-new')" data-i18n="cancel">Cancel</button><button onclick="submitNewUser()" data-i18n="create">Create</button></div>
   </div>
 </div>
@@ -2824,6 +2843,45 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-sec" id="dialog-alt" style="display:none;" onclick="dialogDone('alt')">Alt</button>
       <button id="dialog-ok" onclick="dialogDone(true)">OK</button>
     </div>
+  </div>
+</div>
+
+<!-- Step-up: confirm a dangerous action -->
+<div class="modal-overlay" id="modal-stepup" style="z-index:9800;">
+  <div class="modal" style="width:400px;">
+    <h3>🛡 <span data-i18n="su_title">Confirm it is you</span></h3>
+    <div class="muted-text" id="su-msg" style="margin-bottom:10px;"></div>
+    <div class="field"><label data-i18n="password">Password</label><input type="password" id="su-password" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();stepUpSubmit();}"></div>
+    <div class="field" id="su-code-wrap"><label data-i18n="su_code">2FA code (or a recovery code)</label><input type="text" id="su-code" inputmode="numeric" autocomplete="one-time-code" onkeydown="if(event.key==='Enter'){event.preventDefault();stepUpSubmit();}"></div>
+    <div class="fm-error" id="su-error" style="display:none;"></div>
+    <div class="modal-footer"><button class="btn-sec" onclick="stepUpDone(false)" data-i18n="cancel">Cancel</button><button onclick="stepUpSubmit()" data-i18n="confirm">Confirm</button></div>
+  </div>
+</div>
+
+<!-- Delete a user, optionally handing over what they own -->
+<div class="modal-overlay" id="modal-user-delete" style="z-index:9150;">
+  <div class="modal" style="width:460px;">
+    <h3>🗑 <span id="ud-title"></span></h3>
+    <div class="hint-box" id="ud-owned"></div>
+    <div class="field"><label data-i18n="ud_handover">What happens to the connections, folders, credentials, keys and shares</label><select id="ud-target"></select>
+      <div class="muted-text" style="margin-top:4px;" id="ud-hint"></div></div>
+    <div class="field"><label id="ud-typed-lbl"></label><input type="text" id="ud-typed" autocomplete="off" spellcheck="false"></div>
+    <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-user-delete')" data-i18n="cancel">Cancel</button><button class="btn-danger" onclick="submitDeleteUser()" data-i18n="delete">Delete</button></div>
+  </div>
+</div>
+
+<!-- Team editor -->
+<div class="modal-overlay" id="modal-team" style="z-index:9150;">
+  <div class="modal" style="width:520px;">
+    <h3>👥 <span id="team-title"></span></h3>
+    <input type="hidden" id="team-id">
+    <div class="field"><label data-i18n="team_name">Name</label><input type="text" id="team-name" maxlength="40" placeholder="ops"></div>
+    <div class="field"><label data-i18n="team_desc">Description (optional)</label><input type="text" id="team-desc" maxlength="300"></div>
+    <div class="field"><label data-i18n="team_members">Members</label>
+      <input type="text" id="team-q" placeholder="🔍" oninput="renderTeamMembersEditor()" style="margin-bottom:6px;">
+      <div class="team-members-box" id="team-members-box"></div>
+      <div class="muted-text" style="margin-top:4px;" data-i18n="team_lead_hint">A lead receives the connections of a member who leaves (suggested when the account is deleted).</div></div>
+    <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-team')" data-i18n="cancel">Cancel</button><button onclick="submitTeam()" data-i18n="save">Save</button></div>
   </div>
 </div>
 
@@ -2941,7 +2999,17 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       init.headers = h;
       if (!init.credentials) init.credentials = 'same-origin';
     }
-    return origFetch(input, init);
+    const p = origFetch(input, init);
+    // Step-up: a dangerous action answered 403 {step_up: true}. Ask for the password (and the
+    // 2FA code), confirm, and send the same request once more.
+    if (!url.startsWith('/api/') || url.startsWith('/api/auth/step-up') || !init.method || init.method === 'GET') return p;
+    return p.then(async res => {
+      if (res.status !== 403) return res;
+      const info = await res.clone().json().catch(() => null);
+      if (!info || !info.step_up || typeof window.wrmStepUp !== 'function') return res;
+      if (!(await window.wrmStepUp(info))) return res;
+      return origFetch(input, init);
+    });
   };
 })();
 
@@ -5144,6 +5212,133 @@ Object.assign(LANGS.hr, {
  "sp_audit_chain_why": "Svaki zapis audita povezan je s prethodnim hashom, pa se uklonjen ili promijenjen zapis vidi.",
  "sp_audit_chain_fix": "Netko je izravno mijenjao bazu. Sačuvaj kopiju za istragu i provjeri Admin → Audit → Provjeri cjelovitost."
 });
+// v12.6.23: roles, teams, step-up, break-glass
+Object.assign(LANGS.en, {
+ "adm_teams": "Teams",
+ "adin_teams": "Teams are groups of users. Add a team to a share to give all its members a role there, name teams in policies (teams:ops), and mark leads: a lead is suggested to receive the connections of a member who leaves.",
+ "role_lbl": "Role",
+ "urole_admin": "Administrator",
+ "urole_auditor": "Security auditor",
+ "urole_operator": "Operator",
+ "urole_user": "User",
+ "urole_admin_d": "Everything: users, policies, the security level and every server.",
+ "urole_auditor_d": "Reads the audit log, terminal sessions and recordings, file transfers and the security posture. Cannot open connections, use tools or the AI assistant, or change anything.",
+ "urole_operator_d": "A user who also gets the features whose policy is set to Operators.",
+ "urole_user_d": "Uses their own connections and what is shared with them, as the policies allow.",
+ "role_change_q": "Change the role of {u} to {r}?",
+ "break_glass": "Break-glass",
+ "break_glass_d": "Emergency administrator: must use 2FA, may be limited to allowed networks, every sign-in is audited and sent to the other administrators.",
+ "break_glass_on": "Make a break-glass account",
+ "break_glass_off": "Remove break-glass",
+ "break_glass_q": "Keep this administrator as the emergency (break-glass) account? It must use two-factor authentication (it is asked at the next sign-in), it may only sign in from the networks in Break-glass networks (if set), and every sign-in is audited and sent to all other administrators.",
+ "share_teams": "Teams",
+ "share_teams_hint": "Every member of a team you add gets its role here. When someone leaves, the share stays with the team.",
+ "su_title": "Confirm it is you",
+ "su_code": "2FA code (or a recovery code)",
+ "su_msg": "This action needs a fresh confirmation. It stays valid for {m} minutes in this browser.",
+ "ud_handover": "What happens to the connections, folders, credentials, keys and shares",
+ "ud_owned": "Owns {c} connections, {f} folders, {cr} credentials, {k} SSH keys, {s} shares and {p} proxies.",
+ "ud_owned_none": "Owns no connections, folders, credentials, keys, shares or proxies.",
+ "ud_delete_all": "Delete them together with the account",
+ "ud_give_to": "Give them to {u}",
+ "ud_team_lead": "team lead",
+ "ud_hint": "The receiver becomes the owner. Shares keep their members and teams, so the people they were shared with keep their access.",
+ "ud_hint_teams": "Teams: {t}. The receiver becomes the owner; shares keep their members and teams, so the team keeps its access.",
+ "ud_done_handover": "Deleted. Everything the user owned now belongs to the chosen account.",
+ "team_name": "Name",
+ "team_desc": "Description (optional)",
+ "team_members": "Members",
+ "team_lead": "lead",
+ "team_lead_hint": "A lead is suggested to receive the connections of a member whose account is deleted.",
+ "team_new": "New team",
+ "team_edit": "Edit team",
+ "teams_count": "{n} teams",
+ "team_members_lc": "members",
+ "su_err_password": "Wrong password.",
+ "no_members_yet": "No members yet. Add people or a team, or nobody but you can open this share.",
+ "no_members_optional": "No members added (optional for this access mode).",
+ "su_err_code": "Wrong 2FA code.",
+ "team_no_members": "No members yet.",
+ "team_in_policies": "Named in",
+ "teams_none": "No teams yet. Create one, add members, then add the team to a share or name it in a policy.",
+ "team_delete_q": "Delete the team {t}? Its members lose the access they had through the team's shares.",
+ "po_who_operators": "Administrators and operators",
+ "po_who_teams": "Choose teams…",
+ "po_who_no_teams": "There are no teams yet: create one in Admin → Teams.",
+ "po_who_teams_msg": "Team names, comma-separated. Administrators are always allowed. Teams: {t}",
+ "p_require_step_up": "Confirm dangerous actions (step-up)",
+ "p_require_step_up_d": "Policies, the security level, roles, disabling and deleting users, password and 2FA resets, and showing or exporting stored secrets ask for the password (and the 2FA code) again.",
+ "p_step_up_minutes": "Step-up valid for (minutes)",
+ "p_step_up_minutes_d": "How long one confirmation lasts in the same browser session (1–240).",
+ "p_break_glass_ips": "Break-glass networks",
+ "p_break_glass_ips_d": "IP addresses or networks (CIDR, comma-separated) a break-glass administrator may sign in from. Empty: anywhere.",
+ "p_break_glass_ips_ph": "10.0.0.0/8, 192.0.2.10",
+ "slr_require_step_up": "A stolen or unattended session cannot change policies, roles or reveal secrets without the password and 2FA code.",
+ "ne_security_break_glass_login": "A break-glass administrator signed in",
+});
+Object.assign(LANGS.hr, {
+ "adm_teams": "Timovi",
+ "adin_teams": "Timovi su grupe korisnika. Dodaj tim u dijeljenje da svi njegovi članovi dobiju ulogu, navedi timove u politikama (teams:ops) i označi voditelje: voditelj je predložen da preuzme konekcije člana koji odlazi.",
+ "role_lbl": "Uloga",
+ "urole_admin": "Administrator",
+ "urole_auditor": "Sigurnosni revizor",
+ "urole_operator": "Operater",
+ "urole_user": "Korisnik",
+ "urole_admin_d": "Sve: korisnici, politike, razina sigurnosti i svi serveri.",
+ "urole_auditor_d": "Čita audit, terminalske sesije i snimke, prijenose datoteka i sigurnosno stanje. Ne može otvarati konekcije, koristiti alate ni AI asistenta, niti išta mijenjati.",
+ "urole_operator_d": "Korisnik koji dobiva i funkcije čija je politika postavljena na Operateri.",
+ "urole_user_d": "Koristi svoje konekcije i ono što je s njim podijeljeno, kako politike dopuštaju.",
+ "role_change_q": "Promijeniti ulogu korisnika {u} u {r}?",
+ "break_glass": "Break-glass",
+ "break_glass_d": "Administrator za hitne slučajeve: mora koristiti 2FA, može biti ograničen na dopuštene mreže, svaka prijava ide u audit i šalje se ostalim administratorima.",
+ "break_glass_on": "Postavi kao break-glass račun",
+ "break_glass_off": "Ukloni break-glass",
+ "break_glass_q": "Zadržati ovog administratora kao račun za hitne slučajeve (break-glass)? Mora koristiti dvofaktorsku autentifikaciju (traži se pri sljedećoj prijavi), smije se prijaviti samo s mreža iz postavke Break-glass mreže (ako je postavljena), a svaka prijava ide u audit i šalje se svim ostalim administratorima.",
+ "share_teams": "Timovi",
+ "share_teams_hint": "Svaki član tima kojeg dodaš dobiva ovdje njegovu ulogu. Kad netko ode, dijeljenje ostaje timu.",
+ "su_title": "Potvrdi da si to ti",
+ "su_code": "2FA kod (ili rezervni kod)",
+ "su_msg": "Ova radnja traži novu potvrdu. Vrijedi {m} minuta u ovom pregledniku.",
+ "ud_handover": "Što se događa s konekcijama, mapama, vjerodajnicama, ključevima i dijeljenjima",
+ "ud_owned": "Posjeduje {c} konekcija, {f} mapa, {cr} vjerodajnica, {k} SSH ključeva, {s} dijeljenja i {p} proxyja.",
+ "ud_owned_none": "Ne posjeduje konekcije, mape, vjerodajnice, ključeve, dijeljenja ni proxyje.",
+ "ud_delete_all": "Obriši ih zajedno s računom",
+ "ud_give_to": "Predaj ih korisniku {u}",
+ "ud_team_lead": "voditelj tima",
+ "ud_hint": "Primatelj postaje vlasnik. Dijeljenja zadržavaju članove i timove, pa oni s kojima je podijeljeno zadržavaju pristup.",
+ "ud_hint_teams": "Timovi: {t}. Primatelj postaje vlasnik; dijeljenja zadržavaju članove i timove, pa tim zadržava pristup.",
+ "ud_done_handover": "Obrisano. Sve što je korisnik posjedovao sada pripada odabranom računu.",
+ "team_name": "Naziv",
+ "team_desc": "Opis (neobavezno)",
+ "team_members": "Članovi",
+ "team_lead": "voditelj",
+ "team_lead_hint": "Voditelj je predložen da preuzme konekcije člana čiji se račun briše.",
+ "team_new": "Novi tim",
+ "team_edit": "Uredi tim",
+ "teams_count": "Timova: {n}",
+ "team_members_lc": "članova",
+ "su_err_password": "Pogrešna lozinka.",
+ "no_members_yet": "Još nema članova. Dodaj osobe ili tim, inače ovo dijeljenje možeš otvoriti samo ti.",
+ "no_members_optional": "Nema dodanih članova (za ovaj način pristupa nije obavezno).",
+ "su_err_code": "Pogrešan 2FA kod.",
+ "team_no_members": "Još nema članova.",
+ "team_in_policies": "Naveden u",
+ "teams_none": "Još nema timova. Napravi tim, dodaj članove, a zatim ga dodaj u dijeljenje ili navedi u politici.",
+ "team_delete_q": "Obrisati tim {t}? Članovi gube pristup koji su imali kroz dijeljenja tima.",
+ "po_who_operators": "Administratori i operateri",
+ "po_who_teams": "Odaberi timove…",
+ "po_who_no_teams": "Još nema timova: napravi tim u Admin → Timovi.",
+ "po_who_teams_msg": "Nazivi timova odvojeni zarezom. Administratori su uvijek dopušteni. Timovi: {t}",
+ "p_require_step_up": "Potvrda opasnih radnji (step-up)",
+ "p_require_step_up_d": "Politike, razina sigurnosti, uloge, gašenje i brisanje korisnika, reset lozinke i 2FA te prikaz ili izvoz spremljenih tajni ponovno traže lozinku (i 2FA kod).",
+ "p_step_up_minutes": "Step-up vrijedi (minuta)",
+ "p_step_up_minutes_d": "Koliko jedna potvrda traje u istoj sesiji preglednika (1–240).",
+ "p_break_glass_ips": "Break-glass mreže",
+ "p_break_glass_ips_d": "IP adrese ili mreže (CIDR, odvojene zarezom) s kojih se break-glass administrator smije prijaviti. Prazno: bilo gdje.",
+ "p_break_glass_ips_ph": "10.0.0.0/8, 192.0.2.10",
+ "slr_require_step_up": "Ukradena ili ostavljena sesija ne može mijenjati politike, uloge ni otkriti tajne bez lozinke i 2FA koda.",
+ "ne_security_break_glass_login": "Prijavio se break-glass administrator",
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5579,8 +5774,10 @@ function initApp() {
   if (currentUser) {
     document.getElementById('username-display').textContent = currentUser.display_name || currentUser.username;
     document.getElementById('user-avatar').textContent = (currentUser.username || '?').charAt(0);
-    document.getElementById('admin-badge').style.display = currentUser.is_admin ? 'inline' : 'none';
-    document.getElementById('admin-settings-row').style.display = currentUser.is_admin ? '' : 'none';
+    const badge = document.getElementById('admin-badge');
+    badge.style.display = currentUser.is_admin || currentUser.is_auditor ? 'inline' : 'none';
+    badge.textContent = currentUser.is_admin ? 'ADMIN' : 'AUDITOR';
+    document.getElementById('admin-settings-row').style.display = currentUser.is_admin || currentUser.is_auditor ? '' : 'none';
     applyPolicyToUI();
   }
   if (window.wrmLayout) wrmLayout.init();
@@ -6373,6 +6570,7 @@ function openShareModal(opts) {
     editId: edit ? edit.id : null,
     mode: edit ? edit.access_mode : 'members',
     members: edit ? (edit.members || []).map(m => ({user_id: m.user_id, username: m.username, role: m.role})) : [],
+    teams: edit ? (edit.teams || []).map(x => ({team_id: x.team_id, name: x.name, role: x.role})) : [],
     connIds: new Set(edit ? edit.connection_ids : (opts.connIds || [])),
     folderIds: new Set(edit ? edit.folder_ids : (opts.folderIds || [])),
     hadPassword: edit ? !!edit.password_protected : false,
@@ -6400,6 +6598,9 @@ function openShareModal(opts) {
   document.getElementById('role-matrix-box').innerHTML = roleMatrixHTML();
   renderShareConnList();
   renderShareMembers();
+  document.getElementById('share-team-role').innerHTML = roleOptions('operator');
+  renderShareTeams();
+  loadTeamDirectory();
   setShareMode(shareDraft.mode);
   loadUserDirectory();
   document.getElementById('modal-share').classList.add('open');
@@ -6454,6 +6655,31 @@ function renderShareMembers() {
     </div>`).join('');
 }
 
+let teamDirectory = [];
+async function loadTeamDirectory() {
+  try { const r = await fetch('/api/teams'); if (r.ok) teamDirectory = (await r.json()).teams || []; } catch (_) {}
+  renderShareTeams();
+}
+function renderShareTeams() {
+  if (!shareDraft) return;
+  const field = document.getElementById('share-teams-field');
+  field.style.display = teamDirectory.length || shareDraft.teams.length ? '' : 'none';
+  const used = new Set(shareDraft.teams.map(x => x.team_id));
+  document.getElementById('share-team-add').innerHTML = teamDirectory.filter(x => !used.has(x.id)).map(x => `<option value="${x.id}">👥 ${esc(x.name)} (${x.member_count})</option>`).join('') || `<option value="">${esc(t('none'))}</option>`;
+  document.getElementById('share-team-list').innerHTML = shareDraft.teams.length ? shareDraft.teams.map((x, i) => `<div class="member-row">
+      <span class="nm">👥 ${esc(x.name)}</span>
+      <select onchange="shareDraft.teams[${i}].role=this.value">${roleOptions(x.role)}</select>
+      <button class="icon-btn" title="${esc(t('remove'))}" onclick="shareDraft.teams.splice(${i},1);renderShareTeams()">✕</button>
+    </div>`).join('') : `<div class="muted-text" style="padding:4px 2px;">${esc(t('share_teams_hint'))}</div>`;
+}
+function addShareTeam() {
+  const id = Number(document.getElementById('share-team-add').value || 0);
+  const tm = teamDirectory.find(x => x.id === id);
+  if (!tm) return;
+  shareDraft.teams.push({team_id: id, name: tm.name, role: document.getElementById('share-team-role').value || 'operator'});
+  renderShareTeams();
+}
+
 function addShareMember() {
   const inp = document.getElementById('share-member-input');
   const name = inp.value.trim();
@@ -6500,6 +6726,7 @@ async function submitShare() {
     connection_ids: [...shareDraft.connIds].filter(id => { const c = conns.find(x => x.id === id); return c && !(shareFolderCovers(c.folder_id)); }),
     folder_ids: [...shareDraft.folderIds],
     members: shareDraft.members.map(m => ({user_id: m.user_id || 0, username: m.username, role: m.role})),
+    teams: shareDraft.teams.map(x => ({team_id: x.team_id, role: x.role})),
   };
   const pw = document.getElementById('share-pass').value;
   if (pw) pl.password = pw;
@@ -6653,18 +6880,24 @@ async function setShareParticipant(shareId, pid, body) {
 let adminTab = 'overview';
 let adminUsersCache = [];
 
+// Security auditors see the read-only tabs only.
+const AUDITOR_TABS = ['security', 'audit', 'sessions', 'transfers'];
+function adminTabAllowed(tab) { return !currentUser || currentUser.is_admin || AUDITOR_TABS.includes(tab); }
+
 function openAdminPanel() {
   document.getElementById('modal-admin').classList.add('open');
-  showAdminTab(adminTab);
+  document.querySelectorAll('#admin-tabs .tab-btn').forEach(b => { b.style.display = adminTabAllowed(b.dataset.tab) ? '' : 'none'; });
+  showAdminTab(adminTabAllowed(adminTab) ? adminTab : 'audit');
 }
 
 function showAdminTab(tab) {
+  if (!adminTabAllowed(tab)) tab = 'audit';
   adminTab = tab;
   document.querySelectorAll('#admin-tabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   const body = document.getElementById('admin-body');
   setTabIntro('admin-intro', 'adin_' + (document.querySelector(`#admin-tabs [data-tab="${tab}"]`) ? tab : 'overview'));
   body.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
-  ({overview: adminOverview, security: adminSecurity, users: adminUsers, shares: adminShares, policies: () => adminPolicies('policies'),
+  ({overview: adminOverview, security: adminSecurity, users: adminUsers, teams: adminTeams, shares: adminShares, policies: () => adminPolicies('policies'),
     voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
     transfers: adminTransfers,
@@ -6739,7 +6972,7 @@ function renderAdminUsers() {
   document.getElementById('adm-users-table').innerHTML = `<table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('status'))}</th><th>${esc(t('last_login'))}</th><th>${esc(t('connections_lc'))}</th><th>${esc(t('created'))}</th><th></th></tr></thead><tbody>` +
     list.map(u => `<tr>
       <td>${u.online ? '<span class="online-dot"></span>' : ''}<b style="color:var(--text);">${esc(u.username)}</b>${u.display_name ? ' <span class="muted-text">' + esc(u.display_name) + '</span>' : ''}
-        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${u.is_admin ? '<span class="pill warn">ADMIN</span>' : ''}${u.totp_enabled ? '<span class="pill ok">2FA</span>' : ''}${u.id === currentUser.id ? '<span class="pill info">' + esc(t('you')) + '</span>' : ''}</div></td>
+        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${userRolePill(u)}${u.break_glass ? '<span class="pill bad" title="' + esc(t('break_glass_d')) + '">🚨 ' + esc(t('break_glass')) + '</span>' : ''}${u.totp_enabled ? '<span class="pill ok">2FA</span>' : ''}${u.id === currentUser.id ? '<span class="pill info">' + esc(t('you')) + '</span>' : ''}${(u.teams || []).map(tm => '<span class="pill">👥 ' + esc(tm.name) + (tm.lead ? ' ★' : '') + '</span>').join('')}</div></td>
       <td>${u.disabled ? `<span class="pill bad">${esc(t('disabled'))}</span>` : u.locked ? `<span class="pill bad">🔒 ${esc(t('locked'))}</span>` : `<span class="pill ok">${esc(t('active'))}</span>`}${u.must_change_password ? `<div class="sub">${esc(t('must_change_pw_short'))}</div>` : ''}</td>
       <td>${esc(fmtTime(u.last_login_at))}<div class="sub mono">${esc(u.last_login_ip || '')}</div></td>
       <td>${u.connections} · <span class="muted-text">${u.shares} ${esc(t('adm_shares').toLowerCase())} · ${u.sessions} ${esc(t('sessions_lc'))}</span></td>
@@ -6757,7 +6990,10 @@ function adminUserMenu(e, id) {
   menu.innerHTML = `
     <div class="ctx-section">${esc(u.username)}</div>
     <div class="ctx-item" onclick="closeAllCtx(); adminEditDisplayName(${id})">✏ ${esc(t('edit_display_name'))}</div>
-    <div class="ctx-item ${self ? 'disabled' : ''}" onclick="closeAllCtx(); adminUserUpdate(${id}, {is_admin: ${!u.is_admin}})">${u.is_admin ? '⬇ ' + esc(t('remove_admin')) : '⬆ ' + esc(t('make_admin'))}</div>
+    <div class="ctx-section">${esc(t('role_lbl'))}</div>
+    ${['admin', 'operator', 'user', 'auditor'].map(r => `<div class="ctx-item ${self && r !== 'admin' ? 'disabled' : ''}" onclick="closeAllCtx(); adminUserUpdate(${id}, {role: '${r}'})">${u.role === r ? '✓' : '\u2003'} ${esc(t('urole_' + r))}</div>`).join('')}
+    ${u.is_admin ? `<div class="ctx-item" onclick="closeAllCtx(); adminBreakGlass(${id}, ${!u.break_glass})">🚨 ${esc(t(u.break_glass ? 'break_glass_off' : 'break_glass_on'))}</div>` : ''}
+    <div class="ctx-hr"></div>
     <div class="ctx-item" onclick="closeAllCtx(); adminResetPassword(${id})">🔑 ${esc(t('reset_password'))}</div>
     ${u.totp_enabled ? `<div class="ctx-item" onclick="closeAllCtx(); adminUserAction(${id}, 'reset-2fa', 'reset_2fa_q')">🔐 ${esc(t('reset_2fa'))}</div>` : ''}
     <div class="ctx-item" onclick="closeAllCtx(); adminUserAction(${id}, 'revoke-sessions', 'revoke_sessions_q')">⏏ ${esc(t('sign_out_everywhere'))}</div>
@@ -6768,8 +7004,23 @@ function adminUserMenu(e, id) {
   showCtx('dyn-ctx-menu', e.clientX, e.clientY);
 }
 
+function userRolePill(u) {
+  const cls = {admin: 'warn', auditor: 'info', operator: 'ok'}[u.role];
+  return cls ? `<span class="pill ${cls}">${esc(t('urole_' + u.role).toUpperCase())}</span>` : '';
+}
+
+async function adminBreakGlass(id, on) {
+  if (on && !(await uiConfirm(t('break_glass_q'), {okText: t('break_glass_on')}))) return;
+  adminUserUpdate(id, {break_glass: on});
+}
+
 async function adminUserUpdate(id, body) {
   if (body.disabled && !(await uiConfirm(t('disable_q'), {okText: t('disable_account'), danger: true}))) return;
+  if (body.role) {
+    const u = adminUsersCache.find(x => x.id === id);
+    if (u && u.role === body.role) return;
+    if (!(await uiConfirm(t('role_change_q').replace('{u}', u ? u.username : '').replace('{r}', t('urole_' + body.role)) + '\n\n' + t('urole_' + body.role + '_d'), {okText: t('confirm')}))) return;
+  }
   const res = await fetch('/api/admin/users/' + id, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   if (!res.ok) { showToast(await apiError(res), 'error'); return; }
   showToast(t('saved'), 'success', 1500);
@@ -6806,21 +7057,144 @@ function showGeneratedPassword(username, pw) {
     .then(ok => { if (ok) copyText(pw); });
 }
 
+let deleteUserDraft = null;
 async function adminDeleteUser(id) {
   const u = adminUsersCache.find(x => x.id === id);
-  const typed = await uiPrompt(t('delete_user_typed').replace('{u}', u.username), '', {okText: t('delete'), danger: true});
-  if (typed === null || typed === false) return;
-  if (String(typed).trim() !== u.username) { showToast(t('name_mismatch'), 'warning'); return; }
-  const res = await fetch('/api/admin/users/' + id, {method: 'DELETE'});
+  if (!u) return;
+  const res = await fetch('/api/admin/users/' + id + '/handover');
+  const h = res.ok ? await res.json() : {owned: {}};
+  deleteUserDraft = {id, username: u.username};
+  const o = h.owned || {};
+  const total = (o.connections || 0) + (o.folders || 0) + (o.credentials || 0) + (o.shares || 0) + (o.proxies || 0) + (o.keys || 0);
+  document.getElementById('ud-title').textContent = t('delete_user') + ': ' + u.username;
+  document.getElementById('ud-owned').textContent = total ? t('ud_owned').replace('{c}', o.connections || 0).replace('{f}', o.folders || 0).replace('{cr}', o.credentials || 0)
+    .replace('{k}', o.keys || 0).replace('{s}', o.shares || 0).replace('{p}', o.proxies || 0) : t('ud_owned_none');
+  const others = adminUsersCache.filter(x => x.id !== id && !x.disabled && x.role !== 'auditor');
+  const sel = document.getElementById('ud-target');
+  sel.innerHTML = `<option value="0">🗑 ${esc(t('ud_delete_all'))}</option>` + others.map(x => `<option value="${x.id}" ${x.id === h.suggested_user_id ? 'selected' : ''}>➜ ${esc(t('ud_give_to').replace('{u}', x.username))}${x.id === h.suggested_user_id ? ' (' + esc(t('ud_team_lead')) + ')' : x.is_admin ? ' (admin)' : ''}</option>`).join('');
+  if (!h.suggested_user_id && total) { const me = others.find(x => x.id === currentUser.id); if (me) sel.value = String(me.id); }
+  if (!total) sel.value = '0';
+  sel.disabled = !total;
+  document.getElementById('ud-hint').textContent = (h.teams || []).length ? t('ud_hint_teams').replace('{t}', h.teams.map(x => x.name).join(', ')) : t('ud_hint');
+  document.getElementById('ud-typed-lbl').textContent = t('delete_user_typed').replace('{u}', u.username);
+  document.getElementById('ud-typed').value = '';
+  document.getElementById('modal-user-delete').classList.add('open');
+  setTimeout(() => document.getElementById('ud-typed').focus(), 60);
+}
+
+async function submitDeleteUser() {
+  const d = deleteUserDraft;
+  if (!d) return;
+  if (document.getElementById('ud-typed').value.trim() !== d.username) { showToast(t('name_mismatch'), 'warning'); return; }
+  const to = document.getElementById('ud-target').value;
+  const res = await fetch('/api/admin/users/' + d.id + (to !== '0' ? '?transfer_to=' + encodeURIComponent(to) : ''), {method: 'DELETE'});
   if (!res.ok) { showToast(await apiError(res), 'error'); return; }
-  showToast(t('user_deleted'), 'success');
+  closeModal('modal-user-delete');
+  showToast(t(to !== '0' ? 'ud_done_handover' : 'user_deleted'), 'success', 4000);
   adminUsers();
+}
+
+// ── Teams (Admin → Teams) ──
+let adminTeamsCache = [], teamDraft = null;
+async function adminTeams() {
+  const body = document.getElementById('admin-body');
+  const [tr, ur] = await Promise.all([fetch('/api/admin/teams'), fetch('/api/admin/users')]);
+  if (!tr.ok) { body.innerHTML = `<div class="fm-error">${esc(await apiError(tr))}</div>`; return; }
+  adminTeamsCache = await tr.json();
+  if (ur.ok) adminUsersCache = await ur.json();
+  body.innerHTML = `<div class="adm-toolbar"><span class="grow muted-text">${esc(t('teams_count').replace('{n}', adminTeamsCache.length))}</span><button class="btn-sm" onclick="openTeamEditor(0)">+ ${esc(t('team_new'))}</button></div>` +
+    (adminTeamsCache.length ? adminTeamsCache.map(tm => `<div class="share-card"><div class="sc-top"><span class="sc-name">👥 ${esc(tm.name)}</span>
+      <span class="pill" title="${esc(t('team_members_lc'))}">👥 ${tm.member_count}</span>${tm.shares ? `<span class="pill info">🤝 ${tm.shares}</span>` : ''}
+      <span style="flex:1;"></span><button class="btn-sm btn-sec" onclick="openTeamEditor(${tm.id})">✏ ${esc(t('edit'))}</button><button class="btn-sm btn-danger" onclick="deleteTeam(${tm.id})">🗑</button></div>
+      ${tm.description ? `<div class="sc-meta">${esc(tm.description)}</div>` : ''}
+      <div class="sc-meta">${(tm.members || []).map(m => `<span>${m.lead ? '★ ' : ''}${esc(m.username)}${m.disabled ? ' <span class="pill bad">' + esc(t('disabled')) + '</span>' : ''}</span>`).join('') || esc(t('team_no_members'))}</div>
+      ${(tm.policies || []).length ? `<div class="sc-meta">🛡 ${esc(t('team_in_policies'))}: ${tm.policies.map(k => esc(t('p_' + k))).join(', ')}</div>` : ''}</div>`).join('')
+      : `<div class="hint-box">${esc(t('teams_none'))}</div>`);
+}
+
+function openTeamEditor(id) {
+  const tm = adminTeamsCache.find(x => x.id === id);
+  teamDraft = {id, members: new Map((tm ? tm.members : []).map(m => [m.user_id, !!m.lead]))};
+  document.getElementById('team-id').value = id || '';
+  document.getElementById('team-title').textContent = tm ? t('team_edit') + ': ' + tm.name : t('team_new');
+  document.getElementById('team-name').value = tm ? tm.name : '';
+  document.getElementById('team-desc').value = tm ? tm.description : '';
+  document.getElementById('team-q').value = '';
+  renderTeamMembersEditor();
+  document.getElementById('modal-team').classList.add('open');
+  setTimeout(() => document.getElementById('team-name').focus(), 60);
+}
+
+function renderTeamMembersEditor() {
+  const q = document.getElementById('team-q').value.toLowerCase();
+  document.getElementById('team-members-box').innerHTML = adminUsersCache.filter(u => !q || (u.username + ' ' + u.display_name).toLowerCase().includes(q)).map(u => {
+    const on = teamDraft.members.has(u.id), lead = on && teamDraft.members.get(u.id);
+    return `<div class="team-member-row"><label><input type="checkbox" ${on ? 'checked' : ''} onchange="teamToggle(${u.id}, this.checked)"> ${esc(u.username)}${u.display_name ? ' <span class="muted-text">' + esc(u.display_name) + '</span>' : ''} ${userRolePill(u)}</label>
+      <label class="muted-text" style="${on ? '' : 'visibility:hidden;'}"><input type="checkbox" ${lead ? 'checked' : ''} onchange="teamDraft.members.set(${u.id}, this.checked)"> ★ ${esc(t('team_lead'))}</label></div>`;
+  }).join('') || `<div class="muted-text">${esc(t('none'))}</div>`;
+}
+function teamToggle(uid, on) { if (on) teamDraft.members.set(uid, false); else teamDraft.members.delete(uid); renderTeamMembersEditor(); }
+
+async function submitTeam() {
+  const id = Number(document.getElementById('team-id').value || 0);
+  const body = {name: document.getElementById('team-name').value.trim(), description: document.getElementById('team-desc').value.trim(),
+    members: [...teamDraft.members].map(([user_id, lead]) => ({user_id, lead}))};
+  const res = await fetch('/api/admin/teams' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!res.ok) { showToast(await apiError(res), 'error', 5000); return; }
+  closeModal('modal-team');
+  showToast(t('saved'), 'success', 1500);
+  adminTeams();
+}
+
+async function deleteTeam(id) {
+  const tm = adminTeamsCache.find(x => x.id === id);
+  if (!tm || !(await uiConfirm(t('team_delete_q').replace('{t}', tm.name), {okText: t('delete'), danger: true}))) return;
+  const res = await fetch('/api/admin/teams/' + id, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error', 6000); return; }
+  adminTeams();
+}
+
+// ── Step-up: confirm with the password (and 2FA) before a dangerous action ──
+let _stepUp = null;
+window.wrmStepUp = function (info) {
+  return new Promise(resolve => {
+    if (_stepUp) _stepUp.resolve(false);
+    _stepUp = {resolve, action: info.action || ''};
+    document.getElementById('su-msg').textContent = t('su_msg').replace('{m}', (currentUser && currentUser.step_up && currentUser.step_up.minutes) || 10);
+    document.getElementById('su-code-wrap').style.display = info.totp ? '' : 'none';
+    document.getElementById('su-password').value = '';
+    document.getElementById('su-code').value = '';
+    document.getElementById('su-error').style.display = 'none';
+    document.getElementById('modal-stepup').classList.add('open');
+    setTimeout(() => document.getElementById('su-password').focus(), 40);
+  });
+};
+function stepUpDone(ok) {
+  document.getElementById('modal-stepup').classList.remove('open');
+  const s = _stepUp; _stepUp = null;
+  if (s) s.resolve(ok);
+}
+async function stepUpSubmit() {
+  if (!_stepUp) return;
+  const res = await fetch('/api/auth/step-up', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({password: document.getElementById('su-password').value, code: document.getElementById('su-code').value.trim(), action: _stepUp.action})});
+  if (!res.ok) {
+    const e = document.getElementById('su-error');
+    const msg = await apiError(res);
+    e.textContent = msg === 'Wrong password' ? t('su_err_password') : msg === 'Invalid verification code' ? t('su_err_code') : msg;
+    e.style.display = '';
+    return;
+  }
+  stepUpDone(true);
 }
 
 function openNewUser() {
   ['nu-username', 'nu-display', 'nu-password'].forEach(i => document.getElementById(i).value = '');
   document.getElementById('nu-must-change').checked = true;
-  document.getElementById('nu-admin').checked = false;
+  const nr = document.getElementById('nu-role');
+  nr.value = 'user';
+  nr.onchange = () => { document.getElementById('nu-role-hint').textContent = t('urole_' + nr.value + '_d'); };
+  nr.onchange();
   document.getElementById('modal-user-new').classList.add('open');
   setTimeout(() => document.getElementById('nu-username').focus(), 50);
 }
@@ -6830,7 +7204,7 @@ async function submitNewUser() {
     username: document.getElementById('nu-username').value.trim(),
     display_name: document.getElementById('nu-display').value.trim(),
     password: document.getElementById('nu-password').value,
-    is_admin: document.getElementById('nu-admin').checked,
+    role: document.getElementById('nu-role').value,
     must_change_password: document.getElementById('nu-must-change').checked,
   };
   const res = await fetch('/api/admin/users', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
@@ -6874,7 +7248,7 @@ async function adminShareDelete(id) {
 
 const POLICY_GROUPS = {
   policies: [
-    ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days']],
+    ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips']],
     ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export', 'bitwarden', 'bitwarden_idle_minutes']],
     ['pg_sharing', ['allow_link_shares', 'link_share_max_days', 'chat_file_max_mb']],
     ['pg_terminal', ['broadcast_enabled']],
@@ -6920,6 +7294,15 @@ function settingRowHTML(st) {
   const k = st.key, dis = st.locked ? 'disabled' : '';
   let ctl = '';
   if (st.kind === 'bool') ctl = `<label class="switch"><input type="checkbox" ${st.value === '1' ? 'checked' : ''} ${dis} onchange="saveSetting('${k}', this.checked ? '1' : '0', this)"><span></span></label>`;
+  else if (st.kind === 'enum' && st.who) {
+    // Who-policies also accept operators and teams:<names>.
+    const teamsVal = String(st.value || '').startsWith('teams:') ? st.value : '';
+    const opts = st.enum.map(v => `<option value="${esc(v)}" ${v === st.value ? 'selected' : ''}>${esc(t('po_' + k + '_' + v))}</option>`).join('') +
+      `<option value="operators" ${st.value === 'operators' ? 'selected' : ''}>${esc(t('po_who_operators'))}</option>` +
+      (teamsVal ? `<option value="${esc(teamsVal)}" selected>👥 ${esc(teamsVal.slice(6).split(',').join(', '))}</option>` : '') +
+      `<option value="__teams">👥 ${esc(t('po_who_teams'))}</option>`;
+    ctl = `<select class="setting-select" ${dis} onchange="whoPolicyChange('${k}', this)">${opts}</select>`;
+  }
   else if (st.kind === 'enum') ctl = `<select class="setting-select" ${dis} onchange="saveSetting('${k}', this.value, this)">${st.enum.map(v => `<option value="${esc(v)}" ${v === st.value ? 'selected' : ''}>${esc(t('po_' + k + '_' + v))}</option>`).join('')}</select>`;
   else if (st.kind === 'int') ctl = `<input type="number" style="width:110px;" min="${st.min}" max="${st.max}" value="${esc(st.value)}" ${dis} onchange="saveSetting('${k}', this.value, this)">`;
   else if (st.kind === 'json') ctl = '';
@@ -6932,6 +7315,18 @@ function settingRowHTML(st) {
       <textarea spellcheck="false" ${dis} onchange="saveSetting('${k}', this.value, this)">${esc(st.value)}</textarea>${lock}</div>`;
   }
   return `<div class="setting-row"><div><div class="setting-label">${esc(t('p_' + k))}</div><div class="setting-desc">${esc(t('p_' + k + '_d'))}</div>${lock}</div><div class="setting-control">${ctl}</div></div>`;
+}
+
+async function whoPolicyChange(key, el) {
+  if (el.value !== '__teams') return saveSetting(key, el.value, el);
+  const st = adminSettingsCache.find(x => x.key === key) || {};
+  let names = [];
+  try { const r = await fetch('/api/teams'); if (r.ok) names = ((await r.json()).teams || []).map(x => x.name); } catch (_) {}
+  if (!names.length) { showToast(t('po_who_no_teams'), 'warning', 6000); el.value = st.value; return; }
+  const cur = String(st.value || '').startsWith('teams:') ? st.value.slice(6) : '';
+  const v = await uiPrompt(t('po_who_teams'), cur, {message: t('po_who_teams_msg').replace('{t}', names.join(', ')), placeholder: names[0]});
+  if (v === null || v === false || !String(v).trim()) { el.value = st.value; return; }
+  saveSetting(key, 'teams:' + String(v).trim(), el).then(() => { if (adminTab === 'policies') adminPolicies('policies'); });
 }
 
 async function saveSetting(key, value, el, note) {
@@ -7015,7 +7410,8 @@ function secSortedChecks() {
 
 function renderAdminSecurity() {
   const p = secPosture, s = p.summary || {};
-  const cards = p.levels.map(l => `<button type="button" class="sec-level ${l === p.level ? 'active' : ''}" ${p.level_locked ? 'disabled' : ''} onclick="secPreview('${l}')">
+  const ro = !(currentUser && currentUser.is_admin); // security auditors read only
+  const cards = p.levels.map(l => `<button type="button" class="sec-level ${l === p.level ? 'active' : ''}" ${p.level_locked || ro ? 'disabled' : ''} onclick="secPreview('${l}')">
       <b>${esc(t('sec_lvl_' + l))}${l === p.level ? ` <span class="pill ok">${esc(t('sec_current'))}</span>` : ''}</b><span>${esc(t('sec_lvl_' + l + '_d'))}</span></button>`).join('');
   const lock = p.level_locked ? `<div class="locked-note">🔒 ${esc(t('set_by_env'))} ${esc(p.level_env)}</div>` : '';
   const checks = secSortedChecks().map(c => {
@@ -7023,7 +7419,7 @@ function renderAdminSecurity() {
     return `<div class="sec-check ${c.status}"><div class="sec-ic" title="${esc(t('sec_st_' + c.status))}">${SEC_ICON[c.status]}</div><div class="grow">
       <div class="sec-ttl">${esc(i.title)} <span class="sec-val">${esc(i.value)}</span>${i.required ? ` <span class="muted-text">· ${esc(i.required)}</span>` : ''}</div>
       <div class="setting-desc">${esc(i.why)}</div>${i.fix ? `<div class="sec-fix">${esc(i.fix)}</div>` : ''}</div>
-      ${i.canFix ? `<div><button class="btn-sec btn-sm" onclick="secFixRule(${jsq(c.id)}, ${jsq(c.required)})">${esc(t('sec_fix_btn'))}</button></div>` : ''}</div>`;
+      ${i.canFix && !ro ? `<div><button class="btn-sec btn-sm" onclick="secFixRule(${jsq(c.id)}, ${jsq(c.required)})">${esc(t('sec_fix_btn'))}</button></div>` : ''}</div>`;
   }).join('');
   const devs = p.deviations || [];
   const devTable = devs.length ? `<table class="admin-table"><thead><tr><th>${esc(t('sec_setting'))}</th><th>${esc(t('sec_value'))}</th><th>${esc(t('sec_required'))}</th><th>${esc(t('sec_note'))}</th><th>${esc(t('sec_by'))}</th><th>${esc(t('sec_when'))}</th></tr></thead><tbody>` +

@@ -317,7 +317,7 @@ func normalizeTimeBound(s string, upper bool) string {
 // GET /api/admin/audit?format=csv                                                  (CSV download)
 // GET /api/admin/audit/verify                                                      (hash chain check)
 func apiAdminAuditHandler(w http.ResponseWriter, r *http.Request) {
-	adminID, ok := requireAdmin(w, r)
+	adminID, ok := requireAuditRead(w, r)
 	if !ok {
 		return
 	}

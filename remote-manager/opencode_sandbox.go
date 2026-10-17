@@ -100,13 +100,11 @@ func opencodeSandboxPackage(arch string) string {
 
 // opencodeSandboxAllowed: may this user start an agent with the Docker sandbox, and why not.
 func opencodeSandboxAllowed(userID int) (bool, string) {
-	switch getSetting("ai_opencode_sandbox") {
-	case "off":
+	switch v := getSetting("ai_opencode_sandbox"); {
+	case v == "off":
 		return false, "the Docker sandbox for OpenCode is off (policy ai_opencode_sandbox)"
-	case "admins":
-		if !isAdminUser(userID) {
-			return false, "the Docker sandbox for OpenCode is limited to administrators"
-		}
+	case !policyAllows(userID, v):
+		return false, "the Docker sandbox for OpenCode is limited to " + policyLimitText(v)
 	}
 	if mediumInContainer() {
 		return false, "WRM itself runs in a container; the Docker sandbox needs WRM on the host"

@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.6.22"
+var AppVersion = "v12.6.23"
 
 const sessionCookieName = "wrm_session"
 
@@ -320,6 +320,10 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/settings", apiAdminSettingsHandler)
 	mux.HandleFunc("/api/admin/security", apiAdminSecurityHandler)
 	mux.HandleFunc("/api/admin/security/", apiAdminSecurityHandler)
+	mux.HandleFunc("/api/admin/teams", apiAdminTeamsHandler)
+	mux.HandleFunc("/api/admin/teams/", apiAdminTeamsHandler)
+	mux.HandleFunc("/api/teams", apiTeamsHandler)
+	mux.HandleFunc("/api/auth/step-up", apiAuthStepUpHandler)
 	mux.HandleFunc("/api/admin/audit", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
@@ -1070,6 +1074,30 @@ func initDB() {
 		username TEXT NOT NULL DEFAULT '',
 		created_at TEXT NOT NULL DEFAULT '')`,
 		"key", "value", "required", "level", "note", "user_id", "username", "created_at")
+	// v12.6.23: roles, teams (also as share members), step-up, break-glass administrators.
+	db.Exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT ''`)
+	db.Exec(`ALTER TABLE users ADD COLUMN break_glass INTEGER NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN step_up_at TEXT NOT NULL DEFAULT ''`)
+	ensureTable("teams", `CREATE TABLE IF NOT EXISTS teams (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+		description TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '')`,
+		"id", "name", "description", "created_at")
+	ensureTable("team_members", `CREATE TABLE IF NOT EXISTS team_members (
+		team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		lead INTEGER NOT NULL DEFAULT 0,
+		added_at TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (team_id, user_id))`,
+		"team_id", "user_id", "lead", "added_at")
+	ensureTable("share_teams", `CREATE TABLE IF NOT EXISTS share_teams (
+		share_id INTEGER NOT NULL REFERENCES share_links(id) ON DELETE CASCADE,
+		team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+		role TEXT NOT NULL DEFAULT 'operator',
+		added_at TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (share_id, team_id))`,
+		"share_id", "team_id", "role", "added_at")
 	ensureTable("notify_prefs", `CREATE TABLE IF NOT EXISTS notify_prefs (
 		user_id INTEGER PRIMARY KEY,
 		quiet_enabled INTEGER NOT NULL DEFAULT 0,
@@ -2154,6 +2182,9 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if !u.IsAdmin && !settingBool("allow_secret_export") {
 			jsonError(w, "Exporting passwords and keys is disabled by the administrator", 403)
+			return
+		}
+		if !requireStepUp(w, r, "config_export_secrets") {
 			return
 		}
 		withSecrets = true

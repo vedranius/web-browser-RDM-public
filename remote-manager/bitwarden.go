@@ -51,8 +51,7 @@ func bitwardenState(uid int) *bitwardenSession {
 	return s
 }
 func bitwardenAllowed(uid int) bool {
-	v := getSetting("bitwarden")
-	return v == "all" || (v == "admins" && isAdminUser(uid))
+	return policyWhoAllows(uid, "bitwarden")
 }
 func bitwardenCLI() string {
 	if p := os.Getenv("WRM_BITWARDEN_CLI"); p != "" {

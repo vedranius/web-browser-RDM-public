@@ -65,6 +65,7 @@ var levelRules = []levelRule{
 	{Key: "allow_link_shares", Order: []string{"1", "0"}, Need: [3]string{"", "", "0"}},
 	{Key: "link_share_max_days", Less: true, ZeroOff: true, Need: [3]string{"", "30", "7"}},
 	{Key: "ai_full_access", Order: []string{"1", "0"}, Need: [3]string{"", "0", "0"}},
+	{Key: "require_step_up", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}},
 	{Key: "audit_enabled", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}, Rec: "1"},
 	{Key: "audit_retention_days", Need: [3]string{"", "365", "730"}},
 	{Key: "session_recording", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}},
@@ -430,8 +431,12 @@ func checkLinkShareExpiry(mode, expires string) error {
 // GET  /api/admin/security        → level, rules, deviations and the security posture
 // POST /api/admin/security/level  {level, preview, keep: {key: note}, apply_now}
 func apiAdminSecurityHandler(w http.ResponseWriter, r *http.Request) {
-	adminID, ok := requireAdmin(w, r)
+	adminID, ok := requireAuditRead(w, r) // auditors read the posture; changing the level stays with administrators
 	if !ok {
+		return
+	}
+	if r.Method != http.MethodGet && !isAdminUser(adminID) {
+		jsonError(w, "Admin access required", 403)
 		return
 	}
 	sess, err := lookupSession(r)
@@ -461,6 +466,9 @@ func apiAdminSecurityHandler(w http.ResponseWriter, r *http.Request) {
 		plan := planLevelChange(level, r, sess.ID)
 		if in.Preview {
 			jsonOK(w, plan)
+			return
+		}
+		if !requireStepUp(w, r, "security_level") {
 			return
 		}
 		if plan.Locked && level != securityLevel() {

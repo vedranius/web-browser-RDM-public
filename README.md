@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.22** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.23** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.23
+
+**Roles, teams and a second confirmation for risky actions.** Every account now has a role: *Administrator*, *Security auditor* (reads the audit log, terminal sessions, recordings, file transfers and the security posture, and changes nothing), *Operator* or *User*. Administrators create **teams** in *Admin panel → Teams*; a share can include a whole team with one role, and policies that say who may use a feature accept `operators` and `teams:<names>` besides `off / admins / all`. With **step-up** on (required from the Business level), changing policies, roles, the security level, deleting or disabling users, resetting passwords or 2FA and revealing stored secrets ask for your password (and 2FA code) again. A **break-glass** administrator account must use 2FA, can be limited to chosen networks, and every sign-in is audited and sent to the other administrators. When you delete a user, their connections, folders, credentials, keys, shares and proxies can **pass to their team lead or another account** instead of being deleted. See [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass).
 
 ## What's new in v12.6.22
 
@@ -128,7 +132,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -179,6 +183,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Audit log, session recording & file transfers](#audit-log-session-recording--file-transfers)
    - [Admin panel](#admin-panel)
    - [Security levels and posture](#security-levels-and-posture)
+   - [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass)
    - [Updates & self-update](#updates--self-update)
    - [Mobile, responsive UI & installable app](#mobile-responsive-ui--installable-app)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
@@ -231,21 +236,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.22-linux-amd64
-   ./wrm-pro-v12.6.22-linux-amd64
+   chmod +x wrm-pro-v12.6.23-linux-amd64
+   ./wrm-pro-v12.6.23-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.22-windows-amd64.exe
+   .\wrm-pro-v12.6.23-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.6.22-linux-amd64.AppImage
-   ./wrm-pro-v12.6.22-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.6.22-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.6.23-linux-amd64.AppImage
+   ./wrm-pro-v12.6.23-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.6.23-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -254,8 +259,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.22/wrm-pro-v12.6.22-android-arm64
-   chmod +x wrm-pro-v12.6.22-android-arm64 && ./wrm-pro-v12.6.22-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.23/wrm-pro-v12.6.23-android-arm64
+   chmod +x wrm-pro-v12.6.23-android-arm64 && ./wrm-pro-v12.6.23-android-arm64
    ```
 
    **Docker**
@@ -279,6 +284,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.22
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets the tables `teams`, `team_members` and `share_teams` and the columns `users.role`, `users.break_glass` and `auth_sessions.step_up_at`; a previous version still starts on it (it sees administrators as before, and auditors and operators as ordinary users). Existing accounts keep their rights: administrators stay administrators, everyone else is a *User*. New settings `require_step_up` (off; the Business and Enterprise levels require it, so an installation at one of those levels shows it in the security posture until it is turned on), `step_up_minutes` and `break_glass_ips`. Scripts that call `PUT /api/admin/settings`, change roles or delete users with step-up on get `403 {"step_up": true}` unless the session confirmed with `POST /api/auth/step-up` (signing in counts as a confirmation for `step_up_minutes`). `DELETE /api/admin/users/{id}` still deletes everything the user owns unless `?transfer_to=<user id>` is given.
 
 ## Upgrading from v12.6.21
 
@@ -1816,7 +1825,8 @@ Personal preferences are stored per browser; everything security-related is stor
 *Settings → 🛡 Admin panel* (administrators only):
 
 - **Overview:** version, uptime, users (admins, 2FA), HTTPS, voice relay status, encryption key source, **security warnings** (no HTTPS, open registration, admins without 2FA, host keys off…), **open terminals** (who, which server, from which IP — with *End*), **active SSH tunnels** (owner, connection and route, listen → target, traffic — with *Stop*), **live rooms** (participants, voice, shared terminals).
-- **Users:** create users (temporary password generated if you leave it empty), display name, make/remove admin, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete (with everything the user owns). The last active administrator cannot be removed.
+- **Users:** create users with a role (temporary password generated if you leave it empty), display name, change the role (administrator, security auditor, operator, user), **break-glass** on/off for administrators, **reset password**, **reset 2FA**, **sign out everywhere**, unlock, **disable/enable**, delete (with everything the user owns, or handed over to another account). The last active administrator cannot be removed.
+- **Teams:** create teams, add members and mark team leads; see which policies and shares use a team.
 - **Shares:** every share on the server — pause/resume or delete.
 - **Security:** the security level (Home / Business / Enterprise), its preview, deviations and the security posture report (see [Security levels and posture](#security-levels-and-posture)).
 - **Security policies:** registration, required 2FA, password length, lockout, session idle/maximum time, host-key policy, server key files, server-side upload limit, secret export, guest links, chat file size, audit log on/off and retention, session recording (on/off, keystrokes, retention, size limit), **broadcast input**, **live status** (on/off, interval, checks through jump hosts), **SSH tunnels** (on/off, who may use them, listening on network addresses, remote forwarding, idle stop), **proxies** (who may define them).
@@ -1854,6 +1864,28 @@ A **security level** sets minimums for the settings that matter. Pick it on the 
 - A higher level **raises** weaker settings and leaves stronger ones as they are. Before applying, *Preview* lists every change, settings an environment variable keeps, what blocks the change (HTTPS while this browser uses plain HTTP) and whom it affects: users who must set up 2FA at their next sign-in, sessions that end, guest links that are too long or blocked, passwords checked at the next change. *Apply* can also sign out every other session.
 - **Deviations:** a setting may stay below the level only with a written reason (in the preview, or when you change a policy). The *Security* tab lists each deviation with who recorded it and when; it is audited (`security.deviation`, `security.deviation_removed`) and removed once the setting meets the level again. Choosing a level over plain HTTP on the first-run screen records the HTTPS deviation by itself, so you can turn HTTPS on afterwards.
 - **Security posture:** the same tab grades the installation item by item (✅ / ⚠ / ⛔): HTTPS for this browser, every rule of the level, administrators and users without 2FA, where the encryption key lives (next to the database or separate), `WRM_ALLOW_ANY_ORIGIN`, guest links without expiry, signed updates, the current version and the audit hash chain. Every item says why it matters and how to fix it. *Export JSON* and *Print / PDF* produce a report for auditors.
+
+### Roles, teams, step-up and break-glass
+
+**Roles.** Every account has one role, set when it is created or later in *Admin panel → Users → ⋯*:
+
+| Role | What it can do |
+|---|---|
+| **Administrator** | Everything, as before. |
+| **Security auditor** | Reads the audit log, terminal sessions and recordings, file transfers and the security posture in the admin panel. Cannot change anything, open connections, use the AI assistant or AI connections. Changing someone to auditor ends their terminals and AI sessions. |
+| **Operator** | A user who also passes policies set to `operators` (for example tunnels or Git updates for the operations staff only). |
+| **User** | As before. |
+
+**Teams.** *Admin panel → Teams* creates teams with members and optional **leads** (★). Teams are used in three places:
+- **Shares:** in the share dialog (*Members only* mode) add a team with a role; every member gets that role, and people added to the team later get it too. Removing someone from the team closes what they opened through the share at once. A person in several teams gets the highest role; a direct member role that is higher wins.
+- **Policies:** every *who may use it* policy (tunnels, remote forwarding, serial ports, network tools, proxies, Git checks/updates/upgrades/rollbacks/restarts/installs/Medium/transfers/merge requests, Bitwarden, AI assistant, personal AI keys, OpenCode, the OpenCode sandbox and AI connections) accepts `operators` (administrators and operators) and `teams:<name>,<name>` (administrators and members of those teams) besides `off`, `admins` and `all`. In *Policies* choose *Choose teams…*. A team named in a policy cannot be deleted or renamed until the policy changes.
+- **Handover:** the lead of a leaving user's team is the suggested new owner (see below).
+
+**Step-up confirmation.** With `require_step_up` on (required by the Business and Enterprise levels), these actions ask for your password, and your 2FA or a recovery code when the account has 2FA: changing policies, changing the security level, creating administrators or auditors, changing a role, disabling, deleting or turning break-glass on for a user, resetting a password or 2FA, revealing a stored credential password, exporting a private key and exporting connections with secrets. The confirmation lasts `step_up_minutes` (default 10) in that browser session; signing in counts as one. Wrong passwords count toward the sign-in rate limit, and every confirmation is audited (`auth.step_up`, `auth.step_up_failed`).
+
+**Break-glass administrator.** Mark a local administrator account as break-glass (*Admin panel → Users → ⋯*) for emergencies, for example when the directory sign-in of a later version is down. It must use 2FA (its sessions end until 2FA is set up), it can be limited to `break_glass_ips` (IP addresses or networks such as `10.0.0.0/24`), and every sign-in is audited (`auth.break_glass_login`) and sent to all other administrators as a notification.
+
+**Handover when deleting a user.** *Delete* shows what the user owns (connections, folders, credentials, SSH keys, shares, proxies) and asks what happens to it: delete it with the account, or hand it to another active account (the team lead is suggested, administrators are listed). The receiver becomes the owner; shares keep their members and teams, so people keep their access. A folder whose name the receiver already uses gets the old owner's name added. The handover is audited (`admin.user_handover`) with the counts.
 
 ### Updates & self-update
 
@@ -1952,6 +1984,9 @@ Medium runtime settings (introduced in v12.4.3b):
 |---|---|---|
 | `security_level` | `home` | `home` / `business` / `enterprise`, see [Security levels and posture](#security-levels-and-posture); changed in *Admin panel → Security*, not here |
 | `require_https` | `0` | sign-in, registration and 2FA only over HTTPS (or from localhost) |
+| `require_step_up` | `0` | dangerous actions need a fresh password (and 2FA) confirmation, see [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass); required by the Business and Enterprise levels |
+| `step_up_minutes` | `10` | how long a step-up confirmation lasts (1–240) |
+| `break_glass_ips` | – | IP addresses or networks (comma-separated) a break-glass administrator may sign in from; empty = anywhere |
 | `registration` | `closed` | `closed` / `open` self-registration |
 | `require_2fa` | `off` | `off` / `admins` / `all` |
 | `password_min_length` | `8` | 6–128 |
@@ -1981,7 +2016,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `recording_retention_days` | `90` | how long recordings are kept (minimum 7) |
 | `recording_max_mb` | `100` | maximum recording size per session (0 = unlimited) |
 | `tunnels_enabled` | `1` | SSH tunnels and web interfaces behind jump hosts; off stops running tunnels. Also `TUNNELS_ENABLED` |
-| `tunnel_users` | `all` | `all` / `admins`: who may use tunnels |
+| `tunnel_users` | `all` | `all` / `admins`: who may use tunnels (every *who may* policy also accepts `operators` and `teams:<names>`) |
 | `tunnel_bind_any` | `0` | allow non-administrators to listen on network addresses (`0.0.0.0`, LAN IP) instead of `127.0.0.1` |
 | `tunnel_remote_forward` | `admins` | `off` / `admins` / `all`: remote port forwarding (`-R`) |
 | `tunnel_idle_minutes` | `0` | stop tunnels started by hand after this many minutes without traffic (0 = never) |
@@ -2331,7 +2366,9 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/auth/login` | `{username, password}` → user, or `{mfa_required, mfa_token}` |
 | POST | `/api/auth/mfa` | `{mfa_token, code}` (TOTP or recovery code) |
 | POST | `/api/auth/logout` | Sign out |
-| GET | `/api/auth/me` | Current user, restrictions and policies |
+| GET | `/api/auth/me` | Current user, restrictions and policies; also `role`, `is_auditor`, `break_glass`, `teams` and `step_up: {required, minutes, totp}` |
+| POST | `/api/auth/step-up` | `{password, code, action}` confirms this session for `step_up_minutes`; a 403 with `step_up: true` from another call means this is needed |
+| GET | `/api/teams` | Teams for the share dialog `{teams: [{id, name, member_count}], mine}` |
 | GET / POST / DELETE | `/api/me/events` · `/api/me/events/read` | Your in-app notifications: `GET ?limit=` (default 50, at most 200) → `{events: [{id, event, title, body, at, read}], unread}`; `POST /api/me/events/read` `{ids: […]}` or `{all: true}`; `DELETE /api/me/events` clears the list |
 | GET | `/api/workboard/metrics?id=` | CPU, RAM, load, uptime and disks of one of your SSH/SFTP connections: `{conn_id, at, source: zabbix\|ssh, cpu_percent, memory_percent, memory_total, load, cpu_count, uptime, disks: [{mount, percent, size_kb}], error}`; `refresh=1` skips the 25 s cache; 403 when reading over SSH is off and there is no fresh Monitoring sample |
 | GET / PUT / DELETE | `/api/me/ui/{key}` | Your interface state, `key` = `layout` (panel layout) or `workboard`: `GET` → `{value, updated_at}` (`value` null when nothing is stored), `PUT {value: {…}}` (a JSON object, at most 64 KiB), `DELETE` resets |
@@ -2572,8 +2609,11 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET / POST | `/api/admin/users` | Users / create |
-| PUT / DELETE | `/api/admin/users/{id}` | `{is_admin, disabled, display_name}` / delete |
+| GET / POST | `/api/admin/users` | Users (with `role`, `break_glass`, `teams`) / create `{username, password, role, …}` |
+| PUT / DELETE | `/api/admin/users/{id}` | `{role, is_admin, break_glass, disabled, display_name}` / delete; `?transfer_to=<id>` hands what the user owns to that account first |
+| GET | `/api/admin/users/{id}/handover` | What the user owns `{owned, suggested_user_id, suggested_username, suggested_reason, teams}` |
+| GET / POST | `/api/admin/teams` | Teams with members and the policies that name them / create `{name, description, members: [{user_id, lead}]}` |
+| PUT / DELETE | `/api/admin/teams/{id}` | Change (same fields, each optional) / delete; 409 while a policy names the team |
 | POST | `/api/admin/users/{id}/reset-password` · `reset-2fa` · `revoke-sessions` · `unlock` | Account actions |
 | GET / PUT | `/api/admin/settings` | Policies; `GET` adds each setting's `required` value and `deviation`; `PUT` takes `_deviation_notes: {key: reason}`, without a reason a value below the level → 400 `{error, deviation: {key, value, required, level}}` |
 | GET | `/api/admin/security` | Security posture: `{level, level_locked, level_env, levels, rules, deviations, checks: [{id, kind, status: ok\|warn\|bad\|info, value, required, recommended, env, count, deviation}], summary, version, host, generated_at}` |
@@ -2702,6 +2742,8 @@ remote-manager/
   service.go      run as a service: prompt, env file, service files, versions, newest binary in the folder, restarts
   service_unix.go / service_windows.go  systemd, launchd, rc.d installers / Windows service (SCM)
   update.go       update check against GitHub releases, verified self-update, rollback, restart
+  roles.go        roles, who-policies (operators, teams:), step-up, break-glass, handover
+  teams.go        teams, team members, teams in shares, admin team API
   security_level.go  security levels: rules, preview and apply, deviations, the first-run and start-up level, HTTPS for sign-in
   security_posture.go  the security posture checks for Admin → Security
   releasesign.go  release signatures (ed25519 over SHA256SUMS.txt): verification for the self-update, -release-keygen/-sign/-verify
@@ -2811,6 +2853,7 @@ remote-manager/
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
   releasesign_test.go  release signatures: round trip, tampering, wrong key or file, WRM context, key parsing, the command-line tools, self-update refusing unsigned or wrongly signed releases
+  v12623_test.go       roles and teams: who-policy values, auditor read-only and refused connections, step-up, break-glass networks and notifications, teams in shares, handover on delete
   v12622_test.go       security levels: rule comparison, preview, blockers and deviations, apply and sign-out, env lock, HTTPS for sign-in, level at start and first run, guest link lifetime
   fuzz_test.go         fuzz targets for the import parsers (mRemoteNG, SSH config, CSV/XLSX, PuTTY, WinSCP, configuration files, deploy-config YAML); seeds run with every go test
   update_test.go       self-update against a fake GitHub releases server: success and rollback, checksum mismatch, missing checksums file or line, missing asset, wrong -version, policy, Docker, local binary

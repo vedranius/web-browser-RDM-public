@@ -67,13 +67,7 @@ func gitActionAllowed(userID int, key string) bool {
 	if !gitAllowed() {
 		return false
 	}
-	switch getSetting(key) {
-	case "all":
-		return true
-	case "admins":
-		return isAdminUser(userID)
-	}
-	return false
+	return policyWhoAllows(userID, key)
 }
 
 func gitDeployPolicies(userID int) map[string]bool {
