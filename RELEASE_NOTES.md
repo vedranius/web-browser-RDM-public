@@ -1,17 +1,34 @@
-## Web Remote Manager PRO v12.6.21 — Signed releases
+## Web Remote Manager PRO v12.6.22 — Security levels
 
 ### Added
+
+- **Choose how strict WRM is:** *Home* (as before), *Business* or *Enterprise*. The level sets minimums for HTTPS, two-factor authentication, password length, session lifetime, failed sign-ins, registration, host keys, secret export, guest links, AI full access, audit and session recording. A higher level raises weaker settings and never loosens stronger ones.
+- **At install or later:** the first administrator picks the level on the first-run screen; `wrm -security-level business` (also with `-install-service`) or `WRM_INITIAL_SECURITY_LEVEL` sets it at install, `WRM_SECURITY_LEVEL` forces it. Later it changes in **Admin panel → Security**.
+- **See before you switch:** the preview lists every setting that changes, what blocks the change (for example HTTPS while you use plain HTTP), and whom it affects: users who must set up 2FA, sessions that end, guest links that become too long. You can keep a setting as a **deviation** with a written reason, and sign out every other session at once.
+- **Deviations are on record:** loosening a policy below the level asks why. Who recorded each deviation, when and why is listed and audited, and it disappears once the setting meets the level again.
+- **Security posture page:** a checklist of this installation against the level (HTTPS, every level rule, administrators and users without 2FA, where the encryption key lives, open origins, guest links without expiry, signed updates, the current version, the audit hash chain), each with the explanation and the exact fix. Export it as JSON or print it to PDF for an auditor.
+- **New policies:** *HTTPS required for sign-in* (`require_https`, localhost always allowed) and *Longest guest link* (`link_share_max_days`).
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets one new table (`security_deviations`); a previous version still starts on it. Existing installations stay at *Home* with all their settings unchanged until an administrator picks another level.
+
+[Download v12.6.22](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.22) · [Security levels](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.22/SECURITY.md#security-levels)
+
+### Included from v12.6.21 — Signed releases
+
+#### Added
 
 - **Signed releases:** every release carries `SHA256SUMS.txt.sig`, an ed25519 signature of the checksums file, plus a software bill of materials (CycloneDX) and GitHub build provenance. You can check where a file comes from and that nobody changed it.
 - **Updates check the signature:** once the project's public key is built in, the one-click update refuses a release that is unsigned or wrongly signed. The update dialog says whether the signature is checked. Administrators of their own fork add its key in *Release signing keys* (`update_signing_keys`).
 - **Verify a download yourself:** put `SHA256SUMS.txt` and `SHA256SUMS.txt.sig` next to the file and run `wrm-pro-… -release-verify SHA256SUMS.txt`.
 - **Nightly security tests:** fuzz tests feed random input to the import parsers (mRemoteNG, SSH config, CSV/XLSX, PuTTY, WinSCP, configuration files, deploy-config YAML), and OWASP ZAP scans a running WRM signed out and as an administrator.
 
-### Fixed
+#### Fixed
 
 - A damaged PuTTY `.reg` file could make the import fail with an internal error instead of a clear message. The fuzz tests found it.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. This version has no built-in release key yet, so updates still check the SHA-256 only; the next version with the key turns the signature check on.
 
