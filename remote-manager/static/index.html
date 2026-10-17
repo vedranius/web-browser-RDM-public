@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.6.20</title>
+<title>Web Remote Manager PRO v12.6.21</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1579,7 +1579,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.6.20 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.6.21 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1661,7 +1661,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.20</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.21</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -4838,6 +4838,14 @@ Object.assign(LANGS.hr, {
   cv_pin: 'Prikvači na mjesto', cv_unpin: 'Otkvači', cv_pinned_t: 'Prikvačeno: ovaj se prozor ne miče i ne mijenja veličinu. Otkvači ga iz njegovog izbornika (desni klik na naslovnu traku).',
   cv_ontop: 'Uvijek na vrhu', cv_hint_add: 'Dodaj addon', cv_hint_add_t: 'Stavi addone poput stanja poslužitelja, opterećenja, sata ili bilješki na canvas pored terminala',
 });
+Object.assign(LANGS.en, {
+  upd_sig: 'Signature', upd_sig_on: 'required ({n} release key(s)): an unsigned or wrongly signed release is refused', upd_sig_off: 'not checked: no release key is known for this repository, only the SHA-256 is verified',
+  p_update_signing_keys: 'Release signing keys', p_update_signing_keys_d: 'Extra public keys (wrm-ed25519:…, comma-separated) whose signature of SHA256SUMS.txt a release must carry, for example for your own fork in "Release repository". This project\'s key is built in.', p_update_signing_keys_ph: 'wrm-ed25519:…',
+});
+Object.assign(LANGS.hr, {
+  upd_sig: 'Potpis', upd_sig_on: 'obavezan ({n} ključ(eva) izdanja): nepotpisano ili krivo potpisano izdanje se odbija', upd_sig_off: 'ne provjerava se: za ovaj repozitorij nije poznat ključ izdanja, provjerava se samo SHA-256',
+  p_update_signing_keys: 'Ključevi za potpis izdanja', p_update_signing_keys_d: 'Dodatni javni ključevi (wrm-ed25519:…, odvojeni zarezom) čiji potpis datoteke SHA256SUMS.txt izdanje mora imati, npr. za vlastiti fork u "Repozitorij izdanja". Ključ ovog projekta je ugrađen.', p_update_signing_keys_ph: 'wrm-ed25519:…',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5123,6 +5131,7 @@ function renderUpdateModal() {
     <div>${esc(t('upd_current'))}</div><div><b>${esc(s.current || '')}</b>${s.service ? `<span class="upd-tag">${esc(t('upd_service').replace('{m}', s.service))}</span>` : ''}${s.docker ? '<span class="upd-tag">Docker</span>' : ''}</div>
     <div>${esc(t('upd_latest'))}</div><div>${s.latest ? `<b>${esc(s.latest)}</b>` : '—'}${s.available ? `<span class="upd-tag new">${esc(t('upd_new'))}</span>` : (s.latest ? `<span class="upd-tag">${esc(t('upd_up_to_date'))}</span>` : '')}</div>
     <div>${esc(t('upd_checked'))}</div><div>${s.checked_at ? esc(fmtTime(s.checked_at)) : esc(t('upd_never'))}${admin && s.repo ? ` · ${esc(s.repo)}` : ''}</div>
+    ${admin ? `<div>${esc(t('upd_sig'))}</div><div>${s.signature_keys ? '🔏 ' + esc(t('upd_sig_on').replace('{n}', s.signature_keys)) : '⚠ ' + esc(t('upd_sig_off'))}</div>` : ''}
   </div>`;
   if (!s.check_enabled) h += `<div class="hint-box">${esc(t('upd_check_off'))}</div>`;
   if (admin && s.error) h += `<div class="hint-box warn">⚠ ${esc(t('upd_check_failed'))}: ${esc(s.error)}</div>`;
@@ -6557,7 +6566,7 @@ const POLICY_GROUPS = {
     ['pg_proxies', ['proxies']],
     ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_check_parallel', 'git_check_per_server', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_medium', 'medium_docker_install', 'medium_host_ca', 'medium_ca_file', 'medium_log_output', 'git_transfer', 'git_gitignore_mr', 'git_schedule_grace_minutes']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
-    ['pg_updates', ['update_check', 'update_repo', 'update_proxy', 'self_update']],
+    ['pg_updates', ['update_check', 'update_repo', 'update_signing_keys', 'update_proxy', 'self_update']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],

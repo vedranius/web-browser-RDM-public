@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -356,6 +357,7 @@ func updateStatus(userID int) map[string]interface{} {
 	out["policy"] = getSetting("self_update")
 	out["blocked"] = blocked
 	out["docker_image"] = dockerImage()
+	out["signature_keys"] = len(releaseTrustedKeys())
 	if blocked == "" {
 		if nb := newerLocalBinary(); nb != nil {
 			out["local"] = nb
@@ -540,6 +542,39 @@ func (c *countingWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
+// checkReleaseSignature verifies the release's SHA256SUMS.txt.sig. With a trusted release
+// key a missing or wrong signature refuses the update; without one it returns
+// "not checked" and the update relies on the SHA-256 alone.
+func checkReleaseSignature(ctx context.Context, rel *releaseInfo, sumsData []byte) (string, error) {
+	keys := releaseTrustedKeys()
+	if len(keys) == 0 {
+		return "not checked (no release key)", nil
+	}
+	var sig *releaseAsset
+	for i := range rel.Assets {
+		if rel.Assets[i].Name == checksumsAsset+releaseSignatureExt {
+			sig = &rel.Assets[i]
+		}
+	}
+	if sig == nil {
+		return "", fmt.Errorf("the release %s is not signed (no %s); update refused", rel.Tag, checksumsAsset+releaseSignatureExt)
+	}
+	resp, err := githubGet(ctx, sig.URL, "application/octet-stream")
+	if err != nil {
+		return "", fmt.Errorf("%s: %v", checksumsAsset+releaseSignatureExt, err)
+	}
+	sigData, err := io.ReadAll(io.LimitReader(resp.Body, maxReleaseSigFileSize+1))
+	resp.Body.Close()
+	if err != nil {
+		return "", fmt.Errorf("%s: %v", checksumsAsset+releaseSignatureExt, err)
+	}
+	id, err := verifyReleaseSignature(checksumsAsset, sumsData, sigData, keys)
+	if err != nil {
+		return "", fmt.Errorf("the signature of release %s is not valid (%v); update refused", rel.Tag, err)
+	}
+	return "key " + id, nil
+}
+
 func applyUpdate(ctx context.Context, r *http.Request, userID int, version string) (err error) {
 	exe, err := selfExecutable()
 	if err != nil {
@@ -578,8 +613,16 @@ func applyUpdate(ctx context.Context, r *http.Request, userID int, version strin
 	if err != nil {
 		return fail("checksums", fmt.Errorf("%s: %v", checksumsAsset, err))
 	}
-	want := parseChecksums(io.LimitReader(resp.Body, 1<<20))[asset.Name]
+	sumsData, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	resp.Body.Close()
+	if err != nil {
+		return fail("checksums", fmt.Errorf("%s: %v", checksumsAsset, err))
+	}
+	signedBy, err := checkReleaseSignature(ctx, rel, sumsData)
+	if err != nil {
+		return fail("signature", err)
+	}
+	want := parseChecksums(bytes.NewReader(sumsData))[asset.Name]
 	if want == "" {
 		return fail("checksums", fmt.Errorf("%s has no line for %s; update refused", checksumsAsset, asset.Name))
 	}
@@ -639,7 +682,7 @@ func applyUpdate(ctx context.Context, r *http.Request, userID int, version strin
 	if !versionAnswerMatches(answer, rel.Tag) {
 		return fail("verify", fmt.Errorf("the new binary answers -version with %q instead of %s", answer, rel.Tag))
 	}
-	audit("system.update_verified", map[string]string{"asset": asset.Name, "sha256": got})
+	audit("system.update_verified", map[string]string{"asset": asset.Name, "sha256": got, "signature": signedBy})
 
 	setUpdateProgress(updateProgressInfo{State: "installing", Version: version})
 	if err := replaceBinary(exe, tmpName); err != nil {
