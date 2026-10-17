@@ -349,7 +349,7 @@ func validSecurityLevel(v string) (string, bool) {
 	v = strings.ToLower(strings.TrimSpace(v))
 	for _, l := range securityLevels {
 		if l == v {
-			return v, true
+			return l, true // the constant, never the caller's string
 		}
 	}
 	return "", false
