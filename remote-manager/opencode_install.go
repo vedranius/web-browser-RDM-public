@@ -207,7 +207,11 @@ func opencodeInstall(by string) error {
 	if !ok {
 		return fmt.Errorf("the registry gave no sha512 integrity for the package")
 	}
-	opencodeLogf("Package %s %s, licence %s; downloading %s", pkg, meta.Version, nonEmpty(meta.License, "?"), meta.Dist.Tarball)
+	lic := ""
+	if meta.License != "" {
+		lic = ", licence " + meta.License
+	}
+	opencodeLogf("Package %s %s%s; downloading %s", pkg, meta.Version, lic, meta.Dist.Tarball)
 	resp, err = get(meta.Dist.Tarball)
 	if err != nil {
 		return fmt.Errorf("download failed: %v", err)
