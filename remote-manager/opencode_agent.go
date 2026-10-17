@@ -65,6 +65,7 @@ type ocProc struct {
 	started  map[string]bool   // text parts already announced
 	tools    map[string]string // call id → last state
 	stopping bool
+	stopped  chan struct{} // closed when ocStop has finished
 }
 
 func (o *ocProc) logf(format string, a ...interface{}) {
@@ -269,7 +270,7 @@ func (s *aiSession) ocStart(r *http.Request, agent string) error {
 	if err != nil {
 		return err
 	}
-	o := &ocProc{grantID: g.ID, exited: make(chan struct{}), parts: map[string]string{}, roles: map[string]string{}, started: map[string]bool{}, tools: map[string]string{}}
+	o := &ocProc{grantID: g.ID, exited: make(chan struct{}), stopped: make(chan struct{}), parts: map[string]string{}, roles: map[string]string{}, started: map[string]bool{}, tools: map[string]string{}}
 	fail := func(err error) error {
 		mcpRevoke(nil, g.ID, 0, "OpenCode did not start")
 		if o.cmd != nil && o.cmd.Process != nil {
@@ -407,8 +408,15 @@ func (s *aiSession) ocStop(reason string) {
 	o.stopping = true
 	o.mu.Unlock()
 	if already {
+		// a stop is under way (Kill starts one): wait for it, so a WRM shutdown does not
+		// exit while OpenCode still runs
+		select {
+		case <-o.stopped:
+		case <-time.After(15 * time.Second):
+		}
 		return
 	}
+	defer close(o.stopped)
 	ocRegistry.Lock()
 	delete(ocRegistry.byGrant, o.grantID)
 	ocRegistry.Unlock()
@@ -417,7 +425,7 @@ func (s *aiSession) ocStop(reason string) {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		o.call(ctx, http.MethodPost, "/global/dispose", nil, nil)
 		cancel()
-		o.cmd.Process.Kill()
+		ocKillTree(o.cmd)
 		select {
 		case <-o.exited:
 		case <-time.After(10 * time.Second):
