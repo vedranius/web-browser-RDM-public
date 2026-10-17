@@ -141,3 +141,85 @@ func TestOpencodeProviderValidation(t *testing.T) {
 		t.Fatalf("a keyless OpenCode provider must be valid: %v", err)
 	}
 }
+
+// The assistant hands a subtask to a free helper model: the tool is offered only when the
+// administrator turned delegation on, the helper gets redacted text and no tools, and the
+// call is shown, audited and counted.
+func TestAIDelegateToHelperModel(t *testing.T) {
+	helper := newFakeLLM(t, func(n int, body map[string]interface{}) fakeTurn {
+		return fakeTurn{Text: "summary: nginx restarted twice"}
+	})
+	fakeOpencodeCatalog(t, helper.srv.URL)
+	offered := map[int]bool{}
+	delegated := false
+	e := newAIEnv(t, nil)
+	e.llm.script = func(n int, body map[string]interface{}) fakeTurn {
+		for _, tl := range body["tools"].([]interface{}) {
+			if asMap(tl)["name"] == aiDelegateTool {
+				offered[n] = true
+			}
+		}
+		if offered[n] && !delegated {
+			delegated = true
+			return fakeTurn{Text: "Delegating.", Calls: []fakeCall{{aiDelegateTool, `{"task":"Summarise this log","context":"password=Hunter2Secret99 nginx restarted\nnginx restarted","model":"free-chat","reason":"long log"}`}}}
+		}
+		return fakeTurn{Text: "Done."}
+	}
+	// off: not offered
+	s := e.start("read_only", nil)
+	e.prompt(s, "hello")
+	e.waitIdle(s)
+	if offered[0] {
+		t.Fatal("delegate_task offered while delegation is off")
+	}
+	aiKillAll(0, "next")
+
+	code, v := e.admin.aiDo("POST", "/api/admin/ai/providers", map[string]interface{}{"name": "Zen", "kind": "opencode", "base_url": helper.srv.URL, "models": "free-chat"})
+	if code != 200 {
+		t.Fatalf("helper provider: %d %v", code, v)
+	}
+	hid := int(asMap(v)["id"].(float64))
+	if code, v := e.admin.aiDo("PUT", "/api/admin/settings", map[string]interface{}{"ai_delegate": "1", "ai_delegate_provider": fmt.Sprint(hid), "ai_delegate_models": "free-chat"}); code != 200 {
+		t.Fatalf("settings: %d %v", code, v)
+	}
+	// free-chat's data use is unknown: treated like a model that may train, so it is left out
+	// until the user opts in
+	before := e.llm.requests()
+	s = e.start("read_only", nil)
+	e.prompt(s, "hello")
+	e.waitIdle(s)
+	if offered[before] {
+		t.Fatal("a model that may train on prompts was offered without the user's opt-in")
+	}
+	aiKillAll(0, "next")
+	if code, v := e.user.aiDo("PUT", "/api/ai/delegate", map[string]interface{}{"training": true}); code != 200 || asMap(v)["training"] != true {
+		t.Fatalf("opt-in: %d %v", code, v)
+	}
+	before = e.llm.requests()
+	s = e.start("read_only", nil)
+	e.prompt(s, "summarise the log")
+	e.waitIdle(s)
+	if !offered[before] {
+		t.Fatal("delegate_task not offered")
+	}
+	if helper.requests() != 1 {
+		t.Fatalf("helper requests: %d", helper.requests())
+	}
+	hb := helper.rawBody(0)
+	if strings.Contains(hb, "Hunter2Secret99") || !strings.Contains(hb, "Summarise this log") || strings.Contains(hb, `"tools"`) {
+		t.Fatalf("helper body: %s", hb)
+	}
+	if helper.headers[0].Get("Authorization") != "Bearer public" {
+		t.Fatalf("keyless helper auth: %q", helper.headers[0].Get("Authorization"))
+	}
+	r := lastToolResults(e.llm.body(e.llm.requests() - 1))
+	if len(r) != 1 || !strings.Contains(r[0], "nginx restarted twice") || !strings.Contains(r[0], "helper_output") {
+		t.Fatalf("result for the assistant: %v", r)
+	}
+	if aiAuditCount("ai.delegated", s.ID) != 1 || aiAuditCount("ai.delegate_result", s.ID) != 1 {
+		t.Fatal("delegation not audited")
+	}
+	if tr := toolResultFor(s, ""); tr == nil || tr["tool"] != aiDelegateTool {
+		t.Fatalf("live view event: %v", tr)
+	}
+}

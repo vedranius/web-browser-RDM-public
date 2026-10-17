@@ -57,7 +57,19 @@ Object.assign(LANGS.en, {
   aiw_testing: 'Saving and testing…', aiw_ok: 'It works. The provider answered{reply}.', aiw_fail: 'The provider did not answer: {err}', aiw_fix: 'Go back and check the key, the address and the model name.',
   aiw_next: 'Save and test', aiw_back: 'Back', aiw_finish: 'Done', aiw_use: 'Open an AI assistant window on a server connection and choose this provider. Every session is recorded and audited.', aiw_wizard: 'Setup wizard', aiw_need: 'Fill in the required fields.',
   aiw_s_ollama: 'Ollama on this server', aiw_p_xai: 'xAI (Grok)', aiw_p_deepseek: 'DeepSeek', aiw_p_together: 'Together AI', aiw_p_perplexity: 'Perplexity', aiw_p_cohere: 'Cohere',
-  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (free models)', aiw_free: 'free',
+  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (free models)', aiw_free: 'free', ai_deleg_setup: 'Helper models: {p}, {n} in use', ai_deleg_setup_d: 'The assistant may hand text subtasks to these models; WRM picks the best one for each task, free ones first. They get only redacted text and cannot run anything.',
+  ai_deleg_training_me: 'Also use free models that may use my prompts for training', ai_deleg_training_all: 'The administrator allows free models that may train on prompts for everyone.', ai_deleg_training_off: 'The administrator does not allow free models that may train on prompts.',
+  ai_deleg_excluded: 'Not used (may train on prompts):',
+  ai_du_zero_retention: 'keeps nothing', ai_du_zero_retention_d: 'Zero retention: prompts are not stored or used for training.', ai_du_trains: 'may train', ai_du_trains_d: 'During the free period the provider may use prompts and answers to improve its models.',
+  ai_du_unknown: 'terms unknown', ai_du_unknown_d: 'WRM does not know this free model’s data terms; it is treated like a model that may train.', ai_du_paid: 'paid', ai_du_paid_d: 'Billed to the OpenCode Zen workspace; Zen states zero retention (OpenAI and Anthropic keep requests 30 days).',
+  ai_du_provider: 'own provider', ai_du_provider_d: 'Your organisation’s own provider and its terms.',
+  p_ai_delegate_training: 'Free models that may train on prompts', p_ai_delegate_training_d: 'Off: never used. User: each user decides in the assistant (default off). All: used for everyone.',
+  po_ai_delegate_training_off: 'Never', po_ai_delegate_training_user: 'Each user decides', po_ai_delegate_training_all: 'Everyone', ai_deleg_h: 'Delegation to helper models', ai_deleg_help: 'The assistant can hand self-contained text subtasks (summarise a long log, explain an error, draft a snippet) to a cheaper or free helper model. The helper only gets the text the assistant passes, with secrets redacted; it has no tools and cannot run anything on a server. Every delegation appears in the live view, the transcript and the audit log with model, size, tokens and cost. Free OpenCode Zen models can use what they receive to improve their models: only allow models whose terms fit your data.',
+  ai_deleg_off: 'Delegation is off.', ai_deleg_noprov: 'Delegation is on, but no helper provider is chosen.', ai_deleg_disabled: 'The chosen helper provider is disabled.', ai_deleg_on: 'Active: {p} with {m}', ai_deleg_load: 'Load models',
+  p_ai_delegate: 'Allow delegation to helper models', p_ai_delegate_d: 'Offers the assistant the delegate_task tool (built-in assistant only; MCP clients use their own agents).',
+  p_ai_delegate_provider: 'Helper provider', p_ai_delegate_provider_d: 'An organisation provider, for example OpenCode Zen (free models work without a key).',
+  p_ai_delegate_models: 'Helper models', p_ai_delegate_models_d: 'Comma-separated; the first is the default. Empty: automatic, every usable model of the provider (for OpenCode Zen the current catalog). WRM picks the one that fits each task.', p_ai_delegate_models_ph: 'big-pickle',
+  p_ai_delegate_max_kb: 'Delegation size limit (KB)', p_ai_delegate_max_kb_d: 'The most text one delegation may send to the helper.',
   aiw_n_opencode: 'Without a key only the free OpenCode Zen models work (limited per IP address; some free models may use prompts to improve their models, so do not send confidential data). With a key from opencode.ai every Zen model works, billed to that workspace. Use “Load models” after the test to pick from the current list.',
   aiw_model_note: 'Model names change often. Type any model name (several separated by commas; the first one is the default), or save and use “Load the model list” on the last step.',
   aiw_n_perplexity: 'Perplexity models cannot call tools, so the assistant may be unable to run checks with them.',
@@ -160,7 +172,19 @@ Object.assign(LANGS.hr, {
   aiw_testing: 'Spremanje i testiranje…', aiw_ok: 'Radi. Pružatelj je odgovorio{reply}.', aiw_fail: 'Pružatelj nije odgovorio: {err}', aiw_fix: 'Vratite se i provjerite ključ, adresu i naziv modela.',
   aiw_next: 'Spremi i testiraj', aiw_back: 'Natrag', aiw_finish: 'Gotovo', aiw_use: 'Otvorite prozor AI asistenta na vezi prema poslužitelju i odaberite ovog pružatelja. Svaka sesija se bilježi i evidentira u reviziji.', aiw_wizard: 'Čarobnjak za postavljanje', aiw_need: 'Ispunite obavezna polja.',
   aiw_s_ollama: 'Ollama na ovom poslužitelju', aiw_p_xai: 'xAI (Grok)', aiw_p_deepseek: 'DeepSeek', aiw_p_together: 'Together AI', aiw_p_perplexity: 'Perplexity', aiw_p_cohere: 'Cohere',
-  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (besplatni modeli)', aiw_free: 'besplatno',
+  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (besplatni modeli)', aiw_free: 'besplatno', ai_deleg_setup: 'Pomoćni modeli: {p}, u upotrebi {n}', ai_deleg_setup_d: 'Asistent može tekstualne podzadatke predati ovim modelima; WRM za svaki zadatak bira najprikladniji, prvo besplatne. Dobivaju samo tekst s maskiranim tajnama i ne mogu ništa pokrenuti.',
+  ai_deleg_training_me: 'Koristi i besplatne modele koji moje upite mogu koristiti za treniranje', ai_deleg_training_all: 'Administrator svima dopušta besplatne modele koji mogu trenirati na upitima.', ai_deleg_training_off: 'Administrator ne dopušta besplatne modele koji mogu trenirati na upitima.',
+  ai_deleg_excluded: 'Ne koriste se (mogu trenirati na upitima):',
+  ai_du_zero_retention: 'ne čuva ništa', ai_du_zero_retention_d: 'Bez zadržavanja: upiti se ne spremaju i ne koriste za treniranje.', ai_du_trains: 'može trenirati', ai_du_trains_d: 'Tijekom besplatnog razdoblja pružatelj može koristiti upite i odgovore za poboljšanje svojih modela.',
+  ai_du_unknown: 'uvjeti nepoznati', ai_du_unknown_d: 'WRM ne zna uvjete za podatke ovog besplatnog modela; tretira se kao model koji može trenirati.', ai_du_paid: 'plaćeno', ai_du_paid_d: 'Naplaćuje se OpenCode Zen radnom prostoru; Zen navodi da ne zadržava podatke (OpenAI i Anthropic čuvaju zahtjeve 30 dana).',
+  ai_du_provider: 'vlastiti pružatelj', ai_du_provider_d: 'Vlastiti pružatelj vaše organizacije i njegovi uvjeti.',
+  p_ai_delegate_training: 'Besplatni modeli koji mogu trenirati na upitima', p_ai_delegate_training_d: 'Nikad: ne koriste se. Korisnik: svaki korisnik bira u asistentu (zadano isključeno). Svi: koriste se za sve.',
+  po_ai_delegate_training_off: 'Nikad', po_ai_delegate_training_user: 'Svaki korisnik bira', po_ai_delegate_training_all: 'Svi', ai_deleg_h: 'Delegiranje pomoćnim modelima', ai_deleg_help: 'Asistent može samostalne tekstualne podzadatke (sažeti dugi log, objasniti grešku, napisati prijedlog isječka) predati jeftinijem ili besplatnom pomoćnom modelu. Pomoćni model dobiva samo tekst koji mu asistent preda, s maskiranim tajnama; nema alata i ne može ništa pokrenuti na serveru. Svako delegiranje vidi se u live prikazu, zapisu sesije i revizijskom zapisu s modelom, veličinom, tokenima i cijenom. Besplatni OpenCode Zen modeli mogu primljeno koristiti za poboljšanje svojih modela: dopustite samo modele čiji uvjeti odgovaraju vašim podacima.',
+  ai_deleg_off: 'Delegiranje je isključeno.', ai_deleg_noprov: 'Delegiranje je uključeno, ali pomoćni pružatelj nije odabran.', ai_deleg_disabled: 'Odabrani pomoćni pružatelj je isključen.', ai_deleg_on: 'Aktivno: {p} s {m}', ai_deleg_load: 'Učitaj modele',
+  p_ai_delegate: 'Dopusti delegiranje pomoćnim modelima', p_ai_delegate_d: 'Asistentu nudi alat delegate_task (samo ugrađeni asistent; MCP klijenti koriste svoje agente).',
+  p_ai_delegate_provider: 'Pomoćni pružatelj', p_ai_delegate_provider_d: 'Pružatelj organizacije, na primjer OpenCode Zen (besplatni modeli rade bez ključa).',
+  p_ai_delegate_models: 'Pomoćni modeli', p_ai_delegate_models_d: 'Odvojeni zarezom; prvi je zadani. Prazno: automatski, svi upotrebljivi modeli pružatelja (za OpenCode Zen aktualni katalog). WRM za svaki zadatak bira odgovarajući.', p_ai_delegate_models_ph: 'big-pickle',
+  p_ai_delegate_max_kb: 'Ograničenje veličine delegiranja (KB)', p_ai_delegate_max_kb_d: 'Najviše teksta koje jedno delegiranje smije poslati pomoćnom modelu.',
   aiw_n_opencode: 'Bez ključa rade samo besplatni OpenCode Zen modeli (ograničeno po IP adresi; neki besplatni modeli mogu koristiti upite za poboljšanje svojih modela, zato ne šaljite povjerljive podatke). S ključem s opencode.ai rade svi Zen modeli, a naplaćuju se tom radnom prostoru. Nakon testa upotrijebite “Učitaj modele” za odabir s aktualnog popisa.',
   aiw_model_note: 'Nazivi modela se često mijenjaju. Upišite bilo koji naziv modela (više njih odvojite zarezom; prvi je zadani) ili spremite i na zadnjem koraku odaberite „Učitaj popis modela”.',
   aiw_n_perplexity: 'Perplexity modeli ne mogu pozivati alate pa asistent s njima možda neće moći izvoditi provjere.',
@@ -516,6 +540,7 @@ Object.assign(LANGS.hr, {
       <div id="ai-auto-${id}" style="display:none;">${autoForm('ai-a-' + id)}</div>
       ${pol.has_notes && pol.share_notes_allowed && !shared ? `<label class="ai-check"><input type="checkbox" id="ai-notes-${id}"> ${esc(t('ai_share_notes'))}</label>` : ''}
       <details><summary class="ai-see">👁 ${esc(t('ai_see'))}</summary><div id="ai-see-${id}">${seeHTML(pol.sees, provs[0] && provs[0].name, false)}</div></details>
+      ${delegSetupHTML(id)}
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button onclick="wrmAI.start(${id})">✦ ${esc(t('ai_start'))}</button>${own}</div>
       <div class="ai-see">${esc(t('ai_subscriptions_note'))}</div></div>`;
     models(id); modeHelp(id);
@@ -1202,6 +1227,7 @@ Object.assign(LANGS.hr, {
       <div class="adm-h">🔑 ${esc(t('ai_providers_org'))}</div>
       <div class="hint-box">${esc(t('ai_subscriptions_note'))}</div>
       ${provList(provs, 'org')}<div style="margin:8px 0 4px;"><button class="btn-sm" onclick="wrmAI.editProv('org', 0)">＋ ${esc(t('ai_prov_add'))}</button></div>
+      ${delegateHTML(provs)}
       <div class="adm-h">✦ ${esc(t('ai_sessions'))}</div>${sessionsTable(sessions, true)}
       <div class="adm-h">📊 ${esc(t('ai_usage_users'))}</div>
       <div class="tbl-scroll"><table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('ai_sessions'))}</th><th>${esc(t('ai_tokens'))}</th><th>${esc(t('ai_cost'))}</th><th></th></tr></thead><tbody>` +
@@ -1212,6 +1238,61 @@ Object.assign(LANGS.hr, {
       <div class="adm-h">⚙ ${esc(t('ai_policies'))}</div><div class="hint-box">${esc(t('ai_mode_rules_help'))}</div>
       <div class="policy-group">${AI_POLICY_KEYS.map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
       <div class="adm-h">⛔ ${esc(t('ai_destructive'))}</div><ul class="ai-see">${sum.destructive_rules.map(r => `<li><span class="mono">${esc(r.id)}</span> — ${esc(r.what)}</li>`).join('')}</ul>`;
+  }
+  // what the assistant may hand to helper models, and the user's own training choice
+  const DATA_USE_ICON = {zero_retention: '🛡', trains: '⚠', unknown: '❔', paid: '💳', provider: '🔑'};
+  function dataUseTag(m) { return `<span class="pill ${m.data_use === 'trains' || m.data_use === 'unknown' ? 'warn' : ''}" title="${esc(t('ai_du_' + m.data_use + '_d'))}">${DATA_USE_ICON[m.data_use] || ''} ${esc(t('ai_du_' + m.data_use))}</span>`; }
+  function delegSetupHTML(id) {
+    const d = cfg && cfg.delegate;
+    if (!d || !d.enabled) return '';
+    const on = (d.models || []).filter(m => m.allowed), off = (d.models || []).filter(m => !m.allowed);
+    const toggle = d.training_policy === 'user' ? `<label class="ai-check"><input type="checkbox" ${d.training ? 'checked' : ''} onchange="wrmAI.delegTraining(${id}, this.checked)"> ${esc(t('ai_deleg_training_me'))}</label>`
+      : `<div class="ai-see">${esc(t(d.training_policy === 'all' ? 'ai_deleg_training_all' : 'ai_deleg_training_off'))}</div>`;
+    const row = m => `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;margin:2px 0;"><span class="mono">${esc(m.id)}</span>${m.free ? ` <span class="pill">${esc(t('aiw_free'))}</span>` : ''} ${dataUseTag(m)}</div>`;
+    return `<details><summary class="ai-see">🤝 ${esc(tf('ai_deleg_setup', {p: d.provider, n: on.length}))}</summary><div class="ai-see">${esc(t('ai_deleg_setup_d'))}</div>
+      ${toggle}${on.map(row).join('')}${off.length ? `<div class="ai-see" style="margin-top:6px;">${esc(t('ai_deleg_excluded'))}</div>${off.map(row).join('')}` : ''}</details>`;
+  }
+  async function delegTraining(id, on) {
+    try { await api('PUT', '/api/ai/delegate', {training: on}); } catch (e) { showToast(e.message, 'error'); }
+    const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo);
+  }
+
+  // delegation to helper models: provider, models, limits (settings ai_delegate*)
+  function delegateHTML(provs) {
+    const st = k => adminSettingsCache.find(x => x.key === k) || {value: ''};
+    const on = st('ai_delegate').value === '1', pid = Number(st('ai_delegate_provider').value) || 0, models = st('ai_delegate_models').value;
+    const prov = provs.find(p => p.id === pid);
+    const state = !on ? t('ai_deleg_off') : !prov ? t('ai_deleg_noprov') : !prov.enabled ? t('ai_deleg_disabled') : tf('ai_deleg_on', {p: prov.name, m: models || prov.models});
+    const locked = st('ai_delegate_provider').locked || st('ai_delegate_models').locked ? 'disabled' : '';
+    return `<div class="adm-h">🤝 ${esc(t('ai_deleg_h'))}</div><div class="hint-box">${esc(t('ai_deleg_help'))}</div>
+      <div class="hint-box ${on && prov && prov.enabled ? '' : 'warn'}" id="ai-deleg-state">${on && prov && prov.enabled ? '✅' : '⚪'} ${esc(state)}</div>
+      <div class="policy-group">${settingRowHTML(st('ai_delegate').key ? st('ai_delegate') : null)}
+        <div class="setting-row"><div><div class="setting-label">${esc(t('p_ai_delegate_provider'))}</div><div class="setting-desc">${esc(t('p_ai_delegate_provider_d'))}</div></div>
+          <div class="setting-control"><select class="setting-select" id="ai-deleg-prov" ${locked} onchange="wrmAI.delegProv(this)"><option value="0">—</option>${provs.map(p => `<option value="${p.id}" ${p.id === pid ? 'selected' : ''}>${esc(p.name)} (${esc(t('ai_kind_' + p.kind))})</option>`).join('')}</select></div></div>
+        <div class="setting-row" style="display:block;"><div class="setting-label">${esc(t('p_ai_delegate_models'))}</div><div class="setting-desc">${esc(t('p_ai_delegate_models_d'))}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"><input type="text" id="ai-deleg-models" style="flex:1;min-width:220px;" value="${esc(models)}" placeholder="${esc(prov ? prov.models : '')}" ${locked} onchange="saveSetting('ai_delegate_models', this.value.trim(), this).then(() => wrmAI.adminTab())">
+            <button class="btn-sec btn-sm" ${pid ? '' : 'disabled'} onclick="wrmAI.delegLoad(${pid})">${esc(t('ai_deleg_load'))}</button></div><div id="ai-deleg-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"></div></div>
+        ${settingRowHTML(st('ai_delegate_training').key ? st('ai_delegate_training') : null)}
+        ${settingRowHTML(st('ai_delegate_max_kb').key ? st('ai_delegate_max_kb') : null)}</div>`;
+  }
+  async function delegProv(el) { await saveSetting('ai_delegate_provider', el.value, el); adminAI(); }
+  async function delegLoad(pid) {
+    const box = $('ai-deleg-list');
+    box.innerHTML = `<span class="ai-see">${esc(t('loading'))}</span>`;
+    let r;
+    try { r = await api('GET', `/api/admin/ai/providers/${pid}/models`); } catch (e) { box.innerHTML = `<div class="hint-box warn">${esc(e.message)}</div>`; return; }
+    if (!r.ok) { box.innerHTML = `<div class="hint-box warn">${esc(r.error)}</div>`; return; }
+    const free = r.free || [], du = r.data_use || {};
+    const list = free.length ? r.models.filter(m => free.includes(m)).concat(r.models.filter(m => !free.includes(m))) : r.models;
+    box.innerHTML = list.length ? list.map(m => `<button class="btn-sec btn-sm" onclick="wrmAI.delegAdd(this.dataset.m)" data-m="${esc(m)}">＋ ${esc(m)}${free.includes(m) ? ` <span class="pill">${esc(t('aiw_free'))}</span>` : ''}${du[m] ? ' ' + dataUseTag({data_use: du[m]}) : ''}</button>`).join('') : `<span class="ai-see">${esc(t('aiw_models_none'))}</span>`;
+  }
+  async function delegAdd(m) {
+    const el = $('ai-deleg-models');
+    const list = el.value.split(/[\s,]+/).filter(Boolean);
+    if (!list.includes(m)) list.push(m);
+    el.value = list.join(',');
+    await saveSetting('ai_delegate_models', el.value, el);
+    showToast(t('saved'), 'success', 1200);
   }
   async function killAll() {
     if (!(await uiConfirm(t('ai_kill_all_q'), {okText: t('ai_kill_all'), danger: true}))) return;
@@ -1237,6 +1318,6 @@ Object.assign(LANGS.hr, {
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,
     myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); }; awOpen('user'); },
-    statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
+    statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, delegProv, delegLoad, delegAdd, delegTraining, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
   };
 })();

@@ -53,6 +53,8 @@ func apiAIHandler(w http.ResponseWriter, r *http.Request) {
 		aiContextHandler(w, r, userID)
 	case "config":
 		aiConfigHandler(w, r, userID)
+	case "delegate":
+		aiDelegateHandler(w, r, userID)
 	case "connections":
 		if len(parts) != 2 {
 			jsonError(w, "Not found", 404)
@@ -92,6 +94,7 @@ func aiConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 	}
 	if allowed {
 		out["providers"] = providersFor(userID)
+		out["delegate"] = aiDelegateView(r.Context(), userID)
 	}
 	active := []map[string]interface{}{}
 	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.UserID == userID && s.Transport != "mcp" }) {

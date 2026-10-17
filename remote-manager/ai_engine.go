@@ -720,6 +720,9 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		return fail(why)
 	}
 	s.touch()
+	if call.Name == aiDelegateTool && s.Scopes == nil {
+		return s.delegate(ctx, call)
+	}
 	spec, ok := aiToolSpecFor(call.Name)
 	if !ok {
 		s.audit(nil, "ai.tool_call", map[string]interface{}{"tool": truncateStr(call.Name, 80), "decision": aiDeny, "reason": "unknown tool"})
@@ -1478,6 +1481,9 @@ func (s *aiSession) runTurn(ctx context.Context, cancel context.CancelFunc) {
 		req := aiLLMRequest{System: s.systemPrompt(), Messages: append([]aiMsg{}, s.history...), Tools: aiToolDefsFor(s.Mode), Model: s.Model}
 		prov := s.provider
 		s.mu.Unlock()
+		if d := s.delegateDef(); d != nil {
+			req.Tools = append(req.Tools, *d)
+		}
 		s.emit("assistant_start", nil)
 		start := time.Now()
 		resp, err := s.completeWithRecovery(ctx, prov, &req)
