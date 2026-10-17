@@ -155,8 +155,9 @@ jobs:
         run: |
           if out=$(gh api "repos/${REPO}/dependency-graph/compare/${BASE_SHA}...${HEAD_SHA}" 2>&1); then
             echo "enabled=1" >> "$GITHUB_OUTPUT"
-          elif grep -qi "dependency graph" <<<"$out"; then
-            echo "::warning::Dependency review skipped: the dependency graph is not enabled for this repository (Settings → Advanced Security → Dependency graph)."
+          # with the graph off the API answers 403 Forbidden (or names the dependency graph)
+          elif grep -qiE "dependency graph|HTTP 403" <<<"$out"; then
+            echo "::warning::Dependency review skipped: the dependency graph is not enabled for this repository (Settings → Advanced Security → Dependency graph). API answer: $out"
           else
             echo "$out"; exit 1
           fi
