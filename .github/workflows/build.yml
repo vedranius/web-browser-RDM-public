@@ -280,6 +280,47 @@ jobs:
   # ─────────────────────────────────────────────
   #  macOS universal binary + SHA-256 checksums (tags only)
   # ─────────────────────────────────────────────
+  # ─────────────────────────────────────────────
+  #  Automatic release: when a push to main carries a new version (APP_VERSION, the same as
+  #  AppVersion in main.go and the top CHANGELOG section) and every build passed, tag that
+  #  commit and start this workflow on the tag. A tag pushed with the workflow token starts
+  #  no workflow by itself; workflow_dispatch is the documented exception.
+  # ─────────────────────────────────────────────
+  auto-release:
+    name: Tag new version
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write   # create the tag
+      actions: write    # start this workflow on the tag
+    needs: [build, appimage, docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: auto-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Tag and release when the version is new
+        run: |
+          set -euo pipefail
+          V="${APP_VERSION}"
+          if ! [[ "$V" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::APP_VERSION '$V' is not vX.Y.Z"; exit 1
+          fi
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${V}" >/dev/null 2>&1; then
+            echo "Tag $V already exists: nothing to release."; exit 0
+          fi
+          code=$(grep -oE 'AppVersion = "v[0-9.]+"' remote-manager/main.go | grep -oE 'v[0-9.]+')
+          top=$(grep -m1 -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md | tr -d '#[] ')
+          if [ "$code" != "$V" ] || [ "v$top" != "$V" ]; then
+            echo "::error::Version mismatch: APP_VERSION $V, AppVersion $code, CHANGELOG $top. Not releasing."; exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/git/refs" -f "ref=refs/tags/${V}" -f "sha=${GITHUB_SHA}" >/dev/null
+          echo "Created tag $V on ${GITHUB_SHA}."
+          gh workflow run build.yml --repo "$GITHUB_REPOSITORY" --ref "$V"
+          echo "::notice::Release $V started: the workflow now runs on the tag."
+
   finalize:
     name: Verify assets & publish release
     runs-on: ubuntu-24.04

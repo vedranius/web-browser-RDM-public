@@ -2,6 +2,7 @@
 
 ### Added
 - The project's release public key is built in (`builtinReleaseKeys`): from the next release on, self-update refuses a release whose `SHA256SUMS.txt.sig` is missing or does not verify, and the release workflow signs with the `RELEASE_SIGNING_KEY` secret. A test checks that every built-in key parses.
+- **Automatic releases:** the new `Tag new version` job in `build.yml` tags a push to `main` whose version is new (`APP_VERSION`, `AppVersion` and the top CHANGELOG section must agree) once every build passed, and starts the release on that tag. Releases no longer have to be created by hand.
 
 ## [12.6.23] - 2026-10-17
 
