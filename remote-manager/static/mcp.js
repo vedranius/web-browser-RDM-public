@@ -72,7 +72,7 @@ Object.assign(LANGS.en, {
   mcpw_title: 'Connect an AI app (step by step)', mcpw_intro: 'WRM prepares the token and the exact setting for your app. You only copy it.',
   mcpw_s_client: 'App', mcpw_s_access: 'Servers and access', mcpw_s_connect: 'Connect', mcpw_s_test: 'Test',
   mcpw_pick: 'Which app do you want to connect?', mcpw_via_token: 'with a token (WRM creates it)', mcpw_via_oauth: 'sign in through WRM (no token)',
-  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / other', mcpw_c_claude_connector: 'Claude.ai (cloud connector, public HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
+  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_opencode: 'OpenCode', mcpw_h_opencode_json: '2. Add this to ~/.config/opencode/opencode.json (or opencode.json in the project). OpenCode reads the token from the environment variable:', mcpw_h_opencode_oauth: 'Or without a token, with OAuth sign-in: this entry without headers, then these commands:', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / other', mcpw_c_claude_connector: 'Claude.ai (cloud connector, public HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
   mcpw_access: 'What may the app do?', mcpw_p_read: 'Look only (recommended)', mcpw_p_read_d: 'Read logs, files and system information and run read-only commands. Nothing is changed.',
   mcpw_p_ask: 'Look and change, with your approval', mcpw_p_ask_d: 'Also run commands and edit files, but every change waits for your approval in WRM.',
   mcpw_valid: 'The token is valid for {n} hours. You can revoke it at any time below.',
@@ -170,7 +170,7 @@ Object.assign(LANGS.hr, {
   mcpw_title: 'Povezivanje AI aplikacije (korak po korak)', mcpw_intro: 'WRM priprema token i točnu postavku za vašu aplikaciju. Vi je samo kopirate.',
   mcpw_s_client: 'Aplikacija', mcpw_s_access: 'Poslužitelji i pristup', mcpw_s_connect: 'Povezivanje', mcpw_s_test: 'Test',
   mcpw_pick: 'Koju aplikaciju želite povezati?', mcpw_via_token: 'tokenom (WRM ga stvara)', mcpw_via_oauth: 'prijava preko WRM-a (bez tokena)',
-  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / ostalo', mcpw_c_claude_connector: 'Claude.ai (konektor u oblaku, javni HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
+  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_opencode: 'OpenCode', mcpw_h_opencode_json: '2. Dodajte ovo u ~/.config/opencode/opencode.json (ili opencode.json u projektu). OpenCode token čita iz varijable okoline:', mcpw_h_opencode_oauth: 'Ili bez tokena, s OAuth prijavom: ovakav unos bez zaglavlja, zatim ove naredbe:', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / ostalo', mcpw_c_claude_connector: 'Claude.ai (konektor u oblaku, javni HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
   mcpw_access: 'Što aplikacija smije raditi?', mcpw_p_read: 'Samo pregled (preporučeno)', mcpw_p_read_d: 'Čita zapise, datoteke i podatke o sustavu te izvršava naredbe koje samo čitaju. Ništa se ne mijenja.',
   mcpw_p_ask: 'Pregled i promjene, uz vaše odobrenje', mcpw_p_ask_d: 'Može i izvršavati naredbe i uređivati datoteke, ali svaka promjena čeka vaše odobrenje u WRM-u.',
   mcpw_valid: 'Token vrijedi {n} sati. Možete ga opozvati bilo kada u nastavku.',
@@ -413,9 +413,9 @@ Object.assign(LANGS.hr, {
   // and a test that talks to the MCP endpoint like the app will.
   const WCLIENTS = [
     {id:'codex_oauth',icon:'⌨️',token:false}, {id: 'codex', icon: '⌨️', token: true}, {id: 'claude_desktop', icon: '🖥️', token: true, via: 'mcpw_via_extension'}, {id: 'claude_code', icon: '🟠', token: true}, {id: 'gemini', icon: '✨', token: true},
-    {id: 'cursor', icon: '🧩', token: true}, {id: 'claude_connector', icon: '🟠', token: false}, {id: 'chatgpt', icon: '💬', token: false},
+    {id: 'opencode', icon: '⬛', token: true}, {id: 'cursor', icon: '🧩', token: true}, {id: 'claude_connector', icon: '🟠', token: false}, {id: 'chatgpt', icon: '💬', token: false},
   ];
-  const WINSTR = {codex: 'AGENTS.md', claude_code: 'CLAUDE.md', gemini: 'GEMINI.md', cursor: 'AGENTS.md'};
+  const WINSTR = {opencode: 'AGENTS.md', codex: 'AGENTS.md', claude_code: 'CLAUDE.md', gemini: 'GEMINI.md', cursor: 'AGENTS.md'};
   let W = {step: 1, client: null, token: '', preset: 'read', hours: 0, conn_ids: []};
   function wizSteps() {
     const c = WCLIENTS.find(x => x.id === W.client);
@@ -439,6 +439,11 @@ Object.assign(LANGS.hr, {
     ];
     out.cursor = [{h: 'mcpw_h_json', code: JSON.stringify({mcpServers: {wrm: {type: 'http', url, headers: hdr}}}, null, 2), file: 'mcp.json'}];
     out.codex_oauth=[{h:'mcpw_h_codex_cmd',code:`codex mcp add wrm --url ${shellQuoteJS(url)}\ncodex mcp login wrm`}];
+    out.opencode = [
+      {h: 'mcpw_h_env', code: `export WRM_MCP_TOKEN='${tk}'\n# Windows PowerShell:\n$env:WRM_MCP_TOKEN='${tk}'`},
+      {h: 'mcpw_h_opencode_json', code: JSON.stringify({$schema: 'https://opencode.ai/config.json', mcp: {wrm: {type: 'remote', url, enabled: true, headers: {Authorization: 'Bearer {env:WRM_MCP_TOKEN}'}}}}, null, 2), file: 'opencode.json'},
+      {h: 'mcpw_h_opencode_oauth', code: JSON.stringify({$schema: 'https://opencode.ai/config.json', mcp: {wrm: {type: 'remote', url, enabled: true}}}, null, 2) + '\n\nopencode mcp auth wrm\nopencode mcp list'},
+    ];
     out.claude_connector = [{h: 'mcpw_h_remote', code: url}];
     out.chatgpt = [{h: 'mcpw_h_chatgpt', code: url}];
     return out[client] || [];
