@@ -22,6 +22,7 @@ import (
 //   bedrock            AWS Bedrock: Converse API, or the Messages API endpoint; SigV4 or an API key
 //   vertex             Google Vertex AI: Claude (rawPredict) or the OpenAI-compatible endpoint; service account
 //   openai_compatible  any OpenAI-compatible base URL (local models)
+//   opencode           OpenCode Zen: free models without a key, every model with one (ai_opencode.go)
 //
 // Secrets (API keys, AWS secret keys, service account JSON) are stored in one encrypted
 // JSON value (encryptValue) and never returned to the browser: the API reports only which
@@ -537,7 +538,18 @@ func handleAIProviders(w http.ResponseWriter, r *http.Request, userID int, scope
 			jsonOK(w, map[string]interface{}{"ok": false, "error": err.Error(), "models": []string{}})
 			return
 		}
-		jsonOK(w, map[string]interface{}{"ok": true, "models": list})
+		out := map[string]interface{}{"ok": true, "models": list}
+		if p.Kind == "opencode" {
+			free := []string{}
+			for _, id := range list {
+				if opencodeModelInfo(r.Context(), id).Free {
+					free = append(free, id)
+				}
+			}
+			out["free"] = free
+			out["keyless"] = p.secret.APIKey == ""
+		}
+		jsonOK(w, out)
 		return
 	}
 	if len(parts) != 1 {
