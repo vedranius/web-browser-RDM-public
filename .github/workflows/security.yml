@@ -137,10 +137,30 @@ jobs:
     name: Dependency review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
-      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+      # The review needs the repository's dependency graph (Settings → Advanced Security →
+      # Dependency graph). Until the owner turns it on, the job says so and passes.
+      - name: Dependency graph enabled?
+        id: graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if out=$(gh api "repos/${REPO}/dependency-graph/compare/${BASE_SHA}...${HEAD_SHA}" 2>&1); then
+            echo "enabled=1" >> "$GITHUB_OUTPUT"
+          elif grep -qi "dependency graph" <<<"$out"; then
+            echo "::warning::Dependency review skipped: the dependency graph is not enabled for this repository (Settings → Advanced Security → Dependency graph)."
+          else
+            echo "$out"; exit 1
+          fi
+      - if: steps.graph.outputs.enabled == '1'
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           fail-on-severity: moderate
