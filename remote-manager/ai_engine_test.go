@@ -170,6 +170,16 @@ func eventTypes(s *aiSession) []string {
 	return out
 }
 
+func toolResultFor(s *aiSession, callPrefix string) map[string]interface{} {
+	evs, _, _ := s.eventsSince(0)
+	for _, e := range evs {
+		if e.Type == "tool_result" && strings.HasPrefix(fmt.Sprint(e.Data["call_id"]), callPrefix) {
+			return e.Data
+		}
+	}
+	return nil
+}
+
 // ─── tests ───────────────────────────────────────────
 
 // The ask mode: reads run, a change waits for an approval; the user edits the command

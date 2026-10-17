@@ -9,7 +9,7 @@
 
 **A remote server manager that runs in any web browser, with an AI assistant and guided setup for AI agents.** Add your own AI provider or a local model: WRM offers model suggestions, an Ollama setup wizard and connection presets for MCP agents to help you start practical work on your servers quickly.
 
-**Optional automatic Ollama installation:** from WRM, an administrator can install the Ollama server on the **WRM host**, start it as a background service and download the chosen model. Enable `ai_ollama_manage` in Admin → AI, then confirm each action in the provider wizard. Choose the suggested local model or another supported model; installation and setup actions are recorded and audited. Connect **Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code, Claude or ChatGPT** through the MCP wizard, which supplies the connection commands or configuration and lets you choose the servers and permissions.
+**Optional automatic Ollama installation:** from WRM, an administrator can install the Ollama server on the **WRM host**, start it as a background service and download the chosen model. Enable `ai_ollama_manage` in Admin → AI, then confirm each action in the provider wizard. Choose the suggested local model or another supported model; installation and setup actions are recorded and audited. Connect **Codex CLI, Claude Code, Gemini CLI, OpenCode, Cursor / VS Code, Claude or ChatGPT** through the MCP wizard, which supplies the connection commands or configuration and lets you choose the servers and permissions.
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
@@ -18,6 +18,10 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 ## What's new in v12.6.12
 
 **Security checked on every change.** WRM is now built with a supported Go release (1.27) and up-to-date libraries, and every push and pull request runs automatic security checks: known vulnerabilities in Go and the libraries WRM uses (govulncheck), GitHub CodeQL for the server and the web UI, gosec and staticcheck, secret scanning (gitleaks), checks of the build workflows themselves, a dependency review, a vulnerability scan of the Docker image and the OpenSSF Scorecard. Dependabot proposes library updates every week, and Claude can review pull requests for security problems. The Medium proxy uses Go's safer `Rewrite` hook. No change for users; see [Continuous security checks](SECURITY.md#continuous-security-checks) and the [security roadmap](ROADMAP.md) (signed releases, security levels for home, business and enterprise, roles and teams, sign-in with Microsoft Entra ID / AD, LDAP and SCIM, SIEM export).
+
+## What's new in v12.6.11
+
+**OpenCode inside WRM.** Add the **OpenCode Zen** provider and use OpenCode's free models in the AI assistant without an account, or paste an OpenCode account's Zen key for all its models. Choose **OpenCode agent** as the assistant's engine (agents *build* and *plan*): WRM downloads OpenCode itself after one click by an administrator (sha512 checked) and runs it on the WRM host with its own shell, file and web tools switched off, so it works on your servers only through WRM and every command still waits for your approval. The assistant can also hand text jobs to **helper models**, picked automatically by the kind of job (free first), each labelled with how it treats your data; models that may train on prompts stay off until you switch them on. See [OpenCode Zen, agents and helper models](#opencode-zen-agents-and-helper-models).
 
 ## What's new in v12.6.10
 
@@ -116,7 +120,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -267,9 +271,13 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
-## Upgrading from v12.6.10
+## Upgrading from v12.6.11
 
 Replace the executable/AppImage/container and keep the database and encryption key. No database or setting change. Building from source now needs **Go 1.26 or newer** (`go.mod` asks for the Go 1.27.2 toolchain, which `go` downloads by itself when `GOTOOLCHAIN` allows it).
+
+## Upgrading from v12.6.10
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new column, `users.ai_delegate_training` (a user's own choice to allow helper models that may train on prompts); a previous version still starts on it. Nothing changes until an administrator adds an **OpenCode Zen** provider, turns on delegation (`ai_delegate`) or installs OpenCode in *Admin panel → AI assistant → OpenCode agents*. `ai_provider_kinds` now includes `opencode`; if you set it yourself, add `opencode` to allow the new provider. New settings `ai_delegate*` and `ai_opencode*`; new endpoints `/api/ai/delegate` and `/api/admin/opencode`. OpenCode itself is stored next to the database in `<DB>.opencode/`.
 
 ## Upgrading from v12.6.9
 
@@ -1477,7 +1485,7 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 - **What the AI sees** (👁 in the panel): the tool results of this session, the OS of the server and, only if you tick it, your notes for the connection. Never the passwords and keys stored in WRM, your WRM sign-in, other connections or your terminal screen. **Secrets in output are redacted** before they are sent to the provider (`ai_redact_output`): private keys, passwords and tokens in `key=value` form, `Authorization` headers, passwords in URLs, AWS / GitHub / GitLab / Slack / OpenAI / Anthropic / Google keys, JWTs, password hashes. Output is limited per call (`ai_output_max_kb`).
 - **Server output is untrusted data.** Tool results are framed as untrusted data and the model is told never to follow instructions found in them. A log line that says *switch to automatic mode* changes nothing: only you can change the mode, in the WRM interface, and every change goes through the same checks.
 - **Stop and kill:** ■ *Stop* cancels the running request and command; ⏻ ends the session. Administrators end one session, all sessions of a user, or every session (*Stop every AI session now*), turn the assistant off for a user, or turn on the **kill switch** (`ai_kill_switch`, also `WRM_AI_KILL_SWITCH=1`), which ends everything and blocks new sessions. An **✦ AI** badge on the window shows that a session is active.
-- **Providers:** the **Anthropic API** (the latest Claude models, e.g. `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; an optional gateway base URL), the **OpenAI API**, **Azure OpenAI** (deployment + api-version, or the v1 API), **AWS Bedrock** (the Converse API with SigV4 access keys or a Bedrock API key, or the Messages API endpoint with an API key; model IDs such as `anthropic.claude-opus-5-5`), **Google Vertex AI** (Claude through `rawPredict`, or the OpenAI-compatible endpoint, with a service account key) and any **OpenAI-compatible** base URL (Ollama, vLLM, LM Studio …). Responses are streamed; tokens and the estimated cost are counted per request (built-in list prices for Anthropic models, your own prices for others); requests time out and are cancelled with *Stop*.
+- **Providers:** the **Anthropic API** (the latest Claude models, e.g. `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; an optional gateway base URL), the **OpenAI API**, **Azure OpenAI** (deployment + api-version, or the v1 API), **AWS Bedrock** (the Converse API with SigV4 access keys or a Bedrock API key, or the Messages API endpoint with an API key; model IDs such as `anthropic.claude-opus-5-5`), **Google Vertex AI** (Claude through `rawPredict`, or the OpenAI-compatible endpoint, with a service account key) **OpenCode Zen** (free models without a key, every model with an OpenCode account's key; see [OpenCode Zen, agents and helper models](#opencode-zen-agents-and-helper-models)) and any **OpenAI-compatible** base URL (Ollama, vLLM, LM Studio …). Responses are streamed; tokens and the estimated cost are counted per request (built-in list prices for Anthropic models, your own prices for others); requests time out and are cancelled with *Stop*.
 - **Keys:** the organisation's providers are managed by administrators (*Admin panel → AI assistant → Organisation providers*); personal keys (*🔑 My API keys* in the panel) only when `ai_personal_keys` allows them. Keys are encrypted at rest and **never sent to the browser**; *Test* sends one tiny request.
 - **Consumer subscriptions do not work here:** Claude.ai and ChatGPT chat subscriptions cannot be used by third-party applications as an API. Use an API key (or your company's gateway) for this panel — or let the chat app itself connect to WRM over MCP: see [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 - **Shared connections:** the assistant can be used on a shared connection by signed-in users whose role allows terminals and file changes (*Operator* and up); their notes are not shared.
@@ -1485,6 +1493,29 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 **Admin policies** (*Admin panel → AI assistant*): who may use it (`ai_assistant`), the allowed modes (`ai_modes`) and **mode rules per tag, folder, connection or host** — the **most restrictive** matching rule wins, e.g. `[{"match":"tag","value":"prod","modes":["read_only"]}, {"match":"folder","value":"Staging","modes":["read_only","ask"]}]` — the default mode, providers and models (`ai_provider_kinds`, `ai_models`), personal keys, redaction, sharing notes, the approval timeout, the automatic mode's maximum time and actions, power commands, extra blocked commands and unreadable files, the command time limit, the output limit, the steps per request, the idle timeout and the **transcript retention** (`ai_transcript_retention_days`). A running session follows a policy change at its next tool call.
 
 **Audit and transcripts:** every AI request (provider, model, tokens, cost), every tool call with its inputs and its (redacted) output, every approval and denial with who and when, mode changes, stops and kills are audit events (`ai.*`) linked to the connection. The session transcript (redacted) is kept for `ai_transcript_retention_days` and shown to its user (🕘 in the panel) and to administrators (*Admin panel → AI assistant → Transcript*); it is also **recorded like a terminal session** (*Sessions & recordings*, marked ✦ AI, with replay).
+
+### OpenCode Zen, agents and helper models
+
+[OpenCode](https://opencode.ai) is an open-source coding agent (MIT licence) with its own model gateway, **OpenCode Zen**. WRM uses both, in three independent parts. Everything stays visible: what runs, which model got what, tokens and cost.
+
+**1. OpenCode Zen as a provider.** Add it in *Admin panel → AI assistant → Organisation providers* (for everyone), or as a personal key under *🔑 My API keys* when `ai_personal_keys` allows it; the provider wizard has an **OpenCode Zen** preset.
+- **Without a key** WRM offers only the **free models** (it sends OpenCode's public key, as OpenCode's own client does). Nothing else is needed.
+- **With a key** from your OpenCode account (*opencode.ai/auth* → API keys) every model of the account is available, billed by OpenCode.
+- The model list comes from OpenCode's public catalog (`models.dev`): names, prices, context size and which API each model speaks. Models that only work over OpenAI's Responses API or Google's API are refused with a clear message; choose another one.
+
+**2. Helper models (delegation).** With `ai_delegate` on, the assistant may hand a self-contained text job to a helper model: summarise a long log, classify, explain an error, draft a snippet or some code. The helper gets only the text the assistant passes, with secrets redacted and at most `ai_delegate_max_kb`; it has **no tools** and cannot touch a server.
+- **Automatic choice:** with `ai_delegate_models` empty WRM uses the whole catalog of the provider in `ai_delegate_provider` and picks per job: free models first, then coding and reasoning models for code and drafts, reasoning models for explanations, large-context and fast models for summaries. If a model fails, WRM tries the next one (at most three). A list of models narrows the choice.
+- **Data-use labels** on every model, in the admin list, the assistant setup and each delegation card: 🛡 *zero retention*, ⚠ *may use prompts for training*, ❔ *unknown terms* (treated like ⚠), 💳 *paid*, 🔑 *your own provider*. The labels follow OpenCode's published terms for its free models.
+- **Training is off by default.** Models marked ⚠ or ❔ are only used when allowed: `ai_delegate_training` = `user` (default) lets each user switch them all on for themselves in the assistant setup (*Helper models* → *Also use free models that may use my prompts for training*), `all` allows them for everyone, `off` never.
+- Each delegation is a card in the chat (task, model, label, size, tokens, cost), part of the transcript and audited (`ai.delegated`, `ai.delegate_result`, `ai.delegate_denied`; a user's training choice `ai.delegate_training`).
+
+**3. OpenCode agents.** In the assistant setup choose **Engine → OpenCode agent** and an agent: **build** does the work, **plan** looks and plans. The WRM mode (read-only, ask, automatic) applies as for the WRM assistant and is fixed for the session.
+- **Installed by WRM, once.** *Admin panel → AI assistant → OpenCode agents* shows the state. **Download and install** asks for confirmation, then downloads the official package for the WRM host from the npm registry (`ai_opencode_registry`, an HTTPS mirror also works), checks its **sha512** against the registry, unpacks only the `opencode` binary into `<DB>.opencode/bin/<version>/` and runs `--version`. The log is shown live; who installed which version is recorded and audited (`opencode.install_started`, `opencode.installed`). Or point `ai_opencode_path` at an OpenCode binary you installed yourself.
+- **How it runs:** one `opencode serve` process per session on `127.0.0.1`, in its own folder under `<DB>.opencode/run/`, with a configuration WRM writes: one provider (OpenCode Zen, Anthropic, OpenAI or OpenAI-compatible providers of WRM; the key is passed in the process environment, never written to disk), **all of OpenCode's own tools switched off** (shell, file read and edit, web fetch and search, LSP, questions) and **WRM as its only tool server** (MCP over a loopback-only listener). The process gets a minimal environment without WRM's variables.
+- **It works through WRM.** The agent uses WRM's server tools in a WRM session opened for it, so every command and file edit goes through WRM's permission engine and appears in the chat with the same **approval cards**; nothing changes on a server without your approval unless full access is on. OpenCode's own steps are shown too. If OpenCode asks for a permission or a question, WRM refuses it and audits `ai.opencode_refused`.
+- **Lifetime:** the session's AI connection (kind `opencode`) works only from `127.0.0.1` and only while the agent runs; ending the session, a kill, the kill switch, an idle timeout or stopping WRM stops the process and removes its folder. At most `ai_opencode_max_sessions` agents run at once; `ai_opencode` decides who may use them (`off`, `admins`, `all`).
+
+**OpenCode on your own computer** can also use WRM as an MCP server: *Settings → AI connections → Connect an AI app → OpenCode* gives the `opencode.json` snippet (token in `WRM_MCP_TOKEN`) or the OAuth login (`opencode mcp auth wrm`).
 
 ### AI desktop apps (MCP)
 
@@ -1932,7 +1963,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_default_mode` | `read_only` | mode of a new session when allowed: `read_only`, `ask` |
 | `ai_mode_rules` | `[]` | JSON rules `{"match": "tag"\|"folder"\|"connection"\|"host", "value", "modes"}`; the most restrictive matching rule wins |
 | `ai_personal_keys` | `off` | who may add their own provider keys: `off`, `admins`, `all` |
-| `ai_provider_kinds` | all | allowed provider types: `anthropic,openai,azure,bedrock,vertex,openai_compatible` |
+| `ai_provider_kinds` | all | allowed provider types: `anthropic,openai,azure,bedrock,vertex,openai_compatible,opencode` |
 | `ai_models` | – | allowed models, comma-separated patterns (`claude-*`); empty = every model of the providers |
 | `ai_ollama_manage` | `0` | lets administrators install / start / pull Ollama through WRM from the provider wizard (`WRM_AI_OLLAMA_MANAGE`); off = the wizard only shows the commands |
 | `ai_redact_output` | `1` | redact secrets before output is sent to the provider (transcripts and the audit are always redacted) |
@@ -1944,6 +1975,16 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_allow_power` | `off` | `shutdown` / `reboot`: `off` (blocked) or `ask` (each needs an approval, never automatic) |
 | `ai_blocked_commands` | – | extra command patterns refused in every mode |
 | `ai_read_deny_paths` | – | extra path patterns treated as sensitive (a pattern without `/` matches the file name) |
+| `ai_delegate` | `0` | the assistant may hand text jobs to helper models |
+| `ai_delegate_provider` | `0` | id of the organisation provider for helper models |
+| `ai_delegate_models` | – | allowed helper models, comma-separated; empty = automatic choice from the provider's catalog |
+| `ai_delegate_max_kb` | `64` | the most text one delegation may send (1–1024 KiB) |
+| `ai_delegate_training` | `user` | free models that may use prompts for training: `off` never, `user` each user decides (default off), `all` for everyone |
+| `ai_opencode` | `all` | who may use OpenCode agents in the assistant: `off`, `admins`, `all` (the assistant permission still applies) |
+| `ai_opencode_version` | `1.19.3` | the OpenCode version WRM installs |
+| `ai_opencode_registry` | `https://registry.npmjs.org` | npm registry (HTTPS) WRM downloads OpenCode from |
+| `ai_opencode_path` | – | absolute path of your own OpenCode binary instead of the one WRM installs |
+| `ai_opencode_max_sessions` | `4` | OpenCode agents running at the same time (1–50) |
 | `ai_full_access` | `0` | Full access for the AI: everything WRM would refuse is asked instead (each time, never automatically); read-only stays read-only |
 | `ai_full_access_mode` | `all` | Where full access applies: `all` (every AI session), `connection` (AI connections with the `full_access` scope), `user` (users who turn it on themselves) |
 | `ai_full_access_blocked` | `ask` | Under full access, commands on `ai_blocked_commands` ask for approval (`ask`) or stay refused (`deny`); the built-in destructive list always asks |
@@ -2500,13 +2541,16 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/api/ai/connections/{id}` | `{allowed_modes, default_mode, rules, has_notes, sees}` for a connection (most restrictive rule wins) |
 | GET / POST / PUT / DELETE | `/api/ai/providers[/{id}]` | Personal providers (policy `ai_personal_keys`); secrets are write-only (`api_key`, `access_key_id`, `secret_access_key`, `session_token`, `service_account`; omitted = unchanged, `""` = removed), responses carry `has_api_key` / `has_access_key` / `has_service_account` |
 | POST | `/api/ai/providers/{id}/test` | One tiny request `{model}` → `{ok, reply \| error}` |
-| GET / POST | `/api/ai/sessions` | Own sessions / start `{conn_id, provider_id, model, mode, auto: {allow, deny, path_allow, path_deny, minutes, max_actions}, confirm_auto, share_notes}` |
+| GET / POST | `/api/ai/sessions` | Own sessions / start `{conn_id, provider_id, model, mode, auto: {allow, deny, path_allow, path_deny, minutes, max_actions}, confirm_auto, share_notes, engine?: "opencode", agent?: "build"\|"plan"}` |
 | GET | `/api/ai/sessions/{id}` | Session and its (redacted) transcript |
 | GET | `/api/ai/sessions/{id}/events?since=N` | Server-sent events: `session`, `user`, `assistant_start`, `text`, `assistant_done`, `tool_call`, `approval_required`, `approval_resolved`, `tool_result`, `mode`, `usage`, `busy`, `notice`, `error`, `ended` |
 | POST | `/api/ai/sessions/{id}/prompt` | `{text}` |
 | POST | `/api/ai/sessions/{id}/mode` | `{mode, auto, confirm}` |
 | POST | `/api/ai/sessions/{id}/approvals/{approval}` | `{decision: "approve"\|"deny", command?, content?, note?}` (only the session's user) |
 | POST | `/api/ai/sessions/{id}/stop` · `/kill` | Cancel the running request / end the session |
+| GET / PUT | `/api/ai/delegate` | Helper models for the user (provider, models with data-use labels, allowed or not) / `{training: bool}` (only with `ai_delegate_training` = `user`) |
+| GET | `/api/admin/opencode` | OpenCode state: installed version, binary, package for this host, running agents, install log (administrators) |
+| POST | `/api/admin/opencode/install` | `{confirm: true}`: download, verify (sha512) and install OpenCode in the background (administrators) |
 | POST | `/api/ai/kill-all` | End all own sessions |
 
 **AI connections (MCP)** — the MCP endpoint takes a bearer token, the OAuth endpoints are public, the rest needs a WRM sign-in
@@ -2605,6 +2649,10 @@ remote-manager/
   ai_provider.go  AI providers (organisation / personal), encrypted keys, schema
   ai_api.go       /api/ai and /api/admin/ai
   ai_ollama.go    Ollama detection / install / start / pull (audited), provider model lists
+  ai_opencode.go  OpenCode Zen provider: models.dev catalog, free models, data-use labels, API family routing
+  ai_delegate.go  delegate_task: helper models chosen by kind of job, fallback, training opt-in, /api/ai/delegate
+  opencode_install.go  OpenCode download from the npm registry with sha512 check, /api/admin/opencode
+  opencode_agent.go    OpenCode agents: managed opencode serve per session, its config, loopback MCP, event mapping, cleanup
   ai_transfer.go  transfer_file: SFTP copy between two sessions of one AI connection
   mcp_server.go   the MCP server at /mcp: streamable HTTP, JSON-RPC, tools, elicitation, origin and CORS checks
   mcp_tokens.go   AI connections (hashed tokens, scopes, expiry, revoke), policies, /api/mcp and /api/admin/mcp
@@ -2701,6 +2749,8 @@ remote-manager/
   mcp_bundle_test.go   the Claude Desktop extension: download, manifest, token checks; its Node.js bridge end to end with an approval
   v1265_test.go        Medium step by step: tool import steps with output, deploy-config checked at once and kept while preparing, failed start keeps its step, error and redacted output, activity log; 409 names the running operation and its user, visibility and medium_log_output; approve later after the AI app closed its session; grep/sed/find patterns are not taken for files
   v1266_test.go        Docker for Medium: backend choice, Linux packages after consent with steps and output, no rights shows -setup-docker, policy off, Windows and macOS Docker Desktop with download, signature and licence, permission denied, wrm -setup-docker
+  ai_opencode_test.go  OpenCode Zen: catalog parsing, free and deprecated models, keyless use only of free models, API family routing, fallback without the catalog; delegation off, automatic choice, training opt-in, redaction, audit
+  opencode_agent_test.go  OpenCode configuration (own tools off, WRM as MCP server), install with sha512 check against a fake registry, loopback-only tokens; with WRM_TEST_OPENCODE set, the real OpenCode binary end to end (WRM tools, approval in the chat, cleanup)
   v12610_test.go       the canvas is wired (addon windows, floating panels on the canvas, Tools menu, top bar group and order, sessions keep addons); /api/me/ui takes 256 KiB
   v1269_test.go        in-app notifications (recorded without channels, per user, reminders once a day, mark read, clear, newest 200 kept, removed with the user); metrics parser; /api/workboard/metrics (own connections only, SSH error in the result, policy off, fresh and stale Monitoring sample); the page loads static/workboard.js
   v1268_test.go        /api/me/ui: per-user layout store (put, overwrite, reset, objects only, 64 KiB limit, unknown keys, signed out, removed with the user); the page loads static/layout.js and has every panel
