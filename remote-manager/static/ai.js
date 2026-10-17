@@ -47,7 +47,7 @@ Object.assign(LANGS.en, {
   ai_prov_maxtok: 'Max output tokens (0 = 16000)', ai_prov_fallback: 'Refusal fallback (Anthropic API)', ai_prov_enabled: 'Enabled', ai_prov_test: 'Test',
   ai_prov_test_ok: 'The provider answered', ai_prov_add: 'Add provider', ai_prov_edit: 'Edit provider', ai_prov_del_q: 'Delete this provider? Its sessions end.',
   ai_prov_none: 'No providers yet.', ai_models_col: 'Models', ai_prov_secrets: 'Keys', ai_kind_anthropic: 'Anthropic API', ai_kind_openai: 'OpenAI API', ai_kind_azure: 'Azure OpenAI',
-  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-compatible (local models)',
+  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-compatible (local models)', ai_kind_opencode: 'OpenCode Zen (free models without a key)',
   ai_subscriptions_note: 'Consumer Claude.ai and ChatGPT chat subscriptions cannot be used by other applications. Use an API key or an enterprise gateway here, or connect the chat app to WRM over MCP (Settings → AI connections).',
   aiw_title: 'Add an AI provider (step by step)', aiw_s_pick: 'Provider', aiw_s_key: 'Key and model', aiw_s_test: 'Test', aiw_s_done: 'Done',
   aiw_pick: 'Which AI service do you want to use?', aiw_p_anthropic: 'Anthropic (Claude)', aiw_p_openai: 'OpenAI', aiw_p_gemini: 'Google Gemini', aiw_p_groq: 'Groq', aiw_p_openrouter: 'OpenRouter', aiw_p_mistral: 'Mistral',
@@ -57,7 +57,20 @@ Object.assign(LANGS.en, {
   aiw_testing: 'Saving and testing…', aiw_ok: 'It works. The provider answered{reply}.', aiw_fail: 'The provider did not answer: {err}', aiw_fix: 'Go back and check the key, the address and the model name.',
   aiw_next: 'Save and test', aiw_back: 'Back', aiw_finish: 'Done', aiw_use: 'Open an AI assistant window on a server connection and choose this provider. Every session is recorded and audited.', aiw_wizard: 'Setup wizard', aiw_need: 'Fill in the required fields.',
   aiw_s_ollama: 'Ollama on this server', aiw_p_xai: 'xAI (Grok)', aiw_p_deepseek: 'DeepSeek', aiw_p_together: 'Together AI', aiw_p_perplexity: 'Perplexity', aiw_p_cohere: 'Cohere',
-  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras',
+  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (free models)', aiw_free: 'free', ai_deleg_setup: 'Helper models: {p}, {n} in use', ai_deleg_setup_d: 'The assistant may hand text subtasks to these models; WRM picks the best one for each task, free ones first. They get only redacted text and cannot run anything.',
+  ai_deleg_training_me: 'Also use free models that may use my prompts for training', ai_deleg_training_all: 'The administrator allows free models that may train on prompts for everyone.', ai_deleg_training_off: 'The administrator does not allow free models that may train on prompts.',
+  ai_deleg_excluded: 'Not used (may train on prompts):',
+  ai_du_zero_retention: 'keeps nothing', ai_du_zero_retention_d: 'Zero retention: prompts are not stored or used for training.', ai_du_trains: 'may train', ai_du_trains_d: 'During the free period the provider may use prompts and answers to improve its models.',
+  ai_du_unknown: 'terms unknown', ai_du_unknown_d: 'WRM does not know this free model’s data terms; it is treated like a model that may train.', ai_du_paid: 'paid', ai_du_paid_d: 'Billed to the OpenCode Zen workspace; Zen states zero retention (OpenAI and Anthropic keep requests 30 days).',
+  ai_du_provider: 'own provider', ai_du_provider_d: 'Your organisation’s own provider and its terms.',
+  p_ai_delegate_training: 'Free models that may train on prompts', p_ai_delegate_training_d: 'Off: never used. User: each user decides in the assistant (default off). All: used for everyone.',
+  po_ai_delegate_training_off: 'Never', po_ai_delegate_training_user: 'Each user decides', po_ai_delegate_training_all: 'Everyone', ai_deleg_h: 'Delegation to helper models', ai_deleg_help: 'The assistant can hand self-contained text subtasks (summarise a long log, explain an error, draft a snippet) to a cheaper or free helper model. The helper only gets the text the assistant passes, with secrets redacted; it has no tools and cannot run anything on a server. Every delegation appears in the live view, the transcript and the audit log with model, size, tokens and cost. Free OpenCode Zen models can use what they receive to improve their models: only allow models whose terms fit your data.',
+  ai_deleg_off: 'Delegation is off.', ai_deleg_noprov: 'Delegation is on, but no helper provider is chosen.', ai_deleg_disabled: 'The chosen helper provider is disabled.', ai_deleg_on: 'Active: {p} with {m}', ai_deleg_load: 'Load models',
+  p_ai_delegate: 'Allow delegation to helper models', p_ai_delegate_d: 'Offers the assistant the delegate_task tool (built-in assistant only; MCP clients use their own agents).',
+  p_ai_delegate_provider: 'Helper provider', p_ai_delegate_provider_d: 'An organisation provider, for example OpenCode Zen (free models work without a key).',
+  p_ai_delegate_models: 'Helper models', p_ai_delegate_models_d: 'Comma-separated; the first is the default. Empty: automatic, every usable model of the provider (for OpenCode Zen the current catalog). WRM picks the one that fits each task.', p_ai_delegate_models_ph: 'big-pickle',
+  p_ai_delegate_max_kb: 'Delegation size limit (KB)', p_ai_delegate_max_kb_d: 'The most text one delegation may send to the helper.',
+  aiw_n_opencode: 'Without a key only the free OpenCode Zen models work (limited per IP address; some free models may use prompts to improve their models, so do not send confidential data). With a key from opencode.ai every Zen model works, billed to that workspace. Use “Load models” after the test to pick from the current list.',
   aiw_model_note: 'Model names change often. Type any model name (several separated by commas; the first one is the default), or save and use “Load the model list” on the last step.',
   aiw_n_perplexity: 'Perplexity models cannot call tools, so the assistant may be unable to run checks with them.',
   aiw_o_intro: 'Ollama runs free AI models on a computer you control. WRM talks to it through its OpenAI-compatible address and needs no API key. The assistant still works through WRM, so every session is recorded and audited.',
@@ -87,7 +100,7 @@ Object.assign(LANGS.en, {
   p_ai_default_mode: 'Default mode', p_ai_default_mode_d: 'Mode of a new session when it is allowed.', po_ai_default_mode_read_only: 'Read-only', po_ai_default_mode_ask: 'Ask before every change',
   p_ai_mode_rules: 'Mode rules', p_ai_mode_rules_d: 'Per tag, folder, connection or host; the most restrictive matching rule wins.',
   p_ai_personal_keys: 'Personal API keys', p_ai_personal_keys_d: 'Who may add their own provider keys.', po_ai_personal_keys_off: 'Nobody', po_ai_personal_keys_admins: 'Administrators', po_ai_personal_keys_all: 'Everybody',
-  p_ai_provider_kinds: 'Allowed provider types', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible', p_ai_provider_kinds_ph: 'anthropic,azure',
+  p_ai_provider_kinds: 'Allowed provider types', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode', p_ai_provider_kinds_ph: 'anthropic,azure',
   p_ai_models: 'Allowed models', p_ai_models_d: 'Comma-separated patterns (claude-*); empty = every model of the providers.', p_ai_models_ph: 'claude-*',
   p_ai_redact_output: 'Redact output', p_ai_redact_output_d: 'Replace secrets (passwords, tokens, private keys …) before output is sent to the provider. Transcripts and the audit are always redacted.',
   p_ai_share_notes: 'Allow sharing notes', p_ai_share_notes_d: 'Users may opt in to send their connection notes to the assistant.',
@@ -149,7 +162,7 @@ Object.assign(LANGS.hr, {
   ai_prov_maxtok: 'Najviše izlaznih tokena (0 = 16000)', ai_prov_fallback: 'Zamjenski model kod odbijanja (Anthropic API)', ai_prov_enabled: 'Uključen', ai_prov_test: 'Testiraj',
   ai_prov_test_ok: 'Pružatelj je odgovorio', ai_prov_add: 'Dodaj pružatelja', ai_prov_edit: 'Uredi pružatelja', ai_prov_del_q: 'Obrisati ovog pružatelja? Njegove sesije završavaju.',
   ai_prov_none: 'Još nema pružatelja.', ai_models_col: 'Modeli', ai_prov_secrets: 'Ključevi', ai_kind_anthropic: 'Anthropic API', ai_kind_openai: 'OpenAI API', ai_kind_azure: 'Azure OpenAI',
-  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-kompatibilan (lokalni modeli)',
+  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-kompatibilan (lokalni modeli)', ai_kind_opencode: 'OpenCode Zen (besplatni modeli bez ključa)',
   ai_subscriptions_note: 'Potrošačke pretplate na Claude.ai i ChatGPT chat ne mogu koristiti druge aplikacije. Ovdje koristi API ključ ili enterprise gateway, ili poveži chat aplikaciju s WRM-om preko MCP-a (Postavke → AI veze).',
   aiw_title: 'Dodavanje AI pružatelja (korak po korak)', aiw_s_pick: 'Pružatelj', aiw_s_key: 'Ključ i model', aiw_s_test: 'Test', aiw_s_done: 'Gotovo',
   aiw_pick: 'Koju AI uslugu želite koristiti?', aiw_p_anthropic: 'Anthropic (Claude)', aiw_p_openai: 'OpenAI', aiw_p_gemini: 'Google Gemini', aiw_p_groq: 'Groq', aiw_p_openrouter: 'OpenRouter', aiw_p_mistral: 'Mistral',
@@ -159,7 +172,20 @@ Object.assign(LANGS.hr, {
   aiw_testing: 'Spremanje i testiranje…', aiw_ok: 'Radi. Pružatelj je odgovorio{reply}.', aiw_fail: 'Pružatelj nije odgovorio: {err}', aiw_fix: 'Vratite se i provjerite ključ, adresu i naziv modela.',
   aiw_next: 'Spremi i testiraj', aiw_back: 'Natrag', aiw_finish: 'Gotovo', aiw_use: 'Otvorite prozor AI asistenta na vezi prema poslužitelju i odaberite ovog pružatelja. Svaka sesija se bilježi i evidentira u reviziji.', aiw_wizard: 'Čarobnjak za postavljanje', aiw_need: 'Ispunite obavezna polja.',
   aiw_s_ollama: 'Ollama na ovom poslužitelju', aiw_p_xai: 'xAI (Grok)', aiw_p_deepseek: 'DeepSeek', aiw_p_together: 'Together AI', aiw_p_perplexity: 'Perplexity', aiw_p_cohere: 'Cohere',
-  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras',
+  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (besplatni modeli)', aiw_free: 'besplatno', ai_deleg_setup: 'Pomoćni modeli: {p}, u upotrebi {n}', ai_deleg_setup_d: 'Asistent može tekstualne podzadatke predati ovim modelima; WRM za svaki zadatak bira najprikladniji, prvo besplatne. Dobivaju samo tekst s maskiranim tajnama i ne mogu ništa pokrenuti.',
+  ai_deleg_training_me: 'Koristi i besplatne modele koji moje upite mogu koristiti za treniranje', ai_deleg_training_all: 'Administrator svima dopušta besplatne modele koji mogu trenirati na upitima.', ai_deleg_training_off: 'Administrator ne dopušta besplatne modele koji mogu trenirati na upitima.',
+  ai_deleg_excluded: 'Ne koriste se (mogu trenirati na upitima):',
+  ai_du_zero_retention: 'ne čuva ništa', ai_du_zero_retention_d: 'Bez zadržavanja: upiti se ne spremaju i ne koriste za treniranje.', ai_du_trains: 'može trenirati', ai_du_trains_d: 'Tijekom besplatnog razdoblja pružatelj može koristiti upite i odgovore za poboljšanje svojih modela.',
+  ai_du_unknown: 'uvjeti nepoznati', ai_du_unknown_d: 'WRM ne zna uvjete za podatke ovog besplatnog modela; tretira se kao model koji može trenirati.', ai_du_paid: 'plaćeno', ai_du_paid_d: 'Naplaćuje se OpenCode Zen radnom prostoru; Zen navodi da ne zadržava podatke (OpenAI i Anthropic čuvaju zahtjeve 30 dana).',
+  ai_du_provider: 'vlastiti pružatelj', ai_du_provider_d: 'Vlastiti pružatelj vaše organizacije i njegovi uvjeti.',
+  p_ai_delegate_training: 'Besplatni modeli koji mogu trenirati na upitima', p_ai_delegate_training_d: 'Nikad: ne koriste se. Korisnik: svaki korisnik bira u asistentu (zadano isključeno). Svi: koriste se za sve.',
+  po_ai_delegate_training_off: 'Nikad', po_ai_delegate_training_user: 'Svaki korisnik bira', po_ai_delegate_training_all: 'Svi', ai_deleg_h: 'Delegiranje pomoćnim modelima', ai_deleg_help: 'Asistent može samostalne tekstualne podzadatke (sažeti dugi log, objasniti grešku, napisati prijedlog isječka) predati jeftinijem ili besplatnom pomoćnom modelu. Pomoćni model dobiva samo tekst koji mu asistent preda, s maskiranim tajnama; nema alata i ne može ništa pokrenuti na serveru. Svako delegiranje vidi se u live prikazu, zapisu sesije i revizijskom zapisu s modelom, veličinom, tokenima i cijenom. Besplatni OpenCode Zen modeli mogu primljeno koristiti za poboljšanje svojih modela: dopustite samo modele čiji uvjeti odgovaraju vašim podacima.',
+  ai_deleg_off: 'Delegiranje je isključeno.', ai_deleg_noprov: 'Delegiranje je uključeno, ali pomoćni pružatelj nije odabran.', ai_deleg_disabled: 'Odabrani pomoćni pružatelj je isključen.', ai_deleg_on: 'Aktivno: {p} s {m}', ai_deleg_load: 'Učitaj modele',
+  p_ai_delegate: 'Dopusti delegiranje pomoćnim modelima', p_ai_delegate_d: 'Asistentu nudi alat delegate_task (samo ugrađeni asistent; MCP klijenti koriste svoje agente).',
+  p_ai_delegate_provider: 'Pomoćni pružatelj', p_ai_delegate_provider_d: 'Pružatelj organizacije, na primjer OpenCode Zen (besplatni modeli rade bez ključa).',
+  p_ai_delegate_models: 'Pomoćni modeli', p_ai_delegate_models_d: 'Odvojeni zarezom; prvi je zadani. Prazno: automatski, svi upotrebljivi modeli pružatelja (za OpenCode Zen aktualni katalog). WRM za svaki zadatak bira odgovarajući.', p_ai_delegate_models_ph: 'big-pickle',
+  p_ai_delegate_max_kb: 'Ograničenje veličine delegiranja (KB)', p_ai_delegate_max_kb_d: 'Najviše teksta koje jedno delegiranje smije poslati pomoćnom modelu.',
+  aiw_n_opencode: 'Bez ključa rade samo besplatni OpenCode Zen modeli (ograničeno po IP adresi; neki besplatni modeli mogu koristiti upite za poboljšanje svojih modela, zato ne šaljite povjerljive podatke). S ključem s opencode.ai rade svi Zen modeli, a naplaćuju se tom radnom prostoru. Nakon testa upotrijebite “Učitaj modele” za odabir s aktualnog popisa.',
   aiw_model_note: 'Nazivi modela se često mijenjaju. Upišite bilo koji naziv modela (više njih odvojite zarezom; prvi je zadani) ili spremite i na zadnjem koraku odaberite „Učitaj popis modela”.',
   aiw_n_perplexity: 'Perplexity modeli ne mogu pozivati alate pa asistent s njima možda neće moći izvoditi provjere.',
   aiw_o_intro: 'Ollama pokreće besplatne AI modele na računalu koje kontrolirate. WRM mu pristupa preko adrese kompatibilne s OpenAI-jem i ne treba API ključ. Asistent i dalje radi preko WRM-a, pa se svaka sesija bilježi i evidentira u reviziji.',
@@ -187,7 +213,7 @@ Object.assign(LANGS.hr, {
   p_ai_default_mode: 'Zadani način rada', p_ai_default_mode_d: 'Način rada nove sesije kad je dopušten.', po_ai_default_mode_read_only: 'Samo čitanje', po_ai_default_mode_ask: 'Pitaj prije svake promjene',
   p_ai_mode_rules: 'Pravila načina rada', p_ai_mode_rules_d: 'Po oznaci, mapi, vezi ili hostu; pobjeđuje najstrože pravilo koje odgovara.',
   p_ai_personal_keys: 'Osobni API ključevi', p_ai_personal_keys_d: 'Tko smije dodati vlastite ključeve pružatelja.', po_ai_personal_keys_off: 'Nitko', po_ai_personal_keys_admins: 'Administratori', po_ai_personal_keys_all: 'Svi',
-  p_ai_provider_kinds: 'Dopuštene vrste pružatelja', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible', p_ai_provider_kinds_ph: 'anthropic,azure',
+  p_ai_provider_kinds: 'Dopuštene vrste pružatelja', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode', p_ai_provider_kinds_ph: 'anthropic,azure',
   p_ai_models: 'Dopušteni modeli', p_ai_models_d: 'Uzorci odvojeni zarezom (claude-*); prazno = svi modeli pružatelja.', p_ai_models_ph: 'claude-*',
   p_ai_redact_output: 'Rediguj izlaz', p_ai_redact_output_d: 'Zamijeni tajne (lozinke, tokene, privatne ključeve …) prije slanja izlaza pružatelju. Transkripti i audit uvijek su redigirani.',
   p_ai_share_notes: 'Dopusti dijeljenje bilješki', p_ai_share_notes_d: 'Korisnici mogu izabrati da asistentu pošalju bilješke veze.',
@@ -216,6 +242,45 @@ Object.assign(LANGS.en, {
 Object.assign(LANGS.hr, {
  ai_status_ready:'Asistent je omogućen za ovaj račun.', ai_status_blocked:'Asistent nije dostupan za ovaj račun.', ai_status_test:'Uspješan test pružatelja potvrđuje povezanost. Za asistenta su potrebni i dopuštenje računa te SSH ili SFTP veza prema serveru.',
  ai_status_admin:'Administratori mogu omogućiti asistenta u Admin → AI asistent. Tamo su označene i postavke zadane varijablama okruženja.', ai_status_open:'Otvorite terminal ili datoteke na SSH/SFTP vezi pa kliknite AI u zaglavlju prozora.', ai_status_no_modes:'Nije omogućen nijedan način dopuštenja za AI.', ai_status_providers:'Dostupni pružatelji', ai_status_refresh:'Osvježi stanje', ai_status_setup:'Otvori AI administraciju', ai_status_connections:'Otvoreni prozori servera', ai_status_config_error:'Dostupnost nije provjerena. Osvježite stanje prije korištenja asistenta.',
+});
+
+Object.assign(LANGS.en, {
+ ai_engine: 'Engine', ai_engine_wrm: 'WRM assistant', ai_engine_oc: 'OpenCode agent',
+ ai_engine_wrm_d: 'The built-in assistant: WRM talks to the model and runs every tool itself.',
+ ai_engine_oc_d: 'OpenCode runs on the WRM host as a managed helper with its own agent loop and prompts. Its own shell, file and web tools are switched off: it reaches the server only through WRM tools, so every command is shown and approved here like with the WRM assistant (unless full access is on). Works with OpenCode Zen, Anthropic, OpenAI and OpenAI-compatible providers.',
+ ai_oc_agent: 'OpenCode agent', ai_oc_agent_build: 'build (does the work)', ai_oc_agent_plan: 'plan (looks and plans, changes nothing)',
+ ai_oc_unavail: 'OpenCode is not available', ai_oc_starting: 'Starting OpenCode…', ai_oc_mode_fixed: 'The mode of an OpenCode agent is chosen when it starts.',
+ ai_oc_kind_off: 'not usable with OpenCode', ai_n_delegate_retry: 'The helper model failed; trying the next one.',
+ ai_oc_h: 'OpenCode agents', ai_oc_help: 'Users can pick OpenCode as the engine of the assistant. WRM downloads the official OpenCode build once (from the npm registry, MIT licence, about 50 to 150 MB), checks its sha512 against the registry and keeps it next to the database. Each agent runs as a local helper on 127.0.0.1 with its own folder; its shell, file and web tools are off and WRM is its only tool server.',
+ ai_oc_installed: 'Installed: OpenCode {v}', ai_oc_custom: 'Using the binary from ai_opencode_path: {p}', ai_oc_missing: 'Not installed yet.', ai_oc_unsupported: 'OpenCode has no build for {os}; set a binary path instead.',
+ ai_oc_installing: 'Installing…', ai_oc_install: 'Download and install', ai_oc_reinstall: 'Install the selected version', ai_oc_refresh: 'Refresh',
+ ai_oc_install_q: 'Download OpenCode {v} ({pkg}) from {reg}? WRM checks the sha512 checksum from the registry before using it. OpenCode is MIT licensed. The file stays in {root}.',
+ ai_oc_by: 'by {u}, {t}', ai_oc_sessions: 'Running agents: {n} of {max}', ai_oc_log: 'Installation log', ai_oc_failed: 'Installation failed',
+ p_ai_opencode: 'OpenCode agents', p_ai_opencode_d: 'Who may use OpenCode as the engine of the assistant. The normal AI assistant permissions still apply.',
+ po_ai_opencode_off: 'Nobody', po_ai_opencode_admins: 'Administrators', po_ai_opencode_all: 'Everyone allowed to use the assistant',
+ p_ai_opencode_version: 'OpenCode version', p_ai_opencode_version_d: 'The version WRM installs. After a change press Install again.', p_ai_opencode_version_ph: '1.19.3',
+ p_ai_opencode_registry: 'Download registry', p_ai_opencode_registry_d: 'An npm registry over HTTPS (a mirror or proxy in closed networks).', p_ai_opencode_registry_ph: 'https://registry.npmjs.org',
+ p_ai_opencode_path: 'OpenCode binary', p_ai_opencode_path_d: 'Absolute path of an OpenCode binary you installed yourself. Empty: the one WRM installed.', p_ai_opencode_path_ph: '/usr/local/bin/opencode',
+ p_ai_opencode_max_sessions: 'Agents at the same time', p_ai_opencode_max_sessions_d: 'The most OpenCode agents running at once on this WRM host (each one is a separate process).',
+});
+Object.assign(LANGS.hr, {
+ ai_engine: 'Pogon', ai_engine_wrm: 'WRM asistent', ai_engine_oc: 'OpenCode agent',
+ ai_engine_wrm_d: 'Ugrađeni asistent: WRM razgovara s modelom i sam pokreće svaki alat.',
+ ai_engine_oc_d: 'OpenCode radi na WRM hostu kao upravljani pomoćni program sa svojom petljom agenta i uputama. Njegovi vlastiti alati za ljusku, datoteke i web su isključeni: do servera dolazi samo preko WRM alata, pa se svaka naredba prikazuje i odobrava ovdje kao kod WRM asistenta (osim ako je uključen puni pristup). Radi s OpenCode Zen, Anthropic, OpenAI i OpenAI-kompatibilnim pružateljima.',
+ ai_oc_agent: 'OpenCode agent', ai_oc_agent_build: 'build (obavlja posao)', ai_oc_agent_plan: 'plan (gleda i planira, ništa ne mijenja)',
+ ai_oc_unavail: 'OpenCode nije dostupan', ai_oc_starting: 'Pokrećem OpenCode…', ai_oc_mode_fixed: 'Način rada OpenCode agenta bira se pri pokretanju.',
+ ai_oc_kind_off: 'ne radi s OpenCodeom', ai_n_delegate_retry: 'Pomoćni model nije uspio; pokušavam sljedeći.',
+ ai_oc_h: 'OpenCode agenti', ai_oc_help: 'Korisnici mogu odabrati OpenCode kao pogon asistenta. WRM jednom preuzme službenu OpenCode verziju (iz npm registra, MIT licenca, oko 50 do 150 MB), provjeri njen sha512 prema registru i čuva je pokraj baze. Svaki agent radi kao lokalni pomoćni program na 127.0.0.1 sa svojom mapom; alati za ljusku, datoteke i web su mu isključeni, a WRM mu je jedini poslužitelj alata.',
+ ai_oc_installed: 'Instalirano: OpenCode {v}', ai_oc_custom: 'Koristi se program iz ai_opencode_path: {p}', ai_oc_missing: 'Još nije instaliran.', ai_oc_unsupported: 'OpenCode nema verziju za {os}; postavite putanju do programa.',
+ ai_oc_installing: 'Instaliram…', ai_oc_install: 'Preuzmi i instaliraj', ai_oc_reinstall: 'Instaliraj odabranu verziju', ai_oc_refresh: 'Osvježi',
+ ai_oc_install_q: 'Preuzeti OpenCode {v} ({pkg}) s {reg}? WRM prije korištenja provjerava sha512 kontrolni zbroj iz registra. OpenCode ima MIT licencu. Datoteka ostaje u {root}.',
+ ai_oc_by: '{u}, {t}', ai_oc_sessions: 'Pokrenuti agenti: {n} od {max}', ai_oc_log: 'Zapis instalacije', ai_oc_failed: 'Instalacija nije uspjela',
+ p_ai_opencode: 'OpenCode agenti', p_ai_opencode_d: 'Tko smije koristiti OpenCode kao pogon asistenta. Obična dopuštenja AI asistenta i dalje vrijede.',
+ po_ai_opencode_off: 'Nitko', po_ai_opencode_admins: 'Administratori', po_ai_opencode_all: 'Svi kojima je asistent dopušten',
+ p_ai_opencode_version: 'Verzija OpenCodea', p_ai_opencode_version_d: 'Verzija koju WRM instalira. Nakon promjene ponovno pritisnite Instaliraj.', p_ai_opencode_version_ph: '1.19.3',
+ p_ai_opencode_registry: 'Registar za preuzimanje', p_ai_opencode_registry_d: 'npm registar preko HTTPS-a (zrcalo ili proxy u zatvorenim mrežama).', p_ai_opencode_registry_ph: 'https://registry.npmjs.org',
+ p_ai_opencode_path: 'OpenCode program', p_ai_opencode_path_d: 'Apsolutna putanja do OpenCode programa koji ste sami instalirali. Prazno: onaj koji je instalirao WRM.', p_ai_opencode_path_ph: '/usr/local/bin/opencode',
+ p_ai_opencode_max_sessions: 'Agenata istovremeno', p_ai_opencode_max_sessions_d: 'Najviše OpenCode agenata koji istovremeno rade na ovom WRM hostu (svaki je zaseban proces).',
 });
 
 (function () {
@@ -507,6 +572,7 @@ Object.assign(LANGS.hr, {
     const shared = !!wo.shareToken;
     body.innerHTML = `<div class="ai-setup">
       ${resume.map(s => `<button class="btn-sec btn-sm" onclick="wrmAI.attach(${id}, ${s.id})">↪ ${esc(t('ai_continue'))} #${s.id} · ${esc(t('ai_mode_' + s.mode))} · ${esc(s.model)}</button>`).join('')}
+      ${engineHTML(id)}
       <div class="ai-row"><div><label>${esc(t('ai_provider'))}</label><select id="ai-prov-${id}" onchange="wrmAI.models(${id})">${provs.map(p => `<option value="${p.id}">${esc(p.name)}${p.scope === 'user' ? ' (🔑)' : ''}</option>`).join('')}</select></div>
         <div><label>${esc(t('ai_model'))}</label><select id="ai-model-${id}"></select></div></div>
       <div><label>${esc(t('ai_mode'))}</label><select id="ai-mode-${id}" onchange="wrmAI.modeHelp(${id})">${pol.allowed_modes.map(m => `<option value="${m}" ${m === pol.default_mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
@@ -514,9 +580,40 @@ Object.assign(LANGS.hr, {
       <div id="ai-auto-${id}" style="display:none;">${autoForm('ai-a-' + id)}</div>
       ${pol.has_notes && pol.share_notes_allowed && !shared ? `<label class="ai-check"><input type="checkbox" id="ai-notes-${id}"> ${esc(t('ai_share_notes'))}</label>` : ''}
       <details><summary class="ai-see">👁 ${esc(t('ai_see'))}</summary><div id="ai-see-${id}">${seeHTML(pol.sees, provs[0] && provs[0].name, false)}</div></details>
+      ${delegSetupHTML(id)}
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button onclick="wrmAI.start(${id})">✦ ${esc(t('ai_start'))}</button>${own}</div>
       <div class="ai-see">${esc(t('ai_subscriptions_note'))}</div></div>`;
-    models(id); modeHelp(id);
+    models(id); modeHelp(id); engine(id);
+  }
+
+  // engine: the WRM assistant or an OpenCode agent (cfg.opencode says whether it can run)
+  function engineHTML(id) {
+    const oc = cfg && cfg.opencode;
+    if (!oc) return '';
+    return `<div class="ai-row"><div><label>${esc(t('ai_engine'))}</label><select id="ai-eng-${id}" onchange="wrmAI.engine(${id})">
+        <option value="wrm">✦ ${esc(t('ai_engine_wrm'))}</option>
+        <option value="opencode" ${oc.available ? '' : 'disabled'} title="${esc(oc.reason || '')}">⬛ ${esc(t('ai_engine_oc'))}${oc.available ? '' : ' (' + esc(t('ai_oc_unavail')) + ')'}</option></select></div>
+      <div id="ai-agent-w-${id}" style="display:none;"><label>${esc(t('ai_oc_agent'))}</label><select id="ai-agent-${id}">${(oc.agents || ['build']).map(a => `<option value="${esc(a)}">${esc(t('ai_oc_agent_' + a))}</option>`).join('')}</select></div></div>
+      <div class="ai-see" id="ai-eng-d-${id}"></div>`;
+  }
+  function engine(id) {
+    const sel = $('ai-eng-' + id), oc = cfg && cfg.opencode;
+    if (!sel || !oc) return;
+    const on = sel.value === 'opencode', kinds = oc.kinds || [];
+    $('ai-agent-w-' + id).style.display = on ? '' : 'none';
+    const d = $('ai-eng-d-' + id);
+    d.textContent = on ? t('ai_engine_oc_d') : t('ai_engine_wrm_d') + (oc.available ? '' : ' · ' + t('ai_oc_unavail') + ': ' + (oc.reason || ''));
+    const ps = $('ai-prov-' + id);
+    if (!ps) return;
+    let first = null;
+    [...ps.options].forEach(o => {
+      const p = (cfg.providers || []).find(x => String(x.id) === o.value);
+      const bad = on && p && !kinds.includes(p.kind);
+      o.disabled = bad;
+      o.textContent = p.name + (p.scope === 'user' ? ' (🔑)' : '') + (bad ? ' · ' + t('ai_oc_kind_off') : '');
+      if (!bad && first === null) first = o.value;
+    });
+    if (ps.selectedOptions[0] && ps.selectedOptions[0].disabled && first !== null) { ps.value = first; models(id); }
   }
 
   function autoForm(p) {
@@ -571,6 +668,8 @@ Object.assign(LANGS.hr, {
     const mode = $('ai-mode-' + id).value;
     const body = {conn_id: wo.connId, provider_id: Number($('ai-prov-' + id).value), model: $('ai-model-' + id).value, mode,
       share_notes: !!($('ai-notes-' + id) && $('ai-notes-' + id).checked)};
+    const eng = $('ai-eng-' + id);
+    if (eng && eng.value === 'opencode') { body.engine = 'opencode'; body.agent = $('ai-agent-' + id).value; showToast(t('ai_oc_starting'), 'info', 3000); }
     if (mode === 'auto') {
       const a = readAuto('ai-a-' + id);
       if (!a.ok) { showToast(t('ai_auto_need_confirm'), 'warning', 4000); return; }
@@ -615,8 +714,9 @@ Object.assign(LANGS.hr, {
     if (!el || !v) return;
     const allowed = (st.pol && st.pol.allowed_modes) || [v.mode];
     const auto = v.auto ? ` · ${esc(tf('ai_auto_until', {time: new Date(v.auto.until).toLocaleTimeString(), used: v.auto.used, max: v.auto.max_actions}))}` : '';
-    el.innerHTML = `<select onchange="wrmAI.setMode(${id}, this.value)" ${st.ended ? 'disabled' : ''}>${MODES.filter(m => allowed.includes(m) || m === v.mode).map(m => `<option value="${m}" ${m === v.mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
-      <span>${esc(v.provider)} · ${esc(v.model)}${auto}</span><span style="margin-left:auto;" id="ai-use-${id}"></span>`;
+    const oc = v.transport === 'opencode';
+    el.innerHTML = `<select onchange="wrmAI.setMode(${id}, this.value)" ${st.ended || oc ? 'disabled' : ''} ${oc ? `title="${esc(t('ai_oc_mode_fixed'))}"` : ''}>${MODES.filter(m => allowed.includes(m) || m === v.mode).map(m => `<option value="${m}" ${m === v.mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
+      <span>${oc ? `⬛ OpenCode · ${esc(v.agent || 'build')} · ` : ''}${esc(v.provider)} · ${esc(v.model)}${auto}</span><span style="margin-left:auto;" id="ai-use-${id}"></span>`;
     usage(id);
     const pm = $('aipm-' + id);
     pm.style.display = ''; pm.textContent = t('ai_mode_' + v.mode);
@@ -680,7 +780,7 @@ Object.assign(LANGS.hr, {
           <div class="ai-appr"></div><div class="ai-res"></div></div>`);
         st.cards[d.call_id] = el; break;
       }
-      case 'approval_required': approvalUI(id, d.approval); break;
+      case 'approval_required': approvalUI(id, d.session_id ? Object.assign({}, d.approval, {session_id: d.session_id}) : d.approval); break;
       case 'approval_resolved': {
         const card = st.cards[d.call_id];
         if (card) {
@@ -729,6 +829,7 @@ Object.assign(LANGS.hr, {
   function approvalUI(id, a) {
     const st = S[id], card = st.cards[a.call_id];
     if (!card) return;
+    if (a.session_id) (st.apprSess = st.apprSess || {})[a.id] = a.session_id;
     card.classList.add('wait');
     const box = card.querySelector('.ai-appr');
     const isWrite = !!a.path;
@@ -755,7 +856,8 @@ Object.assign(LANGS.hr, {
     const ed = $(`ai-ed-${id}-${aid}`), note = $(`ai-nt-${id}-${aid}`);
     const body = {decision: ok ? 'approve' : 'deny', note: note ? note.value : ''};
     if (ok && ed) { if (isWrite) body.content = ed.value; else body.command = ed.value; }
-    try { await api('POST', `/api/ai/sessions/${st.sid}/approvals/${encodeURIComponent(aid)}${shareQ(wo)}`, body); }
+    const sid = (st.apprSess && st.apprSess[aid]) || st.sid;
+    try { await api('POST', `/api/ai/sessions/${sid}/approvals/${encodeURIComponent(aid)}${shareQ(wo)}`, body); }
     catch (e) { showToast(e.message, 'error', 5000); }
   }
 
@@ -886,8 +988,8 @@ Object.assign(LANGS.hr, {
   }
 
   // ── providers (personal and organisation) ─────────────
-  const KINDS = ['anthropic', 'openai', 'azure', 'bedrock', 'vertex', 'openai_compatible'];
-  const MODEL_HINT = {anthropic: 'claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5', bedrock: 'anthropic.claude-opus-5-5', vertex: 'claude-opus-5-5'};
+  const KINDS = ['anthropic', 'openai', 'azure', 'bedrock', 'vertex', 'openai_compatible', 'opencode'];
+  const MODEL_HINT = {anthropic: 'claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5', bedrock: 'anthropic.claude-opus-5-5', vertex: 'claude-opus-5-5', opencode: 'big-pickle'};
 
   function provForm(p, scope) {
     p = p || {kind: 'anthropic', enabled: true, refusal_fallback: true};
@@ -899,8 +1001,8 @@ Object.assign(LANGS.hr, {
         <div class="field"><label>${esc(t('ai_prov_kind'))}</label><select id="aipf-kind" onchange="wrmAI.formKind()" ${p.id ? 'disabled' : ''}>${kinds.map(k => `<option value="${k}" ${k === p.kind ? 'selected' : ''}>${esc(t('ai_kind_' + k))}</option>`).join('')}</select></div></div>
       ${f('models', t('ai_prov_models'), p.models, 'text', MODEL_HINT[p.kind] || '')}
       ${f('default_model', t('ai_prov_default'), p.default_model)}
-      <div class="kind-anthropic kind-openai kind-azure kind-bedrock kind-openai_compatible">${sec('api_key', t('ai_prov_key') + ' / ' + t('ai_prov_bkey'), p.has_api_key)}</div>
-      <div class="kind-anthropic kind-openai kind-bedrock kind-vertex">${f('base_url', t('ai_prov_base'), p.base_url)}</div>
+      <div class="kind-anthropic kind-openai kind-azure kind-bedrock kind-openai_compatible kind-opencode">${sec('api_key', t('ai_prov_key') + ' / ' + t('ai_prov_bkey'), p.has_api_key)}</div>
+      <div class="kind-anthropic kind-openai kind-bedrock kind-vertex kind-opencode">${f('base_url', t('ai_prov_base'), p.base_url)}</div>
       <div class="kind-azure kind-openai_compatible">${f('base_url2', p.kind === 'azure' ? t('ai_prov_endpoint') : t('ai_prov_base_req'), p.base_url)}</div>
       <div class="kind-azure ai-row">${f('deployment', t('ai_prov_deployment'), p.deployment)}${f('api_version', t('ai_prov_apiver'), p.api_version, 'text', '2024-10-21')}</div>
       <div class="kind-bedrock kind-vertex ai-row">${f('region', t('ai_prov_region'), p.region, 'text', 'eu-central-1 / global')}<div class="field"><label>${esc(t('ai_prov_api'))}</label><select id="aipf-api_mode"></select></div></div>
@@ -986,6 +1088,7 @@ Object.assign(LANGS.hr, {
   const AIW_PRESETS = [
     {id: 'anthropic', kind: 'anthropic', model: 'claude-sonnet-5-5, claude-opus-5-5, claude-haiku-4-5', key: true},
     {id: 'openai', kind: 'openai', model: 'gpt-5, gpt-5-mini, gpt-4.1, gpt-4.1-mini', key: true},
+    {id: 'opencode', kind: 'opencode', model: 'big-pickle', key: false},
     {id: 'gemini', kind: 'openai_compatible', base: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite', key: true},
     {id: 'groq', kind: 'openai_compatible', base: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile, openai/gpt-oss-120b, openai/gpt-oss-20b', key: true},
     {id: 'openrouter', kind: 'openai_compatible', base: 'https://openrouter.ai/api/v1', model: 'anthropic/claude-sonnet-4.5, openai/gpt-5, google/gemini-2.5-pro', key: true},
@@ -1098,7 +1201,7 @@ Object.assign(LANGS.hr, {
       const defModel = p.id === 'ollama' && AW.oll && AW.oll.models && AW.oll.models.length ? AW.oll.models[0].name : p.model;
       body = `<div class="ai-form">${field('name', t('aiw_name'), v.name != null ? v.name : t('aiw_p_' + p.id))}
         ${p.kind === 'openai_compatible' ? field('base', t('aiw_endpoint'), v.base != null ? v.base : defBase, 'text', 'https://…/v1') : ''}
-        ${p.key || p.id === 'custom' ? field('key', t(p.key ? 'aiw_key' : 'aiw_key_opt'), '', 'password') : ''}
+        ${p.key || p.id === 'custom' || p.kind === 'opencode' ? field('key', t(p.key ? 'aiw_key' : 'aiw_key_opt'), '', 'password') : ''}
         ${field('model', t('aiw_model'), v.model != null ? v.model : defModel, 'text', tf('aiw_model_ph', {m: (p.model || 'model-name').split(',')[0]}))}
         <div class="ai-see">${esc(t('aiw_key_note'))} ${esc(t('aiw_model_note'))}${t('aiw_n_' + p.id) !== 'aiw_n_' + p.id ? ' ' + esc(t('aiw_n_' + p.id)) : ''}</div></div>`;
       nav = `<button class="btn-sec" onclick="wrmAI.awGo(-1)">← ${esc(t('aiw_back'))}</button><button onclick="wrmAI.awTest()">${esc(t('aiw_next'))} →</button>`;
@@ -1117,13 +1220,13 @@ Object.assign(LANGS.hr, {
     if (!AW.avail) return '';
     if (AW.avail.error) return `<div class="hint-box warn">${esc(AW.avail.error)}</div>`;
     if (!AW.avail.models.length) return `<div class="ai-see">${esc(t('aiw_models_none'))}</div>`;
-    return `<div class="ai-see">${esc(t('aiw_models_loaded'))}</div><div style="display:flex;gap:6px;flex-wrap:wrap;max-height:160px;overflow:auto;">${AW.avail.models.map((m, i) => `<button class="btn-sec btn-sm" onclick="wrmAI.awAddModel(${i})">${esc(m)}</button>`).join('')}</div>`;
+    return `<div class="ai-see">${esc(t('aiw_models_loaded'))}</div><div style="display:flex;gap:6px;flex-wrap:wrap;max-height:160px;overflow:auto;">${AW.avail.models.map((m, i) => `<button class="btn-sec btn-sm" onclick="wrmAI.awAddModel(${i})">${esc(m)}${(AW.avail.free || []).includes(m) ? ` <span class="pill">${esc(t('aiw_free'))}</span>` : ''}</button>`).join('')}</div>`;
   }
   function awProvBase() { return AW.scope === 'org' ? '/api/admin/ai/providers' : '/api/ai/providers'; }
   async function awLoadModels() {
     try {
       const r = await api('GET', `${awProvBase()}/${AW.pid}/models`);
-      AW.avail = r.ok ? {models: r.models} : {error: r.error};
+      AW.avail = r.ok ? {models: r.models, free: r.free || []} : {error: r.error};
     } catch (e) { AW.avail = {error: e.message}; }
     awRender();
   }
@@ -1185,10 +1288,10 @@ Object.assign(LANGS.hr, {
 
   async function adminAI() {
     const body = $('admin-body');
-    let sum, provs, sessions, settings;
+    let sum, provs, sessions, settings, ocs;
     try {
-      [sum, provs, sessions, settings] = await Promise.all([api('GET', '/api/admin/ai/summary'), api('GET', '/api/admin/ai/providers'),
-        api('GET', '/api/admin/ai/sessions?limit=100'), api('GET', '/api/admin/settings')]);
+      [sum, provs, sessions, settings, ocs] = await Promise.all([api('GET', '/api/admin/ai/summary'), api('GET', '/api/admin/ai/providers'),
+        api('GET', '/api/admin/ai/sessions?limit=100'), api('GET', '/api/admin/settings'), api('GET', '/api/admin/opencode').catch(e => ({error: e.message, log: []}))]);
     } catch (e) { body.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
     adminSettingsCache = settings;
     const ks = sum.kill_switch;
@@ -1199,6 +1302,9 @@ Object.assign(LANGS.hr, {
       <div class="adm-h">🔑 ${esc(t('ai_providers_org'))}</div>
       <div class="hint-box">${esc(t('ai_subscriptions_note'))}</div>
       ${provList(provs, 'org')}<div style="margin:8px 0 4px;"><button class="btn-sm" onclick="wrmAI.editProv('org', 0)">＋ ${esc(t('ai_prov_add'))}</button></div>
+      ${delegateHTML(provs)}
+      <div class="adm-h">⬛ ${esc(t('ai_oc_h'))}</div><div class="hint-box">${esc(t('ai_oc_help'))}</div><div id="ai-oc-box">${ocBoxHTML(ocs)}</div>
+      <div class="policy-group">${OC_KEYS.map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
       <div class="adm-h">✦ ${esc(t('ai_sessions'))}</div>${sessionsTable(sessions, true)}
       <div class="adm-h">📊 ${esc(t('ai_usage_users'))}</div>
       <div class="tbl-scroll"><table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('ai_sessions'))}</th><th>${esc(t('ai_tokens'))}</th><th>${esc(t('ai_cost'))}</th><th></th></tr></thead><tbody>` +
@@ -1209,6 +1315,95 @@ Object.assign(LANGS.hr, {
       <div class="adm-h">⚙ ${esc(t('ai_policies'))}</div><div class="hint-box">${esc(t('ai_mode_rules_help'))}</div>
       <div class="policy-group">${AI_POLICY_KEYS.map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
       <div class="adm-h">⛔ ${esc(t('ai_destructive'))}</div><ul class="ai-see">${sum.destructive_rules.map(r => `<li><span class="mono">${esc(r.id)}</span> — ${esc(r.what)}</li>`).join('')}</ul>`;
+  }
+  // OpenCode on the WRM host: state, one-click install (with consent), its log
+  const OC_KEYS = ['ai_opencode', 'ai_opencode_version', 'ai_opencode_registry', 'ai_opencode_path', 'ai_opencode_max_sessions'];
+  let ocState = null, ocTimer = null;
+  function ocBoxHTML(s) {
+    ocState = s || {};
+    s = ocState;
+    const ok = !!s.binary, custom = s.source === 'path';
+    const state = custom ? tf('ai_oc_custom', {p: s.binary}) : s.installed ? tf('ai_oc_installed', {v: s.version}) + (s.installed_by ? ' · ' + tf('ai_oc_by', {u: s.installed_by, t: s.installed_at ? new Date(s.installed_at).toLocaleString() : ''}) : '')
+      : s.supported === false ? tf('ai_oc_unsupported', {os: s.os || ''}) : t('ai_oc_missing');
+    const busy = !!s.installing;
+    const btn = s.supported === false ? '' : `<button class="btn-sm" ${busy ? 'disabled' : ''} onclick="wrmAI.ocInstall()">⬇ ${esc(busy ? t('ai_oc_installing') : s.installed ? t('ai_oc_reinstall') : t('ai_oc_install'))}</button>`;
+    const log = (s.log || []).length ? `<details ${busy || s.error ? 'open' : ''}><summary class="ai-see">${esc(t('ai_oc_log'))}</summary><pre class="mono" style="max-height:220px;overflow:auto;white-space:pre-wrap;font-size:11px;">${esc(s.log.join('\n'))}</pre></details>` : '';
+    return `<div class="hint-box ${ok ? '' : 'warn'}" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><span style="flex:1;min-width:200px;">${ok ? '✅' : '⚪'} ${esc(state)}${ok ? ' · ' + esc(tf('ai_oc_sessions', {n: s.sessions || 0, max: s.max_sessions || 0})) : ''}</span>
+      ${btn}<button class="btn-sec btn-sm" onclick="wrmAI.ocRefresh()">↻ ${esc(t('ai_oc_refresh'))}</button></div>
+      ${s.error ? `<div class="hint-box warn">⚠ ${esc(t('ai_oc_failed'))}: ${esc(s.error)}</div>` : ''}${log}`;
+  }
+  async function ocRefresh() {
+    let s;
+    try { s = await api('GET', '/api/admin/opencode'); } catch (e) { s = {error: e.message, log: []}; }
+    const box = $('ai-oc-box');
+    if (box) box.innerHTML = ocBoxHTML(s);
+    if (ocTimer) { clearTimeout(ocTimer); ocTimer = null; }
+    if (s.installing && box) ocTimer = setTimeout(ocRefresh, 1500);
+    return s;
+  }
+  async function ocInstall() {
+    const s = ocState || {};
+    const st = k => (adminSettingsCache.find(x => x.key === k) || {}).value || '';
+    const q = tf('ai_oc_install_q', {v: st('ai_opencode_version') || s.version_wanted || '', pkg: s.package || '', reg: st('ai_opencode_registry') || 'https://registry.npmjs.org', root: s.root || ''});
+    if (!(await uiConfirm(q, {okText: t('ai_oc_install')}))) return;
+    try { await api('POST', '/api/admin/opencode/install', {confirm: true}); } catch (e) { showToast(e.message, 'error', 6000); }
+    await ocRefresh();
+  }
+
+  // what the assistant may hand to helper models, and the user's own training choice
+  const DATA_USE_ICON = {zero_retention: '🛡', trains: '⚠', unknown: '❔', paid: '💳', provider: '🔑'};
+  function dataUseTag(m) { return `<span class="pill ${m.data_use === 'trains' || m.data_use === 'unknown' ? 'warn' : ''}" title="${esc(t('ai_du_' + m.data_use + '_d'))}">${DATA_USE_ICON[m.data_use] || ''} ${esc(t('ai_du_' + m.data_use))}</span>`; }
+  function delegSetupHTML(id) {
+    const d = cfg && cfg.delegate;
+    if (!d || !d.enabled) return '';
+    const on = (d.models || []).filter(m => m.allowed), off = (d.models || []).filter(m => !m.allowed);
+    const toggle = d.training_policy === 'user' ? `<label class="ai-check"><input type="checkbox" ${d.training ? 'checked' : ''} onchange="wrmAI.delegTraining(${id}, this.checked)"> ${esc(t('ai_deleg_training_me'))}</label>`
+      : `<div class="ai-see">${esc(t(d.training_policy === 'all' ? 'ai_deleg_training_all' : 'ai_deleg_training_off'))}</div>`;
+    const row = m => `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;margin:2px 0;"><span class="mono">${esc(m.id)}</span>${m.free ? ` <span class="pill">${esc(t('aiw_free'))}</span>` : ''} ${dataUseTag(m)}</div>`;
+    return `<details><summary class="ai-see">🤝 ${esc(tf('ai_deleg_setup', {p: d.provider, n: on.length}))}</summary><div class="ai-see">${esc(t('ai_deleg_setup_d'))}</div>
+      ${toggle}${on.map(row).join('')}${off.length ? `<div class="ai-see" style="margin-top:6px;">${esc(t('ai_deleg_excluded'))}</div>${off.map(row).join('')}` : ''}</details>`;
+  }
+  async function delegTraining(id, on) {
+    try { await api('PUT', '/api/ai/delegate', {training: on}); } catch (e) { showToast(e.message, 'error'); }
+    const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo);
+  }
+
+  // delegation to helper models: provider, models, limits (settings ai_delegate*)
+  function delegateHTML(provs) {
+    const st = k => adminSettingsCache.find(x => x.key === k) || {value: ''};
+    const on = st('ai_delegate').value === '1', pid = Number(st('ai_delegate_provider').value) || 0, models = st('ai_delegate_models').value;
+    const prov = provs.find(p => p.id === pid);
+    const state = !on ? t('ai_deleg_off') : !prov ? t('ai_deleg_noprov') : !prov.enabled ? t('ai_deleg_disabled') : tf('ai_deleg_on', {p: prov.name, m: models || prov.models});
+    const locked = st('ai_delegate_provider').locked || st('ai_delegate_models').locked ? 'disabled' : '';
+    return `<div class="adm-h">🤝 ${esc(t('ai_deleg_h'))}</div><div class="hint-box">${esc(t('ai_deleg_help'))}</div>
+      <div class="hint-box ${on && prov && prov.enabled ? '' : 'warn'}" id="ai-deleg-state">${on && prov && prov.enabled ? '✅' : '⚪'} ${esc(state)}</div>
+      <div class="policy-group">${settingRowHTML(st('ai_delegate').key ? st('ai_delegate') : null)}
+        <div class="setting-row"><div><div class="setting-label">${esc(t('p_ai_delegate_provider'))}</div><div class="setting-desc">${esc(t('p_ai_delegate_provider_d'))}</div></div>
+          <div class="setting-control"><select class="setting-select" id="ai-deleg-prov" ${locked} onchange="wrmAI.delegProv(this)"><option value="0">—</option>${provs.map(p => `<option value="${p.id}" ${p.id === pid ? 'selected' : ''}>${esc(p.name)} (${esc(t('ai_kind_' + p.kind))})</option>`).join('')}</select></div></div>
+        <div class="setting-row" style="display:block;"><div class="setting-label">${esc(t('p_ai_delegate_models'))}</div><div class="setting-desc">${esc(t('p_ai_delegate_models_d'))}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"><input type="text" id="ai-deleg-models" style="flex:1;min-width:220px;" value="${esc(models)}" placeholder="${esc(prov ? prov.models : '')}" ${locked} onchange="saveSetting('ai_delegate_models', this.value.trim(), this).then(() => wrmAI.adminTab())">
+            <button class="btn-sec btn-sm" ${pid ? '' : 'disabled'} onclick="wrmAI.delegLoad(${pid})">${esc(t('ai_deleg_load'))}</button></div><div id="ai-deleg-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"></div></div>
+        ${settingRowHTML(st('ai_delegate_training').key ? st('ai_delegate_training') : null)}
+        ${settingRowHTML(st('ai_delegate_max_kb').key ? st('ai_delegate_max_kb') : null)}</div>`;
+  }
+  async function delegProv(el) { await saveSetting('ai_delegate_provider', el.value, el); adminAI(); }
+  async function delegLoad(pid) {
+    const box = $('ai-deleg-list');
+    box.innerHTML = `<span class="ai-see">${esc(t('loading'))}</span>`;
+    let r;
+    try { r = await api('GET', `/api/admin/ai/providers/${pid}/models`); } catch (e) { box.innerHTML = `<div class="hint-box warn">${esc(e.message)}</div>`; return; }
+    if (!r.ok) { box.innerHTML = `<div class="hint-box warn">${esc(r.error)}</div>`; return; }
+    const free = r.free || [], du = r.data_use || {};
+    const list = free.length ? r.models.filter(m => free.includes(m)).concat(r.models.filter(m => !free.includes(m))) : r.models;
+    box.innerHTML = list.length ? list.map(m => `<button class="btn-sec btn-sm" onclick="wrmAI.delegAdd(this.dataset.m)" data-m="${esc(m)}">＋ ${esc(m)}${free.includes(m) ? ` <span class="pill">${esc(t('aiw_free'))}</span>` : ''}${du[m] ? ' ' + dataUseTag({data_use: du[m]}) : ''}</button>`).join('') : `<span class="ai-see">${esc(t('aiw_models_none'))}</span>`;
+  }
+  async function delegAdd(m) {
+    const el = $('ai-deleg-models');
+    const list = el.value.split(/[\s,]+/).filter(Boolean);
+    if (!list.includes(m)) list.push(m);
+    el.value = list.join(',');
+    await saveSetting('ai_delegate_models', el.value, el);
+    showToast(t('saved'), 'success', 1200);
   }
   async function killAll() {
     if (!(await uiConfirm(t('ai_kill_all_q'), {okText: t('ai_kill_all'), danger: true}))) return;
@@ -1234,6 +1429,6 @@ Object.assign(LANGS.hr, {
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,
     myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); }; awOpen('user'); },
-    statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
+    statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, engine, ocInstall, ocRefresh, delegProv, delegLoad, delegAdd, delegTraining, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
   };
 })();

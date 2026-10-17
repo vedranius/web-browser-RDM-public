@@ -166,6 +166,8 @@ func aiCompleteRaw(ctx context.Context, p aiProvider, req aiLLMRequest, onText f
 		}
 		req.Model = model
 		return openaiStream(ctx, p, u, req, onText, func(h http.Header) { h.Set("api-key", p.secret.APIKey) })
+	case "opencode":
+		return opencodeComplete(ctx, p, req, onText)
 	case "openai", "openai_compatible":
 		base := p.BaseURL
 		if base == "" {
@@ -1088,6 +1090,9 @@ func aiCost(p aiProvider, model string, u aiUsage) float64 {
 		if pr, ok := aiBuiltinPrices[model]; ok {
 			in, out = pr[0], pr[1]
 		}
+	}
+	if in == 0 && out == 0 && p.Kind == "opencode" {
+		in, out, _ = opencodePrice(model)
 	}
 	return (float64(u.In)*in + float64(u.CacheRead)*in*0.1 + float64(u.CacheWrite)*in*1.25 + float64(u.Out)*out) / 1e6
 }
