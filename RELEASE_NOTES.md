@@ -1,6 +1,21 @@
-## Web Remote Manager PRO v12.6.11 — OpenCode inside WRM
+## Web Remote Manager PRO v12.6.19 — OpenCode with its own tools, in a sandbox
 
 ### Added
+
+- **Both ways to run OpenCode:** next to the contained OpenCode agent (its own tools off, everything through WRM), an administrator can now allow **🐳 OpenCode's own tools, in a Docker sandbox** (`ai_opencode_sandbox`: off by default, administrators only, or everyone). The agent then gets its own shell, file and web tools, but only inside a container on the WRM host. Your servers are still reached only through WRM.
+- **Every use asks you:** each shell command, file change and web fetch in the sandbox appears as an approval card with the exact command, diff or address. You approve it once or refuse it, with a note if you like; it cannot be edited and is never approved automatically, not even with full access.
+- **A locked-down container:** no capabilities, no privilege escalation, read-only system, memory, CPU and process limits, only the session's own folder mounted, the port open on `127.0.0.1` only. It is removed when the session ends or WRM stops. The image is your choice (`ai_opencode_sandbox_image`, default `debian:stable-slim`).
+- **Set up with the same one click:** *Download and install* also prepares the sandbox (the Linux build of OpenCode for Docker, the image, a test run). The admin page shows whether the sandbox is ready and what is missing.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. Nothing changes until an administrator sets `ai_opencode_sandbox` and presses *Download and install* again under *Admin panel → AI assistant → OpenCode agents*. The sandbox needs Docker on the WRM host (Medium's step 2 can install it) and WRM itself not running in a container.
+
+[Download v12.6.19](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.19) · [OpenCode in WRM](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.19/README.md#opencode-zen-agents-and-helper-models)
+
+### Included from v12.6.11 — OpenCode inside WRM
+
+#### Added
 
 - **OpenCode Zen, free models without a key:** add the **OpenCode Zen** provider (a preset in the wizard) and use OpenCode's free models in the AI assistant without an account. With an OpenCode account, paste its Zen API key (org-wide by an administrator, or for yourself under *My API keys*) and every model of the account is available. Free models are marked in the model lists.
 - **OpenCode agents in the assistant:** choose **OpenCode agent** as the engine and its **build** or **plan** agent. WRM downloads OpenCode itself (an administrator presses *Download and install* once; the file is checked against the registry's sha512) and runs it on the WRM host, one private process per session. OpenCode's own shell, file and web tools are switched off: it works on your server **only through WRM**, so every command and edit shows up in the chat and waits for your approval exactly like the WRM assistant (unless full access is on).
@@ -8,11 +23,11 @@
 - **Clear data-use labels:** 🛡 zero retention, ⚠ may use prompts for training, ❔ unknown terms, 💳 paid. Models that may train on prompts are **off by default**; each user can switch them all on for themselves in the assistant (administrators can also allow them for everyone or never).
 - **OpenCode on your computer** can connect to WRM too: the MCP wizard has an OpenCode entry with the `opencode.json` snippet or the OAuth login.
 
-### Fixed
+#### Fixed
 
 - Stopping WRM also stops every running OpenCode agent; after a crash WRM cleans up what was left on its next start.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets one new column (`users.ai_delegate_training`); a previous version still starts on it. Nothing changes until an administrator adds an OpenCode Zen provider, turns on delegation (`ai_delegate`) or installs OpenCode (*Admin panel → AI assistant → OpenCode agents*). New settings: `ai_delegate*`, `ai_opencode*`. New endpoints: `/api/ai/delegate`, `/api/admin/opencode`.
 

@@ -1,3 +1,15 @@
+## [12.6.19] - 2026-10-17
+
+### Added
+- **OpenCode's own tools in a Docker sandbox** (`opencode_sandbox.go`): an option next to the contained OpenCode agent. With the policy `ai_opencode_sandbox` (`off` by default, `admins`, `all`) the assistant setup shows **🐳 OpenCode's own tools, in a Docker sandbox**. The agent then runs `opencode serve` in a container on the WRM host and may use its own shell, file and web tools there; the servers are still reached only through WRM's tools.
+- **Every sandbox use is approved in WRM:** OpenCode's `bash`, file changes (`edit`, `write`, `patch`) and `webfetch` are set to *ask*. Each request becomes a normal WRM approval card showing the exact command, the diff (secrets redacted) or the URL. It **cannot be edited**, only approved once or refused (with an optional note to the agent). It is never approved automatically, also not with automatic mode or full access. Any other OpenCode permission is refused (`ai.opencode_refused`). Reading files inside the sandbox folder needs no approval.
+- **Locked-down container:** image `ai_opencode_sandbox_image` (default `debian:stable-slim`, any image with a shell), run as WRM's own user ID with `--cap-drop ALL`, `no-new-privileges`, a read-only root file system, `/tmp` as tmpfs, 2 GB memory, 2 CPUs and 512 processes. The only mount is the session's own folder (`/work`) plus the OpenCode binary read-only; the API port is published on `127.0.0.1` only; keys and tokens reach the container through the environment, never the command line. Containers carry a label per WRM installation and are removed when the session ends, when WRM stops and on the next start after a crash.
+- **Installer:** with the sandbox allowed, *Download and install* also fetches the Linux build of OpenCode for the Docker server's architecture (sha512-checked like the host build) when the host's own build cannot run in the container, pulls the image and runs `opencode --version` inside it. The admin page shows the sandbox state (Docker, image, ready or what is missing). Docker Desktop's Linux containers work too; WRM running inside a container cannot use the sandbox.
+- **Reaching WRM and local providers from the container:** on Linux WRM's MCP listener for the sandbox binds to the Docker bridge gateway (token-protected as before); an AI provider on the WRM host's loopback address (for example Ollama) is forwarded to that container only.
+
+### Changed
+- An OpenCode agent's step cards in the sandbox say *· sandbox* and that they run on the WRM host, not on the server; `ai.opencode_started` records `sandbox`, `container` and `image`.
+
 ## [12.6.11] - 2026-10-17
 
 ### Added
