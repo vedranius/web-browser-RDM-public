@@ -1,3 +1,18 @@
+## [12.6.22] - 2026-10-17
+
+### Added
+- **Security levels** (`security_level.go`): the new setting `security_level` is *Home* (default, today's behaviour), *Business* or *Enterprise*. Each level sets minimums for the settings that matter (`levelRules`): HTTPS, two-factor authentication, password length, session lifetime and idle time, failed sign-ins, registration, host-key policy, server-side keys, secret export, guest links and their lifetime, AI full access, audit and its retention, session recording and its retention. A higher level raises weaker settings; stronger settings stay as they are.
+- **Choosing the level:** on the first-run screen (the first administrator picks it; over plain HTTP the HTTPS requirement is recorded as a deviation to fix later), with `wrm -security-level home|business|enterprise` (also kept by `-install-service`), with `WRM_INITIAL_SECURITY_LEVEL` (applied once, while no level was chosen) or `WRM_SECURITY_LEVEL` (forced and locked), and later in **Admin → Security**.
+- **Change preview:** `POST /api/admin/security/level` with `preview` returns what changes, what an environment variable keeps, what blocks the change (for example HTTPS while this browser uses HTTP) and whom it affects (users who must set up 2FA, sessions that end, guest links that become too long or are blocked, passwords checked on the next change). Applying can keep a setting as a **deviation** with a written reason, and can sign out all other sessions at once.
+- **Deviations:** a policy weaker than the level asks for a reason (`_deviation_notes` in `PUT /api/admin/settings`); without one the API answers 400 with the required value. Deviations are listed with who recorded them and when, audited (`security.deviation`, `security.deviation_removed`) and removed when the setting meets the level again.
+- **Security posture** (`security_posture.go`, `GET /api/admin/security`): Admin → Security grades the installation against the level: transport, every level rule, administrators and users without 2FA, where the encryption key lives, `WRM_ALLOW_ANY_ORIGIN`, guest links without expiry, signed updates, the current version and the audit hash chain. Each item shows the value, the requirement, the explanation and the fix. The report exports as JSON or prints to PDF for auditors.
+- New settings `require_https` (sign-in, registration and 2FA only over HTTPS or from localhost) and `link_share_max_days` (longest lifetime of a guest link; 0 means no limit).
+- Audit events `security.level_changed`, `security.level_enforced`.
+
+### Changed
+- `PUT /api/admin/settings` validates every value before it saves any, and `GET` returns the level's requirement and any deviation per setting; Policies show both.
+- `GET /api/auth/config` returns `security_level` on first run and `https_required` when sign-in needs HTTPS; the admin status includes `security_level`.
+
 ## [12.6.21] - 2026-10-17
 
 ### Added
