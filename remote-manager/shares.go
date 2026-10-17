@@ -652,6 +652,10 @@ func apiSharesHandler(w http.ResponseWriter, r *http.Request) {
 		if in.ExpiresAt != nil {
 			expires = *in.ExpiresAt
 		}
+		if err := checkLinkShareExpiry(*in.AccessMode, expires); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
 		token := randomToken(24)
 		tx, err := db.Begin()
 		if err != nil {
@@ -737,6 +741,19 @@ func apiSharesByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if err := validateShareInput(&in, s.OwnerID); err != nil {
 			jsonError(w, err.Error(), 400)
 			return
+		}
+		if (in.AccessMode != nil && *in.AccessMode != s.AccessMode) || (in.ExpiresAt != nil && *in.ExpiresAt != s.ExpiresAt) {
+			mode, exp := s.AccessMode, s.ExpiresAt
+			if in.AccessMode != nil {
+				mode = *in.AccessMode
+			}
+			if in.ExpiresAt != nil {
+				exp = *in.ExpiresAt
+			}
+			if err := checkLinkShareExpiry(mode, exp); err != nil {
+				jsonError(w, err.Error(), 400)
+				return
+			}
 		}
 		tx, err := db.Begin()
 		if err != nil {

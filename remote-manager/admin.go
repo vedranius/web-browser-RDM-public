@@ -140,7 +140,7 @@ func apiAdminStatusHandler(w http.ResponseWriter, r *http.Request) {
 		"uptime_s": int(time.Since(startedAt).Seconds()), "db_path": resolveDBPath(), "db_size": dbSize,
 		"encryption_key": encryptionKeySource, "https": isHTTPS(r), "trust_proxy": trustProxy,
 		"users": users, "admins": admins, "users_2fa": with2FA, "shares": shares, "connections": conns,
-		"terminals": tl, "rooms": roomsSummary(), "turn": turnStatus(), "warnings": warnings,
+		"terminals": tl, "rooms": roomsSummary(), "turn": turnStatus(), "warnings": warnings, "security_level": securityLevel(),
 		"tunnels": tunnelMgr.runsWhere(func(*tunnelRun) bool { return true }),
 		"guacd":   guacdStatus(),
 		"vault":   vault,

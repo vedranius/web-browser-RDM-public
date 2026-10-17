@@ -389,6 +389,14 @@ func apiAuthConfigHandler(w http.ResponseWriter, r *http.Request) {
 		"first_run":         n == 0,
 		"registration_open": n == 0 || getSetting("registration") == "open",
 	}
+	if n == 0 {
+		// The first-run screen offers the security level (preselected when -security-level chose one).
+		out["security_level"], out["security_level_fixed"] = securityLevel(), levelChosen() || settingLocked("security_level")
+		out["secure_transport"] = secureTransport(r)
+	}
+	if msg := signInTransportError(r); msg != "" {
+		out["https_required"] = msg
+	}
 	// The sign-in page's version badge: an available update and its release page.
 	if info := lastUpdateInfo(); settingBool("update_check") && updateAvailable(info) {
 		out["update"], out["update_url"] = info.Latest, info.URL
@@ -402,11 +410,16 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var payload struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username      string `json:"username"`
+		Password      string `json:"password"`
+		SecurityLevel string `json:"security_level"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		jsonError(w, "Bad JSON", 400)
+		return
+	}
+	if msg := signInTransportError(r); msg != "" {
+		jsonError(w, msg, 403)
 		return
 	}
 	ip := clientIP(r)
@@ -445,6 +458,9 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := res.LastInsertId()
 	auditLogAs(r, int(id), payload.Username, "auth.register", "", map[string]bool{"admin": first})
+	if first && payload.SecurityLevel != "" {
+		applyFirstRunLevel(r, int(id), payload.SecurityLevel)
+	}
 	u, err := loadUser("id=?", id)
 	if err != nil {
 		jsonError(w, "Server error", 500)
@@ -464,6 +480,10 @@ func apiAuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		jsonError(w, "Bad JSON", 400)
+		return
+	}
+	if msg := signInTransportError(r); msg != "" {
+		jsonError(w, msg, 403)
 		return
 	}
 	ip := clientIP(r)
@@ -528,6 +548,10 @@ func apiAuthMFAHandler(w http.ResponseWriter, r *http.Request) {
 		Code  string `json:"code"`
 	}
 	json.NewDecoder(r.Body).Decode(&payload)
+	if msg := signInTransportError(r); msg != "" {
+		jsonError(w, msg, 403)
+		return
+	}
 	ip := clientIP(r)
 	if blocked, wait := loginBlocked(ip); blocked {
 		jsonError(w, fmt.Sprintf("Too many failed attempts. Try again in %d s.", int(wait.Seconds())+1), 429)

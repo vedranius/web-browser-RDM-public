@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.6.21"
+var AppVersion = "v12.6.22"
 
 const sessionCookieName = "wrm_session"
 
@@ -318,6 +318,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/users", apiAdminUsersHandler)
 	mux.HandleFunc("/api/admin/users/", apiAdminUserByIDHandler)
 	mux.HandleFunc("/api/admin/settings", apiAdminSettingsHandler)
+	mux.HandleFunc("/api/admin/security", apiAdminSecurityHandler)
+	mux.HandleFunc("/api/admin/security/", apiAdminSecurityHandler)
 	mux.HandleFunc("/api/admin/audit", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
@@ -428,6 +430,7 @@ func main() {
 	releaseKeyFile := flag.String("release-key-file", "", "with -release-sign: read the private release key from `FILE`")
 	releaseVerify := flag.String("release-verify", "", "check the signature FILE.sig of `FILE` (a downloaded SHA256SUMS.txt) and the SHA-256 of the listed files next to it, and exit")
 	releasePublicKey := flag.String("release-public-key", "", "with -release-verify: also trust this public `KEY` (wrm-ed25519:…)")
+	flag.StringVar(&initialSecurityLevel, "security-level", "", "`LEVEL` home, business or enterprise: the security level to start with while none was chosen yet (also with -install-service)")
 	flag.Parse()
 	switch {
 	case *releaseKeygen != "":
@@ -469,6 +472,17 @@ func main() {
 		fmt.Fprintln(os.Stderr, "For boot services, download the standalone Linux binary and run -install-service from its permanent location.")
 		os.Exit(1)
 	}
+	if initialSecurityLevel != "" {
+		l, ok := validSecurityLevel(initialSecurityLevel)
+		if !ok {
+			fmt.Fprintln(os.Stderr, "-security-level: use home, business or enterprise")
+			os.Exit(2)
+		}
+		initialSecurityLevel = l
+		if *installSvc {
+			os.Setenv(initialSecurityLevelEnv, l) // copied into the service's environment file
+		}
+	}
 	if *installSvc || *uninstallSvc || *svcStatus {
 		os.Exit(runServiceCommand(*installSvc, *uninstallSvc, *svcStatus, opts))
 	}
@@ -509,6 +523,7 @@ func serve(stop <-chan struct{}) int {
 	initEncryptionKey()
 	migrateSessionTokens()
 	ensureAdminExists()
+	applySecurityLevelAtStart(initialSecurityLevel)
 	log.Printf("Web Remote Manager %s starting%s", AppVersion, map[bool]string{true: " (service: " + serviceMode + ")"}[serviceMode != ""])
 	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
 	startTURN()
@@ -1044,6 +1059,17 @@ func initDB() {
 		updated_at TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (user_id, key))`,
 		"user_id", "key", "value", "updated_at")
+	// v12.6.22: settings an administrator keeps looser than the security level, with a note.
+	ensureTable("security_deviations", `CREATE TABLE IF NOT EXISTS security_deviations (
+		key TEXT PRIMARY KEY,
+		value TEXT NOT NULL DEFAULT '',
+		required TEXT NOT NULL DEFAULT '',
+		level TEXT NOT NULL DEFAULT '',
+		note TEXT NOT NULL DEFAULT '',
+		user_id INTEGER NOT NULL DEFAULT 0,
+		username TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '')`,
+		"key", "value", "required", "level", "note", "user_id", "username", "created_at")
 	ensureTable("notify_prefs", `CREATE TABLE IF NOT EXISTS notify_prefs (
 		user_id INTEGER PRIMARY KEY,
 		quiet_enabled INTEGER NOT NULL DEFAULT 0,
