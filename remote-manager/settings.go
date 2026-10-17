@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -127,6 +129,11 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_delegate_models", Default: "", Kind: "string"},
 	{Key: "ai_delegate_max_kb", Default: "64", Kind: "int", Min: 1, Max: 1024},
 	{Key: "ai_delegate_training", Default: "user", Kind: "enum", Enum: []string{"off", "user", "all"}},
+	{Key: "ai_opencode", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "ai_opencode_version", Default: opencodeDefaultVersion, Kind: "string"},
+	{Key: "ai_opencode_registry", Default: "https://registry.npmjs.org", Kind: "string"},
+	{Key: "ai_opencode_path", Default: "", Kind: "string"},
+	{Key: "ai_opencode_max_sessions", Default: "4", Kind: "int", Min: 1, Max: 50},
 	{Key: "ai_redact_output", Default: "1", Kind: "bool"},
 	{Key: "ai_share_notes", Default: "1", Kind: "bool"},
 	{Key: "ai_transcript_retention_days", Default: "90", Kind: "int", Min: 1, Max: 3650},
@@ -337,6 +344,20 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		}
 	case "ai_provider_kinds":
 		return normalizeAIKinds(v)
+	case "ai_opencode_version":
+		if !regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$`).MatchString(v) {
+			return "", fmt.Errorf("use a version such as %s", opencodeDefaultVersion)
+		}
+	case "ai_opencode_registry":
+		u, err := url.Parse(v)
+		if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" {
+			return "", fmt.Errorf("use an https registry URL such as https://registry.npmjs.org")
+		}
+		return strings.TrimRight(v, "/"), nil
+	case "ai_opencode_path":
+		if v != "" && !filepath.IsAbs(v) {
+			return "", fmt.Errorf("use an absolute path to the opencode binary")
+		}
 	case "ai_delegate_models":
 		var out []string
 		for _, m := range splitPatterns(v) {
