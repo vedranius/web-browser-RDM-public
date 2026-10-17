@@ -45,7 +45,41 @@ type opencodeModel struct {
 	PriceOut   float64 `json:"price_out"`
 	Tools      bool    `json:"tools"`
 	Deprecated bool    `json:"deprecated"`
+	Desc       string  `json:"description"`
+	Reasoning  bool    `json:"reasoning"`
+	Context    int     `json:"context"`
+	DataUse    string  `json:"data_use"` // paid | zero_retention | trains | unknown (free models)
 }
+
+// What Zen's free models do with prompts, from the OpenCode Zen documentation: some may use
+// them to improve their models during the free period, some keep nothing. Free models that are
+// not listed are "unknown" and treated like the ones that train. The lists are prefixes.
+var (
+	opencodeTrainsPrefixes = []string{"big-pickle", "exo", "mimo", "ling-", "muse-spark", "nemotron"}
+	opencodeZeroPrefixes   = []string{"space-bunny", "longcat", "step-"}
+)
+
+func opencodeDataUse(id string, free bool) string {
+	if !free {
+		return "paid"
+	}
+	id = strings.ToLower(id)
+	for _, p := range opencodeZeroPrefixes {
+		if strings.HasPrefix(id, p) {
+			return "zero_retention"
+		}
+	}
+	for _, p := range opencodeTrainsPrefixes {
+		if strings.HasPrefix(id, p) {
+			return "trains"
+		}
+	}
+	return "unknown"
+}
+
+// mayTrain reports whether prompts sent to the model may be used for training (or the terms
+// are unknown).
+func (m opencodeModel) mayTrain() bool { return m.DataUse == "trains" || m.DataUse == "unknown" }
 
 // supported reports whether WRM can talk to the model (the assistant needs tool calls).
 func (m opencodeModel) supported() bool {
@@ -97,10 +131,15 @@ func parseOpencodeCatalog(b []byte) (map[string]opencodeModel, error) {
 		NPM    string `json:"npm"`
 		API    string `json:"api"`
 		Models map[string]struct {
-			ID       string `json:"id"`
-			Name     string `json:"name"`
-			ToolCall bool   `json:"tool_call"`
-			Status   string `json:"status"`
+			ID          string `json:"id"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			ToolCall    bool   `json:"tool_call"`
+			Reasoning   bool   `json:"reasoning"`
+			Status      string `json:"status"`
+			Limit       struct {
+				Context int `json:"context"`
+			} `json:"limit"`
 			Provider struct {
 				NPM string `json:"npm"`
 				API string `json:"api"`
@@ -126,13 +165,14 @@ func parseOpencodeCatalog(b []byte) (map[string]opencodeModel, error) {
 		}
 		npm := nonEmpty(m.Provider.NPM, prov.NPM)
 		om := opencodeModel{ID: id, Name: nonEmpty(m.Name, id), API: opencodeAPIFor(npm), Base: strings.TrimRight(nonEmpty(m.Provider.API, prov.API), "/"),
-			Tools: m.ToolCall, Deprecated: m.Status == "deprecated"}
+			Tools: m.ToolCall, Deprecated: m.Status == "deprecated", Desc: truncateStr(m.Description, 200), Reasoning: m.Reasoning, Context: m.Limit.Context}
 		if m.Cost != nil {
 			om.PriceIn, om.PriceOut = m.Cost.Input, m.Cost.Output
 			om.Free = m.Cost.Input == 0 && m.Cost.Output == 0
 		} else {
 			om.Free = opencodeGuessFree(id)
 		}
+		om.DataUse = opencodeDataUse(id, om.Free)
 		out[id] = om
 	}
 	return out, nil
@@ -189,7 +229,8 @@ func opencodeModelInfo(ctx context.Context, id string) opencodeModel {
 			return m
 		}
 	}
-	return opencodeModel{ID: id, Name: id, API: opencodeGuessAPI(id), Free: opencodeGuessFree(id), Tools: true}
+	free := opencodeGuessFree(id)
+	return opencodeModel{ID: id, Name: id, API: opencodeGuessAPI(id), Free: free, Tools: true, DataUse: opencodeDataUse(id, free)}
 }
 
 // opencodeKey is the key sent to Zen: the configured one, or "public" (free models only).
@@ -253,7 +294,8 @@ func opencodeListModels(ctx context.Context, p aiProvider) ([]opencodeModel, err
 			return nil, fmt.Errorf("%v (and %v)", err, catErr)
 		}
 		for _, id := range ids {
-			all = append(all, opencodeModel{ID: id, Name: id, API: opencodeGuessAPI(id), Free: opencodeGuessFree(id), Tools: true})
+			free := opencodeGuessFree(id)
+			all = append(all, opencodeModel{ID: id, Name: id, API: opencodeGuessAPI(id), Free: free, Tools: true, DataUse: opencodeDataUse(id, free)})
 		}
 	}
 	pick := func(withDeprecated bool) []opencodeModel {

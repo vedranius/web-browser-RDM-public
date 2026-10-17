@@ -69,6 +69,7 @@ const aiProviderCols = `id, scope, COALESCE(user_id,0), name, kind, base_url, re
 
 func initAISchema() {
 	db.Exec(`ALTER TABLE users ADD COLUMN ai_blocked INTEGER NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE users ADD COLUMN ai_delegate_training INTEGER NOT NULL DEFAULT 0`)
 	initOllamaSchema()
 	ensureTable("ai_providers", `CREATE TABLE IF NOT EXISTS ai_providers (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -548,6 +549,11 @@ func handleAIProviders(w http.ResponseWriter, r *http.Request, userID int, scope
 			}
 			out["free"] = free
 			out["keyless"] = p.secret.APIKey == ""
+			du := map[string]string{}
+			for _, id := range list {
+				du[id] = opencodeModelInfo(r.Context(), id).DataUse
+			}
+			out["data_use"] = du
 		}
 		jsonOK(w, out)
 		return

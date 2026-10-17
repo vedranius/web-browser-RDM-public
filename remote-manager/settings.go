@@ -122,6 +122,11 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_provider_kinds", Default: aiAllProviderKinds, Kind: "string"},
 	{Key: "ai_models", Default: "", Kind: "string"},
 	{Key: "ai_ollama_manage", Default: "0", Kind: "bool"},
+	{Key: "ai_delegate", Default: "0", Kind: "bool"},
+	{Key: "ai_delegate_provider", Default: "0", Kind: "int", Min: 0, Max: 2147483647},
+	{Key: "ai_delegate_models", Default: "", Kind: "string"},
+	{Key: "ai_delegate_max_kb", Default: "64", Kind: "int", Min: 1, Max: 1024},
+	{Key: "ai_delegate_training", Default: "user", Kind: "enum", Enum: []string{"off", "user", "all"}},
 	{Key: "ai_redact_output", Default: "1", Kind: "bool"},
 	{Key: "ai_share_notes", Default: "1", Kind: "bool"},
 	{Key: "ai_transcript_retention_days", Default: "90", Kind: "int", Min: 1, Max: 3650},
@@ -332,6 +337,15 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		}
 	case "ai_provider_kinds":
 		return normalizeAIKinds(v)
+	case "ai_delegate_models":
+		var out []string
+		for _, m := range splitPatterns(v) {
+			if len(m) > 200 || strings.ContainsAny(m, " \t\"'<>") {
+				return "", fmt.Errorf("invalid model name %q", m)
+			}
+			out = append(out, m)
+		}
+		return strings.Join(out, ","), nil
 	case "update_repo":
 		if !updateRepoRe.MatchString(v) {
 			return "", fmt.Errorf("use the form owner/repository")
