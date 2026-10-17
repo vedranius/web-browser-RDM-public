@@ -379,11 +379,11 @@ func applySecurityLevelAtStart(initial string) {
 			log.Printf("WARNING: ignoring the initial security level from -security-level or %s: use home, business or enterprise", initialSecurityLevelEnv)
 		} else if _, err := setSetting("security_level", l); err == nil {
 			auditLogAs(nil, 0, "system", "security.level_changed", l, map[string]string{"from": "home", "to": l, "by": "-security-level"})
-			log.Printf("Security level set to %s (-security-level)", securityLevel())
+			log.Printf("Security level set to %s (-security-level)", securityLevels[levelIndex(l)])
 		}
 	}
 	if changed := enforceSecurityLevel(nil, 0, "start"); len(changed) > 0 {
-		log.Printf("Security level %s: raised %d settings to its minimum", securityLevel(), len(changed))
+		log.Printf("Security level %s: raised %d settings to its minimum", securityLevels[levelIndex(securityLevel())], len(changed))
 	}
 }
 
