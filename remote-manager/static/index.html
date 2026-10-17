@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.6.21</title>
+<title>Web Remote Manager PRO v12.6.22</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1129,6 +1129,40 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 .kv .v.small { font-size: 11.5px; font-weight: 500; font-family: 'JetBrains Mono', monospace; }
 .adm-h { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin: 16px 0 8px; }
 .policy-group { border: 1px solid var(--border2); border-radius: 12px; padding: 4px 14px; margin-bottom: 12px; background: rgba(0,0,0,.12); }
+/* v12.6.22 security level & posture */
+.sec-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-bottom: 8px; }
+.sec-level { display: flex; flex-direction: column; gap: 5px; text-align: left; padding: 11px 13px; border-radius: 10px; border: 1px solid var(--border2); background: var(--bg); color: var(--text2); cursor: pointer; font-size: 11.5px; line-height: 1.45; }
+.sec-level b { color: var(--text); font-size: 13px; }
+.sec-level:hover:not([disabled]) { border-color: var(--accent-b); }
+.sec-level.active { border-color: rgba(34,197,94,.55); background: rgba(34,197,94,.06); }
+.sec-level[disabled] { cursor: default; opacity: .8; }
+.sec-checks { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.sec-check { display: flex; gap: 10px; align-items: flex-start; padding: 8px 11px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg); }
+.sec-check.bad { border-color: rgba(239,68,68,.45); }
+.sec-check.warn { border-color: rgba(245,158,11,.4); }
+.sec-ic { font-size: 14px; line-height: 1.3; }
+.sec-ttl { color: var(--text); font-weight: 600; font-size: 12.5px; }
+.sec-val { font-weight: 500; color: var(--text2); font-family: var(--mono, monospace); font-size: 11.5px; }
+.sec-fix { font-size: 11.5px; color: #fde68a; margin-top: 3px; }
+.sec-check.bad .sec-fix { color: #fecaca; }
+.sec-plan { padding: 6px 14px 12px; }
+.sec-keep { display: flex; gap: 6px; align-items: center; font-size: 11.5px; color: var(--text2); cursor: pointer; }
+.sec-list { margin: 4px 0 4px 18px; padding: 0; font-size: 11.5px; color: var(--text2); line-height: 1.6; }
+@media (max-width: 640px) {
+  .sec-plan table, .sec-plan tbody, .sec-plan tr, .sec-plan td { display: block; width: auto; }
+  .sec-plan thead { display: none; }
+  .sec-plan tr { padding: 8px 0; border-bottom: 1px solid var(--border2); }
+  .sec-plan td { border: none !important; padding: 2px 0 !important; }
+  .sec-plan td[data-l]::before { content: attr(data-l) ": "; color: var(--text3, var(--text2)); }
+}
+.sec-req { font-size: 11px; color: #bcd2ff; margin-top: 3px; }
+.sec-dev { font-size: 11px; color: #fde68a; margin-top: 3px; }
+.auth-lvl-title { display: block; font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; font-weight: 600; }
+.auth-levels { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; }
+.auth-level { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--border2); border-radius: 9px; cursor: pointer; font-size: 11.5px; color: var(--text2); line-height: 1.4; }
+.auth-level b { color: var(--text); }
+.auth-level input { margin-top: 2px; }
+.auth-level:has(input:checked) { border-color: var(--accent-b); background: var(--accent-d); }
 .policy-group .setting-row .setting-desc { max-width: 520px; line-height: 1.45; }
 .policy-group input[type=text], .policy-group input[type=number], .policy-group textarea { background: var(--bg); border: 1px solid var(--border2); color: var(--text); border-radius: 7px; padding: 6px 8px; font-size: 12px; outline: none; font-family: inherit; }
 .policy-group textarea { width: 100%; min-height: 70px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
@@ -1579,7 +1613,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.6.21 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.6.22 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1597,6 +1631,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <label data-i18n="password">Password</label>
         <input type="password" id="auth-pass" placeholder="Enter password" autocomplete="current-password"
                onkeydown="if(event.key==='Enter') doAuth()">
+      </div>
+      <div id="auth-level" style="display:none;">
+        <label class="auth-lvl-title" data-i18n="sec_first_title">Where will WRM run?</label>
+        <div class="auth-levels" id="auth-levels"></div>
+        <div class="hint-box warn" id="auth-level-http" style="display:none;" data-i18n="sec_first_http"></div>
+        <div class="muted-text" id="auth-level-note" style="margin-bottom:10px;font-size:11px;"></div>
       </div>
       <button class="auth-btn" id="auth-submit-btn" onclick="doAuth()">Sign In</button>
       <div class="muted-text" id="auth-reg-closed" style="display:none;margin-top:12px;text-align:center;" data-i18n="registration_closed_hint">No account? Ask your administrator to create one.</div>
@@ -1661,7 +1701,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.21</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.22</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -2630,6 +2670,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🛡 <span data-i18n="admin_panel">Admin panel</span></h3><button class="icon-btn" onclick="closeModal('modal-admin')">✕</button></div>
     <div class="tabs" id="admin-tabs" style="margin-top:12px;">
       <button class="tab-btn active" data-tab="overview" onclick="showAdminTab('overview')" data-i18n="adm_overview">Overview</button>
+      <button class="tab-btn" data-tab="security" onclick="showAdminTab('security')" data-i18n="adm_security">Security</button>
       <button class="tab-btn" data-tab="users" onclick="showAdminTab('users')" data-i18n="adm_users">Users</button>
       <button class="tab-btn" data-tab="shares" onclick="showAdminTab('shares')" data-i18n="adm_shares">Shares</button>
       <button class="tab-btn" data-tab="policies" onclick="showAdminTab('policies')" data-i18n="adm_policies">Security policies</button>
@@ -4846,6 +4887,263 @@ Object.assign(LANGS.hr, {
   upd_sig: 'Potpis', upd_sig_on: 'obavezan ({n} ključ(eva) izdanja): nepotpisano ili krivo potpisano izdanje se odbija', upd_sig_off: 'ne provjerava se: za ovaj repozitorij nije poznat ključ izdanja, provjerava se samo SHA-256',
   p_update_signing_keys: 'Ključevi za potpis izdanja', p_update_signing_keys_d: 'Dodatni javni ključevi (wrm-ed25519:…, odvojeni zarezom) čiji potpis datoteke SHA256SUMS.txt izdanje mora imati, npr. za vlastiti fork u "Repozitorij izdanja". Ključ ovog projekta je ugrađen.', p_update_signing_keys_ph: 'wrm-ed25519:…',
 });
+// v12.6.22: security level and security posture
+Object.assign(LANGS.en, {
+ "adm_security": "Security",
+ "adin_security": "The security level of this installation and how it measures up: every check with why it matters and the exact fix, the settings kept looser as deviations, and a report for auditors.",
+ "sec_level": "Security level",
+ "sec_lvl_home": "Home",
+ "sec_lvl_home_d": "A home lab or one administrator on a network you trust. Works as before; WRM only recommends.",
+ "sec_lvl_business": "Business",
+ "sec_lvl_business_d": "A small team. Strong enough that ordinary attacks do not get through: HTTPS for sign-in, 2FA for everyone, shorter sessions, recorded sessions.",
+ "sec_lvl_enterprise": "Enterprise",
+ "sec_lvl_enterprise_d": "Companies and corporations. Strict and provable: approved host keys only, no guest links for users, one-day sessions, two years of audit.",
+ "sec_current": "current",
+ "sec_posture": "Security posture",
+ "sec_posture_for": "Graded against the level {level}.",
+ "sec_print": "Print / PDF",
+ "sec_deviations": "Deviations",
+ "sec_no_deviations": "No setting is kept looser than the level.",
+ "sec_required": "Level requires",
+ "sec_recommended": "Recommended",
+ "sec_value": "Now",
+ "sec_new": "New",
+ "sec_setting": "Setting",
+ "sec_note": "Note",
+ "sec_by": "By",
+ "sec_when": "When",
+ "sec_no_limit": "no limit",
+ "sec_check": "Check",
+ "sec_fix": "What to do",
+ "sec_status": "Status",
+ "sec_st_ok": "OK",
+ "sec_st_warn": "Attention",
+ "sec_st_bad": "Problem",
+ "sec_st_info": "Info",
+ "sec_fix_set": "Fix: set it to {v}.",
+ "sec_fix_btn": "Set",
+ "sec_fix_env": "Set by the environment variable {env}: change it there to {v} and restart WRM.",
+ "sec_fix_dev": "Kept looser as a deviation:",
+ "sec_plan_title": "Changes for {from} → {to}",
+ "sec_plan_none": "No setting needs to change. Your stricter values stay as they are.",
+ "sec_keep": "Keep looser (deviation)",
+ "sec_note_ph": "Why it stays looser (required)",
+ "sec_note_needed": "Every setting kept looser needs a note of at least 3 characters.",
+ "sec_blocker_https": "You are connected over plain HTTP. Requiring HTTPS now would stop your next sign-in. Turn on HTTPS first (HTTPS_CERT_FILE and HTTPS_KEY_FILE, HTTPS_SELF_SIGNED=1 or a reverse proxy with WRM_TRUST_PROXY=1), or keep this setting as a deviation with a note.",
+ "sec_forced": "Set by environment variables, so they stay as they are (the posture page marks them red):",
+ "sec_kept_list": "Existing deviations that stay:",
+ "sec_removed_list": "Deviations that no longer apply and are removed:",
+ "sec_affected": "Who is affected",
+ "sec_aff_users_need_2fa": "{n} users have no two-factor authentication yet: they set it up at their next sign-in.",
+ "sec_aff_idle_sessions_end": "{n} idle sessions end at their next request.",
+ "sec_aff_link_shares_blocked": "{n} guest links of users who are not administrators stop working.",
+ "sec_aff_link_shares_long": "{n} guest links have no expiry or a longer one. They keep working; new or changed links need an expiry.",
+ "sec_aff_passwords_on_next_change": "The longer minimum applies when each of the {n} users next changes their password; current passwords keep working.",
+ "sec_aff_other_sessions": "{n} other sessions stay signed in. The new rules apply at their next sign-in, unless you choose to apply now.",
+ "sec_apply_now": "Apply now: sign everyone else out",
+ "sec_apply_now_q": "Sign out every other session now? Running terminals stay connected until their page reloads.",
+ "sec_apply": "Apply level",
+ "sec_applied": "Security level {level} applied ({n} settings changed).",
+ "sec_dev_prompt_title": "Looser than the security level",
+ "sec_dev_prompt": "The security level requires {v}. A looser value is recorded as a deviation, written to the audit log and shown on the security posture page. Why does it stay looser?",
+ "sec_row_required": "Security level requires: {v}",
+ "sec_row_deviation": "Deviation",
+ "sec_overview": "Security level: {level}. The posture check and the auditor report are in Security.",
+ "sec_open": "Open",
+ "sec_report_title": "WRM PRO security posture report",
+ "sec_host": "Host",
+ "sec_generated": "Generated",
+ "sec_popup_blocked": "The browser blocked the report window. Allow pop-ups for WRM and try again.",
+ "sec_first_title": "Where will WRM run?",
+ "sec_first_hint": "You can change this later in Admin → Security.",
+ "sec_first_http": "This page is open over plain HTTP. Business and Enterprise require HTTPS for sign-in; until HTTPS is on, WRM records that as a deviation so you are not locked out.",
+ "sec_first_fixed": "Chosen at installation (-security-level or WRM_SECURITY_LEVEL).",
+ "https_required_note": "This server allows signing in only over HTTPS. Open WRM with https:// (or on the WRM host itself).",
+ "p_require_https": "Require HTTPS for sign-in",
+ "p_require_https_d": "Passwords and 2FA codes are accepted only over HTTPS (or on the WRM host itself, localhost). Plain HTTP shows how to switch.",
+ "p_link_share_max_days": "Guest link lifetime (days)",
+ "p_link_share_max_days_d": "Links for people without an account must expire within this many days (0 = no limit). Existing links keep working until they are changed.",
+ "slr_require_https": "Passwords and session cookies cross the network encrypted only with HTTPS.",
+ "slr_require_2fa": "A stolen password alone is not enough to sign in.",
+ "slr_password_min_length": "Longer passwords resist guessing and offline cracking.",
+ "slr_session_idle_hours": "A forgotten open browser stops being a way in.",
+ "slr_session_max_days": "A stolen session cookie stops working sooner.",
+ "slr_login_max_failures": "Password guessing is stopped after fewer attempts.",
+ "slr_registration": "Only accounts an administrator creates can sign in.",
+ "slr_host_key_policy": "Checking SSH host keys stops man-in-the-middle attacks; strict accepts only keys that are already known.",
+ "slr_allow_server_keys": "Only administrators use private keys stored on the WRM server.",
+ "slr_allow_secret_export": "Only administrators can export stored passwords and keys.",
+ "slr_allow_link_shares": "People without an account cannot join through a link of a regular user.",
+ "slr_link_share_max_days": "Guest links do not stay open forever.",
+ "slr_ai_full_access": "AI connections cannot get \"Allow everything\"; every command keeps its approval.",
+ "slr_audit_enabled": "Every action is recorded for later investigation.",
+ "slr_audit_retention_days": "Audit records are kept long enough for investigations and audits.",
+ "slr_session_recording": "Terminal sessions are recorded for review.",
+ "slr_recording_retention_days": "Recordings are kept long enough for investigations.",
+ "sp_transport": "HTTPS for this browser",
+ "sp_transport_https": "HTTPS",
+ "sp_transport_localhost": "on the WRM host (localhost)",
+ "sp_transport_http": "plain HTTP",
+ "sp_transport_why": "Over plain HTTP anyone on the network path can read passwords, session cookies and terminal output.",
+ "sp_transport_fix": "Set HTTPS_CERT_FILE and HTTPS_KEY_FILE (or HTTPS_SELF_SIGNED=1), or put WRM behind a reverse proxy with HTTPS and WRM_TRUST_PROXY=1.",
+ "sp_admins_2fa": "Administrators without 2FA",
+ "sp_admins_2fa_why": "An administrator account opens every server; a password alone should not be enough.",
+ "sp_admins_2fa_fix": "Each administrator sets up 2FA in Settings → Account, or set \"Require two-factor authentication\" so it is asked at the next sign-in.",
+ "sp_users_2fa": "Users without 2FA yet",
+ "sp_users_2fa_why": "These users will be asked to set up 2FA at their next sign-in.",
+ "sp_users_2fa_fix": "Nothing to do now; check later in Admin → Users that everyone finished.",
+ "sp_encryption_key": "Key for stored secrets",
+ "sp_key_separate": "separate from the database",
+ "sp_key_next_to_database": "file next to the database",
+ "sp_encryption_key_why": "The key that encrypts stored passwords and private keys lies next to the database, so one copy of the data folder holds both.",
+ "sp_encryption_key_fix": "Move the key to ENCRYPTION_KEY_FILE outside the data folder (or a secret store), and back it up apart from database backups.",
+ "sp_any_origin": "Requests from any website",
+ "sp_any_origin_why": "WRM_ALLOW_ANY_ORIGIN=1 turns off the protection against requests from other websites.",
+ "sp_any_origin_fix": "Remove WRM_ALLOW_ANY_ORIGIN and restart WRM.",
+ "sp_open_links": "Guest links without expiry",
+ "sp_open_links_why": "A forgotten guest link stays usable for anyone who has it.",
+ "sp_open_links_fix": "Give these links an expiry date in Admin → Shares, or set \"Guest link lifetime\".",
+ "sp_update_signature": "Signed updates",
+ "sp_keys": "{n} release keys",
+ "sp_update_signature_why": "With a release key the self-update installs only releases signed by the project; without one it checks the SHA-256 only.",
+ "sp_update_signature_fix": "Add the project's public release key in Policies → Updates (update_signing_keys), or update to a version that has it built in.",
+ "sp_version": "WRM version",
+ "sp_version_why": "Newer versions fix security issues.",
+ "sp_version_fix": "Install the newer version (Admin → Updates).",
+ "sp_audit_chain": "Audit log integrity",
+ "sp_audit_ok": "{n} entries verified",
+ "sp_audit_broken": "broken at entry {id}",
+ "sp_audit_chain_why": "Every audit entry is chained to the previous one by a hash, so a removed or changed entry shows.",
+ "sp_audit_chain_fix": "Someone changed the database directly. Keep a copy for investigation and check Admin → Audit log → Verify integrity."
+});
+Object.assign(LANGS.hr, {
+ "adm_security": "Sigurnost",
+ "adin_security": "Razina sigurnosti ove instalacije i koliko je ispunjava: svaka provjera s objašnjenjem i točnim popravkom, postavke ostavljene blaže kao odstupanja i izvještaj za auditora.",
+ "sec_level": "Razina sigurnosti",
+ "sec_lvl_home": "Kućna",
+ "sec_lvl_home_d": "Kućni laboratorij ili jedan administrator na mreži kojoj vjeruješ. Radi kao i dosad; WRM samo preporučuje.",
+ "sec_lvl_business": "Tvrtka",
+ "sec_lvl_business_d": "Mali tim. Dovoljno jako da obični napadi ne prođu: HTTPS za prijavu, 2FA za sve, kraće sesije, snimanje sesija.",
+ "sec_lvl_enterprise": "Enterprise",
+ "sec_lvl_enterprise_d": "Tvrtke i korporacije. Strogo i dokazivo: samo poznati ključevi hostova, bez poveznica za goste korisnika, sesije od jednog dana, dvije godine audita.",
+ "sec_current": "trenutna",
+ "sec_posture": "Sigurnosno stanje",
+ "sec_posture_for": "Ocijenjeno prema razini {level}.",
+ "sec_print": "Ispis / PDF",
+ "sec_deviations": "Odstupanja",
+ "sec_no_deviations": "Nijedna postavka nije ostavljena blažom od razine.",
+ "sec_required": "Razina traži",
+ "sec_recommended": "Preporučeno",
+ "sec_value": "Sada",
+ "sec_new": "Novo",
+ "sec_setting": "Postavka",
+ "sec_note": "Napomena",
+ "sec_by": "Tko",
+ "sec_when": "Kada",
+ "sec_no_limit": "bez ograničenja",
+ "sec_check": "Provjera",
+ "sec_fix": "Što napraviti",
+ "sec_status": "Stanje",
+ "sec_st_ok": "U redu",
+ "sec_st_warn": "Pažnja",
+ "sec_st_bad": "Problem",
+ "sec_st_info": "Info",
+ "sec_fix_set": "Popravak: postavi na {v}.",
+ "sec_fix_btn": "Postavi",
+ "sec_fix_env": "Postavljeno env varijablom {env}: promijeni je tamo na {v} i ponovno pokreni WRM.",
+ "sec_fix_dev": "Ostavljeno blaže kao odstupanje:",
+ "sec_plan_title": "Promjene za {from} → {to}",
+ "sec_plan_none": "Nijedna postavka se ne mijenja. Tvoje strože vrijednosti ostaju kakve jesu.",
+ "sec_keep": "Ostavi blaže (odstupanje)",
+ "sec_note_ph": "Zašto ostaje blaže (obavezno)",
+ "sec_note_needed": "Svaka postavka koja ostaje blaža treba napomenu od barem 3 znaka.",
+ "sec_blocker_https": "Spojen si preko običnog HTTP-a. Ako sada zatražiš HTTPS, sljedeća prijava ti neće uspjeti. Prvo uključi HTTPS (HTTPS_CERT_FILE i HTTPS_KEY_FILE, HTTPS_SELF_SIGNED=1 ili reverse proxy s WRM_TRUST_PROXY=1) ili ovu postavku ostavi kao odstupanje s napomenom.",
+ "sec_forced": "Postavljeno env varijablama, pa ostaju kakve jesu (stranica stanja ih označava crveno):",
+ "sec_kept_list": "Postojeća odstupanja koja ostaju:",
+ "sec_removed_list": "Odstupanja koja više ne vrijede i brišu se:",
+ "sec_affected": "Koga se tiče",
+ "sec_aff_users_need_2fa": "{n} korisnika još nema dvofaktorsku prijavu: postavit će je pri sljedećoj prijavi.",
+ "sec_aff_idle_sessions_end": "{n} neaktivnih sesija završava pri sljedećem zahtjevu.",
+ "sec_aff_link_shares_blocked": "{n} poveznica za goste korisnika koji nisu administratori prestaje raditi.",
+ "sec_aff_link_shares_long": "{n} poveznica za goste nema istek ili ima dulji. Rade i dalje; nove ili promijenjene poveznice trebaju istek.",
+ "sec_aff_passwords_on_next_change": "Dulja minimalna lozinka vrijedi kad svaki od {n} korisnika sljedeći put promijeni lozinku; sadašnje lozinke i dalje rade.",
+ "sec_aff_other_sessions": "{n} drugih sesija ostaje prijavljeno. Nova pravila vrijede od njihove sljedeće prijave, osim ako odabereš primjenu odmah.",
+ "sec_apply_now": "Primijeni odmah: odjavi sve ostale",
+ "sec_apply_now_q": "Odjaviti sada sve druge sesije? Otvoreni terminali ostaju spojeni dok se njihova stranica ne osvježi.",
+ "sec_apply": "Primijeni razinu",
+ "sec_applied": "Razina sigurnosti {level} primijenjena ({n} postavki promijenjeno).",
+ "sec_dev_prompt_title": "Blaže od razine sigurnosti",
+ "sec_dev_prompt": "Razina sigurnosti traži {v}. Blaža vrijednost bilježi se kao odstupanje, upisuje u audit i prikazuje na stranici sigurnosnog stanja. Zašto ostaje blaže?",
+ "sec_row_required": "Razina sigurnosti traži: {v}",
+ "sec_row_deviation": "Odstupanje",
+ "sec_overview": "Razina sigurnosti: {level}. Provjera stanja i izvještaj za auditora su u Sigurnosti.",
+ "sec_open": "Otvori",
+ "sec_report_title": "WRM PRO izvještaj o sigurnosnom stanju",
+ "sec_host": "Host",
+ "sec_generated": "Izrađeno",
+ "sec_popup_blocked": "Preglednik je blokirao prozor izvještaja. Dopusti skočne prozore za WRM i pokušaj ponovno.",
+ "sec_first_title": "Gdje će WRM raditi?",
+ "sec_first_hint": "Ovo možeš kasnije promijeniti u Admin → Sigurnost.",
+ "sec_first_http": "Ova stranica je otvorena preko običnog HTTP-a. Tvrtka i Enterprise traže HTTPS za prijavu; dok HTTPS ne uključiš, WRM to bilježi kao odstupanje da se ne zaključaš.",
+ "sec_first_fixed": "Odabrano pri instalaciji (-security-level ili WRM_SECURITY_LEVEL).",
+ "https_required_note": "Ovaj server dopušta prijavu samo preko HTTPS-a. Otvori WRM s https:// (ili na samom WRM hostu).",
+ "p_require_https": "Prijava samo preko HTTPS-a",
+ "p_require_https_d": "Lozinke i 2FA kodovi primaju se samo preko HTTPS-a (ili na samom WRM hostu, localhost). Na običnom HTTP-u WRM objasni kako prijeći.",
+ "p_link_share_max_days": "Trajanje poveznica za goste (dani)",
+ "p_link_share_max_days_d": "Poveznice za ljude bez računa moraju isteći unutar ovoliko dana (0 = bez ograničenja). Postojeće poveznice rade dok ih netko ne promijeni.",
+ "slr_require_https": "Lozinke i kolačići sesije putuju mrežom šifrirano samo preko HTTPS-a.",
+ "slr_require_2fa": "Ukradena lozinka sama nije dovoljna za prijavu.",
+ "slr_password_min_length": "Dulje lozinke teže je pogoditi i probiti.",
+ "slr_session_idle_hours": "Zaboravljeni otvoreni preglednik prestaje biti ulaz.",
+ "slr_session_max_days": "Ukradeni kolačić sesije prije prestaje vrijediti.",
+ "slr_login_max_failures": "Pogađanje lozinke zaustavlja se nakon manje pokušaja.",
+ "slr_registration": "Prijaviti se mogu samo računi koje stvori administrator.",
+ "slr_host_key_policy": "Provjera SSH ključeva hostova zaustavlja napade \"čovjek u sredini\"; strogo prihvaća samo već poznate ključeve.",
+ "slr_allow_server_keys": "Privatne ključeve spremljene na WRM serveru koriste samo administratori.",
+ "slr_allow_secret_export": "Spremljene lozinke i ključeve mogu izvesti samo administratori.",
+ "slr_allow_link_shares": "Ljudi bez računa ne mogu ući preko poveznice običnog korisnika.",
+ "slr_link_share_max_days": "Poveznice za goste ne ostaju otvorene zauvijek.",
+ "slr_ai_full_access": "AI veze ne mogu dobiti \"Dopusti sve\"; svaka naredba zadržava odobrenje.",
+ "slr_audit_enabled": "Svaka radnja se bilježi za kasniju istragu.",
+ "slr_audit_retention_days": "Zapisi audita čuvaju se dovoljno dugo za istrage i audite.",
+ "slr_session_recording": "Terminal sesije se snimaju za pregled.",
+ "slr_recording_retention_days": "Snimke se čuvaju dovoljno dugo za istrage.",
+ "sp_transport": "HTTPS za ovaj preglednik",
+ "sp_transport_https": "HTTPS",
+ "sp_transport_localhost": "na WRM hostu (localhost)",
+ "sp_transport_http": "obični HTTP",
+ "sp_transport_why": "Preko običnog HTTP-a svatko na putu mreže može pročitati lozinke, kolačiće sesije i ispis terminala.",
+ "sp_transport_fix": "Postavi HTTPS_CERT_FILE i HTTPS_KEY_FILE (ili HTTPS_SELF_SIGNED=1) ili stavi WRM iza reverse proxyja s HTTPS-om i WRM_TRUST_PROXY=1.",
+ "sp_admins_2fa": "Administratori bez 2FA",
+ "sp_admins_2fa_why": "Administratorski račun otvara svaki server; sama lozinka ne bi smjela biti dovoljna.",
+ "sp_admins_2fa_fix": "Svaki administrator postavi 2FA u Postavke → Račun, ili uključi \"Obavezna dvofaktorska autentifikacija\" pa se traži pri sljedećoj prijavi.",
+ "sp_users_2fa": "Korisnici još bez 2FA",
+ "sp_users_2fa_why": "Ovi korisnici morat će postaviti 2FA pri sljedećoj prijavi.",
+ "sp_users_2fa_fix": "Sada ništa; kasnije u Admin → Korisnici provjeri jesu li svi završili.",
+ "sp_encryption_key": "Ključ za spremljene tajne",
+ "sp_key_separate": "odvojen od baze",
+ "sp_key_next_to_database": "datoteka pokraj baze",
+ "sp_encryption_key_why": "Ključ koji šifrira spremljene lozinke i privatne ključeve leži pokraj baze, pa jedna kopija mape s podacima sadrži oboje.",
+ "sp_encryption_key_fix": "Premjesti ključ u ENCRYPTION_KEY_FILE izvan mape s podacima (ili u spremište tajni) i čuvaj ga odvojeno od backupa baze.",
+ "sp_any_origin": "Zahtjevi s bilo koje stranice",
+ "sp_any_origin_why": "WRM_ALLOW_ANY_ORIGIN=1 isključuje zaštitu od zahtjeva s drugih web stranica.",
+ "sp_any_origin_fix": "Ukloni WRM_ALLOW_ANY_ORIGIN i ponovno pokreni WRM.",
+ "sp_open_links": "Poveznice za goste bez isteka",
+ "sp_open_links_why": "Zaboravljena poveznica za goste ostaje upotrebljiva svakome tko je ima.",
+ "sp_open_links_fix": "Daj tim poveznicama datum isteka u Admin → Dijeljenja ili postavi \"Trajanje poveznica za goste\".",
+ "sp_update_signature": "Potpisana ažuriranja",
+ "sp_keys": "{n} ključeva izdanja",
+ "sp_update_signature_why": "S ključem izdanja samoažuriranje instalira samo izdanja koja je potpisao projekt; bez njega provjerava samo SHA-256.",
+ "sp_update_signature_fix": "Dodaj javni ključ izdanja projekta u Pravila → Nadogradnje (update_signing_keys) ili ažuriraj na verziju koja ga ima ugrađenog.",
+ "sp_version": "Verzija WRM-a",
+ "sp_version_why": "Novije verzije popravljaju sigurnosne probleme.",
+ "sp_version_fix": "Instaliraj noviju verziju (Admin → Nadogradnje).",
+ "sp_audit_chain": "Cjelovitost audita",
+ "sp_audit_ok": "{n} zapisa provjereno",
+ "sp_audit_broken": "prekinuto kod zapisa {id}",
+ "sp_audit_chain_why": "Svaki zapis audita povezan je s prethodnim hashom, pa se uklonjen ili promijenjen zapis vidi.",
+ "sp_audit_chain_fix": "Netko je izravno mijenjao bazu. Sačuvaj kopiju za istragu i provjeri Admin → Audit → Provjeri cjelovitost."
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -4961,12 +5259,17 @@ async function loadAuthConfig() {
   try { const r = await fetch('/api/auth/config'); if (r.ok) authConfig = await r.json(); } catch(_) {}
   const note = document.getElementById('auth-note');
   const tabs = document.getElementById('auth-tabs');
+  renderAuthLevels();
   if (authConfig.first_run) {
     tabs.style.display = 'none';
     switchAuthTab('register');
     note.textContent = t('first_run_note');
     note.style.display = 'block';
-  } else {
+  } else if (authConfig.https_required) {
+    note.textContent = t('https_required_note');
+    note.style.display = 'block';
+  }
+  if (!authConfig.first_run) {
     tabs.style.display = '';
     document.getElementById('auth-tab-register').style.display = authConfig.registration_open ? '' : 'none';
     document.getElementById('auth-reg-closed').style.display = authConfig.registration_open ? 'none' : 'block';
@@ -4979,6 +5282,18 @@ async function loadAuthConfig() {
     upd.textContent = '⬆ ' + t('upd_auth_badge').replace('{v}', authConfig.update);
     if (/^https:\/\//.test(authConfig.update_url || '')) upd.href = authConfig.update_url; else upd.removeAttribute('href');
   }
+}
+
+// The first-run screen asks where WRM will run: the security level (v12.6.22).
+function renderAuthLevels() {
+  const box = document.getElementById('auth-level');
+  if (!authConfig.first_run || !authConfig.security_level) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  const fixed = !!authConfig.security_level_fixed;
+  document.getElementById('auth-levels').innerHTML = ['home', 'business', 'enterprise'].map(l => `<label class="auth-level"><input type="radio" name="auth-level" value="${l}" ${l === authConfig.security_level ? 'checked' : ''} ${fixed ? 'disabled' : ''}>
+    <span><b>${esc(t('sec_lvl_' + l))}</b> · ${esc(t('sec_lvl_' + l + '_d'))}</span></label>`).join('');
+  document.getElementById('auth-level-http').style.display = authConfig.secure_transport ? 'none' : '';
+  document.getElementById('auth-level-note').textContent = fixed ? t('sec_first_fixed') : t('sec_first_hint');
 }
 
 function showAuthScreen(noteText) {
@@ -5008,9 +5323,12 @@ async function doAuth() {
   const btn = document.getElementById('auth-submit-btn');
   btn.disabled = true;
   try {
+    const body = {username: user, password: pass};
+    const lvl = document.querySelector('input[name="auth-level"]:checked');
+    if (authMode !== 'login' && authConfig.first_run && lvl && !lvl.disabled) body.security_level = lvl.value;
     const res = await fetch('/api/auth/' + (authMode === 'login' ? 'login' : 'register'), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({username: user, password: pass})
+      body: JSON.stringify(body)
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { authErr('auth-error', data.error || t('auth_failed')); return; }
@@ -6346,7 +6664,7 @@ function showAdminTab(tab) {
   const body = document.getElementById('admin-body');
   setTabIntro('admin-intro', 'adin_' + (document.querySelector(`#admin-tabs [data-tab="${tab}"]`) ? tab : 'overview'));
   body.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
-  ({overview: adminOverview, users: adminUsers, shares: adminShares, policies: () => adminPolicies('policies'),
+  ({overview: adminOverview, security: adminSecurity, users: adminUsers, shares: adminShares, policies: () => adminPolicies('policies'),
     voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
     transfers: adminTransfers,
@@ -6368,6 +6686,7 @@ async function adminOverview() {
   const turn = st.turn || {};
   const warn = (st.warnings || []).map(w => `<div class="hint-box warn">⚠ ${esc(t('warn_' + w))}</div>`).join('');
   body.innerHTML = `
+    ${st.security_level ? `<div class="hint-box">🛡 ${esc(t('sec_overview').replace('{level}', t('sec_lvl_' + st.security_level)))} <a href="#" onclick="showAdminTab('security');return false;">${esc(t('sec_open'))}</a></div>` : ''}
     ${warn || `<div class="hint-box ok">✅ ${esc(t('no_warnings'))}</div>`}
     <div class="kv-grid">
       <div class="kv"><div class="k">${esc(t('version'))}</div><div class="v">${esc(st.version)}</div></div>
@@ -6555,9 +6874,9 @@ async function adminShareDelete(id) {
 
 const POLICY_GROUPS = {
   policies: [
-    ['pg_accounts', ['registration', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days']],
+    ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days']],
     ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export', 'bitwarden', 'bitwarden_idle_minutes']],
-    ['pg_sharing', ['allow_link_shares', 'chat_file_max_mb']],
+    ['pg_sharing', ['allow_link_shares', 'link_share_max_days', 'chat_file_max_mb']],
     ['pg_terminal', ['broadcast_enabled']],
     ['pg_status', ['status_enabled', 'status_interval_seconds', 'status_jump_checks', 'workboard_ssh_metrics']],
     ['pg_desktop', ['desktop_enabled', 'guacd_address', 'desktop_tunnel_bind']],
@@ -6605,7 +6924,9 @@ function settingRowHTML(st) {
   else if (st.kind === 'int') ctl = `<input type="number" style="width:110px;" min="${st.min}" max="${st.max}" value="${esc(st.value)}" ${dis} onchange="saveSetting('${k}', this.value, this)">`;
   else if (st.kind === 'json') ctl = '';
   else ctl = `<input type="text" style="width:200px;" value="${esc(st.value)}" placeholder="${esc(t('p_' + k + '_ph'))}" ${dis} onchange="saveSetting('${k}', this.value, this)">`;
-  const lock = st.locked ? `<div class="locked-note">🔒 ${esc(t('set_by_env'))} ${esc(st.env)}</div>` : '';
+  const lock = (st.locked ? `<div class="locked-note">🔒 ${esc(t('set_by_env'))} ${esc(st.env)}</div>` : '') +
+    (st.required ? `<div class="sec-req">🛡 ${esc(t('sec_row_required').replace('{v}', secValueText(k, st.required)))}</div>` : '') +
+    (st.deviation ? `<div class="sec-dev">⚠ ${esc(t('sec_row_deviation'))}: „${esc(st.deviation.note)}” (${esc(st.deviation.username)})</div>` : '');
   if (st.kind === 'json') {
     return `<div class="setting-row" style="display:block;"><div class="setting-label">${esc(t('p_' + k))}</div><div class="setting-desc" style="margin-bottom:6px;">${esc(t('p_' + k + '_d'))}</div>
       <textarea spellcheck="false" ${dis} onchange="saveSetting('${k}', this.value, this)">${esc(st.value)}</textarea>${lock}</div>`;
@@ -6613,9 +6934,17 @@ function settingRowHTML(st) {
   return `<div class="setting-row"><div><div class="setting-label">${esc(t('p_' + k))}</div><div class="setting-desc">${esc(t('p_' + k + '_d'))}</div>${lock}</div><div class="setting-control">${ctl}</div></div>`;
 }
 
-async function saveSetting(key, value, el) {
-  const res = await fetch('/api/admin/settings', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({[key]: value})});
+async function saveSetting(key, value, el, note) {
+  const payload = {[key]: value};
+  if (note) payload._deviation_notes = {[key]: note};
+  const res = await fetch('/api/admin/settings', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
   const d = await res.json().catch(() => ({}));
+  if (!res.ok && d.deviation && !note) {
+    // Looser than the security level: allowed as a deviation with a note.
+    const why = await uiPrompt(t('sec_dev_prompt_title'), '', {message: t('sec_dev_prompt').replace('{v}', secValueText(key, d.deviation.required)), placeholder: t('sec_note_ph'), okText: t('sec_keep')});
+    if (why && why.trim().length >= 3) return saveSetting(key, value, el, why.trim());
+    if (why !== null && why !== false) showToast(t('sec_note_needed'), 'error', 5000);
+  }
   if (!res.ok) {
     showToast(d.error || t('failed'), 'error', 5000);
     const st = adminSettingsCache.find(x => x.key === key);
@@ -6625,8 +6954,192 @@ async function saveSetting(key, value, el) {
   const st = adminSettingsCache.find(x => x.key === key);
   if (st && d.changed && key in d.changed) st.value = d.changed[key];
   showToast(t('saved'), 'success', 1200);
+  if (st && (st.required || st.deviation) && adminTab === 'policies') adminPolicies('policies');
   if (key.startsWith('ai_') || ['bitwarden','git_medium'].includes(key)) await refreshUserPolicy();
   if (key.startsWith('turn_') || key === 'voice_enabled') setTimeout(() => { if (adminTab === 'voice') adminPolicies('voice'); }, 600);
+}
+
+// ══ SECURITY LEVEL & POSTURE (v12.6.22) ══════════════════
+
+let secPosture = null, secPlan = null;
+const SEC_ICON = {ok: '✅', warn: '⚠', bad: '⛔', info: 'ℹ'};
+const SEC_ORDER = {bad: 0, warn: 1, ok: 2, info: 3};
+
+function secValueText(key, v) {
+  if (v === undefined || v === null || v === '') return '—';
+  const st = (adminSettingsCache || []).find(x => x.key === key);
+  if (key === 'link_share_max_days' && String(v) === '0') return t('sec_no_limit');
+  if (st && st.kind === 'bool') return v === '1' ? t('on') : t('off');
+  if (st && st.kind === 'enum') return t('po_' + key + '_' + v);
+  return String(v);
+}
+
+async function adminSecurity() {
+  const body = document.getElementById('admin-body');
+  const [pr, sr] = await Promise.all([fetch('/api/admin/security'), fetch('/api/admin/settings')]);
+  if (!pr.ok) { body.innerHTML = `<div class="fm-error">${esc(await apiError(pr))}</div>`; return; }
+  secPosture = await pr.json();
+  if (sr.ok) adminSettingsCache = await sr.json();
+  secPlan = null;
+  renderAdminSecurity();
+}
+
+// secCheckInfo gives the title, value, explanation and fix of one posture check.
+function secCheckInfo(c) {
+  const open = c.status === 'bad' || c.status === 'warn';
+  if (c.kind === 'rule') {
+    let fix = '';
+    if (open && c.env) fix = t('sec_fix_env').replace('{env}', c.env).replace('{v}', secValueText(c.id, c.required));
+    else if (open && c.deviation) fix = t('sec_fix_dev') + ' „' + c.deviation.note + '” (' + c.deviation.username + ', ' + fmtTime(c.deviation.created_at) + ')';
+    else if (open) fix = t('sec_fix_set').replace('{v}', secValueText(c.id, c.required));
+    const req = c.recommended ? t('sec_recommended') : t('sec_required');
+    return {title: t('p_' + c.id), value: secValueText(c.id, c.value), required: c.required ? req + ': ' + secValueText(c.id, c.required) : '',
+      why: t('slr_' + c.id), fix, canFix: open && !c.env && !c.deviation};
+  }
+  let value = '';
+  switch (c.id) {
+    case 'transport': value = t('sp_transport_' + c.value); break;
+    case 'encryption_key': value = t('sp_key_' + c.value); break;
+    case 'update_signature': value = t('sp_keys').replace('{n}', c.count || 0); break;
+    case 'version': value = c.value + (c.required ? ' → ' + c.required : ''); break;
+    case 'audit_chain': value = c.status === 'ok' ? t('sp_audit_ok').replace('{n}', c.count || 0) : t('sp_audit_broken').replace('{id}', c.value); break;
+    case 'any_origin': value = c.status === 'ok' ? t('off') : t('on'); break;
+    default: value = String(c.count || 0);
+  }
+  return {title: t('sp_' + c.id), value, required: '', why: t('sp_' + c.id + '_why'), fix: open ? t('sp_' + c.id + '_fix') : '', canFix: false};
+}
+
+function secSortedChecks() {
+  return (secPosture.checks || []).slice().sort((a, b) => SEC_ORDER[a.status] - SEC_ORDER[b.status]);
+}
+
+function renderAdminSecurity() {
+  const p = secPosture, s = p.summary || {};
+  const cards = p.levels.map(l => `<button type="button" class="sec-level ${l === p.level ? 'active' : ''}" ${p.level_locked ? 'disabled' : ''} onclick="secPreview('${l}')">
+      <b>${esc(t('sec_lvl_' + l))}${l === p.level ? ` <span class="pill ok">${esc(t('sec_current'))}</span>` : ''}</b><span>${esc(t('sec_lvl_' + l + '_d'))}</span></button>`).join('');
+  const lock = p.level_locked ? `<div class="locked-note">🔒 ${esc(t('set_by_env'))} ${esc(p.level_env)}</div>` : '';
+  const checks = secSortedChecks().map(c => {
+    const i = secCheckInfo(c);
+    return `<div class="sec-check ${c.status}"><div class="sec-ic" title="${esc(t('sec_st_' + c.status))}">${SEC_ICON[c.status]}</div><div class="grow">
+      <div class="sec-ttl">${esc(i.title)} <span class="sec-val">${esc(i.value)}</span>${i.required ? ` <span class="muted-text">· ${esc(i.required)}</span>` : ''}</div>
+      <div class="setting-desc">${esc(i.why)}</div>${i.fix ? `<div class="sec-fix">${esc(i.fix)}</div>` : ''}</div>
+      ${i.canFix ? `<div><button class="btn-sec btn-sm" onclick="secFixRule(${jsq(c.id)}, ${jsq(c.required)})">${esc(t('sec_fix_btn'))}</button></div>` : ''}</div>`;
+  }).join('');
+  const devs = p.deviations || [];
+  const devTable = devs.length ? `<table class="admin-table"><thead><tr><th>${esc(t('sec_setting'))}</th><th>${esc(t('sec_value'))}</th><th>${esc(t('sec_required'))}</th><th>${esc(t('sec_note'))}</th><th>${esc(t('sec_by'))}</th><th>${esc(t('sec_when'))}</th></tr></thead><tbody>` +
+    devs.map(d => `<tr><td>${esc(t('p_' + d.key))}</td><td>${esc(secValueText(d.key, d.value))}</td><td>${esc(secValueText(d.key, d.required))}</td><td>${esc(d.note)}</td><td>${esc(d.username)}</td><td style="white-space:nowrap;">${esc(fmtTime(d.created_at))}</td></tr>`).join('') + '</tbody></table>'
+    : `<div class="muted-text">${esc(t('sec_no_deviations'))}</div>`;
+  document.getElementById('admin-body').innerHTML = `
+    <div class="adm-h">🛡 ${esc(t('sec_level'))}</div>
+    <div class="sec-levels">${cards}</div>${lock}
+    <div id="sec-plan"></div>
+    <div class="adm-h">${esc(t('sec_posture'))} <span class="pill bad">⛔ ${s.bad || 0}</span> <span class="pill warn">⚠ ${s.warn || 0}</span> <span class="pill ok">✅ ${s.ok || 0}</span></div>
+    <div class="adm-toolbar"><span class="muted-text grow">${esc(t('sec_posture_for').replace('{level}', t('sec_lvl_' + p.level)))}</span>
+      <button class="btn-sec btn-sm" onclick="adminSecurity()">↻ ${esc(t('reload'))}</button>
+      <button class="btn-sec btn-sm" onclick="secExportJSON()">⬇ JSON</button>
+      <button class="btn-sec btn-sm" onclick="secPrint()">🖨 ${esc(t('sec_print'))}</button></div>
+    <div class="sec-checks">${checks}</div>
+    <div class="adm-h">${esc(t('sec_deviations'))} (${devs.length})</div>${devTable}`;
+}
+
+async function secFixRule(key, value) {
+  const res = await fetch('/api/admin/settings', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({[key]: value})});
+  if (!res.ok) { showToast(await apiError(res), 'error', 5000); return; }
+  showToast(t('saved'), 'success', 1200);
+  adminSecurity();
+}
+
+async function secPreview(level) {
+  const box = document.getElementById('sec-plan');
+  box.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
+  const res = await fetch('/api/admin/security/level', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({level, preview: true})});
+  if (!res.ok) { box.innerHTML = `<div class="hint-box bad">${esc(await apiError(res))}</div>`; return; }
+  secPlan = await res.json();
+  renderSecPlan();
+  box.scrollIntoView({block: 'nearest'});
+}
+
+function renderSecPlan() {
+  const p = secPlan, box = document.getElementById('sec-plan');
+  if (!p) { box.innerHTML = ''; return; }
+  const row = (c, blocker) => `<tr data-key="${esc(c.key)}"><td>${esc(t('p_' + c.key))}<div class="sub">${esc(t('slr_' + c.key))}</div></td><td data-l="${esc(t('sec_value'))}">${esc(secValueText(c.key, c.old))}</td><td data-l="${esc(t('sec_new'))}"><b>${esc(secValueText(c.key, c.new))}</b></td>
+    <td><label class="sec-keep"><input type="checkbox" class="sec-keep-cb" ${blocker ? 'checked disabled' : ''} onchange="this.closest('tr').querySelector('.sec-note').style.display = this.checked ? '' : 'none'"> ${esc(t('sec_keep'))}</label>
+      <input type="text" class="sec-note" maxlength="500" placeholder="${esc(t('sec_note_ph'))}" style="${blocker ? '' : 'display:none;'}width:100%;margin-top:4px;"></td></tr>`;
+  const list = (items, withNote) => '<ul class="sec-list">' + items.map(c => `<li>${esc(t('p_' + c.key))}: ${esc(secValueText(c.key, c.old))}${withNote && c.note ? ' — „' + esc(c.note) + '”' : ''}${c.env ? ' (' + esc(c.env) + ')' : ''}</li>`).join('') + '</ul>';
+  const rows = p.blockers.map(c => row(c, true)).join('') + p.changes.map(c => row(c, false)).join('');
+  const aff = Object.entries(p.affected || {}).filter(([, n]) => n > 0).map(([k, n]) => `<li>${esc(t('sec_aff_' + k).replace('{n}', n))}</li>`).join('');
+  box.innerHTML = `<div class="policy-group sec-plan">
+    <div class="adm-h">${esc(t('sec_plan_title').replace('{from}', t('sec_lvl_' + p.from)).replace('{to}', t('sec_lvl_' + p.to)))}</div>
+    ${p.blockers.length ? `<div class="hint-box bad">⛔ ${esc(t('sec_blocker_https'))}</div>` : ''}
+    ${rows ? `<table class="admin-table"><thead><tr><th>${esc(t('sec_setting'))}</th><th>${esc(t('sec_value'))}</th><th>${esc(t('sec_new'))}</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="hint-box ok">✅ ${esc(t('sec_plan_none'))}</div>`}
+    ${p.forced.length ? `<div class="hint-box warn">🔒 ${esc(t('sec_forced'))}${list(p.forced)}</div>` : ''}
+    ${p.kept.length ? `<div class="hint-box">${esc(t('sec_kept_list'))}${list(p.kept, true)}</div>` : ''}
+    ${p.removed.length ? `<div class="hint-box">${esc(t('sec_removed_list'))}<ul class="sec-list">${p.removed.map(k => `<li>${esc(t('p_' + k))}</li>`).join('')}</ul></div>` : ''}
+    ${aff ? `<div class="adm-h">${esc(t('sec_affected'))}</div><ul class="sec-list">${aff}</ul>` : ''}
+    <label class="sec-keep" style="margin-top:8px;"><input type="checkbox" id="sec-apply-now"> ${esc(t('sec_apply_now'))}</label>
+    <div class="adm-toolbar" style="margin-top:10px;"><span class="grow"></span><button class="btn-sec btn-sm" onclick="secPlan=null;renderSecPlan()">${esc(t('cancel'))}</button>
+      <button class="btn-sm" ${p.level_locked ? 'disabled' : ''} onclick="secApply()">🛡 ${esc(t('sec_apply'))}</button></div></div>`;
+}
+
+async function secApply() {
+  const keep = {};
+  let missing = false;
+  document.querySelectorAll('#sec-plan tr[data-key]').forEach(tr => {
+    if (!tr.querySelector('.sec-keep-cb').checked) return;
+    const note = tr.querySelector('.sec-note').value.trim();
+    if (note.length < 3) missing = true;
+    keep[tr.dataset.key] = note;
+  });
+  if (missing) { showToast(t('sec_note_needed'), 'error', 5000); return; }
+  const applyNow = document.getElementById('sec-apply-now').checked;
+  if (applyNow && !(await uiConfirm(t('sec_apply_now_q'), {okText: t('sec_apply'), danger: true}))) return;
+  const res = await fetch('/api/admin/security/level', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({level: secPlan.to, keep, apply_now: applyNow})});
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) { showToast(d.error || t('failed'), 'error', 7000); if (d.plan) { secPlan = d.plan; renderSecPlan(); } return; }
+  showToast(t('sec_applied').replace('{level}', t('sec_lvl_' + d.level)).replace('{n}', Object.keys(d.changed || {}).length), 'success', 4000);
+  await refreshUserPolicy();
+  adminSecurity();
+}
+
+// The auditor report: the same checks, in the language of the page.
+function secReport() {
+  const p = secPosture;
+  return {
+    product: 'WRM PRO', version: p.version, host: p.host, url: location.origin, generated_at: p.generated_at,
+    level: p.level, level_name: t('sec_lvl_' + p.level), level_set_by_environment: !!p.level_locked, summary: p.summary,
+    checks: secSortedChecks().map(c => { const i = secCheckInfo(c); return {id: c.id, status: c.status, status_text: t('sec_st_' + c.status), title: i.title, value: i.value, requirement: i.required, why: i.why, fix: i.fix, deviation: c.deviation || null}; }),
+    deviations: p.deviations,
+  };
+}
+
+function secExportJSON() {
+  const blob = new Blob([JSON.stringify(secReport(), null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wrm-security-report-' + (secPosture.generated_at || '').slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function secPrint() {
+  const r = secReport();
+  const w = window.open('', '_blank');
+  if (!w) { showToast(t('sec_popup_blocked'), 'error', 5000); return; }
+  const rows = r.checks.map(c => `<tr class="${c.status}"><td>${SEC_ICON[c.status]} ${esc(c.status_text)}</td><td><b>${esc(c.title)}</b><div>${esc(c.why)}</div></td><td>${esc(c.value)}${c.requirement ? '<div class="m">' + esc(c.requirement) + '</div>' : ''}</td><td>${esc(c.fix)}</td></tr>`).join('');
+  const devs = r.deviations.length ? '<table><tr><th>' + [t('sec_setting'), t('sec_value'), t('sec_required'), t('sec_note'), t('sec_by'), t('sec_when')].map(esc).join('</th><th>') + '</th></tr>' +
+    r.deviations.map(d => '<tr><td>' + [t('p_' + d.key), secValueText(d.key, d.value), secValueText(d.key, d.required), d.note, d.username, fmtTime(d.created_at)].map(esc).join('</td><td>') + '</td></tr>').join('') + '</table>' : '<p>' + esc(t('sec_no_deviations')) + '</p>';
+  w.document.write(`<!doctype html><html lang="${esc(currentLang)}"><head><meta charset="utf-8"><title>${esc(t('sec_report_title'))}</title><style>
+    body{font:12px/1.45 system-ui,sans-serif;color:#111;margin:24px;} h1{font-size:18px;margin:0 0 4px;} h2{font-size:14px;margin:18px 0 6px;}
+    table{border-collapse:collapse;width:100%;} th,td{border:1px solid #bbb;padding:5px 7px;vertical-align:top;text-align:left;} th{background:#eee;}
+    tr.bad td:first-child{background:#fde2e2;} tr.warn td:first-child{background:#fdf1d6;} tr.ok td:first-child{background:#dcf5e3;} .m,.meta{color:#555;}
+  </style></head><body><h1>${esc(t('sec_report_title'))}</h1>
+  <div class="meta">${esc(r.product)} ${esc(r.version)} · ${esc(t('sec_host'))}: ${esc(r.host)} (${esc(r.url)}) · ${esc(t('sec_generated'))}: ${esc(fmtTime(r.generated_at))}</div>
+  <div class="meta">${esc(t('sec_level'))}: <b>${esc(r.level_name)}</b> · ⛔ ${r.summary.bad || 0} · ⚠ ${r.summary.warn || 0} · ✅ ${r.summary.ok || 0}</div>
+  <h2>${esc(t('sec_posture'))}</h2><table><tr><th>${esc(t('sec_status'))}</th><th>${esc(t('sec_check'))}</th><th>${esc(t('sec_value'))}</th><th>${esc(t('sec_fix'))}</th></tr>${rows}</table>
+  <h2>${esc(t('sec_deviations'))}</h2>${devs}</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 300);
 }
 
 async function adminHosts() {
