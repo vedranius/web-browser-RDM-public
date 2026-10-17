@@ -144,7 +144,6 @@ type aiSession struct {
 	cost          float64
 	termID        int64
 	rec           *recorder
-	pendingText   strings.Builder
 	oc            *ocProc // transport opencode: the OpenCode process (opencode_agent.go)
 }
 

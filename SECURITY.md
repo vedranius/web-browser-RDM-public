@@ -29,6 +29,32 @@ You will get an answer as soon as possible, usually within a week. Once a fix is
 
 **Out of scope:** problems that need an administrator account or access to the server's files, missing HTTPS when the operator did not configure it, social engineering, reports from automated scanners that come without a working attack, and vulnerabilities in the servers you connect to.
 
+## Continuous security checks
+
+Every push and pull request (and a weekly run) checks WRM automatically. The checks are free on GitHub for this public repository; their results are in the pull request and under *Security → Code scanning*.
+
+| Check | What it finds | Where |
+|---|---|---|
+| **govulncheck** | known vulnerabilities in Go, the standard library and the modules, limited to code WRM calls; fails when one is reachable | `security.yml` |
+| **CodeQL** (`security-extended`) | injection, path traversal, unsafe redirects, XSS in the Go server and the JavaScript UI | `codeql.yml` |
+| **gosec** | Go security patterns; fails on findings that are not in the reviewed baseline `.github/security/gosec-baseline.json` (`tools/gosec-baseline.js`), and when gosec cannot load the code | `security.yml` |
+| **staticcheck** | bugs and deprecated APIs (`remote-manager/staticcheck.conf`) | `security.yml` |
+| **gitleaks** | tokens and private keys in the commits of a push or pull request; the whole history weekly (`.gitleaks.toml`) | `security.yml` |
+| **actionlint, zizmor** | broken or unsafe workflows: unpinned actions, injection through titles or branch names, broad token permissions, persisted credentials | `security.yml` |
+| **Dependency review** | a pull request that adds a dependency with a known vulnerability (moderate or worse) | `security.yml` |
+| **Trivy** | vulnerabilities in the Docker image's OS and npm packages; fails on a fixable CRITICAL one | `build.yml` (Docker job) |
+| **OpenSSF Scorecard** | the repository's security practices | `scorecard.yml` |
+| **Dependabot** | weekly updates of Go modules, GitHub Actions and the Docker base images | `.github/dependabot.yml` |
+| **Claude security review** | security problems in the changes of a pull request, with WRM's own checklist (`.github/security/claude-review-instructions.txt`) | `claude-security-review.yml` |
+
+Rules for the workflows: the token is read-only unless a job uploads release assets, every action is pinned to a full commit SHA (Dependabot updates them), and checkouts do not keep credentials.
+
+The **Claude security review** needs the repository secret `ANTHROPIC_API_KEY` (*Settings → Secrets and variables → Actions*); without it the job is skipped. It is billed per token to that key, so set a monthly spend limit for the key in the Anthropic Console. Because the reviewer reads the pull request's text and code, which an attacker could write, it runs only for pull requests from branches of this repository, never from forks. Keep *Settings → Actions → Fork pull request workflows* at *Require approval for all external contributors*.
+
+Development sessions with Claude Code also run the **wrm-security-review** skill (`.claude/skills/wrm-security-review/`) before every push: the built-in `/security-review`, the same checklist and the same scanners, with the result in the pull request.
+
+**gosec baseline (v12.6.20):** 207 findings were reviewed and accepted. They are paths WRM builds itself (data directory, recordings, Medium runtime, Bitwarden cache, OpenCode install and run directories), commands WRM runs by design with separate arguments (SSH, Docker, ipmitool, service managers, OpenCode), URLs that users or administrators configure on purpose (Git servers, AI providers, NetBox; WRM can reach whatever its host can reach, so restrict who may add them), TLS verification skipped only where the user chose a self-signed certificate or the certificate is pinned or checked afterwards, and MD5/SHA-1 kept for compatibility (mRemoteNG, TOTP, Git). A new finding must be fixed, or reviewed and added to the baseline with the reason in the pull request. gosec's taint rules (G7xx) are not deterministic (the same code gives a few findings more or less from run to run), so the baseline is made from about 20 runs with Go 1.26.9, the release CI pins: `node tools/gosec-baseline.js run1.json run2.json … --update` keeps each finding with the highest count any run had.
+
 ## Hardening checklist
 
 WRM is secure by default in most respects. For production and company use, also check the items below. The admin panel (*Overview*) warns about several of them.

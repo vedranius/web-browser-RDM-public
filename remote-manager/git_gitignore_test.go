@@ -71,10 +71,6 @@ func (fw *fakeWrites) handler(g *fakeGit, wtoken string) func(w http.ResponseWri
 	}
 }
 
-type ignoreInfoResp struct {
-	gitIgnoreInfo
-}
-
 func TestGitIgnoreHelper(t *testing.T) {
 	e := newDeployEnv(t, "git-ignore")
 	writeFile(t, e.dir+"/run.py", runV110)
