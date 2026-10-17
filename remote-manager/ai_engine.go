@@ -142,7 +142,6 @@ type aiSession struct {
 	cost          float64
 	termID        int64
 	rec           *recorder
-	pendingText   strings.Builder
 }
 
 // aiApprovalTimeout is a variable so tests can shorten it.

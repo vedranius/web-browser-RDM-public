@@ -120,7 +120,7 @@ func importBundle(userID int, r io.Reader) (*bundleImportResult, error) {
 		if err != nil {
 			return nil, fmt.Errorf("damaged archive: %v", err)
 		}
-		if h.Typeflag != tar.TypeReg && h.Typeflag != tar.TypeRegA {
+		if h.Typeflag != tar.TypeReg && h.Typeflag != '\x00' { // '\x00': regular file in old tar writers
 			continue
 		}
 		dir, rest, safe := safeBundlePath(h.Name)

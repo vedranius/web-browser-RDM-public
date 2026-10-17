@@ -69,7 +69,6 @@ type deploySession struct {
 	imports []pyImport
 	backup  string   // backup directory (absolute) of this run
 	created []string // directories created by the writes
-	logf    func(step, status, msg string)
 }
 
 func (s *deploySession) abs(rel string) string { return s.in.Path + "/" + rel }

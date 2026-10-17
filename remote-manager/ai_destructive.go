@@ -134,7 +134,7 @@ func blockWords(words []string) *aiBlock {
 	}
 done:
 	inner, _ := innerCommand(words)
-	if inner == nil || len(inner) == 0 {
+	if len(inner) == 0 {
 		inner = words
 	}
 	if len(inner) == 0 {
