@@ -15,6 +15,7 @@
 
 - WRM is built with **Go 1.27** (Go 1.23, used until now, no longer receives security fixes), and all libraries are updated, among them `golang.org/x/crypto`, `golang.org/x/sys`, the SQLite driver, SFTP and FTP.
 - The build workflows run with read-only tokens unless a job publishes release files, every action is pinned to an exact commit, and checkouts no longer keep credentials.
+- The Docker image no longer contains npm, corepack and yarn, which are only needed while it is built.
 - The Medium proxy uses Go's safer `Rewrite` hook, so a request can no longer drop the headers WRM adds by naming them in its `Connection` header.
 
 ### Upgrade

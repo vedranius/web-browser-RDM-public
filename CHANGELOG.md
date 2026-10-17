@@ -16,9 +16,14 @@
 - **Workflows:** `permissions: contents: read` by default, `contents: write` only for the jobs that upload release assets; every action pinned to a full commit SHA; `actions/checkout` with `persist-credentials: false`.
 - **Medium proxy** (`git_medium.go`): `httputil.ReverseProxy` with `Rewrite` instead of the deprecated `Director`; headers set by WRM (`X-WRM-Medium-Key`, `Origin`, `Sec-Fetch-Site`) and removed (`Cookie`, `Authorization`) can no longer be undone by a client's `Connection` header. `X-Forwarded-*` headers are not added.
 - Bundle import accepts regular tar entries without the deprecated `tar.TypeRegA` constant (same behaviour).
+- **Docker image:** npm, corepack and yarn are removed after the Bitwarden CLI is installed; only Node stays to run `bw` (npm's bundled `tar` had a fixable critical vulnerability, CVE-2026-59873).
 
 ### Removed
 - Unused code found by staticcheck (`mediumStart`, `mediumDockerUser`, `aiDelegateModel.mayTrain`, two unused struct fields, an unused test type).
+
+### Fixed
+- Git checks: a finished check job frees the user's check slot before it reads as ended, so a check started right after the previous one ended no longer gets *A check is already running* (409).
+
 ## [12.6.19] - 2026-10-17
 
 ### Added
