@@ -151,13 +151,7 @@ func deleteGitUserData(userID int) {
 func gitAllowed() bool { return settingBool("git_enabled") }
 
 func gitChecksAllowed(userID int) bool {
-	switch getSetting("git_checks") {
-	case "all":
-		return gitAllowed()
-	case "admins":
-		return gitAllowed() && isAdminUser(userID)
-	}
-	return false
+	return gitAllowed() && policyWhoAllows(userID, "git_checks")
 }
 
 func jsonUnmarshalBytes(b []byte, v interface{}) { json.Unmarshal(b, v) }

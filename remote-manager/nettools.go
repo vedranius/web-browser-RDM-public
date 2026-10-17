@@ -41,13 +41,7 @@ var toolsRunning = struct {
 }{m: map[int]bool{}}
 
 func networkToolsAllowed(userID int) bool {
-	switch getSetting("network_tools") {
-	case "all":
-		return true
-	case "admins":
-		return isAdminUser(userID)
-	}
-	return false
+	return policyWhoAllows(userID, "network_tools")
 }
 
 func validToolHost(h string) error {

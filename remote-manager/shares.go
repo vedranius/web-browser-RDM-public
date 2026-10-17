@@ -233,6 +233,11 @@ func resolveShareAccessCtx(share ShareLink, ctx accessCtx) (*ShareAccess, *share
 			}
 			a.Role, a.Member = role, true
 		}
+		// Through a team: the best role of the user's teams in this share, or the direct role
+		// when that is higher.
+		if tr := teamShareRole(share.ID, a.UserID); tr != "" && roleRank[tr] > roleRank[a.Role] {
+			a.Role, a.Member = tr, true
+		}
 	}
 	if !a.Member {
 		mode := share.AccessMode
@@ -356,8 +361,13 @@ func authorizeConnection(r *http.Request, connID int, perm string) (*connAccess,
 	if connID <= 0 {
 		return nil, 404, "Connection not found"
 	}
-	if userID, err := currentUserID(r); err == nil && userOwnsConnection(connID, userID) {
-		return &connAccess{UserID: userID}, 0, ""
+	if userID, err := currentUserID(r); err == nil {
+		if isAuditorUser(userID) {
+			return nil, 403, "Security auditors cannot open connections"
+		}
+		if userOwnsConnection(connID, userID) {
+			return &connAccess{UserID: userID}, 0, ""
+		}
 	}
 	token := strings.TrimSpace(r.URL.Query().Get("share_token"))
 	if token == "" {
@@ -427,17 +437,18 @@ type memberInput struct {
 }
 
 type shareInput struct {
-	Name          *string        `json:"name"`
-	ConnectionIDs *[]int         `json:"connection_ids"`
-	FolderIDs     *[]int         `json:"folder_ids"`
-	AccessMode    *string        `json:"access_mode"`
-	GuestRole     *string        `json:"guest_role"`
-	Password      *string        `json:"password"`
-	ClearPassword bool           `json:"clear_password"`
-	Public        *bool          `json:"public"`
-	ExpiresAt     *string        `json:"expires_at"`
-	Active        *bool          `json:"active"`
-	Members       *[]memberInput `json:"members"`
+	Name          *string            `json:"name"`
+	ConnectionIDs *[]int             `json:"connection_ids"`
+	FolderIDs     *[]int             `json:"folder_ids"`
+	AccessMode    *string            `json:"access_mode"`
+	GuestRole     *string            `json:"guest_role"`
+	Password      *string            `json:"password"`
+	ClearPassword bool               `json:"clear_password"`
+	Public        *bool              `json:"public"`
+	ExpiresAt     *string            `json:"expires_at"`
+	Active        *bool              `json:"active"`
+	Members       *[]memberInput     `json:"members"`
+	Teams         *[]teamMemberInput `json:"teams"`
 	// legacy (v9) field
 	RecipientUsernames []string `json:"recipient_usernames"`
 }
@@ -476,6 +487,15 @@ func validateShareInput(in *shareInput, userID int) error {
 				(*in.Members)[i].Role = RoleOperator
 			} else if !validAssignableRole(m.Role, roleRank[RoleModerator]) {
 				return fmt.Errorf("invalid role %q", m.Role)
+			}
+		}
+	}
+	if in.Teams != nil {
+		for i, t := range *in.Teams {
+			if t.Role == "" {
+				(*in.Teams)[i].Role = RoleOperator
+			} else if !validAssignableRole(t.Role, roleRank[RoleModerator]) {
+				return fmt.Errorf("invalid role %q", t.Role)
 			}
 		}
 	}
@@ -572,7 +592,7 @@ func shareDetails(s ShareLink) map[string]interface{} {
 		"access_mode": s.AccessMode, "guest_role": s.GuestRole, "public": s.Public,
 		"password_protected": s.PasswordHash != "", "expires_at": s.ExpiresAt, "expired": s.expired(),
 		"active": s.Active, "created_at": s.CreatedAt, "connection_ids": connIDs, "folder_ids": folderIDs,
-		"items": items, "members": members, "online": roomOnlineCount(s.ID),
+		"items": items, "members": members, "teams": shareTeamsOf(s.ID), "online": roomOnlineCount(s.ID),
 		"connections": len(sharedConnectionsFor(s)),
 	}
 }
@@ -682,6 +702,9 @@ func apiSharesHandler(w http.ResponseWriter, r *http.Request) {
 		var unknown []string
 		if in.Members != nil {
 			unknown = applyShareMembers(tx, shareID, userID, *in.Members)
+		}
+		if in.Teams != nil {
+			applyShareTeams(tx, shareID, *in.Teams)
 		}
 		if err := tx.Commit(); err != nil {
 			jsonError(w, err.Error(), 500)
@@ -814,6 +837,10 @@ func apiSharesByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if in.Members != nil {
 			unknown = applyShareMembers(tx, id, s.OwnerID, *in.Members)
 			changes["members"] = len(*in.Members)
+		}
+		if in.Teams != nil {
+			applyShareTeams(tx, id, *in.Teams)
+			changes["teams"] = len(*in.Teams)
 		}
 		if err := tx.Commit(); err != nil {
 			jsonError(w, err.Error(), 500)
@@ -1094,7 +1121,8 @@ func apiSharedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	rows, err := db.Query(`SELECT `+shareCols+` FROM share_links WHERE owner_id != ? AND active=1 AND (
 			id IN (SELECT share_id FROM share_members WHERE user_id=?) OR (public=1 AND access_mode IN ('users','link'))
-		) ORDER BY created_at DESC`, userID, userID)
+			OR id IN (SELECT st.share_id FROM share_teams st JOIN team_members tm ON tm.team_id=st.team_id WHERE tm.user_id=?)
+		) ORDER BY created_at DESC`, userID, userID, userID)
 	if err != nil {
 		jsonError(w, err.Error(), 500)
 		return

@@ -129,13 +129,7 @@ func proxyAccessible(p proxyDef, userID int) bool {
 }
 
 func proxiesAllowed(userID int) bool {
-	switch getSetting("proxies") {
-	case "off":
-		return false
-	case "admins":
-		return isAdminUser(userID)
-	}
-	return true
+	return policyWhoAllows(userID, "proxies")
 }
 
 // inContainer reports whether WRM runs in a Docker / Podman container, where 127.0.0.1 is
