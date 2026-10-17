@@ -1,6 +1,25 @@
-## Web Remote Manager PRO v12.6.20 — Security checked on every change
+## Web Remote Manager PRO v12.6.21 — Signed releases
 
 ### Added
+
+- **Signed releases:** every release carries `SHA256SUMS.txt.sig`, an ed25519 signature of the checksums file, plus a software bill of materials (CycloneDX) and GitHub build provenance. You can check where a file comes from and that nobody changed it.
+- **Updates check the signature:** once the project's public key is built in, the one-click update refuses a release that is unsigned or wrongly signed. The update dialog says whether the signature is checked. Administrators of their own fork add its key in *Release signing keys* (`update_signing_keys`).
+- **Verify a download yourself:** put `SHA256SUMS.txt` and `SHA256SUMS.txt.sig` next to the file and run `wrm-pro-… -release-verify SHA256SUMS.txt`.
+- **Nightly security tests:** fuzz tests feed random input to the import parsers (mRemoteNG, SSH config, CSV/XLSX, PuTTY, WinSCP, configuration files, deploy-config YAML), and OWASP ZAP scans a running WRM signed out and as an administrator.
+
+### Fixed
+
+- A damaged PuTTY `.reg` file could make the import fail with an internal error instead of a clear message. The fuzz tests found it.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. This version has no built-in release key yet, so updates still check the SHA-256 only; the next version with the key turns the signature check on.
+
+[Download v12.6.21](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.21) · [Signed releases](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.21/SECURITY.md#signed-releases)
+
+### Included from v12.6.20 — Security checked on every change
+
+#### Added
 
 - **Automatic security checks on every change** to WRM, before it reaches a release:
   - known vulnerabilities in Go and in the libraries WRM uses, limited to code WRM actually calls (govulncheck);
@@ -11,14 +30,14 @@
 - **Claude security review** of pull requests with WRM's own checklist (who could attack, what they could reach), and the same review in every development session before a push.
 - **Dependabot** proposes updates of Go libraries, GitHub Actions and the Docker base images every week.
 
-### Changed
+#### Changed
 
 - WRM is built with **Go 1.27** (Go 1.23, used until now, no longer receives security fixes), and all libraries are updated, among them `golang.org/x/crypto`, `golang.org/x/sys`, the SQLite driver, SFTP and FTP.
 - The build workflows run with read-only tokens unless a job publishes release files, every action is pinned to an exact commit, and checkouts no longer keep credentials.
 - The Docker image no longer contains npm, corepack and yarn, which are only needed while it is built.
 - The Medium proxy uses Go's safer `Rewrite` hook, so a request can no longer drop the headers WRM adds by naming them in its `Connection` header.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database or setting change. Building from source needs Go 1.26 or newer. What comes next for security (signed releases, security levels for home, business and enterprise, roles and teams, sign-in with Microsoft Entra ID / Active Directory, LDAP and SCIM, SIEM export) is in the [roadmap](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.20/ROADMAP.md).
 
