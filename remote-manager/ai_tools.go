@@ -194,7 +194,6 @@ type aiPlanned struct {
 	NewText   string
 	Diff      string
 	Inventory *aiToolInput
-	maxOutput int
 	// transfers (transfer_file): the source session, its real path and the size
 	Transfer bool
 	From     *aiSession

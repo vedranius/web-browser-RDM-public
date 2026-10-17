@@ -3,7 +3,7 @@
 #   docker run -d -p 8080:8080 -v wrm-data:/data wrm-pro
 # Data (database, encryption key, recordings, self-signed certificate) lives in /data.
 
-FROM golang:1.23-alpine AS build
+FROM golang:1.27-alpine AS build
 WORKDIR /src
 COPY remote-manager/go.mod remote-manager/go.sum ./
 RUN go mod download

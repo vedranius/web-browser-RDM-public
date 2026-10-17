@@ -12,12 +12,13 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+# Read-only by default; jobs that upload release assets ask for write access themselves.
 permissions:
-  contents: write
+  contents: read
 
 env:
   # Version for branch builds. Tag builds use the tag name (e.g. v10.10.0) as version and in file names.
-  APP_VERSION: v12.6.10
+  APP_VERSION: v12.6.12
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -28,12 +29,22 @@ jobs:
     name: Vet & lint
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: remote-manager/go.mod
           cache: false
+
+      - name: Go toolchain matches go.mod
+        working-directory: remote-manager
+        run: |
+          want=$(awk '$1=="toolchain"{print $2}' go.mod)
+          got=$(go env GOVERSION)
+          echo "go.mod toolchain: ${want}; in use: ${got}"
+          [ "$want" = "$got" ]
 
       - name: Download Go modules (retries on network errors)
         working-directory: remote-manager
@@ -70,10 +81,14 @@ jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     needs: check
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
       - name: Create or update GitHub Release
         run: |
@@ -91,6 +106,8 @@ jobs:
   build:
     name: Build ${{ matrix.label }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     needs: [check, create-release]
     # create-release is skipped on branch pushes; still build (compile check) in that case.
     if: ${{ !cancelled() && needs.check.result == 'success' && needs.create-release.result != 'failure' }}
@@ -113,9 +130,11 @@ jobs:
           - { label: openbsd-amd64,  goos: openbsd, goarch: amd64, goarm: "",  ext: "" }
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: remote-manager/go.mod
           cache: false
@@ -155,6 +174,8 @@ jobs:
   appimage:
     name: AppImage ${{ matrix.arch }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     needs: [check, create-release]
     if: ${{ !cancelled() && needs.check.result == 'success' && needs.create-release.result != 'failure' }}
     strategy:
@@ -162,8 +183,10 @@ jobs:
       matrix:
         arch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: remote-manager/go.mod
           cache: false
@@ -187,7 +210,9 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
       # Docker Hub rate-limits anonymous pulls from shared runners (429 Too Many Requests).
       # Pull the base images of the Dockerfile from Google's Docker Hub mirror first, with a
@@ -208,6 +233,29 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then VERSION="${GITHUB_REF_NAME}"; else VERSION="${APP_VERSION}-$(git rev-parse --short HEAD)"; fi
           docker build --build-arg VERSION="${VERSION}" -t wrm-pro:ci .
           docker run --rm wrm-pro:ci -version
+
+      # Known vulnerabilities in the image's OS and npm packages (the Go binary is covered by
+      # govulncheck). Shows HIGH and CRITICAL; fails on a CRITICAL one that has a fix.
+      - name: Vulnerability scan of the image (report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: wrm-pro:ci
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: '0'
+      - name: Vulnerability scan of the image (fail on fixable CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_SKIP_DB_UPDATE: 'true'
+        with:
+          image-ref: wrm-pro:ci
+          scanners: vuln
+          severity: CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: '1'
 
       - name: Smoke test (starts, answers /healthz, container health check works)
         run: |
@@ -235,11 +283,15 @@ jobs:
   finalize:
     name: Verify assets & publish release
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     needs: [build, appimage, docker]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version: 'stable'
           cache: false
