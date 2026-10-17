@@ -143,6 +143,7 @@ type aiSession struct {
 	termID        int64
 	rec           *recorder
 	pendingText   strings.Builder
+	oc            *ocProc // transport opencode: the OpenCode process (opencode_agent.go)
 }
 
 // aiApprovalTimeout is a variable so tests can shorten it.
@@ -200,6 +201,8 @@ type aiStartParams struct {
 	ClientName  string
 	TokenID     int64
 	Scopes      []string
+	// OpenCode (transport "opencode", opencode_agent.go): the agent to run
+	Agent string
 }
 
 // aiStart opens a session after every policy check.
@@ -207,7 +210,11 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 	mcp := p.Transport == "mcp"
 	userOK, why := aiUserAllowed(p.UserID)
 	if mcp {
-		userOK, why = mcpUserAllowed(p.UserID)
+		kind := ""
+		if g, err := loadGrant(p.TokenID); err == nil {
+			kind = g.Kind
+		}
+		userOK, why = mcpUserAllowedKind(p.UserID, kind)
 	}
 	if !userOK {
 		return nil, errors.New(why)
@@ -249,6 +256,14 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 		}
 		if !aiModelAllowed(model) {
 			return nil, fmt.Errorf("the policy does not allow the model %q", model)
+		}
+		if p.Transport == "opencode" {
+			if ok, why := opencodeAllowed(p.UserID); !ok {
+				return nil, errors.New(why)
+			}
+			if !oneOf(prov.Kind, opencodeProviderKinds...) {
+				return nil, fmt.Errorf("OpenCode agents can use OpenCode Zen, Anthropic, OpenAI and OpenAI-compatible providers, not %s", prov.Kind)
+			}
 		}
 	}
 	allowed := aiModesFor(p.Transport, p.ConnID)
@@ -424,8 +439,16 @@ func (s *aiSession) view() map[string]interface{} {
 		"end_reason": s.endReason, "started_at": s.Started.UTC().Format(time.RFC3339), "share_notes": s.ShareNotes, "transport": s.Transport,
 		"requests": s.requests, "tool_calls": s.toolCalls, "approvals": s.approvalsN, "denials": s.denials, "tokens_in": s.tokensIn,
 		"tokens_out": s.tokensOut, "cost_usd": s.cost, "pending": pend, "user": s.Username, "seq": s.seq,
-		"mcp_grant": s.TokenID, "scopes": s.Scopes,
+		"mcp_grant": s.TokenID, "scopes": s.Scopes, "agent": s.ocAgent(),
 	}
+}
+
+// ocAgent is the OpenCode agent of the session ("" for other transports). s.mu is held.
+func (s *aiSession) ocAgent() string {
+	if s.oc == nil {
+		return ""
+	}
+	return s.oc.agent
 }
 
 // ─── events, transcript, audit, recording ────────────
@@ -444,6 +467,7 @@ func (s *aiSession) emitLocked(typ string, data map[string]interface{}) {
 	}
 	close(s.notify)
 	s.notify = make(chan struct{})
+	ocForward(s, typ, data)
 }
 
 // eventsSince returns the events after seq and a channel closed on the next event.
@@ -720,6 +744,9 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		return fail(why)
 	}
 	s.touch()
+	if call.Name == aiDelegateTool && s.Scopes == nil {
+		return s.delegate(ctx, call)
+	}
 	spec, ok := aiToolSpecFor(call.Name)
 	if !ok {
 		s.audit(nil, "ai.tool_call", map[string]interface{}{"tool": truncateStr(call.Name, 80), "decision": aiDeny, "reason": "unknown tool"})
@@ -1176,6 +1203,9 @@ func (s *aiSession) SetMode(r *http.Request, userID int, mode string, auto *aiAu
 	if s.Transport == "mcp" {
 		return fmt.Errorf("the mode of an AI connection is chosen when it is created; create a new one for another mode")
 	}
+	if s.Transport == "opencode" {
+		return fmt.Errorf("the mode of an OpenCode agent is chosen when it starts; start a new AI session for another mode")
+	}
 	allowed := aiModesFor(s.Transport, s.ConnID)
 	if !oneOf(mode, allowed...) {
 		return fmt.Errorf("the mode %s is not allowed on this connection (allowed: %s)", mode, strings.Join(allowed, ", "))
@@ -1253,6 +1283,9 @@ func (s *aiSession) Kill(by int, reason string) {
 	s.mu.Unlock()
 	if cl != nil {
 		cl.Close()
+	}
+	if s.Transport == "opencode" {
+		go s.ocStop(reason)
 	}
 	aiReg.Lock()
 	delete(aiReg.m, s.ID)
@@ -1406,6 +1439,10 @@ func (s *aiSession) Prompt(r *http.Request, userID int, text string) error {
 	s.transcript("user", s.Username, text, nil)
 	s.emit("user", map[string]interface{}{"text": text})
 	s.emit("busy", map[string]interface{}{"busy": true})
+	if s.Transport == "opencode" {
+		go s.ocTurn(ctx, cancel, content)
+		return nil
+	}
 	go s.runTurn(ctx, cancel)
 	return nil
 }
@@ -1478,6 +1515,9 @@ func (s *aiSession) runTurn(ctx context.Context, cancel context.CancelFunc) {
 		req := aiLLMRequest{System: s.systemPrompt(), Messages: append([]aiMsg{}, s.history...), Tools: aiToolDefsFor(s.Mode), Model: s.Model}
 		prov := s.provider
 		s.mu.Unlock()
+		if d := s.delegateDef(); d != nil {
+			req.Tools = append(req.Tools, *d)
+		}
 		s.emit("assistant_start", nil)
 		start := time.Now()
 		resp, err := s.completeWithRecovery(ctx, prov, &req)
