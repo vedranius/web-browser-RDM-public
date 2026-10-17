@@ -340,8 +340,11 @@ jobs:
           cd dist
           WRM="./wrm-pro-${GITHUB_REF_NAME}-linux-amd64"
           chmod +x "$WRM"
+          # Captured first: with pipefail, piping the failing command into grep made the
+          # check always report a built-in key.
           builtin=1
-          if "$WRM" -release-verify /dev/null 2>&1 | grep -q 'has no release key'; then builtin=0; fi
+          probe=$("$WRM" -release-verify /dev/null 2>&1 || true)
+          case "$probe" in *"has no release key"*) builtin=0 ;; esac
           if [ -z "$WRM_RELEASE_SIGNING_KEY" ]; then
             if [ "$builtin" = 1 ]; then
               echo "::error::RELEASE_SIGNING_KEY is not set, but this WRM has a built-in release key: its self-update would refuse this release."

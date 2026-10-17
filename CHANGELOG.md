@@ -12,6 +12,9 @@
 - `/api/auth/me` returns `role`, `is_auditor`, `break_glass`, `teams` and `step_up`; the admin user list returns `role`, `break_glass` and `teams`. Disabling a user also ends their AI sessions and AI connections.
 - The share dialog shows a hint text when no members were added (the keys were missing).
 
+### Fixed
+- Release workflow: the check whether the build has a built-in release key always answered yes (with `pipefail`, the failing probe piped into `grep` failed the condition), so every release without `RELEASE_SIGNING_KEY` stopped at *Sign SHA256SUMS.txt* before the SBOM and provenance.
+
 ## [12.6.22] - 2026-10-17
 
 ### Added
