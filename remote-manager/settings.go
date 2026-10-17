@@ -134,6 +134,8 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_opencode_registry", Default: "https://registry.npmjs.org", Kind: "string"},
 	{Key: "ai_opencode_path", Default: "", Kind: "string"},
 	{Key: "ai_opencode_max_sessions", Default: "4", Kind: "int", Min: 1, Max: 50},
+	{Key: "ai_opencode_sandbox", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "ai_opencode_sandbox_image", Default: opencodeSandboxDefaultImage, Kind: "string"},
 	{Key: "ai_redact_output", Default: "1", Kind: "bool"},
 	{Key: "ai_share_notes", Default: "1", Kind: "bool"},
 	{Key: "ai_transcript_retention_days", Default: "90", Kind: "int", Min: 1, Max: 3650},
@@ -354,6 +356,14 @@ func validateSetting(s settingSpec, v string) (string, error) {
 			return "", fmt.Errorf("use an https registry URL such as https://registry.npmjs.org")
 		}
 		return strings.TrimRight(v, "/"), nil
+	case "ai_opencode_sandbox_image":
+		if v == "" {
+			v = opencodeSandboxDefaultImage
+		}
+		if !regexp.MustCompile(`^[a-z0-9][a-z0-9._/:@-]{0,254}$`).MatchString(v) || strings.Contains(v, "..") {
+			return "", fmt.Errorf("use a Docker image reference such as %s or registry.example.com/team/image:tag", opencodeSandboxDefaultImage)
+		}
+		return v, nil
 	case "ai_opencode_path":
 		if v != "" && !filepath.IsAbs(v) {
 			return "", fmt.Errorf("use an absolute path to the opencode binary")
@@ -505,6 +515,14 @@ func apiAdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 			aiKillWhere(func(s *aiSession) bool {
 				return s.Transport == "opencode" && (v == "off" || !isAdminUser(s.UserID))
 			}, adminID, "the policy no longer allows OpenCode agents")
+		}
+		if v, ok := changed["ai_opencode_sandbox"]; ok && v != "all" {
+			aiKillWhere(func(s *aiSession) bool {
+				s.mu.Lock()
+				sb := s.oc != nil && s.oc.sandbox
+				s.mu.Unlock()
+				return sb && (v == "off" || !isAdminUser(s.UserID))
+			}, adminID, "the policy no longer allows OpenCode's Docker sandbox")
 		}
 		if _, ok := changed["ai_mcp"]; ok {
 			mcpShutdown(adminID, "the policy no longer allows AI connections for the user", func(uid int) bool { ok, _ := mcpUserAllowed(uid); return !ok })
