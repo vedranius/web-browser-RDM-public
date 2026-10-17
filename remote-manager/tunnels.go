@@ -91,8 +91,8 @@ func tunnelsAllowedFor(userID int) error {
 	if !settingBool("tunnels_enabled") {
 		return fmt.Errorf("SSH tunnels are turned off by the administrator")
 	}
-	if getSetting("tunnel_users") == "admins" && !isAdminUser(userID) {
-		return fmt.Errorf("SSH tunnels are limited to administrators")
+	if v := getSetting("tunnel_users"); !policyAllows(userID, v) {
+		return fmt.Errorf("SSH tunnels are limited to %s", policyLimitText(v))
 	}
 	return nil
 }
@@ -147,13 +147,11 @@ func validateTunnelDef(d *tunnelDef, userID int) error {
 			return fmt.Errorf("only administrators may listen on %s (others: 127.0.0.1)", d.BindHost)
 		}
 	} else {
-		switch getSetting("tunnel_remote_forward") {
-		case "off":
+		switch v := getSetting("tunnel_remote_forward"); {
+		case v == "off":
 			return fmt.Errorf("remote port forwarding is turned off by the administrator")
-		case "admins":
-			if !isAdminUser(userID) {
-				return fmt.Errorf("remote port forwarding is limited to administrators")
-			}
+		case !policyAllows(userID, v):
+			return fmt.Errorf("remote port forwarding is limited to %s", policyLimitText(v))
 		}
 	}
 	if d.Kind == "dynamic" {
@@ -995,7 +993,7 @@ func apiTunnelsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		pol := map[string]interface{}{"enabled": settingBool("tunnels_enabled"), "allowed": tunnelsAllowedFor(userID) == nil,
-			"bind_any": isAdminUser(userID) || settingBool("tunnel_bind_any"), "remote": getSetting("tunnel_remote_forward") == "all" || (getSetting("tunnel_remote_forward") == "admins" && isAdminUser(userID))}
+			"bind_any": isAdminUser(userID) || settingBool("tunnel_bind_any"), "remote": policyWhoAllows(userID, "tunnel_remote_forward")}
 		jsonOK(w, map[string]interface{}{"tunnels": tunnelsForUser(userID), "policy": pol})
 		return
 	}

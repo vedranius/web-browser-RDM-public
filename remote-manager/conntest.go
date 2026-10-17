@@ -22,6 +22,10 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Method not allowed", 405)
 		return
 	}
+	if isAuditorUser(userID) {
+		jsonError(w, "Security auditors cannot open connections", 403)
+		return
+	}
 	var c Connection
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		jsonError(w, "Bad JSON", 400)

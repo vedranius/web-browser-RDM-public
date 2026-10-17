@@ -325,13 +325,7 @@ func serialOptionsFrom(o map[string]string) serialOptions {
 
 // serialAllowed: serial ports belong to the WRM server, like key files.
 func serialAllowed(userID int) bool {
-	switch getSetting("serial_ports") {
-	case "all":
-		return true
-	case "admins":
-		return isAdminUser(userID)
-	}
-	return false
+	return policyWhoAllows(userID, "serial_ports")
 }
 
 func openSerial(c Connection) (*termIO, error) {

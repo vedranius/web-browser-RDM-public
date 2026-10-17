@@ -257,13 +257,13 @@ func aiUserAllowed(userID int) (bool, string) {
 	if settingBool("ai_kill_switch") {
 		return false, "the AI assistant is stopped by the administrator (kill switch)"
 	}
-	switch getSetting("ai_assistant") {
-	case "off":
+	switch v := getSetting("ai_assistant"); {
+	case v == "off":
 		return false, "the AI assistant is turned off"
-	case "admins":
-		if !isAdminUser(userID) {
-			return false, "the AI assistant is limited to administrators"
-		}
+	case isAuditorUser(userID):
+		return false, "security auditors cannot use the AI assistant"
+	case !policyAllows(userID, v):
+		return false, "the AI assistant is limited to " + policyLimitText(v)
 	}
 	var blocked int
 	db.QueryRow(`SELECT COALESCE(ai_blocked,0) FROM users WHERE id=?`, userID).Scan(&blocked)
@@ -274,13 +274,7 @@ func aiUserAllowed(userID int) (bool, string) {
 }
 
 func aiPersonalKeysAllowed(userID int) bool {
-	switch getSetting("ai_personal_keys") {
-	case "all":
-		return true
-	case "admins":
-		return isAdminUser(userID)
-	}
-	return false
+	return policyWhoAllows(userID, "ai_personal_keys")
 }
 
 func aiKindAllowed(kind string) bool {

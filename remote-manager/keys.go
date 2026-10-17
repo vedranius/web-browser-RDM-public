@@ -529,7 +529,7 @@ func uniqueIDs(ids []int, max int) ([]int, error) {
 // switched to the key after a successful test login with it.
 func deployKey(r *http.Request, userID int, k sshKey, id int, useKey bool) keyHostResult {
 	res := keyHostResult{ConnID: id}
-	if !userOwnsConnection(id, userID) {
+	if !userOwnsConnection(id, userID) || isAuditorUser(userID) {
 		res.Error = "connection not found"
 		return res
 	}
@@ -604,7 +604,7 @@ func removeKeyFromConn(c Connection, blob string) (int, error) {
 
 func revokeKey(r *http.Request, userID int, k sshKey, id int) keyHostResult {
 	res := keyHostResult{ConnID: id}
-	if !userOwnsConnection(id, userID) {
+	if !userOwnsConnection(id, userID) || isAuditorUser(userID) {
 		res.Error = "connection not found"
 		return res
 	}
@@ -729,6 +729,9 @@ func apiKeysHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if !u.IsAdmin && !settingBool("allow_secret_export") {
 			jsonError(w, "Exporting private keys is disabled by the administrator", 403)
+			return
+		}
+		if !requireStepUp(w, r, "ssh_key_export") {
 			return
 		}
 		if !k.HasPrivate {

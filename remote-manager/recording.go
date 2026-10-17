@@ -730,7 +730,7 @@ func apiRecordingsHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Method not allowed", 405)
 		return
 	}
-	admin := isAdminUser(userID)
+	admin := isAdminUser(userID) || isAuditorUser(userID) // auditors see every session read-only
 	rest := strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/recordings"), "/")
 	if rest == "" {
 		listTermSessions(w, r, userID, admin)
@@ -922,7 +922,7 @@ type fileTransferView struct {
 
 // GET /api/admin/transfers?q&user&conn&direction&from&to&before_id&limit[&format=csv]
 func apiAdminTransfersHandler(w http.ResponseWriter, r *http.Request) {
-	adminID, ok := requireAdmin(w, r)
+	adminID, ok := requireAuditRead(w, r)
 	if !ok {
 		return
 	}
