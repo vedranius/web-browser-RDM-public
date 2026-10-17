@@ -98,13 +98,6 @@ func mediumDockerCheck(ctx context.Context) error {
 	return nil
 }
 
-func mediumDockerUser() string {
-	if runtime.GOOS == "windows" {
-		return "0:0"
-	}
-	return strconv.Itoa(os.Getuid()) + ":" + strconv.Itoa(os.Getgid())
-}
-
 func mediumContainerPath(host string) string {
 	rel, e := filepath.Rel(mediumRoot(), host)
 	if e != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {

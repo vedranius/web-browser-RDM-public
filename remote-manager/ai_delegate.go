@@ -35,8 +35,6 @@ type aiDelegateModel struct {
 	Allowed   bool   `json:"allowed"` // false: excluded because it may train on prompts
 }
 
-func (m aiDelegateModel) mayTrain() bool { return m.DataUse == "trains" || m.DataUse == "unknown" }
-
 // aiDelegateTraining reports whether this user's delegations may go to free models that can
 // use prompts for training (ai_delegate_training: off, user = the user's own choice, all).
 func aiDelegateTraining(userID int) bool {

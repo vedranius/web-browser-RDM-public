@@ -1,3 +1,29 @@
+## [12.6.20] - 2026-10-17
+
+### Added
+- **Security workflow** `.github/workflows/security.yml` (every push and pull request to `main`, weekly on Monday, manual): **govulncheck** v1.9.0 (fails on a reachable vulnerability), **staticcheck** v0.8.2 (`remote-manager/staticcheck.conf`: default checks without ST1005, ST1013 and ST1018), **gosec** v2.29.0 without G104, compared with the reviewed baseline `.github/security/gosec-baseline.json` by `tools/gosec-baseline.js` (fingerprint: rule, file and the flagged line's text, so moved code is not new; fails on new findings and when gosec reports load errors; runs with Go 1.26.9 because gosec v2.29 cannot read Go 1.27 export data; the baseline is the union of about 20 runs, because the taint rules are not deterministic), **gitleaks** v8.30.1 (the commits of the push or pull request, the whole history on the weekly run; `.gitleaks.toml`: default rules, vendor files and Go test files allowed), **actionlint** v1.7.12 and **zizmor** 1.31.1 over the workflows, and **dependency review** on pull requests (fails from moderate).
+- **CodeQL** `.github/workflows/codeql.yml`: Go (manual build) and JavaScript, `security-extended` queries, vendor files ignored; push, pull request, weekly.
+- **OpenSSF Scorecard** `.github/workflows/scorecard.yml`: push to `main` and weekly, results published and uploaded to code scanning.
+- **Claude security review** `.github/workflows/claude-security-review.yml` (`anthropics/claude-code-security-review`): comments security findings on pull requests from branches of this repository (never forks), with WRM's checklist `.github/security/claude-review-instructions.txt` and exclusions `.github/security/claude-review-false-positives.txt`; skipped with a notice while the `ANTHROPIC_API_KEY` secret is not set.
+- **Trivy** image scan in the Docker job of `build.yml`: HIGH and CRITICAL shown, fails on a fixable CRITICAL vulnerability.
+- **Dependabot** `.github/dependabot.yml`: Go modules (`/remote-manager`), GitHub Actions and Docker, weekly, minor and patch grouped.
+- Repository skill `.claude/skills/wrm-security-review/` and a *Security review* step in `CLAUDE.md` → *Before every push*.
+- ROADMAP: the accepted security and enterprise identity plan (v12.6.21 signed releases, v12.6.22 security levels Home / Business / Enterprise and the security posture page, v12.6.23 roles and teams, v12.6.24 OIDC, v12.6.25 LDAP / AD and SCIM, v12.6.26 SIEM export and containment).
+
+### Changed
+- **Go 1.27.2:** `go.mod` declares `go 1.26.0` and `toolchain go1.27.2` (was `go 1.23.0`, a release without security fixes, which CI used for every binary); CI checks that the toolchain in use matches `go.mod`. Docker build stage `golang:1.27-alpine`.
+- **Modules updated:** `golang.org/x/crypto` v0.58.0, `golang.org/x/sys` v0.49.0, `modernc.org/sqlite` v1.60.1, `github.com/pkg/sftp` v1.13.11, `github.com/jlaffaye/ftp` v0.2.4 and their dependencies; `gopkg.in/yaml.v3` is a direct dependency.
+- **Workflows:** `permissions: contents: read` by default, `contents: write` only for the jobs that upload release assets; every action pinned to a full commit SHA; `actions/checkout` with `persist-credentials: false`.
+- **Medium proxy** (`git_medium.go`): `httputil.ReverseProxy` with `Rewrite` instead of the deprecated `Director`; headers set by WRM (`X-WRM-Medium-Key`, `Origin`, `Sec-Fetch-Site`) and removed (`Cookie`, `Authorization`) can no longer be undone by a client's `Connection` header. `X-Forwarded-*` headers are not added.
+- Bundle import accepts regular tar entries without the deprecated `tar.TypeRegA` constant (same behaviour).
+- **Docker image:** npm, corepack and yarn are removed after the Bitwarden CLI is installed; only Node stays to run `bw` (npm's bundled `tar` had a fixable critical vulnerability, CVE-2026-59873).
+
+### Removed
+- Unused code found by staticcheck (`mediumStart`, `mediumDockerUser`, `aiDelegateModel.mayTrain`, two unused struct fields, an unused test type).
+
+### Fixed
+- Git checks: a finished check job frees the user's check slot before it reads as ended, so a check started right after the previous one ended no longer gets *A check is already running* (409).
+
 ## [12.6.19] - 2026-10-17
 
 ### Added

@@ -246,7 +246,7 @@ func TestAIListModels(t *testing.T) {
 		t.Fatal("model listing must be audited")
 	}
 	// a provider kind without a model list answers with a hint, not an error status
-	code, v = admin.aiDo("POST", "/api/admin/ai/providers", map[string]interface{}{"name": "Demo Azure", "kind": "azure",
+	_, v = admin.aiDo("POST", "/api/admin/ai/providers", map[string]interface{}{"name": "Demo Azure", "kind": "azure",
 		"base_url": "https://demo.example.com", "api_key": "demo-key-0123456789", "models": "demo-deployment"})
 	id = int(asMap(v)["id"].(float64))
 	_, v = admin.aiDo("GET", fmt.Sprintf("/api/admin/ai/providers/%d/models", id), nil)

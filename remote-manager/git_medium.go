@@ -357,7 +357,6 @@ func mediumStopAll() {
 		p.cancel()
 	}
 }
-func mediumStart(uid int) error { return mediumStartForSetup(uid, false) }
 func mediumStartForSetup(uid int, setup bool) error {
 	if !mediumAllowed(uid) {
 		return fmt.Errorf("Medium access is not allowed")
@@ -1022,10 +1021,11 @@ func mediumProxyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	target, _ := url.Parse(p.base)
-	proxy := httputil.NewSingleHostReverseProxy(target)
-	original := proxy.Director
-	proxy.Director = func(req *http.Request) {
-		original(req)
+	// Rewrite (not Director) runs after hop-by-hop headers are removed, so a client cannot
+	// strip the headers set here by naming them in its Connection header.
+	proxy := &httputil.ReverseProxy{Rewrite: func(pr *httputil.ProxyRequest) {
+		pr.SetURL(target)
+		req := pr.Out
 		req.URL.Path = route
 		req.URL.RawPath = ""
 		req.Host = target.Host
@@ -1035,7 +1035,7 @@ func mediumProxyHandler(w http.ResponseWriter, r *http.Request) {
 		req.Header.Del("Cookie")
 		req.Header.Del("Authorization")
 		req.Header.Del("Accept-Encoding")
-	}
+	}}
 	proxy.Transport = mediumTransport
 	proxy.ModifyResponse = func(resp *http.Response) error {
 		record(resp.StatusCode, "")

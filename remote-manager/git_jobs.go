@@ -274,7 +274,6 @@ func startGitJob(userID int, in gitJobRequest) (*gitCheckJob, error) {
 }
 
 func (j *gitCheckJob) run() {
-	defer gitUnlock(j.UserID)
 	targets := map[string]gitTarget{}
 	if j.Refresh && !j.isCancelled() {
 		j.mu.Lock()
@@ -318,10 +317,6 @@ func (j *gitCheckJob) run() {
 	}
 	wg.Wait()
 	j.mu.Lock()
-	j.State, j.Phase, j.Ended = "done", "", nowStamp()
-	if j.cancelled {
-		j.State = "cancelled"
-	}
 	checked := 0
 	for _, it := range j.items {
 		if it.State == "queued" || it.State == "running" {
@@ -338,6 +333,15 @@ func (j *gitCheckJob) run() {
 		db.Exec(`INSERT OR IGNORE INTO git_workspace (user_id) VALUES (?)`, j.UserID)
 		db.Exec(`UPDATE git_workspace SET last_check_at=? WHERE user_id=?`, nowStamp(), j.UserID)
 	}
+	// free the user's check slot before the job reads as ended, so a client that sees the
+	// end can start the next check at once instead of getting "already running"
+	gitUnlock(j.UserID)
+	j.mu.Lock()
+	j.State, j.Phase, j.Ended = "done", "", nowStamp()
+	if j.cancelled {
+		j.State = "cancelled"
+	}
+	j.mu.Unlock()
 }
 
 // server checks the job's installations on one server.
