@@ -10,7 +10,7 @@
 - **Admin panel → Directory sign-in:** providers with presets and setup hints, step-by-step *Test connection* (`POST /api/admin/oidc/check`), rule editor with a claims preview (`POST /api/admin/oidc/{id}/preview`), *Test sign-in* in a new window that shows the claims and what WRM would do without creating anything, the linked accounts with their last directory check, and unlinking. Saving, deleting and unlinking need step-up.
 - **Sign-in page:** *Sign in with <provider>* buttons; with `local_login = break_glass` the password form is folded behind *Emergency sign-in with a local account*.
 - **Step-up through the provider** (`prompt=login`, `max_age=0`, the same directory identity) for accounts without a password; 2FA changes of such accounts use that confirmation instead of a password.
-- **Settings → Security → Organisation accounts:** link a directory account to an existing WRM account (the provider must confirm it) and unlink it.
+- **Settings → Security → Organisation accounts:** link a directory account to an existing WRM account (the provider must confirm it, and WRM asks for a fresh confirmation first, even with step-up off; an existing link is never replaced silently) and unlink it.
 - The project's release public key is built in (`builtinReleaseKeys`): self-update refuses a release whose `SHA256SUMS.txt.sig` is missing or does not verify, and the release workflow signs with the `RELEASE_SIGNING_KEY` secret. A test checks that every built-in key parses.
 - **Automatic releases:** the `Tag new version` job in `build.yml` tags a push to `main` whose version is new (`APP_VERSION`, `AppVersion` and the top CHANGELOG section must agree) once every build passed, and starts the release on that tag.
 
