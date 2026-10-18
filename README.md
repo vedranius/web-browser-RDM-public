@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.25** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.26** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.26
+
+**SIEM export, security alerts and lockdown.** WRM sends every audit entry to your **SIEM**: syslog over TLS (RFC 5424), a JSON lines file, Splunk HEC, Elastic, Microsoft Sentinel or any HTTPS collector, with user, role, directory identity, source address and the audit hash chain, and catches up after an outage. The admin sees per destination whether it delivers and what is waiting. **Security alerts** tell administrators about repeated failed sign-ins, break-glass sign-ins, new administrators, revealed secrets, AI full-access approvals and the audit being turned off. **Stop user** ends everything an account has open in one click, and **lockdown** keeps everyone except break-glass administrators out, switches AI off and pauses shares, from the UI, `wrm -lockdown` or `WRM_LOCKDOWN=1`. See [SIEM export, alerts and lockdown](#siem-export-alerts-and-lockdown).
 
 ## What's new in v12.6.25
 
@@ -140,7 +144,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -194,6 +198,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass)
    - [Directory sign-in (OIDC)](#directory-sign-in-oidc)
    - [LDAP / Active Directory and SCIM](#ldap--active-directory-and-scim)
+   - [SIEM export, alerts and lockdown](#siem-export-alerts-and-lockdown)
    - [Updates & self-update](#updates--self-update)
    - [Mobile, responsive UI & installable app](#mobile-responsive-ui--installable-app)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
@@ -246,21 +251,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.25-linux-amd64
-   ./wrm-pro-v12.6.25-linux-amd64
+   chmod +x wrm-pro-v12.6.26-linux-amd64
+   ./wrm-pro-v12.6.26-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.25-windows-amd64.exe
+   .\wrm-pro-v12.6.26-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.6.25-linux-amd64.AppImage
-   ./wrm-pro-v12.6.25-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.6.25-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.6.26-linux-amd64.AppImage
+   ./wrm-pro-v12.6.26-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.6.26-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -269,8 +274,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.25/wrm-pro-v12.6.25-android-arm64
-   chmod +x wrm-pro-v12.6.25-android-arm64 && ./wrm-pro-v12.6.25-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.26/wrm-pro-v12.6.26-android-arm64
+   chmod +x wrm-pro-v12.6.26-android-arm64 && ./wrm-pro-v12.6.26-android-arm64
    ```
 
    **Docker**
@@ -294,6 +299,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.25
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets the table `siem_destinations`; a previous version still starts on it (it does not enforce a lockdown, so end a lockdown before going back). Nothing is exported until an administrator adds a SIEM destination. New settings `alert_failed_signins` (10), `alert_failed_signins_minutes` (10), `alert_break_glass`, `alert_new_admin`, `alert_secret_reveal`, `alert_ai_full_access` and `alert_audit_off` (all on); new notification event `security.alert`; new command line flags `-lockdown` / `-lockdown-reason` and environment variable `WRM_LOCKDOWN`. Security events (`security.*`) are now recorded even with `audit_enabled` off.
 
 ## Upgrading from v12.6.24
 
@@ -1966,6 +1975,52 @@ How it behaves:
 
 **Ending access.** Every route that stops an account (an administrator disabling it, OIDC revalidation, the LDAP check, SCIM) ends the same things: sign-in sessions, terminals, tunnels, collaboration rooms, AI sessions and AI connections (MCP tokens).
 
+### SIEM export, alerts and lockdown
+
+Since v12.6.26 (`remote-manager/siem.go`, `alerts.go`, `lockdown.go`), in *Admin panel → Security*.
+
+**SIEM export.** *SIEM export → Add destination*, choose the kind, fill in its fields and save (step-up). *Test* sends one `siem.test` event and shows the answer.
+
+| Kind | Address | Secret | Notes |
+|---|---|---|---|
+| Syslog (RFC 5424 over TLS) | `host:port` (usually 6514) | private key of the client certificate (optional) | RFC 5425 octet counting; structured data `wrm@32473` with the main fields, the whole event as JSON in the message; facility `authpriv` (10) unless set; severity notice, warning for failures, critical for `security.alert` |
+| JSON lines file | absolute path on the WRM host ending in `.jsonl`, `.json` or `.log` | – | one event per line, mode 0600, rotated at 100 MB keeping `.1`–`.3`; the folder must exist and the file must not be a symbolic link |
+| Splunk HEC | the HEC address (`https://splunk.example.com:8088`) or the full `…/services/collector/event` | HEC token | `sourcetype` (default `wrm:audit`) and `index` optional |
+| Elastic | the Elasticsearch / OpenSearch address | API key (optional) | `_bulk` into the index (default `wrm-audit`); item errors count as a failed delivery |
+| Microsoft Sentinel | the data collection endpoint (`https://<dce>.<region>.ingest.monitor.azure.com`) | client secret of the Entra application | tenant ID, application (client) ID, the data collection rule's immutable ID and the stream (default `Custom-WRMAudit_CL`); the application needs *Monitoring Metrics Publisher* on the rule |
+| Generic HTTPS | any HTTPS URL | token (optional) | POST of a JSON array of events; with a token WRM sends `Authorization: Bearer <token>` and `X-WRM-Signature: sha256=<HMAC-SHA256 of the body with the token>` |
+
+HTTPS addresses must use HTTPS (plain HTTP only on loopback); an extra CA certificate (PEM) can be added for internal collectors. Redirects are not followed.
+
+How it behaves:
+- **Every event, in order, at least once.** Each destination keeps its own position in the audit log and sends up to 200 events at a time. A failed delivery is retried after 5 s, 10 s, 20 s … up to 5 minutes; nothing is lost while WRM keeps the audit log (`audit_retention_days`). A new destination starts with new events or, when chosen, with the whole kept audit log. *Send only these actions* limits a destination to action prefixes (for example `auth., admin., security.`).
+- **Event fields:** `@timestamp`, `event` (`id`, `action`, `category`, `outcome`, `kind`), `observer` (product, version, host name), `hash` (`prev`, `this`: the audit chain, so the SIEM can prove nothing was removed), `user` (`id`, `name`, `roles`, `email`, `directory` with the provider and immutable ID for directory accounts), `source.ip`, `target`, `details`, `connection_id`, `session_id`.
+- **Status:** each destination shows *Delivering*, *Behind* (more than 1000 events waiting), *Failing* (with the last error, its time and the next try) or *Off*, with the sent and waiting counts and the last delivery.
+- **Secrets** are encrypted at rest and never sent to the browser. Changing a destination's address or kind asks for the secret again, so a stored secret never goes to another server.
+- Audited: `siem.destination_created`, `siem.destination_updated`, `siem.destination_deleted`, `siem.tested`, `siem.test_failed`.
+
+**Security alerts.** Rules watch the audit log. A matching rule writes a `security.alert` entry (rule, summary, the action, user and address that caused it), which reaches the SIEM, and tells every active administrator in the Workboard inbox and through the `security.alert` notification. *Admin panel → Security* lists the recent alerts; *Policies → Security alerts* holds the rules:
+
+| Rule | Setting | Raised when |
+|---|---|---|
+| Failed sign-ins | `alert_failed_signins` (10, 0 = off), `alert_failed_signins_minutes` (10) | that many failed sign-ins (password, 2FA, step-up, AI tokens) from one address or for one name within the window; once per window and key |
+| Break-glass sign-in | `alert_break_glass` | a break-glass administrator signed in (SIEM only: administrators are already notified with `security.break_glass_login`) |
+| New administrator | `alert_new_admin` | an account was created as, changed to, or synced from a directory as an administrator |
+| Secret revealed | `alert_secret_reveal` | a stored password was shown, a private SSH key or connections with secrets were exported |
+| AI full access | `alert_ai_full_access` | someone approved an AI command that WRM refuses without full access |
+| Audit off | `alert_audit_off` | `audit_enabled` was turned off, or a SIEM destination was turned off or deleted |
+
+Security events (`security.*`) are recorded even with `audit_enabled` off.
+
+**Stop user.** In *Admin panel → Users* → ⋯ → *Stop user* (step-up): the account is disabled and its sign-in sessions, terminals, shared sessions, tunnels, AI sessions and AI connections end at once; WRM then shows how many of each were ended. Enable the account again when it is safe. Not possible for yourself or the last administrator. Audited `admin.user_stopped` with what was ended.
+
+**Lockdown.** For an incident: only break-glass administrators can sign in or keep a session.
+- **Turning it on:** *Admin panel → Security → Lockdown → Lock down WRM* with a reason everyone sees (a fresh confirmation is always asked). It is refused while there is no break-glass administrator, because nobody could sign in. On the WRM host: `wrm -lockdown on -lockdown-reason "incident 42"` (also `off` and `status`); a running WRM applies it within five seconds. `WRM_LOCKDOWN=1` forces it at start and cannot be ended in the UI.
+- **What happens:** everyone except break-glass administrators is signed out, their terminals, shared sessions and tunnels end; all AI sessions and AI connections end and AI is refused as with the AI kill switch; shares are refused. The response lists what was ended. Administrators who are not break-glass are signed out too.
+- **During the lockdown** the sign-in page shows it with the reason, and only break-glass administrators can sign in (password and 2FA; directory sign-in is refused).
+- **Ending it:** a break-glass administrator presses *End lockdown*, or `wrm -lockdown off` on the host. Accounts, shares and AI settings are as before; people sign in again.
+- Audited: `security.lockdown_on`, `security.lockdown_off`, `security.lockdown_enforced` (applied at start or from the command line), and refused sign-ins with the reason `lockdown`.
+
 ### Updates & self-update
 
 - **Update check:** once a day (and with *Check now*) WRM asks the GitHub releases API of `update_repo` (default this project) for the latest release. Only the repository path and a fixed `User-Agent` are sent: no user data, no installation ID. A proxy comes from `update_proxy` or `HTTPS_PROXY` / `HTTP_PROXY`. Air-gapped installations turn it off with `update_check` (`WRM_UPDATE_CHECK=off`).
@@ -2054,6 +2109,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `WRM_TRUST_PROXY` | – | `1` = trust `X-Real-IP` / `X-Forwarded-For` / `X-Forwarded-Proto` / `X-Forwarded-Host` from your reverse proxy (client IPs in rate limits and audit, secure cookies). Only when WRM is reachable **only** through that proxy. |
 | `WRM_ALLOWED_ORIGINS` | – | Extra hostnames allowed as `Origin` (comma-separated), e.g. when a proxy rewrites the `Host` header |
 | `WRM_ALLOW_ANY_ORIGIN` | – | `1` disables the origin check (not recommended) |
+| `WRM_LOCKDOWN` | – | `1` forces a lockdown at start: only break-glass administrators can sign in, AI off, shares paused; it cannot be ended in the UI |
 | `WRM_INITIAL_SECURITY_LEVEL` | – | `home` / `business` / `enterprise`: applied once at start while no security level was chosen (for installers); `WRM_SECURITY_LEVEL` forces and locks it |
 | `WRM_<POLICY>` | – | Forces a policy from the admin panel, e.g. `WRM_REGISTRATION=open`, `WRM_REQUIRE_2FA=all`, `WRM_TURN_PUBLIC_IP=203.0.113.10`, `WRM_TURN_ENABLED=0`, `WRM_HOST_KEY_POLICY=strict`. |
 
@@ -2069,6 +2125,9 @@ Medium runtime settings (introduced in v12.4.3b):
 | `local_login` | `all` | `all` / `break_glass`: who may still sign in with a password while a directory sign-in is enabled, see [Directory sign-in (OIDC)](#directory-sign-in-oidc); required `break_glass` by the Enterprise level |
 | `oidc_revalidate_minutes` | `60` | how often WRM checks with the identity provider that signed-in directory users may still sign in (5–1440) |
 | `oidc_unverified_hours` | `12` | directory sessions end after this long without a successful check (1–720) |
+| `alert_failed_signins` | `10` | failed sign-ins from one address or for one name that raise a security alert (0 = off), see [SIEM export, alerts and lockdown](#siem-export-alerts-and-lockdown) |
+| `alert_failed_signins_minutes` | `10` | the window in which failed sign-ins are counted (1–1440) |
+| `alert_break_glass` / `alert_new_admin` / `alert_secret_reveal` / `alert_ai_full_access` / `alert_audit_off` | `1` | the other security alert rules |
 | `ldap_sync_minutes` | `15` | how often WRM checks every account linked to an LDAP / Active Directory directory (5–1440), see [LDAP / Active Directory and SCIM](#ldap--active-directory-and-scim) |
 | `registration` | `closed` | `closed` / `open` self-registration |
 | `require_2fa` | `off` | `off` / `admins` / `all` |
@@ -2191,6 +2250,8 @@ Medium runtime settings (introduced in v12.4.3b):
 wrm -version                       print the version
 wrm -reset-password USER           set a new temporary password (must be changed at sign-in)
 wrm -reset-password USER -reset-2fa  … and turn off two-factor authentication
+wrm -lockdown on|off|status        lockdown: only break-glass administrators can sign in (a running WRM applies it within 5 s)
+    -lockdown-reason TEXT          the reason shown on the sign-in page (with -lockdown on)
 wrm -healthcheck                   check /healthz of the local server (exit code 0 = healthy; for containers)
 wrm -install-service               install WRM as a service that starts at boot, start it (see Service)
     -security-level LEVEL          home, business or enterprise on first start (kept in the service environment)
@@ -2720,7 +2781,12 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET / POST | `/api/admin/teams` | Teams with members and the policies that name them / create `{name, description, members: [{user_id, lead}]}` |
 | PUT / DELETE | `/api/admin/teams/{id}` | Change (same fields, each optional) / delete; 409 while a policy names the team |
 | POST | `/api/admin/users/{id}/reset-password` · `reset-2fa` · `revoke-sessions` · `unlock` | Account actions |
+| POST | `/api/admin/users/{id}/stop` | Stop user: disable and end everything (step-up): `{ok, user, ended: {sessions_ended, terminals_ended, rooms_left, tunnels_stopped, ai_sessions_ended, ai_connections_revoked, disabled}}` |
 | GET / PUT | `/api/admin/settings` | Policies; `GET` adds each setting's `required` value and `deviation`; `PUT` takes `_deviation_notes: {key: reason}`, without a reason a value below the level → 400 `{error, deviation: {key, value, required, level}}` |
+| GET / POST | `/api/admin/lockdown` | Lockdown state `{on, reason, by, at, source, env, break_glass_admins}` / `{on, reason}` turn it on (reason required, fresh step-up; adds `ended` and `you_signed_out`) or off (break-glass administrators only) |
+| GET / POST | `/api/admin/siem` | SIEM destinations with status (`state`, `sent`, `failed`, `waiting`, `last_ok_at`, `last_error`, `retry_at`; never the secret), `kinds`, recent `alerts` and `hostname` / create `{name, kind, url, config: {index, sourcetype, tenant_id, client_id, dcr_id, stream, facility, ca_pem, client_cert, actions}, secret, enabled, start_from: now\|all}` (step-up) |
+| PUT / DELETE | `/api/admin/siem/{id}` | Change a destination (an empty `secret` keeps the stored one unless the address or kind changes, `clear_secret` removes it) / delete it (step-up) |
+| POST | `/api/admin/siem/{id}/test` | Send a test event `{ok, error}` |
 | GET | `/api/admin/security` | Security posture: `{level, level_locked, level_env, levels, rules, deviations, checks: [{id, kind, status: ok\|warn\|bad\|info, value, required, recommended, env, count, deviation}], summary, version, host, generated_at}` |
 | POST | `/api/admin/security/level` | `{level, preview, keep: {key: reason}, apply_now}` → the plan `{from, to, changes, forced, kept, blockers, removed, affected}`; 409 when the level is forced or a blocker is not kept |
 | GET | `/api/admin/status` | Status, open terminals, rooms, relay |
@@ -2855,6 +2921,9 @@ remote-manager/
   ldap_proto.go   LDAPv3 client: BER, LDAPS and StartTLS, bind, paged search, filter compiler
   scim.go         SCIM 2.0 provisioning: Users, Groups, tokens, groups as teams, admin API
   directory.go    endUserAccess: what ends when an account is stopped by any route
+  siem.go         SIEM export: destinations, event format, syslog / file / Splunk / Elastic / Sentinel / HTTPS delivery, status, admin API
+  alerts.go       security alert rules on the audit log
+  lockdown.go     lockdown (UI, wrm -lockdown, WRM_LOCKDOWN) and Stop user
   security_level.go  security levels: rules, preview and apply, deviations, the first-run and start-up level, HTTPS for sign-in
   security_posture.go  the security posture checks for Admin → Security
   releasesign.go  release signatures (ed25519 over SHA256SUMS.txt): verification for the self-update, -release-keygen/-sign/-verify
@@ -2965,6 +3034,7 @@ remote-manager/
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
   releasesign_test.go  release signatures: round trip, tampering, wrong key or file, WRM context, key parsing, the command-line tools, self-update refusing unsigned or wrongly signed releases
   v12625_test.go       LDAP and SCIM against a fake LDAP server (LDAPS, StartTLS, AD nested groups, paging): protocol pieces and filter escaping, sign-in and mapping, refused accounts, the regular check ending access, linking, stored passwords not sent to a changed address, SCIM users, groups, PATCH and deprovisioning, the SCIM account linked on the first OIDC sign-in, disabling ends everything
+  v12626_test.go       lockdown (sessions, sign-in, AI, shares, CLI state, break-glass only), Stop user and what it ends, every alert rule and its settings, SIEM delivery to fake Splunk, Elastic, Sentinel (with a fake Entra token endpoint) and HTTPS collectors over TLS, syslog over TLS (RFC 5424 framing, structured data), the JSON lines file, catching up after an outage, action filters and the stored secret not sent to a changed address
   v12624_test.go       directory sign-in against a fake identity provider: ID token checks (RS256/ES256, nonce, audience, expiry, alg none/HS256, key rotation), accounts from rules, role and team sync, refusals, browser binding and replay of the callback, MFA, local 2FA after a directory sign-in, revalidation (refused refresh, removed from the group, no refresh token), password sign-in limited to break-glass, linking, step-up and test sign-in, admin API
   v12623_test.go       roles and teams: who-policy values, auditor read-only and refused connections, step-up, break-glass networks and notifications, teams in shares, handover on delete
   v12622_test.go       security levels: rule comparison, preview, blockers and deviations, apply and sign-out, env lock, HTTPS for sign-in, level at start and first run, guest link lifetime
@@ -3032,6 +3102,9 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 | LDAP: *Test connection* fails at *TLS* | The certificate is not trusted by the WRM host or does not name the address you entered: paste the directory's CA certificate (PEM), and use the name in the certificate (not the IP address) |
 | LDAP: *Test connection* fails at *Connect* on port 389 | The server does not offer StartTLS: enable LDAPS or StartTLS on the directory (Active Directory needs a server certificate), or use `ldaps://` on port 636 |
 | LDAP: *Your directory account is not in a group that may use WRM* | No rule matches: use *Test sign-in* with that account to see its groups and attributes, then add the person to a mapped group or add a rule |
+| SIEM destination *Failing* with *x509* or *certificate* | The collector's certificate is not trusted by the WRM host: paste its CA certificate (PEM) into the destination |
+| Sentinel: *403* or *Forbidden* | The Entra application needs the role *Monitoring Metrics Publisher* on the data collection rule; check the rule's immutable ID and the stream name |
+| Everyone is signed out and cannot sign in | WRM is in lockdown (the sign-in page says so): a break-glass administrator ends it in *Admin panel → Security*, or run `wrm -lockdown off` on the host; with `WRM_LOCKDOWN=1` remove the variable and restart |
 | SCIM: Entra reports *401* or *Unauthorized* | The secret token is wrong, rotated or revoked: create a new token in *SCIM provisioning* and paste it into the provisioning settings |
 | Directory users are signed out every few hours | The provider gives no refresh token: add `offline_access` to the scopes (and allow it for the client), or raise `oidc_unverified_hours` |
 | A panel is gone, or tabs cannot be dragged | *Panels* (▦ in the top bar, or in its ⋯ menu) shows and hides every panel; 🔒 on that button means the layout is locked: unlock it there. *Reset the layout* puts every panel back where it started |

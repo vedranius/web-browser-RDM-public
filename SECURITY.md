@@ -112,6 +112,18 @@ Since v12.6.25 (`remote-manager/ldap.go`, `ldap_proto.go`, `scim.go`, `directory
 - **Linking:** linking a directory account to an existing WRM account needs a fresh confirmation (even with step-up off), the directory password, and an account that is not break-glass. A SCIM account is linked to an OIDC identity only when its `externalId` equals the token's `oid` or `sub` and it has no directory link yet.
 - **Audit:** directory changes, accounts created, links, checks that ended access, test sign-ins, refused sign-ins with their reason, and every SCIM change.
 
+## SIEM export, alerts and lockdown
+
+Since v12.6.26 (`remote-manager/siem.go`, `alerts.go`, `lockdown.go`):
+
+- **Delivery:** every audit entry goes to each SIEM destination in order and at least once; each destination keeps its own position in the audit log, so an outage loses nothing while the entry is kept. Events carry the audit hash chain (`hash.prev`, `hash.this`), so the SIEM can show that no entry was removed or changed.
+- **Transport:** syslog only over TLS (RFC 5425), HTTPS destinations only over HTTPS (plain HTTP only on loopback), TLS 1.2 or newer, certificates checked against the system store or a CA certificate pasted per destination; redirects are not followed. A syslog client certificate's private key is stored as the secret.
+- **Secrets:** HEC tokens, API keys, Sentinel client secrets and private keys are encrypted at rest, never sent to the browser, and never sent to a changed address or kind (the secret must be entered again). Destinations are changed only by administrators with step-up.
+- **File output:** an absolute path with a `.jsonl`, `.json` or `.log` name in an existing folder, never through a symbolic link, written with mode 0600 and rotated at 100 MB.
+- **Alerts:** repeated failed sign-ins, break-glass sign-ins, new administrators, revealed or exported secrets, AI full-access approvals and the audit or a SIEM export turned off raise `security.alert` entries and notify administrators. Security events (`security.*`) are recorded even with `audit_enabled` off, and turning the audit or an export off raises an alert itself.
+- **Stop user** disables an account and ends its sessions, terminals, rooms, tunnels, AI sessions and AI connections at once (step-up).
+- **Lockdown** lets only break-glass administrators (2FA, optional `break_glass_ips`) sign in or keep a session, switches AI and AI connections off and refuses shares. It needs a fresh confirmation and a reason, cannot be turned on while there is no break-glass administrator, can only be ended in the UI by a break-glass administrator, and can be set on the host (`wrm -lockdown on`) or forced (`WRM_LOCKDOWN=1`) when the UI is not trusted.
+
 ## Hardening checklist
 
 WRM is secure by default in most respects. For production and company use, also check the items below. The admin panel (*Overview*) warns about several of them.
@@ -251,7 +263,8 @@ WRM is secure by default in most respects. For production and company use, also 
 
 **Monitoring**
 
-- [ ] Forward the server log (`AUDIT …` lines) to your SIEM, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
+- [ ] Send the audit log to your SIEM (*Admin panel → Security → SIEM export*; syslog over TLS, Splunk, Elastic, Sentinel or HTTPS) and watch that each destination shows *Delivering*, or export the audit log and file transfers regularly (*Admin panel → Audit log / File transfers → CSV*). Set `audit_retention_days` to match your retention rules.
+- [ ] Keep the security alert rules on (*Policies → Security alerts*) and mark at least one administrator as break-glass, so a lockdown is possible in an incident.
 - [ ] Monitor `GET /healthz` (HTTP 200 while the server and database work).
 - [ ] Watch for `auth.login_failed`, `auth.account_locked`, `hostkey.mismatch`, `admin.*`, `share.*`, `tunnel.*`, `desktop.*`, `terminal.broadcast`, `snippet.*`, `bookmark.*`, `ssh_key.*` (deploy, revoke, export) `credential.*` (grants, reveal, rotation), `proxy.*` (created, shared, tested), `folder.updated` (default jump host / proxy), `admin.notify_channel_*` and `bmc.*` (power actions) events.
 - [ ] Keep WRM up to date. Releases are published on the [Releases page](https://github.com/vedranius/web-browser-RDM-public/releases); verify downloads with `SHA256SUMS.txt`.

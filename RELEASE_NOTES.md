@@ -1,6 +1,25 @@
-## Web Remote Manager PRO v12.6.25 — Active Directory, LDAP and SCIM
+## Web Remote Manager PRO v12.6.26 — SIEM export, alerts and lockdown
 
 ### Added
+
+- **Send the audit log to your SIEM:** syslog over TLS (RFC 5424), a JSON lines file, Splunk HEC, Elastic, Microsoft Sentinel or any HTTPS collector. Every event carries the user, role, directory identity, source address and the audit hash chain. Nothing is lost while a destination is down: WRM keeps its place and catches up, and *Admin panel → Security* shows for each destination whether it delivers, how much is waiting, the last error and the next try.
+- **Security alerts:** repeated failed sign-ins, a break-glass sign-in, a new administrator, a revealed or exported secret, an AI command approved under full access, and audit or SIEM export turned off. Administrators get them in the inbox and by notification, and every alert goes to the SIEM. Each rule can be changed or turned off in *Policies → Security alerts*.
+- **Stop user:** one click disables an account and ends everything it has open (sessions, terminals, shared sessions, tunnels, AI sessions and AI connections), then shows what was ended.
+- **Lockdown:** in an incident only break-glass administrators can sign in; everyone else is signed out at once, AI is switched off and shares are paused until the lockdown ends. Turn it on in *Admin panel → Security*, on the WRM host with `wrm -lockdown on`, or with the `WRM_LOCKDOWN=1` environment variable. The sign-in page shows the lockdown and its reason.
+
+### Changed
+
+- Security alerts and lockdown events are always recorded, even with the audit log switched off.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets one new table (`siem_destinations`); a previous version still starts on it (it does not enforce a lockdown). Nothing is exported until an administrator adds a SIEM destination. The alert rules are on by default and only notify administrators.
+
+[Download v12.6.26](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.26) · [SIEM export, alerts and lockdown](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.26/README.md#siem-export-alerts-and-lockdown)
+
+### Included from v12.6.25 — Active Directory, LDAP and SCIM
+
+#### Added
 
 - **Sign in with Active Directory or LDAP:** people use their directory name and password on the normal sign-in page (`name`, `DOMAIN\name` or `name@domain`). WRM checks the password with the directory and never stores it. The connection is always encrypted (LDAPS or StartTLS). Nested AD groups, OpenLDAP, 389 Directory Server and FreeIPA are supported.
 - **Who gets in, decided by directory groups:** rules turn groups (nested ones included) or attributes into a WRM role and teams. Accounts are created on the first sign-in only for people a rule matches; disabled, locked and expired accounts are refused with a clear message.
@@ -10,15 +29,15 @@
 - **Set up step by step:** *Test connection* checks the address, encryption, certificate, service account, base DN, users and groups and says what to fix. *Test sign-in* shows what WRM would do for a person, without creating anything.
 - **Secrets stay with their server:** changing a directory's address or a provider's issuer asks for the password or client secret again, so a stored secret is never sent to another server.
 
-### Fixed
+#### Fixed
 
 - **Automatic releases:** the release job never started after a merge, so v12.6.24 was not published on its own. This release includes everything from v12.6.24 and is the first signed, automatically published release.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets six new tables (`ldap_directories`, `ldap_identities`, `scim_clients`, `scim_users`, `scim_groups`, `scim_group_members`); a previous version still starts on it. Nothing changes until an administrator adds a directory or a provisioning client.
 
-[Download v12.6.25](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.25) · [LDAP / Active Directory and SCIM](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.25/README.md#ldap--active-directory-and-scim)
+[LDAP / Active Directory and SCIM](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.26/README.md#ldap--active-directory-and-scim)
 
 ### Included from v12.6.24 — Sign in with your organisation's account
 
@@ -37,7 +56,7 @@ Replace the executable/container and keep the database and encryption key. The d
 
 Replace the executable/container and keep the database and encryption key. The database gets two new tables (`oidc_providers`, `user_identities`) and three columns; a previous version still starts on it. Nothing changes until an administrator adds an identity provider.
 
-v12.6.24 was not released on its own (see *Fixed* above); it ships in v12.6.25. · [Directory sign-in (OIDC)](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.25/README.md#directory-sign-in-oidc)
+v12.6.24 was not released on its own (see *Fixed* above); it ships in v12.6.25. · [Directory sign-in (OIDC)](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.26/README.md#directory-sign-in-oidc)
 
 ### Included from v12.6.23 — Roles, teams and step-up
 
