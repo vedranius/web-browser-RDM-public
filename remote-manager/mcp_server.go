@@ -236,7 +236,7 @@ func mcpAuthenticate(w http.ResponseWriter, r *http.Request) (*mcpGrant, bool) {
 	g, why := mcpLookupBearer(tok)
 	if g == nil {
 		if mcpRateOK("authfail:"+clientIP(r), 10, time.Minute) {
-			auditLog(r, 0, "mcp.auth_failed", "", map[string]interface{}{"reason": why, "hint": tok[max(0, len(tok)-4):]})
+			auditLog(r, 0, "mcp.auth_failed", "", map[string]interface{}{"reason": why, "presented_sha256": sha256Hex(tok)[:12]})
 		}
 		w.Header().Set("WWW-Authenticate", `Bearer error="invalid_token", error_description="`+why+`", resource_metadata="`+meta+`"`)
 		writeRPC(w, 401, rpcErr(nil, -32001, why))
