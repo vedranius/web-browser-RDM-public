@@ -33,7 +33,7 @@ const (
 	scimSchemaList      = "urn:ietf:params:scim:api:messages:2.0:ListResponse"
 	scimSchemaError     = "urn:ietf:params:scim:api:messages:2.0:Error"
 	scimSchemaPatch     = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
-	scimClientKeyPrefix     = "wrm_scim_"
+	scimClientKeyPrefix = "wrm_scim_"
 	scimMaxBody         = 1 << 20
 	scimMaxGroupMembers = 20000
 )
