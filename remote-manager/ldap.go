@@ -494,6 +494,41 @@ func ldapVerify(d *ldapDirectory, login, password string, byKey string) (*ldapEn
 	return e, key, groups, nil
 }
 
+// ldapErrorSummary describes a directory error with fixed text only (no server message,
+// no names), for logs and audit entries written during a sign-in.
+func ldapErrorSummary(err error) string {
+	var le *ldapError
+	var ne net.Error
+	msg := err.Error()
+	switch {
+	case errors.As(err, &le):
+		switch le.Code {
+		case 32:
+			return "LDAP error: no such object"
+		case 49:
+			return "LDAP error: invalid credentials"
+		case 50:
+			return "LDAP error: insufficient access rights"
+		case 51, 52:
+			return "LDAP error: server busy or unavailable"
+		case 53:
+			return "LDAP error: unwilling to perform"
+		}
+		return "LDAP error"
+	case errors.As(err, &ne) && ne.Timeout():
+		return "timeout"
+	case strings.Contains(msg, "x509") || strings.Contains(msg, "certificate"):
+		return "TLS certificate not trusted"
+	case strings.Contains(msg, "connection refused"):
+		return "connection refused"
+	case strings.Contains(msg, "no such host"):
+		return "host not found"
+	case errors.Is(err, io.EOF) || strings.Contains(msg, "connection reset"):
+		return "connection closed by the server"
+	}
+	return "connection or protocol error"
+}
+
 func ldapInvalidCredentials(err error) bool {
 	var le *ldapError
 	return errors.As(err, &le) && le.Code == ldapResultInvalidCrd
@@ -536,8 +571,10 @@ func ldapSignIn(r *http.Request, typed, password string, linked *userRow) (*ldap
 			if errors.Is(err, errLDAPNoUser) {
 				return refuse(401, "directory account not found", "Invalid credentials")
 			}
-			log.Printf("LDAP %s: %v", d.Name, err)
-			return refuse(502, "directory unreachable: "+truncateStr(err.Error(), 200), "WRM could not reach the directory "+d.Name+". Try again later or ask your administrator.")
+			// the sign-in error can carry the typed name, so only its kind is logged and audited
+			kind := ldapErrorSummary(err)
+			log.Printf("LDAP %s: sign-in failed: %s", d.Name, kind)
+			return refuse(502, "directory unreachable: "+kind, "WRM could not reach the directory "+d.Name+". Try again later or ask your administrator.")
 		}
 		if why := ldapAccountBlocked(e); why != "" {
 			return refuse(403, why, "Your directory account may not sign in ("+why+").")
@@ -991,7 +1028,7 @@ func apiAdminLDAPHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		rep := ldapSync(r, d)
-		auditLog(r, adminID, "ldap.synced", d.Name, map[string]interface{}{"checked": rep.Checked, "ended": len(rep.Ended), "error": rep.Error})
+		auditLog(r, adminID, "ldap.synced", d.Name, map[string]interface{}{"checked": rep.Checked, "ended": len(rep.Ended), "failed": rep.Error != ""})
 		jsonOK(w, rep)
 	case len(parts) == 1 && rest != "" && r.Method == http.MethodPut:
 		if !requireStepUp(w, r, "ldap.directory") {
