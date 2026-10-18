@@ -47,7 +47,7 @@ func alertObserve(action, username, ip, target, det string) {
 	select {
 	case alertQueue <- in:
 	default:
-		log.Printf("alerts: queue full, an audit entry was not checked (%s)", action)
+		log.Print("alerts: queue full, an audit entry was not checked")
 	}
 }
 
