@@ -799,6 +799,9 @@ func mdMakeChangeSet(changes []mdChange) mdChangeSet {
 			cs.added = append(cs.added, c.Path)
 			if c.ServerKind != "" {
 				cs.removals = append(cs.removals, mdChange{Path: rel, Action: "replaced", Kind: c.ServerKind, ServerKind: c.ServerKind})
+				if c.ServerKind == "dir" {
+					cs.delDirs = append(cs.delDirs, rel+"/")
+				}
 			}
 			if c.Kind == "dir" {
 				cs.mkdirs = append(cs.mkdirs, rel)
