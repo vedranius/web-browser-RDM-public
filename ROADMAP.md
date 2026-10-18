@@ -1,6 +1,6 @@
 # Roadmap
 
-Accepted work through **v12.6.26** is delivered in [CHANGELOG.md](CHANGELOG.md).
+Accepted work through **v12.7.0** is delivered in [CHANGELOG.md](CHANGELOG.md).
 
 ## Security and enterprise identity (accepted, versions before v12.7.0)
 
@@ -26,6 +26,6 @@ Agreed design:
   Platform and architecture of the build server are checked against the destinations.
 - **Trust:** build and `post_deploy` commands still run code from the project/config; Medium stays limited to trusted operators.
 
-Delivery plan (v12.6.0 delivered the deploy-config reader/validator, the native plan and the comparison with the original tool; see [CHANGELOG.md](CHANGELOG.md)):
-1. **v12.7.0 – native engine:** deploy, dry run, lock, backup, history and rollback through WRM connections; build location choice; per-project switch between the Docker runtime and the native engine. The Docker path keeps working until the native engine matches it.
-2. **v12.8.0 – switch-over:** native engine as the default on Linux and Windows; the Docker runtime becomes optional and is then retired.
+Delivery plan (v12.6.0 delivered the deploy-config reader/validator, the native plan and the comparison with the original tool; v12.7.0 native deploy, dry run, lock, backup, history and rollback through WRM connections with a per-project engine switch; see [CHANGELOG.md](CHANGELOG.md)):
+1. **v12.7.1 – build locations:** projects with a build step deploy natively; per project the build runs on the WRM host, on a chosen Linux build server over SSH (temporary directory, only the prepared source sent, no Git or SSH keys) or not at all, chosen and shown in the plan before anything runs, with the build server's platform and architecture checked against the destinations.
+2. **v12.8.0 – switch-over:** the original tool's screens served from Go (details/diff, YAML editor, settings, config Git actions), `build_user`, line-ending handling (`eol_only`), native engine as the default on Linux and Windows; the Docker runtime becomes optional and is then retired.

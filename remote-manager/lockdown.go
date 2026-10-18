@@ -123,6 +123,7 @@ func lockdownApply(r *http.Request, byID int, reason string) map[string]int {
 	if reason != "" {
 		msg += ": " + reason
 	}
+	out["medium_jobs_stopped"] = mdCancelUserJobs(0, msg)
 	rows, err := db.Query(`SELECT DISTINCT user_id FROM auth_sessions`)
 	var ids []int
 	if err == nil {

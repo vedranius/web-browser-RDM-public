@@ -1,17 +1,39 @@
-## Web Remote Manager PRO v12.6.26 — SIEM export, alerts and lockdown
+## Web Remote Manager PRO v12.7.0 — Medium deploys natively
 
 ### Added
+
+- **WRM deploys Medium projects itself:** switch a project to the *WRM native* engine and WRM deploys it from your WRM Git source to every server of the environment through your WRM connections. No Docker and no original tool are needed for it. Each server gets a lock, a backup of everything that changes, a checksum check of every uploaded file, `post_deploy` and a history entry.
+- **Same server state as the original tool:** the lock, `current.json`, `history.jsonl` and the backups are written exactly as the original tool writes them, so you can switch a project between the two engines at any time and each continues after the other, rollbacks included.
+- **Dry run:** takes the lock, compares again and stops before changing anything.
+- **Leave changes out:** tick changes in the plan to keep them as they are on the server for this deployment.
+- **Safe by design:** WRM compares again under the lock and stops if anything changed since you reviewed the plan; production environments still ask you to type their name; deploying, rolling back and releasing a lock ask for step-up confirmation.
+- **History and rollback:** see what is on each server, who deployed what and when, and roll back the last deployment (or try a dry rollback first). A lock someone left behind can be released once it is old enough.
+- **Live progress:** a log with every step and command output, the result per server, and *Cancel* before the next server starts changing.
+
+### Changed
+
+- Projects with a build step are still deployed by the original tool until build locations arrive in v12.7.1.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets one new table (`medium_project_engine`); a previous version still starts on it. Every project stays on the original tool until someone allowed by the new policy `medium_native` (default: administrators) switches it.
+
+[Download v12.7.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.7.0) · [Medium native engine](https://github.com/vedranius/web-browser-RDM-public/blob/v12.7.0/README.md#medium-native-engine)
+
+### Included from v12.6.26 — SIEM export, alerts and lockdown
+
+#### Added
 
 - **Send the audit log to your SIEM:** syslog over TLS (RFC 5424), a JSON lines file, Splunk HEC, Elastic, Microsoft Sentinel or any HTTPS collector. Every event carries the user, role, directory identity, source address and the audit hash chain. Nothing is lost while a destination is down: WRM keeps its place and catches up, and *Admin panel → Security* shows for each destination whether it delivers, how much is waiting, the last error and the next try.
 - **Security alerts:** repeated failed sign-ins, a break-glass sign-in, a new administrator, a revealed or exported secret, an AI command approved under full access, and audit or SIEM export turned off. Administrators get them in the inbox and by notification, and every alert goes to the SIEM. Each rule can be changed or turned off in *Policies → Security alerts*.
 - **Stop user:** one click disables an account and ends everything it has open (sessions, terminals, shared sessions, tunnels, AI sessions and AI connections), then shows what was ended.
 - **Lockdown:** in an incident only break-glass administrators can sign in; everyone else is signed out at once, AI is switched off and shares are paused until the lockdown ends. Turn it on in *Admin panel → Security*, on the WRM host with `wrm -lockdown on`, or with the `WRM_LOCKDOWN=1` environment variable. The sign-in page shows the lockdown and its reason.
 
-### Changed
+#### Changed
 
 - Security alerts and lockdown events are always recorded, even with the audit log switched off.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets one new table (`siem_destinations`); a previous version still starts on it (it does not enforce a lockdown). Nothing is exported until an administrator adds a SIEM destination. The alert rules are on by default and only notify administrators.
 
