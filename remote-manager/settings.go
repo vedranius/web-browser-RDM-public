@@ -46,6 +46,7 @@ var settingSpecs = []settingSpec{
 	{Key: "local_login", Default: "all", Kind: "enum", Enum: []string{"all", "break_glass"}},
 	{Key: "oidc_revalidate_minutes", Default: "60", Kind: "int", Min: 5, Max: 1440},
 	{Key: "oidc_unverified_hours", Default: "12", Kind: "int", Min: 1, Max: 720},
+	{Key: "ldap_sync_minutes", Default: "15", Kind: "int", Min: 5, Max: 1440},
 	{Key: "password_min_length", Default: "8", Kind: "int", Min: 6, Max: 128},
 	{Key: "session_idle_hours", Default: "168", Kind: "int", Min: 1, Max: 8760},
 	{Key: "session_max_days", Default: "30", Kind: "int", Min: 1, Max: 365},
