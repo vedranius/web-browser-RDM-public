@@ -325,6 +325,13 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/teams", apiTeamsHandler)
 	mux.HandleFunc("/api/auth/step-up", apiAuthStepUpHandler)
 	mux.HandleFunc("/api/auth/oidc/start", apiOIDCStartHandler)
+	mux.HandleFunc("/api/admin/ldap", apiAdminLDAPHandler)
+	mux.HandleFunc("/api/admin/ldap/", apiAdminLDAPHandler)
+	mux.HandleFunc("/api/me/ldap", apiMeLDAPHandler)
+	mux.HandleFunc("/api/me/ldap/", apiMeLDAPHandler)
+	mux.HandleFunc("/api/admin/scim", apiAdminSCIMHandler)
+	mux.HandleFunc("/api/admin/scim/", apiAdminSCIMHandler)
+	mux.HandleFunc("/scim/v2/", scimHandler)
 	mux.HandleFunc("/api/auth/oidc/callback", apiOIDCCallbackHandler)
 	mux.HandleFunc("/api/auth/oidc/result", apiOIDCResultHandler)
 	mux.HandleFunc("/api/admin/oidc", apiAdminOIDCHandler)
@@ -577,6 +584,7 @@ func serve(stop <-chan struct{}) int {
 		}
 	}()
 	go oidcRevalidateLoop()
+	go ldapSyncLoop()
 
 	srv := &http.Server{
 		Addr: addr, Handler: newRouter(),
@@ -1144,6 +1152,84 @@ func initDB() {
 	db.Exec(`ALTER TABLE users ADD COLUMN sso_only INTEGER NOT NULL DEFAULT 0`)
 	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN identity_id INTEGER NOT NULL DEFAULT 0`)
 	db.Exec(`ALTER TABLE team_members ADD COLUMN source TEXT NOT NULL DEFAULT ''`)
+	// v12.6.25: LDAP / Active Directory sign-in and SCIM provisioning.
+	ensureTable("ldap_directories", `CREATE TABLE IF NOT EXISTS ldap_directories (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+		kind TEXT NOT NULL DEFAULT 'ad',
+		url TEXT NOT NULL DEFAULT '',
+		ca_pem TEXT NOT NULL DEFAULT '',
+		bind_dn TEXT NOT NULL DEFAULT '',
+		bind_password TEXT NOT NULL DEFAULT '',
+		base_dn TEXT NOT NULL DEFAULT '',
+		user_filter TEXT NOT NULL DEFAULT '',
+		login_attr TEXT NOT NULL DEFAULT '',
+		id_attr TEXT NOT NULL DEFAULT '',
+		group_base TEXT NOT NULL DEFAULT '',
+		nested INTEGER NOT NULL DEFAULT 1,
+		jit INTEGER NOT NULL DEFAULT 1,
+		rules TEXT NOT NULL DEFAULT '[]',
+		enabled INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '',
+		last_sync_at TEXT NOT NULL DEFAULT '',
+		last_sync TEXT NOT NULL DEFAULT '')`,
+		"id", "name", "kind", "url", "ca_pem", "bind_dn", "bind_password", "base_dn", "user_filter", "login_attr", "id_attr", "group_base", "nested", "jit", "rules", "enabled", "created_at", "updated_at", "last_sync_at", "last_sync")
+	ensureTable("ldap_identities", `CREATE TABLE IF NOT EXISTS ldap_identities (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		directory_id INTEGER NOT NULL REFERENCES ldap_directories(id) ON DELETE CASCADE,
+		object_key TEXT NOT NULL,
+		dn TEXT NOT NULL DEFAULT '',
+		login TEXT NOT NULL DEFAULT '',
+		email TEXT NOT NULL DEFAULT '',
+		display TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '',
+		last_login_at TEXT NOT NULL DEFAULT '',
+		last_check_at TEXT NOT NULL DEFAULT '',
+		last_ok_at TEXT NOT NULL DEFAULT '',
+		last_error TEXT NOT NULL DEFAULT '',
+		revoked INTEGER NOT NULL DEFAULT 0,
+		UNIQUE (directory_id, object_key))`,
+		"id", "user_id", "directory_id", "object_key", "dn", "login", "email", "display", "created_at", "last_login_at", "last_check_at", "last_ok_at", "last_error", "revoked")
+	ensureTable("scim_clients", `CREATE TABLE IF NOT EXISTS scim_clients (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+		token_hash TEXT NOT NULL UNIQUE,
+		rules TEXT NOT NULL DEFAULT '[]',
+		created_by INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		last_used_at TEXT NOT NULL DEFAULT '',
+		last_ip TEXT NOT NULL DEFAULT '',
+		revoked_at TEXT NOT NULL DEFAULT '')`,
+		"id", "name", "token_hash", "rules", "created_by", "created_at", "last_used_at", "last_ip", "revoked_at")
+	ensureTable("scim_users", `CREATE TABLE IF NOT EXISTS scim_users (
+		user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+		client_id INTEGER NOT NULL REFERENCES scim_clients(id) ON DELETE CASCADE,
+		scim_id TEXT NOT NULL UNIQUE,
+		external_id TEXT NOT NULL DEFAULT '',
+		user_name TEXT NOT NULL DEFAULT '',
+		active INTEGER NOT NULL DEFAULT 1,
+		deleted INTEGER NOT NULL DEFAULT 0,
+		data TEXT NOT NULL DEFAULT '{}',
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '')`,
+		"user_id", "client_id", "scim_id", "external_id", "user_name", "active", "deleted", "data", "created_at", "updated_at")
+	ensureTable("scim_groups", `CREATE TABLE IF NOT EXISTS scim_groups (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		client_id INTEGER NOT NULL REFERENCES scim_clients(id) ON DELETE CASCADE,
+		scim_id TEXT NOT NULL UNIQUE,
+		external_id TEXT NOT NULL DEFAULT '',
+		display_name TEXT NOT NULL DEFAULT '',
+		team_id INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '')`,
+		"id", "client_id", "scim_id", "external_id", "display_name", "team_id", "created_at", "updated_at")
+	ensureTable("scim_group_members", `CREATE TABLE IF NOT EXISTS scim_group_members (
+		group_id INTEGER NOT NULL REFERENCES scim_groups(id) ON DELETE CASCADE,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		PRIMARY KEY (group_id, user_id))`,
+		"group_id", "user_id")
 	ensureTable("notify_prefs", `CREATE TABLE IF NOT EXISTS notify_prefs (
 		user_id INTEGER PRIMARY KEY,
 		quiet_enabled INTEGER NOT NULL DEFAULT 0,

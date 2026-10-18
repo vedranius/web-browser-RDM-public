@@ -118,7 +118,7 @@ func oidcAnyEnabled() bool {
 // localLoginLimited: password sign-in only for break-glass administrators. It takes effect only
 // while a provider is enabled, so nobody is locked out of a WRM without directory sign-in.
 func localLoginLimited() bool {
-	return getSetting("local_login") == "break_glass" && oidcAnyEnabled()
+	return getSetting("local_login") == "break_glass" && (oidcAnyEnabled() || ldapAnyEnabled())
 }
 
 func oidcRedirectURI(p *oidcProvider, r *http.Request) string {
@@ -154,9 +154,15 @@ func oidcClaimHas(c oidcClaims, claim, value string) bool {
 }
 
 func oidcMap(p *oidcProvider, c oidcClaims) oidcMapResult {
+	return directoryMap(p.Rules, c)
+}
+
+// directoryMap applies mapping rules to a user's claims (OIDC claims, LDAP attributes and
+// groups, or SCIM groups): the strongest matched role wins, teams add up.
+func directoryMap(rules []oidcRule, c oidcClaims) oidcMapResult {
 	res := oidcMapResult{Teams: []string{}, Rules: []int{}}
 	seen := map[string]bool{}
-	for i, rule := range p.Rules {
+	for i, rule := range rules {
 		if rule.Value == "" || !oidcClaimHas(c, rule.Claim, rule.Value) {
 			continue
 		}
@@ -478,16 +484,22 @@ func oidcUsername(p *oidcProvider, c oidcClaims) string {
 
 // oidcApplyMapping sets the role and the SSO team memberships of a directory user.
 func oidcApplyMapping(r *http.Request, userID int, m oidcMapResult) {
+	directoryApplyMapping(r, userID, m, "oidc")
+}
+
+// directoryApplyMapping sets the role and the team memberships that come from one source
+// (oidc, ldap or scim). Hand-added memberships and other sources stay as they are.
+func directoryApplyMapping(r *http.Request, userID int, m oidcMapResult, source string) {
 	u, err := loadUser("id=?", userID)
 	if err != nil || u.BreakGlass {
 		return
 	}
 	if m.Role != u.Role {
 		if u.IsAdmin && m.Role != userRoleAdmin && activeAdminCount() <= 1 {
-			auditLogAs(r, u.ID, u.Username, "oidc.role_kept", u.Username, map[string]string{"reason": "last active administrator", "directory_role": m.Role})
+			auditLogAs(r, u.ID, u.Username, source+".role_kept", u.Username, map[string]string{"reason": "last active administrator", "directory_role": m.Role})
 		} else {
 			db.Exec(`UPDATE users SET is_admin=?, role=? WHERE id=?`, boolToInt(m.Role == userRoleAdmin), storedRole(m.Role), userID)
-			auditLogAs(r, u.ID, u.Username, "oidc.role_synced", u.Username, map[string]string{"from": u.Role, "to": m.Role})
+			auditLogAs(r, u.ID, u.Username, source+".role_synced", u.Username, map[string]string{"from": u.Role, "to": m.Role})
 		}
 	}
 	want := map[int]bool{}
@@ -499,9 +511,9 @@ func oidcApplyMapping(r *http.Request, userID int, m oidcMapResult) {
 	}
 	now := nowRFC()
 	for id := range want {
-		db.Exec(`INSERT OR IGNORE INTO team_members (team_id, user_id, lead, added_at, source) VALUES (?,?,0,?,'oidc')`, id, userID, now)
+		db.Exec(`INSERT OR IGNORE INTO team_members (team_id, user_id, lead, added_at, source) VALUES (?,?,0,?,?)`, id, userID, now, source)
 	}
-	rows, err := db.Query(`SELECT team_id FROM team_members WHERE user_id=? AND source='oidc'`, userID)
+	rows, err := db.Query(`SELECT team_id FROM team_members WHERE user_id=? AND source=?`, userID, source)
 	if err != nil {
 		return
 	}
@@ -515,7 +527,7 @@ func oidcApplyMapping(r *http.Request, userID int, m oidcMapResult) {
 	}
 	rows.Close()
 	for _, id := range drop {
-		db.Exec(`DELETE FROM team_members WHERE team_id=? AND user_id=? AND source='oidc'`, id, userID)
+		db.Exec(`DELETE FROM team_members WHERE team_id=? AND user_id=? AND source=?`, id, userID, source)
 	}
 	if len(drop) > 0 {
 		revalidateTeamShares(sharesOfUser(userID))
@@ -539,9 +551,7 @@ func sharesOfUser(userID int) []int {
 
 // oidcEndIdentity ends a directory user's sessions and terminals.
 func oidcEndIdentity(identityID, userID int, reason string) {
-	db.Exec(`DELETE FROM auth_sessions WHERE user_id=?`, userID)
-	disconnectUserEverywhere(userID, reason)
-	aiKillWhere(func(s *aiSession) bool { return s.UserID == userID }, 0, "the directory account may no longer sign in")
+	endUserAccess(nil, userID, 0, reason)
 	db.Exec(`UPDATE user_identities SET revoked=1 WHERE id=?`, identityID)
 }
 
@@ -845,6 +855,10 @@ func apiOIDCCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	var userID int
 	if idErr == nil {
 		userID = id.UserID
+	} else if uid := scimUserForOIDC(c); uid > 0 {
+		// An account provisioned by SCIM with this directory ID: its first sign-in links it.
+		userID = uid
+		auditLogAs(r, uid, usernameOf(uid), "oidc.scim_account_linked", usernameOf(uid), map[string]string{"provider": p.Name, "subject": subject})
 	} else {
 		if !p.JIT || !hasRules {
 			refuse("no linked account", "There is no WRM account for your directory account yet. Ask your administrator to create one or to allow automatic accounts.", c)
@@ -1237,6 +1251,7 @@ func saveOIDCProvider(w http.ResponseWriter, r *http.Request, adminID, id int) {
 			*dst = truncateStr(strings.TrimSpace(*v), max)
 		}
 	}
+	oldIssuer := p.Issuer
 	setStr(&p.Name, in.Name, 60)
 	setStr(&p.Issuer, in.Issuer, 300)
 	setStr(&p.ClientID, in.ClientID, 300)
@@ -1253,6 +1268,11 @@ func saveOIDCProvider(w http.ResponseWriter, r *http.Request, adminID, id int) {
 	}
 	if in.Enabled != nil {
 		p.Enabled = *in.Enabled
+	}
+	// The stored client secret only goes to the provider it was entered for.
+	if id > 0 && p.secret != "" && in.Issuer != nil && oidcIssuerTrim(*in.Issuer) != oidcIssuerTrim(oldIssuer) && (in.ClientSecret == nil || *in.ClientSecret == "") && !in.ClearSecret {
+		jsonError(w, "Enter the client secret again when you change the issuer", 400)
+		return
 	}
 	secretChanged := false
 	if in.ClearSecret {
