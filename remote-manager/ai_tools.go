@@ -184,6 +184,7 @@ func aiClamp(v, def, lo, hi int) int {
 // aiPlanned is a tool call turned into something to evaluate and run.
 type aiPlanned struct {
 	Act     aiAction
+	Rule    string // the policy rule that asked for approval (audited with the answer)
 	Script  string // command line to run (read tools and run_command)
 	Display string // what the user sees (command or tool summary)
 	// writes

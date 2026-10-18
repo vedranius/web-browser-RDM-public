@@ -905,7 +905,8 @@ func closeRoom(shareID int, reason string) {
 	dropRoomIfEmpty(rm)
 }
 
-func kickUserFromRooms(userID int, reason string) {
+func kickUserFromRooms(userID int, reason string) int {
+	n := 0
 	rooms.Lock()
 	list := make([]*room, 0, len(rooms.m))
 	for _, rm := range rooms.m {
@@ -918,10 +919,12 @@ func kickUserFromRooms(userID int, reason string) {
 			if p.sa.UserID == userID {
 				p.closeWith(map[string]interface{}{"type": "kicked", "message": reason}, 4011, "revoked")
 				rm.leaveLocked(p)
+				n++
 			}
 		}
 		rm.mu.Unlock()
 	}
+	return n
 }
 
 func roomOnlineCount(shareID int) int {

@@ -903,6 +903,11 @@ func apiOIDCCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/#sso-mfa="+url.QueryEscape(newMFATokenFor(u.ID, identityID)), http.StatusFound)
 		return
 	}
+	if lockdownRefuses(u.ID) {
+		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"method": "oidc", "reason": "lockdown"})
+		oauthPage(w, 403, "WRM is in lockdown", lockdownMessage)
+		return
+	}
 	restricted := restrictionFor(u)
 	if p.RequireMFA && mfaOK && restricted == "mfa" {
 		restricted = ""

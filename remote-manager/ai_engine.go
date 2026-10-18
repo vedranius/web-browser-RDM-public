@@ -737,7 +737,7 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 	ended := s.ended
 	s.toolCalls++
 	s.mu.Unlock()
-	if ended || settingBool("ai_kill_switch") {
+	if ended || settingBool("ai_kill_switch") || lockdownActive() {
 		return fail("The AI session has been stopped.")
 	}
 	if ok, why := s.userAllowed(); !ok {
@@ -840,6 +840,7 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 			s.audit(nil, "ai.approved", map[string]interface{}{"tool": call.Name, "via": "later", "rule": dec.Rule})
 			s.emit("approval_resolved", map[string]interface{}{"call_id": call.ID, "outcome": "approved", "via": "later", "by": s.Username})
 		} else {
+			pl.Rule = dec.Rule
 			r = s.requestApproval(ctx, call, pl, in.Reason, dec.Reason)
 		}
 		if r.Approved {
@@ -1067,6 +1068,9 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	}
 	s.mu.Unlock()
 	d := map[string]interface{}{"approval": a.ID, "tool": call.Name, "outcome": r.Outcome}
+	if pl.Rule != "" {
+		d["rule"] = pl.Rule
+	}
 	if r.Deferred {
 		d["kept_for_later"] = true
 	}
