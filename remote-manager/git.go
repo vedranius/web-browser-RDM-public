@@ -103,6 +103,7 @@ func initGitSchema() {
 	initGitFunctionalitySchema()
 	initGitRunsSchema()
 	initMediumNativeSchema()
+	initMediumDeploySchema()
 	initMediumActivitySchema()
 	mediumActivityRunningFix()
 	initGitCISchema()

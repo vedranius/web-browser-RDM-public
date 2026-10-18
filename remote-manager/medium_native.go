@@ -287,6 +287,19 @@ func mdGitTreeModes(p *gitProvider, sourceID int, project, commit string) (map[s
 	return out, nil
 }
 
+// mdSafeTreePath: a relative path with no empty, "." or ".." components.
+func mdSafeTreePath(p string) bool {
+	if p == "" || strings.HasPrefix(p, "/") {
+		return false
+	}
+	for _, c := range strings.Split(p, "/") {
+		if c == "" || c == "." || c == ".." {
+			return false
+		}
+	}
+	return true
+}
+
 // mdGitSourceTree prepares the source of a project at a commit from a WRM Git source:
 // the files below source_dir with their SHA-256 (and link targets), without a build.
 func mdGitSourceTree(m mdSourceMatch, proj *mdProject, commit string) (mdTree, error) {
@@ -311,6 +324,9 @@ func mdGitSourceTree(m mdSourceMatch, proj *mdProject, commit string) (mdTree, e
 				continue
 			}
 			rel = strings.TrimPrefix(p, prefix+"/")
+		}
+		if !mdSafeTreePath(rel) {
+			return nil, fmt.Errorf("the repository has an unsafe path %q (absolute, empty or .. components); it cannot be deployed", rel)
 		}
 		jobs = append(jobs, job{rel, e.Blob, e.Mode})
 	}
@@ -342,12 +358,23 @@ func mdGitSourceTree(m mdSourceMatch, proj *mdProject, commit string) (mdTree, e
 				storeBlob(m.src.ID, j.blob, data)
 				content = data
 			}
-			e := &mdEntry{Type: "file", Size: int64(len(content))}
+			e := &mdEntry{Type: "file", Size: int64(len(content)), exec: j.mode == "100755"}
 			if j.mode == "120000" {
 				e = &mdEntry{Type: "symlink", Link: string(content)}
 			} else {
 				sum := sha256.Sum256(content)
 				e.Hash = hex.EncodeToString(sum[:])
+				srcID, blob, project := m.src.ID, j.blob, m.project
+				e.open = func() ([]byte, error) {
+					if b, ok := blobContent(srcID, blob); ok {
+						return b, nil
+					}
+					b, err := p.blob(project, blob)
+					if err == nil {
+						storeBlob(srcID, blob, b)
+					}
+					return b, err
+				}
 			}
 			mu.Lock()
 			tree[j.rel] = e
@@ -520,6 +547,7 @@ type mdPlanRequest struct {
 	Ref         string   `json:"ref"`
 	Servers     []string `json:"servers"`
 	Compare     bool     `json:"compare"`
+	Excluded    []string `json:"excluded"` // paths left out of this deployment (as the change list shows them)
 }
 
 type mdServerPlan struct {
@@ -538,6 +566,9 @@ type mdServerPlan struct {
 	Compare    *mdCompare     `json:"compare,omitempty"`
 	RefError   string         `json:"reference_error,omitempty"`
 	RefCount   int            `json:"reference_count"`
+	// ExcludedFor: the plan's excluded paths that leave a change out on this server
+	// (current.json keeps them, and the next plan offers them excluded again)
+	ExcludedFor []string `json:"excluded_for"`
 }
 
 type mdSourceCheck struct {
@@ -566,6 +597,9 @@ type mdPlanResult struct {
 	SourceCheck *mdSourceCheck `json:"source_check,omitempty"`
 	Servers     []mdServerPlan `json:"servers"`
 	NotCompared []string       `json:"not_compared"`
+	Excluded    []string       `json:"excluded"`
+	Revision    string         `json:"revision,omitempty"`
+	Deployable  bool           `json:"deployable"` // a native deployment of this plan is possible
 }
 
 type mdRun struct {
@@ -578,6 +612,8 @@ type mdRun struct {
 	Result  *mdPlanResult `json:"result,omitempty"`
 	uid     int
 	at      time.Time
+	src     mdTree // the prepared source (with the files' content), for a deployment
+	used    bool   // a deployment of this plan has started
 }
 
 var mdRuns = struct {
@@ -618,9 +654,9 @@ func mdStartRun(uid int, req mdPlanRequest) (*mdRun, error) {
 			delete(mdRuns.active, uid)
 			mdRuns.Unlock()
 		}()
-		res, err := mdExecute(uid, req, func(stage string) { run.set(func() { run.Stage = stage }) })
+		res, src, err := mdExecute(uid, req, func(stage string) { run.set(func() { run.Stage = stage }) })
 		run.set(func() {
-			run.Result = res
+			run.Result, run.src = res, src
 			if err != nil {
 				run.Error = err.Error()
 			}
@@ -666,37 +702,25 @@ func mdGetRun(uid int, id string) (mdRun, bool) {
 
 // mdOpenDestination connects to the server's linked WRM connection and runs fn on it.
 var mdOpenDestination = func(uid int, cfg *mdConfig, server string, fn func(mdRemote, string) error) error {
-	conns := mdUserConnections(uid)
-	link, ok := mdLinks(uid, cfg, conns)[server]
-	if !ok {
-		s := cfg.server(server)
-		return fmt.Errorf("no WRM connection is linked to %s (%s@%s:%d); add or choose one under Servers", server, s.User, s.Host, s.Port)
-	}
-	conn, err := loadConnection(link.ConnID)
-	if err != nil || conn.UserID != uid || !isSSHProtocol(conn) {
-		return fmt.Errorf("the connection linked to %s is not available", server)
-	}
-	p, err := acquireSFTP(conn)
-	if err != nil {
-		return fmt.Errorf("cannot log in to %s: %v", conn.Name, err)
-	}
-	err = fn(mdSFTP{cl: p.sftp, ssh: p.ssh}, conn.Name)
-	releaseSFTP(p, err)
-	return err
+	return mdOpenHost(uid, cfg, server, func(h mdHost, name string) error { return fn(h, name) })
 }
 
-func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, error) {
+func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, mdTree, error) {
 	cfg, err := mdLoadConfig(mdConfigDir(uid))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	proj := cfg.project(req.Project)
 	if proj == nil {
-		return nil, fmt.Errorf("unknown project %s", req.Project)
+		return nil, nil, fmt.Errorf("unknown project %s", req.Project)
 	}
 	target := proj.target(req.Environment)
 	if target == nil {
-		return nil, fmt.Errorf("project %s has no environment %s", proj.Name, req.Environment)
+		return nil, nil, fmt.Errorf("project %s has no environment %s", proj.Name, req.Environment)
+	}
+	excluded, err := mdCleanExcluded(req.Excluded)
+	if err != nil {
+		return nil, nil, err
 	}
 	var dests []*mdDestination
 	if len(req.Servers) == 0 {
@@ -705,7 +729,7 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, e
 		want := map[string]bool{}
 		for _, s := range req.Servers {
 			if target.destination(s) == nil {
-				return nil, fmt.Errorf("environment %s has no destination on %s", target.Name, s)
+				return nil, nil, fmt.Errorf("environment %s has no destination on %s", target.Name, s)
 			}
 			want[s] = true
 		}
@@ -715,7 +739,7 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, e
 			}
 		}
 	}
-	res := &mdPlanResult{Project: proj.Name, Environment: target.Name, Build: proj.Build, Confirm: target.Confirm, Warnings: []string{}, NotCompared: []string{}, Compared: req.Compare}
+	res := &mdPlanResult{Project: proj.Name, Environment: target.Name, Build: proj.Build, Confirm: target.Confirm, Warnings: []string{}, NotCompared: []string{}, Compared: req.Compare, Excluded: excluded}
 	for _, d := range target.Destinations {
 		in := false
 		for _, x := range dests {
@@ -731,7 +755,7 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, e
 	if req.Compare {
 		stage("original")
 		if ref, err = mdReferencePlan(uid, req); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		res.Ref, res.Commit, res.Version, res.SourceFrom = ref.Ref, ref.Commit, ref.Version, "original"
 		res.Warnings = append(res.Warnings, ref.Warnings...)
@@ -750,21 +774,21 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, e
 		}
 	} else {
 		if proj.Build != nil {
-			return nil, fmt.Errorf("project %s has a build step; the native preview of built projects comes with the native engine (v12.7.0). Use Compare with the original tool, which uses the original build", proj.Name)
+			return nil, nil, fmt.Errorf("project %s has a build step; the native preview of built projects comes with the native engine (v12.7.0). Use Compare with the original tool, which uses the original build", proj.Name)
 		}
 		if !hasSource {
-			return nil, fmt.Errorf("no WRM Git source serves %s; add the Git server under Git → Sources, or compare with the original tool", redactURLText(proj.Repo))
+			return nil, nil, fmt.Errorf("no WRM Git source serves %s; add the Git server under Git → Sources, or compare with the original tool", redactURLText(proj.Repo))
 		}
 		stage("source")
 		p, err := newGitProvider(match.src)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if res.Commit, res.Ref, err = mdResolveRef(p, match.project, req.Ref); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if src, err = mdGitSourceTree(match, proj, res.Commit); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		res.SourceFrom, res.SourceName = "git_source", match.src.Name
 	}
@@ -791,7 +815,7 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, e
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			res.Servers[i] = mdPlanServer(uid, cfg, proj, target, d, src, ref)
+			res.Servers[i] = mdPlanServer(uid, cfg, proj, target, d, src, ref, excluded)
 		}(i, d)
 	}
 	wg.Wait()
@@ -801,32 +825,32 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, e
 			res.Same = res.Same && s.Compare != nil && s.Compare.Same && s.Error == "" && s.RefError == ""
 		}
 	}
-	return res, nil
+	res.Deployable = res.SourceFrom == "git_source" && len(res.Servers) > 0
+	for _, s := range res.Servers {
+		res.Deployable = res.Deployable && s.Error == ""
+	}
+	res.Revision = mdPlanRevision(res)
+	return res, src, nil
 }
 
-func mdPlanServer(uid int, cfg *mdConfig, proj *mdProject, target *mdTarget, d *mdDestination, src mdTree, ref *mdRefResult) mdServerPlan {
+func mdPlanServer(uid int, cfg *mdConfig, proj *mdProject, target *mdTarget, d *mdDestination, src mdTree, ref *mdRefResult, excluded []string) mdServerPlan {
 	sp := mdServerPlan{Server: d.Server, Path: d.appDir(), Label: d.label(), Warnings: []string{}, Changes: []mdChange{}, PostDeploy: d.PostDeploy,
-		Excludes: proj.ignoreFor(target.Name, d.Server), Counts: map[string]int{"new": 0, "changed": 0, "deleted": 0}}
-	rules := mdCompileRules(sp.Excludes)
-	filtered := mdFilterTree(src, rules)
+		Excludes: proj.ignoreFor(target.Name, d.Server), Counts: map[string]int{"new": 0, "changed": 0, "deleted": 0}, ExcludedFor: []string{}}
 	err := mdOpenDestination(uid, cfg, d.Server, func(r mdRemote, connName string) error {
 		sp.Connection = connName
-		dst, keep, exists, err := mdWalk(r, d.appDir(), rules, filtered)
+		view, err := mdPlanOn(r, d.appDir(), sp.Excludes, excluded, src)
 		if err != nil {
 			return err
 		}
-		sp.Exists = exists
-		if err := mdFillHashes(r, d.appDir(), filtered, dst); err != nil {
-			return err
-		}
-		var conflicts []string
-		sp.Changes, conflicts = mdDiff(filtered, dst, keep)
-		if len(conflicts) > 0 {
+		sp.Exists, sp.Changes = view.exists, view.changes
+		if sp.Changes == nil {
 			sp.Changes = []mdChange{}
-			return fmt.Errorf("the server has a directory where the source has a file or symlink (%s), and something in it is excluded, so it cannot be replaced; exclude the whole path or nothing in it", mdEscapePath(strings.Join(conflicts, ", ")))
 		}
-		for p := range keep {
-			if _, inSource := filtered[p]; !inSource && dst[p] != nil {
+		for _, e := range view.excludedFor {
+			sp.ExcludedFor = append(sp.ExcludedFor, mdEscapePath(e))
+		}
+		for p := range view.keep {
+			if _, inSource := view.src[p]; !inSource && view.dst[p] != nil {
 				sp.Warnings = append(sp.Warnings, fmt.Sprintf("%s/ is not in the source but stays on the server because it holds excluded items; everything else in it would be deleted", mdEscapePath(p)))
 			}
 		}
@@ -953,6 +977,7 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 		}
 		out["ok"], out["config"], out["projects"] = true, cfg, projects
 		out["links"], out["connections"] = mdLinks(uid, cfg, conns), conns
+		out["engines"], out["can_deploy"], out["step_up"] = mdProjectEngines(uid), mdNativeAllowed(uid), settingBool("require_step_up")
 		jsonOK(w, out)
 	case action == "/link" && r.Method == "POST":
 		var in struct {
@@ -1035,7 +1060,9 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 		}
 		jsonOK(w, run)
 	default:
-		jsonError(w, "not found", 404)
+		if !mdNativeAPI(w, r, uid, action) {
+			jsonError(w, "not found", 404)
+		}
 	}
 }
 

@@ -14,6 +14,7 @@ func endUserAccess(r *http.Request, userID, byID int, reason string) map[string]
 	ai := aiKillWhere(func(s *aiSession) bool { return s.UserID == userID }, byID, reason)
 	mcpShutdown(byID, reason, func(uid int) bool { return uid == userID })
 	tokens := mcpRevokeWhere(r, "user_id=?", []interface{}{userID}, byID, reason)
+	jobs := mdCancelUserJobs(userID, "access ended: "+reason)
 	return map[string]interface{}{"sessions_ended": sessions, "terminals_ended": terminals, "rooms_left": rooms, "tunnels_stopped": tunnels,
-		"ai_sessions_ended": ai, "ai_connections_revoked": tokens}
+		"ai_sessions_ended": ai, "ai_connections_revoked": tokens, "medium_jobs_stopped": jobs}
 }
