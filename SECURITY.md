@@ -99,6 +99,19 @@ Since v12.6.24 (`remote-manager/oidc.go`, `oidc_jwt.go`):
 - **Local passwords:** `local_login = break_glass` (required by the Enterprise level while a provider is enabled) leaves password sign-in and self-registration only to break-glass administrators, so a person disabled in the directory cannot fall back to a local password.
 - **Audit:** provider changes, accounts created from the directory, links, role syncs, ended access, test sign-ins and every refused directory sign-in with its reason.
 
+## LDAP / Active Directory and SCIM
+
+Since v12.6.25 (`remote-manager/ldap.go`, `ldap_proto.go`, `scim.go`, `directory.go`):
+
+- **Transport:** LDAP connections always use TLS (LDAPS, or StartTLS before any bind), TLS 1.2 or newer, with the certificate and host name checked against the system store or the directory's CA certificate. There is no setting to skip the check.
+- **Passwords:** the person's password is checked by binding as them and is never stored or logged. Empty passwords are refused before the bind (an empty simple bind is an anonymous bind on most servers). Failed directory sign-ins count towards the IP lockout. The service account password is encrypted at rest, never sent to the browser, and never sent to a changed server address: changing the address requires the password again (the same applies to an OIDC provider's client secret when its issuer changes).
+- **Injection:** every value in a filter is escaped (RFC 4515), and administrator filters are compiled and validated before use.
+- **Identity:** accounts are found by the directory's immutable ID (`objectGUID` or the configured attribute), never by name. Disabled, locked and expired accounts are refused at sign-in and at every check.
+- **Deprovisioning:** linked accounts are checked every `ldap_sync_minutes`; SCIM disables accounts at once. Any route that stops an account (administrator, OIDC revalidation, LDAP check, SCIM) runs `endUserAccess`: sign-in sessions, terminals, tunnels, rooms, AI sessions and AI connections (MCP tokens) end.
+- **SCIM tokens:** random 256-bit bearer tokens with the prefix `wrm_scim_`, shown once and stored only as SHA-256; rotation and revocation need step-up. A client sees and changes only the accounts and groups it created, never local accounts, never the last active administrator's role or state, and never a team an administrator made. Requests are limited to 600 a minute per address and 1 MB each.
+- **Linking:** linking a directory account to an existing WRM account needs a fresh confirmation (even with step-up off), the directory password, and an account that is not break-glass. A SCIM account is linked to an OIDC identity only when its `externalId` equals the token's `oid` or `sub` and it has no directory link yet.
+- **Audit:** directory changes, accounts created, links, checks that ended access, test sign-ins, refused sign-ins with their reason, and every SCIM change.
+
 ## Hardening checklist
 
 WRM is secure by default in most respects. For production and company use, also check the items below. The admin panel (*Overview*) warns about several of them.
