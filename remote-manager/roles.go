@@ -96,7 +96,7 @@ func requireAuditRead(w http.ResponseWriter, r *http.Request) (int, bool) {
 var whoPolicies = map[string]bool{
 	"tunnel_users": true, "tunnel_remote_forward": true, "serial_ports": true, "network_tools": true, "proxies": true,
 	"git_checks": true, "git_update": true, "git_upgrade": true, "git_rollback": true, "git_restart": true, "git_install": true,
-	"git_medium": true, "git_transfer": true, "git_gitignore_mr": true, "bitwarden": true,
+	"git_medium": true, "medium_native": true, "git_transfer": true, "git_gitignore_mr": true, "bitwarden": true,
 	"ai_assistant": true, "ai_personal_keys": true, "ai_opencode": true, "ai_opencode_sandbox": true, "ai_mcp": true,
 }
 

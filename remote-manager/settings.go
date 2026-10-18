@@ -119,6 +119,10 @@ var settingSpecs = []settingSpec{
 	{Key: "git_install", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "git_medium", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "medium_log_output", Default: "all", Kind: "enum", Enum: []string{"none", "admins", "all"}},
+	// Medium native engine: who deploys, rolls back and releases locks; time limits of one step
+	{Key: "medium_native", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "medium_command_timeout", Default: "300", Kind: "int", Min: 30, Max: 86400},
+	{Key: "medium_transfer_timeout", Default: "3600", Kind: "int", Min: 600, Max: 86400},
 	{Key: "medium_docker_install", Default: "1", Kind: "bool"},
 	{Key: "medium_host_ca", Default: "1", Kind: "bool"},
 	{Key: "medium_ca_file", Default: "", Kind: "string"},

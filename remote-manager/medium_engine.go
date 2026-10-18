@@ -53,6 +53,10 @@ type mdEntry struct {
 	Size int64  `json:"size,omitempty"`
 	Hash string `json:"sha256,omitempty"`
 	Link string `json:"link,omitempty"`
+
+	perm os.FileMode            // destination: permission bits with setuid, setgid and sticky
+	exec bool                   // source: executable (Git mode 100755)
+	open func() ([]byte, error) // source: the file's content (deployments)
 }
 
 // mdTree maps a path relative to the root (no leading or trailing slash) to its entry.
@@ -204,7 +208,7 @@ func mdWalk(r mdRemote, root string, rules []*mdRule, src mdTree) (tree mdTree, 
 				}
 				return
 			}
-			tree[p] = &mdEntry{Type: typ, Size: fi.Size()}
+			tree[p] = &mdEntry{Type: typ, Size: fi.Size(), perm: fi.Mode() & (os.ModePerm | os.ModeSetuid | os.ModeSetgid | os.ModeSticky)}
 			if typ == "dir" {
 				wg.Add(1)
 				go visit(p)
@@ -418,6 +422,8 @@ func mdLocalTree(root string) (mdTree, error) {
 			if e.Hash, e.Size, err = mdHashFile(p); err != nil {
 				return err
 			}
+			file := filepath.Clean(p)
+			e.exec, e.open = fi.Mode()&0o100 != 0, func() ([]byte, error) { return os.ReadFile(file) }
 		case "symlink":
 			if e.Link, err = os.Readlink(p); err != nil {
 				return err

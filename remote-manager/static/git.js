@@ -691,6 +691,48 @@ Object.assign(LANGS.hr, {
 });
 Object.assign(LANGS.en, { mn_title: 'WRM preview (read-only)', mn_needs_running: 'Start the original deploy tool first (step 5)', gm_quick_title: 'Or everything at once: prepare and start in one click', gm_prepare: 'Prepare runtime / retry', gm_settings_hint: 'Stop the original deploy tool before saving; the settings apply at its next start. These are the original deploy-tool environment options: config Git repository/pull/check interval, commit identity, SSH options, command timeout and build user. Empty fields use the original defaults. Masked values are preserved.' });
 Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_running: 'Prvo pokreni izvorni deploy-tool (korak 5)', gm_quick_title: 'Ili sve odjednom: pripremi i pokreni jednim klikom', gm_prepare: 'Pripremi okruženje / pokušaj ponovno', gm_title: 'Izvorni deploy-tool', gm_settings: 'Postavke izvornog alata', gm_settings_hint: 'Zaustavi izvorni deploy-tool prije spremanja; postavke vrijede od sljedećeg pokretanja. Ovo su izvorne deploy-tool opcije: Git repo konfiguracije/povlačenje/interval provjere, autor commitova, SSH opcije, timeout naredbi i build korisnik. Prazna polja koriste izvorne zadane vrijednosti. Maskirane vrijednosti se zadržavaju.', gm_quick: 'Pripremi i pokreni pouzdane ZIP-ove', gm_stop_confirm: 'Zaustaviti izvorni deploy-tool? Najprije pričekaj da deployi završe.' });
+Object.assign(LANGS.en, {
+  mn_title: 'WRM engine', gm_two_preview: 'WRM\'s own engine. It shows what a deployment would change on each server through your WRM connections. A project switched to the WRM native engine is deployed and rolled back by WRM itself, in the same server state the original tool uses. It needs only your deploy-config; only "Compare with the original tool" needs the original tool running.',
+  mn_intro: 'WRM reads your deploy-config as it is, prepares the chosen branch or tag from a WRM Git source and compares it with each destination through the WRM connection linked to that server. A comparison and a dry run change nothing. A project switched to the WRM native engine is deployed and rolled back by WRM: lock, backup, upload, checksum check, post_deploy and history, written in the original tool\'s format, so either tool can continue after the other.',
+  mn_build_note: 'This project has a build step. In this version the native engine deploys projects without a build (build locations come in v12.7.1); until then only the comparison with the original tool is available, and the original tool deploys it.',
+  mn_engine: 'Engine', mn_engine_docker: 'Original tool (Docker)', mn_engine_native: 'WRM native', mn_engine_hint: 'Who deploys this project. The server state is the same either way, so you can switch back at any time.',
+  mn_engine_set: 'Engine saved', mn_engine_no_policy: 'Native deployments are not allowed for you (policy medium_native).',
+  mn_exclude: 'Leave out', mn_exclude_hint: 'Tick changes to leave out of this deployment, then compare again.', mn_replan: 'Compare again without the ticked ones',
+  mn_excluded_now: 'Left out of this deployment', mn_clear_excluded: 'Include everything again', mn_excluded_on: 'left out here',
+  mn_dry_run: 'Dry run', mn_deploy: 'Deploy', mn_dry_hint: 'A dry run takes the lock, compares again under it and stops before changing anything.',
+  mn_confirm_label: 'Type {0} to confirm', mn_deploy_needs_native: 'Switch the project to the WRM native engine first (Engine above).',
+  mn_not_deployable: 'This comparison cannot be deployed natively: it needs a WRM Git source and every destination compared without errors.',
+  mn_deploy_confirm: 'Deploy {0} to {1} ({2})?', mn_job_deploy: 'Deployment', mn_job_rollback: 'Rollback', mn_job_dry: 'dry run', mn_running: 'running: {0}',
+  mn_cancel: 'Cancel', mn_cancel_hint: 'Stops before the next destination starts changing; a destination already being changed is finished.', mn_cancel_sent: 'Cancel requested',
+  'mn_status_ok': 'done', 'mn_status_dry-run': 'dry run OK', mn_status_failed: 'failed', mn_status_mismatch: 'plan changed', mn_status_locked: 'locked', mn_status_skipped: 'skipped',
+  mn_sent: '{0} uploaded, {1} deleted', mn_hist_title: 'History and rollback', mn_hist_load: 'Show history', mn_hist_none: 'No deployments yet.',
+  mn_h_when: 'When', mn_h_action: 'Action', mn_h_version: 'Version', mn_h_by: 'By', mn_h_server: 'Server', mn_h_note: 'Note', mn_h_changes: 'Changes',
+  mn_rb_target: 'A rollback undoes {0} ({1}, {2}) and restores {3}.', mn_rb_first: 'the state before the first deployment', mn_rb_none: 'Nothing to roll back',
+  mn_rb_dry: 'Dry rollback', mn_rb_go: 'Roll back', mn_rb_on: 'on {0}', mn_rb_confirm: 'Roll back {0} on {1}?',
+  mn_lock_stale: 'older than {0} min, may be released', mn_lock_young: 'may be released after {0} min', mn_lock_release: 'Release lock',
+  mn_lock_release_confirm: 'Release the lock of {0} on {1}? Do it only when no deployment is running there.', mn_lock_released: 'Lock released',
+});
+Object.assign(LANGS.hr, {
+  mn_title: 'WRM engine', gm_two_preview: 'WRM-ov vlastiti engine. Pokazuje što bi deploy promijenio na svakom serveru, preko tvojih WRM veza. Projekt prebačen na WRM nativni engine deploya i vraća sam WRM, u istom stanju na serveru koje koristi izvorni alat. Treba mu samo tvoj deploy-config; samo "Usporedi s izvornim alatom" traži da izvorni alat radi.',
+  mn_intro: 'WRM čita tvoj deploy-config kakav jest, priprema odabranu granu ili tag iz WRM Git izvora i uspoređuje ga sa svakim odredištem preko WRM veze povezane s tim serverom. Usporedba i probni deploy ništa ne mijenjaju. Projekt prebačen na WRM nativni engine deploya i vraća WRM: lock, backup, prijenos, provjera kontrolnih zbrojeva, post_deploy i povijest, zapisani u formatu izvornog alata, pa svaki alat može nastaviti nakon drugoga.',
+  mn_build_note: 'Ovaj projekt ima build. U ovoj verziji nativni engine deploya projekte bez builda (mjesta za build dolaze u v12.7.1); do tada je dostupna samo usporedba s izvornim alatom, a deploya ga izvorni alat.',
+  mn_engine: 'Engine', mn_engine_docker: 'Izvorni alat (Docker)', mn_engine_native: 'WRM nativno', mn_engine_hint: 'Tko deploya ovaj projekt. Stanje na serveru je isto u oba slučaja, pa se možeš vratiti bilo kad.',
+  mn_engine_set: 'Engine spremljen', mn_engine_no_policy: 'Nativni deployevi ti nisu dopušteni (politika medium_native).',
+  mn_exclude: 'Izostavi', mn_exclude_hint: 'Označi promjene koje želiš izostaviti iz ovog deploya, pa ponovno usporedi.', mn_replan: 'Ponovno usporedi bez označenih',
+  mn_excluded_now: 'Izostavljeno iz ovog deploya', mn_clear_excluded: 'Ponovno uključi sve', mn_excluded_on: 'ovdje izostavljeno',
+  mn_dry_run: 'Probni deploy', mn_deploy: 'Deployaj', mn_dry_hint: 'Probni deploy uzima lock, pod njim ponovno uspoređuje i staje prije bilo kakve promjene.',
+  mn_confirm_label: 'Upiši {0} za potvrdu', mn_deploy_needs_native: 'Prvo prebaci projekt na WRM nativni engine (Engine iznad).',
+  mn_not_deployable: 'Ova usporedba se ne može nativno deployati: treba WRM Git izvor i da se svako odredište usporedilo bez greške.',
+  mn_deploy_confirm: 'Deployati {0} na {1} ({2})?', mn_job_deploy: 'Deploy', mn_job_rollback: 'Rollback', mn_job_dry: 'proba', mn_running: 'u tijeku: {0}',
+  mn_cancel: 'Otkaži', mn_cancel_hint: 'Zaustavlja prije nego se počne mijenjati sljedeće odredište; odredište koje se upravo mijenja dovršava se.', mn_cancel_sent: 'Otkazivanje zatraženo',
+  'mn_status_ok': 'gotovo', 'mn_status_dry-run': 'proba u redu', mn_status_failed: 'nije uspjelo', mn_status_mismatch: 'plan se promijenio', mn_status_locked: 'zaključano', mn_status_skipped: 'preskočeno',
+  mn_sent: '{0} preneseno, {1} obrisano', mn_hist_title: 'Povijest i rollback', mn_hist_load: 'Prikaži povijest', mn_hist_none: 'Još nema deployeva.',
+  mn_h_when: 'Kada', mn_h_action: 'Radnja', mn_h_version: 'Verzija', mn_h_by: 'Tko', mn_h_server: 'Server', mn_h_note: 'Napomena', mn_h_changes: 'Promjene',
+  mn_rb_target: 'Rollback poništava {0} ({1}, {2}) i vraća {3}.', mn_rb_first: 'stanje prije prvog deploya', mn_rb_none: 'Nema ničega za rollback',
+  mn_rb_dry: 'Probni rollback', mn_rb_go: 'Napravi rollback', mn_rb_on: 'na {0}', mn_rb_confirm: 'Napraviti rollback {0} na {1}?',
+  mn_lock_stale: 'starije od {0} min, smije se otpustiti', mn_lock_young: 'smije se otpustiti nakon {0} min', mn_lock_release: 'Otpusti lock',
+  mn_lock_release_confirm: 'Otpustiti lock korisnika {0} na {1}? Samo ako tamo ne radi nijedan deploy.', mn_lock_released: 'Lock otpušten',
+});
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
   const modeKey = () => 'wrm_git_mode:' + ((typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.username)) || '');
@@ -3249,7 +3291,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
   // Native engine preview (read-only): WRM reads deploy-config, prepares the source and
   // compares it with the servers through WRM connections; optionally side by side with the
   // original tool's own comparison.
-  const MN = {cfg: null, timer: null};
+  const MN = {cfg: null, timer: null, run: null, job: null, jobTimer: null, hist: null};
   const mnFmt = (k, ...a) => t(k).replace(/\{(\d)\}/g, (_, i) => a[+i] ?? '');
   async function nativeLoad() {
     const box = $('mn-body'); if (!box) return;
@@ -3274,10 +3316,12 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
       <h4>${esc(t('mn_servers'))}</h4><div class="g-scroll"><table><thead><tr><th>${esc(t('mn_server'))}</th><th>${esc(t('mn_address'))}</th><th>${esc(t('mn_connection'))}</th></tr></thead><tbody>${rows}</tbody></table></div>
       <h4>${esc(t('mn_plan'))}</h4>
       <div class="g-grid"><label>${esc(t('mn_project'))}<select id="mn-project" onchange="gitWorkspace.nativeProject()">${projects}</select></label><label>${esc(t('mn_env'))}<select id="mn-env" onchange="gitWorkspace.nativeEnv()"></select></label><label>${esc(t('mn_ref'))}<input id="mn-ref" list="mn-refs" placeholder="main" autocomplete="off"><datalist id="mn-refs"></datalist></label></div>
-      <div id="mn-dests" class="g-bar"></div><p id="mn-note" class="g-mut"></p>
+      <div id="mn-dests" class="g-bar"></div><div id="mn-engine" class="g-bar"></div><p id="mn-note" class="g-mut"></p>
       <div class="g-bar"><button id="mn-preview" onclick="gitWorkspace.nativePlan(false)">${esc(t('mn_preview'))}</button><button class="btn-sec" id="mn-compare" onclick="gitWorkspace.nativePlan(true)" ${c.running ? '' : 'disabled'} title="${esc(c.running ? '' : t('mn_needs_running'))}">${esc(t('mn_compare'))}</button>${refresh}</div>
-      <div id="mn-result" role="status" aria-live="polite"></div>`;
+      <div id="mn-result" role="status" aria-live="polite"></div><div id="mn-job" role="status" aria-live="polite"></div>
+      <h4>${esc(t('mn_hist_title'))}</h4><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.nativeHistory()">${esc(t('mn_hist_load'))}</button></div><div id="mn-hist"></div>`;
     nativeProject();
+    nativeResumeJob();
   }
   function mnProject() { const c = MN.cfg; const name = $('mn-project') && $('mn-project').value; return c && c.config.projects.find(p => p.name === name); }
   async function nativeProject() {
@@ -3286,6 +3330,8 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     $('mn-env').innerHTML = (view.environments || []).map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('');
     $('mn-note').textContent = view.build ? t('mn_build_note') : view.source ? mnFmt('mn_source_note', view.source) : t('mn_no_source_note');
     $('mn-preview').disabled = !!view.build || !view.source;
+    const eng = (c.engines || {})[p.name] || 'docker';
+    $('mn-engine').innerHTML = `<label>${esc(t('mn_engine'))} <select id="mn-engine-sel" onchange="gitWorkspace.nativeEngine(this.value)" ${c.can_deploy || eng === 'native' ? '' : 'disabled'}>${['docker', 'native'].map(e => `<option value="${e}" ${e === eng ? 'selected' : ''}>${esc(t('mn_engine_' + e))}</option>`).join('')}</select></label> <span class="g-mut">${esc(t(c.can_deploy ? 'mn_engine_hint' : 'mn_engine_no_policy'))}</span>`;
     nativeEnv();
     $('mn-refs').innerHTML = '';
     if (!view.source) return;
@@ -3297,6 +3343,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
   }
   function nativeEnv() {
     const p = mnProject(), env = $('mn-env') && $('mn-env').value;
+    if ($('mn-hist')) $('mn-hist').innerHTML = '';
     const tg = p && (p.targets || []).find(x => x.name === env);
     $('mn-dests').innerHTML = tg ? tg.destinations.map(d => `<label class="mn-dest"><input type="checkbox" data-mn-dest="${esc(d.server)}" checked><span class="g-mono">${esc(d.server + ':' + d.path)}</span></label>`).join('') : '';
   }
@@ -3305,10 +3352,18 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
     if (!r.ok) { showToast(await apiError(r), 'error'); return; }
     showToast(t('mn_linked'), 'success'); await nativeLoad();
   }
-  async function nativePlan(compare) {
+  async function nativeEngine(engine) {
+    const p = mnProject(); if (!p) return;
+    const r = await fetch('/api/git/medium/native/engine', json('POST', {project: p.name, engine}));
+    if (!r.ok) { showToast(await apiError(r), 'error', 8000); nativeProject(); return; }
+    MN.cfg.engines = Object.assign({}, MN.cfg.engines || {}); if (engine === 'native') MN.cfg.engines[p.name] = 'native'; else delete MN.cfg.engines[p.name];
+    showToast(t('mn_engine_set'), 'success');
+    if (MN.run && MN.run.result && MN.run.result.project === p.name) nativeRender(MN.run);
+  }
+  async function nativePlan(compare, excluded) {
     const p = mnProject(); if (!p) return;
     const servers = [...document.querySelectorAll('[data-mn-dest]')].filter(x => x.checked).map(x => x.dataset.mnDest);
-    const body = {project: p.name, environment: $('mn-env').value, ref: $('mn-ref').value.trim(), servers, compare};
+    const body = {project: p.name, environment: $('mn-env').value, ref: $('mn-ref').value.trim(), servers, compare, excluded: excluded || []};
     if (!body.ref || !servers.length) { showToast(t(!body.ref ? 'mn_ref' : 'mn_server') + '?', 'error'); return; }
     $('mn-preview').disabled = $('mn-compare').disabled = true;
     try {
@@ -3323,13 +3378,13 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
       const r = await fetch('/api/git/medium/native/plan/' + encodeURIComponent(id)); if (!r.ok) throw new Error(await apiError(r));
       const run = await r.json();
       if (!run.done) { out.innerHTML = `<p><span class="g-spin"></span> ${esc(t('mn_stage_' + run.stage) || run.stage)}</p>`; MN.timer = setTimeout(() => nativePoll(id), 1500); return; }
-      nativeRender(run);
+      run.id = id; MN.run = run; nativeRender(run);
     } catch (e) { out.textContent = String(e); }
     if ($('mn-compare')) { nativeProject(); $('mn-compare').disabled = !MN.cfg.running; }
   }
-  function mnChanges(list, limit) {
+  function mnChanges(list, limit, pick) {
     const shown = list.slice(0, limit);
-    const rows = shown.map(c => `<tr><td><span class="g-st s-e${c.action === 'deleted' ? 'removed' : c.action}">${esc(t('mn_' + c.action))}</span></td><td class="g-mono">${esc(c.path)}${c.link_target ? ' → ' + esc(c.link_target) : ''}</td><td class="g-mut">${esc(c.kind)}${c.server_kind && c.server_kind !== c.kind ? ' (' + esc(c.server_kind) + ')' : ''}</td></tr>`).join('');
+    const rows = shown.map(c => `<tr>${pick ? `<td><input type="checkbox" data-mn-ex="${esc(c.path)}" aria-label="${esc(t('mn_exclude') + ' ' + c.path)}" title="${esc(t('mn_exclude'))}"></td>` : ''}<td><span class="g-st s-e${c.action === 'deleted' ? 'removed' : c.action}">${esc(t('mn_' + c.action))}</span></td><td class="g-mono">${esc(c.path)}${c.link_target ? ' → ' + esc(c.link_target) : ''}</td><td class="g-mut">${esc(c.kind)}${c.server_kind && c.server_kind !== c.kind ? ' (' + esc(c.server_kind) + ')' : ''}</td></tr>`).join('');
     return `<div class="g-scroll"><table><tbody>${rows}</tbody></table></div>${list.length > limit ? `<p class="g-mut">${esc(mnFmt('mn_more', list.length - limit))}</p>` : ''}`;
   }
   function nativeRender(run) {
@@ -3371,11 +3426,146 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
         if (st.lock) html += `<p><span class="g-st s-pending">${esc(mnFmt('mn_lock', st.lock.user || '?', st.lock.since || '?'))}</span></p>`;
         if (st.history && st.history.length) html += `<details><summary>${esc(t('mn_history'))} (${st.history.length})</summary><div class="g-scroll"><table><tbody>${st.history.slice(0, 20).map(h => `<tr><td class="g-mono">${esc(h.deployed_at || '')}</td><td>${esc(h.action || 'DEPLOY')}</td><td class="g-mono">${esc(h.version || h.branch || '')}</td><td>${esc(h.deployed_by || '')}</td><td class="g-mut">${esc(h.server || '')}</td></tr>`).join('')}</tbody></table></div></details>`;
       }
-      if (s.changes.length) html += `<details${s.changes.length <= 30 ? ' open' : ''}><summary>${esc(t('mn_changes'))} (${s.changes.length})</summary>${mnChanges(s.changes, 500)}</details>`;
+      if (s.excluded_for && s.excluded_for.length) html += `<p class="g-mut">${esc(t('mn_excluded_on'))}: <span class="g-mono">${esc(s.excluded_for.join('  '))}</span></p>`;
+      if (s.changes.length) html += `<details${s.changes.length <= 30 ? ' open' : ''}><summary>${esc(t('mn_changes'))} (${s.changes.length})</summary>${mnChanges(s.changes, 500, r.deployable)}</details>`;
       else if (!s.error) html += `<p class="g-mut">${esc(t('mn_no_changes'))}</p>`;
       html += `<details><summary>${esc(t('mn_excludes'))} (${s.excludes.length})</summary><p class="g-mono">${esc(s.excludes.join('  '))}</p></details></div>`;
     }
+    html += mnDeployBar(r);
     out.innerHTML = html;
+  }
+  // The deploy bar under a finished comparison: leave changes out, dry run, deploy.
+  function mnDeployBar(r) {
+    if (!r.deployable) return `<p class="g-mut">${esc(t('mn_not_deployable'))}</p>`;
+    const c = MN.cfg, native = ((c.engines || {})[r.project] || 'docker') === 'native';
+    const why = !native ? t('mn_deploy_needs_native') : !c.can_deploy ? t('mn_engine_no_policy') : !r.ref_allowed ? t('mn_not_allowed') : '';
+    let h = `<div class="g-card" id="mn-deploy">`;
+    if (r.excluded && r.excluded.length) h += `<p>${esc(t('mn_excluded_now'))}: <span class="g-mono">${esc(r.excluded.join('  '))}</span> <button class="btn-sec btn-sm" onclick="gitWorkspace.nativeReplan(true)">${esc(t('mn_clear_excluded'))}</button></p>`;
+    h += `<div class="g-bar"><span class="g-mut">${esc(t('mn_exclude_hint'))}</span><button class="btn-sec" onclick="gitWorkspace.nativeReplan(false)">${esc(t('mn_replan'))}</button></div>`;
+    if (r.confirm) h += `<div class="g-bar"><label>${esc(mnFmt('mn_confirm_label', r.environment))} <input id="mn-confirm" autocomplete="off" spellcheck="false"></label></div>`;
+    h += `<div class="g-bar"><button class="btn-sec" id="mn-dry" onclick="gitWorkspace.nativeDeploy(true)" title="${esc(t('mn_dry_hint'))}">${esc(t('mn_dry_run'))}</button><button id="mn-go" onclick="gitWorkspace.nativeDeploy(false)" ${why ? `disabled title="${esc(why)}"` : ''}>🚀 ${esc(t('mn_deploy'))}</button>${why ? `<span class="g-mut">${esc(why)}</span>` : `<span class="g-mut">${esc(t('mn_dry_hint'))}</span>`}</div></div>`;
+    return h;
+  }
+  function nativeReplan(clear) {
+    const run = MN.run; if (!run || !run.result) return;
+    const r = run.result;
+    const ticked = [...document.querySelectorAll('[data-mn-ex]')].filter(x => x.checked).map(x => x.dataset.mnEx);
+    const excluded = clear ? [] : [...new Set([...(r.excluded || []), ...ticked])];
+    $('mn-ref').value = r.ref;
+    nativePlan(!!r.compared, excluded);
+  }
+  async function nativeDeploy(dry) {
+    const run = MN.run; if (!run || !run.result) return;
+    const r = run.result, confirmText = $('mn-confirm') ? $('mn-confirm').value.trim() : '';
+    if (!dry && !confirm(mnFmt('mn_deploy_confirm', r.ref, r.environment, r.servers.map(s => s.server).join(', ')))) return;
+    const body = {run_id: run.id, revision: r.revision, confirm: confirmText, dry_run: dry};
+    for (const b of ['mn-dry', 'mn-go']) if ($(b)) $(b).disabled = true;
+    try {
+      const resp = await fetch('/api/git/medium/native/deploy', json('POST', body)); if (!resp.ok) throw new Error(await apiError(resp));
+      const {job_id} = await resp.json(); nativeJobStart(job_id);
+    } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 10000); nativeRender(run); }
+  }
+  // ─── a running deployment or rollback: log and outcome per destination ───
+  function nativeJobStart(id) { clearTimeout(MN.jobTimer); MN.job = {id, from: 0, lines: [], view: null}; nativeJobPoll(); }
+  async function nativeResumeJob() {
+    if (MN.job) { nativeJobPaint(); if (!(MN.job.view && MN.job.view.done)) nativeJobPoll(); return; }
+    try {
+      const r = await fetch('/api/git/medium/native/jobs'); if (!r.ok) return;
+      const jobs = ((await r.json()).jobs || []).filter(j => !j.done);
+      if (jobs.length) nativeJobStart(jobs[0].id);
+    } catch (_) {}
+  }
+  async function nativeJobPoll() {
+    clearTimeout(MN.jobTimer);
+    const j = MN.job; if (!j || !$('mn-job')) return;
+    try {
+      const r = await fetch('/api/git/medium/native/jobs/' + encodeURIComponent(j.id) + '?from=' + j.from); if (!r.ok) throw new Error(await apiError(r));
+      const v = await r.json(); if (MN.job !== j) return;
+      j.lines.push(...(v.lines || [])); j.from += (v.lines || []).length; j.view = v;
+      nativeJobPaint();
+      if (!v.done) { MN.jobTimer = setTimeout(nativeJobPoll, 1000); return; }
+      if (v.kind === 'deploy' && v.dry_run && MN.run && MN.run.id === v.run_id) nativeRender(MN.run);
+      if ($('mn-hist') && $('mn-hist').innerHTML) nativeHistory();
+    } catch (e) { $('mn-job').innerHTML = `<p><span class="g-st s-error">${esc(String(e).replace(/^Error: /, ''))}</span></p>`; }
+  }
+  const mnLevel = {ok: 's-ok', warn: 's-pending', error: 's-error', cmd: 's-differs'};
+  function nativeJobPaint() {
+    const j = MN.job, box = $('mn-job'); if (!j || !j.view || !box) return;
+    const v = j.view;
+    const title = `${esc(t('mn_job_' + v.kind))}${v.dry_run ? ' (' + esc(t('mn_job_dry')) + ')' : ''} · <b>${esc(v.project)}</b> / ${esc(v.environment)}${v.ref ? ' · <span class="g-mono">' + esc(v.ref) + '</span>' : ''}${v.rolled_back ? ' · <span class="g-mono">' + esc(v.rolled_back) + '</span>' : ''} · <span class="g-mono g-mut">${esc(v.deploy_id)}</span>`;
+    let h = `<div class="g-card"><p>${title}</p>`;
+    if (!v.done) h += `<div class="g-bar"><span class="g-spin"></span> ${esc(mnFmt('mn_running', v.phase || '…'))} <button class="btn-sec btn-sm" onclick="gitWorkspace.nativeCancel()" title="${esc(t('mn_cancel_hint'))}">${esc(t('mn_cancel'))}</button></div>`;
+    if (v.outcomes && v.outcomes.length) h += `<div class="g-scroll"><table><tbody>${v.outcomes.map(o => `<tr><td class="g-mono">${esc(o.label || o.server)}</td><td><span class="g-st ${o.status === 'ok' || o.status === 'dry-run' ? 's-ok' : o.status === 'skipped' ? 's-pending' : 's-error'}">${esc(t('mn_status_' + o.status) || o.status)}</span></td><td class="g-mut">${o.sent || o.deleted ? esc(mnFmt('mn_sent', o.sent, o.deleted)) : ''}</td><td>${esc(o.message || '')}</td></tr>`).join('')}</tbody></table></div>`;
+    h += `<pre class="g-pre mn-log">${j.lines.map(l => `<span class="${l.level === 'out' ? 'g-mut' : ''}">${l.level === 'out' || l.level === 'info' ? '' : `<span class="g-st ${mnLevel[l.level] || ''}">${esc(l.level)}</span> `}${esc(l.text)}</span>`).join('\n')}</pre></div>`;
+    const pre = box.querySelector('.mn-log'), stick = !pre || pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 8;
+    box.innerHTML = h;
+    const np = box.querySelector('.mn-log'); if (np && stick) np.scrollTop = np.scrollHeight;
+  }
+  async function nativeCancel() {
+    const j = MN.job; if (!j) return;
+    const r = await fetch('/api/git/medium/native/jobs/' + encodeURIComponent(j.id) + '/cancel', json('POST', {}));
+    if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+    showToast(t('mn_cancel_sent'), 'success');
+  }
+  // ─── history, locks and rollback ───
+  async function nativeHistory() {
+    const p = mnProject(), env = $('mn-env') && $('mn-env').value, box = $('mn-hist'); if (!p || !env || !box) return;
+    box.innerHTML = `<p><span class="g-spin"></span> ${esc(t('loading'))}</p>`;
+    try {
+      const r = await fetch('/api/git/medium/native/history?project=' + encodeURIComponent(p.name) + '&environment=' + encodeURIComponent(env)); if (!r.ok) throw new Error(await apiError(r));
+      MN.hist = await r.json(); nativeHistoryPaint();
+    } catch (e) { box.innerHTML = `<p><span class="g-st s-error">${esc(String(e).replace(/^Error: /, ''))}</span></p>`; }
+  }
+  function nativeHistoryPaint() {
+    const hv = MN.hist, box = $('mn-hist'); if (!hv || !box) return;
+    const native = hv.engine === 'native', groups = {};
+    let h = '';
+    hv.servers.forEach((s, i) => {
+      h += `<div class="g-card"><h4 class="g-mono">${esc(s.label)}</h4>`;
+      if (s.error) h += `<p><span class="g-st s-error">${esc(s.error)}</span></p>`;
+      const cur = s.current;
+      if (cur) h += `<p>${esc(t('mn_current'))}: <b class="g-mono">${esc(cur.version || cur.branch || '?')}</b> <span class="g-mut">${esc([cur.branch, (cur.commit || '').slice(0, 10), cur.deployed_at, cur.deployed_by].filter(Boolean).join(' · '))}</span></p>`;
+      if (s.lock) {
+        const age = s.lock.since ? (Date.now() - Date.parse(s.lock.since)) / 60000 : 0, stale = age >= hv.stale_lock_minutes;
+        h += `<p><span class="g-st s-pending">${esc(mnFmt('mn_lock', s.lock.user || '?', s.lock.since || '?'))}</span> <span class="g-mut">${esc(mnFmt(stale ? 'mn_lock_stale' : 'mn_lock_young', hv.stale_lock_minutes))}</span>${hv.can_deploy ? ` <button class="btn-sec btn-sm" onclick="gitWorkspace.nativeLockRelease(${i})" ${stale ? '' : 'disabled'}>${esc(t('mn_lock_release'))}</button>` : ''}</p>`;
+      }
+      const rb = s.rollback;
+      if (rb && rb.deploy_id) {
+        h += `<p>${esc(mnFmt('mn_rb_target', rb.version || rb.deploy_id, rb.by || '?', rb.at || '?', rb.after === 'the state before the first deployment' ? t('mn_rb_first') : rb.after))}</p>`;
+        (groups[rb.deploy_id] = groups[rb.deploy_id] || []).push(s.server);
+      } else if (rb && !s.error) h += `<p class="g-mut">${esc(t('mn_rb_none'))}</p>`;
+      if (s.entries.length) h += `<details><summary>${esc(t('mn_history'))} (${s.entries.length})</summary><div class="g-scroll"><table><thead><tr><th>${esc(t('mn_h_when'))}</th><th>${esc(t('mn_h_action'))}</th><th>${esc(t('mn_h_version'))}</th><th>${esc(t('mn_h_by'))}</th><th>${esc(t('mn_h_changes'))}</th><th>${esc(t('mn_h_note'))}</th></tr></thead><tbody>${s.entries.map(e => `<tr><td class="g-mono">${esc(e.deployed_at || '')}</td><td>${esc(e.action || 'DEPLOY')}${e.rolled_back ? ' <span class="g-mono g-mut">' + esc(e.rolled_back) + '</span>' : ''}</td><td class="g-mono">${esc(e.version || e.branch || '')}</td><td>${esc(e.deployed_by || '')}</td><td class="g-mut">${e.counts ? esc(['new', 'changed', 'deleted'].map(k => (e.counts[k] || 0) + ' ' + t('mn_' + k)).join(', ')) : ''}</td><td>${esc(e.note || '')}</td></tr>`).join('')}</tbody></table></div></details>`;
+      else if (!s.error) h += `<p class="g-mut">${esc(t('mn_hist_none'))}</p>`;
+      h += '</div>';
+    });
+    const ids = Object.keys(groups);
+    if (ids.length) {
+      const why = !native ? t('mn_deploy_needs_native') : !hv.can_deploy ? t('mn_engine_no_policy') : '';
+      h += `<div class="g-card">${hv.confirm ? `<div class="g-bar"><label>${esc(mnFmt('mn_confirm_label', hv.environment))} <input id="mn-rb-confirm" autocomplete="off" spellcheck="false"></label></div>` : ''}`;
+      ids.forEach((id, k) => { h += `<div class="g-bar"><span class="g-mono">${esc(id)}</span> <span class="g-mut">${esc(mnFmt('mn_rb_on', groups[id].join(', ')))}</span><button class="btn-sec" onclick="gitWorkspace.nativeRollback(${k}, true)">${esc(t('mn_rb_dry'))}</button><button onclick="gitWorkspace.nativeRollback(${k}, false)" ${why ? `disabled title="${esc(why)}"` : ''}>↩ ${esc(t('mn_rb_go'))}</button></div>`; });
+      if (why) h += `<p class="g-mut">${esc(why)}</p>`;
+      h += '</div>';
+    }
+    MN.rbGroups = groups; MN.rbIds = ids;
+    box.innerHTML = h;
+  }
+  async function nativeRollback(k, dry) {
+    const id = typeof k === 'number' ? (MN.rbIds || [])[k] : k;
+    const hv = MN.hist, servers = (MN.rbGroups || {})[id]; if (!hv || !servers) return;
+    if (!dry && !confirm(mnFmt('mn_rb_confirm', id, servers.join(', ')))) return;
+    const body = {project: hv.project, environment: hv.environment, deploy_id: id, servers, confirm: $('mn-rb-confirm') ? $('mn-rb-confirm').value.trim() : '', dry_run: dry};
+    try {
+      const r = await fetch('/api/git/medium/native/rollback', json('POST', body)); if (!r.ok) throw new Error(await apiError(r));
+      const {job_id} = await r.json(); nativeJobStart(job_id);
+      $('mn-job').scrollIntoView({block: 'nearest'});
+    } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 10000); }
+  }
+  async function nativeLockRelease(i) {
+    const hv = MN.hist, s = hv && hv.servers[i]; if (!s || !s.lock) return;
+    if (!confirm(mnFmt('mn_lock_release_confirm', s.lock.user || '?', s.label))) return;
+    const r = await fetch('/api/git/medium/native/lock/release', json('POST', {project: hv.project, environment: hv.environment, server: s.server, deploy_id: s.lock.deploy_id || ''}));
+    if (!r.ok) { showToast(await apiError(r), 'error', 10000); return; }
+    showToast(t('mn_lock_released'), 'success'); nativeHistory();
   }
   async function mediumQuickSetup(){
     const data=new FormData();for(const kind of ['tool','config','ssh']){const f=$('medium-quick-'+kind)?.files?.[0];if(f){if(f.size>20*1024*1024){showToast(t('gm_size'),'error');return}data.append(kind,f)}}
@@ -3818,7 +4008,7 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,

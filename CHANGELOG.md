@@ -1,3 +1,24 @@
+## [12.7.0] - 2026-10-18
+
+### Added
+- **Medium native engine: deployments and rollbacks** (`medium_deploy.go`, `medium_rollback.go`, `medium_state.go`, `medium_host.go`, `medium_deploy_api.go`): WRM deploys a project from its WRM Git source to every destination of an environment through the user's WRM connections (SFTP plus `sh` over SSH), without Docker and without the original tool. The server state is the original tool's, byte for byte: `lock/` (created with `mkdir`) and `lock/owner.json`, `current.json`, `history.jsonl` (compact JSON, the original's key order, every field present), `backups/<deploy_id>/` with `<deploy_id>.added` and `<deploy_id>.dirs`, and `rollback-<id>/` for rollbacks. Either tool reads, continues after and rolls back what the other wrote.
+- **Deployment sequence per destination:** lock; compare again under the lock and stop when the result differs from the reviewed plan (nothing written); manifests; removals deepest first into the backup; new directories; uploads to temporary files next to their targets (four at a time, new files 0664/0775 minus the server's umask, changed files keep their permissions); SHA-256 check of every upload; replacement (the old file goes to the backup first); `post_deploy` in the application directory through the login shell; a final check; `current.json` and history; pruning (the current deployment and the last five applied ones keep their backups, rollbacks their newest five); lock released. A failure after the first change writes a partial history entry (`current: false`) so it can be rolled back.
+- **Dry run:** takes the lock, compares again under it and releases it, changing nothing.
+- **Rollback:** WRM chooses the deployment to undo and what it restores from the history as the original tool does (applied deployments that changed files, rollbacks that completed, `previous` where recorded), restores files, symbolic links and directories with their modes from the backup, removes what the deployment added, and records a `ROLLBACK` entry. A dry rollback shows what would happen. The chosen deployment must still be the last one when the rollback starts.
+- **Locks:** a deployment by someone else (WRM or the original tool) is reported with its owner and age. A lock older than the longest a deployment may take (`medium_command_timeout` and `medium_transfer_timeout`, at least 30 minutes) can be released by hand, only if its owner did not change meanwhile (`POST /api/git/medium/native/lock/release`, step-up, audited).
+- **Per-project engine** (table `medium_project_engine`, `POST /api/git/medium/native/engine`): every project starts on the Docker runtime (the original tool deploys it); a user allowed by the new policy `medium_native` (default `admins`) switches it to the WRM native engine and back at any time, since the server state is the same.
+- **Leave changes out:** in the plan, tick changes to leave out of this deployment and compare again; the plan keeps them as they are on each server and `current.json` records them in `excluded`.
+- **WRM engine panel** (Medium): the engine switch per project, exclusions, the typed environment confirmation where `confirm` is set, *Dry run* and *Deploy*, a live log with the outcome per destination and *Cancel* (it stops before the next destination starts changing), and *History and rollback* with the current version, the lock with its owner and *Release lock*, the recent entries with their changes, and *Dry rollback* / *Roll back* grouped by deployment.
+- **Jobs** (`GET /api/git/medium/native/jobs`, `/jobs/{id}?from=`, `POST /jobs/{id}/cancel`): one running deployment or rollback per user, kept for an hour, each with a row in the Medium activity log (`native_deploy`, `native_deploy_dry_run`, `native_rollback`, `native_rollback_dry_run`). Stopping a user or a lockdown cancels their jobs before the next destination.
+- New settings `medium_command_timeout` (300 s) and `medium_transfer_timeout` (3600 s).
+- Audit: `git.medium_engine_set`, `git.medium_native_deploy`, `git.medium_native_rollback`, `git.medium_native_<kind>_done`, `git.medium_native_lock_released`, `git.medium_native_cancelled`. Deploying, rolling back and releasing a lock need step-up (`medium.deploy`, `medium.rollback`, `medium.lock_release`).
+
+### Changed
+- A comparison's result carries a `revision` (over the commit, the exclusions and every server's plan) and `deployable`; a deployment names the revision it was reviewed at and is refused when the plan changed. A plan is deployed at most once.
+- Projects with a build step are still deployed by the original tool; build locations (WRM host, a Linux build server over SSH, none) come in v12.7.1.
+- A repository path that is absolute or has empty, `.` or `..` components stops the comparison.
+- Symbolic links created over SFTP are checked and made with `ln -s` when the SFTP server changed their target.
+
 ## [12.6.26] - 2026-10-18
 
 ### Added
