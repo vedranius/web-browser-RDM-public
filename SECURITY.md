@@ -87,6 +87,18 @@ Since v12.6.23 (`remote-manager/roles.go`, `teams.go`):
 - **Break-glass administrator** (`users.break_glass`): a local emergency account that must use 2FA (its sessions end until 2FA is set up), may be limited to `break_glass_ips`, and whose every sign-in is audited (`auth.break_glass_login`) and notified to all other administrators.
 - **Deprovisioning:** deleting a user can hand their connections, folders, credentials, SSH keys, shares and proxies to another active, non-auditor account in one transaction (`handOver`, audited `admin.user_handover`). Disabling a user ends their sign-in sessions, terminals, AI sessions and AI connections.
 
+## Directory sign-in (OIDC)
+
+Since v12.6.24 (`remote-manager/oidc.go`, `oidc_jwt.go`):
+
+- **Protocol:** authorization code flow with PKCE (S256), a random `state` that is used once, expires after 10 minutes and must match a cookie set in the browser that started the sign-in (so a sign-in link cannot be completed in someone else's browser), and a `nonce` checked in the ID token. ID tokens are verified with the provider's published keys (RSA ≥ 2048 bits or ECDSA P-256/384/521); unsigned and shared-secret (HS*) tokens are refused, and issuer, audience, `azp`, expiry and issue time are checked. Provider addresses must be HTTPS (plain HTTP only on loopback), including every endpoint the discovery document names.
+- **Identity:** accounts are found only by the immutable directory ID (`tid` + `oid` for Entra, otherwise `iss` + `sub`). Names and e-mail addresses are never used to match an existing account; a new account whose preferred name is taken gets a different name. Existing accounts are linked only by their signed-in owner, and the provider must confirm the person.
+- **Least privilege from the directory:** accounts are created only for people a rule matches, and every sign-in re-applies the role and SSO teams; people no rule matches are refused and their sessions end. The last active administrator is never demoted by a sign-in. Break-glass accounts stay local.
+- **Deprovisioning:** signed-in directory users are revalidated with their refresh token every `oidc_revalidate_minutes`; a refused refresh, a token no rule matches, or no successful check for `oidc_unverified_hours` ends their sign-in sessions, terminals, tunnels, rooms and AI sessions.
+- **Secrets:** the client secret and refresh tokens are encrypted at rest (`encryptValue`) and never sent to the browser or written to the audit log. *Test sign-in* shows only the ID token's claims to the administrator.
+- **Local passwords:** `local_login = break_glass` (required by the Enterprise level while a provider is enabled) leaves password sign-in and self-registration only to break-glass administrators, so a person disabled in the directory cannot fall back to a local password.
+- **Audit:** provider changes, accounts created from the directory, links, role syncs, ended access, test sign-ins and every refused directory sign-in with its reason.
+
 ## Hardening checklist
 
 WRM is secure by default in most respects. For production and company use, also check the items below. The admin panel (*Overview*) warns about several of them.
