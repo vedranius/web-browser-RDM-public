@@ -1,6 +1,24 @@
-## Web Remote Manager PRO v12.6.24 — Sign in with your organisation's account
+## Web Remote Manager PRO v12.6.25 — Active Directory, LDAP and SCIM
 
 ### Added
+
+- **Sign in with Active Directory or LDAP:** people use their directory name and password on the normal sign-in page (`name`, `DOMAIN\name` or `name@domain`). WRM checks the password with the directory and never stores it. The connection is always encrypted (LDAPS or StartTLS). Nested AD groups, OpenLDAP, 389 Directory Server and FreeIPA are supported.
+- **Who gets in, decided by directory groups:** rules turn groups (nested ones included) or attributes into a WRM role and teams. Accounts are created on the first sign-in only for people a rule matches; disabled, locked and expired accounts are refused with a clear message.
+- **Access ends when the directory says so:** WRM checks every linked account regularly (every 15 minutes by default, or with *Check now*). Someone deleted, disabled, locked or removed from the WRM groups loses access at once.
+- **SCIM provisioning:** Microsoft Entra ID, Okta and other identity providers create, change, disable and delete WRM accounts and groups immediately. Groups become WRM teams, and each provisioning client has its own token that can be rotated or revoked.
+- **Stopping someone stops everything:** disabling an account in WRM, in the directory or through SCIM ends their sign-in sessions, terminals, tunnels, collaboration rooms, AI sessions and AI connections.
+- **Set up step by step:** *Test connection* checks the address, encryption, certificate, service account, base DN, users and groups and says what to fix. *Test sign-in* shows what WRM would do for a person, without creating anything.
+- **Secrets stay with their server:** changing a directory's address or a provider's issuer asks for the password or client secret again, so a stored secret is never sent to another server.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets six new tables (`ldap_directories`, `ldap_identities`, `scim_clients`, `scim_users`, `scim_groups`, `scim_group_members`); a previous version still starts on it. Nothing changes until an administrator adds a directory or a provisioning client.
+
+[Download v12.6.25](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.25) · [LDAP / Active Directory and SCIM](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.25/README.md#ldap--active-directory-and-scim)
+
+### Included from v12.6.24 — Sign in with your organisation's account
+
+#### Added
 
 - **Directory sign-in:** people sign in with Microsoft Entra ID, ADFS, Okta, Keycloak, Google Workspace or any OpenID Connect provider. *Admin panel → Directory sign-in* adds the provider with setup hints for each kind and checks the connection step by step, saying what to fix when a step fails.
 - **Who gets in, decided in the directory:** rules turn Entra app roles, group IDs or other claims into a WRM role and teams. Accounts are created on the first sign-in only for people a rule matches; everyone else is refused with a clear message. People are recognised by their immutable directory ID, never by name or e-mail.
@@ -11,7 +29,7 @@
 - **Confirm with the directory:** accounts without a password confirm risky actions (step-up) by signing in at the provider again. Existing accounts can link their directory account in *Settings → Security*.
 - **Signed, automatic releases:** releases are now published automatically when a new version is merged, and signed with the project's key; the one-click update refuses a release without a valid signature.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets two new tables (`oidc_providers`, `user_identities`) and three columns; a previous version still starts on it. Nothing changes until an administrator adds an identity provider.
 

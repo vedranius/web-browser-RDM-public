@@ -1,15 +1,14 @@
 # Roadmap
 
-Accepted work through **v12.6.24** is delivered in [CHANGELOG.md](CHANGELOG.md).
+Accepted work through **v12.6.25** is delivered in [CHANGELOG.md](CHANGELOG.md).
 
 ## Security and enterprise identity (accepted, versions before v12.7.0)
 
 Goal: the same WRM fits a home lab, a small company and a large organisation. Security is checked automatically on every change, the operator chooses a security level, and companies sign in with their directory (Microsoft Entra ID / AD, LDAP, other identity providers) so every action is traceable to a domain user and can be stopped at once.
 
-v12.6.20 delivered the continuous security pipeline, v12.6.21 signed releases, SBOM, build provenance and the nightly fuzz and ZAP tests, v12.6.22 the security levels (Home / Business / Enterprise), deviations and the security posture page, v12.6.23 roles, teams, step-up re-authentication, the break-glass administrator and handover on delete, v12.6.24 directory sign-in (OIDC) (see [CHANGELOG.md](CHANGELOG.md)). Next, in this order:
+v12.6.20 delivered the continuous security pipeline, v12.6.21 signed releases, SBOM, build provenance and the nightly fuzz and ZAP tests, v12.6.22 the security levels (Home / Business / Enterprise), deviations and the security posture page, v12.6.23 roles, teams, step-up re-authentication, the break-glass administrator and handover on delete, v12.6.24 directory sign-in (OIDC), v12.6.25 LDAP / Active Directory and SCIM (see [CHANGELOG.md](CHANGELOG.md)). Next:
 
-1. **v12.6.25 – LDAP / Active Directory and SCIM:** LDAPS or StartTLS only, service-account search then user bind, nested AD groups, periodic sync of disabled/locked state and group membership; a SCIM 2.0 endpoint so Entra ID / Okta create, change and disable users and groups immediately. Disabling by any route ends terminals, tunnels, rooms, sessions, AI sessions and MCP tokens.
-2. **v12.6.26 – SIEM export and containment:** audit to syslog (RFC 5424 over TLS), JSON lines and HTTPS (Splunk HEC, Elastic, Microsoft Sentinel, generic), with identity fields and the hash chain; delivery status visible to the admin; alert rules (failed sign-ins, break-glass sign-in, new admins, secret reveals, AI full-access approvals, audit off); *Stop user* (one click, shows what was ended) and *Lockdown* mode (only break-glass admins, AI kill switch, shares paused) from the UI, `wrm -lockdown` and an environment variable.
+1. **v12.6.26 – SIEM export and containment:** audit to syslog (RFC 5424 over TLS), JSON lines and HTTPS (Splunk HEC, Elastic, Microsoft Sentinel, generic), with identity fields and the hash chain; delivery status visible to the admin; alert rules (failed sign-ins, break-glass sign-in, new admins, secret reveals, AI full-access approvals, audit off); *Stop user* (one click, shows what was ended) and *Lockdown* mode (only break-glass admins, AI kill switch, shares paused) from the UI, `wrm -lockdown` and an environment variable.
 
 Later, when needed: passkeys/WebAuthn, SAML 2.0, Kerberos/SPNEGO, trusted proxy headers, client certificates, encryption key in an external key store with key rotation, a CSP without `'unsafe-inline'`, encrypted backups.
 
