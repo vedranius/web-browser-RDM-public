@@ -10,6 +10,10 @@
 - **Set up step by step:** *Test connection* checks the address, encryption, certificate, service account, base DN, users and groups and says what to fix. *Test sign-in* shows what WRM would do for a person, without creating anything.
 - **Secrets stay with their server:** changing a directory's address or a provider's issuer asks for the password or client secret again, so a stored secret is never sent to another server.
 
+### Fixed
+
+- **Automatic releases:** the release job never started after a merge, so v12.6.24 was not published on its own. This release includes everything from v12.6.24 and is the first signed, automatically published release.
+
 ### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets six new tables (`ldap_directories`, `ldap_identities`, `scim_clients`, `scim_users`, `scim_groups`, `scim_group_members`); a previous version still starts on it. Nothing changes until an administrator adds a directory or a provisioning client.
@@ -33,7 +37,7 @@ Replace the executable/container and keep the database and encryption key. The d
 
 Replace the executable/container and keep the database and encryption key. The database gets two new tables (`oidc_providers`, `user_identities`) and three columns; a previous version still starts on it. Nothing changes until an administrator adds an identity provider.
 
-[Download v12.6.24](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.24) · [Directory sign-in (OIDC)](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.24/README.md#directory-sign-in-oidc)
+v12.6.24 was not released on its own (see *Fixed* above); it ships in v12.6.25. · [Directory sign-in (OIDC)](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.25/README.md#directory-sign-in-oidc)
 
 ### Included from v12.6.23 — Roles, teams and step-up
 

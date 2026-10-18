@@ -17,6 +17,9 @@
 - Password sign-in limited to break-glass (`local_login = break_glass`) also applies while an LDAP directory is enabled; directory users sign in with their directory password on the same form.
 - `/api/auth/config` returns `ldap` (the directories' names); `/api/auth/me` returns `directory_password` (the account confirms with its directory password). Accounts that sign in with a directory password cannot change it in WRM, and confirm step-up and 2FA changes with it.
 
+### Fixed
+- Automatic releases: the `Tag new version` job was always skipped on `main`, because the build jobs it waits for depend on the release job that only runs on tags. v12.6.24 was therefore not released on its own; this release includes it.
+
 ## [12.6.24] - 2026-10-18
 
 ### Added
