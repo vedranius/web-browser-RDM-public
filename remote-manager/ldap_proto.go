@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
 	"net/url"
 	"strconv"
@@ -56,16 +57,35 @@ func berBool(tag byte, b bool) *berPacket {
 	return &berPacket{Tag: tag, Value: []byte{0}}
 }
 func berInt(tag byte, n int64) *berPacket {
-	var out []byte
-	for {
-		out = append([]byte{byte(n)}, out...)
-		n >>= 8
-		if (n == 0 && out[0]&0x80 == 0) || (n == -1 && out[0]&0x80 != 0) {
-			break
+	// Two's complement, shortest form.
+	if n < 0 {
+		out := berMagnitude(^n) // -n-1 >= 0
+		for i := range out {
+			out[i] = ^out[i]
 		}
+		if out[0]&0x80 == 0 {
+			out = append([]byte{0xff}, out...)
+		}
+		return &berPacket{Tag: tag, Value: out}
+	}
+	out := berMagnitude(n)
+	if out[0]&0x80 != 0 {
+		out = append([]byte{0}, out...)
 	}
 	return &berPacket{Tag: tag, Value: out}
 }
+
+// berMagnitude returns the big-endian bytes of n >= 0, at least one byte.
+func berMagnitude(n int64) []byte {
+	b := new(big.Int).SetInt64(n).Bytes()
+	if len(b) == 0 {
+		return []byte{0}
+	}
+	return b
+}
+
+// berLongForm[k] is the first length octet of a long-form length with k+1 length bytes.
+var berLongForm = [...]byte{0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88}
 
 func (p *berPacket) constructed() bool { return p.Tag&berConstructed != 0 }
 
@@ -79,17 +99,11 @@ func (p *berPacket) Bytes() []byte {
 		body = b.Bytes()
 	}
 	out := []byte{p.Tag}
-	n := len(body)
-	switch {
-	case n < 0x80:
-		out = append(out, byte(n))
-	case n < 0x100:
-		out = append(out, 0x81, byte(n))
-	case n < 0x10000:
-		out = append(out, 0x82, byte(n>>8), byte(n))
-	default:
-		out = append(out, 0x84, byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
+	lb := berMagnitude(int64(len(body)))
+	if len(body) >= 0x80 {
+		out = append(out, berLongForm[len(lb)-1])
 	}
+	out = append(out, lb...)
 	return append(out, body...)
 }
 

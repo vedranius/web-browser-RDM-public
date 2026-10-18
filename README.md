@@ -1960,6 +1960,7 @@ How it behaves:
 - Provisioned accounts have no password; they sign in through the directory. The first OIDC sign-in links the account when its `externalId` equals the token's `oid` (Entra) or `sub`, and the account has no directory link yet.
 - `active: false` or deleting the user disables the account and ends its sessions, terminals, tunnels, rooms, AI sessions and AI connections; WRM keeps the account so an administrator can hand its work over. The last active administrator is never disabled or demoted (`scim.disable_refused`).
 - Groups become WRM teams named `<group> (SCIM)`; membership follows the group. A team made by hand is never taken over.
+- The identity provider is the source of truth for the accounts it provisions: `active: true` re-enables such an account even when an administrator disabled it in WRM. To keep someone out, disable or unassign them in the identity provider.
 - Supported: Users and Groups (create, read, replace, PATCH, delete), `filter=userName eq "…"`, `externalId eq "…"` or `id eq "…"` (groups: `displayName`, `externalId`, `id`), `startIndex` / `count`, `ServiceProviderConfig`, `ResourceTypes`, `Schemas`. Limits: 600 requests a minute per address, 1 MB per request.
 - Audited: `scim.client_created`, `scim.client_updated`, `scim.token_rotated`, `scim.client_revoked`, `scim.user_created`, `scim.user_updated`, `scim.user_disabled`, `scim.user_deleted`, `scim.group_created`, `scim.group_renamed`, `scim.group_deleted`, `scim.team_created`.
 
