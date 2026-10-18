@@ -606,6 +606,14 @@ func apiOIDCStartHandler(w http.ResponseWriter, r *http.Request) {
 				jsonError(w, "A break-glass account stays local; it cannot be linked to a directory account", 400)
 				return
 			}
+			if _, err := loadOIDCIdentity(`user_id=? AND provider_id=?`, s.UserID, p.ID); err == nil {
+				jsonError(w, "Your account is already linked to this identity provider; unlink it first", 400)
+				return
+			}
+			// Linking adds a way to sign in, so a stolen session must not be enough.
+			if !requireStepUpAlways(w, r, "oidc.link") {
+				return
+			}
 		case "stepup":
 			if !p.Enabled {
 				jsonError(w, "This identity provider is turned off", 400)
@@ -785,7 +793,8 @@ func apiOIDCCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if _, err := loadOIDCIdentity(`provider_id=? AND user_id=?`, p.ID, pend.UserID); err == nil {
-			db.Exec(`DELETE FROM user_identities WHERE provider_id=? AND user_id=?`, p.ID, pend.UserID)
+			refuse("already linked", "Your WRM account is already linked to "+p.Name+"; unlink it first.", c)
+			return
 		}
 		oidcSaveIdentity(pend.UserID, p.ID, subject, c, tr.RefreshToken)
 		auditLog(r, pend.UserID, "oidc.identity_linked", p.Name, map[string]string{"subject": subject})

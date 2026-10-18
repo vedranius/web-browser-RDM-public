@@ -687,6 +687,15 @@ func TestOIDCLinkStepUpAndTest(t *testing.T) {
 		t.Fatalf("test sign-in by a non-admin: %d", code)
 	}
 
+	// Linking adds a way to sign in, so it needs a fresh confirmation even with the policy off.
+	setSetting("require_step_up", "0")
+	db.Exec(`UPDATE auth_sessions SET step_up_at='2000-01-01T00:00:00Z' WHERE user_id=?`, other.userID)
+	var su map[string]interface{}
+	if code := other.jsonDo("POST", "/api/auth/oidc/start", map[string]interface{}{"provider": pid, "mode": "link"}, &su); code != 403 || su["step_up"] != true {
+		t.Fatalf("link with a stale session: %d %v", code, su)
+	}
+	db.Exec(`UPDATE auth_sessions SET step_up_at=? WHERE user_id=?`, nowRFC(), other.userID)
+
 	// A local account links its directory account and can then sign in with it.
 	if res := popup(other, "link", map[string]interface{}{"sub": "other-dir"}); res["ok"] != true {
 		t.Fatalf("link: %v", res)
@@ -697,6 +706,10 @@ func TestOIDCLinkStepUpAndTest(t *testing.T) {
 	var me map[string]interface{}
 	if code := b.jsonDo("GET", "/api/auth/me", nil, &me); code != 200 || int(me["id"].(float64)) != other.userID {
 		t.Fatalf("sign-in with the linked account: %d %v", code, me)
+	}
+	// An existing link is never silently replaced by another directory account.
+	if code := other.jsonDo("POST", "/api/auth/oidc/start", map[string]interface{}{"provider": pid, "mode": "link"}, nil); code != 400 {
+		t.Fatalf("second link for the same account: %d", code)
 	}
 	// The same directory account cannot be linked to a second WRM account.
 	if res := popup(admin, "link", map[string]interface{}{"sub": "other-dir"}); res["ok"] != false {

@@ -7557,10 +7557,12 @@ async function stepUpSubmit() {
 // outcome (the window is on another site, so it cannot report back itself).
 let _ssoPoll = null;
 async function ssoPopup(providerId, mode) {
-  const win = window.open('about:blank', 'wrm-sso', 'width=520,height=720');
+  let win = window.open('about:blank', 'wrm-sso', 'width=520,height=720');
   const res = await fetch('/api/auth/oidc/start', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({provider: providerId, mode})});
   const d = await res.json().catch(() => ({}));
   if (!res.ok) { try { win && win.close(); } catch (_) {} showToast(d.error || t('failed'), 'error', 7000); return null; }
+  // Linking asks for a step-up first, which may have used (and closed) the same window.
+  if (win && win.closed) win = window.open('about:blank', 'wrm-sso', 'width=520,height=720');
   if (!win) { showToast(t('sso_popup_blocked'), 'error', 7000); return null; }
   win.location.href = d.url;
   if (mode !== 'stepup') showToast(t('sso_finish_in_window'), 'info', 4000);
