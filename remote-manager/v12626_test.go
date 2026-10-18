@@ -50,6 +50,23 @@ func TestLockdown(t *testing.T) {
 	admin := newTestUser(t, srv, "lock-admin", true)
 	bg := newTestUser(t, srv, "lock-breakglass", true)
 	user := newTestUser(t, srv, "lock-user", false)
+	// Other tests in the shared database may have left break-glass accounts behind.
+	var others []int
+	if rows, err := db.Query(`SELECT id FROM users WHERE break_glass=1`); err == nil {
+		for rows.Next() {
+			var id int
+			if rows.Scan(&id) == nil {
+				others = append(others, id)
+			}
+		}
+		rows.Close()
+	}
+	db.Exec(`UPDATE users SET break_glass=0 WHERE break_glass=1`)
+	t.Cleanup(func() {
+		for _, id := range others {
+			db.Exec(`UPDATE users SET break_glass=1 WHERE id=?`, id)
+		}
+	})
 
 	if code := admin.jsonDo("POST", "/api/admin/lockdown", map[string]interface{}{"on": true, "reason": "incident"}, nil); code != 409 {
 		t.Fatalf("lockdown without any break-glass administrator: %d", code)
