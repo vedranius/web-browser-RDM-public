@@ -47,9 +47,9 @@ func TestLockdown(t *testing.T) {
 	t.Cleanup(func() { endLockdown(t) })
 	resetLoginLimiter()
 	srv := newTestServer(t)
-	admin := newTestUser(t, srv, "ld-admin", true)
-	bg := newTestUser(t, srv, "ld-breakglass", true)
-	user := newTestUser(t, srv, "ld-user", false)
+	admin := newTestUser(t, srv, "lock-admin", true)
+	bg := newTestUser(t, srv, "lock-breakglass", true)
+	user := newTestUser(t, srv, "lock-user", false)
 
 	if code := admin.jsonDo("POST", "/api/admin/lockdown", map[string]interface{}{"on": true, "reason": "incident"}, nil); code != 409 {
 		t.Fatalf("lockdown without any break-glass administrator: %d", code)
@@ -74,7 +74,7 @@ func TestLockdown(t *testing.T) {
 	if code := bg.jsonDo("GET", "/api/auth/me", nil, nil); code != 200 {
 		t.Fatalf("the break-glass administrator lost the session: %d", code)
 	}
-	code, out, _ := passwordLogin(t, srv, "ld-user", "pw-ld-user-123456")
+	code, out, _ := passwordLogin(t, srv, "lock-user", "pw-lock-user-123456")
 	if code != 403 || !strings.Contains(fmt.Sprint(out["error"]), "lockdown") {
 		t.Fatalf("sign-in during lockdown: %d %v", code, out)
 	}
@@ -108,7 +108,7 @@ func TestLockdown(t *testing.T) {
 		t.Fatal("lockdown still on")
 	}
 	resetLoginLimiter()
-	if code, out, _ := passwordLogin(t, srv, "ld-user", "pw-ld-user-123456"); code != 200 {
+	if code, out, _ := passwordLogin(t, srv, "lock-user", "pw-lock-user-123456"); code != 200 {
 		t.Fatalf("sign-in after the lockdown: %d %v", code, out)
 	}
 
@@ -223,7 +223,12 @@ func TestSecurityAlerts(t *testing.T) {
 		t.Fatalf("failed sign-in alert: %v", d)
 	}
 	var n int
-	db.QueryRow(`SELECT COUNT(*) FROM user_events WHERE user_id=? AND event='security.alert'`, admin.userID).Scan(&n)
+	for i := 0; i < 50 && n == 0; i++ { // the inbox entry follows the audit entry
+		db.QueryRow(`SELECT COUNT(*) FROM user_events WHERE user_id=? AND event='security.alert'`, admin.userID).Scan(&n)
+		if n == 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
 	if n == 0 {
 		t.Fatal("administrators were not told about the alert")
 	}

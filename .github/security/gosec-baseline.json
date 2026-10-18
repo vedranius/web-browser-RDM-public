@@ -185,6 +185,8 @@
   "G703 service.go data, err := os.ReadFile(path)",
   "G703 service.go if fi, err := os.Stat(path); err == nil && fi.Mode().IsRegular() && fi.Mode()&0o100 == 0 {",
   "G703 service.go os.Chmod(path, fi.Mode()|0o100)",
+  "G703 siem.go if fi, err := os.Lstat(p); err == nil && fi.Mode()&os.ModeSymlink != 0 {",
+  "G703 siem.go if fi, err := os.Stat(filepath.Dir(p)); err != nil || !fi.IsDir() {",
   "G703 update.go os.Remove(name)",
   "G704 ai_llm.go req, err := http.NewRequestWithContext(requestCtx, http.MethodPost, u, bytes.NewReader(body))",
   "G704 ai_llm.go resp, err := client.Do(req)",
