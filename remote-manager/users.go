@@ -308,6 +308,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 		"is_admin": u.IsAdmin, "totp_enabled": u.TOTPEnabled, "must_change_password": u.MustChange,
 		"restricted": restricted, "mfa_required": mfaRequiredByPolicy(u.IsAdmin) || u.BreakGlass,
 		"role": u.Role, "is_auditor": u.Role == userRoleAuditor, "break_glass": u.BreakGlass, "teams": userTeams(u.ID),
+		"sso_only": userSSOOnly(u.ID), "sso": userSSOProviders(u.ID),
 		"step_up":             map[string]interface{}{"required": settingBool("require_step_up"), "minutes": settingInt("step_up_minutes"), "totp": u.TOTPEnabled},
 		"recovery_codes_left": recoveryCodesLeft(u.Recovery),
 		"password_min_length": settingInt("password_min_length"),
@@ -356,6 +357,15 @@ func finishLogin(w http.ResponseWriter, r *http.Request, u *userRow, method stri
 		breakGlassSignedIn(r, u)
 	}
 	jsonOK(w, mePayload(u.ID, restricted))
+}
+
+// passwordOrDirectoryConfirmed: the account's password, or for an account that signs in only
+// through the directory (no password) a fresh confirmation there (step-up window).
+func passwordOrDirectoryConfirmed(u *userRow, password string, sessionID int) bool {
+	if checkPassword(u.Hash, password) {
+		return true
+	}
+	return userSSOOnly(u.ID) && stepUpFresh(sessionID)
 }
 
 // Two-factor step: after a correct password the browser gets a short-lived signed token
@@ -407,6 +417,8 @@ func apiAuthConfigHandler(w http.ResponseWriter, r *http.Request) {
 	if msg := signInTransportError(r); msg != "" {
 		out["https_required"] = msg
 	}
+	// Directory sign-in buttons; local_login_limited hides the password form behind "Emergency sign-in".
+	out["sso"], out["local_login_limited"] = oidcSignInOptions(), localLoginLimited()
 	// The sign-in page's version badge: an available update and its release page.
 	if info := lastUpdateInfo(); settingBool("update_check") && updateAvailable(info) {
 		out["update"], out["update_url"] = info.Latest, info.URL
@@ -442,6 +454,10 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	first := existing == 0
 	if !first && getSetting("registration") != "open" {
 		jsonError(w, "Registration is disabled. Ask an administrator to create an account for you.", 403)
+		return
+	}
+	if !first && localLoginLimited() {
+		jsonError(w, "Accounts come from your organisation's directory: sign in with its button.", 403)
 		return
 	}
 	payload.Username = strings.TrimSpace(payload.Username)
@@ -539,6 +555,11 @@ func apiAuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "This account is disabled. Contact an administrator.", 403)
 		return
 	}
+	if localLoginLimited() && !u.BreakGlass {
+		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"reason": "local sign-in limited to break-glass administrators"})
+		jsonError(w, "Sign in with your organisation's account (the button above). Password sign-in is kept for emergency administrators only.", 403)
+		return
+	}
 	if u.BreakGlass && !breakGlassIPAllowed(ip) {
 		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"reason": "break-glass account from a network not in break_glass_ips"})
 		jsonError(w, "This emergency (break-glass) account may only sign in from the networks the administrator allowed.", 403)
@@ -608,6 +629,12 @@ func apiAuthMFAHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	recordLoginResult(ip, true)
+	if identityID := oidcMFAIdentity(nonce); identityID > 0 {
+		// The second step of a directory sign-in: the session belongs to that identity.
+		finishLogin(w, r, u, "oidc+"+method)
+		db.Exec(`UPDATE auth_sessions SET identity_id=? WHERE id=(SELECT MAX(id) FROM auth_sessions WHERE user_id=?) AND identity_id=0`, identityID, u.ID)
+		return
+	}
 	finishLogin(w, r, u, method)
 }
 
@@ -762,7 +789,7 @@ func apiAuth2FAHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Two-factor authentication is required by the security policy", 403)
 			return
 		}
-		if !checkPassword(u.Hash, p.Password) {
+		if !passwordOrDirectoryConfirmed(u, p.Password, s.ID) {
 			jsonError(w, "Wrong password", 400)
 			return
 		}
@@ -782,7 +809,7 @@ func apiAuth2FAHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Two-factor authentication is not enabled", 400)
 			return
 		}
-		if !checkPassword(u.Hash, p.Password) {
+		if !passwordOrDirectoryConfirmed(u, p.Password, s.ID) {
 			jsonError(w, "Wrong password", 400)
 			return
 		}
@@ -926,7 +953,13 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		rows.Close()
 		for _, u := range users {
-			u["teams"] = userTeams(u["id"].(int))
+			id := u["id"].(int)
+			u["teams"] = userTeams(id)
+			sso := []string{}
+			for _, p := range userSSOProviders(id) {
+				sso = append(sso, p["name"].(string))
+			}
+			u["sso"], u["sso_only"] = sso, userSSOOnly(id)
 		}
 		jsonOK(w, users)
 	case http.MethodPost:
@@ -1144,7 +1177,7 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		mustChange := p.MustChange == nil || *p.MustChange
 		hash, _ := hashPassword(p.Password)
-		db.Exec(`UPDATE users SET password_hash=?, must_change_password=?, failed_logins=0, locked_until='', password_changed_at=? WHERE id=?`,
+		db.Exec(`UPDATE users SET password_hash=?, must_change_password=?, failed_logins=0, locked_until='', password_changed_at=?, sso_only=0 WHERE id=?`,
 			hash, boolToInt(mustChange), time.Now().UTC().Format(time.RFC3339), id)
 		revokeUserSessions(id, 0)
 		auditLog(r, adminID, "admin.user_password_reset", target.Username, map[string]bool{"must_change_password": mustChange})
@@ -1227,6 +1260,7 @@ func deleteUserCompletely(id int) {
 	tx.Exec(`DELETE FROM git_relay_members WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM git_sources WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM auth_sessions WHERE user_id=?`, id)
+	tx.Exec(`DELETE FROM user_identities WHERE user_id=?`, id)
 	tx.Exec(`DELETE FROM users WHERE id=?`, id)
 	tx.Commit()
 }

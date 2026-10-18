@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.6.23</title>
+<title>Web Remote Manager PRO v12.6.24</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1589,6 +1589,25 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .team-members-box { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; margin-top: 6px; }
 .team-member-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .team-member-row:last-child { border-bottom: none; }
+/* Directory sign-in (OIDC) */
+.auth-sso-btn { display: block; text-align: center; text-decoration: none; box-sizing: border-box; margin: 0 0 8px; }
+.auth-or { display: flex; align-items: center; gap: 10px; color: var(--text2); font-size: 11px; margin: 10px 0 12px; text-transform: uppercase; letter-spacing: .06em; }
+.auth-or::before, .auth-or::after { content: ''; flex: 1; border-top: 1px solid var(--border); }
+.auth-local-link { display: block; text-align: center; color: var(--text2); font-size: 12px; margin-top: 10px; }
+.sso-rule { display: grid; grid-template-columns: 110px 1fr 120px 1fr 28px; gap: 6px; margin-bottom: 6px; align-items: center; }
+.sso-rule input, .sso-rule select { min-width: 0; }
+.sso-steps { list-style: none; padding: 0; margin: 8px 0; font-size: 12px; }
+.sso-steps li { padding: 4px 0; border-bottom: 1px solid var(--border); line-height: 1.45; }
+.sso-steps li .fix { color: var(--text2); display: block; }
+.sso-pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 11px; max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-all; user-select: text; }
+@media (max-width: 640px) {
+  .sso-ids table, .sso-ids tbody, .sso-ids tr, .sso-ids td { display: block; width: auto; }
+  .sso-ids thead { display: none; }
+  .sso-ids tr { padding: 8px 0; border-bottom: 1px solid var(--border2); }
+  .sso-ids td { border: none !important; padding: 2px 0 !important; }
+  .sso-ids td[data-l]::before { content: attr(data-l) ": "; color: var(--text3, var(--text2)); }
+}
+@media (max-width: 600px) { .sso-rule { grid-template-columns: 1fr 1fr; } .sso-rule .sso-del { justify-self: end; } }
 .team-member-row label { white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; text-transform: none; letter-spacing: normal; font-size: 13px; font-weight: 400; color: var(--text); }
 .team-member-row label.muted-text { color: var(--text2); }
 </style>
@@ -1619,7 +1638,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.6.23 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.6.24 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1629,13 +1648,15 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')" data-i18n="register">Register</div>
       </div>
       <div id="auth-error" class="auth-error"></div>
+      <div id="auth-sso" style="display:none;"></div>
+      <div id="auth-local">
       <div class="auth-field">
         <label data-i18n="username">Username</label>
-        <input type="text" id="auth-user" placeholder="Enter username" autocomplete="username" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') document.getElementById('auth-pass').focus()">
+        <input type="text" id="auth-user" placeholder="Enter username" data-i18n-placeholder="auth_ph_user" autocomplete="username" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') document.getElementById('auth-pass').focus()">
       </div>
       <div class="auth-field">
         <label data-i18n="password">Password</label>
-        <input type="password" id="auth-pass" placeholder="Enter password" autocomplete="current-password"
+        <input type="password" id="auth-pass" placeholder="Enter password" data-i18n-placeholder="auth_ph_pass" autocomplete="current-password"
                onkeydown="if(event.key==='Enter') doAuth()">
       </div>
       <div id="auth-level" style="display:none;">
@@ -1645,6 +1666,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div class="muted-text" id="auth-level-note" style="margin-bottom:10px;font-size:11px;"></div>
       </div>
       <button class="auth-btn" id="auth-submit-btn" onclick="doAuth()">Sign In</button>
+      </div>
+      <a href="#" class="auth-local-link" id="auth-local-link" style="display:none;" onclick="event.preventDefault();showLocalSignIn(true)" data-i18n="sso_local_link">Emergency sign-in with a local account</a>
       <div class="muted-text" id="auth-reg-closed" style="display:none;margin-top:12px;text-align:center;" data-i18n="registration_closed_hint">No account? Ask your administrator to create one.</div>
     </div>
     <div id="auth-step-mfa" style="display:none;">
@@ -1707,7 +1730,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.23</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.24</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -2688,6 +2711,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="security" onclick="showAdminTab('security')" data-i18n="adm_security">Security</button>
       <button class="tab-btn" data-tab="users" onclick="showAdminTab('users')" data-i18n="adm_users">Users</button>
       <button class="tab-btn" data-tab="teams" onclick="showAdminTab('teams')" data-i18n="adm_teams">Teams</button>
+      <button class="tab-btn" data-tab="sso" onclick="showAdminTab('sso')" data-i18n="adm_sso">Directory sign-in</button>
       <button class="tab-btn" data-tab="shares" onclick="showAdminTab('shares')" data-i18n="adm_shares">Shares</button>
       <button class="tab-btn" data-tab="policies" onclick="showAdminTab('policies')" data-i18n="adm_policies">Security policies</button>
       <button class="tab-btn" data-tab="ai" onclick="showAdminTab('ai')" data-i18n="adm_ai">AI assistant</button>
@@ -2851,10 +2875,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="modal" style="width:400px;">
     <h3>🛡 <span data-i18n="su_title">Confirm it is you</span></h3>
     <div class="muted-text" id="su-msg" style="margin-bottom:10px;"></div>
-    <div class="field"><label data-i18n="password">Password</label><input type="password" id="su-password" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();stepUpSubmit();}"></div>
+    <div id="su-sso"></div>
+    <div class="field" id="su-pw-wrap"><label data-i18n="password">Password</label><input type="password" id="su-password" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();stepUpSubmit();}"></div>
     <div class="field" id="su-code-wrap"><label data-i18n="su_code">2FA code (or a recovery code)</label><input type="text" id="su-code" inputmode="numeric" autocomplete="one-time-code" onkeydown="if(event.key==='Enter'){event.preventDefault();stepUpSubmit();}"></div>
     <div class="fm-error" id="su-error" style="display:none;"></div>
-    <div class="modal-footer"><button class="btn-sec" onclick="stepUpDone(false)" data-i18n="cancel">Cancel</button><button onclick="stepUpSubmit()" data-i18n="confirm">Confirm</button></div>
+    <div class="modal-footer"><button class="btn-sec" onclick="stepUpDone(false)" data-i18n="cancel">Cancel</button><button id="su-submit" onclick="stepUpSubmit()" data-i18n="confirm">Confirm</button></div>
   </div>
 </div>
 
@@ -2882,6 +2907,48 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="team-members-box" id="team-members-box"></div>
       <div class="muted-text" style="margin-top:4px;" data-i18n="team_lead_hint">A lead receives the connections of a member who leaves (suggested when the account is deleted).</div></div>
     <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-team')" data-i18n="cancel">Cancel</button><button onclick="submitTeam()" data-i18n="save">Save</button></div>
+  </div>
+</div>
+
+<!-- Directory sign-in (OIDC) provider -->
+<div class="modal-overlay" id="modal-sso" style="z-index:9150;">
+  <div class="modal" style="width:720px;">
+    <h3>🏢 <span id="sso-title"></span></h3>
+    <input type="hidden" id="sso-id">
+    <div class="hint-box" id="sso-preset-hint"></div>
+    <div class="field"><label data-i18n="sso_f_name">Name on the sign-in button</label><input type="text" id="sso-name" maxlength="60" placeholder="Microsoft Entra ID"></div>
+    <div class="field"><label data-i18n="sso_f_issuer">Issuer</label>
+      <div style="display:flex;gap:6px;"><input type="text" id="sso-issuer" maxlength="300" spellcheck="false" style="flex:1;min-width:0;"><button class="btn-sec btn-sm" onclick="ssoCheck()" data-i18n="sso_check">Test connection</button></div>
+      <ul class="sso-steps" id="sso-check-out"></ul></div>
+    <div class="field"><label data-i18n="sso_f_client_id">Client ID (application ID)</label><input type="text" id="sso-client-id" maxlength="300" spellcheck="false" autocomplete="off"></div>
+    <div class="field"><label data-i18n="sso_f_secret">Client secret</label><input type="password" id="sso-secret" maxlength="300" autocomplete="new-password">
+      <div class="muted-text" style="margin-top:4px;" id="sso-secret-hint"></div></div>
+    <div class="field"><label data-i18n="sso_f_redirect">Redirect address to register at the provider</label>
+      <div style="display:flex;gap:6px;"><input type="text" id="sso-redirect" maxlength="300" spellcheck="false" style="flex:1;min-width:0;"><button class="btn-sec btn-sm" onclick="ssoCopyRedirect()" data-i18n="copy">Copy</button></div>
+      <div class="muted-text" style="margin-top:4px;" data-i18n="sso_f_redirect_d">Leave empty to use the address shown. Set it when WRM is reached through another address (reverse proxy).</div></div>
+    <div class="field"><label data-i18n="sso_f_scopes">Scopes</label><input type="text" id="sso-scopes" maxlength="300" spellcheck="false">
+      <div class="muted-text" style="margin-top:4px;" data-i18n="sso_f_scopes_d">offline_access lets WRM check regularly that the user may still sign in.</div></div>
+    <div class="field"><label data-i18n="sso_f_username">Username from claim</label><input type="text" id="sso-username-claim" maxlength="60" spellcheck="false" placeholder="preferred_username"></div>
+    <div class="adm-h" data-i18n="sso_rules">Who may sign in, and with which role</div>
+    <div class="muted-text" style="margin-bottom:8px;" data-i18n="sso_rules_d">Each rule matches a value in the token (an app role in roles, a group ID in groups, or another claim). The strongest matched role wins; teams of all matched rules are added. Without rules only accounts linked by hand may sign in.</div>
+    <div id="sso-rules"></div>
+    <button class="btn-sec btn-sm" onclick="ssoAddRule()">＋ <span data-i18n="sso_add_rule">Add rule</span></button>
+    <label class="check-row" style="margin-top:10px;"><input type="checkbox" id="sso-jit"> <span><b data-i18n="sso_f_jit">Create accounts on first sign-in</b> — <span data-i18n="sso_f_jit_d">only for users a rule matches; everyone else is refused with a clear message.</span></span></label>
+    <label class="check-row"><input type="checkbox" id="sso-mfa"> <span><b data-i18n="sso_f_mfa">Require MFA proven by the provider</b> — <span data-i18n="sso_f_mfa_d">the token must show a second factor (amr) or one of the values below (acr, Entra authentication context in acrs).</span></span></label>
+    <div class="field"><input type="text" id="sso-mfa-values" maxlength="300" spellcheck="false" placeholder="c1"></div>
+    <label class="check-row"><input type="checkbox" id="sso-enabled"> <span><b data-i18n="sso_f_enabled">Enabled</b> — <span data-i18n="sso_f_enabled_d">shows the button on the sign-in page.</span></span></label>
+    <details style="margin-top:10px;"><summary class="muted-text" style="cursor:pointer;" data-i18n="sso_preview">Preview: what would WRM do for these claims?</summary>
+      <textarea id="sso-preview-claims" rows="4" spellcheck="false" style="width:100%;box-sizing:border-box;margin-top:6px;font-family:monospace;font-size:12px;" placeholder='{"roles": ["WRM.Admin"], "groups": ["…"]}'></textarea>
+      <button class="btn-sec btn-sm" onclick="ssoPreview()" data-i18n="sso_preview_btn">Show result</button> <span id="sso-preview-out" class="muted-text"></span></details>
+    <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-sso')" data-i18n="cancel">Cancel</button><button onclick="ssoSave()" data-i18n="save">Save</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-sso-test" style="z-index:9160;">
+  <div class="modal" style="width:620px;">
+    <h3>🧪 <span data-i18n="sso_test_title">Test sign-in</span></h3>
+    <div id="sso-test-body"></div>
+    <div class="modal-footer"><button onclick="closeModal('modal-sso-test')" data-i18n="close">Close</button></div>
   </div>
 </div>
 
@@ -5339,6 +5406,255 @@ Object.assign(LANGS.hr, {
  "slr_require_step_up": "Ukradena ili ostavljena sesija ne može mijenjati politike, uloge ni otkriti tajne bez lozinke i 2FA koda.",
  "ne_security_break_glass_login": "Prijavio se break-glass administrator",
 });
+// v12.6.24: directory sign-in (OIDC)
+Object.assign(LANGS.en, {
+ "adm_sso": "Directory sign-in",
+ "adin_sso": "Let people sign in with their organisation's account (Microsoft Entra ID, ADFS, Okta, Keycloak, Google Workspace or any OpenID Connect provider). Rules decide who gets an account and with which role and teams; WRM checks regularly that the account may still sign in.",
+ "pg_sso": "Directory sign-in",
+ "p_local_login": "Password sign-in",
+ "p_local_login_d": "Who may still sign in with a WRM password once a directory sign-in is enabled. Break-glass administrators always can.",
+ "po_local_login_all": "Everyone",
+ "po_local_login_break_glass": "Only break-glass administrators",
+ "slr_local_login": "Accounts are managed in the directory: a person disabled there cannot keep using a local password.",
+ "p_oidc_revalidate_minutes": "Directory check (minutes)",
+ "p_oidc_revalidate_minutes_d": "How often WRM asks the identity provider whether a signed-in user may still sign in. A refused answer ends the user's sessions and terminals.",
+ "p_oidc_unverified_hours": "Without a check at most (hours)",
+ "p_oidc_unverified_hours_d": "Directory sessions end when WRM could not confirm them with the provider for this long (no refresh token, or the provider was unreachable).",
+ "sso_sign_in_with": "Sign in with {p}",
+ "sso_or": "or",
+ "sso_local_link": "Emergency sign-in with a local account",
+ "sso_local_note": "Password sign-in is kept for emergency (break-glass) administrators. Everyone else signs in with the organisation's account above.",
+ "sso_mfa_note": "Your organisation signed you in. Your WRM account also uses two-factor authentication: enter its code.",
+ "su_msg_sso": "Confirm with your organisation's account to continue. The confirmation is valid for {m} minutes.",
+ "su_with_sso": "Confirm with {p}",
+ "sso_not_finished": "The sign-in window did not finish. Try again; allow pop-up windows for WRM if none opened.",
+ "sso_popup_blocked": "The browser blocked the sign-in window. Allow pop-up windows for this WRM address and try again.",
+ "sso_finish_in_window": "Finish the sign-in in the new window.",
+ "sso_preset_entra": "Microsoft Entra ID",
+ "sso_preset_adfs": "ADFS",
+ "sso_preset_okta": "Okta",
+ "sso_preset_keycloak": "Keycloak",
+ "sso_preset_google": "Google Workspace",
+ "sso_preset_other": "Other OpenID Connect",
+ "sso_hint_entra": "Entra admin centre → App registrations → New registration: add the redirect address below as a Web platform redirect, create a client secret, and under App roles create roles such as WRM.Admin and WRM.Operator; assign them to users or groups in Enterprise applications. Issuer: https://login.microsoftonline.com/<tenant ID>/v2.0. Rules use the claim roles.",
+ "sso_hint_adfs": "ADFS → Application groups → Server application with a client secret; add the redirect address below. Issuer: https://<ADFS host>/adfs. Send group membership as the groups claim (claim rule) and map those values.",
+ "sso_hint_okta": "Okta → Applications → OIDC Web application; add the redirect address below; add a groups claim to the ID token. Issuer: https://<your org>.okta.com (or your authorization server).",
+ "sso_hint_keycloak": "Keycloak → Clients → OpenID Connect, client authentication on; add the redirect address below; add a Group Membership mapper (claim groups) to the client scope. Issuer: https://<host>/realms/<realm>.",
+ "sso_hint_google": "Google Cloud console → APIs & Services → Credentials → OAuth client ID (Web); add the redirect address below. Google tokens carry no groups: a rule on hd (your Workspace domain) admits your domain's users.",
+ "sso_hint_other": "Create a confidential client (authorization code flow with PKCE) at your provider and add the redirect address below. Enter its issuer; Test connection shows whether WRM can use it.",
+ "sso_intro_redirect": "Register this redirect address at your identity provider:",
+ "sso_ll_inactive": "Password sign-in is limited to break-glass administrators, but no directory sign-in is enabled yet, so the limit is not in effect.",
+ "sso_ll_active": "Password sign-in is limited to break-glass administrators.",
+ "sso_providers": "Identity providers",
+ "sso_add": "Add provider",
+ "sso_none": "No identity provider yet.",
+ "sso_rules_n": "{n} rule(s)",
+ "sso_jit_short": "accounts created automatically",
+ "sso_sessions_lc": "sessions",
+ "sso_test": "Test sign-in",
+ "sso_linked": "Linked directory accounts",
+ "sso_provider": "Provider",
+ "sso_last_sign_in": "Last sign-in",
+ "sso_directory_check": "Directory check",
+ "sso_no_refresh": "no refresh token: signs in again after the limit",
+ "sso_access_ended": "access ended",
+ "sso_check_failed": "check failed",
+ "sso_unlink": "Unlink",
+ "sso_unlink_q": "Unlink this directory account? Its directory sessions end; an account without a password can then no longer sign in.",
+ "sso_unlink_me_q": "Unlink this directory account? You then sign in with your password only.",
+ "sso_delete_q": "Remove the provider {p}? Its links are removed and its users are signed out.",
+ "sso_f_name": "Name on the sign-in button",
+ "sso_f_issuer": "Issuer",
+ "sso_check": "Test connection",
+ "sso_f_client_id": "Client ID (application ID)",
+ "sso_f_secret": "Client secret",
+ "sso_secret_hint": "Stored encrypted; never shown again. Leave empty for a public client.",
+ "sso_secret_keep": "A secret is stored. Leave empty to keep it, or enter a new one.",
+ "sso_f_redirect": "Redirect address to register at the provider",
+ "sso_f_redirect_d": "Leave empty to use the address shown. Set it when WRM is reached through another address (reverse proxy).",
+ "sso_f_scopes": "Scopes",
+ "sso_f_scopes_d": "offline_access lets WRM check regularly that the user may still sign in.",
+ "sso_f_username": "Username from claim",
+ "sso_rules": "Who may sign in, and with which role",
+ "sso_rules_d": "Each rule matches a value in the token (an app role in roles, a group ID in groups, or another claim). The strongest matched role wins; teams of all matched rules are added. Without rules only accounts linked by hand may sign in.",
+ "sso_add_rule": "Add rule",
+ "sso_no_rules": "No rules: only WRM accounts linked to a directory account may sign in.",
+ "sso_rule_claim": "Claim (roles, groups, …)",
+ "sso_rule_value": "Value (app role, group ID)",
+ "sso_rule_role": "WRM role",
+ "sso_rule_teams": "Teams (comma-separated)",
+ "sso_f_jit": "Create accounts on first sign-in",
+ "sso_f_jit_d": "only for users a rule matches; everyone else is refused with a clear message.",
+ "sso_f_mfa": "Require MFA proven by the provider",
+ "sso_f_mfa_d": "the token must show a second factor (amr) or one of the values below (acr, Entra authentication context in acrs).",
+ "sso_f_enabled": "Enabled",
+ "sso_f_enabled_d": "shows the button on the sign-in page.",
+ "sso_preview": "Preview: what would WRM do for these claims?",
+ "sso_preview_btn": "Show result",
+ "sso_preview_json": "Enter the claims as JSON, for example {\"roles\": [\"WRM.Admin\"]}.",
+ "sso_save_first": "Save the provider first.",
+ "sso_map_refused": "No rule matches: this user would be refused.",
+ "sso_map_role": "Role {r}",
+ "sso_step_issuer": "Issuer",
+ "sso_step_discovery": "Discovery document",
+ "sso_step_endpoints": "Endpoints",
+ "sso_step_keys": "Signing keys",
+ "sso_step_pkce": "PKCE",
+ "sso_step_revalidation": "Regular directory check",
+ "sso_step_redirect": "Redirect address",
+ "sso_fix_issuer": "Enter the issuer exactly as the provider publishes it, over https://. For Entra use your own tenant (https://login.microsoftonline.com/<tenant ID>/v2.0), not common or organizations.",
+ "sso_fix_discovery": "WRM must reach <issuer>/.well-known/openid-configuration over HTTPS: check the address, DNS, the firewall and the proxy of the WRM host.",
+ "sso_fix_endpoints": "The provider's discovery document is incomplete; check the issuer.",
+ "sso_fix_keys": "The provider's signing keys must be reachable from the WRM host.",
+ "sso_fix_pkce": "Turn on PKCE (S256) for the client at the provider.",
+ "sso_fix_revalidation": "Allow the offline_access scope for the client so WRM can check users regularly.",
+ "sso_fix_redirect": "Register the redirect address at the provider.",
+ "sso_check_next": "WRM can use this provider. Save it and use Test sign-in to see what a real sign-in sends.",
+ "sso_test_title": "Test sign-in",
+ "sso_test_who": "Account",
+ "sso_test_account": "signs in as {u}",
+ "sso_test_create": "a new account {u} would be created",
+ "sso_test_refused": "would be refused (no account and none created)",
+ "sso_test_mfa_yes": "second factor proven by the token",
+ "sso_test_mfa_no": "the token does not prove a second factor",
+ "sso_test_refresh_yes": "refresh token received",
+ "sso_test_id": "Directory ID",
+ "sso_test_overage": "This user is in too many groups for the token to list them (groups overage). Map Entra app roles instead of groups, or send only groups assigned to the application.",
+ "sso_test_claims": "What the provider sent",
+ "sso_my_title": "Organisation accounts",
+ "sso_connect": "Connect {p}",
+ "sso_linked_ok": "Directory account linked. You can now sign in with it.",
+ "sso_no_provider": "No directory sign-in is available for your account.",
+ "sso_no_password": "Your account signs in through your organisation's directory and has no WRM password.",
+ "sso_only_d": "Signs in only through the directory",
+ "sso_linked_d": "Linked to a directory account",
+ "auth_ph_user": "Enter username",
+ "auth_ph_pass": "Enter password"
+});
+Object.assign(LANGS.hr, {
+ "adm_sso": "Prijava preko direktorija",
+ "adin_sso": "Korisnici se prijavljuju računom svoje organizacije (Microsoft Entra ID, ADFS, Okta, Keycloak, Google Workspace ili bilo koji OpenID Connect provider). Pravila određuju tko dobiva račun te s kojom ulogom i timovima; WRM redovito provjerava smije li se račun još prijaviti.",
+ "pg_sso": "Prijava preko direktorija",
+ "p_local_login": "Prijava lozinkom",
+ "p_local_login_d": "Tko se još smije prijaviti WRM lozinkom kad je uključena prijava preko direktorija. Break-glass administratori uvijek mogu.",
+ "po_local_login_all": "Svi",
+ "po_local_login_break_glass": "Samo break-glass administratori",
+ "slr_local_login": "Računima se upravlja u direktoriju: osoba isključena tamo ne može nastaviti s lokalnom lozinkom.",
+ "p_oidc_revalidate_minutes": "Provjera u direktoriju (minute)",
+ "p_oidc_revalidate_minutes_d": "Koliko često WRM pita identity provider smije li se prijavljeni korisnik još prijaviti. Odbijen odgovor završava korisnikove sesije i terminale.",
+ "p_oidc_unverified_hours": "Bez provjere najviše (sati)",
+ "p_oidc_unverified_hours_d": "Sesije iz direktorija završavaju kad ih WRM toliko dugo nije mogao potvrditi kod providera (nema refresh tokena ili provider nije dostupan).",
+ "sso_sign_in_with": "Prijava: {p}",
+ "sso_or": "ili",
+ "sso_local_link": "Hitna prijava lokalnim računom",
+ "sso_local_note": "Prijava lozinkom ostaje samo za hitne (break-glass) administratore. Svi ostali se prijavljuju računom organizacije iznad.",
+ "sso_mfa_note": "Organizacija te prijavila. Tvoj WRM račun koristi i dvofaktorsku prijavu: upiši njen kod.",
+ "su_msg_sso": "Potvrdi računom organizacije za nastavak. Potvrda vrijedi {m} minuta.",
+ "su_with_sso": "Potvrdi preko: {p}",
+ "sso_not_finished": "Prozor za prijavu nije završio. Pokušaj ponovno; ako se prozor nije otvorio, dopusti skočne prozore za WRM.",
+ "sso_popup_blocked": "Preglednik je blokirao prozor za prijavu. Dopusti skočne prozore za ovu WRM adresu i pokušaj ponovno.",
+ "sso_finish_in_window": "Dovrši prijavu u novom prozoru.",
+ "sso_preset_entra": "Microsoft Entra ID",
+ "sso_preset_adfs": "ADFS",
+ "sso_preset_okta": "Okta",
+ "sso_preset_keycloak": "Keycloak",
+ "sso_preset_google": "Google Workspace",
+ "sso_preset_other": "Drugi OpenID Connect",
+ "sso_hint_entra": "Entra admin centar → App registrations → New registration: dodaj donju adresu za preusmjeravanje kao Web redirect, napravi client secret i pod App roles napravi uloge, npr. WRM.Admin i WRM.Operator; dodijeli ih korisnicima ili grupama u Enterprise applications. Issuer: https://login.microsoftonline.com/<tenant ID>/v2.0. Pravila koriste claim roles.",
+ "sso_hint_adfs": "ADFS → Application groups → Server application s client secretom; dodaj donju adresu za preusmjeravanje. Issuer: https://<ADFS host>/adfs. Članstvo u grupama pošalji kao claim groups (claim rule) i mapiraj te vrijednosti.",
+ "sso_hint_okta": "Okta → Applications → OIDC Web aplikacija; dodaj donju adresu za preusmjeravanje; dodaj groups claim u ID token. Issuer: https://<tvoja organizacija>.okta.com (ili tvoj authorization server).",
+ "sso_hint_keycloak": "Keycloak → Clients → OpenID Connect, uključi client authentication; dodaj donju adresu za preusmjeravanje; u client scope dodaj Group Membership mapper (claim groups). Issuer: https://<host>/realms/<realm>.",
+ "sso_hint_google": "Google Cloud console → APIs & Services → Credentials → OAuth client ID (Web); dodaj donju adresu za preusmjeravanje. Google tokeni nemaju grupe: pravilo na hd (tvoja Workspace domena) pušta korisnike tvoje domene.",
+ "sso_hint_other": "Kod svog providera napravi povjerljivog klijenta (authorization code s PKCE) i dodaj donju adresu za preusmjeravanje. Upiši njegov issuer; Testiraj vezu pokazuje može li ga WRM koristiti.",
+ "sso_intro_redirect": "Ovu adresu za preusmjeravanje registriraj kod svog identity providera:",
+ "sso_ll_inactive": "Prijava lozinkom ograničena je na break-glass administratore, ali još nije uključena nijedna prijava preko direktorija, pa ograničenje ne vrijedi.",
+ "sso_ll_active": "Prijava lozinkom ograničena je na break-glass administratore.",
+ "sso_providers": "Identity provideri",
+ "sso_add": "Dodaj providera",
+ "sso_none": "Još nema identity providera.",
+ "sso_rules_n": "pravila: {n}",
+ "sso_jit_short": "računi se stvaraju automatski",
+ "sso_sessions_lc": "sesija",
+ "sso_test": "Probna prijava",
+ "sso_linked": "Povezani računi iz direktorija",
+ "sso_provider": "Provider",
+ "sso_last_sign_in": "Zadnja prijava",
+ "sso_directory_check": "Provjera u direktoriju",
+ "sso_no_refresh": "nema refresh tokena: nakon ograničenja se prijavljuje ponovno",
+ "sso_access_ended": "pristup završen",
+ "sso_check_failed": "provjera nije uspjela",
+ "sso_unlink": "Odspoji",
+ "sso_unlink_q": "Odspojiti ovaj račun iz direktorija? Njegove sesije iz direktorija završavaju; račun bez lozinke se tada više ne može prijaviti.",
+ "sso_unlink_me_q": "Odspojiti ovaj račun iz direktorija? Tada se prijavljuješ samo lozinkom.",
+ "sso_delete_q": "Ukloniti providera {p}? Njegove veze se brišu, a njegovi korisnici odjavljuju.",
+ "sso_f_name": "Naziv na gumbu za prijavu",
+ "sso_f_issuer": "Issuer",
+ "sso_check": "Testiraj vezu",
+ "sso_f_client_id": "Client ID (ID aplikacije)",
+ "sso_f_secret": "Client secret",
+ "sso_secret_hint": "Sprema se šifrirano i više se ne prikazuje. Ostavi prazno za javnog klijenta.",
+ "sso_secret_keep": "Tajna je spremljena. Ostavi prazno da je zadržiš ili upiši novu.",
+ "sso_f_redirect": "Adresa za preusmjeravanje koju registriraš kod providera",
+ "sso_f_redirect_d": "Ostavi prazno za prikazanu adresu. Postavi je kad se WRM-u pristupa preko druge adrese (reverse proxy).",
+ "sso_f_scopes": "Scopeovi",
+ "sso_f_scopes_d": "offline_access omogućuje WRM-u da redovito provjerava smije li se korisnik još prijaviti.",
+ "sso_f_username": "Korisničko ime iz claima",
+ "sso_rules": "Tko se smije prijaviti i s kojom ulogom",
+ "sso_rules_d": "Svako pravilo traži vrijednost u tokenu (app rolu u roles, ID grupe u groups ili neki drugi claim). Vrijedi najjača pogođena uloga; dodaju se timovi svih pogođenih pravila. Bez pravila se smiju prijaviti samo ručno povezani računi.",
+ "sso_add_rule": "Dodaj pravilo",
+ "sso_no_rules": "Nema pravila: prijaviti se smiju samo WRM računi povezani s računom iz direktorija.",
+ "sso_rule_claim": "Claim (roles, groups, …)",
+ "sso_rule_value": "Vrijednost (app rola, ID grupe)",
+ "sso_rule_role": "WRM uloga",
+ "sso_rule_teams": "Timovi (odvojeni zarezom)",
+ "sso_f_jit": "Stvori račun pri prvoj prijavi",
+ "sso_f_jit_d": "samo za korisnike koje pogađa neko pravilo; svi ostali su odbijeni uz jasnu poruku.",
+ "sso_f_mfa": "Traži MFA koji potvrđuje provider",
+ "sso_f_mfa_d": "token mora pokazati drugi faktor (amr) ili jednu od donjih vrijednosti (acr, Entra authentication context u acrs).",
+ "sso_f_enabled": "Uključen",
+ "sso_f_enabled_d": "prikazuje gumb na stranici za prijavu.",
+ "sso_preview": "Pregled: što bi WRM napravio za ove claimove?",
+ "sso_preview_btn": "Prikaži rezultat",
+ "sso_preview_json": "Upiši claimove kao JSON, npr. {\"roles\": [\"WRM.Admin\"]}.",
+ "sso_save_first": "Najprije spremi providera.",
+ "sso_map_refused": "Nijedno pravilo ne odgovara: ovaj korisnik bi bio odbijen.",
+ "sso_map_role": "Uloga {r}",
+ "sso_step_issuer": "Issuer",
+ "sso_step_discovery": "Discovery dokument",
+ "sso_step_endpoints": "Endpointi",
+ "sso_step_keys": "Ključevi za potpis",
+ "sso_step_pkce": "PKCE",
+ "sso_step_revalidation": "Redovita provjera u direktoriju",
+ "sso_step_redirect": "Adresa za preusmjeravanje",
+ "sso_fix_issuer": "Upiši issuer točno kako ga provider objavljuje, preko https://. Za Entra koristi svoj tenant (https://login.microsoftonline.com/<tenant ID>/v2.0), ne common ni organizations.",
+ "sso_fix_discovery": "WRM mora dohvatiti <issuer>/.well-known/openid-configuration preko HTTPS-a: provjeri adresu, DNS, vatrozid i proxy WRM poslužitelja.",
+ "sso_fix_endpoints": "Discovery dokument providera nije potpun; provjeri issuer.",
+ "sso_fix_keys": "Ključevi za potpis providera moraju biti dostupni s WRM poslužitelja.",
+ "sso_fix_pkce": "Kod providera uključi PKCE (S256) za klijenta.",
+ "sso_fix_revalidation": "Dopusti klijentu scope offline_access da WRM može redovito provjeravati korisnike.",
+ "sso_fix_redirect": "Registriraj adresu za preusmjeravanje kod providera.",
+ "sso_check_next": "WRM može koristiti ovog providera. Spremi ga i s Probnom prijavom vidi što šalje stvarna prijava.",
+ "sso_test_title": "Probna prijava",
+ "sso_test_who": "Račun",
+ "sso_test_account": "prijavljuje se kao {u}",
+ "sso_test_create": "stvorio bi se novi račun {u}",
+ "sso_test_refused": "bio bi odbijen (nema računa i ne stvara se)",
+ "sso_test_mfa_yes": "token potvrđuje drugi faktor",
+ "sso_test_mfa_no": "token ne potvrđuje drugi faktor",
+ "sso_test_refresh_yes": "refresh token primljen",
+ "sso_test_id": "ID u direktoriju",
+ "sso_test_overage": "Korisnik je u previše grupa da bi ih token naveo (groups overage). Mapiraj Entra app role umjesto grupa ili šalji samo grupe dodijeljene aplikaciji.",
+ "sso_test_claims": "Što je provider poslao",
+ "sso_my_title": "Računi organizacije",
+ "sso_connect": "Poveži: {p}",
+ "sso_linked_ok": "Račun iz direktorija je povezan. Sada se možeš njime prijaviti.",
+ "sso_no_provider": "Za tvoj račun nije dostupna prijava preko direktorija.",
+ "sso_no_password": "Tvoj račun se prijavljuje preko direktorija organizacije i nema WRM lozinku.",
+ "sso_only_d": "Prijavljuje se samo preko direktorija",
+ "sso_linked_d": "Povezan s računom iz direktorija",
+ "auth_ph_user": "Upiši korisničko ime",
+ "auth_ph_pass": "Upiši lozinku"
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5448,6 +5764,38 @@ function switchAuthTab(mode) {
   document.getElementById('auth-submit-btn').textContent = mode === 'login' ? t('sign_in') : t('create_account');
   document.getElementById('auth-pass').autocomplete = mode === 'login' ? 'current-password' : 'new-password';
   document.getElementById('auth-error').style.display = 'none';
+  renderAuthSSO();
+}
+
+// Directory sign-in buttons (v12.6.24). With local_login_limited the password form is only for
+// break-glass administrators and stays folded behind a link.
+function renderAuthSSO() {
+  const box = document.getElementById('auth-sso');
+  if (!box) return;
+  const list = (!authConfig.first_run && authMode === 'login' && authConfig.sso) || [];
+  const limited = !!authConfig.local_login_limited && list.length > 0;
+  box.style.display = list.length ? '' : 'none';
+  box.innerHTML = list.map(p => `<a class="auth-btn auth-sso-btn" href="/api/auth/oidc/start?provider=${Number(p.id)}">🏢 ${esc(t('sso_sign_in_with').replace('{p}', p.name))}</a>`).join('') +
+    (list.length && !limited ? `<div class="auth-or">${esc(t('sso_or'))}</div>` : '');
+  document.getElementById('auth-local').style.display = limited ? 'none' : '';
+  document.getElementById('auth-local-link').style.display = limited ? '' : 'none';
+}
+
+function showLocalSignIn() {
+  document.getElementById('auth-local').style.display = '';
+  document.getElementById('auth-local-link').style.display = 'none';
+  const n = document.getElementById('auth-note');
+  n.textContent = t('sso_local_note');
+  n.style.display = 'block';
+  setTimeout(() => document.getElementById('auth-user').focus(), 30);
+}
+
+function showMFAStep(token) {
+  mfaToken = token;
+  document.getElementById('auth-step-cred').style.display = 'none';
+  document.getElementById('auth-step-mfa').style.display = '';
+  document.getElementById('auth-mfa-error').style.display = 'none';
+  setTimeout(() => document.getElementById('auth-mfa-code').focus(), 50);
 }
 
 async function loadAuthConfig() {
@@ -5470,6 +5818,7 @@ async function loadAuthConfig() {
     document.getElementById('auth-reg-closed').style.display = authConfig.registration_open ? 'none' : 'block';
     if (!authConfig.registration_open) switchAuthTab('login');
   }
+  renderAuthSSO();
   if (authConfig.version) document.getElementById('auth-ver').textContent = 'PRO ' + authConfig.version + ' · Secure · Multi-User';
   const upd = document.getElementById('auth-upd');
   upd.style.display = authConfig.update ? 'inline-block' : 'none';
@@ -5492,11 +5841,19 @@ function renderAuthLevels() {
 }
 
 function showAuthScreen(noteText) {
+  applyLang();
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   resetAuthSteps();
   loadAuthConfig().then(() => {
     if (noteText) { const n = document.getElementById('auth-note'); n.textContent = noteText; n.style.display = 'block'; }
+    // Back from a directory sign-in whose account also uses WRM's own 2FA.
+    const m = /[#&]sso-mfa=([^&]+)/.exec(location.hash);
+    if (m) {
+      history.replaceState(null, '', location.pathname + location.search);
+      showMFAStep(decodeURIComponent(m[1]));
+      const n = document.getElementById('auth-note'); n.textContent = t('sso_mfa_note'); n.style.display = 'block';
+    }
   });
   setTimeout(() => { try { document.getElementById('auth-user').focus(); } catch(_) {} }, 60);
 }
@@ -5527,14 +5884,7 @@ async function doAuth() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { authErr('auth-error', data.error || t('auth_failed')); return; }
-    if (data.mfa_required) {
-      mfaToken = data.mfa_token;
-      document.getElementById('auth-step-cred').style.display = 'none';
-      document.getElementById('auth-step-mfa').style.display = '';
-      document.getElementById('auth-mfa-error').style.display = 'none';
-      setTimeout(() => document.getElementById('auth-mfa-code').focus(), 50);
-      return;
-    }
+    if (data.mfa_required) { showMFAStep(data.mfa_token); return; }
     document.getElementById('auth-pass').value = '';
     onSignedIn(data);
   } catch(e) {
@@ -6897,7 +7247,7 @@ function showAdminTab(tab) {
   const body = document.getElementById('admin-body');
   setTabIntro('admin-intro', 'adin_' + (document.querySelector(`#admin-tabs [data-tab="${tab}"]`) ? tab : 'overview'));
   body.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
-  ({overview: adminOverview, security: adminSecurity, users: adminUsers, teams: adminTeams, shares: adminShares, policies: () => adminPolicies('policies'),
+  ({overview: adminOverview, security: adminSecurity, users: adminUsers, teams: adminTeams, sso: adminSSO, shares: adminShares, policies: () => adminPolicies('policies'),
     voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
     transfers: adminTransfers,
@@ -6972,7 +7322,7 @@ function renderAdminUsers() {
   document.getElementById('adm-users-table').innerHTML = `<table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('status'))}</th><th>${esc(t('last_login'))}</th><th>${esc(t('connections_lc'))}</th><th>${esc(t('created'))}</th><th></th></tr></thead><tbody>` +
     list.map(u => `<tr>
       <td>${u.online ? '<span class="online-dot"></span>' : ''}<b style="color:var(--text);">${esc(u.username)}</b>${u.display_name ? ' <span class="muted-text">' + esc(u.display_name) + '</span>' : ''}
-        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${userRolePill(u)}${u.break_glass ? '<span class="pill bad" title="' + esc(t('break_glass_d')) + '">🚨 ' + esc(t('break_glass')) + '</span>' : ''}${u.totp_enabled ? '<span class="pill ok">2FA</span>' : ''}${u.id === currentUser.id ? '<span class="pill info">' + esc(t('you')) + '</span>' : ''}${(u.teams || []).map(tm => '<span class="pill">👥 ' + esc(tm.name) + (tm.lead ? ' ★' : '') + '</span>').join('')}</div></td>
+        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${userRolePill(u)}${(u.sso || []).length ? '<span class="pill info" title="' + esc(t(u.sso_only ? 'sso_only_d' : 'sso_linked_d')) + '">🏢 ' + esc(u.sso.join(', ')) + '</span>' : ''}${u.break_glass ? '<span class="pill bad" title="' + esc(t('break_glass_d')) + '">🚨 ' + esc(t('break_glass')) + '</span>' : ''}${u.totp_enabled ? '<span class="pill ok">2FA</span>' : ''}${u.id === currentUser.id ? '<span class="pill info">' + esc(t('you')) + '</span>' : ''}${(u.teams || []).map(tm => '<span class="pill">👥 ' + esc(tm.name) + (tm.lead ? ' ★' : '') + '</span>').join('')}</div></td>
       <td>${u.disabled ? `<span class="pill bad">${esc(t('disabled'))}</span>` : u.locked ? `<span class="pill bad">🔒 ${esc(t('locked'))}</span>` : `<span class="pill ok">${esc(t('active'))}</span>`}${u.must_change_password ? `<div class="sub">${esc(t('must_change_pw_short'))}</div>` : ''}</td>
       <td>${esc(fmtTime(u.last_login_at))}<div class="sub mono">${esc(u.last_login_ip || '')}</div></td>
       <td>${u.connections} · <span class="muted-text">${u.shares} ${esc(t('adm_shares').toLowerCase())} · ${u.sessions} ${esc(t('sessions_lc'))}</span></td>
@@ -7160,16 +7510,30 @@ window.wrmStepUp = function (info) {
   return new Promise(resolve => {
     if (_stepUp) _stepUp.resolve(false);
     _stepUp = {resolve, action: info.action || ''};
-    document.getElementById('su-msg').textContent = t('su_msg').replace('{m}', (currentUser && currentUser.step_up && currentUser.step_up.minutes) || 10);
-    document.getElementById('su-code-wrap').style.display = info.totp ? '' : 'none';
+    const pw = info.password !== false, sso = info.sso || [];
+    document.getElementById('su-msg').textContent = t(pw ? 'su_msg' : 'su_msg_sso').replace('{m}', (currentUser && currentUser.step_up && currentUser.step_up.minutes) || 10);
+    document.getElementById('su-code-wrap').style.display = info.totp && pw ? '' : 'none';
+    document.getElementById('su-pw-wrap').style.display = pw ? '' : 'none';
+    document.getElementById('su-submit').style.display = pw ? '' : 'none';
+    document.getElementById('su-sso').innerHTML = sso.map(p => `<button class="btn-sec" style="width:100%;margin-bottom:8px;" onclick="stepUpSSO(${Number(p.id)})">🏢 ${esc(t('su_with_sso').replace('{p}', p.name))}</button>`).join('') +
+      (sso.length && pw ? `<div class="auth-or">${esc(t('sso_or'))}</div>` : '');
     document.getElementById('su-password').value = '';
     document.getElementById('su-code').value = '';
     document.getElementById('su-error').style.display = 'none';
     document.getElementById('modal-stepup').classList.add('open');
-    setTimeout(() => document.getElementById('su-password').focus(), 40);
+    if (pw) setTimeout(() => document.getElementById('su-password').focus(), 40);
   });
 };
+async function stepUpSSO(providerId) {
+  const r = await ssoPopup(providerId, 'stepup');
+  if (r && r.ok) { stepUpDone(true); return; }
+  if (!_stepUp) return;
+  const e = document.getElementById('su-error');
+  e.textContent = (r && r.error) || t('sso_not_finished');
+  e.style.display = '';
+}
 function stepUpDone(ok) {
+  if (_ssoPoll) _ssoPoll.stop = true;
   document.getElementById('modal-stepup').classList.remove('open');
   const s = _stepUp; _stepUp = null;
   if (s) s.resolve(ok);
@@ -7186,6 +7550,245 @@ async function stepUpSubmit() {
     return;
   }
   stepUpDone(true);
+}
+
+// ── Directory sign-in (OIDC, v12.6.24) ──
+// Link / step-up / test sign-ins open the provider in a new window; this page asks WRM for the
+// outcome (the window is on another site, so it cannot report back itself).
+let _ssoPoll = null;
+async function ssoPopup(providerId, mode) {
+  const win = window.open('about:blank', 'wrm-sso', 'width=520,height=720');
+  const res = await fetch('/api/auth/oidc/start', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({provider: providerId, mode})});
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) { try { win && win.close(); } catch (_) {} showToast(d.error || t('failed'), 'error', 7000); return null; }
+  if (!win) { showToast(t('sso_popup_blocked'), 'error', 7000); return null; }
+  win.location.href = d.url;
+  if (mode !== 'stepup') showToast(t('sso_finish_in_window'), 'info', 4000);
+  const poll = {stop: false};
+  if (_ssoPoll) _ssoPoll.stop = true;
+  _ssoPoll = poll;
+  for (let i = 0, gone = 0; i < 600 && !poll.stop; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    if (poll.stop) break;
+    const r = await fetch('/api/auth/oidc/result?state=' + encodeURIComponent(d.state)).then(x => x.ok ? x.json() : null).catch(() => null);
+    if (r && r.done) { if (_ssoPoll === poll) _ssoPoll = null; return r; }
+    if (r && !r.pending && ++gone > 30) break;
+  }
+  if (_ssoPoll === poll) _ssoPoll = null;
+  return null;
+}
+
+const SSO_PRESETS = {
+  entra: {name: 'Microsoft Entra ID', issuer: 'https://login.microsoftonline.com/<tenant-id>/v2.0', claim: 'roles', value: 'WRM.Admin'},
+  adfs: {name: 'ADFS', issuer: 'https://adfs.example.com/adfs', claim: 'groups', value: ''},
+  okta: {name: 'Okta', issuer: 'https://example.okta.com', claim: 'groups', value: ''},
+  keycloak: {name: 'Keycloak', issuer: 'https://keycloak.example.com/realms/<realm>', claim: 'groups', value: ''},
+  google: {name: 'Google Workspace', issuer: 'https://accounts.google.com', claim: 'hd', value: 'example.com'},
+  other: {name: '', issuer: '', claim: 'groups', value: ''},
+};
+let ssoAdminCache = null, ssoRulesDraft = [], ssoEditing = null;
+
+async function adminSSO() {
+  const body = document.getElementById('admin-body');
+  const [r, sr, tr] = await Promise.all([fetch('/api/admin/oidc'), fetch('/api/admin/settings'), fetch('/api/admin/teams')]);
+  if (!r.ok) { body.innerHTML = `<div class="fm-error">${esc(await apiError(r))}</div>`; return; }
+  ssoAdminCache = await r.json();
+  if (sr.ok) adminSettingsCache = await sr.json();
+  if (tr.ok) { const tl = await tr.json(); adminTeamsCache = Array.isArray(tl) ? tl : (tl.teams || adminTeamsCache); }
+  const d = ssoAdminCache;
+  const provs = d.providers || [], ids = d.identities || [];
+  const presetOpts = Object.keys(SSO_PRESETS).map(k => `<option value="${k}">${esc(t('sso_preset_' + k))}</option>`).join('');
+  const checkPill = x => x.revoked ? `<span class="pill bad">${esc(t('sso_access_ended'))}</span>`
+    : x.last_error ? `<span class="pill warn" title="${esc(x.last_error)}">⚠ ${esc(t('sso_check_failed'))}</span>`
+    : `<span class="pill ok">✓ ${esc(fmtTime(x.last_ok_at))}</span>`;
+  body.innerHTML = `
+    <div class="hint-box">${esc(t('sso_intro_redirect'))}<div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;"><code class="mono" style="user-select:text;word-break:break-all;">${esc(d.default_redirect_uri)}</code><button class="btn-sec btn-sm" onclick="copyText(${jsq(d.default_redirect_uri)})">${esc(t('copy'))}</button></div></div>
+    ${d.local_login === 'break_glass' && !d.local_login_limited ? `<div class="hint-box warn">⚠ ${esc(t('sso_ll_inactive'))}</div>` : ''}
+    ${d.local_login_limited ? `<div class="hint-box ok">🛡 ${esc(t('sso_ll_active'))}</div>` : ''}
+    <div class="adm-h" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${esc(t('sso_providers'))}<span style="flex:1"></span>
+      <select id="sso-new-preset" class="setting-select">${presetOpts}</select><button class="btn-sm" onclick="ssoOpen(0)">＋ ${esc(t('sso_add'))}</button></div>
+    ${provs.length ? provs.map(p => `<div class="share-card"><div class="sc-top"><span class="sc-name">🏢 ${esc(p.name)}</span>${p.enabled ? `<span class="pill ok">${esc(t('on'))}</span>` : `<span class="pill">${esc(t('off'))}</span>`}${p.require_mfa ? '<span class="pill info">MFA</span>' : ''}</div>
+      <div class="muted-text mono" style="word-break:break-all;font-size:11px;margin-top:2px;">${esc(p.issuer)}</div>
+      <div class="sc-meta"><span>${esc(t('sso_rules_n').replace('{n}', (p.rules || []).length))}${p.jit ? ' · ' + esc(t('sso_jit_short')) : ''}</span><span>👤 ${p.linked_users} · ${p.sessions} ${esc(t('sso_sessions_lc'))}</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button class="btn-sec btn-sm" onclick="ssoOpen(${p.id})">${esc(t('edit'))}</button><button class="btn-sec btn-sm" onclick="ssoTest(${p.id})">🧪 ${esc(t('sso_test'))}</button><button class="btn-danger btn-sm" onclick="ssoDelete(${p.id})">🗑</button></div></div>`).join('')
+      : `<div class="muted-text">${esc(t('sso_none'))}</div>`}
+    <div class="adm-h">${esc(t('pg_sso'))}</div>
+    <div class="policy-group">${['local_login', 'oidc_revalidate_minutes', 'oidc_unverified_hours'].map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
+    <div class="adm-h">${esc(t('sso_linked'))} (${ids.length})</div>
+    ${ids.length ? `<div class="sso-ids"><table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('sso_provider'))}</th><th>${esc(t('sso_last_sign_in'))}</th><th>${esc(t('sso_directory_check'))}</th><th></th></tr></thead><tbody>` + ids.map(x => `<tr>
+      <td>${esc(x.username)}<div class="sub">${esc(x.display || '')}${x.email ? ' · ' + esc(x.email) : ''}</div></td>
+      <td data-l="${esc(t('sso_provider'))}">${esc(x.provider)}<div class="sub mono" style="word-break:break-all;">${esc(x.subject)}</div></td>
+      <td data-l="${esc(t('sso_last_sign_in'))}">${esc(fmtTime(x.last_login_at))}</td>
+      <td data-l="${esc(t('sso_directory_check'))}">${checkPill(x)}${x.refresh ? '' : `<div class="sub">${esc(t('sso_no_refresh'))}</div>`}</td>
+      <td><button class="btn-sec btn-sm" onclick="ssoUnlink(${x.id})">${esc(t('sso_unlink'))}</button></td></tr>`).join('') + '</tbody></table></div>'
+      : `<div class="muted-text">${esc(t('none'))}</div>`}
+    <datalist id="sso-team-names">${(adminTeamsCache || []).map(tm => `<option value="${esc(tm.name)}">`).join('')}</datalist>
+    <datalist id="sso-claim-names"><option value="roles"><option value="groups"><option value="hd"><option value="email"><option value="wids"></datalist>`;
+}
+
+function ssoOpen(id) {
+  const d = ssoAdminCache || {};
+  const p = id ? (d.providers || []).find(x => x.id === id) : null;
+  const presetKey = p ? (p.entra ? 'entra' : 'other') : document.getElementById('sso-new-preset').value;
+  const pre = SSO_PRESETS[presetKey] || SSO_PRESETS.other;
+  ssoEditing = p;
+  document.getElementById('sso-id').value = p ? p.id : '';
+  document.getElementById('sso-title').textContent = p ? p.name : t('sso_add') + ': ' + t('sso_preset_' + presetKey);
+  document.getElementById('sso-preset-hint').textContent = t('sso_hint_' + presetKey);
+  document.getElementById('sso-name').value = p ? p.name : pre.name;
+  document.getElementById('sso-issuer').value = p ? p.issuer : '';
+  document.getElementById('sso-issuer').placeholder = pre.issuer || 'https://idp.example.com';
+  document.getElementById('sso-client-id').value = p ? p.client_id : '';
+  document.getElementById('sso-secret').value = '';
+  document.getElementById('sso-secret-hint').textContent = t(p && p.has_secret ? 'sso_secret_keep' : 'sso_secret_hint');
+  document.getElementById('sso-redirect').value = p ? p.redirect_uri : '';
+  document.getElementById('sso-redirect').placeholder = (p && p.redirect_uri_effective) || d.default_redirect_uri || '';
+  document.getElementById('sso-scopes').value = p ? p.scopes : 'openid profile email offline_access';
+  document.getElementById('sso-username-claim').value = p ? p.username_claim : (presetKey === 'google' ? 'email' : 'preferred_username');
+  document.getElementById('sso-jit').checked = p ? p.jit : true;
+  document.getElementById('sso-mfa').checked = p ? p.require_mfa : false;
+  document.getElementById('sso-mfa-values').value = p ? p.mfa_values : '';
+  document.getElementById('sso-enabled').checked = p ? p.enabled : false;
+  document.getElementById('sso-check-out').innerHTML = '';
+  document.getElementById('sso-preview-out').textContent = '';
+  ssoRulesDraft = p ? (p.rules || []).map(r => Object.assign({}, r, {teams: (r.teams || []).join(', ')})) : [{claim: pre.claim, value: pre.value, role: 'user', teams: ''}];
+  ssoRenderRules();
+  document.getElementById('modal-sso').classList.add('open');
+  setTimeout(() => document.getElementById(p ? 'sso-name' : 'sso-issuer').focus(), 60);
+}
+
+function ssoRenderRules() {
+  const roles = ['admin', 'auditor', 'operator', 'user'];
+  document.getElementById('sso-rules').innerHTML = ssoRulesDraft.map((r, i) => `<div class="sso-rule">
+    <input type="text" list="sso-claim-names" value="${esc(r.claim || '')}" placeholder="roles" title="${esc(t('sso_rule_claim'))}" oninput="ssoRulesDraft[${i}].claim=this.value">
+    <input type="text" value="${esc(r.value || '')}" placeholder="${esc(t('sso_rule_value'))}" title="${esc(t('sso_rule_value'))}" spellcheck="false" oninput="ssoRulesDraft[${i}].value=this.value">
+    <select title="${esc(t('sso_rule_role'))}" onchange="ssoRulesDraft[${i}].role=this.value">${roles.map(x => `<option value="${x}" ${x === (r.role || 'user') ? 'selected' : ''}>${esc(t('urole_' + x))}</option>`).join('')}</select>
+    <input type="text" list="sso-team-names" value="${esc(r.teams || '')}" placeholder="${esc(t('sso_rule_teams'))}" title="${esc(t('sso_rule_teams'))}" oninput="ssoRulesDraft[${i}].teams=this.value">
+    <button class="icon-btn sso-del" title="${esc(t('delete'))}" onclick="ssoRulesDraft.splice(${i},1);ssoRenderRules()">✕</button></div>`).join('') || `<div class="muted-text" style="margin-bottom:6px;">${esc(t('sso_no_rules'))}</div>`;
+}
+function ssoAddRule() { ssoRulesDraft.push({claim: 'groups', value: '', role: 'user', teams: ''}); ssoRenderRules(); }
+function ssoCopyRedirect() { const el = document.getElementById('sso-redirect'); copyText(el.value || el.placeholder); }
+
+function ssoRulesOut() {
+  return ssoRulesDraft.map(r => ({claim: (r.claim || '').trim(), value: (r.value || '').trim(), role: r.role || 'user',
+    teams: String(r.teams || '').split(',').map(x => x.trim()).filter(Boolean)})).filter(r => r.claim || r.value);
+}
+
+async function ssoSave() {
+  const id = Number(document.getElementById('sso-id').value || 0);
+  const v = i => document.getElementById(i).value.trim();
+  const body = {name: v('sso-name'), issuer: v('sso-issuer'), client_id: v('sso-client-id'), redirect_uri: v('sso-redirect'), scopes: v('sso-scopes'),
+    username_claim: v('sso-username-claim'), mfa_values: v('sso-mfa-values'), require_mfa: document.getElementById('sso-mfa').checked,
+    jit: document.getElementById('sso-jit').checked, enabled: document.getElementById('sso-enabled').checked, rules: ssoRulesOut()};
+  const secret = document.getElementById('sso-secret').value;
+  if (secret) body.client_secret = secret;
+  const res = await fetch('/api/admin/oidc' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!res.ok) { showToast(await apiError(res), 'error', 8000); return; }
+  document.getElementById('sso-secret').value = '';
+  closeModal('modal-sso');
+  showToast(t('saved'), 'success', 1500);
+  adminSSO();
+}
+
+async function ssoCheck() {
+  const out = document.getElementById('sso-check-out');
+  out.innerHTML = `<li>${esc(t('loading'))}</li>`;
+  const res = await fetch('/api/admin/oidc/check', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({issuer: document.getElementById('sso-issuer').value.trim()})});
+  if (!res.ok) { out.innerHTML = `<li>❌ ${esc(await apiError(res))}</li>`; return; }
+  const d = await res.json();
+  out.innerHTML = (d.steps || []).map(st => `<li>${st.ok ? '✅' : '❌'} <b>${esc(t('sso_step_' + st.step))}</b> <span class="mono" style="font-size:11px;word-break:break-all;">${esc(st.detail)}</span>${st.ok ? '' : `<span class="fix">→ ${esc(t('sso_fix_' + st.step))}</span>`}</li>`).join('') +
+    (d.ok ? `<li>✅ <b>${esc(t('sso_check_next'))}</b></li>` : '');
+}
+
+async function ssoPreview() {
+  const id = Number(document.getElementById('sso-id').value || 0);
+  const out = document.getElementById('sso-preview-out');
+  if (!id) { out.textContent = t('sso_save_first'); return; }
+  let claims;
+  try { claims = JSON.parse(document.getElementById('sso-preview-claims').value || '{}'); } catch (_) { out.textContent = t('sso_preview_json'); return; }
+  const res = await fetch(`/api/admin/oidc/${id}/preview`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({claims, rules: ssoRulesOut()})});
+  if (!res.ok) { out.textContent = await apiError(res); return; }
+  const d = await res.json();
+  out.textContent = ssoMappingText(d.mapping);
+}
+
+function ssoMappingText(m) {
+  if (!m || !m.matched) return '⛔ ' + t('sso_map_refused');
+  return '✅ ' + t('sso_map_role').replace('{r}', t('urole_' + m.role)) + ((m.teams || []).length ? ' · 👥 ' + m.teams.join(', ') : '');
+}
+
+async function ssoTest(id) {
+  const r = await ssoPopup(id, 'test');
+  const box = document.getElementById('sso-test-body');
+  if (!r) { showToast(t('sso_not_finished'), 'error', 6000); return; }
+  if (!r.ok) {
+    box.innerHTML = `<div class="hint-box warn">⚠ ${esc(r.error || t('failed'))}</div>`;
+  } else {
+    const who = r.account ? t('sso_test_account').replace('{u}', r.account) : r.would_create ? t('sso_test_create').replace('{u}', r.username) : t('sso_test_refused');
+    box.innerHTML = `<div class="hint-box ${r.mapping && r.mapping.matched ? 'ok' : 'warn'}">${esc(ssoMappingText(r.mapping))}</div>
+      <div class="kv-grid">
+        <div class="kv"><div class="k">${esc(t('sso_test_who'))}</div><div class="v small">${esc(who)}</div></div>
+        <div class="kv"><div class="k">MFA</div><div class="v small">${r.mfa ? '✅ ' + esc(t('sso_test_mfa_yes')) : (r.mfa_required ? '❌ ' : '— ') + esc(t('sso_test_mfa_no'))}</div></div>
+        <div class="kv"><div class="k">${esc(t('sso_directory_check'))}</div><div class="v small">${r.refresh_token ? '✅ ' + esc(t('sso_test_refresh_yes')) : '⚠ ' + esc(t('sso_no_refresh'))}</div></div>
+        <div class="kv"><div class="k">${esc(t('sso_test_id'))}</div><div class="v small mono" style="word-break:break-all;">${esc(r.subject || '')}</div></div>
+      </div>
+      ${r.groups_overage ? `<div class="hint-box warn">⚠ ${esc(t('sso_test_overage'))}</div>` : ''}
+      <div class="adm-h">${esc(t('sso_test_claims'))}</div><pre class="sso-pre">${esc(JSON.stringify(r.claims || {}, null, 2))}</pre>`;
+  }
+  document.getElementById('modal-sso-test').classList.add('open');
+}
+
+async function ssoDelete(id) {
+  const p = ((ssoAdminCache || {}).providers || []).find(x => x.id === id);
+  if (!p || !(await uiConfirm(t('sso_delete_q').replace('{p}', p.name), {okText: t('delete'), danger: true}))) return;
+  const res = await fetch('/api/admin/oidc/' + id, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  adminSSO();
+}
+
+async function ssoUnlink(iid) {
+  if (!(await uiConfirm(t('sso_unlink_q'), {okText: t('sso_unlink'), danger: true}))) return;
+  const res = await fetch('/api/admin/oidc/identities/' + iid, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  adminSSO();
+}
+
+// Personal settings: the directory accounts linked to this WRM account.
+async function renderMySSO() {
+  const box = document.getElementById('my-sso');
+  if (!box) return;
+  const res = await fetch('/api/me/identities');
+  if (!res.ok) { box.innerHTML = ''; return; }
+  const d = await res.json();
+  const ids = d.identities || [], provs = d.providers || [];
+  const linked = new Set(ids.map(x => x.provider_id));
+  const free = provs.filter(p => !linked.has(p.id));
+  document.getElementById('my-sso-h').style.display = ids.length || free.length ? '' : 'none';
+  box.innerHTML = ids.map(x => `<div class="sess-row"><span style="font-size:18px;">🏢</span>
+      <div class="grow"><div><b>${esc(x.provider)}</b> <span class="muted-text">${esc(x.email || x.display || '')}</span></div><div class="ua">${esc(t('sso_last_sign_in'))}: ${esc(fmtTime(x.last_login_at))}</div></div>
+      ${currentUser.sso_only ? '' : `<button class="btn-sec btn-sm" onclick="mySSOUnlink(${x.id})">${esc(t('sso_unlink'))}</button>`}</div>`).join('') +
+    (free.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${free.map(p => `<button class="btn-sec btn-sm" onclick="mySSOLink(${p.id})">🏢 ${esc(t('sso_connect').replace('{p}', p.name))}</button>`).join('')}</div>` : '');
+}
+
+async function mySSOLink(pid) {
+  const r = await ssoPopup(pid, 'link');
+  if (r && r.ok) showToast(t('sso_linked_ok'), 'success');
+  else if (r) showToast(r.error || t('failed'), 'error', 8000);
+  renderMySSO();
+}
+
+async function mySSOUnlink(id) {
+  if (!(await uiConfirm(t('sso_unlink_me_q'), {okText: t('sso_unlink'), danger: true}))) return;
+  const res = await fetch('/api/me/identities/' + id, {method: 'DELETE'});
+  if (!res.ok) showToast(await apiError(res), 'error');
+  renderMySSO();
+}
+
+// Accounts without a password confirm through the directory instead (2FA changes).
+async function ssoConfirmSelf() {
+  const sso = (currentUser && currentUser.sso) || [];
+  if (!sso.length) { showToast(t('sso_no_provider'), 'error'); return false; }
+  return window.wrmStepUp({action: '2fa', password: false, totp: false, sso});
 }
 
 function openNewUser() {
@@ -7249,6 +7852,7 @@ async function adminShareDelete(id) {
 const POLICY_GROUPS = {
   policies: [
     ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips']],
+    ['pg_sso', ['local_login', 'oidc_revalidate_minutes', 'oidc_unverified_hours']],
     ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export', 'bitwarden', 'bitwarden_idle_minutes']],
     ['pg_sharing', ['allow_link_shares', 'link_share_max_days', 'chat_file_max_mb']],
     ['pg_terminal', ['broadcast_enabled']],
@@ -14507,8 +15111,8 @@ async function renderSecurityPane() {
   const me = currentUser;
   pane.innerHTML = `
     <div class="setting-row">
-      <div><div class="setting-label">${esc(t('password'))}</div><div class="setting-desc">${esc(t('password_desc'))}</div></div>
-      <div class="setting-control"><button class="btn-sec btn-sm" onclick="openPasswordModal(false)">${esc(t('change_password'))}</button></div>
+      <div><div class="setting-label">${esc(t('password'))}</div><div class="setting-desc">${esc(t(me.sso_only ? 'sso_no_password' : 'password_desc'))}</div></div>
+      <div class="setting-control">${me.sso_only ? '' : `<button class="btn-sec btn-sm" onclick="openPasswordModal(false)">${esc(t('change_password'))}</button>`}</div>
     </div>
     <div class="setting-row">
       <div><div class="setting-label">${esc(t('twofa'))} ${me.totp_enabled ? '<span class="pill ok">' + esc(t('on')) + '</span>' : '<span class="pill ' + (me.mfa_required ? 'bad' : 'warn') + '">' + esc(t('off')) + '</span>'}</div>
@@ -14517,8 +15121,10 @@ async function renderSecurityPane() {
         ? `<button class="btn-sec btn-sm" onclick="regenRecoveryCodes()">${esc(t('new_recovery_codes'))}</button>${me.mfa_required ? '' : `<button class="btn-danger btn-sm" onclick="disable2FA()">${esc(t('turn_off'))}</button>`}`
         : `<button class="btn-sm" onclick="open2FASetup(false)">${esc(t('turn_on'))}</button>`}</div>
     </div>
+    <div class="adm-h" id="my-sso-h" style="display:none;">${esc(t('sso_my_title'))}</div><div id="my-sso"></div>
     <div class="adm-h" style="display:flex;align-items:center;">${esc(t('signed_in_devices'))}<span style="flex:1"></span><button class="btn-sec btn-sm" onclick="revokeOtherSessions()">${esc(t('sign_out_others'))}</button></div>
     <div id="my-sessions"><div class="fm-loading">${esc(t('loading'))}</div></div>`;
+  renderMySSO();
   const res = await fetch('/api/auth/sessions');
   const box = document.getElementById('my-sessions');
   if (!res.ok) { box.innerHTML = ''; return; }
@@ -14629,7 +15235,7 @@ function downloadText(name, text) {
 }
 
 async function disable2FA() {
-  const pw = await uiPrompt(t('twofa_disable_pw'), '', {okText: t('continue'), password: true});
+  const pw = currentUser.sso_only ? ((await ssoConfirmSelf()) ? '' : null) : await uiPrompt(t('twofa_disable_pw'), '', {okText: t('continue'), password: true});
   if (pw === null || pw === false) return;
   const code = await uiPrompt(t('twofa_disable_code'), '', {okText: t('turn_off'), danger: true});
   if (code === null || code === false) return;
@@ -14640,7 +15246,7 @@ async function disable2FA() {
 }
 
 async function regenRecoveryCodes() {
-  const pw = await uiPrompt(t('twofa_disable_pw'), '', {okText: t('continue'), password: true});
+  const pw = currentUser.sso_only ? ((await ssoConfirmSelf()) ? '' : null) : await uiPrompt(t('twofa_disable_pw'), '', {okText: t('continue'), password: true});
   if (pw === null || pw === false) return;
   const res = await fetch('/api/auth/2fa/recovery', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pw})});
   const d = await res.json().catch(() => ({}));

@@ -207,6 +207,7 @@ func requireStepUp(w http.ResponseWriter, r *http.Request, action string) bool {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"error":   "Confirm with your password (and 2FA code) to continue",
 		"step_up": true, "action": action, "totp": userHasTOTP(s.UserID),
+		"password": !userSSOOnly(s.UserID), "sso": userSSOProviders(s.UserID),
 	})
 	return false
 }
