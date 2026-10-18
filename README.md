@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.24** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.25** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.25
+
+**Active Directory, LDAP and SCIM.** People sign in with their **Active Directory or LDAP** name and password on the normal sign-in page; WRM checks the password with the directory over LDAPS or StartTLS and never stores it. Rules turn directory groups (nested AD groups included) into WRM roles and teams, and WRM **checks every linked account regularly**: someone deleted, disabled, locked or removed from the WRM groups loses access at once. **SCIM 2.0** lets Microsoft Entra ID or Okta create, change and disable WRM accounts and groups immediately. Whichever way an account is stopped, WRM ends its sessions, terminals, tunnels, rooms, AI sessions and AI connections. See [LDAP / Active Directory and SCIM](#ldap--active-directory-and-scim).
 
 ## What's new in v12.6.24
 
@@ -136,7 +140,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -189,6 +193,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Security levels and posture](#security-levels-and-posture)
    - [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass)
    - [Directory sign-in (OIDC)](#directory-sign-in-oidc)
+   - [LDAP / Active Directory and SCIM](#ldap--active-directory-and-scim)
    - [Updates & self-update](#updates--self-update)
    - [Mobile, responsive UI & installable app](#mobile-responsive-ui--installable-app)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
@@ -241,21 +246,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.24-linux-amd64
-   ./wrm-pro-v12.6.24-linux-amd64
+   chmod +x wrm-pro-v12.6.25-linux-amd64
+   ./wrm-pro-v12.6.25-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.24-windows-amd64.exe
+   .\wrm-pro-v12.6.25-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.6.24-linux-amd64.AppImage
-   ./wrm-pro-v12.6.24-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.6.24-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.6.25-linux-amd64.AppImage
+   ./wrm-pro-v12.6.25-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.6.25-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -264,8 +269,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.24/wrm-pro-v12.6.24-android-arm64
-   chmod +x wrm-pro-v12.6.24-android-arm64 && ./wrm-pro-v12.6.24-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.25/wrm-pro-v12.6.25-android-arm64
+   chmod +x wrm-pro-v12.6.25-android-arm64 && ./wrm-pro-v12.6.25-android-arm64
    ```
 
    **Docker**
@@ -289,6 +294,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.24
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets the tables `ldap_directories`, `ldap_identities`, `scim_clients`, `scim_users`, `scim_groups` and `scim_group_members`; a previous version still starts on it (accounts that sign in with a directory password then cannot sign in, since WRM keeps no password for them). Nothing changes until an administrator adds an LDAP directory or a SCIM client. New setting `ldap_sync_minutes` (15). Changing an OIDC provider's issuer now asks for its client secret again.
 
 ## Upgrading from v12.6.23
 
@@ -1917,6 +1926,46 @@ How it behaves:
 - **Password sign-in only for emergencies:** `local_login` = `break_glass` leaves the password form only to break-glass administrators (folded behind *Emergency sign-in with a local account*) and closes self-registration. It takes effect only while a provider is enabled. The Enterprise level requires it.
 - Audited: `oidc.provider_saved`, `oidc.provider_deleted`, `oidc.account_created`, `oidc.identity_linked`, `oidc.identity_unlinked`, `oidc.role_synced`, `oidc.access_ended`, `oidc.test_sign_in`, `auth.oidc_refused` (with the reason) and `auth.login` with `method: oidc`.
 
+### LDAP / Active Directory and SCIM
+
+**LDAP / Active Directory sign-in.** *Admin panel → Directory sign-in → LDAP / Active Directory → Add directory*:
+
+1. **Kind:** *Active Directory* or *other LDAP* (OpenLDAP, 389 Directory Server, FreeIPA and similar). The kind fills in the user filter, the sign-in attribute (`sAMAccountName` / `uid`) and the ID attribute (`objectGUID` / `entryUUID`); change them under *Advanced* if your directory differs.
+2. **Server:** `ldaps://dc1.example.com` (port 636) or `ldap://dc1.example.com` (port 389, StartTLS is then mandatory). Plain LDAP without TLS is not possible. When the directory's certificate comes from an internal CA that the WRM host does not trust, paste that CA certificate (PEM).
+3. **Service account:** the DN (for example `CN=svc-wrm,OU=Service,DC=example,DC=com`) and password of an account that may read users and groups. The password is stored encrypted and never shown again; changing the server address asks for it again.
+4. **Base DN** where users are searched, for example `DC=example,DC=com`.
+5. **Test connection** checks step by step: the address, the connection, TLS and the certificate, the service account, the base DN, whether users are found, and for a test name the account, its immutable ID and its groups. A failed step says what to fix.
+6. **Rules** decide who may sign in: `group` matches a group name or DN (nested groups included), any other claim matches a user attribute (for example `department`). The strongest matched role wins; teams of every matched rule are added.
+7. **Create accounts on first sign-in** makes an account for a person a rule matches, named after the directory's sign-in name. **Test sign-in** checks a name and password and shows the account, groups, attributes and what WRM would do, without creating anything.
+8. **Enable** the directory. It can only be enabled while the service account works.
+
+How it behaves:
+- **Signing in:** on the normal sign-in page with `name`, `DOMAIN\name` or `name@domain` and the directory password. WRM finds the person with the service account and checks the password by binding as them; the password is never stored, and an empty one is refused (servers would treat it as an anonymous bind). Failed directory sign-ins count towards the same lockout as local ones.
+- **Identity:** the person is the directory's immutable ID (`objectGUID`, or the chosen ID attribute), never the name.
+- **Refused accounts:** disabled (`userAccountControl`), locked, expired (`accountExpires`) and, on other LDAP servers, `nsAccountLock`, `loginDisabled` or `pwdAccountLockedTime` accounts cannot sign in.
+- **Regular check:** every `ldap_sync_minutes` (default 15) WRM looks up every linked account with the service account. A deleted, disabled, locked or expired account, or one no rule matches any more, loses its sessions, terminals, tunnels, rooms, AI sessions and AI connections at once (audited `ldap.access_ended`); role and team changes are applied (`team_members.source = 'ldap'`). *Check now* runs it on demand. The directory card shows the last check and a ⚠ when it failed.
+- **Linking existing accounts:** in *Settings → Security → Organisation accounts* a signed-in user links their directory account with its name and password (WRM asks for a fresh confirmation first). From then on the account signs in with its directory password; WRM no longer keeps a local password for it. An administrator can unlink accounts in the list; the user then needs a password reset to sign in locally.
+- **Directory passwords in WRM:** such accounts cannot change their password in WRM; step-up and 2FA changes are confirmed with the directory password.
+- `local_login` = `break_glass` also applies while a directory is enabled: only break-glass administrators keep a local password.
+- Audited: `ldap.directory_created`, `ldap.directory_updated`, `ldap.directory_deleted`, `ldap.account_created`, `ldap.identity_linked`, `ldap.identity_unlinked`, `ldap.synced`, `ldap.access_ended`, `ldap.test_sign_in`, and `auth.login` / `auth.login_failed` with `method: ldap` (refusals with the reason).
+
+**SCIM provisioning.** With SCIM 2.0 an identity provider (Microsoft Entra ID, Okta, …) creates, changes, disables and deletes WRM accounts and groups at once. *Admin panel → Directory sign-in → SCIM provisioning → Add provisioning client*:
+
+1. Name the client and optionally add rules that turn group names into roles (`group` = `WRM Admins` → Administrator).
+2. Copy the **token** (`wrm_scim_…`); it is shown only once and stored only as a hash. *New token* replaces it, *Revoke* stops the client.
+3. In the identity provider set the **tenant URL** to the endpoint shown (`https://<WRM address>/scim/v2`) and the **secret token** to the copied token. In Entra ID: *Enterprise application → Provisioning → Automatic*. Map `externalId` to `objectId` so the person's first sign-in through [directory sign-in (OIDC)](#directory-sign-in-oidc) uses the provisioned account.
+
+How it behaves:
+- A client sees only the accounts and groups it created; local accounts and other clients' accounts are invisible to it, and names never link accounts.
+- Provisioned accounts have no password; they sign in through the directory. The first OIDC sign-in links the account when its `externalId` equals the token's `oid` (Entra) or `sub`, and the account has no directory link yet.
+- `active: false` or deleting the user disables the account and ends its sessions, terminals, tunnels, rooms, AI sessions and AI connections; WRM keeps the account so an administrator can hand its work over. The last active administrator is never disabled or demoted (`scim.disable_refused`).
+- Groups become WRM teams named `<group> (SCIM)`; membership follows the group. A team made by hand is never taken over.
+- The identity provider is the source of truth for the accounts it provisions: `active: true` re-enables such an account even when an administrator disabled it in WRM. To keep someone out, disable or unassign them in the identity provider.
+- Supported: Users and Groups (create, read, replace, PATCH, delete), `filter=userName eq "…"`, `externalId eq "…"` or `id eq "…"` (groups: `displayName`, `externalId`, `id`), `startIndex` / `count`, `ServiceProviderConfig`, `ResourceTypes`, `Schemas`. Limits: 600 requests a minute per address, 1 MB per request.
+- Audited: `scim.client_created`, `scim.client_updated`, `scim.token_rotated`, `scim.client_revoked`, `scim.user_created`, `scim.user_updated`, `scim.user_disabled`, `scim.user_deleted`, `scim.group_created`, `scim.group_renamed`, `scim.group_deleted`, `scim.team_created`.
+
+**Ending access.** Every route that stops an account (an administrator disabling it, OIDC revalidation, the LDAP check, SCIM) ends the same things: sign-in sessions, terminals, tunnels, collaboration rooms, AI sessions and AI connections (MCP tokens).
+
 ### Updates & self-update
 
 - **Update check:** once a day (and with *Check now*) WRM asks the GitHub releases API of `update_repo` (default this project) for the latest release. Only the repository path and a fixed `User-Agent` are sent: no user data, no installation ID. A proxy comes from `update_proxy` or `HTTPS_PROXY` / `HTTP_PROXY`. Air-gapped installations turn it off with `update_check` (`WRM_UPDATE_CHECK=off`).
@@ -2020,6 +2069,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `local_login` | `all` | `all` / `break_glass`: who may still sign in with a password while a directory sign-in is enabled, see [Directory sign-in (OIDC)](#directory-sign-in-oidc); required `break_glass` by the Enterprise level |
 | `oidc_revalidate_minutes` | `60` | how often WRM checks with the identity provider that signed-in directory users may still sign in (5–1440) |
 | `oidc_unverified_hours` | `12` | directory sessions end after this long without a successful check (1–720) |
+| `ldap_sync_minutes` | `15` | how often WRM checks every account linked to an LDAP / Active Directory directory (5–1440), see [LDAP / Active Directory and SCIM](#ldap--active-directory-and-scim) |
 | `registration` | `closed` | `closed` / `open` self-registration |
 | `require_2fa` | `off` | `off` / `admins` / `all` |
 | `password_min_length` | `8` | 6–128 |
@@ -2404,6 +2454,9 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/auth/oidc/start` | `{provider, mode}` with `link`, `stepup` or `test` (administrators) for a signed-in user: `{url, state}` to open in a new window |
 | GET | `/api/auth/oidc/callback` | The provider returns here (register this address at the provider) |
 | GET | `/api/auth/oidc/result?state=` | Outcome of a link / step-up / test window (`done`, `ok`, `error`, test details) |
+| GET / POST | `/api/me/ldap` | Your linked directory accounts and the enabled directories / link one `{directory, username, password}` (fresh confirmation required) |
+| DELETE | `/api/me/ldap/{id}` | Unlink your directory account (accounts that still have a local password) |
+| * | `/scim/v2/…` | SCIM 2.0 for identity providers (`Authorization: Bearer wrm_scim_…`): `Users`, `Groups`, `ServiceProviderConfig`, `ResourceTypes`, `Schemas` |
 | GET / DELETE | `/api/me/identities`, `/api/me/identities/{id}` | Your linked directory accounts and the providers you can connect / unlink one (accounts with a password only) |
 | POST | `/api/auth/step-up` | `{password, code, action}` confirms this session for `step_up_minutes`; a 403 with `step_up: true` from another call means this is needed |
 | GET | `/api/teams` | Teams for the share dialog `{teams: [{id, name, member_count}], mine}` |
@@ -2655,6 +2708,15 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST | `/api/admin/oidc/check` | `{issuer}` step-by-step connection test |
 | POST | `/api/admin/oidc/{id}/preview` | `{claims, rules?}` the role and teams WRM would give |
 | DELETE | `/api/admin/oidc/identities/{id}` | Unlink a directory account (step-up) |
+| GET / POST | `/api/admin/ldap` | LDAP directories (never the service account password), linked accounts and `sync_minutes` / create a directory `{name, kind: ad\|ldap, url, ca_pem, bind_dn, bind_password, base_dn, user_filter, login_attr, id_attr, group_base, nested, jit, rules, enabled}` (step-up) |
+| PUT / DELETE | `/api/admin/ldap/{id}` | Change a directory (fields optional; an empty `bind_password` keeps the stored one unless `url` changes, `clear_bind_password` removes it) / remove it with its links (step-up) |
+| POST | `/api/admin/ldap/check` | `{…directory fields, directory?, username?}` step-by-step connection test (`directory` uses that directory's stored password) |
+| POST | `/api/admin/ldap/{id}/test` | `{username, password}` test sign-in: account, groups, attributes and the mapping, nothing is created |
+| POST | `/api/admin/ldap/{id}/sync` | Check the directory's linked accounts now: `{checked, ended, updated, error}` |
+| DELETE | `/api/admin/ldap/identities/{id}` | Unlink a directory account (step-up) |
+| GET / POST | `/api/admin/scim` | SCIM clients, provisioned accounts and the endpoint / create a client `{name, rules}`: `{id, token, endpoint}`, the token is shown once (step-up) |
+| PUT / DELETE | `/api/admin/scim/{id}` | Change a client's name or rules / revoke it (step-up) |
+| POST | `/api/admin/scim/{id}/rotate` | New token for a client (step-up) |
 | GET / POST | `/api/admin/teams` | Teams with members and the policies that name them / create `{name, description, members: [{user_id, lead}]}` |
 | PUT / DELETE | `/api/admin/teams/{id}` | Change (same fields, each optional) / delete; 409 while a policy names the team |
 | POST | `/api/admin/users/{id}/reset-password` · `reset-2fa` · `revoke-sessions` · `unlock` | Account actions |
@@ -2789,6 +2851,10 @@ remote-manager/
   teams.go        teams, team members, teams in shares, admin team API
   oidc.go         directory sign-in: providers, PKCE sign-in, mapping rules, identities, revalidation, admin API
   oidc_jwt.go     OIDC discovery, signing keys (JWKS) and ID token verification
+  ldap.go         LDAP / Active Directory: directories, sign-in, groups and mapping, regular check, admin and self-service API
+  ldap_proto.go   LDAPv3 client: BER, LDAPS and StartTLS, bind, paged search, filter compiler
+  scim.go         SCIM 2.0 provisioning: Users, Groups, tokens, groups as teams, admin API
+  directory.go    endUserAccess: what ends when an account is stopped by any route
   security_level.go  security levels: rules, preview and apply, deviations, the first-run and start-up level, HTTPS for sign-in
   security_posture.go  the security posture checks for Admin → Security
   releasesign.go  release signatures (ed25519 over SHA256SUMS.txt): verification for the self-update, -release-keygen/-sign/-verify
@@ -2898,6 +2964,7 @@ remote-manager/
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
   releasesign_test.go  release signatures: round trip, tampering, wrong key or file, WRM context, key parsing, the command-line tools, self-update refusing unsigned or wrongly signed releases
+  v12625_test.go       LDAP and SCIM against a fake LDAP server (LDAPS, StartTLS, AD nested groups, paging): protocol pieces and filter escaping, sign-in and mapping, refused accounts, the regular check ending access, linking, stored passwords not sent to a changed address, SCIM users, groups, PATCH and deprovisioning, the SCIM account linked on the first OIDC sign-in, disabling ends everything
   v12624_test.go       directory sign-in against a fake identity provider: ID token checks (RS256/ES256, nonce, audience, expiry, alg none/HS256, key rotation), accounts from rules, role and team sync, refusals, browser binding and replay of the callback, MFA, local 2FA after a directory sign-in, revalidation (refused refresh, removed from the group, no refresh token), password sign-in limited to break-glass, linking, step-up and test sign-in, admin API
   v12623_test.go       roles and teams: who-policy values, auditor read-only and refused connections, step-up, break-glass networks and notifications, teams in shares, handover on delete
   v12622_test.go       security levels: rule comparison, preview, blockers and deviations, apply and sign-out, env lock, HTTPS for sign-in, level at start and first run, guest link lifetime
@@ -2962,6 +3029,10 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 | Directory sign-in: *Sign-in refused: your directory account is not assigned to WRM* | No rule matches the token. Use *Test sign-in* with that person's account to see the claims; assign the app role or group in the directory, or add a rule. Entra sends `groups` only when the app registration's token configuration adds them, and replaces them by an overage note for people in many groups: map app roles instead |
 | Directory sign-in: the provider says the redirect address does not match | Register exactly the address shown in *Admin panel → Directory sign-in*; behind a reverse proxy set the provider's redirect address (or `ai_mcp_public_url`) to the public address |
 | Directory sign-in: *the ID token has expired* / *issued in the future* | The WRM host's clock is wrong; sync it (NTP) |
+| LDAP: *Test connection* fails at *TLS* | The certificate is not trusted by the WRM host or does not name the address you entered: paste the directory's CA certificate (PEM), and use the name in the certificate (not the IP address) |
+| LDAP: *Test connection* fails at *Connect* on port 389 | The server does not offer StartTLS: enable LDAPS or StartTLS on the directory (Active Directory needs a server certificate), or use `ldaps://` on port 636 |
+| LDAP: *Your directory account is not in a group that may use WRM* | No rule matches: use *Test sign-in* with that account to see its groups and attributes, then add the person to a mapped group or add a rule |
+| SCIM: Entra reports *401* or *Unauthorized* | The secret token is wrong, rotated or revoked: create a new token in *SCIM provisioning* and paste it into the provisioning settings |
 | Directory users are signed out every few hours | The provider gives no refresh token: add `offline_access` to the scopes (and allow it for the client), or raise `oidc_unverified_hours` |
 | A panel is gone, or tabs cannot be dragged | *Panels* (▦ in the top bar, or in its ⋯ menu) shows and hides every panel; 🔒 on that button means the layout is locked: unlock it there. *Reset the layout* puts every panel back where it started |
 | Medium: pip fails with *certificate verify failed: self-signed certificate in certificate chain* | A proxy or antivirus inspects HTTPS. Keep `medium_host_ca` on (default) and press *Prepare runtime* again; if its root certificate is not in the WRM host's store, export it as PEM and set `medium_ca_file` |

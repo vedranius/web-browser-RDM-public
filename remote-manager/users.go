@@ -308,7 +308,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 		"is_admin": u.IsAdmin, "totp_enabled": u.TOTPEnabled, "must_change_password": u.MustChange,
 		"restricted": restricted, "mfa_required": mfaRequiredByPolicy(u.IsAdmin) || u.BreakGlass,
 		"role": u.Role, "is_auditor": u.Role == userRoleAuditor, "break_glass": u.BreakGlass, "teams": userTeams(u.ID),
-		"sso_only": userSSOOnly(u.ID), "sso": userSSOProviders(u.ID),
+		"sso_only": userSSOOnly(u.ID), "sso": userSSOProviders(u.ID), "directory_password": userLDAPIdentity(u.ID) != nil,
 		"step_up":             map[string]interface{}{"required": settingBool("require_step_up"), "minutes": settingInt("step_up_minutes"), "totp": u.TOTPEnabled},
 		"recovery_codes_left": recoveryCodesLeft(u.Recovery),
 		"password_min_length": settingInt("password_min_length"),
@@ -362,7 +362,7 @@ func finishLogin(w http.ResponseWriter, r *http.Request, u *userRow, method stri
 // passwordOrDirectoryConfirmed: the account's password, or for an account that signs in only
 // through the directory (no password) a fresh confirmation there (step-up window).
 func passwordOrDirectoryConfirmed(u *userRow, password string, sessionID int) bool {
-	if checkPassword(u.Hash, password) {
+	if userCheckPassword(u, password) {
 		return true
 	}
 	return userSSOOnly(u.ID) && stepUpFresh(sessionID)
@@ -419,6 +419,7 @@ func apiAuthConfigHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Directory sign-in buttons; local_login_limited hides the password form behind "Emergency sign-in".
 	out["sso"], out["local_login_limited"] = oidcSignInOptions(), localLoginLimited()
+	out["ldap"] = ldapSignInOptions()
 	// The sign-in page's version badge: an available update and its release page.
 	if info := lastUpdateInfo(); settingBool("update_check") && updateAvailable(info) {
 		out["update"], out["update_url"] = info.Latest, info.URL
@@ -519,6 +520,23 @@ func apiAuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	username := strings.TrimSpace(payload.Username)
 	u, err := loadUser("username=?", username)
+	// Directory (LDAP / AD) accounts: a WRM account linked to a directory, or a name that is
+	// not a WRM user and may be a directory user.
+	if ldapAnyEnabled() && (err != nil || userLDAPIdentity(u.ID) != nil) {
+		var linked *userRow
+		if err == nil {
+			linked = u
+			if t, ok := parseTS(u.LockedUntil); ok && time.Now().Before(t) {
+				recordLoginResult(ip, false)
+				jsonError(w, fmt.Sprintf("Account temporarily locked after repeated failed sign-ins. Try again in %d min or ask an administrator.", int(time.Until(t).Minutes())+1), 429)
+				return
+			}
+		}
+		if res, handled := ldapSignIn(r, username, payload.Password, linked); handled {
+			ldapFinishLogin(w, r, ip, username, linked, res)
+			return
+		}
+	}
 	if err != nil {
 		bcrypt.CompareHashAndPassword(dummyHash, []byte(payload.Password))
 		recordLoginResult(ip, false)
@@ -557,7 +575,7 @@ func apiAuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if localLoginLimited() && !u.BreakGlass {
 		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"reason": "local sign-in limited to break-glass administrators"})
-		jsonError(w, "Sign in with your organisation's account (the button above). Password sign-in is kept for emergency administrators only.", 403)
+		jsonError(w, "Sign in with your organisation's account. Sign-in with a local WRM password is kept for emergency administrators only.", 403)
 		return
 	}
 	if u.BreakGlass && !breakGlassIPAllowed(ip) {
@@ -689,6 +707,10 @@ func apiAuthPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	u, err := loadUser("id=?", s.UserID)
 	if err != nil {
 		jsonError(w, "Unauthorized", 401)
+		return
+	}
+	if userLDAPIdentity(u.ID) != nil {
+		jsonError(w, "Your password is managed by your organisation's directory; change it there", 400)
 		return
 	}
 	if !checkPassword(u.Hash, p.Current) {
@@ -1118,10 +1140,9 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 			db.Exec(`UPDATE users SET disabled=? WHERE id=?`, boolToInt(*p.Disabled), id)
 			changes["disabled"] = *p.Disabled
 			if *p.Disabled {
-				revokeUserSessions(id, 0)
-				disconnectUserEverywhere(id, "Your account was disabled")
-				changes["ai_sessions_ended"] = aiKillWhere(func(s *aiSession) bool { return s.UserID == id }, adminID, "the account was disabled")
-				mcpShutdown(adminID, "the account was disabled", func(uid int) bool { return uid == id })
+				for k, v := range endUserAccess(r, id, adminID, "the account was disabled") {
+					changes[k] = v
+				}
 			}
 		}
 		if p.DisplayName != nil {

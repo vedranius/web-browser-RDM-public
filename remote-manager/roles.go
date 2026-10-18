@@ -213,7 +213,7 @@ func requireStepUpAlways(w http.ResponseWriter, r *http.Request, action string) 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"error":   "Confirm with your password (and 2FA code) to continue",
 		"step_up": true, "action": action, "totp": userHasTOTP(s.UserID),
-		"password": !userSSOOnly(s.UserID), "sso": userSSOProviders(s.UserID),
+		"password": userHasPassword(s.UserID), "sso": userSSOProviders(s.UserID),
 	})
 	return false
 }
@@ -260,7 +260,7 @@ func apiAuthStepUpHandler(w http.ResponseWriter, r *http.Request) {
 		auditLogAs(r, u.ID, u.Username, "auth.step_up_failed", action, map[string]string{"reason": reason})
 		jsonError(w, msg, 403)
 	}
-	if !checkPassword(u.Hash, in.Password) {
+	if !userCheckPassword(u, in.Password) {
 		fail("wrong password", "Wrong password")
 		return
 	}

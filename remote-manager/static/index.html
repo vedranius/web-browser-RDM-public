@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.6.24</title>
+<title>Web Remote Manager PRO v12.6.25</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1638,7 +1638,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.6.24 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.6.25 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1730,7 +1730,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.24</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.25</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -2946,9 +2946,57 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 
 <div class="modal-overlay" id="modal-sso-test" style="z-index:9160;">
   <div class="modal" style="width:620px;">
-    <h3>🧪 <span data-i18n="sso_test_title">Test sign-in</span></h3>
+    <h3><span id="sso-test-title" data-i18n="sso_test_title">Test sign-in</span></h3>
     <div id="sso-test-body"></div>
     <div class="modal-footer"><button onclick="closeModal('modal-sso-test')" data-i18n="close">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ldap" style="z-index:9150;">
+  <div class="modal" style="width:720px;">
+    <h3>🗂 <span id="ldap-title"></span></h3>
+    <input type="hidden" id="ldap-id">
+    <div class="hint-box" id="ldap-hint"></div>
+    <div class="field"><label data-i18n="ldap_f_kind">Directory type</label><select id="ldap-kind" class="setting-select" onchange="ldapKindChanged()"><option value="ad" data-i18n="ldap_kind_ad">Active Directory</option><option value="ldap" data-i18n="ldap_kind_ldap">Other LDAP server (OpenLDAP, 389 DS, FreeIPA…)</option></select></div>
+    <div class="field"><label data-i18n="ldap_f_name">Name</label><input type="text" id="ldap-name" maxlength="60" placeholder="Active Directory"></div>
+    <div class="field"><label data-i18n="ldap_f_url">Server</label><input type="text" id="ldap-url" maxlength="300" spellcheck="false" placeholder="ldaps://dc1.example.com">
+      <div class="muted-text" style="margin-top:4px;" data-i18n="ldap_f_url_d">ldaps://host (port 636) or ldap://host (port 389, WRM then always uses StartTLS). WRM never sends passwords without encryption.</div></div>
+    <div class="field"><label data-i18n="ldap_f_ca">CA certificate (PEM, optional)</label><textarea id="ldap-ca" rows="3" spellcheck="false" style="width:100%;box-sizing:border-box;font-family:monospace;font-size:11px;" placeholder="-----BEGIN CERTIFICATE-----"></textarea>
+      <div class="muted-text" style="margin-top:4px;" data-i18n="ldap_f_ca_d">Needed when the directory's certificate comes from your own CA (common for domain controllers). Use the host name the certificate is issued to.</div></div>
+    <div class="field"><label data-i18n="ldap_f_bind_dn">Service account (bind DN)</label><input type="text" id="ldap-bind-dn" maxlength="500" spellcheck="false" autocomplete="off" placeholder="CN=svc-wrm,OU=Service,DC=example,DC=com"></div>
+    <div class="field"><label data-i18n="ldap_f_bind_pw">Service account password</label><input type="password" id="ldap-bind-pw" maxlength="300" autocomplete="new-password">
+      <div class="muted-text" style="margin-top:4px;" id="ldap-bind-pw-hint"></div></div>
+    <div class="field"><label data-i18n="ldap_f_base">Base DN (where users are searched)</label><input type="text" id="ldap-base" maxlength="500" spellcheck="false" placeholder="DC=example,DC=com"></div>
+    <details><summary class="muted-text" style="cursor:pointer;" data-i18n="ldap_advanced">Advanced: user filter, attributes, groups</summary>
+      <div class="field" style="margin-top:8px;"><label data-i18n="ldap_f_filter">User filter ({user} is the sign-in name)</label><input type="text" id="ldap-filter" maxlength="1000" spellcheck="false"></div>
+      <div class="field"><label data-i18n="ldap_f_login">Sign-in name attribute</label><input type="text" id="ldap-login" maxlength="60" spellcheck="false"></div>
+      <div class="field"><label data-i18n="ldap_f_idattr">Immutable ID attribute</label><input type="text" id="ldap-idattr" maxlength="60" spellcheck="false">
+        <div class="muted-text" style="margin-top:4px;" data-i18n="ldap_f_idattr_d">WRM finds accounts only by this ID, never by name: objectGUID (AD), entryUUID (OpenLDAP), nsUniqueId (389 DS), ipaUniqueID (FreeIPA).</div></div>
+      <div class="field"><label data-i18n="ldap_f_groupbase">Group base DN (optional)</label><input type="text" id="ldap-groupbase" maxlength="500" spellcheck="false"></div>
+      <label class="check-row"><input type="checkbox" id="ldap-nested"> <span><b data-i18n="ldap_f_nested">Nested groups</b> — <span data-i18n="ldap_f_nested_d">a member of a group inside a mapped group counts as a member.</span></span></label>
+    </details>
+    <div class="field" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;"><input type="text" id="ldap-check-user" maxlength="200" spellcheck="false" autocomplete="off" style="flex:1;min-width:140px;" placeholder="jdoe" data-i18n-placeholder="ldap_check_user_ph"><button class="btn-sec btn-sm" onclick="ldapCheck()" data-i18n="sso_check">Test connection</button></div>
+    <ul class="sso-steps" id="ldap-check-out"></ul>
+    <div class="adm-h" data-i18n="sso_rules">Who may sign in, and with which role</div>
+    <div class="muted-text" style="margin-bottom:8px;" data-i18n="ldap_rules_d">A rule on group matches a group's name or its DN (nested groups included); other rules match a user attribute such as department. The strongest matched role wins; teams of all matched rules are added.</div>
+    <div id="ldap-rules"></div>
+    <button class="btn-sec btn-sm" onclick="ldapRulesDraft.push({claim: 'group', value: '', role: 'user', teams: ''});renderRules('ldapRulesDraft')">＋ <span data-i18n="sso_add_rule">Add rule</span></button>
+    <label class="check-row" style="margin-top:10px;"><input type="checkbox" id="ldap-jit"> <span><b data-i18n="sso_f_jit">Create accounts on first sign-in</b> — <span data-i18n="sso_f_jit_d">only for users a rule matches; everyone else is refused with a clear message.</span></span></label>
+    <label class="check-row"><input type="checkbox" id="ldap-enabled"> <span><b data-i18n="sso_f_enabled">Enabled</b> — <span data-i18n="ldap_f_enabled_d">directory users sign in with their directory name and password.</span></span></label>
+    <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-ldap')" data-i18n="cancel">Cancel</button><button onclick="ldapSave()" data-i18n="save">Save</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-scim" style="z-index:9150;">
+  <div class="modal" style="width:640px;">
+    <h3>🔄 <span id="scim-title"></span></h3>
+    <input type="hidden" id="scim-id">
+    <div class="field"><label data-i18n="ldap_f_name">Name</label><input type="text" id="scim-name" maxlength="60" placeholder="Entra ID provisioning"></div>
+    <div class="adm-h" data-i18n="scim_rules">Roles from groups</div>
+    <div class="muted-text" style="margin-bottom:8px;" data-i18n="scim_rules_d">Provisioned groups become WRM teams. A rule turns a group name into a role (the strongest wins); without a matching rule an account has the user role.</div>
+    <div id="scim-rules"></div>
+    <button class="btn-sec btn-sm" onclick="scimRulesDraft.push({claim: 'group', value: '', role: 'user', teams: ''});renderRules('scimRulesDraft')">＋ <span data-i18n="sso_add_rule">Add rule</span></button>
+    <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-scim')" data-i18n="cancel">Cancel</button><button onclick="scimSave()" data-i18n="save">Save</button></div>
   </div>
 </div>
 
@@ -5655,6 +5703,177 @@ Object.assign(LANGS.hr, {
  "auth_ph_user": "Upiši korisničko ime",
  "auth_ph_pass": "Upiši lozinku"
 });
+
+// v12.6.25: LDAP / Active Directory sign-in and SCIM provisioning
+Object.assign(LANGS.en, {
+ "ldap_title": "LDAP / Active Directory",
+ "ldap_intro": "Users sign in on the normal sign-in page with their directory name (also DOMAIN\\name or name@domain) and password. WRM checks the password with the directory, never stores it, and checks every linked account regularly.",
+ "ldap_add": "Add directory",
+ "ldap_none": "No LDAP directory yet.",
+ "ldap_kind_ad": "Active Directory",
+ "ldap_kind_ldap": "Other LDAP server (OpenLDAP, 389 DS, FreeIPA…)",
+ "ldap_kind_short_ad": "AD",
+ "ldap_kind_short_ldap": "LDAP",
+ "ldap_hint_ad": "Use a domain controller's host name over LDAPS (636) or LDAP with StartTLS (389), a read-only service account and your domain as base DN. Group rules may use the group name (WRM Admins) or its DN; nested groups are followed.",
+ "ldap_hint_ldap": "Use the server over LDAPS or StartTLS, an account that may read users and groups, and the users' base DN. Groups come from memberOf or from groups that list the user as member.",
+ "ldap_f_kind": "Directory type",
+ "ldap_f_name": "Name",
+ "ldap_f_url": "Server",
+ "ldap_f_url_d": "ldaps://host (port 636) or ldap://host (port 389, WRM then always uses StartTLS). WRM never sends passwords without encryption.",
+ "ldap_f_ca": "CA certificate (PEM, optional)",
+ "ldap_f_ca_d": "Needed when the directory's certificate comes from your own CA (common for domain controllers). Use the host name the certificate is issued to.",
+ "ldap_f_bind_dn": "Service account (bind DN)",
+ "ldap_f_bind_pw": "Service account password",
+ "ldap_bind_pw_hint": "Stored encrypted; never shown again.",
+ "ldap_f_base": "Base DN (where users are searched)",
+ "ldap_advanced": "Advanced: user filter, attributes, groups",
+ "ldap_f_filter": "User filter ({user} is the sign-in name)",
+ "ldap_f_login": "Sign-in name attribute",
+ "ldap_f_idattr": "Immutable ID attribute",
+ "ldap_f_idattr_d": "WRM finds accounts only by this ID, never by name: objectGUID (AD), entryUUID (OpenLDAP), nsUniqueId (389 DS), ipaUniqueID (FreeIPA).",
+ "ldap_f_groupbase": "Group base DN (optional)",
+ "ldap_f_nested": "Nested groups",
+ "ldap_f_nested_d": "a member of a group inside a mapped group counts as a member.",
+ "ldap_f_enabled_d": "directory users sign in with their directory name and password.",
+ "ldap_check_user_ph": "Optional: a sign-in name to look up",
+ "ldap_rules_d": "A rule on group matches a group's name or its DN (nested groups included); other rules match a user attribute such as department. The strongest matched role wins; teams of all matched rules are added.",
+ "ldap_rule_value": "Group name, DN or value",
+ "ldap_step_settings": "Settings",
+ "ldap_step_address": "Address",
+ "ldap_step_connect": "Connection",
+ "ldap_step_tls": "Encryption",
+ "ldap_step_service": "Service account",
+ "ldap_step_base": "Base DN",
+ "ldap_step_users": "Users",
+ "ldap_step_user": "This user",
+ "ldap_step_groups": "Groups",
+ "ldap_check_next": "Works. Add rules for the groups that may use WRM, turn the directory on and try Test sign-in.",
+ "ldap_never_synced": "not checked yet",
+ "ldap_sync_now": "Check now",
+ "ldap_synced": "Checked {n} account(s), access ended for {e}",
+ "ldap_linked": "Accounts linked to a directory",
+ "ldap_directory": "Directory",
+ "ldap_delete_q": "Remove the directory {d}? Accounts that sign in only through it lose access.",
+ "ldap_test_user_q": "Test sign-in with {d}: directory user name",
+ "ldap_test_pw_q": "Password of {u} (checked once with the directory, not stored)",
+ "ldap_test_create": "WRM would create a new account on the first sign-in",
+ "ldap_test_groups": "Groups",
+ "ldap_test_attrs": "Attributes",
+ "ldap_sign_in_note": "Sign in with your {d} user name and password.",
+ "ldap_link_q": "Link your account to {d}? From then on you sign in with your directory name and password, and WRM's own password of this account is no longer used.",
+ "ldap_link_user": "Your user name in {d}",
+ "ldap_link_pw": "Directory password of {u}",
+ "ldap_linked_ok": "Linked. Sign in with your directory password from now on.",
+ "ldap_password_managed": "Your password is managed by your organisation's directory; change it there.",
+ "p_ldap_sync_minutes": "Directory check every (minutes)",
+ "p_ldap_sync_minutes_d": "How often WRM checks every account linked to an LDAP directory: deleted, disabled, locked or expired accounts, and accounts that left all mapped groups, lose access at once (5–1440).",
+ "scim_title": "SCIM provisioning",
+ "scim_intro": "Your identity provider (Entra ID, Okta…) creates, changes and disables WRM accounts and groups through this address. In Entra, map externalId to objectId so the first directory sign-in links the account.",
+ "scim_add": "Add provisioning client",
+ "scim_none": "No provisioning client yet.",
+ "scim_rules": "Roles from groups",
+ "scim_rules_d": "Provisioned groups become WRM teams. A rule turns a group name into a role (the strongest wins); without a matching rule an account has the user role.",
+ "scim_revoked": "Revoked",
+ "scim_last_used": "Last request",
+ "scim_rotate": "New token",
+ "scim_new_token": "New token",
+ "scim_revoke": "Revoke",
+ "scim_rotate_q": "Create a new token? The current one stops working at once; enter the new one at your identity provider.",
+ "scim_revoke_q": "Revoke this provisioning client? Its accounts stay as they are, but the identity provider can no longer change them.",
+ "scim_users": "Provisioned accounts",
+ "scim_user_name": "userName",
+ "scim_updated": "Updated",
+ "scim_deleted": "Removed by the provider",
+ "scim_token_once": "Copy the token now: WRM shows it only once.",
+ "scim_endpoint": "Tenant URL",
+ "scim_token": "Secret token",
+ "scim_token_where": "In Entra ID: Enterprise application → Provisioning → Admin credentials: paste the tenant URL and the secret token, then Test connection.",
+});
+
+Object.assign(LANGS.hr, {
+ "ldap_title": "LDAP / Active Directory",
+ "ldap_intro": "Korisnici se prijavljuju na običnoj stranici za prijavu svojim imenom iz direktorija (i DOMENA\\ime ili ime@domena) i lozinkom. WRM lozinku provjerava u direktoriju, nikad je ne sprema i redovito provjerava svaki povezani račun.",
+ "ldap_add": "Dodaj direktorij",
+ "ldap_none": "Još nema LDAP direktorija.",
+ "ldap_kind_ad": "Active Directory",
+ "ldap_kind_ldap": "Drugi LDAP poslužitelj (OpenLDAP, 389 DS, FreeIPA…)",
+ "ldap_kind_short_ad": "AD",
+ "ldap_kind_short_ldap": "LDAP",
+ "ldap_hint_ad": "Upiši ime domenskog kontrolera preko LDAPS-a (636) ili LDAP-a sa StartTLS-om (389), servisni račun samo za čitanje i domenu kao base DN. Pravila za grupe mogu koristiti ime grupe (WRM Admins) ili njezin DN; ugniježđene grupe se prate.",
+ "ldap_hint_ldap": "Upiši poslužitelj preko LDAPS-a ili StartTLS-a, račun koji smije čitati korisnike i grupe te base DN korisnika. Grupe dolaze iz memberOf ili iz grupa koje korisnika navode kao člana.",
+ "ldap_f_kind": "Vrsta direktorija",
+ "ldap_f_name": "Naziv",
+ "ldap_f_url": "Poslužitelj",
+ "ldap_f_url_d": "ldaps://host (port 636) ili ldap://host (port 389, WRM tada uvijek koristi StartTLS). WRM nikad ne šalje lozinke bez šifriranja.",
+ "ldap_f_ca": "CA certifikat (PEM, nije obavezno)",
+ "ldap_f_ca_d": "Potreban kad certifikat direktorija dolazi od vašeg CA (često kod domenskih kontrolera). Koristi ime hosta na koje je certifikat izdan.",
+ "ldap_f_bind_dn": "Servisni račun (bind DN)",
+ "ldap_f_bind_pw": "Lozinka servisnog računa",
+ "ldap_bind_pw_hint": "Sprema se šifrirano i više se ne prikazuje.",
+ "ldap_f_base": "Base DN (gdje se traže korisnici)",
+ "ldap_advanced": "Napredno: filtar korisnika, atributi, grupe",
+ "ldap_f_filter": "Filtar korisnika ({user} je ime za prijavu)",
+ "ldap_f_login": "Atribut imena za prijavu",
+ "ldap_f_idattr": "Atribut nepromjenjivog ID-a",
+ "ldap_f_idattr_d": "WRM račune pronalazi samo po ovom ID-u, nikad po imenu: objectGUID (AD), entryUUID (OpenLDAP), nsUniqueId (389 DS), ipaUniqueID (FreeIPA).",
+ "ldap_f_groupbase": "Base DN grupa (nije obavezno)",
+ "ldap_f_nested": "Ugniježđene grupe",
+ "ldap_f_nested_d": "član grupe unutar mapirane grupe računa se kao član.",
+ "ldap_f_enabled_d": "korisnici direktorija prijavljuju se imenom i lozinkom iz direktorija.",
+ "ldap_check_user_ph": "Neobavezno: ime za prijavu koje treba potražiti",
+ "ldap_rules_d": "Pravilo na group odgovara imenu grupe ili njezinom DN-u (i ugniježđenim grupama); ostala pravila odgovaraju atributu korisnika, npr. department. Vrijedi najjača pronađena uloga; timovi svih pravila se zbrajaju.",
+ "ldap_rule_value": "Ime grupe, DN ili vrijednost",
+ "ldap_step_settings": "Postavke",
+ "ldap_step_address": "Adresa",
+ "ldap_step_connect": "Veza",
+ "ldap_step_tls": "Šifriranje",
+ "ldap_step_service": "Servisni račun",
+ "ldap_step_base": "Base DN",
+ "ldap_step_users": "Korisnici",
+ "ldap_step_user": "Ovaj korisnik",
+ "ldap_step_groups": "Grupe",
+ "ldap_check_next": "Radi. Dodaj pravila za grupe koje smiju koristiti WRM, uključi direktorij i isprobaj Testnu prijavu.",
+ "ldap_never_synced": "još nije provjereno",
+ "ldap_sync_now": "Provjeri sada",
+ "ldap_synced": "Provjereno računa: {n}, pristup prekinut za {e}",
+ "ldap_linked": "Računi povezani s direktorijem",
+ "ldap_directory": "Direktorij",
+ "ldap_delete_q": "Ukloniti direktorij {d}? Računi koji se prijavljuju samo preko njega gube pristup.",
+ "ldap_test_user_q": "Testna prijava za {d}: korisničko ime u direktoriju",
+ "ldap_test_pw_q": "Lozinka za {u} (provjerava se jednom u direktoriju, ne sprema se)",
+ "ldap_test_create": "WRM bi pri prvoj prijavi napravio novi račun",
+ "ldap_test_groups": "Grupe",
+ "ldap_test_attrs": "Atributi",
+ "ldap_sign_in_note": "Prijavi se korisničkim imenom i lozinkom iz {d}.",
+ "ldap_link_q": "Povezati račun s {d}? Od tada se prijavljuješ imenom i lozinkom iz direktorija, a WRM-ova lozinka ovog računa više se ne koristi.",
+ "ldap_link_user": "Tvoje korisničko ime u {d}",
+ "ldap_link_pw": "Lozinka iz direktorija za {u}",
+ "ldap_linked_ok": "Povezano. Od sada se prijavljuj lozinkom iz direktorija.",
+ "ldap_password_managed": "Lozinkom upravlja direktorij tvoje organizacije; promijeni je tamo.",
+ "p_ldap_sync_minutes": "Provjera u direktoriju svakih (minuta)",
+ "p_ldap_sync_minutes_d": "Koliko često WRM provjerava svaki račun povezan s LDAP direktorijem: obrisani, onemogućeni, zaključani ili istekli računi te računi koji su izašli iz svih mapiranih grupa odmah gube pristup (5–1440).",
+ "scim_title": "SCIM provisioning",
+ "scim_intro": "Tvoj identity provider (Entra ID, Okta…) preko ove adrese stvara, mijenja i gasi WRM račune i grupe. U Entri mapiraj externalId na objectId da prva prijava preko direktorija poveže račun.",
+ "scim_add": "Dodaj klijenta za provisioning",
+ "scim_none": "Još nema klijenta za provisioning.",
+ "scim_rules": "Uloge iz grupa",
+ "scim_rules_d": "Grupe iz providera postaju WRM timovi. Pravilo pretvara ime grupe u ulogu (vrijedi najjača); bez pravila račun ima ulogu korisnika.",
+ "scim_revoked": "Opozvan",
+ "scim_last_used": "Zadnji zahtjev",
+ "scim_rotate": "Novi token",
+ "scim_new_token": "Novi token",
+ "scim_revoke": "Opozovi",
+ "scim_rotate_q": "Napraviti novi token? Trenutni odmah prestaje vrijediti; novi upiši kod identity providera.",
+ "scim_revoke_q": "Opozvati ovog klijenta? Njegovi računi ostaju kakvi jesu, ali ih identity provider više ne može mijenjati.",
+ "scim_users": "Računi iz providera",
+ "scim_user_name": "userName",
+ "scim_updated": "Promijenjeno",
+ "scim_deleted": "Provider ga je uklonio",
+ "scim_token_once": "Kopiraj token sada: WRM ga prikazuje samo jednom.",
+ "scim_endpoint": "Tenant URL",
+ "scim_token": "Tajni token",
+ "scim_token_where": "U Entra ID-u: Enterprise application → Provisioning → Admin credentials: zalijepi tenant URL i tajni token, pa Test connection.",
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -5773,12 +5992,18 @@ function renderAuthSSO() {
   const box = document.getElementById('auth-sso');
   if (!box) return;
   const list = (!authConfig.first_run && authMode === 'login' && authConfig.sso) || [];
-  const limited = !!authConfig.local_login_limited && list.length > 0;
+  const dirs = (!authConfig.first_run && authMode === 'login' && authConfig.ldap) || [];
+  const limited = !!authConfig.local_login_limited && list.length > 0 && !dirs.length;
   box.style.display = list.length ? '' : 'none';
   box.innerHTML = list.map(p => `<a class="auth-btn auth-sso-btn" href="/api/auth/oidc/start?provider=${Number(p.id)}">🏢 ${esc(t('sso_sign_in_with').replace('{p}', p.name))}</a>`).join('') +
     (list.length && !limited ? `<div class="auth-or">${esc(t('sso_or'))}</div>` : '');
   document.getElementById('auth-local').style.display = limited ? 'none' : '';
   document.getElementById('auth-local-link').style.display = limited ? '' : 'none';
+  const n = document.getElementById('auth-note');
+  if (dirs.length && n) {
+    n.textContent = t('ldap_sign_in_note').replace('{d}', dirs.map(d => d.name).join(', '));
+    n.style.display = 'block';
+  }
 }
 
 function showLocalSignIn() {
@@ -7615,7 +7840,7 @@ async function adminSSO() {
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button class="btn-sec btn-sm" onclick="ssoOpen(${p.id})">${esc(t('edit'))}</button><button class="btn-sec btn-sm" onclick="ssoTest(${p.id})">🧪 ${esc(t('sso_test'))}</button><button class="btn-danger btn-sm" onclick="ssoDelete(${p.id})">🗑</button></div></div>`).join('')
       : `<div class="muted-text">${esc(t('sso_none'))}</div>`}
     <div class="adm-h">${esc(t('pg_sso'))}</div>
-    <div class="policy-group">${['local_login', 'oidc_revalidate_minutes', 'oidc_unverified_hours'].map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
+    <div class="policy-group">${['local_login', 'oidc_revalidate_minutes', 'oidc_unverified_hours', 'ldap_sync_minutes'].map(k => settingRowHTML(adminSettingsCache.find(x => x.key === k))).join('')}</div>
     <div class="adm-h">${esc(t('sso_linked'))} (${ids.length})</div>
     ${ids.length ? `<div class="sso-ids"><table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('sso_provider'))}</th><th>${esc(t('sso_last_sign_in'))}</th><th>${esc(t('sso_directory_check'))}</th><th></th></tr></thead><tbody>` + ids.map(x => `<tr>
       <td>${esc(x.username)}<div class="sub">${esc(x.display || '')}${x.email ? ' · ' + esc(x.email) : ''}</div></td>
@@ -7624,8 +7849,254 @@ async function adminSSO() {
       <td data-l="${esc(t('sso_directory_check'))}">${checkPill(x)}${x.refresh ? '' : `<div class="sub">${esc(t('sso_no_refresh'))}</div>`}</td>
       <td><button class="btn-sec btn-sm" onclick="ssoUnlink(${x.id})">${esc(t('sso_unlink'))}</button></td></tr>`).join('') + '</tbody></table></div>'
       : `<div class="muted-text">${esc(t('none'))}</div>`}
+    <div id="ldap-admin"></div>
+    <div id="scim-admin"></div>
     <datalist id="sso-team-names">${(adminTeamsCache || []).map(tm => `<option value="${esc(tm.name)}">`).join('')}</datalist>
+    <datalist id="ldap-claim-names"><option value="group"><option value="department"><option value="title"><option value="company"></datalist>
+    <datalist id="scim-claim-names"><option value="group"></datalist>
     <datalist id="sso-claim-names"><option value="roles"><option value="groups"><option value="hd"><option value="email"><option value="wids"></datalist>`;
+  adminLDAP();
+  adminSCIM();
+}
+
+// ── LDAP / Active Directory (v12.6.25) ──
+var ldapRulesDraft = [], scimRulesDraft = [];
+let ldapAdminCache = null, scimAdminCache = null;
+const RULE_BOXES = {ldapRulesDraft: ['ldap-rules', 'ldap-claim-names', 'group'], scimRulesDraft: ['scim-rules', 'scim-claim-names', 'group']};
+
+function renderRules(v) {
+  const [boxId, listId, ph] = RULE_BOXES[v];
+  const roles = ['admin', 'auditor', 'operator', 'user'];
+  const d = window[v];
+  document.getElementById(boxId).innerHTML = d.map((r, i) => `<div class="sso-rule">
+    <input type="text" list="${listId}" value="${esc(r.claim || '')}" placeholder="${ph}" title="${esc(t('sso_rule_claim'))}" oninput="${v}[${i}].claim=this.value">
+    <input type="text" value="${esc(r.value || '')}" placeholder="${esc(t('ldap_rule_value'))}" title="${esc(t('ldap_rule_value'))}" spellcheck="false" oninput="${v}[${i}].value=this.value">
+    <select title="${esc(t('sso_rule_role'))}" onchange="${v}[${i}].role=this.value">${roles.map(x => `<option value="${x}" ${x === (r.role || 'user') ? 'selected' : ''}>${esc(t('urole_' + x))}</option>`).join('')}</select>
+    <input type="text" list="sso-team-names" value="${esc(r.teams || '')}" placeholder="${esc(t('sso_rule_teams'))}" title="${esc(t('sso_rule_teams'))}" oninput="${v}[${i}].teams=this.value">
+    <button class="icon-btn sso-del" title="${esc(t('delete'))}" onclick="${v}.splice(${i},1);renderRules('${v}')">✕</button></div>`).join('') || `<div class="muted-text" style="margin-bottom:6px;">${esc(t('sso_no_rules'))}</div>`;
+}
+
+function rulesOut(d) {
+  return d.map(r => ({claim: (r.claim || '').trim(), value: (r.value || '').trim(), role: r.role || 'user',
+    teams: String(r.teams || '').split(',').map(x => x.trim()).filter(Boolean)})).filter(r => r.claim || r.value);
+}
+
+async function adminLDAP() {
+  const box = document.getElementById('ldap-admin');
+  if (!box) return;
+  const r = await fetch('/api/admin/ldap');
+  if (!r.ok) { box.innerHTML = `<div class="fm-error">${esc(await apiError(r))}</div>`; return; }
+  const d = ldapAdminCache = await r.json();
+  const dirs = d.directories || [], ids = d.identities || [];
+  const checkPill = x => x.revoked ? `<span class="pill bad" title="${esc(x.last_error || '')}">${esc(t('sso_access_ended'))}</span>`
+    : x.last_error ? `<span class="pill warn" title="${esc(x.last_error)}">⚠ ${esc(t('sso_check_failed'))}</span>`
+    : `<span class="pill ok">✓ ${esc(fmtTime(x.last_ok_at))}</span>`;
+  box.innerHTML = `
+    <div class="adm-h" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">🗂 ${esc(t('ldap_title'))}<span style="flex:1"></span><button class="btn-sm" onclick="ldapOpen(0)">＋ ${esc(t('ldap_add'))}</button></div>
+    <div class="muted-text" style="margin-bottom:8px;">${esc(t('ldap_intro'))}</div>
+    ${dirs.length ? dirs.map(x => `<div class="share-card"><div class="sc-top"><span class="sc-name">🗂 ${esc(x.name)}</span>${x.enabled ? `<span class="pill ok">${esc(t('on'))}</span>` : `<span class="pill">${esc(t('off'))}</span>`}<span class="pill info">${esc(t('ldap_kind_short_' + x.kind))}</span></div>
+      <div class="muted-text mono" style="word-break:break-all;font-size:11px;margin-top:2px;">${esc(x.url)} · ${esc(x.base_dn)}</div>
+      <div class="sc-meta"><span>${esc(t('sso_rules_n').replace('{n}', (x.rules || []).length))}${x.jit ? ' · ' + esc(t('sso_jit_short')) : ''}</span><span>👤 ${Number(x.linked_users)}</span><span title="${esc(x.last_sync || '')}">🔁 ${x.last_sync_at ? esc(fmtTime(x.last_sync_at)) + (String(x.last_sync || '').startsWith('error') ? ' ⚠ ' + esc(t('sso_check_failed')) : '') : esc(t('ldap_never_synced'))}</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button class="btn-sec btn-sm" onclick="ldapOpen(${Number(x.id)})">${esc(t('edit'))}</button><button class="btn-sec btn-sm" onclick="ldapTest(${Number(x.id)})">🧪 ${esc(t('sso_test'))}</button><button class="btn-sec btn-sm" onclick="ldapSync(${Number(x.id)})">🔁 ${esc(t('ldap_sync_now'))}</button><button class="btn-danger btn-sm" onclick="ldapDelete(${Number(x.id)})">🗑</button></div></div>`).join('')
+      : `<div class="muted-text">${esc(t('ldap_none'))}</div>`}
+    ${ids.length ? `<div class="adm-h">${esc(t('ldap_linked'))} (${ids.length})</div><div class="sso-ids"><table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('ldap_directory'))}</th><th>${esc(t('sso_last_sign_in'))}</th><th>${esc(t('sso_directory_check'))}</th><th></th></tr></thead><tbody>` + ids.map(x => `<tr>
+      <td>${esc(x.username)}<div class="sub">${esc(x.display || '')}${x.email ? ' · ' + esc(x.email) : ''}</div></td>
+      <td data-l="${esc(t('ldap_directory'))}">${esc(x.directory)}<div class="sub mono" style="word-break:break-all;">${esc(x.dn)}</div></td>
+      <td data-l="${esc(t('sso_last_sign_in'))}">${esc(fmtTime(x.last_login_at))}</td>
+      <td data-l="${esc(t('sso_directory_check'))}">${checkPill(x)}</td>
+      <td><button class="btn-sec btn-sm" onclick="ldapUnlink(${Number(x.id)})">${esc(t('sso_unlink'))}</button></td></tr>`).join('') + '</tbody></table></div>' : ''}`;
+}
+
+function ldapKindChanged() {
+  const kind = document.getElementById('ldap-kind').value;
+  const d = (ldapAdminCache && ldapAdminCache.defaults) || {};
+  const def = kind === 'ad'
+    ? {filter: '(&(objectCategory=person)(objectClass=user)(|(sAMAccountName={user})(userPrincipalName={user})))', login: 'sAMAccountName', id: 'objectGUID'}
+    : {filter: '(&(objectClass=person)(|(uid={user})(mail={user})))', login: 'uid', id: 'entryUUID'};
+  document.getElementById('ldap-filter').placeholder = def.filter;
+  document.getElementById('ldap-login').placeholder = def.login;
+  document.getElementById('ldap-idattr').placeholder = def.id;
+  document.getElementById('ldap-hint').textContent = t('ldap_hint_' + kind);
+}
+
+function ldapOpen(id) {
+  const x = id ? ((ldapAdminCache || {}).directories || []).find(v => v.id === id) : null;
+  const val = (i, v) => { document.getElementById(i).value = v || ''; };
+  val('ldap-id', x ? x.id : '');
+  document.getElementById('ldap-title').textContent = x ? x.name : t('ldap_add');
+  document.getElementById('ldap-kind').value = x ? x.kind : 'ad';
+  val('ldap-name', x ? x.name : '');
+  val('ldap-url', x ? x.url : '');
+  val('ldap-ca', x ? x.ca_pem : '');
+  val('ldap-bind-dn', x ? x.bind_dn : '');
+  val('ldap-bind-pw', '');
+  document.getElementById('ldap-bind-pw-hint').textContent = t(x && x.has_bind_password ? 'sso_secret_keep' : 'ldap_bind_pw_hint');
+  val('ldap-base', x ? x.base_dn : '');
+  val('ldap-filter', x ? x.user_filter : '');
+  val('ldap-login', x ? x.login_attr : '');
+  val('ldap-idattr', x ? x.id_attr : '');
+  val('ldap-groupbase', x ? x.group_base : '');
+  val('ldap-check-user', '');
+  document.getElementById('ldap-nested').checked = x ? x.nested : true;
+  document.getElementById('ldap-jit').checked = x ? x.jit : true;
+  document.getElementById('ldap-enabled').checked = x ? x.enabled : false;
+  document.getElementById('ldap-check-out').innerHTML = '';
+  ldapRulesDraft = x ? (x.rules || []).map(r => Object.assign({}, r, {teams: (r.teams || []).join(', ')})) : [{claim: 'group', value: '', role: 'user', teams: ''}];
+  renderRules('ldapRulesDraft');
+  ldapKindChanged();
+  document.getElementById('modal-ldap').classList.add('open');
+  setTimeout(() => document.getElementById('ldap-name').focus(), 60);
+}
+
+function ldapForm() {
+  const v = i => document.getElementById(i).value.trim();
+  const body = {name: v('ldap-name'), kind: document.getElementById('ldap-kind').value, url: v('ldap-url'), ca_pem: document.getElementById('ldap-ca').value.trim(),
+    bind_dn: v('ldap-bind-dn'), base_dn: v('ldap-base'), user_filter: v('ldap-filter'), login_attr: v('ldap-login'), id_attr: v('ldap-idattr'),
+    group_base: v('ldap-groupbase'), nested: document.getElementById('ldap-nested').checked, jit: document.getElementById('ldap-jit').checked,
+    enabled: document.getElementById('ldap-enabled').checked, rules: rulesOut(ldapRulesDraft)};
+  const pw = document.getElementById('ldap-bind-pw').value;
+  if (pw) body.bind_password = pw;
+  return body;
+}
+
+async function ldapSave() {
+  const id = Number(document.getElementById('ldap-id').value || 0);
+  const res = await fetch('/api/admin/ldap' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(ldapForm())});
+  if (!res.ok) { showToast(await apiError(res), 'error', 9000); return; }
+  document.getElementById('ldap-bind-pw').value = '';
+  closeModal('modal-ldap');
+  showToast(t('saved'), 'success', 1500);
+  adminLDAP();
+}
+
+async function ldapCheck() {
+  const out = document.getElementById('ldap-check-out');
+  out.innerHTML = `<li>${esc(t('loading'))}</li>`;
+  const body = Object.assign(ldapForm(), {directory: Number(document.getElementById('ldap-id').value || 0), username: document.getElementById('ldap-check-user').value.trim()});
+  const res = await fetch('/api/admin/ldap/check', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!res.ok) { out.innerHTML = `<li>❌ ${esc(await apiError(res))}</li>`; return; }
+  const d = await res.json();
+  out.innerHTML = (d.steps || []).map(st => `<li>${st.ok ? '✅' : '❌'} <b>${esc(t('ldap_step_' + st.step))}</b> <span class="mono" style="font-size:11px;word-break:break-all;">${esc(st.detail)}</span>${st.ok || !st.fix ? '' : `<span class="fix">→ ${esc(st.fix)}</span>`}</li>`).join('') +
+    (d.ok ? `<li>✅ <b>${esc(t('ldap_check_next'))}</b></li>` : '');
+}
+
+async function ldapTest(id) {
+  const x = ((ldapAdminCache || {}).directories || []).find(v => v.id === id);
+  const user = await uiPrompt(t('ldap_test_user_q').replace('{d}', x ? x.name : ''), '', {okText: t('continue')});
+  if (!user) return;
+  const pw = await uiPrompt(t('ldap_test_pw_q').replace('{u}', user), '', {okText: t('sso_test'), password: true});
+  if (pw === null || pw === undefined) return;
+  const res = await fetch(`/api/admin/ldap/${id}/test`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username: user, password: pw})});
+  const r = await res.json().catch(() => ({}));
+  const box = document.getElementById('sso-test-body');
+  document.getElementById('sso-test-title').textContent = '🧪 ' + t('sso_test_title');
+  if (!res.ok || !r.ok) {
+    box.innerHTML = `<div class="hint-box warn">⚠ ${esc(r.error || t('failed'))}</div>`;
+  } else {
+    const who = r.linked_user ? t('sso_test_account').replace('{u}', r.linked_user) : (r.mapping && r.mapping.matched && x && x.jit) ? t('ldap_test_create') : t('sso_test_refused');
+    box.innerHTML = `<div class="hint-box ${r.mapping && r.mapping.matched && !r.blocked ? 'ok' : 'warn'}">${esc(r.blocked ? '⛔ ' + r.blocked : ssoMappingText(r.mapping))}</div>
+      <div class="kv-grid">
+        <div class="kv"><div class="k">${esc(t('sso_test_who'))}</div><div class="v small">${esc(who)}</div></div>
+        <div class="kv"><div class="k">DN</div><div class="v small mono" style="word-break:break-all;">${esc(r.dn || '')}</div></div>
+        <div class="kv"><div class="k">${esc(t('sso_test_id'))}</div><div class="v small mono" style="word-break:break-all;">${esc(r.key || '')}</div></div>
+      </div>
+      <div class="adm-h">${esc(t('ldap_test_groups'))} (${(r.groups || []).length})</div><div class="muted-text" style="user-select:text;">${esc((r.groups || []).join(', ') || t('none'))}</div>
+      <div class="adm-h">${esc(t('ldap_test_attrs'))}</div><pre class="sso-pre">${esc(JSON.stringify(r.attributes || {}, null, 2))}</pre>`;
+  }
+  document.getElementById('modal-sso-test').classList.add('open');
+}
+
+async function ldapSync(id) {
+  const res = await fetch(`/api/admin/ldap/${id}/sync`, {method: 'POST'});
+  const r = await res.json().catch(() => ({}));
+  if (!res.ok || r.error) { showToast(r.error || t('failed'), 'error', 9000); }
+  else showToast(t('ldap_synced').replace('{n}', r.checked).replace('{e}', (r.ended || []).length) + ((r.ended || []).length ? ': ' + r.ended.join(', ') : ''), (r.ended || []).length ? 'warning' : 'success', 7000);
+  adminLDAP();
+}
+
+async function ldapDelete(id) {
+  const x = ((ldapAdminCache || {}).directories || []).find(v => v.id === id);
+  if (!x || !(await uiConfirm(t('ldap_delete_q').replace('{d}', x.name), {okText: t('delete'), danger: true}))) return;
+  const res = await fetch('/api/admin/ldap/' + id, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  adminLDAP();
+}
+
+async function ldapUnlink(iid) {
+  if (!(await uiConfirm(t('sso_unlink_q'), {okText: t('sso_unlink'), danger: true}))) return;
+  const res = await fetch('/api/admin/ldap/identities/' + iid, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  adminLDAP();
+}
+
+// ── SCIM provisioning (v12.6.25) ──
+async function adminSCIM() {
+  const box = document.getElementById('scim-admin');
+  if (!box) return;
+  const r = await fetch('/api/admin/scim');
+  if (!r.ok) { box.innerHTML = `<div class="fm-error">${esc(await apiError(r))}</div>`; return; }
+  const d = scimAdminCache = await r.json();
+  const clients = d.clients || [], users = d.users || [];
+  box.innerHTML = `
+    <div class="adm-h" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">🔄 ${esc(t('scim_title'))}<span style="flex:1"></span><button class="btn-sm" onclick="scimOpen(0)">＋ ${esc(t('scim_add'))}</button></div>
+    <div class="hint-box">${esc(t('scim_intro'))}<div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;"><code class="mono" style="user-select:text;word-break:break-all;">${esc(d.endpoint)}</code><button class="btn-sec btn-sm" onclick="copyText(${jsq(d.endpoint)})">${esc(t('copy'))}</button></div></div>
+    ${clients.length ? clients.map(c => `<div class="share-card"><div class="sc-top"><span class="sc-name">🔄 ${esc(c.name)}</span>${c.revoked ? `<span class="pill bad">${esc(t('scim_revoked'))}</span>` : `<span class="pill ok">${esc(t('on'))}</span>`}</div>
+      <div class="sc-meta"><span>👤 ${Number(c.users)} · 👥 ${Number(c.groups)}</span><span>${esc(t('sso_rules_n').replace('{n}', (c.rules || []).length))}</span><span>${esc(t('scim_last_used'))}: ${c.last_used_at ? esc(fmtTime(c.last_used_at)) + (c.last_ip ? ' · ' + esc(c.last_ip) : '') : esc(t('never'))}</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button class="btn-sec btn-sm" onclick="scimOpen(${Number(c.id)})">${esc(t('edit'))}</button><button class="btn-sec btn-sm" onclick="scimRotate(${Number(c.id)})">🔑 ${esc(t(c.revoked ? 'scim_new_token' : 'scim_rotate'))}</button>${c.revoked ? '' : `<button class="btn-danger btn-sm" onclick="scimRevoke(${Number(c.id)})">${esc(t('scim_revoke'))}</button>`}</div></div>`).join('')
+      : `<div class="muted-text">${esc(t('scim_none'))}</div>`}
+    ${users.length ? `<div class="adm-h">${esc(t('scim_users'))} (${users.length})</div><div class="sso-ids"><table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('scim_user_name'))}</th><th>${esc(t('status'))}</th><th>${esc(t('scim_updated'))}</th></tr></thead><tbody>` + users.map(u => `<tr>
+      <td>${esc(u.username)}<div class="sub">${esc(u.client)}</div></td>
+      <td data-l="${esc(t('scim_user_name'))}">${esc(u.user_name)}<div class="sub mono" style="word-break:break-all;">${esc(u.external_id || '')}</div></td>
+      <td data-l="${esc(t('status'))}">${u.deleted ? `<span class="pill bad">${esc(t('scim_deleted'))}</span>` : u.disabled ? `<span class="pill warn">${esc(t('disabled'))}</span>` : `<span class="pill ok">${esc(t('active'))}</span>`}</td>
+      <td data-l="${esc(t('scim_updated'))}">${esc(fmtTime(u.updated_at))}</td></tr>`).join('') + '</tbody></table></div>' : ''}`;
+}
+
+function scimOpen(id) {
+  const c = id ? ((scimAdminCache || {}).clients || []).find(x => x.id === id) : null;
+  document.getElementById('scim-id').value = c ? c.id : '';
+  document.getElementById('scim-title').textContent = c ? c.name : t('scim_add');
+  document.getElementById('scim-name').value = c ? c.name : '';
+  scimRulesDraft = c ? (c.rules || []).map(r => Object.assign({}, r, {teams: (r.teams || []).join(', ')})) : [];
+  renderRules('scimRulesDraft');
+  document.getElementById('modal-scim').classList.add('open');
+  setTimeout(() => document.getElementById('scim-name').focus(), 60);
+}
+
+async function scimSave() {
+  const id = Number(document.getElementById('scim-id').value || 0);
+  const body = {name: document.getElementById('scim-name').value.trim(), rules: rulesOut(scimRulesDraft)};
+  const res = await fetch('/api/admin/scim' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const r = await res.json().catch(() => ({}));
+  if (!res.ok) { showToast(r.error || t('failed'), 'error', 8000); return; }
+  closeModal('modal-scim');
+  if (r.token) scimShowToken(r.token, r.endpoint);
+  adminSCIM();
+}
+
+function scimShowToken(token, endpoint) {
+  const box = document.getElementById('sso-test-body');
+  document.getElementById('sso-test-title').textContent = '🔑 ' + t('scim_token');
+  box.innerHTML = `<div class="hint-box warn">⚠ ${esc(t('scim_token_once'))}</div>
+    <div class="adm-h">${esc(t('scim_endpoint'))}</div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><code class="mono" style="user-select:text;word-break:break-all;">${esc(endpoint || (scimAdminCache && scimAdminCache.endpoint) || '')}</code><button class="btn-sec btn-sm" onclick="copyText(${jsq(endpoint || (scimAdminCache && scimAdminCache.endpoint) || '')})">${esc(t('copy'))}</button></div>
+    <div class="adm-h">${esc(t('scim_token'))}</div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><code class="mono" style="user-select:text;word-break:break-all;">${esc(token)}</code><button class="btn-sec btn-sm" onclick="copyText(${jsq(token)})">${esc(t('copy'))}</button></div>
+    <div class="muted-text" style="margin-top:10px;">${esc(t('scim_token_where'))}</div>`;
+  document.getElementById('modal-sso-test').classList.add('open');
+}
+
+async function scimRotate(id) {
+  if (!(await uiConfirm(t('scim_rotate_q'), {okText: t('scim_rotate')}))) return;
+  const res = await fetch(`/api/admin/scim/${id}/rotate`, {method: 'POST'});
+  const r = await res.json().catch(() => ({}));
+  if (!res.ok) { showToast(r.error || t('failed'), 'error'); return; }
+  scimShowToken(r.token);
+  adminSCIM();
+}
+
+async function scimRevoke(id) {
+  if (!(await uiConfirm(t('scim_revoke_q'), {okText: t('scim_revoke'), danger: true}))) return;
+  const res = await fetch('/api/admin/scim/' + id, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  adminSCIM();
 }
 
 function ssoOpen(id) {
@@ -7722,6 +8193,7 @@ function ssoMappingText(m) {
 async function ssoTest(id) {
   const r = await ssoPopup(id, 'test');
   const box = document.getElementById('sso-test-body');
+  document.getElementById('sso-test-title').textContent = '🧪 ' + t('sso_test_title');
   if (!r) { showToast(t('sso_not_finished'), 'error', 6000); return; }
   if (!r.ok) {
     box.innerHTML = `<div class="hint-box warn">⚠ ${esc(r.error || t('failed'))}</div>`;
@@ -7770,6 +8242,31 @@ async function renderMySSO() {
       <div class="grow"><div><b>${esc(x.provider)}</b> <span class="muted-text">${esc(x.email || x.display || '')}</span></div><div class="ua">${esc(t('sso_last_sign_in'))}: ${esc(fmtTime(x.last_login_at))}</div></div>
       ${currentUser.sso_only ? '' : `<button class="btn-sec btn-sm" onclick="mySSOUnlink(${x.id})">${esc(t('sso_unlink'))}</button>`}</div>`).join('') +
     (free.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${free.map(p => `<button class="btn-sec btn-sm" onclick="mySSOLink(${p.id})">🏢 ${esc(t('sso_connect').replace('{p}', p.name))}</button>`).join('')}</div>` : '');
+  const lr = await fetch('/api/me/ldap');
+  if (!lr.ok) return;
+  const ld = await lr.json();
+  const lids = ld.identities || [], ldirs = ld.directories || [];
+  const llinked = new Set(lids.map(x => x.directory_id));
+  const lfree = currentUser.break_glass ? [] : ldirs.filter(x => !llinked.has(x.id));
+  if (lids.length || lfree.length) document.getElementById('my-sso-h').style.display = '';
+  box.insertAdjacentHTML('beforeend', lids.map(x => `<div class="sess-row"><span style="font-size:18px;">🗂</span>
+      <div class="grow"><div><b>${esc(x.directory)}</b> <span class="muted-text">${esc(x.login || '')}${x.email ? ' · ' + esc(x.email) : ''}</span></div><div class="ua">${esc(t('sso_last_sign_in'))}: ${esc(fmtTime(x.last_login_at))}</div></div></div>`).join('') +
+    (lfree.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${lfree.map(x => `<button class="btn-sec btn-sm" onclick="myLDAPLink(${Number(x.id)})">🗂 ${esc(t('sso_connect').replace('{p}', x.name))}</button>`).join('')}</div>` : ''));
+}
+
+async function myLDAPLink(id) {
+  const dir = await fetch('/api/me/ldap').then(r => r.ok ? r.json() : {}).catch(() => ({}));
+  const x = (dir.directories || []).find(v => v.id === id);
+  if (!x || !(await uiConfirm(t('ldap_link_q').replace('{d}', x.name), {okText: t('continue')}))) return;
+  const user = await uiPrompt(t('ldap_link_user').replace('{d}', x.name), '', {okText: t('continue')});
+  if (!user) return;
+  const pw = await uiPrompt(t('ldap_link_pw').replace('{u}', user), '', {okText: t('sso_connect').replace('{p}', x.name), password: true});
+  if (!pw) return;
+  const res = await fetch('/api/me/ldap', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({directory: id, username: user, password: pw})});
+  if (!res.ok) { showToast(await apiError(res), 'error', 8000); return; }
+  showToast(t('ldap_linked_ok'), 'success', 6000);
+  try { const r = await fetch('/api/auth/me'); if (r.ok) { const me = await r.json(); if (!me.restricted) currentUser = me; } } catch (_) {}
+  renderMySSO();
 }
 
 async function mySSOLink(pid) {
@@ -15113,7 +15610,7 @@ async function renderSecurityPane() {
   const me = currentUser;
   pane.innerHTML = `
     <div class="setting-row">
-      <div><div class="setting-label">${esc(t('password'))}</div><div class="setting-desc">${esc(t(me.sso_only ? 'sso_no_password' : 'password_desc'))}</div></div>
+      <div><div class="setting-label">${esc(t('password'))}</div><div class="setting-desc">${esc(t(me.directory_password ? 'ldap_password_managed' : me.sso_only ? 'sso_no_password' : 'password_desc'))}</div></div>
       <div class="setting-control">${me.sso_only ? '' : `<button class="btn-sec btn-sm" onclick="openPasswordModal(false)">${esc(t('change_password'))}</button>`}</div>
     </div>
     <div class="setting-row">
@@ -15237,7 +15734,7 @@ function downloadText(name, text) {
 }
 
 async function disable2FA() {
-  const pw = currentUser.sso_only ? ((await ssoConfirmSelf()) ? '' : null) : await uiPrompt(t('twofa_disable_pw'), '', {okText: t('continue'), password: true});
+  const pw = currentUser.sso_only && !currentUser.directory_password ? ((await ssoConfirmSelf()) ? '' : null) : await uiPrompt(t('twofa_disable_pw'), '', {okText: t('continue'), password: true});
   if (pw === null || pw === false) return;
   const code = await uiPrompt(t('twofa_disable_code'), '', {okText: t('turn_off'), danger: true});
   if (code === null || code === false) return;
@@ -15248,7 +15745,7 @@ async function disable2FA() {
 }
 
 async function regenRecoveryCodes() {
-  const pw = currentUser.sso_only ? ((await ssoConfirmSelf()) ? '' : null) : await uiPrompt(t('twofa_disable_pw'), '', {okText: t('continue'), password: true});
+  const pw = currentUser.sso_only && !currentUser.directory_password ? ((await ssoConfirmSelf()) ? '' : null) : await uiPrompt(t('twofa_disable_pw'), '', {okText: t('continue'), password: true});
   if (pw === null || pw === false) return;
   const res = await fetch('/api/auth/2fa/recovery', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pw})});
   const d = await res.json().catch(() => ({}));
