@@ -5,7 +5,7 @@ Guidance for Claude Code sessions in this repository. The project owner writes i
 ## What to build
 - **[ROADMAP.md](ROADMAP.md)** holds the agreed plan. A session works on **one version** from it, the first one not yet done, unless told otherwise.
 - When that version is finished, **remove its section from ROADMAP.md in the same PR**. Its content then lives in CHANGELOG.md.
-- Do not start the next version on your own.
+- After a version is merged and released, continue with the next ROADMAP version on your own, without asking for permission. Design forks still go to the owner as options, while work continues on the recommended one.
 
 ## Project layout (short)
 - `remote-manager/`: one Go program (single binary) with the web UI embedded from `remote-manager/static/`.

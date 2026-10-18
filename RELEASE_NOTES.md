@@ -1,6 +1,25 @@
-## Web Remote Manager PRO v12.6.23 — Roles, teams and step-up
+## Web Remote Manager PRO v12.6.24 — Sign in with your organisation's account
 
 ### Added
+
+- **Directory sign-in:** people sign in with Microsoft Entra ID, ADFS, Okta, Keycloak, Google Workspace or any OpenID Connect provider. *Admin panel → Directory sign-in* adds the provider with setup hints for each kind and checks the connection step by step, saying what to fix when a step fails.
+- **Who gets in, decided in the directory:** rules turn Entra app roles, group IDs or other claims into a WRM role and teams. Accounts are created on the first sign-in only for people a rule matches; everyone else is refused with a clear message. People are recognised by their immutable directory ID, never by name or e-mail.
+- **Access ends when the directory says so:** WRM checks regularly that each signed-in person may still sign in. Someone disabled, deleted or removed from the WRM group loses their sessions and terminals, and role or team changes in the directory apply at the next sign-in.
+- **MFA from the directory:** a provider can be required to prove a second factor in its token (for Entra through Conditional Access authentication contexts).
+- **Test sign-in:** see exactly what the provider sends and what WRM would do with it, without creating anything.
+- **Password sign-in for emergencies only:** optionally only break-glass administrators keep password sign-in (required by the Enterprise level once a directory sign-in is on).
+- **Confirm with the directory:** accounts without a password confirm risky actions (step-up) by signing in at the provider again. Existing accounts can link their directory account in *Settings → Security*.
+- **Signed, automatic releases:** releases are now published automatically when a new version is merged, and signed with the project's key; the one-click update refuses a release without a valid signature.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. The database gets two new tables (`oidc_providers`, `user_identities`) and three columns; a previous version still starts on it. Nothing changes until an administrator adds an identity provider.
+
+[Download v12.6.24](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.6.24) · [Directory sign-in (OIDC)](https://github.com/vedranius/web-browser-RDM-public/blob/v12.6.24/README.md#directory-sign-in-oidc)
+
+### Included from v12.6.23 — Roles, teams and step-up
+
+#### Added
 
 - **Roles:** *Administrator*, *Security auditor*, *Operator* and *User*. A security auditor reads the audit log, terminal sessions, recordings, file transfers and the security posture and changes nothing; auditors cannot open connections or use the AI assistant. Operators pass policies set to *operators*.
 - **Teams:** *Admin panel → Teams* with members and team leads. Add a whole team to a share with one role; people who join the team later get it too, and leaving the team closes what they opened through the share.
@@ -9,7 +28,7 @@
 - **Break-glass administrator:** an emergency administrator account that must use 2FA, can be limited to chosen networks, and whose every sign-in is audited and sent to the other administrators.
 - **Handover when a user leaves:** deleting a user can hand their connections, folders, credentials, keys, shares and proxies to their team lead or another account, so the team keeps its access.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets three new tables (`teams`, `team_members`, `share_teams`) and three columns; a previous version still starts on it. Existing administrators stay administrators and everyone else becomes a *User*; nothing changes until an administrator assigns roles or teams. With step-up on, scripts that change settings or users need `POST /api/auth/step-up` first.
 
