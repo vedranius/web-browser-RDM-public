@@ -566,7 +566,7 @@ func ldapSignIn(r *http.Request, typed, password string, linked *userRow) (*ldap
 		}
 		if err != nil {
 			if ldapInvalidCredentials(err) {
-				return refuse(401, "wrong directory password", "Invalid credentials")
+				return refuse(401, "wrong directory credentials", "Invalid credentials")
 			}
 			if errors.Is(err, errLDAPNoUser) {
 				return refuse(401, "directory account not found", "Invalid credentials")
@@ -612,7 +612,7 @@ func ldapSignIn(r *http.Request, typed, password string, linked *userRow) (*ldap
 			return refuse(403, "account missing", "Your WRM account no longer exists. Ask your administrator.")
 		}
 		if u.BreakGlass {
-			return refuse(403, "break-glass", "A break-glass account signs in with its local password only.")
+			return refuse(403, "break-glass", "A break-glass account must use its local WRM sign-in.")
 		}
 		if hasRules {
 			directoryApplyMapping(r, userID, m, "ldap")
