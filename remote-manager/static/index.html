@@ -1145,6 +1145,14 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 .sec-val { font-weight: 500; color: var(--text2); font-family: var(--mono, monospace); font-size: 11.5px; }
 .sec-fix { font-size: 11.5px; color: #fde68a; margin-top: 3px; }
 .sec-check.bad .sec-fix { color: #fecaca; }
+.ld-card { border: 1px solid var(--border2); border-radius: 10px; padding: 11px 13px; background: var(--bg); margin-bottom: 12px; }
+.ld-card.on { border-color: rgba(239,68,68,.55); background: rgba(239,68,68,.08); }
+.ld-card .ld-ttl { font-weight: 600; margin-bottom: 4px; }
+.siem-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: #6b7280; vertical-align: middle; }
+.siem-dot.ok { background: #22c55e; } .siem-dot.behind { background: #f59e0b; } .siem-dot.failing { background: #ef4444; }
+.alert-row { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border2); font-size: 12px; flex-wrap: wrap; }
+.alert-row .grow { min-width: 180px; }
+.auth-note.bad { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.45); color: #fecaca; }
 .sec-plan { padding: 6px 14px 12px; }
 .sec-keep { display: flex; gap: 6px; align-items: center; font-size: 11.5px; color: var(--text2); cursor: pointer; }
 .sec-list { margin: 4px 0 4px 18px; padding: 0; font-size: 11.5px; color: var(--text2); line-height: 1.6; }
@@ -1642,6 +1650,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
+      <div id="auth-lockdown" class="auth-note bad" style="display:none;"></div>
       <div id="auth-note" class="auth-note" style="display:none;"></div>
       <div class="auth-tabs" id="auth-tabs">
         <div class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')" data-i18n="sign_in">Sign In</div>
@@ -1730,7 +1739,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.25</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.6.26</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -2997,6 +3006,30 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div id="scim-rules"></div>
     <button class="btn-sec btn-sm" onclick="scimRulesDraft.push({claim: 'group', value: '', role: 'user', teams: ''});renderRules('scimRulesDraft')">＋ <span data-i18n="sso_add_rule">Add rule</span></button>
     <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-scim')" data-i18n="cancel">Cancel</button><button onclick="scimSave()" data-i18n="save">Save</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-siem" style="z-index:9150;">
+  <div class="modal" style="width:640px;">
+    <h3>📤 <span id="siem-title"></span></h3>
+    <input type="hidden" id="siem-id">
+    <div class="field"><label data-i18n="ldap_f_name">Name</label><input type="text" id="siem-name" maxlength="60" placeholder="Splunk"></div>
+    <div class="field"><label data-i18n="siem_kind">Kind</label><select id="siem-kind" onchange="siemKindChanged()"></select></div>
+    <div class="field"><label id="siem-url-lbl"></label><input type="text" id="siem-url" maxlength="500" autocomplete="off" spellcheck="false"><div class="setting-desc" id="siem-url-hint"></div></div>
+    <div class="field siem-k siem-k-splunk siem-k-elastic"><label data-i18n="siem_index">Index</label><input type="text" id="siem-index" maxlength="100" placeholder="wrm"></div>
+    <div class="field siem-k siem-k-splunk"><label data-i18n="siem_sourcetype">Source type</label><input type="text" id="siem-sourcetype" maxlength="100" placeholder="wrm:audit"></div>
+    <div class="field siem-k siem-k-sentinel"><label data-i18n="siem_tenant">Tenant ID</label><input type="text" id="siem-tenant" maxlength="100" spellcheck="false"></div>
+    <div class="field siem-k siem-k-sentinel"><label data-i18n="siem_client">Application (client) ID</label><input type="text" id="siem-client" maxlength="100" spellcheck="false"></div>
+    <div class="field siem-k siem-k-sentinel"><label data-i18n="siem_dcr">Data collection rule immutable ID</label><input type="text" id="siem-dcr" maxlength="100" spellcheck="false" placeholder="dcr-…"></div>
+    <div class="field siem-k siem-k-sentinel"><label data-i18n="siem_stream">Stream</label><input type="text" id="siem-stream" maxlength="100" placeholder="Custom-WRMAudit_CL"></div>
+    <div class="field siem-k siem-k-syslog"><label data-i18n="siem_facility">Facility</label><input type="number" id="siem-facility" min="0" max="23" placeholder="10"></div>
+    <div class="field siem-k siem-k-syslog siem-k-splunk siem-k-elastic siem-k-http"><label data-i18n="siem_ca">Extra trusted CA (PEM, optional)</label><textarea id="siem-ca" rows="3" spellcheck="false" placeholder="-----BEGIN CERTIFICATE-----"></textarea></div>
+    <div class="field siem-k siem-k-syslog"><label data-i18n="siem_cert">Client certificate (PEM, optional)</label><textarea id="siem-cert" rows="3" spellcheck="false" placeholder="-----BEGIN CERTIFICATE-----"></textarea></div>
+    <div class="field siem-k siem-k-syslog siem-k-splunk siem-k-elastic siem-k-sentinel siem-k-http"><label id="siem-secret-lbl"></label><textarea id="siem-secret" rows="2" spellcheck="false" autocomplete="off" style="-webkit-text-security:disc;"></textarea><div class="setting-desc" id="siem-secret-hint"></div></div>
+    <div class="field"><label data-i18n="siem_actions">Send only these actions (prefixes, comma separated; empty = everything)</label><input type="text" id="siem-actions" maxlength="2000" placeholder="auth., admin., security., credential."></div>
+    <div class="field" id="siem-start-wrap"><label data-i18n="siem_start">Start with</label><select id="siem-start"><option value="now" data-i18n="siem_start_now">New events from now on</option><option value="all" data-i18n="siem_start_all">The whole audit log kept in WRM</option></select></div>
+    <label class="check-row"><input type="checkbox" id="siem-enabled"> <span><b data-i18n="sso_f_enabled">Enabled</b></span></label>
+    <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-siem')" data-i18n="cancel">Cancel</button><button onclick="siemSave()" data-i18n="save">Save</button></div>
   </div>
 </div>
 
@@ -5874,6 +5907,239 @@ Object.assign(LANGS.hr, {
  "scim_token": "Tajni token",
  "scim_token_where": "U Entra ID-u: Enterprise application → Provisioning → Admin credentials: zalijepi tenant URL i tajni token, pa Test connection.",
 });
+Object.assign(LANGS.en, {
+ "ld_auth_banner": "WRM is in lockdown: only break-glass administrators can sign in.",
+ "ld_reason": "Reason",
+ "ld_reason_ph": "for example: suspected stolen password, incident 42",
+ "ld_reason_needed": "Write why WRM goes into lockdown; everyone sees it.",
+ "ld_on_title": "Lockdown is on",
+ "ld_on_d": "Only break-glass administrators can sign in or keep a session. AI is switched off and shares are paused. Everything else stays as it is and returns when the lockdown ends.",
+ "ld_since": "Since {at} · by {by} · from {src}",
+ "ld_src_ui": "the admin panel",
+ "ld_src_cli": "wrm -lockdown on the WRM host",
+ "ld_src_env": "the WRM_LOCKDOWN environment variable",
+ "ld_env": "Forced by the WRM_LOCKDOWN environment variable: remove it and restart WRM to end the lockdown.",
+ "ld_end": "End lockdown",
+ "ld_end_q": "End the lockdown? Users can sign in again, AI and shares work again (as their policies allow).",
+ "ld_end_bg_only": "Only a break-glass administrator can end the lockdown here; on the WRM host also: wrm -lockdown off.",
+ "ld_ended": "Lockdown ended",
+ "ld_off_title": "Lockdown",
+ "ld_off_d": "In an incident one click ends every session except those of break-glass administrators, ends terminals, tunnels and AI, pauses shares and keeps everyone else out until the lockdown ends. Also available on the WRM host: wrm -lockdown on -lockdown-reason \"…\", or the WRM_LOCKDOWN=1 environment variable.",
+ "ld_bg_count": "Break-glass administrators: {n}",
+ "ld_need_bg": "mark an administrator as break-glass first (Users → ⋯), otherwise nobody could sign in",
+ "ld_start": "Lock down WRM",
+ "ld_start_q": "Lock down WRM now? Everyone except break-glass administrators is signed out at once and cannot sign in until the lockdown ends. Write the reason everyone will see.",
+ "ld_you_out": "You are not a break-glass administrator, so you are signed out too.",
+ "ld_done": "WRM is in lockdown. This was ended:",
+ "ld_e_sessions_ended": "Sign-in sessions",
+ "ld_e_terminals_ended": "Terminals",
+ "ld_e_rooms_left": "Shared sessions left",
+ "ld_e_tunnels_stopped": "Tunnels",
+ "ld_e_ai_sessions_ended": "AI sessions",
+ "ld_e_ai_connections_ended": "AI connections (MCP)",
+ "ld_e_ai_connections_revoked": "AI connections (MCP)",
+ "stop_user": "Stop user",
+ "stop_user_q": "Stop {u} now? The account is disabled and every session, terminal, tunnel, shared session and AI connection of it ends at once. Enable the account again later if needed.",
+ "stop_user_done": "{u} is stopped and disabled. This was ended:",
+ "al_title": "Security alerts",
+ "al_d": "Raised by the alert rules (Policies → Security alerts). Administrators also get them in the inbox and by notification; every alert goes to the SIEM as security.alert.",
+ "al_none": "No alerts.",
+ "al_r_failed_signins": "Failed sign-ins",
+ "al_r_break_glass": "Break-glass sign-in",
+ "al_r_new_admin": "New administrator",
+ "al_r_secret_reveal": "Secret revealed",
+ "al_r_ai_full_access": "AI full access",
+ "al_r_audit_off": "Audit off",
+ "siem_title": "SIEM export",
+ "siem_intro": "WRM sends every audit entry, in order and at least once, with user, role, directory, source address and the hash chain. A destination that does not answer is retried with growing pauses; nothing is lost while WRM keeps the audit log. Host name in events: {host}.",
+ "siem_add": "Add destination",
+ "siem_none": "No destinations yet.",
+ "siem_kind": "Kind",
+ "siem_k_syslog": "Syslog (RFC 5424 over TLS)",
+ "siem_k_jsonl": "JSON lines file",
+ "siem_k_splunk": "Splunk HEC",
+ "siem_k_elastic": "Elastic (bulk API)",
+ "siem_k_sentinel": "Microsoft Sentinel (Logs ingestion API)",
+ "siem_k_http": "Generic HTTPS (JSON)",
+ "siem_st_ok": "Delivering",
+ "siem_st_behind": "Behind",
+ "siem_st_failing": "Failing",
+ "siem_st_off": "Off",
+ "siem_sent": "Sent",
+ "siem_waiting": "Waiting",
+ "siem_last_ok": "Last delivery",
+ "siem_retry": "Next try",
+ "siem_err_hint": "WRM keeps the events and tries again. Check the address, the certificate and the secret, then press Test.",
+ "siem_test": "Test",
+ "siem_testing": "Sending a test event…",
+ "siem_test_ok": "Test event delivered",
+ "siem_test_fail": "Test failed",
+ "siem_delete_q": "Delete the destination {n}? WRM stops sending to it (this is an audited security event).",
+ "siem_url_syslog": "Syslog server (host:port)",
+ "siem_url_syslog_d": "TLS only (RFC 5425, usually port 6514).",
+ "siem_url_jsonl": "File path on the WRM host",
+ "siem_url_jsonl_d": "An absolute path ending in .jsonl, .json or .log in an existing directory; rotated at 100 MB.",
+ "siem_url_splunk": "HEC URL",
+ "siem_url_splunk_d": "The event endpoint, for example …:8088/services/collector/event.",
+ "siem_url_elastic": "Elasticsearch URL",
+ "siem_url_elastic_d": "WRM uses the bulk API into the index below (default wrm-audit).",
+ "siem_url_sentinel": "Data collection endpoint",
+ "siem_url_sentinel_d": "The logs ingestion URL of the data collection endpoint (Azure Monitor).",
+ "siem_url_http": "HTTPS URL",
+ "siem_url_http_d": "WRM POSTs a JSON array of events.",
+ "siem_secret_syslog": "Private key of the client certificate (PEM, optional)",
+ "siem_secret_splunk": "HEC token",
+ "siem_secret_elastic": "API key (optional)",
+ "siem_secret_sentinel": "Client secret of the Entra application",
+ "siem_secret_http": "Bearer token (optional)",
+ "siem_secret_kept": "A secret is stored. Leave the field empty to keep it; when you change the address, enter it again.",
+ "siem_index": "Index",
+ "siem_sourcetype": "Source type",
+ "siem_tenant": "Tenant ID",
+ "siem_client": "Application (client) ID",
+ "siem_dcr": "Data collection rule immutable ID",
+ "siem_stream": "Stream",
+ "siem_facility": "Facility",
+ "siem_ca": "Extra trusted CA (PEM, optional)",
+ "siem_cert": "Client certificate (PEM, optional)",
+ "siem_actions": "Send only these actions (prefixes, comma separated; empty = everything)",
+ "siem_start": "Start with",
+ "siem_start_now": "New events from now on",
+ "siem_start_all": "The whole audit log kept in WRM",
+ "pg_alerts": "Security alerts",
+ "p_alert_failed_signins": "Alert after failed sign-ins",
+ "p_alert_failed_signins_d": "How many failed sign-ins (password, 2FA, step-up, AI tokens) from one address or for one name raise an alert. 0 turns the rule off.",
+ "p_alert_failed_signins_minutes": "Failed sign-in window (minutes)",
+ "p_alert_failed_signins_minutes_d": "The failed sign-ins are counted within this many minutes (1–1440).",
+ "p_alert_break_glass": "Alert on break-glass sign-in",
+ "p_alert_break_glass_d": "A security.alert entry for the SIEM when a break-glass administrator signs in (administrators are already told).",
+ "p_alert_new_admin": "Alert on a new administrator",
+ "p_alert_new_admin_d": "An account was created as, changed to, or synced from a directory as an administrator.",
+ "p_alert_secret_reveal": "Alert when a secret is revealed",
+ "p_alert_secret_reveal_d": "A stored password was shown, a private SSH key or connections with secrets were exported.",
+ "p_alert_ai_full_access": "Alert on AI full-access approvals",
+ "p_alert_ai_full_access_d": "Someone approved an AI command that WRM refuses without full access.",
+ "p_alert_audit_off": "Alert when audit or SIEM export is turned off",
+ "p_alert_audit_off_d": "The audit log was switched off, or a SIEM destination was turned off or deleted.",
+ "ne_security_alert": "Security alert",
+});
+
+Object.assign(LANGS.hr, {
+ "ld_auth_banner": "WRM je zaključan: prijaviti se mogu samo break-glass administratori.",
+ "ld_reason": "Razlog",
+ "ld_reason_ph": "npr. sumnja na ukradenu lozinku, incident 42",
+ "ld_reason_needed": "Napiši zašto se WRM zaključava; to vide svi.",
+ "ld_on_title": "Zaključavanje je uključeno",
+ "ld_on_d": "Prijaviti se i zadržati sesiju mogu samo break-glass administratori. AI je isključen, dijeljenja su pauzirana. Sve ostalo ostaje kako jest i vraća se kad zaključavanje završi.",
+ "ld_since": "Od {at} · uključio {by} · preko: {src}",
+ "ld_src_ui": "admin panel",
+ "ld_src_cli": "wrm -lockdown na WRM poslužitelju",
+ "ld_src_env": "varijabla okoline WRM_LOCKDOWN",
+ "ld_env": "Zaključavanje forsira varijabla okoline WRM_LOCKDOWN: ukloni je i ponovno pokreni WRM da ga završiš.",
+ "ld_end": "Završi zaključavanje",
+ "ld_end_q": "Završiti zaključavanje? Korisnici se opet mogu prijaviti, AI i dijeljenja opet rade (kako politike dopuštaju).",
+ "ld_end_bg_only": "Zaključavanje ovdje može završiti samo break-glass administrator; na WRM poslužitelju i: wrm -lockdown off.",
+ "ld_ended": "Zaključavanje je završeno",
+ "ld_off_title": "Zaključavanje (lockdown)",
+ "ld_off_d": "U incidentu jedan klik završava sve sesije osim break-glass administratora, gasi terminale, tunele i AI, pauzira dijeljenja i drži sve ostale vani dok zaključavanje ne završi. Dostupno i na WRM poslužitelju: wrm -lockdown on -lockdown-reason \"…\" ili varijabla okoline WRM_LOCKDOWN=1.",
+ "ld_bg_count": "Break-glass administratora: {n}",
+ "ld_need_bg": "prvo označi jednog administratora kao break-glass (Korisnici → ⋯), inače se nitko ne bi mogao prijaviti",
+ "ld_start": "Zaključaj WRM",
+ "ld_start_q": "Zaključati WRM sada? Svi osim break-glass administratora odmah se odjavljuju i ne mogu se prijaviti dok zaključavanje ne završi. Napiši razlog koji će svi vidjeti.",
+ "ld_you_out": "Nisi break-glass administrator, pa si i ti odjavljen.",
+ "ld_done": "WRM je zaključan. Završeno je:",
+ "ld_e_sessions_ended": "Sesije prijave",
+ "ld_e_terminals_ended": "Terminali",
+ "ld_e_rooms_left": "Napuštene zajedničke sesije",
+ "ld_e_tunnels_stopped": "Tuneli",
+ "ld_e_ai_sessions_ended": "AI sesije",
+ "ld_e_ai_connections_ended": "AI veze (MCP)",
+ "ld_e_ai_connections_revoked": "AI veze (MCP)",
+ "stop_user": "Zaustavi korisnika",
+ "stop_user_q": "Zaustaviti {u} sada? Račun se gasi, a sve njegove sesije, terminali, tuneli, zajedničke sesije i AI veze odmah završavaju. Račun kasnije po potrebi ponovno uključi.",
+ "stop_user_done": "{u} je zaustavljen i račun je ugašen. Završeno je:",
+ "al_title": "Sigurnosne uzbune",
+ "al_d": "Podižu ih pravila uzbuna (Politike → Sigurnosne uzbune). Administratori ih dobivaju i u inbox i kao obavijest; svaka uzbuna ide u SIEM kao security.alert.",
+ "al_none": "Nema uzbuna.",
+ "al_r_failed_signins": "Neuspjele prijave",
+ "al_r_break_glass": "Break-glass prijava",
+ "al_r_new_admin": "Novi administrator",
+ "al_r_secret_reveal": "Otkrivena tajna",
+ "al_r_ai_full_access": "AI puni pristup",
+ "al_r_audit_off": "Audit isključen",
+ "siem_title": "Izvoz u SIEM",
+ "siem_intro": "WRM šalje svaki audit zapis, redom i barem jednom, s korisnikom, ulogom, direktorijem, izvornom adresom i hash lancem. Odredište koje ne odgovara pokušava se ponovno sa sve duljim pauzama; ništa se ne gubi dok WRM čuva audit log. Ime poslužitelja u događajima: {host}.",
+ "siem_add": "Dodaj odredište",
+ "siem_none": "Još nema odredišta.",
+ "siem_kind": "Vrsta",
+ "siem_k_syslog": "Syslog (RFC 5424 preko TLS-a)",
+ "siem_k_jsonl": "Datoteka JSON redaka",
+ "siem_k_splunk": "Splunk HEC",
+ "siem_k_elastic": "Elastic (bulk API)",
+ "siem_k_sentinel": "Microsoft Sentinel (Logs ingestion API)",
+ "siem_k_http": "Općeniti HTTPS (JSON)",
+ "siem_st_ok": "Isporučuje",
+ "siem_st_behind": "Kasni",
+ "siem_st_failing": "Ne uspijeva",
+ "siem_st_off": "Isključeno",
+ "siem_sent": "Poslano",
+ "siem_waiting": "Čeka",
+ "siem_last_ok": "Zadnja isporuka",
+ "siem_retry": "Sljedeći pokušaj",
+ "siem_err_hint": "WRM čuva događaje i pokušava ponovno. Provjeri adresu, certifikat i tajnu, pa stisni Test.",
+ "siem_test": "Test",
+ "siem_testing": "Šaljem testni događaj…",
+ "siem_test_ok": "Testni događaj je isporučen",
+ "siem_test_fail": "Test nije uspio",
+ "siem_delete_q": "Obrisati odredište {n}? WRM mu prestaje slati (to je sigurnosni događaj koji se bilježi).",
+ "siem_url_syslog": "Syslog poslužitelj (host:port)",
+ "siem_url_syslog_d": "Samo TLS (RFC 5425, obično port 6514).",
+ "siem_url_jsonl": "Putanja datoteke na WRM poslužitelju",
+ "siem_url_jsonl_d": "Apsolutna putanja koja završava s .jsonl, .json ili .log u postojećem direktoriju; rotira se na 100 MB.",
+ "siem_url_splunk": "HEC URL",
+ "siem_url_splunk_d": "Endpoint za događaje, npr. …:8088/services/collector/event.",
+ "siem_url_elastic": "Elasticsearch URL",
+ "siem_url_elastic_d": "WRM koristi bulk API u indeks ispod (zadano wrm-audit).",
+ "siem_url_sentinel": "Data collection endpoint",
+ "siem_url_sentinel_d": "Logs ingestion URL data collection endpointa (Azure Monitor).",
+ "siem_url_http": "HTTPS URL",
+ "siem_url_http_d": "WRM šalje (POST) JSON niz događaja.",
+ "siem_secret_syslog": "Privatni ključ klijentskog certifikata (PEM, neobavezno)",
+ "siem_secret_splunk": "HEC token",
+ "siem_secret_elastic": "API ključ (neobavezno)",
+ "siem_secret_sentinel": "Client secret Entra aplikacije",
+ "siem_secret_http": "Bearer token (neobavezno)",
+ "siem_secret_kept": "Tajna je spremljena. Ostavi polje prazno da je zadržiš; kad promijeniš adresu, upiši je ponovno.",
+ "siem_index": "Indeks",
+ "siem_sourcetype": "Source type",
+ "siem_tenant": "Tenant ID",
+ "siem_client": "Application (client) ID",
+ "siem_dcr": "Immutable ID pravila prikupljanja podataka (DCR)",
+ "siem_stream": "Stream",
+ "siem_facility": "Facility",
+ "siem_ca": "Dodatni pouzdani CA (PEM, neobavezno)",
+ "siem_cert": "Klijentski certifikat (PEM, neobavezno)",
+ "siem_actions": "Šalji samo ove radnje (prefiksi odvojeni zarezom; prazno = sve)",
+ "siem_start": "Počni s",
+ "siem_start_now": "Novim događajima od sada",
+ "siem_start_all": "Cijelim audit logom koji WRM čuva",
+ "pg_alerts": "Sigurnosne uzbune",
+ "p_alert_failed_signins": "Uzbuna nakon neuspjelih prijava",
+ "p_alert_failed_signins_d": "Koliko neuspjelih prijava (lozinka, 2FA, step-up, AI tokeni) s jedne adrese ili za jedno ime podiže uzbunu. 0 isključuje pravilo.",
+ "p_alert_failed_signins_minutes": "Prozor neuspjelih prijava (minuta)",
+ "p_alert_failed_signins_minutes_d": "Neuspjele prijave broje se unutar ovoliko minuta (1–1440).",
+ "p_alert_break_glass": "Uzbuna na break-glass prijavu",
+ "p_alert_break_glass_d": "Zapis security.alert za SIEM kad se prijavi break-glass administrator (administratori već dobivaju obavijest).",
+ "p_alert_new_admin": "Uzbuna na novog administratora",
+ "p_alert_new_admin_d": "Račun je stvoren kao administrator, promijenjen u administratora ili tako sinkroniziran iz direktorija.",
+ "p_alert_secret_reveal": "Uzbuna kad se otkrije tajna",
+ "p_alert_secret_reveal_d": "Prikazana je spremljena lozinka, izvezen privatni SSH ključ ili veze s tajnama.",
+ "p_alert_ai_full_access": "Uzbuna na AI odobrenja uz puni pristup",
+ "p_alert_ai_full_access_d": "Netko je odobrio AI naredbu koju WRM bez punog pristupa odbija.",
+ "p_alert_audit_off": "Uzbuna kad se isključi audit ili izvoz u SIEM",
+ "p_alert_audit_off_d": "Audit log je isključen ili je SIEM odredište isključeno ili obrisano.",
+ "ne_security_alert": "Sigurnosna uzbuna",
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -6044,6 +6310,11 @@ async function loadAuthConfig() {
     if (!authConfig.registration_open) switchAuthTab('login');
   }
   renderAuthSSO();
+  const ld = document.getElementById('auth-lockdown');
+  if (authConfig.lockdown) {
+    ld.textContent = '🚨 ' + t('ld_auth_banner') + (authConfig.lockdown.reason ? ' ' + t('ld_reason') + ': ' + authConfig.lockdown.reason : '');
+    ld.style.display = 'block';
+  } else ld.style.display = 'none';
   if (authConfig.version) document.getElementById('auth-ver').textContent = 'PRO ' + authConfig.version + ' · Secure · Multi-User';
   const upd = document.getElementById('auth-upd');
   upd.style.display = authConfig.update ? 'inline-block' : 'none';
@@ -7574,6 +7845,7 @@ function adminUserMenu(e, id) {
     <div class="ctx-item" onclick="closeAllCtx(); adminUserAction(${id}, 'revoke-sessions', 'revoke_sessions_q')">⏏ ${esc(t('sign_out_everywhere'))}</div>
     ${u.locked ? `<div class="ctx-item" onclick="closeAllCtx(); adminUserAction(${id}, 'unlock')">🔓 ${esc(t('unlock'))}</div>` : ''}
     <div class="ctx-hr"></div>
+    ${u.disabled ? '' : `<div class="ctx-item danger ${self ? 'disabled' : ''}" onclick="closeAllCtx(); adminStopUser(${id})">🛑 ${esc(t('stop_user'))}</div>`}
     <div class="ctx-item ${self ? 'disabled' : ''}" onclick="closeAllCtx(); adminUserUpdate(${id}, {disabled: ${!u.disabled}})">${u.disabled ? '✅ ' + esc(t('enable_account')) : '⛔ ' + esc(t('disable_account'))}</div>
     <div class="ctx-item danger ${self ? 'disabled' : ''}" onclick="closeAllCtx(); adminDeleteUser(${id})">🗑 ${esc(t('delete_user'))}</div>`;
   showCtx('dyn-ctx-menu', e.clientX, e.clientY);
@@ -8364,6 +8636,7 @@ const POLICY_GROUPS = {
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_updates', ['update_check', 'update_repo', 'update_signing_keys', 'update_proxy', 'self_update']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days']],
+    ['pg_alerts', ['alert_failed_signins', 'alert_failed_signins_minutes', 'alert_break_glass', 'alert_new_admin', 'alert_secret_reveal', 'alert_ai_full_access', 'alert_audit_off']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],
   voice: [
@@ -8529,6 +8802,7 @@ function renderAdminSecurity() {
     devs.map(d => `<tr><td>${esc(t('p_' + d.key))}</td><td>${esc(secValueText(d.key, d.value))}</td><td>${esc(secValueText(d.key, d.required))}</td><td>${esc(d.note)}</td><td>${esc(d.username)}</td><td style="white-space:nowrap;">${esc(fmtTime(d.created_at))}</td></tr>`).join('') + '</tbody></table>'
     : `<div class="muted-text">${esc(t('sec_no_deviations'))}</div>`;
   document.getElementById('admin-body').innerHTML = `
+    <div id="sec-lockdown"></div>
     <div class="adm-h">🛡 ${esc(t('sec_level'))}</div>
     <div class="sec-levels">${cards}</div>${lock}
     <div id="sec-plan"></div>
@@ -8538,7 +8812,171 @@ function renderAdminSecurity() {
       <button class="btn-sec btn-sm" onclick="secExportJSON()">⬇ JSON</button>
       <button class="btn-sec btn-sm" onclick="secPrint()">🖨 ${esc(t('sec_print'))}</button></div>
     <div class="sec-checks">${checks}</div>
-    <div class="adm-h">${esc(t('sec_deviations'))} (${devs.length})</div>${devTable}`;
+    <div class="adm-h">${esc(t('sec_deviations'))} (${devs.length})</div>${devTable}
+    <div id="sec-alerts"></div>
+    <div id="siem-admin"></div>`;
+  if (!ro) secLoadExtra();
+}
+
+// ══ LOCKDOWN, ALERTS, SIEM EXPORT (v12.6.26) ══════════════════
+
+let siemCache = null, lockdownCache = null;
+const SIEM_URL_HINT = {syslog: 'siem.example.com:6514', jsonl: '/var/log/wrm/audit.jsonl', splunk: 'https://splunk.example.com:8088/services/collector/event',
+  elastic: 'https://elastic.example.com:9200', sentinel: 'https://dce-name.westeurope-1.ingest.monitor.azure.com', http: 'https://collector.example.com/wrm'};
+
+async function secLoadExtra() {
+  const [lr, sr] = await Promise.all([fetch('/api/admin/lockdown'), fetch('/api/admin/siem')]);
+  if (lr.ok) { lockdownCache = await lr.json(); renderLockdownCard(); }
+  if (sr.ok) { siemCache = await sr.json(); renderSIEMAdmin(); }
+}
+
+function endedList(ended) {
+  const order = ['sessions_ended', 'terminals_ended', 'rooms_left', 'tunnels_stopped', 'ai_sessions_ended', 'ai_connections_ended', 'ai_connections_revoked'];
+  const rows = Object.keys(ended || {}).filter(k => k !== 'disabled').sort((a, b) => order.indexOf(a) - order.indexOf(b)).map(k => `<li>${esc(t('ld_e_' + k))}: <b>${Number(ended[k]) || 0}</b></li>`).join('');
+  return rows ? `<ul style="margin:6px 0 0 18px;">${rows}</ul>` : '';
+}
+
+function renderLockdownCard() {
+  const box = document.getElementById('sec-lockdown');
+  const l = lockdownCache;
+  if (!box || !l) return;
+  const iAmBG = !!(currentUser && currentUser.break_glass);
+  if (l.on) {
+    box.innerHTML = `<div class="ld-card on"><div class="ld-ttl">🚨 ${esc(t('ld_on_title'))}</div>
+      <div>${esc(t('ld_reason'))}: <b>${esc(l.reason || '—')}</b></div>
+      <div class="muted-text">${esc(t('ld_since').replace('{at}', l.at ? fmtTime(l.at) : '—').replace('{by}', l.by || 'system').replace('{src}', t('ld_src_' + (l.source || 'ui'))))}</div>
+      <div class="setting-desc">${esc(t('ld_on_d'))}</div>
+      ${l.env ? `<div class="locked-note">🔒 ${esc(t('ld_env'))}</div>` : iAmBG ? `<div style="margin-top:8px;"><button class="btn-sec btn-sm" onclick="lockdownSet(false)">🔓 ${esc(t('ld_end'))}</button></div>` : `<div class="setting-desc">${esc(t('ld_end_bg_only'))}</div>`}</div>`;
+    return;
+  }
+  const none = !l.break_glass_admins;
+  box.innerHTML = `<div class="ld-card"><div class="ld-ttl">🔓 ${esc(t('ld_off_title'))}</div>
+    <div class="setting-desc">${esc(t('ld_off_d'))}</div>
+    <div class="muted-text">${esc(t('ld_bg_count').replace('{n}', l.break_glass_admins || 0))}${none ? ' · ' + esc(t('ld_need_bg')) : ''}</div>
+    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><button class="btn-danger btn-sm" ${none ? 'disabled' : ''} onclick="lockdownSet(true)">🚨 ${esc(t('ld_start'))}</button></div></div>`;
+}
+
+async function lockdownSet(on) {
+  let reason = '';
+  if (on) {
+    const v = await uiPrompt(t('ld_start'), '', {message: t('ld_start_q') + (currentUser && !currentUser.break_glass ? '\n\n' + t('ld_you_out') : ''), placeholder: t('ld_reason_ph'), okText: t('ld_start')});
+    if (v === null || v === false) return;
+    reason = String(v).trim();
+    if (!reason) { showToast(t('ld_reason_needed'), 'error', 5000); return; }
+  } else if (!(await uiConfirm(t('ld_end_q'), {okText: t('ld_end')}))) return;
+  const res = await fetch('/api/admin/lockdown', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({on, reason})});
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) { showToast(d.error || t('failed'), 'error', 8000); return; }
+  lockdownCache = d;
+  if (on) {
+    document.getElementById('sso-test-title').textContent = '🚨 ' + t('ld_on_title');
+    document.getElementById('sso-test-body').innerHTML = `<div class="hint-box bad">${esc(t('ld_done'))}</div>${endedList(d.ended)}${d.you_signed_out ? `<div class="hint-box warn" style="margin-top:8px;">${esc(t('ld_you_out'))}</div>` : ''}`;
+    document.getElementById('modal-sso-test').classList.add('open');
+    if (d.you_signed_out) { setTimeout(() => location.reload(), 4000); return; }
+  } else showToast(t('ld_ended'), 'success', 3000);
+  renderLockdownCard();
+}
+
+function renderSIEMAdmin() {
+  const d = siemCache;
+  const al = document.getElementById('sec-alerts');
+  if (al && d) {
+    const alerts = d.alerts || [];
+    al.innerHTML = `<div class="adm-h">🔔 ${esc(t('al_title'))} (${alerts.length})</div><div class="setting-desc" style="margin-bottom:6px;">${esc(t('al_d'))}</div>` +
+      (alerts.length ? alerts.map(a => `<div class="alert-row"><span class="muted-text" style="white-space:nowrap;">${esc(fmtTime(a.ts))}</span><span class="pill warn">${esc(t('al_r_' + a.rule))}</span><span class="grow">${esc(currentLang === 'hr' && a.summary_hr ? a.summary_hr : a.summary)}</span></div>`).join('')
+        : `<div class="muted-text">${esc(t('al_none'))}</div>`);
+  }
+  const box = document.getElementById('siem-admin');
+  if (!box || !d) return;
+  const list = d.destinations || [];
+  box.innerHTML = `<div class="adm-h" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">📤 ${esc(t('siem_title'))}<span style="flex:1"></span><button class="btn-sec btn-sm" onclick="secLoadExtra()">↻ ${esc(t('reload'))}</button><button class="btn-sm" onclick="siemOpen(0)">＋ ${esc(t('siem_add'))}</button></div>
+    <div class="hint-box">${esc(t('siem_intro').replace('{host}', d.hostname || ''))}</div>
+    ${list.length ? list.map(x => `<div class="share-card"><div class="sc-top"><span class="sc-name"><span class="siem-dot ${esc(x.state)}"></span>${esc(x.name)}</span><span class="pill ${{ok: 'ok', behind: 'warn', failing: 'bad', off: ''}[x.state] || ''}">${esc(t('siem_st_' + x.state))}</span></div>
+      <div class="sc-meta"><span>${esc(t('siem_k_' + x.kind))}</span><span class="mono" style="word-break:break-all;">${esc(x.url)}</span></div>
+      <div class="sc-meta"><span>${esc(t('siem_sent'))}: ${Number(x.sent) || 0}</span><span>${esc(t('siem_waiting'))}: ${Number(x.waiting) || 0}</span><span>${esc(t('siem_last_ok'))}: ${x.last_ok_at ? esc(fmtTime(x.last_ok_at)) : esc(t('never'))}</span>${x.retry_at ? `<span>${esc(t('siem_retry'))}: ${esc(fmtTime(x.retry_at))}</span>` : ''}</div>
+      ${x.last_error ? `<div class="hint-box bad" style="margin-top:6px;">⛔ ${esc(x.last_error)}${x.last_error_at ? ' · ' + esc(fmtTime(x.last_error_at)) : ''}<div class="setting-desc">${esc(t('siem_err_hint'))}</div></div>` : ''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button class="btn-sec btn-sm" onclick="siemOpen(${Number(x.id)})">${esc(t('edit'))}</button><button class="btn-sec btn-sm" onclick="siemTest(${Number(x.id)})">▶ ${esc(t('siem_test'))}</button><button class="btn-danger btn-sm" onclick="siemDelete(${Number(x.id)})">${esc(t('delete'))}</button></div></div>`).join('')
+      : `<div class="muted-text">${esc(t('siem_none'))}</div>`}`;
+}
+
+function siemKindChanged() {
+  const k = document.getElementById('siem-kind').value;
+  document.querySelectorAll('#modal-siem .siem-k').forEach(el => { el.style.display = el.classList.contains('siem-k-' + k) ? '' : 'none'; });
+  document.getElementById('siem-url-lbl').textContent = t('siem_url_' + k);
+  document.getElementById('siem-url').placeholder = SIEM_URL_HINT[k] || '';
+  document.getElementById('siem-url-hint').textContent = t('siem_url_' + k + '_d');
+  document.getElementById('siem-secret-lbl').textContent = t('siem_secret_' + k);
+  const id = Number(document.getElementById('siem-id').value || 0);
+  const x = id ? ((siemCache || {}).destinations || []).find(y => y.id === id) : null;
+  document.getElementById('siem-secret-hint').textContent = x && x.has_secret ? t('siem_secret_kept') : '';
+}
+
+function siemOpen(id) {
+  const x = id ? ((siemCache || {}).destinations || []).find(y => y.id === id) : null;
+  const c = (x && x.config) || {};
+  document.getElementById('siem-id').value = x ? x.id : '';
+  document.getElementById('siem-title').textContent = x ? x.name : t('siem_add');
+  document.getElementById('siem-kind').innerHTML = ((siemCache || {}).kinds || []).map(k => `<option value="${esc(k)}">${esc(t('siem_k_' + k))}</option>`).join('');
+  document.getElementById('siem-kind').value = x ? x.kind : 'syslog';
+  const set = (el, v) => { document.getElementById(el).value = v || ''; };
+  set('siem-name', x && x.name); set('siem-url', x && x.url); set('siem-index', c.index); set('siem-sourcetype', c.sourcetype);
+  set('siem-tenant', c.tenant_id); set('siem-client', c.client_id); set('siem-dcr', c.dcr_id); set('siem-stream', c.stream);
+  set('siem-facility', c.facility || ''); set('siem-ca', c.ca_pem); set('siem-cert', c.client_cert); set('siem-secret', '');
+  set('siem-actions', (c.actions || []).join(', '));
+  document.getElementById('siem-enabled').checked = x ? !!x.enabled : true;
+  document.getElementById('siem-start-wrap').style.display = x ? 'none' : '';
+  document.getElementById('siem-start').value = 'now';
+  siemKindChanged();
+  document.getElementById('modal-siem').classList.add('open');
+  setTimeout(() => document.getElementById('siem-name').focus(), 60);
+}
+
+async function siemSave() {
+  const id = Number(document.getElementById('siem-id').value || 0);
+  const v = el => document.getElementById(el).value.trim();
+  const body = {name: v('siem-name'), kind: v('siem-kind'), url: v('siem-url'), enabled: document.getElementById('siem-enabled').checked,
+    config: {index: v('siem-index'), sourcetype: v('siem-sourcetype'), tenant_id: v('siem-tenant'), client_id: v('siem-client'), dcr_id: v('siem-dcr'),
+      stream: v('siem-stream'), facility: Number(v('siem-facility')) || 0, ca_pem: v('siem-ca'), client_cert: v('siem-cert'),
+      actions: v('siem-actions').split(',').map(a => a.trim()).filter(Boolean)}};
+  const secret = document.getElementById('siem-secret').value;
+  if (secret.trim()) body.secret = secret.trim();
+  if (!id) body.start_from = v('siem-start');
+  const res = await fetch('/api/admin/siem' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const r = await res.json().catch(() => ({}));
+  if (!res.ok) { showToast(r.error || t('failed'), 'error', 8000); return; }
+  document.getElementById('siem-secret').value = '';
+  closeModal('modal-siem');
+  showToast(t('saved'), 'success', 1500);
+  secLoadExtra();
+}
+
+async function siemTest(id) {
+  showToast(t('siem_testing'), 'info', 1500);
+  const res = await fetch(`/api/admin/siem/${id}/test`, {method: 'POST'});
+  const r = await res.json().catch(() => ({}));
+  if (!res.ok) { showToast(r.error || t('failed'), 'error', 8000); return; }
+  if (r.ok) showToast(t('siem_test_ok'), 'success', 4000);
+  else showToast(t('siem_test_fail') + ': ' + (r.error || ''), 'error', 12000);
+}
+
+async function siemDelete(id) {
+  const x = ((siemCache || {}).destinations || []).find(y => y.id === id);
+  if (!(await uiConfirm(t('siem_delete_q').replace('{n}', x ? x.name : ''), {okText: t('delete'), danger: true}))) return;
+  const res = await fetch('/api/admin/siem/' + id, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error', 6000); return; }
+  secLoadExtra();
+}
+
+async function adminStopUser(id) {
+  const u = adminUsersCache.find(x => x.id === id);
+  if (!(await uiConfirm(t('stop_user_q').replace('{u}', u ? u.username : ''), {okText: t('stop_user'), danger: true}))) return;
+  const res = await fetch('/api/admin/users/' + id + '/stop', {method: 'POST'});
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) { showToast(d.error || t('failed'), 'error', 6000); return; }
+  document.getElementById('sso-test-title').textContent = '⛔ ' + t('stop_user');
+  document.getElementById('sso-test-body').innerHTML = `<div class="hint-box">${esc(t('stop_user_done').replace('{u}', d.user || ''))}</div>${endedList(d.ended)}`;
+  document.getElementById('modal-sso-test').classList.add('open');
+  adminUsers();
 }
 
 async function secFixRule(key, value) {

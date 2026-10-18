@@ -772,18 +772,20 @@ func (m *tunnelManager) keys(match func(*tunnelRun) bool) []string {
 	return out
 }
 
-func (m *tunnelManager) stopWhere(match func(*tunnelRun) bool, reason string) {
-	for _, k := range m.keys(match) {
+func (m *tunnelManager) stopWhere(match func(*tunnelRun) bool, reason string) int {
+	keys := m.keys(match)
+	for _, k := range keys {
 		m.stop(k, 0, reason)
 	}
+	return len(keys)
 }
 
 func (m *tunnelManager) stopConn(connID int, reason string) {
 	m.stopWhere(func(t *tunnelRun) bool { return t.conn.ID == connID || t.forConn == connID }, reason)
 }
 
-func (m *tunnelManager) stopUser(userID int, reason string) {
-	m.stopWhere(func(t *tunnelRun) bool { return t.ownerID == userID }, reason)
+func (m *tunnelManager) stopUser(userID int, reason string) int {
+	return m.stopWhere(func(t *tunnelRun) bool { return t.ownerID == userID }, reason)
 }
 
 func (m *tunnelManager) stopAll(reason string) {

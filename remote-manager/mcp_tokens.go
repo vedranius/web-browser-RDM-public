@@ -108,6 +108,9 @@ func mcpUserAllowed(userID int) (bool, string) {
 	if settingBool("ai_kill_switch") {
 		return false, "the AI assistant is stopped by the administrator (kill switch)"
 	}
+	if lockdownActive() {
+		return false, "WRM is in lockdown: AI is stopped"
+	}
 	if !settingBool("ai_mcp_enabled") {
 		return false, "AI connections (MCP) are turned off"
 	}

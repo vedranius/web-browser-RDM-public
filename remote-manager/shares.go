@@ -200,6 +200,9 @@ func resolveShareAccessCtx(share ShareLink, ctx accessCtx) (*ShareAccess, *share
 	if share.ID == 0 {
 		return nil, denied(404, "not_found", "Share not found")
 	}
+	if lockdownActive() && !userIsBreakGlass(ctx.UserID) {
+		return nil, denied(403, "lockdown", "WRM is in lockdown: shares are paused")
+	}
 	a := &ShareAccess{Share: share, Ctx: ctx}
 	if ctx.UserID > 0 {
 		var username, dn string
