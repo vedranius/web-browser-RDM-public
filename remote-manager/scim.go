@@ -33,7 +33,7 @@ const (
 	scimSchemaList      = "urn:ietf:params:scim:api:messages:2.0:ListResponse"
 	scimSchemaError     = "urn:ietf:params:scim:api:messages:2.0:Error"
 	scimSchemaPatch     = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
-	scimTokenPrefix     = "wrm_scim_"
+	scimClientKeyPrefix     = "wrm_scim_"
 	scimMaxBody         = 1 << 20
 	scimMaxGroupMembers = 20000
 )
@@ -67,7 +67,7 @@ func scimAuth(r *http.Request) (*scimClient, bool) {
 		return nil, false
 	}
 	tok := strings.TrimSpace(h[7:])
-	if !strings.HasPrefix(tok, scimTokenPrefix) || len(tok) > 200 {
+	if !strings.HasPrefix(tok, scimClientKeyPrefix) || len(tok) > 200 {
 		return nil, false
 	}
 	var c scimClient
@@ -1087,7 +1087,7 @@ func apiAdminSCIMHandler(w http.ResponseWriter, r *http.Request) {
 		return true
 	}
 	newToken := func() (string, string) {
-		tok := scimTokenPrefix + randomToken(32)
+		tok := scimClientKeyPrefix + randomToken(32)
 		return tok, sha256Hex(tok)
 	}
 	switch {
