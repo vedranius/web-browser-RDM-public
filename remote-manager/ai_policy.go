@@ -257,6 +257,9 @@ func aiUserAllowed(userID int) (bool, string) {
 	if settingBool("ai_kill_switch") {
 		return false, "the AI assistant is stopped by the administrator (kill switch)"
 	}
+	if lockdownActive() {
+		return false, "WRM is in lockdown: AI is stopped"
+	}
 	switch v := getSetting("ai_assistant"); {
 	case v == "off":
 		return false, "the AI assistant is turned off"

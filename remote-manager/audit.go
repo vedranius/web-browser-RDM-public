@@ -29,7 +29,8 @@ import (
 //   - every entry carries the SHA-256 of the previous one (hash chain), so a changed or
 //     removed entry is detected by Admin → Audit log → Verify integrity.
 //
-// audit_enabled = 0 stops recording normal events; administrator actions (admin.*) are
+// audit_enabled = 0 stops recording normal events; administrator actions (admin.*) and
+// security events (security.*: alerts, lockdown) are
 // always recorded, including the change of that setting itself.
 
 const auditMinRetentionDays = 7
@@ -101,7 +102,7 @@ func redactDetails(details interface{}) interface{} {
 }
 
 func auditEnabled(action string) bool {
-	return settingBool("audit_enabled") || strings.HasPrefix(action, "admin.")
+	return settingBool("audit_enabled") || strings.HasPrefix(action, "admin.") || strings.HasPrefix(action, "security.")
 }
 
 func auditWrite(r *http.Request, userID int, username, action, target string, details interface{}, ref auditRef) {
@@ -148,6 +149,10 @@ func auditWrite(r *http.Request, userID int, username, action, target string, de
 		auditChain.last = h
 	}
 	auditChain.Unlock()
+	if err == nil {
+		alertObserve(action, username, ip, target, det)
+		siemNotify()
+	}
 	if err != nil {
 		log.Printf("audit: %v", err)
 	}
