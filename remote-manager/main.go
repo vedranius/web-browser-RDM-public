@@ -1140,6 +1140,7 @@ func initDB() {
 		revoked INTEGER NOT NULL DEFAULT 0,
 		UNIQUE (provider_id, subject))`,
 		"id", "user_id", "provider_id", "subject", "email", "display", "refresh_token", "created_at", "last_login_at", "last_check_at", "last_ok_at", "last_error", "revoked")
+	db.Exec(`CREATE TABLE IF NOT EXISTS oidc_issuer_checks (issuer TEXT PRIMARY KEY, checked_at TEXT NOT NULL DEFAULT '')`)
 	db.Exec(`ALTER TABLE users ADD COLUMN sso_only INTEGER NOT NULL DEFAULT 0`)
 	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN identity_id INTEGER NOT NULL DEFAULT 0`)
 	db.Exec(`ALTER TABLE team_members ADD COLUMN source TEXT NOT NULL DEFAULT ''`)

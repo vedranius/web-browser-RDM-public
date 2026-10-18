@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -157,7 +158,11 @@ func auditWrite(r *http.Request, userID int, username, action, target string, de
 	if ref.SessionID > 0 {
 		extra += " session=" + strconv.Itoa(ref.SessionID)
 	}
-	log.Printf("AUDIT action=%s user=%q ip=%s target=%q%s %s", action, username, ip, target, extra, det)
+	// One audit event is one log line: line breaks in any field cannot start a fake entry.
+	line := fmt.Sprintf("AUDIT action=%s user=%q ip=%s target=%q%s %s", action, username, ip, target, extra, det)
+	line = strings.ReplaceAll(line, "\n", " ")
+	line = strings.ReplaceAll(line, "\r", " ")
+	log.Print(line)
 }
 
 func lastAuditHash() string {

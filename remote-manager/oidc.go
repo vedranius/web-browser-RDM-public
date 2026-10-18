@@ -1290,7 +1290,11 @@ func saveOIDCProvider(w http.ResponseWriter, r *http.Request, adminID, id int) {
 		p.UsernameClaim = "preferred_username"
 	}
 	if p.Enabled {
-		if _, err := oidcDiscover(p.Issuer, true); err != nil {
+		issuer, err := oidcRecordIssuer(p.Issuer)
+		if err == nil {
+			_, err = oidcDiscover(issuer, true)
+		}
+		if err != nil {
 			jsonError(w, "Cannot enable: "+err.Error()+" (use Test connection)", 400)
 			return
 		}
@@ -1328,6 +1332,20 @@ func saveOIDCProvider(w http.ResponseWriter, r *http.Request, adminID, id int) {
 	jsonOK(w, oidcProviderJSON(saved, r))
 }
 
+// oidcRecordIssuer records an issuer an administrator asked WRM to contact (tests and enabling
+// a provider) and returns the stored value, so outbound requests only use issuers from WRM's
+// own database. Entries older than 30 days are dropped.
+func oidcRecordIssuer(issuer string) (string, error) {
+	now := nowRFC()
+	db.Exec(`DELETE FROM oidc_issuer_checks WHERE checked_at < ?`, time.Now().Add(-30*24*time.Hour).UTC().Format(time.RFC3339))
+	if _, err := db.Exec(`INSERT INTO oidc_issuer_checks (issuer, checked_at) VALUES (?,?) ON CONFLICT(issuer) DO UPDATE SET checked_at=excluded.checked_at`, issuer, now); err != nil {
+		return "", err
+	}
+	var stored string
+	err := db.QueryRow(`SELECT issuer FROM oidc_issuer_checks WHERE issuer=?`, issuer).Scan(&stored)
+	return stored, err
+}
+
 type oidcCheckStep struct {
 	Step   string `json:"step"`
 	OK     bool   `json:"ok"`
@@ -1357,7 +1375,12 @@ func oidcCheck(issuer string, r *http.Request) map[string]interface{} {
 		add("issuer", false, "Multi-tenant Entra addresses (common, organizations) are not accepted.", "Use your own tenant: https://login.microsoftonline.com/<tenant ID>/v2.0.")
 		return done()
 	}
-	d, err := oidcDiscover(issuer, true)
+	stored, err := oidcRecordIssuer(issuer)
+	if err != nil {
+		add("issuer", false, err.Error(), "")
+		return done()
+	}
+	d, err := oidcDiscover(stored, true)
 	if err != nil {
 		add("discovery", false, err.Error(), "WRM must reach "+issuer+"/.well-known/openid-configuration over HTTPS. Check the address, DNS, firewall and the proxy of the WRM host.")
 		return done()
