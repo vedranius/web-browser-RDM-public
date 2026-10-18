@@ -325,6 +325,9 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/teams", apiTeamsHandler)
 	mux.HandleFunc("/api/auth/step-up", apiAuthStepUpHandler)
 	mux.HandleFunc("/api/auth/oidc/start", apiOIDCStartHandler)
+	mux.HandleFunc("/api/admin/lockdown", apiAdminLockdownHandler)
+	mux.HandleFunc("/api/admin/siem", apiAdminSIEMHandler)
+	mux.HandleFunc("/api/admin/siem/", apiAdminSIEMHandler)
 	mux.HandleFunc("/api/admin/ldap", apiAdminLDAPHandler)
 	mux.HandleFunc("/api/admin/ldap/", apiAdminLDAPHandler)
 	mux.HandleFunc("/api/me/ldap", apiMeLDAPHandler)
@@ -448,6 +451,8 @@ func main() {
 	releaseKeyFile := flag.String("release-key-file", "", "with -release-sign: read the private release key from `FILE`")
 	releaseVerify := flag.String("release-verify", "", "check the signature FILE.sig of `FILE` (a downloaded SHA256SUMS.txt) and the SHA-256 of the listed files next to it, and exit")
 	releasePublicKey := flag.String("release-public-key", "", "with -release-verify: also trust this public `KEY` (wrm-ed25519:…)")
+	lockdownMode := flag.String("lockdown", "", "`on`, off or status: turn the lockdown on or off (only break-glass administrators can sign in, AI stopped, shares paused) and exit; a running WRM applies it within seconds")
+	lockdownReason := flag.String("lockdown-reason", "", "with -lockdown on: the `REASON` shown to everyone")
 	flag.StringVar(&initialSecurityLevel, "security-level", "", "`LEVEL` home, business or enterprise: the security level to start with while none was chosen yet (also with -install-service)")
 	flag.Parse()
 	switch {
@@ -512,6 +517,14 @@ func main() {
 		migrateSessionTokens()
 		ensureAdminExists()
 		if err := resetPasswordCLI(*resetPassword, *reset2FA); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+	if *lockdownMode != "" {
+		initDB()
+		loadAppSettings()
+		if err := lockdownCLI(*lockdownMode, *lockdownReason); err != nil {
 			log.Fatal(err)
 		}
 		return
@@ -585,6 +598,8 @@ func serve(stop <-chan struct{}) int {
 	}()
 	go oidcRevalidateLoop()
 	go ldapSyncLoop()
+	go lockdownWatchLoop()
+	go siemLoop()
 
 	srv := &http.Server{
 		Addr: addr, Handler: newRouter(),
@@ -1230,6 +1245,24 @@ func initDB() {
 		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 		PRIMARY KEY (group_id, user_id))`,
 		"group_id", "user_id")
+	// v12.6.26: audit export to a SIEM (cursor = last audit_log id delivered).
+	ensureTable("siem_destinations", `CREATE TABLE IF NOT EXISTS siem_destinations (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+		kind TEXT NOT NULL,
+		url TEXT NOT NULL DEFAULT '',
+		config TEXT NOT NULL DEFAULT '{}',
+		secret TEXT NOT NULL DEFAULT '',
+		enabled INTEGER NOT NULL DEFAULT 1,
+		cursor INTEGER NOT NULL DEFAULT 0,
+		sent INTEGER NOT NULL DEFAULT 0,
+		failed INTEGER NOT NULL DEFAULT 0,
+		last_ok_at TEXT NOT NULL DEFAULT '',
+		last_error TEXT NOT NULL DEFAULT '',
+		last_error_at TEXT NOT NULL DEFAULT '',
+		created_by INTEGER,
+		created_at TEXT NOT NULL DEFAULT '')`,
+		"id", "name", "kind", "url", "config", "secret", "enabled", "cursor", "sent", "failed", "last_ok_at", "last_error", "last_error_at", "created_by", "created_at")
 	ensureTable("notify_prefs", `CREATE TABLE IF NOT EXISTS notify_prefs (
 		user_id INTEGER PRIMARY KEY,
 		quiet_enabled INTEGER NOT NULL DEFAULT 0,

@@ -84,7 +84,7 @@ func lookupSession(r *http.Request) (*authSession, error) {
 	if laOK && now.Sub(la) > time.Duration(settingInt("session_idle_hours"))*time.Hour {
 		expired = true
 	}
-	if expired || disabled == 1 {
+	if expired || disabled == 1 || lockdownRefuses(s.UserID) {
 		db.Exec(`DELETE FROM auth_sessions WHERE id=?`, s.ID)
 		return nil, errUnauthenticated
 	}
@@ -345,6 +345,11 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 
 // finishLogin creates the session after all checks passed.
 func finishLogin(w http.ResponseWriter, r *http.Request, u *userRow, method string) {
+	if lockdownRefuses(u.ID) {
+		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"method": method, "reason": "lockdown"})
+		jsonError(w, lockdownMessage, 403)
+		return
+	}
 	restricted := restrictionFor(u)
 	if err := createAuthSession(w, r, u.ID, restricted); err != nil {
 		jsonError(w, "Server error", 500)
@@ -420,6 +425,9 @@ func apiAuthConfigHandler(w http.ResponseWriter, r *http.Request) {
 	// Directory sign-in buttons; local_login_limited hides the password form behind "Emergency sign-in".
 	out["sso"], out["local_login_limited"] = oidcSignInOptions(), localLoginLimited()
 	out["ldap"] = ldapSignInOptions()
+	if st := lockdown(); st.On {
+		out["lockdown"] = map[string]string{"reason": st.Reason, "at": st.At}
+	}
 	// The sign-in page's version badge: an available update and its release page.
 	if info := lastUpdateInfo(); settingBool("update_check") && updateAvailable(info) {
 		out["update"], out["update_url"] = info.Latest, info.URL
@@ -1151,6 +1159,8 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		auditLog(r, adminID, "admin.user_updated", target.Username, changes)
 		jsonOK(w, map[string]bool{"ok": true})
+	case action == "stop" && r.Method == http.MethodPost:
+		stopUser(w, r, adminID, target)
 	case action == "handover" && r.Method == http.MethodGet:
 		to, why := suggestedHandover(id)
 		jsonOK(w, map[string]interface{}{"owned": ownedCounts(id), "suggested_user_id": to, "suggested_username": usernameOf(to), "suggested_reason": why, "teams": userTeams(id)})
@@ -1287,10 +1297,12 @@ func deleteUserCompletely(id int) {
 }
 
 // disconnectUserEverywhere closes the user's terminals and collaboration connections.
-func disconnectUserEverywhere(userID int, reason string) {
-	killTerminals(func(t *termSession) bool { return t.UserID == userID }, reason)
-	kickUserFromRooms(userID, reason)
-	tunnelMgr.stopUser(userID, reason)
+// disconnectUserEverywhere ends the user's terminals, room seats and tunnels and says how many.
+func disconnectUserEverywhere(userID int, reason string) (terminals, rooms, tunnels int) {
+	terminals = killTerminals(func(t *termSession) bool { return t.UserID == userID }, reason)
+	rooms = kickUserFromRooms(userID, reason)
+	tunnels = tunnelMgr.stopUser(userID, reason)
+	return
 }
 
 // resetPasswordCLI implements "wrm -reset-password <username>" for locked-out admins.
