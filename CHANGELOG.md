@@ -1,8 +1,23 @@
-## [Unreleased]
+## [12.6.24] - 2026-10-18
 
 ### Added
-- The project's release public key is built in (`builtinReleaseKeys`): from the next release on, self-update refuses a release whose `SHA256SUMS.txt.sig` is missing or does not verify, and the release workflow signs with the `RELEASE_SIGNING_KEY` secret. A test checks that every built-in key parses.
-- **Automatic releases:** the new `Tag new version` job in `build.yml` tags a push to `main` whose version is new (`APP_VERSION`, `AppVersion` and the top CHANGELOG section must agree) once every build passed, and starts the release on that tag. Releases no longer have to be created by hand.
+- **Directory sign-in (OIDC)** (`oidc.go`, `oidc_jwt.go`, tables `oidc_providers`, `user_identities`): sign-in through Microsoft Entra ID, ADFS, Okta, Keycloak, Google Workspace or any OpenID Connect provider with the authorization code flow and PKCE (S256), `state` bound to the browser by a cookie and used once, and a `nonce`. ID tokens are verified with the standard library (RS256/384/512, PS256/384/512, ES256/384/512 from the provider's JWKS, keys refetched on rotation; `none` and HS* refused; issuer, audience, `azp`, expiry, `iat`/`nbf` with two minutes of clock skew). Provider addresses must use HTTPS (plain HTTP only on loopback).
+- **Immutable identities:** a directory user is keyed by Entra's `tid` + `oid`, otherwise `iss` + `sub`, never by name or e-mail.
+- **Mapping rules** per provider (`claim`, `value`, `role`, `teams`): app roles, group IDs or any claim give a WRM role (the strongest wins) and teams. Accounts are created on first sign-in only for matched users (`jit`), without a password (`users.sso_only`); unmatched users are refused with a message that says why (and a hint for Entra group overage). Every sign-in syncs the role and the SSO team memberships (`team_members.source = 'oidc'`); hand-added teams stay, the last active administrator is never demoted, break-glass accounts cannot be linked.
+- **MFA proven by the token** (`require_mfa`, `mfa_values`): `amr`, or accepted `acr` / Entra `acrs` values requested through `claims` (Entra) or `acr_values`. A provider that proves MFA satisfies `require_2fa`; otherwise accounts with WRM's own 2FA enter their code after the directory sign-in (the signed MFA token carries the identity).
+- **Revalidation** (`oidc_revalidate_minutes`, default 60; `oidc_unverified_hours`, default 12): WRM refreshes each signed-in directory identity with its refresh token (encrypted at rest). A refused refresh, a refreshed token no rule matches, or no successful check within `oidc_unverified_hours` ends the user's sessions, terminals, tunnels, rooms and AI sessions (`oidc.access_ended`).
+- **`local_login`** (`all` / `break_glass`): with `break_glass`, password sign-in and self-registration are limited to break-glass administrators while a provider is enabled. The Enterprise security level requires it.
+- **Admin panel → Directory sign-in:** providers with presets and setup hints, step-by-step *Test connection* (`POST /api/admin/oidc/check`), rule editor with a claims preview (`POST /api/admin/oidc/{id}/preview`), *Test sign-in* in a new window that shows the claims and what WRM would do without creating anything, the linked accounts with their last directory check, and unlinking. Saving, deleting and unlinking need step-up.
+- **Sign-in page:** *Sign in with <provider>* buttons; with `local_login = break_glass` the password form is folded behind *Emergency sign-in with a local account*.
+- **Step-up through the provider** (`prompt=login`, `max_age=0`, the same directory identity) for accounts without a password; 2FA changes of such accounts use that confirmation instead of a password.
+- **Settings → Security → Organisation accounts:** link a directory account to an existing WRM account (the provider must confirm it, and WRM asks for a fresh confirmation first, even with step-up off; an existing link is never replaced silently) and unlink it.
+- The project's release public key is built in (`builtinReleaseKeys`): self-update refuses a release whose `SHA256SUMS.txt.sig` is missing or does not verify, and the release workflow signs with the `RELEASE_SIGNING_KEY` secret. A test checks that every built-in key parses.
+- **Automatic releases:** the `Tag new version` job in `build.yml` tags a push to `main` whose version is new (`APP_VERSION`, `AppVersion` and the top CHANGELOG section must agree) once every build passed, and starts the release on that tag.
+
+### Changed
+- A failed AI connection sign-in (`mcp.auth_failed`) records the first 12 hex characters of the presented token's SHA-256 instead of its last four characters.
+- `/api/auth/config` returns `sso` (the sign-in buttons) and `local_login_limited`; `/api/auth/me` returns `sso_only` and `sso`; the admin user list shows which accounts are linked to a directory; a step-up answer carries `password` and `sso`.
+- The sign-in page is shown in the chosen language (it stayed partly English before signing in).
 
 ## [12.6.23] - 2026-10-17
 

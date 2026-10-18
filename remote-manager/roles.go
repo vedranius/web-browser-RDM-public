@@ -194,6 +194,12 @@ func requireStepUp(w http.ResponseWriter, r *http.Request, action string) bool {
 	if !settingBool("require_step_up") {
 		return true
 	}
+	return requireStepUpAlways(w, r, action)
+}
+
+// requireStepUpAlways asks for a fresh confirmation even when the step-up policy is off,
+// for actions that add a way to sign in (linking a directory account).
+func requireStepUpAlways(w http.ResponseWriter, r *http.Request, action string) bool {
 	s, err := lookupSession(r)
 	if err != nil {
 		jsonError(w, "Unauthorized", 401)
@@ -207,6 +213,7 @@ func requireStepUp(w http.ResponseWriter, r *http.Request, action string) bool {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"error":   "Confirm with your password (and 2FA code) to continue",
 		"step_up": true, "action": action, "totp": userHasTOTP(s.UserID),
+		"password": !userSSOOnly(s.UserID), "sso": userSSOProviders(s.UserID),
 	})
 	return false
 }
