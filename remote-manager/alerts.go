@@ -141,8 +141,7 @@ func alertCheck(in alertInput) {
 		}
 	case in.Action == "credential.revealed" || in.Action == "ssh_key.exported" || (in.Action == "config.exported" && detStr(d, "with_secrets") == "true"):
 		if settingBool("alert_secret_reveal") {
-			what := map[string]string{"credential.revealed": "revealed the stored password of", "ssh_key.exported": "exported the private SSH key", "config.exported": "exported connections with their secrets"}[in.Action]
-			hr := map[string]string{"credential.revealed": "otkrio je spremljenu lozinku", "ssh_key.exported": "izvezao je privatni SSH ključ", "config.exported": "izvezao je veze s tajnama"}[in.Action]
+			what, hr := alertRevealText(in.Action)
 			raiseAlert("secret_reveal", in, strings.TrimSpace(in.Username+" "+what+" "+in.Target), strings.TrimSpace(in.Username+" "+hr+" "+in.Target), true)
 		}
 	case in.Action == "ai.approved" && detStr(d, "rule") == "full_access":
@@ -156,6 +155,17 @@ func alertCheck(in alertInput) {
 				"Audit ili izvoz u SIEM isključio je ili uklonio "+in.Username+" ("+in.Action+")", true)
 		}
 	}
+}
+
+// alertRevealText describes a secret reveal in English and Croatian.
+func alertRevealText(action string) (string, string) {
+	switch action {
+	case "credential.revealed":
+		return "revealed the stored credential", "otkrio je spremljenu vjerodajnicu"
+	case "ssh_key.exported":
+		return "exported the private SSH key", "izvezao je privatni SSH ključ"
+	}
+	return "exported connections including their stored credentials", "izvezao je veze sa spremljenim vjerodajnicama"
 }
 
 func alertMakesAdmin(in alertInput) bool {
