@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.6.23"
+var AppVersion = "v12.6.24"
 
 const sessionCookieName = "wrm_session"
 
@@ -324,6 +324,13 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/teams/", apiAdminTeamsHandler)
 	mux.HandleFunc("/api/teams", apiTeamsHandler)
 	mux.HandleFunc("/api/auth/step-up", apiAuthStepUpHandler)
+	mux.HandleFunc("/api/auth/oidc/start", apiOIDCStartHandler)
+	mux.HandleFunc("/api/auth/oidc/callback", apiOIDCCallbackHandler)
+	mux.HandleFunc("/api/auth/oidc/result", apiOIDCResultHandler)
+	mux.HandleFunc("/api/admin/oidc", apiAdminOIDCHandler)
+	mux.HandleFunc("/api/admin/oidc/", apiAdminOIDCHandler)
+	mux.HandleFunc("/api/me/identities", apiMeIdentitiesHandler)
+	mux.HandleFunc("/api/me/identities/", apiMeIdentitiesHandler)
 	mux.HandleFunc("/api/admin/audit", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
@@ -569,6 +576,7 @@ func serve(stop <-chan struct{}) int {
 			time.Sleep(time.Hour)
 		}
 	}()
+	go oidcRevalidateLoop()
 
 	srv := &http.Server{
 		Addr: addr, Handler: newRouter(),
@@ -1098,6 +1106,44 @@ func initDB() {
 		added_at TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (share_id, team_id))`,
 		"share_id", "team_id", "role", "added_at")
+	// v12.6.24: OIDC sign-in (identity providers, linked directory identities, SSO team memberships).
+	ensureTable("oidc_providers", `CREATE TABLE IF NOT EXISTS oidc_providers (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+		issuer TEXT NOT NULL DEFAULT '',
+		client_id TEXT NOT NULL DEFAULT '',
+		client_secret TEXT NOT NULL DEFAULT '',
+		scopes TEXT NOT NULL DEFAULT '',
+		redirect_uri TEXT NOT NULL DEFAULT '',
+		username_claim TEXT NOT NULL DEFAULT '',
+		require_mfa INTEGER NOT NULL DEFAULT 0,
+		mfa_values TEXT NOT NULL DEFAULT '',
+		jit INTEGER NOT NULL DEFAULT 1,
+		rules TEXT NOT NULL DEFAULT '[]',
+		enabled INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT '',
+		updated_at TEXT NOT NULL DEFAULT '')`,
+		"id", "name", "issuer", "client_id", "client_secret", "scopes", "redirect_uri", "username_claim", "require_mfa", "mfa_values", "jit", "rules", "enabled", "created_at", "updated_at")
+	ensureTable("user_identities", `CREATE TABLE IF NOT EXISTS user_identities (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		provider_id INTEGER NOT NULL REFERENCES oidc_providers(id) ON DELETE CASCADE,
+		subject TEXT NOT NULL,
+		email TEXT NOT NULL DEFAULT '',
+		display TEXT NOT NULL DEFAULT '',
+		refresh_token TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT '',
+		last_login_at TEXT NOT NULL DEFAULT '',
+		last_check_at TEXT NOT NULL DEFAULT '',
+		last_ok_at TEXT NOT NULL DEFAULT '',
+		last_error TEXT NOT NULL DEFAULT '',
+		revoked INTEGER NOT NULL DEFAULT 0,
+		UNIQUE (provider_id, subject))`,
+		"id", "user_id", "provider_id", "subject", "email", "display", "refresh_token", "created_at", "last_login_at", "last_check_at", "last_ok_at", "last_error", "revoked")
+	db.Exec(`CREATE TABLE IF NOT EXISTS oidc_issuer_checks (issuer TEXT PRIMARY KEY, checked_at TEXT NOT NULL DEFAULT '')`)
+	db.Exec(`ALTER TABLE users ADD COLUMN sso_only INTEGER NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN identity_id INTEGER NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE team_members ADD COLUMN source TEXT NOT NULL DEFAULT ''`)
 	ensureTable("notify_prefs", `CREATE TABLE IF NOT EXISTS notify_prefs (
 		user_id INTEGER PRIMARY KEY,
 		quiet_enabled INTEGER NOT NULL DEFAULT 0,

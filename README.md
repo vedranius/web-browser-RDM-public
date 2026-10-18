@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.6.23** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.6.24** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.6.24
+
+**Sign in with your organisation's account.** WRM now signs people in through **Microsoft Entra ID, ADFS, Okta, Keycloak, Google Workspace or any OpenID Connect provider** (authorization code with PKCE). In *Admin panel → Directory sign-in* you add the provider, test the connection step by step, and write rules: an Entra **app role** or a **group ID** gives a WRM role and teams. Accounts are created on the first sign-in only for people a rule matches; everyone else is refused with a message that says why. People are recognised by their immutable directory ID, never by their name, so a renamed or re-used name cannot take over an account. A provider can require **MFA proven by the token**. WRM **checks regularly** with the provider that each signed-in user may still sign in: someone disabled or removed from the WRM group loses their sessions and terminals. Password sign-in can be limited to the **break-glass** administrators (the Enterprise level requires it once a directory sign-in is on). **Test sign-in** shows what the provider sends and what WRM would do, without creating anything. See [Directory sign-in (OIDC)](#directory-sign-in-oidc).
 
 ## What's new in v12.6.23
 
@@ -132,7 +136,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -184,6 +188,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Admin panel](#admin-panel)
    - [Security levels and posture](#security-levels-and-posture)
    - [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass)
+   - [Directory sign-in (OIDC)](#directory-sign-in-oidc)
    - [Updates & self-update](#updates--self-update)
    - [Mobile, responsive UI & installable app](#mobile-responsive-ui--installable-app)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
@@ -236,21 +241,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.6.23-linux-amd64
-   ./wrm-pro-v12.6.23-linux-amd64
+   chmod +x wrm-pro-v12.6.24-linux-amd64
+   ./wrm-pro-v12.6.24-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.6.23-windows-amd64.exe
+   .\wrm-pro-v12.6.24-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.6.23-linux-amd64.AppImage
-   ./wrm-pro-v12.6.23-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.6.23-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.6.24-linux-amd64.AppImage
+   ./wrm-pro-v12.6.24-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.6.24-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -259,8 +264,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.23/wrm-pro-v12.6.23-android-arm64
-   chmod +x wrm-pro-v12.6.23-android-arm64 && ./wrm-pro-v12.6.23-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.6.24/wrm-pro-v12.6.24-android-arm64
+   chmod +x wrm-pro-v12.6.24-android-arm64 && ./wrm-pro-v12.6.24-android-arm64
    ```
 
    **Docker**
@@ -284,6 +289,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.6.23
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets the tables `oidc_providers` and `user_identities` and the columns `users.sso_only`, `auth_sessions.identity_id` and `team_members.source`; a previous version still starts on it (directory accounts then cannot sign in, since they have no password). Nothing changes until an administrator adds an identity provider. New settings `local_login` (`all`), `oidc_revalidate_minutes` (60) and `oidc_unverified_hours` (12). The Enterprise level now requires `local_login` = `break_glass`; it takes effect only while a directory sign-in is enabled, so nobody is locked out of an installation without one. Releases from this version on are signed and published automatically when a version is merged.
 
 ## Upgrading from v12.6.22
 
@@ -1887,6 +1896,27 @@ A **security level** sets minimums for the settings that matter. Pick it on the 
 
 **Handover when deleting a user.** *Delete* shows what the user owns (connections, folders, credentials, SSH keys, shares, proxies) and asks what happens to it: delete it with the account, or hand it to another active account (the team lead is suggested, administrators are listed). The receiver becomes the owner; shares keep their members and teams, so people keep their access. A folder whose name the receiver already uses gets the old owner's name added. The handover is audited (`admin.user_handover`) with the counts.
 
+### Directory sign-in (OIDC)
+
+Companies sign in with their directory instead of WRM passwords. *Admin panel → Directory sign-in*:
+
+1. **Add a provider:** choose the kind (Microsoft Entra ID, ADFS, Okta, Keycloak, Google Workspace, other OpenID Connect); the editor shows where to create the client at that provider. Register the **redirect address** shown (`https://<WRM address>/api/auth/oidc/callback`; behind a reverse proxy set it in the provider, or set `ai_mcp_public_url`). Enter the **issuer** (Entra: `https://login.microsoftonline.com/<tenant ID>/v2.0`, your own tenant, not `common`), the **client ID** and the **client secret** (stored encrypted, never shown again).
+2. **Test connection** checks step by step: the issuer address, the discovery document, the endpoints, the signing keys, PKCE and whether WRM can check users later (`offline_access`). A failed step says what to fix.
+3. **Rules** decide who may sign in: each rule names a claim (`roles` for Entra app roles, `groups` for group IDs, `hd` for a Google Workspace domain, or any other claim), a value, a WRM role and optional teams. The strongest matched role wins (*Administrator* > *Security auditor* > *Operator* > *User*); teams of every matched rule are added. Values are compared without case. Without rules, only WRM accounts that were linked by hand may sign in.
+4. **Create accounts on first sign-in** (on by default) makes an account for a person a rule matches. The username comes from `preferred_username` (or the claim you choose); a name already taken gets a number added. Such an account has no password (*signs in only through the directory*).
+5. **Test sign-in** opens the provider in a new window and shows what it sent (claims), which account would be used or created, the role and teams, whether MFA was proven and whether a refresh token came back. Nothing is created.
+6. **Enable** the provider: the sign-in page shows *Sign in with <name>*.
+
+How it behaves:
+- **Identity:** a person is the directory's immutable ID: Entra's tenant and object ID (`tid` + `oid`), otherwise issuer + subject (`iss` + `sub`). E-mail addresses and names are never used to find an account, so renaming someone or re-using a name in the directory does not give anyone else's account.
+- **Every sign-in follows the directory:** the role and the teams added by rules (`team_members.source = 'oidc'`) are updated; teams an administrator added by hand stay. A person no rule matches any more is refused and their open sessions end. The last active administrator is never demoted by a sign-in (audited `oidc.role_kept`). Break-glass accounts stay local and cannot be linked.
+- **MFA:** with *Require MFA proven by the provider* the ID token must show a second factor (`amr` such as `mfa`, `otp`, `hwk`) or one of the listed values in `acr` or Entra's `acrs` (authentication context, requested through the `claims` parameter; for other providers through `acr_values`). Microsoft Entra v2 tokens carry no `amr`: enforce MFA there with Conditional Access and an authentication context (for example `c1`). A provider that proves MFA satisfies `require_2fa`; otherwise an account that uses WRM's own 2FA enters its code after the directory sign-in, and `require_2fa` asks other accounts to set it up.
+- **Regular check:** every `oidc_revalidate_minutes` WRM uses the refresh token to ask the provider whether each signed-in person may still sign in. A refused refresh (account disabled or deleted, password reset, consent revoked) or a refreshed token that no longer matches a rule ends the person's sessions, terminals, tunnels, rooms and AI sessions (audited `oidc.access_ended`). Without a refresh token, or while the provider cannot be reached, directory sessions end after `oidc_unverified_hours` without a successful check. The list of linked accounts shows the last check and its error.
+- **Step-up:** accounts without a password confirm dangerous actions through the provider (it is asked to sign the person in again); accounts with a password can use either.
+- **Linking existing accounts:** in *Settings → Security → Organisation accounts* a signed-in user connects their directory account (the provider window must confirm the same person); afterwards they can sign in either way. An administrator can unlink accounts in the list; unlinking ends the directory sessions.
+- **Password sign-in only for emergencies:** `local_login` = `break_glass` leaves the password form only to break-glass administrators (folded behind *Emergency sign-in with a local account*) and closes self-registration. It takes effect only while a provider is enabled. The Enterprise level requires it.
+- Audited: `oidc.provider_saved`, `oidc.provider_deleted`, `oidc.account_created`, `oidc.identity_linked`, `oidc.identity_unlinked`, `oidc.role_synced`, `oidc.access_ended`, `oidc.test_sign_in`, `auth.oidc_refused` (with the reason) and `auth.login` with `method: oidc`.
+
 ### Updates & self-update
 
 - **Update check:** once a day (and with *Check now*) WRM asks the GitHub releases API of `update_repo` (default this project) for the latest release. Only the repository path and a fixed `User-Agent` are sent: no user data, no installation ID. A proxy comes from `update_proxy` or `HTTPS_PROXY` / `HTTP_PROXY`. Air-gapped installations turn it off with `update_check` (`WRM_UPDATE_CHECK=off`).
@@ -1987,6 +2017,9 @@ Medium runtime settings (introduced in v12.4.3b):
 | `require_step_up` | `0` | dangerous actions need a fresh password (and 2FA) confirmation, see [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass); required by the Business and Enterprise levels |
 | `step_up_minutes` | `10` | how long a step-up confirmation lasts (1–240) |
 | `break_glass_ips` | – | IP addresses or networks (comma-separated) a break-glass administrator may sign in from; empty = anywhere |
+| `local_login` | `all` | `all` / `break_glass`: who may still sign in with a password while a directory sign-in is enabled, see [Directory sign-in (OIDC)](#directory-sign-in-oidc); required `break_glass` by the Enterprise level |
+| `oidc_revalidate_minutes` | `60` | how often WRM checks with the identity provider that signed-in directory users may still sign in (5–1440) |
+| `oidc_unverified_hours` | `12` | directory sessions end after this long without a successful check (1–720) |
 | `registration` | `closed` | `closed` / `open` self-registration |
 | `require_2fa` | `off` | `off` / `admins` / `all` |
 | `password_min_length` | `8` | 6–128 |
@@ -2367,6 +2400,11 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/auth/mfa` | `{mfa_token, code}` (TOTP or recovery code) |
 | POST | `/api/auth/logout` | Sign out |
 | GET | `/api/auth/me` | Current user, restrictions and policies; also `role`, `is_auditor`, `break_glass`, `teams` and `step_up: {required, minutes, totp}` |
+| GET | `/api/auth/oidc/start?provider=<id>` | Directory sign-in: redirects to the identity provider (authorization code + PKCE) |
+| POST | `/api/auth/oidc/start` | `{provider, mode}` with `link`, `stepup` or `test` (administrators) for a signed-in user: `{url, state}` to open in a new window |
+| GET | `/api/auth/oidc/callback` | The provider returns here (register this address at the provider) |
+| GET | `/api/auth/oidc/result?state=` | Outcome of a link / step-up / test window (`done`, `ok`, `error`, test details) |
+| GET / DELETE | `/api/me/identities`, `/api/me/identities/{id}` | Your linked directory accounts and the providers you can connect / unlink one (accounts with a password only) |
 | POST | `/api/auth/step-up` | `{password, code, action}` confirms this session for `step_up_minutes`; a 403 with `step_up: true` from another call means this is needed |
 | GET | `/api/teams` | Teams for the share dialog `{teams: [{id, name, member_count}], mine}` |
 | GET / POST / DELETE | `/api/me/events` · `/api/me/events/read` | Your in-app notifications: `GET ?limit=` (default 50, at most 200) → `{events: [{id, event, title, body, at, read}], unread}`; `POST /api/me/events/read` `{ids: […]}` or `{all: true}`; `DELETE /api/me/events` clears the list |
@@ -2612,6 +2650,11 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET / POST | `/api/admin/users` | Users (with `role`, `break_glass`, `teams`) / create `{username, password, role, …}` |
 | PUT / DELETE | `/api/admin/users/{id}` | `{role, is_admin, break_glass, disabled, display_name}` / delete; `?transfer_to=<id>` hands what the user owns to that account first |
 | GET | `/api/admin/users/{id}/handover` | What the user owns `{owned, suggested_user_id, suggested_username, suggested_reason, teams}` |
+| GET / POST | `/api/admin/oidc` | Identity providers (never the client secret), linked accounts and the redirect address / create a provider `{name, issuer, client_id, client_secret, scopes, redirect_uri, username_claim, require_mfa, mfa_values, jit, rules: [{claim, value, role, teams}], enabled}` (step-up) |
+| PUT / DELETE | `/api/admin/oidc/{id}` | Change a provider (fields optional; an empty `client_secret` keeps the stored one, `clear_secret` removes it) / remove it with its links (step-up) |
+| POST | `/api/admin/oidc/check` | `{issuer}` step-by-step connection test |
+| POST | `/api/admin/oidc/{id}/preview` | `{claims, rules?}` the role and teams WRM would give |
+| DELETE | `/api/admin/oidc/identities/{id}` | Unlink a directory account (step-up) |
 | GET / POST | `/api/admin/teams` | Teams with members and the policies that name them / create `{name, description, members: [{user_id, lead}]}` |
 | PUT / DELETE | `/api/admin/teams/{id}` | Change (same fields, each optional) / delete; 409 while a policy names the team |
 | POST | `/api/admin/users/{id}/reset-password` · `reset-2fa` · `revoke-sessions` · `unlock` | Account actions |
@@ -2744,6 +2787,8 @@ remote-manager/
   update.go       update check against GitHub releases, verified self-update, rollback, restart
   roles.go        roles, who-policies (operators, teams:), step-up, break-glass, handover
   teams.go        teams, team members, teams in shares, admin team API
+  oidc.go         directory sign-in: providers, PKCE sign-in, mapping rules, identities, revalidation, admin API
+  oidc_jwt.go     OIDC discovery, signing keys (JWKS) and ID token verification
   security_level.go  security levels: rules, preview and apply, deviations, the first-run and start-up level, HTTPS for sign-in
   security_posture.go  the security posture checks for Admin → Security
   releasesign.go  release signatures (ed25519 over SHA256SUMS.txt): verification for the self-update, -release-keygen/-sign/-verify
@@ -2853,6 +2898,7 @@ remote-manager/
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
   releasesign_test.go  release signatures: round trip, tampering, wrong key or file, WRM context, key parsing, the command-line tools, self-update refusing unsigned or wrongly signed releases
+  v12624_test.go       directory sign-in against a fake identity provider: ID token checks (RS256/ES256, nonce, audience, expiry, alg none/HS256, key rotation), accounts from rules, role and team sync, refusals, browser binding and replay of the callback, MFA, local 2FA after a directory sign-in, revalidation (refused refresh, removed from the group, no refresh token), password sign-in limited to break-glass, linking, step-up and test sign-in, admin API
   v12623_test.go       roles and teams: who-policy values, auditor read-only and refused connections, step-up, break-glass networks and notifications, teams in shares, handover on delete
   v12622_test.go       security levels: rule comparison, preview, blockers and deviations, apply and sign-out, env lock, HTTPS for sign-in, level at start and first run, guest link lifetime
   fuzz_test.go         fuzz targets for the import parsers (mRemoteNG, SSH config, CSV/XLSX, PuTTY, WinSCP, configuration files, deploy-config YAML); seeds run with every go test
@@ -2913,6 +2959,10 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 
 | Problem | Fix |
 |---|---|
+| Directory sign-in: *Sign-in refused: your directory account is not assigned to WRM* | No rule matches the token. Use *Test sign-in* with that person's account to see the claims; assign the app role or group in the directory, or add a rule. Entra sends `groups` only when the app registration's token configuration adds them, and replaces them by an overage note for people in many groups: map app roles instead |
+| Directory sign-in: the provider says the redirect address does not match | Register exactly the address shown in *Admin panel → Directory sign-in*; behind a reverse proxy set the provider's redirect address (or `ai_mcp_public_url`) to the public address |
+| Directory sign-in: *the ID token has expired* / *issued in the future* | The WRM host's clock is wrong; sync it (NTP) |
+| Directory users are signed out every few hours | The provider gives no refresh token: add `offline_access` to the scopes (and allow it for the client), or raise `oidc_unverified_hours` |
 | A panel is gone, or tabs cannot be dragged | *Panels* (▦ in the top bar, or in its ⋯ menu) shows and hides every panel; 🔒 on that button means the layout is locked: unlock it there. *Reset the layout* puts every panel back where it started |
 | Medium: pip fails with *certificate verify failed: self-signed certificate in certificate chain* | A proxy or antivirus inspects HTTPS. Keep `medium_host_ca` on (default) and press *Prepare runtime* again; if its root certificate is not in the WRM host's store, export it as PEM and set `medium_ca_file` |
 | *Request blocked by CSRF protection* / terminals do not connect behind a proxy | Pass the `Host` header (`proxy_set_header Host $host;`) and WebSocket upgrade headers, or set `WRM_ALLOWED_ORIGINS` |

@@ -66,6 +66,7 @@ var levelRules = []levelRule{
 	{Key: "link_share_max_days", Less: true, ZeroOff: true, Need: [3]string{"", "30", "7"}},
 	{Key: "ai_full_access", Order: []string{"1", "0"}, Need: [3]string{"", "0", "0"}},
 	{Key: "require_step_up", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}},
+	{Key: "local_login", Order: []string{"all", "break_glass"}, Need: [3]string{"", "", "break_glass"}},
 	{Key: "audit_enabled", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}, Rec: "1"},
 	{Key: "audit_retention_days", Need: [3]string{"", "365", "730"}},
 	{Key: "session_recording", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}},
