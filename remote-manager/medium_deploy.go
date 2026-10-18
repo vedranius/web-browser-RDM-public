@@ -321,6 +321,12 @@ func mdJobSummary(j *mdJob) string {
 }
 
 func mdFinishJob(j *mdJob) {
+	// the user may start the next job as soon as this one shows as done
+	mdJobs.Lock()
+	if mdJobs.active[j.uid] == j {
+		delete(mdJobs.active, j.uid)
+	}
+	mdJobs.Unlock()
 	j.mu.Lock()
 	j.Done, j.Ended, j.Phase = true, nowStamp(), "done"
 	status, errText := "ok", ""
@@ -349,11 +355,6 @@ func mdFinishJob(j *mdJob) {
 		truncateStr(redactText(errText), 2000), encryptValue(redactText(text)), j.activity)
 	mediumPruneActivity()
 	auditLog(nil, j.uid, "git.medium_native_"+j.Kind+"_done", j.Project, map[string]interface{}{"environment": j.Environment, "deploy_id": j.DeployID, "dry_run": j.DryRun, "outcomes": j.Outcomes})
-	mdJobs.Lock()
-	if mdJobs.active[j.uid] == j {
-		delete(mdJobs.active, j.uid)
-	}
-	mdJobs.Unlock()
 }
 
 func mdGetJob(uid int, id string) *mdJob {
