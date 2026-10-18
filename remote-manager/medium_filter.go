@@ -37,6 +37,13 @@ type mdRule struct {
 	pattern   string
 	re        *regexp.Regexp
 	alt       *mdRule // "dir/***": the rule for "dir" itself
+	exact     bool    // a path the operator excluded from one deployment: it and everything below
+}
+
+// mdExactRule excludes one path (relative to the root, without a trailing slash) and
+// everything below it, taken literally (never as a wildcard pattern).
+func mdExactRule(rel string) *mdRule {
+	return &mdRule{raw: rel, exact: true, pattern: strings.Trim(rel, "/")}
 }
 
 var mdRuleCache sync.Map
@@ -160,6 +167,9 @@ func mdWildClass(rs []rune) (string, int) {
 // matches tells whether the rule excludes rel (relative to the transfer root, no leading
 // or trailing slash); isDir is the type on the side being examined.
 func (r *mdRule) matches(rel string, isDir bool) bool {
+	if r.exact {
+		return rel == r.pattern || strings.HasPrefix(rel, r.pattern+"/")
+	}
 	if r.alt != nil && r.alt.matches(rel, isDir) {
 		return true
 	}
