@@ -15,6 +15,7 @@
 - **Automatic releases:** the `Tag new version` job in `build.yml` tags a push to `main` whose version is new (`APP_VERSION`, `AppVersion` and the top CHANGELOG section must agree) once every build passed, and starts the release on that tag.
 
 ### Changed
+- A failed AI connection sign-in (`mcp.auth_failed`) records the first 12 hex characters of the presented token's SHA-256 instead of its last four characters.
 - `/api/auth/config` returns `sso` (the sign-in buttons) and `local_login_limited`; `/api/auth/me` returns `sso_only` and `sso`; the admin user list shows which accounts are linked to a directory; a step-up answer carries `password` and `sso`.
 - The sign-in page is shown in the chosen language (it stayed partly English before signing in).
 
