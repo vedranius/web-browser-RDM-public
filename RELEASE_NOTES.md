@@ -1,6 +1,18 @@
-## Web Remote Manager PRO v12.7.0 — Medium deploys natively
+## Web Remote Manager PRO v12.7.1 — Medium environment server lists
 
-### Added
+### Fixed
+
+- **Medium: per-environment `servers` lists.** `environments.yaml` now accepts the original deploy tool's `servers: [name, ...]` key. A listed server must exist in `servers.yaml` exactly once; an empty list is refused; and a project target in that environment may only deploy to a listed server. Environments without the key keep every server, as before.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. Existing `deploy-config` files keep working; add `servers` only where an environment should be limited.
+
+[Download v12.7.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.7.1) · [Medium native engine](https://github.com/vedranius/web-browser-RDM-public/blob/v12.7.1/README.md#medium-native-engine)
+
+### Included from v12.7.0 — Medium deploys natively
+
+#### Added
 
 - **WRM deploys Medium projects itself:** switch a project to the *WRM native* engine and WRM deploys it from your WRM Git source to every server of the environment through your WRM connections. No Docker and no original tool are needed for it. Each server gets a lock, a backup of everything that changes, a checksum check of every uploaded file, `post_deploy` and a history entry.
 - **Same server state as the original tool:** the lock, `current.json`, `history.jsonl` and the backups are written exactly as the original tool writes them, so you can switch a project between the two engines at any time and each continues after the other, rollbacks included.
@@ -10,11 +22,11 @@
 - **History and rollback:** see what is on each server, who deployed what and when, and roll back the last deployment (or try a dry rollback first). A lock someone left behind can be released once it is old enough.
 - **Live progress:** a log with every step and command output, the result per server, and *Cancel* before the next server starts changing.
 
-### Changed
+#### Changed
 
-- Projects with a build step are still deployed by the original tool until build locations arrive in v12.7.1.
+- Projects with a build step are still deployed by the original tool until build locations arrive in v12.7.2.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. The database gets one new table (`medium_project_engine`); a previous version still starts on it. Every project stays on the original tool until someone allowed by the new policy `medium_native` (default: administrators) switches it.
 
