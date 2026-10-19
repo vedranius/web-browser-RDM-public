@@ -1,3 +1,8 @@
+## [12.7.1] - 2026-10-19
+
+### Fixed
+- **Medium deploy-config: per-environment server lists** (`medium_config.go`): `environments.yaml` now accepts the original deploy tool's `servers: [name, ...]` key. A listed server must exist in `servers.yaml` exactly once; an empty list is refused because it would forbid every deploy; and every project target in that environment may only use a listed server. Environments without the key keep every server. Errors name the file and the key, and `medium_env_servers_test.go` covers valid, unknown, duplicate, empty and out-of-list cases.
+
 ## [12.7.0] - 2026-10-18
 
 ### Added
@@ -15,7 +20,7 @@
 
 ### Changed
 - A comparison's result carries a `revision` (over the commit, the exclusions and every server's plan) and `deployable`; a deployment names the revision it was reviewed at and is refused when the plan changed. A plan is deployed at most once.
-- Projects with a build step are still deployed by the original tool; build locations (WRM host, a Linux build server over SSH, none) come in v12.7.1.
+- Projects with a build step are still deployed by the original tool; build locations (WRM host, a Linux build server over SSH, none) come in v12.7.2.
 - A repository path that is absolute or has empty, `.` or `..` components stops the comparison.
 - Symbolic links created over SFTP are checked and made with `ln -s` when the SFTP server changed their target.
 
