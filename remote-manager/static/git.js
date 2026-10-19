@@ -9,6 +9,11 @@ Object.assign(LANGS.en, { hf_runtime:'Runtime', hf_freshness:'Freshness', hf_sta
   git_st_ok: 'Up to date', git_st_update: 'Needs update', git_st_review: 'Review', git_st_error: 'Error', git_st_gone: 'Gone', git_st_unknown: 'Not checked',
   git_fs_ok: 'ok', git_fs_old: 'old', git_fs_modified: 'modified', git_fs_missing: 'missing', git_fs_extra: 'extra', git_fs_protected: 'protected',
   git_behind: '{n} behind', git_vmd_missing: 'missing', git_version_md: 'VERSION.md', git_target: 'Target', git_latest_tag: 'Latest tag',
+  git_check_vmd: 'Also check VERSION.md', git_check_vmd_h: 'Off: the version is detected from the code only. On: VERSION.md is compared with the code as well.',
+  git_detected: 'Detected version', git_detected_code: 'from the code', git_detected_mixed: 'Mixed / modified', git_detected_modified: 'Modified',
+  git_detected_missing: 'Incomplete', git_detected_unknown: 'Unknown', git_vmd_ignored: 'VERSION.md is not used for the version check.',
+  git_vmd_match: 'VERSION.md matches the code.', git_vmd_mismatch: 'VERSION.md says {v} ({c}); the code matches {dv} ({dc}).', git_vmd_no_version: 'VERSION.md cannot be matched to a single version ({s}).',
+  git_vmd_none: 'No VERSION.md on the server.', git_code_error: 'Code check failed: {e}', git_approx: 'approx.',
   git_all_states: 'All states', git_all_envs: 'All environments', git_all_folders: 'All folders', git_all_tags: 'All tags', git_search: 'Search…',
   git_ref_choice: 'Ref', git_ref_catalog: 'As in the catalog', git_ref_default: 'Default branch of each project', git_ref_branch: 'One branch for all',
   git_ref_override: 'Ref for this run', git_ref_override_ph: 'tag:latest, tag:v2 or a branch (empty = as chosen above)',
@@ -41,6 +46,11 @@ Object.assign(LANGS.hr, { hf_runtime:'Izvršavanje', hf_freshness:'Svježina', h
   git_st_ok: 'Ažurno', git_st_update: 'Treba ažurirati', git_st_review: 'Pregledati', git_st_error: 'Greška', git_st_gone: 'Nema je', git_st_unknown: 'Nije provjereno',
   git_fs_ok: 'ok', git_fs_old: 'staro', git_fs_modified: 'izmijenjeno', git_fs_missing: 'nedostaje', git_fs_extra: 'višak', git_fs_protected: 'zaštićeno',
   git_behind: '{n} iza', git_vmd_missing: 'nema', git_version_md: 'VERSION.md', git_target: 'Cilj', git_latest_tag: 'Zadnji tag',
+  git_check_vmd: 'Provjeri i VERSION.md', git_check_vmd_h: 'Isključeno: verzija se određuje samo iz koda. Uključeno: VERSION.md se uspoređuje s kodom.',
+  git_detected: 'Detektirana verzija', git_detected_code: 'iz koda', git_detected_mixed: 'Miješano / izmijenjeno', git_detected_modified: 'Izmijenjeno',
+  git_detected_missing: 'Nepotpuno', git_detected_unknown: 'Nepoznato', git_vmd_ignored: 'VERSION.md se ne koristi za provjeru verzije.',
+  git_vmd_match: 'VERSION.md odgovara kodu.', git_vmd_mismatch: 'VERSION.md kaže {v} ({c}); kod odgovara {dv} ({dc}).', git_vmd_no_version: 'VERSION.md se ne može poistovjetiti s jednom verzijom ({s}).',
+  git_vmd_none: 'Na serveru nema VERSION.md.', git_code_error: 'Provjera koda nije uspjela: {e}', git_approx: 'približno',
   git_all_states: 'Sva stanja', git_all_envs: 'Sva okruženja', git_all_folders: 'Sve mape', git_all_tags: 'Sve oznake', git_search: 'Traži…',
   git_ref_choice: 'Ref', git_ref_catalog: 'Kao u katalogu', git_ref_default: 'Zadana grana svakog projekta', git_ref_branch: 'Jedna grana za sve',
   git_ref_override: 'Ref za ovu provjeru', git_ref_override_ph: 'tag:latest, tag:v2 ili grana (prazno = kao gore)',
@@ -433,7 +443,7 @@ Object.assign(LANGS.en, {
   gs_auto_done: '{n} environment(s) saved.',
   gs_on_server: 'On the server', gs_on_branch: 'Latest on the branch', gs_version: 'Version', gs_commit: 'Commit', gs_not_installed: 'Not installed here yet',
   gs_no_target: 'The latest version on the branch is not known yet. In Advanced mode open Overview and refresh the targets.',
-  gs_status_ok: 'Up to date', gs_status_update: 'Update available', gs_status_missing: 'Not installed', gs_status_unknown: 'Cannot compare', gs_status_error: 'Problem',
+  gs_status_ok: 'Up to date', gs_status_update: 'Update available', gs_status_missing: 'Not installed', gs_status_unknown: 'Cannot compare', gs_status_error: 'Problem', gs_status_review: 'Mixed / modified',
   gs_install: 'Install', gs_update: 'Update', gs_redeploy: 'Deploy again', gs_deploy: 'Deploy', gs_rollback: 'Roll back to the previous version', gs_refresh: 'Refresh',
   gs_differ: 'The servers in this environment run different versions.',
   gs_title_install: 'Install {app} on {env}', gs_title_update: 'Update {app} on {env}', gs_title_deploy: 'Deploy {app} to {env}',
@@ -463,7 +473,7 @@ Object.assign(LANGS.hr, {
   gs_auto_done: '{n} okruženje(a) spremljeno.',
   gs_on_server: 'Na serveru', gs_on_branch: 'Najnovije na grani', gs_version: 'Verzija', gs_commit: 'Commit', gs_not_installed: 'Ovdje još nije instalirano',
   gs_no_target: 'Najnovija verzija na grani još nije poznata. U naprednom načinu otvorite Pregled i osvježite ciljeve.',
-  gs_status_ok: 'Ažurno', gs_status_update: 'Dostupna nadogradnja', gs_status_missing: 'Nije instalirano', gs_status_unknown: 'Nije moguće usporediti', gs_status_error: 'Problem',
+  gs_status_ok: 'Ažurno', gs_status_update: 'Dostupna nadogradnja', gs_status_missing: 'Nije instalirano', gs_status_unknown: 'Nije moguće usporediti', gs_status_error: 'Problem', gs_status_review: 'Miješano / izmijenjeno',
   gs_install: 'Instaliraj', gs_update: 'Nadogradi', gs_redeploy: 'Ponovno isporuči', gs_deploy: 'Isporuči', gs_rollback: 'Vrati prethodnu verziju', gs_refresh: 'Osvježi',
   gs_differ: 'Serveri u ovom okruženju imaju različite verzije.',
   gs_title_install: 'Instalacija {app} u {env}', gs_title_update: 'Nadogradnja {app} u {env}', gs_title_deploy: 'Isporuka {app} u {env}',
@@ -734,7 +744,8 @@ Object.assign(LANGS.hr, {
   mn_lock_release_confirm: 'Otpustiti lock korisnika {0} na {1}? Samo ako tamo ne radi nijedan deploy.', mn_lock_released: 'Lock otpušten',
 });
 (function () {
-  const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set()};
+  const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set(),
+    checkVMD: (() => { try { return localStorage.getItem('wrm_git_check_vmd') === '1'; } catch (_) { return false; } })()};
   const modeKey = () => 'wrm_git_mode:' + ((typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.username)) || '');
   G.mode = (() => { try { return ['simple', 'medium'].includes(localStorage.getItem(modeKey())) ? localStorage.getItem(modeKey()) : 'advanced'; } catch (_) { return 'advanced'; } })();
   const $ = id => document.getElementById(id);
@@ -819,6 +830,8 @@ Object.assign(LANGS.hr, {
 #git-ws .s-gone, #git-ws .s-unknown, #git-ws .s-extra, #git-ws .s-protected { background: var(--bg4); color: var(--text2); }
 #git-ws .g-env { font-size: 10px; color: var(--purple); margin-left: 4px; }
 #git-ws .g-mut { color: var(--text3); font-size: 11px; }
+#git-ws .g-opt { display: inline-flex; gap: 5px; align-items: center; font-size: 11.5px; color: var(--text2); white-space: nowrap; }
+#git-ws .g-opt input { width: auto; min-width: 0; }
 #git-ws .g-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; word-break: break-all; }
 #git-ws .g-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
 #git-ws .g-grid label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 3px; }
@@ -1106,10 +1119,53 @@ Object.assign(LANGS.hr, {
     return html;
   }
 
+  function detectedStateText(d) {
+    return d.state === 'mixed' ? t('git_detected_mixed') : d.state === 'modified' ? t('git_detected_modified')
+      : d.state === 'missing' ? t('git_detected_missing') : t('git_detected_unknown');
+  }
+
+  function codeVersion(i) {
+    const d = i.detected || {};
+    if (d.state === 'exact') return d.version || '—';
+    if (d.state) return detectedStateText(d);
+    return (i.version_md && i.version_md.version) || t('git_vmd_missing');
+  }
+
+  function vmdConflict(d, v) {
+    const vv = String((v && v.version) || '').trim();
+    if (!vv) return false;
+    if (!d || !d.state) return false;
+    if (d.state === 'unknown') return false;
+    if (d.state !== 'exact') return true;
+    if (vv.toLowerCase() === String(d.version || '').trim().toLowerCase()) return false;
+    const vc = String((v && v.commit) || '').split(/\s+/)[0].slice(0, 10);
+    const dc = String(d.commit || '').slice(0, 10);
+    return !(vc.length >= 7 && dc.length >= 7 && (vc.startsWith(dc) || dc.startsWith(vc)));
+  }
+
+  function vmdLine(i, compact) {
+    const v = i.version_md || {}, d = i.detected || {};
+    if (!v.version) return `<span class="g-mut">${esc(t('git_vmd_none'))}</span>`;
+    const conflict = vmdConflict(d, v);
+    const head = `<span class="g-mono">${esc(v.version)}</span>${v.commit ? ` <span class="g-mono g-mut">${esc(v.commit)}</span>` : ''}`;
+    if (compact) return `${head}${conflict ? ` <span class="g-st s-review">⚠</span>` : ''}`;
+    let note;
+    if (!d.state) note = t('git_vmd_ignored');
+    else if (d.state !== 'exact') note = tf('git_vmd_no_version', {s: detectedStateText(d)});
+    else if (conflict) note = tf('git_vmd_mismatch', {v: v.version, c: v.commit || '—', dv: codeVersion(i), dc: sh10(d.commit) || '—'});
+    else note = t('git_vmd_match');
+    return `${head}<div class="g-mut">${esc(note)}</div>`;
+  }
+
+  function vmdBox() {
+    return `<label class="g-opt" title="${esc(t('git_check_vmd_h'))}"><input type="checkbox" ${G.checkVMD ? 'checked' : ''} onchange="gitWorkspace.setCheckVMD(this.checked)"><span>${esc(t('git_check_vmd'))}</span></label>`;
+  }
+
   function instChip(i) {
-    const v = (i.version_md && i.version_md.version) || '';
+    const vline = G.checkVMD ? `<div class="g-mut">${esc(t('git_version_md'))}: ${vmdLine(i, true)}</div>` : '';
     return `<span class="g-inst${G.sel.has(i.id) ? ' sel' : ''}" onclick="gitWorkspace.details(${i.id})" title="${esc(i.path)}"><input type="checkbox" class="g-cb" ${G.sel.has(i.id) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="gitWorkspace.sel([${i.id}], this.checked)">${stateCell(i)}${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}
-      <div class="g-mut">${esc(t('git_version_md'))}: <span class="g-mono">${v ? esc(v) : esc(t('git_vmd_missing'))}</span>${i.behind ? ' · ' + esc(tf('git_behind', {n: i.behind})) : ''}</div>
+      <div class="g-mut">${esc(t('git_detected'))}: <span class="g-mono">${esc(codeVersion(i))}</span>${i.detected && i.detected.approx ? ` <span class="g-mut">(${esc(t('git_approx'))})</span>` : ''}${i.behind ? ' · ' + esc(tf('git_behind', {n: i.behind})) : ''}</div>
+      ${vline}
       <div class="g-ago" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${lastGood(i)}${esc(tf('git_checked_ago', {t: ago(i.checked_at)}))}</div></span>`;
   }
 
@@ -1150,6 +1206,7 @@ Object.assign(LANGS.hr, {
       <button class="btn-sec btn-sm" onclick="gitWorkspace.checkVisible()" ${can && !running && list.length ? '' : 'disabled'}>${esc(tf('git_check_visible', {n: list.length}))}</button>
       <span style="display:inline-flex;gap:4px;align-items:center"><button class="btn-sec btn-sm" onclick="gitWorkspace.checkStale()" ${can && !running && list.length ? '' : 'disabled'}>${esc(t('git_check_stale'))}</button>
       <select id="git-stale" onchange="gitWorkspace.setStale(this.value)">${stale.map(x => `<option value="${x}" ${J.stale === x ? 'selected' : ''}>${esc(t('git_stale_' + x))}</option>`).join('')}</select></span>
+      ${vmdBox()}
       ${n ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.clearSel()">${esc(t('git_clear_sel'))}</button>` : ''}
       ${running ? `<span class="g-sp"></span><span class="g-prog"><span class="g-spin"></span>${esc(j.phase === 'targets' ? t('git_job_targets') : tf('git_job_progress', {done: j.done || 0, total: j.total || 0}))}</span>
         <button class="btn-danger btn-sm" onclick="gitWorkspace.cancelCheck()">✕ ${esc(t('git_cancel_check'))}</button>` : ''}</div>`;
@@ -1170,6 +1227,11 @@ Object.assign(LANGS.hr, {
   function sel(ids, on) { ids.forEach(id => on ? G.sel.add(id) : G.sel.delete(id)); keepView(); }
   function clearSel() { G.sel.clear(); keepView(); }
   function setStale(v) { J.stale = v; }
+  function setCheckVMD(on) {
+    G.checkVMD = !!on;
+    try { localStorage.setItem('wrm_git_check_vmd', on ? '1' : '0'); } catch (_) {}
+    if (G.mode === 'simple') paintSimple(); else keepView();
+  }
 
   function mergeInstalls(list) {
     const by = new Map(list.map(i => [i.id, i]));
@@ -1357,10 +1419,10 @@ Object.assign(LANGS.hr, {
       <button class="btn-sm" onclick="gitWorkspace.install()" ${can('install') ? '' : `disabled title="${esc(t('git_no_permission'))}"`}>＋ ${esc(t('git_install'))}</button></div>
       ${checkBar(list)}<div class="g-bar g-actions">${actionButtons('')}</div></div>
       <div class="g-card g-scroll"><table><tr><th>${selBox(list.map(i => i.id), t('git_sel_all'))}</th><th>${esc(t('git_server'))}</th><th>${esc(t('git_service'))}</th><th>${esc(t('git_path'))}</th><th>${esc(t('git_env'))}</th><th>${esc(t('git_state'))}</th>
-      <th>${esc(t('git_version_md'))}</th><th>${esc(t('git_target'))}</th><th>${esc(t('git_checked'))}</th><th></th></tr>
+      <th>${esc(t('git_detected'))}</th><th>${esc(t('git_target'))}</th><th>${esc(t('git_checked'))}</th><th></th></tr>
       ${list.map(i => `<tr><td><input type="checkbox" class="git-isel g-cb" value="${i.id}" ${G.sel.has(i.id) ? 'checked' : ''} onchange="gitWorkspace.sel([${i.id}], this.checked)"></td><td>${esc(hn(i.conn_name, i.hostname))}${i.host ? `<div class="g-hostname g-mono">${esc(i.host)}</div>` : ''}</td><td><b>${esc(i.app)}</b>${i.restart_pending ? `<span class="g-pend" title="${esc(fmtTime(i.restart_pending))}">↻ ${esc(t('git_restart_pending'))}</span>` : ''}</td><td class="g-mono">${esc(i.path)}</td><td>${esc(i.env || '')}</td>
         <td>${stateCell(i)}${i.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: i.behind}))}</span>` : ''}${i.error ? `<div class="g-mut">${esc(i.error)}</div>` : ''}${i.state === 'error' && i.last_ok_state ? `<div class="g-mut">${lastGood(i).replace(/ · $/, '')}</div>` : ''}</td>
-        <td class="g-mono">${esc((i.version_md && i.version_md.version) || t('git_vmd_missing'))}</td><td class="g-mono">${esc(i.target || '—')}</td><td class="g-mut" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${esc(ago(i.checked_at))}</td>
+        <td class="g-mono">${esc(codeVersion(i))}${i.detected && i.detected.approx ? ` <span class="g-mut">(${esc(t('git_approx'))})</span>` : ''}${G.checkVMD ? `<div class="g-mut">${vmdLine(i, true)}</div>` : ''}</td><td class="g-mono">${esc(i.target || '—')}</td><td class="g-mut" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${esc(ago(i.checked_at))}</td>
         <td style="white-space:nowrap">${G.state.can_check ? `<button class="btn-sec btn-sm" title="${esc(t('git_check_cell'))}" ${jobRunning() ? 'disabled' : ''} onclick="gitWorkspace.checkIds([${i.id}])">↻</button> ` : ''}<button class="btn-sec btn-sm" onclick="gitWorkspace.details(${i.id})">${esc(t('git_details'))}</button> <button class="btn-danger btn-sm" onclick="gitWorkspace.forget(${i.id})">✕</button></td></tr>`).join('')}</table></div>
       <div class="g-card"><h3>${esc(t('git_add_install'))}</h3><div class="g-bar"><select id="gi-conn">${sshConns.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
       <select id="gi-app">${apps.map(a => `<option>${esc(a)}</option>`).join('')}</select><input id="gi-path" placeholder="/opt/service" style="min-width:200px"><input id="gi-env" placeholder="${esc(t('git_env'))}">
@@ -1492,14 +1554,18 @@ Object.assign(LANGS.hr, {
     const i = await r.json();
     G.detail = i;
     Object.assign(F, {id, list: null, err: '', loading: G.state.can_check, q: '', diff: null});
-    const v = i.version_md || {};
+    const d = i.detected || {}, v = i.version_md || {};
     modal(`<h3>${esc(hn(i.conn_name, i.hostname))} · ${esc(i.app)} · <span class="g-mono">${esc(i.path)}</span></h3>
       <div class="g-bar">${stBadge(i.state)}${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${Object.entries(i.counts || {}).map(([k, n]) => `${fsBadge(k)} ${n}`).join(' ')}
         <span class="g-mut" title="${esc(i.checked_at ? fmtTime(i.checked_at) : '')}">${lastGood(i)}${esc(tf('git_checked_ago', {t: ago(i.checked_at)}))}</span></div>
       <div class="g-bar g-actions">${actionButtons(i.id)}</div>
       ${i.error ? `<div class="hint-box bad">${esc(i.error)}</div>` : ''}${i.capped ? `<div class="hint-box warn">${esc(t('git_capped'))}</div>` : ''}
-      <div class="g-grid"><div><label>${esc(t('git_version_md'))}</label><span class="g-mono">${v.version ? esc(v.version) : esc(t('git_vmd_missing'))}</span>
-        ${v.ref || v.commit ? `<div class="g-mut">${[v.ref ? esc(v.ref) : '', v.commit ? `<span class="g-mono">${esc(v.commit)}</span>` : ''].filter(Boolean).join(' · ')}</div>` : ''}${v.updated ? `<div class="g-mut">${esc(v.updated)} ${esc(v.user || '')}${v.bundle ? ' · ' + esc(v.bundle) : ''}</div>` : ''}</div>
+      <div class="g-grid"><div><label>${esc(t('git_detected'))}</label><span class="g-mono">${esc(codeVersion(i))}</span>
+        ${d.commit ? `<div class="g-mut"><span class="g-mono">${esc(sh10(d.commit))}</span>${d.date ? ' · ' + esc(d.date) : ''}</div>` : ''}
+        ${d.approx ? `<div class="g-mut">≈ ${esc(t('git_approx'))}</div>` : ''}
+        ${d.state && d.state !== 'exact' ? `<div class="hint-box warn">${esc(detectedStateText(d))}</div>` : ''}</div>
+        ${G.checkVMD ? `<div><label>${esc(t('git_version_md'))}</label>${vmdLine(i, false)}
+          ${v.ref ? `<div class="g-mut">${esc(v.ref)}</div>` : ''}${v.updated ? `<div class="g-mut">${esc(v.updated)} ${esc(v.user || '')}${v.bundle ? ' · ' + esc(v.bundle) : ''}</div>` : ''}</div>` : ''}
         <div><label>${esc(t('git_target'))}</label><span class="g-mono">${esc(i.target || '—')}</span><div id="git-commits" class="g-commits"></div></div>
         <div><label>${esc(t('git_units'))}</label>${(i.units || []).length ? i.units.map(u => `<div class="g-mono">${esc(u.kind)}: ${esc(u.name)}</div>`).join('') : `<span class="g-mut">${esc(t('git_no_units'))}</span>`}</div></div>
       <h3 style="margin:14px 0 6px">${esc(t('git_files_all'))}</h3><div id="git-files">${filesHTML()}</div>
@@ -1584,12 +1650,13 @@ Object.assign(LANGS.hr, {
 
   async function loadCommits(i) {
     const el = $('git-commits');
-    const v = i.version_md || {};
-    if (!el || !i.target || !(v.commit || v.version)) return;
+    const d = i.detected || {}, v = i.version_md || {};
+    const allowVMD = G.checkVMD;
+    if (!el || !i.target || !(allowVMD || d.commit)) return;
     el.innerHTML = `<div class="g-mut">⏳ ${esc(t('git_commits_loading'))}</div>`;
     let c = null, err = '';
     try {
-      const r = await fetch(`/api/git/installs/${i.id}/commits`);
+      const r = await fetch(`/api/git/installs/${i.id}/commits${allowVMD ? '?md=1' : ''}`);
       if (r.ok) c = await r.json(); else err = await apiError(r);
     } catch (e) { err = e.message; }
     if (F.id !== i.id || !$('git-commits')) return;
@@ -3625,7 +3692,7 @@ Object.assign(LANGS.hr, {
   function simpleHTML() {
     const ov = E.ov;
     let html = `<div class="gs-wrap"><div class="hint-box">${esc(t('gs_intro'))}</div>
-      <div class="g-bar" style="margin-bottom:10px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleRefresh()">↻ ${esc(t('gs_refresh'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.showFunctionality()">${esc(t('git_tab_functionality'))}</button></div>`;
+      <div class="g-bar" style="margin-bottom:10px"><button class="btn-sec btn-sm" onclick="gitWorkspace.simpleRefresh()">↻ ${esc(t('gs_refresh'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.showFunctionality()">${esc(t('git_tab_functionality'))}</button>${vmdBox()}</div>`;
     if (!ov) return html + `<div class="hint-box">⏳</div></div>`;
     if (ov.services.length) html += simpleFilterHTML();
     const cards = ov.services.flatMap(s => s.envs.map(e => `<div class="g-card gs-card" id="${sKey(s.app, e.name)}">${simpleCardHTML(s.app, e)}</div>`));
@@ -3639,7 +3706,7 @@ Object.assign(LANGS.hr, {
     const envs = [...new Set(E.ov.services.flatMap(s => s.envs.map(e => e.name)))].sort();
     const servers = [...new Set(E.ov.services.flatMap(s => s.envs.flatMap(e => e.destinations.map(d => d.server))))].sort();
     const opt = (value, label, current) => `<option value="${esc(value)}" ${value === current ? 'selected' : ''}>${esc(label)}</option>`;
-    const statuses = ['ok', 'update', 'missing', 'unknown', 'error'];
+    const statuses = ['ok', 'update', 'review', 'missing', 'unknown', 'error'];
     return `<div class="g-bar gs-filters" aria-label="${esc(t('gs_intro'))}">
       <select aria-label="${esc(t('gs_filter_service'))}" onchange="gitWorkspace.simpleFilter('app',this.value)">${opt('', t('gs_filter_service'), f.app)}${services.map(x => opt(x, x, f.app)).join('')}</select>
       <select id="gs-server-filter" aria-label="${esc(t('gs_filter_server'))}" onchange="gitWorkspace.simpleFilter('server',this.value)">${opt('', t('gs_filter_server'), f.server)}${servers.map(x => opt(x, hn(x), f.server)).join('')}</select>
@@ -3667,7 +3734,7 @@ Object.assign(LANGS.hr, {
       const c = E.cells[envKey(svc.app, e.name)], d = c && c.data, tg = (d && d.target) || {};
       const dests = (d && d.dests) || e.destinations || [];
       const servers = dests.map(x => `${x.server || ''} ${hn(x.server || '', x.hostname || '')} ${x.path || ''}`);
-      const versions = dests.flatMap(x => [x.current && x.current.version, x.version_md, x.current && x.current.commit, x.commit_md]).filter(Boolean);
+      const versions = dests.flatMap(x => [x.current && x.current.version, x.version_md, (x.detected && x.detected.version), (x.detected && x.detected.commit), x.current && x.current.commit, x.commit_md]).filter(Boolean);
       const branches = [tg.branch, tg.ref_name, ...dests.map(x => (x.current && x.current.ref) || x.ref_md)].filter(Boolean);
       const status = c ? (c.error ? 'error' : d ? simpleStatus(d) : 'unknown') : 'unknown';
       const haystack = [svc.app, e.name, tg.version, tg.branch, tg.commit, ...servers, ...versions, ...branches].join(' ').toLowerCase();
@@ -3691,16 +3758,19 @@ Object.assign(LANGS.hr, {
     simpleRefresh();
   }
 
-  // up to date / update / missing / unknown / error, from the cell data of one environment
+  // up to date / update / mixed / missing / unknown / error, from the cell data of one environment
   function simpleStatus(d) {
     const tg = d.target || {};
     if (d.dests.some(x => x.error)) return 'error';
     if (d.dests.some(x => !x.exists)) return 'missing';
+    if (d.dests.some(x => x.detected && ['mixed', 'modified', 'missing'].includes(x.detected.state))) return 'review';
+    if (d.dests.some(x => x.detected && x.detected.state && x.detected.state !== 'exact')) return 'unknown';
     if (d.dests.some(x => x.behind > 0)) return 'update';
     if (d.dests.every(x => x.behind === 0)) return 'ok';
     if (!tg.commit || tg.error) return 'unknown';
-    const same = x => { const c = String((x.current && x.current.commit) || x.commit_md || ''); return c.length >= 7 && (tg.commit.startsWith(c.slice(0, 7)) || c.startsWith(tg.commit.slice(0, 7))); };
-    const known = d.dests.filter(x => (x.current && x.current.commit) || x.commit_md);
+    const commitOf = x => (x.detected && x.detected.state === 'exact') ? (x.detected.commit || '') : (x.current && x.current.commit) || x.commit_md || '';
+    const same = x => { const c = String(commitOf(x)); return c.length >= 7 && (tg.commit.startsWith(c.slice(0, 7)) || c.startsWith(tg.commit.slice(0, 7))); };
+    const known = d.dests.filter(x => commitOf(x));
     if (known.length !== d.dests.length) return 'unknown';
     return known.every(same) ? 'ok' : 'update';
   }
@@ -3712,13 +3782,24 @@ Object.assign(LANGS.hr, {
     if (!c) return head() + `<div class="g-mut"><span class="g-spin"></span> ${esc(tf('genv_n_dests', {n: e.destinations.length}))}</div>`;
     if (c.error) return head() + `<div class="hint-box bad">${esc(c.error)}</div>`;
     const d = c.data, tg = d.target || {}, st = simpleStatus(d);
-    const cls = {ok: 'ok', update: 'update', missing: 'review', unknown: 'unknown', error: 'error'}[st];
+    const cls = {ok: 'ok', update: 'update', review: 'review', missing: 'review', unknown: 'unknown', error: 'error'}[st];
     const badge = `<span class="g-st s-${cls} gs-big">${esc(t('gs_status_' + st))}</span>`;
     const dests = d.dests.map(x => {
-      const cur = x.current, ver = cur ? cur.version : x.version_md, commit = sh10(cur ? cur.commit : x.commit_md);
+      const cur = x.current, det = x.detected || {}, state = det.state;
+      let ver = '', commit = '', stateBadge = '';
+      if (state === 'exact') {
+        ver = (det.approx ? '≈ ' : '') + (det.version || '');
+        commit = sh10(det.commit);
+      } else if (state) {
+        stateBadge = `<span class="g-st s-${state === 'unknown' ? 'unknown' : 'review'}">${esc(detectedStateText(det))}</span>`;
+      } else {
+        ver = cur ? cur.version : x.version_md;
+        commit = sh10(cur ? cur.commit : x.commit_md);
+      }
+      const vmd = G.checkVMD ? `<div class="g-ago">VERSION.md: ${esc(x.version_md || t('git_vmd_missing'))}${vmdConflict(det, {version: x.version_md, commit: x.commit_md}) ? ' <span class="g-st s-review">⚠</span>' : ''}</div>` : '';
       return `<div style="margin-bottom:6px"><b>${esc(hn(x.server))}</b> <span class="g-mono g-mut">${esc(x.path)}</span>` + (x.error ? `<div><span class="g-st s-error">${esc(x.error)}</span></div>`
         : !x.exists ? `<div class="g-mut">${esc(t('gs_not_installed'))}</div>`
-        : `<div><span class="gs-ver g-mono">${esc(ver || '—')}</span> <span class="g-mono g-mut">${esc(commit)}</span></div>${cur || x.updated_md ? `<div class="g-ago">${esc((cur ? cur.by || '' : x.user_md || '') + ' · ' + fmtTime(cur ? cur.at : x.updated_md))}</div>` : ''}`)
+        : `<div>${stateBadge}${ver ? `<span class="gs-ver g-mono">${esc(ver)}</span> ` : ''}<span class="g-mono g-mut">${esc(commit)}</span></div>${cur || x.updated_md ? `<div class="g-ago">${esc((cur ? cur.by || '' : x.user_md || '') + ' · ' + fmtTime(cur ? cur.at : x.updated_md))}</div>` : ''}${vmd}${x.code_error ? `<div class="g-mut">⚠ ${esc(tf('git_code_error', {e: x.code_error}))}</div>` : ''}`)
         + (x.lock ? `<div class="g-q">🔒 ${esc(tf('genv_locked_by', {user: x.lock.user || '?', from: x.lock.from || '?'}))}</div>` : '') + '</div>';
     }).join('');
     const branch = tg.version || tg.commit
@@ -4008,7 +4089,7 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, setCheckVMD, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
