@@ -1,10 +1,28 @@
-## Web Remote Manager PRO v12.7.1 — Medium environment server lists
+## Web Remote Manager PRO v12.7.2 — Version detected from the code
 
-### Fixed
+### Added
+
+- **The deployed version is read from the code.** The Git workspace compares every tracked file on the server with the repository tree at the target and at the earlier tags instead of trusting `VERSION.md`. All files matching one version show that version; a consistent older version is named exactly from its commit tree; a mix of versions or a hand-edited file shows **Mixed / modified** with the per-file details.
+- **Optional `VERSION.md` check.** A checkbox next to *Check now* (off by default) also reads `VERSION.md` and warns when it disagrees with the code. With it on, the commits list follows `VERSION.md`; with it off, the list follows the detected commit.
+
+### Changed
+
+- The installs table, the details dialog and the Simple view show the detected version and commit. The per-environment behind/drift comparison uses the detected commit and falls back to the deploy record only when the code cannot be identified.
+- Deployments and updates still write `VERSION.md` for compatibility with the original tool. Older stored targets and offline bundles without version trees use the per-file history and are marked *approx.* when no full tree is available.
+
+### Upgrade
+
+Replace the executable/container and keep the database and encryption key. No database change. The first check after the upgrade may need a target refresh to load the older version trees; until then the per-file history is used.
+
+[Download v12.7.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.7.2) · [Git workspace: every file and partial checks](https://github.com/vedranius/web-browser-RDM-public/blob/v12.7.2/README.md#git-workspace-every-file-and-partial-checks)
+
+### Included from v12.7.1 — Medium environment server lists
+
+#### Fixed
 
 - **Medium: per-environment `servers` lists.** `environments.yaml` now accepts the original deploy tool's `servers: [name, ...]` key. A listed server must exist in `servers.yaml` exactly once; an empty list is refused; and a project target in that environment may only deploy to a listed server. Environments without the key keep every server, as before.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable/container and keep the database and encryption key. No database change. Existing `deploy-config` files keep working; add `servers` only where an environment should be limited.
 
@@ -24,7 +42,7 @@ Replace the executable/container and keep the database and encryption key. No da
 
 #### Changed
 
-- Projects with a build step are still deployed by the original tool until build locations arrive in v12.7.2.
+- Projects with a build step are still deployed by the original tool until build locations arrive in v12.7.3.
 
 #### Upgrade
 

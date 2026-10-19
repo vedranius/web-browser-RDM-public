@@ -1038,7 +1038,7 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 			if !needCheck() {
 				return
 			}
-			out, err := installCommits(userID, in)
+			out, err := installCommits(userID, in, r.URL.Query().Get("md") == "1")
 			if err != nil {
 				jsonError(w, err.Error(), 400)
 				return

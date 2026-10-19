@@ -29,6 +29,7 @@ const (
 
 type gitBundleFile struct {
 	Hash    string         `json:"hash"`
+	Oldest  int            `json:"oldest,omitempty"`
 	History []gitHistEntry `json:"history"`
 }
 
@@ -47,6 +48,7 @@ type gitBundleApp struct {
 	InstallHint []string                 `json:"install_hint"`
 	Exclude     []string                 `json:"exclude"`
 	Files       map[string]gitBundleFile `json:"files"`
+	Versions    []gitTargetVersion       `json:"versions,omitempty"`
 }
 
 type gitBundleManifest struct {
@@ -252,7 +254,7 @@ func bundleTarget(src gitSource, m *gitBundleManifest, name string) (gitTarget, 
 	t := gitTarget{App: name, SourceID: src.ID, Source: "bundle:" + m.BundleID, Project: a.Project, Branch: a.Branch, RefKind: a.RefKind,
 		Version: a.Version, Commit: a.Commit, CommitDate: a.CommitDate, Subdir: a.Subdir, Kind: a.Kind,
 		Protected: nonNil(a.Protected), Fingerprint: nonNil(a.Fingerprint), InstallHint: nonNil(a.InstallHint), Exclude: nonNil(a.Exclude), Include: []string{},
-		Files: map[string]gitTargetFile{}, Warnings: []string{}, ComputedAt: nowStamp()}
+		Files: map[string]gitTargetFile{}, Versions: a.Versions, Warnings: []string{}, ComputedAt: nowStamp()}
 	if a.LatestTag != nil {
 		t.LatestTag = *a.LatestTag
 	}
@@ -261,9 +263,9 @@ func bundleTarget(src gitSource, m *gitBundleManifest, name string) (gitTarget, 
 		t.Ref = "tag:" + a.Version
 	}
 	for rel, f := range a.Files {
-		tf := gitTargetFile{Hash: f.Hash, History: f.History}
+		tf := gitTargetFile{Hash: f.Hash, Oldest: f.Oldest, History: f.History}
 		if len(tf.History) == 0 {
-			tf.History = []gitHistEntry{{Commit: a.Commit, Date: a.CommitDate, Hash: f.Hash}}
+			tf.History = []gitHistEntry{{Commit: a.Commit, CommitFull: a.Commit, Version: 0, Date: a.CommitDate, Hash: f.Hash}}
 		}
 		if !globHit(rel, a.Protected) {
 			if b, have := lookupBlob(src.ID, bundleBlobID(f.Hash)); have {
@@ -290,7 +292,7 @@ func nonNil(s []string) []string {
 func bundleAppFromTarget(t gitTarget) gitBundleApp {
 	a := gitBundleApp{Project: t.Project, Branch: t.Branch, RefKind: t.RefKind, Version: t.Version, Commit: t.Commit, CommitDate: t.CommitDate,
 		Subdir: t.Subdir, Kind: t.Kind, Protected: nonNil(t.Protected), Fingerprint: nonNil(t.Fingerprint), InstallHint: nonNil(t.InstallHint),
-		Exclude: nonNil(t.Exclude), Files: map[string]gitBundleFile{}}
+		Exclude: nonNil(t.Exclude), Files: map[string]gitBundleFile{}, Versions: t.Versions}
 	if t.LatestTag != "" {
 		lt := t.LatestTag
 		a.LatestTag = &lt
@@ -301,7 +303,7 @@ func bundleAppFromTarget(t gitTarget) gitBundleApp {
 			e.Hash2 = ""
 			h = append(h, e)
 		}
-		a.Files[rel] = gitBundleFile{Hash: f.Hash, History: h}
+		a.Files[rel] = gitBundleFile{Hash: f.Hash, Oldest: f.Oldest, History: h}
 	}
 	return a
 }

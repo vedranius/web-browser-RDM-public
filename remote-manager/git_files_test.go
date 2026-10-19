@@ -195,15 +195,26 @@ func TestGitInstallFilesAndDiff(t *testing.T) {
 				t.Fatal("command injection")
 			}
 
-			// commits between VERSION.md's commit (v1.9) and the target (v1.10)
+			// commits between the code and the target: the code on the server matches
+			// v1.10, so nothing is between it and the target
 			var cm struct {
 				Count   int             `json:"count"`
 				Commits []gitCommitInfo `json:"commits"`
 				From    string          `json:"from"`
 			}
-			if code := u.jsonDo("GET", fmt.Sprintf("/api/git/installs/%d/commits", in.ID), nil, &cm); code != 200 || cm.Count != 1 || len(cm.Commits) != 1 ||
-				cm.Commits[0].SHA != commitSHA("c2") || cm.Commits[0].Title != "change 2026-09-10" || cm.From != commitSHA("c1")[:10] {
+			if code := u.jsonDo("GET", fmt.Sprintf("/api/git/installs/%d/commits", in.ID), nil, &cm); code != 200 || cm.Count != 0 || len(cm.Commits) != 0 ||
+				cm.From != commitSHA("c2") {
 				t.Fatalf("commits: %d %+v", code, cm)
+			}
+			// with md=1 VERSION.md (v1.9) is used: one commit to the target
+			cm = struct {
+				Count   int             `json:"count"`
+				Commits []gitCommitInfo `json:"commits"`
+				From    string          `json:"from"`
+			}{}
+			if code := u.jsonDo("GET", fmt.Sprintf("/api/git/installs/%d/commits?md=1", in.ID), nil, &cm); code != 200 || cm.Count != 1 || len(cm.Commits) != 1 ||
+				cm.Commits[0].SHA != commitSHA("c2") || cm.Commits[0].Title != "change 2026-09-10" || cm.From != commitSHA("c1")[:10] {
+				t.Fatalf("commits md: %d %+v", code, cm)
 			}
 			// another user sees nothing
 			other := newTestUser(t, srv, "git-files-other-"+kind, false)

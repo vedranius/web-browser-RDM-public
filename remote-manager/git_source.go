@@ -755,11 +755,13 @@ func (p *gitProvider) ensureBlobs(sourceID int, project string, blobs []string) 
 // ─── targets ─────────────────────────────────────────
 
 type gitHistEntry struct {
-	Commit string `json:"commit"`
-	Date   string `json:"date"`
-	Hash   string `json:"hash"`
-	Tag    string `json:"tag,omitempty"`
-	Hash2  string `json:"hash2,omitempty"` // WRM only (not in bundles)
+	Commit     string `json:"commit"`
+	CommitFull string `json:"commit_full,omitempty"`
+	Version    int    `json:"version,omitempty"` // index in gitTarget.Versions (0 = target)
+	Date       string `json:"date"`
+	Hash       string `json:"hash"`
+	Tag        string `json:"tag,omitempty"`
+	Hash2      string `json:"hash2,omitempty"` // WRM only (not in bundles)
 }
 
 type gitTargetFile struct {
@@ -767,7 +769,16 @@ type gitTargetFile struct {
 	Hash2   string         `json:"hash2,omitempty"`
 	Blob    string         `json:"blob,omitempty"`
 	Size    int64          `json:"size,omitempty"`
+	Oldest  int            `json:"oldest,omitempty"` // oldest version in Versions that still has this file
 	History []gitHistEntry `json:"history"`
+}
+
+// gitTargetVersion is one known version of a service: the target and the earlier tags.
+type gitTargetVersion struct {
+	Commit     string `json:"commit"`
+	CommitFull string `json:"commit_full,omitempty"`
+	Date       string `json:"date"`
+	Tag        string `json:"tag,omitempty"`
 }
 
 // gitTarget is what an installation is compared with: one service at one ref.
@@ -792,6 +803,7 @@ type gitTarget struct {
 	Exclude     []string                 `json:"exclude"`
 	Include     []string                 `json:"include"`
 	Files       map[string]gitTargetFile `json:"files"`
+	Versions    []gitTargetVersion       `json:"versions,omitempty"` // target first, then earlier tags
 	Warnings    []string                 `json:"warnings"`
 	Error       string                   `json:"error,omitempty"`
 	ComputedAt  string                   `json:"computed_at"`
@@ -997,6 +1009,7 @@ func computeTarget(p *gitProvider, src gitSource, cat *gitCatalog, a gitCatalogA
 			break
 		}
 		trees[i] = selectFiles(tr, a)
+		t.Versions = append(t.Versions, gitTargetVersion{Commit: short10(v.commit), CommitFull: v.commit, Date: v.date, Tag: v.tag})
 		for _, b := range trees[i] {
 			blobs = append(blobs, b)
 		}
@@ -1010,8 +1023,18 @@ func computeTarget(p *gitProvider, src gitSource, cat *gitCatalog, a gitCatalogA
 	}
 	for rel, blob := range trees[0] {
 		bi := info[blob]
-		f := gitTargetFile{Hash: bi.Hash, Hash2: bi.Hash2, Blob: blob, Size: bi.Size}
-		seen := map[string]bool{}
+		oldest := 0
+		for i := range versions {
+			if trees[i] == nil {
+				break
+			}
+			if _, ok := trees[i][rel]; !ok {
+				break
+			}
+			oldest = i
+		}
+		f := gitTargetFile{Hash: bi.Hash, Hash2: bi.Hash2, Blob: blob, Size: bi.Size, Oldest: oldest}
+		lastHash := ""
 		for i, v := range versions {
 			if trees[i] == nil {
 				break
@@ -1021,11 +1044,11 @@ func computeTarget(p *gitProvider, src gitSource, cat *gitCatalog, a gitCatalogA
 				continue
 			}
 			h := info[b]
-			if seen[h.Hash] {
+			if i > 0 && h.Hash == lastHash {
 				continue
 			}
-			seen[h.Hash] = true
-			e := gitHistEntry{Commit: short10(v.commit), Date: v.date, Hash: h.Hash, Tag: v.tag}
+			lastHash = h.Hash
+			e := gitHistEntry{Commit: short10(v.commit), CommitFull: v.commit, Version: i, Date: v.date, Hash: h.Hash, Tag: v.tag}
 			if h.Hash2 != h.Hash {
 				e.Hash2 = h.Hash2
 			}
