@@ -262,6 +262,16 @@ else echo "E	sha256sum, shasum or openssl is needed on the server"; exit 0; fi
 
 // scanOn hashes the files of installations on one server.
 func scanOn(cl *ssh.Client, dirs []string) (map[string]*gitScanResult, error) {
+	return scanOnMode(cl, dirs, true)
+}
+
+// scanFilesOn hashes files and reads VERSION.md, without looking for units (used by the
+// environment overview, where only the deployed version is needed).
+func scanFilesOn(cl *ssh.Client, dirs []string) (map[string]*gitScanResult, error) {
+	return scanOnMode(cl, dirs, false)
+}
+
+func scanOnMode(cl *ssh.Client, dirs []string, withUnits bool) (map[string]*gitScanResult, error) {
 	var sb strings.Builder
 	sb.WriteString(gitHashPrelude)
 	sysd := make([]string, len(gitSystemdDirs))
@@ -282,14 +292,16 @@ func scanOn(cl *ssh.Client, dirs []string) (map[string]*gitScanResult, error) {
 		sb.WriteString(`  if [ -r "$f" ]; then h=$(tr -d '\r' < "$f" | $S | cut -c1-64); z=$(wc -c < "$f"); z=${z##* }; else h=-; z=0; fi` + "\n")
 		sb.WriteString(`  printf 'F\t%s\t%s\t%s\n' "$h" "$z" "$rel"` + "\n")
 		sb.WriteString("done\n")
-		fmt.Fprintf(&sb, "if [ -f %s/VERSION.md ]; then head -n 40 %s/VERSION.md | sed 's/^/V\t/'; fi\n", q, q)
-		fmt.Fprintf(&sb, "for u in %s; do [ -d \"$u\" ] && grep -lE -- %s \"$u\"/*.service 2>/dev/null; done | sort -u | while IFS= read -r f; do printf 'U\\tsystemd\\t%%s\\n' \"${f##*/}\"; done\n", strings.Join(sysd, " "), re)
-		fmt.Fprintf(&sb, `for u in %s; do [ -d "$u" ] && grep -lE -- %s "$u"/*.conf "$u"/*.ini 2>/dev/null; done | sort -u | while IFS= read -r f; do
+		fmt.Fprintf(&sb, "if [ -f %s/VERSION.md ]; then head -n 40 %s/VERSION.md | sed 's/^/V\\t/'; fi\n", q, q)
+		if withUnits {
+			fmt.Fprintf(&sb, "for u in %s; do [ -d \"$u\" ] && grep -lE -- %s \"$u\"/*.service 2>/dev/null; done | sort -u | while IFS= read -r f; do printf 'U\\tsystemd\\t%%s\\n' \"${f##*/}\"; done\n", strings.Join(sysd, " "), re)
+			fmt.Fprintf(&sb, `for u in %s; do [ -d "$u" ] && grep -lE -- %s "$u"/*.conf "$u"/*.ini 2>/dev/null; done | sort -u | while IFS= read -r f; do
 awk -v dir=%s 'function emit() {if (name != "" && hit) printf "U\tsupervisor\t%%s\n", name}
 /^[[:space:]]*\[/ {emit(); name=""; hit=0; if ($0 ~ /^[[:space:]]*\[program:/) {name=$0; sub(/^[[:space:]]*\[program:/,"",name); sub(/\].*$/,"",name)}}
 {p=index($0,dir); c=substr($0,p+length(dir),1); if(p && (c=="" || c ~ /[\/ ":;=]/ || c==sprintf("%%c",39))) hit=1}
 END {emit()}' "$f"; done
 `, strings.Join(sup, " "), re, shellQuote(d))
+		}
 		sb.WriteString("fi\n")
 	}
 	sb.WriteString("echo WRM_DONE\n")
@@ -438,10 +450,198 @@ func trackedState(f gitTargetFile, h string) (string, int, string, string) {
 			if tag == "" {
 				tag = e.Commit
 			}
-			return "old", i, tag, e.Date
+			behind := e.Version
+			if behind == 0 {
+				behind = i
+			}
+			return "old", behind, tag, e.Date
 		}
 	}
 	return "modified", 0, "", ""
+}
+
+// gitDetected is the version concluded from the code on the server, not from VERSION.md.
+type gitDetected struct {
+	State   string `json:"state"` // exact | mixed | modified | missing | unknown
+	Version string `json:"version,omitempty"`
+	Commit  string `json:"commit,omitempty"`
+	Date    string `json:"date,omitempty"`
+	Approx  bool   `json:"approx,omitempty"` // from per-file history, without full version trees
+}
+
+func versionCommit(t gitTarget, v gitTargetVersion, i int) string {
+	if v.CommitFull != "" {
+		return v.CommitFull
+	}
+	if v.Commit != "" {
+		return v.Commit
+	}
+	if i == 0 {
+		if t.CommitFull != "" {
+			return t.CommitFull
+		}
+		return t.Commit
+	}
+	return ""
+}
+
+func versionName(t gitTarget, v gitTargetVersion, i int) string {
+	if i == 0 && t.Version != "" {
+		return t.Version
+	}
+	if v.Tag != "" {
+		return v.Tag
+	}
+	if v.Commit != "" {
+		return v.Commit
+	}
+	return t.Version
+}
+
+// fileHashAtVersion returns the hash of a target file at one known version.
+func fileHashAtVersion(f gitTargetFile, i int) (string, string, bool) {
+	if i > f.Oldest {
+		return "", "", false
+	}
+	hash, hash2 := f.Hash, f.Hash2
+	for _, e := range f.History {
+		if e.Version > i {
+			break
+		}
+		hash, hash2 = e.Hash, e.Hash2
+	}
+	return hash, hash2, true
+}
+
+// historyAtVersion finds the history entry of a file at one version index. Older stored
+// targets have no Version values, so it falls back to the position in the list.
+func historyAtVersion(f gitTargetFile, v int) (gitHistEntry, bool) {
+	for _, e := range f.History {
+		if e.Version == v {
+			return e, true
+		}
+	}
+	if v < len(f.History) {
+		return f.History[v], true
+	}
+	return gitHistEntry{}, false
+}
+
+// fileStateKey is a stable signature of the compared code, used to spot drift between
+// servers even when no single version matches.
+func fileStateKey(files []gitFileState) string {
+	parts := make([]string, 0, len(files))
+	for _, f := range files {
+		if f.State == "extra" || f.State == "protected" {
+			continue
+		}
+		parts = append(parts, f.Path+"\x00"+f.State+"\x00"+f.Tag+"\x00"+f.ServerHash)
+	}
+	sort.Strings(parts)
+	return strings.Join(parts, "\x1f")
+}
+
+// installMatchesVersion reports whether every comparable tracked file on the server is
+// exactly as it was in one known version.
+func installMatchesVersion(t gitTarget, server map[string]string, i int) bool {
+	comparable := 0
+	for rel, f := range t.Files {
+		if globHit(rel, t.Protected) {
+			continue
+		}
+		comparable++
+		h, ok := server[rel]
+		if !ok || h == "-" {
+			return false
+		}
+		hash, hash2, ok := fileHashAtVersion(f, i)
+		if !ok || !matchHash(h, hash, hash2) {
+			return false
+		}
+	}
+	return comparable > 0
+}
+
+// detectInstallVersion determines the deployed version from the code itself. The target's
+// version trees are complete (computeTarget fetched them), so no extra API calls are needed.
+func detectInstallVersion(t gitTarget, server map[string]string, files []gitFileState) gitDetected {
+	if len(t.Files) == 0 {
+		return gitDetected{State: "unknown"}
+	}
+	if len(t.Versions) > 0 {
+		for i, v := range t.Versions {
+			if installMatchesVersion(t, server, i) {
+				return gitDetected{State: "exact", Version: versionName(t, v, i), Commit: versionCommit(t, v, i), Date: v.Date}
+			}
+		}
+	}
+	// No single version matches (or the target has no version metadata yet): use the
+	// per-file comparison for a clear state and a best-effort older version.
+	var allOK, modified, missing bool = true, false, false
+	tags := map[string]bool{}
+	tracked := 0
+	for _, f := range files {
+		switch f.State {
+		case "ok":
+			tracked++
+		case "old":
+			tracked++
+			allOK = false
+			if f.Tag != "" {
+				tags[f.Tag] = true
+			}
+		case "modified":
+			tracked++
+			allOK = false
+			modified = true
+		case "missing":
+			tracked++
+			allOK = false
+			missing = true
+		}
+	}
+	switch {
+	case tracked == 0:
+		return gitDetected{State: "unknown"}
+	case modified:
+		return gitDetected{State: "modified"}
+	case missing:
+		return gitDetected{State: "missing"}
+	case allOK:
+		commit := t.CommitFull
+		if commit == "" {
+			commit = t.Commit
+		}
+		return gitDetected{State: "exact", Version: t.Version, Commit: commit, Date: t.CommitDate}
+	case len(tags) == 1:
+		// Old targets and bundles without version trees: all changed files point to one
+		// tag, so that is the most likely deployed version.
+		tag := ""
+		for x := range tags {
+			tag = x
+		}
+		commit, date := "", ""
+		for _, f := range files {
+			if f.State != "old" || f.Tag != tag {
+				continue
+			}
+			for _, e := range t.Files[f.Path].History {
+				if e.Tag == tag || e.Commit == tag {
+					commit, date = e.CommitFull, e.Date
+					if commit == "" {
+						commit = e.Commit
+					}
+					break
+				}
+			}
+			if commit != "" {
+				break
+			}
+		}
+		return gitDetected{State: "exact", Version: tag, Commit: commit, Date: date, Approx: true}
+	default:
+		return gitDetected{State: "mixed"}
+	}
 }
 
 // compareInstall compares the files on a server with a target.
@@ -523,8 +723,9 @@ type gitInstall struct {
 	State         string            `json:"state"` // ok | update | review | error | gone | unknown
 	Counts        map[string]int    `json:"counts"`
 	Behind        int               `json:"behind"`
-	Target        string            `json:"target"` // target version compared with
+	Target        string            `json:"target"`
 	VersionMD     gitVersionInfo    `json:"version_md"`
+	Detected      gitDetected       `json:"detected"`
 	Units         []gitUnit         `json:"units"`
 	Error         string            `json:"error,omitempty"`
 	Capped        bool              `json:"capped,omitempty"`
@@ -543,6 +744,7 @@ type gitInstallData struct {
 	Behind        int               `json:"behind"`
 	Target        string            `json:"target"`
 	VersionMD     gitVersionInfo    `json:"version_md"`
+	Detected      gitDetected       `json:"detected"`
 	Units         []gitUnit         `json:"units"`
 	Error         string            `json:"error,omitempty"`
 	Capped        bool              `json:"capped,omitempty"`
@@ -571,7 +773,7 @@ func loadGitInstalls(userID int, withFiles bool, where string, args ...interface
 		in.Tags = parseTags(tags)
 		var d gitInstallData
 		jsonUnmarshalString(data, &d)
-		in.Counts, in.Behind, in.Target, in.VersionMD, in.Units, in.Error, in.Capped = d.Counts, d.Behind, d.Target, d.VersionMD, d.Units, d.Error, d.Capped
+		in.Counts, in.Behind, in.Target, in.VersionMD, in.Detected, in.Units, in.Error, in.Capped = d.Counts, d.Behind, d.Target, d.VersionMD, d.Detected, d.Units, d.Error, d.Capped
 		in.Functionality = d.Functionality
 		if in.Counts == nil {
 			in.Counts = map[string]int{}
@@ -761,6 +963,7 @@ func evalInstall(s *gitScanResult, t gitTarget, ok bool, ignore []string) (strin
 			for rel, h := range s.Files {
 				d.Files = append(d.Files, gitFileState{Path: rel, State: "extra", ServerHash: h, Size: s.Sizes[rel]})
 			}
+			d.Detected = gitDetected{State: "unknown"}
 		} else {
 			d.Target = t.Version
 			d.Files, d.Counts, state = compareInstall(t, s.Files, ignore)
@@ -773,6 +976,10 @@ func evalInstall(s *gitScanResult, t gitTarget, ok bool, ignore []string) (strin
 				if f.State == "old" && f.Behind > d.Behind {
 					d.Behind = f.Behind
 				}
+			}
+			d.Detected = detectInstallVersion(t, s.Files, d.Files)
+			if s.Capped {
+				d.Detected = gitDetected{State: "unknown"}
 			}
 		}
 	}

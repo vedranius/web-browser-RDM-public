@@ -727,14 +727,20 @@ func TestGitEnvDoctorAndOverview(t *testing.T) {
 	if code := e.u.jsonDo("GET", "/api/git/env/overview", nil, &ov); code != 200 || len(ov.Services) != 1 || ov.Envs[0] != "test" {
 		t.Fatalf("overview: %d %+v", code, ov)
 	}
-	// drift: the destinations run different versions
+	// drift: the destinations run different versions. It is detected from the code, not VERSION.md.
+	for _, d := range e.dirs {
+		writeFile(t, d+"/lib/util.py", utilV1)
+		writeFile(t, d+"/config.ini", "[main]\nhost=app-01.example.com\n")
+	}
+	writeFile(t, e.dirs[0]+"/run.py", runV110)
+	writeFile(t, e.dirs[1]+"/run.py", runV19)
 	writeFile(t, e.dirs[1]+"/VERSION.md", "# demo-api - v1.9\n\n- **Verzija**:     v1.9\n- **Commit**:      "+commitSHA("c1")[:10]+" (2026-09-01)\n")
 	writeFile(t, e.dirs[0]+"/VERSION.md", "# demo-api - v1.10\n\n- **Verzija**:     v1.10\n- **Commit**:      "+commitSHA("c2")[:10]+" (2026-09-10)\n")
 	var cell struct {
 		Drift bool             `json:"drift"`
 		Dests []gitEnvCellDest `json:"dests"`
 	}
-	if code := e.u.jsonDo("GET", "/api/git/env/cell?"+url.Values{"app": {"demo-api"}, "env": {"test"}}.Encode(), nil, &cell); code != 200 || !cell.Drift || cell.Dests[1].VersionM != "v1.9" || cell.Dests[1].Behind != 1 {
+	if code := e.u.jsonDo("GET", "/api/git/env/cell?"+url.Values{"app": {"demo-api"}, "env": {"test"}}.Encode(), nil, &cell); code != 200 || !cell.Drift || cell.Dests[1].VersionM != "v1.9" || cell.Dests[1].Detected.Version != "v1.9" || cell.Dests[1].Behind != 1 {
 		t.Fatalf("drift: %d %+v", code, cell)
 	}
 }

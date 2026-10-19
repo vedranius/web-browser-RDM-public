@@ -1,3 +1,13 @@
+## [12.7.2] - 2026-10-19
+
+### Added
+- **The deployed version is read from the code, not from `VERSION.md`.** The Git workspace compares every tracked file on the server with the repository tree at the target and at the earlier tags. All files matching one version show that version; a consistent older version is named exactly from its commit tree; a mix of versions or a hand-edited file shows **Mixed / modified** with the per-file details. Deployments and updates still write `VERSION.md` for compatibility with the original tool.
+- **Optional `VERSION.md` check.** A checkbox next to *Check now* (off by default) also reads `VERSION.md` and warns when it disagrees with the code. With it on, the commits list follows `VERSION.md`; with it off, the list follows the detected commit.
+
+### Changed
+- The installs table, the details dialog and the Simple view show the detected version and commit. The per-environment behind/drift comparison uses the detected commit and falls back to the deploy record only when the code cannot be identified.
+- Older stored targets and offline bundles without version trees keep working through the per-file history fallback; they are marked *approx.* when no full tree is available.
+
 ## [12.7.1] - 2026-10-19
 
 ### Fixed
@@ -20,7 +30,7 @@
 
 ### Changed
 - A comparison's result carries a `revision` (over the commit, the exclusions and every server's plan) and `deployable`; a deployment names the revision it was reviewed at and is refused when the plan changed. A plan is deployed at most once.
-- Projects with a build step are still deployed by the original tool; build locations (WRM host, a Linux build server over SSH, none) come in v12.7.2.
+- Projects with a build step are still deployed by the original tool; build locations (WRM host, a Linux build server over SSH, none) come in v12.7.3.
 - A repository path that is absolute or has empty, `.` or `..` components stops the comparison.
 - Symbolic links created over SFTP are checked and made with `ln -s` when the SFTP server changed their target.
 

@@ -712,8 +712,8 @@ func (p *gitProvider) compareCommits(project, from, to string) (int, []gitCommit
 	return total, out, nil
 }
 
-// installCommits lists the commits between the server's version (VERSION.md) and the target.
-func installCommits(userID int, in gitInstall) (map[string]interface{}, error) {
+// installCommits lists the commits between the server's code version and the target.
+func installCommits(userID int, in gitInstall, allowVMD bool) (map[string]interface{}, error) {
 	t, ok := loadGitTarget(userID, in.App)
 	if !ok || t.Error != "" || t.Commit == "" {
 		return nil, fmt.Errorf("no target for this service yet (refresh the targets)")
@@ -722,14 +722,26 @@ func installCommits(userID int, in gitInstall) (map[string]interface{}, error) {
 	if to == "" {
 		to = t.Commit
 	}
-	from := strings.TrimSpace(in.VersionMD.Commit)
-	fromKind := "commit"
-	if from == "" {
-		from, fromKind = strings.TrimSpace(in.VersionMD.Version), "version"
+	from, fromKind := "", "commit"
+	if allowVMD {
+		from = strings.TrimSpace(in.VersionMD.Commit)
+		fromKind = "commit"
+		if from == "" {
+			from, fromKind = strings.TrimSpace(in.VersionMD.Version), "version"
+		}
+	}
+	if from == "" && in.Detected.State == "exact" {
+		from = strings.TrimSpace(in.Detected.Commit)
+		if from == "" {
+			from, fromKind = strings.TrimSpace(in.Detected.Version), "version"
+		}
 	}
 	res := map[string]interface{}{"from": from, "from_kind": fromKind, "to": t.Version, "to_commit": t.Commit, "count": 0, "commits": []gitCommitInfo{}}
-	if from == "" || strings.ContainsAny(from, " \t/") && fromKind == "version" {
-		return nil, fmt.Errorf("the server's version is unknown (no commit in VERSION.md)")
+	if from == "" {
+		return nil, fmt.Errorf("the server code does not match a single version (mixed or modified); compare the files")
+	}
+	if fromKind == "version" && strings.ContainsAny(from, " \t/") {
+		return nil, fmt.Errorf("the server's version is unknown")
 	}
 	if strings.HasPrefix(to, from) || from == t.Version {
 		return res, nil
