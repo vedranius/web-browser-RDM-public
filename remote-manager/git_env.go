@@ -1223,6 +1223,9 @@ type gitEnvCellDest struct {
 	Current  *gitEnvRecord `json:"current,omitempty"`
 	VersionM string        `json:"version_md,omitempty"`
 	CommitMD string        `json:"commit_md,omitempty"`
+	Detected gitDetected   `json:"detected"`
+	CodeErr  string        `json:"code_error,omitempty"`
+	CodeKey  string        `json:"-"`
 	RefMD    string        `json:"ref_md,omitempty"`     // Grana/ref of VERSION.md
 	UserMD   string        `json:"user_md,omitempty"`    // who wrote VERSION.md
 	UpdateMD string        `json:"updated_md,omitempty"` // and when
@@ -1239,6 +1242,7 @@ func envCell(userID int, app, env string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	out := make([]gitEnvCellDest, len(e.Destinations))
+	t, haveT := loadGitTarget(userID, app)
 	forEachDest(userID, a, e, func(dc envDestCtx, err error) {
 		cd := gitEnvCellDest{Server: dc.d.Server, Path: dc.d.Path, Behind: -1}
 		if err == nil {
@@ -1265,6 +1269,23 @@ func envCell(userID int, app, env string) (map[string]interface{}, error) {
 				cd.VersionM, cd.CommitMD = v.Version, strings.TrimSpace(strings.Split(v.Commit, " ")[0])
 				cd.RefMD, cd.UserMD, cd.UpdateMD = v.Ref, v.User, v.Updated
 				cd.Lock = parseLock(o)
+				if cd.Exists && haveT && t.Error == "" && len(t.Files) > 0 {
+					if scans, serr := scanFilesOn(dc.cl, []string{dc.d.Path}); serr != nil {
+						cd.CodeErr = serr.Error()
+						cd.Detected = gitDetected{State: "unknown"}
+					} else if s := scans[dc.d.Path]; s != nil && !s.Missing {
+						files, _, _ := compareInstall(t, s.Files, cat.IgnoreDirs)
+						cd.Detected = detectInstallVersion(t, s.Files, files)
+						cd.CodeKey = fileStateKey(files)
+						if s.Capped {
+							cd.Detected = gitDetected{State: "unknown"}
+						}
+					} else {
+						cd.Detected = gitDetected{State: "unknown"}
+					}
+				} else if cd.Exists {
+					cd.Detected = gitDetected{State: "unknown"}
+				}
 			}
 		}
 		if err != nil {
@@ -1273,7 +1294,6 @@ func envCell(userID int, app, env string) (map[string]interface{}, error) {
 		out[dc.idx] = cd
 	})
 	// commits behind the service's target (one compare per distinct commit)
-	t, haveT := loadGitTarget(userID, app)
 	var p *gitProvider
 	if haveT && t.Error == "" && t.CommitFull != "" {
 		if src, found := loadGitSource(userID, t.SourceID); found && src.Kind != "bundle" {
@@ -1285,22 +1305,33 @@ func envCell(userID int, app, env string) (map[string]interface{}, error) {
 	drift := false
 	for i := range out {
 		cd := &out[i]
-		commit := cd.CommitMD
-		if cd.Current != nil {
-			commit = cd.Current.Commit
-		}
-		key := commit + "|" + cd.VersionM
-		if cd.Current != nil {
-			key = cd.Current.Commit + "|" + cd.Current.Version
+		commit, version, key := "", "", ""
+		switch {
+		case cd.Detected.State == "exact":
+			commit, version = cd.Detected.Commit, cd.Detected.Version
+			key = "exact|" + version + "|" + commit
+		case cd.Detected.State != "":
+			key = cd.Detected.State + "|" + cd.CodeKey
+		default:
+			// no code check (no target yet, or an old check): use the deploy record
+			version, commit = cd.VersionM, cd.CommitMD
+			if cd.Current != nil {
+				version, commit = cd.Current.Version, cd.Current.Commit
+			}
+			key = "meta|" + version + "|" + commit
 		}
 		if cd.Error == "" && cd.Exists {
 			seen[key] = true
 		}
-		if commit == "" || p == nil {
+		if commit == "" {
 			continue
 		}
-		if strings.HasPrefix(t.CommitFull, commit) {
+		if commit != "" && ((t.CommitFull != "" && (strings.HasPrefix(t.CommitFull, commit) || strings.HasPrefix(commit, t.CommitFull))) ||
+			(t.Commit != "" && (strings.HasPrefix(t.Commit, commit) || strings.HasPrefix(commit, t.Commit)))) {
 			cd.Behind = 0
+			continue
+		}
+		if p == nil {
 			continue
 		}
 		n, ok := behind[commit]

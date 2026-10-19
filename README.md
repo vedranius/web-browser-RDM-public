@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.7.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.7.2** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.7.2
+
+**The version is read from the code.** The Git workspace no longer trusts `VERSION.md` to say what is deployed. It compares every tracked file on the server with the repository tree at the target and at the earlier tags: all files matching one version show that version, a consistent older version is named exactly from its commit tree, and a mix or a hand-edited file shows **Mixed / modified** with the per-file details. A new checkbox next to *Check now* (off by default) also checks `VERSION.md` and warns when it disagrees. See [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks).
 
 ## What's new in v12.7.1
 
@@ -21,7 +25,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 ## What's new in v12.7.0
 
-**Medium deploys natively.** Switch a Medium project to the **WRM native** engine and WRM deploys it itself, from your WRM Git source to every server of the environment through your saved WRM connections, without Docker and without the original tool. Each server gets a lock, a backup of everything that changes, a SHA-256 check of every uploaded file, `post_deploy` and a history entry, all in the original tool's format, so both engines can take turns on the same servers and roll back each other's deployments. A **dry run** compares again under the lock and changes nothing; changes can be **left out** of a deployment; **History and rollback** shows what runs where, rolls back the last deployment and releases a lock someone left behind. Projects with a build step stay on the original tool until v12.7.2. See [Medium native engine](#medium-native-engine).
+**Medium deploys natively.** Switch a Medium project to the **WRM native** engine and WRM deploys it itself, from your WRM Git source to every server of the environment through your saved WRM connections, without Docker and without the original tool. Each server gets a lock, a backup of everything that changes, a SHA-256 check of every uploaded file, `post_deploy` and a history entry, all in the original tool's format, so both engines can take turns on the same servers and roll back each other's deployments. A **dry run** compares again under the lock and changes nothing; changes can be **left out** of a deployment; **History and rollback** shows what runs where, rolls back the last deployment and releases a lock someone left behind. Projects with a build step stay on the original tool until v12.7.3. See [Medium native engine](#medium-native-engine).
 
 ## What's new in v12.6.26
 
@@ -152,7 +156,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -259,21 +263,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.7.1-linux-amd64
-   ./wrm-pro-v12.7.1-linux-amd64
+   chmod +x wrm-pro-v12.7.2-linux-amd64
+   ./wrm-pro-v12.7.2-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.7.1-windows-amd64.exe
+   .\wrm-pro-v12.7.2-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.7.1-linux-amd64.AppImage
-   ./wrm-pro-v12.7.1-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.7.1-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.7.2-linux-amd64.AppImage
+   ./wrm-pro-v12.7.2-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.7.2-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -282,8 +286,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.7.1/wrm-pro-v12.7.1-android-arm64
-   chmod +x wrm-pro-v12.7.1-android-arm64 && ./wrm-pro-v12.7.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.7.2/wrm-pro-v12.7.2-android-arm64
+   chmod +x wrm-pro-v12.7.2-android-arm64 && ./wrm-pro-v12.7.2-android-arm64
    ```
 
    **Docker**
@@ -307,6 +311,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.7.1
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. The Git check reads the version from the code by default; `VERSION.md` is only compared when the new checkbox is on. Deployments and updates still write `VERSION.md`. The first check after the upgrade may need a target refresh to load the older version trees; until then the per-file history is used.
 
 ## Upgrading from v12.7.0
 
@@ -1233,8 +1241,9 @@ WRM tells you about events outside the browser too. **Administrators** set up th
 - **Refs:** only tags whose commit is on the chosen branch count (*branch-aware*); versions sort numerically (`v1.10` after `v1.9`); `tag:latest` without a matching tag uses the branch head, and a missing branch falls back to `fallback_branches` or the default branch — both with a warning. *Ref* in the overview: as in the catalog, one branch for all, or each project's default branch.
 - **Discovery** (*Installations → Discover*, and with every check): one SSH call per server walks the server roots (`/opt`, `/srv`, …) to depth 3 and finds installations by their fingerprint files. Paths that look like copies or backups are skipped (segments with `bkp`, `backup`, `bak`, `old`, `orig`, `prev`, `copy`, `kopija`, `stari`, `recyclebin`, `trash`, `snapshot`, policy `git_backup_words`, plus the catalog's `ignore_dirs`). The environment comes from the path: `/srv/scripts/test/App` → *test*, `/opt/App_prod` → *prod*. Installations can also be added by hand.
 - **Comparison:** the server hashes its files with `tr -d '\r' < f | sha256sum` (or `shasum` / `openssl`); WRM compares them with the target (SHA-256 with CRLF → LF) and with the earlier versions of every file (the earlier tags of the branch, *History depth* in *Settings*). Files are **ok**, **old** (*n behind*, with the tag it matches), **modified**, **missing**, **extra** (only on the server) or **protected**; an installation is **review** when a file is modified, **needs update** when a file is old or missing, otherwise **up to date**. `VERSION.md` and `updates.jsonl` of deploy tools, `.deploy-bak`, `.git`, `__pycache__` are left out.
-- **Details:** the version recorded in `VERSION.md` (`**Verzija**:` line, otherwise the `# <service> - <version>` title; *missing* when there is none), the systemd / supervisor units whose unit file mentions the directory, the file states and a coloured **diff** of a file (server → target).
-- **Overview:** the target of every service (version, latest tag, source, warnings) and a **servers × services matrix** with the state, environment, `VERSION.md` version and *n behind* of each installation, filtered by state, environment, folder, tag and text.
+- **Version from the code:** the deployed version is concluded from the compared files, not from `VERSION.md`. When every tracked file matches one known version, that version is shown exactly; an older consistent version is looked up in its Git commit tree; a mix or a hand-edited file shows **Mixed / modified** with the per-file states and is never guessed as one version. The checkbox next to *Check now* (off by default) also compares `VERSION.md` and warns when it disagrees; deployments and updates still write it for compatibility.
+- **Details:** the detected version, commit and date, the optional `VERSION.md` version (when the checkbox is on), the systemd / supervisor units whose unit file mentions the directory, the file states and a coloured **diff** of a file (server → target).
+- **Overview:** the target of every service (version, latest tag, source, warnings) and a **servers × services matrix** with the state, environment, detected version and *n behind* of each installation, filtered by state, environment, folder, tag and text.
 - **Periodic checks** (*Settings → Periodic checks*): while WRM runs, the chosen servers are checked every `git_check_interval_minutes` (60). Checks never change anything. They notify (one digest per round) about **a new version** of a service, **drift** (an installation that turns to *review*) and **unreachable servers** — subscribe to the *Git* events in *Settings → Notifications*.
 - Everything is per user (sources, catalog, installations). Policies `git_enabled` (hides the workspace), `git_checks` (who may run checks: everyone), `git_check_interval_minutes`, `git_backup_words`. Checks, bundle imports / exports, source and catalog changes and viewed diffs are audited (`git.*`).
 
@@ -1320,7 +1329,7 @@ The Medium view has a collapsible **WRM engine** panel. It compares a branch or 
 - **History and rollback:** per server the current version, the lock (owner and age), the recent history with counts, and which deployment a rollback undoes and what it restores (chosen from the history as the original tool chooses). *Dry rollback* shows what would happen; *Roll back* restores files, links and directories with their modes from the backup and records a `ROLLBACK` entry (`rollback-<id>/` keeps what it replaced). A lock older than the longest a deployment may take (from `medium_command_timeout` and `medium_transfer_timeout`, at least 30 minutes) can be released with *Release lock* if its owner did not change.
 - **Progress:** one deployment or rollback per user runs in the background with a live log (commands and their output), the result per destination and *Cancel*, which stops before the next destination starts changing. Each run is a row in the Medium activity log. Stopping a user or a lockdown cancels their runs.
 - Deploying, rolling back and releasing a lock need the `medium_native` policy and, with step-up on, a fresh confirmation; all are audited (`git.medium_native_deploy`, `git.medium_native_rollback`, `git.medium_native_lock_released`, `git.medium_native_cancelled`, and `git.medium_native_<kind>_done` with the outcome per destination). Comparisons and dry runs need `git_medium` like the rest of Medium and are audited (`git.medium_native_preview`).
-- Projects with a build step can only be compared with the original tool in this version; build locations come in v12.7.2.
+- Projects with a build step can only be compared with the original tool in this version; build locations come in v12.7.3.
 
 ### Git workspace: every file and partial checks
 
@@ -1332,7 +1341,7 @@ The Medium view has a collapsible **WRM engine** panel. It compares a branch or 
 - **Filters:** *All*, *Differing*, *Tracked only*, *Not tracked*, and a search.
 - **Open** shows any file (view only, up to about 1.9 MB; binary files show their size and hash), from the server or from Git. **Diff** compares server ↔ Git for **any file in the repository** — also files the catalog excludes, labelled *informational, not updated* — unified or side by side; line endings are ignored like in the hashing. Binary and large files are compared by hash.
 - Files the catalog does not track are **informational**: they never change the state of an installation (*review* / *needs update* / *up to date* still come from the tracked files only).
-- **Commits behind:** when `VERSION.md` names a commit (or a version), the details show how many commits the target is ahead and lists them (GitLab / GitHub compare API).
+- **Commits behind:** the details use the detected commit; with the `VERSION.md` checkbox on they use the commit (or version) in `VERSION.md` instead. They show how many commits the target is ahead and list them (GitLab / GitHub compare API). When the code is mixed or modified, no single commit is known, so the list is not shown.
 - Server files are read over SSH with quoted paths and POSIX tools only, never cached by WRM. Opening a file is audited (`git.file_viewed`). The other repository files come from the cached tree of the target commit; their contents are fetched and cached like target files (at most 200 unknown files per listing).
 
 **Partial and incremental checks.** In the overview and on the *Installations* tab:
@@ -1405,9 +1414,9 @@ The header of the Git workspace has a **Simple | Advanced** switch. The choice i
 
 **Simple** is a single view for people who only want to know what is deployed and to update it. For every environment of every service it shows one card. **No manual setup is needed:** once a Git source is connected and the checker has found your services on the servers, the environments appear automatically (see *Automatic environments* below); environments defined in Advanced → *Environments* are shown as before and win over detected ones:
 
-- **On the server**: the version, commit and who deployed it, per destination server (or *Not installed here yet*).
+- **On the server**: the detected version and commit, the optional `VERSION.md` (with the checkbox next to *Check now*) and who deployed it, per destination server (or *Not installed here yet*).
 - **Latest on the branch**: version, branch, commit and date of the service target.
-- A status: **Up to date**, **Update available**, **Not installed**, **Cannot compare** or **Problem**.
+- A status: **Up to date**, **Update available**, **Not installed**, **Mixed / modified**, **Cannot compare** or **Problem**.
 - Combined filters for service, hostname, environment and status, plus searches for branch, version or commit; each card shows when its server state was compared.
 - Big actions: **Install** (not installed yet), **Update** (a newer version exists), **Deploy again** (already current) and **Roll back to the previous version**.
 
@@ -3135,7 +3144,7 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 |---|---|
 | Medium native deploy: *locked by … since …* | Another deployment (WRM or the original tool) holds the destination. Wait for it; a lock left behind by a crash can be released in *History and rollback* once it is older than the time shown (from `medium_command_timeout` and `medium_transfer_timeout`) |
 | Medium native deploy: *the plan changed since you reviewed it* / *plan changed* | The server or the deploy-config changed after the comparison. Compare again, review the new plan and deploy that |
-| Medium native deploy: *Deploy* is disabled | Switch the project to *WRM native* (Engine), check the `medium_native` policy and `allowed_refs`; projects with a build step stay on the original tool until v12.7.2 |
+| Medium native deploy: *Deploy* is disabled | Switch the project to *WRM native* (Engine), check the `medium_native` policy and `allowed_refs`; projects with a build step stay on the original tool until v12.7.3 |
 | Directory sign-in: *Sign-in refused: your directory account is not assigned to WRM* | No rule matches the token. Use *Test sign-in* with that person's account to see the claims; assign the app role or group in the directory, or add a rule. Entra sends `groups` only when the app registration's token configuration adds them, and replaces them by an overage note for people in many groups: map app roles instead |
 | Directory sign-in: the provider says the redirect address does not match | Register exactly the address shown in *Admin panel → Directory sign-in*; behind a reverse proxy set the provider's redirect address (or `ai_mcp_public_url`) to the public address |
 | Directory sign-in: *the ID token has expired* / *issued in the future* | The WRM host's clock is wrong; sync it (NTP) |

@@ -731,9 +731,11 @@ func versionRows(t gitTarget, plan []planFile, written map[string]bool) []versio
 			}
 			v, d := label(f.History[0])
 			rows = append(rows, versionRow{rel, v, d})
-		case p.State == "old" && p.Behind < len(f.History):
-			v, d := label(f.History[p.Behind])
-			rows = append(rows, versionRow{rel, v, d})
+		case p.State == "old":
+			if e, ok := historyAtVersion(f, p.Behind); ok {
+				v, d := label(e)
+				rows = append(rows, versionRow{rel, v, d})
+			}
 		case p.State == "missing":
 		default:
 			rows = append(rows, versionRow{rel, "(local)", "-"})
