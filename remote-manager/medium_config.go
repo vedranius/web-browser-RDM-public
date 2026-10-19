@@ -22,7 +22,7 @@ import (
 //
 //	deploy-config/
 //	├── servers.yaml        servers: {name: {host, user, port, key}}
-//	├── environments.yaml   environments: {name: {confirm, allowed_refs}} (order = UI order)
+//	├── environments.yaml   environments: {name: {confirm, allowed_refs, servers}} (order = UI order)
 //	└── projects/<name>.yaml  name, repo, source_dir, build, ignore, targets
 //
 // A project environment (a key under targets) is "server:/path", a list of destinations
@@ -57,6 +57,7 @@ type mdEnvironment struct {
 	Name        string   `json:"name"`
 	Confirm     bool     `json:"confirm"`
 	AllowedRefs []string `json:"allowed_refs"` // nil = every branch and tag
+	Servers     []string `json:"servers"`      // nil = every server
 }
 
 type mdDestination struct {
@@ -793,7 +794,7 @@ func mdLoadConfig(dir string) (*mdConfig, error) {
 	if cfg.Servers, err = mdLoadServers(dir); err != nil {
 		return nil, err
 	}
-	if cfg.Envs, err = mdLoadEnvironments(dir); err != nil {
+	if cfg.Envs, err = mdLoadEnvironments(dir, cfg.Servers); err != nil {
 		return nil, err
 	}
 	var placed []mdPlaced
@@ -906,11 +907,11 @@ func mdNestedExample(dir string) string {
 	return names[0]
 }
 
-func mdLoadEnvironments(dir string) ([]*mdEnvironment, error) {
+func mdLoadEnvironments(dir string, servers []*mdServer) ([]*mdEnvironment, error) {
 	rel := mdEnvsFile
 	file := filepath.Join(dir, rel)
 	if st, err := os.Stat(file); err != nil || st.IsDir() {
-		return nil, mdErr("%s Environments (their UI order and the confirm and allowed_refs rules) are listed in %s.", mdMissingFile(dir, rel), rel)
+		return nil, mdErr("%s Environments (their UI order and the confirm, allowed_refs and servers rules) are listed in %s.", mdMissingFile(dir, rel), rel)
 	}
 	data, err := mdReadMapping(file, rel)
 	if err != nil {
@@ -919,7 +920,7 @@ func mdLoadEnvironments(dir string) ([]*mdEnvironment, error) {
 	if v, ok := data.get("environments"); ok && v.kind == "seq" {
 		return nil, mdErr("%s: environments: must be a mapping (environment name: rules), not a list; an environment without rules is written as 'dev: {}'.", rel)
 	}
-	_, entries, err := mdTopLevel(file, rel, "environments", "environment name: {confirm, allowed_refs}")
+	_, entries, err := mdTopLevel(file, rel, "environments", "environment name: {confirm, allowed_refs, servers}")
 	if err != nil {
 		return nil, err
 	}
@@ -937,18 +938,23 @@ func mdLoadEnvironments(dir string) ([]*mdEnvironment, error) {
 			raw = &mdYAML{kind: "map"}
 		}
 		if raw.kind != "map" {
-			return nil, mdErr("%s: %s: must be a mapping with the rules confirm and allowed_refs, or {} for an environment without rules (got: %s).", rel, key, raw.repr())
+			return nil, mdErr("%s: %s: must be a mapping with the rules confirm, allowed_refs and servers, or {} for an environment without rules (got: %s).", rel, key, raw.repr())
 		}
 		if err := mdCheckFilledName(raw, name, rel, key); err != nil {
 			return nil, err
 		}
 		f := mdFields{rel, key, raw}
-		if err := f.unknown("name", "confirm", "allowed_refs"); err != nil {
+		if err := f.unknown("name", "confirm", "allowed_refs", "servers"); err != nil {
 			return nil, err
 		}
 		e := &mdEnvironment{Name: name}
 		if e.Confirm, _, err = f.boolean("confirm"); err != nil {
 			return nil, err
+		}
+		if v, ok := raw.get("servers"); ok && v.kind != "null" {
+			if e.Servers, _, err = f.strList("servers"); err != nil {
+				return nil, err
+			}
 		}
 		if v, ok := raw.get("allowed_refs"); ok && v.kind != "null" {
 			if e.AllowedRefs, _, err = f.strList("allowed_refs"); err != nil {
@@ -958,9 +964,48 @@ func mdLoadEnvironments(dir string) ([]*mdEnvironment, error) {
 		if err := mdCheckAllowedRefs(e.AllowedRefs, rel, key+".allowed_refs"); err != nil {
 			return nil, err
 		}
+		if err := mdCheckEnvironmentServers(e.Servers, servers, rel, key+".servers"); err != nil {
+			return nil, err
+		}
 		out = append(out, e)
 	}
 	return out, nil
+}
+
+// mdCheckEnvironmentServers mirrors the deploy-tool's environment restriction: no servers key
+// (nil) means every configured server; a listed server must exist exactly once, and an empty
+// list is rejected because it would block every deploy.
+func mdCheckEnvironmentServers(names []string, servers []*mdServer, rel, key string) error {
+	if names == nil {
+		return nil
+	}
+	if len(names) == 0 {
+		return mdErr("%s: %s: an empty list would forbid every server; leave the key out to allow all servers.", rel, key)
+	}
+	known := make(map[string]bool, len(servers))
+	knownNames := make([]string, 0, len(servers))
+	for _, s := range servers {
+		known[s.Name] = true
+		knownNames = append(knownNames, s.Name)
+	}
+	if len(knownNames) == 0 {
+		knownNames = []string{"-"}
+	}
+	seen := make(map[string]bool, len(names))
+	for i, name := range names {
+		itemKey := fmt.Sprintf("%s[%d]", key, i)
+		if err := mdCheckName(name, rel, itemKey, "server"); err != nil {
+			return err
+		}
+		if !known[name] {
+			return mdErr("%s: %s: server %s is not defined in %s (there are: %s).", rel, itemKey, pyRepr(name), mdServersFile, strings.Join(knownNames, ", "))
+		}
+		if seen[name] {
+			return mdErr("%s: %s: server %s is listed more than once.", rel, itemKey, pyRepr(name))
+		}
+		seen[name] = true
+	}
+	return nil
 }
 
 // mdPlaced is a destination with its place in the configuration, for the global checks.
@@ -1198,6 +1243,18 @@ func mdLoadTarget(raw *mdYAML, env *mdEnvironment, cfg *mdConfig, rel, key strin
 		d, err := mdLoadDestination(item, cfg, rel, itemKeys[i])
 		if err != nil {
 			return nil, err
+		}
+		if env.Servers != nil {
+			allowed := false
+			for _, name := range env.Servers {
+				if name == d.Server {
+					allowed = true
+					break
+				}
+			}
+			if !allowed {
+				return nil, mdErr("%s: %s: server %s is not allowed in environment %s; allowed servers: %s.", rel, itemKeys[i], pyRepr(d.Server), pyRepr(env.Name), strings.Join(env.Servers, ", "))
+			}
 		}
 		t.Destinations = append(t.Destinations, d)
 	}
