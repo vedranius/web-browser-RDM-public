@@ -147,6 +147,7 @@ func deleteGitUserData(userID int) {
 	db.Exec(`DELETE FROM git_feeds WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_pipelines WHERE user_id=?`, userID)
 	db.Exec(`DELETE FROM git_env_exclusions WHERE user_id=?`, userID)
+	db.Exec(`DELETE FROM medium_build_settings WHERE user_id=?`, userID)
 }
 
 func gitAllowed() bool { return settingBool("git_enabled") }

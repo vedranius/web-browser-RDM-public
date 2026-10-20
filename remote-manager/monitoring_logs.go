@@ -108,7 +108,7 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 	}
 	cfg := loadMonitorConfig(c.ID)
 	cfg.Roots = monitorAvailableRoots(c)
-	ctx, cancel := context.WithTimeout(r.Context(), 45*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 	defer cancel()
 	fs, closeFS, err := openMonitorSFTP(ctx, c)
 	if err != nil {
@@ -117,7 +117,7 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 	}
 	defer closeFS()
 	if rest == "logs" {
-		rootCtx, stopRoots := context.WithTimeout(ctx, 10*time.Second)
+		rootCtx, stopRoots := context.WithTimeout(ctx, 20*time.Second)
 		roots, rootWarnings := monitorDiscoverRoots(rootCtx, fs, c)
 		stopRoots()
 		cfg.Roots = roots
@@ -136,6 +136,12 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 				warnings = append(warnings, x.Path+": "+err.Error())
 				continue
 			}
+			// A discovered service log folder is already scoped to logs, so accept
+			// the usual log names plus .txt (the FTP mirror, for example, writes
+			// daily .txt files). Broad roots such as /var/log keep the name filter.
+			includeTxt := oneOf(strings.ToLower(path.Base(x.Path)), "log", "logs") &&
+				(x.Service != "" || x.Operator != "") &&
+				strings.TrimRight(x.Path, "/") != "/var/log"
 			queue := []dir{{real, 0, root}}
 			for len(queue) > 0 && len(files) < 2000 && visited < 10000 {
 				d := queue[0]
@@ -157,7 +163,11 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 						break
 					}
 					p := path.Join(d.name, f.Name())
+					lower := strings.ToLower(f.Name())
 					if f.IsDir() {
+						if strings.HasPrefix(f.Name(), ".") || oneOf(lower, "archive", "backups", "backup", "old", "node_modules", "venv", "__pycache__", "temp", "tmp") {
+							continue
+						}
 						if d.depth < 8 {
 							queue = append(queue, dir{p, d.depth + 1, root})
 						} else {
@@ -165,7 +175,13 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 						}
 						continue
 					}
-					if !f.Mode().IsRegular() || !monitorLogName(f.Name()) || aiReadDenied(p) != "" {
+					if !f.Mode().IsRegular() || aiReadDenied(p) != "" {
+						continue
+					}
+					if !monitorLogName(f.Name()) && !(includeTxt && strings.HasSuffix(strings.ToLower(f.Name()), ".txt")) {
+						continue
+					}
+					if oneOf(strings.ToLower(path.Ext(f.Name())), ".gz", ".bz2", ".xz", ".zip", ".zst") {
 						continue
 					}
 					if seenFiles[p] {

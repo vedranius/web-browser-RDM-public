@@ -163,7 +163,9 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 	}
 	cat, _ := loadGitWorkspace(c.UserID)
 	bases := append([]string{"/home/skripte", "/srv", "/opt"}, cat.ServerRoots...)
-	// Bounded two-level service/operator discovery, never a recursive /home scan.
+	// Bounded operator/service discovery, never a recursive /home scan. On the
+	// deployment layout /home/skripte/<operator>/<service>/log(s) the first level
+	// is the operator and the second level is the service.
 	type candidate struct {
 		p, service, operator string
 		depth                int
@@ -200,18 +202,19 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 				continue
 			}
 			n := e.Name()
-			if strings.HasPrefix(n, ".") || oneOf(n, "node_modules", "venv", "__pycache__", "backups") {
+			lower := strings.ToLower(n)
+			if strings.HasPrefix(n, ".") || strings.HasSuffix(lower, ".egg-info") || oneOf(lower, "node_modules", "venv", "__pycache__", "backups", "build", "dist", "archive", "workingdir", "temp", "privkey") {
 				continue
 			}
 			p := path.Join(d.p, n)
-			if oneOf(strings.ToLower(n), "log", "logs") {
+			if oneOf(lower, "log", "logs") {
 				add(p, d.service, d.operator)
 			} else if d.depth < 2 {
 				service, operator := d.service, d.operator
 				if d.depth == 0 {
-					service = n
-				} else {
 					operator = n
+				} else {
+					service = n
 				}
 				queue = append(queue, candidate{p, service, operator, d.depth + 1})
 			}
