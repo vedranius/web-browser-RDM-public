@@ -51,6 +51,8 @@ var (
 		if cli == "" {
 			return nil, errGuacdNoDocker
 		}
+		// #nosec G204 -- cli comes from mediumDockerCLI()'s fixed local paths and every
+		// argument is built by WRM (container/image/port names), never by a remote user.
 		return exec.CommandContext(ctx, cli, args...).CombinedOutput()
 	}
 )
