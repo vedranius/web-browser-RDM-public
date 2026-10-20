@@ -15,6 +15,7 @@ type fakeGuacdDocker struct {
 	container bool
 	running   bool
 	ready     bool
+	serverOS  string
 }
 
 func (f *fakeGuacdDocker) command(_ context.Context, args ...string) ([]byte, error) {
@@ -23,6 +24,9 @@ func (f *fakeGuacdDocker) command(_ context.Context, args ...string) ([]byte, er
 	f.calls = append(f.calls, append([]string(nil), args...))
 	switch args[0] {
 	case "version":
+		if f.serverOS != "" {
+			return []byte(f.serverOS + "\n"), nil
+		}
 		return []byte("linux\n"), nil
 	case "inspect":
 		if !f.container {
@@ -156,6 +160,20 @@ func TestGuacdAutoStartsContainer(t *testing.T) {
 	}
 }
 
+func TestGuacdWindowsContainersIsRejected(t *testing.T) {
+	f := stubGuacd(t)
+	f.serverOS = "windows"
+	if err := guacdEnsure(context.Background(), false); !errors.Is(err, errGuacdWindowsContainers) {
+		t.Fatalf("guacdEnsure = %v; want errGuacdWindowsContainers", err)
+	}
+	if f.called("run") != nil {
+		t.Fatal("docker run was called with Windows containers")
+	}
+	if got := guacdFailureMessage(errGuacdWindowsContainers); !strings.Contains(got, "Linux containers") {
+		t.Fatalf("failure message = %q", got)
+	}
+}
+
 func TestGuacdStartsExistingContainer(t *testing.T) {
 	f := stubGuacd(t)
 	f.container, f.running = true, false
@@ -205,6 +223,7 @@ func TestGuacdFailureMessages(t *testing.T) {
 	}{
 		{errGuacdNoDocker, "Install Docker Desktop"},
 		{errGuacdDockerDown, "not running"},
+		{errGuacdWindowsContainers, "Linux containers"},
 		{context.DeadlineExceeded, "starting guacd automatically"},
 	}
 	for _, c := range cases {

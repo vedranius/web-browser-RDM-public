@@ -3,7 +3,7 @@
 ### Added
 - **Remote desktop works out of the box on Windows and macOS.** When guacd is not reachable and `guacd_address` is local, WRM starts the official `guacamole/guacd:1.5.5` container in Docker Desktop (name `wrm-guacd`, published on `127.0.0.1:4822` only, restart policy `unless-stopped`) and waits for it. The first RDP/VNC/Telnet click can start it; later starts happen when WRM starts. A custom (non-local) guacd is never touched.
 - The new policy **Start guacd automatically** (`guacd_auto`, default on) controls this. Admin → Overview shows the state and has a **Start guacd** button; `-setup-guacd` sets the container up once from the command line.
-- If Docker Desktop is missing or stopped, the desktop window says exactly what to do instead of only showing the old Linux instructions.
+- If Docker Desktop is missing, stopped or set to Windows containers, the desktop window says exactly what to do (including switching Docker Desktop to Linux containers) instead of only showing the old Linux instructions.
 - **Every textual file opens in Preview, with the right formatting.** Text is now detected from the content instead of a short extension allowlist, so scripts, configuration files and files without an extension open as text too. UTF-8, UTF-16 (with a BOM or a detected byte order) and single-byte text are decoded; binary files still get the clear 415 answer. A bundled PrismJS 1.29.0 highlights XML/SMIL/SVG, JSON, YAML, TOML, INI, shell, Python, JavaScript/TypeScript, Go, SQL, CSS/SCSS/LESS, Markdown, PowerShell, batch, Dockerfile, Makefile, C/C++/C#/Java/Rust/Ruby/PHP and similar files, offline and without a CDN. The 256 KiB text limit and the escaped-text safety policy are unchanged.
 
 ### Fixed
