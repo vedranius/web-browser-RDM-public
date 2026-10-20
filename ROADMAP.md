@@ -1,6 +1,6 @@
 # Roadmap
 
-Accepted work through **v12.7.3** is delivered in [CHANGELOG.md](CHANGELOG.md).
+Accepted work through **v12.7.4** is delivered in [CHANGELOG.md](CHANGELOG.md).
 
 ## Security and enterprise identity (accepted, versions before v12.7.0)
 

@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.7.3"
+var AppVersion = "v12.7.4"
 
 const sessionCookieName = "wrm_session"
 
@@ -395,6 +395,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/recordings/", apiRecordingsHandler)
 	mux.HandleFunc("/api/admin/known-hosts", apiAdminKnownHostsHandler)
 	mux.HandleFunc("/api/admin/known-hosts/", apiAdminKnownHostsHandler)
+	mux.HandleFunc("/api/admin/guacd", apiAdminGuacdHandler)
 	mux.HandleFunc("/api/admin/status", apiAdminStatusHandler)
 	mux.HandleFunc("/api/update", apiUpdateHandler)
 	mux.HandleFunc("/api/update/", apiUpdateHandler)
@@ -441,6 +442,7 @@ func main() {
 	mcpTokenFile := flag.String("token-file", "", "with -mcp-stdio: read the token from `FILE`")
 	mcpCA := flag.String("ca-file", "", "with -mcp-stdio: trust the CA or self-signed certificate in `FILE` (PEM) for the WRM server")
 	setupDocker := flag.Bool("setup-docker", false, "Linux, as root: install Docker Engine for Medium, let the WRM account (-service-user, default: the WRM service's user) use it, restart the WRM service and exit")
+	setupGuacd := flag.Bool("setup-guacd", false, "Windows/macOS: start the guacd container for remote desktop in Docker Desktop and exit")
 	gitlabRelay := flag.Bool("gitlab-relay", false, "run a client GitLab relay on this computer, using the exact -url relay job URL from WRM")
 	gitlabURL := flag.String("gitlab-url", "", "the selected GitLab origin for the client relay")
 	relayKeyFile := flag.String("relay-key-file", "", "read the short-lived WRM relay job key from FILE")
@@ -489,6 +491,9 @@ func main() {
 	currentServiceName = *svcName
 	if *setupDocker {
 		os.Exit(runSetupDocker(*svcUser, *svcName, os.Stdout))
+	}
+	if *setupGuacd {
+		os.Exit(runSetupGuacd(os.Stdout))
 	}
 	opts := serviceOptions{Name: *svcName, Scope: *svcScope, User: *svcUser}
 	if *installSvc && os.Getenv("WRM_APPIMAGE") == "1" {
@@ -572,6 +577,7 @@ func serve(stop <-chan struct{}) int {
 	go runAIJanitor()
 	go runMCPJanitor()
 	go opencodeCleanup()
+	go guacdAutoStartLoop()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {

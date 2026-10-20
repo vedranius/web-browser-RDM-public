@@ -13,7 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.7.3** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.7.4** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.7.4
+
+**RDP works on Windows without preparing guacd by hand.** When guacd does not answer and its address is local (`127.0.0.1:4822`), WRM starts the official `guacamole/guacd:1.5.5` container in Docker Desktop, publishes it on loopback only, and keeps it running with Docker (`wrm-guacd`, `unless-stopped`). The first RDP/VNC/Telnet connection can start it; later starts happen with WRM. *Admin → Overview* shows the state and has **Start guacd**, `-setup-guacd` does the same from the command line, and the desktop window explains when Docker Desktop is missing or stopped. A custom guacd on another machine is never touched. Linux keeps using its system guacd or the `docker-compose.yml` service.
+
+**Every text file previews with its formatting.** Preview now detects text from the file content, so shell/Python scripts, XML/SMIL, JSON, YAML, configuration files and extensionless files open as text instead of being refused. A bundled offline PrismJS highlighter colors the formats it knows; binary files still get the clear answer to download them. The 256 KiB preview limit and escaped-text safety policy are unchanged.
 
 ## What's new in v12.7.3
 
@@ -269,21 +275,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.7.3-linux-amd64
-   ./wrm-pro-v12.7.3-linux-amd64
+   chmod +x wrm-pro-v12.7.4-linux-amd64
+   ./wrm-pro-v12.7.4-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.7.3-windows-amd64.exe
+   .\wrm-pro-v12.7.4-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.7.3-linux-amd64.AppImage
-   ./wrm-pro-v12.7.3-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.7.3-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.7.4-linux-amd64.AppImage
+   ./wrm-pro-v12.7.4-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.7.4-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -292,8 +298,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.7.3/wrm-pro-v12.7.3-android-arm64
-   chmod +x wrm-pro-v12.7.3-android-arm64 && ./wrm-pro-v12.7.3-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.7.4/wrm-pro-v12.7.4-android-arm64
+   chmod +x wrm-pro-v12.7.4-android-arm64 && ./wrm-pro-v12.7.4-android-arm64
    ```
 
    **Docker**
@@ -1099,7 +1105,7 @@ Windows servers (RDP), Linux desktops and KVM/IPMI consoles (VNC) and old networ
 | Debian / Ubuntu | `sudo apt install guacd` (listens on 127.0.0.1:4822) |
 | Docker | `docker compose up -d` — `docker-compose.yml` contains a `guacd` service that shares WRM's network |
 | Any Linux with Docker | `docker run -d --name guacd --network host --restart unless-stopped guacamole/guacd` |
-| Windows / macOS | run guacd in Docker (Docker Desktop) or on a Linux machine and set `guacd_address` |
+| Windows / macOS | **nothing by hand:** WRM starts the official guacd container in Docker Desktop when `guacd_address` is local (`127.0.0.1:4822`). Docker Desktop must use **Linux containers**. Install/start it; otherwise run guacd on a Linux machine and set `guacd_address`. |
 
 *Admin panel → Overview* shows whether guacd answers (and its version); *Test connection* on an RDP/VNC connection checks the server's port **and** guacd.
 
@@ -1122,7 +1128,7 @@ Windows servers (RDP), Linux desktops and KVM/IPMI consoles (VNC) and old networ
 
 **Audit and recording:** every desktop session appears in *Sessions & recordings* and the audit log (`desktop.open`, `desktop.close`, `desktop.error`). With session recording on, WRM records the screen stream (no passwords: they are sent to guacd during the handshake and never appear on screen) and **▶ Replay** plays it in the browser with play/pause and seek; *⬇ .guac* downloads it (playable with Guacamole's tools).
 
-**Security:** the browser never picks the target: WRM performs the handshake with the stored host, user, password and options, and afterwards forwards only display data and input instructions from an allow-list. Access follows the same rules as terminals (owner; share members with the *Operator* role or higher). Policies: `desktop_enabled` (`REMOTE_DESKTOP_ENABLED`), `guacd_address` (`GUACD_ADDRESS`, default `127.0.0.1:4822`), `desktop_tunnel_bind` (address of jump-host tunnels for guacd, default `127.0.0.1`).
+**Security:** the browser never picks the target: WRM performs the handshake with the stored host, user, password and options, and afterwards forwards only display data and input instructions from an allow-list. Access follows the same rules as terminals (owner; share members with the *Operator* role or higher). Policies: `desktop_enabled` (`REMOTE_DESKTOP_ENABLED`), `guacd_address` (`GUACD_ADDRESS`, default `127.0.0.1:4822`), `guacd_auto` (Windows/macOS: start the local guacd container in Docker Desktop; default on), `desktop_tunnel_bind` (address of jump-host tunnels for guacd, default `127.0.0.1`).
 
 ### Out-of-band management, consoles & serial ports
 
@@ -1726,7 +1732,7 @@ Only your own connections can be used as a source; one check per user at a time;
 
 ### File manager (SFTP / FTP / FTPS)
 
-**Preview** in the file context menu opens video/audio, images, PDFs or text inside WRM. Large video/audio files stream with byte-range seeking over SFTP/FTP; browser codec support still applies. Text previews show at most 256 KiB, with a truncation notice and Download. HTML/SVG/source files render as escaped text. Closing the viewer stops playback. Every metadata/range/content request checks the same file-read/share permissions as downloads; FTP requires SIZE and REST support for seekable playback.
+**Preview** in the file context menu opens video/audio, images, PDFs or text inside WRM. Large video/audio files stream with byte-range seeking over SFTP/FTP; browser codec support still applies. Text is recognized from the content, not only from the extension: XML/SMIL/SVG, JSON, YAML, TOML, INI, shell, Python, JavaScript/TypeScript, Go, SQL, CSS/SCSS/LESS, Markdown, PowerShell, batch, Dockerfile, Makefile, C/C++/C#/Java/Rust/Ruby/PHP and similar files are syntax-highlighted by the bundled PrismJS; other textual files open as plain text. UTF-8, UTF-16 (with a BOM or a detected byte order) and single-byte text are decoded; binary files are refused with **Download**. Text previews show at most 256 KiB, with a truncation notice and Download. HTML/SVG/source files render as escaped text. Closing the viewer stops playback. Every metadata/range/content request checks the same file-read/share permissions as downloads; FTP requires SIZE and REST support for seekable playback.
 
 In a terminal, select a single file path with the pointer and right-click for **Preview selected path** or **Download selected path**. Relative paths use the terminal's current directory; `~/` resolves the SSH file account's home. Paths are treated as filenames and never executed as shell commands.
 
@@ -2781,7 +2787,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/api/remote/list?id&path` | List a folder |
 | GET | `/api/remote/list-recursive?id&path` | All files below a path |
 | GET | `/api/remote/search?id&path&q&mode=name\|content&max&hidden` | Search (NDJSON stream) |
-| GET / HEAD | `/api/remote/preview?id&path` | Inline allowlisted media with byte ranges; `metadata=1` returns kind/MIME/size, `text=1` returns bounded text |
+| GET / HEAD | `/api/remote/preview?id&path` | Inline media/PDF with byte ranges; `metadata=1` returns kind/MIME/size/language, `text=1` returns bounded, content-detected text with a Prism language id |
 | GET | `/api/remote/download?id&path` | Download a file |
 | GET | `/api/remote/download-dir?id&path` | Download a folder as ZIP (SFTP) |
 | POST | `/api/remote/upload?id&path&overwrite` | Multipart upload, streamed |
@@ -3012,7 +3018,7 @@ remote-manager/
   git_source.go   GitLab API v4 / GitHub REST client, tree and blob cache, ref resolution, suggestions
   git_bundle.go   offline bundles: import and export (bundle.json + payload)
   folders.go      nested hierarchy, owner/cycle/depth validation and import ordering
-  preview.go      authenticated SFTP/FTP byte-range streaming and bounded previews
+  preview.go      authenticated SFTP/FTP byte-range streaming, content-detected text previews and language hints
   git_functionality.go runtime checks, redacted logs and configuration inspection
   git_scan.go     discovery and file hashing over SSH, VERSION.md, units, comparison
   git_monitor.go  periodic Git checks and their notifications
