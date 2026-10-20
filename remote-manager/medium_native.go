@@ -569,6 +569,8 @@ type mdServerPlan struct {
 	// ExcludedFor: the plan's excluded paths that leave a change out on this server
 	// (current.json keeps them, and the next plan offers them excluded again)
 	ExcludedFor []string `json:"excluded_for"`
+	Platform    string   `json:"platform,omitempty"`
+	Arch        string   `json:"arch,omitempty"`
 }
 
 type mdSourceCheck struct {
@@ -600,20 +602,29 @@ type mdPlanResult struct {
 	Excluded    []string       `json:"excluded"`
 	Revision    string         `json:"revision,omitempty"`
 	Deployable  bool           `json:"deployable"` // a native deployment of this plan is possible
+	// BuildLocation shows where a project's build ran: host, server, none, original (the
+	// comparison with the original tool), or empty for a project without a build.
+	BuildLocation string `json:"build_location,omitempty"`
+	BuildServer   string `json:"build_server,omitempty"`
+	BuildPlatform string `json:"build_platform,omitempty"`
+	BuildArch     string `json:"build_arch,omitempty"`
+	BuildLog      string `json:"build_log,omitempty"`
 }
 
 type mdRun struct {
-	ID      string        `json:"id"`
-	Done    bool          `json:"done"`
-	Stage   string        `json:"stage"`
-	Error   string        `json:"error,omitempty"`
-	Started string        `json:"started"`
-	Request mdPlanRequest `json:"request"`
-	Result  *mdPlanResult `json:"result,omitempty"`
-	uid     int
-	at      time.Time
-	src     mdTree // the prepared source (with the files' content), for a deployment
-	used    bool   // a deployment of this plan has started
+	ID        string        `json:"id"`
+	Done      bool          `json:"done"`
+	Stage     string        `json:"stage"`
+	Error     string        `json:"error,omitempty"`
+	Started   string        `json:"started"`
+	Request   mdPlanRequest `json:"request"`
+	Result    *mdPlanResult `json:"result,omitempty"`
+	uid       int
+	at        time.Time
+	src       mdTree // the prepared source (with the files' content), for a deployment
+	used      bool   // a deployment of this plan has started
+	cleanup   func() // removes a build's temporary files when the run is discarded
+	deploying bool   // a deployment job still needs src
 }
 
 var mdRuns = struct {
@@ -635,7 +646,10 @@ func mdStartRun(uid int, req mdPlanRequest) (*mdRun, error) {
 		return nil, fmt.Errorf("a native preview is already running")
 	}
 	for id, r := range mdRuns.m {
-		if r.Done && time.Since(r.at) > time.Hour {
+		if r.Done && !r.deploying && time.Since(r.at) > time.Hour {
+			if r.cleanup != nil {
+				r.cleanup()
+			}
 			delete(mdRuns.m, id)
 		}
 	}
@@ -654,9 +668,9 @@ func mdStartRun(uid int, req mdPlanRequest) (*mdRun, error) {
 			delete(mdRuns.active, uid)
 			mdRuns.Unlock()
 		}()
-		res, src, err := mdExecute(uid, req, func(stage string) { run.set(func() { run.Stage = stage }) })
+		res, src, cleanup, err := mdExecute(uid, req, func(stage string) { run.set(func() { run.Stage = stage }) })
 		run.set(func() {
-			run.Result, run.src = res, src
+			run.Result, run.src, run.cleanup = res, src, cleanup
 			if err != nil {
 				run.Error = err.Error()
 			}
@@ -705,22 +719,22 @@ var mdOpenDestination = func(uid int, cfg *mdConfig, server string, fn func(mdRe
 	return mdOpenHost(uid, cfg, server, func(h mdHost, name string) error { return fn(h, name) })
 }
 
-func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, mdTree, error) {
+func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, mdTree, func(), error) {
 	cfg, err := mdLoadConfig(mdConfigDir(uid))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	proj := cfg.project(req.Project)
 	if proj == nil {
-		return nil, nil, fmt.Errorf("unknown project %s", req.Project)
+		return nil, nil, nil, fmt.Errorf("unknown project %s", req.Project)
 	}
 	target := proj.target(req.Environment)
 	if target == nil {
-		return nil, nil, fmt.Errorf("project %s has no environment %s", proj.Name, req.Environment)
+		return nil, nil, nil, fmt.Errorf("project %s has no environment %s", proj.Name, req.Environment)
 	}
 	excluded, err := mdCleanExcluded(req.Excluded)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	var dests []*mdDestination
 	if len(req.Servers) == 0 {
@@ -729,7 +743,7 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, m
 		want := map[string]bool{}
 		for _, s := range req.Servers {
 			if target.destination(s) == nil {
-				return nil, nil, fmt.Errorf("environment %s has no destination on %s", target.Name, s)
+				return nil, nil, nil, fmt.Errorf("environment %s has no destination on %s", target.Name, s)
 			}
 			want[s] = true
 		}
@@ -751,13 +765,17 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, m
 	}
 	var src mdTree
 	var ref *mdRefResult
+	var cleanup func()
 	match, hasSource := mdFindSource(uid, proj.Repo)
 	if req.Compare {
 		stage("original")
 		if ref, err = mdReferencePlan(uid, req); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		res.Ref, res.Commit, res.Version, res.SourceFrom = ref.Ref, ref.Commit, ref.Version, "original"
+		if proj.Build != nil {
+			res.BuildLocation = "original"
+		}
 		res.Warnings = append(res.Warnings, ref.Warnings...)
 		src = mdTree{}
 		for _, e := range ref.Source {
@@ -773,23 +791,24 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, m
 			res.SourceName = match.src.Name
 		}
 	} else {
-		if proj.Build != nil {
-			return nil, nil, fmt.Errorf("project %s has a build step; the native preview of built projects comes with the native engine (v12.7.0). Use Compare with the original tool, which uses the original build", proj.Name)
-		}
 		if !hasSource {
-			return nil, nil, fmt.Errorf("no WRM Git source serves %s; add the Git server under Git → Sources, or compare with the original tool", redactURLText(proj.Repo))
+			return nil, nil, nil, fmt.Errorf("no WRM Git source serves %s; add the Git server under Git → Sources, or compare with the original tool", redactURLText(proj.Repo))
 		}
 		stage("source")
 		p, err := newGitProvider(match.src)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		if res.Commit, res.Ref, err = mdResolveRef(p, match.project, req.Ref); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
-		if src, err = mdGitSourceTree(match, proj, res.Commit); err != nil {
-			return nil, nil, err
+		out, err := mdBuildProject(uid, match, proj, res.Commit, mdBuildOf(uid, proj.Name), stage)
+		if err != nil {
+			return nil, nil, nil, err
 		}
+		cleanup = out.cleanup
+		src = out.Tree
+		res.BuildLocation, res.BuildServer, res.BuildPlatform, res.BuildArch, res.BuildLog = out.Location, out.Server, out.Platform, out.Arch, out.Log
 		res.SourceFrom, res.SourceName = "git_source", match.src.Name
 	}
 	res.RefAllowed = target.AllowedRefs == nil || mdRefAllowed(res.Ref, target.AllowedRefs)
@@ -815,7 +834,7 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, m
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			res.Servers[i] = mdPlanServer(uid, cfg, proj, target, d, src, ref, excluded)
+			res.Servers[i] = mdPlanServer(uid, cfg, proj, target, d, src, ref, excluded, res.BuildLocation == "host" || res.BuildLocation == "server")
 		}(i, d)
 	}
 	wg.Wait()
@@ -825,19 +844,29 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, m
 			res.Same = res.Same && s.Compare != nil && s.Compare.Same && s.Error == "" && s.RefError == ""
 		}
 	}
+	mdCheckBuildPlatforms(res, res.BuildLocation, res.BuildPlatform, res.BuildArch)
 	res.Deployable = res.SourceFrom == "git_source" && len(res.Servers) > 0
 	for _, s := range res.Servers {
 		res.Deployable = res.Deployable && s.Error == ""
 	}
 	res.Revision = mdPlanRevision(res)
-	return res, src, nil
+	return res, src, cleanup, nil
 }
 
-func mdPlanServer(uid int, cfg *mdConfig, proj *mdProject, target *mdTarget, d *mdDestination, src mdTree, ref *mdRefResult, excluded []string) mdServerPlan {
+func mdPlanServer(uid int, cfg *mdConfig, proj *mdProject, target *mdTarget, d *mdDestination, src mdTree, ref *mdRefResult, excluded []string, wantPlatform bool) mdServerPlan {
 	sp := mdServerPlan{Server: d.Server, Path: d.appDir(), Label: d.label(), Warnings: []string{}, Changes: []mdChange{}, PostDeploy: d.PostDeploy,
 		Excludes: proj.ignoreFor(target.Name, d.Server), Counts: map[string]int{"new": 0, "changed": 0, "deleted": 0}, ExcludedFor: []string{}}
 	err := mdOpenDestination(uid, cfg, d.Server, func(r mdRemote, connName string) error {
 		sp.Connection = connName
+		if wantPlatform {
+			if h, ok := r.(mdHost); ok {
+				if platform, arch, err := mdHostPlatform(h); err == nil {
+					sp.Platform, sp.Arch = platform, arch
+				} else {
+					sp.Warnings = append(sp.Warnings, "platform: "+err.Error())
+				}
+			}
+		}
 		view, err := mdPlanOn(r, d.appDir(), sp.Excludes, excluded, src)
 		if err != nil {
 			return err
@@ -943,11 +972,14 @@ func redactURLText(s string) string {
 // ─── API: /api/git/medium/native/… ───
 
 type mdProjectView struct {
-	Name         string   `json:"name"`
-	Repo         string   `json:"repo"`
-	Build        bool     `json:"build"`
-	Source       string   `json:"source,omitempty"`
-	Environments []string `json:"environments"`
+	Name          string   `json:"name"`
+	Repo          string   `json:"repo"`
+	Build         bool     `json:"build"`
+	Source        string   `json:"source,omitempty"`
+	Environments  []string `json:"environments"`
+	BuildLocation string   `json:"build_location,omitempty"`
+	BuildConnID   int      `json:"build_conn_id,omitempty"`
+	BuildConnName string   `json:"build_conn_name,omitempty"`
 }
 
 func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action string) {
@@ -961,11 +993,24 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 			return
 		}
 		conns := mdUserConnections(uid)
+		names := map[int]string{}
+		for _, c := range conns {
+			names[c.ID] = c.Name
+		}
+		builds := mdBuildSettings(uid)
 		projects := []mdProjectView{}
 		for _, p := range cfg.Projects {
 			v := mdProjectView{Name: p.Name, Repo: redactURLText(p.Repo), Build: p.Build != nil, Environments: []string{}}
 			if m, ok := mdFindSource(uid, p.Repo); ok {
 				v.Source = m.src.Name
+			}
+			if b, ok := builds[p.Name]; ok {
+				v.BuildLocation, v.BuildConnID, v.BuildConnName = b.Location, b.ConnID, names[b.ConnID]
+				if b.Location == "server" && v.BuildConnName == "" {
+					// The saved connection was deleted or is no longer usable; make the
+					// user choose one again instead of offering a preview that will fail.
+					v.BuildConnID = 0
+				}
 			}
 			for _, e := range cfg.Envs {
 				if p.target(e.Name) != nil {
@@ -978,7 +1023,38 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 		out["ok"], out["config"], out["projects"] = true, cfg, projects
 		out["links"], out["connections"] = mdLinks(uid, cfg, conns), conns
 		out["engines"], out["can_deploy"], out["step_up"] = mdProjectEngines(uid), mdNativeAllowed(uid), settingBool("require_step_up")
+		out["host_build"] = mdHostBuildInfo()
 		jsonOK(w, out)
+	case action == "/build" && r.Method == "POST":
+		if !mdNativeAllowed(uid) {
+			jsonError(w, "Native deployments are not allowed for you by policy (medium_native)", 403)
+			return
+		}
+		var in struct {
+			Project  string `json:"project"`
+			Location string `json:"location"`
+			ConnID   int    `json:"conn_id"`
+		}
+		if json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&in) != nil || !mdNameRe.MatchString(in.Project) {
+			jsonError(w, "invalid request", 400)
+			return
+		}
+		cfg, err := mdLoadConfig(mdConfigDir(uid))
+		if err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
+		if cfg.project(in.Project) == nil {
+			jsonError(w, "unknown project", 404)
+			return
+		}
+		b, err := mdSetBuild(uid, in.Project, in.Location, in.ConnID)
+		if err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
+		auditLog(r, uid, "git.medium_build_set", in.Project, map[string]interface{}{"location": b.Location, "conn_id": b.ConnID})
+		jsonOK(w, map[string]interface{}{"ok": true, "build": b})
 	case action == "/link" && r.Method == "POST":
 		var in struct {
 			Server string `json:"server"`

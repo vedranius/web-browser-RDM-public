@@ -537,8 +537,8 @@ Object.assign(LANGS.en, {
  mn_title:'Native engine (preview, read-only)', mn_intro:'WRM reads your deploy-config as it is, prepares the chosen branch or tag from a WRM Git source and compares it with each destination through the WRM connection linked to that server. Nothing is written to any server. Compare with the original tool runs the original comparison too and shows both change lists side by side.',
  mn_servers:'Servers and WRM connections', mn_server:'Server', mn_address:'Address in servers.yaml', mn_connection:'WRM connection', mn_auto:'Automatic', mn_none:'None', mn_unlinked:'not linked', mn_linked:'Connection saved',
  mn_plan:'Plan', mn_project:'Project', mn_env:'Environment', mn_ref:'Branch or tag', mn_preview:'Preview natively', mn_compare:'Compare with the original tool', mn_needs_running:'Start Medium (the original tool) first',
- mn_build_note:'This project has a build step: only the comparison with the original tool (which builds it) is available until the native engine (v12.7.0).', mn_source_note:'Source: WRM Git source {0}', mn_no_source_note:'No WRM Git source serves this repository; add it under Git → Sources for the native preview.',
- mn_stage_configuration:'Reading the configuration…', mn_stage_original:'The original tool is comparing (fetch, export, build, rsync)…', mn_stage_source:'Preparing the source…', mn_stage_servers:'Comparing with the servers…',
+ mn_build_note:'This project has a build step. Choose where the build runs before previewing: on the WRM host, on a Linux build server over SSH, or not at all. The plan shows the build location and checks its platform and architecture against every destination.', mn_source_note:'Source: WRM Git source {0}', mn_no_source_note:'No WRM Git source serves this repository; add it under Git → Sources for the native preview.',
+ mn_stage_configuration:'Reading the configuration…', mn_stage_original:'The original tool is comparing (fetch, export, build, rsync)…', mn_stage_build:'Building', mn_stage_source:'Preparing the source…', mn_stage_servers:'Comparing with the servers…',
  mn_same:'Same result as the original tool', mn_differs:'Differs from the original tool', mn_src_git_source:'WRM Git source', mn_src_original:'the original tool\'s prepared source', mn_files:'files',
  mn_new:'new', mn_changed:'changed', mn_deleted:'deleted', mn_no_changes:'No changes: the server matches the source.', mn_missing_dir:'The application directory does not exist yet; everything is new.',
  mn_only_ref:'Only in the original tool', mn_only_native:'Only in the native engine', mn_kind:'Type differs', mn_matched:'{0} of {1} changes match',
@@ -549,8 +549,8 @@ Object.assign(LANGS.hr, {
  mn_title:'Nativni engine (pregled, samo čitanje)', mn_intro:'WRM čita vaš deploy-config kakav jest, priprema odabranu granu ili tag iz WRM Git izvora i uspoređuje ga sa svakim odredištem preko WRM veze povezane s tim serverom. Ništa se ne zapisuje ni na jedan server. Usporedba s izvornim alatom pokreće i izvornu usporedbu i prikazuje oba popisa promjena jedan uz drugi.',
  mn_servers:'Serveri i WRM veze', mn_server:'Server', mn_address:'Adresa u servers.yaml', mn_connection:'WRM veza', mn_auto:'Automatski', mn_none:'Nijedna', mn_unlinked:'nije povezan', mn_linked:'Veza spremljena',
  mn_plan:'Plan', mn_project:'Projekt', mn_env:'Okolina', mn_ref:'Grana ili tag', mn_preview:'Nativni pregled', mn_compare:'Usporedi s izvornim alatom', mn_needs_running:'Prvo pokrenite Srednje (izvorni alat)',
- mn_build_note:'Ovaj projekt ima build: do nativnog enginea (v12.7.0) dostupna je samo usporedba s izvornim alatom (koji ga builda).', mn_source_note:'Izvor: WRM Git izvor {0}', mn_no_source_note:'Nijedan WRM Git izvor ne poslužuje ovaj repozitorij; za nativni pregled dodajte ga pod Git → Izvori.',
- mn_stage_configuration:'Čitam konfiguraciju…', mn_stage_original:'Izvorni alat uspoređuje (fetch, izvoz, build, rsync)…', mn_stage_source:'Pripremam izvor…', mn_stage_servers:'Uspoređujem sa serverima…',
+ mn_build_note:'Ovaj projekt ima build. Prije pregleda odaberite gdje se build izvodi: na WRM hostu, na Linux build serveru preko SSH-a ili nikako. Plan prikazuje mjesto builda i provjerava njegovu platformu i arhitekturu prema svakom odredištu.', mn_source_note:'Izvor: WRM Git izvor {0}', mn_no_source_note:'Nijedan WRM Git izvor ne poslužuje ovaj repozitorij; za nativni pregled dodajte ga pod Git → Izvori.',
+ mn_stage_configuration:'Čitam konfiguraciju…', mn_stage_original:'Izvorni alat uspoređuje (fetch, izvoz, build, rsync)…', mn_stage_build:'Izvodim build', mn_stage_source:'Pripremam izvor…', mn_stage_servers:'Uspoređujem sa serverima…',
  mn_same:'Isti rezultat kao izvorni alat', mn_differs:'Razlikuje se od izvornog alata', mn_src_git_source:'WRM Git izvor', mn_src_original:'izvor koji je pripremio izvorni alat', mn_files:'datoteka',
  mn_new:'novo', mn_changed:'promijenjeno', mn_deleted:'obrisano', mn_no_changes:'Nema promjena: server odgovara izvoru.', mn_missing_dir:'Direktorij aplikacije još ne postoji; sve je novo.',
  mn_only_ref:'Samo u izvornom alatu', mn_only_native:'Samo u nativnom engineu', mn_kind:'Razlikuje se vrsta', mn_matched:'{0} od {1} promjena se poklapa',
@@ -704,7 +704,12 @@ Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_runn
 Object.assign(LANGS.en, {
   mn_title: 'WRM engine', gm_two_preview: 'WRM\'s own engine. It shows what a deployment would change on each server through your WRM connections. A project switched to the WRM native engine is deployed and rolled back by WRM itself, in the same server state the original tool uses. It needs only your deploy-config; only "Compare with the original tool" needs the original tool running.',
   mn_intro: 'WRM reads your deploy-config as it is, prepares the chosen branch or tag from a WRM Git source and compares it with each destination through the WRM connection linked to that server. A comparison and a dry run change nothing. A project switched to the WRM native engine is deployed and rolled back by WRM: lock, backup, upload, checksum check, post_deploy and history, written in the original tool\'s format, so either tool can continue after the other.',
-  mn_build_note: 'This project has a build step. In this version the native engine deploys projects without a build (build locations come in v12.7.1); until then only the comparison with the original tool is available, and the original tool deploys it.',
+  mn_build_note: 'This project has a build step. Choose where the build runs before previewing: on the WRM host, on a Linux build server over SSH, or not at all. The plan shows the build location and checks its platform and architecture against every destination.',
+  mn_build_where: 'Build', mn_build_choose: 'Choose where to build', mn_build_host: 'WRM host', mn_build_server: 'Linux build server', mn_build_none: 'No build',
+  mn_build_conn: 'Build server connection', mn_build_save: 'Save build location', mn_build_saved: 'Build location saved',
+  mn_build_no_conn: 'Add an SSH connection for the build server under Servers.', mn_build_pick_conn: 'Choose a build server connection.', mn_build_needed: 'Choose where to build first.',
+  mn_build_none_note: 'No build: the selected files come from the commit.', mn_build_ready_note: 'The plan shows the build location and checks its platform and architecture against every destination.',
+  mn_build_log: 'Build output', mn_build_original: 'the original tool (it builds)', mn_build_unavailable: 'not available on this WRM host',
   mn_engine: 'Engine', mn_engine_docker: 'Original tool (Docker)', mn_engine_native: 'WRM native', mn_engine_hint: 'Who deploys this project. The server state is the same either way, so you can switch back at any time.',
   mn_engine_set: 'Engine saved', mn_engine_no_policy: 'Native deployments are not allowed for you (policy medium_native).',
   mn_exclude: 'Leave out', mn_exclude_hint: 'Tick changes to leave out of this deployment, then compare again.', mn_replan: 'Compare again without the ticked ones',
@@ -725,7 +730,12 @@ Object.assign(LANGS.en, {
 Object.assign(LANGS.hr, {
   mn_title: 'WRM engine', gm_two_preview: 'WRM-ov vlastiti engine. Pokazuje što bi deploy promijenio na svakom serveru, preko tvojih WRM veza. Projekt prebačen na WRM nativni engine deploya i vraća sam WRM, u istom stanju na serveru koje koristi izvorni alat. Treba mu samo tvoj deploy-config; samo "Usporedi s izvornim alatom" traži da izvorni alat radi.',
   mn_intro: 'WRM čita tvoj deploy-config kakav jest, priprema odabranu granu ili tag iz WRM Git izvora i uspoređuje ga sa svakim odredištem preko WRM veze povezane s tim serverom. Usporedba i probni deploy ništa ne mijenjaju. Projekt prebačen na WRM nativni engine deploya i vraća WRM: lock, backup, prijenos, provjera kontrolnih zbrojeva, post_deploy i povijest, zapisani u formatu izvornog alata, pa svaki alat može nastaviti nakon drugoga.',
-  mn_build_note: 'Ovaj projekt ima build. U ovoj verziji nativni engine deploya projekte bez builda (mjesta za build dolaze u v12.7.1); do tada je dostupna samo usporedba s izvornim alatom, a deploya ga izvorni alat.',
+  mn_build_note: 'Ovaj projekt ima build. Prije pregleda odaberite gdje se build izvodi: na WRM hostu, na Linux build serveru preko SSH-a ili nikako. Plan prikazuje mjesto builda i provjerava njegovu platformu i arhitekturu prema svakom odredištu.',
+  mn_build_where: 'Build', mn_build_choose: 'Odaberite gdje se build izvodi', mn_build_host: 'WRM host', mn_build_server: 'Linux build server', mn_build_none: 'Bez builda',
+  mn_build_conn: 'Veza build servera', mn_build_save: 'Spremi mjesto builda', mn_build_saved: 'Mjesto builda spremljeno',
+  mn_build_no_conn: 'Dodajte SSH vezu za build server pod Serveri.', mn_build_pick_conn: 'Odaberite vezu build servera.', mn_build_needed: 'Prvo odaberite gdje se build izvodi.',
+  mn_build_none_note: 'Bez builda: odabrane datoteke dolaze iz commita.', mn_build_ready_note: 'Plan prikazuje mjesto builda i provjerava njegovu platformu i arhitekturu prema svakom odredištu.',
+  mn_build_log: 'Izlaz builda', mn_build_original: 'izvorni alat (on builda)', mn_build_unavailable: 'nije dostupno na ovom WRM hostu',
   mn_engine: 'Engine', mn_engine_docker: 'Izvorni alat (Docker)', mn_engine_native: 'WRM nativno', mn_engine_hint: 'Tko deploya ovaj projekt. Stanje na serveru je isto u oba slučaja, pa se možeš vratiti bilo kad.',
   mn_engine_set: 'Engine spremljen', mn_engine_no_policy: 'Nativni deployevi ti nisu dopušteni (politika medium_native).',
   mn_exclude: 'Izostavi', mn_exclude_hint: 'Označi promjene koje želiš izostaviti iz ovog deploya, pa ponovno usporedi.', mn_replan: 'Ponovno usporedi bez označenih',
@@ -3383,7 +3393,7 @@ Object.assign(LANGS.hr, {
       <h4>${esc(t('mn_servers'))}</h4><div class="g-scroll"><table><thead><tr><th>${esc(t('mn_server'))}</th><th>${esc(t('mn_address'))}</th><th>${esc(t('mn_connection'))}</th></tr></thead><tbody>${rows}</tbody></table></div>
       <h4>${esc(t('mn_plan'))}</h4>
       <div class="g-grid"><label>${esc(t('mn_project'))}<select id="mn-project" onchange="gitWorkspace.nativeProject()">${projects}</select></label><label>${esc(t('mn_env'))}<select id="mn-env" onchange="gitWorkspace.nativeEnv()"></select></label><label>${esc(t('mn_ref'))}<input id="mn-ref" list="mn-refs" placeholder="main" autocomplete="off"><datalist id="mn-refs"></datalist></label></div>
-      <div id="mn-dests" class="g-bar"></div><div id="mn-engine" class="g-bar"></div><p id="mn-note" class="g-mut"></p>
+      <div id="mn-dests" class="g-bar"></div><div id="mn-engine" class="g-bar"></div><div id="mn-build" class="g-bar"></div><p id="mn-note" class="g-mut"></p>
       <div class="g-bar"><button id="mn-preview" onclick="gitWorkspace.nativePlan(false)">${esc(t('mn_preview'))}</button><button class="btn-sec" id="mn-compare" onclick="gitWorkspace.nativePlan(true)" ${c.running ? '' : 'disabled'} title="${esc(c.running ? '' : t('mn_needs_running'))}">${esc(t('mn_compare'))}</button>${refresh}</div>
       <div id="mn-result" role="status" aria-live="polite"></div><div id="mn-job" role="status" aria-live="polite"></div>
       <h4>${esc(t('mn_hist_title'))}</h4><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.nativeHistory()">${esc(t('mn_hist_load'))}</button></div><div id="mn-hist"></div>`;
@@ -3395,8 +3405,14 @@ Object.assign(LANGS.hr, {
     const c = MN.cfg, p = mnProject(); if (!p) return;
     const view = c.projects.find(x => x.name === p.name) || {};
     $('mn-env').innerHTML = (view.environments || []).map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('');
-    $('mn-note').textContent = view.build ? t('mn_build_note') : view.source ? mnFmt('mn_source_note', view.source) : t('mn_no_source_note');
-    $('mn-preview').disabled = !!view.build || !view.source;
+    nativeBuild(view);
+    const loc = view.build ? (view.build_location || '') : '';
+    const hostOK = !!(c.host_build && c.host_build.supported);
+    const ready = !view.build || loc === 'none' || (loc === 'host' && hostOK) || (loc === 'server' && view.build_conn_id);
+    $('mn-note').textContent = view.build
+      ? (!loc ? t('mn_build_note') : loc === 'none' ? t('mn_build_none_note') : t('mn_build_ready_note'))
+      : (view.source ? mnFmt('mn_source_note', view.source) : t('mn_no_source_note'));
+    $('mn-preview').disabled = !view.source || !ready;
     const eng = (c.engines || {})[p.name] || 'docker';
     $('mn-engine').innerHTML = `<label>${esc(t('mn_engine'))} <select id="mn-engine-sel" onchange="gitWorkspace.nativeEngine(this.value)" ${c.can_deploy || eng === 'native' ? '' : 'disabled'}>${['docker', 'native'].map(e => `<option value="${e}" ${e === eng ? 'selected' : ''}>${esc(t('mn_engine_' + e))}</option>`).join('')}</select></label> <span class="g-mut">${esc(t(c.can_deploy ? 'mn_engine_hint' : 'mn_engine_no_policy'))}</span>`;
     nativeEnv();
@@ -3407,6 +3423,50 @@ Object.assign(LANGS.hr, {
       const v = await r.json(); if (mnProject() !== p) return;
       $('mn-refs').innerHTML = [...(v.branches || []), ...(v.tags || [])].map(x => `<option value="${esc(x)}">`).join('');
     } catch (_) {}
+  }
+  function nativeBuild(view, draftLoc) {
+    const box = $('mn-build'); if (!box) return;
+    if (!view || !view.build) { box.innerHTML = ''; return; }
+    const c = MN.cfg, hb = c.host_build || {}, loc = draftLoc || view.build_location || '';
+    const opt = (v, label, disabled) => `<option value="${v}" ${v === loc ? 'selected' : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</option>`;
+    let h = `<label>${esc(t('mn_build_where'))} <select id="mn-build-loc" onchange="gitWorkspace.nativeBuildDraft()">` +
+      opt('', t('mn_build_choose')) +
+      opt('host', t('mn_build_host') + (hb.platform ? ' (' + hb.platform + ')' : ''), !hb.supported && loc !== 'host') +
+      opt('server', t('mn_build_server')) + opt('none', t('mn_build_none')) + `</select></label>`;
+    if (loc === 'server') {
+      const conns = c.connections || [];
+      if (!conns.length) h += `<span class="g-st s-missing">${esc(t('mn_build_no_conn'))}</span>`;
+      else h += `<label>${esc(t('mn_build_conn'))} <select id="mn-build-conn" onchange="gitWorkspace.nativeBuildSave()"><option value="0">${esc(t('mn_build_choose'))}</option>` +
+        conns.map(x => `<option value="${x.id}" ${view.build_conn_id === x.id ? 'selected' : ''}>${esc(x.name)} (${esc(x.user + '@' + x.host)})</option>`).join('') + `</select></label>`;
+    }
+    if (loc === 'host' && !hb.supported) h += `<span class="g-st s-error">${esc(hb.reason || t('mn_build_unavailable'))}</span>`;
+    h += ` <button class="btn-sec btn-sm" onclick="gitWorkspace.nativeBuildSave()">${esc(t('mn_build_save'))}</button>`;
+    box.innerHTML = h;
+  }
+  function nativeBuildDraft() {
+    const p = mnProject(); if (!p) return;
+    const view = MN.cfg.projects.find(x => x.name === p.name) || {};
+    const loc = $('mn-build-loc') ? $('mn-build-loc').value : '';
+    nativeBuild(view, loc);
+    if (loc !== 'server') nativeBuildSave();
+  }
+  async function nativeBuildSave() {
+    const p = mnProject(); if (!p) return;
+    const view = MN.cfg.projects.find(x => x.name === p.name) || {};
+    const loc = $('mn-build-loc') ? $('mn-build-loc').value : (view.build_location || '');
+    let conn = $('mn-build-conn') ? +$('mn-build-conn').value : 0;
+    if (loc !== 'server') conn = 0;
+    if (loc === 'server' && !conn) { showToast(t('mn_build_pick_conn'), 'error'); return; }
+    try {
+      const r = await fetch('/api/git/medium/native/build', json('POST', {project: p.name, location: loc, conn_id: conn}));
+      if (!r.ok) throw new Error(await apiError(r));
+      const v = await r.json(), b = v.build || {};
+      view.build_location = b.location || loc;
+      view.build_conn_id = b.conn_id || 0;
+      view.build_conn_name = b.conn_name || '';
+      MN.run = null; const out = $('mn-result'); if (out) out.innerHTML = '';
+      showToast(t('mn_build_saved'), 'success'); nativeProject();
+    } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 8000); nativeProject(); }
   }
   function nativeEnv() {
     const p = mnProject(), env = $('mn-env') && $('mn-env').value;
@@ -3429,6 +3489,9 @@ Object.assign(LANGS.hr, {
   }
   async function nativePlan(compare, excluded) {
     const p = mnProject(); if (!p) return;
+    const view = MN.cfg.projects.find(x => x.name === p.name) || {};
+    if (view.build && !view.build_location) { showToast(t('mn_build_needed'), 'error'); return; }
+    if (view.build && view.build_location === 'server' && !view.build_conn_id) { showToast(t('mn_build_pick_conn'), 'error'); return; }
     const servers = [...document.querySelectorAll('[data-mn-dest]')].filter(x => x.checked).map(x => x.dataset.mnDest);
     const body = {project: p.name, environment: $('mn-env').value, ref: $('mn-ref').value.trim(), servers, compare, excluded: excluded || []};
     if (!body.ref || !servers.length) { showToast(t(!body.ref ? 'mn_ref' : 'mn_server') + '?', 'error'); return; }
@@ -3462,6 +3525,12 @@ Object.assign(LANGS.hr, {
       `${esc(t('mn_src_' + r.source_from))}${r.source_name ? ' (' + esc(r.source_name) + ')' : ''} · ${r.files} ${esc(t('mn_files'))}`,
       !r.ref_allowed ? `<span class="g-st s-error">${esc(t('mn_not_allowed'))}</span>` : '', r.confirm ? `<span class="g-st s-pending">${esc(t('mn_confirm'))}</span>` : ''].filter(Boolean).join(' · ');
     let html = `<div class="g-card"><p>${head}</p>`;
+    if (r.build) {
+      let where = r.build_location === 'none' ? t('mn_build_none') : r.build_location === 'original' ? t('mn_build_original') : r.build_location === 'host' ? t('mn_build_host') : r.build_location === 'server' ? t('mn_build_server') + (r.build_server ? ' ' + r.build_server : '') : t('mn_build_choose');
+      if (r.build_platform) where += ' (' + r.build_platform + ')';
+      html += `<p><b>${esc(t('mn_build_where'))}:</b> ${esc(where)} <span class="g-mono g-mut">${esc(r.build)}</span></p>`;
+      if (r.build_log) html += `<details><summary>${esc(t('mn_build_log'))}</summary><pre class="gm-out">${esc(r.build_log)}</pre></details>`;
+    }
     if (r.compared) html += `<p><span class="g-st ${r.same ? 's-ok' : 's-differs'}">${esc(t(r.same ? 'mn_same' : 'mn_differs'))}</span></p>`;
     if (r.warnings && r.warnings.length) html += `<ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>`;
     if (r.source_check) {
@@ -3471,7 +3540,7 @@ Object.assign(LANGS.hr, {
     if (r.not_compared && r.not_compared.length) html += `<p class="g-mut">${esc(t('mn_not_compared'))}: ${esc(r.not_compared.join(', '))}</p>`;
     html += '</div>';
     for (const s of r.servers) {
-      html += `<div class="g-card"><h4 class="g-mono">${esc(s.label)}</h4><p class="g-mut">${esc(t('mn_connection'))}: ${esc(s.connection || '—')}${s.post_deploy ? ` · ${esc(t('mn_post_deploy'))}: <span class="g-mono">${esc(s.post_deploy)}</span>` : ''}</p>`;
+      html += `<div class="g-card"><h4 class="g-mono">${esc(s.label)}</h4><p class="g-mut">${esc(t('mn_connection'))}: ${esc(s.connection || '-')}${s.platform ? ' · ' + esc(s.platform + '/' + s.arch) : ''}${s.post_deploy ? ` · ${esc(t('mn_post_deploy'))}: <span class="g-mono">${esc(s.post_deploy)}</span>` : ''}</p>`;
       if (s.error) html += `<p><span class="g-st s-error">${esc(s.error)}</span></p>`;
       else {
         html += `<p>${['new', 'changed', 'deleted'].map(a => `<span class="g-st s-e${a === 'deleted' ? 'removed' : a}">${s.counts[a]} ${esc(t('mn_' + a))}</span>`).join(' ')}</p>`;
@@ -4089,7 +4158,7 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, setCheckVMD, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeBuild, nativeBuildDraft, nativeBuildSave, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, setCheckVMD, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,

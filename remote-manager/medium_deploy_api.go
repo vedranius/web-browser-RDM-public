@@ -26,6 +26,7 @@ func initMediumDeploySchema() {
 		updated_at TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (user_id, project))`,
 		"user_id", "project", "engine", "updated_at")
+	mdBuildSchema()
 }
 
 func mdProjectEngine(uid int, project string) string {
@@ -191,6 +192,11 @@ func mdAPIDeploy(w http.ResponseWriter, r *http.Request, uid int) {
 	case in.Revision != res.Revision:
 		jsonError(w, "the plan changed since you reviewed it; compare again", 400)
 		return
+	case used:
+		// A real deployment consumes the plan and removes a build's temporary
+		// files. Do not run a dry run on that plan afterwards.
+		jsonError(w, "this plan was already deployed; compare again", 409)
+		return
 	}
 	if !in.DryRun {
 		switch {
@@ -199,9 +205,6 @@ func mdAPIDeploy(w http.ResponseWriter, r *http.Request, uid int) {
 			return
 		case mdProjectEngine(uid, res.Project) != "native":
 			jsonError(w, "switch "+res.Project+" to the native engine first (Engine: native); it is deployed by the original tool now", 400)
-			return
-		case used:
-			jsonError(w, "this plan was already deployed; compare again", 409)
 			return
 		case !res.RefAllowed:
 			jsonError(w, res.Ref+" is not allowed for "+res.Environment+" (allowed_refs)", 400)
@@ -255,19 +258,35 @@ func mdAPIDeploy(w http.ResponseWriter, r *http.Request, uid int) {
 		run.used = true
 		mdRuns.Unlock()
 	}
+	mdRuns.Lock()
+	run.deploying = true
+	mdRuns.Unlock()
 	dc := &mdDeployContext{uid: uid, cfg: cfg, proj: proj, target: target, src: src, excluded: excluded, entry: entry, dryRun: in.DryRun, job: j}
 	if err := mdStartJob(uid, j, func(j *mdJob) {
+		defer func() {
+			mdRuns.Lock()
+			run.deploying = false
+			var cleanup func()
+			if !in.DryRun && run.cleanup != nil {
+				cleanup, run.cleanup = run.cleanup, nil
+			}
+			mdRuns.Unlock()
+			if cleanup != nil {
+				cleanup()
+			}
+		}()
 		j.log("info", "%s of %s / %s @ %s (%s), deployment %s", map[bool]string{true: "Dry run", false: "Deployment"}[in.DryRun], res.Project, res.Environment, res.Ref, res.Commit[:10], id)
 		if len(excluded) > 0 {
 			j.log("info", "Excluded from this deployment: %s", mdShown(excluded, 20))
 		}
 		mdDeployDestinations(dc, targets)
 	}); err != nil {
+		mdRuns.Lock()
+		run.deploying = false
 		if !in.DryRun {
-			mdRuns.Lock()
 			run.used = false
-			mdRuns.Unlock()
 		}
+		mdRuns.Unlock()
 		jsonError(w, err.Error(), 409)
 		return
 	}

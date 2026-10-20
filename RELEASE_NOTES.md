@@ -1,3 +1,15 @@
+## Web Remote Manager PRO v12.7.3 - Medium build locations and complete service logs
+
+### Added
+
+- **Choose where a Medium build runs.** A project with a `build` step can now deploy natively. For each project choose the **WRM host**, a **Linux build server over SSH**, or **no build**. The choice is saved per user and project and audited.
+- The whole commit is prepared, the `build` command runs in the repository root, and `source_dir` is read from the result. A build server receives only the prepared source in a temporary directory (no Git metadata and no SSH keys); the build runs through the account's login shell and the directory is removed afterwards.
+- The plan shows the build location, its platform and architecture, and the last build output. A destination with a different platform or architecture is refused with the reason. WRM-host builds need a POSIX host with the toolchain; on Windows choose a Linux build server or no build.
+
+### Fixed
+
+- **Monitoring → Logs now discovers every service under `/home/operators/<operator>/<service>`.** Service and Operator labels are correct, virtual environments and build/archive directories no longer hide services, and service `log`/`logs` folders include their log files, including FTP `.txt` logs, while compressed archives are skipped. Larger time budgets keep large hosts complete.
+
 ## Web Remote Manager PRO v12.7.2 — Version detected from the code
 
 ### Added
