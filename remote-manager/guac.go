@@ -569,9 +569,20 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 
 	gconn, err := net.DialTimeout("tcp", getSetting("guacd_address"), 5*time.Second)
 	if err != nil {
-		msg := "Remote desktop needs guacd (the Apache Guacamole proxy) at " + getSetting("guacd_address") + ", but it is not reachable. Install it on the WRM machine (apt install guacd, or docker run -d --network host guacamole/guacd) or set guacd_address."
+		// On Windows and macOS WRM can start the official guacd container itself.
+		// Give a stopped container a few seconds, then let the first click work.
+		if ok, perr := guacdPrepare(12 * time.Second); ok {
+			gconn, err = net.DialTimeout("tcp", getSetting("guacd_address"), 5*time.Second)
+		} else {
+			guacdStartAsync()
+			ta.failed("guacd not reachable: " + err.Error())
+			fail(guacdFailureMessage(perr), 512)
+			return
+		}
+	}
+	if err != nil {
 		ta.failed("guacd not reachable: " + err.Error())
-		fail(msg, 512)
+		fail(guacdFailureMessage(err), 512)
 		return
 	}
 	defer gconn.Close()

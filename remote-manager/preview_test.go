@@ -94,6 +94,80 @@ func TestRemotePreviewRangesTextAndPermissions(t *testing.T) {
 	}
 }
 
+func TestRemotePreviewContentDetection(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		data []byte
+		text bool
+	}{{"utf8", []byte("hello\n"), true}, {"empty", nil, true}, {"nul", []byte{0, 1, 2}, false},
+		{"png", []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'}, false},
+		{"utf16", []byte{0xFF, 0xFE, 'h', 0}, true}, {"utf16le", []byte{'h', 0, 'i', 0}, true},
+		{"ansi", []byte("\x1b[31mred\x1b[0m\n"), true},
+		{"compressed", []byte{0x1F, 0x8B, 8, 0}, false}} {
+		if got := remotePreviewIsText(tc.data); got != tc.text {
+			t.Fatalf("%s: %v; want %v", tc.name, got, tc.text)
+		}
+	}
+	if got := remotePreviewDecodeText([]byte{'h', 0, 'i', 0}); got != "hi" {
+		t.Fatalf("UTF-16LE without BOM: %q", got)
+	}
+	for _, tc := range []struct {
+		name string
+		data []byte
+		lang string
+	}{{"template.smil", []byte("<smil><body/></smil>"), "markup"}, {"notes.custom", []byte(`{"a":1}`), "json"},
+		{"run", []byte("#!/bin/sh\necho hi\n"), "bash"}, {"app.py", []byte("print(1)\n"), "python"},
+		{"conf", []byte("[main]\nkey=value\n"), "ini"}} {
+		if got := remotePreviewLanguage(tc.name, tc.data); got != tc.lang {
+			t.Fatalf("%s language: %q; want %q", tc.name, got, tc.lang)
+		}
+	}
+}
+
+func TestRemotePreviewDetectsTextAndLanguages(t *testing.T) {
+	h := startFakeHost(t, testSSHUser, testSSHPass)
+	srv := httptest.NewServer(newRouter())
+	defer srv.Close()
+	u := newTestUser(t, srv, "preview-text", false)
+	id := u.addConnection("files", h.addr)
+	cases := []struct{ name, content, lang string }{
+		{"template.smil", `<smil><body><seq>Hi</seq></body></smil>`, "markup"},
+		{"notes.custom", `{"enabled":true}`, "json"},
+		{"run-me", "#!/usr/bin/env bash\necho hi\n", "bash"},
+		{"app.py", "print('hi')\n", "python"},
+		{"plain.dat", "name=value\n", ""},
+	}
+	var info remotePreviewInfo
+	for _, tc := range cases {
+		writeFile(t, h.home+"/"+tc.name, tc.content)
+		endpoint := fmt.Sprintf("/api/remote/preview?id=%d&path=%s&metadata=1", id, url.QueryEscape(h.home+"/"+tc.name))
+		res, b := previewRequest(t, u, "GET", endpoint, "")
+		info = remotePreviewInfo{}
+		json.Unmarshal(b, &info)
+		if res.StatusCode != 200 || info.Kind != "text" || info.Lang != tc.lang {
+			t.Fatalf("%s: %d %+v", tc.name, res.StatusCode, info)
+		}
+		res, b = previewRequest(t, u, "GET", strings.TrimSuffix(endpoint, "&metadata=1")+"&text=1", "")
+		info = remotePreviewInfo{}
+		json.Unmarshal(b, &info)
+		if res.StatusCode != 200 || info.Text != tc.content {
+			t.Fatalf("%s text: %d %+v", tc.name, res.StatusCode, info)
+		}
+	}
+	os.WriteFile(h.home+"/blob.custom", []byte{0, 1, 2, 3}, 0o644)
+	res, _ := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s&metadata=1", id, url.QueryEscape(h.home+"/blob.custom")), "")
+	if res.StatusCode != 415 {
+		t.Fatalf("binary candidate: %d", res.StatusCode)
+	}
+	os.WriteFile(h.home+"/utf16.dat", []byte{0xFF, 0xFE, 'h', 0, 'i', 0}, 0o644)
+	res, b := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s&text=1", id, url.QueryEscape(h.home+"/utf16.dat")), "")
+	info = remotePreviewInfo{}
+	json.Unmarshal(b, &info)
+	if res.StatusCode != 200 || info.Text != "hi" {
+		t.Fatalf("UTF-16 text: %d %+v", res.StatusCode, info)
+	}
+}
+
 // Minimal FTP endpoint that records REST offsets and serves real data connections.
 func startPreviewFTP(t *testing.T, data string) (string, func() []int64) {
 	t.Helper()
@@ -187,6 +261,13 @@ func TestRemotePreviewFTPRanges(t *testing.T) {
 	got := offsets()
 	if len(got) != 1 || got[0] != 10 {
 		t.Fatalf("FTP discarded prefix instead of seeking: %v", got)
+	}
+	textEndpoint := fmt.Sprintf("/api/remote/preview?id=%d&path=/notes.txt&text=1", c.ID)
+	res, b = previewRequest(t, u, "GET", textEndpoint, "")
+	var info remotePreviewInfo
+	json.Unmarshal(b, &info)
+	if res.StatusCode != 200 || info.Kind != "text" || info.Text != "01234567890123456789" {
+		t.Fatalf("FTP text preview: %d %+v", res.StatusCode, info)
 	}
 }
 

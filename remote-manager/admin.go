@@ -181,6 +181,9 @@ func apiAdminTerminalsHandler(w http.ResponseWriter, r *http.Request) {
 // guacdStatus reports the remote desktop proxy for the admin overview.
 func guacdStatus() map[string]interface{} {
 	st := map[string]interface{}{"enabled": settingBool("desktop_enabled"), "address": getSetting("guacd_address")}
+	for k, v := range guacdManagedStatus() {
+		st[k] = v
+	}
 	if !settingBool("desktop_enabled") {
 		return st
 	}
@@ -190,6 +193,33 @@ func guacdStatus() map[string]interface{} {
 		st["ok"], st["version"] = true, v
 	}
 	return st
+}
+
+// POST /api/admin/guacd — start the managed guacd container now.
+func apiAdminGuacdHandler(w http.ResponseWriter, r *http.Request) {
+	adminID, ok := requireAdmin(w, r)
+	if !ok {
+		return
+	}
+	if r.Method != http.MethodPost {
+		jsonError(w, "Method not allowed", 405)
+		return
+	}
+	if !settingBool("desktop_enabled") {
+		jsonError(w, "Remote desktop is turned off.", 400)
+		return
+	}
+	if _, err := guacdCheck(); err == nil {
+		jsonOK(w, map[string]interface{}{"started": false, "guacd": guacdStatus()})
+		return
+	}
+	if !guacdAutoEnabled() {
+		jsonError(w, "Automatic guacd setup is available on Windows and macOS when guacd_auto is on and guacd_address is local (127.0.0.1:4822).", 400)
+		return
+	}
+	started := guacdStartAsync()
+	auditLog(r, adminID, "admin.guacd_setup", guacdManagedContainer, map[string]interface{}{"address": getSetting("guacd_address")})
+	jsonOK(w, map[string]interface{}{"started": started, "guacd": guacdStatus()})
 }
 
 func mergeCounts(maps ...map[string]int) map[string]int {
