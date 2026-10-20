@@ -88,6 +88,7 @@ var settingSpecs = []settingSpec{
 	// Remote desktop (RDP / VNC / Telnet through guacd)
 	{Key: "desktop_enabled", Default: "1", Kind: "bool", Alias: "REMOTE_DESKTOP_ENABLED"},
 	{Key: "guacd_address", Default: "127.0.0.1:4822", Kind: "string", Alias: "GUACD_ADDRESS"},
+	{Key: "guacd_auto", Default: "1", Kind: "bool"},
 	{Key: "desktop_tunnel_bind", Default: "127.0.0.1", Kind: "string"},
 	// Out-of-band management (BMC) and serial ports
 	{Key: "bmc_enabled", Default: "1", Kind: "bool", Alias: "BMC_ENABLED"},
