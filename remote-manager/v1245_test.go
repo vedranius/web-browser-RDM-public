@@ -20,10 +20,13 @@ func TestV1245AutomaticLogsAndEventTimes(t *testing.T) {
 	srv := newTestServer(t)
 	u := newTestUser(t, srv, "log-discovery", false)
 	id := u.addConnection("demo-stream", h.addr)
-	root := filepath.Join(h.home, "demo-api", "demo-operator", "log")
+	// /home/skripte/<operator>/<service>/log, as in production.
+	root := filepath.Join(h.home, "demo-operator", "demo-api", "log")
 	os.MkdirAll(root, 0700)
 	file := filepath.Join(root, "events.log")
 	writeFile(t, file, "2026-10-15T10:00:00Z ERROR old unique-event\n2026-10-15T11:00:00Z INFO ready\n")
+	txt := filepath.Join(root, "ftp-2026-10-15.txt")
+	writeFile(t, txt, "2026-10-15T10:30:00Z INFO ftp upload\n")
 	writeFile(t, filepath.Join(root, "config.ini"), "password=not-a-log")
 	outside := filepath.Join(h.home, "outside.log")
 	writeFile(t, outside, "private")
@@ -41,11 +44,14 @@ func TestV1245AutomaticLogsAndEventTimes(t *testing.T) {
 	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs?id=%d", id), nil, &catalog); code != 200 {
 		t.Fatal(code)
 	}
-	var log *monitorLogFile
+	var log, txtLog *monitorLogFile
 	for i := range catalog.Files {
 		f := &catalog.Files[i]
 		if f.Path == file {
 			log = f
+		}
+		if f.Path == txt {
+			txtLog = f
 		}
 		if strings.HasSuffix(f.Path, "config.ini") || strings.HasSuffix(f.Path, "escape.log") {
 			t.Fatalf("non-log/symlink offered: %s", f.Path)
@@ -53,6 +59,9 @@ func TestV1245AutomaticLogsAndEventTimes(t *testing.T) {
 	}
 	if log == nil || log.Service != "demo-api" || log.Operator != "demo-operator" || log.Modified == 0 {
 		t.Fatalf("discovery: %+v", catalog)
+	}
+	if txtLog == nil || txtLog.Service != "demo-api" || txtLog.Operator != "demo-operator" {
+		t.Fatalf("FTP .txt log not discovered: %+v", catalog)
 	}
 	endpoint := fmt.Sprintf("/api/monitoring/log?id=%d&root_path=%s&path=%s&scan=1&offset=0&timezone=UTC&q=unique-event", id, url.QueryEscape(root), url.QueryEscape(file))
 	var chunk monitorLogChunk

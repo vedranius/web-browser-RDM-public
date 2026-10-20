@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.7.2"
+var AppVersion = "v12.7.3"
 
 const sessionCookieName = "wrm_session"
 
@@ -549,6 +549,7 @@ func serve(stop <-chan struct{}) int {
 	}
 	cleanupReplacedBinary()
 	initDB()
+	mdCleanupBuildDirs()
 	loadAppSettings()
 	initServerSecret()
 	initEncryptionKey()

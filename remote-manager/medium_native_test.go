@@ -625,7 +625,7 @@ func TestMediumNativeCompareRun(t *testing.T) {
 	mdOpenDestination = func(uid int, cfg *mdConfig, server string, fn func(mdRemote, string) error) error {
 		return fn(mdLocal{}, "local "+server)
 	}
-	res, _, err := mdExecute(uid, mdPlanRequest{Project: "demo-api", Environment: "prod", Ref: "v1.2.0", Compare: true}, func(string) {})
+	res, _, _, err := mdExecute(uid, mdPlanRequest{Project: "demo-api", Environment: "prod", Ref: "v1.2.0", Compare: true}, func(string) {})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -643,11 +643,11 @@ func TestMediumNativeCompareRun(t *testing.T) {
 		}
 	}
 	// a plan without the original tool needs a Git source for the project
-	if _, _, err := mdExecute(uid, mdPlanRequest{Project: "demo-api", Environment: "prod", Ref: "main"}, func(string) {}); err == nil || !strings.Contains(err.Error(), "no WRM Git source") {
+	if _, _, _, err := mdExecute(uid, mdPlanRequest{Project: "demo-api", Environment: "prod", Ref: "main"}, func(string) {}); err == nil || !strings.Contains(err.Error(), "no WRM Git source") {
 		t.Fatalf("no source: %v", err)
 	}
 	// unknown server selection
-	if _, _, err := mdExecute(uid, mdPlanRequest{Project: "demo-api", Environment: "prod", Ref: "main", Servers: []string{"app-09"}}, func(string) {}); err == nil {
+	if _, _, _, err := mdExecute(uid, mdPlanRequest{Project: "demo-api", Environment: "prod", Ref: "main", Servers: []string{"app-09"}}, func(string) {}); err == nil {
 		t.Fatal("unknown server accepted")
 	}
 }
