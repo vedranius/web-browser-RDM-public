@@ -113,7 +113,7 @@ func (e *mdDeployEnv) plan(env string, excluded []string) (*mdPlanResult, mdTree
 	res := &mdPlanResult{Project: proj.Name, Environment: target.Name, Ref: "refs/heads/main", Commit: fmt.Sprintf("%07x", e.commit) + strings.Repeat("0", 33),
 		SourceFrom: "git_source", RefAllowed: true, Confirm: target.Confirm, Excluded: ex, Deployable: true}
 	for _, d := range target.Destinations {
-		sp := mdPlanServer(e.uid, cfg, proj, target, d, tree, nil, ex)
+		sp := mdPlanServer(e.uid, cfg, proj, target, d, tree, nil, ex, false)
 		if sp.Error != "" {
 			e.t.Fatalf("plan %s: %s", d.label(), sp.Error)
 		}

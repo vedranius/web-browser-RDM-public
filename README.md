@@ -13,7 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.7.2** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.7.3** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.7.3
+
+**Medium builds where you choose.** Projects with a build step can now deploy with the **WRM native** engine. For each project, choose where the build runs: on the WRM host, on a chosen Linux build server over SSH, or not at all. The plan shows the place and the build's platform and architecture before anything runs; a destination with a different platform or architecture is refused with the reason. A build server receives only the prepared source in a temporary directory (no Git metadata and no SSH keys), and the directory is removed afterwards.
+
+**Monitoring → Logs finds every service.** Service logs are now discovered under `/home/operators/<operator>/<service>/log` and `/logs`, with the correct Service and Operator labels. Non-compressed service logs, including FTP `.txt` files, are listed; virtual environments, build/archive directories and old backups are skipped. Discovery and listing have larger time budgets, so large hosts no longer show incomplete results.
 
 ## What's new in v12.7.2
 
@@ -25,7 +31,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 ## What's new in v12.7.0
 
-**Medium deploys natively.** Switch a Medium project to the **WRM native** engine and WRM deploys it itself, from your WRM Git source to every server of the environment through your saved WRM connections, without Docker and without the original tool. Each server gets a lock, a backup of everything that changes, a SHA-256 check of every uploaded file, `post_deploy` and a history entry, all in the original tool's format, so both engines can take turns on the same servers and roll back each other's deployments. A **dry run** compares again under the lock and changes nothing; changes can be **left out** of a deployment; **History and rollback** shows what runs where, rolls back the last deployment and releases a lock someone left behind. Projects with a build step stay on the original tool until v12.7.3. See [Medium native engine](#medium-native-engine).
+**Medium deploys natively.** Switch a Medium project to the **WRM native** engine and WRM deploys it itself, from your WRM Git source to every server of the environment through your saved WRM connections, without Docker and without the original tool. Each server gets a lock, a backup of everything that changes, a SHA-256 check of every uploaded file, `post_deploy` and a history entry, all in the original tool's format, so both engines can take turns on the same servers and roll back each other's deployments. A **dry run** compares again under the lock and changes nothing; changes can be **left out** of a deployment; **History and rollback** shows what runs where, rolls back the last deployment and releases a lock someone left behind. Projects with a build step gained native builds in v12.7.3. See [Medium native engine](#medium-native-engine).
 
 ## What's new in v12.6.26
 
@@ -263,21 +269,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.7.2-linux-amd64
-   ./wrm-pro-v12.7.2-linux-amd64
+   chmod +x wrm-pro-v12.7.3-linux-amd64
+   ./wrm-pro-v12.7.3-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.7.2-windows-amd64.exe
+   .\wrm-pro-v12.7.3-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.7.2-linux-amd64.AppImage
-   ./wrm-pro-v12.7.2-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.7.2-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.7.3-linux-amd64.AppImage
+   ./wrm-pro-v12.7.3-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.7.3-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -286,8 +292,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.7.2/wrm-pro-v12.7.2-android-arm64
-   chmod +x wrm-pro-v12.7.2-android-arm64 && ./wrm-pro-v12.7.2-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.7.3/wrm-pro-v12.7.3-android-arm64
+   chmod +x wrm-pro-v12.7.3-android-arm64 && ./wrm-pro-v12.7.3-android-arm64
    ```
 
    **Docker**
@@ -1329,7 +1335,7 @@ The Medium view has a collapsible **WRM engine** panel. It compares a branch or 
 - **History and rollback:** per server the current version, the lock (owner and age), the recent history with counts, and which deployment a rollback undoes and what it restores (chosen from the history as the original tool chooses). *Dry rollback* shows what would happen; *Roll back* restores files, links and directories with their modes from the backup and records a `ROLLBACK` entry (`rollback-<id>/` keeps what it replaced). A lock older than the longest a deployment may take (from `medium_command_timeout` and `medium_transfer_timeout`, at least 30 minutes) can be released with *Release lock* if its owner did not change.
 - **Progress:** one deployment or rollback per user runs in the background with a live log (commands and their output), the result per destination and *Cancel*, which stops before the next destination starts changing. Each run is a row in the Medium activity log. Stopping a user or a lockdown cancels their runs.
 - Deploying, rolling back and releasing a lock need the `medium_native` policy and, with step-up on, a fresh confirmation; all are audited (`git.medium_native_deploy`, `git.medium_native_rollback`, `git.medium_native_lock_released`, `git.medium_native_cancelled`, and `git.medium_native_<kind>_done` with the outcome per destination). Comparisons and dry runs need `git_medium` like the rest of Medium and are audited (`git.medium_native_preview`).
-- Projects with a build step can only be compared with the original tool in this version; build locations come in v12.7.3.
+- **Build locations:** for a project with a build step, choose where the build runs before previewing: on the WRM host, on a chosen Linux build server over SSH, or not at all (`none`). The choice is stored per user and project and audited (`git.medium_build_set`). The whole commit is prepared, the configured `build` command runs in the repository root, and `source_dir` is read from the result. A build server gets a temporary directory with only the source (no Git metadata or SSH keys) and the directory is removed afterwards; the build runs through the account's login shell. The plan shows the build location, its platform and architecture, and the last build output; a destination whose platform or architecture differs is refused with the reason. WRM-host builds need a POSIX host with the toolchain, so on Windows use a Linux build server or `none`.
 
 ### Git workspace: every file and partial checks
 
@@ -3144,7 +3150,7 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 |---|---|
 | Medium native deploy: *locked by … since …* | Another deployment (WRM or the original tool) holds the destination. Wait for it; a lock left behind by a crash can be released in *History and rollback* once it is older than the time shown (from `medium_command_timeout` and `medium_transfer_timeout`) |
 | Medium native deploy: *the plan changed since you reviewed it* / *plan changed* | The server or the deploy-config changed after the comparison. Compare again, review the new plan and deploy that |
-| Medium native deploy: *Deploy* is disabled | Switch the project to *WRM native* (Engine), check the `medium_native` policy and `allowed_refs`; projects with a build step stay on the original tool until v12.7.3 |
+| Medium native deploy: *Deploy* is disabled | Switch the project to *WRM native* (Engine), check the `medium_native` policy and `allowed_refs`; for a project with a build step, choose a build location (WRM host, Linux build server or none) before previewing |
 | Directory sign-in: *Sign-in refused: your directory account is not assigned to WRM* | No rule matches the token. Use *Test sign-in* with that person's account to see the claims; assign the app role or group in the directory, or add a rule. Entra sends `groups` only when the app registration's token configuration adds them, and replaces them by an overage note for people in many groups: map app roles instead |
 | Directory sign-in: the provider says the redirect address does not match | Register exactly the address shown in *Admin panel → Directory sign-in*; behind a reverse proxy set the provider's redirect address (or `ai_mcp_public_url`) to the public address |
 | Directory sign-in: *the ID token has expired* / *issued in the future* | The WRM host's clock is wrong; sync it (NTP) |

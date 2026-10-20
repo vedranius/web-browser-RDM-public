@@ -148,10 +148,18 @@ func mdPlanRevision(res *mdPlanResult) string {
 		Changes      []mdChange
 	}
 	v := struct {
-		Commit   string
-		Excluded []string
-		Servers  []srv
-	}{Commit: res.Commit, Excluded: res.Excluded}
+		Commit        string
+		Excluded      []string
+		BuildLocation string
+		BuildServer   string
+		BuildPlatform string
+		BuildArch     string
+		Servers       []srv
+	}{
+		Commit: res.Commit, Excluded: res.Excluded,
+		BuildLocation: res.BuildLocation, BuildServer: res.BuildServer,
+		BuildPlatform: res.BuildPlatform, BuildArch: res.BuildArch,
+	}
 	for _, s := range res.Servers {
 		v.Servers = append(v.Servers, srv{s.Server, s.Path, s.Excludes, s.PostDeploy, s.Changes})
 	}

@@ -36,6 +36,8 @@ type mdHost interface {
 	WriteNew(p string, r io.Reader) error // creates p, which must not exist
 	// Sh runs script with a POSIX sh: its exit code, stdout and stderr.
 	Sh(ctx context.Context, script string, stdin []byte) (int, []byte, string, error)
+	// Stream runs script with a POSIX sh and streams stdout (for build output).
+	Stream(ctx context.Context, script string, out io.Writer) (int, string, error)
 	// Login runs command through the account's login shell and streams the output.
 	Login(ctx context.Context, command string, out io.Writer) (int, error)
 }
@@ -137,6 +139,12 @@ func (m mdSFTP) Sh(ctx context.Context, script string, stdin []byte) (int, []byt
 	out, errb := &capBuffer{max: 64 << 20}, &capBuffer{max: 64 << 10}
 	code, err := mdSSHRun(ctx, m.ssh, "sh -c "+shellQuote(script), stdin, out, errb)
 	return code, out.Bytes(), errb.String(), err
+}
+
+func (m mdSFTP) Stream(ctx context.Context, script string, out io.Writer) (int, string, error) {
+	errb := &capBuffer{max: 64 << 10}
+	code, err := mdSSHRun(ctx, m.ssh, "sh -c "+shellQuote(script), nil, out, errb)
+	return code, errb.String(), err
 }
 
 func (m mdSFTP) Login(ctx context.Context, command string, out io.Writer) (int, error) {

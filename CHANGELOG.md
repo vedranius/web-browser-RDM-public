@@ -1,3 +1,14 @@
+## [12.7.3] - 2026-10-20
+
+### Added
+- **Medium build locations.** A project with a `build` step can now deploy with the **WRM native** engine. For each project, choose where the build runs: on the WRM host, on a chosen Linux build server over SSH, or not at all (`none`). The choice is stored per user and project and audited (`git.medium_build_set`).
+- The whole commit is prepared, the `build` command runs in the repository root, and `source_dir` is read from the result. A build server receives a temporary directory containing only the prepared source (no Git metadata and no SSH keys); the build runs through the account's login shell, and the temporary directory is removed afterwards.
+- The plan shows the build location, the build's platform and architecture, and the last build output. A destination whose platform or architecture differs from the build is refused with the reason. WRM-host builds need a POSIX host with the toolchain; on Windows, choose a Linux build server or no build.
+
+### Fixed
+- **Monitoring → Logs discovers every service under `/home/operators`.** The first level is now read as the operator and the second as the service, so the Service and Operator dropdowns show the correct values. Virtual environments, builds, distributions, archives, temporary and private-key directories are skipped instead of consuming the visit limit.
+- Service `log` and `logs` folders list their log files, including FTP `.txt` logs, and skip compressed archives; `/var/log` and broad roots keep the name filter. Archive, backup and old subfolders are pruned. Discovery and listing have larger time budgets (20 s and 60 s), so large hosts no longer return an incomplete list.
+
 ## [12.7.2] - 2026-10-19
 
 ### Added

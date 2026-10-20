@@ -30,6 +30,11 @@ func (mdLocal) Sh(ctx context.Context, script string, stdin []byte) (int, []byte
 	code, err := mdLocalRun(ctx, script, stdin, &out, &errb)
 	return code, out.Bytes(), errb.String(), err
 }
+func (mdLocal) Stream(ctx context.Context, script string, out io.Writer) (int, string, error) {
+	var errb bytes.Buffer
+	code, err := mdLocalRun(ctx, script, nil, out, &errb)
+	return code, errb.String(), err
+}
 
 func mdLocalRmdir(p string) error {
 	fi, err := os.Lstat(p)
