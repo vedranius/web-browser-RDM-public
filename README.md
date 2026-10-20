@@ -1105,7 +1105,7 @@ Windows servers (RDP), Linux desktops and KVM/IPMI consoles (VNC) and old networ
 | Debian / Ubuntu | `sudo apt install guacd` (listens on 127.0.0.1:4822) |
 | Docker | `docker compose up -d` — `docker-compose.yml` contains a `guacd` service that shares WRM's network |
 | Any Linux with Docker | `docker run -d --name guacd --network host --restart unless-stopped guacamole/guacd` |
-| Windows / macOS | **nothing by hand:** WRM starts the official guacd container in Docker Desktop when `guacd_address` is local (`127.0.0.1:4822`). Install/start Docker Desktop; otherwise run guacd on a Linux machine and set `guacd_address`. |
+| Windows / macOS | **nothing by hand:** WRM starts the official guacd container in Docker Desktop when `guacd_address` is local (`127.0.0.1:4822`). Docker Desktop must use **Linux containers**. Install/start it; otherwise run guacd on a Linux machine and set `guacd_address`. |
 
 *Admin panel → Overview* shows whether guacd answers (and its version); *Test connection* on an RDP/VNC connection checks the server's port **and** guacd.
 

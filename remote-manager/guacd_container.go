@@ -34,10 +34,11 @@ const (
 )
 
 var (
-	errGuacdNoDocker   = errors.New("Docker Desktop is not installed on this computer")
-	errGuacdDockerDown = errors.New("Docker Desktop is installed but is not running")
-	errGuacdNotLocal   = errors.New("guacd_address is not a local address")
-	errGuacdAutoOff    = errors.New("automatic guacd setup is off")
+	errGuacdNoDocker          = errors.New("Docker Desktop is not installed on this computer")
+	errGuacdDockerDown        = errors.New("Docker Desktop is installed but is not running")
+	errGuacdWindowsContainers = errors.New("Docker Desktop is using Windows containers")
+	errGuacdNotLocal          = errors.New("guacd_address is not a local address")
+	errGuacdAutoOff           = errors.New("automatic guacd setup is off")
 )
 
 // Replaced in tests.
@@ -185,6 +186,9 @@ func guacdEnsure(ctx context.Context, force bool) error {
 	if err != nil {
 		return fmt.Errorf("%w (%s)", errGuacdDockerDown, guacdCommandError(out, err))
 	}
+	if engineOS := strings.ToLower(strings.TrimSpace(string(out))); engineOS != "" && engineOS != "linux" {
+		return fmt.Errorf("%w (%s); switch Docker Desktop to Linux containers", errGuacdWindowsContainers, engineOS)
+	}
 
 	state := ""
 	ictx, cancel := context.WithTimeout(ctx, 15*time.Second)
@@ -259,6 +263,8 @@ func guacdFailureMessage(err error) string {
 		return "Remote desktop needs Docker Desktop on this computer to run guacd. Install Docker Desktop (Medium → step 2), or set guacd_address to an existing guacd."
 	case errors.Is(err, errGuacdDockerDown):
 		return "Docker Desktop is installed but is not running. Start Docker Desktop, then try the remote desktop again."
+	case errors.Is(err, errGuacdWindowsContainers):
+		return "Docker Desktop is using Windows containers. Switch it to Linux containers (right-click the Docker icon → Switch to Linux containers), then try the remote desktop again."
 	case errors.Is(err, errGuacdNotLocal):
 		return "Remote desktop needs guacd at " + addr + ", but it is not reachable. Start it there, or set guacd_address to the WRM machine (127.0.0.1:4822) so WRM can start it."
 	case guacdAutoEnabled():
