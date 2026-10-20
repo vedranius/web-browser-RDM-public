@@ -489,7 +489,7 @@ func mdWriteTree(root string, tree mdTree) error {
 		paths = append(paths, p)
 	}
 	sort.Strings(paths)
-	if err := os.MkdirAll(root, 0o755); err != nil {
+	if err := os.MkdirAll(root, 0o750); err != nil {
 		return err
 	}
 	write := func(symlinks bool) error {
@@ -507,7 +507,7 @@ func mdWriteTree(root string, tree mdTree) error {
 			p := filepath.Join(root, filepath.FromSlash(rel))
 			switch e.Type {
 			case "dir":
-				if err := os.MkdirAll(p, 0o755); err != nil {
+				if err := os.MkdirAll(p, 0o750); err != nil {
 					return err
 				}
 			case "file":
@@ -518,7 +518,7 @@ func mdWriteTree(root string, tree mdTree) error {
 				if err != nil {
 					return err
 				}
-				if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+				if err := os.MkdirAll(filepath.Dir(p), 0o750); err != nil {
 					return err
 				}
 				mode := os.FileMode(0o644)
@@ -532,7 +532,7 @@ func mdWriteTree(root string, tree mdTree) error {
 					return err
 				}
 			case "symlink":
-				if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+				if err := os.MkdirAll(filepath.Dir(p), 0o750); err != nil {
 					return err
 				}
 				if err := os.Symlink(e.Link, p); err != nil {
@@ -632,7 +632,7 @@ func mdExtractTarGz(name, root string) error {
 		return err
 	}
 	defer gz.Close()
-	if err := os.MkdirAll(root, 0o755); err != nil {
+	if err := os.MkdirAll(root, 0o750); err != nil {
 		return err
 	}
 	// os.Root confines every operation below root, including symlinks. A build
@@ -661,13 +661,13 @@ func mdExtractTarGz(name, root string) error {
 		}
 		dir := path.Dir(rel)
 		if dir != "." {
-			if err := rootFS.MkdirAll(dir, 0o755); err != nil {
+			if err := rootFS.MkdirAll(dir, 0o750); err != nil {
 				return err
 			}
 		}
 		switch hdr.Typeflag {
 		case tar.TypeDir:
-			if err := rootFS.MkdirAll(rel, 0o755); err != nil {
+			if err := rootFS.MkdirAll(rel, 0o750); err != nil {
 				return err
 			}
 		case tar.TypeReg:
@@ -679,10 +679,13 @@ func mdExtractTarGz(name, root string) error {
 			if err != nil {
 				return err
 			}
-			_, cpErr := io.Copy(out, tr)
+			n, cpErr := io.CopyN(out, tr, hdr.Size)
 			closeErr := out.Close()
 			if cpErr != nil {
 				return cpErr
+			}
+			if n != hdr.Size {
+				return fmt.Errorf("the build result ended early in %s", rel)
 			}
 			if closeErr != nil {
 				return closeErr
