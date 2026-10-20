@@ -635,6 +635,13 @@ func mdExtractTarGz(name, root string) error {
 	if err := os.MkdirAll(root, 0o755); err != nil {
 		return err
 	}
+	// os.Root confines every operation below root, including symlinks. A build
+	// result may not write through a link or point a link outside the result.
+	rootFS, err := os.OpenRoot(root)
+	if err != nil {
+		return err
+	}
+	defer rootFS.Close()
 	tr := tar.NewReader(gz)
 	var total int64
 	for {
@@ -652,24 +659,23 @@ func mdExtractTarGz(name, root string) error {
 		if !mdSafeTreePath(rel) {
 			return fmt.Errorf("the build result has an unsafe path %q", hdr.Name)
 		}
-		p := filepath.Join(root, filepath.FromSlash(rel))
-		if err := mdNoSymlinkParents(root, rel); err != nil {
-			return err
+		dir := path.Dir(rel)
+		if dir != "." {
+			if err := rootFS.MkdirAll(dir, 0o755); err != nil {
+				return err
+			}
 		}
 		switch hdr.Typeflag {
 		case tar.TypeDir:
-			if err := os.MkdirAll(p, 0o755); err != nil {
+			if err := rootFS.MkdirAll(rel, 0o755); err != nil {
 				return err
 			}
-		case tar.TypeReg, tar.TypeRegA:
+		case tar.TypeReg:
 			if hdr.Size > mdBuildMaxOutput-total {
 				return fmt.Errorf("the build result is too large (more than %d MB)", mdBuildMaxOutput>>20)
 			}
 			total += hdr.Size
-			if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-				return err
-			}
-			out, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+			out, err := rootFS.OpenFile(rel, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
 			if err != nil {
 				return err
 			}
@@ -685,48 +691,23 @@ func mdExtractTarGz(name, root string) error {
 			if hdr.Mode&0o100 != 0 {
 				mode = 0o755
 			}
-			if err := os.Chmod(p, mode); err != nil {
+			if err := rootFS.Chmod(rel, mode); err != nil {
 				return err
 			}
 		case tar.TypeSymlink:
-			if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-				return err
-			}
-			if err := os.Symlink(hdr.Linkname, p); err != nil {
-				return err
+			if err := rootFS.Symlink(hdr.Linkname, rel); err != nil {
+				return fmt.Errorf("the build result has an unsafe symlink %s -> %s: %v", rel, hdr.Linkname, err)
 			}
 		case tar.TypeLink:
 			target := path.Clean(strings.TrimPrefix(hdr.Linkname, "./"))
 			if !mdSafeTreePath(target) {
 				return fmt.Errorf("the build result has an unsafe hard link %q", hdr.Linkname)
 			}
-			if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-				return err
-			}
-			if err := os.Link(filepath.Join(root, filepath.FromSlash(target)), p); err != nil {
+			if err := rootFS.Link(target, rel); err != nil {
 				return err
 			}
 		default:
 			// GNU tar's metadata entries are consumed by archive/tar itself.
-		}
-	}
-	return nil
-}
-
-func mdNoSymlinkParents(root, rel string) error {
-	parts := strings.Split(rel, "/")
-	p := root
-	for _, c := range parts[:len(parts)-1] {
-		p = filepath.Join(p, filepath.FromSlash(c))
-		fi, err := os.Lstat(p)
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil
-			}
-			return err
-		}
-		if fi.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("the build result writes below a symlink (%s)", c)
 		}
 	}
 	return nil
