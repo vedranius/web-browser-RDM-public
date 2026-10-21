@@ -53,6 +53,11 @@ var aiTools = []aiToolSpec{
 		Schema: obj(map[string]interface{}{"path": strProp("Absolute path, or ~/")}, "path")}},
 	{Kind: "read", Def: aiToolDef{Name: "tail_log", Description: "Show the last lines of a log file.",
 		Schema: obj(map[string]interface{}{"path": strProp("Absolute path of the log file"), "lines": intProp("Number of lines (1-2000, default 200)")}, "path")}},
+	{Kind: "read", Def: aiToolDef{Name: "find_logs", Description: "List the log sources WRM discovered on this server: services with the folders or journal unit each one logs to. Uses the same discovery as Monitoring → Logs (cached for an hour; the connection owner may trigger one scan over this session's connection). Start here when asked why a service fails or where its logs are.",
+		Schema: obj(map[string]interface{}{"filter": strProp("Only services whose name, kind or path contains this text"), "limit": intProp("Maximum services to list (1-300, default 100)")})}},
+	{Kind: "read", Def: aiToolDef{Name: "read_log", Description: "Read the log of a service found with find_logs, or a file path. With a service name it reads that service's newest log file, or its systemd journal; the other files of the service are named at the end. Optional literal grep keeps matching lines only. Output is size-limited and redacted like every read.",
+		Schema: obj(map[string]interface{}{"service": strProp("Service name from find_logs, with or without .service"), "path": strProp("Log file to read instead of a service (absolute, or ~/)"),
+			"lines": intProp("Number of lines (1-2000, default 200)"), "grep": strProp("Only lines containing this literal text")})}},
 	{Kind: "read", Def: aiToolDef{Name: "journal", Description: "Read the systemd journal (journalctl), optionally for one unit, since a time, at a priority, matching a pattern.",
 		Schema: obj(map[string]interface{}{"unit": strProp("systemd unit, e.g. nginx.service"), "lines": intProp("Number of lines (1-2000, default 200)"),
 			"since": strProp("e.g. '1 hour ago', 'today', '2025-01-31 10:00'"), "priority": strProp("emerg, alert, crit, err, warning, notice, info or debug"), "grep": strProp("Only lines matching this pattern")})}},
@@ -118,6 +123,10 @@ func withTransferSource(ctx context.Context, src *aiSession) context.Context {
 	return context.WithValue(ctx, aiTransferSourceKey, src)
 }
 
+// aiReadRealTools print the real path before any content, so the engine can
+// refuse a path that resolves to a sensitive file.
+var aiReadRealTools = map[string]bool{"read_file": true, "tail_log": true, "read_log": true}
+
 func aiToolSpecFor(name string) (aiToolSpec, bool) {
 	for _, t := range aiTools {
 		if t.Def.Name == name {
@@ -151,6 +160,7 @@ type aiToolInput struct {
 	Priority string `json:"priority"`
 	Grep     string `json:"grep"`
 	Name     string `json:"name"`
+	Service  string `json:"service"`
 	Filter   string `json:"filter"`
 	Sort     string `json:"sort"`
 	Limit    int    `json:"limit"`
@@ -195,6 +205,8 @@ type aiPlanned struct {
 	NewText   string
 	Diff      string
 	Inventory *aiToolInput
+	// Logs (find_logs): the discovery listing, produced in run
+	Logs *aiToolInput
 	// transfers (transfer_file): the source session, its real path and the size
 	Transfer bool
 	From     *aiSession
@@ -251,26 +263,71 @@ func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiP
 			return nil, err
 		}
 		p = aiExpandHome(p, s.home)
-		var body string
-		if name == "read_file" {
-			max := aiReadMax()
-			n := in.MaxBytes
-			if n <= 0 || n > max {
-				n = max
-			}
-			off := in.Offset
-			if off < 0 {
-				off = 0
-			}
-			body = `tail -c +` + strconv.FormatInt(off+1, 10) + ` -- "$r" | head -c ` + strconv.FormatInt(n, 10)
-		} else {
-			body = `tail -n ` + strconv.Itoa(aiClamp(in.Lines, 200, 1, 2000)) + ` -- "$r"`
+		if name == "tail_log" {
+			return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: p}, Display: name + " " + p, Script: aiTailScript(p, in.Lines, "")}, nil
 		}
+		max := aiReadMax()
+		n := in.MaxBytes
+		if n <= 0 || n > max {
+			n = max
+		}
+		off := in.Offset
+		if off < 0 {
+			off = 0
+		}
+		body := `tail -c +` + strconv.FormatInt(off+1, 10) + ` -- "$r" | head -c ` + strconv.FormatInt(n, 10)
 		// the real path is printed first so a symlink to a sensitive file is caught
 		script := `f=` + q(p) + `; r=$(readlink -f -- "$f" 2>/dev/null || printf %s "$f"); printf 'WRM-REAL %s\n' "$r"; ` +
 			`[ -e "$r" ] || { echo "No such file: $f"; exit 2; }; [ -d "$r" ] && { echo "Is a directory: $f"; exit 2; }; ` +
 			`printf 'WRM-SIZE %s\n' "$(wc -c < "$r" 2>/dev/null)"; ` + body
 		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: p}, Display: name + " " + p, Script: script}, nil
+	case "find_logs":
+		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read"}, Display: "find logs " + in.Filter, Logs: &in}, nil
+	case "read_log":
+		grep := in.Grep
+		if len(grep) > 200 || strings.ContainsAny(grep, "\x00\r\n") {
+			return nil, fmt.Errorf("invalid pattern")
+		}
+		if in.Path != "" {
+			p, err := aiRequirePath(in.Path)
+			if err != nil {
+				return nil, err
+			}
+			p = aiExpandHome(p, s.home)
+			return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: p}, Display: "read_log " + p, Script: aiTailScript(p, in.Lines, grep)}, nil
+		}
+		service := strings.TrimSpace(in.Service)
+		if service == "" {
+			return nil, fmt.Errorf("give a service name (see find_logs) or a path")
+		}
+		if len(service) > 200 || strings.ContainsAny(service, "\x00\r\n") {
+			return nil, fmt.Errorf("invalid service name")
+		}
+		files, unit, err := s.aiServiceLogs(ctx, service)
+		if err != nil {
+			return nil, err
+		}
+		if unit != "" {
+			cmd := "journalctl --no-pager -o short-iso -n " + strconv.Itoa(aiClamp(in.Lines, 200, 1, 2000)) + " -u " + shellQuote(unit)
+			if grep != "" {
+				cmd += " -g " + shellQuote(grep)
+			}
+			return &aiPlanned{Act: aiAction{Tool: name, Kind: "read"}, Display: "read_log journal " + unit, Script: cmd + " 2>&1"}, nil
+		}
+		if len(files) == 0 {
+			return nil, fmt.Errorf("no readable log file was found for service %q; call find_logs to see which services have logs", service)
+		}
+		chosen := files[0]
+		script := aiTailScript(chosen.Path, in.Lines, grep)
+		if len(files) > 1 {
+			others := []string{}
+			for _, f := range files[1:] {
+				others = append(others, f.Path)
+			}
+			note := fmt.Sprintf("[newest log of %s; other files: %s]", service, strings.Join(others, ", "))
+			script += `; printf '\n%s\n' ` + shellQuote(note)
+		}
+		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: chosen.Path}, Display: "read_log " + service + " (" + chosen.Path + ")", Script: script}, nil
 	case "list_directory":
 		p, err := aiRequirePath(in.Path)
 		if err != nil {

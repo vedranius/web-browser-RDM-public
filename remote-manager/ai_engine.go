@@ -936,6 +936,8 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 	}
 	if pl.Inventory != nil {
 		out, code, err = s.inventoryFiles(ctx, *pl.Inventory)
+	} else if pl.Logs != nil {
+		out, code, err = s.findLogs(ctx, *pl.Logs)
 	} else if pl.Transfer {
 		out, code, err = s.transferRun(ctx, pl)
 	} else if pl.Write {
@@ -943,7 +945,7 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 	} else {
 		out, code, err = s.exec(ctx, pl.Script, "", 0)
 	}
-	if err == nil && (call.Name == "read_file" || call.Name == "tail_log") && strings.HasPrefix(out, "WRM-REAL ") {
+	if err == nil && aiReadRealTools[call.Name] && strings.HasPrefix(out, "WRM-REAL ") {
 		i := strings.Index(out, "\n")
 		real := out[len("WRM-REAL "):max(i, len("WRM-REAL "))]
 		if i >= 0 {
@@ -968,7 +970,7 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 			}
 		}
 	}
-	if (call.Name == "read_file" || call.Name == "tail_log") && strings.HasPrefix(out, "WRM-SIZE ") {
+	if aiReadRealTools[call.Name] && strings.HasPrefix(out, "WRM-SIZE ") {
 		if i := strings.Index(out, "\n"); i > 0 {
 			out = "(file size: " + strings.TrimSpace(out[len("WRM-SIZE "):i]) + " bytes)\n" + out[i+1:]
 		}
@@ -1370,7 +1372,7 @@ func (s *aiSession) systemPrompt() string {
 	b.WriteString(`How you work:
 - You never have a shell. You act only through the WRM tools; WRM checks every call against the session's permission mode and runs it over its own SSH connection.
 - Before each tool call, say in one short sentence what you are going to do and why. Give run_command, write_file and edit_file a clear "reason".
-- Prefer inventory_files for recursive configuration inventories and literal content search; do not retry a denied shell command with another shell command. Prefer the read tools (system_info, read_file, list_directory, tail_log, journal, service_status, list_packages, processes, disk_usage, network_status) for inspection.
+- Prefer inventory_files for recursive configuration inventories and literal content search; do not retry a denied shell command with another shell command. Prefer the read tools (system_info, read_file, list_directory, tail_log, journal, service_status, list_packages, processes, disk_usage, network_status) for inspection. For "why is service X failing", call find_logs and then read_log with the service name before guessing a path or a command.
 - Commands must be non-interactive: no pagers, editors, prompts or endless output (no tail -f, journalctl -f, top without -b). Use sudo -n when root is needed.
 - Changes (commands that modify the system, file edits) may need the user's approval. If WRM denies a call, do not try to get around it with another command; explain what you need and let the user decide.
 - Destructive operations (wiping disks or file systems, rm -rf of system directories, cutting off SSH access, editing password files …) are always refused.
