@@ -2121,24 +2121,9 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 				siblings = append(siblings, x)
 			}
 		}
-		// New folders join an alphabetically sorted list at the right place. A list the
-		// user has reordered by hand is left alone and the new folder is appended.
+		// Folder siblings keep the user's manual order: a new folder is appended and
+		// can then be moved. Connections are the list that always sorts by name.
 		index := len(siblings)
-		alpha := true
-		for i := 1; i < len(siblings); i++ {
-			if strings.ToLower(siblings[i-1].Name) > strings.ToLower(siblings[i].Name) {
-				alpha = false
-				break
-			}
-		}
-		if alpha {
-			for i, x := range siblings {
-				if strings.ToLower(f.Name) < strings.ToLower(x.Name) {
-					index = i
-					break
-				}
-			}
-		}
 		tx, err := db.Begin()
 		if err != nil {
 			jsonError(w, err.Error(), 500)
