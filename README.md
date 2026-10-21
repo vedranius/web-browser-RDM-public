@@ -13,7 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.7.4** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.8.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.8.0
+
+**Folders now behave like a proper remote manager.** Deleting a folder removes its subfolders and every connection inside in one step, without moving anything to the root first. Folders and connections can be moved from the context menu or dragged, including several selected connections at once, and the new position is saved. Shared and collaboration trees keep their nested folder structure, and folder/connection lists sort names case-insensitively while new folders join an alphabetically sorted list.
+
+**Every reported detail is covered.** The Settings window opens at the size of the Admin window and wide tab rows have scroll arrows. Terminal windows have **Edit** and **Tunnels** buttons in the title bar. The file manager can change permissions (including recursively and with an optional sudo password), and the transfer destination can create a folder. Additional uploads can be queued while one is running. Tunnels can be filtered by port, description or host, with an active-only switch, and proxy settings are reachable from **Tools** and the Tunnels panel. Save buttons show progress and reject a second click, and **+ Connection** on a folder is pre-filled with that folder and its defaults.
 
 ## What's new in v12.7.4
 
@@ -275,21 +281,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.7.4-linux-amd64
-   ./wrm-pro-v12.7.4-linux-amd64
+   chmod +x wrm-pro-v12.8.0-linux-amd64
+   ./wrm-pro-v12.8.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.7.4-windows-amd64.exe
+   .\wrm-pro-v12.8.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.7.4-linux-amd64.AppImage
-   ./wrm-pro-v12.7.4-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.7.4-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.8.0-linux-amd64.AppImage
+   ./wrm-pro-v12.8.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.8.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -298,8 +304,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.7.4/wrm-pro-v12.7.4-android-arm64
-   chmod +x wrm-pro-v12.7.4-android-arm64 && ./wrm-pro-v12.7.4-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.8.0/wrm-pro-v12.8.0-android-arm64
+   chmod +x wrm-pro-v12.8.0-android-arm64 && ./wrm-pro-v12.8.0-android-arm64
    ```
 
    **Docker**

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hash"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 )
 
 // ─── FILE MANAGER ─────────────────────────────────────
@@ -786,6 +788,130 @@ func mkdirRemoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	auditFileOp(r, acc, c, "file.mkdir", remotePath, nil)
+	jsonOK(w, map[string]interface{}{"ok": true, "status": "ok"})
+}
+
+func remotePermissionErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := strings.ToLower(err.Error())
+	return strings.Contains(e, "permission denied") || strings.Contains(e, "operation not permitted") || strings.Contains(e, "access denied")
+}
+
+func chmodRemoteHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	c, acc, ok := fileRequest(w, r, PermFilesWrite)
+	if !ok {
+		return
+	}
+	var in struct {
+		Path         string `json:"path"`
+		Mode         string `json:"mode"`
+		Recursive    bool   `json:"recursive"`
+		Sudo         bool   `json:"sudo"`
+		SudoPassword string `json:"sudo_password"`
+	}
+	if json.NewDecoder(r.Body).Decode(&in) != nil {
+		jsonError(w, "Bad JSON", 400)
+		return
+	}
+	in.Path = strings.TrimSpace(in.Path)
+	if in.Path == "" || in.Path == "." || in.Path == ".." || strings.Trim(in.Path, "/") == "" || strings.ContainsRune(in.Path, 0) {
+		jsonError(w, "Invalid path", 400)
+		return
+	}
+	if len(in.Mode) < 3 || len(in.Mode) > 4 {
+		jsonError(w, "Mode must be three or four octal digits", 400)
+		return
+	}
+	for _, ch := range in.Mode {
+		if ch < '0' || ch > '7' {
+			jsonError(w, "Mode must be three or four octal digits", 400)
+			return
+		}
+	}
+	mode, _ := strconv.ParseUint(in.Mode, 8, 32)
+	perm := os.FileMode(mode & 0o777)
+	if mode&0o4000 != 0 {
+		perm |= os.ModeSetuid
+	}
+	if mode&0o2000 != 0 {
+		perm |= os.ModeSetgid
+	}
+	if mode&0o1000 != 0 {
+		perm |= os.ModeSticky
+	}
+	useSudo := in.Sudo || in.SudoPassword != ""
+	if !useSudo && in.Recursive {
+		if isFTP(c) {
+			jsonError(w, "Recursive permissions need an SSH/SFTP connection", 400)
+			return
+		}
+		cmd := "chmod -R " + in.Mode + " -- " + shellQuote(in.Path)
+		err := withSSHClient(c, func(cl *ssh.Client) error {
+			_, e := runRemoteScript(cl, cmd, "", 60*time.Second)
+			return e
+		})
+		if err != nil {
+			if remotePermissionErr(err) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error(), "need_sudo": true})
+				return
+			}
+			jsonError(w, err.Error(), 500)
+			return
+		}
+		auditFileOp(r, acc, c, "file.chmod", in.Path, map[string]interface{}{"mode": in.Mode, "recursive": true, "sudo": false})
+		jsonOK(w, map[string]interface{}{"ok": true, "status": "ok"})
+		return
+	}
+	if useSudo {
+		if isFTP(c) {
+			jsonError(w, "sudo is only available on SSH/SFTP connections", 400)
+			return
+		}
+		flag := ""
+		if in.Recursive {
+			flag = "-R "
+		}
+		cmd := "sudo -S -p '' chmod " + flag + in.Mode + " -- " + shellQuote(in.Path)
+		stdin := in.SudoPassword + "\n"
+		if in.SudoPassword == "" {
+			cmd = "sudo -n -p '' chmod " + flag + in.Mode + " -- " + shellQuote(in.Path)
+			stdin = ""
+		}
+		err := withSSHClient(c, func(cl *ssh.Client) error {
+			_, e := runRemoteScript(cl, cmd, stdin, 60*time.Second)
+			return e
+		})
+		if err != nil {
+			jsonError(w, err.Error(), 500)
+			return
+		}
+		auditFileOp(r, acc, c, "file.chmod", in.Path, map[string]interface{}{"mode": in.Mode, "recursive": in.Recursive, "sudo": true})
+		jsonOK(w, map[string]interface{}{"ok": true, "status": "ok"})
+		return
+	}
+	err := fileOp(c, true, func(sc *sftp.Client) error {
+		return sc.Chmod(in.Path, perm)
+	}, func(fc *ftp.ServerConn) error {
+		return errors.New("changing permissions is not supported on FTP connections")
+	})
+	if err != nil {
+		if remotePermissionErr(err) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error(), "need_sudo": true})
+			return
+		}
+		jsonError(w, err.Error(), 500)
+		return
+	}
+	auditFileOp(r, acc, c, "file.chmod", in.Path, map[string]interface{}{"mode": in.Mode, "recursive": in.Recursive, "sudo": false})
 	jsonOK(w, map[string]interface{}{"ok": true, "status": "ok"})
 }
 

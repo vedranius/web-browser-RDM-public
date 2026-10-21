@@ -330,7 +330,7 @@ func isConnLostErr(err error) bool {
 func loadFolders(userID int) []Folder {
 	out := []Folder{}
 	rows, err := db.Query(`SELECT f.id, f.name, f.parent_id, f.jump_conn_id, f.proxy_id, f.sort_order, COALESCE(j.name,''), COALESCE(p.name,'') FROM folders f
-		LEFT JOIN connections j ON j.id=f.jump_conn_id LEFT JOIN proxies p ON p.id=f.proxy_id WHERE f.user_id=? ORDER BY f.sort_order, f.name, f.id`, userID)
+		LEFT JOIN connections j ON j.id=f.jump_conn_id LEFT JOIN proxies p ON p.id=f.proxy_id WHERE f.user_id=? ORDER BY f.sort_order, f.name COLLATE NOCASE, f.id`, userID)
 	if err != nil {
 		return out
 	}
