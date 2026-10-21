@@ -1,3 +1,12 @@
+## [12.8.1] - 2026-10-21
+
+### Security
+- **Go 1.27.3 fixes GO-2026-6809 / CVE-2026-111943.** The standard library's `crypto/x509` verifier now rejects known compromised intermediate certificates instead of trusting them through an older system trust store. The module toolchain is `go1.27.3`, and the security workflow's `govulncheck` run is clean. WRM reaches the affected API in `nettools.go` when it verifies an HTTP check's certificate chain.
+- **gosec G702 at `opencode_sandbox.go:492` is a reviewed false positive, not a command injection.** gosec follows the operator-set `WRM_MEDIUM_DOCKER` value from `mediumDockerCLI()` as tainted input. The flagged `docker inspect` passes the internally generated `wrm-opencode-<session>-<random>` container name as a separate argument, never through a shell. The call is now in the reviewed baseline with that reason; the existing G204 entry for the same line is unchanged.
+
+### Upgrade
+Replace the executable or container and keep the database and encryption key. No database migration is required. This release only updates the Go runtime and the reviewed security baseline.
+
 ## [12.8.0] - 2026-10-21
 
 ### Added
