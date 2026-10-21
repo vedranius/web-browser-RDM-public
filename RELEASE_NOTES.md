@@ -13,7 +13,7 @@
 ### Fixed
 
 - Nested shared and collaboration folders keep their hierarchy instead of being flattened into the root.
-- Connection and folder names sort case-insensitively; new folders join an alphabetical list in the right place.
+- Connection names sort case-insensitively. Folder names compare case-insensitively in dropdowns and paths, and folder order stays manual.
 - **Save Connection** and **Save Folder** show progress and cannot be submitted twice by a double click.
 - **+ Connection** on a folder is pre-filled with that folder and inherits its jump-host and proxy defaults.
 - The folder delete confirmation now describes recursive deletion instead of promising that connections move to the root.

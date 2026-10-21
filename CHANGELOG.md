@@ -11,7 +11,7 @@
 
 ### Fixed
 - **Shared and collaboration folders keep their hierarchy.** Nested shared folders are returned by the API and rendered as a tree instead of flattened into the root, including the share room.
-- **Case-insensitive name ordering.** Connections, shared connections, folder dropdowns and folder paths sort names case-insensitively; new folders join an already alphabetical sibling list in the right place instead of always being appended.
+- **Case-insensitive name ordering.** Connections and shared connections sort by name case-insensitively, and folder dropdowns and paths compare names case-insensitively. Folder sibling order stays manual: a new folder is appended and can then be moved.
 - **No duplicate saves.** **Save Connection** and **Save Folder** disable during the request and show a saving state, so a double click cannot submit twice.
 - **Folder `+ Connection` is pre-filled.** Creating a connection from a folder context menu selects that folder and inherits its jump-host and proxy defaults.
 - **Delete confirmation describes the real result.** The old text promised that connections would be moved to the root; it now reports the recursive folder and connection counts.
