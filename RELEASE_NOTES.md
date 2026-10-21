@@ -1,3 +1,16 @@
+## Web Remote Manager PRO v12.8.1 - Security update: Go 1.27.3 and a reviewed gosec finding
+
+### Security
+
+- **Go 1.27.3 fixes GO-2026-6809 / CVE-2026-111943.** In Go 1.27.2, the `crypto/x509` certificate verifier could still trust a chain built on a known compromised intermediate certificate in environments whose system trust store had not removed it. Go 1.27.3 (and 1.26.10) adds a denylist and makes `Certificate.Verify` return an error for those intermediates. The advisory was published by the Go security team on 2026-10-21; it is not a WRM-specific vulnerability. WRM reaches the API in `nettools.go` when it verifies an HTTP check's certificate chain, so this release moves the build toolchain to `go1.27.3`.
+- **gosec G702 in the OpenCode sandbox is a reviewed false positive.** gosec follows the operator-set `WRM_MEDIUM_DOCKER` value from `mediumDockerCLI()` as tainted input. The flagged `docker inspect` call passes the internally generated `wrm-opencode-<session>-<random>` container name as a separate argument, without a shell. The call arrived with the OpenCode Docker sandbox in v12.6.19 (commit `9c102ae`, merged in PR #82); the taint finding was not in the reviewed baseline. It is now accepted there with the reason, alongside the existing G204 entry for the same line.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database migration is required. This release only updates the Go runtime and the reviewed security baseline.
+
+[Download v12.8.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.8.1) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v12.8.0 - Folder management, permissions, upload queue and the reported UI fixes
 
 ### Added

@@ -157,6 +157,7 @@
   "G702 git_medium_setup.go cmd := exec.Command(\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-Command\", \"Start-Process -FilePath '\"+strings.ReplaceAll(p, \"'\", \"''\")+\"'\")",
   "G702 medium_build.go cmd := exec.CommandContext(ctx, \"sh\", \"-c\", *proj.Build)",
   "G702 opencode_sandbox.go exec.CommandContext(ctx, mediumDockerCLI(), \"rm\", \"--force\", name).Run()",
+  "G702 opencode_sandbox.go out, _ := exec.CommandContext(ctx, mediumDockerCLI(), \"inspect\", \"--format\", \"{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}\", name).Output()",
   "G702 service_unix.go return syscall.Exec(path, append([]string{path}, args...), os.Environ())",
   "G703 bitwarden.go f, e := os.Open(filename)",
   "G703 bitwarden.go if e = os.Remove(filename); e != nil {",
