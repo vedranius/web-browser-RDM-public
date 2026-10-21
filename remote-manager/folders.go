@@ -42,6 +42,155 @@ func folderPathOf(userID int, id *int) string {
 	return folderPath(loadFolders(userID), *id)
 }
 
+// folderSubtreeIDs returns the folder and every folder below it.
+func folderSubtreeIDs(folders []Folder, rootID int) []int {
+	children := map[int][]int{}
+	found := false
+	for _, f := range folders {
+		if f.ID == rootID {
+			found = true
+		}
+		if f.ParentID != nil {
+			children[*f.ParentID] = append(children[*f.ParentID], f.ID)
+		}
+	}
+	if !found {
+		return nil
+	}
+	out := make([]int, 0)
+	seen := map[int]bool{}
+	var walk func(int)
+	walk = func(id int) {
+		if seen[id] {
+			return
+		}
+		seen[id] = true
+		out = append(out, id)
+		for _, child := range children[id] {
+			walk(child)
+		}
+	}
+	walk(rootID)
+	return out
+}
+
+func idChunks(ids []int, size int) [][]int {
+	if size <= 0 {
+		size = 400
+	}
+	out := make([][]int, 0, (len(ids)+size-1)/size)
+	for len(ids) > 0 {
+		n := size
+		if n > len(ids) {
+			n = len(ids)
+		}
+		out = append(out, ids[:n])
+		ids = ids[n:]
+	}
+	return out
+}
+
+func intPlaceholders(n int) string {
+	return strings.TrimRight(strings.Repeat("?,", n), ",")
+}
+
+func intArgs(ids []int) []interface{} {
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		args[i] = id
+	}
+	return args
+}
+
+// deleteFolderTree deletes a folder, all its subfolders and every connection in that
+// subtree in one transaction. It returns the IDs that were removed so the caller can
+// stop terminals and tunnels for them.
+func deleteFolderTree(userID, rootID int) (folderIDs, connIDs []int, err error) {
+	all := loadFolders(userID)
+	folderIDs = folderSubtreeIDs(all, rootID)
+	if len(folderIDs) == 0 {
+		return nil, nil, fmt.Errorf("folder not found")
+	}
+	for _, chunk := range idChunks(folderIDs, 400) {
+		args := append([]interface{}{userID}, intArgs(chunk)...)
+		rows, qerr := db.Query("SELECT id FROM connections WHERE user_id=? AND folder_id IN ("+intPlaceholders(len(chunk))+")", args...)
+		if qerr != nil {
+			return nil, nil, qerr
+		}
+		for rows.Next() {
+			var id int
+			if qerr = rows.Scan(&id); qerr == nil {
+				connIDs = append(connIDs, id)
+			}
+		}
+		rows.Close()
+		if qerr != nil {
+			return nil, nil, qerr
+		}
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer tx.Rollback()
+	// The query templates contain %s, replaced by one placeholder per ID chunk.
+	exec := func(queryFmt string, ids []int, prefix ...interface{}) error {
+		if len(ids) == 0 {
+			return nil
+		}
+		for _, chunk := range idChunks(ids, 400) {
+			args := append(append([]interface{}{}, prefix...), intArgs(chunk)...)
+			if _, e := tx.Exec(fmt.Sprintf(queryFmt, intPlaceholders(len(chunk))), args...); e != nil {
+				return e
+			}
+		}
+		return nil
+	}
+	// Connection-scoped data first, while the connections still exist.
+	for _, set := range []struct {
+		query  string
+		prefix []interface{}
+	}{
+		{"DELETE FROM connection_tunnels WHERE user_id=? AND conn_id IN (%s)", []interface{}{userID}},
+		{"DELETE FROM ssh_key_deployments WHERE user_id=? AND conn_id IN (%s)", []interface{}{userID}},
+		{"DELETE FROM snippets WHERE user_id=? AND scope='connection' AND scope_id IN (%s)", []interface{}{userID}},
+		{"DELETE FROM bookmarks WHERE user_id=? AND scope='connection' AND scope_id IN (%s)", []interface{}{userID}},
+		{"DELETE FROM share_items WHERE connection_id IN (%s)", nil},
+	} {
+		if e := exec(set.query, connIDs, set.prefix...); e != nil {
+			return nil, nil, e
+		}
+	}
+	if e := exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id IN (%s)", connIDs); e != nil {
+		return nil, nil, e
+	}
+	if e := exec("UPDATE folders SET jump_conn_id=NULL WHERE jump_conn_id IN (%s)", connIDs); e != nil {
+		return nil, nil, e
+	}
+	if e := exec("DELETE FROM connections WHERE user_id=? AND id IN (%s)", connIDs, userID); e != nil {
+		return nil, nil, e
+	}
+
+	// Folder-scoped data (snippets, bookmarks, shares), then the folders themselves.
+	if e := exec("DELETE FROM snippets WHERE user_id=? AND scope='folder' AND scope_id IN (%s)", folderIDs, userID); e != nil {
+		return nil, nil, e
+	}
+	if e := exec("DELETE FROM bookmarks WHERE user_id=? AND scope='folder' AND scope_id IN (%s)", folderIDs, userID); e != nil {
+		return nil, nil, e
+	}
+	if e := exec("DELETE FROM share_items WHERE folder_id IN (%s)", folderIDs); e != nil {
+		return nil, nil, e
+	}
+	if e := exec("DELETE FROM folders WHERE user_id=? AND id IN (%s)", folderIDs, userID); e != nil {
+		return nil, nil, e
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, nil, err
+	}
+	return folderIDs, connIDs, nil
+}
+
 func validateFolderParent(userID int, f *Folder) error {
 	if f.ParentID != nil && *f.ParentID <= 0 {
 		f.ParentID = nil

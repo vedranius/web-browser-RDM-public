@@ -34,13 +34,34 @@ func TestNestedFoldersOwnershipCycleAndDelete(t *testing.T) {
 	if code := u.jsonDo("PUT", "/api/folders/"+strconv.Itoa(c.ID), map[string]interface{}{"name": "Renamed"}, &updated); code != 200 || updated.ParentID == nil || *updated.ParentID != b.ID {
 		t.Fatalf("old client lost parent: %d %+v", code, updated)
 	}
-	if code := u.jsonDo("DELETE", "/api/folders/"+strconv.Itoa(b.ID), nil, nil); code != 200 {
+	inside := u.addConnection("Inside", "inside.example.com")
+	outside := u.addConnection("Outside", "outside.example.com")
+	db.Exec(`UPDATE connections SET folder_id=? WHERE id=?`, c.ID, inside)
+	db.Exec(`UPDATE connections SET folder_id=? WHERE id=?`, a.ID, outside)
+	var deleted struct {
+		OK          bool `json:"ok"`
+		Folders     int  `json:"folders"`
+		Connections int  `json:"connections"`
+	}
+	if code := u.jsonDo("DELETE", "/api/folders/"+strconv.Itoa(b.ID), nil, &deleted); code != 200 {
 		t.Fatalf("delete: %d", code)
 	}
+	if !deleted.OK || deleted.Folders != 2 || deleted.Connections != 1 {
+		t.Fatalf("recursive delete counts: %+v", deleted)
+	}
 	for _, f := range loadFolders(u.userID) {
-		if f.ID == c.ID && (f.ParentID == nil || *f.ParentID != a.ID || f.Path != "Client-A / Renamed") {
-			t.Fatalf("child not reparented: %+v", f)
+		if f.ID == b.ID || f.ID == c.ID {
+			t.Fatalf("subtree folder survived: %+v", f)
 		}
+		if f.ID == a.ID && f.Path != "Client-A" {
+			t.Fatalf("parent folder changed: %+v", f)
+		}
+	}
+	if _, err := loadConnectionRaw(inside); err == nil {
+		t.Fatal("inside connection survived")
+	}
+	if _, err := loadConnectionRaw(outside); err != nil {
+		t.Fatal("outside connection was deleted")
 	}
 }
 
@@ -111,5 +132,19 @@ func TestNestedFolderSharedSubtree(t *testing.T) {
 	list := sharedConnectionsFor(sh)
 	if len(list) != 1 || list[0].FolderPath != "Client / Site" {
 		t.Fatalf("shared labels: %+v", list)
+	}
+	folders := sharedFoldersFor(sh, list)
+	if len(folders) != 2 {
+		t.Fatalf("shared folders: %+v", folders)
+	}
+	byID := map[int]SharedFolder{}
+	for _, f := range folders {
+		byID[f.ID] = f
+	}
+	if childShared, ok := byID[child.ID]; !ok || childShared.ParentID == nil || *childShared.ParentID != root.ID {
+		t.Fatalf("shared child hierarchy: %+v", folders)
+	}
+	if rootShared, ok := byID[root.ID]; !ok || rootShared.ParentID != nil {
+		t.Fatalf("shared root parent: %+v", folders)
 	}
 }

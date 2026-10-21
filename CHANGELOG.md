@@ -1,3 +1,24 @@
+## [12.8.0] - 2026-10-21
+
+### Added
+- **Recursive folder deletion.** Deleting a folder now deletes every subfolder and every connection inside it, together with its tunnels, SSH-key deployments, snippets, bookmarks and share entries, in one database transaction. Nothing is moved to the root first. The confirmation shows how many folders and connections will be removed, and the API returns both counts.
+- **Reliable folder and connection moves.** Folders and connections have a **Move to folder…** action. Connection drag-and-drop moves all selected connections, and folder/connection positions persist after reload. A folder cannot be moved into itself or one of its descendants.
+- **File-manager permissions.** The context menu can change permissions with a three- or four-digit octal mode. Folders can apply it recursively; if SSH reports a permission error, WRM offers an optional sudo password and retries. FTP limitations are reported clearly.
+- **Upload queue.** Additional uploads dropped into a file-manager window are queued and start automatically when the current upload finishes. Each queued job keeps the destination folder it was dropped into.
+- **Tunnel filters and proxy shortcuts.** The Tunnels panel can filter by name/description, port, host or route, and can show active tunnels only. Proxy settings are available from **Tools** and from the Tunnels panel.
+- **Terminal title-bar actions.** Owned SSH and SFTP windows have **Edit** and **Tunnels** buttons in the title bar.
+- **Tab scroll arrows.** Settings and Admin tab rows, and the folder tab bar, get left/right arrows when they overflow. The Settings window now uses the same size as the Admin window.
+
+### Fixed
+- **Shared and collaboration folders keep their hierarchy.** Nested shared folders are returned by the API and rendered as a tree instead of flattened into the root, including the share room.
+- **Case-insensitive name ordering.** Connections, shared connections, folder dropdowns and folder paths sort names case-insensitively; new folders join an already alphabetical sibling list in the right place instead of always being appended.
+- **No duplicate saves.** **Save Connection** and **Save Folder** disable during the request and show a saving state, so a double click cannot submit twice.
+- **Folder `+ Connection` is pre-filled.** Creating a connection from a folder context menu selects that folder and inherits its jump-host and proxy defaults.
+- **Delete confirmation describes the real result.** The old text promised that connections would be moved to the root; it now reports the recursive folder and connection counts.
+
+### Upgrade
+Replace the executable/container and keep the database and encryption key. No database migration is needed. Recursive deletion is intentional: deleting a folder removes everything inside it.
+
 ## [12.7.4] - 2026-10-20
 
 ### Added

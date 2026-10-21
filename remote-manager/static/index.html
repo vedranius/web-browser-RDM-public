@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.7.4</title>
+<title>Web Remote Manager PRO v12.8.0</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1104,8 +1104,13 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 .toast.persist { border-left-color: var(--purple); }
 
 /* Tabs (settings & admin) */
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: -4px 0 14px; overflow-x: auto; scrollbar-width: none; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: -4px 0 14px; overflow-x: auto; scrollbar-width: none; position: relative; }
 .tabs::-webkit-scrollbar { display: none; }
+.tabs-scroll-btn { position: sticky; z-index: 3; flex: 0 0 auto; align-self: stretch; width: 24px; min-width: 24px; padding: 0; border: 0; border-radius: 0; background: var(--bg2); color: var(--text2); font-size: 17px; line-height: 1; cursor: pointer; }
+.tabs-scroll-btn:hover { color: var(--text); background: var(--bg3); }
+.tabs-scroll-btn.left { left: 0; box-shadow: 8px 0 8px -8px rgba(0,0,0,.8); }
+.tabs-scroll-btn.right { right: 0; box-shadow: -8px 0 8px -8px rgba(0,0,0,.8); }
+.tabs-scroll-btn[hidden] { display: none; }
 .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; border-radius: 0; color: var(--text2); padding: 8px 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap; box-shadow: none !important; }
 .tab-btn:hover { color: var(--text); background: transparent !important; }
 .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); background: transparent !important; }
@@ -1114,7 +1119,8 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 .tab-intro::before { content: 'ℹ '; color: var(--accent); }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
-#modal-settings .modal { width: 560px; }
+#modal-settings .modal { width: min(1080px, 96vw); height: min(88vh, 900px); max-height: 90vh; display: flex; flex-direction: column; }
+#modal-settings .modal > .tab-pane { flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px; }
 #modal-admin .modal { width: min(1080px, 96vw); height: min(88vh, 900px); display: flex; flex-direction: column; }
 #modal-admin .adm-body { flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px; }
 .adm-toolbar { position:sticky;top:0;z-index:20;background:var(--bg2);max-height:40vh;overflow-y:auto;padding:6px 0;display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -1245,7 +1251,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   .side-panel { top: 60px; right: 8px; left: 8px; width: auto; bottom: 8px; }
   #collab-bar { height: 46px; }
   .mode-cards { grid-template-columns: 1fr; }
-  #modal-admin .modal { height: calc(100vh - 20px); }
+  #modal-admin .modal, #modal-settings .modal { height: calc(100vh - 20px); max-height: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1280,6 +1286,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 #folder-tab-bar:empty { display:none; }
 #folder-tab-bar button { flex-shrink:0; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:4px 8px; font-size:11px; background:var(--bg3); color:var(--text2); }
 #folder-tab-bar button.active { color:var(--accent); background:var(--bg4); }
+#folder-tab-bar .tabs-scroll-btn { width:24px; min-width:24px; max-width:24px; padding:0; font-size:17px; background:var(--bg2); color:var(--text2); }
 .win-btn.ai { font-weight: 800; font-size: 10px; letter-spacing: .02em; width: auto; min-width: 24px; padding: 0 6px; }
 .win-btn.ai.policy-off { opacity:.6; }
 .win-btn.ai.on { color: #c4b5fd; background: rgba(139,92,246,.18); }
@@ -1648,6 +1655,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="ctx-item" id="fm-ctx-ai-btn" onclick="hideFmCtx();sendSelectionToAI(fmCtxState.winId,fmCtxState.path)">✦ <span data-i18n="ctx_ai">Send selection to AI</span></div>
   <div class="ctx-item" id="fm-ctx-term-btn" onclick="fmCtxTerminal()">⌨ <span data-i18n="fm_open_term_here">Open terminal here</span></div>
   <div class="ctx-item" onclick="fmCtxCopyPath()">📋 <span data-i18n="fm_copy_path">Copy path</span></div>
+  <div class="ctx-item" data-perm="write" onclick="fmCtxPermissions()">🔒 <span data-i18n="fm_permissions">Permissions…</span></div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" data-perm="write" onclick="fmCtxRename()">✏️ <span data-i18n="rename_plain">Rename</span> <span style="margin-left:auto;color:var(--text3);font-size:10px;">F2</span></div>
   <div class="ctx-item danger" data-perm="write" onclick="fmCtxDelete()">🗑 <span data-i18n="delete">Delete</span> <span style="margin-left:auto;color:var(--text3);font-size:10px;">Del</span></div>
@@ -1660,7 +1668,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.7.4 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO v12.8.0 · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1753,7 +1761,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.7.4</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.8.0</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1992,7 +2000,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-sec" onclick="testConn()" id="conn-test-btn">🔌 <span data-i18n="test_connection">Test connection</span></button>
       <div style="display:flex;gap:8px;">
         <button class="btn-sec" onclick="closeModal('modal-conn')" data-i18n="cancel">Cancel</button>
-        <button onclick="saveConn()" data-i18n="save_connection">Save Connection</button>
+        <button onclick="saveConn()" id="conn-save-btn" data-i18n="save_connection">Save Connection</button>
       </div>
     </div>
   </div>
@@ -2011,6 +2019,18 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="modal-footer">
       <button class="btn-sec" onclick="closeModal('modal-folder')" data-i18n="cancel">Cancel</button>
       <button onclick="saveFolder()" id="f-save" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Move to folder -->
+<div class="modal-overlay" id="modal-move">
+  <div class="modal" style="width:min(480px, calc(100vw - 24px));">
+    <h3 id="mv-title">Move</h3>
+    <div class="field"><label data-i18n="destination">Destination folder</label><select id="mv-folder"></select></div>
+    <div class="modal-footer">
+      <button class="btn-sec" onclick="closeModal('modal-move')" data-i18n="cancel">Cancel</button>
+      <button id="mv-save" onclick="saveMove()" data-i18n="move_to_folder">Move</button>
     </div>
   </div>
 </div>
@@ -2681,7 +2701,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="modal tun-modal">
     <div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🔀 <span data-i18n="tunnels_title">SSH tunnels (port forwarding)</span></h3>
       <label id="tun-all-wrap" style="display:none;font-size:12px;color:var(--text2);align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="tun-all" style="width:auto;" onchange="renderTunnelsPanel()"> <span data-i18n="tun_all_users">All users (admin)</span></label>
+      <button class="btn-sec btn-sm" onclick="openVault('proxies')" data-i18n="vault_proxies">Proxies</button>
       <button class="icon-btn" onclick="closeModal('modal-tunnels')">✕</button></div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+      <input id="tun-filter" oninput="renderTunnelsPanel()" data-i18n-placeholder="tun_filter" placeholder="Filter tunnels (port, description, host)…" style="flex:1;min-width:180px;">
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="tun-active-only" style="width:auto;" onchange="renderTunnelsPanel()"> <span data-i18n="tun_active_only">Active tunnels only</span></label>
+    </div>
     <div class="hint-box" style="margin-top:10px;" id="tun-help"></div>
     <div id="tun-list"></div>
   </div>
@@ -2832,6 +2857,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
           <input id="transfer-dest-path" style="flex:1;padding:5px;background:var(--bg);color:var(--text1);border:1px solid var(--border);border-radius:4px;font-size:11px;"
                  onkeydown="if(event.key==='Enter'){event.preventDefault();loadTransferDestFiles(this.value);}" placeholder="Path...">
           <button class="btn-sec btn-sm" onclick="loadTransferDestFiles(document.getElementById('transfer-dest-path').value)" style="font-size:10px;padding:3px 8px;">Go</button>
+          <button class="btn-sec btn-sm" onclick="newTransferDestFolder()" title="New folder" style="font-size:10px;padding:3px 8px;">+ 📁</button>
         </div>
         <div id="transfer-dest-list" style="background:var(--bg);border:1px solid var(--border);border-radius:5px;height:260px;overflow-y:auto;font-size:11px;"></div>
         <div style="font-size:10px;color:var(--text2);margin-top:3px;" id="transfer-dest-info">Select a connection</div>
@@ -3253,14 +3279,20 @@ const LANGS = {
     fm_results:'results', fm_folders:'folders', fm_files:'files', fm_selected:'selected', fm_type_to_search:'Type what to search for',
     fm_content_results:'Files containing', fm_name_results:'Names matching', fm_in:'in', fm_searching:'searching…', fm_scanned:'scanned',
     fm_search_failed:'Search failed', fm_truncated:'limit reached', fm_nothing_found:'Nothing found.', fm_stopped:'stopped',
-    fm_upload_busy:'An upload is already running in this window', fm_too_big:'file(s) larger than the limit were skipped', fm_upload_cancelled:'Upload cancelled',
+    fm_upload_queued:'Upload queued — it starts when the current one finishes', fm_too_big:'file(s) larger than the limit were skipped', fm_upload_cancelled:'Upload cancelled',
     fm_exists_overwrite:'file(s) already exist. Overwrite?', fm_file_exists:'Files already exist', overwrite:'Overwrite',
     fm_too_big_edit:'File is too large to edit in the browser (max 5 MB)', fm_binary_warn:'This looks like a binary file. Open it anyway?', fm_edit:'Edit',
     fm_open_failed:'Cannot open file', fm_open:'Open', fm_transfer_to:'Transfer to Server', fm_copy_path:'Copy path',
     lines:'lines', modified:'modified', saved:'Saved', save_failed:'Save failed', discard_changes:'Discard unsaved changes?', discard:'Discard',
     save:'Save', save_close:'Save & Close', ok:'OK', confirm:'Confirm', stop:'Stop', retry:'Retry', loading:'Loading…', today:'Today',
     network_error:'network error', duplicate:'Duplicate', copy_suffix:'copy', new_folder_name:'New folder name', rename_to:'Rename to',
-    session_name:'Session name', new_name:'New name', delete_conn_q:'Delete this connection?', delete_folder_q:'Delete this folder? Connections inside will be moved to root.',
+    session_name:'Session name', new_name:'New name', delete_conn_q:'Delete this connection?',
+    delete_folder_tree_q:'Delete "{name}" and everything inside? This removes {folders} folder(s) and {connections} connection(s).',
+    move_to_folder:'Move to folder…', move_folder:'Move folder', move_connection:'Move connection', destination:'Destination folder',
+    folder_moved:'Folder moved', connection_moved:'Connection moved', saving:'Saving…',
+    tun_filter:'Filter tunnels (port, description, host)…', tun_active_only:'Active tunnels only', tun_no_match:'No tunnels match the filter.',
+    fm_permissions:'Permissions…', fm_perm_mode:'Permissions (for example 755)', fm_perm_recursive:'Apply recursively to everything inside? Cancel applies only to this folder.', fm_perm_saved:'Permissions changed',
+    fm_sudo_password:'sudo password (blank for passwordless sudo)',
     delete_share_q:'Delete this share? All collaborators will lose access.', delete_user_q:'Delete this user? All their data will be removed.',
   },
   hr: {
@@ -3338,14 +3370,20 @@ const LANGS = {
     fm_results:'rezultata', fm_folders:'mapa', fm_files:'datoteka', fm_selected:'odabrano', fm_type_to_search:'Upiši što tražiš',
     fm_content_results:'Datoteke koje sadrže', fm_name_results:'Nazivi koji odgovaraju', fm_in:'u', fm_searching:'tražim…', fm_scanned:'pregledano',
     fm_search_failed:'Pretraga nije uspjela', fm_truncated:'dosegnut limit', fm_nothing_found:'Ništa nije pronađeno.', fm_stopped:'zaustavljeno',
-    fm_upload_busy:'U ovom prozoru već traje upload', fm_too_big:'datoteka većih od limita je preskočeno', fm_upload_cancelled:'Upload otkazan',
+    fm_upload_queued:'Upload je u redu čekanja — počinje nakon trenutnog', fm_too_big:'datoteka većih od limita je preskočeno', fm_upload_cancelled:'Upload otkazan',
     fm_exists_overwrite:'datoteka već postoji. Prepisati?', fm_file_exists:'Datoteke već postoje', overwrite:'Prepiši',
     fm_too_big_edit:'Datoteka je prevelika za uređivanje u pregledniku (maks. 5 MB)', fm_binary_warn:'Ovo izgleda kao binarna datoteka. Ipak otvoriti?', fm_edit:'Uredi',
     fm_open_failed:'Ne mogu otvoriti datoteku', fm_open:'Otvori', fm_transfer_to:'Prijenos na server', fm_copy_path:'Kopiraj putanju',
     lines:'redaka', modified:'izmijenjeno', saved:'Spremljeno', save_failed:'Spremanje nije uspjelo', discard_changes:'Odbaciti nespremljene promjene?', discard:'Odbaci',
     save:'Spremi', save_close:'Spremi i zatvori', ok:'U redu', confirm:'Potvrda', stop:'Zaustavi', retry:'Pokušaj ponovo', loading:'Učitavam…', today:'Danas',
     network_error:'mrežna greška', duplicate:'Dupliciraj', copy_suffix:'kopija', new_folder_name:'Naziv nove mape', rename_to:'Preimenuj u',
-    session_name:'Naziv sesije', new_name:'Novi naziv', delete_conn_q:'Obrisati ovu vezu?', delete_folder_q:'Obrisati mapu? Veze iz nje prelaze u korijen.',
+    session_name:'Naziv sesije', new_name:'Novi naziv', delete_conn_q:'Obrisati ovu vezu?',
+    delete_folder_tree_q:'Obrisati "{name}" i sve unutra? Uklanja {folders} mapa i {connections} veza.',
+    move_to_folder:'Premjesti u mapu…', move_folder:'Premjesti mapu', move_connection:'Premjesti vezu', destination:'Odredišna mapa',
+    folder_moved:'Mapa premještena', connection_moved:'Veza premještena', saving:'Spremanje…',
+    tun_filter:'Filtriraj tunele (port, opis, host)…', tun_active_only:'Samo aktivni tuneli', tun_no_match:'Nijedan tunel ne odgovara filtru.',
+    fm_permissions:'Dozvole…', fm_perm_mode:'Dozvole (npr. 755)', fm_perm_recursive:'Primijeni rekurzivno na sav sadržaj? Odustajanje mijenja samo ovu mapu.', fm_perm_saved:'Dozvole promijenjene',
+    fm_sudo_password:'sudo lozinka (prazno za sudo bez lozinke)',
     delete_share_q:'Obrisati dijeljenje? Svi suradnici gube pristup.', delete_user_q:'Obrisati korisnika? Svi njegovi podaci bit će uklonjeni.',
   }
 };
@@ -6192,6 +6230,7 @@ let isCollabMode = false;
 let collabToken = null;
 let collabWS = null;
 let collabConns = [];
+let collabFolders = [];
 let winObjects = [];
 let nextWinId = 1;
 let topZ = 100;
@@ -6241,6 +6280,59 @@ function openInsteadOf(fromId, open, reopen) {
   });
 }
 function settingsTabNow() { const b = document.querySelector('#settings-tabs .tab-btn.active'); return b ? b.dataset.tab : ''; }
+
+// Disables an action button while its request runs, so a double click cannot save twice.
+function busyButton(btn, label) {
+  if (!btn) return () => {};
+  if (btn.dataset.busy) return null;
+  const old = btn.innerHTML;
+  btn.dataset.busy = '1';
+  btn.disabled = true;
+  btn.textContent = label || t('saving');
+  return () => {
+    delete btn.dataset.busy;
+    btn.disabled = false;
+    btn.innerHTML = old;
+  };
+}
+
+// Horizontal tab bars scroll with a mouse wheel but some users have no horizontal wheel.
+// Add visible arrows to every tab strip that actually overflows.
+function enhanceTabScrollers() {
+  document.querySelectorAll('.tabs, #folder-tab-bar').forEach(el => {
+    if (el.querySelector('.tabs-scroll-btn')) return;
+    if (el.id === 'folder-tab-bar' && !el.querySelector('button:not(.tabs-scroll-btn)')) return;
+    const make = (dir, glyph) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tabs-scroll-btn ' + dir;
+      b.textContent = glyph;
+      b.title = dir === 'left' ? 'Scroll left' : 'Scroll right';
+      b.onclick = e => { e.preventDefault(); e.stopPropagation(); el.scrollLeft += dir === 'left' ? -180 : 180; update(); };
+      return b;
+    };
+    const left = make('left', '‹'), right = make('right', '›');
+    el.prepend(left);
+    el.append(right);
+    const update = () => {
+      const tabs = [...el.children].filter(c => !c.classList.contains('tabs-scroll-btn'));
+      const gap = 4 * Math.max(0, tabs.length - 1);
+      const total = tabs.reduce((n, c) => n + c.offsetWidth, 0) + gap;
+      const over = total > el.clientWidth;
+      left.hidden = !over || el.scrollLeft <= 2;
+      right.hidden = !over || el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
+    };
+    el._tabScrollUpdate = update;
+    el.addEventListener('scroll', update, {passive: true});
+    if (window.ResizeObserver) new ResizeObserver(update).observe(el);
+    setTimeout(update, 0);
+  });
+}
+function refreshTabScrollers() {
+  document.querySelectorAll('.tabs, #folder-tab-bar').forEach(el => {
+    if (typeof el._tabScrollUpdate === 'function') el._tabScrollUpdate();
+  });
+}
 function closeAllCtx() { document.querySelectorAll('.ctx-menu').forEach(m => m.classList.remove('open', 'bm-menu')); }
 
 function showCtx(menuId, x, y) {
@@ -6648,6 +6740,7 @@ function initApp() {
   }
   if (window.wrmLayout) wrmLayout.init();
   if (window.wrmWorkboard) wrmWorkboard.init();
+  enhanceTabScrollers();
   if (enforceRestrictions()) return;
   setupResize();
   loadClipboard();
@@ -6705,8 +6798,8 @@ function renderTree() {
     e.preventDefault(); rootDrop.classList.remove('drag-over');
     const fid = parseInt(e.dataTransfer.getData('folderId'));
     if (fid) { reorderFolder({id:fid,parent_id:null}); return; }
-    const cid = parseInt(e.dataTransfer.getData('connId'));
-    if (cid) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:[cid], folder_id: null})}).then(loadData);
+    const cids = dragConnIDs(e);
+    if (cids.length) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:cids, folder_id: null})}).then(loadData);
   };
   wrap.appendChild(rootDrop);
 
@@ -6763,8 +6856,8 @@ function renderTree() {
         else reorderFolder({id:fid,parent_id:f.id});
         return;
       }
-      const cid = parseInt(e.dataTransfer.getData('connId'));
-      if (cid) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:[cid], folder_id: f.id})}).then(loadData);
+      const cids = dragConnIDs(e);
+      if (cids.length) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:cids, folder_id: f.id})}).then(loadData);
     };
     row.onclick = () => {
       const ch = row.querySelector('.folder-chevron');
@@ -6835,7 +6928,7 @@ function renderTree() {
         wrap.appendChild(hint);
         return;
       }
-      (g.connections || []).filter(c => !query || connMatches(c, query)).forEach(c => {
+      const makeSharedItem = c => {
         const item = document.createElement('div');
         item.className = 'shared-conn-item';
         const proto = (c.protocol || 'SSH').toLowerCase();
@@ -6843,8 +6936,10 @@ function renderTree() {
         item.title = (c.username ? c.username + '@' : '') + c.host;
         item.ondblclick = () => { closeDrawers(); openSharedConnection(c, sh.token, perms); };
         item.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = sh.token; showSharedCtx(e.clientX, e.clientY, c, perms); };
-        wrap.appendChild(item);
-      });
+        return item;
+      };
+      const visibleConns = (g.connections || []).filter(c => !query || connMatches(c, query));
+      appendSharedFolderTree(wrap, g.folders || [], visibleConns, makeSharedItem);
     });
   }
 
@@ -6862,6 +6957,36 @@ function connMatches(c, q) {
     return connLabel(c).toLowerCase().includes(w) || (c.host || '').toLowerCase().includes(w) || (c.username || '').toLowerCase().includes(w) ||
       (c.protocol || '').toLowerCase() === w || tags.some(x => x.includes(w));
   });
+}
+
+function appendSharedFolderTree(container, folderList, connList, makeItem) {
+  const children = new Map();
+  const ids = new Set(folderList.map(f => f.id));
+  folderList.forEach(f => {
+    const parent = f.parent_id != null && ids.has(f.parent_id) ? f.parent_id : null;
+    if (!children.has(parent)) children.set(parent, []);
+    children.get(parent).push(f);
+  });
+  const add = (f, parentEl, depth) => {
+    if (depth >= 32) return;
+    const wrap = document.createElement('div');
+    const row = document.createElement('div');
+    row.className = 'folder-row shared-folder-row';
+    row.style.paddingLeft = (8 + depth * 14) + 'px';
+    row.innerHTML = `<span class="folder-chevron open">▾</span><span style="flex:1;">${esc(f.name)}</span>`;
+    const box = document.createElement('div');
+    box.className = 'folder-children open';
+    connList.filter(c => c.folder_id === f.id).forEach(c => box.appendChild(makeItem(c)));
+    (children.get(f.id) || []).forEach(ch => add(ch, box, depth + 1));
+    row.onclick = () => {
+      const open = box.classList.toggle('open');
+      row.querySelector('.folder-chevron').classList.toggle('open', open);
+    };
+    wrap.append(row, box);
+    parentEl.appendChild(wrap);
+  };
+  (children.get(null) || []).forEach(f => add(f, container, 0));
+  connList.filter(c => !c.folder_id || !ids.has(c.folder_id)).forEach(c => container.appendChild(makeItem(c)));
 }
 
 function makeConnItem(c) {
@@ -6903,8 +7028,17 @@ function makeConnItem(c) {
     setWinMode(wo.id, defaultWinMode(c));
   };
   el.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = null; showConnCtx(e.clientX, e.clientY, c); };
-  el.ondragstart = e => { e.dataTransfer.setData('connId', c.id); };
+  el.ondragstart = e => { const ids = selectedConns.has(c.id) ? [...selectedConns] : [c.id]; e.dataTransfer.setData('connIds', JSON.stringify(ids)); e.dataTransfer.setData('connId', c.id); e.dataTransfer.effectAllowed = 'move'; };
   return el;
+}
+
+function dragConnIDs(e) {
+  try {
+    const ids = JSON.parse(e.dataTransfer.getData('connIds') || '[]');
+    if (Array.isArray(ids) && ids.length) return ids.map(Number).filter(Boolean);
+  } catch (_) {}
+  const id = parseInt(e.dataTransfer.getData('connId'));
+  return id ? [id] : [];
 }
 
 function folderPathLabel(id) {
@@ -6920,6 +7054,52 @@ function folderDescendants(id) {
   const out = new Set([id]);
   for (let n = 0; n < 32; n++) { const before = out.size; folders.forEach(f => { if (out.has(f.parent_id)) out.add(f.id); }); if (out.size === before) break; }
   return out;
+}
+
+let moveDraft = null;
+function openMoveModal(kind, id) {
+  const item = kind === 'folder' ? folders.find(f => f.id === id) : conns.find(c => c.id === id);
+  if (!item) return;
+  const ids = kind === 'conn' && selectedConns.has(id) ? [...selectedConns] : [id];
+  const blocked = kind === 'folder' ? folderDescendants(id) : new Set();
+  const opts = folders.filter(f => !blocked.has(f.id))
+    .sort((a, b) => folderPathLabel(a.id).localeCompare(folderPathLabel(b.id), undefined, {sensitivity: 'base', numeric: true}));
+  moveDraft = {kind, id, ids};
+  document.getElementById('mv-title').textContent = kind === 'folder' ? t('move_folder') : t('move_connection') + (ids.length > 1 ? ' (' + ids.length + ')' : '');
+  const sel = document.getElementById('mv-folder');
+  sel.innerHTML = `<option value="">${esc(t('no_folder'))}</option>` + opts.map(f => `<option value="${f.id}">${esc(folderPathLabel(f.id))}</option>`).join('');
+  const current = kind === 'folder' ? item.parent_id : item.folder_id;
+  sel.value = current || '';
+  document.getElementById('modal-move').classList.add('open');
+  setTimeout(() => sel.focus(), 50);
+}
+
+async function saveMove() {
+  if (!moveDraft) return;
+  const btn = document.getElementById('mv-save');
+  if (btn.dataset.busy) return;
+  btn.dataset.busy = '1'; btn.disabled = true;
+  const old = btn.textContent; btn.textContent = t('saving');
+  const parent = document.getElementById('mv-folder').value;
+  try {
+    let res;
+    if (moveDraft.kind === 'folder') {
+      res = await fetch('/api/folders/reorder', {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: moveDraft.id, parent_id: parent ? Number(parent) : null})});
+    } else {
+      res = await fetch('/api/connections/bulk', {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'move', ids: moveDraft.ids, folder_id: parent ? Number(parent) : null})});
+    }
+    if (!res.ok) throw new Error(await apiError(res));
+    selectedConns.clear();
+    closeModal('modal-move');
+    showToast(t(moveDraft.kind === 'folder' ? 'folder_moved' : 'connection_moved'), 'success');
+    loadData();
+  } catch (e) {
+    showToast(e.message, 'error', 5000);
+  } finally {
+    delete btn.dataset.busy; btn.disabled = false; btn.textContent = old;
+  }
 }
 const visualGlyphs = {server:'🖥',rack:'🗄',network:'🌐',router:'🔀',switch:'🔗',database:'🛢',storage:'💾',backup:'📦',security:'🛡',cloud:'☁',monitoring:'📊',video:'🎬',broadcast:'📡',encoder:'⚙',audio:'🎧',terminal:'⌨',linux:'🐧',windows:'⊞'};
 function visualIconHTML(label, fallback) { const icon = label && visualGlyphs[label.icon]; return `<span title="${esc(icon ? t('vl_' + label.icon) : t('vl_default'))}" aria-label="${esc(icon ? t('vl_' + label.icon) : t('vl_default'))}">${icon || fallback || ''}</span>`; }
@@ -6946,10 +7126,11 @@ function refreshWindowConnectionTitle(wo) {
 
 function updateFolderSelects() {
   const selects = document.querySelectorAll('#m-folder');
+  const ordered = [...folders].sort((a, b) => folderPathLabel(a.id).localeCompare(folderPathLabel(b.id), undefined, {sensitivity: 'base', numeric: true}));
   selects.forEach(sel => {
     const val = sel.value;
     sel.innerHTML = `<option value="">${t('no_folder')}</option>`;
-    folders.forEach(f => { sel.innerHTML += `<option value="${f.id}">${esc(folderPathLabel(f.id))}</option>`; });
+    ordered.forEach(f => { sel.innerHTML += `<option value="${f.id}">${esc(folderPathLabel(f.id))}</option>`; });
     sel.value = val;
   });
 }
@@ -7006,6 +7187,7 @@ function showConnCtx(x, y, conn) {
     ${conn.protocol !== 'SERIAL' ? `<div class="ctx-item" onclick="closeAllCtx(); openTools({target: ${jsq(conn.host)}, tool: 'ports'})">🔍 ${esc(t('tools_check_ports'))}</div>` : ''}
     <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow([${conn.id}])">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">${t('edit_connection')}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openMoveModal('conn', ${conn.id})">${esc(t('move_to_folder'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); duplicateConn(${conn.id})">⧉ ${t('duplicate')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalConn(${conn.id})">${t('share_connection')}</div>
     <div class="ctx-hr"></div>
@@ -7081,6 +7263,8 @@ function showFolderCtx(x, y) {
   menu.innerHTML = `
     <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(null, ctxFolderId)">＋ ${esc(t('fd_child'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openFolderModal(ctxFolderId)">✏ ${esc(t('fd_edit'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openConnModal(null, false, ctxFolderId)">+ ${esc(t('new_connection_title'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); openMoveModal('folder', ctxFolderId)">${esc(t('move_to_folder'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); moveFolderStep(ctxFolderId,-1)">↑ ${esc(t('fd_up'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); moveFolderStep(ctxFolderId,1)">↓ ${esc(t('fd_down'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
@@ -7109,7 +7293,7 @@ function ctxOpenConnInWindow(winId, mode) {
 
 // ══ CONNECTION CRUD ════════════════════════════════════
 
-function openConnModal(id, focusTunnels) {
+function openConnModal(id, focusTunnels, folderId) {
   document.getElementById('m-id').value = id || '';
   document.getElementById('conn-modal-title').textContent = id ? t('edit_connection_title') : t('new_connection_title');
   const c = id ? conns.find(x => x.id === id) : null;
@@ -7120,7 +7304,7 @@ function openConnModal(id, focusTunnels) {
   document.getElementById('m-user').value = c ? c.username : '';
   document.getElementById('m-proto').value = c ? c.protocol : 'SSH';
   document.getElementById('m-auth').value = c ? c.auth_method : 'PASSWORD';
-  document.getElementById('m-folder').value = c && c.folder_id ? c.folder_id : '';
+  document.getElementById('m-folder').value = c && c.folder_id ? c.folder_id : (folderId || '');
   document.getElementById('m-webpath').value = c ? (c.web_path || '') : '';
   document.getElementById('m-monitor').checked = c ? c.monitor !== false : true;
   document.getElementById('m-tags').value = c && c.tags ? c.tags.join(', ') : '';
@@ -7253,6 +7437,10 @@ function connFormPayload() {
 async function saveConn() {
   const b = connFormPayload();
   if (!b.name || !b.host) { showToast(t('name_host_required'), 'warning'); return; }
+  const saveBtn = document.getElementById('conn-save-btn');
+  const done = busyButton(saveBtn, t('saving'));
+  if (!done) return;
+  try {
   const id = document.getElementById('m-id').value;
   const res = await fetch(id ? '/api/connections/' + id : '/api/connections', {
     method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(b)
@@ -7273,6 +7461,7 @@ async function saveConn() {
   } else {
     showToast(await apiError(res), 'error');
   }
+  } finally { done(); }
 }
 
 async function testConn() {
@@ -7353,7 +7542,9 @@ async function openFolderModal(id, parentId) {
  visualPicker('f',f?.label);
   const descendants = f ? folderDescendants(f.id) : new Set();
   const parent = document.getElementById('f-parent');
-  parent.innerHTML = `<option value="">${esc(t('no_folder'))}</option>` + folders.filter(x => !descendants.has(x.id)).map(x => `<option value="${x.id}">${esc(folderPathLabel(x.id))}</option>`).join('');
+  const parentFolders = folders.filter(x => !descendants.has(x.id))
+    .sort((a, b) => folderPathLabel(a.id).localeCompare(folderPathLabel(b.id), undefined, {sensitivity: 'base', numeric: true}));
+  parent.innerHTML = `<option value="">${esc(t('no_folder'))}</option>` + parentFolders.map(x => `<option value="${x.id}">${esc(folderPathLabel(x.id))}</option>`).join('');
   parent.value = (f && f.parent_id) || parentId || '';
   const js = document.getElementById('f-jump');
   js.innerHTML = `<option value="">— ${esc(t('jump_direct'))} —</option>` + conns.filter(x => (x.protocol === 'SSH' || x.protocol === 'SFTP') && !x.temporary)
@@ -7370,10 +7561,14 @@ async function saveFolder() {
   const id = Number(document.getElementById('f-id').value) || 0;
   const name = document.getElementById('f-name').value.trim();
   if (!name) return;
+  const done = busyButton(document.getElementById('f-save'), t('saving'));
+  if (!done) return;
+  try {
   const body = {name, label:visualValue('f'), parent_id: Number(document.getElementById('f-parent').value) || null, jump_id: Number(document.getElementById('f-jump').value) || null, proxy_id: Number(document.getElementById('f-proxy').value) || null};
   const res = await fetch('/api/folders' + (id ? '/' + id : ''), {method: id ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   if (res.ok) { closeModal('modal-folder'); showToast(id ? t('saved') : t('folder_created'), 'success'); loadData(); }
   else showToast(await apiError(res), 'error', 6000);
+  } finally { done(); }
 }
 
 // The folder chosen in the connection dialog (its defaults are inherited).
@@ -7387,8 +7582,14 @@ function onConnFolderChange() {
 }
 
 async function delFolder(id) {
-  if (!(await uiConfirm(t('delete_folder_q'), {okText: t('delete'), danger: true}))) return;
-  await fetch('/api/folders/' + id, {method: 'DELETE'});
+  const f = folders.find(x => x.id === id);
+  const desc = folderDescendants(id);
+  const nFolders = Math.max(0, desc.size - 1);
+  const nConns = conns.filter(c => desc.has(c.folder_id)).length;
+  const msg = t('delete_folder_tree_q').replace('{name}', () => f ? f.name : '').replace('{folders}', () => String(nFolders)).replace('{connections}', () => String(nConns));
+  if (!(await uiConfirm(msg, {okText: t('delete'), danger: true}))) return;
+  const res = await fetch('/api/folders/' + id, {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error', 5000); return; }
   showToast(t('folder_deleted'), 'success');
   loadData();
 }
@@ -7754,6 +7955,7 @@ function openAdminPanel() {
   document.getElementById('modal-admin').classList.add('open');
   document.querySelectorAll('#admin-tabs .tab-btn').forEach(b => { b.style.display = adminTabAllowed(b.dataset.tab) ? '' : 'none'; });
   showAdminTab(adminTabAllowed(adminTab) ? adminTab : 'audit');
+  refreshTabScrollers();
 }
 
 function showAdminTab(tab) {
@@ -9751,8 +9953,13 @@ async function renderTunnelsPanel() {
     try { const r = await fetch('/api/tunnels?all=1'); if (r.ok) list = await r.json(); } catch (_) {}
   }
   if (tunnelPanelConn && !all) list = list.filter(v => v.conn_id === tunnelPanelConn);
+  const q = (document.getElementById('tun-filter')?.value || '').trim().toLowerCase();
+  const activeOnly = !!document.getElementById('tun-active-only')?.checked;
+  if (activeOnly) list = list.filter(v => v.running);
+  if (q) list = list.filter(v => [v.name, v.reason, v.connection, v.connection_host, v.route, v.kind, v.bind_host, v.bind_port, v.target_host, v.target_port, v.listen]
+    .filter(x => x != null).join(' ').toLowerCase().includes(q));
   if (!list.length) {
-    box.innerHTML = `<div class="chat-empty">${esc(t('tun_none'))}</div>`;
+    box.innerHTML = `<div class="chat-empty">${esc(q || activeOnly ? t('tun_no_match') : t('tun_none'))}</div>`;
     return;
   }
   const groups = {};
@@ -12254,6 +12461,7 @@ function openToolsMenu(anchor) {
   const pol = (currentUser && currentUser.policy) || {};
   const items = [{head: '🧰 ' + t('tools_lbl')}];
   if (pol.network_tools !== false) items.push({ico: '🛠', label: t('tools_net'), title: t('tools_net_t'), do: () => openTools()});
+  items.push({ico: '🌐', label: t('vault_proxies'), title: t('p_proxies_d'), do: () => openVault('proxies')});
   if (pol.broadcast !== false) {
     items.push({ico: '📣', label: t('broadcast_lbl') + '…', side: bcast.on ? t('tools_bc_on') : '', title: t('tools_bc_t'), do: () => openBroadcastModal()});
     if (bcast.on) items.push({ico: '■', label: t('bc_stop'), do: () => stopBroadcast()});
@@ -12598,6 +12806,8 @@ function addWindow(opts) {
       </div>
       <button class="win-snap-btn win-snap-menu-btn" title="${t('snap_layouts')}" onclick="openSnapMenu(event, ${id})">${snapIcon('nw')}</button>
       <div class="win-btns">
+        <button class="win-btn" id="wb-edit-${id}" title="${esc(t('edit_connection'))}" style="display:none;" onclick="event.stopPropagation(); openConnModal((winObjects.find(w => w.id === ${id}) || {}).connId)">✏</button>
+        <button class="win-btn" id="wb-tun-${id}" title="${esc(t('tunnels_lbl'))}" style="display:none;" onclick="event.stopPropagation(); openTunnelsPanel((winObjects.find(w => w.id === ${id}) || {}).connId)">🔀</button>
         <button class="win-btn reconnect" id="wb-rc-${id}" title="${t('reconnect_now')}" style="display:none;" onclick="reconnectTermById(${id})">↻</button>
         <button class="win-btn fm" id="wb-fm-${id}" title="${esc(t('win_files_t'))}" style="display:none;" onclick="event.stopPropagation(); openFilesMenu(${id}, this)">📂<span class="fm-caret">▾</span></button>
         <button class="win-btn ai" id="wb-ai-${id}" title="${esc(t('ai_btn_t'))}" style="display:none;" onclick="openAI(${id})">AI</button>
@@ -12755,6 +12965,10 @@ function setWinMode(id, mode) {
   if (bmBtn) bmBtn.style.display = mode === 'ssh' ? '' : 'none';
   const snBtn = document.getElementById('wb-sn-' + id);
   if (snBtn) snBtn.style.display = mode === 'ssh' && (!isCollabMode || currentUser) ? '' : 'none';
+  const editBtn = document.getElementById('wb-edit-' + id);
+  if (editBtn) editBtn.style.display = c && !wo.shareToken && !isCollabMode ? '' : 'none';
+  const tunBtn = document.getElementById('wb-tun-' + id);
+  if (tunBtn) tunBtn.style.display = c && !wo.shareToken && !isCollabMode && !wo.console && (c.protocol === 'SSH' || c.protocol === 'SFTP') ? '' : 'none';
   const fmBtn = document.getElementById('wb-fm-' + id);
   if (fmBtn) fmBtn.style.display = mode === 'ssh' && !wo.console && c && (c.protocol || 'SSH') === 'SSH' && winCan(wo, 'files_read') ? '' : 'none';
   const ntBtn = document.getElementById('wb-nt-' + id);
@@ -12901,6 +13115,41 @@ function fmCtxTransfer() {
   const sel = wo && wo.selected && wo.selected.size > 1 ? [...wo.selected] : [fmCtxState.path];
   openTransferModal(fmCtxState.winId, sel);
 }
+async function fmCtxPermissions() {
+  hideFmCtx();
+  const {winId, path, isDir} = fmCtxState;
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo || !wo.connId) return;
+  if (!guardWin(wo, 'files_write')) return;
+  const mode = await uiPrompt(t('fm_perm_mode'), isDir ? '755' : '644', {okText: t('save'), placeholder: '755'});
+  if (mode == null) return;
+  const clean = String(mode).trim();
+  if (!/^[0-7]{3,4}$/.test(clean)) { showToast(t('fm_perm_mode'), 'warning'); return; }
+  const recursive = isDir ? !!(await uiConfirm(t('fm_perm_recursive'), {okText: t('confirm')})) : false;
+  const send = async (sudo, password) => {
+    const res = await fetch(`/api/remote/chmod?${connQS(wo)}`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({path, mode: clean, recursive, sudo, sudo_password: password || ''})
+    });
+    const body = await res.json().catch(() => ({}));
+    return {res, body};
+  };
+  try {
+    let out = await send(false, '');
+    if (out.res.status === 403 && out.body.need_sudo) {
+      const password = await uiPrompt(t('fm_sudo_password'), '', {okText: t('confirm'), password: true});
+      if (password == null) return;
+      out = await send(true, password);
+    }
+    if (!out.res.ok) throw new Error(out.body.error || out.res.statusText);
+    showToast(t('fm_perm_saved') + ' (' + clean + ')', 'success');
+    if (wo._searchResults) endFmSearch(winId);
+    loadFiles(winId, wo.path);
+  } catch (e) {
+    showToast(e.message, 'error', 6000);
+  }
+}
+
 async function fmCtxRename() {
   hideFmCtx();
   const {winId, path} = fmCtxState;
@@ -14012,14 +14261,32 @@ async function collectDroppedFiles(dt) {
 function uploadItems(winId, items, overwrite) {
   const wo = winObjects.find(w => w.id === winId);
   if (!wo || !wo.connId || !guardWin(wo, 'files_write')) return;
-  if (wo._uploading) { showToast(t('fm_upload_busy'), 'warning'); return; }
+  if (!items || !items.length) return;
   const maxMB = settings.maxUploadMB || 0;
   if (maxMB > 0) {
     const tooBig = items.filter(i => i.file.size > maxMB * 1048576);
     if (tooBig.length) { showToast(`${tooBig.length} ${t('fm_too_big')} (${maxMB} MB)`, 'error', 5000); items = items.filter(i => !tooBig.includes(i)); }
     if (!items.length) return;
   }
-  const targetPath = wo.path || '.';
+  wo._uploadQueue = wo._uploadQueue || [];
+  // Each job remembers the folder it was dropped into, even if the user browses elsewhere.
+  wo._uploadQueue.push({items, overwrite: !!overwrite, targetPath: wo.path || '.'});
+  if (wo._uploading || wo._uploadBusy) showToast(t('fm_upload_queued'), 'info', 1800);
+  else pumpUploadQueue(winId);
+}
+
+function pumpUploadQueue(winId) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo || wo._uploading || wo._uploadBusy) return;
+  const job = (wo._uploadQueue || []).shift();
+  if (!job) return;
+  startUploadJob(winId, job);
+}
+
+function startUploadJob(winId, job) {
+  const wo = winObjects.find(w => w.id === winId);
+  if (!wo) return;
+  const {items, overwrite, targetPath} = job;
   const fd = new FormData();
   items.forEach(it => { if (it.rel) fd.append('relpath', it.rel); fd.append('file', it.file, it.file.name); });
   const total = items.reduce((s, i) => s + i.file.size, 0);
@@ -14027,6 +14294,7 @@ function uploadItems(winId, items, overwrite) {
   xhr.open('POST', `/api/remote/upload?${connQS(wo)}&path=${encodeURIComponent(targetPath)}${overwrite ? '&overwrite=true' : ''}`);
   xhr.setRequestHeader('X-WRM-Request', '1');
   wo._uploading = xhr;
+  wo._uploadBusy = true;
   const st = document.getElementById('fst-' + winId);
   const t0 = Date.now();
   const label = items.length === 1 ? items[0].file.name : items.length + ' ' + t('fm_files');
@@ -14035,7 +14303,8 @@ function uploadItems(winId, items, overwrite) {
     const pct = total ? Math.min(100, Math.round(loaded / total * 100)) : 0;
     const secs = (Date.now() - t0) / 1000;
     const speed = secs > 0.3 ? loaded / secs : 0;
-    st.innerHTML = `<div class="up-prog">⬆ ${esc(label)} <div class="bar"><div style="width:${pct}%"></div></div> ${pct}% · ${fmtBytes(loaded)}/${fmtBytes(total)}${speed ? ' · ' + fmtBytes(Math.round(speed)) + '/s' : ''}</div>
+    const queued = (wo._uploadQueue || []).length;
+    st.innerHTML = `<div class="up-prog">📤 ${esc(label)}${queued ? ` <span class="muted-text">(+${queued})</span>` : ''} <div class="bar"><div style="width:${pct}%"></div></div> ${pct}% · ${fmtBytes(loaded)}/${fmtBytes(total)}${speed ? ' · ' + fmtBytes(Math.round(speed)) + '/s' : ''}</div>
       <button class="icon-btn" onclick="cancelUpload(${winId})" title="${t('cancel')}">✕</button>`;
   };
   draw(0);
@@ -14052,7 +14321,7 @@ function uploadItems(winId, items, overwrite) {
       showToast(t('upload_failed') + ': ' + (body.error || xhr.statusText), 'error', 6000);
     } else {
       if (ok.length) showToast(`✅ ${t('upload_complete')}: ${ok.length === 1 ? ok[0].name : ok.length + ' ' + t('fm_files')}`, 'success');
-      if (errors.length) showToast(`❌ ${errors.length} ${t('upload_failed')}: ${errors[0].name} — ${errors[0].error}`, 'error', 7000);
+      if (errors.length) showToast(`⚠ ${errors.length} ${t('upload_failed')}: ${errors[0].name} — ${errors[0].error}`, 'error', 7000);
     }
     updateFmSelectionUI(winId);
     loadFiles(winId, wo.path);
@@ -14060,18 +14329,23 @@ function uploadItems(winId, items, overwrite) {
       const names = conflicts.slice(0, 8).map(c => '• ' + c.name).join('\n') + (conflicts.length > 8 ? `\n… +${conflicts.length - 8}` : '');
       if (await uiConfirm(`${conflicts.length} ${t('fm_exists_overwrite')}\n\n${names}`, {title: t('fm_file_exists'), okText: t('overwrite'), danger: true})) {
         const set = new Set(conflicts.map(c => c.name));
-        uploadItems(winId, items.filter(i => set.has(i.rel || i.file.name)), true);
+        const retry = items.filter(i => set.has(i.rel || i.file.name));
+        if (retry.length) wo._uploadQueue.unshift({items: retry, overwrite: true, targetPath});
       }
     }
+    wo._uploadBusy = false;
+    pumpUploadQueue(winId);
   };
-  xhr.onerror = () => { wo._uploading = null; updateFmSelectionUI(winId); showToast(t('upload_failed') + ': ' + t('network_error'), 'error'); };
-  xhr.onabort = () => { wo._uploading = null; updateFmSelectionUI(winId); showToast(t('fm_upload_cancelled'), 'warning'); loadFiles(winId, wo.path); };
+  xhr.onerror = () => { wo._uploading = null; wo._uploadBusy = false; updateFmSelectionUI(winId); showToast(t('upload_failed') + ': ' + t('network_error'), 'error'); pumpUploadQueue(winId); };
+  xhr.onabort = () => { wo._uploading = null; wo._uploadBusy = false; updateFmSelectionUI(winId); showToast(t('fm_upload_cancelled'), 'warning'); loadFiles(winId, wo.path); pumpUploadQueue(winId); };
   xhr.send(fd);
 }
+
 function cancelUpload(winId) {
   const wo = winObjects.find(w => w.id === winId);
   if (wo && wo._uploading) wo._uploading.abort();
 }
+
 
 // ── Text editor ──
 const EDITABLE_EXT = /\.(txt|log|md|conf|cfg|ini|env|toml|ya?ml|json|xml|html?|css|js|mjs|ts|go|py|sh|bash|zsh|php|rb|pl|lua|sql|service|properties|m3u8?|mpd|srt|vtt|csv|tsv|c|h|cpp|hpp|rs|java|kt|swift|gitignore|dockerfile|nginx|htaccess|crontab|out|err)$/i;
@@ -14347,6 +14621,22 @@ function updateTransferSrcInfo() {
   const info = document.getElementById('transfer-src-info');
   const n = _transferSrcSelected.size;
   info.textContent = n + ' item' + (n !== 1 ? 's' : '') + ' selected';
+}
+
+async function newTransferDestFolder() {
+  const connId = parseInt(document.getElementById('transfer-dest-conn').value);
+  if (!connId) { showToast(t('fm_select_first') || 'Select a connection first', 'warning'); return; }
+  const name = await uiPrompt(t('new_folder_name'), '', {okText: t('create'), placeholder: 'folder'});
+  if (!name || !name.trim()) return;
+  const full = joinPath(_transferDestPath || '/', name.trim());
+  try {
+    const res = await fetch(`/api/remote/mkdir?id=${connId}&path=${encodeURIComponent(full)}`, {method: 'POST'});
+    if (!res.ok) throw new Error(await apiError(res));
+    await loadTransferDestFiles(_transferDestPath || '/');
+    showToast('📁 ' + name.trim(), 'success');
+  } catch (e) {
+    showToast(e.message, 'error', 5000);
+  }
 }
 
 async function loadTransferDestFiles(path) {
@@ -15170,6 +15460,7 @@ function closeWindow(id) {
   disposeWinTerminal(wo);
   if (wo._searchCtrl) { try { wo._searchCtrl.abort(); } catch(_) {} }
   if (wo._uploading) { try { wo._uploading.abort(); } catch(_) {} }
+  wo._uploadQueue = []; wo._uploadBusy = false;
   if (wo.viewerTerm) { try { wo.viewerTerm.dispose(); } catch(_) {} }
   if (wo.el) wo.el.remove();
   winObjects = winObjects.filter(x => x.id !== id);
@@ -15368,6 +15659,7 @@ function renderTabs() {
   });
   const active = bar.querySelector('.tab-item.active');
   if (active) active.scrollIntoView({behavior:'smooth', block:'nearest', inline:'nearest'});
+  enhanceTabScrollers();
 }
 
 function showTabCtx(x, y, id) {
@@ -16062,6 +16354,7 @@ function openSettings(tab) {
   document.getElementById('st-mcp-btn').style.display = signedIn && !isCollabMode && currentUser.policy && currentUser.policy.mcp_enabled ? '' : 'none';
   showSettingsTab(tab || 'st-general');
   updateInstallRow();
+  refreshTabScrollers();
 }
 
 function showSettingsTab(id) {
@@ -16289,6 +16582,7 @@ async function initCollabView(token) {
   collab.role = data.me.role;
   collab.perms = data.me.perms || {};
   collabConns = data.connections || [];
+  collabFolders = data.folders || [];
   const brand = document.querySelector('.brand');
   if (brand) brand.textContent = data.share.name || t('shared_workspace');
   const sessBar = document.getElementById('sess-bar-name');
@@ -16374,7 +16668,7 @@ function renderCollabTree() {
     wrap.appendChild(hint);
     return;
   }
-  collabConns.forEach(c => {
+  const makeItem = c => {
     const item = document.createElement('div');
     item.className = 'conn-item';
     const proto = (c.protocol || 'SSH').toLowerCase();
@@ -16383,8 +16677,9 @@ function renderCollabTree() {
     item.ondblclick = () => { closeDrawers(); openSharedConnection(c, collabToken, collab.perms); };
     item.onclick = () => { if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) item.ondblclick(); };
     item.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = collabToken; showSharedCtx(e.clientX, e.clientY, c, collab.perms); };
-    wrap.appendChild(item);
-  });
+    return item;
+  };
+  appendSharedFolderTree(wrap, collabFolders, collabConns, makeItem);
   if (!collab.perms.terminal) {
     const hint = document.createElement('div');
     hint.className = 'muted-text'; hint.style.padding = '8px 10px';

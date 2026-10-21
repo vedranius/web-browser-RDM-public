@@ -1,3 +1,29 @@
+## Web Remote Manager PRO v12.8.0 - Folder management, permissions, upload queue and the reported UI fixes
+
+### Added
+
+- **Folders delete recursively.** Deleting a folder now deletes its subfolders and every connection inside it, with the tunnels, snippets, bookmarks and shares that belong to them. Nothing is moved to the root. The confirmation shows the exact folder and connection counts before you confirm.
+- **Folders and connections move where you put them.** Use **Move to folder…** in the context menu, or drag a folder or one/more selected connections. The new position is saved, and invalid moves (a folder into itself or its descendant) are refused.
+- **File permissions from the file manager.** Change a file or folder to a three- or four-digit octal mode. For folders you can apply it recursively. If the SSH account is not allowed, WRM asks for an optional sudo password and retries. FTP connections get a clear explanation instead of a silent failure.
+- **Upload queue.** Drop more files while an upload is running; they are queued and start automatically. Each batch remembers the folder it was dropped into.
+- **Tunnel search and proxy shortcuts.** Filter tunnels by port, description, host or route, and switch to active tunnels only. Proxy settings are now reachable from **Tools** and from the Tunnels panel.
+- **Edit and Tunnels in the terminal title bar.** Owned SSH and SFTP windows can open connection editing or their tunnels without going back to the sidebar.
+- **Scroll arrows for overflowing tabs.** Settings, Admin and folder tab rows get left/right arrows when they do not fit. The Settings window now uses the Admin window size.
+
+### Fixed
+
+- Nested shared and collaboration folders keep their hierarchy instead of being flattened into the root.
+- Connection and folder names sort case-insensitively; new folders join an alphabetical list in the right place.
+- **Save Connection** and **Save Folder** show progress and cannot be submitted twice by a double click.
+- **+ Connection** on a folder is pre-filled with that folder and inherits its jump-host and proxy defaults.
+- The folder delete confirmation now describes recursive deletion instead of promising that connections move to the root.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database migration is required. Recursive deletion is intentional and permanent: review the counts in the confirmation before deleting a folder.
+
+[Download v12.8.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.8.0) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v12.7.4 - Remote desktop without the manual guacd setup, previews for every text file
 
 ### Added

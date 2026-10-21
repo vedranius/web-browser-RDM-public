@@ -318,7 +318,7 @@ func sharedConnectionsFor(share ShareLink) []SharedConn {
 	folders := loadFolders(share.OwnerID)
 	rows, err := db.Query(`SELECT id, name, protocol, host, username, folder_id FROM connections
 		WHERE user_id=? AND (id IN (SELECT connection_id FROM share_items WHERE share_id=? AND connection_id IS NOT NULL)
-		OR folder_id IN (`+shareFolderSubtreeSQL+`)) ORDER BY name`,
+		OR folder_id IN (`+shareFolderSubtreeSQL+`)) ORDER BY name COLLATE NOCASE, name, id`,
 		share.OwnerID, share.ID, share.ID, share.OwnerID, share.OwnerID)
 	out := []SharedConn{}
 	if err != nil {
@@ -332,6 +332,66 @@ func sharedConnectionsFor(share ShareLink) []SharedConn {
 			c.FolderPath = folderPath(folders, *c.FolderID)
 		}
 		out = append(out, c)
+	}
+	return out
+}
+
+type SharedFolder struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	ParentID  *int   `json:"parent_id"`
+	Path      string `json:"path"`
+	SortOrder int    `json:"sort_order"`
+}
+
+// sharedFoldersFor returns the folder skeleton of a share. A shared folder brings its
+// whole subtree; a separately shared connection also brings the folders above it so the
+// shared tree keeps the same hierarchy as the owner's tree.
+func sharedFoldersFor(share ShareLink, conns []SharedConn) []SharedFolder {
+	folders := loadFolders(share.OwnerID)
+	byID := map[int]Folder{}
+	for _, f := range folders {
+		byID[f.ID] = f
+	}
+	allowed := map[int]bool{}
+	if rows, err := db.Query(`SELECT folder_id FROM share_items WHERE share_id=? AND folder_id IS NOT NULL`, share.ID); err == nil {
+		for rows.Next() {
+			var id int
+			if rows.Scan(&id) == nil {
+				for _, sub := range folderSubtreeIDs(folders, id) {
+					allowed[sub] = true
+				}
+			}
+		}
+		rows.Close()
+	}
+	for _, c := range conns {
+		id := 0
+		if c.FolderID != nil {
+			id = *c.FolderID
+		}
+		for n := 0; id > 0 && n < folderMaxDepth; n++ {
+			if allowed[id] {
+				break
+			}
+			allowed[id] = true
+			f, ok := byID[id]
+			if !ok || f.ParentID == nil {
+				break
+			}
+			id = *f.ParentID
+		}
+	}
+	out := []SharedFolder{}
+	for _, f := range folders {
+		if !allowed[f.ID] {
+			continue
+		}
+		parent := f.ParentID
+		if parent != nil && !allowed[*parent] {
+			parent = nil // the shared root starts here
+		}
+		out = append(out, SharedFolder{ID: f.ID, Name: f.Name, ParentID: parent, Path: f.Path, SortOrder: f.SortOrder})
 	}
 	return out
 }
@@ -1020,8 +1080,10 @@ func apiShareByTokenHandler(w http.ResponseWriter, r *http.Request) {
 		var owner string
 		db.QueryRow("SELECT username FROM users WHERE id=?", share.OwnerID).Scan(&owner)
 		conns := []SharedConn{}
+		folders := []SharedFolder{}
 		if roleCan(sa.Role, PermFilesRead) {
 			conns = sharedConnectionsFor(share)
+			folders = sharedFoldersFor(share, conns)
 		}
 		jsonOK(w, map[string]interface{}{
 			"share": map[string]interface{}{
@@ -1030,6 +1092,7 @@ func apiShareByTokenHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			"me":          map[string]interface{}{"name": sa.Name, "role": sa.Role, "guest": sa.Guest, "member": sa.Member, "owner": sa.IsOwner, "perms": rolePerms(sa.Role), "named": !sa.Guest || participantHasName(share.ID, sa.PKey)},
 			"connections": conns,
+			"folders":     folders,
 			"voice":       settingBool("voice_enabled"),
 		})
 	case "unlock":
@@ -1153,8 +1216,10 @@ func apiSharedHandler(w http.ResponseWriter, r *http.Request) {
 		var owner string
 		db.QueryRow("SELECT username FROM users WHERE id=?", s.OwnerID).Scan(&owner)
 		conns := []SharedConn{}
+		folders := []SharedFolder{}
 		if !locked && roleCan(role, PermFilesRead) {
 			conns = sharedConnectionsFor(s)
+			folders = sharedFoldersFor(s, conns)
 		}
 		results = append(results, map[string]interface{}{
 			"share": map[string]interface{}{
@@ -1163,6 +1228,7 @@ func apiSharedHandler(w http.ResponseWriter, r *http.Request) {
 				"access_mode": s.AccessMode,
 			},
 			"connections": conns,
+			"folders":     folders,
 		})
 	}
 	jsonOK(w, results)

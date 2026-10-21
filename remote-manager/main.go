@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.7.4"
+var AppVersion = "v12.8.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -409,6 +409,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/remote/download-dir", downloadRemoteDirHandler)
 	mux.HandleFunc("/api/remote/upload", uploadRemoteFileHandler)
 	mux.HandleFunc("/api/remote/mkdir", mkdirRemoteHandler)
+	mux.HandleFunc("/api/remote/chmod", chmodRemoteHandler)
 	mux.HandleFunc("/api/remote/delete", deleteRemoteHandler)
 	mux.HandleFunc("/api/remote/rename", renameRemoteHandler)
 	mux.HandleFunc("/api/remote/transfer", transferRemoteHandler)
@@ -1674,7 +1675,7 @@ func isWeb(c Connection) bool {
 }
 
 func loadUserConnections(userID int) []Connection {
-	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path,key_id,credential_id,COALESCE(tags,''),proxy_id FROM connections WHERE user_id=? ORDER BY name`, userID)
+	rows, err := db.Query(`SELECT id,name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,jump_conn_id,web_path,key_id,credential_id,COALESCE(tags,''),proxy_id FROM connections WHERE user_id=? ORDER BY name COLLATE NOCASE, name, id`, userID)
 	conns := []Connection{}
 	if err != nil {
 		return conns
@@ -2114,15 +2115,64 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), 400)
 			return
 		}
-		var rank int
-		db.QueryRow("SELECT COALESCE(MAX(sort_order),0)+1 FROM folders WHERE user_id=? AND parent_id IS ?", userID, f.ParentID).Scan(&rank)
-		res, err := db.Exec("INSERT INTO folders (name,user_id,jump_conn_id,proxy_id,parent_id,sort_order) VALUES (?,?,?,?,?,?)", f.Name, userID, f.JumpID, f.ProxyID, f.ParentID, rank)
+		siblings := []Folder{}
+		for _, x := range loadFolders(userID) {
+			if intPtrEq(x.ParentID, f.ParentID) {
+				siblings = append(siblings, x)
+			}
+		}
+		// New folders join an alphabetically sorted list at the right place. A list the
+		// user has reordered by hand is left alone and the new folder is appended.
+		index := len(siblings)
+		alpha := true
+		for i := 1; i < len(siblings); i++ {
+			if strings.ToLower(siblings[i-1].Name) > strings.ToLower(siblings[i].Name) {
+				alpha = false
+				break
+			}
+		}
+		if alpha {
+			for i, x := range siblings {
+				if strings.ToLower(f.Name) < strings.ToLower(x.Name) {
+					index = i
+					break
+				}
+			}
+		}
+		tx, err := db.Begin()
 		if err != nil {
+			jsonError(w, err.Error(), 500)
+			return
+		}
+		res, err := tx.Exec("INSERT INTO folders (name,user_id,jump_conn_id,proxy_id,parent_id,sort_order) VALUES (?,?,?,?,?,?)", f.Name, userID, f.JumpID, f.ProxyID, f.ParentID, index+1)
+		if err != nil {
+			tx.Rollback()
 			jsonError(w, err.Error(), 500)
 			return
 		}
 		id, _ := res.LastInsertId()
 		f.ID = int(id)
+		order := make([]int, 0, len(siblings)+1)
+		for i, x := range siblings {
+			if i == index {
+				order = append(order, f.ID)
+			}
+			order = append(order, x.ID)
+		}
+		if index >= len(siblings) {
+			order = append(order, f.ID)
+		}
+		for i, fid := range order {
+			if _, err := tx.Exec("UPDATE folders SET sort_order=? WHERE id=? AND user_id=?", i+1, fid, userID); err != nil {
+				tx.Rollback()
+				jsonError(w, err.Error(), 500)
+				return
+			}
+		}
+		if err := tx.Commit(); err != nil {
+			jsonError(w, err.Error(), 500)
+			return
+		}
 		saveVisualLabel(db, "folder", f.ID, userID, f.Label)
 		if f.JumpID != nil || f.ProxyID != nil {
 			auditLog(r, userID, "folder.created", f.Name, map[string]interface{}{"folder_id": f.ID, "default_jump": f.JumpID, "default_proxy": f.ProxyID})
@@ -2161,23 +2211,34 @@ func apiFolderByIDHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Method not allowed", 405)
 		return
 	}
-	tx, err := db.Begin()
+	folderName := ""
+	for _, f := range loadFolders(userID) {
+		if f.ID == id {
+			folderName = f.Name
+			break
+		}
+	}
+	folderIDs, connIDs, err := deleteFolderTree(userID, id)
 	if err != nil {
+		if err.Error() == "folder not found" {
+			jsonError(w, "Not found", 404)
+			return
+		}
 		jsonError(w, err.Error(), 500)
 		return
 	}
-	if _, err := tx.Exec(`UPDATE folders SET parent_id=(SELECT parent_id FROM folders WHERE id=? AND user_id=?) WHERE parent_id=? AND user_id=?`, id, userID, id, userID); err != nil {
-		tx.Rollback()
-		jsonError(w, err.Error(), 500)
-		return
+	// Running terminals and tunnels would otherwise keep a connection that no longer exists.
+	if len(connIDs) > 0 {
+		set := make(map[int]bool, len(connIDs))
+		for _, cid := range connIDs {
+			set[cid] = true
+			tunnelMgr.stopConn(cid, "the connection was deleted with its folder")
+		}
+		killTerminals(func(t *termSession) bool { return set[t.ConnID] }, "The connection was deleted with its folder")
 	}
-	tx.Exec("UPDATE connections SET folder_id=NULL WHERE folder_id=? AND user_id=?", id, userID)
-	tx.Exec("DELETE FROM folders WHERE id=? AND user_id=?", id, userID)
-	tx.Exec("DELETE FROM snippets WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
-	tx.Exec("DELETE FROM bookmarks WHERE scope='folder' AND scope_id=? AND user_id=?", id, userID)
-	tx.Commit()
 	revalidateFolderShares(userID)
-	jsonOK(w, map[string]bool{"ok": true})
+	auditLog(r, userID, "folder.deleted", folderName, map[string]interface{}{"folder_id": id, "folders": len(folderIDs), "connections": len(connIDs), "recursive": true})
+	jsonOK(w, map[string]interface{}{"ok": true, "folders": len(folderIDs), "connections": len(connIDs)})
 }
 
 // ─── SESSIONS ─────────────────────────────────────────
