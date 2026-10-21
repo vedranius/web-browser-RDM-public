@@ -1,3 +1,20 @@
+## [13.0.0] - Unreleased
+
+### Added
+- **Find logs is an explicit action.** Opening Monitoring → Logs no longer scans a server. Select a server and click **Find logs**; the result is cached for an hour per connection and configuration, and the file list is served from that cache. The tab states plainly that nothing was scanned yet.
+- **Service inventory.** Discovery reports services, not just folders: systemd units, Docker containers, Supervisor programs, Git installs and plain folders. A service whose output goes to journald is listed as `journal` instead of disappearing. Services with no readable file log are shown with that reason.
+- **systemd journal sources.** A log root can be `kind: journal` with a unit name. It is read with `journalctl --output=short-iso`, filtered by time range and keyword, and followed live by timestamp. Unit names are validated against a strict pattern and every other argument is generated server-side.
+- **Broader log folder detection.** `log`, `logs`, `log-*`, `logs_*`, `*-log`, `*_logs`, and `WorkingDirectory/{log,logs,var/log,var/logs}` are recognised; project folders such as `catalog`, `dialog` or `blog` are not.
+
+### Changed
+- Log discovery no longer runs inside the log-list request, so opening the tab cannot start an unbounded scan.
+- Discovery keeps its depth and file caps; the root budget rises from 100 to 200 roots and the folder scan visits up to 400 directories.
+
+### Security
+- Journal access uses the existing SSH account and the file-read permission, exactly like a file read; the SSH account still needs journal read access on the host.
+- Discovery is audited as `monitor.logs_discovered` and stays owner-only; shares can read a journal source but cannot trigger a scan.
+- Docker container names and log paths come from bounded reads of `config.v2.json`; no Docker socket or daemon command is used.
+
 ## [12.8.1] - 2026-10-21
 
 ### Security

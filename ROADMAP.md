@@ -2,6 +2,15 @@
 
 Accepted work through **v12.8.1** is delivered in [CHANGELOG.md](CHANGELOG.md).
 
+## v13 (in progress)
+
+Goal: WRM explains a server instead of only connecting to it, and it can be extended from inside itself, in the spirit of Omarchy: an addon is a folder that is dropped in and discovered at runtime, not a plugin compiled into the core.
+
+- **v13.0, log engine and AI log tool.** Explicit **Find logs**, a service inventory built from systemd units, Docker containers, Supervisor programs, Git installs and folders, systemd journal sources read through `journalctl`, and an AI tool that reads the same log sources through the existing approval, audit and redaction path. Status: the backend and UI of explicit discovery, the service inventory and journal sources are implemented on `v13.0-log-engine`; the AI log tool is next.
+- **v13.1, monitoring, replay and addons.** Continuous monitoring per server and service, wall-clock replay with per-user recording levels, and the addon platform: manifest, capability declaration, WASM sandboxed server hooks, registered UI panels, the CLI, and the community repository "WRM Pro - community public addons" (MIT, pull request plus CI validation and manual review).
+
+Addon decisions already taken: server code runs in a WASM sandbox (`wazero`, pure Go, no cgo) unless the operator opts into native code; UI addons register into defined slots and themes instead of touching core DOM; addons declare capabilities, which the installer shows before installing; the community index uses trust levels (`official`, `reviewed`, `community`, `unverified`) with checksums, plus a security and hobby-project liability notice.
+
 ## Security and enterprise identity (accepted, versions before v12.7.0)
 
 Goal: the same WRM fits a home lab, a small company and a large organisation. Security is checked automatically on every change, the operator chooses a security level, and companies sign in with their directory (Microsoft Entra ID / AD, LDAP, other identity providers) so every action is traceable to a domain user and can be stopped at once.

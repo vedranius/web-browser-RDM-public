@@ -19,6 +19,10 @@ type monitorLogRoot struct {
 	Path     string `json:"path"`
 	Service  string `json:"service"`
 	Operator string `json:"operator"`
+	// Kind is "journal" for a systemd unit read through journalctl; empty or
+	// "file" means a directory of log files on the SSH host.
+	Kind string `json:"kind,omitempty"`
+	Unit string `json:"unit,omitempty"`
 }
 type monitorConfig struct {
 	Enabled     bool             `json:"enabled"`
@@ -106,6 +110,20 @@ func (c *monitorConfig) normalize() error {
 	}
 	for i := range c.Roots {
 		x := &c.Roots[i]
+		if x.Kind == "journal" {
+			if !monitorJournalUnit.MatchString(x.Unit) {
+				return fmt.Errorf("invalid journal unit name")
+			}
+			// The unit is the whole address of this source; keep Path canonical so
+			// the UI, audit records and root matching agree on one spelling.
+			x.Path = "journal:" + x.Unit
+			if len(x.Service) > 120 || len(x.Operator) > 120 {
+				return fmt.Errorf("invalid log root labels")
+			}
+			continue
+		}
+		x.Kind = ""
+		x.Unit = ""
 		x.Path = path.Clean(x.Path)
 		if !strings.HasPrefix(x.Path, "/") || x.Path == "/" || len(x.Path) > 1024 || strings.ContainsAny(x.Path, "\x00\r\n") || len(x.Service) > 120 || len(x.Operator) > 120 {
 			return fmt.Errorf("invalid log root; use an absolute directory other than /")
@@ -255,6 +273,8 @@ func apiMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 			rows.Close()
 		}
 		jsonOK(w, out)
+	case "logs/discover":
+		monitorLogsDiscoverHandler(w, r, c, acc)
 	case "logs", "log":
 		monitorLogsHandler(w, r, c, acc, rest)
 	default:
