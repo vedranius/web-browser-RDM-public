@@ -120,6 +120,74 @@ func TestV130LogsNeedExplicitDiscovery(t *testing.T) {
 	}
 }
 
+// A folder under a broad root that holds a *.log is a service log folder: it
+// must show up as a service and all of its files (extensionless "info" too)
+// must be listed under that service.
+func TestV130FolderUnderBroadRootIsAService(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX log roots")
+	}
+	h := startFakeHost(t, testSSHUser, testSSHPass)
+	srv := newTestServer(t)
+	u := newTestUser(t, srv, "log-broad-root", false)
+	id := u.addConnection("demo-stream", h.addr)
+	root := filepath.Join(h.home, "varlog")
+	dir := filepath.Join(root, "media-api")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(dir, "error.log"), "2026-10-15T10:00:00Z ERROR boom\n")
+	writeFile(t, filepath.Join(dir, "info"), "2026-10-15T10:00:01Z INFO started\n")
+	// Another folder without any *.log file stays out of the service list.
+	empty := filepath.Join(root, "private")
+	if err := os.MkdirAll(empty, 0700); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(empty, "state"), "x\n")
+
+	cfg := defaultMonitorConfig()
+	cfg.Roots = []monitorLogRoot{{Path: root}}
+	if code := u.jsonDo("PUT", fmt.Sprintf("/api/monitoring/config?id=%d", id), cfg, nil); code != 200 {
+		t.Fatalf("config: %d", code)
+	}
+	var scan struct {
+		Services []monitorServiceInfo `json:"services"`
+	}
+	if code := u.jsonDo("POST", fmt.Sprintf("/api/monitoring/logs/discover?id=%d", id), nil, &scan); code != 200 {
+		t.Fatalf("discover: %d", code)
+	}
+	found := false
+	for _, s := range scan.Services {
+		if s.Name == "media-api" && s.Kind == "folder" {
+			found = true
+		}
+		if s.Name == "private" {
+			t.Fatalf("folder without log files was listed as a service: %+v", s)
+		}
+	}
+	if !found {
+		t.Fatalf("log folder under a broad root was not discovered: %+v", scan.Services)
+	}
+	var list struct {
+		Files []monitorLogFile `json:"files"`
+	}
+	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs?id=%d", id), nil, &list); code != 200 {
+		t.Fatalf("list: %d", code)
+	}
+	got := map[string]string{}
+	for _, f := range list.Files {
+		got[filepath.Base(f.Path)] = f.Service
+	}
+	for _, name := range []string{"error.log", "info"} {
+		if got[name] != "media-api" {
+			t.Fatalf("%s not listed with its folder as service: %+v", name, list.Files)
+		}
+	}
+	if _, ok := got["state"]; ok {
+		t.Fatalf("file from a folder without logs was listed: %+v", list.Files)
+	}
+}
+
 func TestV130JournalSourceIsListed(t *testing.T) {
 	h := startFakeHost(t, testSSHUser, testSSHPass)
 	srv := newTestServer(t)

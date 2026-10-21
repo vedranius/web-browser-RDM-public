@@ -190,6 +190,16 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 					warnings = append(warnings, d.name+": not readable")
 					continue
 				}
+				// A folder that already holds a *.log file is a service log folder:
+				// its other files (Serilog "info", "warn", extensionless output) belong
+				// to the same service and are shown too.
+				hasLog := false
+				for _, f := range entries {
+					if !f.IsDir() && monitorLogName(f.Name()) {
+						hasLog = true
+						break
+					}
+				}
 				for _, f := range entries {
 					visited++
 					if visited > 10000 || len(files) >= 2000 {
@@ -212,7 +222,7 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 					if !f.Mode().IsRegular() || aiReadDenied(p) != "" {
 						continue
 					}
-					if !monitorLogName(f.Name()) && !(includeTxt && strings.HasSuffix(strings.ToLower(f.Name()), ".txt")) {
+					if !monitorLogName(f.Name()) && !(includeTxt && strings.HasSuffix(strings.ToLower(f.Name()), ".txt")) && !(hasLog && d.depth > 0) {
 						continue
 					}
 					if oneOf(strings.ToLower(path.Ext(f.Name())), ".gz", ".bz2", ".xz", ".zip", ".zst") {
@@ -222,7 +232,20 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 						continue
 					}
 					seenFiles[p] = true
-					files = append(files, monitorLogFile{Root: root, Path: p, Service: x.Service, Operator: x.Operator, Size: f.Size(), Modified: f.ModTime().Unix()})
+					// Files in a subfolder of a broad root belong to that folder;
+					// label them so the service filter and column are useful
+					// (/var/log/media-api/error.log -> media-api).
+					service := x.Service
+					if service == "" && d.depth > 0 {
+						rel := strings.TrimPrefix(d.name, strings.TrimSuffix(real, "/")+"/")
+						if i := strings.Index(rel, "/"); i > 0 {
+							rel = rel[:i]
+						}
+						if rel != "" && rel != "." && !strings.Contains(rel, "..") {
+							service = rel
+						}
+					}
+					files = append(files, monitorLogFile{Root: root, Path: p, Service: service, Operator: x.Operator, Size: f.Size(), Modified: f.ModTime().Unix()})
 				}
 			}
 			if len(queue) > 0 {

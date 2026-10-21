@@ -5,6 +5,7 @@
 - **Service inventory.** Discovery reports services, not just folders: systemd units, Docker containers, Supervisor programs, Git installs and plain folders. A service whose output goes to journald is listed as `journal` instead of disappearing. Services with no readable file log are shown with that reason.
 - **systemd journal sources.** A log root can be `kind: journal` with a unit name. It is read with `journalctl --output=short-iso`, filtered by time range and keyword, and followed live by timestamp. Unit names are validated against a strict pattern and every other argument is generated server-side.
 - **Broader log folder detection.** `log`, `logs`, `log-*`, `logs_*`, `*-log`, `*_logs`, and `WorkingDirectory/{log,logs,var/log,var/logs}` are recognised; project folders such as `catalog`, `dialog` or `blog` are not.
+- **Application folders under a broad root are services.** A folder inside `/var/log` (or any configured root without a service label) that contains a `*.log` file is listed as a service, and every file in it is listed under that service name — including extensionless names such as `info` or `warn` that a logger writes next to `error.log`.
 
 ### Changed
 - Log discovery no longer runs inside the log-list request, so opening the tab cannot start an unbounded scan.

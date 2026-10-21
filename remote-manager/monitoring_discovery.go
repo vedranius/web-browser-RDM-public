@@ -179,6 +179,39 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 			continue
 		}
 		addService(r.Service, "folder", "file", "", "", p)
+		// A broad root such as /var/log holds one folder per application. List
+		// the folders that actually contain a *.log file so they show up as
+		// services instead of only as unlabeled rows in the file list.
+		if r.Service == "" && r.Operator == "" {
+			if entries, err := fs.ReadDir(p); err == nil {
+				subs := 0
+				for _, e := range entries {
+					if subs >= 60 || ctx.Err() != nil {
+						break
+					}
+					if !e.IsDir() || strings.HasPrefix(e.Name(), ".") {
+						continue
+					}
+					sub := path.Join(p, e.Name())
+					filesIn, err := fs.ReadDir(sub)
+					if err != nil {
+						continue
+					}
+					hasLog := false
+					for _, f := range filesIn {
+						if !f.IsDir() && monitorLogName(f.Name()) {
+							hasLog = true
+							break
+						}
+					}
+					if !hasLog {
+						continue
+					}
+					subs++
+					addService(e.Name(), "folder", "file", "", "", sub)
+				}
+			}
+		}
 	}
 	// Known installations provide labels without requiring another expensive Git
 	// comparison. Their small log directories are preferred over broad roots.
