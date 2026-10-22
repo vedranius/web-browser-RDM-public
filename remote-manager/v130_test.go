@@ -113,11 +113,17 @@ func TestV130LogsNeedExplicitDiscovery(t *testing.T) {
 	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs?id=%d", id), nil, &second); code != 200 {
 		t.Fatalf("list after discovery: %d", code)
 	}
-	if !second.Discovered || len(second.Files) != 1 || second.Files[0].Path != file {
+	if !second.Discovered || len(second.Files) == 0 {
 		t.Fatalf("discovered logs were not listed: %+v", second)
 	}
-	if second.Files[0].Service != "media-api" {
-		t.Fatalf("service label lost: %+v", second.Files[0])
+	foundFile := false
+	for _, f := range second.Files {
+		if f.Path == file && f.Service == "media-api" {
+			foundFile = true
+		}
+	}
+	if !foundFile {
+		t.Fatalf("the service log was not listed as media-api: %+v", second.Files)
 	}
 }
 

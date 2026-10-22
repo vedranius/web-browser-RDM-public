@@ -35,7 +35,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 **Medium builds where you choose.** Projects with a build step can now deploy with the **WRM native** engine. For each project, choose where the build runs: on the WRM host, on a chosen Linux build server over SSH, or not at all. The plan shows the place and the build's platform and architecture before anything runs; a destination with a different platform or architecture is refused with the reason. A build server receives only the prepared source in a temporary directory (no Git metadata and no SSH keys), and the directory is removed afterwards.
 
-**Monitoring → Logs finds every service.** Service logs are now discovered under `/home/operators/<operator>/<service>/log` and `/logs`, with the correct Service and Operator labels. Non-compressed service logs, including FTP `.txt` files, are listed; virtual environments, build/archive directories and old backups are skipped. Discovery and listing have larger time budgets, so large hosts no longer show incomplete results.
+**Monitoring → Logs finds every service.** Service logs are now discovered under `/home/<operator>/<operator>/<service>/log` and `/logs`, with the correct Service and Operator labels. Non-compressed service logs, including FTP `.txt` files, are listed; virtual environments, build/archive directories and old backups are skipped. Discovery and listing have larger time budgets, so large hosts no longer show incomplete results.
 
 ## What's new in v12.7.2
 

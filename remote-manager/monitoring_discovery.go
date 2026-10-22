@@ -438,9 +438,9 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 		}
 	}
 	cat, _ := loadGitWorkspace(c.UserID)
-	bases := append([]string{"/home/operators", "/srv", "/opt"}, cat.ServerRoots...)
+	bases := append([]string{"/home", "/srv", "/opt"}, cat.ServerRoots...)
 	// Bounded operator/service discovery, never a recursive /home scan. On the
-	// deployment layout /home/operators/<operator>/<service>/log(s) the first level
+	// deployment layout /home/<operator>/<operator>/<service>/log(s) the first level
 	// is the operator and the second level is the service.
 	type candidate struct {
 		p, service, operator string

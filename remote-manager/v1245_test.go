@@ -20,7 +20,7 @@ func TestV1245AutomaticLogsAndEventTimes(t *testing.T) {
 	srv := newTestServer(t)
 	u := newTestUser(t, srv, "log-discovery", false)
 	id := u.addConnection("demo-stream", h.addr)
-	// /home/operators/<operator>/<service>/log, as in production.
+	// /home/<operator>/<operator>/<service>/log, as in production.
 	root := filepath.Join(h.home, "demo-operator", "demo-api", "log")
 	os.MkdirAll(root, 0700)
 	file := filepath.Join(root, "events.log")

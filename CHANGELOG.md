@@ -1,3 +1,16 @@
+## [13.1.1] - 2026-10-22
+
+### Added
+- **One-command Claude Code setup.** The plugin ships `/wrm-pro:connect` and `scripts/connect-claude.sh` / `.ps1`, which run `claude mcp add --transport http --scope user wrm <url> --header "Authorization: Bearer <token>"`. The README documents the two-line marketplace install and the values it asks for, including a local instance over `http://localhost:8080` (Claude Code opens a sign-in page only over HTTPS, so a local address needs the token header).
+- **Release assets match the updater again**: `wrm-pro-v<version>-<os>-<arch>[.exe]` plus `SHA256SUMS.txt` for Windows, Linux (amd64, arm64, 386) and macOS (amd64, arm64). The in-app update failed with "the release has no file for this platform" because the assets were published without the `wrm-pro-` prefix.
+
+### Changed
+- Log discovery walks `/home` with the same bounded operator/service depth instead of one hardcoded home directory; documentation uses `/home/<operator>`.
+- The generated version file lists deployments under `## Services`.
+
+### Security
+- Documentation, tests, release notes and the community repository no longer name private deployments or paths; examples use generic placeholders.
+
 ## [13.1.0] - 2026-10-22
 
 ### Added
@@ -95,7 +108,7 @@ Replace the executable/container and keep the database and encryption key. No da
 - The plan shows the build location, the build's platform and architecture, and the last build output. A destination whose platform or architecture differs from the build is refused with the reason. WRM-host builds need a POSIX host with the toolchain; on Windows, choose a Linux build server or no build.
 
 ### Fixed
-- **Monitoring → Logs discovers every service under `/home/operators`.** The first level is now read as the operator and the second as the service, so the Service and Operator dropdowns show the correct values. Virtual environments, builds, distributions, archives, temporary and private-key directories are skipped instead of consuming the visit limit.
+- **Monitoring → Logs discovers every service under `/home/<operator>`.** The first level is now read as the operator and the second as the service, so the Service and Operator dropdowns show the correct values. Virtual environments, builds, distributions, archives, temporary and private-key directories are skipped instead of consuming the visit limit.
 - Service `log` and `logs` folders list their log files, including FTP `.txt` logs, and skip compressed archives; `/var/log` and broad roots keep the name filter. Archive, backup and old subfolders are pruned. Discovery and listing have larger time budgets (20 s and 60 s), so large hosts no longer return an incomplete list.
 
 ## [12.7.2] - 2026-10-19

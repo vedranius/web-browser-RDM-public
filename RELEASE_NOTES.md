@@ -1,3 +1,20 @@
+## Web Remote Manager PRO v13.1.1 - Claude Code in one command, updater assets fixed
+
+### Added
+
+- **One-command Claude Code setup.** The plugin ships `/wrm-pro:connect` and `scripts/connect-claude.sh` / `.ps1`, which run `claude mcp add --transport http --scope user wrm <url> --header "Authorization: Bearer <token>"`. In the chat: `/plugin marketplace add vedranius/web-browser-RDM-public` and `/plugin install wrm-pro@wrm-pro`.
+- **Release assets match the updater:** `wrm-pro-v<version>-<os>-<arch>[.exe]` and `SHA256SUMS.txt` for Windows, Linux (amd64, arm64, 386) and macOS (amd64, arm64). The previous upload without the `wrm-pro-` prefix made the in-app update report that the release has no file for the platform.
+
+### Changed
+
+- Log discovery walks `/home` with the same bounded operator/service depth instead of one hardcoded home directory; docs use `/home/<operator>`.
+- The generated version file lists deployments under `## Services`.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.1.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.1.1) · [Full changelog](CHANGELOG.md)
 ## Web Remote Manager PRO v13.1.0 - Logs the assistant can read, addons you can install, monitoring you can watch
 
 ### Logs and the assistant
@@ -105,7 +122,7 @@ Replace the executable/container and keep the database and encryption key. No da
 
 ### Fixed
 
-- **Monitoring → Logs now discovers every service under `/home/operators/<operator>/<service>`.** Service and Operator labels are correct, virtual environments and build/archive directories no longer hide services, and service `log`/`logs` folders include their log files, including FTP `.txt` logs, while compressed archives are skipped. Larger time budgets keep large hosts complete.
+- **Monitoring → Logs now discovers every service under `/home/<operator>/<operator>/<service>`.** Service and Operator labels are correct, virtual environments and build/archive directories no longer hide services, and service `log`/`logs` folders include their log files, including FTP `.txt` logs, while compressed archives are skipped. Larger time budgets keep large hosts complete.
 
 ## Web Remote Manager PRO v12.7.2 — Version detected from the code
 
