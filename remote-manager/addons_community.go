@@ -176,52 +176,56 @@ func addonCommunityInstallHandler(w http.ResponseWriter, r *http.Request, adminI
 		jsonError(w, "Bad JSON", 400)
 		return
 	}
+	out, status, err := addonCommunityInstall(r.Context(), r, adminID, p.ID)
+	if err != nil {
+		jsonError(w, err.Error(), status)
+		return
+	}
+	jsonOK(w, map[string]interface{}{"id": out.ID, "name": out.Name, "version": out.Version, "enabled": out.Enabled, "checksum": out.Checksum})
+}
+
+// addonCommunityInstall downloads one index entry and installs it through the
+// same archive checks as an upload. The AI tool calls it without a request.
+func addonCommunityInstall(ctx context.Context, r *http.Request, adminID int, id string) (addonInstallOutcome, int, error) {
+	var out addonInstallOutcome
 	list, err := addonCommunityList()
 	if err != nil {
-		jsonError(w, err.Error(), 502)
-		return
+		return out, 502, err
 	}
 	var chosen *communityAddon
 	for i := range list {
-		if list[i].ID == p.ID {
+		if list[i].ID == id {
 			chosen = &list[i]
 			break
 		}
 	}
 	if chosen == nil {
-		jsonError(w, "This addon is not in the community index", 404)
-		return
+		return out, 404, fmt.Errorf("this addon is not in the community index")
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+	dctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, chosen.URL, nil)
+	req, err := http.NewRequestWithContext(dctx, http.MethodGet, chosen.URL, nil)
 	if err != nil {
-		jsonError(w, "The addon download address is invalid", 400)
-		return
+		return out, 400, fmt.Errorf("the addon download address is invalid")
 	}
 	res, err := addonCommunityHTTP().Do(req)
 	if err != nil {
-		jsonError(w, "The addon cannot be downloaded", 502)
-		return
+		return out, 502, fmt.Errorf("the addon cannot be downloaded")
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		jsonError(w, fmt.Sprintf("The addon download answered HTTP %d", res.StatusCode), 502)
-		return
+		return out, 502, fmt.Errorf("the addon download answered HTTP %d", res.StatusCode)
 	}
 	body, err := io.ReadAll(io.LimitReader(res.Body, addonMaxArchive+1))
 	if err != nil || len(body) == 0 {
-		jsonError(w, "The addon cannot be downloaded", 502)
-		return
+		return out, 502, fmt.Errorf("the addon cannot be downloaded")
 	}
 	if len(body) > addonMaxArchive {
-		jsonError(w, "The archive is larger than 20 MB", 413)
-		return
+		return out, 413, fmt.Errorf("the archive is larger than 20 MB")
 	}
 	sum := sha256.Sum256(body)
 	if hex.EncodeToString(sum[:]) != chosen.SHA256 {
-		jsonError(w, "The downloaded archive does not match the checksum in the index; nothing was installed", 409)
-		return
+		return out, 409, fmt.Errorf("the downloaded archive does not match the checksum in the index; nothing was installed")
 	}
-	addonInstallBytes(w, r, adminID, body, "community:"+chosen.ID+"@"+chosen.Trust)
+	return addonInstallArchive(ctx, r, adminID, body, "community:"+chosen.ID+"@"+chosen.Trust)
 }

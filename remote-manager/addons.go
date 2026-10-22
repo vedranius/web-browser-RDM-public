@@ -420,40 +420,57 @@ func addonInstall(w http.ResponseWriter, r *http.Request, adminID int) {
 	addonInstallBytes(w, r, adminID, body, source)
 }
 
+// addonInstallOutcome is what an install reports, whether it came from an
+// upload, the community library or a draft.
+type addonInstallOutcome struct {
+	ID       string
+	Name     string
+	Version  string
+	Checksum string
+	Enabled  bool
+}
+
 // addonInstallBytes validates and installs one archive. The upload endpoint and
 // the community library share it, so a downloaded addon passes exactly the same
 // checks as a hand-picked ZIP.
 func addonInstallBytes(w http.ResponseWriter, r *http.Request, adminID int, body []byte, source string) {
+	out, status, err := addonInstallArchive(r.Context(), r, adminID, body, source)
+	if err != nil {
+		jsonError(w, err.Error(), status)
+		return
+	}
+	jsonOK(w, map[string]interface{}{"id": out.ID, "name": out.Name, "version": out.Version, "enabled": out.Enabled, "checksum": out.Checksum})
+}
+
+// addonInstallArchive is addonInstallBytes without an HTTP response: the AI
+// tools install a draft through the same function the upload endpoint uses.
+func addonInstallArchive(ctx context.Context, r *http.Request, adminID int, body []byte, source string) (addonInstallOutcome, int, error) {
+	var out addonInstallOutcome
 	m, prefix, err := addonReadArchive(body)
 	if err != nil {
-		jsonError(w, err.Error(), 400)
-		return
+		return out, 400, err
 	}
 	sum := sha256.Sum256(body)
 	checksum := "sha256:" + hex.EncodeToString(sum[:])
 	if err := os.MkdirAll(addonsRoot(), 0o755); err != nil {
-		jsonError(w, "The addon folder cannot be created", 500)
-		return
+		return out, 500, fmt.Errorf("the addon folder cannot be created")
 	}
 	tmp, err := os.MkdirTemp(addonsRoot(), ".install-")
 	if err != nil {
-		jsonError(w, "The addon folder cannot be written", 500)
-		return
+		return out, 500, fmt.Errorf("the addon folder cannot be written")
 	}
 	defer os.RemoveAll(tmp)
 	if err := addonWriteFiles(body, prefix, tmp); err != nil {
-		jsonError(w, "The archive cannot be written: "+err.Error(), 500)
-		return
+		return out, 500, fmt.Errorf("the archive cannot be written: %v", err)
 	}
 	// Compiling is not executing, and it turns a broken module into an install
 	// error instead of a surprise on the first call.
 	if m.Server != nil {
-		vctx, vcancel := context.WithTimeout(r.Context(), 10*time.Second)
+		vctx, vcancel := context.WithTimeout(ctx, 10*time.Second)
 		err := addonCheckWASM(vctx, m, tmp)
 		vcancel()
 		if err != nil {
-			jsonError(w, err.Error(), 400)
-			return
+			return out, 400, err
 		}
 	}
 	final := addonDir(m.ID)
@@ -462,16 +479,14 @@ func addonInstallBytes(w http.ResponseWriter, r *http.Request, adminID int, body
 	previous, hadPrevious := addonGet(m.ID)
 	if _, err := os.Stat(final); err == nil {
 		if err := os.Rename(final, old); err != nil {
-			jsonError(w, "The previous version cannot be replaced", 500)
-			return
+			return out, 500, fmt.Errorf("the previous version cannot be replaced")
 		}
 	}
 	if err := os.Rename(tmp, final); err != nil {
 		if _, statErr := os.Stat(old); statErr == nil {
 			os.Rename(old, final)
 		}
-		jsonError(w, "The addon folder cannot be written", 500)
-		return
+		return out, 500, fmt.Errorf("the addon folder cannot be written")
 	}
 	os.RemoveAll(old)
 	manifest, _ := json.Marshal(m)
@@ -488,25 +503,23 @@ func addonInstallBytes(w http.ResponseWriter, r *http.Request, adminID int, body
 		ON CONFLICT(id) DO UPDATE SET version=excluded.version, manifest=excluded.manifest,
 			source=excluded.source, checksum=excluded.checksum, installed_at=excluded.installed_at, installed_by=excluded.installed_by`,
 		m.ID, m.Version, enabled, string(manifest), source, checksum, now, usernameOf(adminID)); err != nil {
-		jsonError(w, "The addon cannot be recorded", 500)
-		return
+		return out, 500, fmt.Errorf("the addon cannot be recorded")
 	}
 	auditLog(r, adminID, "addon.installed", m.ID, map[string]interface{}{
 		"version": m.Version, "capabilities": m.Capabilities, "checksum": checksum, "enabled": enabled == 1,
 	})
-	jsonOK(w, map[string]interface{}{"id": m.ID, "name": m.Name, "version": m.Version, "enabled": enabled == 1, "checksum": checksum})
+	out = addonInstallOutcome{ID: m.ID, Name: m.Name, Version: m.Version, Checksum: checksum, Enabled: enabled == 1}
+	return out, 200, nil
 }
 
-func addonSetEnabled(w http.ResponseWriter, r *http.Request, adminID int, id string, on bool) {
+func addonSetEnabledCore(adminID int, id string, on bool) (addonRecord, int, error) {
 	rec, ok := addonGet(id)
 	if !ok {
-		jsonError(w, "Addon not found", 404)
-		return
+		return rec, 404, fmt.Errorf("addon not found")
 	}
 	if on {
 		if _, err := os.Stat(filepath.Join(addonDir(id), "addon.json")); err != nil {
-			jsonError(w, "The addon files are missing; install the archive again", 409)
-			return
+			return rec, 409, fmt.Errorf("the addon files are missing; install the archive again")
 		}
 	}
 	v := 0
@@ -514,29 +527,43 @@ func addonSetEnabled(w http.ResponseWriter, r *http.Request, adminID int, id str
 		v = 1
 	}
 	if _, err := db.Exec(`UPDATE addons SET enabled=? WHERE id=?`, v, id); err != nil {
-		jsonError(w, "The addon cannot be updated", 500)
-		return
+		return rec, 500, fmt.Errorf("the addon cannot be updated")
 	}
 	action := "addon.disabled"
 	if on {
 		action = "addon.enabled"
 	}
-	auditLog(r, adminID, action, id, map[string]interface{}{"version": rec.Version})
-	jsonOK(w, map[string]bool{"ok": true, "enabled": on})
+	auditLog(nil, adminID, action, id, map[string]interface{}{"version": rec.Version})
+	return rec, 200, nil
+}
+
+func addonSetEnabled(w http.ResponseWriter, r *http.Request, adminID int, id string, on bool) {
+	rec, status, err := addonSetEnabledCore(adminID, id, on)
+	if err != nil {
+		jsonError(w, err.Error(), status)
+		return
+	}
+	jsonOK(w, map[string]interface{}{"ok": true, "enabled": on, "id": rec.ID})
+}
+
+func addonRemoveCore(adminID int, id string) (addonRecord, int, error) {
+	rec, ok := addonGet(id)
+	if !ok {
+		return rec, 404, fmt.Errorf("addon not found")
+	}
+	if _, err := db.Exec(`DELETE FROM addons WHERE id=?`, id); err != nil {
+		return rec, 500, fmt.Errorf("the addon cannot be removed")
+	}
+	os.RemoveAll(addonDir(id))
+	auditLog(nil, adminID, "addon.removed", id, map[string]interface{}{"version": rec.Version})
+	return rec, 200, nil
 }
 
 func addonRemove(w http.ResponseWriter, r *http.Request, adminID int, id string) {
-	rec, ok := addonGet(id)
-	if !ok {
-		jsonError(w, "Addon not found", 404)
+	if _, status, err := addonRemoveCore(adminID, id); err != nil {
+		jsonError(w, err.Error(), status)
 		return
 	}
-	if _, err := db.Exec(`DELETE FROM addons WHERE id=?`, id); err != nil {
-		jsonError(w, "The addon cannot be removed", 500)
-		return
-	}
-	os.RemoveAll(addonDir(id))
-	auditLog(r, adminID, "addon.removed", id, map[string]interface{}{"version": rec.Version})
 	jsonOK(w, map[string]bool{"ok": true})
 }
 
@@ -609,6 +636,14 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 		list := addonRecords(!admin)
 		sort.Slice(list, func(i, j int) bool { return list[i].Name < list[j].Name })
 		jsonOK(w, map[string]interface{}{"addons": list, "capabilities": addonCapabilities})
+		return
+	}
+	if parts[0] == "drafts" {
+		if !admin {
+			jsonError(w, "Admin access required", 403)
+			return
+		}
+		addonDraftsHandler(w, r, userID, parts[1:])
 		return
 	}
 	if parts[0] == "community" {

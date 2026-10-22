@@ -10331,8 +10331,9 @@ let mcpPoll = null;
 async function mcpRefresh() {
   const pol = (currentUser && currentUser.policy) || {};
   const btn = document.getElementById('btn-mcp');
-  if (!pol.mcp_enabled || isCollabMode) { if (btn) btn.style.display = 'none'; return; }
-  if (btn) btn.title = t('mcp_btn_t');
+  if (isCollabMode) { if (btn) btn.style.display = 'none'; return; }
+  // The same poll carries built-in assistant approvals, so it runs even when MCP is off.
+  if (btn) { btn.style.display = pol.mcp_enabled ? '' : 'none'; btn.title = t('mcp_btn_t'); }
   if (window.wrmMCP) { wrmMCP.refresh(); return; }
   try {
     const r = await fetch('/api/mcp/active');
@@ -10345,7 +10346,14 @@ function mcpStart() {
   const id = new URLSearchParams(location.search).get('mcp_authorize');
   if (id) loadMCP().then(() => wrmMCP.consent(id), () => showToast(t('mcp_load_failed'), 'error'));
   mcpRefresh();
-  if (!mcpPoll) mcpPoll = setInterval(mcpRefresh, 60000);
+  if (!mcpPoll) mcpPoll = setInterval(mcpRefresh, document.hidden ? 15000 : 5000);
+  if (!window.__wrmMcpVis) {
+    window.__wrmMcpVis = true;
+    document.addEventListener('visibilitychange', () => {
+      if (mcpPoll) { clearInterval(mcpPoll); mcpPoll = setInterval(mcpRefresh, document.hidden ? 15000 : 5000); }
+      if (!document.hidden) mcpRefresh();
+    });
+  }
 }
 function openMCPPop() {
   loadMCP().then(() => wrmMCP.togglePop(), () => showToast(t('mcp_load_failed'), 'error'));
@@ -11787,6 +11795,64 @@ function notifyStatusChanges(prev, cur) {
 function browserNotify(text) {
   try {
     if (document.hidden && 'Notification' in window && Notification.permission === 'granted') new Notification('WRM PRO', {body: text, icon: '/static/brand/icon-192.png'});
+  } catch (_) {}
+}
+
+// ── AI alerts: a short sound, a toast and (when the page is hidden) a desktop
+// notification. An approval must be impossible to miss, also when the AI panel
+// or the MCP live view is closed. The sound is one setting for this browser.
+var wrmSoundCtx = null, wrmAlertSeen = {};
+function wrmSoundOn() { try { return localStorage.getItem('wrm_sound') !== '0'; } catch (_) { return true; } }
+function wrmSound(kind) {
+  if (!wrmSoundOn()) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!wrmSoundCtx) wrmSoundCtx = new Ctx();
+    if (wrmSoundCtx.state === 'suspended') wrmSoundCtx.resume().catch(() => {});
+    const ctx = wrmSoundCtx, t0 = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+    const approval = kind === 'approval';
+    o.type = 'sine';
+    o.frequency.setValueAtTime(approval ? 880 : 660, t0);
+    if (approval) o.frequency.setValueAtTime(1175, t0 + 0.14);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(approval ? 0.16 : 0.1, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + (approval ? 0.42 : 0.2));
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t0); o.stop(t0 + (approval ? 0.44 : 0.22));
+  } catch (_) {}
+}
+// Browsers allow audio only after a gesture; the first click prepares the context.
+document.addEventListener('pointerdown', function () {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx && !wrmSoundCtx) wrmSoundCtx = new Ctx();
+    if (wrmSoundCtx && wrmSoundCtx.state === 'suspended') wrmSoundCtx.resume().catch(() => {});
+  } catch (_) {}
+}, {once: true});
+function wrmDesktopNotify(title, body) {
+  try {
+    if ('Notification' in window && Notification.permission === 'granted') new Notification(title, {body: body, icon: '/static/brand/icon-192.png', tag: 'wrm-ai'});
+  } catch (_) {}
+}
+// wrmAiAlert is used by static/ai.js and static/mcp.js. The same approval is
+// announced once, even when both views see it.
+function wrmAiAlert(kind, text, key) {
+  const now = Date.now();
+  if (key) {
+    if (wrmAlertSeen[key] && now - wrmAlertSeen[key] < 30000) return;
+    wrmAlertSeen[key] = now;
+  }
+  wrmSound(kind);
+  if (typeof showToast === 'function') showToast((kind === 'approval' ? '⏳ ' : '✦ ') + text, kind === 'approval' ? 'warning' : 'info', kind === 'approval' ? 9000 : 3500);
+  if (document.hidden) wrmDesktopNotify('WRM PRO', text);
+}
+function wrmAskNotifications() {
+  try {
+    if ('Notification' in window && Notification.permission === 'default' && localStorage.getItem('wrm_notify_asked') !== '1') {
+      localStorage.setItem('wrm_notify_asked', '1');
+      Notification.requestPermission();
+    }
   } catch (_) {}
 }
 

@@ -27,6 +27,7 @@ type aiToolSpec struct {
 	Modes   []string
 	Expose  bool // offered to the model
 	MCPOnly bool // offered to MCP clients only (needs a second session of the same AI connection)
+	Host    bool // acts on WRM itself, not on the session's server (administrators only)
 }
 
 func obj(props map[string]interface{}, required ...string) map[string]interface{} {
@@ -80,6 +81,33 @@ var aiTools = []aiToolSpec{
 	{Kind: "write", MCPOnly: true, Def: aiToolDef{Name: "transfer_file", Description: "Copy one file from another server of this AI connection to this session's server, through WRM (SFTP). The destination is treated like a file edit: refused in read-only mode, otherwise the user approves it (unless the automatic mode allows the path). Sensitive source files are refused.",
 		Schema: obj(map[string]interface{}{"path": strProp("Destination path on this session's server (absolute, or ~/)"), "from_path": strProp("Source path on the other server (absolute, or ~/)"),
 			"reason": strProp("One sentence for the user: why this transfer")}, "path", "from_path", "reason")}},
+	// The addon loop works on WRM itself, not on the session's server. Every
+	// change waits for the user's approval in every mode, and a draft is never
+	// enabled by these tools.
+	{Kind: "read", Host: true, Def: aiToolDef{Name: "addon_list", Description: "List the addons installed in WRM and the addon drafts in the AI workspace. Drafts are files waiting for the user's review in Settings → Addons; they are never served or executed.",
+		Schema: obj(map[string]interface{}{})}},
+	{Kind: "read", Host: true, Def: aiToolDef{Name: "addon_files", Description: "List the files of an installed addon or of a draft, with sizes and the manifest; give a path to read one text file. Use it to inspect what is installed before writing a draft.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "draft": map[string]interface{}{"type": "boolean", "description": "Read the draft instead of the installed addon"},
+			"path": strProp("Optional relative file to read")}, "id")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_create", Description: "Create or replace an addon draft in WRM's AI workspace from a set of text files (addon.json at the root plus the files it declares). The draft is validated exactly like a ZIP; nothing is installed, served or executed. The user reviews the diff in Settings → Addons and installs it; with install=true the same call also installs it (a new addon stays disabled). Every call needs the user's approval.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id, matching addon.json"), "files": map[string]interface{}{"type": "object", "description": "Relative path → file content", "additionalProperties": map[string]interface{}{"type": "string"}},
+			"install": map[string]interface{}{"type": "boolean", "description": "Also install the validated draft after writing it (disabled for a new addon)"},
+			"reason":  strProp("One sentence for the user: why this addon")}, "id", "files", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_write", Description: "Write one file into an existing addon draft. The draft is validated again exactly like a ZIP; a broken write leaves the previous draft untouched. Every call needs the user's approval.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "path": strProp("Relative path inside the addon"), "content": strProp("New text content"),
+			"content_base64": strProp("Base64 content instead of content, for a binary file such as plugin.wasm"), "install": map[string]interface{}{"type": "boolean", "description": "Also install the validated draft after writing it"},
+			"reason": strProp("One sentence for the user: why this change")}, "id", "path", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_enable", Description: "Enable an installed addon. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "reason": strProp("One sentence for the user: why enable it")}, "id", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_disable", Description: "Disable an installed addon. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "reason": strProp("One sentence for the user: why disable it")}, "id", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_delete", Description: "Remove an installed addon and delete its files. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "reason": strProp("One sentence for the user: why remove it")}, "id", "reason")}},
+	{Kind: "command", Host: true, Def: aiToolDef{Name: "addon_run", Description: "Run one export of an enabled addon's WebAssembly module in WRM's sandbox (no files, no network, 64 MiB, five seconds). Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "export": strProp("Export declared in addon.json"), "input": strProp("JSON request for the export (default {})"),
+			"reason": strProp("One sentence for the user: why run it")}, "id", "export", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_install_community", Description: "Install one addon from the community index. The download must match the SHA-256 in the index and then passes the same archive checks as an upload. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"community_id": strProp("Addon id from the community index"), "reason": strProp("One sentence for the user: why install it")}, "community_id", "reason")}},
 }
 
 // aiScopesFor lists the MCP scopes that allow a tool (any one of them is enough).
@@ -87,6 +115,9 @@ func aiScopesFor(name string) []string {
 	spec, ok := aiToolSpecFor(name)
 	if !ok {
 		return nil
+	}
+	if spec.Host {
+		return []string{"addons.manage"}
 	}
 	switch {
 	case spec.Kind == "read":
@@ -139,9 +170,14 @@ func aiToolSpecFor(name string) (aiToolSpec, bool) {
 // aiToolDefsFor lists the tools offered to the model in a mode: read-only sessions are
 // not offered the write tools at all (run_command stays: read-only commands are allowed).
 func aiToolDefsFor(mode string) []aiToolDef {
+	return aiToolDefsForUser(mode, true)
+}
+
+// aiToolDefsForUser also hides the host-side addon tools from non-administrators.
+func aiToolDefsForUser(mode string, admin bool) []aiToolDef {
 	var out []aiToolDef
 	for _, t := range aiTools {
-		if (t.Kind == "write" && mode == aiModeReadOnly) || t.MCPOnly {
+		if (t.Kind == "write" && mode == aiModeReadOnly) || t.MCPOnly || (t.Host && !admin) {
 			continue
 		}
 		out = append(out, t.Def)
@@ -149,9 +185,14 @@ func aiToolDefsFor(mode string) []aiToolDef {
 	return out
 }
 
+func (s *aiSession) toolDefs() []aiToolDef {
+	return aiToolDefsForUser(s.Mode, isAdminUser(s.UserID))
+}
+
 // aiToolInput is the union of every tool's arguments.
 type aiToolInput struct {
 	Path     string `json:"path"`
+	FilePath string `json:"file_path"` // accepted as an alias for path: many models know it from other tools
 	Offset   int64  `json:"offset"`
 	MaxBytes int64  `json:"max_bytes"`
 	Lines    int    `json:"lines"`
@@ -170,6 +211,15 @@ type aiToolInput struct {
 	OldText  string `json:"old_text"`
 	NewText  string `json:"new_text"`
 	FromPath string `json:"from_path"`
+	// addon tools (host)
+	ID            string            `json:"id"`
+	Files         map[string]string `json:"files"`
+	Install       bool              `json:"install"`
+	Draft         bool              `json:"draft"`
+	Export        string            `json:"export"`
+	Input         string            `json:"input"`
+	ContentBase64 string            `json:"content_base64"`
+	CommunityID   string            `json:"community_id"`
 }
 
 var (
@@ -207,6 +257,8 @@ type aiPlanned struct {
 	Inventory *aiToolInput
 	// Logs (find_logs): the discovery listing, produced in run
 	Logs *aiToolInput
+	// Host: an addon tool that acts on WRM itself, not on the session's server
+	Host *aiToolInput
 	// transfers (transfer_file): the source session, its real path and the size
 	Transfer bool
 	From     *aiSession
@@ -239,6 +291,9 @@ func aiReadMax() int64 { return int64(settingInt("ai_output_max_kb")) << 10 }
 // plan turns a tool call into an action. File edits read the current file first (through
 // a read-only script) to build the diff.
 func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiPlanned, error) {
+	if spec, ok := aiToolSpecFor(name); ok && spec.Host {
+		return s.planHostTool(name, in)
+	}
 	q := shellQuote
 	switch name {
 	case "inventory_files":
@@ -542,6 +597,11 @@ func decodeToolInput(raw json.RawMessage) (aiToolInput, error) {
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&in); err != nil {
 		return in, fmt.Errorf("invalid arguments: %v", err)
+	}
+	// Models trained on other tools often send file_path; treat it as path so a
+	// correct edit still reaches the approval step instead of failing on a name.
+	if in.Path == "" && in.FilePath != "" {
+		in.Path = in.FilePath
 	}
 	return in, nil
 }

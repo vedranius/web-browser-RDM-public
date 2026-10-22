@@ -183,15 +183,21 @@ func TestV130FolderUnderBroadRootIsAService(t *testing.T) {
 	}
 	got := map[string]string{}
 	for _, f := range list.Files {
-		got[filepath.Base(f.Path)] = f.Service
+		// The SSH server is the test host itself, so its own log folders may be
+		// visible under other roots; only this test's service is asserted.
+		if f.Service == "media-api" && (filepath.Base(f.Path) == "error.log" || filepath.Base(f.Path) == "info") {
+			got[filepath.Base(f.Path)] = f.Service
+		}
 	}
 	for _, name := range []string{"error.log", "info"} {
 		if got[name] != "media-api" {
 			t.Fatalf("%s not listed with its folder as service: %+v", name, list.Files)
 		}
 	}
-	if _, ok := got["state"]; ok {
-		t.Fatalf("file from a folder without logs was listed: %+v", list.Files)
+	for _, f := range list.Files {
+		if strings.HasSuffix(f.Path, "/private/state") {
+			t.Fatalf("file from a folder without logs was listed: %+v", f)
+		}
 	}
 }
 

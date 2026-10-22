@@ -28,6 +28,8 @@ Object.assign(LANGS.en, {
   ai_see_never: 'Never: passwords and keys stored in WRM, your WRM sign-in, other connections, your terminal screen.', ai_see_denied: '{n} kinds of sensitive files (password hashes, private keys, credentials) are never read.',
   ai_see_provider: 'Everything the assistant sees is sent to {provider}.', ai_see_notes_on: 'Your notes for this connection are shared.',
   ai_placeholder: 'Ask about this server…', ai_send: 'Send', ai_stop: 'Stop', ai_end: 'End the AI session', ai_end_q: 'End this AI session? A running command is stopped.',
+  ai_sound_on: 'Sound is on: a beep for an approval and for every reply', ai_sound_off: 'Sound is off', ai_sound_on_toast: 'Sound on', ai_sound_off_toast: 'Sound off',
+  ai_pending: 'Approval needed', ai_pending_more: '+{n} more', ai_pending_details: 'Details',
   ai_close_panel: 'Hide the panel (the session keeps running)', ai_history: 'My AI sessions', ai_continue: 'Continue session', ai_new: 'New session',
   ai_approve: 'Approve', ai_deny: 'Deny', ai_edit: 'Edit', ai_note_ph: 'Note for the assistant (optional)', ai_expires: 'expires in {s} s',
   ai_wait_approval: 'Waiting for your approval', ai_d_allow: 'ran', ai_d_readonly: 'read-only', ai_d_auto: 'automatic', ai_d_approve: 'needs approval', ai_d_deny: 'denied',
@@ -147,6 +149,8 @@ Object.assign(LANGS.hr, {
   ai_see_never: 'Nikada: lozinke i ključevi spremljeni u WRM, tvoja WRM prijava, druge veze, tvoj zaslon terminala.', ai_see_denied: '{n} vrsta osjetljivih datoteka (hashevi lozinki, privatni ključevi, vjerodajnice) nikada se ne čita.',
   ai_see_provider: 'Sve što asistent vidi šalje se pružatelju {provider}.', ai_see_notes_on: 'Tvoje bilješke za ovu vezu su podijeljene.',
   ai_placeholder: 'Pitaj o ovom serveru…', ai_send: 'Pošalji', ai_stop: 'Zaustavi', ai_end: 'Završi AI sesiju', ai_end_q: 'Završiti ovu AI sesiju? Naredba koja se izvršava bit će zaustavljena.',
+  ai_sound_on: 'Zvuk je uključen: kratki signal za odobrenje i za svaki odgovor', ai_sound_off: 'Zvuk je isključen', ai_sound_on_toast: 'Zvuk uključen', ai_sound_off_toast: 'Zvuk isključen',
+  ai_pending: 'Potrebno je odobrenje', ai_pending_more: '+{n} više', ai_pending_details: 'Detalji',
   ai_close_panel: 'Sakrij panel (sesija nastavlja raditi)', ai_history: 'Moje AI sesije', ai_continue: 'Nastavi sesiju', ai_new: 'Nova sesija',
   ai_approve: 'Odobri', ai_deny: 'Odbij', ai_edit: 'Uredi', ai_note_ph: 'Napomena za asistenta (neobavezno)', ai_expires: 'istječe za {s} s',
   ai_wait_approval: 'Čeka tvoje odobrenje', ai_d_allow: 'izvršeno', ai_d_readonly: 'samo čitanje', ai_d_auto: 'automatski', ai_d_approve: 'treba odobrenje', ai_d_deny: 'odbijeno',
@@ -374,6 +378,9 @@ Object.assign(LANGS.hr, {
 .ai-see { font-size: 11.5px; color: var(--text2); line-height: 1.5; }
 .ai-see li { margin-left: 16px; }
 .ai-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--text2); position: sticky; top: -8px; z-index: 2; background: var(--bg2); padding: 6px 0 4px; margin-top: -6px; }
+.ai-pend { position: sticky; top: 22px; z-index: 3; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 6px; padding: 7px 9px; border: 1px solid var(--yellow, #f59e0b); border-radius: 8px; background: var(--bg3); box-shadow: 0 4px 14px rgba(0,0,0,.25); font-size: 12px; }
+.ai-pend b { color: var(--yellow, #f59e0b); }
+.ai-pend .ai-pend-w { flex: 1; min-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ai-bar select { font-size: 11.5px; padding: 2px 6px; max-width: 100%; }
 #admin-body button.btn-sm.danger, .ai-modal button.btn-sm.danger, .ai-panel button.danger { background: #dc2626; border-color: #dc2626; color: #fff; }
 #admin-body button.btn-sm.danger:hover, .ai-modal button.btn-sm.danger:hover { background: #b91c1c; }
@@ -432,6 +439,7 @@ Object.assign(LANGS.hr, {
       <button class="ai-ib ai-dockb" data-d="right" title="${esc(t('ai_dock_right'))}" onclick="wrmAI.dock(${wo.id},'right')">◨</button>
       <button class="ai-ib ai-dockb" data-d="float" title="${esc(t('ai_float'))}" onclick="wrmAI.dock(${wo.id},'float')">❐</button>
       <button class="ai-ib ai-dockb ai-xb" title="${esc(t('ai_expand'))}" onclick="wrmAI.expand(${wo.id})">⛶</button>
+      <button class="ai-ib" id="aisnd-${wo.id}" title="${esc(t(wrmSoundOn() ? 'ai_sound_on' : 'ai_sound_off'))}" onclick="wrmAI.sound(${wo.id})">${wrmSoundOn() ? '🔊' : '🔇'}</button>
       <button class="ai-ib" title="${esc(t('ai_see'))}" onclick="wrmAI.see(${wo.id})">👁</button>
       <button class="ai-ib" title="${esc(t('ai_history'))}" onclick="wrmAI.history(${wo.id})">🕘</button>
       <button class="ai-ib danger" id="aipk-${wo.id}" title="${esc(t('ai_end'))}" style="display:none;" onclick="wrmAI.end(${wo.id})">⏻</button>
@@ -692,6 +700,7 @@ Object.assign(LANGS.hr, {
   }
 
   async function start(id) {
+    if (window.wrmAskNotifications) wrmAskNotifications();
     const wo = winOf(id);
     const mode = $('ai-mode-' + id).value;
     const body = {conn_id: wo.connId, provider_id: Number($('ai-prov-' + id).value), model: $('ai-model-' + id).value, mode,
@@ -715,9 +724,9 @@ Object.assign(LANGS.hr, {
     if (!wo) return;
     const old = S[id] || {};
     if (old.es) old.es.close();
-    S[id] = {pol: old.pol, sid, seq: 0, ended: false, busy: false, cards: {}, cur: null};
+    S[id] = {pol: old.pol, sid, seq: 0, ended: false, busy: false, cards: {}, pending: {}, cur: null};
     const body = $('aib-' + id);
-    body.innerHTML = `<div class="ai-bar" id="ai-bar-${id}"></div>`;
+    body.innerHTML = `<div class="ai-bar" id="ai-bar-${id}"></div><div class="ai-pend" id="ai-pend-${id}" style="display:none;"></div>`;
     $('aipk-' + id).style.display = '';
     const foot = $('aif-' + id);
     foot.style.display = '';
@@ -830,9 +839,12 @@ Object.assign(LANGS.hr, {
       case 'assistant_done':
         if (d.text) { if (!st.cur) st.cur = add(id, `<div class="ai-msg assistant"></div>`); st.cur.innerHTML = md(d.text); }
         else if (st.cur && d.text === '') st.cur.remove(); // parsed tool JSON has no final assistant text
-        st.cur = null; workLogDone(id); break;
+        st.cur = null; workLogDone(id);
+        if (window.wrmSound) wrmSound('reply');
+        break;
       case 'tool_call': {
         workLogStep(id, d.tool ? d.tool + (d.display ? ' · ' + String(d.display) : '') : String(d.display || ''));
+        if (st.cards[d.call_id]) break; // an approval already made the card
         const el = add(id, `<div class="ai-card ${d.decision === 'deny' ? 'deny' : ''}" id="aic-${id}-${esc(d.call_id)}">
           <div class="ai-ch"><span class="ai-tool">${esc(d.tool)}</span>${decisionPill(d)}</div>
           <div class="ai-cmd">${esc(d.display)}</div>
@@ -844,6 +856,11 @@ Object.assign(LANGS.hr, {
       }
       case 'approval_required': approvalUI(id, d.session_id ? Object.assign({}, d.approval, {session_id: d.session_id}) : d.approval); break;
       case 'approval_resolved': {
+        if (st.pending && d.approval_id) delete st.pending[d.approval_id];
+        if (st.pending && d.call_id) {
+          for (const [aid, a] of Object.entries(st.pending)) if (a.call_id === d.call_id) delete st.pending[aid];
+        }
+        pendingBar(id);
         const card = st.cards[d.call_id];
         if (card) {
           card.classList.remove('wait');
@@ -878,6 +895,8 @@ Object.assign(LANGS.hr, {
       case 'notice': add(id, `<div class="ai-note">${esc(t('ai_n_' + d.text))}</div>`); break;
       case 'ended':
         st.ended = true;
+        st.pending = {};
+        pendingBar(id);
         workingUI(id, false);
         if (st.es) st.es.close();
         add(id, `<div class="ai-note err">⏻ ${esc(t('ai_ended'))}: ${esc(reasonText(d.reason))}</div><button class="btn-sm" style="align-self:center;" onclick="wrmAI.newSession(${id})">✦ ${esc(t('ai_new'))}</button>`);
@@ -889,9 +908,21 @@ Object.assign(LANGS.hr, {
   }
 
   function approvalUI(id, a) {
-    const st = S[id], card = st.cards[a.call_id];
-    if (!card) return;
+    const st = S[id];
+    if (!st) return;
+    st.pending = st.pending || {};
+    st.pending[a.id] = a;
     if (a.session_id) (st.apprSess = st.apprSess || {})[a.id] = a.session_id;
+    let card = st.cards[a.call_id];
+    if (!card) {
+      // The approval can arrive before the tool card (a replayed session or a fast
+      // model): make its own card, so there is always something to approve.
+      card = add(id, `<div class="ai-card wait" id="aic-${id}-${esc(a.call_id || a.id)}">
+        <div class="ai-ch"><span class="ai-tool">${esc(a.tool || '')}</span><span class="pill warn">${esc(t('ai_d_approve'))}</span></div>
+        <div class="ai-cmd">${esc(a.command || a.path || a.transfer || '')}</div>
+        <div class="ai-appr"></div><div class="ai-res"></div></div>`);
+      if (card && a.call_id) st.cards[a.call_id] = card;
+    }
     card.classList.add('wait');
     const box = card.querySelector('.ai-appr');
     const isWrite = !!a.path;
@@ -902,7 +933,34 @@ Object.assign(LANGS.hr, {
       <div class="ai-acts"><input type="text" id="ai-nt-${id}-${esc(a.id)}" placeholder="${esc(t('ai_note_ph'))}">
         <button class="btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', true, ${isWrite})">✓ ${esc(t('ai_approve'))}</button>
         <button class="btn-sec btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', false, ${isWrite})">✕ ${esc(t('ai_deny'))}</button></div>`;
-    tick(id); scrollEnd(id); indicators();
+    tick(id); scrollEnd(id); pendingBar(id); indicators();
+    if (window.wrmAiAlert) wrmAiAlert('approval', (a.tool || '') + ' · ' + (a.command || a.path || a.transfer || ''), 'approval-' + a.id);
+  }
+
+  // pendingBar keeps the newest approval at the top of the chat, even when the
+  // tool card scrolled away. It is the "approve it in the chat" path.
+  function pendingBar(id) {
+    const st = S[id], el = $('ai-pend-' + id);
+    if (!st || !el) return;
+    const list = Object.values(st.pending || {});
+    if (!list.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    const a = list[0], isWrite = !!a.path;
+    const what = a.command || a.path || a.transfer || a.tool || '';
+    el.style.display = '';
+    el.innerHTML = `<b>⏳ ${esc(t('ai_pending'))}</b>
+      <span class="ai-pend-w" title="${esc(what)}">${esc(a.tool || '')} · ${esc(what)}</span>
+      ${list.length > 1 ? `<span class="pill">${esc(tf('ai_pending_more', {n: list.length - 1}))}</span>` : ''}
+      <button class="btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', true, ${isWrite})">✓ ${esc(t('ai_approve'))}</button>
+      <button class="btn-sec btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', false, ${isWrite})">✕ ${esc(t('ai_deny'))}</button>
+      <button class="btn-sec btn-sm" onclick="wrmAI.pendingDetails(${id}, '${esc(a.id)}')">${esc(t('ai_pending_details'))}</button>`;
+  }
+
+  function pendingDetails(id, aid) {
+    const st = S[id];
+    const a = st && st.pending && st.pending[aid];
+    if (!a) return;
+    const card = st.cards[a.call_id];
+    if (card) card.scrollIntoView({block: 'center', behavior: 'smooth'});
   }
 
   function tick(id) {
@@ -912,6 +970,18 @@ Object.assign(LANGS.hr, {
       const s = Math.max(0, Math.round((Number(el.dataset.exp) - Date.now()) / 1000));
       el.textContent = tf('ai_expires', {s});
     });
+  }
+
+  function sound(id) {
+    const nowOn = !wrmSoundOn();
+    try { localStorage.setItem('wrm_sound', nowOn ? '1' : '0'); } catch (_) {}
+    const b = $('aisnd-' + id);
+    if (b) {
+      b.textContent = nowOn ? '🔊' : '🔇';
+      b.title = t(nowOn ? 'ai_sound_on' : 'ai_sound_off');
+    }
+    showToast(t(nowOn ? 'ai_sound_on_toast' : 'ai_sound_off_toast'), 'info', 2000);
+    if (nowOn) wrmSound('reply');
   }
 
   async function decide(id, aid, ok, isWrite) {
@@ -1488,7 +1558,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmAI = {
-    queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession,
+    queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession, sound, pendingDetails,
     myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); }),
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,

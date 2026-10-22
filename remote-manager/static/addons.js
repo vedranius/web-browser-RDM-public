@@ -39,7 +39,7 @@ Object.assign(LANGS.en, {
   add_ai: 'AI addon',
   add_ai_d: 'Describe the addon you want to an AI client: WRM builds the prompt with the manifest, the capabilities this build accepts and the sandbox rules.',
   add_ai_q: 'Create an addon with AI',
-  add_ai_help: 'Copy this prompt into the AI client you use (Claude, Codex, OpenCode…) or open the WRM assistant. WRM neither starts another desktop app nor runs what the AI writes: zip the files the AI returns and install the ZIP above. Only what the manifest declares is executed, and server code only as WebAssembly in the sandbox.',
+  add_ai_help: 'Copy this prompt into the AI client you use (Claude, Codex, OpenCode…) or open the WRM assistant. With the addon tools the assistant can write a draft directly into WRM; otherwise zip the files it returns and install the ZIP above. A draft is never served or executed and never enables itself: you review the diff and install it here. Only what the manifest declares is executed, and server code only as WebAssembly in the sandbox.',
   add_ai_copy: 'Copy prompt',
   add_ai_copied: 'The prompt is copied',
   add_ai_copy_fail: 'The clipboard is not available; the text is selected, copy it with Ctrl+C.',
@@ -53,6 +53,21 @@ Object.assign(LANGS.en, {
   add_trust_reviewed: 'Reviewed',
   add_trust_community: 'Community',
   add_trust_unverified: 'Unverified',
+  add_drafts: 'AI drafts',
+  add_drafts_d: 'Addons the assistant wrote, kept apart from the installed ones. Review the diff, then install; a new draft is installed disabled and you enable it yourself.',
+  add_drafts_none: 'No drafts.',
+  add_draft_files: '{n} files',
+  add_draft_installed: 'installed {version}',
+  add_draft_not_installed: 'not installed',
+  add_draft_diff: 'Diff',
+  add_draft_install: 'Install draft',
+  add_draft_discard: 'Discard',
+  add_draft_install_q: 'Install the draft {name}? It goes through the same checks as a ZIP; a new addon stays disabled until you enable it.',
+  add_draft_installed_toast: 'Draft {name} is installed; enable it when you are ready',
+  add_draft_discarded: 'Draft {name} is discarded',
+  add_draft_diff_title: 'Draft {name} compared with the installed addon',
+  add_draft_invalid: 'This draft is not valid: {error}',
+  add_draft_empty: '(no changes)',
 });
 
 Object.assign(LANGS.hr, {
@@ -87,7 +102,7 @@ Object.assign(LANGS.hr, {
   add_ai: 'AI dodatak',
   add_ai_d: 'Opišite željeni dodatak AI klijentu: WRM sastavlja upit s manifestom, mogućnostima koje ova verzija prihvaća i pravilima sandboxa.',
   add_ai_q: 'Napravi dodatak uz AI',
-  add_ai_help: 'Kopirajte ovaj upit u AI klijent koji koristite (Claude, Codex, OpenCode…) ili otvorite WRM asistenta. WRM ne pokreće druge desktop aplikacije i ne izvršava ono što AI napiše: zapakirajte datoteke koje AI vrati u ZIP i instalirajte ga gore. Izvršava se samo ono što manifest deklarira, a kôd na serveru samo kao WebAssembly u sandboxu.',
+  add_ai_help: 'Kopirajte ovaj upit u AI klijent koji koristite (Claude, Codex, OpenCode…) ili otvorite WRM asistenta. S addon alatima asistent može izravno napisati skicu u WRM; inače zapakirajte datoteke koje AI vrati u ZIP i instalirajte ga gore. Skica se nikad ne poslužuje ni izvršava i nikad se sama ne uključuje: pregledate razlike i instalirate je ovdje. Izvršava se samo ono što manifest deklarira, a kôd na serveru samo kao WebAssembly u sandboxu.',
   add_ai_copy: 'Kopiraj upit',
   add_ai_copied: 'Upit je kopiran',
   add_ai_copy_fail: 'Međuspremnik nije dostupan; tekst je označen, kopirajte ga s Ctrl+C.',
@@ -101,6 +116,21 @@ Object.assign(LANGS.hr, {
   add_trust_reviewed: 'Pregledano',
   add_trust_community: 'Zajednica',
   add_trust_unverified: 'Neprovjereno',
+  add_drafts: 'AI skice',
+  add_drafts_d: 'Dodaci koje je napisao asistent, odvojeni od instaliranih. Pregledajte razlike i instalirajte; nova skica instalira se isključena i sami je uključujete.',
+  add_drafts_none: 'Nema skica.',
+  add_draft_files: '{n} datoteka',
+  add_draft_installed: 'instalirano {version}',
+  add_draft_not_installed: 'nije instalirano',
+  add_draft_diff: 'Razlike',
+  add_draft_install: 'Instaliraj skicu',
+  add_draft_discard: 'Odbaci',
+  add_draft_install_q: 'Instalirati skicu {name}? Prolazi iste provjere kao ZIP; novi dodatak ostaje isključen dok ga sami ne uključite.',
+  add_draft_installed_toast: 'Skica {name} je instalirana; uključite je kad ste spremni',
+  add_draft_discarded: 'Skica {name} je odbačena',
+  add_draft_diff_title: 'Skica {name} u odnosu na instalirani dodatak',
+  add_draft_invalid: 'Skica nije valjana: {error}',
+  add_draft_empty: '(nema promjena)',
 });
 
 (function () {
@@ -108,6 +138,7 @@ Object.assign(LANGS.hr, {
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(String(b)); return s; };
   let list = [], caps = {}, loaded = false, loading = null;
   let community = [], trust = {}, communityError = '';
+  let drafts = [], draftsError = '';
   const openWins = {};
 
   async function api(method, url, body) {
@@ -138,6 +169,100 @@ Object.assign(LANGS.hr, {
     } catch (e) {
       community = [];
       communityError = e.message;
+    }
+  }
+
+  // ── AI drafts ────────────────────────────────────────
+  // The assistant writes files into <DB>.addons/.drafts/<id>/. They are not
+  // installed, served or executed until the administrator installs one here.
+  async function loadDrafts() {
+    const admin = !!(typeof currentUser !== 'undefined' && currentUser && currentUser.is_admin);
+    if (!admin) { drafts = []; draftsError = ''; return; }
+    try {
+      const d = await api('GET', '/api/addons/drafts');
+      drafts = d.drafts || [];
+      draftsError = '';
+    } catch (e) {
+      drafts = [];
+      draftsError = e.message;
+    }
+  }
+
+  function draftsHTML() {
+    const admin = !!(typeof currentUser !== 'undefined' && currentUser && currentUser.is_admin);
+    if (!admin) return '';
+    const rows = drafts.map(d => {
+      const installed = d.installed ? tf('add_draft_installed', {version: d.installed_version || ''}) + (d.installed_enabled ? '' : ' · ' + t('add_disable')) : t('add_draft_not_installed');
+      const invalid = d.valid ? '' : `<div class="hint-box warn" style="margin-top:6px;">${esc(tf('add_draft_invalid', {error: d.error || ''}))}</div>`;
+      return `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;${d.valid ? '' : 'opacity:.75;'}">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <b>${esc(d.name || d.id)}</b> ${d.version ? pill(d.version) : ''}
+          ${(d.capabilities || []).map(c => pill(c)).join(' ')}
+          <span style="flex:1;"></span>
+          <button class="btn-sec btn-sm" onclick="wrmAddons.draftDiff('${esc(d.id)}')">${esc(t('add_draft_diff'))}</button>
+          <button class="btn-sec btn-sm" ${d.valid ? '' : 'disabled'} onclick="wrmAddons.draftInstall('${esc(d.id)}')">${esc(t('add_draft_install'))}</button>
+          <button class="btn-danger btn-sm" onclick="wrmAddons.draftDiscard('${esc(d.id)}')">${esc(t('add_draft_discard'))}</button>
+        </div>
+        ${d.description ? `<div class="sub" style="font-size:11.5px;color:var(--text2);margin-top:4px;">${esc(d.description)}</div>` : ''}
+        <div class="sub" style="font-size:10.5px;color:var(--text3);margin-top:2px;">${esc(d.id)} · ${esc(tf('add_draft_files', {n: (d.files || []).length}))} · ${esc(installed)}${d.updated_at ? ' · ' + esc(fmtTime(d.updated_at)) : ''}</div>
+        ${invalid}
+      </div>`;
+    }).join('');
+    return `<div class="adm-h">${esc(t('add_drafts'))}</div>
+      <div class="hint-box">${esc(t('add_drafts_d'))}</div>
+      ${rows || `<div class="sub" style="color:var(--text3);font-size:11.5px;">${esc(draftsError || t('add_drafts_none'))}</div>`}`;
+  }
+
+  async function draftInstall(id) {
+    const d = drafts.find(x => x.id === id);
+    if (!d || !d.valid) return;
+    if (!(await uiConfirm(tf('add_draft_install_q', {name: d.name || d.id}), {okText: t('add_draft_install')}))) return;
+    try {
+      await api('POST', '/api/addons/drafts/' + encodeURIComponent(id) + '/install');
+      await after(tf('add_draft_installed_toast', {name: d.name || id}));
+    } catch (e) {
+      showToast(e.message, 'error', 8000);
+    }
+  }
+
+  async function draftDiff(id) {
+    let d;
+    try {
+      d = await api('GET', '/api/addons/drafts/' + encodeURIComponent(id) + '/diff');
+    } catch (e) {
+      showToast(e.message, 'error', 8000);
+      return;
+    }
+    const draft = drafts.find(x => x.id === id);
+    let m = $('addon-draft-diff');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'addon-draft-diff';
+      m.className = 'modal-overlay';
+      m.style.zIndex = 9660;
+      document.body.appendChild(m);
+    }
+    m.innerHTML = `<div class="modal" style="width:900px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;">
+      <h3>${esc(tf('add_draft_diff_title', {name: (draft && (draft.name || draft.id)) || id}))}</h3>
+      <pre style="margin:0;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;white-space:pre-wrap;max-height:60vh;overflow:auto;color:var(--text2);">${esc(d.diff || t('add_draft_empty'))}</pre>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;"><button onclick="wrmAddons.closeDraftDiff()">${esc(t('add_ai_close'))}</button></div>
+    </div>`;
+    m.classList.add('open');
+  }
+
+  function closeDraftDiff() {
+    const m = $('addon-draft-diff');
+    if (m) m.classList.remove('open');
+  }
+
+  async function draftDiscard(id) {
+    const d = drafts.find(x => x.id === id);
+    if (!(await uiConfirm(tf('add_draft_discard', {name: (d && (d.name || d.id)) || id}), {okText: t('add_draft_discard'), danger: true}))) return;
+    try {
+      await api('DELETE', '/api/addons/drafts/' + encodeURIComponent(id));
+      await after(tf('add_draft_discarded', {name: (d && (d.name || d.id)) || id}));
+    } catch (e) {
+      showToast(e.message, 'error', 8000);
     }
   }
 
@@ -311,6 +436,7 @@ Object.assign(LANGS.hr, {
       <div class="hint-box warn">${esc(t('add_disclaimer'))}</div>
       ${install}
       ${aiBox}
+      ${draftsHTML()}
       <div class="adm-h">${esc(t('tab_addons'))}</div>
       ${list.length ? list.map(rowHTML).join('') : `<div class="sub" style="color:var(--text3);font-size:11.5px;">${esc(t('add_none'))}</div>`}
       ${communityHTML()}`;
@@ -322,12 +448,14 @@ Object.assign(LANGS.hr, {
     el.innerHTML = `<div class="sub" style="color:var(--text3);">…</div>`;
     try { await refresh(); } catch (e) { el.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
     await loadCommunity();
+    await loadDrafts();
     render();
   }
 
   async function after(msg) {
     if (msg) showToast(msg, 'success');
     try { await refresh(); } catch (_) {}
+    await loadDrafts();
     applyThemes();
     if ($('addons-pane') && $('st-addons') && $('st-addons').classList.contains('active')) render();
   }
@@ -433,7 +561,8 @@ Object.assign(LANGS.hr, {
       '- server.wasm is WebAssembly run by wazero with no WASI: no files, no network, no environment, no clock. The only import is wrm.log(ptr, len). The module must export its memory, wrm_alloc(size) -> ptr, and each declared export as (ptr, len) -> ptr returning a pointer to a NUL-terminated UTF-8 string. WRM writes the JSON request at the pointer wrm_alloc returned. 64 KiB input, 1 MB output, 5 seconds per call, 64 MiB memory.',
       '- Nothing runs at install time; the module is compiled and its imports and exports are checked.',
       '',
-      'Write the smallest addon that does the job, state its license, and tell me how to zip it for install.'
+      'Write the smallest addon that does the job, state its license, and tell me how to zip it for install.',
+      'If you are the WRM assistant and have the addon tools, call addon_create with addon.json and the files it declares instead of returning a ZIP; the draft waits for my review in Settings → Addons.'
     ].join('\n');
   }
 
@@ -490,7 +619,8 @@ Object.assign(LANGS.hr, {
     if ($('addons-pane') && $('st-addons') && $('st-addons').classList.contains('active')) render();
   }
 
-  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, communityInstall, applyThemes, reload: after};
+  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, communityInstall, applyThemes, reload: after,
+    draftInstall, draftDiff, draftDiscard, closeDraftDiff};
 
   if (typeof window.initApp === 'function' && !window.initApp.__addons) {
     const orig = window.initApp;

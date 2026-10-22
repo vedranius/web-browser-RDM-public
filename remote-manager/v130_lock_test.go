@@ -10,12 +10,12 @@ import (
 // and audits the attempt; the browser session and the running sessions stay.
 func TestV130LockVerify(t *testing.T) {
 	srv := newTestServer(t)
-	c := newTestUser(t, srv, "lock-user", false)
+	c := newTestUser(t, srv, "lock-verify-user", false)
 	hash, err := hashPassword("Lock!Pass123")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := db.Exec(`UPDATE users SET password_hash=? WHERE username='lock-user'`, hash); err != nil {
+	if _, err := db.Exec(`UPDATE users SET password_hash=? WHERE username='lock-verify-user'`, hash); err != nil {
 		t.Fatal(err)
 	}
 	post := func(body string) int {

@@ -37,7 +37,7 @@ import (
 //   GET grants, DELETE grants/{id}, POST revoke-all, GET clients, DELETE clients/{id}
 
 const (
-	mcpAllScopes        = "read_logs,run_readonly,run_with_approval,edit_file_with_approval,transfer,full_access"
+	mcpAllScopes        = "read_logs,run_readonly,run_with_approval,edit_file_with_approval,transfer,addons.manage,full_access"
 	mcpMaxGrantsPerUser = 25
 	mcpMaxConnsPerGrant = 50
 	mcpPATPrefix        = "wrm_pat_"
@@ -151,6 +151,17 @@ func mcpUserAllowedKind(userID int, kind string) (bool, string) {
 func mcpAllowedFlag(userID int) bool {
 	ok, _ := mcpUserAllowed(userID)
 	return ok
+}
+
+// removeOne returns list without v, keeping the order.
+func removeOne(list []string, v string) []string {
+	out := make([]string, 0, len(list))
+	for _, x := range list {
+		if x != v {
+			out = append(out, x)
+		}
+	}
+	return out
 }
 
 func normalizeMCPScopes(v string) (string, error) {
@@ -395,6 +406,9 @@ func (q *mcpGrantRequest) validate(userID int) error {
 		if !oneOf(s, allowed...) {
 			return fmt.Errorf("the scope %s is not allowed by the policy", s)
 		}
+	}
+	if oneOf("addons.manage", q.Scopes...) && !isAdminUser(userID) {
+		return fmt.Errorf("the addons.manage scope is for administrators only")
 	}
 	maxH := settingInt("ai_mcp_max_token_hours")
 	if q.Hours <= 0 {
@@ -665,8 +679,13 @@ func mcpConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		rows.Close()
 	}
 	base := mcpBaseURL(r)
+	scopes := mcpAllowedScopes()
+	if !isAdminUser(userID) {
+		// addons.manage changes WRM itself; only an administrator can grant it.
+		scopes = removeOne(scopes, "addons.manage")
+	}
 	jsonOK(w, map[string]interface{}{
-		"enabled": ok, "reason": why, "connections": conns, "modes": mcpAllowedModes(), "scopes": mcpAllowedScopes(), "all_scopes": mcpScopeOrder,
+		"enabled": ok, "reason": why, "connections": conns, "modes": mcpAllowedModes(), "scopes": scopes, "all_scopes": mcpScopeOrder,
 		"default_hours": min(settingInt("ai_mcp_token_hours"), settingInt("ai_mcp_max_token_hours")), "max_hours": settingInt("ai_mcp_max_token_hours"),
 		"url": base + "/mcp", "base_url": base, "instructions": mcpInstructions, "description": mcpServerDescription, "version": AppVersion, "oauth": settingBool("ai_mcp_oauth"), "elicitation": settingBool("ai_mcp_elicitation"),
 		"auto_max_minutes": settingInt("ai_auto_max_minutes"), "auto_max_actions": settingInt("ai_auto_max_actions"), "auto_until_grant": settingBool("ai_auto_until_grant"),
@@ -727,10 +746,14 @@ func mcpActiveHandler(w http.ResponseWriter, userID int) {
 			}
 		}
 	}
-	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.UserID == userID && s.Transport == "mcp" }) {
+	for _, s := range aiActiveSessions(func(s *aiSession) bool { return s.UserID == userID }) {
 		v := s.view()
 		for _, a := range v["pending"].([]*aiApproval) {
-			pending = append(pending, map[string]interface{}{"session": s.ID, "connection": s.ConnName, "host": s.Host, "client": s.Model, "approval": a})
+			client := s.Model
+			if s.Transport == "" || s.Transport == "panel" {
+				client = "WRM · " + nonEmpty(s.Model, "assistant")
+			}
+			pending = append(pending, map[string]interface{}{"session": s.ID, "connection": s.ConnName, "host": s.Host, "client": client, "transport": s.Transport, "approval": a})
 		}
 	}
 	pending = append(pending, aiStoredLaterFor(userID)...)

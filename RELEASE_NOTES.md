@@ -1,3 +1,23 @@
+## Web Remote Manager PRO v13.3.0 - The AI writes addons, you review them
+
+### Added
+
+- **AI addon loop.** The assistant drafts an addon in its own workspace (`<DB>.addons/.drafts/<id>/`) instead of the live addon folder. New tools — `addon_list`, `addon_files`, `addon_create`, `addon_write`, `addon_enable`, `addon_disable`, `addon_delete`, `addon_run` and `addon_install_community` — are covered by the new **`addons.manage`** scope and are available to administrators only. A draft is validated exactly like a ZIP, including the WebAssembly compile check, and installing a new draft always leaves it disabled.
+- **Drafts in Settings → Addons.** Review a draft with **Diff** (a unified diff against the installed version), then **Install draft** or **Discard**. Nothing in the workspace is served or executed until you install it.
+- **Approvals you cannot miss.** A pending approval is recorded in your notifications (`ai.approval`, also for email/Telegram/…), pops up as a fixed card even when the AI panel is closed, and plays a short sound. The assistant chat keeps a sticky **Approval needed** bar with **Approve / Deny**, and every reply plays a short sound; the speaker button turns sound off. The global check runs every five seconds and covers the built-in assistant and OpenCode, not only MCP apps.
+- **`file_path` works as `path`.** A model that used the name from other tools no longer gets its edit refused before you see an approval.
+
+### Security
+
+- Addon changes always ask for your approval, including in automatic mode and with full access; a draft never enables itself.
+- A non-administrator cannot use the addon tools, cannot create an AI connection with `addons.manage`, and is not offered the scope. A broken draft write leaves the previous draft untouched.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.3.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.3.0) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v13.2.0 - Screen lock
 
 ### Added

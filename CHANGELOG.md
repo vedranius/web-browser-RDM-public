@@ -1,3 +1,19 @@
+## [13.3.0] - 2026-10-22
+
+### Added
+- **AI addon loop.** The assistant can now write an addon into a draft workspace, `<DB>.addons/.drafts/<id>/`, instead of the live folder. New tools (`addon_list`, `addon_files`, `addon_create`, `addon_write`, `addon_enable`, `addon_disable`, `addon_delete`, `addon_run`, `addon_install_community`) are covered by the new `addons.manage` scope and are available to administrators only. `addon_create`/`addon_write` validate the draft exactly like a ZIP (manifest, layout, declared files, WebAssembly compile check) and can install it in the same call; installing a new draft always leaves it disabled.
+- **Drafts in Settings → Addons.** Every draft is listed with its files, version, validity and whether the addon is installed, with **Diff** (a unified diff against the installed version), **Install draft** and **Discard**. Nothing in the workspace is served or executed until it is installed.
+- **Approval in every mode.** Addon writes and `addon_run` always wait for the user's approval, including automatic mode and full access; a draft never enables itself.
+- **Approvals are impossible to miss.** Every pending approval now also appears in the user's notifications (`ai.approval`, subscribable for email/Telegram/…), pops up as a fixed approval card even when the AI panel or the live view is closed, and plays a short sound. The AI panel keeps a sticky **Approval needed** bar with **Approve / Deny** above the chat, and every assistant reply plays a short sound; the speaker button in the panel header turns sound off for that browser. The global poll runs every five seconds instead of once a minute, and it includes built-in and OpenCode sessions, not only MCP.
+- **`file_path` is accepted as an alias for `path`.** Some models send `file_path` (the name other tools use); WRM treated that as an unknown argument and refused the call before any approval was shown. The tool input now accepts both, with `path` winning when both are present.
+
+### Fixed
+- **A refused tool call can no longer look like a pending approval.** The assistant is told to claim a change only after a successful tool result; when WRM refuses the arguments, the tool card shows the error and no approval card is created.
+
+### Security
+- The addon tools act on WRM itself and are refused for non-administrators even when a token carries `addons.manage`; the scope is also refused when a non-administrator creates an AI connection, and it is not offered in their scope list.
+- A draft write is validated in a temporary folder first, so a broken manifest or an unsafe path leaves the previous draft untouched. Draft ids and paths use the same strict checks as an installed addon, and installing goes through `addonInstallArchive`, the function behind an uploaded ZIP and the community library.
+
 ## [13.2.0] - 2026-10-22
 
 ### Added
