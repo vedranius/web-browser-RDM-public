@@ -671,12 +671,7 @@ func openaiMessages(system string, msgs []aiMsg) []map[string]interface{} {
 			out = append(out, map[string]interface{}{"role": "user", "content": m.Text})
 			continue
 		}
-		msg := map[string]interface{}{"role": "assistant"}
-		if m.Text != "" {
-			msg["content"] = m.Text
-		} else {
-			msg["content"] = nil
-		}
+		msg := map[string]interface{}{"role": "assistant", "content": m.Text}
 		if len(m.Calls) > 0 {
 			calls := []map[string]interface{}{}
 			for _, c := range m.Calls {

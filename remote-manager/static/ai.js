@@ -10,6 +10,9 @@ Object.assign(LANGS.en, {
   ai_float: 'Float (drag the title bar to move, drag the corner to resize)', ai_expand: 'Expand over the whole terminal window', ai_restore: 'Restore size',
   ai_title: 'AI assistant', ai_start: 'Start', ai_provider: 'Provider', ai_model: 'Model', ai_mode: 'Mode',
   ai_thinking: 'Processing your request…',
+  ai_worklog: 'Work log',
+  ai_worklog_working: 'Working…',
+  ai_worklog_steps: '{n} steps',
   ai_mode_read_only: 'Read-only', ai_mode_ask: 'Ask before every change', ai_mode_auto: 'Automatic within limits',
   ai_mode_read_only_d: 'The assistant reads logs, files, services and packages. Every change is refused.',
   ai_mode_ask_d: 'Reads run directly. Every command that changes something and every file edit waits for your approval.',
@@ -126,6 +129,9 @@ Object.assign(LANGS.hr, {
   ai_float: 'Slobodan prozor (povuci naslovnu traku za pomicanje, povuci kut za promjenu veličine)', ai_expand: 'Proširi preko cijelog prozora terminala', ai_restore: 'Vrati veličinu',
   ai_title: 'AI asistent', ai_start: 'Pokreni', ai_provider: 'Pružatelj', ai_model: 'Model', ai_mode: 'Način rada',
   ai_thinking: 'Obrađujem upit…',
+  ai_worklog: 'Tijek rada',
+  ai_worklog_working: 'Radim…',
+  ai_worklog_steps: '{n} koraka',
   ai_mode_read_only: 'Samo čitanje', ai_mode_ask: 'Pitaj prije svake promjene', ai_mode_auto: 'Automatski u granicama',
   ai_mode_read_only_d: 'Asistent čita logove, datoteke, servise i pakete. Svaka promjena se odbija.',
   ai_mode_ask_d: 'Čitanje se izvršava odmah. Svaka naredba koja nešto mijenja i svaka izmjena datoteke čeka tvoje odobrenje.',
@@ -767,13 +773,46 @@ Object.assign(LANGS.hr, {
   }
 
   function workingUI(id, busy) {
-    const waitId = 'ai-wait-' + id, wait = $(waitId), body = $('aib-' + id);
-    if (!busy) { if (wait) wait.remove(); return; }
-    if (!wait && body) {
-      body.insertAdjacentHTML('beforeend', `<div id="${waitId}" class="ai-note" role="status" style="display:flex;align-items:center;gap:8px;">
-        <span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span><span>${esc(t('ai_thinking'))}</span></div>`);
-      scrollEnd(id);
+    if (!busy) { workLogDone(id); return; }
+    workLog(id);
+  }
+
+  // The work log: one collapsible line per request that shows what the
+  // assistant is doing right now (tool by tool), open while it works and
+  // collapsed once the answer is there. It never duplicates the tool cards
+  // below it; it is the overview you can ignore.
+  function workLog(id) {
+    const b = $('aib-' + id);
+    if (!b) return null;
+    let el = b.querySelector('[data-worklog]:not([data-done])');
+    if (!el) {
+      b.insertAdjacentHTML('beforeend', `<details class="ai-worklog" data-worklog open style="margin:6px 0;border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--bg2);">
+        <summary style="cursor:pointer;font-size:11.5px;color:var(--text2);">⏳ <span data-sum>${esc(t('ai_worklog_working'))}</span></summary>
+        <div data-steps style="font-size:11px;color:var(--text2);margin-top:4px;display:flex;flex-direction:column;gap:2px;"></div></details>`);
+      el = b.lastElementChild;
     }
+    scrollEnd(id);
+    return el;
+  }
+
+  function workLogStep(id, text) {
+    const el = workLog(id);
+    if (!el) return;
+    const box = el.querySelector('[data-steps]');
+    const n = box.children.length + 1;
+    box.insertAdjacentHTML('beforeend', `<div style="display:flex;gap:6px;"><span style="color:var(--text3);">${n}.</span><span>${esc(text)}</span></div>`);
+    el.querySelector('[data-sum]').textContent = `${t('ai_worklog_working')} · ${tf('ai_worklog_steps', {n})}`;
+    scrollEnd(id);
+  }
+
+  function workLogDone(id) {
+    const b = $('aib-' + id);
+    const el = b && b.querySelector('[data-worklog]:not([data-done])');
+    if (!el) return;
+    const n = el.querySelectorAll('[data-steps] div').length;
+    el.querySelector('[data-sum]').textContent = t('ai_worklog') + (n ? ' · ' + tf('ai_worklog_steps', {n}) : '');
+    el.open = false;
+    el.dataset.done = '1';
   }
 
   function onEvent(id, ev) {
@@ -783,16 +822,17 @@ Object.assign(LANGS.hr, {
     const d = ev.data || {};
     switch (ev.type) {
       case 'session': st.view = d; st.ended = d.ended; bar(id); (d.pending || []).forEach(a => approvalUI(id, a)); break;
-      case 'user': add(id, `<div class="ai-msg user">${esc(d.text)}</div>`); break;
-      case 'assistant_start': st.cur = null; break;
+      case 'user': workLogDone(id); add(id, `<div class="ai-msg user">${esc(d.text)}</div>`); break;
+      case 'assistant_start': st.cur = null; workLog(id); break;
       case 'text':
         if (!st.cur) { st.cur = add(id, `<div class="ai-msg assistant"></div>`); st.curText = ''; }
         st.curText += d.delta; st.cur.textContent = st.curText; scrollEnd(id); break;
       case 'assistant_done':
         if (d.text) { if (!st.cur) st.cur = add(id, `<div class="ai-msg assistant"></div>`); st.cur.innerHTML = md(d.text); }
         else if (st.cur && d.text === '') st.cur.remove(); // parsed tool JSON has no final assistant text
-        st.cur = null; break;
+        st.cur = null; workLogDone(id); break;
       case 'tool_call': {
+        workLogStep(id, d.tool ? d.tool + (d.display ? ' · ' + String(d.display) : '') : String(d.display || ''));
         const el = add(id, `<div class="ai-card ${d.decision === 'deny' ? 'deny' : ''}" id="aic-${id}-${esc(d.call_id)}">
           <div class="ai-ch"><span class="ai-tool">${esc(d.tool)}</span>${decisionPill(d)}</div>
           <div class="ai-cmd">${esc(d.display)}</div>
