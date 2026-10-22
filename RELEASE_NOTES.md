@@ -1,3 +1,17 @@
+## Web Remote Manager PRO v12.9.0 - Medium: file details, line endings and the deploy-config editor
+
+### Added
+
+- **See what changes in each file before deploying.** In the WRM engine's plan, every changed file has a **Details** button: the server's version against the branch, line by line, with clear notes for new and deleted files, links, directories, binary files and large files.
+- **Line-ending-only changes are marked.** Files copied by hand from a Windows checkout often have CRLF on the server and LF in Git. WRM now marks such files *line endings only* and counts them separately, so real changes stand out. The deployment still sends them, and history records the count (`counts.eol`) as the original tool does.
+- **Edit deploy-config in WRM.** *Edit deploy-config* opens `servers.yaml`, `environments.yaml` and the project files. WRM saves a file only when the whole configuration still loads and nobody else changed it in the meantime; comments, layout and CRLF line endings stay as they are. New project files can be created and old ones deleted. Editing needs the `medium_native` policy and is audited.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database migration is required.
+
+[Download v12.9.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.9.0) · [Medium native engine in the README](https://github.com/vedranius/web-browser-RDM-public/blob/v12.9.0/README.md#medium-native-engine)
+
 ## Web Remote Manager PRO v12.8.1 - Security update: Go 1.27.3 and a reviewed gosec finding
 
 ### Security
