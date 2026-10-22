@@ -1,3 +1,18 @@
+## [12.9.1] - 2026-10-22
+
+### Added
+- **Medium: deploy-config from Git.** With `DEPLOY_CONFIG_REPO` set in the Medium settings and a WRM Git source serving that repository, the deploy-config editor shows a **Git** section. **Pull from Git and use it** makes WRM's own copy of the branch head the configuration (`<DB>.medium/users/<id>/native-config`); the imported ZIP stays untouched. Local edits are listed as new, changed or deleted files. **Commit and push** sends them as one commit through the source's write token (GitLab commits API, GitHub Git data API with a non-forced ref update, Gitea contents API), after checking that the whole configuration loads and that none of the changed files moved on Git since the pull; the pushed commit is pulled back. **Pull** refuses while there are local changes unless they are discarded, and a branch head whose configuration does not load is never applied. **Stop using the Git copy** goes back to the imported deploy-config. Pull and push need the `medium_native` policy, are audited (`git.medium_config_pull`, `git.medium_config_push`, `git.medium_config_git_stop`) and appear in the Medium activity log.
+- **Medium: build user on the WRM host.** The new policy `medium_build_user` names an unprivileged OS account (for example `wrm-build`) that runs WRM-host builds. It needs WRM running as root on Linux or another Unix system; root, accounts in the root group and accounts that can read the WRM database, its key or the Medium data directory are refused with the reason. The build directory is handed to that account and the build gets a clean environment (`PATH`, `HOME`, `USER`, `LANG`, `TMPDIR`) without WRM's variables; afterwards WRM takes the directory back before reading the result and refuses hard links to files the account does not own. The plan shows *as wrm-build* next to the build location.
+- **Medium: default engine.** The new policy `medium_default_engine` (`native` by default, or `original`) decides the engine of projects nobody chose one for. With `native`, users allowed by `medium_native` deploy with WRM directly, and the Medium page shows the WRM engine card first and open, with the original deploy tool folded away as optional. A deploy-config ZIP can be imported from the WRM engine card too.
+
+### Changed
+- The original deploy tool and its Docker runtime are optional: the WRM engine needs only a deploy-config (imported, edited in WRM or pulled from Git) and WRM connections. An imported deploy-config is used by the WRM engine at once instead of waiting for the original tool's first start.
+- An installation that already has the original deploy tool imported keeps `medium_default_engine=original` after the upgrade (set once at start and logged), so its projects do not change engine silently. Projects with an engine chosen explicitly keep it either way.
+- ROADMAP: the Medium switch-over is complete; retiring the Docker runtime is left to the owner's decision.
+
+### Upgrade
+Replace the executable or container and keep the database and encryption key. No database migration is required. To deploy with the WRM engine by default on an installation that used the original tool, set **Admin → Policies → Medium: default engine** to `native`.
+
 ## [12.9.0] - 2026-10-22
 
 ### Added

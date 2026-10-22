@@ -1,6 +1,6 @@
 # Roadmap
 
-Accepted work through **v12.9.0** is delivered in [CHANGELOG.md](CHANGELOG.md).
+Accepted work through **v12.9.1** is delivered in [CHANGELOG.md](CHANGELOG.md).
 
 ## Security and enterprise identity (accepted, versions before v12.7.0)
 
@@ -29,4 +29,6 @@ Agreed design:
 Delivery plan (v12.6.0 delivered the deploy-config reader/validator, the native plan and the comparison with the original tool; v12.7.0 native deploy, dry run, lock, backup, history and rollback through WRM connections with a per-project engine switch; see [CHANGELOG.md](CHANGELOG.md)):
 1. **v12.7.3 – build locations (delivered):** projects with a build step deploy natively; per project the build runs on the WRM host, on a chosen Linux build server over SSH (temporary directory, only the prepared source sent, no Git or SSH keys) or not at all, chosen and shown in the plan before anything runs, with the build server's platform and architecture checked against the destinations.
 2. **v12.9.0 – screens (delivered):** file details (server against branch), line-ending marking (`eol_only`) and the deploy-config editor with validation before saving.
-3. **v12.9.1 – switch-over:** config Git actions (state, pull, commit and push of a deploy-config clone, validated before commit), `build_user`, native engine as the default on Linux and Windows; the Docker runtime becomes optional and is then retired.
+3. **v12.9.1 – switch-over (delivered):** deploy-config Git actions through the WRM Git source (pull, local changes, commit and push, validated first), `medium_build_user` for WRM-host builds, the native engine as the default (`medium_default_engine`); the original tool and its Docker runtime are optional.
+
+Open: retiring the Docker runtime and the original tool entirely waits for the owner's decision; until then they stay available as an optional engine and for comparisons.
