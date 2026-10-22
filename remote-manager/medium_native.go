@@ -606,6 +606,7 @@ type mdPlanResult struct {
 	// comparison with the original tool), or empty for a project without a build.
 	BuildLocation string `json:"build_location,omitempty"`
 	BuildServer   string `json:"build_server,omitempty"`
+	BuildUser     string `json:"build_user,omitempty"`
 	BuildPlatform string `json:"build_platform,omitempty"`
 	BuildArch     string `json:"build_arch,omitempty"`
 	BuildLog      string `json:"build_log,omitempty"`
@@ -808,7 +809,7 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, m
 		}
 		cleanup = out.cleanup
 		src = out.Tree
-		res.BuildLocation, res.BuildServer, res.BuildPlatform, res.BuildArch, res.BuildLog = out.Location, out.Server, out.Platform, out.Arch, out.Log
+		res.BuildLocation, res.BuildServer, res.BuildUser, res.BuildPlatform, res.BuildArch, res.BuildLog = out.Location, out.Server, out.User, out.Platform, out.Arch, out.Log
 		res.SourceFrom, res.SourceName = "git_source", match.src.Name
 	}
 	res.RefAllowed = target.AllowedRefs == nil || mdRefAllowed(res.Ref, target.AllowedRefs)
@@ -1028,7 +1029,7 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 		}
 		out["ok"], out["config"], out["projects"] = true, cfg, projects
 		out["links"], out["connections"] = mdLinks(uid, cfg, conns), conns
-		out["engines"], out["can_deploy"], out["step_up"] = mdProjectEngines(uid), mdNativeAllowed(uid), settingBool("require_step_up")
+		out["engines"], out["engine_default"], out["can_deploy"], out["step_up"] = mdProjectEngines(uid), mdDefaultEngine(uid), mdNativeAllowed(uid), settingBool("require_step_up")
 		out["host_build"] = mdHostBuildInfo()
 		jsonOK(w, out)
 	case action == "/build" && r.Method == "POST":
@@ -1136,6 +1137,8 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 		jsonOK(w, map[string]string{"id": run.ID})
 	case strings.HasPrefix(action, "/plan/") && strings.HasSuffix(action, "/diff") && r.Method == "GET":
 		mdAPIDiff(w, r, uid, strings.TrimSuffix(strings.TrimPrefix(action, "/plan/"), "/diff"))
+	case action == "/config/git" || strings.HasPrefix(action, "/config/git/"):
+		mdAPIConfigGit(w, r, uid, action)
 	case action == "/config/files" || action == "/config/file":
 		mdAPIConfigFiles(w, r, uid, action)
 	case strings.HasPrefix(action, "/plan/") && r.Method == "GET":
@@ -1152,9 +1155,13 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 	}
 }
 
-// mdConfigDir is the deploy-config the preview reads: a kept ZIP (already checked by WRM's
+// mdConfigDir is the deploy-config the WRM engine reads: WRM's Git copy, else a kept ZIP (already checked by WRM's
 // reader, waiting for the original tool) is the user's newest one, else the applied one.
 func mdConfigDir(uid int) string {
+	// WRM's own copy pulled from the configuration repository wins
+	if _, ok := mdLoadGitConfigState(uid); ok {
+		return mdGitConfigDir(uid)
+	}
 	for _, d := range []string{"pending-config", "pending-config.applying"} {
 		if p := filepath.Join(mediumUserDir(uid), d); mediumFileExists(filepath.Join(p, "servers.yaml")) {
 			return p

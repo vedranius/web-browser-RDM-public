@@ -562,6 +562,7 @@ func serve(stop <-chan struct{}) int {
 	migrateSessionTokens()
 	ensureAdminExists()
 	applySecurityLevelAtStart(initialSecurityLevel)
+	mdMigrateDefaultEngine()
 	log.Printf("Web Remote Manager %s starting%s", AppVersion, map[bool]string{true: " (service: " + serviceMode + ")"}[serviceMode != ""])
 	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
 	startTURN()

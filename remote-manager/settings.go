@@ -123,6 +123,8 @@ var settingSpecs = []settingSpec{
 	// Medium native engine: who deploys, rolls back and releases locks; time limits of one step
 	{Key: "medium_native", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "medium_command_timeout", Default: "300", Kind: "int", Min: 30, Max: 86400},
+	{Key: "medium_default_engine", Default: "native", Kind: "enum", Enum: []string{"native", "original"}},
+	{Key: "medium_build_user", Default: "", Kind: "string"},
 	{Key: "medium_transfer_timeout", Default: "3600", Kind: "int", Min: 600, Max: 86400},
 	{Key: "medium_docker_install", Default: "1", Kind: "bool"},
 	{Key: "medium_host_ca", Default: "1", Kind: "bool"},
@@ -346,6 +348,13 @@ func validateSetting(s settingSpec, v string) (string, error) {
 	switch s.Key {
 	case "break_glass_ips":
 		return validateIPList(v)
+	case "medium_build_user":
+		if v != "" && !regexp.MustCompile(`^[a-z_][a-z0-9_.-]{0,31}$`).MatchString(v) {
+			return "", fmt.Errorf("use an OS account name such as wrm-build")
+		}
+		if v == "root" {
+			return "", fmt.Errorf("the build user must not be root")
+		}
 	case "turn_public_ip":
 		if v != "" && net.ParseIP(v) == nil {
 			return "", fmt.Errorf("not an IP address")
