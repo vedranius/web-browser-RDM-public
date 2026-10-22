@@ -118,3 +118,31 @@ func TestMediumBuildUserHardLink(t *testing.T) {
 		t.Fatalf("built file: %+v", e)
 	}
 }
+
+func TestMediumBuildUserLinkedOutput(t *testing.T) {
+	defer setSetting("medium_build_user", "")
+	if os.Geteuid() != 0 {
+		t.Skip("switching the build account needs root")
+	}
+	if _, err := user.Lookup("nobody"); err != nil {
+		t.Skip("no nobody account")
+	}
+	if _, err := setSetting("medium_build_user", "nobody"); err != nil {
+		t.Fatal(err)
+	}
+	tree := mdTestTree(t, map[string]string{"src/index.txt": "hello"})
+	// a link on the way to source_dir must not point the read-back outside the build
+	build := "ln -s / a"
+	if _, err := mdBuildOnHost(tree, &mdProject{Name: "demo-web", SourceDir: "a/etc", Build: &build}); err == nil || !strings.Contains(err.Error(), "symbolic link") {
+		t.Fatalf("source_dir through a link: %v", err)
+	}
+	// the build cannot replace its own directory (the parent belongs to WRM)
+	build = "d=$PWD; mv \"$d\" \"$d.x\" && ln -s / \"$d\"; mkdir -p etc"
+	out, err := mdBuildOnHost(tree, &mdProject{Name: "demo-web", SourceDir: "etc", Build: &build})
+	if err == nil {
+		defer out.Close()
+		if len(out.Tree) != 0 {
+			t.Fatalf("read outside the build: %d entries", len(out.Tree))
+		}
+	}
+}
