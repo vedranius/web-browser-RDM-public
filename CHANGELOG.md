@@ -7,15 +7,19 @@
 - **Broader log folder detection.** `log`, `logs`, `log-*`, `logs_*`, `*-log`, `*_logs`, and `WorkingDirectory/{log,logs,var/log,var/logs}` are recognised; project folders such as `catalog`, `dialog` or `blog` are not.
 - **Application folders under a broad root are services.** A folder inside `/var/log` (or any configured root without a service label) that contains a `*.log` file is listed as a service, and every file in it is listed under that service name — including extensionless names such as `info` or `warn` that a logger writes next to `error.log`.
 - **The assistant reads logs through that inventory.** `find_logs` lists the discovered services with their folders or journal unit and `read_log` opens one service's newest log, or its journal unit, with optional literal filtering. Both are ordinary read tools: allowed in read-only sessions, covered by the `read_logs` MCP scope, redacted, size-limited and audited. The cache of the Logs tab is reused; only the connection owner can trigger a scan and it runs over the session's existing SSH connection.
+- **Addons, in the spirit of Omarchy.** An addon is a folder under `<DB_PATH>.addons/<id>/` with `addon.json`; it is installed from a ZIP in **Settings → Addons** and discovered at runtime, never compiled into the binary. This version implements the core: the manifest, a capability allowlist (`ui.panel`, `ui.theme`), install/enable/disable/remove with an audit entry for each, an archive checksum kept in the database, strict entry-name checks (absolute paths, `..`, backslashes, duplicates, oversize and missing declared files are refused), and a served asset endpoint limited to known file types.
+- **Panels and themes.** A panel opens as a normal WRM window whose content is a sandboxed `iframe` (`sandbox="allow-scripts"`, no same-origin): it cannot read the page, cookies or other panels, and it receives only a small context through `postMessage` (user name, language, theme tokens, connection names and hosts) and can send a toast back. A theme is a stylesheet link applied while the addon is enabled and removed when it is disabled. Only an administrator installs, enables or removes; other users see the enabled addons.
 
 ### Changed
 - Log discovery no longer runs inside the log-list request, so opening the tab cannot start an unbounded scan.
 - Discovery keeps its depth and file caps; the root budget rises from 100 to 200 roots and the folder scan visits up to 400 directories.
+- The addon installer accepts an `addon.json` written with a UTF-8 byte order mark, which editors on Windows add by default.
 
 ### Security
 - Journal access uses the existing SSH account and the file-read permission, exactly like a file read; the SSH account still needs journal read access on the host.
 - Discovery is audited as `monitor.logs_discovered` and stays owner-only; shares can read a journal source but cannot trigger a scan.
 - Docker container names and log paths come from bounded reads of `config.v2.json`; no Docker socket or daemon command is used.
+- Addons execute nothing at install time. Server code is refused in this version: the manifest is validated and the archive unpacked into its own folder, and a capability that is not implemented refuses the whole install instead of being ignored. Panel HTML is served with `Content-Security-Policy: sandbox allow-scripts` and same-origin framing only; other documents stay unframeable. The addon settings tab carries the community and no-warranty notice.
 
 ## [12.8.1] - 2026-10-21
 

@@ -2181,6 +2181,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="st-history" id="st-history-btn" onclick="showSettingsTab('st-history')" data-i18n="tab_history">Session history</button>
       <button class="tab-btn" data-tab="st-ai" id="st-ai-btn" onclick="showSettingsTab('st-ai')" data-i18n="adm_ai">AI assistant</button>
       <button class="tab-btn" data-tab="st-mcp" id="st-mcp-btn" onclick="showSettingsTab('st-mcp')" data-i18n="tab_mcp">AI connections</button>
+      <button class="tab-btn" data-tab="st-addons" id="st-addons-btn" onclick="showSettingsTab('st-addons')" data-i18n="tab_addons">Addons</button>
       <button class="tab-btn" data-tab="st-data" id="st-data-btn" onclick="showSettingsTab('st-data')" data-i18n="tab_data">Data</button>
     </div>
     <div class="tab-intro" id="settings-intro"></div>
@@ -2233,6 +2234,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     </div>
     <div class="tab-pane" id="st-ai"><div id="ai-status-pane"></div></div>
     <div class="tab-pane" id="st-mcp"><div id="mcp-pane"></div></div>
+    <div class="tab-pane" id="st-addons"><div id="addons-pane"></div></div>
     <div class="tab-pane" id="st-data">
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="export_config">Export connections</div><div class="setting-desc" data-i18n="export_config_desc">Folders and connections as JSON, without passwords and keys</div></div>
@@ -5058,6 +5060,14 @@ Object.assign(LANGS.en, {
 Object.assign(LANGS.hr, {
   tab_mcp: 'AI veze', adm_mcp: 'AI veze', mcp_connected_lbl: 'AI povezan', mcp_btn_t: 'AI aplikacije povezane preko MCP-a: pregled ili opoziv pristupa',
   mcp_load_failed: 'AI veze se nisu mogle učitati',
+});
+Object.assign(LANGS.en, {
+  tab_addons: 'Addons',
+  stin_addons: 'Addons extend WRM from inside itself: an extra panel or a colour theme, installed as a ZIP. A panel runs sandboxed and cannot touch the rest of the interface. Only an administrator installs, enables or removes an addon.',
+});
+Object.assign(LANGS.hr, {
+  tab_addons: 'Dodaci',
+  stin_addons: 'Dodaci proširuju WRM iz njega samoga: dodatni panel ili tema boja, instalirani kao ZIP. Panel radi u sandboxu i ne može dirati ostatak sučelja. Samo administrator instalira, uključuje ili uklanja dodatak.',
 });
 // Short "what is this for" lines under the Settings and Admin panel tabs (v12.2.3)
 Object.assign(LANGS.en, {
@@ -15593,7 +15603,7 @@ function renderTabs() {
   const groupKey = windowFolderKey;
   const groups = new Map();
   // Addons belong to the canvas, not to a connection folder: they are never filtered out.
-  const inFolder = wo => wo.mode === 'addon' || tabFolderFilter === null || groupKey(wo) === tabFolderFilter;
+  const inFolder = wo => wo.mode === 'addon' || wo.mode === 'addon-panel' || tabFolderFilter === null || groupKey(wo) === tabFolderFilter;
   winObjects.forEach(wo => { if (wo.mode === 'addon') return; const c = winConn(wo); const key = groupKey(wo); if (!groups.has(key)) groups.set(key, folderPathLabel(c && c.folder_id) || (c && c.folder_path) || t('no_folder')); });
   if (tabFolderFilter !== null && !groups.has(tabFolderFilter)) tabFolderFilter = null;
   winObjects.forEach(wo => { refreshWindowConnectionTitle(wo); if (wo.el) wo.el.classList.toggle('folder-hidden', !inFolder(wo)); });
@@ -15631,6 +15641,7 @@ function renderTabs() {
     }
     if (wo.mode === 'screen-viewer' && wo.viewing) { icon = '👁'; title = wo.viewing.name + ' — ' + wo.viewing.title; }
     if (wo.mode === 'addon' && window.wrmWorkboard) { const ai = wrmWorkboard.tabInfo(wo); icon = ai.ico; title = ai.title; }
+  if (wo.mode === 'addon-panel') { icon = '▣'; title = wo.addonTitle || 'Addon'; }
     if (wo.el && wo.el.style.display === 'none') icon = '▪';
 
     const stateDot = wo.mode === 'ssh' || wo.mode === 'desk' ? `<span class="tab-state state-${wo.connState || 'connecting'}" title="${esc(wo.connState || '')}"></span>` : '';
@@ -16367,6 +16378,7 @@ function showSettingsTab(id) {
   if (id === 'st-history') renderTermSessions('history-pane', true);
   if (id === 'st-ai') loadAI().then(() => wrmAI.statusPane(), () => showToast(t('ai_load_failed'),'error'));
   if (id === 'st-mcp') loadMCP().then(() => wrmMCP.settingsPane(), () => showToast(t('mcp_load_failed'), 'error'));
+  if (id === 'st-addons') wrmAddons.pane();
 }
 
 // ── Security: password, two-factor, sign-in sessions ──
@@ -18089,5 +18101,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 </script>
 <script src="/static/layout.js"></script>
 <script src="/static/workboard.js"></script>
+<script src="/static/addons.js"></script>
 </body>
 </html>

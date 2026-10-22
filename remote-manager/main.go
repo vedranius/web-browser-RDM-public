@@ -354,6 +354,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/gitlab-relay", gitRelayWorkerHandler)
 	mux.HandleFunc("/api/monitoring", apiMonitoringHandler)
 	mux.HandleFunc("/api/monitoring/", apiMonitoringHandler)
+	mux.HandleFunc("/api/addons", apiAddonsHandler)
+	mux.HandleFunc("/api/addons/", apiAddonsHandler)
 	mux.HandleFunc("/api/git", apiGitHandler)
 	mux.HandleFunc("/api/git/", apiGitHandler)
 	mux.HandleFunc("/api/git/medium", apiMediumHandler)
@@ -1444,6 +1446,9 @@ func initDB() {
 	// v12.0: AI assistant (providers, sessions, transcripts)
 	initAISchema()
 	initMCPSchema()
+
+	// v13.0: addons (a folder under <DB>.addons plus its manifest)
+	initAddonSchema()
 
 	var nC, nF, nS int
 	db.QueryRow("SELECT COUNT(*) FROM connections").Scan(&nC)
