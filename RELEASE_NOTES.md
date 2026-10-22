@@ -1,3 +1,42 @@
+## Web Remote Manager PRO v13.1.0 - Logs the assistant can read, addons you can install, monitoring you can watch
+
+### Logs and the assistant
+
+- **Find logs is an explicit action.** Monitoring Ôćĺ Logs never scans a server by itself. Select a server, click **Find logs**, and the result is cached for an hour.
+- **A service inventory, not a folder list.** Discovery reports systemd units, Docker containers, Supervisor programs, Git installs and plain folders, including services whose output only goes to journald, and application folders under a broad root such as `/var/log/media-api` with `error.log` and `info`.
+- **The assistant reads the same inventory.** `find_logs` and `read_log` go through the existing approval, audit, redaction and size-limit path, over the session's own SSH connection.
+
+### Addons
+
+- **Install from a ZIP in Settings Ôćĺ Addons.** The archive is checked before anything is written: manifest, safe entry names, declared files, capabilities. Panels open in a sandboxed `iframe` with no same-origin; themes are a stylesheet that disappears when the addon is disabled.
+- **Server code runs as WebAssembly** (`wazero`, no CGO, no WASI): no files, no network, no environment, 64 MiB and five seconds per call. Only an administrator may call it, and the installer compiles the module and checks its exports and imports before install.
+- **Community library.** The index of *WRM Pro - community public addons* is listed with trust levels (`official`, `reviewed`, `community`, `unverified`). Downloads must come from a GitHub host over HTTPS and match the SHA-256 in the index, then pass the same checks as an uploaded ZIP.
+- **AI addon.** The pane builds a complete prompt from the capabilities this build supports and hands it to your AI client or the built-in assistant.
+
+### Monitoring and replay
+
+- **Watch services, not only metrics.** A server can watch up to 20 systemd units or Docker containers on the same SSH poll; a service that is not `active`/`running` turns the sample into `problem` and uses the existing notifications. **Poll automatically** is a switch on the server card.
+- **Replay shows wall-clock time.** The player puts the exact time at the playhead next to the offset and the header gains **Ended**; old recordings show absolute times too.
+
+### Accounts and the assistant
+
+- **Recording level per account.** When creating a user, choose *As the server settings*, *Off for this user*, *Session output only* or *Output and keystrokes*. The server setting stays the master switch.
+- **Work log in the assistant chat.** Each request gets a collapsible work log that names every tool step while the model works and collapses to a step count when the answer arrives.
+
+### Fixed
+
+- **Ollama:** a turn that only called tools failed with `HTTP 400: invalid message content type: <nil>`; the request builder wrote `"content": null` for an assistant message without text. It now always sends a string.
+
+### Security
+
+- Journal access and log discovery use the existing SSH account and file-read permission; discovery is owner-only and audited (`monitor.logs_discovered`). The addon surface is a capability allowlist, and a capability this build does not implement refuses the whole install. Panel HTML is served with `Content-Security-Policy: sandbox allow-scripts` and same-origin framing only.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. The database is upgraded in place (`users.recording_level` is added, empty means "follow the server settings"). No manual step is required.
+
+[Download v13.1.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.1.0) ┬Ě [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v12.8.1 - Security update: Go 1.27.3 and a reviewed gosec finding
 
 ### Security

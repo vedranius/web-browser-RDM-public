@@ -1,4 +1,4 @@
-## [13.1.0] - Unreleased
+## [13.1.0] - 2026-10-22
 
 ### Added
 - **Monitored services.** A monitored server can watch up to 20 services next to its metrics: systemd units (`systemd:nginx`) and Docker containers (`docker:web`). They are read on every SSH poll, in the same round trip as the metrics, and each sample carries the state (`active`, `running`, `failed`, `missing`, …). A watched service that is not `active`/`running` turns the sample into `problem` with a `service problem: …` message, so the existing notification and history path reports it without a second mechanism. The watch list lives in **Monitoring settings**, and **Poll automatically** can be switched directly on the server card.
@@ -15,7 +15,10 @@
 - Service state is read with the SSH account and no extra privilege: `systemctl is-active` and `docker inspect` only. A missing container is reported as `missing`, not as a failed container, and a failed check marks the sample `problem` instead of hiding the previous state.
 - The community index cannot point WRM anywhere: entries are accepted only from HTTPS GitHub hosts (HTTP is allowed for loopback so the tests can run), downloads are capped at 20 MB, redirects stop after five hops, and an archive whose SHA-256 differs from the index is refused before it reaches the installer. An entry that fails validation is dropped instead of hiding the rest of the list.
 
-## [13.0.0] - Unreleased
+### Upgrade
+Replace the executable or container and keep the database and encryption key. The database is upgraded in place: `users.recording_level` is added with an empty default (follow the server settings), and existing addons, recordings, monitor profiles and audits are untouched. 13.0.0 was never published on its own; its log engine, AI log tools and addon core are part of this release.
+
+## [13.0.0] - 2026-10-22
 
 ### Added
 - **Find logs is an explicit action.** Opening Monitoring → Logs no longer scans a server. Select a server and click **Find logs**; the result is cached for an hour per connection and configuration, and the file list is served from that cache. The tab states plainly that nothing was scanned yet.
