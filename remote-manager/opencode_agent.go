@@ -115,7 +115,7 @@ func opencodeAllowed(userID int) (bool, string) {
 }
 
 // opencodeProviderKinds are the WRM provider kinds an OpenCode agent can use.
-var opencodeProviderKinds = []string{"opencode", "anthropic", "openai", "openai_compatible"}
+var opencodeProviderKinds = []string{"opencode", "opencode_go", "anthropic", "openai", "openai_compatible"}
 
 // opencodeConfig builds the OpenCode configuration for one session. It returns the JSON,
 // the provider and model ids in OpenCode's terms, and the environment holding the key.
@@ -140,6 +140,11 @@ func opencodeConfig(p aiProvider, model, mcpURL, token string, sandbox bool) ([]
 		if p.BaseURL != "" {
 			opts["baseURL"] = p.BaseURL
 		}
+	case "opencode_go":
+		pid = "opencode-go"
+		if p.BaseURL != "" {
+			opts["baseURL"] = p.BaseURL
+		}
 	case "anthropic":
 		pid = "anthropic"
 		if p.BaseURL != "" {
@@ -159,7 +164,7 @@ func opencodeConfig(p aiProvider, model, mcpURL, token string, sandbox bool) ([]
 		opts["baseURL"] = p.BaseURL
 		explicit()
 	default:
-		return nil, "", "", nil, fmt.Errorf("OpenCode agents can use OpenCode Zen, Anthropic, OpenAI and OpenAI-compatible providers, not %s", p.Kind)
+		return nil, "", "", nil, fmt.Errorf("OpenCode agents can use OpenCode Zen, OpenCode Go, Anthropic, OpenAI and OpenAI-compatible providers, not %s", p.Kind)
 	}
 	if u, ok := opts["baseURL"].(string); ok && sandbox {
 		for _, h := range []string{"//127.0.0.1", "//localhost", "//[::1]"} {

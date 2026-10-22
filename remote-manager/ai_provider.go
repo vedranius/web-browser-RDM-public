@@ -23,6 +23,7 @@ import (
 //   vertex             Google Vertex AI: Claude (rawPredict) or the OpenAI-compatible endpoint; service account
 //   openai_compatible  any OpenAI-compatible base URL (local models)
 //   opencode           OpenCode Zen: free models without a key, every model with one (ai_opencode.go)
+//   opencode_go        OpenCode Go: a subscription key on Go's own endpoints (ai_opencode_go.go)
 //
 // Secrets (API keys, AWS secret keys, service account JSON) are stored in one encrypted
 // JSON value (encryptValue) and never returned to the browser: the API reports only which
@@ -406,6 +407,12 @@ func (in aiProviderInput) apply(p *aiProvider) error {
 		if p.BaseURL == "" {
 			return fmt.Errorf("the base URL is required")
 		}
+	case "opencode":
+		// Zen works without a key for its free models (the key "public").
+	case "opencode_go":
+		if p.secret.APIKey == "" {
+			return fmt.Errorf("an OpenCode Go API key is required (OpenCode Console → Go)")
+		}
 	}
 	return nil
 }
@@ -540,18 +547,24 @@ func handleAIProviders(w http.ResponseWriter, r *http.Request, userID int, scope
 			return
 		}
 		out := map[string]interface{}{"ok": true, "models": list}
-		if p.Kind == "opencode" {
+		if p.Kind == "opencode" || p.Kind == "opencode_go" {
+			info := func(id string) opencodeModel {
+				if p.Kind == "opencode_go" {
+					return opencodeGoModelInfo(r.Context(), id)
+				}
+				return opencodeModelInfo(r.Context(), id)
+			}
 			free := []string{}
 			for _, id := range list {
-				if opencodeModelInfo(r.Context(), id).Free {
+				if info(id).Free {
 					free = append(free, id)
 				}
 			}
 			out["free"] = free
-			out["keyless"] = p.secret.APIKey == ""
+			out["keyless"] = p.Kind == "opencode" && p.secret.APIKey == ""
 			du := map[string]string{}
 			for _, id := range list {
-				du[id] = opencodeModelInfo(r.Context(), id).DataUse
+				du[id] = info(id).DataUse
 			}
 			out["data_use"] = du
 		}

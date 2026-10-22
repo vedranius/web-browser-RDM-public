@@ -1,3 +1,19 @@
+## Web Remote Manager PRO v13.4.0 - OpenCode Go keys work
+
+### Added
+
+- **OpenCode Go provider.** The Go subscription is separate from OpenCode Zen: a Go key is only accepted by Go's endpoints, and Zen answers *insufficient funds* when it receives one. Choose **OpenCode Go (subscription key)** as the provider, paste the key from `opencode.ai/console/go`, and WRM sends requests to `https://opencode.ai/inference/go/...` with the right API per model (Chat Completions or Anthropic Messages), a stable `x-opencode-session` and a `WRM-PRO` user agent. The Go model list is loaded from Go (with the documented list as fallback); models WRM cannot speak (OpenAI Responses, Google Gemini) are left out. The OpenCode agent engine can use the same provider as `opencode-go/<model>`.
+
+### Fixed
+
+- A Go subscription key is no longer used against the Zen endpoint, so it no longer produces *insufficient funds*; a missing key is reported clearly.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.0) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v13.3.0 - The AI writes addons, you review them
 
 ### Added

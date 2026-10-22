@@ -263,7 +263,7 @@ func aiStart(p aiStartParams) (*aiSession, error) {
 				return nil, errors.New(why)
 			}
 			if !oneOf(prov.Kind, opencodeProviderKinds...) {
-				return nil, fmt.Errorf("OpenCode agents can use OpenCode Zen, Anthropic, OpenAI and OpenAI-compatible providers, not %s", prov.Kind)
+				return nil, fmt.Errorf("OpenCode agents can use OpenCode Zen, OpenCode Go, Anthropic, OpenAI and OpenAI-compatible providers, not %s", prov.Kind)
 			}
 		}
 	}
@@ -1550,7 +1550,7 @@ func (s *aiSession) runTurn(ctx context.Context, cancel context.CancelFunc) {
 			return
 		}
 		s.mu.Lock()
-		req := aiLLMRequest{System: s.systemPrompt(), Messages: append([]aiMsg{}, s.history...), Tools: s.toolDefs(), Model: s.Model}
+		req := aiLLMRequest{System: s.systemPrompt(), Messages: append([]aiMsg{}, s.history...), Tools: s.toolDefs(), Model: s.Model, SessionID: s.UID}
 		prov := s.provider
 		s.mu.Unlock()
 		if d := s.delegateDef(); d != nil {

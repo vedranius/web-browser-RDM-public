@@ -76,6 +76,13 @@ func aiDelegateCatalog(ctx context.Context, userID int) (aiProvider, []aiDelegat
 			}
 		}
 	}
+	if auto && p.Kind == "opencode_go" {
+		if list, err := opencodeGoListModels(ctx, p); err == nil {
+			for _, m := range list {
+				ids = append(ids, m.ID)
+			}
+		}
+	}
 	if len(ids) == 0 {
 		ids = p.modelList()
 	}
@@ -86,9 +93,12 @@ func aiDelegateCatalog(ctx context.Context, userID int) (aiProvider, []aiDelegat
 			continue
 		}
 		m := aiDelegateModel{ID: id, DataUse: "provider", Allowed: true}
-		if p.Kind == "opencode" {
+		if p.Kind == "opencode" || p.Kind == "opencode_go" {
 			info := opencodeModelInfo(ctx, id)
-			if !info.supported() || (p.secret.APIKey == "" && !info.Free) {
+			if p.Kind == "opencode_go" {
+				info = opencodeGoModelInfo(ctx, id)
+			}
+			if !info.supported() || (p.Kind == "opencode" && p.secret.APIKey == "" && !info.Free) {
 				continue
 			}
 			m.Free, m.DataUse, m.Desc, m.Context, m.Reasoning = info.Free, info.DataUse, info.Desc, info.Context, info.Reasoning

@@ -32,7 +32,7 @@ const (
 	aiModeAsk      = "ask"
 	aiModeAuto     = "auto"
 
-	aiAllProviderKinds = "anthropic,openai,azure,bedrock,vertex,openai_compatible,opencode"
+	aiAllProviderKinds = "anthropic,openai,azure,bedrock,vertex,openai_compatible,opencode,opencode_go"
 )
 
 var aiModeOrder = []string{aiModeReadOnly, aiModeAsk, aiModeAuto}

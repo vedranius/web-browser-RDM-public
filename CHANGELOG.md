@@ -1,3 +1,11 @@
+## [13.4.0] - 2026-10-22
+
+### Added
+- **OpenCode Go provider.** OpenCode Go is the subscription next to OpenCode Zen (the pay-as-you-go Console). A Go key is only accepted by the Go endpoints, so sending it to Zen made Console answer *insufficient funds*. The new provider kind `opencode_go` sends the key to `https://opencode.ai/inference/go/...` (chat completions or Anthropic Messages, chosen per model), uses the Go model list (`/v1/models`, with the documented list as fallback), sends a stable `x-opencode-session` per conversation and a `WRM-PRO` user agent. Qwen and MiniMax M3 use the Messages API on Go even where the Zen catalog says chat. The OpenCode agent engine also accepts the provider and runs `opencode-go/<model>`.
+
+### Fixed
+- An OpenCode Go subscription key is no longer charged to a Zen balance, and a missing key gives a clear message instead of an *insufficient funds* answer from the wrong endpoint. Models the WRM engine cannot speak (OpenAI Responses, Google Gemini) are left out of the Go list instead of failing at the first prompt.
+
 ## [13.3.0] - 2026-10-22
 
 ### Added

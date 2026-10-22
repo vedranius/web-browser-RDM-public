@@ -66,6 +66,7 @@ type aiLLMRequest struct {
 	Tools     []aiToolDef
 	Model     string
 	MaxTokens int
+	SessionID string // stable per conversation, sent to OpenCode Go as x-opencode-session
 }
 
 type aiLLMResponse struct {
@@ -168,6 +169,8 @@ func aiCompleteRaw(ctx context.Context, p aiProvider, req aiLLMRequest, onText f
 		return openaiStream(ctx, p, u, req, onText, func(h http.Header) { h.Set("api-key", p.secret.APIKey) })
 	case "opencode":
 		return opencodeComplete(ctx, p, req, onText)
+	case "opencode_go":
+		return opencodeGoComplete(ctx, p, req, onText)
 	case "openai", "openai_compatible":
 		base := p.BaseURL
 		if base == "" {
@@ -187,7 +190,7 @@ func aiTestProvider(ctx context.Context, p aiProvider, model string) (string, er
 	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
 	defer cancel()
 	res, err := aiComplete(ctx, p, aiLLMRequest{
-		System: "You are a connectivity check.", Model: model, MaxTokens: 256,
+		System: "You are a connectivity check.", Model: model, MaxTokens: 256, SessionID: "provider-test",
 		Messages: []aiMsg{{Role: "user", Text: "Reply with the single word OK."}},
 	}, nil)
 	if err != nil {
@@ -1086,7 +1089,7 @@ func aiCost(p aiProvider, model string, u aiUsage) float64 {
 			in, out = pr[0], pr[1]
 		}
 	}
-	if in == 0 && out == 0 && p.Kind == "opencode" {
+	if in == 0 && out == 0 && (p.Kind == "opencode" || p.Kind == "opencode_go") {
 		in, out, _ = opencodePrice(model)
 	}
 	return (float64(u.In)*in + float64(u.CacheRead)*in*0.1 + float64(u.CacheWrite)*in*1.25 + float64(u.Out)*out) / 1e6

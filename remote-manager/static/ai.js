@@ -52,7 +52,8 @@ Object.assign(LANGS.en, {
   ai_prov_maxtok: 'Max output tokens (0 = 16000)', ai_prov_fallback: 'Refusal fallback (Anthropic API)', ai_prov_enabled: 'Enabled', ai_prov_test: 'Test',
   ai_prov_test_ok: 'The provider answered', ai_prov_add: 'Add provider', ai_prov_edit: 'Edit provider', ai_prov_del_q: 'Delete this provider? Its sessions end.',
   ai_prov_none: 'No providers yet.', ai_models_col: 'Models', ai_prov_secrets: 'Keys', ai_kind_anthropic: 'Anthropic API', ai_kind_openai: 'OpenAI API', ai_kind_azure: 'Azure OpenAI',
-  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-compatible (local models)', ai_kind_opencode: 'OpenCode Zen (free models without a key)',
+  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-compatible (local models)', ai_kind_opencode: 'OpenCode Zen (pay-as-you-go; free models without a key)',
+  ai_kind_opencode_go: 'OpenCode Go (subscription key)',
   ai_subscriptions_note: 'Consumer Claude.ai and ChatGPT chat subscriptions cannot be used by other applications. Use an API key or an enterprise gateway here, or connect the chat app to WRM over MCP (Settings → AI connections).',
   aiw_title: 'Add an AI provider (step by step)', aiw_s_pick: 'Provider', aiw_s_key: 'Key and model', aiw_s_test: 'Test', aiw_s_done: 'Done',
   aiw_pick: 'Which AI service do you want to use?', aiw_p_anthropic: 'Anthropic (Claude)', aiw_p_openai: 'OpenAI', aiw_p_gemini: 'Google Gemini', aiw_p_groq: 'Groq', aiw_p_openrouter: 'OpenRouter', aiw_p_mistral: 'Mistral',
@@ -62,7 +63,7 @@ Object.assign(LANGS.en, {
   aiw_testing: 'Saving and testing…', aiw_ok: 'It works. The provider answered{reply}.', aiw_fail: 'The provider did not answer: {err}', aiw_fix: 'Go back and check the key, the address and the model name.',
   aiw_next: 'Save and test', aiw_back: 'Back', aiw_finish: 'Done', aiw_use: 'Open an AI assistant window on a server connection and choose this provider. Every session is recorded and audited.', aiw_wizard: 'Setup wizard', aiw_need: 'Fill in the required fields.',
   aiw_s_ollama: 'Ollama on this server', aiw_p_xai: 'xAI (Grok)', aiw_p_deepseek: 'DeepSeek', aiw_p_together: 'Together AI', aiw_p_perplexity: 'Perplexity', aiw_p_cohere: 'Cohere',
-  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (free models)', aiw_free: 'free', ai_deleg_setup: 'Helper models: {p}, {n} in use', ai_deleg_setup_d: 'The assistant may hand text subtasks to these models; WRM picks the best one for each task, free ones first. They get only redacted text and cannot run anything.',
+  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (pay-as-you-go; free models)', aiw_p_opencode_go: 'OpenCode Go (subscription)', aiw_free: 'free', ai_deleg_setup: 'Helper models: {p}, {n} in use', ai_deleg_setup_d: 'The assistant may hand text subtasks to these models; WRM picks the best one for each task, free ones first. They get only redacted text and cannot run anything.',
   ai_deleg_training_me: 'Also use free models that may use my prompts for training', ai_deleg_training_all: 'The administrator allows free models that may train on prompts for everyone.', ai_deleg_training_off: 'The administrator does not allow free models that may train on prompts.',
   ai_deleg_excluded: 'Not used (may train on prompts):',
   ai_du_zero_retention: 'keeps nothing', ai_du_zero_retention_d: 'Zero retention: prompts are not stored or used for training.', ai_du_trains: 'may train', ai_du_trains_d: 'During the free period the provider may use prompts and answers to improve its models.',
@@ -75,7 +76,8 @@ Object.assign(LANGS.en, {
   p_ai_delegate_provider: 'Helper provider', p_ai_delegate_provider_d: 'An organisation provider, for example OpenCode Zen (free models work without a key).',
   p_ai_delegate_models: 'Helper models', p_ai_delegate_models_d: 'Comma-separated; the first is the default. Empty: automatic, every usable model of the provider (for OpenCode Zen the current catalog). WRM picks the one that fits each task.', p_ai_delegate_models_ph: 'big-pickle',
   p_ai_delegate_max_kb: 'Delegation size limit (KB)', p_ai_delegate_max_kb_d: 'The most text one delegation may send to the helper.',
-  aiw_n_opencode: 'Without a key only the free OpenCode Zen models work (limited per IP address; some free models may use prompts to improve their models, so do not send confidential data). With a key from opencode.ai every Zen model works, billed to that workspace. Use “Load models” after the test to pick from the current list.',
+  aiw_n_opencode: 'Without a key only the free OpenCode Zen models work (limited per IP address; some free models may use prompts to improve their models, so do not send confidential data). With a key from opencode.ai every Zen model works, billed to that workspace. Use "Load models" after the test to pick from the current list.',
+  aiw_n_opencode_go: 'Uses the OpenCode Go subscription endpoints, not Zen: paste the Go API key from opencode.ai/console/go. A Go key has no pay-as-you-go balance, so Zen would answer "insufficient funds". Use "Load models" to pick a model from the Go list.',
   aiw_model_note: 'Model names change often. Type any model name (several separated by commas; the first one is the default), or save and use “Load the model list” on the last step.',
   aiw_n_perplexity: 'Perplexity models cannot call tools, so the assistant may be unable to run checks with them.',
   aiw_o_intro: 'Ollama runs free AI models on a computer you control. WRM talks to it through its OpenAI-compatible address and needs no API key. The assistant still works through WRM, so every session is recorded and audited.',
@@ -105,7 +107,7 @@ Object.assign(LANGS.en, {
   p_ai_default_mode: 'Default mode', p_ai_default_mode_d: 'Mode of a new session when it is allowed.', po_ai_default_mode_read_only: 'Read-only', po_ai_default_mode_ask: 'Ask before every change',
   p_ai_mode_rules: 'Mode rules', p_ai_mode_rules_d: 'Per tag, folder, connection or host; the most restrictive matching rule wins.',
   p_ai_personal_keys: 'Personal API keys', p_ai_personal_keys_d: 'Who may add their own provider keys.', po_ai_personal_keys_off: 'Nobody', po_ai_personal_keys_admins: 'Administrators', po_ai_personal_keys_all: 'Everybody',
-  p_ai_provider_kinds: 'Allowed provider types', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode', p_ai_provider_kinds_ph: 'anthropic,azure',
+  p_ai_provider_kinds: 'Allowed provider types', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode (Zen), opencode_go (Go subscription)', p_ai_provider_kinds_ph: 'anthropic,azure',
   p_ai_models: 'Allowed models', p_ai_models_d: 'Comma-separated patterns (claude-*); empty = every model of the providers.', p_ai_models_ph: 'claude-*',
   p_ai_redact_output: 'Redact output', p_ai_redact_output_d: 'Replace secrets (passwords, tokens, private keys …) before output is sent to the provider. Transcripts and the audit are always redacted.',
   p_ai_share_notes: 'Allow sharing notes', p_ai_share_notes_d: 'Users may opt in to send their connection notes to the assistant.',
@@ -172,7 +174,8 @@ Object.assign(LANGS.hr, {
   ai_prov_maxtok: 'Najviše izlaznih tokena (0 = 16000)', ai_prov_fallback: 'Zamjenski model kod odbijanja (Anthropic API)', ai_prov_enabled: 'Uključen', ai_prov_test: 'Testiraj',
   ai_prov_test_ok: 'Pružatelj je odgovorio', ai_prov_add: 'Dodaj pružatelja', ai_prov_edit: 'Uredi pružatelja', ai_prov_del_q: 'Obrisati ovog pružatelja? Njegove sesije završavaju.',
   ai_prov_none: 'Još nema pružatelja.', ai_models_col: 'Modeli', ai_prov_secrets: 'Ključevi', ai_kind_anthropic: 'Anthropic API', ai_kind_openai: 'OpenAI API', ai_kind_azure: 'Azure OpenAI',
-  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-kompatibilan (lokalni modeli)', ai_kind_opencode: 'OpenCode Zen (besplatni modeli bez ključa)',
+  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-kompatibilan (lokalni modeli)', ai_kind_opencode: 'OpenCode Zen (plaćanje po upotrebi; besplatni modeli bez ključa)',
+  ai_kind_opencode_go: 'OpenCode Go (ključ pretplate)',
   ai_subscriptions_note: 'Potrošačke pretplate na Claude.ai i ChatGPT chat ne mogu koristiti druge aplikacije. Ovdje koristi API ključ ili enterprise gateway, ili poveži chat aplikaciju s WRM-om preko MCP-a (Postavke → AI veze).',
   aiw_title: 'Dodavanje AI pružatelja (korak po korak)', aiw_s_pick: 'Pružatelj', aiw_s_key: 'Ključ i model', aiw_s_test: 'Test', aiw_s_done: 'Gotovo',
   aiw_pick: 'Koju AI uslugu želite koristiti?', aiw_p_anthropic: 'Anthropic (Claude)', aiw_p_openai: 'OpenAI', aiw_p_gemini: 'Google Gemini', aiw_p_groq: 'Groq', aiw_p_openrouter: 'OpenRouter', aiw_p_mistral: 'Mistral',
@@ -182,7 +185,7 @@ Object.assign(LANGS.hr, {
   aiw_testing: 'Spremanje i testiranje…', aiw_ok: 'Radi. Pružatelj je odgovorio{reply}.', aiw_fail: 'Pružatelj nije odgovorio: {err}', aiw_fix: 'Vratite se i provjerite ključ, adresu i naziv modela.',
   aiw_next: 'Spremi i testiraj', aiw_back: 'Natrag', aiw_finish: 'Gotovo', aiw_use: 'Otvorite prozor AI asistenta na vezi prema poslužitelju i odaberite ovog pružatelja. Svaka sesija se bilježi i evidentira u reviziji.', aiw_wizard: 'Čarobnjak za postavljanje', aiw_need: 'Ispunite obavezna polja.',
   aiw_s_ollama: 'Ollama na ovom poslužitelju', aiw_p_xai: 'xAI (Grok)', aiw_p_deepseek: 'DeepSeek', aiw_p_together: 'Together AI', aiw_p_perplexity: 'Perplexity', aiw_p_cohere: 'Cohere',
-  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (besplatni modeli)', aiw_free: 'besplatno', ai_deleg_setup: 'Pomoćni modeli: {p}, u upotrebi {n}', ai_deleg_setup_d: 'Asistent može tekstualne podzadatke predati ovim modelima; WRM za svaki zadatak bira najprikladniji, prvo besplatne. Dobivaju samo tekst s maskiranim tajnama i ne mogu ništa pokrenuti.',
+  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (plaćanje po upotrebi; besplatni modeli)', aiw_p_opencode_go: 'OpenCode Go (pretplata)', aiw_free: 'besplatno', ai_deleg_setup: 'Pomoćni modeli: {p}, u upotrebi {n}', ai_deleg_setup_d: 'Asistent može tekstualne podzadatke predati ovim modelima; WRM za svaki zadatak bira najprikladniji, prvo besplatne. Dobivaju samo tekst s maskiranim tajnama i ne mogu ništa pokrenuti.',
   ai_deleg_training_me: 'Koristi i besplatne modele koji moje upite mogu koristiti za treniranje', ai_deleg_training_all: 'Administrator svima dopušta besplatne modele koji mogu trenirati na upitima.', ai_deleg_training_off: 'Administrator ne dopušta besplatne modele koji mogu trenirati na upitima.',
   ai_deleg_excluded: 'Ne koriste se (mogu trenirati na upitima):',
   ai_du_zero_retention: 'ne čuva ništa', ai_du_zero_retention_d: 'Bez zadržavanja: upiti se ne spremaju i ne koriste za treniranje.', ai_du_trains: 'može trenirati', ai_du_trains_d: 'Tijekom besplatnog razdoblja pružatelj može koristiti upite i odgovore za poboljšanje svojih modela.',
@@ -195,7 +198,8 @@ Object.assign(LANGS.hr, {
   p_ai_delegate_provider: 'Pomoćni pružatelj', p_ai_delegate_provider_d: 'Pružatelj organizacije, na primjer OpenCode Zen (besplatni modeli rade bez ključa).',
   p_ai_delegate_models: 'Pomoćni modeli', p_ai_delegate_models_d: 'Odvojeni zarezom; prvi je zadani. Prazno: automatski, svi upotrebljivi modeli pružatelja (za OpenCode Zen aktualni katalog). WRM za svaki zadatak bira odgovarajući.', p_ai_delegate_models_ph: 'big-pickle',
   p_ai_delegate_max_kb: 'Ograničenje veličine delegiranja (KB)', p_ai_delegate_max_kb_d: 'Najviše teksta koje jedno delegiranje smije poslati pomoćnom modelu.',
-  aiw_n_opencode: 'Bez ključa rade samo besplatni OpenCode Zen modeli (ograničeno po IP adresi; neki besplatni modeli mogu koristiti upite za poboljšanje svojih modela, zato ne šaljite povjerljive podatke). S ključem s opencode.ai rade svi Zen modeli, a naplaćuju se tom radnom prostoru. Nakon testa upotrijebite “Učitaj modele” za odabir s aktualnog popisa.',
+  aiw_n_opencode: 'Bez ključa rade samo besplatni OpenCode Zen modeli (ograničeno po IP adresi; neki besplatni modeli mogu koristiti upite za poboljšanje svojih modela, zato ne šaljite povjerljive podatke). S ključem s opencode.ai rade svi Zen modeli, a naplaćuju se tom radnom prostoru. Nakon testa upotrijebite "Učitaj modele" za odabir s aktualnog popisa.',
+  aiw_n_opencode_go: 'Koristi OpenCode Go pretplatničke endpointe, ne Zen: zalijepite Go API ključ s opencode.ai/console/go. Go ključ nema pay-as-you-go saldo, pa bi Zen odgovorio "insufficient funds". Upotrijebite "Učitaj modele" za odabir s Go popisa.',
   aiw_model_note: 'Nazivi modela se često mijenjaju. Upišite bilo koji naziv modela (više njih odvojite zarezom; prvi je zadani) ili spremite i na zadnjem koraku odaberite „Učitaj popis modela”.',
   aiw_n_perplexity: 'Perplexity modeli ne mogu pozivati alate pa asistent s njima možda neće moći izvoditi provjere.',
   aiw_o_intro: 'Ollama pokreće besplatne AI modele na računalu koje kontrolirate. WRM mu pristupa preko adrese kompatibilne s OpenAI-jem i ne treba API ključ. Asistent i dalje radi preko WRM-a, pa se svaka sesija bilježi i evidentira u reviziji.',
@@ -223,7 +227,7 @@ Object.assign(LANGS.hr, {
   p_ai_default_mode: 'Zadani način rada', p_ai_default_mode_d: 'Način rada nove sesije kad je dopušten.', po_ai_default_mode_read_only: 'Samo čitanje', po_ai_default_mode_ask: 'Pitaj prije svake promjene',
   p_ai_mode_rules: 'Pravila načina rada', p_ai_mode_rules_d: 'Po oznaci, mapi, vezi ili hostu; pobjeđuje najstrože pravilo koje odgovara.',
   p_ai_personal_keys: 'Osobni API ključevi', p_ai_personal_keys_d: 'Tko smije dodati vlastite ključeve pružatelja.', po_ai_personal_keys_off: 'Nitko', po_ai_personal_keys_admins: 'Administratori', po_ai_personal_keys_all: 'Svi',
-  p_ai_provider_kinds: 'Dopuštene vrste pružatelja', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode', p_ai_provider_kinds_ph: 'anthropic,azure',
+  p_ai_provider_kinds: 'Dopuštene vrste pružatelja', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode (Zen), opencode_go (Go pretplata)', p_ai_provider_kinds_ph: 'anthropic,azure',
   p_ai_models: 'Dopušteni modeli', p_ai_models_d: 'Uzorci odvojeni zarezom (claude-*); prazno = svi modeli pružatelja.', p_ai_models_ph: 'claude-*',
   p_ai_redact_output: 'Rediguj izlaz', p_ai_redact_output_d: 'Zamijeni tajne (lozinke, tokene, privatne ključeve …) prije slanja izlaza pružatelju. Transkripti i audit uvijek su redigirani.',
   p_ai_share_notes: 'Dopusti dijeljenje bilješki', p_ai_share_notes_d: 'Korisnici mogu izabrati da asistentu pošalju bilješke veze.',
@@ -1121,8 +1125,8 @@ Object.assign(LANGS.hr, {
   }
 
   // ── providers (personal and organisation) ─────────────
-  const KINDS = ['anthropic', 'openai', 'azure', 'bedrock', 'vertex', 'openai_compatible', 'opencode'];
-  const MODEL_HINT = {anthropic: 'claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5', bedrock: 'anthropic.claude-opus-5-5', vertex: 'claude-opus-5-5', opencode: 'big-pickle'};
+  const KINDS = ['anthropic', 'openai', 'azure', 'bedrock', 'vertex', 'openai_compatible', 'opencode', 'opencode_go'];
+  const MODEL_HINT = {anthropic: 'claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5', bedrock: 'anthropic.claude-opus-5-5', vertex: 'claude-opus-5-5', opencode: 'big-pickle', opencode_go: 'kimi-k3, glm-5.3, deepseek-v4.1-flash, claude-haiku-5-5'};
 
   function provForm(p, scope) {
     p = p || {kind: 'anthropic', enabled: true, refusal_fallback: true};
@@ -1134,8 +1138,8 @@ Object.assign(LANGS.hr, {
         <div class="field"><label>${esc(t('ai_prov_kind'))}</label><select id="aipf-kind" onchange="wrmAI.formKind()" ${p.id ? 'disabled' : ''}>${kinds.map(k => `<option value="${k}" ${k === p.kind ? 'selected' : ''}>${esc(t('ai_kind_' + k))}</option>`).join('')}</select></div></div>
       ${f('models', t('ai_prov_models'), p.models, 'text', MODEL_HINT[p.kind] || '')}
       ${f('default_model', t('ai_prov_default'), p.default_model)}
-      <div class="kind-anthropic kind-openai kind-azure kind-bedrock kind-openai_compatible kind-opencode">${sec('api_key', t('ai_prov_key') + ' / ' + t('ai_prov_bkey'), p.has_api_key)}</div>
-      <div class="kind-anthropic kind-openai kind-bedrock kind-vertex kind-opencode">${f('base_url', t('ai_prov_base'), p.base_url)}</div>
+      <div class="kind-anthropic kind-openai kind-azure kind-bedrock kind-openai_compatible kind-opencode kind-opencode_go">${sec('api_key', t('ai_prov_key') + ' / ' + t('ai_prov_bkey'), p.has_api_key)}</div>
+      <div class="kind-anthropic kind-openai kind-bedrock kind-vertex kind-opencode kind-opencode_go">${f('base_url', t('ai_prov_base'), p.base_url)}</div>
       <div class="kind-azure kind-openai_compatible">${f('base_url2', p.kind === 'azure' ? t('ai_prov_endpoint') : t('ai_prov_base_req'), p.base_url)}</div>
       <div class="kind-azure ai-row">${f('deployment', t('ai_prov_deployment'), p.deployment)}${f('api_version', t('ai_prov_apiver'), p.api_version, 'text', '2024-10-21')}</div>
       <div class="kind-bedrock kind-vertex ai-row">${f('region', t('ai_prov_region'), p.region, 'text', 'eu-central-1 / global')}<div class="field"><label>${esc(t('ai_prov_api'))}</label><select id="aipf-api_mode"></select></div></div>
@@ -1222,6 +1226,7 @@ Object.assign(LANGS.hr, {
     {id: 'anthropic', kind: 'anthropic', model: 'claude-sonnet-5-5, claude-opus-5-5, claude-haiku-4-5', key: true},
     {id: 'openai', kind: 'openai', model: 'gpt-5, gpt-5-mini, gpt-4.1, gpt-4.1-mini', key: true},
     {id: 'opencode', kind: 'opencode', model: 'big-pickle', key: false},
+    {id: 'opencode_go', kind: 'opencode_go', model: 'kimi-k3', key: true},
     {id: 'gemini', kind: 'openai_compatible', base: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite', key: true},
     {id: 'groq', kind: 'openai_compatible', base: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile, openai/gpt-oss-120b, openai/gpt-oss-20b', key: true},
     {id: 'openrouter', kind: 'openai_compatible', base: 'https://openrouter.ai/api/v1', model: 'anthropic/claude-sonnet-4.5, openai/gpt-5, google/gemini-2.5-pro', key: true},

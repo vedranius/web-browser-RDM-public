@@ -496,6 +496,16 @@ func aiListModels(ctx context.Context, p aiProvider) ([]string, error) {
 			out = append(out, m.ID)
 		}
 		return out, nil
+	case "opencode_go":
+		list, err := opencodeGoListModels(ctx, p)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]string, 0, len(list))
+		for _, m := range list {
+			out = append(out, m.ID)
+		}
+		return out, nil
 	default:
 		return nil, fmt.Errorf("this provider type has no model list; type the model or deployment name")
 	}
