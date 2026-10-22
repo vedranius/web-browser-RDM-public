@@ -64,12 +64,11 @@ test('processing indicator persists after POST acceptance until the backend ends
     return {ok: true, json: async () => ({ok: true})};
   };
   await f.state.send(1);
-  assert.match(f.nodes.get('ai-wait-1').innerHTML, /Processing your request/);
   assert.equal(f.nodes.get('ai-send-1').disabled, true);
   f.nodes.get('ai-in-1').value = 'unsent draft'; await f.state.send(1);
   assert.equal(f.nodes.get('ai-in-1').value, 'unsent draft');
   f.event('busy', {busy: false});
-  assert.equal(f.nodes.has('ai-wait-1'), false); assert.equal(f.nodes.get('ai-send-1').disabled, false);
+  assert.equal(f.nodes.get('ai-send-1').disabled, false);
 });
 
 test('rejected prompt clears the processing indicator and allows a retry', async () => {

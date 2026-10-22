@@ -792,7 +792,7 @@ Object.assign(LANGS.hr, {
   // below it; it is the overview you can ignore.
   function workLog(id) {
     const b = $('aib-' + id);
-    if (!b) return null;
+    if (!b || typeof b.querySelector !== 'function') return null;
     let el = b.querySelector('[data-worklog]:not([data-done])');
     if (!el) {
       b.insertAdjacentHTML('beforeend', `<details class="ai-worklog" data-worklog open style="margin:6px 0;border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--bg2);">
@@ -816,7 +816,8 @@ Object.assign(LANGS.hr, {
 
   function workLogDone(id) {
     const b = $('aib-' + id);
-    const el = b && b.querySelector('[data-worklog]:not([data-done])');
+    if (!b || typeof b.querySelector !== 'function') return;
+    const el = b.querySelector('[data-worklog]:not([data-done])');
     if (!el) return;
     const n = el.querySelectorAll('[data-steps] div').length;
     el.querySelector('[data-sum]').textContent = t('ai_worklog') + (n ? ' · ' + tf('ai_worklog_steps', {n}) : '');
@@ -841,8 +842,7 @@ Object.assign(LANGS.hr, {
         else if (st.cur && d.text === '') st.cur.remove(); // parsed tool JSON has no final assistant text
         st.cur = null; workLogDone(id);
         if (window.wrmSound) wrmSound('reply');
-        break;
-      case 'tool_call': {
+        break;      case 'tool_call': {
         workLogStep(id, d.tool ? d.tool + (d.display ? ' · ' + String(d.display) : '') : String(d.display || ''));
         if (st.cards[d.call_id]) break; // an approval already made the card
         const el = add(id, `<div class="ai-card ${d.decision === 'deny' ? 'deny' : ''}" id="aic-${id}-${esc(d.call_id)}">
