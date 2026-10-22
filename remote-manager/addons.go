@@ -416,6 +416,14 @@ func addonInstall(w http.ResponseWriter, r *http.Request, adminID int) {
 		jsonError(w, "The archive is larger than 20 MB", 413)
 		return
 	}
+	source := strings.TrimSpace(r.URL.Query().Get("source"))
+	addonInstallBytes(w, r, adminID, body, source)
+}
+
+// addonInstallBytes validates and installs one archive. The upload endpoint and
+// the community library share it, so a downloaded addon passes exactly the same
+// checks as a hand-picked ZIP.
+func addonInstallBytes(w http.ResponseWriter, r *http.Request, adminID int, body []byte, source string) {
 	m, prefix, err := addonReadArchive(body)
 	if err != nil {
 		jsonError(w, err.Error(), 400)
@@ -467,7 +475,6 @@ func addonInstall(w http.ResponseWriter, r *http.Request, adminID int) {
 	}
 	os.RemoveAll(old)
 	manifest, _ := json.Marshal(m)
-	source := strings.TrimSpace(r.URL.Query().Get("source"))
 	if len(source) > 300 {
 		source = source[:300]
 	}
@@ -602,6 +609,26 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 		list := addonRecords(!admin)
 		sort.Slice(list, func(i, j int) bool { return list[i].Name < list[j].Name })
 		jsonOK(w, map[string]interface{}{"addons": list, "capabilities": addonCapabilities})
+		return
+	}
+	if parts[0] == "community" {
+		if len(parts) == 1 && r.Method == http.MethodGet {
+			addonCommunityListHandler(w, r)
+			return
+		}
+		if len(parts) == 2 && parts[1] == "install" {
+			if r.Method != http.MethodPost {
+				jsonError(w, "Method not allowed", 405)
+				return
+			}
+			if !admin {
+				jsonError(w, "Admin access required", 403)
+				return
+			}
+			addonCommunityInstallHandler(w, r, userID)
+			return
+		}
+		jsonError(w, "Not found", 404)
 		return
 	}
 	if parts[0] == "install" {

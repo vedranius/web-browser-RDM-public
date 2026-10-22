@@ -45,6 +45,14 @@ Object.assign(LANGS.en, {
   add_ai_copy_fail: 'The clipboard is not available; the text is selected, copy it with Ctrl+C.',
   add_ai_open: 'Open assistant',
   add_ai_close: 'Close',
+  add_community: 'Community library',
+  add_community_d: 'Addons published in the public repository "WRM Pro - community public addons". The badge is the trust level recorded in the index; every download must match its SHA-256 before anything is installed.',
+  add_community_none: 'The community index is empty or cannot be reached.',
+  add_community_install: 'Install from community',
+  add_trust_official: 'Official',
+  add_trust_reviewed: 'Reviewed',
+  add_trust_community: 'Community',
+  add_trust_unverified: 'Unverified',
 });
 
 Object.assign(LANGS.hr, {
@@ -85,12 +93,21 @@ Object.assign(LANGS.hr, {
   add_ai_copy_fail: 'Međuspremnik nije dostupan; tekst je označen, kopirajte ga s Ctrl+C.',
   add_ai_open: 'Otvori asistenta',
   add_ai_close: 'Zatvori',
+  add_community: 'Zajednica',
+  add_community_d: 'Dodaci objavljeni u javnom repozitoriju "WRM Pro - community public addons". Značka je razina povjerenja iz indeksa; svako preuzimanje mora odgovarati svom SHA-256 prije nego se išta instalira.',
+  add_community_none: 'Indeks zajednice je prazan ili nedostupan.',
+  add_community_install: 'Instaliraj iz zajednice',
+  add_trust_official: 'Službeno',
+  add_trust_reviewed: 'Pregledano',
+  add_trust_community: 'Zajednica',
+  add_trust_unverified: 'Neprovjereno',
 });
 
 (function () {
   const $ = id => document.getElementById(id);
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(String(b)); return s; };
   let list = [], caps = {}, loaded = false, loading = null;
+  let community = [], trust = {}, communityError = '';
   const openWins = {};
 
   async function api(method, url, body) {
@@ -109,6 +126,47 @@ Object.assign(LANGS.hr, {
       loaded = true;
     }).finally(() => { loading = null; });
     return loading;
+  }
+
+  // ── community library ────────────────────────────────
+  async function loadCommunity() {
+    try {
+      const d = await api('GET', '/api/addons/community');
+      community = d.addons || [];
+      trust = d.trust || {};
+      communityError = '';
+    } catch (e) {
+      community = [];
+      communityError = e.message;
+    }
+  }
+
+  function communityHTML() {
+    const admin = !!(typeof currentUser !== 'undefined' && currentUser && currentUser.is_admin);
+    return `<div class="adm-h">${esc(t('add_community'))}</div>
+      <div class="hint-box warn">${esc(t('add_community_d'))}</div>
+      ${community.length ? community.map(a => `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <b>${esc(a.name)}</b> ${pill(a.version)}
+          <span class="pill ${a.trust === 'official' ? 'ok' : a.trust === 'unverified' ? 'warn' : ''}">${esc(t('add_trust_' + a.trust))}</span>
+          ${(a.capabilities || []).map(c => pill(c)).join(' ')}
+          <span style="flex:1;"></span>
+          ${admin ? `<button class="btn-sec btn-sm" onclick="wrmAddons.communityInstall('${esc(a.id)}')">${esc(t('add_community_install'))}</button>` : ''}
+        </div>
+        ${a.description ? `<div class="sub" style="font-size:11.5px;color:var(--text2);margin-top:4px;">${esc(a.description)}</div>` : ''}
+        <div class="sub" style="font-size:10.5px;color:var(--text3);margin-top:2px;">${esc(a.id)} · ${esc(a.license || '')} · ${esc(trust[a.trust] || '')}</div>
+      </div>`).join('') : `<div class="sub" style="color:var(--text3);font-size:11.5px;">${esc(communityError || t('add_community_none'))}</div>`}`;
+  }
+
+  async function communityInstall(id) {
+    const a = community.find(x => x.id === id);
+    try {
+      await api('POST', '/api/addons/community/install', {id});
+      await loadCommunity();
+      await after(tf('add_installed', {name: a ? a.name : id}));
+    } catch (e) {
+      showToast(e.message, 'error', 8000);
+    }
   }
 
   // ── themes ───────────────────────────────────────────
@@ -254,7 +312,8 @@ Object.assign(LANGS.hr, {
       ${install}
       ${aiBox}
       <div class="adm-h">${esc(t('tab_addons'))}</div>
-      ${list.length ? list.map(rowHTML).join('') : `<div class="sub" style="color:var(--text3);font-size:11.5px;">${esc(t('add_none'))}</div>`}`;
+      ${list.length ? list.map(rowHTML).join('') : `<div class="sub" style="color:var(--text3);font-size:11.5px;">${esc(t('add_none'))}</div>`}
+      ${communityHTML()}`;
   }
 
   async function pane() {
@@ -262,6 +321,7 @@ Object.assign(LANGS.hr, {
     if (!el) return;
     el.innerHTML = `<div class="sub" style="color:var(--text3);">…</div>`;
     try { await refresh(); } catch (e) { el.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
+    await loadCommunity();
     render();
   }
 
@@ -430,7 +490,7 @@ Object.assign(LANGS.hr, {
     if ($('addons-pane') && $('st-addons') && $('st-addons').classList.contains('active')) render();
   }
 
-  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, applyThemes, reload: after};
+  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, communityInstall, applyThemes, reload: after};
 
   if (typeof window.initApp === 'function' && !window.initApp.__addons) {
     const orig = window.initApp;
