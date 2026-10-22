@@ -998,6 +998,7 @@ func mdDeployOne(dc *mdDeployContext, h mdHost, t mdDeployTarget) mdOutcome {
 	}
 	out.Sent, out.Deleted = len(done.news)+len(done.changed), len(done.deleted)
 	mdHistoryFiles(&rec, done.news, done.changed, done.deleted)
+	mdHistoryEOL(&rec, t.plan, done.changed)
 	var note *string
 	if t.postDeploy != nil && strings.TrimSpace(*t.postDeploy) != "" {
 		if n := mdRunPostDeploy(h, d, *t.postDeploy, j); n != "" {

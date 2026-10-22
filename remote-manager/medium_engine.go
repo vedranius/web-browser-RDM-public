@@ -68,6 +68,7 @@ type mdChange struct {
 	Kind       string `json:"kind"`   // file | dir | symlink | other (a deleted symlink is "file", like rsync)
 	Link       string `json:"link_target,omitempty"`
 	ServerKind string `json:"server_kind,omitempty"` // what the server has there when it is replaced or deleted
+	EOL        bool   `json:"eol_only,omitempty"`    // changed only in line endings (CRLF/LF)
 }
 
 func (c mdChange) key() string { return c.Action + " " + c.Path }

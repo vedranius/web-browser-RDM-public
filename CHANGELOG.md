@@ -1,3 +1,16 @@
+## [12.9.0] - 2026-10-22
+
+### Added
+- **Medium: file details.** Every changed file of a native plan has a **Details** button. It shows what the deployment changes in that file: the server's version against the branch, line by line (the same comparison as the Git workspace), with notes for new and deleted files, symbolic links, directories, binary files and files above 512 KiB. Opening a file is audited (`git.medium_native_diff`).
+- **Medium: line-ending marking (`eol_only`).** A changed file that differs from the branch only in CRLF/LF is marked *line endings only*. The server computes the hash without `\r` in one SSH command (`tr -d '\r' | sha256sum`; over SFTP when `sha256sum` is missing); the plan counts these files separately and the deployment record writes `counts.eol` like the original tool. The plan itself does not change: the deployment still sends those files, so the difference disappears.
+- **Medium: deploy-config editor.** *Edit deploy-config* opens `servers.yaml`, `environments.yaml` and `projects/*.yaml` as text. **Check** validates the whole configuration with the edit; **Save** writes the file only when the configuration still loads, and only when nobody changed it since it was opened. Comments, layout and CRLF line endings are kept. Project files can be created and deleted. Editing needs the `medium_native` policy and is audited (`git.medium_config_edit`) and recorded in the Medium activity log.
+
+### Changed
+- ROADMAP: the switch-over continues in v12.9.1 (config Git actions, `build_user`, native engine as the default, Docker runtime optional).
+
+### Upgrade
+Replace the executable or container and keep the database and encryption key. No database migration is required.
+
 ## [12.8.1] - 2026-10-21
 
 ### Security

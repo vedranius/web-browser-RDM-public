@@ -753,6 +753,34 @@ Object.assign(LANGS.hr, {
   mn_lock_stale: 'starije od {0} min, smije se otpustiti', mn_lock_young: 'smije se otpustiti nakon {0} min', mn_lock_release: 'Otpusti lock',
   mn_lock_release_confirm: 'Otpustiti lock korisnika {0} na {1}? Samo ako tamo ne radi nijedan deploy.', mn_lock_released: 'Lock otpušten',
 });
+Object.assign(LANGS.en, {
+  mn_eol: 'line endings only', mn_eol_hint: 'Differs from the branch only in line endings (CRLF/LF). The deployment still sends it, so the difference disappears.', mn_eol_n: '{0} of them line endings only',
+  mn_details: 'Details', mn_diff_title: 'What the deployment changes', mn_diff_server: 'on the server', mn_diff_source: 'in the branch', mn_diff_counts: '+{0} −{1} lines',
+  mn_diff_missing_srv: 'The file is not on the server yet; the deployment adds it.', mn_diff_missing_src: 'The file is not in the branch; the deployment deletes it (it goes into the backup first).',
+  mn_diff_binary: 'Binary file: there is no line comparison.', mn_diff_large: 'The file is larger than 512 KiB: there is no line comparison.', mn_diff_none: 'No differences in the lines.',
+  mn_diff_eol: 'Only the line endings differ (CRLF on one side, LF on the other). The deployment sends the file and the difference disappears.', mn_diff_symlink: 'Symbolic link → {0}', mn_diff_dir: 'A directory is there.',
+  mn_diff_trunc: 'The comparison is shortened to its first 5000 lines.', mn_diff_crlf: 'Line endings: server {0}, branch {1}.',
+  mn_cfg_title: 'deploy-config', mn_cfg_open: 'Edit deploy-config', mn_cfg_intro: 'Edit servers.yaml, environments.yaml and the project files here. WRM saves a file only when the whole configuration still loads, and keeps your comments, layout and line endings as they are.',
+  mn_cfg_file: 'File', mn_cfg_check: 'Check', mn_cfg_save: 'Save', mn_cfg_new: 'New project', mn_cfg_new_name: 'Name of the new project file (letters, digits, . _ -; without .yaml)',
+  mn_cfg_delete: 'Delete project file', mn_cfg_delete_confirm: 'Delete {0}? The project disappears from deploy-config; the servers are not changed.', mn_cfg_ok: 'Valid: {0} servers, {1} environments, {2} projects.',
+  mn_cfg_saved: 'Saved; the configuration is valid.', mn_cfg_deleted: 'Deleted.', mn_cfg_not_saved: 'Not saved, the configuration would not load:', mn_cfg_read_only: 'Read only: the policy medium_native does not allow editing deploy-config in WRM.',
+  mn_cfg_discard: 'Discard the unsaved changes?', mn_cfg_invalid_now: 'The current configuration does not load:', mn_cfg_crlf: 'This file uses CRLF line endings; WRM keeps them when saving.', mn_cfg_new_note: 'A new project file: save it to create it.',
+  gm_op_config_edit: 'deploy-config edit',
+});
+Object.assign(LANGS.hr, {
+  mn_eol: 'samo završeci redaka', mn_eol_hint: 'Od grane se razlikuje samo u završecima redaka (CRLF/LF). Deploy je svejedno šalje, pa razlika nestaje.', mn_eol_n: 'od toga {0} samo završeci redaka',
+  mn_details: 'Detalji', mn_diff_title: 'Što deploy mijenja', mn_diff_server: 'na serveru', mn_diff_source: 'u grani', mn_diff_counts: '+{0} −{1} redaka',
+  mn_diff_missing_srv: 'Datoteke još nema na serveru; deploy je dodaje.', mn_diff_missing_src: 'Datoteke nema u grani; deploy je briše (prije toga ide u backup).',
+  mn_diff_binary: 'Binarna datoteka: nema usporedbe po redcima.', mn_diff_large: 'Datoteka je veća od 512 KiB: nema usporedbe po redcima.', mn_diff_none: 'Nema razlika u redcima.',
+  mn_diff_eol: 'Razlikuju se samo završeci redaka (na jednoj strani CRLF, na drugoj LF). Deploy šalje datoteku i razlika nestaje.', mn_diff_symlink: 'Simbolička poveznica → {0}', mn_diff_dir: 'Na tom mjestu je mapa.',
+  mn_diff_trunc: 'Usporedba je skraćena na prvih 5000 redaka.', mn_diff_crlf: 'Završeci redaka: server {0}, grana {1}.',
+  mn_cfg_title: 'deploy-config', mn_cfg_open: 'Uredi deploy-config', mn_cfg_intro: 'Ovdje uređuješ servers.yaml, environments.yaml i datoteke projekata. WRM sprema datoteku samo ako se cijela konfiguracija i dalje učitava, a komentare, raspored i završetke redaka ostavlja kakve si napisao.',
+  mn_cfg_file: 'Datoteka', mn_cfg_check: 'Provjeri', mn_cfg_save: 'Spremi', mn_cfg_new: 'Novi projekt', mn_cfg_new_name: 'Ime nove datoteke projekta (slova, brojke, . _ -; bez .yaml)',
+  mn_cfg_delete: 'Obriši datoteku projekta', mn_cfg_delete_confirm: 'Obrisati {0}? Projekt nestaje iz deploy-configa; serveri se ne mijenjaju.', mn_cfg_ok: 'Ispravno: servera {0}, okolina {1}, projekata {2}.',
+  mn_cfg_saved: 'Spremljeno; konfiguracija je ispravna.', mn_cfg_deleted: 'Obrisano.', mn_cfg_not_saved: 'Nije spremljeno, konfiguracija se ne bi učitala:', mn_cfg_read_only: 'Samo čitanje: politika medium_native ne dopušta uređivanje deploy-configa u WRM-u.',
+  mn_cfg_discard: 'Odbaciti nespremljene izmjene?', mn_cfg_invalid_now: 'Trenutna konfiguracija se ne učitava:', mn_cfg_crlf: 'Ova datoteka koristi CRLF završetke redaka; WRM ih zadržava pri spremanju.', mn_cfg_new_note: 'Nova datoteka projekta: spremi je da se stvori.',
+  gm_op_config_edit: 'uređivanje deploy-configa',
+});
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set(),
     checkVMD: (() => { try { return localStorage.getItem('wrm_git_check_vmd') === '1'; } catch (_) { return false; } })()};
@@ -3381,7 +3409,7 @@ Object.assign(LANGS.hr, {
   function nativePaint() {
     const c = MN.cfg, box = $('mn-body'); if (!box || !c) return;
     const refresh = `<button class="btn-sec" onclick="gitWorkspace.nativeLoad()">↻ ${esc(t('git_refresh'))}</button>`;
-    if (!c.ok) { box.innerHTML = `<p><span class="g-st s-error">${esc(c.error)}</span></p><div class="g-bar">${refresh}</div>`; return; }
+    if (!c.ok) { box.innerHTML = `<p><span class="g-st s-error">${esc(c.error)}</span></p><div class="g-bar">${refresh}<button class="btn-sec" onclick="gitWorkspace.nativeConfig()">📝 ${esc(t('mn_cfg_open'))}</button></div>`; return; }
     const conns = c.connections || [];
     const rows = c.config.servers.map(s => {
       const l = (c.links || {})[s.name];
@@ -3396,7 +3424,8 @@ Object.assign(LANGS.hr, {
       <div id="mn-dests" class="g-bar"></div><div id="mn-engine" class="g-bar"></div><div id="mn-build" class="g-bar"></div><p id="mn-note" class="g-mut"></p>
       <div class="g-bar"><button id="mn-preview" onclick="gitWorkspace.nativePlan(false)">${esc(t('mn_preview'))}</button><button class="btn-sec" id="mn-compare" onclick="gitWorkspace.nativePlan(true)" ${c.running ? '' : 'disabled'} title="${esc(c.running ? '' : t('mn_needs_running'))}">${esc(t('mn_compare'))}</button>${refresh}</div>
       <div id="mn-result" role="status" aria-live="polite"></div><div id="mn-job" role="status" aria-live="polite"></div>
-      <h4>${esc(t('mn_hist_title'))}</h4><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.nativeHistory()">${esc(t('mn_hist_load'))}</button></div><div id="mn-hist"></div>`;
+      <h4>${esc(t('mn_hist_title'))}</h4><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.nativeHistory()">${esc(t('mn_hist_load'))}</button></div><div id="mn-hist"></div>
+      <h4>${esc(t('mn_cfg_title'))}</h4><p class="g-mut">${esc(t('mn_cfg_intro'))}</p><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.nativeConfig()">📝 ${esc(t('mn_cfg_open'))}</button></div>`;
     nativeProject();
     nativeResumeJob();
   }
@@ -3512,9 +3541,9 @@ Object.assign(LANGS.hr, {
     } catch (e) { out.textContent = String(e); }
     if ($('mn-compare')) { nativeProject(); $('mn-compare').disabled = !MN.cfg.running; }
   }
-  function mnChanges(list, limit, pick) {
+  function mnChanges(list, limit, pick, server) {
     const shown = list.slice(0, limit);
-    const rows = shown.map(c => `<tr>${pick ? `<td><input type="checkbox" data-mn-ex="${esc(c.path)}" aria-label="${esc(t('mn_exclude') + ' ' + c.path)}" title="${esc(t('mn_exclude'))}"></td>` : ''}<td><span class="g-st s-e${c.action === 'deleted' ? 'removed' : c.action}">${esc(t('mn_' + c.action))}</span></td><td class="g-mono">${esc(c.path)}${c.link_target ? ' → ' + esc(c.link_target) : ''}</td><td class="g-mut">${esc(c.kind)}${c.server_kind && c.server_kind !== c.kind ? ' (' + esc(c.server_kind) + ')' : ''}</td></tr>`).join('');
+    const rows = shown.map(c => `<tr>${pick ? `<td><input type="checkbox" data-mn-ex="${esc(c.path)}" aria-label="${esc(t('mn_exclude') + ' ' + c.path)}" title="${esc(t('mn_exclude'))}"></td>` : ''}<td><span class="g-st s-e${c.action === 'deleted' ? 'removed' : c.action}">${esc(t('mn_' + c.action))}</span>${c.eol_only ? ` <span class="g-st s-pending" title="${esc(t('mn_eol_hint'))}">${esc(t('mn_eol'))}</span>` : ''}</td><td class="g-mono">${esc(c.path)}${c.link_target ? ' → ' + esc(c.link_target) : ''}</td><td class="g-mut">${esc(c.kind)}${c.server_kind && c.server_kind !== c.kind ? ' (' + esc(c.server_kind) + ')' : ''}</td>${server ? `<td>${c.kind === 'dir' || c.path.endsWith('/') ? '' : `<button class="btn-sec btn-sm" style="white-space:nowrap" data-mn-diff-s="${esc(server)}" data-mn-diff-p="${esc(c.path)}" onclick="gitWorkspace.nativeDiff(this)">${esc(t('mn_details'))}</button>`}</td>` : ''}</tr>`).join('');
     return `<div class="g-scroll"><table><tbody>${rows}</tbody></table></div>${list.length > limit ? `<p class="g-mut">${esc(mnFmt('mn_more', list.length - limit))}</p>` : ''}`;
   }
   function nativeRender(run) {
@@ -3543,7 +3572,7 @@ Object.assign(LANGS.hr, {
       html += `<div class="g-card"><h4 class="g-mono">${esc(s.label)}</h4><p class="g-mut">${esc(t('mn_connection'))}: ${esc(s.connection || '-')}${s.platform ? ' · ' + esc(s.platform + '/' + s.arch) : ''}${s.post_deploy ? ` · ${esc(t('mn_post_deploy'))}: <span class="g-mono">${esc(s.post_deploy)}</span>` : ''}</p>`;
       if (s.error) html += `<p><span class="g-st s-error">${esc(s.error)}</span></p>`;
       else {
-        html += `<p>${['new', 'changed', 'deleted'].map(a => `<span class="g-st s-e${a === 'deleted' ? 'removed' : a}">${s.counts[a]} ${esc(t('mn_' + a))}</span>`).join(' ')}</p>`;
+        html += `<p>${['new', 'changed', 'deleted'].map(a => `<span class="g-st s-e${a === 'deleted' ? 'removed' : a}">${s.counts[a]} ${esc(t('mn_' + a))}</span>`).join(' ')}${s.counts.eol ? ` <span class="g-mut" title="${esc(t('mn_eol_hint'))}">(${esc(mnFmt('mn_eol_n', s.counts.eol))})</span>` : ''}</p>`;
         if (!s.exists) html += `<p class="g-mut">${esc(t('mn_missing_dir'))}</p>`;
       }
       if (s.reference_error) html += `<p>${esc(t('mn_ref_error'))}: <span class="g-st s-error">${esc(s.reference_error)}</span></p>`;
@@ -3563,7 +3592,7 @@ Object.assign(LANGS.hr, {
         if (st.history && st.history.length) html += `<details><summary>${esc(t('mn_history'))} (${st.history.length})</summary><div class="g-scroll"><table><tbody>${st.history.slice(0, 20).map(h => `<tr><td class="g-mono">${esc(h.deployed_at || '')}</td><td>${esc(h.action || 'DEPLOY')}</td><td class="g-mono">${esc(h.version || h.branch || '')}</td><td>${esc(h.deployed_by || '')}</td><td class="g-mut">${esc(h.server || '')}</td></tr>`).join('')}</tbody></table></div></details>`;
       }
       if (s.excluded_for && s.excluded_for.length) html += `<p class="g-mut">${esc(t('mn_excluded_on'))}: <span class="g-mono">${esc(s.excluded_for.join('  '))}</span></p>`;
-      if (s.changes.length) html += `<details${s.changes.length <= 30 ? ' open' : ''}><summary>${esc(t('mn_changes'))} (${s.changes.length})</summary>${mnChanges(s.changes, 500, r.deployable)}</details>`;
+      if (s.changes.length) html += `<details${s.changes.length <= 30 ? ' open' : ''}><summary>${esc(t('mn_changes'))} (${s.changes.length})</summary>${mnChanges(s.changes, 500, r.deployable, s.server)}</details>`;
       else if (!s.error) html += `<p class="g-mut">${esc(t('mn_no_changes'))}</p>`;
       html += `<details><summary>${esc(t('mn_excludes'))} (${s.excludes.length})</summary><p class="g-mono">${esc(s.excludes.join('  '))}</p></details></div>`;
     }
@@ -3696,6 +3725,106 @@ Object.assign(LANGS.hr, {
       $('mn-job').scrollIntoView({block: 'nearest'});
     } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 10000); }
   }
+  // File details: the server's version against the branch, for one change of the plan.
+  async function nativeDiff(btn) {
+    const run = MN.run; if (!run || !run.id) return;
+    const server = btn.dataset.mnDiffS, path = btn.dataset.mnDiffP;
+    modal(`<h3>${esc(t('mn_diff_title'))}: <span class="g-mono">${esc(path)}</span></h3><div class="hint-box">⏳</div>`);
+    let v;
+    try {
+      const r = await fetch('/api/git/medium/native/plan/' + encodeURIComponent(run.id) + '/diff?server=' + encodeURIComponent(server) + '&path=' + encodeURIComponent(path));
+      if (!r.ok) throw new Error(await apiError(r));
+      v = await r.json();
+    } catch (e) { modal(`<h3>${esc(t('mn_diff_title'))}: <span class="g-mono">${esc(path)}</span></h3><div class="hint-box bad">${esc(String(e).replace(/^Error: /, ''))}</div><div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('close'))}</button></div>`); return; }
+    const side = (x, label) => x.state === 'symlink' ? `${label}: ${esc(mnFmt('mn_diff_symlink', x.link || ''))}` : x.state === 'dir' ? `${label}: ${esc(t('mn_diff_dir'))}` : '';
+    const notes = [side(v.server_side, esc(t('mn_diff_server'))), side(v.source_side, esc(t('mn_diff_source')))].filter(Boolean);
+    if (v.server_side.state === 'missing') notes.push(esc(t('mn_diff_missing_srv')));
+    if (v.source_side.state === 'missing') notes.push(esc(t('mn_diff_missing_src')));
+    if (v.eol_only) notes.push(esc(t('mn_diff_eol')));
+    else if (v.server_side.state === 'text' && v.source_side.state === 'text' && v.server_side.crlf !== v.source_side.crlf) notes.push(esc(mnFmt('mn_diff_crlf', v.server_side.crlf ? 'CRLF' : 'LF', v.source_side.crlf ? 'CRLF' : 'LF')));
+    if (v.truncated) notes.push(esc(t('mn_diff_trunc')));
+    let body;
+    if ([v.server_side.state, v.source_side.state].includes('binary')) body = `<div class="hint-box">${esc(t('mn_diff_binary'))}</div>`;
+    else if ([v.server_side.state, v.source_side.state].includes('too_large')) body = `<div class="hint-box">${esc(t('mn_diff_large'))}</div>`;
+    else if (!v.lines.length) body = !v.eol_only && (v.server_side.state === 'text' || v.source_side.state === 'text') ? `<div class="hint-box">${esc(t('mn_diff_none'))}</div>` : '';
+    else body = '<div class="g-diff">' + v.lines.map(l => l.op === '@' ? `<div class="d-hunk">@@ -${l.a} +${l.b} @@</div>` : `<div class="${l.op === '+' ? 'd-add' : l.op === '-' ? 'd-del' : ''}">${esc(l.op + ' ' + l.s)}</div>`).join('') + '</div>';
+    modal(`<h3>${esc(t('mn_diff_title'))}: <span class="g-mono">${esc(v.path)}</span></h3>
+      <p class="g-mut">${esc(v.server)} · <span class="g-st s-e${v.action === 'deleted' ? 'removed' : v.action}">${esc(t('mn_' + v.action))}</span> · ${esc(mnFmt('mn_diff_counts', v.added, v.removed))} · <span class="d-del">−</span> ${esc(t('mn_diff_server'))}, <span class="d-add">+</span> ${esc(t('mn_diff_source'))}</p>
+      ${notes.length ? `<div class="hint-box">${notes.join('<br>')}</div>` : ''}${body}
+      <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('close'))}</button></div>`);
+  }
+
+  // deploy-config editor: raw YAML, saved only when the whole configuration loads.
+  const MC = {files: [], name: '', hash: '', text: '', crlf: false, canEdit: false, isNew: false};
+  const mcDirty = () => { const ta = $('mc-text'); return !!ta && ta.value !== MC.text; };
+  async function nativeConfig(name) {
+    try {
+      const r = await fetch('/api/git/medium/native/config/files'); if (!r.ok) throw new Error(await apiError(r));
+      const v = await r.json(); MC.files = v.files || []; MC.canEdit = !!v.can_edit; MC.valid = v.valid; MC.error = v.error || '';
+    } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 8000); return; }
+    const pick = name && MC.files.some(f => f.name === name) ? name : (MC.files.find(f => f.name === MC.name) ? MC.name : (MC.files[0] || {}).name);
+    if (!pick) { MC.name = ''; MC.text = ''; MC.hash = ''; mcPaint(); return; }
+    await mcOpen(pick, true);
+  }
+  async function mcOpen(name, force) {
+    if (!force && mcDirty() && !confirm(t('mn_cfg_discard'))) { if ($('mc-file')) $('mc-file').value = MC.name; return; }
+    try {
+      const r = await fetch('/api/git/medium/native/config/file?name=' + encodeURIComponent(name)); if (!r.ok) throw new Error(await apiError(r));
+      const v = await r.json(); MC.name = v.name; MC.hash = v.hash; MC.text = (v.text || '').replace(/\r\n/g, '\n'); MC.crlf = !!v.crlf; MC.isNew = false;
+    } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 8000); return; }
+    mcPaint();
+  }
+  function mcPaint(msg) {
+    const opts = MC.files.map(f => `<option value="${esc(f.name)}" ${f.name === MC.name ? 'selected' : ''}>${esc(f.name)}</option>`).join('') + (MC.isNew ? `<option value="${esc(MC.name)}" selected>${esc(MC.name)}</option>` : '');
+    const ro = !MC.canEdit;
+    modal(`<h3>📝 ${esc(t('mn_cfg_title'))}</h3><p class="g-mut">${esc(t('mn_cfg_intro'))}</p>
+      ${MC.valid === false ? `<div class="hint-box bad">${esc(t('mn_cfg_invalid_now'))} ${esc(MC.error)}</div>` : ''}${ro ? `<div class="hint-box warn">${esc(t('mn_cfg_read_only'))}</div>` : ''}
+      <div class="g-bar"><label>${esc(t('mn_cfg_file'))} <select id="mc-file" onchange="gitWorkspace.mcOpen(this.value)">${opts}</select></label>${ro ? '' : `<button class="btn-sec btn-sm" onclick="gitWorkspace.mcNew()">＋ ${esc(t('mn_cfg_new'))}</button>`}</div>
+      ${MC.crlf ? `<p class="g-mut">${esc(t('mn_cfg_crlf'))}</p>` : ''}${MC.isNew ? `<p class="g-mut">${esc(t('mn_cfg_new_note'))}</p>` : ''}
+      <textarea id="mc-text" class="g-mono" spellcheck="false" autocomplete="off" aria-label="${esc(MC.name)}" style="min-height:50vh;font-size:12px;white-space:pre;tab-size:2" ${ro ? 'readonly' : ''}>${esc(MC.text)}</textarea>
+      <div id="mc-msg" role="status" aria-live="polite">${msg || ''}</div>
+      <div class="g-btns">${ro ? '' : `<button onclick="gitWorkspace.mcSave(false)">${esc(t('mn_cfg_save'))}</button><button class="btn-sec" onclick="gitWorkspace.mcSave(true)">${esc(t('mn_cfg_check'))}</button>${MC.name.startsWith('projects/') && !MC.isNew ? `<button class="btn-danger" onclick="gitWorkspace.mcDelete()">${esc(t('mn_cfg_delete'))}</button>` : ''}`}<button class="btn-sec" onclick="gitWorkspace.mcClose()">${esc(t('close'))}</button></div>`);
+    const ta = $('mc-text');
+    if (ta) ta.addEventListener('keydown', e => { if (e.key === 'Tab' && !e.shiftKey && !ta.readOnly) { e.preventDefault(); ta.setRangeText('  ', ta.selectionStart, ta.selectionEnd, 'end'); } });
+  }
+  function mcNew() {
+    if (mcDirty() && !confirm(t('mn_cfg_discard'))) return;
+    const n = (prompt(t('mn_cfg_new_name')) || '').trim().replace(/\.ya?ml$/i, '');
+    if (!n) return;
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/.test(n)) { showToast(t('mn_cfg_new_name'), 'error', 6000); return; }
+    MC.name = 'projects/' + n + '.yaml'; MC.hash = ''; MC.crlf = false; MC.isNew = true;
+    MC.text = `name: ${n}\nrepo: \ntargets:\n  dev: server:/path/${n}\n`;
+    mcPaint();
+  }
+  async function mcSave(check) {
+    const ta = $('mc-text'); if (!ta) return;
+    const msg = $('mc-msg');
+    try {
+      const r = await fetch('/api/git/medium/native/config/files', json('POST', {name: MC.name, text: ta.value, base_hash: MC.hash, check_only: !!check}));
+      if (!r.ok) throw new Error(await apiError(r));
+      const v = await r.json();
+      if (!v.ok) { msg.innerHTML = `<div class="hint-box bad">${esc(t('mn_cfg_not_saved'))} ${esc(v.error)}</div>`; return; }
+      const sum = v.summary || {}, ok = esc(mnFmt('mn_cfg_ok', sum.servers, sum.environments, sum.projects));
+      if (check) { msg.innerHTML = `<div class="hint-box">${ok}</div>`; return; }
+      MC.hash = v.hash; MC.text = ta.value; MC.isNew = false; MC.valid = true;
+      showToast(t('mn_cfg_saved'), 'success');
+      await nativeConfig(MC.name);
+      if ($('mc-msg')) $('mc-msg').innerHTML = `<div class="hint-box">${esc(t('mn_cfg_saved'))} ${ok}</div>`;
+      MN.run = null; nativeLoad();
+    } catch (e) { msg.innerHTML = `<div class="hint-box bad">${esc(String(e).replace(/^Error: /, ''))}</div>`; }
+  }
+  async function mcDelete() {
+    if (!confirm(mnFmt('mn_cfg_delete_confirm', MC.name))) return;
+    try {
+      const r = await fetch('/api/git/medium/native/config/files', json('POST', {name: MC.name, delete: true, base_hash: MC.hash}));
+      if (!r.ok) throw new Error(await apiError(r));
+      const v = await r.json();
+      if (!v.ok) { $('mc-msg').innerHTML = `<div class="hint-box bad">${esc(t('mn_cfg_not_saved'))} ${esc(v.error)}</div>`; return; }
+      showToast(t('mn_cfg_deleted'), 'success'); MC.name = ''; MC.text = '';
+      await nativeConfig(); MN.run = null; nativeLoad();
+    } catch (e) { $('mc-msg').innerHTML = `<div class="hint-box bad">${esc(String(e).replace(/^Error: /, ''))}</div>`; }
+  }
+  function mcClose() { if (mcDirty() && !confirm(t('mn_cfg_discard'))) return; closeModal(); }
   async function nativeLockRelease(i) {
     const hv = MN.hist, s = hv && hv.servers[i]; if (!s || !s.lock) return;
     if (!confirm(mnFmt('mn_lock_release_confirm', s.lock.user || '?', s.label))) return;
@@ -4158,7 +4287,7 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeBuild, nativeBuildDraft, nativeBuildSave, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, setCheckVMD, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeBuild, nativeBuildDraft, nativeBuildSave, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, nativeDiff, nativeConfig, mcOpen, mcNew, mcSave, mcDelete, mcClose, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, setCheckVMD, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
