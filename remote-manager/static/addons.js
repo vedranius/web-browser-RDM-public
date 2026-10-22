@@ -14,7 +14,7 @@ Object.assign(LANGS.en, {
   add_disclaimer: 'Addons are contributed by the community and are used at your own risk. WRM PRO is a hobby project without a warranty: check what an addon does before you enable it, and prefer addons you trust.',
   add_none: 'No addons are installed.',
   add_install: 'Install an addon (.zip)',
-  add_install_d: 'The archive is checked before anything is written: a manifest, a safe layout and declared capabilities. Server code is refused in this version.',
+  add_install_d: 'The archive is checked before anything is written: a manifest, a safe layout and declared capabilities. Server code runs only as WebAssembly inside a sandbox.',
   add_pick: 'Choose the .zip file',
   add_go: 'Install',
   add_need_file: 'Choose the .zip file first',
@@ -30,6 +30,12 @@ Object.assign(LANGS.en, {
   add_removed: 'Addon {name} is removed',
   add_by: 'by {author}',
   add_caps: 'Capabilities',
+  add_run: 'Run',
+  add_run_d: 'Server code runs in a WebAssembly sandbox: it has no files, no network and no environment, and a call is stopped after five seconds. Its output is shown below.',
+  add_run_in: 'Input (JSON)',
+  add_run_out: 'Result',
+  add_run_running: 'Running…',
+  add_run_empty: '(no output)',
 });
 
 Object.assign(LANGS.hr, {
@@ -39,7 +45,7 @@ Object.assign(LANGS.hr, {
   add_disclaimer: 'Dodatke piše zajednica i koristite ih na vlastitu odgovornost. WRM PRO je hobi projekt bez jamstva: provjerite što dodatak radi prije uključivanja i koristite dodatke kojima vjerujete.',
   add_none: 'Nema instaliranih dodataka.',
   add_install: 'Instaliraj dodatak (.zip)',
-  add_install_d: 'Arhiva se provjerava prije nego se išta zapiše: manifest, siguran raspored i deklarirane mogućnosti. Kôd na serveru ova verzija odbija.',
+  add_install_d: 'Arhiva se provjerava prije nego se išta zapiše: manifest, siguran raspored i deklarirane mogućnosti. Kôd na serveru izvodi se samo kao WebAssembly u sandboxu.',
   add_pick: 'Odaberite .zip datoteku',
   add_go: 'Instaliraj',
   add_need_file: 'Prvo odaberite .zip datoteku',
@@ -55,6 +61,12 @@ Object.assign(LANGS.hr, {
   add_removed: 'Dodatak {name} je uklonjen',
   add_by: 'autor {author}',
   add_caps: 'Mogućnosti',
+  add_run: 'Pokreni',
+  add_run_d: 'Kôd na serveru radi u WebAssembly sandboxu: nema datoteka, mreže ni okoline, a poziv se prekida nakon pet sekundi. Rezultat se prikazuje ispod.',
+  add_run_in: 'Ulaz (JSON)',
+  add_run_out: 'Rezultat',
+  add_run_running: 'Radi…',
+  add_run_empty: '(nema izlaza)',
 });
 
 (function () {
@@ -182,6 +194,17 @@ Object.assign(LANGS.hr, {
       btns.push(`<button class="btn-danger btn-sm" onclick="wrmAddons.remove('${esc(a.id)}')">${esc(t('add_remove'))}</button>`);
     }
     const meta = [a.author ? tf('add_by', {author: a.author}) : '', a.license || '', a.homepage || ''].filter(Boolean).map(esc).join(' · ');
+    const exports = (a.server && a.server.exports) || [];
+    const runner = admin && a.enabled && exports.length ? `<details style="margin-top:6px;">
+        <summary style="cursor:pointer;font-size:11.5px;color:var(--text2);">${esc(t('add_run'))} · ${esc(a.server.module)}</summary>
+        <div class="setting-desc" style="margin:4px 0;">${esc(t('add_run_d'))}</div>
+        <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
+          <select id="addon-export-${esc(a.id)}" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:11.5px;padding:4px 6px;">${exports.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select>
+          <textarea id="addon-in-${esc(a.id)}" placeholder="${esc(t('add_run_in'))}" style="flex:1;min-width:180px;min-height:44px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;padding:5px 7px;"></textarea>
+          <button class="btn-sec btn-sm" onclick="wrmAddons.run('${esc(a.id)}')">${esc(t('add_run'))}</button>
+        </div>
+        <pre id="addon-out-${esc(a.id)}" style="margin:6px 0 0;padding:6px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;white-space:pre-wrap;max-height:180px;overflow:auto;color:var(--text2);">${esc(t('add_run_out'))}</pre>
+      </details>` : '';
     return `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;${a.enabled ? '' : 'opacity:.65;'}">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <b>${esc(a.name)}</b> ${pill(a.version)}
@@ -191,6 +214,7 @@ Object.assign(LANGS.hr, {
       ${a.description ? `<div class="sub" style="font-size:11.5px;color:var(--text2);margin-top:4px;">${esc(a.description)}</div>` : ''}
       ${meta ? `<div class="sub" style="font-size:11px;color:var(--text3);margin-top:2px;">${meta}</div>` : ''}
       <div class="sub" style="font-size:10.5px;color:var(--text3);margin-top:2px;">${esc(a.id)} · ${esc(a.checksum || '')}${a.installed_at ? ' · ' + esc(fmtTime(a.installed_at)) : ''}</div>
+      ${runner}
     </div>`;
   }
 
@@ -272,6 +296,28 @@ Object.assign(LANGS.hr, {
     }
   }
 
+  // ── server code ──────────────────────────────────────
+  // The input box is JSON text sent as-is; the result is shown in the card.
+  async function run(id) {
+    const a = list.find(x => x.id === id);
+    if (!a || !a.server) return;
+    const sel = $('addon-export-' + id), inp = $('addon-in-' + id), out = $('addon-out-' + id);
+    const ex = (sel && sel.value) || (a.server.exports || [])[0];
+    const body = (inp && inp.value.trim()) || '{}';
+    if (out) out.textContent = t('add_run_running');
+    try {
+      const res = await fetch('/api/addons/' + encodeURIComponent(id) + '/call/' + encodeURIComponent(ex), {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || ('HTTP ' + res.status));
+      if (out) out.textContent = d.output ? d.output : t('add_run_empty');
+    } catch (e) {
+      if (out) out.textContent = e.message;
+      showToast(e.message, 'error', 8000);
+    }
+  }
+
   // Themes are applied once the app is signed in: initApp is wrapped here
   // because this script loads after the main one.
   async function boot() {
@@ -279,7 +325,7 @@ Object.assign(LANGS.hr, {
     if ($('addons-pane') && $('st-addons') && $('st-addons').classList.contains('active')) render();
   }
 
-  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, applyThemes, reload: after};
+  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, applyThemes, reload: after};
 
   if (typeof window.initApp === 'function' && !window.initApp.__addons) {
     const orig = window.initApp;

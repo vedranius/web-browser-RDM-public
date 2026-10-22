@@ -34,6 +34,15 @@ func addonDemoManifest(id string) string {
 	return fmt.Sprintf(`{"id":%q,"name":"Demo panel","version":"1.0.0","description":"test addon","author":"tests","license":"MIT","capabilities":["ui.panel","ui.theme"],"ui":{"panel":"panel.html","theme":"theme.css","title":"Demo"}}`, id)
 }
 
+func addonByID(list []addonRecord, id string) *addonRecord {
+	for i := range list {
+		if list[i].ID == id {
+			return &list[i]
+		}
+	}
+	return nil
+}
+
 func TestV130AddonInstallEnableServeRemove(t *testing.T) {
 	srv := newTestServer(t)
 	admin := newTestUser(t, srv, "addon-admin", true)
@@ -63,17 +72,16 @@ func TestV130AddonInstallEnableServeRemove(t *testing.T) {
 	if code := admin.jsonDo("GET", "/api/addons", nil, &list); code != 200 {
 		t.Fatalf("list: %d", code)
 	}
-	if len(list.Addons) != 1 || list.Addons[0].ID != "demo.panel" || list.Addons[0].Enabled {
+	if rec := addonByID(list.Addons, "demo.panel"); rec == nil || rec.Enabled {
 		t.Fatalf("unexpected list: %+v", list.Addons)
-	}
-	if list.Addons[0].Checksum == "" {
+	} else if rec.Checksum == "" {
 		t.Fatal("the install did not record the archive checksum")
 	}
 	// A normal user does not see a disabled addon.
 	var userList struct {
 		Addons []addonRecord `json:"addons"`
 	}
-	if code := user.jsonDo("GET", "/api/addons", nil, &userList); code != 200 || len(userList.Addons) != 0 {
+	if code := user.jsonDo("GET", "/api/addons", nil, &userList); code != 200 || addonByID(userList.Addons, "demo.panel") != nil {
 		t.Fatalf("disabled addon was visible to a normal user: %d %+v", code, userList.Addons)
 	}
 	getAsset := func(c *testClient, rel string) (int, string, string) {
@@ -108,7 +116,7 @@ func TestV130AddonInstallEnableServeRemove(t *testing.T) {
 	if addonSafeRel("../addon.json") || addonSafeRel("/etc/passwd") {
 		t.Fatal("addonSafeRel accepted an escaping path")
 	}
-	if code := user.jsonDo("GET", "/api/addons", nil, &userList); code != 200 || len(userList.Addons) != 1 {
+	if code := user.jsonDo("GET", "/api/addons", nil, &userList); code != 200 || addonByID(userList.Addons, "demo.panel") == nil {
 		t.Fatalf("enabled addon missing for a normal user: %+v", userList.Addons)
 	}
 	if code := admin.jsonDo("POST", "/api/addons/demo.panel/disable", nil, nil); code != 200 {
@@ -156,6 +164,7 @@ func TestV130AddonUIHooks(t *testing.T) {
 	for _, want := range []string{
 		`frame.setAttribute('sandbox', 'allow-scripts')`, // never allow-same-origin
 		`'wrm:notify'`, `'wrm:context'`, `applyThemes`, `/api/addons/`, `add_disclaimer`,
+		`wrmAddons.run`, `add_run_d`, `/call/`,
 	} {
 		if !strings.Contains(a, want) {
 			t.Errorf("addons.js lacks %s", want)

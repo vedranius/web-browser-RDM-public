@@ -10,6 +10,7 @@ require (
 	github.com/pion/logging v0.2.4
 	github.com/pion/turn/v4 v4.1.4
 	github.com/pkg/sftp v1.13.11
+	github.com/tetratelabs/wazero v1.12.0
 	golang.org/x/crypto v0.58.0
 	golang.org/x/sys v0.49.0
 	gopkg.in/yaml.v3 v3.0.1

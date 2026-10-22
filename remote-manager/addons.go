@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -23,10 +24,9 @@ import (
 // An addon is a folder that is dropped in and discovered at runtime, in the
 // spirit of Omarchy: <DB_PATH>.addons/<id>/addon.json plus the files it
 // declares. Installing a ZIP is the only way in, so nothing executes at
-// install time. The manifest declares capabilities; the installer shows them
-// and this build accepts only interface hooks (a sandboxed panel and a theme).
-// Server code is refused until the WASM sandbox lands, so an archive that
-// carries it cannot silently do nothing.
+// install time. The manifest declares capabilities; this build accepts
+// interface hooks (a sandboxed panel and a theme) and WebAssembly server code
+// (server.wasm, run through wazero in addons_wasm.go).
 
 const (
 	addonMaxArchive = 20 << 20
@@ -39,9 +39,11 @@ var (
 	// addonCapabilities is the whole trusted surface of an addon. A capability
 	// that is not listed here refuses the install instead of being ignored.
 	addonCapabilities = map[string]string{
-		"ui.panel": "show a panel in the WRM interface",
-		"ui.theme": "apply a colour theme",
+		"ui.panel":    "show a panel in the WRM interface",
+		"ui.theme":    "apply a colour theme",
+		"server.wasm": "run a WebAssembly hook in the sandbox",
 	}
+	addonExportPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
 )
 
 type addonUI struct {
@@ -52,8 +54,8 @@ type addonUI struct {
 }
 
 type addonServer struct {
-	Module string   `json:"module"`
-	Hooks  []string `json:"hooks,omitempty"`
+	Module  string   `json:"module"`  // plugin.wasm
+	Exports []string `json:"exports"` // functions the host may call
 }
 
 type addonManifest struct {
@@ -173,7 +175,30 @@ func (m *addonManifest) validate() error {
 		seen[c] = true
 	}
 	if m.Server != nil {
-		return fmt.Errorf("server code is not enabled yet: this version runs interface addons only")
+		if !seen["server.wasm"] {
+			return fmt.Errorf("a server block requires the server.wasm capability")
+		}
+		if !addonSafeRel(m.Server.Module) || !strings.HasSuffix(strings.ToLower(m.Server.Module), ".wasm") {
+			return fmt.Errorf("server.module must be a relative .wasm file")
+		}
+		if len(m.Server.Exports) == 0 {
+			return fmt.Errorf("server.exports must name at least one exported function")
+		}
+		if len(m.Server.Exports) > 8 {
+			return fmt.Errorf("at most 8 exported functions are allowed")
+		}
+		xseen := map[string]bool{}
+		for _, e := range m.Server.Exports {
+			if !addonExportPattern.MatchString(e) {
+				return fmt.Errorf("export %q must be letters, digits and underscore, starting with a letter or underscore", e)
+			}
+			if xseen[e] {
+				return fmt.Errorf("export %q is listed twice", e)
+			}
+			xseen[e] = true
+		}
+	} else if seen["server.wasm"] {
+		return fmt.Errorf("the server.wasm capability needs a server block")
 	}
 	if m.UI != nil {
 		if m.UI.Panel != "" {
@@ -196,8 +221,8 @@ func (m *addonManifest) validate() error {
 			return fmt.Errorf("the ui block declares neither a panel nor a theme")
 		}
 	}
-	if m.UI == nil {
-		return fmt.Errorf("this version supports interface addons only (a ui block is required)")
+	if m.UI == nil && m.Server == nil {
+		return fmt.Errorf("the addon declares neither a ui panel/theme nor server code")
 	}
 	return nil
 }
@@ -329,7 +354,14 @@ func addonReadArchive(body []byte) (*addonManifest, string, error) {
 	}
 	// Declared entries must be in the archive, or the addon would install and
 	// then show nothing.
-	for _, want := range []string{m.UI.Panel, m.UI.Theme} {
+	declared := []string{}
+	if m.UI != nil {
+		declared = append(declared, m.UI.Panel, m.UI.Theme)
+	}
+	if m.Server != nil {
+		declared = append(declared, m.Server.Module)
+	}
+	for _, want := range declared {
 		if want != "" && !names[strings.ToLower(prefix+want)] {
 			return nil, "", fmt.Errorf("%s is declared in addon.json but missing from the archive", want)
 		}
@@ -404,6 +436,17 @@ func addonInstall(w http.ResponseWriter, r *http.Request, adminID int) {
 	if err := addonWriteFiles(body, prefix, tmp); err != nil {
 		jsonError(w, "The archive cannot be written: "+err.Error(), 500)
 		return
+	}
+	// Compiling is not executing, and it turns a broken module into an install
+	// error instead of a surprise on the first call.
+	if m.Server != nil {
+		vctx, vcancel := context.WithTimeout(r.Context(), 10*time.Second)
+		err := addonCheckWASM(vctx, m, tmp)
+		vcancel()
+		if err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
 	}
 	final := addonDir(m.ID)
 	old := final + ".old"
@@ -580,6 +623,18 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		addonAssetHandler(w, r, id, strings.Join(parts[2:], "/"))
+		return
+	}
+	if len(parts) == 3 && parts[1] == "call" {
+		if r.Method != http.MethodPost {
+			jsonError(w, "Method not allowed", 405)
+			return
+		}
+		if !admin {
+			jsonError(w, "Admin access required", 403)
+			return
+		}
+		addonCallHandler(w, r, userID, id, parts[2])
 		return
 	}
 	if !admin {
