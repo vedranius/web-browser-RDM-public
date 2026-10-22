@@ -63,6 +63,9 @@ type mediumStatus struct {
 	PendingSSH    bool              `json:"pending_ssh"`
 	Docker        *mediumDockerInfo `json:"docker,omitempty"`
 	OutputPolicy  string            `json:"output_policy"`
+	// v12.9.1: the engine of projects nobody chose one for (native or docker); with native
+	// the original tool and its runtime are optional
+	DefaultEngine string `json:"default_engine"`
 }
 
 // mediumExit is how the original tool's process last ended.
@@ -169,6 +172,7 @@ func mediumState(uid int) mediumStatus {
 		s.PendingSSH = true
 	}
 	s.OutputPolicy = getSetting("medium_log_output")
+	s.DefaultEngine = mdDefaultEngine(uid)
 	return s
 }
 

@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,9 +15,9 @@ import (
 
 // ─── MEDIUM: native deployment API (/api/git/medium/native/…) ───
 //
-// Every project starts on the Docker runtime (the original tool deploys it). An operator
-// switches a project to the native engine; from then on WRM deploys and rolls it back
-// itself. The state on the servers is the same either way, so switching back and forth
+// A project uses the engine an operator chose for it, else medium_default_engine: the
+// native engine (WRM deploys and rolls it back itself) or the original tool on the Docker
+// runtime. Installations that already ran the original tool keep it as their default. The state on the servers is the same either way, so switching back and forth
 // needs no migration, and both tools show each other's deployments.
 
 func initMediumDeploySchema() {
@@ -31,12 +33,22 @@ func initMediumDeploySchema() {
 
 func mdProjectEngine(uid int, project string) string {
 	var e string
-	if db.QueryRow(`SELECT engine FROM medium_project_engine WHERE user_id=? AND project=?`, uid, project).Scan(&e) != nil || e != "native" {
-		return "docker"
+	if db.QueryRow(`SELECT engine FROM medium_project_engine WHERE user_id=? AND project=?`, uid, project).Scan(&e) == nil && (e == "native" || e == "docker") {
+		return e
 	}
-	return "native"
+	return mdDefaultEngine(uid)
 }
 
+// mdDefaultEngine is the engine of a project nobody chose one for: the native engine when
+// medium_default_engine says so and the user may deploy with it, else the original tool.
+func mdDefaultEngine(uid int) string {
+	if getSetting("medium_default_engine") == "native" && mdNativeAllowed(uid) {
+		return "native"
+	}
+	return "docker"
+}
+
+// mdProjectEngines lists the engines users chose per project; the rest use mdDefaultEngine.
 func mdProjectEngines(uid int) map[string]string {
 	out := map[string]string{}
 	rows, err := db.Query(`SELECT project, engine FROM medium_project_engine WHERE user_id=?`, uid)
@@ -46,11 +58,31 @@ func mdProjectEngines(uid int) map[string]string {
 	defer rows.Close()
 	for rows.Next() {
 		var p, e string
-		if rows.Scan(&p, &e) == nil && e == "native" {
+		if rows.Scan(&p, &e) == nil && (e == "native" || e == "docker") {
 			out[p] = e
 		}
 	}
 	return out
+}
+
+// mdMigrateDefaultEngine keeps installations that already use the original deploy tool on
+// it after an upgrade: the native default applies to new installations, and the admin can
+// switch it in Admin → Policies.
+func mdMigrateDefaultEngine() {
+	if env, _ := settingEnv("medium_default_engine"); env != "" {
+		return
+	}
+	var n int
+	db.QueryRow(`SELECT COUNT(*) FROM app_settings WHERE key='medium_default_engine'`).Scan(&n)
+	if n > 0 {
+		return
+	}
+	if _, err := os.Stat(mediumToolDir()); err != nil {
+		return
+	}
+	if _, err := setSetting("medium_default_engine", "original"); err == nil {
+		log.Printf("Medium: the original deploy tool is installed, so projects keep using it by default (medium_default_engine=original); switch to native in Admin → Policies")
+	}
 }
 
 // mdNativeAllowed: may the user change servers with the native engine?

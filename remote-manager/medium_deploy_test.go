@@ -695,8 +695,17 @@ func TestMediumNativeDeployAPI(t *testing.T) {
 	})
 	body := map[string]interface{}{"run_id": run.ID, "revision": res.Revision}
 	var out map[string]interface{}
+	// projects stay on the original tool unless the native engine is the default or chosen
+	setSetting("medium_default_engine", "original")
 	if code := admin.jsonDo("POST", "/api/git/medium/native/deploy", body, &out); code != 400 || !strings.Contains(fmt.Sprint(out["error"]), "native engine first") {
 		t.Fatalf("engine docker: %d %v", code, out)
+	}
+	setSetting("medium_default_engine", "native")
+	if mdProjectEngine(admin.userID, "demo-api") != "native" || mdProjectEngine(user.userID, "demo-api") != "docker" {
+		t.Fatalf("default engine: admin %s, user %s", mdProjectEngine(admin.userID, "demo-api"), mdProjectEngine(user.userID, "demo-api"))
+	}
+	if code := admin.jsonDo("POST", "/api/git/medium/native/engine", map[string]string{"project": "demo-api", "engine": "docker"}, nil); code != 200 || mdProjectEngine(admin.userID, "demo-api") != "docker" {
+		t.Fatalf("explicit original tool: %d", code)
 	}
 	if code := user.jsonDo("POST", "/api/git/medium/native/engine", map[string]string{"project": "demo-api", "engine": "native"}, nil); code != 403 {
 		t.Fatalf("a user may not deploy natively by default: %d", code)
@@ -776,5 +785,40 @@ func TestMediumSafeTreePath(t *testing.T) {
 		if mdSafeTreePath(p) != want {
 			t.Errorf("mdSafeTreePath(%q) != %v", p, want)
 		}
+	}
+}
+
+func TestMediumDefaultEngineMigration(t *testing.T) {
+	newTestServer(t)
+	reset := func() {
+		db.Exec(`DELETE FROM app_settings WHERE key='medium_default_engine'`)
+		settingsStore.Lock()
+		delete(settingsStore.values, "medium_default_engine")
+		settingsStore.Unlock()
+	}
+	reset()
+	t.Cleanup(reset)
+	// a new installation: native stays the default
+	if _, err := os.Stat(mediumToolDir()); err == nil {
+		t.Skip("another test left the original tool installed")
+	}
+	mdMigrateDefaultEngine()
+	if getSetting("medium_default_engine") != "native" {
+		t.Fatalf("new installation: %s", getSetting("medium_default_engine"))
+	}
+	// an upgraded installation with the original tool keeps it
+	if err := os.MkdirAll(mediumToolDir(), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(mediumToolDir()) })
+	mdMigrateDefaultEngine()
+	if getSetting("medium_default_engine") != "original" {
+		t.Fatalf("upgrade: %s", getSetting("medium_default_engine"))
+	}
+	// an admin's later choice is kept
+	setSetting("medium_default_engine", "native")
+	mdMigrateDefaultEngine()
+	if getSetting("medium_default_engine") != "native" {
+		t.Fatal("the admin's choice was overwritten")
 	}
 }

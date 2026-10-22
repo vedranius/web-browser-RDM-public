@@ -1,12 +1,31 @@
-## Web Remote Manager PRO v12.9.0 - Medium: file details, line endings and the deploy-config editor
+## Web Remote Manager PRO v12.9.1 - Medium without the original tool: deploy-config from Git, build user and the native engine as the default
 
 ### Added
+
+- **deploy-config from its Git repository.** With `DEPLOY_CONFIG_REPO` set in the Medium settings and a WRM Git source serving that repository, the deploy-config editor gets a **Git** section: repository, branch, the pulled commit, whether Git has newer commits, and your local changes. **Pull from Git and use it** makes WRM's own copy of the branch the configuration in use, while the imported ZIP stays as it was. **Commit and push** sends your edits as one commit through the Git source's write token (GitLab, GitHub and Gitea), after checking that the whole configuration still loads and that nobody changed the same files on Git since your pull. **Pull** never overwrites local changes unless you choose *Discard changes and pull*, and never applies a branch head whose configuration does not load. **Stop using the Git copy** goes back to the imported deploy-config. Everything is audited and listed in the Medium activity log.
+- **Builds on the WRM host as an unprivileged account.** The policy **Medium: build user on the WRM host** (`medium_build_user`, for example `wrm-build`) runs builds as that account with a clean environment, so a build command cannot read WRM's database, key or Medium data. WRM must run as root on Linux or another Unix system; root and accounts that could read WRM's files are refused with the reason. The plan shows *as wrm-build* next to the build location.
+- **The WRM engine is the default.** The policy **Medium: default engine** (`medium_default_engine`, `native`) puts projects nobody chose an engine for on the WRM engine for users allowed to deploy with it. The Medium page then shows the WRM engine first and folds the original deploy tool away as optional; a deploy-config ZIP can be imported right from the WRM engine card.
+
+### Changed
+
+- The original deploy tool and its Docker runtime are optional. The WRM engine needs only your deploy-config and your WRM connections, and an imported deploy-config is used at once.
+- Installations that already have the original deploy tool imported start with `medium_default_engine=original` after the upgrade (logged once), so no project changes engine by itself. Projects with an engine chosen explicitly keep it.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database migration is required. To make the WRM engine the default on an installation that used the original tool, set **Admin → Policies → Medium: default engine** to `native`.
+
+[Download v12.9.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.9.1) · [Medium native engine in the README](https://github.com/vedranius/web-browser-RDM-public/blob/v12.9.1/README.md#medium-native-engine)
+
+## Included from v12.9.0 - Medium: file details, line endings and the deploy-config editor
+
+#### Added
 
 - **See what changes in each file before deploying.** In the WRM engine's plan, every changed file has a **Details** button: the server's version against the branch, line by line, with clear notes for new and deleted files, links, directories, binary files and large files.
 - **Line-ending-only changes are marked.** Files copied by hand from a Windows checkout often have CRLF on the server and LF in Git. WRM now marks such files *line endings only* and counts them separately, so real changes stand out. The deployment still sends them, and history records the count (`counts.eol`) as the original tool does.
 - **Edit deploy-config in WRM.** *Edit deploy-config* opens `servers.yaml`, `environments.yaml` and the project files. WRM saves a file only when the whole configuration still loads and nobody else changed it in the meantime; comments, layout and CRLF line endings stay as they are. New project files can be created and old ones deleted. Editing needs the `medium_native` policy and is audited.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. No database migration is required.
 

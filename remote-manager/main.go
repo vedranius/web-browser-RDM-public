@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.9.0"
+var AppVersion = "v12.9.1"
 
 const sessionCookieName = "wrm_session"
 
@@ -562,6 +562,7 @@ func serve(stop <-chan struct{}) int {
 	migrateSessionTokens()
 	ensureAdminExists()
 	applySecurityLevelAtStart(initialSecurityLevel)
+	mdMigrateDefaultEngine()
 	log.Printf("Web Remote Manager %s starting%s", AppVersion, map[bool]string{true: " (service: " + serviceMode + ")"}[serviceMode != ""])
 	log.Printf("Encryption key for stored secrets: %s", encryptionKeySource)
 	startTURN()

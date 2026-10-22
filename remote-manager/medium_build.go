@@ -45,6 +45,7 @@ type mdBuildOutcome struct {
 	Tree     mdTree
 	Location string // host, server, none
 	Server   string
+	User     string // medium_build_user of a WRM-host build
 	Platform string
 	Arch     string
 	Log      string
@@ -213,10 +214,14 @@ func mdBuildProject(uid int, match mdSourceMatch, proj *mdProject, commit string
 }
 
 // mdBuildOnHost materialises the commit in a private temporary directory, runs the build
-// command there with the WRM OS account, and reads source_dir back.
+// command there with the WRM OS account (or medium_build_user), and reads source_dir back.
 func mdBuildOnHost(full mdTree, proj *mdProject) (*mdBuildOutcome, error) {
 	if ok, why := mdHostBuildSupported(); !ok {
 		return nil, errors.New(why)
+	}
+	acc, err := mdResolveBuildUser()
+	if err != nil {
+		return nil, err
 	}
 	root, err := os.MkdirTemp("", "wrm-medium-build-")
 	if err != nil {
@@ -224,17 +229,38 @@ func mdBuildOnHost(full mdTree, proj *mdProject) (*mdBuildOutcome, error) {
 	}
 	out := &mdBuildOutcome{Location: "host", Platform: runtime.GOOS, Arch: mdNormalizeArch(runtime.GOARCH)}
 	out.cleanup = func() { os.RemoveAll(root) }
-	if err := mdWriteTree(root, full); err != nil {
+	// With a build user the build gets a subdirectory of a directory it cannot change, so
+	// it cannot replace the directory WRM reads the result from.
+	work := root
+	if acc != nil {
+		work = filepath.Join(root, "work")
+		if err := os.Chmod(root, 0o711); err != nil {
+			out.Close()
+			return nil, fmt.Errorf("prepare the build directory: %v", err)
+		}
+	}
+	if err := mdWriteTree(work, full); err != nil {
 		out.Close()
 		return nil, fmt.Errorf("prepare the build source: %v", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), mdBuildTimeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "sh", "-c", *proj.Build)
-	cmd.Dir = root
+	cmd.Dir = work
+	if err := mdApplyBuildUser(cmd, acc, work); err != nil {
+		out.Close()
+		return nil, err
+	}
+	if acc != nil {
+		out.User = acc.Name
+	}
 	stdout, stderr := &mdTailWriter{max: mdBuildLog}, &mdTailWriter{max: mdBuildLog}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
 	err = cmd.Run()
+	if rerr := mdReclaimBuildDir(acc, work); rerr != nil {
+		out.Close()
+		return nil, rerr
+	}
 	out.Log = mdBuildLogText(stdout.String(), stderr.String())
 	if ctx.Err() != nil {
 		out.Close()
@@ -244,7 +270,7 @@ func mdBuildOnHost(full mdTree, proj *mdProject) (*mdBuildOutcome, error) {
 		out.Close()
 		return nil, fmt.Errorf("the build failed: %v%s", err, mdBuildLogSuffix(out.Log))
 	}
-	tree, err := mdReadBuildOutput(root, proj.SourceDir)
+	tree, err := mdReadBuildOutput(work, proj.SourceDir)
 	if err != nil {
 		out.Close()
 		return nil, err
@@ -471,12 +497,28 @@ func mdReadBuildOutput(root, sourceDir string) (mdTree, error) {
 	if err != nil || inside == ".." || strings.HasPrefix(inside, ".."+string(filepath.Separator)) {
 		return nil, fmt.Errorf("source_dir %s points outside the build directory", sourceDir)
 	}
-	st, err := os.Lstat(dir)
+	// every component is checked, so a link the build created anywhere on the way cannot
+	// point the read-back at a directory outside the build
+	r, err := os.OpenRoot(root)
 	if err != nil {
-		return nil, fmt.Errorf("source_dir %s does not exist after the build", sourceDir)
+		return nil, fmt.Errorf("read the build directory: %v", err)
 	}
-	if !st.IsDir() || st.Mode()&os.ModeSymlink != 0 {
-		return nil, fmt.Errorf("source_dir %s is not a directory after the build", sourceDir)
+	defer r.Close()
+	cur := "."
+	for _, part := range append([]string{""}, strings.Split(rel, "/")...) {
+		if part != "" {
+			cur = path.Join(cur, part)
+		}
+		st, err := r.Lstat(cur)
+		if err != nil {
+			return nil, fmt.Errorf("source_dir %s does not exist after the build", sourceDir)
+		}
+		if st.Mode()&os.ModeSymlink != 0 {
+			return nil, fmt.Errorf("source_dir %s goes through a symbolic link after the build; WRM reads build results only from real directories", sourceDir)
+		}
+		if !st.IsDir() {
+			return nil, fmt.Errorf("source_dir %s is not a directory after the build", sourceDir)
+		}
 	}
 	return mdLocalTree(dir)
 }
