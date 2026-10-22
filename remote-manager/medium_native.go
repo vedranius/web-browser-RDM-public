@@ -855,7 +855,7 @@ func mdExecute(uid int, req mdPlanRequest, stage func(string)) (*mdPlanResult, m
 
 func mdPlanServer(uid int, cfg *mdConfig, proj *mdProject, target *mdTarget, d *mdDestination, src mdTree, ref *mdRefResult, excluded []string, wantPlatform bool) mdServerPlan {
 	sp := mdServerPlan{Server: d.Server, Path: d.appDir(), Label: d.label(), Warnings: []string{}, Changes: []mdChange{}, PostDeploy: d.PostDeploy,
-		Excludes: proj.ignoreFor(target.Name, d.Server), Counts: map[string]int{"new": 0, "changed": 0, "deleted": 0}, ExcludedFor: []string{}}
+		Excludes: proj.ignoreFor(target.Name, d.Server), Counts: map[string]int{"new": 0, "changed": 0, "deleted": 0, "eol": 0}, ExcludedFor: []string{}}
 	err := mdOpenDestination(uid, cfg, d.Server, func(r mdRemote, connName string) error {
 		sp.Connection = connName
 		if wantPlatform {
@@ -874,6 +874,9 @@ func mdPlanServer(uid int, cfg *mdConfig, proj *mdProject, target *mdTarget, d *
 		sp.Exists, sp.Changes = view.exists, view.changes
 		if sp.Changes == nil {
 			sp.Changes = []mdChange{}
+		}
+		if _, err := mdMarkEOL(r, d.appDir(), src, sp.Changes); err != nil {
+			sp.Warnings = append(sp.Warnings, "line endings: "+err.Error())
 		}
 		for _, e := range view.excludedFor {
 			sp.ExcludedFor = append(sp.ExcludedFor, mdEscapePath(e))
@@ -898,6 +901,9 @@ func mdPlanServer(uid int, cfg *mdConfig, proj *mdProject, target *mdTarget, d *
 	for i := range sp.Changes {
 		sp.Changes[i].Path = mdEscapePath(sp.Changes[i].Path)
 		sp.Counts[sp.Changes[i].Action]++
+		if sp.Changes[i].EOL {
+			sp.Counts["eol"]++
+		}
 	}
 	if ref != nil {
 		var rs *mdRefServer
@@ -1128,6 +1134,10 @@ func apiMediumNative(w http.ResponseWriter, r *http.Request, uid int, action str
 		}
 		auditLog(r, uid, "git.medium_native_preview", in.Project, map[string]interface{}{"environment": in.Environment, "ref": in.Ref, "compare": in.Compare, "servers": in.Servers})
 		jsonOK(w, map[string]string{"id": run.ID})
+	case strings.HasPrefix(action, "/plan/") && strings.HasSuffix(action, "/diff") && r.Method == "GET":
+		mdAPIDiff(w, r, uid, strings.TrimSuffix(strings.TrimPrefix(action, "/plan/"), "/diff"))
+	case action == "/config/files" || action == "/config/file":
+		mdAPIConfigFiles(w, r, uid, action)
 	case strings.HasPrefix(action, "/plan/") && r.Method == "GET":
 		run, ok := mdGetRun(uid, strings.TrimPrefix(action, "/plan/"))
 		if !ok {
