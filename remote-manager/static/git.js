@@ -781,6 +781,42 @@ Object.assign(LANGS.hr, {
   mn_cfg_discard: 'Odbaciti nespremljene izmjene?', mn_cfg_invalid_now: 'Trenutna konfiguracija se ne učitava:', mn_cfg_crlf: 'Ova datoteka koristi CRLF završetke redaka; WRM ih zadržava pri spremanju.', mn_cfg_new_note: 'Nova datoteka projekta: spremi je da se stvori.',
   gm_op_config_edit: 'uređivanje deploy-configa',
 });
+Object.assign(LANGS.en, {
+  gm_two_original: 'Your original deploy tool, run unchanged from its ZIP (in Docker or with Python on the WRM host). It is optional: projects on the WRM native engine are deployed by WRM itself. Set it up with steps 1 to 5 below when you still deploy with it or want to compare; once it runs, it opens below its card.',
+  gm_optional: 'Optional: WRM deploys projects on the native engine by itself. You need the original tool only for projects you keep on it and for "Compare with the original tool".',
+  gm_s3_native: 'Received and checked by WRM. The WRM engine uses it now; the original tool would apply it at its first start.',
+  mn_cfg_start: 'Import your deploy-config ZIP (servers.yaml, environments.yaml and projects/), or write it here in the editor. With DEPLOY_CONFIG_REPO set in the Medium settings, the editor can pull it from Git.',
+  mn_cfg_upload: 'Import deploy-config ZIP', mn_build_as: 'as {0}',
+  mc_git_title: 'Git', mc_git_off: 'not connected', mc_git_off_hint: 'To edit deploy-config from its repository, set DEPLOY_CONFIG_REPO in the Medium settings and add a WRM Git source for that repository under Git → Sources (a write token there allows commit and push).',
+  mc_git_source: 'WRM Git source {0}', mc_git_inactive: 'WRM uses the imported deploy-config. Pull branch {0} to edit WRM\'s own Git copy instead; the imported files stay as they are.',
+  mc_git_use: 'Pull from Git and use it', mc_git_active: 'WRM uses its Git copy of branch {0} at', mc_git_pulled: 'pulled {0}', mc_git_behind: 'Git has newer commits ({0})', mc_git_current: 'up to date',
+  mc_git_changes: 'Local changes ({0}):', mc_git_a_create: 'new', mc_git_a_update: 'changed', mc_git_a_delete: 'deleted', mc_git_clean: 'No local changes.',
+  mc_git_message: 'Commit message', mc_git_message_ph: 'Describe the change (empty: the changed file names)', mc_git_push: 'Commit and push', mc_git_push_hint: 'One commit on the branch through the Git source\'s write token, with you ({0}) as its author when DEPLOY_USER_EMAIL is set in the Medium settings. WRM refuses when one of these files changed on Git meanwhile, and checks that the whole configuration still loads first.',
+  mc_git_no_write: 'The Git source has no write token, so the changes cannot be pushed from WRM. Add one under Git → Sources, or discard the changes.',
+  mc_git_discard_pull: 'Discard changes and pull', mc_git_pull: 'Pull', mc_git_stop: 'Stop using the Git copy',
+  mc_git_discard_confirm: 'Discard the local changes ({0}) and replace them with the branch head?', mc_git_pulled_ok: 'Pulled; the configuration is valid.',
+  mc_git_save_first: 'Save or discard the change in the editor first.', mc_git_push_confirm: 'Commit and push the local changes to branch {0}?', mc_git_pushed_ok: 'Committed and pushed.',
+  mc_git_stop_confirm: 'Stop using the Git copy? WRM deletes its copy and goes back to the imported deploy-config.', mc_git_stop_confirm_changes: 'Stop using the Git copy? Its local changes are lost: WRM deletes the copy and goes back to the imported deploy-config.', mc_git_stopped: 'WRM uses the imported deploy-config again.',
+  gm_op_config_pull: 'deploy-config pull', gm_op_config_push: 'deploy-config push',
+});
+Object.assign(LANGS.hr, {
+  gm_two_original: 'Tvoj izvorni deploy-tool, pokrenut neizmijenjen iz ZIP-a (u Dockeru ili s Pythonom na WRM računalu). Neobavezan je: projekte na WRM nativnom engineu deploya sam WRM. Postavi ga koracima 1 do 5 ispod ako još deployaš s njim ili želiš usporedbu; kad radi, otvara se ispod svoje kartice.',
+  gm_optional: 'Neobavezno: projekte na nativnom engineu WRM deploya sam. Izvorni alat trebaš samo za projekte koje držiš na njemu i za "Usporedi s izvornim alatom".',
+  gm_s3_native: 'Primljen i provjeren u WRM-u. WRM engine ga već koristi; izvorni alat bi ga primijenio pri prvom pokretanju.',
+  mn_cfg_start: 'Uvezi svoj deploy-config ZIP (servers.yaml, environments.yaml i projects/) ili ga napiši ovdje u uređivaču. Ako je u Medium postavkama postavljen DEPLOY_CONFIG_REPO, uređivač ga može povući iz Gita.',
+  mn_cfg_upload: 'Uvezi deploy-config ZIP', mn_build_as: 'kao {0}',
+  mc_git_title: 'Git', mc_git_off: 'nije povezan', mc_git_off_hint: 'Za uređivanje deploy-configa iz njegovog repozitorija postavi DEPLOY_CONFIG_REPO u Medium postavkama i dodaj WRM Git izvor za taj repozitorij pod Git → Izvori (token za pisanje ondje omogućuje commit i push).',
+  mc_git_source: 'WRM Git izvor {0}', mc_git_inactive: 'WRM koristi uvezeni deploy-config. Povuci granu {0} da umjesto toga uređuješ WRM-ovu Git kopiju; uvezene datoteke ostaju kakve jesu.',
+  mc_git_use: 'Povuci iz Gita i koristi', mc_git_active: 'WRM koristi svoju Git kopiju grane {0} na', mc_git_pulled: 'povučeno {0}', mc_git_behind: 'Git ima novije commitove ({0})', mc_git_current: 'ažurno',
+  mc_git_changes: 'Lokalne izmjene ({0}):', mc_git_a_create: 'nova', mc_git_a_update: 'izmijenjena', mc_git_a_delete: 'obrisana', mc_git_clean: 'Nema lokalnih izmjena.',
+  mc_git_message: 'Poruka commita', mc_git_message_ph: 'Opiši izmjenu (prazno: imena izmijenjenih datoteka)', mc_git_push: 'Commit i push', mc_git_push_hint: 'Jedan commit na grani preko tokena za pisanje Git izvora, s tobom ({0}) kao autorom kad je DEPLOY_USER_EMAIL postavljen u Medium postavkama. WRM odbija ako se neka od tih datoteka u međuvremenu promijenila u Gitu, a prije toga provjerava da se cijela konfiguracija i dalje učitava.',
+  mc_git_no_write: 'Git izvor nema token za pisanje, pa se izmjene ne mogu pushati iz WRM-a. Dodaj ga pod Git → Izvori ili odbaci izmjene.',
+  mc_git_discard_pull: 'Odbaci izmjene i povuci', mc_git_pull: 'Povuci', mc_git_stop: 'Prestani koristiti Git kopiju',
+  mc_git_discard_confirm: 'Odbaciti lokalne izmjene ({0}) i zamijeniti ih vrhom grane?', mc_git_pulled_ok: 'Povučeno; konfiguracija je ispravna.',
+  mc_git_save_first: 'Najprije spremi ili odbaci izmjenu u uređivaču.', mc_git_push_confirm: 'Commitati i pushati lokalne izmjene na granu {0}?', mc_git_pushed_ok: 'Commitano i pushano.',
+  mc_git_stop_confirm: 'Prestati koristiti Git kopiju? WRM briše svoju kopiju i vraća se na uvezeni deploy-config.', mc_git_stop_confirm_changes: 'Prestati koristiti Git kopiju? Njezine lokalne izmjene se gube: WRM briše kopiju i vraća se na uvezeni deploy-config.', mc_git_stopped: 'WRM opet koristi uvezeni deploy-config.',
+  gm_op_config_pull: 'povlačenje deploy-configa', gm_op_config_push: 'push deploy-configa',
+});
 (function () {
   const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set(),
     checkVMD: (() => { try { return localStorage.getItem('wrm_git_check_vmd') === '1'; } catch (_) { return false; } })()};
@@ -800,6 +836,10 @@ Object.assign(LANGS.hr, {
 @media (max-width: 700px) { #git-ws .gm-two {grid-template-columns:1fr;} #git-ws .gm-log td:nth-child(5), #git-ws .gm-log th:nth-child(5) {display:none;} }
 #git-ws .gm-head {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 #git-ws .gm-head h3 {margin:0;flex:1;}
+#git-ws summary.gm-head {cursor:pointer;list-style:none;}
+#git-ws summary.gm-head::-webkit-details-marker {display:none;}
+#git-ws summary.gm-head::before {content:'▸';color:var(--text2);}
+#git-ws details[open] > summary.gm-head::before {content:'▾';}
 #git-ws .gm-light {display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--bg3);white-space:nowrap;}
 #git-ws .gm-light i {width:9px;height:9px;border-radius:50%;background:var(--text3);display:inline-block;}
 #git-ws .gm-light.gm-ok i {background:var(--green);box-shadow:0 0 6px var(--green);} #git-ws .gm-light.gm-ok {color:var(--green);}
@@ -3164,7 +3204,8 @@ Object.assign(LANGS.hr, {
       body.innerHTML = `<div class="g-card gm-overview"><h3>${esc(t('gm_two_title'))}</h3><div class="gm-two">
         <div><b>🛠 ${esc(t('gm_title'))}</b><p>${esc(t('gm_two_original'))}</p></div>
         <div><b>🔎 ${esc(t('mn_title'))}</b><p>${esc(t('gm_two_preview'))}</p></div></div></div>
-      <div class="g-card" id="gm-original"><div class="gm-head"><h3>🛠 ${esc(t('gm_title'))}</h3><span id="gm-light"></span></div>
+      <details class="g-card" id="gm-original" open><summary class="gm-head"><h3>🛠 ${esc(t('gm_title'))}</h3><span id="gm-light"></span></summary>
+        <p class="g-mut" id="gm-optional" hidden>${esc(t('gm_optional'))}</p>
         <div id="medium-status" role="status" aria-live="polite">${esc(t('loading'))}</div>
         <div id="gm-op"></div>
         <ol class="gm-steps" id="gm-steps">
@@ -3176,11 +3217,11 @@ Object.assign(LANGS.hr, {
         </ol>
         <details class="gm-quick"><summary>${esc(t('gm_quick_title'))}</summary><p>${esc(t('gm_quick_hint'))}</p><p class="g-mut">${esc(t('gm_quick_files'))}</p><div class="g-grid" id="medium-quick-inputs"><label id="medium-quick-tool-label">${esc(t('gm_tool'))}<input id="medium-quick-tool" type="file" accept=".zip"></label><label>${esc(t('gm_config'))}<input id="medium-quick-config" type="file" accept=".zip"></label><label>${esc(t('gm_ssh'))}<input id="medium-quick-ssh" type="file" accept=".zip"></label></div><div class="g-bar"><button id="medium-quick-go" onclick="gitWorkspace.mediumQuickSetup()">▶ ${esc(t('gm_quick'))}</button></div></details>
         <div class="g-bar" style="margin-top:8px"><button class="btn-sec btn-sm" onclick="gitWorkspace.mediumRefresh()">↻ ${esc(t('git_refresh'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.mediumSettings()">⚙ ${esc(t('gm_settings'))}</button></div>
-      </div>
+      </details>
       <div id="medium-frame"></div>
       <details class="g-card" id="mn-card" ontoggle="if(this.open)gitWorkspace.nativeLoad()"><summary><b>🔎 ${esc(t('mn_title'))}</b> <span id="gm-preview-light"></span></summary><div id="mn-body"></div></details>
       <div class="g-card" id="gm-activity"><div class="gm-head"><h3>📜 ${esc(t('gm_log_title'))}</h3><button class="btn-sec btn-sm" onclick="gitWorkspace.mediumActivity(true)">↻</button></div><p class="g-mut">${esc(t('gm_log_hint'))}</p><div id="gm-rows"></div></div>`;
-      MS.lastOp = '';
+      MS.lastOp = ''; MS.arranged = false;
     }
     await mediumRefresh();
   }
@@ -3237,7 +3278,8 @@ Object.assign(LANGS.hr, {
     else if (deps.length) set(2, 'bad', tf('gm_s2_missing', {where, deps: deps.join(', ')}));
     else set(2, 'wait', s.admin ? tf('gm_s2_todo_admin', {where}) : t('gm_s2_todo_user'));
     // 3. deploy-config (each user's own)
-    if (s.pending_config) set(3, 'pend', t('gm_s3_pending'));
+    if (s.pending_config && s.default_engine === 'native' && !s.tool) set(3, 'ok', t('gm_s3_native'));
+    else if (s.pending_config) set(3, 'pend', t('gm_s3_pending'));
     else if (s.config) set(3, 'ok', t('gm_s3_ok'));
     else set(3, 'wait', t('gm_s3_todo'));
     if (failedStep && failedStep.step === 'config_check' && !s.pending_config) set(3, 'bad', t('gm_s3_rejected'), `<div class="gm-todo">${esc(t('gm_hint_config'))}</div>`);
@@ -3332,6 +3374,20 @@ Object.assign(LANGS.hr, {
     }
     mRender(box, html);
   }
+  // With the native engine as the default WRM deploys by itself: its card comes first and
+  // opens, and the original tool's card folds away as optional (it stays usable).
+  function mediumArrange(s) {
+    const native = s.default_engine === 'native', orig = $('gm-original'), mn = $('mn-card');
+    if (!orig || !mn) return;
+    $('gm-optional').hidden = !native;
+    if (MS.arranged === native) return;
+    if (native) {
+      orig.parentNode.insertBefore(mn, orig);
+      if (!s.tool_imported && !s.running) orig.open = false;
+      if (!mn.open) mn.open = true;
+    }
+    MS.arranged = native;
+  }
   async function mediumRefresh() {
     clearTimeout(mediumTimer);
     if (G.mode !== 'medium' || !$('medium-status') || !$('git-ws') || $('git-ws').style.display === 'none') return;
@@ -3359,6 +3415,7 @@ Object.assign(LANGS.hr, {
     const where = s.backend === 'docker' ? t('gm_rt_docker') : t('gm_rt_host');
     $('medium-status').innerHTML = esc([tf('gm_runtime_is', {where}), s.running ? tf('gm_s5_running', {since: mClock(s.running_since), took: mSince(s.running_since)}) : '', other ? t('gm_now_other_short') : ''].filter(Boolean).join(' · '));
     $('gm-preview-light').innerHTML = s.config || s.pending_config ? mLight('ok', t('gm_p_ready')) : mLight('off', t('gm_p_needs_config'));
+    mediumArrange(s);
     mediumPaintOp(s);
     if (MS.showLog && op) mediumLoadLog();
     const host = $('medium-frame');
@@ -3409,7 +3466,7 @@ Object.assign(LANGS.hr, {
   function nativePaint() {
     const c = MN.cfg, box = $('mn-body'); if (!box || !c) return;
     const refresh = `<button class="btn-sec" onclick="gitWorkspace.nativeLoad()">↻ ${esc(t('git_refresh'))}</button>`;
-    if (!c.ok) { box.innerHTML = `<p><span class="g-st s-error">${esc(c.error)}</span></p><div class="g-bar">${refresh}<button class="btn-sec" onclick="gitWorkspace.nativeConfig()">📝 ${esc(t('mn_cfg_open'))}</button></div>`; return; }
+    if (!c.ok) { box.innerHTML = `<p><span class="g-st s-error">${esc(c.error)}</span></p><p class="g-mut">${esc(t('mn_cfg_start'))}</p><div class="g-bar">${refresh}<label class="btn-sec" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">⇪ ${esc(t('mn_cfg_upload'))}<input type="file" accept=".zip" hidden onchange="gitWorkspace.mediumUpload('config',this)"></label><button class="btn-sec" onclick="gitWorkspace.nativeConfig()">📝 ${esc(t('mn_cfg_open'))}</button></div>`; return; }
     const conns = c.connections || [];
     const rows = c.config.servers.map(s => {
       const l = (c.links || {})[s.name];
@@ -3442,7 +3499,7 @@ Object.assign(LANGS.hr, {
       ? (!loc ? t('mn_build_note') : loc === 'none' ? t('mn_build_none_note') : t('mn_build_ready_note'))
       : (view.source ? mnFmt('mn_source_note', view.source) : t('mn_no_source_note'));
     $('mn-preview').disabled = !view.source || !ready;
-    const eng = (c.engines || {})[p.name] || 'docker';
+    const eng = (c.engines || {})[p.name] || c.engine_default || 'docker';
     $('mn-engine').innerHTML = `<label>${esc(t('mn_engine'))} <select id="mn-engine-sel" onchange="gitWorkspace.nativeEngine(this.value)" ${c.can_deploy || eng === 'native' ? '' : 'disabled'}>${['docker', 'native'].map(e => `<option value="${e}" ${e === eng ? 'selected' : ''}>${esc(t('mn_engine_' + e))}</option>`).join('')}</select></label> <span class="g-mut">${esc(t(c.can_deploy ? 'mn_engine_hint' : 'mn_engine_no_policy'))}</span>`;
     nativeEnv();
     $('mn-refs').innerHTML = '';
@@ -3512,7 +3569,7 @@ Object.assign(LANGS.hr, {
     const p = mnProject(); if (!p) return;
     const r = await fetch('/api/git/medium/native/engine', json('POST', {project: p.name, engine}));
     if (!r.ok) { showToast(await apiError(r), 'error', 8000); nativeProject(); return; }
-    MN.cfg.engines = Object.assign({}, MN.cfg.engines || {}); if (engine === 'native') MN.cfg.engines[p.name] = 'native'; else delete MN.cfg.engines[p.name];
+    MN.cfg.engines = Object.assign({}, MN.cfg.engines || {}); MN.cfg.engines[p.name] = engine;
     showToast(t('mn_engine_set'), 'success');
     if (MN.run && MN.run.result && MN.run.result.project === p.name) nativeRender(MN.run);
   }
@@ -3556,6 +3613,7 @@ Object.assign(LANGS.hr, {
     let html = `<div class="g-card"><p>${head}</p>`;
     if (r.build) {
       let where = r.build_location === 'none' ? t('mn_build_none') : r.build_location === 'original' ? t('mn_build_original') : r.build_location === 'host' ? t('mn_build_host') : r.build_location === 'server' ? t('mn_build_server') + (r.build_server ? ' ' + r.build_server : '') : t('mn_build_choose');
+      if (r.build_user) where += ' · ' + mnFmt('mn_build_as', r.build_user);
       if (r.build_platform) where += ' (' + r.build_platform + ')';
       html += `<p><b>${esc(t('mn_build_where'))}:</b> ${esc(where)} <span class="g-mono g-mut">${esc(r.build)}</span></p>`;
       if (r.build_log) html += `<details><summary>${esc(t('mn_build_log'))}</summary><pre class="gm-out">${esc(r.build_log)}</pre></details>`;
@@ -3602,7 +3660,7 @@ Object.assign(LANGS.hr, {
   // The deploy bar under a finished comparison: leave changes out, dry run, deploy.
   function mnDeployBar(r) {
     if (!r.deployable) return `<p class="g-mut">${esc(t('mn_not_deployable'))}</p>`;
-    const c = MN.cfg, native = ((c.engines || {})[r.project] || 'docker') === 'native';
+    const c = MN.cfg, native = ((c.engines || {})[r.project] || c.engine_default || 'docker') === 'native';
     const why = !native ? t('mn_deploy_needs_native') : !c.can_deploy ? t('mn_engine_no_policy') : !r.ref_allowed ? t('mn_not_allowed') : '';
     let h = `<div class="g-card" id="mn-deploy">`;
     if (r.excluded && r.excluded.length) h += `<p>${esc(t('mn_excluded_now'))}: <span class="g-mono">${esc(r.excluded.join('  '))}</span> <button class="btn-sec btn-sm" onclick="gitWorkspace.nativeReplan(true)">${esc(t('mn_clear_excluded'))}</button></p>`;
@@ -3762,6 +3820,7 @@ Object.assign(LANGS.hr, {
       const r = await fetch('/api/git/medium/native/config/files'); if (!r.ok) throw new Error(await apiError(r));
       const v = await r.json(); MC.files = v.files || []; MC.canEdit = !!v.can_edit; MC.valid = v.valid; MC.error = v.error || '';
     } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 8000); return; }
+    try { const g = await fetch('/api/git/medium/native/config/git'); MC.git = g.ok ? await g.json() : null; } catch (_) { MC.git = null; }
     const pick = name && MC.files.some(f => f.name === name) ? name : (MC.files.find(f => f.name === MC.name) ? MC.name : (MC.files[0] || {}).name);
     if (!pick) { MC.name = ''; MC.text = ''; MC.hash = ''; mcPaint(); return; }
     await mcOpen(pick, true);
@@ -3779,6 +3838,7 @@ Object.assign(LANGS.hr, {
     const ro = !MC.canEdit;
     modal(`<h3>📝 ${esc(t('mn_cfg_title'))}</h3><p class="g-mut">${esc(t('mn_cfg_intro'))}</p>
       ${MC.valid === false ? `<div class="hint-box bad">${esc(t('mn_cfg_invalid_now'))} ${esc(MC.error)}</div>` : ''}${ro ? `<div class="hint-box warn">${esc(t('mn_cfg_read_only'))}</div>` : ''}
+      ${mcGitHTML()}
       <div class="g-bar"><label>${esc(t('mn_cfg_file'))} <select id="mc-file" onchange="gitWorkspace.mcOpen(this.value)">${opts}</select></label>${ro ? '' : `<button class="btn-sec btn-sm" onclick="gitWorkspace.mcNew()">＋ ${esc(t('mn_cfg_new'))}</button>`}</div>
       ${MC.crlf ? `<p class="g-mut">${esc(t('mn_cfg_crlf'))}</p>` : ''}${MC.isNew ? `<p class="g-mut">${esc(t('mn_cfg_new_note'))}</p>` : ''}
       <textarea id="mc-text" class="g-mono" spellcheck="false" autocomplete="off" aria-label="${esc(MC.name)}" style="min-height:50vh;font-size:12px;white-space:pre;tab-size:2" ${ro ? 'readonly' : ''}>${esc(MC.text)}</textarea>
@@ -3786,6 +3846,58 @@ Object.assign(LANGS.hr, {
       <div class="g-btns">${ro ? '' : `<button onclick="gitWorkspace.mcSave(false)">${esc(t('mn_cfg_save'))}</button><button class="btn-sec" onclick="gitWorkspace.mcSave(true)">${esc(t('mn_cfg_check'))}</button>${MC.name.startsWith('projects/') && !MC.isNew ? `<button class="btn-danger" onclick="gitWorkspace.mcDelete()">${esc(t('mn_cfg_delete'))}</button>` : ''}`}<button class="btn-sec" onclick="gitWorkspace.mcClose()">${esc(t('close'))}</button></div>`);
     const ta = $('mc-text');
     if (ta) ta.addEventListener('keydown', e => { if (e.key === 'Tab' && !e.shiftKey && !ta.readOnly) { e.preventDefault(); ta.setRangeText('  ', ta.selectionStart, ta.selectionEnd, 'end'); } });
+  }
+  // WRM's Git copy of deploy-config: pulled from DEPLOY_CONFIG_REPO through a WRM Git source,
+  // edited here, committed and pushed back with the source's write token
+  function mcGitHTML() {
+    const g = MC.git; if (!g) return '';
+    const short = c => esc((c || '').slice(0, 10));
+    if (!g.available) return `<details class="g-card" id="mc-git"><summary>🔀 ${esc(t('mc_git_title'))}: ${esc(t('mc_git_off'))}</summary><p class="g-mut">${esc(g.error || '')}</p><p class="g-mut">${esc(t('mc_git_off_hint'))}</p></details>`;
+    const ro = !MC.canEdit;
+    let h = `<div class="g-card" id="mc-git"><b>🔀 ${esc(t('mc_git_title'))}</b> <span class="g-mono g-mut">${esc(g.repo)}</span> · ${esc(mnFmt('mc_git_source', g.source))}`;
+    if (!g.active) {
+      h += `<p class="g-mut">${esc(mnFmt('mc_git_inactive', g.branch || '?'))}${g.head ? ' <span class="g-mono">' + short(g.head) + '</span>' : ''}</p>`;
+      if (g.head_error) h += `<div class="hint-box bad">${esc(g.head_error)}</div>`;
+      if (!ro) h += `<div class="g-bar"><button class="btn-sm" onclick="gitWorkspace.mcGitPull(false)">⇩ ${esc(t('mc_git_use'))}</button></div>`;
+      return h + '</div>';
+    }
+    const ch = g.changes || [];
+    h += `<p>${esc(mnFmt('mc_git_active', g.branch))} <span class="g-mono">${short(g.commit)}</span> · ${esc(mnFmt('mc_git_pulled', typeof fmtTime === 'function' ? fmtTime(g.pulled_at) : g.pulled_at))}`
+      + (g.behind ? ` <span class="g-st s-pending">${esc(mnFmt('mc_git_behind', short(g.head)))}</span>` : g.head ? ` <span class="g-st s-ok">${esc(t('mc_git_current'))}</span>` : '') + '</p>';
+    if (g.head_error) h += `<div class="hint-box warn">${esc(g.head_error)}</div>`;
+    if (g.error) h += `<div class="hint-box bad">${esc(g.error)}</div>`;
+    h += ch.length ? `<p><b>${esc(mnFmt('mc_git_changes', ch.length))}</b> ${ch.map(c => `<span class="g-st ${c.action === 'delete' ? 's-error' : c.action === 'create' ? 's-ok' : 's-pending'}">${esc(t('mc_git_a_' + c.action))}</span> <span class="g-mono">${esc(c.name)}</span>`).join(' · ')}</p>` : `<p class="g-mut">${esc(t('mc_git_clean'))}</p>`;
+    if (ro) return h + '</div>';
+    if (ch.length && g.can_push) h += `<div class="g-bar"><label style="flex:1 1 240px;display:flex;gap:6px;align-items:center">${esc(t('mc_git_message'))} <input id="mc-git-msg" style="flex:1;min-width:0" maxlength="5000" placeholder="${esc(t('mc_git_message_ph'))}" autocomplete="off"></label><button class="btn-sm" onclick="gitWorkspace.mcGitPush()">⇧ ${esc(t('mc_git_push'))}</button></div><p class="g-mut">${esc(mnFmt('mc_git_push_hint', g.author || ''))}</p>`;
+    else if (ch.length) h += `<p class="g-mut">${esc(t('mc_git_no_write'))}</p>`;
+    h += `<div class="g-bar">${ch.length ? `<button class="btn-danger btn-sm" onclick="gitWorkspace.mcGitPull(true)">${esc(t('mc_git_discard_pull'))}</button>` : `<button class="btn-sec btn-sm" onclick="gitWorkspace.mcGitPull(false)">⇩ ${esc(t('mc_git_pull'))}</button>`}<button class="btn-sec btn-sm" onclick="gitWorkspace.mcGitStop()">${esc(t('mc_git_stop'))}</button></div>`;
+    return h + '</div>';
+  }
+  async function mcGitAfter(r) {
+    if (!r.ok) throw new Error(await apiError(r));
+    const v = await r.json();
+    MC.name = ''; await nativeConfig(); MN.run = null; nativeLoad();
+    if (v.error) showToast(v.error, 'error', 12000);
+    return v;
+  }
+  async function mcGitPull(discard) {
+    if (mcDirty() && !confirm(t('mn_cfg_discard'))) return;
+    if (discard && !confirm(mnFmt('mc_git_discard_confirm', ((MC.git || {}).changes || []).map(c => c.name).join(', ')))) return;
+    try { await mcGitAfter(await fetch('/api/git/medium/native/config/git/pull', json('POST', {discard: !!discard}))); showToast(t('mc_git_pulled_ok'), 'success'); }
+    catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 12000); }
+  }
+  async function mcGitPush() {
+    if (mcDirty()) { showToast(t('mc_git_save_first'), 'error', 8000); return; }
+    const m = ($('mc-git-msg') || {}).value || '';
+    if (!confirm(mnFmt('mc_git_push_confirm', (MC.git || {}).branch || ''))) return;
+    try { await mcGitAfter(await fetch('/api/git/medium/native/config/git/push', json('POST', {message: m.trim()}))); showToast(t('mc_git_pushed_ok'), 'success'); }
+    catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 12000); }
+  }
+  async function mcGitStop() {
+    const ch = ((MC.git || {}).changes || []).length;
+    if (!confirm(t(ch ? 'mc_git_stop_confirm_changes' : 'mc_git_stop_confirm'))) return;
+    try { await mcGitAfter(await fetch('/api/git/medium/native/config/git/stop', json('POST', {}))); showToast(t('mc_git_stopped'), 'success'); }
+    catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 12000); }
   }
   function mcNew() {
     if (mcDirty() && !confirm(t('mn_cfg_discard'))) return;
@@ -3856,9 +3968,10 @@ Object.assign(LANGS.hr, {
     try {
       const r = await fetch('/api/git/medium/' + kind + '?confirm=1', {method:'POST',body:data}); if (!r.ok) throw new Error(await apiError(r));
       // 202: kept and checked by WRM; the original tool checks and applies it at the next start
-      if (r.status === 202 && kind !== 'tool') showToast(t('gm_kept_' + kind), 'success', 9000);
+      if (r.status === 202 && kind !== 'tool' && !(kind === 'config' && (MS.s || {}).default_engine === 'native')) showToast(t('gm_kept_' + kind), 'success', 9000);
       else showToast(t('gm_imported_' + kind), 'success');
       await mediumRefresh(); mediumActivity(false);
+      if (kind === 'config' && $('mn-card') && $('mn-card').open) nativeLoad();
     } catch (e) { showToast(String(e).replace(/^Error: /, ''), 'error', 12000); mediumActivity(false); }
     input.value = '';
   }
@@ -4287,7 +4400,7 @@ Object.assign(LANGS.hr, {
 
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
-    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeBuild, nativeBuildDraft, nativeBuildSave, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, nativeDiff, nativeConfig, mcOpen, mcNew, mcSave, mcDelete, mcClose, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, setCheckVMD, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
+    open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeBuild, nativeBuildDraft, nativeBuildSave, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, nativeDiff, nativeConfig, mcOpen, mcNew, mcSave, mcDelete, mcClose, mcGitPull, mcGitPush, mcGitStop, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, setCheckVMD, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
     viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,

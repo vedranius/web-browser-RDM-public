@@ -45,6 +45,7 @@ type mdBuildOutcome struct {
 	Tree     mdTree
 	Location string // host, server, none
 	Server   string
+	User     string // medium_build_user of a WRM-host build
 	Platform string
 	Arch     string
 	Log      string
@@ -213,10 +214,14 @@ func mdBuildProject(uid int, match mdSourceMatch, proj *mdProject, commit string
 }
 
 // mdBuildOnHost materialises the commit in a private temporary directory, runs the build
-// command there with the WRM OS account, and reads source_dir back.
+// command there with the WRM OS account (or medium_build_user), and reads source_dir back.
 func mdBuildOnHost(full mdTree, proj *mdProject) (*mdBuildOutcome, error) {
 	if ok, why := mdHostBuildSupported(); !ok {
 		return nil, errors.New(why)
+	}
+	acc, err := mdResolveBuildUser()
+	if err != nil {
+		return nil, err
 	}
 	root, err := os.MkdirTemp("", "wrm-medium-build-")
 	if err != nil {
@@ -232,9 +237,20 @@ func mdBuildOnHost(full mdTree, proj *mdProject) (*mdBuildOutcome, error) {
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "sh", "-c", *proj.Build)
 	cmd.Dir = root
+	if err := mdApplyBuildUser(cmd, acc, root); err != nil {
+		out.Close()
+		return nil, err
+	}
+	if acc != nil {
+		out.User = acc.Name
+	}
 	stdout, stderr := &mdTailWriter{max: mdBuildLog}, &mdTailWriter{max: mdBuildLog}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
 	err = cmd.Run()
+	if rerr := mdReclaimBuildDir(acc, root); rerr != nil {
+		out.Close()
+		return nil, rerr
+	}
 	out.Log = mdBuildLogText(stdout.String(), stderr.String())
 	if ctx.Err() != nil {
 		out.Close()
