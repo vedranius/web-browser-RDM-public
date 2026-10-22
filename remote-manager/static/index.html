@@ -2723,6 +2723,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="rp-controls">
       <button class="btn-sm" id="rp-play" onclick="replayToggle()" style="min-width:40px;">▶</button>
       <span class="rp-time" id="rp-time">0:00 / 0:00</span>
+      <span class="rp-time" id="rp-wall" title="Wall-clock time at the playhead"></span>
       <input type="range" id="rp-seek" min="0" max="1000" value="0" oninput="replaySeekInput(this.value)">
       <select id="rp-speed" class="setting-select" onchange="replaySetSpeed(this.value)"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option><option value="16">16×</option></select>
       <label class="rp-idle"><input type="checkbox" id="rp-idle" checked onchange="replaySetIdle(this.checked)"><span data-i18n="skip_idle">Skip idle time</span></label>
@@ -3440,6 +3441,7 @@ Object.assign(LANGS.en, {
   started:'Started', server:'Server', duration:'Duration', all_statuses:'All statuses', no_sessions_yet:'No terminal sessions yet.',
   ts_active:'Active', ts_connecting:'Connecting', ts_closed:'Closed', ts_failed:'Failed', ts_lost:'Connection lost', ts_killed:'Ended by admin', ts_interrupted:'Interrupted',
   skip_idle:'Skip idle time', session_events:'Session events', replay_failed:'The recording could not be loaded',
+  rp_wall:'Wall-clock time at the playhead', rp_ended:'Ended',
   date_from:'From date', date_to:'To date', verify_integrity:'Verify integrity',
   audit_ok:'Audit log intact: {n} entries verified (#{first} – #{last}).', audit_unsigned:'{n} newer entries have no hash (written by an older version).',
   audit_broken:'Audit log integrity check FAILED at entry #{id}: {reason}',
@@ -3955,6 +3957,7 @@ Object.assign(LANGS.hr, {
   started:'Početak', server:'Server', duration:'Trajanje', all_statuses:'Svi statusi', no_sessions_yet:'Još nema terminalskih sesija.',
   ts_active:'Aktivna', ts_connecting:'Spajanje', ts_closed:'Zatvorena', ts_failed:'Neuspjela', ts_lost:'Veza izgubljena', ts_killed:'Prekinuo admin', ts_interrupted:'Prekinuta',
   skip_idle:'Preskoči neaktivnost', session_events:'Događaji sesije', replay_failed:'Snimku nije moguće učitati',
+  rp_wall:'Stvarno vrijeme na poziciji reprodukcije', rp_ended:'Završeno',
   date_from:'Od datuma', date_to:'Do datuma', verify_integrity:'Provjeri integritet',
   audit_ok:'Audit log je netaknut: provjereno {n} zapisa (#{first} – #{last}).', audit_unsigned:'{n} novijih zapisa nema hash (zapisala ih je starija verzija).',
   audit_broken:'Provjera integriteta audit loga NIJE USPJELA kod zapisa #{id}: {reason}',
@@ -9445,7 +9448,7 @@ async function renderTermSessions(boxId, mine, more) {
 }
 
 // ── replay player (asciicast v2 on xterm.js) ──
-const replay = {term: null, raw: [], events: [], header: null, dur: 0, pos: 0, idx: 0, playing: false, speed: 1, idle: true, timer: null, wallStart: 0, posStart: 0};
+const replay = {term: null, raw: [], events: [], header: null, dur: 0, pos: 0, idx: 0, playing: false, speed: 1, idle: true, timer: null, wallStart: 0, posStart: 0, startMs: 0};
 
 function buildReplayTimeline() {
   let shift = 0, prev = 0;
@@ -9482,8 +9485,10 @@ async function openReplay(id) {
     const ms = meta.session || {};
     if (ms.recording && ms.recording.format === 'guacamole+gzip') {
       document.getElementById('rp-title').textContent = `${ms.username || '—'} → ${ms.connection || ''} (${(ms.protocol || '').toUpperCase()} ${ms.host || ''})`;
+      const g0 = ms.started_at ? Date.parse(ms.started_at) : 0;
       document.getElementById('rp-meta').innerHTML = [[t('started'), fmtTime(ms.started_at)], [t('duration'), fmtMs(ms.duration_ms)], ['IP', ms.client_ip], [t('status'), t('ts_' + ms.status)],
-        ['SHA-256', (ms.recording.sha256 || '').slice(0, 16) + '…']].map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
+        g0 && ms.duration_ms ? [t('rp_ended'), fmtTime(new Date(g0 + Number(ms.duration_ms)))] : null,
+        ['SHA-256', (ms.recording.sha256 || '').slice(0, 16) + '…']].filter(Boolean).map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
       const evs = meta.events || [];
       document.getElementById('rp-events').innerHTML = evs.length ? `<table class="admin-table"><tbody>` + evs.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td><b style="color:var(--text);">${esc(e.action)}</b></td><td class="mono" style="font-size:10.5px;word-break:break-all;">${esc(e.details)}</td></tr>`).join('') + '</tbody></table>' : `<div class="sub">${esc(t('none'))}</div>`;
       openGuacReplay(id, meta);
@@ -9505,10 +9510,12 @@ async function openReplay(id) {
     try { const e = JSON.parse(lines[i]); if (Array.isArray(e) && (e[1] === 'o' || e[1] === 'r')) replay.raw.push(e); } catch (_) {}
   }
   const s = meta.session || {};
+  replay.startMs = s.started_at ? Date.parse(s.started_at) : 0;
   document.getElementById('rp-title').textContent = `${s.username || '—'} → ${s.connection || ''} (${s.remote_user ? s.remote_user + '@' : ''}${s.host || ''})`;
   document.getElementById('rp-meta').innerHTML = [
     [t('started'), fmtTime(s.started_at)], [t('duration'), fmtMs(s.duration_ms)], ['IP', s.client_ip],
     [t('status'), t('ts_' + s.status)], s.share ? [t('share'), s.share] : null,
+    replay.startMs && s.duration_ms ? [t('rp_ended'), fmtTime(new Date(replay.startMs + Number(s.duration_ms)))] : null,
     s.recording ? ['SHA-256', (s.recording.sha256 || '').slice(0, 16) + '…'] : null,
   ].filter(Boolean).map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
   const ev = meta.events || [];
@@ -9543,8 +9550,16 @@ function replayApplyUntil(target) {
 
 function updateReplayUI() {
   document.getElementById('rp-time').textContent = fmtMs(replay.pos * 1000) + ' / ' + fmtMs(replay.dur * 1000);
+  const wall = document.getElementById('rp-wall');
+  if (wall) wall.textContent = replayWall(replay.pos);
   document.getElementById('rp-seek').value = replay.dur ? Math.round(replay.pos / replay.dur * 1000) : 0;
   document.getElementById('rp-play').textContent = replay.playing ? '❚❚' : '▶';
+}
+
+// The recording header carries a Unix timestamp, so the playhead can be shown
+// as the wall-clock time it happened, not only as seconds from the start.
+function replayWall(posSec) {
+  return replay.startMs ? fmtTime(new Date(replay.startMs + posSec * 1000)) : '';
 }
 
 function replayTick() {
@@ -11658,6 +11673,7 @@ async function openGuacReplay(id, meta) {
   const screen = document.getElementById('rp-screen');
   screen.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
   ['rp-speed', 'rp-idle'].forEach(x => { const el = document.getElementById(x); if (el) el.closest('select, label').style.display = 'none'; });
+  replay.startMs = meta && meta.session && meta.session.started_at ? Date.parse(meta.session.started_at) : 0;
   document.getElementById('rp-download').href = '/api/recordings/' + Number(id) + '/guac?download=1';
   document.getElementById('rp-download').textContent = '⬇ .guac';
   try {
@@ -11675,6 +11691,8 @@ async function openGuacReplay(id, meta) {
     const upd = () => {
       const pos = rec.getPosition(), dur = rec.getDuration();
       document.getElementById('rp-time').textContent = fmtMs(pos) + ' / ' + fmtMs(dur);
+      const wall = document.getElementById('rp-wall');
+      if (wall) wall.textContent = replayWall(pos / 1000);
       document.getElementById('rp-seek').value = dur ? Math.round(pos / dur * 1000) : 0;
       document.getElementById('rp-play').textContent = rec.isPlaying() ? '❚❚' : '▶';
     };
