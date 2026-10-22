@@ -1,3 +1,15 @@
+## Web Remote Manager PRO v13.4.1 - OpenCode Go on existing installations
+
+### Fixed
+
+- If `ai_provider_kinds` was saved with the old "all provider kinds" list, WRM now adds `opencode_go` automatically, so **OpenCode Go (subscription key)** appears in the provider form without editing the policy. A deliberately narrowed list is not changed.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.1) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v13.4.0 - OpenCode Go keys work
 
 ### Added

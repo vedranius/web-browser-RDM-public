@@ -255,7 +255,14 @@ func TestV133AddonToolApprovalLoop(t *testing.T) {
 		t.Fatalf("a panel approval is not in the global pending list: %+v", active.Pending)
 	}
 	var events int
-	db.QueryRow(`SELECT COUNT(*) FROM user_events WHERE user_id=? AND event='ai.approval'`, e.admin.userID).Scan(&events)
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		db.QueryRow(`SELECT COUNT(*) FROM user_events WHERE user_id=? AND event='ai.approval'`, e.admin.userID).Scan(&events)
+		if events > 0 {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	if events == 0 {
 		t.Fatal("the approval was not recorded in the user's notifications")
 	}

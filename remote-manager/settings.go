@@ -248,6 +248,13 @@ func loadAppSettings() {
 			settingsStore.values[k] = v
 		}
 	}
+	// v13.4.0: an installation that saved the old "all provider kinds" value gets
+	// OpenCode Go without editing the policy. A custom list stays untouched.
+	if v, ok := settingsStore.values["ai_provider_kinds"]; ok {
+		if n, err := normalizeAIKinds(v); err == nil && n == aiProviderKindsOldDefault {
+			settingsStore.values["ai_provider_kinds"] = aiAllProviderKinds
+		}
+	}
 	for _, s := range settingSpecs {
 		if env, name := settingEnv(s.Key); env != "" {
 			if _, err := validateSetting(s, env); err != nil {

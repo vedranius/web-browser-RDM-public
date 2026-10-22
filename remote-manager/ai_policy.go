@@ -33,6 +33,9 @@ const (
 	aiModeAuto     = "auto"
 
 	aiAllProviderKinds = "anthropic,openai,azure,bedrock,vertex,openai_compatible,opencode,opencode_go"
+	// aiProviderKindsOldDefault is the value before OpenCode Go. An installation
+	// that saved it meant "every kind", so loadAppSettings upgrades it once.
+	aiProviderKindsOldDefault = "anthropic,openai,azure,bedrock,vertex,openai_compatible,opencode"
 )
 
 var aiModeOrder = []string{aiModeReadOnly, aiModeAsk, aiModeAuto}

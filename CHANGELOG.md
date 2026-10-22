@@ -1,3 +1,8 @@
+## [13.4.1] - 2026-10-22
+
+### Fixed
+- **OpenCode Go appears on existing installations.** If `ai_provider_kinds` was saved with the old "all kinds" list (before `opencode_go` existed), the setting is upgraded in memory to include it, so the new provider can be added without editing the policy; a deliberately narrowed list is left unchanged.
+
 ## [13.4.0] - 2026-10-22
 
 ### Added

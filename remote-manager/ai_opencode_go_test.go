@@ -146,6 +146,29 @@ func TestOpencodeGoBaseAndProviderValidation(t *testing.T) {
 	}
 }
 
+func TestOpencodeGoPolicyMigration(t *testing.T) {
+	old := getSetting("ai_provider_kinds")
+	if _, err := db.Exec(`INSERT INTO app_settings(key,value) VALUES('ai_provider_kinds',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`, aiProviderKindsOldDefault); err != nil {
+		t.Fatal(err)
+	}
+	loadAppSettings()
+	if got := getSetting("ai_provider_kinds"); !strings.Contains(got, "opencode_go") {
+		t.Fatalf("the old all-kinds value did not gain OpenCode Go: %q", got)
+	}
+	// A deliberately narrowed list is not widened.
+	if _, err := db.Exec(`INSERT INTO app_settings(key,value) VALUES('ai_provider_kinds','anthropic,openai') ON CONFLICT(key) DO UPDATE SET value=excluded.value`); err != nil {
+		t.Fatal(err)
+	}
+	loadAppSettings()
+	if got := getSetting("ai_provider_kinds"); got != "anthropic,openai" {
+		t.Fatalf("a custom provider list was changed: %q", got)
+	}
+	if _, err := db.Exec(`INSERT INTO app_settings(key,value) VALUES('ai_provider_kinds',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`, old); err != nil {
+		t.Fatal(err)
+	}
+	loadAppSettings()
+}
+
 func TestOpencodeGoFallbackWithoutModelList(t *testing.T) {
 	old := opencodeCatalogURL
 	opencodeCatalogURL = "http://127.0.0.1:1/api.json"
