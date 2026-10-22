@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strconv"
 	"syscall"
@@ -37,8 +38,8 @@ func mdResolveBuildUser() (*mdBuildAccount, error) {
 	if err != nil {
 		return nil, fmt.Errorf("the build user %s does not exist on the WRM host; create it (for example useradd --system --create-home %s) or clear the setting", name, name)
 	}
-	uid, err1 := strconv.ParseUint(u.Uid, 10, 32)
-	gid, err2 := strconv.ParseUint(u.Gid, 10, 32)
+	uid, err1 := strconv.ParseUint(u.Uid, 10, 31) // fits an int on every platform
+	gid, err2 := strconv.ParseUint(u.Gid, 10, 31)
 	if err1 != nil || err2 != nil {
 		return nil, fmt.Errorf("the build user %s has an unexpected user or group id", name)
 	}
@@ -48,7 +49,7 @@ func mdResolveBuildUser() (*mdBuildAccount, error) {
 	acc := &mdBuildAccount{Name: name, Home: u.HomeDir, UID: uint32(uid), GID: uint32(gid)}
 	if ids, err := u.GroupIds(); err == nil {
 		for _, s := range ids {
-			if g, err := strconv.ParseUint(s, 10, 32); err == nil {
+			if g, err := strconv.ParseUint(s, 10, 31); err == nil {
 				if g == 0 {
 					return nil, fmt.Errorf("the build user %s is in the root group; choose an account outside it", name)
 				}
@@ -102,11 +103,8 @@ func mdApplyBuildUser(cmd *exec.Cmd, acc *mdBuildAccount, root string) error {
 	if acc == nil {
 		return nil
 	}
-	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		return os.Lchown(p, int(acc.UID), int(acc.GID))
+	err := mdWalkInRoot(root, func(r *os.Root, rel string, fi fs.FileInfo) error {
+		return r.Lchown(rel, int(acc.UID), int(acc.GID))
 	})
 	if err != nil {
 		return fmt.Errorf("hand the build directory to %s: %v", acc.Name, err)
@@ -130,27 +128,20 @@ func mdReclaimBuildDir(acc *mdBuildAccount, root string) error {
 		return nil
 	}
 	var bad string
-	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		fi, err := os.Lstat(p)
-		if err != nil {
-			return err
-		}
+	err := mdWalkInRoot(root, func(r *os.Root, rel string, fi fs.FileInfo) error {
 		if st, ok := fi.Sys().(*syscall.Stat_t); ok && fi.Mode().IsRegular() && st.Nlink > 1 && st.Uid != acc.UID && bad == "" {
-			bad, _ = filepath.Rel(root, p)
+			bad = rel
 			return nil
 		}
 		if bad != "" {
 			return nil
 		}
-		// a directory is taken over before WalkDir lists it, so nothing new appears in it
-		if err := os.Lchown(p, os.Geteuid(), os.Getegid()); err != nil {
+		// a directory is taken over before its entries are listed, so nothing new appears in it
+		if err := r.Lchown(rel, os.Geteuid(), os.Getegid()); err != nil {
 			return err
 		}
 		if fi.Mode()&fs.ModeSymlink == 0 && fi.Mode().Perm()&0o022 != 0 {
-			return os.Chmod(p, fi.Mode().Perm()&^0o022)
+			return r.Chmod(rel, fi.Mode().Perm()&^0o022)
 		}
 		return nil
 	})
@@ -161,4 +152,43 @@ func mdReclaimBuildDir(acc *mdBuildAccount, root string) error {
 		return fmt.Errorf("the build left a hard link (%s); WRM does not deploy hard links from a build that ran as %s", filepath.ToSlash(bad), acc.Name)
 	}
 	return nil
+}
+
+// mdWalkInRoot visits root and everything below it, a directory before its entries, with
+// every operation scoped to an os.Root so no path can lead outside the build directory.
+func mdWalkInRoot(root string, fn func(r *os.Root, rel string, fi fs.FileInfo) error) error {
+	r, err := os.OpenRoot(root)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	var walk func(rel string) error
+	walk = func(rel string) error {
+		fi, err := r.Lstat(rel)
+		if err != nil {
+			return err
+		}
+		if err := fn(r, rel, fi); err != nil {
+			return err
+		}
+		if !fi.IsDir() {
+			return nil
+		}
+		d, err := r.Open(rel)
+		if err != nil {
+			return err
+		}
+		names, err := d.Readdirnames(-1)
+		d.Close()
+		if err != nil {
+			return err
+		}
+		for _, n := range names {
+			if err := walk(path.Join(rel, n)); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return walk(".")
 }
