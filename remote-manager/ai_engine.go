@@ -531,7 +531,7 @@ func (s *aiSession) startRecording(r *http.Request) {
 	}
 	s.termID, _ = res.LastInsertId()
 	db.Exec(`UPDATE ai_sessions SET term_session_id=? WHERE id=?`, s.termID, s.ID)
-	if settingBool("session_recording") {
+	if _, on := userRecordingLevel(s.UserID); on {
 		maxBytes := int64(settingInt("recording_max_mb")) << 20
 		rec, err := newRecorder("ai-"+s.UID, 120, 40, "AI: "+s.Username+" on "+s.ConnName+" ("+s.Model+")", "xterm-256color", false, maxBytes)
 		if err != nil {

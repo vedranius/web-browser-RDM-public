@@ -1394,6 +1394,8 @@ func initDB() {
 		`ALTER TABLE folders ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
 		// v10.9.1: the PuTTY session an imported mRemoteNG connection names (PuttySession)
 		`ALTER TABLE connections ADD COLUMN putty_session TEXT NOT NULL DEFAULT ''`,
+		// v13.1: recording level per user ('' follows the server settings)
+		`ALTER TABLE users ADD COLUMN recording_level TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)

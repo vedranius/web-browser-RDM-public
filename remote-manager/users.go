@@ -994,12 +994,13 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		jsonOK(w, users)
 	case http.MethodPost:
 		var p struct {
-			Username    string `json:"username"`
-			DisplayName string `json:"display_name"`
-			Password    string `json:"password"`
-			IsAdmin     bool   `json:"is_admin"`
-			Role        string `json:"role"`
-			MustChange  *bool  `json:"must_change_password"`
+			Username       string `json:"username"`
+			DisplayName    string `json:"display_name"`
+			Password       string `json:"password"`
+			IsAdmin        bool   `json:"is_admin"`
+			Role           string `json:"role"`
+			MustChange     *bool  `json:"must_change_password"`
+			RecordingLevel string `json:"recording_level"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			jsonError(w, "Bad JSON", 400)
@@ -1035,21 +1036,26 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		mustChange := p.MustChange == nil || *p.MustChange
+		p.RecordingLevel = strings.TrimSpace(p.RecordingLevel)
+		if !validRecordingLevel(p.RecordingLevel) {
+			jsonError(w, "Recording level must be empty (server settings), none, metadata or input", 400)
+			return
+		}
 		hash, err := hashPassword(p.Password)
 		if err != nil {
 			jsonError(w, "Server error", 500)
 			return
 		}
 		now := time.Now().UTC().Format(time.RFC3339)
-		res, err := db.Exec(`INSERT INTO users (username, display_name, password_hash, is_admin, role, must_change_password, created_at, password_changed_at) VALUES (?,?,?,?,?,?,?,?)`,
-			p.Username, truncateStr(strings.TrimSpace(p.DisplayName), 80), hash, boolToInt(p.IsAdmin), storedRole(role), boolToInt(mustChange), now, now)
+		res, err := db.Exec(`INSERT INTO users (username, display_name, password_hash, is_admin, role, must_change_password, recording_level, created_at, password_changed_at) VALUES (?,?,?,?,?,?,?,?,?)`,
+			p.Username, truncateStr(strings.TrimSpace(p.DisplayName), 80), hash, boolToInt(p.IsAdmin), storedRole(role), boolToInt(mustChange), p.RecordingLevel, now, now)
 		if err != nil {
 			jsonError(w, "Username already exists", 400)
 			return
 		}
 		id, _ := res.LastInsertId()
-		auditLog(r, adminID, "admin.user_created", p.Username, map[string]interface{}{"admin": p.IsAdmin, "role": role, "must_change_password": mustChange})
-		jsonOK(w, map[string]interface{}{"id": id, "username": p.Username, "generated_password": generated})
+		auditLog(r, adminID, "admin.user_created", p.Username, map[string]interface{}{"admin": p.IsAdmin, "role": role, "must_change_password": mustChange, "recording_level": p.RecordingLevel})
+		jsonOK(w, map[string]interface{}{"id": id, "username": p.Username, "generated_password": generated, "recording_level": p.RecordingLevel})
 	default:
 		jsonError(w, "Method not allowed", 405)
 	}
@@ -1084,11 +1090,12 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case action == "" && r.Method == http.MethodPut:
 		var p struct {
-			IsAdmin     *bool   `json:"is_admin"`
-			Role        *string `json:"role"`
-			BreakGlass  *bool   `json:"break_glass"`
-			Disabled    *bool   `json:"disabled"`
-			DisplayName *string `json:"display_name"`
+			IsAdmin        *bool   `json:"is_admin"`
+			Role           *string `json:"role"`
+			BreakGlass     *bool   `json:"break_glass"`
+			Disabled       *bool   `json:"disabled"`
+			DisplayName    *string `json:"display_name"`
+			RecordingLevel *string `json:"recording_level"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			jsonError(w, "Bad JSON", 400)
@@ -1156,6 +1163,15 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if p.DisplayName != nil {
 			db.Exec(`UPDATE users SET display_name=? WHERE id=?`, truncateStr(strings.TrimSpace(*p.DisplayName), 80), id)
 			changes["display_name"] = *p.DisplayName
+		}
+		if p.RecordingLevel != nil {
+			lv := strings.TrimSpace(*p.RecordingLevel)
+			if !validRecordingLevel(lv) {
+				jsonError(w, "Recording level must be empty (server settings), none, metadata or input", 400)
+				return
+			}
+			db.Exec(`UPDATE users SET recording_level=? WHERE id=?`, lv, id)
+			changes["recording_level"] = lv
 		}
 		auditLog(r, adminID, "admin.user_updated", target.Username, changes)
 		jsonOK(w, map[string]bool{"ok": true})

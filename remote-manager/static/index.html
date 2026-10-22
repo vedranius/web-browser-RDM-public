@@ -2825,6 +2825,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <option value="user" data-i18n="urole_user">User</option><option value="operator" data-i18n="urole_operator">Operator</option>
       <option value="auditor" data-i18n="urole_auditor">Security auditor</option><option value="admin" data-i18n="urole_admin">Administrator</option></select>
       <div class="muted-text" style="margin-top:4px;" id="nu-role-hint"></div></div>
+    <div class="field"><label data-i18n="rec_level_lbl">Session recording</label><select id="nu-record">
+      <option value="" data-i18n="rec_level_default">As the server settings</option>
+      <option value="none" data-i18n="rec_level_none">Off for this user</option>
+      <option value="metadata" data-i18n="rec_level_meta">Session output only (no keystrokes)</option>
+      <option value="input" data-i18n="rec_level_input">Session output and keystrokes</option></select>
+      <div class="muted-text" style="margin-top:4px;" data-i18n="rec_level_hint">The server setting stays the master switch: turning recording off there records nothing.</div></div>
     <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-user-new')" data-i18n="cancel">Cancel</button><button onclick="submitNewUser()" data-i18n="create">Create</button></div>
   </div>
 </div>
@@ -5444,6 +5450,12 @@ Object.assign(LANGS.en, {
  "urole_auditor_d": "Reads the audit log, terminal sessions and recordings, file transfers and the security posture. Cannot open connections, use tools or the AI assistant, or change anything.",
  "urole_operator_d": "A user who also gets the features whose policy is set to Operators.",
  "urole_user_d": "Uses their own connections and what is shared with them, as the policies allow.",
+ "rec_level_lbl": "Session recording",
+ "rec_level_default": "As the server settings",
+ "rec_level_none": "Off for this user",
+ "rec_level_meta": "Session output only (no keystrokes)",
+ "rec_level_input": "Session output and keystrokes",
+ "rec_level_hint": "The server setting stays the master switch: turning recording off there records nothing.",
  "role_change_q": "Change the role of {u} to {r}?",
  "break_glass": "Break-glass",
  "break_glass_d": "Emergency administrator: must use 2FA, may be limited to allowed networks, every sign-in is audited and sent to the other administrators.",
@@ -5507,6 +5519,12 @@ Object.assign(LANGS.hr, {
  "urole_auditor_d": "Čita audit, terminalske sesije i snimke, prijenose datoteka i sigurnosno stanje. Ne može otvarati konekcije, koristiti alate ni AI asistenta, niti išta mijenjati.",
  "urole_operator_d": "Korisnik koji dobiva i funkcije čija je politika postavljena na Operateri.",
  "urole_user_d": "Koristi svoje konekcije i ono što je s njim podijeljeno, kako politike dopuštaju.",
+ "rec_level_lbl": "Snimanje sesije",
+ "rec_level_default": "Kako su postavke servera",
+ "rec_level_none": "Isključeno za ovog korisnika",
+ "rec_level_meta": "Samo izlaz sesije (bez tipki)",
+ "rec_level_input": "Izlaz sesije i tipke",
+ "rec_level_hint": "Postavka servera ostaje glavni prekidač: kad je snimanje tamo isključeno, ne snima se ništa.",
  "role_change_q": "Promijeniti ulogu korisnika {u} u {r}?",
  "break_glass": "Break-glass",
  "break_glass_d": "Administrator za hitne slučajeve: mora koristiti 2FA, može biti ograničen na dopuštene mreže, svaka prijava ide u audit i šalje se ostalim administratorima.",
@@ -8807,6 +8825,7 @@ async function ssoConfirmSelf() {
 function openNewUser() {
   ['nu-username', 'nu-display', 'nu-password'].forEach(i => document.getElementById(i).value = '');
   document.getElementById('nu-must-change').checked = true;
+  document.getElementById('nu-record').value = '';
   const nr = document.getElementById('nu-role');
   nr.value = 'user';
   nr.onchange = () => { document.getElementById('nu-role-hint').textContent = t('urole_' + nr.value + '_d'); };
@@ -8822,6 +8841,7 @@ async function submitNewUser() {
     password: document.getElementById('nu-password').value,
     role: document.getElementById('nu-role').value,
     must_change_password: document.getElementById('nu-must-change').checked,
+    recording_level: document.getElementById('nu-record').value,
   };
   const res = await fetch('/api/admin/users', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   const d = await res.json().catch(() => ({}));

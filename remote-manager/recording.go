@@ -387,6 +387,39 @@ func startTerminalSession(r *http.Request, acc *connAccess, c Connection) *termA
 
 func (t *termAudit) ref() auditRef { return auditRef{ConnID: t.conn.ID, SessionID: int(t.ID)} }
 
+// validRecordingLevel reports whether an account may store this level.
+func validRecordingLevel(v string) bool {
+	switch v {
+	case "", "none", "metadata", "input":
+		return true
+	}
+	return false
+}
+
+// userRecordingLevel resolves the effective recording level for a user:
+// "none", "metadata" (output only) or "input" (output and keystrokes). The
+// server setting is the master switch; a level chosen on the account overrides
+// the type, and an empty level follows session_recording_input.
+func userRecordingLevel(userID int) (string, bool) {
+	if !settingBool("session_recording") {
+		return "none", false
+	}
+	level := ""
+	if userID > 0 {
+		db.QueryRow(`SELECT recording_level FROM users WHERE id=?`, userID).Scan(&level)
+	}
+	switch level {
+	case "none":
+		return "none", false
+	case "metadata", "input":
+		return level, true
+	}
+	if settingBool("session_recording_input") {
+		return "input", true
+	}
+	return "metadata", true
+}
+
 // connected marks the session active and starts recording when enabled. It returns true
 // when the session is being recorded.
 func (t *termAudit) connected(cols, rows int, term string) bool {
@@ -395,16 +428,17 @@ func (t *termAudit) connected(cols, rows int, term string) bool {
 	if t.shareID > 0 {
 		d["share_id"] = t.shareID
 	}
-	if settingBool("session_recording") && t.ID > 0 {
+	if level, on := userRecordingLevel(t.userID); on && t.ID > 0 {
 		maxBytes := int64(settingInt("recording_max_mb")) << 20
 		title := t.conn.Username + "@" + t.conn.Host + " (" + t.conn.Name + ") — " + t.user
-		rec, err := newRecorder(t.UID, cols, rows, title, term, settingBool("session_recording_input"), maxBytes)
+		rec, err := newRecorder(t.UID, cols, rows, title, term, level == "input", maxBytes)
 		if err != nil {
 			log.Printf("recording: %v", err)
 			d["recording_error"] = err.Error()
 		} else {
 			t.rec.Store(rec)
 			d["recorded"] = true
+			d["recording_level"] = level
 		}
 	}
 	auditLogRef(t.r, t.userID, t.user, "terminal.open", t.conn.Name, d, t.ref())
