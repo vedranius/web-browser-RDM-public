@@ -297,6 +297,11 @@ func collectMonitor(ctx context.Context, c Connection, cfg monitorConfig) monito
 	delete(s.Metrics, "filesystems")
 	delete(s.Metrics, "interfaces")
 	finishMonitor(&s)
+	// Service state is read over the same SSH connection. direct/api transports
+	// have no shell, so a service list only applies to the ssh transport.
+	if cl != nil && len(cfg.Services) > 0 {
+		collectMonitorServices(ctx, cl, cfg.Services, &s)
+	}
 	return s
 }
 

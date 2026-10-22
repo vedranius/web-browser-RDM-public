@@ -1,3 +1,12 @@
+## [13.1.0] - Unreleased
+
+### Added
+- **Monitored services.** A monitored server can watch up to 20 services next to its metrics: systemd units (`systemd:nginx`) and Docker containers (`docker:web`). They are read on every SSH poll, in the same round trip as the metrics, and each sample carries the state (`active`, `running`, `failed`, `missing`, …). A watched service that is not `active`/`running` turns the sample into `problem` with a `service problem: …` message, so the existing notification and history path reports it without a second mechanism. The watch list lives in **Monitoring settings**, and **Poll automatically** can be switched directly on the server card.
+- **Safer service checks.** Names are validated before they are stored (`systemd` units and Docker container names only) and the remote command is one fixed POSIX loop that receives the names on stdin through a quoted heredoc, so a name is data and never shell syntax.
+
+### Security
+- Service state is read with the SSH account and no extra privilege: `systemctl is-active` and `docker inspect` only. A missing container is reported as `missing`, not as a failed container, and a failed check marks the sample `problem` instead of hiding the previous state.
+
 ## [13.0.0] - Unreleased
 
 ### Added

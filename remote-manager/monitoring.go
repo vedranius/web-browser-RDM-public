@@ -24,6 +24,10 @@ type monitorLogRoot struct {
 	Kind string `json:"kind,omitempty"`
 	Unit string `json:"unit,omitempty"`
 }
+type monitorService struct {
+	Kind string `json:"kind"` // systemd | docker
+	Name string `json:"name"`
+}
 type monitorConfig struct {
 	Enabled     bool             `json:"enabled"`
 	Mode        string           `json:"mode"` // ssh | direct | api
@@ -41,6 +45,7 @@ type monitorConfig struct {
 	APIToken    string           `json:"api_token,omitempty"`
 	HasSecrets  bool             `json:"has_secrets"`
 	Roots       []monitorLogRoot `json:"roots"`
+	Services    []monitorService `json:"services,omitempty"`
 }
 
 type monitorMetric struct {
@@ -56,6 +61,7 @@ type monitorSample struct {
 	State    string                   `json:"state"`
 	Error    string                   `json:"error,omitempty"`
 	Metrics  map[string]monitorMetric `json:"metrics"`
+	Services map[string]string        `json:"services,omitempty"` // "systemd:nginx" -> active
 }
 
 func initMonitoring() {
@@ -131,6 +137,28 @@ func (c *monitorConfig) normalize() error {
 	}
 	if len(c.CA)+len(c.Certificate)+len(c.PrivateKey) > 128<<10 || len(c.APIToken) > 4096 {
 		return fmt.Errorf("monitoring credentials too large")
+	}
+	if len(c.Services) > 20 {
+		return fmt.Errorf("at most 20 monitored services")
+	}
+	for i := range c.Services {
+		x := &c.Services[i]
+		x.Name = strings.TrimSpace(x.Name)
+		if x.Kind == "" {
+			x.Kind = "systemd"
+		}
+		switch x.Kind {
+		case "systemd":
+			if !monitorUnitPattern.MatchString(x.Name) {
+				return fmt.Errorf("invalid systemd unit name %q", x.Name)
+			}
+		case "docker":
+			if !monitorContainerPattern.MatchString(x.Name) {
+				return fmt.Errorf("invalid Docker container name %q", x.Name)
+			}
+		default:
+			return fmt.Errorf("a monitored service is systemd or docker")
+		}
 	}
 	return nil
 }
