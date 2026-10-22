@@ -1,3 +1,15 @@
+## Web Remote Manager PRO v13.2.0 - Screen lock
+
+### Added
+
+- **Screen lock (#115).** After 2, 5, 10, 30 or 60 minutes without activity (or off) the interface is covered by a lock screen that asks for the signed-in account's password; the **🔒** button next to Sign out locks it immediately. Terminals, tunnels and AI runs keep going, every unlock attempt is audited (`auth.unlocked` / `auth.unlock_failed`, five per minute), and the note on the screen says plainly that this is a presence check, not a new sign-in.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.2.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.2.0) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v13.1.2 - Three-level service discovery and a clean history
 
 ### Changed

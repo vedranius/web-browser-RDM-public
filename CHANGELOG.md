@@ -1,3 +1,8 @@
+## [13.2.0] - 2026-10-22
+
+### Added
+- **Screen lock (#115).** After a chosen period without activity (2, 5, 10, 30 or 60 minutes, or off) the interface is covered by a lock screen that asks for the signed-in account's password; a **🔒** button next to Sign out locks it at once. Terminals, tunnels and AI runs keep working, and every unlock attempt is checked and audited (`auth.unlocked` / `auth.unlock_failed`, five attempts per minute). The choice is stored per browser; the lock is a presence check, not a second sign-in, and the session stays valid.
+
 ## [13.1.2] - 2026-10-22
 
 ### Changed
