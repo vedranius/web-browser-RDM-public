@@ -232,12 +232,14 @@ func mdAPIDiff(w http.ResponseWriter, r *http.Request, uid int, runID string) {
 		jsonError(w, "this file is not a change of the plan", 400)
 		return
 	}
-	rel := mdUnescapePath(p)
+	// the path and server come from the plan, not from the request
+	rel := mdUnescapePath(ch.Path)
 	if !mdSafeTreePath(rel) {
 		jsonError(w, "invalid path", 400)
 		return
 	}
-	view := mdDiffView{Server: server, Path: p, Action: ch.Action, EOL: ch.EOL}
+	server = sp.Server
+	view := mdDiffView{Server: server, Path: ch.Path, Action: ch.Action, EOL: ch.EOL}
 	var newB []byte
 	var newSize int64
 	if e := run.src[rel]; e != nil && ch.Action != "deleted" {
@@ -312,7 +314,7 @@ func mdAPIDiff(w http.ResponseWriter, r *http.Request, uid int, runID string) {
 		view.New = n
 	}
 	view.Lines, view.Truncated, view.Added, view.Removed = lines, truncated, add, rem
-	auditLog(r, uid, "git.medium_native_diff", run.Result.Project, map[string]interface{}{"server": server, "path": p})
+	auditLog(r, uid, "git.medium_native_diff", run.Result.Project, map[string]interface{}{"server": server, "path": ch.Path})
 	jsonOK(w, view)
 }
 
