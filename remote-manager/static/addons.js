@@ -36,6 +36,15 @@ Object.assign(LANGS.en, {
   add_run_out: 'Result',
   add_run_running: 'Running…',
   add_run_empty: '(no output)',
+  add_ai: 'AI addon',
+  add_ai_d: 'Describe the addon you want to an AI client: WRM builds the prompt with the manifest, the capabilities this build accepts and the sandbox rules.',
+  add_ai_q: 'Create an addon with AI',
+  add_ai_help: 'Copy this prompt into the AI client you use (Claude, Codex, OpenCode…) or open the WRM assistant. WRM neither starts another desktop app nor runs what the AI writes: zip the files the AI returns and install the ZIP above. Only what the manifest declares is executed, and server code only as WebAssembly in the sandbox.',
+  add_ai_copy: 'Copy prompt',
+  add_ai_copied: 'The prompt is copied',
+  add_ai_copy_fail: 'The clipboard is not available; the text is selected, copy it with Ctrl+C.',
+  add_ai_open: 'Open assistant',
+  add_ai_close: 'Close',
 });
 
 Object.assign(LANGS.hr, {
@@ -67,6 +76,15 @@ Object.assign(LANGS.hr, {
   add_run_out: 'Rezultat',
   add_run_running: 'Radi…',
   add_run_empty: '(nema izlaza)',
+  add_ai: 'AI dodatak',
+  add_ai_d: 'Opišite željeni dodatak AI klijentu: WRM sastavlja upit s manifestom, mogućnostima koje ova verzija prihvaća i pravilima sandboxa.',
+  add_ai_q: 'Napravi dodatak uz AI',
+  add_ai_help: 'Kopirajte ovaj upit u AI klijent koji koristite (Claude, Codex, OpenCode…) ili otvorite WRM asistenta. WRM ne pokreće druge desktop aplikacije i ne izvršava ono što AI napiše: zapakirajte datoteke koje AI vrati u ZIP i instalirajte ga gore. Izvršava se samo ono što manifest deklarira, a kôd na serveru samo kao WebAssembly u sandboxu.',
+  add_ai_copy: 'Kopiraj upit',
+  add_ai_copied: 'Upit je kopiran',
+  add_ai_copy_fail: 'Međuspremnik nije dostupan; tekst je označen, kopirajte ga s Ctrl+C.',
+  add_ai_open: 'Otvori asistenta',
+  add_ai_close: 'Zatvori',
 });
 
 (function () {
@@ -228,9 +246,13 @@ Object.assign(LANGS.hr, {
         <input type="file" id="addon-file" accept=".zip,application/zip" style="max-width:240px;">
         <button class="btn-sec btn-sm" id="addon-install-btn" onclick="wrmAddons.install()">${esc(t('add_go'))}</button>
       </div></div>` : '';
+    const aiBox = admin ? `<div class="setting-row">
+      <div><div class="setting-label">✨ ${esc(t('add_ai_q'))}</div><div class="setting-desc">${esc(t('add_ai_d'))}</div></div>
+      <div class="setting-control"><button class="btn-sec btn-sm" onclick="wrmAddons.aiPrompt()">${esc(t('add_ai'))}</button></div></div>` : '';
     el.innerHTML = `<div class="hint-box">${esc(t('add_intro'))}</div>
       <div class="hint-box warn">${esc(t('add_disclaimer'))}</div>
       ${install}
+      ${aiBox}
       <div class="adm-h">${esc(t('tab_addons'))}</div>
       ${list.length ? list.map(rowHTML).join('') : `<div class="sub" style="color:var(--text3);font-size:11.5px;">${esc(t('add_none'))}</div>`}`;
   }
@@ -318,6 +340,89 @@ Object.assign(LANGS.hr, {
     }
   }
 
+  // ── AI addon ─────────────────────────────────────────
+  // The prompt is generated from the capabilities the server reports, so it
+  // cannot describe a hook this build would refuse. WRM does not launch other
+  // apps: the text goes to the user's AI client, or to the built-in assistant.
+  function aiPromptText() {
+    const capLines = Object.entries(caps || {}).map(([k, v]) => '- ' + k + ': ' + v).join('\n');
+    return [
+      'You are writing an addon for WRM PRO, a self-hosted server manager.',
+      'Deliver it as ONE zip with addon.json at the root plus the files it declares.',
+      '',
+      'addon.json:',
+      '{',
+      '  "id": "lowercase.dotted-id",',
+      '  "name": "Short name",',
+      '  "version": "1.0.0",',
+      '  "description": "One sentence",',
+      '  "author": "Your name",',
+      '  "license": "MIT",',
+      '  "homepage": "https://example.com/addon",',
+      '  "capabilities": ["ui.panel"],',
+      '  "ui": {"panel": "panel.html", "theme": "theme.css", "title": "Window title"},',
+      '  "server": {"module": "plugin.wasm", "exports": ["status"]}',
+      '}',
+      '',
+      'Capabilities this WRM build accepts:',
+      capLines,
+      '',
+      'Rules:',
+      '- ui.panel is HTML opened in an iframe with sandbox="allow-scripts" and no same-origin. It cannot read WRM cookies or the page. It receives {type:"wrm:context", user, lang, theme, connections} through postMessage, may send {type:"wrm:notify", text} back, and may ask for the context again with {type:"wrm:context"}.',
+      '- ui.theme is a CSS file applied while the addon is enabled.',
+      '- server.wasm is WebAssembly run by wazero with no WASI: no files, no network, no environment, no clock. The only import is wrm.log(ptr, len). The module must export its memory, wrm_alloc(size) -> ptr, and each declared export as (ptr, len) -> ptr returning a pointer to a NUL-terminated UTF-8 string. WRM writes the JSON request at the pointer wrm_alloc returned. 64 KiB input, 1 MB output, 5 seconds per call, 64 MiB memory.',
+      '- Nothing runs at install time; the module is compiled and its imports and exports are checked.',
+      '',
+      'Write the smallest addon that does the job, state its license, and tell me how to zip it for install.'
+    ].join('\n');
+  }
+
+  function aiPrompt() {
+    let m = $('addon-ai-modal');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'addon-ai-modal';
+      m.className = 'modal-overlay';
+      m.style.zIndex = 9660;
+      document.body.appendChild(m);
+    }
+    m.innerHTML = `<div class="modal" style="width:760px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;">
+      <h3>✨ ${esc(t('add_ai_q'))}</h3>
+      <div class="hint-box">${esc(t('add_ai_help'))}</div>
+      <textarea id="addon-ai-text" spellcheck="false" style="width:100%;min-height:320px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;padding:8px;">${esc(aiPromptText())}</textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap;">
+        <button class="btn-sec" onclick="wrmAddons.copyPrompt()">${esc(t('add_ai_copy'))}</button>
+        <button class="btn-sec" onclick="wrmAddons.openAssistant()">${esc(t('add_ai_open'))}</button>
+        <button onclick="wrmAddons.closeAIPrompt()">${esc(t('add_ai_close'))}</button>
+      </div>
+    </div>`;
+    m.classList.add('open');
+  }
+
+  function closeAIPrompt() {
+    const m = $('addon-ai-modal');
+    if (m) m.classList.remove('open');
+  }
+
+  async function copyPrompt() {
+    const ta = $('addon-ai-text');
+    if (!ta) return;
+    try {
+      await navigator.clipboard.writeText(ta.value);
+      showToast(t('add_ai_copied'), 'success');
+    } catch (_) {
+      ta.focus();
+      ta.select();
+      showToast(t('add_ai_copy_fail'), 'warning', 7000);
+    }
+  }
+
+  function openAssistant() {
+    closeAIPrompt();
+    if (typeof openAIHome === 'function') openAIHome();
+    else showToast(t('add_ai_copy_fail'), 'warning', 7000);
+  }
+
   // Themes are applied once the app is signed in: initApp is wrapped here
   // because this script loads after the main one.
   async function boot() {
@@ -325,7 +430,7 @@ Object.assign(LANGS.hr, {
     if ($('addons-pane') && $('st-addons') && $('st-addons').classList.contains('active')) render();
   }
 
-  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, applyThemes, reload: after};
+  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, applyThemes, reload: after};
 
   if (typeof window.initApp === 'function' && !window.initApp.__addons) {
     const orig = window.initApp;

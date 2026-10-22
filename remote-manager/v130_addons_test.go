@@ -165,6 +165,7 @@ func TestV130AddonUIHooks(t *testing.T) {
 		`frame.setAttribute('sandbox', 'allow-scripts')`, // never allow-same-origin
 		`'wrm:notify'`, `'wrm:context'`, `applyThemes`, `/api/addons/`, `add_disclaimer`,
 		`wrmAddons.run`, `add_run_d`, `/call/`,
+		`wrmAddons.aiPrompt`, `add_ai_q`, `openAIHome`, `wrm_alloc(size)`, `postMessage`,
 	} {
 		if !strings.Contains(a, want) {
 			t.Errorf("addons.js lacks %s", want)
