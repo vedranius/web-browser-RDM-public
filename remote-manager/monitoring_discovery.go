@@ -445,6 +445,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 	type candidate struct {
 		p, service, operator string
 		depth                int
+		skip                 bool // one container level under /home (project) carries no label
 	}
 	queue := []candidate{}
 	baseSeen := map[string]bool{}
@@ -454,7 +455,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 			continue
 		}
 		baseSeen[p] = true
-		queue = append(queue, candidate{p: p})
+		queue = append(queue, candidate{p: p, skip: p == "/home"})
 	}
 	visited := 0
 	for len(queue) > 0 && visited < 400 && len(roots) < 200 && ctx.Err() == nil {
@@ -483,6 +484,11 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 				continue
 			}
 			p := path.Join(d.p, n)
+			if d.skip && d.depth == 0 {
+				// /home/<project>/<operator>/<service>: the container level is not a label.
+				queue = append(queue, candidate{p: p})
+				continue
+			}
 			if monitorLogDirName(n) {
 				if r := add(p, d.service, d.operator); r != "" {
 					addService(effectiveServiceName(d.service, n), "folder", "file", "", "", r)
@@ -494,7 +500,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 				} else {
 					service = n
 				}
-				queue = append(queue, candidate{p, service, operator, d.depth + 1})
+				queue = append(queue, candidate{p, service, operator, d.depth + 1, false})
 			}
 		}
 	}

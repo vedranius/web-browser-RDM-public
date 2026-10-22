@@ -1,3 +1,8 @@
+## [13.1.2] - Unreleased
+
+### Changed
+- **Service labels under `/home`.** Discovery descends one container level under `/home`, so `/home/<project>/<operator>/<service>` is recognised and labelled operator/service without naming any project; labels found this way are defaults and a root line in Monitoring settings (`path | service | operator`) overrides them.
+
 ## [13.1.1] - 2026-10-22
 
 ### Added
