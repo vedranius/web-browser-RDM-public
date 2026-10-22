@@ -1,3 +1,18 @@
+## Web Remote Manager PRO v13.1.2 - Three-level service discovery and a clean history
+
+### Changed
+
+- **Service labels under `/home`.** Discovery descends one container level under `/home`, so `/home/<project>/<operator>/<service>` is recognised and labelled operator/service without naming any project. Those labels are defaults: a root line in **Monitoring settings** (`path | service | operator`) overrides them.
+- Documentation, tests, release notes and the community repository now use neutral placeholders only; the public branch history was rewritten so no private deployment name remains.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.1.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.1.2) · [Full changelog](CHANGELOG.md)
+
+
+
 ## Web Remote Manager PRO v13.1.1 - Claude Code in one command, updater assets fixed
 
 ### Added
