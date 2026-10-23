@@ -52,6 +52,7 @@ Object.assign(LANGS.hr, {
 
 (function () {
   const $ = id => document.getElementById(id);
+  const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(String(b)); return s; };
   const C = {};
   let seq = 0;
   const EVENTS = ['session', 'user', 'assistant_start', 'thinking', 'text', 'assistant_done', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'usage', 'busy', 'error', 'notice', 'ended', 'title', 'history', 'mode'];

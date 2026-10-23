@@ -316,6 +316,18 @@ Object.assign(LANGS.hr, {
  p_ai_opencode_sandbox_image: 'Slika sandboxa', p_ai_opencode_sandbox_image_d: 'Docker slika koju sandbox pokreće (glibc Linux). Minimalna je najsigurnija; dodaj alate koje agent smije koristiti.', p_ai_opencode_sandbox_image_ph: 'debian:stable-slim',
 });
 
+Object.assign(LANGS.en, {
+  ai_continue_chat: 'Continue chat', ai_resumed_from: 'Continued from session #{n}', ai_resumed_msgs: 'earlier questions', ai_rename: 'Rename the session',
+  ai_recent: 'Recent chats on this server (continue where you stopped):', ai_purpose_logs: 'log assistant', ai_purpose_file: 'file assistant',
+  p_ai_show_thinking: 'Show the assistant\'s thinking', p_ai_show_thinking_d: 'Ask models that support it (Claude 4.6 and later, reasoning models of OpenAI-compatible servers) for a summary of their reasoning and show it live in the chat\'s work log.',
+  p_ai_auto_titles: 'Generate session titles', p_ai_auto_titles_d: 'After the first answer one short extra model request writes a title for the chat (otherwise the first question is used). Titles can be renamed.',
+});
+Object.assign(LANGS.hr, {
+  ai_continue_chat: 'Nastavi chat', ai_resumed_from: 'Nastavak sesije #{n}', ai_resumed_msgs: 'ranijih pitanja', ai_rename: 'Preimenuj sesiju',
+  ai_recent: 'Nedavni chatovi na ovom serveru (nastavite gdje ste stali):', ai_purpose_logs: 'asistent za logove', ai_purpose_file: 'asistent za file',
+  p_ai_show_thinking: 'Prikaži razmišljanje asistenta', p_ai_show_thinking_d: 'Modele koji to podržavaju (Claude 4.6 i noviji, modeli s razmišljanjem na OpenAI-kompatibilnim serverima) traži sažetak razmišljanja i prikazuje ga uživo u radnom logu chata.',
+  p_ai_auto_titles: 'Generiraj naslove sesija', p_ai_auto_titles_d: 'Nakon prvog odgovora jedan kratki dodatni zahtjev modelu napiše naslov chata (inače se koristi prvo pitanje). Naslove možete preimenovati.',
+});
 (function () {
   const $ = id => document.getElementById(id);
   const S = {}; // per window: {sid, es, seq, view, cfg, pol, busy}
@@ -598,7 +610,9 @@ Object.assign(LANGS.hr, {
     S[id] = Object.assign(S[id] || {}, {pol});
     if (!cfg.enabled) { body.innerHTML = `<div class="hint-box warn">${esc(t('ai_disabled'))}: ${esc(cfg.reason || '')}</div>`; return; }
     if (!pol.allowed_modes.length) { body.innerHTML = `<div class="hint-box warn">${esc(t('ai_disabled'))}</div>`; return; }
-    const resume = (cfg.active || []).filter(s => s.conn_id === wo.connId && !Object.values(S).some(x => x.sid === s.id));
+    const resume = (cfg.active || []).filter(s => s.conn_id === wo.connId && !Object.values(S).some(x => x.sid === s.id) && !s.purpose);
+    let recent = [];
+    try { recent = (await api('GET', '/api/ai/sessions?purpose=terminal')).filter(s => s.conn_id === wo.connId && !s.live && s.transport === 'panel' && s.requests > 0).slice(0, 4); } catch (_) {}
     const provs = cfg.providers || [];
     const own = cfg.personal_keys ? `<button class="btn-sec btn-sm" onclick="wrmAI.myKeys(${id})">🔑 ${esc(t('ai_my_keys'))}</button>` : '';
     if (!provs.length) {
@@ -608,7 +622,8 @@ Object.assign(LANGS.hr, {
     }
     const shared = !!wo.shareToken;
     body.innerHTML = `<div class="ai-setup">
-      ${resume.map(s => `<button class="btn-sec btn-sm" onclick="wrmAI.attach(${id}, ${s.id})">↪ ${esc(t('ai_continue'))} #${s.id} · ${esc(t('ai_mode_' + s.mode))} · ${esc(s.model)}</button>`).join('')}
+      ${resume.map(s => `<button class="btn-sec btn-sm" onclick="wrmAI.attach(${id}, ${s.id})">↪ ${esc(t('ai_continue'))} #${s.id} · ${esc(s.title || t('ai_mode_' + s.mode))} · ${esc(s.model)}</button>`).join('')}
+      ${recent.length ? `<div class="ai-see">${esc(t('ai_recent'))}</div>` + recent.map(s => `<button class="btn-sec btn-sm" style="text-align:left" onclick="wrmAI.resume(${id}, ${s.id})">↪ ${esc(s.title || '#' + s.id)} · ${esc(fmtTime(s.started_at))}</button>`).join('') : ''}
       ${engineHTML(id)}
       <div class="ai-row"><div><label>${esc(t('ai_provider'))}</label><select id="ai-prov-${id}" onchange="wrmAI.models(${id})">${provs.map(p => `<option value="${p.id}">${esc(p.name)}${p.scope === 'user' ? ' (🔑)' : ''}</option>`).join('')}</select></div>
         <div><label>${esc(t('ai_model'))}</label><select id="ai-model-${id}"></select></div></div>
@@ -740,7 +755,7 @@ Object.assign(LANGS.hr, {
     if(wo.pendingAIContext){$('ai-in-'+id).value=wo.pendingAIContext;wo.pendingAIContext='';}
     const es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
     S[id].es = es;
-    ['session', 'user', 'assistant_start', 'text', 'assistant_done', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'mode', 'usage', 'busy', 'error', 'notice', 'ended']
+    ['session', 'user', 'assistant_start', 'thinking', 'text', 'assistant_done', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'mode', 'usage', 'busy', 'error', 'notice', 'ended', 'title', 'history']
       .forEach(ty => es.addEventListener(ty, ev => { try { onEvent(id, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));
     es.onerror = () => { if (S[id] && S[id].ended) es.close(); };
     indicators();
@@ -757,6 +772,7 @@ Object.assign(LANGS.hr, {
     const auto = v.auto ? ` · ${esc(tf('ai_auto_until', {time: new Date(v.auto.until).toLocaleTimeString(), used: v.auto.used, max: v.auto.max_actions}))}` : '';
     const oc = v.transport === 'opencode';
     el.innerHTML = `<select onchange="wrmAI.setMode(${id}, this.value)" ${st.ended || oc ? 'disabled' : ''} ${oc ? `title="${esc(t('ai_oc_mode_fixed'))}"` : ''}>${MODES.filter(m => allowed.includes(m) || m === v.mode).map(m => `<option value="${m}" ${m === v.mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
+      ${v.title || st.title ? `<b class="ai-title" title="${esc(t('ai_rename'))}" style="cursor:pointer;max-width:16em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onclick="wrmAI.rename(${id})">${esc(v.title || st.title)}</b>` : ''}
       <span>${oc ? `⬛ OpenCode · ${esc(v.agent || 'build')}${v.sandbox ? ' · 🐳 ' + esc(t('ai_oc_sb_on')) : ''} · ` : ''}${esc(v.provider)} · ${esc(v.model)}${auto}</span><span style="margin-left:auto;" id="ai-use-${id}"></span>`;
     usage(id);
     const pm = $('aipm-' + id);
@@ -808,14 +824,17 @@ Object.assign(LANGS.hr, {
     return el;
   }
 
+  // workLogStep adds one line; it returns the text element so a live step
+  // (the model's thinking) can grow in place.
   function workLogStep(id, text) {
     const el = workLog(id);
-    if (!el) return;
+    if (!el) return null;
     const box = el.querySelector('[data-steps]');
     const n = box.children.length + 1;
-    box.insertAdjacentHTML('beforeend', `<div style="display:flex;gap:6px;"><span style="color:var(--text3);">${n}.</span><span>${esc(text)}</span></div>`);
+    box.insertAdjacentHTML('beforeend', `<div style="display:flex;gap:6px;"><span style="color:var(--text3);">${n}.</span><span style="white-space:pre-wrap;overflow-wrap:anywhere;">${esc(text)}</span></div>`);
     el.querySelector('[data-sum]').textContent = `${t('ai_worklog_working')} · ${tf('ai_worklog_steps', {n})}`;
     scrollEnd(id);
+    return box.lastElementChild.lastElementChild;
   }
 
   function workLogDone(id) {
@@ -837,15 +856,31 @@ Object.assign(LANGS.hr, {
     switch (ev.type) {
       case 'session': st.view = d; st.ended = d.ended; bar(id); (d.pending || []).forEach(a => approvalUI(id, a)); break;
       case 'user': workLogDone(id); add(id, `<div class="ai-msg user">${esc(d.text)}</div>`); break;
-      case 'assistant_start': st.cur = null; workLog(id); break;
+      case 'assistant_start': st.cur = null; st.think = null; workLog(id); break;
+      case 'thinking': {
+        // the model's summarized reasoning, live in the work log
+        if (!st.think) { st.think = workLogStep(id, '💭 ', true); st.thinkText = ''; }
+        st.thinkText += d.delta || '';
+        if (st.think) { st.think.textContent = '💭 ' + st.thinkText.slice(-600); st.think.title = st.thinkText.slice(-4000); }
+        scrollEnd(id); break;
+      }
+      case 'title': st.title = d.title; if (st.view) st.view.title = d.title; bar(id); break;
+      case 'history': {
+        const msgs = d.messages || [];
+        add(id, `<details class="ai-worklog" style="margin:6px 0;border:1px dashed var(--border);border-radius:8px;padding:6px 10px;"><summary style="cursor:pointer;font-size:11.5px;color:var(--text2);">↪ ${esc(tf('ai_resumed_from', {n: d.from}))} · ${msgs.filter(m => m.kind === 'user').length} ${esc(t('ai_resumed_msgs'))}</summary>
+          ${msgs.map(m => m.kind === 'user' ? `<div class="ai-msg user" style="opacity:.75">${esc(m.text)}</div>` : m.kind === 'assistant' ? `<div class="ai-msg assistant" style="opacity:.75">${md(m.text)}</div>`
+            : `<div class="ai-note" style="opacity:.7">${m.kind === 'tool_call' ? '🛠' : m.kind === 'error' ? '⚠' : '📄'} ${esc(String(m.text || '').slice(0, 300))}</div>`).join('')}</details>`);
+        break;
+      }
       case 'text':
         if (!st.cur) { st.cur = add(id, `<div class="ai-msg assistant"></div>`); st.curText = ''; }
         st.curText += d.delta; st.cur.textContent = st.curText; scrollEnd(id); break;
       case 'assistant_done':
         if (d.text) { if (!st.cur) st.cur = add(id, `<div class="ai-msg assistant"></div>`); st.cur.innerHTML = md(d.text); }
         else if (st.cur && d.text === '') st.cur.remove(); // parsed tool JSON has no final assistant text
-        st.cur = null; workLogDone(id);
-        if (window.wrmSound) wrmSound('reply');
+        if (d.text && d.stop === 'tool_use') workLogStep(id, '💬 ' + String(d.text).replace(/\s+/g, ' ').slice(0, 300));
+        st.cur = null; st.think = null;
+        if (d.stop !== 'tool_use') { workLogDone(id); if (window.wrmSound) wrmSound('reply'); }
         break;      case 'tool_call': {
         workLogStep(id, d.tool ? d.tool + (d.display ? ' · ' + String(d.display) : '') : String(d.display || ''));
         if (st.cards[d.call_id]) break; // an approval already made the card
@@ -879,6 +914,7 @@ Object.assign(LANGS.hr, {
         const head = d.error ? `<div class="ai-why" style="color:#fca5a5;">${esc(d.error)}</div>`
           : `<div class="ai-ch"><span class="pill ${d.exit_code === 0 ? '' : 'warn'}">${esc(tf('ai_exit', {code: d.exit_code}))}</span>${d.redactions ? `<span class="pill info">🔒 ${esc(tf('ai_redactions', {n: d.redactions}))}</span>` : ''}</div>`;
         const out = d.output != null ? `<details ${String(d.output).length < 600 ? 'open' : ''}><summary>${esc(t('ai_output'))} (${String(d.output).length} B)</summary><pre>${esc(d.output)}</pre></details>` : '';
+        workLogStep(id, (d.error ? '✗ ' : d.exit_code === 0 ? '✓ ' : '⚠ ') + (d.tool || '') + (d.error ? ' · ' + String(d.error).slice(0, 160) : ' · ' + tf('ai_exit', {code: d.exit_code}) + (d.output != null ? ' · ' + String(d.output).length + ' B' : '')));
         if (card) card.querySelector('.ai-res').innerHTML = head + out;
         else add(id, `<div class="ai-card ${d.error ? 'deny' : ''}"><div class="ai-ch"><span class="ai-tool">${esc(d.tool || '')}</span>${d.error ? `<span class="pill bad">${esc(t('ai_d_deny'))}</span>` : ''}</div>${head}${out}</div>`);
         scrollEnd(id); break;
@@ -903,7 +939,7 @@ Object.assign(LANGS.hr, {
         pendingBar(id);
         workingUI(id, false);
         if (st.es) st.es.close();
-        add(id, `<div class="ai-note err">⏻ ${esc(t('ai_ended'))}: ${esc(reasonText(d.reason))}</div><button class="btn-sm" style="align-self:center;" onclick="wrmAI.newSession(${id})">✦ ${esc(t('ai_new'))}</button>`);
+        add(id, `<div class="ai-note err">⏻ ${esc(t('ai_ended'))}: ${esc(reasonText(d.reason))}</div><div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">${st.view && st.view.transport === 'opencode' ? '' : `<button class="btn-sm" onclick="wrmAI.resume(${id})">↪ ${esc(t('ai_continue_chat'))}</button>`}<button class="btn-sec btn-sm" onclick="wrmAI.newSession(${id})">✦ ${esc(t('ai_new'))}</button></div>`);
         const f = $('aif-' + id); if (f) f.style.display = 'none';
         $('aipk-' + id).style.display = 'none';
         if (st.view) st.view.ended = true;
@@ -1027,6 +1063,27 @@ Object.assign(LANGS.hr, {
     api('POST', `/api/ai/sessions/${st.sid}/kill${shareQ(winOf(id))}`).catch(e => showToast(e.message, 'error'));
   }
   function newSession(id) { const st = S[id]; if (st && st.es) st.es.close(); S[id] = {pol: st && st.pol}; renderSetup(winOf(id)); indicators(); }
+  // resume continues an ended session (idle, stopped, WRM restarted) in a new
+  // one that gets the conversation back; sid is an ended session from the list.
+  async function resume(id, sid) {
+    const wo = winOf(id), st = S[id] || {};
+    sid = sid || st.sid;
+    if (!wo || !sid) return;
+    try {
+      const v = await api('POST', '/api/ai/sessions' + shareQ(wo), {resume_from: sid, conn_id: wo.connId});
+      closeAIModal();
+      attach(id, v.id);
+    } catch (e) { showToast(e.message, 'error', 6000); }
+  }
+  async function rename(id, sid) {
+    const st = S[id] || {};
+    sid = sid || st.sid;
+    const cur = (st.view && st.view.title) || st.title || '';
+    const v = await uiPrompt(t('ai_rename'), cur);
+    if (v == null || !v.trim()) return;
+    try { const r = await api('POST', `/api/ai/sessions/${sid}/title`, {title: v}); if (st.sid === sid) { st.title = r.title; if (st.view) st.view.title = r.title; bar(id); } }
+    catch (e) { showToast(e.message, 'error'); }
+  }
 
   async function setMode(id, mode) {
     const wo = winOf(id), st = S[id];
@@ -1068,7 +1125,9 @@ Object.assign(LANGS.hr, {
       ${seeHTML(st.pol && st.pol.sees, prov, st.view && st.view.share_notes)}<div class="hint-box">${esc(t('ai_subscriptions_note'))}</div>`);
   }
 
+  let histWin = 0;
   async function history(id) {
+    histWin = id;
     let list = [];
     try { list = await api('GET', '/api/ai/sessions'); } catch (e) { showToast(e.message, 'error'); return; }
     modal(`<div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🕘 ${esc(t('ai_history'))}</h3><button class="icon-btn" onclick="wrmAI.closeModal()">✕</button></div>
@@ -1078,13 +1137,14 @@ Object.assign(LANGS.hr, {
   function sessionsTable(list, admin) {
     if (!list.length) return `<div class="chat-empty">${esc(t('none'))}</div>`;
     return `<div class="tbl-scroll"><table class="admin-table"><thead><tr><th>${esc(t('started'))}</th>${admin ? `<th>${esc(t('user'))}</th>` : ''}<th>${esc(t('server'))}</th><th>${esc(t('ai_model'))}</th><th>${esc(t('status'))}</th><th>${esc(t('ai_tokens'))}</th><th></th></tr></thead><tbody>` +
-      list.map(s => `<tr><td style="white-space:nowrap;">${esc(fmtTime(s.started_at))}</td>${admin ? `<td>${esc(s.user)}</td>` : ''}
+      list.map(s => `<tr><td style="white-space:nowrap;">${s.title ? `<b>${esc(s.title)}</b><div class="sub">` : ''}${esc(fmtTime(s.started_at))}${s.purpose ? ' · ' + esc(t('ai_purpose_' + s.purpose)) : ''}${s.title ? '</div>' : ''}</td>${admin ? `<td>${esc(s.user)}</td>` : ''}
         <td>${esc(s.connection)}<div class="sub mono">${esc(s.host)}</div></td><td>${esc(s.model)}<div class="sub">${esc(s.provider)} · ${esc(t('ai_mode_' + s.mode))}</div></td>
         <td><span class="pill ${s.live ? 'ok' : s.status === 'killed' ? 'warn' : ''}">${esc(s.live ? t('ai_live') : s.status)}</span>${s.end_reason ? `<div class="sub">${esc(reasonText(s.end_reason))}</div>` : ''}</td>
         <td class="mono">${s.tokens_in}/${s.tokens_out}${s.cost_usd ? `<div class="sub">$${Number(s.cost_usd).toFixed(4)}</div>` : ''}<div class="sub">${s.tool_calls} ${esc(t('ai_tool_calls'))}</div></td>
         <td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn-sec btn-sm" onclick="wrmAI.transcript(${s.id}, ${admin})">${esc(t('ai_transcript'))}</button>
           ${s.recording_session ? `<button class="btn-sec btn-sm" onclick="wrmAI.closeModal(); openReplay(${s.recording_session})">▶</button>` : ''}
-          ${admin && s.live ? `<button class="btn-sm danger" onclick="wrmAI.adminKill(${s.id})">${esc(t('ai_kill'))}</button>` : ''}</div></td></tr>`).join('') + '</tbody></table></div>';
+          ${admin && s.live ? `<button class="btn-sm danger" onclick="wrmAI.adminKill(${s.id})">${esc(t('ai_kill'))}</button>` : ''}
+          ${!admin && !s.live && histWin && s.transport === 'panel' && !s.purpose && winOf(histWin) && winOf(histWin).connId === s.conn_id ? `<button class="btn-sm" onclick="wrmAI.resume(${histWin}, ${s.id})">↪ ${esc(t('ai_continue_chat'))}</button>` : ''}</div></td></tr>`).join('') + '</tbody></table></div>';
   }
 
   async function transcript(sid, admin) {
@@ -1421,7 +1481,7 @@ Object.assign(LANGS.hr, {
 
   // ── admin tab ─────────────────────────────────────────
   const AI_POLICY_KEYS = ['ai_assistant', 'ai_kill_switch', 'ai_modes', 'ai_default_mode', 'ai_mode_rules', 'ai_personal_keys', 'ai_provider_kinds', 'ai_models', 'ai_ollama_manage',
-    'ai_redact_output', 'ai_share_notes', 'ai_allow_power', 'ai_sensitive_reads', 'ai_blocked_commands', 'ai_read_deny_paths', 'ai_approval_timeout_seconds', 'ai_auto_max_minutes',
+    'ai_redact_output', 'ai_show_thinking', 'ai_auto_titles', 'ai_share_notes', 'ai_allow_power', 'ai_sensitive_reads', 'ai_blocked_commands', 'ai_read_deny_paths', 'ai_approval_timeout_seconds', 'ai_auto_max_minutes',
     'ai_auto_max_actions', 'ai_auto_until_grant', 'ai_provider_header_seconds', 'ai_provider_request_seconds', 'ai_provider_stream_idle_seconds', 'ai_command_timeout_seconds', 'ai_output_max_kb', 'ai_max_steps', 'ai_idle_minutes', 'ai_transcript_retention_days'];
 
   async function adminAI() {
@@ -1563,7 +1623,8 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmAI = {
-    queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession, sound, pendingDetails,
+    md, diffHTML, reasonText, loadCfg,
+    queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession, resume, rename, sound, pendingDetails,
     myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); }),
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,

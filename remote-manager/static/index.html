@@ -862,12 +862,7 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 }
 
 /* Editor */
-#modal-editor .modal { width: min(1100px, 96vw); height: min(86vh, 900px); display: flex; flex-direction: column; padding: 16px; }
-#editor-text { flex: 1; min-height: 0; width: 100%; resize: none; background: #0b0d12; color: #e7e9ef; border: 1px solid var(--border2); border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; tab-size: 4; outline: none; white-space: pre; overflow: auto; user-select: text; }
-#editor-text:focus { border-color: var(--accent-b); }
-.editor-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.editor-head h3 { margin: 0 !important; font-size: 14px !important; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'JetBrains Mono', monospace; }
-.editor-meta { font-size: 11px; color: var(--text3); }
+#modal-editor .modal { display: flex; flex-direction: column; }
 
 /* Connection test result */
 .conn-test-result { font-size: 11.5px; padding: 8px 10px; border-radius: 8px; margin-top: 4px; display: none; word-break: break-word; }
@@ -2904,19 +2899,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 
 <!-- Text Editor Modal -->
 <div class="modal-overlay" id="modal-editor" style="z-index:9150;">
-  <div class="modal">
-    <div class="editor-head">
-      <h3 id="editor-title">file</h3>
-      <span class="editor-meta" id="editor-meta"></span>
-    </div>
-    <textarea id="editor-text" spellcheck="false" wrap="off" onkeydown="editorKey(event)" oninput="updateEditorMeta()"></textarea>
-    <div class="modal-footer">
-      <span style="margin-right:auto;font-size:11px;color:var(--text3);"><kbd>Ctrl</kbd>+<kbd>S</kbd> <span data-i18n="save">Save</span> · <kbd>Esc</kbd> <span data-i18n="close">Close</span></span>
-      <button class="btn-sec" onclick="closeEditor()" data-i18n="close">Close</button>
-      <button class="btn-sec" id="editor-save-btn" onclick="saveEditor(false)" data-i18n="save">Save</button>
-      <button onclick="saveEditor(true)" data-i18n="save_close">Save &amp; Close</button>
-    </div>
-  </div>
+  <div class="modal"></div>
 </div>
 
 <!-- Generic confirm / prompt dialog -->
@@ -14601,88 +14584,23 @@ function isEditable(f) {
   return EDITABLE_EXT.test(f.name) || !f.name.includes('.') || /^\./.test(f.name);
 }
 
-let _editor = null;
+// The editor lives in static/fileeditor.js (highlighting, find and replace,
+// review before saving, conflict check, AI assistant); loaded on first use.
+let _editorLoading = null;
 async function openEditor(winId, path, size) {
-  const wo = winObjects.find(w => w.id === winId);
-  if (!wo) return;
-  if (size > 5 * 1048576) { showToast(t('fm_too_big_edit'), 'warning'); return; }
-  showToast(t('loading') + ' ' + path.split('/').pop(), 'info', 1200);
-  try {
-    const res = await fetch(`/api/remote/download?${connQS(wo)}&path=${encodeURIComponent(path)}&inline=1`);
-    if (!res.ok) throw new Error(await apiError(res));
-    const buf = new Uint8Array(await res.arrayBuffer());
-    if (buf.subarray(0, 8000).includes(0) && !(await uiConfirm(t('fm_binary_warn'), {title: t('fm_edit')}))) return;
-    const text = new TextDecoder('utf-8').decode(buf);
-    _editor = {winId, path, crlf: text.includes('\r\n'), original: text.replace(/\r\n/g, '\n'), readOnly: !winCan(wo, 'files_write')};
-    document.getElementById('editor-save-btn').style.display = _editor.readOnly ? 'none' : '';
-    document.getElementById('editor-save-btn').nextElementSibling.style.display = _editor.readOnly ? 'none' : '';
-    document.getElementById('editor-text').readOnly = _editor.readOnly;
-    document.getElementById('editor-title').textContent = path;
-    document.getElementById('editor-title').title = path;
-    const ta = document.getElementById('editor-text');
-    ta.value = _editor.original;
-    updateEditorMeta();
-    document.getElementById('modal-editor').classList.add('open');
-    setTimeout(() => { ta.focus(); ta.setSelectionRange(0, 0); ta.scrollTop = 0; }, 30);
-  } catch(e) {
-    showToast(t('fm_open_failed') + ': ' + e.message, 'error', 5000);
+  if (!window.wrmFileEditor) {
+    if (!_editorLoading) _editorLoading = new Promise((ok, fail) => {
+      const script = document.createElement('script');
+      script.src = '/static/fileeditor.js'; script.onload = ok;
+      script.onerror = () => { _editorLoading = null; fail(new Error(t('git_load_failed'))); };
+      document.head.appendChild(script);
+    });
+    try { await _editorLoading; } catch (e) { showToast(e.message, 'error'); return; }
   }
+  return wrmFileEditor.open(winId, path, size);
 }
-function updateEditorMeta() {
-  if (!_editor) return;
-  const ta = document.getElementById('editor-text');
-  const lines = ta.value.split('\n').length;
-  const dirty = ta.value !== _editor.original;
-  document.getElementById('editor-meta').textContent = `${lines} ${t('lines')} · ${_editor.crlf ? 'CRLF' : 'LF'} · UTF-8${dirty ? ' · ● ' + t('modified') : ''}`;
-}
-function editorKey(e) {
-  const ta = e.target;
-  if (e.key === 'Tab' && !e.ctrlKey && !e.altKey) {
-    e.preventDefault();
-    const s = ta.selectionStart, en = ta.selectionEnd;
-    ta.setRangeText('\t', s, en, 'end');
-    updateEditorMeta();
-  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-    e.preventDefault(); saveEditor(false);
-  } else if (e.key === 'Escape') {
-    e.preventDefault(); e.stopPropagation(); closeEditor();
-  }
-}
-async function saveEditor(close) {
-  if (!_editor) return;
-  if (_editor.readOnly) { showToast(t('read_only_role'), 'warning'); return; }
-  const wo = winObjects.find(w => w.id === _editor.winId);
-  if (!wo) { showToast('Window closed', 'error'); return; }
-  let text = document.getElementById('editor-text').value;
-  if (_editor.crlf) text = text.replace(/\n/g, '\r\n');
-  const name = _editor.path.split('/').pop();
-  const dir = parentPath(_editor.path);
-  const fd = new FormData();
-  fd.append('file', new Blob([text], {type: 'application/octet-stream'}), name);
-  const btn = document.getElementById('editor-save-btn');
-  btn.disabled = true;
-  try {
-    const res = await fetch(`/api/remote/upload?${connQS(wo)}&path=${encodeURIComponent(dir)}&overwrite=true`, {method: 'POST', body: fd});
-    const body = await res.json().catch(() => ({}));
-    const r = (body.results || [])[0];
-    if (!res.ok || !r || r.status !== 'ok') throw new Error((r && r.error) || body.error || res.statusText);
-    _editor.original = document.getElementById('editor-text').value;
-    updateEditorMeta();
-    showToast('💾 ' + t('saved') + ': ' + name, 'success');
-    if (wo.path === dir) loadFiles(wo.id, dir);
-    if (close) { document.getElementById('modal-editor').classList.remove('open'); _editor = null; }
-  } catch(e) {
-    showToast(t('save_failed') + ': ' + e.message, 'error', 6000);
-  }
-  btn.disabled = false;
-}
-async function closeEditor() {
-  if (_editor && document.getElementById('editor-text').value !== _editor.original) {
-    if (!(await uiConfirm(t('discard_changes'), {title: t('fm_edit'), okText: t('discard'), danger: true}))) return;
-  }
-  document.getElementById('modal-editor').classList.remove('open');
-  _editor = null;
-}
+function saveEditor(close) { return window.wrmFileEditor?.save(close); }
+function closeEditor() { return window.wrmFileEditor ? wrmFileEditor.close() : document.getElementById('modal-editor').classList.remove('open'); }
 
 // ── Modern confirm / prompt dialogs ──
 let _dialogResolve = null;
