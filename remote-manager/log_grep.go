@@ -250,35 +250,88 @@ func logSearchable(c Connection, req []string) (files, units []string, ok bool) 
 	return files, units, true
 }
 
-// logLinesHandler returns numbered lines around one line of a discovered log
-// file (GET ?id=&path=&line=&before=&after=), so a search hit opens at its
-// place with real line numbers. sed runs on the server; nothing else is read.
+// logLinesHandler serves the log viewer (GET ?id=&path=): numbered lines of a
+// discovered log file or journal unit, read on the server with sed/tail/
+// journalctl. Modes:
+//   - mode=tail&n=N: the last N lines (default);
+//   - mode=around&line=L&before=B&after=A: lines around one line (search hits);
+//   - mode=since&bytes=B (files) or mode=since&cursor=C (journal): what was
+//     appended after an earlier read, for follow. reset=true means the file
+//     shrank (rotated/truncated) and the viewer starts again from the tail.
 func logLinesHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *connAccess) {
 	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
 	q := r.URL.Query()
-	files, _, ok := logSearchable(c, []string{q.Get("path")})
+	files, units, ok := logSearchable(c, []string{q.Get("path")})
 	if !ok {
 		jsonError(w, "Find logs first: the viewer uses the discovered file list", 409)
 		return
 	}
-	if len(files) != 1 {
+	if len(files)+len(units) != 1 {
 		jsonError(w, "Not a discovered log file", 400)
 		return
 	}
-	line, _ := strconv.Atoi(q.Get("line"))
-	before, _ := strconv.Atoi(nonEmpty(q.Get("before"), "200"))
-	after, _ := strconv.Atoi(nonEmpty(q.Get("after"), "300"))
-	line = max(1, line)
-	before = max(0, min(before, 5000))
-	after = max(0, min(after, 5000))
-	first := max(1, line-before)
-	last := line + after
-	cmd := "LC_ALL=C; export LC_ALL\nf=" + shellQuote(files[0]) + "\n" +
-		"find -P \"$f\" -maxdepth 0 -type f 2>/dev/null | grep -q . || { echo 'WRM-NOFILE'; exit 0; }\n" +
-		"printf 'WRM-TOTAL %s\\n' \"$(wc -l < \"$f\" 2>/dev/null)\"\n" +
-		"sed -n '" + strconv.Itoa(first) + "," + strconv.Itoa(last) + "p;" + strconv.Itoa(last+1) + "q' \"$f\" 2>/dev/null | head -c 4000000\n"
+	num := func(k string, def, lo, hi int) int {
+		v, err := strconv.Atoi(q.Get(k))
+		if err != nil {
+			v = def
+		}
+		return max(lo, min(v, hi))
+	}
+	mode := nonEmpty(q.Get("mode"), "tail")
+	if mode != "tail" && mode != "around" && mode != "since" {
+		jsonError(w, "Unknown mode", 400)
+		return
+	}
+	n := num("n", 1000, 1, 20000)
+	const capBytes = 900000
+	var cmd string
+	journal := len(units) == 1
+	if journal {
+		u := units[0]
+		cmd = "journalctl --no-pager --output=short-iso --show-cursor --unit=" + u + " "
+		switch mode {
+		case "since":
+			cur := q.Get("cursor")
+			if !logJournalCursor.MatchString(cur) {
+				jsonError(w, "Bad journal cursor", 400)
+				return
+			}
+			cmd += "--after-cursor=" + shellQuote(cur) + " -n 20000"
+		default:
+			cmd += "-n " + strconv.Itoa(n)
+		}
+		cmd += " 2>/dev/null | tail -c " + strconv.Itoa(capBytes) + "\n"
+	} else {
+		f := "f=" + shellQuote(files[0]) + "\n" +
+			"find -P \"$f\" -maxdepth 0 -type f 2>/dev/null | grep -q . || { echo WRM-NOFILE; exit 0; }\n" +
+			"size=$(wc -c < \"$f\" 2>/dev/null | tr -d ' ')\n"
+		switch mode {
+		case "tail":
+			cmd = f + "total=$(head -c \"$size\" \"$f\" 2>/dev/null | wc -l | tr -d ' ')\n" +
+				"printf 'WRM-HEAD %s %s\\n' \"$size\" \"$total\"\n" +
+				"head -c \"$size\" \"$f\" 2>/dev/null | tail -n " + strconv.Itoa(n) + " | tail -c " + strconv.Itoa(capBytes) + "\n"
+		case "around":
+			line := num("line", 1, 1, 1<<30)
+			first := max(1, line-num("before", 200, 0, 5000))
+			last := line + num("after", 300, 0, 5000)
+			cmd = f + "total=$(head -c \"$size\" \"$f\" 2>/dev/null | wc -l | tr -d ' ')\n" +
+				"printf 'WRM-HEAD %s %s\\n' \"$size\" \"$total\"\n" +
+				"sed -n '" + strconv.Itoa(first) + "," + strconv.Itoa(last) + "p;" + strconv.Itoa(last+1) + "q' \"$f\" 2>/dev/null | head -c " + strconv.Itoa(capBytes) + "\n"
+		case "since":
+			b, err := strconv.ParseInt(q.Get("bytes"), 10, 64)
+			if err != nil || b < 0 {
+				jsonError(w, "Bad byte offset", 400)
+				return
+			}
+			bs := strconv.FormatInt(b, 10)
+			cmd = f + "printf 'WRM-HEAD %s 0\\n' \"$size\"\n" +
+				"[ \"$size\" -ge " + bs + " ] 2>/dev/null || { echo WRM-RESET; exit 0; }\n" +
+				"tail -c +" + strconv.FormatInt(b+1, 10) + " \"$f\" 2>/dev/null | head -c " + strconv.Itoa(capBytes) + "\n"
+		}
+		cmd = "LC_ALL=C; export LC_ALL\n" + cmd
+	}
 	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 	defer cancel()
 	cl, err := dialSSH(c, nil)
@@ -292,16 +345,80 @@ func logLinesHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *
 		jsonError(w, "Reading the log failed: "+err.Error(), 502)
 		return
 	}
+	out := map[string]interface{}{"path": nonEmpty(strings.Join(files, ""), "journal:"+strings.Join(units, "")), "mode": mode}
+	if journal {
+		// The last line is "-- cursor: …" when journalctl printed any entry.
+		body := strings.TrimSuffix(raw, "\n")
+		if at := strings.LastIndex(body, "\n-- cursor: "); at >= 0 || strings.HasPrefix(body, "-- cursor: ") {
+			cur := strings.TrimPrefix(body[at+1:], "-- cursor: ")
+			if at < 0 {
+				cur, body = strings.TrimPrefix(body, "-- cursor: "), ""
+			} else {
+				body = body[:at]
+			}
+			if logJournalCursor.MatchString(cur) {
+				out["cursor"] = cur
+			}
+		}
+		if strings.HasPrefix(body, "-- No entries --") {
+			body = ""
+		}
+		out["text"] = strings.ToValidUTF8(body, "�")
+		auditFileOp(r, acc, c, "monitor.log_lines", c.Name, map[string]interface{}{"unit": units[0], "mode": mode})
+		jsonOK(w, out)
+		return
+	}
 	if strings.HasPrefix(raw, "WRM-NOFILE") {
 		jsonError(w, "The log file is gone or is no longer a regular file", 404)
 		return
 	}
+	head, body, _ := strings.Cut(raw, "\n")
+	var size int64
 	total := 0
-	if head, rest, ok := strings.Cut(raw, "\n"); ok && strings.HasPrefix(head, "WRM-TOTAL ") {
-		total, _ = strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(head, "WRM-TOTAL ")))
-		raw = rest
+	if f := strings.Fields(strings.TrimPrefix(head, "WRM-HEAD ")); strings.HasPrefix(head, "WRM-HEAD ") && len(f) == 2 {
+		size, _ = strconv.ParseInt(f[0], 10, 64)
+		total, _ = strconv.Atoi(f[1])
 	}
-	text := strings.ToValidUTF8(strings.TrimSuffix(raw, "\n"), "\uFFFD")
-	auditFileOp(r, acc, c, "monitor.log_lines", c.Name, map[string]interface{}{"path": files[0], "line": line})
-	jsonOK(w, map[string]interface{}{"path": files[0], "first": first, "text": text, "total": total})
+	switch mode {
+	case "since":
+		if strings.HasPrefix(body, "WRM-RESET") {
+			out["reset"] = true
+			body = ""
+		}
+		// Only whole lines are returned; a partly written last line waits for
+		// the next poll. bytes is the offset to continue from.
+		b, _ := strconv.ParseInt(q.Get("bytes"), 10, 64)
+		if at := strings.LastIndexByte(body, '\n'); at >= 0 {
+			body = body[:at+1]
+		} else {
+			body = ""
+		}
+		out["bytes"] = b + int64(len(body))
+	case "tail":
+		lines := strings.Count(body, "\n")
+		if body != "" && !strings.HasSuffix(body, "\n") {
+			lines++
+		}
+		if len(body) >= capBytes {
+			// The cap cut the oldest line; drop the partial first line.
+			if at := strings.IndexByte(body, '\n'); at >= 0 {
+				body = body[at+1:]
+				lines--
+			}
+		}
+		out["first"] = max(1, total-lines+1)
+		out["bytes"] = size
+	case "around":
+		line := num("line", 1, 1, 1<<30)
+		out["first"] = max(1, line-num("before", 200, 0, 5000))
+		out["bytes"] = size
+	}
+	out["text"] = strings.ToValidUTF8(strings.TrimSuffix(body, "\n"), "�")
+	out["total"] = total
+	out["size"] = size
+	auditFileOp(r, acc, c, "monitor.log_lines", c.Name, map[string]interface{}{"path": files[0], "mode": mode})
+	jsonOK(w, out)
 }
+
+// A journal cursor as journalctl prints it (s=…;i=…;b=…;m=…;t=…;x=…).
+var logJournalCursor = regexp.MustCompile(`^[A-Za-z0-9=;_-]{1,512}$`)

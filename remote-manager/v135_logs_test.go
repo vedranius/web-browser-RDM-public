@@ -192,8 +192,36 @@ func TestV135FastDiscoveryAndGrep(t *testing.T) {
 		Text  string `json:"text"`
 		Total int    `json:"total"`
 	}
-	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs/lines?id=%d&path=%s&line=2&before=0&after=0", id, got["app.log"].Path), nil, &lines); code != 200 || lines.First != 2 || lines.Total != 2 || !strings.Contains(lines.Text, "database timeout") || strings.Contains(lines.Text, "ready") {
+	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs/lines?id=%d&mode=around&path=%s&line=2&before=0&after=0", id, got["app.log"].Path), nil, &lines); code != 200 || lines.First != 2 || lines.Total != 2 || !strings.Contains(lines.Text, "database timeout") || strings.Contains(lines.Text, "ready") {
 		t.Fatalf("lines: %d %+v", code, lines)
+	}
+	var tail struct {
+		First int    `json:"first"`
+		Text  string `json:"text"`
+		Bytes int64  `json:"bytes"`
+	}
+	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs/lines?id=%d&path=%s&n=1", id, got["app.log"].Path), nil, &tail); code != 200 || tail.First != 2 || !strings.HasPrefix(tail.Text, "2026-10-21") || tail.Bytes == 0 {
+		t.Fatalf("tail: %d %+v", code, tail)
+	}
+	appendFile := func(p, s string) {
+		f, err := os.OpenFile(p, os.O_APPEND|os.O_WRONLY, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.WriteString(s)
+		f.Close()
+	}
+	appendFile(filepath.Join(svc, "app.log"), "2026-10-21T12:00:00Z WARN slow\npartial")
+	var since struct {
+		Text  string `json:"text"`
+		Bytes int64  `json:"bytes"`
+		Reset bool   `json:"reset"`
+	}
+	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs/lines?id=%d&path=%s&mode=since&bytes=%d", id, got["app.log"].Path, tail.Bytes), nil, &since); code != 200 || since.Text != "2026-10-21T12:00:00Z WARN slow" || since.Bytes != tail.Bytes+int64(len("2026-10-21T12:00:00Z WARN slow\n")) || since.Reset {
+		t.Fatalf("since: %d %+v", code, since)
+	}
+	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs/lines?id=%d&path=%s&mode=since&bytes=99999999", id, got["app.log"].Path), nil, &since); code != 200 || !since.Reset {
+		t.Fatalf("shrunk file not reported: %d %+v", code, since)
 	}
 	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs/lines?id=%d&path=/etc/passwd&line=1", id), nil, nil); code != 400 {
 		t.Fatalf("undiscovered path read: %d", code)

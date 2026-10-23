@@ -2208,6 +2208,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div class="setting-control"><select class="setting-select" id="setting-notify-down" onchange="applySettings()"><option value="1" data-i18n="on">On</option><option value="0" data-i18n="off">Off</option></select></div>
       </div>
       <div class="setting-row">
+        <div><div class="setting-label" data-i18n="date_format">Date and time format</div><div class="setting-desc" data-i18n="date_format_desc">How dates and times are shown everywhere in WRM (logs, searches, history)</div></div>
+        <div class="setting-control"><select class="setting-select" id="setting-datefmt" onchange="setDateFormat(this.value)"><option value="eu" data-i18n="date_fmt_eu">European (23.10.2026 14:05:09)</option><option value="iso" data-i18n="date_fmt_iso">ISO (2026-10-23 14:05:09)</option><option value="us" data-i18n="date_fmt_us">US (10/23/2026, 2:05:09 PM)</option><option value="locale" data-i18n="date_fmt_locale">Browser default</option></select></div>
+      </div>
+      <div class="setting-row">
         <div><div class="setting-label" data-i18n="max_upload">Max upload size</div><div class="setting-desc" data-i18n="max_upload_desc">Per file, 0 = unlimited (MB)</div></div>
         <div class="setting-control"><input type="number" min="0" step="100" id="setting-max-upload" onchange="applySettings()" style="width:90px;background:var(--bg);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 8px;"></div>
       </div>
@@ -6234,6 +6238,24 @@ Object.assign(LANGS.hr, {
  "p_alert_audit_off_d": "Audit log je isključen ili je SIEM odredište isključeno ili obrisano.",
  "ne_security_alert": "Sigurnosna uzbuna",
 });
+Object.assign(LANGS.en, {
+ "date_format": "Date and time format",
+ "date_format_desc": "How WRM shows dates and times everywhere (logs, searches, filters, sessions). Saved in this browser.",
+ "date_fmt_eu": "European: 23.10.2026 14:05:09",
+ "date_fmt_iso": "ISO: 2026-10-23 14:05:09",
+ "date_fmt_us": "US: 10/23/2026 2:05:09 PM",
+ "date_fmt_locale": "Browser language default",
+ "date_format_saved": "Date and time format saved",
+});
+Object.assign(LANGS.hr, {
+ "date_format": "Format datuma i vremena",
+ "date_format_desc": "Kako WRM svugdje prikazuje datume i vremena (logovi, pretrage, filteri, sesije). Sprema se u ovom pregledniku.",
+ "date_fmt_eu": "Europski: 23.10.2026 14:05:09",
+ "date_fmt_iso": "ISO: 2026-10-23 14:05:09",
+ "date_fmt_us": "Američki: 10/23/2026 2:05:09 PM",
+ "date_fmt_locale": "Prema jeziku preglednika",
+ "date_format_saved": "Format datuma i vremena spremljen",
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -8026,7 +8048,100 @@ function fmtDuration(sec) {
   const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60);
   return (d ? d + 'd ' : '') + (h || d ? h + 'h ' : '') + m + 'm';
 }
-function fmtTime(ts) { return ts ? new Date(ts).toLocaleString() : '—'; }
+function fmtTime(ts) { return ts ? wrmFmt(ts, 'datetime') : '—'; }
+
+// ── Date and time format (v13.5.0) ───────────────────
+// European (dd.mm.yyyy HH:mm:ss) by default, ISO, US or the browser's own,
+// chosen in Settings → General. Date.prototype.toLocale*String calls without an
+// explicit locale follow the choice, so every view uses the same format.
+const WRM_DATE_FORMATS = ['eu', 'iso', 'us', 'locale'];
+const wrmNativeDate = {s: Date.prototype.toLocaleString, d: Date.prototype.toLocaleDateString, t: Date.prototype.toLocaleTimeString};
+function wrmDateFormat() { try { const v = localStorage.getItem('wrm_datefmt'); return WRM_DATE_FORMATS.includes(v) ? v : 'eu'; } catch (_) { return 'eu'; } }
+function setDateFormat(v) {
+  try { localStorage.setItem('wrm_datefmt', WRM_DATE_FORMATS.includes(v) ? v : 'eu'); } catch (_) {}
+  showToast(t('date_format_saved'), 'success');
+  if (typeof applyLang === 'function') applyLang();
+  if (window.wrmLogViewer) wrmLogViewer.refreshTimes();
+}
+function wrmDateLocale(f) {
+  f = f || wrmDateFormat();
+  if (f === 'us') return 'en-US';
+  if (f === 'iso') return 'sv-SE';
+  if (f === 'locale') return undefined;
+  return typeof currentLang !== 'undefined' && currentLang === 'hr' ? 'hr-HR' : 'en-GB';
+}
+function wrmDateParts(d, tz) {
+  const o = {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'};
+  if (tz) o.timeZone = tz;
+  const p = {};
+  new Intl.DateTimeFormat('en-GB', o).formatToParts(d).forEach(x => { p[x.type] = x.value; });
+  if (p.hour === '24') p.hour = '00';
+  return p;
+}
+// wrmFmt(date, 'datetime' | 'date' | 'time', {timeZone, seconds, ms})
+function wrmFmt(d, what, opts) {
+  opts = opts || {};
+  if (!(d instanceof Date)) d = new Date(typeof d === 'number' && d < 1e11 ? d * 1000 : d);
+  if (isNaN(d)) return '';
+  const f = opts.format || wrmDateFormat();
+  what = what || 'datetime';
+  if (f === 'us' || f === 'locale') {
+    const o = {};
+    if (opts.timeZone) o.timeZone = opts.timeZone;
+    if (what !== 'time') Object.assign(o, {year: 'numeric', month: '2-digit', day: '2-digit'});
+    if (what !== 'date') Object.assign(o, {hour: '2-digit', minute: '2-digit'}, opts.seconds === false ? {} : {second: '2-digit'});
+    return wrmNativeDate.s.call(d, f === 'us' ? 'en-US' : undefined, o);
+  }
+  const p = wrmDateParts(d, opts.timeZone);
+  const date = f === 'iso' ? `${p.year}-${p.month}-${p.day}` : `${p.day}.${p.month}.${p.year}`;
+  let time = `${p.hour}:${p.minute}` + (opts.seconds === false ? '' : `:${p.second}`);
+  if (opts.ms) time += '.' + String(d.getMilliseconds()).padStart(3, '0');
+  return what === 'date' ? date : what === 'time' ? time : date + ' ' + time;
+}
+// wrmParseDateTime reads what a user typed in the chosen format (or ISO) and
+// returns "YYYY-MM-DDTHH:MM[:SS]" for the API, or '' when it is empty/invalid.
+function wrmParseDateTime(v) {
+  v = String(v || '').trim();
+  if (!v) return '';
+  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  let y, mo, d, h = '00', mi = '00', s = '00';
+  if (m) [, y, mo, d, h = '00', mi = '00', s = '00'] = m;
+  else if ((m = v.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})\.?(?:[ ,T]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)?)?$/))) {
+    const us = wrmDateFormat() === 'us' || v.includes('/') && wrmDateFormat() !== 'eu' && wrmDateFormat() !== 'iso';
+    [, d, mo, y, h = '00', mi = '00', s = '00'] = m;
+    if (us) [d, mo] = [mo, d];
+    if (m[7]) { let hh = Number(h) % 12; if (/pm/i.test(m[7])) hh += 12; h = String(hh); }
+  } else return '';
+  const pad = x => String(x).padStart(2, '0');
+  if (+mo < 1 || +mo > 12 || +d < 1 || +d > 31 || +h > 23 || +mi > 59 || +s > 59) return '';
+  return `${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:${pad(s)}`;
+}
+function wrmDatePlaceholder() { const f = wrmDateFormat(); return f === 'iso' ? 'yyyy-mm-dd hh:mm' : f === 'us' ? 'mm/dd/yyyy hh:mm' : 'dd.mm.yyyy hh:mm'; }
+(function () {
+  const plain = loc => loc === undefined || (Array.isArray(loc) && !loc.length) || (typeof currentLang !== 'undefined' && loc === currentLang);
+  const only = (o, keys) => !o || Object.keys(o).every(k => keys.includes(k));
+  Date.prototype.toLocaleString = function (loc, o) {
+    if (plain(loc) && wrmDateFormat() !== 'locale') {
+      if (only(o, ['timeZone', 'dateStyle', 'timeStyle'])) return wrmFmt(this, 'datetime', {timeZone: o && o.timeZone});
+      return wrmNativeDate.s.call(this, wrmDateLocale(), Object.assign({hourCycle: wrmDateFormat() === 'us' ? undefined : 'h23'}, o));
+    }
+    return wrmNativeDate.s.call(this, loc, o);
+  };
+  Date.prototype.toLocaleDateString = function (loc, o) {
+    if (plain(loc) && wrmDateFormat() !== 'locale') {
+      if (only(o, ['timeZone', 'dateStyle'])) return wrmFmt(this, 'date', {timeZone: o && o.timeZone});
+      return wrmNativeDate.d.call(this, wrmDateLocale(), o);
+    }
+    return wrmNativeDate.d.call(this, loc, o);
+  };
+  Date.prototype.toLocaleTimeString = function (loc, o) {
+    if (plain(loc) && wrmDateFormat() !== 'locale') {
+      if (only(o, ['timeZone', 'timeStyle'])) return wrmFmt(this, 'time', {timeZone: o && o.timeZone});
+      return wrmNativeDate.t.call(this, wrmDateLocale(), Object.assign({hourCycle: wrmDateFormat() === 'us' ? undefined : 'h23'}, o, o && o.hour12 === false ? {} : {}));
+    }
+    return wrmNativeDate.t.call(this, loc, o);
+  };
+})();
 
 async function adminOverview() {
   const body = document.getElementById('admin-body');
@@ -12779,7 +12894,7 @@ async function saveCurrentSession() {
   const layout = captureLayout();
   const defName = layout.windows.length
     ? [...new Set(layout.windows.map(w => (conns.find(c => c.id === w.conn_id) || {}).name).filter(Boolean))].slice(0, 3).join(' + ')
-    : new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    : wrmFmt(new Date(), 'datetime', {seconds: false});
   const name = await uiPrompt(t('session_name'), defName, {okText: t('save'), message: layout.windows.length ? `${layout.windows.length} ${t('sess_windows')}` : t('sess_empty_warn')});
   if (name === null) return;
   const oldKey = sessionClipKey(currentSessionId);
@@ -14025,7 +14140,7 @@ function fmtDate(ts) {
   const pad = n => String(n).padStart(2, '0');
   const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
   if (d.toDateString() === now.toDateString()) return t('today') + ' ' + time;
-  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + time;
+  return wrmFmt(d, 'datetime', {seconds: false});
 }
 
 function matchFilter(name, q) {
@@ -16486,6 +16601,8 @@ function openSettings(tab) {
   document.getElementById('st-ai-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-mcp-btn').style.display = signedIn && !isCollabMode && currentUser.policy && currentUser.policy.mcp_enabled ? '' : 'none';
   showSettingsTab(tab || 'st-general');
+  const dfSel = document.getElementById('setting-datefmt');
+  if (dfSel) dfSel.value = wrmDateFormat();
   updateInstallRow();
   refreshTabScrollers();
 }
