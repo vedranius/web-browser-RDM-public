@@ -176,6 +176,7 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_redact_output", Default: "1", Kind: "bool"},
 	{Key: "ai_show_thinking", Default: "1", Kind: "bool"},
 	{Key: "ai_auto_titles", Default: "1", Kind: "bool"},
+	{Key: "ai_keep_saved_sessions", Default: "1", Kind: "bool"},
 	{Key: "ai_share_notes", Default: "1", Kind: "bool"},
 	{Key: "ai_transcript_retention_days", Default: "90", Kind: "int", Min: 1, Max: 3650},
 	{Key: "ai_approval_timeout_seconds", Default: "300", Kind: "int", Min: 30, Max: 3600},
@@ -208,6 +209,7 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_mcp_allowed_origins", Default: "", Kind: "string"},
 	{Key: "ai_mcp_public_url", Default: "", Kind: "string"},
 	{Key: "ai_mcp_elicitation", Default: "1", Kind: "bool"},
+	{Key: "ai_mcp_later_approval", Default: "run", Kind: "enum", Enum: []string{"run", "repeat"}},
 	{Key: "ai_mcp_transfer_max_mb", Default: "100", Kind: "int", Min: 1, Max: 10240},
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},

@@ -66,10 +66,15 @@ type aiApproval struct {
 	// Later: the AI call no longer waits; the user can still approve it in WRM, and the
 	// same call then runs once without asking (approvedLater)
 	Later bool `json:"later,omitempty"`
+	// RunNow: approving the request kept for later runs it at once (ai_mcp_later_approval)
+	RunNow bool `json:"run_now,omitempty"`
 	// NoEdit: the command or change is approved or refused as it is (OpenCode's sandbox)
 	NoEdit bool `json:"no_edit,omitempty"`
 	key    string
 	ch     chan aiApprovalResult
+	// the call and its plan, so a later approval can run it at once (ai_approvals.go)
+	call aiToolCall
+	pl   *aiPlanned
 }
 
 // aiLaterTTL is how long a request nobody answered stays in WRM to be approved later, and
@@ -129,7 +134,8 @@ type aiSession struct {
 	ctx           context.Context
 	cancel        context.CancelFunc
 	pending       map[string]*aiApproval
-	approvedLater map[string]time.Time // aiApprovalKey → until when a later approval is valid
+	approvedLater map[string]time.Time   // aiApprovalKey → until when a later approval is valid
+	laterRuns     map[string]*aiLaterRun // aiApprovalKey → a call run when the user approved it later
 	ended         bool
 	endReason     string
 	events        []aiEvent
@@ -914,6 +920,10 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		return fail("Denied by WRM: " + dec.Reason + "." + aiDenyHint(dec) + " Do not try to work around this; explain to the user what you would need.")
 	case aiApprove:
 		var r aiApprovalResult
+		if lr := s.takeLaterRun(aiApprovalKey(call.Name, pl)); lr != nil {
+			// the user approved this exact call after the AI had stopped waiting, and WRM ran it then
+			return s.laterRunResult(ctx, call, lr)
+		}
 		if key := aiApprovalKey(call.Name, pl); s.takeLaterApproval(key) || aiTakeStoredLater(s.UserID, s.ConnID, key) {
 			r = aiApprovalResult{Approved: true, Outcome: "approved", Via: "later"}
 			s.audit(nil, "ai.approved", map[string]interface{}{"tool": call.Name, "via": "later", "rule": dec.Rule})
@@ -935,10 +945,14 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 			if r.Deferred {
 				what := map[string]string{"timeout": "nobody answered the approval within " + aiApprovalTimeout().String(),
 					"cancelled": "the app stopped waiting for the approval", "denied": "the AI app declined the approval question"}[r.Outcome]
+				then := "it then runs once without asking again"
+				if aiLaterRunsNow() {
+					then = "WRM runs it as soon as they approve it, and calling the tool again then returns that output (it does not run twice)"
+				}
 				return fail("Not run yet: " + what + ". WRM keeps the request open in the user's WRM (the live panel and the 🤖 menu show the full " +
 					"command with Approve / Deny) for " + aiLaterTTL.String() + "." + " " + aiApprovalWhy(dec, true) +
 					" Tell the user exactly what you want to run, why, and that they can approve it in WRM. When they say they approved it, call this tool again " +
-					"with exactly the same arguments: it then runs once without asking again. Do not run a variant of it on your own.")
+					"with exactly the same arguments: " + then + ". Do not run a variant of it on your own.")
 			}
 			switch r.Outcome {
 			case "timeout":
@@ -1119,7 +1133,7 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	} else {
 		a.Command = pl.Act.Command
 	}
-	a.key, a.NoEdit = aiApprovalKey(call.Name, pl), pl.NoEdit
+	a.key, a.NoEdit, a.call, a.pl = aiApprovalKey(call.Name, pl), pl.NoEdit, call, pl
 	s.mu.Lock()
 	for id, old := range s.pending {
 		// the AI repeats a call that is still waiting to be approved later: ask once, here
@@ -1155,8 +1169,9 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	delete(s.pending, a.ID)
 	// over MCP nothing answered is lost: a timeout, an app that stops waiting or declines
 	// the question on its own leaves the request in WRM, to be approved later
-	if s.Transport == "mcp" && !s.ended && (r.Outcome == "timeout" || r.Outcome == "cancelled" || r.Outcome == "denied" && r.Via == "mcp") {
-		a.Later, a.Expires, a.ch = true, time.Now().Add(aiLaterTTL), make(chan aiApprovalResult, 1)
+	// (an explicit Deny in the app's question is final)
+	if s.Transport == "mcp" && !s.ended && (r.Outcome == "timeout" || r.Outcome == "cancelled" || r.Outcome == "denied" && r.Via == aiViaMCPDeclined) {
+		a.Later, a.Expires, a.ch, a.RunNow = true, time.Now().Add(aiLaterTTL), make(chan aiApprovalResult, 1), aiLaterRunsNow()
 		s.pending[a.ID] = a
 		r.Deferred = true
 	}
@@ -1218,33 +1233,51 @@ func (s *aiSession) resolveVia(approvalID string, userID int, approve bool, comm
 	}
 	s.mu.Lock()
 	a := s.pending[approvalID]
+	if a != nil && a.Later && via == aiViaMCPDeclined {
+		// the app closed its question: the request stays open in WRM
+		s.mu.Unlock()
+		return nil
+	}
 	if a != nil {
 		delete(s.pending, approvalID)
 	}
 	s.mu.Unlock()
 	if a == nil {
-		return fmt.Errorf("the approval is no longer pending")
+		return aiNotPending(s.ID, approvalID)
 	}
 	if a.Later {
 		// the AI no longer waits: an approval lets the same call run once when it is repeated
 		outcome := "denied"
+		runNow := false
 		if approve {
 			outcome = "approved"
+			runNow = aiLaterRunsNow() && a.pl != nil
 			s.mu.Lock()
-			if s.approvedLater == nil {
-				s.approvedLater = map[string]time.Time{}
+			if !runNow {
+				if s.approvedLater == nil {
+					s.approvedLater = map[string]time.Time{}
+				}
+				s.approvedLater[a.key] = time.Now().Add(aiLaterTTL)
 			}
-			s.approvedLater[a.key] = time.Now().Add(aiLaterTTL)
+			if runNow {
+				s.approvalsN++
+			}
 			s.mu.Unlock()
 		}
 		d := map[string]interface{}{"approval": a.ID, "tool": a.Tool, "outcome": outcome, "by": usernameOf(userID), "later": true}
+		if runNow {
+			d["run_now"] = true
+		}
 		if via != "" {
 			d["via"] = via
 		}
 		s.audit(nil, map[bool]string{true: "ai.approved", false: "ai.denied"}[approve], d)
-		s.emit("approval_resolved", map[string]interface{}{"approval_id": a.ID, "call_id": a.CallID, "outcome": outcome, "by": usernameOf(userID), "via": via, "later": true})
+		s.emit("approval_resolved", map[string]interface{}{"approval_id": a.ID, "call_id": a.CallID, "outcome": outcome, "by": usernameOf(userID), "via": via, "later": true, "run_now": runNow})
 		s.transcript("decision", usernameOf(userID), outcome+" (later)", d)
 		s.notifyMCP()
+		if runNow {
+			s.runLater(a, usernameOf(userID))
+		}
 		return nil
 	}
 	r := aiApprovalResult{Approved: approve, By: userID, ByName: usernameOf(userID), Note: note, Outcome: "denied", Via: via}
@@ -1565,7 +1598,7 @@ func (s *aiSession) Stop(userID int) {
 // answer (413, or the provider's token limit) shrinks the old tool output and retries.
 func (s *aiSession) completeWithRecovery(ctx context.Context, prov aiProvider, req *aiLLMRequest) (aiLLMResponse, error) {
 	onText := func(t string) { s.emit("text", map[string]interface{}{"delta": t}) }
-	if settingBool("ai_show_thinking") {
+	if aiThinkingWanted(s.UserID) {
 		ctx = aiWithThinking(ctx, func(t string) {
 			s.mu.Lock()
 			if s.thinking.Len() < 64<<10 {
@@ -1746,6 +1779,11 @@ func aiJanitorTick(now time.Time) {
 				delete(s.approvedLater, k)
 			}
 		}
+		for k, lr := range s.laterRuns {
+			if now.Sub(lr.at) > aiLaterTTL {
+				delete(s.laterRuns, k)
+			}
+		}
 		busy, last := s.busy, s.lastActive
 		var expired bool
 		if s.Mode == aiModeAuto && s.Auto != nil && !s.Auto.UntilGrant && now.After(s.Auto.Until) {
@@ -1771,11 +1809,16 @@ func aiJanitorTick(now time.Time) {
 func cleanupAITranscripts() {
 	days := settingInt("ai_transcript_retention_days")
 	cut := time.Now().AddDate(0, 0, -days).UTC().Format(time.RFC3339)
-	res, err := db.Exec(`DELETE FROM ai_messages WHERE session_id IN (SELECT id FROM ai_sessions WHERE status != 'active' AND started_at < ?)`, cut)
+	// sessions their users saved are kept while ai_keep_saved_sessions is on
+	keep := ""
+	if settingBool("ai_keep_saved_sessions") {
+		keep = " AND saved = 0"
+	}
+	res, err := db.Exec(`DELETE FROM ai_messages WHERE session_id IN (SELECT id FROM ai_sessions WHERE status != 'active' AND started_at < ?`+keep+`)`, cut)
 	if err == nil {
 		if n, _ := res.RowsAffected(); n > 0 {
 			log.Printf("AI transcripts: removed %d entries older than %d days", n, days)
 		}
 	}
-	db.Exec(`DELETE FROM ai_sessions WHERE status != 'active' AND started_at < ?`, cut)
+	db.Exec(`DELETE FROM ai_sessions WHERE status != 'active' AND started_at < ?`+keep, cut)
 }
