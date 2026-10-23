@@ -1,3 +1,8 @@
+## [13.4.4] - 2026-10-23
+
+### Fixed
+- **Claude Desktop and Claude Code are clearly separate in AI connections.** The wizard labels them *Claude Desktop app (chat)* and *Claude Code (terminal or Code tab)*, and says plainly that Claude Desktop uses the `.mcpb` extension while `/plugin` is a slash command inside Claude Code, not a PowerShell command. Running `/plugin` in PowerShell is the error most people hit; the panel now tells you to run `claude` first (or use the `claude plugin install …` / `claude mcp add …` line) and to run `/mcp` or restart Claude Code after adding the connector.
+
 ## [13.4.3] - 2026-10-23
 
 ### Added
