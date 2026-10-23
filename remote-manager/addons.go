@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -40,17 +41,22 @@ var (
 	// that is not listed here refuses the install instead of being ignored.
 	addonCapabilities = map[string]string{
 		"ui.panel":    "show a panel in the WRM interface",
-		"ui.theme":    "apply a colour theme",
+		"ui.theme":    "offer colour themes users can pick in Settings → Appearance",
 		"server.wasm": "run a WebAssembly hook in the sandbox",
+		"store":       "keep its settings on the WRM server (apiVersion 2)",
+		"notify":      "show short notifications from its panel (apiVersion 2)",
 	}
 	addonExportPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
 )
 
 type addonUI struct {
-	Panel string `json:"panel,omitempty"` // panel.html
-	Theme string `json:"theme,omitempty"` // theme.css
-	Title string `json:"title,omitempty"`
-	Icon  string `json:"icon,omitempty"`
+	Panel       string       `json:"panel,omitempty"` // panel.html
+	Theme       string       `json:"theme,omitempty"` // theme.css
+	Title       string       `json:"title,omitempty"`
+	Icon        string       `json:"icon,omitempty"`
+	Themes      []addonTheme `json:"themes,omitempty"`
+	DefaultSize *addonSize   `json:"defaultSize,omitempty"`
+	MinSize     *addonSize   `json:"minSize,omitempty"`
 }
 
 type addonServer struct {
@@ -59,6 +65,7 @@ type addonServer struct {
 }
 
 type addonManifest struct {
+	APIVersion   int          `json:"apiVersion,omitempty"`
 	ID           string       `json:"id"`
 	Name         string       `json:"name"`
 	Version      string       `json:"version"`
@@ -69,9 +76,11 @@ type addonManifest struct {
 	Capabilities []string     `json:"capabilities"`
 	UI           *addonUI     `json:"ui,omitempty"`
 	Server       *addonServer `json:"server,omitempty"`
+	Store        *addonStore  `json:"store,omitempty"`
 }
 
 type addonRecord struct {
+	APIVersion   int          `json:"apiVersion,omitempty"`
 	ID           string       `json:"id"`
 	Name         string       `json:"name"`
 	Version      string       `json:"version"`
@@ -87,6 +96,21 @@ type addonRecord struct {
 	Source       string       `json:"source,omitempty"`
 	Checksum     string       `json:"checksum"`
 	Server       *addonServer `json:"server,omitempty"`
+	Store        *addonStore  `json:"store,omitempty"`
+	// Key names the addon in URLs: the id of an organisation addon, "~id" for
+	// the signed-in user's personal addon. AssetBase is where its files are.
+	Key       string `json:"key"`
+	AssetBase string `json:"asset_base"`
+	Personal  bool   `json:"personal,omitempty"`
+	OwnerID   int    `json:"owner_id,omitempty"`
+	Owner     string `json:"owner,omitempty"`
+	// NeedsApproval: an update asked for more than was approved; the addon
+	// stays disabled until someone allowed to enable it approves the sheet.
+	NeedsApproval bool              `json:"needs_approval,omitempty"`
+	Permissions   []string          `json:"permissions"`
+	Added         []string          `json:"permissions_added,omitempty"`
+	files         map[string]string // rel path -> sha256 hex, pinned at install
+	approved      []string          // permission atoms approved when it was last enabled
 }
 
 func initAddonSchema() {
@@ -100,6 +124,12 @@ func initAddonSchema() {
 		installed_at TEXT NOT NULL DEFAULT '',
 		installed_by TEXT NOT NULL DEFAULT ''
 	)`)
+	// v13.9: file hashes pinned at install, the permission sheet that was
+	// approved, and what an update added on top of it.
+	db.Exec(`ALTER TABLE addons ADD COLUMN files TEXT NOT NULL DEFAULT ''`)
+	db.Exec(`ALTER TABLE addons ADD COLUMN approved TEXT NOT NULL DEFAULT ''`)
+	db.Exec(`ALTER TABLE addons ADD COLUMN pending TEXT NOT NULL DEFAULT ''`)
+	initAddonV2Schema()
 }
 
 func addonsRoot() string { return resolveDBPath() + ".addons" }
@@ -113,8 +143,74 @@ func addonDir(id string) string {
 	return filepath.Join(addonsRoot(), id)
 }
 
+// addonRef names one installed addon: an organisation addon (Owner 0) or the
+// personal addon of one user. Personal addons live in their own table and
+// folder (<addons>/.users/<user id>/<id>), so an organisation addon and a
+// personal one may share an id and an older binary never sees personal ones.
+type addonRef struct {
+	Owner int
+	ID    string
+}
+
+func (r addonRef) Key() string {
+	if r.Owner > 0 {
+		return "~" + r.ID
+	}
+	return r.ID
+}
+
+func addonRefDir(r addonRef) string {
+	if r.Owner <= 0 {
+		return addonDir(r.ID)
+	}
+	if !addonIDPattern.MatchString(r.ID) || strings.Contains(r.ID, "..") {
+		return filepath.Join(addonsRoot(), ".invalid")
+	}
+	return filepath.Join(addonsRoot(), ".users", strconv.Itoa(r.Owner), r.ID)
+}
+
+// addonParseKey turns a URL segment into a reference for the signed-in user.
+func addonParseKey(key string, userID int) (addonRef, bool) {
+	if strings.HasPrefix(key, "~") {
+		id := key[1:]
+		return addonRef{Owner: userID, ID: id}, addonIDPattern.MatchString(id)
+	}
+	return addonRef{ID: key}, addonIDPattern.MatchString(key)
+}
+
+func addonRecordFrom(owner int, id string, enabled int, manifest, source, checksum, installedAt, installedBy, files, approved, pending string) (addonRecord, bool) {
+	var m addonManifest
+	if json.Unmarshal([]byte(manifest), &m) != nil {
+		return addonRecord{}, false
+	}
+	ref := addonRef{Owner: owner, ID: id}
+	rec := addonRecord{
+		APIVersion: m.APIVersion, ID: id, Name: m.Name, Version: m.Version, Description: m.Description, Author: m.Author,
+		License: m.License, Homepage: m.Homepage, Capabilities: m.Capabilities, UI: m.UI, Server: m.Server, Store: m.Store,
+		Enabled: enabled == 1, InstalledAt: installedAt, InstalledBy: installedBy, Source: source, Checksum: checksum,
+		Key: ref.Key(), AssetBase: "/api/addons/" + ref.Key() + "/asset/", Personal: owner > 0, OwnerID: owner,
+		Permissions: addonPermissions(&m),
+	}
+	if owner > 0 {
+		rec.Owner = usernameOf(owner)
+	}
+	if files != "" {
+		json.Unmarshal([]byte(files), &rec.files)
+	}
+	if pending != "" {
+		var added []string
+		if json.Unmarshal([]byte(pending), &added) == nil && len(added) > 0 {
+			rec.NeedsApproval, rec.Added = true, added
+		}
+	}
+	if approved != "" {
+		json.Unmarshal([]byte(approved), &rec.approved)
+	}
+	return rec, true
+}
+
 func addonRecords(enabledOnly bool) []addonRecord {
-	q := `SELECT id, enabled, manifest, source, checksum, installed_at, installed_by FROM addons`
+	q := `SELECT id, enabled, manifest, source, checksum, installed_at, installed_by, files, approved, pending FROM addons`
 	if enabledOnly {
 		q += ` WHERE enabled=1`
 	}
@@ -125,27 +221,55 @@ func addonRecords(enabledOnly bool) []addonRecord {
 	defer rows.Close()
 	out := []addonRecord{}
 	for rows.Next() {
-		var id, manifest, source, checksum, installedAt, installedBy string
+		var id, manifest, source, checksum, installedAt, installedBy, files, approved, pending string
 		var enabled int
-		if rows.Scan(&id, &enabled, &manifest, &source, &checksum, &installedAt, &installedBy) != nil {
+		if rows.Scan(&id, &enabled, &manifest, &source, &checksum, &installedAt, &installedBy, &files, &approved, &pending) != nil {
 			continue
 		}
-		var m addonManifest
-		if json.Unmarshal([]byte(manifest), &m) != nil {
+		if rec, ok := addonRecordFrom(0, id, enabled, manifest, source, checksum, installedAt, installedBy, files, approved, pending); ok {
+			out = append(out, rec)
+		}
+	}
+	return out
+}
+
+// addonPersonalRecords lists the personal addons of one user, or of every
+// user when owner is 0 (the administrator's overview).
+func addonPersonalRecords(owner int, enabledOnly bool) []addonRecord {
+	q := `SELECT owner_id, id, enabled, manifest, source, checksum, installed_at, installed_by, files, approved, pending FROM addons_personal WHERE (owner_id=? OR ?=0)`
+	if enabledOnly {
+		q += ` AND enabled=1`
+	}
+	rows, err := db.Query(q+` ORDER BY owner_id, id`, owner, owner)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	out := []addonRecord{}
+	for rows.Next() {
+		var id, manifest, source, checksum, installedAt, installedBy, files, approved, pending string
+		var uid, enabled int
+		if rows.Scan(&uid, &id, &enabled, &manifest, &source, &checksum, &installedAt, &installedBy, &files, &approved, &pending) != nil {
 			continue
 		}
-		out = append(out, addonRecord{
-			ID: id, Name: m.Name, Version: m.Version, Description: m.Description, Author: m.Author,
-			License: m.License, Homepage: m.Homepage, Capabilities: m.Capabilities, UI: m.UI, Server: m.Server,
-			Enabled: enabled == 1, InstalledAt: installedAt, InstalledBy: installedBy, Source: source, Checksum: checksum,
-		})
+		if rec, ok := addonRecordFrom(uid, id, enabled, manifest, source, checksum, installedAt, installedBy, files, approved, pending); ok {
+			out = append(out, rec)
+		}
 	}
 	return out
 }
 
 func addonGet(id string) (addonRecord, bool) {
-	for _, a := range addonRecords(false) {
-		if a.ID == id {
+	return addonGetRef(addonRef{ID: id})
+}
+
+func addonGetRef(ref addonRef) (addonRecord, bool) {
+	list := addonRecords(false)
+	if ref.Owner > 0 {
+		list = addonPersonalRecords(ref.Owner, false)
+	}
+	for _, a := range list {
+		if a.ID == ref.ID && a.OwnerID == ref.Owner {
 			return a, true
 		}
 	}
@@ -224,14 +348,20 @@ func (m *addonManifest) validate() error {
 				return fmt.Errorf("ui.theme must be a relative .css file")
 			}
 		}
-		if m.UI.Panel == "" && m.UI.Theme == "" {
+		if len(m.UI.Themes) > 0 && !seen["ui.theme"] {
+			return fmt.Errorf("ui.themes requires the ui.theme capability")
+		}
+		if m.UI.Panel == "" && m.UI.Theme == "" && len(m.UI.Themes) == 0 {
 			return fmt.Errorf("the ui block declares neither a panel nor a theme")
+		}
+		if err := addonValidateUIv2(m.UI); err != nil {
+			return err
 		}
 	}
 	if m.UI == nil && m.Server == nil {
 		return fmt.Errorf("the addon declares neither a ui panel/theme nor server code")
 	}
-	return nil
+	return addonValidateV2(m, seen)
 }
 
 // addonSafeRel accepts a relative path inside an addon folder and nothing else.
@@ -352,28 +482,31 @@ func addonReadArchive(body []byte) (*addonManifest, string, error) {
 	}
 	// Editors on Windows like to add a byte order mark; JSON does not allow it.
 	raw = bytes.TrimPrefix(raw, []byte("\xef\xbb\xbf"))
-	var m addonManifest
-	if err := json.Unmarshal(raw, &m); err != nil {
-		return nil, "", fmt.Errorf("addon.json is not valid JSON: %v", err)
+	m, err := addonDecodeManifest(raw)
+	if err != nil {
+		return nil, "", err
 	}
 	if err := m.validate(); err != nil {
-		return nil, "", err
+		return nil, "", addonErrf("E_MANIFEST", "%v", err)
 	}
 	// Declared entries must be in the archive, or the addon would install and
 	// then show nothing.
 	declared := []string{}
 	if m.UI != nil {
 		declared = append(declared, m.UI.Panel, m.UI.Theme)
+		for _, th := range m.UI.Themes {
+			declared = append(declared, th.CSS)
+		}
 	}
 	if m.Server != nil {
 		declared = append(declared, m.Server.Module)
 	}
 	for _, want := range declared {
 		if want != "" && !names[strings.ToLower(prefix+want)] {
-			return nil, "", fmt.Errorf("%s is declared in addon.json but missing from the archive", want)
+			return nil, "", addonErrf("E_MISSING_FILE", "%s is declared in addon.json but missing from the archive", want)
 		}
 	}
-	return &m, prefix, nil
+	return m, prefix, nil
 }
 
 func addonWriteFiles(body []byte, prefix, dst string) error {
@@ -413,56 +546,71 @@ func addonWriteFiles(body []byte, prefix, dst string) error {
 	return nil
 }
 
-func addonInstall(w http.ResponseWriter, r *http.Request, adminID int) {
+func addonInstall(w http.ResponseWriter, r *http.Request, userID int, owner int) {
 	body, err := io.ReadAll(io.LimitReader(r.Body, addonMaxArchive+1))
 	if err != nil || len(body) == 0 {
 		jsonError(w, "Send the addon as a ZIP file", 400)
 		return
 	}
 	if len(body) > addonMaxArchive {
-		jsonError(w, "The archive is larger than 20 MB", 413)
+		addonFail(w, addonErrf("E_LIMIT_SIZE", "The archive is larger than 20 MB"), 413)
 		return
 	}
 	source := strings.TrimSpace(r.URL.Query().Get("source"))
-	addonInstallBytes(w, r, adminID, body, source)
+	out, status, err := addonInstallArchiveAs(r.Context(), r, userID, owner, body, source)
+	if err != nil {
+		addonFail(w, err, status)
+		return
+	}
+	jsonOK(w, map[string]interface{}{"id": out.ID, "key": out.Key, "name": out.Name, "version": out.Version, "enabled": out.Enabled,
+		"checksum": out.Checksum, "needs_approval": len(out.Added) > 0, "permissions_added": out.Added})
 }
 
 // addonInstallOutcome is what an install reports, whether it came from an
 // upload, the community library or a draft.
 type addonInstallOutcome struct {
 	ID       string
+	Key      string
 	Name     string
 	Version  string
 	Checksum string
 	Enabled  bool
+	Added    []string // permissions an update asked for beyond the approved ones
 }
 
-// addonInstallBytes validates and installs one archive. The upload endpoint and
-// the community library share it, so a downloaded addon passes exactly the same
-// checks as a hand-picked ZIP.
-func addonInstallBytes(w http.ResponseWriter, r *http.Request, adminID int, body []byte, source string) {
-	out, status, err := addonInstallArchive(r.Context(), r, adminID, body, source)
-	if err != nil {
-		jsonError(w, err.Error(), status)
-		return
-	}
-	jsonOK(w, map[string]interface{}{"id": out.ID, "name": out.Name, "version": out.Version, "enabled": out.Enabled, "checksum": out.Checksum})
-}
-
-// addonInstallArchive is addonInstallBytes without an HTTP response: the AI
-// tools install a draft through the same function the upload endpoint uses.
+// addonInstallArchive installs an organisation addon. The AI tools install a
+// draft through the same function the upload endpoint uses.
 func addonInstallArchive(ctx context.Context, r *http.Request, adminID int, body []byte, source string) (addonInstallOutcome, int, error) {
+	return addonInstallArchiveAs(ctx, r, adminID, 0, body, source)
+}
+
+// addonInstallArchiveAs installs an archive as an organisation addon (owner 0)
+// or as the personal addon of owner. A new addon is installed disabled. An
+// update keeps the enabled state only while it asks for nothing beyond what
+// was approved; otherwise it waits, disabled, for the sheet to be approved
+// again. A lower version than the installed one needs allow_downgrade=1.
+func addonInstallArchiveAs(ctx context.Context, r *http.Request, userID, owner int, body []byte, source string) (addonInstallOutcome, int, error) {
 	var out addonInstallOutcome
 	m, prefix, err := addonReadArchive(body)
 	if err != nil {
 		return out, 400, err
 	}
+	if owner > 0 && m.Server != nil {
+		return out, 400, addonErrf("E_PERSONAL_SERVER", "Server code (server.wasm) is only allowed in an addon an administrator installs for the organisation")
+	}
+	ref := addonRef{Owner: owner, ID: m.ID}
+	previous, hadPrevious := addonGetRef(ref)
+	if hadPrevious && addonVersionLess(m.Version, previous.Version) && (r == nil || r.URL.Query().Get("allow_downgrade") != "1") {
+		return out, 409, addonErrf("E_DOWNGRADE", "Version %s is older than the installed %s; confirm the downgrade to install it", m.Version, previous.Version)
+	}
 	sum := sha256.Sum256(body)
 	checksum := "sha256:" + hex.EncodeToString(sum[:])
-	if err := os.MkdirAll(addonsRoot(), 0o755); err != nil {
+	final := addonRefDir(ref)
+	parent := filepath.Dir(final)
+	if err := os.MkdirAll(parent, 0o750); err != nil {
 		return out, 500, fmt.Errorf("the addon folder cannot be created")
 	}
-	tmp, err := os.MkdirTemp(addonsRoot(), ".install-")
+	tmp, err := os.MkdirTemp(parent, ".install-")
 	if err != nil {
 		return out, 500, fmt.Errorf("the addon folder cannot be written")
 	}
@@ -480,10 +628,12 @@ func addonInstallArchive(ctx context.Context, r *http.Request, adminID int, body
 			return out, 400, err
 		}
 	}
-	final := addonDir(m.ID)
+	hashes, err := addonHashTree(tmp)
+	if err != nil {
+		return out, 500, fmt.Errorf("the addon files cannot be read back")
+	}
 	old := final + ".old"
 	os.RemoveAll(old)
-	previous, hadPrevious := addonGet(m.ID)
 	if _, err := os.Stat(final); err == nil {
 		if err := os.Rename(final, old); err != nil {
 			return out, 500, fmt.Errorf("the previous version cannot be replaced")
@@ -497,35 +647,82 @@ func addonInstallArchive(ctx context.Context, r *http.Request, adminID int, body
 	}
 	os.RemoveAll(old)
 	manifest, _ := json.Marshal(m)
+	filesJSON, _ := json.Marshal(hashes)
 	if len(source) > 300 {
 		source = source[:300]
 	}
 	enabled := 0
-	if hadPrevious && previous.Enabled {
-		enabled = 1
+	var added []string
+	approved := ""
+	if hadPrevious {
+		base := previous.approved
+		if len(base) == 0 {
+			base = previous.Permissions // installed before sheets were recorded
+		}
+		added = addonPermsAdded(addonPermissions(m), base)
+		if previous.Enabled && len(added) == 0 {
+			enabled = 1
+		}
+		if b, err := json.Marshal(base); err == nil {
+			approved = string(b)
+		}
+	}
+	pending := ""
+	if len(added) > 0 {
+		b, _ := json.Marshal(added)
+		pending = string(b)
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
-	if _, err := db.Exec(`INSERT INTO addons (id, version, enabled, manifest, source, checksum, installed_at, installed_by)
-		VALUES (?,?,?,?,?,?,?,?)
-		ON CONFLICT(id) DO UPDATE SET version=excluded.version, manifest=excluded.manifest,
-			source=excluded.source, checksum=excluded.checksum, installed_at=excluded.installed_at, installed_by=excluded.installed_by`,
-		m.ID, m.Version, enabled, string(manifest), source, checksum, now, usernameOf(adminID)); err != nil {
+	if owner > 0 {
+		_, err = db.Exec(`INSERT INTO addons_personal (owner_id, id, version, enabled, manifest, source, checksum, installed_at, installed_by, files, approved, pending)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+			ON CONFLICT(owner_id, id) DO UPDATE SET version=excluded.version, enabled=excluded.enabled, manifest=excluded.manifest,
+				source=excluded.source, checksum=excluded.checksum, installed_at=excluded.installed_at, installed_by=excluded.installed_by,
+				files=excluded.files, approved=excluded.approved, pending=excluded.pending`,
+			owner, m.ID, m.Version, enabled, string(manifest), source, checksum, now, usernameOf(userID), string(filesJSON), approved, pending)
+	} else {
+		_, err = db.Exec(`INSERT INTO addons (id, version, enabled, manifest, source, checksum, installed_at, installed_by, files, approved, pending)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?)
+			ON CONFLICT(id) DO UPDATE SET version=excluded.version, enabled=excluded.enabled, manifest=excluded.manifest,
+				source=excluded.source, checksum=excluded.checksum, installed_at=excluded.installed_at, installed_by=excluded.installed_by,
+				files=excluded.files, approved=excluded.approved, pending=excluded.pending`,
+			m.ID, m.Version, enabled, string(manifest), source, checksum, now, usernameOf(userID), string(filesJSON), approved, pending)
+	}
+	if err != nil {
 		return out, 500, fmt.Errorf("the addon cannot be recorded")
 	}
-	auditLog(r, adminID, "addon.installed", m.ID, map[string]interface{}{
-		"version": m.Version, "capabilities": m.Capabilities, "checksum": checksum, "enabled": enabled == 1,
-	})
-	out = addonInstallOutcome{ID: m.ID, Name: m.Name, Version: m.Version, Checksum: checksum, Enabled: enabled == 1}
+	details := map[string]interface{}{
+		"version": m.Version, "capabilities": m.Capabilities, "checksum": checksum, "enabled": enabled == 1, "api_version": m.APIVersion,
+	}
+	if owner > 0 {
+		details["personal_owner"] = usernameOf(owner)
+	}
+	if len(added) > 0 {
+		details["permissions_added"] = added
+	}
+	if hadPrevious {
+		details["previous_version"] = previous.Version
+	}
+	auditLog(r, userID, "addon.installed", ref.Key(), details)
+	out = addonInstallOutcome{ID: m.ID, Key: ref.Key(), Name: m.Name, Version: m.Version, Checksum: checksum, Enabled: enabled == 1, Added: added}
 	return out, 200, nil
 }
 
 func addonSetEnabledCore(adminID int, id string, on bool) (addonRecord, int, error) {
-	rec, ok := addonGet(id)
+	return addonSetEnabledRef(adminID, addonRef{ID: id}, on)
+}
+
+// addonSetEnabledRef enables or disables an addon. Enabling is the approval of
+// its permission sheet: the sheet is stored, and a later update that asks for
+// more disables the addon until it is approved again.
+func addonSetEnabledRef(userID int, ref addonRef, on bool) (addonRecord, int, error) {
+	rec, ok := addonGetRef(ref)
 	if !ok {
 		return rec, 404, fmt.Errorf("addon not found")
 	}
 	if on {
-		if _, err := os.Stat(filepath.Join(addonDir(id), "addon.json")); err != nil {
+		// The folder comes from the stored record, not from the request.
+		if _, err := os.Stat(filepath.Join(addonRefDir(addonRef{Owner: rec.OwnerID, ID: rec.ID}), "addon.json")); err != nil {
 			return rec, 409, fmt.Errorf("the addon files are missing; install the archive again")
 		}
 	}
@@ -533,41 +730,76 @@ func addonSetEnabledCore(adminID int, id string, on bool) (addonRecord, int, err
 	if on {
 		v = 1
 	}
-	if _, err := db.Exec(`UPDATE addons SET enabled=? WHERE id=?`, v, id); err != nil {
+	var err error
+	if on {
+		approved, _ := json.Marshal(rec.Permissions)
+		if ref.Owner > 0 {
+			_, err = db.Exec(`UPDATE addons_personal SET enabled=1, approved=?, pending='' WHERE owner_id=? AND id=?`, string(approved), ref.Owner, ref.ID)
+		} else {
+			_, err = db.Exec(`UPDATE addons SET enabled=1, approved=?, pending='' WHERE id=?`, string(approved), ref.ID)
+		}
+	} else if ref.Owner > 0 {
+		_, err = db.Exec(`UPDATE addons_personal SET enabled=? WHERE owner_id=? AND id=?`, v, ref.Owner, ref.ID)
+	} else {
+		_, err = db.Exec(`UPDATE addons SET enabled=? WHERE id=?`, v, ref.ID)
+	}
+	if err != nil {
 		return rec, 500, fmt.Errorf("the addon cannot be updated")
 	}
 	action := "addon.disabled"
+	details := map[string]interface{}{"version": rec.Version}
 	if on {
 		action = "addon.enabled"
+		details["permissions"] = rec.Permissions
 	}
-	auditLog(nil, adminID, action, id, map[string]interface{}{"version": rec.Version})
+	if ref.Owner > 0 {
+		details["personal_owner"] = usernameOf(ref.Owner)
+	}
+	auditLog(nil, userID, action, ref.Key(), details)
 	return rec, 200, nil
 }
 
-func addonSetEnabled(w http.ResponseWriter, r *http.Request, adminID int, id string, on bool) {
-	rec, status, err := addonSetEnabledCore(adminID, id, on)
+func addonSetEnabled(w http.ResponseWriter, r *http.Request, userID int, ref addonRef, on bool) {
+	rec, status, err := addonSetEnabledRef(userID, ref, on)
 	if err != nil {
 		jsonError(w, err.Error(), status)
 		return
 	}
-	jsonOK(w, map[string]interface{}{"ok": true, "enabled": on, "id": rec.ID})
+	jsonOK(w, map[string]interface{}{"ok": true, "enabled": on, "id": rec.ID, "key": rec.Key})
 }
 
 func addonRemoveCore(adminID int, id string) (addonRecord, int, error) {
-	rec, ok := addonGet(id)
+	return addonRemoveRef(adminID, addonRef{ID: id})
+}
+
+// addonRemoveRef deletes the addon with its files, instances, stored values
+// and remembered windows.
+func addonRemoveRef(userID int, ref addonRef) (addonRecord, int, error) {
+	rec, ok := addonGetRef(ref)
 	if !ok {
 		return rec, 404, fmt.Errorf("addon not found")
 	}
-	if _, err := db.Exec(`DELETE FROM addons WHERE id=?`, id); err != nil {
+	var err error
+	if ref.Owner > 0 {
+		_, err = db.Exec(`DELETE FROM addons_personal WHERE owner_id=? AND id=?`, ref.Owner, ref.ID)
+	} else {
+		_, err = db.Exec(`DELETE FROM addons WHERE id=?`, ref.ID)
+	}
+	if err != nil {
 		return rec, 500, fmt.Errorf("the addon cannot be removed")
 	}
-	os.RemoveAll(addonDir(id))
-	auditLog(nil, adminID, "addon.removed", id, map[string]interface{}{"version": rec.Version})
+	os.RemoveAll(addonRefDir(addonRef{Owner: rec.OwnerID, ID: rec.ID}))
+	addonForgetInstances(ref)
+	details := map[string]interface{}{"version": rec.Version}
+	if ref.Owner > 0 {
+		details["personal_owner"] = usernameOf(ref.Owner)
+	}
+	auditLog(nil, userID, "addon.removed", ref.Key(), details)
 	return rec, 200, nil
 }
 
-func addonRemove(w http.ResponseWriter, r *http.Request, adminID int, id string) {
-	if _, status, err := addonRemoveCore(adminID, id); err != nil {
+func addonRemove(w http.ResponseWriter, r *http.Request, userID int, ref addonRef) {
+	if _, status, err := addonRemoveRef(userID, ref); err != nil {
 		jsonError(w, err.Error(), status)
 		return
 	}
@@ -575,9 +807,10 @@ func addonRemove(w http.ResponseWriter, r *http.Request, adminID int, id string)
 }
 
 // addonAssetHandler serves a file from an addon folder. Only an enabled addon
-// is served, only known asset types, and only from inside its own folder.
-func addonAssetHandler(w http.ResponseWriter, r *http.Request, id, rel string) {
-	rec, ok := addonGet(id)
+// is served, only known asset types, only from inside its own folder, and only
+// a file whose SHA-256 still matches the one pinned at install.
+func addonAssetHandler(w http.ResponseWriter, r *http.Request, ref addonRef, rel string) {
+	rec, ok := addonGetRef(ref)
 	if !ok || !rec.Enabled {
 		jsonError(w, "Addon not found", 404)
 		return
@@ -592,27 +825,38 @@ func addonAssetHandler(w http.ResponseWriter, r *http.Request, id, rel string) {
 		jsonError(w, "Invalid file", 400)
 		return
 	}
-	root, err := filepath.Abs(addonDir(id))
+	// os.Root keeps every lookup inside the addon folder, symlinks included.
+	root, err := os.OpenRoot(addonRefDir(ref))
 	if err != nil {
 		jsonError(w, "Addon not found", 404)
 		return
 	}
-	full, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(rel)))
-	if err != nil || !strings.HasPrefix(full, root+string(os.PathSeparator)) {
-		jsonError(w, "Invalid file", 400)
-		return
-	}
-	st, err := os.Stat(full)
-	if err != nil || !st.Mode().IsRegular() {
-		jsonError(w, "Addon not found", 404)
-		return
-	}
-	f, err := os.Open(full)
+	defer root.Close()
+	f, err := root.Open(filepath.FromSlash(rel))
 	if err != nil {
 		jsonError(w, "Addon not found", 404)
 		return
 	}
-	defer f.Close()
+	st, err := f.Stat()
+	if err != nil || !st.Mode().IsRegular() || st.Size() > addonMaxFile {
+		f.Close()
+		jsonError(w, "Addon not found", 404)
+		return
+	}
+	data, err := io.ReadAll(io.LimitReader(f, addonMaxFile+1))
+	f.Close()
+	if err != nil {
+		jsonError(w, "Addon not found", 404)
+		return
+	}
+	if rec.files != nil {
+		want, known := rec.files[rel]
+		sum := sha256.Sum256(data)
+		if !known || want != hex.EncodeToString(sum[:]) {
+			addonFail(w, addonErrf("E_INTEGRITY", "%s changed after the addon was installed; install the addon again", rel), 409)
+			return
+		}
+	}
 	h := w.Header()
 	h.Set("Content-Type", typ)
 	h.Set("X-Content-Type-Options", "nosniff")
@@ -621,10 +865,16 @@ func addonAssetHandler(w http.ResponseWriter, r *http.Request, id, rel string) {
 	// document WRM frames itself, and only from the same origin.
 	h.Set("X-Frame-Options", "SAMEORIGIN")
 	if strings.HasPrefix(typ, "text/html") {
-		// Belt and braces: the panel already runs in a sandboxed iframe.
-		h.Set("Content-Security-Policy", "sandbox allow-scripts")
+		if rec.APIVersion >= 2 {
+			// apiVersion 2: no network of its own (everything goes through the
+			// host), inline scripts only by hash, nothing that leaves the frame.
+			h.Set("Content-Security-Policy", addonPanelCSP(data))
+		} else {
+			// Belt and braces: the panel already runs in a sandboxed iframe.
+			h.Set("Content-Security-Policy", "sandbox allow-scripts")
+		}
 	}
-	http.ServeContent(w, r, rel, st.ModTime(), f)
+	http.ServeContent(w, r, rel, st.ModTime(), bytes.NewReader(data))
 }
 
 func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
@@ -641,8 +891,20 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		list := addonRecords(!admin)
-		sort.Slice(list, func(i, j int) bool { return list[i].Name < list[j].Name })
-		jsonOK(w, map[string]interface{}{"addons": list, "capabilities": addonCapabilities})
+		list = append(list, addonPersonalRecords(userID, false)...)
+		sort.SliceStable(list, func(i, j int) bool { return list[i].Name < list[j].Name })
+		out := map[string]interface{}{"addons": list, "capabilities": addonCapabilities,
+			"personal_allowed": addonPersonalAllowed(userID), "api_versions": []int{1, 2}}
+		if admin && r.URL.Query().Get("personal") == "all" {
+			others := []addonRecord{}
+			for _, a := range addonPersonalRecords(0, false) {
+				if a.OwnerID != userID {
+					others = append(others, a)
+				}
+			}
+			out["personal_others"] = others
+		}
+		jsonOK(w, out)
 		return
 	}
 	if parts[0] == "drafts" {
@@ -678,20 +940,61 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Method not allowed", 405)
 			return
 		}
+		// An administrator installs for the organisation unless asking for a
+		// personal addon; everybody else installs a personal one.
+		if admin && r.URL.Query().Get("scope") != "personal" {
+			addonInstall(w, r, userID, 0)
+			return
+		}
+		if !addonPersonalAllowed(userID) {
+			addonFail(w, addonErrf("E_PERSONAL_OFF", "Personal addons are turned off by the administrator (addon_personal)"), 403)
+			return
+		}
+		addonInstall(w, r, userID, userID)
+		return
+	}
+	if parts[0] == "users" {
+		// The administrator's kill switch for other users' personal addons:
+		// /api/addons/users/{user id}/{addon id}[/disable].
 		if !admin {
 			jsonError(w, "Admin access required", 403)
 			return
 		}
-		addonInstall(w, r, userID)
+		if len(parts) < 3 {
+			jsonError(w, "Not found", 404)
+			return
+		}
+		uid, err := strconv.Atoi(parts[1])
+		if err != nil || uid <= 0 || !addonIDPattern.MatchString(parts[2]) {
+			jsonError(w, "Not found", 404)
+			return
+		}
+		ref := addonRef{Owner: uid, ID: parts[2]}
+		switch {
+		case len(parts) == 3 && r.Method == http.MethodDelete:
+			addonRemove(w, r, userID, ref)
+		case len(parts) == 4 && parts[3] == "disable" && r.Method == http.MethodPost:
+			addonSetEnabled(w, r, userID, ref, false)
+		default:
+			jsonError(w, "Not found", 404)
+		}
 		return
 	}
-	id := parts[0]
+	ref, valid := addonParseKey(parts[0], userID)
+	if !valid {
+		jsonError(w, "Addon not found", 404)
+		return
+	}
 	if len(parts) >= 3 && parts[1] == "asset" {
 		if r.Method != http.MethodGet {
 			jsonError(w, "Method not allowed", 405)
 			return
 		}
-		addonAssetHandler(w, r, id, strings.Join(parts[2:], "/"))
+		addonAssetHandler(w, r, ref, strings.Join(parts[2:], "/"))
+		return
+	}
+	if len(parts) >= 2 && parts[1] == "instances" {
+		addonInstancesHandler(w, r, userID, admin, ref, parts[2:])
 		return
 	}
 	if len(parts) == 3 && parts[1] == "call" {
@@ -699,19 +1002,22 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Method not allowed", 405)
 			return
 		}
-		if !admin {
+		if !admin || ref.Owner > 0 {
 			jsonError(w, "Admin access required", 403)
 			return
 		}
-		addonCallHandler(w, r, userID, id, parts[2])
+		addonCallHandler(w, r, userID, ref.ID, parts[2])
 		return
 	}
-	if !admin {
+	// Managing an addon: the administrator for organisation addons, the owner
+	// for a personal one (while personal addons are allowed; turning one off
+	// stays possible either way).
+	if ref.Owner == 0 && !admin {
 		jsonError(w, "Admin access required", 403)
 		return
 	}
 	if len(parts) == 1 && r.Method == http.MethodDelete {
-		addonRemove(w, r, userID, id)
+		addonRemove(w, r, userID, ref)
 		return
 	}
 	if len(parts) != 2 || r.Method != http.MethodPost {
@@ -719,8 +1025,14 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch parts[1] {
-	case "enable", "disable":
-		addonSetEnabled(w, r, userID, id, parts[1] == "enable")
+	case "enable":
+		if ref.Owner > 0 && !addonPersonalAllowed(userID) {
+			addonFail(w, addonErrf("E_PERSONAL_OFF", "Personal addons are turned off by the administrator (addon_personal)"), 403)
+			return
+		}
+		addonSetEnabled(w, r, userID, ref, true)
+	case "disable":
+		addonSetEnabled(w, r, userID, ref, false)
 	default:
 		jsonError(w, "Not found", 404)
 	}

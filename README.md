@@ -19,6 +19,10 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 **Saved logins on demand, hostname names and a calmer top bar.** *Edit connection* has **👁 Show saved login**: after you confirm with your WRM password (or your domain password), WRM shows what the connection logs in with. Right-click a connection for **Copy username**, **Copy password** (same confirmation) and **Copy IP address**. A new connection can take its **name from the server's hostname**. Tabs show just the connection's name, the version next to the logo stays visible, the user name no longer jumps every 5 seconds, and the Git workspace server filter has no blank entries any more. See [Connections & folders](#connections--folders).
 
+## What's new in v13.9.0
+
+**Addon platform v2: your own addons, several windows each, and settings that stay.** Every user can now install **personal addons** that only they see (an administrator decides who may with `addon_personal` and can turn any of them off). An addon with a panel opens as **instances**, each with its own settings and window, for example two dashboards side by side; administrators can set up shared instances for everybody. Settings are kept **on the WRM server** with export and import, and windows come back where you left them after a reload or on another device. Addon **themes** appear in *Settings → Appearance* for whoever picks them. Before an addon is enabled WRM shows a **permission sheet** generated from `addon.json`; an update that asks for more waits for approval again. apiVersion 2 panels run without any network of their own, every file is pinned by SHA-256, and a watchdog offers *Reload* when a panel hangs. See [Addons](#addons) and the [addon developer guide](docs/ADDONS.md).
+
 ## What's new in v13.8.0
 
 **AI sessions, your own AI settings and approvals that do what they say.** The new **🧠 AI sessions** panel lists every AI session you had, from the assistant, the log and file assistants, OpenCode agents and AI apps over MCP, with search (also in the conversation), filters, a transcript viewer, **Continue** (also an MCP session, whose steps become the earlier context), **Save** (kept beyond the transcript retention) and export to Markdown or JSON. Everybody sees only their own sessions. *⚙ My AI settings* in the assistant keep your own default provider (your own key, e.g. your OpenAI or Anthropic account), model, mode, engine and whether you see the model's thinking. Over MCP an approval given in WRM after the AI app stopped waiting now **runs the call at once** (`ai_mcp_later_approval`), *Deny* in the AI app is final, an app's open question is closed when you decide in WRM, and deciding a request that is no longer waiting says who decided it and where. The work log keeps the whole thinking text instead of its last lines. See [AI sessions](#ai-sessions) and [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
@@ -208,7 +212,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -226,6 +230,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Appearance, themes and accessibility](#appearance-themes-and-accessibility)
    - [Screen lock](#screen-lock)
    - [Workboard: the shared canvas and addons](#workboard-the-shared-canvas-and-addons)
+   - [Addons](#addons)
    - [SSH terminal](#ssh-terminal)
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
    - [Out-of-band management, consoles & serial ports](#out-of-band-management-consoles--serial-ports)
@@ -367,9 +372,13 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
-## Upgrading from v13.8.0
+## Upgrading from v13.9.0
 
 Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. Git workspace installations whose connection was deleted are no longer listed, and deleting a connection now removes its installations. *Show saved login* and *Copy password* follow the existing *Allow export of passwords & keys* policy (`allow_secret_export`, on by default; administrators always can) and the step-up policy.
+
+## Upgrading from v13.8.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: new tables `addons_personal`, `addon_instances`, `addon_store` and `addon_windows` and new columns `files`, `approved` and `pending` in `addons`; a previous version still starts on the database (it ignores personal addons, instances and stored values). Installed addons keep working; their files are pinned by SHA-256 the next time they are installed. New policy `addon_personal` (`all`): set it to `admins` or `off` if users must not install their own addons.
 
 ## Upgrading from v13.7.0
 
@@ -1858,6 +1867,18 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
 
 Only your own connections can be used as a source; one check per user at a time; targets are host names or addresses only (no options or shell characters); every check is audited (`nettool.run`). Policy `network_tools`: all users (default), administrators only, or off.
 
+### Addons
+
+An addon extends WRM from inside itself: a panel (a window), colour themes and, for organisation addons, WebAssembly server code. It is a ZIP with `addon.json`, installed in **Settings → Addons**. Nothing runs at install time, every file is pinned by SHA-256, and a new addon is installed **off**.
+
+- **Who installs:** an administrator installs for everybody (*Install for: Everybody*) or only for themselves (*Only me*). Every other user installs **personal addons** that only they see, if the policy `addon_personal` allows it (default: everybody). Personal addons cannot carry server code. Administrators find all users' personal addons under *Personal addons of other users* with **Disable** and **Remove**.
+- **Enabling** shows the **permission sheet**: what the addon may do, written by WRM from `addon.json` (a window without network, *n* themes, *x* KB of settings per instance, notifications, server code). An update that asks for more stays off and shows *waits for approval* with the new lines until you enable it again; a smaller update keeps it on. Installing an older version asks first.
+- **Instances:** *Open panel* opens your instance (the first one is created as *Default*). *Instances* in the addon's card creates more (administrators may share one with everybody), opens, renames, **exports** and **imports** their settings, and removes them. Each instance has its own settings and window.
+- **Windows** are ordinary WRM windows (move, resize, snap, minimize, tabs). Their place and size are remembered on the server per user, so open addon windows come back after a reload or on another device. **↻** reloads the panel; **⚠ n** lists the errors it reported. A panel that does not start within 5 seconds or stops answering for 45 seconds shows a banner with *Reload*, *Diagnostics*, *Disable addon* and *Close*.
+- **Themes** of enabled addons are offered in *Settings → Appearance*; nobody gets one without picking it.
+- **What a panel can do:** it runs in a sandboxed frame with no access to WRM, its cookies or other windows and (apiVersion 2) **no network of its own**. It receives the display name, the language, the theme, its instance and its stored settings, and may store settings, show short notifications (5 a minute) and ask for a window size. Addons work while their window is open: WRM runs no background jobs for them, so 24/7 alerting stays in the monitored system.
+- **Writing one:** see the [addon developer guide](docs/ADDONS.md) (manifest, bridge, store, themes, error codes) or *AI addon* in the same pane for a ready prompt. The WRM assistant can write a draft that you review (**Diff**) and install.
+
 ### SSH terminal
 
 - Full **xterm-256color** terminal (xterm.js 5, served by WRM itself — no CDN) with the JetBrains Mono font. Works with `nano`, `vim`, `less`, `htop`, `mc`, `tmux`, colors, mouse reporting and UTF-8 (č, ć, ž, š, đ, emoji…).
@@ -2362,6 +2383,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `status_enabled` | `1` | live up/down status of connections. Also `STATUS_ENABLED` |
 | `status_interval_seconds` | `60` | seconds between status rounds (15–3600) |
 | `status_jump_checks` | `0` | check connections behind jump hosts by logging in to the jump host |
+| `addon_personal` | `all` | who may install personal addons that only they see (`off`, `admins`, `all`); personal addons cannot carry server code |
 | `workboard_ssh_metrics` | `1` | the Workboard's *Server load* addon may read CPU, RAM, load and disks over SSH (Linux) for servers without Monitoring |
 | `desktop_enabled` | `1` | RDP / VNC / Telnet in the browser. Also `REMOTE_DESKTOP_ENABLED` |
 | `guacd_address` | `127.0.0.1:4822` | host:port of guacd. Also `GUACD_ADDRESS` |
@@ -2757,6 +2779,16 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | POST | `/api/auth/step-up` | `{password, code, action}` confirms this session for `step_up_minutes`; a 403 with `step_up: true` from another call means this is needed |
 | GET | `/api/teams` | Teams for the share dialog `{teams: [{id, name, member_count}], mine}` |
 | GET / POST / DELETE | `/api/me/events` · `/api/me/events/read` | Your in-app notifications: `GET ?limit=` (default 50, at most 200) → `{events: [{id, event, title, body, at, read}], unread}`; `POST /api/me/events/read` `{ids: […]}` or `{all: true}`; `DELETE /api/me/events` clears the list |
+| GET | `/api/addons` | installed addons you can use (administrators: all organisation addons; `?personal=all` adds `personal_others`); each has `key` (`id`, or `~id` for your personal addon), `asset_base`, `apiVersion`, `permissions`, `needs_approval`, `permissions_added`; also `capabilities` and `personal_allowed` |
+| POST | `/api/addons/install` | install a ZIP (body). Administrators install for the organisation unless `scope=personal`; other users install a personal addon. `allow_downgrade=1` installs an older version. Refusals carry `{error, code, hint}` |
+| POST | `/api/addons/{key}/enable` · `/disable` · DELETE `/api/addons/{key}` | manage an addon: administrators for organisation addons, the owner for a personal one; enabling records the approved permission sheet |
+| POST · DELETE | `/api/addons/users/{user id}/{id}/disable` · `/api/addons/users/{user id}/{id}` | administrators: turn off or remove another user's personal addon |
+| GET · POST | `/api/addons/{key}/instances` | instances of an apiVersion 2 panel you can see; create `{name, shared}` (shared: administrators, organisation addons) |
+| PATCH · DELETE | `/api/addons/{key}/instances/{iid}` | rename `{name}` or remove an instance with its values and windows |
+| GET · PUT · DELETE | `/api/addons/{key}/instances/{iid}/store[/{k}]` | stored values: all (`{values, used, quota, writable}`), one key, write a JSON body (32 KB, quota per instance), delete |
+| GET · POST | `/api/addons/{key}/instances/{iid}/export` · `/import` | the instance's values as `{"format": "wrm-addon-config", …}` and back |
+| PUT · DELETE | `/api/addons/{key}/instances/{iid}/window` | your window state of the instance (JSON object, 4 KB) |
+| GET | `/api/addons/{key}/asset/{file}` | a file of an enabled addon; HTML of apiVersion 2 panels carries the full CSP; a file that changed since install answers 409 `E_INTEGRITY` |
 | GET | `/api/workboard/metrics?id=` | CPU, RAM, load, uptime and disks of one of your SSH/SFTP connections: `{conn_id, at, source: zabbix\|ssh, cpu_percent, memory_percent, memory_total, load, cpu_count, uptime, disks: [{mount, percent, size_kb}], error}`; `refresh=1` skips the 25 s cache; 403 when reading over SSH is off and there is no fresh Monitoring sample |
 | GET / PUT / DELETE | `/api/me/ui/{key}` | Your interface state, `key` = `layout` (panel layout), `workboard` or `ai` (my AI settings: `provider_id, model, mode, engine, thinking`): `GET` → `{value, updated_at}` (`value` null when nothing is stored), `PUT {value: {…}}` (a JSON object, at most 64 KiB), `DELETE` resets |
 | POST | `/api/auth/password` | `{current_password, new_password}` |
@@ -3142,6 +3174,7 @@ remote-manager/
   users.go        sign-in, 2FA step, sessions, password change, account administration
   totp.go         TOTP (RFC 6238), QR code, recovery codes
   settings.go     admin policies (database + WRM_<KEY> environment overrides)
+  addons.go       addons: install, enable, assets; addons_v2.go: manifest v2, personal addons, instances, store, windows, CSP, integrity, permission sheets
   audit.go        audit log (hash chain, append-only triggers), CSV export, integrity check, retention
   recording.go    terminal sessions, asciicast recorder, file transfer log, recordings & transfers API
   hostkeys.go     SSH host key verification (TOFU/strict), FTPS certificate pinning
@@ -3301,6 +3334,7 @@ remote-manager/
   opencode_agent_test.go  OpenCode configuration (own tools off, WRM as MCP server), install with sha512 check against a fake registry, loopback-only tokens; with WRM_TEST_OPENCODE set, the real OpenCode binary end to end (WRM tools, approval in the chat, cleanup)
   opencode_sandbox_test.go  OpenCode sandbox: configuration (own tools on, shell/edit/web fetch ask, local provider rewritten), locked-down docker arguments without secrets, settings, a permission request becoming a WRM approval that cannot be edited (approve, deny with a note, other permissions refused); with WRM_TEST_OPENCODE and WRM_TEST_OPENCODE_SANDBOX=<image>, a real container end to end
   v12610_test.go       the canvas is wired (addon windows, floating panels on the canvas, Tools menu, top bar group and order, sessions keep addons); /api/me/ui takes 256 KiB
+  addons_v2_test.go    addon platform v2: strict manifest and error codes, theme validation, personal addons (visibility, policy, no server code, admin kill switch), instances, store scopes and quota, windows, export/import, CSP with script hashes, integrity, approvals on growing updates, downgrades
   v1269_test.go        in-app notifications (recorded without channels, per user, reminders once a day, mark read, clear, newest 200 kept, removed with the user); metrics parser; /api/workboard/metrics (own connections only, SSH error in the result, policy off, fresh and stale Monitoring sample); the page loads static/workboard.js
   v1268_test.go        /api/me/ui: per-user layout store (put, overwrite, reset, objects only, 64 KiB limit, unknown keys, signed out, removed with the user); the page loads static/layout.js and has every panel
   v1267_test.go        Medium certificates: host CA bundle and extra PEM file reach every container (mount, environment, image roots kept), expired and duplicate certificates left out, bad or missing file named
@@ -3316,6 +3350,7 @@ remote-manager/
   static/mcp.js              AI connections (MCP): settings, indicator, approval cards, OAuth consent, admin tab (loaded when used)
   static/aisessions.js       the AI sessions panel and viewer; shared handling of decisions on requests that no longer wait
   static/layout.js           panel layout: dock zones, tab groups, splitters, floating windows, lock, Panels menu, per-user storage
+  static/addons.js           Settings → Addons, addon panels and the v2 bridge (instances, store, watchdog, permission sheet)
   static/workboard.js        the Workboard: addon windows on the canvas, addon catalog, settings, docking addons as panels, canvas menu (grid, arrange, saved layouts, export/import)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)

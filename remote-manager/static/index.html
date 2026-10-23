@@ -9308,6 +9308,7 @@ const POLICY_GROUPS = {
     ['pg_desktop', ['desktop_enabled', 'guacd_address', 'guacd_auto', 'desktop_tunnel_bind']],
     ['pg_bmc', ['bmc_enabled', 'serial_ports']],
     ['pg_tools', ['network_tools']],
+    ['pg_addons', ['addon_personal']],
     ['pg_proxies', ['proxies']],
     ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_check_parallel', 'git_check_per_server', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_medium', 'medium_docker_install', 'medium_host_ca', 'medium_ca_file', 'medium_log_output', 'medium_native', 'medium_default_engine', 'medium_build_user', 'medium_command_timeout', 'medium_transfer_timeout', 'git_transfer', 'git_gitignore_mr', 'git_schedule_grace_minutes']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
@@ -15933,6 +15934,7 @@ function closeWindow(id) {
   if (wo.viewing) closeViewerWindow(wo);
   if (window.wrmAI) wrmAI.onWinClose(wo);
   if (wo.mode === 'addon' && window.wrmWorkboard) wrmWorkboard.windowGone(wo);
+  if (wo.mode === 'addon-panel' && window.wrmAddons) wrmAddons.windowGone(wo);
   disposeWinTerminal(wo);
   if (wo._searchCtrl) { try { wo._searchCtrl.abort(); } catch(_) {} }
   if (wo._uploading) { try { wo._uploading.abort(); } catch(_) {} }
@@ -15990,6 +15992,7 @@ function updateNoWindowsHint() {
 function winLayoutChanged(id) {
   const wo = winObjects.find(w => w.id === id);
   if (wo && wo.mode === 'addon' && window.wrmWorkboard) wrmWorkboard.windowMoved(wo);
+  if (wo && wo.mode === 'addon-panel' && window.wrmAddons) wrmAddons.windowChanged(wo);
 }
 function canvasGrid() { return window.wrmWorkboard && wrmWorkboard.grid ? wrmWorkboard.grid() : 0; }
 const snapToGrid = (v, g) => (g ? Math.round(v / g) * g : v);

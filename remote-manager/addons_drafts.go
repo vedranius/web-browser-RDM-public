@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -120,14 +119,14 @@ func addonDraftManifest(dir string) (*addonManifest, error) {
 		return nil, fmt.Errorf("addon.json is larger than 256 KiB")
 	}
 	raw = bytes.TrimPrefix(raw, []byte("\xef\xbb\xbf"))
-	var m addonManifest
-	if err := json.Unmarshal(raw, &m); err != nil {
-		return nil, fmt.Errorf("addon.json is not valid JSON: %v", err)
+	m, err := addonDecodeManifest(raw)
+	if err != nil {
+		return nil, err
 	}
 	if err := m.validate(); err != nil {
 		return nil, err
 	}
-	return &m, nil
+	return m, nil
 }
 
 // addonDraftZip turns a draft folder into the same archive an upload would
