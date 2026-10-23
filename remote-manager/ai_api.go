@@ -90,7 +90,8 @@ func aiConfigHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		"redact_output": settingBool("ai_redact_output"), "share_notes": settingBool("ai_share_notes"),
 		"approval_timeout_seconds": settingInt("ai_approval_timeout_seconds"), "auto_max_minutes": settingInt("ai_auto_max_minutes"),
 		"auto_max_actions": settingInt("ai_auto_max_actions"), "kill_switch": settingBool("ai_kill_switch"),
-		"read_max_kb": settingInt("ai_output_max_kb"),
+		"read_max_kb":   settingInt("ai_output_max_kb"),
+		"show_thinking": settingBool("ai_show_thinking"), "prefs": aiPrefsOf(userID),
 	}
 	if allowed {
 		out["providers"] = providersFor(userID)
@@ -186,6 +187,10 @@ func aiSessionsHandler(w http.ResponseWriter, r *http.Request, userID int, parts
 	if len(parts) == 0 || parts[0] == "" {
 		switch r.Method {
 		case http.MethodGet:
+			if r.URL.Query().Get("view") == "all" {
+				aiSessionsViewList(w, r, userID)
+				return
+			}
 			switch p := r.URL.Query().Get("purpose"); p {
 			case "":
 				jsonOK(w, aiListSessions(`s.user_id = ?`, []interface{}{userID}, 50))
@@ -216,6 +221,14 @@ func aiSessionsHandler(w http.ResponseWriter, r *http.Request, userID int, parts
 		aiTitleHandler(w, r, userID, parts[0])
 		return
 	}
+	if len(parts) == 2 && parts[1] == "save" && r.Method == http.MethodPost {
+		aiSaveHandler(w, r, userID, parts[0])
+		return
+	}
+	if len(parts) == 2 && parts[1] == "export" && r.Method == http.MethodGet {
+		aiExportHandler(w, r, userID, parts[0])
+		return
+	}
 	if len(parts) == 2 && parts[1] == "events" && r.Method == http.MethodGet {
 		if s := aiGet(parseID(parts[0])); (s == nil || s.UserID != userID) && aiEndedEvents(w, parseID(parts[0]), userID) {
 			return
@@ -242,11 +255,16 @@ func aiSessionsHandler(w http.ResponseWriter, r *http.Request, userID int, parts
 		}
 		found, err := aiResolveStoredLater(parseID(parts[0]), parts[2], userID, in.Decision == "approve")
 		if !found {
-			jsonError(w, "AI session not found or ended", 404)
+			var owner int
+			if db.QueryRow(`SELECT COALESCE(user_id,0) FROM ai_sessions WHERE id=?`, parseID(parts[0])).Scan(&owner) != nil || owner != userID {
+				jsonError(w, "AI session not found or ended", 404)
+				return
+			}
+			aiDecisionError(w, aiNotPending(parseID(parts[0]), parts[2]))
 			return
 		}
 		if err != nil {
-			jsonError(w, err.Error(), 409)
+			aiDecisionError(w, err)
 			return
 		}
 		jsonOK(w, map[string]interface{}{"ok": true, "session_ended": true})
@@ -311,7 +329,7 @@ func aiSessionsHandler(w http.ResponseWriter, r *http.Request, userID int, parts
 			return
 		}
 		if err := s.Resolve(parts[2], userID, in.Decision == "approve", in.Command, in.Content, in.Note); err != nil {
-			jsonError(w, err.Error(), 409)
+			aiDecisionError(w, err)
 			return
 		}
 		jsonOK(w, map[string]bool{"ok": true})
@@ -367,16 +385,20 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		if in.ProviderID == 0 {
 			in.ProviderID = prev.ProviderID
 		}
-		if in.Model == "" {
+		if in.Model == "" && prev.Transport != "mcp" && in.ProviderID == prev.ProviderID {
 			in.Model = prev.Model
 		}
-		if in.Mode == "" && prev.Mode != aiModeAuto {
+		if in.Mode == "" && prev.Mode != aiModeAuto && oneOf(prev.Mode, aiModesFor("panel", in.ConnID)...) {
 			in.Mode = prev.Mode
 		}
-		if prev.Transport == "opencode" || prev.Transport == "mcp" {
-			jsonError(w, "Only sessions of the WRM assistant can be continued", 400)
+		// an OpenCode or MCP session continues in the WRM assistant: what it did is the earlier context
+		if transport == "opencode" {
+			jsonError(w, "A session is continued in the WRM assistant, not in OpenCode", 400)
 			return
 		}
+	}
+	if in.ProviderID == 0 && transport != "opencode" {
+		in.ProviderID = aiDefaultProviderFor(userID)
 	}
 	shareID, code, msg := aiConnAccess(r, userID, in.ConnID)
 	if code != 0 {

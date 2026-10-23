@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.8.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.8.0
+
+**AI sessions, your own AI settings and approvals that do what they say.** The new **🧠 AI sessions** panel lists every AI session you had, from the assistant, the log and file assistants, OpenCode agents and AI apps over MCP, with search (also in the conversation), filters, a transcript viewer, **Continue** (also an MCP session, whose steps become the earlier context), **Save** (kept beyond the transcript retention) and export to Markdown or JSON. Everybody sees only their own sessions. *⚙ My AI settings* in the assistant keep your own default provider (your own key, e.g. your OpenAI or Anthropic account), model, mode, engine and whether you see the model's thinking. Over MCP an approval given in WRM after the AI app stopped waiting now **runs the call at once** (`ai_mcp_later_approval`), *Deny* in the AI app is final, an app's open question is closed when you decide in WRM, and deciding a request that is no longer waiting says who decided it and where. The work log keeps the whole thinking text instead of its last lines. See [AI sessions](#ai-sessions) and [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 
 ## What's new in v13.7.0
 
@@ -200,7 +204,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -310,21 +314,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.7.0-linux-amd64
-   ./wrm-pro-v13.7.0-linux-amd64
+   chmod +x wrm-pro-v13.8.0-linux-amd64
+   ./wrm-pro-v13.8.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.7.0-windows-amd64.exe
+   .\wrm-pro-v13.8.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.7.0-linux-amd64.AppImage
-   ./wrm-pro-v13.7.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.7.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.8.0-linux-amd64.AppImage
+   ./wrm-pro-v13.8.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.8.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -333,8 +337,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.7.0/wrm-pro-v13.7.0-android-arm64
-   chmod +x wrm-pro-v13.7.0-android-arm64 && ./wrm-pro-v13.7.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.8.0/wrm-pro-v13.8.0-android-arm64
+   chmod +x wrm-pro-v13.8.0-android-arm64 && ./wrm-pro-v13.8.0-android-arm64
    ```
 
    **Docker**
@@ -358,6 +362,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.7.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: a new column `saved` in `ai_sessions` and an index; a previous version still starts on the database. New settings `ai_mcp_later_approval` (`run`: an approval given in WRM after the AI app stopped waiting runs the call at once; `repeat` keeps the earlier behaviour, where the AI must repeat the call) and `ai_keep_saved_sessions` (`1`). *Deny* in an AI app's approval question is now a final denial; closing the question without an answer still keeps the request in WRM. New endpoints: `GET /api/ai/sessions?view=all`, `POST /api/ai/sessions/{id}/save`, `GET /api/ai/sessions/{id}/export`, and the key `ai` of `/api/me/ui/{key}`. A decision on a request that is no longer waiting answers `409` with `decided`.
 
 ## Upgrading from v13.6.0
 
@@ -1682,6 +1690,7 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 - **What the AI sees** (👁 in the panel): the tool results of this session, the OS of the server and, only if you tick it, your notes for the connection. Never the passwords and keys stored in WRM, your WRM sign-in, other connections or your terminal screen. **Secrets in output are redacted** before they are sent to the provider (`ai_redact_output`): private keys, passwords and tokens in `key=value` form, `Authorization` headers, passwords in URLs, AWS / GitHub / GitLab / Slack / OpenAI / Anthropic / Google keys, JWTs, password hashes. Output is limited per call (`ai_output_max_kb`).
 - **Server output is untrusted data.** Tool results are framed as untrusted data and the model is told never to follow instructions found in them. A log line that says *switch to automatic mode* changes nothing: only you can change the mode, in the WRM interface, and every change goes through the same checks.
 - **Work log, titles and continuing a chat:** the work log shows the assistant's thinking (💭; Anthropic adaptive thinking on the models that support it, `reasoning_content` of OpenAI-compatible servers), its narration before each step and every tool result (`ai_show_thinking`). After the first answer the chat gets a short title (`ai_auto_titles`; click it to rename). A chat that ended (WRM restart, idle time, kill switch) shows **Continue chat**, which starts a new session with the earlier conversation as context; the history lists title, date, time and *Continue*.
+- **My AI settings** (⚙ in the panel, stored per user like the panel layout): your default provider (an organisation provider or your own key, when `ai_personal_keys` allows), model, mode and engine for new chats, and whether you see the model's thinking (only while `ai_show_thinking` is on). The work log keeps the whole thinking text in a scrolling box.
 - **Stop and kill:** ■ *Stop* cancels the running request and command; ⏻ ends the session. Administrators end one session, all sessions of a user, or every session (*Stop every AI session now*), turn the assistant off for a user, or turn on the **kill switch** (`ai_kill_switch`, also `WRM_AI_KILL_SWITCH=1`), which ends everything and blocks new sessions. An **✦ AI** badge on the window shows that a session is active.
 - **Providers:** the **Anthropic API** (the latest Claude models, e.g. `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; an optional gateway base URL), the **OpenAI API**, **Azure OpenAI** (deployment + api-version, or the v1 API), **AWS Bedrock** (the Converse API with SigV4 access keys or a Bedrock API key, or the Messages API endpoint with an API key; model IDs such as `anthropic.claude-opus-5-5`), **Google Vertex AI** (Claude through `rawPredict`, or the OpenAI-compatible endpoint, with a service account key) **OpenCode Zen** (pay-as-you-go: free models without a key, every model with an OpenCode account's key), **OpenCode Go** (the Go subscription key; see [OpenCode Zen, Go, agents and helper models](#opencode-zen-go-agents-and-helper-models)) and any **OpenAI-compatible** base URL (Ollama, vLLM, LM Studio …). Responses are streamed; tokens and the estimated cost are counted per request (built-in list prices for Anthropic models, your own prices for others); requests time out and are cancelled with *Stop*.
 - **Keys:** the organisation's providers are managed by administrators (*Admin panel → AI assistant → Organisation providers*); personal keys (*🔑 My API keys* in the panel) only when `ai_personal_keys` allows them. Keys are encrypted at rest and **never sent to the browser**; *Test* sends one tiny request.
@@ -1724,6 +1733,15 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 - **Lifetime:** the session's AI connection (kind `opencode`) works only from `127.0.0.1` and only while the agent runs; ending the session, a kill, the kill switch, an idle timeout or stopping WRM stops the process and removes its folder. At most `ai_opencode_max_sessions` agents run at once; `ai_opencode` decides who may use them (`off`, `admins`, `all`).
 
 **OpenCode on your own computer** can also use WRM as an MCP server: *Settings → AI connections → Connect an AI app → OpenCode* gives the `opencode.json` snippet (token in `WRM_MCP_TOKEN`) or the OAuth login (`opencode mcp auth wrm`).
+
+### AI sessions
+
+**🧠 AI sessions** (a panel; *Panels* menu) lists all of **your own** AI sessions, newest first, whatever started them: the assistant in a terminal, the log and file assistants, OpenCode agents and AI apps over MCP. Nobody else's sessions are listed, also not for administrators (they have *Admin panel → AI assistant → Transcript*).
+
+- **Search and filters:** the search looks in the title, server, model, provider and the conversation itself; filters for kind (assistant, logs, file, OpenCode, AI app), *Live* and *Saved*.
+- **Open:** the transcript (redacted, as stored) with thinking, steps, approvals and results; a live MCP session opens its live view, a live chat goes to its window.
+- **Continue:** starts a new assistant chat on the same server with the earlier session as context. An MCP or OpenCode session can be continued too: its tool calls and results become the earlier context.
+- **Save:** ☆ keeps a session beyond `ai_transcript_retention_days` while `ai_keep_saved_sessions` is on. **Rename** and **Export** (Markdown or JSON; audited as `ai.session_export`).
 
 ### AI desktop apps (MCP)
 
@@ -1778,7 +1796,7 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
   - The layout is stored for your account. Approval cards always pop up at the bottom right, whatever the layout. On a phone the live view is a sheet at the bottom of the screen.
 - **After a refusal** (denied in WRM or in the app, or no answer within `ai_approval_timeout_seconds`) the tool result tells the AI where it was refused, **which rule made WRM ask** (the time or action limit, a command outside the allow list, ask mode, a power command) and what you can change in WRM, and to ask you whether to continue, change the command or stop, instead of retrying a variant on its own.
 - **Full access (v12.6.2, modes v12.6.3):** the administrator's `ai_full_access` switch applies, depending on `ai_full_access_mode`, to every AI session (`all`, the default: the WRM AI panel and every AI connection), only to AI connections with the scope `full_access` (`connection`; the scope is offered only in this mode), or to users who turn on **Full access for my AI sessions** in *Settings → AI connections* (`user`). Then nothing is refused outright: commands on the destructive list or `ai_blocked_commands`, the connection's deny lists, power commands, protected paths and secret files (also with `ai_sensitive_reads` = `deny`) become approvals marked *FULL ACCESS*, asked every time and never automatic, even with "Allow everything". A read-only connection stays read-only and the other scopes still apply. With `ai_full_access_blocked` = `deny` (v12.6.4) the administrator's `ai_blocked_commands` stay refused even under full access. Turning the policy off restores the refusals at the next call.
-- **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Approve it there and tell the AI to continue: the identical call then runs once without asking. This also works after the AI app closed its session (v12.6.5): the approval covers the same call once in your next session on that connection. A denial in WRM stays a denial. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.
+- **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Since v13.8.0 approving it there **runs the call at once** (`ai_mcp_later_approval` = `run`, the default): the output appears in the live view, and when the AI repeats the same call it gets that output (marked as run after your approval) instead of running it again. With `repeat` the approval only lets the identical call run once without asking when the AI repeats it. This also works after the AI app closed its session (v12.6.5): the approval covers the same call once in your next session on that connection. A denial in WRM stays a denial, and so does *Deny* in the app's question (v13.8.0); only closing the question without an answer keeps the request for later. When you decide in WRM, the app's open question is closed. Deciding a request that is no longer waiting tells you who decided it and where (in WRM or in the AI app), or that the AI stopped waiting. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.
 - **Allow everything:** in automatic mode an AI connection can allow every command (`*`) and file (`/**`) with **no time or action limit**: it then stays automatic until the AI connection expires or you revoke it. With `*`, chains, variables, groups and redirections run too. Still refused or asked: the built-in destructive patterns and `ai_blocked_commands`, your deny lists, sensitive files, commands WRM cannot parse, power commands, and servers the connection does not include. The policy `ai_auto_until_grant` (default on) decides whether users may choose no limits; the browser's built-in assistant always keeps its limits.
 - **🤖 AI connected** in the top bar shows while an app has an open session (with the number of pending approvals); click it to see the apps and **revoke** one or all with one click. Revoking ends the sessions at once; so do expiry, the kill switch and the policies.
 - Each session is an AI session with transport *mcp*: in the audit log (`mcp.*` for connecting, tokens and OAuth; `ai.*` for every tool call, approval and denial), in the transcripts and in **Sessions & recordings** (✦ AI), like the built-in assistant.
@@ -2379,6 +2397,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_share_notes` | `1` | users may opt in to send their connection notes |
 | `ai_transcript_retention_days` | `90` | AI transcripts are deleted after this time (1–3650) |
 | `ai_approval_timeout_seconds` | `300` | an unanswered approval is denied (30–3600) |
+| `ai_mcp_later_approval` | `run` | MCP: an approval given in WRM after the AI app stopped waiting runs the call at once (`run`) or only lets the AI repeat it (`repeat`) |
+| `ai_keep_saved_sessions` | `1` | saved AI sessions (☆ in *AI sessions*) are kept beyond `ai_transcript_retention_days` |
 | `ai_auto_max_minutes` / `ai_auto_max_actions` | `60` / `50` | the largest time limit and action count a user may opt into |
 | `ai_auto_until_grant` | `1` | AI connections (MCP) may use automatic mode with no time or action limit, for as long as the connection is valid |
 | `ai_allow_power` | `off` | `shutdown` / `reboot`: `off` (blocked) or `ask` (each needs an approval, never automatic) |
@@ -2728,7 +2748,7 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | GET | `/api/teams` | Teams for the share dialog `{teams: [{id, name, member_count}], mine}` |
 | GET / POST / DELETE | `/api/me/events` · `/api/me/events/read` | Your in-app notifications: `GET ?limit=` (default 50, at most 200) → `{events: [{id, event, title, body, at, read}], unread}`; `POST /api/me/events/read` `{ids: […]}` or `{all: true}`; `DELETE /api/me/events` clears the list |
 | GET | `/api/workboard/metrics?id=` | CPU, RAM, load, uptime and disks of one of your SSH/SFTP connections: `{conn_id, at, source: zabbix\|ssh, cpu_percent, memory_percent, memory_total, load, cpu_count, uptime, disks: [{mount, percent, size_kb}], error}`; `refresh=1` skips the 25 s cache; 403 when reading over SSH is off and there is no fresh Monitoring sample |
-| GET / PUT / DELETE | `/api/me/ui/{key}` | Your interface state, `key` = `layout` (panel layout) or `workboard`: `GET` → `{value, updated_at}` (`value` null when nothing is stored), `PUT {value: {…}}` (a JSON object, at most 64 KiB), `DELETE` resets |
+| GET / PUT / DELETE | `/api/me/ui/{key}` | Your interface state, `key` = `layout` (panel layout), `workboard` or `ai` (my AI settings: `provider_id, model, mode, engine, thinking`): `GET` → `{value, updated_at}` (`value` null when nothing is stored), `PUT {value: {…}}` (a JSON object, at most 64 KiB), `DELETE` resets |
 | POST | `/api/auth/password` | `{current_password, new_password}` |
 | POST | `/api/auth/2fa/setup` · `enable` · `disable` · `recovery` | Two-factor management |
 | GET / DELETE | `/api/auth/sessions[/{id}]` | Signed-in devices / sign out one or all others |
@@ -3023,12 +3043,15 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET / POST / PUT / DELETE | `/api/ai/providers[/{id}]` | Personal providers (policy `ai_personal_keys`); secrets are write-only (`api_key`, `access_key_id`, `secret_access_key`, `session_token`, `service_account`; omitted = unchanged, `""` = removed), responses carry `has_api_key` / `has_access_key` / `has_service_account` |
 | POST | `/api/ai/providers/{id}/test` | One tiny request `{model}` → `{ok, reply \| error}` |
 | GET / POST | `/api/ai/sessions` | Own sessions (`?purpose=terminal\|logs\|file&conn_id=`) / start `{conn_id, provider_id, model, mode, purpose?: "logs"\|"file", file_path?, resume_from?, auto: {allow, deny, path_allow, path_deny, minutes, max_actions}, confirm_auto, share_notes, engine?: "opencode", sandbox?: true, agent?: "build"\|"plan"}` |
+| GET | `/api/ai/sessions?view=all` | The AI sessions view: own sessions of every kind `?kind=assistant\|logs\|file\|opencode\|mcp\|saved\|live&q=&conn_id=&before=&limit=` → `{sessions (with saved, preview, kind, can_continue), more, keep_saved, retention_days}` |
 | GET | `/api/ai/sessions/{id}` | Session and its (redacted) transcript |
+| POST | `/api/ai/sessions/{id}/save` | `{saved}`: keep an own session beyond the retention |
+| GET | `/api/ai/sessions/{id}/export?format=md\|json` | Download an own session's transcript |
 | GET | `/api/ai/sessions/{id}/events?since=N` | Server-sent events: `session`, `user`, `assistant_start`, `text`, `assistant_done`, `tool_call`, `approval_required`, `approval_resolved`, `tool_result`, `mode`, `usage`, `busy`, `notice`, `error`, `thinking`, `title`, `history`, `ended` (an ended session answers with `ended` and `resumable`) |
 | POST | `/api/ai/sessions/{id}/prompt` | `{text}` |
 | POST | `/api/ai/sessions/{id}/title` | `{title}`: rename a chat |
 | POST | `/api/ai/sessions/{id}/mode` | `{mode, auto, confirm}` |
-| POST | `/api/ai/sessions/{id}/approvals/{approval}` | `{decision: "approve"\|"deny", command?, content?, note?}` (only the session's user) |
+| POST | `/api/ai/sessions/{id}/approvals/{approval}` | `{decision: "approve"\|"deny", command?, content?, note?}` (only the session's user); a request that no longer waits answers `409 {error, decided: {outcome, by, via, at}}` |
 | POST | `/api/ai/sessions/{id}/stop` · `/kill` | Cancel the running request / end the session |
 | GET / PUT | `/api/ai/delegate` | Helper models for the user (provider, models with data-use labels, allowed or not) / `{training: bool}` (only with `ai_delegate_training` = `user`) |
 | GET | `/api/admin/opencode` | OpenCode state: installed version, binary, package for this host, running agents, install log (administrators) |
@@ -3248,6 +3271,7 @@ remote-manager/
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
   releasesign_test.go  release signatures: round trip, tampering, wrong key or file, WRM context, key parsing, the command-line tools, self-update refusing unsigned or wrongly signed releases
+  v138_ai_sessions_test.go  AI sessions view (own sessions only, filters, search, save, export, retention), personal AI settings, continuing an MCP session; MCP approvals given later run at once (and with repeat) and are checked again before they run, Deny in the app is final
   v12625_test.go       LDAP and SCIM against a fake LDAP server (LDAPS, StartTLS, AD nested groups, paging): protocol pieces and filter escaping, sign-in and mapping, refused accounts, the regular check ending access, linking, stored passwords not sent to a changed address, SCIM users, groups, PATCH and deprovisioning, the SCIM account linked on the first OIDC sign-in, disabling ends everything
   v12626_test.go       lockdown (sessions, sign-in, AI, shares, CLI state, break-glass only), Stop user and what it ends, every alert rule and its settings, SIEM delivery to fake Splunk, Elastic, Sentinel (with a fake Entra token endpoint) and HTTPS collectors over TLS, syslog over TLS (RFC 5424 framing, structured data), the JSON lines file, catching up after an outage, action filters and the stored secret not sent to a changed address
   v12624_test.go       directory sign-in against a fake identity provider: ID token checks (RS256/ES256, nonce, audience, expiry, alg none/HS256, key rotation), accounts from rules, role and team sync, refusals, browser binding and replay of the callback, MFA, local 2FA after a directory sign-in, revalidation (refused refresh, removed from the group, no refresh token), password sign-in limited to break-glass, linking, step-up and test sign-in, admin API
@@ -3278,6 +3302,7 @@ remote-manager/
   static/git.js              the Git workspace (loaded when it is opened)
   static/ai.js               the AI assistant panel and the admin AI tab (loaded when used)
   static/mcp.js              AI connections (MCP): settings, indicator, approval cards, OAuth consent, admin tab (loaded when used)
+  static/aisessions.js       the AI sessions panel and viewer; shared handling of decisions on requests that no longer wait
   static/layout.js           panel layout: dock zones, tab groups, splitters, floating windows, lock, Panels menu, per-user storage
   static/workboard.js        the Workboard: addon windows on the canvas, addon catalog, settings, docking addons as panels, canvas menu (grid, arrange, saved layouts, export/import)
   static/brand/              logo, favicon and app icons
@@ -3347,6 +3372,7 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 | MCP: HTTP 403 *origin not allowed* | A browser-based client on another origin: add it to `ai_mcp_allowed_origins` |
 | MCP: a change is *Denied by WRM … run_readonly* | The AI connection has no `run_with_approval` scope; create one with it (if the policy allows) |
 | MCP: the app waits and nothing happens | An approval is pending: answer it on the card in WRM (or in the app); unanswered approvals are denied after `ai_approval_timeout_seconds` |
+| MCP: "already approved / denied" when deciding | Somebody (you in the AI app, or in another WRM tab) decided it first; the message says who and where. "The AI stopped waiting": ask the AI to repeat the call |
 | MCP stdio bridge: *certificate signed by unknown authority* | Start the bridge with `-ca-file` pointing to the WRM certificate or your CA (PEM) |
 | *HOST KEY VERIFICATION FAILED* | The server's SSH key changed. If you know why (reinstall), click *Trust this key* in the terminal (connection owner/admin) or forget the host in *Admin → Host keys* |
 | *Microphone requires HTTPS* / no microphone | Use HTTPS (certificate, reverse proxy or `HTTPS_SELF_SIGNED=1`) and allow the microphone in the browser; you can also join as a listener |

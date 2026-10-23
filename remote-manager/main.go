@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v13.7.0"
+var AppVersion = "v13.8.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -1457,6 +1457,7 @@ func initDB() {
 	// v12.0: AI assistant (providers, sessions, transcripts)
 	initAISchema()
 	initAIChatSchema()
+	initAISessionsViewSchema()
 	initMCPSchema()
 
 	// v13.0: addons (a folder under <DB>.addons plus its manifest)
