@@ -1,6 +1,32 @@
-## Web Remote Manager PRO v13.5.0 - Log viewer, smart editor and AI that shows its work
+## Web Remote Manager PRO v13.6.0 - Themes, accessibility and a real screen lock
 
 ### Added
+
+- **Settings → Appearance**: eleven themes (dark, OLED, Fjord, Solar, Forest, Ember, light Daylight, Paper, Solar light, high contrast dark and light), *follow the system light/dark*, a colour picker for every colour including the terminal, your own saved themes with export and import, fonts, interface size, spacing, corners and custom CSS. Your choice follows you to every browser.
+- **Accessibility**: palettes for deuteranopia, protanopia, tritanopia and achromatopsia (also in terminals), signs and shapes so nothing relies on colour alone, more contrast, terminal minimum contrast (WCAG AA/AAA), reduced motion and transparency, a strong focus outline.
+- **Themes from addons** are offered in Appearance and applied only for the users who choose them; administrators can make any theme the default.
+- **Settings → Security → Screen lock**: **Lock now**, idle time with a warning, lock when WRM is hidden, when the computer locks or sleeps, on every start, a keyboard shortcut, how the lock screen looks, and notifications held until the unlock. Everything keeps running in the background.
+- **Unlock PIN** and an optional sign-out after wrong attempts.
+
+### Changed
+
+- **The lock is kept by the server**: a reload or a new tab stays locked, and a locked browser session cannot reach WRM data until it is unlocked (`screen_lock_mode`, default `server`).
+- Addon themes are no longer applied to everyone; the accent colour is part of the theme.
+
+### Fixed
+
+- Directory (LDAP) accounts can unlock the screen.
+- The lock screen no longer breaks after its first use.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. Additive migration only: new columns `locked_at` and `lock_failures` in `auth_sessions` and `lock_pin_hash` in `users`. New settings `screen_lock_mode`, `screen_lock_max_minutes`, `screen_lock_pin`, `screen_lock_max_failures`, `appearance_default_theme` and `appearance_custom_css`. Users who used an addon theme pick it again in *Settings → Appearance*.
+
+[Download v13.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.6.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.5.0 - Log viewer, smart editor and AI that shows its work
+
+#### Added
 
 - **A professional log viewer** in *Monitoring → Logs*: sortable and filterable file list (operator, service, newest first), log tabs with line numbers, level colours, smart highlighting (times, IPs, URLs, HTTP codes, UUIDs, key=value), find in the log, level filters, **Follow**, older lines and go to line.
 - **Search across all logs by time**: the search runs on the server with grep, takes a From/To range in the EU format (`dd.mm.yyyy hh:mm`) or a quick range, sorts hits by time and draws a timeline. A click opens the file at the hit.
@@ -11,14 +37,14 @@
 - **Date and time format**: EU by default, ISO, US or the browser's locale in *Settings*.
 - **Plugin and skills**: the skills use `search_logs`; `server.json` lets the owner publish WRM to the MCP Registry.
 
-### Fixed
+#### Fixed
 
 - A week-wide log search no longer ends with "time budget reached" or "results are bounded or incomplete".
 - Operators under `/home/<project>/<operator>/<service>` are found again.
 - AI sessions no longer hang in "stopped": an ended session says so and offers **Continue chat**.
 - The version at the top left is shown again after reloading a signed-in page.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. Additive migration only: new table `log_settings` and new columns `title`, `purpose`, `resumed_from` and `file_path` in `ai_sessions`. Log folders configured in the Zabbix dialog are read into the new log settings. New settings `ai_show_thinking` and `ai_auto_titles` (both on).
 
