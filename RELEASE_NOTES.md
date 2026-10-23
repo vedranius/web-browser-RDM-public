@@ -1,6 +1,25 @@
-## Web Remote Manager PRO v13.5.0 - Log viewer, smart editor and AI that shows its work
+## Web Remote Manager PRO v13.6.0 - Log folders, a folder tree and smarter operators
 
 ### Added
+
+- **Folder tree** in *Monitoring → Logs* (*View: Folder tree*): logs grouped under their main folder (`/var/log`, `/home/scripts` …) and subfolders, each folder can be opened and ticked as a whole. A **Folder** filter narrows either view to one folder and everything below it.
+- **Main folders** in *⚙ Log settings*: everything below one is grouped under it (scan paths and Git workspace server roots count too).
+- **Operators from repeated words**: `nova`, `NOVA2` and `novatv` in folder and service names are recognised and linked into one operator group; the filter offers the group and each operator. Guesses are marked `≈` and can be turned off in *Log settings*.
+- Every log shows whether it sits in a **log folder** or an **app folder**.
+
+### Fixed
+
+- Logs in `/var/log/<service>` looked missing when a script folder had the same name in a different case: the service filter now treats them as one service and shows both folders, clearly marked.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration: the new log settings `main_folders` and `guess_operators` (on) live in the existing `log_settings` JSON.
+
+[Download v13.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.6.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.5.0 - Log viewer, smart editor and AI that shows its work
+
+#### Added
 
 - **A professional log viewer** in *Monitoring → Logs*: sortable and filterable file list (operator, service, newest first), log tabs with line numbers, level colours, smart highlighting (times, IPs, URLs, HTTP codes, UUIDs, key=value), find in the log, level filters, **Follow**, older lines and go to line.
 - **Search across all logs by time**: the search runs on the server with grep, takes a From/To range in the EU format (`dd.mm.yyyy hh:mm`) or a quick range, sorts hits by time and draws a timeline. A click opens the file at the hit.
@@ -11,14 +30,14 @@
 - **Date and time format**: EU by default, ISO, US or the browser's locale in *Settings*.
 - **Plugin and skills**: the skills use `search_logs`; `server.json` lets the owner publish WRM to the MCP Registry.
 
-### Fixed
+#### Fixed
 
 - A week-wide log search no longer ends with "time budget reached" or "results are bounded or incomplete".
 - Operators under `/home/<project>/<operator>/<service>` are found again.
 - AI sessions no longer hang in "stopped": an ended session says so and offers **Continue chat**.
 - The version at the top left is shown again after reloading a signed-in page.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. Additive migration only: new table `log_settings` and new columns `title`, `purpose`, `resumed_from` and `file_path` in `ai_sessions`. Log folders configured in the Zabbix dialog are read into the new log settings. New settings `ai_show_thinking` and `ai_auto_titles` (both on).
 
