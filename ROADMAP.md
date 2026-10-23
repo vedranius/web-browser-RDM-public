@@ -20,6 +20,17 @@ Still open from v13:
 
 Addon decisions already taken: server code runs in a WASM sandbox (`wazero`, pure Go, no cgo) unless the operator opts into native code; UI addons register into defined slots and themes instead of touching core DOM; addons declare capabilities, which the installer shows before installing; the community index uses trust levels (`official`, `reviewed`, `community`, `unverified`) with checksums, plus a security and hobby-project liability notice.
 
+## Addon platform v2 (accepted 2026-10-23, one version per step)
+
+Goal: an addon written by any user (or their AI) can show live data in a WRM window, keep its settings and survive restarts, without being able to read WRM secrets, reach arbitrary hosts, hang the app or escalate beyond what was approved. Decisions: every user may install personal addons (network access and secrets are approved by an administrator); secrets per instance entered by an administrator, with a personal override that wins; **no background checks or history in WRM** (addons fetch while their window is open; 24/7 alerting stays in the monitored system).
+
+Delivered: v13.9.0 step 1 (manifest v2, personal addons, themes for Appearance, instances, server-side store, remembered windows, bridge v2 with watchdog, CSP and integrity, permission sheets; see [CHANGELOG.md](CHANGELOG.md)).
+
+Next:
+- **Step 2: HTTP proxy and secrets.** Manifest `http: {origins, paths, methods, secrets}`; `wrm:http` performed by WRM: method and size checks, exact origin and path prefix, DNS/IP checks (loopback, link-local, RFC1918 and metadata blocked unless the administrator approves the origin as private network), only `Accept`, `Content-Type`, `Range` forwarded plus one secret header (`bearer:`, `basic:`, `header:<name>:`), 10 s timeout, re-validated redirects, 8 MB response cap, rate limits (120/min, 20 concurrent, 2 s coalescing), audit without secret values. Secrets per instance (administrator) with a personal override; the panel references them and never reads them. Origins of personal addons need an administrator's approval.
+- **Step 3: tooling for AI-made addons.** JSON Schema and `llms.txt` served by WRM, `wrm -addon-lint <dir>` (schema, files, traversal, remote scripts, `eval`, inline handlers, CSP hashes, wasm imports/exports, permission summary), `wrm -addon-dev <dir>` (the real CSP and a host shim with store and proxy, hot reload), structured diagnostics `{code, message, file, line, hint}`, starter templates (blank, fetch-and-render, grafana-panel, wasm-hook).
+- Later, when needed: a separate addon origin (own host or port), safe mode after repeated startup crashes, signed addons and a registry with updates.
+
 ## Security and enterprise identity (accepted, versions before v12.7.0)
 
 Goal: the same WRM fits a home lab, a small company and a large organisation. Security is checked automatically on every change, the operator chooses a security level, and companies sign in with their directory (Microsoft Entra ID / AD, LDAP, other identity providers) so every action is traceable to a domain user and can be stopped at once.

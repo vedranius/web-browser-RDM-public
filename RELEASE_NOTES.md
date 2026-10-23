@@ -1,24 +1,47 @@
-## Web Remote Manager PRO v13.8.0 - AI sessions, your own AI settings and approvals that do what they say
+## Web Remote Manager PRO v13.9.0 - Addon platform v2: personal addons, instances and a stricter sandbox
 
 ### Added
+
+- **Personal addons.** Every user can install addons that only they see (*Settings → Addons*). Administrators decide who may (`addon_personal`) and can turn off or remove any user's personal addon.
+- **Themes from addons** appear in *Settings → Appearance*; each user picks one for themselves.
+- **Instances**: open one addon several times (for example two dashboards), each with its own settings and window. Shared instances are set up by an administrator for everybody.
+- **Settings on the server**: an addon keeps its settings in WRM (per instance), with export and import, so nothing is retyped after a reload.
+- **Windows come back**: where you put an addon window, its size and whether it was open are remembered on the server, also on another device.
+- **A watchdog**: a panel that does not start or stops answering shows a banner with *Reload*, *Diagnostics*, *Disable addon* and *Close*; errors the panel reports are listed under ⚠ in its title bar.
+- **A permission sheet** before an addon is enabled, written by WRM from `addon.json`. An update that asks for more stays off until you approve it again.
+- **Addon developer guide** ([docs/ADDONS.md](docs/ADDONS.md)) and an updated *AI addon* prompt.
+
+### Changed
+
+- apiVersion 2 panels run without any network of their own and only with the scripts that came in their ZIP; every addon file is checked against the SHA-256 recorded at install.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. Additive migration only: new tables `addons_personal`, `addon_instances`, `addon_store` and `addon_windows`, new columns `files`, `approved` and `pending` in `addons`. Installed addons keep working; their files are pinned the next time they are installed. New policy `addon_personal` (`all`).
+
+[Download v13.9.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.9.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.8.0 - AI sessions, your own AI settings and approvals that do what they say
+
+#### Added
 
 - **AI sessions** (🧠 panel next to *Sessions*): every AI session you had in one list, whatever started it: the assistant in a terminal, the log and file assistants, OpenCode agents and AI apps such as Claude or ChatGPT over MCP. Search (titles, servers, questions and commands), filter by kind, ⭐ saved or running, open the transcript, jump to the live chat or the live view, rename, export as Markdown or JSON, and **continue** any ended session in the WRM assistant. An AI app's session continues with what the app did on the server as its earlier context. Every user sees only their own sessions.
 - **Saved sessions**: ☆ keeps a session beyond the transcript retention (`ai_keep_saved_sessions`, on by default).
 - **My AI settings** (*Settings → AI assistant*): your own default engine, provider, model and permission mode for new sessions, whether to show the assistant's thinking, your own API keys (when the administrator allows personal keys) and a shortcut to connect your own Claude, ChatGPT or Cursor app over MCP. These settings are per user.
 
-### Changed
+#### Changed
 
 - **An approval given after the AI stopped waiting runs at once.** When an AI app gives up waiting (its own timeout, or nobody answered), the request stays open in WRM. Approving it now runs exactly that call right away, shows the output in the live view, and hands the output to the AI when it repeats the call; nothing runs twice. Administrators can keep the old behaviour (*Admin → AI connections → Approval after the AI stopped waiting: Allow the AI to repeat it once*).
 - **Deny in the AI app is final.** Choosing *Deny* in Claude's or ChatGPT's own approval question now refuses the call like Deny in WRM; only closing the question without an answer keeps it open in WRM.
 - When you decide in WRM, the approval question still open in the AI app is closed.
 
-### Fixed
+#### Fixed
 
 - **"The approval is no longer pending"** is replaced by what really happened: who approved or denied it and where (WRM or the AI app), or that the AI stopped waiting and the request was closed.
 - An approval card in the 🤖 menu now changes when the request is kept for later (other text, no editing, which a later approval would ignore), and the approval pop-up closes once the request is decided.
 - **The AI work log no longer loses its text while it fills.** The assistant's thinking used to show only its last 600 characters, so its beginning kept disappearing; the whole thought now stays and scrolls in its own line. Empty *Work log* lines above your questions are gone.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. Additive migration only: new column `saved` in `ai_sessions`. New settings `ai_mcp_later_approval` (`run`) and `ai_keep_saved_sessions` (on). Personal AI settings are stored in `user_ui` under the key `ai`.
 
