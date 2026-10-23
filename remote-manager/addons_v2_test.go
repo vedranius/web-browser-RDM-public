@@ -233,6 +233,9 @@ func TestAddonV2InstancesStoreWindows(t *testing.T) {
 	if r := put(other, mid, "panels", `1`); r.Code != 404 {
 		t.Fatalf("another user wrote a personal instance: %d", r.Code)
 	}
+	if r := addonReq(admin, "GET", fmt.Sprintf("%s/%d/store", base, mid), ""); r.Code != 404 {
+		t.Fatalf("an administrator read a user's private instance: %d", r.Code)
+	}
 	if r := put(user, mid, "wrm.secret", `1`); r.Code != 400 || r.Body["code"] != "E_STORE_KEY" {
 		t.Fatalf("reserved key: %d %s", r.Code, r.Raw)
 	}

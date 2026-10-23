@@ -578,19 +578,6 @@ type addonInstallOutcome struct {
 	Added    []string // permissions an update asked for beyond the approved ones
 }
 
-// addonInstallBytes validates and installs one archive. The upload endpoint and
-// the community library share it, so a downloaded addon passes exactly the same
-// checks as a hand-picked ZIP.
-func addonInstallBytes(w http.ResponseWriter, r *http.Request, adminID int, body []byte, source string) {
-	out, status, err := addonInstallArchive(r.Context(), r, adminID, body, source)
-	if err != nil {
-		addonFail(w, err, status)
-		return
-	}
-	jsonOK(w, map[string]interface{}{"id": out.ID, "name": out.Name, "version": out.Version, "enabled": out.Enabled, "checksum": out.Checksum,
-		"needs_approval": len(out.Added) > 0, "permissions_added": out.Added})
-}
-
 // addonInstallArchive installs an organisation addon. The AI tools install a
 // draft through the same function the upload endpoint uses.
 func addonInstallArchive(ctx context.Context, r *http.Request, adminID int, body []byte, source string) (addonInstallOutcome, int, error) {
@@ -620,7 +607,7 @@ func addonInstallArchiveAs(ctx context.Context, r *http.Request, userID, owner i
 	checksum := "sha256:" + hex.EncodeToString(sum[:])
 	final := addonRefDir(ref)
 	parent := filepath.Dir(final)
-	if err := os.MkdirAll(parent, 0o755); err != nil {
+	if err := os.MkdirAll(parent, 0o750); err != nil {
 		return out, 500, fmt.Errorf("the addon folder cannot be created")
 	}
 	tmp, err := os.MkdirTemp(parent, ".install-")
@@ -734,7 +721,8 @@ func addonSetEnabledRef(userID int, ref addonRef, on bool) (addonRecord, int, er
 		return rec, 404, fmt.Errorf("addon not found")
 	}
 	if on {
-		if _, err := os.Stat(filepath.Join(addonRefDir(ref), "addon.json")); err != nil {
+		// The folder comes from the stored record, not from the request.
+		if _, err := os.Stat(filepath.Join(addonRefDir(addonRef{Owner: rec.OwnerID, ID: rec.ID}), "addon.json")); err != nil {
 			return rec, 409, fmt.Errorf("the addon files are missing; install the archive again")
 		}
 	}
@@ -800,7 +788,7 @@ func addonRemoveRef(userID int, ref addonRef) (addonRecord, int, error) {
 	if err != nil {
 		return rec, 500, fmt.Errorf("the addon cannot be removed")
 	}
-	os.RemoveAll(addonRefDir(ref))
+	os.RemoveAll(addonRefDir(addonRef{Owner: rec.OwnerID, ID: rec.ID}))
 	addonForgetInstances(ref)
 	details := map[string]interface{}{"version": rec.Version}
 	if ref.Owner > 0 {
@@ -837,22 +825,26 @@ func addonAssetHandler(w http.ResponseWriter, r *http.Request, ref addonRef, rel
 		jsonError(w, "Invalid file", 400)
 		return
 	}
-	root, err := filepath.Abs(addonRefDir(ref))
+	// os.Root keeps every lookup inside the addon folder, symlinks included.
+	root, err := os.OpenRoot(addonRefDir(ref))
 	if err != nil {
 		jsonError(w, "Addon not found", 404)
 		return
 	}
-	full, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(rel)))
-	if err != nil || !strings.HasPrefix(full, root+string(os.PathSeparator)) {
-		jsonError(w, "Invalid file", 400)
-		return
-	}
-	st, err := os.Stat(full)
-	if err != nil || !st.Mode().IsRegular() {
+	defer root.Close()
+	f, err := root.Open(filepath.FromSlash(rel))
+	if err != nil {
 		jsonError(w, "Addon not found", 404)
 		return
 	}
-	data, err := os.ReadFile(full)
+	st, err := f.Stat()
+	if err != nil || !st.Mode().IsRegular() || st.Size() > addonMaxFile {
+		f.Close()
+		jsonError(w, "Addon not found", 404)
+		return
+	}
+	data, err := io.ReadAll(io.LimitReader(f, addonMaxFile+1))
+	f.Close()
 	if err != nil {
 		jsonError(w, "Addon not found", 404)
 		return

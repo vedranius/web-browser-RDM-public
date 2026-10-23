@@ -1000,7 +1000,7 @@ Object.assign(LANGS.hr, {
     const el = $('addons-pane');
     if (!el) return;
     const admin = isAdmin();
-    const scope = admin && personalAllowed ? `<select id="addon-scope" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:11.5px;padding:4px 6px;" title="${esc(t('add_scope'))}">
+    const scope = admin && personalAllowed ? `<select id="addon-scope" style="max-width:180px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:11.5px;padding:4px 6px;" title="${esc(t('add_scope'))}">
         <option value="org">${esc(t('add_scope_org'))}</option><option value="personal">${esc(t('add_scope_me'))}</option></select>` : '';
     const install = admin || personalAllowed ? `<div class="setting-row">
       <div><div class="setting-label">${esc(t(admin ? 'add_install' : 'add_install_me'))}</div><div class="setting-desc">${esc(t('add_install_d'))}${admin ? '' : ' ' + esc(t('add_install_me_d'))}</div></div>

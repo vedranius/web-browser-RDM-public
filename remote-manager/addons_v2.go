@@ -12,7 +12,6 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -387,19 +386,20 @@ func addonPersonalAllowed(userID int) bool {
 
 // addonHashTree pins the SHA-256 of every file of an installed addon.
 func addonHashTree(dir string) (map[string]string, error) {
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		return nil, err
+	}
+	defer root.Close()
 	out := map[string]string{}
-	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+	err = fs.WalkDir(root.FS(), ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if !d.Type().IsRegular() {
 			return nil
 		}
-		rel, err := filepath.Rel(dir, p)
-		if err != nil {
-			return err
-		}
-		f, err := os.Open(p)
+		f, err := root.Open(p)
 		if err != nil {
 			return err
 		}
@@ -409,7 +409,7 @@ func addonHashTree(dir string) (map[string]string, error) {
 		if err != nil {
 			return err
 		}
-		out[filepath.ToSlash(rel)] = hex.EncodeToString(h.Sum(nil))
+		out[p] = hex.EncodeToString(h.Sum(nil))
 		return nil
 	})
 	return out, err
@@ -646,7 +646,8 @@ func addonInstancesHandler(w http.ResponseWriter, r *http.Request, userID int, a
 	}
 	iid, err := strconv.Atoi(rest[0])
 	in, found := addonInstanceGet(ref, iid)
-	if err != nil || !found || (!in.Shared && in.OwnerID != userID && !admin) {
+	// Another user's instance is private: an administrator may only remove it.
+	if err != nil || !found || (!in.Shared && in.OwnerID != userID && !(admin && len(rest) == 1 && r.Method == http.MethodDelete)) {
 		addonFail(w, addonErrf("E_NOT_FOUND", "Instance not found"), 404)
 		return
 	}
