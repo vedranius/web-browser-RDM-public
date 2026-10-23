@@ -67,9 +67,9 @@ func monitorAvailableRoots(c Connection) []monitorLogRoot {
 	if x, ok := monitorDiscoveryView(c); ok {
 		return x.Roots
 	}
-	// Without a discovery only the configured roots are listed; scan paths
-	// are searched only when the user asks for it (Find logs).
-	return loadLogSettings(c.ID).Roots
+	// Without a discovery only the configured roots (and /var/log) are listed;
+	// scan paths are searched only when the user asks for it (Find logs).
+	return monitorAvailableRootsFrom(loadLogSettings(c.ID))
 }
 
 func monitorLogName(name string) bool {

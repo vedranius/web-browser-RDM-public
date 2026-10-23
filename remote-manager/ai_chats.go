@@ -152,11 +152,12 @@ func (s *aiSession) setTitle(title, by string) {
 	if title == "" {
 		return
 	}
+	// stored first, so whoever sees the new title in memory finds it in the database too
+	db.Exec(`UPDATE ai_sessions SET title=? WHERE id=?`, title, s.ID)
 	s.mu.Lock()
 	s.Title = title
 	s.titled = true
 	s.mu.Unlock()
-	db.Exec(`UPDATE ai_sessions SET title=? WHERE id=?`, title, s.ID)
 	s.emit("title", map[string]interface{}{"title": title, "by": by})
 	hub.sendTo(s.UserID, jsonMarshal(map[string]interface{}{"type": "ai_sessions_changed"}))
 }
