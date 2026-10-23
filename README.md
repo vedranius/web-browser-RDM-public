@@ -13,11 +13,15 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.6.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.7.0
+
+**Saved logins on demand, hostname names and a calmer top bar.** *Edit connection* has **👁 Show saved login**: after you confirm with your WRM password (or your domain password), WRM shows what the connection logs in with. Right-click a connection for **Copy username**, **Copy password** (same confirmation) and **Copy IP address**. A new connection can take its **name from the server's hostname**. Tabs show just the connection's name, the version next to the logo stays visible, the user name no longer jumps every 5 seconds, and the Git workspace server filter has no blank entries any more. See [Connections & folders](#connections--folders).
 
 ## What's new in v13.6.0
 
-**Saved logins on demand, hostname names and a calmer top bar.** *Edit connection* has **👁 Show saved login**: after you confirm with your WRM password (or your domain password), WRM shows what the connection logs in with. Right-click a connection for **Copy username**, **Copy password** (same confirmation) and **Copy IP address**. A new connection can take its **name from the server's hostname**. Tabs show just the connection's name, the version next to the logo stays visible, the user name no longer jumps every 5 seconds, and the Git workspace server filter has no blank entries any more. See [Connections & folders](#connections--folders).
+**Log folders, a folder tree and smarter operators.** *Monitoring → Logs* can show the logs as a **folder tree** under their main folders (`/var/log`, `/home/scripts` …) and has a **Folder** filter for one folder and everything below it; *Log settings* take your own **main folders**. Operators are recognised from words that repeat in folder and service names (`nova`, `NOVA2`, `novatv` → one operator group), and every log says whether it sits in a log folder or an app folder. A log folder and a script folder with the same name (different case) no longer hide each other's logs. See [Logs: viewer, search and log settings](#logs-viewer-search-and-log-settings).
 
 ## What's new in v13.5.0
 
@@ -196,7 +200,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -304,21 +308,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.6.0-linux-amd64
-   ./wrm-pro-v13.6.0-linux-amd64
+   chmod +x wrm-pro-v13.7.0-linux-amd64
+   ./wrm-pro-v13.7.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.6.0-windows-amd64.exe
+   .\wrm-pro-v13.7.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.6.0-linux-amd64.AppImage
-   ./wrm-pro-v13.6.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.6.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.7.0-linux-amd64.AppImage
+   ./wrm-pro-v13.7.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.7.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -327,8 +331,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.6.0/wrm-pro-v13.6.0-android-arm64
-   chmod +x wrm-pro-v13.6.0-android-arm64 && ./wrm-pro-v13.6.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.7.0/wrm-pro-v13.7.0-android-arm64
+   chmod +x wrm-pro-v13.7.0-android-arm64 && ./wrm-pro-v13.7.0-android-arm64
    ```
 
    **Docker**
@@ -353,9 +357,13 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
-## Upgrading from v13.5.0
+## Upgrading from v13.6.0
 
 Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. Git workspace installations whose connection was deleted are no longer listed, and deleting a connection now removes its installations. *Show saved login* and *Copy password* follow the existing *Allow export of passwords & keys* policy (`allow_secret_export`, on by default; administrators always can) and the step-up policy.
+
+## Upgrading from v13.5.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. No migration: the log settings gain `main_folders` (empty) and `guess_operators` (on) inside the existing per-server JSON, and a previous version ignores them. Labels of logs under a configured main folder are taken from it before the default patterns.
 
 ## Upgrading from v13.4.4
 
@@ -1268,10 +1276,12 @@ WRM checks every saved connection in the background and shows the result in the 
 *Monitoring → Logs*, choose a server.
 
 - **Discovery** runs over the connection's SSH account without sudo: one read-only command reads systemd units, Supervisor programs and Docker containers, a second one runs `find` over the scan paths with a time budget. Accounts without a shell (SFTP only) fall back to an SFTP walk. Scripts and code (`.py`, `.sh`, `.js` …) are never listed as logs, even in a log folder.
-- **File list:** sort by newest, oldest, name, size, service, operator or path; filter by operator, service and name; tick files to search only those. Each file shows its operator and service labels, folder, size and modification time.
+- **File list:** sort by newest, oldest, name, size, service, operator or path; filter by operator, service, folder and name; tick files to search only those. Each file shows its operator and service labels, whether it sits in a **log folder** (`/var/log`, `log`, `logs` …) or an **app folder** (scripts, application), its folder, size and modification time. Services are compared without case, so a log folder `/var/log/VideoX_NOVA` and a script folder `/home/scripts/Videox_NOVA` are one service with both folders.
+- **Folder tree** (*View: Folder tree*): logs grouped under their **main folder** (the scan paths, the Git workspace server roots and the main folders from *Log settings*) and its subfolders. Open or close a folder with a click; its checkbox ticks every shown log in it. The **Folder** filter lists the same tree and keeps one folder and everything below it, in either view.
+- **Operators:** labels from the path patterns and fixed folders come first. With *Guess operators* on (default), a word that repeats across service and folder names is an operator unless it is the product (the first word of several names) or an environment word (`qa`, `test`, `dev`, `prod`, `bkp` …): `VideoX_NOVA`, `VideoX_NOVA2`, `novatv` and `INGEST_SFTP_novatv` give operators `nova` and `novatv`. Operators where one name starts with another (at least four letters) form a group; the operator filter offers the group (*nova (5) · nova, novatv*) and each member. Guessed operators are marked `≈`.
 - **Log tabs:** line numbers, level colours (a stack trace keeps the level of its line), highlighting of times, IPs, URLs, HTTP status codes, UUIDs and key=value pairs, **find** in the log (regex, case, ↑ ↓, *only matching lines*), level chips (errors, warnings, info, debug, other), **Follow** (new lines every 2.5 s; for the journal by cursor), *Load older lines*, *Go to line*, wrap, line numbers, copy, download and *open a terminal here*. Keys: `/` find, `n` / `N` next and previous hit, `g` go to line, `f` follow, `w` wrap.
 - **Search tab:** the search runs **on the server** (grep), so large and old logs are searched quickly: literal or regex, case, whole word, context lines, *From* / *To* in your date format with quick ranges (15 minutes to 30 days), the time zone of the logs, the selected or the shown files. Hits are sorted by time (either order) with level chips, a per-file filter and a timeline you can zoom. A click opens the file at that line.
-- **⚙ Log settings** (per server, only its owner can change them): scan paths, excluded names, **path patterns** that give operator and service labels (default `/home/*/{operator}/{service}/{logdir}/**`, `/srv/{operator}/{service}/{logdir}/**` …), extra log name patterns, depth, maximum files and age, time budget, rotated and compressed files, empty files, the systemd journal, systemd/Supervisor/Docker metadata, explicit folders and journal units, and the method (`auto`, `ssh`, `sftp`). Zabbix settings stay in the Zabbix dialog.
+- **⚙ Log settings** (per server, only its owner can change them): scan paths, **main folders** for the folder tree, *Guess operators*, excluded names, **path patterns** that give operator and service labels (default `/home/*/{operator}/{service}/{logdir}/**`, `/srv/{operator}/{service}/{logdir}/**` …), extra log name patterns, depth, maximum files and age, time budget, rotated and compressed files, empty files, the systemd journal, systemd/Supervisor/Docker metadata, explicit folders and journal units, and the method (`auto`, `ssh`, `sftp`). Zabbix settings stay in the Zabbix dialog.
 - **🤖 AI log assistant:** a chat panel next to the logs that searches every discovered log with `search_logs`, reads around the hits and explains what failed, since when, how often and which services are affected. It is always read-only. Its chats are listed separately from terminal chats, with title, date and time.
 - **Date and time format:** EU (`dd.mm.yyyy hh:mm`) by default; ISO, US or the browser's locale in *Settings → Date and time format* (saved per browser).
 

@@ -1,4 +1,4 @@
-## [13.6.0] - 2026-10-23
+## [13.7.0] - 2026-10-23
 
 ### Added
 - **Show saved login** in *Edit connection* (and the 👁 in an empty password field): the owner sees what the connection logs in with: its password or private key, the user name and password of an own vault credential, the key store key, the Bitwarden SSH key, or the path of a key file on the WRM server. Confirmed with the WRM password; a domain (LDAP / Active Directory) account confirms with its directory password and an SSO-only account through its identity provider (step-up). `POST /api/connections/{id}/secret`, audited as `connection.secret_revealed` / `connection.secret_denied`, raises the *secret revealed* alert, follows `allow_secret_export` and the step-up policy, and counts wrong passwords towards the sign-in rate limit. A credential shared by another user is never shown to the grantee.
@@ -13,6 +13,17 @@
 - **The version next to the logo is always visible.** When the top bar shortened its texts it hid the version, and the empty session name *— none —* (whose *SESSION:* label had been hidden) looked like a missing version. Now only the *WRM* prefix gives way, and an empty session is hidden together with its label.
 - **The user name in the top bar no longer jumps every 5 seconds.** With MCP enabled the background poll showed the *AI connected* button and the indicator hid it again a moment later; the button now has one owner and is shown only while an AI app is connected or an approval waits, and the poll changes nothing when nothing changed.
 - **Git workspace: no more blank servers in the server filter.** Installations found on connections that were later deleted stayed in the database with an empty name; they are no longer listed, and deleting a connection removes its installations and cached hostname.
+
+## [13.6.0] - 2026-10-23
+
+### Added
+- **Folder tree in the log viewer.** *View: Folder tree* groups the logs under their **main folder** (`/var/log`, `/home/scripts` …) and its subfolders; every folder can be opened, closed and ticked to search all its logs. A new **Folder** filter (in both views) lists the main folders and their subfolders as a tree, so you can narrow the list to one folder and everything below it.
+- **Main folders** in *⚙ Log settings* (`main_folders`): everything under a main folder is grouped under it. The scan paths and the Git workspace server roots count as main folders too, and a main folder is also used for labels before the default patterns, so `/home/scripts/<service>/logs` is no longer read as operator `scripts`.
+- **Operators guessed from repeated words** (`guess_operators`, on by default). A word that repeats across service and folder names and is not the product name (the first word shared by several names) or an environment word (`qa`, `test`, `bkp` …) is an operator: `VideoX_NOVA`, `VideoX_NOVA2` and `INGEST_SFTP_novatv` give operators `nova` and `novatv`. Similar operators form one group (`nova` + `novatv`); the operator filter offers the group and each member. Guessed operators are marked with `≈` and a dashed border.
+- Each file shows whether it lives in a **log folder** (`/var/log`, `log`, `logs` …) or an **app folder** (scripts and application folders), and the API returns `main`, `place`, `op_group`, `op_guess` per file and `main_folders`.
+
+### Fixed
+- **Logs in `/var/log/<service>` seemed missing when a script folder had the same name.** Discovery did find them (`info.txt`, dated `info.txt.2026-10-22`, `workers.out.log` …), but the service filter listed `VideoXTractor_NOVA` (the log folder) and `VideoXtractor_NOVA` (the script folder) as two services that differ only in case, so picking the script folder showed no logs. Services are now compared without case: one entry shows the logs of both folders, each marked log folder or app folder, and the folder tree keeps them apart.
 
 ## [13.5.0] - 2026-10-23
 

@@ -277,7 +277,7 @@ Remote previews require `files_read` on every metadata/range/content request, in
 
 Folder parents must belong to the same user; hierarchy mutations are serialized and reject cycles/excess depth. Shared folder recursion is scoped to the owner. Sharing a parent folder includes existing and future descendant folders: check the folder tree before moving a connection into a shared subtree. Jump/proxy defaults apply only to the immediate folder. Deleting a parent reparents its children, preserving their connections.
 
-## Showing and copying a connection's saved login (v13.6.0)
+## Showing and copying a connection's saved login (v13.7.0)
 
 - *Show saved login* and *Copy password* (`POST /api/connections/{id}/secret`) are for the **owner of the connection** only. They need the owner's WRM password, or the directory password of an LDAP / Active Directory account (checked by binding as the user); accounts that sign in only through an identity provider need a fresh step-up through it. Wrong passwords count towards the sign-in rate limit and are audited (`connection.secret_denied`).
 - A vault credential is shown only to **its owner**: a grantee who logs in with a shared credential still never sees its password. Key files of the WRM server are named, never read for the browser.

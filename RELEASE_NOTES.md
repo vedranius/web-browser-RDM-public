@@ -1,4 +1,4 @@
-## Web Remote Manager PRO v13.6.0 - Saved logins, hostname names and a calmer top bar
+## Web Remote Manager PRO v13.7.0 - Saved logins, hostname names and a calmer top bar
 
 ### Added
 
@@ -20,6 +20,25 @@
 ### Upgrade
 
 Replace the executable or container and keep the database and encryption key. No database change: installations of deleted connections are no longer listed, and deleting a connection now removes them. New API endpoints `POST /api/connections/{id}/secret` and `POST /api/connections/{id}/name-from-hostname`.
+
+[Download v13.7.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.7.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.6.0 - Log folders, a folder tree and smarter operators
+
+#### Added
+
+- **Folder tree** in *Monitoring → Logs* (*View: Folder tree*): logs grouped under their main folder (`/var/log`, `/home/scripts` …) and subfolders, each folder can be opened and ticked as a whole. A **Folder** filter narrows either view to one folder and everything below it.
+- **Main folders** in *⚙ Log settings*: everything below one is grouped under it (scan paths and Git workspace server roots count too).
+- **Operators from repeated words**: `nova`, `NOVA2` and `novatv` in folder and service names are recognised and linked into one operator group; the filter offers the group and each operator. Guesses are marked `≈` and can be turned off in *Log settings*.
+- Every log shows whether it sits in a **log folder** or an **app folder**.
+
+#### Fixed
+
+- Logs in `/var/log/<service>` looked missing when a script folder had the same name in a different case: the service filter now treats them as one service and shows both folders, clearly marked.
+
+#### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration: the new log settings `main_folders` and `guess_operators` (on) live in the existing `log_settings` JSON.
 
 [Download v13.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.6.0) · [Full changelog](CHANGELOG.md)
 
