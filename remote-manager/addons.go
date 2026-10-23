@@ -104,7 +104,14 @@ func initAddonSchema() {
 
 func addonsRoot() string { return resolveDBPath() + ".addons" }
 
-func addonDir(id string) string { return filepath.Join(addonsRoot(), id) }
+// addonDir is the folder of one addon. Ids are checked when a manifest is
+// read; the check is repeated here so no caller can reach outside the root.
+func addonDir(id string) string {
+	if !addonIDPattern.MatchString(id) || strings.Contains(id, "..") {
+		return filepath.Join(addonsRoot(), ".invalid")
+	}
+	return filepath.Join(addonsRoot(), id)
+}
 
 func addonRecords(enabledOnly bool) []addonRecord {
 	q := `SELECT id, enabled, manifest, source, checksum, installed_at, installed_by FROM addons`

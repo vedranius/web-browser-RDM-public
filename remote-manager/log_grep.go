@@ -103,14 +103,11 @@ func logGrepHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *c
 	}
 	flags = append(flags, "-m", strconv.Itoa(in.Max))
 	var sb strings.Builder
-	sb.WriteString("LC_ALL=C; export LC_ALL\n")
+	sb.WriteString("LC_ALL=C; export LC_ALL\nIFS= read -r WRM_Q || exit 0\n")
 	if len(files) > 0 {
-		// find -P drops files that became symbolic links since discovery.
-		sb.WriteString("find -P")
-		for _, f := range files {
-			sb.WriteString(" " + shellQuote(f))
-		}
-		sb.WriteString(" -maxdepth 0 -type f -print0 2>/dev/null | xargs -0 grep " + strings.Join(flags, " ") + " -e " + shellQuote(in.Q) + " -- 2>/dev/null | head -n 20000\n")
+		// The paths follow the pattern on standard input, one per line; links
+		// that appeared since discovery are dropped.
+		sb.WriteString("while IFS= read -r f; do [ -f \"$f\" ] && [ ! -h \"$f\" ] && printf '%s\\0' \"$f\"; done | xargs -0 grep " + strings.Join(flags, " ") + " -e \"$WRM_Q\" -- 2>/dev/null | head -n 20000\n")
 	}
 	for _, u := range units {
 		since := "-n 50000"
@@ -126,7 +123,7 @@ func logGrepHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *c
 				jflags = append(jflags, f)
 			}
 		}
-		sb.WriteString("journalctl --no-pager --output=short-iso --unit=" + u + " " + since + " 2>/dev/null | grep " + strings.Join(jflags, " ") + " -e " + shellQuote(in.Q) + " 2>/dev/null | head -n " + strconv.Itoa(in.Max*(1+2*in.Context)) + " | sed 's|^|journal:" + u + ":|'\n")
+		sb.WriteString("journalctl --no-pager --output=short-iso --unit=" + u + " " + since + " 2>/dev/null | grep " + strings.Join(jflags, " ") + " -e \"$WRM_Q\" 2>/dev/null | head -n " + strconv.Itoa(in.Max*(1+2*in.Context)) + " | sed 's|^|journal:" + u + ":|'\n")
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 90*time.Second)
 	defer cancel()
@@ -137,7 +134,11 @@ func logGrepHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *c
 	}
 	defer cl.Close()
 	start := time.Now()
-	raw, err := monitorSSHCommand(ctx, cl, sb.String())
+	input := in.Q + "\n"
+	if len(files) > 0 {
+		input += strings.Join(files, "\n") + "\n"
+	}
+	raw, err := monitorSSHCommandInput(ctx, cl, sb.String(), input)
 	if err != nil && strings.TrimSpace(raw) == "" && ctx.Err() == nil {
 		// grep exits 1 when nothing matched; that is not an error.
 		raw = ""
@@ -304,7 +305,8 @@ func logLinesHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *
 		}
 		cmd += " 2>/dev/null | tail -c " + strconv.Itoa(capBytes) + "\n"
 	} else {
-		f := "f=" + shellQuote(files[0]) + "\n" +
+		// The path comes on standard input, so it is never part of the command.
+		f := "IFS= read -r f || exit 0\n" +
 			"find -P \"$f\" -maxdepth 0 -type f 2>/dev/null | grep -q . || { echo WRM-NOFILE; exit 0; }\n" +
 			"size=$(wc -c < \"$f\" 2>/dev/null | tr -d ' ')\n"
 		switch mode {
@@ -340,7 +342,11 @@ func logLinesHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *
 		return
 	}
 	defer cl.Close()
-	raw, err := monitorSSHCommand(ctx, cl, cmd)
+	input := ""
+	if !journal {
+		input = files[0] + "\n"
+	}
+	raw, err := monitorSSHCommandInput(ctx, cl, cmd, input)
 	if err != nil && raw == "" {
 		jsonError(w, "Reading the log failed: "+err.Error(), 502)
 		return

@@ -100,6 +100,9 @@ func addonCallWASM(ctx context.Context, rec addonRecord, export string, input []
 	if len(input) > addonInputLimit {
 		return "", fmt.Errorf("the input is larger than 64 KB")
 	}
+	if !addonSafeRel(rec.Server.Module) || strings.Contains(rec.Server.Module, "..") {
+		return "", fmt.Errorf("the server module path is not valid")
+	}
 	file := filepath.Join(addonDir(rec.ID), filepath.FromSlash(rec.Server.Module))
 	st, err := os.Stat(file)
 	if err != nil || !st.Mode().IsRegular() {
@@ -192,6 +195,9 @@ func addonCallError(ctx context.Context, err error) error {
 // import it may have is wrm.log. Compilation is linear in the module size and
 // the size is already capped by addonMaxFile, so this is safe at install time.
 func addonCheckWASM(ctx context.Context, m *addonManifest, dir string) error {
+	if !addonSafeRel(m.Server.Module) || strings.Contains(m.Server.Module, "..") {
+		return fmt.Errorf("the server module path is not valid")
+	}
 	file := filepath.Join(dir, filepath.FromSlash(m.Server.Module))
 	st, err := os.Stat(file)
 	if err != nil || !st.Mode().IsRegular() {
