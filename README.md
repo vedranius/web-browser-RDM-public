@@ -1641,6 +1641,20 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 
 WRM is an **MCP server** (Model Context Protocol). AI apps that speak MCP — **Claude** (the desktop app and claude.ai), **ChatGPT** (connectors / developer mode), Claude Code and other MCP clients — can open a WRM session to a server you chose and work on it, under the same rules as the built-in assistant. The model runs in the app, on your account there; WRM never sees your chat and never needs a provider key.
 
+**Quick start for Claude Code.** Create a token in *Settings → AI connections* (the wizard does it for you), then use one of these:
+
+```sh
+# WRM PRO plugin (recommended): installs the plugin and stores the address and token
+claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public \
+  --config wrm_url=https://wrm.example.com/mcp --config wrm_token=wrm_pat_…
+
+# Plain MCP, no plugin (works with any Claude Code version)
+claude mcp add --transport http --scope user wrm "https://wrm.example.com/mcp" \
+  --header "Authorization: Bearer wrm_pat_…"
+```
+
+Inside Claude Code the same plugin can be installed with `/plugin marketplace add vedranius/web-browser-RDM-public` and `/plugin install wrm-pro@wrm-pro`, then `/plugin configure wrm-pro@wrm-pro`. A local WRM (`http://localhost:8080/mcp`) works with the same commands, but **only with the token header**: Claude Code opens a sign-in page only over HTTPS. *Settings → AI connections* shows the command with your address and token after the wizard creates it, and has a **Copy** button.
+
 > **Using a Claude or ChatGPT subscription with WRM:** consumer chat subscriptions cannot be used by other applications as an API (so the built-in assistant needs an API key). The supported way to use your Claude or ChatGPT account with WRM is the other direction: the chat app connects to WRM over MCP, as described here.
 
 **Connect an AI app (wizard)**

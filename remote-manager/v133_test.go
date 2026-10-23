@@ -354,6 +354,22 @@ func TestV133ApprovalUX(t *testing.T) {
 	}
 }
 
+func TestV134MCPQuickStartUI(t *testing.T) {
+	js, _ := os.ReadFile("static/mcp.js")
+	readme, _ := os.ReadFile("../README.md")
+	m := string(js)
+	for _, want := range []string{`mcp_quick_title`, `mcp-quick-cmd`, `wizClient('claude_code')`, `claude mcp add --transport http --scope user wrm`, `openSettings('st-mcp')`} {
+		if !strings.Contains(m, want) {
+			t.Errorf("mcp.js lacks %s", want)
+		}
+	}
+	for _, want := range []string{`claude plugin install wrm-pro`, `claude mcp add --transport http --scope user wrm`, `/plugin install wrm-pro@wrm-pro`} {
+		if !strings.Contains(string(readme), want) {
+			t.Errorf("README lacks %s", want)
+		}
+	}
+}
+
 func TestV134VersionAndLockUI(t *testing.T) {
 	page, _ := os.ReadFile("static/index.html")
 	lock, _ := os.ReadFile("static/lock.js")

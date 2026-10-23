@@ -1,3 +1,9 @@
+## [13.4.3] - 2026-10-23
+
+### Added
+- **Claude in one command, at the top of AI connections.** *Settings → AI connections* now opens with a card that shows the exact `claude mcp add --transport http --scope user wrm … --header "Authorization: Bearer …"` command, a **Copy** button and one-click shortcuts into the step-by-step wizard for **Claude Code**, **Claude Desktop** and **claude.ai / ChatGPT**. The admin view of AI connections has a matching **Open the step-by-step wizard** button. The README has the same quick start, including the WRM PRO plugin command.
+- The token wizard already creates the token, fills the address and token into the command and tests the connection; the quick card makes that path discoverable without opening the advanced form.
+
 ## [13.4.2] - 2026-10-23
 
 ### Fixed

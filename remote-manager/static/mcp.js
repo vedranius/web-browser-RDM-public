@@ -27,6 +27,13 @@ Object.assign(LANGS.en, {
   mcp_auto_all: 'Allow everything', mcp_auto_all_d: 'Every command and file on the chosen servers, without asking. Blocked commands and sensitive files still stay blocked.',
   mcp_auto_grant: 'No time or action limit: automatic for as long as this AI connection is valid',
   mcp_token_once: 'Copy the token now. WRM stores only a hash and cannot show it again.', mcp_token: 'Token', mcp_copy: 'Copy', mcp_url: 'MCP server address',
+  mcp_quick_title: 'Connect Claude in one command',
+  mcp_quick_d: 'Claude Code: the command below (or the WRM PRO plugin) with a token from the wizard. Claude Desktop: download the extension. claude.ai and ChatGPT: add a custom connector with the MCP address and sign in.',
+  mcp_quick_cmd: 'Claude Code command (replace YOUR_TOKEN)',
+  mcp_quick_wizard: 'Open the step-by-step wizard',
+  mcp_quick_cc: 'Claude Code, step by step',
+  mcp_quick_desk: 'Claude Desktop extension',
+  mcp_quick_cloud: 'claude.ai / ChatGPT connector',
   mcp_setup: 'Set up your app', mcp_setup_claude_desktop: 'Claude Desktop (local bridge)', mcp_setup_remote: 'Claude (custom connector)', mcp_setup_chatgpt: 'ChatGPT (connector)',
   mcp_setup_generic: 'Other MCP clients', mcp_setup_cli: 'Test from a shell',
   mcp_h_claude_desktop: 'Copy the WRM program (the same file as the server, for your computer\'s system) to your computer, then add this to claude_desktop_config.json (Claude → Settings → Developer → Edit config) and restart Claude. Replace the path with the program\'s full path.',
@@ -129,6 +136,13 @@ Object.assign(LANGS.hr, {
   mcp_auto_all: 'Dopusti sve', mcp_auto_all_d: 'Sve naredbe i datoteke na odabranim serverima, bez pitanja. Blokirane naredbe i osjetljive datoteke i dalje ostaju blokirane.',
   mcp_auto_grant: 'Bez ograničenja vremena i broja radnji: automatski dok god vrijedi ova AI veza',
   mcp_token_once: 'Kopirajte token sada. WRM sprema samo sažetak i ne može ga ponovno prikazati.', mcp_token: 'Token', mcp_copy: 'Kopiraj', mcp_url: 'Adresa MCP poslužitelja',
+  mcp_quick_title: 'Poveži Claude jednom naredbom',
+  mcp_quick_d: 'Claude Code: naredba ispod (ili WRM PRO dodatak) s tokenom iz čarobnjaka. Claude Desktop: preuzmite proširenje. claude.ai i ChatGPT: dodajte prilagođeni konektor s MCP adresom i prijavite se.',
+  mcp_quick_cmd: 'Naredba za Claude Code (zamijenite YOUR_TOKEN)',
+  mcp_quick_wizard: 'Otvori čarobnjak korak po korak',
+  mcp_quick_cc: 'Claude Code, korak po korak',
+  mcp_quick_desk: 'Proširenje za Claude Desktop',
+  mcp_quick_cloud: 'claude.ai / ChatGPT konektor',
   mcp_setup: 'Postavljanje aplikacije', mcp_setup_claude_desktop: 'Claude Desktop (lokalni most)', mcp_setup_remote: 'Claude (prilagođeni konektor)', mcp_setup_chatgpt: 'ChatGPT (konektor)',
   mcp_setup_generic: 'Drugi MCP klijenti', mcp_setup_cli: 'Provjera iz ljuske',
   mcp_h_claude_desktop: 'Kopirajte program WRM (istu datoteku kao poslužitelj, za sustav vašeg računala) na računalo, zatim ovo dodajte u claude_desktop_config.json (Claude → Settings → Developer → Edit config) i ponovno pokrenite Claude. Zamijenite putanju punom putanjom programa.',
@@ -587,6 +601,17 @@ Object.assign(LANGS.hr, {
     catch (e) { pane.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
     if (!cfg.enabled) { pane.innerHTML = `<div class="hint-box warn">${esc(t('mcp_off'))}: ${esc(cfg.reason)}</div>${fullAccessHTML(cfg.full_access)}`; return; }
     pane.innerHTML = `<div class="hint-box">${esc(t('mcp_intro'))}</div>
+      <div class="hint-box" style="margin:8px 0;">
+        <b>🔌 ${esc(t('mcp_quick_title'))}</b>
+        <div class="sub" style="margin:3px 0 6px;">${esc(t('mcp_quick_d'))}</div>
+        <div class="sub" style="font-size:10.5px;color:var(--text3);">${esc(t('mcp_quick_cmd'))}</div>
+        <div class="mcp-snip"><pre id="mcp-quick-cmd">claude mcp add --transport http --scope user wrm ${esc(cfg.url)} --header "Authorization: Bearer YOUR_TOKEN"</pre><button class="btn-sec btn-sm" onclick="wrmMCP.copy('mcp-quick-cmd')">${esc(t('mcp_copy'))}</button></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+          <button class="btn-sm" onclick="wrmMCP.wizClient('claude_code')">${esc(t('mcp_quick_cc'))} →</button>
+          <button class="btn-sec btn-sm" onclick="wrmMCP.wizClient('claude_desktop')">${esc(t('mcp_quick_desk'))} →</button>
+          <button class="btn-sec btn-sm" onclick="wrmMCP.wizClient('claude_connector')">${esc(t('mcp_quick_cloud'))} →</button>
+        </div>
+      </div>
       <div id="mcpw" class="mcpw"></div>
       <div class="field" style="margin:8px 0;"><label style="font-size:11px;color:var(--text2);">${esc(t('mcp_url'))}</label><div class="mcp-snip"><pre id="mcp-url">${esc(cfg.url)}</pre><button class="btn-sec btn-sm" onclick="wrmMCP.copy('mcp-url')">${esc(t('mcp_copy'))}</button></div>
         <div class="sub" style="font-size:11px;color:var(--text3);">${esc(cfg.oauth ? t('mcp_oauth_box') : t('mcp_oauth_off'))}</div></div>
@@ -1027,6 +1052,7 @@ Object.assign(LANGS.hr, {
     adminSettingsCache = settings;
     const active = grants.filter(g => g.state === 'active');
     body.innerHTML = `<div class="hint-box">${esc(tf('mcp_adm_help', {url: c.url}))}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"><button class="btn-sm" onclick="openSettings('st-mcp')">🔌 ${esc(t('mcp_quick_wizard'))}</button></div>
       <div style="display:flex;align-items:center;gap:8px;"><div class="adm-h" style="flex:1;">🔌 ${esc(t('mcp_adm_active'))}</div>${active.length ? `<button class="btn-danger btn-sm" onclick="wrmMCP.adminRevokeAll()">⏻ ${esc(t('mcp_revoke_all'))}</button>` : ''}</div>
       ${active.length ? `<div class="tbl-scroll"><table class="admin-table"><thead><tr><th>${esc(t('mcp_user'))}</th><th>${esc(t('mcp_client'))}</th><th>${esc(t('mcp_conns'))}</th><th>${esc(t('mcp_mode'))}</th><th>${esc(t('mcp_state'))}</th><th></th></tr></thead><tbody>` +
         active.map(g => `<tr><td>${esc(g.user)}</td><td>${esc(g.client_name || g.name)} <span class="pill">${esc(t('mcp_kind_' + g.kind))}</span><div class="sub">${esc(tf('mcp_expires', {time: rel(g.expires_at)}))}</div></td>

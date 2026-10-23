@@ -1,3 +1,22 @@
+## Web Remote Manager PRO v13.4.3 - Claude in one command
+
+### Added
+
+- **The Claude command is now at the top of Settings → AI connections.** A quick card shows the exact command, a **Copy** button, and one-click shortcuts into the step-by-step wizard for **Claude Code**, **Claude Desktop** and **claude.ai / ChatGPT**. The admin AI connections view links to the same wizard, and the README has the quick start.
+
+```sh
+claude mcp add --transport http --scope user wrm "https://<your-wrm>/mcp" \
+  --header "Authorization: Bearer <token>"
+```
+
+- The wizard still creates the token, fills it into the command, and tests the connection.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.3) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v13.4.2 - The version and the lock button tell the truth
 
 ### Fixed
