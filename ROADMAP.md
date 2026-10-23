@@ -2,12 +2,21 @@
 
 Accepted work through **v12.8.1** is delivered in [CHANGELOG.md](CHANGELOG.md).
 
-## v13 (in progress)
+## v13 (delivered through v13.5.0)
 
 Goal: WRM explains a server instead of only connecting to it, and it can be extended from inside itself, in the spirit of Omarchy: an addon is a folder that is dropped in and discovered at runtime, not a plugin compiled into the core.
 
-- **v13.0, log engine, AI log tool and addon core.** Explicit **Find logs**, a service inventory built from systemd units, Docker containers, Supervisor programs, Git installs and folders, systemd journal sources read through `journalctl`, and an AI tool that reads the same log sources through the existing approval, audit and redaction path. The addon core installs a ZIP with `addon.json`, checks its declared capabilities, keeps it under `<DB_PATH>.addons/<id>/` and serves a sandboxed panel and a colour theme from **Settings → Addons**. Status: discovery, the service inventory, journal sources, the AI log tools and the addon core with sandboxed panels, themes, WebAssembly server hooks and the AI addon prompt are implemented on `v13.0-log-engine`.
-- **v13.1, monitoring, replay and the community library.** Continuous monitoring per server and service (systemd units and Docker containers on the SSH poll, with the per-server switch on the card), wall-clock replay with per-user recording levels, and the rest of the addon platform: the CLI, administrator-driven hooks beyond a manual Run, and the community repository "WRM Pro - community public addons" (MIT, pull request plus CI validation and manual review). Status: service monitoring, wall-clock replay, per-account recording levels, the community index with checksum-verified installs, the assistant work log and the Ollama fix are implemented on `v13.0-log-engine`. The audit switch already existed (`audit_enabled`, default on; `admin.*` and `security.*` are always recorded). The public repository scaffold (MIT index, two example addons, `tools/build.py`, `tools/validate.py` and CI) is ready locally to publish as `wrm-pro-community-addons`. The inactivity lock (#115) is next.
+Delivered (see [CHANGELOG.md](CHANGELOG.md)):
+- v13.0 log engine, service inventory, journal sources, AI log tools and the addon core (sandboxed panels, themes, WebAssembly server hooks);
+- v13.1 service monitoring, wall-clock replay, recording levels and the community addon index with checksum-verified installs;
+- v13.2 screen lock (#115);
+- v13.3 the AI addon loop with drafts; v13.4 the OpenCode Go provider and fixes;
+- v13.5.0 the log viewer, log search and log settings, the file editor with an AI assistant, log AI chats, and the Claude plugin, skills and MCP Registry entry.
+
+Still open from v13:
+- publish the community repository ("WRM Pro - community public addons", MIT, pull request plus CI validation and manual review);
+- publish the Claude plugin to the MCP Registry (`server.json` is ready; publishing needs the owner's GitHub sign-in);
+- addon CLI and administrator-driven hooks beyond a manual Run.
 
 Addon decisions already taken: server code runs in a WASM sandbox (`wazero`, pure Go, no cgo) unless the operator opts into native code; UI addons register into defined slots and themes instead of touching core DOM; addons declare capabilities, which the installer shows before installing; the community index uses trust levels (`official`, `reviewed`, `community`, `unverified`) with checksums, plus a security and hobby-project liability notice.
 
