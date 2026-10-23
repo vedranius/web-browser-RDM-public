@@ -864,7 +864,7 @@ func ocForward(child *aiSession, typ string, data map[string]interface{}) {
 	if parent == nil || parent == child {
 		return
 	}
-	d := make(map[string]interface{}, len(data)+1)
+	d := make(map[string]interface{}, len(data))
 	for k, v := range data {
 		d[k] = v
 	}
