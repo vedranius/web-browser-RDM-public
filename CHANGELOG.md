@@ -1,4 +1,4 @@
-## [13.9.0] - 2026-10-23
+## [13.10.0] - 2026-10-23
 
 ### Added
 - **Show saved login** in *Edit connection* (and the 👁 in an empty password field): the owner sees what the connection logs in with: its password or private key, the user name and password of an own vault credential, the key store key, the Bitwarden SSH key, or the path of a key file on the WRM server. Confirmed with the WRM password; a domain (LDAP / Active Directory) account confirms with its directory password and an SSO-only account through its identity provider (step-up). `POST /api/connections/{id}/secret`, audited as `connection.secret_revealed` / `connection.secret_denied`, raises the *secret revealed* alert, follows `allow_secret_export` and the step-up policy, and counts wrong passwords towards the sign-in rate limit. A credential shared by another user is never shown to the grantee.
