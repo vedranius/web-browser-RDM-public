@@ -13,7 +13,15 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.8.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v12.9.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v12.9.1
+
+**Medium runs without the original tool.** The WRM engine is now the default for projects nobody chose an engine for, its card comes first on the Medium page, and the original deploy tool with its Docker runtime is folded away as optional. Upgraded installations that already use the original tool keep it as their default until an administrator switches **Medium: default engine** to `native`. The deploy-config editor can now pull the configuration from its Git repository, show your local changes and **Commit and push** them through the WRM Git source, after checking that the whole configuration loads. WRM-host builds can run as an unprivileged account (`medium_build_user`) with a clean environment.
+
+## What's new in v12.9.0
+
+**Medium shows what changes in each file and lets you edit deploy-config.** In the WRM engine's plan, **Details** opens the server's version of a changed file against the branch, line by line. Files that differ only in CRLF/LF are marked *line endings only* and counted separately, as in the original tool. *Edit deploy-config* edits `servers.yaml`, `environments.yaml` and the project files in WRM: a file is saved only when the whole configuration still loads, and comments, layout and line endings stay as you wrote them.
 
 ## What's new in v12.8.1
 
@@ -178,7 +186,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -285,21 +293,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.8.1-linux-amd64
-   ./wrm-pro-v12.8.1-linux-amd64
+   chmod +x wrm-pro-v12.9.1-linux-amd64
+   ./wrm-pro-v12.9.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.8.1-windows-amd64.exe
+   .\wrm-pro-v12.9.1-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.8.1-linux-amd64.AppImage
-   ./wrm-pro-v12.8.1-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.8.1-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v12.9.1-linux-amd64.AppImage
+   ./wrm-pro-v12.9.1-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v12.9.1-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -308,8 +316,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.8.1/wrm-pro-v12.8.1-android-arm64
-   chmod +x wrm-pro-v12.8.1-android-arm64 && ./wrm-pro-v12.8.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.9.1/wrm-pro-v12.9.1-android-arm64
+   chmod +x wrm-pro-v12.9.1-android-arm64 && ./wrm-pro-v12.9.1-android-arm64
    ```
 
    **Docker**
@@ -333,6 +341,14 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v12.9.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. New policies: `medium_default_engine` (`native`) and `medium_build_user` (empty). If the original deploy tool was already imported, WRM sets `medium_default_engine=original` once at the first start and logs it, so projects keep their engine; set it to `native` in *Admin → Policies* to deploy with WRM by default. A project with an engine chosen explicitly keeps it. Pulling deploy-config from Git needs `DEPLOY_CONFIG_REPO` in the Medium settings and a WRM Git source for that repository (with a write token for commit and push).
+
+## Upgrading from v12.8.1
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. Editing deploy-config in WRM uses the existing `medium_native` policy (default `admins`); users without it see the files read-only.
 
 ## Upgrading from v12.7.1
 
@@ -1338,7 +1354,7 @@ The **activity log** below lists every Medium action (imports, preparation, star
 
 ### Medium native engine
 
-The Medium view has a collapsible **WRM engine** panel. It compares a branch or tag with every server of an environment and, for a project switched to the native engine, deploys and rolls it back without Docker and without the original tool ([roadmap](ROADMAP.md)).
+The Medium view has a **WRM engine** panel. It compares a branch or tag with every server of an environment and, for a project on the native engine, deploys and rolls it back without Docker and without the original tool ([roadmap](ROADMAP.md)). With the native engine as the default (`medium_default_engine=native`) the panel comes first and opens, and the original tool's card is folded away as optional; a deploy-config ZIP can also be imported from the WRM engine panel.
 
 - **Configuration:** the imported `deploy-config` (`servers.yaml`, `environments.yaml`, `projects/*.yaml`) is read as it is by a Go reader with the original tool's validation: unknown and duplicate keys, YAML 1.1 booleans and `<<` merges, names, hosts, ports, `allowed_refs`, per-environment `servers` lists, ignore rules, absolute paths, `source_dir`, state locations (`.deploy/<app>` or `state_dir`) and destinations that overlap or nest. Errors name the file and the key.
 - **Environment server limits:** an environment's `servers: [name, ...]` restricts every project target in that environment to those servers, as in the original tool. A listed server must exist in `servers.yaml`; unknown, duplicate and empty lists are refused. Leave the key out to allow every server.
@@ -1346,12 +1362,17 @@ The Medium view has a collapsible **WRM engine** panel. It compares a branch or 
 - **Source:** the repository of a project is served by the WRM Git source (GitLab, GitHub or Gitea API) on the same host. Branches, tags, full refs and commits are resolved there; files below `source_dir` are fetched through the blob cache, symlinks keep their targets, and a path that is absolute or has `.` or `..` components stops the comparison.
 - **Plan:** for each destination of the environment, WRM walks the application directory over SFTP and computes what `rsync -rlc --delete` with the project's exclusions would do: new, changed (SHA-256, computed on the server with `sha256sum` where available), deleted, type changes, kept directories that hold excluded items and the "cannot make way" error. It shows the server state in the original format (`current.json`, recent `history.jsonl` entries, the lock owner), `allowed_refs` and confirmation rules, and the `post_deploy` command. Tick changes and *Compare again without the ticked ones* to leave them out of this deployment.
 - **Compare with the original tool:** with Medium running, the original comparison (fetch, export, build, `rsync --dry-run`) runs through the authenticated bridge and the native plan is computed on the same prepared source. Each server shows *Same result as the original tool* or the changes found by only one engine. The WRM Git source is also checked against the original export.
-- **Engine per project:** *Original tool (Docker)* (the default) or *WRM native*. Switching needs the `medium_native` policy (default `admins`) and is audited (`git.medium_engine_set`). The server state is the same for both, so a project can be switched back at any time.
+- **Engine per project:** *Original tool (Docker)* or *WRM native*. A project nobody chose an engine for uses `medium_default_engine` (`native` for users allowed by `medium_native`, else the original tool). Switching needs the `medium_native` policy (default `admins`) and is audited (`git.medium_engine_set`). The server state is the same for both, so a project can be switched back at any time.
 - **Dry run and Deploy:** a deployment uses the comparison you reviewed (its revision) and is refused when the comparison changed, the environment's `allowed_refs` does not allow the ref, or the environment has `confirm` and its name was not typed. Per destination, in config order: lock (`lock/` and `lock/owner.json`), compare again under the lock (a different result writes nothing), backup manifests, removals into `backups/<deploy_id>/`, new directories, uploads to temporary files next to their targets with a SHA-256 check, replacement (the old version goes to the backup first), `post_deploy` in the application directory through the account's login shell (`medium_command_timeout`), a final check, `current.json`, `history.jsonl`, pruning of old backups (the current deployment and the last five applied ones are kept) and the lock released. A dry run stops after the second comparison. A destination that fails after it started changing gets a partial history entry, can be rolled back, and the next destinations are skipped.
 - **History and rollback:** per server the current version, the lock (owner and age), the recent history with counts, and which deployment a rollback undoes and what it restores (chosen from the history as the original tool chooses). *Dry rollback* shows what would happen; *Roll back* restores files, links and directories with their modes from the backup and records a `ROLLBACK` entry (`rollback-<id>/` keeps what it replaced). A lock older than the longest a deployment may take (from `medium_command_timeout` and `medium_transfer_timeout`, at least 30 minutes) can be released with *Release lock* if its owner did not change.
 - **Progress:** one deployment or rollback per user runs in the background with a live log (commands and their output), the result per destination and *Cancel*, which stops before the next destination starts changing. Each run is a row in the Medium activity log. Stopping a user or a lockdown cancels their runs.
 - Deploying, rolling back and releasing a lock need the `medium_native` policy and, with step-up on, a fresh confirmation; all are audited (`git.medium_native_deploy`, `git.medium_native_rollback`, `git.medium_native_lock_released`, `git.medium_native_cancelled`, and `git.medium_native_<kind>_done` with the outcome per destination). Comparisons and dry runs need `git_medium` like the rest of Medium and are audited (`git.medium_native_preview`).
+- **File details:** every changed file of a plan has **Details**: the server's version against the branch, line by line, as in the Git workspace (up to 512 KiB per side; new and deleted files, links, directories and binary files are explained instead). Opening one is audited (`git.medium_native_diff`).
+- **Line endings:** a changed file whose content without `\r` equals the branch's is marked *line endings only* (`eol_only`) and counted separately; the hash is computed on the server with `tr -d '\r' | sha256sum` (over SFTP when `sha256sum` is missing), for files up to 8 MiB and at most 2000 files per server. The plan does not change: the deployment sends those files, and the history entry's `counts.eol` records how many there were.
+- **deploy-config editor:** *Edit deploy-config* opens `servers.yaml`, `environments.yaml` and `projects/*.yaml` as text. **Check** loads the whole configuration with your edit; **Save** writes the file only when it loads and the file did not change since you opened it (otherwise *reload*). Comments, layout and CRLF line endings are kept; project files can be created and deleted (never `servers.yaml` or `environments.yaml`). Needs the `medium_native` policy; audited (`git.medium_config_edit`) and listed in the Medium activity log.
 - **Build locations:** for a project with a build step, choose where the build runs before previewing: on the WRM host, on a chosen Linux build server over SSH, or not at all (`none`). The choice is stored per user and project and audited (`git.medium_build_set`). The whole commit is prepared, the configured `build` command runs in the repository root, and `source_dir` is read from the result. A build server gets a temporary directory with only the source (no Git metadata or SSH keys) and the directory is removed afterwards; the build runs through the account's login shell. The plan shows the build location, its platform and architecture, and the last build output; a destination whose platform or architecture differs is refused with the reason. WRM-host builds need a POSIX host with the toolchain, so on Windows use a Linux build server or `none`.
+- **Build user:** with `medium_build_user` set (for example `wrm-build`), WRM-host builds run as that account: WRM must run as root on Linux or another Unix system; root, accounts in the root group and accounts that can read the WRM database, its key or `<DB>.medium` are refused with the reason. The build directory is handed to the account, the build gets only `PATH`, `HOME`, `USER`, `LOGNAME`, `LANG` and `TMPDIR` (no WRM variables), and the plan shows *as wrm-build*. Afterwards WRM takes the directory back before reading the result and refuses hard links to files the account does not own.
+- **deploy-config from Git:** with `DEPLOY_CONFIG_REPO` in the Medium settings and a WRM Git source serving it, the editor's **Git** section shows the repository, branch, pulled commit, whether Git has newer commits, and the local changes. *Pull from Git and use it* makes WRM's copy (`<DB>.medium/users/<id>/native-config`) the configuration in use; the imported deploy-config stays untouched. *Pull* replaces the copy with the branch head only when there are no local changes (or *Discard changes and pull*), and never applies a head whose configuration does not load. *Commit and push* validates the whole configuration, refuses when a changed file moved on Git since the pull, writes one commit through the source's write token (GitLab commits API, GitHub Git data API with a non-forced ref update, Gitea contents API; author from `DEPLOY_USER_EMAIL` when set) and pulls the result back. *Stop using the Git copy* deletes it and goes back to the imported deploy-config. Needs `medium_native`; audited (`git.medium_config_pull`, `git.medium_config_push`, `git.medium_config_git_stop`) and listed in the Medium activity log.
 
 ### Git workspace: every file and partial checks
 
@@ -2154,6 +2175,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | `medium_ca_file` / `WRM_MEDIUM_CA_FILE` | – | Path to a PEM file with extra root certificates for Medium's Docker runtime, e.g. a proxy's root CA. |
 | `medium_docker_install` / `WRM_MEDIUM_DOCKER_INSTALL` | `1` | WRM may install and start Docker for Medium on its own host after an administrator allows it once in Medium step 2 (accepting Docker Desktop's licence on Windows and macOS). `0` hides **Install Docker** and stops automatic installation. |
 | `medium_native` / `WRM_MEDIUM_NATIVE` | `admins` | Who may switch Medium projects to the WRM native engine and deploy, roll back and release locks with it (`off`, `admins`, `operators`, `teams:<names>`, `all`). Comparisons and dry runs only need `git_medium`. |
+| `medium_default_engine` / `WRM_MEDIUM_DEFAULT_ENGINE` | `native` | Engine of Medium projects nobody chose one for: `native` (WRM deploys them for users allowed by `medium_native`; the original tool is optional) or `original`. Upgraded installations with the original tool imported start with `original`. |
+| `medium_build_user` / `WRM_MEDIUM_BUILD_USER` | – | Unprivileged OS account that runs Medium builds on the WRM host (WRM must run as root on Linux/Unix). Empty: builds run with the WRM account. |
 | `medium_command_timeout` / `WRM_MEDIUM_COMMAND_TIMEOUT` | `300` | Seconds one command of a native deployment may run on a server, such as `post_deploy` (30–86400). |
 | `medium_transfer_timeout` / `WRM_MEDIUM_TRANSFER_TIMEOUT` | `3600` | Seconds the file transfer of one destination may take (600–86400). With the command timeout it decides when a lock left behind may be released by hand. |
 | `medium_log_output` / `WRM_MEDIUM_LOG_OUTPUT` | `all` | Who sees command output in the Medium activity log: `all` (the user who ran it, administrators, everyone for the shared runtime), `admins`, `none`. Steps, results and errors are always shown. |
@@ -2565,6 +2588,14 @@ All endpoints require a WRM session and effective owner/policy access. Mutating 
 | `GET /api/git/medium/native/refs?project=` | Branches and tags of the project's WRM Git source. |
 | `POST /api/git/medium/native/plan` | Start a read-only native preview (`project`, `environment`, `ref`, optional `servers`, `compare`, `excluded`). Returns the run id. |
 | `GET /api/git/medium/native/plan/<id>` | Stage, per-server plans, comparison with the original tool and source check of a preview; `deployable` and `revision` for a native deployment. |
+| `GET /api/git/medium/native/plan/<id>/diff?server=&path=` | One changed file of a finished plan: the server's and the branch's side (`text`, `missing`, `binary`, `too_large`, `symlink`, `dir`, CRLF), `eol_only` and the line diff. |
+| `GET /api/git/medium/native/config/files` | deploy-config files (name, size, hash), whether the configuration loads, and whether the user may edit it. |
+| `GET /api/git/medium/native/config/file?name=` | One deploy-config file's text and hash. |
+| `POST /api/git/medium/native/config/files` | Check, save, create or delete a file (`name`, `text`, `base_hash`, `check_only`, `delete`). Saved only when the whole configuration loads; `409` when the file changed since `base_hash`. Policy `medium_native`. |
+| `GET /api/git/medium/native/config/git` | deploy-config Git state: repository and source, branch, pulled commit, branch head, `behind`, local `changes`, `can_push`. |
+| `POST /api/git/medium/native/config/git/pull` | Make the branch head WRM's copy of deploy-config (`{"discard":true}` drops local changes; `409` with local changes otherwise). Policy `medium_native`. |
+| `POST /api/git/medium/native/config/git/push` | Validate, commit and push the local changes (`message`, optional) through the Git source's write token; `409` when a changed file moved on Git. Policy `medium_native`. |
+| `POST /api/git/medium/native/config/git/stop` | Delete WRM's Git copy and use the imported deploy-config again. Policy `medium_native`. |
 | `POST /api/git/medium/native/engine` | Switch a project between the Docker runtime and the native engine (`{"project","engine":"docker"\|"native"}`, policy `medium_native`). |
 | `POST /api/git/medium/native/deploy` | Deploy or dry-run a finished comparison (`run_id`, `revision`, `confirm`, `dry_run`). Returns `job_id` and `deploy_id`. Step-up `medium.deploy`. |
 | `GET /api/git/medium/native/history?project=&environment=` | Per destination: `current.json`, the lock, recent history entries and the rollback choice; `stale_lock_minutes`. |
@@ -3104,6 +3135,9 @@ remote-manager/
   git_env_test.go        environments: plan with CRLF-only files, dry run, typed confirmation, one-shot plans, fingerprint mismatch, lock contention, stale lock, own lock only, remembered and permanent exclusions, allowed_refs, nested paths, partial transfer, post_deploy failure, rollback (moved aside, symlinks skipped, removed directories, kept backups), doctor, drift
   git_activity_test.go   Git activity against fake GitLab / GitHub / Gitea: paging (X-Next-Page, Link, cursors), tracked branches, filters, author / branch summaries, links, cache, rate limits and 429, CSV escaping
   medium_deploy_test.go  Medium native engine: state format, rollback choice on the original's history, lock, deploy and rollback against real rsync with backups, plan mismatch, exclusions, post_deploy, partial deployment, pruning, deploy over SSH (fake server), API with policy, confirmation and engine checks
+  medium_screens_test.go Medium file details (line diff, binary/large/CRLF), eol_only marking locally and over SSH with counts in history, the details API and the deploy-config editor (validation, stale hash, CRLF kept, create/delete, policy)
+  medium_config_git_test.go deploy-config from Git with fake GitLab / GitHub / Gitea: pull, local changes, refused pull, push with conflict check and validation, discard, stop
+  medium_build_user_test.go build user checks (root, missing account, readable WRM key) and a real build as nobody with a clean environment
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)
   git_provision_test.go  Git install / transfer: templates, exclusions, units; install from the fake GitLab and from a bundle, vault values, overwrite refusal and backup, transfer A → B, policies
