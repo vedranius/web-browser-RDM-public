@@ -1117,7 +1117,7 @@ func unifiedDiff(a, b []string, ctx int) ([]diffLine, bool) {
 	for i := 0; i < pre; i++ {
 		ops = append(ops, op{' ', i, i})
 	}
-	if len(ma)*len(mb) > 4_000_000 {
+	if len(ma) > 4_000_000 || len(mb) > 4_000_000 || len(ma)*len(mb) > 4_000_000 {
 		for i := range ma {
 			ops = append(ops, op{'-', pre + i, -1})
 		}

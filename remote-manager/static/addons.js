@@ -331,8 +331,9 @@ Object.assign(LANGS.hr, {
     try {
       conn = (typeof conns !== 'undefined' ? conns : []).map(c => ({id: c.id, name: c.name, host: c.host, folder: c.folder_id || null}));
     } catch (_) {}
+    // The panel gets the display name only: the sign-in name stays inside WRM.
     const me = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : {};
-    const ctx = {type: 'wrm:context', addon: a.id, user: me.username || '', lang: typeof currentLang !== 'undefined' ? currentLang : 'en', theme: themeTokens(), connections: conn};
+    const ctx = {type: 'wrm:context', addon: a.id, user: me.display_name || '', lang: typeof currentLang !== 'undefined' ? currentLang : 'en', theme: themeTokens(), connections: conn};
     try { frame.contentWindow.postMessage(ctx, '*'); } catch (_) {}
   }
 
@@ -562,7 +563,7 @@ Object.assign(LANGS.hr, {
       capLines,
       '',
       'Rules:',
-      '- ui.panel is HTML opened in an iframe with sandbox="allow-scripts" and no same-origin. It cannot read WRM cookies or the page. It receives {type:"wrm:context", user, lang, theme, connections} through postMessage, may send {type:"wrm:notify", text} back, and may ask for the context again with {type:"wrm:context"} (a page it navigates to must ask; only the first page gets it automatically).',
+      '- ui.panel is HTML opened in an iframe with sandbox="allow-scripts" and no same-origin. It cannot read WRM cookies or the page. It receives {type:"wrm:context", user (display name), lang, theme, connections} through postMessage, may send {type:"wrm:notify", text} back, and may ask for the context again with {type:"wrm:context"} (a page it navigates to must ask; only the first page gets it automatically).',
       '- ui.theme is a CSS file applied while the addon is enabled.',
       '- server.wasm is WebAssembly run by wazero with no WASI: no files, no network, no environment, no clock. The only import is wrm.log(ptr, len). The module must export its memory, wrm_alloc(size) -> ptr, and each declared export as (ptr, len) -> ptr returning a pointer to a NUL-terminated UTF-8 string. WRM writes the JSON request at the pointer wrm_alloc returned. 64 KiB input, 1 MB output, 5 seconds per call, 64 MiB memory.',
       '- Nothing runs at install time; the module is compiled and its imports and exports are checked.',

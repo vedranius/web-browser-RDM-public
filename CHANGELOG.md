@@ -14,6 +14,7 @@
 - **Plugin and skills**: the skills name `search_logs`, the plugin README explains what is in it and where the data goes, and `server.json` describes WRM for the MCP Registry (`io.github.vedranius/wrm-pro`). Tests check the manifests and that every tool a skill names exists.
 
 ### Changed
+- **Addon panels get the display name, not the sign-in name.** The `user` field of the `wrm:context` message is now the display name (empty when none is set). Log search and the log viewer pass the search text and file paths to the server on standard input instead of on the command line.
 - Discovery never lists scripts and code (`.py`, `.sh`, `.js`, …) as logs, finds logs with or without a service label and labels operator and service from the path patterns.
 
 ### Fixed
