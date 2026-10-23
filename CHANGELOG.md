@@ -1,4 +1,4 @@
-## [13.6.0] - 2026-10-23
+## [13.7.0] - 2026-10-23
 
 ### Added
 - **Addon platform v2, step 1** (`addons_v2.go`, `static/addons.js`, [docs/ADDONS.md](docs/ADDONS.md)). A manifest with `"apiVersion": 2` is decoded strictly: unknown fields, also nested ones, refuse the install with `E_MANIFEST_FIELD`. A manifest without `apiVersion` keeps the v1 behaviour.
@@ -16,6 +16,17 @@
 - **apiVersion 2 panels have no network of their own**: their HTML is served with a full CSP (`default-src 'none'`, `connect-src 'none'`, `form-action 'none'`, `base-uri 'none'`, inline scripts allowed only by their SHA-256). v1 panels keep `sandbox allow-scripts`.
 - **Every addon file is pinned by SHA-256 at install**; a file changed or added on disk afterwards is refused with `E_INTEGRITY` until the addon is installed again.
 - An addon's install, enable, disable and removal are audited with its permissions and, for personal addons, the owner; instances, imports and the kill switch are audited too.
+
+## [13.6.0] - 2026-10-23
+
+### Added
+- **Folder tree in the log viewer.** *View: Folder tree* groups the logs under their **main folder** (`/var/log`, `/home/scripts` …) and its subfolders; every folder can be opened, closed and ticked to search all its logs. A new **Folder** filter (in both views) lists the main folders and their subfolders as a tree, so you can narrow the list to one folder and everything below it.
+- **Main folders** in *⚙ Log settings* (`main_folders`): everything under a main folder is grouped under it. The scan paths and the Git workspace server roots count as main folders too, and a main folder is also used for labels before the default patterns, so `/home/scripts/<service>/logs` is no longer read as operator `scripts`.
+- **Operators guessed from repeated words** (`guess_operators`, on by default). A word that repeats across service and folder names and is not the product name (the first word shared by several names) or an environment word (`qa`, `test`, `bkp` …) is an operator: `VideoX_NOVA`, `VideoX_NOVA2` and `INGEST_SFTP_novatv` give operators `nova` and `novatv`. Similar operators form one group (`nova` + `novatv`); the operator filter offers the group and each member. Guessed operators are marked with `≈` and a dashed border.
+- Each file shows whether it lives in a **log folder** (`/var/log`, `log`, `logs` …) or an **app folder** (scripts and application folders), and the API returns `main`, `place`, `op_group`, `op_guess` per file and `main_folders`.
+
+### Fixed
+- **Logs in `/var/log/<service>` seemed missing when a script folder had the same name.** Discovery did find them (`info.txt`, dated `info.txt.2026-10-22`, `workers.out.log` …), but the service filter listed `VideoXTractor_NOVA` (the log folder) and `VideoXtractor_NOVA` (the script folder) as two services that differ only in case, so picking the script folder showed no logs. Services are now compared without case: one entry shows the logs of both folders, each marked log folder or app folder, and the folder tree keeps them apart.
 
 ## [13.5.0] - 2026-10-23
 

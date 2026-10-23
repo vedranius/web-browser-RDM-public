@@ -124,7 +124,7 @@ func initAddonSchema() {
 		installed_at TEXT NOT NULL DEFAULT '',
 		installed_by TEXT NOT NULL DEFAULT ''
 	)`)
-	// v13.6: file hashes pinned at install, the permission sheet that was
+	// v13.7: file hashes pinned at install, the permission sheet that was
 	// approved, and what an update added on top of it.
 	db.Exec(`ALTER TABLE addons ADD COLUMN files TEXT NOT NULL DEFAULT ''`)
 	db.Exec(`ALTER TABLE addons ADD COLUMN approved TEXT NOT NULL DEFAULT ''`)

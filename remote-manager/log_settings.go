@@ -23,6 +23,12 @@ type logSettings struct {
 	Exclude []string `json:"exclude"`
 	// Patterns label files by their path: /home/*/{operator}/{service}/{logdir}/**.
 	Patterns []string `json:"patterns"`
+	// MainFolders are the tops of the folder tree in the log list (/home/skripte):
+	// everything below one is grouped under it.
+	MainFolders []string `json:"main_folders"`
+	// GuessOperators links logs to operators from words that repeat across
+	// service and folder names (nova, novatv).
+	GuessOperators bool `json:"guess_operators"`
 	// Extra holds additional file name patterns that count as logs (*.trace).
 	Extra      []string `json:"extra"`
 	MaxDepth   int      `json:"max_depth"`
@@ -62,7 +68,7 @@ var defaultLogPatterns = []string{
 
 func defaultLogSettings() logSettings {
 	return logSettings{Roots: []monitorLogRoot{}, ScanPaths: append([]string(nil), defaultLogScanPaths...), Exclude: append([]string(nil), defaultLogExclude...),
-		Patterns: []string{}, Extra: []string{}, MaxDepth: 7, MaxFiles: 5000, TimeBudget: 45, Rotated: true, Journal: true, Systemd: true, Docker: true, Supervisor: true, Method: "auto"}
+		Patterns: []string{}, MainFolders: []string{}, GuessOperators: true, Extra: []string{}, MaxDepth: 7, MaxFiles: 5000, TimeBudget: 45, Rotated: true, Journal: true, Systemd: true, Docker: true, Supervisor: true, Method: "auto"}
 }
 
 func initLogSettings() {
@@ -138,6 +144,12 @@ func (s *logSettings) normalize() error {
 	}
 	for i := range s.ScanPaths {
 		s.ScanPaths[i] = path.Clean(s.ScanPaths[i])
+	}
+	if s.MainFolders, err = clean(s.MainFolders, 50, "main folder", func(v string) bool { return logAbsDir(path.Clean(v)) && !strings.ContainsAny(v, "*?[") }); err != nil {
+		return err
+	}
+	for i := range s.MainFolders {
+		s.MainFolders[i] = path.Clean(s.MainFolders[i])
 	}
 	if s.Exclude, err = clean(s.Exclude, 100, "exclude pattern", func(v string) bool { _, e := path.Match(v, "x"); return e == nil && !strings.Contains(v, "/") }); err != nil {
 		return err
@@ -264,19 +276,22 @@ type logLabeler struct {
 	pats [][]string
 }
 
-// newLogLabeler uses the server's own patterns first, then the defaults, then
-// <base>/{operator}/{service}/<log folder> for every other base folder (scan
-// paths and the Git workspace's server roots).
+// newLogLabeler uses the server's own patterns first, then
+// <base>/{operator}/{service}/<log folder> for every main folder and other base
+// folder (scan paths and the Git workspace's server roots), then the defaults.
 func newLogLabeler(s logSettings, bases ...string) logLabeler {
 	l := logLabeler{}
-	pats := append(append([]string{}, s.Patterns...), defaultLogPatterns...)
-	for _, b := range bases {
+	// The server's own folders come before the defaults, so a main folder such
+	// as /home/skripte is not read as /home/{operator}.
+	pats := append([]string{}, s.Patterns...)
+	for _, b := range append(append([]string{}, s.MainFolders...), bases...) {
 		b = path.Clean(b)
 		if !logAbsDir(b) || strings.ContainsAny(b, "*?[]{}") || oneOf(b, "/home", "/srv", "/opt", "/var/log") {
 			continue
 		}
 		pats = append(pats, b+"/{operator}/{service}/{logdir}/**", b+"/{service}/{logdir}/**")
 	}
+	pats = append(pats, defaultLogPatterns...)
 	for _, p := range pats {
 		if segs, err := parseLogPattern(p); err == nil {
 			l.pats = append(l.pats, segs)

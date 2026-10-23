@@ -571,6 +571,7 @@ func logFastDiscover(ctx context.Context, cl *ssh.Client, c Connection, s logSet
 	if out.Files == nil {
 		out.Files = []monitorLogFile{}
 	}
+	logDecorate(out.Files, logMainFolders(c, s), s.GuessOperators)
 	return out, nil
 }
 

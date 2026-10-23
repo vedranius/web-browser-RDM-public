@@ -60,8 +60,8 @@ func TestV130AddonInstallEnableServeRemove(t *testing.T) {
 		defer resp.Body.Close()
 		return resp.StatusCode
 	}
-	// v13.6: a normal user installs personal addons only while addon_personal
-	// allows it (covered in v136_addons_test.go); here the policy is off.
+	// v13.7: a normal user installs personal addons only while addon_personal
+	// allows it (covered in addons_v2_test.go); here the policy is off.
 	setSetting("addon_personal", "admins")
 	defer setSetting("addon_personal", "all")
 	if code := install(user); code != 403 {

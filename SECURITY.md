@@ -404,7 +404,7 @@ Medium output (v12.6.5): the activity log and live output show what Docker, pip,
 
 The Medium native preview (v12.6.0) is read-only: it lists application directories over SFTP and runs `sha256sum` with NUL-separated, stdin-fed paths; it writes nothing and runs no build or `post_deploy` command. It uses only the requesting user's own SSH connections (`loadConnection` owner and protocol checks) and Git sources; links between `servers.yaml` servers and connections are per user and audited. Its `/__wrm_plan` bridge endpoint requires the same per-process key as the rest of the bridge. Repository addresses are shown with URL credentials removed.
 
-## Addon platform v2 (v13.6.0)
+## Addon platform v2 (v13.7.0)
 
 - **Personal addons** (policy `addon_personal`, default everybody) are visible and usable only by their owner: the URL key `~id` is always resolved against the signed-in user, so no request can name another user's personal addon. They cannot carry server code. Administrators see all of them and can disable or remove any (audited with the owner's name).
 - **apiVersion 2 panels have no network of their own.** Their HTML is served with `sandbox allow-scripts; default-src 'none'; script-src 'self' <hashes of the inline scripts>; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'self'`; the frame has an opaque origin, so it cannot read WRM, its cookies or other panels. Injected inline script, inline event handlers and remote scripts do not run.
