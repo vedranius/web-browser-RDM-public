@@ -103,6 +103,8 @@ var settingSpecs = []settingSpec{
 	{Key: "status_jump_checks", Default: "0", Kind: "bool"},
 	// Workboard: disk, CPU and RAM read over SSH for servers without a fresh Monitoring sample
 	{Key: "workboard_ssh_metrics", Default: "1", Kind: "bool"},
+	// Addons: who may install personal addons (visible only to themselves)
+	{Key: "addon_personal", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	// Notifications (e-mail, chat and push channels)
 	{Key: "notifications_enabled", Default: "1", Kind: "bool", Alias: "NOTIFICATIONS_ENABLED"},
 	{Key: "notify_min_interval_seconds", Default: "60", Kind: "int", Min: 0, Max: 86400},
