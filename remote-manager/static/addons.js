@@ -244,7 +244,7 @@ Object.assign(LANGS.hr, {
     }
     m.innerHTML = `<div class="modal" style="width:900px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;">
       <h3>${esc(tf('add_draft_diff_title', {name: (draft && (draft.name || draft.id)) || id}))}</h3>
-      <pre style="margin:0;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;white-space:pre-wrap;max-height:60vh;overflow:auto;color:var(--text2);">${esc(d.diff || t('add_draft_empty'))}</pre>
+      <pre style="margin:0;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:11.5px var(--font-mono);white-space:pre-wrap;max-height:60vh;overflow:auto;color:var(--text2);">${esc(d.diff || t('add_draft_empty'))}</pre>
       <div style="display:flex;justify-content:flex-end;margin-top:10px;"><button onclick="wrmAddons.closeDraftDiff()">${esc(t('add_ai_close'))}</button></div>
     </div>`;
     m.classList.add('open');
@@ -295,27 +295,27 @@ Object.assign(LANGS.hr, {
   }
 
   // ── themes ───────────────────────────────────────────
-  // An enabled theme is one stylesheet link. Removing or disabling the addon
-  // takes the link out again, so the look always matches the enabled list.
+  // v13.7: an addon theme is no longer applied to everyone. Enabled addons offer their themes
+  // (ui.themes, or the older single ui.theme stylesheet) in Settings → Appearance, and each
+  // user picks one there (static/appearance.js applies it).
   function applyThemes() {
-    const want = {};
-    list.filter(a => a.enabled && a.ui && a.ui.theme).forEach(a => { want['addon-theme-' + a.id] = assetURL(a, a.ui.theme); });
-    document.querySelectorAll('link[data-addon-theme]').forEach(l => {
-      if (!want[l.id]) l.remove();
+    const out = [];
+    list.filter(a => a.enabled && a.ui).forEach(a => {
+      // A personal addon (only its owner sees it) may share its id with an organisation addon:
+      // its key ("~<id>") keeps the theme ids apart.
+      const key = a.key || a.id, personal = !!a.personal;
+      (Array.isArray(a.ui.themes) ? a.ui.themes : []).forEach(th => {
+        if (!th || !th.id) return;
+        out.push({id: 'addon:' + key + ':' + th.id, addon: key, personal, name: th.name || a.name, name_hr: th.name_hr, mode: th.mode,
+          tokens: th.tokens || {}, css: th.css ? assetURL(a, th.css) : ''});
+      });
+      if (a.ui.theme) out.push({id: 'addon:' + key + ':theme', addon: key, personal, name: a.name || a.id, mode: 'dark', tokens: {}, css: assetURL(a, a.ui.theme)});
     });
-    Object.entries(want).forEach(([id, href]) => {
-      let l = $(id);
-      if (!l) {
-        l = document.createElement('link');
-        l.id = id; l.rel = 'stylesheet'; l.dataset.addonTheme = '1';
-        document.head.appendChild(l);
-      }
-      if (l.getAttribute('href') !== href) l.href = href;
-    });
+    if (window.wrmAppearance) wrmAppearance.setAddonThemes(out);
   }
 
   function assetURL(a, file) {
-    return '/api/addons/' + encodeURIComponent(a.id) + '/asset/' + String(file).split('/').map(encodeURIComponent).join('/');
+    return (a.asset_base || '/api/addons/' + encodeURIComponent(a.id) + '/asset/') + String(file).split('/').map(encodeURIComponent).join('/');
   }
 
   // ── the panel window ─────────────────────────────────
@@ -408,10 +408,10 @@ Object.assign(LANGS.hr, {
         <div class="setting-desc" style="margin:4px 0;">${esc(t('add_run_d'))}</div>
         <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
           <select id="addon-export-${esc(a.id)}" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:11.5px;padding:4px 6px;">${exports.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select>
-          <textarea id="addon-in-${esc(a.id)}" placeholder="${esc(t('add_run_in'))}" style="flex:1;min-width:180px;min-height:44px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;padding:5px 7px;"></textarea>
+          <textarea id="addon-in-${esc(a.id)}" placeholder="${esc(t('add_run_in'))}" style="flex:1;min-width:180px;min-height:44px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font:11.5px var(--font-mono);padding:5px 7px;"></textarea>
           <button class="btn-sec btn-sm" onclick="wrmAddons.run('${esc(a.id)}')">${esc(t('add_run'))}</button>
         </div>
-        <pre id="addon-out-${esc(a.id)}" style="margin:6px 0 0;padding:6px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;white-space:pre-wrap;max-height:180px;overflow:auto;color:var(--text2);">${esc(t('add_run_out'))}</pre>
+        <pre id="addon-out-${esc(a.id)}" style="margin:6px 0 0;padding:6px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:11.5px var(--font-mono);white-space:pre-wrap;max-height:180px;overflow:auto;color:var(--text2);">${esc(t('add_run_out'))}</pre>
       </details>` : '';
     return `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;${a.enabled ? '' : 'opacity:.65;'}">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -585,7 +585,7 @@ Object.assign(LANGS.hr, {
     m.innerHTML = `<div class="modal" style="width:760px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;">
       <h3>✨ ${esc(t('add_ai_q'))}</h3>
       <div class="hint-box">${esc(t('add_ai_help'))}</div>
-      <textarea id="addon-ai-text" spellcheck="false" style="width:100%;min-height:320px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;padding:8px;">${esc(aiPromptText())}</textarea>
+      <textarea id="addon-ai-text" spellcheck="false" style="width:100%;min-height:320px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font:11.5px var(--font-mono);padding:8px;">${esc(aiPromptText())}</textarea>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap;">
         <button class="btn-sec" onclick="wrmAddons.copyPrompt()">${esc(t('add_ai_copy'))}</button>
         <button class="btn-sec" onclick="wrmAddons.openAssistant()">${esc(t('add_ai_open'))}</button>

@@ -1,4 +1,4 @@
-## [13.7.0] - 2026-10-23
+## [13.8.0] - 2026-10-23
 
 ### Added
 - **AI sessions view** (🧠 *AI sessions* panel next to *Sessions*, `static/aisessions.js`, `ai_sessions_view.go`): every AI session of the signed-in user, from the terminal assistant, the log and file assistants, OpenCode and AI apps over MCP. Search (title, server, host, model or app, and the text of questions, answers and tool calls), filter (`kind`: assistant, logs, file, opencode, mcp, saved, live), paging, transcript, *Go to the chat* for a running assistant, *Open live view* for a running AI app, rename, export and *Continue*. `GET /api/ai/sessions?view=all&kind=&q=&conn_id=&before=&limit=`.
@@ -17,6 +17,26 @@
 - A decision on a request that no longer waits answers `409` with `decided` (`outcome`, `by`, `via`, `at`) and the UI says who decided it and where, instead of "the approval is no longer pending".
 - 🤖 menu approval cards are rebuilt when a request becomes "kept for later" (the edit button is gone, as edits are ignored then); approval toasts close once the request is decided.
 - AI work log: the thinking line kept only its last 600 characters, so its beginning vanished while it filled; it now keeps the whole text in a scrolling box. An empty work log is removed instead of left above the question, and chat items no longer shrink in the scrolling column.
+
+## [13.7.0] - 2026-10-23
+
+### Added
+- **Settings → Appearance** (`static/appearance.js`): eleven built-in themes (Graphite, Midnight, Fjord, Solar dark, Forest, Ember, Daylight, Paper, Solar light, High contrast dark and light), following the system's light/dark setting, a colour picker for every token including the terminal palette, saved, exported and imported themes, interface and monospace fonts, interface size, spacing, corners, line and letter spacing, heavier text and custom CSS (`appearance_custom_css`). Stored per user (`/api/me/ui/appearance`). Administrators set the default theme (`appearance_default_theme`, or **Default for everyone**).
+- **Accessibility:** colour-vision palettes for deuteranopia, protanopia, tritanopia and achromatopsia (also for the terminal's ANSI colours), *Do not rely on colour alone* (signs on status badges and toasts, shapes on connection status dots, underlined links), more or maximum contrast, a minimum contrast for terminals (xterm `minimumContrastRatio`), reduced motion and transparency, a strong focus outline.
+- **Themes from addons** are listed in Appearance (`ui.themes` with tokens and/or a stylesheet; the older `ui.theme` appears as one theme) and applied only for users who pick them.
+- **Settings → Security → Screen lock**: Lock now, idle time with a warning, lock when WRM is hidden, when the computer locks (idle detection) or sleeps, on every start, a keyboard shortcut (Ctrl+Alt+L), the lock screen's background, clock, name, running-window count, message and tab title, and holding notifications while locked. Stored per user (`/api/me/ui/lock`). All tabs of a browser lock and unlock together.
+- **Unlock PIN** (`PUT/DELETE /api/auth/lock/pin`, `screen_lock_pin`) and sign-out after wrong attempts (`screen_lock_max_failures`).
+- Admin settings `screen_lock_mode` (`server`, `remember`, `browser`) and `screen_lock_max_minutes`; the Business and Enterprise security levels require the server mode and an idle lock of at most 30 / 15 minutes, Enterprise turns the PIN off.
+
+### Changed
+- **The screen lock is kept by the server** (`auth_sessions.locked_at`, `POST /api/auth/lock`): a reload or a new tab stays locked, and in the default `server` mode the locked session gets `423 Locked` from the API until it is unlocked. Running terminals, tunnels, AI and MCP sessions are not affected.
+- Every colour in the interface is a theme token (`--bg0`, `--*-rgb`, `--red-t` …, `--font-ui`, `--font-mono`); primary buttons follow the accent. The accent colour moved from *Settings → General* to the theme (an earlier choice is carried over once).
+- An addon's colour theme is no longer applied globally.
+
+### Fixed
+- **Directory (LDAP) accounts could not unlock the screen**: the unlock now checks the password the account signs in with.
+- **The lock screen broke after its first use** (a missing helper made the lock screen throw), and reloading the page removed the lock.
+- Light themes no longer show a dark top bar, dark menus, toasts and sign-in card.
 
 ## [13.6.0] - 2026-10-23
 

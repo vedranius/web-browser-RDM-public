@@ -228,7 +228,7 @@ Object.assign(LANGS.hr, {
   mcp_valid_for: 'Vrijedi', mcp_unit_hours: 'sati', mcp_unit_days: 'dana', mcp_max_days: 'najviše {n} dana', mcpw_hours_d: 'Kad token istekne, aplikacija gubi pristup dok ne stvorite novi. Možete ga opozvati bilo kada u nastavku. Najdulje trajanje postavlja administrator (Admin panel → AI veze).',
 });
 
-// v13.7.0: an approval given after the AI stopped waiting runs at once (ai_mcp_later_approval)
+// v13.8.0: an approval given after the AI stopped waiting runs at once (ai_mcp_later_approval)
 Object.assign(LANGS.en, {
   mcp_w_later_run: 'Not approved in time, or the app closed the question: the AI no longer waits, but you can still approve it here. WRM then runs it at once, shows the output here and gives it to the AI when it asks again.',
   mcp_ap_later_run: 'Not approved in time, or the app closed the question. Approve it and WRM runs exactly this at once (within an hour); the AI gets the output when it repeats the call.',
@@ -255,7 +255,7 @@ Object.assign(LANGS.hr, {
 .mcp-form .field { margin: 8px 0; }
 .mcp-form .field > label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px; }
 .mcp-form input[type=text], .mcp-form input[type=number], .mcp-form select, .mcp-form textarea { width: 100%; box-sizing: border-box; }
-.mcp-form textarea { min-height: 60px; font: 11px 'JetBrains Mono', monospace; }
+.mcp-form textarea { min-height: 60px; font: 11px var(--font-mono); }
 .mcp-row { display: flex; gap: 10px; } .mcp-row > * { flex: 1; min-width: 0; }
 .mcp-conns { max-height: 170px; overflow: auto; border: 1px solid var(--border2); border-radius: 8px; padding: 4px 8px; background: var(--bg); }
 .mcp-check { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; padding: 3px 0; color: var(--text2); cursor: pointer; }
@@ -269,7 +269,7 @@ Object.assign(LANGS.hr, {
 .mcp-grant { border: 1px solid var(--border2); border-radius: 8px; padding: 9px 11px; margin: 6px 0; background: var(--bg); display: flex; gap: 10px; align-items: flex-start; }
 .mcp-grant .g-main { flex: 1; min-width: 0; font-size: 12px; } .mcp-grant .g-main b { color: var(--text); }
 .mcp-grant .sub { font-size: 10.5px; color: var(--text3); margin-top: 3px; word-break: break-word; }
-.mcp-snip { position: relative; } .mcp-snip pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 11px; font: 11px 'JetBrains Mono', monospace; white-space: pre-wrap; word-break: break-all; margin: 6px 0; max-height: 220px; overflow: auto; }
+.mcp-snip { position: relative; } .mcp-snip pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 11px; font: 11px var(--font-mono); white-space: pre-wrap; word-break: break-all; margin: 6px 0; max-height: 220px; overflow: auto; }
 .mcp-snip .btn-sm { position: absolute; top: 6px; right: 6px; }
 .mcp-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px; } .mcp-tabs button { font-size: 11px; padding: 4px 9px; }
 .mcp-tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -283,11 +283,11 @@ Object.assign(LANGS.hr, {
 #mcpw-auto-form .mcp-form > .field, #mcpw-auto-form .mcp-form > .mcp-row, #mcpw-auto-form .mcp-form > .sub {display:none;}
 .mcpw-adv { margin-top: 12px; } .mcpw-adv > summary { cursor: pointer; font-size: 12px; color: var(--text2); }
 #mcp-cards { position: fixed; right: 16px; bottom: 16px; z-index: 9700; display: flex; flex-direction: column; gap: 10px; max-width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
-.mcp-card { background: var(--bg2); border: 1px solid var(--yellow, #f59e0b); border-radius: 10px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 12px; color: var(--text2); }
-.mcp-card h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); } .mcp-card pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; padding: 7px 9px; font: 11px 'JetBrains Mono', monospace; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow: auto; margin: 4px 0 8px; }
-.mcp-card pre .a { color: #86efac; } .mcp-card pre .d { color: #fca5a5; } .mcp-card pre .h { color: var(--text3); }
+.mcp-card { background: var(--bg2); border: 1px solid var(--yellow); border-radius: 10px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 12px; color: var(--text2); }
+.mcp-card h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); } .mcp-card pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; padding: 7px 9px; font: 11px var(--font-mono); white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow: auto; margin: 4px 0 8px; }
+.mcp-card pre .a { color: var(--green-t); } .mcp-card pre .d { color: var(--red-t); } .mcp-card pre .h { color: var(--text3); }
 .mcp-card > .sub { display: block; margin-top: 3px; font-size: 11px; color: var(--text3); }
-.mcp-card .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .mcp-card textarea, .mcp-card input[type=text] { width: 100%; box-sizing: border-box; font: 11px 'JetBrains Mono', monospace; }
+.mcp-card .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .mcp-card textarea, .mcp-card input[type=text] { width: 100%; box-sizing: border-box; font: 11px var(--font-mono); }
 .mcp-card textarea { min-height: 70px; }
 #mcp-pop { position: fixed; z-index: 9650; top: 52px; right: 12px; width: min(420px, calc(100vw - 24px)); background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 14px; box-shadow: 0 12px 34px rgba(0,0,0,.5); display: none; }
 #mcp-pop.open { display: block; }
@@ -295,7 +295,7 @@ Object.assign(LANGS.hr, {
 #mcp-watch.on { display: flex; }
 #mcp-watch .ad-head { display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-bottom: 1px solid var(--border2); user-select: none; flex: none; touch-action: none; }
 #mcp-watch .ad-head .ad-t { flex: 1; min-width: 0; font-weight: 700; color: var(--text); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#mcp-watch .ad-head .ad-t .ad-wait { color: var(--yellow, #f59e0b); font-weight: 600; margin-left: 6px; }
+#mcp-watch .ad-head .ad-t .ad-wait { color: var(--yellow); font-weight: 600; margin-left: 6px; }
 #mcp-watch .ad-head .icon-btn { width: 24px; height: 22px; padding: 0; font-size: 12px; }
 #mcp-watch .ad-head .icon-btn.on { color: var(--accent); border-color: var(--accent); }
 #mcp-watch .ad-body { flex: 1; min-height: 0; overflow: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
@@ -311,10 +311,10 @@ Object.assign(LANGS.hr, {
 #rp-ai { flex: 1; min-height: 0; display: none; flex-direction: column; }
 #rp-ai > #mcp-watch { flex: 1; }
 #ai-dock-chip { position: fixed; left: 16px; bottom: 16px; z-index: 9690; display: none; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--border2); box-shadow: 0 6px 20px rgba(0,0,0,.4); color: var(--text); font-size: 12px; cursor: pointer; }
-#ai-dock-chip.on { display: flex; } #ai-dock-chip.wait { border-color: var(--yellow, #f59e0b); animation: adPulse 1.6s ease-in-out infinite; }
-@keyframes adPulse { 50% { box-shadow: 0 0 0 4px rgba(245,158,11,.25); } }
+#ai-dock-chip.on { display: flex; } #ai-dock-chip.wait { border-color: var(--yellow); animation: adPulse 1.6s ease-in-out infinite; }
+@keyframes adPulse { 50% { box-shadow: 0 0 0 4px rgba(var(--yellow-rgb),.25); } }
 .rp-badge { display: inline-block; min-width: 14px; padding: 0 4px; margin-left: 3px; border-radius: 7px; background: var(--bg4); color: var(--text2); font-size: 9px; line-height: 14px; text-align: center; }
-.rp-badge.wait { background: var(--yellow, #f59e0b); color: #111; }
+.rp-badge.wait { background: var(--yellow); color: #111; }
 .ad-seg { display: inline-flex; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 2px; }
 .ad-seg button { background: transparent; border: none; color: var(--text3); font-size: 11px; padding: 3px 8px; border-radius: 5px; cursor: pointer; } .ad-seg button.active { background: var(--bg3); color: var(--text); }
 @media (max-width: 759px) {
@@ -325,8 +325,8 @@ Object.assign(LANGS.hr, {
 .mcp-wbox { background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 12px; color: var(--text2); display: flex; flex-direction: column; min-height: 0; }
 .mcp-wbox .wh { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border2); } .mcp-wbox .wh b { flex: 1; color: var(--text); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mcp-wbox .wb { overflow: auto; max-height: 340px; padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; } .mcp-wbox.min .wb { display: none; }
-.mcp-wbox .we { border-left: 3px solid var(--border2); padding-left: 8px; } .mcp-wbox .we.ask { border-color: var(--yellow, #f59e0b); } .mcp-wbox .we.bad { border-color: #ef4444; } .mcp-wbox .we.ok { border-color: #22c55e; }
-.mcp-wbox pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 8px; font: 11px 'JetBrains Mono', monospace; white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: auto; margin: 4px 0; }
+.mcp-wbox .we { border-left: 3px solid var(--border2); padding-left: 8px; } .mcp-wbox .we.ask { border-color: var(--yellow); } .mcp-wbox .we.bad { border-color: var(--red); } .mcp-wbox .we.ok { border-color: var(--green); }
+.mcp-wbox pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 8px; font: 11px var(--font-mono); white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: auto; margin: 4px 0; }
 .mcp-wbox .acts { display: flex; gap: 6px; margin-top: 4px; }
 @media (max-width: 480px) { .mcp-row { flex-direction: column; gap: 0; } #mcp-cards { right: 8px; left: 8px; bottom: 8px; max-width: none; } }
 `;
@@ -607,7 +607,7 @@ Object.assign(LANGS.hr, {
       const j2 = await (await rpc({jsonrpc: '2.0', id: 2, method: 'tools/list'}, sh)).json();
       const n = ((j2.result || {}).tools || []).length;
       const name = ((j1.result || {}).serverInfo || {}).title || 'WRM';
-      out.innerHTML = `<div class="hint-box" style="border-color:var(--green,#22c55e);">✅ ${esc(tf('mcpw_test_ok', {name, n}))}</div>`;
+      out.innerHTML = `<div class="hint-box" style="border-color:var(--green,var(--green));">✅ ${esc(tf('mcpw_test_ok', {name, n}))}</div>`;
     } catch (e) {
       out.innerHTML = `<div class="hint-box warn">❌ ${esc(tf('mcpw_test_fail', {err: e.message}))}</div>`;
     }
@@ -948,7 +948,7 @@ Object.assign(LANGS.hr, {
           break;
         }
         const out = d.output != null ? String(d.output) : '';
-        const html = d.error ? `<div class="sub" style="color:#fca5a5;">${esc(d.error)}</div>`
+        const html = d.error ? `<div class="sub" style="color:var(--red-t);">${esc(d.error)}</div>`
           : `<div class="sub">${esc(tf('mcp_w_exit', {code: d.exit_code}))}</div>${out ? `<details ${out.length < 800 ? 'open' : ''}><summary>${esc(t('mcp_w_output'))} (${out.length} B)</summary><pre>${esc(out.length > 20000 ? out.slice(0, 20000) + '\n…' : out)}</pre></details>` : ''}`;
         const el = st.calls[d.call_id];
         if (el) el.querySelector('.wr').innerHTML = html; else wAdd(sid, `<div class="we">${html}</div>`);

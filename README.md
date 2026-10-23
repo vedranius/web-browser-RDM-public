@@ -13,11 +13,15 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.8.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.8.0
+
+**AI sessions, your own AI settings and approvals that do what they say.** The new **🧠 AI sessions** panel lists every AI session you had, from the assistant, the log and file assistants, OpenCode agents and AI apps over MCP, with search (also in the conversation), filters, a transcript viewer, **Continue** (also an MCP session, whose steps become the earlier context), **Save** (kept beyond the transcript retention) and export to Markdown or JSON. Everybody sees only their own sessions. *⚙ My AI settings* in the assistant keep your own default provider (your own key, e.g. your OpenAI or Anthropic account), model, mode, engine and whether you see the model's thinking. Over MCP an approval given in WRM after the AI app stopped waiting now **runs the call at once** (`ai_mcp_later_approval`), *Deny* in the AI app is final, an app's open question is closed when you decide in WRM, and deciding a request that is no longer waiting says who decided it and where. The work log keeps the whole thinking text instead of its last lines. See [AI sessions](#ai-sessions) and [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 
 ## What's new in v13.7.0
 
-**AI sessions, your own AI settings and approvals that do what they say.** The new **🧠 AI sessions** panel lists every AI session you had, from the assistant, the log and file assistants, OpenCode agents and AI apps over MCP, with search (also in the conversation), filters, a transcript viewer, **Continue** (also an MCP session, whose steps become the earlier context), **Save** (kept beyond the transcript retention) and export to Markdown or JSON. Everybody sees only their own sessions. *⚙ My AI settings* in the assistant keep your own default provider (your own key, e.g. your OpenAI or Anthropic account), model, mode, engine and whether you see the model's thinking. Over MCP an approval given in WRM after the AI app stopped waiting now **runs the call at once** (`ai_mcp_later_approval`), *Deny* in the AI app is final, an app's open question is closed when you decide in WRM, and deciding a request that is no longer waiting says who decided it and where. The work log keeps the whole thinking text instead of its last lines. See [AI sessions](#ai-sessions) and [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
+**Themes, accessibility and a screen lock you can rely on.** *Settings → Appearance* offers eleven themes (dark, OLED black, Fjord, Solar, Forest, Ember, light Daylight, Paper, Solar light and two high-contrast themes), follows the system's light/dark setting if you want, and lets you change every colour, the fonts, the interface size, corners and spacing, save your own themes, export and import them, and add your own CSS. Themes from addons are picked there per user instead of being forced on everyone. For colour vision deficiency (deuteranopia, protanopia, tritanopia, achromatopsia) WRM switches status colours, diffs and optionally the terminal palette to colours you can tell apart, can add ✓ ✕ ! signs and shapes so nothing relies on colour alone, and offers more contrast, a terminal minimum contrast, reduced motion and transparency and a strong focus outline. *Settings → Security → Screen lock* sets when WRM locks (inactivity with a warning, a hidden window, the computer locking or sleeping, on every start, a keyboard shortcut) and how the lock screen looks; **Lock now** locks at once while terminals, transfers, tunnels, AI and MCP keep running. The lock is now kept by the server: a reload or a new tab stays locked, directory (LDAP) accounts can unlock, and a personal PIN can unlock instead of the password. See [Appearance, themes and accessibility](#appearance-themes-and-accessibility) and [Screen lock](#screen-lock).
 
 ## What's new in v13.6.0
 
@@ -200,7 +204,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -215,6 +219,8 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [Panel layout: dock, stack, float and lock](#panel-layout-dock-stack-float-and-lock)
+   - [Appearance, themes and accessibility](#appearance-themes-and-accessibility)
+   - [Screen lock](#screen-lock)
    - [Workboard: the shared canvas and addons](#workboard-the-shared-canvas-and-addons)
    - [SSH terminal](#ssh-terminal)
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
@@ -308,21 +314,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.7.0-linux-amd64
-   ./wrm-pro-v13.7.0-linux-amd64
+   chmod +x wrm-pro-v13.8.0-linux-amd64
+   ./wrm-pro-v13.8.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.7.0-windows-amd64.exe
+   .\wrm-pro-v13.8.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.7.0-linux-amd64.AppImage
-   ./wrm-pro-v13.7.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.7.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.8.0-linux-amd64.AppImage
+   ./wrm-pro-v13.8.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.8.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -331,8 +337,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.7.0/wrm-pro-v13.7.0-android-arm64
-   chmod +x wrm-pro-v13.7.0-android-arm64 && ./wrm-pro-v13.7.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.8.0/wrm-pro-v13.8.0-android-arm64
+   chmod +x wrm-pro-v13.8.0-android-arm64 && ./wrm-pro-v13.8.0-android-arm64
    ```
 
    **Docker**
@@ -357,9 +363,13 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
-## Upgrading from v13.6.0
+## Upgrading from v13.7.0
 
 Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: a new column `saved` in `ai_sessions` and an index; a previous version still starts on the database. New settings `ai_mcp_later_approval` (`run`: an approval given in WRM after the AI app stopped waiting runs the call at once; `repeat` keeps the earlier behaviour, where the AI must repeat the call) and `ai_keep_saved_sessions` (`1`). *Deny* in an AI app's approval question is now a final denial; closing the question without an answer still keeps the request in WRM. New endpoints: `GET /api/ai/sessions?view=all`, `POST /api/ai/sessions/{id}/save`, `GET /api/ai/sessions/{id}/export`, and the key `ai` of `/api/me/ui/{key}`. A decision on a request that is no longer waiting answers `409` with `decided`.
+
+## Upgrading from v13.6.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: new columns `locked_at` and `lock_failures` in `auth_sessions` and `lock_pin_hash` in `users`; a previous version still starts on the database. New settings `screen_lock_mode` (`server`), `screen_lock_max_minutes` (`0`), `screen_lock_pin` (`1`), `screen_lock_max_failures` (`0`), `appearance_default_theme` (`graphite`) and `appearance_custom_css` (`1`); the Business and Enterprise security levels require `screen_lock_mode=server` and an idle lock of at most 30 / 15 minutes, and Enterprise turns the PIN off. **Two behaviour changes:** a locked browser session can no longer reach the API until it is unlocked (set `screen_lock_mode` to `remember` or `browser` for the looser behaviour), and a colour theme from an addon is no longer applied to everyone: each user picks it in *Settings → Appearance*, or the administrator makes it the default (`appearance_default_theme=addon:<addon>:theme`). The accent colour chosen in *Settings → General* before v13.7 is carried over into the theme once.
 
 ## Upgrading from v13.5.0
 
@@ -1088,6 +1098,29 @@ Every opened connection is a **window** inside the workspace. There is also a **
 - **Close confirmation** can be *Always*, *Never* or *Only when connected* (Settings).
 - The browser warns you before leaving the page while terminals are connected or a transfer is running.
 
+### Appearance, themes and accessibility
+
+*Settings → Appearance* (`static/appearance.js`) changes how WRM looks for you; the choice is stored on the server (`/api/me/ui/appearance`) and follows you to every browser.
+
+- **Themes:** Graphite (default), Midnight (OLED black), Fjord, Solar dark, Forest, Ember, Daylight, Paper, Solar light, High contrast dark and High contrast light. *Follow the system light / dark setting* switches between a dark and a light theme of your choice. Every theme also sets the terminal colours.
+- **Your own colours:** every colour token (backgrounds, text, borders, accent, status colours and their text variants, terminal background, foreground and ANSI colours) has a colour picker and a CSS field; your changes apply on top of the theme and can be reset one by one or all at once. **Save as my theme** keeps the result (up to 30), **Export** / **Import** move a theme as JSON (`{"wrm_theme": 1, "name", "mode", "tokens", "term"}`).
+- **Fonts and size:** interface font (including readable choices such as Atkinson Hyperlegible, Lexend and OpenDyslexic when installed), monospace font for terminals, editor and logs, interface size 70–160 %, spacing (compact, normal, roomy with larger click targets), rounded corners, line and letter spacing, heavier text.
+- **Colour vision:** deuteranopia, protanopia, tritanopia and achromatopsia switch OK / warning / error / info colours and diffs to an Okabe–Ito based palette, optionally also in terminals. *Do not rely on colour alone* adds ✓ ✕ ! signs to status badges and toasts, shapes to connection status dots (● up, ◆ slow, ■ down) and underlines links.
+- **Other options:** contrast (normal, more, maximum), minimum contrast in terminals (WCAG 4.5:1 or 7:1), animations (system, reduce, full), reduce transparency and blur, strong keyboard focus outline, underline links.
+- **Custom CSS** for your own interface only (`appearance_custom_css`, default on).
+- **Themes from addons:** an enabled addon offers its themes here (`ui.themes` in `addon.json` with `id`, `name`, `name_hr`, `mode`, `tokens` and/or `css`; the older single `ui.theme` stylesheet appears as one theme). Nothing is applied to users who did not pick it. An administrator can make any theme the default with **Default for everyone** or `appearance_default_theme`.
+
+### Screen lock
+
+The lock covers WRM and asks for the account password; terminals, file transfers, tunnels, AI and MCP sessions keep running. *Settings → Security → Screen lock* (per user, `/api/me/ui/lock`):
+
+- **Lock now** (also 🔒 in the top bar and a keyboard shortcut, Ctrl+Alt+L by default).
+- **When:** after inactivity (off, 1 minute to 4 hours or a custom time, with an optional 10/30/60 s warning; activity in any WRM tab counts, mouse movement optionally), when WRM is not visible (immediately or after 1/5/15 minutes, unless another WRM tab is visible), when the computer locks (browser idle detection, Chrome/Edge, asks for permission once), after the computer sleeps, and on every start or reload.
+- **Lock screen:** blurred, dimmed or solid background, clock, your name, how many windows keep running, a message of your own, and a neutral tab title. Notifications are held while locked and shown after the unlock; desktop notifications do not show their text.
+- **Unlocking:** the account password (local or directory/LDAP), or a personal 4–12 digit **PIN** (`screen_lock_pin`). Accounts that only sign in through an identity provider can set a PIN right after signing in, or sign out from the lock screen. Every lock, unlock and failed attempt is audited; five attempts per minute at most, and `screen_lock_max_failures` signs the browser session out after that many wrong attempts.
+- **How strict** (`screen_lock_mode`): `server` (default) remembers the lock per sign-in session and refuses that session's requests with `423 Locked` until the unlock, so a reload, a new tab or the browser's developer tools do not get past it; `remember` keeps the lock over a reload but lets the page refresh underneath; `browser` is the page-only lock of earlier versions. All WRM tabs of the browser lock and unlock together.
+- **Administrator limit:** `screen_lock_max_minutes` is the longest idle time a user may choose (0 = no limit); users cannot turn the idle lock off below it.
+
 ### Panel layout: dock, stack, float and lock
 
 The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view (while an AI app works) are **panels**, each with a tab. Panels share a tab bar in a **group**; groups sit in a **dock zone** (left, right, or at the bottom under the windows) or **on the canvas**, anywhere between your windows (v12.6.10).
@@ -1763,7 +1796,7 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
   - The layout is stored for your account. Approval cards always pop up at the bottom right, whatever the layout. On a phone the live view is a sheet at the bottom of the screen.
 - **After a refusal** (denied in WRM or in the app, or no answer within `ai_approval_timeout_seconds`) the tool result tells the AI where it was refused, **which rule made WRM ask** (the time or action limit, a command outside the allow list, ask mode, a power command) and what you can change in WRM, and to ask you whether to continue, change the command or stop, instead of retrying a variant on its own.
 - **Full access (v12.6.2, modes v12.6.3):** the administrator's `ai_full_access` switch applies, depending on `ai_full_access_mode`, to every AI session (`all`, the default: the WRM AI panel and every AI connection), only to AI connections with the scope `full_access` (`connection`; the scope is offered only in this mode), or to users who turn on **Full access for my AI sessions** in *Settings → AI connections* (`user`). Then nothing is refused outright: commands on the destructive list or `ai_blocked_commands`, the connection's deny lists, power commands, protected paths and secret files (also with `ai_sensitive_reads` = `deny`) become approvals marked *FULL ACCESS*, asked every time and never automatic, even with "Allow everything". A read-only connection stays read-only and the other scopes still apply. With `ai_full_access_blocked` = `deny` (v12.6.4) the administrator's `ai_blocked_commands` stay refused even under full access. Turning the policy off restores the refusals at the next call.
-- **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Since v13.7.0 approving it there **runs the call at once** (`ai_mcp_later_approval` = `run`, the default): the output appears in the live view, and when the AI repeats the same call it gets that output (marked as run after your approval) instead of running it again. With `repeat` the approval only lets the identical call run once without asking when the AI repeats it. This also works after the AI app closed its session (v12.6.5): the approval covers the same call once in your next session on that connection. A denial in WRM stays a denial, and so does *Deny* in the app's question (v13.7.0); only closing the question without an answer keeps the request for later. When you decide in WRM, the app's open question is closed. Deciding a request that is no longer waiting tells you who decided it and where (in WRM or in the AI app), or that the AI stopped waiting. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.
+- **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Since v13.8.0 approving it there **runs the call at once** (`ai_mcp_later_approval` = `run`, the default): the output appears in the live view, and when the AI repeats the same call it gets that output (marked as run after your approval) instead of running it again. With `repeat` the approval only lets the identical call run once without asking when the AI repeats it. This also works after the AI app closed its session (v12.6.5): the approval covers the same call once in your next session on that connection. A denial in WRM stays a denial, and so does *Deny* in the app's question (v13.8.0); only closing the question without an answer keeps the request for later. When you decide in WRM, the app's open question is closed. Deciding a request that is no longer waiting tells you who decided it and where (in WRM or in the AI app), or that the AI stopped waiting. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.
 - **Allow everything:** in automatic mode an AI connection can allow every command (`*`) and file (`/**`) with **no time or action limit**: it then stays automatic until the AI connection expires or you revoke it. With `*`, chains, variables, groups and redirections run too. Still refused or asked: the built-in destructive patterns and `ai_blocked_commands`, your deny lists, sensitive files, commands WRM cannot parse, power commands, and servers the connection does not include. The policy `ai_auto_until_grant` (default on) decides whether users may choose no limits; the browser's built-in assistant always keeps its limits.
 - **🤖 AI connected** in the top bar shows while an app has an open session (with the number of pending approvals); click it to see the apps and **revoke** one or all with one click. Revoking ends the sessions at once; so do expiry, the kill switch and the policies.
 - Each session is an AI session with transport *mcp*: in the audit log (`mcp.*` for connecting, tokens and OAuth; `ai.*` for every tool call, approval and denial), in the transcripts and in **Sessions & recordings** (✦ AI), like the built-in assistant.
@@ -2353,6 +2386,12 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_models` | – | allowed models, comma-separated patterns (`claude-*`); empty = every model of the providers |
 | `ai_ollama_manage` | `0` | lets administrators install / start / pull Ollama through WRM from the provider wizard (`WRM_AI_OLLAMA_MANAGE`); off = the wizard only shows the commands |
 | `ai_redact_output` | `1` | redact secrets before output is sent to the provider (transcripts and the audit are always redacted) |
+| `screen_lock_mode` | `server` | how strict the screen lock is: `server` (a locked session gets `423` until unlocked), `remember` (survives a reload), `browser` (page only) |
+| `screen_lock_max_minutes` | `0` | longest idle time before the screen lock users may choose; `0` = the user decides |
+| `screen_lock_pin` | `1` | users may unlock the screen with a personal 4–12 digit PIN |
+| `screen_lock_max_failures` | `0` | sign the browser session out after this many wrong unlock attempts; `0` = never |
+| `appearance_default_theme` | `graphite` | theme for users who have not chosen one: a built-in id or `addon:<addon>:<theme>` |
+| `appearance_custom_css` | `1` | users may add CSS to their own interface |
 | `ai_show_thinking` | `1` | show the assistant's thinking (reasoning summaries) in the work log and keep it in the transcript |
 | `ai_auto_titles` | `1` | give each AI chat a short title after its first answer (one small extra request without tools) |
 | `ai_share_notes` | `1` | users may opt in to send their connection notes |
@@ -2625,6 +2664,17 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 ---
 
 ## API reference
+
+### v13.7.0 endpoints
+
+| Endpoint | Behavior |
+|---|---|
+| `GET / POST /api/auth/lock` | Lock state of this sign-in session / lock it (`{"reason": "manual"\|"idle"\|"hidden"\|"os_locked"\|"sleep"\|"shortcut"}`), audited as `auth.locked`. |
+| `POST /api/auth/lock/verify` | `{"password"}` or `{"pin"}`: unlock (`auth.unlocked` / `auth.unlock_failed`); `429` after five attempts a minute, `401 {"signed_out": true}` at `screen_lock_max_failures`. |
+| `PUT / DELETE /api/auth/lock/pin` | Set (`{"pin", "password"}`) or remove the unlock PIN. |
+| `GET / PUT /api/me/ui/appearance`, `/api/me/ui/lock` | The user's appearance and screen lock preferences (JSON object, 256 KiB). |
+
+While a session is locked in `server` mode every other authenticated endpoint answers `423 Locked`; `/api/auth/me` reports `screen_locked` and the `screen_lock` and `appearance` policy.
 
 ### v12.4.4–v12.4.5 endpoints
 
@@ -3221,7 +3271,7 @@ remote-manager/
   import_limits_test.go  import size limits through the real middleware: multi-MB confCons.xml and CSV, HTTP 413 above the limit
   service_test.go      service files for every OS (golden files in testdata/service), env file, version comparison, newest binary in the folder
   releasesign_test.go  release signatures: round trip, tampering, wrong key or file, WRM context, key parsing, the command-line tools, self-update refusing unsigned or wrongly signed releases
-  v137_ai_sessions_test.go  AI sessions view (own sessions only, filters, search, save, export, retention), personal AI settings, continuing an MCP session; MCP approvals given later run at once (and with repeat) and are checked again before they run, Deny in the app is final
+  v138_ai_sessions_test.go  AI sessions view (own sessions only, filters, search, save, export, retention), personal AI settings, continuing an MCP session; MCP approvals given later run at once (and with repeat) and are checked again before they run, Deny in the app is final
   v12625_test.go       LDAP and SCIM against a fake LDAP server (LDAPS, StartTLS, AD nested groups, paging): protocol pieces and filter escaping, sign-in and mapping, refused accounts, the regular check ending access, linking, stored passwords not sent to a changed address, SCIM users, groups, PATCH and deprovisioning, the SCIM account linked on the first OIDC sign-in, disabling ends everything
   v12626_test.go       lockdown (sessions, sign-in, AI, shares, CLI state, break-glass only), Stop user and what it ends, every alert rule and its settings, SIEM delivery to fake Splunk, Elastic, Sentinel (with a fake Entra token endpoint) and HTTPS collectors over TLS, syslog over TLS (RFC 5424 framing, structured data), the JSON lines file, catching up after an outage, action filters and the stored secret not sent to a changed address
   v12624_test.go       directory sign-in against a fake identity provider: ID token checks (RS256/ES256, nonce, audience, expiry, alg none/HS256, key rotation), accounts from rules, role and team sync, refusals, browser binding and replay of the callback, MFA, local 2FA after a directory sign-in, revalidation (refused refresh, removed from the group, no refresh token), password sign-in limited to break-glass, linking, step-up and test sign-in, admin API

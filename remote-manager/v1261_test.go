@@ -118,7 +118,7 @@ func TestV1261PanelKeepsLimits(t *testing.T) {
 // An approval the app declined (or nobody answered) is not lost: it stays in WRM, the user
 // approves it there later, and the same call then runs once without asking.
 func TestV1261ApproveLater(t *testing.T) {
-	// the repeat policy (v13.7.0 runs a later approval at once by default: v137_ai_sessions_test.go)
+	// the repeat policy (v13.8.0 runs a later approval at once by default: v138_ai_sessions_test.go)
 	t.Setenv("WRM_AI_MCP_LATER_APPROVAL", "repeat")
 	e := newMCPEnv(t)
 	tok, _ := e.pat("ask", []string{"read_logs", "run_with_approval"}, nil)

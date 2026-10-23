@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// v13.7.0: approvals kept for later run at once, an explicit Deny in the AI app is final,
+// v13.8.0: approvals kept for later run at once, an explicit Deny in the AI app is final,
 // a decision on a request that no longer waits says what happened, and the AI sessions view.
 
 // mcpDeferredCall starts a command over the engine, waits for its approval and lets the

@@ -328,7 +328,7 @@ Object.assign(LANGS.hr, {
   p_ai_show_thinking: 'Prikaži razmišljanje asistenta', p_ai_show_thinking_d: 'Modele koji to podržavaju (Claude 4.6 i noviji, modeli s razmišljanjem na OpenAI-kompatibilnim serverima) traži sažetak razmišljanja i prikazuje ga uživo u radnom logu chata.',
   p_ai_auto_titles: 'Generiraj naslove sesija', p_ai_auto_titles_d: 'Nakon prvog odgovora jedan kratki dodatni zahtjev modelu napiše naslov chata (inače se koristi prvo pitanje). Naslove možete preimenovati.',
 });
-// v13.7.0: personal AI settings (Settings → AI assistant) and saved sessions
+// v13.8.0: personal AI settings (Settings → AI assistant) and saved sessions
 Object.assign(LANGS.en, {
   aip_title: 'My AI settings', aip_d: 'These settings are yours alone: every WRM user chooses their own defaults, their own provider accounts and their own AI apps.',
   aip_engine: 'Default engine', aip_provider: 'Default provider', aip_provider_first: 'The first one offered', aip_model: 'Default model', aip_model_prov: 'The provider\'s default',
@@ -382,35 +382,35 @@ Object.assign(LANGS.hr, {
 .ai-head .ai-sp { flex: 1; }
 .ai-ib { background: transparent; border: 1px solid transparent; color: var(--text2); border-radius: 6px; padding: 2px 6px; font-size: 12px; line-height: 18px; }
 .ai-ib:hover { background: var(--bg4); color: var(--text); }
-.ai-ib.danger:hover { color: var(--red); border-color: rgba(239,68,68,.35); }
+.ai-ib.danger:hover { color: var(--red); border-color: rgba(var(--red-rgb),.35); }
 .ai-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; min-height: 0; user-select: text; }
 .ai-body > * { flex-shrink: 0; }
 .ai-think { display: block; max-height: 9.5em; overflow-y: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 .ai-foot { border-top: 1px solid var(--border); padding: 6px; display: flex; gap: 6px; align-items: flex-end; }
 .ai-foot textarea { flex: 1; min-height: 36px; max-height: 140px; resize: vertical; font-size: 12.5px; }
 .ai-msg { border-radius: 9px; padding: 7px 9px; font-size: 12.5px; line-height: 1.5; word-wrap: break-word; overflow-wrap: anywhere; }
-.ai-msg.user { background: var(--accent-d); border: 1px solid var(--accent-b, rgba(59,130,246,.3)); align-self: flex-end; max-width: 92%; white-space: pre-wrap; }
+.ai-msg.user { background: var(--accent-d); border: 1px solid var(--accent-b, rgba(var(--accent-rgb),.3)); align-self: flex-end; max-width: 92%; white-space: pre-wrap; }
 .ai-msg.assistant { background: var(--bg3); border: 1px solid var(--border2); }
-.ai-msg.assistant pre, .ai-card pre { background: #0b0d12; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; overflow-x: auto; font: 11.5px/1.45 'JetBrains Mono', monospace; white-space: pre; margin: 5px 0; max-height: 320px; }
-.ai-msg code { font: 11.5px 'JetBrains Mono', monospace; background: var(--bg4); padding: 0 4px; border-radius: 4px; }
+.ai-msg.assistant pre, .ai-card pre { background: var(--bg0); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; overflow-x: auto; font: 11.5px/1.45 var(--font-mono); white-space: pre; margin: 5px 0; max-height: 320px; }
+.ai-msg code { font: 11.5px var(--font-mono); background: var(--bg4); padding: 0 4px; border-radius: 4px; }
 .ai-note { font-size: 11px; color: var(--text2); text-align: center; }
-.ai-note.err { color: #fca5a5; }
+.ai-note.err { color: var(--red-t); }
 .ai-card { border: 1px solid var(--border2); border-radius: 9px; background: var(--bg); padding: 7px 8px; font-size: 12px; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.ai-card.wait { border-color: rgba(245,158,11,.55); box-shadow: 0 0 0 1px rgba(245,158,11,.15); }
-.ai-card.deny { border-color: rgba(239,68,68,.4); }
+.ai-card.wait { border-color: rgba(var(--yellow-rgb),.55); box-shadow: 0 0 0 1px rgba(var(--yellow-rgb),.15); }
+.ai-card.deny { border-color: rgba(var(--red-rgb),.4); }
 .ai-card .ai-ch { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ai-card .ai-tool { font-weight: 700; font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
-.ai-card .ai-cmd { font: 12px/1.45 'JetBrains Mono', monospace; color: var(--text); word-break: break-all; white-space: pre-wrap; }
+.ai-card .ai-cmd { font: 12px/1.45 var(--font-mono); color: var(--text); word-break: break-all; white-space: pre-wrap; }
 .ai-card .ai-why { font-size: 11px; color: var(--text2); }
-.ai-card textarea { font: 12px/1.4 'JetBrains Mono', monospace; min-height: 54px; width: 100%; }
+.ai-card textarea { font: 12px/1.4 var(--font-mono); min-height: 54px; width: 100%; }
 .ai-card .ai-acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .ai-card .ai-acts input { flex: 1; min-width: 120px; font-size: 11.5px; }
-.ai-diff .a { color: #86efac; } .ai-diff .d { color: #fca5a5; } .ai-diff .h { color: #93c5fd; }
+.ai-diff .a { color: var(--green-t); } .ai-diff .d { color: var(--red-t); } .ai-diff .h { color: var(--accent-t); }
 .ai-card details summary { cursor: pointer; font-size: 11px; color: var(--text2); }
 .ai-setup { display: flex; flex-direction: column; gap: 9px; font-size: 12px; }
 .ai-setup label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px; }
 .ai-setup select, .ai-setup input[type=text], .ai-setup input[type=number], .ai-setup textarea { width: 100%; }
-.ai-setup textarea { min-height: 52px; font: 11.5px 'JetBrains Mono', monospace; }
+.ai-setup textarea { min-height: 52px; font: 11.5px var(--font-mono); }
 .ai-row { display: flex; gap: 8px; } .ai-row > div { flex: 1; min-width: 0; }
 .aip { max-width: 760px; } .aip h4 { margin: 14px 0 4px; } .aip .ai-row { margin: 8px 0; flex-wrap: wrap; } .aip .ai-row > div { min-width: 180px; }
 .aip label:not(.ai-check) { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px; }
@@ -420,11 +420,11 @@ Object.assign(LANGS.hr, {
 .ai-see { font-size: 11.5px; color: var(--text2); line-height: 1.5; }
 .ai-see li { margin-left: 16px; }
 .ai-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--text2); position: sticky; top: -8px; z-index: 2; background: var(--bg2); padding: 6px 0 4px; margin-top: -6px; }
-.ai-pend { position: sticky; top: 22px; z-index: 3; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 6px; padding: 7px 9px; border: 1px solid var(--yellow, #f59e0b); border-radius: 8px; background: var(--bg3); box-shadow: 0 4px 14px rgba(0,0,0,.25); font-size: 12px; }
-.ai-pend b { color: var(--yellow, #f59e0b); }
+.ai-pend { position: sticky; top: 22px; z-index: 3; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 6px; padding: 7px 9px; border: 1px solid var(--yellow); border-radius: 8px; background: var(--bg3); box-shadow: 0 4px 14px rgba(0,0,0,.25); font-size: 12px; }
+.ai-pend b { color: var(--yellow); }
 .ai-pend .ai-pend-w { flex: 1; min-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ai-bar select { font-size: 11.5px; padding: 2px 6px; max-width: 100%; }
-#admin-body button.btn-sm.danger, .ai-modal button.btn-sm.danger, .ai-panel button.danger { background: #dc2626; border-color: #dc2626; color: #fff; }
+#admin-body button.btn-sm.danger, .ai-modal button.btn-sm.danger, .ai-panel button.danger { background: var(--red); border-color: var(--red); color: #fff; }
 #admin-body button.btn-sm.danger:hover, .ai-modal button.btn-sm.danger:hover { background: #b91c1c; }
 .ai-modal .modal { width: 760px; max-width: calc(100vw - 24px); max-height: calc(100vh - 40px); overflow-y: auto; }
 .ai-tr { display: flex; flex-direction: column; gap: 6px; }
@@ -435,7 +435,7 @@ Object.assign(LANGS.hr, {
 .ai-wgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin: 8px 0; } .ai-wgrid button { height: auto; white-space: normal; text-align: left; padding: 9px 11px; }
 .ai-form .field label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px; }
 .ai-form input[type=text], .ai-form input[type=password], .ai-form input[type=number], .ai-form select, .ai-form textarea { width: 100%; }
-.ai-form textarea { min-height: 90px; font: 11px 'JetBrains Mono', monospace; }
+.ai-form textarea { min-height: 90px; font: 11px var(--font-mono); }
 @media (max-width: 480px) { .ai-row { flex-direction: column; gap: 6px; } .ai-modal .modal { padding: 14px; } }
 `;
   if (!$('ai-style')) { const s = document.createElement('style'); s.id = 'ai-style'; s.textContent = css; document.head.appendChild(s); }
@@ -1003,7 +1003,7 @@ Object.assign(LANGS.hr, {
       }
       case 'tool_result': {
         const card = st.cards[d.call_id];
-        const head = d.error ? `<div class="ai-why" style="color:#fca5a5;">${esc(d.error)}</div>`
+        const head = d.error ? `<div class="ai-why" style="color:var(--red-t);">${esc(d.error)}</div>`
           : `<div class="ai-ch"><span class="pill ${d.exit_code === 0 ? '' : 'warn'}">${esc(tf('ai_exit', {code: d.exit_code}))}</span>${d.redactions ? `<span class="pill info">🔒 ${esc(tf('ai_redactions', {n: d.redactions}))}</span>` : ''}</div>`;
         const out = d.output != null ? `<details ${String(d.output).length < 600 ? 'open' : ''}><summary>${esc(t('ai_output'))} (${String(d.output).length} B)</summary><pre>${esc(d.output)}</pre></details>` : '';
         workLogStep(id, (d.error ? '✗ ' : d.exit_code === 0 ? '✓ ' : '⚠ ') + (d.tool || '') + (d.error ? ' · ' + String(d.error).slice(0, 160) : ' · ' + tf('ai_exit', {code: d.exit_code}) + (d.output != null ? ' · ' + String(d.output).length + ' B' : '')));
