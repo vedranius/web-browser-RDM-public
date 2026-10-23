@@ -142,7 +142,7 @@ func apiAuthLockVerifyHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Account not found", 403)
 		return
 	}
-	method, ok := "password", false
+	method, ok := "account", false // audit value: "account" (sign-in secret) or "pin"
 	if p.PIN != "" {
 		method = "pin"
 		var pinHash string

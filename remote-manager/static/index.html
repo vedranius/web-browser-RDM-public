@@ -6743,7 +6743,9 @@ function renderUpdateModal() {
 
 // plainNotes shows release notes (Markdown with some HTML) as readable text.
 function plainNotes(md) {
-  return String(md || '').replace(/<[^>]*>/g, '').replace(/\[!\[[^\]]*\]\([^)]*\)\]\([^)]*\)/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+  // DOMParser never runs scripts; textContent drops every tag, whatever its shape.
+  const text = new DOMParser().parseFromString(String(md || ''), 'text/html').body.textContent || '';
+  return text.replace(/\[!\[[^\]]*\]\([^)]*\)\]\([^)]*\)/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/^#{1,6}\s*/gm, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\n{3,}/g, '\n\n').trim();
 }
 
@@ -16943,7 +16945,7 @@ function connectCollabWS() {
   collab.ws = ws;
   collabWS = ws;
   ws.onopen = () => { collab.retry = 0; };
-  ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch(_) { return; } try { handleCollabMsg(m); } catch(err) { console.error('collab', m.type, err); } };
+  ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch(_) { return; } try { handleCollabMsg(m); } catch(_) { console.error('collab: a message could not be handled'); } };
   ws.onclose = ev => {
     if (collab.ws !== ws) return;
     const wasConnected = collab.connected;
