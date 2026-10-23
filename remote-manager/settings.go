@@ -42,6 +42,15 @@ var settingSpecs = []settingSpec{
 	{Key: "require_2fa", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "require_step_up", Default: "0", Kind: "bool"},
 	{Key: "step_up_minutes", Default: "10", Kind: "int", Min: 1, Max: 240},
+	// Screen lock (lock.go, v13.7)
+	{Key: "screen_lock_mode", Default: "server", Kind: "enum", Enum: []string{"browser", "remember", "server"}},
+	{Key: "screen_lock_max_minutes", Default: "0", Kind: "int", Min: 0, Max: 1440},
+	{Key: "screen_lock_pin", Default: "1", Kind: "bool"},
+	{Key: "screen_lock_max_failures", Default: "0", Kind: "int", Min: 0, Max: 100},
+	// Appearance (static/appearance.js, v13.7): the theme new users start with and whether
+	// users may add their own CSS to their own interface.
+	{Key: "appearance_default_theme", Default: "graphite", Kind: "string"},
+	{Key: "appearance_custom_css", Default: "1", Kind: "bool"},
 	{Key: "break_glass_ips", Default: "", Kind: "string"},
 	{Key: "local_login", Default: "all", Kind: "enum", Enum: []string{"all", "break_glass"}},
 	{Key: "oidc_revalidate_minutes", Default: "60", Kind: "int", Min: 5, Max: 1440},
@@ -431,6 +440,15 @@ func validateSetting(s settingSpec, v string) (string, error) {
 			out = append(out, m)
 		}
 		return strings.Join(out, ","), nil
+	case "appearance_default_theme":
+		// A built-in theme id, or addon:<addon>:<theme>; the page falls back to graphite for
+		// a theme it does not know (for example an addon that was removed).
+		if v == "" {
+			v = "graphite"
+		}
+		if !appearanceThemeRe.MatchString(v) {
+			return "", fmt.Errorf("use a theme id such as graphite, daylight or addon:my-addon:my-theme")
+		}
 	case "update_repo":
 		if !updateRepoRe.MatchString(v) {
 			return "", fmt.Errorf("use the form owner/repository")
@@ -455,6 +473,8 @@ func validateSetting(s settingSpec, v string) (string, error) {
 	}
 	return v, nil
 }
+
+var appearanceThemeRe = regexp.MustCompile(`^(addon:[a-z0-9][a-z0-9._-]{0,63}:)?[a-z0-9][a-z0-9-]{0,31}$`)
 
 func parsePortRange(v string) (uint16, uint16, error) {
 	parts := strings.SplitN(strings.TrimSpace(v), "-", 2)

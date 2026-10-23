@@ -404,7 +404,13 @@ Medium output (v12.6.5): the activity log and live output show what Docker, pip,
 
 The Medium native preview (v12.6.0) is read-only: it lists application directories over SFTP and runs `sha256sum` with NUL-separated, stdin-fed paths; it writes nothing and runs no build or `post_deploy` command. It uses only the requesting user's own SSH connections (`loadConnection` owner and protocol checks) and Git sources; links between `servers.yaml` servers and connections are per user and audited. Its `/__wrm_plan` bridge endpoint requires the same per-process key as the rest of the bridge. Repository addresses are shown with URL credentials removed.
 
-## Addon platform v2 (v13.7.0)
+## Screen lock and appearance (v13.7.0)
+
+- The screen lock is enforced by the server in the default `screen_lock_mode=server`: a locked sign-in session gets `423 Locked` from every API endpoint except sign-out, the lock state and the unlock itself, so reloading the page or using the browser's developer tools does not get past it. The lock does not end anything that is running (terminals, tunnels, AI and MCP sessions).
+- Unlocking checks the password the account signs in with (local or LDAP) or a personal PIN (bcrypt, 4–12 digits, only for unlocking, never for signing in; `screen_lock_pin`, off at the Enterprise level). Five attempts per minute per account; `screen_lock_max_failures` ends the browser session. Setting a PIN needs the account password (or, for identity-provider-only accounts, a sign-in within the step-up window). Lock, unlock, failures, PIN changes and the sign-out are audited (`auth.locked`, `auth.unlocked`, `auth.unlock_failed`, `auth.lock_pin_set`, `auth.lock_pin_removed`, `auth.lock_signed_out`).
+- Custom CSS and theme tokens only affect the user's own browser. Theme values from addons and imported theme files are filtered (no `url(`, `expression`, `@import`, `;`, braces or angle brackets). An administrator can turn custom CSS off (`appearance_custom_css`).
+
+## Addon platform v2 (v13.8.0)
 
 - **Personal addons** (policy `addon_personal`, default everybody) are visible and usable only by their owner: the URL key `~id` is always resolved against the signed-in user, so no request can name another user's personal addon. They cannot carry server code. Administrators see all of them and can disable or remove any (audited with the owner's name).
 - **apiVersion 2 panels have no network of their own.** Their HTML is served with `sandbox allow-scripts; default-src 'none'; script-src 'self' <hashes of the inline scripts>; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'self'`; the frame has an opaque origin, so it cannot read WRM, its cookies or other panels. Injected inline script, inline event handlers and remote scripts do not run.

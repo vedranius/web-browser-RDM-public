@@ -2,7 +2,7 @@
 
 An addon is a ZIP with `addon.json` at its root (or one folder down) and the files it declares. Nothing runs at install time: WRM checks the manifest, the paths and the declared files, pins the SHA-256 of every file, and installs the addon **disabled**. Enabling it shows a permission sheet that WRM generates from `addon.json`.
 
-A manifest without `apiVersion` is a v1 addon and keeps working as before. This page describes **apiVersion 2**, available since v13.7.0.
+A manifest without `apiVersion` is a v1 addon and keeps working as before. This page describes **apiVersion 2**, available since v13.8.0.
 
 ## Who installs what
 
