@@ -230,6 +230,7 @@
   "G704 proxy.go return net.DialTimeout(network, addr, proxyDialTimeout)",
   "G705 monitoring_logs.go io.WriteString(w, chunk.Text)",
   "G705 monitoring_logs.go io.WriteString(w, chunk.Text)",
+  "G706 audit.go log.Printf(\"AUDIT action=%s user=%q ip=%s target=%q%s %s\", action, username, ip, target, extra, det)",
   "G706 files.go log.Printf(\"download %s aborted: %v\", remotePath, err)",
   "G706 files.go log.Printf(\"zip %s aborted: %v\", remotePath, err)",
   "G706 files.go log.Printf(\"zip subdir %s: %v\", fullRemote, err)",
