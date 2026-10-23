@@ -1,4 +1,4 @@
-## Web Remote Manager PRO v13.8.0 - Addon platform v2: personal addons, instances and a stricter sandbox
+## Web Remote Manager PRO v13.9.0 - Addon platform v2: personal addons, instances and a stricter sandbox
 
 ### Added
 
@@ -19,7 +19,7 @@
 
 Replace the executable or container and keep the database and encryption key. Additive migration only: new tables `addons_personal`, `addon_instances`, `addon_store` and `addon_windows`, new columns `files`, `approved` and `pending` in `addons`. Installed addons keep working; their files are pinned the next time they are installed. New policy `addon_personal` (`all`).
 
-[Download v13.8.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.8.0) · [Full changelog](CHANGELOG.md)
+[Download v13.9.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.9.0) · [Full changelog](CHANGELOG.md)
 
 ## Included from v13.7.0 - Themes, accessibility and a real screen lock
 

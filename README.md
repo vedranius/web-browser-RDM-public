@@ -13,9 +13,9 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.8.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.9.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
-## What's new in v13.8.0
+## What's new in v13.9.0
 
 **Addon platform v2: your own addons, several windows each, and settings that stay.** Every user can now install **personal addons** that only they see (an administrator decides who may with `addon_personal` and can turn any of them off). An addon with a panel opens as **instances**, each with its own settings and window, for example two dashboards side by side; administrators can set up shared instances for everybody. Settings are kept **on the WRM server** with export and import, and windows come back where you left them after a reload or on another device. Addon **themes** appear in *Settings → Appearance* for whoever picks them. Before an addon is enabled WRM shows a **permission sheet** generated from `addon.json`; an update that asks for more waits for approval again. apiVersion 2 panels run without any network of their own, every file is pinned by SHA-256, and a watchdog offers *Reload* when a panel hangs. See [Addons](#addons) and the [addon developer guide](docs/ADDONS.md).
 
@@ -315,21 +315,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.8.0-linux-amd64
-   ./wrm-pro-v13.8.0-linux-amd64
+   chmod +x wrm-pro-v13.9.0-linux-amd64
+   ./wrm-pro-v13.9.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.8.0-windows-amd64.exe
+   .\wrm-pro-v13.9.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.8.0-linux-amd64.AppImage
-   ./wrm-pro-v13.8.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.8.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.9.0-linux-amd64.AppImage
+   ./wrm-pro-v13.9.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.9.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -338,8 +338,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.8.0/wrm-pro-v13.8.0-android-arm64
-   chmod +x wrm-pro-v13.8.0-android-arm64 && ./wrm-pro-v13.8.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.9.0/wrm-pro-v13.9.0-android-arm64
+   chmod +x wrm-pro-v13.9.0-android-arm64 && ./wrm-pro-v13.9.0-android-arm64
    ```
 
    **Docker**

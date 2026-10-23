@@ -1,4 +1,4 @@
-## [13.8.0] - 2026-10-23
+## [13.9.0] - 2026-10-23
 
 ### Added
 - **Addon platform v2, step 1** (`addons_v2.go`, `static/addons.js`, [docs/ADDONS.md](docs/ADDONS.md)). A manifest with `"apiVersion": 2` is decoded strictly: unknown fields, also nested ones, refuse the install with `E_MANIFEST_FIELD`. A manifest without `apiVersion` keeps the v1 behaviour.

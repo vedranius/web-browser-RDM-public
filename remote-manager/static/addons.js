@@ -133,7 +133,7 @@ Object.assign(LANGS.hr, {
   add_draft_empty: '(nema promjena)',
 });
 
-// v13.8: addon platform v2: personal addons, instances, the server-side store,
+// v13.9: addon platform v2: personal addons, instances, the server-side store,
 // remembered windows, the v2 bridge with a watchdog, and the permission sheet.
 Object.assign(LANGS.en, {
   add_scope: 'Install for',
