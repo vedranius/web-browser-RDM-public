@@ -358,7 +358,7 @@ func TestV134MCPQuickStartUI(t *testing.T) {
 	js, _ := os.ReadFile("static/mcp.js")
 	readme, _ := os.ReadFile("../README.md")
 	m := string(js)
-	for _, want := range []string{`mcp_quick_title`, `mcp-quick-cmd`, `wizClient('claude_code')`, `claude mcp add --transport http --scope user wrm`, `openSettings('st-mcp')`} {
+	for _, want := range []string{`mcp_quick_title`, `mcp-quick-cmd`, `wizClient('claude_code')`, `claude mcp add --transport http --scope user wrm`, `openSettings('st-mcp')`, `mcpw_cc_shell`, `mcpw_desk_no_plugin`, `mcp_quick_which`} {
 		if !strings.Contains(m, want) {
 			t.Errorf("mcp.js lacks %s", want)
 		}

@@ -23,6 +23,23 @@ Replace the executable or container and keep the database and encryption key. Ad
 
 [Download v13.5.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.5.0) · [Full changelog](CHANGELOG.md)
 
+## Web Remote Manager PRO v13.4.4 - Claude Desktop or Claude Code, clearly
+
+### Fixed
+
+- **No more `/plugin` in PowerShell.** *Settings → AI connections* now says plainly:
+  - **Claude Desktop app (chat)** uses the `.mcpb` extension, not `/plugin`.
+  - **Claude Code (terminal or Code tab)** uses `/plugin …` **inside Claude**, or the `claude plugin install …` / `claude mcp add …` command in PowerShell (no leading slash).
+  - After adding the connector, restart Claude Code or run `/mcp` to reconnect.
+
+The quick card and the wizard carry the same note, so the “/plugin is not recognized” dead end is explained where it happens.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.4](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.4) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v13.4.3 - Claude in one command
 
 ### Added
