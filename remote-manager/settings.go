@@ -163,6 +163,8 @@ var settingSpecs = []settingSpec{
 	{Key: "ai_opencode_sandbox", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "ai_opencode_sandbox_image", Default: opencodeSandboxDefaultImage, Kind: "string"},
 	{Key: "ai_redact_output", Default: "1", Kind: "bool"},
+	{Key: "ai_show_thinking", Default: "1", Kind: "bool"},
+	{Key: "ai_auto_titles", Default: "1", Kind: "bool"},
 	{Key: "ai_share_notes", Default: "1", Kind: "bool"},
 	{Key: "ai_transcript_retention_days", Default: "90", Kind: "int", Min: 1, Max: 3650},
 	{Key: "ai_approval_timeout_seconds", Default: "300", Kind: "int", Min: 30, Max: 3600},

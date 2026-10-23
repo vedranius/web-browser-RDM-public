@@ -186,7 +186,20 @@ func aiSessionsHandler(w http.ResponseWriter, r *http.Request, userID int, parts
 	if len(parts) == 0 || parts[0] == "" {
 		switch r.Method {
 		case http.MethodGet:
-			jsonOK(w, aiListSessions(`s.user_id = ?`, []interface{}{userID}, 50))
+			switch p := r.URL.Query().Get("purpose"); p {
+			case "":
+				jsonOK(w, aiListSessions(`s.user_id = ?`, []interface{}{userID}, 50))
+			case "terminal":
+				jsonOK(w, aiListSessions(`s.user_id = ? AND s.purpose = ''`, []interface{}{userID}, 100))
+			case aiPurposeLogs, aiPurposeFile:
+				where, args := `s.user_id = ? AND s.purpose = ?`, []interface{}{userID, p}
+				if c, _ := strconv.Atoi(r.URL.Query().Get("conn_id")); c > 0 {
+					where, args = where+` AND s.conn_id = ?`, append(args, c)
+				}
+				jsonOK(w, aiListSessions(where, args, 100))
+			default:
+				jsonError(w, "Unknown purpose", 400)
+			}
 		case http.MethodPost:
 			aiStartHandler(w, r, userID)
 		default:
@@ -199,7 +212,14 @@ func aiSessionsHandler(w http.ResponseWriter, r *http.Request, userID int, parts
 		aiTranscriptHandler(w, id, `user_id = ?`, userID)
 		return
 	}
+	if len(parts) == 2 && parts[1] == "title" && r.Method == http.MethodPost {
+		aiTitleHandler(w, r, userID, parts[0])
+		return
+	}
 	if len(parts) == 2 && parts[1] == "events" && r.Method == http.MethodGet {
+		if s := aiGet(parseID(parts[0])); (s == nil || s.UserID != userID) && aiEndedEvents(w, parseID(parts[0]), userID) {
+			return
+		}
 		s := aiSessionByID(w, parts[0], userID)
 		if s == nil {
 			return
@@ -318,6 +338,9 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		Engine      string        `json:"engine"` // "" (WRM) | opencode
 		Agent       string        `json:"agent"`
 		Sandbox     bool          `json:"sandbox"` // OpenCode with its own tools in a Docker sandbox
+		Purpose     string        `json:"purpose"` // "" | logs | file (ai_chats.go)
+		FilePath    string        `json:"file_path"`
+		ResumeFrom  int64         `json:"resume_from"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		jsonError(w, "Bad JSON", 400)
@@ -331,6 +354,30 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 			return
 		}
 	}
+	if in.ResumeFrom > 0 {
+		// Continue an ended session: what is not given comes from the old one.
+		prev, err := aiLoadPrev(in.ResumeFrom, userID)
+		if err != nil {
+			jsonError(w, err.Error(), 404)
+			return
+		}
+		if in.ConnID == 0 {
+			in.ConnID = prev.ConnID
+		}
+		if in.ProviderID == 0 {
+			in.ProviderID = prev.ProviderID
+		}
+		if in.Model == "" {
+			in.Model = prev.Model
+		}
+		if in.Mode == "" && prev.Mode != aiModeAuto {
+			in.Mode = prev.Mode
+		}
+		if prev.Transport == "opencode" || prev.Transport == "mcp" {
+			jsonError(w, "Only sessions of the WRM assistant can be continued", 400)
+			return
+		}
+	}
 	shareID, code, msg := aiConnAccess(r, userID, in.ConnID)
 	if code != 0 {
 		jsonError(w, msg, code)
@@ -340,7 +387,8 @@ func aiStartHandler(w http.ResponseWriter, r *http.Request, userID int) {
 		in.ShareNotes = false // notes belong to the owner of the connection
 	}
 	s, err := aiStart(aiStartParams{UserID: userID, Username: usernameOf(userID), ConnID: in.ConnID, ShareID: shareID, ProviderID: in.ProviderID,
-		Model: in.Model, Mode: in.Mode, Auto: in.Auto, ConfirmAut: in.ConfirmAuto, ShareNotes: in.ShareNotes, Transport: transport, Request: r, Agent: in.Agent})
+		Model: in.Model, Mode: in.Mode, Auto: in.Auto, ConfirmAut: in.ConfirmAuto, ShareNotes: in.ShareNotes, Transport: transport, Request: r, Agent: in.Agent,
+		Purpose: in.Purpose, FilePath: in.FilePath, ResumeFrom: in.ResumeFrom})
 	if err != nil {
 		auditLog(r, userID, "ai.session_refused", "", map[string]interface{}{"conn_id": in.ConnID, "reason": err.Error()})
 		jsonError(w, err.Error(), 403)
@@ -407,7 +455,7 @@ func aiListSessions(where string, args []interface{}, limit int) []map[string]in
 	out := []map[string]interface{}{}
 	rows, err := db.Query(`SELECT s.id, COALESCE(s.user_id,0), s.username, COALESCE(s.conn_id,0), s.conn_name, s.host, s.transport, s.provider_name, s.provider_kind,
 		s.model, s.mode, s.status, s.end_reason, s.started_at, s.ended_at, s.last_activity, s.requests, s.tool_calls, s.approvals, s.denials,
-		s.tokens_in, s.tokens_out, s.cost_usd, COALESCE(s.term_session_id,0)
+		s.tokens_in, s.tokens_out, s.cost_usd, COALESCE(s.term_session_id,0), s.title, s.purpose, s.resumed_from, s.file_path
 		FROM ai_sessions s WHERE `+where+` ORDER BY s.id DESC LIMIT ?`, append(args, limit)...)
 	if err != nil {
 		return out
@@ -417,7 +465,9 @@ func aiListSessions(where string, args []interface{}, limit int) []map[string]in
 		var id, uid, cid, req, tc, ap, dn, ti, to, tid int64
 		var user, conn, host, tr, pn, pk, model, mode, status, reason, st, en, la string
 		var cost float64
-		if rows.Scan(&id, &uid, &user, &cid, &conn, &host, &tr, &pn, &pk, &model, &mode, &status, &reason, &st, &en, &la, &req, &tc, &ap, &dn, &ti, &to, &cost, &tid) != nil {
+		var title, purpose, filePath string
+		var resumed int64
+		if rows.Scan(&id, &uid, &user, &cid, &conn, &host, &tr, &pn, &pk, &model, &mode, &status, &reason, &st, &en, &la, &req, &tc, &ap, &dn, &ti, &to, &cost, &tid, &title, &purpose, &resumed, &filePath) != nil {
 			continue
 		}
 		live := aiGet(id) != nil
@@ -427,7 +477,8 @@ func aiListSessions(where string, args []interface{}, limit int) []map[string]in
 		out = append(out, map[string]interface{}{"id": id, "user_id": uid, "user": user, "conn_id": cid, "connection": conn, "host": host,
 			"transport": tr, "provider": pn, "provider_kind": pk, "model": model, "mode": mode, "status": status, "end_reason": reason,
 			"started_at": st, "ended_at": en, "last_activity": la, "requests": req, "tool_calls": tc, "approvals": ap, "denials": dn,
-			"tokens_in": ti, "tokens_out": to, "cost_usd": cost, "recording_session": tid, "live": live})
+			"tokens_in": ti, "tokens_out": to, "cost_usd": cost, "recording_session": tid, "live": live,
+			"title": title, "purpose": purpose, "resumed_from": resumed, "file_path": filePath})
 	}
 	return out
 }

@@ -59,6 +59,9 @@ var aiTools = []aiToolSpec{
 	{Kind: "read", Def: aiToolDef{Name: "read_log", Description: "Read the log of a service found with find_logs, or a file path. With a service name it reads that service's newest log file, or its systemd journal; the other files of the service are named at the end. Optional literal grep keeps matching lines only. Output is size-limited and redacted like every read.",
 		Schema: obj(map[string]interface{}{"service": strProp("Service name from find_logs, with or without .service"), "path": strProp("Log file to read instead of a service (absolute, or ~/)"),
 			"lines": intProp("Number of lines (1-2000, default 200)"), "grep": strProp("Only lines containing this literal text")})}},
+	{Kind: "read", Def: aiToolDef{Name: "search_logs", Description: "Search many log files at once for a literal text (case-insensitive), on the server with grep. It searches the log files WRM discovered (call find_logs first); narrow it with a service name or a path filter. Each result line is file:line:text.",
+		Schema: obj(map[string]interface{}{"grep": strProp("The literal text to find, e.g. an error message, an id or an IP address"), "service": strProp("Only the log files of this service (from find_logs)"),
+			"filter": strProp("Only log files whose path, service or operator contains this text"), "limit": intProp("Maximum result lines (1-1000, default 200)")}, "grep")}},
 	{Kind: "read", Def: aiToolDef{Name: "journal", Description: "Read the systemd journal (journalctl), optionally for one unit, since a time, at a priority, matching a pattern.",
 		Schema: obj(map[string]interface{}{"unit": strProp("systemd unit, e.g. nginx.service"), "lines": intProp("Number of lines (1-2000, default 200)"),
 			"since": strProp("e.g. '1 hour ago', 'today', '2025-01-31 10:00'"), "priority": strProp("emerg, alert, crit, err, warning, notice, info or debug"), "grep": strProp("Only lines matching this pattern")})}},
@@ -186,7 +189,17 @@ func aiToolDefsForUser(mode string, admin bool) []aiToolDef {
 }
 
 func (s *aiSession) toolDefs() []aiToolDef {
-	return aiToolDefsForUser(s.Mode, isAdminUser(s.UserID))
+	defs := aiToolDefsForUser(s.Mode, isAdminUser(s.UserID))
+	if _, ok := aiPurposeTools[s.Purpose]; !ok {
+		return defs
+	}
+	out := defs[:0]
+	for _, d := range defs {
+		if s.purposeAllows(d.Name) {
+			out = append(out, d)
+		}
+	}
+	return out
 }
 
 // aiToolInput is the union of every tool's arguments.
@@ -338,6 +351,8 @@ func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiP
 		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: p}, Display: name + " " + p, Script: script}, nil
 	case "find_logs":
 		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read"}, Display: "find logs " + in.Filter, Logs: &in}, nil
+	case "search_logs":
+		return s.planSearchLogs(in)
 	case "read_log":
 		grep := in.Grep
 		if len(grep) > 200 || strings.ContainsAny(grep, "\x00\r\n") {
