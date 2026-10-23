@@ -21,7 +21,7 @@ A manifest without `apiVersion` is a v1 addon and keeps working as before. This 
   "author": "Your name",
   "license": "MIT",
   "homepage": "https://example.com/addon",
-  "capabilities": ["ui.panel", "ui.theme", "store", "notify"],
+  "capabilities": ["ui.panel", "ui.theme", "store", "notify", "http"],
   "ui": {
     "panel": "panel.html",
     "title": "Counter",
@@ -32,7 +32,13 @@ A manifest without `apiVersion` is a v1 addon and keeps working as before. This 
         "tokens": { "--bg": "#0b1220", "--accent": "#38bdf8" }, "css": "ocean.css" }
     ]
   },
-  "store": { "quotaKb": 16, "shared": false }
+  "store": { "quotaKb": 16, "shared": false },
+  "http": {
+    "origins": ["https://grafana.example.com"],
+    "paths": ["/api/health", "/api/dashboards/*"],
+    "methods": ["GET"],
+    "secrets": ["grafana_token"]
+  }
 }
 ```
 
@@ -48,9 +54,10 @@ Rules:
 | `ui.theme` | colour themes users pick in *Settings → Appearance* (`ui.themes`, or the v1 `ui.theme` stylesheet) |
 | `store` | settings kept on the WRM server per instance (`store.quotaKb` 1-1024, default 64; `store.shared`) |
 | `notify` | short notifications from the panel |
+| `http` | requests to the web sites in `http`, sent by WRM after an administrator approved them (see [Web sites and secrets](#web-sites-and-secrets)) |
 | `server.wasm` | WebAssembly server code, organisation addons only (see the v1 documentation in ARCHITECTURE.md) |
 
-`store` and `notify` need `apiVersion: 2` and a panel.
+`store`, `notify` and `http` need `apiVersion: 2` and a panel.
 
 ### Themes
 
@@ -73,7 +80,7 @@ media-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri '
 
 What that means for your code:
 
-- **No network of its own**: `fetch`, XHR and WebSocket are blocked. A proxied HTTP capability for allow-listed sites is planned; until then a panel works with what the user enters and what it stores.
+- **No network of its own**: `fetch`, XHR and WebSocket are blocked. To reach a web site, declare it in `http` and ask WRM with `wrm:http` (see [Web sites and secrets](#web-sites-and-secrets)).
 - Scripts are files of the ZIP or inline `<script>` blocks (WRM allows each inline block by its hash). **Inline event handlers** (`onclick="…"`), `eval` and remote scripts or fonts do not run: use `addEventListener`.
 - Use a `ResizeObserver` to redraw charts when the window changes size.
 
@@ -92,6 +99,7 @@ Panel → WRM:
 | `{v:2, type:'wrm:context'}` | ask for the context again |
 | `{v:2, type:'wrm:store.get', id, key}` | read a stored value |
 | `{v:2, type:'wrm:store.set', id, key, value}` | store any JSON value (32 KB at most) |
+| `{v:2, type:'wrm:http', id, method, url, headers, body, encoding, secret}` | a web request sent by WRM (see below) |
 | `{v:2, type:'wrm:notify', text, level}` | a notification: plain text up to 200 characters, `level` is `info`, `success`, `warn` or `error`; at most 5 a minute per instance, a repeat within 5 minutes is dropped |
 | `{v:2, type:'wrm:resize', w, h}` | ask for a content size; WRM decides (not when snapped, pinned or the layout is locked) |
 | `{v:2, type:'wrm:error', message, source, line}` | report an error into the window's diagnostics (⚠ in the title bar) |
@@ -100,10 +108,11 @@ WRM → panel:
 
 | Message | Meaning |
 |---|---|
-| `wrm:context` | `{v, user: {id, name}, lang, theme: {"--bg": …}, addon: {id, key, version, instance, instanceName}, config: {…stored values…}, features: {store, notify, http: false, jobs: false, history: false, visibility: true}, size: {w, h}, visible}` |
+| `wrm:context` | `{v, user: {id, name}, lang, theme: {"--bg": …}, addon: {id, key, version, instance, instanceName}, config: {…stored values…}, features: {store, notify, http, jobs: false, history: false, visibility: true}, http: {origins, approved, secrets: {name: true if a value is set}}, size: {w, h}, visible}` |
 | `wrm:theme` | `{theme}` after the user switched the theme |
 | `wrm:visibility` | `{visible}`: the window was minimized or restored, or the browser tab hidden. **Stop polling and timers while hidden.** |
 | `wrm:store` | the answer to a store request: `{id, key, value}`, or `{id, key, error, code}` |
+| `wrm:http` | the answer to a web request: `{id, ok, status, headers, body, encoding: 'text'|'base64', truncated, coalesced}`, or `{id, ok: false, error, code}` |
 | `wrm:fatal` | `{code, message}` right before WRM closes the panel (addon disabled or removed) |
 
 `user.name` is the display name, never the sign-in name. WRM runs **no background jobs** for addons: a panel works while its window is open, and 24/7 alerting belongs in the monitored system (for example Grafana alerting).
@@ -117,6 +126,42 @@ An addon with a panel can be opened as several **instances**, each with its own 
 - Keys: 1-64 characters (letters, digits, `.`, `-`, `_`), not starting with `wrm.`. Values: JSON, 32 KB each, `quotaKb` per instance in total (`E_LIMIT_QUOTA`).
 - **Export / Import** writes or reads a file `{"format": "wrm-addon-config", "addon", "version", "instance", "values"}`.
 - The place and size of each window are remembered per user on the server, so an open window comes back after a reload, a restart or on another device.
+
+## Web sites and secrets
+
+The `http` block lists what the panel may reach:
+
+- `origins` (1-8): exact `scheme://host[:port]`, lowercase, without a path or the default port. `https` is the rule; a plain `http://` origin works only after an administrator approved it as private network.
+- `paths` (default `/*`): exact paths, or prefixes ending in `*` (`/api/*`). Paths with `..` are refused.
+- `methods` (default `GET`): `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`.
+- `secrets` (up to 8): `name` (sent as `Authorization: Bearer <value>`), `basic:name` (the value is `user:password`) or `header:X-Api-Key:name`. Names are 1-32 lowercase letters, digits and `_`.
+
+A request:
+
+```js
+const id = 'h' + Date.now();
+window.parent.postMessage({v: 2, type: 'wrm:http', id, method: 'GET',
+  url: 'https://grafana.example.com/api/health', headers: {Accept: 'application/json'},
+  secret: 'grafana_token'}, '*');
+window.addEventListener('message', (e) => {
+  const d = e.data;
+  if (d && d.type === 'wrm:http' && d.id === id && d.ok) render(JSON.parse(d.body));
+});
+```
+
+How WRM sends it:
+
+- Only to a listed origin, path and method, and only after an **administrator approved the origins**. Enabling an organisation addon as an administrator approves them; a personal addon shows *sites wait for an administrator* until an administrator presses *Approve*. An update that adds an origin, a method, a path or a secret waits for approval again.
+- WRM resolves the name itself and refuses loopback, private (RFC 1918, `fc00::/7`), link-local (cloud metadata), CGNAT, multicast and reserved addresses (`E_HTTP_BLOCKED`), unless the administrator ticked **private network** for that origin. The address that was checked is the one connected to, so DNS rebinding does not get around it.
+- Only `Accept`, `Content-Type` and `Range` are taken from the panel; WRM sets its own `User-Agent`. Cookies are never sent or kept. The answer carries `Content-Type`, `Content-Length`, `Content-Range`, `ETag`, `Last-Modified`, `Cache-Control`, `Date` and `Retry-After`.
+- Redirects (3 at most) are checked like the first URL; the secret is sent only to the same origin.
+- Limits: 256 KB request body, 8 MB response (cut, `truncated: true`), 10 s, 120 requests a minute and 20 at once per instance. Identical `GET`/`HEAD` requests within 2 seconds share one answer (`coalesced: true`).
+- Text answers (`text/*`, JSON, XML, JavaScript) come back as text, anything else as base64.
+- Every request is logged (method, origin, path, status, size, time, code; never the secret or the body); the window's **⚠** diagnostics list the recent ones.
+
+**Secrets** are entered in WRM, never in the addon: *Settings → Addons → Instances → 🔑 Secrets*. The value for a shared instance is set by an administrator, for a private instance by its owner; in a shared instance every user may add their **own** value, which replaces it for them. Values are stored encrypted, up to 4 KB, without line breaks. The panel names a secret in `wrm:http` and only learns from `wrm:context` whether a value is set. Never put tokens, passwords or internal host names in the ZIP.
+
+The policy `addon_http` (`off`, `admins`, `all`) decides who may use addons with web access at all.
 
 ## Approvals and updates
 
@@ -132,7 +177,7 @@ Every refusal of the API carries `{error, code, hint}`:
 | `E_MANIFEST_FIELD` | an unknown field in an apiVersion 2 manifest |
 | `E_API_VERSION` | `apiVersion` is not 1 or 2 |
 | `E_MISSING_FILE` | a declared file is not in the ZIP |
-| `E_LIMIT_SIZE` | archive or value too large |
+| `E_LIMIT_SIZE` | archive, value, request body or response too large |
 | `E_LIMIT_QUOTA` | the store of the instance is full |
 | `E_LIMIT_COUNT` | too many instances (50 per user per addon) |
 | `E_STORE_KEY`, `E_STORE_VALUE` | invalid key, value is not JSON |
@@ -143,6 +188,16 @@ Every refusal of the API carries `{error, code, hint}`:
 | `E_DOWNGRADE` | an older version than the installed one; confirm with `allow_downgrade=1` |
 | `E_PERSONAL_OFF`, `E_PERSONAL_SERVER` | personal addons are turned off; personal addons cannot carry server code |
 | `E_NOT_FOUND` | the addon or instance does not exist (for you) |
+| `E_HTTP_REQUEST` | the request is not valid (URL, JSON, base64 body) |
+| `E_HTTP_ORIGIN`, `E_HTTP_PATH`, `E_HTTP_METHOD` | the origin, path or method is not in `http` |
+| `E_HTTP_UNAPPROVED` | an administrator has not approved the origin yet |
+| `E_HTTP_SCHEME` | plain `http://` without a private-network approval |
+| `E_HTTP_BLOCKED` | the name resolves to a local or private address |
+| `E_HTTP_REDIRECT` | too many redirects, or a redirect to a site that is not allowed |
+| `E_HTTP_SECRET`, `E_SECRET_MISSING` | the secret is not declared; it has no value for this instance |
+| `E_HTTP_TIMEOUT`, `E_HTTP_UPSTREAM` | the site did not answer in 10 s; the connection failed |
+| `E_HTTP_OFF` | web access for addons is turned off for you (`addon_http`) |
+| `E_LIMIT_RATE` | too many requests (120 a minute, 20 at once) |
 
 In the panel, `wrm:store` answers carry the same codes, and *Diagnostics* lists the last 20 bridge errors (`E_BRIDGE`, `E_LIMIT_RATE`, …).
 

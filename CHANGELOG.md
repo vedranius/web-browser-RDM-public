@@ -1,3 +1,15 @@
+## [13.11.0] - 2026-10-24
+
+### Added
+- **Addon platform v2, step 2: web sites through WRM** (`addons_http.go`, [docs/ADDONS.md](docs/ADDONS.md)). A new capability `http` with a manifest block `http: {origins, paths, methods, secrets}` (8 origins, exact `scheme://host[:port]`; paths exact or prefix with a trailing `*`; methods `GET HEAD POST PUT PATCH DELETE`, default `GET`). The panel sends `wrm:http` and WRM performs the request (`POST /api/addons/{key}/instances/{iid}/http`): only listed origins, paths and methods, only `Accept`, `Content-Type` and `Range` from the panel, its own `User-Agent`, no cookies, 256 KB request, 8 MB response (cut with `truncated`), 10 s, at most 3 redirects, each checked again. Text answers come back as text, others as base64; a whitelist of response headers is passed on.
+- **SSRF guard**: WRM resolves the host itself and connects to the address it checked, so DNS rebinding does not get around it. Loopback, private, link-local, CGNAT, multicast, broadcast and reserved addresses are refused (`E_HTTP_BLOCKED`, audited as `addon.http_refused`) unless an administrator approved the origin as **private network**; plain `http://` needs that approval too (`E_HTTP_SCHEME`).
+- **Administrator approval of origins** (`addon_http_grants`): enabling an organisation addon as an administrator approves its origins (with the *private network* ticks on the permission sheet); personal addons show *sites wait for an administrator*, and administrators approve, change or withdraw them (`POST/DELETE /api/addons/{key}/http`, `/api/addons/users/{user id}/{id}/http`), audited as `addon.http_approved` / `addon.http_revoked`. The permission sheet lists every site, the methods, the paths and the secrets; an update that adds any of them waits for approval again.
+- **Secrets** (`addon_secrets`, encrypted): `http.secrets` entries `name` (Bearer), `basic:name` or `header:X-Name:name`. *🔑 Secrets* on an instance sets the value for the instance (administrators for shared instances, the owner for private ones) and, in a shared instance, each user's own value that replaces it for them (`GET/PUT/DELETE /api/addons/{key}/instances/{iid}/secrets[/{name}]`). The panel only learns whether a value is set; WRM adds it to requests for the same origin and strips it on a redirect elsewhere. Audited as `addon.http_auth_set` / `addon.http_auth_cleared` without the value.
+- **Rate limits and coalescing** per instance: 120 requests a minute and 20 at once (`E_LIMIT_RATE`); identical `GET`/`HEAD` requests within 2 seconds share one answer.
+- **Request log** (`addon_http_log`, 20000 rows kept): method, origin, path, status, size, time and code, never the secret or the body; `GET /api/addons/{key}/instances/{iid}/http/log` and *Recent web requests* in the window's diagnostics.
+- Policy `addon_http` (`off`, `admins`, `all`; default `all`): who may use addons with web access (`E_HTTP_OFF`).
+- `wrm:context` carries `features.http` and `http: {origins, approved, secrets}`; the *AI addon* prompt describes the http capability and its error codes.
+
 ## [13.10.0] - 2026-10-23
 
 ### Added
