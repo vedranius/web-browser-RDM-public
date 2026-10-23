@@ -1155,11 +1155,11 @@ Object.assign(LANGS.hr, {
     const fids = [...new Set(s.installs.map(i => i.folder_id).filter(Boolean))];
     const tags = [...new Set(s.installs.flatMap(i => i.tags || []))].sort();
     const appNames = [...new Set(s.installs.map(i => i.app))].sort();
-    const servers = [...new Map(s.installs.map(i => [i.conn_id, i.conn_name])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    const servers = [...new Map(s.installs.map(i => [i.conn_id, i.conn_name || i.hostname || i.host || ''])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
     const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(label)}</option>`;
     const fname = id => ((folders || []).find(x => x.id === id) || {}).name || ('#' + id);
     return `<select onchange="gitWorkspace.filter('app', this.value)">${opt('', t('git_all_services'), f.app)}${appNames.map(x => opt(x, x, f.app)).join('')}</select>
-      <select onchange="gitWorkspace.filter('conn', this.value)">${opt('', t('git_all_servers'), f.conn)}${servers.map(([id, n]) => opt(id, hn(n), f.conn)).join('')}</select>
+      <select onchange="gitWorkspace.filter('conn', this.value)">${opt('', t('git_all_servers'), f.conn)}${servers.map(([id, n]) => opt(id, hn(n) || '#' + id, f.conn)).join('')}</select>
       <select onchange="gitWorkspace.filter('state', this.value)">${opt('', t('git_all_states'), f.state)}${['update', 'review', 'ok', 'error', 'gone', 'unknown'].map(x => opt(x, t('git_st_' + x), f.state)).join('')}</select>
       <select onchange="gitWorkspace.filter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${envs.map(x => opt(x, x, f.env)).join('')}</select>
       <select onchange="gitWorkspace.filter('folder', this.value)">${opt('', t('git_all_folders'), f.folder)}${fids.map(x => opt(x, fname(x), f.folder)).join('')}</select>

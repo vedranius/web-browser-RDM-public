@@ -880,14 +880,14 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 /* The top bar lives in #center, so react to the width of #center, not the viewport */
 #center { container-type: inline-size; }
 @container (max-width: 720px) {
-  .app-ver .ver-txt, .top-sep, .sess-lbl, .btn-top .lbl { display: none; }
+  .app-ver .ver-pfx, .top-sep, .sess-lbl, .btn-top .lbl, #sess-bar-name.empty { display: none; }
 }
 @container (max-width: 520px) {
   .add-win-btn .lbl, #user-chip .name { display: none; }
   #sess-bar-name { max-width: 80px; }
 }
 @container (max-width: 380px) {
-  #admin-badge, #sess-bar-name { display: none; }
+  #admin-badge, #sess-bar-name, .app-ver .ver-txt { display: none; }
 }
 #auth-info { min-width: 0; flex-shrink: 1; }
 .add-win-btn { flex-shrink: 0; }
@@ -928,7 +928,7 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 
 /* ══ RESPONSIVE ══ */
 @media (max-width: 1100px) {
-  .app-ver .ver-txt, .top-sep, .sess-lbl { display: none; }
+  .app-ver .ver-pfx, .top-sep, .sess-lbl, #sess-bar-name.empty { display: none; }
   .btn-top .lbl { display: none; }
 }
 @media (max-width: 760px) {
@@ -1431,6 +1431,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .check-row { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--text2); margin: 8px 0; text-transform: none; letter-spacing: 0; font-weight: 400; line-height: 1.45; cursor: pointer; }
 .check-row input { width: auto; margin-top: 2px; flex: none; }
 .check-row b { color: var(--text); }
+.field label.check-row { display: flex; font-size: 12px; color: var(--text2); text-transform: none; letter-spacing: 0; font-weight: 400; }
+.pw-wrap { position: relative; display: flex; }
+.pw-wrap input { flex: 1; padding-right: 34px; }
+.pw-eye { position: absolute; right: 3px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; box-shadow: none; padding: 3px 6px; cursor: pointer; opacity: .7; font-size: 13px; }
+.pw-eye:hover, .pw-eye:focus-visible { opacity: 1; }
+.cs-box { font-family: 'JetBrains Mono', monospace; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 8px 10px; max-height: 40vh; overflow: auto; user-select: all; }
 #bc-bar { display: none; align-items: center; gap: 10px; padding: 5px 12px; background: linear-gradient(90deg, rgba(234,88,12,.30), rgba(234,88,12,.10)); border-bottom: 1px solid rgba(234,88,12,.55); color: #fed7aa; font-size: 12px; flex-shrink: 0; }
 #bc-bar .sp { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #bc-bar b { color: #fff; }
@@ -1594,11 +1600,13 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 #top-bar.tb1 .top-sep, #top-bar.tb1 .sess-lbl { display: none; }
 #top-bar.tb2 #btn-mcp .lbl, #top-bar.tb2 .upd-badge .lbl { display: none; }
 #top-bar.tb2 .upd-badge { margin-left: 4px; padding: 2px 7px; }
-#top-bar.tb3 .btn-top .lbl, #top-bar.tb3 .app-ver .ver-txt { display: none; }
+#top-bar.tb3 .btn-top .lbl, #top-bar.tb3 .app-ver .ver-pfx { display: none; }
 #top-bar.tb4 .add-win-btn .lbl, #top-bar.tb4 #user-chip .name { display: none; }
 #top-bar.tb5 #sess-bar-name { max-width: 70px; }
 #top-bar.tb5, #top-bar.tb5 #auth-info { gap: 4px; }
 #top-bar.tb6 #admin-badge, #top-bar.tb6 #sess-bar-name { display: none; }
+/* Without its "SESSION:" label an empty session reads like a missing version: hide it then */
+#top-bar.tb1 #sess-bar-name.empty { display: none; }
 #top-bar .tb-moved { display: none !important; }
 #btn-more { position: relative; }
 #btn-more .more-dot { position: absolute; top: 2px; right: 2px; width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: none; }
@@ -1756,7 +1764,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt"><span class="ver-pfx">WRM </span><span class="ver-num"></span></span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1906,7 +1914,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         </select>
       </div>
     </div>
-    <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="m-name" placeholder="e.g. Web Server 1"></div>
+    <div class="field"><label data-i18n="name_lbl">Name</label><input type="text" id="m-name" placeholder="e.g. Web Server 1">
+      <label class="check-row" style="margin:6px 0 0;"><input type="checkbox" id="m-name-host" onchange="onNameFromHost()"> <span><b data-i18n="name_from_host">Use the server's hostname as the name</b> — <span data-i18n="name_from_host_d">After saving, WRM logs in once and reads the hostname.</span></span></label></div>
     <div class="field"><label data-i18n="tags_lbl">Tags</label><input type="text" id="m-tags" autocomplete="off" oninput="renderTagSuggestions()" placeholder="env:prod, site:dc1, rack:a12, web">
       <div class="tag-sugg" id="m-tags-sugg"></div></div>
     <div class="field-row">
@@ -1944,7 +1953,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="field" id="field-cred" style="display:none;"><label data-i18n="vc_cred">Credential</label><select id="m-cred" onchange="onCredPick()"></select>
       <div class="muted-text" id="m-cred-info" style="margin-top:5px;line-height:1.5;"></div></div>
     <div class="field" id="field-bitwarden" style="display:none;"><label data-i18n="bw_key">Bitwarden SSH key</label><select id="m-bitwarden"></select><div class="muted-text"><a href="#" onclick="openVault('bitwarden');return false;" data-i18n="bw_manage">Sign in / unlock Bitwarden</a> · <a href="#" onclick="loadBitwardenKeys();return false;" data-i18n="bw_refresh">Refresh</a></div></div>
-    <div class="field" id="field-pass"><label data-i18n="password">Password</label><input type="password" id="m-pass" autocomplete="new-password">
+    <div class="field" id="m-reveal-row" style="display:none;"><button type="button" class="btn-sec btn-sm" id="m-reveal" onclick="revealConnLogin()" data-i18n-title="cs_show_t" title="Show saved login">👁 <span data-i18n="cs_show_login">Show saved login</span></button></div>
+    <div class="field" id="field-pass"><label data-i18n="password">Password</label><div class="pw-wrap"><input type="password" id="m-pass" autocomplete="new-password"><button type="button" class="pw-eye" id="m-pass-eye" onclick="toggleConnPass()" data-i18n-title="cs_show_t" title="Show">👁</button></div>
       <div class="muted-text" id="m-pass-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span> <label style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;text-transform:none;letter-spacing:0;font-size:11px;font-weight:400;"><input type="checkbox" id="m-pass-clear" style="width:auto;"> <span data-i18n="remove_saved">remove saved</span></label></div></div>
     <div class="field" id="field-key" style="display:none;"><label data-i18n="private_key">Private Key</label><textarea id="m-key" rows="5" placeholder="Paste your private key here..." autocomplete="off" spellcheck="false"></textarea>
       <div class="muted-text" id="m-key-note" style="display:none;margin-top:5px;">🔒 <span data-i18n="secret_stored">Saved and encrypted — leave empty to keep it.</span> <label style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;text-transform:none;letter-spacing:0;font-size:11px;font-weight:400;"><input type="checkbox" id="m-key-clear" style="width:auto;"> <span data-i18n="remove_saved">remove saved</span></label></div></div>
@@ -6222,6 +6232,70 @@ Object.assign(LANGS.hr, {
  "ne_security_alert": "Sigurnosna uzbuna",
 });
 Object.assign(LANGS.en, {
+ "name_from_host": "Use the server's hostname as the name",
+ "name_from_host_d": "After saving, WRM logs in once and reads the hostname (SSH, SFTP) or looks the address up in DNS (other protocols), and names the connection after it.",
+ "name_from_host_ph": "taken from the server's hostname after saving",
+ "name_from_host_busy": "Reading the server's hostname…",
+ "name_from_host_ok": "Named after the server's hostname",
+ "name_from_host_fail": "The hostname could not be read, the name stays the address",
+ "name_from_host_menu": "Rename to the server's hostname",
+ "host_required_name": "The host is required",
+ "cs_show": "Show",
+ "cs_show_login": "Show saved login",
+ "cs_show_t": "Shows what this connection logs in with, after you confirm with your WRM password",
+ "cs_confirm": "Confirm with your WRM password to see the saved login. The reveal is recorded in the audit log.",
+ "cs_confirm_domain": "Confirm with the password of your domain account (the one you sign in to WRM with). The reveal is recorded in the audit log.",
+ "cs_confirm_copy": "Confirm with your WRM password to copy the saved password. The copy is recorded in the audit log.",
+ "cs_confirm_copy_domain": "Confirm with the password of your domain account (the one you sign in to WRM with) to copy the saved password. The copy is recorded in the audit log.",
+ "cs_title": "Saved login",
+ "cs_none": "This connection has no saved password or key.",
+ "cs_no_password": "This connection has no saved password (it logs in with a key).",
+ "cs_from_vault": "From the vault credential",
+ "cs_from_key": "From the key store key",
+ "cs_from_bitwarden": "From Bitwarden",
+ "cs_key_file": "Key file on the WRM server",
+ "cs_pw_copied": "Password copied to the clipboard",
+ "cs_copy_failed": "The browser did not allow copying. Press Copy to try again.",
+ "cs_shown": "Shown: saving without changes keeps it as it is",
+ "copy_username": "Copy username",
+ "copy_password": "Copy password",
+ "copy_ip": "Copy IP address",
+ "copy_host": "Copy host name",
+ "no_username": "This connection has no username",
+});
+Object.assign(LANGS.hr, {
+ "name_from_host": "Za naziv uzmi hostname servera",
+ "name_from_host_d": "Nakon spremanja WRM se jednom prijavi i pročita hostname (SSH, SFTP) ili adresu potraži u DNS-u (ostali protokoli) i po njemu nazove vezu.",
+ "name_from_host_ph": "uzima se iz hostnamea servera nakon spremanja",
+ "name_from_host_busy": "Čitam hostname servera…",
+ "name_from_host_ok": "Nazvano po hostnameu servera",
+ "name_from_host_fail": "Hostname nije pročitan, naziv ostaje adresa",
+ "name_from_host_menu": "Preimenuj po hostnameu servera",
+ "host_required_name": "Host je obavezan",
+ "cs_show": "Prikaži",
+ "cs_show_login": "Prikaži spremljenu prijavu",
+ "cs_show_t": "Prikazuje s čime se ova veza prijavljuje, nakon potvrde tvojom WRM lozinkom",
+ "cs_confirm": "Potvrdi svojom WRM lozinkom da vidiš spremljenu prijavu. Prikaz se bilježi u audit log.",
+ "cs_confirm_domain": "Potvrdi lozinkom svog domenskog računa (onog kojim se prijavljuješ u WRM). Prikaz se bilježi u audit log.",
+ "cs_confirm_copy": "Potvrdi svojom WRM lozinkom da kopiraš spremljenu lozinku. Kopiranje se bilježi u audit log.",
+ "cs_confirm_copy_domain": "Potvrdi lozinkom svog domenskog računa (onog kojim se prijavljuješ u WRM) da kopiraš spremljenu lozinku. Kopiranje se bilježi u audit log.",
+ "cs_title": "Spremljena prijava",
+ "cs_none": "Ova veza nema spremljenu lozinku ni ključ.",
+ "cs_no_password": "Ova veza nema spremljenu lozinku (prijavljuje se ključem).",
+ "cs_from_vault": "Iz vjerodajnice u trezoru",
+ "cs_from_key": "Iz ključa u spremištu ključeva",
+ "cs_from_bitwarden": "Iz Bitwardena",
+ "cs_key_file": "Datoteka ključa na WRM serveru",
+ "cs_pw_copied": "Lozinka kopirana u međuspremnik",
+ "cs_copy_failed": "Preglednik nije dopustio kopiranje. Pritisni Kopiraj za novi pokušaj.",
+ "cs_shown": "Prikazano: spremanje bez promjena ostavlja je kakva jest",
+ "copy_username": "Kopiraj korisničko ime",
+ "copy_password": "Kopiraj lozinku",
+ "copy_ip": "Kopiraj IP adresu",
+ "copy_host": "Kopiraj naziv hosta",
+ "no_username": "Ova veza nema korisničko ime",
+});
+Object.assign(LANGS.en, {
  "date_format": "Date and time format",
  "date_format_desc": "How WRM shows dates and times everywhere (logs, searches, filters, sessions). Saved in this browser.",
  "date_fmt_eu": "European: 23.10.2026 14:05:09",
@@ -6772,7 +6846,7 @@ function showUpdateReconnect(version) {
 function setAppVersion(v) {
   v = String(v || '').trim();
   if (!v) return;
-  document.querySelectorAll('.ver-txt').forEach(el => { el.textContent = 'WRM ' + v; });
+  document.querySelectorAll('.ver-num').forEach(el => { el.textContent = v; });
   const av = document.getElementById('auth-ver');
   if (av) av.textContent = 'PRO ' + v + ' · Secure · Multi-User';
   document.title = 'Web Remote Manager PRO ' + v;
@@ -7169,6 +7243,9 @@ function visualPicker(prefix, label) {
 }
 function visualValue(prefix) { return {color:document.getElementById(prefix+'-color-set').checked?document.getElementById(prefix+'-color').value:'',icon:document.getElementById(prefix+'-icon').value}; }
 function visualPreview(prefix) { const el=document.getElementById(prefix+'-visual-preview'), v=visualValue(prefix); el.style.cssText='margin-top:6px;padding:8px;'+visualColorStyle(v); el.innerHTML=visualIconHTML(v,'📁')+' '+esc(t('vl_preview')); }
+// connName is what a tab or window title shows: the connection's own name. The folder path
+// (connLabel) stays in the tooltip, pickers and search.
+function connName(c) { const icon = c.label && visualGlyphs[c.label.icon] ? visualGlyphs[c.label.icon] + ' ' : ''; return icon + c.name; }
 function connLabel(c) { const icon = c.label && visualGlyphs[c.label.icon] ? visualGlyphs[c.label.icon] + ' ' : ''; const path = folderPathLabel(c.folder_id) || c.folder_path || ''; return icon + (path ? path + ' / ' + c.name : c.name); }
 
 function refreshWindowConnectionTitle(wo) {
@@ -7176,9 +7253,10 @@ function refreshWindowConnectionTitle(wo) {
   if (!c || !title) return;
   if (wo.mode === 'ssh') {
     const prefix = wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : (c.protocol || 'SSH');
-    title.textContent = prefix + ' — ' + connLabel(c);
-  } else if (wo.mode === 'sftp') title.textContent = 'Files — ' + connLabel(c);
-  else if (wo.mode === 'desk') title.textContent = c.protocol + ' — ' + connLabel(c);
+    title.textContent = prefix + ' — ' + connName(c);
+  } else if (wo.mode === 'sftp') title.textContent = 'Files — ' + connName(c);
+  else if (wo.mode === 'desk') title.textContent = c.protocol + ' — ' + connName(c);
+  title.title = connLabel(c);
 }
 
 function updateFolderSelects() {
@@ -7246,7 +7324,12 @@ function showConnCtx(x, y, conn) {
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">${t('edit_connection')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openMoveModal('conn', ${conn.id})">${esc(t('move_to_folder'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); duplicateConn(${conn.id})">⧉ ${t('duplicate')}</div>
+    ${conn.protocol !== 'SERIAL' && !web ? `<div class="ctx-item" onclick="closeAllCtx(); nameFromHostname(${conn.id})">🏷 ${esc(t('name_from_host_menu'))}</div>` : ''}
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalConn(${conn.id})">${t('share_connection')}</div>
+    <div class="ctx-hr"></div>
+    <div class="ctx-item" onclick="closeAllCtx(); copyConnUsername(${conn.id})">📋 ${esc(t('copy_username'))}</div>
+    ${pol.secret_export !== false ? `<div class="ctx-item" onclick="closeAllCtx(); copyConnPassword(${conn.id})">🔑 ${esc(t('copy_password'))}</div>` : ''}
+    ${conn.protocol !== 'SERIAL' ? `<div class="ctx-item" onclick="closeAllCtx(); copyConnHost(${conn.id})">🌐 ${esc(t(isIPAddr(connHostAddr(conn)) ? 'copy_ip' : 'copy_host'))}</div>` : ''}
     <div class="ctx-hr"></div>
     <div class="ctx-item danger" onclick="closeAllCtx(); deleteConn(${conn.id})">🗑 ${t('delete_connection')}</div>
   `;
@@ -7394,6 +7477,11 @@ function openConnModal(id, focusTunnels, folderId) {
   document.getElementById('m-pass-note').style.display = c && c.has_password ? 'block' : 'none';
   document.getElementById('m-key-note').style.display = c && c.has_private_key ? 'block' : 'none';
   document.getElementById('m-pass').placeholder = c && c.has_password ? '••••••••' : '';
+  document.getElementById('m-pass').type = 'password';
+  document.getElementById('m-name-host').checked = false;
+  onNameFromHost();
+  document.getElementById('m-reveal').dataset.conn = c && !c.temporary ? c.id : '';
+  document.getElementById('m-reveal').dataset.auth = c ? c.auth_method : '';
   document.getElementById('m-key').placeholder = c && c.has_private_key ? '•••••••• (' + t('secret_stored') + ')' : t('paste_private_key');
   // Keep an existing server-key method selectable when editing, even if the policy changed.
   const pol = (currentUser && currentUser.policy) || {};
@@ -7418,7 +7506,137 @@ function onAuthMethodChange() {
   document.getElementById('field-keyref').style.display = v === 'KEY_REF' ? 'block' : 'none';
   document.getElementById('field-cred').style.display = v === 'CREDENTIAL' ? 'block' : 'none';
   document.getElementById('field-bitwarden').style.display = v === 'BITWARDEN' ? 'block' : 'none';
+  updateRevealButton();
   onCredPick();
+}
+
+// ── Saved login of a connection: shown or copied after the user confirms who they are ──
+// With the WRM password, or the directory password of a domain account. Accounts that sign in
+// only through an identity provider confirm there (the step-up dialog of the fetch wrapper).
+function updateRevealButton() {
+  const b = document.getElementById('m-reveal'), row = document.getElementById('m-reveal-row');
+  if (!b || !row) return;
+  const pol = (currentUser && currentUser.policy) || {};
+  const c = conns.find(x => x.id === Number(b.dataset.conn));
+  // Only for the saved method: a method picked just now has nothing stored yet.
+  const v = document.getElementById('m-auth').value;
+  const stored = c && v === c.auth_method && (c.has_password || c.has_private_key || ['KEY_REF', 'CREDENTIAL', 'BITWARDEN', 'KEY_FILE'].includes(v));
+  row.style.display = stored && pol.secret_export !== false ? '' : 'none';
+}
+async function fetchConnSecret(id, purpose) {
+  let pw = '';
+  if (!(currentUser && currentUser.sso_only)) {
+    const dom = currentUser && currentUser.directory_password;
+    pw = await uiDialog({title: (purpose === 'copy' ? t('copy_password') : t('cs_title')) + ': ' + ((conns.find(x => x.id === id) || {}).name || ''),
+      message: t(purpose === 'copy' ? (dom ? 'cs_confirm_copy_domain' : 'cs_confirm_copy') : (dom ? 'cs_confirm_domain' : 'cs_confirm')),
+      input: true, password: true, okText: purpose === 'copy' ? t('copy') : t('cs_show')});
+    if (!pw) return null;
+  }
+  const r = await fetch('/api/connections/' + id + '/secret', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pw, purpose})});
+  if (!r.ok) { showToast(await apiError(r) === 'Wrong password' ? t('su_err_password') : await apiError(r), 'error', 6000); return null; }
+  return r.json();
+}
+// copySecret copies without echoing the secret in a toast. Plain HTTP has no clipboard API
+// and a slow confirmation can outlive the click, so a failed copy offers a button (a new click).
+async function copySecret(text, okMsg) {
+  let ok = false;
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px;';
+    document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove();
+  } catch (_) { ok = false; }
+  if (!ok && navigator.clipboard && window.isSecureContext) ok = await navigator.clipboard.writeText(text).then(() => true, () => false);
+  if (ok) { showToast(okMsg || t('copied'), 'success', 2500); return; }
+  const a = await uiDialog({title: t('copy'), message: t('cs_copy_failed'), okText: t('copy'), cancelText: t('cancel')});
+  if (a) copySecret(text, okMsg);
+}
+async function revealConnLogin() {
+  const id = Number(document.getElementById('m-reveal').dataset.conn);
+  if (!id) return;
+  const s = await fetchConnSecret(id, 'show');
+  if (!s) return;
+  const v = document.getElementById('m-auth').value;
+  if (v === 'PASSWORD' && s.source === 'connection') {
+    const p = document.getElementById('m-pass');
+    p.value = s.password || ''; p.type = 'text';
+    if (!s.password) showToast(t('cs_none'), 'info');
+    else showToast(t('cs_shown'), 'info', 3500);
+    return;
+  }
+  if (v === 'KEY' && s.source === 'connection' && s.private_key) {
+    document.getElementById('m-key').value = s.private_key;
+    if (s.password) { const p = document.getElementById('m-pass'); p.value = s.password; p.type = 'text'; }
+    showToast(t('cs_shown'), 'info', 3500);
+    return;
+  }
+  showConnSecret(s);
+}
+function showConnSecret(s) {
+  const from = {vault: 'cs_from_vault', key_store: 'cs_from_key', bitwarden: 'cs_from_bitwarden'}[s.source];
+  const rows = [];
+  if (from) rows.push(`<div class="muted-text" style="margin-bottom:6px;">${esc(t(from))}${s.source_name ? ': <b>' + esc(s.source_name) + '</b>' : ''}</div>`);
+  if (s.username) rows.push(`<div class="field"><label>${esc(t('username'))}</label><div class="cs-box">${esc(s.username)}</div></div>`);
+  if (s.password) rows.push(`<div class="field"><label>${esc(t('password'))}</label><div class="cs-box" id="cs-pw">${esc(s.password)}</div></div>`);
+  if (s.private_key) rows.push(`<div class="field"><label>${esc(t('private_key'))}</label><div class="cs-box">${esc(s.private_key)}</div></div>`);
+  if (s.key_path) rows.push(`<div class="field"><label>${esc(t('cs_key_file'))}</label><div class="cs-box">${esc(s.key_path)}</div></div>`);
+  if (!s.password && !s.private_key && !s.key_path) rows.push(`<div class="muted-text">${esc(t('cs_none'))}</div>`);
+  document.getElementById('cs-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'cs-modal'; m.className = 'modal-overlay open'; m.style.zIndex = 9700;
+  m.innerHTML = `<div class="modal" style="width:min(560px,calc(100vw - 24px))"><h3>🔐 ${esc(t('cs_title'))}</h3>${rows.join('')}
+    <div class="modal-footer">${s.password ? `<button class="btn-sec" id="cs-copy-pw">📋 ${esc(t('copy_password'))}</button>` : ''}<button id="cs-close">${esc(t('close'))}</button></div></div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.querySelector('#cs-close').onclick = close;
+  m.onclick = e => { if (e.target === m) close(); };
+  m.onkeydown = e => { if (e.key === 'Escape') close(); };
+  const cp = m.querySelector('#cs-copy-pw');
+  if (cp) cp.onclick = () => copySecret(s.password, t('cs_pw_copied'));
+  m.querySelector('#cs-close').focus();
+}
+function toggleConnPass() {
+  const p = document.getElementById('m-pass');
+  const c = conns.find(x => x.id === Number(document.getElementById('m-reveal').dataset.conn));
+  // Empty field of a saved password: the eye asks to reveal the saved one.
+  if (!p.value && c && c.has_password && document.getElementById('m-auth').value === c.auth_method) { revealConnLogin(); return; }
+  p.type = p.type === 'password' ? 'text' : 'password';
+}
+function onNameFromHost() {
+  const on = document.getElementById('m-name-host').checked, n = document.getElementById('m-name');
+  n.disabled = on;
+  n.placeholder = on ? t('name_from_host_ph') : 'e.g. Web Server 1';
+}
+async function copyConnPassword(id) {
+  const s = await fetchConnSecret(id, 'copy');
+  if (!s) return;
+  if (!s.password) { showToast(t(s.private_key ? 'cs_no_password' : 'cs_none'), 'warning', 5000); return; }
+  copySecret(s.password, t('cs_pw_copied'));
+}
+function copyConnUsername(id) {
+  const c = conns.find(x => x.id === id);
+  const u = c && (c.auth_method === 'CREDENTIAL' && c.credential_user ? c.credential_user : c.username);
+  if (!u) { showToast(t('no_username'), 'warning'); return; }
+  copySecret(u, t('copied') + ': ' + u);
+}
+function connHostAddr(c) {
+  const h = String((c && c.host) || '').trim();
+  const m = h.match(/^\[([^\]]+)\](?::\d+)?$/);
+  if (m) return m[1];
+  return (h.match(/:/g) || []).length === 1 ? h.replace(/:\d+$/, '') : h;
+}
+function isIPAddr(h) { return /^\d{1,3}(\.\d{1,3}){3}$/.test(h) || (h.includes(':') && /^[0-9a-f:.]+$/i.test(h)); }
+function copyConnHost(id) {
+  const h = connHostAddr(conns.find(x => x.id === id));
+  if (h) copySecret(h, t('copied') + ': ' + h);
+}
+// nameFromHostname renames a saved connection after the server's hostname.
+async function nameFromHostname(id, retried) {
+  showToast('⏳ ' + t('name_from_host_busy'), 'info', 2500);
+  const r = await fetch('/api/connections/' + id + '/name-from-hostname', {method: 'POST'});
+  const d = await r.json().catch(() => ({}));
+  if (r.ok) { showToast('🏷 ' + t('name_from_host_ok') + ': ' + d.name, 'success', 4000); loadData(); return; }
+  if (d.hostkey && !retried && await acceptHostKey(d.hostkey)) return nameFromHostname(id, true);
+  showToast(t('name_from_host_fail') + ': ' + (d.error || r.statusText), 'warning', 8000);
 }
 
 // Auth methods a protocol can use: remote desktops and FTP log in with a password or a vault credential.
@@ -7493,7 +7711,10 @@ function connFormPayload() {
 
 async function saveConn() {
   const b = connFormPayload();
-  if (!b.name || !b.host) { showToast(t('name_host_required'), 'warning'); return; }
+  const fromHost = document.getElementById('m-name-host').checked;
+  // The address names it until the server's hostname is read after saving.
+  if (fromHost && b.host) b.name = connHostAddr(b) || b.host;
+  if (!b.name || !b.host) { showToast(t(fromHost ? 'host_required_name' : 'name_host_required'), 'warning'); return; }
   const saveBtn = document.getElementById('conn-save-btn');
   const done = busyButton(saveBtn, t('saving'));
   if (!done) return;
@@ -7514,7 +7735,8 @@ async function saveConn() {
     closeModal('modal-conn');
     document.getElementById('m-pass').value = ''; document.getElementById('m-key').value = '';
     showToast(id ? t('connection_updated') : t('connection_created'), 'success');
-    loadData();
+    await loadData();
+    if (fromHost && cid) nameFromHostname(cid);
   } else {
     showToast(await apiError(res), 'error');
   }
@@ -10448,17 +10670,20 @@ function loadMCP() {
 }
 let mcpPoll = null;
 async function mcpRefresh() {
-  const pol = (currentUser && currentUser.policy) || {};
   const btn = document.getElementById('btn-mcp');
   if (isCollabMode) { if (btn) btn.style.display = 'none'; return; }
   // The same poll carries built-in assistant approvals, so it runs even when MCP is off.
-  if (btn) { btn.style.display = pol.mcp_enabled ? '' : 'none'; btn.title = t('mcp_btn_t'); }
+  // Once mcp.js is loaded its indicator owns the button: setting it here as well made it
+  // appear and vanish again on every poll, and the top bar (the user name) jumped with it.
   if (window.wrmMCP) { wrmMCP.refresh(); return; }
+  // "AI connected" shows while an AI app is connected or waits for an approval.
+  if (btn && btn.title !== t('mcp_btn_t')) btn.title = t('mcp_btn_t');
   try {
     const r = await fetch('/api/mcp/active');
     if (!r.ok) return;
     const d = await r.json();
     if (d.live.length || d.pending.length) loadMCP().then(() => wrmMCP.indicator(d), () => {});
+    else if (btn && btn.style.display !== 'none') btn.style.display = 'none';
   } catch (_) {}
 }
 function mcpStart() {
@@ -13224,9 +13449,9 @@ function setWinMode(id, mode) {
       </div>
       <div class="term-overlay" id="to-${id}" hidden></div>
     </div>`;
-    const title = c ? `${wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : c.protocol} — ${connLabel(c)}` : `Terminal ${id}`;
+    const title = c ? `${wo.console ? (wo.console === 'sol' ? 'SOL' : 'BMC') + ' ' + t('bmc_console_tab').toUpperCase() : c.protocol} — ${connName(c)}` : `Terminal ${id}`;
     const el = document.getElementById('wt-' + id);
-    if (el) el.textContent = title;
+    if (el) { el.textContent = title; if (c) el.title = connLabel(c); }
     renderTabs();
     updateShareButtons();
     termFontReady.then(() => {
@@ -13249,7 +13474,7 @@ function setWinMode(id, mode) {
   } else if (mode === 'desk') {
     wc.innerHTML = deskHTML(id);
     const el = document.getElementById('wt-' + id);
-    if (el) el.textContent = c ? `${c.protocol} — ${connLabel(c)}` : `Desktop ${id}`;
+    if (el) { el.textContent = c ? `${c.protocol} — ${connName(c)}` : `Desktop ${id}`; if (c) el.title = connLabel(c); }
     renderTabs();
     requestAnimationFrame(() => startDesktop(wo));
   } else if (mode === 'sftp') {
@@ -13261,9 +13486,9 @@ function setWinMode(id, mode) {
     if (termBtn && isFtpConn(c)) termBtn.style.display = 'none';
     applyFmPermissions(wo);
     fmFirstLoad(id);
-    const title = c ? `Files — ${connLabel(c)}` : `Files ${id}`;
+    const title = c ? `Files — ${connName(c)}` : `Files ${id}`;
     const el = document.getElementById('wt-' + id);
-    if (el) el.textContent = title;
+    if (el) { el.textContent = title; if (c) el.title = connLabel(c); }
     renderTabs();
   }
 }
@@ -15783,19 +16008,22 @@ function renderTabs() {
     t2.dataset.tabId = id;
     t2.draggable = true;
 
-    let icon = '□', title = 'Window ' + id;
+    let icon = '□', title = 'Window ' + id, tip = '';
     if (wo.mode === 'ssh') {
       icon = wo.console ? '📟' : '⚡';
       const c = winConn(wo);
-      title = c ? connLabel(c) + (wo.console ? ' — ' + t('bmc_console_tab') : '') : 'Terminal ' + id;
+      title = c ? connName(c) + (wo.console ? ' — ' + t('bmc_console_tab') : '') : 'Terminal ' + id;
+      if (c) tip = connLabel(c);
     } else if (wo.mode === 'sftp') {
       icon = '📂';
       const c = winConn(wo);
-      title = c ? 'Files — ' + connLabel(c) : 'Files ' + id;
+      title = c ? 'Files — ' + connName(c) : 'Files ' + id;
+      if (c) tip = 'Files — ' + connLabel(c);
     } else if (wo.mode === 'desk') {
       icon = '🖥';
       const c = winConn(wo);
-      title = c ? connLabel(c) : 'Desktop ' + id;
+      title = c ? connName(c) : 'Desktop ' + id;
+      if (c) tip = connLabel(c);
     }
     if (wo.mode === 'screen-viewer' && wo.viewing) { icon = '👁'; title = wo.viewing.name + ' — ' + wo.viewing.title; }
     if (wo.mode === 'addon' && window.wrmWorkboard) { const ai = wrmWorkboard.tabInfo(wo); icon = ai.ico; title = ai.title; }
@@ -15803,7 +16031,7 @@ function renderTabs() {
     if (wo.el && wo.el.style.display === 'none') icon = '▪';
 
     const stateDot = wo.mode === 'ssh' || wo.mode === 'desk' ? `<span class="tab-state state-${wo.connState || 'connecting'}" title="${esc(wo.connState || '')}"></span>` : '';
-    t2.innerHTML = `${stateDot}<span class="tab-icon">${icon}</span><span class="tab-title" title="${esc(title)}">${esc(title)}</span><button class="tab-close" title="Close">✕</button>`;
+    t2.innerHTML = `${stateDot}<span class="tab-icon">${icon}</span><span class="tab-title" title="${esc(tip || title)}">${esc(title)}</span><button class="tab-close" title="Close">✕</button>`;
     t2.querySelector('.tab-close').onclick = e => { e.stopPropagation(); handleCloseWindow(id); };
     t2.onclick = e => {
       if (e.target.classList.contains('tab-close')) return;

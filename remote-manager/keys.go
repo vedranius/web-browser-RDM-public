@@ -722,7 +722,7 @@ func apiKeysHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewDecoder(r.Body).Decode(&in)
 		u, err := loadUser("id=?", userID)
-		if err != nil || !checkPassword(u.Hash, in.Password) {
+		if err != nil || !userCheckPassword(u, in.Password) {
 			auditLog(r, userID, "ssh_key.export_denied", k.Name, map[string]string{"reason": "wrong password"})
 			jsonError(w, "Wrong password", 403)
 			return

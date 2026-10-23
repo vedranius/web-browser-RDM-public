@@ -706,10 +706,18 @@ Object.assign(LANGS.hr, {
     lastActive = d;
     const btn = $('btn-mcp');
     if (btn) {
-      btn.style.display = d.live.length || d.pending.length ? '' : 'none';
-      const bar = $('top-bar'); if (bar) bar.classList.toggle('mcp-on', !!(d.live.length || d.pending.length));
+      // Only touch what changed: every write is a mutation the top bar re-measures itself for.
+      const on = !!(d.live.length || d.pending.length), disp = on ? '' : 'none';
+      if (btn.style.display !== disp) btn.style.display = disp;
+      const bar = $('top-bar'); if (bar && bar.classList.contains('mcp-on') !== on) bar.classList.toggle('mcp-on', on);
       const b = $('mcp-badge');
-      if (b) { b.textContent = d.pending.length || d.live.length; b.style.background = d.pending.length ? 'var(--yellow)' : ''; }
+      if (b) {
+        const n = String(d.pending.length || d.live.length || ''), bg = d.pending.length ? 'var(--yellow)' : '';
+        if (b.textContent !== n) b.textContent = n;
+        if (b.style.background !== bg) b.style.background = bg;
+        const bd = n ? '' : 'none';
+        if (b.style.display !== bd) b.style.display = bd;
+      }
     }
     // A new approval is announced with a sound, a toast and a desktop notification:
     // the live view may be hidden, so the card alone is not enough.

@@ -139,7 +139,7 @@ func alertCheck(in alertInput) {
 			raiseAlert("new_admin", in, "Account "+in.Target+" became an administrator ("+in.Action+")",
 				"Račun "+in.Target+" postao je administrator ("+in.Action+")", true)
 		}
-	case in.Action == "credential.revealed" || in.Action == "ssh_key.exported" || (in.Action == "config.exported" && detStr(d, "with_secrets") == "true"):
+	case in.Action == "credential.revealed" || in.Action == "connection.secret_revealed" || in.Action == "ssh_key.exported" || (in.Action == "config.exported" && detStr(d, "with_secrets") == "true"):
 		if settingBool("alert_secret_reveal") {
 			what, hr := alertRevealText(in.Action)
 			raiseAlert("secret_reveal", in, strings.TrimSpace(in.Username+" "+what+" "+in.Target), strings.TrimSpace(in.Username+" "+hr+" "+in.Target), true)
@@ -164,6 +164,8 @@ func alertRevealText(action string) (string, string) {
 		return "revealed the stored credential", "otkrio je spremljenu vjerodajnicu"
 	case "ssh_key.exported":
 		return "exported the private SSH key", "izvezao je privatni SSH ključ"
+	case "connection.secret_revealed":
+		return "revealed what the connection logs in with:", "otkrio je s čime se veza prijavljuje:"
 	}
 	return "exported connections including their stored credentials", "izvezao je veze sa spremljenim vjerodajnicama"
 }
