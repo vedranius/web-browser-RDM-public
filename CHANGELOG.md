@@ -1,30 +1,143 @@
-## [12.9.1] - 2026-10-22
+## [13.5.0] - 2026-10-23
 
 ### Added
-- **Medium: deploy-config from Git.** With `DEPLOY_CONFIG_REPO` set in the Medium settings and a WRM Git source serving that repository, the deploy-config editor shows a **Git** section. **Pull from Git and use it** makes WRM's own copy of the branch head the configuration (`<DB>.medium/users/<id>/native-config`); the imported ZIP stays untouched. Local edits are listed as new, changed or deleted files. **Commit and push** sends them as one commit through the source's write token (GitLab commits API, GitHub Git data API with a non-forced ref update, Gitea contents API), after checking that the whole configuration loads and that none of the changed files moved on Git since the pull; the pushed commit is pulled back. **Pull** refuses while there are local changes unless they are discarded, and a branch head whose configuration does not load is never applied. **Stop using the Git copy** goes back to the imported deploy-config. Pull and push need the `medium_native` policy, are audited (`git.medium_config_pull`, `git.medium_config_push`, `git.medium_config_git_stop`) and appear in the Medium activity log.
-- **Medium: build user on the WRM host.** The new policy `medium_build_user` names an unprivileged OS account (for example `wrm-build`) that runs WRM-host builds. It needs WRM running as root on Linux or another Unix system; root, accounts in the root group and accounts that can read the WRM database, its key or the Medium data directory are refused with the reason. The build directory is handed to that account and the build gets a clean environment (`PATH`, `HOME`, `USER`, `LANG`, `TMPDIR`) without WRM's variables; afterwards WRM takes the directory back before reading the result and refuses hard links to files the account does not own. The plan shows *as wrm-build* next to the build location.
-- **Medium: default engine.** The new policy `medium_default_engine` (`native` by default, or `original`) decides the engine of projects nobody chose one for. With `native`, users allowed by `medium_native` deploy with WRM directly, and the Medium page shows the WRM engine card first and open, with the original deploy tool folded away as optional. A deploy-config ZIP can be imported from the WRM engine card too.
+- **Professional log viewer** (*Monitoring → Logs*, `static/logviewer.js`). The file list can be sorted by newest, oldest, name, size, service, operator or path and filtered by operator and service. A log opens in a tab with line numbers, level colours (a stack trace keeps the level of its line), highlighting of times, IPs, URLs, HTTP status codes, UUIDs and key=value pairs, find in the log (regex, case, previous/next, only matching lines), level filters, **Follow** (new lines every 2.5 s, journal by cursor), loading of older lines, go to line, wrap, copy, download and a terminal shortcut. Keys: `/` find, `n`/`N`, `g`, `f`, `w`.
+- **Search across logs by time.** The Search tab greps the selected or shown files on the server (`POST /api/monitoring/logs/grep`): literal or regex, case, whole word, context lines, a From/To range in the chosen date format with quick ranges (15 min … 30 days), the log time zone, hits sorted by time in either order, level chips, per-file filter and a timeline with zoom. Clicking a hit opens the file at that line.
+- **Log settings, separate from Zabbix** (`⚙ Log settings`, `GET/PUT /api/monitoring/logs/settings`, table `log_settings`): scan paths, excluded names, path patterns that label operator and service (`/home/*/{operator}/{service}/{logdir}/**`), extra log name patterns, depth, file and age limits, time budget, rotated and compressed files, empty files, systemd journal, systemd/Supervisor/Docker metadata and the discovery method (`auto`, `ssh`, `sftp`). Explicit log folders and journal units moved here from the Zabbix configuration; existing ones are read from it.
+- **Fast discovery over SSH.** One read-only command collects systemd, Supervisor and Docker metadata and a second runs `find` over the scan paths, so a large server is listed in about a second; servers without a shell fall back to the SFTP walk.
+- **`GET /api/monitoring/logs/lines`**: `mode=tail` (`n`), `around` (`line`, `before`, `after`) and `since` (`bytes`, or `cursor` for the journal; only whole lines, `reset` when the file shrank).
+- **AI log assistant.** 🤖 in the log viewer opens a chat panel that searches every discovered log on the server with the new **`search_logs`** tool (also offered over MCP under `read_logs`), reads around the hits and explains what happened. It is always read-only.
+- **Smart file editor with an AI assistant** (`static/fileeditor.js`, replaces the plain editor of the file manager): syntax highlighting for about 40 languages (off above 300 KB), line numbers, find and replace with regex and case (`Ctrl+F`, `Ctrl+H`), go to line (`Ctrl+G`), auto-indent and block indent, JSON check and format, **review of the changes before saving** (a diff, can be turned off), a check that nobody wrote the file on the server since it was opened (overwrite, or show the differences first), reload from the server, and a **🤖 AI assistant** panel that reviews, explains and edits the open file. Every change of the assistant is a diff that waits for approval; the editor reloads the file afterwards, or warns when you have unsaved changes. **Ask AI about the selection** sends the selected lines.
+- **The AI work log shows what the assistant thinks and does**: its reasoning (💭, Anthropic adaptive thinking on models that support it, `reasoning_content` from OpenAI-compatible servers), its narration before tool calls and each tool result. Setting `ai_show_thinking` (default on).
+- **AI chats have titles and can be continued.** A short title is generated after the first answer (`ai_auto_titles`, default on; click the title to rename, `POST /api/ai/sessions/{id}/title`). An ended or interrupted session shows **Continue chat**: a new session with the earlier conversation as context (`resume_from`). History lists title, date and time, and log and file chats are kept apart from terminal chats (`GET /api/ai/sessions?purpose=terminal|logs|file`).
+- **EU date and time by default** (`dd.mm.yyyy hh:mm`), with ISO, US and the browser's locale under *Settings → Date and time format*.
+- **Plugin and skills**: the skills name `search_logs`, the plugin README explains what is in it and where the data goes, and `server.json` describes WRM for the MCP Registry (`io.github.vedranius/wrm-pro`). Tests check the manifests and that every tool a skill names exists.
 
 ### Changed
-- The original deploy tool and its Docker runtime are optional: the WRM engine needs only a deploy-config (imported, edited in WRM or pulled from Git) and WRM connections. An imported deploy-config is used by the WRM engine at once instead of waiting for the original tool's first start.
-- An installation that already has the original deploy tool imported keeps `medium_default_engine=original` after the upgrade (set once at start and logged), so its projects do not change engine silently. Projects with an engine chosen explicitly keep it either way.
-- ROADMAP: the Medium switch-over is complete; retiring the Docker runtime is left to the owner's decision.
+- **Addon panels get the display name, not the sign-in name.** The `user` field of the `wrm:context` message is now the display name (empty when none is set). Log search and the log viewer pass the search text and file paths to the server on standard input instead of on the command line.
+- Discovery never lists scripts and code (`.py`, `.sh`, `.js`, …) as logs, finds logs with or without a service label and labels operator and service from the path patterns.
 
-### Upgrade
-Replace the executable or container and keep the database and encryption key. No database migration is required. To deploy with the WRM engine by default on an installation that used the original tool, set **Admin → Policies → Medium: default engine** to `native`.
+### Fixed
+- **A week-wide search no longer stops with "Automatic folder discovery time budget reached" or "Results are bounded or incomplete"**: discovery runs on the server in one command with its own time budget, and searches grep on the server instead of downloading files.
+- **Operators were not found** for logs under `/home/<project>/<operator>/<service>`; the path patterns and the operator filter now cover them.
+- **AI sessions stuck in "stopped".** A session that ended (WRM restart, idle time, kill switch) kept the browser reconnecting to a dead stream; the stream now answers with an `ended` event and the chat offers **Continue chat** with its history.
+- The log viewer's status no longer shows `01.01.1` before the first discovery.
+- **The version at the top left is shown again after a reload.** A browser that was already signed in skipped `/api/auth/config`, so the title bar said only *WRM*; it now reads `/api/version`, and the version stays visible until the top bar also hides button labels.
 
-## [12.9.0] - 2026-10-22
+## [13.4.4] - 2026-10-23
+
+### Fixed
+- **Claude Desktop and Claude Code are clearly separate in AI connections.** The wizard labels them *Claude Desktop app (chat)* and *Claude Code (terminal or Code tab)*, and says plainly that Claude Desktop uses the `.mcpb` extension while `/plugin` is a slash command inside Claude Code, not a PowerShell command. Running `/plugin` in PowerShell is the error most people hit; the panel now tells you to run `claude` first (or use the `claude plugin install …` / `claude mcp add …` line) and to run `/mcp` or restart Claude Code after adding the connector.
+
+## [13.4.3] - 2026-10-23
 
 ### Added
-- **Medium: file details.** Every changed file of a native plan has a **Details** button. It shows what the deployment changes in that file: the server's version against the branch, line by line (the same comparison as the Git workspace), with notes for new and deleted files, symbolic links, directories, binary files and files above 512 KiB. Opening a file is audited (`git.medium_native_diff`).
-- **Medium: line-ending marking (`eol_only`).** A changed file that differs from the branch only in CRLF/LF is marked *line endings only*. The server computes the hash without `\r` in one SSH command (`tr -d '\r' | sha256sum`; over SFTP when `sha256sum` is missing); the plan counts these files separately and the deployment record writes `counts.eol` like the original tool. The plan itself does not change: the deployment still sends those files, so the difference disappears.
-- **Medium: deploy-config editor.** *Edit deploy-config* opens `servers.yaml`, `environments.yaml` and `projects/*.yaml` as text. **Check** validates the whole configuration with the edit; **Save** writes the file only when the configuration still loads, and only when nobody changed it since it was opened. Comments, layout and CRLF line endings are kept. Project files can be created and deleted. Editing needs the `medium_native` policy and is audited (`git.medium_config_edit`) and recorded in the Medium activity log.
+- **Claude in one command, at the top of AI connections.** *Settings → AI connections* now opens with a card that shows the exact `claude mcp add --transport http --scope user wrm … --header "Authorization: Bearer …"` command, a **Copy** button and one-click shortcuts into the step-by-step wizard for **Claude Code**, **Claude Desktop** and **claude.ai / ChatGPT**. The admin view of AI connections has a matching **Open the step-by-step wizard** button. The README has the same quick start, including the WRM PRO plugin command.
+- The token wizard already creates the token, fills the address and token into the command and tests the connection; the quick card makes that path discoverable without opening the advanced form.
+
+## [13.4.2] - 2026-10-23
+
+### Fixed
+- **The version in the title bar and on the sign-in card is now the running version.** `index.html` still carried a hard-coded `v12.8.1` label, so the Update dialog said v13.4.x while the header said v12.8.1. The title, the header and the sign-in card are filled from `/api/auth/config` / `/api/version`; nothing is hard-coded any more.
+- **The screen-lock button is always there and always wired.** It is a fixed top-bar button with its own `wrmLock.lock()` handler instead of one inserted at runtime next to Sign Out; `lock.js` only translates its title and label. A click now opens the lock screen even if the panel was re-rendered.
+
+## [13.4.1] - 2026-10-22
+
+### Fixed
+- **OpenCode Go appears on existing installations.** If `ai_provider_kinds` was saved with the old "all kinds" list (before `opencode_go` existed), the setting is upgraded in memory to include it, so the new provider can be added without editing the policy; a deliberately narrowed list is left unchanged.
+
+## [13.4.0] - 2026-10-22
+
+### Added
+- **OpenCode Go provider.** OpenCode Go is the subscription next to OpenCode Zen (the pay-as-you-go Console). A Go key is only accepted by the Go endpoints, so sending it to Zen made Console answer *insufficient funds*. The new provider kind `opencode_go` sends the key to `https://opencode.ai/inference/go/...` (chat completions or Anthropic Messages, chosen per model), uses the Go model list (`/v1/models`, with the documented list as fallback), sends a stable `x-opencode-session` per conversation and a `WRM-PRO` user agent. Qwen and MiniMax M3 use the Messages API on Go even where the Zen catalog says chat. The OpenCode agent engine also accepts the provider and runs `opencode-go/<model>`.
+
+### Fixed
+- An OpenCode Go subscription key is no longer charged to a Zen balance, and a missing key gives a clear message instead of an *insufficient funds* answer from the wrong endpoint. Models the WRM engine cannot speak (OpenAI Responses, Google Gemini) are left out of the Go list instead of failing at the first prompt.
+
+## [13.3.0] - 2026-10-22
+
+### Added
+- **AI addon loop.** The assistant can now write an addon into a draft workspace, `<DB>.addons/.drafts/<id>/`, instead of the live folder. New tools (`addon_list`, `addon_files`, `addon_create`, `addon_write`, `addon_enable`, `addon_disable`, `addon_delete`, `addon_run`, `addon_install_community`) are covered by the new `addons.manage` scope and are available to administrators only. `addon_create`/`addon_write` validate the draft exactly like a ZIP (manifest, layout, declared files, WebAssembly compile check) and can install it in the same call; installing a new draft always leaves it disabled.
+- **Drafts in Settings → Addons.** Every draft is listed with its files, version, validity and whether the addon is installed, with **Diff** (a unified diff against the installed version), **Install draft** and **Discard**. Nothing in the workspace is served or executed until it is installed.
+- **Approval in every mode.** Addon writes and `addon_run` always wait for the user's approval, including automatic mode and full access; a draft never enables itself.
+- **Approvals are impossible to miss.** Every pending approval now also appears in the user's notifications (`ai.approval`, subscribable for email/Telegram/…), pops up as a fixed approval card even when the AI panel or the live view is closed, and plays a short sound. The AI panel keeps a sticky **Approval needed** bar with **Approve / Deny** above the chat, and every assistant reply plays a short sound; the speaker button in the panel header turns sound off for that browser. The global poll runs every five seconds instead of once a minute, and it includes built-in and OpenCode sessions, not only MCP.
+- **`file_path` is accepted as an alias for `path`.** Some models send `file_path` (the name other tools use); WRM treated that as an unknown argument and refused the call before any approval was shown. The tool input now accepts both, with `path` winning when both are present.
+
+### Fixed
+- **A refused tool call can no longer look like a pending approval.** The assistant is told to claim a change only after a successful tool result; when WRM refuses the arguments, the tool card shows the error and no approval card is created.
+
+### Security
+- The addon tools act on WRM itself and are refused for non-administrators even when a token carries `addons.manage`; the scope is also refused when a non-administrator creates an AI connection, and it is not offered in their scope list.
+- A draft write is validated in a temporary folder first, so a broken manifest or an unsafe path leaves the previous draft untouched. Draft ids and paths use the same strict checks as an installed addon, and installing goes through `addonInstallArchive`, the function behind an uploaded ZIP and the community library.
+
+## [13.2.0] - 2026-10-22
+
+### Added
+- **Screen lock (#115).** After a chosen period without activity (2, 5, 10, 30 or 60 minutes, or off) the interface is covered by a lock screen that asks for the signed-in account's password; a **🔒** button next to Sign out locks it at once. Terminals, tunnels and AI runs keep working, and every unlock attempt is checked and audited (`auth.unlocked` / `auth.unlock_failed`, five attempts per minute). The choice is stored per browser; the lock is a presence check, not a second sign-in, and the session stays valid.
+
+## [13.1.2] - 2026-10-22
 
 ### Changed
-- ROADMAP: the switch-over continues in v12.9.1 (config Git actions, `build_user`, native engine as the default, Docker runtime optional).
+- **Service labels under `/home`.** Discovery descends one container level under `/home`, so `/home/<project>/<operator>/<service>` is recognised and labelled operator/service without naming any project; labels found this way are defaults and a root line in Monitoring settings (`path | service | operator`) overrides them.
+- Documentation, tests, release notes and the community repository use neutral placeholders only; the history of the public branch was rewritten so no private deployment name remains in it.
+
+## [13.1.1] - 2026-10-22
+
+### Added
+- **One-command Claude Code setup.** The plugin ships `/wrm-pro:connect` and `scripts/connect-claude.sh` / `.ps1`, which run `claude mcp add --transport http --scope user wrm <url> --header "Authorization: Bearer <token>"`. The README documents the two-line marketplace install and the values it asks for, including a local instance over `http://localhost:8080` (Claude Code opens a sign-in page only over HTTPS, so a local address needs the token header).
+- **Release assets match the updater again**: `wrm-pro-v<version>-<os>-<arch>[.exe]` plus `SHA256SUMS.txt` for Windows, Linux (amd64, arm64, 386) and macOS (amd64, arm64). The in-app update failed with "the release has no file for this platform" because the assets were published without the `wrm-pro-` prefix.
+
+### Changed
+- Log discovery walks `/home` with the same bounded operator/service depth instead of one hardcoded home directory; documentation uses `/home/<operator>`.
+- The generated version file lists deployments under `## Services`.
+
+### Security
+- Documentation, tests, release notes and the community repository no longer name private deployments or paths; examples use generic placeholders.
+
+## [13.1.0] - 2026-10-22
+
+### Added
+- **Monitored services.** A monitored server can watch up to 20 services next to its metrics: systemd units (`systemd:nginx`) and Docker containers (`docker:web`). They are read on every SSH poll, in the same round trip as the metrics, and each sample carries the state (`active`, `running`, `failed`, `missing`, …). A watched service that is not `active`/`running` turns the sample into `problem` with a `service problem: …` message, so the existing notification and history path reports it without a second mechanism. The watch list lives in **Monitoring settings**, and **Poll automatically** can be switched directly on the server card.
+- **Safer service checks.** Names are validated before they are stored (`systemd` units and Docker container names only) and the remote command is one fixed POSIX loop that receives the names on stdin through a quoted heredoc, so a name is data and never shell syntax.
+- **Community library.** **Settings → Addons** lists the index of the public repository "WRM Pro - community public addons" with each entry's trust badge (**official**, **reviewed**, **community**, **unverified**), license and declared capabilities. Only an administrator installs; the download must be HTTPS from a GitHub host and must match the SHA-256 in the index, and the archive then passes the same manifest, layout, capability and WebAssembly checks as an uploaded ZIP. The source is stored as `community:<id>@<trust>` and every install is audited as `addon.installed`.
+- **Recording level per account.** The new-user dialog gained **Session recording** — as the server settings, off for this account, session output only, or output and keystrokes. It is stored in `users.recording_level`, validated on create and on the user update endpoint, and resolved by `userRecordingLevel` for terminals, desktops and AI sessions alike. The server setting remains the master switch: turning recording off there still records nothing, and an account without a choice follows `session_recording_input`. The `terminal.open` and `desktop.open` audit entries now carry the level that was used.
+- **Assistant work log.** While the assistant works, the chat shows one collapsible **Work log** per request: it opens with the request, names every tool step as it starts, and collapses to a single line with the step count when the answer arrives. The tool cards below stay the detailed record; the log is the overview you can ignore.
+- **Replay shows wall-clock time.** The player puts the exact time at the playhead next to the offset (`0:12 / 3:40 · 22.10.2026. 12:01:05`) and the recording header gains **Ended**; the terminal cast always stored its Unix start in the asciicast header and the desktop recording has `started_at`, so both players show absolute time without re-recording anything and old recordings work too. The session events list already had absolute timestamps.
+
+### Fixed
+- **Ollama rejected a turn that only called tools** with `HTTP 400: invalid message content type: <nil>`. The request builder wrote `"content": null` for an assistant message without text; Ollama's OpenAI-compatible endpoint accepts only a string there, and every provider accepts an empty one, so the content field is now always a string.
+
+### Security
+- Service state is read with the SSH account and no extra privilege: `systemctl is-active` and `docker inspect` only. A missing container is reported as `missing`, not as a failed container, and a failed check marks the sample `problem` instead of hiding the previous state.
+- The community index cannot point WRM anywhere: entries are accepted only from HTTPS GitHub hosts (HTTP is allowed for loopback so the tests can run), downloads are capped at 20 MB, redirects stop after five hops, and an archive whose SHA-256 differs from the index is refused before it reaches the installer. An entry that fails validation is dropped instead of hiding the rest of the list.
 
 ### Upgrade
-Replace the executable or container and keep the database and encryption key. No database migration is required.
+Replace the executable or container and keep the database and encryption key. The database is upgraded in place: `users.recording_level` is added with an empty default (follow the server settings), and existing addons, recordings, monitor profiles and audits are untouched. 13.0.0 was never published on its own; its log engine, AI log tools and addon core are part of this release.
+
+## [13.0.0] - 2026-10-22
+
+### Added
+- **Find logs is an explicit action.** Opening Monitoring → Logs no longer scans a server. Select a server and click **Find logs**; the result is cached for an hour per connection and configuration, and the file list is served from that cache. The tab states plainly that nothing was scanned yet.
+- **Service inventory.** Discovery reports services, not just folders: systemd units, Docker containers, Supervisor programs, Git installs and plain folders. A service whose output goes to journald is listed as `journal` instead of disappearing. Services with no readable file log are shown with that reason.
+- **systemd journal sources.** A log root can be `kind: journal` with a unit name. It is read with `journalctl --output=short-iso`, filtered by time range and keyword, and followed live by timestamp. Unit names are validated against a strict pattern and every other argument is generated server-side.
+- **Broader log folder detection.** `log`, `logs`, `log-*`, `logs_*`, `*-log`, `*_logs`, and `WorkingDirectory/{log,logs,var/log,var/logs}` are recognised; project folders such as `catalog`, `dialog` or `blog` are not.
+- **Application folders under a broad root are services.** A folder inside `/var/log` (or any configured root without a service label) that contains a `*.log` file is listed as a service, and every file in it is listed under that service name — including extensionless names such as `info` or `warn` that a logger writes next to `error.log`.
+- **The assistant reads logs through that inventory.** `find_logs` lists the discovered services with their folders or journal unit and `read_log` opens one service's newest log, or its journal unit, with optional literal filtering. Both are ordinary read tools: allowed in read-only sessions, covered by the `read_logs` MCP scope, redacted, size-limited and audited. The cache of the Logs tab is reused; only the connection owner can trigger a scan and it runs over the session's existing SSH connection.
+- **Addons, in the spirit of Omarchy.** An addon is a folder under `<DB_PATH>.addons/<id>/` with `addon.json`; it is installed from a ZIP in **Settings → Addons** and discovered at runtime, never compiled into the binary. This version implements the core: the manifest, a capability allowlist (`ui.panel`, `ui.theme`), install/enable/disable/remove with an audit entry for each, an archive checksum kept in the database, strict entry-name checks (absolute paths, `..`, backslashes, duplicates, oversize and missing declared files are refused), and a served asset endpoint limited to known file types.
+- **Panels and themes.** A panel opens as a normal WRM window whose content is a sandboxed `iframe` (`sandbox="allow-scripts"`, no same-origin): it cannot read the page, cookies or other panels, and it receives only a small context through `postMessage` (user name, language, theme tokens, connection names and hosts) and can send a toast back. A theme is a stylesheet link applied while the addon is enabled and removed when it is disabled. Only an administrator installs, enables or removes; other users see the enabled addons.
+- **Server code runs in a WebAssembly sandbox.** A manifest may declare `"server": {"module": "plugin.wasm", "exports": ["status"]}` with the `server.wasm` capability. The module is executed by `wazero` (pure Go, no CGO) in a fresh instance per call, with no WASI: no files, no network, no environment and no clock; the only import is `wrm.log`, the memory ceiling is 64 MiB and a call is stopped after five seconds. The ABI is two functions — `wrm_alloc(size) -> ptr` for the request buffer and `<export>(ptr, len) -> ptr` returning a NUL-terminated UTF-8 result. Administrators run a declared export from **Settings → Addons** (`POST /api/addons/{id}/call/{export}`, 64 KB input, 1 MB output), and every call is audited as `addon.call`. The installer compiles the module without running it and refuses an archive whose module is invalid, lacks `wrm_alloc` or its memory, misses a declared export, or imports anything but `wrm.log`.
+- **AI addon action.** **Settings → Addons** generates a prompt from the capabilities this server actually reports — the manifest, the panel/theme rules, the WebAssembly ABI and its limits — with a **Copy prompt** button and a shortcut to the built-in assistant. WRM does not start another desktop app and does not trust what the AI writes: the result still arrives as a ZIP and goes through the same install checks.
+
+### Changed
+- Log discovery no longer runs inside the log-list request, so opening the tab cannot start an unbounded scan.
+- Discovery keeps its depth and file caps; the root budget rises from 100 to 200 roots and the folder scan visits up to 400 directories.
+- The addon installer accepts an `addon.json` written with a UTF-8 byte order mark, which editors on Windows add by default.
+
+### Security
+- Journal access uses the existing SSH account and the file-read permission, exactly like a file read; the SSH account still needs journal read access on the host.
+- Discovery is audited as `monitor.logs_discovered` and stays owner-only; shares can read a journal source but cannot trigger a scan.
+- Docker container names and log paths come from bounded reads of `config.v2.json`; no Docker socket or daemon command is used.
+- Addons execute nothing at install time: the manifest is validated and the archive unpacked into its own folder, and a capability that is not implemented refuses the whole install instead of being ignored. Panel HTML is served with `Content-Security-Policy: sandbox allow-scripts` and same-origin framing only; other documents stay unframeable. Server code is WebAssembly only (no native binaries, no shell), runs without WASI or host filesystem access, is limited to 64 MiB and five seconds, and only an administrator can call it. The addon settings tab carries the community and no-warranty notice.
 
 ## [12.8.1] - 2026-10-21
 
@@ -78,7 +191,7 @@ Replace the executable/container and keep the database and encryption key. No da
 - The plan shows the build location, the build's platform and architecture, and the last build output. A destination whose platform or architecture differs from the build is refused with the reason. WRM-host builds need a POSIX host with the toolchain; on Windows, choose a Linux build server or no build.
 
 ### Fixed
-- **Monitoring → Logs discovers every service under `/home/skripte`.** The first level is now read as the operator and the second as the service, so the Service and Operator dropdowns show the correct values. Virtual environments, builds, distributions, archives, temporary and private-key directories are skipped instead of consuming the visit limit.
+- **Monitoring → Logs discovers every service under `/home/<operator>`.** The first level is now read as the operator and the second as the service, so the Service and Operator dropdowns show the correct values. Virtual environments, builds, distributions, archives, temporary and private-key directories are skipped instead of consuming the visit limit.
 - Service `log` and `logs` folders list their log files, including FTP `.txt` logs, and skip compressed archives; `/var/log` and broad roots keep the name filter. Archive, backup and old subfolders are pruned. Discovery and listing have larger time budgets (20 s and 60 s), so large hosts no longer return an incomplete list.
 
 ## [12.7.2] - 2026-10-19

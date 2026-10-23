@@ -20,12 +20,23 @@ Object.assign(LANGS.en, {
   mcp_mode_auto_d: 'Changes on your allow list run without asking, within a time and action limit per session. Everything else still asks.',
   mcp_sc_read_logs: 'Read logs, files and system information', mcp_sc_run_readonly: 'Run read-only commands', mcp_sc_run_with_approval: 'Run commands that change something (with approval)',
   mcp_sc_edit_file_with_approval: 'Edit files (with approval, shown as a diff)', mcp_sc_transfer: 'Copy files between the chosen servers (with approval)',
+  mcp_sc_addons_manage: 'Draft and manage WRM addons (administrators only, every change with approval)',
   mcp_sc_full_access: '⚠ Full access: nothing is refused, but everything WRM would block (destructive commands, deny lists, secret files, shutdown) asks you first, every time',
   mcp_auto_allow: 'Commands that may run without asking (one pattern per line)', mcp_auto_path_allow: 'Files that may be changed without asking (/etc/nginx/**)',
   mcp_auto_minutes: 'Time limit per session (minutes)', mcp_auto_actions: 'Maximum actions per session', mcp_auto_confirm: 'I allow these changes without asking, within these limits.',
   mcp_auto_all: 'Allow everything', mcp_auto_all_d: 'Every command and file on the chosen servers, without asking. Blocked commands and sensitive files still stay blocked.',
   mcp_auto_grant: 'No time or action limit: automatic for as long as this AI connection is valid',
   mcp_token_once: 'Copy the token now. WRM stores only a hash and cannot show it again.', mcp_token: 'Token', mcp_copy: 'Copy', mcp_url: 'MCP server address',
+  mcp_quick_title: 'Connect Claude in one command',
+  mcp_quick_d: 'Claude Code: the command below (or the WRM PRO plugin) with a token from the wizard. Claude Desktop: download the extension. claude.ai and ChatGPT: add a custom connector with the MCP address and sign in.',
+  mcp_quick_cmd: 'Claude Code command (replace YOUR_TOKEN)',
+  mcp_quick_wizard: 'Open the step-by-step wizard',
+  mcp_quick_cc: 'Claude Code, step by step',
+  mcp_quick_desk: 'Claude Desktop extension',
+  mcp_quick_cloud: 'claude.ai / ChatGPT connector',
+  mcp_quick_which: 'Claude Desktop app uses the extension; Claude Code (terminal or Code tab) uses /plugin inside Claude or the claude command in PowerShell.',
+  mcpw_cc_shell: 'In Claude Code, /plugin is a slash command typed at the Claude prompt, not in PowerShell. In PowerShell run the command below (no leading slash), or run `claude` first and type `/plugin …` there. After adding it, restart Claude Code or run `/mcp` to reconnect.',
+  mcpw_desk_no_plugin: 'Claude Desktop does not use /plugin: install the .mcpb extension below (or open the downloaded file).',
   mcp_setup: 'Set up your app', mcp_setup_claude_desktop: 'Claude Desktop (local bridge)', mcp_setup_remote: 'Claude (custom connector)', mcp_setup_chatgpt: 'ChatGPT (connector)',
   mcp_setup_generic: 'Other MCP clients', mcp_setup_cli: 'Test from a shell',
   mcp_h_claude_desktop: 'Copy the WRM program (the same file as the server, for your computer\'s system) to your computer, then add this to claude_desktop_config.json (Claude → Settings → Developer → Edit config) and restart Claude. Replace the path with the program\'s full path.',
@@ -52,7 +63,7 @@ Object.assign(LANGS.en, {
   mcp_adm_help: 'MCP clients reach WRM at {url}. The kill switch of the AI assistant also stops every AI connection.',
   p_ai_mcp_enabled: 'AI connections (MCP)', p_ai_mcp_enabled_d: 'Serve the MCP endpoint /mcp and the OAuth endpoints for AI apps.',
   p_ai_mcp: 'Who may use AI connections', p_ai_mcp_d: 'Who may create tokens and approve AI apps.', po_ai_mcp_off: 'Nobody', po_ai_mcp_admins: 'Administrators', po_ai_mcp_all: 'Everybody',
-  p_ai_mcp_scopes: 'Allowed scopes', p_ai_mcp_scopes_d: 'read_logs, run_readonly, run_with_approval, edit_file_with_approval, transfer', p_ai_mcp_scopes_ph: 'read_logs,run_readonly',
+  p_ai_mcp_scopes: 'Allowed scopes', p_ai_mcp_scopes_d: 'read_logs, run_readonly, run_with_approval, edit_file_with_approval, transfer, addons.manage (administrators)', p_ai_mcp_scopes_ph: 'read_logs,run_readonly',
   p_ai_mcp_modes: 'Allowed modes', p_ai_mcp_modes_d: 'read_only, ask, auto. The AI assistant\'s mode rules narrow them per connection.', p_ai_mcp_modes_ph: 'read_only,ask',
   p_ai_mcp_token_hours: 'Default lifetime (hours)', p_ai_mcp_token_hours_d: 'Lifetime of a new token or OAuth approval when the user does not choose one.',
   p_ai_mcp_max_token_hours: 'Maximum lifetime (hours)', p_ai_mcp_max_token_hours_d: 'The longest lifetime a user may choose.',
@@ -72,7 +83,7 @@ Object.assign(LANGS.en, {
   mcpw_title: 'Connect an AI app (step by step)', mcpw_intro: 'WRM prepares the token and the exact setting for your app. You only copy it.',
   mcpw_s_client: 'App', mcpw_s_access: 'Servers and access', mcpw_s_connect: 'Connect', mcpw_s_test: 'Test',
   mcpw_pick: 'Which app do you want to connect?', mcpw_via_token: 'with a token (WRM creates it)', mcpw_via_oauth: 'sign in through WRM (no token)',
-  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_opencode: 'OpenCode', mcpw_h_opencode_json: '2. Add this to ~/.config/opencode/opencode.json (or opencode.json in the project). OpenCode reads the token from the environment variable:', mcpw_h_opencode_oauth: 'Or without a token, with OAuth sign-in: this entry without headers, then these commands:', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / other', mcpw_c_claude_connector: 'Claude.ai (cloud connector, public HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
+  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code (terminal or Code tab)', mcpw_c_opencode: 'OpenCode', mcpw_h_opencode_json: '2. Add this to ~/.config/opencode/opencode.json (or opencode.json in the project). OpenCode reads the token from the environment variable:', mcpw_h_opencode_oauth: 'Or without a token, with OAuth sign-in: this entry without headers, then these commands:', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / other', mcpw_c_claude_connector: 'Claude.ai (cloud connector, public HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
   mcpw_access: 'What may the app do?', mcpw_p_read: 'Look only (recommended)', mcpw_p_read_d: 'Read logs, files and system information and run read-only commands. Nothing is changed.',
   mcpw_p_ask: 'Look and change, with your approval', mcpw_p_ask_d: 'Also run commands and edit files, but every change waits for your approval in WRM.',
   mcpw_valid: 'The token is valid for {n} hours. You can revoke it at any time below.',
@@ -88,7 +99,7 @@ Object.assign(LANGS.en, {
   mcpw_advanced: 'Advanced: create a token with custom mode and scopes',
 });
 Object.assign(LANGS.en, {
-  mcpw_c_claude_desktop: 'Claude Desktop', mcpw_via_extension: 'one-click extension (works on your network)',
+  mcpw_c_claude_desktop: 'Claude Desktop app (chat)', mcpw_via_extension: 'one-click extension (works on your network)',
   mcpw_desk_h: 'Download the WRM PRO extension and open it: Claude Desktop shows an Install button. The address and the token are already filled in, so there is nothing to type. Works with WRM on your own network and over plain HTTP, because Claude Desktop talks to WRM from this computer.',
   mcpw_desk_dl: 'Download Claude Desktop extension (wrm-pro.mcpb)', mcpw_desk_dl_note: 'The file contains your token. Delete it after installing.',
   mcpw_desk_steps: '1. Open the downloaded wrm-pro.mcpb (double-click). If it does not open Claude: Claude → Settings → Extensions → Advanced settings → Install extension… and choose the file.\n2. Press Install, then turn the extension on. Leave the settings as they are.\n3. In a new chat, ask for example: “wrm: list my servers”.',
@@ -121,12 +132,23 @@ Object.assign(LANGS.hr, {
   mcp_mode_auto_d: 'Promjene s vašeg popisa dopuštenih izvršavaju se bez pitanja, unutar vremenskog ograničenja i ograničenja broja radnji po sesiji. Sve ostalo i dalje pita.',
   mcp_sc_read_logs: 'Čitanje zapisa, datoteka i podataka o sustavu', mcp_sc_run_readonly: 'Izvršavanje naredbi koje samo čitaju', mcp_sc_run_with_approval: 'Izvršavanje naredbi koje nešto mijenjaju (uz odobrenje)',
   mcp_sc_edit_file_with_approval: 'Uređivanje datoteka (uz odobrenje, prikazano kao razlike)', mcp_sc_transfer: 'Kopiranje datoteka između odabranih poslužitelja (uz odobrenje)',
+  mcp_sc_addons_manage: 'Skiciranje i upravljanje WRM dodacima (samo administratori, svaka promjena uz odobrenje)',
   mcp_sc_full_access: '⚠ Potpuni pristup: ništa se ne odbija, ali sve što bi WRM blokirao (destruktivne naredbe, liste zabrana, tajne datoteke, gašenje) prvo pita tebe, svaki put',
   mcp_auto_allow: 'Naredbe koje se smiju izvršiti bez pitanja (jedan uzorak po retku)', mcp_auto_path_allow: 'Datoteke koje se smiju mijenjati bez pitanja (/etc/nginx/**)',
   mcp_auto_minutes: 'Vremensko ograničenje po sesiji (minute)', mcp_auto_actions: 'Najviše radnji po sesiji', mcp_auto_confirm: 'Dopuštam ove promjene bez pitanja, unutar ovih ograničenja.',
   mcp_auto_all: 'Dopusti sve', mcp_auto_all_d: 'Sve naredbe i datoteke na odabranim serverima, bez pitanja. Blokirane naredbe i osjetljive datoteke i dalje ostaju blokirane.',
   mcp_auto_grant: 'Bez ograničenja vremena i broja radnji: automatski dok god vrijedi ova AI veza',
   mcp_token_once: 'Kopirajte token sada. WRM sprema samo sažetak i ne može ga ponovno prikazati.', mcp_token: 'Token', mcp_copy: 'Kopiraj', mcp_url: 'Adresa MCP poslužitelja',
+  mcp_quick_title: 'Poveži Claude jednom naredbom',
+  mcp_quick_d: 'Claude Code: naredba ispod (ili WRM PRO dodatak) s tokenom iz čarobnjaka. Claude Desktop: preuzmite proširenje. claude.ai i ChatGPT: dodajte prilagođeni konektor s MCP adresom i prijavite se.',
+  mcp_quick_cmd: 'Naredba za Claude Code (zamijenite YOUR_TOKEN)',
+  mcp_quick_wizard: 'Otvori čarobnjak korak po korak',
+  mcp_quick_cc: 'Claude Code, korak po korak',
+  mcp_quick_desk: 'Proširenje za Claude Desktop',
+  mcp_quick_cloud: 'claude.ai / ChatGPT konektor',
+  mcp_quick_which: 'Claude Desktop aplikacija koristi proširenje; Claude Code (terminal ili Code kartica) koristi /plugin unutar Claudea ili claude naredbu u PowerShellu.',
+  mcpw_cc_shell: 'U Claude Codeu je /plugin kosa crta naredba na Claude promptu, ne u PowerShellu. U PowerShellu pokrenite naredbu ispod (bez kose crte) ili prvo pokrenite `claude` pa upišite `/plugin …`. Nakon dodavanja restartajte Claude Code ili pokrenite `/mcp` za ponovno spajanje.',
+  mcpw_desk_no_plugin: 'Claude Desktop ne koristi /plugin: instalirajte .mcpb proširenje ispod (ili otvorite preuzetu datoteku).',
   mcp_setup: 'Postavljanje aplikacije', mcp_setup_claude_desktop: 'Claude Desktop (lokalni most)', mcp_setup_remote: 'Claude (prilagođeni konektor)', mcp_setup_chatgpt: 'ChatGPT (konektor)',
   mcp_setup_generic: 'Drugi MCP klijenti', mcp_setup_cli: 'Provjera iz ljuske',
   mcp_h_claude_desktop: 'Kopirajte program WRM (istu datoteku kao poslužitelj, za sustav vašeg računala) na računalo, zatim ovo dodajte u claude_desktop_config.json (Claude → Settings → Developer → Edit config) i ponovno pokrenite Claude. Zamijenite putanju punom putanjom programa.',
@@ -150,7 +172,7 @@ Object.assign(LANGS.hr, {
   mcp_adm_help: 'MCP klijenti pristupaju WRM-u na {url}. Prekidač za zaustavljanje AI asistenta zaustavlja i sve AI veze.',
   p_ai_mcp_enabled: 'AI veze (MCP)', p_ai_mcp_enabled_d: 'Posluži MCP krajnju točku /mcp i OAuth krajnje točke za AI aplikacije.',
   p_ai_mcp: 'Tko smije koristiti AI veze', p_ai_mcp_d: 'Tko smije stvarati tokene i odobravati AI aplikacije.', po_ai_mcp_off: 'Nitko', po_ai_mcp_admins: 'Administratori', po_ai_mcp_all: 'Svi',
-  p_ai_mcp_scopes: 'Dopušteni opsezi', p_ai_mcp_scopes_d: 'read_logs, run_readonly, run_with_approval, edit_file_with_approval, transfer', p_ai_mcp_scopes_ph: 'read_logs,run_readonly',
+  p_ai_mcp_scopes: 'Dopušteni opsezi', p_ai_mcp_scopes_d: 'read_logs, run_readonly, run_with_approval, edit_file_with_approval, transfer, addons.manage (administratori)', p_ai_mcp_scopes_ph: 'read_logs,run_readonly',
   p_ai_mcp_modes: 'Dopušteni načini rada', p_ai_mcp_modes_d: 'read_only, ask, auto. Pravila načina rada AI asistenta ih sužavaju po vezi.', p_ai_mcp_modes_ph: 'read_only,ask',
   p_ai_mcp_token_hours: 'Zadano trajanje (sati)', p_ai_mcp_token_hours_d: 'Trajanje novog tokena ili OAuth odobrenja kad ga korisnik ne odabere.',
   p_ai_mcp_max_token_hours: 'Najdulje trajanje (sati)', p_ai_mcp_max_token_hours_d: 'Najdulje trajanje koje korisnik smije odabrati.',
@@ -170,7 +192,7 @@ Object.assign(LANGS.hr, {
   mcpw_title: 'Povezivanje AI aplikacije (korak po korak)', mcpw_intro: 'WRM priprema token i točnu postavku za vašu aplikaciju. Vi je samo kopirate.',
   mcpw_s_client: 'Aplikacija', mcpw_s_access: 'Poslužitelji i pristup', mcpw_s_connect: 'Povezivanje', mcpw_s_test: 'Test',
   mcpw_pick: 'Koju aplikaciju želite povezati?', mcpw_via_token: 'tokenom (WRM ga stvara)', mcpw_via_oauth: 'prijava preko WRM-a (bez tokena)',
-  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code', mcpw_c_opencode: 'OpenCode', mcpw_h_opencode_json: '2. Dodajte ovo u ~/.config/opencode/opencode.json (ili opencode.json u projektu). OpenCode token čita iz varijable okoline:', mcpw_h_opencode_oauth: 'Ili bez tokena, s OAuth prijavom: ovakav unos bez zaglavlja, zatim ove naredbe:', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / ostalo', mcpw_c_claude_connector: 'Claude.ai (konektor u oblaku, javni HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
+  mcpw_c_codex: 'Codex CLI', mcpw_c_codex_oauth:'Codex CLI (OAuth)', mcpw_c_claude_code: 'Claude Code (terminal ili Code kartica)', mcpw_c_opencode: 'OpenCode', mcpw_h_opencode_json: '2. Dodajte ovo u ~/.config/opencode/opencode.json (ili opencode.json u projektu). OpenCode token čita iz varijable okoline:', mcpw_h_opencode_oauth: 'Ili bez tokena, s OAuth prijavom: ovakav unos bez zaglavlja, zatim ove naredbe:', mcpw_c_gemini: 'Gemini CLI', mcpw_c_cursor: 'Cursor / VS Code / ostalo', mcpw_c_claude_connector: 'Claude.ai (konektor u oblaku, javni HTTPS)', mcpw_c_chatgpt: 'ChatGPT',
   mcpw_access: 'Što aplikacija smije raditi?', mcpw_p_read: 'Samo pregled (preporučeno)', mcpw_p_read_d: 'Čita zapise, datoteke i podatke o sustavu te izvršava naredbe koje samo čitaju. Ništa se ne mijenja.',
   mcpw_p_ask: 'Pregled i promjene, uz vaše odobrenje', mcpw_p_ask_d: 'Može i izvršavati naredbe i uređivati datoteke, ali svaka promjena čeka vaše odobrenje u WRM-u.',
   mcpw_valid: 'Token vrijedi {n} sati. Možete ga opozvati bilo kada u nastavku.',
@@ -186,7 +208,7 @@ Object.assign(LANGS.hr, {
   mcpw_advanced: 'Napredno: stvori token s vlastitim načinom rada i opsezima',
 });
 Object.assign(LANGS.hr, {
-  mcpw_c_claude_desktop: 'Claude Desktop', mcpw_via_extension: 'proširenje u jednom kliku (radi u vašoj mreži)',
+  mcpw_c_claude_desktop: 'Claude Desktop aplikacija (chat)', mcpw_via_extension: 'proširenje u jednom kliku (radi u vašoj mreži)',
   mcpw_desk_h: 'Preuzmite WRM PRO proširenje i otvorite ga: Claude Desktop pokazuje gumb Install. Adresa i token već su upisani, pa ništa ne trebate tipkati. Radi i s WRM-om u vlastitoj mreži i preko običnog HTTP-a jer Claude Desktop s WRM-om razgovara s ovog računala.',
   mcpw_desk_dl: 'Preuzmi proširenje za Claude Desktop (wrm-pro.mcpb)', mcpw_desk_dl_note: 'Datoteka sadrži vaš token. Obrišite je nakon instalacije.',
   mcpw_desk_steps: '1. Otvorite preuzetu datoteku wrm-pro.mcpb (dvoklik). Ako se Claude ne otvori: Claude → Settings → Extensions → Advanced settings → Install extension… i odaberite datoteku.\n2. Pritisnite Install, zatim uključite proširenje. Postavke ostavite kakve jesu.\n3. U novom razgovoru zatražite na primjer: „wrm: popiši moje poslužitelje”.',
@@ -502,7 +524,7 @@ Object.assign(LANGS.hr, {
       const parts = wizConfig(W.client, cfg.url, W.token);
       const cloud=['chatgpt','claude_connector'].includes(W.client), host=new URL(cfg.url).hostname, local=/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(host)||host==='[::1]'||host.endsWith('.local');
       const warning=cloud&&(new URL(cfg.url).protocol!=='https:'||local)?'mcpw_public_needed':local?'mcpw_local_url':'';
-      body = `${warning?`<div class="hint-box warn">${esc(t(warning))}</div>`:''}<div class="hint-box">${esc(t('mcpw_h_' + (c.token ? 'token' : 'oauth')))}</div>${c.token ? `<div class="hint-box warn">${esc(t('mcp_token_once'))}</div>` : ''}` +
+      body = `${warning?`<div class="hint-box warn">${esc(t(warning))}</div>`:''}${W.client==='claude_code'?`<div class="hint-box warn">${esc(t('mcpw_cc_shell'))}</div>`:''}${W.client==='claude_desktop'?`<div class="hint-box warn">${esc(t('mcpw_desk_no_plugin'))}</div>`:''}<div class="hint-box">${esc(t('mcpw_h_' + (c.token ? 'token' : 'oauth')))}</div>${c.token ? `<div class="hint-box warn">${esc(t('mcp_token_once'))}</div>` : ''}` +
         (W.client === 'claude_desktop' ? `<div class="hint-box">${esc(t('mcpw_desk_h'))}</div><div style="margin:8px 0;"><button id="mcpw-desk-dl" onclick="wrmMCP.desktopExtension()">⬇ ${esc(t('mcpw_desk_dl'))}</button></div><div class="sub">${esc(t('mcpw_desk_dl_note'))}</div><div class="hint-box" style="white-space:pre-line;">${esc(t('mcpw_desk_steps'))}</div><div class="sub">${esc(t('mcpw_desk_noapp'))}</div>` : '') +
         parts.map((p, i) => `<div class="sub" style="margin-top:8px;">${esc(t(p.h))}</div>${wizPre(i, p.code)}${p.file ? `<button class="btn-sec btn-sm" onclick="wrmMCP.wizDownload(${i})">⬇ ${esc(t('mcpw_download'))} ${esc(p.file)}</button>` : ''}`).join('') +
         (['codex','codex_oauth','claude_code','gemini'].includes(W.client)?`<div class="hint-box">${esc(t('mcpw_installer_d'))}</div><button class="btn-sec btn-sm" onclick="wrmMCP.installer('sh')">${esc(t('mcpw_installer'))} (.sh)</button> <button class="btn-sec btn-sm" onclick="wrmMCP.installer('ps1')">${esc(t('mcpw_installer'))} (.ps1)</button>`:'')+
@@ -585,6 +607,18 @@ Object.assign(LANGS.hr, {
     catch (e) { pane.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
     if (!cfg.enabled) { pane.innerHTML = `<div class="hint-box warn">${esc(t('mcp_off'))}: ${esc(cfg.reason)}</div>${fullAccessHTML(cfg.full_access)}`; return; }
     pane.innerHTML = `<div class="hint-box">${esc(t('mcp_intro'))}</div>
+      <div class="hint-box" style="margin:8px 0;">
+        <b>🔌 ${esc(t('mcp_quick_title'))}</b>
+        <div class="sub" style="margin:3px 0 6px;">${esc(t('mcp_quick_d'))}</div>
+        <div class="sub" style="margin:0 0 6px;font-size:10.5px;color:var(--text3);">${esc(t('mcp_quick_which'))}</div>
+        <div class="sub" style="font-size:10.5px;color:var(--text3);">${esc(t('mcp_quick_cmd'))}</div>
+        <div class="mcp-snip"><pre id="mcp-quick-cmd">claude mcp add --transport http --scope user wrm ${esc(cfg.url)} --header "Authorization: Bearer YOUR_TOKEN"</pre><button class="btn-sec btn-sm" onclick="wrmMCP.copy('mcp-quick-cmd')">${esc(t('mcp_copy'))}</button></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+          <button class="btn-sm" onclick="wrmMCP.wizClient('claude_code')">${esc(t('mcp_quick_cc'))} →</button>
+          <button class="btn-sec btn-sm" onclick="wrmMCP.wizClient('claude_desktop')">${esc(t('mcp_quick_desk'))} →</button>
+          <button class="btn-sec btn-sm" onclick="wrmMCP.wizClient('claude_connector')">${esc(t('mcp_quick_cloud'))} →</button>
+        </div>
+      </div>
       <div id="mcpw" class="mcpw"></div>
       <div class="field" style="margin:8px 0;"><label style="font-size:11px;color:var(--text2);">${esc(t('mcp_url'))}</label><div class="mcp-snip"><pre id="mcp-url">${esc(cfg.url)}</pre><button class="btn-sec btn-sm" onclick="wrmMCP.copy('mcp-url')">${esc(t('mcp_copy'))}</button></div>
         <div class="sub" style="font-size:11px;color:var(--text3);">${esc(cfg.oauth ? t('mcp_oauth_box') : t('mcp_oauth_off'))}</div></div>
@@ -677,6 +711,19 @@ Object.assign(LANGS.hr, {
       const b = $('mcp-badge');
       if (b) { b.textContent = d.pending.length || d.live.length; b.style.background = d.pending.length ? 'var(--yellow)' : ''; }
     }
+    // A new approval is announced with a sound, a toast and a desktop notification:
+    // the live view may be hidden, so the card alone is not enough.
+    const now = new Set((d.pending || []).map(p => p.approval && p.approval.id).filter(Boolean));
+    for (const id of Object.keys(seenPending)) if (!now.has(id)) delete seenPending[id];
+    for (const p of d.pending || []) {
+      const a = p.approval || {};
+      if (!a.id || seenPending[a.id]) continue;
+      seenPending[a.id] = true;
+      if (window.wrmAiAlert) {
+        const what = a.command || a.path || a.transfer || a.tool || '';
+        wrmAiAlert('approval', tf('mcp_ap_title', {client: p.client, server: p.connection}) + (what ? ' · ' + what : ''), 'approval-' + a.id);
+      }
+    }
     if ($('mcp-pop') && $('mcp-pop').classList.contains('open')) renderPop();
     cards(d.pending);
     // a new MCP session opens its live view once (closing it is respected)
@@ -688,7 +735,7 @@ Object.assign(LANGS.hr, {
   }
 
   // ── live view of MCP sessions: what the AI runs on the server, approvals and output ──
-  const seenSess = {}, W8 = {};
+  const seenSess = {}, W8 = {}, seenPending = {};
   function watchAuto(on) {
     try {
       if (on === undefined) return localStorage.getItem('wrm_mcp_watch') !== '0';
@@ -1012,6 +1059,7 @@ Object.assign(LANGS.hr, {
     adminSettingsCache = settings;
     const active = grants.filter(g => g.state === 'active');
     body.innerHTML = `<div class="hint-box">${esc(tf('mcp_adm_help', {url: c.url}))}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"><button class="btn-sm" onclick="openSettings('st-mcp')">🔌 ${esc(t('mcp_quick_wizard'))}</button></div>
       <div style="display:flex;align-items:center;gap:8px;"><div class="adm-h" style="flex:1;">🔌 ${esc(t('mcp_adm_active'))}</div>${active.length ? `<button class="btn-danger btn-sm" onclick="wrmMCP.adminRevokeAll()">⏻ ${esc(t('mcp_revoke_all'))}</button>` : ''}</div>
       ${active.length ? `<div class="tbl-scroll"><table class="admin-table"><thead><tr><th>${esc(t('mcp_user'))}</th><th>${esc(t('mcp_client'))}</th><th>${esc(t('mcp_conns'))}</th><th>${esc(t('mcp_mode'))}</th><th>${esc(t('mcp_state'))}</th><th></th></tr></thead><tbody>` +
         active.map(g => `<tr><td>${esc(g.user)}</td><td>${esc(g.client_name || g.name)} <span class="pill">${esc(t('mcp_kind_' + g.kind))}</span><div class="sub">${esc(tf('mcp_expires', {time: rel(g.expires_at)}))}</div></td>

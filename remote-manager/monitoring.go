@@ -19,6 +19,14 @@ type monitorLogRoot struct {
 	Path     string `json:"path"`
 	Service  string `json:"service"`
 	Operator string `json:"operator"`
+	// Kind is "journal" for a systemd unit read through journalctl; empty or
+	// "file" means a directory of log files on the SSH host.
+	Kind string `json:"kind,omitempty"`
+	Unit string `json:"unit,omitempty"`
+}
+type monitorService struct {
+	Kind string `json:"kind"` // systemd | docker
+	Name string `json:"name"`
 }
 type monitorConfig struct {
 	Enabled     bool             `json:"enabled"`
@@ -37,6 +45,7 @@ type monitorConfig struct {
 	APIToken    string           `json:"api_token,omitempty"`
 	HasSecrets  bool             `json:"has_secrets"`
 	Roots       []monitorLogRoot `json:"roots"`
+	Services    []monitorService `json:"services,omitempty"`
 }
 
 type monitorMetric struct {
@@ -52,6 +61,7 @@ type monitorSample struct {
 	State    string                   `json:"state"`
 	Error    string                   `json:"error,omitempty"`
 	Metrics  map[string]monitorMetric `json:"metrics"`
+	Services map[string]string        `json:"services,omitempty"` // "systemd:nginx" -> active
 }
 
 func initMonitoring() {
@@ -106,6 +116,20 @@ func (c *monitorConfig) normalize() error {
 	}
 	for i := range c.Roots {
 		x := &c.Roots[i]
+		if x.Kind == "journal" {
+			if !monitorJournalUnit.MatchString(x.Unit) {
+				return fmt.Errorf("invalid journal unit name")
+			}
+			// The unit is the whole address of this source; keep Path canonical so
+			// the UI, audit records and root matching agree on one spelling.
+			x.Path = "journal:" + x.Unit
+			if len(x.Service) > 120 || len(x.Operator) > 120 {
+				return fmt.Errorf("invalid log root labels")
+			}
+			continue
+		}
+		x.Kind = ""
+		x.Unit = ""
 		x.Path = path.Clean(x.Path)
 		if !strings.HasPrefix(x.Path, "/") || x.Path == "/" || len(x.Path) > 1024 || strings.ContainsAny(x.Path, "\x00\r\n") || len(x.Service) > 120 || len(x.Operator) > 120 {
 			return fmt.Errorf("invalid log root; use an absolute directory other than /")
@@ -113,6 +137,28 @@ func (c *monitorConfig) normalize() error {
 	}
 	if len(c.CA)+len(c.Certificate)+len(c.PrivateKey) > 128<<10 || len(c.APIToken) > 4096 {
 		return fmt.Errorf("monitoring credentials too large")
+	}
+	if len(c.Services) > 20 {
+		return fmt.Errorf("at most 20 monitored services")
+	}
+	for i := range c.Services {
+		x := &c.Services[i]
+		x.Name = strings.TrimSpace(x.Name)
+		if x.Kind == "" {
+			x.Kind = "systemd"
+		}
+		switch x.Kind {
+		case "systemd":
+			if !monitorUnitPattern.MatchString(x.Name) {
+				return fmt.Errorf("invalid systemd unit name %q", x.Name)
+			}
+		case "docker":
+			if !monitorContainerPattern.MatchString(x.Name) {
+				return fmt.Errorf("invalid Docker container name %q", x.Name)
+			}
+		default:
+			return fmt.Errorf("a monitored service is systemd or docker")
+		}
 	}
 	return nil
 }
@@ -255,6 +301,14 @@ func apiMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 			rows.Close()
 		}
 		jsonOK(w, out)
+	case "logs/discover":
+		monitorLogsDiscoverHandler(w, r, c, acc)
+	case "logs/settings":
+		logSettingsHandler(w, r, c, acc)
+	case "logs/grep":
+		logGrepHandler(w, r, c, acc)
+	case "logs/lines":
+		logLinesHandler(w, r, c, acc)
 	case "logs", "log":
 		monitorLogsHandler(w, r, c, acc, rest)
 	default:

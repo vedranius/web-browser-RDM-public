@@ -26,6 +26,10 @@ type monitorLogFile struct {
 	Operator string `json:"operator"`
 	Size     int64  `json:"size"`
 	Modified int64  `json:"modified"`
+	// Kind is "journal" for a systemd unit read through journalctl; empty means a
+	// regular log file. Unit carries the journal unit name.
+	Kind string `json:"kind,omitempty"`
+	Unit string `json:"unit,omitempty"`
 }
 type monitorLogChunk struct {
 	Text         string `json:"text"`
@@ -44,7 +48,15 @@ type monitorLogChunk struct {
 	Matches      int    `json:"matches"`
 	Timezone     string `json:"timezone"`
 	Note         string `json:"note"`
+	// Kind is "journal" when the text came from journalctl rather than a file
+	// read; byte offsets and signatures do not apply to journal sources.
+	Kind string `json:"kind,omitempty"`
+	Unit string `json:"unit,omitempty"`
 }
+
+// A systemd unit name may contain letters, digits, dot, underscore, at, colon
+// and dash. Anything else is rejected before it can reach a command line.
+var monitorJournalUnit = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.@:\-]{0,199}$`)
 
 func openMonitorSFTP(ctx context.Context, c Connection) (*sftp.Client, func(), error) {
 	cl, err := dialSSH(c, nil)
@@ -108,21 +120,42 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 	}
 	cfg := loadMonitorConfig(c.ID)
 	cfg.Roots = monitorAvailableRoots(c)
+	discovery, discovered := monitorDiscoveryView(c)
 	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 	defer cancel()
-	fs, closeFS, err := openMonitorSFTP(ctx, c)
-	if err != nil {
-		jsonError(w, "SSH/SFTP log access failed: "+err.Error(), 502)
+	// SFTP is opened lazily: a journal-only source needs an SSH command, not a
+	// file session, and listing files for an undiscovered connection should not
+	// pay for a session it cannot use.
+	var fs *sftp.Client
+	var closeFS func()
+	defer func() {
+		if closeFS != nil {
+			closeFS()
+		}
+	}()
+	openFS := func() bool {
+		if fs != nil {
+			return true
+		}
+		var err error
+		fs, closeFS, err = openMonitorSFTP(ctx, c)
+		if err != nil {
+			jsonError(w, "SSH/SFTP log access failed: "+err.Error(), 502)
+			return false
+		}
+		return true
+	}
+	if rest == "logs" && discovered && discovery.Files != nil {
+		jsonOK(w, map[string]interface{}{"files": discovery.Files, "roots": discovery.Roots, "warnings": discovery.Warnings, "incomplete": false, "discovered": true, "discovered_at": discovery.At, "services": discovery.Services, "method": discovery.Method, "limits": map[string]int{"files": loadLogSettings(c.ID).MaxFiles}})
 		return
 	}
-	defer closeFS()
 	if rest == "logs" {
-		rootCtx, stopRoots := context.WithTimeout(ctx, 20*time.Second)
-		roots, rootWarnings := monitorDiscoverRoots(rootCtx, fs, c)
-		stopRoots()
-		cfg.Roots = roots
+		if !openFS() {
+			return
+		}
+		logSet := loadLogSettings(c.ID)
 		files := []monitorLogFile{}
-		warnings := rootWarnings
+		warnings := append([]string(nil), discovery.Warnings...)
 		visited := 0
 		seenFiles := map[string]bool{}
 		capped := false
@@ -131,6 +164,12 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 			depth, root int
 		}
 		for root, x := range cfg.Roots {
+			if x.Kind == "journal" {
+				if monitorJournalUnit.MatchString(x.Unit) {
+					files = append(files, monitorLogFile{Root: root, Path: "journal:" + x.Unit, Service: x.Service, Operator: x.Operator, Kind: "journal", Unit: x.Unit})
+				}
+				continue
+			}
 			real, err := monitorSafePath(fs, x.Path, x.Path)
 			if err != nil {
 				warnings = append(warnings, x.Path+": "+err.Error())
@@ -156,6 +195,16 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 					warnings = append(warnings, d.name+": not readable")
 					continue
 				}
+				// A folder that already holds a *.log file is a service log folder:
+				// its other files (Serilog "info", "warn", extensionless output) belong
+				// to the same service and are shown too.
+				hasLog := false
+				for _, f := range entries {
+					if !f.IsDir() && monitorLogName(f.Name()) {
+						hasLog = true
+						break
+					}
+				}
 				for _, f := range entries {
 					visited++
 					if visited > 10000 || len(files) >= 2000 {
@@ -178,7 +227,7 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 					if !f.Mode().IsRegular() || aiReadDenied(p) != "" {
 						continue
 					}
-					if !monitorLogName(f.Name()) && !(includeTxt && strings.HasSuffix(strings.ToLower(f.Name()), ".txt")) {
+					if !logFileAccepted(f.Name(), includeTxt || (hasLog && d.depth > 0) || monitorLogDirName(path.Base(d.name)), logSet) {
 						continue
 					}
 					if oneOf(strings.ToLower(path.Ext(f.Name())), ".gz", ".bz2", ".xz", ".zip", ".zst") {
@@ -188,14 +237,27 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 						continue
 					}
 					seenFiles[p] = true
-					files = append(files, monitorLogFile{Root: root, Path: p, Service: x.Service, Operator: x.Operator, Size: f.Size(), Modified: f.ModTime().Unix()})
+					// Files in a subfolder of a broad root belong to that folder;
+					// label them so the service filter and column are useful
+					// (/var/log/media-api/error.log -> media-api).
+					service := x.Service
+					if service == "" && d.depth > 0 {
+						rel := strings.TrimPrefix(d.name, strings.TrimSuffix(real, "/")+"/")
+						if i := strings.Index(rel, "/"); i > 0 {
+							rel = rel[:i]
+						}
+						if rel != "" && rel != "." && !strings.Contains(rel, "..") {
+							service = rel
+						}
+					}
+					files = append(files, monitorLogFile{Root: root, Path: p, Service: service, Operator: x.Operator, Size: f.Size(), Modified: f.ModTime().Unix()})
 				}
 			}
 			if len(queue) > 0 {
 				capped = true
 			}
 		}
-		jsonOK(w, map[string]interface{}{"files": files, "roots": cfg.Roots, "warnings": warnings, "incomplete": capped, "limits": map[string]int{"files": 2000, "entries": 10000, "depth": 8}})
+		jsonOK(w, map[string]interface{}{"files": files, "roots": cfg.Roots, "warnings": warnings, "incomplete": capped, "discovered": discovered, "discovered_at": discovery.At, "services": discovery.Services, "limits": map[string]int{"files": 2000, "entries": 10000, "depth": 8}})
 		return
 	}
 	root, err := strconv.Atoi(r.URL.Query().Get("root"))
@@ -211,6 +273,13 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 	}
 	if err != nil || root < 0 || root >= len(cfg.Roots) {
 		jsonError(w, "Choose a configured log root", 400)
+		return
+	}
+	if cfg.Roots[root].Kind == "journal" {
+		monitorJournalLogHandler(w, r, c, cfg.Roots[root])
+		return
+	}
+	if !openFS() {
 		return
 	}
 	p := r.URL.Query().Get("path")
@@ -409,19 +478,70 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 	jsonOK(w, chunk)
 }
 
-var monitorISOTime = regexp.MustCompile(`^\s*(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)`)
+var monitorISOTime = regexp.MustCompile(`^\s*\[?(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:Z|[+-]\d{2}:?\d{2})?)`)
+
+// Other timestamp shapes seen in service logs, tried near the start of a line:
+// 2026/10/22 14:03:01, 22.10.2026 14:03:01, [22/Oct/2026:14:03:01 +0200]
+// (nginx/Apache) and ISO times after a level or a bracket.
+var (
+	monitorSlashTime = regexp.MustCompile(`^\s*\[?(\d{4})/(\d{2})/(\d{2})[ T](\d{2}):(\d{2}):(\d{2})`)
+	monitorEUTime    = regexp.MustCompile(`^\s*\[?(\d{1,2})\.(\d{1,2})\.(\d{4})\.?[ T](\d{1,2}):(\d{2}):(\d{2})`)
+	monitorCLFTime   = regexp.MustCompile(`\[(\d{2}/[A-Z][a-z]{2}/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4})\]`)
+	monitorISOInside = regexp.MustCompile(`(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:Z|[+-]\d{2}:?\d{2})?)`)
+)
+
+func parseMonitorISO(v string, loc *time.Location) (time.Time, bool) {
+	v = strings.Replace(strings.Replace(v, " ", "T", 1), ",", ".", 1)
+	for _, layout := range []string{time.RFC3339Nano, "2006-01-02T15:04:05.999999999-0700", "2006-01-02T15:04:05.999999999"} {
+		if at, err := time.ParseInLocation(layout, v, loc); err == nil {
+			return at, true
+		}
+	}
+	return time.Time{}, false
+}
 
 func parseMonitorLogTime(line string, loc *time.Location) (time.Time, bool) {
 	if m := monitorISOTime.FindStringSubmatch(line); len(m) > 1 {
-		v := strings.Replace(m[1], " ", "T", 1)
-		for _, layout := range []string{time.RFC3339Nano, "2006-01-02T15:04:05.999999999-0700", "2006-01-02T15:04:05.999999999"} {
-			if at, err := time.ParseInLocation(layout, v, loc); err == nil {
-				return at, true
-			}
+		if at, ok := parseMonitorISO(m[1], loc); ok {
+			return at, true
+		}
+	}
+	num := func(m []string) []int {
+		out := make([]int, len(m)-1)
+		for i, v := range m[1:] {
+			out[i], _ = strconv.Atoi(v)
+		}
+		return out
+	}
+	if m := monitorSlashTime.FindStringSubmatch(line); m != nil {
+		n := num(m)
+		return time.Date(n[0], time.Month(n[1]), n[2], n[3], n[4], n[5], 0, loc), true
+	}
+	if m := monitorEUTime.FindStringSubmatch(line); m != nil {
+		n := num(m)
+		if n[1] >= 1 && n[1] <= 12 && n[0] >= 1 && n[0] <= 31 {
+			return time.Date(n[2], time.Month(n[1]), n[0], n[3], n[4], n[5], 0, loc), true
 		}
 	}
 	if len(line) >= 15 {
 		if at, err := time.ParseInLocation("2006 Jan _2 15:04:05", fmt.Sprintf("%d %s", time.Now().In(loc).Year(), line[:15]), loc); err == nil {
+			return at, true
+		}
+	}
+	head := line
+	if len(head) > 160 {
+		head = head[:160]
+	}
+	if m := monitorCLFTime.FindStringSubmatch(head); m != nil {
+		if at, err := time.Parse("02/Jan/2006:15:04:05 -0700", m[1]); err == nil {
+			return at.In(loc), true
+		}
+	}
+	if len(head) > 64 {
+		head = head[:64]
+	}
+	if m := monitorISOInside.FindStringSubmatch(head); m != nil {
+		if at, ok := parseMonitorISO(m[1], loc); ok {
 			return at, true
 		}
 	}
@@ -510,6 +630,133 @@ func filterMonitorLogSegment(text, q string, from, to time.Time, loc *time.Locat
 		}
 	}
 	return out.String(), unknown, matches, consumed, eventTime
+}
+
+// monitorLogsDiscoverHandler runs the explicit "Find logs" action. It is the
+// only place that scans the host; the file list endpoint reads the cached
+// result so opening the tab never starts a scan on its own.
+func monitorLogsDiscoverHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *connAccess) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	if acc.Share != nil {
+		jsonError(w, "Only the owner can search for logs", 403)
+		return
+	}
+	start := time.Now()
+	res, err := logDiscover(r.Context(), c)
+	if err != nil {
+		jsonError(w, err.Error(), 502)
+		return
+	}
+	auditFileOp(r, acc, c, "monitor.logs_discovered", c.Name, map[string]interface{}{"roots": len(res.Roots), "services": len(res.Services), "files": len(res.Files), "method": res.Method, "ms": time.Since(start).Milliseconds()})
+	jsonOK(w, map[string]interface{}{"roots": res.Roots, "services": res.Services, "warnings": res.Warnings, "discovered": true, "discovered_at": res.At, "method": res.Method, "files": len(res.Files), "ms": time.Since(start).Milliseconds()})
+}
+
+// monitorJournalLogHandler reads a systemd unit through journalctl. The unit is
+// matched against a strict name pattern, every other argument is generated here
+// and timestamps are formatted from parsed values, so no request text reaches
+// the remote shell.
+func monitorJournalLogHandler(w http.ResponseWriter, r *http.Request, c Connection, root monitorLogRoot) {
+	if !monitorJournalUnit.MatchString(root.Unit) {
+		jsonError(w, "Invalid journal unit", 400)
+		return
+	}
+	tz := r.URL.Query().Get("timezone")
+	if tz == "" {
+		tz = "UTC"
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		jsonError(w, "Unknown log timezone", 400)
+		return
+	}
+	q := r.URL.Query().Get("q")
+	if len(q) > 200 {
+		jsonError(w, "Search text too long", 400)
+		return
+	}
+	from, err := monitorLogTimeBound(r.URL.Query().Get("from"), loc)
+	if err != nil {
+		jsonError(w, "Invalid from date/time", 400)
+		return
+	}
+	to, err := monitorLogTimeBound(r.URL.Query().Get("to"), loc)
+	if err != nil {
+		jsonError(w, "Invalid to date/time", 400)
+		return
+	}
+	if !from.IsZero() && !to.IsZero() && from.After(to) {
+		jsonError(w, "From must not be after until", 400)
+		return
+	}
+	lower := from
+	if since, err := time.Parse(time.RFC3339, r.URL.Query().Get("since")); err == nil && (lower.IsZero() || since.After(lower)) {
+		lower = since.In(loc)
+	}
+	lines := 200
+	if v, err := strconv.Atoi(r.URL.Query().Get("lines")); err == nil && v > 0 {
+		lines = min(v, 2000)
+	}
+	args := []string{"journalctl", "--no-pager", "--output=short-iso", "--unit=" + root.Unit, "--lines=" + strconv.Itoa(lines)}
+	if !lower.IsZero() {
+		// @seconds is timezone-free, so a browser timezone can never shift the
+		// window relative to the server's journal.
+		args = append(args, "--since=@"+strconv.FormatInt(lower.Unix(), 10))
+	}
+	if !to.IsZero() {
+		args = append(args, "--until=@"+strconv.FormatInt(to.Unix(), 10))
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	cl, err := dialSSH(c, nil)
+	if err != nil {
+		jsonError(w, "SSH log access failed: "+err.Error(), 502)
+		return
+	}
+	defer cl.Close()
+	raw, err := monitorSSHCommand(ctx, cl, strings.Join(args, " "))
+	raw = strings.ToValidUTF8(raw, "�")
+	if err != nil && strings.TrimSpace(raw) == "" {
+		jsonError(w, "journalctl failed: "+truncateStr(redactText(err.Error()), 300), 502)
+		return
+	}
+	kept := []string{}
+	for _, line := range strings.Split(raw, "\n") {
+		// journalctl prints "-- Logs begin at …" banners and rotation notes.
+		if strings.HasPrefix(line, "-- ") || strings.ContainsRune(line, '\x00') {
+			continue
+		}
+		kept = append(kept, line)
+	}
+	text := strings.TrimRight(strings.Join(kept, "\n"), "\n")
+	chunk := monitorLogChunk{Kind: "journal", Unit: root.Unit, Timezone: tz, Note: "systemd journal read with journalctl --output=short-iso. The last " + strconv.Itoa(lines) + " entries are read, then filtered; byte offsets and live signatures do not apply. A unit that writes to journald needs the SSH account to have journal read access."}
+	chunk.Text = text
+	if q != "" || !from.IsZero() || !to.IsZero() {
+		var unknown, matches int
+		chunk.Text, unknown, matches = filterMonitorLog(text, q, from, to, loc)
+		chunk.UnknownTimes = unknown
+		chunk.Matches = matches
+	}
+	for _, line := range strings.Split(chunk.Text, "\n") {
+		if strings.TrimSpace(line) != "" {
+			chunk.Rows++
+		}
+	}
+	if q == "" {
+		chunk.Matches = chunk.Rows
+	}
+	chunk.FirstTime, chunk.LastTime = monitorEventRange(chunk.Text, "", time.Time{}, time.Time{}, loc, time.Time{})
+	chunk.EventTime = chunk.LastTime
+	chunk.Signature = root.Unit + ":" + chunk.LastTime
+	if r.URL.Query().Get("download") == "1" {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Content-Disposition", `attachment; filename="journal-excerpt.txt"`)
+		io.WriteString(w, chunk.Text)
+		return
+	}
+	jsonOK(w, chunk)
 }
 
 // Matching continuation lines inherit their event timestamp even when the

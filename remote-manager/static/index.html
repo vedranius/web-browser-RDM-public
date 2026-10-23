@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.9.1</title>
+<title>Web Remote Manager PRO</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -862,12 +862,7 @@ kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var
 }
 
 /* Editor */
-#modal-editor .modal { width: min(1100px, 96vw); height: min(86vh, 900px); display: flex; flex-direction: column; padding: 16px; }
-#editor-text { flex: 1; min-height: 0; width: 100%; resize: none; background: #0b0d12; color: #e7e9ef; border: 1px solid var(--border2); border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; tab-size: 4; outline: none; white-space: pre; overflow: auto; user-select: text; }
-#editor-text:focus { border-color: var(--accent-b); }
-.editor-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.editor-head h3 { margin: 0 !important; font-size: 14px !important; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'JetBrains Mono', monospace; }
-.editor-meta { font-size: 11px; color: var(--text3); }
+#modal-editor .modal { display: flex; flex-direction: column; }
 
 /* Connection test result */
 .conn-test-result { font-size: 11.5px; padding: 8px 10px; border-radius: 8px; margin-top: 4px; display: none; word-break: break-word; }
@@ -1596,10 +1591,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 /* Top bar: fitTopBar() gives way step by step (tb1..tb6: labels, then less used buttons
    into the ⋯ menu) whenever it would overflow, whatever the language, zoom or badges */
 .btn-top, .add-win-btn, .upd-badge { white-space: nowrap; flex-shrink: 0; }
-#top-bar.tb1 .app-ver .ver-txt, #top-bar.tb1 .top-sep, #top-bar.tb1 .sess-lbl { display: none; }
+#top-bar.tb1 .top-sep, #top-bar.tb1 .sess-lbl { display: none; }
 #top-bar.tb2 #btn-mcp .lbl, #top-bar.tb2 .upd-badge .lbl { display: none; }
 #top-bar.tb2 .upd-badge { margin-left: 4px; padding: 2px 7px; }
-#top-bar.tb3 .btn-top .lbl { display: none; }
+#top-bar.tb3 .btn-top .lbl, #top-bar.tb3 .app-ver .ver-txt { display: none; }
 #top-bar.tb4 .add-win-btn .lbl, #top-bar.tb4 #user-chip .name { display: none; }
 #top-bar.tb5 #sess-bar-name { max-width: 70px; }
 #top-bar.tb5, #top-bar.tb5 #auth-info { gap: 4px; }
@@ -1668,7 +1663,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.9.1 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1761,7 +1756,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.9.1</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1784,6 +1779,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </span>
       <button class="btn-top" id="btn-more" style="display:none;" onclick="toggleTopMore(event)" data-i18n-title="tb_more_t" title="More" aria-haspopup="menu" aria-expanded="false"><span>⋯</span><span class="more-dot"></span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
+      <button class="btn-top" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
       <button class="btn-top" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
     </div>
     <button class="add-win-btn" onclick="addWindow()" title="New window (Alt+N)"><span>＋</span><span class="lbl" data-i18n="new_window_lbl">New Window</span></button>
@@ -2181,6 +2177,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="st-history" id="st-history-btn" onclick="showSettingsTab('st-history')" data-i18n="tab_history">Session history</button>
       <button class="tab-btn" data-tab="st-ai" id="st-ai-btn" onclick="showSettingsTab('st-ai')" data-i18n="adm_ai">AI assistant</button>
       <button class="tab-btn" data-tab="st-mcp" id="st-mcp-btn" onclick="showSettingsTab('st-mcp')" data-i18n="tab_mcp">AI connections</button>
+      <button class="tab-btn" data-tab="st-addons" id="st-addons-btn" onclick="showSettingsTab('st-addons')" data-i18n="tab_addons">Addons</button>
       <button class="tab-btn" data-tab="st-data" id="st-data-btn" onclick="showSettingsTab('st-data')" data-i18n="tab_data">Data</button>
     </div>
     <div class="tab-intro" id="settings-intro"></div>
@@ -2204,6 +2201,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="notify_down">Notify when a server goes down</div><div class="setting-desc" data-i18n="notify_down_desc">A message (and a desktop notification while WRM is in the background) when a monitored connection goes down or comes back</div></div>
         <div class="setting-control"><select class="setting-select" id="setting-notify-down" onchange="applySettings()"><option value="1" data-i18n="on">On</option><option value="0" data-i18n="off">Off</option></select></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label" data-i18n="date_format">Date and time format</div><div class="setting-desc" data-i18n="date_format_desc">How dates and times are shown everywhere in WRM (logs, searches, history)</div></div>
+        <div class="setting-control"><select class="setting-select" id="setting-datefmt" onchange="setDateFormat(this.value)"><option value="eu" data-i18n="date_fmt_eu">European (23.10.2026 14:05:09)</option><option value="iso" data-i18n="date_fmt_iso">ISO (2026-10-23 14:05:09)</option><option value="us" data-i18n="date_fmt_us">US (10/23/2026, 2:05:09 PM)</option><option value="locale" data-i18n="date_fmt_locale">Browser default</option></select></div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="max_upload">Max upload size</div><div class="setting-desc" data-i18n="max_upload_desc">Per file, 0 = unlimited (MB)</div></div>
@@ -2233,6 +2234,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     </div>
     <div class="tab-pane" id="st-ai"><div id="ai-status-pane"></div></div>
     <div class="tab-pane" id="st-mcp"><div id="mcp-pane"></div></div>
+    <div class="tab-pane" id="st-addons"><div id="addons-pane"></div></div>
     <div class="tab-pane" id="st-data">
       <div class="setting-row">
         <div><div class="setting-label" data-i18n="export_config">Export connections</div><div class="setting-desc" data-i18n="export_config_desc">Folders and connections as JSON, without passwords and keys</div></div>
@@ -2721,6 +2723,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="rp-controls">
       <button class="btn-sm" id="rp-play" onclick="replayToggle()" style="min-width:40px;">▶</button>
       <span class="rp-time" id="rp-time">0:00 / 0:00</span>
+      <span class="rp-time" id="rp-wall" title="Wall-clock time at the playhead"></span>
       <input type="range" id="rp-seek" min="0" max="1000" value="0" oninput="replaySeekInput(this.value)">
       <select id="rp-speed" class="setting-select" onchange="replaySetSpeed(this.value)"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option><option value="16">16×</option></select>
       <label class="rp-idle"><input type="checkbox" id="rp-idle" checked onchange="replaySetIdle(this.checked)"><span data-i18n="skip_idle">Skip idle time</span></label>
@@ -2822,6 +2825,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <option value="user" data-i18n="urole_user">User</option><option value="operator" data-i18n="urole_operator">Operator</option>
       <option value="auditor" data-i18n="urole_auditor">Security auditor</option><option value="admin" data-i18n="urole_admin">Administrator</option></select>
       <div class="muted-text" style="margin-top:4px;" id="nu-role-hint"></div></div>
+    <div class="field"><label data-i18n="rec_level_lbl">Session recording</label><select id="nu-record">
+      <option value="" data-i18n="rec_level_default">As the server settings</option>
+      <option value="none" data-i18n="rec_level_none">Off for this user</option>
+      <option value="metadata" data-i18n="rec_level_meta">Session output only (no keystrokes)</option>
+      <option value="input" data-i18n="rec_level_input">Session output and keystrokes</option></select>
+      <div class="muted-text" style="margin-top:4px;" data-i18n="rec_level_hint">The server setting stays the master switch: turning recording off there records nothing.</div></div>
     <div class="modal-footer"><button class="btn-sec" onclick="closeModal('modal-user-new')" data-i18n="cancel">Cancel</button><button onclick="submitNewUser()" data-i18n="create">Create</button></div>
   </div>
 </div>
@@ -2890,19 +2899,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 
 <!-- Text Editor Modal -->
 <div class="modal-overlay" id="modal-editor" style="z-index:9150;">
-  <div class="modal">
-    <div class="editor-head">
-      <h3 id="editor-title">file</h3>
-      <span class="editor-meta" id="editor-meta"></span>
-    </div>
-    <textarea id="editor-text" spellcheck="false" wrap="off" onkeydown="editorKey(event)" oninput="updateEditorMeta()"></textarea>
-    <div class="modal-footer">
-      <span style="margin-right:auto;font-size:11px;color:var(--text3);"><kbd>Ctrl</kbd>+<kbd>S</kbd> <span data-i18n="save">Save</span> · <kbd>Esc</kbd> <span data-i18n="close">Close</span></span>
-      <button class="btn-sec" onclick="closeEditor()" data-i18n="close">Close</button>
-      <button class="btn-sec" id="editor-save-btn" onclick="saveEditor(false)" data-i18n="save">Save</button>
-      <button onclick="saveEditor(true)" data-i18n="save_close">Save &amp; Close</button>
-    </div>
-  </div>
+  <div class="modal"></div>
 </div>
 
 <!-- Generic confirm / prompt dialog -->
@@ -3438,6 +3435,7 @@ Object.assign(LANGS.en, {
   started:'Started', server:'Server', duration:'Duration', all_statuses:'All statuses', no_sessions_yet:'No terminal sessions yet.',
   ts_active:'Active', ts_connecting:'Connecting', ts_closed:'Closed', ts_failed:'Failed', ts_lost:'Connection lost', ts_killed:'Ended by admin', ts_interrupted:'Interrupted',
   skip_idle:'Skip idle time', session_events:'Session events', replay_failed:'The recording could not be loaded',
+  rp_wall:'Wall-clock time at the playhead', rp_ended:'Ended',
   date_from:'From date', date_to:'To date', verify_integrity:'Verify integrity',
   audit_ok:'Audit log intact: {n} entries verified (#{first} – #{last}).', audit_unsigned:'{n} newer entries have no hash (written by an older version).',
   audit_broken:'Audit log integrity check FAILED at entry #{id}: {reason}',
@@ -3953,6 +3951,7 @@ Object.assign(LANGS.hr, {
   started:'Početak', server:'Server', duration:'Trajanje', all_statuses:'Svi statusi', no_sessions_yet:'Još nema terminalskih sesija.',
   ts_active:'Aktivna', ts_connecting:'Spajanje', ts_closed:'Zatvorena', ts_failed:'Neuspjela', ts_lost:'Veza izgubljena', ts_killed:'Prekinuo admin', ts_interrupted:'Prekinuta',
   skip_idle:'Preskoči neaktivnost', session_events:'Događaji sesije', replay_failed:'Snimku nije moguće učitati',
+  rp_wall:'Stvarno vrijeme na poziciji reprodukcije', rp_ended:'Završeno',
   date_from:'Od datuma', date_to:'Do datuma', verify_integrity:'Provjeri integritet',
   audit_ok:'Audit log je netaknut: provjereno {n} zapisa (#{first} – #{last}).', audit_unsigned:'{n} novijih zapisa nema hash (zapisala ih je starija verzija).',
   audit_broken:'Provjera integriteta audit loga NIJE USPJELA kod zapisa #{id}: {reason}',
@@ -5059,6 +5058,14 @@ Object.assign(LANGS.hr, {
   tab_mcp: 'AI veze', adm_mcp: 'AI veze', mcp_connected_lbl: 'AI povezan', mcp_btn_t: 'AI aplikacije povezane preko MCP-a: pregled ili opoziv pristupa',
   mcp_load_failed: 'AI veze se nisu mogle učitati',
 });
+Object.assign(LANGS.en, {
+  tab_addons: 'Addons',
+  stin_addons: 'Addons extend WRM from inside itself: an extra panel or a colour theme, installed as a ZIP. A panel runs sandboxed and cannot touch the rest of the interface. Only an administrator installs, enables or removes an addon.',
+});
+Object.assign(LANGS.hr, {
+  tab_addons: 'Dodaci',
+  stin_addons: 'Dodaci proširuju WRM iz njega samoga: dodatni panel ili tema boja, instalirani kao ZIP. Panel radi u sandboxu i ne može dirati ostatak sučelja. Samo administrator instalira, uključuje ili uklanja dodatak.',
+});
 // Short "what is this for" lines under the Settings and Admin panel tabs (v12.2.3)
 Object.assign(LANGS.en, {
   stin_general: 'Everyday preferences for this browser: language, accent color, upload limit and the messages WRM shows you.',
@@ -5435,6 +5442,12 @@ Object.assign(LANGS.en, {
  "urole_auditor_d": "Reads the audit log, terminal sessions and recordings, file transfers and the security posture. Cannot open connections, use tools or the AI assistant, or change anything.",
  "urole_operator_d": "A user who also gets the features whose policy is set to Operators.",
  "urole_user_d": "Uses their own connections and what is shared with them, as the policies allow.",
+ "rec_level_lbl": "Session recording",
+ "rec_level_default": "As the server settings",
+ "rec_level_none": "Off for this user",
+ "rec_level_meta": "Session output only (no keystrokes)",
+ "rec_level_input": "Session output and keystrokes",
+ "rec_level_hint": "The server setting stays the master switch: turning recording off there records nothing.",
  "role_change_q": "Change the role of {u} to {r}?",
  "break_glass": "Break-glass",
  "break_glass_d": "Emergency administrator: must use 2FA, may be limited to allowed networks, every sign-in is audited and sent to the other administrators.",
@@ -5498,6 +5511,12 @@ Object.assign(LANGS.hr, {
  "urole_auditor_d": "Čita audit, terminalske sesije i snimke, prijenose datoteka i sigurnosno stanje. Ne može otvarati konekcije, koristiti alate ni AI asistenta, niti išta mijenjati.",
  "urole_operator_d": "Korisnik koji dobiva i funkcije čija je politika postavljena na Operateri.",
  "urole_user_d": "Koristi svoje konekcije i ono što je s njim podijeljeno, kako politike dopuštaju.",
+ "rec_level_lbl": "Snimanje sesije",
+ "rec_level_default": "Kako su postavke servera",
+ "rec_level_none": "Isključeno za ovog korisnika",
+ "rec_level_meta": "Samo izlaz sesije (bez tipki)",
+ "rec_level_input": "Izlaz sesije i tipke",
+ "rec_level_hint": "Postavka servera ostaje glavni prekidač: kad je snimanje tamo isključeno, ne snima se ništa.",
  "role_change_q": "Promijeniti ulogu korisnika {u} u {r}?",
  "break_glass": "Break-glass",
  "break_glass_d": "Administrator za hitne slučajeve: mora koristiti 2FA, može biti ograničen na dopuštene mreže, svaka prijava ide u audit i šalje se ostalim administratorima.",
@@ -6202,6 +6221,24 @@ Object.assign(LANGS.hr, {
  "p_alert_audit_off_d": "Audit log je isključen ili je SIEM odredište isključeno ili obrisano.",
  "ne_security_alert": "Sigurnosna uzbuna",
 });
+Object.assign(LANGS.en, {
+ "date_format": "Date and time format",
+ "date_format_desc": "How WRM shows dates and times everywhere (logs, searches, filters, sessions). Saved in this browser.",
+ "date_fmt_eu": "European: 23.10.2026 14:05:09",
+ "date_fmt_iso": "ISO: 2026-10-23 14:05:09",
+ "date_fmt_us": "US: 10/23/2026 2:05:09 PM",
+ "date_fmt_locale": "Browser language default",
+ "date_format_saved": "Date and time format saved",
+});
+Object.assign(LANGS.hr, {
+ "date_format": "Format datuma i vremena",
+ "date_format_desc": "Kako WRM svugdje prikazuje datume i vremena (logovi, pretrage, filteri, sesije). Sprema se u ovom pregledniku.",
+ "date_fmt_eu": "Europski: 23.10.2026 14:05:09",
+ "date_fmt_iso": "ISO: 2026-10-23 14:05:09",
+ "date_fmt_us": "Američki: 10/23/2026 2:05:09 PM",
+ "date_fmt_locale": "Prema jeziku preglednika",
+ "date_format_saved": "Format datuma i vremena spremljen",
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -6431,7 +6468,7 @@ async function loadAuthConfig() {
     ld.textContent = '🚨 ' + t('ld_auth_banner') + (authConfig.lockdown.reason ? ' ' + t('ld_reason') + ': ' + authConfig.lockdown.reason : '');
     ld.style.display = 'block';
   } else ld.style.display = 'none';
-  if (authConfig.version) document.getElementById('auth-ver').textContent = 'PRO ' + authConfig.version + ' · Secure · Multi-User';
+  if (authConfig.version) setAppVersion(authConfig.version);
   const upd = document.getElementById('auth-upd');
   upd.style.display = authConfig.update ? 'inline-block' : 'none';
   if (authConfig.update) {
@@ -6729,7 +6766,23 @@ function showUpdateReconnect(version) {
 
 // ══ APP INIT ══════════════════════════════════════════
 
+// setAppVersion fills the version labels from the running process, so a new
+// binary never shows an old hard-coded version in the title bar or on the
+// sign-in card. /api/auth/config and /api/version both carry it.
+function setAppVersion(v) {
+  v = String(v || '').trim();
+  if (!v) return;
+  document.querySelectorAll('.ver-txt').forEach(el => { el.textContent = 'WRM ' + v; });
+  const av = document.getElementById('auth-ver');
+  if (av) av.textContent = 'PRO ' + v + ' · Secure · Multi-User';
+  document.title = 'Web Remote Manager PRO ' + v;
+}
+
 function initApp() {
+  // A session that is already signed in skips the sign-in card, and with it
+  // /api/auth/config: read the version from /api/version then.
+  if (authConfig && authConfig.version) setAppVersion(authConfig.version);
+  else fetch('/api/version').then(r => r.ok ? r.json() : {}).then(v => setAppVersion(v && v.version)).catch(() => {});
   loadSettings();
   document.getElementById('setting-lang').value = currentLang;
   applyLang();
@@ -7981,7 +8034,100 @@ function fmtDuration(sec) {
   const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60);
   return (d ? d + 'd ' : '') + (h || d ? h + 'h ' : '') + m + 'm';
 }
-function fmtTime(ts) { return ts ? new Date(ts).toLocaleString() : '—'; }
+function fmtTime(ts) { return ts ? wrmFmt(ts, 'datetime') : '—'; }
+
+// ── Date and time format (v13.5.0) ───────────────────
+// European (dd.mm.yyyy HH:mm:ss) by default, ISO, US or the browser's own,
+// chosen in Settings → General. Date.prototype.toLocale*String calls without an
+// explicit locale follow the choice, so every view uses the same format.
+const WRM_DATE_FORMATS = ['eu', 'iso', 'us', 'locale'];
+const wrmNativeDate = {s: Date.prototype.toLocaleString, d: Date.prototype.toLocaleDateString, t: Date.prototype.toLocaleTimeString};
+function wrmDateFormat() { try { const v = localStorage.getItem('wrm_datefmt'); return WRM_DATE_FORMATS.includes(v) ? v : 'eu'; } catch (_) { return 'eu'; } }
+function setDateFormat(v) {
+  try { localStorage.setItem('wrm_datefmt', WRM_DATE_FORMATS.includes(v) ? v : 'eu'); } catch (_) {}
+  showToast(t('date_format_saved'), 'success');
+  if (typeof applyLang === 'function') applyLang();
+  if (window.wrmLogViewer) wrmLogViewer.refreshTimes();
+}
+function wrmDateLocale(f) {
+  f = f || wrmDateFormat();
+  if (f === 'us') return 'en-US';
+  if (f === 'iso') return 'sv-SE';
+  if (f === 'locale') return undefined;
+  return typeof currentLang !== 'undefined' && currentLang === 'hr' ? 'hr-HR' : 'en-GB';
+}
+function wrmDateParts(d, tz) {
+  const o = {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'};
+  if (tz) o.timeZone = tz;
+  const p = {};
+  new Intl.DateTimeFormat('en-GB', o).formatToParts(d).forEach(x => { p[x.type] = x.value; });
+  if (p.hour === '24') p.hour = '00';
+  return p;
+}
+// wrmFmt(date, 'datetime' | 'date' | 'time', {timeZone, seconds, ms})
+function wrmFmt(d, what, opts) {
+  opts = opts || {};
+  if (!(d instanceof Date)) d = new Date(typeof d === 'number' && d < 1e11 ? d * 1000 : d);
+  if (isNaN(d)) return '';
+  const f = opts.format || wrmDateFormat();
+  what = what || 'datetime';
+  if (f === 'us' || f === 'locale') {
+    const o = {};
+    if (opts.timeZone) o.timeZone = opts.timeZone;
+    if (what !== 'time') Object.assign(o, {year: 'numeric', month: '2-digit', day: '2-digit'});
+    if (what !== 'date') Object.assign(o, {hour: '2-digit', minute: '2-digit'}, opts.seconds === false ? {} : {second: '2-digit'});
+    return wrmNativeDate.s.call(d, f === 'us' ? 'en-US' : undefined, o);
+  }
+  const p = wrmDateParts(d, opts.timeZone);
+  const date = f === 'iso' ? `${p.year}-${p.month}-${p.day}` : `${p.day}.${p.month}.${p.year}`;
+  let time = `${p.hour}:${p.minute}` + (opts.seconds === false ? '' : `:${p.second}`);
+  if (opts.ms) time += '.' + String(d.getMilliseconds()).padStart(3, '0');
+  return what === 'date' ? date : what === 'time' ? time : date + ' ' + time;
+}
+// wrmParseDateTime reads what a user typed in the chosen format (or ISO) and
+// returns "YYYY-MM-DDTHH:MM[:SS]" for the API, or '' when it is empty/invalid.
+function wrmParseDateTime(v) {
+  v = String(v || '').trim();
+  if (!v) return '';
+  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  let y, mo, d, h = '00', mi = '00', s = '00';
+  if (m) [, y, mo, d, h = '00', mi = '00', s = '00'] = m;
+  else if ((m = v.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})\.?(?:[ ,T]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)?)?$/))) {
+    const us = wrmDateFormat() === 'us' || v.includes('/') && wrmDateFormat() !== 'eu' && wrmDateFormat() !== 'iso';
+    [, d, mo, y, h = '00', mi = '00', s = '00'] = m;
+    if (us) [d, mo] = [mo, d];
+    if (m[7]) { let hh = Number(h) % 12; if (/pm/i.test(m[7])) hh += 12; h = String(hh); }
+  } else return '';
+  const pad = x => String(x).padStart(2, '0');
+  if (+mo < 1 || +mo > 12 || +d < 1 || +d > 31 || +h > 23 || +mi > 59 || +s > 59) return '';
+  return `${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:${pad(s)}`;
+}
+function wrmDatePlaceholder() { const f = wrmDateFormat(); return f === 'iso' ? 'yyyy-mm-dd hh:mm' : f === 'us' ? 'mm/dd/yyyy hh:mm' : 'dd.mm.yyyy hh:mm'; }
+(function () {
+  const plain = loc => loc === undefined || (Array.isArray(loc) && !loc.length) || (typeof currentLang !== 'undefined' && loc === currentLang);
+  const only = (o, keys) => !o || Object.keys(o).every(k => keys.includes(k));
+  Date.prototype.toLocaleString = function (loc, o) {
+    if (plain(loc) && wrmDateFormat() !== 'locale') {
+      if (only(o, ['timeZone', 'dateStyle', 'timeStyle'])) return wrmFmt(this, 'datetime', {timeZone: o && o.timeZone});
+      return wrmNativeDate.s.call(this, wrmDateLocale(), Object.assign({hourCycle: wrmDateFormat() === 'us' ? undefined : 'h23'}, o));
+    }
+    return wrmNativeDate.s.call(this, loc, o);
+  };
+  Date.prototype.toLocaleDateString = function (loc, o) {
+    if (plain(loc) && wrmDateFormat() !== 'locale') {
+      if (only(o, ['timeZone', 'dateStyle'])) return wrmFmt(this, 'date', {timeZone: o && o.timeZone});
+      return wrmNativeDate.d.call(this, wrmDateLocale(), o);
+    }
+    return wrmNativeDate.d.call(this, loc, o);
+  };
+  Date.prototype.toLocaleTimeString = function (loc, o) {
+    if (plain(loc) && wrmDateFormat() !== 'locale') {
+      if (only(o, ['timeZone', 'timeStyle'])) return wrmFmt(this, 'time', {timeZone: o && o.timeZone});
+      return wrmNativeDate.t.call(this, wrmDateLocale(), Object.assign({hourCycle: wrmDateFormat() === 'us' ? undefined : 'h23'}, o, o && o.hour12 === false ? {} : {}));
+    }
+    return wrmNativeDate.t.call(this, loc, o);
+  };
+})();
 
 async function adminOverview() {
   const body = document.getElementById('admin-body');
@@ -8798,6 +8944,7 @@ async function ssoConfirmSelf() {
 function openNewUser() {
   ['nu-username', 'nu-display', 'nu-password'].forEach(i => document.getElementById(i).value = '');
   document.getElementById('nu-must-change').checked = true;
+  document.getElementById('nu-record').value = '';
   const nr = document.getElementById('nu-role');
   nr.value = 'user';
   nr.onchange = () => { document.getElementById('nu-role-hint').textContent = t('urole_' + nr.value + '_d'); };
@@ -8813,6 +8960,7 @@ async function submitNewUser() {
     password: document.getElementById('nu-password').value,
     role: document.getElementById('nu-role').value,
     must_change_password: document.getElementById('nu-must-change').checked,
+    recording_level: document.getElementById('nu-record').value,
   };
   const res = await fetch('/api/admin/users', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   const d = await res.json().catch(() => ({}));
@@ -9439,7 +9587,7 @@ async function renderTermSessions(boxId, mine, more) {
 }
 
 // ── replay player (asciicast v2 on xterm.js) ──
-const replay = {term: null, raw: [], events: [], header: null, dur: 0, pos: 0, idx: 0, playing: false, speed: 1, idle: true, timer: null, wallStart: 0, posStart: 0};
+const replay = {term: null, raw: [], events: [], header: null, dur: 0, pos: 0, idx: 0, playing: false, speed: 1, idle: true, timer: null, wallStart: 0, posStart: 0, startMs: 0};
 
 function buildReplayTimeline() {
   let shift = 0, prev = 0;
@@ -9476,8 +9624,10 @@ async function openReplay(id) {
     const ms = meta.session || {};
     if (ms.recording && ms.recording.format === 'guacamole+gzip') {
       document.getElementById('rp-title').textContent = `${ms.username || '—'} → ${ms.connection || ''} (${(ms.protocol || '').toUpperCase()} ${ms.host || ''})`;
+      const g0 = ms.started_at ? Date.parse(ms.started_at) : 0;
       document.getElementById('rp-meta').innerHTML = [[t('started'), fmtTime(ms.started_at)], [t('duration'), fmtMs(ms.duration_ms)], ['IP', ms.client_ip], [t('status'), t('ts_' + ms.status)],
-        ['SHA-256', (ms.recording.sha256 || '').slice(0, 16) + '…']].map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
+        g0 && ms.duration_ms ? [t('rp_ended'), fmtTime(new Date(g0 + Number(ms.duration_ms)))] : null,
+        ['SHA-256', (ms.recording.sha256 || '').slice(0, 16) + '…']].filter(Boolean).map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
       const evs = meta.events || [];
       document.getElementById('rp-events').innerHTML = evs.length ? `<table class="admin-table"><tbody>` + evs.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td><b style="color:var(--text);">${esc(e.action)}</b></td><td class="mono" style="font-size:10.5px;word-break:break-all;">${esc(e.details)}</td></tr>`).join('') + '</tbody></table>' : `<div class="sub">${esc(t('none'))}</div>`;
       openGuacReplay(id, meta);
@@ -9499,10 +9649,12 @@ async function openReplay(id) {
     try { const e = JSON.parse(lines[i]); if (Array.isArray(e) && (e[1] === 'o' || e[1] === 'r')) replay.raw.push(e); } catch (_) {}
   }
   const s = meta.session || {};
+  replay.startMs = s.started_at ? Date.parse(s.started_at) : 0;
   document.getElementById('rp-title').textContent = `${s.username || '—'} → ${s.connection || ''} (${s.remote_user ? s.remote_user + '@' : ''}${s.host || ''})`;
   document.getElementById('rp-meta').innerHTML = [
     [t('started'), fmtTime(s.started_at)], [t('duration'), fmtMs(s.duration_ms)], ['IP', s.client_ip],
     [t('status'), t('ts_' + s.status)], s.share ? [t('share'), s.share] : null,
+    replay.startMs && s.duration_ms ? [t('rp_ended'), fmtTime(new Date(replay.startMs + Number(s.duration_ms)))] : null,
     s.recording ? ['SHA-256', (s.recording.sha256 || '').slice(0, 16) + '…'] : null,
   ].filter(Boolean).map(([k, v]) => `<span>${esc(k)}: <b>${esc(v || '—')}</b></span>`).join('');
   const ev = meta.events || [];
@@ -9537,8 +9689,16 @@ function replayApplyUntil(target) {
 
 function updateReplayUI() {
   document.getElementById('rp-time').textContent = fmtMs(replay.pos * 1000) + ' / ' + fmtMs(replay.dur * 1000);
+  const wall = document.getElementById('rp-wall');
+  if (wall) wall.textContent = replayWall(replay.pos);
   document.getElementById('rp-seek').value = replay.dur ? Math.round(replay.pos / replay.dur * 1000) : 0;
   document.getElementById('rp-play').textContent = replay.playing ? '❚❚' : '▶';
+}
+
+// The recording header carries a Unix timestamp, so the playhead can be shown
+// as the wall-clock time it happened, not only as seconds from the start.
+function replayWall(posSec) {
+  return replay.startMs ? fmtTime(new Date(replay.startMs + posSec * 1000)) : '';
 }
 
 function replayTick() {
@@ -10290,8 +10450,9 @@ let mcpPoll = null;
 async function mcpRefresh() {
   const pol = (currentUser && currentUser.policy) || {};
   const btn = document.getElementById('btn-mcp');
-  if (!pol.mcp_enabled || isCollabMode) { if (btn) btn.style.display = 'none'; return; }
-  if (btn) btn.title = t('mcp_btn_t');
+  if (isCollabMode) { if (btn) btn.style.display = 'none'; return; }
+  // The same poll carries built-in assistant approvals, so it runs even when MCP is off.
+  if (btn) { btn.style.display = pol.mcp_enabled ? '' : 'none'; btn.title = t('mcp_btn_t'); }
   if (window.wrmMCP) { wrmMCP.refresh(); return; }
   try {
     const r = await fetch('/api/mcp/active');
@@ -10304,7 +10465,14 @@ function mcpStart() {
   const id = new URLSearchParams(location.search).get('mcp_authorize');
   if (id) loadMCP().then(() => wrmMCP.consent(id), () => showToast(t('mcp_load_failed'), 'error'));
   mcpRefresh();
-  if (!mcpPoll) mcpPoll = setInterval(mcpRefresh, 60000);
+  if (!mcpPoll) mcpPoll = setInterval(mcpRefresh, document.hidden ? 15000 : 5000);
+  if (!window.__wrmMcpVis) {
+    window.__wrmMcpVis = true;
+    document.addEventListener('visibilitychange', () => {
+      if (mcpPoll) { clearInterval(mcpPoll); mcpPoll = setInterval(mcpRefresh, document.hidden ? 15000 : 5000); }
+      if (!document.hidden) mcpRefresh();
+    });
+  }
 }
 function openMCPPop() {
   loadMCP().then(() => wrmMCP.togglePop(), () => showToast(t('mcp_load_failed'), 'error'));
@@ -11652,6 +11820,7 @@ async function openGuacReplay(id, meta) {
   const screen = document.getElementById('rp-screen');
   screen.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
   ['rp-speed', 'rp-idle'].forEach(x => { const el = document.getElementById(x); if (el) el.closest('select, label').style.display = 'none'; });
+  replay.startMs = meta && meta.session && meta.session.started_at ? Date.parse(meta.session.started_at) : 0;
   document.getElementById('rp-download').href = '/api/recordings/' + Number(id) + '/guac?download=1';
   document.getElementById('rp-download').textContent = '⬇ .guac';
   try {
@@ -11669,6 +11838,8 @@ async function openGuacReplay(id, meta) {
     const upd = () => {
       const pos = rec.getPosition(), dur = rec.getDuration();
       document.getElementById('rp-time').textContent = fmtMs(pos) + ' / ' + fmtMs(dur);
+      const wall = document.getElementById('rp-wall');
+      if (wall) wall.textContent = replayWall(pos / 1000);
       document.getElementById('rp-seek').value = dur ? Math.round(pos / dur * 1000) : 0;
       document.getElementById('rp-play').textContent = rec.isPlaying() ? '❚❚' : '▶';
     };
@@ -11743,6 +11914,64 @@ function notifyStatusChanges(prev, cur) {
 function browserNotify(text) {
   try {
     if (document.hidden && 'Notification' in window && Notification.permission === 'granted') new Notification('WRM PRO', {body: text, icon: '/static/brand/icon-192.png'});
+  } catch (_) {}
+}
+
+// ── AI alerts: a short sound, a toast and (when the page is hidden) a desktop
+// notification. An approval must be impossible to miss, also when the AI panel
+// or the MCP live view is closed. The sound is one setting for this browser.
+var wrmSoundCtx = null, wrmAlertSeen = {};
+function wrmSoundOn() { try { return localStorage.getItem('wrm_sound') !== '0'; } catch (_) { return true; } }
+function wrmSound(kind) {
+  if (!wrmSoundOn()) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!wrmSoundCtx) wrmSoundCtx = new Ctx();
+    if (wrmSoundCtx.state === 'suspended') wrmSoundCtx.resume().catch(() => {});
+    const ctx = wrmSoundCtx, t0 = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+    const approval = kind === 'approval';
+    o.type = 'sine';
+    o.frequency.setValueAtTime(approval ? 880 : 660, t0);
+    if (approval) o.frequency.setValueAtTime(1175, t0 + 0.14);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(approval ? 0.16 : 0.1, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + (approval ? 0.42 : 0.2));
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t0); o.stop(t0 + (approval ? 0.44 : 0.22));
+  } catch (_) {}
+}
+// Browsers allow audio only after a gesture; the first click prepares the context.
+document.addEventListener('pointerdown', function () {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx && !wrmSoundCtx) wrmSoundCtx = new Ctx();
+    if (wrmSoundCtx && wrmSoundCtx.state === 'suspended') wrmSoundCtx.resume().catch(() => {});
+  } catch (_) {}
+}, {once: true});
+function wrmDesktopNotify(title, body) {
+  try {
+    if ('Notification' in window && Notification.permission === 'granted') new Notification(title, {body: body, icon: '/static/brand/icon-192.png', tag: 'wrm-ai'});
+  } catch (_) {}
+}
+// wrmAiAlert is used by static/ai.js and static/mcp.js. The same approval is
+// announced once, even when both views see it.
+function wrmAiAlert(kind, text, key) {
+  const now = Date.now();
+  if (key) {
+    if (wrmAlertSeen[key] && now - wrmAlertSeen[key] < 30000) return;
+    wrmAlertSeen[key] = now;
+  }
+  wrmSound(kind);
+  if (typeof showToast === 'function') showToast((kind === 'approval' ? '⏳ ' : '✦ ') + text, kind === 'approval' ? 'warning' : 'info', kind === 'approval' ? 9000 : 3500);
+  if (document.hidden) wrmDesktopNotify('WRM PRO', text);
+}
+function wrmAskNotifications() {
+  try {
+    if ('Notification' in window && Notification.permission === 'default' && localStorage.getItem('wrm_notify_asked') !== '1') {
+      localStorage.setItem('wrm_notify_asked', '1');
+      Notification.requestPermission();
+    }
   } catch (_) {}
 }
 
@@ -12651,7 +12880,7 @@ async function saveCurrentSession() {
   const layout = captureLayout();
   const defName = layout.windows.length
     ? [...new Set(layout.windows.map(w => (conns.find(c => c.id === w.conn_id) || {}).name).filter(Boolean))].slice(0, 3).join(' + ')
-    : new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    : wrmFmt(new Date(), 'datetime', {seconds: false});
   const name = await uiPrompt(t('session_name'), defName, {okText: t('save'), message: layout.windows.length ? `${layout.windows.length} ${t('sess_windows')}` : t('sess_empty_warn')});
   if (name === null) return;
   const oldKey = sessionClipKey(currentSessionId);
@@ -13897,7 +14126,7 @@ function fmtDate(ts) {
   const pad = n => String(n).padStart(2, '0');
   const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
   if (d.toDateString() === now.toDateString()) return t('today') + ' ' + time;
-  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + time;
+  return wrmFmt(d, 'datetime', {seconds: false});
 }
 
 function matchFilter(name, q) {
@@ -14358,88 +14587,23 @@ function isEditable(f) {
   return EDITABLE_EXT.test(f.name) || !f.name.includes('.') || /^\./.test(f.name);
 }
 
-let _editor = null;
+// The editor lives in static/fileeditor.js (highlighting, find and replace,
+// review before saving, conflict check, AI assistant); loaded on first use.
+let _editorLoading = null;
 async function openEditor(winId, path, size) {
-  const wo = winObjects.find(w => w.id === winId);
-  if (!wo) return;
-  if (size > 5 * 1048576) { showToast(t('fm_too_big_edit'), 'warning'); return; }
-  showToast(t('loading') + ' ' + path.split('/').pop(), 'info', 1200);
-  try {
-    const res = await fetch(`/api/remote/download?${connQS(wo)}&path=${encodeURIComponent(path)}&inline=1`);
-    if (!res.ok) throw new Error(await apiError(res));
-    const buf = new Uint8Array(await res.arrayBuffer());
-    if (buf.subarray(0, 8000).includes(0) && !(await uiConfirm(t('fm_binary_warn'), {title: t('fm_edit')}))) return;
-    const text = new TextDecoder('utf-8').decode(buf);
-    _editor = {winId, path, crlf: text.includes('\r\n'), original: text.replace(/\r\n/g, '\n'), readOnly: !winCan(wo, 'files_write')};
-    document.getElementById('editor-save-btn').style.display = _editor.readOnly ? 'none' : '';
-    document.getElementById('editor-save-btn').nextElementSibling.style.display = _editor.readOnly ? 'none' : '';
-    document.getElementById('editor-text').readOnly = _editor.readOnly;
-    document.getElementById('editor-title').textContent = path;
-    document.getElementById('editor-title').title = path;
-    const ta = document.getElementById('editor-text');
-    ta.value = _editor.original;
-    updateEditorMeta();
-    document.getElementById('modal-editor').classList.add('open');
-    setTimeout(() => { ta.focus(); ta.setSelectionRange(0, 0); ta.scrollTop = 0; }, 30);
-  } catch(e) {
-    showToast(t('fm_open_failed') + ': ' + e.message, 'error', 5000);
+  if (!window.wrmFileEditor) {
+    if (!_editorLoading) _editorLoading = new Promise((ok, fail) => {
+      const script = document.createElement('script');
+      script.src = '/static/fileeditor.js'; script.onload = ok;
+      script.onerror = () => { _editorLoading = null; fail(new Error(t('git_load_failed'))); };
+      document.head.appendChild(script);
+    });
+    try { await _editorLoading; } catch (e) { showToast(e.message, 'error'); return; }
   }
+  return wrmFileEditor.open(winId, path, size);
 }
-function updateEditorMeta() {
-  if (!_editor) return;
-  const ta = document.getElementById('editor-text');
-  const lines = ta.value.split('\n').length;
-  const dirty = ta.value !== _editor.original;
-  document.getElementById('editor-meta').textContent = `${lines} ${t('lines')} · ${_editor.crlf ? 'CRLF' : 'LF'} · UTF-8${dirty ? ' · ● ' + t('modified') : ''}`;
-}
-function editorKey(e) {
-  const ta = e.target;
-  if (e.key === 'Tab' && !e.ctrlKey && !e.altKey) {
-    e.preventDefault();
-    const s = ta.selectionStart, en = ta.selectionEnd;
-    ta.setRangeText('\t', s, en, 'end');
-    updateEditorMeta();
-  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-    e.preventDefault(); saveEditor(false);
-  } else if (e.key === 'Escape') {
-    e.preventDefault(); e.stopPropagation(); closeEditor();
-  }
-}
-async function saveEditor(close) {
-  if (!_editor) return;
-  if (_editor.readOnly) { showToast(t('read_only_role'), 'warning'); return; }
-  const wo = winObjects.find(w => w.id === _editor.winId);
-  if (!wo) { showToast('Window closed', 'error'); return; }
-  let text = document.getElementById('editor-text').value;
-  if (_editor.crlf) text = text.replace(/\n/g, '\r\n');
-  const name = _editor.path.split('/').pop();
-  const dir = parentPath(_editor.path);
-  const fd = new FormData();
-  fd.append('file', new Blob([text], {type: 'application/octet-stream'}), name);
-  const btn = document.getElementById('editor-save-btn');
-  btn.disabled = true;
-  try {
-    const res = await fetch(`/api/remote/upload?${connQS(wo)}&path=${encodeURIComponent(dir)}&overwrite=true`, {method: 'POST', body: fd});
-    const body = await res.json().catch(() => ({}));
-    const r = (body.results || [])[0];
-    if (!res.ok || !r || r.status !== 'ok') throw new Error((r && r.error) || body.error || res.statusText);
-    _editor.original = document.getElementById('editor-text').value;
-    updateEditorMeta();
-    showToast('💾 ' + t('saved') + ': ' + name, 'success');
-    if (wo.path === dir) loadFiles(wo.id, dir);
-    if (close) { document.getElementById('modal-editor').classList.remove('open'); _editor = null; }
-  } catch(e) {
-    showToast(t('save_failed') + ': ' + e.message, 'error', 6000);
-  }
-  btn.disabled = false;
-}
-async function closeEditor() {
-  if (_editor && document.getElementById('editor-text').value !== _editor.original) {
-    if (!(await uiConfirm(t('discard_changes'), {title: t('fm_edit'), okText: t('discard'), danger: true}))) return;
-  }
-  document.getElementById('modal-editor').classList.remove('open');
-  _editor = null;
-}
+function saveEditor(close) { return window.wrmFileEditor?.save(close); }
+function closeEditor() { return window.wrmFileEditor ? wrmFileEditor.close() : document.getElementById('modal-editor').classList.remove('open'); }
 
 // ── Modern confirm / prompt dialogs ──
 let _dialogResolve = null;
@@ -15597,7 +15761,7 @@ function renderTabs() {
   const groupKey = windowFolderKey;
   const groups = new Map();
   // Addons belong to the canvas, not to a connection folder: they are never filtered out.
-  const inFolder = wo => wo.mode === 'addon' || tabFolderFilter === null || groupKey(wo) === tabFolderFilter;
+  const inFolder = wo => wo.mode === 'addon' || wo.mode === 'addon-panel' || tabFolderFilter === null || groupKey(wo) === tabFolderFilter;
   winObjects.forEach(wo => { if (wo.mode === 'addon') return; const c = winConn(wo); const key = groupKey(wo); if (!groups.has(key)) groups.set(key, folderPathLabel(c && c.folder_id) || (c && c.folder_path) || t('no_folder')); });
   if (tabFolderFilter !== null && !groups.has(tabFolderFilter)) tabFolderFilter = null;
   winObjects.forEach(wo => { refreshWindowConnectionTitle(wo); if (wo.el) wo.el.classList.toggle('folder-hidden', !inFolder(wo)); });
@@ -15635,6 +15799,7 @@ function renderTabs() {
     }
     if (wo.mode === 'screen-viewer' && wo.viewing) { icon = '👁'; title = wo.viewing.name + ' — ' + wo.viewing.title; }
     if (wo.mode === 'addon' && window.wrmWorkboard) { const ai = wrmWorkboard.tabInfo(wo); icon = ai.ico; title = ai.title; }
+  if (wo.mode === 'addon-panel') { icon = '▣'; title = wo.addonTitle || 'Addon'; }
     if (wo.el && wo.el.style.display === 'none') icon = '▪';
 
     const stateDot = wo.mode === 'ssh' || wo.mode === 'desk' ? `<span class="tab-state state-${wo.connState || 'connecting'}" title="${esc(wo.connState || '')}"></span>` : '';
@@ -16357,6 +16522,8 @@ function openSettings(tab) {
   document.getElementById('st-ai-btn').style.display = signedIn && !isCollabMode ? '' : 'none';
   document.getElementById('st-mcp-btn').style.display = signedIn && !isCollabMode && currentUser.policy && currentUser.policy.mcp_enabled ? '' : 'none';
   showSettingsTab(tab || 'st-general');
+  const dfSel = document.getElementById('setting-datefmt');
+  if (dfSel) dfSel.value = wrmDateFormat();
   updateInstallRow();
   refreshTabScrollers();
 }
@@ -16371,6 +16538,7 @@ function showSettingsTab(id) {
   if (id === 'st-history') renderTermSessions('history-pane', true);
   if (id === 'st-ai') loadAI().then(() => wrmAI.statusPane(), () => showToast(t('ai_load_failed'),'error'));
   if (id === 'st-mcp') loadMCP().then(() => wrmMCP.settingsPane(), () => showToast(t('mcp_load_failed'), 'error'));
+  if (id === 'st-addons') wrmAddons.pane();
 }
 
 // ── Security: password, two-factor, sign-in sessions ──
@@ -18093,5 +18261,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 </script>
 <script src="/static/layout.js"></script>
 <script src="/static/workboard.js"></script>
+<script src="/static/addons.js"></script>
+<script src="/static/lock.js"></script>
 </body>
 </html>

@@ -33,7 +33,7 @@ func TestGitDeployFormats(t *testing.T) {
 		"- **Host**:        app-01\n" +
 		"- **Korisnik**:    deploy\n" +
 		"- **Bundle**:      wrm-20261009-2105\n\n" +
-		"## Skripte (3)\n\n" +
+		"## Services (3)\n\n" +
 		"| Datoteka    | Verzija    | Datum      |\n" +
 		"| ----------- | ---------- | ---------- |\n" +
 		"| config.ini  | (per-host) | -          |\n" +
@@ -45,7 +45,7 @@ func TestGitDeployFormats(t *testing.T) {
 	if v := parseVersionMD(strings.Split(got, "\n")); v.Version != "v1.10" || v.Commit != "abcdef0123 (2026-09-10)" || v.Bundle != "wrm-20261009-2105" {
 		t.Fatalf("parse: %+v", v)
 	}
-	if crlf := string(versionMD(tg, nil, when, "h", "u", "b", true)); !strings.Contains(crlf, "## Skripte (0)\r\n") || strings.Contains(strings.ReplaceAll(crlf, "\r\n", ""), "\n") {
+	if crlf := string(versionMD(tg, nil, when, "h", "u", "b", true)); !strings.Contains(crlf, "## Services (0)\r\n") || strings.Contains(strings.ReplaceAll(crlf, "\r\n", ""), "\n") {
 		t.Fatalf("crlf: %q", crlf)
 	}
 	if gitBackupName("wrm-20261009-2105", when) != "wrm-20261009-2105-20261009-210507" {
@@ -257,7 +257,7 @@ func TestGitDeployUpdateRollbackStamp(t *testing.T) {
 	vmd := readFile(t, e.dir+"/VERSION.md")
 	for _, want := range []string{"# demo-api - v1.10\n", "- **Grana/ref**:   main (tag)\n", "- **Commit**:      " + c2 + " (2026-09-10)\n",
 		"- **Bundle**:      " + strings.Split(bk[0], "-")[0] + "-" + strings.Split(bk[0], "-")[1] + "-" + strings.Split(bk[0], "-")[2] + "\n",
-		"## Skripte (3)\n", "| config.ini  | (per-host) | -          |\n", "| lib/util.py | v1.10      | 2026-09-10 |\n"} {
+		"## Services (3)\n", "| config.ini  | (per-host) | -          |\n", "| lib/util.py | v1.10      | 2026-09-10 |\n"} {
 		if !strings.Contains(vmd, want) {
 			t.Fatalf("VERSION.md lacks %q:\n%s", want, vmd)
 		}

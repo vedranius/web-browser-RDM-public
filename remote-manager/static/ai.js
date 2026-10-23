@@ -10,6 +10,9 @@ Object.assign(LANGS.en, {
   ai_float: 'Float (drag the title bar to move, drag the corner to resize)', ai_expand: 'Expand over the whole terminal window', ai_restore: 'Restore size',
   ai_title: 'AI assistant', ai_start: 'Start', ai_provider: 'Provider', ai_model: 'Model', ai_mode: 'Mode',
   ai_thinking: 'Processing your request…',
+  ai_worklog: 'Work log',
+  ai_worklog_working: 'Working…',
+  ai_worklog_steps: '{n} steps',
   ai_mode_read_only: 'Read-only', ai_mode_ask: 'Ask before every change', ai_mode_auto: 'Automatic within limits',
   ai_mode_read_only_d: 'The assistant reads logs, files, services and packages. Every change is refused.',
   ai_mode_ask_d: 'Reads run directly. Every command that changes something and every file edit waits for your approval.',
@@ -25,6 +28,8 @@ Object.assign(LANGS.en, {
   ai_see_never: 'Never: passwords and keys stored in WRM, your WRM sign-in, other connections, your terminal screen.', ai_see_denied: '{n} kinds of sensitive files (password hashes, private keys, credentials) are never read.',
   ai_see_provider: 'Everything the assistant sees is sent to {provider}.', ai_see_notes_on: 'Your notes for this connection are shared.',
   ai_placeholder: 'Ask about this server…', ai_send: 'Send', ai_stop: 'Stop', ai_end: 'End the AI session', ai_end_q: 'End this AI session? A running command is stopped.',
+  ai_sound_on: 'Sound is on: a beep for an approval and for every reply', ai_sound_off: 'Sound is off', ai_sound_on_toast: 'Sound on', ai_sound_off_toast: 'Sound off',
+  ai_pending: 'Approval needed', ai_pending_more: '+{n} more', ai_pending_details: 'Details',
   ai_close_panel: 'Hide the panel (the session keeps running)', ai_history: 'My AI sessions', ai_continue: 'Continue session', ai_new: 'New session',
   ai_approve: 'Approve', ai_deny: 'Deny', ai_edit: 'Edit', ai_note_ph: 'Note for the assistant (optional)', ai_expires: 'expires in {s} s',
   ai_wait_approval: 'Waiting for your approval', ai_d_allow: 'ran', ai_d_readonly: 'read-only', ai_d_auto: 'automatic', ai_d_approve: 'needs approval', ai_d_deny: 'denied',
@@ -47,7 +52,8 @@ Object.assign(LANGS.en, {
   ai_prov_maxtok: 'Max output tokens (0 = 16000)', ai_prov_fallback: 'Refusal fallback (Anthropic API)', ai_prov_enabled: 'Enabled', ai_prov_test: 'Test',
   ai_prov_test_ok: 'The provider answered', ai_prov_add: 'Add provider', ai_prov_edit: 'Edit provider', ai_prov_del_q: 'Delete this provider? Its sessions end.',
   ai_prov_none: 'No providers yet.', ai_models_col: 'Models', ai_prov_secrets: 'Keys', ai_kind_anthropic: 'Anthropic API', ai_kind_openai: 'OpenAI API', ai_kind_azure: 'Azure OpenAI',
-  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-compatible (local models)', ai_kind_opencode: 'OpenCode Zen (free models without a key)',
+  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-compatible (local models)', ai_kind_opencode: 'OpenCode Zen (pay-as-you-go; free models without a key)',
+  ai_kind_opencode_go: 'OpenCode Go (subscription key)',
   ai_subscriptions_note: 'Consumer Claude.ai and ChatGPT chat subscriptions cannot be used by other applications. Use an API key or an enterprise gateway here, or connect the chat app to WRM over MCP (Settings → AI connections).',
   aiw_title: 'Add an AI provider (step by step)', aiw_s_pick: 'Provider', aiw_s_key: 'Key and model', aiw_s_test: 'Test', aiw_s_done: 'Done',
   aiw_pick: 'Which AI service do you want to use?', aiw_p_anthropic: 'Anthropic (Claude)', aiw_p_openai: 'OpenAI', aiw_p_gemini: 'Google Gemini', aiw_p_groq: 'Groq', aiw_p_openrouter: 'OpenRouter', aiw_p_mistral: 'Mistral',
@@ -57,7 +63,7 @@ Object.assign(LANGS.en, {
   aiw_testing: 'Saving and testing…', aiw_ok: 'It works. The provider answered{reply}.', aiw_fail: 'The provider did not answer: {err}', aiw_fix: 'Go back and check the key, the address and the model name.',
   aiw_next: 'Save and test', aiw_back: 'Back', aiw_finish: 'Done', aiw_use: 'Open an AI assistant window on a server connection and choose this provider. Every session is recorded and audited.', aiw_wizard: 'Setup wizard', aiw_need: 'Fill in the required fields.',
   aiw_s_ollama: 'Ollama on this server', aiw_p_xai: 'xAI (Grok)', aiw_p_deepseek: 'DeepSeek', aiw_p_together: 'Together AI', aiw_p_perplexity: 'Perplexity', aiw_p_cohere: 'Cohere',
-  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (free models)', aiw_free: 'free', ai_deleg_setup: 'Helper models: {p}, {n} in use', ai_deleg_setup_d: 'The assistant may hand text subtasks to these models; WRM picks the best one for each task, free ones first. They get only redacted text and cannot run anything.',
+  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (pay-as-you-go; free models)', aiw_p_opencode_go: 'OpenCode Go (subscription)', aiw_free: 'free', ai_deleg_setup: 'Helper models: {p}, {n} in use', ai_deleg_setup_d: 'The assistant may hand text subtasks to these models; WRM picks the best one for each task, free ones first. They get only redacted text and cannot run anything.',
   ai_deleg_training_me: 'Also use free models that may use my prompts for training', ai_deleg_training_all: 'The administrator allows free models that may train on prompts for everyone.', ai_deleg_training_off: 'The administrator does not allow free models that may train on prompts.',
   ai_deleg_excluded: 'Not used (may train on prompts):',
   ai_du_zero_retention: 'keeps nothing', ai_du_zero_retention_d: 'Zero retention: prompts are not stored or used for training.', ai_du_trains: 'may train', ai_du_trains_d: 'During the free period the provider may use prompts and answers to improve its models.',
@@ -70,7 +76,8 @@ Object.assign(LANGS.en, {
   p_ai_delegate_provider: 'Helper provider', p_ai_delegate_provider_d: 'An organisation provider, for example OpenCode Zen (free models work without a key).',
   p_ai_delegate_models: 'Helper models', p_ai_delegate_models_d: 'Comma-separated; the first is the default. Empty: automatic, every usable model of the provider (for OpenCode Zen the current catalog). WRM picks the one that fits each task.', p_ai_delegate_models_ph: 'big-pickle',
   p_ai_delegate_max_kb: 'Delegation size limit (KB)', p_ai_delegate_max_kb_d: 'The most text one delegation may send to the helper.',
-  aiw_n_opencode: 'Without a key only the free OpenCode Zen models work (limited per IP address; some free models may use prompts to improve their models, so do not send confidential data). With a key from opencode.ai every Zen model works, billed to that workspace. Use “Load models” after the test to pick from the current list.',
+  aiw_n_opencode: 'Without a key only the free OpenCode Zen models work (limited per IP address; some free models may use prompts to improve their models, so do not send confidential data). With a key from opencode.ai every Zen model works, billed to that workspace. Use "Load models" after the test to pick from the current list.',
+  aiw_n_opencode_go: 'Uses the OpenCode Go subscription endpoints, not Zen: paste the Go API key from opencode.ai/console/go. A Go key has no pay-as-you-go balance, so Zen would answer "insufficient funds". Use "Load models" to pick a model from the Go list.',
   aiw_model_note: 'Model names change often. Type any model name (several separated by commas; the first one is the default), or save and use “Load the model list” on the last step.',
   aiw_n_perplexity: 'Perplexity models cannot call tools, so the assistant may be unable to run checks with them.',
   aiw_o_intro: 'Ollama runs free AI models on a computer you control. WRM talks to it through its OpenAI-compatible address and needs no API key. The assistant still works through WRM, so every session is recorded and audited.',
@@ -100,7 +107,7 @@ Object.assign(LANGS.en, {
   p_ai_default_mode: 'Default mode', p_ai_default_mode_d: 'Mode of a new session when it is allowed.', po_ai_default_mode_read_only: 'Read-only', po_ai_default_mode_ask: 'Ask before every change',
   p_ai_mode_rules: 'Mode rules', p_ai_mode_rules_d: 'Per tag, folder, connection or host; the most restrictive matching rule wins.',
   p_ai_personal_keys: 'Personal API keys', p_ai_personal_keys_d: 'Who may add their own provider keys.', po_ai_personal_keys_off: 'Nobody', po_ai_personal_keys_admins: 'Administrators', po_ai_personal_keys_all: 'Everybody',
-  p_ai_provider_kinds: 'Allowed provider types', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode', p_ai_provider_kinds_ph: 'anthropic,azure',
+  p_ai_provider_kinds: 'Allowed provider types', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode (Zen), opencode_go (Go subscription)', p_ai_provider_kinds_ph: 'anthropic,azure',
   p_ai_models: 'Allowed models', p_ai_models_d: 'Comma-separated patterns (claude-*); empty = every model of the providers.', p_ai_models_ph: 'claude-*',
   p_ai_redact_output: 'Redact output', p_ai_redact_output_d: 'Replace secrets (passwords, tokens, private keys …) before output is sent to the provider. Transcripts and the audit are always redacted.',
   p_ai_share_notes: 'Allow sharing notes', p_ai_share_notes_d: 'Users may opt in to send their connection notes to the assistant.',
@@ -126,6 +133,9 @@ Object.assign(LANGS.hr, {
   ai_float: 'Slobodan prozor (povuci naslovnu traku za pomicanje, povuci kut za promjenu veličine)', ai_expand: 'Proširi preko cijelog prozora terminala', ai_restore: 'Vrati veličinu',
   ai_title: 'AI asistent', ai_start: 'Pokreni', ai_provider: 'Pružatelj', ai_model: 'Model', ai_mode: 'Način rada',
   ai_thinking: 'Obrađujem upit…',
+  ai_worklog: 'Tijek rada',
+  ai_worklog_working: 'Radim…',
+  ai_worklog_steps: '{n} koraka',
   ai_mode_read_only: 'Samo čitanje', ai_mode_ask: 'Pitaj prije svake promjene', ai_mode_auto: 'Automatski u granicama',
   ai_mode_read_only_d: 'Asistent čita logove, datoteke, servise i pakete. Svaka promjena se odbija.',
   ai_mode_ask_d: 'Čitanje se izvršava odmah. Svaka naredba koja nešto mijenja i svaka izmjena datoteke čeka tvoje odobrenje.',
@@ -141,6 +151,8 @@ Object.assign(LANGS.hr, {
   ai_see_never: 'Nikada: lozinke i ključevi spremljeni u WRM, tvoja WRM prijava, druge veze, tvoj zaslon terminala.', ai_see_denied: '{n} vrsta osjetljivih datoteka (hashevi lozinki, privatni ključevi, vjerodajnice) nikada se ne čita.',
   ai_see_provider: 'Sve što asistent vidi šalje se pružatelju {provider}.', ai_see_notes_on: 'Tvoje bilješke za ovu vezu su podijeljene.',
   ai_placeholder: 'Pitaj o ovom serveru…', ai_send: 'Pošalji', ai_stop: 'Zaustavi', ai_end: 'Završi AI sesiju', ai_end_q: 'Završiti ovu AI sesiju? Naredba koja se izvršava bit će zaustavljena.',
+  ai_sound_on: 'Zvuk je uključen: kratki signal za odobrenje i za svaki odgovor', ai_sound_off: 'Zvuk je isključen', ai_sound_on_toast: 'Zvuk uključen', ai_sound_off_toast: 'Zvuk isključen',
+  ai_pending: 'Potrebno je odobrenje', ai_pending_more: '+{n} više', ai_pending_details: 'Detalji',
   ai_close_panel: 'Sakrij panel (sesija nastavlja raditi)', ai_history: 'Moje AI sesije', ai_continue: 'Nastavi sesiju', ai_new: 'Nova sesija',
   ai_approve: 'Odobri', ai_deny: 'Odbij', ai_edit: 'Uredi', ai_note_ph: 'Napomena za asistenta (neobavezno)', ai_expires: 'istječe za {s} s',
   ai_wait_approval: 'Čeka tvoje odobrenje', ai_d_allow: 'izvršeno', ai_d_readonly: 'samo čitanje', ai_d_auto: 'automatski', ai_d_approve: 'treba odobrenje', ai_d_deny: 'odbijeno',
@@ -162,7 +174,8 @@ Object.assign(LANGS.hr, {
   ai_prov_maxtok: 'Najviše izlaznih tokena (0 = 16000)', ai_prov_fallback: 'Zamjenski model kod odbijanja (Anthropic API)', ai_prov_enabled: 'Uključen', ai_prov_test: 'Testiraj',
   ai_prov_test_ok: 'Pružatelj je odgovorio', ai_prov_add: 'Dodaj pružatelja', ai_prov_edit: 'Uredi pružatelja', ai_prov_del_q: 'Obrisati ovog pružatelja? Njegove sesije završavaju.',
   ai_prov_none: 'Još nema pružatelja.', ai_models_col: 'Modeli', ai_prov_secrets: 'Ključevi', ai_kind_anthropic: 'Anthropic API', ai_kind_openai: 'OpenAI API', ai_kind_azure: 'Azure OpenAI',
-  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-kompatibilan (lokalni modeli)', ai_kind_opencode: 'OpenCode Zen (besplatni modeli bez ključa)',
+  ai_kind_bedrock: 'AWS Bedrock', ai_kind_vertex: 'Google Vertex AI', ai_kind_openai_compatible: 'OpenAI-kompatibilan (lokalni modeli)', ai_kind_opencode: 'OpenCode Zen (plaćanje po upotrebi; besplatni modeli bez ključa)',
+  ai_kind_opencode_go: 'OpenCode Go (ključ pretplate)',
   ai_subscriptions_note: 'Potrošačke pretplate na Claude.ai i ChatGPT chat ne mogu koristiti druge aplikacije. Ovdje koristi API ključ ili enterprise gateway, ili poveži chat aplikaciju s WRM-om preko MCP-a (Postavke → AI veze).',
   aiw_title: 'Dodavanje AI pružatelja (korak po korak)', aiw_s_pick: 'Pružatelj', aiw_s_key: 'Ključ i model', aiw_s_test: 'Test', aiw_s_done: 'Gotovo',
   aiw_pick: 'Koju AI uslugu želite koristiti?', aiw_p_anthropic: 'Anthropic (Claude)', aiw_p_openai: 'OpenAI', aiw_p_gemini: 'Google Gemini', aiw_p_groq: 'Groq', aiw_p_openrouter: 'OpenRouter', aiw_p_mistral: 'Mistral',
@@ -172,7 +185,7 @@ Object.assign(LANGS.hr, {
   aiw_testing: 'Spremanje i testiranje…', aiw_ok: 'Radi. Pružatelj je odgovorio{reply}.', aiw_fail: 'Pružatelj nije odgovorio: {err}', aiw_fix: 'Vratite se i provjerite ključ, adresu i naziv modela.',
   aiw_next: 'Spremi i testiraj', aiw_back: 'Natrag', aiw_finish: 'Gotovo', aiw_use: 'Otvorite prozor AI asistenta na vezi prema poslužitelju i odaberite ovog pružatelja. Svaka sesija se bilježi i evidentira u reviziji.', aiw_wizard: 'Čarobnjak za postavljanje', aiw_need: 'Ispunite obavezna polja.',
   aiw_s_ollama: 'Ollama na ovom poslužitelju', aiw_p_xai: 'xAI (Grok)', aiw_p_deepseek: 'DeepSeek', aiw_p_together: 'Together AI', aiw_p_perplexity: 'Perplexity', aiw_p_cohere: 'Cohere',
-  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (besplatni modeli)', aiw_free: 'besplatno', ai_deleg_setup: 'Pomoćni modeli: {p}, u upotrebi {n}', ai_deleg_setup_d: 'Asistent može tekstualne podzadatke predati ovim modelima; WRM za svaki zadatak bira najprikladniji, prvo besplatne. Dobivaju samo tekst s maskiranim tajnama i ne mogu ništa pokrenuti.',
+  aiw_p_fireworks: 'Fireworks AI', aiw_p_cerebras: 'Cerebras', aiw_p_opencode: 'OpenCode Zen (plaćanje po upotrebi; besplatni modeli)', aiw_p_opencode_go: 'OpenCode Go (pretplata)', aiw_free: 'besplatno', ai_deleg_setup: 'Pomoćni modeli: {p}, u upotrebi {n}', ai_deleg_setup_d: 'Asistent može tekstualne podzadatke predati ovim modelima; WRM za svaki zadatak bira najprikladniji, prvo besplatne. Dobivaju samo tekst s maskiranim tajnama i ne mogu ništa pokrenuti.',
   ai_deleg_training_me: 'Koristi i besplatne modele koji moje upite mogu koristiti za treniranje', ai_deleg_training_all: 'Administrator svima dopušta besplatne modele koji mogu trenirati na upitima.', ai_deleg_training_off: 'Administrator ne dopušta besplatne modele koji mogu trenirati na upitima.',
   ai_deleg_excluded: 'Ne koriste se (mogu trenirati na upitima):',
   ai_du_zero_retention: 'ne čuva ništa', ai_du_zero_retention_d: 'Bez zadržavanja: upiti se ne spremaju i ne koriste za treniranje.', ai_du_trains: 'može trenirati', ai_du_trains_d: 'Tijekom besplatnog razdoblja pružatelj može koristiti upite i odgovore za poboljšanje svojih modela.',
@@ -185,7 +198,8 @@ Object.assign(LANGS.hr, {
   p_ai_delegate_provider: 'Pomoćni pružatelj', p_ai_delegate_provider_d: 'Pružatelj organizacije, na primjer OpenCode Zen (besplatni modeli rade bez ključa).',
   p_ai_delegate_models: 'Pomoćni modeli', p_ai_delegate_models_d: 'Odvojeni zarezom; prvi je zadani. Prazno: automatski, svi upotrebljivi modeli pružatelja (za OpenCode Zen aktualni katalog). WRM za svaki zadatak bira odgovarajući.', p_ai_delegate_models_ph: 'big-pickle',
   p_ai_delegate_max_kb: 'Ograničenje veličine delegiranja (KB)', p_ai_delegate_max_kb_d: 'Najviše teksta koje jedno delegiranje smije poslati pomoćnom modelu.',
-  aiw_n_opencode: 'Bez ključa rade samo besplatni OpenCode Zen modeli (ograničeno po IP adresi; neki besplatni modeli mogu koristiti upite za poboljšanje svojih modela, zato ne šaljite povjerljive podatke). S ključem s opencode.ai rade svi Zen modeli, a naplaćuju se tom radnom prostoru. Nakon testa upotrijebite “Učitaj modele” za odabir s aktualnog popisa.',
+  aiw_n_opencode: 'Bez ključa rade samo besplatni OpenCode Zen modeli (ograničeno po IP adresi; neki besplatni modeli mogu koristiti upite za poboljšanje svojih modela, zato ne šaljite povjerljive podatke). S ključem s opencode.ai rade svi Zen modeli, a naplaćuju se tom radnom prostoru. Nakon testa upotrijebite "Učitaj modele" za odabir s aktualnog popisa.',
+  aiw_n_opencode_go: 'Koristi OpenCode Go pretplatničke endpointe, ne Zen: zalijepite Go API ključ s opencode.ai/console/go. Go ključ nema pay-as-you-go saldo, pa bi Zen odgovorio "insufficient funds". Upotrijebite "Učitaj modele" za odabir s Go popisa.',
   aiw_model_note: 'Nazivi modela se često mijenjaju. Upišite bilo koji naziv modela (više njih odvojite zarezom; prvi je zadani) ili spremite i na zadnjem koraku odaberite „Učitaj popis modela”.',
   aiw_n_perplexity: 'Perplexity modeli ne mogu pozivati alate pa asistent s njima možda neće moći izvoditi provjere.',
   aiw_o_intro: 'Ollama pokreće besplatne AI modele na računalu koje kontrolirate. WRM mu pristupa preko adrese kompatibilne s OpenAI-jem i ne treba API ključ. Asistent i dalje radi preko WRM-a, pa se svaka sesija bilježi i evidentira u reviziji.',
@@ -213,7 +227,7 @@ Object.assign(LANGS.hr, {
   p_ai_default_mode: 'Zadani način rada', p_ai_default_mode_d: 'Način rada nove sesije kad je dopušten.', po_ai_default_mode_read_only: 'Samo čitanje', po_ai_default_mode_ask: 'Pitaj prije svake promjene',
   p_ai_mode_rules: 'Pravila načina rada', p_ai_mode_rules_d: 'Po oznaci, mapi, vezi ili hostu; pobjeđuje najstrože pravilo koje odgovara.',
   p_ai_personal_keys: 'Osobni API ključevi', p_ai_personal_keys_d: 'Tko smije dodati vlastite ključeve pružatelja.', po_ai_personal_keys_off: 'Nitko', po_ai_personal_keys_admins: 'Administratori', po_ai_personal_keys_all: 'Svi',
-  p_ai_provider_kinds: 'Dopuštene vrste pružatelja', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode', p_ai_provider_kinds_ph: 'anthropic,azure',
+  p_ai_provider_kinds: 'Dopuštene vrste pružatelja', p_ai_provider_kinds_d: 'anthropic, openai, azure, bedrock, vertex, openai_compatible, opencode (Zen), opencode_go (Go pretplata)', p_ai_provider_kinds_ph: 'anthropic,azure',
   p_ai_models: 'Dopušteni modeli', p_ai_models_d: 'Uzorci odvojeni zarezom (claude-*); prazno = svi modeli pružatelja.', p_ai_models_ph: 'claude-*',
   p_ai_redact_output: 'Rediguj izlaz', p_ai_redact_output_d: 'Zamijeni tajne (lozinke, tokene, privatne ključeve …) prije slanja izlaza pružatelju. Transkripti i audit uvijek su redigirani.',
   p_ai_share_notes: 'Dopusti dijeljenje bilješki', p_ai_share_notes_d: 'Korisnici mogu izabrati da asistentu pošalju bilješke veze.',
@@ -302,6 +316,18 @@ Object.assign(LANGS.hr, {
  p_ai_opencode_sandbox_image: 'Slika sandboxa', p_ai_opencode_sandbox_image_d: 'Docker slika koju sandbox pokreće (glibc Linux). Minimalna je najsigurnija; dodaj alate koje agent smije koristiti.', p_ai_opencode_sandbox_image_ph: 'debian:stable-slim',
 });
 
+Object.assign(LANGS.en, {
+  ai_continue_chat: 'Continue chat', ai_resumed_from: 'Continued from session #{n}', ai_resumed_msgs: 'earlier questions', ai_rename: 'Rename the session',
+  ai_recent: 'Recent chats on this server (continue where you stopped):', ai_purpose_logs: 'log assistant', ai_purpose_file: 'file assistant',
+  p_ai_show_thinking: 'Show the assistant\'s thinking', p_ai_show_thinking_d: 'Ask models that support it (Claude 4.6 and later, reasoning models of OpenAI-compatible servers) for a summary of their reasoning and show it live in the chat\'s work log.',
+  p_ai_auto_titles: 'Generate session titles', p_ai_auto_titles_d: 'After the first answer one short extra model request writes a title for the chat (otherwise the first question is used). Titles can be renamed.',
+});
+Object.assign(LANGS.hr, {
+  ai_continue_chat: 'Nastavi chat', ai_resumed_from: 'Nastavak sesije #{n}', ai_resumed_msgs: 'ranijih pitanja', ai_rename: 'Preimenuj sesiju',
+  ai_recent: 'Nedavni chatovi na ovom serveru (nastavite gdje ste stali):', ai_purpose_logs: 'asistent za logove', ai_purpose_file: 'asistent za file',
+  p_ai_show_thinking: 'Prikaži razmišljanje asistenta', p_ai_show_thinking_d: 'Modele koji to podržavaju (Claude 4.6 i noviji, modeli s razmišljanjem na OpenAI-kompatibilnim serverima) traži sažetak razmišljanja i prikazuje ga uživo u radnom logu chata.',
+  p_ai_auto_titles: 'Generiraj naslove sesija', p_ai_auto_titles_d: 'Nakon prvog odgovora jedan kratki dodatni zahtjev modelu napiše naslov chata (inače se koristi prvo pitanje). Naslove možete preimenovati.',
+});
 (function () {
   const $ = id => document.getElementById(id);
   const S = {}; // per window: {sid, es, seq, view, cfg, pol, busy}
@@ -368,6 +394,9 @@ Object.assign(LANGS.hr, {
 .ai-see { font-size: 11.5px; color: var(--text2); line-height: 1.5; }
 .ai-see li { margin-left: 16px; }
 .ai-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--text2); position: sticky; top: -8px; z-index: 2; background: var(--bg2); padding: 6px 0 4px; margin-top: -6px; }
+.ai-pend { position: sticky; top: 22px; z-index: 3; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 6px; padding: 7px 9px; border: 1px solid var(--yellow, #f59e0b); border-radius: 8px; background: var(--bg3); box-shadow: 0 4px 14px rgba(0,0,0,.25); font-size: 12px; }
+.ai-pend b { color: var(--yellow, #f59e0b); }
+.ai-pend .ai-pend-w { flex: 1; min-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ai-bar select { font-size: 11.5px; padding: 2px 6px; max-width: 100%; }
 #admin-body button.btn-sm.danger, .ai-modal button.btn-sm.danger, .ai-panel button.danger { background: #dc2626; border-color: #dc2626; color: #fff; }
 #admin-body button.btn-sm.danger:hover, .ai-modal button.btn-sm.danger:hover { background: #b91c1c; }
@@ -426,6 +455,7 @@ Object.assign(LANGS.hr, {
       <button class="ai-ib ai-dockb" data-d="right" title="${esc(t('ai_dock_right'))}" onclick="wrmAI.dock(${wo.id},'right')">◨</button>
       <button class="ai-ib ai-dockb" data-d="float" title="${esc(t('ai_float'))}" onclick="wrmAI.dock(${wo.id},'float')">❐</button>
       <button class="ai-ib ai-dockb ai-xb" title="${esc(t('ai_expand'))}" onclick="wrmAI.expand(${wo.id})">⛶</button>
+      <button class="ai-ib" id="aisnd-${wo.id}" title="${esc(t(wrmSoundOn() ? 'ai_sound_on' : 'ai_sound_off'))}" onclick="wrmAI.sound(${wo.id})">${wrmSoundOn() ? '🔊' : '🔇'}</button>
       <button class="ai-ib" title="${esc(t('ai_see'))}" onclick="wrmAI.see(${wo.id})">👁</button>
       <button class="ai-ib" title="${esc(t('ai_history'))}" onclick="wrmAI.history(${wo.id})">🕘</button>
       <button class="ai-ib danger" id="aipk-${wo.id}" title="${esc(t('ai_end'))}" style="display:none;" onclick="wrmAI.end(${wo.id})">⏻</button>
@@ -580,7 +610,9 @@ Object.assign(LANGS.hr, {
     S[id] = Object.assign(S[id] || {}, {pol});
     if (!cfg.enabled) { body.innerHTML = `<div class="hint-box warn">${esc(t('ai_disabled'))}: ${esc(cfg.reason || '')}</div>`; return; }
     if (!pol.allowed_modes.length) { body.innerHTML = `<div class="hint-box warn">${esc(t('ai_disabled'))}</div>`; return; }
-    const resume = (cfg.active || []).filter(s => s.conn_id === wo.connId && !Object.values(S).some(x => x.sid === s.id));
+    const resume = (cfg.active || []).filter(s => s.conn_id === wo.connId && !Object.values(S).some(x => x.sid === s.id) && !s.purpose);
+    let recent = [];
+    try { recent = (await api('GET', '/api/ai/sessions?purpose=terminal')).filter(s => s.conn_id === wo.connId && !s.live && s.transport === 'panel' && s.requests > 0).slice(0, 4); } catch (_) {}
     const provs = cfg.providers || [];
     const own = cfg.personal_keys ? `<button class="btn-sec btn-sm" onclick="wrmAI.myKeys(${id})">🔑 ${esc(t('ai_my_keys'))}</button>` : '';
     if (!provs.length) {
@@ -590,7 +622,8 @@ Object.assign(LANGS.hr, {
     }
     const shared = !!wo.shareToken;
     body.innerHTML = `<div class="ai-setup">
-      ${resume.map(s => `<button class="btn-sec btn-sm" onclick="wrmAI.attach(${id}, ${s.id})">↪ ${esc(t('ai_continue'))} #${s.id} · ${esc(t('ai_mode_' + s.mode))} · ${esc(s.model)}</button>`).join('')}
+      ${resume.map(s => `<button class="btn-sec btn-sm" onclick="wrmAI.attach(${id}, ${s.id})">↪ ${esc(t('ai_continue'))} #${s.id} · ${esc(s.title || t('ai_mode_' + s.mode))} · ${esc(s.model)}</button>`).join('')}
+      ${recent.length ? `<div class="ai-see">${esc(t('ai_recent'))}</div>` + recent.map(s => `<button class="btn-sec btn-sm" style="text-align:left" onclick="wrmAI.resume(${id}, ${s.id})">↪ ${esc(s.title || '#' + s.id)} · ${esc(fmtTime(s.started_at))}</button>`).join('') : ''}
       ${engineHTML(id)}
       <div class="ai-row"><div><label>${esc(t('ai_provider'))}</label><select id="ai-prov-${id}" onchange="wrmAI.models(${id})">${provs.map(p => `<option value="${p.id}">${esc(p.name)}${p.scope === 'user' ? ' (🔑)' : ''}</option>`).join('')}</select></div>
         <div><label>${esc(t('ai_model'))}</label><select id="ai-model-${id}"></select></div></div>
@@ -686,6 +719,7 @@ Object.assign(LANGS.hr, {
   }
 
   async function start(id) {
+    if (window.wrmAskNotifications) wrmAskNotifications();
     const wo = winOf(id);
     const mode = $('ai-mode-' + id).value;
     const body = {conn_id: wo.connId, provider_id: Number($('ai-prov-' + id).value), model: $('ai-model-' + id).value, mode,
@@ -709,9 +743,9 @@ Object.assign(LANGS.hr, {
     if (!wo) return;
     const old = S[id] || {};
     if (old.es) old.es.close();
-    S[id] = {pol: old.pol, sid, seq: 0, ended: false, busy: false, cards: {}, cur: null};
+    S[id] = {pol: old.pol, sid, seq: 0, ended: false, busy: false, cards: {}, pending: {}, cur: null};
     const body = $('aib-' + id);
-    body.innerHTML = `<div class="ai-bar" id="ai-bar-${id}"></div>`;
+    body.innerHTML = `<div class="ai-bar" id="ai-bar-${id}"></div><div class="ai-pend" id="ai-pend-${id}" style="display:none;"></div>`;
     $('aipk-' + id).style.display = '';
     const foot = $('aif-' + id);
     foot.style.display = '';
@@ -721,7 +755,7 @@ Object.assign(LANGS.hr, {
     if(wo.pendingAIContext){$('ai-in-'+id).value=wo.pendingAIContext;wo.pendingAIContext='';}
     const es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
     S[id].es = es;
-    ['session', 'user', 'assistant_start', 'text', 'assistant_done', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'mode', 'usage', 'busy', 'error', 'notice', 'ended']
+    ['session', 'user', 'assistant_start', 'thinking', 'text', 'assistant_done', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'mode', 'usage', 'busy', 'error', 'notice', 'ended', 'title', 'history']
       .forEach(ty => es.addEventListener(ty, ev => { try { onEvent(id, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));
     es.onerror = () => { if (S[id] && S[id].ended) es.close(); };
     indicators();
@@ -738,6 +772,7 @@ Object.assign(LANGS.hr, {
     const auto = v.auto ? ` · ${esc(tf('ai_auto_until', {time: new Date(v.auto.until).toLocaleTimeString(), used: v.auto.used, max: v.auto.max_actions}))}` : '';
     const oc = v.transport === 'opencode';
     el.innerHTML = `<select onchange="wrmAI.setMode(${id}, this.value)" ${st.ended || oc ? 'disabled' : ''} ${oc ? `title="${esc(t('ai_oc_mode_fixed'))}"` : ''}>${MODES.filter(m => allowed.includes(m) || m === v.mode).map(m => `<option value="${m}" ${m === v.mode ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select>
+      ${v.title || st.title ? `<b class="ai-title" title="${esc(t('ai_rename'))}" style="cursor:pointer;max-width:16em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onclick="wrmAI.rename(${id})">${esc(v.title || st.title)}</b>` : ''}
       <span>${oc ? `⬛ OpenCode · ${esc(v.agent || 'build')}${v.sandbox ? ' · 🐳 ' + esc(t('ai_oc_sb_on')) : ''} · ` : ''}${esc(v.provider)} · ${esc(v.model)}${auto}</span><span style="margin-left:auto;" id="ai-use-${id}"></span>`;
     usage(id);
     const pm = $('aipm-' + id);
@@ -767,13 +802,50 @@ Object.assign(LANGS.hr, {
   }
 
   function workingUI(id, busy) {
-    const waitId = 'ai-wait-' + id, wait = $(waitId), body = $('aib-' + id);
-    if (!busy) { if (wait) wait.remove(); return; }
-    if (!wait && body) {
-      body.insertAdjacentHTML('beforeend', `<div id="${waitId}" class="ai-note" role="status" style="display:flex;align-items:center;gap:8px;">
-        <span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span><span>${esc(t('ai_thinking'))}</span></div>`);
-      scrollEnd(id);
+    if (!busy) { workLogDone(id); return; }
+    workLog(id);
+  }
+
+  // The work log: one collapsible line per request that shows what the
+  // assistant is doing right now (tool by tool), open while it works and
+  // collapsed once the answer is there. It never duplicates the tool cards
+  // below it; it is the overview you can ignore.
+  function workLog(id) {
+    const b = $('aib-' + id);
+    if (!b || typeof b.querySelector !== 'function') return null;
+    let el = b.querySelector('[data-worklog]:not([data-done])');
+    if (!el) {
+      b.insertAdjacentHTML('beforeend', `<details class="ai-worklog" data-worklog open style="margin:6px 0;border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--bg2);">
+        <summary style="cursor:pointer;font-size:11.5px;color:var(--text2);">⏳ <span data-sum>${esc(t('ai_worklog_working'))}</span></summary>
+        <div data-steps style="font-size:11px;color:var(--text2);margin-top:4px;display:flex;flex-direction:column;gap:2px;"></div></details>`);
+      el = b.lastElementChild;
     }
+    scrollEnd(id);
+    return el;
+  }
+
+  // workLogStep adds one line; it returns the text element so a live step
+  // (the model's thinking) can grow in place.
+  function workLogStep(id, text) {
+    const el = workLog(id);
+    if (!el) return null;
+    const box = el.querySelector('[data-steps]');
+    const n = box.children.length + 1;
+    box.insertAdjacentHTML('beforeend', `<div style="display:flex;gap:6px;"><span style="color:var(--text3);">${n}.</span><span style="white-space:pre-wrap;overflow-wrap:anywhere;">${esc(text)}</span></div>`);
+    el.querySelector('[data-sum]').textContent = `${t('ai_worklog_working')} · ${tf('ai_worklog_steps', {n})}`;
+    scrollEnd(id);
+    return box.lastElementChild.lastElementChild;
+  }
+
+  function workLogDone(id) {
+    const b = $('aib-' + id);
+    if (!b || typeof b.querySelector !== 'function') return;
+    const el = b.querySelector('[data-worklog]:not([data-done])');
+    if (!el) return;
+    const n = el.querySelectorAll('[data-steps] div').length;
+    el.querySelector('[data-sum]').textContent = t('ai_worklog') + (n ? ' · ' + tf('ai_worklog_steps', {n}) : '');
+    el.open = false;
+    el.dataset.done = '1';
   }
 
   function onEvent(id, ev) {
@@ -783,16 +855,35 @@ Object.assign(LANGS.hr, {
     const d = ev.data || {};
     switch (ev.type) {
       case 'session': st.view = d; st.ended = d.ended; bar(id); (d.pending || []).forEach(a => approvalUI(id, a)); break;
-      case 'user': add(id, `<div class="ai-msg user">${esc(d.text)}</div>`); break;
-      case 'assistant_start': st.cur = null; break;
+      case 'user': workLogDone(id); add(id, `<div class="ai-msg user">${esc(d.text)}</div>`); break;
+      case 'assistant_start': st.cur = null; st.think = null; workLog(id); break;
+      case 'thinking': {
+        // the model's summarized reasoning, live in the work log
+        if (!st.think) { st.think = workLogStep(id, '💭 ', true); st.thinkText = ''; }
+        st.thinkText += d.delta || '';
+        if (st.think) { st.think.textContent = '💭 ' + st.thinkText.slice(-600); st.think.title = st.thinkText.slice(-4000); }
+        scrollEnd(id); break;
+      }
+      case 'title': st.title = d.title; if (st.view) st.view.title = d.title; bar(id); break;
+      case 'history': {
+        const msgs = d.messages || [];
+        add(id, `<details class="ai-worklog" style="margin:6px 0;border:1px dashed var(--border);border-radius:8px;padding:6px 10px;"><summary style="cursor:pointer;font-size:11.5px;color:var(--text2);">↪ ${esc(tf('ai_resumed_from', {n: d.from}))} · ${msgs.filter(m => m.kind === 'user').length} ${esc(t('ai_resumed_msgs'))}</summary>
+          ${msgs.map(m => m.kind === 'user' ? `<div class="ai-msg user" style="opacity:.75">${esc(m.text)}</div>` : m.kind === 'assistant' ? `<div class="ai-msg assistant" style="opacity:.75">${md(m.text)}</div>`
+            : `<div class="ai-note" style="opacity:.7">${m.kind === 'tool_call' ? '🛠' : m.kind === 'error' ? '⚠' : '📄'} ${esc(String(m.text || '').slice(0, 300))}</div>`).join('')}</details>`);
+        break;
+      }
       case 'text':
         if (!st.cur) { st.cur = add(id, `<div class="ai-msg assistant"></div>`); st.curText = ''; }
         st.curText += d.delta; st.cur.textContent = st.curText; scrollEnd(id); break;
       case 'assistant_done':
         if (d.text) { if (!st.cur) st.cur = add(id, `<div class="ai-msg assistant"></div>`); st.cur.innerHTML = md(d.text); }
         else if (st.cur && d.text === '') st.cur.remove(); // parsed tool JSON has no final assistant text
-        st.cur = null; break;
-      case 'tool_call': {
+        if (d.text && d.stop === 'tool_use') workLogStep(id, '💬 ' + String(d.text).replace(/\s+/g, ' ').slice(0, 300));
+        st.cur = null; st.think = null;
+        if (d.stop !== 'tool_use') { workLogDone(id); if (window.wrmSound) wrmSound('reply'); }
+        break;      case 'tool_call': {
+        workLogStep(id, d.tool ? d.tool + (d.display ? ' · ' + String(d.display) : '') : String(d.display || ''));
+        if (st.cards[d.call_id]) break; // an approval already made the card
         const el = add(id, `<div class="ai-card ${d.decision === 'deny' ? 'deny' : ''}" id="aic-${id}-${esc(d.call_id)}">
           <div class="ai-ch"><span class="ai-tool">${esc(d.tool)}</span>${decisionPill(d)}</div>
           <div class="ai-cmd">${esc(d.display)}</div>
@@ -804,6 +895,11 @@ Object.assign(LANGS.hr, {
       }
       case 'approval_required': approvalUI(id, d.session_id ? Object.assign({}, d.approval, {session_id: d.session_id}) : d.approval); break;
       case 'approval_resolved': {
+        if (st.pending && d.approval_id) delete st.pending[d.approval_id];
+        if (st.pending && d.call_id) {
+          for (const [aid, a] of Object.entries(st.pending)) if (a.call_id === d.call_id) delete st.pending[aid];
+        }
+        pendingBar(id);
         const card = st.cards[d.call_id];
         if (card) {
           card.classList.remove('wait');
@@ -818,6 +914,7 @@ Object.assign(LANGS.hr, {
         const head = d.error ? `<div class="ai-why" style="color:#fca5a5;">${esc(d.error)}</div>`
           : `<div class="ai-ch"><span class="pill ${d.exit_code === 0 ? '' : 'warn'}">${esc(tf('ai_exit', {code: d.exit_code}))}</span>${d.redactions ? `<span class="pill info">🔒 ${esc(tf('ai_redactions', {n: d.redactions}))}</span>` : ''}</div>`;
         const out = d.output != null ? `<details ${String(d.output).length < 600 ? 'open' : ''}><summary>${esc(t('ai_output'))} (${String(d.output).length} B)</summary><pre>${esc(d.output)}</pre></details>` : '';
+        workLogStep(id, (d.error ? '✗ ' : d.exit_code === 0 ? '✓ ' : '⚠ ') + (d.tool || '') + (d.error ? ' · ' + String(d.error).slice(0, 160) : ' · ' + tf('ai_exit', {code: d.exit_code}) + (d.output != null ? ' · ' + String(d.output).length + ' B' : '')));
         if (card) card.querySelector('.ai-res').innerHTML = head + out;
         else add(id, `<div class="ai-card ${d.error ? 'deny' : ''}"><div class="ai-ch"><span class="ai-tool">${esc(d.tool || '')}</span>${d.error ? `<span class="pill bad">${esc(t('ai_d_deny'))}</span>` : ''}</div>${head}${out}</div>`);
         scrollEnd(id); break;
@@ -838,9 +935,11 @@ Object.assign(LANGS.hr, {
       case 'notice': add(id, `<div class="ai-note">${esc(t('ai_n_' + d.text))}</div>`); break;
       case 'ended':
         st.ended = true;
+        st.pending = {};
+        pendingBar(id);
         workingUI(id, false);
         if (st.es) st.es.close();
-        add(id, `<div class="ai-note err">⏻ ${esc(t('ai_ended'))}: ${esc(reasonText(d.reason))}</div><button class="btn-sm" style="align-self:center;" onclick="wrmAI.newSession(${id})">✦ ${esc(t('ai_new'))}</button>`);
+        add(id, `<div class="ai-note err">⏻ ${esc(t('ai_ended'))}: ${esc(reasonText(d.reason))}</div><div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">${st.view && st.view.transport === 'opencode' ? '' : `<button class="btn-sm" onclick="wrmAI.resume(${id})">↪ ${esc(t('ai_continue_chat'))}</button>`}<button class="btn-sec btn-sm" onclick="wrmAI.newSession(${id})">✦ ${esc(t('ai_new'))}</button></div>`);
         const f = $('aif-' + id); if (f) f.style.display = 'none';
         $('aipk-' + id).style.display = 'none';
         if (st.view) st.view.ended = true;
@@ -849,9 +948,21 @@ Object.assign(LANGS.hr, {
   }
 
   function approvalUI(id, a) {
-    const st = S[id], card = st.cards[a.call_id];
-    if (!card) return;
+    const st = S[id];
+    if (!st) return;
+    st.pending = st.pending || {};
+    st.pending[a.id] = a;
     if (a.session_id) (st.apprSess = st.apprSess || {})[a.id] = a.session_id;
+    let card = st.cards[a.call_id];
+    if (!card) {
+      // The approval can arrive before the tool card (a replayed session or a fast
+      // model): make its own card, so there is always something to approve.
+      card = add(id, `<div class="ai-card wait" id="aic-${id}-${esc(a.call_id || a.id)}">
+        <div class="ai-ch"><span class="ai-tool">${esc(a.tool || '')}</span><span class="pill warn">${esc(t('ai_d_approve'))}</span></div>
+        <div class="ai-cmd">${esc(a.command || a.path || a.transfer || '')}</div>
+        <div class="ai-appr"></div><div class="ai-res"></div></div>`);
+      if (card && a.call_id) st.cards[a.call_id] = card;
+    }
     card.classList.add('wait');
     const box = card.querySelector('.ai-appr');
     const isWrite = !!a.path;
@@ -862,7 +973,34 @@ Object.assign(LANGS.hr, {
       <div class="ai-acts"><input type="text" id="ai-nt-${id}-${esc(a.id)}" placeholder="${esc(t('ai_note_ph'))}">
         <button class="btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', true, ${isWrite})">✓ ${esc(t('ai_approve'))}</button>
         <button class="btn-sec btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', false, ${isWrite})">✕ ${esc(t('ai_deny'))}</button></div>`;
-    tick(id); scrollEnd(id); indicators();
+    tick(id); scrollEnd(id); pendingBar(id); indicators();
+    if (window.wrmAiAlert) wrmAiAlert('approval', (a.tool || '') + ' · ' + (a.command || a.path || a.transfer || ''), 'approval-' + a.id);
+  }
+
+  // pendingBar keeps the newest approval at the top of the chat, even when the
+  // tool card scrolled away. It is the "approve it in the chat" path.
+  function pendingBar(id) {
+    const st = S[id], el = $('ai-pend-' + id);
+    if (!st || !el) return;
+    const list = Object.values(st.pending || {});
+    if (!list.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    const a = list[0], isWrite = !!a.path;
+    const what = a.command || a.path || a.transfer || a.tool || '';
+    el.style.display = '';
+    el.innerHTML = `<b>⏳ ${esc(t('ai_pending'))}</b>
+      <span class="ai-pend-w" title="${esc(what)}">${esc(a.tool || '')} · ${esc(what)}</span>
+      ${list.length > 1 ? `<span class="pill">${esc(tf('ai_pending_more', {n: list.length - 1}))}</span>` : ''}
+      <button class="btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', true, ${isWrite})">✓ ${esc(t('ai_approve'))}</button>
+      <button class="btn-sec btn-sm" onclick="wrmAI.decide(${id}, '${esc(a.id)}', false, ${isWrite})">✕ ${esc(t('ai_deny'))}</button>
+      <button class="btn-sec btn-sm" onclick="wrmAI.pendingDetails(${id}, '${esc(a.id)}')">${esc(t('ai_pending_details'))}</button>`;
+  }
+
+  function pendingDetails(id, aid) {
+    const st = S[id];
+    const a = st && st.pending && st.pending[aid];
+    if (!a) return;
+    const card = st.cards[a.call_id];
+    if (card) card.scrollIntoView({block: 'center', behavior: 'smooth'});
   }
 
   function tick(id) {
@@ -872,6 +1010,18 @@ Object.assign(LANGS.hr, {
       const s = Math.max(0, Math.round((Number(el.dataset.exp) - Date.now()) / 1000));
       el.textContent = tf('ai_expires', {s});
     });
+  }
+
+  function sound(id) {
+    const nowOn = !wrmSoundOn();
+    try { localStorage.setItem('wrm_sound', nowOn ? '1' : '0'); } catch (_) {}
+    const b = $('aisnd-' + id);
+    if (b) {
+      b.textContent = nowOn ? '🔊' : '🔇';
+      b.title = t(nowOn ? 'ai_sound_on' : 'ai_sound_off');
+    }
+    showToast(t(nowOn ? 'ai_sound_on_toast' : 'ai_sound_off_toast'), 'info', 2000);
+    if (nowOn) wrmSound('reply');
   }
 
   async function decide(id, aid, ok, isWrite) {
@@ -913,6 +1063,27 @@ Object.assign(LANGS.hr, {
     api('POST', `/api/ai/sessions/${st.sid}/kill${shareQ(winOf(id))}`).catch(e => showToast(e.message, 'error'));
   }
   function newSession(id) { const st = S[id]; if (st && st.es) st.es.close(); S[id] = {pol: st && st.pol}; renderSetup(winOf(id)); indicators(); }
+  // resume continues an ended session (idle, stopped, WRM restarted) in a new
+  // one that gets the conversation back; sid is an ended session from the list.
+  async function resume(id, sid) {
+    const wo = winOf(id), st = S[id] || {};
+    sid = sid || st.sid;
+    if (!wo || !sid) return;
+    try {
+      const v = await api('POST', '/api/ai/sessions' + shareQ(wo), {resume_from: sid, conn_id: wo.connId});
+      closeAIModal();
+      attach(id, v.id);
+    } catch (e) { showToast(e.message, 'error', 6000); }
+  }
+  async function rename(id, sid) {
+    const st = S[id] || {};
+    sid = sid || st.sid;
+    const cur = (st.view && st.view.title) || st.title || '';
+    const v = await uiPrompt(t('ai_rename'), cur);
+    if (v == null || !v.trim()) return;
+    try { const r = await api('POST', `/api/ai/sessions/${sid}/title`, {title: v}); if (st.sid === sid) { st.title = r.title; if (st.view) st.view.title = r.title; bar(id); } }
+    catch (e) { showToast(e.message, 'error'); }
+  }
 
   async function setMode(id, mode) {
     const wo = winOf(id), st = S[id];
@@ -954,7 +1125,9 @@ Object.assign(LANGS.hr, {
       ${seeHTML(st.pol && st.pol.sees, prov, st.view && st.view.share_notes)}<div class="hint-box">${esc(t('ai_subscriptions_note'))}</div>`);
   }
 
+  let histWin = 0;
   async function history(id) {
+    histWin = id;
     let list = [];
     try { list = await api('GET', '/api/ai/sessions'); } catch (e) { showToast(e.message, 'error'); return; }
     modal(`<div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🕘 ${esc(t('ai_history'))}</h3><button class="icon-btn" onclick="wrmAI.closeModal()">✕</button></div>
@@ -964,13 +1137,14 @@ Object.assign(LANGS.hr, {
   function sessionsTable(list, admin) {
     if (!list.length) return `<div class="chat-empty">${esc(t('none'))}</div>`;
     return `<div class="tbl-scroll"><table class="admin-table"><thead><tr><th>${esc(t('started'))}</th>${admin ? `<th>${esc(t('user'))}</th>` : ''}<th>${esc(t('server'))}</th><th>${esc(t('ai_model'))}</th><th>${esc(t('status'))}</th><th>${esc(t('ai_tokens'))}</th><th></th></tr></thead><tbody>` +
-      list.map(s => `<tr><td style="white-space:nowrap;">${esc(fmtTime(s.started_at))}</td>${admin ? `<td>${esc(s.user)}</td>` : ''}
+      list.map(s => `<tr><td style="white-space:nowrap;">${s.title ? `<b>${esc(s.title)}</b><div class="sub">` : ''}${esc(fmtTime(s.started_at))}${s.purpose ? ' · ' + esc(t('ai_purpose_' + s.purpose)) : ''}${s.title ? '</div>' : ''}</td>${admin ? `<td>${esc(s.user)}</td>` : ''}
         <td>${esc(s.connection)}<div class="sub mono">${esc(s.host)}</div></td><td>${esc(s.model)}<div class="sub">${esc(s.provider)} · ${esc(t('ai_mode_' + s.mode))}</div></td>
         <td><span class="pill ${s.live ? 'ok' : s.status === 'killed' ? 'warn' : ''}">${esc(s.live ? t('ai_live') : s.status)}</span>${s.end_reason ? `<div class="sub">${esc(reasonText(s.end_reason))}</div>` : ''}</td>
         <td class="mono">${s.tokens_in}/${s.tokens_out}${s.cost_usd ? `<div class="sub">$${Number(s.cost_usd).toFixed(4)}</div>` : ''}<div class="sub">${s.tool_calls} ${esc(t('ai_tool_calls'))}</div></td>
         <td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn-sec btn-sm" onclick="wrmAI.transcript(${s.id}, ${admin})">${esc(t('ai_transcript'))}</button>
           ${s.recording_session ? `<button class="btn-sec btn-sm" onclick="wrmAI.closeModal(); openReplay(${s.recording_session})">▶</button>` : ''}
-          ${admin && s.live ? `<button class="btn-sm danger" onclick="wrmAI.adminKill(${s.id})">${esc(t('ai_kill'))}</button>` : ''}</div></td></tr>`).join('') + '</tbody></table></div>';
+          ${admin && s.live ? `<button class="btn-sm danger" onclick="wrmAI.adminKill(${s.id})">${esc(t('ai_kill'))}</button>` : ''}
+          ${!admin && !s.live && histWin && s.transport === 'panel' && !s.purpose && winOf(histWin) && winOf(histWin).connId === s.conn_id ? `<button class="btn-sm" onclick="wrmAI.resume(${histWin}, ${s.id})">↪ ${esc(t('ai_continue_chat'))}</button>` : ''}</div></td></tr>`).join('') + '</tbody></table></div>';
   }
 
   async function transcript(sid, admin) {
@@ -1011,8 +1185,8 @@ Object.assign(LANGS.hr, {
   }
 
   // ── providers (personal and organisation) ─────────────
-  const KINDS = ['anthropic', 'openai', 'azure', 'bedrock', 'vertex', 'openai_compatible', 'opencode'];
-  const MODEL_HINT = {anthropic: 'claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5', bedrock: 'anthropic.claude-opus-5-5', vertex: 'claude-opus-5-5', opencode: 'big-pickle'};
+  const KINDS = ['anthropic', 'openai', 'azure', 'bedrock', 'vertex', 'openai_compatible', 'opencode', 'opencode_go'];
+  const MODEL_HINT = {anthropic: 'claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5', bedrock: 'anthropic.claude-opus-5-5', vertex: 'claude-opus-5-5', opencode: 'big-pickle', opencode_go: 'kimi-k3, glm-5.3, deepseek-v4.1-flash, claude-haiku-5-5'};
 
   function provForm(p, scope) {
     p = p || {kind: 'anthropic', enabled: true, refusal_fallback: true};
@@ -1024,8 +1198,8 @@ Object.assign(LANGS.hr, {
         <div class="field"><label>${esc(t('ai_prov_kind'))}</label><select id="aipf-kind" onchange="wrmAI.formKind()" ${p.id ? 'disabled' : ''}>${kinds.map(k => `<option value="${k}" ${k === p.kind ? 'selected' : ''}>${esc(t('ai_kind_' + k))}</option>`).join('')}</select></div></div>
       ${f('models', t('ai_prov_models'), p.models, 'text', MODEL_HINT[p.kind] || '')}
       ${f('default_model', t('ai_prov_default'), p.default_model)}
-      <div class="kind-anthropic kind-openai kind-azure kind-bedrock kind-openai_compatible kind-opencode">${sec('api_key', t('ai_prov_key') + ' / ' + t('ai_prov_bkey'), p.has_api_key)}</div>
-      <div class="kind-anthropic kind-openai kind-bedrock kind-vertex kind-opencode">${f('base_url', t('ai_prov_base'), p.base_url)}</div>
+      <div class="kind-anthropic kind-openai kind-azure kind-bedrock kind-openai_compatible kind-opencode kind-opencode_go">${sec('api_key', t('ai_prov_key') + ' / ' + t('ai_prov_bkey'), p.has_api_key)}</div>
+      <div class="kind-anthropic kind-openai kind-bedrock kind-vertex kind-opencode kind-opencode_go">${f('base_url', t('ai_prov_base'), p.base_url)}</div>
       <div class="kind-azure kind-openai_compatible">${f('base_url2', p.kind === 'azure' ? t('ai_prov_endpoint') : t('ai_prov_base_req'), p.base_url)}</div>
       <div class="kind-azure ai-row">${f('deployment', t('ai_prov_deployment'), p.deployment)}${f('api_version', t('ai_prov_apiver'), p.api_version, 'text', '2024-10-21')}</div>
       <div class="kind-bedrock kind-vertex ai-row">${f('region', t('ai_prov_region'), p.region, 'text', 'eu-central-1 / global')}<div class="field"><label>${esc(t('ai_prov_api'))}</label><select id="aipf-api_mode"></select></div></div>
@@ -1112,6 +1286,7 @@ Object.assign(LANGS.hr, {
     {id: 'anthropic', kind: 'anthropic', model: 'claude-sonnet-5-5, claude-opus-5-5, claude-haiku-4-5', key: true},
     {id: 'openai', kind: 'openai', model: 'gpt-5, gpt-5-mini, gpt-4.1, gpt-4.1-mini', key: true},
     {id: 'opencode', kind: 'opencode', model: 'big-pickle', key: false},
+    {id: 'opencode_go', kind: 'opencode_go', model: 'kimi-k3', key: true},
     {id: 'gemini', kind: 'openai_compatible', base: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite', key: true},
     {id: 'groq', kind: 'openai_compatible', base: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile, openai/gpt-oss-120b, openai/gpt-oss-20b', key: true},
     {id: 'openrouter', kind: 'openai_compatible', base: 'https://openrouter.ai/api/v1', model: 'anthropic/claude-sonnet-4.5, openai/gpt-5, google/gemini-2.5-pro', key: true},
@@ -1306,7 +1481,7 @@ Object.assign(LANGS.hr, {
 
   // ── admin tab ─────────────────────────────────────────
   const AI_POLICY_KEYS = ['ai_assistant', 'ai_kill_switch', 'ai_modes', 'ai_default_mode', 'ai_mode_rules', 'ai_personal_keys', 'ai_provider_kinds', 'ai_models', 'ai_ollama_manage',
-    'ai_redact_output', 'ai_share_notes', 'ai_allow_power', 'ai_sensitive_reads', 'ai_blocked_commands', 'ai_read_deny_paths', 'ai_approval_timeout_seconds', 'ai_auto_max_minutes',
+    'ai_redact_output', 'ai_show_thinking', 'ai_auto_titles', 'ai_share_notes', 'ai_allow_power', 'ai_sensitive_reads', 'ai_blocked_commands', 'ai_read_deny_paths', 'ai_approval_timeout_seconds', 'ai_auto_max_minutes',
     'ai_auto_max_actions', 'ai_auto_until_grant', 'ai_provider_header_seconds', 'ai_provider_request_seconds', 'ai_provider_stream_idle_seconds', 'ai_command_timeout_seconds', 'ai_output_max_kb', 'ai_max_steps', 'ai_idle_minutes', 'ai_transcript_retention_days'];
 
   async function adminAI() {
@@ -1448,7 +1623,8 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmAI = {
-    queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession,
+    md, diffHTML, reasonText, loadCfg,
+    queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession, resume, rename, sound, pendingDetails,
     myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); }),
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,

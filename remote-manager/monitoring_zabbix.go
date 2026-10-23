@@ -49,11 +49,9 @@ func monitorTLS(cfg monitorConfig) (*tls.Config, error) {
 	return t, nil
 }
 func zabbixFrame(data []byte) []byte {
-	b := make([]byte, 13+len(data))
-	copy(b, []byte{'Z', 'B', 'X', 'D', 1})
+	b := []byte{'Z', 'B', 'X', 'D', 1, 0, 0, 0, 0, 0, 0, 0, 0}
 	binary.LittleEndian.PutUint32(b[5:9], uint32(len(data)))
-	copy(b[13:], data)
-	return b
+	return append(b, data...)
 }
 func zabbixRead(r io.Reader) ([]byte, error) {
 	h := make([]byte, 13)
@@ -113,11 +111,21 @@ func zabbixValue(b []byte) (string, bool, error) {
 	return text, false, nil
 }
 func monitorSSHCommand(ctx context.Context, cl *ssh.Client, cmd string) (string, error) {
+	return monitorSSHCommandInput(ctx, cl, cmd, "")
+}
+
+// monitorSSHCommandInput runs cmd with input on its standard input, so text a
+// user typed (a search pattern) reaches the remote shell as data and never as
+// part of the command line.
+func monitorSSHCommandInput(ctx context.Context, cl *ssh.Client, cmd, input string) (string, error) {
 	sess, err := cl.NewSession()
 	if err != nil {
 		return "", err
 	}
 	defer sess.Close()
+	if input != "" {
+		sess.Stdin = strings.NewReader(input)
+	}
 	buf := &lockedBuf{buf: capBuffer{max: 1 << 20}}
 	sess.Stdout = buf
 	sess.Stderr = buf
@@ -297,6 +305,11 @@ func collectMonitor(ctx context.Context, c Connection, cfg monitorConfig) monito
 	delete(s.Metrics, "filesystems")
 	delete(s.Metrics, "interfaces")
 	finishMonitor(&s)
+	// Service state is read over the same SSH connection. direct/api transports
+	// have no shell, so a service list only applies to the ssh transport.
+	if cl != nil && len(cfg.Services) > 0 {
+		collectMonitorServices(ctx, cl, cfg.Services, &s)
+	}
 	return s
 }
 

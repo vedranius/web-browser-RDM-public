@@ -1,35 +1,208 @@
-## Web Remote Manager PRO v12.9.1 - Medium without the original tool: deploy-config from Git, build user and the native engine as the default
+## Web Remote Manager PRO v13.5.0 - Log viewer, smart editor and AI that shows its work
 
 ### Added
 
-- **deploy-config from its Git repository.** With `DEPLOY_CONFIG_REPO` set in the Medium settings and a WRM Git source serving that repository, the deploy-config editor gets a **Git** section: repository, branch, the pulled commit, whether Git has newer commits, and your local changes. **Pull from Git and use it** makes WRM's own copy of the branch the configuration in use, while the imported ZIP stays as it was. **Commit and push** sends your edits as one commit through the Git source's write token (GitLab, GitHub and Gitea), after checking that the whole configuration still loads and that nobody changed the same files on Git since your pull. **Pull** never overwrites local changes unless you choose *Discard changes and pull*, and never applies a branch head whose configuration does not load. **Stop using the Git copy** goes back to the imported deploy-config. Everything is audited and listed in the Medium activity log.
-- **Builds on the WRM host as an unprivileged account.** The policy **Medium: build user on the WRM host** (`medium_build_user`, for example `wrm-build`) runs builds as that account with a clean environment, so a build command cannot read WRM's database, key or Medium data. WRM must run as root on Linux or another Unix system; root and accounts that could read WRM's files are refused with the reason. The plan shows *as wrm-build* next to the build location.
-- **The WRM engine is the default.** The policy **Medium: default engine** (`medium_default_engine`, `native`) puts projects nobody chose an engine for on the WRM engine for users allowed to deploy with it. The Medium page then shows the WRM engine first and folds the original deploy tool away as optional; a deploy-config ZIP can be imported right from the WRM engine card.
+- **A professional log viewer** in *Monitoring → Logs*: sortable and filterable file list (operator, service, newest first), log tabs with line numbers, level colours, smart highlighting (times, IPs, URLs, HTTP codes, UUIDs, key=value), find in the log, level filters, **Follow**, older lines and go to line.
+- **Search across all logs by time**: the search runs on the server with grep, takes a From/To range in the EU format (`dd.mm.yyyy hh:mm`) or a quick range, sorts hits by time and draws a timeline. A click opens the file at the hit.
+- **Log settings of their own** (⚙ *Log settings*, not in the Zabbix dialog any more): scan paths, exclusions, operator/service path patterns, limits, time budget, journal, systemd, Supervisor and Docker metadata, and the discovery method. Discovery runs as one read-only SSH command and never lists scripts such as `.py` as logs.
+- **AI log assistant** (🤖 in the log viewer): searches every discovered log with the new `search_logs` tool and explains what failed, since when and where. Read-only.
+- **Smart file editor with an AI assistant**: highlighting, find and replace, go to line, JSON check and format, a diff of your changes before saving, a warning when the file changed on the server, and an AI panel that reviews, explains and edits the open file (every edit is a diff you approve).
+- **The AI work log shows thinking, narration and tool results**, chats get a short title with date and time, and an ended chat can be **continued** with its history.
+- **Date and time format**: EU by default, ISO, US or the browser's locale in *Settings*.
+- **Plugin and skills**: the skills use `search_logs`; `server.json` lets the owner publish WRM to the MCP Registry.
 
-### Changed
+### Fixed
 
-- The original deploy tool and its Docker runtime are optional. The WRM engine needs only your deploy-config and your WRM connections, and an imported deploy-config is used at once.
-- Installations that already have the original deploy tool imported start with `medium_default_engine=original` after the upgrade (logged once), so no project changes engine by itself. Projects with an engine chosen explicitly keep it.
+- A week-wide log search no longer ends with "time budget reached" or "results are bounded or incomplete".
+- Operators under `/home/<project>/<operator>/<service>` are found again.
+- AI sessions no longer hang in "stopped": an ended session says so and offers **Continue chat**.
+- The version at the top left is shown again after reloading a signed-in page.
 
 ### Upgrade
 
-Replace the executable or container and keep the database and encryption key. No database migration is required. To make the WRM engine the default on an installation that used the original tool, set **Admin → Policies → Medium: default engine** to `native`.
+Replace the executable or container and keep the database and encryption key. Additive migration only: new table `log_settings` and new columns `title`, `purpose`, `resumed_from` and `file_path` in `ai_sessions`. Log folders configured in the Zabbix dialog are read into the new log settings. New settings `ai_show_thinking` and `ai_auto_titles` (both on).
 
-[Download v12.9.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.9.1) · [Medium native engine in the README](https://github.com/vedranius/web-browser-RDM-public/blob/v12.9.1/README.md#medium-native-engine)
+[Download v13.5.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.5.0) · [Full changelog](CHANGELOG.md)
 
-## Included from v12.9.0 - Medium: file details, line endings and the deploy-config editor
+## Web Remote Manager PRO v13.4.4 - Claude Desktop or Claude Code, clearly
 
-#### Added
+### Fixed
 
-- **See what changes in each file before deploying.** In the WRM engine's plan, every changed file has a **Details** button: the server's version against the branch, line by line, with clear notes for new and deleted files, links, directories, binary files and large files.
-- **Line-ending-only changes are marked.** Files copied by hand from a Windows checkout often have CRLF on the server and LF in Git. WRM now marks such files *line endings only* and counts them separately, so real changes stand out. The deployment still sends them, and history records the count (`counts.eol`) as the original tool does.
-- **Edit deploy-config in WRM.** *Edit deploy-config* opens `servers.yaml`, `environments.yaml` and the project files. WRM saves a file only when the whole configuration still loads and nobody else changed it in the meantime; comments, layout and CRLF line endings stay as they are. New project files can be created and old ones deleted. Editing needs the `medium_native` policy and is audited.
+- **No more `/plugin` in PowerShell.** *Settings → AI connections* now says plainly:
+  - **Claude Desktop app (chat)** uses the `.mcpb` extension, not `/plugin`.
+  - **Claude Code (terminal or Code tab)** uses `/plugin …` **inside Claude**, or the `claude plugin install …` / `claude mcp add …` command in PowerShell (no leading slash).
+  - After adding the connector, restart Claude Code or run `/mcp` to reconnect.
 
-#### Upgrade
+The quick card and the wizard carry the same note, so the “/plugin is not recognized” dead end is explained where it happens.
 
-Replace the executable or container and keep the database and encryption key. No database migration is required.
+### Upgrade
 
-[Download v12.9.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v12.9.0) · [Medium native engine in the README](https://github.com/vedranius/web-browser-RDM-public/blob/v12.9.0/README.md#medium-native-engine)
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.4](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.4) · [Full changelog](CHANGELOG.md)
+
+## Web Remote Manager PRO v13.4.3 - Claude in one command
+
+### Added
+
+- **The Claude command is now at the top of Settings → AI connections.** A quick card shows the exact command, a **Copy** button, and one-click shortcuts into the step-by-step wizard for **Claude Code**, **Claude Desktop** and **claude.ai / ChatGPT**. The admin AI connections view links to the same wizard, and the README has the quick start.
+
+```sh
+claude mcp add --transport http --scope user wrm "https://<your-wrm>/mcp" \
+  --header "Authorization: Bearer <token>"
+```
+
+- The wizard still creates the token, fills it into the command, and tests the connection.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.3) · [Full changelog](CHANGELOG.md)
+
+## Web Remote Manager PRO v13.4.2 - The version and the lock button tell the truth
+
+### Fixed
+
+- **The version label matches the running binary.** The title bar and the sign-in card no longer show a hard-coded `v12.8.1`; they are filled from the server (`/api/auth/config`, `/api/version`), so an updated server shows its real version everywhere.
+- **The lock button works.** It is now a fixed top-bar button with its own handler (🔒 **Lock**), not one inserted next to Sign Out at runtime. Clicking it opens the password lock screen; sessions and AI runs keep going.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.2) · [Full changelog](CHANGELOG.md)
+
+## Web Remote Manager PRO v13.4.1 - OpenCode Go on existing installations
+
+### Fixed
+
+- If `ai_provider_kinds` was saved with the old "all provider kinds" list, WRM now adds `opencode_go` automatically, so **OpenCode Go (subscription key)** appears in the provider form without editing the policy. A deliberately narrowed list is not changed.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.1) · [Full changelog](CHANGELOG.md)
+
+## Web Remote Manager PRO v13.4.0 - OpenCode Go keys work
+
+### Added
+
+- **OpenCode Go provider.** The Go subscription is separate from OpenCode Zen: a Go key is only accepted by Go's endpoints, and Zen answers *insufficient funds* when it receives one. Choose **OpenCode Go (subscription key)** as the provider, paste the key from `opencode.ai/console/go`, and WRM sends requests to `https://opencode.ai/inference/go/...` with the right API per model (Chat Completions or Anthropic Messages), a stable `x-opencode-session` and a `WRM-PRO` user agent. The Go model list is loaded from Go (with the documented list as fallback); models WRM cannot speak (OpenAI Responses, Google Gemini) are left out. The OpenCode agent engine can use the same provider as `opencode-go/<model>`.
+
+### Fixed
+
+- A Go subscription key is no longer used against the Zen endpoint, so it no longer produces *insufficient funds*; a missing key is reported clearly.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.0) · [Full changelog](CHANGELOG.md)
+
+## Web Remote Manager PRO v13.3.0 - The AI writes addons, you review them
+
+### Added
+
+- **AI addon loop.** The assistant drafts an addon in its own workspace (`<DB>.addons/.drafts/<id>/`) instead of the live addon folder. New tools — `addon_list`, `addon_files`, `addon_create`, `addon_write`, `addon_enable`, `addon_disable`, `addon_delete`, `addon_run` and `addon_install_community` — are covered by the new **`addons.manage`** scope and are available to administrators only. A draft is validated exactly like a ZIP, including the WebAssembly compile check, and installing a new draft always leaves it disabled.
+- **Drafts in Settings → Addons.** Review a draft with **Diff** (a unified diff against the installed version), then **Install draft** or **Discard**. Nothing in the workspace is served or executed until you install it.
+- **Approvals you cannot miss.** A pending approval is recorded in your notifications (`ai.approval`, also for email/Telegram/…), pops up as a fixed card even when the AI panel is closed, and plays a short sound. The assistant chat keeps a sticky **Approval needed** bar with **Approve / Deny**, and every reply plays a short sound; the speaker button turns sound off. The global check runs every five seconds and covers the built-in assistant and OpenCode, not only MCP apps.
+- **`file_path` works as `path`.** A model that used the name from other tools no longer gets its edit refused before you see an approval.
+
+### Security
+
+- Addon changes always ask for your approval, including in automatic mode and with full access; a draft never enables itself.
+- A non-administrator cannot use the addon tools, cannot create an AI connection with `addons.manage`, and is not offered the scope. A broken draft write leaves the previous draft untouched.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.3.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.3.0) · [Full changelog](CHANGELOG.md)
+
+## Web Remote Manager PRO v13.2.0 - Screen lock
+
+### Added
+
+- **Screen lock (#115).** After 2, 5, 10, 30 or 60 minutes without activity (or off) the interface is covered by a lock screen that asks for the signed-in account's password; the **🔒** button next to Sign out locks it immediately. Terminals, tunnels and AI runs keep going, every unlock attempt is audited (`auth.unlocked` / `auth.unlock_failed`, five per minute), and the note on the screen says plainly that this is a presence check, not a new sign-in.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.2.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.2.0) · [Full changelog](CHANGELOG.md)
+
+## Web Remote Manager PRO v13.1.2 - Three-level service discovery and a clean history
+
+### Changed
+
+- **Service labels under `/home`.** Discovery descends one container level under `/home`, so `/home/<project>/<operator>/<service>` is recognised and labelled operator/service without naming any project. Those labels are defaults: a root line in **Monitoring settings** (`path | service | operator`) overrides them.
+- Documentation, tests, release notes and the community repository now use neutral placeholders only; the public branch history was rewritten so no private deployment name remains.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.1.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.1.2) · [Full changelog](CHANGELOG.md)
+
+
+
+## Web Remote Manager PRO v13.1.1 - Claude Code in one command, updater assets fixed
+
+### Added
+
+- **One-command Claude Code setup.** The plugin ships `/wrm-pro:connect` and `scripts/connect-claude.sh` / `.ps1`, which run `claude mcp add --transport http --scope user wrm <url> --header "Authorization: Bearer <token>"`. In the chat: `/plugin marketplace add vedranius/web-browser-RDM-public` and `/plugin install wrm-pro@wrm-pro`.
+- **Release assets match the updater:** `wrm-pro-v<version>-<os>-<arch>[.exe]` and `SHA256SUMS.txt` for Windows, Linux (amd64, arm64, 386) and macOS (amd64, arm64). The previous upload without the `wrm-pro-` prefix made the in-app update report that the release has no file for the platform.
+
+### Changed
+
+- Log discovery walks `/home` with the same bounded operator/service depth instead of one hardcoded home directory; docs use `/home/<operator>`.
+- The generated version file lists deployments under `## Services`.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.1.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.1.1) · [Full changelog](CHANGELOG.md)
+## Web Remote Manager PRO v13.1.0 - Logs the assistant can read, addons you can install, monitoring you can watch
+
+### Logs and the assistant
+
+- **Find logs is an explicit action.** Monitoring Ôćĺ Logs never scans a server by itself. Select a server, click **Find logs**, and the result is cached for an hour.
+- **A service inventory, not a folder list.** Discovery reports systemd units, Docker containers, Supervisor programs, Git installs and plain folders, including services whose output only goes to journald, and application folders under a broad root such as `/var/log/media-api` with `error.log` and `info`.
+- **The assistant reads the same inventory.** `find_logs` and `read_log` go through the existing approval, audit, redaction and size-limit path, over the session's own SSH connection.
+
+### Addons
+
+- **Install from a ZIP in Settings Ôćĺ Addons.** The archive is checked before anything is written: manifest, safe entry names, declared files, capabilities. Panels open in a sandboxed `iframe` with no same-origin; themes are a stylesheet that disappears when the addon is disabled.
+- **Server code runs as WebAssembly** (`wazero`, no CGO, no WASI): no files, no network, no environment, 64 MiB and five seconds per call. Only an administrator may call it, and the installer compiles the module and checks its exports and imports before install.
+- **Community library.** The index of *WRM Pro - community public addons* is listed with trust levels (`official`, `reviewed`, `community`, `unverified`). Downloads must come from a GitHub host over HTTPS and match the SHA-256 in the index, then pass the same checks as an uploaded ZIP.
+- **AI addon.** The pane builds a complete prompt from the capabilities this build supports and hands it to your AI client or the built-in assistant.
+
+### Monitoring and replay
+
+- **Watch services, not only metrics.** A server can watch up to 20 systemd units or Docker containers on the same SSH poll; a service that is not `active`/`running` turns the sample into `problem` and uses the existing notifications. **Poll automatically** is a switch on the server card.
+- **Replay shows wall-clock time.** The player puts the exact time at the playhead next to the offset and the header gains **Ended**; old recordings show absolute times too.
+
+### Accounts and the assistant
+
+- **Recording level per account.** When creating a user, choose *As the server settings*, *Off for this user*, *Session output only* or *Output and keystrokes*. The server setting stays the master switch.
+- **Work log in the assistant chat.** Each request gets a collapsible work log that names every tool step while the model works and collapses to a step count when the answer arrives.
+
+### Fixed
+
+- **Ollama:** a turn that only called tools failed with `HTTP 400: invalid message content type: <nil>`; the request builder wrote `"content": null` for an assistant message without text. It now always sends a string.
+
+### Security
+
+- Journal access and log discovery use the existing SSH account and file-read permission; discovery is owner-only and audited (`monitor.logs_discovered`). The addon surface is a capability allowlist, and a capability this build does not implement refuses the whole install. Panel HTML is served with `Content-Security-Policy: sandbox allow-scripts` and same-origin framing only.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. The database is upgraded in place (`users.recording_level` is added, empty means "follow the server settings"). No manual step is required.
+
+[Download v13.1.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.1.0) ┬Ě [Full changelog](CHANGELOG.md)
 
 ## Web Remote Manager PRO v12.8.1 - Security update: Go 1.27.3 and a reviewed gosec finding
 
@@ -99,7 +272,7 @@ Replace the executable/container and keep the database and encryption key. No da
 
 ### Fixed
 
-- **Monitoring → Logs now discovers every service under `/home/skripte/<operator>/<service>`.** Service and Operator labels are correct, virtual environments and build/archive directories no longer hide services, and service `log`/`logs` folders include their log files, including FTP `.txt` logs, while compressed archives are skipped. Larger time budgets keep large hosts complete.
+- **Monitoring → Logs now discovers every service under `/home/<operator>/<operator>/<service>`.** Service and Operator labels are correct, virtual environments and build/archive directories no longer hide services, and service `log`/`logs` folders include their log files, including FTP `.txt` logs, while compressed archives are skipped. Larger time budgets keep large hosts complete.
 
 ## Web Remote Manager PRO v12.7.2 — Version detected from the code
 

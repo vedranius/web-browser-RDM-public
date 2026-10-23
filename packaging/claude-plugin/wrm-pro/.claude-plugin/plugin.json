@@ -1,8 +1,8 @@
 {
   "name": "wrm-pro",
   "displayName": "WRM PRO",
-  "version": "1.0.0",
-  "description": "Work on your servers through WRM PRO over MCP: logs, files, services and commands, under WRM's permissions and approvals.",
+  "version": "1.1.0",
+  "description": "Work on your servers through WRM PRO over MCP: logs, files, services and commands under WRM's permissions, approvals and audit, plus skills for safe server work and incident triage.",
   "author": {
     "name": "vedranius",
     "url": "https://github.com/vedranius"
@@ -10,7 +10,16 @@
   "homepage": "https://github.com/vedranius/web-browser-RDM-public#ai-desktop-apps-mcp",
   "repository": "https://github.com/vedranius/web-browser-RDM-public",
   "license": "LicenseRef-WRM-PRO",
-  "keywords": ["wrm", "mcp", "ssh", "servers", "devops"],
+  "keywords": [
+    "wrm",
+    "ssh",
+    "servers",
+    "devops",
+    "sysadmin",
+    "logs",
+    "incident",
+    "linux"
+  ],
   "mcpServers": {
     "wrm": {
       "type": "http",

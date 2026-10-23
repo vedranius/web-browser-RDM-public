@@ -1,6 +1,15 @@
 # Roadmap
 
-Accepted work through **v12.9.1** is delivered in [CHANGELOG.md](CHANGELOG.md).
+Accepted work through **v12.8.1** is delivered in [CHANGELOG.md](CHANGELOG.md).
+
+## v13 (in progress)
+
+Goal: WRM explains a server instead of only connecting to it, and it can be extended from inside itself, in the spirit of Omarchy: an addon is a folder that is dropped in and discovered at runtime, not a plugin compiled into the core.
+
+- **v13.0, log engine, AI log tool and addon core.** Explicit **Find logs**, a service inventory built from systemd units, Docker containers, Supervisor programs, Git installs and folders, systemd journal sources read through `journalctl`, and an AI tool that reads the same log sources through the existing approval, audit and redaction path. The addon core installs a ZIP with `addon.json`, checks its declared capabilities, keeps it under `<DB_PATH>.addons/<id>/` and serves a sandboxed panel and a colour theme from **Settings → Addons**. Status: discovery, the service inventory, journal sources, the AI log tools and the addon core with sandboxed panels, themes, WebAssembly server hooks and the AI addon prompt are implemented on `v13.0-log-engine`.
+- **v13.1, monitoring, replay and the community library.** Continuous monitoring per server and service (systemd units and Docker containers on the SSH poll, with the per-server switch on the card), wall-clock replay with per-user recording levels, and the rest of the addon platform: the CLI, administrator-driven hooks beyond a manual Run, and the community repository "WRM Pro - community public addons" (MIT, pull request plus CI validation and manual review). Status: service monitoring, wall-clock replay, per-account recording levels, the community index with checksum-verified installs, the assistant work log and the Ollama fix are implemented on `v13.0-log-engine`. The audit switch already existed (`audit_enabled`, default on; `admin.*` and `security.*` are always recorded). The public repository scaffold (MIT index, two example addons, `tools/build.py`, `tools/validate.py` and CI) is ready locally to publish as `wrm-pro-community-addons`. The inactivity lock (#115) is next.
+
+Addon decisions already taken: server code runs in a WASM sandbox (`wazero`, pure Go, no cgo) unless the operator opts into native code; UI addons register into defined slots and themes instead of touching core DOM; addons declare capabilities, which the installer shows before installing; the community index uses trust levels (`official`, `reviewed`, `community`, `unverified`) with checksums, plus a security and hobby-project liability notice.
 
 ## Security and enterprise identity (accepted, versions before v12.7.0)
 
@@ -28,7 +37,4 @@ Agreed design:
 
 Delivery plan (v12.6.0 delivered the deploy-config reader/validator, the native plan and the comparison with the original tool; v12.7.0 native deploy, dry run, lock, backup, history and rollback through WRM connections with a per-project engine switch; see [CHANGELOG.md](CHANGELOG.md)):
 1. **v12.7.3 – build locations (delivered):** projects with a build step deploy natively; per project the build runs on the WRM host, on a chosen Linux build server over SSH (temporary directory, only the prepared source sent, no Git or SSH keys) or not at all, chosen and shown in the plan before anything runs, with the build server's platform and architecture checked against the destinations.
-2. **v12.9.0 – screens (delivered):** file details (server against branch), line-ending marking (`eol_only`) and the deploy-config editor with validation before saving.
-3. **v12.9.1 – switch-over (delivered):** deploy-config Git actions through the WRM Git source (pull, local changes, commit and push, validated first), `medium_build_user` for WRM-host builds, the native engine as the default (`medium_default_engine`); the original tool and its Docker runtime are optional.
-
-Open: retiring the Docker runtime and the original tool entirely waits for the owner's decision; until then they stay available as an optional engine and for comparisons.
+2. **v12.8.0 – switch-over:** the original tool's screens served from Go (details/diff, YAML editor, settings, config Git actions), `build_user`, line-ending handling (`eol_only`), native engine as the default on Linux and Windows; the Docker runtime becomes optional and is then retired.

@@ -27,6 +27,7 @@ type aiToolSpec struct {
 	Modes   []string
 	Expose  bool // offered to the model
 	MCPOnly bool // offered to MCP clients only (needs a second session of the same AI connection)
+	Host    bool // acts on WRM itself, not on the session's server (administrators only)
 }
 
 func obj(props map[string]interface{}, required ...string) map[string]interface{} {
@@ -53,6 +54,14 @@ var aiTools = []aiToolSpec{
 		Schema: obj(map[string]interface{}{"path": strProp("Absolute path, or ~/")}, "path")}},
 	{Kind: "read", Def: aiToolDef{Name: "tail_log", Description: "Show the last lines of a log file.",
 		Schema: obj(map[string]interface{}{"path": strProp("Absolute path of the log file"), "lines": intProp("Number of lines (1-2000, default 200)")}, "path")}},
+	{Kind: "read", Def: aiToolDef{Name: "find_logs", Description: "List the log sources WRM discovered on this server: services with the folders or journal unit each one logs to. Uses the same discovery as Monitoring → Logs (cached for an hour; the connection owner may trigger one scan over this session's connection). Start here when asked why a service fails or where its logs are.",
+		Schema: obj(map[string]interface{}{"filter": strProp("Only services whose name, kind or path contains this text"), "limit": intProp("Maximum services to list (1-300, default 100)")})}},
+	{Kind: "read", Def: aiToolDef{Name: "read_log", Description: "Read the log of a service found with find_logs, or a file path. With a service name it reads that service's newest log file, or its systemd journal; the other files of the service are named at the end. Optional literal grep keeps matching lines only. Output is size-limited and redacted like every read.",
+		Schema: obj(map[string]interface{}{"service": strProp("Service name from find_logs, with or without .service"), "path": strProp("Log file to read instead of a service (absolute, or ~/)"),
+			"lines": intProp("Number of lines (1-2000, default 200)"), "grep": strProp("Only lines containing this literal text")})}},
+	{Kind: "read", Def: aiToolDef{Name: "search_logs", Description: "Search many log files at once for a literal text (case-insensitive), on the server with grep. It searches the log files WRM discovered (call find_logs first); narrow it with a service name or a path filter. Each result line is file:line:text.",
+		Schema: obj(map[string]interface{}{"grep": strProp("The literal text to find, e.g. an error message, an id or an IP address"), "service": strProp("Only the log files of this service (from find_logs)"),
+			"filter": strProp("Only log files whose path, service or operator contains this text"), "limit": intProp("Maximum result lines (1-1000, default 200)")}, "grep")}},
 	{Kind: "read", Def: aiToolDef{Name: "journal", Description: "Read the systemd journal (journalctl), optionally for one unit, since a time, at a priority, matching a pattern.",
 		Schema: obj(map[string]interface{}{"unit": strProp("systemd unit, e.g. nginx.service"), "lines": intProp("Number of lines (1-2000, default 200)"),
 			"since": strProp("e.g. '1 hour ago', 'today', '2025-01-31 10:00'"), "priority": strProp("emerg, alert, crit, err, warning, notice, info or debug"), "grep": strProp("Only lines matching this pattern")})}},
@@ -75,6 +84,33 @@ var aiTools = []aiToolSpec{
 	{Kind: "write", MCPOnly: true, Def: aiToolDef{Name: "transfer_file", Description: "Copy one file from another server of this AI connection to this session's server, through WRM (SFTP). The destination is treated like a file edit: refused in read-only mode, otherwise the user approves it (unless the automatic mode allows the path). Sensitive source files are refused.",
 		Schema: obj(map[string]interface{}{"path": strProp("Destination path on this session's server (absolute, or ~/)"), "from_path": strProp("Source path on the other server (absolute, or ~/)"),
 			"reason": strProp("One sentence for the user: why this transfer")}, "path", "from_path", "reason")}},
+	// The addon loop works on WRM itself, not on the session's server. Every
+	// change waits for the user's approval in every mode, and a draft is never
+	// enabled by these tools.
+	{Kind: "read", Host: true, Def: aiToolDef{Name: "addon_list", Description: "List the addons installed in WRM and the addon drafts in the AI workspace. Drafts are files waiting for the user's review in Settings → Addons; they are never served or executed.",
+		Schema: obj(map[string]interface{}{})}},
+	{Kind: "read", Host: true, Def: aiToolDef{Name: "addon_files", Description: "List the files of an installed addon or of a draft, with sizes and the manifest; give a path to read one text file. Use it to inspect what is installed before writing a draft.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "draft": map[string]interface{}{"type": "boolean", "description": "Read the draft instead of the installed addon"},
+			"path": strProp("Optional relative file to read")}, "id")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_create", Description: "Create or replace an addon draft in WRM's AI workspace from a set of text files (addon.json at the root plus the files it declares). The draft is validated exactly like a ZIP; nothing is installed, served or executed. The user reviews the diff in Settings → Addons and installs it; with install=true the same call also installs it (a new addon stays disabled). Every call needs the user's approval.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id, matching addon.json"), "files": map[string]interface{}{"type": "object", "description": "Relative path → file content", "additionalProperties": map[string]interface{}{"type": "string"}},
+			"install": map[string]interface{}{"type": "boolean", "description": "Also install the validated draft after writing it (disabled for a new addon)"},
+			"reason":  strProp("One sentence for the user: why this addon")}, "id", "files", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_write", Description: "Write one file into an existing addon draft. The draft is validated again exactly like a ZIP; a broken write leaves the previous draft untouched. Every call needs the user's approval.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "path": strProp("Relative path inside the addon"), "content": strProp("New text content"),
+			"content_base64": strProp("Base64 content instead of content, for a binary file such as plugin.wasm"), "install": map[string]interface{}{"type": "boolean", "description": "Also install the validated draft after writing it"},
+			"reason": strProp("One sentence for the user: why this change")}, "id", "path", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_enable", Description: "Enable an installed addon. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "reason": strProp("One sentence for the user: why enable it")}, "id", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_disable", Description: "Disable an installed addon. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "reason": strProp("One sentence for the user: why disable it")}, "id", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_delete", Description: "Remove an installed addon and delete its files. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "reason": strProp("One sentence for the user: why remove it")}, "id", "reason")}},
+	{Kind: "command", Host: true, Def: aiToolDef{Name: "addon_run", Description: "Run one export of an enabled addon's WebAssembly module in WRM's sandbox (no files, no network, 64 MiB, five seconds). Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id"), "export": strProp("Export declared in addon.json"), "input": strProp("JSON request for the export (default {})"),
+			"reason": strProp("One sentence for the user: why run it")}, "id", "export", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_install_community", Description: "Install one addon from the community index. The download must match the SHA-256 in the index and then passes the same archive checks as an upload. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"community_id": strProp("Addon id from the community index"), "reason": strProp("One sentence for the user: why install it")}, "community_id", "reason")}},
 }
 
 // aiScopesFor lists the MCP scopes that allow a tool (any one of them is enough).
@@ -82,6 +118,9 @@ func aiScopesFor(name string) []string {
 	spec, ok := aiToolSpecFor(name)
 	if !ok {
 		return nil
+	}
+	if spec.Host {
+		return []string{"addons.manage"}
 	}
 	switch {
 	case spec.Kind == "read":
@@ -118,6 +157,10 @@ func withTransferSource(ctx context.Context, src *aiSession) context.Context {
 	return context.WithValue(ctx, aiTransferSourceKey, src)
 }
 
+// aiReadRealTools print the real path before any content, so the engine can
+// refuse a path that resolves to a sensitive file.
+var aiReadRealTools = map[string]bool{"read_file": true, "tail_log": true, "read_log": true}
+
 func aiToolSpecFor(name string) (aiToolSpec, bool) {
 	for _, t := range aiTools {
 		if t.Def.Name == name {
@@ -130,9 +173,14 @@ func aiToolSpecFor(name string) (aiToolSpec, bool) {
 // aiToolDefsFor lists the tools offered to the model in a mode: read-only sessions are
 // not offered the write tools at all (run_command stays: read-only commands are allowed).
 func aiToolDefsFor(mode string) []aiToolDef {
+	return aiToolDefsForUser(mode, true)
+}
+
+// aiToolDefsForUser also hides the host-side addon tools from non-administrators.
+func aiToolDefsForUser(mode string, admin bool) []aiToolDef {
 	var out []aiToolDef
 	for _, t := range aiTools {
-		if (t.Kind == "write" && mode == aiModeReadOnly) || t.MCPOnly {
+		if (t.Kind == "write" && mode == aiModeReadOnly) || t.MCPOnly || (t.Host && !admin) {
 			continue
 		}
 		out = append(out, t.Def)
@@ -140,9 +188,24 @@ func aiToolDefsFor(mode string) []aiToolDef {
 	return out
 }
 
+func (s *aiSession) toolDefs() []aiToolDef {
+	defs := aiToolDefsForUser(s.Mode, isAdminUser(s.UserID))
+	if _, ok := aiPurposeTools[s.Purpose]; !ok {
+		return defs
+	}
+	out := defs[:0]
+	for _, d := range defs {
+		if s.purposeAllows(d.Name) {
+			out = append(out, d)
+		}
+	}
+	return out
+}
+
 // aiToolInput is the union of every tool's arguments.
 type aiToolInput struct {
 	Path     string `json:"path"`
+	FilePath string `json:"file_path"` // accepted as an alias for path: many models know it from other tools
 	Offset   int64  `json:"offset"`
 	MaxBytes int64  `json:"max_bytes"`
 	Lines    int    `json:"lines"`
@@ -151,6 +214,7 @@ type aiToolInput struct {
 	Priority string `json:"priority"`
 	Grep     string `json:"grep"`
 	Name     string `json:"name"`
+	Service  string `json:"service"`
 	Filter   string `json:"filter"`
 	Sort     string `json:"sort"`
 	Limit    int    `json:"limit"`
@@ -160,6 +224,15 @@ type aiToolInput struct {
 	OldText  string `json:"old_text"`
 	NewText  string `json:"new_text"`
 	FromPath string `json:"from_path"`
+	// addon tools (host)
+	ID            string            `json:"id"`
+	Files         map[string]string `json:"files"`
+	Install       bool              `json:"install"`
+	Draft         bool              `json:"draft"`
+	Export        string            `json:"export"`
+	Input         string            `json:"input"`
+	ContentBase64 string            `json:"content_base64"`
+	CommunityID   string            `json:"community_id"`
 }
 
 var (
@@ -195,6 +268,10 @@ type aiPlanned struct {
 	NewText   string
 	Diff      string
 	Inventory *aiToolInput
+	// Logs (find_logs): the discovery listing, produced in run
+	Logs *aiToolInput
+	// Host: an addon tool that acts on WRM itself, not on the session's server
+	Host *aiToolInput
 	// transfers (transfer_file): the source session, its real path and the size
 	Transfer bool
 	From     *aiSession
@@ -227,6 +304,9 @@ func aiReadMax() int64 { return int64(settingInt("ai_output_max_kb")) << 10 }
 // plan turns a tool call into an action. File edits read the current file first (through
 // a read-only script) to build the diff.
 func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiPlanned, error) {
+	if spec, ok := aiToolSpecFor(name); ok && spec.Host {
+		return s.planHostTool(name, in)
+	}
 	q := shellQuote
 	switch name {
 	case "inventory_files":
@@ -251,26 +331,73 @@ func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiP
 			return nil, err
 		}
 		p = aiExpandHome(p, s.home)
-		var body string
-		if name == "read_file" {
-			max := aiReadMax()
-			n := in.MaxBytes
-			if n <= 0 || n > max {
-				n = max
-			}
-			off := in.Offset
-			if off < 0 {
-				off = 0
-			}
-			body = `tail -c +` + strconv.FormatInt(off+1, 10) + ` -- "$r" | head -c ` + strconv.FormatInt(n, 10)
-		} else {
-			body = `tail -n ` + strconv.Itoa(aiClamp(in.Lines, 200, 1, 2000)) + ` -- "$r"`
+		if name == "tail_log" {
+			return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: p}, Display: name + " " + p, Script: aiTailScript(p, in.Lines, "")}, nil
 		}
+		max := aiReadMax()
+		n := in.MaxBytes
+		if n <= 0 || n > max {
+			n = max
+		}
+		off := in.Offset
+		if off < 0 {
+			off = 0
+		}
+		body := `tail -c +` + strconv.FormatInt(off+1, 10) + ` -- "$r" | head -c ` + strconv.FormatInt(n, 10)
 		// the real path is printed first so a symlink to a sensitive file is caught
 		script := `f=` + q(p) + `; r=$(readlink -f -- "$f" 2>/dev/null || printf %s "$f"); printf 'WRM-REAL %s\n' "$r"; ` +
 			`[ -e "$r" ] || { echo "No such file: $f"; exit 2; }; [ -d "$r" ] && { echo "Is a directory: $f"; exit 2; }; ` +
 			`printf 'WRM-SIZE %s\n' "$(wc -c < "$r" 2>/dev/null)"; ` + body
 		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: p}, Display: name + " " + p, Script: script}, nil
+	case "find_logs":
+		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read"}, Display: "find logs " + in.Filter, Logs: &in}, nil
+	case "search_logs":
+		return s.planSearchLogs(in)
+	case "read_log":
+		grep := in.Grep
+		if len(grep) > 200 || strings.ContainsAny(grep, "\x00\r\n") {
+			return nil, fmt.Errorf("invalid pattern")
+		}
+		if in.Path != "" {
+			p, err := aiRequirePath(in.Path)
+			if err != nil {
+				return nil, err
+			}
+			p = aiExpandHome(p, s.home)
+			return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: p}, Display: "read_log " + p, Script: aiTailScript(p, in.Lines, grep)}, nil
+		}
+		service := strings.TrimSpace(in.Service)
+		if service == "" {
+			return nil, fmt.Errorf("give a service name (see find_logs) or a path")
+		}
+		if len(service) > 200 || strings.ContainsAny(service, "\x00\r\n") {
+			return nil, fmt.Errorf("invalid service name")
+		}
+		files, unit, err := s.aiServiceLogs(ctx, service)
+		if err != nil {
+			return nil, err
+		}
+		if unit != "" {
+			cmd := "journalctl --no-pager -o short-iso -n " + strconv.Itoa(aiClamp(in.Lines, 200, 1, 2000)) + " -u " + shellQuote(unit)
+			if grep != "" {
+				cmd += " -g " + shellQuote(grep)
+			}
+			return &aiPlanned{Act: aiAction{Tool: name, Kind: "read"}, Display: "read_log journal " + unit, Script: cmd + " 2>&1"}, nil
+		}
+		if len(files) == 0 {
+			return nil, fmt.Errorf("no readable log file was found for service %q; call find_logs to see which services have logs", service)
+		}
+		chosen := files[0]
+		script := aiTailScript(chosen.Path, in.Lines, grep)
+		if len(files) > 1 {
+			others := []string{}
+			for _, f := range files[1:] {
+				others = append(others, f.Path)
+			}
+			note := fmt.Sprintf("[newest log of %s; other files: %s]", service, strings.Join(others, ", "))
+			script += `; printf '\n%s\n' ` + shellQuote(note)
+		}
+		return &aiPlanned{Act: aiAction{Tool: name, Kind: "read", Path: chosen.Path}, Display: "read_log " + service + " (" + chosen.Path + ")", Script: script}, nil
 	case "list_directory":
 		p, err := aiRequirePath(in.Path)
 		if err != nil {
@@ -485,6 +612,11 @@ func decodeToolInput(raw json.RawMessage) (aiToolInput, error) {
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&in); err != nil {
 		return in, fmt.Errorf("invalid arguments: %v", err)
+	}
+	// Models trained on other tools often send file_path; treat it as path so a
+	// correct edit still reaches the approval step instead of failing on a name.
+	if in.Path == "" && in.FilePath != "" {
+		in.Path = in.FilePath
 	}
 	return in, nil
 }

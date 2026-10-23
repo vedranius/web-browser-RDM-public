@@ -69,6 +69,8 @@ func newAIEnv(t *testing.T, script func(n int, body map[string]interface{}) fake
 	t.Helper()
 	t.Setenv("WRM_AI_ASSISTANT", "all")
 	t.Setenv("WRM_AI_MODES", "read_only,ask,auto")
+	// generated titles add a model request after the first answer (v135_ai_test.go turns them on)
+	t.Setenv("WRM_AI_AUTO_TITLES", "0")
 	srv := newTestServer(t)
 	aiUserSeq++
 	e := &aiEnv{t: t}
@@ -535,10 +537,12 @@ func TestAIKillSwitch(t *testing.T) {
 		t.Fatal("pending approval not cancelled")
 	}
 	// the event stream of an ended session ends with "ended"
+	// (v13.5.0: one "ended" event, so an open chat shows the end and Continue)
 	resp := e.user.do("GET", fmt.Sprintf("/api/ai/sessions/%d/events?since=0", s.ID), nil, "")
+	ended, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
-	if resp.StatusCode != 404 {
-		t.Fatalf("events of an ended session: %d", resp.StatusCode)
+	if resp.StatusCode != 200 || !strings.Contains(string(ended), "event: ended") {
+		t.Fatalf("events of an ended session: %d %s", resp.StatusCode, ended)
 	}
 	// per user, by an administrator
 	s1, s2 := e.start("ask", nil), e.start("read_only", nil)

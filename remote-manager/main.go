@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v12.9.1"
+var AppVersion = "v13.5.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -281,6 +281,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/auth/register", apiAuthRegisterHandler)
 	mux.HandleFunc("/api/auth/login", apiAuthLoginHandler)
 	mux.HandleFunc("/api/auth/mfa", apiAuthMFAHandler)
+	mux.HandleFunc("/api/auth/lock/verify", apiAuthLockVerifyHandler)
 	mux.HandleFunc("/api/auth/logout", apiAuthLogoutHandler)
 	mux.HandleFunc("/api/auth/me", apiAuthMeHandler)
 	mux.HandleFunc("/api/auth/keepalive", apiAuthKeepaliveHandler)
@@ -354,6 +355,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/gitlab-relay", gitRelayWorkerHandler)
 	mux.HandleFunc("/api/monitoring", apiMonitoringHandler)
 	mux.HandleFunc("/api/monitoring/", apiMonitoringHandler)
+	mux.HandleFunc("/api/addons", apiAddonsHandler)
+	mux.HandleFunc("/api/addons/", apiAddonsHandler)
 	mux.HandleFunc("/api/git", apiGitHandler)
 	mux.HandleFunc("/api/git/", apiGitHandler)
 	mux.HandleFunc("/api/git/medium", apiMediumHandler)
@@ -1393,6 +1396,8 @@ func initDB() {
 		`ALTER TABLE folders ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
 		// v10.9.1: the PuTTY session an imported mRemoteNG connection names (PuttySession)
 		`ALTER TABLE connections ADD COLUMN putty_session TEXT NOT NULL DEFAULT ''`,
+		// v13.1: recording level per user ('' follows the server settings)
+		`ALTER TABLE users ADD COLUMN recording_level TEXT NOT NULL DEFAULT ''`,
 	} {
 		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			log.Printf("Migration warning: %v", err)
@@ -1438,13 +1443,18 @@ func initDB() {
 
 	// v11.0: Git workspace (sources, blob cache, catalog, targets, installations)
 	initMonitoring()
+	initLogSettings()
 	initVisualLabels()
 	initGitSchema()
 	initGitConfigProfiles()
 
 	// v12.0: AI assistant (providers, sessions, transcripts)
 	initAISchema()
+	initAIChatSchema()
 	initMCPSchema()
+
+	// v13.0: addons (a folder under <DB>.addons plus its manifest)
+	initAddonSchema()
 
 	var nC, nF, nS int
 	db.QueryRow("SELECT COUNT(*) FROM connections").Scan(&nC)

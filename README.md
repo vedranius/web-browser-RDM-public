@@ -13,7 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v12.9.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.5.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.5.0
+
+**A professional log viewer, a smart editor and an AI that shows its work.** *Monitoring → Logs* lists every log of a server in about a second (one read-only SSH command), sortable and filterable by operator and service, and never lists scripts such as `.py`. Logs open in tabs with level colours, smart highlighting, find, level filters and **Follow**; the **Search** tab greps all selected logs on the server for a From/To range in the EU date format and sorts the hits on a timeline. *Log settings* are now separate from Zabbix. The file manager's editor highlights syntax, finds and replaces, shows your changes before saving, warns when the file changed on the server and has an **AI assistant** that reviews and edits the open file with your approval. The log viewer has an AI log assistant (`search_logs`). The AI work log shows the assistant's thinking and each step, chats get a short title with date and time, and an ended chat can be **continued**. See [Logs: viewer, search and log settings](#logs-viewer-search-and-log-settings), [Text editor](#text-editor) and [AI assistant](#ai-assistant).
+
+v13.0.0 to v13.4.4 (log engine, addons, screen lock, OpenCode Go, Claude quick start, Claude Desktop and Claude Code setup) are described in the [changelog](CHANGELOG.md).
 
 ## What's new in v12.9.1
 
@@ -43,7 +49,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 **Medium builds where you choose.** Projects with a build step can now deploy with the **WRM native** engine. For each project, choose where the build runs: on the WRM host, on a chosen Linux build server over SSH, or not at all. The plan shows the place and the build's platform and architecture before anything runs; a destination with a different platform or architecture is refused with the reason. A build server receives only the prepared source in a temporary directory (no Git metadata and no SSH keys), and the directory is removed afterwards.
 
-**Monitoring → Logs finds every service.** Service logs are now discovered under `/home/skripte/<operator>/<service>/log` and `/logs`, with the correct Service and Operator labels. Non-compressed service logs, including FTP `.txt` files, are listed; virtual environments, build/archive directories and old backups are skipped. Discovery and listing have larger time budgets, so large hosts no longer show incomplete results.
+**Monitoring → Logs finds every service.** Service logs are now discovered under `/home/<operator>/<operator>/<service>/log` and `/logs`, with the correct Service and Operator labels. Non-compressed service logs, including FTP `.txt` files, are listed; virtual environments, build/archive directories and old backups are skipped. Discovery and listing have larger time budgets, so large hosts no longer show incomplete results.
 
 ## What's new in v12.7.2
 
@@ -87,7 +93,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 ## What's new in v12.6.11
 
-**OpenCode inside WRM.** Add the **OpenCode Zen** provider and use OpenCode's free models in the AI assistant without an account, or paste an OpenCode account's Zen key for all its models. Choose **OpenCode agent** as the assistant's engine (agents *build* and *plan*): WRM downloads OpenCode itself after one click by an administrator (sha512 checked) and runs it on the WRM host with its own shell, file and web tools switched off, so it works on your servers only through WRM and every command still waits for your approval. The assistant can also hand text jobs to **helper models**, picked automatically by the kind of job (free first), each labelled with how it treats your data; models that may train on prompts stay off until you switch them on. See [OpenCode Zen, agents and helper models](#opencode-zen-agents-and-helper-models).
+**OpenCode inside WRM.** Add the **OpenCode Zen** provider and use OpenCode's free models in the AI assistant without an account, or paste an OpenCode account's Zen key for all its models. A **Go subscription** has its own **OpenCode Go** provider, so a Go key is sent to Go's endpoints instead of Zen. Choose **OpenCode agent** as the assistant's engine (agents *build* and *plan*): WRM downloads OpenCode itself after one click by an administrator (sha512 checked) and runs it on the WRM host with its own shell, file and web tools switched off, so it works on your servers only through WRM and every command still waits for your approval. The assistant can also hand text jobs to **helper models**, picked automatically by the kind of job (free first), each labelled with how it treats your data; models that may train on prompts stay off until you switch them on. See [OpenCode Zen, Go, agents and helper models](#opencode-zen-go-agents-and-helper-models).
 
 ## What's new in v12.6.10
 
@@ -186,7 +192,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -209,6 +215,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Folder bookmarks](#folder-bookmarks)
    - [Broadcast input](#broadcast-input)
    - [Live up/down status](#live-updown-status)
+   - [Logs: viewer, search and log settings](#logs-viewer-search-and-log-settings)
    - [Notifications (e-mail, chat, push, webhook)](#notifications-e-mail-chat-push-webhook)
    - [Git workspace: service functionality and configuration](#git-workspace-service-functionality-and-configuration)
    - [Git workspace: compare services](#git-workspace-compare-services)
@@ -293,21 +300,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v12.9.1-linux-amd64
-   ./wrm-pro-v12.9.1-linux-amd64
+   chmod +x wrm-pro-v13.5.0-linux-amd64
+   ./wrm-pro-v13.5.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v12.9.1-windows-amd64.exe
+   .\wrm-pro-v13.5.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v12.9.1-linux-amd64.AppImage
-   ./wrm-pro-v12.9.1-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v12.9.1-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.5.0-linux-amd64.AppImage
+   ./wrm-pro-v13.5.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.5.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -316,8 +323,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v12.9.1/wrm-pro-v12.9.1-android-arm64
-   chmod +x wrm-pro-v12.9.1-android-arm64 && ./wrm-pro-v12.9.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.5.0/wrm-pro-v13.5.0-android-arm64
+   chmod +x wrm-pro-v13.5.0-android-arm64 && ./wrm-pro-v13.5.0-android-arm64
    ```
 
    **Docker**
@@ -341,6 +348,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.4.4
+
+Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: a new table `log_settings` (per connection, encrypted) and new columns `title`, `purpose`, `resumed_from` and `file_path` in `ai_sessions`; a previous version still starts on the database. Log folders and journal units configured in the Zabbix dialog are read into the new *Log settings* until you save them there. New settings `ai_show_thinking` and `ai_auto_titles` (both `1`). Dates are shown in the EU format by default; pick another in *Settings → Date and time format* (per browser).
 
 ## Upgrading from v12.9.0
 
@@ -1242,6 +1253,18 @@ WRM checks every saved connection in the background and shows the result in the 
 
 > **fail2ban / IDS:** the check is an ordinary connection without a login. Default fail2ban `sshd` filters do not count it, but the *aggressive* / *ddos* modes may. Add the WRM server to `ignoreip`, raise the interval, or untick monitoring for such hosts.
 
+### Logs: viewer, search and log settings
+
+*Monitoring → Logs*, choose a server.
+
+- **Discovery** runs over the connection's SSH account without sudo: one read-only command reads systemd units, Supervisor programs and Docker containers, a second one runs `find` over the scan paths with a time budget. Accounts without a shell (SFTP only) fall back to an SFTP walk. Scripts and code (`.py`, `.sh`, `.js` …) are never listed as logs, even in a log folder.
+- **File list:** sort by newest, oldest, name, size, service, operator or path; filter by operator, service and name; tick files to search only those. Each file shows its operator and service labels, folder, size and modification time.
+- **Log tabs:** line numbers, level colours (a stack trace keeps the level of its line), highlighting of times, IPs, URLs, HTTP status codes, UUIDs and key=value pairs, **find** in the log (regex, case, ↑ ↓, *only matching lines*), level chips (errors, warnings, info, debug, other), **Follow** (new lines every 2.5 s; for the journal by cursor), *Load older lines*, *Go to line*, wrap, line numbers, copy, download and *open a terminal here*. Keys: `/` find, `n` / `N` next and previous hit, `g` go to line, `f` follow, `w` wrap.
+- **Search tab:** the search runs **on the server** (grep), so large and old logs are searched quickly: literal or regex, case, whole word, context lines, *From* / *To* in your date format with quick ranges (15 minutes to 30 days), the time zone of the logs, the selected or the shown files. Hits are sorted by time (either order) with level chips, a per-file filter and a timeline you can zoom. A click opens the file at that line.
+- **⚙ Log settings** (per server, only its owner can change them): scan paths, excluded names, **path patterns** that give operator and service labels (default `/home/*/{operator}/{service}/{logdir}/**`, `/srv/{operator}/{service}/{logdir}/**` …), extra log name patterns, depth, maximum files and age, time budget, rotated and compressed files, empty files, the systemd journal, systemd/Supervisor/Docker metadata, explicit folders and journal units, and the method (`auto`, `ssh`, `sftp`). Zabbix settings stay in the Zabbix dialog.
+- **🤖 AI log assistant:** a chat panel next to the logs that searches every discovered log with `search_logs`, reads around the hits and explains what failed, since when, how often and which services are affected. It is always read-only. Its chats are listed separately from terminal chats, with title, date and time.
+- **Date and time format:** EU (`dd.mm.yyyy hh:mm`) by default; ISO, US or the browser's locale in *Settings → Date and time format* (saved per browser).
+
 ### Notifications (e-mail, chat, push, webhook)
 
 WRM tells you about events outside the browser too. **Administrators** set up the channels (*Admin panel → Notifications*), **users** choose what they receive and where (*Settings → Notifications*). The in-app messages and browser notifications stay as they are.
@@ -1426,7 +1449,7 @@ Runs change servers only when you start or schedule them. Select installations o
     - **Korisnik**:    deploy
     - **Bundle**:      wrm-20261009-2105
 
-    ## Skripte (3)
+    ## Services (3)
 
     | Datoteka    | Verzija    | Datum      |
     | ----------- | ---------- | ---------- |
@@ -1602,7 +1625,7 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 
 **Position and size (desktop):** the panel can be **docked** left, right, top or bottom with the ◧ ⬒ ⬓ ◨ buttons, shown as a **floating window** with ❐, **expanded** over the whole terminal window with ⛶ (or a double-click on the title bar; press again to restore) and **resized** by dragging its inner edge (the corner when floating). Drag the title bar to move it; a docked panel then starts floating. The terminal shrinks beside a docked panel and is refitted. Dock, size and floating position are remembered per user in the browser (`localStorage` key `wrm_ai_win_<user id>`). On compact windows (up to 760 px wide, e.g. phones) the panel keeps its full-window layout and these buttons are hidden.
 
-- **The model never gets a shell.** It can only call WRM's tools: `system_info`, `read_file` (size-limited), `list_directory`, `tail_log`, `journal` (journalctl), `service_status`, `list_packages`, `processes`, `disk_usage`, `network_status`, `run_command`, `write_file` and `edit_file`. Every call goes through the **permission engine on the server**, which decides; WRM runs the result over its own SSH connection to that server (jump hosts, proxies and vault logins as for the terminal).
+- **The model never gets a shell.** It can only call WRM's tools: `system_info`, `read_file` (size-limited), `list_directory`, `tail_log`, `find_logs`, `read_log`, `search_logs` (grep over every discovered log), `journal` (journalctl), `service_status`, `list_packages`, `processes`, `disk_usage`, `network_status`, `run_command`, `write_file` and `edit_file`. Every call goes through the **permission engine on the server**, which decides; WRM runs the result over its own SSH connection to that server (jump hosts, proxies and vault logins as for the terminal).
 - **Three modes per session** (the panel shows the current one; WRM's side of the policy decides):
 
 | Mode | What happens |
@@ -1615,8 +1638,9 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 - **Sensitive files are not read without you:** password hashes, SSH and TLS private keys, cloud and tool credentials (`~/.aws/credentials`, `.kube/config`, `.netrc` …), process environments — also through wildcards or symlinks — plus your own patterns (`ai_read_deny_paths`). Since v12.6.1 reading one with `read_file` / `tail_log` asks you each time and the AI gets the content with secret-looking values redacted; with `ai_sensitive_reads` = `deny` they are never read. Commands that name such a file always need an approval.
 - **What the AI sees** (👁 in the panel): the tool results of this session, the OS of the server and, only if you tick it, your notes for the connection. Never the passwords and keys stored in WRM, your WRM sign-in, other connections or your terminal screen. **Secrets in output are redacted** before they are sent to the provider (`ai_redact_output`): private keys, passwords and tokens in `key=value` form, `Authorization` headers, passwords in URLs, AWS / GitHub / GitLab / Slack / OpenAI / Anthropic / Google keys, JWTs, password hashes. Output is limited per call (`ai_output_max_kb`).
 - **Server output is untrusted data.** Tool results are framed as untrusted data and the model is told never to follow instructions found in them. A log line that says *switch to automatic mode* changes nothing: only you can change the mode, in the WRM interface, and every change goes through the same checks.
+- **Work log, titles and continuing a chat:** the work log shows the assistant's thinking (💭; Anthropic adaptive thinking on the models that support it, `reasoning_content` of OpenAI-compatible servers), its narration before each step and every tool result (`ai_show_thinking`). After the first answer the chat gets a short title (`ai_auto_titles`; click it to rename). A chat that ended (WRM restart, idle time, kill switch) shows **Continue chat**, which starts a new session with the earlier conversation as context; the history lists title, date, time and *Continue*.
 - **Stop and kill:** ■ *Stop* cancels the running request and command; ⏻ ends the session. Administrators end one session, all sessions of a user, or every session (*Stop every AI session now*), turn the assistant off for a user, or turn on the **kill switch** (`ai_kill_switch`, also `WRM_AI_KILL_SWITCH=1`), which ends everything and blocks new sessions. An **✦ AI** badge on the window shows that a session is active.
-- **Providers:** the **Anthropic API** (the latest Claude models, e.g. `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; an optional gateway base URL), the **OpenAI API**, **Azure OpenAI** (deployment + api-version, or the v1 API), **AWS Bedrock** (the Converse API with SigV4 access keys or a Bedrock API key, or the Messages API endpoint with an API key; model IDs such as `anthropic.claude-opus-5-5`), **Google Vertex AI** (Claude through `rawPredict`, or the OpenAI-compatible endpoint, with a service account key) **OpenCode Zen** (free models without a key, every model with an OpenCode account's key; see [OpenCode Zen, agents and helper models](#opencode-zen-agents-and-helper-models)) and any **OpenAI-compatible** base URL (Ollama, vLLM, LM Studio …). Responses are streamed; tokens and the estimated cost are counted per request (built-in list prices for Anthropic models, your own prices for others); requests time out and are cancelled with *Stop*.
+- **Providers:** the **Anthropic API** (the latest Claude models, e.g. `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; an optional gateway base URL), the **OpenAI API**, **Azure OpenAI** (deployment + api-version, or the v1 API), **AWS Bedrock** (the Converse API with SigV4 access keys or a Bedrock API key, or the Messages API endpoint with an API key; model IDs such as `anthropic.claude-opus-5-5`), **Google Vertex AI** (Claude through `rawPredict`, or the OpenAI-compatible endpoint, with a service account key) **OpenCode Zen** (pay-as-you-go: free models without a key, every model with an OpenCode account's key), **OpenCode Go** (the Go subscription key; see [OpenCode Zen, Go, agents and helper models](#opencode-zen-go-agents-and-helper-models)) and any **OpenAI-compatible** base URL (Ollama, vLLM, LM Studio …). Responses are streamed; tokens and the estimated cost are counted per request (built-in list prices for Anthropic models, your own prices for others); requests time out and are cancelled with *Stop*.
 - **Keys:** the organisation's providers are managed by administrators (*Admin panel → AI assistant → Organisation providers*); personal keys (*🔑 My API keys* in the panel) only when `ai_personal_keys` allows them. Keys are encrypted at rest and **never sent to the browser**; *Test* sends one tiny request.
 - **Consumer subscriptions do not work here:** Claude.ai and ChatGPT chat subscriptions cannot be used by third-party applications as an API. Use an API key (or your company's gateway) for this panel — or let the chat app itself connect to WRM over MCP: see [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 - **Shared connections:** the assistant can be used on a shared connection by signed-in users whose role allows terminals and file changes (*Operator* and up); their notes are not shared.
@@ -1625,14 +1649,19 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 
 **Audit and transcripts:** every AI request (provider, model, tokens, cost), every tool call with its inputs and its (redacted) output, every approval and denial with who and when, mode changes, stops and kills are audit events (`ai.*`) linked to the connection. The session transcript (redacted) is kept for `ai_transcript_retention_days` and shown to its user (🕘 in the panel) and to administrators (*Admin panel → AI assistant → Transcript*); it is also **recorded like a terminal session** (*Sessions & recordings*, marked ✦ AI, with replay).
 
-### OpenCode Zen, agents and helper models
+### OpenCode Zen, Go, agents and helper models
 
-[OpenCode](https://opencode.ai) is an open-source coding agent (MIT licence) with its own model gateway, **OpenCode Zen**. WRM uses both, in three independent parts. Everything stays visible: what runs, which model got what, tokens and cost.
+[OpenCode](https://opencode.ai) is an open-source coding agent (MIT licence) with two model gateways, **OpenCode Zen** (pay-as-you-go) and **OpenCode Go** (a monthly subscription). WRM uses both, in independent parts. Everything stays visible: what runs, which model got what, tokens and cost.
 
 **1. OpenCode Zen as a provider.** Add it in *Admin panel → AI assistant → Organisation providers* (for everyone), or as a personal key under *🔑 My API keys* when `ai_personal_keys` allows it; the provider wizard has an **OpenCode Zen** preset.
 - **Without a key** WRM offers only the **free models** (it sends OpenCode's public key, as OpenCode's own client does). Nothing else is needed.
 - **With a key** from your OpenCode account (*opencode.ai/auth* → API keys) every model of the account is available, billed by OpenCode.
 - The model list comes from OpenCode's public catalog (`models.dev`): names, prices, context size and which API each model speaks. Models that only work over OpenAI's Responses API or Google's API are refused with a clear message; choose another one.
+
+**OpenCode Go.** Go is a subscription with included monthly usage, not a Console balance. A Go key is only accepted by Go's endpoints, so using it as an OpenCode Zen provider makes Console answer *insufficient funds*. Add the separate **OpenCode Go (subscription key)** provider with the key from *opencode.ai/console/go*:
+- WRM sends the key to `https://opencode.ai/inference/go/...`, with Chat Completions or Anthropic Messages chosen per model (Qwen and MiniMax M3 use Messages on Go even where the Zen catalog says chat), and a stable `x-opencode-session` per conversation.
+- **Load models** asks Go for its current list; if the list cannot be reached, the documented models are offered. Models that only work over OpenAI Responses or Google Gemini are left out.
+- The **OpenCode agent** engine accepts the same provider and runs `opencode-go/<model>`; no Zen balance is involved.
 
 **2. Helper models (delegation).** With `ai_delegate` on, the assistant may hand a self-contained text job to a helper model: summarise a long log, classify, explain an error, draft a snippet or some code. The helper gets only the text the assistant passes, with secrets redacted and at most `ai_delegate_max_kb`; it has **no tools** and cannot touch a server.
 - **Automatic choice:** with `ai_delegate_models` empty WRM uses the whole catalog of the provider in `ai_delegate_provider` and picks per job: free models first, then coding and reasoning models for code and drafts, reasoning models for explanations, large-context and fast models for summaries. If a model fails, WRM tries the next one (at most three). A list of models narrows the choice.
@@ -1656,6 +1685,20 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 ### AI desktop apps (MCP)
 
 WRM is an **MCP server** (Model Context Protocol). AI apps that speak MCP — **Claude** (the desktop app and claude.ai), **ChatGPT** (connectors / developer mode), Claude Code and other MCP clients — can open a WRM session to a server you chose and work on it, under the same rules as the built-in assistant. The model runs in the app, on your account there; WRM never sees your chat and never needs a provider key.
+
+**Quick start for Claude Code.** Create a token in *Settings → AI connections* (the wizard does it for you), then use one of these:
+
+```sh
+# WRM PRO plugin (recommended): installs the plugin and stores the address and token
+claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public \
+  --config wrm_url=https://wrm.example.com/mcp --config wrm_token=wrm_pat_…
+
+# Plain MCP, no plugin (works with any Claude Code version)
+claude mcp add --transport http --scope user wrm "https://wrm.example.com/mcp" \
+  --header "Authorization: Bearer wrm_pat_…"
+```
+
+Inside Claude Code the same plugin can be installed with `/plugin marketplace add vedranius/web-browser-RDM-public` and `/plugin install wrm-pro@wrm-pro`, then `/plugin configure wrm-pro@wrm-pro`. A local WRM (`http://localhost:8080/mcp`) works with the same commands, but **only with the token header**: Claude Code opens a sign-in page only over HTTPS. *Settings → AI connections* shows the command with your address and token after the wizard creates it, and has a **Copy** button.
 
 > **Using a Claude or ChatGPT subscription with WRM:** consumer chat subscriptions cannot be used by other applications as an API (so the built-in assistant needs an API key). The supported way to use your Claude or ChatGPT account with WRM is the other direction: the chat app connects to WRM over MCP, as described here.
 
@@ -1801,9 +1844,12 @@ The search box at the top of every file manager:
 
 ### Text editor
 
-- Opens text and config files up to **5 MB** directly in the browser (double-click, or right-click → *Edit*). Binary files show a warning first.
-- **Ctrl+S** saves (uploads back to the server), **Tab** inserts a tab, **Esc** closes and asks if there are unsaved changes.
-- Keeps the file's **line endings** (LF or CRLF) and UTF-8 encoding. Shows line count and a *modified* marker.
+- Opens text and config files up to **5 MB** in the browser (double-click, or right-click → *Edit*). Binary files show a warning first. Read-only shares open read-only.
+- **Syntax highlighting** for about 40 languages (shell, YAML, JSON, INI and systemd units, nginx, Apache, Dockerfile, Python, Go, JavaScript, SQL …), chosen from the file name and changeable in the toolbar; it is off above 300 KB. Line numbers, the current line and column, wrap.
+- **Find and replace** (`Ctrl+F`, `Ctrl+H`): literal or regex, case, all hits marked, *Replace* and *Replace all*. **Go to line** (`Ctrl+G`). `Tab` / `Shift+Tab` indent and outdent the selected lines, `Enter` keeps the indentation.
+- **JSON:** *Check JSON* (with line and column of an error) and *Format JSON*; saving invalid JSON asks first.
+- **Saving** (`Ctrl+S`): *Review before saving* (on by default) shows a diff of your changes first. Before writing, WRM reads the file again: if someone else, a service or the AI assistant changed it since you opened it, you choose to overwrite or to see the differences. **± Changes** shows your changes at any time and **⟲ Reload** reads the file again. Line endings (LF or CRLF) and UTF-8 are kept.
+- **🤖 AI assistant:** a panel next to the file that reviews it (bugs, security problems, wrong configuration), explains it and proposes changes. Every change is a diff that waits for your approval; after it the editor reloads the file, or warns if you have unsaved changes. **Ask AI about the selection** sends the selected lines. Its chats are kept per file, with title, date and time, and can be continued.
 
 ### Server-to-server transfer
 
@@ -2279,6 +2325,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_models` | – | allowed models, comma-separated patterns (`claude-*`); empty = every model of the providers |
 | `ai_ollama_manage` | `0` | lets administrators install / start / pull Ollama through WRM from the provider wizard (`WRM_AI_OLLAMA_MANAGE`); off = the wizard only shows the commands |
 | `ai_redact_output` | `1` | redact secrets before output is sent to the provider (transcripts and the audit are always redacted) |
+| `ai_show_thinking` | `1` | show the assistant's thinking (reasoning summaries) in the work log and keep it in the transcript |
+| `ai_auto_titles` | `1` | give each AI chat a short title after its first answer (one small extra request without tools) |
 | `ai_share_notes` | `1` | users may opt in to send their connection notes |
 | `ai_transcript_retention_days` | `90` | AI transcripts are deleted after this time (1–3650) |
 | `ai_approval_timeout_seconds` | `300` | an unanswered approval is denied (30–3600) |
@@ -2557,6 +2605,10 @@ All endpoints require a WRM session and effective owner/policy access. Mutating 
 | `POST /api/git/medium/setup?confirm=1` | Combined multipart `tool`, `config`, optional `ssh` ZIPs (20 MiB each); retained background setup and automatic launch. Empty fields resume/reuse imports. |
 | `GET /api/monitoring/logs?id=…` | Bounded automatic/manual root discovery; progressive UI aggregates files/roots/warnings per server. |
 | `GET /api/monitoring/log?id=…&root_path=…&path=…` | Authorized historical/live chunk, optional `scan=1`, byte `offset`, date/timezone/keyword; modification/event-range/record-count metadata. |
+| `GET / PUT /api/monitoring/logs/settings?id=…` | The server's log settings (scan paths, exclusions, path patterns, limits, journal, metadata sources, method) and the defaults; only the owner may save. |
+| `POST /api/monitoring/logs/discover?id=…` | Discover logs now with the log settings (SSH, or SFTP as a fallback). |
+| `POST /api/monitoring/logs/grep?id=…` | `{files, q, regex, case, word, context, max, from, to, timezone}`: grep discovered files on the server; hits with path, line, text and parsed time. |
+| `GET /api/monitoring/logs/lines?id=…&path=…&mode=tail\|around\|since` | Lines of one discovered file: `n`, or `line`/`before`/`after`, or `bytes` (files) / `cursor` (journal) for following. |
 | `GET /api/git/medium` | Runtime/import/dependency status and tool SHA-256; the running `operation` (op, user, start), the caller's `steps` with times, `pending_config` / `pending_ssh`, `running_since`, `last_exit` and `output_policy`. |
 | `GET /api/git/medium/activity?limit=&output=1` | Medium activity log (newest first): time, user, operation, result, duration, detail, error, steps and, per `medium_log_output`, redacted output. Users see their own and shared rows. |
 | `GET /api/git/medium/log` | Live output (redacted) of the caller's running operation and original-tool process, per `medium_log_output`. |
@@ -2910,10 +2962,11 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/api/ai/connections/{id}` | `{allowed_modes, default_mode, rules, has_notes, sees}` for a connection (most restrictive rule wins) |
 | GET / POST / PUT / DELETE | `/api/ai/providers[/{id}]` | Personal providers (policy `ai_personal_keys`); secrets are write-only (`api_key`, `access_key_id`, `secret_access_key`, `session_token`, `service_account`; omitted = unchanged, `""` = removed), responses carry `has_api_key` / `has_access_key` / `has_service_account` |
 | POST | `/api/ai/providers/{id}/test` | One tiny request `{model}` → `{ok, reply \| error}` |
-| GET / POST | `/api/ai/sessions` | Own sessions / start `{conn_id, provider_id, model, mode, auto: {allow, deny, path_allow, path_deny, minutes, max_actions}, confirm_auto, share_notes, engine?: "opencode", sandbox?: true, agent?: "build"\|"plan"}` |
+| GET / POST | `/api/ai/sessions` | Own sessions (`?purpose=terminal\|logs\|file&conn_id=`) / start `{conn_id, provider_id, model, mode, purpose?: "logs"\|"file", file_path?, resume_from?, auto: {allow, deny, path_allow, path_deny, minutes, max_actions}, confirm_auto, share_notes, engine?: "opencode", sandbox?: true, agent?: "build"\|"plan"}` |
 | GET | `/api/ai/sessions/{id}` | Session and its (redacted) transcript |
-| GET | `/api/ai/sessions/{id}/events?since=N` | Server-sent events: `session`, `user`, `assistant_start`, `text`, `assistant_done`, `tool_call`, `approval_required`, `approval_resolved`, `tool_result`, `mode`, `usage`, `busy`, `notice`, `error`, `ended` |
+| GET | `/api/ai/sessions/{id}/events?since=N` | Server-sent events: `session`, `user`, `assistant_start`, `text`, `assistant_done`, `tool_call`, `approval_required`, `approval_resolved`, `tool_result`, `mode`, `usage`, `busy`, `notice`, `error`, `thinking`, `title`, `history`, `ended` (an ended session answers with `ended` and `resumable`) |
 | POST | `/api/ai/sessions/{id}/prompt` | `{text}` |
+| POST | `/api/ai/sessions/{id}/title` | `{title}`: rename a chat |
 | POST | `/api/ai/sessions/{id}/mode` | `{mode, auto, confirm}` |
 | POST | `/api/ai/sessions/{id}/approvals/{approval}` | `{decision: "approve"\|"deny", command?, content?, note?}` (only the session's user) |
 | POST | `/api/ai/sessions/{id}/stop` · `/kill` | Cancel the running request / end the session |

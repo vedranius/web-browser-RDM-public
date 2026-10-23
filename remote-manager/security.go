@@ -357,6 +357,8 @@ func isImportPath(path string) bool {
 
 func bodyLimitFor(path string) int64 {
 	switch {
+	case path == "/api/addons/install":
+		return addonMaxArchive + (64 << 10)
 	case path == "/api/git/medium/setup":
 		return 3*mediumArchiveLimit + (1 << 20)
 	case strings.HasPrefix(path, "/api/git/medium/"):

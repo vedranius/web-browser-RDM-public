@@ -20,7 +20,7 @@ func TestV1245AutomaticLogsAndEventTimes(t *testing.T) {
 	srv := newTestServer(t)
 	u := newTestUser(t, srv, "log-discovery", false)
 	id := u.addConnection("demo-stream", h.addr)
-	// /home/skripte/<operator>/<service>/log, as in production.
+	// /home/<operator>/<operator>/<service>/log, as in production.
 	root := filepath.Join(h.home, "demo-operator", "demo-api", "log")
 	os.MkdirAll(root, 0700)
 	file := filepath.Join(root, "events.log")
@@ -40,6 +40,10 @@ func TestV1245AutomaticLogsAndEventTimes(t *testing.T) {
 	var catalog struct {
 		Files []monitorLogFile `json:"files"`
 		Roots []monitorLogRoot `json:"roots"`
+	}
+	// Discovery is an explicit action since v13: opening the log list never scans.
+	if code := u.jsonDo("POST", fmt.Sprintf("/api/monitoring/logs/discover?id=%d", id), nil, nil); code != 200 {
+		t.Fatal(code)
 	}
 	if code := u.jsonDo("GET", fmt.Sprintf("/api/monitoring/logs?id=%d", id), nil, &catalog); code != 200 {
 		t.Fatal(code)

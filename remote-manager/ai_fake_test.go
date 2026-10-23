@@ -123,6 +123,9 @@ func (f *fakeLLM) serve(w http.ResponseWriter, r *http.Request) {
 	idx := 0
 	// a thinking block that must be passed back unchanged
 	send("content_block_start", map[string]interface{}{"type": "content_block_start", "index": idx, "content_block": map[string]interface{}{"type": "thinking", "thinking": ""}})
+	if body["thinking"] != nil {
+		send("content_block_delta", map[string]interface{}{"type": "content_block_delta", "index": idx, "delta": map[string]interface{}{"type": "thinking_delta", "thinking": "Looking at the request."}})
+	}
 	send("content_block_delta", map[string]interface{}{"type": "content_block_delta", "index": idx, "delta": map[string]interface{}{"type": "signature_delta", "signature": fmt.Sprintf("sig-%d", n)}})
 	send("content_block_stop", map[string]interface{}{"type": "content_block_stop", "index": idx})
 	idx++

@@ -710,7 +710,7 @@ func (t *termAudit) desktopConnected(protocol, route string) bool {
 	if t.shareID > 0 {
 		d["share_id"] = t.shareID
 	}
-	if settingBool("session_recording") && t.ID > 0 {
+	if level, on := userRecordingLevel(t.userID); on && t.ID > 0 {
 		rec, err := newGuacRecorder(t.UID, int64(settingInt("recording_max_mb"))<<20)
 		if err != nil {
 			log.Printf("recording: %v", err)
@@ -718,6 +718,7 @@ func (t *termAudit) desktopConnected(protocol, route string) bool {
 		} else {
 			desktopRecs.Store(t.UID, rec)
 			d["recorded"] = true
+			d["recording_level"] = level
 		}
 	}
 	auditLogRef(t.r, t.userID, t.user, "desktop.open", t.conn.Name, d, t.ref())

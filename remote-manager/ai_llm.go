@@ -66,6 +66,7 @@ type aiLLMRequest struct {
 	Tools     []aiToolDef
 	Model     string
 	MaxTokens int
+	SessionID string // stable per conversation, sent to OpenCode Go as x-opencode-session
 }
 
 type aiLLMResponse struct {
@@ -168,6 +169,8 @@ func aiCompleteRaw(ctx context.Context, p aiProvider, req aiLLMRequest, onText f
 		return openaiStream(ctx, p, u, req, onText, func(h http.Header) { h.Set("api-key", p.secret.APIKey) })
 	case "opencode":
 		return opencodeComplete(ctx, p, req, onText)
+	case "opencode_go":
+		return opencodeGoComplete(ctx, p, req, onText)
 	case "openai", "openai_compatible":
 		base := p.BaseURL
 		if base == "" {
@@ -187,7 +190,7 @@ func aiTestProvider(ctx context.Context, p aiProvider, model string) (string, er
 	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
 	defer cancel()
 	res, err := aiComplete(ctx, p, aiLLMRequest{
-		System: "You are a connectivity check.", Model: model, MaxTokens: 256,
+		System: "You are a connectivity check.", Model: model, MaxTokens: 256, SessionID: "provider-test",
 		Messages: []aiMsg{{Role: "user", Text: "Reply with the single word OK."}},
 	}, nil)
 	if err != nil {
@@ -416,6 +419,29 @@ func anthropicModelSupportsFallback(model string) bool {
 	return false
 }
 
+// aiThinkKey carries a callback for the model's reasoning text (Anthropic
+// summarized thinking, reasoning_content of OpenAI-compatible servers), so the
+// chat's work log can show what the assistant is thinking while it works.
+type aiThinkKey struct{}
+
+func aiWithThinking(ctx context.Context, f func(string)) context.Context {
+	return context.WithValue(ctx, aiThinkKey{}, f)
+}
+
+func aiThinkingFn(ctx context.Context) func(string) {
+	f, _ := ctx.Value(aiThinkKey{}).(func(string))
+	return f
+}
+
+// reAnthropicAdaptive matches Claude models that take thinking {type: adaptive}
+// (the 4.6 generation and later). Older models only know budget_tokens and are
+// left without a thinking parameter.
+var reAnthropicAdaptive = regexp.MustCompile(`claude-(?:opus|sonnet|haiku|fable|mythos)-(?:4-[6-9]|[5-9](?:-[0-9])?)(?:$|[^0-9])`)
+
+func anthropicAdaptiveThinking(model string) bool {
+	return reAnthropicAdaptive.MatchString(strings.ToLower(model))
+}
+
 func anthropicMessages(msgs []aiMsg) []map[string]interface{} {
 	out := []map[string]interface{}{}
 	for _, m := range msgs {
@@ -458,6 +484,12 @@ func anthropicStream(ctx context.Context, p aiProvider, endpoint string, req aiL
 	}
 	if req.System != "" {
 		body["system"] = []map[string]interface{}{{"type": "text", "text": req.System}}
+	}
+	think := aiThinkingFn(ctx)
+	if think != nil && anthropicAdaptiveThinking(req.Model) {
+		// Summarized thinking: the work log shows what the model reasons about.
+		// The blocks are passed back unchanged in Raw on the next request.
+		body["thinking"] = map[string]string{"type": "adaptive", "display": "summarized"}
 	}
 	if p.Kind == "vertex" {
 		body["anthropic_version"] = "vertex-2023-10-16"
@@ -574,6 +606,9 @@ func anthropicStream(ctx context.Context, p aiProvider, endpoint string, req aiL
 			case "thinking_delta":
 				s, _ := bl.data["thinking"].(string)
 				bl.data["thinking"] = s + m.Delta.Thinking
+				if think != nil && m.Delta.Thinking != "" {
+					think(m.Delta.Thinking)
+				}
 			case "signature_delta":
 				s, _ := bl.data["signature"].(string)
 				bl.data["signature"] = s + m.Delta.Signature
@@ -671,12 +706,7 @@ func openaiMessages(system string, msgs []aiMsg) []map[string]interface{} {
 			out = append(out, map[string]interface{}{"role": "user", "content": m.Text})
 			continue
 		}
-		msg := map[string]interface{}{"role": "assistant"}
-		if m.Text != "" {
-			msg["content"] = m.Text
-		} else {
-			msg["content"] = nil
-		}
+		msg := map[string]interface{}{"role": "assistant", "content": m.Text}
 		if len(m.Calls) > 0 {
 			calls := []map[string]interface{}{}
 			for _, c := range m.Calls {
@@ -741,6 +771,8 @@ func openaiStream(ctx context.Context, p aiProvider, endpoint string, req aiLLMR
 			Choices []struct {
 				Delta struct {
 					Content   *string `json:"content"`
+					Reasoning *string `json:"reasoning_content"`
+					Reason2   *string `json:"reasoning"`
 					ToolCalls []struct {
 						Index    int    `json:"index"`
 						ID       string `json:"id"`
@@ -776,6 +808,13 @@ func openaiStream(ctx context.Context, p aiProvider, endpoint string, req aiLLMR
 			out.Usage.Out = m.Usage.Completion
 		}
 		for _, ch := range m.Choices {
+			if think := aiThinkingFn(ctx); think != nil {
+				if r := ch.Delta.Reasoning; r != nil && *r != "" {
+					think(*r)
+				} else if r := ch.Delta.Reason2; r != nil && *r != "" {
+					think(*r)
+				}
+			}
 			if ch.Delta.Content != nil && *ch.Delta.Content != "" {
 				text.WriteString(*ch.Delta.Content)
 				if onText != nil {
@@ -1091,7 +1130,7 @@ func aiCost(p aiProvider, model string, u aiUsage) float64 {
 			in, out = pr[0], pr[1]
 		}
 	}
-	if in == 0 && out == 0 && p.Kind == "opencode" {
+	if in == 0 && out == 0 && (p.Kind == "opencode" || p.Kind == "opencode_go") {
 		in, out, _ = opencodePrice(model)
 	}
 	return (float64(u.In)*in + float64(u.CacheRead)*in*0.1 + float64(u.CacheWrite)*in*1.25 + float64(u.Out)*out) / 1e6
