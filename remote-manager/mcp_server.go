@@ -487,8 +487,12 @@ func mcpOnResponse(c *mcpConn, g *mcpGrant, m rpcMsg) {
 	switch {
 	case res.Action == "accept" && res.Content.Decision == "approve":
 		s.resolveVia(e.approvalID, g.UserID, true, nil, nil, truncateStr(res.Content.Note, 500), "mcp")
-	case res.Action == "accept" || res.Action == "decline":
+	case res.Action == "accept":
+		// the user chose Deny in the app's question: final, like Deny in WRM
 		s.resolveVia(e.approvalID, g.UserID, false, nil, nil, truncateStr(res.Content.Note, 500), "mcp")
+	case res.Action == "decline":
+		// the app (or the user) closed the question without deciding: kept in WRM for later
+		s.resolveVia(e.approvalID, g.UserID, false, nil, nil, "", aiViaMCPDeclined)
 	}
 	// "cancel": no decision; the approval stays open in WRM until it times out
 }
@@ -681,6 +685,7 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 	defer ping.Stop()
 	progress := 0
 	elicited := map[string]bool{}
+	asked := map[string]string{} // approval id → id of WRM's question in the app
 	for {
 		select {
 		case res := <-done:
@@ -691,6 +696,23 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 			evs, wait, _ = s.eventsSince(since)
 			for _, e := range evs {
 				since = e.Seq
+				if e.Type == "approval_resolved" {
+					// decided in WRM (or it timed out): close the question still open in the app
+					aid, _ := e.Data["approval_id"].(string)
+					outcome, _ := e.Data["outcome"].(string)
+					if eid := asked[aid]; eid != "" && (outcome == "approved" || outcome == "denied") {
+						c.mu.Lock()
+						_, open := c.elicits[eid]
+						delete(c.elicits, eid)
+						c.mu.Unlock()
+						if open {
+							send(map[string]interface{}{"jsonrpc": "2.0", "method": "notifications/cancelled", "params": map[string]interface{}{
+								"requestId": eid, "reason": "decided in WRM"}})
+						}
+						delete(asked, aid)
+					}
+					continue
+				}
 				if e.Type != "approval_required" {
 					continue
 				}
@@ -712,6 +734,7 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 					c.mu.Lock()
 					c.elicits[eid] = mcpElicit{sessionID: s.ID, approvalID: a.ID}
 					c.mu.Unlock()
+					asked[a.ID] = eid
 					send(map[string]interface{}{"jsonrpc": "2.0", "id": eid, "method": "elicitation/create", "params": map[string]interface{}{
 						"message": mcpApprovalMessage(s, a),
 						"requestedSchema": map[string]interface{}{"type": "object", "required": []string{"decision"}, "properties": map[string]interface{}{

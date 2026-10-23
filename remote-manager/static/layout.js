@@ -48,12 +48,14 @@
   const P = {
     conn: {ico: '🖥', key: 'pn_conn', el: 'pnl-conn'},
     sess: {ico: '🗂', key: 'sessions', el: 'pnl-sess'},
+    // v13.8.0: every AI session of the user (static/aisessions.js)
+    aisess: {ico: '🧠', key: 'aiss_panel', el: 'pnl-aisess', avail: () => typeof currentUser !== 'undefined' && !!currentUser, shown: () => { if (window.wrmAISessions) wrmAISessions.shown(); }},
     snip: {ico: '⚡', key: 'snippets', el: 'pnl-snip', avail: () => typeof currentUser !== 'undefined' && !!currentUser, shown: () => { if (typeof renderSnippets === 'function') renderSnippets(); }},
     ai: {ico: '🤖', key: 'rp_ai', el: 'rp-ai', avail: () => !!(window.wrmMCP && wrmMCP.dockAvailable && wrmMCP.dockAvailable()), badge: 'rp-ai-badge', auto: true},
     clip: {ico: '📋', key: 'clipboard', el: 'clip-panel'},
   };
   const IDS = Object.keys(P);
-  const HOME = {conn: 'left', sess: 'right', snip: 'right', ai: 'right', clip: 'right'};
+  const HOME = {conn: 'left', sess: 'right', aisess: 'right', snip: 'right', ai: 'right', clip: 'right'};
   // Dynamic panels: a stored layout keeps their place even before the Workboard has registered
   // them (they are just not shown until then).
   const DYN = /^wb:[a-z0-9]{1,16}$/;
@@ -64,7 +66,7 @@
   function def() {
     return {v: 1, locked: false, t: 0,
       zones: {left: {groups: [{p: ['conn'], a: 'conn', s: 1}], w: 240, wa: 400},
-        right: {groups: [{p: ['sess', 'snip', 'ai'], a: 'sess', s: 3}, {p: ['clip'], a: 'clip', s: 1}], w: 210, wa: 400},
+        right: {groups: [{p: ['sess', 'aisess', 'snip', 'ai'], a: 'sess', s: 3}, {p: ['clip'], a: 'clip', s: 1}], w: 210, wa: 400},
         bottom: {groups: [], h: 240}},
       floats: [], hidden: [], last: {}};
   }

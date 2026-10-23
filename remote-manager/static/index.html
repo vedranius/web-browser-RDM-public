@@ -1907,6 +1907,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="pnl-pad"><button class="btn-save-sess" id="rp-sess-save" onclick="saveCurrentSession()" data-i18n="save_session">+ Save Session</button></div>
       <div id="sess-list"></div>
     </div>
+    <div id="pnl-aisess"></div>
     <div id="pnl-snip">
       <div class="pnl-pad"><div id="snip-tools"><input type="text" id="snip-search" data-i18n-placeholder="snip_search" placeholder="Search snippets…" oninput="renderSnippets()"><button class="btn-sm" onclick="openSnippetModal(null)" title="New snippet">＋</button></div></div>
       <div id="snip-list"></div>
@@ -6393,6 +6394,7 @@ function applyLang() {
   if (typeof updateReplayFsBtn === 'function') updateReplayFsBtn();
   if (window.wrmLayout) wrmLayout.refresh();
   if (window.wrmWorkboard) wrmWorkboard.langChanged();
+  if (window.wrmAISessions) wrmAISessions.langChanged();
 }
 function changeLang(l) {
   currentLang = l;
@@ -6437,6 +6439,7 @@ function showToast(msg, type = 'info', dur = 3000) {
   d.textContent = msg;
   document.getElementById('toast-container').appendChild(d);
   setTimeout(() => { d.style.animation = 'fadeOut .3s ease forwards'; setTimeout(() => d.remove(), 300); }, dur);
+  return d;
 }
 
 function closeModal(id) {
@@ -12259,8 +12262,16 @@ function wrmAiAlert(kind, text, key) {
     wrmAlertSeen[key] = now;
   }
   wrmSound(kind);
-  if (typeof showToast === 'function') showToast((kind === 'approval' ? '⏳ ' : '✦ ') + text, kind === 'approval' ? 'warning' : 'info', kind === 'approval' ? 9000 : 3500);
+  const el = typeof showToast === 'function' ? showToast((kind === 'approval' ? '⏳ ' : '✦ ') + text, kind === 'approval' ? 'warning' : 'info', kind === 'approval' ? 9000 : 3500) : null;
+  if (key && el) wrmAlertToasts[key] = el;
   if (document.hidden) wrmDesktopNotify('WRM PRO', text);
+}
+// wrmAiAlertDone removes the toast of an approval once it is decided (here or elsewhere).
+const wrmAlertToasts = {};
+function wrmAiAlertDone(key) {
+  const el = wrmAlertToasts[key];
+  delete wrmAlertToasts[key];
+  if (el && el.isConnected) el.remove();
 }
 function wrmAskNotifications() {
   try {
@@ -18331,7 +18342,7 @@ let eventBusReconnectDelay = 1000;
 function connectEventBus() {
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
   ws.onopen = () => { eventBusReconnectDelay = 1000; refreshUserPolicy(); };
-  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); if (m.type === 'mcp_changed') mcpRefresh(); if (m.type === 'ai_policy_changed') { refreshUserPolicy(); if (window.wrmAI) wrmAI.policyChanged(); } if (window.wrmWorkboard) wrmWorkboard.bus(m.type); } catch(_) {} };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); if ((m.type === 'ai_sessions_changed' || m.type === 'mcp_changed') && window.wrmAISessions) wrmAISessions.refresh(); if (m.type === 'mcp_changed') mcpRefresh(); if (m.type === 'ai_policy_changed') { refreshUserPolicy(); if (window.wrmAI) wrmAI.policyChanged(); } if (window.wrmWorkboard) wrmWorkboard.bus(m.type); } catch(_) {} };
   ws.onclose = () => {
     setTimeout(() => {
       connectEventBus();
@@ -18567,5 +18578,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 <script src="/static/addons.js"></script>
 <script src="/static/appearance.js"></script>
 <script src="/static/lock.js"></script>
+<script src="/static/aisessions.js"></script>
 </body>
 </html>

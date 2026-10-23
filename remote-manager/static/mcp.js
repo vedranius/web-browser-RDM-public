@@ -228,6 +228,21 @@ Object.assign(LANGS.hr, {
   mcp_valid_for: 'Vrijedi', mcp_unit_hours: 'sati', mcp_unit_days: 'dana', mcp_max_days: 'najviše {n} dana', mcpw_hours_d: 'Kad token istekne, aplikacija gubi pristup dok ne stvorite novi. Možete ga opozvati bilo kada u nastavku. Najdulje trajanje postavlja administrator (Admin panel → AI veze).',
 });
 
+// v13.8.0: an approval given after the AI stopped waiting runs at once (ai_mcp_later_approval)
+Object.assign(LANGS.en, {
+  mcp_w_later_run: 'Not approved in time, or the app closed the question: the AI no longer waits, but you can still approve it here. WRM then runs it at once, shows the output here and gives it to the AI when it asks again.',
+  mcp_ap_later_run: 'Not approved in time, or the app closed the question. Approve it and WRM runs exactly this at once (within an hour); the AI gets the output when it repeats the call.',
+  mcp_w_later_running: 'running now: the AI gets the output when it repeats the call', mcp_w_later_handed: 'the AI repeated the call and got the output of the run approved at {time} (not run again)',
+  mcp_w_mcp_app: 'in the AI app', p_ai_mcp_later_approval: 'Approval after the AI stopped waiting', p_ai_mcp_later_approval_d: 'When an AI app stops waiting before anybody approves, the request stays open in WRM. Run: approving it runs the call at once and the AI gets its output when it repeats the call. Repeat: approving only lets the AI repeat exactly that call once.',
+  po_ai_mcp_later_approval_run: 'Run it at once', po_ai_mcp_later_approval_repeat: 'Allow the AI to repeat it once',
+});
+Object.assign(LANGS.hr, {
+  mcp_w_later_run: 'Nije odobreno na vrijeme ili je aplikacija zatvorila pitanje: AI više ne čeka, ali to i dalje možeš odobriti ovdje. WRM ga tada odmah izvrši, izlaz prikaže ovdje i preda ga AI-u kad ponovno pita.',
+  mcp_ap_later_run: 'Nije odobreno na vrijeme ili je aplikacija zatvorila pitanje. Odobri i WRM točno ovo odmah izvrši (unutar sat vremena); AI dobije izlaz kad ponovi poziv.',
+  mcp_w_later_running: 'izvršava se: AI dobije izlaz kad ponovi poziv', mcp_w_later_handed: 'AI je ponovio poziv i dobio izlaz izvršavanja odobrenog u {time} (nije ponovno pokrenuto)',
+  mcp_w_mcp_app: 'u AI aplikaciji', p_ai_mcp_later_approval: 'Odobrenje nakon što AI prestane čekati', p_ai_mcp_later_approval_d: 'Kad AI aplikacija prestane čekati prije nego itko odobri, zahtjev ostaje otvoren u WRM-u. Izvrši: odobrenje odmah pokrene poziv, a AI dobije izlaz kad ga ponovi. Ponovi: odobrenje samo dopušta AI-u da točno taj poziv ponovi jednom.',
+  po_ai_mcp_later_approval_run: 'Izvrši odmah', po_ai_mcp_later_approval_repeat: 'Dopusti AI-u da ponovi jednom',
+});
 (function () {
   const $ = id => document.getElementById(id);
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(String(b)); return s; };
@@ -915,7 +930,7 @@ Object.assign(LANGS.hr, {
         const a = d.approval || {}, el = st.calls[a.call_id];
         if (el) {
           el.classList.remove('bad'); el.classList.add('ask');
-          el.querySelector('.wa').innerHTML = `<div class="sub">⏳ ${esc(t('mcp_w_later'))}</div><div class="acts">
+          el.querySelector('.wa').innerHTML = `<div class="sub">⏳ ${esc(t(a.run_now ? 'mcp_w_later_run' : 'mcp_w_later'))}</div><div class="acts">
           <button class="btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', true)">✔ ${esc(t('mcp_ap_approve'))}</button>
           <button class="btn-danger btn-sm" onclick="wrmMCP.decide(${sid}, '${esc(a.id)}', false)">✕ ${esc(t('mcp_ap_deny'))}</button></div>`;
         }
@@ -928,12 +943,18 @@ Object.assign(LANGS.hr, {
         if (d.later && d.outcome !== 'approved' && d.outcome !== 'denied') break; // approval_deferred follows
         if (el) {
           el.classList.remove('ask'); el.classList.add(d.outcome === 'approved' ? 'ok' : 'bad');
-          el.querySelector('.wa').innerHTML = `<div class="sub">${d.outcome === 'approved' ? '✔' : '✕'} ${esc(t('mcp_w_o_' + d.outcome))}${d.by ? ' · ' + esc(d.by) : ''}${d.later && d.outcome === 'approved' ? ' · ' + esc(t('mcp_w_later_ok')) : ''}</div>`;
+          el.querySelector('.wa').innerHTML = `<div class="sub">${d.outcome === 'approved' ? '✔' : '✕'} ${esc(t('mcp_w_o_' + d.outcome))}${d.by ? ' · ' + esc(d.by) : ''}${String(d.via || '').startsWith('mcp') ? ' · ' + esc(t('mcp_w_mcp_app')) : ''}${d.later && d.outcome === 'approved' ? ' · ' + esc(t(d.run_now ? 'mcp_w_later_running' : 'mcp_w_later_ok')) : ''}</div>`;
         }
         dockBadges();
         break;
       }
       case 'tool_result': {
+        if (d.later_run) {
+          const el = st.calls[d.call_id];
+          const html = `<div class="sub">↪ ${esc(tf('mcp_w_later_handed', {time: fmtTime(d.ran_at)}))}</div>`;
+          if (el) el.querySelector('.wr').innerHTML = html; else wAdd(sid, `<div class="we">${html}</div>`);
+          break;
+        }
         const out = d.output != null ? String(d.output) : '';
         const html = d.error ? `<div class="sub" style="color:var(--red-t);">${esc(d.error)}</div>`
           : `<div class="sub">${esc(tf('mcp_w_exit', {code: d.exit_code}))}</div>${out ? `<details ${out.length < 800 ? 'open' : ''}><summary>${esc(t('mcp_w_output'))} (${out.length} B)</summary><pre>${esc(out.length > 20000 ? out.slice(0, 20000) + '\n…' : out)}</pre></details>` : ''}`;
@@ -976,17 +997,19 @@ Object.assign(LANGS.hr, {
     let box = $('mcp-cards');
     if (!box) { box = document.createElement('div'); box.id = 'mcp-cards'; document.body.appendChild(box); }
     const ids = new Set(pending.map(p => p.approval.id));
-    for (const id of Object.keys(shown)) if (!ids.has(id)) { const el = $('mcp-card-' + id); if (el) el.remove(); delete shown[id]; }
+    for (const id of Object.keys(shown)) if (!ids.has(id)) { const el = $('mcp-card-' + id); if (el) el.remove(); delete shown[id]; if (window.wrmAiAlertDone) wrmAiAlertDone('approval-' + id); }
     for (const p of pending) {
       const a = p.approval;
-      if (shown[a.id]) continue;
+      // a request that became "kept for later" is shown again: other text, no editing
+      if (shown[a.id] && !!shown[a.id].approval.later === !!a.later) continue;
+      if (shown[a.id]) { const old = $('mcp-card-' + a.id); if (old) old.remove(); }
       shown[a.id] = p;
       const el = document.createElement('div');
       el.className = 'mcp-card'; el.id = 'mcp-card-' + a.id;
       const what = a.transfer ? `<div>${esc(t('mcp_ap_transfer'))}</div><pre>${esc(a.transfer)}</pre>`
         : a.command ? `<div>${esc(t('mcp_ap_cmd'))}</div><pre id="mcp-cmd-${a.id}">${esc(a.command)}</pre>`
         : `<div>${esc(tf('mcp_ap_edit_file', {path: a.path}))}</div><pre>${diffHTML(a.diff)}</pre>`;
-      el.innerHTML = `<h4>🤖 ${esc(tf('mcp_ap_title', {client: p.client, server: p.connection}))}</h4>${a.later ? `<div class="hint-box warn" style="margin:4px 0;">${esc(t('mcp_ap_later'))}</div>` : ''}${what}
+      el.innerHTML = `<h4>🤖 ${esc(tf('mcp_ap_title', {client: p.client, server: p.connection}))}</h4>${a.later ? `<div class="hint-box warn" style="margin:4px 0;">${esc(t(a.run_now ? 'mcp_ap_later_run' : 'mcp_ap_later'))}</div>` : ''}${what}
         ${a.why ? `<div class="sub">${esc(t('mcp_ap_why'))}: ${esc(a.why)}</div>` : ''}${a.reason ? `<div class="sub">${esc(t('mcp_ap_reason'))}: ${esc(a.reason)}</div>` : ''}
         <div id="mcp-edit-${a.id}"></div>
         <input type="text" id="mcp-note-${a.id}" maxlength="500" placeholder="${esc(t('mcp_ap_note'))}" style="margin-top:6px;">
@@ -1018,9 +1041,16 @@ Object.assign(LANGS.hr, {
     const body = {decision: approve ? 'approve' : 'deny', note: ($('mcp-note-' + aid) || {}).value || ''};
     const ed = $('mcp-edv-' + aid);
     if (approve && ed && p) { if (p.approval.command) body.command = ed.value; else body.content = ed.value; }
-    try { await api('POST', `/api/ai/sessions/${sid}/approvals/${aid}`, body); } catch (e) { showToast(e.message, 'error', 6000); }
+    // a request already decided elsewhere (the AI app, another tab) is reported as such, not as an error
+    const r = await wrmAISessions.decide(`/api/ai/sessions/${sid}/approvals/${aid}`, body);
     const el = $('mcp-card-' + aid); if (el) el.remove();
     delete shown[aid];
+    if (r.decided) {
+      for (const w of Object.values(W8)) {
+        const box = w.el.querySelector('.we.ask .wa [onclick*="' + aid + '"]');
+        if (box) box.closest('.wa').innerHTML = `<div class="sub">${esc(wrmAISessions.decidedText(r.decided))}</div>`;
+      }
+    }
     refresh();
   }
 
@@ -1057,7 +1087,7 @@ Object.assign(LANGS.hr, {
 
   // ── Admin panel → AI connections ──────────────────────
   const MCP_POLICY_KEYS = ['ai_mcp_enabled', 'ai_mcp', 'ai_mcp_modes', 'ai_mcp_scopes', 'ai_full_access', 'ai_full_access_mode', 'ai_full_access_blocked', 'ai_mcp_token_hours', 'ai_mcp_max_token_hours', 'ai_mcp_oauth',
-    'ai_mcp_elicitation', 'ai_mcp_redirect_uris', 'ai_mcp_allowed_origins', 'ai_mcp_public_url', 'ai_mcp_transfer_max_mb'];
+    'ai_mcp_elicitation', 'ai_mcp_later_approval', 'ai_mcp_redirect_uris', 'ai_mcp_allowed_origins', 'ai_mcp_public_url', 'ai_mcp_transfer_max_mb'];
   async function adminMCP() {
     const body = $('admin-body');
     let grants, clients, settings, c;
