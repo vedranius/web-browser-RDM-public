@@ -1,3 +1,9 @@
+## [13.4.2] - 2026-10-23
+
+### Fixed
+- **The version in the title bar and on the sign-in card is now the running version.** `index.html` still carried a hard-coded `v12.8.1` label, so the Update dialog said v13.4.x while the header said v12.8.1. The title, the header and the sign-in card are filled from `/api/auth/config` / `/api/version`; nothing is hard-coded any more.
+- **The screen-lock button is always there and always wired.** It is a fixed top-bar button with its own `wrmLock.lock()` handler instead of one inserted at runtime next to Sign Out; `lock.js` only translates its title and label. A click now opens the lock screen even if the panel was re-rendered.
+
 ## [13.4.1] - 2026-10-22
 
 ### Fixed

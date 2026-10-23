@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Web Remote Manager PRO v12.8.1</title>
+<title>Web Remote Manager PRO</title>
 <meta name="theme-color" content="#0f1419">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
@@ -1668,7 +1668,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
   <div class="auth-card">
     <div class="auth-logo">
       <img class="auth-lockup" src="/static/brand/lockup-on-dark.svg" alt="WRM PRO — Web Remote Manager" width="240" height="90">
-      <p id="auth-ver">PRO v12.8.1 · Secure · Multi-User</p>
+      <p id="auth-ver">PRO · Secure · Multi-User</p>
       <a id="auth-upd" class="auth-upd" style="display:none;" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div id="auth-step-cred">
@@ -1761,7 +1761,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <div id="center">
   <div id="top-bar">
     <button class="btn-top btn-menu" onclick="openDrawer('sidebar')" title="Menu">☰</button>
-    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM v12.8.1</span></span>
+    <span class="app-ver" role="button" tabindex="0" data-i18n-title="upd_ver_t" title="Updates" onclick="openUpdateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpdateModal();}"><img class="app-mark" src="/static/brand/mark-on-dark.svg" alt="" width="18" height="18"><span class="ver-txt">WRM</span></span>
     <button class="upd-badge" id="upd-badge" style="display:none;" onclick="openUpdateModal()"></button>
     <span class="top-sep">│</span>
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
@@ -1784,6 +1784,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </span>
       <button class="btn-top" id="btn-more" style="display:none;" onclick="toggleTopMore(event)" data-i18n-title="tb_more_t" title="More" aria-haspopup="menu" aria-expanded="false"><span>⋯</span><span class="more-dot"></span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
+      <button class="btn-top" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
       <button class="btn-top" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
     </div>
     <button class="add-win-btn" onclick="addWindow()" title="New window (Alt+N)"><span>＋</span><span class="lbl" data-i18n="new_window_lbl">New Window</span></button>
@@ -6458,7 +6459,7 @@ async function loadAuthConfig() {
     ld.textContent = '🚨 ' + t('ld_auth_banner') + (authConfig.lockdown.reason ? ' ' + t('ld_reason') + ': ' + authConfig.lockdown.reason : '');
     ld.style.display = 'block';
   } else ld.style.display = 'none';
-  if (authConfig.version) document.getElementById('auth-ver').textContent = 'PRO ' + authConfig.version + ' · Secure · Multi-User';
+  if (authConfig.version) setAppVersion(authConfig.version);
   const upd = document.getElementById('auth-upd');
   upd.style.display = authConfig.update ? 'inline-block' : 'none';
   if (authConfig.update) {
@@ -6756,7 +6757,20 @@ function showUpdateReconnect(version) {
 
 // ══ APP INIT ══════════════════════════════════════════
 
+// setAppVersion fills the version labels from the running process, so a new
+// binary never shows an old hard-coded version in the title bar or on the
+// sign-in card. /api/auth/config and /api/version both carry it.
+function setAppVersion(v) {
+  v = String(v || '').trim();
+  if (!v) return;
+  document.querySelectorAll('.ver-txt').forEach(el => { el.textContent = 'WRM ' + v; });
+  const av = document.getElementById('auth-ver');
+  if (av) av.textContent = 'PRO ' + v + ' · Secure · Multi-User';
+  document.title = 'Web Remote Manager PRO ' + v;
+}
+
 function initApp() {
+  setAppVersion(authConfig && authConfig.version);
   loadSettings();
   document.getElementById('setting-lang').value = currentLang;
   applyLang();

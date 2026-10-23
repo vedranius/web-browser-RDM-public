@@ -113,15 +113,19 @@ Object.assign(LANGS.hr, {
   }
 
   function button() {
-    if ($('btn-lock') || !$('btn-logout')) return;
-    const b = document.createElement('button');
-    b.id = 'btn-lock';
-    b.className = 'btn-top';
+    let b = $('btn-lock');
+    if (!b) {
+      b = document.createElement('button');
+      b.id = 'btn-lock';
+      b.className = 'btn-top';
+      b.innerHTML = '<span>🔒</span><span class="lbl"></span>';
+      b.addEventListener('click', lock);
+      if ($('btn-logout')) $('btn-logout').parentNode.insertBefore(b, $('btn-logout'));
+    }
     b.title = t('lock_now');
     b.setAttribute('aria-label', t('lock_now'));
-    b.innerHTML = '<span>🔒</span>';
-    b.addEventListener('click', lock);
-    $('btn-logout').parentNode.insertBefore(b, $('btn-logout'));
+    const lbl = b.querySelector('.lbl');
+    if (lbl) lbl.textContent = t('lock_now');
   }
 
   function boot() {

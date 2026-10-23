@@ -1,3 +1,16 @@
+## Web Remote Manager PRO v13.4.2 - The version and the lock button tell the truth
+
+### Fixed
+
+- **The version label matches the running binary.** The title bar and the sign-in card no longer show a hard-coded `v12.8.1`; they are filled from the server (`/api/auth/config`, `/api/version`), so an updated server shows its real version everywhere.
+- **The lock button works.** It is now a fixed top-bar button with its own handler (🔒 **Lock**), not one inserted next to Sign Out at runtime. Clicking it opens the password lock screen; sessions and AI runs keep going.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No migration.
+
+[Download v13.4.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.4.2) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v13.4.1 - OpenCode Go on existing installations
 
 ### Fixed

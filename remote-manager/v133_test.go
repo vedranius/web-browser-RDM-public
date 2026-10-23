@@ -354,6 +354,25 @@ func TestV133ApprovalUX(t *testing.T) {
 	}
 }
 
+func TestV134VersionAndLockUI(t *testing.T) {
+	page, _ := os.ReadFile("static/index.html")
+	lock, _ := os.ReadFile("static/lock.js")
+	p, l := string(page), string(lock)
+	if strings.Contains(p, "v12.8.1") {
+		t.Error("index.html still carries the old hard-coded version")
+	}
+	for _, want := range []string{`id="btn-lock"`, `setAppVersion`, `class="ver-txt"`, `wrmLock.lock()`} {
+		if !strings.Contains(p, want) {
+			t.Errorf("index.html lacks %s", want)
+		}
+	}
+	for _, want := range []string{`let b = $('btn-lock')`, `b.title = t('lock_now')`, `b.querySelector('.lbl')`} {
+		if !strings.Contains(l, want) {
+			t.Errorf("lock.js lacks %s", want)
+		}
+	}
+}
+
 func TestV133AddonDraftUI(t *testing.T) {
 	js, _ := os.ReadFile("static/addons.js")
 	page, _ := os.ReadFile("static/index.html")
