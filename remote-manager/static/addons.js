@@ -361,7 +361,10 @@ Object.assign(LANGS.hr, {
     frame.setAttribute('sandbox', 'allow-scripts');
     frame.setAttribute('referrerpolicy', 'no-referrer');
     frame.style.cssText = 'width:100%;height:100%;border:0;display:block;background:#fff';
-    frame.addEventListener('load', () => sendContext(frame, a));
+    // The context goes out once, to the panel page WRM loaded. If the frame later
+    // navigates (a link in the panel), the new page may be another site: it gets
+    // nothing unless it is an addon page that asks (see the message listener).
+    frame.addEventListener('load', () => { if (frame.dataset.ctxSent) return; frame.dataset.ctxSent = '1'; sendContext(frame, a); });
     frame.src = assetURL(a, a.ui.panel);
     wc.appendChild(frame);
     if (typeof renderTabs === 'function') renderTabs();
@@ -372,6 +375,9 @@ Object.assign(LANGS.hr, {
   window.addEventListener('message', ev => {
     const d = ev.data;
     if (!d || typeof d !== 'object' || typeof d.type !== 'string') return;
+    // Addon pages are served with the sandbox CSP, so their origin is opaque
+    // ("null"); a page from any real origin in the frame is not an addon page.
+    if (ev.origin !== 'null') return;
     const frame = Array.from(document.querySelectorAll('iframe.addon-frame')).find(f => f.contentWindow === ev.source);
     if (!frame) return;
     const a = list.find(x => { const wo = openWins[x.id]; return wo && wo.el && wo.el.contains(frame); });
@@ -556,7 +562,7 @@ Object.assign(LANGS.hr, {
       capLines,
       '',
       'Rules:',
-      '- ui.panel is HTML opened in an iframe with sandbox="allow-scripts" and no same-origin. It cannot read WRM cookies or the page. It receives {type:"wrm:context", user, lang, theme, connections} through postMessage, may send {type:"wrm:notify", text} back, and may ask for the context again with {type:"wrm:context"}.',
+      '- ui.panel is HTML opened in an iframe with sandbox="allow-scripts" and no same-origin. It cannot read WRM cookies or the page. It receives {type:"wrm:context", user, lang, theme, connections} through postMessage, may send {type:"wrm:notify", text} back, and may ask for the context again with {type:"wrm:context"} (a page it navigates to must ask; only the first page gets it automatically).',
       '- ui.theme is a CSS file applied while the addon is enabled.',
       '- server.wasm is WebAssembly run by wazero with no WASI: no files, no network, no environment, no clock. The only import is wrm.log(ptr, len). The module must export its memory, wrm_alloc(size) -> ptr, and each declared export as (ptr, len) -> ptr returning a pointer to a NUL-terminated UTF-8 string. WRM writes the JSON request at the pointer wrm_alloc returned. 64 KiB input, 1 MB output, 5 seconds per call, 64 MiB memory.',
       '- Nothing runs at install time; the module is compiled and its imports and exports are checked.',
