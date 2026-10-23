@@ -1,3 +1,19 @@
+## [13.10.0] - 2026-10-23
+
+### Added
+- **Show saved login** in *Edit connection* (and the 👁 in an empty password field): the owner sees what the connection logs in with: its password or private key, the user name and password of an own vault credential, the key store key, the Bitwarden SSH key, or the path of a key file on the WRM server. Confirmed with the WRM password; a domain (LDAP / Active Directory) account confirms with its directory password and an SSO-only account through its identity provider (step-up). `POST /api/connections/{id}/secret`, audited as `connection.secret_revealed` / `connection.secret_denied`, raises the *secret revealed* alert, follows `allow_secret_export` and the step-up policy, and counts wrong passwords towards the sign-in rate limit. A credential shared by another user is never shown to the grantee.
+- **Copy username, Copy password and Copy IP address** in the connection's right-click menu. *Copy password* asks for the same confirmation; the password goes to the clipboard and is not shown in the notification (over plain HTTP, where the browser may refuse, a **Copy** button tries again).
+- **Use the server's hostname as the name** when adding a connection: the name can stay empty; after saving, WRM logs in once and reads the hostname (SSH, SFTP) or looks the address up in DNS (other protocols) and renames the connection. An unknown host key is shown for approval first. *Rename to the server's hostname* in the connection menu does the same for existing connections (`POST /api/connections/{id}/name-from-hostname`).
+
+### Changed
+- **Tabs and window titles show only the connection's name**, not *folder / subfolder / name*; the folder path is in the tooltip. Pickers and search still show the path.
+- The vault's *Reveal* and the key store's *Export* accept the directory password of a domain account (they only knew local passwords).
+
+### Fixed
+- **The version next to the logo is always visible.** When the top bar shortened its texts it hid the version, and the empty session name *— none —* (whose *SESSION:* label had been hidden) looked like a missing version. Now only the *WRM* prefix gives way, and an empty session is hidden together with its label.
+- **The user name in the top bar no longer jumps every 5 seconds.** With MCP enabled the background poll showed the *AI connected* button and the indicator hid it again a moment later; the button now has one owner and is shown only while an AI app is connected or an approval waits, and the poll changes nothing when nothing changed.
+- **Git workspace: no more blank servers in the server filter.** Installations found on connections that were later deleted stayed in the database with an empty name; they are no longer listed, and deleting a connection removes its installations and cached hostname.
+
 ## [13.9.0] - 2026-10-23
 
 ### Added

@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v13.9.0"
+var AppVersion = "v13.10.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -1812,6 +1812,8 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 
 // /api/connections/{id}            GET · PUT · DELETE
 // /api/connections/{id}/duplicate  POST
+// /api/connections/{id}/secret     POST (owner, re-authentication; connsecret.go)
+// /api/connections/{id}/name-from-hostname  POST
 func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireAuth(w, r)
 	if !ok {
@@ -1980,6 +1982,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		db.Exec("UPDATE folders SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 		db.Exec("DELETE FROM connections WHERE id=? AND user_id=?", id, userID)
+		deleteGitInstallsOf(userID, id)
 		auditLog(r, userID, "connection.deleted", cur.Name, map[string]interface{}{"id": id, "host": cur.Host})
 		jsonOK(w, map[string]bool{"ok": true})
 	case action == "tunnels":
@@ -1990,6 +1993,10 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		authorizedKeysHandler(w, r, userID, id)
 	case action == "bmc":
 		bmcHandler(w, r, userID, cur)
+	case action == "secret":
+		connectionSecretHandler(w, r, userID, cur)
+	case action == "name-from-hostname":
+		connectionNameFromHostnameHandler(w, r, userID, id)
 	case action == "duplicate" && r.Method == http.MethodPost:
 		res, err := db.Exec(`INSERT INTO connections (name,protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc,notes,proxy_id)
 			SELECT name || ' (copy)',protocol,host,username,auth_method,password,private_key,key_path,folder_id,user_id,jump_conn_id,web_path,monitor,options,key_id,credential_id,tags,bmc,notes,proxy_id FROM connections WHERE id=? AND user_id=?`, id, userID)
@@ -2056,6 +2063,7 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 			deleteBookmarksForScope("connection", id)
 			db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
 			db.Exec("UPDATE folders SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
+			deleteGitInstallsOf(userID, id)
 		}
 		db.Exec("DELETE FROM connections WHERE id IN ("+ph+") AND user_id=?", append(args, userID)...)
 		auditLog(r, userID, "connection.deleted", "", map[string]interface{}{"ids": payload.IDs})

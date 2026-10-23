@@ -751,10 +751,18 @@ type gitInstallData struct {
 	Files         []gitFileState    `json:"files"`
 }
 
+// deleteGitInstallsOf forgets the installations found on a deleted connection. Installations
+// whose connection is gone are not listed either (loadGitInstalls), so older leftovers cannot
+// show up as nameless servers.
+func deleteGitInstallsOf(userID, connID int) {
+	db.Exec(`DELETE FROM git_installs WHERE user_id=? AND conn_id=?`, userID, connID)
+	db.Exec(`DELETE FROM git_hostnames WHERE conn_id=?`, connID)
+}
+
 func loadGitInstalls(userID int, withFiles bool, where string, args ...interface{}) []gitInstall {
 	out := []gitInstall{}
 	q := `SELECT i.id, i.conn_id, COALESCE(c.name,''), COALESCE(c.host,''), COALESCE(h.hostname,''), c.folder_id, COALESCE(c.tags,''), i.app, i.path, i.env, i.manual, i.state, i.data, i.checked_at, i.discovered_at,
-		COALESCE(p.since,''), i.last_ok_at, i.last_ok_state FROM git_installs i LEFT JOIN connections c ON c.id=i.conn_id LEFT JOIN git_hostnames h ON h.conn_id=i.conn_id LEFT JOIN git_pending_restarts p ON p.install_id=i.id WHERE i.user_id=?`
+		COALESCE(p.since,''), i.last_ok_at, i.last_ok_state FROM git_installs i LEFT JOIN connections c ON c.id=i.conn_id LEFT JOIN git_hostnames h ON h.conn_id=i.conn_id LEFT JOIN git_pending_restarts p ON p.install_id=i.id WHERE i.user_id=? AND c.id IS NOT NULL`
 	if where != "" {
 		q += " AND " + where
 	}

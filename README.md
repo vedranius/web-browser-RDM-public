@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.9.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.10.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.10.0
+
+**Saved logins on demand, hostname names and a calmer top bar.** *Edit connection* has **👁 Show saved login**: after you confirm with your WRM password (or your domain password), WRM shows what the connection logs in with. Right-click a connection for **Copy username**, **Copy password** (same confirmation) and **Copy IP address**. A new connection can take its **name from the server's hostname**. Tabs show just the connection's name, the version next to the logo stays visible, the user name no longer jumps every 5 seconds, and the Git workspace server filter has no blank entries any more. See [Connections & folders](#connections--folders).
 
 ## What's new in v13.9.0
 
@@ -208,7 +212,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -319,21 +323,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.9.0-linux-amd64
-   ./wrm-pro-v13.9.0-linux-amd64
+   chmod +x wrm-pro-v13.10.0-linux-amd64
+   ./wrm-pro-v13.10.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.9.0-windows-amd64.exe
+   .\wrm-pro-v13.10.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.9.0-linux-amd64.AppImage
-   ./wrm-pro-v13.9.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.9.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.10.0-linux-amd64.AppImage
+   ./wrm-pro-v13.10.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.10.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -342,8 +346,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.9.0/wrm-pro-v13.9.0-android-arm64
-   chmod +x wrm-pro-v13.9.0-android-arm64 && ./wrm-pro-v13.9.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.10.0/wrm-pro-v13.10.0-android-arm64
+   chmod +x wrm-pro-v13.10.0-android-arm64 && ./wrm-pro-v13.10.0-android-arm64
    ```
 
    **Docker**
@@ -367,6 +371,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.9.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. Git workspace installations whose connection was deleted are no longer listed, and deleting a connection now removes its installations. *Show saved login* and *Copy password* follow the existing *Allow export of passwords & keys* policy (`allow_secret_export`, on by default; administrators always can) and the step-up policy.
 
 ## Upgrading from v13.8.0
 
@@ -856,7 +864,7 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 
 ### Connections & folders
 
-Folders can have a **Parent folder** (up to 32 levels); right-click a folder to create a subfolder or edit its parent. The sidebar renders the hierarchy, while connection pickers/window titles/tabs show the complete folder path. The row above connection tabs filters open tabs/windows by folder and focuses its most recently used window. Config export/import and new mRemoteNG imports preserve nesting. Deleting a folder moves its child folders to its former parent and keeps their connections. Sharing a folder includes descendants; jump/proxy defaults apply to the immediate folder only.
+Folders can have a **Parent folder** (up to 32 levels); right-click a folder to create a subfolder or edit its parent. The sidebar renders the hierarchy and connection pickers show the complete folder path; tabs and window titles show only the connection's name, with the folder path in their tooltip. The row above connection tabs filters open tabs/windows by folder and focuses its most recently used window. Config export/import and new mRemoteNG imports preserve nesting. Deleting a folder moves its child folders to its former parent and keeps their connections. Sharing a folder includes descendants; jump/proxy defaults apply to the immediate folder only.
 
 Left sidebar ("PRO MANAGER"):
 
@@ -870,11 +878,13 @@ Left sidebar ("PRO MANAGER"):
   - **⚡ Out-of-band management:** the BMC of the server (see [Out-of-band management](#out-of-band-management-consoles--serial-ports)).
   - **📝 Notes & runbook:** procedures, contacts, links (see [Notes](#quick-connect--connection-notes)).
   - **Authentication:** *Password*, *Private key (paste)*, *Key file (path on the WRM server)*, *Auto* (tries `~/.ssh/id_rsa`, `id_ed25519`, `id_ecdsa`, `id_dsa` of the WRM server user), **🔑 SSH key from the key store** or **🗝 Credential from the vault** (see [SSH keys & credentials vault](#ssh-keys--credentials-vault)). *Key file* and *Auto* use keys of the **WRM server itself** and are therefore limited to administrators (policy). Password authentication also answers keyboard-interactive prompts. RDP, VNC, Telnet and FTP log in with a password or a vault credential.
+  - **Use the server's hostname as the name:** leave the name empty; after saving, WRM logs in once and reads the hostname (SSH, SFTP), or looks the address up in DNS (other protocols, or the first label of a typed host name), and names the connection after it. Until then the address is the name. A host key that is not known yet is shown for approval first. *Rename to the server's hostname* in the connection menu does the same later.
   - **🔌 Test connection** logs in once and shows the result, latency and — for a new server — its host key fingerprint.
-- **Secrets never leave the server.** Passwords and private keys are write-only: the edit dialog shows “saved and encrypted — leave empty to keep it”, with an option to remove the saved secret. *Duplicate* copies the connection on the server.
+- **Secrets stay on the server unless the owner asks for them.** Passwords and private keys are write-only in the form: the edit dialog shows “saved and encrypted — leave empty to keep it”, with an option to remove the saved secret. *Duplicate* copies the connection on the server.
+- **👁 Show saved login** (in *Edit connection*, or the 👁 in an empty password field) shows what the connection logs in with: its password or private key, the vault credential's user name and password (only for credentials you own), the key store key or the Bitwarden SSH key, or the path of a key file on the WRM server. You confirm with your WRM password; a domain (LDAP / Active Directory) account confirms with its directory password, and an account that only signs in through an identity provider confirms there (step-up). With *Confirm dangerous actions (step-up)* on, the 2FA code is asked as well. Every reveal is in the audit log (`connection.secret_revealed`, failed attempts `connection.secret_denied`), raises the *secret revealed* alert when it is on, counts towards the sign-in rate limit, and follows the *Allow export of passwords & keys* policy (`allow_secret_export`; administrators always can).
 - **Host key verification:** the first connection to a server remembers its SSH host key (and, for FTPS, the certificate if it is not signed by a public CA). A **changed key is refused** with a clear warning and both fingerprints; the owner of the connection (or an administrator) can accept the new key after checking it. Policy: *trust on first use* (default), *strict* (new hosts must be approved) or *off*.
 - **Double-click** a connection to open it: SSH opens a terminal; SFTP/FTP/FTPS open the file manager. On touch devices a single tap opens it.
-- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Network tools from this server…*, *Who has access (authorized_keys)…*, *Deploy SSH key…*, *Notes & runbook*, *Check ports of this host*, *Edit*, *Duplicate*, *Share*, *Delete*. Web interface connections: *Open web interface*.
+- **Right-click** a connection: *Open as Terminal / File Manager* (in a new or an existing window), *Tunnels*, *Start / Stop all tunnels*, *Add tunnel…*, *Network tools from this server…*, *Who has access (authorized_keys)…*, *Deploy SSH key…*, *Notes & runbook*, *Check ports of this host*, *Edit*, *Duplicate*, *Rename to the server's hostname*, *Share*, **Copy username**, **Copy password** (after the same confirmation as *Show saved login*; the password is never shown in the notification), **Copy IP address** (or host name), *Delete*. Web interface connections: *Open web interface*.
 - **📁 Folder** creates folders. **Drag** connections onto a folder to move them, or onto *"↓ Drop here"* to move them back to the root. Right-click a folder to *Share* or *Delete* it (its connections move to the root), or **Folder settings…** to rename it and give it a **default jump host** and a **default proxy**: its connections — also new ones and the ones moved into it — use them unless they choose their own (⤳ after the folder name). Export and import keep the defaults.
 - **Search box** filters by name, host, username, protocol or tag; `#tag` searches tags only, several words must all match (`#env:prod web`). The **🏷 tag bar** above the list filters by one or more tags (click again to remove). **Multi-select** with **Ctrl/Cmd + click**, then use **🤝 Share**, **🔑 Key** (deploy an SSH key to all of them), **🏷 Tags** (add tags, or remove them with `-tag`) or **Delete**.
 - The **dot in front of a connection** is its [live status](#live-updown-status): 🟢 up, 🟡 up but slow (> 300 ms), 🔴 down, a ring = behind a jump host (colored by the jump host's state). A **blue dot after the name** means one of its terminals is connected. **⤳** means it goes through a jump host (hover shows the route), **🔀** that it has tunnels (colored while one runs; click opens them), **WEB** marks web interfaces.
@@ -2793,6 +2803,8 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | GET / POST | `/api/connections` | List (without secrets) / create |
 | GET / PUT / DELETE | `/api/connections/{id}` | Read / update (empty secret = keep; `clear_password`, `clear_private_key`) / delete |
 | POST | `/api/connections/{id}/duplicate` | Copy on the server |
+| POST | `/api/connections/{id}/secret` | `{password, purpose: "show"\|"copy"}` → `{username, password, private_key, key_path, source: connection\|vault\|key_store\|bitwarden\|server_key, source_name}` (owner; the WRM or directory password, or a fresh step-up for SSO-only accounts; `allow_secret_export`; audited) |
+| POST | `/api/connections/{id}/name-from-hostname` | Reads the server's hostname (SSH) or DNS name and renames the connection → `{name, hostname}`; an unknown host key answers `409` with `hostkey` |
 | POST | `/api/connections/bulk` | `{action: "move"\|"delete", ids, folder_id}` |
 | POST | `/api/connections/test` | Test a connection (reports host key problems) |
 | POST | `/api/hostkeys/accept` | `{host, fingerprint}` accept a new/changed host key |

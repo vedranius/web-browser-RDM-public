@@ -1,6 +1,31 @@
-## Web Remote Manager PRO v13.9.0 - Addon platform v2: personal addons, instances and a stricter sandbox
+## Web Remote Manager PRO v13.10.0 - Saved logins, hostname names and a calmer top bar
 
 ### Added
+
+- **Show saved login** in *Edit connection*: after you confirm with your WRM password (a domain account with its domain password, an SSO-only account through its identity provider), WRM shows what the connection logs in with: password, private key, your vault credential, key store key, Bitwarden key or the key file path. Every reveal is audited and can raise an alert; the administrator's *Allow export of passwords & keys* policy applies.
+- **Right-click a connection**: *Copy username*, *Copy password* (same confirmation, never shown in the notification) and *Copy IP address*.
+- **Use the server's hostname as the name** when adding a connection, and *Rename to the server's hostname* in the menu: WRM reads the hostname over SSH, or the DNS name for other protocols.
+
+### Changed
+
+- Tabs and window titles show only the connection's name; the folder path is in the tooltip.
+- The vault's *Reveal* and the key store's *Export* accept a domain account's password.
+
+### Fixed
+
+- The version next to the WRM logo is visible again; the empty session *— none —* no longer stands in its place.
+- The user name in the top bar no longer jumps every 5 seconds when MCP is enabled.
+- The Git workspace server filter no longer shows blank entries for deleted connections.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database change: installations of deleted connections are no longer listed, and deleting a connection now removes them. New API endpoints `POST /api/connections/{id}/secret` and `POST /api/connections/{id}/name-from-hostname`.
+
+[Download v13.10.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.10.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.9.0 - Addon platform v2: personal addons, instances and a stricter sandbox
+
+#### Added
 
 - **Personal addons.** Every user can install addons that only they see (*Settings → Addons*). Administrators decide who may (`addon_personal`) and can turn off or remove any user's personal addon.
 - **Themes from addons** appear in *Settings → Appearance*; each user picks one for themselves.
@@ -11,15 +36,14 @@
 - **A permission sheet** before an addon is enabled, written by WRM from `addon.json`. An update that asks for more stays off until you approve it again.
 - **Addon developer guide** ([docs/ADDONS.md](docs/ADDONS.md)) and an updated *AI addon* prompt.
 
-### Changed
+#### Changed
 
 - apiVersion 2 panels run without any network of their own and only with the scripts that came in their ZIP; every addon file is checked against the SHA-256 recorded at install.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. Additive migration only: new tables `addons_personal`, `addon_instances`, `addon_store` and `addon_windows`, new columns `files`, `approved` and `pending` in `addons`. Installed addons keep working; their files are pinned the next time they are installed. New policy `addon_personal` (`all`).
 
-[Download v13.9.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.9.0) · [Full changelog](CHANGELOG.md)
 
 ## Included from v13.8.0 - AI sessions, your own AI settings and approvals that do what they say
 
@@ -45,7 +69,6 @@ Replace the executable or container and keep the database and encryption key. Ad
 
 Replace the executable or container and keep the database and encryption key. Additive migration only: new column `saved` in `ai_sessions`. New settings `ai_mcp_later_approval` (`run`) and `ai_keep_saved_sessions` (on). Personal AI settings are stored in `user_ui` under the key `ai`.
 
-[Download v13.8.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.8.0) · [Full changelog](CHANGELOG.md)
 
 ## Included from v13.7.0 - Themes, accessibility and a real screen lock
 
