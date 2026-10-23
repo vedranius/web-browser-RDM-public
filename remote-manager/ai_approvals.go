@@ -49,6 +49,21 @@ func (s *aiSession) runLater(a *aiApproval, by string) {
 	s.audit(nil, "ai.later_run", map[string]interface{}{"approval": a.ID, "tool": a.Tool, "by": by})
 	go func() {
 		defer close(lr.done)
+		// the mode or the policies may have changed since the request was made: check again
+		s.recheckMode()
+		s.mu.Lock()
+		mode, home := s.Mode, s.home
+		s.mu.Unlock()
+		dec := aiEvaluate(mode, nil, pl.Act, home, time.Now())
+		if s.fullAccess() {
+			dec = aiFullAccessDecision(dec, mode)
+		}
+		if dec.Action == aiDeny || (mode == aiModeReadOnly && (pl.Write || pl.Transfer)) {
+			why := nonEmpty(dec.Reason, "the session is read-only now")
+			s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": a.Tool, "rule": nonEmpty(dec.Rule, "mode"), "reason": why, "later_run": true})
+			lr.res = aiToolResult{ID: a.call.ID, Name: a.call.Name, IsError: true, Content: "Denied by WRM when it was to run after the approval: " + why + "."}
+			return
+		}
 		lr.res = s.run(ctx, a.call, &pl)
 	}()
 }

@@ -109,6 +109,32 @@ func TestMCPLaterApprovalRepeatPolicy(t *testing.T) {
 	}
 }
 
+// A later approval is checked again before it runs: here the policy made the session read-only.
+func TestMCPLaterApprovalRecheckedBeforeRun(t *testing.T) {
+	e := newMCPEnv(t)
+	tok, _ := e.pat("ask", []string{"read_logs", "run_with_approval"}, nil)
+	c := e.client(tok)
+	c.initialize(false)
+	sid := c.open("demo-api")
+	s := mcpSessionOf(sid)
+	cmd := "echo ran >> ~/recheck.txt"
+	a, _ := mcpDeferredCall(t, s, cmd)
+	t.Setenv("WRM_AI_MCP_MODES", "read_only") // the administrator narrows the policy meanwhile
+	e.user.aiDo("POST", fmt.Sprintf("/api/ai/sessions/%d/approvals/%s", s.ID, a.ID), map[string]interface{}{"decision": "approve"})
+	time.Sleep(300 * time.Millisecond)
+	if hostLines(t, e.host, "recheck.txt") != 0 {
+		t.Fatal("a later approval ran although the session is read-only now")
+	}
+	lr := s.takeLaterRun(a.key)
+	if lr == nil {
+		t.Fatal("no later run kept")
+	}
+	<-lr.done
+	if !lr.res.IsError || !strings.Contains(lr.res.Content, "Denied by WRM when it was to run") {
+		t.Fatalf("later run result: %+v", lr.res)
+	}
+}
+
 // Deny chosen in the app's own question is final; closing the question keeps it for later.
 func TestMCPElicitationDenyIsFinal(t *testing.T) {
 	e := newMCPEnv(t)
