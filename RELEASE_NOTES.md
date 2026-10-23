@@ -1,4 +1,4 @@
-## Web Remote Manager PRO v13.8.0 - Saved logins, hostname names and a calmer top bar
+## Web Remote Manager PRO v13.9.0 - Saved logins, hostname names and a calmer top bar
 
 ### Added
 
@@ -21,7 +21,7 @@
 
 Replace the executable or container and keep the database and encryption key. No database change: installations of deleted connections are no longer listed, and deleting a connection now removes them. New API endpoints `POST /api/connections/{id}/secret` and `POST /api/connections/{id}/name-from-hostname`.
 
-[Download v13.8.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.8.0) · [Full changelog](CHANGELOG.md)
+[Download v13.9.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.9.0) · [Full changelog](CHANGELOG.md)
 
 ## Included from v13.7.0 - Themes, accessibility and a real screen lock
 

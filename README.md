@@ -13,9 +13,9 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.8.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.9.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
-## What's new in v13.8.0
+## What's new in v13.9.0
 
 **Saved logins on demand, hostname names and a calmer top bar.** *Edit connection* has **👁 Show saved login**: after you confirm with your WRM password (or your domain password), WRM shows what the connection logs in with. Right-click a connection for **Copy username**, **Copy password** (same confirmation) and **Copy IP address**. A new connection can take its **name from the server's hostname**. Tabs show just the connection's name, the version next to the logo stays visible, the user name no longer jumps every 5 seconds, and the Git workspace server filter has no blank entries any more. See [Connections & folders](#connections--folders).
 
@@ -314,21 +314,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.8.0-linux-amd64
-   ./wrm-pro-v13.8.0-linux-amd64
+   chmod +x wrm-pro-v13.9.0-linux-amd64
+   ./wrm-pro-v13.9.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.8.0-windows-amd64.exe
+   .\wrm-pro-v13.9.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.8.0-linux-amd64.AppImage
-   ./wrm-pro-v13.8.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.8.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.9.0-linux-amd64.AppImage
+   ./wrm-pro-v13.9.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.9.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -337,8 +337,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.8.0/wrm-pro-v13.8.0-android-arm64
-   chmod +x wrm-pro-v13.8.0-android-arm64 && ./wrm-pro-v13.8.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.9.0/wrm-pro-v13.9.0-android-arm64
+   chmod +x wrm-pro-v13.9.0-android-arm64 && ./wrm-pro-v13.9.0-android-arm64
    ```
 
    **Docker**
