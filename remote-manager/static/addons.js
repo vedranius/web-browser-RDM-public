@@ -301,18 +301,21 @@ Object.assign(LANGS.hr, {
   function applyThemes() {
     const out = [];
     list.filter(a => a.enabled && a.ui).forEach(a => {
+      // A personal addon (only its owner sees it) may share its id with an organisation addon:
+      // its key ("~<id>") keeps the theme ids apart.
+      const key = a.key || a.id, personal = !!a.personal;
       (Array.isArray(a.ui.themes) ? a.ui.themes : []).forEach(th => {
         if (!th || !th.id) return;
-        out.push({id: 'addon:' + a.id + ':' + th.id, addon: a.id, name: th.name || a.name, name_hr: th.name_hr, mode: th.mode,
+        out.push({id: 'addon:' + key + ':' + th.id, addon: key, personal, name: th.name || a.name, name_hr: th.name_hr, mode: th.mode,
           tokens: th.tokens || {}, css: th.css ? assetURL(a, th.css) : ''});
       });
-      if (a.ui.theme) out.push({id: 'addon:' + a.id + ':theme', addon: a.id, name: a.name || a.id, mode: 'dark', tokens: {}, css: assetURL(a, a.ui.theme)});
+      if (a.ui.theme) out.push({id: 'addon:' + key + ':theme', addon: key, personal, name: a.name || a.id, mode: 'dark', tokens: {}, css: assetURL(a, a.ui.theme)});
     });
     if (window.wrmAppearance) wrmAppearance.setAddonThemes(out);
   }
 
   function assetURL(a, file) {
-    return '/api/addons/' + encodeURIComponent(a.id) + '/asset/' + String(file).split('/').map(encodeURIComponent).join('/');
+    return (a.asset_base || '/api/addons/' + encodeURIComponent(a.id) + '/asset/') + String(file).split('/').map(encodeURIComponent).join('/');
   }
 
   // ── the panel window ─────────────────────────────────

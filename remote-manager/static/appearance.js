@@ -552,7 +552,7 @@ Object.assign(LANGS.hr, {
         const name = String(k).replace(/^--/, '');
         if (/^[a-z0-9-]{1,40}$/.test(name) && safeValue(v)) tokens[name] = safeValue(v);
       });
-      return {id: x.id, name: x.name, name_hr: x.name_hr, mode: x.mode === 'light' ? 'light' : 'dark', tokens, css: x.css || '', addon: x.addon};
+      return {id: x.id, name: x.name, name_hr: x.name_hr, mode: x.mode === 'light' ? 'light' : 'dark', tokens, css: x.css || '', addon: x.addon, personal: !!x.personal};
     });
     apply();
     const pane = $('appearance-pane');
@@ -624,7 +624,7 @@ Object.assign(LANGS.hr, {
           <button class="btn-sec btn-sm" id="ap-export">⬇ ${esc(t('ap_export'))}</button>
           <button class="btn-sec btn-sm" id="ap-import">⬆ ${esc(t('ap_import'))}</button>
           ${th.source === 'mine' ? `<button class="btn-sec btn-sm" id="ap-del">🗑 ${esc(t('ap_delete_theme'))}</button>` : ''}
-          ${isAdmin && th.id !== pol.default_theme && th.source !== 'mine' ? `<button class="btn-sec btn-sm" id="ap-admin-default" title="${esc(t('ap_admin_default_d'))}">🛡 ${esc(t('ap_admin_default'))}</button>` : ''}
+          ${isAdmin && th.id !== pol.default_theme && th.source !== 'mine' && !th.personal ? `<button class="btn-sec btn-sm" id="ap-admin-default" title="${esc(t('ap_admin_default_d'))}">🛡 ${esc(t('ap_admin_default'))}</button>` : ''}
           <button class="btn-sec btn-sm" id="ap-reset">↺ ${esc(t('ap_reset_all'))}</button>
           <input type="file" id="ap-import-file" accept=".json,application/json" style="display:none">
         </div>
