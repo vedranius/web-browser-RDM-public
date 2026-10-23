@@ -249,6 +249,96 @@ Object.assign(LANGS.hr, {
   p_addon_personal_d: 'Tko smije instalirati osobne dodatke koje vidi samo on (Postavke → Dodaci). Rade u istom sandboxu kao dodaci organizacije i ne mogu imati kôd na serveru. Isključeno: dodatke instaliraju samo administratori, za sve.',
 });
 
+// v13.11: addon platform v2, step 2: web sites through WRM (http capability),
+// the administrator's approval per site, and secrets per instance.
+Object.assign(LANGS.en, {
+  add_perm_http: 'Reach {origin} through WRM. The panel never connects by itself.',
+  add_perm_http_methods: 'Use the request methods {list}.',
+  add_perm_http_paths: 'Only these paths on those sites: {list}.',
+  add_perm_secret: 'Send the secret "{name}" to those sites. WRM adds it to the request; the panel never sees it.',
+  add_net_private: 'Allow the private network for {origin} (local, LAN and plain http addresses)',
+  add_net_private_d: 'Leave it off for sites on the internet. Turn it on only for a site inside your network, such as a Grafana on the LAN.',
+  add_net_wait_owner: 'Its web sites still need an administrator\'s approval; until then its requests are refused.',
+  add_net: 'Network',
+  add_net_ok: 'approved by {by}',
+  add_net_private_on: 'private network',
+  add_net_waiting: 'Waiting for an administrator to approve the sites this addon reaches: {list}',
+  add_net_approve: 'Approve sites',
+  add_net_change: 'Change approval',
+  add_net_revoke: 'Withdraw approval',
+  add_net_revoke_q: 'Withdraw the approval of the sites of {name}? Its requests are refused until the sites are approved again.',
+  add_net_t: 'Web sites of {name}',
+  add_net_d: 'The addon reaches only these sites, through WRM. Every request is logged; the private network (local, LAN and metadata addresses) stays closed unless you allow it per site.',
+  add_net_approved: 'The sites of {name} are approved',
+  add_net_revoked: 'The approval of {name} is withdrawn',
+  add_sec: 'Secrets',
+  add_sec_t: 'Secrets of {name} · {instance}',
+  add_sec_d: 'WRM adds a secret to the addon\'s requests; the panel can name it but never read it. Values are encrypted on the server and never shown again.',
+  add_sec_kind_bearer: 'sent as Authorization: Bearer …',
+  add_sec_kind_basic: 'sent as Authorization: Basic (enter user:password)',
+  add_sec_kind_header: 'sent in the header {header}',
+  add_sec_inst_set: 'set for this instance by {by}',
+  add_sec_inst_unset: 'not set for this instance',
+  add_sec_own_set: 'your own value is set and used for your requests',
+  add_sec_value: 'New value',
+  add_sec_save: 'Save for the instance',
+  add_sec_save_own: 'Save as my own value',
+  add_sec_clear: 'Clear instance value',
+  add_sec_clear_own: 'Clear my own value',
+  add_sec_saved: 'The secret is saved',
+  add_sec_cleared: 'The secret is cleared',
+  add_sec_none: 'Type a value first.',
+  add_diag_http: 'Recent web requests',
+  add_diag_http_none: 'No web requests yet.',
+  po_addon_http_off: 'Nobody', po_addon_http_admins: 'Administrators', po_addon_http_all: 'Everyone',
+  p_addon_http: 'Addons reaching web sites',
+  p_addon_http_d: 'Who may use addons that reach web sites through WRM (http capability). The sites of each addon are approved by an administrator; secrets stay on the server. Off: such requests are refused for everybody.',
+});
+
+Object.assign(LANGS.hr, {
+  add_perm_http: 'Pristupati stranici {origin} preko WRM-a. Panel se nikad ne spaja sam.',
+  add_perm_http_methods: 'Koristiti metode zahtjeva {list}.',
+  add_perm_http_paths: 'Samo ove putanje na tim stranicama: {list}.',
+  add_perm_secret: 'Slati tajnu "{name}" tim stranicama. WRM je dodaje u zahtjev; panel je nikad ne vidi.',
+  add_net_private: 'Dopusti privatnu mrežu za {origin} (lokalne, LAN i obične http adrese)',
+  add_net_private_d: 'Za stranice na internetu ostavite isključeno. Uključite samo za stranicu unutar vaše mreže, npr. Grafanu na LAN-u.',
+  add_net_wait_owner: 'Njegove stranice još mora odobriti administrator; dotad se njegovi zahtjevi odbijaju.',
+  add_net: 'Mreža',
+  add_net_ok: 'odobrio {by}',
+  add_net_private_on: 'privatna mreža',
+  add_net_waiting: 'Čeka se da administrator odobri stranice kojima ovaj dodatak pristupa: {list}',
+  add_net_approve: 'Odobri stranice',
+  add_net_change: 'Promijeni odobrenje',
+  add_net_revoke: 'Povuci odobrenje',
+  add_net_revoke_q: 'Povući odobrenje stranica dodatka {name}? Njegovi se zahtjevi odbijaju dok se stranice ponovno ne odobre.',
+  add_net_t: 'Stranice dodatka {name}',
+  add_net_d: 'Dodatak pristupa samo ovim stranicama, preko WRM-a. Svaki se zahtjev bilježi; privatna mreža (lokalne, LAN i metadata adrese) ostaje zatvorena osim ako je ne dopustite za pojedinu stranicu.',
+  add_net_approved: 'Stranice dodatka {name} su odobrene',
+  add_net_revoked: 'Odobrenje dodatka {name} je povučeno',
+  add_sec: 'Tajne',
+  add_sec_t: 'Tajne: {name} · {instance}',
+  add_sec_d: 'WRM dodaje tajnu u zahtjeve dodatka; panel je može imenovati, ali je nikad ne može pročitati. Vrijednosti su šifrirane na serveru i više se ne prikazuju.',
+  add_sec_kind_bearer: 'šalje se kao Authorization: Bearer …',
+  add_sec_kind_basic: 'šalje se kao Authorization: Basic (upišite korisnik:lozinka)',
+  add_sec_kind_header: 'šalje se u zaglavlju {header}',
+  add_sec_inst_set: 'postavio za ovu instancu: {by}',
+  add_sec_inst_unset: 'nije postavljena za ovu instancu',
+  add_sec_own_set: 'vaša vlastita vrijednost je postavljena i koristi se za vaše zahtjeve',
+  add_sec_value: 'Nova vrijednost',
+  add_sec_save: 'Spremi za instancu',
+  add_sec_save_own: 'Spremi kao moju vrijednost',
+  add_sec_clear: 'Obriši vrijednost instance',
+  add_sec_clear_own: 'Obriši moju vrijednost',
+  add_sec_saved: 'Tajna je spremljena',
+  add_sec_cleared: 'Tajna je obrisana',
+  add_sec_none: 'Najprije upišite vrijednost.',
+  add_diag_http: 'Nedavni web zahtjevi',
+  add_diag_http_none: 'Još nema web zahtjeva.',
+  po_addon_http_off: 'Nitko', po_addon_http_admins: 'Administratori', po_addon_http_all: 'Svi',
+  p_addon_http: 'Dodaci koji pristupaju stranicama',
+  p_addon_http_d: 'Tko smije koristiti dodatke koji preko WRM-a pristupaju web stranicama (sposobnost http). Stranice svakog dodatka odobrava administrator; tajne ostaju na serveru. Isključeno: takvi se zahtjevi odbijaju za sve.',
+});
+
 (function () {
   const $ = id => document.getElementById(id);
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(String(b)); return s; };
@@ -652,11 +742,21 @@ Object.assign(LANGS.hr, {
     if (hasCap(a, 'store')) {
       try { config = (await api('GET', apiBase(a) + '/instances/' + st.inst.id + '/store')).values || {}; } catch (_) {}
     }
+    let http = null;
+    if (hasCap(a, 'http') && a.http) {
+      const secrets = {};
+      if ((a.secrets || []).length) {
+        try {
+          for (const x of (await api('GET', apiBase(a) + '/instances/' + st.inst.id + '/secrets')).secrets || []) secrets[x.name] = !!(x.instance_set || x.own_set);
+        } catch (_) {}
+      }
+      http = {origins: a.http.origins || [], approved: !a.http_waiting, secrets};
+    }
     const wc = $('wc-' + st.wo.id);
     post(st, {type: 'wrm:context', user: {id: me.id || 0, name: me.display_name || ''},
       lang: typeof currentLang !== 'undefined' ? currentLang : 'en', theme: themeTokens(),
       addon: {id: a.id, key: keyOf(a), version: a.version, instance: st.inst.id, instanceName: st.inst.name},
-      config, features: {store: hasCap(a, 'store'), notify: hasCap(a, 'notify'), http: false, jobs: false, history: false, visibility: true},
+      config, features: {store: hasCap(a, 'store'), notify: hasCap(a, 'notify'), http: !!http, jobs: false, history: false, visibility: true}, http,
       size: {w: wc ? wc.clientWidth : 0, h: wc ? wc.clientHeight : 0}, visible: st.visible});
   }
 
@@ -705,12 +805,23 @@ Object.assign(LANGS.hr, {
       document.body.appendChild(m);
     }
     const rows = st.diag.map(d => `${d.at.slice(11, 19)}  ${d.kind || 'error'}  ${d.message || ''}${d.source ? '  (' + d.source + (d.line ? ':' + d.line : '') + ')' : ''}`).join('\n');
+    const pre = 'margin:0;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:11.5px \'JetBrains Mono\',monospace;white-space:pre-wrap;max-height:40vh;overflow:auto;color:var(--text2);';
+    const httpBox = hasCap(st.a, 'http') ? `<div class="adm-h" style="margin-top:10px;">${esc(t('add_diag_http'))}</div><pre id="addon-diag-http" style="${pre}">…</pre>` : '';
     m.innerHTML = `<div class="modal" style="width:760px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;">
       <h3>${esc(tf('add_diag_t', {name: st.a.ui.title || st.a.name}))}</h3>
-      <pre style="margin:0;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:11.5px 'JetBrains Mono',monospace;white-space:pre-wrap;max-height:60vh;overflow:auto;color:var(--text2);">${esc(rows || t('add_diag_none'))}</pre>
+      <pre style="${pre}">${esc(rows || t('add_diag_none'))}</pre>
+      ${httpBox}
       <div style="display:flex;justify-content:flex-end;margin-top:10px;"><button onclick="document.getElementById('addon-diag-modal').classList.remove('open')">${esc(t('add_ai_close'))}</button></div>
     </div>`;
     m.classList.add('open');
+    if (httpBox) {
+      api('GET', apiBase(st.a) + '/instances/' + st.inst.id + '/http/log').then(d => {
+        const el = $('addon-diag-http');
+        if (!el) return;
+        const lines = (d.requests || []).map(x => `${(x.at || '').slice(11, 19)}  ${x.method || '-'} ${x.origin || ''}${x.path || ''}  ${x.status || ''} ${x.code || ''}  ${x.bytes || 0} B  ${x.ms || 0} ms${x.user ? '  ' + x.user : ''}`);
+        el.textContent = lines.join('\n') || t('add_diag_http_none');
+      }).catch(e => { const el = $('addon-diag-http'); if (el) el.textContent = e.message; });
+    }
   }
 
   // The watchdog: no wrm:ready within 5 s, or three missed heartbeats (15 s each).
@@ -769,6 +880,29 @@ Object.assign(LANGS.hr, {
         } catch (e) {
           addDiag(st, {kind: e.code || 'E_STORE', message: e.message});
           fail('wrm:store', d.id, e, {key: d.key});
+        }
+        return;
+      }
+      case 'wrm:http': {
+        if (!reqID(d.id)) return addDiag(st, {kind: 'E_BRIDGE', message: 'wrm:http needs an id'});
+        if (!hasCap(a, 'http')) {
+          addDiag(st, {kind: 'E_CAPABILITY', message: 'wrm:http needs the http capability'});
+          return fail('wrm:http', d.id, {message: 'The addon does not declare the http capability', code: 'E_CAPABILITY'}, {ok: false});
+        }
+        if (!shortStr(d.url, 4096)) return fail('wrm:http', d.id, {message: 'wrm:http needs a url', code: 'E_HTTP_REQUEST'}, {ok: false});
+        const req = {method: shortStr(d.method, 10) ? d.method : 'GET', url: d.url,
+          headers: d.headers && typeof d.headers === 'object' ? d.headers : undefined,
+          body: typeof d.body === 'string' ? d.body : (d.body === undefined || d.body === null ? undefined : JSON.stringify(d.body)),
+          encoding: d.encoding === 'base64' ? 'base64' : undefined, secret: shortStr(d.secret, 32) ? d.secret : undefined};
+        try {
+          const res = await fetch(apiBase(a) + '/instances/' + st.inst.id + '/http', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(req)});
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok) throw Object.assign(new Error(j.error || ('HTTP ' + res.status)), {code: j.code || '', hint: j.hint || ''});
+          if (j.code) addDiag(st, {kind: j.code, message: (j.error || '') + ' ' + req.url});
+          post(st, Object.assign({type: 'wrm:http', id: d.id}, j));
+        } catch (e) {
+          addDiag(st, {kind: e.code || 'E_HTTP', message: e.message + (e.hint ? ' — ' + e.hint : '')});
+          fail('wrm:http', d.id, e, {ok: false, status: 0});
         }
         return;
       }
@@ -885,7 +1019,12 @@ Object.assign(LANGS.hr, {
 
   // ── permission sheet ─────────────────────────────────
   function permText(p, a) {
-    const [kind, val, extra] = String(p).split(':');
+    p = String(p);
+    if (p.startsWith('http:')) return tf('add_perm_http', {origin: p.slice(5)});
+    if (p.startsWith('http.methods:')) return tf('add_perm_http_methods', {list: p.slice(13).split(',').join(', ')});
+    if (p.startsWith('http.paths:')) return tf('add_perm_http_paths', {list: p.slice(11).split(',').join(', ')});
+    if (p.startsWith('secret:')) return tf('add_perm_secret', {name: p.slice(7)});
+    const [kind, val, extra] = p.split(':');
     if (kind === 'panel') return t((a.apiVersion || 1) >= 2 ? 'add_perm_panel_v2' : 'add_perm_panel');
     if (kind === 'themes') return tf('add_perm_themes', {n: val});
     if (kind === 'store') return tf(extra === 'shared' ? 'add_perm_store_shared' : 'add_perm_store', {kb: val});
@@ -905,18 +1044,28 @@ Object.assign(LANGS.hr, {
         document.body.appendChild(m);
       }
       const added = new Set(a.permissions_added || []);
+      const origins = (a.http && a.http.origins) || [];
+      const granted = {};
+      for (const g of a.http_grants || []) granted[g.origin] = g.private;
+      // An administrator approves the sites in the same step; the owner of a
+      // personal addon waits for one.
+      const net = !origins.length ? '' : isAdmin() ? `<div class="adm-h" style="margin-top:10px;">${esc(t('add_net'))}</div>
+        <div class="setting-desc">${esc(t('add_net_private_d'))}</div>
+        ${origins.map(o => `<label class="mcp-check" style="display:flex;gap:6px;align-items:center;margin:4px 0;font-size:12px;"><input type="checkbox" data-private="${esc(o)}" ${granted[o] || o.startsWith('http://') ? 'checked' : ''}><span>${esc(tf('add_net_private', {origin: o}))}</span></label>`).join('')}`
+        : `<div class="hint-box warn" style="margin-top:8px;">${esc(t('add_net_wait_owner'))}</div>`;
       const items = (a.permissions || []).map(p => `<li style="margin:4px 0;">${esc(permText(p, a))}${added.has(p) ? ` <span class="pill warn">${esc(t('add_approve_new'))}</span>` : ''}</li>`).join('');
       m.innerHTML = `<div class="modal" style="width:560px;max-width:calc(100vw - 32px);">
         <h3>${esc(tf('add_approve_t', {name: a.name}))} ${a.personal ? `<span class="pill">${esc(t('add_personal'))}</span>` : ''}</h3>
         <div class="hint-box">${esc(t('add_approve_d'))}</div>
         <ul style="margin:8px 0 0 18px;padding:0;font-size:12.5px;">${items}</ul>
+        ${net}
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
           <button class="btn-sec" data-act="no">${esc(t('cancel'))}</button>
           <button data-act="yes">${esc(t('add_approve_go'))}</button>
         </div></div>`;
       const done = v => { m.classList.remove('open'); resolve(v); };
       m.querySelector('[data-act="no"]').onclick = () => done(false);
-      m.querySelector('[data-act="yes"]').onclick = () => done(true);
+      m.querySelector('[data-act="yes"]').onclick = () => done({private: [...m.querySelectorAll('[data-private]')].filter(x => x.checked).map(x => x.dataset.private)});
       m.classList.add('open');
     });
   }
@@ -932,6 +1081,7 @@ Object.assign(LANGS.hr, {
         <span style="flex:1;"></span>
         <button class="btn-sec btn-sm" onclick="wrmAddons.openPanel('${k}', ${i.id})">${esc(t('add_open'))}</button>
         ${i.mine || (i.shared && isAdmin()) ? `<button class="btn-sec btn-sm" onclick="wrmAddons.instRename('${k}', ${i.id})">${esc(t('add_inst_rename'))}</button>` : ''}
+        ${(a.secrets || []).length ? `<button class="btn-sec btn-sm" onclick="wrmAddons.secrets('${k}', ${i.id})">🔑 ${esc(t('add_sec'))}</button>` : ''}
         ${hasCap(a, 'store') ? `<button class="btn-sec btn-sm" onclick="wrmAddons.instExport('${k}', ${i.id})">${esc(t('add_inst_export'))}</button>
         <button class="btn-sec btn-sm" onclick="wrmAddons.instImport('${k}', ${i.id})">${esc(t('add_inst_import'))}</button>` : ''}
         ${i.mine || isAdmin() ? `<button class="btn-danger btn-sm" onclick="wrmAddons.instDelete('${k}', ${i.id})">${esc(t('add_remove'))}</button>` : ''}
@@ -976,9 +1126,23 @@ Object.assign(LANGS.hr, {
       ${meta ? `<div class="sub" style="font-size:11px;color:var(--text3);margin-top:2px;">${meta}</div>` : ''}
       <div class="sub" style="font-size:10.5px;color:var(--text3);margin-top:2px;">${esc(a.id)} · ${esc(a.checksum || '')}${a.installed_at ? ' · ' + esc(fmtTime(a.installed_at)) : ''}</div>
       ${wait}
+      ${netHTML(a)}
       ${instancesHTML(a)}
       ${runner}
     </div>`;
+  }
+
+  // What the addon may reach and who approved it.
+  function netHTML(a, uid) {
+    if (!a.http || !(a.http.origins || []).length) return '';
+    const grants = a.http_grants || [];
+    const ref = uid ? `${uid}, '${esc(a.id)}'` : `0, '${esc(keyOf(a))}'`;
+    const btns = isAdmin() ? `<button class="btn-sec btn-sm" onclick="wrmAddons.netApprove(${ref})">${esc(t(grants.length ? 'add_net_change' : 'add_net_approve'))}</button>
+      ${grants.length ? `<button class="btn-danger btn-sm" onclick="wrmAddons.netRevoke(${ref})">${esc(t('add_net_revoke'))}</button>` : ''}` : '';
+    const sites = grants.map(g => `${esc(g.origin)}${g.private ? ' ' + pill(t('add_net_private_on')) : ''} <span style="color:var(--text3);">${esc(tf('add_net_ok', {by: g.approved_by || '?'}))}</span>`).join(' · ');
+    const waiting = a.http_waiting ? `<div class="hint-box warn" style="margin-top:4px;">${esc(tf('add_net_waiting', {list: a.http.origins.filter(o => !grants.some(g => g.origin === o)).join(', ')}))}</div>` : '';
+    return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:11.5px;">
+        <b>🌐 ${esc(t('add_net'))}</b> <span style="flex:1;min-width:160px;">${sites}</span>${btns}</div>${waiting}`;
   }
 
   function othersHTML() {
@@ -990,7 +1154,7 @@ Object.assign(LANGS.hr, {
         <span style="flex:1;"></span>
         ${a.enabled ? `<button class="btn-sec btn-sm" onclick="wrmAddons.otherDisable(${a.owner_id}, '${esc(a.id)}')">${esc(t('add_disable'))}</button>` : ''}
         <button class="btn-danger btn-sm" onclick="wrmAddons.otherRemove(${a.owner_id}, '${esc(a.id)}')">${esc(t('add_remove'))}</button>
-      </div></div>`).join('');
+      </div>${netHTML(a, a.owner_id)}</div>`).join('');
     return `<div class="adm-h">${esc(t('add_personal_others'))}</div>
       <div class="setting-desc">${esc(t('add_personal_others_d'))}</div>
       ${rows || `<div class="sub" style="color:var(--text3);font-size:11.5px;">${esc(t('add_personal_none'))}</div>`}`;
@@ -1072,8 +1236,13 @@ Object.assign(LANGS.hr, {
   async function toggle(key, on) {
     const a = byKey(key);
     try {
-      if (on && a && !(await approveSheet(a))) { render(); return; }
-      await api('POST', '/api/addons/' + encodeURIComponent(key) + '/' + (on ? 'enable' : 'disable'));
+      let body;
+      if (on && a) {
+        const ok = await approveSheet(a);
+        if (!ok) { render(); return; }
+        if (isAdmin() && a.http) body = {private: ok.private || []};
+      }
+      await api('POST', '/api/addons/' + encodeURIComponent(key) + '/' + (on ? 'enable' : 'disable'), body);
       if (!on) closeAddonWindows(key, 'E_DISABLED');
       await after(tf(on ? 'add_enabled_toast' : 'add_disabled_toast', {name: a ? a.name : key}));
     } catch (e) {
@@ -1104,6 +1273,118 @@ Object.assign(LANGS.hr, {
     if (!(await uiConfirm(tf('add_remove_q', {name: a ? a.name : id}), {okText: t('add_remove'), danger: true}))) return;
     try { await api('DELETE', '/api/addons/users/' + uid + '/' + encodeURIComponent(id)); await after(tf('add_removed', {name: a ? a.name : id})); }
     catch (e) { showToast(e.message, 'error', 8000); }
+  }
+
+  // ── network approval ─────────────────────────────────
+  // uid 0: an organisation addon or your own personal one, named by key; a
+  // user id: that user's personal addon.
+  const netAddon = (uid, id) => uid ? others.find(x => x.owner_id === uid && x.id === id) : byKey(id);
+  const netURL = (uid, id) => uid ? '/api/addons/users/' + uid + '/' + encodeURIComponent(id) + '/http' : '/api/addons/' + encodeURIComponent(id) + '/http';
+
+  function netSheet(a) {
+    return new Promise(resolve => {
+      let m = $('addon-net-modal');
+      if (!m) {
+        m = document.createElement('div');
+        m.id = 'addon-net-modal';
+        m.className = 'modal-overlay';
+        m.style.zIndex = 9665;
+        document.body.appendChild(m);
+      }
+      const granted = {};
+      for (const g of a.http_grants || []) granted[g.origin] = g.private;
+      const perms = (a.permissions || []).filter(p => p.startsWith('http') || p.startsWith('secret:'));
+      m.innerHTML = `<div class="modal" style="width:560px;max-width:calc(100vw - 32px);">
+        <h3>${esc(tf('add_net_t', {name: a.name}))} ${a.personal ? `<span class="pill">${esc(tf('add_personal_of', {user: a.owner || ''}))}</span>` : ''}</h3>
+        <div class="hint-box">${esc(t('add_net_d'))}</div>
+        <ul style="margin:8px 0 0 18px;padding:0;font-size:12.5px;">${perms.map(p => `<li style="margin:4px 0;">${esc(permText(p, a))}</li>`).join('')}</ul>
+        <div class="setting-desc" style="margin-top:8px;">${esc(t('add_net_private_d'))}</div>
+        ${a.http.origins.map(o => `<label class="mcp-check" style="display:flex;gap:6px;align-items:center;margin:4px 0;font-size:12px;"><input type="checkbox" data-private="${esc(o)}" ${granted[o] || o.startsWith('http://') ? 'checked' : ''}><span>${esc(tf('add_net_private', {origin: o}))}</span></label>`).join('')}
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button class="btn-sec" data-act="no">${esc(t('cancel'))}</button>
+          <button data-act="yes">${esc(t('add_net_approve'))}</button>
+        </div></div>`;
+      const done = v => { m.classList.remove('open'); resolve(v); };
+      m.querySelector('[data-act="no"]').onclick = () => done(null);
+      m.querySelector('[data-act="yes"]').onclick = () => done([...m.querySelectorAll('[data-private]')].filter(x => x.checked).map(x => x.dataset.private));
+      m.classList.add('open');
+    });
+  }
+
+  async function netApprove(uid, id) {
+    const a = netAddon(uid, id);
+    if (!a) return;
+    const priv = await netSheet(a);
+    if (!priv) return;
+    try { await api('POST', netURL(uid, id), {private: priv}); await after(tf('add_net_approved', {name: a.name})); }
+    catch (e) { showToast(e.message, 'error', 8000); }
+  }
+
+  async function netRevoke(uid, id) {
+    const a = netAddon(uid, id);
+    if (!a || !(await uiConfirm(tf('add_net_revoke_q', {name: a.name}), {okText: t('add_net_revoke'), danger: true}))) return;
+    try { await api('DELETE', netURL(uid, id)); await after(tf('add_net_revoked', {name: a.name})); }
+    catch (e) { showToast(e.message, 'error', 8000); }
+  }
+
+  // ── secrets ──────────────────────────────────────────
+  async function secrets(key, iid) {
+    const a = byKey(key), inst = (instCache[key] || []).find(x => x.id === iid);
+    if (!a) return;
+    let d;
+    try { d = await api('GET', apiBase(a) + '/instances/' + iid + '/secrets'); } catch (e) { showToast(e.message, 'error', 8000); return; }
+    let m = $('addon-sec-modal');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'addon-sec-modal';
+      m.className = 'modal-overlay';
+      m.style.zIndex = 9665;
+      document.body.appendChild(m);
+    }
+    const k = esc(key);
+    const kind = x => x.kind === 'basic' ? t('add_sec_kind_basic') : x.kind === 'header' ? tf('add_sec_kind_header', {header: x.header}) : t('add_sec_kind_bearer');
+    const rows = (d.secrets || []).map(x => `<div style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:6px 0;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><b style="font-family:var(--font-mono);font-size:12px;">${esc(x.name)}</b>
+          <span class="sub" style="font-size:11px;color:var(--text3);">${esc(kind(x))}</span></div>
+        <div style="font-size:11.5px;margin:4px 0;color:var(--text2);">${x.instance_set ? '✓ ' + esc(tf('add_sec_inst_set', {by: (x.instance_set_by || '?') + (x.updated_at ? ', ' + fmtTime(x.updated_at) : '')})) : '○ ' + esc(t('add_sec_inst_unset'))}
+          ${x.own_set ? '<br>✓ ' + esc(t('add_sec_own_set')) : ''}</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <input type="password" id="addon-sec-${esc(x.name)}" autocomplete="new-password" placeholder="${esc(t('add_sec_value'))}" style="flex:1;min-width:160px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;padding:5px 7px;">
+          ${x.can_set_instance ? `<button class="btn-sec btn-sm" onclick="wrmAddons.secretSave('${k}', ${iid}, '${esc(x.name)}', 'instance')">${esc(t('add_sec_save'))}</button>` : ''}
+          ${x.can_set_own ? `<button class="btn-sec btn-sm" onclick="wrmAddons.secretSave('${k}', ${iid}, '${esc(x.name)}', 'own')">${esc(t('add_sec_save_own'))}</button>` : ''}
+        </div>
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px;">
+          ${x.can_set_instance && x.instance_set ? `<button class="btn-danger btn-sm" onclick="wrmAddons.secretClear('${k}', ${iid}, '${esc(x.name)}', 'instance')">${esc(t('add_sec_clear'))}</button>` : ''}
+          ${x.own_set ? `<button class="btn-danger btn-sm" onclick="wrmAddons.secretClear('${k}', ${iid}, '${esc(x.name)}', 'own')">${esc(t('add_sec_clear_own'))}</button>` : ''}
+        </div></div>`).join('');
+    m.innerHTML = `<div class="modal" style="width:600px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;">
+      <h3>🔑 ${esc(tf('add_sec_t', {name: a.name, instance: inst ? inst.name : '#' + iid}))}</h3>
+      <div class="hint-box">${esc(t('add_sec_d'))}</div>
+      ${rows}
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;"><button onclick="document.getElementById('addon-sec-modal').classList.remove('open')">${esc(t('add_ai_close'))}</button></div>
+    </div>`;
+    m.classList.add('open');
+  }
+
+  async function secretSave(key, iid, name, scope) {
+    const a = byKey(key), inp = $('addon-sec-' + name);
+    const value = inp ? inp.value : '';
+    if (!value) { showToast(t('add_sec_none'), 'error'); return; }
+    try {
+      await api('PUT', apiBase(a) + '/instances/' + iid + '/secrets/' + encodeURIComponent(name), {value, scope});
+      if (inp) inp.value = '';
+      showToast(t('add_sec_saved'), 'success');
+      secrets(key, iid);
+    } catch (e) { showToast(e.message, 'error', 8000); }
+  }
+
+  async function secretClear(key, iid, name, scope) {
+    const a = byKey(key);
+    try {
+      await api('DELETE', apiBase(a) + '/instances/' + iid + '/secrets/' + encodeURIComponent(name) + '?scope=' + scope);
+      showToast(t('add_sec_cleared'), 'success');
+      secrets(key, iid);
+    } catch (e) { showToast(e.message, 'error', 8000); }
   }
 
   // ── instances ────────────────────────────────────────
@@ -1215,10 +1496,11 @@ Object.assign(LANGS.hr, {
       '  "author": "Your name",',
       '  "license": "MIT",',
       '  "homepage": "https://example.com/addon",',
-      '  "capabilities": ["ui.panel", "store", "notify"],',
+      '  "capabilities": ["ui.panel", "store", "notify", "http"],',
       '  "ui": {"panel": "panel.html", "title": "Window title", "defaultSize": {"w": 760, "h": 500}, "minSize": {"w": 320, "h": 220},',
       '         "themes": [{"id": "ocean", "name": "Ocean", "name_hr": "Ocean", "mode": "dark", "tokens": {"--bg": "#0b1220", "--accent": "#38bdf8"}, "css": "ocean.css"}]},',
-      '  "store": {"quotaKb": 64, "shared": false}',
+      '  "store": {"quotaKb": 64, "shared": false},',
+      '  "http": {"origins": ["https://grafana.example.com"], "paths": ["/api/*"], "methods": ["GET", "POST"], "secrets": ["grafana_token"]}',
       '}',
       '',
       'Capabilities this WRM build accepts:',
@@ -1228,13 +1510,14 @@ Object.assign(LANGS.hr, {
       '- The panel is HTML in an iframe with sandbox="allow-scripts", an opaque origin and this CSP: default-src \'none\'; script-src \'self\' plus the hash of each inline <script>; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob:; connect-src \'none\'. So: no fetch/XHR/WebSocket, no inline event handlers (onclick="…"), no eval, no remote scripts or fonts; put JS in <script> blocks or files of the zip and use addEventListener.',
       '- Talk to WRM only with window.parent.postMessage(msg, "*"); every message carries v: 2. Listen with window.addEventListener("message", e => …) and check e.data.type.',
       '- On load send {v:2, type:"wrm:ready"} (within 5 s) and then {v:2, type:"wrm:heartbeat"} every 15 s, or WRM shows a "not responding" banner.',
-      '- WRM answers wrm:ready with {type:"wrm:context", v:2, user:{id,name}, lang, theme:{"--bg":…}, addon:{id, key, version, instance, instanceName}, config:{…stored values…}, features:{store, notify, http:false, visibility:true}, size:{w,h}, visible}. Ask again with {v:2, type:"wrm:context"}.',
+      '- WRM answers wrm:ready with {type:"wrm:context", v:2, user:{id,name}, lang, theme:{"--bg":…}, addon:{id, key, version, instance, instanceName}, config:{…stored values…}, features:{store, notify, http, visibility:true}, http:{origins, approved, secrets:{name: true if a value is set}}, size:{w,h}, visible}. Ask again with {v:2, type:"wrm:context"}.',
       '- WRM also sends {type:"wrm:theme", theme} when the user switches theme, {type:"wrm:visibility", visible} when the window is minimized or restored (stop polling and timers while hidden), and {type:"wrm:fatal", code, message} before it closes the panel.',
       '- store capability: {v:2, type:"wrm:store.get", id, key} and {v:2, type:"wrm:store.set", id, key, value} (any JSON, 32 KB per value, quotaKb per instance). The answer is {type:"wrm:store", id, key, value} or with error and code (E_LIMIT_QUOTA, E_LIMIT_SIZE, E_STORE_KEY, E_STORE_READONLY). Keys: 1-64 letters, digits, dot, dash, underscore, not starting with wrm.',
       '- notify capability: {v:2, type:"wrm:notify", text, level:"info"|"success"|"warn"|"error"}; plain text, 200 characters, at most 5 a minute, repeats within 5 minutes are dropped.',
       '- {v:2, type:"wrm:resize", w, h} asks for a content size (WRM decides); {v:2, type:"wrm:error", message, source, line} reports an error into the window diagnostics. Use a ResizeObserver to redraw.',
       '- Each instance (the user may open several, e.g. two dashboards) has its own stored values and window. Data is fetched only while the window is open; WRM runs no background jobs for addons.',
-      '- There is no network access from the panel in this version. Use data the user enters or pastes, or wait for the HTTP proxy capability.',
+      '- http capability: the panel never fetches by itself. Send {v:2, type:"wrm:http", id, method, url, headers:{Accept, Content-Type, Range}, body (string; encoding:"base64" for bytes), secret:"grafana_token"} and WRM performs the request. The answer is {type:"wrm:http", id, ok, status, headers, body, encoding:"text"|"base64", truncated} or {id, ok:false, error, code}. Only origins listed in http.origins (exact scheme://host[:port]; plain http:// only for an origin the administrator approved as private network) and paths in http.paths (prefix with * at the end) are allowed; an administrator approves the origins; local and private addresses are refused unless the administrator allowed the private network for that origin; redirects are checked again; 120 requests a minute, 20 at a time, 10 s timeout, 256 KB request and 8 MB response. Codes: E_HTTP_ORIGIN, E_HTTP_PATH, E_HTTP_METHOD, E_HTTP_UNAPPROVED, E_HTTP_BLOCKED, E_HTTP_SCHEME, E_HTTP_SECRET, E_SECRET_MISSING, E_HTTP_TIMEOUT, E_HTTP_UPSTREAM, E_LIMIT_RATE, E_LIMIT_SIZE.',
+      '- http.secrets: "name" (sent as Authorization: Bearer), "basic:name" (value user:password) or "header:X-Api-Key:name". Values are entered in WRM per instance (an administrator for shared instances, each user may add their own); the panel references a secret by name and never sees it. Never put tokens, passwords or internal host names in the zip.',
       '',
       'Themes (ui.theme capability): ui.themes lists themes users pick in Settings → Appearance (never applied to everybody). tokens are CSS variables of WRM (--bg --bg2 --bg3 --bg4 --bg5 --border --border2 --text --text2 --text3 --accent --green --red --yellow --purple --font-ui --font-mono --radius), values without ; { } < > url( or @import; css is an optional stylesheet in the zip. A v1 "theme": "theme.css" still works.',
       '',
@@ -1303,7 +1586,7 @@ Object.assign(LANGS.hr, {
 
   window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, communityInstall, applyThemes, reload: after,
     draftInstall, draftDiff, draftDiscard, closeDraftDiff, windowChanged, windowGone, list: () => list.slice(),
-    instNew, instRename, instDelete, instExport, instImport, otherDisable, otherRemove};
+    instNew, instRename, instDelete, instExport, instImport, otherDisable, otherRemove, netApprove, netRevoke, secrets, secretSave, secretClear};
 
   if (typeof window.initApp === 'function' && !window.initApp.__addons) {
     const orig = window.initApp;

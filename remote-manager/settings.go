@@ -114,6 +114,8 @@ var settingSpecs = []settingSpec{
 	{Key: "workboard_ssh_metrics", Default: "1", Kind: "bool"},
 	// Addons: who may install personal addons (visible only to themselves)
 	{Key: "addon_personal", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	// Who may use addons that reach web sites through WRM (http capability).
+	{Key: "addon_http", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	// Notifications (e-mail, chat and push channels)
 	{Key: "notifications_enabled", Default: "1", Kind: "bool", Alias: "NOTIFICATIONS_ENABLED"},
 	{Key: "notify_min_interval_seconds", Default: "60", Kind: "int", Min: 0, Max: 86400},

@@ -292,6 +292,7 @@ func addonPermissions(m *addonManifest) []string {
 	if has["notify"] {
 		out = append(out, "notify")
 	}
+	out = append(out, addonHTTPPermissions(m.HTTP)...)
 	if m.Server != nil {
 		out = append(out, "server:"+strings.Join(m.Server.Exports, ","))
 	}
@@ -329,6 +330,10 @@ func addonPermCovered(a string, base []string) bool {
 			ai, _ := strconv.Atoi(an)
 			bi, _ := strconv.Atoi(bn)
 			if ai <= bi && ashared == bshared {
+				return true
+			}
+		case "http.methods", "http.paths":
+			if addonHTTPPermCovered(kind, val, bv) {
 				return true
 			}
 		case "server":
@@ -497,6 +502,7 @@ func initAddonV2Schema() {
 		updated_at TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (user_id, instance_id)
 	)`)
+	initAddonHTTPSchema()
 }
 
 type addonInstance struct {
@@ -579,6 +585,7 @@ func addonForgetInstances(ref addonRef) {
 func addonForgetInstance(iid int) {
 	db.Exec(`DELETE FROM addon_store WHERE instance_id=?`, iid)
 	db.Exec(`DELETE FROM addon_windows WHERE instance_id=?`, iid)
+	db.Exec(`DELETE FROM addon_secrets WHERE instance_id=?`, iid)
 	db.Exec(`DELETE FROM addon_instances WHERE id=?`, iid)
 }
 
@@ -690,6 +697,12 @@ func addonInstancesHandler(w http.ResponseWriter, r *http.Request, userID int, a
 	switch rest[1] {
 	case "window":
 		addonWindowSave(w, r, userID, in)
+		return
+	case "secrets":
+		addonSecretsHandler(w, r, userID, admin, rec, in, rest[2:])
+		return
+	case "http":
+		addonHTTPHandler(w, r, userID, admin, rec, in, rest[2:])
 		return
 	case "store", "export", "import":
 	default:
