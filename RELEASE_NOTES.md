@@ -1,6 +1,32 @@
-## Web Remote Manager PRO v13.5.0 - Log viewer, smart editor and AI that shows its work
+## Web Remote Manager PRO v13.6.0 - AI sessions, your own AI settings and approvals that do what they say
 
 ### Added
+
+- **AI sessions** (🧠 panel next to *Sessions*): every AI session you had in one list, whatever started it: the assistant in a terminal, the log and file assistants, OpenCode agents and AI apps such as Claude or ChatGPT over MCP. Search (titles, servers, questions and commands), filter by kind, ⭐ saved or running, open the transcript, jump to the live chat or the live view, rename, export as Markdown or JSON, and **continue** any ended session in the WRM assistant. An AI app's session continues with what the app did on the server as its earlier context. Every user sees only their own sessions.
+- **Saved sessions**: ☆ keeps a session beyond the transcript retention (`ai_keep_saved_sessions`, on by default).
+- **My AI settings** (*Settings → AI assistant*): your own default engine, provider, model and permission mode for new sessions, whether to show the assistant's thinking, your own API keys (when the administrator allows personal keys) and a shortcut to connect your own Claude, ChatGPT or Cursor app over MCP. These settings are per user.
+
+### Changed
+
+- **An approval given after the AI stopped waiting runs at once.** When an AI app gives up waiting (its own timeout, or nobody answered), the request stays open in WRM. Approving it now runs exactly that call right away, shows the output in the live view, and hands the output to the AI when it repeats the call; nothing runs twice. Administrators can keep the old behaviour (*Admin → AI connections → Approval after the AI stopped waiting: Allow the AI to repeat it once*).
+- **Deny in the AI app is final.** Choosing *Deny* in Claude's or ChatGPT's own approval question now refuses the call like Deny in WRM; only closing the question without an answer keeps it open in WRM.
+- When you decide in WRM, the approval question still open in the AI app is closed.
+
+### Fixed
+
+- **"The approval is no longer pending"** is replaced by what really happened: who approved or denied it and where (WRM or the AI app), or that the AI stopped waiting and the request was closed.
+- An approval card in the 🤖 menu now changes when the request is kept for later (other text, no editing, which a later approval would ignore), and the approval pop-up closes once the request is decided.
+- **The AI work log no longer loses its text while it fills.** The assistant's thinking used to show only its last 600 characters, so its beginning kept disappearing; the whole thought now stays and scrolls in its own line. Empty *Work log* lines above your questions are gone.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. Additive migration only: new column `saved` in `ai_sessions`. New settings `ai_mcp_later_approval` (`run`) and `ai_keep_saved_sessions` (on). Personal AI settings are stored in `user_ui` under the key `ai`.
+
+[Download v13.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.6.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.5.0 - Log viewer, smart editor and AI that shows its work
+
+#### Added
 
 - **A professional log viewer** in *Monitoring → Logs*: sortable and filterable file list (operator, service, newest first), log tabs with line numbers, level colours, smart highlighting (times, IPs, URLs, HTTP codes, UUIDs, key=value), find in the log, level filters, **Follow**, older lines and go to line.
 - **Search across all logs by time**: the search runs on the server with grep, takes a From/To range in the EU format (`dd.mm.yyyy hh:mm`) or a quick range, sorts hits by time and draws a timeline. A click opens the file at the hit.
@@ -11,14 +37,14 @@
 - **Date and time format**: EU by default, ISO, US or the browser's locale in *Settings*.
 - **Plugin and skills**: the skills use `search_logs`; `server.json` lets the owner publish WRM to the MCP Registry.
 
-### Fixed
+#### Fixed
 
 - A week-wide log search no longer ends with "time budget reached" or "results are bounded or incomplete".
 - Operators under `/home/<project>/<operator>/<service>` are found again.
 - AI sessions no longer hang in "stopped": an ended session says so and offers **Continue chat**.
 - The version at the top left is shown again after reloading a signed-in page.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. Additive migration only: new table `log_settings` and new columns `title`, `purpose`, `resumed_from` and `file_path` in `ai_sessions`. Log folders configured in the Zabbix dialog are read into the new log settings. New settings `ai_show_thinking` and `ai_auto_titles` (both on).
 

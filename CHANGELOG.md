@@ -1,3 +1,23 @@
+## [13.6.0] - 2026-10-23
+
+### Added
+- **AI sessions view** (🧠 *AI sessions* panel next to *Sessions*, `static/aisessions.js`, `ai_sessions_view.go`): every AI session of the signed-in user, from the terminal assistant, the log and file assistants, OpenCode and AI apps over MCP. Search (title, server, host, model or app, and the text of questions, answers and tool calls), filter (`kind`: assistant, logs, file, opencode, mcp, saved, live), paging, transcript, *Go to the chat* for a running assistant, *Open live view* for a running AI app, rename, export and *Continue*. `GET /api/ai/sessions?view=all&kind=&q=&conn_id=&before=&limit=`.
+- **Continue any ended session in the WRM assistant**, including OpenCode and MCP sessions: an AI app's tool calls and results become the earlier context. Without a provider the personal default (or the first one offered) is used.
+- **Saved AI sessions**: `POST /api/ai/sessions/{id}/save {saved}` (audited `ai.session_saved`); saved sessions are kept beyond `ai_transcript_retention_days` while the new setting `ai_keep_saved_sessions` is on (default).
+- **Export**: `GET /api/ai/sessions/{id}/export?format=md|json` (own sessions only, audited `ai.session_export`; transcripts are stored redacted).
+- **Personal AI settings** in *Settings → AI assistant*: default engine, provider, model and mode, show thinking, own API keys and the AI connections shortcut. Stored per user in `/api/me/ui/ai`; `GET /api/ai/config` returns them as `prefs` with `show_thinking`. The thinking choice is applied by the server.
+- **`ai_mcp_later_approval`** (`run` default, `repeat`): approving a request the AI no longer waits for runs it at once (audited `ai.later_run`), after checking it again against the current mode and policies; the repeated call gets that output without running again.
+
+### Changed
+- An explicit *Deny* in the AI app's approval question (MCP elicitation `accept` with `decision: deny`) is final; only `decline` keeps the request for later.
+- When a request is decided in WRM, WRM sends `notifications/cancelled` for its open elicitation in the AI app.
+- Approvals carry `run_now` when they are kept for later; the live view and the 🤖 menu explain what an approval will do.
+
+### Fixed
+- A decision on a request that no longer waits answers `409` with `decided` (`outcome`, `by`, `via`, `at`) and the UI says who decided it and where, instead of "the approval is no longer pending".
+- 🤖 menu approval cards are rebuilt when a request becomes "kept for later" (the edit button is gone, as edits are ignored then); approval toasts close once the request is decided.
+- AI work log: the thinking line kept only its last 600 characters, so its beginning vanished while it filled; it now keeps the whole text in a scrolling box. An empty work log is removed instead of left above the question, and chat items no longer shrink in the scrolling column.
+
 ## [13.5.0] - 2026-10-23
 
 ### Added
