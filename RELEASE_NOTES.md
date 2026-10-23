@@ -1,3 +1,26 @@
+## Web Remote Manager PRO v13.6.0 - Addon platform v2: personal addons, instances and a stricter sandbox
+
+### Added
+
+- **Personal addons.** Every user can install addons that only they see (*Settings → Addons*). Administrators decide who may (`addon_personal`) and can turn off or remove any user's personal addon.
+- **Themes from addons** appear in *Settings → Appearance*; each user picks one for themselves.
+- **Instances**: open one addon several times (for example two dashboards), each with its own settings and window. Shared instances are set up by an administrator for everybody.
+- **Settings on the server**: an addon keeps its settings in WRM (per instance), with export and import, so nothing is retyped after a reload.
+- **Windows come back**: where you put an addon window, its size and whether it was open are remembered on the server, also on another device.
+- **A watchdog**: a panel that does not start or stops answering shows a banner with *Reload*, *Diagnostics*, *Disable addon* and *Close*; errors the panel reports are listed under ⚠ in its title bar.
+- **A permission sheet** before an addon is enabled, written by WRM from `addon.json`. An update that asks for more stays off until you approve it again.
+- **Addon developer guide** ([docs/ADDONS.md](docs/ADDONS.md)) and an updated *AI addon* prompt.
+
+### Changed
+
+- apiVersion 2 panels run without any network of their own and only with the scripts that came in their ZIP; every addon file is checked against the SHA-256 recorded at install.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. Additive migration only: new tables `addons_personal`, `addon_instances`, `addon_store` and `addon_windows`, new columns `files`, `approved` and `pending` in `addons`. Installed addons keep working; their files are pinned the next time they are installed. New policy `addon_personal` (`all`).
+
+[Download v13.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.6.0) · [Full changelog](CHANGELOG.md)
+
 ## Web Remote Manager PRO v13.5.0 - Log viewer, smart editor and AI that shows its work
 
 ### Added
