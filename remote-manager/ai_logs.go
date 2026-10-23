@@ -43,6 +43,19 @@ func (s *aiSession) aiLogSource(ctx context.Context) (monitorRootCache, error) {
 	if err != nil {
 		return monitorRootCache{}, err
 	}
+	if set := loadLogSettings(s.conn.ID); set.Method != "sftp" {
+		key := logSettingsKey(s.conn.ID)
+		dctx, cancel := context.WithTimeout(ctx, time.Duration(set.TimeBudget)*time.Second)
+		res, err := logFastDiscover(dctx, cl, s.conn, set)
+		cancel()
+		if err == nil {
+			res.Config, res.Until = key, time.Now().Add(time.Hour)
+			if logSettingsKey(s.conn.ID) == key {
+				monitorDiscoveredRoots.Store(s.conn.ID, res)
+			}
+			return res, nil
+		}
+	}
 	fs, err := sftp.NewClient(cl)
 	if err != nil {
 		return monitorRootCache{}, fmt.Errorf("SFTP log access failed: %v", err)
@@ -138,6 +151,28 @@ func (s *aiSession) aiServiceLogs(ctx context.Context, name string) ([]aiLogCand
 		}
 		return nil, svc.Unit, nil
 	}
+	if x.Files != nil {
+		// The SSH discovery already listed the files with their times.
+		found := []aiLogCandidate{}
+		for _, f := range x.Files {
+			if f.Kind == "" && strings.EqualFold(f.Service, svc.Name) && aiReadDenied(f.Path) == "" {
+				found = append(found, aiLogCandidate{Path: f.Path, Size: f.Size, Modified: f.Modified})
+			}
+		}
+		if len(found) > 0 {
+			sort.Slice(found, func(i, j int) bool {
+				if found[i].Modified != found[j].Modified {
+					return found[i].Modified > found[j].Modified
+				}
+				return found[i].Path < found[j].Path
+			})
+			if len(found) > 10 {
+				found = found[:10]
+			}
+			return found, "", nil
+		}
+	}
+	set := loadLogSettings(s.conn.ID)
 	cl, err := s.sshClient()
 	if err != nil {
 		return nil, "", err
@@ -178,7 +213,7 @@ func (s *aiSession) aiServiceLogs(ctx context.Context, name string) ([]aiLogCand
 			if !f.Mode().IsRegular() || aiReadDenied(p) != "" {
 				continue
 			}
-			if !monitorLogName(f.Name()) && !hasLog {
+			if !logFileAccepted(f.Name(), hasLog || monitorLogDirName(path.Base(real)), set) {
 				continue
 			}
 			if oneOf(strings.ToLower(path.Ext(f.Name())), ".gz", ".bz2", ".xz", ".zip", ".zst") {

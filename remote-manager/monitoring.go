@@ -303,6 +303,12 @@ func apiMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 		jsonOK(w, out)
 	case "logs/discover":
 		monitorLogsDiscoverHandler(w, r, c, acc)
+	case "logs/settings":
+		logSettingsHandler(w, r, c, acc)
+	case "logs/grep":
+		logGrepHandler(w, r, c, acc)
+	case "logs/lines":
+		logLinesHandler(w, r, c, acc)
 	case "logs", "log":
 		monitorLogsHandler(w, r, c, acc, rest)
 	default:

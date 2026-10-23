@@ -25,6 +25,10 @@ type monitorRootCache struct {
 	Roots    []monitorLogRoot
 	Services []monitorServiceInfo
 	Warnings []string
+	// Files is the file list found by the SSH discovery (nil after an SFTP
+	// discovery, which lists files per request).
+	Files  []monitorLogFile
+	Method string
 }
 
 // monitorServiceInfo explains what a service is and where its logs live, so a
@@ -42,8 +46,7 @@ type monitorServiceInfo struct {
 var monitorDiscoveredRoots sync.Map
 
 func monitorRootConfig(id int) string {
-	b, _ := json.Marshal(loadMonitorConfig(id).Roots)
-	return string(b)
+	return logSettingsKey(id)
 }
 
 // monitorDiscoveryView returns the last on-demand discovery for this user and
@@ -64,7 +67,9 @@ func monitorAvailableRoots(c Connection) []monitorLogRoot {
 	if x, ok := monitorDiscoveryView(c); ok {
 		return x.Roots
 	}
-	return loadMonitorConfig(c.ID).Roots
+	// Without a discovery only the configured roots are listed; scan paths
+	// are searched only when the user asks for it (Find logs).
+	return loadLogSettings(c.ID).Roots
 }
 
 func monitorLogName(name string) bool {
@@ -112,9 +117,9 @@ func monitorUnitField(conf, key string) []string {
 }
 
 func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([]monitorLogRoot, []monitorServiceInfo, []string) {
-	cfg := loadMonitorConfig(c.ID)
-	encoded, _ := json.Marshal(cfg.Roots)
-	configKey := string(encoded)
+	cfg := loadLogSettings(c.ID)
+	configKey := logSettingsKey(c.ID)
+	cfg.Roots = monitorAvailableRootsFrom(cfg)
 	roots := []monitorLogRoot{}
 	services := []monitorServiceInfo{}
 	seen := map[string]bool{}
@@ -438,7 +443,13 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 		}
 	}
 	cat, _ := loadGitWorkspace(c.UserID)
-	bases := append([]string{"/home", "/srv", "/opt"}, cat.ServerRoots...)
+	bases := []string{}
+	for _, p := range cfg.ScanPaths {
+		if p != "/var/log" {
+			bases = append(bases, p)
+		}
+	}
+	bases = append(bases, cat.ServerRoots...)
 	// Bounded operator/service discovery, never a recursive /home scan. On the
 	// deployment layout /home/<operator>/<operator>/<service>/log(s) the first level
 	// is the operator and the second level is the service.
@@ -518,11 +529,23 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 		return strings.ToLower(services[i].Name) < strings.ToLower(services[j].Name)
 	})
 	if monitorRootConfig(c.ID) == configKey {
-		monitorDiscoveredRoots.Store(c.ID, monitorRootCache{Owner: c.UserID, Config: configKey, Until: time.Now().Add(time.Hour), At: time.Now(), Roots: roots, Services: services, Warnings: warnings})
+		monitorDiscoveredRoots.Store(c.ID, monitorRootCache{Owner: c.UserID, Config: configKey, Until: time.Now().Add(time.Hour), At: time.Now(), Roots: roots, Services: services, Warnings: warnings, Method: "sftp"})
 	} else {
 		warnings = append(warnings, "Monitoring roots changed during discovery; find logs again")
 	}
 	return roots, services, warnings
+}
+
+// monitorAvailableRootsFrom lists the configured roots plus /var/log when it is
+// a scan path, which the SFTP walk treats as a broad root.
+func monitorAvailableRootsFrom(s logSettings) []monitorLogRoot {
+	roots := append([]monitorLogRoot{}, s.Roots...)
+	for _, p := range s.ScanPaths {
+		if p == "/var/log" {
+			roots = append(roots, monitorLogRoot{Path: p})
+		}
+	}
+	return roots
 }
 
 func unitOrEmpty(logs, unit string) string {

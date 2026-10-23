@@ -145,10 +145,15 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 		}
 		return true
 	}
+	if rest == "logs" && discovered && discovery.Files != nil {
+		jsonOK(w, map[string]interface{}{"files": discovery.Files, "roots": discovery.Roots, "warnings": discovery.Warnings, "incomplete": false, "discovered": true, "discovered_at": discovery.At, "services": discovery.Services, "method": discovery.Method, "limits": map[string]int{"files": loadLogSettings(c.ID).MaxFiles}})
+		return
+	}
 	if rest == "logs" {
 		if !openFS() {
 			return
 		}
+		logSet := loadLogSettings(c.ID)
 		files := []monitorLogFile{}
 		warnings := append([]string(nil), discovery.Warnings...)
 		visited := 0
@@ -222,7 +227,7 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 					if !f.Mode().IsRegular() || aiReadDenied(p) != "" {
 						continue
 					}
-					if !monitorLogName(f.Name()) && !(includeTxt && strings.HasSuffix(strings.ToLower(f.Name()), ".txt")) && !(hasLog && d.depth > 0) {
+					if !logFileAccepted(f.Name(), includeTxt || (hasLog && d.depth > 0) || monitorLogDirName(path.Base(d.name)), logSet) {
 						continue
 					}
 					if oneOf(strings.ToLower(path.Ext(f.Name())), ".gz", ".bz2", ".xz", ".zip", ".zst") {
@@ -473,19 +478,70 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 	jsonOK(w, chunk)
 }
 
-var monitorISOTime = regexp.MustCompile(`^\s*(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)`)
+var monitorISOTime = regexp.MustCompile(`^\s*\[?(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:Z|[+-]\d{2}:?\d{2})?)`)
+
+// Other timestamp shapes seen in service logs, tried near the start of a line:
+// 2026/10/22 14:03:01, 22.10.2026 14:03:01, [22/Oct/2026:14:03:01 +0200]
+// (nginx/Apache) and ISO times after a level or a bracket.
+var (
+	monitorSlashTime = regexp.MustCompile(`^\s*\[?(\d{4})/(\d{2})/(\d{2})[ T](\d{2}):(\d{2}):(\d{2})`)
+	monitorEUTime    = regexp.MustCompile(`^\s*\[?(\d{1,2})\.(\d{1,2})\.(\d{4})\.?[ T](\d{1,2}):(\d{2}):(\d{2})`)
+	monitorCLFTime   = regexp.MustCompile(`\[(\d{2}/[A-Z][a-z]{2}/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4})\]`)
+	monitorISOInside = regexp.MustCompile(`(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:Z|[+-]\d{2}:?\d{2})?)`)
+)
+
+func parseMonitorISO(v string, loc *time.Location) (time.Time, bool) {
+	v = strings.Replace(strings.Replace(v, " ", "T", 1), ",", ".", 1)
+	for _, layout := range []string{time.RFC3339Nano, "2006-01-02T15:04:05.999999999-0700", "2006-01-02T15:04:05.999999999"} {
+		if at, err := time.ParseInLocation(layout, v, loc); err == nil {
+			return at, true
+		}
+	}
+	return time.Time{}, false
+}
 
 func parseMonitorLogTime(line string, loc *time.Location) (time.Time, bool) {
 	if m := monitorISOTime.FindStringSubmatch(line); len(m) > 1 {
-		v := strings.Replace(m[1], " ", "T", 1)
-		for _, layout := range []string{time.RFC3339Nano, "2006-01-02T15:04:05.999999999-0700", "2006-01-02T15:04:05.999999999"} {
-			if at, err := time.ParseInLocation(layout, v, loc); err == nil {
-				return at, true
-			}
+		if at, ok := parseMonitorISO(m[1], loc); ok {
+			return at, true
+		}
+	}
+	num := func(m []string) []int {
+		out := make([]int, len(m)-1)
+		for i, v := range m[1:] {
+			out[i], _ = strconv.Atoi(v)
+		}
+		return out
+	}
+	if m := monitorSlashTime.FindStringSubmatch(line); m != nil {
+		n := num(m)
+		return time.Date(n[0], time.Month(n[1]), n[2], n[3], n[4], n[5], 0, loc), true
+	}
+	if m := monitorEUTime.FindStringSubmatch(line); m != nil {
+		n := num(m)
+		if n[1] >= 1 && n[1] <= 12 && n[0] >= 1 && n[0] <= 31 {
+			return time.Date(n[2], time.Month(n[1]), n[0], n[3], n[4], n[5], 0, loc), true
 		}
 	}
 	if len(line) >= 15 {
 		if at, err := time.ParseInLocation("2006 Jan _2 15:04:05", fmt.Sprintf("%d %s", time.Now().In(loc).Year(), line[:15]), loc); err == nil {
+			return at, true
+		}
+	}
+	head := line
+	if len(head) > 160 {
+		head = head[:160]
+	}
+	if m := monitorCLFTime.FindStringSubmatch(head); m != nil {
+		if at, err := time.Parse("02/Jan/2006:15:04:05 -0700", m[1]); err == nil {
+			return at.In(loc), true
+		}
+	}
+	if len(head) > 64 {
+		head = head[:64]
+	}
+	if m := monitorISOInside.FindStringSubmatch(head); m != nil {
+		if at, ok := parseMonitorISO(m[1], loc); ok {
 			return at, true
 		}
 	}
@@ -587,18 +643,14 @@ func monitorLogsDiscoverHandler(w http.ResponseWriter, r *http.Request, c Connec
 		jsonError(w, "Only the owner can search for logs", 403)
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 90*time.Second)
-	defer cancel()
-	fs, closeFS, err := openMonitorSFTP(ctx, c)
+	start := time.Now()
+	res, err := logDiscover(r.Context(), c)
 	if err != nil {
-		jsonError(w, "SSH/SFTP log access failed: "+err.Error(), 502)
+		jsonError(w, err.Error(), 502)
 		return
 	}
-	defer closeFS()
-	roots, services, warnings := monitorDiscoverRoots(ctx, fs, c)
-	view, _ := monitorDiscoveryView(c)
-	auditFileOp(r, acc, c, "monitor.logs_discovered", c.Name, map[string]interface{}{"roots": len(roots), "services": len(services)})
-	jsonOK(w, map[string]interface{}{"roots": roots, "services": services, "warnings": warnings, "discovered": true, "discovered_at": view.At})
+	auditFileOp(r, acc, c, "monitor.logs_discovered", c.Name, map[string]interface{}{"roots": len(res.Roots), "services": len(res.Services), "files": len(res.Files), "method": res.Method, "ms": time.Since(start).Milliseconds()})
+	jsonOK(w, map[string]interface{}{"roots": res.Roots, "services": res.Services, "warnings": res.Warnings, "discovered": true, "discovered_at": res.At, "method": res.Method, "files": len(res.Files), "ms": time.Since(start).Milliseconds()})
 }
 
 // monitorJournalLogHandler reads a systemd unit through journalctl. The unit is

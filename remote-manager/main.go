@@ -1443,6 +1443,7 @@ func initDB() {
 
 	// v11.0: Git workspace (sources, blob cache, catalog, targets, installations)
 	initMonitoring()
+	initLogSettings()
 	initVisualLabels()
 	initGitSchema()
 	initGitConfigProfiles()
