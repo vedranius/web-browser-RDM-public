@@ -1457,6 +1457,7 @@ func initDB() {
 	// v12.0: AI assistant (providers, sessions, transcripts)
 	initAISchema()
 	initAIChatSchema()
+	initAISessionsViewSchema()
 	initMCPSchema()
 
 	// v13.0: addons (a folder under <DB>.addons plus its manifest)
