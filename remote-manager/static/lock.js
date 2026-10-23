@@ -1,4 +1,4 @@
-// Screen lock (#115, v13.6). After a period without activity, when the window is hidden, when
+// Screen lock (#115, v13.7). After a period without activity, when the window is hidden, when
 // the computer locks or sleeps, on a keyboard shortcut or on "Lock now" the interface is
 // covered by a lock screen that asks for the signed-in account's password (or a personal PIN).
 // Sessions, tunnels and AI runs keep going; the lock only detaches the view. The server

@@ -30,6 +30,15 @@ type monitorLogFile struct {
 	// regular log file. Unit carries the journal unit name.
 	Kind string `json:"kind,omitempty"`
 	Unit string `json:"unit,omitempty"`
+	// Main is the main folder the file lives under (a scan path, a configured
+	// main folder or a Git workspace server root); Place is "logs" for a log
+	// folder, "app" for an application or script folder and "journal".
+	Main  string `json:"main,omitempty"`
+	Place string `json:"place,omitempty"`
+	// OpGroup links similar operators (nova, novatv); OpGuess marks an operator
+	// guessed from repeated words in folder and service names.
+	OpGroup string `json:"op_group,omitempty"`
+	OpGuess bool   `json:"op_guess,omitempty"`
 }
 type monitorLogChunk struct {
 	Text         string `json:"text"`
@@ -146,7 +155,7 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 		return true
 	}
 	if rest == "logs" && discovered && discovery.Files != nil {
-		jsonOK(w, map[string]interface{}{"files": discovery.Files, "roots": discovery.Roots, "warnings": discovery.Warnings, "incomplete": false, "discovered": true, "discovered_at": discovery.At, "services": discovery.Services, "method": discovery.Method, "limits": map[string]int{"files": loadLogSettings(c.ID).MaxFiles}})
+		jsonOK(w, map[string]interface{}{"files": discovery.Files, "main_folders": logMainFolders(c, loadLogSettings(c.ID)), "roots": discovery.Roots, "warnings": discovery.Warnings, "incomplete": false, "discovered": true, "discovered_at": discovery.At, "services": discovery.Services, "method": discovery.Method, "limits": map[string]int{"files": loadLogSettings(c.ID).MaxFiles}})
 		return
 	}
 	if rest == "logs" {
@@ -257,7 +266,9 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 				capped = true
 			}
 		}
-		jsonOK(w, map[string]interface{}{"files": files, "roots": cfg.Roots, "warnings": warnings, "incomplete": capped, "discovered": discovered, "discovered_at": discovery.At, "services": discovery.Services, "limits": map[string]int{"files": 2000, "entries": 10000, "depth": 8}})
+		mains := logMainFolders(c, logSet)
+		logDecorate(files, mains, logSet.GuessOperators)
+		jsonOK(w, map[string]interface{}{"files": files, "main_folders": mains, "roots": cfg.Roots, "warnings": warnings, "incomplete": capped, "discovered": discovered, "discovered_at": discovery.At, "services": discovery.Services, "limits": map[string]int{"files": 2000, "entries": 10000, "depth": 8}})
 		return
 	}
 	root, err := strconv.Atoi(r.URL.Query().Get("root"))

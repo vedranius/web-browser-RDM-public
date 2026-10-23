@@ -1,4 +1,4 @@
-## [13.6.0] - 2026-10-23
+## [13.7.0] - 2026-10-23
 
 ### Added
 - **Settings → Appearance** (`static/appearance.js`): eleven built-in themes (Graphite, Midnight, Fjord, Solar dark, Forest, Ember, Daylight, Paper, Solar light, High contrast dark and light), following the system's light/dark setting, a colour picker for every token including the terminal palette, saved, exported and imported themes, interface and monospace fonts, interface size, spacing, corners, line and letter spacing, heavier text and custom CSS (`appearance_custom_css`). Stored per user (`/api/me/ui/appearance`). Administrators set the default theme (`appearance_default_theme`, or **Default for everyone**).
@@ -17,6 +17,17 @@
 - **Directory (LDAP) accounts could not unlock the screen**: the unlock now checks the password the account signs in with.
 - **The lock screen broke after its first use** (a missing helper made the lock screen throw), and reloading the page removed the lock.
 - Light themes no longer show a dark top bar, dark menus, toasts and sign-in card.
+
+## [13.6.0] - 2026-10-23
+
+### Added
+- **Folder tree in the log viewer.** *View: Folder tree* groups the logs under their **main folder** (`/var/log`, `/home/scripts` …) and its subfolders; every folder can be opened, closed and ticked to search all its logs. A new **Folder** filter (in both views) lists the main folders and their subfolders as a tree, so you can narrow the list to one folder and everything below it.
+- **Main folders** in *⚙ Log settings* (`main_folders`): everything under a main folder is grouped under it. The scan paths and the Git workspace server roots count as main folders too, and a main folder is also used for labels before the default patterns, so `/home/scripts/<service>/logs` is no longer read as operator `scripts`.
+- **Operators guessed from repeated words** (`guess_operators`, on by default). A word that repeats across service and folder names and is not the product name (the first word shared by several names) or an environment word (`qa`, `test`, `bkp` …) is an operator: `VideoX_NOVA`, `VideoX_NOVA2` and `INGEST_SFTP_novatv` give operators `nova` and `novatv`. Similar operators form one group (`nova` + `novatv`); the operator filter offers the group and each member. Guessed operators are marked with `≈` and a dashed border.
+- Each file shows whether it lives in a **log folder** (`/var/log`, `log`, `logs` …) or an **app folder** (scripts and application folders), and the API returns `main`, `place`, `op_group`, `op_guess` per file and `main_folders`.
+
+### Fixed
+- **Logs in `/var/log/<service>` seemed missing when a script folder had the same name.** Discovery did find them (`info.txt`, dated `info.txt.2026-10-22`, `workers.out.log` …), but the service filter listed `VideoXTractor_NOVA` (the log folder) and `VideoXtractor_NOVA` (the script folder) as two services that differ only in case, so picking the script folder showed no logs. Services are now compared without case: one entry shows the logs of both folders, each marked log folder or app folder, and the folder tree keeps them apart.
 
 ## [13.5.0] - 2026-10-23
 

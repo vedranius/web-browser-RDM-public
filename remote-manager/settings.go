@@ -42,12 +42,12 @@ var settingSpecs = []settingSpec{
 	{Key: "require_2fa", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "require_step_up", Default: "0", Kind: "bool"},
 	{Key: "step_up_minutes", Default: "10", Kind: "int", Min: 1, Max: 240},
-	// Screen lock (lock.go, v13.6)
+	// Screen lock (lock.go, v13.7)
 	{Key: "screen_lock_mode", Default: "server", Kind: "enum", Enum: []string{"browser", "remember", "server"}},
 	{Key: "screen_lock_max_minutes", Default: "0", Kind: "int", Min: 0, Max: 1440},
 	{Key: "screen_lock_pin", Default: "1", Kind: "bool"},
 	{Key: "screen_lock_max_failures", Default: "0", Kind: "int", Min: 0, Max: 100},
-	// Appearance (static/appearance.js, v13.6): the theme new users start with and whether
+	// Appearance (static/appearance.js, v13.7): the theme new users start with and whether
 	// users may add their own CSS to their own interface.
 	{Key: "appearance_default_theme", Default: "graphite", Kind: "string"},
 	{Key: "appearance_custom_css", Default: "1", Kind: "bool"},

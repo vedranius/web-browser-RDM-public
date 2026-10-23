@@ -404,7 +404,7 @@ Medium output (v12.6.5): the activity log and live output show what Docker, pip,
 
 The Medium native preview (v12.6.0) is read-only: it lists application directories over SFTP and runs `sha256sum` with NUL-separated, stdin-fed paths; it writes nothing and runs no build or `post_deploy` command. It uses only the requesting user's own SSH connections (`loadConnection` owner and protocol checks) and Git sources; links between `servers.yaml` servers and connections are per user and audited. Its `/__wrm_plan` bridge endpoint requires the same per-process key as the rest of the bridge. Repository addresses are shown with URL credentials removed.
 
-## Screen lock and appearance (v13.6.0)
+## Screen lock and appearance (v13.7.0)
 
 - The screen lock is enforced by the server in the default `screen_lock_mode=server`: a locked sign-in session gets `423 Locked` from every API endpoint except sign-out, the lock state and the unlock itself, so reloading the page or using the browser's developer tools does not get past it. The lock does not end anything that is running (terminals, tunnels, AI and MCP sessions).
 - Unlocking checks the password the account signs in with (local or LDAP) or a personal PIN (bcrypt, 4–12 digits, only for unlocking, never for signing in; `screen_lock_pin`, off at the Enterprise level). Five attempts per minute per account; `screen_lock_max_failures` ends the browser session. Setting a PIN needs the account password (or, for identity-provider-only accounts, a sign-in within the step-up window). Lock, unlock, failures, PIN changes and the sign-out are audited (`auth.locked`, `auth.unlocked`, `auth.unlock_failed`, `auth.lock_pin_set`, `auth.lock_pin_removed`, `auth.lock_signed_out`).

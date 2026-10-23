@@ -18,10 +18,10 @@ import (
 // still passes the normal authentication and CSRF checks. Unlocking asks for
 // the signed-in account's password; the attempt is audited either way.
 //
-// v13.6: the lock is remembered per sign-in session (auth_sessions.locked_at), so reloading
+// v13.7: the lock is remembered per sign-in session (auth_sessions.locked_at), so reloading
 // the page or opening a new tab shows the lock screen again. screen_lock_mode decides how
 // strict it is:
-//   - browser:  only the page covers itself (the behaviour before v13.6);
+//   - browser:  only the page covers itself (the behaviour before v13.7);
 //   - remember: the server remembers the lock, but the API keeps answering;
 //   - server:   while locked, this sign-in session can only reach the endpoints in
 //               screenLockAllowedPaths (423 Locked otherwise). Terminals, tunnels, AI runs

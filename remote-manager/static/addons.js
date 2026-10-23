@@ -295,7 +295,7 @@ Object.assign(LANGS.hr, {
   }
 
   // ── themes ───────────────────────────────────────────
-  // v13.6: an addon theme is no longer applied to everyone. Enabled addons offer their themes
+  // v13.7: an addon theme is no longer applied to everyone. Enabled addons offer their themes
   // (ui.themes, or the older single ui.theme stylesheet) in Settings → Appearance, and each
   // user picks one there (static/appearance.js applies it).
   function applyThemes() {

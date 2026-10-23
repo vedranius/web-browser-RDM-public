@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// v13.6: the screen lock is remembered per sign-in session and, in the strict mode, the
+// v13.7: the screen lock is remembered per sign-in session and, in the strict mode, the
 // server refuses that session's requests until the unlock.
 func TestV136ScreenLockServer(t *testing.T) {
 	srv := newTestServer(t)

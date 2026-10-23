@@ -33,7 +33,7 @@ type authSession struct {
 	ID         int
 	UserID     int
 	Restricted string
-	LockedAt   string // screen lock (v13.6): set while this sign-in session is locked
+	LockedAt   string // screen lock (v13.7): set while this sign-in session is locked
 }
 
 func tokenHash(raw string) string { return "h:" + sha256Hex(raw) }

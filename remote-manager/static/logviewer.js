@@ -103,6 +103,21 @@ Object.assign(LANGS.en, {
   lv_bad_date: 'Use the date format',
   lv_no_discovery: 'No logs found yet for this server. Click Find logs.',
   lv_keys: 'Keys: / find · n / N next or previous match · g go to line · f follow · w wrap',
+  lv_folder: 'Folder',
+  lv_all_folders: 'All folders',
+  lv_view: 'View',
+  lv_view_list: 'List',
+  lv_view_tree: 'Folder tree',
+  lv_place_logs: 'log folder',
+  lv_place_app: 'app folder',
+  lv_place_logs_d: 'Log folder: /var/log or a folder named log, logs, …',
+  lv_place_app_d: 'Application or script folder (not a log folder)',
+  lv_op_guess: 'Operator guessed from words that repeat in folder and service names',
+  lv_main_folders: 'Main folders for the folder tree (one per line, e.g. /home/scripts)',
+  lv_main_folders_d: 'Everything under a main folder is grouped under it in the folder tree and the Folder filter. The scan paths and the Git workspace server roots are main folders too.',
+  lv_guess_operators: 'Guess operators from words that repeat in folder and service names (nova, novatv → one operator group)',
+  lv_tree_journal: 'systemd journal',
+  lv_select_folder: 'Select all shown logs in this folder',
 });
 Object.assign(LANGS.hr, {
   lv_files: 'Log fileovi',
@@ -203,13 +218,29 @@ Object.assign(LANGS.hr, {
   lv_bad_date: 'Koristite format datuma',
   lv_no_discovery: 'Za ovaj server još nema pronađenih logova. Kliknite Pronađi logove.',
   lv_keys: 'Tipke: / traži · n / N sljedeći ili prethodni pogodak · g idi na liniju · f prati · w prelamanje',
+  lv_folder: 'Folder',
+  lv_all_folders: 'Svi folderi',
+  lv_view: 'Prikaz',
+  lv_view_list: 'Popis',
+  lv_view_tree: 'Stablo foldera',
+  lv_place_logs: 'log folder',
+  lv_place_app: 'folder aplikacije',
+  lv_place_logs_d: 'Log folder: /var/log ili folder imena log, logs, …',
+  lv_place_app_d: 'Folder aplikacije ili skripti (nije log folder)',
+  lv_op_guess: 'Operater prepoznat iz riječi koje se ponavljaju u imenima foldera i servisa',
+  lv_main_folders: 'Glavni folderi za stablo (jedan po liniji, npr. /home/skripte)',
+  lv_main_folders_d: 'Sve ispod glavnog foldera grupira se pod njim u stablu foldera i u filtru Folder. Folderi za pretragu i serverski rootovi Git workspacea su također glavni folderi.',
+  lv_guess_operators: 'Prepoznaj operatere iz riječi koje se ponavljaju u imenima foldera i servisa (nova, novatv → jedna grupa operatera)',
+  lv_tree_journal: 'systemd journal',
+  lv_select_folder: 'Označi sve prikazane logove u ovom folderu',
 });
 
 (function () {
   const $ = id => document.getElementById(id);
   const LEVELS = ['error', 'warn', 'info', 'debug', 'other'];
   const S = {
-    host: null, ctx: null, conn: 0, files: [], meta: {}, filter: '', service: '', operator: '',
+    host: null, ctx: null, conn: 0, files: [], meta: {}, filter: '', service: '', operator: '', folder: '', mains: [],
+    view: lsGet('wrm_lv_view', 'list'), tree: {},
     sort: lsGet('wrm_lv_sort', 'modified_desc'), selected: new Set(), tabs: [], active: 'search', seq: 0,
     listW: +lsGet('wrm_lv_listw', '340') || 340,
     search: {q: '', regex: false, case: false, word: false, context: 0, from: '', to: '', scope: 'shown', hits: null, running: false, desc: true, file: '', levels: new Set(LEVELS), ms: 0, truncated: false, ctrl: null, error: ''},
@@ -239,6 +270,16 @@ Object.assign(LANGS.hr, {
 #lv .lv-file .lv-fp{font-size:11px;color:var(--text3);overflow-wrap:anywhere}
 #lv .lv-pill{display:inline-block;font-size:10px;padding:0 5px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);margin-right:3px}
 #lv .lv-pill.op{border-color:var(--purple)}
+#lv .lv-pill.op.guess{border-style:dashed}
+#lv .lv-pill.pl-logs{border-color:var(--green)}
+#lv .lv-pill.pl-app{border-color:var(--yellow)}
+#lv .lv-tdir{display:flex;gap:6px;align-items:center;padding:5px 8px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--bg2);font-size:12px}
+#lv .lv-tdir:hover{background:var(--bg3)}
+#lv .lv-tdir.main{font-weight:700;background:var(--bg3)}
+#lv .lv-tdir input{width:auto;flex:none;margin:0}
+#lv .lv-tdir .tw{flex:none;width:1em;color:var(--text3)}
+#lv .lv-tdir .tn{flex:1;min-width:0;overflow-wrap:anywhere}
+#lv .lv-tdir .tc{flex:none;font-size:11px;color:var(--text3)}
 #lv .lv-right{flex:1;min-width:0;display:flex;flex-direction:column}
 #lv .lv-tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--bg2);flex:none}
 #lv .lv-tab{padding:6px 10px;cursor:pointer;white-space:nowrap;border:0;background:none;color:var(--text2);border-bottom:2px solid transparent;display:flex;gap:6px;align-items:center;border-radius:0}
@@ -385,7 +426,7 @@ Object.assign(LANGS.hr, {
     const id = Number(ctx.server) || 0;
     if (id !== S.conn) {
       stopAll();
-      Object.assign(S, {conn: id, files: [], meta: {}, selected: new Set(), tabs: [], active: 'search', settings: null, tz: ''});
+      Object.assign(S, {conn: id, files: [], meta: {}, selected: new Set(), tabs: [], active: 'search', settings: null, tz: '', folder: '', mains: [], tree: {}});
       S.search.hits = null; S.search.error = '';
       if (id) await loadFiles(false);
     }
@@ -412,6 +453,7 @@ Object.assign(LANGS.hr, {
       const r = await api('GET', '/api/monitoring/logs?id=' + id);
       if (seq !== S.seq) return;
       S.files = (r.files || []).map(f => ({...f, root_path: r.roots?.[f.root]?.path || ''}));
+      S.mains = r.main_folders || [];
       S.meta = {method: r.method || '', at: r.discovered_at || '', discovered: !!r.discovered, warnings: r.warnings || [], incomplete: r.incomplete, services: r.services || []};
     } catch (e) {
       if (seq === S.seq) S.meta = {error: e.message};
@@ -432,9 +474,17 @@ Object.assign(LANGS.hr, {
       S.discovering = false; render();
     }
   }
+  // Operators: "g:<group>" picks a group of similar operators (nova, novatv),
+  // "o:<name>" one operator. Services are compared without case, so a script
+  // folder and a log folder of the same service end up together.
+  const opGroup = f => f.op_group || String(f.operator || '').toLowerCase();
+  const opOk = f => !S.operator || (S.operator.startsWith('g:') ? opGroup(f) === S.operator.slice(2)
+    : S.operator.startsWith('o:') ? String(f.operator || '').toLowerCase() === S.operator.slice(2) : f.operator === S.operator);
+  const mainOf = f => isJournal(f) ? 'journal' : (f.main || dir(f.path));
+  const inFolder = (f, p) => p === 'journal' ? isJournal(f) : !isJournal(f) && (dir(f.path) === p || f.path.startsWith(p.replace(/\/$/, '') + '/'));
   function shownFiles() {
     const q = S.filter.toLowerCase();
-    const list = S.files.filter(f => (!S.service || f.service === S.service) && (!S.operator || f.operator === S.operator) &&
+    const list = S.files.filter(f => (!S.service || String(f.service || '').toLowerCase() === S.service) && opOk(f) && (!S.folder || inFolder(f, S.folder)) &&
       (!q || [f.path, f.service, f.operator, f.unit].join(' ').toLowerCase().includes(q)));
     const by = S.sort, str = (a, b) => String(a || '￿').localeCompare(String(b || '￿'));
     list.sort((a, b) => by === 'modified_asc' ? (a.modified || 0) - (b.modified || 0)
@@ -453,8 +503,7 @@ Object.assign(LANGS.hr, {
     const focus = document.activeElement && S.host.contains(document.activeElement) ? {id: document.activeElement.id, pos: document.activeElement.selectionStart} : null;
     const listScroll = S.host.querySelector('.lv-files')?.scrollTop || 0;
     const shown = shownFiles();
-    const ops = [...new Set(S.files.map(f => f.operator).filter(Boolean))].sort();
-    const svcs = [...new Set(S.files.filter(f => !S.operator || f.operator === S.operator).map(f => f.service).filter(Boolean))].sort();
+    const opOpts = operatorOptions(), svcOpts = serviceOptions(), folderOpts = folderOptions();
     const meta = S.meta || {};
     const status = !S.conn ? t('mon_pick_server')
       : S.discovering ? '⏳ ' + t('mon_discovering')
@@ -474,15 +523,19 @@ ${(meta.warnings || []).length ? `<details class="hint-box warn"><summary>${esc(
   <div class="lv-list-head">
    <input id="lv-filter" type="search" placeholder="${esc(t('lv_filter'))}" value="${esc(S.filter)}" oninput="wrmLogViewer.set('filter',this.value)">
    <div class="lv-row">
-    <select aria-label="${esc(t('mon_operator'))}" onchange="wrmLogViewer.set('operator',this.value)">${opt('', t('lv_all_operators'), S.operator)}${ops.map(x => opt(x, x, S.operator)).join('')}</select>
-    <select aria-label="${esc(t('mon_service'))}" onchange="wrmLogViewer.set('service',this.value)">${opt('', t('lv_all_services'), S.service)}${svcs.map(x => opt(x, x, S.service)).join('')}</select>
+    <select id="lv-op" aria-label="${esc(t('mon_operator'))}" onchange="wrmLogViewer.set('operator',this.value)">${opt('', t('lv_all_operators'), S.operator)}${opOpts}</select>
+    <select id="lv-svc" aria-label="${esc(t('mon_service'))}" onchange="wrmLogViewer.set('service',this.value)">${opt('', t('lv_all_services'), S.service)}${svcOpts}</select>
+   </div>
+   <div class="lv-row">
+    <select id="lv-folder" aria-label="${esc(t('lv_folder'))}" onchange="wrmLogViewer.set('folder',this.value)">${opt('', t('lv_all_folders'), S.folder)}${folderOpts}</select>
    </div>
    <div class="lv-row">
     <select id="lv-sort" aria-label="${esc(t('lv_sort'))}" onchange="wrmLogViewer.set('sort',this.value)">${['modified_desc', 'modified_asc', 'name', 'size', 'service', 'operator', 'path'].map(k => opt(k, t('lv_sort') + ': ' + t('lv_sort_' + k), S.sort)).join('')}</select>
+    <select id="lv-view" aria-label="${esc(t('lv_view'))}" onchange="wrmLogViewer.set('view',this.value)">${opt('list', t('lv_view') + ': ' + t('lv_view_list'), S.view)}${opt('tree', t('lv_view') + ': ' + t('lv_view_tree'), S.view)}</select>
    </div>
    <div class="mon-sub">${shown.length} / ${S.files.length} · ${S.selected.size} ${esc(t('lv_selected'))} · <a href="#" onclick="wrmLogViewer.selectShown(true);return false">${esc(t('lv_select_all'))}</a> · <a href="#" onclick="wrmLogViewer.selectShown(false);return false">${esc(t('lv_select_none'))}</a></div>
   </div>
-  <div class="lv-files">${shown.slice(0, 3000).map(f => fileRow(f)).join('') || `<div class="lv-empty">${esc(t(S.conn ? (S.discovering ? 'mon_discovering' : 'lv_no_discovery') : 'mon_pick_server'))}</div>`}</div>
+  <div class="lv-files">${(S.view === 'tree' ? treeHtml(shown) : shown.slice(0, 3000).map(f => fileRow(f)).join('')) || `<div class="lv-empty">${esc(t(S.conn ? (S.discovering ? 'mon_discovering' : 'lv_no_discovery') : 'mon_pick_server'))}</div>`}</div>
  </div>
  <div class="lv-split" title="↔" onpointerdown="wrmLogViewer.resize(event)"></div>
  <div class="lv-right">
@@ -495,15 +548,109 @@ ${(meta.warnings || []).length ? `<details class="hint-box warn"><summary>${esc(
     window.wrmChat?.restoreLogAI();
     if (focus?.id && $(focus.id)) { $(focus.id).focus(); if (focus.pos != null) try { $(focus.id).setSelectionRange(focus.pos, focus.pos); } catch (_) {} }
   }
-  function fileRow(f) {
+  function fileRow(f, depth) {
     const open = S.tabs.find(x => x.file.path === f.path);
     const sel = S.selected.has(f.path);
-    return `<div class="lv-file${open && S.active === open.id ? ' on' : ''}" onclick="if(event.target.tagName!=='INPUT')wrmLogViewer.openFile(${JSON.stringify(f.path).replace(/"/g, '&quot;')})">
+    return `<div class="lv-file${open && S.active === open.id ? ' on' : ''}"${depth ? ` style="padding-left:${8 + depth * 14}px"` : ''} onclick="if(event.target.tagName!=='INPUT')wrmLogViewer.openFile(${JSON.stringify(f.path).replace(/"/g, '&quot;')})">
 <input type="checkbox" aria-label="${esc(f.path)}" ${sel ? 'checked' : ''} onchange="wrmLogViewer.select(${JSON.stringify(f.path).replace(/"/g, '&quot;')},this.checked)">
 <div style="min-width:0;flex:1"><div class="lv-fn">${esc(fileName(f))}</div>
-<div>${f.service ? `<span class="lv-pill">${esc(f.service)}</span>` : ''}${f.operator ? `<span class="lv-pill op">👤 ${esc(f.operator)}</span>` : ''}</div>
+<div>${f.service ? `<span class="lv-pill">${esc(f.service)}</span>` : ''}${f.operator ? `<span class="lv-pill op${f.op_guess ? ' guess' : ''}"${f.op_guess ? ` title="${esc(t('lv_op_guess'))}"` : ''}>👤 ${f.op_guess ? '≈ ' : ''}${esc(f.operator)}</span>` : ''}${f.place === 'logs' || f.place === 'app' ? `<span class="lv-pill pl-${f.place}" title="${esc(t('lv_place_' + f.place + '_d'))}">${f.place === 'logs' ? '🗒' : '📜'} ${esc(t('lv_place_' + f.place))}</span>` : ''}</div>
 <div class="lv-fp">${esc(isJournal(f) ? t('mon_journal') : dir(f.path))}</div>
 ${isJournal(f) ? '' : `<div class="lv-fp">${esc(fmtBytes(f.size || 0))} · ${esc(fmt(f.modified))}</div>`}</div></div>`;
+  }
+  function operatorOptions() {
+    const groups = new Map();
+    for (const f of S.files) {
+      if (!f.operator) continue;
+      const g = opGroup(f), m = String(f.operator).toLowerCase();
+      let x = groups.get(g);
+      if (!x) groups.set(g, x = {count: 0, members: new Map()});
+      x.count++; x.members.set(m, (x.members.get(m) || 0) + 1);
+    }
+    return [...groups.keys()].sort().map(g => {
+      const x = groups.get(g), members = [...x.members.keys()].sort();
+      return opt('g:' + g, `${g} (${x.count})${members.length > 1 ? ' · ' + members.join(', ') : ''}`, S.operator) +
+        (members.length > 1 ? members.map(m => opt('o:' + m, `\u00a0\u00a0↳ ${m} (${x.members.get(m)})`, S.operator)).join('') : '');
+    }).join('');
+  }
+  function serviceOptions() {
+    const by = new Map();
+    for (const f of S.files) {
+      if (!f.service || !opOk(f)) continue;
+      const k = String(f.service).toLowerCase();
+      let x = by.get(k);
+      if (!x) by.set(k, x = {count: 0, names: new Map()});
+      x.count++; x.names.set(f.service, (x.names.get(f.service) || 0) + 1);
+    }
+    return [...by.keys()].sort().map(k => {
+      const x = by.get(k), name = [...x.names.entries()].sort((a, b) => b[1] - a[1])[0][0];
+      return opt(k, `${name} (${x.count})`, S.service);
+    }).join('');
+  }
+  // buildTree groups files under their main folder, then their subfolders.
+  function buildTree(files) {
+    const roots = new Map();
+    const node = (p, name, main) => ({path: p, name, main, dirs: new Map(), files: [], count: 0});
+    for (const f of files) {
+      const m = mainOf(f);
+      let n = roots.get(m);
+      if (!n) roots.set(m, n = node(m, m === 'journal' ? t('lv_tree_journal') : m, m));
+      n.count++;
+      const d = isJournal(f) ? m : dir(f.path);
+      if (d !== m && d.startsWith(m.replace(/\/$/, '') + '/')) {
+        let p = m.replace(/\/$/, '');
+        for (const seg of d.slice(p.length + 1).split('/')) {
+          p += '/' + seg;
+          let c = n.dirs.get(seg);
+          if (!c) n.dirs.set(seg, c = node(p, seg, m));
+          c.count++; n = c;
+        }
+      }
+      n.files.push(f);
+    }
+    return [...roots.values()].sort((a, b) => a.main === 'journal' ? 1 : b.main === 'journal' ? -1 : a.path.localeCompare(b.path));
+  }
+  const byName = (a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'});
+  function folderOptions() {
+    const out = [];
+    const walk = (n, depth) => {
+      if (out.length > 1500) return;
+      out.push(opt(n.path, (depth ? '\u00a0\u00a0'.repeat(depth) + '└ ' : '') + n.name + ` (${n.count})`, S.folder));
+      [...n.dirs.values()].sort(byName).forEach(c => walk(c, depth + 1));
+    };
+    buildTree(S.files).forEach(n => walk(n, 0));
+    return out.join('');
+  }
+  const treeKey = n => n.main + '\u0000' + n.path;
+  function treeOpen(n, depth) { const v = S.tree[treeKey(n)]; return v != null ? v : depth === 0 || !!S.filter; }
+  function treeHtml(files) {
+    let rows = 0;
+    const q = v => JSON.stringify(v).replace(/"/g, '&quot;');
+    const walk = (n, depth) => {
+      if (rows > 3000) return '';
+      rows++;
+      const open = treeOpen(n, depth);
+      const inNode = [], gather = x => { inNode.push(...x.files); x.dirs.forEach(gather); };
+      gather(n);
+      const all = inNode.length > 0 && inNode.every(f => S.selected.has(f.path));
+      let h = `<div class="lv-tdir${depth ? '' : ' main'}" style="padding-left:${8 + depth * 14}px" role="button" aria-expanded="${open}" onclick="if(event.target.tagName!=='INPUT')wrmLogViewer.toggleDir(${q(n.main)},${q(n.path)},${depth})">
+<span class="tw">${open ? '▾' : '▸'}</span><input type="checkbox" aria-label="${esc(t('lv_select_folder'))}" title="${esc(t('lv_select_folder'))}" ${all ? 'checked' : ''} onchange="wrmLogViewer.selectDir(${q(n.main)},${q(n.path)},this.checked)">
+<span class="tn">${depth ? '📁' : '🗂'} ${esc(n.name)}</span><span class="tc">${n.count}</span></div>`;
+      if (!open) return h;
+      [...n.dirs.values()].sort(byName).forEach(c => { h += walk(c, depth + 1); });
+      n.files.forEach(f => { if (rows++ <= 3000) h += fileRow(f, depth + 1); });
+      return h;
+    };
+    return buildTree(files).map(n => walk(n, 0)).join('');
+  }
+  function toggleDir(main, p, depth) {
+    const n = {main, path: p};
+    S.tree[treeKey(n)] = !treeOpen(n, depth);
+    render();
+  }
+  function selectDir(main, p, on) {
+    shownFiles().filter(f => mainOf(f) === main && (p === main || inFolder(f, p))).forEach(f => on ? S.selected.add(f.path) : S.selected.delete(f.path));
+    render();
   }
   function tabButton(id, label, title) {
     return `<button role="tab" class="lv-tab${S.active === id ? ' on' : ''}" aria-selected="${S.active === id}" title="${esc(title || label)}" onclick="wrmLogViewer.activate('${id}')">${esc(label)}${id !== 'search' ? `<span class="x" role="button" aria-label="${esc(t('lv_close_tab'))}" onclick="event.stopPropagation();wrmLogViewer.closeTab('${id}')">✕</span>` : ''}</button>`;
@@ -512,6 +659,7 @@ ${isJournal(f) ? '' : `<div class="lv-fp">${esc(fmtBytes(f.size || 0))} · ${esc
     S[k] = v;
     if (k === 'operator') S.service = '';
     if (k === 'sort') lsSet('wrm_lv_sort', v);
+    if (k === 'view') lsSet('wrm_lv_view', v);
     render();
   }
   function select(p, on) { if (on) S.selected.add(p); else S.selected.delete(p); render(); }
@@ -876,6 +1024,7 @@ ${s.truncated ? `<div class="hint-box warn" style="margin:6px">${esc(t('lv_hits_
 <p class="mon-sub">${esc(t('lv_settings_hint'))}</p>${S.canEdit ? '' : `<div class="hint-box warn">${esc(t('lv_readonly'))}</div>`}
 <div class="lv-form">
  <div><label for="lv-s-scan_paths">${esc(t('lv_scan_paths'))}</label><textarea id="lv-s-scan_paths"${ro}>${lines(s.scan_paths)}</textarea><div class="d">${esc(t('lv_scan_paths_d'))}</div></div>
+ <div><label for="lv-s-main_folders">${esc(t('lv_main_folders'))}</label><textarea id="lv-s-main_folders"${ro}>${lines(s.main_folders)}</textarea><div class="d">${esc(t('lv_main_folders_d'))}</div></div>
  <div><label for="lv-s-exclude">${esc(t('lv_exclude'))}</label><textarea id="lv-s-exclude"${ro}>${lines(s.exclude)}</textarea><div class="d">${esc(t('lv_exclude_d'))}</div></div>
  <div class="wide"><label for="lv-s-patterns">${esc(t('lv_patterns'))}</label><textarea id="lv-s-patterns"${ro}>${lines(s.patterns)}</textarea><div class="d">${esc(t('lv_patterns_d'))}</div></div>
  <div><label for="lv-s-roots">${esc(t('lv_roots'))}</label><textarea id="lv-s-roots"${ro}>${esc((s.roots || []).map(x => [x.kind === 'journal' ? 'journal:' + x.unit : x.path, x.service, x.operator].join(' | ')).join('\n'))}</textarea></div>
@@ -883,7 +1032,7 @@ ${s.truncated ? `<div class="hint-box warn" style="margin:6px">${esc(t('lv_hits_
  ${num('max_depth', 'lv_max_depth', 1, 20)}${num('max_files', 'lv_max_files', 100, 50000)}${num('max_age_days', 'lv_max_age', 0, 3650)}${num('time_budget', 'lv_time_budget', 5, 300)}
  <div><label for="lv-s-method">${esc(t('lv_method'))}</label><select id="lv-s-method"${ro}>${['auto', 'ssh', 'sftp'].map(k => opt(k, t('lv_method_' + k), s.method || 'auto')).join('')}</select></div>
  <div><label for="lv-s-timezone">${esc(t('lv_timezone'))}</label><input id="lv-s-timezone" list="lv-tz-list" value="${esc(s.timezone || '')}" placeholder="${esc(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')}"${ro}></div>
- <div class="wide lv-checks">${check('rotated', 'lv_rotated')}${check('compressed', 'lv_compressed')}${check('skip_empty', 'lv_skip_empty')}${check('journal', 'lv_journal')}${check('systemd', 'lv_systemd')}${check('docker', 'lv_docker')}${check('supervisor', 'lv_supervisor')}</div>
+ <div class="wide lv-checks">${check('guess_operators', 'lv_guess_operators')}${check('rotated', 'lv_rotated')}${check('compressed', 'lv_compressed')}${check('skip_empty', 'lv_skip_empty')}${check('journal', 'lv_journal')}${check('systemd', 'lv_systemd')}${check('docker', 'lv_docker')}${check('supervisor', 'lv_supervisor')}</div>
 </div>
 <div class="modal-footer">${S.canEdit ? `<button class="btn-sec" onclick="wrmLogViewer.settingsDefaults()">${esc(t('lv_defaults'))}</button><button class="btn-sec" onclick="wrmLogViewer.saveSettings(false)">${esc(t('save'))}</button><button onclick="wrmLogViewer.saveSettings(true)">${esc(t('lv_save_find'))}</button>` : ''}</div></div>`;
     document.body.appendChild(el);
@@ -900,12 +1049,12 @@ ${s.truncated ? `<div class="hint-box warn" style="margin:6px">${esc(t('lv_hits_
     const v = k => $('lv-s-' + k).value;
     const list = k => v(k).split('\n').map(x => x.trim()).filter(Boolean);
     const body = Object.assign({}, S.settings, {
-      scan_paths: list('scan_paths'), exclude: list('exclude'), patterns: list('patterns'), extra: list('extra'),
+      scan_paths: list('scan_paths'), main_folders: list('main_folders'), exclude: list('exclude'), patterns: list('patterns'), extra: list('extra'),
       roots: list('roots').map(x => { const [p, service = '', operator = ''] = x.split('|').map(y => y.trim()); return p.startsWith('journal:') ? {kind: 'journal', unit: p.slice(8), path: p, service, operator} : {path: p, service, operator}; }),
       max_depth: +v('max_depth'), max_files: +v('max_files'), max_age_days: +v('max_age_days'), time_budget: +v('time_budget'),
       method: v('method'), timezone: v('timezone').trim(),
     });
-    for (const k of ['rotated', 'compressed', 'skip_empty', 'journal', 'systemd', 'docker', 'supervisor']) body[k] = $('lv-s-' + k).checked;
+    for (const k of ['guess_operators', 'rotated', 'compressed', 'skip_empty', 'journal', 'systemd', 'docker', 'supervisor']) body[k] = $('lv-s-' + k).checked;
     try {
       const r = await api('PUT', '/api/monitoring/logs/settings?id=' + S.conn, body);
       S.settings = r.settings || body; S.tz = S.settings.timezone || '';
@@ -932,7 +1081,7 @@ ${s.truncated ? `<div class="hint-box warn" style="margin:6px">${esc(t('lv_hits_
   }
   function refreshTimes() { if (S.host?.isConnected) render(); }
 
-  window.wrmLogViewer = {mount, render, discover, set, select, selectShown, setServer, resize, activate, openFile, openHit, closeTab,
+  window.wrmLogViewer = {mount, render, discover, set, select, selectShown, toggleDir, selectDir, setServer, resize, activate, openFile, openHit, closeTab,
     search, stopSearch, searchSet, searchLevel, setTZ, quickRange, zoom,
     tabSet, tabLevel, jump, pickLine, gotoLine, pref, copy, download, terminal, older: () => cur() && older(cur()), follow: () => cur() && toggleFollow(cur()),
     openSettings, saveSettings, settingsDefaults, askAI, refreshTimes, stopAll,

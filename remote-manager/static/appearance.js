@@ -1,4 +1,4 @@
-// Appearance (v13.6): themes, a per-user theme editor and accessibility options.
+// Appearance (v13.7): themes, a per-user theme editor and accessibility options.
 //
 // Every colour of the interface is a CSS custom property on :root (index.html). A theme is a
 // set of those tokens plus a terminal palette; this file applies the chosen theme, the user's
@@ -536,7 +536,7 @@ Object.assign(LANGS.hr, {
         const d = await r.json();
         if (d && d.value) prefs = Object.assign({}, DEFAULTS, d.value);
         else if (typeof settings !== 'undefined' && /^#[0-9a-f]{6}$/i.test(settings.accent || '') && settings.accent.toLowerCase() !== '#4f8cff' && !(prefs.overrides || {}).accent) {
-          // The accent colour of Settings → General before v13.6 becomes an override once.
+          // The accent colour of Settings → General before v13.7 becomes an override once.
           prefs.overrides = Object.assign({}, prefs.overrides, {accent: settings.accent});
         }
       }

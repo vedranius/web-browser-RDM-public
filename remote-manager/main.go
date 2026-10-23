@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v13.6.0"
+var AppVersion = "v13.7.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -1123,7 +1123,7 @@ func initDB() {
 	db.Exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT ''`)
 	db.Exec(`ALTER TABLE users ADD COLUMN break_glass INTEGER NOT NULL DEFAULT 0`)
 	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN step_up_at TEXT NOT NULL DEFAULT ''`)
-	// v13.6: screen lock state per sign-in session and an optional unlock PIN per user.
+	// v13.7: screen lock state per sign-in session and an optional unlock PIN per user.
 	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN locked_at TEXT NOT NULL DEFAULT ''`)
 	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN lock_failures INTEGER NOT NULL DEFAULT 0`)
 	db.Exec(`ALTER TABLE users ADD COLUMN lock_pin_hash TEXT NOT NULL DEFAULT ''`)

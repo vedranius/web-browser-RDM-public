@@ -665,7 +665,7 @@ select.setting-select { background: var(--bg3); border: 1px solid var(--border2)
   --red:     #ef4444;
   --yellow:  #f59e0b;
   --purple:  #a78bfa;
-  /* v13.6 theme tokens (static/appearance.js sets them per theme) */
+  /* v13.7 theme tokens (static/appearance.js sets them per theme) */
   --bg0:     #0b0d12;
   --fg-rgb:  255,255,255;
   --muted-rgb: 148,163,184;
@@ -1654,7 +1654,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 @media (max-width: 600px) { .sso-rule { grid-template-columns: 1fr 1fr; } .sso-rule .sso-del { justify-self: end; } }
 .team-member-row label { white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; text-transform: none; letter-spacing: normal; font-size: 13px; font-weight: 400; color: var(--text); }
 .team-member-row label.muted-text { color: var(--text2); }
-/* ══ v13.6 Appearance: theme cards, token editor, accessibility switches ══ */
+/* ══ v13.7 Appearance: theme cards, token editor, accessibility switches ══ */
 .ap-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 16px; align-items: start; }
 .ap-preview { position: sticky; top: 0; }
 .ap-pv { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; font-size: 12.5px; line-height: 1.5; }
@@ -16224,7 +16224,7 @@ function loadSettings() {
 }
 
 function applyAccent() {
-  // v13.6: the accent is part of the theme (static/appearance.js).
+  // v13.7: the accent is part of the theme (static/appearance.js).
   if (window.wrmAppearance) return;
   const hex = settings.accent || '#4f8cff';
   const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
