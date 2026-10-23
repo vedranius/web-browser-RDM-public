@@ -328,7 +328,7 @@ Object.assign(LANGS.hr, {
   p_ai_show_thinking: 'Prikaži razmišljanje asistenta', p_ai_show_thinking_d: 'Modele koji to podržavaju (Claude 4.6 i noviji, modeli s razmišljanjem na OpenAI-kompatibilnim serverima) traži sažetak razmišljanja i prikazuje ga uživo u radnom logu chata.',
   p_ai_auto_titles: 'Generiraj naslove sesija', p_ai_auto_titles_d: 'Nakon prvog odgovora jedan kratki dodatni zahtjev modelu napiše naslov chata (inače se koristi prvo pitanje). Naslove možete preimenovati.',
 });
-// v13.6.0: personal AI settings (Settings → AI assistant) and saved sessions
+// v13.7.0: personal AI settings (Settings → AI assistant) and saved sessions
 Object.assign(LANGS.en, {
   aip_title: 'My AI settings', aip_d: 'These settings are yours alone: every WRM user chooses their own defaults, their own provider accounts and their own AI apps.',
   aip_engine: 'Default engine', aip_provider: 'Default provider', aip_provider_first: 'The first one offered', aip_model: 'Default model', aip_model_prov: 'The provider\'s default',

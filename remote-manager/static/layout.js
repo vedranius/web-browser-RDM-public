@@ -48,7 +48,7 @@
   const P = {
     conn: {ico: '🖥', key: 'pn_conn', el: 'pnl-conn'},
     sess: {ico: '🗂', key: 'sessions', el: 'pnl-sess'},
-    // v13.6.0: every AI session of the user (static/aisessions.js)
+    // v13.7.0: every AI session of the user (static/aisessions.js)
     aisess: {ico: '🧠', key: 'aiss_panel', el: 'pnl-aisess', avail: () => typeof currentUser !== 'undefined' && !!currentUser, shown: () => { if (window.wrmAISessions) wrmAISessions.shown(); }},
     snip: {ico: '⚡', key: 'snippets', el: 'pnl-snip', avail: () => typeof currentUser !== 'undefined' && !!currentUser, shown: () => { if (typeof renderSnippets === 'function') renderSnippets(); }},
     ai: {ico: '🤖', key: 'rp_ai', el: 'rp-ai', avail: () => !!(window.wrmMCP && wrmMCP.dockAvailable && wrmMCP.dockAvailable()), badge: 'rp-ai-badge', auto: true},

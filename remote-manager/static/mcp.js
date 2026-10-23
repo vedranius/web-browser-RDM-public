@@ -228,7 +228,7 @@ Object.assign(LANGS.hr, {
   mcp_valid_for: 'Vrijedi', mcp_unit_hours: 'sati', mcp_unit_days: 'dana', mcp_max_days: 'najviše {n} dana', mcpw_hours_d: 'Kad token istekne, aplikacija gubi pristup dok ne stvorite novi. Možete ga opozvati bilo kada u nastavku. Najdulje trajanje postavlja administrator (Admin panel → AI veze).',
 });
 
-// v13.6.0: an approval given after the AI stopped waiting runs at once (ai_mcp_later_approval)
+// v13.7.0: an approval given after the AI stopped waiting runs at once (ai_mcp_later_approval)
 Object.assign(LANGS.en, {
   mcp_w_later_run: 'Not approved in time, or the app closed the question: the AI no longer waits, but you can still approve it here. WRM then runs it at once, shows the output here and gives it to the AI when it asks again.',
   mcp_ap_later_run: 'Not approved in time, or the app closed the question. Approve it and WRM runs exactly this at once (within an hour); the AI gets the output when it repeats the call.',

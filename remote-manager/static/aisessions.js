@@ -1,4 +1,4 @@
-// WRM PRO AI sessions (v13.6.0).
+// WRM PRO AI sessions (v13.7.0).
 // One panel lists every AI session of the signed-in user, next to the saved Sessions: the
 // assistant in a terminal, the log and file assistants, OpenCode agents and AI apps over MCP.
 // A session can be searched and filtered, opened (transcript; the live view while it runs),

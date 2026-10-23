@@ -1,4 +1,4 @@
-## [13.6.0] - 2026-10-23
+## [13.7.0] - 2026-10-23
 
 ### Added
 - **AI sessions view** (🧠 *AI sessions* panel next to *Sessions*, `static/aisessions.js`, `ai_sessions_view.go`): every AI session of the signed-in user, from the terminal assistant, the log and file assistants, OpenCode and AI apps over MCP. Search (title, server, host, model or app, and the text of questions, answers and tool calls), filter (`kind`: assistant, logs, file, opencode, mcp, saved, live), paging, transcript, *Go to the chat* for a running assistant, *Open live view* for a running AI app, rename, export and *Continue*. `GET /api/ai/sessions?view=all&kind=&q=&conn_id=&before=&limit=`.
@@ -17,6 +17,17 @@
 - A decision on a request that no longer waits answers `409` with `decided` (`outcome`, `by`, `via`, `at`) and the UI says who decided it and where, instead of "the approval is no longer pending".
 - 🤖 menu approval cards are rebuilt when a request becomes "kept for later" (the edit button is gone, as edits are ignored then); approval toasts close once the request is decided.
 - AI work log: the thinking line kept only its last 600 characters, so its beginning vanished while it filled; it now keeps the whole text in a scrolling box. An empty work log is removed instead of left above the question, and chat items no longer shrink in the scrolling column.
+
+## [13.6.0] - 2026-10-23
+
+### Added
+- **Folder tree in the log viewer.** *View: Folder tree* groups the logs under their **main folder** (`/var/log`, `/home/scripts` …) and its subfolders; every folder can be opened, closed and ticked to search all its logs. A new **Folder** filter (in both views) lists the main folders and their subfolders as a tree, so you can narrow the list to one folder and everything below it.
+- **Main folders** in *⚙ Log settings* (`main_folders`): everything under a main folder is grouped under it. The scan paths and the Git workspace server roots count as main folders too, and a main folder is also used for labels before the default patterns, so `/home/scripts/<service>/logs` is no longer read as operator `scripts`.
+- **Operators guessed from repeated words** (`guess_operators`, on by default). A word that repeats across service and folder names and is not the product name (the first word shared by several names) or an environment word (`qa`, `test`, `bkp` …) is an operator: `VideoX_NOVA`, `VideoX_NOVA2` and `INGEST_SFTP_novatv` give operators `nova` and `novatv`. Similar operators form one group (`nova` + `novatv`); the operator filter offers the group and each member. Guessed operators are marked with `≈` and a dashed border.
+- Each file shows whether it lives in a **log folder** (`/var/log`, `log`, `logs` …) or an **app folder** (scripts and application folders), and the API returns `main`, `place`, `op_group`, `op_guess` per file and `main_folders`.
+
+### Fixed
+- **Logs in `/var/log/<service>` seemed missing when a script folder had the same name.** Discovery did find them (`info.txt`, dated `info.txt.2026-10-22`, `workers.out.log` …), but the service filter listed `VideoXTractor_NOVA` (the log folder) and `VideoXtractor_NOVA` (the script folder) as two services that differ only in case, so picking the script folder showed no logs. Services are now compared without case: one entry shows the logs of both folders, each marked log folder or app folder, and the folder tree keeps them apart.
 
 ## [13.5.0] - 2026-10-23
 
