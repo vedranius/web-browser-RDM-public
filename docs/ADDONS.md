@@ -108,7 +108,7 @@ WRM → panel:
 
 | Message | Meaning |
 |---|---|
-| `wrm:context` | `{v, user: {id, name}, lang, theme: {"--bg": …}, addon: {id, key, version, instance, instanceName}, config: {…stored values…}, features: {store, notify, http, jobs: false, history: false, visibility: true}, http: {origins, approved, secrets: {name: true if a value is set}}, size: {w, h}, visible}` |
+| `wrm:context` | `{v, user: {id, name}, lang, theme: {"--bg": …}, addon: {id, key, version, instance, instanceName}, config: {…stored values…}, features: {store, notify, http, jobs: false, history: false, visibility: true}, http: {origins, approved, ready: {secret name: true if a value is set}}, size: {w, h}, visible}` |
 | `wrm:theme` | `{theme}` after the user switched the theme |
 | `wrm:visibility` | `{visible}`: the window was minimized or restored, or the browser tab hidden. **Stop polling and timers while hidden.** |
 | `wrm:store` | the answer to a store request: `{id, key, value}`, or `{id, key, error, code}` |
@@ -159,7 +159,7 @@ How WRM sends it:
 - Text answers (`text/*`, JSON, XML, JavaScript) come back as text, anything else as base64.
 - Every request is logged (method, origin, path, status, size, time, code; never the secret or the body); the window's **⚠** diagnostics list the recent ones.
 
-**Secrets** are entered in WRM, never in the addon: *Settings → Addons → Instances → 🔑 Secrets*. The value for a shared instance is set by an administrator, for a private instance by its owner; in a shared instance every user may add their **own** value, which replaces it for them. Values are stored encrypted, up to 4 KB, without line breaks. The panel names a secret in `wrm:http` and only learns from `wrm:context` whether a value is set. Never put tokens, passwords or internal host names in the ZIP.
+**Secrets** are entered in WRM, never in the addon: *Settings → Addons → Instances → 🔑 Secrets*. The value for a shared instance is set by an administrator, for a private instance by its owner; in a shared instance every user may add their **own** value, which replaces it for them. Values are stored encrypted, up to 4 KB, without line breaks. The panel names a secret in `wrm:http` and only learns from `wrm:context` (`http.ready`) whether a value is set. Never put tokens, passwords or internal host names in the ZIP.
 
 The policy `addon_http` (`off`, `admins`, `all`) decides who may use addons with web access at all.
 

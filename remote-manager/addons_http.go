@@ -885,6 +885,8 @@ func addonTextual(ct string) bool {
 		strings.Contains(ct, "javascript") || strings.Contains(ct, "csv") || strings.Contains(ct, "yaml") || ct == ""
 }
 
+var addonHTTPURLShape = regexp.MustCompile(`(?i)^https?://([a-z0-9.\-]+|\[[0-9a-f:.]+\])(:[0-9]{1,5})?([/?][^\s#]*)?$`)
+
 // addonHTTPDo performs a validated request.
 func addonHTTPDo(ctx context.Context, rec addonRecord, grants map[string]addonHTTPGrant, req addonHTTPRequest, u *url.URL, origin string, body []byte, auth func(*http.Request)) (addonHTTPResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, addonHTTPTimeout)
@@ -893,7 +895,13 @@ func addonHTTPDo(ctx context.Context, rec addonRecord, grants map[string]addonHT
 	if len(body) > 0 {
 		rd = bytes.NewReader(body)
 	}
-	up, err := http.NewRequestWithContext(ctx, req.Method, u.String(), rd)
+	// The URL passed addonHTTPCheckURL (listed origin, approved, allowed path); its
+	// final form must still be a plain absolute URL without user info or whitespace.
+	target := u.String()
+	if !addonHTTPURLShape.MatchString(target) {
+		return addonHTTPResult{}, addonErrf("E_HTTP_REQUEST", "url must be an absolute http(s) URL")
+	}
+	up, err := http.NewRequestWithContext(ctx, req.Method, target, rd)
 	if err != nil {
 		return addonHTTPResult{}, addonErrf("E_HTTP_REQUEST", "Invalid request: %v", err)
 	}

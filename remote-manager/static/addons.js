@@ -744,13 +744,15 @@ Object.assign(LANGS.hr, {
     }
     let http = null;
     if (hasCap(a, 'http') && a.http) {
-      const secrets = {};
+      // Only whether each named value is set; the values never leave the server.
+      const ready = {};
       if ((a.secrets || []).length) {
         try {
-          for (const x of (await api('GET', apiBase(a) + '/instances/' + st.inst.id + '/secrets')).secrets || []) secrets[x.name] = !!(x.instance_set || x.own_set);
+          const states = (await api('GET', apiBase(a) + '/instances/' + st.inst.id + '/secrets')).secrets || [];
+          for (const x of states) ready[x.name] = !!(x.instance_set || x.own_set);
         } catch (_) {}
       }
-      http = {origins: a.http.origins || [], approved: !a.http_waiting, secrets};
+      http = {origins: a.http.origins || [], approved: !a.http_waiting, ready};
     }
     const wc = $('wc-' + st.wo.id);
     post(st, {type: 'wrm:context', user: {id: me.id || 0, name: me.display_name || ''},
@@ -1510,7 +1512,7 @@ Object.assign(LANGS.hr, {
       '- The panel is HTML in an iframe with sandbox="allow-scripts", an opaque origin and this CSP: default-src \'none\'; script-src \'self\' plus the hash of each inline <script>; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob:; connect-src \'none\'. So: no fetch/XHR/WebSocket, no inline event handlers (onclick="…"), no eval, no remote scripts or fonts; put JS in <script> blocks or files of the zip and use addEventListener.',
       '- Talk to WRM only with window.parent.postMessage(msg, "*"); every message carries v: 2. Listen with window.addEventListener("message", e => …) and check e.data.type.',
       '- On load send {v:2, type:"wrm:ready"} (within 5 s) and then {v:2, type:"wrm:heartbeat"} every 15 s, or WRM shows a "not responding" banner.',
-      '- WRM answers wrm:ready with {type:"wrm:context", v:2, user:{id,name}, lang, theme:{"--bg":…}, addon:{id, key, version, instance, instanceName}, config:{…stored values…}, features:{store, notify, http, visibility:true}, http:{origins, approved, secrets:{name: true if a value is set}}, size:{w,h}, visible}. Ask again with {v:2, type:"wrm:context"}.',
+      '- WRM answers wrm:ready with {type:"wrm:context", v:2, user:{id,name}, lang, theme:{"--bg":…}, addon:{id, key, version, instance, instanceName}, config:{…stored values…}, features:{store, notify, http, visibility:true}, http:{origins, approved, ready:{secret name: true if a value is set}}, size:{w,h}, visible}. Ask again with {v:2, type:"wrm:context"}.',
       '- WRM also sends {type:"wrm:theme", theme} when the user switches theme, {type:"wrm:visibility", visible} when the window is minimized or restored (stop polling and timers while hidden), and {type:"wrm:fatal", code, message} before it closes the panel.',
       '- store capability: {v:2, type:"wrm:store.get", id, key} and {v:2, type:"wrm:store.set", id, key, value} (any JSON, 32 KB per value, quotaKb per instance). The answer is {type:"wrm:store", id, key, value} or with error and code (E_LIMIT_QUOTA, E_LIMIT_SIZE, E_STORE_KEY, E_STORE_READONLY). Keys: 1-64 letters, digits, dot, dash, underscore, not starting with wrm.',
       '- notify capability: {v:2, type:"wrm:notify", text, level:"info"|"success"|"warn"|"error"}; plain text, 200 characters, at most 5 a minute, repeats within 5 minutes are dropped.',

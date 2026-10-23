@@ -8,7 +8,7 @@
 - **Rate limits and coalescing** per instance: 120 requests a minute and 20 at once (`E_LIMIT_RATE`); identical `GET`/`HEAD` requests within 2 seconds share one answer.
 - **Request log** (`addon_http_log`, 20000 rows kept): method, origin, path, status, size, time and code, never the secret or the body; `GET /api/addons/{key}/instances/{iid}/http/log` and *Recent web requests* in the window's diagnostics.
 - Policy `addon_http` (`off`, `admins`, `all`; default `all`): who may use addons with web access (`E_HTTP_OFF`).
-- `wrm:context` carries `features.http` and `http: {origins, approved, secrets}`; the *AI addon* prompt describes the http capability and its error codes.
+- `wrm:context` carries `features.http` and `http: {origins, approved, ready}` (`ready` says which secrets have a value); the *AI addon* prompt describes the http capability and its error codes.
 
 ## [13.10.0] - 2026-10-23
 
