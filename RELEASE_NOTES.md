@@ -1,17 +1,43 @@
-## Web Remote Manager PRO v13.6.0 - Log folders, a folder tree and smarter operators
+## Web Remote Manager PRO v13.7.0 - Themes, accessibility and a real screen lock
 
 ### Added
+
+- **Settings → Appearance**: eleven themes (dark, OLED, Fjord, Solar, Forest, Ember, light Daylight, Paper, Solar light, high contrast dark and light), *follow the system light/dark*, a colour picker for every colour including the terminal, your own saved themes with export and import, fonts, interface size, spacing, corners and custom CSS. Your choice follows you to every browser.
+- **Accessibility**: palettes for deuteranopia, protanopia, tritanopia and achromatopsia (also in terminals), signs and shapes so nothing relies on colour alone, more contrast, terminal minimum contrast (WCAG AA/AAA), reduced motion and transparency, a strong focus outline.
+- **Themes from addons** are offered in Appearance and applied only for the users who choose them; administrators can make any theme the default.
+- **Settings → Security → Screen lock**: **Lock now**, idle time with a warning, lock when WRM is hidden, when the computer locks or sleeps, on every start, a keyboard shortcut, how the lock screen looks, and notifications held until the unlock. Everything keeps running in the background.
+- **Unlock PIN** and an optional sign-out after wrong attempts.
+
+### Changed
+
+- **The lock is kept by the server**: a reload or a new tab stays locked, and a locked browser session cannot reach WRM data until it is unlocked (`screen_lock_mode`, default `server`).
+- Addon themes are no longer applied to everyone; the accent colour is part of the theme.
+
+### Fixed
+
+- Directory (LDAP) accounts can unlock the screen.
+- The lock screen no longer breaks after its first use.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. Additive migration only: new columns `locked_at` and `lock_failures` in `auth_sessions` and `lock_pin_hash` in `users`. New settings `screen_lock_mode`, `screen_lock_max_minutes`, `screen_lock_pin`, `screen_lock_max_failures`, `appearance_default_theme` and `appearance_custom_css`. Users who used an addon theme pick it again in *Settings → Appearance*.
+
+[Download v13.7.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.7.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.6.0 - Log folders, a folder tree and smarter operators
+
+#### Added
 
 - **Folder tree** in *Monitoring → Logs* (*View: Folder tree*): logs grouped under their main folder (`/var/log`, `/home/scripts` …) and subfolders, each folder can be opened and ticked as a whole. A **Folder** filter narrows either view to one folder and everything below it.
 - **Main folders** in *⚙ Log settings*: everything below one is grouped under it (scan paths and Git workspace server roots count too).
 - **Operators from repeated words**: `nova`, `NOVA2` and `novatv` in folder and service names are recognised and linked into one operator group; the filter offers the group and each operator. Guesses are marked `≈` and can be turned off in *Log settings*.
 - Every log shows whether it sits in a **log folder** or an **app folder**.
 
-### Fixed
+#### Fixed
 
 - Logs in `/var/log/<service>` looked missing when a script folder had the same name in a different case: the service filter now treats them as one service and shows both folders, clearly marked.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. No migration: the new log settings `main_folders` and `guess_operators` (on) live in the existing `log_settings` JSON.
 
