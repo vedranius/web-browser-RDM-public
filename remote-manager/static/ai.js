@@ -328,6 +328,27 @@ Object.assign(LANGS.hr, {
   p_ai_show_thinking: 'Prikaži razmišljanje asistenta', p_ai_show_thinking_d: 'Modele koji to podržavaju (Claude 4.6 i noviji, modeli s razmišljanjem na OpenAI-kompatibilnim serverima) traži sažetak razmišljanja i prikazuje ga uživo u radnom logu chata.',
   p_ai_auto_titles: 'Generiraj naslove sesija', p_ai_auto_titles_d: 'Nakon prvog odgovora jedan kratki dodatni zahtjev modelu napiše naslov chata (inače se koristi prvo pitanje). Naslove možete preimenovati.',
 });
+// v13.6.0: personal AI settings (Settings → AI assistant) and saved sessions
+Object.assign(LANGS.en, {
+  aip_title: 'My AI settings', aip_d: 'These settings are yours alone: every WRM user chooses their own defaults, their own provider accounts and their own AI apps.',
+  aip_engine: 'Default engine', aip_provider: 'Default provider', aip_provider_first: 'The first one offered', aip_model: 'Default model', aip_model_prov: 'The provider\'s default',
+  aip_mode: 'Default permission mode', aip_mode_conn: 'As the connection allows', aip_thinking: 'Show the assistant\'s thinking in the work log', aip_thinking_off: 'Turned off by the administrator for everybody.',
+  aip_save: 'Save my AI settings', aip_saved: 'Your AI settings are saved', aip_accounts: 'My own AI accounts (API keys)', aip_accounts_d: 'Your own provider keys (Anthropic, OpenAI, Azure, Bedrock, Vertex, OpenCode, an OpenAI-compatible server or Ollama). Only you can use them; they are stored encrypted and never sent to the browser.',
+  aip_accounts_off: 'Your administrator has not allowed personal API keys (Admin → AI assistant → Personal API keys). You can use the organisation\'s providers or an AI app below.',
+  aip_accounts_none: 'You have no own AI account yet.', aip_manage: 'Manage my keys', aip_apps: 'My Claude, ChatGPT or other AI app', aip_apps_d: 'To work with your own Claude, ChatGPT or Cursor subscription, connect that app to WRM over MCP. It runs with your account, sees only the servers you choose, and WRM asks you before every change.',
+  aip_apps_btn: 'AI connections', aip_apps_off: 'AI connections over MCP are turned off by the administrator.', aip_sessions: 'My AI sessions', aip_sessions_d: 'Every AI session you had (assistant, log and file assistants, OpenCode, AI apps) is in the 🧠 AI sessions panel next to Sessions: open, continue, save or export it.',
+  aip_sessions_btn: 'Show AI sessions', ai_resumed_steps: '{n} earlier steps of an AI app', p_ai_keep_saved_sessions: 'Keep saved AI sessions', p_ai_keep_saved_sessions_d: 'Sessions a user saved (☆ in AI sessions) are kept beyond the transcript retention. Turn off to delete every session after the retention.',
+});
+Object.assign(LANGS.hr, {
+  aip_title: 'Moje AI postavke', aip_d: 'Ove postavke su samo tvoje: svaki WRM korisnik bira svoje zadane vrijednosti, svoje račune kod pružatelja i svoje AI aplikacije.',
+  aip_engine: 'Zadani pogon', aip_provider: 'Zadani pružatelj', aip_provider_first: 'Prvi ponuđeni', aip_model: 'Zadani model', aip_model_prov: 'Zadani model pružatelja',
+  aip_mode: 'Zadani način dopuštenja', aip_mode_conn: 'Kako veza dopušta', aip_thinking: 'Prikaži razmišljanje asistenta u tijeku rada', aip_thinking_off: 'Administrator je to isključio za sve.',
+  aip_save: 'Spremi moje AI postavke', aip_saved: 'Tvoje AI postavke su spremljene', aip_accounts: 'Moji AI računi (API ključevi)', aip_accounts_d: 'Tvoji vlastiti ključevi pružatelja (Anthropic, OpenAI, Azure, Bedrock, Vertex, OpenCode, OpenAI-kompatibilni server ili Ollama). Možeš ih koristiti samo ti; spremljeni su šifrirano i nikad se ne šalju pregledniku.',
+  aip_accounts_off: 'Administrator nije dopustio osobne API ključeve (Admin → AI asistent → Osobni API ključevi). Možeš koristiti pružatelje organizacije ili AI aplikaciju niže.',
+  aip_accounts_none: 'Još nemaš vlastiti AI račun.', aip_manage: 'Upravljaj mojim ključevima', aip_apps: 'Moj Claude, ChatGPT ili druga AI aplikacija', aip_apps_d: 'Za rad sa svojom Claude, ChatGPT ili Cursor pretplatom poveži tu aplikaciju s WRM-om preko MCP-a. Radi s tvojim računom, vidi samo poslužitelje koje odabereš, a WRM te pita prije svake promjene.',
+  aip_apps_btn: 'AI veze', aip_apps_off: 'Administrator je isključio AI veze preko MCP-a.', aip_sessions: 'Moje AI sesije', aip_sessions_d: 'Sve tvoje AI sesije (asistent, asistenti za logove i datoteke, OpenCode, AI aplikacije) su u panelu 🧠 AI sesije pokraj Sesija: otvori, nastavi, spremi ili izvezi.',
+  aip_sessions_btn: 'Prikaži AI sesije', ai_resumed_steps: '{n} ranijih koraka AI aplikacije', p_ai_keep_saved_sessions: 'Čuvaj spremljene AI sesije', p_ai_keep_saved_sessions_d: 'Sesije koje je korisnik spremio (☆ u AI sesijama) čuvaju se i nakon roka čuvanja transkripata. Isključi da se sve sesije brišu nakon roka.',
+});
 (function () {
   const $ = id => document.getElementById(id);
   const S = {}; // per window: {sid, es, seq, view, cfg, pol, busy}
@@ -363,6 +384,8 @@ Object.assign(LANGS.hr, {
 .ai-ib:hover { background: var(--bg4); color: var(--text); }
 .ai-ib.danger:hover { color: var(--red); border-color: rgba(239,68,68,.35); }
 .ai-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; min-height: 0; user-select: text; }
+.ai-body > * { flex-shrink: 0; }
+.ai-think { display: block; max-height: 9.5em; overflow-y: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 .ai-foot { border-top: 1px solid var(--border); padding: 6px; display: flex; gap: 6px; align-items: flex-end; }
 .ai-foot textarea { flex: 1; min-height: 36px; max-height: 140px; resize: vertical; font-size: 12.5px; }
 .ai-msg { border-radius: 9px; padding: 7px 9px; font-size: 12.5px; line-height: 1.5; word-wrap: break-word; overflow-wrap: anywhere; }
@@ -389,6 +412,9 @@ Object.assign(LANGS.hr, {
 .ai-setup select, .ai-setup input[type=text], .ai-setup input[type=number], .ai-setup textarea { width: 100%; }
 .ai-setup textarea { min-height: 52px; font: 11.5px 'JetBrains Mono', monospace; }
 .ai-row { display: flex; gap: 8px; } .ai-row > div { flex: 1; min-width: 0; }
+.aip { max-width: 760px; } .aip h4 { margin: 14px 0 4px; } .aip .ai-row { margin: 8px 0; flex-wrap: wrap; } .aip .ai-row > div { min-width: 180px; }
+.aip label:not(.ai-check) { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px; }
+.aip select { width: 100%; background: var(--bg3); border: 1px solid var(--border2); color: var(--text); border-radius: 6px; padding: 6px 8px; font-size: 12px; }
 .ai-check { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; color: var(--text); }
 .ai-check input { margin-top: 2px; flex: none; }
 .ai-see { font-size: 11.5px; color: var(--text2); line-height: 1.5; }
@@ -556,6 +582,16 @@ Object.assign(LANGS.hr, {
   }
 
   async function queueContext(id,text){const wo=winOf(id);if(!wo)return;if(!wo.el.classList.contains('ai-open'))await toggle(id);const input=$('ai-in-'+id);if(input){input.value=text;input.focus()}else wo.pendingAIContext=text;}
+  // openPanel shows the assistant panel of a window (and its setup when nothing runs there).
+  async function openPanel(id) { const wo = winOf(id); if (wo && !wo.el.classList.contains('ai-open')) await toggle(id); }
+  function busyIn(id) { const st = S[id]; return !!(st && st.sid && !st.ended); }
+  // focusSession brings the window that shows a running session to the front.
+  function focusSession(sid) {
+    for (const [id, st] of Object.entries(S)) {
+      if (st && st.sid === sid) { const wo = winOf(Number(id)); if (!wo) continue; if (typeof focusWindow === 'function') focusWindow(wo.id); openPanel(wo.id); return true; }
+    }
+    return false;
+  }
   async function toggle(id) {
     const wo = winOf(id);
     if (!wo) return;
@@ -586,10 +622,49 @@ Object.assign(LANGS.hr, {
     try {
       await loadCfg();
       if (typeof refreshUserPolicy === 'function') await refreshUserPolicy();
-      pane.innerHTML = availabilityHTML(cfg) + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="btn-sec" onclick="wrmAI.statusPane()">${esc(t('ai_status_refresh'))}</button>${currentUser && currentUser.is_admin ? `<button onclick="closeModal('modal-settings'); adminTab='ai'; openAdminPanel()">${esc(t('ai_status_setup'))}</button>` : ''}</div>`;
+      pane.innerHTML = availabilityHTML(cfg) + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="btn-sec" onclick="wrmAI.statusPane()">${esc(t('ai_status_refresh'))}</button>${currentUser && currentUser.is_admin ? `<button onclick="closeModal('modal-settings'); adminTab='ai'; openAdminPanel()">${esc(t('ai_status_setup'))}</button>` : ''}</div>` + prefsHTML();
+      prefsProv();
       const wins = winObjects.filter(wo => aiEligible(wo,wo.mode));
       if (wins.length) pane.innerHTML += `<h4>${esc(t('ai_status_connections'))}</h4>` + wins.map(wo => `<button class="btn-sec" style="margin:4px" onclick="closeModal('modal-settings'); openAI(${wo.id})">${esc(connLabel(winConn(wo)))}</button>`).join('');
     } catch(e) { pane.innerHTML = `<div class="hint-box bad">${esc(e.message)}</div><button onclick="wrmAI.statusPane()">${esc(t('ai_status_refresh'))}</button>`; }
+  }
+  // ── personal AI settings (stored per user in /api/me/ui/ai) ──
+  function prefsHTML() {
+    if (!cfg || !cfg.enabled) return '';
+    const pr = cfg.prefs || {}, provs = cfg.providers || [], oc = cfg.opencode;
+    const own = provs.filter(p => p.scope === 'user');
+    const mcpOn = !!(currentUser && currentUser.policy && currentUser.policy.mcp_enabled);
+    return `<div class="aip"><h4>👤 ${esc(t('aip_title'))}</h4><div class="ai-see">${esc(t('aip_d'))}</div>
+      <div class="ai-row">${oc ? `<div><label>${esc(t('aip_engine'))}</label><select id="aip-eng"><option value="">✦ ${esc(t('ai_engine_wrm'))}</option><option value="opencode" ${pr.engine === 'opencode' ? 'selected' : ''} ${oc.available ? '' : 'disabled'}>⬛ ${esc(t('ai_engine_oc'))}</option></select></div>` : ''}
+        <div><label>${esc(t('aip_mode'))}</label><select id="aip-mode"><option value="">${esc(t('aip_mode_conn'))}</option>${(cfg.modes || []).filter(m => m !== 'auto').map(m => `<option value="${m}" ${pr.mode === m ? 'selected' : ''}>${esc(t('ai_mode_' + m))}</option>`).join('')}</select></div></div>
+      <div class="ai-row"><div><label>${esc(t('aip_provider'))}</label><select id="aip-prov" onchange="wrmAI.prefsProv()"><option value="0">${esc(t('aip_provider_first'))}</option>${provs.map(p => `<option value="${p.id}" ${pr.provider_id === p.id ? 'selected' : ''}>${esc(p.name)}${p.scope === 'user' ? ' (🔑)' : ''}</option>`).join('')}</select></div>
+        <div><label>${esc(t('aip_model'))}</label><select id="aip-model"></select></div></div>
+      <label class="ai-check"><input type="checkbox" id="aip-think" ${pr.thinking === false ? '' : 'checked'} ${cfg.show_thinking ? '' : 'disabled'}> ${esc(t('aip_thinking'))}</label>${cfg.show_thinking ? '' : `<div class="ai-see">${esc(t('aip_thinking_off'))}</div>`}
+      <div style="margin:8px 0 14px;"><button class="btn-sm" onclick="wrmAI.savePrefs()">💾 ${esc(t('aip_save'))}</button></div>
+      <h4>🔑 ${esc(t('aip_accounts'))}</h4>
+      ${cfg.personal_keys ? `<div class="ai-see">${esc(t('aip_accounts_d'))}</div><div class="ai-see"><b>${own.length ? own.map(p => esc(p.name) + ' (' + esc(t('ai_kind_' + p.kind)) + ')').join(', ') : esc(t('aip_accounts_none'))}</b></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;"><button class="btn-sm" onclick="wrmAI.myWizard(0)">🧭 ${esc(t('aiw_wizard'))}</button><button class="btn-sec btn-sm" onclick="wrmAI.myKeys(0)">🔑 ${esc(t('aip_manage'))}</button></div>`
+        : `<div class="hint-box">${esc(t('aip_accounts_off'))}</div>`}
+      <h4>🤖 ${esc(t('aip_apps'))}</h4><div class="ai-see">${esc(t('aip_apps_d'))}</div>
+      <div style="margin:6px 0 14px;">${mcpOn ? `<button class="btn-sec btn-sm" onclick="showSettingsTab('st-mcp')">🔌 ${esc(t('aip_apps_btn'))}</button>` : `<span class="ai-see">${esc(t('aip_apps_off'))}</span>`}</div>
+      <h4>🧠 ${esc(t('aip_sessions'))}</h4><div class="ai-see">${esc(t('aip_sessions_d'))}</div>
+      <div style="margin:6px 0 4px;"><button class="btn-sec btn-sm" onclick="closeModal('modal-settings'); if (window.wrmLayout) wrmLayout.activate('aisess', {reveal: true})">🧠 ${esc(t('aip_sessions_btn'))}</button></div></div>`;
+  }
+  function prefsProv() {
+    const ps = $('aip-prov'), ms = $('aip-model');
+    if (!ps || !ms) return;
+    const p = (cfg.providers || []).find(x => String(x.id) === ps.value);
+    const cur = (cfg.prefs || {}).model || '';
+    ms.innerHTML = `<option value="">${esc(t('aip_model_prov'))}</option>` + (p ? p.models.map(m => `<option ${m === cur ? 'selected' : ''}>${esc(m)}</option>`).join('') : '');
+    ms.disabled = !p;
+  }
+  async function savePrefs() {
+    const v = {provider_id: Number(($('aip-prov') || {}).value) || 0, model: ($('aip-model') || {}).value || '', mode: ($('aip-mode') || {}).value || '',
+      engine: ($('aip-eng') || {}).value || '', thinking: !!($('aip-think') || {}).checked};
+    if (!v.provider_id) v.model = '';
+    try { await api('PUT', '/api/me/ui/ai', {value: v}); } catch (e) { showToast(e.message, 'error'); return; }
+    if (cfg) cfg.prefs = v;
+    showToast(t('aip_saved'), 'success');
   }
   async function policyChanged() {
     await loadCfg().catch(() => {});
@@ -636,6 +711,20 @@ Object.assign(LANGS.hr, {
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button onclick="wrmAI.start(${id})">✦ ${esc(t('ai_start'))}</button>${own}</div>
       <div class="ai-see">${esc(t('ai_subscriptions_note'))}</div></div>`;
     models(id); modeHelp(id); engine(id);
+    applyPrefs(id, pol);
+  }
+  // applyPrefs preselects the user's personal defaults (Settings → AI assistant).
+  function applyPrefs(id, pol) {
+    const pr = (cfg && cfg.prefs) || {};
+    const eng = $('ai-eng-' + id);
+    if (pr.engine === 'opencode' && eng && cfg.opencode && cfg.opencode.available) { eng.value = 'opencode'; engine(id); }
+    const ps = $('ai-prov-' + id);
+    const o = ps && pr.provider_id ? [...ps.options].find(x => x.value === String(pr.provider_id)) : null;
+    if (o && !o.disabled) { ps.value = o.value; models(id); }
+    const m = $('ai-model-' + id);
+    if (o && m && pr.model && [...m.options].some(x => x.value === pr.model)) m.value = pr.model;
+    const md = $('ai-mode-' + id);
+    if (md && pr.mode && pr.mode !== 'auto' && (pol.allowed_modes || []).includes(pr.mode)) { md.value = pr.mode; modeHelp(id); }
   }
 
   // engine: the WRM assistant or an OpenCode agent (cfg.opencode says whether it can run)
@@ -843,6 +932,7 @@ Object.assign(LANGS.hr, {
     const el = b.querySelector('[data-worklog]:not([data-done])');
     if (!el) return;
     const n = el.querySelectorAll('[data-steps] div').length;
+    if (!n) { el.remove(); return; } // nothing happened (the question was only sent): no empty line
     el.querySelector('[data-sum]').textContent = t('ai_worklog') + (n ? ' · ' + tf('ai_worklog_steps', {n}) : '');
     el.open = false;
     el.dataset.done = '1';
@@ -859,15 +949,16 @@ Object.assign(LANGS.hr, {
       case 'assistant_start': st.cur = null; st.think = null; workLog(id); break;
       case 'thinking': {
         // the model's summarized reasoning, live in the work log
-        if (!st.think) { st.think = workLogStep(id, '💭 ', true); st.thinkText = ''; }
+        // the whole text stays: a long thought scrolls inside its own line instead of losing its start
+        if (!st.think) { st.think = workLogStep(id, '💭 ', true); st.thinkText = ''; if (st.think) st.think.classList.add('ai-think'); }
         st.thinkText += d.delta || '';
-        if (st.think) { st.think.textContent = '💭 ' + st.thinkText.slice(-600); st.think.title = st.thinkText.slice(-4000); }
+        if (st.think) { const near = st.think.scrollHeight - st.think.scrollTop - st.think.clientHeight < 40; st.think.textContent = '💭 ' + st.thinkText; if (near) st.think.scrollTop = st.think.scrollHeight; }
         scrollEnd(id); break;
       }
       case 'title': st.title = d.title; if (st.view) st.view.title = d.title; bar(id); break;
       case 'history': {
         const msgs = d.messages || [];
-        add(id, `<details class="ai-worklog" style="margin:6px 0;border:1px dashed var(--border);border-radius:8px;padding:6px 10px;"><summary style="cursor:pointer;font-size:11.5px;color:var(--text2);">↪ ${esc(tf('ai_resumed_from', {n: d.from}))} · ${msgs.filter(m => m.kind === 'user').length} ${esc(t('ai_resumed_msgs'))}</summary>
+        add(id, `<details class="ai-worklog" style="margin:6px 0;border:1px dashed var(--border);border-radius:8px;padding:6px 10px;"><summary style="cursor:pointer;font-size:11.5px;color:var(--text2);">↪ ${esc(tf('ai_resumed_from', {n: d.from}))} · ${msgs.some(m => m.kind === 'user') ? msgs.filter(m => m.kind === 'user').length + ' ' + esc(t('ai_resumed_msgs')) : esc(tf('ai_resumed_steps', {n: msgs.length}))}</summary>
           ${msgs.map(m => m.kind === 'user' ? `<div class="ai-msg user" style="opacity:.75">${esc(m.text)}</div>` : m.kind === 'assistant' ? `<div class="ai-msg assistant" style="opacity:.75">${md(m.text)}</div>`
             : `<div class="ai-note" style="opacity:.7">${m.kind === 'tool_call' ? '🛠' : m.kind === 'error' ? '⚠' : '📄'} ${esc(String(m.text || '').slice(0, 300))}</div>`).join('')}</details>`);
         break;
@@ -895,6 +986,7 @@ Object.assign(LANGS.hr, {
       }
       case 'approval_required': approvalUI(id, d.session_id ? Object.assign({}, d.approval, {session_id: d.session_id}) : d.approval); break;
       case 'approval_resolved': {
+        if (d.approval_id && window.wrmAiAlertDone) wrmAiAlertDone('approval-' + d.approval_id);
         if (st.pending && d.approval_id) delete st.pending[d.approval_id];
         if (st.pending && d.call_id) {
           for (const [aid, a] of Object.entries(st.pending)) if (a.call_id === d.call_id) delete st.pending[aid];
@@ -1030,8 +1122,16 @@ Object.assign(LANGS.hr, {
     const body = {decision: ok ? 'approve' : 'deny', note: note ? note.value : ''};
     if (ok && ed) { if (isWrite) body.content = ed.value; else body.command = ed.value; }
     const sid = (st.apprSess && st.apprSess[aid]) || st.sid;
-    try { await api('POST', `/api/ai/sessions/${sid}/approvals/${encodeURIComponent(aid)}${shareQ(wo)}`, body); }
-    catch (e) { showToast(e.message, 'error', 5000); }
+    const r = await wrmAISessions.decide(`/api/ai/sessions/${sid}/approvals/${encodeURIComponent(aid)}${shareQ(wo)}`, body);
+    if (r.decided) {
+      // decided elsewhere (the AI app, another tab) or no longer waiting: show it as such
+      const a = st.pending && st.pending[aid];
+      if (st.pending) delete st.pending[aid];
+      pendingBar(id);
+      const card = a && st.cards[a.call_id];
+      if (card) { card.classList.remove('wait'); card.querySelector('.ai-appr').innerHTML = `<div class="ai-why">${esc(wrmAISessions.decidedText(r.decided))}</div>`; }
+      indicators();
+    }
   }
 
   async function send(id) {
@@ -1482,7 +1582,7 @@ Object.assign(LANGS.hr, {
   // ── admin tab ─────────────────────────────────────────
   const AI_POLICY_KEYS = ['ai_assistant', 'ai_kill_switch', 'ai_modes', 'ai_default_mode', 'ai_mode_rules', 'ai_personal_keys', 'ai_provider_kinds', 'ai_models', 'ai_ollama_manage',
     'ai_redact_output', 'ai_show_thinking', 'ai_auto_titles', 'ai_share_notes', 'ai_allow_power', 'ai_sensitive_reads', 'ai_blocked_commands', 'ai_read_deny_paths', 'ai_approval_timeout_seconds', 'ai_auto_max_minutes',
-    'ai_auto_max_actions', 'ai_auto_until_grant', 'ai_provider_header_seconds', 'ai_provider_request_seconds', 'ai_provider_stream_idle_seconds', 'ai_command_timeout_seconds', 'ai_output_max_kb', 'ai_max_steps', 'ai_idle_minutes', 'ai_transcript_retention_days'];
+    'ai_auto_max_actions', 'ai_auto_until_grant', 'ai_provider_header_seconds', 'ai_provider_request_seconds', 'ai_provider_stream_idle_seconds', 'ai_command_timeout_seconds', 'ai_output_max_kb', 'ai_max_steps', 'ai_idle_minutes', 'ai_transcript_retention_days', 'ai_keep_saved_sessions'];
 
   async function adminAI() {
     const body = $('admin-body');
@@ -1625,10 +1725,11 @@ Object.assign(LANGS.hr, {
   window.wrmAI = {
     md, diffHTML, reasonText, loadCfg,
     queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession, resume, rename, sound, pendingDetails,
-    myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); }),
+    myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); else if (!wo) statusPane(); }),
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,
-    myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); }; awOpen('user'); },
+    myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); else if (!wo) statusPane(); }; awOpen('user'); },
+    openPanel, busyIn, focusSession, prefsProv, savePrefs,
     statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, engine, ocInstall, ocRefresh, delegProv, delegLoad, delegAdd, delegTraining, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
   };
 })();

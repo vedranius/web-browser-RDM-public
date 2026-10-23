@@ -33,6 +33,7 @@ func (s *aiSession) aiKeepLater(now time.Time) {
 	defer aiLaterStore.Unlock()
 	for _, a := range s.pending {
 		if a.Later && now.Before(a.Expires) {
+			a.RunNow = false // the session has ended: an approval lets a new session run it once
 			aiLaterStore.open[a.ID] = &aiLaterOpen{s: s, a: a}
 		}
 	}

@@ -231,6 +231,7 @@ Object.assign(LANGS.hr, {
       }
       case 'approval_required': approval(id, d.approval || d); break;
       case 'approval_resolved': {
+        if (d.approval_id && window.wrmAiAlertDone) wrmAiAlertDone('approval-' + d.approval_id);
         const card = st.cards[d.call_id];
         if (card) card.querySelector('.ai-appr').innerHTML = `<span class="pill ${d.outcome === 'approved' ? 'ok' : 'bad'}">${esc(t('ai_o_' + d.outcome))}</span>`;
         break;
@@ -270,8 +271,8 @@ Object.assign(LANGS.hr, {
   }
   async function decide(id, aid, ok) {
     const st = C[id]; if (!st) return;
-    try { await api('POST', `/api/ai/sessions/${st.sid}/approvals/${aid}${st.opts.qs || ''}`, {decision: ok ? 'approve' : 'deny'}); delete st.pending[aid]; }
-    catch (e) { showToast(e.message, 'error'); }
+    const r = await wrmAISessions.decide(`/api/ai/sessions/${st.sid}/approvals/${aid}${st.opts.qs || ''}`, {decision: ok ? 'approve' : 'deny'});
+    if (r.ok || r.decided) delete st.pending[aid];
   }
   async function send(id, text) {
     const st = C[id]; if (!st || !st.sid) return;

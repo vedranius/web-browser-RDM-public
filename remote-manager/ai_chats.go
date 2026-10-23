@@ -298,11 +298,19 @@ func aiResumeHistory(id int64) ([]aiMsg, []aiTranscriptEntry) {
 		start--
 	}
 	msgs = msgs[start:]
-	for len(msgs) > 0 && msgs[0].Role != "user" {
-		msgs = msgs[1:]
+	if len(msgs) > 0 && msgs[0].Role != "user" {
+		// the history must start with the user (an AI app's session starts with a tool call)
+		msgs = append([]aiMsg{{Role: "user", Text: "(earlier context)"}}, msgs...)
 	}
+	var transport, client string
+	db.QueryRow(`SELECT transport, provider_name FROM ai_sessions WHERE id=?`, id).Scan(&transport, &client)
 	if len(msgs) > 0 {
-		msgs[0].Text = "[This conversation was resumed in a new WRM AI session; the earlier messages follow. Tool results from before may be out of date: check again before relying on them.]\n\n" + msgs[0].Text
+		note := "[This conversation was resumed in a new WRM AI session; the earlier messages follow. Tool results from before may be out of date: check again before relying on them.]\n\n"
+		if transport == "mcp" {
+			// an AI app's conversation is not in WRM, only what it did on the server
+			note = "[The user continues here, in the WRM assistant, the work an AI app (" + truncateStr(client, 80) + ") did on this server over MCP. Only its tool calls and their results are known to WRM; they follow. They may be out of date: check again before relying on them.]\n\n"
+		}
+		msgs[0].Text = note + msgs[0].Text
 		if msgs[len(msgs)-1].Role == "user" {
 			msgs = append(msgs, aiMsg{Role: "assistant", Text: "(The earlier session ended here.)"})
 		}
