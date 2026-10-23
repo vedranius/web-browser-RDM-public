@@ -1,6 +1,31 @@
-## Web Remote Manager PRO v13.5.0 - Log viewer, smart editor and AI that shows its work
+## Web Remote Manager PRO v13.6.0 - Saved logins, hostname names and a calmer top bar
 
 ### Added
+
+- **Show saved login** in *Edit connection*: after you confirm with your WRM password (a domain account with its domain password, an SSO-only account through its identity provider), WRM shows what the connection logs in with: password, private key, your vault credential, key store key, Bitwarden key or the key file path. Every reveal is audited and can raise an alert; the administrator's *Allow export of passwords & keys* policy applies.
+- **Right-click a connection**: *Copy username*, *Copy password* (same confirmation, never shown in the notification) and *Copy IP address*.
+- **Use the server's hostname as the name** when adding a connection, and *Rename to the server's hostname* in the menu: WRM reads the hostname over SSH, or the DNS name for other protocols.
+
+### Changed
+
+- Tabs and window titles show only the connection's name; the folder path is in the tooltip.
+- The vault's *Reveal* and the key store's *Export* accept a domain account's password.
+
+### Fixed
+
+- The version next to the WRM logo is visible again; the empty session *— none —* no longer stands in its place.
+- The user name in the top bar no longer jumps every 5 seconds when MCP is enabled.
+- The Git workspace server filter no longer shows blank entries for deleted connections.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database change: installations of deleted connections are no longer listed, and deleting a connection now removes them. New API endpoints `POST /api/connections/{id}/secret` and `POST /api/connections/{id}/name-from-hostname`.
+
+[Download v13.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.6.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.5.0 - Log viewer, smart editor and AI that shows its work
+
+#### Added
 
 - **A professional log viewer** in *Monitoring → Logs*: sortable and filterable file list (operator, service, newest first), log tabs with line numbers, level colours, smart highlighting (times, IPs, URLs, HTTP codes, UUIDs, key=value), find in the log, level filters, **Follow**, older lines and go to line.
 - **Search across all logs by time**: the search runs on the server with grep, takes a From/To range in the EU format (`dd.mm.yyyy hh:mm`) or a quick range, sorts hits by time and draws a timeline. A click opens the file at the hit.
@@ -11,14 +36,14 @@
 - **Date and time format**: EU by default, ISO, US or the browser's locale in *Settings*.
 - **Plugin and skills**: the skills use `search_logs`; `server.json` lets the owner publish WRM to the MCP Registry.
 
-### Fixed
+#### Fixed
 
 - A week-wide log search no longer ends with "time budget reached" or "results are bounded or incomplete".
 - Operators under `/home/<project>/<operator>/<service>` are found again.
 - AI sessions no longer hang in "stopped": an ended session says so and offers **Continue chat**.
 - The version at the top left is shown again after reloading a signed-in page.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. Additive migration only: new table `log_settings` and new columns `title`, `purpose`, `resumed_from` and `file_path` in `ai_sessions`. Log folders configured in the Zabbix dialog are read into the new log settings. New settings `ai_show_thinking` and `ai_auto_titles` (both on).
 
