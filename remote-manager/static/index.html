@@ -1591,10 +1591,10 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 /* Top bar: fitTopBar() gives way step by step (tb1..tb6: labels, then less used buttons
    into the ⋯ menu) whenever it would overflow, whatever the language, zoom or badges */
 .btn-top, .add-win-btn, .upd-badge { white-space: nowrap; flex-shrink: 0; }
-#top-bar.tb1 .app-ver .ver-txt, #top-bar.tb1 .top-sep, #top-bar.tb1 .sess-lbl { display: none; }
+#top-bar.tb1 .top-sep, #top-bar.tb1 .sess-lbl { display: none; }
 #top-bar.tb2 #btn-mcp .lbl, #top-bar.tb2 .upd-badge .lbl { display: none; }
 #top-bar.tb2 .upd-badge { margin-left: 4px; padding: 2px 7px; }
-#top-bar.tb3 .btn-top .lbl { display: none; }
+#top-bar.tb3 .btn-top .lbl, #top-bar.tb3 .app-ver .ver-txt { display: none; }
 #top-bar.tb4 .add-win-btn .lbl, #top-bar.tb4 #user-chip .name { display: none; }
 #top-bar.tb5 #sess-bar-name { max-width: 70px; }
 #top-bar.tb5, #top-bar.tb5 #auth-info { gap: 4px; }
@@ -6779,7 +6779,10 @@ function setAppVersion(v) {
 }
 
 function initApp() {
-  setAppVersion(authConfig && authConfig.version);
+  // A session that is already signed in skips the sign-in card, and with it
+  // /api/auth/config: read the version from /api/version then.
+  if (authConfig && authConfig.version) setAppVersion(authConfig.version);
+  else fetch('/api/version').then(r => r.ok ? r.json() : {}).then(v => setAppVersion(v && v.version)).catch(() => {});
   loadSettings();
   document.getElementById('setting-lang').value = currentLang;
   applyLang();

@@ -21,6 +21,7 @@
 - **Operators were not found** for logs under `/home/<project>/<operator>/<service>`; the path patterns and the operator filter now cover them.
 - **AI sessions stuck in "stopped".** A session that ended (WRM restart, idle time, kill switch) kept the browser reconnecting to a dead stream; the stream now answers with an `ended` event and the chat offers **Continue chat** with its history.
 - The log viewer's status no longer shows `01.01.1` before the first discovery.
+- **The version at the top left is shown again after a reload.** A browser that was already signed in skipped `/api/auth/config`, so the title bar said only *WRM*; it now reads `/api/version`, and the version stays visible until the top bar also hides button labels.
 
 ## [13.4.4] - 2026-10-23
 

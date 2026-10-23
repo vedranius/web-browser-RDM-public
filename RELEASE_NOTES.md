@@ -16,6 +16,7 @@
 - A week-wide log search no longer ends with "time budget reached" or "results are bounded or incomplete".
 - Operators under `/home/<project>/<operator>/<service>` are found again.
 - AI sessions no longer hang in "stopped": an ended session says so and offers **Continue chat**.
+- The version at the top left is shown again after reloading a signed-in page.
 
 ### Upgrade
 
