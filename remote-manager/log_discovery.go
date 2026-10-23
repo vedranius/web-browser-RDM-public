@@ -171,9 +171,7 @@ func logFindScript(paths []string, s logSettings) string {
 		prune = append(prune, "-name "+q(e))
 	}
 	names := []string{"*log*", "*.out", "*.err", "*.trace", "*.jsonl", "*.ndjson", "*.audit", "messages*", "secure*", "maillog*", "cron*", "*access*", "*error*", "stdout*", "stderr*"}
-	for _, e := range s.Extra {
-		names = append(names, e)
-	}
+	names = append(names, s.Extra...)
 	match := []string{}
 	for _, n := range names {
 		match = append(match, "-iname "+q(n))
