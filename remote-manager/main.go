@@ -282,6 +282,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/auth/login", apiAuthLoginHandler)
 	mux.HandleFunc("/api/auth/mfa", apiAuthMFAHandler)
 	mux.HandleFunc("/api/auth/lock/verify", apiAuthLockVerifyHandler)
+	mux.HandleFunc("/api/auth/lock", apiAuthLockHandler)
+	mux.HandleFunc("/api/auth/lock/pin", apiAuthLockPinHandler)
 	mux.HandleFunc("/api/auth/logout", apiAuthLogoutHandler)
 	mux.HandleFunc("/api/auth/me", apiAuthMeHandler)
 	mux.HandleFunc("/api/auth/keepalive", apiAuthKeepaliveHandler)
@@ -1121,6 +1123,10 @@ func initDB() {
 	db.Exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT ''`)
 	db.Exec(`ALTER TABLE users ADD COLUMN break_glass INTEGER NOT NULL DEFAULT 0`)
 	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN step_up_at TEXT NOT NULL DEFAULT ''`)
+	// v13.6: screen lock state per sign-in session and an optional unlock PIN per user.
+	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN locked_at TEXT NOT NULL DEFAULT ''`)
+	db.Exec(`ALTER TABLE auth_sessions ADD COLUMN lock_failures INTEGER NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE users ADD COLUMN lock_pin_hash TEXT NOT NULL DEFAULT ''`)
 	ensureTable("teams", `CREATE TABLE IF NOT EXISTS teams (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL UNIQUE COLLATE NOCASE,

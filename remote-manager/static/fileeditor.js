@@ -124,31 +124,31 @@ Object.assign(LANGS.hr, {
     s.textContent = `
 #modal-editor .modal.fe { width:min(1500px,98vw); height:min(92vh,1000px); padding:12px; gap:8px; }
 .fe-head { display:flex; align-items:center; gap:10px; min-width:0; }
-.fe-head h3 { margin:0 !important; font-size:14px !important; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:'JetBrains Mono',monospace; }
+.fe-head h3 { margin:0 !important; font-size:14px !important; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:var(--font-mono); }
 .fe-meta { font-size:11px; color:var(--text3); white-space:nowrap; }
 .fe-tools { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .fe-tools label { display:flex; gap:4px; align-items:center; font-size:12px; color:var(--text2); white-space:nowrap; }
 .fe-tools select { width:auto; padding:3px 6px; font-size:12px; background:var(--bg2); color:var(--text); border:1px solid var(--border2); border-radius:6px; }
 .fe-find { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:6px; border:1px solid var(--border); border-radius:8px; background:var(--bg2); }
-.fe-find input[type=text] { width:min(260px,60vw); padding:4px 8px; font-size:12px; font-family:'JetBrains Mono',monospace; background:var(--bg1); color:var(--text); border:1px solid var(--border2); border-radius:6px; }
+.fe-find input[type=text] { width:min(260px,60vw); padding:4px 8px; font-size:12px; font-family:var(--font-mono); background:var(--bg1); color:var(--text); border:1px solid var(--border2); border-radius:6px; }
 .fe-find .cnt { font-size:11px; color:var(--text3); min-width:70px; }
 .fe-body { flex:1; min-height:0; display:flex; gap:8px; }
 .fe-main { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; position:relative; }
-.fe-ed { flex:1; min-height:0; display:flex; border:1px solid var(--border2); border-radius:8px; background:#0b0d12; overflow:hidden; }
+.fe-ed { flex:1; min-height:0; display:flex; border:1px solid var(--border2); border-radius:8px; background:var(--bg0); overflow:hidden; }
 .fe-ed:focus-within { border-color:var(--accent-b); }
 .fe-gut { flex:none; overflow:hidden; padding:12px 8px 12px 10px; text-align:right; color:#4d5566; user-select:none; border-right:1px solid #1d222c; background:#0d1016; }
 .fe-gut > div { will-change:transform; }
 .fe-gut span { display:block; }
 .fe-gut span.cur { color:#aab2bd; }
 .fe-area { position:relative; flex:1; min-width:0; overflow:hidden; }
-.fe-ed, .fe-ed pre, .fe-ta, .fe-gut { font-family:'JetBrains Mono',monospace; font-size:13px; line-height:20px; tab-size:4; }
-.fe-area pre { position:absolute; left:0; top:0; margin:0; padding:12px; white-space:pre; pointer-events:none; color:#e7e9ef; background:none; border:0; min-width:100%; will-change:transform; }
+.fe-ed, .fe-ed pre, .fe-ta, .fe-gut { font-family:var(--font-mono); font-size:13px; line-height:20px; tab-size:4; }
+.fe-area pre { position:absolute; left:0; top:0; margin:0; padding:12px; white-space:pre; pointer-events:none; color:var(--text); background:none; border:0; min-width:100%; will-change:transform; }
 .fe-area pre code { font:inherit; color:inherit; background:none; padding:0; white-space:inherit; }
 .fe-marks { color:transparent !important; }
 .fe-marks mark { background:rgba(229,192,123,.28); color:transparent; border-radius:2px; }
 .fe-marks mark.cur { background:rgba(255,153,0,.55); outline:1px solid #ff9900; }
-.fe-ta { position:absolute; inset:0; width:100%; height:100%; margin:0; padding:12px; border:0; outline:none; resize:none; background:transparent; color:transparent; caret-color:#e7e9ef; white-space:pre; overflow:auto; user-select:text; }
-.fe-ta.plain { color:#e7e9ef; }
+.fe-ta { position:absolute; inset:0; width:100%; height:100%; margin:0; padding:12px; border:0; outline:none; resize:none; background:transparent; color:transparent; caret-color:var(--text); white-space:pre; overflow:auto; user-select:text; }
+.fe-ta.plain { color:var(--text); }
 .fe-ta::selection { background:rgba(97,175,239,.35); color:transparent; }
 .fe-ta.plain::selection { color:#fff; }
 .fe.wrap .fe-area pre, .fe.wrap .fe-ta { white-space:pre-wrap; overflow-wrap:anywhere; min-width:0; width:100%; }
@@ -166,7 +166,7 @@ Object.assign(LANGS.hr, {
 .fe-note { font-size:12px; padding:6px 10px; border-radius:6px; background:var(--bg2); border:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .fe-note.warn { border-color:rgba(229,192,123,.6); }
 .fe-diff { position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; gap:8px; background:var(--bg1); }
-.fe-diff-body { flex:1; min-height:0; overflow:auto; margin:0; padding:8px 0; background:#0b0d12; border:1px solid var(--border2); border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:18px; user-select:text; }
+.fe-diff-body { flex:1; min-height:0; overflow:auto; margin:0; padding:8px 0; background:var(--bg0); border:1px solid var(--border2); border-radius:8px; font-family:var(--font-mono); font-size:12px; line-height:18px; user-select:text; }
 .fe-diff-body div { white-space:pre; padding:0 10px; }
 .fe-diff-body .a { background:rgba(152,195,121,.16); color:#b5e0a0; }
 .fe-diff-body .d { background:rgba(224,108,117,.16); color:#f0a0a7; }

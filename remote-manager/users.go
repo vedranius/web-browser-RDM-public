@@ -33,6 +33,7 @@ type authSession struct {
 	ID         int
 	UserID     int
 	Restricted string
+	LockedAt   string // screen lock (v13.6): set while this sign-in session is locked
 }
 
 func tokenHash(raw string) string { return "h:" + sha256Hex(raw) }
@@ -69,9 +70,9 @@ func lookupSession(r *http.Request) (*authSession, error) {
 	var s authSession
 	var expiresAt, lastActive string
 	var disabled int
-	err = db.QueryRow(`SELECT a.id, a.user_id, COALESCE(a.restricted,''), a.expires_at, COALESCE(a.last_active_at,''), u.disabled
+	err = db.QueryRow(`SELECT a.id, a.user_id, COALESCE(a.restricted,''), a.expires_at, COALESCE(a.last_active_at,''), u.disabled, COALESCE(a.locked_at,'')
 		FROM auth_sessions a JOIN users u ON u.id=a.user_id WHERE a.token=?`, h).
-		Scan(&s.ID, &s.UserID, &s.Restricted, &expiresAt, &lastActive, &disabled)
+		Scan(&s.ID, &s.UserID, &s.Restricted, &expiresAt, &lastActive, &disabled, &s.LockedAt)
 	if err != nil {
 		return nil, errUnauthenticated
 	}
@@ -121,6 +122,12 @@ func requireAuth(w http.ResponseWriter, r *http.Request) (int, bool) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(403)
 		json.NewEncoder(w).Encode(map[string]string{"error": restrictedMessage(s.Restricted), "restricted": s.Restricted})
+		return 0, false
+	}
+	if screenLockRefuses(s, r) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusLocked)
+		json.NewEncoder(w).Encode(map[string]interface{}{"error": "WRM is locked; unlock it first", "screen_locked": true})
 		return 0, false
 	}
 	return s.UserID, true
@@ -312,6 +319,8 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 		"step_up":             map[string]interface{}{"required": settingBool("require_step_up"), "minutes": settingInt("step_up_minutes"), "totp": u.TOTPEnabled},
 		"recovery_codes_left": recoveryCodesLeft(u.Recovery),
 		"password_min_length": settingInt("password_min_length"),
+		"screen_lock":         screenLockPolicy(u.ID),
+		"appearance":          map[string]interface{}{"default_theme": getSetting("appearance_default_theme"), "custom_css": settingBool("appearance_custom_css")},
 		"policy": map[string]interface{}{
 			"server_keys":      u.IsAdmin || settingBool("allow_server_keys"),
 			"link_shares":      u.IsAdmin || settingBool("allow_link_shares"),
@@ -685,6 +694,7 @@ func apiAuthMeHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Unauthorized", 401)
 		return
 	}
+	me["screen_locked"] = s.LockedAt != "" && screenLockMode() != "browser"
 	jsonOK(w, me)
 }
 
