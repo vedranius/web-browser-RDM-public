@@ -295,7 +295,7 @@ Object.assign(LANGS.hr, {
 #lv .lv-chip.off{opacity:.4;text-decoration:line-through}
 #lv .lv-chip.l-error{border-color:var(--red)}#lv .lv-chip.l-warn{border-color:var(--yellow)}#lv .lv-chip.l-info{border-color:var(--accent)}
 #lv .lv-status{font-size:11px;color:var(--text3);padding:3px 8px;border-bottom:1px solid var(--border);overflow-wrap:anywhere}
-#lv .lv-text{flex:1;min-height:0;overflow:auto;font:12px/1.45 'JetBrains Mono',ui-monospace,monospace;background:var(--bg);user-select:text;outline:none}
+#lv .lv-text{flex:1;min-height:0;overflow:auto;font:12px/1.45 var(--font-mono);background:var(--bg);user-select:text;outline:none}
 #lv .lv-ln{display:flex;min-width:max-content;padding-right:8px}
 #lv.wrap .lv-ln,#lv .wrap .lv-ln{min-width:0}
 #lv .lv-ln .n{flex:none;width:7ch;text-align:right;padding-right:8px;color:var(--text3);user-select:none;border-right:1px solid var(--border);margin-right:8px;cursor:pointer}
@@ -308,7 +308,7 @@ Object.assign(LANGS.hr, {
 #lv .lv-ln.ctx{opacity:.6}
 #lv .lv-ln.cur{outline:1px solid var(--accent);outline-offset:-1px}
 #lv .t-ts{color:#38bdf8}#lv .t-lvl-error{color:var(--red);font-weight:700}#lv .t-lvl-warn{color:var(--yellow);font-weight:700}#lv .t-lvl-info{color:var(--green)}#lv .t-lvl-debug{color:var(--text3)}
-#lv .t-url{color:#a78bfa;text-decoration:underline}#lv .t-ip{color:#f472b6}#lv .t-str{color:#fbbf24}#lv .t-key{color:#22d3ee}#lv .t-exc{color:var(--red);text-decoration:underline dotted}#lv .t-num{color:#fb923c}#lv .t-uuid{color:#94a3b8}#lv .t-path{color:#86efac}
+#lv .t-url{color:var(--purple);text-decoration:underline}#lv .t-ip{color:#f472b6}#lv .t-str{color:var(--yellow-t)}#lv .t-key{color:#22d3ee}#lv .t-exc{color:var(--red);text-decoration:underline dotted}#lv .t-num{color:#fb923c}#lv .t-uuid{color:var(--text2)}#lv .t-path{color:var(--green-t)}
 #lv mark{background:#fde047;color:#111;border-radius:2px}
 #lv mark.cur{background:#f97316;color:#fff}
 #lv .lv-empty{padding:18px;color:var(--text3)}

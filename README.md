@@ -13,11 +13,15 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.8.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.8.0
+
+**Saved logins on demand, hostname names and a calmer top bar.** *Edit connection* has **👁 Show saved login**: after you confirm with your WRM password (or your domain password), WRM shows what the connection logs in with. Right-click a connection for **Copy username**, **Copy password** (same confirmation) and **Copy IP address**. A new connection can take its **name from the server's hostname**. Tabs show just the connection's name, the version next to the logo stays visible, the user name no longer jumps every 5 seconds, and the Git workspace server filter has no blank entries any more. See [Connections & folders](#connections--folders).
 
 ## What's new in v13.7.0
 
-**Saved logins on demand, hostname names and a calmer top bar.** *Edit connection* has **👁 Show saved login**: after you confirm with your WRM password (or your domain password), WRM shows what the connection logs in with. Right-click a connection for **Copy username**, **Copy password** (same confirmation) and **Copy IP address**. A new connection can take its **name from the server's hostname**. Tabs show just the connection's name, the version next to the logo stays visible, the user name no longer jumps every 5 seconds, and the Git workspace server filter has no blank entries any more. See [Connections & folders](#connections--folders).
+**Themes, accessibility and a screen lock you can rely on.** *Settings → Appearance* offers eleven themes (dark, OLED black, Fjord, Solar, Forest, Ember, light Daylight, Paper, Solar light and two high-contrast themes), follows the system's light/dark setting if you want, and lets you change every colour, the fonts, the interface size, corners and spacing, save your own themes, export and import them, and add your own CSS. Themes from addons are picked there per user instead of being forced on everyone. For colour vision deficiency (deuteranopia, protanopia, tritanopia, achromatopsia) WRM switches status colours, diffs and optionally the terminal palette to colours you can tell apart, can add ✓ ✕ ! signs and shapes so nothing relies on colour alone, and offers more contrast, a terminal minimum contrast, reduced motion and transparency and a strong focus outline. *Settings → Security → Screen lock* sets when WRM locks (inactivity with a warning, a hidden window, the computer locking or sleeping, on every start, a keyboard shortcut) and how the lock screen looks; **Lock now** locks at once while terminals, transfers, tunnels, AI and MCP keep running. The lock is now kept by the server: a reload or a new tab stays locked, directory (LDAP) accounts can unlock, and a personal PIN can unlock instead of the password. See [Appearance, themes and accessibility](#appearance-themes-and-accessibility) and [Screen lock](#screen-lock).
 
 ## What's new in v13.6.0
 
@@ -200,7 +204,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -215,6 +219,8 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [Panel layout: dock, stack, float and lock](#panel-layout-dock-stack-float-and-lock)
+   - [Appearance, themes and accessibility](#appearance-themes-and-accessibility)
+   - [Screen lock](#screen-lock)
    - [Workboard: the shared canvas and addons](#workboard-the-shared-canvas-and-addons)
    - [SSH terminal](#ssh-terminal)
    - [Remote desktop: RDP, VNC, Telnet](#remote-desktop-rdp-vnc-telnet)
@@ -308,21 +314,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.7.0-linux-amd64
-   ./wrm-pro-v13.7.0-linux-amd64
+   chmod +x wrm-pro-v13.8.0-linux-amd64
+   ./wrm-pro-v13.8.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.7.0-windows-amd64.exe
+   .\wrm-pro-v13.8.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.7.0-linux-amd64.AppImage
-   ./wrm-pro-v13.7.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.7.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.8.0-linux-amd64.AppImage
+   ./wrm-pro-v13.8.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.8.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -331,8 +337,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.7.0/wrm-pro-v13.7.0-android-arm64
-   chmod +x wrm-pro-v13.7.0-android-arm64 && ./wrm-pro-v13.7.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.8.0/wrm-pro-v13.8.0-android-arm64
+   chmod +x wrm-pro-v13.8.0-android-arm64 && ./wrm-pro-v13.8.0-android-arm64
    ```
 
    **Docker**
@@ -357,9 +363,13 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ---
 
-## Upgrading from v13.6.0
+## Upgrading from v13.7.0
 
 Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. Git workspace installations whose connection was deleted are no longer listed, and deleting a connection now removes its installations. *Show saved login* and *Copy password* follow the existing *Allow export of passwords & keys* policy (`allow_secret_export`, on by default; administrators always can) and the step-up policy.
+
+## Upgrading from v13.6.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: new columns `locked_at` and `lock_failures` in `auth_sessions` and `lock_pin_hash` in `users`; a previous version still starts on the database. New settings `screen_lock_mode` (`server`), `screen_lock_max_minutes` (`0`), `screen_lock_pin` (`1`), `screen_lock_max_failures` (`0`), `appearance_default_theme` (`graphite`) and `appearance_custom_css` (`1`); the Business and Enterprise security levels require `screen_lock_mode=server` and an idle lock of at most 30 / 15 minutes, and Enterprise turns the PIN off. **Two behaviour changes:** a locked browser session can no longer reach the API until it is unlocked (set `screen_lock_mode` to `remember` or `browser` for the looser behaviour), and a colour theme from an addon is no longer applied to everyone: each user picks it in *Settings → Appearance*, or the administrator makes it the default (`appearance_default_theme=addon:<addon>:theme`). The accent colour chosen in *Settings → General* before v13.7 is carried over into the theme once.
 
 ## Upgrading from v13.5.0
 
@@ -1089,6 +1099,29 @@ Every opened connection is a **window** inside the workspace. There is also a **
 - **Tabs:** click to focus or restore, **drag to reorder**, **middle-click** to close, **right-click** for *Reconnect*, *Duplicate window*, snap layouts and *Close*. SSH tabs show the connection state (🟡 connecting, 🟢 connected, 🔴 disconnected).
 - **Close confirmation** can be *Always*, *Never* or *Only when connected* (Settings).
 - The browser warns you before leaving the page while terminals are connected or a transfer is running.
+
+### Appearance, themes and accessibility
+
+*Settings → Appearance* (`static/appearance.js`) changes how WRM looks for you; the choice is stored on the server (`/api/me/ui/appearance`) and follows you to every browser.
+
+- **Themes:** Graphite (default), Midnight (OLED black), Fjord, Solar dark, Forest, Ember, Daylight, Paper, Solar light, High contrast dark and High contrast light. *Follow the system light / dark setting* switches between a dark and a light theme of your choice. Every theme also sets the terminal colours.
+- **Your own colours:** every colour token (backgrounds, text, borders, accent, status colours and their text variants, terminal background, foreground and ANSI colours) has a colour picker and a CSS field; your changes apply on top of the theme and can be reset one by one or all at once. **Save as my theme** keeps the result (up to 30), **Export** / **Import** move a theme as JSON (`{"wrm_theme": 1, "name", "mode", "tokens", "term"}`).
+- **Fonts and size:** interface font (including readable choices such as Atkinson Hyperlegible, Lexend and OpenDyslexic when installed), monospace font for terminals, editor and logs, interface size 70–160 %, spacing (compact, normal, roomy with larger click targets), rounded corners, line and letter spacing, heavier text.
+- **Colour vision:** deuteranopia, protanopia, tritanopia and achromatopsia switch OK / warning / error / info colours and diffs to an Okabe–Ito based palette, optionally also in terminals. *Do not rely on colour alone* adds ✓ ✕ ! signs to status badges and toasts, shapes to connection status dots (● up, ◆ slow, ■ down) and underlines links.
+- **Other options:** contrast (normal, more, maximum), minimum contrast in terminals (WCAG 4.5:1 or 7:1), animations (system, reduce, full), reduce transparency and blur, strong keyboard focus outline, underline links.
+- **Custom CSS** for your own interface only (`appearance_custom_css`, default on).
+- **Themes from addons:** an enabled addon offers its themes here (`ui.themes` in `addon.json` with `id`, `name`, `name_hr`, `mode`, `tokens` and/or `css`; the older single `ui.theme` stylesheet appears as one theme). Nothing is applied to users who did not pick it. An administrator can make any theme the default with **Default for everyone** or `appearance_default_theme`.
+
+### Screen lock
+
+The lock covers WRM and asks for the account password; terminals, file transfers, tunnels, AI and MCP sessions keep running. *Settings → Security → Screen lock* (per user, `/api/me/ui/lock`):
+
+- **Lock now** (also 🔒 in the top bar and a keyboard shortcut, Ctrl+Alt+L by default).
+- **When:** after inactivity (off, 1 minute to 4 hours or a custom time, with an optional 10/30/60 s warning; activity in any WRM tab counts, mouse movement optionally), when WRM is not visible (immediately or after 1/5/15 minutes, unless another WRM tab is visible), when the computer locks (browser idle detection, Chrome/Edge, asks for permission once), after the computer sleeps, and on every start or reload.
+- **Lock screen:** blurred, dimmed or solid background, clock, your name, how many windows keep running, a message of your own, and a neutral tab title. Notifications are held while locked and shown after the unlock; desktop notifications do not show their text.
+- **Unlocking:** the account password (local or directory/LDAP), or a personal 4–12 digit **PIN** (`screen_lock_pin`). Accounts that only sign in through an identity provider can set a PIN right after signing in, or sign out from the lock screen. Every lock, unlock and failed attempt is audited; five attempts per minute at most, and `screen_lock_max_failures` signs the browser session out after that many wrong attempts.
+- **How strict** (`screen_lock_mode`): `server` (default) remembers the lock per sign-in session and refuses that session's requests with `423 Locked` until the unlock, so a reload, a new tab or the browser's developer tools do not get past it; `remember` keeps the lock over a reload but lets the page refresh underneath; `browser` is the page-only lock of earlier versions. All WRM tabs of the browser lock and unlock together.
+- **Administrator limit:** `screen_lock_max_minutes` is the longest idle time a user may choose (0 = no limit); users cannot turn the idle lock off below it.
 
 ### Panel layout: dock, stack, float and lock
 
@@ -2345,6 +2378,12 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_models` | – | allowed models, comma-separated patterns (`claude-*`); empty = every model of the providers |
 | `ai_ollama_manage` | `0` | lets administrators install / start / pull Ollama through WRM from the provider wizard (`WRM_AI_OLLAMA_MANAGE`); off = the wizard only shows the commands |
 | `ai_redact_output` | `1` | redact secrets before output is sent to the provider (transcripts and the audit are always redacted) |
+| `screen_lock_mode` | `server` | how strict the screen lock is: `server` (a locked session gets `423` until unlocked), `remember` (survives a reload), `browser` (page only) |
+| `screen_lock_max_minutes` | `0` | longest idle time before the screen lock users may choose; `0` = the user decides |
+| `screen_lock_pin` | `1` | users may unlock the screen with a personal 4–12 digit PIN |
+| `screen_lock_max_failures` | `0` | sign the browser session out after this many wrong unlock attempts; `0` = never |
+| `appearance_default_theme` | `graphite` | theme for users who have not chosen one: a built-in id or `addon:<addon>:<theme>` |
+| `appearance_custom_css` | `1` | users may add CSS to their own interface |
 | `ai_show_thinking` | `1` | show the assistant's thinking (reasoning summaries) in the work log and keep it in the transcript |
 | `ai_auto_titles` | `1` | give each AI chat a short title after its first answer (one small extra request without tools) |
 | `ai_share_notes` | `1` | users may opt in to send their connection notes |
@@ -2615,6 +2654,17 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 ---
 
 ## API reference
+
+### v13.7.0 endpoints
+
+| Endpoint | Behavior |
+|---|---|
+| `GET / POST /api/auth/lock` | Lock state of this sign-in session / lock it (`{"reason": "manual"\|"idle"\|"hidden"\|"os_locked"\|"sleep"\|"shortcut"}`), audited as `auth.locked`. |
+| `POST /api/auth/lock/verify` | `{"password"}` or `{"pin"}`: unlock (`auth.unlocked` / `auth.unlock_failed`); `429` after five attempts a minute, `401 {"signed_out": true}` at `screen_lock_max_failures`. |
+| `PUT / DELETE /api/auth/lock/pin` | Set (`{"pin", "password"}`) or remove the unlock PIN. |
+| `GET / PUT /api/me/ui/appearance`, `/api/me/ui/lock` | The user's appearance and screen lock preferences (JSON object, 256 KiB). |
+
+While a session is locked in `server` mode every other authenticated endpoint answers `423 Locked`; `/api/auth/me` reports `screen_locked` and the `screen_lock` and `appearance` policy.
 
 ### v12.4.4–v12.4.5 endpoints
 

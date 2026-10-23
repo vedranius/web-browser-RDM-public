@@ -14,7 +14,7 @@ import (
 // GET /api/me/ui/{key}   → {"value": <stored JSON or null>, "updated_at": "…"}
 // PUT /api/me/ui/{key}   body {"value": <JSON object>}; DELETE resets it.
 
-var userUIKeys = map[string]bool{"layout": true, "workboard": true}
+var userUIKeys = map[string]bool{"layout": true, "workboard": true, "appearance": true, "lock": true}
 
 // v12.6.10: 256 KiB, the Workboard also keeps saved canvas layouts.
 const userUIMaxBytes = 256 << 10
