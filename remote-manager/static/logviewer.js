@@ -394,6 +394,7 @@ Object.assign(LANGS.hr, {
   function stopAll() {
     S.search.ctrl?.abort();
     for (const tab of S.tabs) stopFollow(tab);
+    window.wrmChat?.closeLogAI();
   }
   async function loadSettings() {
     if (!S.conn) return null;
@@ -457,7 +458,7 @@ Object.assign(LANGS.hr, {
     const meta = S.meta || {};
     const status = !S.conn ? t('mon_pick_server')
       : S.discovering ? '⏳ ' + t('mon_discovering')
-      : [t('mon_log_count') + ': ' + S.files.length, meta.method ? t('lv_method_used') + ': ' + meta.method.toUpperCase() : '', meta.ms != null ? t('lv_took') + ' ' + (meta.ms / 1000).toFixed(1) + ' s' : '', meta.at ? fmt(meta.at) : ''].filter(Boolean).join(' · ');
+      : [t('mon_log_count') + ': ' + S.files.length, meta.method ? t('lv_method_used') + ': ' + meta.method.toUpperCase() : '', meta.ms != null ? t('lv_took') + ' ' + (meta.ms / 1000).toFixed(1) + ' s' : '', meta.at && !String(meta.at).startsWith('0001') ? fmt(meta.at) : ''].filter(Boolean).join(' · ');
     S.host.innerHTML = `<div id="lv" class="${lsGet('wrm_lv_wrap', '') ? 'wrap' : ''}">
 <div class="lv-bar">
  <select id="lv-server" aria-label="${esc(t('git_server'))}" onchange="wrmLogViewer.setServer(this.value)">${opt('', '— ' + t('git_server') + ' —', '')}${servers.map(x => opt(x.connection.id, (x.sample?.hostname || x.connection.host) + ' · ' + x.connection.name, ctx.server)).join('')}</select>
@@ -491,6 +492,7 @@ ${(meta.warnings || []).length ? `<details class="hint-box warn"><summary>${esc(
 </div></div>`;
     S.host.querySelector('.lv-files').scrollTop = listScroll;
     renderPane();
+    window.wrmChat?.restoreLogAI();
     if (focus?.id && $(focus.id)) { $(focus.id).focus(); if (focus.pos != null) try { $(focus.id).setSelectionRange(focus.pos, focus.pos); } catch (_) {} }
   }
   function fileRow(f) {
@@ -919,7 +921,14 @@ ${s.truncated ? `<div class="hint-box warn" style="margin:6px">${esc(t('lv_hits_
     const server = (S.ctx.servers || []).find(x => String(x.connection.id) === String(S.conn));
     const ctx = {connId: S.conn, connName: server?.connection.name || '', file: tab ? tab.file.path : '', find: tab ? tab.find : S.search.q,
       excerpt: tab ? shownText().split('\n').slice(-200).join('\n') : '', timezone: tz()};
-    if (typeof openLogAI === 'function') openLogAI(ctx);
+    if (typeof openLogAI === 'function') return openLogAI(ctx);
+    if (!S.aiLoading) S.aiLoading = new Promise((ok, fail) => {
+      const script = document.createElement('script');
+      script.src = '/static/aichat.js'; script.onload = ok;
+      script.onerror = () => { S.aiLoading = null; fail(new Error(t('git_load_failed'))); };
+      document.head.appendChild(script);
+    });
+    S.aiLoading.then(() => openLogAI(ctx)).catch(e => showToast(e.message, 'error'));
   }
   function refreshTimes() { if (S.host?.isConnected) render(); }
 
