@@ -1,3 +1,27 @@
+## [13.5.0] - 2026-10-23
+
+### Added
+- **Professional log viewer** (*Monitoring → Logs*, `static/logviewer.js`). The file list can be sorted by newest, oldest, name, size, service, operator or path and filtered by operator and service. A log opens in a tab with line numbers, level colours (a stack trace keeps the level of its line), highlighting of times, IPs, URLs, HTTP status codes, UUIDs and key=value pairs, find in the log (regex, case, previous/next, only matching lines), level filters, **Follow** (new lines every 2.5 s, journal by cursor), loading of older lines, go to line, wrap, copy, download and a terminal shortcut. Keys: `/` find, `n`/`N`, `g`, `f`, `w`.
+- **Search across logs by time.** The Search tab greps the selected or shown files on the server (`POST /api/monitoring/logs/grep`): literal or regex, case, whole word, context lines, a From/To range in the chosen date format with quick ranges (15 min … 30 days), the log time zone, hits sorted by time in either order, level chips, per-file filter and a timeline with zoom. Clicking a hit opens the file at that line.
+- **Log settings, separate from Zabbix** (`⚙ Log settings`, `GET/PUT /api/monitoring/logs/settings`, table `log_settings`): scan paths, excluded names, path patterns that label operator and service (`/home/*/{operator}/{service}/{logdir}/**`), extra log name patterns, depth, file and age limits, time budget, rotated and compressed files, empty files, systemd journal, systemd/Supervisor/Docker metadata and the discovery method (`auto`, `ssh`, `sftp`). Explicit log folders and journal units moved here from the Zabbix configuration; existing ones are read from it.
+- **Fast discovery over SSH.** One read-only command collects systemd, Supervisor and Docker metadata and a second runs `find` over the scan paths, so a large server is listed in about a second; servers without a shell fall back to the SFTP walk.
+- **`GET /api/monitoring/logs/lines`**: `mode=tail` (`n`), `around` (`line`, `before`, `after`) and `since` (`bytes`, or `cursor` for the journal; only whole lines, `reset` when the file shrank).
+- **AI log assistant.** 🤖 in the log viewer opens a chat panel that searches every discovered log on the server with the new **`search_logs`** tool (also offered over MCP under `read_logs`), reads around the hits and explains what happened. It is always read-only.
+- **Smart file editor with an AI assistant** (`static/fileeditor.js`, replaces the plain editor of the file manager): syntax highlighting for about 40 languages (off above 300 KB), line numbers, find and replace with regex and case (`Ctrl+F`, `Ctrl+H`), go to line (`Ctrl+G`), auto-indent and block indent, JSON check and format, **review of the changes before saving** (a diff, can be turned off), a check that nobody wrote the file on the server since it was opened (overwrite, or show the differences first), reload from the server, and a **🤖 AI assistant** panel that reviews, explains and edits the open file. Every change of the assistant is a diff that waits for approval; the editor reloads the file afterwards, or warns when you have unsaved changes. **Ask AI about the selection** sends the selected lines.
+- **The AI work log shows what the assistant thinks and does**: its reasoning (💭, Anthropic adaptive thinking on models that support it, `reasoning_content` from OpenAI-compatible servers), its narration before tool calls and each tool result. Setting `ai_show_thinking` (default on).
+- **AI chats have titles and can be continued.** A short title is generated after the first answer (`ai_auto_titles`, default on; click the title to rename, `POST /api/ai/sessions/{id}/title`). An ended or interrupted session shows **Continue chat**: a new session with the earlier conversation as context (`resume_from`). History lists title, date and time, and log and file chats are kept apart from terminal chats (`GET /api/ai/sessions?purpose=terminal|logs|file`).
+- **EU date and time by default** (`dd.mm.yyyy hh:mm`), with ISO, US and the browser's locale under *Settings → Date and time format*.
+- **Plugin and skills**: the skills name `search_logs`, the plugin README explains what is in it and where the data goes, and `server.json` describes WRM for the MCP Registry (`io.github.vedranius/wrm-pro`). Tests check the manifests and that every tool a skill names exists.
+
+### Changed
+- Discovery never lists scripts and code (`.py`, `.sh`, `.js`, …) as logs, finds logs with or without a service label and labels operator and service from the path patterns.
+
+### Fixed
+- **A week-wide search no longer stops with "Automatic folder discovery time budget reached" or "Results are bounded or incomplete"**: discovery runs on the server in one command with its own time budget, and searches grep on the server instead of downloading files.
+- **Operators were not found** for logs under `/home/<project>/<operator>/<service>`; the path patterns and the operator filter now cover them.
+- **AI sessions stuck in "stopped".** A session that ended (WRM restart, idle time, kill switch) kept the browser reconnecting to a dead stream; the stream now answers with an `ended` event and the chat offers **Continue chat** with its history.
+- The log viewer's status no longer shows `01.01.1` before the first discovery.
+
 ## [13.4.3] - 2026-10-23
 
 ### Added

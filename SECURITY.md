@@ -277,6 +277,14 @@ Remote previews require `files_read` on every metadata/range/content request, in
 
 Folder parents must belong to the same user; hierarchy mutations are serialized and reject cycles/excess depth. Shared folder recursion is scoped to the owner. Sharing a parent folder includes existing and future descendant folders: check the folder tree before moving a connection into a shared subtree. Jump/proxy defaults apply only to the immediate folder. Deleting a parent reparents its children, preserving their connections.
 
+## Logs, log search and AI chats (v13.5.0)
+
+- Log discovery, search and line reads run over the connection's own SSH account, without sudo, as read-only commands (`systemctl list-units`, `grep`, `find`, `sed -n`, `tail -c`, `journalctl`). Every path in those commands is shell-quoted and comes from the server's log settings or from the metadata just read; search and line reads accept only paths and journal units the last discovery returned (`logSearchable`), so a request cannot name `/etc/shadow`. Regex searches use `grep -E` with a size limit; output is capped (about 900 KB per read) and the commands have time limits.
+- Log settings are stored encrypted per connection; only the connection's owner can change them or start a discovery. Shared users can read the logs their role allows.
+- The log assistant is always read-only; a purpose limits the tools the model is offered and `CallTool` refuses any other tool. The file assistant edits only through `edit_file` / `write_file`, so every change is a diff that waits for approval in the ask mode, like in the terminal panel.
+- Chat titles are generated with no tools from the first question and answer (both already redacted); continuing a chat sends the earlier, redacted transcript of the same user to the provider again. Thinking summaries are redacted and stored like other transcript entries.
+- The editor checks the file on the server before it writes and asks before overwriting a newer version.
+
 ## AI assistant: threat model
 
 The built-in assistant (v12.0.0) lets a language model act on a server. WRM treats the model as an **untrusted, possibly manipulated actor** and puts the decisions on the server:

@@ -37,7 +37,7 @@ node ../tools/check-ui.js       # UI: JS syntax + en/hr translation keys
 ## Version bump and docs (every version)
 - **Version in:**
   - `remote-manager/main.go` (`AppVersion`);
-  - `remote-manager/static/index.html` (`<title>`, `#auth-ver`, `.app-ver`);
+  - `remote-manager/static/index.html` needs no change: the title, `#auth-ver` and `.app-ver` show the running version (`setAppVersion`);
   - `.github/workflows/build.yml` (`APP_VERSION`);
   - `docker-compose.yml`;
   - `remote-manager/build-all.sh`;
