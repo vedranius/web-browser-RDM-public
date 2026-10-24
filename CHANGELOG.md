@@ -1,3 +1,18 @@
+## [13.12.0] - 2026-10-24
+
+### Added
+- **Addon platform v2, step 3: tools for AI-made addons** ([docs/ADDONS.md](docs/ADDONS.md#tools-for-writing-addons)).
+- **`wrm -addon-lint DIR|ZIP`** (`addons_lint.go`; `-addon-lint-json` for JSON, exit code 1 on an error): the same archive checks as an install (size, paths, file count, manifest decoding and validation, WebAssembly imports and exports), then the files: remote scripts, stylesheets, fonts and images, inline event handlers, `javascript:` URLs, `eval` / `new Function`, `fetch` / XHR / WebSocket / EventSource, `localStorage` / IndexedDB / cookies, token shapes and secret assignments in the ZIP, sites missing from `http.origins`, `wrm:ready` and `wrm:heartbeat` in apiVersion 2 panels, bridge calls without the capability, files never served, apiVersion 1 manifests, hidden files. Every finding is `{level, code, message, file, line, hint}`; the report adds the permission summary and the panel's CSP. Nothing in the addon runs.
+- **`POST /api/addons/dev/lint`** and *Settings → Addons → 🛠 Developer tools → Check ZIP*; a failed install opens the lint report by itself, with *Copy report* for an AI.
+- **Starter templates** (`addons_templates.go`, `addon_templates/`): `blank`, `fetch-and-render`, `grafana-panel` (alerts from Grafana's Alertmanager API with a secret and notifications) and `wasm-hook` (TinyGo source plus a placeholder module so it installs at once). `wrm -addon-new TEMPLATE [-addon-id ID] DIR`, `GET /api/addons/dev/templates[/{name}.zip?id=]` and *Templates* in the developer tools. The panel templates carry **`wrm-bridge.js`**: `wrm.ready`, `wrm.on`, `wrm.storeGet`, `wrm.storeSet`, `wrm.notify`, `wrm.http`, `wrm.t`, the heartbeat and error reporting.
+- **`wrm -addon-dev DIR`** (`addons_dev.go`): a dev server on `127.0.0.1` (`-addon-dev-port`, default 8790) that serves the panel with the real CSP in the real sandbox, a host page with language, theme and visibility switches, an in-memory store, web requests to the listed sites through the same checks as WRM (secrets from `WRM_ADDON_SECRET_<NAME>`, private and plain-http sites only with `-addon-dev-private`), the lint report, the bridge log, the watchdog, and a reload on every file change.
+- **JSON Schema and `llms.txt`**: `GET /api/addons/dev/schema.json` (draft 2020-12, the apiVersion 2 manifest) and `GET /api/addons/dev/llms.txt` (the addon contract for AI assistants with every error code). The *AI addon* prompt names the tools.
+- Hints for the web request error codes (`E_HTTP_*`, `E_SECRET_MISSING`, `E_LIMIT_RATE`).
+
+### Changed
+- Addon ids `dev`, `install`, `drafts`, `community` and `users` are reserved (they collide with API paths).
+- Unpacking an addon archive writes through `os.Root`, so no archive entry can reach outside the addon folder even if a path check were missed.
+
 ## [13.11.0] - 2026-10-24
 
 ### Added

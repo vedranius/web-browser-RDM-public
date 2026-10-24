@@ -1,6 +1,25 @@
-## Web Remote Manager PRO v13.11.0 - Addons that reach web sites, safely
+## Web Remote Manager PRO v13.12.0 - Tools for writing addons, also with an AI
 
 ### Added
+
+- **Check an addon before installing it**: `wrm -addon-lint ./my-addon` (or *Settings → Addons → 🛠 Developer tools → Check ZIP*) lists everything the sandbox would refuse, every finding with a code, file, line and hint. A failed install opens this report by itself, and *Copy report* hands it to an AI to fix.
+- **Templates**: `wrm -addon-new grafana-panel ./my-addon` (blank, fetch-and-render, grafana-panel, wasm-hook), also as ZIPs in *Templates*. They come with `wrm-bridge.js`, a small helper for talking to WRM.
+- **A dev server**: `wrm -addon-dev ./my-addon` opens the panel on your computer with the real sandbox and CSP, a stand-in for WRM (settings, web requests, secrets from environment variables) and a reload on every change.
+- **For AI assistants**: WRM serves the manifest's JSON Schema and an `llms.txt` guide at `/api/addons/dev/`.
+
+### Changed
+
+- The addon ids `dev`, `install`, `drafts`, `community` and `users` are reserved.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
+
+[Download v13.12.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.12.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.11.0 - Addons that reach web sites, safely
+
+#### Added
 
 - **Addons can show data from web sites** (for example a Grafana dashboard): the addon lists the sites, paths and methods it needs in `addon.json`, and WRM makes the request for it. The panel itself still has no network.
 - **An administrator approves the sites** before anything is sent. Enabling an organisation addon approves them; a personal addon shows *sites wait for an administrator* with *Approve*, *Change* and *Withdraw* for administrators.
@@ -9,7 +28,7 @@
 - **Recent web requests** in the window's ⚠ diagnostics (method, site, path, status, size, time, error code).
 - New policy `addon_http` (`off`, `admins`, `all`) for who may use addons with web access.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. Additive migration (tables `addon_http_grants`, `addon_secrets`, `addon_http_log`); a previous version still starts on the database. Existing addons are unchanged.
 

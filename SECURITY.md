@@ -427,6 +427,13 @@ The Medium native preview (v12.6.0) is read-only: it lists application directori
 - **The bridge** accepts only `v: 2` messages of known types from the panel's own frame and validates every field. Store requests run with the user's session in the WRM page; the panel never sees the session, cookies or the sign-in name (only the display name and the numeric user id). Notifications are plain text, 200 characters, 5 a minute per instance, repeats dropped.
 - **Store:** JSON only, 32 KB per value, a quota per instance (1 MB at most), keys starting with `wrm.` reserved; shared values (`store.shared`) are written by administrators only. The store is not a place for secrets: it is readable by the addon's code; use addon secrets (below).
 
+## Addon developer tools (v13.12.0)
+
+- **Lint runs nothing.** `wrm -addon-lint`, `POST /api/addons/dev/lint` and *Check ZIP* unpack the archive with the install's checks into a temporary folder (through `os.Root`, so no entry can leave it), read the files as text and validate WebAssembly imports and exports without instantiating the module. The API is open to administrators and to users who may install personal addons (`addon_personal`); its findings are advice, the install keeps enforcing the rules.
+- **Secrets in the ZIP.** The lint refuses token shapes and literal password or token assignments (`E_LINT_SECRET`) so that keys go into WRM's encrypted secrets instead of an addon file.
+- **Dev server** (`wrm -addon-dev`): binds `127.0.0.1` only, answers only `Host: 127.0.0.1 | localhost | [::1]` with its port (DNS rebinding gets 421), protects its own API with a random token, serves the panel with the real sandbox and CSP and refuses hidden files and paths outside the folder (`os.Root`). It reads secrets from `WRM_ADDON_SECRET_*` environment variables, keeps the store in memory and sends web requests through WRM's own checks; private-network and plain-http sites need `-addon-dev-private`. It is a developer tool for your own folder and has no WRM sign-in, so do not expose its port.
+- **Reserved ids** `dev`, `install`, `drafts`, `community` and `users` keep addon URLs from shadowing API paths.
+
 ## Addon web requests and secrets (v13.11.0)
 
 - **One network path.** An apiVersion 2 panel still has `connect-src 'none'`; the `http` capability lets it ask WRM, which sends the request from the WRM server. Review an addon's origins on the permission sheet like any other outbound access of the server.

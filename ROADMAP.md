@@ -24,11 +24,9 @@ Addon decisions already taken: server code runs in a WASM sandbox (`wazero`, pur
 
 Goal: an addon written by any user (or their AI) can show live data in a WRM window, keep its settings and survive restarts, without being able to read WRM secrets, reach arbitrary hosts, hang the app or escalate beyond what was approved. Decisions: every user may install personal addons (network access and secrets are approved by an administrator); secrets per instance entered by an administrator, with a personal override that wins; **no background checks or history in WRM** (addons fetch while their window is open; 24/7 alerting stays in the monitored system).
 
-Delivered: v13.9.0 step 1 (manifest v2, personal addons, themes for Appearance, instances, server-side store, remembered windows, bridge v2 with watchdog, CSP and integrity, permission sheets) and v13.11.0 step 2 (web requests through WRM with an origin allowlist, SSRF guard, administrator approval and private-network opt-in, secrets per instance with a personal override, rate limits and a request log); see [CHANGELOG.md](CHANGELOG.md).
+Delivered: v13.9.0 step 1 (manifest v2, personal addons, themes for Appearance, instances, server-side store, remembered windows, bridge v2 with watchdog, CSP and integrity, permission sheets), v13.11.0 step 2 (web requests through WRM with an origin allowlist, SSRF guard, administrator approval and private-network opt-in, secrets per instance with a personal override, rate limits and a request log) and v13.12.0 step 3 (addon lint with structured diagnostics, dev server, starter templates, JSON Schema and `llms.txt`); see [CHANGELOG.md](CHANGELOG.md).
 
-Next:
-- **Step 3: tooling for AI-made addons.** JSON Schema and `llms.txt` served by WRM, `wrm -addon-lint <dir>` (schema, files, traversal, remote scripts, `eval`, inline handlers, CSP hashes, wasm imports/exports, permission summary), `wrm -addon-dev <dir>` (the real CSP and a host shim with store and proxy, hot reload), structured diagnostics `{code, message, file, line, hint}`, starter templates (blank, fetch-and-render, grafana-panel, wasm-hook).
-- Later, when needed: a separate addon origin (own host or port), safe mode after repeated startup crashes, signed addons and a registry with updates.
+Later, when needed: a separate addon origin (own host or port), safe mode after repeated startup crashes, signed addons and a registry with updates.
 
 ## Security and enterprise identity (accepted, versions before v12.7.0)
 

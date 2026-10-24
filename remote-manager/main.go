@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v13.11.0"
+var AppVersion = "v13.12.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -462,8 +462,21 @@ func main() {
 	lockdownMode := flag.String("lockdown", "", "`on`, off or status: turn the lockdown on or off (only break-glass administrators can sign in, AI stopped, shares paused) and exit; a running WRM applies it within seconds")
 	lockdownReason := flag.String("lockdown-reason", "", "with -lockdown on: the `REASON` shown to everyone")
 	flag.StringVar(&initialSecurityLevel, "security-level", "", "`LEVEL` home, business or enterprise: the security level to start with while none was chosen yet (also with -install-service)")
+	addonLint := flag.String("addon-lint", "", "check the addon in `DIR` (or a .zip) as an install would, list what its sandbox refuses, and exit (status 1 on errors)")
+	addonLintJSON := flag.Bool("addon-lint-json", false, "with -addon-lint: print the report as JSON")
+	addonNew := flag.String("addon-new", "", "create an addon from `TEMPLATE` (blank, fetch-and-render, grafana-panel, wasm-hook) in the folder named by the next argument (default ./TEMPLATE) and exit")
+	addonNewID := flag.String("addon-id", "", "with -addon-new: the addon `ID` written into addon.json")
+	addonDev := flag.String("addon-dev", "", "serve the addon in `DIR` on 127.0.0.1 with the real sandbox, a stand-in for WRM and reload on change")
+	addonDevPort := flag.Int("addon-dev-port", 8790, "with -addon-dev: the `PORT` (0 picks a free one)")
+	addonDevPrivate := flag.Bool("addon-dev-private", false, "with -addon-dev: allow private and local addresses for the listed origins")
 	flag.Parse()
 	switch {
+	case *addonLint != "":
+		os.Exit(runAddonLint(*addonLint, *addonLintJSON, os.Stdout))
+	case *addonNew != "":
+		os.Exit(runAddonNew(*addonNew, *addonNewID, flag.Arg(0), os.Stdout))
+	case *addonDev != "":
+		os.Exit(runAddonDev(*addonDev, *addonDevPort, *addonDevPrivate))
 	case *releaseKeygen != "":
 		os.Exit(runReleaseKeygen(*releaseKeygen, os.Stdout))
 	case *releaseSign != "":

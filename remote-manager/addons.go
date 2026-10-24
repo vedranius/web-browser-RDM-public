@@ -48,6 +48,9 @@ var (
 		"http":        "reach the web sites its addon.json lists, through WRM and after an administrator approved them (apiVersion 2)",
 	}
 	addonExportPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
+	// addonReservedIDs are path words of /api/addons/ that an addon id would
+	// shadow.
+	addonReservedIDs = map[string]bool{"dev": true, "install": true, "drafts": true, "community": true, "users": true}
 )
 
 type addonUI struct {
@@ -290,6 +293,9 @@ func (m *addonManifest) validate() error {
 	if !addonIDPattern.MatchString(m.ID) {
 		return fmt.Errorf("the addon id must be 2-64 characters: lowercase letters, digits, dot, dash or underscore")
 	}
+	if addonReservedIDs[m.ID] {
+		return fmt.Errorf("the addon id %q is reserved by WRM; choose another one", m.ID)
+	}
 	m.Name = strings.TrimSpace(m.Name)
 	m.Version = strings.TrimSpace(m.Version)
 	if m.Name == "" || len(m.Name) > 80 {
@@ -526,6 +532,12 @@ func addonWriteFiles(body []byte, prefix, dst string) error {
 	if err != nil {
 		return err
 	}
+	// os.Root keeps every write inside dst, whatever the archive names.
+	root, err := os.OpenRoot(dst)
+	if err != nil {
+		return err
+	}
+	defer root.Close()
 	for _, f := range zr.File {
 		n := strings.TrimSuffix(f.Name, "/")
 		if !strings.HasPrefix(n, prefix) {
@@ -535,15 +547,17 @@ func addonWriteFiles(body []byte, prefix, dst string) error {
 		if rel == "" || f.FileInfo().IsDir() {
 			continue
 		}
-		target := filepath.Join(dst, filepath.FromSlash(rel))
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-			return err
+		target := filepath.FromSlash(rel)
+		if dir := filepath.Dir(target); dir != "." {
+			if err := root.MkdirAll(dir, 0o755); err != nil {
+				return err
+			}
 		}
 		rc, err := f.Open()
 		if err != nil {
 			return err
 		}
-		out, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+		out, err := root.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 		if err != nil {
 			rc.Close()
 			return err
@@ -942,6 +956,10 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 			out["personal_others"] = others
 		}
 		jsonOK(w, out)
+		return
+	}
+	if parts[0] == "dev" {
+		addonDevAPIHandler(w, r, userID, admin, parts[1:])
 		return
 	}
 	if parts[0] == "drafts" {

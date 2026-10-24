@@ -198,7 +198,7 @@ func TestGitEnvDeployDryRunAndRollback(t *testing.T) {
 			Current string `json:"current"`
 		} `json:"dests"`
 	}
-	if code := e.u.jsonDo("GET", "/api/git/env/history?app=demo-api&env=test", nil, &hist); code != 200 || len(hist.Entries) != 2 || hist.Entries[0]["dest"] != 0.0 || hist.Entries[1]["path"] != d1 || hist.Dests[1].Current != id {
+	if code := e.u.jsonDo("GET", "/api/git/env/history?app=demo-api&env=test", nil, &hist); code != 200 || len(hist.Entries) != 2 || histByDest(hist.Entries, 1)["path"] != d1 || histByDest(hist.Entries, 0) == nil || hist.Dests[1].Current != id {
 		t.Fatalf("history api: %d %+v", code, hist)
 	}
 	// the overview cell
@@ -743,4 +743,16 @@ func TestGitEnvDoctorAndOverview(t *testing.T) {
 	if code := e.u.jsonDo("GET", "/api/git/env/cell?"+url.Values{"app": {"demo-api"}, "env": {"test"}}.Encode(), nil, &cell); code != 200 || !cell.Drift || cell.Dests[1].VersionM != "v1.9" || cell.Dests[1].Detected.Version != "v1.9" || cell.Dests[1].Behind != 1 {
 		t.Fatalf("drift: %d %+v", code, cell)
 	}
+}
+
+// histByDest finds a merged history entry by destination index. Entries are
+// newest first, so two destinations deployed across a second boundary may come
+// in either order.
+func histByDest(entries []map[string]interface{}, dest int) map[string]interface{} {
+	for _, e := range entries {
+		if e["dest"] == float64(dest) {
+			return e
+		}
+	}
+	return nil
 }
