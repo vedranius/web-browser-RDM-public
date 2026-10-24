@@ -45,6 +45,7 @@ var (
 		"server.wasm": "run a WebAssembly hook in the sandbox",
 		"store":       "keep its settings on the WRM server (apiVersion 2)",
 		"notify":      "show short notifications from its panel (apiVersion 2)",
+		"http":        "reach the web sites its addon.json lists, through WRM and after an administrator approved them (apiVersion 2)",
 	}
 	addonExportPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
 )
@@ -77,6 +78,7 @@ type addonManifest struct {
 	UI           *addonUI     `json:"ui,omitempty"`
 	Server       *addonServer `json:"server,omitempty"`
 	Store        *addonStore  `json:"store,omitempty"`
+	HTTP         *addonHTTP   `json:"http,omitempty"`
 }
 
 type addonRecord struct {
@@ -97,6 +99,7 @@ type addonRecord struct {
 	Checksum     string       `json:"checksum"`
 	Server       *addonServer `json:"server,omitempty"`
 	Store        *addonStore  `json:"store,omitempty"`
+	HTTP         *addonHTTP   `json:"http,omitempty"`
 	// Key names the addon in URLs: the id of an organisation addon, "~id" for
 	// the signed-in user's personal addon. AssetBase is where its files are.
 	Key       string `json:"key"`
@@ -106,11 +109,16 @@ type addonRecord struct {
 	Owner     string `json:"owner,omitempty"`
 	// NeedsApproval: an update asked for more than was approved; the addon
 	// stays disabled until someone allowed to enable it approves the sheet.
-	NeedsApproval bool              `json:"needs_approval,omitempty"`
-	Permissions   []string          `json:"permissions"`
-	Added         []string          `json:"permissions_added,omitempty"`
-	files         map[string]string // rel path -> sha256 hex, pinned at install
-	approved      []string          // permission atoms approved when it was last enabled
+	NeedsApproval bool     `json:"needs_approval,omitempty"`
+	Permissions   []string `json:"permissions"`
+	Added         []string `json:"permissions_added,omitempty"`
+	// Network access (http capability): the administrator's approvals per
+	// origin, whether an origin still waits for one, and the secrets.
+	HTTPGrants  []addonHTTPGrant  `json:"http_grants,omitempty"`
+	HTTPWaiting bool              `json:"http_waiting,omitempty"`
+	Secrets     []addonSecretSpec `json:"secrets,omitempty"`
+	files       map[string]string // rel path -> sha256 hex, pinned at install
+	approved    []string          // permission atoms approved when it was last enabled
 }
 
 func initAddonSchema() {
@@ -186,7 +194,7 @@ func addonRecordFrom(owner int, id string, enabled int, manifest, source, checks
 	ref := addonRef{Owner: owner, ID: id}
 	rec := addonRecord{
 		APIVersion: m.APIVersion, ID: id, Name: m.Name, Version: m.Version, Description: m.Description, Author: m.Author,
-		License: m.License, Homepage: m.Homepage, Capabilities: m.Capabilities, UI: m.UI, Server: m.Server, Store: m.Store,
+		License: m.License, Homepage: m.Homepage, Capabilities: m.Capabilities, UI: m.UI, Server: m.Server, Store: m.Store, HTTP: m.HTTP,
 		Enabled: enabled == 1, InstalledAt: installedAt, InstalledBy: installedBy, Source: source, Checksum: checksum,
 		Key: ref.Key(), AssetBase: "/api/addons/" + ref.Key() + "/asset/", Personal: owner > 0, OwnerID: owner,
 		Permissions: addonPermissions(&m),
@@ -206,6 +214,7 @@ func addonRecordFrom(owner int, id string, enabled int, manifest, source, checks
 	if approved != "" {
 		json.Unmarshal([]byte(approved), &rec.approved)
 	}
+	addonHTTPStatus(&rec)
 	return rec, true
 }
 
@@ -360,6 +369,9 @@ func (m *addonManifest) validate() error {
 	}
 	if m.UI == nil && m.Server == nil {
 		return fmt.Errorf("the addon declares neither a ui panel/theme nor server code")
+	}
+	if err := addonValidateHTTP(m, seen); err != nil {
+		return err
 	}
 	return addonValidateV2(m, seen)
 }
@@ -760,10 +772,34 @@ func addonSetEnabledRef(userID int, ref addonRef, on bool) (addonRecord, int, er
 }
 
 func addonSetEnabled(w http.ResponseWriter, r *http.Request, userID int, ref addonRef, on bool) {
+	// An administrator who enables an addon with the http capability approves
+	// its origins in the same step: {"private": [origins]} names those that
+	// may reach the private network.
+	var req struct {
+		Private []string `json:"private"`
+	}
+	if on && r.ContentLength > 0 {
+		if json.NewDecoder(io.LimitReader(r.Body, 16<<10)).Decode(&req) != nil {
+			jsonError(w, "Invalid request", 400)
+			return
+		}
+	}
+	if cur, ok := addonGetRef(ref); ok && on && len(req.Private) > 0 {
+		if _, err := addonHTTPPrivateSet(cur, req.Private); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
+	}
 	rec, status, err := addonSetEnabledRef(userID, ref, on)
 	if err != nil {
 		jsonError(w, err.Error(), status)
 		return
+	}
+	if on && rec.HTTP != nil && isAdminUser(userID) {
+		if err := addonHTTPApprove(r, userID, rec, req.Private); err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
 	}
 	jsonOK(w, map[string]interface{}{"ok": true, "enabled": on, "id": rec.ID, "key": rec.Key})
 }
@@ -790,6 +826,7 @@ func addonRemoveRef(userID int, ref addonRef) (addonRecord, int, error) {
 	}
 	os.RemoveAll(addonRefDir(addonRef{Owner: rec.OwnerID, ID: rec.ID}))
 	addonForgetInstances(ref)
+	db.Exec(`DELETE FROM addon_http_grants WHERE addon_owner=? AND addon_id=?`, rec.OwnerID, rec.ID)
 	details := map[string]interface{}{"version": rec.Version}
 	if ref.Owner > 0 {
 		details["personal_owner"] = usernameOf(ref.Owner)
@@ -975,6 +1012,8 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 			addonRemove(w, r, userID, ref)
 		case len(parts) == 4 && parts[3] == "disable" && r.Method == http.MethodPost:
 			addonSetEnabled(w, r, userID, ref, false)
+		case len(parts) == 4 && parts[3] == "http":
+			addonHTTPGrantHandler(w, r, userID, ref)
 		default:
 			jsonError(w, "Not found", 404)
 		}
@@ -1018,6 +1057,15 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(parts) == 1 && r.Method == http.MethodDelete {
 		addonRemove(w, r, userID, ref)
+		return
+	}
+	// Network approvals are an administrator's, also for personal addons.
+	if len(parts) == 2 && parts[1] == "http" {
+		if !admin {
+			jsonError(w, "Admin access required", 403)
+			return
+		}
+		addonHTTPGrantHandler(w, r, userID, ref)
 		return
 	}
 	if len(parts) != 2 || r.Method != http.MethodPost {

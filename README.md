@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.10.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.11.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.11.0
+
+**Addons can reach web sites, through WRM and only where an administrator said yes.** An addon now lists the sites it needs in `addon.json` (for example `https://grafana.example.com`, with the methods and paths it uses). WRM makes the request on the panel's behalf, so the panel itself still has no network: anything not listed is refused, every name is resolved by WRM and private or local addresses are blocked unless the administrator ticked *private network* for that site, and redirects are checked again. API keys and passwords for those sites are **secrets** that you type into WRM (🔑 *Secrets* on the instance): per instance, with your own value in a shared instance if you need one. They are stored encrypted, added to the request by WRM and never shown to the panel. A personal addon's sites wait for an administrator's approval. Recent requests are listed in the window's diagnostics. See [Addons](#addons) and the [addon developer guide](docs/ADDONS.md).
 
 ## What's new in v13.10.0
 
@@ -212,7 +216,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -323,21 +327,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.10.0-linux-amd64
-   ./wrm-pro-v13.10.0-linux-amd64
+   chmod +x wrm-pro-v13.11.0-linux-amd64
+   ./wrm-pro-v13.11.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.10.0-windows-amd64.exe
+   .\wrm-pro-v13.11.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.10.0-linux-amd64.AppImage
-   ./wrm-pro-v13.10.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.10.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.11.0-linux-amd64.AppImage
+   ./wrm-pro-v13.11.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.11.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -346,8 +350,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.10.0/wrm-pro-v13.10.0-android-arm64
-   chmod +x wrm-pro-v13.10.0-android-arm64 && ./wrm-pro-v13.10.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.11.0/wrm-pro-v13.11.0-android-arm64
+   chmod +x wrm-pro-v13.11.0-android-arm64 && ./wrm-pro-v13.11.0-android-arm64
    ```
 
    **Docker**
@@ -371,6 +375,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.10.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: new tables `addon_http_grants`, `addon_secrets` and `addon_http_log`; a previous version still starts on the database (it ignores them, and addons with an `http` block were not installable there). New policy `addon_http` (`all`): who may use addons that reach web sites (`off`, `admins`, `all`). Existing addons are unchanged; an addon gets network access only after an update that declares `http` and a new approval.
 
 ## Upgrading from v13.9.0
 
@@ -1876,6 +1884,8 @@ An addon extends WRM from inside itself: a panel (a window), colour themes and, 
 - **Instances:** *Open panel* opens your instance (the first one is created as *Default*). *Instances* in the addon's card creates more (administrators may share one with everybody), opens, renames, **exports** and **imports** their settings, and removes them. Each instance has its own settings and window.
 - **Windows** are ordinary WRM windows (move, resize, snap, minimize, tabs). Their place and size are remembered on the server per user, so open addon windows come back after a reload or on another device. **↻** reloads the panel; **⚠ n** lists the errors it reported. A panel that does not start within 5 seconds or stops answering for 45 seconds shows a banner with *Reload*, *Diagnostics*, *Disable addon* and *Close*.
 - **Themes** of enabled addons are offered in *Settings → Appearance*; nobody gets one without picking it.
+- **Web sites (v13.11):** an addon with the `http` capability lists its sites (`http.origins`), methods, paths and secrets in `addon.json`. The panel asks WRM, and WRM sends the request: only to a listed site, path and method, after an administrator approved the site (enabling an organisation addon approves its sites; a personal addon shows *sites wait for an administrator* with **Approve** for administrators), with names resolved by WRM and loopback, private, link-local and CGNAT addresses refused unless the administrator ticked **private network** for that site (plain `http://` needs that tick too). Redirects (3 at most) are checked again and the secret is not sent to another site. Limits: 256 KB request, 8 MB response, 10 s, 120 requests a minute and 20 at once per instance; identical GETs within 2 s share one answer. **Withdraw** removes the approval. The window's **⚠** diagnostics list the recent requests.
+- **Secrets (v13.11):** **🔑 Secrets** on an instance stores the API key or password of a site, encrypted on the server, as the administrator's value for a shared instance (or the owner's for a private one) and optionally **your own** value that replaces it for you. WRM adds it to the request (`Authorization: Bearer`, `Basic` or a named header); the panel only learns whether it is set. Setting and clearing a secret is audited without the value.
 - **What a panel can do:** it runs in a sandboxed frame with no access to WRM, its cookies or other windows and (apiVersion 2) **no network of its own**. It receives the display name, the language, the theme, its instance and its stored settings, and may store settings, show short notifications (5 a minute) and ask for a window size. Addons work while their window is open: WRM runs no background jobs for them, so 24/7 alerting stays in the monitored system.
 - **Writing one:** see the [addon developer guide](docs/ADDONS.md) (manifest, bridge, store, themes, error codes) or *AI addon* in the same pane for a ready prompt. The WRM assistant can write a draft that you review (**Diff**) and install.
 
@@ -2384,6 +2394,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `status_interval_seconds` | `60` | seconds between status rounds (15–3600) |
 | `status_jump_checks` | `0` | check connections behind jump hosts by logging in to the jump host |
 | `addon_personal` | `all` | who may install personal addons that only they see (`off`, `admins`, `all`); personal addons cannot carry server code |
+| `addon_http` | `all` | who may use addons that reach web sites through WRM (`off`, `admins`, `all`); the sites still need an administrator's approval |
 | `workboard_ssh_metrics` | `1` | the Workboard's *Server load* addon may read CPU, RAM, load and disks over SSH (Linux) for servers without Monitoring |
 | `desktop_enabled` | `1` | RDP / VNC / Telnet in the browser. Also `REMOTE_DESKTOP_ENABLED` |
 | `guacd_address` | `127.0.0.1:4822` | host:port of guacd. Also `GUACD_ADDRESS` |
@@ -2788,6 +2799,10 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | GET · PUT · DELETE | `/api/addons/{key}/instances/{iid}/store[/{k}]` | stored values: all (`{values, used, quota, writable}`), one key, write a JSON body (32 KB, quota per instance), delete |
 | GET · POST | `/api/addons/{key}/instances/{iid}/export` · `/import` | the instance's values as `{"format": "wrm-addon-config", …}` and back |
 | PUT · DELETE | `/api/addons/{key}/instances/{iid}/window` | your window state of the instance (JSON object, 4 KB) |
+| POST | `/api/addons/{key}/instances/{iid}/http` | send a request for the panel `{method, url, headers, body, encoding, secret}` → `{ok, status, headers, body, encoding, truncated, code}`; refusals carry `E_HTTP_*` codes |
+| GET | `/api/addons/{key}/instances/{iid}/http/log` | the last 50 requests of the instance (your own; administrators: all) |
+| GET · PUT · DELETE | `/api/addons/{key}/instances/{iid}/secrets[/{name}]` | secret states (never values); set `{value, scope}` (`instance` or `own`); clear with `?scope=` |
+| POST · DELETE | `/api/addons/{key}/http` · `/api/addons/users/{user id}/{id}/http` | administrators: approve the addon's sites `{private: [origins]}` or withdraw the approval |
 | GET | `/api/addons/{key}/asset/{file}` | a file of an enabled addon; HTML of apiVersion 2 panels carries the full CSP; a file that changed since install answers 409 `E_INTEGRITY` |
 | GET | `/api/workboard/metrics?id=` | CPU, RAM, load, uptime and disks of one of your SSH/SFTP connections: `{conn_id, at, source: zabbix\|ssh, cpu_percent, memory_percent, memory_total, load, cpu_count, uptime, disks: [{mount, percent, size_kb}], error}`; `refresh=1` skips the 25 s cache; 403 when reading over SSH is off and there is no fresh Monitoring sample |
 | GET / PUT / DELETE | `/api/me/ui/{key}` | Your interface state, `key` = `layout` (panel layout), `workboard` or `ai` (my AI settings: `provider_id, model, mode, engine, thinking`): `GET` → `{value, updated_at}` (`value` null when nothing is stored), `PUT {value: {…}}` (a JSON object, at most 64 KiB), `DELETE` resets |
@@ -3174,7 +3189,7 @@ remote-manager/
   users.go        sign-in, 2FA step, sessions, password change, account administration
   totp.go         TOTP (RFC 6238), QR code, recovery codes
   settings.go     admin policies (database + WRM_<KEY> environment overrides)
-  addons.go       addons: install, enable, assets; addons_v2.go: manifest v2, personal addons, instances, store, windows, CSP, integrity, permission sheets
+  addons.go       addons: install, enable, assets; addons_v2.go: manifest v2, personal addons, instances, store, windows, CSP, integrity, permission sheets; addons_http.go: web requests for addons (allowlist, SSRF guard, secrets, approvals, log)
   audit.go        audit log (hash chain, append-only triggers), CSV export, integrity check, retention
   recording.go    terminal sessions, asciicast recorder, file transfer log, recordings & transfers API
   hostkeys.go     SSH host key verification (TOFU/strict), FTPS certificate pinning
@@ -3335,6 +3350,7 @@ remote-manager/
   opencode_sandbox_test.go  OpenCode sandbox: configuration (own tools on, shell/edit/web fetch ask, local provider rewritten), locked-down docker arguments without secrets, settings, a permission request becoming a WRM approval that cannot be edited (approve, deny with a note, other permissions refused); with WRM_TEST_OPENCODE and WRM_TEST_OPENCODE_SANDBOX=<image>, a real container end to end
   v12610_test.go       the canvas is wired (addon windows, floating panels on the canvas, Tools menu, top bar group and order, sessions keep addons); /api/me/ui takes 256 KiB
   addons_v2_test.go    addon platform v2: strict manifest and error codes, theme validation, personal addons (visibility, policy, no server code, admin kill switch), instances, store scopes and quota, windows, export/import, CSP with script hashes, integrity, approvals on growing updates, downgrades
+  addons_http_test.go  addon web requests: http manifest validation and permission coverage, IP guard (loopback, private, metadata, CGNAT), proxy against a fake site (allowlist, approval, methods, paths, header filtering, secrets per instance and personal override, redirects, size cut, rate limit, coalescing, log), plain http and personal addons waiting for an administrator
   v1269_test.go        in-app notifications (recorded without channels, per user, reminders once a day, mark read, clear, newest 200 kept, removed with the user); metrics parser; /api/workboard/metrics (own connections only, SSH error in the result, policy off, fresh and stale Monitoring sample); the page loads static/workboard.js
   v1268_test.go        /api/me/ui: per-user layout store (put, overwrite, reset, objects only, 64 KiB limit, unknown keys, signed out, removed with the user); the page loads static/layout.js and has every panel
   v1267_test.go        Medium certificates: host CA bundle and extra PEM file reach every container (mount, environment, image roots kept), expired and duplicate certificates left out, bad or missing file named
@@ -3350,7 +3366,7 @@ remote-manager/
   static/mcp.js              AI connections (MCP): settings, indicator, approval cards, OAuth consent, admin tab (loaded when used)
   static/aisessions.js       the AI sessions panel and viewer; shared handling of decisions on requests that no longer wait
   static/layout.js           panel layout: dock zones, tab groups, splitters, floating windows, lock, Panels menu, per-user storage
-  static/addons.js           Settings → Addons, addon panels and the v2 bridge (instances, store, watchdog, permission sheet)
+  static/addons.js           Settings → Addons, addon panels and the v2 bridge (instances, store, watchdog, permission sheet, web requests, secrets)
   static/workboard.js        the Workboard: addon windows on the canvas, addon catalog, settings, docking addons as panels, canvas menu (grid, arrange, saved layouts, export/import)
   static/brand/              logo, favicon and app icons
   static/vendor/             xterm.js + addons and fonts (served locally, see THIRD-PARTY-LICENSES.txt)

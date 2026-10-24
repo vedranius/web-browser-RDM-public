@@ -1,23 +1,40 @@
-## Web Remote Manager PRO v13.10.0 - Saved logins, hostname names and a calmer top bar
+## Web Remote Manager PRO v13.11.0 - Addons that reach web sites, safely
 
 ### Added
+
+- **Addons can show data from web sites** (for example a Grafana dashboard): the addon lists the sites, paths and methods it needs in `addon.json`, and WRM makes the request for it. The panel itself still has no network.
+- **An administrator approves the sites** before anything is sent. Enabling an organisation addon approves them; a personal addon shows *sites wait for an administrator* with *Approve*, *Change* and *Withdraw* for administrators.
+- **Private network only when allowed**: local, private, link-local (cloud metadata) and CGNAT addresses are refused unless the administrator ticked *private network* for that site. WRM checks every address it connects to, also after redirects.
+- **Secrets** (🔑 on an addon instance): API keys and passwords for those sites, stored encrypted, per instance, with your own value in a shared instance if you need one. WRM adds them to the request; the panel never sees them, and setting or clearing one is audited without the value.
+- **Recent web requests** in the window's ⚠ diagnostics (method, site, path, status, size, time, error code).
+- New policy `addon_http` (`off`, `admins`, `all`) for who may use addons with web access.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. Additive migration (tables `addon_http_grants`, `addon_secrets`, `addon_http_log`); a previous version still starts on the database. Existing addons are unchanged.
+
+[Download v13.11.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.11.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.10.0 - Saved logins, hostname names and a calmer top bar
+
+#### Added
 
 - **Show saved login** in *Edit connection*: after you confirm with your WRM password (a domain account with its domain password, an SSO-only account through its identity provider), WRM shows what the connection logs in with: password, private key, your vault credential, key store key, Bitwarden key or the key file path. Every reveal is audited and can raise an alert; the administrator's *Allow export of passwords & keys* policy applies.
 - **Right-click a connection**: *Copy username*, *Copy password* (same confirmation, never shown in the notification) and *Copy IP address*.
 - **Use the server's hostname as the name** when adding a connection, and *Rename to the server's hostname* in the menu: WRM reads the hostname over SSH, or the DNS name for other protocols.
 
-### Changed
+#### Changed
 
 - Tabs and window titles show only the connection's name; the folder path is in the tooltip.
 - The vault's *Reveal* and the key store's *Export* accept a domain account's password.
 
-### Fixed
+#### Fixed
 
 - The version next to the WRM logo is visible again; the empty session *— none —* no longer stands in its place.
 - The user name in the top bar no longer jumps every 5 seconds when MCP is enabled.
 - The Git workspace server filter no longer shows blank entries for deleted connections.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. No database change: installations of deleted connections are no longer listed, and deleting a connection now removes them. New API endpoints `POST /api/connections/{id}/secret` and `POST /api/connections/{id}/name-from-hostname`.
 
