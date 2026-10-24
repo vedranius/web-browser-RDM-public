@@ -893,6 +893,86 @@ func addonTextual(ct string) bool {
 
 var addonHTTPURLShape = regexp.MustCompile(`(?i)^https?://([a-z0-9.\-]+|\[[0-9a-f:.]+\])(:[0-9]{1,5})?([/?][^\s#]*)?$`)
 
+// addonHTTPPrepared is a checked request: URL, origin, body and secret.
+type addonHTTPPrepared struct {
+	u                  *url.URL
+	origin             string
+	body               []byte
+	auth               func(*http.Request)
+	logOrigin, logPath string
+}
+
+// addonHTTPPrepare checks a panel's request against the manifest and the
+// approvals: method, body, URL (origin, path, grant) and secret. secret
+// returns the value of a declared secret, or "" when none is set. The status
+// is the HTTP status to answer an error with.
+func addonHTTPPrepare(rec addonRecord, grants map[string]addonHTTPGrant, req *addonHTTPRequest, secret func(name string) string) (addonHTTPPrepared, int, error) {
+	var prep addonHTTPPrepared
+	req.Method = strings.ToUpper(strings.TrimSpace(req.Method))
+	if req.Method == "" {
+		req.Method = "GET"
+	}
+	allowedMethod := false
+	for _, m := range rec.HTTP.methods() {
+		allowedMethod = allowedMethod || m == req.Method
+	}
+	if !allowedMethod {
+		return prep, 403, addonErrf("E_HTTP_METHOD", "%s is not in http.methods", req.Method)
+	}
+	if req.Body != "" {
+		if req.Encoding == "base64" {
+			b, err := base64.StdEncoding.DecodeString(req.Body)
+			if err != nil {
+				return prep, 400, addonErrf("E_HTTP_REQUEST", "The body is not valid base64")
+			}
+			prep.body = b
+		} else {
+			prep.body = []byte(req.Body)
+		}
+	}
+	if len(prep.body) > addonHTTPMaxBody {
+		return prep, 413, addonErrf("E_LIMIT_SIZE", "The request body is %d bytes; %d KB at most", len(prep.body), addonHTTPMaxBody>>10)
+	}
+	u, err := url.Parse(req.URL)
+	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
+		return prep, 400, addonErrf("E_HTTP_REQUEST", "url must be an absolute http(s) URL")
+	}
+	u.Fragment = ""
+	prep.u = u
+	prep.logOrigin, prep.logPath = strings.ToLower(u.Scheme+"://"+u.Host), u.EscapedPath()
+	origin, err := addonHTTPCheckURL(rec, grants, u)
+	if err != nil {
+		return prep, 403, err
+	}
+	prep.origin = origin
+	if req.Secret != "" {
+		sp, ok := rec.HTTP.secretSpec(req.Secret)
+		if !ok {
+			return prep, 403, addonErrf("E_HTTP_SECRET", "%q is not in http.secrets", req.Secret)
+		}
+		value := secret(sp.Name)
+		if value == "" {
+			return prep, 409, addonErrf("E_SECRET_MISSING", "The secret %s has no value for this instance", sp.Name)
+		}
+		prep.auth = addonHTTPAuthFunc(sp, value)
+	}
+	return prep, 0, nil
+}
+
+// addonHTTPAuthFunc adds a secret to a request the way http.secrets declares it.
+func addonHTTPAuthFunc(sp addonSecretSpec, value string) func(*http.Request) {
+	return func(q *http.Request) {
+		switch sp.Kind {
+		case "basic":
+			q.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(value)))
+		case "header":
+			q.Header.Set(sp.Header, value)
+		default:
+			q.Header.Set("Authorization", "Bearer "+value)
+		}
+	}
+}
+
 // addonHTTPDo performs a validated request.
 func addonHTTPDo(ctx context.Context, rec addonRecord, grants map[string]addonHTTPGrant, req addonHTTPRequest, u *url.URL, origin string, body []byte, auth func(*http.Request)) (addonHTTPResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, addonHTTPTimeout)
@@ -1023,72 +1103,15 @@ func addonHTTPHandler(w http.ResponseWriter, r *http.Request, userID int, admin 
 		addonFail(w, addonErrf("E_HTTP_REQUEST", "The request is not valid JSON"), 400)
 		return
 	}
-	req.Method = strings.ToUpper(strings.TrimSpace(req.Method))
-	if req.Method == "" {
-		req.Method = "GET"
-	}
-	allowedMethod := false
-	for _, m := range rec.HTTP.methods() {
-		allowedMethod = allowedMethod || m == req.Method
-	}
-	if !allowedMethod {
-		fail(addonErrf("E_HTTP_METHOD", "%s is not in http.methods", req.Method), 403)
-		return
-	}
-	var body []byte
-	if req.Body != "" {
-		if req.Encoding == "base64" {
-			b, err := base64.StdEncoding.DecodeString(req.Body)
-			if err != nil {
-				fail(addonErrf("E_HTTP_REQUEST", "The body is not valid base64"), 400)
-				return
-			}
-			body = b
-		} else {
-			body = []byte(req.Body)
-		}
-	}
-	if len(body) > addonHTTPMaxBody {
-		fail(addonErrf("E_LIMIT_SIZE", "The request body is %d bytes; %d KB at most", len(body), addonHTTPMaxBody>>10), 413)
-		return
-	}
-	u, err := url.Parse(req.URL)
-	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
-		fail(addonErrf("E_HTTP_REQUEST", "url must be an absolute http(s) URL"), 400)
-		return
-	}
-	u.Fragment = ""
-	logOrigin, logPath = strings.ToLower(u.Scheme+"://"+u.Host), u.EscapedPath()
 	ref := addonRef{Owner: rec.OwnerID, ID: rec.ID}
 	grants := addonHTTPGrants(ref)
-	origin, err := addonHTTPCheckURL(rec, grants, u)
+	prep, status, err := addonHTTPPrepare(rec, grants, &req, func(name string) string { return addonSecretValue(in, userID, name) })
+	logOrigin, logPath = prep.logOrigin, prep.logPath
 	if err != nil {
-		fail(err, 403)
+		fail(err, status)
 		return
 	}
-	var auth func(*http.Request)
-	if req.Secret != "" {
-		sp, ok := rec.HTTP.secretSpec(req.Secret)
-		if !ok {
-			fail(addonErrf("E_HTTP_SECRET", "%q is not in http.secrets", req.Secret), 403)
-			return
-		}
-		value := addonSecretValue(in, userID, sp.Name)
-		if value == "" {
-			fail(addonErrf("E_SECRET_MISSING", "The secret %s has no value for this instance", sp.Name), 409)
-			return
-		}
-		auth = func(q *http.Request) {
-			switch sp.Kind {
-			case "basic":
-				q.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(value)))
-			case "header":
-				q.Header.Set(sp.Header, value)
-			default:
-				q.Header.Set("Authorization", "Bearer "+value)
-			}
-		}
-	}
+	u, origin, body, auth := prep.u, prep.origin, prep.body, prep.auth
 	if !addonHTTPAcquire(in.ID) {
 		addonFail(w, addonErrf("E_LIMIT_RATE", "At most %d requests a minute and %d at a time per instance", addonHTTPPerMinute, addonHTTPConcurrent), 429)
 		return

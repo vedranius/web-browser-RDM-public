@@ -113,6 +113,20 @@ var addonErrorHints = map[string]string{
 	"E_PERSONAL_OFF":    "Ask an administrator to allow personal addons (addon_personal).",
 	"E_PERSONAL_SERVER": "Remove the server block, or ask an administrator to install the addon for the organisation.",
 	"E_NOT_FOUND":       "Reload the addon list; the instance or addon no longer exists.",
+	"E_HTTP_REQUEST":    "Send an absolute http(s) URL, a JSON request and, for bytes, a base64 body with encoding: 'base64'.",
+	"E_HTTP_ORIGIN":     "Add the site to http.origins in addon.json (exact scheme://host[:port]).",
+	"E_HTTP_PATH":       "Add the path to http.paths (exact, or a prefix ending in *).",
+	"E_HTTP_METHOD":     "Add the method to http.methods.",
+	"E_HTTP_UNAPPROVED": "An administrator approves the addon's sites in Settings → Addons.",
+	"E_HTTP_SCHEME":     "Use https, or ask an administrator to approve the site for the private network.",
+	"E_HTTP_BLOCKED":    "The site resolves to a private or local address; an administrator can approve it for the private network.",
+	"E_HTTP_REDIRECT":   "The site redirected too often or to a site or path that is not allowed; request the final URL.",
+	"E_HTTP_SECRET":     "Name a secret listed in http.secrets.",
+	"E_SECRET_MISSING":  "Enter the value in Settings → Addons → Instances → Secrets.",
+	"E_HTTP_TIMEOUT":    "The site did not answer within 10 seconds; try again later or ask for less.",
+	"E_HTTP_UPSTREAM":   "The connection to the site failed; check its address and certificate.",
+	"E_HTTP_OFF":        "Ask an administrator to allow addons with web access (addon_http).",
+	"E_LIMIT_RATE":      "Send fewer requests: 120 a minute and 20 at once per instance.",
 }
 
 // addonFail answers with {error, code, hint} for coded errors.

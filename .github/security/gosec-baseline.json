@@ -228,6 +228,8 @@
   "G704 opencode_agent.go req, err := http.NewRequestWithContext(ctx, method, o.base+path, rd)",
   "G704 opencode_agent.go resp, err := ocHTTP.Do(req)",
   "G704 proxy.go return net.DialTimeout(network, addr, proxyDialTimeout)",
+  "G705 addons_dev.go w.Write(b)",
+  "G705 addons_dev.go w.Write(b)",
   "G705 monitoring_logs.go io.WriteString(w, chunk.Text)",
   "G705 monitoring_logs.go io.WriteString(w, chunk.Text)",
   "G706 audit.go log.Printf(\"AUDIT action=%s user=%q ip=%s target=%q%s %s\", action, username, ip, target, extra, det)",

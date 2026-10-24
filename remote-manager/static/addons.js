@@ -339,6 +339,50 @@ Object.assign(LANGS.hr, {
   p_addon_http_d: 'Tko smije koristiti dodatke koji preko WRM-a pristupaju web stranicama (sposobnost http). Stranice svakog dodatka odobrava administrator; tajne ostaju na serveru. Isključeno: takvi se zahtjevi odbijaju za sve.',
 });
 
+// v13.12: tools for addons written by people and AI: templates, lint, schema.
+Object.assign(LANGS.en, {
+  add_dev: 'Developer tools',
+  add_dev_d: 'Start from a template, check a ZIP before installing it (the same checks as the install, plus what the sandbox will refuse), and give an AI the manifest schema and llms.txt.',
+  add_dev_check: 'Check ZIP',
+  add_dev_templates: 'Templates',
+  add_lint_t: 'Check of {name}',
+  add_lint_ok: 'No errors · {warnings} warning(s)',
+  add_lint_fail: '{errors} error(s) · {warnings} warning(s)',
+  add_lint_none: 'Nothing to report.',
+  add_lint_perm: 'Permission sheet',
+  add_lint_copy: 'Copy report',
+  add_lint_copied: 'The report is copied; paste it to the AI that wrote the addon',
+  add_lint_install_failed: 'The install was refused; the check shows why',
+  add_tpl_t: 'Addon templates',
+  add_tpl_d: 'Download a template, change the id and the site in addon.json, then zip the folder and install it. With the WRM binary you can also create, check and try an addon locally:',
+  add_tpl_dl: 'Download ZIP',
+  add_tpl_server: 'server code, administrators only',
+  add_tpl_ai: 'For an AI writing an addon:',
+  add_tpl_schema: 'manifest schema (JSON)',
+  add_tpl_llms: 'llms.txt guide'
+});
+Object.assign(LANGS.hr, {
+  add_dev: 'Alati za razvoj',
+  add_dev_d: 'Krenite od predloška, provjerite ZIP prije instalacije (iste provjere kao instalacija, uz ono što će sandbox odbiti) i dajte AI-ju shemu manifesta i llms.txt.',
+  add_dev_check: 'Provjeri ZIP',
+  add_dev_templates: 'Predlošci',
+  add_lint_t: 'Provjera: {name}',
+  add_lint_ok: 'Bez grešaka · upozorenja: {warnings}',
+  add_lint_fail: 'Grešaka: {errors} · upozorenja: {warnings}',
+  add_lint_none: 'Nema nalaza.',
+  add_lint_perm: 'Popis dozvola',
+  add_lint_copy: 'Kopiraj izvještaj',
+  add_lint_copied: 'Izvještaj je kopiran; zalijepite ga AI-ju koji je napisao dodatak',
+  add_lint_install_failed: 'Instalacija je odbijena; provjera pokazuje zašto',
+  add_tpl_t: 'Predlošci dodataka',
+  add_tpl_d: 'Preuzmite predložak, promijenite id i stranicu u addon.json, zapakirajte mapu i instalirajte je. S WRM programom dodatak možete napraviti, provjeriti i isprobati i lokalno:',
+  add_tpl_dl: 'Preuzmi ZIP',
+  add_tpl_server: 'kôd na serveru, samo administratori',
+  add_tpl_ai: 'Za AI koji piše dodatak:',
+  add_tpl_schema: 'shema manifesta (JSON)',
+  add_tpl_llms: 'vodič llms.txt'
+});
+
 (function () {
   const $ = id => document.getElementById(id);
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(String(b)); return s; };
@@ -1178,9 +1222,16 @@ Object.assign(LANGS.hr, {
     const aiBox = admin ? `<div class="setting-row">
       <div><div class="setting-label">✨ ${esc(t('add_ai_q'))}</div><div class="setting-desc">${esc(t('add_ai_d'))}</div></div>
       <div class="setting-control"><button class="btn-sec btn-sm" onclick="wrmAddons.aiPrompt()">${esc(t('add_ai'))}</button></div></div>` : '';
+    const devBox = admin || personalAllowed ? `<div class="setting-row">
+      <div><div class="setting-label">🛠 ${esc(t('add_dev'))}</div><div class="setting-desc">${esc(t('add_dev_d'))}</div></div>
+      <div class="setting-control" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-sec btn-sm" onclick="wrmAddons.lintCheck()">${esc(t('add_dev_check'))}</button>
+        <button class="btn-sec btn-sm" onclick="wrmAddons.templates()">${esc(t('add_dev_templates'))}</button>
+      </div></div>` : '';
     el.innerHTML = `<div class="hint-box">${esc(t('add_intro'))}</div>
       <div class="hint-box warn">${esc(t('add_disclaimer'))}</div>
       ${install}
+      ${devBox}
       ${aiBox}
       ${draftsHTML()}
       <div class="adm-h">${esc(t('tab_addons'))}</div>
@@ -1230,9 +1281,94 @@ Object.assign(LANGS.hr, {
       await after(tf(d.needs_approval ? 'add_installed_wait' : 'add_installed', {name: d.name || d.id || file.name}));
     } catch (e) {
       showToast(e.message, 'error', 8000);
+      try {
+        const rep = await lintFile(file);
+        if ((rep.diagnostics || []).length) lintReport(rep, file.name, t('add_lint_install_failed'));
+      } catch (_) {}
     } finally {
       if (btn) btn.disabled = false;
     }
+  }
+
+  // ── developer tools: lint report and templates ──
+  async function lintFile(file) {
+    const res = await fetch('/api/addons/dev/lint', {method: 'POST', headers: {'Content-Type': 'application/zip'}, body: file});
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((d.error || ('HTTP ' + res.status)) + (d.hint ? ' — ' + d.hint : ''));
+    return d;
+  }
+
+  async function lintCheck() {
+    const inp = $('addon-file');
+    const file = inp && inp.files && inp.files[0];
+    if (!file) { showToast(t('add_need_file'), 'error'); return; }
+    if (file.size > 20 * 1024 * 1024) { showToast(t('add_too_big'), 'error'); return; }
+    try { lintReport(await lintFile(file), file.name); } catch (e) { showToast(e.message, 'error', 8000); }
+  }
+
+  let lastReport = null;
+  function devModal(id) {
+    let m = $(id);
+    if (!m) {
+      m = document.createElement('div');
+      m.id = id;
+      m.className = 'modal-overlay';
+      m.style.zIndex = 9665;
+      document.body.appendChild(m);
+    }
+    return m;
+  }
+
+  function lintReport(rep, fileName, note) {
+    lastReport = rep;
+    const m = devModal('addon-lint-modal');
+    const icon = {error: '⛔', warning: '⚠', info: 'ℹ'};
+    const color = {error: 'var(--red)', warning: 'var(--yellow)', info: 'var(--text3)'};
+    const rows = (rep.diagnostics || []).map(d => `<div style="border-bottom:1px solid var(--border);padding:6px 0;font-size:12px;">
+        <div style="color:${color[d.level] || 'var(--text)'};">${icon[d.level] || ''} ${d.file ? `<code>${esc(d.file + (d.line ? ':' + d.line : ''))}</code> ` : ''}${esc(d.message)} <span style="color:var(--text3);font-family:var(--font-mono);font-size:11px;">${esc(d.code)}</span></div>
+        ${d.hint && d.level !== 'info' ? `<div style="color:var(--text2);font-size:11.5px;margin-top:2px;">→ ${esc(d.hint)}</div>` : ''}</div>`).join('');
+    const perms = (rep.summary || []).map(s => `<li>${esc(s)}</li>`).join('');
+    const head = rep.ok ? tf('add_lint_ok', {warnings: rep.warnings || 0}) : tf('add_lint_fail', {errors: rep.errors || 0, warnings: rep.warnings || 0});
+    m.innerHTML = `<div class="modal" style="width:680px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;">
+      <h3>🛠 ${esc(tf('add_lint_t', {name: rep.name ? rep.name + ' ' + (rep.version || '') : fileName || ''}))}</h3>
+      ${note ? `<div class="hint-box warn">${esc(note)}</div>` : ''}
+      <div style="font-weight:600;color:${rep.ok ? 'var(--green)' : 'var(--red)'};margin:4px 0 8px;">${esc(head)}</div>
+      ${rows || `<div class="sub" style="color:var(--text3);font-size:12px;">${esc(t('add_lint_none'))}</div>`}
+      ${perms ? `<div class="adm-h" style="margin-top:10px;">${esc(t('add_lint_perm'))}</div><ul style="margin:4px 0 0 18px;padding:0;font-size:12px;">${perms}</ul>` : ''}
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn-sec" onclick="wrmAddons.lintCopy()">${esc(t('add_lint_copy'))}</button>
+        <button onclick="document.getElementById('addon-lint-modal').classList.remove('open')">${esc(t('add_ai_close'))}</button></div>
+    </div>`;
+    m.classList.add('open');
+  }
+
+  async function lintCopy() {
+    if (!lastReport) return;
+    const text = JSON.stringify({ok: lastReport.ok, id: lastReport.id, version: lastReport.version, diagnostics: lastReport.diagnostics}, null, 2);
+    try { await navigator.clipboard.writeText(text); showToast(t('add_lint_copied'), 'success'); } catch (_) { showToast(t('add_ai_copy_fail'), 'error'); }
+  }
+
+  async function templates() {
+    let d;
+    try { d = await api('GET', '/api/addons/dev/templates'); } catch (e) { showToast(e.message, 'error', 8000); return; }
+    const m = devModal('addon-tpl-modal');
+    const rows = (d.templates || []).filter(x => !x.server || isAdmin()).map(x => `<div style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:6px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;"><b>${esc(x.title)}</b> <code style="font-size:11px;color:var(--text3);">${esc(x.name)}</code>${x.server ? ` <span style="font-size:11px;color:var(--yellow);">${esc(t('add_tpl_server'))}</span>` : ''}
+          <div style="font-size:11.5px;color:var(--text2);">${esc(x.description)}</div></div>
+        <a class="btn-sec btn-sm" href="/api/addons/dev/templates/${encodeURIComponent(x.name)}.zip" download>${esc(t('add_tpl_dl'))}</a></div>`).join('');
+    m.innerHTML = `<div class="modal" style="width:640px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;">
+      <h3>🛠 ${esc(t('add_tpl_t'))}</h3>
+      ${rows}
+      <div class="hint-box" style="margin-top:10px;">${esc(t('add_tpl_d'))}
+        <pre style="margin:6px 0 0;white-space:pre-wrap;font-size:11.5px;">wrm -addon-new grafana-panel -addon-id me.grafana ./my-addon
+wrm -addon-lint ./my-addon
+wrm -addon-dev ./my-addon</pre></div>
+      <div style="font-size:12px;margin-top:8px;">${esc(t('add_tpl_ai'))}
+        <a href="/api/addons/dev/schema.json" target="_blank" rel="noopener">${esc(t('add_tpl_schema'))}</a> ·
+        <a href="/api/addons/dev/llms.txt" target="_blank" rel="noopener">${esc(t('add_tpl_llms'))}</a></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;"><button onclick="document.getElementById('addon-tpl-modal').classList.remove('open')">${esc(t('add_ai_close'))}</button></div>
+    </div>`;
+    m.classList.add('open');
   }
 
   async function toggle(key, on) {
@@ -1527,6 +1663,8 @@ Object.assign(LANGS.hr, {
       '',
       'Nothing runs at install time. Every file is pinned by SHA-256. Enabling the addon shows the user a permission sheet generated from addon.json; an update that asks for more stays off until it is approved again. Errors come back with a code (E_MANIFEST, E_MANIFEST_FIELD, E_MISSING_FILE, E_LIMIT_SIZE, …) and a hint: fix exactly what they name.',
       '',
+      'Tools: the manifest schema is at ' + location.origin + '/api/addons/dev/schema.json and a guide at ' + location.origin + '/api/addons/dev/llms.txt. Templates (blank, fetch-and-render, grafana-panel, wasm-hook) ship wrm-bridge.js, which wraps the bridge (wrm.ready, wrm.storeGet, wrm.storeSet, wrm.notify, wrm.http). Before handing the addon over, check it: wrm -addon-lint <folder> (or POST the ZIP to /api/addons/dev/lint) answers {level, code, message, file, line, hint} for every problem, including what the sandbox will refuse (E_LINT_REMOTE, E_LINT_NETWORK, E_LINT_STORAGE, E_LINT_SECRET, E_LINT_ORIGIN, …); fix every error. wrm -addon-dev <folder> runs it locally with the real CSP.',
+      '',
       'Write the smallest addon that does the job, state its license, and tell me how to zip it for install.',
       'If you are the WRM assistant and have the addon tools, call addon_create with addon.json and the files it declares instead of returning a ZIP; the draft waits for my review in Settings → Addons.'
     ].join('\n');
@@ -1588,7 +1726,8 @@ Object.assign(LANGS.hr, {
 
   window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, communityInstall, applyThemes, reload: after,
     draftInstall, draftDiff, draftDiscard, closeDraftDiff, windowChanged, windowGone, list: () => list.slice(),
-    instNew, instRename, instDelete, instExport, instImport, otherDisable, otherRemove, netApprove, netRevoke, secrets, secretSave, secretClear};
+    instNew, instRename, instDelete, instExport, instImport, otherDisable, otherRemove, netApprove, netRevoke, secrets, secretSave, secretClear,
+    lintCheck, lintCopy, templates};
 
   if (typeof window.initApp === 'function' && !window.initApp.__addons) {
     const orig = window.initApp;
