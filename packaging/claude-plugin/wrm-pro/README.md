@@ -79,12 +79,10 @@ npx skills add vedranius/web-browser-RDM-public
 `server.json` in the repository root describes the WRM MCP endpoint for the
 [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.vedranius/wrm-pro`: a
 remote server whose host is yours (`https://{wrm_host}/mcp`) and an `Authorization` header with
-your token. Publishing it is a one-time step for the repository owner:
-
-```sh
-mcp-publisher login github
-mcp-publisher publish
-```
+your token. Every release publishes it automatically: the release workflow starts
+`.github/workflows/mcp-registry.yml`, which signs in with the repository's GitHub Actions OIDC
+token (no stored secret) and runs `mcp-publisher publish`. For an existing tag, run the
+**MCP Registry** workflow by hand (Actions → MCP Registry → Run workflow, tag `vX.Y.Z`).
 
 ## Claude Desktop
 
