@@ -740,8 +740,14 @@ func addonIPBlocked(ip net.IP) bool {
 		}
 	}
 	return ip.IsLoopback() || ip.IsUnspecified() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
-		ip.IsMulticast() || ip.IsInterfaceLocalMulticast() || ip.IsPrivate() || isCGNAT(ip) ||
+		ip.IsMulticast() || ip.IsInterfaceLocalMulticast() || ip.IsPrivate() || addonIsCGNAT(ip) ||
 		ip.Equal(net.IPv4bcast) || (ip.To4() != nil && ip.To4()[0] == 0) || (ip.To4() != nil && ip.To4()[0] >= 240)
+}
+
+// addonIsCGNAT reports 100.64.0.0/10 (turn.go's isCGNAT is not built on Android).
+func addonIsCGNAT(ip net.IP) bool {
+	v4 := ip.To4()
+	return v4 != nil && v4[0] == 100 && v4[1]&0xc0 == 64
 }
 
 func addonAllZero(b []byte) bool {
