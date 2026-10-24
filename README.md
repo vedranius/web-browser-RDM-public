@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.11.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.12.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.12.0
+
+**Tools for writing addons, also with an AI.** `wrm -addon-lint ./my-addon` checks an addon before you install it: the manifest against its schema, every file, and the code for what the sandbox would refuse (remote scripts, inline handlers, `eval`, `fetch`, `localStorage`, tokens in the ZIP, sites missing from `http.origins`, a panel that never says *ready*). Every finding has a code, the file, the line and a hint, so an AI can fix its own addon; `-addon-lint-json` gives the same as JSON, and a failed install in *Settings → Addons* opens the report by itself. `wrm -addon-new grafana-panel ./my-addon` starts from one of four templates (blank, fetch-and-render, grafana-panel, wasm-hook) that come with `wrm-bridge.js`, a small helper for the bridge. `wrm -addon-dev ./my-addon` opens the panel on your computer with the real sandbox and CSP, a stand-in for WRM (settings, web requests, secrets from environment variables) and a reload whenever a file changes. WRM also serves the manifest schema and an `llms.txt` guide for AI assistants. See [Addons](#addons) and the [addon developer guide](docs/ADDONS.md#tools-for-writing-addons).
 
 ## What's new in v13.11.0
 
@@ -216,7 +220,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -327,21 +331,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.11.0-linux-amd64
-   ./wrm-pro-v13.11.0-linux-amd64
+   chmod +x wrm-pro-v13.12.0-linux-amd64
+   ./wrm-pro-v13.12.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.11.0-windows-amd64.exe
+   .\wrm-pro-v13.12.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.11.0-linux-amd64.AppImage
-   ./wrm-pro-v13.11.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.11.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.12.0-linux-amd64.AppImage
+   ./wrm-pro-v13.12.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.12.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -350,8 +354,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.11.0/wrm-pro-v13.11.0-android-arm64
-   chmod +x wrm-pro-v13.11.0-android-arm64 && ./wrm-pro-v13.11.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.12.0/wrm-pro-v13.12.0-android-arm64
+   chmod +x wrm-pro-v13.12.0-android-arm64 && ./wrm-pro-v13.12.0-android-arm64
    ```
 
    **Docker**
@@ -375,6 +379,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.11.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. New command-line options `-addon-lint`, `-addon-lint-json`, `-addon-new`, `-addon-id`, `-addon-dev`, `-addon-dev-port` and `-addon-dev-private`, and new endpoints under `/api/addons/dev/`. The addon ids `dev`, `install`, `drafts`, `community` and `users` are now reserved; an installed addon with one of those ids keeps working but cannot be installed again under that id.
 
 ## Upgrading from v13.10.0
 
@@ -1888,6 +1896,10 @@ An addon extends WRM from inside itself: a panel (a window), colour themes and, 
 - **Secrets (v13.11):** **🔑 Secrets** on an instance stores the API key or password of a site, encrypted on the server, as the administrator's value for a shared instance (or the owner's for a private one) and optionally **your own** value that replaces it for you. WRM adds it to the request (`Authorization: Bearer`, `Basic` or a named header); the panel only learns whether it is set. Setting and clearing a secret is audited without the value.
 - **What a panel can do:** it runs in a sandboxed frame with no access to WRM, its cookies or other windows and (apiVersion 2) **no network of its own**. It receives the display name, the language, the theme, its instance and its stored settings, and may store settings, show short notifications (5 a minute) and ask for a window size. Addons work while their window is open: WRM runs no background jobs for them, so 24/7 alerting stays in the monitored system.
 - **Writing one:** see the [addon developer guide](docs/ADDONS.md) (manifest, bridge, store, themes, error codes) or *AI addon* in the same pane for a ready prompt. The WRM assistant can write a draft that you review (**Diff**) and install.
+- **Developer tools (v13.12):** *🛠 Developer tools* in the same pane (administrators, and users who may install personal addons) has **Check ZIP**, which lints an addon without installing it, and **Templates** with the four starters as ZIPs, the manifest schema and `llms.txt`. A failed install opens the lint report on its own; **Copy report** copies it for an AI. On the command line:
+  - `wrm -addon-new TEMPLATE [-addon-id ID] DIR` writes a template (`blank`, `fetch-and-render`, `grafana-panel`, `wasm-hook`) into an empty folder; the panel templates include `wrm-bridge.js`, the WebAssembly one a TinyGo source and a placeholder module.
+  - `wrm -addon-lint DIR|ZIP` (`-addon-lint-json` for JSON) prints errors, warnings and notes as `level file:line: message [code]` with a hint, then the permission summary; it exits with 1 when there is an error. Nothing in the addon runs.
+  - `wrm -addon-dev DIR` serves the panel at `http://127.0.0.1:8790` (`-addon-dev-port`) with the real CSP, a language, theme and visibility switch, an in-memory store, web requests to the listed sites (secrets from `WRM_ADDON_SECRET_<NAME>`; private and plain-http sites only with `-addon-dev-private`), the lint result and the bridge log, and reloads it when a file changes. Options go before the folder.
 
 ### SSH terminal
 
@@ -2505,6 +2517,13 @@ wrm -workdir DIR                   change to DIR before starting
 wrm -mcp-stdio -url URL -token T   stdio bridge for MCP clients to the WRM server at URL (see AI desktop apps)
     -token-file FILE               read the token from FILE (or WRM_MCP_TOKEN; the URL also from WRM_MCP_URL)
     -ca-file FILE                  trust this CA / self-signed certificate (PEM) for the WRM server
+wrm -addon-new TEMPLATE DIR        write an addon template (blank, fetch-and-render, grafana-panel, wasm-hook) into an empty DIR
+    -addon-id ID                   use ID as the addon id
+wrm -addon-lint DIR|ZIP            check an addon (schema, files, sandbox rules, secrets, permissions); exit 1 on an error
+    -addon-lint-json               print the report as JSON
+wrm -addon-dev DIR                 serve the addon's panel on 127.0.0.1 with the real CSP and a WRM stand-in, reload on change
+    -addon-dev-port PORT           port of the dev server (default 8790)
+    -addon-dev-private             allow private-network and plain-http sites in the dev server
 wrm -release-verify SHA256SUMS.txt check SHA256SUMS.txt.sig with the built-in release key, and the SHA-256 of the listed files next to it
     -release-public-key KEY        also trust this public key (wrm-ed25519:…)
 wrm -release-keygen FILE           (maintainers) new release key pair: private key to FILE (0600), public key printed
@@ -2803,6 +2822,9 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | GET | `/api/addons/{key}/instances/{iid}/http/log` | the last 50 requests of the instance (your own; administrators: all) |
 | GET · PUT · DELETE | `/api/addons/{key}/instances/{iid}/secrets[/{name}]` | secret states (never values); set `{value, scope}` (`instance` or `own`); clear with `?scope=` |
 | POST · DELETE | `/api/addons/{key}/http` · `/api/addons/users/{user id}/{id}/http` | administrators: approve the addon's sites `{private: [origins]}` or withdraw the approval |
+| GET | `/api/addons/dev/schema.json` · `/api/addons/dev/llms.txt` | the JSON Schema of `addon.json` and the addon guide for AI assistants (signed-in users) |
+| GET | `/api/addons/dev/templates` · `/api/addons/dev/templates/{name}.zip?id=` | the starter templates; one as a ZIP, with the manifest id replaced when `id` is given |
+| POST | `/api/addons/dev/lint` | lint a ZIP (body) without installing it → `{ok, errors, warnings, diagnostics: [{level, code, message, file, line, hint}], permissions, summary, csp}`; administrators and users allowed personal addons (`E_PERSONAL_OFF`) |
 | GET | `/api/addons/{key}/asset/{file}` | a file of an enabled addon; HTML of apiVersion 2 panels carries the full CSP; a file that changed since install answers 409 `E_INTEGRITY` |
 | GET | `/api/workboard/metrics?id=` | CPU, RAM, load, uptime and disks of one of your SSH/SFTP connections: `{conn_id, at, source: zabbix\|ssh, cpu_percent, memory_percent, memory_total, load, cpu_count, uptime, disks: [{mount, percent, size_kb}], error}`; `refresh=1` skips the 25 s cache; 403 when reading over SSH is off and there is no fresh Monitoring sample |
 | GET / PUT / DELETE | `/api/me/ui/{key}` | Your interface state, `key` = `layout` (panel layout), `workboard` or `ai` (my AI settings: `provider_id, model, mode, engine, thinking`): `GET` → `{value, updated_at}` (`value` null when nothing is stored), `PUT {value: {…}}` (a JSON object, at most 64 KiB), `DELETE` resets |
@@ -3189,7 +3211,7 @@ remote-manager/
   users.go        sign-in, 2FA step, sessions, password change, account administration
   totp.go         TOTP (RFC 6238), QR code, recovery codes
   settings.go     admin policies (database + WRM_<KEY> environment overrides)
-  addons.go       addons: install, enable, assets; addons_v2.go: manifest v2, personal addons, instances, store, windows, CSP, integrity, permission sheets; addons_http.go: web requests for addons (allowlist, SSRF guard, secrets, approvals, log)
+  addons.go       addons: install, enable, assets; addons_v2.go: manifest v2, personal addons, instances, store, windows, CSP, integrity, permission sheets; addons_http.go: web requests for addons (allowlist, SSRF guard, secrets, approvals, log); addons_lint.go: addon lint and diagnostics; addons_dev.go: wrm -addon-dev and /api/addons/dev; addons_templates.go + addon_templates/: starter templates, wrm-bridge.js, schema, llms.txt
   audit.go        audit log (hash chain, append-only triggers), CSV export, integrity check, retention
   recording.go    terminal sessions, asciicast recorder, file transfer log, recordings & transfers API
   hostkeys.go     SSH host key verification (TOFU/strict), FTPS certificate pinning
@@ -3351,6 +3373,7 @@ remote-manager/
   v12610_test.go       the canvas is wired (addon windows, floating panels on the canvas, Tools menu, top bar group and order, sessions keep addons); /api/me/ui takes 256 KiB
   addons_v2_test.go    addon platform v2: strict manifest and error codes, theme validation, personal addons (visibility, policy, no server code, admin kill switch), instances, store scopes and quota, windows, export/import, CSP with script hashes, integrity, approvals on growing updates, downgrades
   addons_http_test.go  addon web requests: http manifest validation and permission coverage, IP guard (loopback, private, metadata, CGNAT), proxy against a fake site (allowlist, approval, methods, paths, header filtering, secrets per instance and personal override, redirects, size cut, rate limit, coalescing, log), plain http and personal addons waiting for an administrator
+  addons_lint_test.go  addon tools: every template lints clean and installs, lint findings with codes and lines, schema covers the manifest, llms.txt lists the codes, /api/addons/dev, the dev server (host check, token, CSP, store, web requests, env secrets, reload)
   v1269_test.go        in-app notifications (recorded without channels, per user, reminders once a day, mark read, clear, newest 200 kept, removed with the user); metrics parser; /api/workboard/metrics (own connections only, SSH error in the result, policy off, fresh and stale Monitoring sample); the page loads static/workboard.js
   v1268_test.go        /api/me/ui: per-user layout store (put, overwrite, reset, objects only, 64 KiB limit, unknown keys, signed out, removed with the user); the page loads static/layout.js and has every panel
   v1267_test.go        Medium certificates: host CA bundle and extra PEM file reach every container (mount, environment, image roots kept), expired and duplicate certificates left out, bad or missing file named

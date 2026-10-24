@@ -201,6 +201,65 @@ Every refusal of the API carries `{error, code, hint}`:
 
 In the panel, `wrm:store` answers carry the same codes, and *Diagnostics* lists the last 20 bridge errors (`E_BRIDGE`, `E_LIMIT_RATE`, …).
 
+## Tools for writing addons
+
+Since v13.12.0 WRM has tools for writing an addon by hand or with an AI assistant. The usual loop is *template → edit → lint → dev server → install*.
+
+### Templates
+
+`wrm -addon-new TEMPLATE [-addon-id ID] DIR` writes a template into an empty folder (options go before the folder). *Settings → Addons → 🛠 Developer tools → Templates* offers the same as ZIPs (`GET /api/addons/dev/templates/{name}.zip?id=`).
+
+| Template | What it shows |
+|---|---|
+| `blank` | a panel with the bridge, a stored setting and a notification |
+| `fetch-and-render` | JSON from one site (`https://status.example.com/api/*`) with a secret, refreshed only while the window is visible |
+| `grafana-panel` | firing alerts from Grafana's Alertmanager API (`/api/alertmanager/grafana/api/v2/alerts`) with a service account token as the secret, and a notification for new alerts |
+| `wasm-hook` | a `server.wasm` hook: TinyGo source (`main.go`, build with `tinygo build -o plugin.wasm -target=wasm-unknown -no-debug .`) and a placeholder `plugin.wasm` so it installs at once |
+
+The panel templates include **`wrm-bridge.js`**, a helper that hides the message format: `wrm.ready()` (sends `wrm:ready` and the heartbeat), `wrm.on('context' | 'theme' | 'visibility', fn)`, `wrm.context`, `wrm.visible`, `await wrm.storeGet(key, fallback)`, `await wrm.storeSet(key, value)`, `wrm.notify(text, level)`, `await wrm.http({method, url, secret})`, `wrm.t(en, hr)`, `wrm.error(message)`, `wrm.resize(w, h)`. Uncaught errors are reported as `wrm:error`. Promises reject with an `Error` whose `code` is the WRM error code.
+
+### Lint
+
+`wrm -addon-lint DIR|ZIP` checks an addon without running any of it and prints `level file:line: message [code]` with a hint, then the permission summary. It exits with 1 when there is an error. `-addon-lint-json` prints the report as JSON, the same as `POST /api/addons/dev/lint` (a ZIP as the body) and *Check ZIP* in the developer tools. A failed install opens this report in WRM by itself.
+
+```json
+{"ok": false, "errors": 1, "warnings": 1,
+ "diagnostics": [{"level": "error", "code": "E_LINT_NETWORK", "message": "fetch( is blocked in the panel (connect-src 'none')",
+                  "file": "panel.js", "line": 12, "hint": "Ask WRM: wrm:http (or wrm.http() in wrm-bridge.js) with the http capability"}],
+ "permissions": ["..."], "summary": ["..."], "csp": "default-src 'none'; ..."}
+```
+
+The lint first runs every check of an install (archive size, paths, file count, strict manifest, validation, WebAssembly imports and exports), so an addon that lints without errors installs. Then it reads the files:
+
+| Code | Level | Meaning |
+|---|---|---|
+| `E_LINT_REMOTE` | error | a remote script, stylesheet, font or image (`https://…` in `src`, `href`, `url()` or `@import`) |
+| `E_LINT_INLINE_HANDLER` | error | `onclick=…` and other inline handlers; use `addEventListener` |
+| `E_LINT_JS_URL` | error | a `javascript:` URL |
+| `E_LINT_EVAL` | error | `eval`, `new Function` or a string passed to `setTimeout` / `setInterval` |
+| `E_LINT_NETWORK` | error | `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `navigator.sendBeacon` |
+| `E_LINT_STORAGE` | error | `localStorage`, `sessionStorage`, `indexedDB`, `document.cookie` |
+| `E_LINT_SECRET` | error | something that looks like a token (`glsa_…`, `ghp_…`, `xox…`, `AKIA…`, `sk-…`) or a password or token assigned to a literal |
+| `E_LINT_ORIGIN` | warning | a URL whose origin is not in `http.origins` |
+| `E_LINT_READY`, `E_LINT_HEARTBEAT` | warning | an apiVersion 2 panel that never sends `wrm:ready` or `wrm:heartbeat` |
+| `E_LINT_CAPABILITY` | warning | a bridge message (`wrm:store.*`, `wrm:notify`, `wrm:http`) without its capability |
+| `E_LINT_V1` | warning | an apiVersion 1 manifest (no store, notifications or web requests) |
+| `E_LINT_SERVER` | info | server code: only administrators install it, personal addons cannot carry it |
+| `E_LINT_UNSERVED` | info | a file with a type WRM never serves to the panel |
+| `E_LINT_HIDDEN` | info | a hidden file or `node_modules` left out when a folder is checked |
+| `E_WASM` | error | the module imports something other than `wrm.log`, or an export is missing |
+| `E_MANIFEST*`, `E_LIMIT_*`, … | error | the install checks above, with the field's line in `addon.json` where it can be found |
+
+### Dev server
+
+`wrm -addon-dev DIR` serves the addon at `http://127.0.0.1:8790` (`-addon-dev-port`): the panel in the same sandboxed frame and with the same CSP as in WRM, inside a host page with a language, theme and visibility switch, *Reload*, the lint report, the bridge log and the watchdog. The host answers like WRM: `wrm:context`, an in-memory store with the same limits, notifications as toasts, and `wrm:http` through the same checks (origin, path, method, address guard, redirects, size). Secrets come from environment variables, `WRM_ADDON_SECRET_<NAME>` with the name in upper case (`grafana_token` → `WRM_ADDON_SECRET_GRAFANA_TOKEN`). Private-network and plain `http://` sites are refused unless you start it with `-addon-dev-private`. When a file in the folder changes the server lints again and the page reloads the panel.
+
+The dev server listens on the loopback address only, answers only requests for `127.0.0.1`, `localhost` or `[::1]` with its port (against DNS rebinding), and its own API needs a random token that only its page knows.
+
+### Schema and llms.txt
+
+`GET /api/addons/dev/schema.json` is the JSON Schema (draft 2020-12) of an apiVersion 2 `addon.json`; editors that understand `"$schema"` can use it. `GET /api/addons/dev/llms.txt` is this contract in short for AI assistants: the workflow, the manifest, the sandbox, the bridge, web requests and secrets, and every error code. Both need a signed-in WRM user.
+
 ## A minimal panel
 
 ```html
