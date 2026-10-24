@@ -52,7 +52,7 @@ func TestV135PluginSkills(t *testing.T) {
 	for _, tl := range mcpToolList(g) {
 		tools[tl["name"].(string)] = true
 	}
-	notTools := map[string]bool{"session_id": true} // parameters the skills name
+	notTools := map[string]bool{"session_id": true, "wrm_connect": true} // parameters the skills name; wrm_connect is the bridge's own tool
 	if !tools["search_logs"] {
 		t.Fatal("search_logs is not offered over MCP")
 	}

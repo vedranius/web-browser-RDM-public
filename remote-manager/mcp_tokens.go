@@ -651,6 +651,8 @@ func apiMCPHandler(w http.ResponseWriter, r *http.Request) {
 		mcpActiveHandler(w, userID)
 	case "claude-desktop":
 		mcpClaudeDesktopHandler(w, r, userID)
+	case "setup-all":
+		mcpSetupAllHandler(w, r, userID)
 	case "full-access":
 		mcpFullAccessHandler(w, r, userID)
 	case "authorize":

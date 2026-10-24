@@ -1,26 +1,19 @@
 ---
-description: Connect this Claude Code session to WRM PRO over MCP
-argument-hint: "[wrm-url] [token]"
-allowed-tools: Bash(claude mcp:*)
+description: Connect to WRM PRO (sign in in the browser), sign in again, or switch to another WRM
+argument-hint: "[wrm-address]"
 ---
-Connect this session to WRM PRO.
+Connect this computer to WRM PRO.
 
-1. If `$1` and `$2` were given, use them as the MCP address and token. Otherwise ask for:
-   - **MCP address**: WRM → Settings → AI connections shows it, for example `https://wrm.example.com/mcp`.
-   - **Token**: the token of that AI connection (`wrm_pat_…`). It is sent only to the `claude mcp add` command below.
-2. Run exactly one command, with the two values quoted:
+1. If `$1` was given, use it as the WRM address. Otherwise ask the user for the address they open
+   WRM with in the browser, for example `http://192.168.1.10:8780` or `https://wrm.example.com`.
+2. Call the `wrm_connect` tool with that `address`. WRM opens in the browser, where the user signs
+   in and approves which servers, mode and permissions this app gets. The token is stored on this
+   computer only (`~/.wrm/mcp.json`); it never passes through the chat.
+3. If the result says the sign-in is still open, ask the user to finish it in the browser (give
+   the link from the result if no window opened), then call `wrm_connect` again.
+4. When connected, call `list_connections` and tell the user which servers they can reach.
 
-```sh
-claude mcp add --transport http --scope user wrm "<address>" --header "Authorization: Bearer <token>"
-```
-
-3. Check it with `claude mcp list` and tell the user which WRM connections the token can reach.
-   Every call still goes through WRM's permissions, approvals and audit; the assistant never gets
-   the server credentials.
-
-Do not print the token back, do not write it to a file, and do not add it to `.mcp.json` in a
-repository.
-
-A local WRM (`http://localhost:8080/mcp`) works the same way, but only with the token header:
-Claude Code opens a sign-in page only over HTTPS and otherwise reports
-`Refused to open sign-in URL for wrm: must be https`. Adding the header avoids OAuth entirely.
+Never ask the user to paste a token into the chat. If `wrm_connect` reports that WRM does not
+offer sign-in for AI apps, an administrator has to turn on AI connections with OAuth sign-in in
+WRM → Settings → AI connections; the alternative is WRM's setup script for all AI apps
+(WRM → Settings → AI connections → All AI apps on this computer).
