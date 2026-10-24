@@ -423,3 +423,17 @@ jobs:
         run: |
           python3 tools/verify-release-assets.py "$GITHUB_REF_NAME" dist
           gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+
+  # ─────────────────────────────────────────────
+  #  MCP Registry: start mcp-registry.yml for the new release (GitHub OIDC, no stored secret)
+  # ─────────────────────────────────────────────
+  mcp-registry:
+    name: Start MCP Registry publish
+    runs-on: ubuntu-24.04
+    needs: finalize
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      actions: write   # workflow_dispatch of mcp-registry.yml
+    steps:
+      - name: Dispatch mcp-registry.yml
+        run: gh workflow run mcp-registry.yml --repo "$GITHUB_REPOSITORY" --ref main -f tag="$GITHUB_REF_NAME"
