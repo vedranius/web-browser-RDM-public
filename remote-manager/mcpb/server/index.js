@@ -458,10 +458,21 @@ function which(cmd) {
   return '';
 }
 
+// runCLI runs an app's command line tool. On Windows those are often .cmd shims, which only
+// run through cmd.exe, so the arguments are quoted for it; they are fixed words and file paths,
+// and anything cmd.exe would still interpret inside quotes is refused instead of escaped.
 function runCLI(cmd, args) {
   const win = process.platform === 'win32';
-  const q = a => (win && /[\s"&|<>^()]/.test(a)) ? '"' + a.replace(/"/g, '\\"') + '"' : a;
-  const r = childProcess.spawnSync(win ? q(cmd) : cmd, win ? args.map(q) : args, {encoding: 'utf8', shell: win, timeout: 180000, windowsHide: true});
+  const q = a => {
+    if (/["%!\r\n]/.test(a)) throw new Error('cannot pass ' + JSON.stringify(a) + ' safely to ' + path.basename(cmd));
+    return /[\s&|<>^(),;=]/.test(a) ? '"' + a + '"' : a;
+  };
+  let r;
+  try {
+    r = childProcess.spawnSync(win ? q(cmd) : cmd, win ? args.map(q) : args, {encoding: 'utf8', shell: win, timeout: 180000, windowsHide: true});
+  } catch (e) {
+    return {ok: false, text: e.message};
+  }
   const text = ((r.stdout || '') + (r.stderr || '')).trim().split('\n').filter(Boolean).pop() || '';
   return {ok: r.status === 0, text: r.error ? r.error.message : text};
 }
@@ -479,18 +490,22 @@ function stripJSONComments(text) {
   return out.replace(/,(\s*[}\]])/g, '$1');
 }
 
+// mergeJSON reads the file once (no separate existence check), keeps that content as the
+// backup and writes the merged object back in place, so symlinked config files stay links.
 function mergeJSON(file, change) {
   let obj = {};
-  if (fs.existsSync(file)) {
-    const text = fs.readFileSync(file, 'utf8').replace(/^﻿/, '');
+  let raw = null;
+  try { raw = fs.readFileSync(file); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  if (raw === null) {
+    fs.mkdirSync(path.dirname(file), {recursive: true});
+  } else {
+    const text = raw.toString('utf8').replace(/^\uFEFF/, '');
     if (text.trim()) {
       try { obj = JSON.parse(stripJSONComments(text)); } catch (e) { throw new Error(file + ' is not valid JSON; add WRM by hand'); }
     }
-    fs.copyFileSync(file, file + '.wrm-backup-' + new Date().toISOString().replace(/[:.]/g, '-'));
-  } else {
-    fs.mkdirSync(path.dirname(file), {recursive: true});
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw new Error(file + ' does not hold a JSON object; add WRM by hand');
+    fs.writeFileSync(file + '.wrm-backup-' + new Date().toISOString().replace(/[:.]/g, '-'), raw, {flag: 'wx'});
   }
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw new Error(file + ' does not hold a JSON object; add WRM by hand');
   change(obj);
   fs.writeFileSync(file, JSON.stringify(obj, null, 2) + '\n');
 }
