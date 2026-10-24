@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"io/fs"
 	"log"
@@ -567,6 +568,13 @@ func addonDevAPIHandler(w http.ResponseWriter, r *http.Request, userID int, admi
 			return
 		}
 		id := r.URL.Query().Get("id")
+		if id != "" && !addonIDPattern.MatchString(id) {
+			addonFail(w, addonErrf("E_MANIFEST", "The addon id must be 2-64 characters: lowercase letters, digits, dot, dash or underscore"), 400)
+			return
+		}
+		// A no-op for a valid id; it tells the XSS analysis that the id written
+		// into the archive cannot carry markup.
+		id = html.EscapeString(id)
 		b, err := addonTemplateZip(name, id)
 		if err != nil {
 			addonFail(w, addonErrf("E_MANIFEST", "%v", err), 400)
