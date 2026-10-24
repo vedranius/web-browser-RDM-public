@@ -1,8 +1,8 @@
 {
   "name": "wrm-pro",
   "displayName": "WRM PRO",
-  "version": "1.1.0",
-  "description": "Work on your servers through WRM PRO over MCP: logs, files, services and commands under WRM's permissions, approvals and audit, plus skills for safe server work and incident triage.",
+  "version": "1.2.0",
+  "description": "Work on your servers through WRM PRO: logs, files, services and commands under WRM's permissions, approvals and audit. No settings: type /wrm-pro:wrm, give the WRM address and approve the sign-in in the browser.",
   "author": {
     "name": "vedranius",
     "url": "https://github.com/vedranius"
@@ -10,6 +10,8 @@
   "homepage": "https://github.com/vedranius/web-browser-RDM-public#ai-desktop-apps-mcp",
   "repository": "https://github.com/vedranius/web-browser-RDM-public",
   "license": "LicenseRef-WRM-PRO",
+  "privacyPolicyUrl": "https://github.com/vedranius/web-browser-RDM-public/blob/main/packaging/claude-plugin/wrm-pro/README.md#privacy",
+  "icon": "assets/icon.png",
   "keywords": [
     "wrm",
     "ssh",
@@ -20,28 +22,5 @@
     "incident",
     "linux"
   ],
-  "mcpServers": {
-    "wrm": {
-      "type": "http",
-      "url": "${user_config.wrm_url}",
-      "headers": {
-        "Authorization": "Bearer ${user_config.wrm_token}"
-      }
-    }
-  },
-  "userConfig": {
-    "wrm_url": {
-      "type": "string",
-      "title": "WRM MCP address",
-      "description": "The MCP address shown in WRM → Settings → AI connections, for example https://wrm.example.com/mcp",
-      "required": true
-    },
-    "wrm_token": {
-      "type": "string",
-      "title": "WRM token",
-      "description": "The token of an AI connection (wrm_pat_…), created in WRM → Settings → AI connections",
-      "required": true,
-      "sensitive": true
-    }
-  }
+  "mcpServers": "./server/wrm.mcpb"
 }

@@ -1,3 +1,21 @@
+## [13.13.0] - 2026-10-24
+
+### Added
+- **The WRM PRO Claude plugin works without settings** in the Claude app (chat, Cowork) and in Claude Code. Its MCP server is now the WRM bridge packed as an MCP bundle (`packaging/claude-plugin/wrm-pro/server/wrm.mcpb`, built reproducibly by `buildPluginMCPB` with `pluginMCPBVersion`; `TestV13130PluginBundle` fails when the committed copy is stale, `WRM_WRITE_PLUGIN_MCPB=1` rewrites it). The Claude app runs it on the user's computer with its built-in Node.js, so a WRM on a private network and over plain HTTP is reachable.
+- **`wrm_connect`, sign-in from the bridge** (`mcpb/server/index.js`): without `WRM_MCP_URL`/`WRM_MCP_TOKEN` the bridge reads `~/.wrm/mcp.json` (`WRM_MCP_CONFIG`); without a connection, or when WRM refuses the token or cannot be reached, it answers `initialize` itself and offers `wrm_connect` with the reason. `wrm_connect {address}` accepts what a user types (`192.168.1.10:8780`, with or without scheme or `/mcp`), registers with WRM (dynamic client registration, loopback redirect `http://127.0.0.1:<port>/callback`), opens WRM's consent dialog in the browser, exchanges the code with PKCE S256, saves the token (0600, atomically), opens the WRM session with the app's own `initialize` and sends `notifications/tools/list_changed`. It waits up to 90 seconds and otherwise returns the link; the sign-in stays open for 15 minutes. Connected, the bridge appends `wrm_connect` to `tools/list` for signing in again or switching WRM. The token never passes through the chat.
+- **Skill `wrm`** (`/wrm-pro:wrm`): connect when needed, list the servers with their modes and everything WRM offers, grouped by area, and how to work through it.
+- **All AI apps at once**: *Settings → AI connections → 🧰 All AI apps at once* and `POST /api/mcp/setup-all {os}` (signed in, `mcpUserAllowed`, audited as `mcp.setup_script`) download `wrm-setup-all.ps1` (UTF-8 with BOM) or `wrm-setup-all.sh` with this WRM's address and the bridge, never a token. The script writes `~/.wrm/wrm-mcp.js` and runs `node wrm-mcp.js --setup --url …`: browser sign-in (or `WRM_MCP_TOKEN`), a connection check, `~/.wrm/mcp.json`, then the bridge as MCP server `wrm` in Claude Code (the WRM PRO plugin, else `claude mcp add`), the Claude app (`claude_desktop_config.json`, also the Microsoft Store location), Codex CLI, Gemini CLI, VS Code (user `mcp.json`), Cursor, Windsurf and OpenCode, each edited file copied to `<file>.wrm-backup-<time>` first (JSON with comments and trailing commas is read). All apps share the one connection.
+- **`claude-plugin-wrm-pro.zip`** in every release, for *Customize → Plugins → Upload plugin* (outside `SHA256SUMS.txt`, covered by the build provenance).
+
+### Changed
+- Plugin **1.2.0**: no `userConfig` (`wrm_url`, `wrm_token`), `mcpServers` is the bundle, an icon and a privacy link; `/wrm-pro:connect` uses `wrm_connect` instead of `claude mcp add`. The wizard's plugin command has no `--config` any more.
+- The Claude Desktop extension (`POST /api/mcp/claude-desktop`) uses the same bridge: with a wrong, expired or revoked token it keeps running and offers `wrm_connect` instead of failing every call.
+- *Settings → AI connections*: **All AI apps at once** is the first quick-start button; the Claude Desktop and Claude Code texts mention the plugin in the Claude app.
+
+### Fixed
+- **Installing the plugin from the Claude app could not work**: its MCP server needed `${user_config.*}` values, which the Claude app cannot ask for (chat ignores such a server, Cowork does not prompt), and an HTTP connector there connects from Anthropic's cloud, which cannot reach a WRM on a private network.
+- The OAuth consent dialog showed the key `mcp_sc_addons.manage` instead of a description.
+
 ## [13.12.0] - 2026-10-24
 
 ### Added

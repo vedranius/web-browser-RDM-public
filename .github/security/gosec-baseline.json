@@ -230,6 +230,8 @@
   "G704 proxy.go return net.DialTimeout(network, addr, proxyDialTimeout)",
   "G705 addons_dev.go w.Write(b)",
   "G705 addons_dev.go w.Write(b)",
+  "G705 mcp_bundle.go w.Write(data)",
+  "G705 mcp_bundle.go w.Write(mcpSetupScript(osName, mcpBaseURL(r)+\"/mcp\"))",
   "G705 monitoring_logs.go io.WriteString(w, chunk.Text)",
   "G705 monitoring_logs.go io.WriteString(w, chunk.Text)",
   "G706 audit.go log.Printf(\"AUDIT action=%s user=%q ip=%s target=%q%s %s\", action, username, ip, target, extra, det)",

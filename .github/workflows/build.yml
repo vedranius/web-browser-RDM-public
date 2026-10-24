@@ -18,7 +18,7 @@ permissions:
 
 env:
   # Version for branch builds. Tag builds use the tag name (e.g. v10.10.0) as version and in file names.
-  APP_VERSION: v13.12.0
+  APP_VERSION: v13.13.0
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -402,6 +402,14 @@ jobs:
           fi
           gh release upload "${GITHUB_REF_NAME}" SHA256SUMS.txt.sig --repo "$GITHUB_REPOSITORY" --clobber
 
+      # The Claude plugin as a zip for Claude → Customize → Plugins → Upload plugin (works
+      # without adding the marketplace). Not a wrm-pro-* package, so not in SHA256SUMS.txt.
+      - name: Claude plugin package
+        run: |
+          set -euo pipefail
+          (cd packaging/claude-plugin/wrm-pro && zip -r -X ../../../dist/claude-plugin-wrm-pro.zip . -x '.gitignore' '.mcpb-cache/*')
+          unzip -l dist/claude-plugin-wrm-pro.zip
+          gh release upload "${GITHUB_REF_NAME}" dist/claude-plugin-wrm-pro.zip --repo "$GITHUB_REPOSITORY" --clobber
       - name: SBOM (CycloneDX)
         run: |
           set -euo pipefail
@@ -418,6 +426,7 @@ jobs:
             dist/wrm-pro-*
             dist/SHA256SUMS.txt
             dist/sbom-*.cdx.json
+            dist/claude-plugin-wrm-pro.zip
 
       - name: Verify complete asset set and publish
         run: |

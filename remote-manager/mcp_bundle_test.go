@@ -154,12 +154,12 @@ func TestMCPClaudeDesktopBridgeNode(t *testing.T) {
 	if err := cmd.Wait(); err != nil {
 		t.Fatalf("bridge exit: %v %s", err, stderr.String())
 	}
-	// a wrong token: a JSON-RPC error that says what to do
+	// a wrong token: the bridge still starts and offers wrm_connect, saying what was wrong
 	bad := exec.Command(node, script)
-	bad.Env = append(os.Environ(), "WRM_MCP_URL="+e.srv+"/mcp", "WRM_MCP_TOKEN=wrm_pat_wrong")
-	bad.Stdin = strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}` + "\n")
+	bad.Env = append(os.Environ(), "WRM_MCP_URL="+e.srv+"/mcp", "WRM_MCP_TOKEN=wrm_pat_wrong", "WRM_MCP_CONFIG="+filepath.Join(t.TempDir(), "none.json"))
+	bad.Stdin = strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}` + "\n" + `{"jsonrpc":"2.0","id":2,"method":"tools/list"}` + "\n")
 	outb, _ := bad.Output()
-	if !strings.Contains(string(outb), `"error"`) || !strings.Contains(string(outb), "401") || !strings.Contains(string(outb), "AI connections") {
+	if strings.Contains(string(outb), `"error"`) || !strings.Contains(string(outb), "wrm_connect") || !strings.Contains(string(outb), "401") || !strings.Contains(string(outb), "AI connections") {
 		t.Fatalf("wrong token: %s", outb)
 	}
 }

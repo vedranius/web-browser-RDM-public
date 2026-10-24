@@ -7,6 +7,20 @@
 'use strict';
 
 Object.assign(LANGS.en, {
+  'mcp_sc_addons.manage': 'Manage WRM addons (administrators; every change needs approval)', mcp_quick_all: 'All AI apps at once', mcpw_c_all_apps: 'All AI apps on this computer', mcpw_via_all: 'one script: Claude, Codex, Gemini, VS Code, Cursor, OpenCode…',
+  mcpw_all_h: 'Download the script for the computer where your AI apps run and start it there. It signs in to this WRM in the browser (you choose the servers and approve), saves the connection once in ~/.wrm/mcp.json and adds WRM to every AI app it finds: Claude Code (as the WRM PRO plugin), the Claude app, Codex CLI, Gemini CLI, VS Code, Cursor, Windsurf and OpenCode. Files it changes are backed up first. The script holds no token. It needs Node.js 18 or later.',
+  mcpw_all_win: 'Windows (.ps1)', mcpw_all_unix: 'Linux / macOS (.sh)',
+  mcpw_all_run: 'Windows: right-click the folder with the file → Open in Terminal, then:\npowershell -ExecutionPolicy Bypass -File .\\wrm-setup-all.ps1\nLinux / macOS:\nsh wrm-setup-all.sh\nThen start the AI apps again. When the access expires, wrm_connect in any app signs in again for all of them.',
+  mcpw_all_claude_app: 'For skills and /wrm-pro:wrm in the Claude app add the plugin too: Customize → Plugins → Add marketplace → vedranius/web-browser-RDM-public, or Upload plugin with claude-plugin-wrm-pro.zip from the WRM release.',
+});
+Object.assign(LANGS.hr, {
+  'mcp_sc_addons.manage': 'Upravljanje WRM dodacima (administratori; svaka promjena traži odobrenje)', mcp_quick_all: 'Sve AI aplikacije odjednom', mcpw_c_all_apps: 'Sve AI aplikacije na ovom računalu', mcpw_via_all: 'jedna skripta: Claude, Codex, Gemini, VS Code, Cursor, OpenCode…',
+  mcpw_all_h: 'Preuzmite skriptu na računalu na kojem rade vaše AI aplikacije i pokrenite je ondje. Prijavljuje se u ovaj WRM u pregledniku (birate poslužitelje i odobravate), vezu sprema jednom u ~/.wrm/mcp.json i dodaje WRM u svaku AI aplikaciju koju pronađe: Claude Code (kao WRM PRO dodatak), Claude aplikaciju, Codex CLI, Gemini CLI, VS Code, Cursor, Windsurf i OpenCode. Datoteke koje mijenja prvo kopira. Skripta ne sadrži token. Treba Node.js 18 ili noviji.',
+  mcpw_all_win: 'Windows (.ps1)', mcpw_all_unix: 'Linux / macOS (.sh)',
+  mcpw_all_run: 'Windows: desni klik na mapu s datotekom → Open in Terminal, zatim:\npowershell -ExecutionPolicy Bypass -File .\\wrm-setup-all.ps1\nLinux / macOS:\nsh wrm-setup-all.sh\nZatim ponovno pokrenite AI aplikacije. Kad pristup istekne, wrm_connect u bilo kojoj aplikaciji ponovno prijavljuje sve.',
+  mcpw_all_claude_app: 'Za vještine i /wrm-pro:wrm u Claude aplikaciji dodajte i dodatak: Customize → Plugins → Add marketplace → vedranius/web-browser-RDM-public, ili Upload plugin s datotekom claude-plugin-wrm-pro.zip iz WRM izdanja.',
+});
+Object.assign(LANGS.en, {
   mcpw_public_needed:'This cloud app needs a reachable HTTPS WRM address. Ask the WRM administrator to set the public MCP URL and reverse proxy; localhost or a private address cannot be reached from the cloud.', mcpw_local_url:'A localhost address works only when the AI client runs on the WRM host. Use the server address when it runs on another computer.', mcpw_installer:'Download setup script', mcpw_installer_d:'Run on the computer with the AI app. The script detects its CLI, backs up existing settings where available, adds WRM and lists the result. Enter the token when asked; it is not embedded in the script.', mcpw_oauth_cli:'Use OAuth sign-in (no copied token)', mcpw_cursor_install:'Add to Cursor', mcpw_slash:'In WRM assistant use /wrm or /wrm server. MCP clients expose the wrm prompt in their own command menu; if unsupported, type “wrm server” in chat to list authorized servers.',
   mcp_edit_note: 'The token and expiry stay the same. Current sessions and pending approvals stop; reopen them with the updated permissions.',
   mcp_title: 'AI connections', mcp_intro: 'Let an AI app on your computer or in the browser (Claude, ChatGPT and other MCP clients) work on servers you choose. WRM checks every action against the mode and the scopes below, asks you before changes, and records everything.',
@@ -34,9 +48,9 @@ Object.assign(LANGS.en, {
   mcp_quick_cc: 'Claude Code, step by step',
   mcp_quick_desk: 'Claude Desktop extension',
   mcp_quick_cloud: 'claude.ai / ChatGPT connector',
-  mcp_quick_which: 'Claude Desktop app uses the extension; Claude Code (terminal or Code tab) uses /plugin inside Claude or the claude command in PowerShell.',
+  mcp_quick_which: 'Easiest: “All AI apps at once” connects every AI app on your computer with one script and a browser sign-in. The Claude app can also add the WRM PRO plugin (Customize → Plugins → Add marketplace → vedranius/web-browser-RDM-public); Claude Code uses /plugin or the claude command.',
   mcpw_cc_shell: 'In Claude Code, /plugin is a slash command typed at the Claude prompt, not in PowerShell. In PowerShell run the command below (no leading slash), or run `claude` first and type `/plugin …` there. After adding it, restart Claude Code or run `/mcp` to reconnect.',
-  mcpw_desk_no_plugin: 'Claude Desktop does not use /plugin: install the .mcpb extension below (or open the downloaded file).',
+  mcpw_desk_no_plugin: 'Two ways: the .mcpb extension below (token filled in, for chat), or the WRM PRO plugin in the Claude app (Customize → Plugins → Add marketplace → vedranius/web-browser-RDM-public, or Upload plugin with claude-plugin-wrm-pro.zip from the WRM release). The plugin needs no token: type /wrm-pro:wrm and approve the sign-in in the browser.',
   mcp_setup: 'Set up your app', mcp_setup_claude_desktop: 'Claude Desktop (local bridge)', mcp_setup_remote: 'Claude (custom connector)', mcp_setup_chatgpt: 'ChatGPT (connector)',
   mcp_setup_generic: 'Other MCP clients', mcp_setup_cli: 'Test from a shell',
   mcp_h_claude_desktop: 'Copy the WRM program (the same file as the server, for your computer\'s system) to your computer, then add this to claude_desktop_config.json (Claude → Settings → Developer → Edit config) and restart Claude. Replace the path with the program\'s full path.',
@@ -104,7 +118,7 @@ Object.assign(LANGS.en, {
   mcpw_desk_dl: 'Download Claude Desktop extension (wrm-pro.mcpb)', mcpw_desk_dl_note: 'The file contains your token. Delete it after installing.',
   mcpw_desk_steps: '1. Open the downloaded wrm-pro.mcpb (double-click). If it does not open Claude: Claude → Settings → Extensions → Advanced settings → Install extension… and choose the file.\n2. Press Install, then turn the extension on. Leave the settings as they are.\n3. In a new chat, ask for example: “wrm: list my servers”.',
   mcpw_desk_token: 'Only if Claude asks for the token:', mcpw_desk_noapp: 'Claude Desktop does not need the WRM program on your computer; it brings its own runtime for the extension.',
-  mcpw_cc_plugin: 'Or install the WRM PRO plugin for Claude Code with one command (Claude Code 2.1.275 or later):',
+  mcpw_cc_plugin: 'Or install the WRM PRO plugin (skills and /wrm-pro:wrm; Claude Code 2.1.275 or later). It needs no token: on first use /wrm-pro:wrm asks for the WRM address and you approve the sign-in in the browser:',
   mcp_w_watch: 'Watch live', mcp_w_auto: 'Open the live view when an AI app starts working on a server', mcp_w_title: '{client} on {server}',
   mcp_w_empty: 'Connected. What the AI runs on the server and its output appear here.', mcp_w_wait: 'Waiting for your approval', mcp_w_runs: 'runs', mcp_w_refused: 'refused by WRM', mcp_w_ask: 'needs your approval',
   mcp_w_later: 'Not approved in time, or the app declined the question: the AI no longer waits, but you can still approve it here. The AI then repeats it and it runs once.', mcp_w_later_ok: 'runs when the AI repeats it',
@@ -146,9 +160,9 @@ Object.assign(LANGS.hr, {
   mcp_quick_cc: 'Claude Code, korak po korak',
   mcp_quick_desk: 'Proširenje za Claude Desktop',
   mcp_quick_cloud: 'claude.ai / ChatGPT konektor',
-  mcp_quick_which: 'Claude Desktop aplikacija koristi proširenje; Claude Code (terminal ili Code kartica) koristi /plugin unutar Claudea ili claude naredbu u PowerShellu.',
+  mcp_quick_which: 'Najlakše: „Sve AI aplikacije odjednom” jednom skriptom i prijavom u pregledniku povezuje sve AI aplikacije na računalu. Claude aplikacija može dodati i WRM PRO dodatak (Customize → Plugins → Add marketplace → vedranius/web-browser-RDM-public); Claude Code koristi /plugin ili claude naredbu.',
   mcpw_cc_shell: 'U Claude Codeu je /plugin kosa crta naredba na Claude promptu, ne u PowerShellu. U PowerShellu pokrenite naredbu ispod (bez kose crte) ili prvo pokrenite `claude` pa upišite `/plugin …`. Nakon dodavanja restartajte Claude Code ili pokrenite `/mcp` za ponovno spajanje.',
-  mcpw_desk_no_plugin: 'Claude Desktop ne koristi /plugin: instalirajte .mcpb proširenje ispod (ili otvorite preuzetu datoteku).',
+  mcpw_desk_no_plugin: 'Dva načina: .mcpb proširenje ispod (token je upisan, za chat) ili WRM PRO dodatak u Claude aplikaciji (Customize → Plugins → Add marketplace → vedranius/web-browser-RDM-public, ili Upload plugin s datotekom claude-plugin-wrm-pro.zip iz WRM izdanja). Dodatak ne treba token: upišite /wrm-pro:wrm i odobrite prijavu u pregledniku.',
   mcp_setup: 'Postavljanje aplikacije', mcp_setup_claude_desktop: 'Claude Desktop (lokalni most)', mcp_setup_remote: 'Claude (prilagođeni konektor)', mcp_setup_chatgpt: 'ChatGPT (konektor)',
   mcp_setup_generic: 'Drugi MCP klijenti', mcp_setup_cli: 'Provjera iz ljuske',
   mcp_h_claude_desktop: 'Kopirajte program WRM (istu datoteku kao poslužitelj, za sustav vašeg računala) na računalo, zatim ovo dodajte u claude_desktop_config.json (Claude → Settings → Developer → Edit config) i ponovno pokrenite Claude. Zamijenite putanju punom putanjom programa.',
@@ -213,7 +227,7 @@ Object.assign(LANGS.hr, {
   mcpw_desk_dl: 'Preuzmi proširenje za Claude Desktop (wrm-pro.mcpb)', mcpw_desk_dl_note: 'Datoteka sadrži vaš token. Obrišite je nakon instalacije.',
   mcpw_desk_steps: '1. Otvorite preuzetu datoteku wrm-pro.mcpb (dvoklik). Ako se Claude ne otvori: Claude → Settings → Extensions → Advanced settings → Install extension… i odaberite datoteku.\n2. Pritisnite Install, zatim uključite proširenje. Postavke ostavite kakve jesu.\n3. U novom razgovoru zatražite na primjer: „wrm: popiši moje poslužitelje”.',
   mcpw_desk_token: 'Samo ako Claude zatraži token:', mcpw_desk_noapp: 'Claude Desktopu ne treba WRM program na računalu; za proširenje donosi vlastito okruženje.',
-  mcpw_cc_plugin: 'Ili instalirajte WRM PRO dodatak za Claude Code jednom naredbom (Claude Code 2.1.275 ili noviji):',
+  mcpw_cc_plugin: 'Ili instalirajte WRM PRO dodatak (vještine i /wrm-pro:wrm; Claude Code 2.1.275 ili noviji). Ne treba token: pri prvoj upotrebi /wrm-pro:wrm pita adresu WRM-a, a prijavu odobrite u pregledniku:',
   mcp_w_watch: 'Prati uživo', mcp_w_auto: 'Otvori prikaz uživo kad AI aplikacija počne raditi na poslužitelju', mcp_w_title: '{client} na {server}',
   mcp_w_empty: 'Povezano. Ovdje se vidi što AI pokreće na poslužitelju i što dobiva kao izlaz.', mcp_w_wait: 'Čeka vaše odobrenje', mcp_w_runs: 'pokreće se', mcp_w_refused: 'WRM je odbio', mcp_w_ask: 'treba vaše odobrenje',
   mcp_w_later: 'Nije odobreno na vrijeme ili je aplikacija odbila pitanje: AI više ne čeka, ali i dalje to možeš odobriti ovdje. AI će to ponoviti i izvršit će se jednom.', mcp_w_later_ok: 'izvršit će se kad AI ponovi',
@@ -449,7 +463,7 @@ Object.assign(LANGS.hr, {
   // exact command or file for the chosen app, the instructions that explain "wrm" to the AI,
   // and a test that talks to the MCP endpoint like the app will.
   const WCLIENTS = [
-    {id:'codex_oauth',icon:'⌨️',token:false}, {id: 'codex', icon: '⌨️', token: true}, {id: 'claude_desktop', icon: '🖥️', token: true, via: 'mcpw_via_extension'}, {id: 'claude_code', icon: '🟠', token: true}, {id: 'gemini', icon: '✨', token: true},
+    {id: 'all_apps', icon: '🧰', token: false, via: 'mcpw_via_all'}, {id:'codex_oauth',icon:'⌨️',token:false}, {id: 'codex', icon: '⌨️', token: true}, {id: 'claude_desktop', icon: '🖥️', token: true, via: 'mcpw_via_extension'}, {id: 'claude_code', icon: '🟠', token: true}, {id: 'gemini', icon: '✨', token: true},
     {id: 'opencode', icon: '⬛', token: true}, {id: 'cursor', icon: '🧩', token: true}, {id: 'claude_connector', icon: '🟠', token: false}, {id: 'chatgpt', icon: '💬', token: false},
   ];
   const WINSTR = {opencode: 'AGENTS.md', codex: 'AGENTS.md', claude_code: 'CLAUDE.md', gemini: 'GEMINI.md', cursor: 'AGENTS.md'};
@@ -468,7 +482,7 @@ Object.assign(LANGS.hr, {
       {h: 'mcpw_h_codex_toml', code: `[mcp_servers.wrm]\nurl = "${url}"\nbearer_token_env_var = "WRM_MCP_TOKEN"\ntool_timeout_sec = 1200`, file: 'config.toml'},
     ];
     out.claude_code = [{h: 'mcpw_h_claude_cmd', code: `claude mcp add --transport http wrm ${url} --header "Authorization: Bearer ${tk}"`},
-      {h: 'mcpw_cc_plugin', code: `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=${url} --config wrm_token=${tk}`}];
+      {h: 'mcpw_cc_plugin', code: `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public`}];
     out.claude_desktop = [{h: 'mcpw_desk_token', code: tk}];
     out.gemini = [
       {h: 'mcpw_h_gemini_cmd', code: `gemini mcp add --scope user --transport http wrm ${url} -H "Authorization: Bearer ${tk}"`},
@@ -492,6 +506,16 @@ Object.assign(LANGS.hr, {
       if (!res.ok) { let m = 'HTTP ' + res.status; try { m = (await res.json()).error || m; } catch (e) {} throw new Error(m); }
       const blob = await res.blob(), a = document.createElement('a');
       a.href = URL.createObjectURL(blob); a.download = 'wrm-pro.mcpb'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    } catch (e) { showToast(e.message, 'error', 6000); }
+  }
+  // all AI apps on this computer: the server builds the script with this WRM's address (no token)
+  async function setupAll(os) {
+    try {
+      const res = await fetch('/api/mcp/setup-all', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-WRM-Request': '1'}, body: JSON.stringify({os})});
+      if (!res.ok) { let m = 'HTTP ' + res.status; try { m = (await res.json()).error || m; } catch (e) {} throw new Error(m); }
+      const blob = await res.blob(), a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = os === 'windows' ? 'wrm-setup-all.ps1' : 'wrm-setup-all.sh'; document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     } catch (e) { showToast(e.message, 'error', 6000); }
   }
@@ -540,6 +564,7 @@ Object.assign(LANGS.hr, {
       const cloud=['chatgpt','claude_connector'].includes(W.client), host=new URL(cfg.url).hostname, local=/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(host)||host==='[::1]'||host.endsWith('.local');
       const warning=cloud&&(new URL(cfg.url).protocol!=='https:'||local)?'mcpw_public_needed':local?'mcpw_local_url':'';
       body = `${warning?`<div class="hint-box warn">${esc(t(warning))}</div>`:''}${W.client==='claude_code'?`<div class="hint-box warn">${esc(t('mcpw_cc_shell'))}</div>`:''}${W.client==='claude_desktop'?`<div class="hint-box warn">${esc(t('mcpw_desk_no_plugin'))}</div>`:''}<div class="hint-box">${esc(t('mcpw_h_' + (c.token ? 'token' : 'oauth')))}</div>${c.token ? `<div class="hint-box warn">${esc(t('mcp_token_once'))}</div>` : ''}` +
+        (W.client === 'all_apps' ? `<div class="hint-box">${esc(t('mcpw_all_h'))}</div><div style="margin:8px 0;"><button onclick="wrmMCP.setupAll('windows')">⬇ ${esc(t('mcpw_all_win'))}</button> <button onclick="wrmMCP.setupAll('unix')">⬇ ${esc(t('mcpw_all_unix'))}</button></div><div class="hint-box" style="white-space:pre-line;">${esc(t('mcpw_all_run'))}</div><div class="sub">${esc(t('mcpw_all_claude_app'))}</div>` : '') +
         (W.client === 'claude_desktop' ? `<div class="hint-box">${esc(t('mcpw_desk_h'))}</div><div style="margin:8px 0;"><button id="mcpw-desk-dl" onclick="wrmMCP.desktopExtension()">⬇ ${esc(t('mcpw_desk_dl'))}</button></div><div class="sub">${esc(t('mcpw_desk_dl_note'))}</div><div class="hint-box" style="white-space:pre-line;">${esc(t('mcpw_desk_steps'))}</div><div class="sub">${esc(t('mcpw_desk_noapp'))}</div>` : '') +
         parts.map((p, i) => `<div class="sub" style="margin-top:8px;">${esc(t(p.h))}</div>${wizPre(i, p.code)}${p.file ? `<button class="btn-sec btn-sm" onclick="wrmMCP.wizDownload(${i})">⬇ ${esc(t('mcpw_download'))} ${esc(p.file)}</button>` : ''}`).join('') +
         (['codex','codex_oauth','claude_code','gemini'].includes(W.client)?`<div class="hint-box">${esc(t('mcpw_installer_d'))}</div><button class="btn-sec btn-sm" onclick="wrmMCP.installer('sh')">${esc(t('mcpw_installer'))} (.sh)</button> <button class="btn-sec btn-sm" onclick="wrmMCP.installer('ps1')">${esc(t('mcpw_installer'))} (.ps1)</button>`:'')+
@@ -629,7 +654,8 @@ Object.assign(LANGS.hr, {
         <div class="sub" style="font-size:10.5px;color:var(--text3);">${esc(t('mcp_quick_cmd'))}</div>
         <div class="mcp-snip"><pre id="mcp-quick-cmd">claude mcp add --transport http --scope user wrm ${esc(cfg.url)} --header "Authorization: Bearer YOUR_TOKEN"</pre><button class="btn-sec btn-sm" onclick="wrmMCP.copy('mcp-quick-cmd')">${esc(t('mcp_copy'))}</button></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
-          <button class="btn-sm" onclick="wrmMCP.wizClient('claude_code')">${esc(t('mcp_quick_cc'))} →</button>
+          <button class="btn-sm" onclick="wrmMCP.wizClient('all_apps')">🧰 ${esc(t('mcp_quick_all'))} →</button>
+          <button class="btn-sec btn-sm" onclick="wrmMCP.wizClient('claude_code')">${esc(t('mcp_quick_cc'))} →</button>
           <button class="btn-sec btn-sm" onclick="wrmMCP.wizClient('claude_desktop')">${esc(t('mcp_quick_desk'))} →</button>
           <button class="btn-sec btn-sm" onclick="wrmMCP.wizClient('claude_connector')">${esc(t('mcp_quick_cloud'))} →</button>
         </div>
@@ -1133,7 +1159,7 @@ Object.assign(LANGS.hr, {
   window.wrmMCP = {
     settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto, dockMode, dockHide, dockPlace,
     dockStyle, dockAvailable: () => dockCount() > 0,
-    installer, cursorInstall, desktopExtension, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
+    installer, cursorInstall, desktopExtension, setupAll, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,
   };
 })();
