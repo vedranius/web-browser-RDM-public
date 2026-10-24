@@ -246,7 +246,7 @@ func (d *addonDevServer) serveHTTPProxy(w http.ResponseWriter, r *http.Request) 
 	}
 	prep, status, err := addonHTTPPrepare(rec, grants, &req, addonDevSecret)
 	if err != nil {
-		log.Printf("addon-dev: %s %s refused: %v", req.Method, req.URL, err)
+		log.Printf("addon-dev: %s %s refused: %s", addonDevLogText(req.Method), addonDevLogText(req.URL), addonDevLogText(err.Error()))
 		addonFail(w, err, status)
 		return
 	}
@@ -258,12 +258,22 @@ func (d *addonDevServer) serveHTTPProxy(w http.ResponseWriter, r *http.Request) 
 		if errors.As(err, &ae) {
 			code = ae.Code
 		}
-		log.Printf("addon-dev: %s %s%s %s (%v)", req.Method, prep.origin, prep.logPath, code, time.Since(start).Round(time.Millisecond))
+		log.Printf("addon-dev: %s %s %s (%v)", addonDevLogText(req.Method), addonDevLogText(prep.origin+prep.logPath), code, time.Since(start).Round(time.Millisecond))
 		addonFail(w, err, 502)
 		return
 	}
-	log.Printf("addon-dev: %s %s%s %d %d bytes (%v)", req.Method, prep.origin, prep.logPath, res.Status, len(res.Body), time.Since(start).Round(time.Millisecond))
+	log.Printf("addon-dev: %s %s %d %d bytes (%v)", addonDevLogText(req.Method), addonDevLogText(prep.origin+prep.logPath), res.Status, len(res.Body), time.Since(start).Round(time.Millisecond))
 	jsonOK(w, res)
+}
+
+// addonDevLogText keeps panel-supplied text on one console line.
+func addonDevLogText(s string) string {
+	s = strings.ReplaceAll(s, "\n", " ")
+	s = strings.ReplaceAll(s, "\r", " ")
+	if len(s) > 300 {
+		s = s[:300] + "…"
+	}
+	return s
 }
 
 func (d *addonDevServer) serveHost(w http.ResponseWriter) {
