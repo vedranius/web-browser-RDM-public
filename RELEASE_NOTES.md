@@ -1,17 +1,42 @@
-## Web Remote Manager PRO v13.12.0 - Tools for writing addons, also with an AI
+## Web Remote Manager PRO v13.13.0 - The Claude plugin with one pick, and every AI app with one script
 
 ### Added
+
+- **WRM PRO plugin without settings**: in the Claude app (*Customize → Plugins → Add marketplace* → `vedranius/web-browser-RDM-public` → WRM PRO) or in Claude Code (`/plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public`). Type `/wrm-pro:wrm`: the first time Claude asks for your WRM address and WRM opens in the browser, where you sign in and approve. The token goes straight to your computer, never into the chat.
+- **`/wrm-pro:wrm`** lists your servers and everything WRM can do (logs, services, files, commands, edits, transfers), and starts the work you ask for.
+- **All AI apps at once** (*Settings → AI connections*): one script for Windows or Linux/macOS signs in once and adds WRM to Claude Code, the Claude app, Codex, Gemini CLI, VS Code, Cursor, Windsurf and OpenCode, with a backup of every file it changes. When the access expires, signing in again in any app renews it for all.
+- **`claude-plugin-wrm-pro.zip`** in the release, for *Customize → Plugins → Upload plugin* when adding the marketplace is not possible.
+
+### Changed
+
+- Plugin 1.2.0 has no address and token settings any more (the Claude app cannot ask for them). After updating, run `/wrm-pro:wrm` once and approve the sign-in.
+- The Claude Desktop extension keeps working when its token expires: Claude offers to sign in again.
+
+### Fixed
+
+- The plugin could not connect from the Claude app: it depended on settings the app cannot ask for, and its web connector would have connected from the cloud, which cannot reach a WRM on your own network.
+- The AI app approval dialog showed a raw key for the addon permission.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
+
+[Download v13.13.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.13.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.12.0 - Tools for writing addons, also with an AI
+
+#### Added
 
 - **Check an addon before installing it**: `wrm -addon-lint ./my-addon` (or *Settings → Addons → 🛠 Developer tools → Check ZIP*) lists everything the sandbox would refuse, every finding with a code, file, line and hint. A failed install opens this report by itself, and *Copy report* hands it to an AI to fix.
 - **Templates**: `wrm -addon-new grafana-panel ./my-addon` (blank, fetch-and-render, grafana-panel, wasm-hook), also as ZIPs in *Templates*. They come with `wrm-bridge.js`, a small helper for talking to WRM.
 - **A dev server**: `wrm -addon-dev ./my-addon` opens the panel on your computer with the real sandbox and CSP, a stand-in for WRM (settings, web requests, secrets from environment variables) and a reload on every change.
 - **For AI assistants**: WRM serves the manifest's JSON Schema and an `llms.txt` guide at `/api/addons/dev/`.
 
-### Changed
+#### Changed
 
 - The addon ids `dev`, `install`, `drafts`, `community` and `users` are reserved.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
 
