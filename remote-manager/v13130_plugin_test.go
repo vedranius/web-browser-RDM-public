@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -76,13 +77,26 @@ func TestV13130PluginBundle(t *testing.T) {
 	}
 }
 
+// lockedBuffer collects the bridge's stderr while the test reads it.
+type lockedBuffer struct {
+	mu sync.Mutex
+	b  bytes.Buffer
+}
+
+func (l *lockedBuffer) Write(p []byte) (int, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.b.Write(p)
+}
+func (l *lockedBuffer) String() string { l.mu.Lock(); defer l.mu.Unlock(); return l.b.String() }
+
 // bridgeProc runs the bridge with Node.js and reads its stdout as JSON-RPC lines.
 type bridgeProc struct {
 	t      *testing.T
 	cmd    *exec.Cmd
 	in     io.WriteCloser
 	lines  chan map[string]interface{}
-	stderr *bytes.Buffer
+	stderr *lockedBuffer
 }
 
 func startBridge(t *testing.T, env ...string) *bridgeProc {
@@ -96,7 +110,7 @@ func startBridge(t *testing.T, env ...string) *bridgeProc {
 	cmd.Env = append(os.Environ(), env...)
 	in, _ := cmd.StdinPipe()
 	out, _ := cmd.StdoutPipe()
-	p := &bridgeProc{t: t, cmd: cmd, in: in, lines: make(chan map[string]interface{}, 64), stderr: &bytes.Buffer{}}
+	p := &bridgeProc{t: t, cmd: cmd, in: in, lines: make(chan map[string]interface{}, 64), stderr: &lockedBuffer{}}
 	cmd.Stderr = p.stderr
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
@@ -391,8 +405,8 @@ func TestV13130SetupAllApps(t *testing.T) {
 	setup := exec.Command(node, bridge, "--setup", "--url", e.srv, "--apps", "none")
 	setup.Env = []string{"HOME=" + home2, "PATH=" + bin, "WRM_MCP_NO_BROWSER=1"}
 	stdout, _ := setup.StdoutPipe()
-	var serr bytes.Buffer
-	setup.Stderr = &serr
+	serr := &lockedBuffer{}
+	setup.Stderr = serr
 	if err := setup.Start(); err != nil {
 		t.Fatal(err)
 	}

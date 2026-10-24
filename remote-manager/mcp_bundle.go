@@ -217,8 +217,9 @@ func psSingleQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", "'
 
 func mcpSetupScript(osName, mcpURL string) []byte {
 	js := strings.Replace(mcpbBridgeJS, "const VERSION = '0.0.0';", "const VERSION = '"+mcpbVersion()+"';", 1)
+	comment := strings.NewReplacer("\r", "", "\n", "").Replace(mcpURL) // the address also appears in a comment line
 	if osName == "windows" {
-		s := "# WRM PRO: connect every AI app on this computer to " + mcpURL + "\r\n" +
+		s := "# WRM PRO: connect every AI app on this computer to " + comment + "\r\n" +
 			"# Run: powershell -ExecutionPolicy Bypass -File .\\wrm-setup-all.ps1\r\n" +
 			"# Sign-in happens in the browser; set $env:WRM_MCP_TOKEN first to use a token instead.\r\n" +
 			"$ErrorActionPreference = 'Stop'\r\n" +
@@ -237,7 +238,7 @@ func mcpSetupScript(osName, mcpURL string) []byte {
 		return append([]byte("\xef\xbb\xbf"), s...)
 	}
 	return []byte("#!/bin/sh\n" +
-		"# WRM PRO: connect every AI app on this computer to " + mcpURL + "\n" +
+		"# WRM PRO: connect every AI app on this computer to " + comment + "\n" +
 		"# Run: sh wrm-setup-all.sh   (sign-in happens in the browser; export WRM_MCP_TOKEN first to use a token instead)\n" +
 		"set -eu\n" +
 		"wrm_url=" + shSingleQuote(mcpURL) + "\n" +
