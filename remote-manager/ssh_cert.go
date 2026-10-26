@@ -104,6 +104,9 @@ func certFileFor(keyPath string) string { return keyPath + "-cert.pub" }
 
 // readCertFile reads a certificate file; a missing file is no error.
 func readCertFile(p string) (*ssh.Certificate, error) {
+	if strings.Contains(p, "..") {
+		return nil, fmt.Errorf("the certificate path %s must not contain '..'", p)
+	}
 	data, err := os.ReadFile(p)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -150,7 +153,7 @@ func certSigners(c Connection, keyPath string, sg ssh.Signer) ([]ssh.Signer, err
 		return nil, fmt.Errorf("the SSH certificate (%s) was not issued for this key", from)
 	}
 	if certExpired(cert, time.Now()) {
-		log.Printf("SSH certificate of %s (%s) expired at %s: logging in with the plain key", c.Name, from, certTime(cert.ValidBefore))
+		log.Printf("SSH certificate of connection #%d expired: logging in with the plain key", c.ID)
 		return []ssh.Signer{sg}, nil
 	}
 	cs, err := ssh.NewCertSigner(cert, sg)

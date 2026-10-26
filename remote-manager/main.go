@@ -2874,11 +2874,7 @@ func resolveKeyMaterialPath(c Connection) ([]byte, string, error) {
 		if p == "" {
 			return nil, "", fmt.Errorf("key path not provided")
 		}
-		if strings.HasSuffix(p, "-cert.pub") { // the certificate of a key: use the key next to it
-			if _, err := os.Stat(strings.TrimSuffix(p, "-cert.pub")); err == nil {
-				p = strings.TrimSuffix(p, "-cert.pub")
-			}
-		}
+		p = strings.TrimSuffix(p, "-cert.pub") // the certificate of a key: use the key next to it
 		data, err := os.ReadFile(p)
 		if err != nil {
 			return nil, "", fmt.Errorf("cannot read '%s': %v", p, err)
