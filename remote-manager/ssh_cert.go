@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -153,7 +152,7 @@ func certSigners(c Connection, keyPath string, sg ssh.Signer) ([]ssh.Signer, err
 		return nil, fmt.Errorf("the SSH certificate (%s) was not issued for this key", from)
 	}
 	if certExpired(cert, time.Now()) {
-		log.Printf("SSH certificate of connection #%d expired: logging in with the plain key", c.ID)
+		// the plain key is still offered; a refused login names the expired certificate (certLoginHint)
 		return []ssh.Signer{sg}, nil
 	}
 	cs, err := ssh.NewCertSigner(cert, sg)
