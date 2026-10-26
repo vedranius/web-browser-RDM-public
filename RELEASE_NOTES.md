@@ -24,6 +24,23 @@ Replace the executable or container and keep the database and encryption key. Ad
 
 [Download v13.14.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.0) · [Full changelog](CHANGELOG.md)
 
+## Included from v13.13.1 - Adding the WRM PRO marketplace in the Claude app
+
+#### Changed
+
+- In the Claude app, add the marketplace with the repository name in lowercase: *Customize → Plugins → Add marketplace* → `vedranius/web-browser-rdm-public` → WRM PRO. The app names the marketplace after the repository, and GitHub accepts the name in any case. WRM's texts, README and the plugin's README now show it this way.
+- Plugin 1.2.1 (icon path only).
+
+#### Fixed
+
+- *Failed to add marketplace* in the Claude app: besides the lowercase name, README (Troubleshooting) says what else to check and where the app's log keeps the real reason. *Upload plugin* with `claude-plugin-wrm-pro.zip` from the release still installs the same plugin without a marketplace.
+
+#### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
+
+[Download v13.13.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.13.1) · [Full changelog](CHANGELOG.md)
+
 ## Included from v13.13.0 - The Claude plugin with one pick, and every AI app with one script
 
 #### Added
@@ -47,7 +64,6 @@ Replace the executable or container and keep the database and encryption key. Ad
 
 Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
 
-[Download v13.13.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.13.0) · [Full changelog](CHANGELOG.md)
 
 ## Included from v13.12.0 - Tools for writing addons, also with an AI
 

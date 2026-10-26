@@ -639,7 +639,7 @@ async function setup(argv) {
     }
   }
   out('');
-  out('Claude app plugin (skills and /wrm-pro:wrm in chat and Cowork): Customize > Plugins > Add marketplace > vedranius/web-browser-RDM-public > WRM PRO, or Upload plugin with claude-plugin-wrm-pro.zip from the WRM release.');
+  out('Claude app plugin (skills and /wrm-pro:wrm in chat and Cowork): Customize > Plugins > Add marketplace > vedranius/web-browser-rdm-public > WRM PRO, or Upload plugin with claude-plugin-wrm-pro.zip from the WRM release.');
   out('Start the AI apps again so they load WRM. In any of them, wrm_connect signs in again when the access expires; the new access then serves all of them.');
   return failed && !added ? 1 : 0;
 }
