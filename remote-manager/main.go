@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v13.13.0"
+var AppVersion = "v13.13.1"
 
 const sessionCookieName = "wrm_session"
 

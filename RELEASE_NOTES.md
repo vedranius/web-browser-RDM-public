@@ -1,27 +1,43 @@
-## Web Remote Manager PRO v13.13.0 - The Claude plugin with one pick, and every AI app with one script
+## Web Remote Manager PRO v13.13.1 - Adding the WRM PRO marketplace in the Claude app
 
-### Added
+### Changed
+
+- In the Claude app, add the marketplace with the repository name in lowercase: *Customize → Plugins → Add marketplace* → `vedranius/web-browser-rdm-public` → WRM PRO. The app names the marketplace after the repository, and GitHub accepts the name in any case. WRM's texts, README and the plugin's README now show it this way.
+- Plugin 1.2.1 (icon path only).
+
+### Fixed
+
+- *Failed to add marketplace* in the Claude app: besides the lowercase name, README (Troubleshooting) says what else to check and where the app's log keeps the real reason. *Upload plugin* with `claude-plugin-wrm-pro.zip` from the release still installs the same plugin without a marketplace.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
+
+[Download v13.13.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.13.1) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.13.0 - The Claude plugin with one pick, and every AI app with one script
+
+#### Added
 
 - **WRM PRO plugin without settings**: in the Claude app (*Customize → Plugins → Add marketplace* → `vedranius/web-browser-RDM-public` → WRM PRO) or in Claude Code (`/plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public`). Type `/wrm-pro:wrm`: the first time Claude asks for your WRM address and WRM opens in the browser, where you sign in and approve. The token goes straight to your computer, never into the chat.
 - **`/wrm-pro:wrm`** lists your servers and everything WRM can do (logs, services, files, commands, edits, transfers), and starts the work you ask for.
 - **All AI apps at once** (*Settings → AI connections*): one script for Windows or Linux/macOS signs in once and adds WRM to Claude Code, the Claude app, Codex, Gemini CLI, VS Code, Cursor, Windsurf and OpenCode, with a backup of every file it changes. When the access expires, signing in again in any app renews it for all.
 - **`claude-plugin-wrm-pro.zip`** in the release, for *Customize → Plugins → Upload plugin* when adding the marketplace is not possible.
 
-### Changed
+#### Changed
 
 - Plugin 1.2.0 has no address and token settings any more (the Claude app cannot ask for them). After updating, run `/wrm-pro:wrm` once and approve the sign-in.
 - The Claude Desktop extension keeps working when its token expires: Claude offers to sign in again.
 
-### Fixed
+#### Fixed
 
 - The plugin could not connect from the Claude app: it depended on settings the app cannot ask for, and its web connector would have connected from the cloud, which cannot reach a WRM on your own network.
 - The AI app approval dialog showed a raw key for the addon permission.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
 
-[Download v13.13.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.13.0) · [Full changelog](CHANGELOG.md)
 
 ## Included from v13.12.0 - Tools for writing addons, also with an AI
 
