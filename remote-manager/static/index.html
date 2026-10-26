@@ -10233,6 +10233,7 @@ async function adminFileEdits(more) {
       <div class="sub">${esc(fmtBytes(x.old_size))} → ${esc(fmtBytes(x.new_size))}</div></td>
     <td>${x.note === 'too_large' || x.note === 'binary' ? '' : `<button class="btn-sec btn-sm" onclick="adminFileEditDiff(${x.id})">${esc(t('edits_view'))}</button>`}</td></tr>`).join('');
   const tbl = document.getElementById('fe-table');
+  if (!tbl) return; // another tab was opened meanwhile
   if (more !== true) tbl.innerHTML = list.length ? `<table class="admin-table"><thead><tr><th>${esc(t('time'))}</th><th>${esc(t('user'))}</th><th>${esc(t('source'))}</th><th>${esc(t('edits_server_ph'))}</th><th>${esc(t('edits_change'))}</th><th></th></tr></thead><tbody id="fe-body">${rows}</tbody></table>` : `<div class="chat-empty">${esc(t('none'))}</div>`;
   else document.getElementById('fe-body').insertAdjacentHTML('beforeend', rows);
   if (list.length) editsLastId = list[list.length - 1].id;

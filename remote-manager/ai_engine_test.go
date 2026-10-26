@@ -508,6 +508,21 @@ func TestAIFileEditApproval(t *testing.T) {
 	if st, _ := os.Stat(conf); st.Mode().Perm() != 0o640 {
 		t.Fatalf("mode changed: %v", st.Mode())
 	}
+	// v13.14.0: the write is in the file edit history, with the diff of what was written
+	edits := func() []string {
+		var out []string
+		rows, _ := db.Query(`SELECT diff FROM file_edits WHERE source='ai' AND session=? ORDER BY id`, fmt.Sprintf("ai #%d", s.ID))
+		for rows.Next() {
+			var d string
+			rows.Scan(&d)
+			out = append(out, decryptValue(d))
+		}
+		rows.Close()
+		return out
+	}
+	if d := edits(); len(d) != 1 || !strings.Contains(d[0], "-workers = 2") || !strings.Contains(d[0], "+workers = 8") {
+		t.Fatalf("file edit history of the AI write: %q", d)
+	}
 	// the file changes after the diff was made → not written
 	e.prompt(s, "rewrite")
 	a = e.waitApproval(s)
@@ -517,6 +532,9 @@ func TestAIFileEditApproval(t *testing.T) {
 	b, _ = os.ReadFile(conf)
 	if string(b) != "changed meanwhile\n" {
 		t.Fatalf("a changed file was overwritten: %q", b)
+	}
+	if d := edits(); len(d) != 1 {
+		t.Fatalf("a refused write must not be in the history: %d", len(d))
 	}
 }
 

@@ -369,9 +369,9 @@ func listInstallFiles(userID int, in gitInstall) (*gitListing, error) {
 			e.State = "unknown"
 			e.Viewable = true
 		default:
-			// outside the check: listed, never compared
+			// outside the check: listed, never compared (log files not even on request)
 			e.State = "outside"
-			e.Viewable, e.Diffable = true, inGit && blob != ""
+			e.Viewable, e.Diffable = true, inGit && blob != "" && e.Reason != "logs"
 		}
 		add(e)
 	}
@@ -389,7 +389,7 @@ func listInstallFiles(userID int, in gitInstall) (*gitListing, error) {
 			e.State = "outside"
 		}
 		e.Viewable = blob != "" && e.Reason != "protected"
-		e.Diffable = e.Viewable
+		e.Diffable = e.Viewable && e.Reason != "logs"
 		add(e)
 	}
 	order := map[string]int{"modified": 0, "old": 1, "missing": 2, "unreadable": 3, "unknown": 4, "symlink": 5, "protected": 6, "ok": 7, "outside": 8}
