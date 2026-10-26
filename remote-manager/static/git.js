@@ -14,7 +14,7 @@ Object.assign(LANGS.en, { hf_runtime:'Runtime', hf_freshness:'Freshness', hf_sta
   git_detected_missing: 'Incomplete', git_detected_unknown: 'Unknown', git_vmd_ignored: 'VERSION.md is not used for the version check.',
   git_vmd_match: 'VERSION.md matches the code.', git_vmd_mismatch: 'VERSION.md says {v} ({c}); the code matches {dv} ({dc}).', git_vmd_no_version: 'VERSION.md cannot be matched to a single version ({s}).',
   git_vmd_none: 'No VERSION.md on the server.', git_code_error: 'Code check failed: {e}', git_approx: 'approx.',
-  git_all_states: 'All states', git_all_envs: 'All environments', git_all_folders: 'All folders', git_all_tags: 'All tags', git_search: 'Search…',
+  git_all_states: 'All states', git_all_envs: 'All environments', git_all_folders: 'All connection folders', git_all_dirs: 'All server folders', git_dir_filter_h: 'Folders on the servers: a folder also shows everything below it.', git_all_tags: 'All tags', git_search: 'Search…',
   git_ref_choice: 'Ref', git_ref_catalog: 'As in the catalog', git_ref_default: 'Default branch of each project', git_ref_branch: 'One branch for all',
   git_ref_override: 'Ref for this run', git_ref_override_ph: 'tag:latest, tag:v2 or a branch (empty = as chosen above)',
   git_server: 'Server', git_service: 'Service', git_path: 'Path', git_env: 'Environment', git_state: 'State', git_files: 'Files', git_checked: 'Checked', git_actions: 'Actions',
@@ -51,7 +51,7 @@ Object.assign(LANGS.hr, { hf_runtime:'Izvršavanje', hf_freshness:'Svježina', h
   git_detected_missing: 'Nepotpuno', git_detected_unknown: 'Nepoznato', git_vmd_ignored: 'VERSION.md se ne koristi za provjeru verzije.',
   git_vmd_match: 'VERSION.md odgovara kodu.', git_vmd_mismatch: 'VERSION.md kaže {v} ({c}); kod odgovara {dv} ({dc}).', git_vmd_no_version: 'VERSION.md se ne može poistovjetiti s jednom verzijom ({s}).',
   git_vmd_none: 'Na serveru nema VERSION.md.', git_code_error: 'Provjera koda nije uspjela: {e}', git_approx: 'približno',
-  git_all_states: 'Sva stanja', git_all_envs: 'Sva okruženja', git_all_folders: 'Sve mape', git_all_tags: 'Sve oznake', git_search: 'Traži…',
+  git_all_states: 'Sva stanja', git_all_envs: 'Sva okruženja', git_all_folders: 'Sve mape veza', git_all_dirs: 'Svi folderi na serveru', git_dir_filter_h: 'Folderi na serverima: folder prikazuje i sve ispod sebe.', git_all_tags: 'Sve oznake', git_search: 'Traži…',
   git_ref_choice: 'Ref', git_ref_catalog: 'Kao u katalogu', git_ref_default: 'Zadana grana svakog projekta', git_ref_branch: 'Jedna grana za sve',
   git_ref_override: 'Ref za ovu provjeru', git_ref_override_ph: 'tag:latest, tag:v2 ili grana (prazno = kao gore)',
   git_server: 'Server', git_service: 'Servis', git_path: 'Putanja', git_env: 'Okruženje', git_state: 'Stanje', git_files: 'Datoteke', git_checked: 'Provjereno', git_actions: 'Akcije',
@@ -181,7 +181,8 @@ Object.assign(LANGS.hr, {
 Object.assign(LANGS.en, {
   git_tab_gitignore: '.gitignore', gi_service: 'Service', gi_load: 'Load', gi_loading: 'Reading the repository and the latest checks…',
   gi_repo: 'Repository', gi_file: 'File', gi_branch: 'Branch', gi_current: 'Current .gitignore', gi_no_current: 'The repository has no .gitignore here yet.',
-  gi_warnings: 'Committed files that look like secrets or per-host configuration', gi_reason_secret: 'looks like a secret', gi_reason_protected: 'matches a protected glob',
+  gi_warnings: 'Committed files that should not be in Git (secrets, per-host configuration, logs)', gi_reason_secret: 'looks like a secret', gi_reason_log: 'log file',
+  gi_warn_log: 'Log files do not belong in Git: keep the Logs patterns checked and remove it from the repository with git rm --cached {path}.', gi_reason_protected: 'matches a protected glob',
   gi_warn_advice: 'Commit a template {tmpl} instead (WRM fills it on install), add {path} to .gitignore and remove it from the repository with git rm --cached {path}.',
   gi_extra: 'Files only on servers (state extra, from the latest checks)', gi_extra_none: 'No extra files in the latest checks of this service.', gi_size: 'Size', gi_pattern: 'Pattern',
   gi_stacks: 'Standard patterns', gi_detected: 'found: {f}', gi_protected: 'Protected globs (per-host files)', gi_custom: 'More patterns', gi_custom_h: 'One per line, e.g. /data/ or *.local.ini',
@@ -208,7 +209,8 @@ Object.assign(LANGS.en, {
 Object.assign(LANGS.hr, {
   git_tab_gitignore: '.gitignore', gi_service: 'Servis', gi_load: 'Učitaj', gi_loading: 'Čitanje repozitorija i zadnjih provjera…',
   gi_repo: 'Repozitorij', gi_file: 'Datoteka', gi_branch: 'Grana', gi_current: 'Trenutni .gitignore', gi_no_current: 'Repozitorij ovdje još nema .gitignore.',
-  gi_warnings: 'Datoteke u repozitoriju koje izgledaju kao tajne ili konfiguracija po hostu', gi_reason_secret: 'izgleda kao tajna', gi_reason_protected: 'odgovara zaštićenom globu',
+  gi_warnings: 'Datoteke u repozitoriju koje ne pripadaju Gitu (tajne, konfiguracija po hostu, logovi)', gi_reason_secret: 'izgleda kao tajna', gi_reason_log: 'log datoteka',
+  gi_warn_log: 'Log datoteke ne pripadaju Gitu: ostavite uzorke Logs označenima i uklonite je iz repozitorija s git rm --cached {path}.', gi_reason_protected: 'odgovara zaštićenom globu',
   gi_warn_advice: 'Umjesto nje spremite predložak {tmpl} (WRM ga popunjava pri instalaciji), dodajte {path} u .gitignore i uklonite je iz repozitorija s git rm --cached {path}.',
   gi_extra: 'Datoteke samo na serverima (stanje višak, iz zadnjih provjera)', gi_extra_none: 'U zadnjim provjerama ovog servisa nema viška datoteka.', gi_size: 'Veličina', gi_pattern: 'Uzorak',
   gi_stacks: 'Standardni uzorci', gi_detected: 'pronađeno: {f}', gi_protected: 'Zaštićeni globovi (datoteke po hostu)', gi_custom: 'Dodatni uzorci', gi_custom_h: 'Jedan po retku, npr. /data/ ili *.local.ini',
@@ -242,16 +244,17 @@ Object.assign(LANGS.en, {
   git_job_done: 'Check finished: {n} installations.', git_job_cancelled: 'Check cancelled.', git_job_errors: '{n} could not be checked.', git_nothing_stale: 'No visible installation is that old.',
   git_q_queued: 'queued', git_q_running: 'checking…', git_checked_ago: 'checked {t}', git_ago_now: 'just now', git_ago_min: '{n} min ago', git_ago_h: '{n} h ago', git_ago_d: '{n} d ago',
   git_last_good: 'last good: {s}, {t}',
-  git_files_all: 'Files in the folder and in Git', git_ff_all: 'All', git_ff_diff: 'Differing', git_ff_tracked: 'Tracked only', git_ff_untracked: 'Not tracked', git_files_search: 'Search files…',
+  git_files_all: 'Files in the folder and in Git', git_ff_all: 'All', git_ff_diff: 'Differing', git_ff_tracked: 'In the check', git_ff_untracked: 'Outside the check', git_files_search: 'Search files…',
   git_files_loading: 'Reading the folder on the server…', git_files_count: '{n} of {total}', git_files_truncated: 'The folder has more than {n} entries: only the first {n} are listed.',
   git_files_partial: 'Only the catalog\'s files of the repository are known: refresh the targets to see the other repository files too.',
   git_files_notcmp: '{n} repository files outside the catalog were not compared yet (Diff compares them).', git_files_more: 'Showing the first {n} rows: narrow the list with the filters.',
-  git_files_failed: 'The folder could not be read: {e}', git_files_stored: 'Files of the last check', git_files_info: 'Files the catalog does not track are informational: they never change the state of the installation.',
+  git_files_failed: 'The folder could not be read: {e}', git_files_stored: 'Files of the last check', git_files_info: 'The check compares only the files the catalog tracks (and the protected ones). Files outside the check, such as logs or files not in the include list, are only listed: they are not compared and never change the state of the installation.',
   git_size: 'Size', git_mtime: 'Modified', git_reason: 'Why', git_open: 'Open',
   git_fs_same: 'same', git_fs_differs: 'differs', git_fs_unknown: 'not compared', git_fs_symlink: 'symlink', git_fs_unreadable: 'unreadable',
   git_r_tracked: 'tracked', git_r_excluded: 'excluded by the catalog', git_r_excluded_p: 'excluded by the catalog ({p})', git_r_not_included: 'not in the include list',
   git_r_protected: 'protected', git_r_protected_p: 'protected ({p})', git_r_extra: 'not in Git', git_r_tool: 'written by the deploy tool', git_r_compiled: 'compiled file',
-  git_r_not_tracked: 'in Git, not tracked', git_r_no_target: 'no target yet', git_link_outside: 'points out of the installation (not followed)', git_dir_unreadable: 'directory: permission denied',
+  git_r_not_tracked: 'in Git, not tracked', git_r_logs: 'log file', git_fs_outside: 'outside the check',
+  git_where_both: 'in Git and on the server', git_where_git: 'only in Git', git_where_server: 'only on the server', git_r_no_target: 'no target yet', git_link_outside: 'points out of the installation (not followed)', git_dir_unreadable: 'directory: permission denied',
   git_informational: 'Excluded by the catalog — informational, not updated.', git_info_untracked: 'Not tracked by the catalog — informational, not updated.',
   git_view_unified: 'Unified', git_view_split: 'Side by side', git_from_server: 'Server', git_from_git: 'Git',
   git_binary_same: 'Binary file: the same on the server and in Git (by hash).', git_binary_differs: 'Binary file: differs between the server and Git (by hash).',
@@ -270,16 +273,17 @@ Object.assign(LANGS.hr, {
   git_job_done: 'Provjera završena: {n} instalacija.', git_job_cancelled: 'Provjera prekinuta.', git_job_errors: 'Nije moguće provjeriti: {n}.', git_nothing_stale: 'Nijedna prikazana instalacija nije toliko stara.',
   git_q_queued: 'na čekanju', git_q_running: 'provjera…', git_checked_ago: 'provjereno {t}', git_ago_now: 'upravo', git_ago_min: 'prije {n} min', git_ago_h: 'prije {n} h', git_ago_d: 'prije {n} d',
   git_last_good: 'zadnje uspješno: {s}, {t}',
-  git_files_all: 'Datoteke u direktoriju i u Gitu', git_ff_all: 'Sve', git_ff_diff: 'Različite', git_ff_tracked: 'Samo praćene', git_ff_untracked: 'Nepraćene', git_files_search: 'Traži datoteke…',
+  git_files_all: 'Datoteke u direktoriju i u Gitu', git_ff_all: 'Sve', git_ff_diff: 'Različite', git_ff_tracked: 'U provjeri', git_ff_untracked: 'Izvan provjere', git_files_search: 'Traži datoteke…',
   git_files_loading: 'Čitanje direktorija na serveru…', git_files_count: '{n} od {total}', git_files_truncated: 'Direktorij ima više od {n} stavki: prikazano je samo prvih {n}.',
   git_files_partial: 'Poznate su samo datoteke repozitorija iz kataloga: osvježite ciljeve da biste vidjeli i ostale datoteke repozitorija.',
   git_files_notcmp: 'Datoteke repozitorija izvan kataloga koje još nisu uspoređene: {n} (usporedite ih gumbom Razlike).', git_files_more: 'Prikazano je prvih {n} redaka: suzite popis filtrima.',
-  git_files_failed: 'Direktorij nije moguće pročitati: {e}', git_files_stored: 'Datoteke zadnje provjere', git_files_info: 'Datoteke koje katalog ne prati samo su informativne: nikad ne mijenjaju stanje instalacije.',
+  git_files_failed: 'Direktorij nije moguće pročitati: {e}', git_files_stored: 'Datoteke zadnje provjere', git_files_info: 'Provjera uspoređuje samo datoteke koje katalog prati (i zaštićene). Datoteke izvan provjere, poput logova ili datoteka koje nisu na popisu uključenih, samo se navode: ne uspoređuju se i nikad ne mijenjaju stanje instalacije.',
   git_size: 'Veličina', git_mtime: 'Izmijenjeno', git_reason: 'Zašto', git_open: 'Otvori',
   git_fs_same: 'isto', git_fs_differs: 'razlikuje se', git_fs_unknown: 'nije uspoređeno', git_fs_symlink: 'simbolička veza', git_fs_unreadable: 'nečitljivo',
   git_r_tracked: 'praćeno', git_r_excluded: 'isključeno katalogom', git_r_excluded_p: 'isključeno katalogom ({p})', git_r_not_included: 'nije na popisu uključenih',
   git_r_protected: 'zaštićeno', git_r_protected_p: 'zaštićeno ({p})', git_r_extra: 'nije u Gitu', git_r_tool: 'zapisuje alat za isporuku', git_r_compiled: 'prevedena datoteka',
-  git_r_not_tracked: 'u Gitu, nije praćeno', git_r_no_target: 'još nema cilja', git_link_outside: 'vodi izvan instalacije (ne slijedi se)', git_dir_unreadable: 'direktorij: pristup odbijen',
+  git_r_not_tracked: 'u Gitu, nije praćeno', git_r_logs: 'log datoteka', git_fs_outside: 'izvan provjere',
+  git_where_both: 'u Gitu i na serveru', git_where_git: 'samo u Gitu', git_where_server: 'samo na serveru', git_r_no_target: 'još nema cilja', git_link_outside: 'vodi izvan instalacije (ne slijedi se)', git_dir_unreadable: 'direktorij: pristup odbijen',
   git_informational: 'Isključeno katalogom — informativno, ne ažurira se.', git_info_untracked: 'Katalog ovo ne prati — informativno, ne ažurira se.',
   git_view_unified: 'Objedinjeno', git_view_split: 'Usporedno', git_from_server: 'Server', git_from_git: 'Git',
   git_binary_same: 'Binarna datoteka: ista na serveru i u Gitu (po hashu).', git_binary_differs: 'Binarna datoteka: razlikuje se između servera i Gita (po hashu).',
@@ -818,7 +822,7 @@ Object.assign(LANGS.hr, {
   gm_op_config_pull: 'povlačenje deploy-configa', gm_op_config_push: 'push deploy-configa',
 });
 (function () {
-  const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set(),
+  const G = {state: null, tab: 'overview', f: {state: '', env: '', folder: '', dir: '', tag: '', q: '', app: '', conn: ''}, onlyChanges: true, busy: false, sel: new Set(),
     checkVMD: (() => { try { return localStorage.getItem('wrm_git_check_vmd') === '1'; } catch (_) { return false; } })()};
   const modeKey = () => 'wrm_git_mode:' + ((typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.username)) || '');
   G.mode = (() => { try { return ['simple', 'medium'].includes(localStorage.getItem(modeKey())) ? localStorage.getItem(modeKey()) : 'advanced'; } catch (_) { return 'advanced'; } })();
@@ -932,7 +936,7 @@ Object.assign(LANGS.hr, {
 #git-modal .s-ok { background: rgba(var(--green-rgb),.14); color: var(--green); }
 #git-modal .s-old, #git-modal .s-missing, #git-modal .s-update { background: rgba(var(--yellow-rgb),.14); color: var(--yellow); }
 #git-modal .s-modified, #git-modal .s-review, #git-modal .s-error { background: rgba(var(--red-rgb),.14); color: var(--red); }
-#git-modal .s-extra, #git-modal .s-protected, #git-modal .s-gone, #git-modal .s-unknown { background: var(--bg4); color: var(--text2); }
+#git-modal .s-extra, #git-modal .s-outside, #git-modal .s-protected, #git-modal .s-gone, #git-modal .s-unknown { background: var(--bg4); color: var(--text2); }
 #git-modal .g-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 #git-modal .g-grid label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 3px; }
 #git-modal textarea { width: 100%; min-height: 48px; font-family: inherit; }
@@ -1074,6 +1078,39 @@ Object.assign(LANGS.hr, {
   function stBadge(s) { return `<span class="g-st s-${esc(s)}">${esc(t('git_st_' + s))}</span>`; }
   function fsBadge(s) { return `<span class="g-st s-${esc(s)}">${esc(t('git_fs_' + s))}</span>`; }
 
+  // ── folder filters (as in the log viewer): a tree of the folders of the given paths, each
+  // with the number of items below it; a folder matches itself and everything under it ──
+  const segsOf = p => String(p || '').split('/').filter(Boolean);
+  function dirOptions(paths, cur, leafIsFolder) {
+    const count = new Map();
+    for (const p of paths) {
+      const sg = segsOf(p), lead = String(p || '').startsWith('/') ? '/' : '';
+      for (let k = 1; k <= (leafIsFolder ? sg.length : sg.length - 1); k++) { const key = lead + sg.slice(0, k).join('/'); count.set(key, (count.get(key) || 0) + 1); }
+    }
+    const keys = [...count.keys()].sort((a, b) => {
+      const x = segsOf(a), y = segsOf(b);
+      for (let k = 0; k < Math.min(x.length, y.length); k++) { const c = x[k].localeCompare(y[k], undefined, {sensitivity: 'base'}); if (c) return c; }
+      return x.length - y.length;
+    });
+    return keys.slice(0, 1500).map(k => { const sg = segsOf(k), d = sg.length - 1;
+      return `<option value="${esc(k)}" ${k === cur ? 'selected' : ''}>${d ? '\u00a0\u00a0'.repeat(d) + '└ ' + esc(sg[d]) : esc(k)} (${count.get(k)})</option>`; }).join('');
+  }
+  const inDir = (p, d) => !d || p === d || String(p || '').startsWith(d.replace(/\/$/, '') + '/');
+  const dirSelect = (onchange, paths, cur, leafIsFolder, id) => `<select ${id ? `id="${id}" ` : ''}aria-label="${esc(t('git_all_dirs'))}" title="${esc(t('git_dir_filter_h'))}" onchange="${onchange}">
+    <option value="">${esc(t('git_all_dirs'))}</option>${dirOptions(paths, cur, leafIsFolder)}</select>`;
+  // connection folders: the folder tree of WRM, a folder matches its subfolders too
+  const connFolderPath = id => { const out = []; let f = (folders || []).find(x => x.id === id); for (let n = 0; f && n < 50; n++) { out.unshift(f); f = folders.find(x => x.id === f.parent_id); } return out; };
+  const inConnFolder = (fid, want) => !want || connFolderPath(fid).some(f => String(f.id) === String(want));
+  function connFolderOptions(fids, cur) {
+    const count = new Map(), byId = new Map();
+    for (const id of fids) for (const f of connFolderPath(id)) { byId.set(f.id, f); count.set(f.id, (count.get(f.id) || 0) + 1); }
+    const sortKey = id => connFolderPath(id).map(f => f.name);
+    const ids = [...byId.keys()].sort((a, b) => { const x = sortKey(a), y = sortKey(b);
+      for (let k = 0; k < Math.min(x.length, y.length); k++) { const c = x[k].localeCompare(y[k], undefined, {sensitivity: 'base'}); if (c) return c; } return x.length - y.length; });
+    return ids.map(id => { const d = connFolderPath(id).length - 1;
+      return `<option value="${id}" ${String(cur) === String(id) ? 'selected' : ''}>${d ? '\u00a0\u00a0'.repeat(d) + '└ ' : ''}${esc(byId.get(id).name)} (${count.get(id)})</option>`; }).join('');
+  }
+
   async function load() {
     const r = await fetch('/api/git');
     if (!r.ok) { showToast(await apiError(r), 'error'); return false; }
@@ -1144,7 +1181,7 @@ Object.assign(LANGS.hr, {
   function filtered() {
     const f = G.f, q = f.q.toLowerCase();
     return G.state.installs.filter(i => (!f.state || i.state === f.state) && (!f.env || i.env === f.env) &&
-      (!f.folder || String(i.folder_id || '') === f.folder) && (!f.tag || (i.tags || []).includes(f.tag)) &&
+      (!f.folder || inConnFolder(i.folder_id, f.folder)) && inDir(i.path, f.dir) && (!f.tag || (i.tags || []).includes(f.tag)) &&
       (!f.app || i.app === f.app) && (!f.conn || String(i.conn_id) === f.conn) &&
       (!q || (i.conn_name + ' ' + (i.host || '') + ' ' + i.app + ' ' + i.path + ' ' + (i.env || '')).toLowerCase().includes(q)));
   }
@@ -1157,12 +1194,12 @@ Object.assign(LANGS.hr, {
     const appNames = [...new Set(s.installs.map(i => i.app))].sort();
     const servers = [...new Map(s.installs.map(i => [i.conn_id, i.conn_name || i.hostname || i.host || ''])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
     const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(label)}</option>`;
-    const fname = id => ((folders || []).find(x => x.id === id) || {}).name || ('#' + id);
     return `<select onchange="gitWorkspace.filter('app', this.value)">${opt('', t('git_all_services'), f.app)}${appNames.map(x => opt(x, x, f.app)).join('')}</select>
       <select onchange="gitWorkspace.filter('conn', this.value)">${opt('', t('git_all_servers'), f.conn)}${servers.map(([id, n]) => opt(id, hn(n) || '#' + id, f.conn)).join('')}</select>
       <select onchange="gitWorkspace.filter('state', this.value)">${opt('', t('git_all_states'), f.state)}${['update', 'review', 'ok', 'error', 'gone', 'unknown'].map(x => opt(x, t('git_st_' + x), f.state)).join('')}</select>
       <select onchange="gitWorkspace.filter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${envs.map(x => opt(x, x, f.env)).join('')}</select>
-      <select onchange="gitWorkspace.filter('folder', this.value)">${opt('', t('git_all_folders'), f.folder)}${fids.map(x => opt(x, fname(x), f.folder)).join('')}</select>
+      ${dirSelect("gitWorkspace.filter('dir', this.value)", s.installs.map(i => i.path), f.dir, true)}
+      <select onchange="gitWorkspace.filter('folder', this.value)">${opt('', t('git_all_folders'), f.folder)}${connFolderOptions(fids, f.folder)}</select>
       <select onchange="gitWorkspace.filter('tag', this.value)">${opt('', t('git_all_tags'), f.tag)}${tags.map(x => opt(x, x, f.tag)).join('')}</select>
       <input type="search" id="git-q" placeholder="${esc(t('git_search_srv'))}" value="${esc(f.q)}" oninput="gitWorkspace.filter('q', this.value, true)">`;
   }
@@ -1528,7 +1565,7 @@ Object.assign(LANGS.hr, {
     return `<div class="g-mut">${esc(fmtTime(h.checked_at))}</div>${(h.warnings || []).map(w => `<div class="hint-box warn" style="overflow-wrap:anywhere">⚠ ${esc(w)}</div>`).join('')}
       ${(h.checks || []).map(c => `<div class="g-card" style="margin-top:6px;overflow-wrap:anywhere">${functionalityBadge(c)} <b>${esc(c.kind)} · ${esc(c.name)}</b><pre style="white-space:pre-wrap;margin:4px 0">${esc(c.status)}</pre>${c.log ? `<details><summary>${esc(t('gf_log'))}</summary><pre style="white-space:pre-wrap;max-height:240px;overflow:auto">${esc(c.log)}</pre></details>` : ''}</div>`).join('')}`;
   }
-  const HF = {q:'',server:'',app:'',env:'',kind:'',health:'',age:'',problem:'',collapsed:new Set()};
+  const HF = {q:'',server:'',app:'',env:'',dir:'',kind:'',health:'',age:'',problem:'',collapsed:new Set()};
   function functionalityHTML() {
     const installs=G.state.installs || [], apps=G.state.catalog.apps || [], servers=G.state.server_health || [];
     const groups=new Map();
@@ -1536,7 +1573,7 @@ Object.assign(LANGS.hr, {
     for (const h of servers) { if (!groups.has(h.conn_id)) groups.set(h.conn_id,{id:h.conn_id,name:h.name,hostname:h.hostname||'',folder:h.folder||'',items:[]}); groups.get(h.conn_id).health=h; }
     const option=(v,label,cur)=>`<option value="${esc(v)}" ${String(cur)===String(v)?'selected':''}>${esc(label)}</option>`;
     const choose=(key,label,values)=>`<select aria-label="${esc(label)}" onchange="gitWorkspace.functionalityFilter('${key}',this.value)">${option('',label,HF[key])}${values.map(([v,l])=>option(v,l,HF[key])).join('')}</select>`;
-    const control=`<div class="g-bar g-sticky"><input id="health-q" type="search" placeholder="${esc(t('git_search_srv'))}" value="${esc(HF.q)}" oninput="gitWorkspace.functionalityFilter('q',this.value)">${choose('server',t('git_all_servers'),[...groups.values()].map(g=>[g.id,hn(g.name,g.hostname)+' · '+g.name+' #'+g.id]))}${choose('app',t('git_all_services'),apps.map(a=>[a.name,a.name]))}${choose('env',t('git_all_envs'),[...new Set(installs.map(i=>i.env).filter(Boolean))].map(x=>[x,x]))}${choose('kind',t('hf_runtime'),['systemd','supervisor','http','tcp','resource'].map(x=>[x,x]))}${choose('health',t('git_all_states'),['healthy','warning','failed','unknown'].map(x=>[x,t('gf_'+x)]))}${choose('age',t('hf_freshness'),[['never',t('gf_never')],['stale',t('hf_stale')]])}${choose('problem',t('hf_installation'),[['yes',t('hf_problems')]])}<button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityReset()">${esc(t('hf_reset'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityExpand(true)">＋</button><button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityExpand(false)">−</button><button class="btn-sec" ${G.state.can_check&&!jobRunning()?'':'disabled'} onclick="gitWorkspace.check()">↻ ${esc(t('git_check_now'))}</button><button class="btn-sec" onclick="gitWorkspace.configProfiles()">${esc(t('gcp_title'))}</button></div>`;
+    const control=`<div class="g-bar g-sticky"><input id="health-q" type="search" placeholder="${esc(t('git_search_srv'))}" value="${esc(HF.q)}" oninput="gitWorkspace.functionalityFilter('q',this.value)">${choose('server',t('git_all_servers'),[...groups.values()].map(g=>[g.id,hn(g.name,g.hostname)+' · '+g.name+' #'+g.id]))}${choose('app',t('git_all_services'),apps.map(a=>[a.name,a.name]))}${choose('env',t('git_all_envs'),[...new Set(installs.map(i=>i.env).filter(Boolean))].map(x=>[x,x]))}${dirSelect("gitWorkspace.functionalityFilter('dir',this.value)",installs.map(i=>i.path),HF.dir,true)}${choose('kind',t('hf_runtime'),['systemd','supervisor','http','tcp','resource'].map(x=>[x,x]))}${choose('health',t('git_all_states'),['healthy','warning','failed','unknown'].map(x=>[x,t('gf_'+x)]))}${choose('age',t('hf_freshness'),[['never',t('gf_never')],['stale',t('hf_stale')]])}${choose('problem',t('hf_installation'),[['yes',t('hf_problems')]])}<button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityReset()">${esc(t('hf_reset'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityExpand(true)">＋</button><button class="btn-sec btn-sm" onclick="gitWorkspace.functionalityExpand(false)">−</button><button class="btn-sec" ${G.state.can_check&&!jobRunning()?'':'disabled'} onclick="gitWorkspace.check()">↻ ${esc(t('git_check_now'))}</button><button class="btn-sec" onclick="gitWorkspace.configProfiles()">${esc(t('gcp_title'))}</button></div>`;
     function matches(health,data) {
       if (HF.q&&!JSON.stringify(data).toLowerCase().includes(HF.q.toLowerCase())) return false;
       if (HF.health&&(health?.state || 'unknown')!==HF.health) return false;
@@ -1548,8 +1585,8 @@ Object.assign(LANGS.hr, {
     let count=0;
     const body=[...groups.values()].sort((a,b)=>hn(a.name,a.hostname).localeCompare(hn(b.name,b.hostname))).map(g=>{
       if (HF.server&&String(g.id)!==HF.server) return '';
-      const items=g.items.filter(i=>(!HF.app||i.app===HF.app)&&(!HF.env||i.env===HF.env)&&(!HF.problem||i.error||['error','gone','unknown'].includes(i.state)||i.functionality?.warnings?.length)&&matches(i.functionality,{...i,repository:apps.find(a=>a.name===i.app)?.project}));
-      const hostMatch=!HF.app&&!HF.env&&!HF.problem&&matches(g.health,g);
+      const items=g.items.filter(i=>(!HF.app||i.app===HF.app)&&(!HF.env||i.env===HF.env)&&inDir(i.path,HF.dir)&&(!HF.problem||i.error||['error','gone','unknown'].includes(i.state)||i.functionality?.warnings?.length)&&matches(i.functionality,{...i,repository:apps.find(a=>a.name===i.app)?.project}));
+      const hostMatch=!HF.app&&!HF.env&&!HF.dir&&!HF.problem&&matches(g.health,g);
       if (!items.length&&!hostMatch) return '';count+=items.length+(hostMatch?1:0);
       const states=g.items.map(i=>i.functionality?.state || 'unknown');if(g.health)states.push(g.health.state);
       const totals=['healthy','warning','failed','unknown'].map(x=>`${t('gf_'+x)}: ${states.filter(s=>s===x).length}`).join(' · ');
@@ -1559,7 +1596,7 @@ Object.assign(LANGS.hr, {
   }
   function paintFunctionality() { const body=document.getElementById('monitor-service-view') || (G.tab==='functionality'&&$('git-body'));if(!body)return;const focus=document.activeElement?.id, pos=document.activeElement?.selectionStart, top=body.scrollTop;body.innerHTML=functionalityHTML();body.scrollTop=top;if(focus==='health-q'){const q=document.getElementById(focus);q.focus();if(pos!=null)q.setSelectionRange(pos,pos)} }
   function functionalityFilter(key,value) {HF[key]=value;paintFunctionality();}
-  function functionalityReset(){for(const k of ['q','server','app','env','kind','health','age','problem'])HF[k]='';paintFunctionality();}
+  function functionalityReset(){for(const k of ['q','server','app','env','dir','kind','health','age','problem'])HF[k]='';paintFunctionality();}
   function functionalityToggle(id,open){if(open)HF.collapsed.delete(id);else HF.collapsed.add(id);}
   function functionalityExpand(open){if(open)HF.collapsed.clear();else for(const i of G.state.installs||[])HF.collapsed.add(i.conn_id);paintFunctionality();}
   async function monitoringMount(el){if(!$('git-style')){const s=document.createElement('style');s.id='git-style';s.textContent=css;document.head.appendChild(s)}if(!$('monitor-git-style')){const s=document.createElement('style');s.id='monitor-git-style';s.textContent=css.replaceAll('#git-ws','#monitor-service-view')+'\n#monitor-service-view {position:static;inset:auto;z-index:auto;display:block;background:inherit;font-size:13px;}';document.head.appendChild(s)}if(el&&await load()&&el.isConnected&&document.getElementById('monitor-service-view')===el)el.innerHTML=functionalityHTML();}
@@ -1624,14 +1661,14 @@ Object.assign(LANGS.hr, {
   }
 
   // ── installation details: every file, diff, view, commits ──
-  const F = {id: 0, list: null, err: '', loading: false, filter: 'all', q: '', diff: null, mode: window.innerWidth < 700 ? 'unified' : 'split'};
+  const F = {id: 0, list: null, err: '', loading: false, filter: 'tracked', dir: '', q: '', diff: null, mode: window.innerWidth < 700 ? 'unified' : 'split'};
 
   async function details(id) {
     const r = await fetch('/api/git/installs/' + id);
     if (!r.ok) { showToast(await apiError(r), 'error'); return; }
     const i = await r.json();
     G.detail = i;
-    Object.assign(F, {id, list: null, err: '', loading: G.state.can_check, q: '', diff: null});
+    Object.assign(F, {id, list: null, err: '', loading: G.state.can_check, q: '', dir: '', diff: null});
     const d = i.detected || {}, v = i.version_md || {};
     modal(`<h3>${esc(hn(i.conn_name, i.hostname))} · ${esc(i.app)} · <span class="g-mono">${esc(i.path)}</span></h3>
       <div class="g-bar">${stBadge(i.state)}${i.env ? `<span class="g-env">${esc(i.env)}</span>` : ''}${Object.entries(i.counts || {}).map(([k, n]) => `${fsBadge(k)} ${n}`).join(' ')}
@@ -1682,7 +1719,7 @@ Object.assign(LANGS.hr, {
         <td>${f.diffable && f.state !== 'ok' && G.state.can_check ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.diff(${i.id}, '${esc(encodeURIComponent(f.path))}')">${esc(t('git_diff'))}</button>` : ''}</td></tr>`).join('')}</table></div>`;
   }
 
-  const DIFFERING = ['old', 'modified', 'differs', 'missing', 'extra'];
+  const DIFFERING = ['old', 'modified', 'missing', 'unknown'];
 
   function reasonText(f) {
     if (f.pattern && (f.reason === 'excluded' || f.reason === 'protected')) return tf('git_r_' + f.reason + '_p', {p: f.pattern});
@@ -1695,26 +1732,28 @@ Object.assign(LANGS.hr, {
     if (F.loading) return `<div class="hint-box">⏳ ${esc(t('git_files_loading'))}</div>`;
     if (F.err || !F.list) return `<div class="hint-box bad">${esc(tf('git_files_failed', {e: F.err}))}</div>${storedHTML(i)}`;
     const L = F.list, q = F.q.toLowerCase();
-    const pass = f => (F.filter === 'all' || (F.filter === 'diff' && DIFFERING.includes(f.state)) || (F.filter === 'tracked' && f.tracked) || (F.filter === 'untracked' && !f.tracked)) &&
-      (!q || f.path.toLowerCase().includes(q));
+    // in the check: tracked and protected files; every other file is outside the check
+    const inCheck = f => f.tracked || f.reason === 'protected';
+    const pass = f => (F.filter === 'all' || (F.filter === 'diff' && inCheck(f) && DIFFERING.includes(f.state)) || (F.filter === 'tracked' && inCheck(f)) || (F.filter === 'untracked' && !inCheck(f))) &&
+      inDir(f.path, F.dir) && (!q || f.path.toLowerCase().includes(q));
     const rows = L.files.filter(pass), max = 1500;
     const seg = k => `<button class="${F.filter === k ? 'on' : ''}" onclick="gitWorkspace.fileFilter('${k}')">${esc(t('git_ff_' + k))}</button>`;
     const enc = p => esc(encodeURIComponent(p));
     const row = f => {
       const name = f.kind === 'symlink' ? `${esc(f.path)} <span class="g-mut">→ ${esc(f.link || '?')}</span>${f.outside ? `<div style="color:var(--red);font-family:inherit;font-size:11px">${esc(t('git_link_outside'))}</div>` : ''}`
         : f.kind === 'dir' ? `${esc(f.path)}/ <span class="g-mut">${esc(t('git_dir_unreadable'))}</span>` : esc(f.path);
-      return `<tr class="${f.tracked ? '' : 'g-untracked'}"><td class="g-mono">${name}</td>
+      return `<tr class="${f.tracked || f.reason === 'protected' ? '' : 'g-untracked'}"><td class="g-mono">${name}</td>
         <td class="g-mut g-hm" style="white-space:nowrap">${f.on_server && f.kind === 'file' ? esc(fmtBytes(f.size)) : f.size ? esc(fmtBytes(f.size)) : ''}</td>
         <td class="g-mut g-hm" style="white-space:nowrap">${f.mtime ? esc(fmtTime(f.mtime)) : ''}</td>
         <td>${fsBadge(f.state)}${f.behind ? ` <span class="g-mut">${esc(tf('git_behind', {n: f.behind}))}${f.tag ? ' (' + esc(f.tag) + ')' : ''}</span>` : ''}</td>
-        <td class="g-why">${esc(reasonText(f))}</td>
+        <td class="g-why">${esc(reasonText(f))}${f.state === 'outside' ? `<div class="g-mut">${esc(t(f.on_server && f.in_git ? 'git_where_both' : f.in_git ? 'git_where_git' : 'git_where_server'))}</div>` : ''}</td>
         <td style="white-space:nowrap">${f.viewable ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.viewFile('${enc(f.path)}', '')">${esc(t('git_open'))}</button> ` : ''}${f.diffable && f.state !== 'ok' && f.state !== 'same' ? `<button class="btn-sec btn-sm" onclick="gitWorkspace.diff(${i.id}, '${enc(f.path)}')">${esc(t('git_diff'))}</button>` : ''}</td></tr>`;
     };
     return `${L.target_error ? `<div class="hint-box warn">${esc(tf('git_target_err', {e: L.target_error}))}</div>` : ''}
       ${L.truncated ? `<div class="hint-box warn">${esc(tf('git_files_truncated', {n: 10000}))}</div>` : ''}
       ${L.git_partial && L.target ? `<div class="hint-box">${esc(t('git_files_partial'))}</div>` : ''}
-      ${L.not_compared ? `<div class="g-mut">${esc(tf('git_files_notcmp', {n: L.not_compared}))}</div>` : ''}
-      <div class="g-bar" style="margin:6px 0"><span class="g-seg">${['all', 'diff', 'tracked', 'untracked'].map(seg).join('')}</span>
+      <div class="g-bar" style="margin:6px 0"><span class="g-seg">${['tracked', 'diff', 'untracked', 'all'].map(seg).join('')}</span>
+        ${dirSelect('gitWorkspace.fileDir(this.value)', L.files.map(f => f.path), F.dir, false)}
         <input type="search" id="git-fq" placeholder="${esc(t('git_files_search'))}" value="${esc(F.q)}" oninput="gitWorkspace.fileSearch(this.value)" style="flex:1 1 160px;min-width:0">
         <span class="g-mut">${esc(tf('git_files_count', {n: rows.length, total: L.files.length}))}</span></div>
       <div class="g-mut" style="margin-bottom:6px">${esc(t('git_files_info'))}</div>
@@ -1724,6 +1763,7 @@ Object.assign(LANGS.hr, {
 
   let fqTimer = null;
   function fileFilter(k) { F.filter = k; paintFiles(); }
+  function fileDir(v) { F.dir = v; paintFiles(); }
   function fileSearch(v) { F.q = v; clearTimeout(fqTimer); fqTimer = setTimeout(paintFiles, 200); }
 
   async function loadCommits(i) {
@@ -2444,7 +2484,7 @@ Object.assign(LANGS.hr, {
       <div><label>${esc(t('gi_branch'))}</label><span class="g-mono">${esc(x.branch || '—')}</span></div><div><label>${esc(t('gi_file'))}</label><span class="g-mono">${esc(x.file)}</span></div></div>
       ${x.note ? `<div class="hint-box warn" style="margin-top:8px">${esc(t('gi_note'))}: ${esc(x.note)}</div>` : ''}</div>`;
     if (x.warnings.length) h += `<div class="g-card g-warn"><h3>⚠ ${esc(t('gi_warnings'))}</h3>${x.warnings.map(w => `<div style="margin:6px 0"><span class="g-mono"><b>${esc(w.path)}</b></span> <span class="g-st s-review">${esc(t('gi_reason_' + w.reason))}</span>
-      <div class="g-mut">${esc(tf('gi_warn_advice', {tmpl: w.template, path: w.path}))}</div></div>`).join('')}</div>`;
+      <div class="g-mut">${esc(w.reason === 'log' ? tf('gi_warn_log', {path: w.path}) : tf('gi_warn_advice', {tmpl: w.template, path: w.path}))}</div></div>`).join('')}</div>`;
     h += `<div class="g-card"><h3>${esc(t('gi_extra'))}</h3>${x.extra.length ? `<div class="g-scroll" style="max-height:40vh"><table><tr><th></th><th>${esc(t('git_path'))}</th><th>${esc(t('gi_size'))}</th><th>${esc(t('git_server'))}</th><th>${esc(t('gi_pattern'))}</th></tr>
       ${x.extra.map(c => `<tr><td><input type="checkbox" class="gi-p" value="${esc(c.pattern)}" ${chk(c.pattern)} onchange="gitWorkspace.ignoreMark(this)"></td><td class="g-mono">${esc(c.path)}</td><td class="g-mut" style="white-space:nowrap">${esc(fmtSize(c.size))}</td>
         <td class="g-mut">${esc(c.servers.join(', '))}</td><td class="g-mono">${esc(c.pattern)}</td></tr>`).join('')}</table></div>` : `<div class="g-mut">${esc(t('gi_extra_none'))}</div>`}</div>`;
@@ -2634,15 +2674,15 @@ Object.assign(LANGS.hr, {
   function envRefresh() { E.cells = {}; E.ov = null; if ($('git-body')) $('git-body').innerHTML = envsHTML(); envLoad(); }
   function envOf(app, env) { const s = ((E.ov || {}).services || []).find(x => x.app === app); return (s && s.envs.find(x => x.name === env)) || null; }
 
-  const EF={q:'',app:'',env:'',server:''};
+  const EF={q:'',app:'',env:'',server:'',dir:''};
   function envFilter(k,v){EF[k]=v;const body=$('git-body'),focus=document.activeElement?.id,pos=document.activeElement?.selectionStart;body.innerHTML=envsHTML();envCells();if(focus&&$(focus)){$(focus).focus();if(pos!=null)$(focus).setSelectionRange(pos,pos)}}
   function envsHTML() {
     const ov=E.ov;if(!ov)return `<div class="hint-box">⏳</div>`;
     const servers=[...new Set(ov.services.flatMap(s=>s.envs.flatMap(e=>e.destinations.map(d=>d.server))))].sort();
     const choose=(k,label,values)=>`<select aria-label="${esc(t(label))}" onchange="gitWorkspace.envFilter('${k}',this.value)">${opt('',t(label),EF[k])}${values.map(v=>opt(v,k==='server'?hn(v)+' · '+v:v,EF[k])).join('')}</select>`;
-    const services=ov.services.filter(s=>!EF.app||s.app===EF.app).map(s=>({...s,envs:s.envs.filter(e=>(!EF.env||e.name===EF.env)&&(!EF.server||e.destinations.some(d=>d.server===EF.server))&&JSON.stringify([s.app,e.name,e.destinations.map(d=>[d.server,hn(d.server),d.path])]).toLowerCase().includes(EF.q.toLowerCase())).map(e=>({...e,destinations:e.destinations.filter(d=>!EF.server||d.server===EF.server)}))})).filter(s=>s.envs.length);
+    const services=ov.services.filter(s=>!EF.app||s.app===EF.app).map(s=>({...s,envs:s.envs.filter(e=>(!EF.env||e.name===EF.env)&&(!EF.server||e.destinations.some(d=>d.server===EF.server))&&(!EF.dir||e.destinations.some(d=>inDir(d.path,EF.dir)))&&JSON.stringify([s.app,e.name,e.destinations.map(d=>[d.server,hn(d.server),d.path])]).toLowerCase().includes(EF.q.toLowerCase())).map(e=>({...e,destinations:e.destinations.filter(d=>(!EF.server||d.server===EF.server)&&inDir(d.path,EF.dir))}))})).filter(s=>s.envs.length);
     const envs=ov.envs.filter(n=>services.some(s=>s.envs.some(e=>e.name===n)));
-    let html=`<div class="g-control-stack"><div class="g-bar"><input id="genv-q" type="search" placeholder="${esc(t('git_search_srv'))}" value="${esc(EF.q)}" oninput="gitWorkspace.envFilter('q',this.value)">${choose('app','git_all_services',ov.services.map(s=>s.app))}${choose('env','git_all_envs',ov.envs)}${choose('server','git_all_servers',servers)}<button class="btn-sec btn-sm" onclick="gitWorkspace.envReset()">${esc(t('hf_reset'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.envRefresh()">↻ ${esc(t('git_refresh'))}</button></div><div class="g-mut">${esc(t('genv_lazy_h'))} · ${services.length} / ${ov.services.length}</div></div>`;
+    let html=`<div class="g-control-stack"><div class="g-bar"><input id="genv-q" type="search" placeholder="${esc(t('git_search_srv'))}" value="${esc(EF.q)}" oninput="gitWorkspace.envFilter('q',this.value)">${choose('app','git_all_services',ov.services.map(s=>s.app))}${choose('env','git_all_envs',ov.envs)}${choose('server','git_all_servers',servers)}${dirSelect("gitWorkspace.envFilter('dir',this.value)",ov.services.flatMap(s=>s.envs.flatMap(e=>e.destinations.map(d=>d.path))),EF.dir,true)}<button class="btn-sec btn-sm" onclick="gitWorkspace.envReset()">${esc(t('hf_reset'))}</button><button class="btn-sec btn-sm" onclick="gitWorkspace.envRefresh()">↻ ${esc(t('git_refresh'))}</button></div><div class="g-mut">${esc(t('genv_lazy_h'))} · ${services.length} / ${ov.services.length}</div></div>`;
     if(!services.length)html+=`<div class="hint-box">${esc(t('genv_none'))}</div>`;
     else html+=`<div class="g-card g-scroll"><table class="g-matrix"><tr><th>${esc(t('git_service'))}</th>${envs.map(n=>`<th>${esc(n)}</th>`).join('')}</tr>`+services.map(s=>`<tr><td><b>${esc(s.app)}</b><div><button class="g-cellbtn" onclick="gitWorkspace.envEdit('${esc(s.app)}')">✎ ${esc(t('genv_edit'))}</button></div></td>${envs.map(n=>{const e=s.envs.find(x=>x.name===n);return e?`<td class="g-cell g-envcell" data-app="${esc(s.app)}" data-env="${esc(n)}">${envCellHTML(s.app,e)}</td>`:'<td>—</td>'}).join('')}</tr>`).join('')+'</table></div>';
     html+=`<div class="g-card"><h3>${esc(t('genv_services'))}</h3><div class="g-actions">${G.state.catalog.apps.filter(a=>(!EF.app||a.name===EF.app)&&a.name.toLowerCase().includes(EF.q.toLowerCase())).map(a=>`<button class="btn-sec btn-sm" onclick="gitWorkspace.envEdit('${esc(a.name)}')">✎ ${esc(a.name)} (${(a.environments||[]).length})</button>`).join('')}</div></div>`;
@@ -2657,7 +2697,7 @@ Object.assign(LANGS.hr, {
     if (!c || c.loading) return `<div class="g-mut"><span class="g-spin"></span> ${esc(tf('genv_n_dests', {n: e.destinations.length}))}</div>${btns}`;
     if (c.error) return `<div class="hint-box bad">${esc(c.error)}</div>${btns}`;
     const d = c.data;
-    return (d.drift ? `<div><span class="g-st s-review">⚠ ${esc(t('genv_drift'))}</span></div>` : '') + d.dests.filter(x=>!EF.server||G.mode==='simple'||x.server===EF.server).map(x => {
+    return (d.drift ? `<div><span class="g-st s-review">⚠ ${esc(t('genv_drift'))}</span></div>` : '') + d.dests.filter(x=>G.mode==='simple'||((!EF.server||x.server===EF.server)&&inDir(x.path,EF.dir))).map(x => {
       const cur = x.current;
       const ver = cur ? cur.version : x.version_md;
       const commit = cur ? String(cur.commit || '').slice(0, 10) : x.commit_md;
@@ -2973,7 +3013,7 @@ Object.assign(LANGS.hr, {
 
   // ── activity: Git activity per branch and author, deploy history, what is where ──
   const A = {view: 'git', act: null, actErr: '', actBusy: false, af: {app: '', branch: '', author: '', since: '', until: ''},
-    hf: {app: '', env: '', server: '', who: '', branch: '', version: '', action: '', since: '', until: ''}, hist: null, wf: {app: '', env: '', server: ''}, where: null, seq: 0};
+    hf: {app: '', env: '', server: '', who: '', branch: '', version: '', action: '', since: '', until: ''}, hist: null, wf: {app: '', env: '', server: '', dir: ''}, where: null, seq: 0};
   const isoDay = d => { const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
   const qs = o => Object.entries(o).filter(([, v]) => v !== '' && v != null && v !== false).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
   const ext = (url, html) => url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${html}</a>` : html;
@@ -3115,7 +3155,7 @@ Object.assign(LANGS.hr, {
   }
 
   // what is where: one request per service and environment and one per service for installations without environment
-  function whereFilter(k, v) { A.wf[k] = v; if (k === 'server') actPaint(); else whereLoad(); }
+  function whereFilter(k, v) { A.wf[k] = v; if (k === 'server' || k === 'dir') actPaint(); else whereLoad(); }
   function whereCSV() { fetch('/api/git/where/export.csv?' + qs(A.wf)).then(r => download(r, 'what-is-where.csv')); }
   function whereLoad(refresh) {
     const seq = ++A.seq, f = A.wf;
@@ -3152,6 +3192,7 @@ Object.assign(LANGS.hr, {
     let h = `<div class="g-bar"><select onchange="gitWorkspace.whereFilter('app', this.value)">${opt('', t('gact_all_services'), f.app)}${apps.map(a => opt(a, a, f.app)).join('')}</select>
       <select onchange="gitWorkspace.whereFilter('env', this.value)">${opt('', t('git_all_envs'), f.env)}${allEnvs().map(e => opt(e, e, f.env)).join('')}</select>
       <select onchange="gitWorkspace.whereFilter('server', this.value)">${opt('', t('gact_all_servers'), f.server)}${allServers().map(s => opt(s, hn(s), f.server)).join('')}</select>
+      ${dirSelect("gitWorkspace.whereFilter('dir', this.value)", (G.state.installs || []).map(i => i.path), f.dir, true)}
       <button class="btn-sec btn-sm" onclick="gitWorkspace.whereLoad(true)">↻ ${esc(t('git_refresh'))}</button>${csvBtn('whereCSV')}</div>`;
     if (!G.state.can_check) h += `<div class="hint-box">${esc(t('gact_no_checks'))}</div>`;
     if (!W) return h;
@@ -3169,7 +3210,7 @@ Object.assign(LANGS.hr, {
   }
 
   // ── Simple mode: one guided card per service environment, built on the environment endpoints ──
-  const S = {pending: new Set(), loading: false, plan: null, ctx: null, submitting: false, excluded: new Set(), destinations: new Set(), rollbackDestinations: new Set(), filters: {app: '', server: '', env: '', status: '', branch: '', version: '', q: ''}};
+  const S = {pending: new Set(), loading: false, plan: null, ctx: null, submitting: false, excluded: new Set(), destinations: new Set(), rollbackDestinations: new Set(), filters: {app: '', server: '', dir: '', env: '', status: '', branch: '', version: '', q: ''}};
   const sKey = (app, env) => 'gs-' + btoa(unescape(encodeURIComponent(app + '\u0000' + env))).replace(/[^A-Za-z0-9]/g, '');
   const sh10 = c => String(c || '').slice(0, 10);
 
@@ -4021,6 +4062,7 @@ Object.assign(LANGS.hr, {
     return `<div class="g-bar gs-filters" aria-label="${esc(t('gs_intro'))}">
       <select aria-label="${esc(t('gs_filter_service'))}" onchange="gitWorkspace.simpleFilter('app',this.value)">${opt('', t('gs_filter_service'), f.app)}${services.map(x => opt(x, x, f.app)).join('')}</select>
       <select id="gs-server-filter" aria-label="${esc(t('gs_filter_server'))}" onchange="gitWorkspace.simpleFilter('server',this.value)">${opt('', t('gs_filter_server'), f.server)}${servers.map(x => opt(x, hn(x), f.server)).join('')}</select>
+      ${dirSelect("gitWorkspace.simpleFilter('dir',this.value)", E.ov.services.flatMap(s => s.envs.flatMap(e => e.destinations.map(d => d.path))), f.dir, true)}
       <select aria-label="${esc(t('gs_filter_env'))}" onchange="gitWorkspace.simpleFilter('env',this.value)">${opt('', t('gs_filter_env'), f.env)}${envs.map(x => opt(x, x, f.env)).join('')}</select>
       <select aria-label="${esc(t('gs_filter_status'))}" onchange="gitWorkspace.simpleFilter('status',this.value)">${opt('', t('gs_filter_status'), f.status)}${statuses.map(x => opt(x, t('gs_status_' + x), f.status)).join('')}</select>
       <input type="search" aria-label="${esc(t('gs_filter_branch'))}" placeholder="${esc(t('gs_filter_branch'))}" value="${esc(f.branch)}" oninput="gitWorkspace.simpleFilter('branch',this.value)">
@@ -4031,7 +4073,7 @@ Object.assign(LANGS.hr, {
 
   function simpleFilter(k, v) { S.filters[k] = v || ''; simpleApplyFilters(); }
   function simpleClearFilters() {
-    S.filters = {app: '', server: '', env: '', status: '', branch: '', version: '', q: ''};
+    S.filters = {app: '', server: '', dir: '', env: '', status: '', branch: '', version: '', q: ''};
     document.querySelectorAll('#git-body .gs-filters select, #git-body .gs-filters input').forEach(el => { el.value = ''; });
     simpleApplyFilters();
   }
@@ -4050,7 +4092,7 @@ Object.assign(LANGS.hr, {
       const status = c ? (c.error ? 'error' : d ? simpleStatus(d) : 'unknown') : 'unknown';
       const haystack = [svc.app, e.name, tg.version, tg.branch, tg.commit, ...servers, ...versions, ...branches].join(' ').toLowerCase();
       const show = (!f.app || svc.app === f.app) && (!f.env || e.name === f.env) &&
-        (!f.server || dests.some(x => x.server === f.server)) && (!f.status || status === f.status) &&
+        (!f.server || dests.some(x => x.server === f.server)) && (!f.dir || dests.some(x => inDir(x.path, f.dir))) && (!f.status || status === f.status) &&
         (!branch || branches.join(' ').toLowerCase().includes(branch)) && (!version || versions.concat([tg.version, tg.commit]).filter(Boolean).join(' ').toLowerCase().includes(version)) &&
         (!q || haystack.includes(q));
       el.style.display = show ? '' : 'none'; if (show) visible++;
@@ -4401,7 +4443,7 @@ Object.assign(LANGS.hr, {
   let qTimer = null;
   window.gitWorkspace = { monitoringMount, functionalityFilter, functionalityReset, functionalityToggle, functionalityExpand,
     open, close, configProfiles, configProfileCheck, configProfileDelete, configProfileNew, configProfileSave, configProfileFilter, mediumQuickSetup, mediumUpload, mediumAction, mediumDockerInstall, mediumActivity, mediumRow, mediumToggleLog, nativeLoad, nativeProject, nativeBuild, nativeBuildDraft, nativeBuildSave, nativeEnv, nativeLink, nativePlan, nativeEngine, nativeReplan, nativeDeploy, nativeCancel, nativeHistory, nativeRollback, nativeLockRelease, nativeDiff, nativeConfig, mcOpen, mcNew, mcSave, mcDelete, mcClose, mcGitPull, mcGitPush, mcGitStop, mediumRefresh, mediumSettings, mediumSaveSettings, showFunctionality, configuration, tab: setTab, setGitMode, setCheckVMD, simpleRefresh, simpleAdopt, simplePlan, simpleRecompare, simpleRollback, simpleFilter, simpleClearFilters, simpleExclude, simpleDestination, simpleRollbackDestination, check, refresh, details, diff, forget, sel, clearSel, setStale, checkIds, checkSel, checkVisible, checkStale, cancelCheck,
-    viewFile, fileFilter, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
+    viewFile, fileFilter, fileDir, fileSearch, diffMode: setMode, addInstall, editApp, delApp, suggest, importCatalog, exportCatalog, exportBundle,
     update, upgrade, rollback, restart, stamp, install, transfer,
     actView, actLoad, actFilter, actCSV, histLoad, histFilter, histCSV, whereLoad, whereFilter, whereCSV,
     envRefresh, envFilter, envReset(){for(const k of Object.keys(EF))EF[k]='';envFilter('q','')}, envEdit, envEditAdd, envEditDel, envPlan, envRecompare, envShowAll, envToggle, envExclude, envClearExcl, envUnlock, envGo, envBack, envHistory, envRollback, envDoctor, wSvcRef, wSlotMode, wUnit, wCheckGo, localWarn, restartWarn, confirmCheck, showRun, cancelRun, loadRuns,

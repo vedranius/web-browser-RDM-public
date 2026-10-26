@@ -34,6 +34,7 @@ func TestGitInstallFilesAndDiff(t *testing.T) {
 			g := newFakeGit(t, kind)
 			addRepoFile(g, "linux/setup.py", setupGit)
 			addRepoFile(g, "linux/tests/test_run.py", "def test():\n    pass\n")
+			addRepoFile(g, "linux/logs/committed.log", "committed by mistake\n")
 			u := setupGitUser(t, srv, "git-files-"+kind, g)
 			h := startFakeHost(t, testSSHUser, testSSHPass)
 			conn := u.addConnection("app-01", h.addr)
@@ -44,6 +45,8 @@ func TestGitInstallFilesAndDiff(t *testing.T) {
 			writeFile(t, dir+"/config.ini", "[main]\nhost=prod.example.com\n")
 			writeFile(t, dir+"/setup.py", setupServer)
 			writeFile(t, dir+"/extra.txt", "only here")
+			writeFile(t, dir+"/log/app.log", "2026-10-26 started\n")
+			writeFile(t, dir+"/worker.log.1", "rotated\n")
 			writeFile(t, dir+"/logo.bin", "PNG\x00\x01\x02")
 			writeFile(t, dir+"/VERSION.md", "# demo-api - v1.9\n\n- **Servis**:      demo-api\n- **Verzija**:     v1.9\n- **Commit**:      "+commitSHA("c1")[:10]+"\n")
 			writeFile(t, dir+"/recyclebin/old.py", "x") // ignore_dirs
@@ -69,6 +72,12 @@ func TestGitInstallFilesAndDiff(t *testing.T) {
 				t.Fatalf("installs: %+v", st.Installs)
 			}
 			in := st.Installs[0]
+			// log files are never part of a check: not even as extra files
+			for _, f := range in.Files {
+				if isLogPath(f.Path) {
+					t.Fatalf("log file in the check: %+v", f)
+				}
+			}
 			// setup.py differs, but the catalog excludes it: the installation is up to date
 			if in.State != "ok" || in.LastOKState != "ok" || in.LastOKAt == "" {
 				t.Fatalf("state: %+v", in)
@@ -95,14 +104,19 @@ func TestGitInstallFilesAndDiff(t *testing.T) {
 			}
 			check("lib/util.py", "ok", "tracked", "")
 			check("config.ini", "protected", "protected", "config*")
-			if f := check("setup.py", "differs", "excluded", "setup.py"); !f.Diffable || f.Tracked || !f.InGit {
+			if f := check("setup.py", "outside", "excluded", "setup.py"); !f.Diffable || f.Tracked || !f.InGit {
 				t.Fatalf("setup.py: %+v", f)
 			}
-			if f := check("tests/test_run.py", "missing", "excluded", "tests"); f.OnServer || !f.Diffable {
+			if f := check("tests/test_run.py", "outside", "excluded", "tests"); f.OnServer || !f.Diffable {
 				t.Fatalf("git only: %+v", f)
 			}
-			check("extra.txt", "extra", "extra", "")
-			check("VERSION.md", "extra", "tool", "")
+			check("extra.txt", "outside", "extra", "")
+			check("VERSION.md", "outside", "tool", "")
+			check("log/app.log", "outside", "logs", "")
+			check("worker.log.1", "outside", "logs", "")
+			if f := check("logs/committed.log", "outside", "logs", ""); f.OnServer || !f.InGit {
+				t.Fatalf("committed log: %+v", f)
+			}
 			if f := check("link.txt", "symlink", "extra", ""); f.Link != "/etc/hostname" || !f.Outside || f.Diffable || f.Viewable {
 				t.Fatalf("symlink: %+v", f)
 			}

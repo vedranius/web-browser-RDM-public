@@ -153,11 +153,11 @@ func serverHostname(c Connection) (string, error) {
 			return "", err
 		}
 		defer cl.Close()
-		out, err := runRemoteScript(cl, "hostname 2>/dev/null || uname -n", "", 15*time.Second)
+		out, err := runRemoteScript(cl, hostnameScript, "", 15*time.Second)
 		if err != nil {
 			return "", fmt.Errorf("reading the hostname failed: %v", err)
 		}
-		h := cleanHostname(out)
+		h := parseHostnameOutput(out)
 		if h == "" {
 			return "", fmt.Errorf("the server did not return a valid hostname")
 		}

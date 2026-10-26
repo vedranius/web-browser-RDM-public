@@ -841,6 +841,11 @@ func selectFiles(tree map[string]string, a gitCatalogApp) map[string]string {
 		if rel == "" || (len(a.Include) > 0 && !globHitDir(rel, a.Include)) || globHitDir(rel, a.Exclude) {
 			continue
 		}
+		// log files committed by mistake are never compared or deployed (a deploy would
+		// overwrite the server's logs), unless the include list names them
+		if isLogPath(rel) && len(a.Include) == 0 {
+			continue
+		}
 		out[rel] = blob
 	}
 	return out

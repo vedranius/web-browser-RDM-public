@@ -18,17 +18,19 @@ import (
 // The comparison of a check keeps only the files the catalog tracks (plus extra files the
 // include / exclude lists allow). The file list of an installation shows everything: every
 // file in the server folder (one find over the folder, ignore_dirs honoured) and every file
-// of the repository at the target ref below the service's subdirectory, each with its
-// state and the reason for it (tracked, excluded by a pattern, not in the include list,
-// protected, extra, …). Files outside the catalog are informational: they never change the
-// installation's state. Everything here is read only on the server; paths are quoted and
-// symlinks are never followed out of the installation.
+// of the repository at the target ref below the service's subdirectory, each with the
+// reason for its place (tracked, excluded by a pattern, not in the include list, protected,
+// a log file, …). Only tracked and protected files are "in the check" and get a state from
+// a comparison; every other file is "outside" the check: it is listed with where it is (in
+// Git, on the server or both) but never compared, because it never changes the
+// installation's state. Its difference can still be opened on request. Everything here is
+// read only on the server; paths are quoted and symlinks are never followed out of the
+// installation.
 
 const (
-	gitListCap       = 10000    // entries of one folder listing
-	gitListHashMax   = 64 << 20 // larger files are listed without a hash
-	gitListBlobFetch = 200      // repository blobs fetched for one listing (files outside the catalog)
-	gitMaxViewFile   = gitMaxDiffFile - 64<<10
+	gitListCap     = 10000    // entries of one folder listing
+	gitListHashMax = 64 << 20 // larger files are listed without a hash
+	gitMaxViewFile = gitMaxDiffFile - 64<<10
 )
 
 type gitListEntry struct {
@@ -41,10 +43,10 @@ type gitListEntry struct {
 	OnServer bool   `json:"on_server"`
 	InGit    bool   `json:"in_git"`
 	Tracked  bool   `json:"tracked"`
-	// ok | old | modified (tracked) · same | differs | unknown (in Git, not tracked) · extra
-	// (server only) · missing (Git only) · protected · symlink · unreadable
+	// in the check: ok | old | modified | missing | unknown (tracked) · protected
+	// outside the check: outside · symlink · unreadable
 	State   string `json:"state"`
-	Reason  string `json:"reason"` // tracked | excluded | not_included | protected | extra | tool | compiled | not_tracked | no_target
+	Reason  string `json:"reason"` // tracked | excluded | not_included | protected | extra | tool | compiled | logs | not_tracked | no_target
 	Pattern string `json:"pattern,omitempty"`
 	Behind  int    `json:"behind,omitempty"`
 	Tag     string `json:"tag,omitempty"`
@@ -60,7 +62,6 @@ type gitListing struct {
 	TargetError string         `json:"target_error,omitempty"`
 	GitPartial  bool           `json:"git_partial"` // only the catalog's files of the repository are known
 	Truncated   bool           `json:"truncated"`
-	NotCompared int            `json:"not_compared,omitempty"` // repository files outside the catalog not fetched
 	ListedAt    string         `json:"listed_at"`
 	Counts      map[string]int `json:"counts"`
 	Files       []gitListEntry `json:"files"`
@@ -168,6 +169,9 @@ func catalogReason(rel string, t gitTarget, haveTarget, inGit bool) (string, str
 	if strings.HasSuffix(rel, ".pyc") {
 		return "compiled", ""
 	}
+	if isLogPath(rel) {
+		return "logs", ""
+	}
 	if len(t.Include) > 0 && !globHitDir(rel, t.Include) {
 		return "not_included", ""
 	}
@@ -179,6 +183,31 @@ func catalogReason(rel string, t gitTarget, haveTarget, inGit bool) (string, str
 	}
 	return "not_tracked", ""
 }
+
+// isLogPath tells whether a path is a log file: named *.log, *.log.1, *.log.gz, …, or below
+// a folder named log or logs (except source and configuration files there, so a code package
+// called log stays code). Log files are never part of a check or a target unless the
+// catalog's include list names them.
+func isLogPath(rel string) bool {
+	parts := strings.Split(strings.ToLower(rel), "/")
+	base := parts[len(parts)-1]
+	if strings.HasSuffix(base, ".log") || strings.Contains(base, ".log.") {
+		return true
+	}
+	if logSourceExts[path.Ext(base)] {
+		return false
+	}
+	for _, d := range parts[:len(parts)-1] {
+		if d == "log" || d == "logs" {
+			return true
+		}
+	}
+	return false
+}
+
+var logSourceExts = map[string]bool{".py": true, ".go": true, ".js": true, ".mjs": true, ".ts": true, ".sh": true, ".java": true, ".rb": true,
+	".php": true, ".pl": true, ".c": true, ".h": true, ".cpp": true, ".rs": true, ".ini": true, ".conf": true, ".cfg": true, ".yml": true,
+	".yaml": true, ".json": true, ".toml": true, ".xml": true, ".md": true}
 
 // ─── listing on the server ───────────────────────────
 
@@ -305,28 +334,6 @@ func listInstallFiles(userID int, in gitInstall) (*gitListing, error) {
 	out.GitPartial = repo.partial
 	words := backupWords()
 	ignored := func(rel string) bool { return ignoredPath(path.Dir(rel), cat.IgnoreDirs, words) }
-	// repository files outside the catalog: hashes from the blob cache, fetched when unknown
-	known := map[string]gitBlobInfo{}
-	var fetch []string
-	for rel, se := range server {
-		blob, inGit := repo.files[rel]
-		if _, tracked := t.Files[rel]; !inGit || tracked || blob == "" || se.kind != "f" || se.unreadable {
-			continue
-		}
-		if info, ok := lookupBlob(t.SourceID, blob); ok {
-			known[blob] = info
-		} else if len(fetch) < gitListBlobFetch {
-			fetch = append(fetch, blob)
-		}
-	}
-	if len(fetch) > 0 && repo.p != nil {
-		got, _ := repo.p.ensureBlobs(repo.src.ID, t.Project, fetch)
-		for b, info := range got {
-			if info.Hash != "" {
-				known[b] = info
-			}
-		}
-	}
 	add := func(e gitListEntry) {
 		out.Counts[e.State]++
 		out.Files = append(out.Files, e)
@@ -358,24 +365,13 @@ func listInstallFiles(userID int, in gitInstall) (*gitListing, error) {
 				e.State, e.Behind, e.Tag, _ = trackedState(f, se.hash)
 			}
 			e.Viewable, e.Diffable = true, f.Blob != ""
-		case inGit:
-			e.State = "unknown"
-			if info, ok := known[blob]; ok && se.hash != "big" {
-				e.State = "differs"
-				if matchHash(se.hash, info.Hash, info.Hash2) {
-					e.State = "same"
-				}
-			}
-			e.Viewable, e.Diffable = true, blob != ""
-			if e.State == "unknown" {
-				out.NotCompared++
-			}
 		case !haveTarget:
 			e.State = "unknown"
 			e.Viewable = true
 		default:
-			e.State = "extra"
-			e.Viewable = true
+			// outside the check: listed, never compared
+			e.State = "outside"
+			e.Viewable, e.Diffable = true, inGit && blob != ""
 		}
 		add(e)
 	}
@@ -389,11 +385,14 @@ func listInstallFiles(userID int, in gitInstall) (*gitListing, error) {
 			e.Size = f.Size
 		}
 		e.Reason, e.Pattern = catalogReason(rel, t, haveTarget, true)
+		if !tracked && e.Reason != "protected" {
+			e.State = "outside"
+		}
 		e.Viewable = blob != "" && e.Reason != "protected"
 		e.Diffable = e.Viewable
 		add(e)
 	}
-	order := map[string]int{"modified": 0, "differs": 1, "old": 2, "missing": 3, "extra": 4, "unreadable": 5, "unknown": 6, "symlink": 7, "protected": 8, "same": 9, "ok": 10}
+	order := map[string]int{"modified": 0, "old": 1, "missing": 2, "unreadable": 3, "unknown": 4, "symlink": 5, "protected": 6, "ok": 7, "outside": 8}
 	sort.Slice(out.Files, func(i, j int) bool {
 		a, b := out.Files[i], out.Files[j]
 		if a.Tracked != b.Tracked {
