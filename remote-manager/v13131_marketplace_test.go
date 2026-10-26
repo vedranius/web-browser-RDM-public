@@ -52,6 +52,7 @@ func TestV13131MarketplaceNames(t *testing.T) {
 	if !strings.HasPrefix(pl.Icon, "./") {
 		t.Errorf("plugin icon %q must start with ./", pl.Icon)
 	}
+	mixed := regexp.MustCompile(`Add marketplace\W+vedranius/web-browser-RDM-public`)
 	for _, f := range []string{
 		filepath.Join("static", "mcp.js"),
 		filepath.Join("mcpb", "server", "index.js"),
@@ -65,7 +66,7 @@ func TestV13131MarketplaceNames(t *testing.T) {
 		if !strings.Contains(s, "vedranius/web-browser-rdm-public") {
 			t.Errorf("%s: no Claude app instruction with the lowercase repository name", f)
 		}
-		if regexp.MustCompile("Add marketplace\\W+vedranius/web-browser-RDM-public").MatchString(s) {
+		if mixed.MatchString(s) {
 			t.Errorf("%s: Claude app instruction uses the mixed-case repository name", f)
 		}
 	}
