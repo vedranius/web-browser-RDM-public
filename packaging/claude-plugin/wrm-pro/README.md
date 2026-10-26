@@ -8,10 +8,20 @@ Claude Code.
 ## Install
 
 **Claude app:** *Customize → Plugins → Add → Add marketplace*, enter
-`vedranius/web-browser-RDM-public`, then install **WRM PRO**. If adding the marketplace fails,
-*Add → Upload plugin* with `claude-plugin-wrm-pro.zip` from the
+`vedranius/web-browser-rdm-public` in lowercase, then install **WRM PRO**. If adding the
+marketplace fails, *Add → Upload plugin* with `claude-plugin-wrm-pro.zip` from the
 [latest WRM release](https://github.com/vedranius/web-browser-RDM-public/releases/latest)
 installs the same plugin.
+
+If the Claude app only says *Failed to add marketplace*:
+
+- Type the repository in lowercase. The Claude app names the marketplace after the repository,
+  and GitHub accepts the repository name in any case.
+- Look under *Customize → Plugins* for a marketplace that is already there (an earlier attempt or
+  another repository with the same name): remove it, or use *Check for updates* on it.
+- The real reason is in the app's log: on Windows `%APPDATA%\Claude\logs\claude.ai-web.log`,
+  on macOS `~/Library/Logs/Claude/claude.ai-web.log`; look for `MARKETPLACE_ERROR` or
+  `REMOTE_SYNC_FAILED`.
 
 **Claude Code** (2.1.275 or later):
 

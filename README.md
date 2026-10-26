@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.13.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.13.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.13.1
+
+**Adding the WRM PRO marketplace in the Claude app.** Enter the repository in lowercase, `vedranius/web-browser-rdm-public`: the Claude app names the marketplace after the repository, and GitHub accepts the name in any case. If the app still says only *Failed to add marketplace*, [Troubleshooting](#troubleshooting) says what to check and where its log keeps the reason; *Upload plugin* with `claude-plugin-wrm-pro.zip` from the release installs the same plugin.
 
 ## What's new in v13.13.0
 
@@ -224,7 +228,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -335,21 +339,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.13.0-linux-amd64
-   ./wrm-pro-v13.13.0-linux-amd64
+   chmod +x wrm-pro-v13.13.1-linux-amd64
+   ./wrm-pro-v13.13.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.13.0-windows-amd64.exe
+   .\wrm-pro-v13.13.1-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.13.0-linux-amd64.AppImage
-   ./wrm-pro-v13.13.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.13.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.13.1-linux-amd64.AppImage
+   ./wrm-pro-v13.13.1-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.13.1-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -358,8 +362,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.13.0/wrm-pro-v13.13.0-android-arm64
-   chmod +x wrm-pro-v13.13.0-android-arm64 && ./wrm-pro-v13.13.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.13.1/wrm-pro-v13.13.1-android-arm64
+   chmod +x wrm-pro-v13.13.1-android-arm64 && ./wrm-pro-v13.13.1-android-arm64
    ```
 
    **Docker**
@@ -383,6 +387,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.13.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. The WRM PRO Claude plugin is now 1.2.1 (icon path only). If adding the marketplace failed in the Claude app, add it again with the lowercase repository name `vedranius/web-browser-rdm-public`.
 
 ## Upgrading from v13.12.0
 
@@ -1803,7 +1811,7 @@ It opens WRM in the browser, where you sign in and choose the servers, the mode,
 
 **Quick start for the Claude app and Claude Code: the WRM PRO plugin.** This repository is a plugin marketplace. The plugin needs **no settings**:
 
-- **Claude app** (desktop or claude.ai): *Customize → Plugins → Add → Add marketplace* → `vedranius/web-browser-RDM-public` → **WRM PRO** → *Install*. If adding the marketplace fails, *Add → Upload plugin* with `claude-plugin-wrm-pro.zip` from the [latest release](https://github.com/vedranius/web-browser-RDM-public/releases/latest) installs the same plugin.
+- **Claude app** (desktop or claude.ai): *Customize → Plugins → Add → Add marketplace* → `vedranius/web-browser-rdm-public` (in lowercase) → **WRM PRO** → *Install*. If adding the marketplace fails, *Add → Upload plugin* with `claude-plugin-wrm-pro.zip` from the [latest release](https://github.com/vedranius/web-browser-RDM-public/releases/latest) installs the same plugin. If it says only *Failed to add marketplace*, see [Troubleshooting](#troubleshooting).
 - **Claude Code**: `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public`, or inside Claude Code `/plugin marketplace add vedranius/web-browser-RDM-public` and `/plugin install wrm-pro@wrm-pro`.
 
 Then type **`/wrm-pro:wrm`** (typing `/wrm` finds it). The first time, Claude asks for the WRM address (the one you open in the browser, for example `http://192.168.1.10:8780`) and calls `wrm_connect`, which opens WRM in the browser for sign-in and approval; the token goes straight to `~/.wrm/mcp.json` on your computer, never into the chat. After that `/wrm-pro:wrm` lists your servers and everything WRM can do. The plugin's MCP server is the same bridge as the Claude Desktop extension, packed as an MCP bundle (`packaging/claude-plugin/wrm-pro/server/wrm.mcpb`) that the app runs on your computer with its built-in Node.js, so it reaches a WRM on your own network and over plain HTTP. In the Claude app the bundled server runs in Cowork; chat in the desktop app uses the extension or the setup script above (chat ignores local servers of plugins).
@@ -1860,7 +1868,7 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
 **Set up your app** — *Settings → AI connections* shows the address (`https://<your WRM>/mcp`) and, after you create a token, ready-to-copy snippets:
 
 1. **Claude Desktop — one-click extension (recommended for Claude Desktop).** In the wizard pick *Claude Desktop*, choose the servers and press *Create token*, then **Download Claude Desktop extension**. Open the downloaded `wrm-pro.mcpb` (or *Claude → Settings → Extensions → Advanced settings → Install extension…*) and press **Install**: the WRM address and the token are already filled in. The extension is an [MCP bundle](https://github.com/modelcontextprotocol/mcpb) with a small Node.js bridge (`remote-manager/mcpb/server/index.js`, no dependencies) that Claude Desktop runs with its own built-in Node.js; it passes MCP messages, including approval questions, between Claude and WRM's `/mcp`. It runs on your computer, so it reaches a WRM on your own network and over plain HTTP; for a self-signed HTTPS certificate choose the CA file in the extension's settings. Claude Desktop keeps the token in the operating system's secure storage; delete the downloaded file after installing, since it contains the token. When the token expires or is revoked, the extension keeps running and offers `wrm_connect` with the reason (since v13.13.0): ask Claude to connect to WRM again and approve the sign-in in the browser, or download the extension again with a new token. `POST /api/mcp/claude-desktop` builds the bundle; downloads are audited (`mcp.desktop_extension`).
-2. **Claude app and Claude Code — WRM PRO plugin** (no settings, see the quick start above). The plugin (`packaging/claude-plugin/wrm-pro`, version 1.2.0) carries the bridge as an MCP bundle, the skills `wrm` (`/wrm-pro:wrm`), `wrm-safe-operator` and `linux-incident-triage`, and the command `/wrm-pro:connect`. Without a saved connection the bridge starts anyway and offers one tool, `wrm_connect`; a wrong, expired or revoked token or an unreachable WRM also leaves it running with that tool and the reason. `wrm_connect` registers itself with WRM (dynamic client registration with a `http://127.0.0.1:<port>/callback` redirect, which the default `ai_mcp_redirect_uris` allows), opens WRM's consent dialog in the browser, exchanges the code with PKCE and saves the token in `~/.wrm/mcp.json` (`WRM_MCP_CONFIG` to move it; mode 0600). The app is told that the tool list changed, and the WRM tools appear. `wrm_connect` with another address switches to another WRM. It needs AI connections with OAuth (`ai_mcp_oauth`, on by default). Needs Claude Code 2.1.275 or later for the one-line install.
+2. **Claude app and Claude Code — WRM PRO plugin** (no settings, see the quick start above). The plugin (`packaging/claude-plugin/wrm-pro`, version 1.2.1) carries the bridge as an MCP bundle, the skills `wrm` (`/wrm-pro:wrm`), `wrm-safe-operator` and `linux-incident-triage`, and the command `/wrm-pro:connect`. Without a saved connection the bridge starts anyway and offers one tool, `wrm_connect`; a wrong, expired or revoked token or an unreachable WRM also leaves it running with that tool and the reason. `wrm_connect` registers itself with WRM (dynamic client registration with a `http://127.0.0.1:<port>/callback` redirect, which the default `ai_mcp_redirect_uris` allows), opens WRM's consent dialog in the browser, exchanges the code with PKCE and saves the token in `~/.wrm/mcp.json` (`WRM_MCP_CONFIG` to move it; mode 0600). The app is told that the tool list changed, and the WRM tools appear. `wrm_connect` with another address switches to another WRM. It needs AI connections with OAuth (`ai_mcp_oauth`, on by default). Needs Claude Code 2.1.275 or later for the one-line install.
 3. **claude.ai — custom connector with OAuth.** *Settings → Connectors → Add custom connector*, enter `https://<your WRM>/mcp`. Claude registers itself (dynamic client registration), opens WRM in the browser, you sign in (with 2FA) and choose the servers, the mode, the scopes and the lifetime; Claude then gets a token for exactly that. claude.ai connects from Anthropic's cloud, so WRM must be reachable from the internet over HTTPS (put it behind a reverse proxy with a real certificate, and keep the other hardening of [SECURITY.md](SECURITY.md)).
 4. **ChatGPT — connector.** *Settings → Apps & Connectors → Advanced settings → Developer mode*, then *Create* (*Add custom connector*): the MCP server URL `https://<your WRM>/mcp`, authentication **OAuth**. ChatGPT opens WRM for your approval, as above. ChatGPT also connects from its cloud: WRM must be reachable over HTTPS.
 5. **Any stdio client — the bridge in the WRM binary** (no inbound access from the internet needed; Claude Desktop users prefer the extension above). Copy the WRM binary for your computer's system (the same release file as the server) to your computer, create a token, and add to `claude_desktop_config.json` (*Claude → Settings → Developer → Edit config*):
@@ -3440,6 +3448,7 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 
 | Problem | Fix |
 |---|---|
+| Claude app: *Failed to add marketplace* | Type the repository in lowercase, `vedranius/web-browser-rdm-public`: the Claude app names the marketplace after the repository, and GitHub accepts the name in any case. Remove a marketplace with the same name that is already under *Customize → Plugins*. The real reason is in the app's log (Windows `%APPDATA%\Claude\logs\claude.ai-web.log`, macOS `~/Library/Logs/Claude/claude.ai-web.log`, lines with `MARKETPLACE_ERROR` or `REMOTE_SYNC_FAILED`). *Add → Upload plugin* with `claude-plugin-wrm-pro.zip` from the release installs the same plugin without a marketplace |
 | Medium native deploy: *locked by … since …* | Another deployment (WRM or the original tool) holds the destination. Wait for it; a lock left behind by a crash can be released in *History and rollback* once it is older than the time shown (from `medium_command_timeout` and `medium_transfer_timeout`) |
 | Medium native deploy: *the plan changed since you reviewed it* / *plan changed* | The server or the deploy-config changed after the comparison. Compare again, review the new plan and deploy that |
 | Medium native deploy: *Deploy* is disabled | Switch the project to *WRM native* (Engine), check the `medium_native` policy and `allowed_refs`; for a project with a build step, choose a build location (WRM host, Linux build server or none) before previewing |

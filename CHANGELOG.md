@@ -1,3 +1,12 @@
+## [13.13.1] - 2026-10-26
+
+### Changed
+- The Claude app instructions (*Settings → AI connections*, the setup script's summary, README and the plugin's README) give the repository in lowercase, `vedranius/web-browser-rdm-public`. The Claude app names a marketplace after the repository name; GitHub accepts the name in any case.
+- Plugin **1.2.1**: the icon path starts with `./`, as the manifest reference asks.
+
+### Fixed
+- **Adding the marketplace in the Claude app showed only *Failed to add marketplace***: the instructions now use the lowercase repository name, and README (Troubleshooting) and the plugin's README say what else to check: a marketplace with the same name already added, and where the app's log keeps the real reason (`MARKETPLACE_ERROR`, `REMOTE_SYNC_FAILED`).
+
 ## [13.13.0] - 2026-10-24
 
 ### Added
