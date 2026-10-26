@@ -28,6 +28,16 @@ The assistant uses the same inventory instead of guessing paths (`ai_logs.go`): 
 
 `card()` renders the states with `ok`/`bad` pills and carries a **Poll automatically** checkbox that writes the whole profile back through the same endpoint; the settings dialog gained the matching textarea (`systemd:nginx`, `docker:web`, one per line).
 
+## Folder sorting, file edit history, SSH certificates and Git log handling (v13.14.0)
+
+`folder_sort.go` sorts sibling folders by `naturalCompare` (case-insensitive, digit runs as numbers) and rewrites `sort_order` only where it changed (`sortFolderGroups`). `autoSortFolders(uid)` runs under `folderHierarchyMu` after a folder is created, updated (`updateFolder`) or reordered, for the levels below folders with `folders.auto_sort` and for the whole tree when the user_ui key `folders_sort` is `auto`.
+
+`file_edits.go` owns the `file_edits` table (created before `createAppendOnlyTriggers`, purged by `cleanupAuditLog`). `recordFileEdit` builds the diff with `unifiedDiff` (falling back to `aiUnifiedDiff`), redacts it and stores it with `encryptValue`. The upload handler (`files.go`) tees the uploaded content when `edit=1` (`editTee`, capped at `file_edit_max_kb`) and reads the previous content over SFTP or FTP before overwriting; `ai_engine.go` records approved AI writes with session `ai #<id>`. `apiAdminFileEditsHandler` serves the list, one entry with the decrypted diff, and CSV.
+
+`ssh_cert.go` adds OpenSSH user certificates to key authentication. `resolveKeyMaterialPath` returns the path a key came from; `certSigners` finds the certificate (`<path>-cert.pub`, `Connection.keyCert` from `ssh_keys.certificate` for KEY_REF and credentials, or a certificate line pasted after a KEY), checks that it belongs to the key and is not expired, and returns `ssh.NewCertSigner` before the plain signer. `certLoginHint` extends "unable to authenticate" errors in `jump.go`.
+
+Git: `isLogPath` (`git_files.go`) marks log files; `compareInstall` drops them from extras, `selectFiles` drops them from targets unless the catalog has an include list, the files listing gives every untracked file the state `outside` without fetching its blob, and `git_gitignore.go` has a `Logs` stack and a `log` warning. `hostnameScript` / `parseHostnameOutput` (`git_hostname.go`) read the hostname behind a `WRM_HOSTNAME` marker, and `hostLabels` never maps a connection to an IP address. `static/git.js` builds the server-folder filters with `dirOptions` / `dirSelect` and the connection-folder tree with `connFolderOptions`.
+
 ## Community library (v13.1)
 
 `addons_community.go` reads the index of the public repository "WRM Pro - community public addons" (`addonCommunityIndex`, `GET /api/addons/community`, cached for ten minutes). An entry carries `id`, `name`, `version`, `license`, `capabilities`, `trust`, `url` and `sha256`; `addonCommunityValid` keeps only entries whose trust is known, whose checksum is 64 hex characters, whose capabilities exist in this build and whose `url` points at `github.com`, `raw.githubusercontent.com`, `objects.githubusercontent.com` or `codeload.github.com` over HTTPS (loopback HTTP is accepted for the tests). One malformed entry is dropped instead of failing the whole index.

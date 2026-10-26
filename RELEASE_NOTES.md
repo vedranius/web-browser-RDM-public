@@ -1,23 +1,49 @@
-## Web Remote Manager PRO v13.13.0 - The Claude plugin with one pick, and every AI app with one script
+## Web Remote Manager PRO v13.14.0 - Git checks that stick to Git, sorted folders and a record of every file edit
 
 ### Added
+
+- **Sort folders A–Z** ([#134](https://github.com/vedranius/web-browser-RDM-public/issues/134)): right-click a folder to sort its subfolders by name or keep them sorted, also for all folders at once. Numbers sort naturally (`srv2` before `srv10`).
+- **File edit history** ([#129](https://github.com/vedranius/web-browser-RDM-public/issues/129)): *Admin → File edits* lists every file saved in the editor or changed by the AI, with the diff, filterable by user, server, session and AI, with CSV export. Diffs are stored encrypted with secrets masked.
+- **SSH certificates and opkssh** ([#119](https://github.com/vedranius/web-browser-RDM-public/issues/119)): keys log in with their OpenSSH user certificate, from a `-cert.pub` file next to the key (renewed by `opkssh login`), saved with a key in the key store, or pasted after the private key.
+- **Folder filters in the Git workspace**: filter the overview, functionality, environments, *What is where* and the files of an installation by folder on the servers, as a tree with counts.
+- **Logs** in the .gitignore helper's standard patterns.
+
+### Changed
+
+- **Git checks compare only what Git tracks.** Logs and other files outside the check are listed as *outside the check* and never compared; log files are never deployed unless the include list names them.
+- Servers in the Git overview are named by hostname or connection name, never by an IP address.
+
+### Fixed
+
+- The Git overview mixed hostnames and IP addresses.
+- The Git checker compared log files with Git.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. Additive migration (table `file_edits`, columns `folders.auto_sort` and `ssh_keys.certificate`); a previous version still starts on the database.
+
+[Download v13.14.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.13.0 - The Claude plugin with one pick, and every AI app with one script
+
+#### Added
 
 - **WRM PRO plugin without settings**: in the Claude app (*Customize → Plugins → Add marketplace* → `vedranius/web-browser-RDM-public` → WRM PRO) or in Claude Code (`/plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public`). Type `/wrm-pro:wrm`: the first time Claude asks for your WRM address and WRM opens in the browser, where you sign in and approve. The token goes straight to your computer, never into the chat.
 - **`/wrm-pro:wrm`** lists your servers and everything WRM can do (logs, services, files, commands, edits, transfers), and starts the work you ask for.
 - **All AI apps at once** (*Settings → AI connections*): one script for Windows or Linux/macOS signs in once and adds WRM to Claude Code, the Claude app, Codex, Gemini CLI, VS Code, Cursor, Windsurf and OpenCode, with a backup of every file it changes. When the access expires, signing in again in any app renews it for all.
 - **`claude-plugin-wrm-pro.zip`** in the release, for *Customize → Plugins → Upload plugin* when adding the marketplace is not possible.
 
-### Changed
+#### Changed
 
 - Plugin 1.2.0 has no address and token settings any more (the Claude app cannot ask for them). After updating, run `/wrm-pro:wrm` once and approve the sign-in.
 - The Claude Desktop extension keeps working when its token expires: Claude offers to sign in again.
 
-### Fixed
+#### Fixed
 
 - The plugin could not connect from the Claude app: it depended on settings the app cannot ask for, and its web connector would have connected from the cloud, which cannot reach a WRM on your own network.
 - The AI app approval dialog showed a raw key for the addon permission.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
 

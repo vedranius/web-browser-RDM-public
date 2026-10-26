@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.13.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.14.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.14.0
+
+**The Git workspace checks only what Git tracks, folders sort themselves, and every file edit is on record.** The Git overview names servers by their hostname or connection name instead of an IP. A check compares only the files the catalog tracks: logs and other files outside the check are listed as *outside the check* and never compared, and the .gitignore helper has a **Logs** group. Every Git filter can narrow to a **folder on the servers** (a tree with counts, like the log viewer's folder filter), and the connection-folder filter includes subfolders. Right-click a folder to **sort its subfolders A–Z** or **keep them sorted** ([#134](https://github.com/vedranius/web-browser-RDM-public/issues/134)). *Admin → File edits* keeps **every file edit with its diff**, from the editor and from the AI, filterable by user, server, session and AI ([#129](https://github.com/vedranius/web-browser-RDM-public/issues/129)). SSH keys can log in with an **OpenSSH user certificate**, also the short-lived ones from **opkssh** ([#119](https://github.com/vedranius/web-browser-RDM-public/issues/119)). See [Connections & folders](#connections--folders), [SSH user certificates and opkssh](#ssh-user-certificates-and-opkssh), [File edit history](#file-edit-history) and [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks).
 
 ## What's new in v13.13.0
 
@@ -224,13 +228,14 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
    - [Connections & folders](#connections--folders)
    - [Quick connect & connection notes](#quick-connect--connection-notes)
    - [SSH keys & credentials vault](#ssh-keys--credentials-vault)
+   - [SSH user certificates and opkssh](#ssh-user-certificates-and-opkssh)
    - [Jump hosts (bastions)](#jump-hosts-bastions)
    - [Proxies (SOCKS / HTTP)](#proxies-socks--http)
    - [SSH tunnels (port forwarding)](#ssh-tunnels-port-forwarding)
@@ -277,6 +282,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Voice calls](#voice-calls)
    - [Settings](#settings)
    - [Audit log, session recording & file transfers](#audit-log-session-recording--file-transfers)
+   - [File edit history](#file-edit-history)
    - [Admin panel](#admin-panel)
    - [Security levels and posture](#security-levels-and-posture)
    - [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass)
@@ -335,21 +341,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.13.0-linux-amd64
-   ./wrm-pro-v13.13.0-linux-amd64
+   chmod +x wrm-pro-v13.14.0-linux-amd64
+   ./wrm-pro-v13.14.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.13.0-windows-amd64.exe
+   .\wrm-pro-v13.14.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.13.0-linux-amd64.AppImage
-   ./wrm-pro-v13.13.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.13.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.14.0-linux-amd64.AppImage
+   ./wrm-pro-v13.14.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.14.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -358,8 +364,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.13.0/wrm-pro-v13.13.0-android-arm64
-   chmod +x wrm-pro-v13.13.0-android-arm64 && ./wrm-pro-v13.13.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.14.0/wrm-pro-v13.14.0-android-arm64
+   chmod +x wrm-pro-v13.14.0-android-arm64 && ./wrm-pro-v13.14.0-android-arm64
    ```
 
    **Docker**
@@ -383,6 +389,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.13.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: a new table `file_edits` (append-only like the audit log, kept for `audit_retention_days`) and new columns `folders.auto_sort` and `ssh_keys.certificate`; a previous version still starts on the database. New settings `file_edit_history` (`1`) and `file_edit_max_kb` (`1024`). New endpoints `GET / POST /api/folders/sort` and `GET /api/admin/file-edits[/{id}]`; `PUT /api/keys/{id}` also takes `certificate`. Git checks no longer compare files the catalog does not track: their state is *outside the check* instead of *same* / *differs*, and log files (`*.log`, `*.log.*`, files below a `log` or `logs` folder) are never compared nor deployed unless the catalog's include list names them. A key file on the WRM server with a `<key>-cert.pub` next to it now logs in with that certificate first.
 
 ## Upgrading from v13.12.0
 
@@ -890,6 +900,8 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 
 Folders can have a **Parent folder** (up to 32 levels); right-click a folder to create a subfolder or edit its parent. The sidebar renders the hierarchy and connection pickers show the complete folder path; tabs and window titles show only the connection's name, with the folder path in their tooltip. The row above connection tabs filters open tabs/windows by folder and focuses its most recently used window. Config export/import and new mRemoteNG imports preserve nesting. Deleting a folder moves its child folders to its former parent and keeps their connections. Sharing a folder includes descendants; jump/proxy defaults apply to the immediate folder only.
 
+**Sorting folders (v13.14.0).** Folders keep the order you give them by drag and drop. Right-click a folder for **Sort subfolders A–Z (all levels)** or **Keep subfolders sorted A–Z**, and the top level offers **Sort all folders A–Z** and **Keep all folders sorted A–Z**. A kept-sorted folder puts new, renamed and moved subfolders in their place by name at every level below it. Names compare without case and with numbers in their natural order (`srv2` before `srv10`). Connections inside a folder are always listed by name. Sorting is audited as `folder.sorted`.
+
 Left sidebar ("PRO MANAGER"):
 
 - **+ Connection** creates a connection:
@@ -964,6 +976,16 @@ A credential is a login that many connections share: a user name with a **passwo
 The progress of every server is shown live. Rotation needs SSH connections to servers where the login user may change its own password with `passwd` (Linux, BSD, macOS). Connections of other types (RDP, VNC, FTP…) block rotation — change those passwords yourself and save the new one with *Edit* (*Edit* with a new password counts as rotated). When the rotation reminder is due, the 🔑 button shows a badge and *Admin panel → Overview* warns.
 
 Everything is in the audit log: `ssh_key.created`, `ssh_key.deployed`, `ssh_key.revoked`, `ssh_key.exported`, `ssh_key.deleted`, `credential.created`, `credential.updated`, `credential.granted`, `credential.grant_revoked`, `credential.revealed`, `credential.checked`, `credential.rotated`, `credential.rotation_failed`, `credential.rotation_incomplete` (never the secrets).
+
+### SSH user certificates and opkssh
+
+A key can log in with an **OpenSSH user certificate** issued for it, by an SSH certificate authority or by [opkssh](https://github.com/openpubkey/opkssh), which turns an OpenID Connect sign-in into a short-lived certificate (`opkssh login` writes `~/.ssh/id_ecdsa` and `id_ecdsa-cert.pub`). WRM offers the certificate first and the plain key after it.
+
+- **Key files on the WRM server** (*Key file* or *Automatic*): WRM reads `<key>-cert.pub` next to the key at every login, so a renewed certificate is used at once; a path to the `-cert.pub` file works too. For opkssh, run `opkssh login` as the user WRM runs as. *Automatic* prefers a key with a valid certificate.
+- **Keys in the key store**: *SSH keys → 📜 Certificate* saves the certificate line with the key. The key shows a pill with the expiry (*opkssh* for opkssh certificates) and the details (key ID, principals, validity, CA fingerprint) in its tooltip.
+- **A key pasted into a connection**: paste the certificate line after the private key (what `cat id_ecdsa id_ecdsa-cert.pub` prints).
+
+A certificate must be a user certificate for the same public key, or it is refused. An expired certificate is skipped (the plain key is still offered), and a refused login says that the certificate expired and how to renew it. The server side needs `TrustedUserCAKeys` (or opkssh's `AuthorizedKeysCommand`); WRM does not change it.
 
 ### Bitwarden SSH keys
 
@@ -1496,13 +1518,16 @@ The Medium view has a **WRM engine** panel. It compares a branch or tag with eve
 **Every file of an installation.** The details of an installation (click it in the overview, or *Details*) read the server folder once and list **every file** — not only the ones the catalog tracks — together with every file of the repository at the target ref below the service's subdirectory:
 
 - **Columns:** path, size, modification time, state and **why**: *tracked*, *excluded by the catalog* (with the pattern, e.g. `setup.py` or `tests`), *not in the include list*, *protected* (with the pattern), *not in Git* (only on the server), *written by the deploy tool* (`VERSION.md`, `updates.jsonl`), *compiled file*, *in Git, not tracked*.
-- **States:** tracked files as in checks (*ok*, *old*, *modified*, *missing*); files the catalog does not track are *same*, *differs* or *not compared*; *extra* (only on the server), *missing* (only in Git), *symlink* (the target is shown, a symlink is **never followed**, and one that points out of the installation is marked), *unreadable* (permission denied, also for directories).
+- **States:** tracked files as in checks (*ok*, *old*, *modified*, *missing*); files the catalog does not track are *outside the check* and are not compared (since v13.14.0); *extra* (only on the server), *missing* (only in Git), *symlink* (the target is shown, a symlink is **never followed**, and one that points out of the installation is marked), *unreadable* (permission denied, also for directories).
 - The catalog's `ignore_dirs`, backup-looking paths and `.git`, `.deploy-bak`, `node_modules`, `__pycache__`, virtual environments are left out; at most 10 000 entries are listed (a notice says when the folder has more).
-- **Filters:** *All*, *Differing*, *Tracked only*, *Not tracked*, and a search.
+- **Filters:** *In the check* (the default), *Differing*, *Outside the check*, *All*, a **folder** filter (a tree of the folders with counts; a folder includes everything below it) and a search. The *Why* column says whether a file is in Git, on the server or both.
+- **Log files** (`*.log`, `*.log.*`, files below a `log` or `logs` folder, except source and configuration files) are never compared, never offered for a diff and never deployed, unless the catalog's include list names them.
 - **Open** shows any file (view only, up to about 1.9 MB; binary files show their size and hash), from the server or from Git. **Diff** compares server ↔ Git for **any file in the repository** — also files the catalog excludes, labelled *informational, not updated* — unified or side by side; line endings are ignored like in the hashing. Binary and large files are compared by hash.
 - Files the catalog does not track are **informational**: they never change the state of an installation (*review* / *needs update* / *up to date* still come from the tracked files only).
 - **Commits behind:** the details use the detected commit; with the `VERSION.md` checkbox on they use the commit (or version) in `VERSION.md` instead. They show how many commits the target is ahead and list them (GitLab / GitHub compare API). When the code is mixed or modified, no single commit is known, so the list is not shown.
 - Server files are read over SSH with quoted paths and POSIX tools only, never cached by WRM. Opening a file is audited (`git.file_viewed`). The other repository files come from the cached tree of the target commit; their contents are fetched and cached like target files (at most 200 unknown files per listing).
+
+**Names and folders in the overview.** Servers are named by the hostname read during checks or by the connection's name, never by a bare IP address (a connection named by its IP still shows it: rename it, or use *Name from hostname*). Besides the connection-folder filter (which includes subfolders), the overview, *Functionality*, *Environments*, *What is where* and Simple mode have a **server folder** filter: a tree of the installation folders with counts, like the log viewer's folder filter.
 
 **Partial and incremental checks.** In the overview and on the *Installations* tab:
 
@@ -1688,7 +1713,7 @@ Two wizards set up a service where it does not run yet. Both are runs (they appe
 The **.gitignore** tab of the Git workspace builds the `.gitignore` of a service's repository from what the checks found. Pick the service; WRM reads the head of its branch through the API (trees and files are cached like everything else) and shows:
 
 - **Files only on servers** — the files in state *extra* from the latest checks of every installation of the service, with their **size** and the **servers** they were seen on, and a suggested pattern: a known directory (`logs/`, `tmp/`, `cache/`, `venv/`, …), a known extension (`*.log`, `*.pyc`, `*.bak`, `*.sqlite`, …) or the file itself (`/local.txt`).
-- **Standard patterns** per stack — Python, Node, Go, Java, Docker and IDE files. Stacks found in the repository tree (`requirements.txt`, `*.py`, `package.json`, `go.mod`, `pom.xml`, `Dockerfile`, …) are pre-selected.
+- **Standard patterns** per stack — Python, Node, Go, Java, Docker, IDE files and **Logs** (`log/`, `logs/`, `*.log`, `*.log.*`; pre-selected when the repository holds log files, which also get a warning). Stacks found in the repository tree (`requirements.txt`, `*.py`, `package.json`, `go.mod`, `pom.xml`, `Dockerfile`, …) are pre-selected.
 - The service's **protected globs** (per-host files), pre-selected, and a box for more patterns.
 - **Warnings** about committed files that look like secrets (`.env`, `*.pem`, `*.key`, `*credentials*`, `*secret*`, `id_rsa*`, …) or match the protected globs (per-host configuration such as `config.ini`), with the advice to commit a **template** instead (`config.example.ini`, `.env.example` — the install wizard fills those), add the file to `.gitignore` and remove it with `git rm --cached`.
 - The service's **exclude / protected lists** of the catalog, editable on the same screen.
@@ -2081,6 +2106,12 @@ WRM keeps a complete, tamper-evident record of who did what, where and when:
   - **Who can see recordings:** administrators all; users their own sessions and sessions of other people on **their** connections (e.g. guests of a share). Viewing or downloading a recording is itself recorded in the audit log.
 - **File transfers** (*Admin panel → File transfers*): every upload, download (including files opened in the editor and every file of a ZIP download) and server-to-server copy with source, destination, size, **SHA-256** and status; CSV export.
 
+### File edit history
+
+*Admin → File edits* (administrators and auditors) lists every file changed through WRM: saves from the text editor (also in shares) and changes the AI assistant made after approval. Each entry has the time, user, connection and server, path, source (*editor* or *AI*), session (the AI session or the share) and the size before and after; **View** shows the unified diff. Filters: search, user, server, connection, source, session and a time range; **CSV** exports the list (audited as `file_edit.exported`), and opening a diff is audited as `file_edit.viewed`. The audit entry of the save names the `file_edits` id.
+
+The diff is stored **encrypted**, with secrets masked (`redactText`) before it is stored. Files larger than `file_edit_max_kb` (1024 KB) and binary files are recorded without a diff, with a note. The table is append-only like the audit log and kept for `audit_retention_days`. `file_edit_history` = `0` turns recording off.
+
 ### Settings
 
 **⚙ Settings** in the top bar has tabs:
@@ -2409,6 +2440,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ice_servers` | Google + Cloudflare STUN | additional STUN/TURN servers (JSON) |
 | `audit_enabled` | `1` | record security events (administrator actions are always recorded). Also `AUDIT_ENABLED` |
 | `audit_retention_days` | `365` | how long audit log, file transfers and chat history are kept (minimum 7) |
+| `file_edit_history` | `1` | keep every file edit with its diff (*Admin → File edits*) |
+| `file_edit_max_kb` | `1024` | larger files are recorded without a diff (16–10240) |
 | `session_recording` | `1` | record terminal sessions. Also `SESSION_RECORDING_ENABLED` |
 | `session_recording_input` | `0` | also record keystrokes (masked at password prompts) |
 | `recording_retention_days` | `90` | how long recordings are kept (minimum 7) |
@@ -2743,6 +2776,17 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 ---
 
 ## API reference
+
+### v13.14.0 endpoints
+
+| Endpoint | Behavior |
+|---|---|
+| `GET /api/folders/sort` | `{keep_all}`: whether all your folders are kept sorted. |
+| `POST /api/folders/sort` | `{folder_id, recursive, keep}`: sort the subfolders of a folder (`0` = top level) by name, at every level with `recursive`; `keep` switches automatic sorting for that folder (for `0`: all folders). Returns `{folders, keep_all, moved}`; audited as `folder.sorted`. |
+| `GET /api/admin/file-edits` | File edit history (administrators, auditors): filters `q`, `user`, `source` (`editor`, `ai`), `session`, `server`, `conn`, `from`, `to`, `before_id`; `format=csv` exports. |
+| `GET /api/admin/file-edits/{id}` | One edit with its diff; audited as `file_edit.viewed`. |
+| `PUT /api/keys/{id}` | Also `{"certificate": "…-cert-v01@openssh.com …"}` (empty removes it); the certificate must be a user certificate for this key. `GET /api/keys` adds `cert` (type, key ID, principals, validity, CA fingerprint, `opkssh`). |
+| `POST /api/remote/upload?…&edit=1` | An editor save: WRM records the change in the file edit history. |
 
 ### v13.7.0 endpoints
 
@@ -3382,6 +3426,7 @@ remote-manager/
   ai_engine_test.go    AI sessions against a fake Anthropic / OpenAI-compatible server and the fake SSH host: approve, edit, deny, timeout, read-only, destructive in every mode, automatic-mode limits, file edits with diffs, kill switch, most restrictive policy, keys never returned, redaction, audit, transcript and recording, prompt injection, the event stream
   mcp_test.go          an MCP client harness: initialize, tools/list, tools/call, elicitation; OAuth with PKCE failure and code reuse; token scopes and expiry; revoke and kill switch; approval round trip; read-only and scope enforcement; destructive block; prompt injection; audit; transfer; the stdio bridge; origin and CORS checks
   mcp_bundle_test.go   the Claude Desktop extension: download, manifest, token checks; its Node.js bridge end to end with an approval
+  v13140_test.go       server names from hostnames, log paths, folder sorting, file edit history (diff, redaction, encryption, filters, CSV), SSH user certificates against a fake SSH host that trusts a CA (expired, mismatched, pasted, key file)
   v13130_plugin_test.go  the Claude plugin: committed bridge bundle is current, no settings, no bin/; the bridge's browser sign-in (wrm_connect) end to end, saved connection, denial; the setup script for all AI apps run with sh against real config files
   v1265_test.go        Medium step by step: tool import steps with output, deploy-config checked at once and kept while preparing, failed start keeps its step, error and redacted output, activity log; 409 names the running operation and its user, visibility and medium_log_output; approve later after the AI app closed its session; grep/sed/find patterns are not taken for files
   v1266_test.go        Docker for Medium: backend choice, Linux packages after consent with steps and output, no rights shows -setup-docker, policy off, Windows and macOS Docker Desktop with download, signature and licence, permission denied, wrm -setup-docker
