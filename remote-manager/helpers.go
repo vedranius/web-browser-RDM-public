@@ -329,7 +329,7 @@ func isConnLostErr(err error) bool {
 // loadFolders lists a user's folders with their defaults and the names they point to.
 func loadFolders(userID int) []Folder {
 	out := []Folder{}
-	rows, err := db.Query(`SELECT f.id, f.name, f.parent_id, f.jump_conn_id, f.proxy_id, f.sort_order, COALESCE(j.name,''), COALESCE(p.name,'') FROM folders f
+	rows, err := db.Query(`SELECT f.id, f.name, f.parent_id, f.jump_conn_id, f.proxy_id, f.sort_order, f.auto_sort, COALESCE(j.name,''), COALESCE(p.name,'') FROM folders f
 		LEFT JOIN connections j ON j.id=f.jump_conn_id LEFT JOIN proxies p ON p.id=f.proxy_id WHERE f.user_id=? ORDER BY f.sort_order, f.name COLLATE NOCASE, f.id`, userID)
 	if err != nil {
 		return out
@@ -337,7 +337,9 @@ func loadFolders(userID int) []Folder {
 	defer rows.Close()
 	for rows.Next() {
 		var f Folder
-		if rows.Scan(&f.ID, &f.Name, &f.ParentID, &f.JumpID, &f.ProxyID, &f.SortOrder, &f.JumpName, &f.ProxyName) == nil {
+		var auto int
+		if rows.Scan(&f.ID, &f.Name, &f.ParentID, &f.JumpID, &f.ProxyID, &f.SortOrder, &auto, &f.JumpName, &f.ProxyName) == nil {
+			f.AutoSort = auto == 1
 			out = append(out, f)
 		}
 	}
@@ -416,6 +418,7 @@ func updateFolder(w http.ResponseWriter, r *http.Request, userID, id int) {
 		return
 	}
 	saveVisualLabel(db, "folder", id, userID, f.Label)
+	autoSortFolders(userID)
 	changed := []string{}
 	if f.Name != cur.Name {
 		changed = append(changed, "name")

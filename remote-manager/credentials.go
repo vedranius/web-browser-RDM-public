@@ -250,7 +250,7 @@ func resolveConnectionAuth(c *Connection) {
 			c.authErr = err.Error()
 			return
 		}
-		c.AuthMethod, c.PrivateKey, c.usedKeyID = "KEY", p, *c.KeyID
+		c.AuthMethod, c.PrivateKey, c.usedKeyID, c.keyCert = "KEY", p, *c.KeyID, storedKeyCert(c.KeyID, c.UserID)
 	case "CREDENTIAL":
 		cr, err := credentialFor(*c)
 		if err != nil {
@@ -269,7 +269,7 @@ func resolveConnectionAuth(c *Connection) {
 				c.authErr = fmt.Sprintf("credential %q: %v", cr.Name, err)
 				return
 			}
-			c.AuthMethod, c.PrivateKey, c.usedKeyID = "KEY", p, *cr.KeyID
+			c.AuthMethod, c.PrivateKey, c.usedKeyID, c.keyCert = "KEY", p, *cr.KeyID, storedKeyCert(cr.KeyID, cr.OwnerID)
 		} else {
 			c.AuthMethod = "PASSWORD"
 		}

@@ -47,29 +47,46 @@ const (
 )
 
 type sshKey struct {
-	ID          int      `json:"id"`
-	UserID      int      `json:"-"`
-	Name        string   `json:"name"`
-	KeyType     string   `json:"key_type"`
-	Bits        int      `json:"bits"`
-	PublicKey   string   `json:"public_key"` // authorized_keys line
-	Fingerprint string   `json:"fingerprint"`
-	Comment     string   `json:"comment"`
-	HasPrivate  bool     `json:"has_private"`
-	CreatedAt   string   `json:"created_at"`
-	LastUsedAt  string   `json:"last_used_at"`
-	UsedBy      []string `json:"used_by"`  // connections and credentials that log in with it
-	Deployed    []int    `json:"deployed"` // connections WRM installed it on
-	private     string   // encrypted private key
+	ID          int          `json:"id"`
+	UserID      int          `json:"-"`
+	Name        string       `json:"name"`
+	KeyType     string       `json:"key_type"`
+	Bits        int          `json:"bits"`
+	PublicKey   string       `json:"public_key"` // authorized_keys line
+	Fingerprint string       `json:"fingerprint"`
+	Comment     string       `json:"comment"`
+	HasPrivate  bool         `json:"has_private"`
+	CreatedAt   string       `json:"created_at"`
+	LastUsedAt  string       `json:"last_used_at"`
+	UsedBy      []string     `json:"used_by"`               // connections and credentials that log in with it
+	Deployed    []int        `json:"deployed"`              // connections WRM installed it on
+	Certificate string       `json:"certificate,omitempty"` // OpenSSH user certificate (public, ssh_cert.go)
+	CertInfo    *sshCertInfo `json:"cert,omitempty"`
+	private     string       // encrypted private key
 }
 
-const sshKeyCols = `id,user_id,name,key_type,bits,public_key,private_key,fingerprint,comment,created_at,last_used_at`
+const sshKeyCols = `id,user_id,name,key_type,bits,public_key,private_key,fingerprint,comment,created_at,last_used_at,certificate`
 
 func scanSSHKey(sc interface{ Scan(...interface{}) error }) (sshKey, error) {
 	var k sshKey
-	err := sc.Scan(&k.ID, &k.UserID, &k.Name, &k.KeyType, &k.Bits, &k.PublicKey, &k.private, &k.Fingerprint, &k.Comment, &k.CreatedAt, &k.LastUsedAt)
+	err := sc.Scan(&k.ID, &k.UserID, &k.Name, &k.KeyType, &k.Bits, &k.PublicKey, &k.private, &k.Fingerprint, &k.Comment, &k.CreatedAt, &k.LastUsedAt, &k.Certificate)
 	k.HasPrivate = k.private != ""
+	if k.Certificate != "" {
+		if cert, cerr := parseUserCert(k.Certificate); cerr == nil {
+			k.CertInfo = certInfoOf(cert)
+		}
+	}
 	return k, err
+}
+
+// storedKeyCert returns the certificate saved with a stored key ("" = none).
+func storedKeyCert(keyID *int, userID int) string {
+	if keyID == nil {
+		return ""
+	}
+	var cert string
+	db.QueryRow(`SELECT certificate FROM ssh_keys WHERE id=? AND user_id=?`, *keyID, userID).Scan(&cert)
+	return cert
 }
 
 func loadSSHKey(id, userID int) (sshKey, error) {
@@ -639,7 +656,7 @@ func revokeKey(r *http.Request, userID int, k sshKey, id int) keyHostResult {
 
 // GET    /api/keys                    key store (no private keys)
 // POST   /api/keys                    {name, comment, generate:{type,bits}} or {name, key, passphrase}
-// PUT    /api/keys/{id}               {name}
+// PUT    /api/keys/{id}               {name} and / or {certificate} ("" removes it)
 // DELETE /api/keys/{id}               (refused while connections or credentials use it)
 // GET    /api/keys/{id}/public        public key as a file (authorized_keys line)
 // POST   /api/keys/{id}/export        {password, passphrase} → private key (re-authentication)
@@ -688,19 +705,45 @@ func apiKeysHandler(w http.ResponseWriter, r *http.Request) {
 		jsonOK(w, k)
 	case action == "" && r.Method == http.MethodPut:
 		var in struct {
-			Name string `json:"name"`
+			Name        *string `json:"name"`
+			Certificate *string `json:"certificate"`
 		}
-		if json.NewDecoder(r.Body).Decode(&in) != nil {
+		if json.NewDecoder(r.Body).Decode(&in) != nil || (in.Name == nil && in.Certificate == nil) {
 			jsonError(w, "Bad JSON", 400)
 			return
 		}
-		name := truncateStr(strings.TrimSpace(in.Name), 120)
-		if name == "" {
-			jsonError(w, "Name is required", 400)
-			return
+		if in.Certificate != nil {
+			text := strings.TrimSpace(*in.Certificate)
+			info := map[string]interface{}{"key_id": id, "key": k.Fingerprint}
+			if text != "" {
+				cert, err := parseUserCert(text)
+				if err != nil {
+					jsonError(w, err.Error(), 400)
+					return
+				}
+				pub, _, _, _, perr := ssh.ParseAuthorizedKey([]byte(k.PublicKey))
+				if perr != nil || !bytes.Equal(cert.Key.Marshal(), pub.Marshal()) {
+					jsonError(w, "This certificate was not issued for this key", 400)
+					return
+				}
+				text = strings.Join(strings.Fields(text)[:2], " ") // no comment
+				ci := certInfoOf(cert)
+				info["cert_key_id"], info["principals"], info["valid_before"], info["ca"] = ci.KeyID, ci.Principals, ci.ValidBefore, ci.CA
+			}
+			db.Exec(`UPDATE ssh_keys SET certificate=? WHERE id=? AND user_id=?`, text, id, userID)
+			auditLog(r, userID, map[bool]string{true: "ssh_key.certificate_set", false: "ssh_key.certificate_removed"}[text != ""], k.Name, info)
 		}
-		db.Exec(`UPDATE ssh_keys SET name=? WHERE id=? AND user_id=?`, name, id, userID)
-		auditLog(r, userID, "ssh_key.renamed", name, map[string]interface{}{"key_id": id, "old_name": k.Name})
+		if in.Name != nil {
+			name := truncateStr(strings.TrimSpace(*in.Name), 120)
+			if name == "" {
+				jsonError(w, "Name is required", 400)
+				return
+			}
+			db.Exec(`UPDATE ssh_keys SET name=? WHERE id=? AND user_id=?`, name, id, userID)
+			if name != k.Name {
+				auditLog(r, userID, "ssh_key.renamed", name, map[string]interface{}{"key_id": id, "old_name": k.Name})
+			}
+		}
 		jsonOK(w, map[string]bool{"ok": true})
 	case action == "" && r.Method == http.MethodDelete:
 		if used := keyUsage(id, userID); len(used) > 0 {

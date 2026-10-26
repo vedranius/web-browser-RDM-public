@@ -216,6 +216,9 @@ var settingSpecs = []settingSpec{
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
+	// File edit history (file_edits.go, v13.14.0): diffs of files saved from the editor or written by the AI
+	{Key: "file_edit_history", Default: "1", Kind: "bool"},
+	{Key: "file_edit_max_kb", Default: "1024", Kind: "int", Min: 16, Max: 10240},
 	{Key: "session_recording", Default: "1", Kind: "bool", Alias: "SESSION_RECORDING_ENABLED"},
 	{Key: "session_recording_input", Default: "0", Kind: "bool"},
 	{Key: "recording_retention_days", Default: "90", Kind: "int", Min: 7, Max: 3650},
