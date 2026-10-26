@@ -43,8 +43,8 @@ type gitIgnoreStack struct {
 
 type gitIgnoreWarning struct {
 	Path     string `json:"path"`
-	Reason   string `json:"reason"`   // secret | protected
-	Template string `json:"template"` // suggested name of the template to commit instead
+	Reason   string `json:"reason"`             // secret | protected | log
+	Template string `json:"template,omitempty"` // suggested name of the template to commit instead
 }
 
 type gitIgnoreInfo struct {
@@ -91,6 +91,8 @@ var gitIgnoreStacks = []struct {
 	{"Docker", []string{"Dockerfile", "docker-compose.yml", "docker-compose.yaml", "compose.yaml"},
 		[]string{".env", "docker-compose.override.yml"}},
 	{"IDE", nil, []string{".idea/", ".vscode/", "*.swp", "*~", ".DS_Store", "Thumbs.db"}},
+	// detected by any log file in the tree (isLogPath), whatever its depth
+	{"Logs", nil, []string{"log/", "logs/", "*.log", "*.log.*"}},
 }
 
 var (
@@ -124,9 +126,11 @@ func suggestIgnorePattern(rel string) string {
 // isTemplateFile: config.ini.example, .env.sample, … are what should be committed.
 func isTemplateFile(rel string) bool { return templateDest(rel) != "" }
 
-// gitIgnoreWarnings lists committed files that look like secrets or match the protected globs.
+// gitIgnoreWarnings lists committed files that look like secrets, match the protected globs
+// or are log files.
 func gitIgnoreWarnings(rels []string, protected []string) []gitIgnoreWarning {
 	out := []gitIgnoreWarning{}
+	logs := 0
 	for _, rel := range rels {
 		if isTemplateFile(rel) || path.Base(rel) == ".gitignore" {
 			continue
@@ -137,6 +141,11 @@ func gitIgnoreWarnings(rels []string, protected []string) []gitIgnoreWarning {
 			reason = "secret"
 		case globHit(rel, protected):
 			reason = "protected"
+		case isLogPath(rel):
+			if logs++; logs <= 20 { // a committed log folder is named by its first files
+				out = append(out, gitIgnoreWarning{Path: rel, Reason: "log"})
+			}
+			continue
 		default:
 			continue
 		}
@@ -159,6 +168,14 @@ func detectStacks(rels []string) []gitIgnoreStack {
 	out := []gitIgnoreStack{}
 	for _, s := range gitIgnoreStacks {
 		st := gitIgnoreStack{Name: s.name, Patterns: s.patterns}
+		if s.name == "Logs" {
+			for _, rel := range rels {
+				if isLogPath(rel) {
+					st.Detected, st.Reason = true, rel
+					break
+				}
+			}
+		}
 		for _, m := range s.markers {
 			for _, rel := range rels {
 				if strings.Count(rel, "/") > 2 {

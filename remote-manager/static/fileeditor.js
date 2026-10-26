@@ -612,7 +612,7 @@ Object.assign(LANGS.hr, {
       const name = E.path.split('/').pop(), dir = parentPath(E.path);
       const fd = new FormData();
       fd.append('file', new Blob([E.crlf ? mine.replace(/\n/g, '\r\n') : mine], {type: 'application/octet-stream'}), name);
-      const res = await fetch(`/api/remote/upload?${connQS(E.wo)}&path=${encodeURIComponent(dir)}&overwrite=true`, {method: 'POST', body: fd});
+      const res = await fetch(`/api/remote/upload?${connQS(E.wo)}&path=${encodeURIComponent(dir)}&overwrite=true&edit=1`, {method: 'POST', body: fd});
       const body = await res.json().catch(() => ({}));
       const r = (body.results || [])[0];
       if (!res.ok || !r || r.status !== 'ok') throw new Error((r && r.error) || body.error || res.statusText);

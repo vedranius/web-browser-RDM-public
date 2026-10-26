@@ -1037,6 +1037,14 @@ func (s *aiSession) run(ctx context.Context, call aiToolCall, pl *aiPlanned) aiT
 		out, code, err = s.transferRun(ctx, pl)
 	} else if pl.Write {
 		out, code, err = s.exec(ctx, aiWriteScript(pl.Path, pl.OldHash), pl.NewText, 0)
+		if err == nil && code == 0 {
+			// the file edit history keeps the diff of what the assistant wrote (#129)
+			max := fileEditMax()
+			recordFileEdit(fileEditRec{UserID: s.UserID, User: s.Username, IP: s.ClientIP, Source: "ai", Session: fmt.Sprintf("ai #%d", s.ID),
+				ShareID: s.ShareID, Conn: s.conn, Path: pl.Path, Created: pl.OldHash == "new",
+				Old: []byte(pl.Old), OldBig: len(pl.Old) > max, New: []byte(pl.NewText), NewBig: len(pl.NewText) > max,
+				OldSize: int64(len(pl.Old)), NewSize: int64(len(pl.NewText))})
+		}
 	} else {
 		out, code, err = s.exec(ctx, pl.Script, "", 0)
 	}

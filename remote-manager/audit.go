@@ -23,7 +23,7 @@ import (
 // via journald/syslog.
 //
 // The audit trail is append-only:
-//   - database triggers refuse UPDATE of audit_log, file_transfers and session_recordings,
+//   - database triggers refuse UPDATE of audit_log, file_transfers, file_edits and session_recordings,
 //     and DELETE of entries younger than the minimum retention (7 days);
 //   - only the retention job removes old entries;
 //   - every entry carries the SHA-256 of the previous one (hash chain), so a changed or
@@ -189,7 +189,7 @@ func auditHash(prev, ts string, userID int, username, ip, action, target, detail
 func createAppendOnlyTriggers() {
 	cutoff := `strftime('%Y-%m-%dT%H:%M:%SZ','now','-` + strconv.Itoa(auditMinRetentionDays) + ` days')`
 	for _, t := range []struct{ table, tsCol string }{
-		{"audit_log", "ts"}, {"file_transfers", "ts"}, {"session_recordings", "created_at"},
+		{"audit_log", "ts"}, {"file_transfers", "ts"}, {"session_recordings", "created_at"}, {"file_edits", "ts"},
 	} {
 		for _, q := range []string{
 			`CREATE TRIGGER IF NOT EXISTS ` + t.table + `_no_update BEFORE UPDATE ON ` + t.table +
@@ -215,6 +215,7 @@ func cleanupAuditLog() {
 	db.Exec(`DELETE FROM audit_log WHERE ts < ?`, cutoff)
 	db.Exec(`DELETE FROM collab_messages WHERE ts < ?`, cutoff)
 	db.Exec(`DELETE FROM file_transfers WHERE ts < ?`, cutoff)
+	db.Exec(`DELETE FROM file_edits WHERE ts < ?`, cutoff)
 	// Session metadata is kept as long as the audit log, but never while it still has a recording.
 	db.Exec(`DELETE FROM terminal_sessions WHERE started_at < ? AND ended_at != ''
 		AND id NOT IN (SELECT session_id FROM session_recordings)`, cutoff)

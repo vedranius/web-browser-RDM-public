@@ -1,3 +1,20 @@
+## [13.14.0] - 2026-10-26
+
+### Added
+- **Folder sorting** ([#134](https://github.com/vedranius/web-browser-RDM-public/issues/134), `folder_sort.go`): right-click a folder for *Sort subfolders A–Z (all levels)* and *Keep subfolders sorted A–Z*, and for the whole tree *Sort all folders A–Z* and *Keep all folders sorted A–Z*. Names compare without case and with numbers in their natural order. A kept-sorted folder (`folders.auto_sort`) or the whole tree (user_ui key `folders_sort`) is sorted again after a folder is created, renamed or moved. `GET / POST /api/folders/sort`, audited as `folder.sorted`.
+- **File edit history** ([#129](https://github.com/vedranius/web-browser-RDM-public/issues/129), `file_edits.go`): every save from the text editor (also in shares, `POST /api/remote/upload?…&edit=1`) and every file change the AI assistant makes after approval is stored in `file_edits` with user, connection, server, path, source, session, sizes and hashes, and a unified diff computed on the WRM server, with secrets masked and encrypted at rest. Files over `file_edit_max_kb` (1024) and binary files are recorded without a diff. The table is append-only and kept for `audit_retention_days`. *Admin → File edits* (administrators and auditors) filters by search, user, server, connection, source, session and time, shows the diff and exports CSV (`GET /api/admin/file-edits[/{id}]`, audited as `file_edit.viewed` / `file_edit.exported`). Setting `file_edit_history` (default on).
+- **SSH user certificates and opkssh** ([#119](https://github.com/vedranius/web-browser-RDM-public/issues/119), `ssh_cert.go`): a key logs in with an OpenSSH user certificate first and the plain key after it. Key files on the WRM server use `<key>-cert.pub` (read at every login, so `opkssh login` renewals work at once; a path to the `-cert.pub` file works too; *Auto* prefers a key with a valid certificate), key-store keys keep a certificate (`ssh_keys.certificate`, `PUT /api/keys/{id} {"certificate"}`, audited as `ssh_key.certificate_set` / `ssh_key.certificate_removed`), and a pasted private key can carry its certificate line. Certificates must be user certificates for the same key; expired ones are skipped and a refused login names them. The key store shows the validity, principals, CA fingerprint and opkssh certificates.
+- **Folder filters in the Git workspace**: a server-folder filter (a tree with counts, a folder includes everything below it) in the overview, *Functionality*, *Environments*, *What is where*, Simple mode and the files of an installation. The connection-folder filter shows the folder tree and includes subfolders.
+- **Logs** group in the .gitignore helper's standard patterns (`log/`, `logs/`, `*.log`, `*.log.*`), pre-selected when the repository has log files, with a warning about committed logs.
+
+### Changed
+- **Git checks compare only what the catalog tracks.** Files the catalog does not track are listed as *outside the check* and are no longer fetched from Git or compared; the files view opens on *In the check* and its *Why* column says where a file is. Log files (`*.log`, `*.log.*`, files below `log` / `logs` folders except source and configuration files) are never compared, never diffable, not reported as extra and not deployed unless the include list names them.
+- The Git overview names servers by hostname or connection name; an IP address is no longer used as the server name. Hostnames are read with a marker line, so a login banner or MOTD cannot become the name.
+
+### Fixed
+- The Git overview mixed hostnames and IP addresses for servers: a connection whose hostname was not known yet fell back to its IP address.
+- The Git checker compared log files and other untracked files with Git, which filled the files view with differences that the deploy never touches.
+
 ## [13.13.1] - 2026-10-26
 
 ### Changed

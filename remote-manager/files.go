@@ -557,6 +557,7 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		haveConn bool
 		results  []uploadResult
 		relDir   string
+		editIDs  []int64
 	)
 	maxBytes := int64(settingInt("max_upload_mb")) << 20
 	ensureConn := func() bool {
@@ -633,7 +634,18 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fullPath := joinRemote(targetDir, fileName)
 		overwrite := params["overwrite"] == "true" || params["overwrite"] == "1"
-		cr := &countingReader{r: part, max: maxBytes, h: sha256.New()}
+		// a save from the file editor keeps the diff of the change (file edit history, #129)
+		edit := q.Get("edit") == "1" && settingBool("file_edit_history")
+		var src io.Reader = part
+		var tee *editTee
+		var oldData []byte
+		var oldBig, oldExists bool
+		var oldSize int64
+		if edit {
+			tee = &editTee{max: fileEditMax()}
+			src = io.TeeReader(part, tee)
+		}
+		cr := &countingReader{r: src, max: maxBytes, h: sha256.New()}
 		opErr := fileOp(c, false, func(sc *sftp.Client) error {
 			if targetDir != baseDir {
 				if err := sc.MkdirAll(targetDir); err != nil {
@@ -643,6 +655,16 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 			if !overwrite {
 				if _, err := sc.Stat(fullPath); err == nil {
 					return errConflict
+				}
+			}
+			if edit {
+				if f, err := sc.Open(fullPath); err == nil {
+					if st, err := f.Stat(); err == nil {
+						oldSize = st.Size()
+					}
+					oldData, oldBig, _ = cappedRead(f, tee.max)
+					oldExists = true
+					f.Close()
 				}
 			}
 			dst, err := sc.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
@@ -666,6 +688,16 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 					return errConflict
 				}
 			}
+			if edit {
+				if resp, err := fc.Retr(fullPath); err == nil {
+					oldData, oldBig, _ = cappedRead(resp, tee.max)
+					resp.Close()
+					oldExists = true
+					if n, err := fc.FileSize(fullPath); err == nil {
+						oldSize = n
+					}
+				}
+			}
 			err := fc.Stor(fullPath, cr)
 			if errors.Is(err, errTooLarge) || cr.tooBig {
 				fc.Delete(fullPath)
@@ -677,6 +709,17 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case opErr == nil:
 			res.Status = "ok"
+			if edit {
+				uid, name := acc.actor()
+				rec := fileEditRec{UserID: uid, User: name, IP: clientIP(r), Source: "editor", Conn: c, Path: fullPath, Created: !oldExists,
+					Old: oldData, OldBig: oldBig, OldSize: oldSize, New: tee.buf.Bytes(), NewBig: tee.big, NewSize: cr.n}
+				if acc.Share != nil {
+					rec.ShareID, rec.Session = acc.Share.Share.ID, "share: "+acc.Share.Share.Name
+				}
+				if id := recordFileEdit(rec); id > 0 {
+					editIDs = append(editIDs, id)
+				}
+			}
 		case errors.Is(opErr, errConflict):
 			res.Status = "conflict"
 		default:
@@ -705,7 +748,11 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if okFiles > 0 {
-		auditFileOp(r, acc, c, "file.upload", params["path"], map[string]interface{}{"files": okFiles, "bytes": bytes})
+		d := map[string]interface{}{"files": okFiles, "bytes": bytes}
+		if len(editIDs) > 0 {
+			d["file_edits"] = editIDs
+		}
+		auditFileOp(r, acc, c, "file.upload", params["path"], d)
 	}
 	status := http.StatusOK
 	allConflict := len(results) > 0

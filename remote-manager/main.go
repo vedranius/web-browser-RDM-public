@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v13.13.1"
+var AppVersion = "v13.14.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -77,6 +77,7 @@ type Connection struct {
 	CredentialRef string     `json:"credential_ref,omitempty"` // export / import: name of the credential
 	ProxyRef      string     `json:"proxy_ref,omitempty"`      // export / import: name of the proxy
 	authErr       string     // why the key or credential cannot be used (set by resolveConnectionAuth)
+	keyCert       string     // SSH user certificate of a stored key (after resolving, ssh_cert.go)
 	usedKeyID     int        // stored key the connection logs in with (after resolving)
 	usedCredID    int        // vault credential it logs in with (after resolving)
 	// JumpID / ProxyID hold the effective route (folder defaults applied). The stored
@@ -174,6 +175,7 @@ type Folder struct {
 	JumpName  string       `json:"jump_name,omitempty"`
 	ProxyName string       `json:"proxy_name,omitempty"`
 	ProxyRef  string       `json:"proxy_ref,omitempty"` // export / import: name of the proxy
+	AutoSort  bool         `json:"auto_sort,omitempty"` // subfolders kept sorted by name (all levels)
 }
 
 type FileItem struct {
@@ -307,6 +309,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/folders", apiFoldersHandler)
 	mux.HandleFunc("/api/folders/", apiFolderByIDHandler)
 	mux.HandleFunc("/api/folders/reorder", apiFolderReorderHandler)
+	mux.HandleFunc("/api/folders/sort", apiFolderSortHandler)
 	mux.HandleFunc("/api/sessions", apiSessionsHandler)
 	mux.HandleFunc("/api/sessions/", apiSessionByIDHandler)
 	mux.HandleFunc("/api/config/export", apiExportHandler)
@@ -347,6 +350,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/audit", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/audit/verify", apiAdminAuditHandler)
 	mux.HandleFunc("/api/admin/transfers", apiAdminTransfersHandler)
+	mux.HandleFunc("/api/admin/file-edits", apiAdminFileEditsHandler)
+	mux.HandleFunc("/api/admin/file-edits/", apiAdminFileEditsHandler)
 	mux.HandleFunc("/api/status", apiStatusHandler)
 	mux.HandleFunc("/api/notify", apiNotifyHandler)
 	mux.HandleFunc("/api/notify/test", apiNotifyHandler)
@@ -1413,6 +1418,10 @@ func initDB() {
 		`ALTER TABLE folders ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE folders ADD COLUMN jump_conn_id INTEGER DEFAULT NULL`,
 		`ALTER TABLE folders ADD COLUMN proxy_id INTEGER DEFAULT NULL`,
+		// v13.14.0: keep this folder's subfolders sorted by name (all levels below it)
+		`ALTER TABLE folders ADD COLUMN auto_sort INTEGER NOT NULL DEFAULT 0`,
+		// v13.14.0: SSH user certificate saved with a stored key (ssh_cert.go)
+		`ALTER TABLE ssh_keys ADD COLUMN certificate TEXT NOT NULL DEFAULT ''`,
 		// v10.9.1: the PuTTY session an imported mRemoteNG connection names (PuttySession)
 		`ALTER TABLE connections ADD COLUMN putty_session TEXT NOT NULL DEFAULT ''`,
 		// v13.1: recording level per user ('' follows the server settings)
@@ -1455,6 +1464,7 @@ func initDB() {
 		}
 	}
 
+	initFileEditsSchema()
 	createAppendOnlyTriggers()
 
 	// Session keepalive: update last_active_at for existing sessions that lack it
@@ -2198,6 +2208,7 @@ func apiFoldersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		saveVisualLabel(db, "folder", f.ID, userID, f.Label)
+		autoSortFolders(userID)
 		if f.JumpID != nil || f.ProxyID != nil {
 			auditLog(r, userID, "folder.created", f.Name, map[string]interface{}{"folder_id": f.ID, "default_jump": f.JumpID, "default_proxy": f.ProxyID})
 		}
@@ -2844,47 +2855,64 @@ func expandPath(p string) string {
 }
 
 func resolveKeyMaterial(c Connection) ([]byte, error) {
+	kd, _, err := resolveKeyMaterialPath(c)
+	return kd, err
+}
+
+// resolveKeyMaterialPath returns the private key of a connection and, for key files on the
+// WRM server, the file it was read from (its certificate lies next to it).
+func resolveKeyMaterialPath(c Connection) ([]byte, string, error) {
 	switch c.AuthMethod {
 	case "KEY":
-		d := strings.TrimSpace(c.PrivateKey)
+		d, _ := splitKeyAndCert(strings.TrimSpace(c.PrivateKey))
 		if d == "" {
-			return nil, fmt.Errorf("private key not provided")
+			return nil, "", fmt.Errorf("private key not provided")
 		}
-		return []byte(d), nil
+		return []byte(d), "", nil
 	case "KEY_FILE":
 		p := expandPath(strings.TrimSpace(c.KeyPath))
 		if p == "" {
-			return nil, fmt.Errorf("key path not provided")
+			return nil, "", fmt.Errorf("key path not provided")
 		}
+		p = strings.TrimSuffix(p, "-cert.pub") // the certificate of a key: use the key next to it
 		data, err := os.ReadFile(p)
 		if err != nil {
-			return nil, fmt.Errorf("cannot read '%s': %v", p, err)
+			return nil, "", fmt.Errorf("cannot read '%s': %v", p, err)
 		}
 		t := strings.TrimSpace(string(data))
 		if strings.HasSuffix(strings.ToLower(p), ".pub") || strings.HasPrefix(t, "ssh-") || strings.HasPrefix(t, "ecdsa-") {
 			priv, found, err := findPrivateForPub(p)
 			if err != nil {
-				return nil, fmt.Errorf("found .pub but no private key: %v", err)
+				return nil, "", fmt.Errorf("found .pub but no private key: %v", err)
 			}
 			log.Printf("Using key: %s", found)
-			return priv, nil
+			return priv, found, nil
 		}
-		return data, nil
+		return data, p, nil
 	case "KEY_AUTO":
 		home, _ := os.UserHomeDir()
+		var first []byte
+		firstPath := ""
 		for _, n := range []string{"id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"} {
 			p := filepath.Join(home, ".ssh", n)
 			data, err := os.ReadFile(p)
-			if err != nil {
+			if err != nil || !strings.Contains(string(data), "PRIVATE KEY") {
 				continue
 			}
-			if strings.Contains(string(data), "PRIVATE KEY") {
-				return data, nil
+			// a key with a valid certificate next to it (opkssh login) comes first
+			if cert, err := readCertFile(certFileFor(p)); err == nil && cert != nil && !certExpired(cert, time.Now()) {
+				return data, p, nil
+			}
+			if first == nil {
+				first, firstPath = data, p
 			}
 		}
-		return nil, fmt.Errorf("no key found in ~/.ssh/")
+		if first != nil {
+			return first, firstPath, nil
+		}
+		return nil, "", fmt.Errorf("no key found in ~/.ssh/")
 	}
-	return nil, fmt.Errorf("unknown auth method: %s", c.AuthMethod)
+	return nil, "", fmt.Errorf("unknown auth method: %s", c.AuthMethod)
 }
 
 func buildAuthMethods(c Connection) ([]ssh.AuthMethod, error) {
@@ -2912,7 +2940,7 @@ func buildAuthMethods(c Connection) ([]ssh.AuthMethod, error) {
 	if usesServerKeys(c.AuthMethod) && c.UserID > 0 && !serverKeysAllowed(c.UserID) {
 		return nil, fmt.Errorf("key files on the WRM server are disabled by the administrator for this account")
 	}
-	kd, err := resolveKeyMaterial(c)
+	kd, keyPath, err := resolveKeyMaterialPath(c)
 	if err != nil {
 		return nil, err
 	}
@@ -2920,7 +2948,11 @@ func buildAuthMethods(c Connection) ([]ssh.AuthMethod, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []ssh.AuthMethod{ssh.PublicKeys(sg)}, nil
+	signers, err := certSigners(c, keyPath, sg)
+	if err != nil {
+		return nil, err
+	}
+	return []ssh.AuthMethod{ssh.PublicKeys(signers...)}, nil
 }
 
 func ensurePort(host, protocol string) string {

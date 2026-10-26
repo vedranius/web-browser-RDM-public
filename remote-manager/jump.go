@@ -149,6 +149,11 @@ func dialSSH(c Connection, onNewKey func(host, fp string)) (*ssh.Client, error) 
 		}
 		if err != nil {
 			closeAll()
+			if strings.Contains(err.Error(), "unable to authenticate") {
+				if hint := certLoginHint(hop); hint != "" {
+					err = fmt.Errorf("%w (%s)", err, hint)
+				}
+			}
 			return nil, hopError(hop, i < len(hops)-1, err)
 		}
 		opened = append(opened, cl)

@@ -79,7 +79,7 @@ func TestGitIgnoreHelper(t *testing.T) {
 	writeFile(t, e.dir+"/logs/app.log", "started ok\n")
 	writeFile(t, e.dir+"/local.txt", "x")
 	e.check(t)
-	head := addHead(e.g, map[string]string{"linux/.gitignore": "*.log\n", "linux/.env": "API_KEY=1\n", "linux/.env.example": "API_KEY=\n"})
+	head := addHead(e.g, map[string]string{"linux/.gitignore": "*.log\n", "linux/.env": "API_KEY=1\n", "linux/.env.example": "API_KEY=\n", "linux/log/worker.log": "committed\n"})
 
 	var info gitIgnoreInfo
 	if code := e.u.jsonDo("GET", "/api/git/gitignore/demo-api", nil, &info); code != 200 {
@@ -89,20 +89,22 @@ func TestGitIgnoreHelper(t *testing.T) {
 	for _, c := range info.Extra {
 		extra[c.Path] = c
 	}
-	if c := extra["logs/app.log"]; c.Pattern != "logs/" || c.Size != 11 || len(c.Servers) != 1 || c.Servers[0] != "app-01" {
-		t.Fatalf("extra log: %+v (all %+v)", c, info.Extra)
+	// log files are not extra files any more: the Logs patterns cover them
+	if c, ok := extra["logs/app.log"]; ok {
+		t.Fatalf("extra log: %+v", c)
 	}
-	if extra["local.txt"].Pattern != "/local.txt" || len(extra) != 2 {
+	if extra["local.txt"].Pattern != "/local.txt" || len(extra) != 1 {
 		t.Fatalf("extra: %+v", info.Extra)
 	}
 	if info.Current != "*.log\n" || !info.HasCurrent || info.File != "linux/.gitignore" || info.Repo == "" || info.Branch != "main" {
 		t.Fatalf("current: %+v", info)
 	}
-	py := false
+	py, logs := false, false
 	for _, s := range info.Stacks {
 		py = py || (s.Name == "Python" && s.Detected)
+		logs = logs || (s.Name == "Logs" && s.Detected && s.Reason == "log/worker.log" && strings.Join(s.Patterns, " ") == "log/ logs/ *.log *.log.*")
 	}
-	if !py {
+	if !py || !logs {
 		t.Fatalf("stacks: %+v", info.Stacks)
 	}
 	warn := map[string]gitIgnoreWarning{}
@@ -110,7 +112,7 @@ func TestGitIgnoreHelper(t *testing.T) {
 		warn[w.Path] = w
 	}
 	if warn[".env"].Reason != "secret" || warn[".env"].Template != ".env.example" || warn["config.ini"].Reason != "protected" ||
-		warn["config.ini"].Template != "config.example.ini" || len(warn) != 2 {
+		warn["config.ini"].Template != "config.example.ini" || warn["log/worker.log"].Reason != "log" || len(warn) != 3 {
 		t.Fatalf("warnings: %+v", info.Warnings)
 	}
 	if info.CanMR || !strings.Contains(info.MRNote, "write token") {

@@ -1,15 +1,41 @@
-## Web Remote Manager PRO v13.13.1 - Adding the WRM PRO marketplace in the Claude app
+## Web Remote Manager PRO v13.14.0 - Git checks that stick to Git, sorted folders and a record of every file edit
+
+### Added
+
+- **Sort folders A–Z** ([#134](https://github.com/vedranius/web-browser-RDM-public/issues/134)): right-click a folder to sort its subfolders by name or keep them sorted, also for all folders at once. Numbers sort naturally (`srv2` before `srv10`).
+- **File edit history** ([#129](https://github.com/vedranius/web-browser-RDM-public/issues/129)): *Admin → File edits* lists every file saved in the editor or changed by the AI, with the diff, filterable by user, server, session and AI, with CSV export. Diffs are stored encrypted with secrets masked.
+- **SSH certificates and opkssh** ([#119](https://github.com/vedranius/web-browser-RDM-public/issues/119)): keys log in with their OpenSSH user certificate, from a `-cert.pub` file next to the key (renewed by `opkssh login`), saved with a key in the key store, or pasted after the private key.
+- **Folder filters in the Git workspace**: filter the overview, functionality, environments, *What is where* and the files of an installation by folder on the servers, as a tree with counts.
+- **Logs** in the .gitignore helper's standard patterns.
 
 ### Changed
+
+- **Git checks compare only what Git tracks.** Logs and other files outside the check are listed as *outside the check* and never compared; log files are never deployed unless the include list names them.
+- Servers in the Git overview are named by hostname or connection name, never by an IP address.
+
+### Fixed
+
+- The Git overview mixed hostnames and IP addresses.
+- The Git checker compared log files with Git.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. Additive migration (table `file_edits`, columns `folders.auto_sort` and `ssh_keys.certificate`); a previous version still starts on the database.
+
+[Download v13.14.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.0) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.13.1 - Adding the WRM PRO marketplace in the Claude app
+
+#### Changed
 
 - In the Claude app, add the marketplace with the repository name in lowercase: *Customize → Plugins → Add marketplace* → `vedranius/web-browser-rdm-public` → WRM PRO. The app names the marketplace after the repository, and GitHub accepts the name in any case. WRM's texts, README and the plugin's README now show it this way.
 - Plugin 1.2.1 (icon path only).
 
-### Fixed
+#### Fixed
 
 - *Failed to add marketplace* in the Claude app: besides the lowercase name, README (Troubleshooting) says what else to check and where the app's log keeps the real reason. *Upload plugin* with `claude-plugin-wrm-pro.zip` from the release still installs the same plugin without a marketplace.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. No database change; a previous version still starts on the database.
 

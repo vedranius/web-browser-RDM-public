@@ -2851,6 +2851,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="audit" onclick="showAdminTab('audit')" data-i18n="adm_audit">Audit log</button>
       <button class="tab-btn" data-tab="sessions" onclick="showAdminTab('sessions')" data-i18n="adm_sessions">Sessions &amp; recordings</button>
       <button class="tab-btn" data-tab="transfers" onclick="showAdminTab('transfers')" data-i18n="adm_transfers">File transfers</button>
+      <button class="tab-btn" data-tab="edits" onclick="showAdminTab('edits')" data-i18n="adm_edits">File edits</button>
     </div>
     <div class="tab-intro" id="admin-intro"></div>
     <div class="adm-body" id="admin-body"></div>
@@ -5208,6 +5209,22 @@ Object.assign(LANGS.hr, {stin_ai:'Stanje AI asistenta, postavljanje i pristup za
 
 Object.assign(LANGS.en, {fd_up:'Move folder up',fd_down:'Move folder down'});
 Object.assign(LANGS.hr, {fd_up:'Pomakni folder gore',fd_down:'Pomakni folder dolje'});
+Object.assign(LANGS.en, {adm_edits: 'File edits', adin_edits: 'The diff of every file saved from the file editor or written by the AI assistant.',
+  edits_help: 'Every file saved from the file editor or written by the AI assistant, with the change as a diff (the same one the editor shows before saving). Secret-looking values are masked and the diffs are encrypted at rest. They are kept as long as the audit log.',
+  edits_all_sources: 'All sources', edits_src_editor: 'File editor', edits_src_ai: 'AI assistant', edits_server_ph: 'Server', edits_session_ph: 'Session',
+  edits_change: 'Change', edits_view: 'Diff', edits_created: 'new file', edits_note_too_large: 'too large for a diff', edits_note_binary: 'binary file', edits_note_no_change: 'no change',
+  p_file_edit_history: 'Keep the diff of edited files', p_file_edit_history_d: 'Files saved from the file editor or written by the AI assistant are kept with their diff in Admin → File edits.',
+  p_file_edit_max_kb: 'Largest file with a diff (KB)', p_file_edit_max_kb_d: 'Larger files are recorded with sizes and SHA-256 only.'});
+Object.assign(LANGS.hr, {adm_edits: 'Izmjene datoteka', adin_edits: 'Razlike (diff) svake datoteke spremljene iz uređivača ili koju je zapisao AI asistent.',
+  edits_help: 'Svaka datoteka spremljena iz uređivača datoteka ili koju je zapisao AI asistent, s izmjenom kao diffom (isti onaj koji uređivač prikazuje prije spremanja). Vrijednosti koje izgledaju kao tajne su maskirane, a diffovi su šifrirani u bazi. Čuvaju se koliko i revizijski zapis.',
+  edits_all_sources: 'Svi izvori', edits_src_editor: 'Uređivač datoteka', edits_src_ai: 'AI asistent', edits_server_ph: 'Server', edits_session_ph: 'Sesija',
+  edits_change: 'Izmjena', edits_view: 'Diff', edits_created: 'nova datoteka', edits_note_too_large: 'prevelika za diff', edits_note_binary: 'binarna datoteka', edits_note_no_change: 'bez promjene',
+  p_file_edit_history: 'Čuvaj diff uređenih datoteka', p_file_edit_history_d: 'Datoteke spremljene iz uređivača ili koje je zapisao AI asistent čuvaju se s diffom u Admin → Izmjene datoteka.',
+  p_file_edit_max_kb: 'Najveća datoteka s diffom (KB)', p_file_edit_max_kb_d: 'Za veće datoteke bilježe se samo veličine i SHA-256.'});
+Object.assign(LANGS.en, {vk_cert: 'Certificate', vk_cert_h: 'An OpenSSH user certificate for this key (an SSH certificate authority or opkssh). WRM offers it first when logging in.', vk_cert_q: 'Paste the certificate (the line of the …-cert.pub file); leave empty to remove it', vk_cert_expired: 'expired', vk_cert_until: 'valid until', vk_cert_from: 'valid from', vk_cert_principals: 'Principals', vk_cert_saved: 'Certificate saved', vk_cert_removed: 'Certificate removed'});
+Object.assign(LANGS.hr, {vk_cert: 'Certifikat', vk_cert_h: 'OpenSSH korisnički certifikat za ovaj ključ (SSH certifikacijsko tijelo ili opkssh). WRM ga nudi prvog pri prijavi.', vk_cert_q: 'Zalijepite certifikat (redak datoteke …-cert.pub); prazno ga uklanja', vk_cert_expired: 'istekao', vk_cert_until: 'vrijedi do', vk_cert_from: 'vrijedi od', vk_cert_principals: 'Principali', vk_cert_saved: 'Certifikat spremljen', vk_cert_removed: 'Certifikat uklonjen'});
+Object.assign(LANGS.en, {fd_sort:'Sort subfolders A–Z (all levels)',fd_keep_sorted:'Keep subfolders sorted A–Z',fd_sort_all:'Sort all folders A–Z',fd_keep_all:'Keep all folders sorted A–Z',fd_sorted:'Folders sorted: {n} moved',fd_keep_on:'New, renamed and moved folders now take their place by name.',fd_keep_off:'Automatic sorting is off: folders keep the order you give them.'});
+Object.assign(LANGS.hr, {fd_sort:'Sortiraj podfoldere A–Ž (sve razine)',fd_keep_sorted:'Drži podfoldere sortirane A–Ž',fd_sort_all:'Sortiraj sve foldere A–Ž',fd_keep_all:'Drži sve foldere sortirane A–Ž',fd_sorted:'Folderi sortirani: premješteno {n}',fd_keep_on:'Novi, preimenovani i premješteni folderi sada dobivaju mjesto po imenu.',fd_keep_off:'Automatsko sortiranje je isključeno: folderi zadržavaju redoslijed koji im date.'});
 
 Object.assign(LANGS.en, {
  po_git_medium_off:'Nobody', po_git_medium_admins:'Administrators', po_git_medium_all:'All accounts', po_bitwarden_off:'Nobody', po_bitwarden_admins:'Administrators', po_bitwarden_all:'All accounts', p_git_medium:'Original Medium deploy tool', p_git_medium_d:'Who may run the original deploy tool, including local builds and editable deployment commands. Grant only to trusted operators. Only administrators can install tool code.', p_bitwarden:'Bitwarden vault connections', p_bitwarden_d:'Who may sign in to their own Bitwarden vault and use its native SSH key items.', p_bitwarden_idle_minutes:'Bitwarden unlock inactivity (minutes)', p_bitwarden_idle_minutes_d:'Locks the WRM Bitwarden unlock session after inactivity. Master passwords and unlock sessions are never stored in the database.', bw_refresh:'Refresh keys', bw_key:'Bitwarden SSH key', bw_manage:'Sign in / unlock Bitwarden', bw_choose:'Choose an SSH key', bw_cli_missing:'Install the official Bitwarden CLI (bw) on the WRM server. Your account uses a separate encrypted CLI cache.', bw_docs:'Bitwarden CLI setup', bw_help:'Sign in with your Bitwarden account and unlock its vault. Connections fetch the selected native SSH key directly; WRM stores its item reference. Master passwords are not saved, and unlock sessions expire after inactivity or a WRM restart.', bw_unlocked:'Vault unlocked', bw_locked:'Vault locked', bw_signed_out:'Signed out', bw_server:'Bitwarden server (cloud/EU/self-hosted)', bw_email:'Email', bw_master:'Master password', bw_api_mfa:'Personal API credentials / two-step login', bw_api_hint:'Personal API credentials plus your master password can be used when email login requires a bot challenge or unsupported MFA.', bw_mfa_method:'Two-step login method', bw_mfa_code:'Two-step login code', bw_unlock:'Unlock', bw_login:'Sign in and unlock', bw_logout:'Sign out', bw_sync:'Sync vault', bw_lock:'Lock vault', bw_no_keys:'No native SSH key items found in this vault.',
@@ -6406,6 +6423,7 @@ function changeLang(l) {
 
 let currentUser = null;
 let folders = [], conns = [], sessions = [], sharedGroups = [];
+let foldersKeepAll = false; // every folder kept sorted by name (#134)
 let selectedConns = new Set();
 let currentSessionId = null;
 const CLIP_KEY = 'wrm_clipboard_v9';
@@ -6961,6 +6979,7 @@ async function loadData() {
     const [fRes, cRes] = await Promise.all([fetch('/api/folders'), fetch('/api/connections')]);
     if (fRes.ok) folders = await fRes.json();
     if (cRes.ok) conns = await cRes.json();
+    fetch('/api/folders/sort').then(r => r.ok ? r.json() : null).then(j => { if (j) foldersKeepAll = !!j.keep_all; }).catch(() => {});
     // Load shared connections for sidebar
     try {
       const sRes = await fetch('/api/shared');
@@ -7479,6 +7498,10 @@ function showFolderCtx(x, y) {
     <div class="ctx-item" onclick="closeAllCtx(); openMoveModal('folder', ctxFolderId)">${esc(t('move_to_folder'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); moveFolderStep(ctxFolderId,-1)">↑ ${esc(t('fd_up'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); moveFolderStep(ctxFolderId,1)">↓ ${esc(t('fd_down'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); sortFolders(ctxFolderId)">🔤 ${esc(t('fd_sort'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); sortFolders(ctxFolderId, !(folders.find(x => x.id === ctxFolderId) || {}).auto_sort)">${(folders.find(x => x.id === ctxFolderId) || {}).auto_sort ? '☑' : '☐'} ${esc(t('fd_keep_sorted'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); sortFolders(0)">🔤 ${esc(t('fd_sort_all'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); sortFolders(0, !foldersKeepAll)">${foldersKeepAll ? '☑' : '☐'} ${esc(t('fd_keep_all'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openBookmarkModal(null, {scope: 'folder', scope_id: ctxFolderId, start_dir: true})">★ ${esc(t('bm_start_menu'))}</div>
@@ -7869,6 +7892,20 @@ async function deleteConn(id) {
   loadData();
 }
 
+
+// sortFolders sorts the subfolders of a folder (0 = every folder) by name; keep switches
+// automatic sorting for it (issue #134)
+async function sortFolders(id, keep) {
+  try {
+    const body = {folder_id: id || 0, recursive: true};
+    if (keep !== undefined) body.keep = !!keep;
+    const r = await fetch('/api/folders/sort', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    if (!r.ok) throw new Error(await apiError(r));
+    const j = await r.json();
+    folders = j.folders || folders; foldersKeepAll = !!j.keep_all; renderTree(); renderTabs();
+    showToast(keep === undefined ? t('fd_sorted').replace('{n}', j.moved || 0) : t(keep ? 'fd_keep_on' : 'fd_keep_off'), 'success');
+  } catch (e) { showToast(String(e.message || e), 'error'); }
+}
 
 async function reorderFolder(change) {
   try {
@@ -8299,7 +8336,7 @@ let adminTab = 'overview';
 let adminUsersCache = [];
 
 // Security auditors see the read-only tabs only.
-const AUDITOR_TABS = ['security', 'audit', 'sessions', 'transfers'];
+const AUDITOR_TABS = ['security', 'audit', 'sessions', 'transfers', 'edits'];
 function adminTabAllowed(tab) { return !currentUser || currentUser.is_admin || AUDITOR_TABS.includes(tab); }
 
 function openAdminPanel() {
@@ -8320,6 +8357,7 @@ function showAdminTab(tab) {
     voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
     transfers: adminTransfers,
+    edits: adminFileEdits,
     ai: () => loadAI().then(() => wrmAI.adminTab(), () => { document.getElementById('admin-body').innerHTML = `<div class="fm-error">${esc(t('ai_load_failed'))}</div>`; }),
     mcp: () => loadMCP().then(() => wrmMCP.adminTab(), () => { document.getElementById('admin-body').innerHTML = `<div class="fm-error">${esc(t('mcp_load_failed'))}</div>`; })}[tab] || adminOverview)();
 }
@@ -9313,7 +9351,7 @@ const POLICY_GROUPS = {
     ['pg_git', ['git_enabled', 'git_checks', 'git_check_interval_minutes', 'git_backup_words', 'git_check_parallel', 'git_check_per_server', 'git_update', 'git_upgrade', 'git_rollback', 'git_restart', 'git_install', 'git_medium', 'medium_docker_install', 'medium_host_ca', 'medium_ca_file', 'medium_log_output', 'medium_native', 'medium_default_engine', 'medium_build_user', 'medium_command_timeout', 'medium_transfer_timeout', 'git_transfer', 'git_gitignore_mr', 'git_schedule_grace_minutes']],
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_updates', ['update_check', 'update_repo', 'update_signing_keys', 'update_proxy', 'self_update']],
-    ['pg_audit', ['audit_enabled', 'audit_retention_days']],
+    ['pg_audit', ['audit_enabled', 'audit_retention_days', 'file_edit_history', 'file_edit_max_kb']],
     ['pg_alerts', ['alert_failed_signins', 'alert_failed_signins_minutes', 'alert_break_glass', 'alert_new_admin', 'alert_secret_reveal', 'alert_ai_full_access', 'alert_audit_off']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],
@@ -10159,6 +10197,63 @@ function adminTransfersCSV() {
   const qs = new URLSearchParams({q: v('xf-q'), direction: v('xf-dir'), user: v('xf-user'), from: v('xf-from'), to: v('xf-to'), format: 'csv'});
   const a = document.createElement('a');
   a.href = '/api/admin/transfers?' + qs; a.download = ''; document.body.appendChild(a); a.click(); a.remove();
+}
+
+// ── admin: file edit history (#129) ──
+let editsLastId = 0;
+function editsQS(extra) {
+  const v = id => (document.getElementById(id) || {}).value || '';
+  return new URLSearchParams({q: v('fe-q'), source: v('fe-src'), user: v('fe-user'), server: v('fe-server'), session: v('fe-session'), from: v('fe-from'), to: v('fe-to'), ...extra});
+}
+async function adminFileEdits(more) {
+  const body = document.getElementById('admin-body');
+  if (more !== true) {
+    body.innerHTML = `<div class="hint-box">${esc(t('edits_help'))}</div><div class="adm-toolbar">
+      <input type="text" id="fe-q" class="grow" placeholder="🔍 ${esc(t('search'))}" onkeydown="if(event.key==='Enter') adminFileEdits()">
+      <select id="fe-src" onchange="adminFileEdits()"><option value="">${esc(t('edits_all_sources'))}</option><option value="editor">${esc(t('edits_src_editor'))}</option><option value="ai">${esc(t('edits_src_ai'))}</option></select>
+      <input type="text" id="fe-user" placeholder="${esc(t('user'))}" style="width:120px;" onkeydown="if(event.key==='Enter') adminFileEdits()">
+      <input type="text" id="fe-server" placeholder="${esc(t('edits_server_ph'))}" style="width:130px;" onkeydown="if(event.key==='Enter') adminFileEdits()">
+      <input type="text" id="fe-session" placeholder="${esc(t('edits_session_ph'))}" style="width:110px;" onkeydown="if(event.key==='Enter') adminFileEdits()">
+      <input type="date" id="fe-from" title="${esc(t('date_from'))}" onchange="adminFileEdits()">
+      <input type="date" id="fe-to" title="${esc(t('date_to'))}" onchange="adminFileEdits()">
+      <button class="btn-sec btn-sm" onclick="adminFileEdits()">${esc(t('filter'))}</button>
+      <button class="btn-sec btn-sm" onclick="adminFileEditsCSV()">⬇ CSV</button>
+    </div><div id="fe-diff"></div><div id="fe-table"></div><div style="text-align:center;margin-top:10px;"><button class="btn-sec btn-sm" id="fe-more" onclick="adminFileEdits(true)" style="display:none;">${esc(t('load_more'))}</button></div>`;
+    editsLastId = 0;
+  }
+  const qs = editsQS({limit: 200});
+  if (more === true && editsLastId) qs.set('before_id', editsLastId);
+  const res = await fetch('/api/admin/file-edits?' + qs);
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  const list = await res.json();
+  const rows = list.map(x => `<tr><td style="white-space:nowrap;">${esc(fmtTime(x.ts))}</td><td>${esc(x.username || '—')}<div class="sub mono">${esc(x.client_ip)}</div></td>
+    <td>${esc(t('edits_src_' + x.source) || x.source)}${x.session ? `<div class="sub">${esc(x.session)}</div>` : ''}</td>
+    <td><span class="mono">${esc(x.conn_name || x.host)}</span><div class="sub mono" style="word-break:break-all;">${esc(x.path)}</div></td>
+    <td style="white-space:nowrap;">${x.created ? `<span class="pill ok">${esc(t('edits_created'))}</span> ` : ''}<span style="color:var(--green)">+${x.added}</span> <span style="color:var(--red)">−${x.removed}</span>${x.note ? `<div class="sub">${esc(t('edits_note_' + x.note))}</div>` : ''}
+      <div class="sub">${esc(fmtBytes(x.old_size))} → ${esc(fmtBytes(x.new_size))}</div></td>
+    <td>${x.note === 'too_large' || x.note === 'binary' ? '' : `<button class="btn-sec btn-sm" onclick="adminFileEditDiff(${x.id})">${esc(t('edits_view'))}</button>`}</td></tr>`).join('');
+  const tbl = document.getElementById('fe-table');
+  if (!tbl) return; // another tab was opened meanwhile
+  if (more !== true) tbl.innerHTML = list.length ? `<table class="admin-table"><thead><tr><th>${esc(t('time'))}</th><th>${esc(t('user'))}</th><th>${esc(t('source'))}</th><th>${esc(t('edits_server_ph'))}</th><th>${esc(t('edits_change'))}</th><th></th></tr></thead><tbody id="fe-body">${rows}</tbody></table>` : `<div class="chat-empty">${esc(t('none'))}</div>`;
+  else document.getElementById('fe-body').insertAdjacentHTML('beforeend', rows);
+  if (list.length) editsLastId = list[list.length - 1].id;
+  document.getElementById('fe-more').style.display = list.length === 200 ? '' : 'none';
+}
+async function adminFileEditDiff(id) {
+  const box = document.getElementById('fe-diff');
+  const res = await fetch('/api/admin/file-edits/' + id);
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  const x = await res.json();
+  const cls = l => l.startsWith('+++') || l.startsWith('---') ? 'color:var(--text3)' : l.startsWith('@@') ? 'color:var(--blue)' : l.startsWith('+') ? 'color:var(--green);background:rgba(152,195,121,.10)' : l.startsWith('-') ? 'color:var(--red);background:rgba(224,108,117,.10)' : '';
+  box.innerHTML = `<div class="hint-box" style="margin-bottom:10px;"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><b class="mono" style="word-break:break-all;">${esc(x.conn_name || x.host)}:${esc(x.path)}</b>
+      <span class="sub">${esc(fmtTime(x.ts))} · ${esc(x.username || '—')} · ${esc(t('edits_src_' + x.source) || x.source)}${x.session ? ' · ' + esc(x.session) : ''}</span>
+      <span style="flex:1"></span><button class="btn-sec btn-sm" onclick="document.getElementById('fe-diff').innerHTML=''">✕</button></div>
+    <pre class="mono" style="max-height:50vh;overflow:auto;margin:8px 0 0;font-size:12px;line-height:1.45;user-select:text;">${(x.diff || '').split('\n').map(l => `<div style="${cls(l)};white-space:pre">${esc(l) || ' '}</div>`).join('')}</pre></div>`;
+  box.scrollIntoView({block: 'nearest'});
+}
+function adminFileEditsCSV() {
+  const a = document.createElement('a');
+  a.href = '/api/admin/file-edits?' + editsQS({format: 'csv'}); a.download = ''; document.body.appendChild(a); a.click(); a.remove();
 }
 
 // ══ JUMP HOSTS, TUNNELS & WEB INTERFACES (v10.2) ══════════════════
@@ -11389,7 +11484,8 @@ function renderVault() {
         <span class="pill">${esc(keyTypeLabel(k))}</span>
         ${k.has_private ? `<span class="pill ok">${esc(t('vk_pair'))}</span>` : `<span class="pill">${esc(t('vk_public_only'))}</span>`}
         ${used.length ? `<span class="pill" title="${esc(used.join(', '))}">🔐 ${esc(t('vk_login_for'))}: ${used.length}</span>` : ''}
-        ${dep.length ? `<span class="pill" title="${esc(dep.map(connName).join(', '))}">🚀 ${esc(t('vk_on_servers'))}: ${dep.length}</span>` : ''}</div>
+        ${dep.length ? `<span class="pill" title="${esc(dep.map(connName).join(', '))}">🚀 ${esc(t('vk_on_servers'))}: ${dep.length}</span>` : ''}
+        ${k.cert ? `<span class="pill ${k.cert.expired ? 'bad' : 'ok'}" title="${esc(certTitle(k.cert))}">📜 ${esc(k.cert.opkssh ? 'opkssh' : t('vk_cert'))} · ${esc(k.cert.expired ? t('vk_cert_expired') : t('vk_cert_until') + ' ' + (k.cert.valid_before === 'forever' ? '∞' : fmtTime(k.cert.valid_before)))}</span>` : ''}</div>
       <div class="vk-fp">${esc(k.fingerprint)}${k.comment ? ' · ' + esc(k.comment) : ''}</div>
       <div class="vk-pub" title="${esc(t('vk_copy_pub'))}" onclick="copyText(${jsq(k.public_key)})">${esc(k.public_key)}</div>
       <div class="sc-meta"><span>${esc(t('created'))}: ${esc(fmtTime(k.created_at))}</span>${k.last_used_at ? `<span>${esc(t('vk_last_used'))}: ${esc(fmtTime(k.last_used_at))}</span>` : ''}
@@ -11400,6 +11496,7 @@ function renderVault() {
         <button class="btn-sec btn-sm" onclick="copyText(${jsq(k.public_key)})">📋 ${esc(t('vk_copy_pub'))}</button>
         <button class="btn-sec btn-sm" onclick="location.href='/api/keys/${k.id}/public'">⬇ .pub</button>
         ${k.has_private && pol.secret_export ? `<button class="btn-sec btn-sm" onclick="exportKey(${k.id})">🔓 ${esc(t('vk_export'))}</button>` : ''}
+        <button class="btn-sec btn-sm" onclick="setKeyCert(${k.id})" title="${esc(t('vk_cert_h'))}">📜 ${esc(t('vk_cert'))}</button>
         <button class="btn-sec btn-sm" onclick="renameKey(${k.id})" title="${esc(t('rename_plain'))}">✏</button>
         <button class="btn-danger btn-sm" onclick="deleteKey(${k.id})" title="${esc(t('delete'))}">🗑</button>
       </div></div>`;
@@ -11494,6 +11591,19 @@ async function saveNewKey() {
     await loadVault();
     renderVault();
   } finally { ok.disabled = false; ok.textContent = old; }
+}
+
+// SSH user certificate of a stored key (#119: an SSH CA or opkssh)
+function certTitle(c) { return [c.type, c.key_id && 'ID: ' + c.key_id, (c.principals || []).length && t('vk_cert_principals') + ': ' + c.principals.join(', '), c.valid_after && t('vk_cert_from') + ': ' + c.valid_after, c.valid_before && t('vk_cert_until') + ': ' + c.valid_before, 'CA: ' + c.ca].filter(Boolean).join('\n'); }
+async function setKeyCert(id) {
+  const k = vaultKeys.find(x => x.id === id);
+  if (!k) return;
+  const v = await uiPrompt(t('vk_cert_q'), k.certificate || '', {placeholder: 'ecdsa-sha2-nistp256-cert-v01@openssh.com AAAA…'});
+  if (v === null || v === undefined || v.trim() === (k.certificate || '')) return;
+  const r = await fetch('/api/keys/' + id, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({certificate: v.trim()})});
+  if (!r.ok) { showToast(await apiError(r), 'error'); return; }
+  showToast(t(v.trim() ? 'vk_cert_saved' : 'vk_cert_removed'), 'success');
+  await loadVault(); renderVault();
 }
 
 async function renameKey(id) {

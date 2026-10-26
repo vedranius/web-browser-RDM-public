@@ -672,7 +672,7 @@ func compareInstall(t gitTarget, server map[string]string, ignore []string) ([]g
 		out = append(out, fs)
 	}
 	for rel, h := range server {
-		if _, known := t.Files[rel]; known || toolFiles[rel] || strings.HasSuffix(rel, ".pyc") || ignoredPath(path.Dir(rel), ignore, words) {
+		if _, known := t.Files[rel]; known || toolFiles[rel] || strings.HasSuffix(rel, ".pyc") || isLogPath(rel) || ignoredPath(path.Dir(rel), ignore, words) {
 			continue
 		}
 		if len(t.Include) > 0 && !globHitDir(rel, t.Include) {
