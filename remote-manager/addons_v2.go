@@ -521,7 +521,7 @@ func initAddonV2Schema() {
 	initAddonHTTPSchema()
 }
 
-// restoreAddonInstances undoes the v13.9.0–v13.14.0 start-up bug that set addon_instances
+// restoreAddonInstances undoes the v13.9.0-v13.14.0 start-up bug that set addon_instances
 // aside as addon_instances_old_<time> on every start (addon_store and addon_windows kept
 // pointing at the old instance ids). When addon_instances is empty, the rows of the newest
 // non-empty copy are put back with their ids; the copies themselves are kept.
@@ -747,6 +747,10 @@ func addonInstancesHandler(w http.ResponseWriter, r *http.Request, userID int, a
 		default:
 			jsonError(w, "Method not allowed", 405)
 		}
+		return
+	}
+	if !rec.Enabled && oneOf(rest[1], "window", "secrets", "http") {
+		addonFail(w, addonErrf("E_DISABLED", "The addon is disabled"), 409)
 		return
 	}
 	switch rest[1] {

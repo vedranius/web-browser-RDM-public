@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/sha256"
 	"crypto/tls"
@@ -13,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -696,26 +699,91 @@ func serve(stop <-chan struct{}) int {
 	return 0
 }
 
-func serveIndex(w http.ResponseWriter) {
-	data, err := staticFiles.ReadFile("static/index.html")
+// serveIndex serves the single-page app with a validator and (when the browser accepts
+// it) gzip. The embedded file never changes at runtime, so the ETag can be cached.
+func serveIndex(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache")
+	serveEmbedded(w, r, "static/index.html")
+}
+
+var (
+	staticETags sync.Map // name -> ETag
+	staticGzip  sync.Map // name -> gzipped bytes
+)
+
+func staticETag(name string, data []byte) string {
+	if v, ok := staticETags.Load(name); ok {
+		return v.(string)
+	}
+	sum := sha256.Sum256(data)
+	et := `"` + hex.EncodeToString(sum[:12]) + `"`
+	staticETags.Store(name, et)
+	return et
+}
+
+func gzipStatic(name string, data []byte) []byte {
+	if v, ok := staticGzip.Load(name); ok {
+		return v.([]byte)
+	}
+	var b bytes.Buffer
+	zw := gzip.NewWriter(&b)
+	zw.Write(data)
+	zw.Close()
+	out := b.Bytes()
+	staticGzip.Store(name, out)
+	return out
+}
+
+func compressibleType(ct string) bool {
+	return strings.HasPrefix(ct, "text/") || strings.Contains(ct, "javascript") ||
+		strings.Contains(ct, "json") || strings.Contains(ct, "svg")
+}
+
+// serveEmbedded writes one embedded file with an ETag, a 304 path, gzip and an explicit
+// Content-Length. embed.FS files have no modification time, so without this every reload
+// transferred the whole 1.2 MB page again.
+func serveEmbedded(w http.ResponseWriter, r *http.Request, name string) {
+	data, err := staticFiles.ReadFile(name)
 	if err != nil {
-		http.Error(w, "Not found", 404)
+		http.NotFound(w, r)
 		return
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Write(data)
+	ct := mime.TypeByExtension(path.Ext(name))
+	if strings.HasSuffix(name, ".html") || ct == "" {
+		ct = "text/html; charset=utf-8"
+	}
+	h := w.Header()
+	h.Set("Content-Type", ct)
+	et := staticETag(name, data)
+	h.Set("ETag", et)
+	h.Set("Vary", "Accept-Encoding")
+	if inm := r.Header.Get("If-None-Match"); inm != "" && (inm == et || inm == "*") {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+	body := data
+	if compressibleType(ct) && strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		body = gzipStatic(name, data)
+		h.Set("Content-Encoding", "gzip")
+	}
+	h.Set("Content-Length", strconv.Itoa(len(body)))
+	if r.Method == http.MethodHead {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	// #nosec G705 -- the body is an embedded file from staticFiles, never request data
+	w.Write(body)
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" || r.URL.Path == "" {
-		serveIndex(w)
+		serveIndex(w, r)
 		return
 	}
 	http.NotFound(w, r)
 }
 
-func sharePageHandler(w http.ResponseWriter, r *http.Request) { serveIndex(w) }
+func sharePageHandler(w http.ResponseWriter, r *http.Request) { serveIndex(w, r) }
 
 // versionHandler also names an available update (for the sign-in page's version badge).
 func versionHandler(w http.ResponseWriter, r *http.Request) {
@@ -816,22 +884,29 @@ func resolveDBPath() string {
 func initDB() {
 	dbPath := resolveDBPath()
 	var err error
-	// busy_timeout must be set on every pooled connection (a PRAGMA run once only reaches
-	// one of them), otherwise concurrent writers can fail with "database is locked".
+	// PRAGMAs are per connection. A PRAGMA run once only reaches one pooled connection, so
+	// both busy_timeout and foreign_keys are part of the DSN; otherwise ON DELETE CASCADE
+	// and FK checks work only on whichever connection happened to run the statement.
 	dsn := dbPath
-	if !strings.ContainsAny(dbPath, "?#") {
-		dsn += "?_pragma=busy_timeout(10000)"
+	if !strings.ContainsAny(dbPath, "#") {
+		sep := "?"
+		if strings.Contains(dbPath, "?") {
+			sep = "&"
+		}
+		dsn = dbPath + sep + "_pragma=busy_timeout(10000)&_pragma=foreign_keys(1)"
 	}
 	db, err = sql.Open("sqlite", dsn)
 	if err != nil {
 		log.Fatalf("Open DB: %v", err)
 	}
+	// A small, bounded pool: SQLite allows one writer and any number of readers, and an
+	// unbounded pool under a burst only produces "database is locked" storms.
+	db.SetMaxOpenConns(8)
+	db.SetMaxIdleConns(8)
 	if err = db.Ping(); err != nil {
 		log.Fatalf("Ping DB: %v", err)
 	}
 	db.Exec(`PRAGMA journal_mode=WAL`)
-	db.Exec(`PRAGMA foreign_keys=ON`)
-	db.Exec(`PRAGMA busy_timeout=5000`)
 	// The database holds password hashes and encrypted secrets: keep it private.
 	for _, f := range []string{dbPath, dbPath + "-wal", dbPath + "-shm"} {
 		os.Chmod(f, 0o600)
@@ -1902,6 +1977,21 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 // /api/connections/{id}/duplicate  POST
 // /api/connections/{id}/secret     POST (owner, re-authentication; connsecret.go)
 // /api/connections/{id}/name-from-hostname  POST
+// deleteConnectionRows removes the per-connection rows that are not covered by a
+// foreign key. The connection row itself is deleted by the caller after the owner check.
+func deleteConnectionRows(connID int) {
+	for _, q := range []string{
+		`DELETE FROM connection_tunnels WHERE conn_id=?`,
+		`DELETE FROM ssh_key_deployments WHERE conn_id=?`,
+		`DELETE FROM monitor_samples WHERE conn_id=?`,
+		`DELETE FROM monitor_profiles WHERE conn_id=?`,
+		`DELETE FROM log_settings WHERE conn_id=?`,
+		`DELETE FROM git_server_health WHERE conn_id=?`,
+	} {
+		db.Exec(q, connID)
+	}
+}
+
 func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireAuth(w, r)
 	if !ok {
@@ -2063,8 +2153,7 @@ func apiConnectionByIDHandler(w http.ResponseWriter, r *http.Request) {
 	case action == "" && r.Method == http.MethodDelete:
 		killTerminals(func(t *termSession) bool { return t.ConnID == id }, "The connection was deleted")
 		tunnelMgr.stopConn(id, "the connection was deleted")
-		db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
-		db.Exec("DELETE FROM ssh_key_deployments WHERE conn_id=?", id)
+		deleteConnectionRows(id)
 		deleteSnippetsForScope("connection", id)
 		deleteBookmarksForScope("connection", id)
 		db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
@@ -2145,8 +2234,7 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 		killTerminals(func(t *termSession) bool { return ids[t.ConnID] }, "The connection was deleted")
 		for id := range ids {
 			tunnelMgr.stopConn(id, "the connection was deleted")
-			db.Exec("DELETE FROM connection_tunnels WHERE conn_id=?", id)
-			db.Exec("DELETE FROM ssh_key_deployments WHERE conn_id=?", id)
+			deleteConnectionRows(id)
 			deleteSnippetsForScope("connection", id)
 			deleteBookmarksForScope("connection", id)
 			db.Exec("UPDATE connections SET jump_conn_id=NULL WHERE jump_conn_id=? AND user_id=?", id, userID)
@@ -2508,7 +2596,15 @@ func apiExportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewDecoder(r.Body).Decode(&p)
 		u, err := loadUser("id=?", userID)
-		if err != nil || !checkPassword(u.Hash, p.Password) {
+		if err != nil {
+			jsonError(w, "Unauthorized", 401)
+			return
+		}
+		switch checkPasswordLimited(r, u, p.Password) {
+		case pwLocked:
+			jsonError(w, "Too many attempts. Try again later.", 429)
+			return
+		case pwWrong:
 			auditLog(r, userID, "config.export_denied", "", map[string]string{"reason": "wrong password"})
 			jsonError(w, "Wrong password", 403)
 			return
