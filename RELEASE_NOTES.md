@@ -1,3 +1,22 @@
+## Web Remote Manager PRO v13.14.2 — security and reliability fixes
+
+**A patch release with the highest-priority findings of an external review.**
+
+- **2FA and password confirmations** now lock the account after repeated wrong codes or passwords, instead of being guessable in a loop.
+- **Destructive AI commands** can no longer hide behind `sudo -u`, `..` or a here-string; automatic-mode budgets survive a new session.
+- **Bundle manifests and addon archives** are validated and bounded before they reach a server or the disk.
+- **SQLite foreign keys** are enforced on every pooled connection.
+- **Host builds** are administrator-only and no longer see WRM's encryption key.
+- **Faster UI:** gzip + ETag, deferred vendor scripts, and honest error messages when a delete fails.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No schema change is required; `mcp_tokens.auto_limits` already exists.
+
+[Download v13.14.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.2) · [Full changelog](CHANGELOG.md)
+
+---
+
 ## Web Remote Manager PRO v13.14.1 - Addon settings survive restarts, and a frozen WRM leaves a record
 
 ### Added
