@@ -77,8 +77,8 @@ func joinMCPScopes(sc []string) string {
 func mcpPolicySignature(g *mcpGrant) string {
 	type autoPolicy struct {
 		Allow, Deny, PathAllow, PathDeny []string
-		Minutes, MaxActions             int
-		UntilGrant                      bool
+		Minutes, MaxActions              int
+		UntilGrant                       bool
 	}
 	var ap *autoPolicy
 	if g.Auto != nil {
