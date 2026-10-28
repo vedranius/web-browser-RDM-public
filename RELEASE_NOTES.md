@@ -1,6 +1,22 @@
-## Web Remote Manager PRO v13.14.0 - Git checks that stick to Git, sorted folders and a record of every file edit
+## Web Remote Manager PRO v13.14.1 - Addon settings survive restarts, and a frozen WRM leaves a record
 
 ### Added
+
+- **Freeze diagnostics**: when WRM is stopped or restarted, and when it notices that it no longer answers itself, it writes what every part of it was doing to the `remote_manager.db.diag` folder next to the database (the newest 20 files are kept). If WRM ever freezes again, restart it and send the newest file from that folder.
+
+### Fixed
+
+- **Addon instances disappeared after every restart**: since v13.9.0 each start set the addon instances (for example a Grafana panel's configurations) aside and started with none. v13.14.1 keeps them and brings back the most recent ones with their stored settings and window positions.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No new tables or columns; on its first start WRM restores addon instances from the newest `addon_instances_old_*` copy when the table is empty. A previous version still starts on the database.
+
+[Download v13.14.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.1) · [Full changelog](CHANGELOG.md)
+
+## Included from v13.14.0 - Git checks that stick to Git, sorted folders and a record of every file edit
+
+#### Added
 
 - **Sort folders A–Z** ([#134](https://github.com/vedranius/web-browser-RDM-public/issues/134)): right-click a folder to sort its subfolders by name or keep them sorted, also for all folders at once. Numbers sort naturally (`srv2` before `srv10`).
 - **File edit history** ([#129](https://github.com/vedranius/web-browser-RDM-public/issues/129)): *Admin → File edits* lists every file saved in the editor or changed by the AI, with the diff, filterable by user, server, session and AI, with CSV export. Diffs are stored encrypted with secrets masked.
@@ -8,17 +24,17 @@
 - **Folder filters in the Git workspace**: filter the overview, functionality, environments, *What is where* and the files of an installation by folder on the servers, as a tree with counts.
 - **Logs** in the .gitignore helper's standard patterns.
 
-### Changed
+#### Changed
 
 - **Git checks compare only what Git tracks.** Logs and other files outside the check are listed as *outside the check* and never compared; log files are never deployed unless the include list names them.
 - Servers in the Git overview are named by hostname or connection name, never by an IP address.
 
-### Fixed
+#### Fixed
 
 - The Git overview mixed hostnames and IP addresses.
 - The Git checker compared log files with Git.
 
-### Upgrade
+#### Upgrade
 
 Replace the executable or container and keep the database and encryption key. Additive migration (table `file_edits`, columns `folders.auto_sort` and `ssh_keys.certificate`); a previous version still starts on the database.
 
