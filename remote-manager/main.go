@@ -751,9 +751,13 @@ func localHealthURL(timeout time.Duration) (string, *http.Client, bool) {
 		}
 		addr = ":" + port
 	}
-	_, port, err := net.SplitHostPort(addr)
+	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return "", nil, false
+	}
+	// A server bound to one address is not reachable on 127.0.0.1.
+	if ip := net.ParseIP(host); host == "" || (ip != nil && ip.IsUnspecified()) {
+		host = "127.0.0.1"
 	}
 	scheme := "http"
 	if (os.Getenv("HTTPS_CERT_FILE") != "" && os.Getenv("HTTPS_KEY_FILE") != "") || os.Getenv("HTTPS_SELF_SIGNED") == "1" {
@@ -763,7 +767,7 @@ func localHealthURL(timeout time.Duration) (string, *http.Client, bool) {
 		// Loopback check of our own (possibly self-signed) certificate.
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 	}}
-	return scheme + "://127.0.0.1:" + port + "/healthz", client, true
+	return scheme + "://" + net.JoinHostPort(host, port) + "/healthz", client, true
 }
 
 // runHealthcheck queries /healthz of the local server (exit code 0 = healthy).

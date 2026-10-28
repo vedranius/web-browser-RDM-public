@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDiagDumpWrittenAndPruned(t *testing.T) {
@@ -28,5 +29,20 @@ func TestDiagDumpWrittenAndPruned(t *testing.T) {
 	}
 	if _, err := os.Stat(name); err != nil {
 		t.Fatalf("newest dump was pruned: %v", err)
+	}
+}
+
+func TestLocalHealthURL(t *testing.T) {
+	for addr, want := range map[string]string{
+		":8080":             "http://127.0.0.1:8080/healthz",
+		"0.0.0.0:9000":      "http://127.0.0.1:9000/healthz",
+		"[::]:9000":         "http://127.0.0.1:9000/healthz",
+		"192.168.5.10:8780": "http://192.168.5.10:8780/healthz",
+		"[fd00::5]:8780":    "http://[fd00::5]:8780/healthz",
+	} {
+		t.Setenv("LISTEN_ADDR", addr)
+		if got, _, ok := localHealthURL(time.Second); !ok || got != want {
+			t.Errorf("%s: %q, want %q", addr, got, want)
+		}
 	}
 }

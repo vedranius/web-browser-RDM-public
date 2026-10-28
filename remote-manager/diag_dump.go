@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -32,8 +33,15 @@ func writeDiagDump(kind string) string {
 		log.Printf("Diagnostics: %v", err)
 		return ""
 	}
-	name := filepath.Join(dir, kind+"-"+time.Now().UTC().Format("20060102-150405")+".txt")
-	f, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		log.Printf("Diagnostics: %v", err)
+		return ""
+	}
+	defer root.Close()
+	base := kind + "-" + time.Now().UTC().Format("20060102-150405") + ".txt"
+	name := filepath.Join(dir, base)
+	f, err := root.OpenFile(base, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		log.Printf("Diagnostics: %v", err)
 		return ""
@@ -47,13 +55,13 @@ func writeDiagDump(kind string) string {
 		p.WriteTo(f, 2)
 	}
 	f.Close()
-	pruneDiagDumps(dir)
+	pruneDiagDumps(root)
 	log.Printf("Diagnostics: %d goroutines written to %s", runtime.NumGoroutine(), name)
 	return name
 }
 
-func pruneDiagDumps(dir string) {
-	entries, err := os.ReadDir(dir)
+func pruneDiagDumps(root *os.Root) {
+	entries, err := fs.ReadDir(root.FS(), ".")
 	if err != nil {
 		return
 	}
@@ -69,7 +77,7 @@ func pruneDiagDumps(dir string) {
 	// Sort by time (the part after the kind), oldest first.
 	sort.Slice(names, func(i, j int) bool { return diagStamp(names[i]) < diagStamp(names[j]) })
 	for _, n := range names[:len(names)-diagMaxFiles] {
-		os.Remove(filepath.Join(dir, n))
+		root.Remove(n)
 	}
 }
 
