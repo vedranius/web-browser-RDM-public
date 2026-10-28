@@ -1,3 +1,11 @@
+## [13.14.1] - 2026-10-28
+
+### Added
+- **Freeze diagnostics** (`diag_dump.go`): every stop or restart, and a watchdog that checks WRM's own `/healthz` and the database every 30 s (two failed checks in a row, at most once every 15 minutes), write the stack of every goroutine with goroutine count, memory and database pool figures to `<DB_PATH>.diag/stop-<time>.txt` or `hang-<time>.txt`. The newest 20 files are kept. A frozen WRM that is restarted therefore leaves a record of what it was waiting on.
+
+### Fixed
+- **Addon instances were lost at every start** (v13.9.0–v13.14.0): `ensureTable` counted a `NOT NULL` column without a default that its caller did not list (`addon_instances.addon_id`) as unknown, so each start set `addon_instances` aside as `addon_instances_old_<time>` and began with an empty table; two starts within the same second stopped WRM with *Upgrade of table addon_instances … failed*. Columns that the `CREATE` statement declares are now always known. An empty `addon_instances` is refilled, with the same ids, from the newest non-empty `addon_instances_old_*` copy, so the addon store and window positions that point at those ids work again. The copies stay in the database.
+
 ## [13.14.0] - 2026-10-26
 
 ### Added

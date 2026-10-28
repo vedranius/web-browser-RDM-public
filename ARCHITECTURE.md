@@ -28,6 +28,12 @@ The assistant uses the same inventory instead of guessing paths (`ai_logs.go`): 
 
 `card()` renders the states with `ok`/`bad` pills and carries a **Poll automatically** checkbox that writes the whole profile back through the same endpoint; the settings dialog gained the matching textarea (`systemd:nginx`, `docker:web`, one per line).
 
+## Schema checks and freeze diagnostics (v13.14.1)
+
+`ensureTable` (`main.go`) treats every column its `CREATE` statement declares (`createColumns`) as known, in addition to the columns the caller lists; only a required column the statement does not declare, or a listed column the table lacks, sets the table aside. Before that, `addon_instances.addon_id` (`NOT NULL`, no default, not part of the key) made every start rename the table. `restoreAddonInstances` (`addons_v2.go`) refills an empty `addon_instances` from the newest non-empty `addon_instances_old_*` copy, keeping ids so `addon_store` and `addon_windows` rows match again. `TestInitDBIsIdempotent` runs `initDB` twice on one database and fails on any `*_old_*` table.
+
+`diag_dump.go`: `writeDiagDump(kind)` writes `pprof` goroutine stacks (debug level 2) with goroutine count, heap and `db.Stats()` to `<DB_PATH>.diag/<kind>-<time>.txt` (0600, newest `diagMaxFiles` = 20 kept). The shutdown goroutine in `main.go` calls it with `stop` before `srv.Shutdown`; `hangWatchdog` calls `hangCheck` (database ping, 15 s; own `/healthz` through `localHealthURL` (127.0.0.1, or the `LISTEN_ADDR` host when bound to one address), 20 s) every 30 s and writes `hang` after two failures in a row, at most every 15 minutes.
+
 ## Folder sorting, file edit history, SSH certificates and Git log handling (v13.14.0)
 
 `folder_sort.go` sorts sibling folders by `naturalCompare` (case-insensitive, digit runs as numbers) and rewrites `sort_order` only where it changed (`sortFolderGroups`). `autoSortFolders(uid)` runs under `folderHierarchyMu` after a folder is created, updated (`updateFolder`) or reordered, for the levels below folders with `folders.auto_sort` and for the whole tree when the user_ui key `folders_sort` is `auto`.

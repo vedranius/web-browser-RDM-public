@@ -119,3 +119,97 @@ func TestBrowserURL(t *testing.T) {
 		}
 	}
 }
+
+// A table whose CREATE statement has a NOT NULL column without a default that the caller
+// did not list (addon_instances.addon_id) must not be set aside again on every start.
+func TestInitDBIsIdempotent(t *testing.T) {
+	saved := db
+	defer func() { db = saved }()
+	t.Setenv("DB_PATH", filepath.Join(t.TempDir(), "restart.db"))
+	initDB()
+	if _, err := db.Exec(`INSERT INTO addon_instances (addon_owner, addon_id, owner_id, name) VALUES (0, 'demo.panel', 0, 'kept')`); err != nil {
+		t.Fatal(err)
+	}
+	db.Close()
+	initDB()
+	defer db.Close()
+	rows, err := db.Query(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%\_old\_%' ESCAPE '\'`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var moved []string
+	for rows.Next() {
+		var n string
+		rows.Scan(&n)
+		moved = append(moved, n)
+	}
+	rows.Close()
+	if len(moved) > 0 {
+		t.Fatalf("a second start set tables aside: %v", moved)
+	}
+	var name string
+	if err := db.QueryRow(`SELECT name FROM addon_instances WHERE addon_id='demo.panel'`).Scan(&name); err != nil || name != "kept" {
+		t.Fatalf("addon instance lost after restart: %q, %v", name, err)
+	}
+}
+
+func TestCreateColumns(t *testing.T) {
+	got := createColumns(`CREATE TABLE IF NOT EXISTS x (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		"Name" TEXT NOT NULL DEFAULT '',
+		price NUMERIC(10, 2) NOT NULL,
+		UNIQUE (id, name),
+		PRIMARY KEY (id)
+	)`)
+	want := []string{"id", "name", "price"}
+	if len(got) != len(want) {
+		t.Fatalf("createColumns = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("createColumns = %v, want %v", got, want)
+		}
+	}
+}
+
+// Instances set aside by the earlier start-up bug come back with their ids, so the
+// addon_store and addon_windows rows that point at them work again.
+func TestAddonInstancesRestored(t *testing.T) {
+	saved := db
+	defer func() { db = saved }()
+	t.Setenv("DB_PATH", filepath.Join(t.TempDir(), "restore.db"))
+	initDB()
+	defer db.Close()
+	for _, q := range []string{
+		`DELETE FROM addon_instances`,
+		`CREATE TABLE addon_instances_old_20261027080042 AS SELECT * FROM addon_instances`,
+		`INSERT INTO addon_instances_old_20261027080042 (id, addon_owner, addon_id, owner_id, name, created_at, created_by) VALUES (2, 0, 'demo.panel', 1, 'Old', '', '')`,
+		`CREATE TABLE addon_instances_old_20261028073353 AS SELECT * FROM addon_instances`,
+		`INSERT INTO addon_instances_old_20261028073353 (id, addon_owner, addon_id, owner_id, name, created_at, created_by) VALUES (1, 0, 'demo.panel', 1, 'Default', '', ''), (3, 0, 'demo.panel', 0, 'shared', '', '')`,
+		`CREATE TABLE addon_instances_old_20261028074752 AS SELECT * FROM addon_instances`,
+	} {
+		if _, err := db.Exec(q); err != nil {
+			t.Fatalf("%v\n%s", err, q)
+		}
+	}
+	restoreAddonInstances()
+	var ids []int
+	rows, _ := db.Query(`SELECT id FROM addon_instances ORDER BY id`)
+	for rows.Next() {
+		var id int
+		rows.Scan(&id)
+		ids = append(ids, id)
+	}
+	rows.Close()
+	if len(ids) != 2 || ids[0] != 1 || ids[1] != 3 {
+		t.Fatalf("restored ids = %v, want [1 3] from the newest non-empty copy", ids)
+	}
+	// A table that already has instances is left alone.
+	db.Exec(`DELETE FROM addon_instances WHERE id=3`)
+	restoreAddonInstances()
+	var n int
+	db.QueryRow(`SELECT COUNT(*) FROM addon_instances`).Scan(&n)
+	if n != 1 {
+		t.Fatalf("restore touched a non-empty table: %d rows", n)
+	}
+}

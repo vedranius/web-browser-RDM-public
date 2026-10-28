@@ -36,7 +36,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v13.14.0"
+var AppVersion = "v13.14.1"
 
 const sessionCookieName = "wrm_session"
 
@@ -632,6 +632,7 @@ func serve(stop <-chan struct{}) int {
 	go ldapSyncLoop()
 	go lockdownWatchLoop()
 	go siemLoop()
+	go hangWatchdog()
 
 	srv := &http.Server{
 		Addr: addr, Handler: newRouter(),
@@ -664,6 +665,8 @@ func serve(stop <-chan struct{}) int {
 		case <-restartState.ch:
 			log.Printf("Restarting…")
 		}
+		// A stop often follows a freeze: keep what every goroutine was doing.
+		writeDiagDump("stop")
 		stopTURN()
 		mediumStopAll()
 		opencodeStopAll()
@@ -737,8 +740,9 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]string{"status": "ok", "version": AppVersion})
 }
 
-// runHealthcheck queries /healthz of the local server (exit code 0 = healthy).
-func runHealthcheck() int {
+// localHealthURL returns the loopback /healthz URL of the server on this machine and a
+// client for it (ok is false when the listen address cannot be parsed).
+func localHealthURL(timeout time.Duration) (string, *http.Client, bool) {
 	addr := os.Getenv("LISTEN_ADDR")
 	if addr == "" {
 		port := os.Getenv("PORT")
@@ -747,19 +751,32 @@ func runHealthcheck() int {
 		}
 		addr = ":" + port
 	}
-	_, port, err := net.SplitHostPort(addr)
+	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		return 1
+		return "", nil, false
+	}
+	// A server bound to one address is not reachable on 127.0.0.1.
+	if ip := net.ParseIP(host); host == "" || (ip != nil && ip.IsUnspecified()) {
+		host = "127.0.0.1"
 	}
 	scheme := "http"
 	if (os.Getenv("HTTPS_CERT_FILE") != "" && os.Getenv("HTTPS_KEY_FILE") != "") || os.Getenv("HTTPS_SELF_SIGNED") == "1" {
 		scheme = "https"
 	}
-	client := &http.Client{Timeout: 5 * time.Second, Transport: &http.Transport{
+	client := &http.Client{Timeout: timeout, Transport: &http.Transport{
 		// Loopback check of our own (possibly self-signed) certificate.
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 	}}
-	resp, err := client.Get(scheme + "://127.0.0.1:" + port + "/healthz")
+	return scheme + "://" + net.JoinHostPort(host, port) + "/healthz", client, true
+}
+
+// runHealthcheck queries /healthz of the local server (exit code 0 = healthy).
+func runHealthcheck() int {
+	url, client, ok := localHealthURL(5 * time.Second)
+	if !ok {
+		return 1
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
@@ -1514,6 +1531,12 @@ func ensureTable(name, create string, cols ...string) {
 	for _, c := range cols {
 		want[c] = true
 	}
+	// Columns the CREATE statement declares itself are never "unknown", even when the
+	// caller did not list them (otherwise a NOT NULL column without a default, such as
+	// addon_instances.addon_id, would set the table aside on every start).
+	for _, c := range createColumns(create) {
+		want[c] = true
+	}
 	have := map[string]bool{}
 	var missing, extra []string
 	for rows.Next() {
@@ -1561,6 +1584,48 @@ func ensureTable(name, create string, cols ...string) {
 	}
 	mustExec(create)
 	log.Printf("Upgraded table %s from an earlier version (%s); the old table was kept as %s", name, reason, old)
+}
+
+// createColumns returns the lower-cased column names a CREATE TABLE statement declares,
+// one column definition per comma-separated item; table constraints are skipped.
+func createColumns(create string) []string {
+	open, end := strings.Index(create, "("), strings.LastIndex(create, ")")
+	if open < 0 || end <= open {
+		return nil
+	}
+	var cols []string
+	depth, start := 0, open+1
+	body := create[:end]
+	for i := open + 1; i <= len(body); i++ {
+		if i < len(body) {
+			switch body[i] {
+			case '(':
+				depth++
+				continue
+			case ')':
+				depth--
+				continue
+			case ',':
+				if depth > 0 {
+					continue
+				}
+			default:
+				continue
+			}
+		}
+		fields := strings.Fields(body[start:i])
+		start = i + 1
+		if len(fields) == 0 {
+			continue
+		}
+		name := strings.ToLower(strings.Trim(fields[0], "\"`[]"))
+		switch name {
+		case "primary", "unique", "foreign", "check", "constraint":
+			continue
+		}
+		cols = append(cols, name)
+	}
+	return cols
 }
 
 func jsonError(w http.ResponseWriter, msg string, code int) {

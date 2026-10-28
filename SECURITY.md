@@ -428,6 +428,10 @@ The Medium native preview (v12.6.0) is read-only: it lists application directori
 - **The bridge** accepts only `v: 2` messages of known types from the panel's own frame and validates every field. Store requests run with the user's session in the WRM page; the panel never sees the session, cookies or the sign-in name (only the display name and the numeric user id). Notifications are plain text, 200 characters, 5 a minute per instance, repeats dropped.
 - **Store:** JSON only, 32 KB per value, a quota per instance (1 MB at most), keys starting with `wrm.` reserved; shared values (`store.shared`) are written by administrators only. The store is not a place for secrets: it is readable by the addon's code; use addon secrets (below).
 
+## Freeze diagnostics (v13.14.1)
+
+- Goroutine dumps in `<DB_PATH>.diag/` are written with mode 0600 in a 0700 folder next to the database. They hold function names, source locations and raw argument words, no request bodies, command output or decrypted secrets; still treat them like a log of the server and look through one before attaching it to a public issue. Only the newest 20 are kept.
+
 ## File edit history and SSH certificates (v13.14.0)
 
 - **File edit history** (`file_edits`). Editor saves (`POST /api/remote/upload?…&edit=1`, also in shares) and approved AI file changes are recorded with user, client IP, connection, host, path, source, session and SHA-256 before and after. The unified diff is computed on the WRM server from the content WRM read and wrote (the browser cannot supply it), passed through `redactText` and then encrypted with the WRM key. Files over `file_edit_max_kb` and binary files are recorded without a diff. The table has the same append-only triggers as the audit log and is purged only by the retention job (`audit_retention_days`). Only administrators and auditors (`requireAuditRead`) can list it; opening a diff and exporting CSV (with formula-injection quoting) are audited. Masking is pattern-based: a secret that does not look like one can still appear in a diff, so treat the history like the files themselves, or turn it off with `file_edit_history = 0`.

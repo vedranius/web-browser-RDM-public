@@ -13,7 +13,11 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.14.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.14.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.14.1
+
+**Addon settings survive restarts, and a frozen WRM leaves a record.** Since v13.9.0 every start of WRM set the addon instances aside (for example a Grafana panel's configurations), so addons came back empty after a restart or an update; v13.14.1 keeps them and restores the most recent ones with their settings and window positions. WRM also writes what it was doing to `remote_manager.db.diag/` next to the database whenever it is stopped or restarted and when its own watchdog sees that it no longer answers (see [Troubleshooting](#troubleshooting)).
 
 ## What's new in v13.14.0
 
@@ -232,7 +236,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -345,21 +349,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.14.0-linux-amd64
-   ./wrm-pro-v13.14.0-linux-amd64
+   chmod +x wrm-pro-v13.14.1-linux-amd64
+   ./wrm-pro-v13.14.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.14.0-windows-amd64.exe
+   .\wrm-pro-v13.14.1-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.14.0-linux-amd64.AppImage
-   ./wrm-pro-v13.14.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.14.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v13.14.1-linux-amd64.AppImage
+   ./wrm-pro-v13.14.1-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v13.14.1-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -368,8 +372,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.14.0/wrm-pro-v13.14.0-android-arm64
-   chmod +x wrm-pro-v13.14.0-android-arm64 && ./wrm-pro-v13.14.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.14.1/wrm-pro-v13.14.1-android-arm64
+   chmod +x wrm-pro-v13.14.1-android-arm64 && ./wrm-pro-v13.14.1-android-arm64
    ```
 
    **Docker**
@@ -393,6 +397,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.14.0
+
+Replace the executable/AppImage/container and keep the database and encryption key. No new tables or columns. On the first start, when `addon_instances` is empty, WRM copies the rows of the newest non-empty `addon_instances_old_<time>` table (left there by the start-up bug of v13.9.0–v13.14.0) back with their ids and logs *Addon instances: restored …*; the old copies are kept and can be dropped by hand once the addons look right. WRM now creates the folder `<DB_PATH>.diag/` (goroutine dumps, newest 20 kept) on every stop and restart.
 
 ## Upgrading from v13.13.1
 
@@ -3276,6 +3284,7 @@ Cross-compile any platform, e.g. `GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build
 ```
 remote-manager/
   main.go         HTTP server, routes, database schema & migrations, connections, folders, sessions, transfer
+  diag_dump.go    freeze diagnostics: goroutine dumps to <DB_PATH>.diag/ on stop/restart and from the /healthz + database watchdog
   security.go     server secret, encryption key management, security headers, CSRF, self-signed TLS, validation
   users.go        sign-in, 2FA step, sessions, password change, account administration
   totp.go         TOTP (RFC 6238), QR code, recovery codes
@@ -3385,7 +3394,8 @@ remote-manager/
   guac.go         remote desktop: guacd handshake, relay, recording (RDP / VNC / Telnet)
   helpers.go      origin check, login rate limiting, shared helpers
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
-  upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs)
+  upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs, restarts that keep every table, restored addon instances)
+  diag_dump_test.go unit tests (freeze diagnostics written and pruned)
   integration_test.go  in-process SSH/SFTP server: connect → audit → recording, transfers, append-only audit
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
@@ -3493,6 +3503,8 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 
 | Problem | Fix |
 |---|---|
+| WRM stops answering (browser or AI apps wait forever) | Restart the service (Windows: `sc stop wrm` and `sc start wrm`, or *Services*). WRM writes what every part of it was doing at the stop to `<DB_PATH>.diag/stop-<time>.txt` (its own watchdog writes `hang-<time>.txt` when it notices first). Send the newest file with the issue: it holds code locations only, no passwords or command output |
+| Addons empty after a restart (v13.9.0–v13.14.0) | Update to v13.14.1: it keeps addon instances and restores the most recent ones from `addon_instances_old_*` |
 | Claude app: *Failed to add marketplace* | Type the repository in lowercase, `vedranius/web-browser-rdm-public`: the Claude app names the marketplace after the repository, and GitHub accepts the name in any case. Remove a marketplace with the same name that is already under *Customize → Plugins*. The real reason is in the app's log (Windows `%APPDATA%\Claude\logs\claude.ai-web.log`, macOS `~/Library/Logs/Claude/claude.ai-web.log`, lines with `MARKETPLACE_ERROR` or `REMOTE_SYNC_FAILED`). *Add → Upload plugin* with `claude-plugin-wrm-pro.zip` from the release installs the same plugin without a marketplace |
 | Medium native deploy: *locked by … since …* | Another deployment (WRM or the original tool) holds the destination. Wait for it; a lock left behind by a crash can be released in *History and rollback* once it is older than the time shown (from `medium_command_timeout` and `medium_transfer_timeout`) |
 | Medium native deploy: *the plan changed since you reviewed it* / *plan changed* | The server or the deploy-config changed after the comparison. Compare again, review the new plan and deploy that |
