@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -66,6 +67,10 @@ type mediumStatus struct {
 	// v12.9.1: the engine of projects nobody chose one for (native or docker); with native
 	// the original tool and its runtime are optional
 	DefaultEngine string `json:"default_engine"`
+	// v13.14.9: deploy-config is a Git clone (DEPLOY_CONFIG_REPO), which turns on the original
+	// tool's Git section; HostName is what DEPLOY_HOSTNAME defaults to
+	ConfigGit bool   `json:"config_git"`
+	HostName  string `json:"host_name,omitempty"`
 }
 
 // mediumExit is how the original tool's process last ended.
@@ -143,7 +148,8 @@ func mediumState(uid int) mediumStatus {
 	s.Backend = mediumBackend()
 	s.Imported = mediumFileExists(filepath.Join(mediumToolDir(), "app", "main.py"))
 	s.Tool = s.Imported && mediumRuntimeReady()
-	s.Config = mediumFileExists(filepath.Join(mediumConfigDir(uid), "servers.yaml")) || mediumPreferences(uid)["DEPLOY_CONFIG_REPO"] != ""
+	s.ConfigGit = mediumPreferences(uid)["DEPLOY_CONFIG_REPO"] != ""
+	s.Config = s.ConfigGit || mediumFileExists(filepath.Join(mediumConfigDir(uid), "servers.yaml"))
 	if p := mediumMgr.processes[mediumUserDir(uid)]; p != nil {
 		select {
 		case <-p.done:
@@ -180,6 +186,7 @@ func mediumState(uid int) mediumStatus {
 func mediumStateFull(uid int) mediumStatus {
 	s := mediumState(uid)
 	s.Operation = mediumHolder(uid)
+	s.HostName = mediumHostName()
 	// outside mediumMgr.mu: finding out the privileges can run sudo
 	if s.Backend == "docker" && (!s.Dependencies["docker"] || mediumDockerConsentGet() != nil) {
 		d := mediumDockerInfoCached()
@@ -451,12 +458,7 @@ func mediumStartForSetup(uid int, setup bool) error {
 			cmd.Env = append(cmd.Env, n+"="+v)
 		}
 	}
-	for k, v := range mediumPreferences(uid) {
-		if v == "" {
-			continue // an empty preference means the original default (and keeps WRM's SSH options)
-		}
-		cmd.Env = append(cmd.Env, k+"="+v)
-	}
+	cmd.Env = append(cmd.Env, mediumPreferenceEnv(uid)...)
 	if sock := os.Getenv("WRM_MEDIUM_SSH_AUTH_SOCK"); sock != "" && serverKeysAllowed(uid) {
 		cmd.Env = append(cmd.Env, "SSH_AUTH_SOCK="+sock)
 	}
@@ -1112,6 +1114,41 @@ func mediumPublicPreferences(uid int) map[string]string {
 		}
 	}
 	return values
+}
+
+// mediumPreferenceEnv: the user's Original runtime settings as environment entries, after
+// WRM's own (so DEPLOY_SSH_OPTIONS and GIT_SSH_COMMAND replace WRM's SSH options).
+func mediumPreferenceEnv(uid int) []string {
+	env := []string{}
+	prefs := mediumPreferences(uid)
+	// Inside the managed container the original default would be the container ID, which
+	// then names the computer in locks and deploy history.
+	if prefs["DEPLOY_HOSTNAME"] == "" {
+		if host := mediumHostName(); host != "" {
+			env = append(env, "DEPLOY_HOSTNAME="+host)
+		}
+	}
+	keys := make([]string, 0, len(prefs))
+	for k := range prefs {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if prefs[k] == "" {
+			continue // an empty preference means the original default (and keeps WRM's SSH options)
+		}
+		env = append(env, k+"="+prefs[k])
+	}
+	return env
+}
+
+// mediumHostName is the WRM computer's name, the default DEPLOY_HOSTNAME of the original tool.
+func mediumHostName() string {
+	host, err := os.Hostname()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(host)
 }
 
 func mediumConfigDir(uid int) string {

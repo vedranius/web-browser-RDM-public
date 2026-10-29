@@ -10,6 +10,22 @@ Replace the executable or container and keep the database and encryption key. No
 
 ---
 
+## Web Remote Manager PRO v13.14.9 — the original tool's Git section explained
+
+**Why the original deploy tool showed no Git section, and a real computer name in locks.**
+
+- **Git section:** the original tool can pull, commit and push deploy-config only when deploy-config is a Git clone. A deploy-config imported as a ZIP has no Git history, so Medium step 3 now says so and points to `DEPLOY_CONFIG_REPO` in *Original runtime settings*.
+- **Defaults are visible:** every field in *Original runtime settings* shows in grey what an empty value means.
+- **`DEPLOY_HOSTNAME`:** in the managed Docker runtime an empty value is now the WRM computer's name instead of the container ID.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No schema change.
+
+[Download v13.14.9](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.9) · [Full changelog](CHANGELOG.md)
+
+---
+
 ## Web Remote Manager PRO v13.14.8 — CSP without unsafe-inline, egress policy
 
 **The sixth review batch closes the roadmap.**

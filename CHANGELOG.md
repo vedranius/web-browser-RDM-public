@@ -4,6 +4,17 @@
 
 - **Self-update on Windows no longer fails with "The process cannot access the file because it is being used by another process".** An antivirus scanner (Windows Defender) keeps the freshly downloaded and test-run `.exe` open for a few seconds, so moving it into place failed and WRM stayed on the old version. WRM now retries the rename for about 15 seconds and, when the file stays locked, copies its content into place instead (the leftover download is removed on the next start). Rollback uses the same steps.
 
+## [13.14.9] - 2026-10-29
+
+### Changed
+
+- **Medium explains the original tool's Git section.** The original deploy tool shows its *Git* section (pull, commit and push of deploy-config) only when deploy-config is a Git clone. Step 3 now says that a deploy-config imported as a ZIP has none and points to `DEPLOY_CONFIG_REPO`, or says that deploy-config comes from Git when it is set. *Original runtime settings* explains what the Git section needs (repository URL and an SSH profile with a key for the Git server) and that a ZIP import clears `DEPLOY_CONFIG_REPO`.
+- **Every runtime setting shows its default.** Empty fields show in grey what they mean: the original default (`true`, `5`, `300`), WRM's SSH options with the user's profile, `wrm` as the Docker build user, or the WRM computer's name.
+
+### Fixed
+
+- **`DEPLOY_HOSTNAME` is the WRM computer, not the container.** In the managed Docker runtime the original default was the container ID, which then named the computer in locks and deploy history. An empty setting now passes the WRM host name.
+
 ## [13.14.8] - 2026-10-29
 
 ### Security
