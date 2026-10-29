@@ -216,6 +216,11 @@ var settingSpecs = []settingSpec{
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
+	// Outbound targets for Git sources, NetBox, AI providers and OIDC (security.go). With
+	// public_only, private and loopback addresses are refused unless listed in
+	// egress_allow_hosts (names, addresses or CIDR blocks, comma separated).
+	{Key: "egress_policy", Default: "allow_private", Kind: "enum", Enum: []string{"allow_private", "public_only"}},
+	{Key: "egress_allow_hosts", Default: "", Kind: "string"},
 	// File edit history (file_edits.go, v13.14.0): diffs of files saved from the editor or written by the AI
 	{Key: "file_edit_history", Default: "1", Kind: "bool"},
 	{Key: "file_edit_max_kb", Default: "1024", Kind: "int", Min: 16, Max: 10240},
