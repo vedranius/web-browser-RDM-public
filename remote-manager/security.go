@@ -417,6 +417,7 @@ var publicAPIPaths = []string{
 	"/api/auth/logout",
 	"/api/auth/mfa",
 	"/api/auth/webauthn/login/",
+	"/api/auth/oidc/start",
 	"/api/auth/oidc/callback",
 	"/api/auth/oidc/result",
 	"/api/auth/saml/start",
