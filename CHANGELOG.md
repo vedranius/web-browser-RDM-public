@@ -1,3 +1,9 @@
+## [13.14.6] - 2026-10-29
+
+### Fixed
+
+- **Two-factor recovery codes no longer pass through an inline event handler.** The modal built `onclick` attributes from the codes and the account name; HTML escaping cannot protect a JavaScript string there, because an entity decodes back to a quote. The buttons now get listeners, so no data reaches an attribute.
+
 ## [13.14.5] - 2026-10-29
 
 ### Security
