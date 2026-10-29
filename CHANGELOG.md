@@ -1,3 +1,12 @@
+## [13.14.4] - 2026-10-29
+
+### Security
+
+- **Cloud metadata and link-local egress are refused.** Git sources, NetBox imports, AI provider base URLs and OIDC discovery go through `guardEgressURL()`; `169.254.169.254`, `100.100.100.200`, `fd00:ec2::254`, `metadata.google.internal`, link-local addresses and URLs with credentials are rejected.
+- **A loopback tunnel belongs to its owner.** `dialSSH`, `dialFTP` and `acquireSFTP` refuse a `127.0.0.1` port held by another user's tunnel, so a connection cannot borrow that tunnel and its owner's SSH login.
+- **First-use host keys are scoped.** In tofu mode only the owner of a connection to that host (or an administrator) may auto-trust it; a BMC's own SSH address counts as the connection's, so console sessions keep working.
+- **Terminal clipboard history expires** after an hour without use (and is still removed on sign-out).
+
 ## [13.14.3] - 2026-10-29
 
 ### Security
