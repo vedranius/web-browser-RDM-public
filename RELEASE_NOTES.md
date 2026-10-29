@@ -1,3 +1,21 @@
+## Web Remote Manager PRO v13.14.5 — keyed audit chain, deny-by-default API
+
+**The fifth review batch.**
+
+- **The audit chain is HMAC-keyed** from the installation's encryption key: rewriting the database no longer lets anyone recompute the chain. Old entries still verify.
+- **Deny-by-default authorization:** `/api` and `/ws` refuse a request without a session unless the path is public, so a forgotten `requireAuth` no longer exposes a handler.
+- **Signed-in cookie hardening:** over HTTPS the session cookie is `__Host-wrm_session`; a sibling subdomain cannot set it.
+- **A first-run card** greets an empty connection list, in English and Croatian.
+- **CI now builds and vets on Windows.**
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No schema change; existing audit entries verify as before.
+
+[Download v13.14.5](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.5) · [Full changelog](CHANGELOG.md)
+
+---
+
 ## Web Remote Manager PRO v13.14.4 — egress, tunnels and host keys
 
 **The next review batch.**
