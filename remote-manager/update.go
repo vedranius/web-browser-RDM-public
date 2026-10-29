@@ -702,16 +702,61 @@ func applyUpdate(ctx context.Context, r *http.Request, userID int, version strin
 
 // replaceBinary puts newFile in the place of exe and keeps the old binary for a rollback.
 func replaceBinary(exe, newFile string) error {
+	return replaceBinaryOn(runtime.GOOS, exe, newFile)
+}
+
+// renameFile and windowsRenameDelays are variables so tests can simulate a locked file.
+var (
+	renameFile          = os.Rename
+	windowsRenameDelays = []time.Duration{100 * time.Millisecond, 250 * time.Millisecond, 500 * time.Millisecond,
+		time.Second, time.Second, 2 * time.Second, 2 * time.Second, 3 * time.Second, 3 * time.Second, 3 * time.Second}
+)
+
+// renameRetry retries a rename on Windows: an antivirus scanner (Windows Defender) often keeps
+// a freshly downloaded and executed .exe open for a few seconds, and Windows then refuses the
+// rename with "The process cannot access the file because it is being used by another process".
+func renameRetry(goos, from, to string) error {
+	err := renameFile(from, to)
+	if err == nil || goos != "windows" {
+		return err
+	}
+	for _, d := range windowsRenameDelays {
+		time.Sleep(d)
+		if err = renameFile(from, to); err == nil {
+			return nil
+		}
+	}
+	return err
+}
+
+// placeOnWindows puts src at dst (dst is free because the running binary was renamed aside).
+// When src stays locked, its content is copied instead: a scanner opens the file for reading
+// and shares it, so a copy works where a rename does not. The leftover src is removed at the
+// next start (cleanupReplacedBinary).
+func placeOnWindows(src, dst string) error {
+	err := renameRetry("windows", src, dst)
+	if err == nil {
+		return nil
+	}
+	if cerr := copyFile(src, dst); cerr != nil {
+		os.Remove(dst)
+		return fmt.Errorf("%v; copying it instead failed too: %v", err, cerr)
+	}
+	os.Remove(src)
+	return nil
+}
+
+func replaceBinaryOn(goos, exe, newFile string) error {
 	prev := exe + ".previous"
-	if runtime.GOOS == "windows" {
+	if goos == "windows" {
 		// A running .exe cannot be overwritten or deleted, but it can be renamed.
 		old := exe + ".old"
 		os.Remove(old)
-		if err := os.Rename(exe, old); err != nil {
+		if err := renameRetry(goos, exe, old); err != nil {
 			return fmt.Errorf("rename the running binary: %v", err)
 		}
-		if err := os.Rename(newFile, exe); err != nil {
-			os.Rename(old, exe)
+		if err := placeOnWindows(newFile, exe); err != nil {
+			renameFile(old, exe)
 			return fmt.Errorf("put the new binary in place: %v", err)
 		}
 		return nil
@@ -722,7 +767,7 @@ func replaceBinary(exe, newFile string) error {
 			return fmt.Errorf("keep the previous binary: %v", err)
 		}
 	}
-	if err := os.Rename(newFile, exe); err != nil {
+	if err := renameFile(newFile, exe); err != nil {
 		return fmt.Errorf("put the new binary in place: %v", err)
 	}
 	return nil
@@ -760,9 +805,9 @@ func rollbackUpdate(r *http.Request, userID int, version string) error {
 	if runtime.GOOS == "windows" {
 		old := exe + ".old"
 		os.Remove(old)
-		if err = os.Rename(exe, old); err == nil {
-			if err = os.Rename(prev, exe); err != nil {
-				os.Rename(old, exe)
+		if err = renameRetry("windows", exe, old); err == nil {
+			if err = placeOnWindows(prev, exe); err != nil {
+				renameFile(old, exe)
 			}
 		}
 	} else {

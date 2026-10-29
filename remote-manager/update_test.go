@@ -404,3 +404,82 @@ func TestSelfUpdateDockerAndLocalBinary(t *testing.T) {
 	}
 	setSetting("update_proxy", "")
 }
+
+// TestReplaceBinaryWindowsLockedFile: Windows refuses to rename a freshly downloaded .exe while
+// a scanner still has it open; the update waits for it and finally copies it instead.
+func TestReplaceBinaryWindowsLockedFile(t *testing.T) {
+	saveRename, saveDelays := renameFile, windowsRenameDelays
+	t.Cleanup(func() { renameFile, windowsRenameDelays = saveRename, saveDelays })
+	windowsRenameDelays = []time.Duration{time.Millisecond, time.Millisecond, time.Millisecond}
+
+	setup := func(t *testing.T) (exe, newFile string) {
+		dir := t.TempDir()
+		exe = filepath.Join(dir, "wrm-pro.exe")
+		newFile = filepath.Join(dir, ".wrm-update-1.exe")
+		os.WriteFile(exe, []byte("old"), 0o755)
+		os.WriteFile(newFile, []byte("new"), 0o755)
+		return exe, newFile
+	}
+	locked := func(n int) *int {
+		fails := 0
+		renameFile = func(from, to string) error {
+			if strings.Contains(from, ".wrm-update-") && fails < n {
+				fails++
+				return fmt.Errorf("rename %s %s: The process cannot access the file because it is being used by another process.", from, to)
+			}
+			return os.Rename(from, to)
+		}
+		return &fails
+	}
+	check := func(t *testing.T, exe, newFile string) {
+		if b, _ := os.ReadFile(exe); string(b) != "new" {
+			t.Fatalf("binary = %q, want the new one", b)
+		}
+		if b, _ := os.ReadFile(exe + ".old"); string(b) != "old" {
+			t.Fatalf(".old = %q, want the previous binary", b)
+		}
+		if _, err := os.Stat(newFile); !os.IsNotExist(err) {
+			t.Fatalf("the downloaded file is still there: %v", err)
+		}
+	}
+
+	t.Run("lock released while waiting", func(t *testing.T) {
+		exe, newFile := setup(t)
+		fails := locked(2)
+		if err := replaceBinaryOn("windows", exe, newFile); err != nil {
+			t.Fatal(err)
+		}
+		if *fails != 2 {
+			t.Fatalf("rename attempts failed %d times, want 2", *fails)
+		}
+		check(t, exe, newFile)
+	})
+	t.Run("lock never released: copy", func(t *testing.T) {
+		exe, newFile := setup(t)
+		locked(1 << 30)
+		if err := replaceBinaryOn("windows", exe, newFile); err != nil {
+			t.Fatal(err)
+		}
+		check(t, exe, newFile)
+	})
+	t.Run("running binary cannot be renamed", func(t *testing.T) {
+		exe, newFile := setup(t)
+		renameFile = func(from, to string) error { return fmt.Errorf("access denied") }
+		if err := replaceBinaryOn("windows", exe, newFile); err == nil || !strings.Contains(err.Error(), "rename the running binary") {
+			t.Fatalf("err = %v", err)
+		}
+		if b, _ := os.ReadFile(exe); string(b) != "old" {
+			t.Fatalf("binary = %q, want it untouched", b)
+		}
+	})
+	t.Run("linux does not retry", func(t *testing.T) {
+		exe, newFile := setup(t)
+		fails := locked(1)
+		if err := replaceBinaryOn("linux", exe, newFile); err == nil {
+			t.Fatal("want the error")
+		}
+		if *fails != 1 {
+			t.Fatalf("fails = %d", *fails)
+		}
+	})
+}
