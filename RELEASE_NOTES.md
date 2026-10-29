@@ -1,3 +1,20 @@
+## Web Remote Manager PRO v13.14.3 — egress, links and scans
+
+**A small follow-up to v13.14.2** with the next review batch.
+
+- **`curl`/`wget` are no longer read-only:** fetching a URL is egress and needs approval. More secret files (`.env`, `.p12`, `.npmrc`, `wp-config.php`, `terraform.tfvars`, …) are refused, also when the assistant wants to create them.
+- **Guest links stay closed** when the administrator disables them; they are not widened to every signed-in account.
+- **HSTS is sent behind a trusted reverse proxy.**
+- **Whole-server Git scans** get a 32 MB output budget and report truncation; the deploy history no longer falls back to `/tmp`.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No schema change.
+
+[Download v13.14.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.3) · [Full changelog](CHANGELOG.md)
+
+---
+
 ## Web Remote Manager PRO v13.14.2 — security and reliability fixes
 
 **A patch release with the highest-priority findings of an external review.**
