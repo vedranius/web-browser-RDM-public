@@ -1,3 +1,21 @@
+## Web Remote Manager PRO v13.14.8 — CSP without unsafe-inline, egress policy
+
+**The sixth review batch closes the roadmap.**
+
+- **Scripts need a hash:** the UI's inline script is allowed by SHA-256, so an injected `<script>` no longer runs. Handler attributes keep working through `script-src-attr`.
+- **`egress_policy=public_only`** refuses loopback, RFC 1918 and ULA targets for Git, NetBox, AI providers and OIDC unless the host is listed in `egress_allow_hosts`.
+- **Deploy archives are checked:** a tar member with `..` or an absolute path is refused.
+- **No race when an OpenCode agent starts** after a mode change.
+- **Accessibility:** 152 form labels are now associated with their fields, and Tab stays inside dialogs.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No schema change.
+
+[Download v13.14.8](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.8) · [Full changelog](CHANGELOG.md)
+
+---
+
 ## Web Remote Manager PRO v13.14.7 — keyboard focus stays in dialogs
 
 - **Accessibility fix:** Tab and Shift+Tab now wrap inside the open dialog instead of moving into the page behind the overlay.
