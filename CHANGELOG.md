@@ -1,3 +1,9 @@
+## [13.14.10] - 2026-10-29
+
+### Fixed
+
+- **Self-update on Windows no longer fails with "The process cannot access the file because it is being used by another process".** An antivirus scanner (Windows Defender) keeps the freshly downloaded and test-run `.exe` open for a few seconds, so moving it into place failed and WRM stayed on the old version. WRM now retries the rename for about 15 seconds and, when the file stays locked, copies its content into place instead (the leftover download is removed on the next start). Rollback uses the same steps.
+
 ## [13.14.9] - 2026-10-29
 
 ### Changed

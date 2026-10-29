@@ -1,3 +1,15 @@
+## Web Remote Manager PRO v13.14.10 — self-update on Windows
+
+- **Self-update works on Windows again when an antivirus scanner holds the new file.** The update used to stop with *being used by another process*; WRM now waits for the lock for about 15 seconds and copies the file into place if it stays locked. Rollback uses the same steps.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No schema change. If the self-update of an older version failed on Windows, update once by hand: stop WRM, replace the `.exe`, start it again.
+
+[Download v13.14.10](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.10) · [Full changelog](CHANGELOG.md)
+
+---
+
 ## Web Remote Manager PRO v13.14.9 — the original tool's Git section explained
 
 **Why the original deploy tool showed no Git section, and a real computer name in locks.**
