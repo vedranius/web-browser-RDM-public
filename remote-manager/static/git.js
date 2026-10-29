@@ -706,6 +706,18 @@ Object.assign(LANGS.hr, {
 Object.assign(LANGS.en, { mn_title: 'WRM preview (read-only)', mn_needs_running: 'Start the original deploy tool first (step 5)', gm_quick_title: 'Or everything at once: prepare and start in one click', gm_prepare: 'Prepare runtime / retry', gm_settings_hint: 'Stop the original deploy tool before saving; the settings apply at its next start. These are the original deploy-tool environment options: config Git repository/pull/check interval, commit identity, SSH options, command timeout and build user. Empty fields use the original defaults. Masked values are preserved.' });
 Object.assign(LANGS.hr, { mn_title: 'WRM pregled (samo čitanje)', mn_needs_running: 'Prvo pokreni izvorni deploy-tool (korak 5)', gm_quick_title: 'Ili sve odjednom: pripremi i pokreni jednim klikom', gm_prepare: 'Pripremi okruženje / pokušaj ponovno', gm_title: 'Izvorni deploy-tool', gm_settings: 'Postavke izvornog alata', gm_settings_hint: 'Zaustavi izvorni deploy-tool prije spremanja; postavke vrijede od sljedećeg pokretanja. Ovo su izvorne deploy-tool opcije: Git repo konfiguracije/povlačenje/interval provjere, autor commitova, SSH opcije, timeout naredbi i build korisnik. Prazna polja koriste izvorne zadane vrijednosti. Maskirane vrijednosti se zadržavaju.', gm_quick: 'Pripremi i pokreni pouzdane ZIP-ove', gm_stop_confirm: 'Zaustaviti izvorni deploy-tool? Najprije pričekaj da deployi završe.' });
 Object.assign(LANGS.en, {
+  gm_settings_hint: 'Stop the original deploy tool before saving; the settings apply at its next start. An empty field uses the value shown in grey. The original tool\'s Git section (pull, commit and push of deploy-config) needs DEPLOY_CONFIG_REPO, the SSH URL of your deploy-config repository (for example git@gitlab.example.com:team/deploy-config.git), and an SSH profile (step 4) with a key for that Git server; the tool then clones it itself. Importing a deploy-config ZIP clears DEPLOY_CONFIG_REPO. Your own DEPLOY_SSH_OPTIONS or GIT_SSH_COMMAND replaces WRM\'s SSH options. Masked values are preserved.',
+  gm_s3_git: 'deploy-config comes from Git (DEPLOY_CONFIG_REPO): the original tool clones it and shows its Git section (pull, commit and push).',
+  gm_s3_zip_git: 'Imported from a ZIP, so the original tool shows no Git section. To pull, commit and push deploy-config there, set DEPLOY_CONFIG_REPO in Original runtime settings.',
+  gm_ph_repo: 'empty: deploy-config from your ZIP, no Git section', gm_ph_email: 'empty: user@computer', gm_ph_host: 'empty: {host} (the WRM computer)', gm_ph_ssh: 'empty: WRM SSH options with your SSH profile'
+});
+Object.assign(LANGS.hr, {
+  gm_settings_hint: 'Zaustavi izvorni deploy-tool prije spremanja; postavke vrijede od sljedećeg pokretanja. Prazno polje koristi vrijednost ispisanu sivo. Odjeljak Git izvornog alata (povlačenje, commit i push deploy-configa) traži DEPLOY_CONFIG_REPO, SSH URL repozitorija s tvojim deploy-configom (npr. git@gitlab.example.com:tim/deploy-config.git), i SSH profil (korak 4) s ključem za taj Git server; alat ga tada sam klonira. Uvoz deploy-config ZIP-a briše DEPLOY_CONFIG_REPO. Vlastiti DEPLOY_SSH_OPTIONS ili GIT_SSH_COMMAND zamjenjuje WRM-ove SSH opcije. Maskirane vrijednosti se zadržavaju.',
+  gm_s3_git: 'deploy-config dolazi iz Gita (DEPLOY_CONFIG_REPO): izvorni alat ga klonira i prikazuje svoj odjeljak Git (povlačenje, commit i push).',
+  gm_s3_zip_git: 'Uvezen iz ZIP-a, pa izvorni alat nema odjeljak Git. Za povlačenje, commit i push deploy-configa ondje postavi DEPLOY_CONFIG_REPO u postavkama izvornog alata.',
+  gm_ph_repo: 'prazno: deploy-config iz tvog ZIP-a, bez odjeljka Git', gm_ph_email: 'prazno: korisnik@računalo', gm_ph_host: 'prazno: {host} (računalo s WRM-om)', gm_ph_ssh: 'prazno: WRM-ove SSH opcije s tvojim SSH profilom'
+});
+Object.assign(LANGS.en, {
   mn_title: 'WRM engine', gm_two_preview: 'WRM\'s own engine. It shows what a deployment would change on each server through your WRM connections. A project switched to the WRM native engine is deployed and rolled back by WRM itself, in the same server state the original tool uses. It needs only your deploy-config; only "Compare with the original tool" needs the original tool running.',
   mn_intro: 'WRM reads your deploy-config as it is, prepares the chosen branch or tag from a WRM Git source and compares it with each destination through the WRM connection linked to that server. A comparison and a dry run change nothing. A project switched to the WRM native engine is deployed and rolled back by WRM: lock, backup, upload, checksum check, post_deploy and history, written in the original tool\'s format, so either tool can continue after the other.',
   mn_build_note: 'This project has a build step. Choose where the build runs before previewing: on the WRM host, on a Linux build server over SSH, or not at all. The plan shows the build location and checks its platform and architecture against every destination.',
@@ -3321,7 +3333,8 @@ Object.assign(LANGS.hr, {
     // 3. deploy-config (each user's own)
     if (s.pending_config && s.default_engine === 'native' && !s.tool) set(3, 'ok', t('gm_s3_native'));
     else if (s.pending_config) set(3, 'pend', t('gm_s3_pending'));
-    else if (s.config) set(3, 'ok', t('gm_s3_ok'));
+    else if (s.config_git) set(3, 'ok', t('gm_s3_git'));
+    else if (s.config) set(3, 'ok', t('gm_s3_ok'), `<div class="gm-todo">${esc(t('gm_s3_zip_git'))}</div>`);
     else set(3, 'wait', t('gm_s3_todo'));
     if (failedStep && failedStep.step === 'config_check' && !s.pending_config) set(3, 'bad', t('gm_s3_rejected'), `<div class="gm-todo">${esc(t('gm_hint_config'))}</div>`);
     // 4. SSH profile (optional)
@@ -3994,7 +4007,10 @@ Object.assign(LANGS.hr, {
     const r=await fetch('/api/git/medium/settings'); if (!r.ok) {showToast(await apiError(r),'error');return;}
     const values=await r.json();
     const keys=['DEPLOY_CONFIG_REPO','DEPLOY_CONFIG_PULL','DEPLOY_CONFIG_CHECK_MINUTES','DEPLOY_USER_EMAIL','DEPLOY_HOSTNAME','DEPLOY_SSH_OPTIONS','DEPLOY_TIMEOUT','DEPLOY_BUILD_USER','GIT_SSH_COMMAND'];
-    modal(`<h3>${esc(t('gm_settings'))}</h3><p>${esc(t('gm_settings_hint'))}</p><div class="g-grid">${keys.map(k=>`<div><label>${esc(k)}</label><input data-medium-key="${k}" value="${esc(values[k] || '')}" autocomplete="off"></div>`).join('')}</div><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.mediumSaveSettings()">${esc(t('save'))}</button><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
+    // grey placeholders: what an empty field means (the original default, or WRM's value)
+    const host=(MS.s||{}).host_name||'';
+    const ph={DEPLOY_CONFIG_REPO:t('gm_ph_repo'),DEPLOY_CONFIG_PULL:'true',DEPLOY_CONFIG_CHECK_MINUTES:'5',DEPLOY_USER_EMAIL:t('gm_ph_email'),DEPLOY_HOSTNAME:host?tf('gm_ph_host',{host}):'',DEPLOY_SSH_OPTIONS:t('gm_ph_ssh'),DEPLOY_TIMEOUT:'300',DEPLOY_BUILD_USER:(MS.s||{}).backend==='docker'?'wrm':'',GIT_SSH_COMMAND:t('gm_ph_ssh')};
+    modal(`<h3>${esc(t('gm_settings'))}</h3><p>${esc(t('gm_settings_hint'))}</p><div class="g-grid">${keys.map(k=>`<div><label for="medium-pref-${k}">${esc(k)}</label><input id="medium-pref-${k}" data-medium-key="${k}" value="${esc(values[k] || '')}" placeholder="${esc(ph[k]||'')}" title="${esc(ph[k]||'')}" autocomplete="off"></div>`).join('')}</div><div class="g-bar"><button class="btn-sec" onclick="gitWorkspace.mediumSaveSettings()">${esc(t('save'))}</button><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_close'))}</button></div>`);
   }
   async function mediumSaveSettings() {
     const values=Object.fromEntries([...document.querySelectorAll('[data-medium-key]')].map(e=>[e.dataset.mediumKey,e.value]));
