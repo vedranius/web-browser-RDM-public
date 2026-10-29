@@ -1,3 +1,15 @@
+## Web Remote Manager PRO v13.14.7 — keyboard focus stays in dialogs
+
+- **Accessibility fix:** Tab and Shift+Tab now wrap inside the open dialog instead of moving into the page behind the overlay.
+
+### Upgrade
+
+Replace the executable or container and keep the database and encryption key. No schema change.
+
+[Download v13.14.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.7) · [Full changelog](CHANGELOG.md)
+
+---
+
 ## Web Remote Manager PRO v13.14.6 — recovery codes out of inline handlers
 
 - **A hardening fix for the 2FA recovery-codes modal:** the codes and the account name are no longer written into `onclick` attributes, where HTML escaping cannot protect a JavaScript string. The buttons get listeners instead.
