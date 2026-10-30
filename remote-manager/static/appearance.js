@@ -40,13 +40,14 @@ Object.assign(LANGS.en, {
   ap_reset_q: 'Remove all your colour, font and accessibility changes?',
   ap_save_as: 'Save as my theme',
   ap_save_name: 'Name of the theme:',
-  ap_saved: 'Theme saved',
+  ap_saved: 'Theme saved; syncing to your account',
+  ap_sync_failed: 'Your appearance is saved on this browser, but could not sync to your account. It will retry when the connection returns or you change a setting.',
   ap_delete_theme: 'Delete this theme',
   ap_delete_q: 'Delete the theme {name}?',
   ap_export: 'Export',
   ap_import: 'Import',
   ap_import_bad: 'This is not a WRM theme file',
-  ap_imported: 'Theme imported',
+  ap_imported: 'Theme imported; syncing to your account',
   ap_fonts: 'Fonts and size',
   ap_font_ui: 'Interface font',
   ap_font_mono: 'Monospace font (terminal, editor, logs)',
@@ -160,13 +161,14 @@ Object.assign(LANGS.hr, {
   ap_reset_q: 'Ukloniti sve vaše promjene boja, fontova i pristupačnosti?',
   ap_save_as: 'Spremi kao moju temu',
   ap_save_name: 'Naziv teme:',
-  ap_saved: 'Tema spremljena',
+  ap_saved: 'Tema je spremljena; sinkroniziram je s računom',
+  ap_sync_failed: 'Izgled je spremljen u ovom pregledniku, ali nije sinkroniziran s računom. Pokušat će ponovno kad se veza vrati ili promijenite postavku.',
   ap_delete_theme: 'Obriši ovu temu',
   ap_delete_q: 'Obrisati temu {name}?',
   ap_export: 'Izvezi',
   ap_import: 'Uvezi',
   ap_import_bad: 'Ovo nije datoteka WRM teme',
-  ap_imported: 'Tema uvezena',
+  ap_imported: 'Tema je uvezena; sinkroniziram je s računom',
   ap_fonts: 'Fontovi i veličina',
   ap_font_ui: 'Font sučelja',
   ap_font_mono: 'Font fiksne širine (terminal, uređivač, logovi)',
@@ -519,15 +521,56 @@ Object.assign(LANGS.hr, {
 
   // ── preferences ───────────────────────────────────
   let saveTimer = null;
+  let saveVersion = 0;
+  let syncRunning = false;
+  let syncPending = false;
+  let syncErrorShown = false;
+  async function syncAppearance() {
+    if (syncRunning) return;
+    syncRunning = true;
+    const version = saveVersion;
+    try {
+      const r = await fetch('/api/me/ui/appearance', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({value: prefs})});
+      if (r.status === 423) {
+        syncPending = false;
+        return;
+      }
+      if (!r.ok) {
+        syncPending = true;
+        if (!syncErrorShown) {
+          let message = t('ap_sync_failed');
+          try { const d = await r.json(); if (d.error) message = d.error; } catch (_) {}
+          if (!syncErrorShown) {
+            showToast(message, 'error', 7000);
+            syncErrorShown = true;
+          }
+        }
+        return;
+      }
+      if (version === saveVersion) {
+        syncPending = false;
+        syncErrorShown = false;
+      } else syncPending = true;
+    } catch (_) {
+      syncPending = true;
+      if (!syncErrorShown) {
+        showToast(t('ap_sync_failed'), 'error', 7000);
+        syncErrorShown = true;
+      }
+    } finally {
+      syncRunning = false;
+      if (syncPending && version !== saveVersion && navigator.onLine) setTimeout(syncAppearance, 0);
+    }
+  }
   function save(p) {
     prefs = Object.assign({}, prefs, p);
+    saveVersion++;
     apply();
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      fetch('/api/me/ui/appearance', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({value: prefs})})
-        .then(r => { if (!r.ok && r.status !== 423) r.json().then(d => showToast(d.error || 'Error', 'error')).catch(() => {}); }).catch(() => {});
-    }, 400);
+    syncPending = true;
+    saveTimer = setTimeout(syncAppearance, 400);
   }
+  window.addEventListener('online', () => { if (syncPending) return syncAppearance(); });
 
   async function load() {
     try {

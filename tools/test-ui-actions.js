@@ -90,3 +90,57 @@ test('remote item deletion reports network failure without claiming success', as
   assert.equal(f.messages.some(m => m[1] === 'success'), false);
   assert.equal(f.reloads(), 0);
 });
+
+const appearance = fs.readFileSync(path.join(__dirname, '..', 'remote-manager', 'static', 'appearance.js'), 'utf8');
+const syncBegin = appearance.indexOf('  let saveTimer = null;');
+const syncEnd = appearance.indexOf('\n\n  async function load()', syncBegin);
+if (syncBegin < 0 || syncEnd < 0) throw new Error('appearance sync functions not found');
+const syncSource = appearance.slice(syncBegin, syncEnd);
+
+function appearanceFixture(fetch) {
+  const messages = [];
+  const timers = new Map();
+  let nextTimer = 1;
+  let onOnline;
+  const context = vm.createContext({
+    prefs: {theme: 'graphite'},
+    apply: () => {},
+    fetch,
+    navigator: {onLine: false},
+    window: {addEventListener: (name, fn) => { if (name === 'online') onOnline = fn; }},
+    setTimeout: fn => { const id = nextTimer++; timers.set(id, fn); return id; },
+    clearTimeout: id => timers.delete(id),
+    showToast: (...args) => messages.push(args),
+    t: key => key,
+  });
+  vm.runInContext(syncSource, context);
+  return {
+    context,
+    messages,
+    async flushSave() {
+      const [id, fn] = [...timers.entries()].at(-1);
+      timers.delete(id);
+      await fn();
+    },
+    online: () => onOnline(),
+  };
+}
+
+test('appearance sync reports network loss and retries when the browser is online', async () => {
+  let requests = 0;
+  const f = appearanceFixture(async () => {
+    requests++;
+    if (requests === 1) throw new Error('offline');
+    return {ok: true, status: 200};
+  });
+  f.context.save({theme: 'fjord'});
+  await f.flushSave();
+  assert.equal(requests, 1);
+  assert.equal(f.messages[0][0], 'ap_sync_failed');
+  assert.equal(f.messages[0][1], 'error');
+
+  f.context.navigator.onLine = true;
+  await f.online();
+  assert.equal(requests, 2);
+  assert.equal(f.messages.length, 1);
+});
