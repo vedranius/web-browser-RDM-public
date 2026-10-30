@@ -61,6 +61,10 @@ Object.assign(LANGS.en, {
   mcp_oauth_off: 'OAuth is turned off by the administrator: use a token.', mcp_kind_pat: 'token', mcp_kind_oauth: 'OAuth',
   mcp_expires: 'expires {time}', mcp_expired: 'expired', mcp_revoked: 'revoked', mcp_last_used: 'last used {time}', mcp_never_used: 'not used yet',
   mcp_live: 'connected', mcp_sessions_n: '{n} open sessions',
+  mcp_notify_enable: 'Enable desktop approval alerts', mcp_notify_enabled: 'Desktop approval alerts are enabled',
+  mcp_notify_denied: 'Notifications are blocked for this site. Allow them in your browser settings.',
+  mcp_notify_unsupported: 'This browser does not support desktop notifications.',
+  mcp_notify_help: 'WRM can show an operating-system notification when an approval is waiting and open the approval card when clicked. The browser and OS decide banner visibility and duration; Focus or Do Not Disturb may suppress it.',
   mcp_ind_title: 'Connected AI apps', mcp_on: 'on {servers}',
   // approvals
   mcp_ap_title: '{client} asks to act on {server}', mcp_ap_cmd: 'Command', mcp_ap_edit_file: 'Edit {path}', mcp_ap_why: 'Why WRM asks', mcp_ap_reason: 'Reason given by the AI',
@@ -174,6 +178,10 @@ Object.assign(LANGS.hr, {
   mcp_oauth_off: 'Administrator je isključio OAuth: koristite token.', mcp_kind_pat: 'token', mcp_kind_oauth: 'OAuth',
   mcp_expires: 'istječe {time}', mcp_expired: 'isteklo', mcp_revoked: 'opozvano', mcp_last_used: 'zadnja uporaba {time}', mcp_never_used: 'još nije korišteno',
   mcp_live: 'povezano', mcp_sessions_n: 'Otvorenih sesija: {n}',
+  mcp_notify_enable: 'Uključi sistemske obavijesti za odobrenja', mcp_notify_enabled: 'Sistemske obavijesti za odobrenja su uključene',
+  mcp_notify_denied: 'Obavijesti su blokirane za ovu stranicu. Dopustite ih u postavkama preglednika.',
+  mcp_notify_unsupported: 'Ovaj preglednik ne podržava sistemske obavijesti.',
+  mcp_notify_help: 'WRM može prikazati sistemsku obavijest dok odobrenje čeka i otvoriti karticu odobrenja na klik. Preglednik i OS određuju vidljivost i trajanje; Fokus ili Ne ometaj mogu je sakriti.',
   mcp_ind_title: 'Povezane AI aplikacije', mcp_on: 'na {servers}',
   mcp_ap_title: '{client} traži radnju na {server}', mcp_ap_cmd: 'Naredba', mcp_ap_edit_file: 'Uređivanje {path}', mcp_ap_why: 'Zašto WRM pita', mcp_ap_reason: 'Razlog koji je naveo AI',
   mcp_ap_approve: 'Odobri', mcp_ap_deny: 'Odbij', mcp_ap_edit: 'Uredi', mcp_ap_approve_edited: 'Odobri uređeno', mcp_ap_expires: 'istječe za {s} s', mcp_ap_note: 'Napomena za AI (neobavezno)',
@@ -649,6 +657,7 @@ Object.assign(LANGS.hr, {
     catch (e) { pane.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
     if (!cfg.enabled) { pane.innerHTML = `<div class="hint-box warn">${esc(t('mcp_off'))}: ${esc(cfg.reason)}</div>${fullAccessHTML(cfg.full_access)}`; return; }
     pane.innerHTML = `<div class="hint-box">${esc(t('mcp_intro'))}</div>
+      <div class="hint-box" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0;"><span style="flex:1;min-width:220px;">🔔 ${esc(t('mcp_notify_help'))}</span><button class="btn-sec btn-sm" onclick="wrmEnableAINotifications()">${esc(t('mcp_notify_enable'))}</button></div>
       <div class="hint-box" style="margin:8px 0;">
         <b>🔌 ${esc(t('mcp_quick_title'))}</b>
         <div class="sub" style="margin:3px 0 6px;">${esc(t('mcp_quick_d'))}</div>
@@ -1055,6 +1064,14 @@ Object.assign(LANGS.hr, {
     if (!els.length && cardTimer) { clearInterval(cardTimer); cardTimer = null; return; }
     els.forEach(el => { const s = Math.max(0, Math.round((new Date(el.dataset.exp) - Date.now()) / 1000)); el.textContent = tf('mcp_ap_expires', {s}); });
   }
+  function focusApproval(aid) {
+    const card = $('mcp-card-' + aid);
+    if (!card) return false;
+    if (useLayout()) { wrmLayout.show('ai'); wrmLayout.activate('ai', {reveal: true}); }
+    else dockHide(false);
+    card.scrollIntoView({behavior: 'smooth', block: 'center'});
+    return true;
+  }
   function edit(aid) {
     const p = shown[aid];
     if (!p) return;
@@ -1162,7 +1179,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmMCP = {
-    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto, dockMode, dockHide, dockPlace,
+    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto, dockMode, dockHide, dockPlace, focusApproval,
     dockStyle, dockAvailable: () => dockCount() > 0,
     installer, cursorInstall, desktopExtension, setupAll, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,

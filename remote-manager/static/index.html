@@ -3366,7 +3366,7 @@ const LANGS = {
     fm_open_failed:'Cannot open file', fm_open:'Open', fm_transfer_to:'Transfer to Server', fm_copy_path:'Copy path',
     lines:'lines', modified:'modified', saved:'Saved', save_failed:'Save failed', discard_changes:'Discard unsaved changes?', discard:'Discard',
     save:'Save', save_close:'Save & Close', ok:'OK', confirm:'Confirm', stop:'Stop', retry:'Retry', loading:'Loading…', today:'Today',
-    network_error:'network error', duplicate:'Duplicate', copy_suffix:'copy', new_folder_name:'New folder name', rename_to:'Rename to',
+    network_error:'network error', ai_approval_notify:'An AI action needs your approval. Open WRM PRO to review it.', duplicate:'Duplicate', copy_suffix:'copy', new_folder_name:'New folder name', rename_to:'Rename to',
     session_name:'Session name', new_name:'New name', delete_conn_q:'Delete this connection?',
     delete_folder_tree_q:'Delete "{name}" and everything inside? This removes {folders} folder(s) and {connections} connection(s).',
     move_to_folder:'Move to folder…', move_folder:'Move folder', move_connection:'Move connection', destination:'Destination folder',
@@ -3459,7 +3459,7 @@ const LANGS = {
     fm_open_failed:'Ne mogu otvoriti datoteku', fm_open:'Otvori', fm_transfer_to:'Prijenos na server', fm_copy_path:'Kopiraj putanju',
     lines:'redaka', modified:'izmijenjeno', saved:'Spremljeno', save_failed:'Spremanje nije uspjelo', discard_changes:'Odbaciti nespremljene promjene?', discard:'Odbaci',
     save:'Spremi', save_close:'Spremi i zatvori', ok:'U redu', confirm:'Potvrda', stop:'Zaustavi', retry:'Pokušaj ponovo', loading:'Učitavam…', today:'Danas',
-    network_error:'mrežna greška', duplicate:'Dupliciraj', copy_suffix:'kopija', new_folder_name:'Naziv nove mape', rename_to:'Preimenuj u',
+    network_error:'mrežna greška', ai_approval_notify:'AI radnja čeka vaše odobrenje. Otvorite WRM PRO da je pregledate.', duplicate:'Dupliciraj', copy_suffix:'kopija', new_folder_name:'Naziv nove mape', rename_to:'Preimenuj u',
     session_name:'Naziv sesije', new_name:'Novi naziv', delete_conn_q:'Obrisati ovu vezu?',
     delete_folder_tree_q:'Obrisati "{name}" i sve unutra? Uklanja {folders} mapa i {connections} veza.',
     move_to_folder:'Premjesti u mapu…', move_folder:'Premjesti mapu', move_connection:'Premjesti vezu', destination:'Odredišna mapa',
@@ -12363,7 +12363,7 @@ function browserNotify(text) {
 // ── AI alerts: a short sound, a toast and (when the page is hidden) a desktop
 // notification. An approval must be impossible to miss, also when the AI panel
 // or the MCP live view is closed. The sound is one setting for this browser.
-var wrmSoundCtx = null, wrmAlertSeen = {};
+var wrmSoundCtx = null, wrmAlertSeen = {}, wrmDesktopAlerts = {};
 function wrmSoundOn() { try { return localStorage.getItem('wrm_sound') !== '0'; } catch (_) { return true; } }
 function wrmSound(kind) {
   if (!wrmSoundOn()) return;
@@ -12392,10 +12392,32 @@ document.addEventListener('pointerdown', function () {
     if (wrmSoundCtx && wrmSoundCtx.state === 'suspended') wrmSoundCtx.resume().catch(() => {});
   } catch (_) {}
 }, {once: true});
-function wrmDesktopNotify(title, body) {
+function wrmDesktopNotify(title, body, key, approval) {
   try {
-    if ('Notification' in window && Notification.permission === 'granted') new Notification(title, {body: body, icon: '/static/brand/icon-192.png', tag: 'wrm-ai'});
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const opts = {body: body, icon: '/static/brand/icon-192.png'};
+      if (key) opts.tag = 'wrm-ai-' + key;
+      if (approval) opts.requireInteraction = true;
+      const notification = new Notification(title, opts);
+      if (key) {
+        const old = wrmDesktopAlerts[key];
+        if (old) try { old.close(); } catch (_) {}
+        wrmDesktopAlerts[key] = notification;
+      }
+      notification.onclick = () => {
+        try { window.focus(); } catch (_) {}
+        if (approval && key && window.wrmFocusApproval) window.wrmFocusApproval(key.replace(/^approval-/, ''));
+        try { notification.close(); } catch (_) {}
+      };
+    }
   } catch (_) {}
+}
+function wrmFocusApproval(id) {
+  if (window.wrmAI && window.wrmAI.focusApproval) {
+    Promise.resolve(window.wrmAI.focusApproval(id)).then(found => {
+      if (!found && window.wrmMCP && window.wrmMCP.focusApproval) window.wrmMCP.focusApproval(id);
+    }).catch(() => {});
+  } else if (window.wrmMCP && window.wrmMCP.focusApproval) window.wrmMCP.focusApproval(id);
 }
 // wrmAiAlert is used by static/ai.js and static/mcp.js. The same approval is
 // announced once, even when both views see it.
@@ -12408,7 +12430,7 @@ function wrmAiAlert(kind, text, key) {
   wrmSound(kind);
   const el = typeof showToast === 'function' ? showToast((kind === 'approval' ? '⏳ ' : '✦ ') + text, kind === 'approval' ? 'warning' : 'info', kind === 'approval' ? 9000 : 3500) : null;
   if (key && el) wrmAlertToasts[key] = el;
-  if (document.hidden) wrmDesktopNotify('WRM PRO', text);
+  if (document.hidden) wrmDesktopNotify('WRM PRO', kind === 'approval' ? t('ai_approval_notify') : text, key, kind === 'approval');
 }
 // wrmAiAlertDone removes the toast of an approval once it is decided (here or elsewhere).
 const wrmAlertToasts = {};
@@ -12416,14 +12438,21 @@ function wrmAiAlertDone(key) {
   const el = wrmAlertToasts[key];
   delete wrmAlertToasts[key];
   if (el && el.isConnected) el.remove();
+  const notification = wrmDesktopAlerts[key];
+  delete wrmDesktopAlerts[key];
+  if (notification) try { notification.close(); } catch (_) {}
+}
+async function wrmEnableAINotifications() {
+  try {
+    if (!('Notification' in window)) { showToast(t('mcp_notify_unsupported'), 'error'); return; }
+    if (Notification.permission === 'granted') { showToast(t('mcp_notify_enabled'), 'success'); return; }
+    if (Notification.permission === 'denied') { showToast(t('mcp_notify_denied'), 'error', 7000); return; }
+    const permission = await Notification.requestPermission();
+    showToast(t(permission === 'granted' ? 'mcp_notify_enabled' : 'mcp_notify_denied'), permission === 'granted' ? 'success' : 'warning', 7000);
+  } catch (_) { showToast(t('mcp_notify_unsupported'), 'error'); }
 }
 function wrmAskNotifications() {
-  try {
-    if ('Notification' in window && Notification.permission === 'default' && localStorage.getItem('wrm_notify_asked') !== '1') {
-      localStorage.setItem('wrm_notify_asked', '1');
-      Notification.requestPermission();
-    }
-  } catch (_) {}
+  // Permission prompts must follow a direct user action; the settings button owns this flow.
 }
 
 async function checkStatusNow(ids) {

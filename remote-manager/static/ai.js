@@ -592,6 +592,20 @@ Object.assign(LANGS.hr, {
     }
     return false;
   }
+  // Bring an approval back into view when the user clicks its OS notification.
+  async function focusApproval(aid) {
+    for (const [id, st] of Object.entries(S)) {
+      if (!st || !st.pending || !st.pending[aid]) continue;
+      const wo = winOf(Number(id));
+      if (!wo) continue;
+      if (typeof focusWindow === 'function') focusWindow(wo.id);
+      await openPanel(wo.id);
+      const card = $('aic-' + id + '-' + (st.pending[aid].call_id || aid));
+      if (card) { card.scrollIntoView({behavior: 'smooth', block: 'center'}); return true; }
+      return false;
+    }
+    return false;
+  }
   async function toggle(id) {
     const wo = winOf(id);
     if (!wo) return;
@@ -1729,7 +1743,7 @@ Object.assign(LANGS.hr, {
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
     awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,
     myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); else if (!wo) statusPane(); }; awOpen('user'); },
-    openPanel, busyIn, focusSession, prefsProv, savePrefs,
+    openPanel, busyIn, focusSession, focusApproval, prefsProv, savePrefs,
     statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, engine, ocInstall, ocRefresh, delegProv, delegLoad, delegAdd, delegTraining, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,
   };
 })();

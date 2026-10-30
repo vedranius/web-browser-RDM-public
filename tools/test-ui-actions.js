@@ -202,3 +202,38 @@ test('share token URL remains intact if session storage cannot persist it', () =
   assert.equal(f.context.shareTokenFromLocation(), 'secret-capability');
   assert.deepEqual(f.replaced, []);
 });
+
+const alertsBegin = html.indexOf('var wrmSoundCtx = null, wrmAlertSeen = {}, wrmDesktopAlerts = {};');
+const alertsEnd = html.indexOf('\nasync function checkStatusNow(', alertsBegin);
+if (alertsBegin < 0 || alertsEnd < 0) throw new Error('AI notification functions not found');
+const alertsSource = html.slice(alertsBegin, alertsEnd);
+
+test('approval notifications are persistent per approval and click opens its card', () => {
+  const opened = [], notifications = [];
+  class FakeNotification {
+    static permission = 'granted';
+    constructor(title, options) { this.title = title; this.options = options; notifications.push(this); }
+    close() { this.closed = true; }
+  }
+  const context = vm.createContext({
+    window: {Notification: FakeNotification, focus() {}, wrmFocusApproval: id => opened.push(id)},
+    Notification: FakeNotification,
+    document: {hidden: true, addEventListener() {}},
+    localStorage: {getItem: () => '0'},
+    showToast: () => null,
+    t: key => key,
+    Date,
+  });
+  vm.runInContext(alertsSource, context);
+  context.wrmAiAlert('approval', 'secret command text', 'approval-a');
+  context.wrmAiAlert('approval', 'another secret command', 'approval-b');
+  assert.equal(notifications.length, 2);
+  assert.notEqual(notifications[0].options.tag, notifications[1].options.tag);
+  assert.equal(notifications[0].options.requireInteraction, true);
+  assert.equal(notifications[0].options.body, 'ai_approval_notify');
+  assert.equal(notifications[0].options.body.includes('secret'), false);
+  notifications[0].onclick();
+  assert.deepEqual(opened, ['a']);
+  context.wrmAiAlertDone('approval-a');
+  assert.equal(notifications[0].closed, true);
+});
