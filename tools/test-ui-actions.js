@@ -46,3 +46,47 @@ test('tunnel stop reports HTTP failure and refreshes state', async () => {
   assert.equal(f.messages[0][1], 'error');
   assert.equal(f.refreshes(), 1);
 });
+
+const fileActionsBegin = html.indexOf('async function createRemoteFolder(');
+const fileActionsEnd = html.indexOf('\nfunction fmtBytes(', fileActionsBegin);
+if (fileActionsBegin < 0 || fileActionsEnd < 0) throw new Error('remote file action functions not found');
+const fileActions = html.slice(fileActionsBegin, fileActionsEnd);
+
+function fileFixture(fetch) {
+  const messages = [];
+  let reloads = 0;
+  const context = vm.createContext({
+    fetch,
+    winObjects: [{id: 7, connId: 3, path: '/srv', _searchResults: null}],
+    guardWin: () => true,
+    uiPrompt: async () => 'reports',
+    uiConfirm: async () => true,
+    showToast: (...args) => messages.push(args),
+    apiError: async () => 'server refused the request',
+    joinPath: (base, name) => base + '/' + name,
+    connQS: () => 'id=3',
+    loadFiles: async () => { reloads++; },
+    endFmSearch: () => {},
+    t: key => key,
+  });
+  vm.runInContext(fileActions, context);
+  return {context, messages, reloads: () => reloads};
+}
+
+test('remote folder creation reports network failure without claiming success', async () => {
+  const f = fileFixture(async () => { throw new Error('offline'); });
+  await f.context.createRemoteFolder(7);
+  assert.match(f.messages[0][0], /network_error.*offline/);
+  assert.equal(f.messages[0][1], 'error');
+  assert.equal(f.messages.some(m => m[1] === 'success'), false);
+  assert.equal(f.reloads(), 0);
+});
+
+test('remote item deletion reports network failure without claiming success', async () => {
+  const f = fileFixture(async () => { throw new Error('offline'); });
+  await f.context.deleteRemoteItem(7, '/srv/report.txt', false, 'report.txt');
+  assert.match(f.messages[0][0], /network_error.*offline/);
+  assert.equal(f.messages[0][1], 'error');
+  assert.equal(f.messages.some(m => m[1] === 'success'), false);
+  assert.equal(f.reloads(), 0);
+});

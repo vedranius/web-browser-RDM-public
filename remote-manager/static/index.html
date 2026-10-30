@@ -15951,9 +15951,11 @@ async function createRemoteFolder(winId) {
   const name = await uiPrompt(t('new_folder_name'), '', {okText: t('create'), placeholder: 'folder'});
   if (!name || !name.trim()) return;
   const fullPath = joinPath(wo.path || '', name.trim());
-  const res = await fetch(`/api/remote/mkdir?${connQS(wo)}&path=${encodeURIComponent(fullPath)}`, {method: 'POST'});
-  if (res.ok) { showToast('📁 ' + name.trim(), 'success'); loadFiles(winId, wo.path, {highlight: fullPath}); }
-  else showToast('Error: ' + await apiError(res), 'error', 5000);
+  try {
+    const res = await fetch(`/api/remote/mkdir?${connQS(wo)}&path=${encodeURIComponent(fullPath)}`, {method: 'POST'});
+    if (res.ok) { showToast('📁 ' + name.trim(), 'success'); loadFiles(winId, wo.path, {highlight: fullPath}); }
+    else showToast('Error: ' + await apiError(res), 'error', 5000);
+  } catch (e) { showToast(t('network_error') + ': ' + String(e.message || e), 'error', 5000); }
 }
 
 // ══ SFTP DELETE FILE / FOLDER ═════════════════════════
@@ -15963,9 +15965,11 @@ async function deleteRemoteItem(winId, path, isDir, name) {
   const label = name || path.split('/').pop();
   const msg = isDir ? `Delete folder "${label}" and ALL its contents?` : `Delete file "${label}"?`;
   if (!(await uiConfirm(msg, {title: t('delete'), okText: t('delete'), danger: true}))) return;
-  const res = await fetch(`/api/remote/delete?${connQS(wo)}&path=${encodeURIComponent(path)}&dir=${isDir ? 1 : 0}`, {method: 'DELETE'});
-  if (res.ok) { showToast('🗑 ' + label, 'success'); if (wo._searchResults) endFmSearch(winId); loadFiles(winId, wo.path); }
-  else showToast('Error: ' + await apiError(res), 'error', 5000);
+  try {
+    const res = await fetch(`/api/remote/delete?${connQS(wo)}&path=${encodeURIComponent(path)}&dir=${isDir ? 1 : 0}`, {method: 'DELETE'});
+    if (res.ok) { showToast('🗑 ' + label, 'success'); if (wo._searchResults) endFmSearch(winId); loadFiles(winId, wo.path); }
+    else showToast('Error: ' + await apiError(res), 'error', 5000);
+  } catch (e) { showToast(t('network_error') + ': ' + String(e.message || e), 'error', 5000); }
 }
 
 function fmtBytes(b) {
