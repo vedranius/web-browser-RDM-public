@@ -17058,8 +17058,10 @@ async function revokeSession(id) {
 
 async function revokeOtherSessions() {
   if (!(await uiConfirm(t('sign_out_others_q'), {okText: t('sign_out_others')}))) return;
-  const res = await fetch('/api/auth/sessions', {method: 'DELETE'});
-  if (res.ok) { const d = await res.json(); showToast(t('sessions_revoked').replace('{n}', d.revoked), 'success'); }
+  const res = await apiOk('/api/auth/sessions', {method: 'DELETE'});
+  if (!res) return;
+  const d = await res.json();
+  showToast(t('sessions_revoked').replace('{n}', d.revoked), 'success');
   renderSecurityPane();
 }
 

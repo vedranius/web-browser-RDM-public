@@ -919,6 +919,96 @@ func aiPathOperands(name string, args []string) []string {
 	return args
 }
 
+// aiWritePathOperands returns targets for common commands that write files. It is
+// intentionally conservative: if WRM cannot identify a target in auto mode, the
+// command still has to match the user's command allow-list and ordinary policy.
+func aiWritePathOperands(name string, args []string) []string {
+	targetDir := func() string {
+		for i, a := range args {
+			if a == "-t" || a == "--target-directory" {
+				if i+1 < len(args) {
+					return args[i+1]
+				}
+			} else if strings.HasPrefix(a, "--target-directory=") {
+				return strings.TrimPrefix(a, "--target-directory=")
+			} else if strings.HasPrefix(a, "-t") && len(a) > 2 {
+				return strings.TrimPrefix(a, "-t")
+			}
+		}
+		return ""
+	}
+	switch name {
+	case "cp", "mv", "install":
+		if dir := targetDir(); dir != "" {
+			return []string{dir}
+		}
+		p := positionals(args, "-t", "--target-directory", "-S", "--suffix", "--backup", "--preserve", "--no-preserve", "--context")
+		if len(p) > 0 {
+			return []string{p[len(p)-1]}
+		}
+	case "tee":
+		return positionals(args)
+	case "dd":
+		var out []string
+		for _, arg := range args {
+			if strings.HasPrefix(arg, "of=") {
+				out = append(out, strings.TrimPrefix(arg, "of="))
+			}
+		}
+		return out
+	case "sed":
+		if !hasOpt(args, "i", "--in-place") {
+			return nil
+		}
+		var out []string
+		script := true
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			switch {
+			case a == "-e" || a == "--expression" || a == "-f" || a == "--file":
+				i++
+				if a == "-f" || a == "--file" {
+					script = false
+				}
+			case a == "-i" || a == "--in-place":
+				// GNU sed's optional suffix is attached (for example -i.bak).
+			case strings.HasPrefix(a, "--in-place=") || strings.HasPrefix(a, "-i") && len(a) > 2:
+			case a == "--":
+				args = args[i+1:]
+				i = len(args)
+				for _, rest := range args {
+					if script {
+						script = false
+						continue
+					}
+					out = append(out, rest)
+				}
+			case strings.HasPrefix(a, "-"):
+			case script:
+				script = false
+			default:
+				out = append(out, a)
+			}
+		}
+		return out
+	case "truncate":
+		return positionals(args, "-s", "--size", "-r", "--reference")
+	case "touch":
+		return positionals(args, "-t", "--date", "-d", "--reference", "-r")
+	case "mkdir":
+		return positionals(args)
+	case "ln":
+		if dir := targetDir(); dir != "" {
+			return []string{dir}
+		}
+		p := positionals(args, "-t", "--target-directory")
+		if len(p) > 0 {
+			return []string{p[len(p)-1]}
+		}
+	}
+	return nil
+}
+
 // classifyReadOnly classifies a whole command line.
 func classifyReadOnly(cmd string) roVerdict {
 	if strings.TrimSpace(cmd) == "" {
