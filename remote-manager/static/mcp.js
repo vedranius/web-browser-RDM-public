@@ -25,7 +25,7 @@ Object.assign(LANGS.en, {
   mcp_edit_note: 'The token and expiry stay the same. Current sessions and pending approvals stop; reopen them with the updated permissions.',
   mcp_title: 'AI connections', mcp_intro: 'Let an AI app on your computer or in the browser (Claude, ChatGPT and other MCP clients) work on servers you choose. WRM checks every action against the mode and the scopes below, asks you before changes, and records everything.',
   mcp_off: 'AI connections are not available', mcp_new: 'New AI connection', mcp_name: 'Name', mcp_name_ph: 'e.g. Claude Desktop on my laptop',
-  mcp_conns: 'Servers', mcp_conns_filter: 'Filter servers…', mcp_mode: 'Mode', mcp_scopes: 'Scopes', mcp_hours: 'Valid for (hours)', mcp_hours_max: 'at most {n} hours',
+  mcp_conns: 'Servers', mcp_conns_filter: 'Filter servers…', mcp_select_all: 'Select all', mcp_mode: 'Mode', mcp_scopes: 'Scopes', mcp_hours: 'Valid for (hours)', mcp_hours_max: 'at most {n} hours',
   mcp_create: 'Create token', mcp_none: 'No AI connections yet.', mcp_revoke: 'Revoke', mcp_revoke_all: 'Revoke all', mcp_revoke_q: 'Revoke this AI connection? Its sessions end at once.',
   mcp_revoke_all_q: 'Revoke every AI connection? All AI apps lose access at once.', mcp_revoked_n: '{n} revoked',
   mcp_mode_read_only: 'Read-only', mcp_mode_ask: 'Ask before every change', mcp_mode_auto: 'Automatic within limits',
@@ -142,7 +142,7 @@ Object.assign(LANGS.hr, {
   mcp_edit_note: 'Token i istek ostaju isti. Aktivne sesije i odobrenja se prekidaju; ponovno ih otvorite s novim ovlastima.',
   mcp_title: 'AI veze', mcp_intro: 'Dopustite AI aplikaciji na računalu ili u pregledniku (Claude, ChatGPT i drugi MCP klijenti) da radi na poslužiteljima koje odaberete. WRM provjerava svaku radnju prema načinu rada i opsezima u nastavku, pita vas prije promjena i sve bilježi.',
   mcp_off: 'AI veze nisu dostupne', mcp_new: 'Nova AI veza', mcp_name: 'Naziv', mcp_name_ph: 'npr. Claude Desktop na mom laptopu',
-  mcp_conns: 'Poslužitelji', mcp_conns_filter: 'Filtriraj poslužitelje…', mcp_mode: 'Način rada', mcp_scopes: 'Opsezi', mcp_hours: 'Vrijedi (sati)', mcp_hours_max: 'najviše {n} sati',
+  mcp_conns: 'Poslužitelji', mcp_conns_filter: 'Filtriraj poslužitelje…', mcp_select_all: 'Odaberi sve', mcp_mode: 'Način rada', mcp_scopes: 'Opsezi', mcp_hours: 'Vrijedi (sati)', mcp_hours_max: 'najviše {n} sati',
   mcp_create: 'Stvori token', mcp_none: 'Još nema AI veza.', mcp_revoke: 'Opozovi', mcp_revoke_all: 'Opozovi sve', mcp_revoke_q: 'Opozvati ovu AI vezu? Njezine sesije odmah završavaju.',
   mcp_revoke_all_q: 'Opozvati sve AI veze? Sve AI aplikacije odmah gube pristup.', mcp_revoked_n: 'Opozvano: {n}',
   mcp_mode_read_only: 'Samo čitanje', mcp_mode_ask: 'Pitaj prije svake promjene', mcp_mode_auto: 'Automatski u granicama',
@@ -388,7 +388,7 @@ Object.assign(LANGS.hr, {
       <span>${esc(x.name)} <span class="sub">${esc(x.host)}${x.modes && x.modes.length ? '' : ' · ' + esc(t('mcp_off'))}</span></span></label>`).join('');
     return `<div class="mcp-form">
       ${pre.noName ? '' : `<div class="field"><label>${esc(t('mcp_name'))}</label><input type="text" id="${prefix}-name" maxlength="100" placeholder="${esc(t('mcp_name_ph'))}"></div>`}
-      <div class="field"><label>${esc(t('mcp_conns'))}</label>${c.connections.length > 8 ? `<input type="text" id="${prefix}-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('${prefix}')">` : ''}
+      <div class="field"><label>${esc(t('mcp_conns'))}</label>${c.connections.length > 1 ? `<button type="button" class="btn-sec btn-sm" style="margin:4px 0;" onclick="wrmMCP.selectAll('${prefix}')">${esc(t('mcp_select_all'))}</button>` : ''}${c.connections.length > 8 ? `<input type="text" id="${prefix}-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('${prefix}')">` : ''}
         <div class="mcp-conns" id="${prefix}-conns">${conns || `<div class="sub">${esc(t('none'))}</div>`}</div></div>
       <div class="mcp-row"><div class="field"><label>${esc(t('mcp_mode'))}</label><select id="${prefix}-mode" onchange="wrmMCP.modeChanged('${prefix}')">${c.modes.map(m => `<option value="${m}" ${m === 'read_only' ? 'selected' : ''}>${esc(t('mcp_mode_' + m))}</option>`).join('')}</select></div>
         <div class="field"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(c.max_hours))})</span></label>${lifetimeHTML(prefix + '-hours', c.default_hours)}</div></div>
@@ -410,6 +410,9 @@ Object.assign(LANGS.hr, {
   function filter(prefix) {
     const q = ($(prefix + '-filter').value || '').toLowerCase();
     document.querySelectorAll(`#${prefix}-conns .mcp-check`).forEach(l => { l.style.display = !q || l.dataset.name.includes(q) ? '' : 'none'; });
+  }
+  function selectAll(prefix) {
+    document.querySelectorAll(`.${prefix}-conn`).forEach(input => { input.checked = true; });
   }
   function modeChanged(prefix) {
     const m = $(prefix + '-mode').value;
@@ -558,7 +561,7 @@ Object.assign(LANGS.hr, {
         <span>${c.icon} <b>${esc(t('mcpw_c_' + c.id))}</b></span><span class="sub">${esc(t(c.via || (c.token ? 'mcpw_via_token' : 'mcpw_via_oauth')))}</span></button>`).join('')}</div>`;
     } else if (key === 'mcpw_s_access') {
       const can = cfg.modes.includes('ask');
-      body = `<div class="field"><label>${esc(t('mcp_conns'))}</label>${cfg.connections.length > 8 ? `<input type="text" id="mcpw-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('mcpw')">` : ''}
+      body = `<div class="field"><label>${esc(t('mcp_conns'))}</label>${cfg.connections.length > 1 ? `<button type="button" class="btn-sec btn-sm" style="margin:4px 0;" onclick="wrmMCP.selectAll('mcpw')">${esc(t('mcp_select_all'))}</button>` : ''}${cfg.connections.length > 8 ? `<input type="text" id="mcpw-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('mcpw')">` : ''}
         <div class="mcp-conns" id="mcpw-conns">${cfg.connections.map(x => `<label class="mcp-check" data-name="${esc((x.name + ' ' + x.host).toLowerCase())}"><input type="checkbox" class="mcpw-conn" value="${x.id}" ${W.conn_ids.includes(x.id) ? 'checked' : ''}>
           <span>${esc(x.name)} <span class="sub">${esc(x.host)}</span></span></label>`).join('') || `<div class="sub">${esc(t('none'))}</div>`}</div></div>
         <div class="field"><label>${esc(t('mcpw_access'))}</label>
@@ -1179,7 +1182,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmMCP = {
-    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto, dockMode, dockHide, dockPlace, focusApproval,
+    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, selectAll, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto, dockMode, dockHide, dockPlace, focusApproval,
     dockStyle, dockAvailable: () => dockCount() > 0,
     installer, cursorInstall, desktopExtension, setupAll, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,

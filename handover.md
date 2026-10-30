@@ -351,3 +351,11 @@ Changed files: `remote-manager/ai_destructive.go` and `remote-manager/v13142_ai_
 Verification passed: `go test . -run '^(TestAIDestructiveBypasses|TestAIDestructivePatterns|TestAIDestructivePath.*)$' -count=1 -timeout 90s` from `remote-manager/`; and `git diff --check`.
 
 Security review found and prompted fixes for abbreviated PowerShell `-EncodedCommand`/`-Command` flags, quoted wrapper forms, and quoted text false positives. The reviewer found no remaining actionable issue in the final focused review. Residual limit: complex shell/PowerShell syntax and UNC or root-relative paths still require a real parser before safe target-aware rules are possible.
+
+## Completed package: select all servers for AI access
+
+Added an English/Croatian “Select all” button to AI connection grant forms, OAuth server-access approval, and the setup wizard. It checks every server in that form, including filtered-out rows; the user can then uncheck any server before approving or creating the grant.
+
+Changed files: `remote-manager/static/mcp.js`, `tools/test-mcp-server-select.js`, and `.github/workflows/build.yml`.
+
+Verification passed: `node --test tools/test-mcp-server-select.js` (2 tests); `node --check remote-manager/static/mcp.js`; `node tools/check-ui.js`; and `git diff --check`.
