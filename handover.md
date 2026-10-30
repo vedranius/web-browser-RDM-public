@@ -359,3 +359,15 @@ Added an English/Croatian “Select all” button to AI connection grant forms, 
 Changed files: `remote-manager/static/mcp.js`, `tools/test-mcp-server-select.js`, and `.github/workflows/build.yml`.
 
 Verification passed: `node --test tools/test-mcp-server-select.js` (2 tests); `node --check remote-manager/static/mcp.js`; `node tools/check-ui.js`; and `git diff --check`.
+
+## Share-token access-log exposure: verified scope and next implementation
+
+The existing clean-share-URL change removes `/share/<token>` from the visible address bar and current history entry after startup, but cannot prevent the initial page request from appearing in reverse-proxy logs. A read-only scope check confirms that bearer tokens also appear in application request URLs throughout the share session:
+
+- `/api/share/<token>` and `/ws/share/<token>` in `remote-manager/static/index.html`.
+- `?share_token=` on terminal/desktop WebSockets, remote file actions and downloads, bookmarks, AI calls, and editor requests. Server authorization reads it in `remote-manager/shares.go` (`authorizeConnection`).
+- `authGate` currently protects most other `/api` and `/ws` routes; changing guest-share authorization must account for this gate rather than widen it incidentally.
+
+No code change was made in this checkpoint. Replacing only the share-info API and collaboration WebSocket would leave many token-bearing URLs; native download links and Guacamole WebSockets also need a credential transport that works without custom fetch headers. A single global cookie risks cross-share collisions when multiple links are open. Independent review recommends a POST token exchange followed by an HttpOnly per-share cookie bound to a non-secret share ID, with matching ID-based routes for API, downloads, and WebSockets. Validate each request against current share state (revocation, expiry, role, password); distinct per-share cookie names preserve simultaneous links. Assess a `/share#<token>` format for newly generated links to avoid the initial request-path log exposure; continue accepting legacy `/share/<token>` links and document their one-time access-log exposure. Standard access logs usually record URL paths, while custom header/body logging depends on proxy configuration.
+
+Verification: read-only source tracing (`rg` across Go, HTML, and JS); no tests run because no code changed.
