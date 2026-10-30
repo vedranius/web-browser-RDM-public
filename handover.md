@@ -1,8 +1,8 @@
 # WRM Pro public audit handover
 
-**Updated:** 2026-10-30  
-**Repository:** `vedranius/web-browser-RDM-public`  
-**Base:** `main` at `v13.14.10` (`8c13b6b`)  
+**Updated:** 2026-10-30
+**Repository:** `vedranius/web-browser-RDM-public`
+**Base:** `main` at `v13.14.10` (`8c13b6b`)
 **Working branch:** `fix/conntest-credential-target-guard`
 
 ## Completed package: connection-test credential egress guard
