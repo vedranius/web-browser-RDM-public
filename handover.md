@@ -7,7 +7,7 @@
 
 ## Completed package: connection-test credential egress guard
 
-The fresh-eyes review flagged that `POST /api/connections/test` could load a saved connection password or private key by ID, then send it to a changed host. The handler now compares the tested destination and effective route with the saved connection before reusing stored authentication material. This covers direct password/key values, vault and key references, Bitwarden, and server-side key modes. If the destination or route changed, the user must save the new target first or enter a password/private key again.
+The fresh-eyes review flagged that `POST /api/connections/test` could load a saved connection secret by ID, then reuse it against a changed target. A password can be disclosed to an FTP endpoint; SSH does not send private-key bytes, though it can still attempt authentication with the stored key. The handler compares the tested destination and effective route with the saved connection before reusing stored authentication material. It covers direct password/key values, vault and key references, Bitwarden, and server-side key modes. If the destination or route changed, the user must save the new target first or enter a password/private key again.
 
 Changed files:
 
@@ -19,9 +19,12 @@ Verification:
 - `go test . -run '^TestConnectionTestDoesNotReuseStoredSecretAfterTargetChange$' -count=1` from `remote-manager/` — passed.
 - `git diff --check` — passed.
 
+An independent review found a bypass when the request changed both protocol and `auth_method` (for example, saved SSH password → FTP with `auth_method: KEY`). FTP consumes the password field directly, so the guard now checks inherited password/key fields independently of the selected method. The regression test covers that crafted request too.
+
 Commit and publication:
 
 - Commit: `c63feb7` (`fix(security): SEC-03 guard saved credentials in connection test`)
+- Follow-up hardening and regression case are being committed on this same branch.
 - Branch pushed to `origin/fix/conntest-credential-target-guard`.
 - Not merged or released.
 

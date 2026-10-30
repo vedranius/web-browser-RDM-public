@@ -32,4 +32,15 @@ func TestConnectionTestDoesNotReuseStoredSecretAfterTargetChange(t *testing.T) {
 	}, &result); code != 409 || !strings.Contains(result["error"].(string), "not reused for a changed target") {
 		t.Fatalf("test with changed target reused saved credentials: status=%d result=%v", code, result)
 	}
+
+	// FTP uses the password field directly; a mismatched auth_method must not
+	// bypass the guard and carry the saved SSH password to an FTP server.
+	result = nil
+	ftpHost := startFakeFTP(t)
+	if code := u.jsonDo("POST", "/api/connections/test", map[string]interface{}{
+		"id": id, "name": "saved", "protocol": "FTP", "host": ftpHost,
+		"username": "anonymous", "auth_method": "KEY",
+	}, &result); code != 409 || !strings.Contains(result["error"].(string), "not reused for a changed target") {
+		t.Fatalf("FTP test reused password across an auth-method change: status=%d result=%v", code, result)
+	}
 }

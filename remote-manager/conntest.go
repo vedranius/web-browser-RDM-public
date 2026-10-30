@@ -164,14 +164,20 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 // reusesStoredConnectionAuth reports whether a connection test would use stored
 // authentication material without a fresh value being supplied in the request.
 func reusesStoredConnectionAuth(c, stored Connection) bool {
+	// Some protocol handlers consume password/private-key fields directly even
+	// when the request supplies a mismatched auth_method (for example FTP).
+	// Account for inherited fields before looking at the selected auth method.
+	if (c.Password == "" && stored.Password != "") || (c.PrivateKey == "" && stored.PrivateKey != "") {
+		return true
+	}
 	if c.AuthMethod != stored.AuthMethod {
 		return false
 	}
 	switch c.AuthMethod {
 	case "PASSWORD":
-		return (c.Password == "" && stored.Password != "") || (c.PrivateKey == "" && stored.PrivateKey != "")
+		return false
 	case "KEY":
-		return c.PrivateKey == "" && stored.PrivateKey != ""
+		return false
 	case "KEY_FILE":
 		return c.KeyPath == stored.KeyPath
 	case "KEY_AUTO":
