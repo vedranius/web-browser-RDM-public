@@ -461,11 +461,15 @@ func mcpConsentHandler(w http.ResponseWriter, r *http.Request, userID int, id st
 	switch r.Method {
 	case http.MethodGet:
 		ok, why := mcpUserAllowed(userID)
+		var clientCreatedAt, clientCreatedIP string
+		_ = db.QueryRow(`SELECT created_at, created_ip FROM mcp_clients WHERE client_id=?`, p.ClientID).Scan(&clientCreatedAt, &clientCreatedIP)
 		jsonOK(w, map[string]interface{}{"client_name": p.ClientName, "client_id": p.ClientID, "redirect_host": redirectHost,
-			"redirect_uri": p.RedirectURI, "scopes": p.Scopes, "enabled": ok, "reason": why})
+			"redirect_uri": p.RedirectURI, "scopes": p.Scopes, "client_created_at": clientCreatedAt, "client_created_ip": clientCreatedIP,
+			"enabled": ok, "reason": why})
 	case http.MethodPost:
 		var in struct {
-			Decision string `json:"decision"`
+			Decision         string `json:"decision"`
+			ConfirmInitiated bool   `json:"confirm_initiated"`
 			mcpGrantRequest
 		}
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
@@ -494,6 +498,10 @@ func mcpConsentHandler(w http.ResponseWriter, r *http.Request, userID int, id st
 			params.Set("error_description", "the user denied the request")
 			auditLog(r, userID, "mcp.authorize_denied", p.ClientName, map[string]interface{}{"client_id": p.ClientID})
 			jsonOK(w, map[string]string{"redirect": withQuery(p.RedirectURI, params)})
+			return
+		}
+		if !in.ConfirmInitiated {
+			jsonError(w, "Confirm that you started this connection from the named AI app before approving it", 400)
 			return
 		}
 		q := in.mcpGrantRequest

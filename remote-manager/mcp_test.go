@@ -752,11 +752,15 @@ func TestMCPOAuthFlow(t *testing.T) {
 		}
 		id := strings.TrimPrefix(loc, "/?mcp_authorize=")
 		code, v := e.user.aiDo("GET", "/api/mcp/authorize/"+id, nil)
-		if code != 200 || asMap(v)["client_name"] != "Claude" || asMap(v)["redirect_host"] != "claude.ai" {
+		if code != 200 || asMap(v)["client_name"] != "Claude" || asMap(v)["redirect_host"] != "claude.ai" || asMap(v)["client_created_ip"] == "" {
 			t.Fatalf("consent info: %d %v", code, v)
 		}
+		if code, _ := e.user.aiDo("POST", "/api/mcp/authorize/"+id, map[string]interface{}{"decision": "approve", "conn_ids": []int{e.connID},
+			"mode": "read_only", "scopes": []string{"read_logs", "run_readonly"}, "hours": 2}); code != 400 {
+			t.Fatalf("approval without initiator confirmation was accepted: %d", code)
+		}
 		code, v = e.user.aiDo("POST", "/api/mcp/authorize/"+id, map[string]interface{}{"decision": "approve", "conn_ids": []int{e.connID},
-			"mode": "read_only", "scopes": []string{"read_logs", "run_readonly"}, "hours": 2})
+			"mode": "read_only", "scopes": []string{"read_logs", "run_readonly"}, "hours": 2, "confirm_initiated": true})
 		if code != 200 {
 			t.Fatalf("consent: %d %v", code, v)
 		}

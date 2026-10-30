@@ -182,6 +182,15 @@ Verification passed: `go test . -run '^(TestRestrictedSessionCannotFallBackToSha
 
 Commit: `51e24f0`; branch pushed.
 
+## Completed package: MCP OAuth consent anti-phishing confirmation
+
+The consent page now shows when and from which IP the OAuth client registration was created. Approving requires an explicit checkbox confirming the user just initiated the connection in the named AI app; the API enforces this flag server-side, so direct approval requests without it fail. Denial remains available without the checkbox.
+
+Changed files: `remote-manager/mcp_oauth.go`, `remote-manager/static/mcp.js`, `remote-manager/mcp_test.go`, and `remote-manager/v13130_plugin_test.go`.
+
+Verification passed: `go test . -run '^(TestMCPOAuthFlow|TestV13130BridgeSignIn)$' -count=1` from `remote-manager/`; `node --check remote-manager/static/mcp.js`; `node tools/check-ui.js`; and `git diff --check`.
+
+This improves user confirmation but does not cryptographically prove that the initiating app is legitimate; dynamic client registration remains a trust boundary.
 ## Audit status cross-check
 
 The original report is based on public v13.14.1; this branch starts from v13.14.10, where several cited findings already have fixes. Current code and focused tests confirm: account-level MFA lockout and atomic factor replay protection; sudo/doas, relative traversal, here-string and protected-write destructive checks; bundle path and ID validation; foreign keys in the SQLite connection DSN; grant-level AI automatic-budget persistence; admin-only host builds with WRM secrets removed from the build environment; total addon ZIP limits and decoded addon HTTP path validation; and checked API errors for the audited destructive UI actions. These findings should not be reopened without a new reproducer.
@@ -191,7 +200,7 @@ The original report is based on public v13.14.1; this branch starts from v13.14.
 - Addon bridge: migrate installed/legacy v2 panels to the shared helper, remove legacy window-message fallback after a documented compatibility window, and add browser tests for secure navigation revocation and old-host fallback.
 - AI shell policy: Windows recursive deletes are currently blocked broadly; later work can add Windows-aware target parsing to allow safe recursive deletes while still blocking system roots.
 - Cross-platform CI: the audited Windows suite still has existing test failures around POSIX paths/shell assumptions. A focused Windows-compatible test job or explicit platform skips remains open.
-- Continue item-by-item verification of the original audit, especially update permissions for MCP grants, MCP OAuth consent, addon operations while disabled, URL tokens, remaining frontend error paths, host-key ownership, and the rest of the operational findings.
+- Continue item-by-item verification of the original audit, especially update permissions for MCP grants, verify addon operations while disabled, URL tokens, remaining frontend error paths, host-key ownership, and the rest of the operational findings.
 - `nettools.go` intentionally remains direct and user-directed; preserve that product behavior while checking its authorization and reachable targets.
 - Reconcile the Enterprise comparison findings with the Enterprise repository only if the user expands scope; this branch changes the public repository only.
 

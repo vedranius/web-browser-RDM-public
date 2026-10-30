@@ -69,6 +69,7 @@ Object.assign(LANGS.en, {
   // consent
   mcp_cs_title: 'Connect an AI app to WRM', mcp_cs_asks: '{client} wants to work on your servers through WRM.',
   mcp_cs_redirect: 'After your answer you go back to {host}. Approve only if you started this connection in that app just now.',
+  mcp_cs_registered: 'This app registration came from {ip} at {time}.', mcp_cs_initiated: 'I just started this connection in the AI app shown above.',
   mcp_cs_approve: 'Allow', mcp_cs_deny: 'Deny', mcp_cs_expired: 'This request has expired. Start the connection in the app again.', mcp_cs_done: 'Returning to the app…',
   // admin
   mcp_adm_active: 'Active AI connections', mcp_adm_none: 'No active AI connections.', mcp_adm_clients: 'Registered OAuth apps', mcp_adm_remove: 'Remove',
@@ -179,6 +180,7 @@ Object.assign(LANGS.hr, {
   mcp_ap_transfer: 'Prijenos datoteke',
   mcp_cs_title: 'Povezivanje AI aplikacije s WRM-om', mcp_cs_asks: '{client} želi raditi na vašim poslužiteljima preko WRM-a.',
   mcp_cs_redirect: 'Nakon odgovora vraćate se na {host}. Odobrite samo ako ste upravo pokrenuli ovu vezu u toj aplikaciji.',
+  mcp_cs_registered: 'Ova registracija aplikacije stigla je s adrese {ip} u {time}.', mcp_cs_initiated: 'Upravo sam pokrenuo/la povezivanje u gore prikazanoj AI aplikaciji.',
   mcp_cs_approve: 'Dopusti', mcp_cs_deny: 'Odbij', mcp_cs_expired: 'Ovaj zahtjev je istekao. Ponovno pokrenite povezivanje u aplikaciji.', mcp_cs_done: 'Povratak u aplikaciju…',
   mcp_adm_active: 'Aktivne AI veze', mcp_adm_none: 'Nema aktivnih AI veza.', mcp_adm_clients: 'Registrirane OAuth aplikacije', mcp_adm_remove: 'Ukloni',
   mcp_adm_remove_q: 'Ukloniti ovu aplikaciju? Njezine AI veze se opozivaju; mora se ponovno registrirati.', mcp_adm_policies: 'Pravila', mcp_adm_redirects: 'Adrese za povratak',
@@ -1089,11 +1091,14 @@ Object.assign(LANGS.hr, {
     if (!req.enabled) { showModal(`<h3>🤖 ${esc(t('mcp_cs_title'))}</h3><div class="hint-box warn">${esc(t('mcp_off'))}: ${esc(req.reason)}</div><div class="modal-footer"><button onclick="wrmMCP.answer('${esc(id)}', false)">${esc(t('mcp_cs_deny'))}</button></div>`); return; }
     showModal(`<h3>🤖 ${esc(t('mcp_cs_title'))}</h3>
       <div class="hint-box"><b>${esc(tf('mcp_cs_asks', {client: req.client_name}))}</b><br>${esc(tf('mcp_cs_redirect', {host: req.redirect_host}))}</div>
+      <div class="hint-box warn">${esc(tf('mcp_cs_registered', {ip: req.client_created_ip || '—', time: req.client_created_at ? rel(req.client_created_at) : '—'}))}</div>
       ${formHTML('mcpc', c, {scopes: (req.scopes || []).filter(s => c.scopes.includes(s)), noName: true})}
+      <label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0;"><input id="mcpc-initiated" type="checkbox" style="margin-top:3px;"> <span>${esc(t('mcp_cs_initiated'))}</span></label>
       <div class="modal-footer"><button class="btn-sec" onclick="wrmMCP.answer('${esc(id)}', false)">${esc(t('mcp_cs_deny'))}</button><button onclick="wrmMCP.answer('${esc(id)}', true)">${esc(t('mcp_cs_approve'))}</button></div>`);
   }
   async function answer(id, approve) {
-    const body = approve ? Object.assign({decision: 'approve'}, formValue('mcpc')) : {decision: 'deny'};
+    if (approve && !$('mcpc-initiated')?.checked) { showToast(t('mcp_cs_initiated'), 'error'); return; }
+    const body = approve ? Object.assign({decision: 'approve', confirm_initiated: true}, formValue('mcpc')) : {decision: 'deny'};
     let r;
     try { r = await api('POST', `/api/mcp/authorize/${encodeURIComponent(id)}`, body); } catch (e) { showToast(e.message, 'error', 6000); return; }
     clearParam();
