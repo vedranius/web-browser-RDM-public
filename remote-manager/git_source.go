@@ -171,16 +171,16 @@ func newGitProvider(s gitSource) (*gitProvider, error) {
 		return &gitProvider{kind: s.Kind, api: api, client: &http.Client{Transport: &gitRelayTransport{Source: s.ID, UserID: s.ViewerID, Generation: meta.Published, API: api}}}, nil
 	}
 	u, _ := url.Parse(api)
-	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr := egressHTTPTransport()
 	if u.Scheme == "https" {
 		tr.TLSClientConfig = pinnedTLSConfig("git://", u.Host)
 	}
 	return &gitProvider{kind: s.Kind, api: api, token: decryptValue(s.token),
 		client: &http.Client{Timeout: 60 * time.Second, Transport: tr, CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 3 || req.URL.Host != u.Host {
+			if len(via) >= 3 || req.URL.Host != u.Host || req.URL.Scheme != u.Scheme {
 				return http.ErrUseLastResponse // never send the token to another host
 			}
-			return nil
+			return guardEgressRedirect(req, via)
 		}}}, nil
 }
 

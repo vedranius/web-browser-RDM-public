@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdsa"
@@ -349,22 +350,111 @@ func guardEgressURL(raw string) error {
 	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil {
 		return fmt.Errorf("the address must be an http(s) URL without credentials")
 	}
-	h := strings.ToLower(u.Hostname())
+	h := strings.TrimSuffix(strings.ToLower(u.Hostname()), ".")
+	return guardEgressHost(h)
+}
+
+func guardEgressHost(h string) error {
 	switch h {
 	case "metadata.google.internal", "metadata.goog", "instance-data":
 		return fmt.Errorf("%s is a cloud metadata endpoint", h)
 	}
-	if ip := net.ParseIP(h); ip != nil {
-		switch ip.String() {
-		case "169.254.169.254", "100.100.100.200", "fd00:ec2::254":
-			return fmt.Errorf("%s is a cloud metadata endpoint", h)
-		}
-		if ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-			return fmt.Errorf("%s is a link-local address", h)
-		}
+	if ip := net.ParseIP(strings.SplitN(h, "%", 2)[0]); ip != nil {
+		return guardEgressIP(h, ip)
 	}
 	if getSetting("egress_policy") == "public_only" && isPrivateHost(h) && !egressPrivateAllowed(h) {
 		return fmt.Errorf("%s is a private address; list it in egress_allow_hosts or choose the allow_private egress policy", h)
+	}
+	return nil
+}
+
+// guardEgressIP applies the policy to the address that will actually be dialled.
+// The original name may be allowlisted for an on-premise service, while an IP or
+// CIDR allowlist entry may allow only some of the name's resolved addresses.
+func guardEgressIP(host string, ip net.IP) error {
+	if ip.To16() == nil {
+		return fmt.Errorf("%s did not resolve to a valid IP address", host)
+	}
+	switch ip.String() {
+	case "169.254.169.254", "100.100.100.200", "fd00:ec2::254":
+		return fmt.Errorf("%s resolves to a cloud metadata endpoint", host)
+	}
+	if ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+		return fmt.Errorf("%s resolves to a link-local address", host)
+	}
+	if getSetting("egress_policy") == "public_only" &&
+		(ip.IsLoopback() || ip.IsPrivate() || ip.IsUnspecified() || ip.IsMulticast()) &&
+		!egressPrivateAllowed(host) && !egressPrivateAllowed(ip.String()) {
+		return fmt.Errorf("%s resolves to a private address; list it in egress_allow_hosts or choose the allow_private egress policy", host)
+	}
+	return nil
+}
+
+// egressDialContext pins each connection to an address checked after DNS resolution.
+// A second hostname lookup by net.Dial would reopen a DNS-rebinding window.
+func egressDialContext(ctx context.Context, network, address string) (net.Conn, error) {
+	dialer := &net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}
+	return dialEgressContext(ctx, network, address, net.DefaultResolver.LookupIPAddr, dialer.DialContext)
+}
+
+func dialEgressContext(ctx context.Context, network, address string,
+	lookup func(context.Context, string) ([]net.IPAddr, error),
+	dial func(context.Context, string, string) (net.Conn, error)) (net.Conn, error) {
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return nil, err
+	}
+	host = strings.TrimSuffix(strings.ToLower(host), ".")
+	if err := guardEgressHost(host); err != nil {
+		return nil, err
+	}
+	var addresses []net.IPAddr
+	if ip := net.ParseIP(strings.SplitN(host, "%", 2)[0]); ip != nil {
+		addresses = []net.IPAddr{{IP: ip}}
+	} else {
+		addresses, err = lookup(ctx, host)
+		if err != nil {
+			return nil, err
+		}
+	}
+	var lastErr error
+	for _, addr := range addresses {
+		if err := guardEgressIP(host, addr.IP); err != nil {
+			lastErr = err
+			continue
+		}
+		conn, err := dial(ctx, network, net.JoinHostPort(addr.IP.String(), port))
+		if err == nil {
+			return conn, nil
+		}
+		lastErr = err
+	}
+	if lastErr == nil {
+		lastErr = fmt.Errorf("%s did not resolve to an address", host)
+	}
+	return nil, lastErr
+}
+
+func egressHTTPTransport() *http.Transport {
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	// A proxy resolves the destination itself, beyond this dialer's checks.
+	// Protected fetches therefore connect directly to the checked destination.
+	tr.Proxy = nil
+	tr.DialContext = egressDialContext
+	tr.DialTLSContext = nil
+	tr.DialTLS = nil
+	return tr
+}
+
+func guardEgressRedirect(req *http.Request, via []*http.Request) error {
+	if err := guardEgressURL(req.URL.String()); err != nil {
+		return err
+	}
+	if len(via) >= 10 {
+		return fmt.Errorf("stopped after 10 redirects")
+	}
+	if len(via) > 0 && (!strings.EqualFold(req.URL.Scheme, via[0].URL.Scheme) || !strings.EqualFold(req.URL.Host, via[0].URL.Host)) {
+		return fmt.Errorf("redirect to another origin is not allowed")
 	}
 	return nil
 }

@@ -234,13 +234,21 @@ func opencodeSaveState(st opencodeInstallState) error {
 // registry's sha512 integrity and writes its binary to dst. It returns the checksum.
 func opencodeFetch(ctx context.Context, pkg, version, dst string) (string, error) {
 	registry := strings.TrimRight(nonEmpty(getSetting("ai_opencode_registry"), "https://registry.npmjs.org"), "/")
+	// npm mirrors may redirect a public, unauthenticated package download to a
+	// separate tarball host. Keep that exception local to the integrity-checked
+	// installer; provider calls must not forward prompts or credentials that way.
+	client := *aiHTTPClient
+	client.CheckRedirect = opencodeDownloadRedirect
 	get := func(u string) (*http.Response, error) {
+		if err := guardEgressURL(u); err != nil {
+			return nil, err
+		}
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 		if err != nil {
 			return nil, err
 		}
 		req.Header.Set("User-Agent", "WRM-PRO/"+AppVersion)
-		resp, err := aiHTTPClient.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			return nil, err
 		}
@@ -308,6 +316,19 @@ func opencodeFetch(ctx context.Context, pkg, version, dst string) (string, error
 		return "", err
 	}
 	return got, nil
+}
+
+func opencodeDownloadRedirect(req *http.Request, via []*http.Request) error {
+	if err := guardEgressURL(req.URL.String()); err != nil {
+		return err
+	}
+	if len(via) >= 10 {
+		return fmt.Errorf("stopped after 10 package redirects")
+	}
+	if len(via) > 0 && via[0].URL.Scheme == "https" && req.URL.Scheme != "https" {
+		return fmt.Errorf("package redirect from HTTPS to HTTP is not allowed")
+	}
+	return nil
 }
 
 // opencodeExtract writes one file of a .tgz to dst (atomically, executable).
