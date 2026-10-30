@@ -19,12 +19,13 @@ Verification:
 - `go test . -run '^TestConnectionTestDoesNotReuseStoredSecretAfterTargetChange$' -count=1` from `remote-manager/` — passed.
 - `git diff --check` — passed.
 
-An independent review found a bypass when the request changed both protocol and `auth_method` (for example, saved SSH password → FTP with `auth_method: KEY`). FTP consumes the password field directly, so the guard now checks inherited password/key fields independently of the selected method. The regression test covers that crafted request too.
+An independent review found and closed a bypass when the request changed both protocol and `auth_method` (for example, saved SSH password → FTP with `auth_method: KEY`). FTP consumes the password field directly, so the guard now checks inherited password/key fields independently of the selected method. The regression test covers that crafted request too.
 
 Commit and publication:
 
 - Commit: `c63feb7` (`fix(security): SEC-03 guard saved credentials in connection test`)
-- Follow-up hardening and regression case are being committed on this same branch.
+- Follow-up commit: `329d901` (`fix(security): block saved-secret reuse across auth methods`)
+- Handover checkpoints: `d91deb4`, `727fc0b`.
 - Branch pushed to `origin/fix/conntest-credential-target-guard`.
 - Not merged or released.
 
