@@ -299,7 +299,7 @@ The original report is based on public v13.14.1; this branch starts from v13.14.
 ## Remaining verified findings
 
 - Addon host bridge handshake and navigation revocation have focused Node MessageChannel regression coverage. Remaining: define a documented compatibility window and migration/distribution path before removing legacy host/helper fallback for installed panels.
-- AI shell policy: Windows recursive deletes are currently blocked broadly; later work can add Windows-aware target parsing to allow safe recursive deletes while still blocking system roots.
+- AI shell policy: Windows recursive deletes remain blocked broadly because WRM lacks a PowerShell/cmd parser and reliable target-resolution context. Guard coverage now includes PowerShell enumeration-to-delete pipelines, cmd `FOR /R`, and UTF-16LE encoded PowerShell; safe target-aware relaxation remains future work.
 - Cross-platform CI: the audited Windows suite still has existing test failures around POSIX paths/shell assumptions. A focused Windows-compatible test job or explicit platform skips remains open.
 - Continue item-by-item verification of the original audit, especially reverse-proxy exposure for bearer share URLs, and the remaining operational findings. Session/folder actions, drag actions, tunnel start/stop, remote file create/delete feedback, appearance sync errors, and visible share URL history have been checked.
 - MCP concurrency cap is implemented and pushed; it bounds global MCP work at 8 calls. Continue monitoring/reproducing any residual UI slowdown. `open_session` still synchronously gathers remote details with a 20-second SSH timeout, so a slow target can make that call take up to 20 seconds.
@@ -341,3 +341,13 @@ Changed files: `remote-manager/static/addons.js`, `tools/test-addon-host-bridge.
 Verification passed: `node --test tools/test-addon-host-bridge.js tools/test-addon-bridge.js` (4 tests); `node --check remote-manager/static/addons.js`; `node tools/check-ui.js`; and `git diff --check`.
 
 Limit: the repository has no browser automation harness, so these are Node VM/MessageChannel host-boundary tests rather than a full browser-driven iframe navigation test.
+
+## Completed package: close Windows recursive-delete command bypasses
+
+The Windows destructive-command guard now catches recursive enumeration piped into deletion, cmd `FOR /R` deletion loops, and PowerShell `-EncodedCommand` (including supported abbreviations). Encoded scripts are decoded as UTF-16LE and passed through the normal destructive checks; malformed/oversized payloads fail closed. Executable-option scanning stops at PowerShell command/file boundaries so quoted examples such as `Write-Output 'pwsh -enc not-base64'` are not mistaken for nested executable invocations. Explicit recursive delete targets remain broadly blocked because WRM does not yet parse PowerShell/cmd or resolve paths safely.
+
+Changed files: `remote-manager/ai_destructive.go` and `remote-manager/v13142_ai_test.go`.
+
+Verification passed: `go test . -run '^(TestAIDestructiveBypasses|TestAIDestructivePatterns|TestAIDestructivePath.*)$' -count=1 -timeout 90s` from `remote-manager/`; and `git diff --check`.
+
+Security review found and prompted fixes for abbreviated PowerShell `-EncodedCommand`/`-Command` flags, quoted wrapper forms, and quoted text false positives. The reviewer found no remaining actionable issue in the final focused review. Residual limit: complex shell/PowerShell syntax and UNC or root-relative paths still require a real parser before safe target-aware rules are possible.

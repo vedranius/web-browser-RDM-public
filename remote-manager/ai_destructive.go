@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"regexp"
 	"strings"
+	"unicode/utf16"
 )
 
 // ─── AI: DESTRUCTIVE COMMANDS (always blocked) ───────
@@ -45,7 +48,7 @@ var aiDestructiveRules = []struct{ ID, What string }{
 	{"root_account", "deleting, locking or removing the password of root"},
 	{"protected_write", "writing to password and group files, sudoers, /boot, raw disks, /dev/mem, sysrq, authorized_keys, login records"},
 	{"pipe_shell", "piping into a shell or interpreter (curl … | sh)"},
-	{"windows_recursive_delete", "recursive PowerShell and cmd deletions (until targets can be resolved safely)"},
+	{"windows_recursive_delete", "recursive PowerShell/cmd deletions, enumeration pipelines, loops, or encoded commands not safely inspected"},
 	{"admin_pattern", "patterns added by the administrator (ai_blocked_commands)"},
 }
 
@@ -345,11 +348,14 @@ done:
 }
 
 var (
-	reForkBomb   = regexp.MustCompile(`([A-Za-z_:.][A-Za-z0-9_:.]*)\(\)\{`)
-	reHereString = regexp.MustCompile(`(?s)<<<\s*(?:'([^']*)'|"([^"]*)"|(\S+))`)
-	rePipeShell  = regexp.MustCompile(`\|\s*(sudo\s+(-[A-Za-z-]+\s+)*)?(env\s+)?(/usr/bin/|/bin/|/usr/local/bin/)?(ba|z|da|k|c|tc|fi|a)?sh($|[\s;&|)])`)
-	rePipeInterp = regexp.MustCompile(`\|\s*(sudo\s+(-[A-Za-z-]+\s+)*)?(/usr/bin/|/bin/)?(python[0-9.]*|perl|ruby|node|php|lua)\s*(-\s*)?($|[;&|)])`)
-	reWriteDev   = regexp.MustCompile(`>\s*(/dev/(sd|hd|vd|xvd|nvme|mmcblk|disk/|mapper/|md|dm-|mem\b|kmem\b|port\b)|/etc/(shadow|gshadow|passwd|sudoers|group)\b|/proc/sysrq-trigger|/boot/)`)
+	reForkBomb          = regexp.MustCompile(`([A-Za-z_:.][A-Za-z0-9_:.]*)\(\)\{`)
+	reHereString        = regexp.MustCompile(`(?s)<<<\s*(?:'([^']*)'|"([^"]*)"|(\S+))`)
+	rePipeShell         = regexp.MustCompile(`\|\s*(sudo\s+(-[A-Za-z-]+\s+)*)?(env\s+)?(/usr/bin/|/bin/|/usr/local/bin/)?(ba|z|da|k|c|tc|fi|a)?sh($|[\s;&|)])`)
+	rePipeInterp        = regexp.MustCompile(`\|\s*(sudo\s+(-[A-Za-z-]+\s+)*)?(/usr/bin/|/bin/)?(python[0-9.]*|perl|ruby|node|php|lua)\s*(-\s*)?($|[;&|)])`)
+	reWriteDev          = regexp.MustCompile(`>\s*(/dev/(sd|hd|vd|xvd|nvme|mmcblk|disk/|mapper/|md|dm-|mem\b|kmem\b|port\b)|/etc/(shadow|gshadow|passwd|sudoers|group)\b|/proc/sysrq-trigger|/boot/)`)
+	reWinDeletePipeline = regexp.MustCompile(`(?is)(?:^|[;&\n])\s*(?:(?:powershell|pwsh)(?:\.exe)?\s+[^|;\n]*?-(?:command|c)\s+["']?)?(?:get-childitem|gci|dir|ls)\b[^|;\n]*\s-(?:recurse|recursive|r)\b[^|;\n]*\|\s*(?:remove-item|ri|rm|del|erase|rd|rmdir)\b`)
+	reWinForDelete      = regexp.MustCompile(`(?is)(?:^|[;&\n])\s*(?:cmd(?:\.exe)?\s+(?:/[a-z]+\s+)*?/(?:c|k)\s+["']?)?for\s+/r(?:\s+(?:"[^"]+"|[^\s]+))?\s+%{1,2}[a-z]\s+in\s*\([^)]*\)\s+do\s+(?:del|erase|rd|rmdir)\b`)
+	reWinDrivePath      = regexp.MustCompile(`(?i)^[a-z]:`)
 )
 
 // forkBomb looks for a function that pipes itself into itself in the background.
@@ -389,6 +395,15 @@ func aiDestructive(cmd string) *aiBlock { return aiDestructiveDepth(cmd, 0) }
 func aiDestructiveDepth(cmd string, depth int) *aiBlock {
 	if depth > 3 {
 		return &aiBlock{Rule: "nested", Why: "nested shell input could not be checked safely"}
+	}
+	encoded, malformed := aiPowerShellEncodedCommands(cmd)
+	if malformed {
+		return &aiBlock{Rule: "windows_recursive_delete", Why: "encoded PowerShell input could not be inspected safely"}
+	}
+	for _, script := range encoded {
+		if b := aiDestructiveDepth(script, depth+1); b != nil {
+			return b
+		}
 	}
 	if b := aiWindowsDestructive(cmd); b != nil {
 		return b
@@ -504,9 +519,15 @@ func aiDestructiveDepth(cmd string, depth int) *aiBlock {
 // Target-aware Windows path normalization is not yet available, so recursive deletes
 // and volume formatting are refused regardless of the named target.
 func aiWindowsDestructive(raw string) *aiBlock {
+	if reWinDeletePipeline.MatchString(raw) {
+		return &aiBlock{Rule: "windows_recursive_delete", Why: "recursive PowerShell enumeration piped to deletion is not allowed by the automatic destructive-command guard"}
+	}
+	if reWinForDelete.MatchString(raw) {
+		return &aiBlock{Rule: "windows_recursive_delete", Why: "cmd recursive FOR deletion is not allowed by the automatic destructive-command guard"}
+	}
 	for _, segment := range looseSegments(raw) {
 		for i, word := range segment {
-			name := strings.ToLower(strings.TrimSuffix(strings.TrimSuffix(word, ".exe"), ".com"))
+			name := aiWindowsCommandName(word)
 			if i > 0 && !oneOf(strings.ToLower(segment[i-1]), "-command", "-c", "/c", "-command:", "&&", "|", "|&") {
 				continue
 			}
@@ -515,9 +536,16 @@ func aiWindowsDestructive(raw string) *aiBlock {
 			case "format-volume", "format-disk", "clear-disk", "initialize-disk":
 				return &aiBlock{Rule: "mkfs", Why: name + " changes or erases a Windows volume"}
 			case "remove-item", "ri", "rm", "rmdir", "rd":
+				windowsTarget := false
+				for _, arg := range args {
+					if reWinDrivePath.MatchString(arg) {
+						windowsTarget = true
+						break
+					}
+				}
 				for _, arg := range args {
 					a := strings.ToLower(arg)
-					if oneOf(a, "-recurse", "-recursive", "/s", "/s/q", "/q/s") || (name != "rm" && a == "-r") || strings.Contains(a, "/s/") {
+					if oneOf(a, "-recurse", "-recursive", "/s", "/s/q", "/q/s") || (a == "-r" && (name != "rm" || windowsTarget)) || strings.Contains(a, "/s/") {
 						return &aiBlock{Rule: "windows_recursive_delete", Why: "recursive PowerShell or cmd deletion is not allowed by the automatic destructive-command guard"}
 					}
 				}
@@ -532,6 +560,121 @@ func aiWindowsDestructive(raw string) *aiBlock {
 		}
 	}
 	return nil
+}
+
+// aiPowerShellEncodedCommands decodes the documented UTF-16LE -EncodedCommand
+// form before the destructive-command checks. Invalid or oversized payloads fail
+// closed because their contents cannot be inspected.
+func aiPowerShellEncodedCommands(raw string) ([]string, bool) {
+	var scripts []string
+	for _, segment := range looseSegments(raw) {
+		for i, word := range segment {
+			if !aiWindowsCommandPosition(segment, i) {
+				continue
+			}
+			name := aiWindowsCommandName(word)
+			if !oneOf(name, "powershell", "pwsh") {
+				continue
+			}
+			for j := i + 1; j < len(segment); j++ {
+				rawArg := segment[j]
+				argName := strings.ToLower(strings.SplitN(rawArg, ":", 2)[0])
+				argName = strings.ToLower(strings.SplitN(argName, "=", 2)[0])
+				if aiPowerShellCommandBoundary(argName) {
+					break
+				}
+				flag, attached, hasAttached := strings.Cut(rawArg, ":")
+				if !hasAttached {
+					flag, attached, hasAttached = strings.Cut(rawArg, "=")
+				}
+				flag = strings.ToLower(flag)
+				encodedFlag := oneOf(flag, "-e", "-ec") || (len(flag) > 2 && strings.HasPrefix("-encodedcommand", flag))
+				if !encodedFlag {
+					continue
+				}
+				payload := ""
+				if hasAttached {
+					payload = attached
+				} else if j+1 < len(segment) {
+					payload = segment[j+1]
+				}
+				if payload == "" || len(payload) > 1<<20 {
+					return nil, true
+				}
+				data, err := base64.StdEncoding.DecodeString(payload)
+				if err != nil || len(data)%2 != 0 {
+					return nil, true
+				}
+				units := make([]uint16, len(data)/2)
+				for k := range units {
+					units[k] = binary.LittleEndian.Uint16(data[k*2:])
+				}
+				script := strings.TrimPrefix(string(utf16.Decode(units)), "\ufeff")
+				scripts = append(scripts, script)
+				break
+			}
+		}
+	}
+	return scripts, false
+}
+
+func aiPowerShellCommandBoundary(arg string) bool {
+	if oneOf(arg, "-c", "-f") {
+		return true
+	}
+	if len(arg) < 3 {
+		return false
+	}
+	for _, option := range []string{"-command", "-commandwithargs", "-file"} {
+		if strings.HasPrefix(option, arg) {
+			return true
+		}
+	}
+	return false
+}
+
+func aiWindowsCommandPosition(words []string, i int) bool {
+	if i == 0 {
+		return true
+	}
+	if oneOf(strings.ToLower(words[i-1]), "-c", "-command", "/c", "/k", "&&", "||", "|", "|&") {
+		return true
+	}
+	if i == 1 && oneOf(strings.ToLower(words[0]), "sudo", "doas", "env", "nohup", "exec", "command", "setsid", "cmd", "cmd.exe") {
+		return true
+	}
+	if oneOf(strings.ToLower(words[0]), "sudo", "doas") {
+		tail := words[1:]
+		remaining := skipWrapperArgs(tail)
+		if len(tail)-len(remaining)+1 == i {
+			return true
+		}
+	}
+	if strings.EqualFold(words[0], "env") {
+		if i == 1 {
+			return true
+		}
+		for _, arg := range words[1:i] {
+			if !strings.Contains(arg, "=") || strings.HasPrefix(arg, "-") {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
+func aiWindowsCommandName(word string) string {
+	lower := strings.ToLower(word)
+	for _, exe := range []string{"powershell.exe", "pwsh.exe", "cmd.exe"} {
+		if strings.HasSuffix(lower, exe) {
+			return strings.TrimSuffix(exe, ".exe")
+		}
+	}
+	if i := strings.LastIndexAny(word, `/\`); i >= 0 {
+		word = word[i+1:]
+	}
+	return strings.ToLower(strings.TrimSuffix(strings.TrimSuffix(word, ".exe"), ".com"))
 }
 
 // aiDestructivePath checks a file the assistant wants to write.
