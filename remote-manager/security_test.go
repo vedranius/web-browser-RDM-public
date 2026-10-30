@@ -233,6 +233,9 @@ func TestCSRFMiddleware(t *testing.T) {
 			t.Errorf("missing header %s", hd)
 		}
 	}
+	if got := rec.Header().Get("Referrer-Policy"); got != "no-referrer" {
+		t.Errorf("bearer URLs may leak through the Referer header: got %q", got)
+	}
 }
 
 func TestEncryptionAndLegacyMigration(t *testing.T) {
