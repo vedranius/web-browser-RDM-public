@@ -425,7 +425,11 @@ func authorizeConnection(r *http.Request, connID int, perm string) (*connAccess,
 	if connID <= 0 {
 		return nil, 404, "Connection not found"
 	}
-	if userID, err := currentUserID(r); err == nil {
+	if session, err := lookupSession(r); err == nil {
+		if session.Restricted != "" {
+			return nil, 403, restrictedMessage(session.Restricted)
+		}
+		userID := session.UserID
 		if isAuditorUser(userID) {
 			return nil, 403, "Security auditors cannot open connections"
 		}
