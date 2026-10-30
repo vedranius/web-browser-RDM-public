@@ -29,11 +29,56 @@ Commit and publication:
 - Branch pushed to `origin/fix/conntest-credential-target-guard`.
 - Not merged or released.
 
+## Completed package: AI approval policy recheck
+
+An approved command or file operation is now re-evaluated against the current mode, automatic-mode deny lists, current full-access policy, and connection scope immediately before it runs. This applies to unchanged approvals as well as edited approvals. Deferred approvals now re-evaluate against a copied current auto-limit state rather than `nil`.
+
+Changed files:
+
+- `remote-manager/ai_engine.go`
+- `remote-manager/ai_approvals.go`
+- `remote-manager/ai_approval_policy_recheck_test.go`
+
+Verification:
+
+- `go test . -run '^TestAIApprovalRechecksCurrentModeBeforeRunning$' -count=1` from `remote-manager/` — passed.
+- A combined Windows run also reached the existing `TestAIAskModeApprovalEditAndInjection`, which timed out waiting for an approval because that older test embeds Windows paths in raw JSON. The historical audit already records this POSIX-path limitation in the Windows test environment.
+
+Commit: pending in this worktree; branch push follows this handover update.
+
+## Completed package: atomic one-time MFA consumption
+
+TOTP steps and recovery codes are now consumed with conditional database updates so concurrent requests cannot reuse the same factor. Login, step-up authentication, and 2FA disable use the shared helper; database errors fail closed.
+
+Changed files:
+
+- `remote-manager/users.go`
+- `remote-manager/roles.go`
+- `remote-manager/totp_replay_test.go`
+
+Verification: `go test . -run '^(TestSecondFactor|TestTOTP|TestRecoveryCodesSingleUse|TestSecurity2FALockout|TestStepUp)$' -count=1 -timeout 60s` from `remote-manager/` — passed.
+
+Commit: pending; push follows this handover update.
+
+## Completed package: AI approval policy recheck
+
+Approved commands and file operations are evaluated again against the current session mode, automatic-mode limits, full-access policy, addon-host rules, and connection scope immediately before execution. Deferred approvals use the current automatic-mode limits.
+
+Changed files:
+
+- `remote-manager/ai_engine.go`
+- `remote-manager/ai_approvals.go`
+- `remote-manager/ai_approval_policy_recheck_test.go`
+
+Verification: `go test . -run '^TestAIApprovalRechecksCurrentModeBeforeRunning$' -count=1` from `remote-manager/` — passed. A separate older Windows-path-sensitive test timed out in a combined run; see the original audit notes.
+
+Commit: pending; push follows this handover update.
+
 ## In progress
 
 - Re-audit the remaining findings in `WRM-PRO-v13.14.1-fresh-eyes-review.md` against current public `main` and this branch.
 - Check completed roadmap claims against current code and identify further concrete fixes.
-- Add each completed package, verification result, commit, and next step to this handover before pushing it.
+- Close DNS egress, tunnel DNS alias, addon bridge, event-bus reconnect, and addon instance restore findings; add each completed package, verification result, commit, and next step here before pushing it.
 
 ## Instructions for the next agent
 

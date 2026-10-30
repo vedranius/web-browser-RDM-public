@@ -1013,7 +1013,8 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 		s.approvalsN++
 		s.mu.Unlock()
 		if r.Edited {
-			// an edited item is evaluated again: it must not be destructive and the mode must allow changes
+			// Apply approved edits first; every approved plan is re-evaluated below,
+			// whether or not its command or content changed.
 			if pl.Transfer {
 				// a transfer cannot be edited (Resolve ignores edits)
 			} else if pl.Write {
@@ -1022,18 +1023,38 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 			} else {
 				pl.Script, pl.Display, pl.Act.Command = r.Command, r.Command, r.Command
 			}
+		}
+		// Approval may have waited while the user changed this session's mode or
+		// automatic-mode deny lists. Re-evaluate the exact plan immediately before
+		// executing it, including unchanged approvals.
+		s.recheckMode()
+		if ok, why := s.userAllowed(); !ok {
+			return fail(why)
+		}
+		mode, auto = s.modeAndAuto()
+		s.mu.Lock()
+		home = s.home
+		s.mu.Unlock()
+		again := aiEvaluate(mode, auto, pl.Act, home, time.Now())
+		if s.fullAccess() {
+			again = aiFullAccessDecision(again, mode)
+		}
+		if spec.Host && spec.Kind != "read" {
+			if mode == aiModeReadOnly {
+				again = aiDecision{Action: aiDeny, Rule: "mode", Reason: "the session is read-only"}
+			} else {
+				again = aiDecision{Action: aiApprove, Rule: "addons.manage", Reason: "changes to addons always need the user's approval"}
+			}
+		}
+		if s.Scopes != nil && spec.Kind == "command" && again.Action != aiDeny && !again.ReadOnly && !oneOf("run_with_approval", s.Scopes...) {
+			again = aiDecision{Action: aiDeny, Rule: "scope", Reason: "the AI connection only allows read-only commands (scope run_readonly)"}
+		}
+		if again.Action == aiDeny {
 			s.mu.Lock()
-			mode = s.Mode
+			s.denials++
 			s.mu.Unlock()
-			again := aiEvaluate(mode, nil, pl.Act, home, time.Now())
-			if full {
-				// the user approved exactly this edited command
-				again = aiFullAccessDecision(again, mode)
-			}
-			if again.Action == aiDeny {
-				s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": call.Name, "rule": again.Rule, "reason": again.Reason, "edited": true})
-				return fail("Denied by WRM after the user's edit: " + again.Reason)
-			}
+			s.audit(nil, "ai.tool_denied", map[string]interface{}{"tool": call.Name, "rule": again.Rule, "reason": again.Reason, "after_approval": true, "edited": r.Edited})
+			return fail("Denied by WRM after approval: " + again.Reason)
 		}
 	case aiAllow:
 		if dec.Auto {
