@@ -7,6 +7,49 @@
 // file only shows it.
 'use strict';
 
+// Validate the one-time v2 handshake before the panel can use WRM capabilities.
+// Kept separate from event lookup so the host boundary can be regression-tested.
+function wrmAddonAcceptBridgeMessage(st, d, ports, onMessage, diag) {
+  if (!st || st.revoked || st.secureBridge) return false;
+  ports = ports || [];
+  if (d.type === 'wrm:ready' && (typeof d.bridge_token === 'string' || ports.length > 0)) {
+    if (!st.bridgeToken || d.bridge_token !== st.bridgeToken || !ports[0]) return false;
+    st.bridgeToken = '';
+    st.secureBridge = true;
+    st.bridgePort = ports[0];
+    st.bridgePort.onmessage = msg => {
+      if (!st.revoked && msg.data && msg.data.v === 2) onMessage(st, msg.data);
+    };
+    if (st.bridgePort.start) st.bridgePort.start();
+    st.bridgePort.postMessage({v: 2, type: 'wrm:bridge:ready'});
+    onMessage(st, {v: 2, type: 'wrm:ready'});
+    return true;
+  }
+  if (d.v !== 2) {
+    st.dropped++;
+    diag(st, {kind: 'E_BRIDGE', message: 'message without v: 2 dropped: ' + d.type.slice(0, 40)});
+    return false;
+  }
+  onMessage(st, d);
+  return true;
+}
+
+// A second load on the same iframe means the addon navigated. Close its private
+// port and discard the browsing context before it can issue any more requests.
+function wrmAddonFrameLoaded(st, frame, loads) {
+  loads++;
+  if (loads <= 1 || st.frame !== frame) return loads;
+  st.revoked = true;
+  st.ready = false;
+  if (st.bridgePort) { try { st.bridgePort.close(); } catch (_) {} }
+  st.bridgePort = null;
+  frame.remove();
+  st.frame = null;
+  addDiag(st, {kind: 'E_BRIDGE_NAVIGATION', message: 'Addon panel navigated; bridge access was revoked. Reload the panel to continue.'});
+  banner(st, 'start');
+  return loads;
+}
+
 Object.assign(LANGS.en, {
   tab_addons: 'Addons',
   stin_addons: 'Addons extend WRM from inside itself: an extra panel or a colour theme, installed as a ZIP. A panel runs sandboxed and cannot touch the rest of the interface. An administrator installs addons for everybody; each user may also install personal addons that only they see (policy addon_personal).',
@@ -783,15 +826,7 @@ Object.assign(LANGS.hr, {
     const panelFrame = st.frame;
     let loads = 0;
     st.frame.addEventListener('load', () => {
-      if (++loads <= 1 || st.frame !== panelFrame) return;
-      st.revoked = true;
-      st.ready = false;
-      if (st.bridgePort) { try { st.bridgePort.close(); } catch (_) {} }
-      st.bridgePort = null;
-      st.frame.remove();
-      st.frame = null;
-      addDiag(st, {kind: 'E_BRIDGE_NAVIGATION', message: 'Addon panel navigated; bridge access was revoked. Reload the panel to continue.'});
-      banner(st, 'start');
+      loads = wrmAddonFrameLoaded(st, panelFrame, loads);
     });
     wc.appendChild(st.frame);
   }
@@ -1084,23 +1119,7 @@ Object.assign(LANGS.hr, {
     if (!frame) return;
     const st = Array.from(v2.values()).find(x => x.frame === frame);
     if (st) {
-      if (st.revoked) return;
-      if (st.secureBridge) return; // v2 requests and replies use the transferred port only.
-      if (d.type === 'wrm:ready' && (typeof d.bridge_token === 'string' || ev.ports.length > 0)) {
-        if (!st.bridgeToken || d.bridge_token !== st.bridgeToken || !ev.ports || !ev.ports[0]) return;
-        st.bridgeToken = '';
-        st.secureBridge = true;
-        st.bridgePort = ev.ports[0];
-        st.bridgePort.onmessage = msg => {
-          if (!st.revoked && msg.data && msg.data.v === 2) handleV2(st, msg.data);
-        };
-        if (st.bridgePort.start) st.bridgePort.start();
-        st.bridgePort.postMessage({v: 2, type: 'wrm:bridge:ready'});
-        handleV2(st, {v: 2, type: 'wrm:ready'});
-        return;
-      }
-      if (d.v !== 2) { st.dropped++; addDiag(st, {kind: 'E_BRIDGE', message: 'message without v: 2 dropped: ' + d.type.slice(0, 40)}); return; }
-      handleV2(st, d);
+      wrmAddonAcceptBridgeMessage(st, d, ev.ports, handleV2, addDiag);
       return;
     }
     const a = list.find(x => { const wo = openWins[keyOf(x)]; return wo && wo.el && wo.el.contains(frame); });
