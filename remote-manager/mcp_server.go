@@ -39,7 +39,22 @@ const (
 	mcpConnIdle        = time.Hour
 	mcpMaxConnsPerUser = 20
 	mcpMaxBody         = 4 << 20
+	// Tool work shares SSH, database and process resources with the WRM UI. Keep a
+	// client that parallelizes calls from starting unbounded work across MCP sessions.
+	mcpMaxConcurrentCalls = 8
 )
+
+var mcpToolSlots = make(chan struct{}, mcpMaxConcurrentCalls)
+
+func mcpStartToolCall(w http.ResponseWriter, id json.RawMessage) bool {
+	select {
+	case mcpToolSlots <- struct{}{}:
+		return true
+	default:
+		writeRPC(w, http.StatusOK, rpcResult(id, toolText("WRM is busy with other MCP tool calls. Retry after an active call finishes; do not start more parallel calls.", true)))
+		return false
+	}
+}
 
 type mcpElicit struct {
 	sessionID  int64
@@ -613,6 +628,10 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		writeRPC(w, 200, rpcResult(m.ID, mcpListConnections(g)))
 		return
 	case "open_session":
+		if !mcpStartToolCall(w, m.ID) {
+			return
+		}
+		defer func() { <-mcpToolSlots }()
 		writeRPC(w, 200, rpcResult(m.ID, mcpOpenSession(r, c, g, p.Arguments)))
 		return
 	case "close_session":
@@ -635,6 +654,10 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		writeRPC(w, 200, rpcResult(m.ID, toolText(why, true)))
 		return
 	}
+	if !mcpStartToolCall(w, m.ID) {
+		return
+	}
+	defer func() { <-mcpToolSlots }()
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	if p.Name == "transfer_file" {
