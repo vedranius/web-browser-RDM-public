@@ -10573,16 +10573,20 @@ async function renderTunnelsPanel() {
 
 async function tunnelStart(key, btn) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-  const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/start', {method: 'POST'});
-  if (!r.ok) showToast(await apiError(r), 'error', 8000);
-  else { const v = await r.json(); showToast(t('tun_started').replace('{addr}', listenAddress(v)), 'success', 3500); }
-  await loadTunnels();
+  try {
+    const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/start', {method: 'POST'});
+    if (!r.ok) showToast(await apiError(r), 'error', 8000);
+    else { const v = await r.json(); showToast(t('tun_started').replace('{addr}', listenAddress(v)), 'success', 3500); }
+  } catch (e) { showToast(String(e.message || e), 'error', 8000); }
+  finally { if (btn) btn.disabled = false; await loadTunnels(); }
 }
 
 async function tunnelStop(key) {
-  const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/stop', {method: 'POST'});
-  if (!r.ok) showToast(await apiError(r), 'error');
-  await loadTunnels();
+  try {
+    const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/stop', {method: 'POST'});
+    if (!r.ok) showToast(await apiError(r), 'error');
+  } catch (e) { showToast(String(e.message || e), 'error'); }
+  finally { await loadTunnels(); }
 }
 
 async function startConnTunnels(connId) {
