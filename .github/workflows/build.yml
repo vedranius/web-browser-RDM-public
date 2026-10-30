@@ -73,7 +73,7 @@ jobs:
         run: |
           python3 tools/test-medium-wrapper.py
           node tools/check-ui.js
-          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js tools/test-git-client.js tools/test-monitoring.js
+          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js tools/test-git-client.js tools/test-monitoring.js tools/test-addon-bridge.js
 
   # Windows: the test suite needs a POSIX shell, but the server must still compile and pass
   # vet on Windows (file handling, service install, path separators).
