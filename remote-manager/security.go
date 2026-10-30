@@ -441,8 +441,6 @@ func egressHTTPTransport() *http.Transport {
 	// Protected fetches therefore connect directly to the checked destination.
 	tr.Proxy = nil
 	tr.DialContext = egressDialContext
-	tr.DialTLSContext = nil
-	tr.DialTLS = nil
 	return tr
 }
 
