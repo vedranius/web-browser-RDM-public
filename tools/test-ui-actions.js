@@ -144,3 +144,61 @@ test('appearance sync reports network loss and retries when the browser is onlin
   assert.equal(requests, 2);
   assert.equal(f.messages.length, 1);
 });
+
+const shareBootBegin = html.indexOf('function shareTokenFromLocation()');
+const shareBootEnd = html.indexOf('\n\nwindow.addEventListener(\'load\'', shareBootBegin);
+if (shareBootBegin < 0 || shareBootEnd < 0) throw new Error('share URL cleanup helper not found');
+const shareBootSource = html.slice(shareBootBegin, shareBootEnd);
+
+function shareBootFixture(pathname, failStorage = false) {
+  let currentPath = pathname;
+  let currentState = null;
+  const values = new Map();
+  const replaced = [];
+  const context = vm.createContext({
+    location: {get pathname() { return currentPath; }},
+    sessionStorage: {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => { if (failStorage) throw new Error('storage disabled'); values.set(key, value); },
+      removeItem: key => values.delete(key),
+    },
+    history: {
+      get state() { return currentState; },
+      replaceState: (state, _title, url) => { replaced.push(url); currentPath = url; currentState = state; },
+    },
+  });
+  vm.runInContext(shareBootSource, context);
+  return {
+    context,
+    values,
+    replaced,
+    get state() { return currentState; },
+    navigate(path, state = null) { currentPath = path; currentState = state; },
+  };
+}
+
+test('share tokens stay associated with their history entries across rooms and back navigation', () => {
+  const first = shareBootFixture('/share/secret-capability/');
+  assert.equal(first.context.shareTokenFromLocation(), 'secret-capability');
+  assert.equal(first.values.has('wrm.share.entries'), true);
+  assert.deepEqual(first.replaced, ['/share']);
+  const firstState = first.state;
+
+  first.navigate('/share/another-capability');
+  assert.equal(first.context.shareTokenFromLocation(), 'another-capability');
+  const secondState = first.state;
+  assert.notEqual(firstState.wrmShareEntry, secondState.wrmShareEntry);
+
+  first.navigate('/share', firstState);
+  assert.equal(first.context.shareTokenFromLocation(), 'secret-capability');
+  first.navigate('/', null);
+  assert.equal(first.context.shareTokenFromLocation(), '');
+  first.navigate('/share', firstState);
+  assert.equal(first.context.shareTokenFromLocation(), 'secret-capability');
+});
+
+test('share token URL remains intact if session storage cannot persist it', () => {
+  const f = shareBootFixture('/share/secret-capability', true);
+  assert.equal(f.context.shareTokenFromLocation(), 'secret-capability');
+  assert.deepEqual(f.replaced, []);
+});

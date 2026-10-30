@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -38,5 +39,19 @@ func TestAPIRoutesDenyByDefault(t *testing.T) {
 	u := newTestUser(t, srv, "deny-by-default", false)
 	if code := u.jsonDo("GET", "/api/connections", nil, nil); code != http.StatusOK {
 		t.Fatalf("signed-in /api/connections: %d, want 200", code)
+	}
+}
+
+func TestSharePageServesCleanAndLegacyPaths(t *testing.T) {
+	for _, path := range []string{"/share", "/share/example-token"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		res := httptest.NewRecorder()
+		newRouter().ServeHTTP(res, req)
+		if res.Code != http.StatusOK {
+			t.Errorf("GET %s: status %d, want %d", path, res.Code, http.StatusOK)
+		}
+		if !strings.Contains(res.Body.String(), "WRM") {
+			t.Errorf("GET %s did not serve the app", path)
+		}
 	}
 }

@@ -18673,10 +18673,36 @@ window.addEventListener('beforeunload', e => {
 
 // ══ BOOT ════════════════════════════════════════════
 
-window.addEventListener('load', async () => {
+function shareTokenFromLocation() {
+  const key = 'wrm.share.entries';
+  let entries;
+  try { entries = JSON.parse(sessionStorage.getItem(key) || '{}'); } catch (_) { entries = {}; }
+  if (!entries || typeof entries !== 'object' || Array.isArray(entries)) entries = {};
   if (location.pathname.startsWith('/share/')) {
+    const token = location.pathname.slice('/share/'.length).replace(/\/$/, '');
+    if (token) {
+      const id = 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      entries[id] = token;
+      try {
+        sessionStorage.setItem(key, JSON.stringify(entries));
+        const state = history.state && typeof history.state === 'object' ? history.state : {};
+        history.replaceState(Object.assign({}, state, {wrmShareEntry: id}), '', '/share');
+      } catch (_) { /* keep the token URL if the tab cannot store a reloadable entry */ }
+    }
+    return token;
+  }
+  if (location.pathname === '/share') {
+    const id = history.state && typeof history.state === 'object' && history.state.wrmShareEntry;
+    return typeof id === 'string' ? entries[id] || '' : '';
+  }
+  return '';
+}
+
+window.addEventListener('load', async () => {
+  const shareToken = shareTokenFromLocation();
+  if (shareToken) {
     isCollabMode = true;
-    collabToken = location.pathname.replace('/share/', '').replace(/\/$/, '');
+    collabToken = shareToken;
 
     // Hide auth, show app
     document.getElementById('auth-screen').style.display = 'none';

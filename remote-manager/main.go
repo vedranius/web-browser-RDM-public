@@ -293,6 +293,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/favicon.ico", faviconHandler)
 	mux.HandleFunc("/healthz", healthHandler)
 	mux.HandleFunc("/", rootHandler)
+	mux.HandleFunc("/share", sharePageHandler)
 	mux.HandleFunc("/share/", sharePageHandler)
 	mux.HandleFunc("/api/version", versionHandler)
 	// accounts & sign-in
