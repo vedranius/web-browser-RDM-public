@@ -7,9 +7,52 @@
   const listeners = {context: [], theme: [], visibility: []};
   let seq = 0;
   let context = null;
+  let bridgeToken = '';
+  let bridgePort = null;
+  let bridgeAccepted = false;
+  let bridgeInit = null;
+  let bridgeTimer = null;
+  try { bridgeToken = new URLSearchParams(location.hash.slice(1)).get('wrm-bridge') || ''; } catch (_) {}
 
   function send(msg) {
-    window.parent.postMessage(Object.assign({v: 2}, msg), '*');
+    const payload = Object.assign({v: 2}, msg);
+    if (bridgePort) {
+      bridgePort.postMessage(payload);
+      return;
+    }
+    if (msg.type === 'wrm:ready' && bridgeToken && typeof MessageChannel === 'function') {
+      const channel = new MessageChannel();
+      bridgePort = channel.port2;
+      bridgeAccepted = false;
+      bridgeInit = payload;
+      bridgePort.onmessage = (e) => {
+        const d = e.data || {};
+        if (d.type === 'wrm:bridge:ready') {
+          bridgeAccepted = true;
+          bridgeInit = null;
+          clearTimeout(bridgeTimer);
+          bridgeTimer = null;
+          return;
+        }
+        receive(d);
+      };
+      bridgePort.start();
+      window.parent.postMessage(Object.assign({}, payload, {bridge_token: bridgeToken}), '*', [channel.port1]);
+      bridgeToken = '';
+      bridgeTimer = setTimeout(fallbackToLegacyBridge, 1000);
+      return;
+    }
+    window.parent.postMessage(payload, '*');
+  }
+
+  function fallbackToLegacyBridge() {
+    clearTimeout(bridgeTimer);
+    bridgeTimer = null;
+    if (bridgePort) { try { bridgePort.close(); } catch (_) {} }
+    bridgePort = null;
+    bridgeAccepted = false;
+    if (bridgeInit) window.parent.postMessage(bridgeInit, '*');
+    bridgeInit = null;
   }
 
   function request(type, fields) {
@@ -30,9 +73,7 @@
     }
   }
 
-  window.addEventListener('message', (e) => {
-    if (e.source !== window.parent) return;
-    const d = e.data || {};
+  function receive(d) {
     if (d.id !== undefined && pending.has(d.id)) {
       const p = pending.get(d.id);
       pending.delete(d.id);
@@ -50,6 +91,14 @@
     } else if (d.type === 'wrm:visibility') {
       listeners.visibility.forEach((f) => f(!!d.visible));
     }
+  }
+
+  window.addEventListener('message', (e) => {
+    if (e.source !== window.parent) return;
+    // A legacy WRM responds over window.postMessage. A current WRM acknowledges
+    // the transferred port and sends all later data over that private channel.
+    if (bridgePort && !bridgeAccepted) fallbackToLegacyBridge();
+    receive(e.data || {});
   });
 
   window.addEventListener('error', (e) => {
