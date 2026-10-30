@@ -31,16 +31,6 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Bad JSON", 400)
 		return
 	}
-	if c.ID > 0 && userOwnsConnection(c.ID, userID) {
-		if stored, err := loadConnectionRaw(c.ID); err == nil {
-			if c.Password == "" {
-				c.Password = stored.Password
-			}
-			if c.PrivateKey == "" {
-				c.PrivateKey = stored.PrivateKey
-			}
-		}
-	}
 	c.Host = strings.TrimSpace(c.Host)
 	if c.Host == "" {
 		jsonError(w, "Host is required", 400)
@@ -52,6 +42,29 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 	if err := normalizeConnection(&c); err != nil {
 		jsonError(w, err.Error(), 400)
 		return
+	}
+	if c.ID > 0 && userOwnsConnection(c.ID, userID) {
+		if stored, err := loadConnectionRaw(c.ID); err == nil {
+			tested := c
+			tested.UserID = userID
+			applyFolderDefaults(&tested)
+			// Editing a saved connection's target or route must not silently send its
+			// saved password or private key to a different endpoint.
+			targetChanged := !strings.EqualFold(tested.Host, stored.Host) ||
+				!strings.EqualFold(tested.Protocol, stored.Protocol) || tested.Username != stored.Username ||
+				!strings.EqualFold(tested.AuthMethod, stored.AuthMethod) ||
+				!intPtrEq(tested.JumpID, stored.JumpID) || !intPtrEq(tested.ProxyID, stored.ProxyID)
+			if targetChanged && reusesStoredConnectionAuth(c, stored) {
+				jsonError(w, "Saved credentials are not reused for a changed target. Save the new target before testing saved credentials, or enter the password or private key again.", http.StatusConflict)
+				return
+			}
+			if c.Password == "" {
+				c.Password = stored.Password
+			}
+			if c.PrivateKey == "" {
+				c.PrivateKey = stored.PrivateKey
+			}
+		}
 	}
 	if err := checkAuthRefs(&c, userID); err != nil {
 		jsonError(w, err.Error(), 400)
@@ -146,4 +159,30 @@ func apiConnectionTestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonOK(w, map[string]interface{}{"ok": true, "message": detail, "latency_ms": ms})
+}
+
+// reusesStoredConnectionAuth reports whether a connection test would use stored
+// authentication material without a fresh value being supplied in the request.
+func reusesStoredConnectionAuth(c, stored Connection) bool {
+	if c.AuthMethod != stored.AuthMethod {
+		return false
+	}
+	switch c.AuthMethod {
+	case "PASSWORD":
+		return (c.Password == "" && stored.Password != "") || (c.PrivateKey == "" && stored.PrivateKey != "")
+	case "KEY":
+		return c.PrivateKey == "" && stored.PrivateKey != ""
+	case "KEY_FILE":
+		return c.KeyPath == stored.KeyPath
+	case "KEY_AUTO":
+		return true
+	case "KEY_REF":
+		return intPtrEq(c.KeyID, stored.KeyID)
+	case "CREDENTIAL":
+		return intPtrEq(c.CredentialID, stored.CredentialID)
+	case "BITWARDEN":
+		return c.Options["bitwarden_item"] == stored.Options["bitwarden_item"]
+	default:
+		return false
+	}
 }
