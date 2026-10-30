@@ -45,6 +45,7 @@ var aiDestructiveRules = []struct{ ID, What string }{
 	{"root_account", "deleting, locking or removing the password of root"},
 	{"protected_write", "writing to password and group files, sudoers, /boot, raw disks, /dev/mem, sysrq, authorized_keys, login records"},
 	{"pipe_shell", "piping into a shell or interpreter (curl … | sh)"},
+	{"windows_recursive_delete", "recursive PowerShell and cmd deletions (until targets can be resolved safely)"},
 	{"admin_pattern", "patterns added by the administrator (ai_blocked_commands)"},
 }
 
@@ -389,6 +390,9 @@ func aiDestructiveDepth(cmd string, depth int) *aiBlock {
 	if depth > 3 {
 		return &aiBlock{Rule: "nested", Why: "nested shell input could not be checked safely"}
 	}
+	if b := aiWindowsDestructive(cmd); b != nil {
+		return b
+	}
 	// A here-string can feed a command to a shell without any separator:
 	// bash <<< 'rm -rf /'. Check its content as a command line too.
 	for _, m := range reHereString.FindAllStringSubmatch(cmd, -1) {
@@ -494,6 +498,40 @@ func aiDestructiveDepth(cmd string, depth int) *aiBlock {
 		}
 	}
 	return power
+}
+
+// aiWindowsDestructive closes the obvious PowerShell/cmd destructive-command gap.
+// Target-aware Windows path normalization is not yet available, so recursive deletes
+// and volume formatting are refused regardless of the named target.
+func aiWindowsDestructive(raw string) *aiBlock {
+	for _, segment := range looseSegments(raw) {
+		for i, word := range segment {
+			name := strings.ToLower(strings.TrimSuffix(strings.TrimSuffix(word, ".exe"), ".com"))
+			if i > 0 && !oneOf(strings.ToLower(segment[i-1]), "-command", "-c", "/c", "-command:", "&&", "|", "|&") {
+				continue
+			}
+			args := segment[i+1:]
+			switch name {
+			case "format-volume", "format-disk", "clear-disk", "initialize-disk":
+				return &aiBlock{Rule: "mkfs", Why: name + " changes or erases a Windows volume"}
+			case "remove-item", "ri", "rm", "rmdir", "rd":
+				for _, arg := range args {
+					a := strings.ToLower(arg)
+					if oneOf(a, "-recurse", "-recursive", "/s", "/s/q", "/q/s") || (name != "rm" && a == "-r") || strings.Contains(a, "/s/") {
+						return &aiBlock{Rule: "windows_recursive_delete", Why: "recursive PowerShell or cmd deletion is not allowed by the automatic destructive-command guard"}
+					}
+				}
+			case "del", "erase":
+				for _, arg := range args {
+					a := strings.ToLower(arg)
+					if oneOf(a, "/s", "/s/q", "/q/s") || strings.Contains(a, "/s/") {
+						return &aiBlock{Rule: "windows_recursive_delete", Why: "recursive cmd deletion is not allowed by the automatic destructive-command guard"}
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // aiDestructivePath checks a file the assistant wants to write.
