@@ -58,7 +58,7 @@ Changed files:
 
 Verification: `go test . -run '^(TestSecondFactor|TestTOTP|TestRecoveryCodesSingleUse|TestSecurity2FALockout|TestStepUp)$' -count=1 -timeout 60s` from `remote-manager/` — passed.
 
-Commit: pending; push follows this handover update.
+Commit: `12c65ec` (shared commit with atomic MFA package); branch pushed.
 
 ## Completed package: AI approval policy recheck
 
@@ -72,13 +72,59 @@ Changed files:
 
 Verification: `go test . -run '^TestAIApprovalRechecksCurrentModeBeforeRunning$' -count=1` from `remote-manager/` — passed. A separate older Windows-path-sensitive test timed out in a combined run; see the original audit notes.
 
+Commit: `12c65ec`; branch pushed.
+
+## Completed package: tunnel DNS alias ownership guard
+
+Local tunnel connections now check the actual connected IP against tunnel ownership before authentication or forwarded payload. This covers direct SSH, FTP control/data, SFTP, direct web reachability, and remote-forward targets while preserving loopback resolution on remote SSH jump hosts.
+
+Changed files:
+
+- `remote-manager/tunnels.go`
+- `remote-manager/jump.go`
+- `remote-manager/files.go`
+- `remote-manager/sftp_pool.go`
+- `remote-manager/tunnel_dial_ownership_test.go`
+
+Verification: focused ownership/protocol tests plus `TestFTPThroughProxyEPSV`, `TestJumpHostChain`, and `TestTunnels` passed (`go test . -run '^(TestLocalDialChecksResolvedTunnelAddress|TestDirectProtocolsCheckTunnelOwner|TestJumpTargetLoopbackIsRemote|TestLoopbackTunnelOwnership|TestFTPThroughProxyEPSV|TestJumpHostChain|TestTunnels)$' -count=1 -timeout 90s`). FTPS-specific runtime coverage was unavailable. `nettools.go` direct network paths remain outside this package.
+
+Commit: pending; push follows this handover update.
+
+## Completed package: event bus session shutdown
+
+The event-bus reconnect loop now stops after logout or session expiry and prevents duplicate reconnect timers.
+
+Changed file: `remote-manager/static/index.html`.
+
+Verification: `node tools/check-ui.js` — passed.
+
+Commit: pending; push follows this handover update.
+
+## Completed package: DNS-aware protected egress
+
+Protected outbound HTTP clients now resolve hostnames once, enforce metadata/link-local and `public_only` policy against resolved IPs, then connect to the checked address. Protected transports bypass environment proxies and custom TLS dial bypasses. Git, NetBox, OIDC, and AI clients reject cross-origin or scheme-changing redirects. OpenCode installation uses a separate GET-only guarded client that permits configurable npm mirror redirects while retaining HTTPS and SHA-512 integrity checks.
+
+Changed files:
+
+- `remote-manager/security.go`
+- `remote-manager/git_source.go`
+- `remote-manager/inventory.go`
+- `remote-manager/oidc_jwt.go`
+- `remote-manager/ai_llm.go`
+- `remote-manager/opencode_install.go`
+- `remote-manager/egress_dns_test.go`
+
+Verification passed: guarded egress/install tests; NetBox, OIDC, and AI provider tests; `gofmt`; and scoped `git diff --check`.
+
+Limits: protected clients no longer honor HTTP proxy environment variables. Existing pooled connections may remain open briefly after a policy change. Installer mirror redirects remain allowed only in its isolated unauthenticated and integrity-verified download path. Other HTTP clients, including Ollama management helpers, remain outside this package.
+
 Commit: pending; push follows this handover update.
 
 ## In progress
 
 - Re-audit the remaining findings in `WRM-PRO-v13.14.1-fresh-eyes-review.md` against current public `main` and this branch.
 - Check completed roadmap claims against current code and identify further concrete fixes.
-- Close DNS egress, tunnel DNS alias, addon bridge, event-bus reconnect, and addon instance restore findings; add each completed package, verification result, commit, and next step here before pushing it.
+- Close addon bridge and addon instance restore findings; review other direct network paths including `nettools.go`, then record each completed package, verification result, commit, and next step here before pushing it.
 
 ## Instructions for the next agent
 

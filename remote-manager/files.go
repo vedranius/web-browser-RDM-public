@@ -79,9 +79,6 @@ func requireMethod(w http.ResponseWriter, r *http.Request, methods ...string) bo
 // control and data connections go through the jump host's SSH connection. Always call
 // the returned close function (it also closes the jump host connection).
 func dialFTP(c Connection) (*ftp.ServerConn, func(), error) {
-	if err := guardLoopbackTunnel(c); err != nil {
-		return nil, nil, err
-	}
 	opts := []ftp.DialOption{ftp.DialWithTimeout(15 * time.Second)}
 	ftps := strings.ToUpper(c.Protocol) == "FTPS"
 	tlsCfg := ftpsTLSConfig(c) // one config for the control and the data connections
@@ -96,6 +93,20 @@ func dialFTP(c Connection) (*ftp.ServerConn, func(), error) {
 			return nil, nil, err
 		}
 		opts = append(opts, ftp.DialWithDialFunc(routedFTPDial(via, hostOnly(c.Host), ftps, tlsCfg)))
+	} else {
+		var controlDone atomic.Bool
+		opts = append(opts, ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
+			conn, err := dialLocalForUser(c.UserID, network, address, 15*time.Second)
+			if err != nil {
+				return nil, err
+			}
+			// A custom dial function also owns TLS on FTP data connections; the
+			// library still upgrades the control connection after AUTH TLS.
+			if controlDone.Swap(true) && ftps {
+				return tls.Client(conn, tlsCfg), nil
+			}
+			return conn, nil
+		}))
 	}
 	closeVia := func() { via.Close() }
 	if c.authErr != "" {
