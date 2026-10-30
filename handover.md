@@ -244,6 +244,13 @@ Tunnel start and stop now catch network exceptions, show failures, and refresh s
 Changed files: `remote-manager/static/index.html`, `tools/test-ui-actions.js`, and `.github/workflows/build.yml`.
 
 Verification passed: `node --test tools/test-ui-actions.js` (2 tests); `node tools/check-ui.js`; and `git diff --check`. The full Linux CI Node test command produced 36 passes and 2 failures on this Windows workstation: both failures are `tools/test-appimage.js` spawning `/bin/sh`, which is unavailable here. The configured CI runner is Ubuntu 24.04.
+## Verified package: rate-limited password reauthentication
+
+The audit's concern that stored credential and private-key reveal could guess account passwords without limits is already addressed in this branch. Both handlers use `checkPasswordLimited`, which applies the sign-in IP and account failure limits. The existing regression test confirms repeated wrong confirmations lock the account and a locked account rejects even the correct password.
+
+Changed files: none in this checkpoint; the guard and test were already present.
+
+Verification passed: `go test . -run '^TestPasswordConfirmationRateLimited$' -count=1 -timeout 60s` from `remote-manager/`.
 ## Audit status cross-check
 
 The original report is based on public v13.14.1; this branch starts from v13.14.10, where several cited findings already have fixes. Current code and focused tests confirm: account-level MFA lockout and atomic factor replay protection; sudo/doas, relative traversal, here-string and protected-write destructive checks; bundle path and ID validation; foreign keys in the SQLite connection DSN; grant-level AI automatic-budget persistence; admin-only host builds with WRM secrets removed from the build environment; total addon ZIP limits and decoded addon HTTP path validation; and checked API errors for the audited destructive UI actions. These findings should not be reopened without a new reproducer.
