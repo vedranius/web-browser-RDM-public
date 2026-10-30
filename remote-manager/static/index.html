@@ -3317,7 +3317,7 @@ const LANGS = {
     copy_url:'📋 Copy URL', manage_shares:'⚙ Manage My Shares', no_shares:'No shares yet.',
     connection_created:'Connection created', connection_updated:'Connection updated',
     connection_deleted:'Connection deleted', folder_created:'Folder created',
-    folder_deleted:'Folder deleted', session_saved:'Session saved', session_expired:'Session expired. Please log in again.',
+    folder_deleted:'Folder deleted', session_saved:'Session saved', sess_renamed:'Session renamed', sess_deleted:'Session deleted', sess_lock_on:'Session locked', sess_lock_off:'Session unlocked', session_expired:'Session expired. Please log in again.',
     clipboard_cleared:'Clipboard cleared', copied:'Copied!', pasted:'Pasted!',
     share_deleted:'Share deleted', upload_complete:'Upload complete', upload_failed:'Upload failed',
     live_collab:'Live Collab:', chat:'💬 Chat',
@@ -3410,7 +3410,7 @@ const LANGS = {
     copy_url:'📋 Kopiraj URL', manage_shares:'⚙ Moja dijeljenja', no_shares:'Nema dijeljenja.',
     connection_created:'Veza stvorena', connection_updated:'Veza ažurirana',
     connection_deleted:'Veza obrisana', folder_created:'Mapa stvorena',
-    folder_deleted:'Mapa obrisana', session_saved:'Sesija spremljena', session_expired:'Sesija istekla. Molimo prijavite se ponovo.',
+    folder_deleted:'Mapa obrisana', session_saved:'Sesija spremljena', sess_renamed:'Sesija preimenovana', sess_deleted:'Sesija obrisana', sess_lock_on:'Sesija zaključana', sess_lock_off:'Sesija otključana', session_expired:'Sesija istekla. Molimo prijavite se ponovo.',
     clipboard_cleared:'Međuspremnik očišćen', copied:'Kopirano!', pasted:'Zalijepljeno!',
     share_deleted:'Dijeljenje obrisano', upload_complete:'Prijenos završen', upload_failed:'Prijenos neuspješan',
     live_collab:'Suradnja uživo:', chat:'💬 Chat',
@@ -7048,7 +7048,7 @@ function renderTree() {
     const fid = parseInt(e.dataTransfer.getData('folderId'));
     if (fid) { reorderFolder({id:fid,parent_id:null}); return; }
     const cids = dragConnIDs(e);
-    if (cids.length) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:cids, folder_id: null})}).then(loadData);
+    if (cids.length) moveConnectionsToFolder(cids, null);
   };
   wrap.appendChild(rootDrop);
 
@@ -7106,7 +7106,7 @@ function renderTree() {
         return;
       }
       const cids = dragConnIDs(e);
-      if (cids.length) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:cids, folder_id: f.id})}).then(loadData);
+      if (cids.length) moveConnectionsToFolder(cids, f.id);
     };
     row.onclick = () => {
       const ch = row.querySelector('.folder-chevron');
@@ -13305,6 +13305,13 @@ function restoreWindowLayout(lay, how) {
 
 function ctxOpenSession(how) { closeAllCtx(); openSession(ctxSessId, how); }
 
+async function moveConnectionsToFolder(ids, folderId) {
+  try {
+    const res = await apiOk('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids, folder_id: folderId})});
+    if (res) await loadData();
+  } catch (e) { showToast(String(e.message || e), 'error'); }
+}
+
 async function ctxUpdateSession() {
   closeAllCtx();
   const sv = sessions.find(x => x.id === ctxSessId);
@@ -13355,14 +13362,20 @@ async function ctxRenameSession() {
   if (!s) return;
   const name = await uiPrompt(t('new_name'), s.name, {okText: t('rename_plain')});
   if (name === null || !name.trim()) return;
-  fetch('/api/sessions/' + ctxSessId, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...s, name: name.trim()})}).then(() => loadSessions());
+  try {
+    const res = await apiOk('/api/sessions/' + ctxSessId, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...s, name: name.trim()})});
+    if (res) { showToast(t('sess_renamed'), 'success'); await loadSessions(); }
+  } catch (e) { showToast(String(e.message || e), 'error'); }
 }
 
-function ctxToggleLockSession() {
+async function ctxToggleLockSession() {
   closeAllCtx();
   const s = sessions.find(x => x.id === ctxSessId);
   if (!s) return;
-  fetch('/api/sessions/' + ctxSessId, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...s, locked: !s.locked})}).then(() => { showToast('Session ' + (s.locked ? 'unlocked' : 'locked'), 'success'); loadSessions(); });
+  try {
+    const res = await apiOk('/api/sessions/' + ctxSessId, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...s, locked: !s.locked})});
+    if (res) { showToast(t(s.locked ? 'sess_lock_off' : 'sess_lock_on'), 'success'); await loadSessions(); }
+  } catch (e) { showToast(String(e.message || e), 'error'); }
 }
 
 async function ctxDeleteSession() {
@@ -13371,9 +13384,12 @@ async function ctxDeleteSession() {
   if (!s) return;
   const extra = s.locked ? '?force=true' : '';
   if (!(await uiConfirm(t('delete_session') + ' "' + s.name + '"?', {okText: t('delete'), danger: true}))) return;
-  await fetch('/api/sessions/' + ctxSessId + extra, {method: 'DELETE'});
+  try {
+    const res = await apiOk('/api/sessions/' + ctxSessId + extra, {method: 'DELETE'});
+    if (!res) return;
+  } catch (e) { showToast(String(e.message || e), 'error'); return; }
   if (currentSessionId === ctxSessId) { currentSessionId = null; updateSessionBar(null); }
-  showToast('Session deleted', 'success');
+  showToast(t('sess_deleted'), 'success');
   loadSessions();
 }
 
