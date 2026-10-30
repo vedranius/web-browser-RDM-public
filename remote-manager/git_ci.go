@@ -89,16 +89,11 @@ func ciClient(raw string) (*http.Client, *url.URL, error) {
 	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" || u.User != nil {
 		return nil, nil, fmt.Errorf("enter an address like https://ci.example.com/…")
 	}
-	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr := egressHTTPTransport()
 	if u.Scheme == "https" {
 		tr.TLSClientConfig = pinnedTLSConfig("ci://", u.Host)
 	}
-	return &http.Client{Timeout: 5 * time.Minute, Transport: tr, CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		if len(via) >= 5 || req.URL.Host != u.Host {
-			return http.ErrUseLastResponse
-		}
-		return nil
-	}}, u, nil
+	return &http.Client{Timeout: 5 * time.Minute, Transport: tr, CheckRedirect: guardEgressRedirect}, u, nil
 }
 
 // onHost moves a URL that a CI server returned (queue item, build) onto the configured host,

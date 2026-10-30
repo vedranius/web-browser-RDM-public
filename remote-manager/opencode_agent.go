@@ -552,7 +552,11 @@ func (o *ocProc) call(ctx context.Context, method, path string, body, out interf
 	return nil
 }
 
-var ocHTTP = &http.Client{Transport: &http.Transport{Proxy: nil, ResponseHeaderTimeout: 2 * time.Minute}}
+var ocHTTP = &http.Client{Transport: func() *http.Transport {
+	tr := egressHTTPTransport()
+	tr.ResponseHeaderTimeout = 2 * time.Minute
+	return tr
+}(), CheckRedirect: guardEgressRedirect}
 
 // ocTurn sends the user's message to the agent and waits until OpenCode is idle again.
 func (s *aiSession) ocTurn(ctx context.Context, cancel context.CancelFunc, text string) {
@@ -613,7 +617,7 @@ func (s *aiSession) ocPump() {
 		req, _ := http.NewRequestWithContext(s.ctx, http.MethodGet, o.base+"/event", nil)
 		req.SetBasicAuth("opencode", o.pass)
 		req.Header.Set("Accept", "text/event-stream")
-		resp, err := (&http.Client{}).Do(req)
+		resp, err := ocHTTP.Do(req)
 		if err == nil {
 			sseEvents(resp.Body, func(_, data string) error {
 				s.ocEvent(o, []byte(data))

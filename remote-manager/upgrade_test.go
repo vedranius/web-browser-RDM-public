@@ -180,6 +180,9 @@ func TestAddonInstancesRestored(t *testing.T) {
 	t.Setenv("DB_PATH", filepath.Join(t.TempDir(), "restore.db"))
 	initDB()
 	defer db.Close()
+	if _, err := db.Exec(`DELETE FROM addon_instance_restore_migration WHERE id=1`); err != nil {
+		t.Fatal(err)
+	}
 	for _, q := range []string{
 		`DELETE FROM addon_instances`,
 		`CREATE TABLE addon_instances_old_20261027080042 AS SELECT * FROM addon_instances`,
@@ -211,5 +214,19 @@ func TestAddonInstancesRestored(t *testing.T) {
 	db.QueryRow(`SELECT COUNT(*) FROM addon_instances`).Scan(&n)
 	if n != 1 {
 		t.Fatalf("restore touched a non-empty table: %d rows", n)
+	}
+	if _, err := db.Exec(`DELETE FROM addon_instances`); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	initDB()
+	defer db.Close()
+	if err := db.QueryRow(`SELECT COUNT(*) FROM addon_instances`).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("deleted addon instances were restored again after restart: %d rows", n)
 	}
 }
