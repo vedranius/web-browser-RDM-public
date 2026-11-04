@@ -6,8 +6,8 @@ Security fixes go into the **latest release** only. Please upgrade before you re
 
 | Version | Supported |
 |---|---|
-| v12.x | ✔ |
-| v11.x and older | ✘ (upgrade: see *Upgrading* in the [README](README.md#table-of-contents)) |
+| v14.x | ✔ |
+| v13.x and older | ✘ (upgrade: see *Upgrading* in the [README](README.md#table-of-contents)) |
 
 ## Reporting a vulnerability
 
@@ -292,6 +292,16 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - The AI sessions view (v13.8.0) lists, exports and continues only the signed-in user's own sessions (another user's session answers 404); exports are the stored, redacted transcript and are audited (`ai.session_export`). Saved sessions outlive `ai_transcript_retention_days` while `ai_keep_saved_sessions` is on; turn it off to enforce the retention for everybody. Personal AI settings hold only IDs and names, never keys; a personal default provider is used only while the policies still offer it. An MCP approval given after the AI app stopped waiting runs the reviewed call at once (`ai_mcp_later_approval` = `run`), with the plan that was shown and checked again against the current mode and policies just before it runs; set `repeat` to require the AI to repeat it.
 - Chat titles are generated with no tools from the first question and answer (both already redacted); continuing a chat sends the earlier, redacted transcript of the same user to the provider again. Thinking summaries are redacted and stored like other transcript entries.
 - The editor checks the file on the server before it writes and asks before overwriting a newer version.
+
+## Storages (v14.0.0)
+
+- Secrets are encrypted with the installation key and never returned, logged or exported without an explicit export with secrets.
+- Every key is resolved inside the storage prefix; `..`, empty segments, absolute paths and control characters are refused before a request is signed.
+- Write, upload and delete are separate per-storage switches checked on the server; a delete needs `X-WRM-Confirm: delete` and step-up where the security level asks for it.
+- The endpoint must pass the egress policy when saved and on every connection (DNS rebinding); redirects are not followed, so the signature cannot leak to another host. A self-signed endpoint is trusted only by its pinned SHA-256 fingerprint.
+- Share links are random tokens stored hashed, read-only, confined to their prefix, expiring and revocable; the page has no script, and download names are quoted.
+- AI connections need the opt-in scopes `storage_read`, `storage_write`, `storage_delete`; a server approval never grants storage access, and writes and deletes need the automatic mode because a storage has no session in which a single change could be approved.
+- `storages_enabled=0` closes the section, its API, its MCP tools and its share links at once.
 
 ## AI assistant: threat model
 

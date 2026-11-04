@@ -13,7 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.14.11** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.0.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v14.0.0
+
+**One combined release: Storages, its release review, and the security work of v13.14.11.** Everything below arrives together when you upgrade from v13.14.10 or older; from v13.14.11 the new part is Storages. Next on the [roadmap](ROADMAP.md) is **Chains**, live monitoring of a whole service chain.
+
+**Storages: S3-compatible object storage as a section of its own.** Add a Hetzner, DigitalOcean Spaces, Amazon S3, MinIO or Backblaze B2 bucket (confined to a prefix), browse it, preview images, play video with a sibling subtitle track, download, and edit small text objects (JSON, configuration, subtitles) with BOM/CRLF kept and a conflict check. Uploads, writes and deletes are allowed per storage; a delete needs an explicit confirmation. Read-only share links open one prefix without a WRM account, a background check notifies `storage.down` / `storage.up`, and AI connections get `storage_list/read/write/delete` behind the opt-in scopes `storage_read`, `storage_write` and `storage_delete` (changes only in the automatic mode). See [Storages (S3)](#storages-s3) and [docs/STORAGES.md](docs/STORAGES.md).
 
 ## What's new in v13.14.11
 
@@ -252,7 +258,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -299,6 +305,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Search in files](#search-in-files)
    - [Text editor](#text-editor)
    - [Server-to-server transfer](#server-to-server-transfer)
+   - [Storages (S3)](#storages-s3)
    - [Workspace sessions](#workspace-sessions)
    - [Clipboard panel](#clipboard-panel)
    - [Sharing: members, roles & links](#sharing-members-roles--links)
@@ -413,6 +420,10 @@ On the first start WRM creates, next to the database:
 Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary password (add `-reset-2fa` to also turn off two-factor authentication).
 
 ---
+
+## Upgrading from v13.14.11
+
+Replace the executable/AppImage/container and keep the database and encryption key. Two tables are added (`storages`, `storage_shares`); an older binary still starts on the database. The **Storages** button appears in the top bar (turn the section off with `storages_enabled=0`). AI connections do not get the new storage scopes: an installation that never changed `ai_mcp_scopes` now defaults to the five server scopes plus `addons.manage`; add `storage_read`, `storage_write` or `storage_delete` there, and then to an AI connection, to let it reach a storage; writes and deletes by an AI need the automatic mode. Upgrading from v13.14.10 or older also brings the v13.14.11 changes (share links with a per-share cookie, credentials bound to their destination; see the [changelog](CHANGELOG.md)).
 
 ## Upgrading from v13.14.9
 
@@ -2047,6 +2058,12 @@ The search box at the top of every file manager:
 - **Saving** (`Ctrl+S`): *Review before saving* (on by default) shows a diff of your changes first. Before writing, WRM reads the file again: if someone else, a service or the AI assistant changed it since you opened it, you choose to overwrite or to see the differences. **± Changes** shows your changes at any time and **⟲ Reload** reads the file again. Line endings (LF or CRLF) and UTF-8 are kept.
 - **🤖 AI assistant:** a panel next to the file that reviews it (bugs, security problems, wrong configuration), explains it and proposes changes. Every change is a diff that waits for your approval; after it the editor reloads the file, or warns if you have unsaved changes. **Ask AI about the selection** sends the selected lines. Its chats are kept per file, with title, date and time, and can be continued.
 
+### Storages (S3)
+
+**Storages** (top bar) holds S3-compatible buckets next to the servers. A storage is not a connection: it never reaches the terminal, tunnels, jump hosts or the deploy code. Each storage has an endpoint, region, bucket, a **prefix** that every key is resolved inside, an access key whose secret is encrypted at rest and never returned, an optional SHA-256 certificate fingerprint for a self-signed endpoint, and switches for write, upload and delete plus a size limit. *Test connection* checks the endpoint, bucket and key before saving; the endpoint must pass the egress policy, checked again on every connection.
+
+The browser lists a prefix, downloads, previews images, plays video over Range requests with a sibling SRT/VTT/ASS track, creates folders, renames, uploads small files and deletes behind a confirmation. Small text objects open in the editor (up to `storage_edit_kb`, default 2048 KB = 2 MB, at most 8 MB): JSON format and validation, subtitle timing check, shift and renumber; BOM and line endings are kept, and a save that would overwrite a newer object is refused (409). **Share** creates a read-only link (`/s3/<token>`) to one prefix that expires (up to 30 days) and can be revoked; the page has no script. Every change is audited (`storage.*`), and a background check sends `storage.down` / `storage.up` notifications. Storages are part of the configuration export and import (secrets only on an explicit export with secrets). The operator guide is [docs/STORAGES.md](docs/STORAGES.md).
+
 ### Server-to-server transfer
 
 Copy files and folders **directly from one SSH/SFTP server to another**. The data flows through the WRM server, not through your browser.
@@ -2479,6 +2496,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | `turn_allow_private` | `0` | allow relaying to private/loopback networks |
 | `ice_servers` | Google + Cloudflare STUN | additional STUN/TURN servers (JSON) |
 | `audit_enabled` | `1` | record security events (administrator actions are always recorded). Also `AUDIT_ENABLED` |
+| `storages_enabled` | `1` | the Storages section and its API (kill switch) |
+| `storage_edit_kb` | `2048` | largest text object the storage editor (and the AI tools) open, in KB (1–8192) |
 | `audit_retention_days` | `365` | how long audit log, file transfers and chat history are kept (minimum 7) |
 | `file_edit_history` | `1` | keep every file edit with its diff (*Admin → File edits*) |
 | `file_edit_max_kb` | `1024` | larger files are recorded without a diff (16–10240) |
@@ -2571,7 +2590,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ai_idle_minutes` | `60` | an idle AI session ends |
 | `ai_mcp_enabled` | `0` | serve the MCP endpoint `/mcp` and the OAuth endpoints for AI apps |
 | `ai_mcp` | `admins` | who may create and use AI connections: `off`, `admins`, `all` |
-| `ai_mcp_scopes` | all five | allowed scopes: `read_logs`, `run_readonly`, `run_with_approval`, `edit_file_with_approval`, `transfer` |
+| `ai_mcp_scopes` | the server scopes and `addons.manage` | allowed scopes: `read_logs`, `run_readonly`, `run_with_approval`, `edit_file_with_approval`, `transfer`, `addons.manage`, and the opt-in storage scopes `storage_read`, `storage_write`, `storage_delete` |
 | `ai_provider_header_seconds` | `900` | provider response-header wait, 30–7200 seconds |
 | `ai_provider_request_seconds` | `3600` | total provider request, 60–14400 seconds |
 | `ai_provider_stream_idle_seconds` | `600` | provider stream inactivity, 30–7200 seconds |
@@ -3027,6 +3046,10 @@ Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only
 |---|---|
 | `GET /api/proxies` | `{proxies: [...], can_define, container}`: proxies you own, are granted or are shared with everybody (no secrets; `url`, `warning: docker_loopback`) |
 | `POST /api/proxies` · `PUT / DELETE /api/proxies/{id}` | `{name, kind: socks5\|socks4\|http\|wrm_tunnel, host, port, username, password, credential_id, remote_dns, tunnel_id, description, grants, shared_all}`; empty `password` on PUT keeps it (owner only; policy `proxies`); DELETE is refused (409) while connections or folders use it |
+| `GET / POST /api/storages` · `GET / PUT / DELETE /api/storages/{id}` · `POST /api/storages/{id}/test` | storages (secrets never returned; policy `storages_enabled`) |
+| `GET /api/storages/{id}/objects?prefix=&cursor=` · `GET / HEAD / PUT / DELETE /api/storages/{id}/object?key=` | list and objects inside the storage prefix (Range, `?inline=1`); DELETE needs `allow_delete` and `X-WRM-Confirm: delete` |
+| `GET / PUT /api/storages/{id}/text?key=` · `POST /api/storages/{id}/dir?prefix=` · `POST /api/storages/{id}/move` | editor `{content, etag, bom, crlf}` with `If-Match` (409 on a stale write), new folder, rename `{from, to, overwrite}` |
+| `GET / POST /api/storages/{id}/shares` · `DELETE /api/storages/{id}/shares/{shareId}` · `GET /s3/{token}` | read-only share links to a prefix; the public page and `/s3/{token}/object?key=` |
 | `POST /api/proxies/{id}/test` | `{target?: "host:port"}` → `{ok, message, latency_ms}`: connects to the proxy (and through it to the target) |
 
 Connections have `proxy_id` (and `jump_id`): `null` = as the folder, `-1` = none, an id otherwise. Views return the effective `jump_id` / `proxy_id`, the stored `jump_choice` / `proxy_choice`, `jump_inherited` / `proxy_inherited`, `proxy_name` and the `route`. Exports name proxies (`proxy_ref`, and a `proxies` list).
@@ -3441,6 +3464,8 @@ remote-manager/
   medium_config_git_test.go deploy-config from Git with fake GitLab / GitHub / Gitea: pull, local changes, refused pull, push with conflict check and validation, discard, stop
   medium_build_user_test.go build user checks (root, missing account, readable WRM key) and a real build as nobody with a clean environment
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
+  v1400_storage_escape_test.go   Storages: share page escaping and quoted download file names
+  v13152_s3stub_test.go … v13154_storage_share_test.go  Storages: S3 stub with an independent SigV4 check, CRUD, prefix confinement, capabilities, delete gate, editor (BOM/CRLF, 409), Range, status, export/import, MCP tools, share links
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)
   git_provision_test.go  Git install / transfer: templates, exclusions, units; install from the fake GitLab and from a bundle, vault values, overwrite refusal and backup, transfer A → B, policies
   quick_test.go        quick connect (targets, expiry, open terminals, limit), notes, network tools from WRM and through SSH, PWA endpoints
