@@ -22,12 +22,14 @@ import (
 // only if the file did not change since the diff was made.
 
 type aiToolSpec struct {
-	Def     aiToolDef
-	Kind    string // read | command | write
-	Modes   []string
-	Expose  bool // offered to the model
-	MCPOnly bool // offered to MCP clients only (needs a second session of the same AI connection)
-	Host    bool // acts on WRM itself, not on the session's server (administrators only)
+	Def       aiToolDef
+	Kind      string // read | command | write
+	Modes     []string
+	Expose    bool // offered to the model
+	MCPOnly   bool // offered to MCP clients only (needs a second session of the same AI connection)
+	Host      bool // acts on WRM itself, not on the session's server
+	Self      bool // acts on WRM as the signed-in user (not only administrators)
+	PanelOnly bool // offered only in WRM's built-in assistant, not to MCP clients
 }
 
 func obj(props map[string]interface{}, required ...string) map[string]interface{} {
@@ -111,6 +113,13 @@ var aiTools = []aiToolSpec{
 			"reason": strProp("One sentence for the user: why run it")}, "id", "export", "reason")}},
 	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_install_community", Description: "Install one addon from the community index. The download must match the SHA-256 in the index and then passes the same archive checks as an upload. Needs the user's approval in every mode.",
 		Schema: obj(map[string]interface{}{"community_id": strProp("Addon id from the community index"), "reason": strProp("One sentence for the user: why install it")}, "community_id", "reason")}},
+	// Chains: the built-in assistant drafts a chain and the user approves it. A draft is not
+	// monitored and never runs a command; the write tool is not offered to MCP clients yet.
+	{Kind: "read", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_status", Description: "List this user's chains with their state, and every SSH connection, storage and check type a new chain may use. Start here, then explore the server with the read tools you already have, before drafting a chain.",
+		Schema: obj(map[string]interface{}{})}},
+	{Kind: "write", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_draft", Description: "Create or replace this assistant session's chain draft. The definition may use only catalog check types and this user's own conn_id and storage_id values (chain_status lists them). Nothing is monitored and no command runs: the draft waits in the Chains window, where the user reviews it on the live diagram and approves it. If validation answers with errors, fix the definition and call again.",
+		Schema: obj(map[string]interface{}{"definition": map[string]interface{}{"type": "object", "description": "Chain definition: name, description, interval_s, confirm, nodes, checks, links, scenarios", "additionalProperties": true},
+			"reason": strProp("One sentence for the user: what this chain is for")}, "definition", "reason")}},
 }
 
 // aiScopesFor lists the MCP scopes that allow a tool (any one of them is enough).
@@ -120,6 +129,9 @@ func aiScopesFor(name string) []string {
 		return nil
 	}
 	if spec.Host {
+		if spec.Self {
+			return nil // built-in assistant only; no MCP scope grants it
+		}
 		return []string{"addons.manage"}
 	}
 	switch {
@@ -136,9 +148,15 @@ func aiScopesFor(name string) []string {
 // aiToolInScopes reports whether a session's scopes allow a tool; nil scopes (the
 // built-in panel) allow every tool except the MCP-only ones.
 func aiToolInScopes(name string, scopes []string) bool {
+	spec, ok := aiToolSpecFor(name)
+	if !ok {
+		return false
+	}
 	if scopes == nil {
-		spec, ok := aiToolSpecFor(name)
-		return ok && !spec.MCPOnly
+		return !spec.MCPOnly
+	}
+	if spec.PanelOnly {
+		return false
 	}
 	for _, sc := range aiScopesFor(name) {
 		if oneOf(sc, scopes...) {
@@ -180,7 +198,7 @@ func aiToolDefsFor(mode string) []aiToolDef {
 func aiToolDefsForUser(mode string, admin bool) []aiToolDef {
 	var out []aiToolDef
 	for _, t := range aiTools {
-		if (t.Kind == "write" && mode == aiModeReadOnly) || t.MCPOnly || (t.Host && !admin) {
+		if (t.Kind == "write" && mode == aiModeReadOnly) || t.MCPOnly || (t.Host && !t.Self && !admin) {
 			continue
 		}
 		out = append(out, t.Def)
@@ -233,6 +251,8 @@ type aiToolInput struct {
 	Input         string            `json:"input"`
 	ContentBase64 string            `json:"content_base64"`
 	CommunityID   string            `json:"community_id"`
+	// chain tools (host, built-in assistant)
+	Definition json.RawMessage `json:"definition"`
 }
 
 var (

@@ -301,6 +301,7 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - DNS, TCP, HTTP and TLS checks run from WRM through the egress policy (checked at save and on every dial). HTTP redirects are not followed.
 - `chains_enabled=0` stops the API and the background checks.
 - Saving diagram positions changes only the coordinates of nodes already in the chain (finite, 0–20000) and is limited to the chain's owner; the rest of the definition is untouched. The diagram is built from text nodes and escaped attributes, never from HTML in chain labels.
+- **AI drafts:** `chain_draft` is a built-in-assistant tool (MCP clients do not get it) that decodes the definition strictly (unknown fields refused, 64 KB cap), runs the same `validateChain` against the signed-in user, and can use only that user's connections and storages. A draft is not polled and runs nothing; it is readable, discardable and approvable only by its owner. Approval validates the definition again before creating the chain, so a draft cannot smuggle in a check type, a foreign connection or a free command. `chain_status` gives the assistant the names and ids of the user's connections and storages (no host names, no credentials) like any other prompt text sent to the configured AI provider.
 
 ## Storages (v14.0.0)
 

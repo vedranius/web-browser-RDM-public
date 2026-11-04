@@ -906,6 +906,14 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rest := strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/chains"), "/")
+	if rest == "drafts" || strings.HasPrefix(rest, "drafts/") {
+		userID, ok := requireAuth(w, r)
+		if !ok {
+			return
+		}
+		apiChainDrafts(w, r, userID, rest)
+		return
+	}
 	switch rest {
 	case "":
 		apiChainsRoot(w, r)

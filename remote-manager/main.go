@@ -1124,6 +1124,8 @@ func initDB() {
 		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
 	ensureTable("chain_samples", chainSampleSchema,
 		"id", "chain_id", "at", "kind", "subject", "old_value", "new_value", "ok")
+	ensureTable("chain_drafts", chainDraftSchema,
+		"id", "user_id", "session_id", "name", "definition", "created_at", "updated_at")
 	ensureTable("storage_shares", storageShareSchema,
 		"id", "storage_id", "token_hash", "prefix", "can_write", "can_delete", "expires_at", "created_by", "created_at")
 	ensureTable("snippets", `CREATE TABLE IF NOT EXISTS snippets (

@@ -2106,7 +2106,9 @@ A chain may use only its owner's connections and storages. Configuration keys th
 
 **Templates.** *New chain* starts from *One service* or *Primary and backup path*: choose the server or storage for each node, then *Create*, or *Edit JSON* to adjust service names, paths and addresses first. *Empty chain* opens the JSON editor.
 
-Building a chain with the AI assistant (step 3) is on the [roadmap](ROADMAP.md).
+**The AI builder.** In WRM's built-in AI assistant, describe the system ("ingest on this server, content on a second one, recordings in the bucket, CDN in front, with a backup path") and name the servers and storage. The assistant calls `chain_status` to see your chains, connections, storages and the fixed check types, inspects the server it is attached to with the read tools, and writes a **chain draft** with `chain_draft`. It can use only catalog check types and your own connections and storages; it cannot run a command, and a definition that is not valid comes back with every problem to fix.
+
+A draft is **not monitored**. It appears in the Chains window under *Drafts from the AI*, opens on the same live diagram (unchecked, with the scenario rules it suggests), and you can discard it or press **Create chain**; only then is it validated again, created and checked in the background. The two tools are for WRM's built-in assistant; MCP connections do not get them yet.
 
 ### Storages (S3)
 
@@ -3102,6 +3104,7 @@ Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only
 | `POST /api/chains/{id}/check` · `GET /api/chains/{id}/timeline` · `GET /api/chains/{id}/export` | check now (the new state), the recorded changes, the definition as a JSON file |
 | `POST /api/chains/validate` · `GET /api/chains/catalog` | validate a definition without saving; the check types, operators, link kinds and formats |
 | `PUT /api/chains/{id}/layout` · `GET /api/chains/templates` | save diagram positions only (`{"positions":{"node-id":{"x":…,"y":…}}}` or `{"reset":true}`); the starter templates |
+| `GET /api/chains/drafts` · `GET / DELETE /api/chains/drafts/{id}` · `POST /api/chains/drafts/{id}/approve` | the signed-in user's AI drafts (list or one definition); discard a draft; validate it and create the monitored chain from it |
 | `GET / POST /api/storages` · `GET / PUT / DELETE /api/storages/{id}` · `POST /api/storages/{id}/test` | storages (secrets never returned; policy `storages_enabled`) |
 | `GET /api/storages/{id}/objects?prefix=&cursor=` · `GET / HEAD / PUT / DELETE /api/storages/{id}/object?key=` | list and objects inside the storage prefix (Range, `?inline=1`); DELETE needs `allow_delete` and `X-WRM-Confirm: delete` |
 | `GET / PUT /api/storages/{id}/text?key=` · `POST /api/storages/{id}/dir?prefix=` · `POST /api/storages/{id}/move` | editor `{content, etag, bom, crlf}` with `If-Match` (409 on a stale write), new folder, rename `{from, to, overwrite}` |
@@ -3521,6 +3524,7 @@ remote-manager/
   medium_build_user_test.go build user checks (root, missing account, readable WRM key) and a real build as nobody with a clean environment
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
   chains_test.go       Chains: script answers and value extraction (INI, JSON, YAML, env, kv, regex), rules and scenarios, change confirmation, validation (ownership, secrets, egress), the API end to end with HTTP, TCP, storage and an unreachable server, the node script in a real shell, diagram positions (saved alone, range-checked, owner only, reset) and every starter template validating
+  chains_drafts_test.go Chains step 3: AI drafts list/read/approve/discard, ownership, an invalid draft kept for fixing, the approval creating an enabled chain and auditing it, the `chain_status` / `chain_draft` tools (one draft per session, foreign connections and unknown fields refused, built-in assistant only)
   v1400_storage_escape_test.go   Storages: share page escaping and quoted download file names
   v13152_s3stub_test.go … v13154_storage_share_test.go  Storages: S3 stub with an independent SigV4 check, CRUD, prefix confinement, capabilities, delete gate, editor (BOM/CRLF, 409), Range, status, export/import, MCP tools, share links
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)
