@@ -24,9 +24,11 @@
 
 ## The bridge (window.parent.postMessage(message, '*'), every message carries v: 2)
 
+New panels should use the bundled `_shared/wrm-bridge.js`: it authenticates the initial `wrm:ready` with a one-time per-frame token and transfers a `MessagePort`; all later traffic uses that port. The token is in the URL fragment (not sent to the server). WRM temporarily accepts the legacy window-message protocol for already-installed panels, and revokes a panel if its iframe navigates.
+
 Panel to WRM:
 - {v:2, type:'wrm:ready'} within 5 seconds of loading; {v:2, type:'wrm:heartbeat'} every 15 seconds.
-- {v:2, type:'wrm:context'} asks for the context again.
+- Context is delivered in response to wrm:ready. Reload the panel to obtain a fresh context.
 - {v:2, type:'wrm:store.get', id, key} and {v:2, type:'wrm:store.set', id, key, value} (JSON, 32 KB per value).
 - {v:2, type:'wrm:notify', text, level} (info, success, warn, error; 200 characters, 5 a minute).
 - {v:2, type:'wrm:http', id, method, url, headers: {Accept, Content-Type, Range}, body, encoding: 'base64' for bytes, secret: '<name from http.secrets>'}.

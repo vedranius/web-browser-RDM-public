@@ -283,6 +283,21 @@ func TestAddonV2InstancesStoreWindows(t *testing.T) {
 	if r := addonReq(user, "POST", fmt.Sprintf("%s/%d/import", base, mid), `{"format":"wrm-addon-config","addon":"other.addon","values":{}}`); r.Code != 400 {
 		t.Fatalf("import of another addon's file: %d", r.Code)
 	}
+	// Disabling the addon revokes every instance capability, not only its panel.
+	disabledExport := addonReq(admin, "GET", fmt.Sprintf("%s/%d/export", base, sid), "")
+	addonReq(admin, "POST", "/api/addons/demo.inst/disable", "")
+	for _, tc := range []struct{ method, path, body string }{
+		{"POST", base, `{"name":"blocked"}`},
+		{"PUT", fmt.Sprintf("%s/%d/window", base, sid), `{"open":true}`},
+		{"GET", fmt.Sprintf("%s/%d/store", base, sid), ""},
+		{"GET", fmt.Sprintf("%s/%d/export", base, sid), ""},
+		{"POST", fmt.Sprintf("%s/%d/import", base, sid), disabledExport.Raw},
+	} {
+		if r := addonReq(admin, tc.method, tc.path, tc.body); r.Code != 409 || r.Body["code"] != "E_DISABLED" {
+			t.Errorf("disabled addon %s %s was available: %d %s", tc.method, tc.path, r.Code, r.Raw)
+		}
+	}
+	addonReq(admin, "POST", "/api/addons/demo.inst/enable", "")
 	if r := addonReq(user, "DELETE", fmt.Sprintf("%s/%d", base, sid), ""); r.Code != 403 {
 		t.Fatalf("a user removed a shared instance: %d", r.Code)
 	}

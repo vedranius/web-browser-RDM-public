@@ -1,3 +1,21 @@
+## Web Remote Manager PRO v13.14.11 — secure shares and reliable AI connections
+
+- **Claude stays connected after a WRM restart.** The local MCP bridge renews its in-memory MCP session using the saved grant, and server selections remain attached to that grant.
+- **Select all servers** in the AI connection and OAuth consent lists, then uncheck any individual servers you want to leave out.
+- **Safer share links:** new links keep bearer tokens out of request URLs and use per-share HttpOnly cookies restricted to the share's allowed routes.
+- Share tokens are checked by WRM before the browser enters collaboration mode.
+- **Security hardening** covers saved credentials in connection tests, approval rechecks, MFA, MCP OAuth consent, outbound requests, addon channels, Windows destructive commands and network-tool audit logs.
+- **Pending AI approvals** produce desktop notifications that take the user to the matching approval in WRM.
+- File, tunnel, session and folder actions now report request failures clearly.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching v13.14.11 asset. Preserve the existing database and encryption key.
+
+[Download v13.14.11](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.11) · [Full changelog](CHANGELOG.md)
+
+---
+
 ## Web Remote Manager PRO v13.14.10 — self-update on Windows
 
 - **Self-update works on Windows again when an antivirus scanner holds the new file.** The update used to stop with *being used by another process*; WRM now waits for the lock for about 15 seconds and copies the file into place if it stays locked. Rollback uses the same steps.

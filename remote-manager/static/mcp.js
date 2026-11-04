@@ -25,7 +25,7 @@ Object.assign(LANGS.en, {
   mcp_edit_note: 'The token and expiry stay the same. Current sessions and pending approvals stop; reopen them with the updated permissions.',
   mcp_title: 'AI connections', mcp_intro: 'Let an AI app on your computer or in the browser (Claude, ChatGPT and other MCP clients) work on servers you choose. WRM checks every action against the mode and the scopes below, asks you before changes, and records everything.',
   mcp_off: 'AI connections are not available', mcp_new: 'New AI connection', mcp_name: 'Name', mcp_name_ph: 'e.g. Claude Desktop on my laptop',
-  mcp_conns: 'Servers', mcp_conns_filter: 'Filter servers…', mcp_mode: 'Mode', mcp_scopes: 'Scopes', mcp_hours: 'Valid for (hours)', mcp_hours_max: 'at most {n} hours',
+  mcp_conns: 'Servers', mcp_conns_filter: 'Filter servers…', mcp_select_all: 'Select all', mcp_mode: 'Mode', mcp_scopes: 'Scopes', mcp_hours: 'Valid for (hours)', mcp_hours_max: 'at most {n} hours',
   mcp_create: 'Create token', mcp_none: 'No AI connections yet.', mcp_revoke: 'Revoke', mcp_revoke_all: 'Revoke all', mcp_revoke_q: 'Revoke this AI connection? Its sessions end at once.',
   mcp_revoke_all_q: 'Revoke every AI connection? All AI apps lose access at once.', mcp_revoked_n: '{n} revoked',
   mcp_mode_read_only: 'Read-only', mcp_mode_ask: 'Ask before every change', mcp_mode_auto: 'Automatic within limits',
@@ -61,6 +61,10 @@ Object.assign(LANGS.en, {
   mcp_oauth_off: 'OAuth is turned off by the administrator: use a token.', mcp_kind_pat: 'token', mcp_kind_oauth: 'OAuth',
   mcp_expires: 'expires {time}', mcp_expired: 'expired', mcp_revoked: 'revoked', mcp_last_used: 'last used {time}', mcp_never_used: 'not used yet',
   mcp_live: 'connected', mcp_sessions_n: '{n} open sessions',
+  mcp_notify_enable: 'Enable desktop approval alerts', mcp_notify_enabled: 'Desktop approval alerts are enabled',
+  mcp_notify_denied: 'Notifications are blocked for this site. Allow them in your browser settings.',
+  mcp_notify_unsupported: 'This browser does not support desktop notifications.',
+  mcp_notify_help: 'WRM can show an operating-system notification when an approval is waiting and open the approval card when clicked. The browser and OS decide banner visibility and duration; Focus or Do Not Disturb may suppress it.',
   mcp_ind_title: 'Connected AI apps', mcp_on: 'on {servers}',
   // approvals
   mcp_ap_title: '{client} asks to act on {server}', mcp_ap_cmd: 'Command', mcp_ap_edit_file: 'Edit {path}', mcp_ap_why: 'Why WRM asks', mcp_ap_reason: 'Reason given by the AI',
@@ -69,6 +73,7 @@ Object.assign(LANGS.en, {
   // consent
   mcp_cs_title: 'Connect an AI app to WRM', mcp_cs_asks: '{client} wants to work on your servers through WRM.',
   mcp_cs_redirect: 'After your answer you go back to {host}. Approve only if you started this connection in that app just now.',
+  mcp_cs_registered: 'This app registration came from {ip} at {time}.', mcp_cs_initiated: 'I just started this connection in the AI app shown above.',
   mcp_cs_approve: 'Allow', mcp_cs_deny: 'Deny', mcp_cs_expired: 'This request has expired. Start the connection in the app again.', mcp_cs_done: 'Returning to the app…',
   // admin
   mcp_adm_active: 'Active AI connections', mcp_adm_none: 'No active AI connections.', mcp_adm_clients: 'Registered OAuth apps', mcp_adm_remove: 'Remove',
@@ -137,7 +142,7 @@ Object.assign(LANGS.hr, {
   mcp_edit_note: 'Token i istek ostaju isti. Aktivne sesije i odobrenja se prekidaju; ponovno ih otvorite s novim ovlastima.',
   mcp_title: 'AI veze', mcp_intro: 'Dopustite AI aplikaciji na računalu ili u pregledniku (Claude, ChatGPT i drugi MCP klijenti) da radi na poslužiteljima koje odaberete. WRM provjerava svaku radnju prema načinu rada i opsezima u nastavku, pita vas prije promjena i sve bilježi.',
   mcp_off: 'AI veze nisu dostupne', mcp_new: 'Nova AI veza', mcp_name: 'Naziv', mcp_name_ph: 'npr. Claude Desktop na mom laptopu',
-  mcp_conns: 'Poslužitelji', mcp_conns_filter: 'Filtriraj poslužitelje…', mcp_mode: 'Način rada', mcp_scopes: 'Opsezi', mcp_hours: 'Vrijedi (sati)', mcp_hours_max: 'najviše {n} sati',
+  mcp_conns: 'Poslužitelji', mcp_conns_filter: 'Filtriraj poslužitelje…', mcp_select_all: 'Odaberi sve', mcp_mode: 'Način rada', mcp_scopes: 'Opsezi', mcp_hours: 'Vrijedi (sati)', mcp_hours_max: 'najviše {n} sati',
   mcp_create: 'Stvori token', mcp_none: 'Još nema AI veza.', mcp_revoke: 'Opozovi', mcp_revoke_all: 'Opozovi sve', mcp_revoke_q: 'Opozvati ovu AI vezu? Njezine sesije odmah završavaju.',
   mcp_revoke_all_q: 'Opozvati sve AI veze? Sve AI aplikacije odmah gube pristup.', mcp_revoked_n: 'Opozvano: {n}',
   mcp_mode_read_only: 'Samo čitanje', mcp_mode_ask: 'Pitaj prije svake promjene', mcp_mode_auto: 'Automatski u granicama',
@@ -173,12 +178,17 @@ Object.assign(LANGS.hr, {
   mcp_oauth_off: 'Administrator je isključio OAuth: koristite token.', mcp_kind_pat: 'token', mcp_kind_oauth: 'OAuth',
   mcp_expires: 'istječe {time}', mcp_expired: 'isteklo', mcp_revoked: 'opozvano', mcp_last_used: 'zadnja uporaba {time}', mcp_never_used: 'još nije korišteno',
   mcp_live: 'povezano', mcp_sessions_n: 'Otvorenih sesija: {n}',
+  mcp_notify_enable: 'Uključi sistemske obavijesti za odobrenja', mcp_notify_enabled: 'Sistemske obavijesti za odobrenja su uključene',
+  mcp_notify_denied: 'Obavijesti su blokirane za ovu stranicu. Dopustite ih u postavkama preglednika.',
+  mcp_notify_unsupported: 'Ovaj preglednik ne podržava sistemske obavijesti.',
+  mcp_notify_help: 'WRM može prikazati sistemsku obavijest dok odobrenje čeka i otvoriti karticu odobrenja na klik. Preglednik i OS određuju vidljivost i trajanje; Fokus ili Ne ometaj mogu je sakriti.',
   mcp_ind_title: 'Povezane AI aplikacije', mcp_on: 'na {servers}',
   mcp_ap_title: '{client} traži radnju na {server}', mcp_ap_cmd: 'Naredba', mcp_ap_edit_file: 'Uređivanje {path}', mcp_ap_why: 'Zašto WRM pita', mcp_ap_reason: 'Razlog koji je naveo AI',
   mcp_ap_approve: 'Odobri', mcp_ap_deny: 'Odbij', mcp_ap_edit: 'Uredi', mcp_ap_approve_edited: 'Odobri uređeno', mcp_ap_expires: 'istječe za {s} s', mcp_ap_note: 'Napomena za AI (neobavezno)',
   mcp_ap_transfer: 'Prijenos datoteke',
   mcp_cs_title: 'Povezivanje AI aplikacije s WRM-om', mcp_cs_asks: '{client} želi raditi na vašim poslužiteljima preko WRM-a.',
   mcp_cs_redirect: 'Nakon odgovora vraćate se na {host}. Odobrite samo ako ste upravo pokrenuli ovu vezu u toj aplikaciji.',
+  mcp_cs_registered: 'Ova registracija aplikacije stigla je s adrese {ip} u {time}.', mcp_cs_initiated: 'Upravo sam pokrenuo/la povezivanje u gore prikazanoj AI aplikaciji.',
   mcp_cs_approve: 'Dopusti', mcp_cs_deny: 'Odbij', mcp_cs_expired: 'Ovaj zahtjev je istekao. Ponovno pokrenite povezivanje u aplikaciji.', mcp_cs_done: 'Povratak u aplikaciju…',
   mcp_adm_active: 'Aktivne AI veze', mcp_adm_none: 'Nema aktivnih AI veza.', mcp_adm_clients: 'Registrirane OAuth aplikacije', mcp_adm_remove: 'Ukloni',
   mcp_adm_remove_q: 'Ukloniti ovu aplikaciju? Njezine AI veze se opozivaju; mora se ponovno registrirati.', mcp_adm_policies: 'Pravila', mcp_adm_redirects: 'Adrese za povratak',
@@ -378,7 +388,7 @@ Object.assign(LANGS.hr, {
       <span>${esc(x.name)} <span class="sub">${esc(x.host)}${x.modes && x.modes.length ? '' : ' · ' + esc(t('mcp_off'))}</span></span></label>`).join('');
     return `<div class="mcp-form">
       ${pre.noName ? '' : `<div class="field"><label>${esc(t('mcp_name'))}</label><input type="text" id="${prefix}-name" maxlength="100" placeholder="${esc(t('mcp_name_ph'))}"></div>`}
-      <div class="field"><label>${esc(t('mcp_conns'))}</label>${c.connections.length > 8 ? `<input type="text" id="${prefix}-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('${prefix}')">` : ''}
+      <div class="field"><label>${esc(t('mcp_conns'))}</label>${c.connections.length > 1 ? `<button type="button" class="btn-sec btn-sm" style="margin:4px 0;" onclick="wrmMCP.selectAll('${prefix}')">${esc(t('mcp_select_all'))}</button>` : ''}${c.connections.length > 8 ? `<input type="text" id="${prefix}-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('${prefix}')">` : ''}
         <div class="mcp-conns" id="${prefix}-conns">${conns || `<div class="sub">${esc(t('none'))}</div>`}</div></div>
       <div class="mcp-row"><div class="field"><label>${esc(t('mcp_mode'))}</label><select id="${prefix}-mode" onchange="wrmMCP.modeChanged('${prefix}')">${c.modes.map(m => `<option value="${m}" ${m === 'read_only' ? 'selected' : ''}>${esc(t('mcp_mode_' + m))}</option>`).join('')}</select></div>
         <div class="field"><label>${esc(t('mcp_valid_for'))} <span class="sub">(${esc(lifetimeMax(c.max_hours))})</span></label>${lifetimeHTML(prefix + '-hours', c.default_hours)}</div></div>
@@ -400,6 +410,9 @@ Object.assign(LANGS.hr, {
   function filter(prefix) {
     const q = ($(prefix + '-filter').value || '').toLowerCase();
     document.querySelectorAll(`#${prefix}-conns .mcp-check`).forEach(l => { l.style.display = !q || l.dataset.name.includes(q) ? '' : 'none'; });
+  }
+  function selectAll(prefix) {
+    document.querySelectorAll(`.${prefix}-conn`).forEach(input => { input.checked = true; });
   }
   function modeChanged(prefix) {
     const m = $(prefix + '-mode').value;
@@ -548,7 +561,7 @@ Object.assign(LANGS.hr, {
         <span>${c.icon} <b>${esc(t('mcpw_c_' + c.id))}</b></span><span class="sub">${esc(t(c.via || (c.token ? 'mcpw_via_token' : 'mcpw_via_oauth')))}</span></button>`).join('')}</div>`;
     } else if (key === 'mcpw_s_access') {
       const can = cfg.modes.includes('ask');
-      body = `<div class="field"><label>${esc(t('mcp_conns'))}</label>${cfg.connections.length > 8 ? `<input type="text" id="mcpw-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('mcpw')">` : ''}
+      body = `<div class="field"><label>${esc(t('mcp_conns'))}</label>${cfg.connections.length > 1 ? `<button type="button" class="btn-sec btn-sm" style="margin:4px 0;" onclick="wrmMCP.selectAll('mcpw')">${esc(t('mcp_select_all'))}</button>` : ''}${cfg.connections.length > 8 ? `<input type="text" id="mcpw-filter" placeholder="${esc(t('mcp_conns_filter'))}" style="margin-bottom:4px;" oninput="wrmMCP.filter('mcpw')">` : ''}
         <div class="mcp-conns" id="mcpw-conns">${cfg.connections.map(x => `<label class="mcp-check" data-name="${esc((x.name + ' ' + x.host).toLowerCase())}"><input type="checkbox" class="mcpw-conn" value="${x.id}" ${W.conn_ids.includes(x.id) ? 'checked' : ''}>
           <span>${esc(x.name)} <span class="sub">${esc(x.host)}</span></span></label>`).join('') || `<div class="sub">${esc(t('none'))}</div>`}</div></div>
         <div class="field"><label>${esc(t('mcpw_access'))}</label>
@@ -647,6 +660,7 @@ Object.assign(LANGS.hr, {
     catch (e) { pane.innerHTML = `<div class="fm-error">${esc(e.message)}</div>`; return; }
     if (!cfg.enabled) { pane.innerHTML = `<div class="hint-box warn">${esc(t('mcp_off'))}: ${esc(cfg.reason)}</div>${fullAccessHTML(cfg.full_access)}`; return; }
     pane.innerHTML = `<div class="hint-box">${esc(t('mcp_intro'))}</div>
+      <div class="hint-box" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0;"><span style="flex:1;min-width:220px;">🔔 ${esc(t('mcp_notify_help'))}</span><button class="btn-sec btn-sm" onclick="wrmEnableAINotifications()">${esc(t('mcp_notify_enable'))}</button></div>
       <div class="hint-box" style="margin:8px 0;">
         <b>🔌 ${esc(t('mcp_quick_title'))}</b>
         <div class="sub" style="margin:3px 0 6px;">${esc(t('mcp_quick_d'))}</div>
@@ -1053,6 +1067,14 @@ Object.assign(LANGS.hr, {
     if (!els.length && cardTimer) { clearInterval(cardTimer); cardTimer = null; return; }
     els.forEach(el => { const s = Math.max(0, Math.round((new Date(el.dataset.exp) - Date.now()) / 1000)); el.textContent = tf('mcp_ap_expires', {s}); });
   }
+  function focusApproval(aid) {
+    const card = $('mcp-card-' + aid);
+    if (!card) return false;
+    if (useLayout()) { wrmLayout.show('ai'); wrmLayout.activate('ai', {reveal: true}); }
+    else dockHide(false);
+    card.scrollIntoView({behavior: 'smooth', block: 'center'});
+    return true;
+  }
   function edit(aid) {
     const p = shown[aid];
     if (!p) return;
@@ -1089,11 +1111,14 @@ Object.assign(LANGS.hr, {
     if (!req.enabled) { showModal(`<h3>🤖 ${esc(t('mcp_cs_title'))}</h3><div class="hint-box warn">${esc(t('mcp_off'))}: ${esc(req.reason)}</div><div class="modal-footer"><button onclick="wrmMCP.answer('${esc(id)}', false)">${esc(t('mcp_cs_deny'))}</button></div>`); return; }
     showModal(`<h3>🤖 ${esc(t('mcp_cs_title'))}</h3>
       <div class="hint-box"><b>${esc(tf('mcp_cs_asks', {client: req.client_name}))}</b><br>${esc(tf('mcp_cs_redirect', {host: req.redirect_host}))}</div>
+      <div class="hint-box warn">${esc(tf('mcp_cs_registered', {ip: req.client_created_ip || '—', time: req.client_created_at ? rel(req.client_created_at) : '—'}))}</div>
       ${formHTML('mcpc', c, {scopes: (req.scopes || []).filter(s => c.scopes.includes(s)), noName: true})}
+      <label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0;"><input id="mcpc-initiated" type="checkbox" style="margin-top:3px;"> <span>${esc(t('mcp_cs_initiated'))}</span></label>
       <div class="modal-footer"><button class="btn-sec" onclick="wrmMCP.answer('${esc(id)}', false)">${esc(t('mcp_cs_deny'))}</button><button onclick="wrmMCP.answer('${esc(id)}', true)">${esc(t('mcp_cs_approve'))}</button></div>`);
   }
   async function answer(id, approve) {
-    const body = approve ? Object.assign({decision: 'approve'}, formValue('mcpc')) : {decision: 'deny'};
+    if (approve && !$('mcpc-initiated')?.checked) { showToast(t('mcp_cs_initiated'), 'error'); return; }
+    const body = approve ? Object.assign({decision: 'approve', confirm_initiated: true}, formValue('mcpc')) : {decision: 'deny'};
     let r;
     try { r = await api('POST', `/api/mcp/authorize/${encodeURIComponent(id)}`, body); } catch (e) { showToast(e.message, 'error', 6000); return; }
     clearParam();
@@ -1157,7 +1182,7 @@ Object.assign(LANGS.hr, {
   }
 
   window.wrmMCP = {
-    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto, dockMode, dockHide, dockPlace,
+    settingsPane, create, editGrant, saveGrant, revoke, revokeAll, filter, selectAll, modeChanged, allowAll, untilGrant, setFullAccess, snip, copy, refresh, indicator, togglePop, decide, edit, watch, unwatch, watchAuto, dockMode, dockHide, dockPlace, focusApproval,
     dockStyle, dockAvailable: () => dockCount() > 0,
     installer, cursorInstall, desktopExtension, setupAll, wizPreset, wizClient, wizGo, wizNext, wizReset, wizDownload, wizTest,
     consent, answer, closeModal, adminTab: adminMCP, adminRevoke, adminRevokeAll, adminRemoveClient,

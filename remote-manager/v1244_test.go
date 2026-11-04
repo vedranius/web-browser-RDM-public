@@ -28,6 +28,14 @@ func TestV1244MCPGrantEditKeepsTokenAndInvalidatesSessions(t *testing.T) {
 	var hash, expiry string
 	db.QueryRow(`SELECT token_hash,expires_at FROM mcp_tokens WHERE id=?`, id).Scan(&hash, &expiry)
 	body := map[string]interface{}{"name": "edited", "conn_ids": []int{second}, "mode": "ask", "scopes": []string{"read_logs", "run_with_approval"}}
+	oldStepUp := getSetting("require_step_up")
+	setSetting("require_step_up", "1")
+	defer setSetting("require_step_up", oldStepUp)
+	db.Exec(`UPDATE auth_sessions SET step_up_at='' WHERE user_id=?`, e.user.userID)
+	if code, denied := e.user.aiDo("PUT", fmt.Sprintf("/api/mcp/grants/%d", id), body); code != 403 || asMap(denied)["step_up"] != true {
+		t.Fatalf("grant permissions changed without fresh step-up: %d %v", code, denied)
+	}
+	db.Exec(`UPDATE auth_sessions SET step_up_at=? WHERE user_id=?`, time.Now().UTC().Format(time.RFC3339), e.user.userID)
 	code, _ := e.user.aiDo("PUT", fmt.Sprintf("/api/mcp/grants/%d", id), body)
 	if code != 200 {
 		t.Fatal(code)

@@ -290,6 +290,52 @@ func loadUser(where string, arg interface{}) (*userRow, error) {
 	return &u, nil
 }
 
+// consumeUserSecondFactor verifies and atomically consumes a one-time factor.
+// Callers may hold the same user snapshot: the conditional database update is
+// what decides which concurrent request may use a TOTP step or recovery code.
+func consumeUserSecondFactor(u *userRow, code string) (method, remaining string, err error) {
+	if ok, step := totpVerify(decryptValue(u.TOTPSecret), code, u.TOTPLastStep); ok {
+		res, err := db.Exec(`UPDATE users SET totp_last_step=? WHERE id=? AND totp_enabled=1 AND totp_secret=? AND totp_last_step<?`, step, u.ID, u.TOTPSecret, step)
+		if err != nil {
+			return "", "", err
+		}
+		n, err := res.RowsAffected()
+		if err != nil || n != 1 {
+			return "", "", err
+		}
+		return "totp", "", nil
+	}
+
+	recovery := u.Recovery
+	// There are ten recovery codes. A competing request can remove a different
+	// code between our read and update; retry against the new set without ever
+	// overwriting it with the stale set or accepting the same code twice.
+	for attempts := 0; attempts < 10; attempts++ {
+		ok, rest := useRecoveryCode(recovery, code)
+		if !ok {
+			return "", "", nil
+		}
+		res, err := db.Exec(`UPDATE users SET recovery_codes=? WHERE id=? AND totp_enabled=1 AND totp_secret=? AND COALESCE(recovery_codes,'')=?`, rest, u.ID, u.TOTPSecret, recovery)
+		if err != nil {
+			return "", "", err
+		}
+		n, err := res.RowsAffected()
+		if err != nil {
+			return "", "", err
+		}
+		if n == 1 {
+			return "recovery_code", rest, nil
+		}
+		if err := db.QueryRow(`SELECT COALESCE(recovery_codes,'') FROM users WHERE id=? AND totp_enabled=1 AND totp_secret=?`, u.ID, u.TOTPSecret).Scan(&recovery); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return "", "", nil
+			}
+			return "", "", err
+		}
+	}
+	return "", "", nil
+}
+
 func mfaRequiredByPolicy(isAdmin bool) bool {
 	switch getSetting("require_2fa") {
 	case "all":
@@ -712,19 +758,20 @@ func apiAuthMFAHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	code := strings.TrimSpace(payload.Code)
-	method := "totp"
-	if okCode, step := totpVerify(decryptValue(u.TOTPSecret), code, u.TOTPLastStep); okCode {
-		db.Exec(`UPDATE users SET totp_last_step=? WHERE id=?`, step, u.ID)
-	} else if okRec, remaining := useRecoveryCode(u.Recovery, code); okRec {
-		db.Exec(`UPDATE users SET recovery_codes=? WHERE id=?`, remaining, u.ID)
-		method = "recovery_code"
-		auditLogAs(r, u.ID, u.Username, "auth.recovery_code_used", "", map[string]int{"left": recoveryCodesLeft(remaining)})
-	} else {
+	method, remaining, err := consumeUserSecondFactor(u, code)
+	if err != nil {
+		jsonError(w, "Could not verify the code. Try again.", 500)
+		return
+	}
+	if method == "" {
 		recordLoginResult(ip, false)
 		noteSecondFactorFailure(r, u)
 		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"reason": "wrong 2FA code"})
 		jsonError(w, "Invalid verification code", 401)
 		return
+	}
+	if method == "recovery_code" {
+		auditLogAs(r, u.ID, u.Username, "auth.recovery_code_used", "", map[string]int{"left": recoveryCodesLeft(remaining)})
 	}
 	if identityID := oidcMFAIdentity(nonce); identityID > 0 {
 		// The second step of a directory sign-in: the session belongs to that identity.
@@ -899,15 +946,24 @@ func apiAuth2FAHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Wrong password", 400)
 			return
 		}
-		ok, _ := totpVerify(decryptValue(u.TOTPSecret), p.Code, u.TOTPLastStep)
-		if !ok {
-			ok, _ = useRecoveryCode(u.Recovery, p.Code)
+		method, _, err := consumeUserSecondFactor(u, p.Code)
+		if err != nil {
+			jsonError(w, "Could not verify the code. Try again.", 500)
+			return
 		}
-		if !ok {
+		if method == "" {
 			jsonError(w, "Invalid verification code", 400)
 			return
 		}
-		db.Exec(`UPDATE users SET totp_secret='', totp_enabled=0, totp_pending='', recovery_codes='' WHERE id=?`, u.ID)
+		res, err := db.Exec(`UPDATE users SET totp_secret='', totp_enabled=0, totp_pending='', recovery_codes='' WHERE id=? AND totp_enabled=1 AND totp_secret=?`, u.ID, u.TOTPSecret)
+		if err != nil {
+			jsonError(w, "Could not disable two-factor authentication. Try again.", 500)
+			return
+		}
+		if n, err := res.RowsAffected(); err != nil || n != 1 {
+			jsonError(w, "Two-factor settings changed. Try again.", 409)
+			return
+		}
 		auditLogAs(r, u.ID, u.Username, "auth.2fa_disabled", "", nil)
 		jsonOK(w, map[string]bool{"ok": true})
 	case "recovery":

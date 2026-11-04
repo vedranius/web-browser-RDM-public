@@ -107,6 +107,7 @@ function saveConnection(u, t, expiresIn, caFile) {
 
 let session = '';
 let protocolVersion = '';
+let reinitializePromise = null;
 
 function request(method, body) {
   return new Promise((resolve, reject) => {
@@ -385,6 +386,30 @@ async function closeWRM() {
   session = '';
 }
 
+// MCP sessions live only in WRM process memory. If the server restarted, it returns this
+// specific 404 before dispatching the request. Reinitialize once with the saved bearer token,
+// then retry that rejected request; never replay calls after any other error.
+function expiredWRMSession(statusCode, body) {
+  return statusCode === 404 && /session not found(?::\s*initialize again)?/i.test(String(body || ''));
+}
+
+async function reinitializeWRM() {
+  if (!reinitializePromise) {
+    reinitializePromise = (async () => {
+      if (!clientInit) throw new Error('WRM MCP client did not initialize');
+      session = '';
+      protocolVersion = '';
+      const init = Object.assign({}, clientInit, {id: 'wrm-restart-' + Date.now()});
+      await openWRM(init);
+      const ack = await request('POST', JSON.stringify({jsonrpc: '2.0', method: 'notifications/initialized'}));
+      if (ack.statusCode !== 202 && ack.statusCode !== 200) throw new Error(httpFailure(ack.statusCode, await readAll(ack, 4096)));
+      lastError = '';
+      mode = 'proxy';
+    })().finally(() => { reinitializePromise = null; });
+  }
+  return reinitializePromise;
+}
+
 // switchTo moves the running bridge to a freshly signed-in WRM and tells the app that the
 // tool list changed.
 async function switchTo(u, t) {
@@ -427,10 +452,26 @@ async function forward(raw, msg) {
   const transform = msg.method === 'tools/list' ? s => withConnectTool(s, msg.id) : s => s;
   let res;
   try { res = await request('POST', raw); } catch (e) { fail('WRM is not reachable at ' + url + ': ' + e.message); return; }
-  const ct = String(res.headers['content-type'] || '');
+  let ct = String(res.headers['content-type'] || '');
   if (res.statusCode === 202) { res.resume(); return; }
   if (ct.startsWith('text/event-stream')) { await copyEvents(res, transform); return; }
-  const body = await readAll(res, ct.startsWith('application/json') ? MAX_BODY : 4096);
+  let body = await readAll(res, ct.startsWith('application/json') ? MAX_BODY : 4096);
+  if (expiredWRMSession(res.statusCode, body)) {
+    try {
+      await reinitializeWRM();
+      res = await request('POST', raw);
+    } catch (e) {
+      lastError = e.message;
+      session = '';
+      mode = 'local';
+      local(raw, msg);
+      return;
+    }
+    ct = String(res.headers['content-type'] || '');
+    if (res.statusCode === 202) { res.resume(); return; }
+    if (ct.startsWith('text/event-stream')) { await copyEvents(res, transform); return; }
+    body = await readAll(res, ct.startsWith('application/json') ? MAX_BODY : 4096);
+  }
   if (res.statusCode !== 200 || !ct.startsWith('application/json')) { fail(httpFailure(res.statusCode, body)); return; }
   write(transform(body));
 }

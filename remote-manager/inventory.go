@@ -749,13 +749,13 @@ func netboxBase(raw string) (*url.URL, error) {
 }
 
 func netboxClient(insecure bool, base *url.URL) *http.Client {
-	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr := egressHTTPTransport()
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecure} //nolint:gosec // user's choice for self-signed NetBox
 	return &http.Client{Timeout: 30 * time.Second, Transport: tr, CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		if req.URL.Host != base.Host || len(via) > 3 {
+		if req.URL.Host != base.Host || req.URL.Scheme != base.Scheme || len(via) > 3 {
 			return fmt.Errorf("NetBox redirected to another server (%s)", req.URL.Host)
 		}
-		return nil
+		return guardEgressRedirect(req, via)
 	}}
 }
 

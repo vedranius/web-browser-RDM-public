@@ -706,7 +706,7 @@ func digestText(lang string, msgs []notifyMessage) (string, string) {
 
 // ─── SENDERS ─────────────────────────────────────────
 
-var notifyHTTPClient = &http.Client{Timeout: notifyHTTPTimeout}
+var notifyHTTPClient = &http.Client{Timeout: notifyHTTPTimeout, Transport: egressHTTPTransport(), CheckRedirect: guardEgressRedirect}
 
 // sendNotification delivers one message through a channel. addr overrides the channel's
 // recipient when the channel allows users to set their own.

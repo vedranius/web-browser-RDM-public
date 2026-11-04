@@ -502,6 +502,10 @@ func initAddonV2Schema() {
 		created_by TEXT NOT NULL DEFAULT ''
 	)`)
 	mustExec(`CREATE INDEX IF NOT EXISTS idx_addon_instances_addon ON addon_instances(addon_owner, addon_id)`)
+	mustExec(`CREATE TABLE IF NOT EXISTS addon_instance_restore_migration (
+		id INTEGER PRIMARY KEY CHECK (id = 1),
+		completed_at TEXT NOT NULL DEFAULT ''
+	)`)
 	restoreAddonInstances()
 	ensureTable("addon_store", `CREATE TABLE IF NOT EXISTS addon_store (
 		instance_id INTEGER NOT NULL,
@@ -522,16 +526,32 @@ func initAddonV2Schema() {
 }
 
 // restoreAddonInstances undoes the v13.9.0-v13.14.0 start-up bug that set addon_instances
-// aside as addon_instances_old_<time> on every start (addon_store and addon_windows kept
-// pointing at the old instance ids). When addon_instances is empty, the rows of the newest
-// non-empty copy are put back with their ids; the copies themselves are kept.
+// aside as addon_instances_old_<time> (addon_store and addon_windows kept pointing at the
+// old instance ids). The migration marker makes this a one-time recovery: an intentionally
+// emptied live table must not be repopulated from the retained legacy copies on later starts.
 func restoreAddonInstances() {
-	var n int
-	if db.QueryRow(`SELECT COUNT(*) FROM addon_instances`).Scan(&n) != nil || n > 0 {
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("Addon instances: recovery migration could not start: %v", err)
 		return
 	}
-	rows, err := db.Query(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'addon\_instances\_old\_%' ESCAPE '\' ORDER BY name DESC`)
+	defer tx.Rollback()
+	var done int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM addon_instance_restore_migration WHERE id=1`).Scan(&done); err != nil {
+		log.Printf("Addon instances: recovery migration marker could not be read: %v", err)
+		return
+	}
+	if done > 0 {
+		return
+	}
+	var n int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM addon_instances`).Scan(&n); err != nil {
+		log.Printf("Addon instances: live table could not be checked: %v", err)
+		return
+	}
+	rows, err := tx.Query(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'addon\_instances\_old\_%' ESCAPE '\' ORDER BY name DESC`)
 	if err != nil {
+		log.Printf("Addon instances: recovery copies could not be listed: %v", err)
 		return
 	}
 	var olds []string
@@ -541,22 +561,36 @@ func restoreAddonInstances() {
 			olds = append(olds, t)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		log.Printf("Addon instances: recovery copies could not be read: %v", err)
+		return
+	}
 	rows.Close()
 	const cols = `id, addon_owner, addon_id, owner_id, name, created_at, created_by`
-	for _, t := range olds {
-		q := `"` + strings.ReplaceAll(t, `"`, `""`) + `"`
-		var c int
-		if db.QueryRow(`SELECT COUNT(*) FROM `+q).Scan(&c) != nil || c == 0 {
-			continue // empty, or not the layout this version knows
+	if n == 0 {
+		for _, t := range olds {
+			q := `"` + strings.ReplaceAll(t, `"`, `""`) + `"`
+			var c int
+			if err := tx.QueryRow(`SELECT COUNT(*) FROM ` + q).Scan(&c); err != nil || c == 0 {
+				continue // empty, or not the layout this version knows
+			}
+			res, err := tx.Exec(`INSERT INTO addon_instances (` + cols + `) SELECT ` + cols + ` FROM ` + q)
+			if err != nil {
+				log.Printf("Addon instances: restoring from %s failed: %v", t, err)
+				return
+			}
+			got, _ := res.RowsAffected()
+			log.Printf("Addon instances: restored %d instance(s) from %s (set aside by an earlier start)", got, t)
+			break
 		}
-		res, err := db.Exec(`INSERT INTO addon_instances (` + cols + `) SELECT ` + cols + ` FROM ` + q)
-		if err != nil {
-			log.Printf("Addon instances: restoring from %s failed: %v", t, err)
-			return
-		}
-		got, _ := res.RowsAffected()
-		log.Printf("Addon instances: restored %d instance(s) from %s (set aside by an earlier start)", got, t)
+	}
+	if _, err := tx.Exec(`INSERT INTO addon_instance_restore_migration(id, completed_at) VALUES (1, ?)`, nowRFC()); err != nil {
+		log.Printf("Addon instances: recovery migration marker could not be saved: %v", err)
 		return
+	}
+	if err := tx.Commit(); err != nil {
+		log.Printf("Addon instances: recovery migration failed to commit: %v", err)
 	}
 }
 

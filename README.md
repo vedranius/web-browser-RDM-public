@@ -13,7 +13,15 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.14.10** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v13.14.11** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+
+## What's new in v13.14.11
+
+**AI connections survive WRM restarts.** Claude's bridge recovers its in-memory MCP session with the saved grant, and the server list stays selected. Grant creation and OAuth consent also have **Select all** controls.
+
+**Share links and security checks are stronger.** New share links keep bearer tokens out of request URLs; saved credentials stay bound to their connection destination; AI approvals are rechecked before execution; outbound requests and addon messages are constrained.
+
+**Pending AI approvals are harder to miss.** WRM can show desktop notifications that focus the related approval.
 
 ## What's new in v13.14.10
 

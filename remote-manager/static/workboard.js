@@ -868,7 +868,7 @@
         if (!r) return;
         how = r === 'alt' ? 'add' : 'replace';
       }
-      restoreWindowLayout(ws, how);
+      await restoreWindowLayout(ws, how);
     }
   }
   async function applySaved(name) {

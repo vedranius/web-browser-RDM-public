@@ -60,7 +60,7 @@ type oidcKey struct {
 }
 
 // oidcHTTP talks to identity providers (tests replace it with a client that trusts their server).
-var oidcHTTP = &http.Client{Timeout: 15 * time.Second}
+var oidcHTTP = &http.Client{Timeout: 15 * time.Second, Transport: egressHTTPTransport(), CheckRedirect: guardEgressRedirect}
 
 var oidcCache = struct {
 	sync.Mutex

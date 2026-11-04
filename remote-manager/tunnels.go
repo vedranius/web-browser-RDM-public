@@ -303,6 +303,33 @@ func guardLoopbackTunnel(c Connection) error {
 	return nil
 }
 
+// dialLocalForUser checks the address the TCP dial actually reached. Checking the
+// requested hostname separately would allow DNS aliases (or a changed DNS answer)
+// to enter another user's tunnel. Call this only for dials made by the WRM host;
+// loopback addresses reached through an SSH hop belong to that remote host.
+func dialLocalForUser(userID int, network, addr string, timeout time.Duration) (net.Conn, error) {
+	conn, err := net.DialTimeout(network, addr, timeout)
+	if err != nil {
+		return nil, err
+	}
+	if err := guardLocalTunnelConn(conn, userID); err != nil {
+		conn.Close()
+		return nil, err
+	}
+	return conn, nil
+}
+
+func guardLocalTunnelConn(conn net.Conn, userID int) error {
+	addr, ok := conn.RemoteAddr().(*net.TCPAddr)
+	if !ok || !isLocalIP(addr.IP) {
+		return nil
+	}
+	if owner := tunnelMgr.localListenerOwner(addr.Port); owner != 0 && owner != userID {
+		return fmt.Errorf("port %d on this host belongs to another user's tunnel", addr.Port)
+	}
+	return nil
+}
+
 func (m *tunnelManager) get(key string) *tunnelRun {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -483,7 +510,7 @@ func (t *tunnelRun) handle(in net.Conn) {
 	case "local":
 		out, err = t.dialRemote(net.JoinHostPort(t.def.TargetHost, strconv.Itoa(t.def.TargetPort)))
 	case "remote":
-		out, err = net.DialTimeout("tcp", net.JoinHostPort(t.def.TargetHost, strconv.Itoa(t.def.TargetPort)), 15*time.Second)
+		out, err = dialLocalForUser(t.ownerID, "tcp", net.JoinHostPort(t.def.TargetHost, strconv.Itoa(t.def.TargetPort)), 15*time.Second)
 	case "dynamic":
 		out, err = t.socks5(in)
 	}
@@ -1261,7 +1288,7 @@ func (m *tunnelManager) startEphemeral(key string, def tunnelDef, c Connection, 
 func testWebReachable(c Connection) error {
 	addr := ensurePort(c.Host, c.Protocol)
 	if !needsRoute(c) {
-		conn, err := net.DialTimeout("tcp", addr, 10*time.Second)
+		conn, err := dialLocalForUser(c.UserID, "tcp", addr, 10*time.Second)
 		if err != nil {
 			return err
 		}

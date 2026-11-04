@@ -211,7 +211,7 @@ func TestV13130BridgeSignIn(t *testing.T) {
 		t.Fatalf("consent info: %d %v", code, v)
 	}
 	code, v = e.user.aiDo("POST", "/api/mcp/authorize/"+id, map[string]interface{}{"decision": "approve", "conn_ids": []int{e.connID},
-		"mode": "read_only", "scopes": []string{"read_logs", "run_readonly"}, "hours": 2})
+		"mode": "read_only", "scopes": []string{"read_logs", "run_readonly"}, "hours": 2, "confirm_initiated": true})
 	if code != 200 {
 		t.Fatalf("consent: %d %v", code, v)
 	}
@@ -422,7 +422,7 @@ func TestV13130SetupAllApps(t *testing.T) {
 	}
 	r.Body.Close()
 	id := strings.TrimPrefix(r.Header.Get("Location"), "/?mcp_authorize=")
-	_, v := e.user.aiDo("POST", "/api/mcp/authorize/"+id, map[string]interface{}{"decision": "approve", "conn_ids": []int{e.connID}, "mode": "read_only", "scopes": []string{"read_logs"}, "hours": 1})
+	_, v := e.user.aiDo("POST", "/api/mcp/authorize/"+id, map[string]interface{}{"decision": "approve", "confirm_initiated": true, "conn_ids": []int{e.connID}, "mode": "read_only", "scopes": []string{"read_logs"}, "hours": 1})
 	cb, err := http.Get(fmt.Sprint(asMap(v)["redirect"]))
 	if err != nil {
 		t.Fatal(err)

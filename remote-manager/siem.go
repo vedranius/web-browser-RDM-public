@@ -460,7 +460,9 @@ func siemClient(d *siemDest, host string) (*http.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	tr := &http.Transport{TLSClientConfig: tc, Proxy: http.ProxyFromEnvironment, TLSHandshakeTimeout: 10 * time.Second}
+	tr := egressHTTPTransport()
+	tr.TLSClientConfig = tc
+	tr.TLSHandshakeTimeout = 10 * time.Second
 	return &http.Client{Transport: tr, Timeout: siemHTTPTimeout,
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, nil
 }

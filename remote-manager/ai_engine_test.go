@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -187,6 +188,9 @@ func toolResultFor(s *aiSession, callPrefix string) map[string]interface{} {
 // The ask mode: reads run, a change waits for an approval; the user edits the command
 // before approving; a prompt injection in a log file changes nothing.
 func TestAIAskModeApprovalEditAndInjection(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("fake SSH host executes POSIX sh commands and cannot run them on Windows")
+	}
 	var home string
 	e := newAIEnv(t, func(n int, body map[string]interface{}) fakeTurn {
 		switch n {

@@ -669,7 +669,7 @@ Object.assign(LANGS.hr, {
       await loadChat();
       const path = E.path, wo = E.wo;
       E.chat = await wrmChat.mount(box, {connId: wo.connId, purpose: 'file', filePath: path,
-        qs: wo.shareToken ? '?share_token=' + encodeURIComponent(wo.shareToken) : '',
+        qs: wo.shareID ? '?share_id=' + encodeURIComponent(wo.shareID) : '',
         onFileChanged: () => aiChanged(path)});
       onCaret();
     } catch (e) { box.style.display = 'none'; showToast(e.message, 'error'); }

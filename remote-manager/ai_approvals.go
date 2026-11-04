@@ -51,10 +51,11 @@ func (s *aiSession) runLater(a *aiApproval, by string) {
 		defer close(lr.done)
 		// the mode or the policies may have changed since the request was made: check again
 		s.recheckMode()
+		mode, auto := s.modeAndAuto()
 		s.mu.Lock()
-		mode, home := s.Mode, s.home
+		home := s.home
 		s.mu.Unlock()
-		dec := aiEvaluate(mode, nil, pl.Act, home, time.Now())
+		dec := aiEvaluate(mode, auto, pl.Act, home, time.Now())
 		if s.fullAccess() {
 			dec = aiFullAccessDecision(dec, mode)
 		}

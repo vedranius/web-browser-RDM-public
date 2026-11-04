@@ -78,13 +78,14 @@ type aiLLMResponse struct {
 	Usage   aiUsage
 }
 
-var aiHTTPClient = &http.Client{Transport: &http.Transport{
-	Proxy:                 http.ProxyFromEnvironment,
-	ResponseHeaderTimeout: 3 * time.Minute,
-	TLSHandshakeTimeout:   20 * time.Second,
-	IdleConnTimeout:       90 * time.Second,
-	MaxIdleConnsPerHost:   4,
-}}
+var aiHTTPClient = func() *http.Client {
+	tr := egressHTTPTransport()
+	tr.ResponseHeaderTimeout = 3 * time.Minute
+	tr.TLSHandshakeTimeout = 20 * time.Second
+	tr.IdleConnTimeout = 90 * time.Second
+	tr.MaxIdleConnsPerHost = 4
+	return &http.Client{Transport: tr, CheckRedirect: guardEgressRedirect}
+}()
 
 // aiComplete runs one model request with streaming. Error messages never carry the
 // provider's credentials (some APIs echo the key they refused).
@@ -267,6 +268,9 @@ func (e *aiAPIError) Error() string {
 }
 
 func aiPost(ctx context.Context, u string, body []byte, setHeaders func(http.Header), sign func(*http.Request) error) (*http.Response, error) {
+	if err := guardEgressURL(u); err != nil {
+		return nil, err
+	}
 	requestCtx, requestCancel := context.WithCancel(ctx)
 	cleanup := context.CancelFunc(requestCancel)
 	success := false

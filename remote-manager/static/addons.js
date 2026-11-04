@@ -7,6 +7,49 @@
 // file only shows it.
 'use strict';
 
+// Validate the one-time v2 handshake before the panel can use WRM capabilities.
+// Kept separate from event lookup so the host boundary can be regression-tested.
+function wrmAddonAcceptBridgeMessage(st, d, ports, onMessage, diag) {
+  if (!st || st.revoked || st.secureBridge) return false;
+  ports = ports || [];
+  if (d.type === 'wrm:ready' && (typeof d.bridge_token === 'string' || ports.length > 0)) {
+    if (!st.bridgeToken || d.bridge_token !== st.bridgeToken || !ports[0]) return false;
+    st.bridgeToken = '';
+    st.secureBridge = true;
+    st.bridgePort = ports[0];
+    st.bridgePort.onmessage = msg => {
+      if (!st.revoked && msg.data && msg.data.v === 2) onMessage(st, msg.data);
+    };
+    if (st.bridgePort.start) st.bridgePort.start();
+    st.bridgePort.postMessage({v: 2, type: 'wrm:bridge:ready'});
+    onMessage(st, {v: 2, type: 'wrm:ready'});
+    return true;
+  }
+  if (d.v !== 2) {
+    st.dropped++;
+    diag(st, {kind: 'E_BRIDGE', message: 'message without v: 2 dropped: ' + d.type.slice(0, 40)});
+    return false;
+  }
+  onMessage(st, d);
+  return true;
+}
+
+// A second load on the same iframe means the addon navigated. Close its private
+// port and discard the browsing context before it can issue any more requests.
+function wrmAddonFrameLoaded(st, frame, loads) {
+  loads++;
+  if (loads <= 1 || st.frame !== frame) return loads;
+  st.revoked = true;
+  st.ready = false;
+  if (st.bridgePort) { try { st.bridgePort.close(); } catch (_) {} }
+  st.bridgePort = null;
+  frame.remove();
+  st.frame = null;
+  addDiag(st, {kind: 'E_BRIDGE_NAVIGATION', message: 'Addon panel navigated; bridge access was revoked. Reload the panel to continue.'});
+  banner(st, 'start');
+  return loads;
+}
+
 Object.assign(LANGS.en, {
   tab_addons: 'Addons',
   stin_addons: 'Addons extend WRM from inside itself: an extra panel or a colour theme, installed as a ZIP. A panel runs sandboxed and cannot touch the rest of the interface. An administrator installs addons for everybody; each user may also install personal addons that only they see (policy addon_personal).',
@@ -630,9 +673,8 @@ Object.assign(LANGS.hr, {
     wc.style.padding = '0';
     wc.style.overflow = 'hidden';
     const frame = newFrame(assetURL(a, a.ui.panel));
-    // The context goes out once, to the panel page WRM loaded. If the frame later
-    // navigates (a link in the panel), the new page may be another site: it gets
-    // nothing unless it is an addon page that asks (see the message listener).
+    // Send context once to the panel document WRM loaded. A later document must
+    // not be able to request the connection inventory through the legacy bridge.
     frame.addEventListener('load', () => { if (frame.dataset.ctxSent) return; frame.dataset.ctxSent = '1'; sendContext(frame, a); });
     wc.appendChild(frame);
     if (typeof renderTabs === 'function') renderTabs();
@@ -679,7 +721,7 @@ Object.assign(LANGS.hr, {
     const wo = addWindow({mode: 'addon-panel'});
     wo.addonPanel = keyOf(a);
     wo.addonTitle = (a.ui.title || a.name) + (insts.length > 1 ? ' · ' + inst.name : '');
-    const st = {a, inst, wo, frame: null, ready: false, started: 0, beat: 0, diag: [], dropped: 0, visible: true, saveT: 0, restoring: !!opts.restore};
+    const st = {a, inst, wo, frame: null, ready: false, revoked: false, secureBridge: false, bridgeToken: '', bridgePort: null, frameGeneration: 0, started: 0, beat: 0, diag: [], dropped: 0, visible: true, saveT: 0, restoring: !!opts.restore};
     v2.set(wo.id, st);
     const tt = $('wt-' + wo.id);
     if (tt) tt.textContent = '▣ ' + wo.addonTitle;
@@ -764,16 +806,37 @@ Object.assign(LANGS.hr, {
   function loadFrame(st) {
     const wc = $('wc-' + st.wo.id);
     if (!wc) return;
+    if (st.bridgePort) { try { st.bridgePort.close(); } catch (_) {} }
+    st.bridgePort = null;
+    st.secureBridge = false;
+    st.bridgeToken = '';
     if (st.frame) st.frame.remove();
     banner(st, null);
     st.ready = false;
+    st.revoked = false;
     st.beat = 0;
     st.started = Date.now();
-    st.frame = newFrame(assetURL(st.a, st.a.ui.panel) + '?instance=' + st.inst.id);
+    st.frameGeneration++;
+    try {
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      st.bridgeToken = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    } catch (_) {}
+    const bridgeFragment = st.bridgeToken ? '#wrm-bridge=' + st.bridgeToken : '';
+    st.frame = newFrame(assetURL(st.a, st.a.ui.panel) + '?instance=' + st.inst.id + bridgeFragment);
+    const panelFrame = st.frame;
+    let loads = 0;
+    st.frame.addEventListener('load', () => {
+      loads = wrmAddonFrameLoaded(st, panelFrame, loads);
+    });
     wc.appendChild(st.frame);
   }
 
-  function post(st, msg) {
+  function post(st, msg, generation) {
+    if (st.revoked || (generation !== undefined && generation !== st.frameGeneration)) return;
+    if (st.secureBridge && st.bridgePort) {
+      try { st.bridgePort.postMessage(Object.assign({v: 2}, msg)); } catch (_) {}
+      return;
+    }
     if (!st.frame || !st.frame.contentWindow) return;
     try { st.frame.contentWindow.postMessage(Object.assign({v: 2}, msg), '*'); } catch (_) {}
   }
@@ -781,6 +844,7 @@ Object.assign(LANGS.hr, {
   const hasCap = (a, c) => (a.capabilities || []).includes(c);
 
   async function contextV2(st) {
+    const generation = st.frameGeneration;
     const a = st.a, me = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : {};
     let config = {};
     if (hasCap(a, 'store')) {
@@ -798,6 +862,7 @@ Object.assign(LANGS.hr, {
       }
       http = {origins: a.http.origins || [], approved: !a.http_waiting, ready};
     }
+    if (st.revoked || generation !== st.frameGeneration) return;
     const wc = $('wc-' + st.wo.id);
     post(st, {type: 'wrm:context', user: {id: me.id || 0, name: me.display_name || ''},
       lang: typeof currentLang !== 'undefined' ? currentLang : 'en', theme: themeTokens(),
@@ -885,8 +950,11 @@ Object.assign(LANGS.hr, {
   const reqID = v => (typeof v === 'string' && v.length <= 64) || (typeof v === 'number' && isFinite(v));
 
   async function handleV2(st, d) {
+    if (st.revoked) return;
+    const generation = st.frameGeneration;
+    const send = msg => post(st, msg, generation);
     const a = st.a;
-    const fail = (type, id, e, extra) => post(st, Object.assign({type, id, error: e.message || String(e), code: e.code || ''}, extra || {}));
+    const fail = (type, id, e, extra) => send(Object.assign({type, id, error: e.message || String(e), code: e.code || ''}, extra || {}));
     switch (d.type) {
       case 'wrm:ready':
         st.ready = true; st.beat = Date.now(); banner(st, null);
@@ -914,14 +982,14 @@ Object.assign(LANGS.hr, {
         try {
           if (d.type === 'wrm:store.get') {
             const r = await api('GET', url);
-            post(st, {type: 'wrm:store', id: d.id, key: d.key, value: r.value === undefined ? null : r.value});
+            send({type: 'wrm:store', id: d.id, key: d.key, value: r.value === undefined ? null : r.value});
           } else {
             const body = JSON.stringify(d.value === undefined ? null : d.value);
             if (body.length > 32768) throw Object.assign(new Error('A value is larger than 32 KB'), {code: 'E_LIMIT_SIZE'});
             const res = await fetch(url, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body});
             const j = await res.json().catch(() => ({}));
             if (!res.ok) throw Object.assign(new Error(j.error || ('HTTP ' + res.status)), {code: j.code || ''});
-            post(st, {type: 'wrm:store', id: d.id, key: d.key, value: d.value, used: j.used});
+            send({type: 'wrm:store', id: d.id, key: d.key, value: d.value, used: j.used});
           }
         } catch (e) {
           addDiag(st, {kind: e.code || 'E_STORE', message: e.message});
@@ -945,7 +1013,7 @@ Object.assign(LANGS.hr, {
           const j = await res.json().catch(() => ({}));
           if (!res.ok) throw Object.assign(new Error(j.error || ('HTTP ' + res.status)), {code: j.code || '', hint: j.hint || ''});
           if (j.code) addDiag(st, {kind: j.code, message: (j.error || '') + ' ' + req.url});
-          post(st, Object.assign({type: 'wrm:http', id: d.id}, j));
+          send(Object.assign({type: 'wrm:http', id: d.id}, j));
         } catch (e) {
           addDiag(st, {kind: e.code || 'E_HTTP', message: e.message + (e.hint ? ' — ' + e.hint : '')});
           fail('wrm:http', d.id, e, {ok: false, status: 0});
@@ -1038,8 +1106,8 @@ Object.assign(LANGS.hr, {
     }
   }
 
-  // The only words a panel gets back into WRM. v1 panels: a toast, or a
-  // request for the context again. v2 panels: the protocol above. Anything
+  // The only words a panel gets back into WRM. v1 panels: a toast. v2 panels:
+  // the protocol above. Anything
   // else is ignored (v2: dropped and counted in the diagnostics).
   window.addEventListener('message', ev => {
     const d = ev.data;
@@ -1051,15 +1119,12 @@ Object.assign(LANGS.hr, {
     if (!frame) return;
     const st = Array.from(v2.values()).find(x => x.frame === frame);
     if (st) {
-      if (d.v !== 2) { st.dropped++; addDiag(st, {kind: 'E_BRIDGE', message: 'message without v: 2 dropped: ' + d.type.slice(0, 40)}); return; }
-      handleV2(st, d);
+      wrmAddonAcceptBridgeMessage(st, d, ev.ports, handleV2, addDiag);
       return;
     }
     const a = list.find(x => { const wo = openWins[keyOf(x)]; return wo && wo.el && wo.el.contains(frame); });
     if (d.type === 'wrm:notify' && typeof d.text === 'string') {
       showToast(String(d.text).slice(0, 500), d.kind === 'error' ? 'error' : 'success', 6000);
-    } else if (d.type === 'wrm:context' && a) {
-      sendContext(frame, a);
     }
   });
 
@@ -1648,7 +1713,8 @@ wrm -addon-dev ./my-addon</pre></div>
       '- The panel is HTML in an iframe with sandbox="allow-scripts", an opaque origin and this CSP: default-src \'none\'; script-src \'self\' plus the hash of each inline <script>; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob:; connect-src \'none\'. So: no fetch/XHR/WebSocket, no inline event handlers (onclick="…"), no eval, no remote scripts or fonts; put JS in <script> blocks or files of the zip and use addEventListener.',
       '- Talk to WRM only with window.parent.postMessage(msg, "*"); every message carries v: 2. Listen with window.addEventListener("message", e => …) and check e.data.type.',
       '- On load send {v:2, type:"wrm:ready"} (within 5 s) and then {v:2, type:"wrm:heartbeat"} every 15 s, or WRM shows a "not responding" banner.',
-      '- WRM answers wrm:ready with {type:"wrm:context", v:2, user:{id,name}, lang, theme:{"--bg":…}, addon:{id, key, version, instance, instanceName}, config:{…stored values…}, features:{store, notify, http, visibility:true}, http:{origins, approved, ready:{secret name: true if a value is set}}, size:{w,h}, visible}. Ask again with {v:2, type:"wrm:context"}.',
+      '- Prefer the bundled wrm-bridge.js helper: it uses a one-time per-frame token and a private MessagePort for the session. Legacy window-message panels are temporarily supported; reloading the panel revokes the old bridge.',
+      '- WRM answers wrm:ready with {type:"wrm:context", v:2, user:{id,name}, lang, theme:{"--bg":…}, addon:{id, key, version, instance, instanceName}, config:{…stored values…}, features:{store, notify, http, visibility:true}, http:{origins, approved, ready:{secret name: true if a value is set}}, size:{w,h}, visible}. The context is delivered to the loaded addon document; reloading the panel obtains a fresh context.',
       '- WRM also sends {type:"wrm:theme", theme} when the user switches theme, {type:"wrm:visibility", visible} when the window is minimized or restored (stop polling and timers while hidden), and {type:"wrm:fatal", code, message} before it closes the panel.',
       '- store capability: {v:2, type:"wrm:store.get", id, key} and {v:2, type:"wrm:store.set", id, key, value} (any JSON, 32 KB per value, quotaKb per instance). The answer is {type:"wrm:store", id, key, value} or with error and code (E_LIMIT_QUOTA, E_LIMIT_SIZE, E_STORE_KEY, E_STORE_READONLY). Keys: 1-64 letters, digits, dot, dash, underscore, not starting with wrm.',
       '- notify capability: {v:2, type:"wrm:notify", text, level:"info"|"success"|"warn"|"error"}; plain text, 200 characters, at most 5 a minute, repeats within 5 minutes are dropped.',

@@ -63,8 +63,10 @@ func connFingerprint(c Connection) string {
 }
 
 func acquireSFTP(c Connection) (*pooledSFTP, error) {
-	if err := guardLoopbackTunnel(c); err != nil {
-		return nil, err
+	if !needsRoute(c) {
+		if err := guardLoopbackTunnel(c); err != nil {
+			return nil, err
+		}
 	}
 	key := connFingerprint(c)
 	sftpPool.Lock()

@@ -3317,7 +3317,7 @@ const LANGS = {
     copy_url:'📋 Copy URL', manage_shares:'⚙ Manage My Shares', no_shares:'No shares yet.',
     connection_created:'Connection created', connection_updated:'Connection updated',
     connection_deleted:'Connection deleted', folder_created:'Folder created',
-    folder_deleted:'Folder deleted', session_saved:'Session saved', session_expired:'Session expired. Please log in again.',
+    folder_deleted:'Folder deleted', session_saved:'Session saved', sess_renamed:'Session renamed', sess_deleted:'Session deleted', sess_lock_on:'Session locked', sess_lock_off:'Session unlocked', session_expired:'Session expired. Please log in again.',
     clipboard_cleared:'Clipboard cleared', copied:'Copied!', pasted:'Pasted!',
     share_deleted:'Share deleted', upload_complete:'Upload complete', upload_failed:'Upload failed',
     live_collab:'Live Collab:', chat:'💬 Chat',
@@ -3366,7 +3366,7 @@ const LANGS = {
     fm_open_failed:'Cannot open file', fm_open:'Open', fm_transfer_to:'Transfer to Server', fm_copy_path:'Copy path',
     lines:'lines', modified:'modified', saved:'Saved', save_failed:'Save failed', discard_changes:'Discard unsaved changes?', discard:'Discard',
     save:'Save', save_close:'Save & Close', ok:'OK', confirm:'Confirm', stop:'Stop', retry:'Retry', loading:'Loading…', today:'Today',
-    network_error:'network error', duplicate:'Duplicate', copy_suffix:'copy', new_folder_name:'New folder name', rename_to:'Rename to',
+    network_error:'network error', ai_approval_notify:'An AI action needs your approval. Open WRM PRO to review it.', duplicate:'Duplicate', copy_suffix:'copy', new_folder_name:'New folder name', rename_to:'Rename to',
     session_name:'Session name', new_name:'New name', delete_conn_q:'Delete this connection?',
     delete_folder_tree_q:'Delete "{name}" and everything inside? This removes {folders} folder(s) and {connections} connection(s).',
     move_to_folder:'Move to folder…', move_folder:'Move folder', move_connection:'Move connection', destination:'Destination folder',
@@ -3410,7 +3410,7 @@ const LANGS = {
     copy_url:'📋 Kopiraj URL', manage_shares:'⚙ Moja dijeljenja', no_shares:'Nema dijeljenja.',
     connection_created:'Veza stvorena', connection_updated:'Veza ažurirana',
     connection_deleted:'Veza obrisana', folder_created:'Mapa stvorena',
-    folder_deleted:'Mapa obrisana', session_saved:'Sesija spremljena', session_expired:'Sesija istekla. Molimo prijavite se ponovo.',
+    folder_deleted:'Mapa obrisana', session_saved:'Sesija spremljena', sess_renamed:'Sesija preimenovana', sess_deleted:'Sesija obrisana', sess_lock_on:'Sesija zaključana', sess_lock_off:'Sesija otključana', session_expired:'Sesija istekla. Molimo prijavite se ponovo.',
     clipboard_cleared:'Međuspremnik očišćen', copied:'Kopirano!', pasted:'Zalijepljeno!',
     share_deleted:'Dijeljenje obrisano', upload_complete:'Prijenos završen', upload_failed:'Prijenos neuspješan',
     live_collab:'Suradnja uživo:', chat:'💬 Chat',
@@ -3459,7 +3459,7 @@ const LANGS = {
     fm_open_failed:'Ne mogu otvoriti datoteku', fm_open:'Otvori', fm_transfer_to:'Prijenos na server', fm_copy_path:'Kopiraj putanju',
     lines:'redaka', modified:'izmijenjeno', saved:'Spremljeno', save_failed:'Spremanje nije uspjelo', discard_changes:'Odbaciti nespremljene promjene?', discard:'Odbaci',
     save:'Spremi', save_close:'Spremi i zatvori', ok:'U redu', confirm:'Potvrda', stop:'Zaustavi', retry:'Pokušaj ponovo', loading:'Učitavam…', today:'Danas',
-    network_error:'mrežna greška', duplicate:'Dupliciraj', copy_suffix:'kopija', new_folder_name:'Naziv nove mape', rename_to:'Preimenuj u',
+    network_error:'mrežna greška', ai_approval_notify:'AI radnja čeka vaše odobrenje. Otvorite WRM PRO da je pregledate.', duplicate:'Dupliciraj', copy_suffix:'kopija', new_folder_name:'Naziv nove mape', rename_to:'Preimenuj u',
     session_name:'Naziv sesije', new_name:'Novi naziv', delete_conn_q:'Obrisati ovu vezu?',
     delete_folder_tree_q:'Obrisati "{name}" i sve unutra? Uklanja {folders} mapa i {connections} veza.',
     move_to_folder:'Premjesti u mapu…', move_folder:'Premjesti mapu', move_connection:'Premjesti vezu', destination:'Odredišna mapa',
@@ -6763,6 +6763,7 @@ async function checkAuth() {
 
 async function doLogout() {
   stopSessionKeepalive();
+  stopEventBus();
   try { if (voice.active) voiceLeave(true); } catch(_) {}
   // Signing out forgets this user's clipboard history on this browser (it may hold secrets).
   try { const k = clipStorageKey(); if (k) { localStorage.removeItem(k); localStorage.removeItem(k + ':at'); } } catch(_) {}
@@ -7047,7 +7048,7 @@ function renderTree() {
     const fid = parseInt(e.dataTransfer.getData('folderId'));
     if (fid) { reorderFolder({id:fid,parent_id:null}); return; }
     const cids = dragConnIDs(e);
-    if (cids.length) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:cids, folder_id: null})}).then(loadData);
+    if (cids.length) moveConnectionsToFolder(cids, null);
   };
   wrap.appendChild(rootDrop);
 
@@ -7105,7 +7106,7 @@ function renderTree() {
         return;
       }
       const cids = dragConnIDs(e);
-      if (cids.length) fetch('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids:cids, folder_id: f.id})}).then(loadData);
+      if (cids.length) moveConnectionsToFolder(cids, f.id);
     };
     row.onclick = () => {
       const ch = row.querySelector('.folder-chevron');
@@ -7162,7 +7163,7 @@ function renderTree() {
       groupLabel.style.cssText = 'padding:6px 8px 3px;font-size:10.5px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:6px;';
       groupLabel.innerHTML = `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(sh.name)}">🤝 ${esc(sh.name || 'Share')} <span style="color:var(--text3);font-weight:500;">· ${esc(sh.owner_username || '')}</span></span>`
         + (sh.locked ? '<span class="pill warn" title="' + esc(t('share_locked_hint')) + '">🔒</span>' : roleBadge(sh.role))
-        + `<button class="icon-btn" style="padding:2px 5px;font-size:11px;" title="${esc(t('open_room'))}" onclick="openShareRoom('/share/${encodeURIComponent(sh.token)}')">↗</button>`;
+        + `<button class="icon-btn" style="padding:2px 5px;font-size:11px;" title="${esc(t('open_room'))}" onclick="openShareRoom('/share#${encodeURIComponent(sh.token)}')">↗</button>`;
       wrap.appendChild(groupLabel);
       if (sh.locked) {
         const hint = document.createElement('div');
@@ -7470,11 +7471,20 @@ function showSharedCtx(x, y, conn, perms) {
 }
 
 // Opens a shared connection in the mode the role allows (terminal needs "operator").
-function openSharedConnection(c, token, perms) {
+async function openSharedConnection(c, token, perms) {
   if (!perms || !perms.files_read) { showToast(t('no_access_role'), 'warning'); return; }
+  let shareID = isCollabMode && token === collab.token ? collab.id : 0;
+  if (!shareID) {
+    const group = (sharedGroups || []).find(g => g.share && g.share.token === token);
+    if (group) shareID = group.share.id;
+    if (token && !String(token).startsWith('share-id:')) {
+      try { shareID = await exchangeShareAccess(token); } catch (e) { showToast(e.message, 'error'); return; }
+    }
+  }
   const wo = addWindow();
   wo.connId = c.id;
   wo.shareToken = token;
+  wo.shareID = shareID;
   wo.perms = perms;
   const wantFiles = c.protocol === 'SFTP' || c.protocol === 'FTP' || c.protocol === 'FTPS' || !perms.terminal;
   if (isDeskConn(c) && !perms.terminal) { showToast(t('no_access_role'), 'warning'); return; }
@@ -7540,7 +7550,7 @@ function showFolderCtx(x, y) {
   showCtx('dyn-ctx-menu', x, y);
 }
 
-function ctxOpenConnInWindow(winId, mode) {
+async function ctxOpenConnInWindow(winId, mode) {
   closeAllCtx();
   let wo;
   if (winId === null) {
@@ -7550,7 +7560,11 @@ function ctxOpenConnInWindow(winId, mode) {
     if (!wo) wo = addWindow();
   }
   wo.connId = ctxConnId;
-  if (ctxShareToken) { wo.shareToken = ctxShareToken; wo.perms = ctxSharePerms; }
+  if (ctxShareToken) {
+    wo.shareToken = ctxShareToken; wo.perms = ctxSharePerms;
+    if (isCollabMode && ctxShareToken === collab.token) wo.shareID = collab.id;
+    else { try { wo.shareID = await exchangeShareAccess(ctxShareToken); } catch (e) { showToast(e.message, 'error'); return; } }
+  }
   setWinMode(wo.id, mode);
 }
 
@@ -8224,7 +8238,7 @@ async function submitShare() {
   closeModal('modal-share');
   if (data.unknown_users && data.unknown_users.length) showToast(t('user_not_found') + ': ' + data.unknown_users.join(', '), 'warning', 6000);
   if (!editId) {
-    document.getElementById('share-url-display').textContent = location.origin + '/share/' + data.token;
+    document.getElementById('share-url-display').textContent = location.origin + '/share#' + data.token;
     document.getElementById('share-created-warn').innerHTML = pl.access_mode === 'link' && !pw
       ? `<div class="hint-box warn">${esc(t('share_link_nopw_warn'))}</div>` : '';
     document.getElementById('modal-share-created').classList.add('open');
@@ -8265,7 +8279,7 @@ async function openManageShares() {
     c.innerHTML = `<div style="text-align:center;color:var(--text3);padding:30px;font-size:12.5px;">${esc(t('no_shares'))}</div>`;
   } else {
     c.innerHTML = manageSharesCache.map(s => {
-      const url = location.origin + '/share/' + s.token;
+      const url = location.origin + '/share#' + s.token;
       const mode = {members: '👥 ' + t('mode_members'), users: '🏢 ' + t('mode_users'), link: '🌐 ' + t('mode_link')}[s.access_mode] || s.access_mode;
       const exp = s.expires_at ? (s.expired ? `<span class="pill bad">${esc(t('expired'))}</span>` : `<span class="pill warn">⏱ ${esc(new Date(s.expires_at).toLocaleString())}</span>`) : '';
       return `<div class="share-card ${s.active ? '' : 'paused'}">
@@ -8309,7 +8323,7 @@ async function rotateShare(id) {
   const res = await fetch('/api/shares/' + id + '/rotate', {method: 'POST'});
   if (!res.ok) { showToast(await apiError(res), 'error'); return; }
   const d = await res.json();
-  copyText(location.origin + '/share/' + d.token, true);
+  copyText(location.origin + '/share#' + d.token, true);
   showToast(t('rotated_copied'), 'success', 4000);
   openManageShares();
 }
@@ -10572,16 +10586,20 @@ async function renderTunnelsPanel() {
 
 async function tunnelStart(key, btn) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-  const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/start', {method: 'POST'});
-  if (!r.ok) showToast(await apiError(r), 'error', 8000);
-  else { const v = await r.json(); showToast(t('tun_started').replace('{addr}', listenAddress(v)), 'success', 3500); }
-  await loadTunnels();
+  try {
+    const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/start', {method: 'POST'});
+    if (!r.ok) showToast(await apiError(r), 'error', 8000);
+    else { const v = await r.json(); showToast(t('tun_started').replace('{addr}', listenAddress(v)), 'success', 3500); }
+  } catch (e) { showToast(String(e.message || e), 'error', 8000); }
+  finally { if (btn) btn.disabled = false; await loadTunnels(); }
 }
 
 async function tunnelStop(key) {
-  const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/stop', {method: 'POST'});
-  if (!r.ok) showToast(await apiError(r), 'error');
-  await loadTunnels();
+  try {
+    const r = await fetch('/api/tunnels/' + encodeURIComponent(key) + '/stop', {method: 'POST'});
+    if (!r.ok) showToast(await apiError(r), 'error');
+  } catch (e) { showToast(String(e.message || e), 'error'); }
+  finally { await loadTunnels(); }
 }
 
 async function startConnTunnels(connId) {
@@ -12171,7 +12189,7 @@ async function startDesktop(wo) {
   const w = Math.max(320, Math.round(view.clientWidth)), h = Math.max(240, Math.round(view.clientHeight));
   const qs = new URLSearchParams({id: wo.connId, width: w, height: h, dpi: Math.round(96 * Math.min(2, window.devicePixelRatio || 1)),
     tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || '')});
-  if (wo.shareToken) qs.set('share_token', wo.shareToken);
+  if (wo.shareID) qs.set('share_id', wo.shareID);
   desk.lastSize = w + 'x' + h;
   client.connect(qs.toString());
 }
@@ -12358,7 +12376,7 @@ function browserNotify(text) {
 // ── AI alerts: a short sound, a toast and (when the page is hidden) a desktop
 // notification. An approval must be impossible to miss, also when the AI panel
 // or the MCP live view is closed. The sound is one setting for this browser.
-var wrmSoundCtx = null, wrmAlertSeen = {};
+var wrmSoundCtx = null, wrmAlertSeen = {}, wrmDesktopAlerts = {};
 function wrmSoundOn() { try { return localStorage.getItem('wrm_sound') !== '0'; } catch (_) { return true; } }
 function wrmSound(kind) {
   if (!wrmSoundOn()) return;
@@ -12387,10 +12405,32 @@ document.addEventListener('pointerdown', function () {
     if (wrmSoundCtx && wrmSoundCtx.state === 'suspended') wrmSoundCtx.resume().catch(() => {});
   } catch (_) {}
 }, {once: true});
-function wrmDesktopNotify(title, body) {
+function wrmDesktopNotify(title, body, key, approval) {
   try {
-    if ('Notification' in window && Notification.permission === 'granted') new Notification(title, {body: body, icon: '/static/brand/icon-192.png', tag: 'wrm-ai'});
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const opts = {body: body, icon: '/static/brand/icon-192.png'};
+      if (key) opts.tag = 'wrm-ai-' + key;
+      if (approval) opts.requireInteraction = true;
+      const notification = new Notification(title, opts);
+      if (key) {
+        const old = wrmDesktopAlerts[key];
+        if (old) try { old.close(); } catch (_) {}
+        wrmDesktopAlerts[key] = notification;
+      }
+      notification.onclick = () => {
+        try { window.focus(); } catch (_) {}
+        if (approval && key && window.wrmFocusApproval) window.wrmFocusApproval(key.replace(/^approval-/, ''));
+        try { notification.close(); } catch (_) {}
+      };
+    }
   } catch (_) {}
+}
+function wrmFocusApproval(id) {
+  if (window.wrmAI && window.wrmAI.focusApproval) {
+    Promise.resolve(window.wrmAI.focusApproval(id)).then(found => {
+      if (!found && window.wrmMCP && window.wrmMCP.focusApproval) window.wrmMCP.focusApproval(id);
+    }).catch(() => {});
+  } else if (window.wrmMCP && window.wrmMCP.focusApproval) window.wrmMCP.focusApproval(id);
 }
 // wrmAiAlert is used by static/ai.js and static/mcp.js. The same approval is
 // announced once, even when both views see it.
@@ -12403,7 +12443,7 @@ function wrmAiAlert(kind, text, key) {
   wrmSound(kind);
   const el = typeof showToast === 'function' ? showToast((kind === 'approval' ? '⏳ ' : '✦ ') + text, kind === 'approval' ? 'warning' : 'info', kind === 'approval' ? 9000 : 3500) : null;
   if (key && el) wrmAlertToasts[key] = el;
-  if (document.hidden) wrmDesktopNotify('WRM PRO', text);
+  if (document.hidden) wrmDesktopNotify('WRM PRO', kind === 'approval' ? t('ai_approval_notify') : text, key, kind === 'approval');
 }
 // wrmAiAlertDone removes the toast of an approval once it is decided (here or elsewhere).
 const wrmAlertToasts = {};
@@ -12411,14 +12451,21 @@ function wrmAiAlertDone(key) {
   const el = wrmAlertToasts[key];
   delete wrmAlertToasts[key];
   if (el && el.isConnected) el.remove();
+  const notification = wrmDesktopAlerts[key];
+  delete wrmDesktopAlerts[key];
+  if (notification) try { notification.close(); } catch (_) {}
+}
+async function wrmEnableAINotifications() {
+  try {
+    if (!('Notification' in window)) { showToast(t('mcp_notify_unsupported'), 'error'); return; }
+    if (Notification.permission === 'granted') { showToast(t('mcp_notify_enabled'), 'success'); return; }
+    if (Notification.permission === 'denied') { showToast(t('mcp_notify_denied'), 'error', 7000); return; }
+    const permission = await Notification.requestPermission();
+    showToast(t(permission === 'granted' ? 'mcp_notify_enabled' : 'mcp_notify_denied'), permission === 'granted' ? 'success' : 'warning', 7000);
+  } catch (_) { showToast(t('mcp_notify_unsupported'), 'error'); }
 }
 function wrmAskNotifications() {
-  try {
-    if ('Notification' in window && Notification.permission === 'default' && localStorage.getItem('wrm_notify_asked') !== '1') {
-      localStorage.setItem('wrm_notify_asked', '1');
-      Notification.requestPermission();
-    }
-  } catch (_) {}
+  // Permission prompts must follow a direct user action; the settings button owns this flow.
 }
 
 async function checkStatusNow(ids) {
@@ -12832,7 +12879,7 @@ async function bookmarksForWin(wo, fresh) {
   if (!fresh && hit && Date.now() - hit.at < 30000) return hit.data;
   let data = {bookmarks: [], start: null};
   try {
-    const r = await fetch('/api/bookmarks?conn=' + encodeURIComponent(wo.connId) + (wo.shareToken ? '&share_token=' + encodeURIComponent(wo.shareToken) : ''));
+    const r = await fetch('/api/bookmarks?conn=' + encodeURIComponent(wo.connId) + (wo.shareID ? '&share_id=' + encodeURIComponent(wo.shareID) : ''));
     if (r.ok) data = await r.json();
   } catch (_) {}
   data.bookmarks = data.bookmarks || [];
@@ -12911,7 +12958,7 @@ async function termCdBookmark(winId, i, all, insert) {
   const ids = [...new Set(targets.map(w => w.connId))];
   let map = {};
   try {
-    const r = await fetch('/api/bookmarks/resolve' + (wo.shareToken ? '?share_token=' + encodeURIComponent(wo.shareToken) : ''),
+    const r = await fetch('/api/bookmarks/resolve' + (wo.shareID ? '?share_id=' + encodeURIComponent(wo.shareID) : ''),
       {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: b.id, conns: ids})});
     if (r.ok) map = await r.json();
   } catch (_) {}
@@ -13242,7 +13289,7 @@ function captureLayout() {
     windows.push({
       conn_id: wo.connId, mode: wo.mode, snap: wo.snap || null, geo,
       path: wo.mode === 'sftp' ? (wo.path || '.') : undefined,
-      share_token: wo.shareToken || undefined,
+      share_id: wo.shareID || undefined,
       console: wo.console || undefined,
       minimized: el.style.display === 'none' || undefined,
       focused: wo === focused || undefined,
@@ -13266,17 +13313,26 @@ async function openSession(id, how) {
       how = r === 'alt' ? 'add' : 'replace';
     } else how = 'replace';
   }
-  const missing = restoreWindowLayout(lay, how);
+  const missing = await restoreWindowLayout(lay, how);
   showToast(t('sess_opened') + ': ' + sv.name + (missing ? ` — ${missing} ${t('sess_missing')}` : ''), missing ? 'warning' : 'success', missing ? 6000 : 2500);
 }
 
 // restoreWindowLayout opens the windows of a session layout (captureLayout) and returns how
 // many connections were missing. Empty placeholder windows are always replaced; with "replace"
 // every connection window is closed first. Workboard addons stay on the canvas.
-function restoreWindowLayout(lay, how) {
+async function restoreWindowLayout(lay, how) {
   winObjects.filter(w => w.mode !== 'addon' && (how === 'replace' || !w.mode)).map(w => w.id).forEach(closeWindow);
   const cont = document.getElementById('win-container');
   const cw = cont.clientWidth, ch = cont.clientHeight;
+  const shareIDs = [...new Set((lay.windows || []).map(w => Number(w.share_id) || 0).filter(Boolean))];
+  const legacyShareIDs = new Map();
+  for (const token of [...new Set((lay.windows || []).map(w => w.share_token).filter(Boolean))]) {
+    try { legacyShareIDs.set(token, await exchangeShareAccess(token)); } catch (_) {}
+  }
+  for (const shareID of shareIDs) {
+    const group = (sharedGroups || []).find(g => g.share && Number(g.share.id) === shareID);
+    if (group && group.share.token) { try { await exchangeShareAccess(group.share.token); } catch (_) {} }
+  }
   let missing = 0, focusId = null;
   lay.windows.forEach(w => {
     const c = conns.find(x => x.id === w.conn_id) || (sharedGroups || []).flatMap(g => g.connections || []).find(x => x.id === w.conn_id);
@@ -13284,7 +13340,15 @@ function restoreWindowLayout(lay, how) {
     const wo = addWindow();
     wo._restored = true;
     wo.connId = c.id;
-    if (w.share_token) wo.shareToken = w.share_token;
+    if (w.share_id) {
+      wo.shareID = w.share_id;
+      const group = (sharedGroups || []).find(g => g.share && Number(g.share.id) === Number(w.share_id));
+      wo.shareToken = group ? group.share.token : 'share-id:' + w.share_id;
+    } else if (w.share_token) {
+      wo.shareToken = w.share_token;
+      const group = (sharedGroups || []).find(g => g.share && g.share.token === w.share_token);
+      wo.shareID = legacyShareIDs.get(w.share_token) || (group && group.share.id) || 0;
+    }
     if (w.console === 'bmc' || w.console === 'sol') wo.console = w.console;
     if (w.mode === 'sftp' && w.path) wo.path = w.path;
     if (w.snap && !isCompact()) snapWindow(wo.id, w.snap);
@@ -13303,6 +13367,13 @@ function restoreWindowLayout(lay, how) {
 }
 
 function ctxOpenSession(how) { closeAllCtx(); openSession(ctxSessId, how); }
+
+async function moveConnectionsToFolder(ids, folderId) {
+  try {
+    const res = await apiOk('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids, folder_id: folderId})});
+    if (res) await loadData();
+  } catch (e) { showToast(String(e.message || e), 'error'); }
+}
 
 async function ctxUpdateSession() {
   closeAllCtx();
@@ -13354,14 +13425,20 @@ async function ctxRenameSession() {
   if (!s) return;
   const name = await uiPrompt(t('new_name'), s.name, {okText: t('rename_plain')});
   if (name === null || !name.trim()) return;
-  fetch('/api/sessions/' + ctxSessId, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...s, name: name.trim()})}).then(() => loadSessions());
+  try {
+    const res = await apiOk('/api/sessions/' + ctxSessId, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...s, name: name.trim()})});
+    if (res) { showToast(t('sess_renamed'), 'success'); await loadSessions(); }
+  } catch (e) { showToast(String(e.message || e), 'error'); }
 }
 
-function ctxToggleLockSession() {
+async function ctxToggleLockSession() {
   closeAllCtx();
   const s = sessions.find(x => x.id === ctxSessId);
   if (!s) return;
-  fetch('/api/sessions/' + ctxSessId, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...s, locked: !s.locked})}).then(() => { showToast('Session ' + (s.locked ? 'unlocked' : 'locked'), 'success'); loadSessions(); });
+  try {
+    const res = await apiOk('/api/sessions/' + ctxSessId, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...s, locked: !s.locked})});
+    if (res) { showToast(t(s.locked ? 'sess_lock_off' : 'sess_lock_on'), 'success'); await loadSessions(); }
+  } catch (e) { showToast(String(e.message || e), 'error'); }
 }
 
 async function ctxDeleteSession() {
@@ -13370,9 +13447,12 @@ async function ctxDeleteSession() {
   if (!s) return;
   const extra = s.locked ? '?force=true' : '';
   if (!(await uiConfirm(t('delete_session') + ' "' + s.name + '"?', {okText: t('delete'), danger: true}))) return;
-  await fetch('/api/sessions/' + ctxSessId + extra, {method: 'DELETE'});
+  try {
+    const res = await apiOk('/api/sessions/' + ctxSessId + extra, {method: 'DELETE'});
+    if (!res) return;
+  } catch (e) { showToast(String(e.message || e), 'error'); return; }
   if (currentSessionId === ctxSessId) { currentSessionId = null; updateSessionBar(null); }
-  showToast('Session deleted', 'success');
+  showToast(t('sess_deleted'), 'success');
   loadSessions();
 }
 
@@ -13472,7 +13552,7 @@ function clearClipboard() {
 
 function addWindow(opts) {
   const id = nextWinId++;
-  const wo = { id, connId: null, shareToken: null, mode: (opts && opts.mode) || null, path: '.', term: null, fitAddon: null, socket: null, el: null, maximized: false, savedPos: null, snap: null, connState: null };
+  const wo = { id, connId: null, shareToken: null, shareID: 0, mode: (opts && opts.mode) || null, path: '.', term: null, fitAddon: null, socket: null, el: null, maximized: false, savedPos: null, snap: null, connState: null };
   winObjects.push(wo);
   tabOrder.push(id);
 
@@ -13620,7 +13700,7 @@ function renderConnPicker(winId) {
       const wo = winObjects.find(w => w.id === winId);
       if (!wo) return;
       wo.connId = c.id;
-      if (isCollabMode) { wo.shareToken = collabToken; wo.perms = collab.perms; }
+      if (isCollabMode) { wo.shareToken = collabToken; wo.shareID = collab.id; wo.perms = collab.perms; }
       const files = c.protocol === 'SFTP' || c.protocol === 'FTP' || c.protocol === 'FTPS' || (isCollabMode && !collab.perms.terminal);
       setWinMode(winId, isDeskConn(c) ? 'desk' : (files ? 'sftp' : 'ssh'));
     };
@@ -14055,7 +14135,7 @@ function setupSSH(wo) {
   const qs = new URLSearchParams({id: wo.connId, cols: wo.term.cols, rows: wo.term.rows});
   if (wo.pendingCwd) {qs.set('cwd',wo.pendingCwd);wo.pendingCwd=null;}
   if (wo.pendingLogPath) {qs.set('log_path',wo.pendingLogPath);wo.pendingLogPath=null;}
-  if (wo.shareToken) qs.set('share_token', wo.shareToken);
+  if (wo.shareID) qs.set('share_id', wo.shareID);
   if (wo.console) qs.set('console', wo.console);
   if (wo.el) wo.el.classList.toggle('console', !!wo.console);
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/ssh?${qs}`);
@@ -14255,7 +14335,7 @@ function openTerminalAt(winId, path) {
   if (!src || !src.connId || !guardWin(src, 'terminal')) return;
   const wo = addWindow();
   wo.connId = src.connId;
-  wo.shareToken = src.shareToken;
+  wo.shareToken = src.shareToken; wo.shareID = src.shareID;
   wo.perms = src.perms;
   wo.pendingCwd = path;
   setWinMode(wo.id, 'ssh');
@@ -14316,7 +14396,7 @@ function openFilesForWin(winId, path) {
   }
   const wo = addWindow();
   wo.connId = src.connId;
-  wo.shareToken = src.shareToken;
+  wo.shareToken = src.shareToken; wo.shareID = src.shareID;
   wo.perms = src.perms;
   if (dir) wo.path = dir;
   setWinMode(wo.id, 'sftp');
@@ -14357,7 +14437,7 @@ function applyFmPermissions(wo) {
 // keyboard, multi-file + folder upload with drag & drop and progress, text editor.
 
 function connQS(wo) {
-  return 'id=' + encodeURIComponent(wo.connId) + (wo.shareToken ? '&share_token=' + encodeURIComponent(wo.shareToken) : '');
+  return 'id=' + encodeURIComponent(wo.connId) + (wo.shareID ? '&share_id=' + encodeURIComponent(wo.shareID) : '');
 }
 function winConn(wo) {
   const all = isCollabMode ? collabConns : (wo && wo.shareToken ? (sharedGroups.find(s => s.share && s.share.token === wo.shareToken) || {}).connections || [] : conns);
@@ -15930,9 +16010,11 @@ async function createRemoteFolder(winId) {
   const name = await uiPrompt(t('new_folder_name'), '', {okText: t('create'), placeholder: 'folder'});
   if (!name || !name.trim()) return;
   const fullPath = joinPath(wo.path || '', name.trim());
-  const res = await fetch(`/api/remote/mkdir?${connQS(wo)}&path=${encodeURIComponent(fullPath)}`, {method: 'POST'});
-  if (res.ok) { showToast('📁 ' + name.trim(), 'success'); loadFiles(winId, wo.path, {highlight: fullPath}); }
-  else showToast('Error: ' + await apiError(res), 'error', 5000);
+  try {
+    const res = await fetch(`/api/remote/mkdir?${connQS(wo)}&path=${encodeURIComponent(fullPath)}`, {method: 'POST'});
+    if (res.ok) { showToast('📁 ' + name.trim(), 'success'); loadFiles(winId, wo.path, {highlight: fullPath}); }
+    else showToast('Error: ' + await apiError(res), 'error', 5000);
+  } catch (e) { showToast(t('network_error') + ': ' + String(e.message || e), 'error', 5000); }
 }
 
 // ══ SFTP DELETE FILE / FOLDER ═════════════════════════
@@ -15942,9 +16024,11 @@ async function deleteRemoteItem(winId, path, isDir, name) {
   const label = name || path.split('/').pop();
   const msg = isDir ? `Delete folder "${label}" and ALL its contents?` : `Delete file "${label}"?`;
   if (!(await uiConfirm(msg, {title: t('delete'), okText: t('delete'), danger: true}))) return;
-  const res = await fetch(`/api/remote/delete?${connQS(wo)}&path=${encodeURIComponent(path)}&dir=${isDir ? 1 : 0}`, {method: 'DELETE'});
-  if (res.ok) { showToast('🗑 ' + label, 'success'); if (wo._searchResults) endFmSearch(winId); loadFiles(winId, wo.path); }
-  else showToast('Error: ' + await apiError(res), 'error', 5000);
+  try {
+    const res = await fetch(`/api/remote/delete?${connQS(wo)}&path=${encodeURIComponent(path)}&dir=${isDir ? 1 : 0}`, {method: 'DELETE'});
+    if (res.ok) { showToast('🗑 ' + label, 'success'); if (wo._searchResults) endFmSearch(winId); loadFiles(winId, wo.path); }
+    else showToast('Error: ' + await apiError(res), 'error', 5000);
+  } catch (e) { showToast(t('network_error') + ': ' + String(e.message || e), 'error', 5000); }
 }
 
 function fmtBytes(b) {
@@ -16033,8 +16117,8 @@ async function terminalClipboard(id,action){const wo=winObjects.find(x=>x.id===i
 async function terminalHere(id){const wo=winObjects.find(x=>x.id===id);if(!wo||!guardWin(wo,'terminal'))return;let path=wo.cwd;const selection=selectedTerminalPath(wo);if(selection){let candidate=selection;if(!candidate.startsWith('/')){const cwd=await termAskCwd(wo);candidate=joinPath(cwd.path||wo.cwd||'/',candidate)}const r=await fetch('/api/remote/list?'+connQS(wo)+'&path='+encodeURIComponent(candidate));if(r.ok)path=candidate;}if(!path){const cwd=await termAskCwd(wo);path=cwd.path}if(!path){showToast(t('pv_select_path'),'warning');return}openTerminalAt(id,path)}
 async function sendSelectionToAI(id,filePath){const wo=winObjects.find(x=>x.id===id);if(!wo||!aiAvailable(wo,wo.mode))return;const selection=(wo.term?.getSelection()||'').slice(0,8192);const res=await fetch('/api/ai/context?'+connQS(wo),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(filePath?{path:filePath}:{text:selection})});if(!res.ok){showToast(await apiError(res),'error');return}const context=await res.json();if(!context.text)return;const question=await uiPrompt(t('ctx_question'),'',{message:t('ctx_review')+'\n'+connLabel(winConn(wo))+'\n'+(context.path||wo.cwd||'')+'\n\n'+context.text,okText:t('ctx_ai')});if(!question)return;await loadAI();await wrmAI.queueContext(id,question+'\n<untrusted_selected_context>\n'+JSON.stringify({server:connLabel(winConn(wo)),directory:wo.cwd||wo.path||'',path:context.path,text:context.text})+'\n</untrusted_selected_context>');}
 
-async function openWRMCommand(){const candidates=(isCollabMode?collabConns:conns).filter(c=>['SSH','SFTP'].includes(c.protocol));const response=await fetch('/api/ai/servers'+(isCollabMode?'?share_token='+encodeURIComponent(collab.token):''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conn_ids:candidates.map(c=>c.id)})});if(!response.ok){showToast(await apiError(response),'error');return;}const list=await response.json();document.getElementById('wrm-command-modal')?.remove();const m=document.createElement('div');m.id='wrm-command-modal';m.className='modal-overlay open';m.style.zIndex=9800;m.innerHTML=`<div class="modal" style="width:min(560px,calc(100vw - 24px))"><h3>/wrm server</h3><p>${esc(t('wrm_command_help'))}</p><select id="wrm-command-server" style="width:100%">${list.map(c=>`<option value="${c.id}">${esc(connLabel(c))} · ${esc(c.host)}</option>`).join('')}</select><div class="modal-footer"><button class="btn-sec" onclick="document.getElementById('wrm-command-modal').remove()">${esc(t('cancel'))}</button><button onclick="chooseWRMServer()">${esc(t('ok'))}</button></div></div>`;document.body.appendChild(m)}
-function chooseWRMServer(){const id=Number(document.getElementById('wrm-command-server').value);if(!id)return;document.getElementById('wrm-command-modal').remove();const wo=addWindow();wo.connId=id;if(isCollabMode){wo.shareToken=collab.token;wo.perms=collab.perms}setWinMode(wo.id,'ssh');loadAI().then(()=>wrmAI.toggle(wo.id))}
+async function openWRMCommand(){const candidates=(isCollabMode?collabConns:conns).filter(c=>['SSH','SFTP'].includes(c.protocol));const response=await fetch('/api/ai/servers'+(isCollabMode?'?share_id='+encodeURIComponent(collab.id):''),{method:'POST',headers:{'Content-Type':'application/json','X-WRM-Request':'1'},body:JSON.stringify({conn_ids:candidates.map(c=>c.id)})});if(!response.ok){showToast(await apiError(response),'error');return;}const list=await response.json();document.getElementById('wrm-command-modal')?.remove();const m=document.createElement('div');m.id='wrm-command-modal';m.className='modal-overlay open';m.style.zIndex=9800;m.innerHTML=`<div class="modal" style="width:min(560px,calc(100vw - 24px))"><h3>/wrm server</h3><p>${esc(t('wrm_command_help'))}</p><select id="wrm-command-server" style="width:100%">${list.map(c=>`<option value="${c.id}">${esc(connLabel(c))} · ${esc(c.host)}</option>`).join('')}</select><div class="modal-footer"><button class="btn-sec" onclick="document.getElementById('wrm-command-modal').remove()">${esc(t('cancel'))}</button><button onclick="chooseWRMServer()">${esc(t('ok'))}</button></div></div>`;document.body.appendChild(m)}
+function chooseWRMServer(){const id=Number(document.getElementById('wrm-command-server').value);if(!id)return;document.getElementById('wrm-command-modal').remove();const wo=addWindow();wo.connId=id;if(isCollabMode){wo.shareToken=collab.token;wo.shareID=collab.id;wo.perms=collab.perms}setWinMode(wo.id,'ssh');loadAI().then(()=>wrmAI.toggle(wo.id))}
 
 async function terminalPathAction(winId, action) {
   closeAllCtx();
@@ -16330,7 +16414,7 @@ function duplicateWindow(id) {
   if (!src || !src.connId) return;
   const wo = addWindow();
   wo.connId = src.connId;
-  wo.shareToken = src.shareToken;
+  wo.shareToken = src.shareToken; wo.shareID = src.shareID;
   if (src.mode === 'sftp') wo.path = src.path;
   setWinMode(wo.id, src.mode);
 }
@@ -17057,8 +17141,10 @@ async function revokeSession(id) {
 
 async function revokeOtherSessions() {
   if (!(await uiConfirm(t('sign_out_others_q'), {okText: t('sign_out_others')}))) return;
-  const res = await fetch('/api/auth/sessions', {method: 'DELETE'});
-  if (res.ok) { const d = await res.json(); showToast(t('sessions_revoked').replace('{n}', d.revoked), 'success'); }
+  const res = await apiOk('/api/auth/sessions', {method: 'DELETE'});
+  if (!res) return;
+  const d = await res.json();
+  showToast(t('sessions_revoked').replace('{n}', d.revoked), 'success');
   renderSecurityPane();
 }
 
@@ -17221,15 +17307,19 @@ async function importConfig(input) {
 // identities and roles; the browser only renders what it is told and asks for actions.
 
 const collab = {
-  token: null, share: null, me: null, pid: null, name: null, role: null, perms: {},
+  token: null, id: null, share: null, me: null, pid: null, name: null, role: null, perms: {},
   participants: [], ws: null, connected: false, everConnected: false, retry: 0,
   closedByServer: false, unread: 0, hand: false, chatFileMaxMB: 5,
 };
+const shareAccessRefreshTimers = new Map();
 
-async function initCollabView(token) {
+async function initCollabView(token, validatedShareID = 0) {
   collab.token = token;
   let res, data = {};
-  try { res = await fetch('/api/share/' + encodeURIComponent(token)); data = await res.json().catch(() => ({})); }
+  try {
+    collab.id = validatedShareID || await exchangeShareAccess(token);
+    res = await fetch('/api/share/' + encodeURIComponent(collab.id)); data = await res.json().catch(() => ({}));
+  }
   catch(e) { showCollabFatal(t('share_load_failed') + ' (' + e.message + ')'); return; }
   if (!res.ok) {
     if (data.password_required) { document.getElementById('modal-share-auth').classList.add('open'); setTimeout(() => document.getElementById('share-unlock-pass').focus(), 60); return; }
@@ -17261,6 +17351,26 @@ async function initCollabView(token) {
   connectCollabWS();
 }
 
+async function exchangeShareAccess(token) {
+  const res = await fetch('/api/share/access', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-WRM-Request': '1'}, body: JSON.stringify({token})});
+  if (!res.ok) { const e = new Error(await apiError(res)); e.status = res.status; throw e; }
+  const data = await res.json();
+  const id = Number(data.share_id) || 0;
+  if (id && !shareAccessRefreshTimers.has(token)) scheduleShareAccessRefresh(token);
+  return id;
+}
+
+function scheduleShareAccessRefresh(token, delay = 12 * 60 * 60 * 1000) {
+  const old = shareAccessRefreshTimers.get(token);
+  if (old) clearTimeout(old);
+  const timer = setTimeout(async () => {
+    shareAccessRefreshTimers.delete(token);
+    try { await exchangeShareAccess(token); }
+    catch (e) { if (!e.status || e.status >= 500) scheduleShareAccessRefresh(token, 10 * 60 * 1000); }
+  }, delay);
+  shareAccessRefreshTimers.set(token, timer);
+}
+
 function showCollabFatal(msg) {
   const hint = document.getElementById('no-win-hint');
   if (hint) hint.innerHTML = `<span class="hint-icon">🔒</span><span class="hint-title">${esc(msg)}</span><span>${esc(t('share_fatal_hint'))}</span>`;
@@ -17280,7 +17390,7 @@ function askGuestName(def) {
 async function submitGuestName() {
   const name = document.getElementById('guest-name-input').value.trim();
   if (!name) return;
-  const res = await fetch('/api/share/' + encodeURIComponent(collab.token) + '/profile', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name})});
+  const res = await fetch('/api/share/' + encodeURIComponent(collab.id) + '/profile', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-WRM-Request': '1'}, body: JSON.stringify({name})});
   const d = await res.json().catch(() => ({}));
   if (!res.ok) { showToast(d.error || t('failed'), 'error'); return; }
   const m = document.getElementById('modal-guest-name');
@@ -17294,8 +17404,8 @@ async function submitGuestName() {
 
 window.unlockShare = async function() {
   const pass = document.getElementById('share-unlock-pass').value;
-  const res = await fetch('/api/share/' + encodeURIComponent(collabToken) + '/unlock', {
-    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pass})
+  const res = await fetch('/api/share/' + encodeURIComponent(collab.id) + '/unlock', {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'X-WRM-Request': '1'}, body: JSON.stringify({password: pass})
   });
   if (res.ok) {
     document.getElementById('share-unlock-pass').value = '';
@@ -17354,7 +17464,7 @@ function myCollabName() { return collab.name || getOrCreateGuestName(); }
 
 function connectCollabWS() {
   if (collab.closedByServer) return;
-  const ws = new WebSocket(`${wsProto()}//${location.host}/ws/share/${encodeURIComponent(collab.token)}`);
+  const ws = new WebSocket(`${wsProto()}//${location.host}/ws/share/${encodeURIComponent(collab.id)}`);
   collab.ws = ws;
   collabWS = ws;
   ws.onopen = () => { collab.retry = 0; };
@@ -17372,9 +17482,12 @@ function connectCollabWS() {
       if (collab.ws !== ws) return;
       // Access may have changed while we were away (password, role, ban): re-check first.
       try {
-        const r = await fetch('/api/share/' + encodeURIComponent(collab.token));
+        await exchangeShareAccess(collab.token);
+        const r = await fetch('/api/share/' + encodeURIComponent(collab.id));
         if (!r.ok) { const d = await r.json().catch(() => ({})); if (r.status !== 502 && r.status !== 503) { collab.closedByServer = true; showCollabEnded(d.error || t('room_closed')); return; } }
-      } catch(_) {}
+      } catch(e) {
+        if (e.status && e.status < 500) { collab.closedByServer = true; showCollabEnded(e.message || t('room_closed')); return; }
+      }
       connectCollabWS();
     }, delay);
   };
@@ -17454,7 +17567,7 @@ async function setMyRole(role, perms, initial) {
   document.getElementById('cb-role').innerHTML = roleBadge(role);
   if (changed && !initial) {
     try {
-      const r = await fetch('/api/share/' + encodeURIComponent(collab.token));
+      const r = await fetch('/api/share/' + encodeURIComponent(collab.id));
       if (r.ok) { const d = await r.json(); collabConns = d.connections || []; }
     } catch(_) {}
     renderCollabTree();
@@ -18512,17 +18625,32 @@ async function handleChatFileSelect(input) {
 // ══ EVENT BUS ════════════════════════════════════════
 
 let eventBusReconnectDelay = 1000;
+let eventBusReconnectTimer = null;
+let eventBusSocket = null;
 
 function connectEventBus() {
+  if (_sessionExpiredShown || !currentUser) return;
   const ws = new WebSocket(`${wsProto()}//${location.host}/ws/events`);
+  eventBusSocket = ws;
   ws.onopen = () => { eventBusReconnectDelay = 1000; refreshUserPolicy(); };
   ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'sessions_changed') { loadSessions(); loadData(); } if (m.type === 'tunnels_changed') scheduleTunnelRefresh(); if (m.type === 'snippets_changed') loadSnippets(); if (m.type === 'bookmarks_changed') loadBookmarks(); if (m.type === 'status_changed') loadStatus(true); if (m.type === 'credentials_changed' || m.type === 'proxies_changed') loadVault(); if (m.type === 'git_run_changed' && window.gitWorkspace) gitWorkspace.loadRuns(); if (m.type === 'ai_sessions_changed' && window.wrmAI) wrmAI.refresh(); if ((m.type === 'ai_sessions_changed' || m.type === 'mcp_changed') && window.wrmAISessions) wrmAISessions.refresh(); if (m.type === 'mcp_changed') mcpRefresh(); if (m.type === 'ai_policy_changed') { refreshUserPolicy(); if (window.wrmAI) wrmAI.policyChanged(); } if (window.wrmWorkboard) wrmWorkboard.bus(m.type); } catch(_) {} };
   ws.onclose = () => {
-    setTimeout(() => {
-      connectEventBus();
+    if (eventBusSocket === ws) eventBusSocket = null;
+    if (_sessionExpiredShown || !currentUser || eventBusReconnectTimer) return;
+    eventBusReconnectTimer = setTimeout(() => {
+      eventBusReconnectTimer = null;
+      if (_sessionExpiredShown || !currentUser) return;
       eventBusReconnectDelay = Math.min(eventBusReconnectDelay * 1.5, 30000);
+      connectEventBus();
     }, eventBusReconnectDelay);
   };
+}
+
+function stopEventBus() {
+  if (eventBusReconnectTimer) { clearTimeout(eventBusReconnectTimer); eventBusReconnectTimer = null; }
+  const ws = eventBusSocket;
+  eventBusSocket = null;
+  if (ws && ws.readyState < WebSocket.CLOSING) ws.close(1000, 'session ended');
 }
 
 // ══ SESSION KEEPALIVE ══════════════════════════════════
@@ -18550,6 +18678,7 @@ let _sessionExpiredShown = false;
 function showSessionExpired() {
   if (_sessionExpiredShown) return;
   _sessionExpiredShown = true;
+  stopEventBus();
   showToast(t('session_expired') || 'Session expired. Please log in again.', 'error', 6000);
   // Do not yank the page away while terminals or transfers are active.
   const busy = _transferRunning || winObjects.some(w => w.socket && w.socket.readyState === 1);
@@ -18630,10 +18759,49 @@ window.addEventListener('beforeunload', e => {
 
 // ══ BOOT ════════════════════════════════════════════
 
+function shareTokenFromLocation() {
+  const key = 'wrm.share.entries';
+  let entries;
+  try { entries = JSON.parse(sessionStorage.getItem(key) || '{}'); } catch (_) { entries = {}; }
+  if (!entries || typeof entries !== 'object' || Array.isArray(entries)) entries = {};
+  if (location.pathname.startsWith('/share/') || (location.pathname === '/share' && location.hash.length > 1)) {
+    let token = location.pathname.startsWith('/share/') ? location.pathname.slice('/share/'.length).replace(/\/$/, '') : '';
+    if (!token && location.hash.length > 1) { try { token = decodeURIComponent(location.hash.slice(1)); } catch (_) { return ''; } }
+    if (token) {
+      const id = 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      entries[id] = token;
+      try {
+        sessionStorage.setItem(key, JSON.stringify(entries));
+        const state = history.state && typeof history.state === 'object' ? history.state : {};
+        history.replaceState(Object.assign({}, state, {wrmShareEntry: id}), '', '/share');
+      } catch (_) { /* keep the token URL if the tab cannot store a reloadable entry */ }
+    }
+    return token;
+  }
+  if (location.pathname === '/share') {
+    const id = history.state && typeof history.state === 'object' && history.state.wrmShareEntry;
+    return typeof id === 'string' ? entries[id] || '' : '';
+  }
+  return '';
+}
+
+function handleShareFragmentNavigation() {
+  if (location.pathname === '/share' && location.hash.length > 1) location.reload();
+}
+window.addEventListener('hashchange', handleShareFragmentNavigation);
+
 window.addEventListener('load', async () => {
-  if (location.pathname.startsWith('/share/')) {
+  const shareToken = shareTokenFromLocation();
+  let validatedShareID = 0;
+  if (shareToken) {
+    // Validate the bearer link with the server before entering the share UI.
+    // This also exchanges it for the per-share HttpOnly access cookie.
+    try { validatedShareID = await exchangeShareAccess(shareToken); }
+    catch (_) { /* fall through to normal authentication */ }
+  }
+  if (validatedShareID) {
     isCollabMode = true;
-    collabToken = location.pathname.replace('/share/', '').replace(/\/$/, '');
+    collabToken = shareToken;
 
     // Hide auth, show app
     document.getElementById('auth-screen').style.display = 'none';
@@ -18663,7 +18831,7 @@ window.addEventListener('load', async () => {
     loadSettings();
     setupResize();
     loadClipboard();
-    initCollabView(collabToken);
+    initCollabView(collabToken, validatedShareID);
   } else {
     checkAuth();
   }

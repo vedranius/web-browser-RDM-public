@@ -27,7 +27,13 @@ func TestV1261AllowEverything(t *testing.T) {
 		{all, "venv=/opt/venv; $venv/bin/pip install -r req.txt && systemctl restart app", aiAllow},
 		{all, "echo done > /opt/app/state.txt", aiAllow},
 		{all, "(cd /srv && make install)", aiAllow},
-		{all, "echo x > /etc/shadow", aiDeny},          // path deny list
+		{all, "echo x > /etc/shadow", aiDeny},       // path deny list
+		{all, "cp /tmp/source /etc/shadow", aiDeny}, // command output target
+		{all, "sudo -u root cp /tmp/source /etc/shadow", aiDeny},
+		{all, "tee /etc/shadow", aiDeny},
+		{all, "sed -i 's/x/y/' /etc/shadow", aiDeny},
+		{all, "dd if=/tmp/source of=/etc/shadow", aiDeny},
+		{all, "truncate -s 0 /etc/shadow", aiDeny},
 		{all, "shutdown -h now", aiDeny},               // deny list
 		{all, "rm -rf --no-preserve-root /", aiDeny},   // blocked command
 		{all, "cp /etc/shadow /tmp/x", aiApprove},      // sensitive file

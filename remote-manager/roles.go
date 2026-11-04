@@ -267,16 +267,16 @@ func apiAuthStepUpHandler(w http.ResponseWriter, r *http.Request) {
 	method := "password"
 	if u.TOTPEnabled {
 		code := strings.TrimSpace(in.Code)
-		if okCode, step := totpVerify(decryptValue(u.TOTPSecret), code, u.TOTPLastStep); okCode {
-			db.Exec(`UPDATE users SET totp_last_step=? WHERE id=?`, step, u.ID)
-			method = "password+totp"
-		} else if okRec, remaining := useRecoveryCode(u.Recovery, code); okRec {
-			db.Exec(`UPDATE users SET recovery_codes=? WHERE id=?`, remaining, u.ID)
-			method = "password+recovery_code"
-		} else {
+		factor, _, err := consumeUserSecondFactor(u, code)
+		if err != nil {
+			jsonError(w, "Could not verify the code. Try again.", 500)
+			return
+		}
+		if factor == "" {
 			fail("wrong 2FA code", "Invalid verification code")
 			return
 		}
+		method = "password+" + factor
 	}
 	recordLoginResult(ip, true)
 	db.Exec(`UPDATE auth_sessions SET step_up_at=? WHERE id=?`, nowRFC(), s.ID)

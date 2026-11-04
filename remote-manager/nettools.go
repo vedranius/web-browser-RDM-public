@@ -278,7 +278,7 @@ func runHTTPCheck(cl *ssh.Client, raw string) (*httpResult, error) {
 		raw = "https://" + raw
 	}
 	u, err := url.Parse(raw)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || validToolHost(u.Hostname()) != nil {
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.User != nil || validToolHost(u.Hostname()) != nil {
 		return nil, fmt.Errorf("enter a URL like https://10.0.0.5/ or a host name")
 	}
 	var state *tls.ConnectionState
@@ -323,6 +323,24 @@ func runHTTPCheck(cl *ssh.Client, raw string) (*httpResult, error) {
 		}
 	}
 	return r, nil
+}
+
+// netToolAuditTarget omits URL userinfo, paths, query strings, and fragments from the
+// audit target. HTTP checks may contain user-provided query credentials, which must not
+// be copied into the long-lived audit log.
+func netToolAuditTarget(tool, target string) string {
+	if tool != "http" {
+		return target
+	}
+	raw := target
+	if !strings.Contains(raw, "://") {
+		raw = "https://" + raw
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" {
+		return "HTTP check"
+	}
+	return u.Scheme + "://" + u.Host
 }
 
 // POST /api/nettools {tool: ports|ping|traceroute|dns|http, target, ports, source_id}
@@ -423,7 +441,7 @@ func apiNetToolsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out["ms"] = time.Since(start).Milliseconds()
-	auditLog(r, userID, "nettool.run", in.Target, map[string]interface{}{"tool": in.Tool, "source": source, "ports": len(ports)})
+	auditLog(r, userID, "nettool.run", netToolAuditTarget(in.Tool, in.Target), map[string]interface{}{"tool": in.Tool, "source": source, "ports": len(ports)})
 	if err != nil {
 		out["error"] = err.Error()
 	}

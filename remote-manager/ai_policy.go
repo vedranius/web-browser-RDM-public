@@ -590,6 +590,15 @@ func aiEvaluateAuto(auto *aiAutoLimits, cmd, home string, now time.Time, v roVer
 				}
 			}
 		}
+		if inner, _ := innerCommand(s.Words); len(inner) > 0 {
+			name, _ := cmdName(inner[0])
+			for _, target := range aiWritePathOperands(name, inner[1:]) {
+				t := aiExpandHome(target, home)
+				if m := matchAny(expandAll(auto.PathDeny, home), t, true); m != "" {
+					return aiDecision{Action: aiDeny, Rule: "auto_deny", Reason: "writes to a path on the session's deny list (" + m + ")"}
+				}
+			}
+		}
 		if classifySegment(shSegment{Words: s.Words}).ReadOnly {
 			continue
 		}
