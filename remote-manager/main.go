@@ -336,6 +336,7 @@ func newRouter() http.Handler {
 	// sharing & collaboration
 	mux.HandleFunc("/api/shares", apiSharesHandler)
 	mux.HandleFunc("/api/shares/", apiSharesByIDHandler)
+	mux.HandleFunc("/api/share/access", apiShareAccessHandler)
 	mux.HandleFunc("/api/share/", apiShareByTokenHandler)
 	mux.HandleFunc("/api/shared", apiSharedHandler)
 	// administration

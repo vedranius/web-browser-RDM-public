@@ -99,6 +99,72 @@ func getShareByID(id int) (ShareLink, error) {
 	return scanShare(db.QueryRow(`SELECT `+shareCols+` FROM share_links WHERE id=?`, id))
 }
 
+const shareAccessCookieTTL = 24 * time.Hour
+
+func shareAccessCookieName(shareID int) string { return "wrm_share_access_" + strconv.Itoa(shareID) }
+
+func shareAccessCookieValue(share ShareLink, expires int64) string {
+	e := strconv.FormatInt(expires, 10)
+	return e + "." + signValue("share-access-v1", strconv.Itoa(share.ID), share.Token, e)
+}
+
+func validShareAccessCookie(r *http.Request, share ShareLink) bool {
+	c, err := r.Cookie(shareAccessCookieName(share.ID))
+	if err != nil {
+		return false
+	}
+	parts := strings.Split(c.Value, ".")
+	if len(parts) != 2 {
+		return false
+	}
+	expires, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil || expires <= time.Now().Unix() {
+		return false
+	}
+	return verifySigned(parts[1], "share-access-v1", strconv.Itoa(share.ID), share.Token, parts[0])
+}
+
+func setShareAccessCookie(w http.ResponseWriter, r *http.Request, share ShareLink) {
+	expires := time.Now().Add(shareAccessCookieTTL).Unix()
+	http.SetCookie(w, &http.Cookie{Name: shareAccessCookieName(share.ID), Value: shareAccessCookieValue(share, expires), Path: "/", MaxAge: int(shareAccessCookieTTL.Seconds()), HttpOnly: true, Secure: isHTTPS(r), SameSite: http.SameSiteStrictMode})
+}
+
+// apiShareAccessHandler exchanges the bearer link once for an HttpOnly, per-share
+// cookie. The cookie is bound to the current token, so rotating the link invalidates it.
+func apiShareAccessHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		jsonError(w, "Method not allowed", 405)
+		return
+	}
+	var in struct {
+		Token string `json:"token"`
+	}
+	if json.NewDecoder(r.Body).Decode(&in) != nil || strings.TrimSpace(in.Token) == "" {
+		jsonError(w, "Share not found", 404)
+		return
+	}
+	share, err := getShareByToken(strings.TrimSpace(in.Token))
+	if err != nil {
+		jsonError(w, "Share not found or deleted", 404)
+		return
+	}
+	ensureGuestCookie(w, r)
+	setShareAccessCookie(w, r, share)
+	jsonOK(w, map[string]int{"share_id": share.ID})
+}
+
+func shareFromRequest(r *http.Request, identifier string) (ShareLink, bool) {
+	if id, err := strconv.Atoi(identifier); err == nil && id > 0 {
+		share, err := getShareByID(id)
+		if err == nil && validShareAccessCookie(r, share) {
+			return share, true
+		}
+		return ShareLink{}, false
+	}
+	share, err := getShareByToken(identifier)
+	return share, err == nil
+}
+
 func (s ShareLink) expired() bool {
 	t, ok := parseTS(s.ExpiresAt)
 	return ok && time.Now().After(t)
@@ -436,6 +502,24 @@ func authorizeConnection(r *http.Request, connID int, perm string) (*connAccess,
 		if userOwnsConnection(connID, userID) {
 			return &connAccess{UserID: userID}, 0, ""
 		}
+	}
+	shareID := strings.TrimSpace(r.URL.Query().Get("share_id"))
+	if shareID != "" {
+		share, ok := shareFromRequest(r, shareID)
+		if !ok {
+			return nil, 404, "Connection not found"
+		}
+		sa, d := resolveShareAccess(r, share)
+		if d != nil {
+			return nil, d.Code, d.Message
+		}
+		if !shareHasConnection(sa.Share, connID) {
+			return nil, 404, "Connection not found"
+		}
+		if !roleCan(sa.Role, perm) {
+			return nil, 403, fmt.Sprintf("Your role in this share (%s) does not allow this action", sa.Role)
+		}
+		return &connAccess{UserID: sa.UserID, Share: sa}, 0, ""
 	}
 	token := strings.TrimSpace(r.URL.Query().Get("share_token"))
 	if token == "" {
@@ -782,7 +866,7 @@ func apiSharesHandler(w http.ResponseWriter, r *http.Request) {
 			"password": ph != nil, "connections": len(connIDs), "folders": len(folderIDs), "expires_at": expires})
 		s, _ := getShareByID(shareID)
 		out := shareDetails(s)
-		out["share_url"] = "/share/" + token
+		out["share_url"] = "/share#" + token
 		out["unknown_users"] = unknown
 		jsonOK(w, out)
 	default:
@@ -934,7 +1018,7 @@ func apiSharesByIDHandler(w http.ResponseWriter, r *http.Request) {
 		auditLog(r, userID, "share.link_rotated", s.Name, map[string]int{"share_id": id})
 		ns, _ := getShareByID(id)
 		out := shareDetails(ns)
-		out["share_url"] = "/share/" + token
+		out["share_url"] = "/share#" + token
 		jsonOK(w, out)
 	case sub == "members" && subID == "" && r.Method == http.MethodGet:
 		jsonOK(w, shareDetails(s)["members"])
@@ -1055,13 +1139,13 @@ func shareParticipants(s ShareLink) []map[string]interface{} {
 // POST /api/share/{token}/profile  {name}   (guests choose how others see them)
 func apiShareByTokenHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/share/"), "/"), "/")
-	token := parts[0]
+	identifier := parts[0]
 	action := ""
 	if len(parts) > 1 {
 		action = parts[1]
 	}
-	share, err := getShareByToken(token)
-	if err != nil || token == "" {
+	share, ok := shareFromRequest(r, identifier)
+	if !ok || identifier == "" {
 		jsonError(w, "Share not found or deleted", 404)
 		return
 	}
@@ -1092,7 +1176,7 @@ func apiShareByTokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		jsonOK(w, map[string]interface{}{
 			"share": map[string]interface{}{
-				"id": share.ID, "token": share.Token, "name": share.Name, "owner_username": owner,
+				"id": share.ID, "name": share.Name, "owner_username": owner,
 				"access_mode": share.AccessMode, "expires_at": share.ExpiresAt,
 			},
 			"me":          map[string]interface{}{"name": sa.Name, "role": sa.Role, "guest": sa.Guest, "member": sa.Member, "owner": sa.IsOwner, "perms": rolePerms(sa.Role), "named": !sa.Guest || participantHasName(share.ID, sa.PKey)},

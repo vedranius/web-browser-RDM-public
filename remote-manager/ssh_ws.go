@@ -45,6 +45,10 @@ type termControl struct {
 }
 
 func sshHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("share_id") != "" && !exactShareWSOrigin(r) {
+		http.Error(w, "WebSocket origin rejected", http.StatusForbidden)
+		return
+	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return

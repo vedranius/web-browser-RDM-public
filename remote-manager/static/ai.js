@@ -442,7 +442,7 @@ Object.assign(LANGS.hr, {
 
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(String(b)); return s; };
   const winOf = id => winObjects.find(w => w.id === id);
-  const shareQ = wo => (wo && wo.shareToken ? '?share_token=' + encodeURIComponent(wo.shareToken) : '');
+  const shareQ = wo => (wo && wo.shareID ? '?share_id=' + encodeURIComponent(wo.shareID) : '');
   async function api(method, url, body) {
     const res = await fetch(url, {method, headers: body ? {'Content-Type': 'application/json'} : {}, body: body ? JSON.stringify(body) : undefined});
     if (!res.ok) throw new Error(await apiError(res));

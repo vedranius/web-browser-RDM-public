@@ -478,6 +478,10 @@ var desktopUpgrader = websocket.Upgrader{CheckOrigin: checkWSOrigin, ReadBufferS
 // GET /ws/desktop?id=&width=&height=&dpi=&tz=[&share_token=]
 func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	if q.Get("share_id") != "" && !exactShareWSOrigin(r) {
+		http.Error(w, "WebSocket origin rejected", http.StatusForbidden)
+		return
+	}
 	id, _ := strconv.Atoi(q.Get("id"))
 	acc, _, denyMsg := authorizeConnection(r, id, PermTerminal)
 	ws, err := desktopUpgrader.Upgrade(w, r, nil)

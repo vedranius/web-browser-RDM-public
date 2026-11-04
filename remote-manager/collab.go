@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -307,8 +309,23 @@ type inMsg struct {
 }
 
 func shareWSHandler(w http.ResponseWriter, r *http.Request) {
-	token := strings.TrimSpace(strings.SplitN(strings.Trim(strings.TrimPrefix(r.URL.Path, "/ws/share/"), "/"), "/", 2)[0])
-	sa, d := resolveShareToken(r, token)
+	identifier := strings.TrimSpace(strings.SplitN(strings.Trim(strings.TrimPrefix(r.URL.Path, "/ws/share/"), "/"), "/", 2)[0])
+	var sa *ShareAccess
+	var d *shareDenied
+	if id, err := strconv.Atoi(identifier); err == nil && id > 0 {
+		share, cookieAccess := shareFromRequest(r, identifier)
+		if !cookieAccess {
+			http.Error(w, "Share not found or deleted", 404)
+			return
+		}
+		if !exactShareWSOrigin(r) {
+			http.Error(w, "WebSocket origin rejected", 403)
+			return
+		}
+		sa, d = resolveShareAccess(r, share)
+	} else {
+		sa, d = resolveShareToken(r, identifier)
+	}
 	if d != nil {
 		http.Error(w, d.Message, d.Code)
 		return
@@ -387,6 +404,39 @@ func shareWSHandler(w http.ResponseWriter, r *http.Request) {
 	p.shutdown(1000, "bye")
 	dropRoomIfEmpty(rm)
 	auditLogAs(r, sa.UserID, participantAuditName(sa), "collab.leave", sa.Share.Name, map[string]interface{}{"share_id": sa.Share.ID, "minutes": int(time.Since(p.joined).Minutes())})
+}
+
+// exactShareWSOrigin is used for cookie-authenticated share sockets. Unlike bearer-token
+// sockets, these requests carry ambient browser credentials, so hostname-only matching is
+// insufficient (it would accept another scheme or port on the same host).
+func exactShareWSOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		return false
+	}
+	u, err := url.Parse(origin)
+	if err != nil || u.Host == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" {
+		return false
+	}
+	wantScheme := "http"
+	if isHTTPS(r) {
+		wantScheme = "https"
+	}
+	if !strings.EqualFold(u.Scheme, wantScheme) {
+		return false
+	}
+	hosts := []string{r.Host}
+	if trustProxy {
+		hosts = append(hosts, r.Header.Get("X-Forwarded-Host"))
+	}
+	for _, raw := range hosts {
+		for _, host := range strings.Split(raw, ",") {
+			if strings.EqualFold(strings.TrimSpace(host), u.Host) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func participantAuditName(sa *ShareAccess) string {

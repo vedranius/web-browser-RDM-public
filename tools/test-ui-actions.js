@@ -152,11 +152,13 @@ const shareBootSource = html.slice(shareBootBegin, shareBootEnd);
 
 function shareBootFixture(pathname, failStorage = false) {
   let currentPath = pathname;
+  let currentHash = '';
   let currentState = null;
   const values = new Map();
   const replaced = [];
   const context = vm.createContext({
-    location: {get pathname() { return currentPath; }},
+    window: {addEventListener() {}},
+    location: {get pathname() { return currentPath; }, get hash() { return currentHash; }},
     sessionStorage: {
       getItem: key => values.get(key) || null,
       setItem: (key, value) => { if (failStorage) throw new Error('storage disabled'); values.set(key, value); },
@@ -164,7 +166,7 @@ function shareBootFixture(pathname, failStorage = false) {
     },
     history: {
       get state() { return currentState; },
-      replaceState: (state, _title, url) => { replaced.push(url); currentPath = url; currentState = state; },
+      replaceState: (state, _title, url) => { replaced.push(url); currentPath = url; currentHash = url.includes('#') ? url.slice(url.indexOf('#')) : ''; currentState = state; },
     },
   });
   vm.runInContext(shareBootSource, context);
@@ -173,7 +175,7 @@ function shareBootFixture(pathname, failStorage = false) {
     values,
     replaced,
     get state() { return currentState; },
-    navigate(path, state = null) { currentPath = path; currentState = state; },
+    navigate(path, state = null, hash = '') { currentPath = path; currentState = state; currentHash = hash; },
   };
 }
 
@@ -201,6 +203,58 @@ test('share token URL remains intact if session storage cannot persist it', () =
   const f = shareBootFixture('/share/secret-capability', true);
   assert.equal(f.context.shareTokenFromLocation(), 'secret-capability');
   assert.deepEqual(f.replaced, []);
+});
+
+test('new fragment share links are cleaned before any follow-up navigation', () => {
+  const f = shareBootFixture('/share');
+  f.navigate('/share', null, '#fragment-capability');
+  assert.equal(f.context.shareTokenFromLocation(), 'fragment-capability');
+  assert.deepEqual(f.replaced, ['/share']);
+  assert.equal(f.state.wrmShareEntry != null, true);
+});
+
+test('opening another fragment share in the same tab reloads into the new room', () => {
+  const begin = html.indexOf('function handleShareFragmentNavigation()');
+  const end = html.indexOf('\nwindow.addEventListener(\'hashchange\'', begin);
+  if (begin < 0 || end < 0) throw new Error('share fragment navigation handler not found');
+  let reloads = 0;
+  const context = vm.createContext({location: {pathname: '/share', hash: '#room-b', reload: () => { reloads++; }}});
+  vm.runInContext(html.slice(begin, end), context);
+  context.handleShareFragmentNavigation();
+  assert.equal(reloads, 1);
+  context.location.hash = '';
+  context.handleShareFragmentNavigation();
+  assert.equal(reloads, 1);
+});
+
+test('share tokens are not interpolated into application request URLs', () => {
+  const clients = html + fs.readFileSync(path.join(__dirname, '..', 'remote-manager', 'static', 'ai.js'), 'utf8') + fs.readFileSync(path.join(__dirname, '..', 'remote-manager', 'static', 'fileeditor.js'), 'utf8');
+  assert.doesNotMatch(clients, /share_token=/);
+  assert.doesNotMatch(clients, /\/api\/share\/[^\n]*encodeURIComponent\((?:token|collab\.token|collabToken)\)/);
+  assert.doesNotMatch(clients, /\/ws\/share\/\$\{[^}]*collab\.token/);
+});
+
+test('active share access renews its HttpOnly session before the cookie expires', async () => {
+  const begin = html.indexOf('const shareAccessRefreshTimers = new Map();');
+  const end = html.indexOf('\nfunction showCollabFatal(', begin);
+  if (begin < 0 || end < 0) throw new Error('share access renewal functions not found');
+  const timers = new Map();
+  let nextTimer = 1, requests = 0;
+  const context = vm.createContext({
+    fetch: async () => ({ok: true, json: async () => ({share_id: 19})}),
+    apiError: async () => 'exchange failed',
+    setTimeout: fn => { const id = nextTimer++; timers.set(id, fn); return id; },
+    clearTimeout: id => timers.delete(id),
+  });
+  const originalFetch = context.fetch;
+  context.fetch = async (...args) => { requests++; return originalFetch(...args); };
+  vm.runInContext(html.slice(begin, end), context);
+  assert.equal(await context.exchangeShareAccess('capability'), 19);
+  const [timerID, renew] = [...timers.entries()][0];
+  timers.delete(timerID);
+  await renew();
+  assert.equal(requests, 2);
+  assert.equal(timers.size, 1);
 });
 
 const alertsBegin = html.indexOf('var wrmSoundCtx = null, wrmAlertSeen = {}, wrmDesktopAlerts = {};');

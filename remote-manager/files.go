@@ -564,7 +564,7 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	params := map[string]string{"id": q.Get("id"), "path": q.Get("path"), "overwrite": q.Get("overwrite"), "share_token": q.Get("share_token")}
+	params := map[string]string{"id": q.Get("id"), "path": q.Get("path"), "overwrite": q.Get("overwrite"), "share_token": q.Get("share_token"), "share_id": q.Get("share_id")}
 	var (
 		c        Connection
 		acc      *connAccess
@@ -582,6 +582,11 @@ func uploadRemoteFileHandler(w http.ResponseWriter, r *http.Request) {
 		if params["share_token"] != "" && q.Get("share_token") == "" {
 			qq := r.URL.Query()
 			qq.Set("share_token", params["share_token"])
+			r.URL.RawQuery = qq.Encode()
+		}
+		if params["share_id"] != "" && q.Get("share_id") == "" {
+			qq := r.URL.Query()
+			qq.Set("share_id", params["share_id"])
 			r.URL.RawQuery = qq.Encode()
 		}
 		a, code, msg := authorizeConnection(r, connID, PermFilesWrite)
