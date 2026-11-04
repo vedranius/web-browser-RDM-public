@@ -71,7 +71,7 @@ GET/HEAD            /s3/{token}/object?key=
 
 **Documents**
 
-- `docs/rfcs/0008-storages-s3.md` - design, permissions, API, security, non-goals.
+- RFC 0008 (`docs/rfcs/0008-storages-s3.md` in the enterprise repository) - design, permissions, API, security, non-goals.
 - `docs/ROADMAP-STORAGES.md` - STG-01 … STG-12 with status and commit SHAs.
 - `docs/security-reviews/0001-storages-s3.md` - 11 checks, findings and residual risks.
 - `docs/STORAGES.md` - operator guide (providers, switches, editor, shares, MCP, troubleshooting).
@@ -185,7 +185,7 @@ Public: identical with `v13.15.0` / `"13.15.0"` and `Refs #155`.
 ## 9. Where to look first
 
 1. `docs/ROADMAP-STORAGES.md` - what exists and what it cost.
-2. `docs/rfcs/0008-storages-s3.md` - why it looks like this.
+2. RFC 0008 (enterprise repository) - why it looks like this.
 3. `docs/security-reviews/0001-storages-s3.md` - what was checked and accepted.
 4. `docs/STORAGES.md` - what an operator sees.
 5. PR #20 / #159 - the diffs and the release plan comment.
