@@ -202,7 +202,7 @@ var settingSpecs = []settingSpec{
 	// AI desktop apps (MCP)
 	{Key: "ai_mcp_enabled", Default: "0", Kind: "bool"},
 	{Key: "ai_mcp", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
-	{Key: "ai_mcp_scopes", Default: mcpAllScopes, Kind: "string"},
+	{Key: "ai_mcp_scopes", Default: mcpDefaultScopes, Kind: "string"},
 	{Key: "ai_mcp_modes", Default: "read_only,ask,auto", Kind: "string"},
 	{Key: "ai_mcp_token_hours", Default: "168", Kind: "int", Min: 1, Max: 8760},
 	{Key: "ai_mcp_max_token_hours", Default: "720", Kind: "int", Min: 1, Max: 8760},
@@ -216,6 +216,9 @@ var settingSpecs = []settingSpec{
 	// Audit & session recording
 	{Key: "audit_enabled", Default: "1", Kind: "bool", Alias: "AUDIT_ENABLED"},
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
+	// Object storage (Storages): a section of its own with S3 endpoints.
+	{Key: "storages_enabled", Default: "1", Kind: "bool"},
+	{Key: "storage_edit_kb", Default: "2", Kind: "int", Min: 1, Max: 64},
 	// Outbound targets for Git sources, NetBox, AI providers and OIDC (security.go). With
 	// public_only, private and loopback addresses are refused unless listed in
 	// egress_allow_hosts (names, addresses or CIDR blocks, comma separated).
