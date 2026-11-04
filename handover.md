@@ -18,7 +18,7 @@ Several agents work on this repository at the same time. The owner wants **one c
 
 Progress log:
 - 2026-11-04: Chains accepted and written into ROADMAP.md (steps 1–3). Nothing implemented yet.
-- 2026-11-04: the owner asked for the combined release now: **v13.15.0** (branch `claude/v13.15.0`) merges Storages (`feat/storages`, PR #159) with code-scanning fixes and the 2 MB editor limit, plus the open Dependabot updates. Chains is not part of it and stays the next work on `claude/chains-*`; the no-bump rule applies again from here until the owner asks for the next combined release.
+- 2026-11-04: the owner asked for the combined release now: **v14.0.0** (branch `claude/v13.15.0`, PR #161) merges Storages (`feat/storages`, PR #159) with code-scanning fixes and the 2 MB editor limit, plus the open Dependabot updates. Chains is not part of it and stays the next work on `claude/chains-*`; the no-bump rule applies again from here until the owner asks for the next combined release.
 
 ## Completed package: connection-test credential egress guard
 

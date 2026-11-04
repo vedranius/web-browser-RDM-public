@@ -98,11 +98,12 @@ jobs:
           curl -skf -c "$RUNNER_TEMP/cookies" -H 'X-WRM-Request: 1' -H 'Content-Type: application/json' \
             -H 'Origin: https://127.0.0.1:8443' -X POST https://127.0.0.1:8443/api/auth/register \
             -d "{\"username\":\"zapadmin\",\"password\":\"$PW\"}" > /dev/null
-          test -n "$(awk '$6 == "wrm_session" {print $7}' "$RUNNER_TEMP/cookies")"
+          # Over HTTPS the session cookie carries the __Host- prefix.
+          test -n "$(awk '$6 ~ /^(__Host-)?wrm_session$/ {print $6 "=" $7}' "$RUNNER_TEMP/cookies")"
       - name: ZAP baseline (signed out and signed in)
         run: |
           set -uo pipefail
-          SESSION="$(awk '$6 == "wrm_session" {print $7}' "$RUNNER_TEMP/cookies")"
+          SESSION="$(awk '$6 ~ /^(__Host-)?wrm_session$/ {print $6 "=" $7}' "$RUNNER_TEMP/cookies")"
           echo "::add-mask::$SESSION"
           mkdir -p zap && chmod 777 zap
           IMAGE=ghcr.io/zaproxy/zaproxy:stable
@@ -112,7 +113,7 @@ jobs:
             zap-baseline.py -t https://127.0.0.1:8443/ -I -j -r signed-out.html -J signed-out.json || status=1
           docker run --rm --network host -v "$PWD/zap:/zap/wrk:rw" "$IMAGE" \
             zap-baseline.py -t https://127.0.0.1:8443/ -I -j -r signed-in.html -J signed-in.json \
-            -z "-config replacer.full_list(0).description=session -config replacer.full_list(0).enabled=true -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Cookie -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=wrm_session=${SESSION}" || status=1
+            -z "-config replacer.full_list(0).description=session -config replacer.full_list(0).enabled=true -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Cookie -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=${SESSION}" || status=1
           # -I: warnings are reported, only FAIL rules (and a scan that could not run) fail the job
           exit $status
       - name: ZAP reports

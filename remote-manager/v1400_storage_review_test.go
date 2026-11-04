@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// Regression tests from the v13.15.0 release review of Storages.
+// Regression tests from the v14.0.0 release review of Storages.
 
 // TestStorageTestAndUpdateWithScopedKey: "Test connection" on a saved storage uses the
 // decrypted secret, and an update keeps working for a key that may only list its prefix.

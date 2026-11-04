@@ -13,11 +13,13 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v13.15.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.0.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
-## What's new in v13.15.0
+## What's new in v14.0.0
 
-**Storages: S3-compatible object storage as a section of its own.** Add a Hetzner, DigitalOcean Spaces, Amazon S3, MinIO or Backblaze B2 bucket (confined to a prefix), browse it, preview images, play video with a sibling subtitle track, download, and edit small text objects (JSON, configuration, subtitles) with BOM/CRLF kept and a conflict check. Uploads, writes and deletes are allowed per storage; a delete needs an explicit confirmation. Read-only share links open one prefix without a WRM account, a background check notifies `storage.down` / `storage.up`, and AI connections get `storage_list/read/write/delete` behind the opt-in scopes `storage_read`, `storage_write` and `storage_delete`. See [Storages (S3)](#storages-s3) and [docs/STORAGES.md](docs/STORAGES.md).
+**One combined release: Storages, its release review, and the security work of v13.14.11.** Everything below arrives together when you upgrade from v13.14.10 or older; from v13.14.11 the new part is Storages. Next on the [roadmap](ROADMAP.md) is **Chains**, live monitoring of a whole service chain.
+
+**Storages: S3-compatible object storage as a section of its own.** Add a Hetzner, DigitalOcean Spaces, Amazon S3, MinIO or Backblaze B2 bucket (confined to a prefix), browse it, preview images, play video with a sibling subtitle track, download, and edit small text objects (JSON, configuration, subtitles) with BOM/CRLF kept and a conflict check. Uploads, writes and deletes are allowed per storage; a delete needs an explicit confirmation. Read-only share links open one prefix without a WRM account, a background check notifies `storage.down` / `storage.up`, and AI connections get `storage_list/read/write/delete` behind the opt-in scopes `storage_read`, `storage_write` and `storage_delete` (changes only in the automatic mode). See [Storages (S3)](#storages-s3) and [docs/STORAGES.md](docs/STORAGES.md).
 
 ## What's new in v13.14.11
 
@@ -421,7 +423,7 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ## Upgrading from v13.14.11
 
-Replace the executable/AppImage/container and keep the database and encryption key. Two tables are added (`storages`, `storage_shares`); an older binary still starts on the database. The **Storages** button appears in the top bar (turn the section off with `storages_enabled=0`). AI connections do not get the new storage scopes: an installation that never changed `ai_mcp_scopes` now defaults to the five server scopes plus `addons.manage`; add `storage_read`, `storage_write` or `storage_delete` there, and then to an AI connection, to let it reach a storage.
+Replace the executable/AppImage/container and keep the database and encryption key. Two tables are added (`storages`, `storage_shares`); an older binary still starts on the database. The **Storages** button appears in the top bar (turn the section off with `storages_enabled=0`). AI connections do not get the new storage scopes: an installation that never changed `ai_mcp_scopes` now defaults to the five server scopes plus `addons.manage`; add `storage_read`, `storage_write` or `storage_delete` there, and then to an AI connection, to let it reach a storage; writes and deletes by an AI need the automatic mode. Upgrading from v13.14.10 or older also brings the v13.14.11 changes (share links with a per-share cookie, credentials bound to their destination; see the [changelog](CHANGELOG.md)).
 
 ## Upgrading from v13.14.9
 
@@ -3462,7 +3464,7 @@ remote-manager/
   medium_config_git_test.go deploy-config from Git with fake GitLab / GitHub / Gitea: pull, local changes, refused pull, push with conflict check and validation, discard, stop
   medium_build_user_test.go build user checks (root, missing account, readable WRM key) and a real build as nobody with a clean environment
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
-  v13150_storage_escape_test.go  Storages: share page escaping and quoted download file names
+  v1400_storage_escape_test.go   Storages: share page escaping and quoted download file names
   v13152_s3stub_test.go … v13154_storage_share_test.go  Storages: S3 stub with an independent SigV4 check, CRUD, prefix confinement, capabilities, delete gate, editor (BOM/CRLF, 409), Range, status, export/import, MCP tools, share links
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)
   git_provision_test.go  Git install / transfer: templates, exclusions, units; install from the fake GitLab and from a bundle, vault values, overwrite refusal and backup, transfer A → B, policies

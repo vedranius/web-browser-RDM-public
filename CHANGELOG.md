@@ -1,4 +1,9 @@
-## [13.15.0] - 2026-11-04
+## [14.0.0] - 2026-11-04
+
+A major release: **Storages (S3)** as a new part of the product, a release review of it with
+the fixes below, the open dependency updates, and the security and reliability work released
+in v13.14.11 (see that section). Upgrading from any v13.14.x keeps the database and the
+encryption key.
 
 ### Added
 
@@ -7,17 +12,29 @@
 - **Per-storage capabilities** (write, upload, delete, size limit) checked on the server; a delete needs `allow_delete`, the `X-WRM-Confirm: delete` header and step-up where the security level asks for it. Every change is audited as `storage.*`.
 - **Read-only share links** (`/s3/<token>`) to one prefix: hashed, expiring (up to 30 days), revocable and rendered without script.
 - **Storage status** with `storage.down` / `storage.up` notifications, configuration export/import of storages, and the MCP tools `storage_list`, `storage_read`, `storage_write` and `storage_delete` behind the opt-in scopes `storage_read`, `storage_write` and `storage_delete`.
-- Settings `storages_enabled` (kill switch, default on) and `storage_edit_kb`.
+- Settings `storages_enabled` (kill switch for the section, its API, its MCP tools and its share links, default on) and `storage_edit_kb` (default 2048 KB, at most 8192 KB).
 
 ### Changed
 
 - The default `ai_mcp_scopes` lists the server scopes and `addons.manage`; the storage scopes are opt-in. `full_access` is still governed by `ai_full_access`.
 - Dependencies: `pkg/sftp` 1.13.12, `modernc.org/sqlite` 1.61.0; CI actions `actions/checkout` 7.0.1, `actions/setup-go` 7.0.0, `actions/dependency-review-action` 5.0.0, `actions/upload-artifact` 7.0.2, `github/codeql-action` 4.39.1; the container image is based on `node:26-alpine3.22` (Node runs the Bitwarden CLI).
-- The roadmap accepts **Chains** (live service-chain monitoring) as the next work; nothing of it ships yet.
+- AI connections may change a storage (`storage_write`, `storage_delete`) only in the **automatic** mode. A storage has no server session in which WRM could ask for one approval, so the ask mode offers only `storage_list` and `storage_read` instead of running changes without the approval it promises.
+- Changing a storage's endpoint needs the secret key again: a stored secret stays bound to the endpoint it was entered for, like saved connection credentials since v13.14.11.
+- Creating a new object from the editor or with `storage_write` needs the storage's upload permission, like an upload.
+- The roadmap accepts **Chains** (live service-chain monitoring: the user links the servers of one system, describes its workflow to WRM's AI, and WRM checks the chain in the background, draws it as a live diagram and notifies on every change of state or active path). It is the next work; nothing of it ships in 14.0.0.
+
+### Fixed
+
+- **Test connection** on a saved storage signed with the encrypted secret and always failed.
+- Saving a storage whose key may only list its prefix failed, because the check listed the bucket root.
+- Renaming an object and writing with server-side encryption sent `x-amz-copy-source` / `x-amz-server-side-encryption` unsigned, which S3 refuses.
+- The storage editor refused text objects above 2 KB instead of 2 MB.
+- The nightly OWASP ZAP scan could not sign in, because over HTTPS the session cookie is `__Host-wrm_session`.
 
 ### Security
 
 - The storage share page is rendered with `html/template`, download file names are quoted with `mime.FormatMediaType`, the S3 client re-checks the resolved address against the egress policy on every connection, and audit sizes no longer narrow `Content-Length`.
+- Share links are rate-limited before the token lookup and closed by `storages_enabled=0`.
 
 ## [13.14.11] - 2026-11-04
 

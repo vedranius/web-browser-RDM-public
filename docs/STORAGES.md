@@ -4,7 +4,7 @@ WRM can browse and edit S3-compatible object storage next to your servers. It is
 own: a storage is not a Connection and never reaches the terminal, tunnels, jump hosts or the
 deploy code.
 
-Released in v13.15.0; the changes are in [CHANGELOG.md](../CHANGELOG.md).
+Released in v14.0.0; the changes are in [CHANGELOG.md](../CHANGELOG.md).
 
 ## Add a storage
 
