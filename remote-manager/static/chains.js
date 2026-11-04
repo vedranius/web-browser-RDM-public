@@ -112,8 +112,28 @@ Object.assign(LANGS.hr, {
   chn_help_links: 'Veze: {"from":"a","to":"b","kind":"data|read|write|failover|dependency","check":"id","scenarios":["primary"]}. Sa scenarios veza nosi promet samo u tim scenarijima; inače je dijagram prikazuje neaktivnom.',
 });
 
+// Step 3: drafts written by the AI assistant and approved by the user.
+Object.assign(LANGS.en, {
+  chn_drafts: 'Drafts from the AI', chn_draft_badge: 'Draft — not monitored yet',
+  chn_draft_note_t: 'Review this draft.',
+  chn_draft_note: 'The assistant wrote it from your description. Nothing is checked in the background and no command runs until you create the chain; open the JSON editor first if a service, path or connection is wrong.',
+  chn_approve: 'Create chain', chn_approve_q: 'Create the chain {name} from this draft and start its background checks?',
+  chn_discard: 'Discard', chn_discard_q: 'Discard the draft {name}? The assistant can write it again.',
+  chn_draft_approved: 'The chain was created. The first check runs within a minute.',
+  chn_draft_untitled: 'Untitled draft', chn_draft_counts: '{n} nodes · {c} checks',
+});
+Object.assign(LANGS.hr, {
+  chn_drafts: 'Skice iz AI asistenta', chn_draft_badge: 'Skica — još se ne provjerava',
+  chn_draft_note_t: 'Pregledajte ovu skicu.',
+  chn_draft_note: 'Asistent ju je napisao prema vašem opisu. Ništa se ne provjerava u pozadini i nijedna naredba se ne izvršava dok ne stvorite lanac; ako je neki servis, putanja ili veza pogrešna, prvo otvorite JSON editor.',
+  chn_approve: 'Stvori lanac', chn_approve_q: 'Stvoriti lanac {name} iz ove skice i pokrenuti provjere u pozadini?',
+  chn_discard: 'Odbaci', chn_discard_q: 'Odbaciti skicu {name}? Asistent ju može ponovno napisati.',
+  chn_draft_approved: 'Lanac je stvoren. Prva provjera kreće unutar minute.',
+  chn_draft_untitled: 'Skica bez naziva', chn_draft_counts: 'Čvorovi: {n} · Provjere: {c}',
+});
+
 (function () {
-  const state = { list: [], current: null, timeline: [], styleAdded: false, mode: 'diagram', sel: null, views: {}, pos: {}, openCheck: null };
+  const state = { list: [], drafts: [], current: null, timeline: [], styleAdded: false, mode: 'diagram', sel: null, views: {}, pos: {}, openCheck: null };
   const $ = (sel) => document.querySelector(sel);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const fmt = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v[k] != null ? String(v[k]) : ''));
@@ -142,6 +162,13 @@ Object.assign(LANGS.hr, {
 .chn-item.sel { border-color:var(--accent); }
 .chn-item .n { font-size:12.5px; font-weight:600; }
 .chn-item .m { font-size:10.5px; color:var(--text2); margin-top:3px; }
+.chn-side-h { font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); padding:8px 8px 3px; }
+.chn-item.draft { border-style:dashed; border-color:var(--accent); }
+.chn-item.draft .n { font-weight:600; }
+.chn-dot.draft { background:var(--accent); opacity:1; }
+.chn-badge.draft { background:var(--bg3); color:var(--accent); border:1px solid var(--accent); }
+.chn-draft-note { font-size:11.5px; line-height:1.45; padding:8px 10px; border:1px solid var(--accent); border-radius:8px; background:var(--bg3); margin-bottom:8px; }
+.chn-draft-note b { color:var(--accent); }
 .chn-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--text3); opacity:.6; margin-right:7px; vertical-align:middle; flex:none; }
 .chn-dot.ok { background:#3fb950; opacity:1; } .chn-dot.bad { background:#f85149; opacity:1; } .chn-dot.warn { background:#d29922; opacity:1; }
 .chn-main { flex:1; display:flex; flex-direction:column; min-width:0; position:relative; }
@@ -280,6 +307,8 @@ Object.assign(LANGS.hr, {
           <button class="btn-sec btn-sm" id="chn-edit" style="display:none;">{ } ${esc(t('chn_edit'))}</button>
           <button class="btn-sec btn-sm" id="chn-export" style="display:none;">⬇ ${esc(t('chn_export'))}</button>
           <button class="btn-sec btn-sm" id="chn-del" style="display:none;">${esc(t('chn_delete'))}</button>
+          <button class="btn-pri btn-sm" id="chn-approve" style="display:none;">✓ ${esc(t('chn_approve'))}</button>
+          <button class="btn-sec btn-sm" id="chn-discard" style="display:none;">${esc(t('chn_discard'))}</button>
           <button class="btn-sec btn-sm" id="chn-close" aria-label="${esc(t('chn_cancel'))}">✕</button>
         </div>
         <div class="chn-body" id="chn-body"></div></div></div>`;
@@ -292,6 +321,8 @@ Object.assign(LANGS.hr, {
     ov.querySelector('#chn-edit').onclick = () => state.current && openEditor(state.current.id, { definition: state.current.definition, enabled: state.current.enabled });
     ov.querySelector('#chn-export').onclick = () => { if (state.current) location.href = `/api/chains/${state.current.id}/export`; };
     ov.querySelector('#chn-del').onclick = deleteChain;
+    ov.querySelector('#chn-approve').onclick = approveDraft;
+    ov.querySelector('#chn-discard').onclick = discardDraft;
     ov.querySelectorAll('#chn-mode button').forEach((b) => { b.onclick = () => setMode(b.dataset.m); });
     return ov;
   }
@@ -317,11 +348,20 @@ Object.assign(LANGS.hr, {
   function isOpen() { const ov = overlay(); return !!(ov && ov.classList.contains('open')); }
 
   function loadList() {
-    return api('GET', '/api/chains').then((list) => {
+    return Promise.all([
+      api('GET', '/api/chains'),
+      api('GET', '/api/chains/drafts').catch(() => []),
+    ]).then(([list, drafts]) => {
       state.list = list || [];
+      state.drafts = drafts || [];
       renderList();
+      if (state.current && state.current.draft) {
+        if (state.drafts.some((d) => d.id === state.current.draftId)) return selectDraft(state.current.draftId, true);
+        state.current = null;
+      }
       if (state.current && state.list.some((c) => c.id === state.current.id)) return select(state.current.id, true);
       if (state.list.length) return select(state.list[0].id);
+      if (state.drafts.length) return selectDraft(state.drafts[0].id);
       state.current = null;
       renderDetail();
       return null;
@@ -338,9 +378,24 @@ Object.assign(LANGS.hr, {
     const box = $('#chn-list');
     if (!box) return;
     box.textContent = '';
-    if (!state.list.length) { box.appendChild(el('div', 'chn-empty', t('chn_none'))); return; }
+    if (state.drafts.length) {
+      box.appendChild(el('div', 'chn-side-h', t('chn_drafts')));
+      state.drafts.forEach((d) => {
+        const item = el('div', 'chn-item draft' + (state.current && state.current.draftId === d.id ? ' sel' : ''));
+        item.tabIndex = 0;
+        const n = el('div', 'n');
+        n.appendChild(el('span', 'chn-dot draft'));
+        n.appendChild(document.createTextNode(d.name || t('chn_draft_untitled')));
+        item.appendChild(n);
+        item.appendChild(el('div', 'm', fmt(t('chn_draft_counts'), { n: d.nodes, c: d.checks })));
+        item.onclick = () => selectDraft(d.id);
+        item.onkeydown = (e) => { if (e.key === 'Enter') selectDraft(d.id); };
+        box.appendChild(item);
+      });
+    }
+    if (!state.list.length && !state.drafts.length) { box.appendChild(el('div', 'chn-empty', t('chn_none'))); return; }
     state.list.forEach((c) => {
-      const item = el('div', 'chn-item' + (state.current && state.current.id === c.id ? ' sel' : ''));
+      const item = el('div', 'chn-item' + (state.current && !state.current.draft && state.current.id === c.id ? ' sel' : ''));
       item.tabIndex = 0;
       const n = el('div', 'n');
       n.appendChild(el('span', 'chn-dot ' + statusClass(c)));
@@ -354,6 +409,23 @@ Object.assign(LANGS.hr, {
       item.onkeydown = (e) => { if (e.key === 'Enter') select(c.id); };
       box.appendChild(item);
     });
+  }
+
+  // selectDraft opens the AI's draft on the same live diagram. It is not monitored and its
+  // checks show "not checked yet" until the user approves it.
+  function selectDraft(id, keep) {
+    return api('GET', `/api/chains/drafts/${id}`).then((d) => {
+      if (!keep || !state.current || state.current.draftId !== id) {
+        state.sel = null; state.openCheck = null; state.timeline = [];
+      }
+      state.current = { id: 'draft:' + id, draft: true, draftId: id, definition: d.definition,
+        enabled: false, state: {}, scenario: '', last_at: '', created_at: d.created_at };
+      state.mode = 'diagram'; // a draft is reviewed on the diagram, whatever view was last used
+      state.pos = {};
+      renderList();
+      renderDetail();
+      return d;
+    }).catch((e) => showToast(e.message, 'error'));
   }
 
   // keep: a live refresh of the same chain keeps the selection and the zoom.
@@ -855,20 +927,33 @@ Object.assign(LANGS.hr, {
 
   function renderDetail() {
     const c = state.current;
+    const isDraft = !!(c && c.draft);
     const show = (id, on) => { const b = $(id); if (b) b.style.display = on ? '' : 'none'; };
-    ['#chn-check', '#chn-edit', '#chn-export', '#chn-del', '#chn-scn', '#chn-mode'].forEach((id) => show(id, !!c));
+    ['#chn-check', '#chn-edit', '#chn-export', '#chn-del'].forEach((id) => show(id, !!c && !isDraft));
+    show('#chn-approve', isDraft);
+    show('#chn-discard', isDraft);
+    ['#chn-scn', '#chn-mode'].forEach((id) => show(id, !!c));
     document.querySelectorAll('#chn-mode button').forEach((b) => { const on = b.dataset.m === state.mode; b.className = (on ? 'btn-pri' : 'btn-sec') + ' btn-sm'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
     const body = $('#chn-body');
     if (!body) return;
     body.textContent = '';
     body.classList.toggle('dg', !!c && state.mode === 'diagram');
     $('#chn-name').textContent = c ? c.definition.name : t('chn_title');
-    if (!c) { body.appendChild(el('div', 'chn-empty', state.list.length ? t('chn_pick') : t('chn_none'))); return; }
+    if (!c) { body.appendChild(el('div', 'chn-empty', state.list.length || state.drafts.length ? t('chn_pick') : t('chn_none'))); return; }
     const scn = $('#chn-scn');
-    scn.textContent = t('chn_scenario') + ': ' + (c.scenario ? c.scenario_label : t('chn_no_scenario'));
-    scn.className = 'chn-badge' + (c.scenario ? ' active' : '');
+    if (isDraft) {
+      scn.textContent = t('chn_draft_badge');
+      scn.className = 'chn-badge draft';
+      const note = el('div', 'chn-draft-note');
+      note.appendChild(el('b', '', t('chn_draft_note_t')));
+      note.appendChild(document.createTextNode(' ' + t('chn_draft_note')));
+      body.appendChild(note);
+    } else {
+      scn.textContent = t('chn_scenario') + ': ' + (c.scenario ? c.scenario_label : t('chn_no_scenario'));
+      scn.className = 'chn-badge' + (c.scenario ? ' active' : '');
+    }
     if (state.mode === 'diagram') renderDiagramView(body); else renderListView(body);
-    renderTimeline(state.timeline);
+    if (!isDraft) renderTimeline(state.timeline);
   }
 
   function renderDiagramView(body) {
@@ -1063,6 +1148,29 @@ Object.assign(LANGS.hr, {
     const c = state.current;
     if (!c || !confirm(fmt(t('chn_delete_q'), { name: c.definition.name }))) return;
     api('DELETE', `/api/chains/${c.id}`).then(() => { delete state.views[c.id]; state.current = null; return loadList(); })
+      .catch((e) => showToast(e.message, 'error'));
+  }
+
+  // Approving a draft is the only step that creates a chain and starts its background checks.
+  function approveDraft() {
+    const c = state.current;
+    if (!c || !c.draft) return;
+    if (!confirm(fmt(t('chn_approve_q'), { name: c.definition.name }))) return;
+    const b = $('#chn-approve');
+    b.disabled = true;
+    api('POST', `/api/chains/drafts/${c.draftId}/approve`).then((chain) => {
+      showToast(t('chn_draft_approved'), 'success');
+      state.current = null;
+      return loadList().then(() => select(chain.id));
+    }).catch((e) => showToast((e.errors && e.errors[0]) || e.message, 'error'))
+      .finally(() => { b.disabled = false; });
+  }
+
+  function discardDraft() {
+    const c = state.current;
+    if (!c || !c.draft) return;
+    if (!confirm(fmt(t('chn_discard_q'), { name: c.definition.name }))) return;
+    api('DELETE', `/api/chains/drafts/${c.draftId}`).then(() => { state.current = null; return loadList(); })
       .catch((e) => showToast(e.message, 'error'));
   }
 
@@ -1293,12 +1401,20 @@ Object.assign(LANGS.hr, {
   function changed(id) {
     if (!isOpen()) return;
     if ($('.chn-editor')) { loadListOnly(); return; }
-    if (state.current && state.current.id === id) loadList(); else loadListOnly();
+    if (state.current && !state.current.draft && state.current.id === id) loadList(); else loadListOnly();
+  }
+
+  // The assistant created or replaced a draft: refresh the list and keep the open draft.
+  function changedDraft(id) {
+    if (!isOpen()) return;
+    if ($('.chn-editor')) { loadListOnly(); return; }
+    return loadList();
   }
 
   function loadListOnly() {
-    api('GET', '/api/chains').then((list) => { state.list = list || []; renderList(); }).catch(() => {});
+    Promise.all([api('GET', '/api/chains'), api('GET', '/api/chains/drafts').catch(() => [])])
+      .then(([list, drafts]) => { state.list = list || []; state.drafts = drafts || []; renderList(); }).catch(() => {});
   }
 
-  window.wrmChains = { open, close, changed };
+  window.wrmChains = { open, close, changed, changedDraft };
 })();

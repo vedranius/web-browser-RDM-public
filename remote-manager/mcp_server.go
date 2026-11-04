@@ -551,7 +551,7 @@ func mcpToolList(g *mcpGrant) []map[string]interface{} {
 			"annotations": map[string]interface{}{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false}},
 	}
 	for _, t := range aiTools {
-		if !aiToolInScopes(t.Def.Name, g.Scopes) || (t.Kind == "write" && g.Mode == aiModeReadOnly) || (t.Host && !isAdminUser(g.UserID)) {
+		if !aiToolInScopes(t.Def.Name, g.Scopes) || (t.Kind == "write" && g.Mode == aiModeReadOnly) || (t.Host && !t.Self && !isAdminUser(g.UserID)) {
 			continue
 		}
 		schema := cloneSchema(t.Def.Schema)

@@ -120,6 +120,8 @@ func (s *aiSession) planHostTool(name string, in aiToolInput) (*aiPlanned, error
 	read := &aiPlanned{Act: aiAction{Tool: name, Kind: "read"}, Host: &host}
 	write := &aiPlanned{Act: aiAction{Tool: name, Kind: "write"}, Host: &host, NoEdit: true}
 	switch name {
+	case "chain_status", "chain_draft":
+		return s.planChainTool(name, in)
 	case "addon_list":
 		read.Display = "list addons and drafts"
 		return read, nil
@@ -256,6 +258,8 @@ func (s *aiSession) planHostTool(name string, in aiToolInput) (*aiPlanned, error
 
 func (s *aiSession) runHostTool(ctx context.Context, name string, in aiToolInput) (string, int, error) {
 	switch name {
+	case "chain_status", "chain_draft":
+		return s.runChainTool(ctx, name, in)
 	case "addon_list":
 		b, _ := json.MarshalIndent(map[string]interface{}{
 			"addons": addonRecords(false), "drafts": addonDraftList(), "capabilities": addonCapabilities,
