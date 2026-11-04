@@ -5,6 +5,20 @@
 **Base:** `main` at `v13.14.10` (`8c13b6b`)
 **Working branch:** `fix/conntest-credential-target-guard`
 
+## Coordination: parallel work and one combined release (2026-11-04)
+
+Several agents work on this repository at the same time. The owner wants **one combined release** when the current parallel work and the Chains steps are done.
+
+- **No version bump** (`AppVersion`, `APP_VERSION`, top `## [X.Y.Z]` of CHANGELOG.md) until the owner asks for the combined release; packages land on `main` or on pushed branches without one. Record each package here as before.
+- **Chains** (ROADMAP "Chains: live service-chain monitoring") is being built in steps on branches `claude/chains-*` from the latest `main`.
+  - New files: `remote-manager/chains*.go`, `remote-manager/chains*_test.go`, `remote-manager/static/chains.js`.
+  - Shared files it touches with small, additive changes: `main.go` (`initDB` tables, route registration, starting the poller), `notify.go` (`notifyEvents`, texts), `settings.go` (`chains_enabled`, interval setting), `static/index.html` (window registration and `LANGS` blocks), `ai_tools.go` (step 3 only), README/ARCHITECTURE/CHANGELOG under an "Unreleased" heading.
+  - Please avoid large rewrites of `runMonitoring`/`monitoring*.go`, `notifyUser` and the window manager in `index.html` while Chains is open; if you must change them, note it here so the Chains branch rebases on it.
+- Before starting a package, pull `main` and read this section; after finishing, add a line below.
+
+Progress log:
+- 2026-11-04: Chains accepted and written into ROADMAP.md (steps 1–3). Nothing implemented yet.
+
 ## Completed package: connection-test credential egress guard
 
 The fresh-eyes review flagged that `POST /api/connections/test` could load a saved connection secret by ID, then reuse it against a changed target. A password can be disclosed to an FTP endpoint; SSH does not send private-key bytes, though it can still attempt authentication with the stored key. The handler compares the tested destination and effective route with the saved connection before reusing stored authentication material. It covers direct password/key values, vault and key references, Bitwarden, and server-side key modes. If the destination or route changed, the user must save the new target first or enter a password/private key again.
