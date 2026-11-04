@@ -293,6 +293,15 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - Chat titles are generated with no tools from the first question and answer (both already redacted); continuing a chat sends the earlier, redacted transcript of the same user to the provider again. Thinking summaries are redacted and stored like other transcript entries.
 - The editor checks the file on the server before it writes and asks before overwriting a newer version.
 
+## Storages (v13.15.0)
+
+- Secrets are encrypted with the installation key and never returned, logged or exported without an explicit export with secrets.
+- Every key is resolved inside the storage prefix; `..`, empty segments, absolute paths and control characters are refused before a request is signed.
+- Write, upload and delete are separate per-storage switches checked on the server; a delete needs `X-WRM-Confirm: delete` and step-up where the security level asks for it.
+- The endpoint must pass the egress policy when saved and on every connection (DNS rebinding); redirects are not followed, so the signature cannot leak to another host. A self-signed endpoint is trusted only by its pinned SHA-256 fingerprint.
+- Share links are random tokens stored hashed, read-only, confined to their prefix, expiring and revocable; the page has no script, and download names are quoted.
+- AI connections need the opt-in scopes `storage_read`, `storage_write`, `storage_delete`; a server approval never grants storage access.
+
 ## AI assistant: threat model
 
 The built-in assistant (v12.0.0) lets a language model act on a server. WRM treats the model as an **untrusted, possibly manipulated actor** and puts the decisions on the server:

@@ -4,7 +4,7 @@ WRM can browse and edit S3-compatible object storage next to your servers. It is
 own: a storage is not a Connection and never reaches the terminal, tunnels, jump hosts or the
 deploy code.
 
-Work items and status: `docs/ROADMAP-STORAGES.md`. Design: RFC 0008 in the enterprise repository.
+Released in v13.15.0; the changes are in [CHANGELOG.md](../CHANGELOG.md).
 
 ## Add a storage
 

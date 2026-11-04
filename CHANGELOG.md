@@ -1,3 +1,24 @@
+## [13.15.0] - 2026-11-04
+
+### Added
+
+- **Storages: S3-compatible object storage as a section of its own.** Hetzner Object Storage, DigitalOcean Spaces, Amazon S3, MinIO and Backblaze B2 through one SigV4 client without an SDK. Each storage is confined to a prefix, its secret is encrypted at rest and never returned, and a self-signed endpoint is trusted only by its pinned SHA-256 certificate fingerprint.
+- **Browser, editor and player.** List by prefix, download, image preview, video over Range requests with a sibling SRT/VTT/ASS subtitle track, new folder, rename, small uploads and delete. The editor opens text objects up to `storage_edit_kb` (default 2 MB) with JSON formatting and validation, subtitle timing check, shift and renumber; BOM and line endings are kept and a stale save is refused with 409.
+- **Per-storage capabilities** (write, upload, delete, size limit) checked on the server; a delete needs `allow_delete`, the `X-WRM-Confirm: delete` header and step-up where the security level asks for it. Every change is audited as `storage.*`.
+- **Read-only share links** (`/s3/<token>`) to one prefix: hashed, expiring (up to 30 days), revocable and rendered without script.
+- **Storage status** with `storage.down` / `storage.up` notifications, configuration export/import of storages, and the MCP tools `storage_list`, `storage_read`, `storage_write` and `storage_delete` behind the opt-in scopes `storage_read`, `storage_write` and `storage_delete`.
+- Settings `storages_enabled` (kill switch, default on) and `storage_edit_kb`.
+
+### Changed
+
+- The default `ai_mcp_scopes` lists the server scopes and `addons.manage`; the storage scopes are opt-in. `full_access` is still governed by `ai_full_access`.
+- Dependencies: `pkg/sftp` 1.13.12, `modernc.org/sqlite` 1.61.0; CI actions `actions/checkout` 7.0.1, `actions/setup-go` 7.0.0, `actions/dependency-review-action` 5.0.0, `actions/upload-artifact` 7.0.2, `github/codeql-action` 4.39.1; the container image is based on `node:26-alpine3.22` (Node runs the Bitwarden CLI).
+- The roadmap accepts **Chains** (live service-chain monitoring) as the next work; nothing of it ships yet.
+
+### Security
+
+- The storage share page is rendered with `html/template`, download file names are quoted with `mime.FormatMediaType`, the S3 client re-checks the resolved address against the egress policy on every connection, and audit sizes no longer narrow `Content-Length`.
+
 ## [13.14.11] - 2026-11-04
 
 ### Security
