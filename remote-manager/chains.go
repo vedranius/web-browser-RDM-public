@@ -558,18 +558,23 @@ type chainRow struct {
 	LastError string     `json:"last_error,omitempty"`
 	State     chainState `json:"state"`
 	Confirmed chainState `json:"-"`
+	// AIDraft: written by the AI assistant (chain_draft) and not yet approved by the user;
+	// a draft is never checked in the background and never notifies.
+	AIDraft   bool   `json:"ai_draft"`
+	DraftNote string `json:"draft_note,omitempty"`
 }
 
 func loadChain(id int) (chainRow, error) {
 	var c chainRow
 	var def, last, conf string
-	var en int
-	err := db.QueryRow(`SELECT id, user_id, enabled, definition, created_at, updated_at, last_at, last_state, confirmed, last_error
-		FROM chains WHERE id=?`, id).Scan(&c.ID, &c.UserID, &en, &def, &c.CreatedAt, &c.UpdatedAt, &c.LastAt, &last, &conf, &c.LastError)
+	var en, draft int
+	err := db.QueryRow(`SELECT id, user_id, enabled, definition, created_at, updated_at, last_at, last_state, confirmed, last_error, ai_draft, draft_note
+		FROM chains WHERE id=?`, id).Scan(&c.ID, &c.UserID, &en, &def, &c.CreatedAt, &c.UpdatedAt, &c.LastAt, &last, &conf, &c.LastError, &draft, &c.DraftNote)
 	if err != nil {
 		return c, err
 	}
-	c.Enabled = en == 1
+	c.Enabled = en == 1 && draft == 0
+	c.AIDraft = draft == 1
 	json.Unmarshal([]byte(def), &c.Def)
 	json.Unmarshal([]byte(last), &c.State)
 	json.Unmarshal([]byte(conf), &c.Confirmed)
@@ -586,8 +591,18 @@ var chainRuns = struct {
 
 // ─── polling ──────────────────────────────────────────────────────────────────────────────
 
+// chainLimit narrows one poll (the assistant's first look at a draft, ai_chains.go): only
+// the servers in Conns are contacted, and no check leaves WRM over the network.
+type chainLimit struct {
+	Conns map[int]bool
+}
+
+type chainLimitKey struct{}
+
 // observeChain runs every check of a chain once and returns what it saw.
 func observeChain(ctx context.Context, c chainRow) chainState {
+	limit, _ := ctx.Value(chainLimitKey{}).(*chainLimit)
+	skipped := chainResult{Value: "unknown", Detail: "not checked for the assistant: press Check now or approve the draft"}
 	s := chainState{At: nowRFC(), Nodes: map[string]chainNodeState{}, Checks: map[string]chainResult{}}
 	var mu sync.Mutex
 	put := func(id string, r chainResult) {
@@ -609,6 +624,15 @@ func observeChain(ctx context.Context, c chainRow) chainState {
 		if n.Kind != "server" {
 			continue
 		}
+		if limit != nil && !limit.Conns[n.ConnID] {
+			mu.Lock()
+			s.Nodes[n.ID] = chainNodeState{State: "unknown", Error: skipped.Detail}
+			mu.Unlock()
+			for _, ch := range byNode[n.ID] {
+				put(ch.ID, skipped)
+			}
+			continue
+		}
 		wg.Add(1)
 		go func(n chainNode) {
 			defer wg.Done()
@@ -623,6 +647,10 @@ func observeChain(ctx context.Context, c chainRow) chainState {
 	}
 	sem := make(chan struct{}, 4)
 	for _, ch := range wrmChecks {
+		if limit != nil && chainCheckTypes[ch.Type].Where == "wrm" {
+			put(ch.ID, skipped)
+			continue
+		}
 		wg.Add(1)
 		go func(ch chainCheck) {
 			defer wg.Done()
@@ -703,7 +731,9 @@ func pollChain(ctx context.Context, id int) (chainRow, error) {
 	for _, ch := range changes {
 		db.Exec(`INSERT INTO chain_samples (chain_id, at, kind, subject, old_value, new_value, ok) VALUES (?,?,?,?,?,?,?)`,
 			id, observed.At, ch.Kind, ch.Subject, truncateStr(ch.Old, 300), truncateStr(ch.New, 300), boolInt(ch.OK))
-		notifyChainChange(c, ch)
+		if !c.AIDraft {
+			notifyChainChange(c, ch)
+		}
 	}
 	if len(changes) > 0 {
 		db.Exec(`DELETE FROM chain_samples WHERE chain_id=? AND id NOT IN (SELECT id FROM chain_samples WHERE chain_id=? ORDER BY id DESC LIMIT ?)`,
@@ -805,7 +835,7 @@ func chainsLoop() {
 }
 
 func dueChains() []int {
-	rows, err := db.Query(`SELECT c.id, c.definition, c.last_at FROM chains c JOIN users u ON u.id=c.user_id AND u.disabled=0 WHERE c.enabled=1`)
+	rows, err := db.Query(`SELECT c.id, c.definition, c.last_at FROM chains c JOIN users u ON u.id=c.user_id AND u.disabled=0 WHERE c.enabled=1 AND c.ai_draft=0`)
 	if err != nil {
 		return nil
 	}
@@ -841,10 +871,11 @@ type chainSummary struct {
 	ChecksOK      int    `json:"checks_ok"`
 	ChecksTotal   int    `json:"checks_total"`
 	LastAt        string `json:"last_at"`
+	AIDraft       bool   `json:"ai_draft,omitempty"`
 }
 
 func summarizeChain(c chainRow) chainSummary {
-	s := chainSummary{ID: c.ID, Name: c.Def.Name, Enabled: c.Enabled, Scenario: c.Confirmed.Scenario,
+	s := chainSummary{ID: c.ID, Name: c.Def.Name, Enabled: c.Enabled, Scenario: c.Confirmed.Scenario, AIDraft: c.AIDraft,
 		ScenarioLabel: c.Def.scenarioLabel(c.Confirmed.Scenario), ChecksTotal: len(c.Def.Checks), LastAt: c.LastAt}
 	for _, n := range c.Def.Nodes {
 		if n.Kind == "server" {
@@ -949,6 +980,8 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 	switch parts[1] {
 	case "layout":
 		apiChainLayout(w, r, c)
+	case "approve":
+		apiChainApprove(w, r, c, userID)
 	case "check":
 		if !requireMethod(w, r, http.MethodPost) {
 			return
@@ -1012,7 +1045,7 @@ func chainFileName(name string) string {
 func chainView(c chainRow) map[string]interface{} {
 	return map[string]interface{}{"id": c.ID, "enabled": c.Enabled, "definition": c.Def, "state": c.State,
 		"scenario": c.Confirmed.Scenario, "scenario_label": c.Def.scenarioLabel(c.Confirmed.Scenario),
-		"last_at": c.LastAt, "created_at": c.CreatedAt, "updated_at": c.UpdatedAt}
+		"last_at": c.LastAt, "created_at": c.CreatedAt, "updated_at": c.UpdatedAt, "ai_draft": c.AIDraft, "draft_note": c.DraftNote}
 }
 
 func apiChainsRoot(w http.ResponseWriter, r *http.Request) {
@@ -1086,15 +1119,17 @@ func apiChainByID(w http.ResponseWriter, r *http.Request, c chainRow, userID int
 			chainErrors(w, errs)
 			return
 		}
-		if _, err := db.Exec(`UPDATE chains SET name=?, definition=?, enabled=?, updated_at=? WHERE id=?`,
-			d.Name, string(jsonMarshal(d)), boolInt(enabled), nowRFC(), c.ID); err != nil {
+		// Saving a draft with "checked in the background" on is the user's approval of it.
+		draft := c.AIDraft && !enabled
+		if _, err := db.Exec(`UPDATE chains SET name=?, definition=?, enabled=?, ai_draft=?, updated_at=? WHERE id=?`,
+			d.Name, string(jsonMarshal(d)), boolInt(enabled), boolInt(draft), nowRFC(), c.ID); err != nil {
 			jsonError(w, "Server error", http.StatusInternalServerError)
 			return
 		}
 		chainRuns.Lock()
 		delete(chainRuns.pending, c.ID)
 		chainRuns.Unlock()
-		auditLog(r, userID, "chain.updated", d.Name, map[string]interface{}{"chain": c.ID, "nodes": len(d.Nodes), "checks": len(d.Checks), "enabled": enabled})
+		auditLog(r, userID, "chain.updated", d.Name, map[string]interface{}{"chain": c.ID, "nodes": len(d.Nodes), "checks": len(d.Checks), "enabled": enabled, "approved_draft": c.AIDraft && enabled})
 		got, _ := loadChain(c.ID)
 		jsonOK(w, chainView(got))
 	case http.MethodDelete:

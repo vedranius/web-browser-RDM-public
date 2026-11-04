@@ -28,6 +28,7 @@ type aiToolSpec struct {
 	Expose  bool // offered to the model
 	MCPOnly bool // offered to MCP clients only (needs a second session of the same AI connection)
 	Host    bool // acts on WRM itself, not on the session's server (administrators only)
+	Chain   bool // a Chains tool (ai_chains.go): the user's own chains, drafts only
 }
 
 func obj(props map[string]interface{}, required ...string) map[string]interface{} {
@@ -111,6 +112,16 @@ var aiTools = []aiToolSpec{
 			"reason": strProp("One sentence for the user: why run it")}, "id", "export", "reason")}},
 	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_install_community", Description: "Install one addon from the community index. The download must match the SHA-256 in the index and then passes the same archive checks as an upload. Needs the user's approval in every mode.",
 		Schema: obj(map[string]interface{}{"community_id": strProp("Addon id from the community index"), "reason": strProp("One sentence for the user: why install it")}, "community_id", "reason")}},
+	// Chains (ai_chains.go): live monitoring of a service chain. The assistant can read the
+	// user's chains and write drafts; a draft runs no background checks and sends no
+	// notifications until the user approves it in the Chains window.
+	{Kind: "read", Chain: true, Def: aiToolDef{Name: "chain_status", Description: "WRM Chains (live monitoring of the servers that form one system). Without chain_id: the user's chains with their status, the SSH connections and storages a chain may use (conn_id, storage_id), the check catalog and the definition's shape. With chain_id: that chain's definition, live state (every check's value) and recent changes. Read-only.",
+		Schema: obj(map[string]interface{}{"chain_id": intProp("Optional chain id")})}},
+	{Kind: "read", Chain: true, Def: aiToolDef{Name: "chain_draft", Description: "Write a WRM chain draft from what you learned about the servers: nodes (servers by conn_id, storages by storage_id, outside endpoints), checks from the fixed catalog only (never commands), links and scenarios. WRM validates it like the Chains editor and returns every error; when valid it is saved as a draft, its read-only checks run once and you get the real values. A draft is not monitored and does not notify until the user approves it in Chains. With chain_id you replace one of your drafts; approved chains cannot be changed here.",
+		Schema: obj(map[string]interface{}{"definition": map[string]interface{}{"type": "object", "description": "The chain definition: name, nodes, checks, links, scenarios (see chain_status for the shape)"},
+			"chain_id": intProp("Optional: the id of a draft to replace"),
+			"note":     strProp("Short note for the user: what the chain watches and what you are unsure about"),
+			"reason":   strProp("One sentence for the user: why this draft")}, "definition", "reason")}},
 }
 
 // aiScopesFor lists the MCP scopes that allow a tool (any one of them is enough).
@@ -121,6 +132,13 @@ func aiScopesFor(name string) []string {
 	}
 	if spec.Host {
 		return []string{"addons.manage"}
+	}
+	if spec.Chain {
+		// a draft is inert until the user approves it; it is still a proposed change
+		if name == "chain_draft" {
+			return []string{"edit_file_with_approval"}
+		}
+		return []string{"read_logs"}
 	}
 	switch {
 	case spec.Kind == "read":
@@ -233,6 +251,10 @@ type aiToolInput struct {
 	Input         string            `json:"input"`
 	ContentBase64 string            `json:"content_base64"`
 	CommunityID   string            `json:"community_id"`
+	// chain tools
+	ChainID    int             `json:"chain_id"`
+	Definition json.RawMessage `json:"definition"`
+	Note       string          `json:"note"`
 }
 
 var (
@@ -272,6 +294,8 @@ type aiPlanned struct {
 	Logs *aiToolInput
 	// Host: an addon tool that acts on WRM itself, not on the session's server
 	Host *aiToolInput
+	// Chain: a Chains tool (chain_status, chain_draft) that acts on the user's chains in WRM
+	Chain *aiToolInput
 	// transfers (transfer_file): the source session, its real path and the size
 	Transfer bool
 	From     *aiSession
@@ -306,6 +330,9 @@ func aiReadMax() int64 { return int64(settingInt("ai_output_max_kb")) << 10 }
 func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiPlanned, error) {
 	if spec, ok := aiToolSpecFor(name); ok && spec.Host {
 		return s.planHostTool(name, in)
+	}
+	if spec, ok := aiToolSpecFor(name); ok && spec.Chain {
+		return s.planChainTool(name, in)
 	}
 	q := shellQuote
 	switch name {

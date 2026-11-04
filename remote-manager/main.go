@@ -1122,6 +1122,9 @@ func initDB() {
 		"max_object_mb", "created_at", "updated_at")
 	ensureTable("chains", chainSchema,
 		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
+	// Chains step 3: drafts written by the AI assistant, waiting for the user's approval.
+	db.Exec(`ALTER TABLE chains ADD COLUMN ai_draft INTEGER NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE chains ADD COLUMN draft_note TEXT NOT NULL DEFAULT ''`)
 	ensureTable("chain_samples", chainSampleSchema,
 		"id", "chain_id", "at", "kind", "subject", "old_value", "new_value", "ok")
 	ensureTable("storage_shares", storageShareSchema,

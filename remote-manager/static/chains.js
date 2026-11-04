@@ -112,6 +112,28 @@ Object.assign(LANGS.hr, {
   chn_help_links: 'Veze: {"from":"a","to":"b","kind":"data|read|write|failover|dependency","check":"id","scenarios":["primary"]}. Sa scenarios veza nosi promet samo u tim scenarijima; inače je dijagram prikazuje neaktivnom.',
 });
 
+// Step 3: drafts written by the AI assistant, and starting the AI builder.
+Object.assign(LANGS.en, {
+  chn_ai_draft: 'AI draft', chn_draft_banner: 'Draft written by the AI assistant. It is not checked in the background and sends no notifications until you approve it. Review it on the diagram, press Check now to see real values, adjust it in the JSON editor if needed, then approve.',
+  chn_draft_note: 'Note from the assistant', chn_approve: 'Approve and start checks', chn_approved: 'Approved: the chain is now checked in the background.',
+  chn_ai_build: 'Build with the AI assistant', chn_ai_build_d: 'Describe how the system works and choose its servers; the assistant explores them and writes a draft for you to approve.',
+  chn_ai_flow: 'How does the system work?', chn_ai_flow_ph: 'e.g. ingest-a records the stream, ingest-b takes over when it fails, content writes the recordings to the bucket, the CDN serves them',
+  chn_ai_servers: 'Servers in the chain and their role', chn_ai_role_ph: 'role, e.g. ingest (primary)', chn_ai_open: 'Open the AI assistant',
+  chn_ai_need: 'Choose at least one server and describe the system.', chn_ai_unavailable: 'The AI assistant is not available here.',
+  chn_ai_hint: 'The assistant opens on the first chosen server with this request filled in. Choose a provider and start it; the draft then appears here.',
+  chn_ai_prompt: 'Build a WRM chain draft for this system.\nServers (conn_id: name, role):\n{servers}\nHow it works: {flow}\nExplore the servers with the read-only tools, call chain_status for ids and the check catalog, then write the draft with chain_draft (catalog checks only). Tell me what you were unsure about.',
+});
+Object.assign(LANGS.hr, {
+  chn_ai_draft: 'AI nacrt', chn_draft_banner: 'Nacrt je napisao AI asistent. Ne provjerava se u pozadini i ne šalje obavijesti dok ga ne odobrite. Pregledajte ga na dijagramu, pritisnite Provjeri sada za stvarne vrijednosti, po potrebi ga doradite u JSON editoru, pa ga odobrite.',
+  chn_draft_note: 'Napomena asistenta', chn_approve: 'Odobri i pokreni provjere', chn_approved: 'Odobreno: lanac se sada provjerava u pozadini.',
+  chn_ai_build: 'Izradi s AI asistentom', chn_ai_build_d: 'Opišite kako sustav radi i odaberite njegove servere; asistent ih pregleda i napiše nacrt koji vi odobravate.',
+  chn_ai_flow: 'Kako sustav radi?', chn_ai_flow_ph: 'npr. ingest-a snima stream, ingest-b preuzima kad on padne, content zapisuje snimke u bucket, CDN ih poslužuje',
+  chn_ai_servers: 'Serveri u lancu i njihova uloga', chn_ai_role_ph: 'uloga, npr. ingest (primarni)', chn_ai_open: 'Otvori AI asistenta',
+  chn_ai_need: 'Odaberite barem jedan server i opišite sustav.', chn_ai_unavailable: 'AI asistent ovdje nije dostupan.',
+  chn_ai_hint: 'Asistent se otvara na prvom odabranom serveru s ovim zahtjevom. Odaberite providera i pokrenite ga; nacrt se zatim pojavi ovdje.',
+  chn_ai_prompt: 'Napravi nacrt WRM lanca za ovaj sustav.\nServeri (conn_id: naziv, uloga):\n{servers}\nKako radi: {flow}\nPregledaj servere alatima samo za čitanje, pozovi chain_status za id-jeve i katalog provjera, pa napiši nacrt s chain_draft (samo provjere iz kataloga). Reci mi u čemu nisi siguran.',
+});
+
 (function () {
   const state = { list: [], current: null, timeline: [], styleAdded: false, mode: 'diagram', sel: null, views: {}, pos: {}, openCheck: null };
   const $ = (sel) => document.querySelector(sel);
@@ -155,6 +177,14 @@ Object.assign(LANGS.hr, {
 .chn-empty { padding:30px 14px; text-align:center; color:var(--text2); font-size:12px; }
 .chn-badge { font-size:11px; padding:2px 8px; border-radius:10px; background:var(--bg3); color:var(--text2); }
 .chn-badge.active { background:var(--accent); color:#fff; }
+.chn-badge.draft { background:#8b5cf6; color:#fff; font-weight:600; }
+.chn-draft { flex:none; margin:0; padding:10px 14px; border-bottom:1px solid var(--border2); background:rgba(139,92,246,.12); font-size:12px; display:flex; flex-direction:column; gap:6px; }
+.chn-draft .note { font-size:11.5px; color:var(--text2); white-space:pre-wrap; overflow-wrap:anywhere; }
+.chn-body:not(.dg) .chn-draft { margin:-12px -14px 12px; }
+.chn-form textarea { font-size:12.5px; background:var(--bg); border:1px solid var(--border2); color:var(--text); border-radius:7px; padding:6px 8px; font-family:inherit; min-height:90px; resize:vertical; }
+.chn-srv { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px; }
+.chn-srv label { flex-direction:row; align-items:center; gap:6px; min-width:180px; color:var(--text); }
+.chn-srv input[type=text] { flex:1; min-width:160px; }
 .chn-sec { margin:4px 0 16px; }
 .chn-sec h4 { margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text2); }
 .chn-nodes { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:10px; }
@@ -345,8 +375,9 @@ Object.assign(LANGS.hr, {
       const n = el('div', 'n');
       n.appendChild(el('span', 'chn-dot ' + statusClass(c)));
       n.appendChild(document.createTextNode(c.name));
+      if (c.ai_draft) { const b = el('span', 'chn-badge draft', t('chn_ai_draft')); b.style.marginLeft = '6px'; n.appendChild(b); }
       const m = el('div', 'm');
-      m.textContent = !c.enabled ? t('chn_disabled')
+      m.textContent = c.ai_draft ? t('chn_ai_draft') : !c.enabled ? t('chn_disabled')
         : [c.scenario_label || t('chn_no_scenario'), c.nodes_total ? fmt(t('chn_nodes_count'), { up: c.nodes_up, n: c.nodes_total }) : '',
           fmt(t('chn_ok_count'), { ok: c.checks_ok, n: c.checks_total })].filter(Boolean).join(' · ');
       item.appendChild(n); item.appendChild(m);
@@ -697,7 +728,7 @@ Object.assign(LANGS.hr, {
     h.appendChild(document.createTextNode(t('chn_summary')));
     box.appendChild(h);
     box.appendChild(el('div', 'r', t('chn_last') + ': ' + when(c.last_at)));
-    if (!c.enabled) box.appendChild(el('div', 'r', t('chn_disabled')));
+    if (!c.enabled) box.appendChild(el('div', 'r', t(c.ai_draft ? 'chn_ai_draft' : 'chn_disabled')));
     if (d.description) box.appendChild(el('div', '', d.description));
     if (sum.checks_total != null) {
       const row = el('div', 'chn-row');
@@ -747,7 +778,7 @@ Object.assign(LANGS.hr, {
     h.appendChild(document.createTextNode(n.label || n.id));
     box.appendChild(h);
     box.appendChild(el('div', 'r', [t('chn_kind_' + n.kind), n.role, n.id].filter(Boolean).join(' · ')
-      + (ns ? ' · ' + t(ns.state === 'up' ? 'chn_up' : 'chn_down') : '')));
+      + (ns ? ' · ' + t(ns.state === 'up' ? 'chn_up' : ns.state === 'down' ? 'chn_down' : 'chn_not_checked') : '')));
     if (n.kind === 'server' && n.conn_id) {
       const conn = (state.conns || []).find((x) => x.id === n.conn_id);
       box.appendChild(el('div', 'r', t('chn_conn') + ': ' + (conn ? conn.name : '#' + n.conn_id)));
@@ -867,8 +898,32 @@ Object.assign(LANGS.hr, {
     const scn = $('#chn-scn');
     scn.textContent = t('chn_scenario') + ': ' + (c.scenario ? c.scenario_label : t('chn_no_scenario'));
     scn.className = 'chn-badge' + (c.scenario ? ' active' : '');
+    if (c.ai_draft) draftBanner(body, c);
     if (state.mode === 'diagram') renderDiagramView(body); else renderListView(body);
     renderTimeline(state.timeline);
+  }
+
+  function draftBanner(body, c) {
+    const b = el('div', 'chn-draft');
+    b.setAttribute('role', 'status');
+    b.appendChild(el('div', '', t('chn_draft_banner')));
+    if (c.draft_note) {
+      const n = el('div', 'note');
+      n.appendChild(el('b', '', t('chn_draft_note') + ': '));
+      n.appendChild(document.createTextNode(c.draft_note));
+      b.appendChild(n);
+    }
+    const act = el('div', 'chn-row');
+    const ok = el('button', 'btn-pri btn-sm', '✓ ' + t('chn_approve'));
+    ok.onclick = () => {
+      ok.disabled = true;
+      api('POST', `/api/chains/${c.id}/approve`).then(() => { showToast(t('chn_approved'), 'success'); return loadList(); })
+        .catch((e) => showToast((e.errors && e.errors.length ? e.errors.join('; ') : e.message), 'error'))
+        .finally(() => { ok.disabled = false; });
+    };
+    act.appendChild(ok);
+    b.appendChild(act);
+    body.appendChild(b);
   }
 
   function renderDiagramView(body) {
@@ -920,7 +975,7 @@ Object.assign(LANGS.hr, {
       h.appendChild(document.createTextNode(n.label || n.id));
       card.appendChild(h);
       card.appendChild(el('div', 'r', [t('chn_kind_' + n.kind), n.role, n.id].filter(Boolean).join(' · ')
-        + (ns ? ' · ' + t(ns.state === 'up' ? 'chn_up' : 'chn_down') : '')));
+        + (ns ? ' · ' + t(ns.state === 'up' ? 'chn_up' : ns.state === 'down' ? 'chn_down' : 'chn_not_checked') : '')));
       if (ns && ns.error) card.appendChild(el('div', 'e', ns.error));
       (d.checks || []).filter((x) => x.node === n.id).forEach((x) => card.appendChild(checkRow(x, false)));
       grid.appendChild(card);
@@ -1129,8 +1184,64 @@ Object.assign(LANGS.hr, {
         card(LANGS.en[k] ? t(k) : tp.name, LANGS.en[k + '_d'] ? t(k + '_d') : tp.description,
           fmt(t('chn_nodes_n'), { n: tp.definition.nodes.length }), () => templateForm(ed, body, tp, conns || [], storages || []));
       });
+      card('🤖 ' + t('chn_ai_build'), t('chn_ai_build_d'), '', () => aiBuildForm(ed, body, conns || []));
       card(t('chn_tpl_empty'), t('chn_tpl_empty_d'), '', () => openEditor(null, emptyChain()));
     });
+  }
+
+  // The AI builder: the user describes the system and picks its servers; the assistant opens
+  // on the first server with the request filled in and writes a draft with chain_draft.
+  function aiBuildForm(ed, body, conns) {
+    body.textContent = '';
+    const ssh = conns.filter((c) => (c.protocol || 'SSH').toUpperCase() === 'SSH');
+    const form = el('div', 'chn-form');
+    body.appendChild(form);
+    form.appendChild(el('h4', '', t('chn_ai_build')));
+    const flowL = el('label', '', t('chn_ai_flow'));
+    const flow = el('textarea');
+    flow.placeholder = t('chn_ai_flow_ph');
+    flow.maxLength = 2000;
+    flowL.appendChild(flow);
+    form.appendChild(flowL);
+    form.appendChild(el('h5', '', t('chn_ai_servers')));
+    if (!ssh.length) form.appendChild(el('div', 'note', t('chn_tpl_no_ssh')));
+    const rows = ssh.slice(0, 60).map((c) => {
+      const row = el('div', 'chn-srv');
+      const l = el('label');
+      const cb = el('input'); cb.type = 'checkbox';
+      l.appendChild(cb);
+      l.appendChild(document.createTextNode(c.name + (c.host ? ' (' + c.host + ')' : '')));
+      const role = el('input'); role.type = 'text'; role.placeholder = t('chn_ai_role_ph'); role.maxLength = 60;
+      role.setAttribute('aria-label', t('chn_ai_role_ph'));
+      role.oninput = () => { if (role.value) cb.checked = true; };
+      row.appendChild(l); row.appendChild(role);
+      form.appendChild(row);
+      return { c, cb, role };
+    });
+    form.appendChild(el('div', 'note', t('chn_ai_hint')));
+    const errs = el('div', 'chn-errs');
+    errs.setAttribute('role', 'status');
+    form.appendChild(errs);
+    const act = el('div', 'chn-row');
+    const back = el('button', 'btn-sec btn-sm', t('chn_back'));
+    back.onclick = () => { ed.remove(); openNew(); };
+    const go = el('button', 'btn-pri btn-sm', '🤖 ' + t('chn_ai_open'));
+    act.appendChild(back); act.appendChild(go);
+    form.appendChild(act);
+    go.onclick = () => {
+      const chosen = rows.filter((r) => r.cb.checked);
+      const text = flow.value.trim();
+      if (!chosen.length || !text) { errs.textContent = t('chn_ai_need'); return; }
+      if (typeof addWindow !== 'function' || typeof setWinMode !== 'function' || typeof loadAI !== 'function') { errs.textContent = t('chn_ai_unavailable'); return; }
+      const servers = chosen.map((r) => `- ${r.c.id}: ${r.c.name}${r.role.value.trim() ? ', ' + r.role.value.trim() : ''}`).join('\n');
+      const prompt = fmt(t('chn_ai_prompt'), { servers, flow: text });
+      ed.remove();
+      close();
+      const wo = addWindow();
+      wo.connId = chosen[0].c.id;
+      setWinMode(wo.id, 'ssh');
+      loadAI().then(() => window.wrmAI && wrmAI.queueContext(wo.id, prompt), () => showToast(t('chn_ai_unavailable'), 'error'));
+    };
   }
 
   function templateForm(ed, body, tp, conns, storages) {
