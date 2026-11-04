@@ -17313,11 +17313,11 @@ const collab = {
 };
 const shareAccessRefreshTimers = new Map();
 
-async function initCollabView(token) {
+async function initCollabView(token, validatedShareID = 0) {
   collab.token = token;
   let res, data = {};
   try {
-    collab.id = await exchangeShareAccess(token);
+    collab.id = validatedShareID || await exchangeShareAccess(token);
     res = await fetch('/api/share/' + encodeURIComponent(collab.id)); data = await res.json().catch(() => ({}));
   }
   catch(e) { showCollabFatal(t('share_load_failed') + ' (' + e.message + ')'); return; }
@@ -18793,6 +18793,11 @@ window.addEventListener('hashchange', handleShareFragmentNavigation);
 window.addEventListener('load', async () => {
   const shareToken = shareTokenFromLocation();
   if (shareToken) {
+    // Validate the bearer link with the server before entering the share UI.
+    // This also exchanges it for the per-share HttpOnly access cookie.
+    let validatedShareID;
+    try { validatedShareID = await exchangeShareAccess(shareToken); }
+    catch (_) { checkAuth(); return; }
     isCollabMode = true;
     collabToken = shareToken;
 
@@ -18824,7 +18829,7 @@ window.addEventListener('load', async () => {
     loadSettings();
     setupResize();
     loadClipboard();
-    initCollabView(collabToken);
+    initCollabView(collabToken, validatedShareID);
   } else {
     checkAuth();
   }

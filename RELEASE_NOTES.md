@@ -3,6 +3,7 @@
 - **Claude stays connected after a WRM restart.** The local MCP bridge renews its in-memory MCP session using the saved grant, and server selections remain attached to that grant.
 - **Select all servers** in the AI connection and OAuth consent lists, then uncheck any individual servers you want to leave out.
 - **Safer share links:** new links keep bearer tokens out of request URLs and use per-share HttpOnly cookies restricted to the share's allowed routes.
+- Share tokens are checked by WRM before the browser enters collaboration mode.
 - **Security hardening** covers saved credentials in connection tests, approval rechecks, MFA, MCP OAuth consent, outbound requests, addon channels, Windows destructive commands and network-tool audit logs.
 - **Pending AI approvals** produce desktop notifications that take the user to the matching approval in WRM.
 - File, tunnel, session and folder actions now report request failures clearly.
