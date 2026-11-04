@@ -160,13 +160,13 @@ func storageServeObject(w http.ResponseWriter, r *http.Request, head bool) {
 	if unsafeInline(ct) {
 		// Never inline: the browser would execute it in the WRM origin.
 		h.Set("Content-Type", "text/plain; charset=utf-8")
-		h.Set("Content-Disposition", "attachment; filename=\""+path.Base(key)+"\"")
+		h.Set("Content-Disposition", contentDisposition("attachment", key))
 	} else {
 		h.Set("Content-Type", ct)
 		if inline {
-			h.Set("Content-Disposition", "inline; filename=\""+path.Base(key)+"\"")
+			h.Set("Content-Disposition", contentDisposition("inline", key))
 		} else {
-			h.Set("Content-Disposition", "attachment; filename=\""+path.Base(key)+"\"")
+			h.Set("Content-Disposition", contentDisposition("attachment", key))
 		}
 	}
 	for _, name := range []string{"Content-Range", "Accept-Ranges", "ETag", "Last-Modified"} {
@@ -233,7 +233,7 @@ func storageStoreObject(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), s3ErrorStatus(err))
 		return
 	}
-	s.auditFile(r, userID, "storage.file_written", key, len(body), map[string]interface{}{"created": !exists})
+	s.auditFile(r, userID, "storage.file_written", key, int64(len(body)), map[string]interface{}{"created": !exists})
 	jsonOK(w, map[string]interface{}{"key": key, "etag": etag, "size": len(body)})
 }
 
@@ -266,7 +266,7 @@ func storageDeleteObject(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), http.StatusBadGateway)
 		return
 	}
-	s.auditFile(r, userID, "storage.file_deleted", key, int(size), nil)
+	s.auditFile(r, userID, "storage.file_deleted", key, size, nil)
 	jsonOK(w, map[string]bool{"ok": true})
 }
 
@@ -440,7 +440,7 @@ func apiStorageText(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), s3ErrorStatus(err))
 			return
 		}
-		s.auditFile(r, userID, "storage.file_written", key, len(data), map[string]interface{}{"edited": true})
+		s.auditFile(r, userID, "storage.file_written", key, int64(len(data)), map[string]interface{}{"edited": true})
 		jsonOK(w, map[string]interface{}{"key": key, "etag": etag, "size": len(data)})
 	default:
 		jsonError(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -458,7 +458,16 @@ func utf8Text(b []byte) (string, bool) {
 
 // auditFile logs one object operation with the storage as the target and the key in the
 // details, so the audit log stays readable and never holds the secret.
-func (s Storage) auditFile(r *http.Request, userID int, action, key string, size int, extra map[string]interface{}) {
+// contentDisposition quotes the object's file name, so a key with quotes or semicolons cannot
+// add parameters to the header; non-ASCII names use the RFC 2231 form.
+func contentDisposition(kind, key string) string {
+	if v := mime.FormatMediaType(kind, map[string]string{"filename": path.Base(key)}); v != "" {
+		return v
+	}
+	return kind
+}
+
+func (s Storage) auditFile(r *http.Request, userID int, action, key string, size int64, extra map[string]interface{}) {
 	d := map[string]interface{}{"key": key, "size": size}
 	for k, v := range extra {
 		d[k] = v

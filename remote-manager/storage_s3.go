@@ -9,7 +9,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"sort"
@@ -96,7 +95,7 @@ func newS3Client(cfg s3Config) (*s3Client, error) {
 		}
 	}
 	tr := &http.Transport{
-		DialContext:           (&net.Dialer{Timeout: 10 * time.Second}).DialContext,
+		DialContext:           egressDialContext, // re-checks the resolved address on every connection
 		TLSClientConfig:       tlsCfg,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,

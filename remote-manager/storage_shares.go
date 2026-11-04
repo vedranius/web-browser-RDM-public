@@ -3,11 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html"
+	"html/template"
 	"io"
 	"net/http"
 	"net/url"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -228,9 +227,9 @@ func storageShareObject(w http.ResponseWriter, r *http.Request, s Storage, sh st
 	} else {
 		h.Set("Content-Type", ct)
 		if r.URL.Query().Get("inline") == "1" {
-			h.Set("Content-Disposition", "inline; filename=\""+path.Base(key)+"\"")
+			h.Set("Content-Disposition", contentDisposition("inline", key))
 		} else {
-			h.Set("Content-Disposition", "attachment; filename=\""+path.Base(key)+"\"")
+			h.Set("Content-Disposition", contentDisposition("attachment", key))
 		}
 	}
 	for _, name := range []string{"Content-Range", "Accept-Ranges", "ETag", "Last-Modified"} {
@@ -270,20 +269,12 @@ func storageSharePage(w http.ResponseWriter, r *http.Request, token string, s St
 	sort.Strings(list.Prefixes)
 	sort.Slice(list.Objects, func(i, j int) bool { return list.Objects[i].Key < list.Objects[j].Key })
 
-	var b strings.Builder
-	b.WriteString("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">")
-	b.WriteString("<meta name=\"robots\" content=\"noindex,nofollow\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
-	b.WriteString("<title>" + html.EscapeString(s.Name) + "</title><style>")
-	b.WriteString("body{font-family:system-ui,sans-serif;margin:0;background:#0f1216;color:#e6edf3}" +
-		"main{max-width:900px;margin:0 auto;padding:28px 20px}h1{font-size:18px;margin:0 0 4px}" +
-		".muted{color:#8b949e;font-size:12px;margin-bottom:18px}ul{list-style:none;padding:0;margin:0}" +
-		"li{display:flex;gap:12px;align-items:center;padding:9px 10px;border-radius:8px}" +
-		"li:hover{background:#161b22}a{color:#58a6ff;text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
-		".s{color:#8b949e;font-size:12px}footer{margin-top:24px;color:#8b949e;font-size:11px}" +
-		"</style></head><body><main>")
-	b.WriteString("<h1>" + html.EscapeString(s.Name) + "</h1>")
-	b.WriteString("<div class=\"muted\">" + html.EscapeString(strings.TrimSuffix(s.Prefix, "/")) + " · read-only link</div>")
-	b.WriteString("<ul>")
+	page := storageSharePageData{
+		Name:      s.Name,
+		Root:      strings.TrimSuffix(s.Prefix, "/"),
+		ExpiresAt: sh.ExpiresAt,
+		Empty:     len(list.Prefixes) == 0 && len(list.Objects) == 0,
+	}
 	if prefix != "" {
 		parent := prefix
 		if i := strings.LastIndex(strings.TrimSuffix(parent, "/"), "/"); i > 0 {
@@ -291,27 +282,46 @@ func storageSharePage(w http.ResponseWriter, r *http.Request, token string, s St
 		} else {
 			parent = ""
 		}
-		b.WriteString("<li><a href=\"?prefix=" + url.QueryEscape(parent) + "\">⬆ ..</a></li>")
+		page.Up = "?prefix=" + url.QueryEscape(parent)
 	}
 	for _, p := range list.Prefixes {
-		name := strings.TrimPrefix(p, prefix)
-		b.WriteString("<li><a href=\"?prefix=" + url.QueryEscape(p) + "\">📁 " + html.EscapeString(name) + "</a></li>")
+		page.Entries = append(page.Entries, storageShareEntry{
+			Href: "?prefix=" + url.QueryEscape(p), Label: "📁 " + strings.TrimPrefix(p, prefix)})
 	}
 	for _, o := range list.Objects {
-		name := strings.TrimPrefix(o.Key, prefix)
-		link := "/s3/" + token + "/object?key=" + url.QueryEscape(o.Key)
-		b.WriteString("<li><a href=\"" + html.EscapeString(link) + "\">📄 " + html.EscapeString(name) + "</a>" +
-			"<span class=\"s\">" + humanSize(o.Size) + "</span></li>")
+		page.Entries = append(page.Entries, storageShareEntry{
+			Href:  "/s3/" + url.PathEscape(token) + "/object?key=" + url.QueryEscape(o.Key),
+			Label: "📄 " + strings.TrimPrefix(o.Key, prefix), Size: humanSize(o.Size)})
 	}
-	if len(list.Prefixes) == 0 && len(list.Objects) == 0 {
-		b.WriteString("<li class=\"muted\">This folder is empty.</li>")
-	}
-	b.WriteString("</ul><footer>Shared with WRM PRO · link expires " + html.EscapeString(sh.ExpiresAt) + "</footer></main></body></html>")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Robots-Tag", "noindex, nofollow")
-	io.WriteString(w, b.String())
+	storageShareTmpl.Execute(w, page)
 }
+
+type storageShareEntry struct{ Href, Label, Size string }
+
+type storageSharePageData struct {
+	Name, Root, ExpiresAt, Up string
+	Entries                   []storageShareEntry
+	Empty                     bool
+}
+
+// storageShareTmpl is rendered with html/template, which escapes every value for its context.
+var storageShareTmpl = template.Must(template.New("share").Parse(`<!doctype html><html lang="en"><head><meta charset="utf-8">` +
+	`<meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">` +
+	`<title>{{.Name}}</title><style>` +
+	`body{font-family:system-ui,sans-serif;margin:0;background:#0f1216;color:#e6edf3}` +
+	`main{max-width:900px;margin:0 auto;padding:28px 20px}h1{font-size:18px;margin:0 0 4px}` +
+	`.muted{color:#8b949e;font-size:12px;margin-bottom:18px}ul{list-style:none;padding:0;margin:0}` +
+	`li{display:flex;gap:12px;align-items:center;padding:9px 10px;border-radius:8px}` +
+	`li:hover{background:#161b22}a{color:#58a6ff;text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}` +
+	`.s{color:#8b949e;font-size:12px}footer{margin-top:24px;color:#8b949e;font-size:11px}` +
+	`</style></head><body><main><h1>{{.Name}}</h1><div class="muted">{{.Root}} · read-only link</div><ul>` +
+	`{{if .Up}}<li><a href="{{.Up}}">⬆ ..</a></li>{{end}}` +
+	`{{range .Entries}}<li><a href="{{.Href}}">{{.Label}}</a>{{if .Size}}<span class="s">{{.Size}}</span>{{end}}</li>{{end}}` +
+	`{{if .Empty}}<li class="muted">This folder is empty.</li>{{end}}` +
+	`</ul><footer>Shared with WRM PRO · link expires {{.ExpiresAt}}</footer></main></body></html>`))
 
 func humanSize(n int64) string {
 	switch {
