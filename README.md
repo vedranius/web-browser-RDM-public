@@ -2106,7 +2106,9 @@ A chain may use only its owner's connections and storages. Configuration keys th
 
 **Templates.** *New chain* starts from *One service* or *Primary and backup path*: choose the server or storage for each node, then *Create*, or *Edit JSON* to adjust service names, paths and addresses first. *Empty chain* opens the JSON editor.
 
-Building a chain with the AI assistant (step 3) is on the [roadmap](ROADMAP.md).
+**Building a chain with the AI assistant.** *New chain → Build with the AI assistant*: describe how the system works, tick its servers and give each a role, then *Open the AI assistant*. The assistant opens on the first server with the request filled in; choose a provider and start it. It explores the server with its read-only tools, calls `chain_status` for the connection and storage ids and the check catalog, and writes the chain with `chain_draft`. WRM validates the draft like the editor (the assistant gets every error back), runs its read-only checks once on the session's own server (over MCP: the AI connection's servers) and storages, leaving the other servers and the DNS, TCP, HTTP and TLS checks for your *Check now*, and shows it in Chains with an **AI draft** badge and the assistant's note. A draft is not checked in the background and sends no notifications. Review it on the diagram, press *Check now*, adjust it in the JSON editor, then **Approve and start checks**. The assistant can change only drafts, never an approved chain.
+
+The same tools work over MCP (Claude Desktop, Claude Code and other AI apps): `chain_status` needs the `read_logs` scope, `chain_draft` needs `edit_file_with_approval`, and a draft may use only the servers of that AI connection (storages only with a storage scope).
 
 ### Storages (S3)
 
@@ -3101,6 +3103,7 @@ Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only
 | `GET / POST /api/chains` · `GET / PUT / DELETE /api/chains/{id}` | chains of the signed-in user: a list with status, or `{definition, enabled}`; an invalid definition answers 400 with `errors` (every problem with its path) |
 | `POST /api/chains/{id}/check` · `GET /api/chains/{id}/timeline` · `GET /api/chains/{id}/export` | check now (the new state), the recorded changes, the definition as a JSON file |
 | `POST /api/chains/validate` · `GET /api/chains/catalog` | validate a definition without saving; the check types, operators, link kinds and formats |
+| `POST /api/chains/{id}/approve` | approve a draft written by the AI assistant: it becomes an ordinary chain checked in the background (409 if it is not a draft) |
 | `PUT /api/chains/{id}/layout` · `GET /api/chains/templates` | save diagram positions only (`{"positions":{"node-id":{"x":…,"y":…}}}` or `{"reset":true}`); the starter templates |
 | `GET / POST /api/storages` · `GET / PUT / DELETE /api/storages/{id}` · `POST /api/storages/{id}/test` | storages (secrets never returned; policy `storages_enabled`) |
 | `GET /api/storages/{id}/objects?prefix=&cursor=` · `GET / HEAD / PUT / DELETE /api/storages/{id}/object?key=` | list and objects inside the storage prefix (Range, `?inline=1`); DELETE needs `allow_delete` and `X-WRM-Confirm: delete` |
@@ -3521,6 +3524,7 @@ remote-manager/
   medium_build_user_test.go build user checks (root, missing account, readable WRM key) and a real build as nobody with a clean environment
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
   chains_test.go       Chains: script answers and value extraction (INI, JSON, YAML, env, kv, regex), rules and scenarios, change confirmation, validation (ownership, secrets, egress), the API end to end with HTTP, TCP, storage and an unreachable server, the node script in a real shell, diagram positions (saved alone, range-checked, owner only, reset) and every starter template validating
+  ai_chains_test.go    Chains AI builder: chain_status, every validation error returned, a draft checked once but never polled or notified, only drafts changeable, owner-only approval, the MCP grant's servers and storage scope
   v1400_storage_escape_test.go   Storages: share page escaping and quoted download file names
   v13152_s3stub_test.go … v13154_storage_share_test.go  Storages: S3 stub with an independent SigV4 check, CRUD, prefix confinement, capabilities, delete gate, editor (BOM/CRLF, 409), Range, status, export/import, MCP tools, share links
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)

@@ -300,6 +300,7 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - Configuration checks keep only the requested key. Keys that look like secrets are refused, and raw command output and file content are never stored.
 - DNS, TCP, HTTP and TLS checks run from WRM through the egress policy (checked at save and on every dial). HTTP redirects are not followed.
 - `chains_enabled=0` stops the API and the background checks.
+- The AI assistant can only write drafts: they use catalog checks, are never checked in the background and never notify, and only the owner's *Approve* (or saving with background checks on) starts monitoring. The assistant cannot change an approved chain. Over MCP a draft may use only the AI connection's servers, and storages only with a storage scope. Writing a draft runs its read-only checks once, but only on what the assistant could read anyway (the panel session's own server, or the AI connection's servers) and storages; other servers and every check that leaves WRM over the network (DNS, TCP, HTTP, TLS) wait for the user's *Check now* or approval, so a draft cannot become a request channel the user did not see.
 - Saving diagram positions changes only the coordinates of nodes already in the chain (finite, 0–20000) and is limited to the chain's owner; the rest of the definition is untouched. The diagram is built from text nodes and escaped attributes, never from HTML in chain labels.
 
 ## Storages (v14.0.0)

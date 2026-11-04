@@ -20,12 +20,17 @@
   - a scenario band shows the active scenario over time with markers for check and server changes, above the list of changes.
 - **Starter templates:** *New chain* offers *One service* and *Primary and backup path* (generic `demo-*` and `example.com` names). Pick a server for each server node and a storage for each storage node, then create the chain or review its JSON first.
 - **API:** `PUT /api/chains/{id}/layout` (`positions` per node id, or `reset`) saves only the positions; `GET /api/chains/templates`. Node `x` / `y` are validated (0–20000).
+- **Chains, step 3: the AI builder.** *New chain → Build with the AI assistant*: describe how the system works and choose its servers with their roles; the assistant opens on the first server with the request filled in.
+  - New AI tools (terminal panel and MCP): `chain_status` lists the user's chains, the SSH connections and storages a chain may use, the check catalog and the definition's shape, or the live state and recent changes of one chain; `chain_draft` writes a draft from catalog checks only, gets every validation error back, and on success runs the draft's read-only checks once on the servers the session may already read (and storages) and returns the real values; other servers and the network checks from WRM wait for the user's *Check now*.
+  - A draft (`ai_draft`) is shown with an *AI draft* badge and a banner with the assistant's note. It is never checked in the background and sends no notifications. *Approve and start checks* (`POST /api/chains/{id}/approve`, or saving it with background checks on) turns it into an ordinary chain whose first check reports what is already down.
+  - The assistant changes only drafts; at most 10 unapproved drafts per user. Audit entries `chain.draft_created`, `chain.draft_updated` and `chain.approved`.
 
 ### Security
 
 - Nothing is installed on a server, and a chain can never run a command. The check script is fixed text, and every parameter reaches it on standard input as data.
 - A chain may use only its owner's SSH connections and storages.
 - Configuration checks keep only the requested key, and keys that look like secrets (password, token, private, credential, API key …) are refused. Raw output is never stored.
+- The AI builder cannot start monitoring: only the user approves a draft. Over MCP a draft may use only the AI connection's servers, storages only with a storage scope; `chain_status` needs `read_logs` and `chain_draft` needs `edit_file_with_approval`.
 
 ## [14.0.0] - 2026-11-04
 
