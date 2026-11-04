@@ -87,6 +87,9 @@ type chainLink struct {
 	Kind  string `json:"kind,omitempty"`
 	Label string `json:"label,omitempty"`
 	Check string `json:"check,omitempty"` // optional: the check whose result colours the link
+	// Scenarios, when set, are the scenarios in which the link carries traffic; in any other
+	// scenario the diagram shows it idle (for example the backup path while on primary).
+	Scenarios []string `json:"scenarios,omitempty"`
 }
 
 type chainScenario struct {
@@ -255,6 +258,9 @@ func validateChain(d *chainDef, userID int) []string {
 		if len(n.Label) > 120 || len(n.Role) > 60 || chainHasControl(n.Label+n.Role) {
 			errs = append(errs, p+": label at most 120 and role at most 60 characters")
 		}
+		if !validChainPos(n.X) || !validChainPos(n.Y) {
+			errs = append(errs, p+": x and y must be between 0 and 20000")
+		}
 		switch n.Kind {
 		case "server":
 			c, err := loadConnectionRaw(n.ConnID)
@@ -339,6 +345,17 @@ func validateChain(d *chainDef, userID int) []string {
 			errs = append(errs, p+": label at most 120 characters")
 		}
 		errs = append(errs, validateChainCond(&sc.When, 0, checks, servers, p+".when", false)...)
+	}
+	for i, l := range d.Links {
+		if len(l.Scenarios) > chainMaxScenarios {
+			errs = append(errs, fmt.Sprintf("links[%d].scenarios: at most %d", i, chainMaxScenarios))
+			continue
+		}
+		for _, id := range l.Scenarios {
+			if !seen[id] {
+				errs = append(errs, fmt.Sprintf("links[%d].scenarios: unknown scenario %q", i, id))
+			}
+		}
 	}
 	return errs
 }
@@ -899,6 +916,9 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 				"link_kinds": []string{"data", "read", "write", "failover", "dependency"}, "formats": []string{"ini", "json", "yaml", "env", "kv", "regex"}})
 		}
 		return
+	case "templates":
+		apiChainTemplates(w, r)
+		return
 	case "validate":
 		userID, ok := requireAuth(w, r)
 		if !ok || !requireMethod(w, r, http.MethodPost) {
@@ -927,6 +947,8 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch parts[1] {
+	case "layout":
+		apiChainLayout(w, r, c)
 	case "check":
 		if !requireMethod(w, r, http.MethodPost) {
 			return

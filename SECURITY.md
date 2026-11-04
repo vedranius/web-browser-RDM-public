@@ -300,6 +300,7 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - Configuration checks keep only the requested key. Keys that look like secrets are refused, and raw command output and file content are never stored.
 - DNS, TCP, HTTP and TLS checks run from WRM through the egress policy (checked at save and on every dial). HTTP redirects are not followed.
 - `chains_enabled=0` stops the API and the background checks.
+- Saving diagram positions changes only the coordinates of nodes already in the chain (finite, 0–20000) and is limited to the chain's owner; the rest of the definition is untouched. The diagram is built from text nodes and escaped attributes, never from HTML in chain labels.
 
 ## Storages (v14.0.0)
 

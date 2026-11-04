@@ -12,6 +12,14 @@
 - **Notifications and timeline.** Changes are recorded in a timeline. The new events `chain.scenario_changed`, `chain.check_changed` (a check turns good or bad), `chain.node_down` and `chain.node_up` go to the Workboard and to the subscribed channels. `chain_changed` on `/ws/events` refreshes an open window.
 - **Chains window** (top bar): list with status and active scenario, details per node and check, links, scenarios, timeline, *Check now*, and a JSON editor with server-side validation (every problem with its path), a reference of your connections, storages and check types, plus import and export.
 - **API:** `/api/chains`, `/api/chains/{id}`, `/check`, `/timeline`, `/export`, `/api/chains/validate` and `/api/chains/catalog`. Audit entries `chain.created`, `chain.updated`, `chain.deleted` and `chain.checked`. Settings `chains_enabled` and `chain_interval_s`.
+- **Chains, step 2: the live diagram.** The Chains window opens on an interactive SVG diagram of the chain (the former cards stay as the *List* view):
+  - automatic layout in columns along the links, sources on the left; dragging a node saves every position, and *Arrange automatically* forgets them;
+  - servers as boxes, storages as buckets, outside endpoints as dashed pills, each with its check results as dots and an OK count;
+  - links coloured by their check or by their two nodes, with animated flow where traffic runs (reversed for `read`), dashed for failover and dependency; a link's new optional `scenarios` list marks it idle outside those scenarios (for example the backup path while on primary);
+  - click a node for its state, error, checks (each expands to its definition and history), links and recent changes, with *Check now*; click a link for its kind, scenarios and colouring check; zoom, fit and pan;
+  - a scenario band shows the active scenario over time with markers for check and server changes, above the list of changes.
+- **Starter templates:** *New chain* offers *One service* and *Primary and backup path* (generic `demo-*` and `example.com` names). Pick a server for each server node and a storage for each storage node, then create the chain or review its JSON first.
+- **API:** `PUT /api/chains/{id}/layout` (`positions` per node id, or `reset`) saves only the positions; `GET /api/chains/templates`. Node `x` / `y` are validated (0–20000).
 
 ### Security
 

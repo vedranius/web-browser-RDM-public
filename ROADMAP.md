@@ -44,7 +44,7 @@ Decisions:
 
 Steps (each lands on `main` without a version bump; the owner releases them together with the parallel work in one combined release):
 1. **Engine** (on `main`, unreleased): tables `chains` and `chain_samples`, the check catalog above (without addon parsers), rules and scenarios, background polling, change detection and notifications, API, a Chains window with list, details per node/check and a JSON editor with validation and import/export.
-2. **Live diagram:** interactive SVG diagram with automatic layout and saved positions, animated flows, storage (bucket) nodes, node and check details on click, a timeline of changes, *Check now*, a generic starter template.
+2. **Live diagram** (on `main`, unreleased): interactive SVG diagram with automatic layout and saved positions, animated flows, storage (bucket) nodes, node and check details on click, a timeline of changes, *Check now*, a generic starter template.
 3. **AI builder:** AI tools `chain_draft` and `chain_status`, exploration of the chosen servers, draft review with the live diagram, approval.
 
 Later, when needed: addon parsers (an addon's WebAssembly export turns a fixed read-only output into values, so new formats need no core change), sharing a chain with a team, a form editor instead of JSON.
