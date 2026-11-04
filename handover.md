@@ -419,3 +419,23 @@ Changed files: `remote-manager/preview_test.go` and `remote-manager/quick_test.g
 Verification passed on Windows: `go test . -run '^(TestRemotePreview|TestNetworkTools)' -count=1 -timeout 120s` from `remote-manager/`; and `git diff --check`. No production code changed. This validates the affected package tests on Windows; Linux CI still exercises the POSIX remote-command assertions.
 
 Next roadmap: continue the Windows CI sweep for remaining tests that assume POSIX paths or a POSIX shell (the audit already noted `TestAIAskModeApprovalEditAndInjection` and `TestGitCIPipeline`), then resume the MCP/addon compatibility follow-ups documented above. Keep each completed package and its verification recorded here and in the workspace handover copy.
+
+## Completed package: make POSIX-only integration tests explicit on Windows
+
+`TestAIAskModeApprovalEditAndInjection` relies on the shared fake SSH server to execute `sh`, `readlink`, `tail`, and `touch`; Windows has no `sh` executable in this environment, so the test timed out before creating its expected approval. `TestGitCIPipeline` uses Linux absolute server roots and the same POSIX fake SSH shell, so its deployment fixture is not meaningful on Windows. Both tests now skip explicitly on Windows with the platform dependency in the skip reason and remain unchanged/active on POSIX. The prior Windows-portable tests continue to run their platform-independent assertions.
+
+Changed files: `remote-manager/ai_engine_test.go` and `remote-manager/git_ci_test.go`.
+
+Verification passed on Windows: focused `go test` for both tests reports the expected skips and package PASS; `git diff --check`. Limitation: their full assertions were not exercised on Linux during this turn; Linux CI remains responsible for them. This is a test-fixture limitation rather than a product-code change.
+
+The full Windows `go test ./... -count=1 -timeout 12m` run failed, with many tests in AI/MCP and Git deployment paths failing because shared fake-host commands assume POSIX tools (`sh`, `readlink`, `touch`) and POSIX server paths. Representative failures include `TestAIAutoModeLimits`, `TestAISessionsView`, `TestMCPLaterApprovalRepeatPolicy`, and Git deployment/discovery tests. The focused Windows-portable tests from the previous package still pass; the two tests above now skip with explicit reasons. Avoid adding more per-test skips until the shared fake SSH fixture can provide a meaningful portable implementation.
+
+## MCP reconnect and server-selection investigation
+
+The Claude stdio bridge already retries an MCP request after WRM's explicit stale-session response by initializing again with its saved bearer token. The focused `node --test tools/test-mcpb-restart.js` passes. WRM stores the OAuth grant (including its selected `conn_ids`) in SQLite; restarting the service should invalidate only in-memory MCP session IDs if the same database file is reused. The OAuth implementation currently has no refresh tokens, so after the user-approved grant lifetime expires, the client must sign in and consent again, which includes choosing servers again. This does not explain reauthentication after every restart while the grant remains active.
+
+The select-all control is already present in the MCP token form, OAuth consent form, and app setup wizard; the user can uncheck individual servers after selecting all. `node --test tools/test-mcp-server-select.js` passes. These fixes are on the pushed feature branch; they are not active in a deployed WRM instance unless that branch has been installed there.
+
+To distinguish grant expiry from a non-persistent database or an older deployed build, inspect the actual WRM service host and its database path/state. The live host has not yet been identified among the available WRM connections, so no server was selected or inspected.
+
+Next roadmap: identify the WRM service host, verify persistent `DB_PATH`/volume and deployed build without exposing credentials; if the active grant is still valid and the same database is mounted, trace Claude's local `.wrm/mcp.json` persistence and service restart response. Separately, improve the shared fake SSH fixture so Windows CI can run AI/MCP and Git deployment integration tests instead of skipping them.

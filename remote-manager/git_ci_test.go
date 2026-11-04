@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -314,6 +315,9 @@ func newFakeJenkins(t *testing.T, result string) *fakeJenkins {
 }
 
 func TestGitCIPipeline(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("deployment fixture requires POSIX server roots and a POSIX fake SSH shell")
+	}
 	oldEvery := gitCIPollEvery
 	gitCIPollEvery = 5 * time.Millisecond
 	defer func() { gitCIPollEvery = oldEvery }()
