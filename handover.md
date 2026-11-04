@@ -19,6 +19,7 @@ Several agents work on this repository at the same time. The owner wants **one c
 Progress log:
 - 2026-11-04: Chains accepted and written into ROADMAP.md (steps 1–3). Nothing implemented yet.
 - 2026-11-04: the owner asked for the combined release now: **v14.0.0** (branch `claude/v13.15.0`, PR #161) merges Storages (`feat/storages`, PR #159) with code-scanning fixes and the 2 MB editor limit, plus the open Dependabot updates. Chains is not part of it and stays the next work on `claude/chains-*`; the no-bump rule applies again from here until the owner asks for the next combined release.
+- 2026-11-04: Chains step 1 (engine) on `claude/chains-engine`: `chains.go`, `chains_checks.go`, `chains_test.go`, `static/chains.js`; small additive changes in `main.go` (tables, routes, `go chainsLoop()`), `settings.go` (`chains_enabled`, `chain_interval_s`), `notify.go` (four `chain.*` events), `static/index.html` (top-bar button, loader, `chain_changed` on the event socket, event labels). CHANGELOG under `[Unreleased]`, no version bump. Next: step 2 (live diagram) on `claude/chains-diagram`.
 
 ## Completed package: connection-test credential egress guard
 

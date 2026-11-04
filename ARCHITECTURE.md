@@ -14,6 +14,19 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. Security checks (v12.6.20): `security.yml` (govulncheck, staticcheck, gosec against `.github/security/gosec-baseline.json`, gitleaks, actionlint/zizmor, dependency review), `codeql.yml`, `scorecard.yml`, `claude-security-review.yml`, Trivy in the Docker job, Dependabot; `nightly.yml` (v12.6.21: Go fuzzing of the import parsers, OWASP ZAP). Releases: `SHA256SUMS.txt` signed with ed25519 (`releasesign.go`, checked by the self-update), CycloneDX SBOM, build provenance; all actions pinned to commit SHAs with read-only tokens by default. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
+## Chains (unreleased, step 1)
+
+`chains.go` holds:
+- the model (`chainDef`: nodes, checks, links, scenarios) and its validation (`validateChain`), which returns every problem with a path;
+- the rules (`chainCond`: fixed operators, no expression language), the change detection (`chainApply`: a key changes after `confirm` identical observations, unknown keys are adopted silently), the poller (`chainsLoop` every 15 s, `pollChain`), the notifications and the API.
+
+`chains_checks.go` is the check catalog:
+- **Server checks** run in one SSH session per node through `monitorSSHCommandInput`, sharing `monitorSlots` with monitoring. The script (`chainNodeScript`) is fixed text run with `sh -c`, and the checks reach it on standard input as `id<TAB>type<TAB>target` lines, so no parameter is part of a command line.
+- **Answers** are `@id value` lines, base64 for file content, interpreted in Go. Configuration values are extracted in Go and only the requested key is kept.
+- **WRM-side checks** (DNS, TCP, HTTP, TLS) dial through `egressDialContext`; storage checks use the Storages client.
+
+Tables: `chains` (definition, latest state, confirmed state) and `chain_samples` (the timeline, at most 2000 rows per chain). The UI is `static/chains.js`, loaded on demand.
+
 ## Storages (v14.0.0)
 
 `storages.go` holds the `storages` table, CRUD under `/api/storages`, validation, prefix normalisation, the capability check `requireStorage(w, r, cap)`, audit, the status map with `storageStatusLoop` (`storage.down` / `storage.up`) and export/import. `storage_s3.go` is a SigV4 client without an SDK (list, ranged get, head, put with `If-Match`, copy, delete) whose transport dials through `egressDialContext` and refuses redirects; a pinned certificate is checked in `VerifyConnection` with session tickets off. `storages_http.go` serves objects, folders, moves and the text editor (`storage_edit_kb`); `storage_shares.go` the hashed, expiring read-only links under `/s3/` rendered with `html/template`; `mcp_storages.go` the four MCP tools behind their own scopes, never through a server session. The UI is the lazily loaded `static/storages.js`. A storage is deliberately not a connection and reaches no terminal, tunnel, jump host or deploy code.
