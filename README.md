@@ -2095,7 +2095,18 @@ Rules use `all`, `any`, `{"check":"id","field":"value|ok","op":"==|!=|in|contain
 
 A change counts only after it is seen `confirm` times in a row (default 2). Every change is kept in the timeline. Notifications go out for a scenario change (`chain.scenario_changed`), a check that turns good or bad (`chain.check_changed`), and a server that goes down or comes back (`chain.node_down`, `chain.node_up`); subscribe to them in *Settings → Notifications*.
 
-A chain may use only its owner's connections and storages. Configuration keys that look like secrets are refused, and only the extracted values are kept. The live diagram (step 2) and building a chain with the AI assistant (step 3) are on the [roadmap](ROADMAP.md).
+A chain may use only its owner's connections and storages. Configuration keys that look like secrets are refused, and only the extracted values are kept.
+
+**The live diagram.** A chain opens as a diagram (switch to *List* for cards per node):
+- nodes are laid out automatically along the links; drag a node to place it (all positions are saved with the chain), or press ⟲ *Arrange automatically*;
+- servers are boxes, storages buckets and outside endpoints dashed pills; the dots on a node are its checks;
+- a green, moving link carries traffic, red is failing, grey dashed is idle. A link is coloured by its `check`, or else by the state of its two nodes. Give a link `"scenarios": ["primary"]` to show it idle in every other scenario, for example the backup path of a failover pair;
+- click a node for its state, checks (click a check for its definition and history), links and recent changes, and *Check now*; click a link for its details. The wheel zooms, dragging the background pans, ⤢ fits the chain into the window;
+- the band below shows which scenario was active when, with markers for check and server changes, followed by the list of changes.
+
+**Templates.** *New chain* starts from *One service* or *Primary and backup path*: choose the server or storage for each node, then *Create*, or *Edit JSON* to adjust service names, paths and addresses first. *Empty chain* opens the JSON editor.
+
+Building a chain with the AI assistant (step 3) is on the [roadmap](ROADMAP.md).
 
 ### Storages (S3)
 
@@ -3090,6 +3101,7 @@ Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only
 | `GET / POST /api/chains` · `GET / PUT / DELETE /api/chains/{id}` | chains of the signed-in user: a list with status, or `{definition, enabled}`; an invalid definition answers 400 with `errors` (every problem with its path) |
 | `POST /api/chains/{id}/check` · `GET /api/chains/{id}/timeline` · `GET /api/chains/{id}/export` | check now (the new state), the recorded changes, the definition as a JSON file |
 | `POST /api/chains/validate` · `GET /api/chains/catalog` | validate a definition without saving; the check types, operators, link kinds and formats |
+| `PUT /api/chains/{id}/layout` · `GET /api/chains/templates` | save diagram positions only (`{"positions":{"node-id":{"x":…,"y":…}}}` or `{"reset":true}`); the starter templates |
 | `GET / POST /api/storages` · `GET / PUT / DELETE /api/storages/{id}` · `POST /api/storages/{id}/test` | storages (secrets never returned; policy `storages_enabled`) |
 | `GET /api/storages/{id}/objects?prefix=&cursor=` · `GET / HEAD / PUT / DELETE /api/storages/{id}/object?key=` | list and objects inside the storage prefix (Range, `?inline=1`); DELETE needs `allow_delete` and `X-WRM-Confirm: delete` |
 | `GET / PUT /api/storages/{id}/text?key=` · `POST /api/storages/{id}/dir?prefix=` · `POST /api/storages/{id}/move` | editor `{content, etag, bom, crlf}` with `If-Match` (409 on a stale write), new folder, rename `{from, to, overwrite}` |
@@ -3508,7 +3520,7 @@ remote-manager/
   medium_config_git_test.go deploy-config from Git with fake GitLab / GitHub / Gitea: pull, local changes, refused pull, push with conflict check and validation, discard, stop
   medium_build_user_test.go build user checks (root, missing account, readable WRM key) and a real build as nobody with a clean environment
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
-  chains_test.go       Chains: script answers and value extraction (INI, JSON, YAML, env, kv, regex), rules and scenarios, change confirmation, validation (ownership, secrets, egress), the API end to end with HTTP, TCP, storage and an unreachable server, the node script in a real shell
+  chains_test.go       Chains: script answers and value extraction (INI, JSON, YAML, env, kv, regex), rules and scenarios, change confirmation, validation (ownership, secrets, egress), the API end to end with HTTP, TCP, storage and an unreachable server, the node script in a real shell, diagram positions (saved alone, range-checked, owner only, reset) and every starter template validating
   v1400_storage_escape_test.go   Storages: share page escaping and quoted download file names
   v13152_s3stub_test.go … v13154_storage_share_test.go  Storages: S3 stub with an independent SigV4 check, CRUD, prefix confinement, capabilities, delete gate, editor (BOM/CRLF, 409), Range, status, export/import, MCP tools, share links
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)
