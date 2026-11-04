@@ -20,35 +20,6 @@ Still open from v13:
 
 Addon decisions already taken: server code runs in a WASM sandbox (`wazero`, pure Go, no cgo) unless the operator opts into native code; UI addons register into defined slots and themes instead of touching core DOM; addons declare capabilities, which the installer shows before installing; the community index uses trust levels (`official`, `reviewed`, `community`, `unverified`) with checksums, plus a security and hobby-project liability notice.
 
-## Chains: live service-chain monitoring (accepted 2026-11-04, one step per version, released together)
-
-Goal: a user links the servers that form one working system (for example ingest → transcoding → content → CDN, with a primary and a backup path), says which server plays which role, and WRM itself checks the whole chain in the background, draws it as a live interactive diagram and notifies when its state or active path changes (for example when a failover happens). Nothing is installed on the servers: WRM uses the SSH connections it already has and only fixed read-only checks. The feature is generic: no check type is tied to one product, file or vendor.
-
-Decisions:
-- **Core feature, not an addon.** Addons have no SSH and run only while their window is open, so the chain engine lives in the core next to `runMonitoring`; the "no background checks in WRM" rule of Addon platform v2 stays valid for addons.
-- **A chain** is nodes (saved connections with a role and a position), checks per node, links between nodes (data flow, read/write, failover, dependency) and scenarios: ordered rules over check results; the first one that matches is the active scenario (for example "primary", "ingest on backup", "content on backup").
-- **Check catalog, read-only and parameterised, never free shell:**
-  - services: systemd unit, Docker container, process by pattern, listening port;
-  - configuration: a value from a file in INI, JSON, YAML, env or `key = value` form, or by regular expression; only allow-listed keys are kept and anything that looks like a secret is dropped;
-  - files: exists, age/mtime, count in a directory;
-  - storage: mount (source, rw/ro, present), NFS, S3 bucket reachability and newest object under a prefix, checked from WRM with a key stored in WRM;
-  - network, checked from WRM: DNS answer (optionally against a chosen resolver), TCP port, HTTP(S) status or a JSON value, TLS certificate expiry;
-  - schedule: crontab line enabled, commented out or missing; systemd timer;
-  - existing sources: metrics WRM already collects (monitoring, Zabbix).
-- **Rules** use a small fixed operator set (`==`, `!=`, `in`, `contains`, `exists`, `all`, `any`), no `eval`.
-- **Polling:** per-chain interval (default 30 s, minimum 15 s, a setting); one SSH round trip per node plus SFTP reads with size limits and safe paths; the same concurrency slots as monitoring; results stored as samples with a cap. A change is reported only after it is seen twice in a row (configurable) so flapping does not spam.
-- **Notifications:** new events `chain.scenario_changed`, `chain.check_changed`, `chain.node_down`, `chain.node_up` through the existing channels and Workboard (by default on: scenario change and node down/up); `chain_changed` on `/ws/events` so an open window updates at once.
-- **Access and audit:** a chain may use only connections its owner can access; raw command output is not stored, only extracted values; secrets never reach the browser; audit `chain.*`; setting `chains_enabled`.
-- **AI builder:** the user picks servers and roles and describes the workflow in WRM's AI chat; the AI explores the servers with the existing read-only tools and writes a **chain draft** (it can only use catalog check types, never commands); the user sees the draft as a live diagram with real values, corrects it and approves it before monitoring starts.
-- **Public repository:** templates and tests use invented names (`demo-ingest`, `demo-content`, `example.com`); real chains live only in the user's WRM database.
-
-Steps (each lands on `main` without a version bump; the owner releases them together with the parallel work in one combined release):
-1. **Engine** (on `main`, unreleased): tables `chains` and `chain_samples`, the check catalog above (without addon parsers), rules and scenarios, background polling, change detection and notifications, API, a Chains window with list, details per node/check and a JSON editor with validation and import/export.
-2. **Live diagram** (on `main`, unreleased): interactive SVG diagram with automatic layout and saved positions, animated flows, storage (bucket) nodes, node and check details on click, a timeline of changes, *Check now*, a generic starter template.
-3. **AI builder:** AI tools `chain_draft` and `chain_status`, exploration of the chosen servers, draft review with the live diagram, approval.
-
-Later, when needed: addon parsers (an addon's WebAssembly export turns a fixed read-only output into values, so new formats need no core change), sharing a chain with a team, a form editor instead of JSON.
-
 ## Addon platform v2 (accepted 2026-10-23, one version per step)
 
 Goal: an addon written by any user (or their AI) can show live data in a WRM window, keep its settings and survive restarts, without being able to read WRM secrets, reach arbitrary hosts, hang the app or escalate beyond what was approved. Decisions: every user may install personal addons (network access and secrets are approved by an administrator); secrets per instance entered by an administrator, with a personal override that wins; **no background checks or history in WRM** (addons fetch while their window is open; 24/7 alerting stays in the monitored system).

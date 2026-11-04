@@ -20,6 +20,10 @@
   - a scenario band shows the active scenario over time with markers for check and server changes, above the list of changes.
 - **Starter templates:** *New chain* offers *One service* and *Primary and backup path* (generic `demo-*` and `example.com` names). Pick a server for each server node and a storage for each storage node, then create the chain or review its JSON first.
 - **API:** `PUT /api/chains/{id}/layout` (`positions` per node id, or `reset`) saves only the positions; `GET /api/chains/templates`. Node `x` / `y` are validated (0–20000).
+- **Chains, step 3: the AI builder.** The built-in assistant gets two tools:
+  - `chain_status` lists the user's chains with their state and every SSH connection, storage and check type a new chain may use, with an example definition;
+  - `chain_draft` writes a draft from a definition that uses only catalog check types and the owner's own `conn_id` / `storage_id` values. It validates immediately and returns every problem with its path, so the model can fix the draft; it cannot run a command.
+- **Draft review:** a draft is not monitored and starts nothing. It appears in the Chains window under *Drafts from the AI*, opens on the same live diagram, and only **Create chain** validates it again, creates the chain and starts its checks; **Discard** removes it. One draft per assistant session (a new call replaces it), audited as `chain.drafted` and `chain.draft_discarded`; `GET /api/chains/drafts`, `GET /api/chains/drafts/{id}`, `DELETE /api/chains/drafts/{id}` and `POST /api/chains/drafts/{id}/approve`. The tools are for WRM's built-in assistant; MCP connections do not get them yet.
 
 ### Security
 

@@ -14,7 +14,7 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. Security checks (v12.6.20): `security.yml` (govulncheck, staticcheck, gosec against `.github/security/gosec-baseline.json`, gitleaks, actionlint/zizmor, dependency review), `codeql.yml`, `scorecard.yml`, `claude-security-review.yml`, Trivy in the Docker job, Dependabot; `nightly.yml` (v12.6.21: Go fuzzing of the import parsers, OWASP ZAP). Releases: `SHA256SUMS.txt` signed with ed25519 (`releasesign.go`, checked by the self-update), CycloneDX SBOM, build provenance; all actions pinned to commit SHAs with read-only tokens by default. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
-## Chains (unreleased, steps 1 and 2)
+## Chains (unreleased, steps 1–3)
 
 `chains.go` holds:
 - the model (`chainDef`: nodes, checks, links, scenarios) and its validation (`validateChain`), which returns every problem with a path;
@@ -25,9 +25,11 @@ every phase of that plan to the code that it touches.
 - **Answers** are `@id value` lines, base64 for file content, interpreted in Go. Configuration values are extracted in Go and only the requested key is kept.
 - **WRM-side checks** (DNS, TCP, HTTP, TLS) dial through `egressDialContext`; storage checks use the Storages client.
 
-Tables: `chains` (definition, latest state, confirmed state) and `chain_samples` (the timeline, at most 2000 rows per chain). The UI is `static/chains.js`, loaded on demand.
+Tables: `chains` (definition, latest state, confirmed state), `chain_samples` (the timeline, at most 2000 rows per chain) and `chain_drafts` (step 3: one validated, unmonitored definition per assistant session). The UI is `static/chains.js`, loaded on demand.
 
 `chains_diagram.go` (step 2) saves diagram positions (`PUT /api/chains/{id}/layout` rewrites only `x` / `y` of the stored definition, so a drag never re-runs or bypasses `validateChain`) and serves the starter templates (`chainTemplates`, validated by the tests once servers and storages are filled in). The diagram is drawn in the browser: `autoLayout` puts nodes in columns by the longest path along the links and orders each column by its predecessors; saved positions override it. A link's state comes from its check, or from its two nodes, and is `idle` when the link lists `scenarios` without the active one.
+
+`chains_drafts.go` (step 3) holds the draft table and API, and the two assistant tools. `chain_status` is a read tool that returns the owner's chains, connections, storages, check catalog and an example definition; `chain_draft` is a write tool that strictly decodes a definition (unknown fields refused), runs `validateChain` against the owner and stores it with the session id, replacing that session's earlier draft. Both are host tools marked `Self` (they act on WRM as the signed-in user, so non-administrators get them) and `PanelOnly` (MCP clients do not). The engine still treats them as write actions for the permission mode and approvals. `POST /api/chains/drafts/{id}/approve` validates again, creates the chain enabled, removes the draft and audits `chain.created` with `from_draft`; a draft itself is never polled.
 
 ## Storages (v14.0.0)
 
