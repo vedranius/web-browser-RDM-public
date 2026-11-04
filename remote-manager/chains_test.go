@@ -383,3 +383,84 @@ func TestChainNodeScriptRuns(t *testing.T) {
 		t.Fatalf("results: %+v\n%s", r, out)
 	}
 }
+
+// TestChainLayoutAndTemplates: dragged positions are saved without touching the rest of the
+// chain, bad coordinates are refused, and every starter template validates once its servers
+// and storages are chosen.
+func TestChainLayoutAndTemplates(t *testing.T) {
+	u, _, storageID := storageTestEnv(t, "chain-layout", nil)
+	if _, err := setSetting("chains_enabled", "1"); err != nil {
+		t.Fatal(err)
+	}
+	conn := chainTestConn(t, u.userID, "SSH")
+	var tpls []chainTemplate
+	if code := u.jsonDo("GET", "/api/chains/templates", nil, &tpls); code != http.StatusOK || len(tpls) < 2 {
+		t.Fatalf("templates: %d %d", code, len(tpls))
+	}
+	for _, tp := range tpls {
+		d := tp.Definition
+		for i := range d.Nodes {
+			switch d.Nodes[i].Kind {
+			case "server":
+				d.Nodes[i].ConnID = conn
+			case "storage":
+				d.Nodes[i].StorageID = storageID
+			}
+		}
+		if errs := validateChain(&d, u.userID); len(errs) > 0 {
+			t.Errorf("template %s: %v", tp.ID, errs)
+		}
+		raw := string(jsonMarshal(tp))
+		if strings.Contains(raw, "password") || !strings.Contains(raw, "demo-") && !strings.Contains(raw, "example.com") {
+			t.Errorf("template %s does not use invented names: %s", tp.ID, raw)
+		}
+	}
+
+	def := tpls[0].Definition
+	for i := range def.Nodes {
+		if def.Nodes[i].Kind == "server" {
+			def.Nodes[i].ConnID = conn
+		}
+	}
+	var v struct {
+		ID         int      `json:"id"`
+		Definition chainDef `json:"definition"`
+	}
+	if code := u.jsonDo("POST", "/api/chains", map[string]interface{}{"definition": def, "enabled": false}, &v); code != http.StatusOK {
+		t.Fatalf("create: %d", code)
+	}
+	base := "/api/chains/" + strconv.Itoa(v.ID)
+	first := v.Definition.Nodes[0].ID
+	if code := u.jsonDo("PUT", base+"/layout", map[string]interface{}{"positions": map[string]interface{}{
+		first: map[string]float64{"x": 120.4, "y": 80}, "nope": map[string]float64{"x": 1, "y": 1}}}, &v); code != http.StatusOK {
+		t.Fatalf("layout: %d", code)
+	}
+	if n := v.Definition.Nodes[0]; n.X != 120 || n.Y != 80 || len(v.Definition.Checks) != len(def.Checks) {
+		t.Fatalf("saved layout: %+v", v.Definition)
+	}
+	if code := u.jsonDo("PUT", base+"/layout", map[string]interface{}{"positions": map[string]interface{}{first: map[string]float64{"x": -5, "y": 1}}}, nil); code != http.StatusBadRequest {
+		t.Fatalf("negative x accepted: %d", code)
+	}
+	if code := u.jsonDo("PUT", base+"/layout", map[string]interface{}{"positions": map[string]interface{}{}, "name": "x"}, nil); code != http.StatusBadRequest {
+		t.Fatalf("unknown field accepted: %d", code)
+	}
+	other := newTestUser(t, u.srv, "chain-layout-other", false)
+	if code := other.jsonDo("PUT", base+"/layout", map[string]interface{}{"reset": true}, nil); code != http.StatusNotFound {
+		t.Fatalf("another user's layout: %d", code)
+	}
+	var after struct {
+		Definition chainDef `json:"definition"`
+	}
+	if code := u.jsonDo("PUT", base+"/layout", map[string]interface{}{"reset": true}, &after); code != http.StatusOK || after.Definition.Nodes[0].X != 0 {
+		t.Fatalf("reset: %d %+v", code, after.Definition.Nodes[0])
+	}
+	bad := def
+	bad.Nodes = append([]chainNode(nil), def.Nodes...)
+	bad.Nodes[0].X = 50000
+	bad.Links = append([]chainLink(nil), def.Links...)
+	bad.Links[0].Scenarios = []string{"nope"}
+	if errs := strings.Join(validateChain(&bad, u.userID), "\n"); !strings.Contains(errs, "x and y") || !strings.Contains(errs, "unknown scenario") {
+		t.Fatalf("an out-of-range position validated: %s", errs)
+	}
+	u.jsonDo("DELETE", base, nil, nil)
+}
