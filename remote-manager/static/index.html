@@ -18792,12 +18792,14 @@ window.addEventListener('hashchange', handleShareFragmentNavigation);
 
 window.addEventListener('load', async () => {
   const shareToken = shareTokenFromLocation();
+  let validatedShareID = 0;
   if (shareToken) {
     // Validate the bearer link with the server before entering the share UI.
     // This also exchanges it for the per-share HttpOnly access cookie.
-    let validatedShareID;
     try { validatedShareID = await exchangeShareAccess(shareToken); }
-    catch (_) { checkAuth(); return; }
+    catch (_) { /* fall through to normal authentication */ }
+  }
+  if (validatedShareID) {
     isCollabMode = true;
     collabToken = shareToken;
 
