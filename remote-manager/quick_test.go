@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http/httptest"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -163,14 +164,17 @@ func TestNetworkTools(t *testing.T) {
 	if dr.DNS == nil || len(dr.DNS.Addresses) == 0 {
 		t.Fatalf("dns: %+v", dr.DNS)
 	}
-	// commands on a server (real sh on the fake host): ping / traceroute answer, also when missing
-	h := startFakeHost(t, "ops", "ops-pass")
-	src := u.addConnection("ops-box", h.addr)
-	db.Exec(`UPDATE connections SET username='ops', password=? WHERE id=?`, encryptValue("ops-pass"), src)
-	for _, tool := range []string{"ping", "traceroute"} {
-		var out map[string]interface{}
-		if code := u.jsonDo("POST", "/api/nettools", map[string]interface{}{"tool": tool, "target": "127.0.0.1", "source_id": src}, &out); code != 200 || fmt.Sprint(out["output"]) == "" {
-			t.Fatalf("%s from a server: %d %v", tool, code, out)
+	// The fake SSH host runs POSIX sh and this assertion requires POSIX ping/
+	// traceroute flags; keep it on POSIX hosts while the API checks below run everywhere.
+	if runtime.GOOS != "windows" {
+		h := startFakeHost(t, "ops", "ops-pass")
+		src := u.addConnection("ops-box", h.addr)
+		db.Exec(`UPDATE connections SET username='ops', password=? WHERE id=?`, encryptValue("ops-pass"), src)
+		for _, tool := range []string{"ping", "traceroute"} {
+			var out map[string]interface{}
+			if code := u.jsonDo("POST", "/api/nettools", map[string]interface{}{"tool": tool, "target": "127.0.0.1", "source_id": src}, &out); code != 200 || fmt.Sprint(out["output"]) == "" {
+				t.Fatalf("%s from a server: %d %v", tool, code, out)
+			}
 		}
 	}
 	// validation, ownership, policy

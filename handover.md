@@ -409,3 +409,13 @@ Changed files: `remote-manager/nettools.go` and `remote-manager/v13146_nettools_
 Verification passed: `go test . -run '^TestHTTPNetToolRejectsURLCredentialsAndRedactsAuditTarget$' -count=1`; 20 gosec v2.29.0 scans with Go 1.26.9, all passing the merged baseline; `govulncheck ./...` (no reachable vulnerabilities; one unused dependency issue reported); and `git diff --check`. `staticcheck ./...` retains the pre-existing `mediumHostRootsUnix` U1000 warning. The broader `TestNetworkTools` failed in this Windows run when the fake SSH host's ping command exited 1; port, HTTP/TLS, and DNS checks had already passed earlier in that test. This is the existing Windows shell/platform test limitation recorded in the roadmap.
 
 Commit: `149b8e6` (`fix(nettools): redact credentials from audit targets`). Gitleaks v8.30.1 scanned `origin/main..HEAD` and found no leaks.
+
+## Completed package: make preview and network-tool tests portable on Windows
+
+The SSH/SFTP preview tests now send paths relative to the fake server's SFTP root instead of passing local absolute paths (which contain a Windows drive letter). The network-tools test continues to check WRM-side ports, HTTP/TLS, DNS, authorization, and validation on every platform; only its fake-SSH `sh`/POSIX `ping` and `traceroute` checks run on non-Windows hosts.
+
+Changed files: `remote-manager/preview_test.go` and `remote-manager/quick_test.go`.
+
+Verification passed on Windows: `go test . -run '^(TestRemotePreview|TestNetworkTools)' -count=1 -timeout 120s` from `remote-manager/`; and `git diff --check`. No production code changed. This validates the affected package tests on Windows; Linux CI still exercises the POSIX remote-command assertions.
+
+Next roadmap: continue the Windows CI sweep for remaining tests that assume POSIX paths or a POSIX shell (the audit already noted `TestAIAskModeApprovalEditAndInjection` and `TestGitCIPipeline`), then resume the MCP/addon compatibility follow-ups documented above. Keep each completed package and its verification recorded here and in the workspace handover copy.

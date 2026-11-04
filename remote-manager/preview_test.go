@@ -43,7 +43,9 @@ func TestRemotePreviewRangesTextAndPermissions(t *testing.T) {
 	id := u.addConnection("media", h.addr)
 	contents := strings.Repeat("0123456789", 100000)
 	writeFile(t, h.home+"/clip.mp4", contents)
-	endpoint := fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape(h.home+"/clip.mp4"))
+	// The fake SFTP server is rooted at h.home; API paths must be remote names,
+	// not local OS paths (which include a drive letter on Windows).
+	endpoint := fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape("clip.mp4"))
 	for _, tc := range []struct {
 		method, r string
 		code      int
@@ -58,7 +60,7 @@ func TestRemotePreviewRangesTextAndPermissions(t *testing.T) {
 		}
 	}
 	writeFile(t, h.home+"/page.html", "<script>window.top.pwned=true</script>"+strings.Repeat("x", remotePreviewTextMax))
-	textEndpoint := fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape(h.home+"/page.html"))
+	textEndpoint := fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape("page.html"))
 	res, b := previewRequest(t, u, "GET", textEndpoint+"&text=1", "")
 	var text remotePreviewInfo
 	json.Unmarshal(b, &text)
@@ -88,7 +90,7 @@ func TestRemotePreviewRangesTextAndPermissions(t *testing.T) {
 		t.Fatalf("observer preview: %d", res.StatusCode)
 	}
 	writeFile(t, h.home+"/unknown.exe", "data")
-	res, _ = previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape(h.home+"/unknown.exe")), "")
+	res, _ = previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape("unknown.exe")), "")
 	if res.StatusCode != 415 {
 		t.Fatal(res.StatusCode)
 	}
@@ -140,7 +142,7 @@ func TestRemotePreviewDetectsTextAndLanguages(t *testing.T) {
 	var info remotePreviewInfo
 	for _, tc := range cases {
 		writeFile(t, h.home+"/"+tc.name, tc.content)
-		endpoint := fmt.Sprintf("/api/remote/preview?id=%d&path=%s&metadata=1", id, url.QueryEscape(h.home+"/"+tc.name))
+		endpoint := fmt.Sprintf("/api/remote/preview?id=%d&path=%s&metadata=1", id, url.QueryEscape(tc.name))
 		res, b := previewRequest(t, u, "GET", endpoint, "")
 		info = remotePreviewInfo{}
 		json.Unmarshal(b, &info)
@@ -155,12 +157,12 @@ func TestRemotePreviewDetectsTextAndLanguages(t *testing.T) {
 		}
 	}
 	os.WriteFile(h.home+"/blob.custom", []byte{0, 1, 2, 3}, 0o644)
-	res, _ := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s&metadata=1", id, url.QueryEscape(h.home+"/blob.custom")), "")
+	res, _ := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s&metadata=1", id, url.QueryEscape("blob.custom")), "")
 	if res.StatusCode != 415 {
 		t.Fatalf("binary candidate: %d", res.StatusCode)
 	}
 	os.WriteFile(h.home+"/utf16.dat", []byte{0xFF, 0xFE, 'h', 0, 'i', 0}, 0o644)
-	res, b := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s&text=1", id, url.QueryEscape(h.home+"/utf16.dat")), "")
+	res, b := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s&text=1", id, url.QueryEscape("utf16.dat")), "")
 	info = remotePreviewInfo{}
 	json.Unmarshal(b, &info)
 	if res.StatusCode != 200 || info.Text != "hi" {
@@ -278,7 +280,7 @@ func TestRemotePreviewNoSpecialFiles(t *testing.T) {
 	u := newTestUser(t, srv, "preview-directory", false)
 	id := u.addConnection("files", h.addr)
 	os.Mkdir(h.home+"/directory.mp4", 0700)
-	res, _ := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape(h.home+"/directory.mp4")), "")
+	res, _ := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape("directory.mp4")), "")
 	if res.StatusCode != 502 {
 		t.Fatal(res.StatusCode)
 	}
@@ -291,7 +293,7 @@ func TestRemotePreviewPDFNativeViewerPolicy(t *testing.T) {
 	u := newTestUser(t, srv, "preview-pdf", false)
 	id := u.addConnection("documents", h.addr)
 	writeFile(t, h.home+"/document.pdf", "%PDF-1.4\n")
-	res, _ := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape(h.home+"/document.pdf")), "")
+	res, _ := previewRequest(t, u, "GET", fmt.Sprintf("/api/remote/preview?id=%d&path=%s", id, url.QueryEscape("document.pdf")), "")
 	if res.StatusCode != 200 || res.Header.Get("Content-Type") != "application/pdf" || res.Header.Get("X-Content-Type-Options") != "nosniff" {
 		t.Fatalf("PDF headers: %d %v", res.StatusCode, res.Header)
 	}
