@@ -16,8 +16,8 @@ import (
 //
 // A storage is an S3-compatible endpoint (Hetzner, DigitalOcean, AWS, MinIO, Backblaze) that
 // belongs to a user. It is deliberately not a Connection: it never reaches the terminal, the
-// tunnels, the jump hosts, the deploy code or the status monitor. The design lives in
-// docs/rfcs/0008-storages-s3.md and the work in docs/ROADMAP-STORAGES.md.
+// tunnels, the jump hosts, the deploy code or the status monitor. The operator guide is
+// docs/STORAGES.md.
 //
 // Capabilities are separate: reading is always allowed, saving an object needs allow_write,
 // adding a new object needs allow_upload and deleting needs allow_delete. They are enforced
@@ -26,8 +26,8 @@ import (
 const (
 	storageDefaultMaxObjectMB = 16
 	storageMaxObjectMB        = 128
-	storageDefaultEditKB      = 2
-	storageMaxEditKB          = 64
+	storageDefaultEditKB      = 2048 // 2 MB: a subtitle or a JSON configuration, not media
+	storageMaxEditKB          = 8192
 	storageMaxName            = 120
 	storageMaxKey             = 1024
 )

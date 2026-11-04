@@ -39,7 +39,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v13.14.11"
+var AppVersion = "v13.15.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -395,7 +395,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/credentials/", apiCredentialsHandler)
 	mux.HandleFunc("/api/proxies", apiProxiesHandler)
 	mux.HandleFunc("/api/proxies/", apiProxiesHandler)
-	// storages: S3-compatible object storage, a section of its own (docs 0008)
+	// storages: S3-compatible object storage, a section of its own (docs/STORAGES.md)
 	mux.HandleFunc("/api/storages", apiStoragesHandler)
 	mux.HandleFunc("/api/storages/", apiStoragesHandler)
 	mux.HandleFunc("/s3/", storageShareHandler)

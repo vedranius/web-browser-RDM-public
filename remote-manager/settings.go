@@ -218,7 +218,7 @@ var settingSpecs = []settingSpec{
 	{Key: "audit_retention_days", Default: "365", Kind: "int", Min: 7, Max: 3650},
 	// Object storage (Storages): a section of its own with S3 endpoints.
 	{Key: "storages_enabled", Default: "1", Kind: "bool"},
-	{Key: "storage_edit_kb", Default: "2", Kind: "int", Min: 1, Max: 64},
+	{Key: "storage_edit_kb", Default: "2048", Kind: "int", Min: 1, Max: 8192},
 	// Outbound targets for Git sources, NetBox, AI providers and OIDC (security.go). With
 	// public_only, private and loopback addresses are refused unless listed in
 	// egress_allow_hosts (names, addresses or CIDR blocks, comma separated).
