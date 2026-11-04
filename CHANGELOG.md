@@ -1,4 +1,6 @@
-## [Unreleased]
+## [14.1.0] - 2026-11-04
+
+Chains: live monitoring of a whole service chain, its live diagram and an AI builder, in one release. Everything is additive; upgrading from v14.0.0 keeps the database and the encryption key.
 
 ### Added
 
