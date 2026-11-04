@@ -299,6 +299,7 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - A chain may use only its owner's SSH connections and storages; this is checked when the chain is saved and again on every poll.
 - Configuration checks keep only the requested key. Keys that look like secrets are refused, and raw command output and file content are never stored.
 - DNS, TCP, HTTP and TLS checks run from WRM through the egress policy (checked at save and on every dial). HTTP redirects are not followed.
+- Diagram positions are cosmetic: `POST /api/chains/{id}/layout` writes only `x`/`y` of nodes the chain already has, is bounded by ±10000, is owner-checked and is audited (`chain.layout`). The starter template (`GET /api/chains/template`) is read-only and contains only the caller's own connection and storage names.
 - `chains_enabled=0` stops the API and the background checks.
 
 ## Storages (v14.0.0)

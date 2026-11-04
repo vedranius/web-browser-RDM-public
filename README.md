@@ -2063,11 +2063,15 @@ The search box at the top of every file manager:
 
 **Chains** (top bar) watches a whole working system instead of single servers. Examples are ingest → transcoding → content → CDN with a primary and a backup path, or an application with its database, storage and DNS.
 
-A chain is written as JSON in the Chains window:
+The window opens on a **live diagram**: servers as boxes, storages as buckets and outside endpoints as diamonds, with arrows for the data flow. A link is green when its check (or the node it reaches) is good, yellow at a warning and red when it fails; flows are animated, also during a normal poll. The layout is computed from the links and ordered so links stay short, and you can **drag a node** to place it yourself — the position is saved with the chain, and *Auto layout* recomputes it. Click a node or a check to see its state, target, value, detail and error next to the diagram; click a timeline entry to jump to it. Zoom in, out and fit are in the canvas corner, and *Check now* runs the whole chain immediately.
+
+A chain is stored as JSON (and edited with the JSON editor in the same window):
 - **Nodes:** saved SSH connections (`kind: server`, `conn_id`), storages from [Storages](#storages-s3) (`kind: storage`, `storage_id`), or outside endpoints (`kind: external`).
 - **Checks:** taken from a fixed catalog.
 - **Links:** data, read, write, failover or dependency between nodes, optionally coloured by a check.
 - **Scenarios:** ordered rules over the check results. The first scenario that matches is active; an empty rule `{}` is the fallback.
+
+*New chain* starts from a **generic starter template** built from your first SSH servers and storage: a primary and a backup app node, a bucket, an outside endpoint with a certificate check, links, and Normal / Backup / Degraded scenarios. Without saved connections it uses outside endpoints only, so it is valid from the start and you edit it from there.
 
 WRM checks each chain in the background with the connections it already has. All checks of a server run in one SSH round trip, and nothing is installed on the server.
 
@@ -2095,7 +2099,7 @@ Rules use `all`, `any`, `{"check":"id","field":"value|ok","op":"==|!=|in|contain
 
 A change counts only after it is seen `confirm` times in a row (default 2). Every change is kept in the timeline. Notifications go out for a scenario change (`chain.scenario_changed`), a check that turns good or bad (`chain.check_changed`), and a server that goes down or comes back (`chain.node_down`, `chain.node_up`); subscribe to them in *Settings → Notifications*.
 
-A chain may use only its owner's connections and storages. Configuration keys that look like secrets are refused, and only the extracted values are kept. The live diagram (step 2) and building a chain with the AI assistant (step 3) are on the [roadmap](ROADMAP.md).
+A chain may use only its owner's connections and storages. Configuration keys that look like secrets are refused, and only the extracted values are kept. Moving a node only writes its coordinates (`POST /api/chains/{id}/layout`); building a chain with the AI assistant (step 3) is on the [roadmap](ROADMAP.md).
 
 ### Storages (S3)
 
@@ -3088,8 +3092,8 @@ Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only
 | `GET /api/proxies` | `{proxies: [...], can_define, container}`: proxies you own, are granted or are shared with everybody (no secrets; `url`, `warning: docker_loopback`) |
 | `POST /api/proxies` · `PUT / DELETE /api/proxies/{id}` | `{name, kind: socks5\|socks4\|http\|wrm_tunnel, host, port, username, password, credential_id, remote_dns, tunnel_id, description, grants, shared_all}`; empty `password` on PUT keeps it (owner only; policy `proxies`); DELETE is refused (409) while connections or folders use it |
 | `GET / POST /api/chains` · `GET / PUT / DELETE /api/chains/{id}` | chains of the signed-in user: a list with status, or `{definition, enabled}`; an invalid definition answers 400 with `errors` (every problem with its path) |
-| `POST /api/chains/{id}/check` · `GET /api/chains/{id}/timeline` · `GET /api/chains/{id}/export` | check now (the new state), the recorded changes, the definition as a JSON file |
-| `POST /api/chains/validate` · `GET /api/chains/catalog` | validate a definition without saving; the check types, operators, link kinds and formats |
+| `POST /api/chains/{id}/check` · `GET /api/chains/{id}/timeline?limit=` · `GET /api/chains/{id}/export` | check now (the new state), the recorded changes (1–500, default 300), the definition as a JSON file |
+| `POST /api/chains/{id}/layout` · `GET /api/chains/template` · `POST /api/chains/validate` · `GET /api/chains/catalog` | save diagram positions (`{positions:{node:{x,y}}}`); the generic starter template; validate a definition without saving; the check types, operators, link kinds and formats |
 | `GET / POST /api/storages` · `GET / PUT / DELETE /api/storages/{id}` · `POST /api/storages/{id}/test` | storages (secrets never returned; policy `storages_enabled`) |
 | `GET /api/storages/{id}/objects?prefix=&cursor=` · `GET / HEAD / PUT / DELETE /api/storages/{id}/object?key=` | list and objects inside the storage prefix (Range, `?inline=1`); DELETE needs `allow_delete` and `X-WRM-Confirm: delete` |
 | `GET / PUT /api/storages/{id}/text?key=` · `POST /api/storages/{id}/dir?prefix=` · `POST /api/storages/{id}/move` | editor `{content, etag, bom, crlf}` with `If-Match` (409 on a stale write), new folder, rename `{from, to, overwrite}` |
@@ -3508,7 +3512,7 @@ remote-manager/
   medium_config_git_test.go deploy-config from Git with fake GitLab / GitHub / Gitea: pull, local changes, refused pull, push with conflict check and validation, discard, stop
   medium_build_user_test.go build user checks (root, missing account, readable WRM key) and a real build as nobody with a clean environment
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
-  chains_test.go       Chains: script answers and value extraction (INI, JSON, YAML, env, kv, regex), rules and scenarios, change confirmation, validation (ownership, secrets, egress), the API end to end with HTTP, TCP, storage and an unreachable server, the node script in a real shell
+  chains_test.go       Chains: script answers and value extraction (INI, JSON, YAML, env, kv, regex), rules and scenarios, change confirmation, validation (ownership, secrets, egress), the API end to end with HTTP, TCP, storage and an unreachable server, the node script in a real shell, the starter template, saved diagram positions and the timeline limit
   v1400_storage_escape_test.go   Storages: share page escaping and quoted download file names
   v13152_s3stub_test.go … v13154_storage_share_test.go  Storages: S3 stub with an independent SigV4 check, CRUD, prefix confinement, capabilities, delete gate, editor (BOM/CRLF, 409), Range, status, export/import, MCP tools, share links
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)

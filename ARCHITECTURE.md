@@ -14,18 +14,20 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. Security checks (v12.6.20): `security.yml` (govulncheck, staticcheck, gosec against `.github/security/gosec-baseline.json`, gitleaks, actionlint/zizmor, dependency review), `codeql.yml`, `scorecard.yml`, `claude-security-review.yml`, Trivy in the Docker job, Dependabot; `nightly.yml` (v12.6.21: Go fuzzing of the import parsers, OWASP ZAP). Releases: `SHA256SUMS.txt` signed with ed25519 (`releasesign.go`, checked by the self-update), CycloneDX SBOM, build provenance; all actions pinned to commit SHAs with read-only tokens by default. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
-## Chains (unreleased, step 1)
+## Chains (unreleased, steps 1–2)
 
 `chains.go` holds:
-- the model (`chainDef`: nodes, checks, links, scenarios) and its validation (`validateChain`), which returns every problem with a path;
-- the rules (`chainCond`: fixed operators, no expression language), the change detection (`chainApply`: a key changes after `confirm` identical observations, unknown keys are adopted silently), the poller (`chainsLoop` every 15 s, `pollChain`), the notifications and the API.
+- the model (`chainDef`: nodes, checks, links, scenarios, and a node's saved diagram position `x`/`y`) and its validation (`validateChain`), which returns every problem with a path and bounds positions;
+- the rules (`chainCond`: fixed operators, no expression language), the change detection (`chainApply`: a key changes after `confirm` identical observations, unknown keys are adopted silently), the poller (`chainsLoop` every 15 s, `pollChain`), the notifications and the API;
+- the starter template (`chainTemplate`): the owner's first SSH connection as the app node, a second one as the backup path, the first storage as a bucket, an outside endpoint with a TLS check, links and Normal / Backup / Degraded scenarios; without connections it uses outside endpoints only. `GET /api/chains/template` returns it and it always validates;
+- `POST /api/chains/{id}/layout`, which writes only node coordinates (bounded, owner-checked, audited as `chain.layout`) so a drag does not revalidate the whole definition or reset pending change detection.
 
 `chains_checks.go` is the check catalog:
 - **Server checks** run in one SSH session per node through `monitorSSHCommandInput`, sharing `monitorSlots` with monitoring. The script (`chainNodeScript`) is fixed text run with `sh -c`, and the checks reach it on standard input as `id<TAB>type<TAB>target` lines, so no parameter is part of a command line.
 - **Answers** are `@id value` lines, base64 for file content, interpreted in Go. Configuration values are extracted in Go and only the requested key is kept.
 - **WRM-side checks** (DNS, TCP, HTTP, TLS) dial through `egressDialContext`; storage checks use the Storages client.
 
-Tables: `chains` (definition, latest state, confirmed state) and `chain_samples` (the timeline, at most 2000 rows per chain). The UI is `static/chains.js`, loaded on demand.
+Tables: `chains` (definition, latest state, confirmed state) and `chain_samples` (the timeline, at most 2000 rows per chain). The UI is `static/chains.js`, loaded on demand: an SVG diagram with a layered automatic layout (rank by longest path from the roots, then a barycentre pass per column) and saved positions, server boxes, storage buckets and outside-endpoint diamonds, animated link flows coloured by the link's check or the target node, zoom, a details panel for a clicked node or check, the timeline and a JSON editor. Nothing in the diagram is HTML built from a definition: labels and values are set as text or DOM nodes.
 
 ## Storages (v14.0.0)
 
