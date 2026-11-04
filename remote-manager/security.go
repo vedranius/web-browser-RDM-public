@@ -607,13 +607,41 @@ func isPublicAPIPath(p string) bool {
 	return false
 }
 
+// shareCookieGatePath is deliberately an exact list. These handlers perform their own
+// per-connection share-role authorization; no other protected API may use a share cookie
+// as a replacement for an account session.
+func shareCookieGatePath(p string) bool {
+	switch p {
+	case "/api/remote/list", "/api/remote/list-recursive", "/api/remote/download", "/api/remote/preview",
+		"/api/remote/download-dir", "/api/remote/upload", "/api/remote/mkdir", "/api/remote/chmod",
+		"/api/remote/delete", "/api/remote/rename", "/api/remote/transfer", "/api/remote/search",
+		"/ws/ssh", "/ws/desktop":
+		return true
+	default:
+		return false
+	}
+}
+
+func validShareCookieRequest(r *http.Request) bool {
+	id, err := strconv.Atoi(strings.TrimSpace(r.URL.Query().Get("share_id")))
+	if err != nil || id <= 0 {
+		return false
+	}
+	if _, err := r.Cookie(shareAccessCookieName(id)); err != nil {
+		return false
+	}
+	share, err := getShareByID(id)
+	return err == nil && validShareAccessCookie(r, share)
+}
+
 // authGate is the deny-by-default authorization layer. A request to /api or /ws without a
-// valid session is refused before any handler runs, unless its path is listed above.
+// valid session is refused before any handler runs, unless its path is listed above or is
+// an exact connection route with a valid per-share cookie for its share_id.
 func authGate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := r.URL.Path
 		if (strings.HasPrefix(p, "/api/") || strings.HasPrefix(p, "/ws/")) && !isPublicAPIPath(p) {
-			if _, err := lookupSession(r); err != nil {
+			if _, err := lookupSession(r); err != nil && !(shareCookieGatePath(p) && validShareCookieRequest(r)) {
 				jsonError(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}

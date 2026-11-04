@@ -48,6 +48,7 @@
   "G120 git_medium.go if e := r.ParseMultipartForm(mediumArchiveLimit); e != nil {",
   "G120 git_medium_setup.go if err := r.ParseMultipartForm(64 << 20); err != nil {",
   "G124 security.go http.SetCookie(w, &http.Cookie{",
+  "G124 shares.go http.SetCookie(w, &http.Cookie{Name: shareAccessCookieName(share.ID), Value: shareAccessCookieValue(share, expires), Path: \"/\", MaxAge: int(shareAccessCookieTTL.Seconds()), HttpOnly: true, Secure: isHTTPS(r), SameSite: http.SameSiteStrictMode})",
   "G124 shares.go r.AddCookie(&http.Cookie{Name: guestCookieName, Value: raw})",
   "G202 addons_v2.go res, err := tx.Exec(`INSERT INTO addon_instances (` + cols + `) SELECT ` + cols + ` FROM ` + q)",
   "G202 main.go db.Exec(\"DELETE FROM connections WHERE id IN (\"+ph+\") AND user_id=?\", append(args, userID)...)",
