@@ -1,3 +1,24 @@
+## [Unreleased]
+
+### Added
+
+- **Chains, step 1: the engine.** A chain is the set of servers, storages and outside endpoints that form one working system. It holds nodes, checks per node from a fixed read-only catalog, links between nodes, and scenarios. Scenarios are ordered rules; the first one that matches is the active scenario (for example "primary" or "ingest on backup").
+- **Check types:**
+  - checks on a server, all in one SSH round trip per node: systemd unit, systemd timer, Docker container, process count, listening port, file and its age, file count in a directory, one value from a configuration file (INI, JSON, YAML, env, `key = value` or a regular expression), mount point (rw/ro), a crontab line (enabled, commented out or missing), and the server's WRM monitoring state;
+  - checks run from WRM through the egress policy: DNS answer (optionally against a chosen resolver), TCP port, HTTP status or a JSON value, TLS days left;
+  - storage checks: the bucket answers, and the newest object under a prefix.
+- Rules use a fixed operator set (`==`, `!=`, `in`, `contains`, `exists`, `all`, `any`).
+- **Background checks.** Each chain is checked every `interval_s` (default `chain_interval_s` = 30 s, minimum 15 s), using the same concurrency slots as monitoring. A change counts only after it is seen `confirm` times in a row (default 2), so a flapping value does not notify.
+- **Notifications and timeline.** Changes are recorded in a timeline. The new events `chain.scenario_changed`, `chain.check_changed` (a check turns good or bad), `chain.node_down` and `chain.node_up` go to the Workboard and to the subscribed channels. `chain_changed` on `/ws/events` refreshes an open window.
+- **Chains window** (top bar): list with status and active scenario, details per node and check, links, scenarios, timeline, *Check now*, and a JSON editor with server-side validation (every problem with its path), a reference of your connections, storages and check types, plus import and export.
+- **API:** `/api/chains`, `/api/chains/{id}`, `/check`, `/timeline`, `/export`, `/api/chains/validate` and `/api/chains/catalog`. Audit entries `chain.created`, `chain.updated`, `chain.deleted` and `chain.checked`. Settings `chains_enabled` and `chain_interval_s`.
+
+### Security
+
+- Nothing is installed on a server, and a chain can never run a command. The check script is fixed text, and every parameter reaches it on standard input as data.
+- A chain may use only its owner's SSH connections and storages.
+- Configuration checks keep only the requested key, and keys that look like secrets (password, token, private, credential, API key …) are refused. Raw output is never stored.
+
 ## [14.0.0] - 2026-11-04
 
 A major release: **Storages (S3)** as a new part of the product, a release review of it with

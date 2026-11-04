@@ -219,6 +219,9 @@ var settingSpecs = []settingSpec{
 	// Object storage (Storages): a section of its own with S3 endpoints.
 	{Key: "storages_enabled", Default: "1", Kind: "bool"},
 	{Key: "storage_edit_kb", Default: "2048", Kind: "int", Min: 1, Max: 8192},
+	// Chains: live monitoring of a service chain; the interval is the default for a chain without one.
+	{Key: "chains_enabled", Default: "1", Kind: "bool"},
+	{Key: "chain_interval_s", Default: "30", Kind: "int", Min: 15, Max: 3600},
 	// Outbound targets for Git sources, NetBox, AI providers and OIDC (security.go). With
 	// public_only, private and loopback addresses are refused unless listed in
 	// egress_allow_hosts (names, addresses or CIDR blocks, comma separated).

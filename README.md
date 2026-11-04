@@ -306,6 +306,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Text editor](#text-editor)
    - [Server-to-server transfer](#server-to-server-transfer)
    - [Storages (S3)](#storages-s3)
+   - [Chains: live service-chain monitoring](#chains-live-service-chain-monitoring)
    - [Workspace sessions](#workspace-sessions)
    - [Clipboard panel](#clipboard-panel)
    - [Sharing: members, roles & links](#sharing-members-roles--links)
@@ -2058,6 +2059,44 @@ The search box at the top of every file manager:
 - **Saving** (`Ctrl+S`): *Review before saving* (on by default) shows a diff of your changes first. Before writing, WRM reads the file again: if someone else, a service or the AI assistant changed it since you opened it, you choose to overwrite or to see the differences. **± Changes** shows your changes at any time and **⟲ Reload** reads the file again. Line endings (LF or CRLF) and UTF-8 are kept.
 - **🤖 AI assistant:** a panel next to the file that reviews it (bugs, security problems, wrong configuration), explains it and proposes changes. Every change is a diff that waits for your approval; after it the editor reloads the file, or warns if you have unsaved changes. **Ask AI about the selection** sends the selected lines. Its chats are kept per file, with title, date and time, and can be continued.
 
+### Chains: live service-chain monitoring
+
+**Chains** (top bar) watches a whole working system instead of single servers. Examples are ingest → transcoding → content → CDN with a primary and a backup path, or an application with its database, storage and DNS.
+
+A chain is written as JSON in the Chains window:
+- **Nodes:** saved SSH connections (`kind: server`, `conn_id`), storages from [Storages](#storages-s3) (`kind: storage`, `storage_id`), or outside endpoints (`kind: external`).
+- **Checks:** taken from a fixed catalog.
+- **Links:** data, read, write, failover or dependency between nodes, optionally coloured by a check.
+- **Scenarios:** ordered rules over the check results. The first scenario that matches is active; an empty rule `{}` is the fallback.
+
+WRM checks each chain in the background with the connections it already has. All checks of a server run in one SSH round trip, and nothing is installed on the server.
+
+| Type | Runs | What it reports |
+|---|---|---|
+| `systemd`, `timer` | server | `systemctl is-active` of `target` |
+| `docker` | server | container state (`running`, `exited`, `missing`) |
+| `process` | server | number of processes matching `target` |
+| `port` | server | `listening` / `closed` for `port` |
+| `file` | server | `present` / `missing` / `stale` (`max_age_s`), with size and age |
+| `dir_count` | server | number of files in the directory |
+| `config` | server | one value: `format` `ini`, `json`, `yaml`, `env`, `kv` or `regex`, `key` such as `storage.recordings` or `a.b.0.c` |
+| `mount` | server | `rw` / `ro` / `missing`, with source and file system |
+| `cron` | server | a crontab line with `target` is `enabled`, `disabled` (commented out) or `missing` |
+| `monitor` | server | the server's state in WRM monitoring |
+| `dns` | WRM | sorted answers for `target` (`record`, optional `resolver`) |
+| `tcp` | WRM | `open` / `closed` for `host:port` |
+| `http` | WRM | status code, or a JSON value with `key` |
+| `tls` | WRM | days until the certificate expires (`warn_days`, default 14) |
+| `storage` | WRM | the bucket answers; with `prefix`, the newest object and its age |
+
+Each check has a default meaning of "OK" (for example `active`, `running`, `listening`, HTTP 2xx/3xx). An `expect` (`{"op":"==","value":"s3"}`) can replace it.
+
+Rules use `all`, `any`, `{"check":"id","field":"value|ok","op":"==|!=|in|contains|exists","value":"…"}` and `{"node":"id","op":"==","value":"up"}`.
+
+A change counts only after it is seen `confirm` times in a row (default 2). Every change is kept in the timeline. Notifications go out for a scenario change (`chain.scenario_changed`), a check that turns good or bad (`chain.check_changed`), and a server that goes down or comes back (`chain.node_down`, `chain.node_up`); subscribe to them in *Settings → Notifications*.
+
+A chain may use only its owner's connections and storages. Configuration keys that look like secrets are refused, and only the extracted values are kept. The live diagram (step 2) and building a chain with the AI assistant (step 3) are on the [roadmap](ROADMAP.md).
+
 ### Storages (S3)
 
 **Storages** (top bar) holds S3-compatible buckets next to the servers. A storage is not a connection: it never reaches the terminal, tunnels, jump hosts or the deploy code. Each storage has an endpoint, region, bucket, a **prefix** that every key is resolved inside, an access key whose secret is encrypted at rest and never returned, an optional SHA-256 certificate fingerprint for a self-signed endpoint, and switches for write, upload and delete plus a size limit. *Test connection* checks the endpoint, bucket and key before saving; the endpoint must pass the egress policy, checked again on every connection.
@@ -2497,6 +2536,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | `ice_servers` | Google + Cloudflare STUN | additional STUN/TURN servers (JSON) |
 | `audit_enabled` | `1` | record security events (administrator actions are always recorded). Also `AUDIT_ENABLED` |
 | `storages_enabled` | `1` | the Storages section and its API (kill switch) |
+| `chains_enabled` | `1` | the Chains section, its API and its background checks (kill switch) |
+| `chain_interval_s` | `30` | default check interval of a chain without its own `interval_s` (15–3600 s) |
 | `storage_edit_kb` | `2048` | largest text object the storage editor (and the AI tools) open, in KB (1–8192) |
 | `audit_retention_days` | `365` | how long audit log, file transfers and chat history are kept (minimum 7) |
 | `file_edit_history` | `1` | keep every file edit with its diff (*Admin → File edits*) |
@@ -3046,6 +3087,9 @@ Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only
 |---|---|
 | `GET /api/proxies` | `{proxies: [...], can_define, container}`: proxies you own, are granted or are shared with everybody (no secrets; `url`, `warning: docker_loopback`) |
 | `POST /api/proxies` · `PUT / DELETE /api/proxies/{id}` | `{name, kind: socks5\|socks4\|http\|wrm_tunnel, host, port, username, password, credential_id, remote_dns, tunnel_id, description, grants, shared_all}`; empty `password` on PUT keeps it (owner only; policy `proxies`); DELETE is refused (409) while connections or folders use it |
+| `GET / POST /api/chains` · `GET / PUT / DELETE /api/chains/{id}` | chains of the signed-in user: a list with status, or `{definition, enabled}`; an invalid definition answers 400 with `errors` (every problem with its path) |
+| `POST /api/chains/{id}/check` · `GET /api/chains/{id}/timeline` · `GET /api/chains/{id}/export` | check now (the new state), the recorded changes, the definition as a JSON file |
+| `POST /api/chains/validate` · `GET /api/chains/catalog` | validate a definition without saving; the check types, operators, link kinds and formats |
 | `GET / POST /api/storages` · `GET / PUT / DELETE /api/storages/{id}` · `POST /api/storages/{id}/test` | storages (secrets never returned; policy `storages_enabled`) |
 | `GET /api/storages/{id}/objects?prefix=&cursor=` · `GET / HEAD / PUT / DELETE /api/storages/{id}/object?key=` | list and objects inside the storage prefix (Range, `?inline=1`); DELETE needs `allow_delete` and `X-WRM-Confirm: delete` |
 | `GET / PUT /api/storages/{id}/text?key=` · `POST /api/storages/{id}/dir?prefix=` · `POST /api/storages/{id}/move` | editor `{content, etag, bom, crlf}` with `If-Match` (409 on a stale write), new folder, rename `{from, to, overwrite}` |
@@ -3464,6 +3508,7 @@ remote-manager/
   medium_config_git_test.go deploy-config from Git with fake GitLab / GitHub / Gitea: pull, local changes, refused pull, push with conflict check and validation, discard, stop
   medium_build_user_test.go build user checks (root, missing account, readable WRM key) and a real build as nobody with a clean environment
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
+  chains_test.go       Chains: script answers and value extraction (INI, JSON, YAML, env, kv, regex), rules and scenarios, change confirmation, validation (ownership, secrets, egress), the API end to end with HTTP, TCP, storage and an unreachable server, the node script in a real shell
   v1400_storage_escape_test.go   Storages: share page escaping and quoted download file names
   v13152_s3stub_test.go … v13154_storage_share_test.go  Storages: S3 stub with an independent SigV4 check, CRUD, prefix confinement, capabilities, delete gate, editor (BOM/CRLF, 409), Range, status, export/import, MCP tools, share links
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)

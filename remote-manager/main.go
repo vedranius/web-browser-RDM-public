@@ -399,6 +399,9 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/storages", apiStoragesHandler)
 	mux.HandleFunc("/api/storages/", apiStoragesHandler)
 	mux.HandleFunc("/s3/", storageShareHandler)
+	// chains: live monitoring of a service chain (chains.go)
+	mux.HandleFunc("/api/chains", apiChainsHandler)
+	mux.HandleFunc("/api/chains/", apiChainsHandler)
 	mux.HandleFunc("/api/snippets", apiSnippetsHandler)
 	mux.HandleFunc("/api/me/ui/", apiUserUIHandler)
 	mux.HandleFunc("/api/me/events", apiUserEventsHandler)
@@ -627,6 +630,7 @@ func serve(stop <-chan struct{}) int {
 	go opencodeCleanup()
 	go guacdAutoStartLoop()
 	go storageStatusLoop()
+	go chainsLoop()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -1116,6 +1120,10 @@ func initDB() {
 		"id", "user_id", "name", "kind", "endpoint", "region", "bucket", "prefix", "path_style",
 		"access_key", "secret", "ca_fingerprint", "sse", "allow_write", "allow_delete", "allow_upload",
 		"max_object_mb", "created_at", "updated_at")
+	ensureTable("chains", chainSchema,
+		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
+	ensureTable("chain_samples", chainSampleSchema,
+		"id", "chain_id", "at", "kind", "subject", "old_value", "new_value", "ok")
 	ensureTable("storage_shares", storageShareSchema,
 		"id", "storage_id", "token_hash", "prefix", "can_write", "can_delete", "expires_at", "created_by", "created_at")
 	ensureTable("snippets", `CREATE TABLE IF NOT EXISTS snippets (

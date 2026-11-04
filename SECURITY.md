@@ -293,6 +293,14 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - Chat titles are generated with no tools from the first question and answer (both already redacted); continuing a chat sends the earlier, redacted transcript of the same user to the provider again. Thinking summaries are redacted and stored like other transcript entries.
 - The editor checks the file on the server before it writes and asks before overwriting a newer version.
 
+## Chains (unreleased)
+
+- A chain cannot run commands. Checks come from a fixed catalog, the server script is fixed text, and parameters are validated (unit and container names by pattern, absolute paths, no control characters). They reach the script on standard input as data.
+- A chain may use only its owner's SSH connections and storages; this is checked when the chain is saved and again on every poll.
+- Configuration checks keep only the requested key. Keys that look like secrets are refused, and raw command output and file content are never stored.
+- DNS, TCP, HTTP and TLS checks run from WRM through the egress policy (checked at save and on every dial). HTTP redirects are not followed.
+- `chains_enabled=0` stops the API and the background checks.
+
 ## Storages (v14.0.0)
 
 - Secrets are encrypted with the installation key and never returned, logged or exported without an explicit export with secrets.
