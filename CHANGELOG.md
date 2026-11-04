@@ -1,3 +1,23 @@
+## [13.14.11] - 2026-11-04
+
+### Security
+
+- **Saved connection credentials stay bound to their original destination.** Connection tests no longer reuse stored passwords or keys when the tested host, protocol, or route changes.
+- **Share bearer tokens stay out of new request URLs.** New share links exchange a fragment token for a per-share HttpOnly cookie; cookie access is restricted to the intended remote routes and exact WebSocket origin. Legacy links remain supported.
+- **Approval and authentication checks are revalidated.** AI approvals are checked against current policy immediately before execution; MFA checks are consumed atomically; MCP OAuth consent requires explicit initiation confirmation and grant edits require step-up authentication.
+- **Outbound requests and addon communication are more tightly bounded.** Tunnel and service clients apply resolved-address egress rules, redirects stay on the intended origin, addon recovery capabilities are one-time, and v2 addon panels use a private message channel.
+- **AI destructive-command and network-tool safeguards are stronger.** Windows recursive-delete bypasses are blocked, auto-mode output paths are checked, and HTTP network checks reject embedded credentials and redact URL secrets from audit logs.
+
+### Added
+
+- **MCP reconnects after a WRM service restart** using the saved grant, without sending Claude through sign-in and server selection again. The new UI also has **Select all** in server grant and OAuth consent lists, with individual servers still editable.
+- **Persistent desktop approval notifications** alert users to pending AI approvals and focus the matching WRM approval when selected.
+
+### Fixed
+
+- Remote file, tunnel, session and folder actions report failures instead of silently appearing to succeed; appearance synchronization reports and retries transient failures.
+- Windows preview fixtures now use SFTP-relative paths. Windows-only fake-host tests identify their POSIX shell requirements explicitly.
+
 ## [13.14.10] - 2026-10-29
 
 ### Fixed

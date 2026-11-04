@@ -1,6 +1,6 @@
 # WRM Pro public audit handover
 
-**Updated:** 2026-10-30
+**Updated:** 2026-11-04
 **Repository:** `vedranius/web-browser-RDM-public`
 **Base:** `main` at `v13.14.10` (`8c13b6b`)
 **Working branch:** `fix/conntest-credential-target-guard`
@@ -439,3 +439,11 @@ The select-all control is already present in the MCP token form, OAuth consent f
 Local read-only inspection on 2026-11-04 identified the cause. The service listening on localhost:8080 runs `wrm-pro-v12.1.0-windows-amd64.exe`; its configured `DB_PATH` points to `remote_manager.db` in the persistent service work directory, and that database file is present. The Claude plugin cache runs bridge v1.2.0, and the user's shared `~/.wrm/wrm-mcp.js` bridge is v13.13.0; neither installed bridge contains `reinitializeWRM`. The saved `~/.wrm/mcp.json` exists, points to localhost, and its grant is still valid until 2026-12-04. So the observed reauthentication is not explained by token expiry or a missing config file: WRM restarts invalidate its in-memory MCP session, while the installed old bridge cannot recover that session and prompts Claude to connect again. The fresh OAuth consent then asks for server selection again. This branch's restart recovery is commit `230345c` (2026-10-30); the select-all feature is `771d1da` (2026-10-30), and the current branch builds WRM v13.14.10 / Claude plugin 1.2.1.
 
 No local service, plugin cache, token, or database was changed. Next roadmap: prepare and review an update from this branch for the local WRM executable and Claude plugin/bridge, then install it only after explicit user authorization; separately improve the shared fake SSH fixture so Windows CI can run AI/MCP and Git deployment integration tests instead of skipping/failing them.
+
+## Release preparation: v13.14.11
+
+Prepared a patch release containing the pushed branch changes. Version metadata is synchronized across `remote-manager/main.go`, `.github/workflows/build.yml`, `server.json`, Docker Compose, `remote-manager/build-all.sh`, README, changelog and release notes. The Claude bridge fix is now included in the actual packaged plugin bundle: `pluginMCPBVersion` and `plugin.json` are v1.2.2, and `server/wrm.mcpb` was regenerated from the current bridge source. This corrects the stale packaged-bundle gap found during release preparation.
+
+Checks passed locally: `go vet ./...`; Windows build and `-version` check for v13.14.11; `TestV13130PluginBundle` while regenerating the package; 19 focused Node tests for MCP restart recovery, select-all, addon channels, UI errors, share URLs and approval notifications; and Gitleaks. Full Windows `go test ./...` is not a valid release gate here: the repository's Build workflow runs the full suite on Linux, while Windows CI runs vet/build; the manual Windows suite still fails across POSIX fake-host tests as recorded above.
+
+Next: open a PR to run the Linux Build and security workflows, merge to `main` when required checks pass, then verify the main push's automatic v13.14.11 tag, build and published release. Do not install the release to the user's local service as part of this publication task.
