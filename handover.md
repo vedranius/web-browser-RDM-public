@@ -456,8 +456,12 @@ CodeQL also flags the configurable `ai_opencode_registry` URL at `http.Client.Do
 
 The targeted Go egress/OpenCode/share-access tests pass (`go test ./... -run 'Test(OpenCode|V13150|Egress|ShareAccess)' -count=1` from `remote-manager/`), as do `node tools/check-ui.js`, `node --check remote-manager/mcpb/server/index.js`, and `git diff --check`. PR #158 will use the final handover commit as its head, with CodeQL and required workflow checks started on PR creation. Wait for the full required workflow set before merging.
 
-## Release publication follow-up (2026-11-04)
+## Release publication complete (2026-11-04)
 
-PR #158 has been merged to `main` at `ed2dc9c`, and tag `v13.14.11` points to that commit. The main-branch Build, Security, CodeQL, and OpenSSF Scorecard checks passed. The first tag build completed its platform and Docker builds, but release creation failed because `RELEASE_NOTES.md` included the full changelog (126,367 bytes), exceeding GitHub's 125,000-character release-body limit. The release was not published.
+PR #158 was merged to `main` at `ed2dc9c`. The main build and security workflows passed. GitHub initially rejected the release because the notes included the full changelog; `RELEASE_NOTES.md` was shortened in commit `d762c80`, which is the commit targeted by tag `v13.14.11`.
 
-`RELEASE_NOTES.md` is now reduced to concise v13.14.11 notes. Next: push this correction to `main`, move the still-unpublished `v13.14.11` tag to that exact main commit, run the tag workflow again, and confirm the published release contains all expected assets. Do not update the user's local WRM service as part of publication.
+Tag workflow `41832239965` completed successfully. GitHub release `v13.14.11` is published with 20 assets, including platform binaries, Linux AppImages, the Claude plugin bundle, SHA256 sums/signature, and CycloneDX SBOM. MCP Registry workflow `41837231284` also completed successfully.
+
+Release: https://github.com/vedranius/web-browser-RDM-public/releases/tag/v13.14.11
+
+The localhost WRM service was not updated as part of publishing.
