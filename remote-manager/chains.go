@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -255,6 +256,9 @@ func validateChain(d *chainDef, userID int) []string {
 		if len(n.Label) > 120 || len(n.Role) > 60 || chainHasControl(n.Label+n.Role) {
 			errs = append(errs, p+": label at most 120 and role at most 60 characters")
 		}
+		if !chainPositionOK(n.X) || !chainPositionOK(n.Y) {
+			errs = append(errs, p+": position must be between -10000 and 10000")
+		}
 		switch n.Kind {
 		case "server":
 			c, err := loadConnectionRaw(n.ConnID)
@@ -341,6 +345,77 @@ func validateChain(d *chainDef, userID int) []string {
 		errs = append(errs, validateChainCond(&sc.When, 0, checks, servers, p+".when", false)...)
 	}
 	return errs
+}
+
+// chainPositionOK bounds a saved diagram position: the UI may write any coordinate it likes,
+// but a definition must never carry NaN, infinities or absurd values.
+func chainPositionOK(v float64) bool {
+	return !math.IsNaN(v) && !math.IsInf(v, 0) && v >= -10000 && v <= 10000
+}
+
+// chainTemplate offers a starter chain that already makes sense: the owner's first SSH server
+// (and a second one as the backup path), a storage when there is one, and an outside endpoint
+// with a certificate check. It always validates, so the editor opens it as is.
+func chainTemplate(userID int) chainDef {
+	d := chainDef{Name: "New chain", Description: "Starter template: edit the nodes, checks and links to match your system.", IntervalS: 30, Confirm: 2}
+
+	var sshIDs []int
+	var sshNames []string
+	if rows, err := db.Query(`SELECT id, name FROM connections WHERE user_id=? ORDER BY name COLLATE NOCASE`, userID); err == nil {
+		for rows.Next() {
+			var id int
+			var name string
+			if rows.Scan(&id, &name) != nil {
+				continue
+			}
+			c, err := loadConnectionRaw(id)
+			if err == nil && c.UserID == userID && isSSHProtocol(c) {
+				sshIDs = append(sshIDs, id)
+				sshNames = append(sshNames, name)
+			}
+		}
+		rows.Close()
+	}
+	app := chainNode{ID: "app", Kind: "external", Label: "App", Role: "app"}
+	appCheck := chainCheck{ID: "app_dns", Node: "app", Type: "dns", Target: "app.example.com", Label: "DNS"}
+	if len(sshIDs) > 0 {
+		app = chainNode{ID: "app", Kind: "server", Label: sshNames[0], Role: "app", ConnID: sshIDs[0]}
+		appCheck = chainCheck{ID: "app_svc", Node: "app", Type: "systemd", Target: "app.service", Label: "Application service"}
+	}
+	d.Nodes = append(d.Nodes, app)
+	d.Checks = append(d.Checks, appCheck)
+	if len(sshIDs) > 1 {
+		d.Nodes = append(d.Nodes, chainNode{ID: "backup", Kind: "server", Label: sshNames[1], Role: "backup", ConnID: sshIDs[1]})
+		d.Checks = append(d.Checks, chainCheck{ID: "backup_svc", Node: "backup", Type: "systemd", Target: "app.service", Label: "Application service"})
+	}
+	d.Nodes = append(d.Nodes, chainNode{ID: "edge", Kind: "external", Label: "Edge", Role: "cdn"})
+	d.Checks = append(d.Checks, chainCheck{ID: "edge_tls", Node: "edge", Type: "tls", Target: "example.com", WarnDays: 14, Label: "Certificate"})
+	d.Links = append(d.Links, chainLink{From: "app", To: "edge", Kind: "data", Check: appCheck.ID})
+	if len(sshIDs) > 1 {
+		d.Links = append(d.Links, chainLink{From: "backup", To: "edge", Kind: "failover", Check: "backup_svc"})
+	}
+	var storageID int
+	var storageName string
+	db.QueryRow(`SELECT id, name FROM storages WHERE user_id=? ORDER BY name COLLATE NOCASE LIMIT 1`, userID).Scan(&storageID, &storageName)
+	if storageID > 0 {
+		d.Nodes = append(d.Nodes, chainNode{ID: "bucket", Kind: "storage", Label: storageName, Role: "storage", StorageID: storageID})
+		d.Checks = append(d.Checks, chainCheck{ID: "bucket_ok", Node: "bucket", Type: "storage", Label: "Bucket"})
+		d.Links = append(d.Links, chainLink{From: "app", To: "bucket", Kind: "write", Check: "bucket_ok"})
+	}
+	d.Scenarios = append(d.Scenarios, chainScenario{ID: "normal", Label: "Normal",
+		When: chainCond{All: []chainCond{
+			{Check: appCheck.ID, Field: "ok", Op: "==", Value: "true"},
+			{Check: "edge_tls", Field: "ok", Op: "==", Value: "true"},
+		}}})
+	if len(sshIDs) > 1 {
+		d.Scenarios = append(d.Scenarios, chainScenario{ID: "backup", Label: "Backup",
+			When: chainCond{All: []chainCond{
+				{Node: "app", Op: "==", Value: "down"},
+				{Node: "backup", Op: "==", Value: "up"},
+			}}})
+	}
+	d.Scenarios = append(d.Scenarios, chainScenario{ID: "degraded", Label: "Degraded", When: chainCond{}})
+	return d
 }
 
 func (d chainDef) interval() time.Duration {
@@ -911,6 +986,13 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 		errs := validateChain(&d, userID)
 		jsonOK(w, map[string]interface{}{"ok": len(errs) == 0, "errors": errs})
 		return
+	case "template":
+		userID, ok := requireAuth(w, r)
+		if !ok || !requireMethod(w, r, http.MethodGet) {
+			return
+		}
+		jsonOK(w, map[string]interface{}{"definition": chainTemplate(userID), "enabled": true})
+		return
 	}
 	parts := strings.Split(rest, "/")
 	id, err := strconv.Atoi(parts[0])
@@ -945,7 +1027,13 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 		auditLog(r, userID, "chain.checked", c.Def.Name, map[string]interface{}{"chain": c.ID})
 		jsonOK(w, chainView(got))
 	case "timeline":
-		rows, err := db.Query(`SELECT at, kind, subject, old_value, new_value, ok FROM chain_samples WHERE chain_id=? ORDER BY id DESC LIMIT 300`, c.ID)
+		limit := 300
+		if v := r.URL.Query().Get("limit"); v != "" {
+			if n, err := strconv.Atoi(v); err == nil && n >= 1 && n <= 500 {
+				limit = n
+			}
+		}
+		rows, err := db.Query(`SELECT at, kind, subject, old_value, new_value, ok FROM chain_samples WHERE chain_id=? ORDER BY id DESC LIMIT ?`, c.ID, limit)
 		if err != nil {
 			jsonError(w, "Server error", http.StatusInternalServerError)
 			return
@@ -966,9 +1054,62 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 		enc.Encode(map[string]interface{}{"definition": c.Def, "enabled": c.Enabled})
+	case "layout":
+		apiChainLayout(w, r, c, userID)
 	default:
 		jsonError(w, "Not found", http.StatusNotFound)
 	}
+}
+
+// apiChainLayout saves the diagram positions only. A whole PUT would revalidate every check and
+// drop the pending change detection on each drag; a position is cosmetic, so it stays separate.
+func apiChainLayout(w http.ResponseWriter, r *http.Request, c chainRow, userID int) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	var in struct {
+		Positions map[string]struct {
+			X float64 `json:"x"`
+			Y float64 `json:"y"`
+		} `json:"positions"`
+	}
+	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 32<<10))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&in); err != nil {
+		jsonError(w, "The positions are not valid JSON: "+truncateStr(err.Error(), 200), http.StatusBadRequest)
+		return
+	}
+	if len(in.Positions) > chainMaxNodes {
+		jsonError(w, "Too many nodes", http.StatusBadRequest)
+		return
+	}
+	known := map[string]bool{}
+	for _, n := range c.Def.Nodes {
+		known[n.ID] = true
+	}
+	for id, p := range in.Positions {
+		if !known[id] {
+			jsonError(w, "Unknown node "+strconv.Quote(id), http.StatusBadRequest)
+			return
+		}
+		if !chainPositionOK(p.X) || !chainPositionOK(p.Y) {
+			jsonError(w, "A position must be between -10000 and 10000", http.StatusBadRequest)
+			return
+		}
+	}
+	for i := range c.Def.Nodes {
+		if p, ok := in.Positions[c.Def.Nodes[i].ID]; ok {
+			c.Def.Nodes[i].X, c.Def.Nodes[i].Y = p.X, p.Y
+		}
+	}
+	if _, err := db.Exec(`UPDATE chains SET definition=?, updated_at=? WHERE id=?`,
+		string(jsonMarshal(c.Def)), nowRFC(), c.ID); err != nil {
+		jsonError(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	auditLog(r, userID, "chain.layout", c.Def.Name, map[string]interface{}{"chain": c.ID, "nodes": len(in.Positions)})
+	got, _ := loadChain(c.ID)
+	jsonOK(w, chainView(got))
 }
 
 func chainFileName(name string) string {

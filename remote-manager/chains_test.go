@@ -347,6 +347,152 @@ func TestChainAPI(t *testing.T) {
 	}
 }
 
+// TestChainTemplate: the starter template is valid for a user with servers and a storage, and
+// for a user with neither (outside endpoints only), and it links what it describes.
+func TestChainTemplate(t *testing.T) {
+	u, _, _ := storageTestEnv(t, "chain-template", nil)
+	chainTestConn(t, u.userID, "SSH")
+	chainTestConn(t, u.userID, "SSH")
+	var got struct {
+		Definition chainDef `json:"definition"`
+		Enabled    bool     `json:"enabled"`
+	}
+	if code := u.jsonDo("GET", "/api/chains/template", nil, &got); code != http.StatusOK || !got.Enabled {
+		t.Fatalf("template: %d %+v", code, got)
+	}
+	if errs := validateChain(&got.Definition, u.userID); len(errs) > 0 {
+		t.Fatalf("the starter template does not validate:\n%s", strings.Join(errs, "\n"))
+	}
+	kinds := map[string]string{}
+	for _, n := range got.Definition.Nodes {
+		kinds[n.ID] = n.Kind
+	}
+	if kinds["app"] != "server" || kinds["backup"] != "server" || kinds["bucket"] != "storage" || kinds["edge"] != "external" {
+		t.Fatalf("template nodes: %+v", kinds)
+	}
+	if len(got.Definition.Links) < 3 || len(got.Definition.Scenarios) < 3 {
+		t.Fatalf("template is not linked into a chain: %+v", got.Definition)
+	}
+
+	app := httptest.NewServer(newRouter())
+	t.Cleanup(app.Close)
+	bare := newTestUser(t, app, "chain-template-bare", false)
+	var bareGot struct {
+		Definition chainDef `json:"definition"`
+		Enabled    bool     `json:"enabled"`
+	}
+	if code := bare.jsonDo("GET", "/api/chains/template", nil, &bareGot); code != http.StatusOK {
+		t.Fatalf("bare template: %d", code)
+	}
+	if errs := validateChain(&bareGot.Definition, bare.userID); len(errs) > 0 {
+		t.Fatalf("the template without saved connections does not validate:\n%s", strings.Join(errs, "\n"))
+	}
+	for _, n := range bareGot.Definition.Nodes {
+		if n.Kind != "external" || n.ConnID != 0 || n.StorageID != 0 {
+			t.Fatalf("a user without connections got a template that needs one: %+v", n)
+		}
+	}
+}
+
+// TestChainLayout: positions are saved without re-validating the whole definition, unknown
+// nodes and absurd coordinates are refused, and another user cannot write them.
+func TestChainLayout(t *testing.T) {
+	u, _, _ := storageTestEnv(t, "chain-layout", nil)
+	def := chainDef{
+		Name: "Demo layout",
+		Nodes: []chainNode{
+			{ID: "app", Kind: "external", Label: "App"},
+			{ID: "edge", Kind: "external", Label: "Edge"},
+		},
+		Checks: []chainCheck{{ID: "dns", Node: "app", Type: "dns", Target: "app.example.com"}},
+		Links:  []chainLink{{From: "app", To: "edge", Kind: "data"}},
+	}
+	var created struct {
+		ID int `json:"id"`
+	}
+	if code := u.jsonDo("POST", "/api/chains", map[string]interface{}{"definition": def}, &created); code != http.StatusOK || created.ID == 0 {
+		t.Fatalf("create: %d", code)
+	}
+	base := "/api/chains/" + strconv.Itoa(created.ID)
+	var got struct {
+		Definition chainDef `json:"definition"`
+	}
+	if code := u.jsonDo("POST", base+"/layout", map[string]interface{}{"positions": map[string]map[string]float64{
+		"app": {"x": 120, "y": 80}, "edge": {"x": 420, "y": 80},
+	}}, &got); code != http.StatusOK {
+		t.Fatalf("layout: %d", code)
+	}
+	if got.Definition.Nodes[0].X != 120 || got.Definition.Nodes[0].Y != 80 || got.Definition.Nodes[1].X != 420 {
+		t.Fatalf("positions not saved: %+v", got.Definition.Nodes)
+	}
+	// A saved position survives a read and still validates.
+	var again struct {
+		Definition chainDef `json:"definition"`
+	}
+	u.jsonDo("GET", base, nil, &again)
+	if again.Definition.Nodes[1].Y != 80 {
+		t.Fatalf("positions not read back: %+v", again.Definition.Nodes)
+	}
+	if errs := validateChain(&again.Definition, u.userID); len(errs) > 0 {
+		t.Fatalf("a chain with saved positions does not validate:\n%s", strings.Join(errs, "\n"))
+	}
+
+	if code := u.jsonDo("POST", base+"/layout", map[string]interface{}{"positions": map[string]map[string]float64{
+		"ghost": {"x": 1, "y": 1},
+	}}, nil); code != http.StatusBadRequest {
+		t.Fatalf("unknown node: %d", code)
+	}
+	if code := u.jsonDo("POST", base+"/layout", map[string]interface{}{"positions": map[string]map[string]float64{
+		"app": {"x": 20000, "y": 1},
+	}}, nil); code != http.StatusBadRequest {
+		t.Fatalf("out-of-range position: %d", code)
+	}
+	if code := u.jsonDo("GET", base+"/layout", nil, nil); code != http.StatusMethodNotAllowed {
+		t.Fatalf("GET layout: %d", code)
+	}
+	other := newTestUser(t, u.srv, "chain-layout-other", false)
+	if code := other.jsonDo("POST", base+"/layout", map[string]interface{}{"positions": map[string]map[string]float64{
+		"app": {"x": 10, "y": 10},
+	}}, nil); code != http.StatusNotFound {
+		t.Fatalf("another user's layout: %d", code)
+	}
+
+	// Validation refuses a position outside the allowed range when a definition is saved.
+	bad := again.Definition
+	bad.Nodes[0].X = 100000
+	if errs := strings.Join(validateChain(&bad, u.userID), "\n"); !strings.Contains(errs, "position must be") {
+		t.Fatalf("out-of-range position accepted:\n%s", errs)
+	}
+}
+
+// TestChainTimelineLimit: the timeline endpoint caps its answer at the requested limit.
+func TestChainTimelineLimit(t *testing.T) {
+	u, _, _ := storageTestEnv(t, "chain-timeline-limit", nil)
+	def := chainDef{
+		Name:   "Demo timeline",
+		Nodes:  []chainNode{{ID: "app", Kind: "external"}},
+		Checks: []chainCheck{{ID: "dns", Node: "app", Type: "dns", Target: "app.example.com"}},
+	}
+	var created struct {
+		ID int `json:"id"`
+	}
+	if code := u.jsonDo("POST", "/api/chains", map[string]interface{}{"definition": def}, &created); code != http.StatusOK || created.ID == 0 {
+		t.Fatalf("create: %d", code)
+	}
+	for i := 0; i < 5; i++ {
+		db.Exec(`INSERT INTO chain_samples (chain_id, at, kind, subject, old_value, new_value, ok) VALUES (?,?,?,?,?,?,?)`,
+			created.ID, nowRFC(), "scenario", "scenario", "a", "b", 0)
+	}
+	var tl []map[string]interface{}
+	if code := u.jsonDo("GET", "/api/chains/"+strconv.Itoa(created.ID)+"/timeline?limit=2", nil, &tl); code != http.StatusOK || len(tl) != 2 {
+		t.Fatalf("limit: %d %d", code, len(tl))
+	}
+	u.jsonDo("GET", "/api/chains/"+strconv.Itoa(created.ID)+"/timeline?limit=9999", nil, &tl)
+	if len(tl) != 5 {
+		t.Fatalf("default cap: %d", len(tl))
+	}
+}
+
 // TestChainNodeScriptRuns runs the fixed script in a real POSIX shell against real files, so
 // its syntax and the answers' format are checked, not only the parser.
 func TestChainNodeScriptRuns(t *testing.T) {
