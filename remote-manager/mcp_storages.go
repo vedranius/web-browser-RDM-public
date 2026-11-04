@@ -126,8 +126,8 @@ func mcpStorageWrite(g *mcpGrant, args map[string]interface{}) (map[string]inter
 	if !mcpHasScope(g, "storage_write") {
 		return nil, fmt.Errorf("this AI connection has no storage_write scope; the user can allow it in WRM")
 	}
-	if g.Mode == aiModeReadOnly {
-		return nil, fmt.Errorf("this AI connection is read-only")
+	if err := mcpStorageChangeMode(g); err != nil {
+		return nil, err
 	}
 	s, err := mcpStorageResolve(g, args["storage"])
 	if err != nil {
@@ -152,6 +152,9 @@ func mcpStorageWrite(g *mcpGrant, args map[string]interface{}) (map[string]inter
 	if err != nil {
 		return nil, err
 	}
+	if err := storageNewObjectAllowed(rctx(), c, s, key, etag); err != nil {
+		return nil, err
+	}
 	tag, err := c.put(rctx(), key, []byte(content), storageContentType("", key), etag)
 	if err != nil {
 		return nil, err
@@ -163,8 +166,8 @@ func mcpStorageDelete(g *mcpGrant, args map[string]interface{}) (map[string]inte
 	if !mcpHasScope(g, "storage_delete") {
 		return nil, fmt.Errorf("this AI connection has no storage_delete scope; the user can allow it in WRM")
 	}
-	if g.Mode == aiModeReadOnly {
-		return nil, fmt.Errorf("this AI connection is read-only")
+	if err := mcpStorageChangeMode(g); err != nil {
+		return nil, err
 	}
 	if v, _ := args["confirm"].(string); v != "delete" {
 		return nil, fmt.Errorf(`pass confirm="delete" to delete an object; there is no undo`)
@@ -194,6 +197,19 @@ func mcpStorageDelete(g *mcpGrant, args map[string]interface{}) (map[string]inte
 	return map[string]interface{}{"storage": s.Name, "key": key, "deleted": true, "size": size}, nil
 }
 
+// mcpStorageChangeMode: a storage has no server session, so WRM cannot ask the user to approve
+// one change there. Writes and deletes therefore need the automatic mode; the ask mode refuses
+// them instead of running them without the approval it promises.
+func mcpStorageChangeMode(g *mcpGrant) error {
+	switch g.Mode {
+	case aiModeAuto:
+		return nil
+	case aiModeReadOnly:
+		return fmt.Errorf("this AI connection is read-only")
+	}
+	return fmt.Errorf("storage changes cannot be approved one by one; in the ask mode the AI may only read storages. Make the change in WRM (Storages) or give this AI connection the automatic mode")
+}
+
 // mcpStorageTools are the tool descriptions offered when the scopes allow them.
 func mcpStorageTools(g *mcpGrant) []map[string]interface{} {
 	store := strProp("Storage id or name from the storage list")
@@ -214,7 +230,7 @@ func mcpStorageTools(g *mcpGrant) []map[string]interface{} {
 				"annotations": map[string]interface{}{"readOnlyHint": true, "openWorldHint": false},
 			})
 	}
-	if mcpHasScope(g, "storage_write") && g.Mode != aiModeReadOnly {
+	if mcpHasScope(g, "storage_write") && g.Mode == aiModeAuto {
 		out = append(out, map[string]interface{}{
 			"name": "storage_write", "title": "Write a storage object",
 			"description": "Replace a small text object in a storage. Pass the etag from storage_read to avoid overwriting a change made in the meantime (the write then fails).",
@@ -224,7 +240,7 @@ func mcpStorageTools(g *mcpGrant) []map[string]interface{} {
 			"annotations": map[string]interface{}{"readOnlyHint": false, "destructiveHint": true, "openWorldHint": false},
 		})
 	}
-	if mcpHasScope(g, "storage_delete") && g.Mode != aiModeReadOnly {
+	if mcpHasScope(g, "storage_delete") && g.Mode == aiModeAuto {
 		out = append(out, map[string]interface{}{
 			"name": "storage_delete", "title": "Delete a storage object",
 			"description": "Delete one object from a storage. This cannot be undone; pass confirm=delete. The storage must allow deleting.",
@@ -238,6 +254,10 @@ func mcpStorageTools(g *mcpGrant) []map[string]interface{} {
 
 // mcpStorageCall runs one storage tool and answers the RPC call.
 func mcpStorageCall(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg, name string, args map[string]interface{}) {
+	if !settingBool("storages_enabled") {
+		writeRPC(w, 200, rpcResult(m.ID, toolText("Storages are turned off by the administrator.", true)))
+		return
+	}
 	if !mcpRateOK(fmt.Sprintf("mcp-storage:%d", g.ID), 120, time.Minute) {
 		writeRPC(w, 200, rpcResult(m.ID, toolText("Too many storage calls; wait a moment.", true)))
 		return

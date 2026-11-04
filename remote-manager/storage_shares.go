@@ -175,17 +175,18 @@ func storageShareHandler(w http.ResponseWriter, r *http.Request) {
 	if i := strings.IndexByte(rest, '/'); i >= 0 {
 		token, tail = rest[:i], rest[i+1:]
 	}
-	if token == "" || len(token) > 96 {
+	if token == "" || len(token) > 96 || !settingBool("storages_enabled") {
 		http.NotFound(w, r)
+		return
+	}
+	// Rate-limited before the lookup, so guessing tokens costs as much as using one.
+	if !mcpRateOK("s3share:"+clientIP(r), 120, time.Minute) {
+		http.Error(w, "Too many requests", http.StatusTooManyRequests)
 		return
 	}
 	s, sh, err := storageShareByToken(token)
 	if err != nil {
 		http.NotFound(w, r)
-		return
-	}
-	if !mcpRateOK("s3share:"+clientIP(r), 120, time.Minute) {
-		http.Error(w, "Too many requests", http.StatusTooManyRequests)
 		return
 	}
 	if tail == "object" {

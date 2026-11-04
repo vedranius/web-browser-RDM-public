@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -435,6 +436,11 @@ func apiStorageText(w http.ResponseWriter, r *http.Request) {
 		if in.BOM {
 			data = append([]byte{0xEF, 0xBB, 0xBF}, data...)
 		}
+		if err := storageNewObjectAllowed(r.Context(), c, s, key, in.ETag); err != nil {
+			auditLog(r, userID, "storage.denied", s.Name, map[string]interface{}{"capability": "upload", "key": key})
+			jsonError(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		etag, err := c.put(r.Context(), key, data, storageContentType("", key), in.ETag)
 		if err != nil {
 			jsonError(w, err.Error(), s3ErrorStatus(err))
@@ -456,8 +462,18 @@ func utf8Text(b []byte) (string, bool) {
 	return string(b), true
 }
 
-// auditFile logs one object operation with the storage as the target and the key in the
-// details, so the audit log stays readable and never holds the secret.
+// storageNewObjectAllowed refuses a save that would create a new object when the storage does
+// not allow uploads. A conditional save (etag given) can only replace an existing object.
+func storageNewObjectAllowed(ctx context.Context, c *s3Client, s Storage, key, etag string) error {
+	if etag != "" || s.AllowUpload {
+		return nil
+	}
+	if _, err := c.head(ctx, key); err != nil {
+		return fmt.Errorf("%s", capabilityMessage("upload"))
+	}
+	return nil
+}
+
 // contentDisposition quotes the object's file name, so a key with quotes or semicolons cannot
 // add parameters to the header; non-ASCII names use the RFC 2231 form.
 func contentDisposition(kind, key string) string {
@@ -467,6 +483,8 @@ func contentDisposition(kind, key string) string {
 	return kind
 }
 
+// auditFile logs one object operation with the storage as the target and the key in the
+// details, so the audit log stays readable and never holds the secret.
 func (s Storage) auditFile(r *http.Request, userID int, action, key string, size int64, extra map[string]interface{}) {
 	d := map[string]interface{}{"key": key, "size": size}
 	for k, v := range extra {

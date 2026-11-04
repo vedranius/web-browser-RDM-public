@@ -701,10 +701,15 @@ func apiStorageByID(w http.ResponseWriter, r *http.Request) {
 		}
 		plain := in.Secret
 		if plain == "" {
+			// The stored secret stays bound to the endpoint it was entered for: a new address
+			// needs the key again, so a saved secret never signs requests for another host.
+			if upd.Endpoint != s.Endpoint {
+				jsonError(w, "enter the secret key again when the endpoint changes", http.StatusBadRequest)
+				return
+			}
 			plain = decryptValue(s.Secret)
 		}
-		if err := storagePreflight(Storage{Endpoint: upd.Endpoint, Region: upd.Region, Bucket: upd.Bucket,
-			PathStyle: upd.PathStyle, AccessKey: upd.AccessKey, CAFingerprint: upd.CAFingerprint}, plain); err != nil {
+		if err := storagePreflight(upd, plain); err != nil {
 			jsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -754,7 +759,7 @@ func apiStorageTest(w http.ResponseWriter, r *http.Request) {
 	if s.CAFingerprint != "" {
 		out["tls_fingerprint"] = s.CAFingerprint
 	}
-	if err := storagePreflight(s, s.Secret); err != nil {
+	if err := storagePreflight(s, decryptValue(s.Secret)); err != nil {
 		setStorageStatus(s.ID, err)
 		auditLog(r, userID, "storage.test_failed", s.Name, map[string]interface{}{"error": err.Error()})
 		jsonError(w, err.Error(), http.StatusBadRequest)

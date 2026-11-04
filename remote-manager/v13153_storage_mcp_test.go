@@ -10,7 +10,7 @@ import (
 // permission and the explicit confirmation.
 func TestStorageMCPTools(t *testing.T) {
 	u, stub, _ := storageTestEnv(t, "storage-mcp", func(b map[string]interface{}) {
-		b["allow_write"], b["allow_delete"] = true, true
+		b["allow_write"], b["allow_delete"], b["allow_upload"] = true, true, true
 	})
 	stub.put("team-a/config.json", []byte(`{"a":1}`))
 
@@ -25,9 +25,20 @@ func TestStorageMCPTools(t *testing.T) {
 	if got := strings.Join(names(readOnly), ","); got != "storage_list,storage_read" {
 		t.Fatalf("read-only tools: %s", got)
 	}
-	if got := strings.Join(names(&mcpGrant{ID: 2, UserID: u.userID, Mode: aiModeAsk,
+	if got := strings.Join(names(&mcpGrant{ID: 2, UserID: u.userID, Mode: aiModeAuto,
 		Scopes: []string{"storage_read", "storage_write", "storage_delete"}}), ","); got != "storage_list,storage_read,storage_write,storage_delete" {
 		t.Fatalf("full tools: %s", got)
+	}
+	// The ask mode cannot approve a storage change, so it offers and runs only the read tools.
+	askAll := &mcpGrant{ID: 7, UserID: u.userID, Mode: aiModeAsk, Scopes: []string{"storage_read", "storage_write", "storage_delete"}}
+	if got := strings.Join(names(askAll), ","); got != "storage_list,storage_read" {
+		t.Fatalf("ask mode tools: %s", got)
+	}
+	if _, err := mcpStorageWrite(askAll, map[string]interface{}{"storage": "hetzner", "key": "config.json", "content": "{}"}); err == nil {
+		t.Fatal("the ask mode wrote an object without an approval")
+	}
+	if _, err := mcpStorageDelete(askAll, map[string]interface{}{"storage": "hetzner", "key": "config.json", "confirm": "delete"}); err == nil {
+		t.Fatal("the ask mode deleted an object without an approval")
 	}
 	if got := strings.Join(names(&mcpGrant{ID: 3, UserID: u.userID, Mode: aiModeReadOnly,
 		Scopes: []string{"storage_read", "storage_write", "storage_delete"}}), ","); got != "storage_list,storage_read" {
@@ -57,7 +68,7 @@ func TestStorageMCPTools(t *testing.T) {
 		t.Fatal("the AI read a .env file from the storage")
 	}
 
-	writer := &mcpGrant{ID: 4, UserID: u.userID, Mode: aiModeAsk, Scopes: []string{"storage_read", "storage_write"}}
+	writer := &mcpGrant{ID: 4, UserID: u.userID, Mode: aiModeAuto, Scopes: []string{"storage_read", "storage_write"}}
 	write, err := mcpStorageWrite(writer, map[string]interface{}{"storage": "hetzner", "key": "new.json", "content": "{\n  \"b\": 2\n}"})
 	if err != nil {
 		t.Fatalf("write: %v", err)
@@ -81,7 +92,7 @@ func TestStorageMCPTools(t *testing.T) {
 	if _, err := mcpStorageDelete(writer, map[string]interface{}{"storage": "hetzner", "key": "new.json", "confirm": "delete"}); err == nil {
 		t.Fatal("a grant without storage_delete deleted an object")
 	}
-	deleter := &mcpGrant{ID: 5, UserID: u.userID, Mode: aiModeAsk, Scopes: []string{"storage_read", "storage_delete"}}
+	deleter := &mcpGrant{ID: 5, UserID: u.userID, Mode: aiModeAuto, Scopes: []string{"storage_read", "storage_delete"}}
 	if _, err := mcpStorageDelete(deleter, map[string]interface{}{"storage": "hetzner", "key": "new.json"}); err == nil {
 		t.Fatal("delete without the confirm argument was accepted")
 	}

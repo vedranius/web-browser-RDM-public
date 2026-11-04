@@ -164,12 +164,17 @@ func (c *s3Client) sign(req *http.Request, payload []byte, payloadHash string) {
 	}
 
 	canonical := req.Method + "\n" + req.URL.EscapedPath() + "\n" + canonicalQuery(req.URL.Query()) + "\n"
-	signed := []string{"host", "x-amz-content-sha256", "x-amz-date"}
-	headers := map[string]string{
-		"host":                 c.host(),
-		"x-amz-content-sha256": payloadHash,
-		"x-amz-date":           amzDate,
+	// Every x-amz-* header is signed: S3 refuses unsigned ones, for example x-amz-copy-source
+	// on a rename or x-amz-server-side-encryption on a write.
+	headers := map[string]string{"host": c.host()}
+	signed := []string{"host"}
+	for name, vs := range req.Header {
+		if ln := strings.ToLower(name); strings.HasPrefix(ln, "x-amz-") {
+			headers[ln] = strings.TrimSpace(strings.Join(vs, ","))
+			signed = append(signed, ln)
+		}
 	}
+	sort.Strings(signed)
 	for _, h := range signed {
 		canonical += h + ":" + headers[h] + "\n"
 	}

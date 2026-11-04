@@ -31,6 +31,8 @@ type s3Stub struct {
 	secret    string
 	region    string
 	lastError string
+	// listOnly, when set, refuses listings outside this prefix, like a key scoped to it.
+	listOnly string
 }
 
 func newS3Stub(t *testing.T, bucket, accessKey, secret string) *s3Stub {
@@ -109,6 +111,13 @@ func (s *s3Stub) verifySignature(r *http.Request) bool {
 		return false
 	}
 	signed := strings.Split(fields["SignedHeaders"], ";")
+	// Like S3: an x-amz-* header that is present but not signed is refused.
+	for name := range r.Header {
+		if ln := strings.ToLower(name); strings.HasPrefix(ln, "x-amz-") && !oneOf(ln, signed...) {
+			s.lastError = "header not signed: " + ln
+			return false
+		}
+	}
 	var canon strings.Builder
 	canon.WriteString(r.Method + "\n" + r.URL.EscapedPath() + "\n" + canonicalQueryFor(r.URL.Query()) + "\n")
 	for _, h := range signed {
@@ -247,6 +256,10 @@ func (s *s3Stub) copyObject(w http.ResponseWriter, r *http.Request, to string) {
 func (s *s3Stub) list(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	prefix := q.Get("prefix")
+	if s.listOnly != "" && !strings.HasPrefix(prefix, s.listOnly) {
+		s.fail(w, http.StatusForbidden, "AccessDenied", "the key may only list "+s.listOnly)
+		return
+	}
 	delimiter := q.Get("delimiter")
 	s.mu.Lock()
 	keys := make([]string, 0, len(s.objects))
