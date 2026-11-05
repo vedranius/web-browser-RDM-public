@@ -86,8 +86,8 @@ Object.assign(LANGS.en, {
   chn_tpl_failover: 'Primary and backup path', chn_tpl_failover_d: 'Ingest on a primary and a backup server, a content server writing to a bucket, and a CDN in front.',
   chn_tpl_name: 'Name', chn_tpl_servers: 'Choose the server for each node', chn_tpl_storages: 'Choose the storage for each storage node',
   chn_tpl_choose: '— choose —', chn_tpl_no_ssh: 'You have no SSH connections yet. Add one first.',
-  chn_tpl_no_storage: 'You have no storages yet. Add one under Storages, or remove the node in the JSON editor.',
-  chn_tpl_missing: 'Choose a server or storage for every node.', chn_tpl_after: 'Service names, paths and addresses are examples: adjust them in the JSON editor.',
+  chn_tpl_no_storage: 'You have no storages yet; the storage nodes will simply be left out. A chain works without one.',
+  chn_tpl_missing: 'Choose a server for every server node.', chn_tpl_after: 'Service names, paths and addresses are examples: adjust them in the guided editor after creating the chain.',
   chn_create: 'Create', chn_back: 'Back', chn_nodes_n: '{n} nodes',
   chn_help_links: 'Links: {"from":"a","to":"b","kind":"data|read|write|failover|dependency","check":"id","scenarios":["primary"]}. With scenarios, the link carries traffic only in those scenarios; otherwise the diagram shows it idle.',
 });
@@ -106,8 +106,8 @@ Object.assign(LANGS.hr, {
   chn_tpl_failover: 'Primarni i rezervni put', chn_tpl_failover_d: 'Ingest na primarnom i rezervnom serveru, content server koji piše u bucket i CDN ispred.',
   chn_tpl_name: 'Naziv', chn_tpl_servers: 'Odaberite server za svaki čvor', chn_tpl_storages: 'Odaberite storage za svaki storage čvor',
   chn_tpl_choose: '— odaberite —', chn_tpl_no_ssh: 'Još nemate SSH veza. Najprije dodajte jednu.',
-  chn_tpl_no_storage: 'Još nemate storagea. Dodajte ga pod Storages ili uklonite čvor u JSON editoru.',
-  chn_tpl_missing: 'Odaberite server ili storage za svaki čvor.', chn_tpl_after: 'Nazivi servisa, putanje i adrese su primjeri: prilagodite ih u JSON editoru.',
+  chn_tpl_no_storage: 'Još nemate storagea; storage čvorovi će jednostavno biti izostavljeni. Lanac radi i bez njih.',
+  chn_tpl_missing: 'Odaberite server za svaki serverski čvor.', chn_tpl_after: 'Nazivi servisa, putanje i adrese su primjeri: prilagodite ih u vođenom uređivaču nakon stvaranja lanca.',
   chn_create: 'Napravi', chn_back: 'Natrag', chn_nodes_n: '{n} čvorova',
   chn_help_links: 'Veze: {"from":"a","to":"b","kind":"data|read|write|failover|dependency","check":"id","scenarios":["primary"]}. Sa scenarios veza nosi promet samo u tim scenarijima; inače je dijagram prikazuje neaktivnom.',
 });
@@ -116,7 +116,7 @@ Object.assign(LANGS.hr, {
 Object.assign(LANGS.en, {
   chn_drafts: 'Drafts from the AI', chn_draft_badge: 'Draft — not monitored yet',
   chn_draft_note_t: 'Review this draft.',
-  chn_draft_note: 'The assistant wrote it from your description. Nothing is checked in the background and no command runs until you create the chain; open the JSON editor first if a service, path or connection is wrong.',
+  chn_draft_note: 'The assistant wrote it from your description. Nothing is checked in the background and no command runs until you create the chain; press Edit to adjust a server, check or link first.',
   chn_approve: 'Create chain', chn_approve_q: 'Create the chain {name} from this draft and start its background checks?',
   chn_discard: 'Discard', chn_discard_q: 'Discard the draft {name}? The assistant can write it again.',
   chn_draft_approved: 'The chain was created. The first check runs within a minute.',
@@ -125,15 +125,97 @@ Object.assign(LANGS.en, {
 Object.assign(LANGS.hr, {
   chn_drafts: 'Skice iz AI asistenta', chn_draft_badge: 'Skica — još se ne provjerava',
   chn_draft_note_t: 'Pregledajte ovu skicu.',
-  chn_draft_note: 'Asistent ju je napisao prema vašem opisu. Ništa se ne provjerava u pozadini i nijedna naredba se ne izvršava dok ne stvorite lanac; ako je neki servis, putanja ili veza pogrešna, prvo otvorite JSON editor.',
+  chn_draft_note: 'Asistent ju je napisao prema vašem opisu. Ništa se ne provjerava u pozadini i nijedna naredba se ne izvršava dok ne stvorite lanac; ako je neki servis, putanja ili veza pogrešna, pritisnite Uredi i prilagodite ju.',
   chn_approve: 'Stvori lanac', chn_approve_q: 'Stvoriti lanac {name} iz ove skice i pokrenuti provjere u pozadini?',
   chn_discard: 'Odbaci', chn_discard_q: 'Odbaciti skicu {name}? Asistent ju može ponovno napisati.',
   chn_draft_approved: 'Lanac je stvoren. Prva provjera kreće unutar minute.',
   chn_draft_untitled: 'Skica bez naziva', chn_draft_counts: 'Čvorovi: {n} · Provjere: {c}',
 });
 
+// Step 4: the guided builder, the visual connections and the AI wizard.
+Object.assign(LANGS.en, {
+  chn_build: 'Build a chain', chn_build_ai: 'Build with AI', chn_build_ai_d: 'Choose the servers, describe the system in one sentence; WRM prepares a draft you review on the diagram.',
+  chn_build_manual: 'Build step by step', chn_build_manual_d: 'Pick servers, add checks and connect them yourself. No JSON.',
+  chn_build_tpl: 'Start from a template', chn_build_adv: 'Advanced: write JSON',
+  chn_how: 'How a chain works', chn_how_t: 'Nodes are your servers, storages and outside services. Checks test each one (a service, a port, a file, a certificate). Links show what talks to what — a failover link is the backup path. Scenarios name the state: the first rule that matches wins, and the last empty rule is the fallback.',
+  chn_ai_note: 'WRM first reads the selected servers (OS, services, containers, ports and mounts) with fixed read-only checks, then prepares a draft. Nothing is checked until you press Create chain.',
+  chn_ai_analyze: 'Look at the servers', chn_ai_analyzing: 'Looking…', chn_ai_found_services: 'Services', chn_ai_found_ports: 'Ports', chn_ai_found_mounts: 'Mounts', chn_ai_no_facts: 'Nothing found (or the server did not answer).', chn_ai_storage_optional: 'Storages are optional. Leave them out and WRM only observes what is on the servers and any storage they mount; it never attaches to a storage or asks for its credentials.',
+  chn_ai_pick_servers: 'Servers in this system', chn_ai_pick_storages: 'Storages (optional)',
+  chn_ai_desc: 'What does the system do?', chn_ai_desc_ph: 'For example: ingest on this server writes recordings to the bucket; the backup server takes over if the primary fails; a CDN serves the content.',
+  chn_ai_name: 'Name (optional)', chn_ai_make: 'Prepare the draft', chn_ai_working: 'Preparing…',
+  chn_ai_servers_none: 'No SSH connections yet. Add a connection first.',
+  chn_ai_ready: 'The draft is ready. Review it on the diagram, adjust it, then create the chain.',
+  chn_ai_fallback: 'AI is not configured for this account, so WRM built a basic chain from your servers. Adjust the checks on the diagram.',
+  chn_ai_failed: 'The AI did not return a usable chain, so WRM built a basic one. Adjust it on the diagram.',
+  chn_g_name: 'Name', chn_g_desc: 'Description', chn_g_interval: 'Check every', chn_g_confirm: 'A change counts after',
+  chn_g_seconds: '{n} s', chn_g_confirm_n: '{n} checks', chn_g_enabled: 'Check in the background',
+  chn_g_basics: 'Name and behaviour', chn_g_nodes: 'Servers, storages and outside services', chn_g_add: 'Add',
+  chn_g_kind: 'Kind', chn_g_pick_server: 'Choose a server', chn_g_pick_storage: 'Choose a storage',
+  chn_g_label: 'Name', chn_g_role: 'Role', chn_g_role_ph: 'app, backup, database, cdn…', chn_g_remove: 'Remove',
+  chn_g_node_empty: 'Add at least one server, storage or outside service.', chn_g_checks: 'What to check',
+  chn_g_add_check: 'Add a check', chn_g_no_checks: 'No checks yet. A server with no check still shows whether SSH answers.',
+  chn_g_edit: 'Edit', chn_g_type: 'Check', chn_g_target: 'Target', chn_g_port: 'Port', chn_g_format: 'Format',
+  chn_g_key: 'Key', chn_g_record: 'DNS record', chn_g_resolver: 'Resolver (optional)', chn_g_prefix: 'Prefix (optional)',
+  chn_g_max_age: 'Max age (s, optional)', chn_g_warn_days: 'Warn before expiry (days)', chn_g_expect: 'Also OK when the value',
+  chn_g_expect_none: 'Use the default meaning of OK', chn_g_check_label: 'Label', chn_g_add_btn: 'Add', chn_g_save: 'Save',
+  chn_g_links: 'What talks to what', chn_g_add_link: 'Add a link', chn_g_from: 'From', chn_g_to: 'To',
+  chn_g_link_kind: 'Meaning', chn_g_link_check: 'Colour by check (optional)',
+  chn_g_link_none: 'No links yet. Links are for the picture and the backup path; checks work without them.',
+  chn_g_scenarios: 'States (scenarios)', chn_g_add_scenario: 'Add a state', chn_g_auto_scenarios: 'Create the usual states automatically',
+  chn_g_auto_scenarios_d: 'Normal: every check is OK. Backup: the first server is down and the second is up. Degraded: everything else.',
+  chn_g_when: 'Active when', chn_g_cond_add: 'Add a condition', chn_g_cond_none: 'Always (fallback)',
+  chn_g_subject: 'Subject', chn_g_value: 'Value', chn_g_up: 'Up', chn_g_down: 'Down', chn_g_ok: 'OK', chn_g_op: 'Operator',
+  chn_g_save_chain: 'Save chain', chn_g_save_draft: 'Save draft', chn_g_json: 'Advanced JSON', chn_g_cancel: 'Cancel',
+  chn_g_errs: 'Fix these problems:', chn_g_required: 'Give the chain a name and add at least one node.',
+  chn_g_any_note: 'This state uses "any" rules; edit it in Advanced JSON.',
+  chn_g_edit_chain: 'Edit', chn_g_edit_draft: 'Edit draft', chn_g_new: 'New chain',
+  chn_add_node: 'Add node', chn_connect: 'Connect to…', chn_delete_node: 'Delete node', chn_delete_link: 'Delete link',
+  chn_add_check: 'Add check', chn_edit_chain: 'Edit chain', chn_pick_target: 'Click the target node',
+  chn_link_saved: 'Saved.', chn_link_exists: 'These two nodes are already linked.', chn_check_bad: 'not OK',
+});
+Object.assign(LANGS.hr, {
+  chn_build: 'Izgradi lanac', chn_build_ai: 'Izgradi uz AI', chn_build_ai_d: 'Odaberite servere i jednom rečenicom opišite sustav; WRM pripremi skicu koju pregledate na dijagramu.',
+  chn_build_manual: 'Izgradi korak po korak', chn_build_manual_d: 'Sami odaberite servere, dodajte provjere i povežite ih. Bez JSON-a.',
+  chn_build_tpl: 'Počni od predloška', chn_build_adv: 'Napredno: napiši JSON',
+  chn_how: 'Kako lanac radi', chn_how_t: 'Čvorovi su vaši serveri, storagei i vanjske usluge. Provjere testiraju svaki (servis, port, datoteku, certifikat). Veze pokazuju što s čim razgovara — failover veza je rezervni put. Scenariji imenuju stanje: prvo pravilo koje odgovara pobjeđuje, a zadnje prazno pravilo je rezerva.',
+  chn_ai_note: 'WRM najprije pročita odabrane servere (OS, servise, kontejnere, portove i mountove) fiksnim provjerama samo za čitanje, zatim pripremi skicu. Ništa se ne provjerava dok ne pritisnete Stvori lanac.',
+  chn_ai_analyze: 'Pregledaj servere', chn_ai_analyzing: 'Pregledavam…', chn_ai_found_services: 'Servisi', chn_ai_found_ports: 'Portovi', chn_ai_found_mounts: 'Mountovi', chn_ai_no_facts: 'Ništa nije pronađeno (ili se server nije javio).', chn_ai_storage_optional: 'Storagei nisu obavezni. Ako ih izostavite, WRM samo promatra što je na serverima i što oni mountaju; nikada se ne spaja na storage i ne traži njegove vjerodajnice.',
+  chn_ai_pick_servers: 'Serveri u ovom sustavu', chn_ai_pick_storages: 'Storagei (nije obavezno)',
+  chn_ai_desc: 'Što sustav radi?', chn_ai_desc_ph: 'Na primjer: ingest na ovom serveru piše snimke u bucket; rezervni server preuzima ako primarni padne; CDN poslužuje sadržaj.',
+  chn_ai_name: 'Naziv (nije obavezno)', chn_ai_make: 'Pripremi skicu', chn_ai_working: 'Pripremam…',
+  chn_ai_servers_none: 'Još nemate SSH veza. Najprije dodajte vezu.',
+  chn_ai_ready: 'Skica je gotova. Pregledajte ju na dijagramu, prilagodite i zatim stvorite lanac.',
+  chn_ai_fallback: 'AI nije konfiguriran za ovaj račun, pa je WRM sastavio osnovni lanac od odabranih servera. Prilagodite provjere na dijagramu.',
+  chn_ai_failed: 'AI nije vratio ispravan lanac, pa je WRM sastavio osnovni. Prilagodite ga na dijagramu.',
+  chn_g_name: 'Naziv', chn_g_desc: 'Opis', chn_g_interval: 'Provjeravaj svakih', chn_g_confirm: 'Promjena se broji nakon',
+  chn_g_seconds: '{n} s', chn_g_confirm_n: '{n} provjera', chn_g_enabled: 'Provjeravaj u pozadini',
+  chn_g_basics: 'Naziv i ponašanje', chn_g_nodes: 'Serveri, storagei i vanjske usluge', chn_g_add: 'Dodaj',
+  chn_g_kind: 'Vrsta', chn_g_pick_server: 'Odaberite server', chn_g_pick_storage: 'Odaberite storage',
+  chn_g_label: 'Naziv', chn_g_role: 'Uloga', chn_g_role_ph: 'app, backup, database, cdn…', chn_g_remove: 'Ukloni',
+  chn_g_node_empty: 'Dodajte barem jedan server, storage ili vanjsku uslugu.', chn_g_checks: 'Što provjeravati',
+  chn_g_add_check: 'Dodaj provjeru', chn_g_no_checks: 'Još nema provjera. Server bez provjere i dalje pokazuje odgovara li SSH.',
+  chn_g_edit: 'Uredi', chn_g_type: 'Provjera', chn_g_target: 'Cilj', chn_g_port: 'Port', chn_g_format: 'Format',
+  chn_g_key: 'Ključ', chn_g_record: 'DNS zapis', chn_g_resolver: 'Resolver (nije obavezno)', chn_g_prefix: 'Prefiks (nije obavezno)',
+  chn_g_max_age: 'Najveća starost (s, nije obavezno)', chn_g_warn_days: 'Upozori prije isteka (dana)', chn_g_expect: 'Također u redu kad je vrijednost',
+  chn_g_expect_none: 'Koristi zadano značenje "u redu"', chn_g_check_label: 'Naziv', chn_g_add_btn: 'Dodaj', chn_g_save: 'Spremi',
+  chn_g_links: 'Što s čim razgovara', chn_g_add_link: 'Dodaj vezu', chn_g_from: 'Od', chn_g_to: 'Prema',
+  chn_g_link_kind: 'Značenje', chn_g_link_check: 'Boju određuje provjera (nije obavezno)',
+  chn_g_link_none: 'Još nema veza. Veze služe slici i rezervnom putu; provjere rade i bez njih.',
+  chn_g_scenarios: 'Stanja (scenariji)', chn_g_add_scenario: 'Dodaj stanje', chn_g_auto_scenarios: 'Automatski stvori uobičajena stanja',
+  chn_g_auto_scenarios_d: 'Normal: sve provjere su u redu. Backup: prvi server ne radi, drugi radi. Degraded: sve ostalo.',
+  chn_g_when: 'Aktivno kad', chn_g_cond_add: 'Dodaj uvjet', chn_g_cond_none: 'Uvijek (rezerva)',
+  chn_g_subject: 'Predmet', chn_g_value: 'Vrijednost', chn_g_up: 'Radi', chn_g_down: 'Ne radi', chn_g_ok: 'U redu', chn_g_op: 'Operator',
+  chn_g_save_chain: 'Spremi lanac', chn_g_save_draft: 'Spremi skicu', chn_g_json: 'Napredni JSON', chn_g_cancel: 'Odustani',
+  chn_g_errs: 'Ispravite sljedeće:', chn_g_required: 'Dajte lancu naziv i dodajte barem jedan čvor.',
+  chn_g_any_note: 'Ovo stanje koristi "any" pravila; uredite ga u naprednom JSON-u.',
+  chn_g_edit_chain: 'Uredi', chn_g_edit_draft: 'Uredi skicu', chn_g_new: 'Novi lanac',
+  chn_add_node: 'Dodaj čvor', chn_connect: 'Poveži s…', chn_delete_node: 'Obriši čvor', chn_delete_link: 'Obriši vezu',
+  chn_add_check: 'Dodaj provjeru', chn_edit_chain: 'Uredi lanac', chn_pick_target: 'Kliknite ciljni čvor',
+  chn_link_saved: 'Spremljeno.', chn_link_exists: 'Ova dva čvora su već povezana.', chn_check_bad: 'nije u redu',
+});
+
 (function () {
-  const state = { list: [], drafts: [], current: null, timeline: [], styleAdded: false, mode: 'diagram', sel: null, views: {}, pos: {}, openCheck: null };
+  const state = { list: [], drafts: [], current: null, timeline: [], styleAdded: false, mode: 'diagram', sel: null, views: {}, pos: {}, openCheck: null, conns: [], storages: [], catalog: null };
   const $ = (sel) => document.querySelector(sel);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const fmt = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v[k] != null ? String(v[k]) : ''));
@@ -256,6 +338,68 @@ Object.assign(LANGS.hr, {
 .chn-form input:focus, .chn-form select:focus { border-color:var(--accent); }
 .chn-form h4 { font-size:13px; margin:0; } .chn-form h5 { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text2); margin:6px 0 0; }
 .chn-form .note { font-size:11px; color:var(--text2); }
+
+/* Guided builder, wizard and dialogs (step 4) */
+.chn-build { padding:14px; overflow:auto; }
+.chn-build h4 { margin:0 0 4px; font-size:13px; }
+.chn-build-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:10px; margin-top:12px; }
+.chn-build-card { text-align:left; padding:14px; border:1px solid var(--border2); border-radius:10px; background:var(--bg2); color:var(--text); cursor:pointer; display:flex; flex-direction:column; gap:6px; }
+.chn-build-card:hover { border-color:var(--accent); }
+.chn-build-card .ic { font-size:22px; }
+.chn-build-card b { font-size:13px; }
+.chn-build-card span { font-size:11px; color:var(--text2); }
+.chn-wizard { flex:1; overflow:auto; padding:14px; }
+.chn-wizard h4 { margin:0 0 6px; font-size:13px; }
+.chn-wizard h5 { margin:12px 0 4px; font-size:11px; color:var(--text2); }
+.chn-wizard textarea, .chn-wizard input, .chn-build input, .chn-build textarea { width:100%; }
+.chn-wizard textarea { min-height:74px; resize:vertical; }
+.chn-picklist { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; }
+.chn-pick { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border2); border-radius:8px; padding:6px 9px; font-size:11.5px; background:var(--bg2); cursor:pointer; }
+.chn-pick input { margin:0; }
+.chn-facts { display:flex; flex-direction:column; gap:6px; margin:6px 0 10px; }
+.chn-fact { border:1px solid var(--border2); border-radius:8px; padding:7px 9px; background:var(--bg1); font-size:11px; }
+.chn-fact b { color:var(--text); }
+.chn-fact .sub { color:var(--text3); font-size:10px; }
+.chn-fact-row { display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:3px; }
+.chn-fact-row .k { color:var(--text3); font-size:10px; }
+.chn-guided { flex:1; display:flex; gap:14px; overflow:auto; padding:12px 14px; }
+.chn-guided-main { flex:1; min-width:0; }
+.chn-guided-help { width:270px; flex:none; font-size:11.5px; color:var(--text2); border-left:1px solid var(--border2); padding-left:12px; }
+.chn-guided-help h4 { margin:0 0 6px; font-size:12px; }
+.chn-gsec { border:1px solid var(--border2); border-radius:10px; background:var(--bg2); padding:10px 12px; margin-bottom:10px; }
+.chn-gsec h4 { margin:0 0 8px; font-size:12.5px; }
+.chn-glist { display:flex; flex-direction:column; gap:6px; }
+.chn-grow { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--border2); border-radius:8px; background:var(--bg1); }
+.chn-grow-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.chn-grow-top { display:flex; gap:6px; align-items:center; }
+.chn-grow-top input { flex:1; min-width:0; }
+.chn-grow-top input.chn-role { flex:none; width:130px; }
+.chn-grow-sub { font-size:10.5px; color:var(--text3); }
+.chn-gicon { font-size:15px; width:20px; text-align:center; flex:none; }
+.chn-gchips { display:flex; gap:4px; flex-wrap:wrap; padding-left:34px; margin:-2px 0 4px; }
+.chn-chip { font-size:9.5px; padding:1px 6px; border-radius:9px; background:var(--bg3); color:var(--text2); }
+.chn-gadd { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border2); }
+.chn-gadd select, .chn-gadd input { flex:1; min-width:110px; }
+.chn-cgroup { margin-bottom:10px; }
+.chn-cgroup h5 { margin:0 0 5px; font-size:11.5px; color:var(--text2); }
+.chn-f { display:flex; flex-direction:column; gap:3px; font-size:10.5px; color:var(--text3); margin-bottom:8px; }
+.chn-f small { font-size:9.5px; color:var(--text3); }
+.chn-grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px 10px; }
+.chn-checkline { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text2); margin:4px 0; }
+.chn-cond-row { display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin:4px 0; }
+.chn-cond-row select, .chn-cond-row input { font-size:11px; padding:3px 5px; }
+.chn-cond { font-size:11px; color:var(--text2); padding:3px 0; }
+.chn-scn-box { border:1px dashed var(--border2); border-radius:8px; padding:6px 8px; margin-bottom:8px; }
+.chn-inline-err { color:#f85149; font-size:11px; flex-basis:100%; }
+.chn-dlg-wrap { position:absolute; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:20; padding:12px; }
+.chn-dlg { width:min(470px,96%); max-height:90%; display:flex; flex-direction:column; background:var(--bg2); border:1px solid var(--border2); border-radius:12px; overflow:hidden; }
+.chn-dlg-head { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border2); }
+.chn-dlg-head h4 { margin:0; font-size:13px; flex:1; }
+.chn-dlg-body { padding:12px; overflow:auto; }
+.chn-svg .chn-port { fill:var(--bg1); stroke:var(--accent); stroke-width:2; opacity:0; cursor:crosshair; }
+.chn-svg .chn-connect-line { fill:none; stroke:var(--accent); stroke-width:2; stroke-dasharray:6 4; pointer-events:none; }
+.chn-node-g:hover .chn-port, .chn-node-g.sel .chn-port { opacity:1; }
+@media (max-width: 900px) { .chn-guided-help { display:none; } }
 @media (max-width: 900px) { .chn-det { width:250px; } }
 @media (max-width: 760px) {
   .chn-wrap { flex-direction:column; height:92vh; }
@@ -304,7 +448,8 @@ Object.assign(LANGS.hr, {
           <span class="chn-badge" id="chn-scn" style="display:none;"></span>
           <span class="chn-seg" id="chn-mode" role="group" style="display:none;"><button class="btn-sec btn-sm" data-m="diagram">${esc(t('chn_view_diagram'))}</button><button class="btn-sec btn-sm" data-m="list">${esc(t('chn_view_list'))}</button></span>
           <button class="btn-sec btn-sm" id="chn-check" style="display:none;">↻ ${esc(t('chn_check_now'))}</button>
-          <button class="btn-sec btn-sm" id="chn-edit" style="display:none;">{ } ${esc(t('chn_edit'))}</button>
+          <button class="btn-sec btn-sm" id="chn-edit" style="display:none;">✎ ${esc(t('chn_edit_chain'))}</button>
+          <button class="btn-sec btn-sm" id="chn-json" style="display:none;" title="${esc(t('chn_edit'))}">{ }</button>
           <button class="btn-sec btn-sm" id="chn-export" style="display:none;">⬇ ${esc(t('chn_export'))}</button>
           <button class="btn-sec btn-sm" id="chn-del" style="display:none;">${esc(t('chn_delete'))}</button>
           <button class="btn-pri btn-sm" id="chn-approve" style="display:none;">✓ ${esc(t('chn_approve'))}</button>
@@ -318,7 +463,8 @@ Object.assign(LANGS.hr, {
     ov.querySelector('#chn-new').onclick = openNew;
     ov.querySelector('#chn-import').onclick = importFile;
     ov.querySelector('#chn-check').onclick = (e) => checkNow(e.currentTarget);
-    ov.querySelector('#chn-edit').onclick = () => state.current && openEditor(state.current.id, { definition: state.current.definition, enabled: state.current.enabled });
+    ov.querySelector('#chn-edit').onclick = editCurrent;
+    ov.querySelector('#chn-json').onclick = () => state.current && openEditor(state.current.id, { definition: state.current.definition, enabled: state.current.enabled });
     ov.querySelector('#chn-export').onclick = () => { if (state.current) location.href = `/api/chains/${state.current.id}/export`; };
     ov.querySelector('#chn-del').onclick = deleteChain;
     ov.querySelector('#chn-approve').onclick = approveDraft;
@@ -336,7 +482,11 @@ Object.assign(LANGS.hr, {
   function open() {
     css();
     shell().classList.add('open');
-    api('GET', '/api/connections').then((l) => { state.conns = l || []; renderSide(); }).catch(() => {});
+    Promise.all([
+      api('GET', '/api/connections').catch(() => []),
+      api('GET', '/api/storages').catch(() => []),
+      api('GET', '/api/chains/catalog').catch(() => ({ types: {} })),
+    ]).then(([conns, storages, cat]) => { state.conns = conns || []; state.storages = storages || []; state.catalog = cat || { types: {} }; renderSide(); }).catch(() => {});
     loadList();
   }
 
@@ -597,7 +747,7 @@ Object.assign(LANGS.hr, {
         ${nodeShape(n, cls, sel.node === n.id)}
         <text x="12" y="${top}" font-size="13" fill="var(--text)" font-weight="600">${icon} ${esc(trunc(n.label || n.id, 20))}</text>
         <text x="12" y="${top + 16}" font-size="10.5" fill="var(--text2)">${esc(trunc(sub, 30))}</text>
-        ${dots}${count}<title>${esc([n.label || n.id, n.role, n.id].filter(Boolean).join(' · '))}</title></g>`;
+        ${dots}${count}<circle class="chn-port" data-port="${esc(n.id)}" cx="${NW}" cy="${NH / 2}" r="7"><title>${esc(t('chn_connect'))}</title></circle><title>${esc([n.label || n.id, n.role, n.id].filter(Boolean).join(' · '))}</title></g>`;
     });
     let svg = wrap.querySelector('svg');
     if (!svg) {
@@ -653,8 +803,14 @@ Object.assign(LANGS.hr, {
       if (e.button !== 0 || !state.current) return;
       const g = e.target.closest('[data-node]');
       const lk = e.target.closest('[data-link]');
+      const port = e.target.closest('[data-port]');
       const p = svgPoint(svg, e);
       const d = state.current.definition;
+      if (port) {
+        drag = { kind: 'connect', from: port.getAttribute('data-port'), p };
+        svg.setPointerCapture(e.pointerId);
+        return;
+      }
       if (g) {
         const id = g.getAttribute('data-node');
         const start = positions(d)[id];
@@ -678,6 +834,11 @@ Object.assign(LANGS.hr, {
         applyView(svg);
         return;
       }
+      if (drag.kind === 'connect') {
+        state.connectPoint = svgPoint(svg, e);
+        drawConnectLine(svg, drag.from, state.connectPoint);
+        return;
+      }
       if (drag.kind !== 'node') return;
       const p = svgPoint(svg, e);
       const dx = p.x - drag.p.x, dy = p.y - drag.p.y;
@@ -696,8 +857,28 @@ Object.assign(LANGS.hr, {
       drag = null;
       svg.classList.remove('panning');
       try { svg.releasePointerCapture(e.pointerId); } catch (_) { /* already released */ }
+      if (was.kind === 'connect') {
+        const line = svg.querySelector('.chn-connect-line');
+        if (line) line.remove();
+        if (e.type === 'pointercancel') return;
+        const el2 = document.elementFromPoint(e.clientX, e.clientY);
+        const target = el2 && el2.closest ? el2.closest('[data-node]') : null;
+        const to = target && target.getAttribute('data-node');
+        if (to && to !== was.from) {
+          openLinkDialog(state.current.definition, { from: was.from, to }, (l) => applyDefinition((d) => { d.links.push(l); }));
+        }
+        return;
+      }
       if (e.type === 'pointercancel') return;
       if (was.kind === 'node' && was.moved) { saveLayout(); return; }
+      if (was.kind === 'node' && state.pickTarget) {
+        const from = state.pickTarget;
+        state.pickTarget = null;
+        if (was.id !== from) openLinkDialog(state.current.definition, { from, to: was.id }, (l) => applyDefinition((d) => { d.links.push(l); }));
+        renderDiagram(svg.parentNode);
+        renderSide();
+        return;
+      }
       if (was.kind === 'node') state.sel = { node: was.id };
       else if (was.kind === 'link') state.sel = { link: was.i };
       else if (!was.moved) state.sel = null;
@@ -723,6 +904,18 @@ Object.assign(LANGS.hr, {
         renderSide();
       }
     });
+  }
+
+  function drawConnectLine(svg, from, to) {
+    let line = svg.querySelector('.chn-connect-line');
+    if (!line) {
+      line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      line.setAttribute('class', 'chn-connect-line');
+      svg.appendChild(line);
+    }
+    const p = positions(state.current.definition)[from];
+    if (!p) return;
+    line.setAttribute('d', `M${p.x + NW},${p.y + NH / 2} L${to.x},${to.y}`);
   }
 
   function saveLayout() {
@@ -784,7 +977,7 @@ Object.assign(LANGS.hr, {
         const b = el('span', 'chn-badge' + (s.id === c.scenario ? ' active' : ''), s.label || s.id);
         if (s.id !== c.scenario) b.style.borderLeft = '3px solid ' + SCN_COLORS[i % SCN_COLORS.length];
         row.appendChild(b);
-        ruleText(row, s.when);
+        ruleText(row, s.when, d);
         box.appendChild(row);
       });
     }
@@ -799,11 +992,36 @@ Object.assign(LANGS.hr, {
     });
   }
 
-  function ruleText(parent, when) {
-    const k = el('span', 'k', JSON.stringify(when || {}));
-    k.style.fontFamily = 'var(--font-mono)';
+  function ruleText(parent, when, def) {
+    const k = el('span', 'k', ruleSummary(def || state.current.definition, when));
     k.style.overflowWrap = 'anywhere';
     parent.appendChild(k);
+  }
+
+  // ruleSummary turns a scenario rule into a sentence a person can check at a glance.
+  function ruleSummary(def, when) {
+    if (!when) return t('chn_g_cond_none');
+    const one = (c) => {
+      if (c.all) return c.all.map(one).filter(Boolean).join(' · ');
+      if (c.any) return c.any.map(one).filter(Boolean).join(' | ');
+      if (c.node) {
+        const val = c.value === 'up' ? t('chn_g_up') : c.value === 'down' ? t('chn_g_down') : c.value;
+        return nodeName(def, c.node) + ' ' + (c.op || '==') + ' ' + val;
+      }
+      if (c.check) {
+        const subj = checkName(def, c.check);
+        if (c.field === 'ok') {
+          const yes = c.value === 'true' || c.value === '';
+          const op = c.op || '==';
+          const val = yes ? t('chn_g_ok') : t('chn_check_bad');
+          return subj + ' ' + op + ' ' + val;
+        }
+        return subj + ' ' + (c.op || '==') + ' ' + (c.value || '');
+      }
+      return '';
+    };
+    const parts = (when.all || when.any || [when]).map(one).filter(Boolean);
+    return parts.length ? parts.join(' · ') : t('chn_g_cond_none');
   }
 
   function renderDiagramOnly() {
@@ -827,9 +1045,27 @@ Object.assign(LANGS.hr, {
     if (n.kind === 'storage' && n.storage_id) box.appendChild(el('div', 'r', t('chn_storage') + ': #' + n.storage_id));
     if (ns && ns.error) box.appendChild(el('div', 'e', ns.error));
     const act = el('div', 'act');
-    const b = el('button', 'btn-sec btn-sm', '↻ ' + t('chn_check_now'));
-    b.onclick = () => checkNow(b);
-    act.appendChild(b);
+    if (!c.draft) {
+      const b = el('button', 'btn-sec btn-sm', '↻ ' + t('chn_check_now'));
+      b.onclick = () => checkNow(b);
+      act.appendChild(b);
+    }
+    const edit = el('button', 'btn-sec btn-sm', '✎ ' + t('chn_edit_chain'));
+    edit.onclick = editCurrent;
+    act.appendChild(edit);
+    const addChk = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_add_check'));
+    addChk.onclick = () => openCheckDialog(d, n, null, (chk) => applyDefinition((dd) => { dd.checks.push(chk); }));
+    act.appendChild(addChk);
+    const conn = el('button', 'btn-sec btn-sm', '⇢ ' + t('chn_connect'));
+    conn.onclick = () => { state.pickTarget = n.id; showToast(t('chn_pick_target')); };
+    act.appendChild(conn);
+    const delN = el('button', 'btn-sec btn-sm', '✕');
+    delN.title = t('chn_delete_node');
+    delN.onclick = () => {
+      if (!confirm(t('chn_delete_node') + ' · ' + (n.label || n.id) + '?')) return;
+      applyDefinition((dd) => stripNode(dd, n.id));
+    };
+    act.appendChild(delN);
     box.appendChild(act);
     const checks = (d.checks || []).filter((x) => x.node === n.id);
     box.appendChild(el('h5', '', t('chn_checks')));
@@ -848,6 +1084,26 @@ Object.assign(LANGS.hr, {
     }
     const ids = new Set(checks.map((x) => x.id));
     history(box, state.timeline.filter((e) => (e.kind === 'node' && e.subject === n.id) || (e.kind === 'check' && ids.has(e.subject))));
+  }
+
+  function stripNode(def, id) {
+    const gone = (def.checks || []).filter((x) => x.node === id).map((x) => x.id);
+    def.nodes = (def.nodes || []).filter((n) => n.id !== id);
+    def.checks = (def.checks || []).filter((x) => x.node !== id);
+    def.links = (def.links || []).filter((l) => l.from !== id && l.to !== id);
+    (def.scenarios || []).forEach((s) => cleanConds(s.when, id, gone));
+    (def.links || []).forEach((l) => { if (gone.includes(l.check)) delete l.check; });
+  }
+
+  function cleanConds(c, nodeID, checkIDs) {
+    if (!c) return;
+    if (c.node === nodeID) { delete c.node; delete c.op; delete c.value; }
+    if (c.check && checkIDs.includes(c.check)) { delete c.check; delete c.field; delete c.op; delete c.value; }
+    (c.all || []).forEach((x) => cleanConds(x, nodeID, checkIDs));
+    (c.any || []).forEach((x) => cleanConds(x, nodeID, checkIDs));
+    const empty = (x) => !x.check && !x.node && !(x.all && x.all.length) && !(x.any && x.any.length);
+    if (c.all) c.all = c.all.filter((x) => !empty(x));
+    if (c.any) c.any = c.any.filter((x) => !empty(x));
   }
 
   function dotOf(st) { return { ok: 'ok', bad: 'bad', warn: 'warn' }[st] || ''; }
@@ -877,6 +1133,12 @@ Object.assign(LANGS.hr, {
         delete def.node;
         more.appendChild(el('pre', '', JSON.stringify(def, null, 2)));
         if (r && r.at) more.appendChild(el('div', '', t('chn_last') + ': ' + when(r.at)));
+        const del = el('button', 'btn-sec btn-sm', '✕ ' + t('chn_g_remove'));
+        del.onclick = () => applyDefinition((dd) => {
+          dd.checks = (dd.checks || []).filter((y) => y.id !== x.id);
+          (dd.links || []).forEach((l) => { if (l.check === x.id) delete l.check; });
+        });
+        more.appendChild(del);
         history(more, state.timeline.filter((e) => e.kind === 'check' && e.subject === x.id), true);
         wrap.appendChild(more);
       }
@@ -920,6 +1182,12 @@ Object.assign(LANGS.hr, {
       b.onclick = () => { state.sel = { node: id }; renderDiagramOnly(); renderSide(); };
       act.appendChild(b);
     });
+    const del = el('button', 'btn-sec btn-sm', '✕ ' + t('chn_delete_link'));
+    del.onclick = () => applyDefinition((dd) => {
+      const at = (dd.links || []).indexOf(l);
+      if (at >= 0) dd.links.splice(at, 1);
+    });
+    act.appendChild(del);
     box.appendChild(act);
   }
 
@@ -929,7 +1197,9 @@ Object.assign(LANGS.hr, {
     const c = state.current;
     const isDraft = !!(c && c.draft);
     const show = (id, on) => { const b = $(id); if (b) b.style.display = on ? '' : 'none'; };
-    ['#chn-check', '#chn-edit', '#chn-export', '#chn-del'].forEach((id) => show(id, !!c && !isDraft));
+    ['#chn-check', '#chn-export', '#chn-del'].forEach((id) => show(id, !!c && !isDraft));
+    show('#chn-edit', !!c);
+    show('#chn-json', !!c && !isDraft);
     show('#chn-approve', isDraft);
     show('#chn-discard', isDraft);
     ['#chn-scn', '#chn-mode'].forEach((id) => show(id, !!c));
@@ -940,6 +1210,8 @@ Object.assign(LANGS.hr, {
     body.classList.toggle('dg', !!c && state.mode === 'diagram');
     $('#chn-name').textContent = c ? c.definition.name : t('chn_title');
     if (!c) { body.appendChild(el('div', 'chn-empty', state.list.length || state.drafts.length ? t('chn_pick') : t('chn_none'))); return; }
+    const eb = $('#chn-edit');
+    if (eb) eb.textContent = '✎ ' + (isDraft ? t('chn_g_edit_draft') : t('chn_edit_chain'));
     const scn = $('#chn-scn');
     if (isDraft) {
       scn.textContent = t('chn_draft_badge');
@@ -965,6 +1237,8 @@ Object.assign(LANGS.hr, {
     tool('+', t('chn_zoom_in'), () => zoom(1 / 1.25));
     tool('⤢', t('chn_fit'), () => { delete state.views[state.current.id]; renderDiagramOnly(); });
     tool('⟲', t('chn_auto_layout'), resetLayout);
+    tool('＋', t('chn_add_node'), () => openNodeDialog(state.current.definition, (n) => applyDefinition((d) => { d.nodes.push(n); })));
+    tool('⇢', t('chn_g_add_link'), () => openLinkDialog(state.current.definition, null, (l) => applyDefinition((d) => { d.links.push(l); })));
     canvas.appendChild(tools);
     const legend = el('div', 'chn-legend');
     [['#3fb950', t('chn_flow')], ['#f85149', t('chn_legend_bad')], ['#8892a0', t('chn_legend_idle')]].forEach(([col, txt]) => {
@@ -1025,7 +1299,7 @@ Object.assign(LANGS.hr, {
       d.scenarios.forEach((s) => {
         const row = el('div', 'chn-row');
         row.appendChild(el('span', 'chn-badge' + (s.id === c.scenario ? ' active' : ''), s.label || s.id));
-        ruleText(row, s.when);
+        ruleText(row, s.when, d);
         ss.appendChild(row);
       });
     }
@@ -1174,143 +1448,6 @@ Object.assign(LANGS.hr, {
       .catch((e) => showToast(e.message, 'error'));
   }
 
-  // An empty starting point for the JSON editor: one server, one service, two scenarios.
-  function emptyChain() {
-    return {
-      enabled: true,
-      definition: {
-        name: 'New chain', interval_s: 30, confirm: 2,
-        nodes: [{ id: 'app', kind: 'server', label: 'App server', role: 'app', conn_id: 0 }],
-        checks: [{ id: 'web', node: 'app', type: 'systemd', target: 'nginx.service', label: 'Web server' }],
-        links: [],
-        scenarios: [
-          { id: 'normal', label: 'Normal', when: { check: 'web', field: 'ok', op: '==', value: 'true' } },
-          { id: 'degraded', label: 'Degraded', when: {} },
-        ],
-      },
-    };
-  }
-
-  function editorPane(title) {
-    const main = $('.chn-main');
-    if (!main) return null;
-    const old = $('.chn-editor');
-    if (old) old.remove();
-    const ed = el('div', 'chn-editor');
-    const head = el('div', 'chn-editor-head');
-    head.appendChild(el('h3', '', title));
-    ed.appendChild(head);
-    main.appendChild(ed);
-    return ed;
-  }
-
-  // New chain: pick a generic template, choose a server or storage for each of its nodes,
-  // then create it at once or review the JSON first.
-  function openNew() {
-    const ed = editorPane(t('chn_new'));
-    if (!ed) return;
-    const head = ed.querySelector('.chn-editor-head');
-    const cancel = el('button', 'btn-sec btn-sm', t('chn_cancel'));
-    cancel.onclick = () => ed.remove();
-    head.appendChild(cancel);
-    const body = el('div', 'chn-tpls');
-    ed.appendChild(body);
-    Promise.all([
-      api('GET', '/api/chains/templates').catch(() => []),
-      api('GET', '/api/connections').catch(() => []),
-      api('GET', '/api/storages').catch(() => []),
-    ]).then(([tpls, conns, storages]) => {
-      body.appendChild(el('h4', '', t('chn_tpl_pick')));
-      const grid = el('div', 'chn-tpl-grid');
-      body.appendChild(grid);
-      const card = (name, desc, extra, fn) => {
-        const b = el('button', 'chn-tpl');
-        b.type = 'button';
-        b.appendChild(el('b', '', name));
-        b.appendChild(el('span', '', desc));
-        if (extra) { const x = el('span', '', ' · ' + extra); b.appendChild(x); }
-        b.onclick = fn;
-        grid.appendChild(b);
-      };
-      (tpls || []).forEach((tp) => {
-        const k = 'chn_tpl_' + tp.id;
-        card(LANGS.en[k] ? t(k) : tp.name, LANGS.en[k + '_d'] ? t(k + '_d') : tp.description,
-          fmt(t('chn_nodes_n'), { n: tp.definition.nodes.length }), () => templateForm(ed, body, tp, conns || [], storages || []));
-      });
-      card(t('chn_tpl_empty'), t('chn_tpl_empty_d'), '', () => openEditor(null, emptyChain()));
-    });
-  }
-
-  function templateForm(ed, body, tp, conns, storages) {
-    body.textContent = '';
-    const ssh = conns.filter((c) => (c.protocol || 'SSH').toUpperCase() === 'SSH');
-    const def = JSON.parse(JSON.stringify(tp.definition));
-    const form = el('div', 'chn-form');
-    body.appendChild(form);
-    const k = 'chn_tpl_' + tp.id;
-    form.appendChild(el('h4', '', LANGS.en[k] ? t(k) : tp.name));
-    const nameL = el('label', '', t('chn_tpl_name'));
-    const name = el('input');
-    name.value = def.name;
-    nameL.appendChild(name);
-    form.appendChild(nameL);
-    const pick = (kind, items, labelOf) => {
-      const nodes = def.nodes.filter((n) => n.kind === kind);
-      if (!nodes.length) return [];
-      form.appendChild(el('h5', '', t(kind === 'server' ? 'chn_tpl_servers' : 'chn_tpl_storages')));
-      if (!items.length) form.appendChild(el('div', 'note', t(kind === 'server' ? 'chn_tpl_no_ssh' : 'chn_tpl_no_storage')));
-      return nodes.map((n) => {
-        const l = el('label', '', [n.label || n.id, n.role].filter(Boolean).join(' · '));
-        const s = el('select');
-        s.appendChild(el('option', '', t('chn_tpl_choose'))).value = '';
-        items.forEach((it) => { const o = el('option', '', labelOf(it)); o.value = String(it.id); s.appendChild(o); });
-        l.appendChild(s);
-        form.appendChild(l);
-        return { n, s };
-      });
-    };
-    const picks = pick('server', ssh, (c) => c.name + (c.host ? ' (' + c.host + ')' : ''))
-      .concat(pick('storage', storages, (s) => s.name + (s.bucket ? ' · ' + s.bucket : '')));
-    form.appendChild(el('div', 'note', t('chn_tpl_after')));
-    const errs = el('div', 'chn-errs');
-    errs.setAttribute('role', 'status');
-    form.appendChild(errs);
-    const act = el('div', 'chn-row');
-    const back = el('button', 'btn-sec btn-sm', t('chn_back'));
-    back.onclick = () => { ed.remove(); openNew(); };
-    const json = el('button', 'btn-sec btn-sm', '{ } ' + t('chn_edit'));
-    const create = el('button', 'btn-pri btn-sm', t('chn_create'));
-    act.appendChild(back); act.appendChild(json); act.appendChild(create);
-    form.appendChild(act);
-    const build = (strict) => {
-      let missing = false;
-      picks.forEach(({ n, s }) => {
-        const v = Number(s.value) || 0;
-        if (!v) missing = true;
-        if (n.kind === 'server') n.conn_id = v; else n.storage_id = v;
-      });
-      def.name = name.value.trim() || def.name;
-      if (strict && missing) { errs.textContent = t('chn_tpl_missing'); return null; }
-      return { definition: def, enabled: true };
-    };
-    json.onclick = () => { const v = build(false); if (v) openEditor(null, v); };
-    create.onclick = () => {
-      const v = build(true);
-      if (!v) return;
-      create.disabled = true;
-      api('POST', '/api/chains', v).then((c) => {
-        ed.remove();
-        showToast(t('chn_saved'), 'success');
-        state.current = c;
-        state.sel = null;
-        return loadList();
-      }).catch((e) => {
-        errs.textContent = '';
-        (e.errors.length ? e.errors : [e.message]).forEach((x) => errs.appendChild(el('div', '', '• ' + x)));
-      }).finally(() => { create.disabled = false; });
-    };
-  }
-
   function importFile() {
     const inp = document.createElement('input');
     inp.type = 'file'; inp.accept = '.json,application/json';
@@ -1349,7 +1486,8 @@ Object.assign(LANGS.hr, {
   }
 
   function showErrors(ed, list, okText) {
-    const box = ed.querySelector('#chn-ed-errs');
+    const box = ed && ed.querySelector('#chn-ed-errs');
+    if (!box) { showToast((list && list[0]) || okText || t('chn_failed'), 'error'); return; }
     box.textContent = '';
     if (okText) { box.style.color = '#3fb950'; box.appendChild(el('div', '', okText)); return; }
     box.style.color = '';

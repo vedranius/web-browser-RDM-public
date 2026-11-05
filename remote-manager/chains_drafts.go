@@ -151,6 +151,8 @@ func apiChainDrafts(w http.ResponseWriter, r *http.Request, userID int, rest str
 		switch r.Method {
 		case http.MethodGet:
 			jsonOK(w, map[string]interface{}{"id": d.ID, "definition": d.Definition, "created_at": d.CreatedAt, "updated_at": d.UpdatedAt})
+		case http.MethodPut:
+			apiChainDraftUpdate(w, r, userID, d)
 		case http.MethodDelete:
 			if _, err := db.Exec(`DELETE FROM chain_drafts WHERE id=?`, d.ID); err != nil {
 				jsonError(w, "Server error", http.StatusInternalServerError)
