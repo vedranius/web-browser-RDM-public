@@ -1,3 +1,14 @@
+## [Unreleased]
+
+### Added
+
+- **Chains: the guided builder.** A chain no longer starts with JSON. *New chain* offers **Build with AI**, **Build step by step**, templates and an advanced JSON editor. The guided editor picks servers, storages or outside services from the existing connections, adds checks with a form for each catalog type (a systemd unit, a container, a port, a file, a mount, a config key, DNS/TCP/HTTP/TLS, a bucket), connects nodes (data, read, write, failover, dependency) and builds states (scenarios) with a condition editor; *Normal / Backup / Degraded* can be generated automatically. Every change is validated on the server with the same rules as before.
+- **Visual editing on the diagram.** Drag from a node's connector dot to another node to create a link (or use *Connect to…* in the node panel, which also works on touch); add a node or a link from the toolbar, add or remove a check from the node panel, and delete a node or link in one step. The same actions work on AI drafts, which can be adjusted before approval.
+- **The AI wizard now explores the servers first.** Pick only servers (storages are optional), optionally describe the system, and WRM runs one fixed read-only discovery over the selected connections: OS, running non-system services, Docker containers, listening ports and network/object-storage mounts (rclone, s3fs, NFS, CIFS, SSHFS). The facts are shown in the wizard and given to the assistant, which chooses real check targets instead of invented unit names and paths. Without an AI provider, or when the model fails validation, the same facts build a deterministic starter.
+- **No storage is required.** A chain of servers is complete on its own. Discovered network or object-storage mounts become `mount` checks on the server; when the mount source names a reachable host, the wizard adds an outside endpoint with a DNS check. WRM never attaches to a discovered storage, never needs its credentials and never creates a storage entry for it. Storage nodes still exist for storages the user already saved in WRM.
+- **Templates** no longer demand a storage: an unpicked storage node is simply left out.
+- **API:** `POST /api/chains/ai-draft` (selection + description → a draft, AI or deterministic fallback), `POST /api/chains/discover` (the read-only facts preview), `PUT /api/chains/drafts/{id}` (save edits to a draft). Discovery scripts are fixed text, bounded, and return names, ports and mount points, never file contents or credentials.
+
 ## [14.1.0] - 2026-11-04
 
 Chains: live monitoring of a whole service chain, its live diagram and an AI builder, in one release. Everything is additive; upgrading from v14.0.0 keeps the database and the encryption key.

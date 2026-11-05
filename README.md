@@ -2071,11 +2071,13 @@ The search box at the top of every file manager:
 
 **Chains** (top bar) watches a whole working system instead of single servers. Examples are ingest → transcoding → content → CDN with a primary and a backup path, or an application with its database, storage and DNS.
 
-A chain is written as JSON in the Chains window:
+A chain is built in the Chains window; JSON remains available for advanced edits. *New chain* offers **Build with AI**, **Build step by step**, templates and an advanced JSON editor. The guided editor picks nodes from your existing connections, adds checks with a form for each catalog type, connects nodes and builds states (scenarios) with a condition editor:
 - **Nodes:** saved SSH connections (`kind: server`, `conn_id`), storages from [Storages](#storages-s3) (`kind: storage`, `storage_id`), or outside endpoints (`kind: external`).
 - **Checks:** taken from a fixed catalog.
 - **Links:** data, read, write, failover or dependency between nodes, optionally coloured by a check.
 - **Scenarios:** ordered rules over the check results. The first scenario that matches is active; an empty rule `{}` is the fallback.
+
+**The guided builder.** Pick a server from the list (its name and host are shown), give it a role (`app`, `backup`, `database`…), add checks by choosing the type and filling the few fields it needs, add a link by choosing two nodes and a meaning, and let *Normal / Backup / Degraded* be generated or edit the states yourself. Nothing in the first flow requires JSON, and a **storage is optional**: a chain of servers is complete on its own.
 
 WRM checks each chain in the background with the connections it already has. All checks of a server run in one SSH round trip, and nothing is installed on the server.
 
@@ -2109,12 +2111,16 @@ A chain may use only its owner's connections and storages. Configuration keys th
 - nodes are laid out automatically along the links; drag a node to place it (all positions are saved with the chain), or press ⟲ *Arrange automatically*;
 - servers are boxes, storages buckets and outside endpoints dashed pills; the dots on a node are its checks;
 - a green, moving link carries traffic, red is failing, grey dashed is idle. A link is coloured by its `check`, or else by the state of its two nodes. Give a link `"scenarios": ["primary"]` to show it idle in every other scenario, for example the backup path of a failover pair;
-- click a node for its state, checks (click a check for its definition and history), links and recent changes, and *Check now*; click a link for its details. The wheel zooms, dragging the background pans, ⤢ fits the chain into the window;
+- drag from a node's connector dot to another node to create a link, or use *Connect to…* in the node panel (also on touch); the toolbar adds a node or a link, and the node panel adds or removes a check. Click a node for its state, checks (click a check for its definition and history), links and recent changes, and *Check now*; click a link for its details. The wheel zooms, dragging the background pans, ⤢ fits the chain into the window;
 - the band below shows which scenario was active when, with markers for check and server changes, followed by the list of changes.
 
-**Templates.** *New chain* starts from *One service* or *Primary and backup path*: choose the server or storage for each node, then *Create*, or *Edit JSON* to adjust service names, paths and addresses first. *Empty chain* opens the JSON editor.
+**Templates.** *New chain* also offers *One service* or *Primary and backup path*: choose the server for each server node and, only if you have one, a storage; an unpicked storage node is left out. Then *Create* or *Edit JSON* to adjust service names, paths and addresses first.
 
-**The AI builder.** In WRM's built-in AI assistant, describe the system ("ingest on this server, content on a second one, recordings in the bucket, CDN in front, with a backup path") and name the servers and storage. The assistant calls `chain_status` to see your chains, connections, storages and the fixed check types, inspects the server it is attached to with the read tools, and writes a **chain draft** with `chain_draft`. It can use only catalog check types and your own connections and storages; it cannot run a command, and a definition that is not valid comes back with every problem to fix.
+**The AI builder (wizard).** *New chain → Build with AI* asks for one or more of your servers (storages are optional) and, if you like, one sentence about the system. WRM then runs one fixed **read-only discovery** on each chosen server — OS, running services, Docker containers, listening ports and network/object-storage mounts (rclone, s3fs, NFS, CIFS, SSHFS) — shows the facts, and gives them to the assistant. The assistant uses those real service names, ports and mounts as check targets and writes a **chain draft**. Without an AI provider, or when the model's answer does not validate, the same facts build a deterministic starter, so the wizard always produces something usable.
+
+Discovered network or object-storage mounts become `mount` checks on their server; when the mount source names a reachable host, the wizard adds an outside endpoint with a DNS check. WRM does **not** attach to a discovered storage, does not create a storage entry and never asks for its credentials. Storage nodes exist only for storages you already saved in WRM.
+
+The assistant can also draft from its own chat: `chain_status` lists your chains, connections, storages and the fixed check types; `chain_draft` writes a draft from a definition that uses only catalog checks and your own connections and storages. It cannot run a command, and an invalid definition comes back with every problem to fix.
 
 A draft is **not monitored**. It appears in the Chains window under *Drafts from the AI*, opens on the same live diagram (unchecked, with the scenario rules it suggests), and you can discard it or press **Create chain**; only then is it validated again, created and checked in the background. The two tools are for WRM's built-in assistant; MCP connections do not get them yet.
 
@@ -3112,7 +3118,8 @@ Connections have `bmc: {type: redfish|ipmi, host, username, password (write-only
 | `POST /api/chains/{id}/check` · `GET /api/chains/{id}/timeline` · `GET /api/chains/{id}/export` | check now (the new state), the recorded changes, the definition as a JSON file |
 | `POST /api/chains/validate` · `GET /api/chains/catalog` | validate a definition without saving; the check types, operators, link kinds and formats |
 | `PUT /api/chains/{id}/layout` · `GET /api/chains/templates` | save diagram positions only (`{"positions":{"node-id":{"x":…,"y":…}}}` or `{"reset":true}`); the starter templates |
-| `GET /api/chains/drafts` · `GET / DELETE /api/chains/drafts/{id}` · `POST /api/chains/drafts/{id}/approve` | the signed-in user's AI drafts (list or one definition); discard a draft; validate it and create the monitored chain from it |
+| `GET /api/chains/drafts` · `GET / PUT / DELETE /api/chains/drafts/{id}` · `POST /api/chains/drafts/{id}/approve` | the signed-in user's AI drafts (list, one definition, save edits); discard a draft; validate it and create the monitored chain from it |
+| `POST /api/chains/ai-draft` · `POST /api/chains/discover` | build a draft from selected `conn_ids`/`storage_ids` and a description (AI or deterministic fallback); preview the read-only facts (OS, services, containers, ports, mounts) the wizard uses |
 | `GET / POST /api/storages` · `GET / PUT / DELETE /api/storages/{id}` · `POST /api/storages/{id}/test` | storages (secrets never returned; policy `storages_enabled`) |
 | `GET /api/storages/{id}/objects?prefix=&cursor=` · `GET / HEAD / PUT / DELETE /api/storages/{id}/object?key=` | list and objects inside the storage prefix (Range, `?inline=1`); DELETE needs `allow_delete` and `X-WRM-Confirm: delete` |
 | `GET / PUT /api/storages/{id}/text?key=` · `POST /api/storages/{id}/dir?prefix=` · `POST /api/storages/{id}/move` | editor `{content, etag, bom, crlf}` with `If-Match` (409 on a stale write), new folder, rename `{from, to, overwrite}` |
@@ -3533,6 +3540,7 @@ remote-manager/
   medium_native_test.go  Medium native: deploy-config validation, state paths, exclude rules and the diff against real rsync (fixed cases and random trees), server state, Git sources (fake GitLab / GitHub / Gitea), connection links, comparison run
   chains_test.go       Chains: script answers and value extraction (INI, JSON, YAML, env, kv, regex), rules and scenarios, change confirmation, validation (ownership, secrets, egress), the API end to end with HTTP, TCP, storage and an unreachable server, the node script in a real shell, diagram positions (saved alone, range-checked, owner only, reset) and every starter template validating
   chains_drafts_test.go Chains step 3: AI drafts list/read/approve/discard, ownership, an invalid draft kept for fixing, the approval creating an enabled chain and auditing it, the `chain_status` / `chain_draft` tools (one draft per session, foreign connections and unknown fields refused, built-in assistant only)
+  chains_assist_test.go Chains guided wizard: discovery output parsing (services, containers, ports, network/object-storage mounts, no local disks or SSH), the starter built from facts without any storage, mount-host extraction, the AI draft with one validation repair, and the deterministic fallback with ownership checks
   v1400_storage_escape_test.go   Storages: share page escaping and quoted download file names
   v13152_s3stub_test.go … v13154_storage_share_test.go  Storages: S3 stub with an independent SigV4 check, CRUD, prefix confinement, capabilities, delete gate, editor (BOM/CRLF, 409), Range, status, export/import, MCP tools, share links
   git_where_test.go      deploy history merged from two destinations and WRM runs (filters, cache, CSV with file lists, policy), what is where (commits behind the branch head, drift, installations, CSV)
