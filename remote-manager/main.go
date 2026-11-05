@@ -398,7 +398,6 @@ func newRouter() http.Handler {
 	// storages: S3-compatible object storage, a section of its own (docs/STORAGES.md)
 	mux.HandleFunc("/api/storages", apiStoragesHandler)
 	mux.HandleFunc("/api/storages/", apiStoragesHandler)
-	mux.HandleFunc("/s3/", storageShareHandler)
 	// chains: live monitoring of a service chain (chains.go)
 	mux.HandleFunc("/api/chains", apiChainsHandler)
 	mux.HandleFunc("/api/chains/", apiChainsHandler)
@@ -1126,8 +1125,6 @@ func initDB() {
 		"id", "chain_id", "at", "kind", "subject", "old_value", "new_value", "ok")
 	ensureTable("chain_drafts", chainDraftSchema,
 		"id", "user_id", "session_id", "name", "definition", "created_at", "updated_at")
-	ensureTable("storage_shares", storageShareSchema,
-		"id", "storage_id", "token_hash", "prefix", "can_write", "can_delete", "expires_at", "created_by", "created_at")
 	ensureTable("snippets", `CREATE TABLE IF NOT EXISTS snippets (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,

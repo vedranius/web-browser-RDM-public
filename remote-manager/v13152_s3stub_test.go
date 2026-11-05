@@ -293,17 +293,41 @@ func (s *s3Stub) list(w http.ResponseWriter, r *http.Request) {
 		contents = append(contents, content{Key: k, Size: len(s.objects[k]), ETag: `"` + s.etags[k] + `"`})
 	}
 	s.mu.Unlock()
+	max := 1000
+	if v := q.Get("max-keys"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n < max {
+			max = n
+		}
+	}
+	offset := 0
+	if v := q.Get("continuation-token"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			offset = n
+		}
+	}
+	if offset > len(contents) {
+		offset = len(contents)
+	}
+	page := contents[offset:]
+	truncated := false
+	next := ""
+	if len(page) > max {
+		page = page[:max]
+		truncated = true
+		next = strconv.Itoa(offset + max)
+	}
 	type result struct {
-		XMLName        xml.Name `xml:"ListBucketResult"`
-		Name           string   `xml:"Name"`
-		Prefix         string   `xml:"Prefix"`
-		IsTruncated    bool     `xml:"IsTruncated"`
-		Contents       []content
-		CommonPrefixes []struct {
+		XMLName               xml.Name `xml:"ListBucketResult"`
+		Name                  string   `xml:"Name"`
+		Prefix                string   `xml:"Prefix"`
+		IsTruncated           bool     `xml:"IsTruncated"`
+		NextContinuationToken string   `xml:"NextContinuationToken,omitempty"`
+		Contents              []content
+		CommonPrefixes        []struct {
 			Prefix string `xml:"Prefix"`
 		} `xml:"CommonPrefixes"`
 	}
-	out := result{Name: s.bucket, Prefix: prefix, Contents: contents}
+	out := result{Name: s.bucket, Prefix: prefix, Contents: page, IsTruncated: truncated, NextContinuationToken: next}
 	for _, p := range prefixes {
 		out.CommonPrefixes = append(out.CommonPrefixes, struct {
 			Prefix string `xml:"Prefix"`

@@ -94,17 +94,6 @@ const storageSchema = `CREATE TABLE IF NOT EXISTS storages (
 		created_at TEXT NOT NULL DEFAULT '',
 		updated_at TEXT NOT NULL DEFAULT '')`
 
-const storageShareSchema = `CREATE TABLE IF NOT EXISTS storage_shares (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		storage_id INTEGER NOT NULL,
-		token_hash TEXT NOT NULL UNIQUE,
-		prefix TEXT NOT NULL DEFAULT '',
-		can_write INTEGER NOT NULL DEFAULT 0,
-		can_delete INTEGER NOT NULL DEFAULT 0,
-		expires_at TEXT NOT NULL DEFAULT '',
-		created_by INTEGER NOT NULL DEFAULT 0,
-		created_at TEXT NOT NULL DEFAULT '')`
-
 // loadStorage returns a storage the user may see: their own, or any when they are an
 // administrator (the same rule connections follow).
 func loadStorage(id, userID int) (Storage, error) {
@@ -268,7 +257,6 @@ func storageStatusLoop() {
 	for {
 		if settingBool("storages_enabled") {
 			refreshStorageStatus()
-			storageSharesCleanup()
 		}
 		time.Sleep(5 * time.Minute)
 	}
@@ -584,6 +572,10 @@ func apiStoragesHandler(w http.ResponseWriter, r *http.Request) {
 		apiStoragesRoot(w, r)
 		return
 	}
+	if rest == "test" {
+		apiStorageTestDraft(w, r)
+		return
+	}
 	parts := strings.Split(rest, "/")
 	if len(parts) == 1 {
 		apiStorageByID(w, r)
@@ -602,8 +594,6 @@ func apiStoragesHandler(w http.ResponseWriter, r *http.Request) {
 		apiStorageMove(w, r)
 	case "text":
 		apiStorageText(w, r)
-	case "shares":
-		apiStorageShares(w, r)
 	default:
 		jsonError(w, "Not found", http.StatusNotFound)
 	}
@@ -737,7 +727,6 @@ func apiStorageByID(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Not found", http.StatusNotFound)
 			return
 		}
-		db.Exec(`DELETE FROM storage_shares WHERE storage_id=?`, s.ID)
 		if _, err := db.Exec(`DELETE FROM storages WHERE id=?`, s.ID); err != nil {
 			jsonError(w, "Server error", http.StatusInternalServerError)
 			return
@@ -750,6 +739,43 @@ func apiStorageByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // apiStorageTest re-checks the credentials and the bucket without saving.
+// apiStorageTestDraft checks the fields of a storage that is not saved yet, so "Test
+// connection" works before the user commits the form.
+func apiStorageTestDraft(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	userID, ok := requireAuth(w, r)
+	if !ok {
+		return
+	}
+	var in struct {
+		Storage
+		Secret string `json:"secret"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&in); err != nil {
+		jsonError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	s := in.Storage
+	s.Secret = in.Secret
+	if strings.TrimSpace(s.Secret) == "" {
+		jsonError(w, "enter the secret key", http.StatusBadRequest)
+		return
+	}
+	if err := validateStorage(&s, userID); err != nil {
+		jsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := storagePreflight(s, s.Secret); err != nil {
+		auditLog(r, userID, "storage.test_failed", s.Name, map[string]interface{}{"error": err.Error(), "draft": true})
+		jsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	auditLog(r, userID, "storage.tested", s.Name, map[string]interface{}{"draft": true, "bucket": s.Bucket})
+	jsonOK(w, map[string]interface{}{"ok": true})
+}
+
 func apiStorageTest(w http.ResponseWriter, r *http.Request) {
 	s, userID, ok := requireStorage(w, r, "read")
 	if !ok {

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -427,5 +428,88 @@ func TestS3ClientDirect(t *testing.T) {
 	}
 	if err := c.delete(rctx(), "a/copy.json"); err != nil {
 		t.Fatalf("delete of a missing key: %v", err)
+	}
+}
+
+// TestStorageListingPagination: a folder larger than one S3 page is returned page by page, and
+// the cursor walks every object exactly once. The UI follows the cursor and counts the folder.
+func TestStorageListingPagination(t *testing.T) {
+	u, stub, id := storageTestEnv(t, "storage-pages", nil)
+	for i := 0; i < 1205; i++ {
+		stub.put(fmt.Sprintf("team-a/big/%04d.dat", i), []byte("x"))
+	}
+	type page struct {
+		Objects []struct {
+			Key string `json:"key"`
+		} `json:"objects"`
+		Next      string `json:"next"`
+		Truncated bool   `json:"truncated"`
+	}
+	var first page
+	base := "/api/storages/" + strconv.Itoa(id) + "/objects?prefix=big"
+	if code := u.jsonDo("GET", base, nil, &first); code != http.StatusOK {
+		t.Fatalf("first page: %d", code)
+	}
+	if len(first.Objects) != 1000 || !first.Truncated || first.Next == "" {
+		t.Fatalf("first page: %d objects, truncated=%v next=%q", len(first.Objects), first.Truncated, first.Next)
+	}
+	var second page
+	if code := u.jsonDo("GET", base+"&cursor="+url.QueryEscape(first.Next), nil, &second); code != http.StatusOK {
+		t.Fatalf("second page: %d", code)
+	}
+	if len(second.Objects) != 205 || second.Truncated {
+		t.Fatalf("second page: %d objects, truncated=%v", len(second.Objects), second.Truncated)
+	}
+	seen := map[string]bool{}
+	for _, o := range append(first.Objects, second.Objects...) {
+		if seen[o.Key] {
+			t.Fatalf("object %q returned twice", o.Key)
+		}
+		seen[o.Key] = true
+	}
+	if len(seen) != 1205 {
+		t.Fatalf("walked %d objects, want 1205", len(seen))
+	}
+}
+
+// TestStorageSharesRemoved: the read-only S3 share links are gone for security; the API is no
+// longer routable and the public /s3/ endpoint does not serve a share.
+func TestStorageSharesRemoved(t *testing.T) {
+	u, _, id := storageTestEnv(t, "storage-shares-gone", nil)
+	if code := u.jsonDo("POST", "/api/storages/"+strconv.Itoa(id)+"/shares", map[string]interface{}{"hours": 1}, nil); code != http.StatusNotFound {
+		t.Fatalf("share API still answers: %d", code)
+	}
+	resp, err := http.Get(u.srv.URL + "/s3/anything")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		t.Fatalf("/s3/ still serves a page: %d", resp.StatusCode)
+	}
+}
+
+// TestStorageDraftTest: Test connection works on the form values before the storage is saved.
+func TestStorageDraftTest(t *testing.T) {
+	u, _, _ := storageTestEnv(t, "storage-draft-test", nil)
+	var endpoint string
+	if err := db.QueryRow(`SELECT endpoint FROM storages WHERE user_id=?`, u.userID).Scan(&endpoint); err != nil {
+		t.Fatal(err)
+	}
+	body := map[string]interface{}{
+		"name": "draft", "endpoint": endpoint, "region": "us-east-1", "bucket": "wrm-test-bucket",
+		"prefix": "team-a", "path_style": true, "access_key": "AKIASTORAGE", "secret": "secret-storage-key",
+	}
+	if code := u.jsonDo("POST", "/api/storages/test", body, nil); code != http.StatusOK {
+		t.Fatalf("draft test: %d", code)
+	}
+	var list []Storage
+	u.jsonDo("GET", "/api/storages", nil, &list)
+	if len(list) != 1 {
+		t.Fatalf("draft test created a storage: %+v", list)
+	}
+	body["secret"] = "wrong"
+	if code := u.jsonDo("POST", "/api/storages/test", body, nil); code != http.StatusBadRequest {
+		t.Fatalf("wrong secret: %d", code)
 	}
 }

@@ -307,13 +307,15 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 
 ## Storages (v14.0.0)
 
+- **Read-only share links were removed in v14.3.0.** There is no public `/s3/` route and no share API; a link created by an older version no longer resolves. The section is reachable only by signed-in users with the storage's permissions.
+
 - Secrets are encrypted with the installation key and never returned, logged or exported without an explicit export with secrets.
 - Every key is resolved inside the storage prefix; `..`, empty segments, absolute paths and control characters are refused before a request is signed.
 - Write, upload and delete are separate per-storage switches checked on the server; a delete needs `X-WRM-Confirm: delete` and step-up where the security level asks for it.
 - The endpoint must pass the egress policy when saved and on every connection (DNS rebinding); redirects are not followed, so the signature cannot leak to another host. A self-signed endpoint is trusted only by its pinned SHA-256 fingerprint.
 - Share links are random tokens stored hashed, read-only, confined to their prefix, expiring and revocable; the page has no script, and download names are quoted.
 - AI connections need the opt-in scopes `storage_read`, `storage_write`, `storage_delete`; a server approval never grants storage access, and writes and deletes need the automatic mode because a storage has no session in which a single change could be approved.
-- `storages_enabled=0` closes the section, its API, its MCP tools and its share links at once.
+- `storages_enabled=0` closes the section, its API and its MCP tools at once.
 
 ## AI assistant: threat model
 

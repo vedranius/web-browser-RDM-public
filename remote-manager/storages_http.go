@@ -69,7 +69,7 @@ func apiStorageObjects(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	res, err := c.list(r.Context(), rel, r.URL.Query().Get("cursor"), 500)
+	res, err := c.list(r.Context(), rel, r.URL.Query().Get("cursor"), 1000)
 	if err != nil {
 		jsonError(w, err.Error(), http.StatusBadGateway)
 		return

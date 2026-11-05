@@ -6,6 +6,14 @@
 'use strict';
 
 Object.assign(LANGS.en, {
+  stg_search_ph: 'Search this folder…', stg_sort: 'Sort',
+  stg_sort_name: 'Name', stg_sort_size: 'Size', stg_sort_date: 'Date', stg_sort_asc: 'Ascending', stg_sort_desc: 'Descending',
+  stg_select_all: 'Select all', stg_total: 'Objects: {n} · Folders: {m} · {size}', stg_loading_n: 'Loaded: {n} objects…',
+  stg_all_shown: 'all objects in this folder are shown', stg_filtered: 'Showing {x} of {y} objects',
+  stg_no_match: 'No objects match the search.', stg_delete_selected: 'Delete selected ({n})',
+  stg_delete_selected_q: 'Delete {n} selected objects? This cannot be undone.', stg_deleted_some: 'Deleted {n} objects.',
+  stg_load_more: 'Load more', stg_partial: 'Showing {n} objects; the folder has more — press Load more.',
+  stg_copy_path: 'Copy path', stg_copied: 'Copied.',
   stg_title: 'Storages', stg_add: 'Add storage', stg_none: 'No storages yet. Add an S3-compatible endpoint (Hetzner, DigitalOcean, AWS, MinIO).',
   stg_name: 'Name', stg_endpoint: 'Endpoint', stg_region: 'Region', stg_bucket: 'Bucket', stg_prefix: 'Prefix (folder inside the bucket)',
   stg_access: 'Access key', stg_secret: 'Secret key', stg_secret_keep: 'Leave empty to keep the current key',
@@ -25,12 +33,16 @@ Object.assign(LANGS.en, {
   stg_loading: 'Loading…', stg_failed: 'The storage request failed.', stg_storage: 'Storage', stg_files: 'Files',
   stg_upload_done: 'Uploaded.', stg_deleted: 'Deleted.', stg_moved: 'Renamed.',
   stg_provider_hetzner: 'Hetzner Object Storage', stg_provider_do: 'DigitalOcean Spaces', stg_provider_aws: 'Amazon S3', stg_provider_minio: 'MinIO',
-  stg_share: 'Share', stg_share_t: 'Read-only link to a prefix', stg_share_prefix: 'Folder to share (relative to the storage prefix)',
-  stg_share_hours: 'Valid for (hours)', stg_share_create: 'Create link', stg_share_link: 'Link (shown once)', stg_share_copy: 'Copy',
-  stg_share_revoke: 'Revoke', stg_share_none: 'No links yet.', stg_share_q: 'Revoke this link? Everyone who has it loses access.',
-  stg_share_expires: 'Expires', stg_share_hint: 'Anyone with the link can list and download this folder, read-only, until it expires.',
 });
 Object.assign(LANGS.hr, {
+  stg_search_ph: 'Pretraži ovu mapu…', stg_sort: 'Sortiraj',
+  stg_sort_name: 'Naziv', stg_sort_size: 'Veličina', stg_sort_date: 'Datum', stg_sort_asc: 'Uzlazno', stg_sort_desc: 'Silazno',
+  stg_select_all: 'Odaberi sve', stg_total: 'Objekti: {n} · Mape: {m} · {size}', stg_loading_n: 'Učitano: {n} objekata…',
+  stg_all_shown: 'prikazani su svi objekti ove mape', stg_filtered: 'Prikazano {x} od {y} objekata',
+  stg_no_match: 'Nijedan objekt ne odgovara pretrazi.', stg_delete_selected: 'Obriši odabrano ({n})',
+  stg_delete_selected_q: 'Obrisati {n} odabranih objekata? To se ne može poništiti.', stg_deleted_some: 'Obrisano {n} objekata.',
+  stg_load_more: 'Učitaj još', stg_partial: 'Prikazano {n}; mapa ima još — pritisnite Učitaj još.',
+  stg_copy_path: 'Kopiraj putanju', stg_copied: 'Kopirano.',
   stg_title: 'Storage', stg_add: 'Dodaj storage', stg_none: 'Nema storagea. Dodajte S3-kompatibilni endpoint (Hetzner, DigitalOcean, AWS, MinIO).',
   stg_name: 'Naziv', stg_endpoint: 'Endpoint', stg_region: 'Regija', stg_bucket: 'Bucket', stg_prefix: 'Prefiks (mapa unutar bucketa)',
   stg_access: 'Access key', stg_secret: 'Secret key', stg_secret_keep: 'Ostavite prazno da ostane postojeći ključ',
@@ -50,14 +62,10 @@ Object.assign(LANGS.hr, {
   stg_loading: 'Učitavam…', stg_failed: 'Zahtjev prema storageu nije uspio.', stg_storage: 'Storage', stg_files: 'Datoteke',
   stg_upload_done: 'Poslano.', stg_deleted: 'Obrisano.', stg_moved: 'Preimenovano.',
   stg_provider_hetzner: 'Hetzner Object Storage', stg_provider_do: 'DigitalOcean Spaces', stg_provider_aws: 'Amazon S3', stg_provider_minio: 'MinIO',
-  stg_share: 'Dijeli', stg_share_t: 'Link samo za čitanje na mapu', stg_share_prefix: 'Mapa za dijeljenje (relativno na prefiks storagea)',
-  stg_share_hours: 'Vrijedi (sati)', stg_share_create: 'Stvori link', stg_share_link: 'Link (prikazuje se jednom)', stg_share_copy: 'Kopiraj',
-  stg_share_revoke: 'Ukini', stg_share_none: 'Nema linkova.', stg_share_q: 'Ukiniti ovaj link? Svi koji ga imaju izgubit će pristup.',
-  stg_share_expires: 'Istječe', stg_share_hint: 'Svatko s linkom može popisati i preuzeti ovu mapu, samo čitanje, dok link ne istekne.',
 });
 
 (function () {
-  const state = { list: [], current: null, prefix: '', entries: [], next: '', editor: null, styleAdded: false };
+  const state = { list: [], current: null, prefix: '', entries: [], prefixes: [], next: '', loading: false, more: false, loadToken: 0, pages: 0, filter: '', sort: 'name', dir: 1, selected: new Set(), totalBytes: 0, complete: true, editor: null, styleAdded: false };
   const VIDEO_EXT = ['.mp4', '.webm', '.m4v', '.mov', '.ogv'];
   const TEXT_EXT = ['.json', '.txt', '.md', '.yaml', '.yml', '.xml', '.ini', '.conf', '.cfg', '.env', '.sh', '.go', '.py', '.js', '.ts', '.css', '.html', '.srt', '.vtt', '.ass', '.ssa', '.log', '.csv'];
   const IMAGE_EXT = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.avif'];
@@ -65,6 +73,7 @@ Object.assign(LANGS.hr, {
   const $ = (sel) => document.querySelector(sel);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const ext = (k) => { const i = k.lastIndexOf('.'); return i < 0 ? '' : k.slice(i).toLowerCase(); };
+  const fmt = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v[k] != null ? String(v[k]) : ''));
 
   function css() {
     if (state.styleAdded) return;
@@ -89,6 +98,13 @@ Object.assign(LANGS.hr, {
 .stg-crumbs { font-size:12px; color:var(--text2); flex:1; min-width:120px; }
 .stg-crumbs a { color:var(--accent); cursor:pointer; text-decoration:none; }
 .stg-crumbs span { color:var(--text3); }
+.stg-tools { display:flex; align-items:center; gap:8px; padding:7px 14px; border-bottom:1px solid var(--border2); flex-wrap:wrap; }
+.stg-tools input[type=search] { flex:1; min-width:150px; max-width:320px; }
+.stg-tools select { width:auto; }
+.stg-all { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text2); white-space:nowrap; }
+.stg-count { font-size:10.5px; color:var(--text3); margin-left:auto; }
+.stg-more { padding:8px 14px 12px; text-align:center; }
+.stg-row input[type=checkbox] { margin:0; flex:none; }
 .stg-rows { flex:1; overflow:auto; padding:6px 10px; }
 .stg-row { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:6px; font-size:12.5px; }
 .stg-row:hover { background:var(--bg3); }
@@ -147,11 +163,23 @@ Object.assign(LANGS.hr, {
           <div class="stg-crumbs" id="stg-crumbs"></div>
           <button class="btn-sec btn-sm" id="stg-upload" style="display:none;">⬆ ${esc(t('stg_upload'))}</button>
           <button class="btn-sec btn-sm" id="stg-newdir" style="display:none;">＋ ${esc(t('stg_new_folder'))}</button>
-          <button class="btn-sec btn-sm" id="stg-share" style="display:none;">🔗 ${esc(t('stg_share'))}</button>
           <button class="btn-sec btn-sm" id="stg-refresh">↻</button>
           <button class="btn-sec btn-sm" id="stg-close">✕</button>
         </div>
+        <div class="stg-tools">
+          <input id="stg-search" type="search" placeholder="${esc(t('stg_search_ph'))}" autocomplete="off">
+          <select id="stg-sort" title="${esc(t('stg_sort'))}">
+            <option value="name">${esc(t('stg_sort_name'))}</option>
+            <option value="size">${esc(t('stg_sort_size'))}</option>
+            <option value="date">${esc(t('stg_sort_date'))}</option>
+          </select>
+          <button class="btn-sec btn-sm" id="stg-dir" title="${esc(t('stg_sort_desc'))}">↓</button>
+          <label class="stg-all"><input type="checkbox" id="stg-all"> ${esc(t('stg_select_all'))}</label>
+          <button class="btn-sec btn-sm danger" id="stg-bulk-del" style="display:none;"></button>
+          <span class="stg-count" id="stg-count"></span>
+        </div>
         <div class="stg-rows" id="stg-rows"></div>
+        <div class="stg-more" id="stg-more" style="display:none;"><button class="btn-sec btn-sm" id="stg-more-btn">${esc(t('stg_load_more'))}</button></div>
         <div class="stg-empty" id="stg-hint" style="display:none;"></div>
       </div></div>`;
     document.body.appendChild(ov);
@@ -161,7 +189,17 @@ Object.assign(LANGS.hr, {
     ov.querySelector('#stg-refresh').onclick = () => loadPrefix(state.prefix);
     ov.querySelector('#stg-upload').onclick = uploadFile;
     ov.querySelector('#stg-newdir').onclick = newFolder;
-    ov.querySelector('#stg-share').onclick = openShares;
+    ov.querySelector('#stg-search').oninput = (e) => { state.filter = e.target.value; renderBrowser(); };
+    ov.querySelector('#stg-sort').onchange = (e) => { state.sort = e.target.value; renderBrowser(); };
+    const dirBtn = ov.querySelector('#stg-dir');
+    dirBtn.onclick = () => { state.dir = -state.dir; dirBtn.textContent = state.dir > 0 ? '↑' : '↓'; dirBtn.title = state.dir > 0 ? t('stg_sort_asc') : t('stg_sort_desc'); renderBrowser(); };
+    ov.querySelector('#stg-all').onchange = (e) => {
+      const { files } = visibleLists();
+      files.forEach((o) => { if (e.target.checked) state.selected.add(o.key); else state.selected.delete(o.key); });
+      renderBrowser();
+    };
+    ov.querySelector('#stg-bulk-del').onclick = deleteSelected;
+    ov.querySelector('#stg-more-btn').onclick = loadMore;
     return ov;
   }
 
@@ -223,16 +261,113 @@ Object.assign(LANGS.hr, {
     return false;
   }
 
+  // A folder is loaded completely: the client follows every continuation token, shows the
+  // running count, and only then says how many objects and folders the folder holds. A hard cap
+  // (100 pages) protects a huge bucket; beyond it "Load more" continues from the last cursor.
   function loadPrefix(prefix) {
     if (!state.current) { renderBrowser(); return; }
     const id = state.current.id;
-    api('GET', `/api/storages/${id}/objects?prefix=${encodeURIComponent(prefix || '')}`).then((res) => {
-      if (!state.current || state.current.id !== id) return;
-      state.prefix = res.prefix || '';
-      state.entries = (res.objects || []).slice();
-      state.prefixes = res.prefixes || [];
+    const token = ++state.loadToken;
+    state.prefix = prefix || '';
+    state.entries = [];
+    state.prefixes = [];
+    state.next = '';
+    state.more = false;
+    state.complete = false;
+    state.loading = true;
+    state.pages = 0;
+    state.totalBytes = 0;
+    state.selected = new Set();
+    state.filter = '';
+    const search = $('#stg-search'); if (search) search.value = '';
+    renderBrowser();
+    fetchPage(token, id, '', true);
+  }
+
+  function fetchPage(token, id, cursor, first) {
+    const url = `/api/storages/${id}/objects?prefix=${encodeURIComponent(state.prefix)}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    api('GET', url).then((res) => {
+      if (token !== state.loadToken || !state.current || state.current.id !== id) return;
+      if (first) state.prefix = res.prefix || state.prefix;
+      const seenP = new Set(state.prefixes);
+      (res.prefixes || []).forEach((p) => { if (!seenP.has(p)) { seenP.add(p); state.prefixes.push(p); } });
+      const seenO = new Set(state.entries.map((o) => o.key));
+      (res.objects || []).forEach((o) => {
+        if (seenO.has(o.key)) return;
+        seenO.add(o.key);
+        state.entries.push(o);
+        state.totalBytes += o.size || 0;
+      });
+      state.next = res.next || '';
+      state.pages++;
+      const more = !!res.truncated && !!state.next;
+      if (more && state.pages < 100) {
+        state.loading = true;
+        renderStatus();
+        fetchPage(token, id, state.next, false);
+        return;
+      }
+      state.loading = false;
+      state.complete = !more;
+      state.more = more;
       renderBrowser();
-    }).catch((e) => { showToast(e.message, 'error'); renderBrowser(); });
+    }).catch((e) => {
+      if (token !== state.loadToken) return;
+      state.loading = false;
+      state.complete = false;
+      showToast(e.message, 'error');
+      renderBrowser();
+    });
+  }
+
+  function loadMore() {
+    if (!state.current || !state.next || state.loading) return;
+    state.loading = true;
+    state.pages = 0;
+    state.more = false;
+    renderStatus();
+    fetchPage(state.loadToken, state.current.id, state.next, false);
+  }
+
+  function visibleLists() {
+    const q = state.filter.trim().toLowerCase();
+    const folders = (state.prefixes || []).filter((p) => !q || p.toLowerCase().includes(q)).slice().sort((a, b) => a.localeCompare(b));
+    const files = (state.entries || []).filter((o) => !q || o.key.toLowerCase().includes(q));
+    files.sort((a, b) => {
+      let x, y;
+      if (state.sort === 'size') { x = a.size || 0; y = b.size || 0; }
+      else if (state.sort === 'date') { x = a.last_modified || ''; y = b.last_modified || ''; }
+      else { x = a.key.toLowerCase(); y = b.key.toLowerCase(); }
+      return (x < y ? -1 : x > y ? 1 : 0) * state.dir;
+    });
+    return { folders, files };
+  }
+
+  function renderStatus() {
+    const count = $('#stg-count'), moreBox = $('#stg-more'), bulk = $('#stg-bulk-del');
+    if (!count) return;
+    const { files } = visibleLists();
+    let text;
+    if (state.loading) {
+      text = fmt(t('stg_loading_n'), { n: state.entries.length });
+    } else if (state.more) {
+      text = fmt(t('stg_partial'), { n: state.entries.length });
+    } else {
+      text = fmt(t('stg_total'), { n: state.entries.length, m: state.prefixes.length, size: fmtSize(state.totalBytes) }) + ' · ' + t('stg_all_shown');
+    }
+    if (state.filter.trim()) text = fmt(t('stg_filtered'), { x: files.length, y: state.entries.length }) + ' · ' + text;
+    count.textContent = text;
+    if (moreBox) moreBox.style.display = state.more ? 'block' : 'none';
+    if (bulk) {
+      bulk.style.display = state.selected.size ? '' : 'none';
+      bulk.textContent = fmt(t('stg_delete_selected'), { n: state.selected.size });
+    }
+    const all = $('#stg-all');
+    if (all) {
+      const visible = files.length;
+      all.checked = visible > 0 && files.every((o) => state.selected.has(o.key));
+      all.indeterminate = !all.checked && files.some((o) => state.selected.has(o.key));
+    }
   }
 
   function renderBrowser() {
@@ -248,12 +383,12 @@ Object.assign(LANGS.hr, {
       hint.textContent = t('stg_none');
       hint.style.display = 'block';
       up.style.display = 'none'; nd.style.display = 'none';
-      const sh0 = document.getElementById('stg-share'); if (sh0) sh0.style.display = 'none';
+      const tools = $('.stg-tools'); if (tools) tools.style.display = 'none';
       return;
     }
+    const tools = $('.stg-tools'); if (tools) tools.style.display = '';
     up.style.display = can('upload') ? '' : 'none';
     nd.style.display = can('write') ? '' : 'none';
-    const shb = document.getElementById('stg-share'); if (shb) shb.style.display = '';
 
     const root = el('a', null, state.current.name);
     root.onclick = () => loadPrefix('');
@@ -261,30 +396,42 @@ Object.assign(LANGS.hr, {
     let acc = '';
     state.prefix.split('/').filter(Boolean).forEach((part) => {
       acc += part + '/';
-      const sep = el('span', null, ' / ');
-      crumbs.appendChild(sep);
+      crumbs.appendChild(el('span', null, ' / '));
       const a = el('a', null, part);
       a.onclick = () => loadPrefix(acc);
       crumbs.appendChild(a);
     });
 
-    (state.prefixes || []).forEach((p) => {
+    renderStatus();
+    if (state.loading && !state.entries.length && !state.prefixes.length) {
+      rows.appendChild(el('div', 'stg-empty', t('stg_loading')));
+      return;
+    }
+
+    const { folders, files } = visibleLists();
+    folders.forEach((p) => {
       const name = p.slice(state.prefix.length).replace(/\/$/, '');
       const row = el('div', 'stg-row');
       const k = el('div', 'k', '📁 ' + name);
+      k.title = p;
       k.onclick = () => loadPrefix(p);
       k.style.cursor = 'pointer';
       row.appendChild(k);
-      const s = el('div', 's', '');
-      const d = el('div', 'd', '');
-      row.appendChild(s); row.appendChild(d);
-
+      row.appendChild(el('div', 's', ''));
+      row.appendChild(el('div', 'd', ''));
       rows.appendChild(row);
     });
 
-    (state.entries || []).forEach((o) => {
+    files.forEach((o) => {
       const name = o.key.slice(state.prefix.length);
       const row = el('div', 'stg-row');
+      if (can('delete')) {
+        const cb = el('input');
+        cb.type = 'checkbox';
+        cb.checked = state.selected.has(o.key);
+        cb.onchange = () => { if (cb.checked) state.selected.add(o.key); else state.selected.delete(o.key); renderStatus(); };
+        row.appendChild(cb);
+      }
       const k = el('div', 'k', '📄 ' + name);
       k.title = o.key;
       k.style.cursor = 'pointer';
@@ -297,6 +444,11 @@ Object.assign(LANGS.hr, {
       dl.title = t('stg_download');
       dl.onclick = () => downloadObject(o.key);
       row.appendChild(dl);
+
+      const cp = el('button', 'btn-sec btn-sm', '⧉');
+      cp.title = t('stg_copy_path');
+      cp.onclick = () => { copyText(o.key); showToast(t('stg_copied'), 'success'); };
+      row.appendChild(cp);
 
       if (can('write')) {
         const ed = el('button', 'btn-sec btn-sm', '✏');
@@ -317,10 +469,32 @@ Object.assign(LANGS.hr, {
       rows.appendChild(row);
     });
 
-    if (!(state.prefixes || []).length && !(state.entries || []).length) {
-      hint.textContent = t('stg_empty_bucket');
+    if (!folders.length && !files.length) {
+      hint.textContent = state.filter.trim() ? t('stg_no_match') : t('stg_empty_bucket');
       hint.style.display = 'block';
     }
+  }
+
+  function deleteSelected() {
+    const keys = Array.from(state.selected);
+    if (!keys.length || !state.current) return;
+    if (!confirm(fmt(t('stg_delete_selected_q'), { n: keys.length }))) return;
+    const id = state.current.id;
+    const prefix = state.prefix;
+    let done = 0;
+    const next = (i) => {
+      if (i >= keys.length) {
+        showToast(fmt(t('stg_deleted_some'), { n: done }), done ? 'success' : 'error');
+        state.selected = new Set();
+        loadPrefix(prefix);
+        return;
+      }
+      fetch(`/api/storages/${id}/object?key=${encodeURIComponent(keys[i])}`, {
+        method: 'DELETE', credentials: 'same-origin',
+        headers: { 'X-WRM-Request': '1', 'X-WRM-Confirm': 'delete' },
+      }).then((res) => { if (res.ok) done++; }).catch(() => {}).finally(() => next(i + 1));
+    };
+    next(0);
   }
 
   function fmtSize(n) {
@@ -622,78 +796,6 @@ Object.assign(LANGS.hr, {
     }).catch((e) => showToast(e.message, 'error'));
   }
 
-  // ─── share links ──────────────────────────────────────────────────────────────────────
-
-  function openShares() {
-    const s = state.current;
-    if (!s) return;
-    api('GET', `/api/storages/${s.id}/shares`).then((list) => renderShares(list || []))
-      .catch((e) => showToast(e.message, 'error'));
-  }
-
-  function renderShares(list) {
-    const s = state.current;
-    document.querySelectorAll('.stg-share-modal').forEach((n) => n.remove());
-    const ov = el('div', 'modal-overlay open stg-share-modal');
-    const rows = list.map((sh) => `<li style="display:flex;gap:10px;align-items:center;padding:4px 0;">
-        <span style="flex:1;">📁 ${esc(sh.prefix || '/')}</span>
-        <span class="stg-hintx">${esc(t('stg_share_expires'))}: ${esc((sh.expires_at || '').slice(0, 16).replace('T', ' '))}</span>
-        <button class="btn-sec btn-sm" data-share="${sh.id}">${esc(t('stg_share_revoke'))}</button></li>`).join('');
-    ov.innerHTML = `<div class="modal" style="width:min(620px,94vw);">
-      <h3>🔗 ${esc(t('stg_share_t'))}</h3>
-      <p class="stg-hintx">${esc(t('stg_share_hint'))}</p>
-      <div class="field"><label for="stg-sh-prefix">${esc(t('stg_share_prefix'))}</label>
-        <input id="stg-sh-prefix" type="text" value="${esc(state.prefix.replace(/\/$/, ''))}"></div>
-      <div class="field"><label for="stg-sh-hours">${esc(t('stg_share_hours'))}</label>
-        <input id="stg-sh-hours" type="number" min="1" max="720" value="24"></div>
-      <div id="stg-sh-link" style="display:none;margin:10px 0;">
-        <div class="stg-hintx">${esc(t('stg_share_link'))}</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input id="stg-sh-url" type="text" readonly style="flex:1;" value="">
-          <button class="btn-sec btn-sm" id="stg-sh-copy">${esc(t('stg_share_copy'))}</button>
-        </div>
-      </div>
-      <h3 style="margin-top:16px;font-size:12px;">${esc(t('stg_share'))}</h3>
-      <ul style="list-style:none;padding:0;margin:0;">${rows || `<li class="stg-hintx">${esc(t('stg_share_none'))}</li>`}</ul>
-      <div class="modal-footer">
-        <button class="btn-sec" id="stg-sh-close">${esc(t('stg_cancel'))}</button>
-        <button class="btn-pri" id="stg-sh-create">${esc(t('stg_share_create'))}</button>
-      </div></div>`;
-    document.body.appendChild(ov);
-    ov.addEventListener('mousedown', (e) => { if (e.target === ov) ov.remove(); });
-    ov.querySelector('#stg-sh-close').onclick = () => ov.remove();
-    ov.querySelectorAll('[data-share]').forEach((btn) => {
-      btn.onclick = () => {
-        if (!confirm(t('stg_share_q'))) return;
-        api('DELETE', `/api/storages/${s.id}/shares/${btn.dataset.share}`)
-          .then(() => api('GET', `/api/storages/${s.id}/shares`))
-          .then((l) => renderShares(l || []))
-          .catch((e) => showToast(e.message, 'error'));
-      };
-    });
-    ov.querySelector('#stg-sh-create').onclick = () => {
-      const prefix = ov.querySelector('#stg-sh-prefix').value.trim();
-      const hours = parseInt(ov.querySelector('#stg-sh-hours').value, 10) || 24;
-      api('POST', `/api/storages/${s.id}/shares`, { prefix, hours }).then((sh) => {
-        const url = location.origin + sh.url;
-        const box = ov.querySelector('#stg-sh-link');
-        box.style.display = 'block';
-        ov.querySelector('#stg-sh-url').value = url;
-        ov.querySelector('#stg-sh-copy').onclick = () => copyText(url);
-        return api('GET', `/api/storages/${s.id}/shares`).then((l) => {
-          // Re-render, but keep the new link visible.
-          renderShares(l || []);
-          const again = document.querySelector('.stg-share-modal');
-          if (again) {
-            again.querySelector('#stg-sh-link').style.display = 'block';
-            again.querySelector('#stg-sh-url').value = url;
-            again.querySelector('#stg-sh-copy').onclick = () => copyText(url);
-          }
-        });
-      }).catch((e) => showToast(e.message, 'error'));
-    };
-  }
-
   // ─── add / edit a storage ──────────────────────────────────────────────────────────────
 
   function editStorage(s) {
@@ -745,9 +847,9 @@ Object.assign(LANGS.hr, {
     document.getElementById('stg-f-cancel').onclick = () => ov.remove();
     document.getElementById('stg-f-test').onclick = (ev) => {
       const btn = ev.currentTarget;
-      if (isNew) { showToast(t('stg_test') + ': ' + t('stg_save'), 'info'); return; }
       btn.disabled = true; btn.textContent = t('stg_testing');
-      api('POST', `/api/storages/${src.id}/test`).then(() => showToast(t('stg_test_ok'), 'success'))
+      const req = isNew ? api('POST', '/api/storages/test', body()) : api('POST', `/api/storages/${src.id}/test`);
+      req.then(() => showToast(t('stg_test_ok'), 'success'))
         .catch((e) => showToast(e.message, 'error'))
         .finally(() => { btn.disabled = false; btn.textContent = t('stg_test'); });
     };

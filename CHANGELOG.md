@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Added
+
+- **Storage browser shows a whole folder.** The window follows every S3 continuation token instead of showing the first 500 objects: while it loads it reports the running count, and when it is done it shows the total object and folder count and size plus "all objects in this folder are shown". Above a 100-page safety limit it offers *Load more* instead of silently truncating the listing.
+- **Test connection before saving:** the add-storage form now checks the endpoint, bucket and keys with the values in the form (`POST /api/storages/test`), instead of only testing a saved storage.
+- **Search, sort and selection in a storage folder:** search filters the complete folder and reports "showing X of Y", sort orders by name, size or date (ascending/descending), select-all and bulk delete work on the visible selection, and *Copy path* copies an object key. Rows keep download, preview, edit, rename and delete.
+
+### Removed
+
+- **Read-only S3 share links are gone for security.** The `Share` button, the `/api/storages/{id}/shares` API and the public `/s3/{token}` page were removed; links created by an older version stop working. Storage access now always needs a signed-in account with the storage's permissions. The unused `storage_shares` table may remain on old installations and can be dropped.
+
 ### Fixed
 
 - **Chains wizard with four or more servers.** A starter built from discovered facts could make check ids longer than the 40-character limit and a "Normal" rule with more than the 20 conditions one rule list may hold, so the wizard answered "Could not build a starter chain". Check ids are now shortened with a numeric collision suffix, and the all-checks-OK rule is nested in groups of 20. The same validation still applies to AI drafts (one repair round).

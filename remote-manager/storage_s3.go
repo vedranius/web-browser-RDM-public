@@ -359,6 +359,19 @@ type listBucketResult struct {
 	} `xml:"CommonPrefixes"`
 }
 
+// humanSize formats a byte count for checks and storage views.
+func humanSize(n int64) string {
+	switch {
+	case n >= 1<<30:
+		return strconv.FormatFloat(float64(n)/(1<<30), 'f', 1, 64) + " GB"
+	case n >= 1<<20:
+		return strconv.FormatFloat(float64(n)/(1<<20), 'f', 1, 64) + " MB"
+	case n >= 1<<10:
+		return strconv.FormatFloat(float64(n)/(1<<10), 'f', 1, 64) + " KB"
+	}
+	return strconv.FormatInt(n, 10) + " B"
+}
+
 // list returns one page of a prefix listing; relPrefix is relative to the storage prefix.
 func (c *s3Client) list(ctx context.Context, relPrefix, cursor string, max int) (s3List, error) {
 	q := url.Values{"list-type": []string{"2"}, "delimiter": []string{"/"}}
