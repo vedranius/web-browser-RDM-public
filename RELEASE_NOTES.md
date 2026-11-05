@@ -1,8 +1,40 @@
-## Web Remote Manager PRO v14.1.0 — Chains: live monitoring, a live diagram and an AI builder
+## Web Remote Manager PRO v14.2.0 — Chains you can build, with an AI that reads the servers
+
+Chains leaves JSON behind: a guided builder, a workflow-like diagram and a wizard that inspects the chosen servers before the assistant drafts anything. A storage is no longer required.
+
+### New: the guided builder
+
+- *New chain* offers **Build with AI**, **Build step by step**, templates and advanced JSON. The guided editor picks servers, storages and outside services from the saved connections, adds checks with a form for each catalog type, connects nodes and edits states (scenarios) with a condition editor; *Normal / Backup / Degraded* can be generated.
+- Drag from a node's connector dot to another node to create a link, or use *Connect to…* in the node panel (also on touch). The toolbar adds a node or a link; the node panel adds/removes checks; nodes and links can be deleted in place. The same works on AI drafts before approval.
+- Scenario rules are shown as sentences, not JSON, and custom rules are preserved when the editor opens.
+
+### The AI wizard discovers the system first
+
+- Pick servers (storages optional) and, if you want, describe the system. WRM runs one fixed, read-only discovery per server: OS, running non-system services, Docker containers, listening ports and network/object-storage mounts (rclone, s3fs, NFS, CIFS, SSHFS). The facts are shown in the wizard and given to the assistant, which uses real service names, ports and mounts as check targets.
+- No AI provider, or an answer that fails validation, is not a dead end: the same facts build a deterministic starter.
+- `POST /api/chains/ai-draft` and `POST /api/chains/discover` are the new endpoints; drafts can be edited with `PUT /api/chains/drafts/{id}`.
+
+### No storage required, nothing attached
+
+- A chain of servers is complete on its own. Templates leave an unpicked storage node out, and the wizard accepts zero storages.
+- A discovered network/object-storage mount becomes a `mount` check on its server; when the source names a reachable host, an outside endpoint with a DNS check is added. WRM does not mount it, does not create a storage entry, never asks for its credentials and never uses a `storage_id` for it. Storage nodes remain only for storages you already saved.
+
+### Security
+
+- Discovery is fixed text over the selected connections, read-only and bounded: names, ports and mount points only — no file contents, environment variables or credentials.
+- Every node must use a connection or storage the caller owns; the AI answer passes the same `validateChain` and facts are treated as untrusted data in the prompt.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.2.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.2.0) asset. Preserve the database and encryption key. No database or setting change; existing chains and the v14.1.0 tables are unchanged.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.1.0 — Chains: live monitoring, a live diagram and an AI builder
 
 Chains is a new core section: WRM watches a whole working system instead of single servers, draws it as a live diagram, and the built-in assistant can draft the chain from your description. Everything is additive; upgrading from v14.0.0 keeps the database and the encryption key.
 
-### New: Chains
+#### New: Chains
 
 - **A chain** is the set of servers, storages and outside endpoints that form one system (for example ingest → transcoding → content → CDN, with a primary and a backup path). It holds nodes (saved SSH connections, storages, outside endpoints), checks per node from a fixed catalog, links (data, read, write, failover, dependency) and scenarios: ordered rules over the results, the first match being the active path.
 - **Read-only checks, nothing installed:** systemd unit and timer, Docker container, process count, listening port, file and its age, file count in a directory, one configuration value (INI, JSON, YAML, env, `key = value` or a regular expression), mount (rw/ro), crontab line and WRM's monitoring state — all in one SSH round trip per server. From WRM: DNS (optional resolver), TCP, HTTP(S) status or a JSON value, TLS expiry, and a storage's bucket or its newest object under a prefix.
@@ -12,13 +44,13 @@ Chains is a new core section: WRM watches a whole working system instead of sing
 - **Notifications:** `chain.scenario_changed`, `chain.check_changed`, `chain.node_down` and `chain.node_up` through the existing channels and Workboard; `chain_changed` refreshes an open window.
 - **AI builder:** describe the system in WRM's assistant. `chain_status` shows your chains, connections, storages and the check catalog; `chain_draft` writes a validated draft using catalog checks and only your own connections and storages. A draft is not monitored and starts nothing: it appears under *Drafts from the AI* in Chains, opens on the same diagram, and you approve it with *Create chain* (or discard it). One draft per assistant session, audited as `chain.drafted`.
 
-### Security
+#### Security
 
 - Nothing is installed on a server and a chain can never run a command: the check script is fixed text and parameters reach it as data.
 - A chain can use only its owner's connections and storages, configuration keys that look like secrets are refused, and only extracted values are kept.
 - A draft is validated again when it is approved, and a draft cannot add a check type, a foreign connection or a command. The builder tools are available only in WRM's built-in assistant.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.1.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.1.0) asset. Preserve the database and encryption key. Three tables are added (`chains`, `chain_samples`, `chain_drafts`); an older binary still starts on the database. The **Chains** button appears in the top bar (kill switch `chains_enabled`, default interval `chain_interval_s`). AI connection scopes do not change.
 

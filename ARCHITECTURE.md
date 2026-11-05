@@ -14,7 +14,7 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. Security checks (v12.6.20): `security.yml` (govulncheck, staticcheck, gosec against `.github/security/gosec-baseline.json`, gitleaks, actionlint/zizmor, dependency review), `codeql.yml`, `scorecard.yml`, `claude-security-review.yml`, Trivy in the Docker job, Dependabot; `nightly.yml` (v12.6.21: Go fuzzing of the import parsers, OWASP ZAP). Releases: `SHA256SUMS.txt` signed with ed25519 (`releasesign.go`, checked by the self-update), CycloneDX SBOM, build provenance; all actions pinned to commit SHAs with read-only tokens by default. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
-## Chains (v14.1.0, plus the unreleased guided builder)
+## Chains (v14.2.0)
 
 `chains.go` holds:
 - the model (`chainDef`: nodes, checks, links, scenarios) and its validation (`validateChain`), which returns every problem with a path;

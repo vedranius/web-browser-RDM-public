@@ -1,4 +1,6 @@
-## [Unreleased]
+## [14.2.0] - 2026-11-05
+
+Chains becomes something you build in the window, with an AI that reads the servers first and no storage requirement. Everything is additive; upgrading from v14.1.0 keeps the database and the encryption key.
 
 ### Added
 
