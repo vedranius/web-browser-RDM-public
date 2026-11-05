@@ -387,6 +387,7 @@ Object.assign(LANGS.hr, {
       return;
     }
     const tools = $('.stg-tools'); if (tools) tools.style.display = '';
+    const allWrap = document.querySelector('.stg-all'); if (allWrap) allWrap.style.display = can('delete') ? '' : 'none';
     up.style.display = can('upload') ? '' : 'none';
     nd.style.display = can('write') ? '' : 'none';
 
