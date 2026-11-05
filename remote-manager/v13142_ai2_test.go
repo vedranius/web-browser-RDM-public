@@ -37,6 +37,17 @@ func TestReadDenySecretFiles(t *testing.T) {
 	if aiReadDenied("~/.ssh/id_ed25519.pub") != "" {
 		t.Error("a public key is refused")
 	}
+	// A log glob must not be refused because it could theoretically end in .ppk; the explicit
+	// key path still is.
+	if why := aiReadDenied("follower/logs/follower.log*"); why != "" {
+		t.Errorf("a log glob is refused as %q", why)
+	}
+	if aiReadDenied("follower/logs/follower.log.ppk") == "" {
+		t.Error("an explicit PuTTY key is readable")
+	}
+	if aiReadDenied("/var/log/nginx/*.log") != "" {
+		t.Error("a normal log glob is refused")
+	}
 }
 
 // TestSanitizeServerInfo covers AI-04: server-controlled text must not inject lines or

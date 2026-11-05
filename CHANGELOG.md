@@ -1,3 +1,10 @@
+## [Unreleased]
+
+### Fixed
+
+- **A log glob is no longer mistaken for a PuTTY key.** `follower.log*` (and other ordinary log globs) was refused because it could theoretically expand to `follower.log.ppk`; extension-only sensitive patterns now apply to explicit paths, while explicit `.ppk`, `.key`, `.p12` and `.pfx` files stay blocked.
+- **WRM stays reachable with parallel MCP sessions and several tabs.** The database pool grew from 8 to 32 connections with idle expiry, and connection/folder lists load their visual labels in one query instead of one query per row. Eight MCP tool calls plus browser tabs could previously hold every connection in a nested lookup and leave the UI waiting until a restart.
+
 ## [14.3.0] - 2026-11-05
 
 Storage folders load completely with search, sorting and selection; read-only S3 share links are removed for security; the Chains wizard handles four or more servers. Upgrading from v14.2.0 keeps the database and the encryption key.

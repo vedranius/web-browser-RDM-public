@@ -343,9 +343,10 @@ func loadFolders(userID int) []Folder {
 			out = append(out, f)
 		}
 	}
+	labels := visualLabelsFor("folder")
 	for i := range out {
 		out[i].Path = folderPath(out, out[i].ID)
-		out[i].Label = loadVisualLabel("folder", out[i].ID)
+		out[i].Label = labels[out[i].ID]
 	}
 	return out
 }

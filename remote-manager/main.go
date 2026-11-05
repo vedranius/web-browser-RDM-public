@@ -923,10 +923,13 @@ func initDB() {
 	if err != nil {
 		log.Fatalf("Open DB: %v", err)
 	}
-	// A small, bounded pool: SQLite allows one writer and any number of readers, and an
-	// unbounded pool under a burst only produces "database is locked" storms.
-	db.SetMaxOpenConns(8)
-	db.SetMaxIdleConns(8)
+	// A bounded pool: SQLite allows one writer and many readers, but a few code paths read a
+	// list while looking up a per-row value, and an MCP client may run up to 8 tool calls in
+	// parallel next to several open browser tabs. Eight connections let those nested lookups
+	// take the last connection and wait forever; 32 keeps headroom for the UI and for MCP.
+	db.SetMaxOpenConns(32)
+	db.SetMaxIdleConns(16)
+	db.SetConnMaxIdleTime(5 * time.Minute)
 	if err = db.Ping(); err != nil {
 		log.Fatalf("Ping DB: %v", err)
 	}
@@ -1897,12 +1900,13 @@ func loadUserConnections(userID int) []Connection {
 	}
 	defer rows.Close()
 	defaults := folderDefaultsOf(userID)
+	labels := visualLabelsFor("connection")
 	for rows.Next() {
 		var c Connection
 		var tags string
 		rows.Scan(&c.ID, &c.Name, &c.Protocol, &c.Host, &c.Username, &c.AuthMethod, &c.Password, &c.PrivateKey, &c.KeyPath, &c.FolderID, &c.JumpID, &c.WebPath, &c.KeyID, &c.CredentialID, &tags, &c.ProxyID)
 		c.Tags = parseTags(tags)
-		c.Label = loadVisualLabel("connection", c.ID)
+		c.Label = labels[c.ID]
 		decryptConnectionSecrets(&c)
 		c.UserID = userID
 		var fd Folder
