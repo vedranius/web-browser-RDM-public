@@ -68,24 +68,3 @@ func TestStorageEditorCannotCreateWithoutUpload(t *testing.T) {
 		t.Fatal("the editor created an object without the upload permission")
 	}
 }
-
-// TestStorageKillSwitchClosesShares: storages_enabled=0 also closes the public share links.
-func TestStorageKillSwitchClosesShares(t *testing.T) {
-	u, _, id := storageTestEnv(t, "storage-review-kill", nil)
-	var sh storageShare
-	if code := u.jsonDo("POST", "/api/storages/"+strconv.Itoa(id)+"/shares", map[string]interface{}{"hours": 1}, &sh); code != http.StatusOK {
-		t.Fatalf("create share: %d", code)
-	}
-	if _, err := setSetting("storages_enabled", "0"); err != nil {
-		t.Fatal(err)
-	}
-	defer setSetting("storages_enabled", "1")
-	resp, err := http.Get(u.srv.URL + sh.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf("share link with storages off: %d, want 404", resp.StatusCode)
-	}
-}

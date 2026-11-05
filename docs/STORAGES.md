@@ -44,8 +44,14 @@ per storage; an administrator can turn the whole section off with `storages_enab
 
 ## What the browser does
 
-- Lists prefixes like folders. Objects: preview (images), play (video through Range requests),
-  download, edit, rename, delete.
+- Lists prefixes like folders. A folder is loaded **completely**: WRM follows every S3
+  continuation token, shows the running count while it loads, and then shows the total object
+  and folder count and size with a clear "all objects in this folder are shown" line. Above a
+  100-page safety limit it offers *Load more* instead of hiding the rest.
+- **Search** filters the complete folder, **sort** orders by name, size or date, **select all**
+  and **bulk delete** work on the visible selection, and *Copy path* copies an object key.
+  Objects: preview (images), play (video through Range requests), download, edit, rename,
+  delete.
 - **Editor:** JSON (format, validate), YAML/XML/INI, scripts, and subtitles (SRT, WebVTT, ASS/SSA)
   with a timing check, a shift and a renumber. Saves keep the BOM and the line endings and use
   `If-Match`, so a file changed in the meantime is a conflict, not a silent overwrite.
@@ -54,15 +60,6 @@ per storage; an administrator can turn the whole section off with `storages_enab
   subtitle track (SRT/ASS converted to VTT in the browser; the stored file is untouched).
 - WRM is not a transfer tool here: uploads are for small files (16 MB per object by default,
   2 MB in the editor). Large media is streamed, never buffered.
-
-## Share links
-
-**Share** in the storage window creates a read-only link to one prefix:
-
-- the token is random, stored hashed, and shown to you once;
-- the link expires (default 24 h, at most 30 days) and can be revoked at any time;
-- the page is plain server-rendered HTML without a script; visitors can list and download inside
-  the shared prefix only.
 
 ## AI / MCP
 
@@ -97,6 +94,7 @@ for its owner, and `storage.up` when it comes back (Notifications → events).
 
 ## Backup and rollback
 
-The two tables (`storages`, `storage_shares`) are created on start; nothing else changes. A
-database backup covers them. To remove the feature, set `storages_enabled=0`; to remove the data
-as well, drop the two tables.
+The `storages` table is created on start; nothing else changes. A database backup covers it. To
+remove the feature, set `storages_enabled=0`; to remove the data as well, drop the table. An old
+installation may still have the unused `storage_shares` table from v14.0.0-v14.2.0; the share
+feature and its `/s3/` route are gone, so those links no longer work and the table can be dropped.
