@@ -1,22 +1,37 @@
-## Web Remote Manager PRO v14.3.0 — Complete storage folders, no share links, and the Chains fix
+## Web Remote Manager PRO v14.3.1 — Log reads and MCP responsiveness
+
+A small bug-fix release for two problems seen in daily use: the AI refusing an ordinary log file, and WRM becoming unreachable while Claude's MCP connection works in parallel with several browser tabs.
+
+### Fixed
+
+- **A log glob is not a private key.** `follower.log*` (and other ordinary log globs) was refused as a PuTTY private key because it could theoretically expand to `follower.log.ppk`. Extension-only rules now apply to explicit paths; `server.ppk`, `.key`, `.p12` and `.pfx` files are still refused.
+- **WRM stays reachable with parallel MCP calls and several tabs.** The database pool grew from 8 to 32 connections with idle expiry, and connection/folder lists load their labels in one query instead of one per row. Eight MCP tool calls plus browser tabs could previously hold every connection in a nested lookup, leaving the UI waiting until a service restart; closing tabs is no longer needed.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.3.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.1) asset. Preserve the database and encryption key. No database or setting change.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.3.0 — Complete storage folders, no share links, and the Chains fix
 
 A storage folder is now loaded and counted completely, the browser gets search, sorting and bulk actions, the public S3 share links are removed for security, and the Chains wizard no longer fails with four or more servers.
 
-### Storage browser
+#### Storage browser
 
 - **The whole folder, not the first page.** The window follows every S3 continuation token, shows the running count while loading, then the total object and folder count and size with "all objects in this folder are shown"; above a 100-page safety limit it offers *Load more*.
 - **Search, sort, select.** Search filters the complete folder ("showing X of Y"), sort by name, size or date ascending/descending, select-all and bulk delete work on the visible selection, and *Copy path* copies an object key.
 - **Test connection before saving** checks the endpoint, bucket and keys from the add form (`POST /api/storages/test`); it no longer needs a saved storage.
 
-### Removed: S3 share links
+#### Removed: S3 share links
 
 - The `Share` button, `GET/POST /api/storages/{id}/shares`, `DELETE .../shares/{id}` and the public `/s3/{token}` page are gone. Links created by an older version stop working; storage access always needs a signed-in account with the storage's permissions. The unused `storage_shares` table may remain and can be dropped.
 
-### Fixed
+#### Fixed
 
 - **Chains wizard with four or more servers** no longer fails with "check id must be 1-40 characters" or "too many rules in one list": ids are shortened with a collision suffix, and a large all-checks-OK state is nested in groups of 20.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.3.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.0) asset. Preserve the database and encryption key. No database or setting change; existing storages and chains are unchanged, but old share links no longer work.
 
