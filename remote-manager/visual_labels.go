@@ -29,6 +29,27 @@ func validateVisualLabel(v *visualLabel) error {
 func initVisualLabels() {
 	ensureTable("visual_labels", `CREATE TABLE IF NOT EXISTS visual_labels (kind TEXT NOT NULL, ref_id INTEGER NOT NULL, user_id INTEGER NOT NULL, color TEXT NOT NULL DEFAULT '', icon TEXT NOT NULL DEFAULT '', PRIMARY KEY(kind,ref_id))`, "kind", "ref_id", "user_id", "color", "icon")
 }
+
+// visualLabelsFor loads all labels of one kind at once, so a list view does not run one query
+// per row while it still holds a database connection.
+func visualLabelsFor(kind string) map[int]*visualLabel {
+	out := map[int]*visualLabel{}
+	rows, err := db.Query(`SELECT ref_id, color, icon FROM visual_labels WHERE kind=?`, kind)
+	if err != nil {
+		return out
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var v visualLabel
+		if rows.Scan(&id, &v.Color, &v.Icon) == nil {
+			vv := v
+			out[id] = &vv
+		}
+	}
+	return out
+}
+
 func loadVisualLabel(kind string, id int) *visualLabel {
 	var v visualLabel
 	if db.QueryRow(`SELECT color,icon FROM visual_labels WHERE kind=? AND ref_id=?`, kind, id).Scan(&v.Color, &v.Icon) != nil {

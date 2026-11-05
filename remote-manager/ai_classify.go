@@ -649,7 +649,13 @@ func aiReadDenied(p string) string {
 			return r.Why
 		}
 		if hasGlob(clean) {
-			// a wildcard could expand to the file: compare with the exact names (id_rsa, not id_rsa.log)
+			// A wildcard could expand to the file: compare with the exact names (id_rsa, not
+			// id_rsa.log). Extension-only rules (*.ppk, *.key …) are checked for explicit
+			// paths above, but not through a wildcard: otherwise an ordinary log glob such as
+			// follower.log* is refused because it could theoretically match follower.log.ppk.
+			if r.Base && strings.HasPrefix(r.Pattern, "*.") && strings.Count(r.Pattern, "*") == 1 {
+				continue
+			}
 			pat := r.Pattern
 			if strings.HasSuffix(pat, "*") && !strings.HasSuffix(pat, "**") {
 				pat = strings.TrimSuffix(pat, "*")
