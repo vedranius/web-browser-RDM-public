@@ -86,8 +86,8 @@ Object.assign(LANGS.en, {
   chn_tpl_failover: 'Primary and backup path', chn_tpl_failover_d: 'Ingest on a primary and a backup server, a content server writing to a bucket, and a CDN in front.',
   chn_tpl_name: 'Name', chn_tpl_servers: 'Choose the server for each node', chn_tpl_storages: 'Choose the storage for each storage node',
   chn_tpl_choose: '— choose —', chn_tpl_no_ssh: 'You have no SSH connections yet. Add one first.',
-  chn_tpl_no_storage: 'You have no storages yet. Add one under Storages, or remove the node in the JSON editor.',
-  chn_tpl_missing: 'Choose a server or storage for every node.', chn_tpl_after: 'Service names, paths and addresses are examples: adjust them in the JSON editor.',
+  chn_tpl_no_storage: 'You have no storages yet; the storage nodes will simply be left out. A chain works without one.',
+  chn_tpl_missing: 'Choose a server for every server node.', chn_tpl_after: 'Service names, paths and addresses are examples: adjust them in the guided editor after creating the chain.',
   chn_create: 'Create', chn_back: 'Back', chn_nodes_n: '{n} nodes',
   chn_help_links: 'Links: {"from":"a","to":"b","kind":"data|read|write|failover|dependency","check":"id","scenarios":["primary"]}. With scenarios, the link carries traffic only in those scenarios; otherwise the diagram shows it idle.',
 });
@@ -106,8 +106,8 @@ Object.assign(LANGS.hr, {
   chn_tpl_failover: 'Primarni i rezervni put', chn_tpl_failover_d: 'Ingest na primarnom i rezervnom serveru, content server koji piše u bucket i CDN ispred.',
   chn_tpl_name: 'Naziv', chn_tpl_servers: 'Odaberite server za svaki čvor', chn_tpl_storages: 'Odaberite storage za svaki storage čvor',
   chn_tpl_choose: '— odaberite —', chn_tpl_no_ssh: 'Još nemate SSH veza. Najprije dodajte jednu.',
-  chn_tpl_no_storage: 'Još nemate storagea. Dodajte ga pod Storages ili uklonite čvor u JSON editoru.',
-  chn_tpl_missing: 'Odaberite server ili storage za svaki čvor.', chn_tpl_after: 'Nazivi servisa, putanje i adrese su primjeri: prilagodite ih u JSON editoru.',
+  chn_tpl_no_storage: 'Još nemate storagea; storage čvorovi će jednostavno biti izostavljeni. Lanac radi i bez njih.',
+  chn_tpl_missing: 'Odaberite server za svaki serverski čvor.', chn_tpl_after: 'Nazivi servisa, putanje i adrese su primjeri: prilagodite ih u vođenom uređivaču nakon stvaranja lanca.',
   chn_create: 'Napravi', chn_back: 'Natrag', chn_nodes_n: '{n} čvorova',
   chn_help_links: 'Veze: {"from":"a","to":"b","kind":"data|read|write|failover|dependency","check":"id","scenarios":["primary"]}. Sa scenarios veza nosi promet samo u tim scenarijima; inače je dijagram prikazuje neaktivnom.',
 });
@@ -116,7 +116,7 @@ Object.assign(LANGS.hr, {
 Object.assign(LANGS.en, {
   chn_drafts: 'Drafts from the AI', chn_draft_badge: 'Draft — not monitored yet',
   chn_draft_note_t: 'Review this draft.',
-  chn_draft_note: 'The assistant wrote it from your description. Nothing is checked in the background and no command runs until you create the chain; open the JSON editor first if a service, path or connection is wrong.',
+  chn_draft_note: 'The assistant wrote it from your description. Nothing is checked in the background and no command runs until you create the chain; press Edit to adjust a server, check or link first.',
   chn_approve: 'Create chain', chn_approve_q: 'Create the chain {name} from this draft and start its background checks?',
   chn_discard: 'Discard', chn_discard_q: 'Discard the draft {name}? The assistant can write it again.',
   chn_draft_approved: 'The chain was created. The first check runs within a minute.',
@@ -125,15 +125,97 @@ Object.assign(LANGS.en, {
 Object.assign(LANGS.hr, {
   chn_drafts: 'Skice iz AI asistenta', chn_draft_badge: 'Skica — još se ne provjerava',
   chn_draft_note_t: 'Pregledajte ovu skicu.',
-  chn_draft_note: 'Asistent ju je napisao prema vašem opisu. Ništa se ne provjerava u pozadini i nijedna naredba se ne izvršava dok ne stvorite lanac; ako je neki servis, putanja ili veza pogrešna, prvo otvorite JSON editor.',
+  chn_draft_note: 'Asistent ju je napisao prema vašem opisu. Ništa se ne provjerava u pozadini i nijedna naredba se ne izvršava dok ne stvorite lanac; ako je neki servis, putanja ili veza pogrešna, pritisnite Uredi i prilagodite ju.',
   chn_approve: 'Stvori lanac', chn_approve_q: 'Stvoriti lanac {name} iz ove skice i pokrenuti provjere u pozadini?',
   chn_discard: 'Odbaci', chn_discard_q: 'Odbaciti skicu {name}? Asistent ju može ponovno napisati.',
   chn_draft_approved: 'Lanac je stvoren. Prva provjera kreće unutar minute.',
   chn_draft_untitled: 'Skica bez naziva', chn_draft_counts: 'Čvorovi: {n} · Provjere: {c}',
 });
 
+// Step 4: the guided builder, the visual connections and the AI wizard.
+Object.assign(LANGS.en, {
+  chn_build: 'Build a chain', chn_build_ai: 'Build with AI', chn_build_ai_d: 'Choose the servers, describe the system in one sentence; WRM prepares a draft you review on the diagram.',
+  chn_build_manual: 'Build step by step', chn_build_manual_d: 'Pick servers, add checks and connect them yourself. No JSON.',
+  chn_build_tpl: 'Start from a template', chn_build_adv: 'Advanced: write JSON',
+  chn_how: 'How a chain works', chn_how_t: 'Nodes are your servers, storages and outside services. Checks test each one (a service, a port, a file, a certificate). Links show what talks to what — a failover link is the backup path. Scenarios name the state: the first rule that matches wins, and the last empty rule is the fallback.',
+  chn_ai_note: 'WRM first reads the selected servers (OS, services, containers, ports and mounts) with fixed read-only checks, then prepares a draft. Nothing is checked until you press Create chain.',
+  chn_ai_analyze: 'Look at the servers', chn_ai_analyzing: 'Looking…', chn_ai_found_services: 'Services', chn_ai_found_ports: 'Ports', chn_ai_found_mounts: 'Mounts', chn_ai_no_facts: 'Nothing found (or the server did not answer).', chn_ai_storage_optional: 'Storages are optional. Leave them out and WRM only observes what is on the servers and any storage they mount; it never attaches to a storage or asks for its credentials.',
+  chn_ai_pick_servers: 'Servers in this system', chn_ai_pick_storages: 'Storages (optional)',
+  chn_ai_desc: 'What does the system do?', chn_ai_desc_ph: 'For example: ingest on this server writes recordings to the bucket; the backup server takes over if the primary fails; a CDN serves the content.',
+  chn_ai_name: 'Name (optional)', chn_ai_make: 'Prepare the draft', chn_ai_working: 'Preparing…',
+  chn_ai_servers_none: 'No SSH connections yet. Add a connection first.',
+  chn_ai_ready: 'The draft is ready. Review it on the diagram, adjust it, then create the chain.',
+  chn_ai_fallback: 'AI is not configured for this account, so WRM built a basic chain from your servers. Adjust the checks on the diagram.',
+  chn_ai_failed: 'The AI did not return a usable chain, so WRM built a basic one. Adjust it on the diagram.',
+  chn_g_name: 'Name', chn_g_desc: 'Description', chn_g_interval: 'Check every', chn_g_confirm: 'A change counts after',
+  chn_g_seconds: '{n} s', chn_g_confirm_n: '{n} checks', chn_g_enabled: 'Check in the background',
+  chn_g_basics: 'Name and behaviour', chn_g_nodes: 'Servers, storages and outside services', chn_g_add: 'Add',
+  chn_g_kind: 'Kind', chn_g_pick_server: 'Choose a server', chn_g_pick_storage: 'Choose a storage',
+  chn_g_label: 'Name', chn_g_role: 'Role', chn_g_role_ph: 'app, backup, database, cdn…', chn_g_remove: 'Remove',
+  chn_g_node_empty: 'Add at least one server, storage or outside service.', chn_g_checks: 'What to check',
+  chn_g_add_check: 'Add a check', chn_g_no_checks: 'No checks yet. A server with no check still shows whether SSH answers.',
+  chn_g_edit: 'Edit', chn_g_type: 'Check', chn_g_target: 'Target', chn_g_port: 'Port', chn_g_format: 'Format',
+  chn_g_key: 'Key', chn_g_record: 'DNS record', chn_g_resolver: 'Resolver (optional)', chn_g_prefix: 'Prefix (optional)',
+  chn_g_max_age: 'Max age (s, optional)', chn_g_warn_days: 'Warn before expiry (days)', chn_g_expect: 'Also OK when the value',
+  chn_g_expect_none: 'Use the default meaning of OK', chn_g_check_label: 'Label', chn_g_add_btn: 'Add', chn_g_save: 'Save',
+  chn_g_links: 'What talks to what', chn_g_add_link: 'Add a link', chn_g_from: 'From', chn_g_to: 'To',
+  chn_g_link_kind: 'Meaning', chn_g_link_check: 'Colour by check (optional)',
+  chn_g_link_none: 'No links yet. Links are for the picture and the backup path; checks work without them.',
+  chn_g_scenarios: 'States (scenarios)', chn_g_add_scenario: 'Add a state', chn_g_auto_scenarios: 'Create the usual states automatically',
+  chn_g_auto_scenarios_d: 'Normal: every check is OK. Backup: the first server is down and the second is up. Degraded: everything else.',
+  chn_g_when: 'Active when', chn_g_cond_add: 'Add a condition', chn_g_cond_none: 'Always (fallback)',
+  chn_g_subject: 'Subject', chn_g_value: 'Value', chn_g_up: 'Up', chn_g_down: 'Down', chn_g_ok: 'OK', chn_g_op: 'Operator',
+  chn_g_save_chain: 'Save chain', chn_g_save_draft: 'Save draft', chn_g_json: 'Advanced JSON', chn_g_cancel: 'Cancel',
+  chn_g_errs: 'Fix these problems:', chn_g_required: 'Give the chain a name and add at least one node.',
+  chn_g_any_note: 'This state uses "any" rules; edit it in Advanced JSON.',
+  chn_g_edit_chain: 'Edit', chn_g_edit_draft: 'Edit draft', chn_g_new: 'New chain',
+  chn_add_node: 'Add node', chn_connect: 'Connect to…', chn_delete_node: 'Delete node', chn_delete_link: 'Delete link',
+  chn_add_check: 'Add check', chn_edit_chain: 'Edit chain', chn_pick_target: 'Click the target node',
+  chn_link_saved: 'Saved.', chn_link_exists: 'These two nodes are already linked.', chn_check_bad: 'not OK',
+});
+Object.assign(LANGS.hr, {
+  chn_build: 'Izgradi lanac', chn_build_ai: 'Izgradi uz AI', chn_build_ai_d: 'Odaberite servere i jednom rečenicom opišite sustav; WRM pripremi skicu koju pregledate na dijagramu.',
+  chn_build_manual: 'Izgradi korak po korak', chn_build_manual_d: 'Sami odaberite servere, dodajte provjere i povežite ih. Bez JSON-a.',
+  chn_build_tpl: 'Počni od predloška', chn_build_adv: 'Napredno: napiši JSON',
+  chn_how: 'Kako lanac radi', chn_how_t: 'Čvorovi su vaši serveri, storagei i vanjske usluge. Provjere testiraju svaki (servis, port, datoteku, certifikat). Veze pokazuju što s čim razgovara — failover veza je rezervni put. Scenariji imenuju stanje: prvo pravilo koje odgovara pobjeđuje, a zadnje prazno pravilo je rezerva.',
+  chn_ai_note: 'WRM najprije pročita odabrane servere (OS, servise, kontejnere, portove i mountove) fiksnim provjerama samo za čitanje, zatim pripremi skicu. Ništa se ne provjerava dok ne pritisnete Stvori lanac.',
+  chn_ai_analyze: 'Pregledaj servere', chn_ai_analyzing: 'Pregledavam…', chn_ai_found_services: 'Servisi', chn_ai_found_ports: 'Portovi', chn_ai_found_mounts: 'Mountovi', chn_ai_no_facts: 'Ništa nije pronađeno (ili se server nije javio).', chn_ai_storage_optional: 'Storagei nisu obavezni. Ako ih izostavite, WRM samo promatra što je na serverima i što oni mountaju; nikada se ne spaja na storage i ne traži njegove vjerodajnice.',
+  chn_ai_pick_servers: 'Serveri u ovom sustavu', chn_ai_pick_storages: 'Storagei (nije obavezno)',
+  chn_ai_desc: 'Što sustav radi?', chn_ai_desc_ph: 'Na primjer: ingest na ovom serveru piše snimke u bucket; rezervni server preuzima ako primarni padne; CDN poslužuje sadržaj.',
+  chn_ai_name: 'Naziv (nije obavezno)', chn_ai_make: 'Pripremi skicu', chn_ai_working: 'Pripremam…',
+  chn_ai_servers_none: 'Još nemate SSH veza. Najprije dodajte vezu.',
+  chn_ai_ready: 'Skica je gotova. Pregledajte ju na dijagramu, prilagodite i zatim stvorite lanac.',
+  chn_ai_fallback: 'AI nije konfiguriran za ovaj račun, pa je WRM sastavio osnovni lanac od odabranih servera. Prilagodite provjere na dijagramu.',
+  chn_ai_failed: 'AI nije vratio ispravan lanac, pa je WRM sastavio osnovni. Prilagodite ga na dijagramu.',
+  chn_g_name: 'Naziv', chn_g_desc: 'Opis', chn_g_interval: 'Provjeravaj svakih', chn_g_confirm: 'Promjena se broji nakon',
+  chn_g_seconds: '{n} s', chn_g_confirm_n: '{n} provjera', chn_g_enabled: 'Provjeravaj u pozadini',
+  chn_g_basics: 'Naziv i ponašanje', chn_g_nodes: 'Serveri, storagei i vanjske usluge', chn_g_add: 'Dodaj',
+  chn_g_kind: 'Vrsta', chn_g_pick_server: 'Odaberite server', chn_g_pick_storage: 'Odaberite storage',
+  chn_g_label: 'Naziv', chn_g_role: 'Uloga', chn_g_role_ph: 'app, backup, database, cdn…', chn_g_remove: 'Ukloni',
+  chn_g_node_empty: 'Dodajte barem jedan server, storage ili vanjsku uslugu.', chn_g_checks: 'Što provjeravati',
+  chn_g_add_check: 'Dodaj provjeru', chn_g_no_checks: 'Još nema provjera. Server bez provjere i dalje pokazuje odgovara li SSH.',
+  chn_g_edit: 'Uredi', chn_g_type: 'Provjera', chn_g_target: 'Cilj', chn_g_port: 'Port', chn_g_format: 'Format',
+  chn_g_key: 'Ključ', chn_g_record: 'DNS zapis', chn_g_resolver: 'Resolver (nije obavezno)', chn_g_prefix: 'Prefiks (nije obavezno)',
+  chn_g_max_age: 'Najveća starost (s, nije obavezno)', chn_g_warn_days: 'Upozori prije isteka (dana)', chn_g_expect: 'Također u redu kad je vrijednost',
+  chn_g_expect_none: 'Koristi zadano značenje "u redu"', chn_g_check_label: 'Naziv', chn_g_add_btn: 'Dodaj', chn_g_save: 'Spremi',
+  chn_g_links: 'Što s čim razgovara', chn_g_add_link: 'Dodaj vezu', chn_g_from: 'Od', chn_g_to: 'Prema',
+  chn_g_link_kind: 'Značenje', chn_g_link_check: 'Boju određuje provjera (nije obavezno)',
+  chn_g_link_none: 'Još nema veza. Veze služe slici i rezervnom putu; provjere rade i bez njih.',
+  chn_g_scenarios: 'Stanja (scenariji)', chn_g_add_scenario: 'Dodaj stanje', chn_g_auto_scenarios: 'Automatski stvori uobičajena stanja',
+  chn_g_auto_scenarios_d: 'Normal: sve provjere su u redu. Backup: prvi server ne radi, drugi radi. Degraded: sve ostalo.',
+  chn_g_when: 'Aktivno kad', chn_g_cond_add: 'Dodaj uvjet', chn_g_cond_none: 'Uvijek (rezerva)',
+  chn_g_subject: 'Predmet', chn_g_value: 'Vrijednost', chn_g_up: 'Radi', chn_g_down: 'Ne radi', chn_g_ok: 'U redu', chn_g_op: 'Operator',
+  chn_g_save_chain: 'Spremi lanac', chn_g_save_draft: 'Spremi skicu', chn_g_json: 'Napredni JSON', chn_g_cancel: 'Odustani',
+  chn_g_errs: 'Ispravite sljedeće:', chn_g_required: 'Dajte lancu naziv i dodajte barem jedan čvor.',
+  chn_g_any_note: 'Ovo stanje koristi "any" pravila; uredite ga u naprednom JSON-u.',
+  chn_g_edit_chain: 'Uredi', chn_g_edit_draft: 'Uredi skicu', chn_g_new: 'Novi lanac',
+  chn_add_node: 'Dodaj čvor', chn_connect: 'Poveži s…', chn_delete_node: 'Obriši čvor', chn_delete_link: 'Obriši vezu',
+  chn_add_check: 'Dodaj provjeru', chn_edit_chain: 'Uredi lanac', chn_pick_target: 'Kliknite ciljni čvor',
+  chn_link_saved: 'Spremljeno.', chn_link_exists: 'Ova dva čvora su već povezana.', chn_check_bad: 'nije u redu',
+});
+
 (function () {
-  const state = { list: [], drafts: [], current: null, timeline: [], styleAdded: false, mode: 'diagram', sel: null, views: {}, pos: {}, openCheck: null };
+  const state = { list: [], drafts: [], current: null, timeline: [], styleAdded: false, mode: 'diagram', sel: null, views: {}, pos: {}, openCheck: null, conns: [], storages: [], catalog: null };
   const $ = (sel) => document.querySelector(sel);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const fmt = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => (v[k] != null ? String(v[k]) : ''));
@@ -256,6 +338,68 @@ Object.assign(LANGS.hr, {
 .chn-form input:focus, .chn-form select:focus { border-color:var(--accent); }
 .chn-form h4 { font-size:13px; margin:0; } .chn-form h5 { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text2); margin:6px 0 0; }
 .chn-form .note { font-size:11px; color:var(--text2); }
+
+/* Guided builder, wizard and dialogs (step 4) */
+.chn-build { padding:14px; overflow:auto; }
+.chn-build h4 { margin:0 0 4px; font-size:13px; }
+.chn-build-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:10px; margin-top:12px; }
+.chn-build-card { text-align:left; padding:14px; border:1px solid var(--border2); border-radius:10px; background:var(--bg2); color:var(--text); cursor:pointer; display:flex; flex-direction:column; gap:6px; }
+.chn-build-card:hover { border-color:var(--accent); }
+.chn-build-card .ic { font-size:22px; }
+.chn-build-card b { font-size:13px; }
+.chn-build-card span { font-size:11px; color:var(--text2); }
+.chn-wizard { flex:1; overflow:auto; padding:14px; }
+.chn-wizard h4 { margin:0 0 6px; font-size:13px; }
+.chn-wizard h5 { margin:12px 0 4px; font-size:11px; color:var(--text2); }
+.chn-wizard textarea, .chn-wizard input, .chn-build input, .chn-build textarea { width:100%; }
+.chn-wizard textarea { min-height:74px; resize:vertical; }
+.chn-picklist { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; }
+.chn-pick { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border2); border-radius:8px; padding:6px 9px; font-size:11.5px; background:var(--bg2); cursor:pointer; }
+.chn-pick input { margin:0; }
+.chn-facts { display:flex; flex-direction:column; gap:6px; margin:6px 0 10px; }
+.chn-fact { border:1px solid var(--border2); border-radius:8px; padding:7px 9px; background:var(--bg1); font-size:11px; }
+.chn-fact b { color:var(--text); }
+.chn-fact .sub { color:var(--text3); font-size:10px; }
+.chn-fact-row { display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:3px; }
+.chn-fact-row .k { color:var(--text3); font-size:10px; }
+.chn-guided { flex:1; display:flex; gap:14px; overflow:auto; padding:12px 14px; }
+.chn-guided-main { flex:1; min-width:0; }
+.chn-guided-help { width:270px; flex:none; font-size:11.5px; color:var(--text2); border-left:1px solid var(--border2); padding-left:12px; }
+.chn-guided-help h4 { margin:0 0 6px; font-size:12px; }
+.chn-gsec { border:1px solid var(--border2); border-radius:10px; background:var(--bg2); padding:10px 12px; margin-bottom:10px; }
+.chn-gsec h4 { margin:0 0 8px; font-size:12.5px; }
+.chn-glist { display:flex; flex-direction:column; gap:6px; }
+.chn-grow { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--border2); border-radius:8px; background:var(--bg1); }
+.chn-grow-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.chn-grow-top { display:flex; gap:6px; align-items:center; }
+.chn-grow-top input { flex:1; min-width:0; }
+.chn-grow-top input.chn-role { flex:none; width:130px; }
+.chn-grow-sub { font-size:10.5px; color:var(--text3); }
+.chn-gicon { font-size:15px; width:20px; text-align:center; flex:none; }
+.chn-gchips { display:flex; gap:4px; flex-wrap:wrap; padding-left:34px; margin:-2px 0 4px; }
+.chn-chip { font-size:9.5px; padding:1px 6px; border-radius:9px; background:var(--bg3); color:var(--text2); }
+.chn-gadd { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border2); }
+.chn-gadd select, .chn-gadd input { flex:1; min-width:110px; }
+.chn-cgroup { margin-bottom:10px; }
+.chn-cgroup h5 { margin:0 0 5px; font-size:11.5px; color:var(--text2); }
+.chn-f { display:flex; flex-direction:column; gap:3px; font-size:10.5px; color:var(--text3); margin-bottom:8px; }
+.chn-f small { font-size:9.5px; color:var(--text3); }
+.chn-grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px 10px; }
+.chn-checkline { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text2); margin:4px 0; }
+.chn-cond-row { display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin:4px 0; }
+.chn-cond-row select, .chn-cond-row input { font-size:11px; padding:3px 5px; }
+.chn-cond { font-size:11px; color:var(--text2); padding:3px 0; }
+.chn-scn-box { border:1px dashed var(--border2); border-radius:8px; padding:6px 8px; margin-bottom:8px; }
+.chn-inline-err { color:#f85149; font-size:11px; flex-basis:100%; }
+.chn-dlg-wrap { position:absolute; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:20; padding:12px; }
+.chn-dlg { width:min(470px,96%); max-height:90%; display:flex; flex-direction:column; background:var(--bg2); border:1px solid var(--border2); border-radius:12px; overflow:hidden; }
+.chn-dlg-head { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border2); }
+.chn-dlg-head h4 { margin:0; font-size:13px; flex:1; }
+.chn-dlg-body { padding:12px; overflow:auto; }
+.chn-svg .chn-port { fill:var(--bg1); stroke:var(--accent); stroke-width:2; opacity:0; cursor:crosshair; }
+.chn-svg .chn-connect-line { fill:none; stroke:var(--accent); stroke-width:2; stroke-dasharray:6 4; pointer-events:none; }
+.chn-node-g:hover .chn-port, .chn-node-g.sel .chn-port { opacity:1; }
+@media (max-width: 900px) { .chn-guided-help { display:none; } }
 @media (max-width: 900px) { .chn-det { width:250px; } }
 @media (max-width: 760px) {
   .chn-wrap { flex-direction:column; height:92vh; }
@@ -304,7 +448,8 @@ Object.assign(LANGS.hr, {
           <span class="chn-badge" id="chn-scn" style="display:none;"></span>
           <span class="chn-seg" id="chn-mode" role="group" style="display:none;"><button class="btn-sec btn-sm" data-m="diagram">${esc(t('chn_view_diagram'))}</button><button class="btn-sec btn-sm" data-m="list">${esc(t('chn_view_list'))}</button></span>
           <button class="btn-sec btn-sm" id="chn-check" style="display:none;">↻ ${esc(t('chn_check_now'))}</button>
-          <button class="btn-sec btn-sm" id="chn-edit" style="display:none;">{ } ${esc(t('chn_edit'))}</button>
+          <button class="btn-sec btn-sm" id="chn-edit" style="display:none;">✎ ${esc(t('chn_edit_chain'))}</button>
+          <button class="btn-sec btn-sm" id="chn-json" style="display:none;" title="${esc(t('chn_edit'))}">{ }</button>
           <button class="btn-sec btn-sm" id="chn-export" style="display:none;">⬇ ${esc(t('chn_export'))}</button>
           <button class="btn-sec btn-sm" id="chn-del" style="display:none;">${esc(t('chn_delete'))}</button>
           <button class="btn-pri btn-sm" id="chn-approve" style="display:none;">✓ ${esc(t('chn_approve'))}</button>
@@ -318,7 +463,8 @@ Object.assign(LANGS.hr, {
     ov.querySelector('#chn-new').onclick = openNew;
     ov.querySelector('#chn-import').onclick = importFile;
     ov.querySelector('#chn-check').onclick = (e) => checkNow(e.currentTarget);
-    ov.querySelector('#chn-edit').onclick = () => state.current && openEditor(state.current.id, { definition: state.current.definition, enabled: state.current.enabled });
+    ov.querySelector('#chn-edit').onclick = editCurrent;
+    ov.querySelector('#chn-json').onclick = () => state.current && openEditor(state.current.id, { definition: state.current.definition, enabled: state.current.enabled });
     ov.querySelector('#chn-export').onclick = () => { if (state.current) location.href = `/api/chains/${state.current.id}/export`; };
     ov.querySelector('#chn-del').onclick = deleteChain;
     ov.querySelector('#chn-approve').onclick = approveDraft;
@@ -336,7 +482,11 @@ Object.assign(LANGS.hr, {
   function open() {
     css();
     shell().classList.add('open');
-    api('GET', '/api/connections').then((l) => { state.conns = l || []; renderSide(); }).catch(() => {});
+    Promise.all([
+      api('GET', '/api/connections').catch(() => []),
+      api('GET', '/api/storages').catch(() => []),
+      api('GET', '/api/chains/catalog').catch(() => ({ types: {} })),
+    ]).then(([conns, storages, cat]) => { state.conns = conns || []; state.storages = storages || []; state.catalog = cat || { types: {} }; renderSide(); }).catch(() => {});
     loadList();
   }
 
@@ -597,7 +747,7 @@ Object.assign(LANGS.hr, {
         ${nodeShape(n, cls, sel.node === n.id)}
         <text x="12" y="${top}" font-size="13" fill="var(--text)" font-weight="600">${icon} ${esc(trunc(n.label || n.id, 20))}</text>
         <text x="12" y="${top + 16}" font-size="10.5" fill="var(--text2)">${esc(trunc(sub, 30))}</text>
-        ${dots}${count}<title>${esc([n.label || n.id, n.role, n.id].filter(Boolean).join(' · '))}</title></g>`;
+        ${dots}${count}<circle class="chn-port" data-port="${esc(n.id)}" cx="${NW}" cy="${NH / 2}" r="7"><title>${esc(t('chn_connect'))}</title></circle><title>${esc([n.label || n.id, n.role, n.id].filter(Boolean).join(' · '))}</title></g>`;
     });
     let svg = wrap.querySelector('svg');
     if (!svg) {
@@ -653,8 +803,14 @@ Object.assign(LANGS.hr, {
       if (e.button !== 0 || !state.current) return;
       const g = e.target.closest('[data-node]');
       const lk = e.target.closest('[data-link]');
+      const port = e.target.closest('[data-port]');
       const p = svgPoint(svg, e);
       const d = state.current.definition;
+      if (port) {
+        drag = { kind: 'connect', from: port.getAttribute('data-port'), p };
+        svg.setPointerCapture(e.pointerId);
+        return;
+      }
       if (g) {
         const id = g.getAttribute('data-node');
         const start = positions(d)[id];
@@ -678,6 +834,11 @@ Object.assign(LANGS.hr, {
         applyView(svg);
         return;
       }
+      if (drag.kind === 'connect') {
+        state.connectPoint = svgPoint(svg, e);
+        drawConnectLine(svg, drag.from, state.connectPoint);
+        return;
+      }
       if (drag.kind !== 'node') return;
       const p = svgPoint(svg, e);
       const dx = p.x - drag.p.x, dy = p.y - drag.p.y;
@@ -696,8 +857,28 @@ Object.assign(LANGS.hr, {
       drag = null;
       svg.classList.remove('panning');
       try { svg.releasePointerCapture(e.pointerId); } catch (_) { /* already released */ }
+      if (was.kind === 'connect') {
+        const line = svg.querySelector('.chn-connect-line');
+        if (line) line.remove();
+        if (e.type === 'pointercancel') return;
+        const el2 = document.elementFromPoint(e.clientX, e.clientY);
+        const target = el2 && el2.closest ? el2.closest('[data-node]') : null;
+        const to = target && target.getAttribute('data-node');
+        if (to && to !== was.from) {
+          openLinkDialog(state.current.definition, { from: was.from, to }, (l) => applyDefinition((d) => { d.links.push(l); }));
+        }
+        return;
+      }
       if (e.type === 'pointercancel') return;
       if (was.kind === 'node' && was.moved) { saveLayout(); return; }
+      if (was.kind === 'node' && state.pickTarget) {
+        const from = state.pickTarget;
+        state.pickTarget = null;
+        if (was.id !== from) openLinkDialog(state.current.definition, { from, to: was.id }, (l) => applyDefinition((d) => { d.links.push(l); }));
+        renderDiagram(svg.parentNode);
+        renderSide();
+        return;
+      }
       if (was.kind === 'node') state.sel = { node: was.id };
       else if (was.kind === 'link') state.sel = { link: was.i };
       else if (!was.moved) state.sel = null;
@@ -723,6 +904,18 @@ Object.assign(LANGS.hr, {
         renderSide();
       }
     });
+  }
+
+  function drawConnectLine(svg, from, to) {
+    let line = svg.querySelector('.chn-connect-line');
+    if (!line) {
+      line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      line.setAttribute('class', 'chn-connect-line');
+      svg.appendChild(line);
+    }
+    const p = positions(state.current.definition)[from];
+    if (!p) return;
+    line.setAttribute('d', `M${p.x + NW},${p.y + NH / 2} L${to.x},${to.y}`);
   }
 
   function saveLayout() {
@@ -784,7 +977,7 @@ Object.assign(LANGS.hr, {
         const b = el('span', 'chn-badge' + (s.id === c.scenario ? ' active' : ''), s.label || s.id);
         if (s.id !== c.scenario) b.style.borderLeft = '3px solid ' + SCN_COLORS[i % SCN_COLORS.length];
         row.appendChild(b);
-        ruleText(row, s.when);
+        ruleText(row, s.when, d);
         box.appendChild(row);
       });
     }
@@ -799,11 +992,36 @@ Object.assign(LANGS.hr, {
     });
   }
 
-  function ruleText(parent, when) {
-    const k = el('span', 'k', JSON.stringify(when || {}));
-    k.style.fontFamily = 'var(--font-mono)';
+  function ruleText(parent, when, def) {
+    const k = el('span', 'k', ruleSummary(def || state.current.definition, when));
     k.style.overflowWrap = 'anywhere';
     parent.appendChild(k);
+  }
+
+  // ruleSummary turns a scenario rule into a sentence a person can check at a glance.
+  function ruleSummary(def, when) {
+    if (!when) return t('chn_g_cond_none');
+    const one = (c) => {
+      if (c.all) return c.all.map(one).filter(Boolean).join(' · ');
+      if (c.any) return c.any.map(one).filter(Boolean).join(' | ');
+      if (c.node) {
+        const val = c.value === 'up' ? t('chn_g_up') : c.value === 'down' ? t('chn_g_down') : c.value;
+        return nodeName(def, c.node) + ' ' + (c.op || '==') + ' ' + val;
+      }
+      if (c.check) {
+        const subj = checkName(def, c.check);
+        if (c.field === 'ok') {
+          const yes = c.value === 'true' || c.value === '';
+          const op = c.op || '==';
+          const val = yes ? t('chn_g_ok') : t('chn_check_bad');
+          return subj + ' ' + op + ' ' + val;
+        }
+        return subj + ' ' + (c.op || '==') + ' ' + (c.value || '');
+      }
+      return '';
+    };
+    const parts = (when.all || when.any || [when]).map(one).filter(Boolean);
+    return parts.length ? parts.join(' · ') : t('chn_g_cond_none');
   }
 
   function renderDiagramOnly() {
@@ -827,9 +1045,27 @@ Object.assign(LANGS.hr, {
     if (n.kind === 'storage' && n.storage_id) box.appendChild(el('div', 'r', t('chn_storage') + ': #' + n.storage_id));
     if (ns && ns.error) box.appendChild(el('div', 'e', ns.error));
     const act = el('div', 'act');
-    const b = el('button', 'btn-sec btn-sm', '↻ ' + t('chn_check_now'));
-    b.onclick = () => checkNow(b);
-    act.appendChild(b);
+    if (!c.draft) {
+      const b = el('button', 'btn-sec btn-sm', '↻ ' + t('chn_check_now'));
+      b.onclick = () => checkNow(b);
+      act.appendChild(b);
+    }
+    const edit = el('button', 'btn-sec btn-sm', '✎ ' + t('chn_edit_chain'));
+    edit.onclick = editCurrent;
+    act.appendChild(edit);
+    const addChk = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_add_check'));
+    addChk.onclick = () => openCheckDialog(d, n, null, (chk) => applyDefinition((dd) => { dd.checks.push(chk); }));
+    act.appendChild(addChk);
+    const conn = el('button', 'btn-sec btn-sm', '⇢ ' + t('chn_connect'));
+    conn.onclick = () => { state.pickTarget = n.id; showToast(t('chn_pick_target')); };
+    act.appendChild(conn);
+    const delN = el('button', 'btn-sec btn-sm', '✕');
+    delN.title = t('chn_delete_node');
+    delN.onclick = () => {
+      if (!confirm(t('chn_delete_node') + ' · ' + (n.label || n.id) + '?')) return;
+      applyDefinition((dd) => stripNode(dd, n.id));
+    };
+    act.appendChild(delN);
     box.appendChild(act);
     const checks = (d.checks || []).filter((x) => x.node === n.id);
     box.appendChild(el('h5', '', t('chn_checks')));
@@ -848,6 +1084,26 @@ Object.assign(LANGS.hr, {
     }
     const ids = new Set(checks.map((x) => x.id));
     history(box, state.timeline.filter((e) => (e.kind === 'node' && e.subject === n.id) || (e.kind === 'check' && ids.has(e.subject))));
+  }
+
+  function stripNode(def, id) {
+    const gone = (def.checks || []).filter((x) => x.node === id).map((x) => x.id);
+    def.nodes = (def.nodes || []).filter((n) => n.id !== id);
+    def.checks = (def.checks || []).filter((x) => x.node !== id);
+    def.links = (def.links || []).filter((l) => l.from !== id && l.to !== id);
+    (def.scenarios || []).forEach((s) => cleanConds(s.when, id, gone));
+    (def.links || []).forEach((l) => { if (gone.includes(l.check)) delete l.check; });
+  }
+
+  function cleanConds(c, nodeID, checkIDs) {
+    if (!c) return;
+    if (c.node === nodeID) { delete c.node; delete c.op; delete c.value; }
+    if (c.check && checkIDs.includes(c.check)) { delete c.check; delete c.field; delete c.op; delete c.value; }
+    (c.all || []).forEach((x) => cleanConds(x, nodeID, checkIDs));
+    (c.any || []).forEach((x) => cleanConds(x, nodeID, checkIDs));
+    const empty = (x) => !x.check && !x.node && !(x.all && x.all.length) && !(x.any && x.any.length);
+    if (c.all) c.all = c.all.filter((x) => !empty(x));
+    if (c.any) c.any = c.any.filter((x) => !empty(x));
   }
 
   function dotOf(st) { return { ok: 'ok', bad: 'bad', warn: 'warn' }[st] || ''; }
@@ -877,6 +1133,12 @@ Object.assign(LANGS.hr, {
         delete def.node;
         more.appendChild(el('pre', '', JSON.stringify(def, null, 2)));
         if (r && r.at) more.appendChild(el('div', '', t('chn_last') + ': ' + when(r.at)));
+        const del = el('button', 'btn-sec btn-sm', '✕ ' + t('chn_g_remove'));
+        del.onclick = () => applyDefinition((dd) => {
+          dd.checks = (dd.checks || []).filter((y) => y.id !== x.id);
+          (dd.links || []).forEach((l) => { if (l.check === x.id) delete l.check; });
+        });
+        more.appendChild(del);
         history(more, state.timeline.filter((e) => e.kind === 'check' && e.subject === x.id), true);
         wrap.appendChild(more);
       }
@@ -920,6 +1182,12 @@ Object.assign(LANGS.hr, {
       b.onclick = () => { state.sel = { node: id }; renderDiagramOnly(); renderSide(); };
       act.appendChild(b);
     });
+    const del = el('button', 'btn-sec btn-sm', '✕ ' + t('chn_delete_link'));
+    del.onclick = () => applyDefinition((dd) => {
+      const at = (dd.links || []).indexOf(l);
+      if (at >= 0) dd.links.splice(at, 1);
+    });
+    act.appendChild(del);
     box.appendChild(act);
   }
 
@@ -929,7 +1197,9 @@ Object.assign(LANGS.hr, {
     const c = state.current;
     const isDraft = !!(c && c.draft);
     const show = (id, on) => { const b = $(id); if (b) b.style.display = on ? '' : 'none'; };
-    ['#chn-check', '#chn-edit', '#chn-export', '#chn-del'].forEach((id) => show(id, !!c && !isDraft));
+    ['#chn-check', '#chn-export', '#chn-del'].forEach((id) => show(id, !!c && !isDraft));
+    show('#chn-edit', !!c);
+    show('#chn-json', !!c && !isDraft);
     show('#chn-approve', isDraft);
     show('#chn-discard', isDraft);
     ['#chn-scn', '#chn-mode'].forEach((id) => show(id, !!c));
@@ -940,6 +1210,8 @@ Object.assign(LANGS.hr, {
     body.classList.toggle('dg', !!c && state.mode === 'diagram');
     $('#chn-name').textContent = c ? c.definition.name : t('chn_title');
     if (!c) { body.appendChild(el('div', 'chn-empty', state.list.length || state.drafts.length ? t('chn_pick') : t('chn_none'))); return; }
+    const eb = $('#chn-edit');
+    if (eb) eb.textContent = '✎ ' + (isDraft ? t('chn_g_edit_draft') : t('chn_edit_chain'));
     const scn = $('#chn-scn');
     if (isDraft) {
       scn.textContent = t('chn_draft_badge');
@@ -965,6 +1237,8 @@ Object.assign(LANGS.hr, {
     tool('+', t('chn_zoom_in'), () => zoom(1 / 1.25));
     tool('⤢', t('chn_fit'), () => { delete state.views[state.current.id]; renderDiagramOnly(); });
     tool('⟲', t('chn_auto_layout'), resetLayout);
+    tool('＋', t('chn_add_node'), () => openNodeDialog(state.current.definition, (n) => applyDefinition((d) => { d.nodes.push(n); })));
+    tool('⇢', t('chn_g_add_link'), () => openLinkDialog(state.current.definition, null, (l) => applyDefinition((d) => { d.links.push(l); })));
     canvas.appendChild(tools);
     const legend = el('div', 'chn-legend');
     [['#3fb950', t('chn_flow')], ['#f85149', t('chn_legend_bad')], ['#8892a0', t('chn_legend_idle')]].forEach(([col, txt]) => {
@@ -1025,7 +1299,7 @@ Object.assign(LANGS.hr, {
       d.scenarios.forEach((s) => {
         const row = el('div', 'chn-row');
         row.appendChild(el('span', 'chn-badge' + (s.id === c.scenario ? ' active' : ''), s.label || s.id));
-        ruleText(row, s.when);
+        ruleText(row, s.when, d);
         ss.appendChild(row);
       });
     }
@@ -1174,21 +1448,705 @@ Object.assign(LANGS.hr, {
       .catch((e) => showToast(e.message, 'error'));
   }
 
-  // An empty starting point for the JSON editor: one server, one service, two scenarios.
-  function emptyChain() {
-    return {
-      enabled: true,
-      definition: {
-        name: 'New chain', interval_s: 30, confirm: 2,
-        nodes: [{ id: 'app', kind: 'server', label: 'App server', role: 'app', conn_id: 0 }],
-        checks: [{ id: 'web', node: 'app', type: 'systemd', target: 'nginx.service', label: 'Web server' }],
-        links: [],
-        scenarios: [
-          { id: 'normal', label: 'Normal', when: { check: 'web', field: 'ok', op: '==', value: 'true' } },
-          { id: 'degraded', label: 'Degraded', when: {} },
-        ],
-      },
+
+  // ─── the guided builder, dialogs and the AI wizard (step 4) ──────────────────────────────
+
+  function sshConns() { return (state.conns || []).filter((c) => (c.protocol || 'SSH').toUpperCase() === 'SSH'); }
+  function catalogTypes() { return (state.catalog && state.catalog.types) || {}; }
+  function nodeOf(def, id) { return (def.nodes || []).find((n) => n.id === id); }
+  function nodeName(def, id) { const n = nodeOf(def, id); return n ? (n.label || n.id) : id; }
+  function checkName(def, id) { const x = (def.checks || []).find((y) => y.id === id); return x ? (x.label || x.id) : id; }
+  function slugify(s) {
+    s = String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    s = s.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+    return s || 'node';
+  }
+  function uniqueID(base, used) {
+    let id = slugify(base), i = 2;
+    while (used[id]) { id = slugify(base).slice(0, 28) + '-' + i; i++; }
+    used[id] = true;
+    return id;
+  }
+  function usedNodeIDs(def) { const u = {}; (def.nodes || []).forEach((n) => { u[n.id] = true; }); return u; }
+  function usedCheckIDs(def) { const u = {}; (def.checks || []).forEach((x) => { u[x.id] = true; }); return u; }
+  function clone(v) { return JSON.parse(JSON.stringify(v)); }
+
+  function defaultDef() {
+    return { name: '', description: '', interval_s: 30, confirm: 2, nodes: [], checks: [], links: [], scenarios: [] };
+  }
+
+  function nodeSubtitle(n) {
+    if (n.kind === 'server') {
+      const c = (state.conns || []).find((x) => x.id === n.conn_id);
+      return c ? c.name : t('chn_g_pick_server');
+    }
+    if (n.kind === 'storage') {
+      const s = (state.storages || []).find((x) => x.id === n.storage_id);
+      return s ? s.name : t('chn_g_pick_storage');
+    }
+    return t('chn_kind_external');
+  }
+
+  // autoScenarios builds the three states most chains need, from the actual checks and roles.
+  function autoScenarios(def) {
+    const servers = (def.nodes || []).filter((n) => n.kind === 'server');
+    const out = [];
+    if ((def.checks || []).length) {
+      out.push({ id: 'normal', label: 'Normal', when: { all: (def.checks || []).map((x) => ({ check: x.id, field: 'ok', op: '==', value: 'true' })) } });
+    }
+    if (servers.length > 1) {
+      out.push({ id: 'backup', label: 'Backup', when: { all: [
+        { node: servers[0].id, op: '==', value: 'down' },
+        { node: servers[1].id, op: '==', value: 'up' },
+      ] } });
+    }
+    out.push({ id: 'degraded', label: 'Degraded', when: {} });
+    return out;
+  }
+
+  function looksAuto(def) {
+    const s = def.scenarios || [];
+    if (!s.length) return true;
+    const auto = autoScenarios(def);
+    const shape = (list) => JSON.stringify(list.map((x) => ({ id: x.id, when: x.when })));
+    return shape(s) === shape(auto);
+  }
+
+  function applyAuto(def) {
+    const s = autoScenarios(def);
+    // keep custom labels for the ids they still use
+    const old = {};
+    (def.scenarios || []).forEach((x) => { old[x.id] = x.label; });
+    def.scenarios = s.map((x) => ({ id: x.id, label: old[x.id] || x.label, when: x.when }));
+  }
+
+  // ─── the guided editor ─────────────────────────────────────────────────────────────────
+
+  function editCurrent() {
+    const c = state.current;
+    if (!c) return;
+    if (c.draft) openGuided(null, { definition: c.definition, enabled: false }, c.draftId);
+    else openGuided(c.id, { definition: c.definition, enabled: c.enabled });
+  }
+
+  function openGuided(id, value, draftId) {
+    const ed = editorPane(draftId ? t('chn_g_edit_draft') : (id ? t('chn_edit_chain') : t('chn_g_new')));
+    if (!ed) return;
+    const def = clone(value.definition || defaultDef());
+    if (!def.name) def.name = t('chn_g_new');
+    def.nodes = def.nodes || []; def.checks = def.checks || []; def.links = def.links || []; def.scenarios = def.scenarios || [];
+    let enabled = value.enabled !== false;
+    let auto = looksAuto(def);
+    const head = ed.querySelector('.chn-editor-head');
+    const errBox = el('div', 'chn-errs');
+    errBox.id = 'chn-ed-errs';
+    errBox.setAttribute('role', 'status');
+    errBox.setAttribute('aria-live', 'polite');
+    const body = el('div', 'chn-guided');
+    const main = el('div', 'chn-guided-main');
+    const help = el('aside', 'chn-guided-help');
+    help.appendChild(el('h4', '', t('chn_how')));
+    help.appendChild(el('p', '', t('chn_how_t')));
+    body.appendChild(main);
+    body.appendChild(help);
+    ed.appendChild(body);
+    ed.appendChild(errBox);
+
+    const cancel = el('button', 'btn-sec btn-sm', t('chn_g_cancel'));
+    cancel.onclick = () => ed.remove();
+    const adv = el('button', 'btn-sec btn-sm', '{ } ' + t('chn_g_json'));
+    adv.onclick = () => { ed.remove(); openEditor(id, { definition: def, enabled }); };
+    const save = el('button', 'btn-pri btn-sm', draftId ? t('chn_g_save_draft') : t('chn_g_save_chain'));
+    head.appendChild(cancel); head.appendChild(adv); head.appendChild(save);
+
+    const refresh = () => { errBox.textContent = ''; renderGuided(main, def, draftId, { enabled: () => enabled, setEnabled: (v) => { enabled = v; }, auto: () => auto, setAuto: (v) => { auto = v; }, refresh, close: () => ed.remove() }); };
+    // Re-render keeps the scroll position of the pane, so adding a row does not jump to the top.
+    const renderGuided = (root, d, isDraft, ctx) => {
+      const scroll = root.scrollTop;
+      root.textContent = '';
+      guidedBasics(root, d, ctx);
+      guidedNodes(root, d, ctx);
+      guidedChecks(root, d, ctx);
+      guidedLinks(root, d, ctx);
+      guidedScenarios(root, d, ctx);
+      root.scrollTop = scroll;
     };
+    refresh();
+
+    save.onclick = () => {
+      errBox.textContent = '';
+      if (!String(def.name || '').trim()) { showErrors(ed, [t('chn_g_required')]); return; }
+      if (!(def.nodes || []).length) { showErrors(ed, [t('chn_g_required')]); return; }
+      for (const n of def.nodes) {
+        if (n.kind === 'server' && !n.conn_id) { showErrors(ed, [t('chn_g_node_empty')]); return; }
+        if (n.kind === 'storage' && !n.storage_id) { showErrors(ed, [t('chn_g_node_empty')]); return; }
+      }
+      if (auto) applyAuto(def);
+      saveGuided(id, draftId, def, enabled, ed, () => {});
+    };
+  }
+
+  function fieldRow(parent, label, input, hint) {
+    const l = el('label', 'chn-f');
+    l.appendChild(el('span', '', label));
+    l.appendChild(input);
+    if (hint) l.appendChild(el('small', '', hint));
+    parent.appendChild(l);
+    return input;
+  }
+
+  function guidedBasics(root, def, ctx) {
+    const sec = guidedSection(root, t('chn_g_basics'));
+    const grid = el('div', 'chn-grid2');
+    sec.appendChild(grid);
+    const name = el('input');
+    name.value = def.name || '';
+    name.maxLength = 120;
+    name.oninput = () => { def.name = name.value; };
+    fieldRow(grid, t('chn_g_name'), name);
+    const interval = el('select');
+    [15, 30, 60, 120, 300, 600].forEach((n) => { const o = el('option', '', fmt(t('chn_g_seconds'), { n })); o.value = String(n); interval.appendChild(o); });
+    interval.value = String(def.interval_s || 30);
+    interval.onchange = () => { def.interval_s = Number(interval.value); };
+    fieldRow(grid, t('chn_g_interval'), interval);
+    const confirm = el('select');
+    [1, 2, 3, 5].forEach((n) => { const o = el('option', '', fmt(t('chn_g_confirm_n'), { n })); o.value = String(n); confirm.appendChild(o); });
+    confirm.value = String(def.confirm || 2);
+    confirm.onchange = () => { def.confirm = Number(confirm.value); };
+    fieldRow(grid, t('chn_g_confirm'), confirm);
+    const en = el('label', 'chn-checkline');
+    const cb = el('input'); cb.type = 'checkbox'; cb.checked = ctx.enabled();
+    cb.onchange = () => ctx.setEnabled(cb.checked);
+    en.appendChild(cb); en.appendChild(document.createTextNode(' ' + t('chn_g_enabled')));
+    grid.appendChild(en);
+    const desc = el('textarea');
+    desc.rows = 2;
+    desc.value = def.description || '';
+    desc.oninput = () => { def.description = desc.value; };
+    fieldRow(sec, t('chn_g_desc'), desc);
+  }
+
+  function guidedSection(root, title) {
+    const s = el('section', 'chn-gsec');
+    s.appendChild(el('h4', '', title));
+    root.appendChild(s);
+    return s;
+  }
+
+  function guidedNodes(root, def, ctx) {
+    const sec = guidedSection(root, t('chn_g_nodes'));
+    const list = el('div', 'chn-glist');
+    sec.appendChild(list);
+    if (!(def.nodes || []).length) list.appendChild(el('div', 'note', t('chn_g_node_empty')));
+    def.nodes.forEach((n, idx) => {
+      const row = el('div', 'chn-grow');
+      const icon = el('span', 'chn-gicon', n.kind === 'server' ? '🖥' : n.kind === 'storage' ? '🪣' : '🌐');
+      rows: {
+        row.appendChild(icon);
+        const bits = el('div', 'chn-grow-main');
+        const top = el('div', 'chn-grow-top');
+        const lab = el('input');
+        lab.value = n.label || n.id;
+        lab.maxLength = 120;
+        lab.oninput = () => { n.label = lab.value; };
+        top.appendChild(lab);
+        const role = el('input');
+        role.value = n.role || '';
+        role.maxLength = 60;
+        role.placeholder = t('chn_g_role_ph');
+        role.oninput = () => { n.role = role.value; };
+        role.className = 'chn-role';
+        top.appendChild(role);
+        bits.appendChild(top);
+        bits.appendChild(el('div', 'chn-grow-sub', t('chn_kind_' + n.kind) + ' · ' + nodeSubtitle(n)));
+        row.appendChild(bits);
+      }
+      const del = el('button', 'btn-sec btn-sm', '✕');
+      del.title = t('chn_g_remove');
+      del.onclick = () => {
+        def.nodes.splice(idx, 1);
+        def.checks = def.checks.filter((x) => x.node !== n.id);
+        def.links = def.links.filter((l) => l.from !== n.id && l.to !== n.id);
+        def.scenarios = def.scenarios.filter((s) => !condUsesNode(s.when, n.id));
+        ctx.refresh();
+      };
+      row.appendChild(del);
+      list.appendChild(row);
+      const checks = (def.checks || []).filter((x) => x.node === n.id);
+      if (checks.length) {
+        const chips = el('div', 'chn-gchips');
+        checks.forEach((x) => chips.appendChild(el('span', 'chn-chip', x.label || x.type)));
+        list.appendChild(chips);
+      }
+    });
+    guidedAddNode(sec, def, ctx);
+  }
+
+  function condUsesNode(when, id) {
+    if (!when) return false;
+    if (when.node === id) return true;
+    return (when.all || []).some((x) => condUsesNode(x, id)) || (when.any || []).some((x) => condUsesNode(x, id));
+  }
+
+  function guidedAddNode(sec, def, ctx) {
+    const box = el('div', 'chn-gadd');
+    const kind = el('select');
+    [['server', t('chn_g_kind') + ': ' + t('chn_kind_server')], ['storage', t('chn_g_kind') + ': ' + t('chn_kind_storage')], ['external', t('chn_g_kind') + ': ' + t('chn_kind_external')]]
+      .forEach(([v, l]) => { const o = el('option', '', l); o.value = v; kind.appendChild(o); });
+    const pick = el('select');
+    const label = el('input');
+    label.placeholder = t('chn_g_label');
+    const role = el('input');
+    role.placeholder = t('chn_g_role_ph');
+    const err = el('span', 'chn-inline-err');
+    const fillPick = () => {
+      pick.textContent = '';
+      if (kind.value === 'server') {
+        pick.appendChild(el('option', '', t('chn_g_pick_server'))).value = '';
+        sshConns().forEach((c) => { const o = el('option', '', c.name + (c.host ? ' (' + c.host + ')' : '')); o.value = String(c.id); pick.appendChild(o); });
+        pick.style.display = '';
+      } else if (kind.value === 'storage') {
+        pick.appendChild(el('option', '', t('chn_g_pick_storage'))).value = '';
+        (state.storages || []).forEach((s) => { const o = el('option', '', s.name); o.value = String(s.id); pick.appendChild(o); });
+        pick.style.display = '';
+      } else {
+        pick.style.display = 'none';
+      }
+    };
+    kind.onchange = fillPick;
+    fillPick();
+    const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add'));
+    add.onclick = () => {
+      err.textContent = '';
+      const id = uniqueID(label.value || (kind.value === 'server' ? 'server' : kind.value === 'storage' ? 'storage' : 'external'), usedNodeIDs(def));
+      const n = { id, kind: kind.value, label: label.value.trim() || id, role: role.value.trim() };
+      if (kind.value === 'server') {
+        const v = Number(pick.value) || 0;
+        if (!v) { err.textContent = t('chn_g_pick_server'); return; }
+        n.conn_id = v;
+      } else if (kind.value === 'storage') {
+        const v = Number(pick.value) || 0;
+        if (!v) { err.textContent = t('chn_g_pick_storage'); return; }
+        n.storage_id = v;
+      }
+      def.nodes.push(n);
+      ctx.refresh();
+    };
+    [kind, pick, label, role, add].forEach((x) => box.appendChild(x));
+    box.appendChild(err);
+    sec.appendChild(box);
+  }
+
+  function guidedChecks(root, def, ctx) {
+    const sec = guidedSection(root, t('chn_g_checks'));
+    if (!(def.checks || []).length) sec.appendChild(el('div', 'note', t('chn_g_no_checks')));
+    (def.nodes || []).forEach((n) => {
+      const group = el('div', 'chn-cgroup');
+      group.appendChild(el('h5', '', n.label || n.id));
+      (def.checks || []).filter((x) => x.node === n.id).forEach((x, i) => {
+        const row = el('div', 'chn-grow');
+        row.appendChild(el('span', 'chn-gicon', '✓'));
+        const main = el('div', 'chn-grow-main');
+        main.appendChild(el('div', 'chn-grow-top', (x.label || x.id) + ' · ' + x.type));
+        main.appendChild(el('div', 'chn-grow-sub', checkSummary(x)));
+        row.appendChild(main);
+        const editB = el('button', 'btn-sec btn-sm', '✎');
+        editB.title = t('chn_g_edit');
+        editB.onclick = () => openCheckDialog(def, n, x, (chk) => {
+          const at = def.checks.findIndex((y) => y.id === x.id);
+          chk.id = x.id;
+          if (at >= 0) def.checks[at] = chk;
+          ctx.refresh();
+        });
+        const delB = el('button', 'btn-sec btn-sm', '✕');
+        delB.title = t('chn_g_remove');
+        delB.onclick = () => { def.checks = def.checks.filter((y) => y.id !== x.id); def.links.forEach((l) => { if (l.check === x.id) delete l.check; }); ctx.refresh(); };
+        row.appendChild(editB); row.appendChild(delB);
+        group.appendChild(row);
+      });
+      const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add_check'));
+      add.onclick = () => openCheckDialog(def, n, null, (chk) => { def.checks.push(chk); ctx.refresh(); });
+      group.appendChild(add);
+      sec.appendChild(group);
+    });
+  }
+
+  function checkSummary(x) {
+    const parts = [x.target, x.port ? ':' + x.port : '', x.key ? x.key : '', x.prefix ? x.prefix : ''];
+    return parts.filter(Boolean).join(' · ') || '—';
+  }
+
+  function guidedLinks(root, def, ctx) {
+    const sec = guidedSection(root, t('chn_g_links'));
+    if (!(def.links || []).length) sec.appendChild(el('div', 'note', t('chn_g_link_none')));
+    (def.links || []).forEach((l, i) => {
+      const row = el('div', 'chn-grow');
+      row.appendChild(el('span', 'chn-gicon', '⇢'));
+      const main = el('div', 'chn-grow-main');
+      main.appendChild(el('div', 'chn-grow-top', nodeName(def, l.from) + ' → ' + nodeName(def, l.to)));
+      main.appendChild(el('div', 'chn-grow-sub', [t('chn_lk_' + (l.kind || 'data')), l.label, l.check ? checkName(def, l.check) : ''].filter(Boolean).join(' · ')));
+      row.appendChild(main);
+      const del = el('button', 'btn-sec btn-sm', '✕');
+      del.title = t('chn_g_remove');
+      del.onclick = () => { def.links.splice(i, 1); ctx.refresh(); };
+      row.appendChild(del);
+      sec.appendChild(row);
+    });
+    const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add_link'));
+    add.onclick = () => openLinkDialog(def, null, (l) => { def.links.push(l); ctx.refresh(); });
+    sec.appendChild(add);
+  }
+
+  function guidedScenarios(root, def, ctx) {
+    const sec = guidedSection(root, t('chn_g_scenarios'));
+    const autoL = el('label', 'chn-checkline');
+    const cb = el('input'); cb.type = 'checkbox'; cb.checked = ctx.auto();
+    cb.onchange = () => { ctx.setAuto(cb.checked); ctx.refresh(); };
+    autoL.appendChild(cb); autoL.appendChild(document.createTextNode(' ' + t('chn_g_auto_scenarios')));
+    sec.appendChild(autoL);
+    if (ctx.auto()) {
+      sec.appendChild(el('div', 'note', t('chn_g_auto_scenarios_d')));
+      applyAuto(def);
+      listScenarios(sec, def, false, ctx);
+      return;
+    }
+    listScenarios(sec, def, true, ctx);
+    const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add_scenario'));
+    add.onclick = () => {
+      const used = {}; def.scenarios.forEach((s) => { used[s.id] = true; });
+      def.scenarios.push({ id: uniqueID('state', used), label: 'State ' + (def.scenarios.length + 1), when: {} });
+      ctx.refresh();
+    };
+    sec.appendChild(add);
+  }
+
+  function listScenarios(sec, def, editable, ctx) {
+    (def.scenarios || []).forEach((sc, si) => {
+      const box = el('div', 'chn-scn-box');
+      const head = el('div', 'chn-grow');
+      const main = el('div', 'chn-grow-main');
+      if (editable) {
+        const lab = el('input');
+        lab.value = sc.label || sc.id;
+        lab.oninput = () => { sc.label = lab.value; };
+        main.appendChild(lab);
+      } else {
+        main.appendChild(el('div', 'chn-grow-top', sc.label || sc.id));
+      }
+      head.appendChild(main);
+      if (editable) {
+        const up = el('button', 'btn-sec btn-sm', '↑');
+        up.onclick = () => { if (si > 0) { const [x] = def.scenarios.splice(si, 1); def.scenarios.splice(si - 1, 0, x); ctx.refresh(); } };
+        const down = el('button', 'btn-sec btn-sm', '↓');
+        down.onclick = () => { if (si < def.scenarios.length - 1) { const [x] = def.scenarios.splice(si, 1); def.scenarios.splice(si + 1, 0, x); ctx.refresh(); } };
+        const del = el('button', 'btn-sec btn-sm', '✕');
+        del.onclick = () => { def.scenarios.splice(si, 1); ctx.refresh(); };
+        head.appendChild(up); head.appendChild(down); head.appendChild(del);
+      }
+      box.appendChild(head);
+      box.appendChild(el('div', 'chn-grow-sub', t('chn_g_when') + ':'));
+      const conds = [];
+      const hasAny = !!(sc.when && (sc.when.any || []).length);
+      flattenConds(sc.when, conds);
+      if (!conds.length) box.appendChild(el('div', 'note', t('chn_g_cond_none')));
+      if (editable && hasAny) box.appendChild(el('div', 'note', t('chn_g_any_note')));
+      if (editable && !hasAny) conds.forEach((c) => box.appendChild(condRow(def, sc, c, ctx)));
+      else conds.forEach((c) => box.appendChild(el('div', 'chn-cond', condText(def, c))));
+      if (editable && !hasAny) {
+        const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_cond_add'));
+        add.onclick = () => {
+          const first = (def.checks || [])[0];
+          const c = first ? { check: first.id, field: 'ok', op: '==', value: 'true' } : { node: (def.nodes.find((n) => n.kind === 'server') || {}).id, op: '==', value: 'up' };
+          sc.when.all = (sc.when.all || []).concat([c]);
+          ctx.refresh();
+        };
+        box.appendChild(add);
+      }
+      sec.appendChild(box);
+    });
+  }
+
+  // flattenConds is only for display and simple editing: the guided builder edits "all" rules.
+  function flattenConds(when, out) {
+    if (!when) return;
+    if ((when.all || []).length) when.all.forEach((x) => flattenConds(x, out));
+    else if ((when.any || []).length) when.any.forEach((x) => flattenConds(x, out));
+    else if (when.check || when.node) out.push(when);
+  }
+
+  function condText(def, c) {
+    const subject = c.check ? checkName(def, c.check) + (c.field === 'ok' ? ' · ' + t('chn_g_ok') : '') : nodeName(def, c.node);
+    return subject + ' ' + (c.op || '==') + ' ' + (c.value || '');
+  }
+
+  function condRow(def, sc, c, ctx) {
+    const row = el('div', 'chn-cond-row');
+    const subj = el('select');
+    (def.checks || []).forEach((x) => { const o = el('option', '', t('chn_g_checks') + ': ' + (x.label || x.id)); o.value = 'check:' + x.id; if (c.check === x.id) o.selected = true; subj.appendChild(o); });
+    (def.nodes || []).filter((n) => n.kind === 'server').forEach((n) => { const o = el('option', '', t('chn_g_nodes') + ': ' + (n.label || n.id)); o.value = 'node:' + n.id; if (c.node === n.id) o.selected = true; subj.appendChild(o); });
+    subj.onchange = () => {
+      const [kind, id] = subj.value.split(':');
+      delete c.check; delete c.node; delete c.field;
+      if (kind === 'check') { c.check = id; c.field = 'ok'; c.op = '=='; c.value = 'true'; }
+      else { c.node = id; c.op = '=='; c.value = 'up'; }
+      ctx.refresh();
+    };
+    row.appendChild(subj);
+    if (c.check) {
+      const fld = el('select');
+      [['ok', t('chn_g_ok')], ['value', t('chn_g_value')]].forEach(([v, l]) => { const o = el('option', '', l); o.value = v; if ((c.field || 'value') === v) o.selected = true; fld.appendChild(o); });
+      fld.onchange = () => { c.field = fld.value; c.value = fld.value === 'ok' ? 'true' : ''; ctx.refresh(); };
+      row.appendChild(fld);
+    }
+    const op = el('select');
+    ['==', '!=', 'contains', 'exists'].forEach((v) => { const o = el('option', '', v); o.value = v; if (c.op === v) o.selected = true; op.appendChild(o); });
+    op.onchange = () => { c.op = op.value; ctx.refresh(); };
+    row.appendChild(op);
+    if (c.op === 'exists') { c.value = ''; }
+    else if (c.node) {
+      const v = el('select');
+      [['up', t('chn_g_up')], ['down', t('chn_g_down')]].forEach(([val, l]) => { const o = el('option', '', l); o.value = val; if (c.value === val) o.selected = true; v.appendChild(o); });
+      v.onchange = () => { c.value = v.value; };
+      row.appendChild(v);
+    } else if (c.check && c.field === 'ok') {
+      const v = el('select');
+      [['true', t('chn_g_ok')], ['false', t('chn_g_down')]].forEach(([val, l]) => { const o = el('option', '', l); o.value = val; if (c.value === val) o.selected = true; v.appendChild(o); });
+      v.onchange = () => { c.value = v.value; };
+      row.appendChild(v);
+    } else {
+      const v = el('input');
+      v.value = c.value || '';
+      v.placeholder = t('chn_g_value');
+      v.oninput = () => { c.value = v.value; };
+      row.appendChild(v);
+    }
+    const del = el('button', 'btn-sec btn-sm', '✕');
+    del.onclick = () => {
+      const list = (sc.when.all || []);
+      sc.when.all = list.filter((x) => x !== c);
+      if (!sc.when.all.length) delete sc.when.all;
+      ctx.refresh();
+    };
+    row.appendChild(del);
+    return row;
+  }
+
+  function saveGuided(id, draftId, def, enabled, ed, done) {
+    // Clean empty optional values so the server sees the same definition the user sees.
+    (def.checks || []).forEach((x) => { ['target', 'key', 'record', 'resolver', 'prefix', 'label'].forEach((k) => { if (typeof x[k] === 'string') x[k] = x[k].trim(); }); });
+    const body = { definition: def, enabled };
+    const req = draftId ? api('PUT', `/api/chains/drafts/${draftId}`, { definition: def })
+      : id ? api('PUT', `/api/chains/${id}`, body) : api('POST', '/api/chains', body);
+    req.then((c) => {
+      if (ed) ed.remove();
+      showToast(t('chn_saved'), 'success');
+      if (draftId) { return selectDraft(draftId); }
+      state.current = c; state.sel = null; state.pos = {};
+      return loadList().then(() => select(c.id));
+    }).catch((e) => showErrors(ed, e.errors.length ? e.errors : [e.message]));
+  }
+
+  // ─── small dialogs over the window (add node, check, link) ─────────────────────────────
+
+  function dialogShell(title) {
+    const wrap = el('div', 'chn-dlg-wrap');
+    const card = el('div', 'chn-dlg');
+    const head = el('div', 'chn-dlg-head');
+    head.appendChild(el('h4', '', title));
+    const x = el('button', 'btn-sec btn-sm', '✕');
+    head.appendChild(x);
+    card.appendChild(head);
+    const body = el('div', 'chn-dlg-body');
+    card.appendChild(body);
+    wrap.appendChild(card);
+    const main = $('.chn-main') || document.body;
+    main.appendChild(wrap);
+    const close = () => wrap.remove();
+    x.onclick = close;
+    wrap.addEventListener('mousedown', (e) => { if (e.target === wrap) close(); });
+    return { wrap, body, close };
+  }
+
+  function openNodeDialog(def, onAdd) {
+    const dlg = dialogShell(t('chn_add_node'));
+    const form = el('div', 'chn-form');
+    dlg.body.appendChild(form);
+    const kind = el('select');
+    [['server', t('chn_kind_server')], ['storage', t('chn_kind_storage')], ['external', t('chn_kind_external')]].forEach(([v, l]) => { const o = el('option', '', l); o.value = v; kind.appendChild(o); });
+    fieldRow(form, t('chn_g_kind'), kind);
+    const pickWrap = el('div');
+    form.appendChild(pickWrap);
+    const label = el('input'); label.placeholder = t('chn_g_label');
+    const role = el('input'); role.placeholder = t('chn_g_role_ph');
+    fieldRow(form, t('chn_g_label'), label);
+    fieldRow(form, t('chn_g_role'), role);
+    const pick = el('select');
+    const fill = () => {
+      pickWrap.textContent = '';
+      if (kind.value === 'server') {
+        pick.textContent = ''; pick.appendChild(el('option', '', t('chn_g_pick_server'))).value = '';
+        sshConns().forEach((c) => { const o = el('option', '', c.name + (c.host ? ' (' + c.host + ')' : '')); o.value = String(c.id); pick.appendChild(o); });
+        fieldRow(pickWrap, t('chn_kind_server'), pick);
+      } else if (kind.value === 'storage') {
+        pick.textContent = ''; pick.appendChild(el('option', '', t('chn_g_pick_storage'))).value = '';
+        (state.storages || []).forEach((s) => { const o = el('option', '', s.name); o.value = String(s.id); pick.appendChild(o); });
+        fieldRow(pickWrap, t('chn_kind_storage'), pick);
+      }
+    };
+    kind.onchange = fill; fill();
+    const err = el('div', 'chn-inline-err'); form.appendChild(err);
+    const add = el('button', 'btn-pri btn-sm', t('chn_g_add'));
+    add.onclick = () => {
+      err.textContent = '';
+      const id = uniqueID(label.value || kind.value, usedNodeIDs(def));
+      const n = { id, kind: kind.value, label: label.value.trim() || id, role: role.value.trim() };
+      if (kind.value === 'server') { const v = Number(pick.value) || 0; if (!v) { err.textContent = t('chn_g_pick_server'); return; } n.conn_id = v; }
+      if (kind.value === 'storage') { const v = Number(pick.value) || 0; if (!v) { err.textContent = t('chn_g_pick_storage'); return; } n.storage_id = v; }
+      dlg.close();
+      onAdd(n);
+    };
+    form.appendChild(add);
+  }
+
+  function openCheckDialog(def, node, existing, onSave) {
+    const dlg = dialogShell(existing ? t('chn_g_edit') + ' · ' + (existing.label || existing.type) : t('chn_g_add_check') + ' · ' + (node.label || node.id));
+    const form = el('div', 'chn-form');
+    dlg.body.appendChild(form);
+    const types = catalogTypes();
+    const chk = existing ? clone(existing) : { node: node.id, type: '', label: '', target: '' };
+    const allowed = Object.keys(types).filter((k) => {
+      const where = types[k].where;
+      return node.kind === 'server' ? where === 'server' : node.kind === 'storage' ? where === 'storage' : where === 'wrm';
+    }).sort();
+    const render = () => {
+      form.textContent = '';
+      const type = el('select');
+      type.appendChild(el('option', '', '—')).value = '';
+      allowed.forEach((k) => { const o = el('option', '', k + (LANGS.en['chn_type_' + k] ? ' — ' + t('chn_type_' + k) : '')); o.value = k; if (chk.type === k) o.selected = true; type.appendChild(o); });
+      type.onchange = () => { chk.type = type.value; render(); };
+      fieldRow(form, t('chn_g_type'), type);
+      if (!chk.type) return;
+      const info = types[chk.type] || {};
+      const need = String(info.needs || '');
+      const lab = el('input'); lab.value = chk.label || ''; lab.placeholder = t('chn_g_check_label');
+      lab.oninput = () => { chk.label = lab.value; };
+      fieldRow(form, t('chn_g_check_label'), lab);
+      if (chk.type === 'port') {
+        const p = el('input'); p.type = 'number'; p.min = 1; p.max = 65535; p.value = chk.port || '';
+        p.oninput = () => { chk.port = Number(p.value) || 0; };
+        fieldRow(form, t('chn_g_port'), p);
+      } else if (chk.type !== 'monitor') {
+        const tgt = el('input'); tgt.value = chk.target || '';
+        tgt.placeholder = need.includes('target') ? (chk.type === 'dns' ? 'app.example.com' : chk.type === 'tcp' ? 'host:443' : chk.type === 'http' ? 'https://…' : chk.type === 'tls' ? 'example.com' : chk.type === 'systemd' ? 'nginx.service' : '/absolute/path') : '';
+        tgt.oninput = () => { chk.target = tgt.value; };
+        fieldRow(form, t('chn_g_target'), tgt);
+      }
+      if (chk.type === 'config') {
+        const fmt = el('select');
+        ['ini', 'json', 'yaml', 'env', 'kv', 'regex'].forEach((v) => { const o = el('option', '', v); o.value = v; if (chk.format === v) o.selected = true; fmt.appendChild(o); });
+        fmt.onchange = () => { chk.format = fmt.value; };
+        fieldRow(form, t('chn_g_format'), fmt);
+      }
+      if (chk.type === 'config' || chk.type === 'http') {
+        const key = el('input'); key.value = chk.key || '';
+        key.oninput = () => { chk.key = key.value; };
+        fieldRow(form, t('chn_g_key'), key);
+      }
+      if (chk.type === 'dns') {
+        const rec = el('select');
+        ['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS'].forEach((v) => { const o = el('option', '', v); o.value = v; if (chk.record === v) o.selected = true; rec.appendChild(o); });
+        rec.onchange = () => { chk.record = rec.value; };
+        fieldRow(form, t('chn_g_record'), rec);
+        const res = el('input'); res.value = chk.resolver || '';
+        res.oninput = () => { chk.resolver = res.value; };
+        fieldRow(form, t('chn_g_resolver'), res);
+      }
+      if (chk.type === 'storage') {
+        const pre = el('input'); pre.value = chk.prefix || '';
+        pre.oninput = () => { chk.prefix = pre.value; };
+        fieldRow(form, t('chn_g_prefix'), pre);
+      }
+      if (chk.type === 'file' || chk.type === 'storage') {
+        const age = el('input'); age.type = 'number'; age.min = 0; age.value = chk.max_age_s || '';
+        age.oninput = () => { chk.max_age_s = Number(age.value) || 0; };
+        fieldRow(form, t('chn_g_max_age'), age);
+      }
+      if (chk.type === 'tls') {
+        const w = el('input'); w.type = 'number'; w.min = 0; w.value = chk.warn_days || '';
+        w.oninput = () => { chk.warn_days = Number(w.value) || 0; };
+        fieldRow(form, t('chn_g_warn_days'), w);
+      }
+      const ex = el('div', 'chn-expect');
+      const op = el('select');
+      [['', t('chn_g_expect_none')], ['==', '=='], ['!=', '!='], ['contains', 'contains'], ['exists', 'exists']].forEach(([v, l]) => { const o = el('option', '', l); o.value = v; if ((chk.expect && chk.expect.op) === v || (!chk.expect && v === '')) o.selected = true; op.appendChild(o); });
+      op.onchange = () => { chk.expect = op.value ? { op: op.value, value: (chk.expect && chk.expect.value) || '' } : undefined; render(); };
+      fieldRow(form, t('chn_g_expect'), op);
+      if (chk.expect && chk.expect.op !== 'exists') {
+        const val = el('input'); val.value = chk.expect.value || '';
+        val.oninput = () => { chk.expect.value = val.value; };
+        fieldRow(form, t('chn_g_value'), val);
+      }
+      const err = el('div', 'chn-inline-err');
+      const save = el('button', 'btn-pri btn-sm', t('chn_g_save'));
+      save.onclick = () => {
+        err.textContent = '';
+        if (need.includes('target') && !String(chk.target || '').trim()) { err.textContent = t('chn_g_target'); return; }
+        if (chk.type === 'port' && (!chk.port || chk.port < 1)) { err.textContent = t('chn_g_port'); return; }
+        if ((chk.type === 'config') && (!chk.format || !String(chk.key || '').trim())) { err.textContent = t('chn_g_key'); return; }
+        if (!String(chk.label || '').trim()) chk.label = chk.type + (chk.port ? ' ' + chk.port : chk.target ? ' ' + trunc(chk.target, 26) : '');
+        if (!chk.id) chk.id = uniqueID(node.id + '-' + chk.type, usedCheckIDs(def));
+        dlg.close();
+        onSave(chk);
+      };
+      form.appendChild(err); form.appendChild(save);
+    };
+    render();
+  }
+
+  function openLinkDialog(def, preset, onSave) {
+    const dlg = dialogShell(t('chn_g_add_link'));
+    const form = el('div', 'chn-form');
+    dlg.body.appendChild(form);
+    if ((def.nodes || []).length < 2) { form.appendChild(el('div', 'note', t('chn_g_node_empty'))); return; }
+    const from = el('select'), to = el('select'), kind = el('select'), label = el('input'), check = el('select');
+    (def.nodes || []).forEach((n) => { [from, to].forEach((s) => { const o = el('option', '', n.label || n.id); o.value = n.id; s.appendChild(o); }); });
+    if (preset && preset.from) from.value = preset.from;
+    if (preset && preset.to) to.value = preset.to;
+    [['data', t('chn_lk_data')], ['read', t('chn_lk_read')], ['write', t('chn_lk_write')], ['failover', t('chn_lk_failover')], ['dependency', t('chn_lk_dependency')]].forEach(([v, l]) => { const o = el('option', '', l); o.value = v; kind.appendChild(o); });
+    fieldRow(form, t('chn_g_from'), from);
+    fieldRow(form, t('chn_g_to'), to);
+    fieldRow(form, t('chn_g_link_kind'), kind);
+    fieldRow(form, t('chn_g_label'), label);
+    check.appendChild(el('option', '', '—')).value = '';
+    (def.checks || []).forEach((x) => { const o = el('option', '', (x.label || x.id) + ' · ' + (nodeName(def, x.node))); o.value = x.id; check.appendChild(o); });
+    fieldRow(form, t('chn_g_link_check'), check);
+    const err = el('div', 'chn-inline-err');
+    const add = el('button', 'btn-pri btn-sm', t('chn_g_add'));
+    add.onclick = () => {
+      if (from.value === to.value) { err.textContent = t('chn_g_to'); return; }
+      if ((def.links || []).some((l) => l.from === from.value && l.to === to.value)) { err.textContent = t('chn_link_exists'); return; }
+      const l = { from: from.value, to: to.value, kind: kind.value };
+      if (label.value.trim()) l.label = label.value.trim();
+      if (check.value) l.check = check.value;
+      dlg.close();
+      onSave(l);
+    };
+    form.appendChild(err); form.appendChild(add);
+  }
+
+  // applyDefinition saves a structural change made on the diagram (node, link, check).
+  function applyDefinition(mutator) {
+    const c = state.current;
+    if (!c) return;
+    const def = clone(c.definition);
+    mutator(def);
+    const req = c.draft ? api('PUT', `/api/chains/drafts/${c.draftId}`, { definition: def })
+      : api('PUT', `/api/chains/${c.id}`, { definition: def, enabled: c.enabled });
+    req.then(() => {
+      showToast(t('chn_link_saved'), 'success');
+      if (c.draft) return selectDraft(c.draftId, true);
+      return select(c.id, true);
+    }).catch((e) => showToast((e.errors && e.errors[0]) || e.message, 'error'));
   }
 
   function editorPane(title) {
@@ -1204,15 +2162,145 @@ Object.assign(LANGS.hr, {
     return ed;
   }
 
-  // New chain: pick a generic template, choose a server or storage for each of its nodes,
-  // then create it at once or review the JSON first.
+  // New chain: the guided choices come first; templates are only a shortcut.
   function openNew() {
-    const ed = editorPane(t('chn_new'));
+    const ed = editorPane(t('chn_build'));
     if (!ed) return;
     const head = ed.querySelector('.chn-editor-head');
-    const cancel = el('button', 'btn-sec btn-sm', t('chn_cancel'));
+    const cancel = el('button', 'btn-sec btn-sm', t('chn_g_cancel'));
     cancel.onclick = () => ed.remove();
     head.appendChild(cancel);
+    const body = el('div', 'chn-build');
+    ed.appendChild(body);
+    body.appendChild(el('h4', '', t('chn_how')));
+    body.appendChild(el('p', 'note', t('chn_how_t')));
+    const grid = el('div', 'chn-build-grid');
+    body.appendChild(grid);
+    const card = (icon, title, desc, fn) => {
+      const b = el('button', 'chn-build-card');
+      b.type = 'button';
+      b.appendChild(el('span', 'ic', icon));
+      b.appendChild(el('b', '', title));
+      if (desc) b.appendChild(el('span', '', desc));
+      b.onclick = fn;
+      grid.appendChild(b);
+    };
+    card('🤖', t('chn_build_ai'), t('chn_build_ai_d'), () => openWizard(ed));
+    card('🧩', t('chn_build_manual'), t('chn_build_manual_d'), () => { ed.remove(); openGuided(null, { definition: defaultDef(), enabled: true }); });
+    card('📋', t('chn_build_tpl'), '', () => templateChooser(ed));
+    card('{ }', t('chn_build_adv'), '', () => { ed.remove(); openEditor(null, { definition: defaultDef(), enabled: true }); });
+  }
+
+  // The AI wizard: pick servers/storages, describe the system, get a draft to review.
+  function openWizard(ed) {
+    Array.from(ed.children).forEach((c) => { if (!c.classList.contains('chn-editor-head')) c.remove(); });
+    const body = el('div', 'chn-wizard');
+    ed.appendChild(body);
+    body.appendChild(el('h4', '', t('chn_build_ai')));
+    const note = el('div', 'note');
+    note.textContent = t('chn_ai_note');
+    body.appendChild(note);
+    const ssh = sshConns();
+    body.appendChild(el('h5', '', t('chn_ai_pick_servers')));
+    const servers = el('div', 'chn-picklist');
+    if (!ssh.length) body.appendChild(el('div', 'note', t('chn_ai_servers_none')));
+    ssh.forEach((c) => {
+      const l = el('label', 'chn-pick');
+      const cb = el('input'); cb.type = 'checkbox'; cb.value = String(c.id);
+      l.appendChild(cb);
+      l.appendChild(el('span', '', c.name + (c.host ? ' (' + c.host + ')' : '')));
+      servers.appendChild(l);
+    });
+    body.appendChild(servers);
+    const discoverBtn = el('button', 'btn-sec btn-sm', '🔍 ' + t('chn_ai_analyze'));
+    body.appendChild(discoverBtn);
+    const factsBox = el('div', 'chn-facts');
+    body.appendChild(factsBox);
+    discoverBtn.onclick = () => {
+      const ids = Array.from(servers.querySelectorAll('input:checked')).map((x) => Number(x.value));
+      if (!ids.length) { factsBox.textContent = t('chn_ai_servers_none'); return; }
+      const old = discoverBtn.textContent;
+      discoverBtn.disabled = true;
+      discoverBtn.textContent = t('chn_ai_analyzing');
+      factsBox.textContent = '';
+      api('POST', '/api/chains/discover', { conn_ids: ids }).then((res) => {
+        (res.servers || []).forEach((f) => {
+          const card = el('div', 'chn-fact');
+          card.appendChild(el('b', '', f.name + (f.hostname ? ' · ' + f.hostname : '')));
+          if (f.os) card.appendChild(el('div', 'sub', f.os));
+          if (f.error) card.appendChild(el('div', 'sub', '⚠ ' + f.error));
+          const line = (label, items) => {
+            if (!items || !items.length) return;
+            const row = el('div', 'chn-fact-row');
+            row.appendChild(el('span', 'k', label + ':'));
+            items.slice(0, 12).forEach((x) => row.appendChild(el('span', 'chn-chip', String(x))));
+            card.appendChild(row);
+          };
+          line(t('chn_ai_found_services'), f.services);
+          line(t('chn_ai_found_ports'), f.ports);
+          line(t('chn_ai_found_mounts'), (f.mounts || []).map((m) => m.target + (m.source ? ' ← ' + m.source : '')));
+          if (!f.services?.length && !f.ports?.length && !f.mounts?.length) card.appendChild(el('div', 'note', t('chn_ai_no_facts')));
+          factsBox.appendChild(card);
+        });
+      }).catch((e) => { factsBox.textContent = e.message; })
+        .finally(() => { discoverBtn.disabled = false; discoverBtn.textContent = old; });
+    };
+    body.appendChild(el('h5', '', t('chn_ai_pick_storages')));
+    const stores = el('div', 'chn-picklist');
+    (state.storages || []).forEach((s) => {
+      const l = el('label', 'chn-pick');
+      const cb = el('input'); cb.type = 'checkbox'; cb.value = String(s.id);
+      l.appendChild(cb); l.appendChild(el('span', '', s.name + (s.bucket ? ' · ' + s.bucket : '')));
+      stores.appendChild(l);
+    });
+    body.appendChild(stores);
+    body.appendChild(el('div', 'note', t('chn_ai_storage_optional')));
+    const grid = el('div', 'chn-grid2');
+    body.appendChild(grid);
+    const name = el('input'); name.maxLength = 120; name.placeholder = t('chn_ai_name');
+    fieldRow(grid, t('chn_g_name'), name);
+    const interval = el('select');
+    [15, 30, 60, 120, 300, 600].forEach((n) => { const o = el('option', '', fmt(t('chn_g_seconds'), { n })); o.value = String(n); interval.appendChild(o); });
+    interval.value = '30';
+    fieldRow(grid, t('chn_g_interval'), interval);
+    const desc = el('textarea');
+    desc.rows = 4;
+    desc.maxLength = 2000;
+    desc.placeholder = t('chn_ai_desc_ph');
+    fieldRow(body, t('chn_ai_desc'), desc);
+    const err = el('div', 'chn-errs');
+    err.setAttribute('role', 'status');
+    body.appendChild(err);
+    const make = el('button', 'btn-pri btn-sm', t('chn_ai_make'));
+    body.appendChild(make);
+    make.onclick = () => {
+      err.textContent = '';
+      const connIDs = servers.querySelectorAll('input:checked');
+      if (!connIDs.length) { err.textContent = t('chn_ai_servers_none'); return; }
+      const storageIDs = Array.from(stores.querySelectorAll('input:checked')).map((x) => Number(x.value));
+      const payload = {
+        name: name.value.trim(), description: desc.value.trim(),
+        conn_ids: Array.from(connIDs).map((x) => Number(x.value)), storage_ids: storageIDs,
+        interval_s: Number(interval.value),
+      };
+      make.disabled = true;
+      const old = make.textContent;
+      make.textContent = t('chn_ai_working');
+      api('POST', '/api/chains/ai-draft', payload).then((res) => {
+        ed.remove();
+        const reason = res.reason || '';
+        const msg = res.ai ? t('chn_ai_ready')
+          : (reason === 'provider_error' || reason === 'invalid_answer' || reason === 'invalid_definition') ? t('chn_ai_failed') : t('chn_ai_fallback');
+        showToast(msg, res.ai ? 'success' : '');
+        return loadList().then(() => selectDraft(res.draft_id));
+      }).catch((e) => { err.textContent = (e.errors && e.errors[0]) || e.message; })
+        .finally(() => { make.disabled = false; make.textContent = old; });
+    };
+  }
+
+  // The old template grid, now one of the choices inside the new window.
+  function templateChooser(ed) {
+    Array.from(ed.children).forEach((c) => { if (!c.classList.contains('chn-editor-head')) c.remove(); });
     const body = el('div', 'chn-tpls');
     ed.appendChild(body);
     Promise.all([
@@ -1237,9 +2325,10 @@ Object.assign(LANGS.hr, {
         card(LANGS.en[k] ? t(k) : tp.name, LANGS.en[k + '_d'] ? t(k + '_d') : tp.description,
           fmt(t('chn_nodes_n'), { n: tp.definition.nodes.length }), () => templateForm(ed, body, tp, conns || [], storages || []));
       });
-      card(t('chn_tpl_empty'), t('chn_tpl_empty_d'), '', () => openEditor(null, emptyChain()));
+      card(t('chn_tpl_empty'), t('chn_tpl_empty_d'), '', () => { ed.remove(); openEditor(null, { definition: defaultDef(), enabled: true }); });
     });
   }
+
 
   function templateForm(ed, body, tp, conns, storages) {
     body.textContent = '';
@@ -1283,14 +2372,18 @@ Object.assign(LANGS.hr, {
     act.appendChild(back); act.appendChild(json); act.appendChild(create);
     form.appendChild(act);
     const build = (strict) => {
-      let missing = false;
+      let missingServer = false;
       picks.forEach(({ n, s }) => {
         const v = Number(s.value) || 0;
-        if (!v) missing = true;
+        if (!v && n.kind === 'server') missingServer = true;
         if (n.kind === 'server') n.conn_id = v; else n.storage_id = v;
       });
       def.name = name.value.trim() || def.name;
-      if (strict && missing) { errs.textContent = t('chn_tpl_missing'); return null; }
+      if (strict) {
+        // A storage is optional: leave an unpicked storage node out instead of blocking.
+        picks.filter(({ n, s }) => n.kind === 'storage' && !Number(s.value)).forEach(({ n }) => stripNode(def, n.id));
+      }
+      if (strict && missingServer) { errs.textContent = t('chn_tpl_missing'); return null; }
       return { definition: def, enabled: true };
     };
     json.onclick = () => { const v = build(false); if (v) openEditor(null, v); };
@@ -1349,7 +2442,8 @@ Object.assign(LANGS.hr, {
   }
 
   function showErrors(ed, list, okText) {
-    const box = ed.querySelector('#chn-ed-errs');
+    const box = ed && ed.querySelector('#chn-ed-errs');
+    if (!box) { showToast((list && list[0]) || okText || t('chn_failed'), 'error'); return; }
     box.textContent = '';
     if (okText) { box.style.color = '#3fb950'; box.appendChild(el('div', '', okText)); return; }
     box.style.color = '';

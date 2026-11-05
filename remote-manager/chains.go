@@ -906,6 +906,22 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rest := strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/chains"), "/")
+	if rest == "discover" {
+		userID, ok := requireAuth(w, r)
+		if !ok {
+			return
+		}
+		apiChainDiscover(w, r, userID)
+		return
+	}
+	if rest == "ai-draft" {
+		userID, ok := requireAuth(w, r)
+		if !ok {
+			return
+		}
+		apiChainAssist(w, r, userID)
+		return
+	}
 	if rest == "drafts" || strings.HasPrefix(rest, "drafts/") {
 		userID, ok := requireAuth(w, r)
 		if !ok {
