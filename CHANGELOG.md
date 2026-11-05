@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### Fixed
+
+- **Chains wizard with four or more servers.** A starter built from discovered facts could make check ids longer than the 40-character limit and a "Normal" rule with more than the 20 conditions one rule list may hold, so the wizard answered "Could not build a starter chain". Check ids are now shortened with a numeric collision suffix, and the all-checks-OK rule is nested in groups of 20. The same validation still applies to AI drafts (one repair round).
+
 ## [14.2.0] - 2026-11-05
 
 Chains becomes something you build in the window, with an AI that reads the servers first and no storage requirement. Everything is additive; upgrading from v14.1.0 keeps the database and the encryption key.
