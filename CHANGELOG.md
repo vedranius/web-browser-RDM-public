@@ -1,4 +1,6 @@
-## [Unreleased]
+## [14.3.1] - 2026-11-05
+
+Log globs are no longer mistaken for private keys, and WRM stays reachable with parallel MCP sessions and several browser tabs. Upgrading from v14.3.0 keeps the database and the encryption key.
 
 ### Fixed
 
