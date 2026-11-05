@@ -585,11 +585,7 @@ func chainStarterFromSelection(userID int, conns []Connection, storages []Storag
 		}
 	}
 	if len(allChecks) > 0 {
-		var normal []chainCond
-		for _, id := range allChecks {
-			normal = append(normal, chainCond{Check: id, Field: "ok", Op: "==", Value: "true"})
-		}
-		def.Scenarios = append(def.Scenarios, chainScenario{ID: "normal", Label: "Normal", When: chainCond{All: normal}})
+		def.Scenarios = append(def.Scenarios, chainScenario{ID: "normal", Label: "Normal", When: chainAllRule(allChecks)})
 	}
 	if backupID != "" && appID != "" {
 		def.Scenarios = append(def.Scenarios, chainScenario{ID: "backup", Label: "Backup", When: chainCond{All: []chainCond{
@@ -603,12 +599,43 @@ func chainStarterFromSelection(userID int, conns []Connection, storages []Storag
 
 // uniqueCheckID returns a check id not used on any node of the same chain.
 func uniqueCheckID(used map[string]bool, base string) string {
-	id := chainSlug(base, map[string]bool{})
-	for used[id] {
-		id += "-2"
+	slug := chainSlug(base, map[string]bool{})
+	if len(slug) > 30 {
+		slug = slug[:30]
+	}
+	id := slug
+	for i := 2; used[id]; i++ {
+		suffix := "-" + strconv.Itoa(i)
+		cut := 40 - len(suffix)
+		root := slug
+		if len(root) > cut {
+			root = root[:cut]
+		}
+		id = root + suffix
 	}
 	used[id] = true
 	return id
+}
+
+// chainAllRule builds an "all checks OK" rule, nested in groups when a chain has more checks
+// than one rule list may hold (20).
+func chainAllRule(ids []string) chainCond {
+	var conds []chainCond
+	for _, id := range ids {
+		conds = append(conds, chainCond{Check: id, Field: "ok", Op: "==", Value: "true"})
+	}
+	if len(conds) <= chainMaxCondItems {
+		return chainCond{All: conds}
+	}
+	var groups []chainCond
+	for i := 0; i < len(conds); i += chainMaxCondItems {
+		end := i + chainMaxCondItems
+		if end > len(conds) {
+			end = len(conds)
+		}
+		groups = append(groups, chainCond{All: conds[i:end]})
+	}
+	return chainCond{All: groups}
 }
 
 // preferredPorts puts the ports a service is usually reached on first, then the rest.

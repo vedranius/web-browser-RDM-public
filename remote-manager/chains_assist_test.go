@@ -121,6 +121,74 @@ func TestChainStarterUsesDiscovery(t *testing.T) {
 	}
 }
 
+// TestChainStarterManyServers: four servers with many discovered facts still validate; check
+// ids stay inside 40 characters and the "all OK" rule is nested instead of exceeding 20 items.
+func TestChainStarterManyServers(t *testing.T) {
+	u, _, _ := storageTestEnv(t, "chain-many-servers", nil)
+	var conns []Connection
+	var facts []chainServerFacts
+	for i := 0; i < 4; i++ {
+		id := chainTestConn(t, u.userID, "SSH")
+		c, err := loadConnectionRaw(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		conns = append(conns, c)
+		f := chainServerFacts{ConnID: id, Name: c.Name, OS: "Linux", Ports: []int{22, 443, 8080, 9000, 5432}}
+		for j := 0; j < 8; j++ {
+			f.Services = append(f.Services, fmt.Sprintf("very-long-service-name-that-should-be-truncated-%d-%d.service", i, j))
+		}
+		for j := 0; j < 3; j++ {
+			f.Containers = append(f.Containers, fmt.Sprintf("demo-container-%d-%d", i, j))
+		}
+		for j := 0; j < 3; j++ {
+			f.Mounts = append(f.Mounts, chainMountFact{Target: fmt.Sprintf("/mnt/storage-%d-%d", i, j), Source: "s3.example.com:/bucket", FSType: "nfs4"})
+		}
+		facts = append(facts, f)
+	}
+	def := chainStarterFromSelection(u.userID, conns, nil, facts, "Four servers", "")
+	if errs := validateChain(&def, u.userID); len(errs) > 0 {
+		t.Fatalf("starter for four servers does not validate:\n%s", strings.Join(errs, "\n"))
+	}
+	if len(def.Checks) <= chainMaxCondItems {
+		t.Fatalf("test did not reach the rule limit: %d checks", len(def.Checks))
+	}
+	for _, x := range def.Checks {
+		if !chainIDPattern.MatchString(x.ID) || len(x.ID) > 40 {
+			t.Errorf("invalid check id %q (%d chars)", x.ID, len(x.ID))
+		}
+	}
+	normal := def.Scenarios[0]
+	if len(normal.When.All) > chainMaxCondItems {
+		t.Fatalf("normal rule has %d top-level items", len(normal.When.All))
+	}
+	// The nested groups still contain only checks, none lost.
+	var flat []string
+	for _, g := range normal.When.All {
+		if g.Check != "" {
+			flat = append(flat, g.Check)
+		}
+		for _, x := range g.All {
+			flat = append(flat, x.Check)
+		}
+	}
+	if len(flat) != len(def.Checks) {
+		t.Fatalf("normal rule covers %d of %d checks", len(flat), len(def.Checks))
+	}
+}
+
+// TestUniqueCheckIDBounded: repeated collisions never produce an id above 40 characters.
+func TestUniqueCheckIDBounded(t *testing.T) {
+	used := map[string]bool{}
+	base := "a-very-long-node-and-service-name-that-will-collide-every-time"
+	for i := 0; i < 2000; i++ {
+		id := uniqueCheckID(used, base)
+		if !chainIDPattern.MatchString(id) || len(id) > 40 {
+			t.Fatalf("id %q is invalid (%d chars)", id, len(id))
+		}
+	}
+}
+
 // TestChainAssistFallback: without an AI provider the wizard still returns a valid draft built
 // from the selection, and it refuses servers/storages the caller does not own.
 func TestChainAssistFallback(t *testing.T) {
