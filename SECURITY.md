@@ -293,7 +293,7 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - Chat titles are generated with no tools from the first question and answer (both already redacted); continuing a chat sends the earlier, redacted transcript of the same user to the provider again. Thinking summaries are redacted and stored like other transcript entries.
 - The editor checks the file on the server before it writes and asks before overwriting a newer version.
 
-## Chains (v14.1.0)
+## Chains (v14.2.0)
 
 - A chain cannot run commands. Checks come from a fixed catalog, the server script is fixed text, and parameters are validated (unit and container names by pattern, absolute paths, no control characters). They reach the script on standard input as data.
 - A chain may use only its owner's SSH connections and storages; this is checked when the chain is saved and again on every poll.

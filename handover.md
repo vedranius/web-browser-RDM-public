@@ -24,6 +24,7 @@ Progress log:
 - 2026-11-04: Chains step 3 (AI builder) on `claude/chains-ai`: `chains_drafts.go` (drafts table and API, `chain_status` / `chain_draft` built-in-assistant tools), `ai_tools.go` (`Self`, `PanelOnly`), host-tool dispatch, draft list/review/approve/discard in `static/chains.js` and the `chain_draft_changed` event; `chains_drafts_test.go`. No version bump. All three steps are on `main`; next is the combined release.
 - 2026-11-04: Combined release **v14.1.0** on `claude/v14.1.0`: version bump in `main.go`, `build.yml`, `docker-compose.yml`, `build-all.sh`, `server.json` and README; CHANGELOG, RELEASE_NOTES and upgrade notes for Chains (steps 1–3). The automatic `Tag new version` job tags and publishes it after the merge.
 - 2026-11-05: Chains step 4 (guided builder + discovery) on `claude/chains-builder`: `chains_assist.go` (AI wizard, deterministic starter, draft PUT), `chains_discover.go` (fixed read-only OS/service/container/port/mount discovery), guided editor + connector-dot links + node/check dialogs in `static/chains.js`, templates no longer require a storage. No version bump; next release when the owner asks.
+- 2026-11-05: Release **v14.2.0** on `claude/v14.2.0`: version bump in `main.go`, `build.yml`, `docker-compose.yml`, `build-all.sh`, `server.json` and README; changelog, release notes and upgrade notes for the guided builder, the AI wizard and discovery. Automatic tag/release after the merge.
 
 ## Completed package: connection-test credential egress guard
 
