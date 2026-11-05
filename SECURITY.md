@@ -305,7 +305,7 @@ Folder parents must belong to the same user; hierarchy mutations are serialized 
 - **Discovered storage is not attached:** a network/object-storage mount becomes a `mount` check on its own server; its host may become an outside endpoint with a DNS check. WRM does not mount it, does not create a storage entry, does not use credentials for it and does not require the user to add a storage to build a chain.
 - **AI drafts:** `chain_draft` is a built-in-assistant tool (MCP clients do not get it) that decodes the definition strictly (unknown fields refused, 64 KB cap), runs the same `validateChain` against the signed-in user, and can use only that user's connections and storages. A draft is not polled and runs nothing; it is readable, discardable and approvable only by its owner. Approval validates the definition again before creating the chain, so a draft cannot smuggle in a check type, a foreign connection or a free command. `chain_status` gives the assistant the names and ids of the user's connections and storages (no host names, no credentials) like any other prompt text sent to the configured AI provider.
 
-## Storages (v14.0.0)
+## Storages (v14.3.0)
 
 - **Read-only share links were removed in v14.3.0.** There is no public `/s3/` route and no share API; a link created by an older version no longer resolves. The section is reachable only by signed-in users with the storage's permissions.
 

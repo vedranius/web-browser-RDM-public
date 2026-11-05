@@ -1,4 +1,6 @@
-## [Unreleased]
+## [14.3.0] - 2026-11-05
+
+Storage folders load completely with search, sorting and selection; read-only S3 share links are removed for security; the Chains wizard handles four or more servers. Upgrading from v14.2.0 keeps the database and the encryption key.
 
 ### Added
 

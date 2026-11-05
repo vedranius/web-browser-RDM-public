@@ -1,30 +1,54 @@
-## Web Remote Manager PRO v14.2.0 — Chains you can build, with an AI that reads the servers
+## Web Remote Manager PRO v14.3.0 — Complete storage folders, no share links, and the Chains fix
+
+A storage folder is now loaded and counted completely, the browser gets search, sorting and bulk actions, the public S3 share links are removed for security, and the Chains wizard no longer fails with four or more servers.
+
+### Storage browser
+
+- **The whole folder, not the first page.** The window follows every S3 continuation token, shows the running count while loading, then the total object and folder count and size with "all objects in this folder are shown"; above a 100-page safety limit it offers *Load more*.
+- **Search, sort, select.** Search filters the complete folder ("showing X of Y"), sort by name, size or date ascending/descending, select-all and bulk delete work on the visible selection, and *Copy path* copies an object key.
+- **Test connection before saving** checks the endpoint, bucket and keys from the add form (`POST /api/storages/test`); it no longer needs a saved storage.
+
+### Removed: S3 share links
+
+- The `Share` button, `GET/POST /api/storages/{id}/shares`, `DELETE .../shares/{id}` and the public `/s3/{token}` page are gone. Links created by an older version stop working; storage access always needs a signed-in account with the storage's permissions. The unused `storage_shares` table may remain and can be dropped.
+
+### Fixed
+
+- **Chains wizard with four or more servers** no longer fails with "check id must be 1-40 characters" or "too many rules in one list": ids are shortened with a collision suffix, and a large all-checks-OK state is nested in groups of 20.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.3.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.0) asset. Preserve the database and encryption key. No database or setting change; existing storages and chains are unchanged, but old share links no longer work.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.2.0 — Chains you can build, with an AI that reads the servers
 
 Chains leaves JSON behind: a guided builder, a workflow-like diagram and a wizard that inspects the chosen servers before the assistant drafts anything. A storage is no longer required.
 
-### New: the guided builder
+#### New: the guided builder
 
 - *New chain* offers **Build with AI**, **Build step by step**, templates and advanced JSON. The guided editor picks servers, storages and outside services from the saved connections, adds checks with a form for each catalog type, connects nodes and edits states (scenarios) with a condition editor; *Normal / Backup / Degraded* can be generated.
 - Drag from a node's connector dot to another node to create a link, or use *Connect to…* in the node panel (also on touch). The toolbar adds a node or a link; the node panel adds/removes checks; nodes and links can be deleted in place. The same works on AI drafts before approval.
 - Scenario rules are shown as sentences, not JSON, and custom rules are preserved when the editor opens.
 
-### The AI wizard discovers the system first
+#### The AI wizard discovers the system first
 
 - Pick servers (storages optional) and, if you want, describe the system. WRM runs one fixed, read-only discovery per server: OS, running non-system services, Docker containers, listening ports and network/object-storage mounts (rclone, s3fs, NFS, CIFS, SSHFS). The facts are shown in the wizard and given to the assistant, which uses real service names, ports and mounts as check targets.
 - No AI provider, or an answer that fails validation, is not a dead end: the same facts build a deterministic starter.
 - `POST /api/chains/ai-draft` and `POST /api/chains/discover` are the new endpoints; drafts can be edited with `PUT /api/chains/drafts/{id}`.
 
-### No storage required, nothing attached
+#### No storage required, nothing attached
 
 - A chain of servers is complete on its own. Templates leave an unpicked storage node out, and the wizard accepts zero storages.
 - A discovered network/object-storage mount becomes a `mount` check on its server; when the source names a reachable host, an outside endpoint with a DNS check is added. WRM does not mount it, does not create a storage entry, never asks for its credentials and never uses a `storage_id` for it. Storage nodes remain only for storages you already saved.
 
-### Security
+#### Security
 
 - Discovery is fixed text over the selected connections, read-only and bounded: names, ports and mount points only — no file contents, environment variables or credentials.
 - Every node must use a connection or storage the caller owns; the AI answer passes the same `validateChain` and facts are treated as untrusted data in the prompt.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.2.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.2.0) asset. Preserve the database and encryption key. No database or setting change; existing chains and the v14.1.0 tables are unchanged.
 
