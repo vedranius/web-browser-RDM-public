@@ -277,11 +277,11 @@ func (c *s3Client) do(ctx context.Context, method, key string, q url.Values, bod
 		if body != nil {
 			rdr = bytes.NewReader(body)
 		}
-		// #nosec G704 -- the endpoint is entered by an administrator and checked by guardEgressURL (metadata, link-local, egress policy)
 		target := u.String()
 		if !s3RequestURL.MatchString(target) {
 			return nil, errors.New("the storage endpoint is not a valid http(s) address")
 		}
+		// #nosec G704 -- the endpoint is entered by an administrator and checked by guardEgressURL (metadata, link-local, egress policy)
 		req, err := http.NewRequestWithContext(ctx, method, target, rdr)
 		if err != nil {
 			return nil, err
