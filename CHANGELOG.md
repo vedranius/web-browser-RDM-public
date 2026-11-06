@@ -1,4 +1,6 @@
-## [Unreleased]
+## [14.3.2] - 2026-11-06
+
+A saved storage can be edited and removed again. Upgrading from v14.3.1 keeps the database and the encryption key.
 
 ### Fixed
 

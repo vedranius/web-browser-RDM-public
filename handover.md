@@ -27,6 +27,7 @@ Progress log:
 - 2026-11-05: Release **v14.2.0** on `claude/v14.2.0`: version bump in `main.go`, `build.yml`, `docker-compose.yml`, `build-all.sh`, `server.json` and README; changelog, release notes and upgrade notes for the guided builder, the AI wizard and discovery. Automatic tag/release after the merge.
 - 2026-11-05: Release **v14.3.0** on `claude/v14.3.0`: complete storage folder listings (all S3 pages, counts, search, sort, select-all/bulk delete, copy path), Test connection on unsaved form values, removal of the S3 share links and `/s3/` for security, plus the Chains four-server fix from v14.2.1. Version bump in `main.go`, `build.yml`, `docker-compose.yml`, `build-all.sh`, `server.json` and README.
 - 2026-11-05: Release **v14.3.1** on `claude/v14.3.1`: the AI log-glob false positive (PuTTY key) and the MCP/DB responsiveness fix (pool 32, label prefetch) from #173. Version bump in `main.go`, `build.yml`, `docker-compose.yml`, `build-all.sh`, `server.json` and README.
+- 2026-11-06: Release **v14.3.2** on `claude/v14.3.2`: storage list pencil/trash and toolbar Edit make the existing Remove storage dialog reachable.
 
 ## Completed package: connection-test credential egress guard
 

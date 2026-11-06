@@ -1,13 +1,27 @@
-## Web Remote Manager PRO v14.3.1 — Log reads and MCP responsiveness
+## Web Remote Manager PRO v14.3.2 — Remove a saved storage
+
+A small fix: a saved S3 storage could not be edited or removed from the window, because the delete action lived in a dialog that had no way to open for an existing entry.
+
+### Fixed
+
+- **Edit and remove a storage.** Every storage in the left list has a **pencil** and a **trash** button, and the selected storage shows **✎ Edit** in the toolbar. The dialog's **Remove storage** deletes the WRM entry; the bucket and its files stay untouched and the confirmation says so.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.3.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.2) asset. Preserve the database and encryption key. No database or setting change.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.3.1 — Log reads and MCP responsiveness
 
 A small bug-fix release for two problems seen in daily use: the AI refusing an ordinary log file, and WRM becoming unreachable while Claude's MCP connection works in parallel with several browser tabs.
 
-### Fixed
+#### Fixed
 
 - **A log glob is not a private key.** `follower.log*` (and other ordinary log globs) was refused as a PuTTY private key because it could theoretically expand to `follower.log.ppk`. Extension-only rules now apply to explicit paths; `server.ppk`, `.key`, `.p12` and `.pfx` files are still refused.
 - **WRM stays reachable with parallel MCP calls and several tabs.** The database pool grew from 8 to 32 connections with idle expiry, and connection/folder lists load their labels in one query instead of one per row. Eight MCP tool calls plus browser tabs could previously hold every connection in a nested lookup, leaving the UI waiting until a service restart; closing tabs is no longer needed.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.3.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.1) asset. Preserve the database and encryption key. No database or setting change.
 
