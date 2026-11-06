@@ -36,6 +36,8 @@ type s3Config struct {
 	CAFingerprint string // hex SHA-256 of the leaf certificate; "" verifies the chain normally
 	SSE           string // "" | AES256 | aws:kms
 	PathStyle     bool
+	StorageID     int // for the activity log only (storage_activity.go); 0 = not saved yet
+	OwnerID       int
 }
 
 type s3Client struct {
@@ -283,8 +285,23 @@ func (c *s3Client) do(ctx context.Context, method, key string, q url.Values, bod
 			}
 		}
 		c.sign(req, body, "")
+		start := time.Now()
 		// #nosec G704 -- same endpoint, already validated when the storage was saved
 		resp, err := c.http.Do(req)
+		op := storageOp{At: start.UTC().Format(time.RFC3339Nano), Op: s3OpName(method, key, q, hdr), Method: method,
+			Key: storageOpKey(c.cfg, key), Ms: time.Since(start).Milliseconds(), Bytes: int64(len(body)), Source: storageSourceOf(ctx)}
+		if attempt > 0 {
+			op.Source += " (retry)"
+		}
+		if err != nil {
+			op.Error = storageOpError(err)
+		} else {
+			op.Status = resp.StatusCode
+			if resp.ContentLength > 0 && method == http.MethodGet {
+				op.Bytes = resp.ContentLength
+			}
+		}
+		recordStorageOp(c.cfg, op)
 		if err != nil {
 			lastErr = fmt.Errorf("cannot reach the storage: %w", err)
 			if ctx.Err() != nil {

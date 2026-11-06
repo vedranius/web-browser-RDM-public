@@ -56,6 +56,7 @@ type Storage struct {
 	CreatedAt     string   `json:"created_at"`
 	UpdatedAt     string   `json:"updated_at"`
 	Tags          []string `json:"tags,omitempty"`
+	Provider      string   `json:"provider,omitempty"` // v14.4.0: hetzner, digitalocean, aws, backblaze, r2, minio, other
 	// Status is filled in by the background check (HeadBucket), never stored in the database.
 	StatusOK  *bool  `json:"status_ok,omitempty"`
 	StatusErr string `json:"status_err,omitempty"`
@@ -102,9 +103,9 @@ func loadStorage(id, userID int) (Storage, error) {
 	var pathStyle, w, d, u int
 	err := db.QueryRow(`SELECT id, user_id, name, kind, endpoint, region, bucket, prefix, path_style,
 		access_key, secret, ca_fingerprint, sse, allow_write, allow_delete, allow_upload, max_object_mb,
-		created_at, updated_at FROM storages WHERE id=?`, id).
+		created_at, updated_at, provider FROM storages WHERE id=?`, id).
 		Scan(&s.ID, &s.UserID, &s.Name, &s.Kind, &s.Endpoint, &s.Region, &s.Bucket, &s.Prefix, &pathStyle,
-			&s.AccessKey, &secret, &s.CAFingerprint, &s.SSE, &w, &d, &u, &s.MaxObjectMB, &s.CreatedAt, &s.UpdatedAt)
+			&s.AccessKey, &secret, &s.CAFingerprint, &s.SSE, &w, &d, &u, &s.MaxObjectMB, &s.CreatedAt, &s.UpdatedAt, &s.Provider)
 	if err != nil {
 		return s, err
 	}
@@ -206,7 +207,7 @@ func refreshStorageStatus() {
 			setStorageStatus(s.ID, err)
 			continue
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+		ctx, cancel := context.WithTimeout(withStorageSource(context.Background(), "background"), 8*time.Second)
 		err = c.headBucket(ctx)
 		cancel()
 		prevOK, _, prevAt := storageStatusFor(s.ID)
@@ -368,6 +369,10 @@ func storageFingerprint(raw string) (string, error) {
 // validateStorage normalises and checks a storage from the browser. The secret is optional on
 // update: an empty one keeps the stored key.
 func validateStorage(s *Storage, userID int) error {
+	s.Provider = strings.ToLower(strings.TrimSpace(s.Provider))
+	if _, ok := storageProviderByID(s.Provider); !ok {
+		s.Provider = guessStorageProvider(s.Endpoint)
+	}
 	s.Name = truncateStr(strings.TrimSpace(s.Name), storageMaxName)
 	if s.Name == "" {
 		return fmt.Errorf("give the storage a name")
@@ -443,7 +448,7 @@ func (s Storage) clientForSecret(secret string) (*s3Client, error) {
 	return newS3Client(s3Config{
 		Endpoint: s.Endpoint, Region: s.Region, Bucket: s.Bucket, Prefix: s.Prefix,
 		PathStyle: s.PathStyle, AccessKey: s.AccessKey, SecretKey: secret,
-		CAFingerprint: s.CAFingerprint, SSE: s.SSE,
+		CAFingerprint: s.CAFingerprint, SSE: s.SSE, StorageID: s.ID, OwnerID: s.UserID,
 	})
 }
 
@@ -589,6 +594,17 @@ func apiStoragesHandler(w http.ResponseWriter, r *http.Request) {
 		apiStorageTestDraft(w, r)
 		return
 	}
+	if rest == "providers" {
+		if _, ok := requireAuth(w, r); ok {
+			out := []storageProvider{}
+			for _, p := range storageProviders {
+				q, _ := storageProviderByID(p.ID)
+				out = append(out, q)
+			}
+			jsonOK(w, map[string]interface{}{"providers": out, "operations": storageWRMOps, "checked": storagePricingChecked})
+		}
+		return
+	}
 	parts := strings.Split(rest, "/")
 	if len(parts) == 1 {
 		apiStorageByID(w, r)
@@ -607,6 +623,10 @@ func apiStoragesHandler(w http.ResponseWriter, r *http.Request) {
 		apiStorageMove(w, r)
 	case "text":
 		apiStorageText(w, r)
+	case "activity":
+		if s, _, ok := requireStorage(w, r, "read"); ok {
+			jsonOK(w, storageActivityView(s))
+		}
 	default:
 		jsonError(w, "Not found", http.StatusNotFound)
 	}
@@ -645,11 +665,11 @@ func apiStoragesRoot(w http.ResponseWriter, r *http.Request) {
 		}
 		now := time.Now().UTC().Format(time.RFC3339)
 		res, err := db.Exec(`INSERT INTO storages (user_id, name, kind, endpoint, region, bucket, prefix, path_style,
-			access_key, secret, ca_fingerprint, sse, allow_write, allow_delete, allow_upload, max_object_mb, created_at, updated_at)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			access_key, secret, ca_fingerprint, sse, allow_write, allow_delete, allow_upload, max_object_mb, created_at, updated_at, provider)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 			userID, s.Name, s.Kind, s.Endpoint, s.Region, s.Bucket, s.Prefix, boolInt(s.PathStyle),
 			s.AccessKey, encryptValue(s.Secret), s.CAFingerprint, s.SSE, boolInt(s.AllowWrite), boolInt(s.AllowDelete),
-			boolInt(s.AllowUpload), s.MaxObjectMB, now, now)
+			boolInt(s.AllowUpload), s.MaxObjectMB, now, now, s.Provider)
 		if err != nil {
 			jsonError(w, "Server error", http.StatusInternalServerError)
 			return
@@ -728,10 +748,10 @@ func apiStorageByID(w http.ResponseWriter, r *http.Request) {
 		now := time.Now().UTC().Format(time.RFC3339)
 		_, err := db.Exec(`UPDATE storages SET name=?, endpoint=?, region=?, bucket=?, prefix=?, path_style=?,
 			access_key=?, secret=?, ca_fingerprint=?, sse=?, allow_write=?, allow_delete=?, allow_upload=?,
-			max_object_mb=?, updated_at=? WHERE id=?`,
+			max_object_mb=?, updated_at=?, provider=? WHERE id=?`,
 			upd.Name, upd.Endpoint, upd.Region, upd.Bucket, upd.Prefix, boolInt(upd.PathStyle), upd.AccessKey, s.Secret,
 			upd.CAFingerprint, upd.SSE, boolInt(upd.AllowWrite), boolInt(upd.AllowDelete), boolInt(upd.AllowUpload),
-			upd.MaxObjectMB, now, s.ID)
+			upd.MaxObjectMB, now, upd.Provider, s.ID)
 		if err != nil {
 			jsonError(w, "Server error", http.StatusInternalServerError)
 			return
@@ -749,6 +769,7 @@ func apiStorageByID(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Server error", http.StatusInternalServerError)
 			return
 		}
+		forgetStorageActivity(s.ID)
 		auditLog(r, userID, "storage.deleted", s.Name, storageAuditDetails(s))
 		jsonOK(w, map[string]bool{"ok": true})
 	default:
@@ -828,10 +849,11 @@ func storagePreflight(s Storage, secret string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.headBucket(rctx()); err != nil {
+	ctx := withStorageSource(rctx(), "check")
+	if err := c.headBucket(ctx); err != nil {
 		return err
 	}
-	if _, err := c.list(rctx(), "", "", 1); err != nil {
+	if _, err := c.list(ctx, "", "", 1); err != nil {
 		return err
 	}
 	return nil

@@ -1122,6 +1122,7 @@ func initDB() {
 		"id", "user_id", "name", "kind", "endpoint", "region", "bucket", "prefix", "path_style",
 		"access_key", "secret", "ca_fingerprint", "sse", "allow_write", "allow_delete", "allow_upload",
 		"max_object_mb", "created_at", "updated_at")
+	db.Exec(`ALTER TABLE storages ADD COLUMN provider TEXT NOT NULL DEFAULT ''`) // v14.4.0
 	ensureTable("chains", chainSchema,
 		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
 	ensureTable("chain_samples", chainSampleSchema,

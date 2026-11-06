@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -153,5 +154,44 @@ func TestChainMCPCall(t *testing.T) {
 	none := &mcpGrant{ID: 79, UserID: u.userID, Mode: aiModeAsk, Scopes: []string{"read_logs"}}
 	if out := call(none, "chain_status"); !strings.Contains(out, "no chains scope") {
 		t.Fatalf("a connection without the scope: %s", out)
+	}
+}
+
+// TestChainBuilderAIEdit: the builder's "Ask AI" sends the chain and the instruction to the
+// model and stores the answer as a draft that changes the chain; the chain stays as it was.
+func TestChainBuilderAIEdit(t *testing.T) {
+	setSetting("chains_enabled", "1")
+	var connID int
+	env := newAIEnv(t, func(n int, body map[string]interface{}) fakeTurn {
+		return fakeTurn{Text: fmt.Sprintf(`{"summary":"Dodana TLS provjera.","definition":{"name":"Builder demo","nodes":[{"id":"app","kind":"server","label":"demo-api","role":"app","conn_id":%d},{"id":"site","kind":"external","label":"Site","role":"endpoint"}],"checks":[{"id":"svc","node":"app","type":"systemd","target":"demo.service","label":"Demo"},{"id":"cert","node":"site","type":"tls","target":"example.com","label":"Certificate"}],"links":[],"scenarios":[{"id":"normal","label":"Normal","when":{"all":[{"check":"svc","field":"ok","op":"==","value":"true"}]}},{"id":"degraded","label":"Degraded","when":{}}]}}`, connID)}
+	})
+	connID = env.connID
+	prefs, _ := json.Marshal(aiUserPrefs{ProviderID: env.provID, Model: "claude-opus-5-5"})
+	db.Exec(`DELETE FROM user_ui WHERE user_id=? AND key='ai'`, env.user.userID)
+	db.Exec(`INSERT INTO user_ui (user_id, key, value, updated_at) VALUES (?, 'ai', ?, ?)`, env.user.userID, string(prefs), nowRFC())
+	def := chainDraftTestDef(connID)
+	def.Name = "Builder demo"
+	def.Nodes = def.Nodes[:1]
+	def.Checks = def.Checks[:1]
+	def.Links = nil
+	code, v := env.user.aiDo("POST", "/api/chains", map[string]interface{}{"definition": def, "enabled": false})
+	if code != http.StatusOK {
+		t.Fatalf("create chain: %d %v", code, v)
+	}
+	chainID := int(asMap(v)["id"].(float64))
+	code, v = env.user.aiDo("POST", "/api/chains/ai-edit", map[string]interface{}{"chain_id": chainID, "instruction": "dodaj TLS provjeru za example.com"})
+	if code != http.StatusOK {
+		t.Fatalf("ai-edit: %d %v", code, v)
+	}
+	m := asMap(v)
+	if m["summary"] != "Dodana TLS provjera." || int(m["changes_chain_id"].(float64)) != chainID {
+		t.Fatalf("ai-edit answer: %v", m)
+	}
+	d, err := loadChainDraft(int(m["draft_id"].(float64)))
+	if err != nil || d.BaseChainID != chainID || len(d.Definition.Checks) != 2 {
+		t.Fatalf("stored draft: %+v %v", d, err)
+	}
+	if c, _ := loadChain(chainID); len(c.Def.Checks) != 1 {
+		t.Fatal("the AI changed the live chain directly")
 	}
 }

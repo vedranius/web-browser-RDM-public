@@ -69,7 +69,7 @@ func mcpStorageList(g *mcpGrant, args map[string]interface{}) (map[string]interf
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.list(rctx(), prefix, "", 200)
+	res, err := c.list(withStorageSource(rctx(), "ai"), prefix, "", 200)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func mcpStorageRead(g *mcpGrant, args map[string]interface{}) (map[string]interf
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.get(rctx(), key, "")
+	resp, err := c.get(withStorageSource(rctx(), "ai"), key, "")
 	if err != nil {
 		return nil, err
 	}
@@ -152,10 +152,10 @@ func mcpStorageWrite(g *mcpGrant, args map[string]interface{}) (map[string]inter
 	if err != nil {
 		return nil, err
 	}
-	if err := storageNewObjectAllowed(rctx(), c, s, key, etag); err != nil {
+	if err := storageNewObjectAllowed(withStorageSource(rctx(), "ai"), c, s, key, etag); err != nil {
 		return nil, err
 	}
-	tag, err := c.put(rctx(), key, []byte(content), storageContentType("", key), etag)
+	tag, err := c.put(withStorageSource(rctx(), "ai"), key, []byte(content), storageContentType("", key), etag)
 	if err != nil {
 		return nil, err
 	}
@@ -188,10 +188,10 @@ func mcpStorageDelete(g *mcpGrant, args map[string]interface{}) (map[string]inte
 		return nil, err
 	}
 	var size int64
-	if meta, err := c.head(rctx(), key); err == nil {
+	if meta, err := c.head(withStorageSource(rctx(), "ai"), key); err == nil {
 		size = meta.Size
 	}
-	if err := c.delete(rctx(), key); err != nil {
+	if err := c.delete(withStorageSource(rctx(), "ai"), key); err != nil {
 		return nil, err
 	}
 	return map[string]interface{}{"storage": s.Name, "key": key, "deleted": true, "size": size}, nil

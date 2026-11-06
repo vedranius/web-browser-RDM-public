@@ -603,7 +603,7 @@ func chainStorage(ctx context.Context, c chainCheck, owner int, node chainNode) 
 	if ok && every > 0 && time.Since(hit.at) < every {
 		return hit.res
 	}
-	res := chainStorageAsk(ctx, c, owner, node)
+	res := chainStorageAsk(withStorageSource(ctx, "chain"), c, owner, node)
 	chainStorageCache.Lock()
 	if len(chainStorageCache.m) > 2000 {
 		chainStorageCache.m = map[string]chainStorageCached{}
