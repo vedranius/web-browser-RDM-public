@@ -251,15 +251,28 @@ func notifyStorageEvent(s Storage, event string, err error) {
 	})
 }
 
-// storageStatusLoop keeps the status fresh without blocking a request.
+// storageStatusLoop keeps the status fresh without blocking a request. It sends one HEAD on
+// the bucket per storage every storage_check_minutes (default 15, 0 = off): no LIST and no
+// object reads, so a provider that counts requests sees about 96 per storage and day.
 func storageStatusLoop() {
 	time.Sleep(45 * time.Second)
+	var last time.Time
 	for {
-		if settingBool("storages_enabled") {
+		if every := storageCheckInterval(); every > 0 && settingBool("storages_enabled") && time.Since(last) >= every {
 			refreshStorageStatus()
+			last = time.Now()
 		}
-		time.Sleep(5 * time.Minute)
+		time.Sleep(time.Minute)
 	}
+}
+
+// storageCheckInterval is the pause between background checks; 0 means no background check.
+func storageCheckInterval() time.Duration {
+	m := settingInt("storage_check_minutes")
+	if m <= 0 {
+		return 0
+	}
+	return time.Duration(m) * time.Minute
 }
 
 // normalizePrefix makes a prefix safe and canonical: no leading or trailing slash, no empty,
@@ -699,9 +712,14 @@ func apiStorageByID(w http.ResponseWriter, r *http.Request) {
 			}
 			plain = decryptValue(s.Secret)
 		}
-		if err := storagePreflight(upd, plain); err != nil {
-			jsonError(w, err.Error(), http.StatusBadRequest)
-			return
+		// Only a change to where or how WRM connects is proven against the bucket again. Renaming
+		// a storage or changing its permissions sends no request, so it also works while the
+		// endpoint is unreachable.
+		if in.Secret != "" || storageConnChanged(s, upd) {
+			if err := storagePreflight(upd, plain); err != nil {
+				jsonError(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 		}
 		if in.Secret != "" {
 			s.Secret = encryptValue(in.Secret)
@@ -793,6 +811,14 @@ func apiStorageTest(w http.ResponseWriter, r *http.Request) {
 	}
 	setStorageStatus(s.ID, nil)
 	jsonOK(w, out)
+}
+
+// storageConnChanged reports whether an edit touches the fields that decide which bucket WRM
+// talks to and how it signs and verifies the requests.
+func storageConnChanged(old, upd Storage) bool {
+	return old.Endpoint != upd.Endpoint || old.Region != upd.Region || old.Bucket != upd.Bucket ||
+		old.Prefix != upd.Prefix || old.PathStyle != upd.PathStyle || old.AccessKey != upd.AccessKey ||
+		old.CAFingerprint != upd.CAFingerprint || old.SSE != upd.SSE
 }
 
 // storagePreflight proves the endpoint, the bucket and the keys before anything is stored: a

@@ -38,6 +38,7 @@ Object.assign(LANGS.hr, {
   stg_search_ph: 'Pretraži ovu mapu…', stg_sort: 'Sortiraj',
   stg_sort_name: 'Naziv', stg_sort_size: 'Veličina', stg_sort_date: 'Datum', stg_sort_asc: 'Uzlazno', stg_sort_desc: 'Silazno',
   stg_select_all: 'Odaberi sve', stg_total: 'Objekti: {n} · Mape: {m} · {size}', stg_loading_n: 'Učitano: {n} objekata…',
+  stg_edit_storage: 'Uredi ili ukloni ovaj storage',
   stg_all_shown: 'prikazani su svi objekti ove mape', stg_filtered: 'Prikazano {x} od {y} objekata',
   stg_no_match: 'Nijedan objekt ne odgovara pretrazi.', stg_delete_selected: 'Obriši odabrano ({n})',
   stg_delete_selected_q: 'Obrisati {n} odabranih objekata? To se ne može poništiti.', stg_deleted_some: 'Obrisano {n} objekata.',
@@ -90,6 +91,9 @@ Object.assign(LANGS.hr, {
 .stg-item.sel { background:var(--bg3); border-color:var(--accent); }
 .stg-item .n { font-size:12.5px; font-weight:600; }
 .stg-item .m { font-size:10.5px; color:var(--text3); margin-top:2px; }
+.stg-item { position:relative; }
+.stg-item .n { padding-right:26px; }
+.stg-item .stg-item-edit { position:absolute; top:6px; right:6px; padding:2px 6px; font-size:12px; line-height:1.2; }
 .stg-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--text3); margin-right:7px; vertical-align:middle; opacity:.5; }
 .stg-dot.ok { background:#3fb950; opacity:1; }
 .stg-dot.bad { background:#f85149; opacity:1; }
@@ -126,6 +130,10 @@ Object.assign(LANGS.hr, {
 .stg-form .row2 { display:flex; gap:10px; }
 .stg-form .row2 .field { flex:1; }
 .stg-hintx { font-size:10.5px; color:var(--text3); margin-top:3px; }
+@media (max-width:640px) {
+  .stg-wrap { flex-direction:column; height:92vh; }
+  .stg-side { width:auto; min-width:0; max-height:32vh; border-right:0; border-bottom:1px solid var(--border2); }
+}
 `;
     document.head.appendChild(s);
   }
@@ -163,6 +171,7 @@ Object.assign(LANGS.hr, {
           <div class="stg-crumbs" id="stg-crumbs"></div>
           <button class="btn-sec btn-sm" id="stg-upload" style="display:none;">⬆ ${esc(t('stg_upload'))}</button>
           <button class="btn-sec btn-sm" id="stg-newdir" style="display:none;">＋ ${esc(t('stg_new_folder'))}</button>
+          <button class="btn-sec btn-sm" id="stg-edit-cur" style="display:none;">⚙ ${esc(t('stg_edit'))}</button>
           <button class="btn-sec btn-sm" id="stg-refresh">↻</button>
           <button class="btn-sec btn-sm" id="stg-close">✕</button>
         </div>
@@ -186,6 +195,7 @@ Object.assign(LANGS.hr, {
     ov.addEventListener('mousedown', (e) => { if (e.target === ov) close(); });
     ov.querySelector('#stg-close').onclick = close;
     ov.querySelector('#stg-add').onclick = () => editStorage(null);
+    ov.querySelector('#stg-edit-cur').onclick = () => { if (state.current) editStorage(state.current); };
     ov.querySelector('#stg-refresh').onclick = () => loadPrefix(state.prefix);
     ov.querySelector('#stg-upload').onclick = uploadFile;
     ov.querySelector('#stg-newdir').onclick = newFolder;
@@ -217,6 +227,13 @@ Object.assign(LANGS.hr, {
   function loadList() {
     api('GET', '/api/storages').then((list) => {
       state.list = list || [];
+      // After an edit the open storage gets its new settings (permissions, prefix) from the list.
+      if (state.current) {
+        const fresh = state.list.find((x) => x.id === state.current.id);
+        if (!fresh) state.current = null;
+        else if (fresh.updated_at !== state.current.updated_at) { selectStorage(fresh.id); return; }
+        else state.current = fresh;
+      }
       renderList();
       if (state.list.length && !state.current) selectStorage(state.list[0].id);
       else if (!state.list.length) { state.current = null; renderBrowser(); }
@@ -238,7 +255,13 @@ Object.assign(LANGS.hr, {
       dot.title = s.status_ok === false ? (s.status_err || t('stg_failed')) : (s.status_at || '');
       n.appendChild(dot); n.appendChild(document.createTextNode(s.name));
       const m = el('div', 'm', `${s.bucket}${s.prefix ? '/' + s.prefix : ''}`);
-      item.appendChild(n); item.appendChild(m);
+      // ✎ opens the storage form: change the endpoint, keys or permissions, or remove it.
+      const edit = el('button', 'btn-sec btn-sm stg-item-edit', '✎');
+      edit.type = 'button';
+      edit.title = t('stg_edit_storage');
+      edit.setAttribute('aria-label', t('stg_edit_storage'));
+      edit.onclick = (e) => { e.stopPropagation(); editStorage(s); };
+      item.appendChild(n); item.appendChild(m); item.appendChild(edit);
       item.onclick = () => selectStorage(s.id);
       box.appendChild(item);
     });
@@ -375,6 +398,7 @@ Object.assign(LANGS.hr, {
     const crumbs = $('#stg-crumbs');
     const hint = $('#stg-hint');
     const up = $('#stg-upload'), nd = $('#stg-newdir');
+    const editCur = $('#stg-edit-cur'); if (editCur) editCur.style.display = state.current ? '' : 'none';
     if (!rows) return;
     rows.textContent = '';
     crumbs.textContent = '';
