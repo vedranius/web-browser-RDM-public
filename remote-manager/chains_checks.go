@@ -68,6 +68,7 @@ type chainResult struct {
 }
 
 var (
+	chainHTTPTarget = regexp.MustCompile(`^https?://[^\s/?#@]+([/?#][^\s]*)?$`)
 	chainSecretKey  = regexp.MustCompile(`(?i)(pass|secret|token|private|credential|api[_-]?key|access[_-]?key|auth)`)
 	chainDNSRecords = map[string]bool{"A": true, "AAAA": true, "CNAME": true, "TXT": true, "MX": true, "NS": true}
 	chainFormats    = map[string]bool{"ini": true, "json": true, "yaml": true, "env": true, "kv": true, "regex": true}
@@ -522,6 +523,11 @@ func chainHTTP(ctx context.Context, c chainCheck) chainResult {
 		Transport: &http.Transport{DialContext: egressDialContext, TLSHandshakeTimeout: 8 * time.Second,
 			ResponseHeaderTimeout: 8 * time.Second, DisableKeepAlives: true},
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}
+	// The target passed guardEgressURL when the chain (or a one-off test) was validated, and
+	// every dial goes through egressDialContext; the shape check keeps it a plain http(s) URL.
+	if !chainHTTPTarget.MatchString(c.Target) {
+		return chainResult{Value: "unknown", Error: "the address is not valid"}
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.Target, nil)
 	if err != nil {
