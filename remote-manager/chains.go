@@ -922,6 +922,18 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 		apiChainAssist(w, r, userID)
 		return
 	}
+	if rest == "test" || rest == "ai-edit" {
+		userID, ok := requireAuth(w, r)
+		if !ok {
+			return
+		}
+		if rest == "test" {
+			apiChainTest(w, r, userID)
+		} else {
+			apiChainAIEdit(w, r, userID)
+		}
+		return
+	}
 	if rest == "drafts" || strings.HasPrefix(rest, "drafts/") {
 		userID, ok := requireAuth(w, r)
 		if !ok {

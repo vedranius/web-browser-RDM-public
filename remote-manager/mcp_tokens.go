@@ -37,7 +37,7 @@ import (
 //   GET grants, DELETE grants/{id}, POST revoke-all, GET clients, DELETE clients/{id}
 
 const (
-	mcpAllScopes        = "read_logs,run_readonly,run_with_approval,edit_file_with_approval,transfer,addons.manage,storage_read,storage_write,storage_delete,full_access"
+	mcpAllScopes        = "read_logs,run_readonly,run_with_approval,edit_file_with_approval,transfer,addons.manage,storage_read,storage_write,storage_delete,chains,full_access"
 	mcpMaxGrantsPerUser = 25
 	mcpMaxConnsPerGrant = 50
 	mcpPATPrefix        = "wrm_pat_"

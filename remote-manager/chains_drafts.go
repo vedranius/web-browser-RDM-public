@@ -31,12 +31,13 @@ const chainDraftSchema = `CREATE TABLE IF NOT EXISTS chain_drafts (
 		updated_at TEXT NOT NULL DEFAULT '')`
 
 type chainDraftRow struct {
-	ID         int      `json:"id"`
-	UserID     int      `json:"-"`
-	SessionID  string   `json:"-"`
-	Definition chainDef `json:"definition"`
-	CreatedAt  string   `json:"created_at"`
-	UpdatedAt  string   `json:"updated_at"`
+	ID          int      `json:"id"`
+	UserID      int      `json:"-"`
+	SessionID   string   `json:"-"`
+	BaseChainID int      `json:"base_chain_id,omitempty"` // v14.4.0: the draft changes this chain
+	Definition  chainDef `json:"definition"`
+	CreatedAt   string   `json:"created_at"`
+	UpdatedAt   string   `json:"updated_at"`
 }
 
 // chainDraftSummary is one entry of the draft list.
@@ -45,6 +46,7 @@ type chainDraftSummary struct {
 	Name      string `json:"name"`
 	Nodes     int    `json:"nodes"`
 	Checks    int    `json:"checks"`
+	BaseChain int    `json:"base_chain_id,omitempty"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
@@ -52,8 +54,8 @@ type chainDraftSummary struct {
 func loadChainDraft(id int) (chainDraftRow, error) {
 	var d chainDraftRow
 	var def string
-	err := db.QueryRow(`SELECT id, user_id, session_id, definition, created_at, updated_at FROM chain_drafts WHERE id=?`, id).
-		Scan(&d.ID, &d.UserID, &d.SessionID, &def, &d.CreatedAt, &d.UpdatedAt)
+	err := db.QueryRow(`SELECT id, user_id, session_id, definition, base_chain_id, created_at, updated_at FROM chain_drafts WHERE id=?`, id).
+		Scan(&d.ID, &d.UserID, &d.SessionID, &def, &d.BaseChainID, &d.CreatedAt, &d.UpdatedAt)
 	if err != nil {
 		return d, err
 	}
@@ -84,27 +86,8 @@ func decodeChainDefinition(raw json.RawMessage) (chainDef, error) {
 // saveChainDraft stores the definition as the session's single draft: a new draft replaces the
 // previous one from the same assistant session, so iterating never leaves a pile of drafts.
 func saveChainDraft(userID int, sessionID string, def chainDef) (int, error) {
-	now := nowRFC()
-	tx, err := db.Begin()
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback()
-	if sessionID != "" && userID > 0 {
-		if _, err := tx.Exec(`DELETE FROM chain_drafts WHERE user_id=? AND session_id=?`, userID, sessionID); err != nil {
-			return 0, err
-		}
-	}
-	res, err := tx.Exec(`INSERT INTO chain_drafts (user_id, session_id, name, definition, created_at, updated_at) VALUES (?,?,?,?,?,?)`,
-		userID, sessionID, def.Name, string(jsonMarshal(def)), now, now)
-	if err != nil {
-		return 0, err
-	}
-	id, _ := res.LastInsertId()
-	if err := tx.Commit(); err != nil {
-		return 0, err
-	}
-	return int(id), nil
+	id, _, err := saveChainDraftFor(userID, sessionID, def, 0, 0)
+	return id, err
 }
 
 func apiChainDrafts(w http.ResponseWriter, r *http.Request, userID int, rest string) {
@@ -117,7 +100,7 @@ func apiChainDrafts(w http.ResponseWriter, r *http.Request, userID int, rest str
 		if !requireMethod(w, r, http.MethodGet) {
 			return
 		}
-		rows, err := db.Query(`SELECT id, definition, created_at, updated_at FROM chain_drafts WHERE user_id=? ORDER BY updated_at DESC`, userID)
+		rows, err := db.Query(`SELECT id, definition, base_chain_id, created_at, updated_at FROM chain_drafts WHERE user_id=? ORDER BY updated_at DESC`, userID)
 		if err != nil {
 			jsonError(w, "Server error", http.StatusInternalServerError)
 			return
@@ -125,14 +108,14 @@ func apiChainDrafts(w http.ResponseWriter, r *http.Request, userID int, rest str
 		defer rows.Close()
 		out := []chainDraftSummary{}
 		for rows.Next() {
-			var id int
+			var id, base int
 			var def, created, updated string
-			if rows.Scan(&id, &def, &created, &updated) != nil {
+			if rows.Scan(&id, &def, &base, &created, &updated) != nil {
 				continue
 			}
 			var d chainDef
 			json.Unmarshal([]byte(def), &d)
-			out = append(out, chainDraftSummary{ID: id, Name: d.Name, Nodes: len(d.Nodes), Checks: len(d.Checks), CreatedAt: created, UpdatedAt: updated})
+			out = append(out, chainDraftSummary{ID: id, Name: d.Name, Nodes: len(d.Nodes), Checks: len(d.Checks), BaseChain: base, CreatedAt: created, UpdatedAt: updated})
 		}
 		jsonOK(w, out)
 		return
@@ -150,7 +133,14 @@ func apiChainDrafts(w http.ResponseWriter, r *http.Request, userID int, rest str
 	if len(parts) == 2 {
 		switch r.Method {
 		case http.MethodGet:
-			jsonOK(w, map[string]interface{}{"id": d.ID, "definition": d.Definition, "created_at": d.CreatedAt, "updated_at": d.UpdatedAt})
+			out := map[string]interface{}{"id": d.ID, "definition": d.Definition, "created_at": d.CreatedAt, "updated_at": d.UpdatedAt}
+			if d.BaseChainID > 0 {
+				out["base_chain_id"] = d.BaseChainID
+				if c, err := loadChain(d.BaseChainID); err == nil && c.UserID == userID {
+					out["base_chain_name"] = c.Def.Name
+				}
+			}
+			jsonOK(w, out)
 		case http.MethodPut:
 			apiChainDraftUpdate(w, r, userID, d)
 		case http.MethodDelete:
@@ -182,6 +172,10 @@ func apiChainApproveDraft(w http.ResponseWriter, r *http.Request, userID int, d 
 	def := d.Definition
 	if errs := validateChain(&def, userID); len(errs) > 0 {
 		chainErrors(w, errs)
+		return
+	}
+	if d.BaseChainID > 0 {
+		apiChainApplyDraft(w, r, userID, d, def)
 		return
 	}
 	var n int
@@ -222,6 +216,48 @@ func apiChainApproveDraft(w http.ResponseWriter, r *http.Request, userID int, d 
 	hub.sendTo(userID, []byte(fmt.Sprintf(`{"type":"chain_draft_changed","id":%d,"removed":true}`, d.ID)))
 	c, _ := loadChain(int(id))
 	jsonOK(w, chainView(c))
+}
+
+// apiChainApplyDraft replaces a chain's definition with a draft that changes it, and removes the
+// draft, in one transaction. The chain keeps its id, history and enabled switch.
+func apiChainApplyDraft(w http.ResponseWriter, r *http.Request, userID int, d chainDraftRow, def chainDef) {
+	c, err := loadChain(d.BaseChainID)
+	if err != nil || c.UserID != userID {
+		jsonError(w, "The chain this draft changes no longer exists; discard the draft or create a new chain from it", http.StatusConflict)
+		return
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		jsonError(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(`UPDATE chains SET name=?, definition=?, updated_at=? WHERE id=? AND user_id=?`,
+		def.Name, string(jsonMarshal(def)), nowRFC(), c.ID, userID); err != nil {
+		jsonError(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	del, err := tx.Exec(`DELETE FROM chain_drafts WHERE id=? AND user_id=?`, d.ID, userID)
+	if err != nil {
+		jsonError(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	if gone, _ := del.RowsAffected(); gone != 1 {
+		jsonError(w, "This draft was already applied or discarded", http.StatusConflict)
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		jsonError(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	chainRuns.Lock()
+	delete(chainRuns.pending, c.ID)
+	chainRuns.Unlock()
+	auditLog(r, userID, "chain.updated", def.Name, map[string]interface{}{"chain": c.ID, "nodes": len(def.Nodes), "checks": len(def.Checks), "from_draft": d.ID})
+	hub.sendTo(userID, []byte(fmt.Sprintf(`{"type":"chain_changed","id":%d}`, c.ID)))
+	hub.sendTo(userID, []byte(fmt.Sprintf(`{"type":"chain_draft_changed","id":%d,"removed":true}`, d.ID)))
+	got, _ := loadChain(c.ID)
+	jsonOK(w, chainView(got))
 }
 
 // chainDraftViewForAI is the compact answer a drafting tool gets back.
@@ -315,7 +351,13 @@ func (s *aiSession) planChainTool(name string, in aiToolInput) (*aiPlanned, erro
 	write := &aiPlanned{Act: aiAction{Tool: name, Kind: "write"}, Host: &host, NoEdit: true}
 	switch name {
 	case "chain_status":
-		read.Display = "list chains, connections and check types"
+		read.Display = "list chains, drafts, connections and check types"
+		return read, nil
+	case "chain_get":
+		read.Display = fmt.Sprintf("read chain %d / draft %d", in.ChainID, in.DraftID)
+		return read, nil
+	case "chain_test":
+		read.Display = fmt.Sprintf("test the checks of chain %d / draft %d once (read-only catalog)", in.ChainID, in.DraftID)
 		return read, nil
 	case "chain_draft":
 		def, err := decodeChainDefinition(in.Definition)
@@ -328,40 +370,21 @@ func (s *aiSession) planChainTool(name string, in aiToolInput) (*aiPlanned, erro
 		pretty, _ := json.MarshalIndent(def, "", "  ")
 		write.Path = "chain-draft:" + def.Name
 		write.Diff = truncateStr(string(pretty), 12000)
-		write.Display = fmt.Sprintf("draft chain %q (%d nodes, %d checks) — review in Chains", def.Name, len(def.Nodes), len(def.Checks))
+		what := "draft chain"
+		if in.ChainID > 0 {
+			what = fmt.Sprintf("draft changes to chain %d", in.ChainID)
+		}
+		write.Display = fmt.Sprintf("%s %q (%d nodes, %d checks) — review in Chains", what, def.Name, len(def.Nodes), len(def.Checks))
 		return write, nil
 	}
 	return nil, fmt.Errorf("unknown chain tool %q", name)
 }
 
 func (s *aiSession) runChainTool(ctx context.Context, name string, in aiToolInput) (string, int, error) {
-	if !settingBool("chains_enabled") {
-		return "", 2, fmt.Errorf("Chains are turned off by the administrator")
+	out, err := runChainAITool(ctx, s.UserID, s.UID, name, in, "assistant")
+	if err != nil {
+		return "", 2, err
 	}
-	switch name {
-	case "chain_status":
-		b, _ := json.MarshalIndent(chainDraftStatus(s.UserID), "", "  ")
-		return string(b), 0, nil
-	case "chain_draft":
-		def, err := decodeChainDefinition(in.Definition)
-		if err != nil {
-			return "", 2, err
-		}
-		if errs := validateChain(&def, s.UserID); len(errs) > 0 {
-			return "", 2, fmt.Errorf("%s", strings.Join(errs, "; "))
-		}
-		id, err := saveChainDraft(s.UserID, s.UID, def)
-		if err != nil {
-			return "", 2, err
-		}
-		auditLog(nil, s.UserID, "chain.drafted", def.Name, map[string]interface{}{"draft": id, "nodes": len(def.Nodes), "checks": len(def.Checks), "session": s.ID})
-		hub.sendTo(s.UserID, []byte(fmt.Sprintf(`{"type":"chain_draft_changed","id":%d}`, id)))
-		view, err := chainDraftViewForAI(id)
-		if err != nil {
-			return "", 2, err
-		}
-		b, _ := json.MarshalIndent(view, "", "  ")
-		return string(b), 0, nil
-	}
-	return "", 2, fmt.Errorf("unknown chain tool %q", name)
+	b, _ := json.MarshalIndent(out, "", "  ")
+	return string(b), 0, nil
 }
