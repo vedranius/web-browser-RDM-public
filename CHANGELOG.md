@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### Fixed
+
+- **A saved storage can be edited and removed.** The storage list now has a pencil and a trash button on every entry, and the selected storage has *Edit* in the toolbar; the edit dialog's **Remove storage** deletes the entry (the bucket and its files are untouched). Previously the delete action existed only inside a dialog that could not be opened for an existing storage.
+
 ## [14.3.1] - 2026-11-05
 
 Log globs are no longer mistaken for private keys, and WRM stays reachable with parallel MCP sessions and several browser tabs. Upgrading from v14.3.0 keeps the database and the encryption key.
