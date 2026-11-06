@@ -9,6 +9,7 @@ Object.assign(LANGS.en, {
   stg_search_ph: 'Search this folder…', stg_sort: 'Sort',
   stg_sort_name: 'Name', stg_sort_size: 'Size', stg_sort_date: 'Date', stg_sort_asc: 'Ascending', stg_sort_desc: 'Descending',
   stg_select_all: 'Select all', stg_total: 'Objects: {n} · Folders: {m} · {size}', stg_loading_n: 'Loaded: {n} objects…',
+  stg_edit_storage: 'Edit or remove this storage',
   stg_all_shown: 'all objects in this folder are shown', stg_filtered: 'Showing {x} of {y} objects',
   stg_no_match: 'No objects match the search.', stg_delete_selected: 'Delete selected ({n})',
   stg_delete_selected_q: 'Delete {n} selected objects? This cannot be undone.', stg_deleted_some: 'Deleted {n} objects.',
