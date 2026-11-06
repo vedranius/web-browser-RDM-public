@@ -8,13 +8,13 @@ A bug-fix release for the storage section: a saved storage can be edited and rem
 
 ### Changed
 
-- **Fewer background S3 requests.** The background bucket check (one `HEAD` per storage) runs every 15 minutes instead of 5; `storage_check_minutes` changes it and `0` turns it off.
+- **Fewer background S3 requests.** The background bucket check (one `HEAD` per storage) runs every 15 minutes instead of 5; `storage_check_minutes` changes it and `0` turns it off. A chain's storage check asks the bucket at most every 5 minutes (`chain_storage_check_s`) instead of on every 30-second poll.
 - **Renaming a storage or changing its permissions sends no S3 request**, so it works while the endpoint is down. Changes to the endpoint, region, bucket, prefix or keys are still checked against the bucket.
 - [docs/STORAGES.md](docs/STORAGES.md) lists every S3 request WRM sends per action. Hetzner Object Storage and DigitalOcean Spaces Standard do not bill API requests.
 
 ### Upgrade
 
-Use WRM's update action or replace the executable/container with the matching [v14.3.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.2) asset. Preserve the database and encryption key. No database change; one new setting, `storage_check_minutes`.
+Use WRM's update action or replace the executable/container with the matching [v14.3.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.2) asset. Preserve the database and encryption key. No database change; two new settings, `storage_check_minutes` and `chain_storage_check_s`.
 
 [Full changelog](CHANGELOG.md)
 

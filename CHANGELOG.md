@@ -5,6 +5,7 @@ A storage can be edited and removed from the list again, and WRM sends fewer bac
 ### Added
 
 - **`storage_check_minutes`** (default 15, `0` = off): minutes between the background `HeadBucket` checks behind the status dots and the `storage.down`/`storage.up` alerts.
+- **`chain_storage_check_s`** (default 300, `0` = every poll): a chain's `storage` check asks the bucket at most this often and reuses the last answer in between. A chain polled every 30 seconds used to send a `HEAD`, or a `LIST` for a prefix check, on every poll.
 - **docs/STORAGES.md lists every S3 request** WRM sends per action.
 
 ### Changed

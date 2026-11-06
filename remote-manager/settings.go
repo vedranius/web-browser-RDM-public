@@ -225,6 +225,9 @@ var settingSpecs = []settingSpec{
 	// Chains: live monitoring of a service chain; the interval is the default for a chain without one.
 	{Key: "chains_enabled", Default: "1", Kind: "bool"},
 	{Key: "chain_interval_s", Default: "30", Kind: "int", Min: 15, Max: 3600},
+	// A chain's storage checks ask the bucket at most this often (HEAD, or one LIST for a prefix);
+	// in between the last answer is reused. 0 asks on every poll.
+	{Key: "chain_storage_check_s", Default: "300", Kind: "int", Min: 0, Max: 86400},
 	// Outbound targets for Git sources, NetBox, AI providers and OIDC (security.go). With
 	// public_only, private and loopback addresses are refused unless listed in
 	// egress_allow_hosts (names, addresses or CIDR blocks, comma separated).

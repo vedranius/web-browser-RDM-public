@@ -17,7 +17,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 ## What's new in v14.3.2
 
-**A storage can be edited and removed again.** Each storage in the list has a ✎ button and the open storage an *Edit* button; both open the storage form with *Remove storage*. Renaming or changing permissions no longer contacts the bucket, so it also works while the endpoint is down. The background bucket check runs every 15 minutes instead of 5 (`storage_check_minutes`, `0` turns it off), and [docs/STORAGES.md](docs/STORAGES.md) lists every S3 request WRM sends.
+**A storage can be edited and removed again.** Each storage in the list has a ✎ button and the open storage an *Edit* button; both open the storage form with *Remove storage*. Renaming or changing permissions no longer contacts the bucket, so it also works while the endpoint is down. The background bucket check runs every 15 minutes instead of 5 (`storage_check_minutes`, `0` turns it off), a chain's storage check asks the bucket at most every 5 minutes instead of on every 30-second poll (`chain_storage_check_s`), and [docs/STORAGES.md](docs/STORAGES.md) lists every S3 request WRM sends.
 
 ## What's new in v14.3.1
 
@@ -452,7 +452,7 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ## Upgrading from v14.3.1
 
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. One new setting: `storage_check_minutes` (default 15) replaces the fixed 5-minute background bucket check; set it to `0` to send no background requests at all.
+Replace the executable/AppImage/container and keep the database and encryption key. No database change. Two new settings: `storage_check_minutes` (default 15) replaces the fixed 5-minute background bucket check (set it to `0` to send no background requests at all), and `chain_storage_check_s` (default 300) limits how often a chain's storage check asks the bucket.
 
 ## Upgrading from v14.3.0
 
@@ -2605,6 +2605,7 @@ Medium runtime settings (introduced in v12.4.3b):
 | `storages_enabled` | `1` | the Storages section and its API (kill switch) |
 | `chains_enabled` | `1` | the Chains section, its API and its background checks (kill switch) |
 | `chain_interval_s` | `30` | default check interval of a chain without its own `interval_s` (15–3600 s) |
+| `chain_storage_check_s` | `300` | a chain's storage check asks the bucket (HEAD, or one LIST for a prefix) at most this often and reuses the answer in between; `0` asks on every poll (0–86400 s) |
 | `storage_edit_kb` | `2048` | largest text object the storage editor (and the AI tools) open, in KB (1–8192) |
 | `storage_check_minutes` | `15` | minutes between the background bucket checks (`HEAD`, one per storage) behind the status dots and `storage.down`/`up`; `0` turns them off (0–1440) |
 | `audit_retention_days` | `365` | how long audit log, file transfers and chat history are kept (minimum 7) |

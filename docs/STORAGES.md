@@ -84,11 +84,12 @@ for its owner, and `storage.up` when it comes back (Notifications → events).
 
 ## Which S3 requests WRM sends
 
-WRM never polls a folder or an object. Requests go out only when someone acts:
+WRM never polls a folder or an object. Apart from the two background checks below, requests go out only when someone acts:
 
 | Action | Requests |
 |---|---|
 | Background status check | `HEAD` bucket, once per storage every `storage_check_minutes` |
+| A chain's `storage` check (Chains) | `HEAD` bucket, or one `LIST` for a `prefix` check, at most every `chain_storage_check_s` (default 300 s), whatever the chain interval |
 | Add a storage, *Test connection*, edit the endpoint/region/bucket/prefix/keys | `HEAD` bucket + one `LIST` with `max-keys=1` |
 | Edit only the name or the permissions, remove a storage | none |
 | Open a folder | one `LIST` (`ListObjectsV2`, 1000 keys) per page, at most 100 pages before *Load more* |
