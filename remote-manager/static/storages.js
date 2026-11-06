@@ -9,7 +9,6 @@ Object.assign(LANGS.en, {
   stg_search_ph: 'Search this folder…', stg_sort: 'Sort',
   stg_sort_name: 'Name', stg_sort_size: 'Size', stg_sort_date: 'Date', stg_sort_asc: 'Ascending', stg_sort_desc: 'Descending',
   stg_select_all: 'Select all', stg_total: 'Objects: {n} · Folders: {m} · {size}', stg_loading_n: 'Loaded: {n} objects…',
-  stg_edit_storage: 'Edit or remove this storage',
   stg_act_title: 'S3 activity', stg_act_toggle: 'Show or hide the S3 requests WRM sends',
   stg_act_hide: 'Hide the activity panel (the 📡 button shows it again)',
   stg_act_none: 'No request to this storage yet.', stg_act_since: 'Counted since {t} (WRM start or first request).',
@@ -32,7 +31,7 @@ Object.assign(LANGS.en, {
   stg_ca: 'TLS certificate fingerprint (only for a self-signed endpoint)', stg_write: 'Allow editing files', stg_upload: 'Allow adding new files',
   stg_delete: 'Allow deleting files', stg_delete_hint: 'Deleting is permanent and asks for a confirmation.',
   stg_test: 'Test connection', stg_testing: 'Testing…', stg_test_ok: 'The bucket answered.', stg_save: 'Save', stg_cancel: 'Cancel', stg_edit: 'Edit',
-  stg_delete_storage: 'Remove storage', stg_delete_storage_q: 'Remove the storage {name}? The files in the bucket stay where they are.',
+  stg_delete_storage: 'Remove storage', stg_storage_removed: 'Storage removed. The files in the bucket stay.', stg_delete_storage_q: 'Remove the storage {name}? The files in the bucket stay where they are.',
   stg_empty_bucket: 'This folder is empty.', stg_upload: 'Upload', stg_new_folder: 'New folder', stg_folder_name: 'Folder name',
   stg_new_name: 'New name', stg_rename: 'Rename', stg_download: 'Download', stg_delete_file: 'Delete', stg_delete_file_q: 'Delete {key}? This cannot be undone.',
   stg_edit_file: 'Edit', stg_play: 'Play', stg_saved: 'Saved', stg_conflict: 'The file changed in the meantime. Reload it, or overwrite anyway.',
@@ -49,7 +48,6 @@ Object.assign(LANGS.hr, {
   stg_search_ph: 'Pretraži ovu mapu…', stg_sort: 'Sortiraj',
   stg_sort_name: 'Naziv', stg_sort_size: 'Veličina', stg_sort_date: 'Datum', stg_sort_asc: 'Uzlazno', stg_sort_desc: 'Silazno',
   stg_select_all: 'Odaberi sve', stg_total: 'Objekti: {n} · Mape: {m} · {size}', stg_loading_n: 'Učitano: {n} objekata…',
-  stg_edit_storage: 'Uredi ili ukloni ovaj storage',
   stg_act_title: 'S3 aktivnost', stg_act_toggle: 'Prikaži ili sakrij S3 zahtjeve koje WRM šalje',
   stg_act_hide: 'Sakrij panel aktivnosti (gumb 📡 ga ponovno prikazuje)',
   stg_act_none: 'Još nema zahtjeva prema ovom storageu.', stg_act_since: 'Broji se od {t} (pokretanje WRM-a ili prvi zahtjev).',
@@ -72,7 +70,7 @@ Object.assign(LANGS.hr, {
   stg_ca: 'Fingerprint TLS certifikata (samo za self-signed endpoint)', stg_write: 'Dopusti uređivanje datoteka', stg_upload: 'Dopusti dodavanje novih datoteka',
   stg_delete: 'Dopusti brisanje datoteka', stg_delete_hint: 'Brisanje je trajno i traži potvrdu.',
   stg_test: 'Testiraj vezu', stg_testing: 'Testiram…', stg_test_ok: 'Bucket je odgovorio.', stg_save: 'Spremi', stg_cancel: 'Odustani', stg_edit: 'Uredi',
-  stg_delete_storage: 'Ukloni storage', stg_delete_storage_q: 'Ukloniti storage {name}? Datoteke u bucketu ostaju gdje jesu.',
+  stg_delete_storage: 'Ukloni storage', stg_storage_removed: 'Storage je uklonjen. Datoteke u bucketu ostaju.', stg_delete_storage_q: 'Ukloniti storage {name}? Datoteke u bucketu ostaju gdje jesu.',
   stg_empty_bucket: 'Ova mapa je prazna.', stg_upload: 'Upload', stg_new_folder: 'Nova mapa', stg_folder_name: 'Naziv mape',
   stg_new_name: 'Novi naziv', stg_rename: 'Preimenuj', stg_download: 'Preuzmi', stg_delete_file: 'Obriši', stg_delete_file_q: 'Obrisati {key}? To se ne može poništiti.',
   stg_edit_file: 'Uredi', stg_play: 'Pusti', stg_saved: 'Spremljeno', stg_conflict: 'Datoteka je u međuvremenu promijenjena. Učitajte ponovno ili svejedno prepišite.',
@@ -107,14 +105,14 @@ Object.assign(LANGS.hr, {
 .stg-side-head { padding:14px 14px 8px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .stg-side-head h3 { margin:0; font-size:14px; }
 .stg-list { flex:1; overflow:auto; padding:6px; }
-.stg-item { padding:9px 10px; border-radius:8px; cursor:pointer; border:1px solid transparent; margin-bottom:4px; }
+.stg-item { position:relative; padding:9px 52px 9px 10px; border-radius:8px; cursor:pointer; border:1px solid transparent; margin-bottom:4px; }
+.stg-edit { position:absolute; right:5px; top:8px; border:0; background:transparent; color:var(--text3); cursor:pointer; padding:2px 4px; font-size:12px; border-radius:4px; }
+.stg-edit:hover { background:var(--bg4); color:var(--text); }
+.stg-del { right:27px; }
 .stg-item:hover { background:var(--bg3); }
 .stg-item.sel { background:var(--bg3); border-color:var(--accent); }
 .stg-item .n { font-size:12.5px; font-weight:600; }
 .stg-item .m { font-size:10.5px; color:var(--text3); margin-top:2px; }
-.stg-item { position:relative; }
-.stg-item .n { padding-right:26px; }
-.stg-item .stg-item-edit { position:absolute; top:6px; right:6px; padding:2px 6px; font-size:12px; line-height:1.2; }
 .stg-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--text3); margin-right:7px; vertical-align:middle; opacity:.5; }
 .stg-dot.ok { background:#3fb950; opacity:1; }
 .stg-dot.bad { background:#f85149; opacity:1; }
@@ -222,7 +220,7 @@ Object.assign(LANGS.hr, {
           <div class="stg-crumbs" id="stg-crumbs"></div>
           <button class="btn-sec btn-sm" id="stg-upload" style="display:none;">⬆ ${esc(t('stg_upload'))}</button>
           <button class="btn-sec btn-sm" id="stg-newdir" style="display:none;">＋ ${esc(t('stg_new_folder'))}</button>
-          <button class="btn-sec btn-sm" id="stg-edit-cur" style="display:none;">⚙ ${esc(t('stg_edit'))}</button>
+          <button class="btn-sec btn-sm" id="stg-edit" style="display:none;">✎ ${esc(t('stg_edit'))}</button>
           <button class="btn-sec btn-sm" id="stg-act-toggle" title="${esc(t('stg_act_toggle'))}" aria-label="${esc(t('stg_act_toggle'))}">📡</button>
           <button class="btn-sec btn-sm" id="stg-refresh">↻</button>
           <button class="btn-sec btn-sm" id="stg-close">✕</button>
@@ -253,7 +251,7 @@ Object.assign(LANGS.hr, {
     ov.querySelector('#stg-act-toggle').onclick = () => setActivityShown(!activityShown());
     ov.querySelector('#stg-act-hide').onclick = () => setActivityShown(false);
     applyActivityShown();
-    ov.querySelector('#stg-edit-cur').onclick = () => { if (state.current) editStorage(state.current); };
+    ov.querySelector('#stg-edit').onclick = () => state.current && editStorage(state.current);
     ov.querySelector('#stg-refresh').onclick = () => loadPrefix(state.prefix);
     ov.querySelector('#stg-upload').onclick = uploadFile;
     ov.querySelector('#stg-newdir').onclick = newFolder;
@@ -313,14 +311,18 @@ Object.assign(LANGS.hr, {
       dot.title = s.status_ok === false ? (s.status_err || t('stg_failed')) : (s.status_at || '');
       n.appendChild(dot); n.appendChild(document.createTextNode(s.name));
       const m = el('div', 'm', `${s.bucket}${s.prefix ? '/' + s.prefix : ''}`);
-      // ✎ opens the storage form: change the endpoint, keys or permissions, or remove it.
-      const edit = el('button', 'btn-sec btn-sm stg-item-edit', '✎');
-      edit.type = 'button';
-      edit.title = t('stg_edit_storage');
-      edit.setAttribute('aria-label', t('stg_edit_storage'));
-      edit.onclick = (e) => { e.stopPropagation(); editStorage(s); };
-      item.appendChild(n); item.appendChild(m); item.appendChild(edit);
+      item.appendChild(n); item.appendChild(m);
       item.onclick = () => selectStorage(s.id);
+      const ed = el('button', 'stg-edit', '✎');
+      ed.title = t('stg_edit');
+      ed.setAttribute('aria-label', t('stg_edit') + ' ' + s.name);
+      ed.onclick = (e) => { e.stopPropagation(); editStorage(s); };
+      item.appendChild(ed);
+      const rm = el('button', 'stg-edit stg-del', '🗑');
+      rm.title = t('stg_delete_storage');
+      rm.setAttribute('aria-label', t('stg_delete_storage') + ' ' + s.name);
+      rm.onclick = (e) => { e.stopPropagation(); deleteStorage(s); };
+      item.appendChild(rm);
       box.appendChild(item);
     });
   }
@@ -358,7 +360,15 @@ Object.assign(LANGS.hr, {
       state.act = v;
       // requests that arrived live before the snapshot are already in it; keep only newer ones
       const seen = new Set((v.ops || []).map((o) => o.at + o.op));
-      early.forEach((o) => { if (!seen.has(o.at + o.op)) state.act.ops.push(o); });
+      state.act.counts = state.act.counts || {};
+      early.forEach((o) => {
+        if (seen.has(o.at + o.op)) return;
+        state.act.ops.push(o);
+        // the snapshot was taken before this request, so its counters do not include it yet
+        const c = state.act.counts[o.op] || { total: 0, today: 0 };
+        c.total++; c.today++;
+        state.act.counts[o.op] = c;
+      });
       renderActivity();
     }).catch(() => {});
   }
@@ -567,7 +577,6 @@ Object.assign(LANGS.hr, {
     const crumbs = $('#stg-crumbs');
     const hint = $('#stg-hint');
     const up = $('#stg-upload'), nd = $('#stg-newdir');
-    const editCur = $('#stg-edit-cur'); if (editCur) editCur.style.display = state.current ? '' : 'none';
     if (!rows) return;
     rows.textContent = '';
     crumbs.textContent = '';
@@ -577,9 +586,11 @@ Object.assign(LANGS.hr, {
       hint.style.display = 'block';
       up.style.display = 'none'; nd.style.display = 'none';
       const tools = $('.stg-tools'); if (tools) tools.style.display = 'none';
+      const editBtn = $('#stg-edit'); if (editBtn) editBtn.style.display = 'none';
       return;
     }
     const tools = $('.stg-tools'); if (tools) tools.style.display = '';
+    const editBtn = $('#stg-edit'); if (editBtn) editBtn.style.display = '';
     const allWrap = document.querySelector('.stg-all'); if (allWrap) allWrap.style.display = can('delete') ? '' : 'none';
     up.style.display = can('upload') ? '' : 'none';
     nd.style.display = can('write') ? '' : 'none';
@@ -992,6 +1003,16 @@ Object.assign(LANGS.hr, {
 
   // ─── add / edit a storage ──────────────────────────────────────────────────────────────
 
+  // deleteStorage removes the entry only; objects in the bucket are not touched.
+  function deleteStorage(s) {
+    if (!s || !confirm(t('stg_delete_storage_q').replace('{name}', s.name))) return;
+    api('DELETE', `/api/storages/${s.id}`).then(() => {
+      if (state.current && state.current.id === s.id) state.current = null;
+      showToast(t('stg_storage_removed'), 'success');
+      loadList();
+    }).catch((e) => showToast(e.message, 'error'));
+  }
+
   function editStorage(s) {
     css();
     const isNew = !s;
@@ -1087,13 +1108,7 @@ Object.assign(LANGS.hr, {
       p.then(() => { ov.remove(); loadList(); }).catch((e) => showToast(e.message, 'error'));
     };
     const rm = document.getElementById('stg-f-remove');
-    if (rm) rm.onclick = () => {
-      if (!confirm(t('stg_delete_storage_q').replace('{name}', src.name))) return;
-      api('DELETE', `/api/storages/${src.id}`).then(() => {
-        ov.remove(); if (state.current && state.current.id === src.id) state.current = null;
-        loadList();
-      }).catch((e) => showToast(e.message, 'error'));
-    };
+    if (rm) rm.onclick = () => { ov.remove(); deleteStorage(src); };
   }
 
   document.addEventListener('keydown', (e) => {
