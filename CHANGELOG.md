@@ -1,3 +1,15 @@
+## [14.4.0] - 2026-11-06
+
+The storage window shows every S3 request and what the provider bills for it, and the AI works inside the Chains builder and over MCP. Upgrading from v14.3.2 keeps the database and the encryption key; two columns are added.
+
+### Added
+
+- **S3 activity panel.** A live panel beside the storage browser lists every request WRM sends to the bucket. Each line has the operation, key, answer, duration and cause (you, the background check, a chain, an AI connection, a connection check; retries marked). Each operation is counted for today and in total, and marked free or billed for the provider. The panel is shown by default and is hidden with ✕ or 📡; the browser remembers the choice. `GET /api/storages/{id}/activity`, live `storage_op` events.
+- **Provider picker with request costs.** The storage form offers Hetzner, DigitalOcean Spaces, Amazon S3, Backblaze B2, Cloudflare R2, MinIO and Other. Picking one fills the usual endpoint and path style. It also states whether, in which class and for how much the provider bills each S3 operation WRM uses (HeadBucket, ListObjectsV2, GetObject, HeadObject, PutObject, CopyObject, DeleteObject), quoting the provider's price page (`GET /api/storages/providers`, docs/STORAGES.md). New column `storages.provider`; existing storages get it from the endpoint.
+- **AI in the Chains builder.** The 🤖 AI button takes one instruction for the open chain or draft. The AI reads the definition and the last results and writes a draft (`POST /api/chains/ai-edit`). A draft that changes a chain carries `base_chain_id`. The live chain is updated only by **Apply changes**, and it keeps its id, history and switch. **Test once** runs a draft's checks a single time without saving (`POST /api/chains/test`).
+- **Chain tools `chain_get` and `chain_test`.** `chain_draft` now accepts `chain_id` (propose a change to a chain) and `draft_id` (replace a draft), and `chain_status` also lists the drafts.
+- **MCP chain tools behind the opt-in `chains` scope.** `chain_status`, `chain_get`, `chain_test` and `chain_draft` work without a server session. Read-only connections may read and test, not draft. The scope is not in the default `ai_mcp_scopes`.
+
 ## [14.3.2] - 2026-11-06
 
 A storage can be edited and removed from the list again, and WRM sends fewer background requests to S3. Upgrading from v14.3.1 keeps the database and the encryption key.

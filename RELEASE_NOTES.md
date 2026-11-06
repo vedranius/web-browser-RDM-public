@@ -1,18 +1,43 @@
-## Web Remote Manager PRO v14.3.2 — Edit and remove storages, fewer S3 requests
+## Web Remote Manager PRO v14.4.0 — S3 activity and costs, AI in the Chains builder
+
+### S3 requests you can see
+
+- **Live S3 activity panel** beside the storage browser. It lists every request WRM sends to the bucket, as it happens: the operation, key, answer and duration, and what caused it (you, the background check, a chain, an AI connection). Each operation is counted for today and in total. The panel is shown by default; ✕ or 📡 hides it.
+- **Provider picker with request costs** in the storage form: Hetzner, DigitalOcean Spaces, Amazon S3, Backblaze B2, Cloudflare R2, MinIO and Other. Picking one shows whether, in which class and for how much the provider bills each S3 operation WRM uses, quoting and linking the provider's own price page:
+  - Hetzner and Backblaze B2 bill none of them;
+  - DigitalOcean's price list has no request fee;
+  - Amazon S3 bills every request except DELETE;
+  - Cloudflare R2 bills two classes after a monthly free allowance.
+
+  The full table is in [docs/STORAGES.md](https://github.com/vedranius/web-browser-RDM-public/blob/v14.4.0/docs/STORAGES.md#what-each-provider-bills).
+
+### AI in the Chains builder
+
+- **🤖 AI on a chain or draft.** Say what to add, change or check. The AI reads the chain and its last results and writes a draft. A change to a chain waits as *Changes for …* until you press **Apply changes**; the chain keeps its id and history.
+- **Test once** runs a draft's checks a single time and shows the results on the diagram, without saving.
+- **New tools.** WRM's AI panel gets `chain_get` and `chain_test`, and `chain_draft` can change an existing chain. MCP clients get the same four tools behind the new opt-in **`chains`** scope: an administrator adds it to the allowed scopes, then a user enables it on an AI connection.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.4.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.4.0) asset. Preserve the database and encryption key. Two columns are added (`storages.provider`, `chain_drafts.base_chain_id`); an older binary still starts on the database.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.3.2 — Edit and remove storages, fewer S3 requests
 
 A bug-fix release for the storage section: a saved storage can be edited and removed again, and WRM sends fewer background requests to the bucket.
 
-### Fixed
+#### Fixed
 
 - **Edit and remove a storage.** Each storage in the list has a ✎ button and the open storage an *Edit* button. Both open the storage form, which also has *Remove storage*. Before this release the form could only be opened for a new storage. After saving, the open storage uses its new permissions straight away, and on a phone the list sits above the files.
 
-### Changed
+#### Changed
 
 - **Fewer background S3 requests.** The background bucket check (one `HEAD` per storage) runs every 15 minutes instead of 5; `storage_check_minutes` changes it and `0` turns it off. A chain's storage check asks the bucket at most every 5 minutes (`chain_storage_check_s`) instead of on every 30-second poll.
 - **Renaming a storage or changing its permissions sends no S3 request**, so it works while the endpoint is down. Changes to the endpoint, region, bucket, prefix or keys are still checked against the bucket.
 - [docs/STORAGES.md](docs/STORAGES.md) lists every S3 request WRM sends per action. Hetzner Object Storage and DigitalOcean Spaces Standard do not bill API requests.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.3.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.2) asset. Preserve the database and encryption key. No database change; two new settings, `storage_check_minutes` and `chain_storage_check_s`.
 
