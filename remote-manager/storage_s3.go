@@ -7,10 +7,12 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -39,6 +41,10 @@ type s3Config struct {
 	StorageID     int // for the activity log only (storage_activity.go); 0 = not saved yet
 	OwnerID       int
 }
+
+// s3RequestURL is the shape every request URL must have: http(s), a host without user info,
+// then the path and query. The endpoint itself was checked by guardEgressURL when saved.
+var s3RequestURL = regexp.MustCompile(`^https?://[^\s/?#@]+([/?#][^\s]*)?$`)
 
 type s3Client struct {
 	cfg  s3Config
@@ -272,7 +278,11 @@ func (c *s3Client) do(ctx context.Context, method, key string, q url.Values, bod
 			rdr = bytes.NewReader(body)
 		}
 		// #nosec G704 -- the endpoint is entered by an administrator and checked by guardEgressURL (metadata, link-local, egress policy)
-		req, err := http.NewRequestWithContext(ctx, method, u.String(), rdr)
+		target := u.String()
+		if !s3RequestURL.MatchString(target) {
+			return nil, errors.New("the storage endpoint is not a valid http(s) address")
+		}
+		req, err := http.NewRequestWithContext(ctx, method, target, rdr)
 		if err != nil {
 			return nil, err
 		}
