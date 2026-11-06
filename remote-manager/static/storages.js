@@ -365,15 +365,23 @@ Object.assign(LANGS.hr, {
         if (seen.has(o.at + o.op)) return;
         state.act.ops.push(o);
         // the snapshot was taken before this request, so its counters do not include it yet
-        const c = state.act.counts[o.op] || { total: 0, today: 0 };
-        c.total++; c.today++;
-        state.act.counts[o.op] = c;
+        bumpCount(state.act.counts, o.op);
       });
       renderActivity();
     }).catch(() => {});
   }
 
   // A live request from the server (WebSocket): added to the list and the counts.
+  // Operation names WRM records (storage_activity.go s3OpName); anything else is not counted.
+  const S3_OPS = ['HeadBucket', 'ListObjects', 'ListObjectsV2', 'GetObject', 'HeadObject', 'PutObject', 'CopyObject', 'DeleteObject'];
+  function bumpCount(counts, op) {
+    const k = S3_OPS.find((x) => x === op);
+    if (!k) return;
+    const c = Object.prototype.hasOwnProperty.call(counts, k) ? counts[k] : { total: 0, today: 0 };
+    c.total++; c.today++;
+    counts[k] = c;
+  }
+
   function liveOp(m) {
     const s = state.current;
     if (!s || !m || m.storage_id !== s.id || !m.op) return;
@@ -382,9 +390,7 @@ Object.assign(LANGS.hr, {
     a.ops = (a.ops || []).concat([m.op]).slice(-300);
     if (!a.pending) {
       a.counts = a.counts || {};
-      const c = a.counts[m.op.op] || { total: 0, today: 0 };
-      c.total++; c.today++;
-      a.counts[m.op.op] = c;
+      bumpCount(a.counts, m.op.op);
     }
     a.fresh = m.op.at;
     if (!state.actRaf) state.actRaf = requestAnimationFrame(() => { state.actRaf = 0; renderActivity(); });
