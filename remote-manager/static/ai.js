@@ -856,7 +856,7 @@ Object.assign(LANGS.hr, {
       <button id="ai-send-${id}" onclick="wrmAI.send(${id})">${esc(t('ai_send'))}</button>
       <button id="ai-stop-${id}" class="btn-sec" style="display:none;" onclick="wrmAI.stop(${id})">■ ${esc(t('ai_stop'))}</button>`;
     if(wo.pendingAIContext){$('ai-in-'+id).value=wo.pendingAIContext;wo.pendingAIContext='';}
-    const es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
+    const es = wrmAIEvents.open(sid);
     S[id].es = es;
     ['session', 'user', 'assistant_start', 'thinking', 'text', 'assistant_done', 'tool_call', 'approval_required', 'approval_resolved', 'tool_result', 'mode', 'usage', 'busy', 'error', 'notice', 'ended', 'title', 'history']
       .forEach(ty => es.addEventListener(ty, ev => { try { onEvent(id, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));

@@ -169,7 +169,7 @@ Object.assign(LANGS.hr, {
     $('wch-f-' + id).style.display = '';
     const inp = $('wch-i-' + id);
     if (st.opts.prefill && !inp.value) { inp.value = st.opts.prefill; st.opts.prefill = ''; }
-    const es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
+    const es = wrmAIEvents.open(sid);
     st.es = es;
     EVENTS.forEach(ty => es.addEventListener(ty, ev => { try { onEvent(id, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));
     es.onerror = () => { if (st.ended) es.close(); };
