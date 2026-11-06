@@ -30,6 +30,13 @@ Released in v14.0.0; the changes are in [CHANGELOG.md](../CHANGELOG.md).
 - A LAN endpoint must pass the egress policy: it is allowed by default (`egress_policy=allow_private`);
   with `public_only`, add the host to `egress_allow_hosts`.
 
+## Edit or remove a storage
+
+A storage in the left list has a pencil and a trash button; the selected storage also shows
+*Edit* in the toolbar. The dialog changes the endpoint, prefix, key or permissions (a changed
+endpoint needs the secret again). **Remove storage** deletes only the WRM entry; the bucket,
+its objects and any share of the provider stay where they are.
+
 ## Permissions inside a storage
 
 | Switch | Default | What it allows |
