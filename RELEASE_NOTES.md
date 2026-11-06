@@ -4,7 +4,7 @@ A bug-fix release for the storage section: a saved storage can be edited and rem
 
 ### Fixed
 
-- **Edit and remove a storage.** Each storage in the list has a ✎ button and the open storage an *Edit* button. Both open the storage form, which also has *Remove storage*. Before this release the form could only be opened for a new storage. After saving, the open storage uses its new permissions straight away, and on a phone the list sits above the files.
+- **Edit and remove a storage.** Each storage in the list has a ✎ (edit) and a 🗑 (remove) button, and the open storage has *Edit* in the toolbar. The storage form also has *Remove storage*. Before this release the form could only be opened for a new storage. After saving, the open storage uses its new permissions straight away, and on a phone the list sits above the files.
 
 ### Changed
 
