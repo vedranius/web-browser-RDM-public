@@ -1,3 +1,30 @@
+## [14.5.0] - 2026-11-06
+
+The Chains builder recognises what runs on your servers and suggests the checks and links, and its server list is sorted by folder with search. WRM no longer freezes in the browser while an AI app works through MCP. Upgrading from v14.4.0 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **Server picker in the Chains builder, the AI wizard and the templates.** Servers are listed by folder with their host and tags, can be searched by name, host, folder or tag, and several can be added at once. Quick connections are left out. A server already in the chain is shown but cannot be added twice, and two servers with the same name in different folders are marked. A template refuses the same server for two nodes.
+- **Recognition with suggested checks.** Right after servers are added (or with *Recognise services*), WRM runs the fixed read-only discovery on them. It turns running services, Docker containers, listening ports (named: PostgreSQL (5432), HTTPS (443) …) and network mounts into one-click check suggestions, with *Add the recommended* for the usual set. The target field of a check offers what was found on that server.
+- **Suggested links.** A network mount whose source is another server of the chain suggests the link between them. A mount from a host outside the chain suggests adding that host as an outside endpoint.
+- **Smart outside endpoints.** One line, a URL, `host:port` or a host name, becomes an outside node with the fitting checks: HTTP and certificate, a TCP port (and the certificate on 443), or DNS. Saved HTTP/HTTPS connections can be added the same way from *Web connections*, and a storage node gets its bucket check automatically.
+- **Try one check.** The check dialog has *Test now*: it runs only that check once, without saving, and shows what it found.
+- Explanations for the check interval, the confirm count and background checking, and for each way of adding to a chain.
+
+### Changed
+
+- The deterministic starter (wizard without AI) labels well-known ports by their service.
+- The automatic states are named in the interface language (Normalno / Rezervni put / Otežano in Croatian).
+- Monitoring cards show the server's name as the title and the host underneath.
+
+### Fixed
+
+- **WRM froze in the browser while an AI app worked through MCP.** The live view opened one event stream per MCP session, and a browser keeps at most six HTTP/1.1 connections per host for all its tabs. Once an AI app had opened six sessions (e.g. one per server), every further request of the page waited, so nothing could be clicked. All AI and MCP views of a tab now share one stream (`GET /api/ai/events`). Plain-HTTP installations were hit; HTTPS uses HTTP/2 and was not.
+- The Chains builder's inputs used the browser's light default style in the dark theme.
+- Croatian grammar of the confirm count ("2 provjere" instead of "2 provjera").
+- The top bar's lock button stayed in the previous language after a language change.
+- Monitoring: the *Settings* button showed the gear icon twice, and the metrics hint mixed an English word into the Croatian text.
+
 ## [14.4.0] - 2026-11-06
 
 The storage window shows every S3 request and what the provider bills for it, and the AI works inside the Chains builder and over MCP. Upgrading from v14.3.2 keeps the database and the encryption key; two columns are added.

@@ -21,6 +21,7 @@ import (
 //   POST sessions                             start {conn_id, provider_id, model, mode, auto, confirm_auto, share_notes}
 //   GET  sessions/{id}                        session + transcript
 //   GET  sessions/{id}/events?since=N         server-sent events
+//   GET  events?s=ID:SINCE,…                  events of several own sessions over one stream
 //   POST sessions/{id}/prompt                 {text}
 //   POST sessions/{id}/mode                   {mode, auto, confirm}
 //   POST sessions/{id}/approvals/{aid}        {decision: approve|deny, command?, content?, note?}
@@ -68,6 +69,8 @@ func apiAIHandler(w http.ResponseWriter, r *http.Request) {
 		apiOllamaHandler(w, r, userID, parts[1:])
 	case "sessions":
 		aiSessionsHandler(w, r, userID, parts[1:])
+	case "events":
+		aiEventsMuxHandler(w, r, userID)
 	case "kill-all":
 		if r.Method != http.MethodPost {
 			jsonError(w, "Method not allowed", 405)

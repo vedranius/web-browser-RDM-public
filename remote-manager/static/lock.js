@@ -670,7 +670,7 @@ Object.assign(LANGS.hr, {
     arm();
   }
 
-  window.wrmLock = {lock, arm, minutes, renderSettings, locked: false, prefs: () => Object.assign({}, prefs)};
+  window.wrmLock = {lock, arm, minutes, renderSettings, langChanged: () => { if ($('btn-lock')) button(); }, locked: false, prefs: () => Object.assign({}, prefs)};
 
   // initApp waits while the session is locked (on the server, or "lock when WRM is opened"),
   // so a reload never shows the interface before the unlock.

@@ -6426,6 +6426,7 @@ function applyLang() {
   if (window.wrmLayout) wrmLayout.refresh();
   if (window.wrmWorkboard) wrmWorkboard.langChanged();
   if (window.wrmAISessions) wrmAISessions.langChanged();
+  if (window.wrmLock && wrmLock.langChanged) wrmLock.langChanged();
 }
 function changeLang(l) {
   currentLang = l;
@@ -12469,6 +12470,50 @@ function wrmFocusApproval(id) {
     }).catch(() => {});
   } else if (window.wrmMCP && window.wrmMCP.focusApproval) window.wrmMCP.focusApproval(id);
 }
+// wrmAIEvents.open(sid) stands in for `new EventSource('/api/ai/sessions/<sid>/events')`:
+// every AI and MCP session view of this tab shares ONE stream (/api/ai/events). A browser
+// keeps only six HTTP/1.1 connections per host for all tabs, so one EventSource per session
+// left the page waiting on every request once an AI app had opened six sessions.
+const wrmAIEvents = (() => {
+  const subs = {}; // sid -> Set of views; each view keeps its own position (since)
+  let es = null, timer = null, retry = null;
+  function url() {
+    return '/api/ai/events?s=' + Object.keys(subs).map(sid => sid + ':' + Math.min(...[...subs[sid]].map(v => v.since))).join(',');
+  }
+  function connect() {
+    timer = null;
+    if (es) { es.close(); es = null; }
+    if (!Object.keys(subs).length) return;
+    const cur = es = new EventSource(url());
+    cur.addEventListener('ai', m => {
+      let x; try { x = JSON.parse(m.data); } catch (e) { return; }
+      const views = subs[x.sid], ev = x.ev || {};
+      if (!views) return;
+      const data = JSON.stringify(ev);
+      for (const v of [...views]) if (ev.seq > v.since) { v.since = ev.seq; v.dispatch(ev.type, data); }
+      if (ev.type === 'ended') { delete subs[x.sid]; schedule(); }
+    });
+    // reconnect with the current positions (the browser's own retry would replay from the old ones)
+    cur.onerror = () => { if (es !== cur) return; cur.close(); es = null; clearTimeout(retry); retry = setTimeout(schedule, 3000); };
+  }
+  function schedule() { if (!timer) timer = setTimeout(connect, 30); }
+  function open(sid) {
+    sid = String(sid);
+    const handlers = {};
+    const view = {
+      onerror: null,
+      addEventListener(type, fn) { (handlers[type] = handlers[type] || []).push(fn); },
+      dispatch(type, data) { for (const fn of handlers[type] || []) { try { fn({data}); } catch (e) { console.warn(e); } } },
+      since: 0,
+      close() { const s = subs[sid]; if (!s || !s.has(view)) return; s.delete(view); if (!s.size) delete subs[sid]; schedule(); },
+    };
+    // like a fresh EventSource, a new view replays the session from the start
+    (subs[sid] = subs[sid] || new Set()).add(view);
+    schedule();
+    return view;
+  }
+  return {open, watched: () => Object.keys(subs).map(Number)};
+})();
 // wrmAiAlert is used by static/ai.js and static/mcp.js. The same approval is
 // announced once, even when both views see it.
 function wrmAiAlert(kind, text, key) {

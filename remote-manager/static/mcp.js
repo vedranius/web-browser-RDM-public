@@ -918,7 +918,7 @@ Object.assign(LANGS.hr, {
     const st = W8[sid] = {el, seq: 0, calls: {}, client: client || 'AI'};
     if (focus && aiHidden()) dockHide(false);
     else dockPlace(true);
-    const es = st.es = new EventSource(`/api/ai/sessions/${sid}/events?since=0`);
+    const es = st.es = wrmAIEvents.open(sid);
     ['session', 'tool_call', 'approval_required', 'approval_resolved', 'approval_deferred', 'tool_result', 'error', 'ended']
       .forEach(ty => es.addEventListener(ty, ev => { try { watchEvent(sid, JSON.parse(ev.data)); } catch (e) { console.warn(e); } }));
     es.onerror = () => { if (st.ended) es.close(); };

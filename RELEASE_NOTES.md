@@ -1,6 +1,31 @@
-## Web Remote Manager PRO v14.4.0 — S3 activity and costs, AI in the Chains builder
+## Web Remote Manager PRO v14.5.0 — Chains that recognise your servers
 
-### S3 requests you can see
+### A server list that makes sense
+
+- **Servers by folder, with search.** The Chains builder, the AI wizard and the templates list your saved SSH servers by folder with their host and tags. Search by name, host, folder or tag, tick several and add them at once. Quick connections are not listed, a server already in the chain cannot be added twice, and two servers with the same name in different folders are marked.
+
+### Recognition and suggestions
+
+- **What runs on a server becomes a check with one click.** Right after adding servers, WRM looks at them read-only (services, Docker containers, listening ports and network mounts) and suggests checks. Ports carry their service name, e.g. PostgreSQL (5432). *Add the recommended* takes the usual set.
+- **Suggested links.** A network mount from another server of the chain suggests the link between the two. A mount from a host outside the chain suggests adding that host as an outside endpoint.
+- **Smart outside endpoints.** Type a URL, `host:port` or a host name, and WRM adds the fitting checks (HTTP and certificate, TCP port, or DNS). Saved HTTP/HTTPS connections can be added from *Web connections*.
+- **Test now** in the check dialog runs only that check once, without saving.
+
+### Fixes
+
+- **WRM no longer freezes while an AI works through MCP.** Every MCP session's live view held its own connection, and over plain HTTP a browser has only six per server for all tabs; at six sessions the page stopped responding. All AI views of a tab now share one connection.
+- The builder's fields follow the dark theme, the Croatian confirm count is grammatical, the automatic states are named in your language, and the fields explain themselves.
+- The lock button follows a language change. Monitoring cards show the server's name as the title, and the doubled gear icon on *Settings* is gone.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.5.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.5.0) asset. Preserve the database and encryption key. Nothing is migrated, and existing chains are unchanged.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.4.0 — S3 activity and costs, AI in the Chains builder
+
+#### S3 requests you can see
 
 - **Live S3 activity panel** beside the storage browser. It lists every request WRM sends to the bucket, as it happens: the operation, key, answer and duration, and what caused it (you, the background check, a chain, an AI connection). Each operation is counted for today and in total. The panel is shown by default; ✕ or 📡 hides it.
 - **Provider picker with request costs** in the storage form: Hetzner, DigitalOcean Spaces, Amazon S3, Backblaze B2, Cloudflare R2, MinIO and Other. Picking one shows whether, in which class and for how much the provider bills each S3 operation WRM uses, quoting and linking the provider's own price page:
@@ -11,13 +36,13 @@
 
   The full table is in [docs/STORAGES.md](https://github.com/vedranius/web-browser-RDM-public/blob/v14.4.0/docs/STORAGES.md#what-each-provider-bills).
 
-### AI in the Chains builder
+#### AI in the Chains builder
 
 - **🤖 AI on a chain or draft.** Say what to add, change or check. The AI reads the chain and its last results and writes a draft. A change to a chain waits as *Changes for …* until you press **Apply changes**; the chain keeps its id and history.
 - **Test once** runs a draft's checks a single time and shows the results on the diagram, without saving.
 - **New tools.** WRM's AI panel gets `chain_get` and `chain_test`, and `chain_draft` can change an existing chain. MCP clients get the same four tools behind the new opt-in **`chains`** scope: an administrator adds it to the allowed scopes, then a user enables it on an AI connection.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.4.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.4.0) asset. Preserve the database and encryption key. Two columns are added (`storages.provider`, `chain_drafts.base_chain_id`); an older binary still starts on the database.
 
