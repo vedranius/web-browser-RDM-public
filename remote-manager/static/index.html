@@ -6426,6 +6426,7 @@ function applyLang() {
   if (window.wrmLayout) wrmLayout.refresh();
   if (window.wrmWorkboard) wrmWorkboard.langChanged();
   if (window.wrmAISessions) wrmAISessions.langChanged();
+  if (window.wrmLock && wrmLock.langChanged) wrmLock.langChanged();
 }
 function changeLang(l) {
   currentLang = l;

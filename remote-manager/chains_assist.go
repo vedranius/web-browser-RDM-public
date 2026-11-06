@@ -524,7 +524,7 @@ func chainStarterFromSelection(userID int, conns []Connection, storages []Storag
 				break
 			}
 			p := port
-			add("port-"+strconv.Itoa(p), "port", fmt.Sprintf("Port %d", p), func(c *chainCheck) { c.Port = p })
+			add("port-"+strconv.Itoa(p), "port", chainPortLabel(p), func(c *chainCheck) { c.Port = p })
 		}
 		for _, m := range f.Mounts {
 			if len(def.Checks)-before >= 6 || !strings.HasPrefix(m.Target, "/") || len(m.Target) > 300 || chainHasControl(m.Target) {
@@ -595,6 +595,24 @@ func chainStarterFromSelection(userID int, conns []Connection, storages []Storag
 	}
 	def.Scenarios = append(def.Scenarios, chainScenario{ID: "degraded", Label: "Degraded", When: chainCond{}})
 	return def
+}
+
+// chainWellKnownPorts names the ports a check label can show instead of a bare number.
+var chainWellKnownPorts = map[int]string{
+	21: "FTP", 22: "SSH", 25: "SMTP", 53: "DNS", 80: "HTTP", 143: "IMAP", 389: "LDAP", 443: "HTTPS", 445: "SMB",
+	554: "RTSP", 587: "SMTP submission", 636: "LDAPS", 993: "IMAPS", 1433: "MS SQL", 1521: "Oracle", 1883: "MQTT",
+	1935: "RTMP", 2049: "NFS", 3000: "Grafana", 3306: "MySQL/MariaDB", 3389: "RDP", 5432: "PostgreSQL",
+	5672: "RabbitMQ", 6379: "Redis", 6443: "Kubernetes API", 8080: "HTTP (alt)", 8443: "HTTPS (alt)", 8554: "RTSP",
+	9000: "MinIO / PHP-FPM", 9090: "Prometheus", 9100: "node_exporter", 9200: "Elasticsearch", 10050: "Zabbix agent",
+	10051: "Zabbix server", 11211: "Memcached", 27017: "MongoDB",
+}
+
+// chainPortLabel is "PostgreSQL (5432)" for a well-known port and "Port 8123" otherwise.
+func chainPortLabel(p int) string {
+	if name, ok := chainWellKnownPorts[p]; ok {
+		return fmt.Sprintf("%s (%d)", name, p)
+	}
+	return fmt.Sprintf("Port %d", p)
 }
 
 // uniqueCheckID returns a check id not used on any node of the same chain.

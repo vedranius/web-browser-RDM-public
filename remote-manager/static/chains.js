@@ -237,6 +237,63 @@ Object.assign(LANGS.hr, {
   chn_add_check: 'Dodaj provjeru', chn_edit_chain: 'Uredi lanac', chn_pick_target: 'Kliknite ciljni čvor',
   chn_link_saved: 'Spremljeno.', chn_link_exists: 'Ova dva čvora su već povezana.', chn_check_bad: 'nije u redu',
 });
+// v14.5.0: server picker, recognition with suggested checks and links, explanations.
+Object.assign(LANGS.en, {
+  chn_sp_no_folder: 'No folder', chn_sp_in_chain: 'already in this chain', chn_sp_search: 'Search by name, host, folder or tag',
+  chn_sp_all: 'Select all shown', chn_sp_count: '{n} selected', chn_sp_max: 'at most {n}', chn_sp_add: 'Add {n} to the chain',
+  chn_sp_nothing: 'No server matches the search.', chn_sp_same_name: 'same name in another folder', chn_sp_pick_one: 'Select at least one server.',
+  chn_add_title: 'Add to the chain', chn_add_servers: 'Servers', chn_add_web: 'Web connections', chn_add_storage: 'Storage', chn_add_ext: 'Outside endpoint',
+  chn_add_servers_d: 'Tick one or more saved SSH servers. Quick connections are not listed. WRM then looks at each server (read-only) and suggests checks.',
+  chn_add_recognise: 'Recognise services, containers, ports and mounts right after adding (read-only)',
+  chn_add_storage_d: 'A storage node checks that the bucket answers. WRM adds that check for you.',
+  chn_add_ext_d: 'Something outside your servers: a website, a CDN, a database host. Enter a URL, host:port or a host name; WRM picks the fitting checks (HTTP and certificate, TCP port, or DNS).',
+  chn_add_ext_bad: 'Enter a URL (https://…), host:port or a host name.',
+  chn_add_web_d: 'Your saved HTTP/HTTPS connections. Each becomes an outside endpoint with an HTTP check, and a certificate check for HTTPS.',
+  chn_sug_title: 'Found on this server', chn_sug_again: 'Look again', chn_sug_run: 'Recognise services',
+  chn_sug_none_yet: 'Not looked at yet. Recognition runs fixed read-only commands (services, containers, listening ports, network mounts) and suggests checks.',
+  chn_sug_all_added: 'Everything found is already checked.', chn_sug_add_one: 'Add this check',
+  chn_sug_add_rec: 'Add the recommended ({n})', chn_sug_port: 'port {n}', chn_sug_mount: 'Mount {p}', chn_sug_cert: 'Certificate',
+  chn_sug_dns: 'DNS name', chn_sug_bucket: 'Bucket answers', chn_sug_links: 'Suggested links (from the mounts found)',
+  chn_sug_link_mount: '{a} mounts {p} from {b}: link {a} → {b} (writes)',
+  chn_sug_ext_mount: '{a} mounts {p} from {h}, which is not in the chain: add {h} as an outside endpoint and link it',
+  chn_g_confirm_1: '1 check', chn_g_confirm_few: '{n} checks',
+  chn_g_confirm_h: 'How many results in a row must agree before a state changes. 2 or more avoids alerts from one slow answer.',
+  chn_g_interval_h: 'How often WRM runs all checks of this chain. Shorter means more SSH and network requests.',
+  chn_g_enabled_h: 'Off: the chain is kept, but nothing is checked until you turn it on.',
+  chn_scn_normal: 'Normal', chn_scn_backup: 'Backup', chn_scn_degraded: 'Degraded',
+  chn_g_type_h: 'Choose what to check. Each type explains what it needs.',
+  chn_g_target_found: 'Suggestions come from what recognition found on this server.',
+  chn_tpl_twice: 'The same server is chosen for two nodes. Pick a different server for each node.',
+  chn_g_test_check: 'Test now', chn_g_test_check_h: 'Run this one check once, without saving, and show what it finds.',
+});
+Object.assign(LANGS.hr, {
+  chn_sp_no_folder: 'Bez mape', chn_sp_in_chain: 'već u ovom lancu', chn_sp_search: 'Traži po nazivu, hostu, mapi ili oznaci',
+  chn_sp_all: 'Označi sve prikazane', chn_sp_count: 'Odabrano: {n}', chn_sp_max: 'najviše {n}', chn_sp_add: 'Dodaj u lanac ({n})',
+  chn_sp_nothing: 'Nijedan server ne odgovara pretrazi.', chn_sp_same_name: 'isti naziv u drugoj mapi', chn_sp_pick_one: 'Odaberite barem jedan server.',
+  chn_add_title: 'Dodaj u lanac', chn_add_servers: 'Serveri', chn_add_web: 'Web veze', chn_add_storage: 'Storage', chn_add_ext: 'Vanjski endpoint',
+  chn_add_servers_d: 'Označite jedan ili više spremljenih SSH servera. Brze veze nisu na popisu. WRM zatim pogleda svaki server (samo čitanje) i predloži provjere.',
+  chn_add_recognise: 'Odmah nakon dodavanja prepoznaj servise, kontejnere, portove i mountove (samo čitanje)',
+  chn_add_storage_d: 'Storage čvor provjerava odgovara li bucket. WRM tu provjeru doda sam.',
+  chn_add_ext_d: 'Nešto izvan vaših servera: web stranica, CDN, host baze. Upišite URL, host:port ili naziv hosta; WRM odabere odgovarajuće provjere (HTTP i certifikat, TCP port ili DNS).',
+  chn_add_ext_bad: 'Upišite URL (https://…), host:port ili naziv hosta.',
+  chn_add_web_d: 'Vaše spremljene HTTP/HTTPS veze. Svaka postaje vanjski endpoint s HTTP provjerom, a za HTTPS i provjerom certifikata.',
+  chn_sug_title: 'Pronađeno na serveru', chn_sug_again: 'Pogledaj ponovno', chn_sug_run: 'Prepoznaj servise',
+  chn_sug_none_yet: 'Još nije pregledano. Prepoznavanje pokreće fiksne naredbe samo za čitanje (servisi, kontejneri, portovi koji slušaju, mrežni mountovi) i predlaže provjere.',
+  chn_sug_all_added: 'Sve pronađeno već se provjerava.', chn_sug_add_one: 'Dodaj ovu provjeru',
+  chn_sug_add_rec: 'Dodaj preporučene ({n})', chn_sug_port: 'port {n}', chn_sug_mount: 'Mount {p}', chn_sug_cert: 'Certifikat',
+  chn_sug_dns: 'DNS naziv', chn_sug_bucket: 'Bucket odgovara', chn_sug_links: 'Predložene veze (iz pronađenih mountova)',
+  chn_sug_link_mount: '{a} mounta {p} s {b}: veza {a} → {b} (piše)',
+  chn_sug_ext_mount: '{a} mounta {p} s {h}, koji nije u lancu: dodaj {h} kao vanjski endpoint i poveži ga',
+  chn_g_confirm_1: '1 provjere', chn_g_confirm_few: '{n} provjere',
+  chn_g_confirm_h: 'Koliko se uzastopnih rezultata mora složiti prije promjene stanja. 2 ili više sprječava uzbunu zbog jednog sporog odgovora.',
+  chn_g_interval_h: 'Koliko često WRM pokreće sve provjere ovog lanca. Kraće znači više SSH i mrežnih zahtjeva.',
+  chn_g_enabled_h: 'Isključeno: lanac ostaje spremljen, ali se ništa ne provjerava dok ga ne uključite.',
+  chn_scn_normal: 'Normalno', chn_scn_backup: 'Rezervni put', chn_scn_degraded: 'Otežano',
+  chn_g_type_h: 'Odaberite što provjeravati. Svaka vrsta objašnjava što joj treba.',
+  chn_g_target_found: 'Prijedlozi dolaze iz onoga što je prepoznavanje pronašlo na serveru.',
+  chn_tpl_twice: 'Isti server je odabran za dva čvora. Odaberite drugi server za svaki čvor.',
+  chn_g_test_check: 'Isprobaj sada', chn_g_test_check_h: 'Pokreni samo ovu provjeru jednom, bez spremanja, i pokaži što je pronašla.',
+});
 
 (function () {
   const state = { list: [], drafts: [], current: null, timeline: [], styleAdded: false, mode: 'diagram', sel: null, views: {}, pos: {}, openCheck: null, conns: [], storages: [], catalog: null };
@@ -407,6 +464,39 @@ Object.assign(LANGS.hr, {
 .chn-gicon { font-size:15px; width:20px; text-align:center; flex:none; }
 .chn-gchips { display:flex; gap:4px; flex-wrap:wrap; padding-left:34px; margin:-2px 0 4px; }
 .chn-chip { font-size:9.5px; padding:1px 6px; border-radius:9px; background:var(--bg3); color:var(--text2); }
+.chn-guided input, .chn-guided select, .chn-guided textarea, .chn-wizard input, .chn-wizard select, .chn-wizard textarea { font-size:12.5px; background:var(--bg); border:1px solid var(--border2); color:var(--text); border-radius:7px; padding:6px 8px; outline:none; font-family:inherit; }
+.chn-guided input:focus, .chn-guided select:focus, .chn-guided textarea:focus, .chn-wizard input:focus, .chn-wizard select:focus, .chn-wizard textarea:focus { border-color:var(--accent); }
+.chn-guided input[type=checkbox], .chn-wizard input[type=checkbox], .chn-sp input[type=checkbox] { padding:0; width:auto; flex:none; }
+.chn-sp-top input[type=search] { width:auto; }
+.chn-gadd2 { margin-top:10px; padding-top:10px; border-top:1px dashed var(--border2); }
+.chn-gadd2 h5 { margin:0 0 6px; font-size:11.5px; color:var(--text2); }
+.chn-tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px; }
+.chn-tab { font-size:11.5px; padding:4px 10px; border-radius:14px; border:1px solid var(--border2); background:var(--bg1); color:var(--text2); cursor:pointer; }
+.chn-tab.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+.chn-sp { border:1px solid var(--border2); border-radius:8px; background:var(--bg1); overflow:hidden; margin:6px 0; }
+.chn-sp-top { display:flex; gap:6px; padding:6px; border-bottom:1px solid var(--border2); }
+.chn-sp-top input { flex:1; min-width:0; }
+.chn-sp-list { max-height:240px; overflow:auto; padding:2px 0; }
+.chn-sp-group { font-size:10.5px; font-weight:600; color:var(--text3); padding:6px 10px 2px; position:sticky; top:0; background:var(--bg1); }
+.chn-sp-row { display:flex; align-items:center; gap:8px; padding:4px 10px; cursor:pointer; font-size:12px; }
+.chn-sp-row:hover { background:var(--bg3); }
+.chn-sp-row.busy { opacity:.55; cursor:default; }
+.chn-sp-main { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-width:0; }
+.chn-sp-host { color:var(--text3); font-size:11px; font-family:var(--font-mono); }
+.chn-sp-dup { font-size:9.5px; color:#d29922; }
+.chn-sp-busy { font-size:9.5px; color:var(--text3); font-style:italic; }
+.chn-sp-foot { display:flex; align-items:center; gap:8px; padding:6px 10px; border-top:1px solid var(--border2); }
+.chn-sp-count { flex:1; font-size:11px; color:var(--text3); }
+.chn-sugg { margin:6px 0 4px 28px; padding:7px 9px; border:1px dashed var(--accent); border-radius:8px; background:var(--bg1); font-size:11.5px; }
+.chn-sugg-head { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.chn-sugg-head b { flex:1; font-size:11.5px; }
+.chn-sugg-chips { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0; }
+.chn-sugg-chip { font-size:11px; padding:2px 8px; border-radius:11px; border:1px solid var(--border2); background:var(--bg2); color:var(--text2); cursor:pointer; }
+.chn-sugg-chip.rec { border-color:var(--accent); color:var(--text); }
+.chn-sugg-chip:hover { background:var(--accent); color:#fff; }
+.chn-type-help { margin:-4px 0 8px; }
+.chn-test-result { font-size:11.5px; margin:6px 0; word-break:break-word; }
+.chn-test-result.ok { color:#3fb950; } .chn-test-result.bad { color:#f85149; }
 .chn-gadd { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border2); }
 .chn-gadd select, .chn-gadd input { flex:1; min-width:110px; }
 .chn-cgroup { margin-bottom:10px; }
@@ -1551,6 +1641,240 @@ Object.assign(LANGS.hr, {
   // ─── the guided builder, dialogs and the AI wizard (step 4) ──────────────────────────────
 
   function sshConns() { return (state.conns || []).filter((c) => (c.protocol || 'SSH').toUpperCase() === 'SSH'); }
+  // The servers a chain can use: saved SSH connections (quick connections are left out), by
+  // folder and name, so two servers with the same name in different folders stay apart.
+  function connSort(a, b) {
+    const fa = a.folder_path || '', fb = b.folder_path || '';
+    if (fa !== fb) { if (!fa) return 1; if (!fb) return -1; return fa.localeCompare(fb, undefined, { sensitivity: 'base' }); }
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base', numeric: true }) || a.id - b.id;
+  }
+  function chainServers() { return sshConns().filter((c) => !c.temporary).sort(connSort); }
+  function webConns() { return (state.conns || []).filter((c) => /^HTTPS?$/i.test(c.protocol || '') && !c.temporary).sort(connSort); }
+  function connURL(c) {
+    const host = String(c.host || '').trim();
+    if (!host) return '';
+    if (/^https?:\/\//i.test(host)) return host;
+    let path = String(c.web_path || '');
+    if (path && path[0] !== '/') path = '/' + path;
+    return String(c.protocol || 'https').toLowerCase() + '://' + host + path;
+  }
+  function connLabel(c) { return c.name + (c.host ? ' (' + c.host + ')' : '') + (c.folder_path ? ' · ' + c.folder_path : ''); }
+  // fillConnSelect lists the servers in a <select> by folder; taken ids are marked and disabled.
+  function fillConnSelect(sel, list, taken, current) {
+    sel.textContent = '';
+    sel.appendChild(el('option', '', t('chn_g_pick_server'))).value = '';
+    let group = null, gname = null;
+    list.forEach((c) => {
+      const g = c.folder_path || t('chn_sp_no_folder');
+      if (g !== gname) { gname = g; group = el('optgroup'); group.label = g; sel.appendChild(group); }
+      const busy = taken && taken.has(c.id) && c.id !== current;
+      const o = el('option', '', c.name + (c.host ? ' (' + c.host + ')' : '') + (busy ? ' · ' + t('chn_sp_in_chain') : ''));
+      o.value = String(c.id);
+      if (busy) o.disabled = true;
+      if (c.id === current) o.selected = true;
+      group.appendChild(o);
+    });
+  }
+
+  // serverPicker: search, folders, several servers at once; servers already in the chain are
+  // shown but cannot be picked twice.
+  function serverPicker(opts) {
+    const list = opts.list || chainServers();
+    const taken = opts.taken || new Set();
+    const chosen = new Set(opts.selected || []);
+    const box = el('div', 'chn-sp');
+    const top = el('div', 'chn-sp-top');
+    const q = el('input');
+    q.type = 'search';
+    q.placeholder = t('chn_sp_search');
+    q.setAttribute('aria-label', t('chn_sp_search'));
+    top.appendChild(q);
+    const allB = el('button', 'btn-sec btn-sm', t('chn_sp_all'));
+    allB.type = 'button';
+    top.appendChild(allB);
+    box.appendChild(top);
+    const rows = el('div', 'chn-sp-list');
+    box.appendChild(rows);
+    const foot = el('div', 'chn-sp-foot');
+    const count = el('span', 'chn-sp-count');
+    foot.appendChild(count);
+    box.appendChild(foot);
+    let addB = null;
+    if (opts.onAdd) {
+      addB = el('button', 'btn-pri btn-sm', '');
+      addB.type = 'button';
+      addB.onclick = () => { if (chosen.size) { const ids = Array.from(chosen); chosen.clear(); opts.onAdd(ids); } };
+      foot.appendChild(addB);
+    }
+    const max = opts.max || 0;
+    const visible = () => {
+      const needle = q.value.trim().toLowerCase();
+      return list.filter((c) => !needle || [c.name, c.host, c.folder_path, (c.tags || []).join(' ')].join(' ').toLowerCase().includes(needle));
+    };
+    const update = () => {
+      count.textContent = fmt(t('chn_sp_count'), { n: chosen.size }) + (max ? ' · ' + fmt(t('chn_sp_max'), { n: max }) : '');
+      if (addB) { addB.disabled = !chosen.size; addB.textContent = '＋ ' + fmt(t('chn_sp_add'), { n: chosen.size }); }
+      if (opts.onChange) opts.onChange(Array.from(chosen));
+    };
+    const render = () => {
+      rows.textContent = '';
+      const vis = visible();
+      if (!list.length) { rows.appendChild(el('div', 'note', t('chn_ai_servers_none'))); update(); return; }
+      if (!vis.length) { rows.appendChild(el('div', 'note', t('chn_sp_nothing'))); update(); return; }
+      let gname = null;
+      const names = {};
+      list.forEach((c) => { const k = String(c.name || '').toLowerCase(); names[k] = (names[k] || 0) + 1; });
+      vis.forEach((c) => {
+        const g = c.folder_path || t('chn_sp_no_folder');
+        if (g !== gname) { gname = g; rows.appendChild(el('div', 'chn-sp-group', '📁 ' + g)); }
+        const busy = taken.has(c.id);
+        const r = el('label', 'chn-sp-row' + (busy ? ' busy' : ''));
+        const cb = el('input');
+        cb.type = 'checkbox';
+        cb.checked = chosen.has(c.id);
+        cb.disabled = busy;
+        cb.onchange = () => {
+          if (cb.checked) {
+            if (max && chosen.size >= max) { cb.checked = false; showToast(fmt(t('chn_sp_max'), { n: max }), 'error'); return; }
+            chosen.add(c.id);
+          } else chosen.delete(c.id);
+          update();
+        };
+        r.appendChild(cb);
+        const main = el('span', 'chn-sp-main');
+        main.appendChild(el('b', '', c.name));
+        main.appendChild(el('span', 'chn-sp-host', c.host || ''));
+        if (names[String(c.name || '').toLowerCase()] > 1) main.appendChild(el('span', 'chn-sp-dup', t('chn_sp_same_name')));
+        (c.tags || []).slice(0, 4).forEach((tg) => main.appendChild(el('span', 'chn-chip', tg)));
+        if (busy) main.appendChild(el('span', 'chn-sp-busy', t('chn_sp_in_chain')));
+        r.appendChild(main);
+        rows.appendChild(r);
+      });
+      update();
+    };
+    q.oninput = render;
+    allB.onclick = () => {
+      const vis = visible().filter((c) => !taken.has(c.id));
+      const every = vis.every((c) => chosen.has(c.id));
+      vis.forEach((c) => { if (every) chosen.delete(c.id); else if (!max || chosen.size < max) chosen.add(c.id); });
+      render();
+    };
+    render();
+    return { el: box, selected: () => Array.from(chosen) };
+  }
+
+  // ─── recognition: what runs on a server, turned into suggested checks and links ─────────
+  const CHN_PORTS = { 21: 'FTP', 22: 'SSH', 25: 'SMTP', 53: 'DNS', 80: 'HTTP', 110: 'POP3', 143: 'IMAP', 389: 'LDAP', 443: 'HTTPS', 445: 'SMB',
+    465: 'SMTPS', 554: 'RTSP', 587: 'SMTP submission', 636: 'LDAPS', 993: 'IMAPS', 1433: 'MS SQL', 1521: 'Oracle', 1883: 'MQTT', 1935: 'RTMP',
+    2049: 'NFS', 2375: 'Docker API', 2379: 'etcd', 3000: 'Grafana', 3306: 'MySQL/MariaDB', 3389: 'RDP', 5000: 'Docker registry',
+    5432: 'PostgreSQL', 5601: 'Kibana', 5672: 'RabbitMQ', 5900: 'VNC', 6379: 'Redis', 6443: 'Kubernetes API', 8000: 'HTTP (app)',
+    8080: 'HTTP (alt)', 8443: 'HTTPS (alt)', 8554: 'RTSP', 8780: 'WRM', 8888: 'HTTP (app)', 9000: 'MinIO / PHP-FPM', 9001: 'MinIO console',
+    9090: 'Prometheus', 9093: 'Alertmanager', 9100: 'node_exporter', 9200: 'Elasticsearch', 9300: 'Elasticsearch cluster',
+    10050: 'Zabbix agent', 10051: 'Zabbix server', 11211: 'Memcached', 15672: 'RabbitMQ admin', 27017: 'MongoDB' };
+  // Services that usually carry the system (shown first and taken by "Add recommended").
+  const CHN_KEY_SERVICE = /^(nginx|apache2|httpd|haproxy|traefik|caddy|envoy|keepalived|varnish|squid|postgres(ql)?(@.*)?|mysql|mariadb|mongod|redis(-server)?|memcached|rabbitmq-server|kafka|zookeeper|elasticsearch|opensearch|kibana|grafana(-server)?|prometheus|alertmanager|node_exporter|zabbix-(agent2?|server|proxy)|docker|containerd|kubelet|k3s|minio|rclone.*|nfs-server|nfs-kernel-server|smbd|php.*-fpm|supervisor(d)?|gunicorn.*|uwsgi.*|puma.*|pm2.*|node.*|java.*|tomcat.*|jetty.*|wildfly.*|ffmpeg.*|srs|wowza.*|nimble.*|janus|mediamtx|gitlab.*|jenkins|wrm.*|bind9|named|unbound|dnsmasq|postfix|dovecot|exim4|openvpn.*|wireguard.*|wg-quick@.*|strongswan.*|cron|crond)(\.service)?$/i;
+  function portName(p) { return CHN_PORTS[p] ? CHN_PORTS[p] + ' (' + p + ')' : fmt(t('chn_sug_port'), { n: p }); }
+  function chnServiceName(u) { return String(u || '').replace(/\.service$/, ''); }
+
+  // suggestions lists what recognition found on a server node and is not yet a check of it.
+  function suggestionsFor(def, n) {
+    const f = state.facts && state.facts[n.conn_id];
+    if (!f || f.loading || f.error) return [];
+    const have = (def.checks || []).filter((x) => x.node === n.id);
+    const has = (type, key) => have.some((x) => x.type === type && (type === 'port' ? x.port === key : x.target === key));
+    const out = [];
+    (f.services || []).forEach((u) => { if (!has('systemd', u)) out.push({ icon: '⚙', label: chnServiceName(u), rec: CHN_KEY_SERVICE.test(u), chk: { type: 'systemd', target: u, label: chnServiceName(u) } }); });
+    (f.containers || []).forEach((c) => { if (!has('docker', c)) out.push({ icon: '🐳', label: c, rec: true, chk: { type: 'docker', target: c, label: c } }); });
+    (f.ports || []).forEach((p) => { if (!has('port', p)) out.push({ icon: '🔌', label: portName(p), rec: !!CHN_PORTS[p] && p !== 22, chk: { type: 'port', port: p, label: portName(p) } }); });
+    (f.mounts || []).forEach((m) => { if (m.target && !has('mount', m.target)) out.push({ icon: '💾', label: m.target + (m.source ? ' ← ' + trunc(m.source, 40) : ''), rec: true, chk: { type: 'mount', target: m.target, label: fmt(t('chn_sug_mount'), { p: m.target }) } }); });
+    // recommended first, then by kind as found
+    out.sort((a, b) => (b.rec ? 1 : 0) - (a.rec ? 1 : 0));
+    return out;
+  }
+
+  // linkSuggestions: a network mount whose source host is another server of the chain means
+  // this server writes to (or reads from) that one.
+  function mountHost(src) {
+    src = String(src || '');
+    let m = src.match(/^\/\/([^/]+)\//) || src.match(/^([A-Za-z0-9.\-]+|\[[0-9a-fA-F:]+\]):\//) || src.match(/^[^@]+@([A-Za-z0-9.\-]+):/);
+    return m ? m[1].replace(/^\[|\]$/g, '').toLowerCase() : '';
+  }
+  function linkSuggestions(def) {
+    const out = [];
+    const byHost = {};
+    (def.nodes || []).forEach((n) => {
+      if (n.kind !== 'server') return;
+      const c = (state.conns || []).find((x) => x.id === n.conn_id);
+      if (c && c.host) byHost[String(c.host).toLowerCase()] = n;
+      const f = state.facts && state.facts[n.conn_id];
+      if (f && f.hostname) byHost[String(f.hostname).toLowerCase()] = n;
+    });
+    (def.nodes || []).forEach((n) => {
+      const f = n.kind === 'server' && state.facts && state.facts[n.conn_id];
+      if (!f || !f.mounts) return;
+      f.mounts.forEach((m) => {
+        const h = mountHost(m.source);
+        if (!h) return;
+        const to = byHost[h];
+        if (to && to.id !== n.id) {
+          if (!(def.links || []).some((l) => l.from === n.id && l.to === to.id)) out.push({ from: n.id, to: to.id, kind: 'write', label: m.target, why: fmt(t('chn_sug_link_mount'), { a: n.label || n.id, p: m.target, b: to.label || to.id }) });
+        } else if (!to && !(def.nodes || []).some((x) => x.kind === 'external' && String(x.label || '').toLowerCase() === h)) {
+          out.push({ external: h, from: n.id, kind: 'write', label: m.target, why: fmt(t('chn_sug_ext_mount'), { a: n.label || n.id, p: m.target, h }) });
+        }
+      });
+    });
+    // de-duplicate
+    const seen = {};
+    return out.filter((x) => { const k = (x.external || x.to) + '|' + x.from; if (seen[k]) return false; seen[k] = true; return true; });
+  }
+
+  // recognise asks the selected servers (fixed read-only discovery, at most 10 at a time).
+  function recognise(ids, refresh) {
+    state.facts = state.facts || {};
+    const todo = ids.filter((id) => id && !(state.facts[id] && state.facts[id].loading));
+    if (!todo.length) return Promise.resolve();
+    todo.forEach((id) => { state.facts[id] = { loading: true }; });
+    refresh();
+    const batches = [];
+    for (let i = 0; i < todo.length; i += 10) batches.push(todo.slice(i, i + 10));
+    return Promise.all(batches.map((b) => api('POST', '/api/chains/discover', { conn_ids: b }).then((res) => {
+      (res.servers || []).forEach((f) => { state.facts[f.conn_id] = f; });
+      b.forEach((id) => { if (state.facts[id] && state.facts[id].loading) state.facts[id] = { error: t('chn_ai_no_facts') }; });
+    }).catch((e) => { b.forEach((id) => { state.facts[id] = { error: e.message }; }); }))).then(() => refresh());
+  }
+
+  // roleGuess mirrors the server's guess from a connection name (chainRoleGuess).
+  function roleGuess(name, index) {
+    const n = String(name || '').toLowerCase();
+    const map = [[/ingest|encoder|capture/, 'ingest'], [/backup|standby|replica|secondary|bkp/, 'backup'], [/db|sql|postgres|mysql|maria|mongo|redis/, 'database'],
+      [/cdn|edge/, 'cdn'], [/lb|haproxy|proxy|balancer|gw|gateway/, 'proxy'], [/s3|minio|nas|nfs|storage|store/, 'storage'], [/web|www|front|nginx|apache/, 'web'],
+      [/api|app|svc|service|worker|origin|content/, 'app']];
+    for (const [re, role] of map) if (re.test(n)) return role;
+    return index === 0 ? 'app' : '';
+  }
+
+  // externalFromText: one line (a URL, host:port or a host name) becomes an outside node with
+  // the checks that fit it.
+  function externalFromText(def, text, label) {
+    text = String(text || '').trim();
+    if (!text) return null;
+    const used = usedNodeIDs(def), usedC = usedCheckIDs(def);
+    let host = text, checks = [];
+    const id = uniqueID(label || text.replace(/^https?:\/\//i, '').split(/[/:]/)[0], used);
+    if (/^https?:\/\//i.test(text)) {
+      try { host = new URL(text).host; } catch (e) { return null; }
+      checks.push({ id: uniqueID(id + '-http', usedC), node: id, type: 'http', target: text, label: 'HTTP ' + host });
+      if (/^https:/i.test(text)) checks.push({ id: uniqueID(id + '-tls', usedC), node: id, type: 'tls', target: host, label: t('chn_sug_cert') });
+    } else if (/^[^\s:/]+:\d{1,5}$/.test(text) || /^\[[0-9a-f:]+\]:\d{1,5}$/i.test(text)) {
+      const port = Number(text.split(':').pop());
+      checks.push({ id: uniqueID(id + '-tcp', usedC), node: id, type: 'tcp', target: text, label: portName(port) });
+      if (port === 443 || port === 8443) checks.push({ id: uniqueID(id + '-tls', usedC), node: id, type: 'tls', target: text, label: t('chn_sug_cert') });
+    } else if (/^[A-Za-z0-9.\-]+$/.test(text)) {
+      checks.push({ id: uniqueID(id + '-dns', usedC), node: id, type: 'dns', target: text, record: 'A', label: t('chn_sug_dns') });
+    } else return null;
+    return { node: { id, kind: 'external', label: label || host, role: '' }, checks };
+  }
+
   function catalogTypes() { return (state.catalog && state.catalog.types) || {}; }
   function nodeOf(def, id) { return (def.nodes || []).find((n) => n.id === id); }
   function nodeName(def, id) { const n = nodeOf(def, id); return n ? (n.label || n.id) : id; }
@@ -1577,7 +1901,7 @@ Object.assign(LANGS.hr, {
   function nodeSubtitle(n) {
     if (n.kind === 'server') {
       const c = (state.conns || []).find((x) => x.id === n.conn_id);
-      return c ? c.name : t('chn_g_pick_server');
+      return c ? [c.name !== n.label ? c.name : '', c.host, c.folder_path].filter(Boolean).join(' · ') : t('chn_g_pick_server');
     }
     if (n.kind === 'storage') {
       const s = (state.storages || []).find((x) => x.id === n.storage_id);
@@ -1591,15 +1915,15 @@ Object.assign(LANGS.hr, {
     const servers = (def.nodes || []).filter((n) => n.kind === 'server');
     const out = [];
     if ((def.checks || []).length) {
-      out.push({ id: 'normal', label: 'Normal', when: { all: (def.checks || []).map((x) => ({ check: x.id, field: 'ok', op: '==', value: 'true' })) } });
+      out.push({ id: 'normal', label: t('chn_scn_normal'), when: { all: (def.checks || []).map((x) => ({ check: x.id, field: 'ok', op: '==', value: 'true' })) } });
     }
     if (servers.length > 1) {
-      out.push({ id: 'backup', label: 'Backup', when: { all: [
+      out.push({ id: 'backup', label: t('chn_scn_backup'), when: { all: [
         { node: servers[0].id, op: '==', value: 'down' },
         { node: servers[1].id, op: '==', value: 'up' },
       ] } });
     }
-    out.push({ id: 'degraded', label: 'Degraded', when: {} });
+    out.push({ id: 'degraded', label: t('chn_scn_degraded'), when: {} });
     return out;
   }
 
@@ -1707,16 +2031,17 @@ Object.assign(LANGS.hr, {
     [15, 30, 60, 120, 300, 600].forEach((n) => { const o = el('option', '', fmt(t('chn_g_seconds'), { n })); o.value = String(n); interval.appendChild(o); });
     interval.value = String(def.interval_s || 30);
     interval.onchange = () => { def.interval_s = Number(interval.value); };
-    fieldRow(grid, t('chn_g_interval'), interval);
+    fieldRow(grid, t('chn_g_interval'), interval, t('chn_g_interval_h'));
     const confirm = el('select');
-    [1, 2, 3, 5].forEach((n) => { const o = el('option', '', fmt(t('chn_g_confirm_n'), { n })); o.value = String(n); confirm.appendChild(o); });
+    [1, 2, 3, 5].forEach((n) => { const o = el('option', '', fmt(t(n === 1 ? 'chn_g_confirm_1' : n < 5 ? 'chn_g_confirm_few' : 'chn_g_confirm_n'), { n })); o.value = String(n); confirm.appendChild(o); });
     confirm.value = String(def.confirm || 2);
     confirm.onchange = () => { def.confirm = Number(confirm.value); };
-    fieldRow(grid, t('chn_g_confirm'), confirm);
+    fieldRow(grid, t('chn_g_confirm'), confirm, t('chn_g_confirm_h'));
     const en = el('label', 'chn-checkline');
     const cb = el('input'); cb.type = 'checkbox'; cb.checked = ctx.enabled();
     cb.onchange = () => ctx.setEnabled(cb.checked);
     en.appendChild(cb); en.appendChild(document.createTextNode(' ' + t('chn_g_enabled')));
+    en.title = t('chn_g_enabled_h');
     grid.appendChild(en);
     const desc = el('textarea');
     desc.rows = 2;
@@ -1788,52 +2113,101 @@ Object.assign(LANGS.hr, {
   }
 
   function guidedAddNode(sec, def, ctx) {
-    const box = el('div', 'chn-gadd');
-    const kind = el('select');
-    [['server', t('chn_g_kind') + ': ' + t('chn_kind_server')], ['storage', t('chn_g_kind') + ': ' + t('chn_kind_storage')], ['external', t('chn_g_kind') + ': ' + t('chn_kind_external')]]
-      .forEach(([v, l]) => { const o = el('option', '', l); o.value = v; kind.appendChild(o); });
-    const pick = el('select');
-    const label = el('input');
-    label.placeholder = t('chn_g_label');
-    const role = el('input');
-    role.placeholder = t('chn_g_role_ph');
-    const err = el('span', 'chn-inline-err');
-    const fillPick = () => {
-      pick.textContent = '';
-      if (kind.value === 'server') {
-        pick.appendChild(el('option', '', t('chn_g_pick_server'))).value = '';
-        sshConns().forEach((c) => { const o = el('option', '', c.name + (c.host ? ' (' + c.host + ')' : '')); o.value = String(c.id); pick.appendChild(o); });
-        pick.style.display = '';
-      } else if (kind.value === 'storage') {
+    const box = el('div', 'chn-gadd2');
+    const tabs = el('div', 'chn-tabs');
+    const pane = el('div', 'chn-tab-pane');
+    const web = webConns();
+    const kinds = [['server', '🖥 ' + t('chn_add_servers')], ['storage', '🪣 ' + t('chn_add_storage')], ['external', '🌐 ' + t('chn_add_ext')]];
+    if (web.length) kinds.push(['web', '🔗 ' + t('chn_add_web')]);
+    state.addTab = state.addTab || 'server';
+    const show = (k) => {
+      state.addTab = k;
+      Array.from(tabs.children).forEach((b) => b.classList.toggle('on', b.dataset.k === k));
+      pane.textContent = '';
+      if (k === 'server') {
+        const taken = new Set((def.nodes || []).filter((n) => n.kind === 'server').map((n) => n.conn_id));
+        pane.appendChild(el('div', 'note', t('chn_add_servers_d')));
+        const picker = serverPicker({ taken, onAdd: (ids) => {
+          const used = usedNodeIDs(def);
+          const base = (def.nodes || []).filter((n) => n.kind === 'server').length;
+          ids.forEach((cid, i) => {
+            const c = (state.conns || []).find((x) => x.id === cid);
+            if (!c) return;
+            def.nodes.push({ id: uniqueID(c.name, used), kind: 'server', label: c.name, role: roleGuess(c.name, base + i), conn_id: cid });
+          });
+          ctx.refresh();
+          if (state.autoRecognise !== false) recognise(ids, ctx.refresh);
+        } });
+        pane.appendChild(picker.el);
+        const auto = el('label', 'chn-checkline');
+        const cb = el('input'); cb.type = 'checkbox'; cb.checked = state.autoRecognise !== false;
+        cb.onchange = () => { state.autoRecognise = cb.checked; };
+        auto.appendChild(cb); auto.appendChild(document.createTextNode(' ' + t('chn_add_recognise')));
+        pane.appendChild(auto);
+      } else if (k === 'storage') {
+        const usedS = new Set((def.nodes || []).filter((n) => n.kind === 'storage').map((n) => n.storage_id));
+        const row = el('div', 'chn-gadd');
+        const pick = el('select');
         pick.appendChild(el('option', '', t('chn_g_pick_storage'))).value = '';
-        (state.storages || []).forEach((s) => { const o = el('option', '', s.name); o.value = String(s.id); pick.appendChild(o); });
-        pick.style.display = '';
-      } else {
-        pick.style.display = 'none';
+        (state.storages || []).forEach((st) => { const o = el('option', '', st.name + (st.bucket ? ' · ' + st.bucket : '') + (usedS.has(st.id) ? ' · ' + t('chn_sp_in_chain') : '')); o.value = String(st.id); o.disabled = usedS.has(st.id); pick.appendChild(o); });
+        const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add'));
+        const err = el('span', 'chn-inline-err');
+        add.onclick = () => {
+          const v = Number(pick.value) || 0;
+          if (!v) { err.textContent = t('chn_g_pick_storage'); return; }
+          const st = (state.storages || []).find((x) => x.id === v) || {};
+          const used = usedNodeIDs(def);
+          const id = uniqueID(st.name || 'storage', used);
+          def.nodes.push({ id, kind: 'storage', label: st.name || id, role: 'storage', storage_id: v });
+          def.checks.push({ id: uniqueID(id + '-bucket', usedCheckIDs(def)), node: id, type: 'storage', label: t('chn_sug_bucket') });
+          ctx.refresh();
+        };
+        [pick, add].forEach((x) => row.appendChild(x));
+        row.appendChild(err);
+        if (!(state.storages || []).length) pane.appendChild(el('div', 'note', t('chn_tpl_no_storage')));
+        pane.appendChild(el('div', 'note', t('chn_add_storage_d')));
+        pane.appendChild(row);
+      } else if (k === 'external') {
+        pane.appendChild(el('div', 'note', t('chn_add_ext_d')));
+        const row = el('div', 'chn-gadd');
+        const target = el('input'); target.placeholder = 'https://app.example.com · cdn.example.com · db.example.com:5432';
+        const label = el('input'); label.placeholder = t('chn_g_label');
+        const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add'));
+        const err = el('span', 'chn-inline-err');
+        add.onclick = () => {
+          const x = externalFromText(def, target.value, label.value.trim());
+          if (!x) { err.textContent = t('chn_add_ext_bad'); return; }
+          def.nodes.push(x.node);
+          x.checks.forEach((c) => def.checks.push(c));
+          ctx.refresh();
+        };
+        target.onkeydown = (e) => { if (e.key === 'Enter') add.onclick(); };
+        [target, label, add].forEach((x) => row.appendChild(x));
+        row.appendChild(err);
+        pane.appendChild(row);
+      } else if (k === 'web') {
+        pane.appendChild(el('div', 'note', t('chn_add_web_d')));
+        const takenW = new Set();
+        web.forEach((c) => { const u = connURL(c); if ((def.checks || []).some((x) => x.type === 'http' && x.target === u)) takenW.add(c.id); });
+        const picker = serverPicker({ list: web, taken: takenW, onAdd: (ids) => {
+          ids.forEach((cid) => {
+            const c = web.find((x) => x.id === cid);
+            const x = c && externalFromText(def, connURL(c), c.name);
+            if (!x) return;
+            def.nodes.push(x.node);
+            x.checks.forEach((ch) => def.checks.push(ch));
+          });
+          ctx.refresh();
+        } });
+        pane.appendChild(picker.el);
       }
     };
-    kind.onchange = fillPick;
-    fillPick();
-    const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add'));
-    add.onclick = () => {
-      err.textContent = '';
-      const id = uniqueID(label.value || (kind.value === 'server' ? 'server' : kind.value === 'storage' ? 'storage' : 'external'), usedNodeIDs(def));
-      const n = { id, kind: kind.value, label: label.value.trim() || id, role: role.value.trim() };
-      if (kind.value === 'server') {
-        const v = Number(pick.value) || 0;
-        if (!v) { err.textContent = t('chn_g_pick_server'); return; }
-        n.conn_id = v;
-      } else if (kind.value === 'storage') {
-        const v = Number(pick.value) || 0;
-        if (!v) { err.textContent = t('chn_g_pick_storage'); return; }
-        n.storage_id = v;
-      }
-      def.nodes.push(n);
-      ctx.refresh();
-    };
-    [kind, pick, label, role, add].forEach((x) => box.appendChild(x));
-    box.appendChild(err);
+    kinds.forEach(([k, l]) => { const b = el('button', 'chn-tab', l); b.type = 'button'; b.dataset.k = k; b.onclick = () => show(k); tabs.appendChild(b); });
+    box.appendChild(el('h5', '', t('chn_add_title')));
+    box.appendChild(tabs);
+    box.appendChild(pane);
     sec.appendChild(box);
+    show(kinds.some((x) => x[0] === state.addTab) ? state.addTab : 'server');
   }
 
   function guidedChecks(root, def, ctx) {
@@ -1866,8 +2240,43 @@ Object.assign(LANGS.hr, {
       const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add_check'));
       add.onclick = () => openCheckDialog(def, n, null, (chk) => { def.checks.push(chk); ctx.refresh(); });
       group.appendChild(add);
+      if (n.kind === 'server' && n.conn_id) group.appendChild(recognitionBox(def, n, ctx));
       sec.appendChild(group);
     });
+  }
+
+  function recognitionBox(def, n, ctx) {
+    const box = el('div', 'chn-sugg');
+    const f = state.facts && state.facts[n.conn_id];
+    const head = el('div', 'chn-sugg-head');
+    head.appendChild(el('b', '', '🔍 ' + t('chn_sug_title')));
+    const again = el('button', 'btn-sec btn-sm', f && !f.loading ? '↻ ' + t('chn_sug_again') : '🔍 ' + t('chn_sug_run'));
+    again.disabled = !!(f && f.loading);
+    again.onclick = () => { if (state.facts) delete state.facts[n.conn_id]; recognise([n.conn_id], ctx.refresh); };
+    head.appendChild(again);
+    box.appendChild(head);
+    if (!f) { box.appendChild(el('div', 'note', t('chn_sug_none_yet'))); return box; }
+    if (f.loading) { box.appendChild(el('div', 'note', t('chn_ai_analyzing'))); return box; }
+    if (f.error) { box.appendChild(el('div', 'note', '⚠ ' + f.error)); return box; }
+    box.appendChild(el('div', 'chn-grow-sub', [f.hostname, f.os].filter(Boolean).join(' · ')));
+    const list = suggestionsFor(def, n);
+    if (!list.length) { box.appendChild(el('div', 'note', t('chn_sug_all_added'))); return box; }
+    const chips = el('div', 'chn-sugg-chips');
+    list.forEach((x) => {
+      const b = el('button', 'chn-sugg-chip' + (x.rec ? ' rec' : ''), x.icon + ' ' + x.label);
+      b.type = 'button';
+      b.title = t('chn_sug_add_one');
+      b.onclick = () => { def.checks.push(Object.assign({ id: uniqueID(n.id + '-' + x.chk.type + '-' + (x.chk.port || x.chk.target || ''), usedCheckIDs(def)), node: n.id }, x.chk)); ctx.refresh(); };
+      chips.appendChild(b);
+    });
+    box.appendChild(chips);
+    const rec = list.filter((x) => x.rec);
+    if (rec.length) {
+      const all = el('button', 'btn-sec btn-sm', '＋ ' + fmt(t('chn_sug_add_rec'), { n: Math.min(rec.length, 8) }));
+      all.onclick = () => { rec.slice(0, 8).forEach((x) => def.checks.push(Object.assign({ id: uniqueID(n.id + '-' + x.chk.type + '-' + (x.chk.port || x.chk.target || ''), usedCheckIDs(def)), node: n.id }, x.chk))); ctx.refresh(); };
+      box.appendChild(all);
+    }
+    return box;
   }
 
   function checkSummary(x) {
@@ -1894,6 +2303,33 @@ Object.assign(LANGS.hr, {
     const add = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add_link'));
     add.onclick = () => openLinkDialog(def, null, (l) => { def.links.push(l); ctx.refresh(); });
     sec.appendChild(add);
+    const sug = linkSuggestions(def);
+    if (sug.length) {
+      const box = el('div', 'chn-sugg');
+      box.appendChild(el('div', 'chn-sugg-head', '🔍 ' + t('chn_sug_links')));
+      sug.forEach((x) => {
+        const row = el('div', 'chn-grow');
+        row.appendChild(el('span', 'chn-gicon', '⇢'));
+        row.appendChild(el('div', 'chn-grow-main', x.why));
+        const b = el('button', 'btn-sec btn-sm', '＋ ' + t('chn_g_add'));
+        b.onclick = () => {
+          let to = x.to;
+          if (x.external) {
+            const e = externalFromText(def, x.external, x.external);
+            if (!e) return;
+            e.node.role = 'storage';
+            def.nodes.push(e.node);
+            e.checks.forEach((c) => def.checks.push(c));
+            to = e.node.id;
+          }
+          def.links.push({ from: x.from, to, kind: x.kind, label: x.label });
+          ctx.refresh();
+        };
+        row.appendChild(b);
+        box.appendChild(row);
+      });
+      sec.appendChild(box);
+    }
   }
 
   function guidedScenarios(root, def, ctx) {
@@ -2124,7 +2560,8 @@ Object.assign(LANGS.hr, {
       allowed.forEach((k) => { const o = el('option', '', k + (LANGS.en['chn_type_' + k] ? ' — ' + t('chn_type_' + k) : '')); o.value = k; if (chk.type === k) o.selected = true; type.appendChild(o); });
       type.onchange = () => { chk.type = type.value; render(); };
       fieldRow(form, t('chn_g_type'), type);
-      if (!chk.type) return;
+      if (!chk.type) { form.appendChild(el('div', 'note', t('chn_g_type_h'))); return; }
+
       const info = types[chk.type] || {};
       const need = String(info.needs || '');
       const lab = el('input'); lab.value = chk.label || ''; lab.placeholder = t('chn_g_check_label');
@@ -2138,7 +2575,17 @@ Object.assign(LANGS.hr, {
         const tgt = el('input'); tgt.value = chk.target || '';
         tgt.placeholder = need.includes('target') ? (chk.type === 'dns' ? 'app.example.com' : chk.type === 'tcp' ? 'host:443' : chk.type === 'http' ? 'https://…' : chk.type === 'tls' ? 'example.com' : chk.type === 'systemd' ? 'nginx.service' : '/absolute/path') : '';
         tgt.oninput = () => { chk.target = tgt.value; };
-        fieldRow(form, t('chn_g_target'), tgt);
+        // what recognition found on this server, as choices for the target
+        const f = node.kind === 'server' && state.facts && state.facts[node.conn_id];
+        const opts = !f || f.loading || f.error ? [] : chk.type === 'systemd' ? (f.services || []) : chk.type === 'docker' ? (f.containers || []) : chk.type === 'mount' ? (f.mounts || []).map((m) => m.target) : chk.type === 'timer' ? (f.services || []).filter((u) => /\.timer$/.test(u)) : [];
+        if (opts.length) {
+          const dl = el('datalist');
+          dl.id = 'chn-dl-' + Math.random().toString(36).slice(2, 8);
+          opts.forEach((v) => { const o = el('option'); o.value = v; dl.appendChild(o); });
+          form.appendChild(dl);
+          tgt.setAttribute('list', dl.id);
+        }
+        fieldRow(form, t('chn_g_target'), tgt, opts.length ? t('chn_g_target_found') : '');
       }
       if (chk.type === 'config') {
         const fmt = el('select');
@@ -2186,18 +2633,45 @@ Object.assign(LANGS.hr, {
         fieldRow(form, t('chn_g_value'), val);
       }
       const err = el('div', 'chn-inline-err');
+      const result = el('div', 'chn-test-result');
+      const missing = () => {
+        if (need.includes('target') && !String(chk.target || '').trim()) return t('chn_g_target');
+        if (chk.type === 'port' && (!chk.port || chk.port < 1)) return t('chn_g_port');
+        if ((chk.type === 'config') && (!chk.format || !String(chk.key || '').trim())) return t('chn_g_key');
+        return '';
+      };
+      const testB = el('button', 'btn-sec btn-sm', '▶ ' + t('chn_g_test_check'));
+      testB.title = t('chn_g_test_check_h');
+      testB.onclick = () => {
+        err.textContent = '';
+        const m = missing();
+        if (m) { err.textContent = m; return; }
+        const one = Object.assign({}, chk, { id: 'probe', node: node.id, label: chk.label || chk.type });
+        const n1 = Object.assign({}, node);
+        const probe = { name: 'probe', interval_s: 30, confirm: 1, nodes: [n1], checks: [one], links: [], scenarios: [{ id: 'any', label: 'any', when: {} }] };
+        testB.disabled = true;
+        result.className = 'chn-test-result';
+        result.textContent = t('chn_testing');
+        api('POST', '/api/chains/test', { definition: probe }).then((res) => {
+          const r = ((res.state || {}).checks || {}).probe || {};
+          result.className = 'chn-test-result ' + (r.ok ? 'ok' : 'bad');
+          result.textContent = (r.ok ? '✓ ' : '✗ ') + [r.value && r.value !== 'unknown' ? r.value : '', r.detail, r.error].filter(Boolean).join(' · ');
+        }).catch((e) => { result.className = 'chn-test-result bad'; result.textContent = (e.errors && e.errors[0]) || e.message; })
+          .finally(() => { testB.disabled = false; });
+      };
       const save = el('button', 'btn-pri btn-sm', t('chn_g_save'));
       save.onclick = () => {
         err.textContent = '';
-        if (need.includes('target') && !String(chk.target || '').trim()) { err.textContent = t('chn_g_target'); return; }
-        if (chk.type === 'port' && (!chk.port || chk.port < 1)) { err.textContent = t('chn_g_port'); return; }
-        if ((chk.type === 'config') && (!chk.format || !String(chk.key || '').trim())) { err.textContent = t('chn_g_key'); return; }
+        const m = missing();
+        if (m) { err.textContent = m; return; }
         if (!String(chk.label || '').trim()) chk.label = chk.type + (chk.port ? ' ' + chk.port : chk.target ? ' ' + trunc(chk.target, 26) : '');
         if (!chk.id) chk.id = uniqueID(node.id + '-' + chk.type, usedCheckIDs(def));
         dlg.close();
         onSave(chk);
       };
-      form.appendChild(err); form.appendChild(save);
+      const act = el('div', 'chn-row');
+      act.appendChild(testB); act.appendChild(save);
+      form.appendChild(err); form.appendChild(result); form.appendChild(act);
     };
     render();
   }
@@ -2299,30 +2773,23 @@ Object.assign(LANGS.hr, {
     const note = el('div', 'note');
     note.textContent = t('chn_ai_note');
     body.appendChild(note);
-    const ssh = sshConns();
     body.appendChild(el('h5', '', t('chn_ai_pick_servers')));
-    const servers = el('div', 'chn-picklist');
-    if (!ssh.length) body.appendChild(el('div', 'note', t('chn_ai_servers_none')));
-    ssh.forEach((c) => {
-      const l = el('label', 'chn-pick');
-      const cb = el('input'); cb.type = 'checkbox'; cb.value = String(c.id);
-      l.appendChild(cb);
-      l.appendChild(el('span', '', c.name + (c.host ? ' (' + c.host + ')' : '')));
-      servers.appendChild(l);
-    });
-    body.appendChild(servers);
+    const servers = serverPicker({ max: 10 });
+    body.appendChild(servers.el);
     const discoverBtn = el('button', 'btn-sec btn-sm', '🔍 ' + t('chn_ai_analyze'));
     body.appendChild(discoverBtn);
     const factsBox = el('div', 'chn-facts');
     body.appendChild(factsBox);
     discoverBtn.onclick = () => {
-      const ids = Array.from(servers.querySelectorAll('input:checked')).map((x) => Number(x.value));
-      if (!ids.length) { factsBox.textContent = t('chn_ai_servers_none'); return; }
+      const ids = servers.selected();
+      if (!ids.length) { factsBox.textContent = t('chn_sp_pick_one'); return; }
       const old = discoverBtn.textContent;
       discoverBtn.disabled = true;
       discoverBtn.textContent = t('chn_ai_analyzing');
       factsBox.textContent = '';
       api('POST', '/api/chains/discover', { conn_ids: ids }).then((res) => {
+        state.facts = state.facts || {};
+        (res.servers || []).forEach((f) => { state.facts[f.conn_id] = f; });
         (res.servers || []).forEach((f) => {
           const card = el('div', 'chn-fact');
           card.appendChild(el('b', '', f.name + (f.hostname ? ' · ' + f.hostname : '')));
@@ -2374,12 +2841,12 @@ Object.assign(LANGS.hr, {
     body.appendChild(make);
     make.onclick = () => {
       err.textContent = '';
-      const connIDs = servers.querySelectorAll('input:checked');
-      if (!connIDs.length) { err.textContent = t('chn_ai_servers_none'); return; }
+      const connIDs = servers.selected();
+      if (!connIDs.length) { err.textContent = t('chn_sp_pick_one'); return; }
       const storageIDs = Array.from(stores.querySelectorAll('input:checked')).map((x) => Number(x.value));
       const payload = {
         name: name.value.trim(), description: desc.value.trim(),
-        conn_ids: Array.from(connIDs).map((x) => Number(x.value)), storage_ids: storageIDs,
+        conn_ids: connIDs, storage_ids: storageIDs,
         interval_s: Number(interval.value),
       };
       make.disabled = true;
@@ -2450,14 +2917,17 @@ Object.assign(LANGS.hr, {
       return nodes.map((n) => {
         const l = el('label', '', [n.label || n.id, n.role].filter(Boolean).join(' · '));
         const s = el('select');
-        s.appendChild(el('option', '', t('chn_tpl_choose'))).value = '';
-        items.forEach((it) => { const o = el('option', '', labelOf(it)); o.value = String(it.id); s.appendChild(o); });
+        if (kind === 'server') fillConnSelect(s, items, null, 0);
+        else {
+          s.appendChild(el('option', '', t('chn_tpl_choose'))).value = '';
+          items.forEach((it) => { const o = el('option', '', labelOf(it)); o.value = String(it.id); s.appendChild(o); });
+        }
         l.appendChild(s);
         form.appendChild(l);
         return { n, s };
       });
     };
-    const picks = pick('server', ssh, (c) => c.name + (c.host ? ' (' + c.host + ')' : ''))
+    const picks = pick('server', ssh.filter((c) => !c.temporary).sort(connSort), (c) => c.name)
       .concat(pick('storage', storages, (s) => s.name + (s.bucket ? ' · ' + s.bucket : '')));
     form.appendChild(el('div', 'note', t('chn_tpl_after')));
     const errs = el('div', 'chn-errs');
@@ -2483,6 +2953,8 @@ Object.assign(LANGS.hr, {
         picks.filter(({ n, s }) => n.kind === 'storage' && !Number(s.value)).forEach(({ n }) => stripNode(def, n.id));
       }
       if (strict && missingServer) { errs.textContent = t('chn_tpl_missing'); return null; }
+      const ids = picks.filter(({ n }) => n.kind === 'server').map(({ s }) => Number(s.value) || 0).filter(Boolean);
+      if (strict && new Set(ids).size !== ids.length) { errs.textContent = t('chn_tpl_twice'); return null; }
       return { definition: def, enabled: true };
     };
     json.onclick = () => { const v = build(false); if (v) openEditor(null, v); };
