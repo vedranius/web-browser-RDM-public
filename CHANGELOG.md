@@ -1,8 +1,21 @@
-## [Unreleased]
+## [14.3.2] - 2026-11-06
+
+A storage can be edited and removed from the list again, and WRM sends fewer background requests to S3. Upgrading from v14.3.1 keeps the database and the encryption key.
+
+### Added
+
+- **`storage_check_minutes`** (default 15, `0` = off): minutes between the background `HeadBucket` checks behind the status dots and the `storage.down`/`storage.up` alerts.
+- **`chain_storage_check_s`** (default 300, `0` = every poll): a chain's `storage` check asks the bucket at most this often and reuses the last answer in between. A chain polled every 30 seconds used to send a `HEAD`, or a `LIST` for a prefix check, on every poll.
+- **docs/STORAGES.md lists every S3 request** WRM sends per action.
+
+### Changed
+
+- **The background bucket check runs every 15 minutes instead of every 5** (one `HEAD` per storage, no `LIST`).
+- **Editing only the name or the permissions sends no S3 request.** The bucket is checked again only when the endpoint, region, bucket, prefix, keys, TLS fingerprint or encryption change, so a storage can be renamed while its endpoint is down.
 
 ### Fixed
 
-- **A saved storage can be edited and removed.** The storage list now has a pencil and a trash button on every entry, and the selected storage has *Edit* in the toolbar; the edit dialog's **Remove storage** deletes the entry (the bucket and its files are untouched). Previously the delete action existed only inside a dialog that could not be opened for an existing storage.
+- **A saved storage could not be edited or removed.** The storage form and its *Remove storage* button existed, but nothing in the list opened them for an existing storage. The storage list now has a pencil and a trash button on every entry, and the selected storage has *Edit* in the toolbar; the edit dialog's **Remove storage** deletes the entry (the bucket and its files are untouched). After saving, the open storage uses its new permissions straight away. On a phone the list sits above the files.
 
 ## [14.3.1] - 2026-11-05
 

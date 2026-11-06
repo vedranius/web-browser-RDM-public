@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -576,7 +577,43 @@ func chainTLS(ctx context.Context, c chainCheck) chainResult {
 		Detail: "expires " + certs[0].NotAfter.UTC().Format("2006-01-02")}
 }
 
+// chainStorageCache keeps the last answer of each storage check, so a chain that is polled every
+// 30 seconds does not send a HEAD or a LIST to the bucket every 30 seconds: the bucket is asked
+// at most every chain_storage_check_s (default 300 s).
+var chainStorageCache = struct {
+	sync.Mutex
+	m map[string]chainStorageCached
+}{m: map[string]chainStorageCached{}}
+
+type chainStorageCached struct {
+	at  time.Time
+	res chainResult
+}
+
+func chainStorageCacheKey(owner int, node chainNode, c chainCheck) string {
+	return fmt.Sprintf("%d|%d|%s|%d", owner, node.StorageID, c.Prefix, c.MaxAgeS)
+}
+
 func chainStorage(ctx context.Context, c chainCheck, owner int, node chainNode) chainResult {
+	key := chainStorageCacheKey(owner, node, c)
+	every := time.Duration(settingInt("chain_storage_check_s")) * time.Second
+	chainStorageCache.Lock()
+	hit, ok := chainStorageCache.m[key]
+	chainStorageCache.Unlock()
+	if ok && every > 0 && time.Since(hit.at) < every {
+		return hit.res
+	}
+	res := chainStorageAsk(ctx, c, owner, node)
+	chainStorageCache.Lock()
+	if len(chainStorageCache.m) > 2000 {
+		chainStorageCache.m = map[string]chainStorageCached{}
+	}
+	chainStorageCache.m[key] = chainStorageCached{at: time.Now(), res: res}
+	chainStorageCache.Unlock()
+	return res
+}
+
+func chainStorageAsk(ctx context.Context, c chainCheck, owner int, node chainNode) chainResult {
 	s, err := loadStorage(node.StorageID, owner)
 	if err != nil || s.UserID != owner {
 		return chainResult{Value: "unknown", Error: "the storage is not available to the chain's owner"}

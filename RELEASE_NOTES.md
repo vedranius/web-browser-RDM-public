@@ -1,13 +1,33 @@
-## Web Remote Manager PRO v14.3.1 — Log reads and MCP responsiveness
+## Web Remote Manager PRO v14.3.2 — Edit and remove storages, fewer S3 requests
+
+A bug-fix release for the storage section: a saved storage can be edited and removed again, and WRM sends fewer background requests to the bucket.
+
+### Fixed
+
+- **Edit and remove a storage.** Each storage in the list has a ✎ (edit) and a 🗑 (remove) button, and the open storage has *Edit* in the toolbar. The storage form also has *Remove storage*. Before this release the form could only be opened for a new storage. After saving, the open storage uses its new permissions straight away, and on a phone the list sits above the files.
+
+### Changed
+
+- **Fewer background S3 requests.** The background bucket check (one `HEAD` per storage) runs every 15 minutes instead of 5; `storage_check_minutes` changes it and `0` turns it off. A chain's storage check asks the bucket at most every 5 minutes (`chain_storage_check_s`) instead of on every 30-second poll.
+- **Renaming a storage or changing its permissions sends no S3 request**, so it works while the endpoint is down. Changes to the endpoint, region, bucket, prefix or keys are still checked against the bucket.
+- [docs/STORAGES.md](docs/STORAGES.md) lists every S3 request WRM sends per action. Hetzner Object Storage and DigitalOcean Spaces Standard do not bill API requests.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.3.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.2) asset. Preserve the database and encryption key. No database change; two new settings, `storage_check_minutes` and `chain_storage_check_s`.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.3.1 — Log reads and MCP responsiveness
 
 A small bug-fix release for two problems seen in daily use: the AI refusing an ordinary log file, and WRM becoming unreachable while Claude's MCP connection works in parallel with several browser tabs.
 
-### Fixed
+#### Fixed
 
 - **A log glob is not a private key.** `follower.log*` (and other ordinary log globs) was refused as a PuTTY private key because it could theoretically expand to `follower.log.ppk`. Extension-only rules now apply to explicit paths; `server.ppk`, `.key`, `.p12` and `.pfx` files are still refused.
 - **WRM stays reachable with parallel MCP calls and several tabs.** The database pool grew from 8 to 32 connections with idle expiry, and connection/folder lists load their labels in one query instead of one per row. Eight MCP tool calls plus browser tabs could previously hold every connection in a nested lookup, leaving the UI waiting until a service restart; closing tabs is no longer needed.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.3.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.3.1) asset. Preserve the database and encryption key. No database or setting change.
 

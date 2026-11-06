@@ -129,6 +129,10 @@ Object.assign(LANGS.hr, {
 .stg-form .row2 { display:flex; gap:10px; }
 .stg-form .row2 .field { flex:1; }
 .stg-hintx { font-size:10.5px; color:var(--text3); margin-top:3px; }
+@media (max-width:640px) {
+  .stg-wrap { flex-direction:column; height:92vh; }
+  .stg-side { width:auto; min-width:0; max-height:32vh; border-right:0; border-bottom:1px solid var(--border2); }
+}
 `;
     document.head.appendChild(s);
   }
@@ -222,6 +226,13 @@ Object.assign(LANGS.hr, {
   function loadList() {
     api('GET', '/api/storages').then((list) => {
       state.list = list || [];
+      // After an edit the open storage gets its new settings (permissions, prefix) from the list.
+      if (state.current) {
+        const fresh = state.list.find((x) => x.id === state.current.id);
+        if (!fresh) state.current = null;
+        else if (fresh.updated_at !== state.current.updated_at) { selectStorage(fresh.id); return; }
+        else state.current = fresh;
+      }
       renderList();
       if (state.list.length && !state.current) selectStorage(state.list[0].id);
       else if (!state.list.length) { state.current = null; renderBrowser(); }
