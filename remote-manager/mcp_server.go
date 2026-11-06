@@ -575,6 +575,7 @@ func mcpToolList(g *mcpGrant) []map[string]interface{} {
 		out = append(out, map[string]interface{}{"name": t.Def.Name, "description": desc, "inputSchema": schema, "annotations": ann})
 	}
 	out = append(out, mcpStorageTools(g)...)
+	out = append(out, mcpChainTools(g)...)
 	return out
 }
 
@@ -646,6 +647,10 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		return
 	case "storage_list", "storage_read", "storage_write", "storage_delete":
 		mcpStorageCall(w, r, g, m, p.Name, p.Arguments)
+		return
+	}
+	if isMCPChainTool(p.Name) {
+		mcpChainCall(w, r, g, m, p.Name, p.Arguments)
 		return
 	}
 	if _, ok := aiToolSpecFor(p.Name); !ok {

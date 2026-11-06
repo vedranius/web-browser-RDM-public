@@ -9,6 +9,16 @@ Object.assign(LANGS.en, {
   stg_search_ph: 'Search this folder…', stg_sort: 'Sort',
   stg_sort_name: 'Name', stg_sort_size: 'Size', stg_sort_date: 'Date', stg_sort_asc: 'Ascending', stg_sort_desc: 'Descending',
   stg_select_all: 'Select all', stg_total: 'Objects: {n} · Folders: {m} · {size}', stg_loading_n: 'Loaded: {n} objects…',
+  stg_act_title: 'S3 activity', stg_act_toggle: 'Show or hide the S3 requests WRM sends',
+  stg_act_hide: 'Hide the activity panel (the 📡 button shows it again)',
+  stg_act_none: 'No request to this storage yet.', stg_act_since: 'Counted since {t} (WRM start or first request).',
+  stg_act_today: 'today', stg_act_total: 'total', stg_act_free: 'free', stg_act_billed: 'billed',
+  stg_act_not_listed: 'no request fee in the price list', stg_act_unknown: 'unknown',
+  stg_act_cost: 'Requests counted here: about {c} {cur} in total, {d} today (before free allowances; storage and egress are billed separately).',
+  stg_act_src_user: 'you', stg_act_src_background: 'background check', stg_act_src_chain: 'chain', stg_act_src_ai: 'AI connection', stg_act_src_check: 'connection check',
+  stg_act_sources: 'Source', stg_act_checked: 'checked {d}',
+  stg_provider: 'Provider',
+  stg_pricing_title: 'What this provider bills for the requests WRM sends',
   stg_all_shown: 'all objects in this folder are shown', stg_filtered: 'Showing {x} of {y} objects',
   stg_no_match: 'No objects match the search.', stg_delete_selected: 'Delete selected ({n})',
   stg_delete_selected_q: 'Delete {n} selected objects? This cannot be undone.', stg_deleted_some: 'Deleted {n} objects.',
@@ -38,6 +48,16 @@ Object.assign(LANGS.hr, {
   stg_search_ph: 'Pretraži ovu mapu…', stg_sort: 'Sortiraj',
   stg_sort_name: 'Naziv', stg_sort_size: 'Veličina', stg_sort_date: 'Datum', stg_sort_asc: 'Uzlazno', stg_sort_desc: 'Silazno',
   stg_select_all: 'Odaberi sve', stg_total: 'Objekti: {n} · Mape: {m} · {size}', stg_loading_n: 'Učitano: {n} objekata…',
+  stg_act_title: 'S3 aktivnost', stg_act_toggle: 'Prikaži ili sakrij S3 zahtjeve koje WRM šalje',
+  stg_act_hide: 'Sakrij panel aktivnosti (gumb 📡 ga ponovno prikazuje)',
+  stg_act_none: 'Još nema zahtjeva prema ovom storageu.', stg_act_since: 'Broji se od {t} (pokretanje WRM-a ili prvi zahtjev).',
+  stg_act_today: 'danas', stg_act_total: 'ukupno', stg_act_free: 'besplatno', stg_act_billed: 'naplaćuje se',
+  stg_act_not_listed: 'u cjeniku nema naknade po zahtjevu', stg_act_unknown: 'nepoznato',
+  stg_act_cost: 'Ovdje izbrojani zahtjevi: oko {c} {cur} ukupno, {d} danas (prije besplatnih kvota; prostor i promet naplaćuju se posebno).',
+  stg_act_src_user: 'vi', stg_act_src_background: 'provjera u pozadini', stg_act_src_chain: 'lanac', stg_act_src_ai: 'AI veza', stg_act_src_check: 'provjera veze',
+  stg_act_sources: 'Izvor', stg_act_checked: 'provjereno {d}',
+  stg_provider: 'Provider',
+  stg_pricing_title: 'Što ovaj provider naplaćuje za zahtjeve koje WRM šalje',
   stg_all_shown: 'prikazani su svi objekti ove mape', stg_filtered: 'Prikazano {x} od {y} objekata',
   stg_no_match: 'Nijedan objekt ne odgovara pretrazi.', stg_delete_selected: 'Obriši odabrano ({n})',
   stg_delete_selected_q: 'Obrisati {n} odabranih objekata? To se ne može poništiti.', stg_deleted_some: 'Obrisano {n} objekata.',
@@ -129,9 +149,33 @@ Object.assign(LANGS.hr, {
 .stg-form .row2 { display:flex; gap:10px; }
 .stg-form .row2 .field { flex:1; }
 .stg-hintx { font-size:10.5px; color:var(--text3); margin-top:3px; }
+.stg-act { width:300px; min-width:240px; border-left:1px solid var(--border2); display:flex; flex-direction:column; font-size:11px; }
+.stg-act.off { display:none; }
+.stg-act-head { padding:10px 12px; border-bottom:1px solid var(--border2); display:flex; align-items:center; gap:6px; }
+.stg-act-head b { flex:1; font-size:12.5px; }
+.stg-act-sum { padding:8px 12px; border-bottom:1px solid var(--border2); line-height:1.45; color:var(--text2); max-height:48%; overflow:auto; }
+.stg-act-sum table { width:100%; border-collapse:collapse; margin:6px 0; }
+.stg-act-sum td { padding:2px 3px; border-bottom:1px solid var(--border2); }
+.stg-act-sum td.n { text-align:right; font-variant-numeric:tabular-nums; }
+.stg-act-sum .free { color:#3fb950; } .stg-act-sum .paid { color:#d29922; }
+.stg-act-sum a { color:var(--accent); word-break:break-all; }
+.stg-act-list { flex:1; overflow:auto; padding:4px 0; font-family:var(--font-mono); font-size:10.5px; }
+.stg-act-row { padding:3px 12px; border-bottom:1px solid var(--border2); }
+.stg-act-row .op { font-weight:600; color:var(--text); }
+.stg-act-row .k { color:var(--text3); word-break:break-all; }
+.stg-act-row.bad .op { color:#f85149; }
+.stg-act-row.fresh { background:var(--bg3); }
+.stg-price { border:1px solid var(--border2); border-radius:8px; padding:8px 10px; font-size:11px; line-height:1.45; margin:6px 0 10px; background:var(--bg3); }
+.stg-price b { display:block; margin-bottom:3px; }
+.stg-price a { color:var(--accent); word-break:break-all; }
+@media (max-width:900px) { .stg-act { width:240px; min-width:200px; } }
 @media (max-width:640px) {
   .stg-wrap { flex-direction:column; height:92vh; }
   .stg-side { width:auto; min-width:0; max-height:32vh; border-right:0; border-bottom:1px solid var(--border2); }
+  .stg-act { width:auto; max-height:30vh; border-left:0; border-top:1px solid var(--border2); }
+  .stg-row { flex-wrap:wrap; gap:6px; }
+  .stg-row .k { flex:1 1 100%; }
+  .stg-row .d { display:none; }
 }
 `;
     document.head.appendChild(s);
@@ -157,6 +201,12 @@ Object.assign(LANGS.hr, {
 
   function overlay() { return document.getElementById('stg-overlay'); }
 
+  let providerList = null;
+  function providers() {
+    if (providerList) return Promise.resolve(providerList);
+    return api('GET', '/api/storages/providers').then((r) => { providerList = (r && r.providers) || []; return providerList; });
+  }
+
   function shell() {
     let ov = overlay();
     if (ov) return ov;
@@ -171,6 +221,7 @@ Object.assign(LANGS.hr, {
           <button class="btn-sec btn-sm" id="stg-upload" style="display:none;">⬆ ${esc(t('stg_upload'))}</button>
           <button class="btn-sec btn-sm" id="stg-newdir" style="display:none;">＋ ${esc(t('stg_new_folder'))}</button>
           <button class="btn-sec btn-sm" id="stg-edit" style="display:none;">✎ ${esc(t('stg_edit'))}</button>
+          <button class="btn-sec btn-sm" id="stg-act-toggle" title="${esc(t('stg_act_toggle'))}" aria-label="${esc(t('stg_act_toggle'))}">📡</button>
           <button class="btn-sec btn-sm" id="stg-refresh">↻</button>
           <button class="btn-sec btn-sm" id="stg-close">✕</button>
         </div>
@@ -189,11 +240,17 @@ Object.assign(LANGS.hr, {
         <div class="stg-rows" id="stg-rows"></div>
         <div class="stg-more" id="stg-more" style="display:none;"><button class="btn-sec btn-sm" id="stg-more-btn">${esc(t('stg_load_more'))}</button></div>
         <div class="stg-empty" id="stg-hint" style="display:none;"></div>
-      </div></div>`;
+      </div>
+      <div class="stg-act" id="stg-act"><div class="stg-act-head"><b>📡 ${esc(t('stg_act_title'))}</b>
+        <button class="btn-sec btn-sm" id="stg-act-hide" title="${esc(t('stg_act_hide'))}" aria-label="${esc(t('stg_act_hide'))}">✕</button></div>
+        <div class="stg-act-sum" id="stg-act-sum"></div><div class="stg-act-list" id="stg-act-list"></div></div></div>`;
     document.body.appendChild(ov);
     ov.addEventListener('mousedown', (e) => { if (e.target === ov) close(); });
     ov.querySelector('#stg-close').onclick = close;
     ov.querySelector('#stg-add').onclick = () => editStorage(null);
+    ov.querySelector('#stg-act-toggle').onclick = () => setActivityShown(!activityShown());
+    ov.querySelector('#stg-act-hide').onclick = () => setActivityShown(false);
+    applyActivityShown();
     ov.querySelector('#stg-edit').onclick = () => state.current && editStorage(state.current);
     ov.querySelector('#stg-refresh').onclick = () => loadPrefix(state.prefix);
     ov.querySelector('#stg-upload').onclick = uploadFile;
@@ -273,8 +330,133 @@ Object.assign(LANGS.hr, {
   function selectStorage(id) {
     state.current = state.list.find((x) => x.id === id) || null;
     state.prefix = '';
+    state.act = null;
     renderList();
+    loadActivity();
     loadPrefix('');
+  }
+
+  // ─── S3 activity: every request WRM sends to the open storage, live ──────────────────────
+  // Shown by default; the 📡 button hides it, and the choice is remembered in this browser.
+  function activityShown() { try { return localStorage.getItem('wrm.storages.activity') !== '0'; } catch (_) { return true; } }
+  function setActivityShown(on) {
+    try { localStorage.setItem('wrm.storages.activity', on ? '1' : '0'); } catch (_) { /* private mode */ }
+    applyActivityShown();
+  }
+  function applyActivityShown() {
+    const box = $('#stg-act'), btn = $('#stg-act-toggle');
+    const on = activityShown();
+    if (box) box.classList.toggle('off', !on);
+    if (btn) { btn.className = (on ? 'btn-pri' : 'btn-sec') + ' btn-sm'; btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  }
+
+  function loadActivity() {
+    const s = state.current;
+    renderActivity();
+    if (!s) return;
+    api('GET', `/api/storages/${s.id}/activity`).then((v) => {
+      if (!state.current || state.current.id !== s.id) return;
+      const early = state.act && state.act.ops ? state.act.ops : [];
+      state.act = v;
+      // requests that arrived live before the snapshot are already in it; keep only newer ones
+      const seen = new Set((v.ops || []).map((o) => o.at + o.op));
+      state.act.counts = state.act.counts || {};
+      early.forEach((o) => {
+        if (seen.has(o.at + o.op)) return;
+        state.act.ops.push(o);
+        // the snapshot was taken before this request, so its counters do not include it yet
+        bumpCount(state.act.counts, o.op);
+      });
+      renderActivity();
+    }).catch(() => {});
+  }
+
+  // A live request from the server (WebSocket): added to the list and the counts.
+  // Operation names WRM records (storage_activity.go s3OpName); anything else is not counted.
+  const S3_OPS = ['HeadBucket', 'ListObjects', 'ListObjectsV2', 'GetObject', 'HeadObject', 'PutObject', 'CopyObject', 'DeleteObject'];
+  function bumpCount(counts, op) {
+    const k = S3_OPS.find((x) => x === op);
+    if (!k) return;
+    const c = Object.prototype.hasOwnProperty.call(counts, k) ? counts[k] : { total: 0, today: 0 };
+    c.total++; c.today++;
+    counts[k] = c;
+  }
+
+  function liveOp(m) {
+    const s = state.current;
+    if (!s || !m || m.storage_id !== s.id || !m.op) return;
+    if (!state.act) state.act = { ops: [], counts: {}, pending: true };
+    const a = state.act;
+    a.ops = (a.ops || []).concat([m.op]).slice(-300);
+    if (!a.pending) {
+      a.counts = a.counts || {};
+      bumpCount(a.counts, m.op.op);
+    }
+    a.fresh = m.op.at;
+    if (!state.actRaf) state.actRaf = requestAnimationFrame(() => { state.actRaf = 0; renderActivity(); });
+  }
+
+  function srcLabel(src) {
+    const retry = / \(retry\)$/.test(src || '');
+    const base = (src || 'user').replace(/ \(retry\)$/, '');
+    const k = 'stg_act_src_' + base;
+    return (LANGS.en[k] ? t(k) : base) + (retry ? ' ↻' : '');
+  }
+
+  function money(v) { return !v ? '0' : (v < 0.01 ? v.toFixed(6) : v.toFixed(4)); }
+  function uiLang() { return (typeof currentLang !== 'undefined' && currentLang === 'hr') ? 'hr' : 'en'; }
+
+  function renderActivity() {
+    const sum = $('#stg-act-sum'), list = $('#stg-act-list');
+    if (!sum || !list) return;
+    sum.textContent = ''; list.textContent = '';
+    const a = state.act;
+    if (!state.current || !a || a.pending) return;
+    const p = a.pricing || {};
+    const lang = uiLang();
+    sum.appendChild(el('b', '', p.name || ''));
+    sum.appendChild(el('div', '', (p.summary && (p.summary[lang] || p.summary.en)) || ''));
+    const tbl = el('table');
+    const head = el('tr');
+    ['', t('stg_act_today'), t('stg_act_total'), ''].forEach((h, i) => head.appendChild(el('td', i ? 'n' : '', h)));
+    tbl.appendChild(head);
+    const counts = a.counts || {};
+    const rows = (a.estimate && a.estimate.rows) || [];
+    let costT = 0, costD = 0;
+    rows.forEach((r) => {
+      const c = counts[r.op] || { total: 0, today: 0 };
+      const tr = el('tr');
+      tr.appendChild(el('td', '', r.op));
+      tr.appendChild(el('td', 'n', String(c.today || 0)));
+      tr.appendChild(el('td', 'n', String(c.total || 0)));
+      let txt, cls;
+      if (r.billed === true) { txt = t('stg_act_billed'); cls = 'paid'; }
+      else if (r.billed === false) { txt = r.note === 'not_listed' ? t('stg_act_not_listed') : t('stg_act_free'); cls = 'free'; }
+      else { txt = t('stg_act_unknown'); cls = ''; }
+      if (r.price_per_request) { costT += r.price_per_request * (c.total || 0); costD += r.price_per_request * (c.today || 0); }
+      tr.appendChild(el('td', cls, txt));
+      tbl.appendChild(tr);
+    });
+    sum.appendChild(tbl);
+    if (p.billed === 'yes') sum.appendChild(el('div', '', fmt(t('stg_act_cost'), { c: money(costT), d: money(costD), cur: p.currency || '' })));
+    if (a.since) sum.appendChild(el('div', '', fmt(t('stg_act_since'), { t: new Date(a.since).toLocaleString() })));
+    (p.sources || []).forEach((u) => {
+      const d = el('div'); d.appendChild(document.createTextNode(t('stg_act_sources') + ': '));
+      const link = el('a', '', u); link.href = u; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      d.appendChild(link); sum.appendChild(d);
+    });
+    if (p.checked) sum.appendChild(el('div', '', fmt(t('stg_act_checked'), { d: p.checked })));
+    const ops = (a.ops || []).slice().reverse();
+    if (!ops.length) { list.appendChild(el('div', 'stg-act-row', t('stg_act_none'))); return; }
+    ops.forEach((o) => {
+      const bad = !!o.error || o.status >= 400;
+      const row = el('div', 'stg-act-row' + (bad ? ' bad' : '') + (o.at === a.fresh ? ' fresh' : ''));
+      row.appendChild(el('span', '', new Date(o.at).toLocaleTimeString() + ' '));
+      row.appendChild(el('span', 'op', o.op));
+      row.appendChild(el('span', '', ` ${o.error ? o.error : o.status} · ${o.ms} ms · ${srcLabel(o.source)}`));
+      if (o.key) row.appendChild(el('div', 'k', o.key));
+      list.appendChild(row);
+    });
   }
 
   function can(cap) {
@@ -844,6 +1026,8 @@ Object.assign(LANGS.hr, {
     const ov = el('div', 'modal-overlay open');
     ov.innerHTML = `<div class="modal stg-form">
       <h3>${isNew ? esc(t('stg_add')) : esc(t('stg_edit'))}</h3>
+      <div class="field"><label for="stg-f-provider">${esc(t('stg_provider'))}</label><select id="stg-f-provider"></select></div>
+      <div class="stg-price" id="stg-f-price" style="display:none;"></div>
       <div class="field"><label for="stg-f-name">${esc(t('stg_name'))}</label><input id="stg-f-name" type="text" value="${esc(src.name)}"></div>
       <div class="row2">
         <div class="field"><label for="stg-f-endpoint">${esc(t('stg_endpoint'))}</label><input id="stg-f-endpoint" type="url" placeholder="https://fsn1.your-objectstorage.com" value="${esc(src.endpoint)}"></div>
@@ -882,7 +1066,38 @@ Object.assign(LANGS.hr, {
       allow_upload: document.getElementById('stg-f-upload').checked,
       allow_delete: document.getElementById('stg-f-delete').checked,
       max_object_mb: src.max_object_mb || 16, sse: src.sse || '',
+      provider: (document.getElementById('stg-f-provider') || {}).value || '',
     });
+    // Provider: fills the usual endpoint and path style and says what the provider bills for
+    // the requests WRM sends, with the price page it comes from.
+    const provSel = document.getElementById('stg-f-provider');
+    const priceBox = document.getElementById('stg-f-price');
+    const showPrice = (p) => {
+      priceBox.textContent = '';
+      if (!p) { priceBox.style.display = 'none'; return; }
+      priceBox.style.display = '';
+      priceBox.appendChild(el('b', '', t('stg_pricing_title')));
+      priceBox.appendChild(el('div', '', (p.summary && (p.summary[uiLang()] || p.summary.en)) || ''));
+      if (p.quote) priceBox.appendChild(el('div', 'stg-hintx', p.quote));
+      (p.sources || []).forEach((u) => { const d = el('div'); const a = el('a', '', u); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; d.appendChild(a); priceBox.appendChild(d); });
+      if (p.checked) priceBox.appendChild(el('div', 'stg-hintx', fmt(t('stg_act_checked'), { d: p.checked })));
+    };
+    providers().then((list) => {
+      provSel.textContent = '';
+      list.forEach((p) => { const o = el('option', '', p.name); o.value = p.id; provSel.appendChild(o); });
+      provSel.value = src.provider || (isNew ? 'hetzner' : 'other');
+      const pick = (fill) => {
+        const p = list.find((x) => x.id === provSel.value);
+        showPrice(p);
+        if (!p || !fill) return;
+        const ep = document.getElementById('stg-f-endpoint'), rg = document.getElementById('stg-f-region');
+        if (p.endpoint_hint) ep.placeholder = p.endpoint_hint;
+        if (p.region_hint) rg.placeholder = p.region_hint;
+        document.getElementById('stg-f-path').checked = !!p.path_style;
+      };
+      provSel.onchange = () => pick(true);
+      pick(isNew);
+    }).catch(() => { provSel.style.display = 'none'; });
     document.getElementById('stg-f-cancel').onclick = () => ov.remove();
     document.getElementById('stg-f-test').onclick = (ev) => {
       const btn = ev.currentTarget;
@@ -915,6 +1130,7 @@ Object.assign(LANGS.hr, {
   window.wrmStorages = {
     open,
     close,
+    op: liveOp,
     _state: state,
     reload: () => loadPrefix(state.prefix),
   };

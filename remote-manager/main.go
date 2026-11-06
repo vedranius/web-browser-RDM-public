@@ -39,7 +39,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v14.3.2"
+var AppVersion = "v14.4.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -1122,12 +1122,14 @@ func initDB() {
 		"id", "user_id", "name", "kind", "endpoint", "region", "bucket", "prefix", "path_style",
 		"access_key", "secret", "ca_fingerprint", "sse", "allow_write", "allow_delete", "allow_upload",
 		"max_object_mb", "created_at", "updated_at")
+	db.Exec(`ALTER TABLE storages ADD COLUMN provider TEXT NOT NULL DEFAULT ''`) // v14.4.0
 	ensureTable("chains", chainSchema,
 		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
 	ensureTable("chain_samples", chainSampleSchema,
 		"id", "chain_id", "at", "kind", "subject", "old_value", "new_value", "ok")
 	ensureTable("chain_drafts", chainDraftSchema,
 		"id", "user_id", "session_id", "name", "definition", "created_at", "updated_at")
+	initChainAISchema()
 	ensureTable("snippets", `CREATE TABLE IF NOT EXISTS snippets (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,

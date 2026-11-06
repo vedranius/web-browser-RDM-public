@@ -7,10 +7,12 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,7 +38,13 @@ type s3Config struct {
 	CAFingerprint string // hex SHA-256 of the leaf certificate; "" verifies the chain normally
 	SSE           string // "" | AES256 | aws:kms
 	PathStyle     bool
+	StorageID     int // for the activity log only (storage_activity.go); 0 = not saved yet
+	OwnerID       int
 }
+
+// s3RequestURL is the shape every request URL must have: http(s), a host without user info,
+// then the path and query. The endpoint itself was checked by guardEgressURL when saved.
+var s3RequestURL = regexp.MustCompile(`^https?://[^\s/?#@]+([/?#][^\s]*)?$`)
 
 type s3Client struct {
 	cfg  s3Config
@@ -269,8 +277,12 @@ func (c *s3Client) do(ctx context.Context, method, key string, q url.Values, bod
 		if body != nil {
 			rdr = bytes.NewReader(body)
 		}
+		target := u.String()
+		if !s3RequestURL.MatchString(target) {
+			return nil, errors.New("the storage endpoint is not a valid http(s) address")
+		}
 		// #nosec G704 -- the endpoint is entered by an administrator and checked by guardEgressURL (metadata, link-local, egress policy)
-		req, err := http.NewRequestWithContext(ctx, method, u.String(), rdr)
+		req, err := http.NewRequestWithContext(ctx, method, target, rdr)
 		if err != nil {
 			return nil, err
 		}
@@ -283,8 +295,23 @@ func (c *s3Client) do(ctx context.Context, method, key string, q url.Values, bod
 			}
 		}
 		c.sign(req, body, "")
+		start := time.Now()
 		// #nosec G704 -- same endpoint, already validated when the storage was saved
 		resp, err := c.http.Do(req)
+		op := storageOp{At: start.UTC().Format(time.RFC3339Nano), Op: s3OpName(method, key, q, hdr), Method: method,
+			Key: storageOpKey(c.cfg, key), Ms: time.Since(start).Milliseconds(), Bytes: int64(len(body)), Source: storageSourceOf(ctx)}
+		if attempt > 0 {
+			op.Source += " (retry)"
+		}
+		if err != nil {
+			op.Error = storageOpError(err)
+		} else {
+			op.Status = resp.StatusCode
+			if resp.ContentLength > 0 && method == http.MethodGet {
+				op.Bytes = resp.ContentLength
+			}
+		}
+		recordStorageOp(c.cfg, op)
 		if err != nil {
 			lastErr = fmt.Errorf("cannot reach the storage: %w", err)
 			if ctx.Err() != nil {

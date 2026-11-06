@@ -105,9 +105,76 @@ WRM never polls a folder or an object. Apart from the two background checks belo
 | Rename | `HEAD` ×2 + `PUT` copy + `DELETE` |
 | Delete | `HEAD` (size for the audit log) + `DELETE` |
 
-Hetzner Object Storage and DigitalOcean Spaces Standard do not bill API requests (they bill
-storage and outbound traffic); Amazon S3 and some other providers do. DigitalOcean rate-limits
-LIST requests under load, which a big folder in the browser can reach.
+A retried request (WRM retries a 5xx answer up to twice) is a request of its own and is counted
+as such in the activity panel.
+
+## What each provider bills
+
+Checked on 2026-11-06 against the providers' own pages; prices change, so the storage form and
+the activity panel always link the source. Storage and egress are billed separately by every
+provider and are not part of this table.
+
+| Operation WRM sends | Hetzner | DigitalOcean Spaces | Amazon S3 (Standard, us-east-1) | Backblaze B2 | Cloudflare R2 (Standard) |
+|---|---|---|---|---|---|
+| HeadBucket | free | not in the price list | GET/other: USD 0.0004 / 1,000 | Class C: free | Class B: USD 0.36 / million |
+| ListObjectsV2 | free | not in the price list | LIST: USD 0.005 / 1,000 | Class C: free | Class A: USD 4.50 / million |
+| GetObject | free | not in the price list | GET: USD 0.0004 / 1,000 | Class B: free | Class B: USD 0.36 / million |
+| HeadObject | free | not in the price list | GET/other: USD 0.0004 / 1,000 | Class B: free | Class B: USD 0.36 / million |
+| PutObject | free | not in the price list | PUT: USD 0.005 / 1,000 | Class A: free | Class A: USD 4.50 / million |
+| CopyObject | free | not in the price list | COPY: USD 0.005 / 1,000 | Class C: free | Class A: USD 4.50 / million |
+| DeleteObject | free | not in the price list | free | Class A: free | free |
+
+- **Hetzner Object Storage.** The FAQ on the
+  [pricing page](https://www.hetzner.com/storage/object-storage/pricing/) ("What traffic is free
+  of charge?") says: "S3 API calls such as PUT, GET, or DELETE requests". The
+  [documentation](https://docs.hetzner.com/storage/object-storage/overview) ("Pricing") says:
+  "S3 operations such as PUT, GET, or DELETE", with the note that the egress the operations cause
+  is billed. Hetzner bills a base price of EUR 6.49 per month, which includes 1 TB of storage and
+  1 TB of egress, plus extra storage and egress. Objects under 64 KB are billed as 64 KB.
+- **DigitalOcean Spaces.** The [pricing page](https://docs.digitalocean.com/products/spaces/details/pricing/)
+  lists only these charges:
+  - the subscription (USD 5 per month, including 250 GiB of storage and 1,024 GiB of outbound transfer);
+  - extra storage (USD 0.02 per GiB);
+  - extra outbound transfer (USD 0.01 per GiB).
+
+  There is no fee per request, but the documentation does not say in so many words that requests
+  are free. The [limits page](https://docs.digitalocean.com/products/spaces/details/limits/)
+  limits new buckets to 800 operations per second and says LIST "may be rate-limited further"
+  under high load. A very large folder in the browser (one LIST per 1,000 objects) is where WRM
+  can come close. The minimum billable object size is 4 KiB.
+- **Amazon S3.** The [pricing page](https://aws.amazon.com/s3/pricing/) says: "You pay for requests
+  made against your S3 buckets and objects", and "LIST requests … are charged at the same rate as
+  S3 Standard PUT, COPY, and POST requests. DELETE and CANCEL requests are free." The
+  [usage report reference](https://docs.aws.amazon.com/AmazonS3/latest/userguide/aws-usage-report-understand.html)
+  puts PUT, COPY, POST and LIST in Requests-Tier1, and GET and "all other non-Tier1 requests"
+  (HEAD) in Requests-Tier2. The prices in the table are the usual S3 Standard us-east-1 figures.
+  WRM could not read the AWS price table itself when this was written, and other regions cost
+  more, so check the table for your region.
+- **Backblaze B2.** The [transaction pricing page](https://www.backblaze.com/cloud-storage/transaction-pricing)
+  lists Class A, B and C calls as "Cost: Free". Backblaze bills storage after the first 10 GB, and
+  egress beyond 3 times the average stored data.
+- **Cloudflare R2.** The [pricing page](https://developers.cloudflare.com/r2/pricing/) lists
+  ListObjects, PutObject and CopyObject as Class A, HeadBucket, HeadObject and GetObject as
+  Class B, and DeleteObject as free. Each month the first 1 million Class A and 10 million Class B
+  requests are free. Egress is free.
+- **MinIO** and other self-hosted servers have no request fees. For any **other** provider WRM
+  does not know the prices; the activity panel still counts every request.
+
+## S3 activity panel
+
+The storage window shows the requests WRM sends to the open storage live, in a panel beside the
+file browser. Each line gives:
+- the time, the S3 operation and the key (inside the storage prefix);
+- the HTTP answer or the error, and how long the request took;
+- what caused it: *you* (the file window), *background check*, *chain*, *AI connection* or
+  *connection check*; a retry is marked ↻.
+
+Above the list, each operation is counted for today and since WRM started (or the first request).
+For the storage's provider each count is marked free or billed, and the panel estimates the cost
+of the billed requests before any free allowance. The panel is shown by default; ✕ or the 📡
+button hides it, and the browser remembers the choice. The counts live in memory only and hold no
+secret and no object content. The checks *Test connection* runs before a storage is saved are not
+counted, because the storage does not exist yet.
 
 ## Troubleshooting
 

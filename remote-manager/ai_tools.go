@@ -113,13 +113,12 @@ var aiTools = []aiToolSpec{
 			"reason": strProp("One sentence for the user: why run it")}, "id", "export", "reason")}},
 	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_install_community", Description: "Install one addon from the community index. The download must match the SHA-256 in the index and then passes the same archive checks as an upload. Needs the user's approval in every mode.",
 		Schema: obj(map[string]interface{}{"community_id": strProp("Addon id from the community index"), "reason": strProp("One sentence for the user: why install it")}, "community_id", "reason")}},
-	// Chains: the built-in assistant drafts a chain and the user approves it. A draft is not
-	// monitored and never runs a command; the write tool is not offered to MCP clients yet.
-	{Kind: "read", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_status", Description: "List this user's chains with their state, and every SSH connection, storage and check type a new chain may use. Start here, then explore the server with the read tools you already have, before drafting a chain.",
-		Schema: obj(map[string]interface{}{})}},
-	{Kind: "write", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_draft", Description: "Create or replace this assistant session's chain draft. The definition may use only catalog check types and this user's own conn_id and storage_id values (chain_status lists them). Nothing is monitored and no command runs: the draft waits in the Chains window, where the user reviews it on the live diagram and approves it. If validation answers with errors, fix the definition and call again.",
-		Schema: obj(map[string]interface{}{"definition": map[string]interface{}{"type": "object", "description": "Chain definition: name, description, interval_s, confirm, nodes, checks, links, scenarios", "additionalProperties": true},
-			"reason": strProp("One sentence for the user: what this chain is for")}, "definition", "reason")}},
+	// Chains: the assistant reads, tests and drafts chains; the user applies every draft. MCP
+	// clients get the same tools without a server session (mcp_chains.go, scope chains).
+	{Kind: "read", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_status", Description: chainToolDesc["chain_status"], Schema: obj(map[string]interface{}{})}},
+	{Kind: "read", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_get", Description: chainToolDesc["chain_get"], Schema: chainGetSchema()}},
+	{Kind: "read", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_test", Description: chainToolDesc["chain_test"], Schema: chainTestSchema()}},
+	{Kind: "write", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_draft", Description: chainToolDesc["chain_draft"], Schema: chainDraftSchemaJSON()}},
 }
 
 // aiScopesFor lists the MCP scopes that allow a tool (any one of them is enough).
@@ -253,6 +252,8 @@ type aiToolInput struct {
 	CommunityID   string            `json:"community_id"`
 	// chain tools (host, built-in assistant)
 	Definition json.RawMessage `json:"definition"`
+	ChainID    int             `json:"chain_id"`
+	DraftID    int             `json:"draft_id"`
 }
 
 var (

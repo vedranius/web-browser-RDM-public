@@ -132,6 +132,30 @@ Object.assign(LANGS.hr, {
   chn_draft_untitled: 'Skica bez naziva', chn_draft_counts: 'Čvorovi: {n} · Provjere: {c}',
 });
 
+// v14.4.0: AI inside the builder (change, test) and drafts that change an existing chain.
+Object.assign(LANGS.en, {
+  chn_ai_btn: 'AI', chn_ai_btn_t: 'Ask the AI to add, change or check something in this chain',
+  chn_ai_ph: 'For example: add a TLS check for example.com on the CDN node, or check why the backup path is red',
+  chn_ai_send: 'Ask AI', chn_ai_working: 'The AI is working…', chn_ai_close: 'Close',
+  chn_ai_hint: 'The AI reads this chain and its last results and writes a draft. Nothing changes until you apply it.',
+  chn_ai_result: 'The AI wrote a draft', chn_test: 'Test once', chn_testing: 'Testing…',
+  chn_test_done: 'Tested once: {ok} OK, {bad} failed. Nothing was saved.',
+  chn_apply: 'Apply changes', chn_apply_q: 'Apply this draft to the chain {name}? The chain keeps its id and history and is checked with the new definition from now on.',
+  chn_applied: 'The chain was updated.', chn_draft_for: 'Changes for {name}',
+  chn_draft_for_note: 'This draft changes an existing chain. The live chain keeps running unchanged until you press Apply changes.',
+});
+Object.assign(LANGS.hr, {
+  chn_ai_btn: 'AI', chn_ai_btn_t: 'Zamolite AI da nešto doda, izmijeni ili provjeri u ovom lancu',
+  chn_ai_ph: 'Na primjer: dodaj TLS provjeru za example.com na CDN čvor, ili provjeri zašto je backup put crven',
+  chn_ai_send: 'Pitaj AI', chn_ai_working: 'AI radi…', chn_ai_close: 'Zatvori',
+  chn_ai_hint: 'AI čita ovaj lanac i zadnje rezultate i piše skicu. Ništa se ne mijenja dok je ne primijenite.',
+  chn_ai_result: 'AI je napisao skicu', chn_test: 'Provjeri jednom', chn_testing: 'Provjeravam…',
+  chn_test_done: 'Provjereno jednom: u redu {ok}, ne valja {bad}. Ništa nije spremljeno.',
+  chn_apply: 'Primijeni izmjene', chn_apply_q: 'Primijeniti ovu skicu na lanac {name}? Lanac zadržava id i povijest, a od sada se provjerava prema novoj definiciji.',
+  chn_applied: 'Lanac je ažuriran.', chn_draft_for: 'Izmjene za {name}',
+  chn_draft_for_note: 'Ova skica mijenja postojeći lanac. Lanac i dalje radi nepromijenjen dok ne pritisnete Primijeni izmjene.',
+});
+
 // Step 4: the guided builder, the visual connections and the AI wizard.
 Object.assign(LANGS.en, {
   chn_build: 'Build a chain', chn_build_ai: 'Build with AI', chn_build_ai_d: 'Choose the servers, describe the system in one sentence; WRM prepares a draft you review on the diagram.',
@@ -251,6 +275,11 @@ Object.assign(LANGS.hr, {
 .chn-badge.draft { background:var(--bg3); color:var(--accent); border:1px solid var(--accent); }
 .chn-draft-note { font-size:11.5px; line-height:1.45; padding:8px 10px; border:1px solid var(--accent); border-radius:8px; background:var(--bg3); margin-bottom:8px; }
 .chn-draft-note b { color:var(--accent); }
+.chn-ai-bar { border:1px solid var(--accent); border-radius:8px; background:var(--bg3); padding:8px 10px; margin-bottom:8px; display:flex; flex-direction:column; gap:6px; }
+.chn-ai-bar textarea { width:100%; min-height:54px; resize:vertical; font-size:12px; }
+.chn-ai-bar .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.chn-ai-bar .hint { font-size:10.5px; color:var(--text3); flex:1; min-width:160px; }
+.chn-ai-bar .res { font-size:11.5px; line-height:1.45; }
 .chn-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--text3); opacity:.6; margin-right:7px; vertical-align:middle; flex:none; }
 .chn-dot.ok { background:#3fb950; opacity:1; } .chn-dot.bad { background:#f85149; opacity:1; } .chn-dot.warn { background:#d29922; opacity:1; }
 .chn-main { flex:1; display:flex; flex-direction:column; min-width:0; position:relative; }
@@ -448,6 +477,8 @@ Object.assign(LANGS.hr, {
           <span class="chn-badge" id="chn-scn" style="display:none;"></span>
           <span class="chn-seg" id="chn-mode" role="group" style="display:none;"><button class="btn-sec btn-sm" data-m="diagram">${esc(t('chn_view_diagram'))}</button><button class="btn-sec btn-sm" data-m="list">${esc(t('chn_view_list'))}</button></span>
           <button class="btn-sec btn-sm" id="chn-check" style="display:none;">↻ ${esc(t('chn_check_now'))}</button>
+          <button class="btn-sec btn-sm" id="chn-test" style="display:none;">▶ ${esc(t('chn_test'))}</button>
+          <button class="btn-sec btn-sm" id="chn-ai" style="display:none;" title="${esc(t('chn_ai_btn_t'))}">🤖 ${esc(t('chn_ai_btn'))}</button>
           <button class="btn-sec btn-sm" id="chn-edit" style="display:none;">✎ ${esc(t('chn_edit_chain'))}</button>
           <button class="btn-sec btn-sm" id="chn-json" style="display:none;" title="${esc(t('chn_edit'))}">{ }</button>
           <button class="btn-sec btn-sm" id="chn-export" style="display:none;">⬇ ${esc(t('chn_export'))}</button>
@@ -463,6 +494,8 @@ Object.assign(LANGS.hr, {
     ov.querySelector('#chn-new').onclick = openNew;
     ov.querySelector('#chn-import').onclick = importFile;
     ov.querySelector('#chn-check').onclick = (e) => checkNow(e.currentTarget);
+    ov.querySelector('#chn-test').onclick = (e) => testDraft(e.currentTarget);
+    ov.querySelector('#chn-ai').onclick = () => { state.aiOpen = !state.aiOpen; renderDetail(); const ta = $('#chn-ai-text'); if (ta) ta.focus(); };
     ov.querySelector('#chn-edit').onclick = editCurrent;
     ov.querySelector('#chn-json').onclick = () => state.current && openEditor(state.current.id, { definition: state.current.definition, enabled: state.current.enabled });
     ov.querySelector('#chn-export').onclick = () => { if (state.current) location.href = `/api/chains/${state.current.id}/export`; };
@@ -537,7 +570,8 @@ Object.assign(LANGS.hr, {
         n.appendChild(el('span', 'chn-dot draft'));
         n.appendChild(document.createTextNode(d.name || t('chn_draft_untitled')));
         item.appendChild(n);
-        item.appendChild(el('div', 'm', fmt(t('chn_draft_counts'), { n: d.nodes, c: d.checks })));
+        const base = d.base_chain_id ? state.list.find((c) => c.id === d.base_chain_id) : null;
+        item.appendChild(el('div', 'm', (base ? fmt(t('chn_draft_for'), { name: base.name }) + ' · ' : '') + fmt(t('chn_draft_counts'), { n: d.nodes, c: d.checks })));
         item.onclick = () => selectDraft(d.id);
         item.onkeydown = (e) => { if (e.key === 'Enter') selectDraft(d.id); };
         box.appendChild(item);
@@ -568,8 +602,10 @@ Object.assign(LANGS.hr, {
       if (!keep || !state.current || state.current.draftId !== id) {
         state.sel = null; state.openCheck = null; state.timeline = [];
       }
+      const keepState = keep && state.current && state.current.draftId === id ? state.current.state : {};
       state.current = { id: 'draft:' + id, draft: true, draftId: id, definition: d.definition,
-        enabled: false, state: {}, scenario: '', last_at: '', created_at: d.created_at };
+        enabled: false, state: keepState || {}, scenario: '', last_at: '', created_at: d.created_at,
+        baseChainId: d.base_chain_id || 0, baseChainName: d.base_chain_name || '' };
       state.mode = 'diagram'; // a draft is reviewed on the diagram, whatever view was last used
       state.pos = {};
       renderList();
@@ -1202,6 +1238,10 @@ Object.assign(LANGS.hr, {
     show('#chn-json', !!c && !isDraft);
     show('#chn-approve', isDraft);
     show('#chn-discard', isDraft);
+    show('#chn-test', isDraft);
+    show('#chn-ai', !!c);
+    const ab = $('#chn-approve');
+    if (ab) ab.textContent = '✓ ' + (isDraft && c.baseChainId ? t('chn_apply') : t('chn_approve'));
     ['#chn-scn', '#chn-mode'].forEach((id) => show(id, !!c));
     document.querySelectorAll('#chn-mode button').forEach((b) => { const on = b.dataset.m === state.mode; b.className = (on ? 'btn-pri' : 'btn-sec') + ' btn-sm'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
     const body = $('#chn-body');
@@ -1213,12 +1253,13 @@ Object.assign(LANGS.hr, {
     const eb = $('#chn-edit');
     if (eb) eb.textContent = '✎ ' + (isDraft ? t('chn_g_edit_draft') : t('chn_edit_chain'));
     const scn = $('#chn-scn');
+    if (state.aiOpen) body.appendChild(aiBar(c));
     if (isDraft) {
-      scn.textContent = t('chn_draft_badge');
+      scn.textContent = c.baseChainId ? fmt(t('chn_draft_for'), { name: c.baseChainName || ('#' + c.baseChainId) }) : t('chn_draft_badge');
       scn.className = 'chn-badge draft';
       const note = el('div', 'chn-draft-note');
       note.appendChild(el('b', '', t('chn_draft_note_t')));
-      note.appendChild(document.createTextNode(' ' + t('chn_draft_note')));
+      note.appendChild(document.createTextNode(' ' + (c.baseChainId ? t('chn_draft_for_note') : t('chn_draft_note'))));
       body.appendChild(note);
     } else {
       scn.textContent = t('chn_scenario') + ': ' + (c.scenario ? c.scenario_label : t('chn_no_scenario'));
@@ -1418,6 +1459,62 @@ Object.assign(LANGS.hr, {
       .finally(() => { btn.disabled = false; btn.textContent = label0; });
   }
 
+  // The AI bar: one instruction for the chain or draft that is open. The answer is always a
+  // draft; for a chain it is a draft that changes the chain, applied only by the user.
+  function aiBar(c) {
+    const bar = el('div', 'chn-ai-bar');
+    const ta = el('textarea');
+    ta.id = 'chn-ai-text';
+    ta.placeholder = t('chn_ai_ph');
+    ta.value = state.aiText || '';
+    ta.oninput = () => { state.aiText = ta.value; };
+    bar.appendChild(ta);
+    const row = el('div', 'row');
+    const send = el('button', 'btn-pri btn-sm', t('chn_ai_send'));
+    const shut = el('button', 'btn-sec btn-sm', t('chn_ai_close'));
+    row.appendChild(send); row.appendChild(shut);
+    row.appendChild(el('span', 'hint', t('chn_ai_hint')));
+    bar.appendChild(row);
+    if (state.aiResult) {
+      const res = el('div', 'res');
+      res.appendChild(el('b', '', t('chn_ai_result') + ': '));
+      res.appendChild(document.createTextNode(state.aiResult));
+      bar.appendChild(res);
+    }
+    shut.onclick = () => { state.aiOpen = false; state.aiResult = ''; renderDetail(); };
+    const go = () => {
+      const text = ta.value.trim();
+      if (!text) { ta.focus(); return; }
+      send.disabled = true; send.textContent = t('chn_ai_working');
+      const body = { instruction: text };
+      if (c.draft) { body.draft_id = c.draftId; body.definition = c.definition; } else body.chain_id = c.id;
+      api('POST', '/api/chains/ai-edit', body).then((res) => {
+        state.aiText = ''; state.aiResult = res.summary || res.message || '';
+        return loadListOnlyP().then(() => selectDraft(res.draft_id));
+      }).catch((e) => showToast(e.message, 'error'))
+        .finally(() => { send.disabled = false; send.textContent = t('chn_ai_send'); });
+    };
+    send.onclick = go;
+    ta.onkeydown = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) go(); };
+    return bar;
+  }
+
+  // Test once: the draft's checks run a single time, the diagram shows the results, nothing is
+  // saved or notified.
+  function testDraft(btn) {
+    const c = state.current;
+    if (!c || !c.draft) return;
+    const label0 = btn.textContent;
+    btn.disabled = true; btn.textContent = t('chn_testing');
+    api('POST', '/api/chains/test', { definition: c.definition }).then((res) => {
+      if (state.current !== c) return;
+      c.state = res.state || {};
+      renderDetail();
+      showToast(fmt(t('chn_test_done'), { ok: res.checks_ok || 0, bad: res.checks_failed || 0 }), res.checks_failed ? '' : 'success');
+    }).catch((e) => showToast(e.message, 'error'))
+      .finally(() => { btn.disabled = false; btn.textContent = label0; });
+  }
+
   function deleteChain() {
     const c = state.current;
     if (!c || !confirm(fmt(t('chn_delete_q'), { name: c.definition.name }))) return;
@@ -1429,11 +1526,13 @@ Object.assign(LANGS.hr, {
   function approveDraft() {
     const c = state.current;
     if (!c || !c.draft) return;
-    if (!confirm(fmt(t('chn_approve_q'), { name: c.definition.name }))) return;
+    const applying = !!c.baseChainId;
+    if (!confirm(fmt(t(applying ? 'chn_apply_q' : 'chn_approve_q'), { name: applying ? (c.baseChainName || c.definition.name) : c.definition.name }))) return;
     const b = $('#chn-approve');
     b.disabled = true;
     api('POST', `/api/chains/drafts/${c.draftId}/approve`).then((chain) => {
-      showToast(t('chn_draft_approved'), 'success');
+      showToast(t(applying ? 'chn_applied' : 'chn_draft_approved'), 'success');
+      state.aiResult = '';
       state.current = null;
       return loadList().then(() => select(chain.id));
     }).catch((e) => showToast((e.errors && e.errors[0]) || e.message, 'error'))
@@ -2503,6 +2602,11 @@ Object.assign(LANGS.hr, {
     if (!isOpen()) return;
     if ($('.chn-editor')) { loadListOnly(); return; }
     return loadList();
+  }
+
+  function loadListOnlyP() {
+    return Promise.all([api('GET', '/api/chains'), api('GET', '/api/chains/drafts').catch(() => [])])
+      .then(([list, drafts]) => { state.list = list || []; state.drafts = drafts || []; renderList(); });
   }
 
   function loadListOnly() {
