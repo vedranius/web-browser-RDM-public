@@ -13,6 +13,7 @@
 
 ### Fixes
 
+- **WRM no longer freezes while an AI works through MCP.** Every MCP session's live view held its own connection, and over plain HTTP a browser has only six per server for all tabs; at six sessions the page stopped responding. All AI views of a tab now share one connection.
 - The builder's fields follow the dark theme, the Croatian confirm count is grammatical, the automatic states are named in your language, and the fields explain themselves.
 - The lock button follows a language change. Monitoring cards show the server's name as the title, and the doubled gear icon on *Settings* is gone.
 

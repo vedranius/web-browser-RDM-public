@@ -19,6 +19,8 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 **Chains recognise your servers.** The builder lists servers by folder with search and adds several at once, without quick connections and without adding a server twice. Right after adding them, WRM looks at the servers read-only and turns their services, containers, named ports (PostgreSQL (5432), HTTPS (443) …) and network mounts into one-click check suggestions. Mounts between servers suggest the links. A URL, `host:port` or host name becomes an outside endpoint with the fitting checks, and **Test now** tries one check without saving. See [Chains](#chains-live-service-chain-monitoring).
 
+**No more freezing while an AI works through MCP.** The MCP live view used one connection per session, and over plain HTTP a browser has only six per server for all its tabs, so WRM stopped responding once an AI app had opened six sessions. All AI and MCP views of a tab now share one stream.
+
 ## What's new in v14.4.0
 
 **See every S3 request, and what it costs.** The storage window has a live **📡 S3 activity** panel beside the file browser, shown by default and hidden with one button. It lists every request WRM sends to the bucket as it happens (operation, key, answer, time, and whether you, the background check, a chain or an AI connection caused it) and counts each operation for today and in total. The storage form has a **Provider** picker (Hetzner, DigitalOcean Spaces, Amazon S3, Backblaze B2, Cloudflare R2, MinIO, other). It says whether that provider bills the requests WRM uses, and how much, quoting the provider's price page. The activity panel prices the counted requests the same way.
@@ -462,7 +464,7 @@ Locked out? `./wrm-pro-… -reset-password admin` prints a new temporary passwor
 
 ## Upgrading from v14.4.0
 
-Replace the executable/AppImage/container and keep the database and encryption key. Nothing is migrated and no setting changes. Recognition uses the same fixed read-only discovery as the AI wizard (`POST /api/chains/discover`) and runs only when you add servers in the builder or press *Recognise services*; turn off *Recognise … right after adding* in the builder to add servers without it. *Test now* uses `POST /api/chains/test` with a one-check definition and saves nothing.
+Replace the executable/AppImage/container and keep the database and encryption key. Nothing is migrated and no setting changes. Recognition uses the same fixed read-only discovery as the AI wizard (`POST /api/chains/discover`) and runs only when you add servers in the builder or press *Recognise services*; turn off *Recognise … right after adding* in the builder to add servers without it. *Test now* uses `POST /api/chains/test` with a one-check definition and saves nothing. The browser follows AI and MCP sessions over one stream per tab, `GET /api/ai/events`; the per-session stream stays for other clients.
 
 ## Upgrading from v14.3.2
 
@@ -3428,6 +3430,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/api/ai/sessions/{id}` | Session and its (redacted) transcript |
 | POST | `/api/ai/sessions/{id}/save` | `{saved}`: keep an own session beyond the retention |
 | GET | `/api/ai/sessions/{id}/export?format=md\|json` | Download an own session's transcript |
+| GET | `/api/ai/events?s=ID:SINCE,…` | One server-sent-events stream for several own sessions (at most 64): each `event: ai` carries `{"sid", "ev"}` with the session's event; a session that is not running gets one `ended`. The page uses it for every AI and MCP view, so a tab holds one connection however many sessions it shows |
 | GET | `/api/ai/sessions/{id}/events?since=N` | Server-sent events: `session`, `user`, `assistant_start`, `text`, `assistant_done`, `tool_call`, `approval_required`, `approval_resolved`, `tool_result`, `mode`, `usage`, `busy`, `notice`, `error`, `thinking`, `title`, `history`, `ended` (an ended session answers with `ended` and `resumable`) |
 | POST | `/api/ai/sessions/{id}/prompt` | `{text}` |
 | POST | `/api/ai/sessions/{id}/title` | `{title}`: rename a chat |
@@ -3550,6 +3553,7 @@ remote-manager/
   ai_cloud.go     AWS SigV4, AWS event streams, Google service account tokens
   ai_provider.go  AI providers (organisation / personal), encrypted keys, schema
   ai_api.go       /api/ai and /api/admin/ai
+  ai_events_mux.go  /api/ai/events: the events of several AI sessions over one stream (one connection per tab)
   ai_ollama.go    Ollama detection / install / start / pull (audited), provider model lists
   ai_opencode.go  OpenCode Zen provider: models.dev catalog, free models, data-use labels, API family routing
   ai_delegate.go  delegate_task: helper models chosen by kind of job, fallback, training opt-in, /api/ai/delegate
@@ -3619,6 +3623,7 @@ remote-manager/
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
   upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs, restarts that keep every table, restored addon instances)
   diag_dump_test.go unit tests (freeze diagnostics written and pruned)
+  v1450_ai_events_mux_test.go  several AI sessions over one stream, positions, own sessions only, the session cap
   integration_test.go  in-process SSH/SFTP server: connect → audit → recording, transfers, append-only audit
   tunnels_test.go      jump host chains, local/remote/SOCKS tunnels, policies, web interfaces
   snippets_test.go     snippets API, sharing, variables, run on connect, broadcast audit
@@ -3733,6 +3738,7 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 
 | Problem | Fix |
 |---|---|
+| Before v14.5.0: the WRM page stops responding while an AI app works through MCP, but other browsers and the AI app still get answers | The browser ran out of connections: the MCP live view held one per session, and over plain HTTP a browser has six per server for all tabs. Update to v14.5.0, which uses one per tab. On an older version close the live views you do not need (✕), turn off *Open the live view when an AI app starts working on a server*, or use HTTPS (HTTP/2 has no such limit) |
 | WRM stops answering (browser or AI apps wait forever) | Restart the service (Windows: `sc stop wrm` and `sc start wrm`, or *Services*). WRM writes what every part of it was doing at the stop to `<DB_PATH>.diag/stop-<time>.txt` (its own watchdog writes `hang-<time>.txt` when it notices first). Send the newest file with the issue: it holds code locations only, no passwords or command output |
 | Addons empty after a restart (v13.9.0–v13.14.0) | Update to v13.14.1: it keeps addon instances and restores the most recent ones from `addon_instances_old_*` |
 | Claude app: *Failed to add marketplace* | Type the repository in lowercase, `vedranius/web-browser-rdm-public`: the Claude app names the marketplace after the repository, and GitHub accepts the name in any case. Remove a marketplace with the same name that is already under *Customize → Plugins*. The real reason is in the app's log (Windows `%APPDATA%\Claude\logs\claude.ai-web.log`, macOS `~/Library/Logs/Claude/claude.ai-web.log`, lines with `MARKETPLACE_ERROR` or `REMOTE_SYNC_FAILED`). *Add → Upload plugin* with `claude-plugin-wrm-pro.zip` from the release installs the same plugin without a marketplace |

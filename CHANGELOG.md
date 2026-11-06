@@ -1,6 +1,6 @@
 ## [14.5.0] - 2026-11-06
 
-The Chains builder recognises what runs on your servers and suggests the checks and links, and its server list is sorted by folder with search. Upgrading from v14.4.0 keeps the database and the encryption key; nothing is migrated.
+The Chains builder recognises what runs on your servers and suggests the checks and links, and its server list is sorted by folder with search. WRM no longer freezes in the browser while an AI app works through MCP. Upgrading from v14.4.0 keeps the database and the encryption key; nothing is migrated.
 
 ### Added
 
@@ -19,6 +19,7 @@ The Chains builder recognises what runs on your servers and suggests the checks 
 
 ### Fixed
 
+- **WRM froze in the browser while an AI app worked through MCP.** The live view opened one event stream per MCP session, and a browser keeps at most six HTTP/1.1 connections per host for all its tabs. Once an AI app had opened six sessions (e.g. one per server), every further request of the page waited, so nothing could be clicked. All AI and MCP views of a tab now share one stream (`GET /api/ai/events`). Plain-HTTP installations were hit; HTTPS uses HTTP/2 and was not.
 - The Chains builder's inputs used the browser's light default style in the dark theme.
 - Croatian grammar of the confirm count ("2 provjere" instead of "2 provjera").
 - The top bar's lock button stayed in the previous language after a language change.
