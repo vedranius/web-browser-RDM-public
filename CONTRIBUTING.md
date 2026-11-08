@@ -85,7 +85,7 @@ Before sending a PR please make sure that:
 
 The v12.4.0 regressions include `folders_test.go` (hierarchy, ownership, imports), `git_functionality_test.go` (workers, redaction and config boundaries), `preview_test.go` (SFTP/FTP ranges, active content and share permissions) and `ai_availability_test.go` (SFTP providers and policy events). Run `node tools/check-ui.js` and `node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js` from the repository root. UI layout/media checks require a real browser; retain a concise report that distinguishes compiled platforms from platforms actually run.
 
-CI (GitHub Actions) builds every platform for each pull request.
+CI (GitHub Actions) builds every platform for each pull request. GitHub is the main repository; the GitLab copy is a mirror updated by `.github/workflows/gitlab-mirror.yml`, so send pull requests here.
 
 ## Contributor terms
 

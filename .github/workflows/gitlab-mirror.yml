@@ -1,0 +1,52 @@
+name: GitLab mirror
+
+# Keeps a GitLab copy of this repository up to date: every branch and v* tag, and a GitLab
+# release for every published GitHub release (its download links point to the signed GitHub
+# assets). Configure it once in the repository settings:
+#   - variable GITLAB_MIRROR_URL   = https://gitlab.com/<group>/<project>.git
+#   - secret   GITLAB_MIRROR_TOKEN = GitLab access token with write_repository and api
+# Without them every run ends with a notice and changes nothing. build.yml starts this
+# workflow for a new release tag (a tag pushed with the workflow token starts no workflow).
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  delete:
+  schedule:
+    - cron: '17 3 * * *'   # daily safety net
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish on GitLab too (empty = only mirror branches and tags)
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitlab-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    name: Push to GitLab
+    runs-on: ubuntu-24.04
+    if: github.repository_owner == 'vedranius'
+    env:
+      GITLAB_MIRROR_URL: ${{ vars.GITLAB_MIRROR_URL }}
+      GITLAB_MIRROR_TOKEN: ${{ secrets.GITLAB_MIRROR_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Mirror branches and tags
+        if: ${{ inputs.tag == '' }}
+        run: tools/gitlab-mirror.sh push
+      - name: Mirror and publish the release
+        if: ${{ inputs.tag != '' }}
+        run: tools/gitlab-mirror.sh release "$TAG"

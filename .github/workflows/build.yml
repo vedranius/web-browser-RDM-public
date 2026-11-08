@@ -470,3 +470,17 @@ jobs:
     steps:
       - name: Dispatch mcp-registry.yml
         run: gh workflow run mcp-registry.yml --repo "$GITHUB_REPOSITORY" --ref main -f tag="$GITHUB_REF_NAME"
+
+  # ─────────────────────────────────────────────
+  #  GitLab mirror: publish the new release on GitLab too (no-op until it is configured)
+  # ─────────────────────────────────────────────
+  gitlab-mirror:
+    name: Start GitLab release mirror
+    runs-on: ubuntu-24.04
+    needs: finalize
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      actions: write   # workflow_dispatch of gitlab-mirror.yml
+    steps:
+      - name: Dispatch gitlab-mirror.yml
+        run: gh workflow run gitlab-mirror.yml --repo "$GITHUB_REPOSITORY" --ref main -f tag="$GITHUB_REF_NAME"
