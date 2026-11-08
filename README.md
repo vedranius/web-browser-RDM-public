@@ -15,6 +15,11 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 **Current version: v14.5.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
+<p align="center">
+  <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
+  <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
+</p>
+
 ## What's new in v14.5.0
 
 **Chains recognise your servers.** The builder lists servers by folder with search and adds several at once, without quick connections and without adding a server twice. Right after adding them, WRM looks at the servers read-only and turns their services, containers, named ports (PostgreSQL (5432), HTTPS (443) …) and network mounts into one-click check suggestions. Mounts between servers suggest the links. A URL, `host:port` or host name becomes an outside endpoint with the fitting checks, and **Test now** tries one check without saving. See [Chains](#chains-live-service-chain-monitoring).
