@@ -362,6 +362,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [LDAP / Active Directory and SCIM](#ldap--active-directory-and-scim)
    - [SIEM export, alerts and lockdown](#siem-export-alerts-and-lockdown)
    - [Updates & self-update](#updates--self-update)
+   - [GitLab mirror](#gitlab-mirror)
    - [Mobile, responsive UI & installable app](#mobile-responsive-ui--installable-app)
 6. [Keyboard shortcuts](#keyboard-shortcuts)
 7. [Configuration](#configuration)
@@ -2543,6 +2544,12 @@ Security events (`security.*`) are recorded even with `audit_enabled` off.
   - The binary's folder must be writable by WRM; otherwise the dialog says so.
 - **Newest binary in the folder:** copy a newer `wrm-pro-v<semver>-<os>-<arch>[.exe]` next to the running binary. A service switches to the newest valid one when it starts (it must answer `-version` with the version in its name; other platforms, older versions and files that do not answer are ignored). The update dialog offers **↻ Restart to vX.Y.Z** for it.
 - **Docker:** a container never replaces itself. The badge and the release notes are shown; the dialog lists `docker pull ghcr.io/<owner>/wrm-pro:vX.Y.Z` and the compose commands instead.
+
+### GitLab mirror
+
+The project can be mirrored to a GitLab project by `.github/workflows/gitlab-mirror.yml` (`tools/gitlab-mirror.sh`). After every push, branch deletion and once a day it pushes every branch and every `v*` tag to GitLab and removes branches that are gone from GitHub (the default branch is never force-pushed, so a diverging GitLab `main` makes the run fail instead of being overwritten). For every published release `build.yml` starts it with the tag, and it creates the matching GitLab release whose download links point to the signed GitHub assets (`SHA256SUMS.txt`, `SHA256SUMS.txt.sig`, binaries).
+
+To turn it on, add under *Settings → Secrets and variables → Actions* the repository variable `GITLAB_MIRROR_URL` (`https://gitlab.com/<group>/<project>.git`) and the secret `GITLAB_MIRROR_TOKEN` (a GitLab project or personal access token with `write_repository` and `api`, role Maintainer). Without them every run ends with a notice and changes nothing. The token is sent in an HTTP header, never in a URL. Treat the GitLab project as a read-only copy: changes made only on GitLab are overwritten or fail the next run. A fork mirrors nothing unless it sets its own variable and secret and changes the owner check in the workflow.
 
 ### Mobile, responsive UI & installable app
 
