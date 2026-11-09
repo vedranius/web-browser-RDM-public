@@ -6289,7 +6289,7 @@ Object.assign(LANGS.en, {
  "mail_url_d": "The address users open WRM with, used in the links in mail (e.g. https://wrm.example.com). WRM never takes it from the request, so a forged request cannot put another address in a mail.",
  "mail_updated": "Changed by {by}, {at}",
  "mail_test": "Send a test message",
- "mail_test_q": "Address to send the test message to (sent now, with the saved settings):",
+ "mail_test_q": "Send a test message now, with the saved settings? It goes to your own confirmed e-mail address (Settings → Security), or else to the sender address.",
  "mail_sending": "Sending…",
  "mail_test_ok": "The test message was sent to {to}. If it does not arrive, look in the spam folder.",
  "mail_policies_d": "Who gets which mail is set in Admin → Policies → E-mail.",
@@ -6495,7 +6495,7 @@ Object.assign(LANGS.hr, {
  "mail_url_d": "Adresa na kojoj korisnici otvaraju WRM, koristi se u poveznicama u porukama (npr. https://wrm.example.com). WRM je nikad ne uzima iz zahtjeva, pa krivotvoreni zahtjev ne može u poruku staviti drugu adresu.",
  "mail_updated": "Promijenio {by}, {at}",
  "mail_test": "Pošalji probnu poruku",
- "mail_test_q": "Adresa na koju se šalje probna poruka (šalje se odmah, sa spremljenim postavkama):",
+ "mail_test_q": "Poslati probnu poruku odmah, sa spremljenim postavkama? Ide na tvoju potvrđenu e-mail adresu (Postavke → Sigurnost), a ako je nemaš, na adresu pošiljatelja.",
  "mail_sending": "Šaljem…",
  "mail_test_ok": "Probna poruka poslana je na {to}. Ako ne stigne, pogledaj u mapu neželjene pošte.",
  "mail_policies_d": "Tko dobiva koju poštu postavlja se u Admin → Pravila → E-pošta.",
@@ -9984,12 +9984,12 @@ async function mailSave(clearPassword) {
 }
 
 async function mailTest() {
-  const to = await uiPrompt(t('mail_test'), (currentUser && currentUser.email) || '', {message: t('mail_test_q'), placeholder: 'you@example.com', okText: t('mail_test')});
-  if (to === null || to === false || !String(to).trim()) return;
+  if (!(await uiConfirm(t('mail_test_q'), {okText: t('mail_test')}))) return;
   showToast(t('mail_sending'), 'info', 2000);
-  const res = await fetch('/api/admin/mail/test', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({to: String(to).trim()})});
+  const res = await fetch('/api/admin/mail/test', {method: 'POST'});
   if (!res.ok) { showToast(await apiError(res), 'error', 12000); return; }
-  showToast(t('mail_test_ok').replace('{to}', String(to).trim()), 'success', 5000);
+  const d = await res.json().catch(() => ({}));
+  showToast(t('mail_test_ok').replace('{to}', d.to || ''), 'success', 6000);
 }
 
 async function renderMyEmail() {

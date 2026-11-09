@@ -465,7 +465,7 @@ func newRouter() http.Handler {
 
 func main() {
 	showVersion := flag.Bool("version", false, "print the version and exit")
-	resetPassword := flag.String("reset-password", "", "set a new temporary password for `USER` (e.g. a locked-out administrator) and exit")
+	resetUser := flag.String("reset-password", "", "set a new temporary password for `USER` (e.g. a locked-out administrator) and exit")
 	reset2FA := flag.Bool("reset-2fa", false, "together with -reset-password: also turn off two-factor authentication")
 	resetCode := flag.String("reset-code", "", "together with -reset-password: the user's current 2FA code (or a recovery code), which confirms the reset at once when the setting cli_password_reset is confirm")
 	healthcheck := flag.Bool("healthcheck", false, "check /healthz of the server running on this machine and exit (for container health checks)")
@@ -570,14 +570,14 @@ func main() {
 	if *installSvc || *uninstallSvc || *svcStatus {
 		os.Exit(runServiceCommand(*installSvc, *uninstallSvc, *svcStatus, opts))
 	}
-	if *resetPassword != "" {
+	if *resetUser != "" {
 		initDB()
 		loadAppSettings()
 		initServerSecret()
 		initEncryptionKey()
 		migrateSessionTokens()
 		ensureAdminExists()
-		if err := resetPasswordCLIWith(*resetPassword, *reset2FA, *resetCode); err != nil {
+		if err := resetPasswordCLIWith(*resetUser, *reset2FA, *resetCode); err != nil {
 			log.Fatal(err)
 		}
 		return

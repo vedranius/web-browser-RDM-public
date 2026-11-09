@@ -231,7 +231,8 @@ func mailDeliverDue(onlyID int64) int {
 		delay := []time.Duration{time.Minute, 5 * time.Minute, 30 * time.Minute, 2 * time.Hour, 6 * time.Hour}[min(n-1, 4)]
 		db.Exec(`UPDATE mail_outbox SET attempts=?, last_error=?, next_at=?, failed=? WHERE id=?`,
 			n, truncateStr(err.Error(), 300), time.Now().UTC().Add(delay).Format(time.RFC3339), boolInt(n >= mailMaxAttempts), it.id)
-		log.Printf("mail: to %s: %v (attempt %d)", it.to, err, n)
+		// the error stays in the outbox (Admin → E-mail); the log only says that it failed
+		log.Printf("mail: message %d not delivered (attempt %d of %d), see Admin → E-mail", it.id, n, mailMaxAttempts)
 	}
 	return sent
 }
@@ -459,7 +460,9 @@ func adminSetUserEmail(r *http.Request, adminID, userID int, raw string) error {
 //
 //   GET  /api/admin/mail          settings (never the password), presets, recent messages
 //   PUT  /api/admin/mail          change (step-up); an empty password keeps the stored one
-//   POST /api/admin/mail/test     {to} send a test message now
+//   POST /api/admin/mail/test     send a test message now, to the administrator's own confirmed
+//                                 address or else to the sender address (never to an address
+//                                 typed in the request, so the endpoint cannot mail anyone)
 
 func apiAdminMailHandler(w http.ResponseWriter, r *http.Request) {
 	adminID, ok := requireAdmin(w, r)
@@ -575,16 +578,11 @@ func apiAdminMailHandler(w http.ResponseWriter, r *http.Request) {
 		mailWake()
 		jsonOK(w, map[string]interface{}{"ok": true, "settings": loadMailSettings()})
 	case rest == "test" && r.Method == http.MethodPost:
-		var p struct {
-			To string `json:"to"`
-		}
-		json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&p)
-		to, ok := validMailAddr(p.To)
-		if !ok {
-			jsonError(w, "That is not a valid e-mail address", 400)
-			return
-		}
 		m := loadMailSettings()
+		to, _ := userMailTo(adminID)
+		if to == "" {
+			to = m.From
+		}
 		if m.Host == "" || m.From == "" {
 			jsonError(w, "Fill in and save the SMTP server and the sender first", 400)
 			return
@@ -598,7 +596,7 @@ func apiAdminMailHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, mailErrorHint(m, err), 502)
 			return
 		}
-		jsonOK(w, map[string]interface{}{"ok": true})
+		jsonOK(w, map[string]interface{}{"ok": true, "to": to})
 	default:
 		jsonError(w, "Not found", 404)
 	}

@@ -56,11 +56,11 @@ func TestV1461AdminMail(t *testing.T) {
 		"from": "wrm@example.com", "public_url": "https://wrm.example.com"}, &map[string]interface{}{}); code != 400 {
 		t.Fatalf("password over plain SMTP to a remote server accepted: %d", code)
 	}
-	if code := admin.jsonDo("POST", "/api/admin/mail/test", map[string]string{"to": "ops@example.com"}, &map[string]interface{}{}); code != 200 {
+	if code := admin.jsonDo("POST", "/api/admin/mail/test", nil, &map[string]interface{}{}); code != 200 {
 		t.Fatalf("test mail: %d", code)
 	}
 	msgs := fake.messages()
-	if len(msgs) == 0 || !strings.Contains(v1461Body(msgs[len(msgs)-1]), "Mail works") {
+	if len(msgs) == 0 || !strings.Contains(v1461Body(msgs[len(msgs)-1]), "Mail works") || !strings.Contains(msgs[len(msgs)-1], "To: wrm@example.com") {
 		t.Fatalf("test message not delivered: %v", msgs)
 	}
 }
