@@ -195,13 +195,17 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 				d := queue[0]
 				queue = queue[1:]
 				if ctx.Err() != nil {
-					warnings = append(warnings, "Discovery time limit reached")
 					capped = true
 					break
 				}
-				entries, err := fs.ReadDir(d.name)
+				entries, err := logReadDir(ctx, fs, d.name)
 				if err != nil {
-					warnings = append(warnings, d.name+": not readable")
+					// an unreadable or silent folder is skipped; the walk goes on
+					if err == errLogDirTimeout {
+						warnings = append(warnings, d.name+": "+err.Error())
+					} else if ctx.Err() == nil {
+						warnings = append(warnings, d.name+": not readable")
+					}
 					continue
 				}
 				// A folder that already holds a *.log file is a service log folder:
@@ -223,7 +227,7 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 					p := path.Join(d.name, f.Name())
 					lower := strings.ToLower(f.Name())
 					if f.IsDir() {
-						if strings.HasPrefix(f.Name(), ".") || oneOf(lower, "archive", "backups", "backup", "old", "node_modules", "venv", "__pycache__", "temp", "tmp") {
+						if strings.HasPrefix(f.Name(), ".") || oneOf(lower, "archive", "backups", "backup", "old", "temp", "tmp") || logSkipDir(f.Name(), logSet.Exclude) {
 							continue
 						}
 						if d.depth < 8 {
@@ -265,6 +269,9 @@ func monitorLogsHandler(w http.ResponseWriter, r *http.Request, c Connection, ac
 			if len(queue) > 0 {
 				capped = true
 			}
+		}
+		if ctx.Err() != nil {
+			warnings = append(warnings, "Discovery time limit reached: the files found so far are listed")
 		}
 		mains := logMainFolders(c, logSet)
 		logDecorate(files, mains, logSet.GuessOperators)

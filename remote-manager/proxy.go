@@ -171,6 +171,40 @@ func proxiesForUser(userID int) []proxyDef {
 	return out
 }
 
+// proxyTunnelOffers lists the user's dynamic SSH tunnels (-D) that no proxy of theirs uses yet,
+// so proxy pickers can offer them directly (issue #188: a new -D tunnel did not show up as a
+// proxy until a "WRM SOCKS tunnel" proxy was created for it by hand).
+func proxyTunnelOffers(userID int) []map[string]interface{} {
+	out := []map[string]interface{}{}
+	used := map[int]bool{}
+	rows, err := db.Query(`SELECT tunnel_id FROM proxies WHERE owner_id=? AND kind='wrm_tunnel' AND tunnel_id IS NOT NULL`, userID)
+	if err == nil {
+		for rows.Next() {
+			var id int
+			rows.Scan(&id)
+			used[id] = true
+		}
+		rows.Close()
+	}
+	names := map[int]string{}
+	for _, d := range loadTunnelDefs(`user_id=? AND kind='dynamic'`, userID) {
+		if used[d.ID] {
+			continue
+		}
+		if _, ok := names[d.ConnID]; !ok {
+			var n string
+			db.QueryRow(`SELECT name FROM connections WHERE id=?`, d.ConnID).Scan(&n)
+			names[d.ConnID] = n
+		}
+		if names[d.ConnID] == "" {
+			continue // the connection is gone
+		}
+		out = append(out, map[string]interface{}{"tunnel_id": d.ID, "name": d.Name, "connection": names[d.ConnID], "conn_id": d.ConnID,
+			"bind_host": d.BindHost, "bind_port": d.BindPort})
+	}
+	return out
+}
+
 func decorateProxy(p proxyDef, userID int) proxyDef {
 	p.Mine = p.OwnerID == userID
 	p.Owner = usernameOf(p.OwnerID)
@@ -753,7 +787,11 @@ func apiProxiesHandler(w http.ResponseWriter, r *http.Request) {
 	if rest == "" {
 		switch r.Method {
 		case http.MethodGet:
-			jsonOK(w, map[string]interface{}{"proxies": proxiesForUser(userID), "can_define": proxiesAllowed(userID), "container": inContainer()})
+			out := map[string]interface{}{"proxies": proxiesForUser(userID), "can_define": proxiesAllowed(userID), "container": inContainer()}
+			if proxiesAllowed(userID) {
+				out["tunnel_offers"] = proxyTunnelOffers(userID)
+			}
+			jsonOK(w, out)
 		case http.MethodPost:
 			saveProxy(w, r, userID, nil)
 		default:
