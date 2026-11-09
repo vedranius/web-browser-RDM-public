@@ -39,7 +39,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v14.5.1"
+var AppVersion = "v14.6.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -343,6 +343,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/users", apiAdminUsersHandler)
 	mux.HandleFunc("/api/admin/users/", apiAdminUserByIDHandler)
 	mux.HandleFunc("/api/admin/settings", apiAdminSettingsHandler)
+	mux.HandleFunc("/api/admin/cli-resets", apiAdminCLIResetsHandler)
+	mux.HandleFunc("/api/admin/cli-resets/", apiAdminCLIResetsHandler)
 	mux.HandleFunc("/api/admin/security", apiAdminSecurityHandler)
 	mux.HandleFunc("/api/admin/security/", apiAdminSecurityHandler)
 	mux.HandleFunc("/api/admin/teams", apiAdminTeamsHandler)
@@ -461,6 +463,7 @@ func main() {
 	showVersion := flag.Bool("version", false, "print the version and exit")
 	resetPassword := flag.String("reset-password", "", "set a new temporary password for `USER` (e.g. a locked-out administrator) and exit")
 	reset2FA := flag.Bool("reset-2fa", false, "together with -reset-password: also turn off two-factor authentication")
+	resetCode := flag.String("reset-code", "", "together with -reset-password: the user's current 2FA code (or a recovery code), which confirms the reset at once when the setting cli_password_reset is confirm")
 	healthcheck := flag.Bool("healthcheck", false, "check /healthz of the server running on this machine and exit (for container health checks)")
 	installSvc := flag.Bool("install-service", false, "install WRM as a service that starts at boot (systemd, launchd, rc.d or a Windows service), start it and exit")
 	uninstallSvc := flag.Bool("uninstall-service", false, "stop and remove the WRM service and exit (the data stays)")
@@ -570,7 +573,7 @@ func main() {
 		initEncryptionKey()
 		migrateSessionTokens()
 		ensureAdminExists()
-		if err := resetPasswordCLI(*resetPassword, *reset2FA); err != nil {
+		if err := resetPasswordCLIWith(*resetPassword, *reset2FA, *resetCode); err != nil {
 			log.Fatal(err)
 		}
 		return
@@ -630,6 +633,9 @@ func serve(stop <-chan struct{}) int {
 	go guacdAutoStartLoop()
 	go storageStatusLoop()
 	go chainsLoop()
+	heartbeatStop := make(chan struct{})
+	heartbeatDone := make(chan struct{})
+	go func() { runServerHeartbeat(heartbeatStop); close(heartbeatDone) }()
 
 	recoverTerminalSessions()
 	if dir := recordingsDir(); settingBool("session_recording") {
@@ -701,6 +707,8 @@ func serve(stop <-chan struct{}) int {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		srv.Shutdown(ctx)
+		close(heartbeatStop)
+		<-heartbeatDone
 		close(shutdownDone)
 	}()
 
@@ -1123,6 +1131,7 @@ func initDB() {
 		"access_key", "secret", "ca_fingerprint", "sse", "allow_write", "allow_delete", "allow_upload",
 		"max_object_mb", "created_at", "updated_at")
 	db.Exec(`ALTER TABLE storages ADD COLUMN provider TEXT NOT NULL DEFAULT ''`) // v14.4.0
+	initCLIResetSchema()
 	ensureTable("chains", chainSchema,
 		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
 	ensureTable("chain_samples", chainSampleSchema,

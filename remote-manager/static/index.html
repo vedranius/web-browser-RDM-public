@@ -6151,6 +6151,7 @@ Object.assign(LANGS.en, {
  "al_r_secret_reveal": "Secret revealed",
  "al_r_ai_full_access": "AI full access",
  "al_r_audit_off": "Audit off",
+ "al_r_cli_reset": "Server password reset",
  "siem_title": "SIEM export",
  "siem_intro": "WRM sends every audit entry, in order and at least once, with user, role, directory, source address and the hash chain. A destination that does not answer is retried with growing pauses; nothing is lost while WRM keeps the audit log. Host name in events: {host}.",
  "siem_add": "Add destination",
@@ -6222,7 +6223,33 @@ Object.assign(LANGS.en, {
  "p_alert_ai_full_access_d": "Someone approved an AI command that WRM refuses without full access.",
  "p_alert_audit_off": "Alert when audit or SIEM export is turned off",
  "p_alert_audit_off_d": "The audit log was switched off, or a SIEM destination was turned off or deleted.",
+ "p_alert_cli_reset": "Alert when a password is reset on the server",
+ "p_alert_cli_reset_d": "Someone ran wrm -reset-password on the WRM server. Only a person with access to the server can do it, so an unexpected reset means that access was misused.",
  "ne_security_alert": "Security alert",
+ "p_cli_password_reset": "Password reset on the server (wrm -reset-password)",
+ "p_cli_password_reset_d": "Anyone who can run WRM on its server can reset a password with wrm -reset-password. Alert: the reset happens at once and every administrator is told. Only while stopped: as Alert, but it works only while the WRM service is stopped. Confirmation: the command files a request; it takes effect when another administrator approves it here, with the user's own 2FA code (-reset-code), or when the command is run again after one hour. An AI working through WRM can never run it.",
+ "po_cli_password_reset_alert": "Alert administrators",
+ "po_cli_password_reset_stopped": "Only while WRM is stopped",
+ "po_cli_password_reset_confirm": "Confirmation (another admin, 2FA or 1 hour)",
+ "slr_cli_password_reset": "Someone with access to the server cannot quietly take over an account of a running WRM: the reset needs an outage or a confirmation.",
+ "cr_title": "Password resets requested on the server",
+ "cr_mode": "Setting: {mode}",
+ "cr_none": "No requests. With the Confirmation setting, wrm -reset-password files a request here instead of resetting at once.",
+ "cr_user": "User",
+ "cr_host": "Server",
+ "cr_requested": "Requested",
+ "cr_effective": "Can take effect from",
+ "cr_status": "State",
+ "cr_st_pending": "Waiting",
+ "cr_st_approved": "Approved",
+ "cr_st_rejected": "Rejected",
+ "cr_st_done": "Done",
+ "cr_2fa": "also turns off 2FA",
+ "cr_approve": "Approve",
+ "cr_reject": "Reject",
+ "cr_approve_q": "Approve the password reset of {user}? The person at the server who asked for it then gets a new temporary password for this account when they run the command again.",
+ "cr_reject_q": "Reject the password reset of {user}? The command will refuse it, also after one hour.",
+ "cr_own": "Another administrator has to decide on your own account.",
 });
 
 Object.assign(LANGS.hr, {
@@ -6268,6 +6295,7 @@ Object.assign(LANGS.hr, {
  "al_r_secret_reveal": "Otkrivena tajna",
  "al_r_ai_full_access": "AI puni pristup",
  "al_r_audit_off": "Audit isključen",
+ "al_r_cli_reset": "Reset lozinke na poslužitelju",
  "siem_title": "Izvoz u SIEM",
  "siem_intro": "WRM šalje svaki audit zapis, redom i barem jednom, s korisnikom, ulogom, direktorijem, izvornom adresom i hash lancem. Odredište koje ne odgovara pokušava se ponovno sa sve duljim pauzama; ništa se ne gubi dok WRM čuva audit log. Ime poslužitelja u događajima: {host}.",
  "siem_add": "Dodaj odredište",
@@ -6339,7 +6367,33 @@ Object.assign(LANGS.hr, {
  "p_alert_ai_full_access_d": "Netko je odobrio AI naredbu koju WRM bez punog pristupa odbija.",
  "p_alert_audit_off": "Uzbuna kad se isključi audit ili izvoz u SIEM",
  "p_alert_audit_off_d": "Audit log je isključen ili je SIEM odredište isključeno ili obrisano.",
+ "p_alert_cli_reset": "Uzbuna kad se lozinka resetira na poslužitelju",
+ "p_alert_cli_reset_d": "Netko je na WRM poslužitelju pokrenuo wrm -reset-password. To može samo osoba s pristupom poslužitelju, pa neočekivani reset znači da je taj pristup zloupotrijebljen.",
  "ne_security_alert": "Sigurnosna uzbuna",
+ "p_cli_password_reset": "Reset lozinke na poslužitelju (wrm -reset-password)",
+ "p_cli_password_reset_d": "Tko god može pokrenuti WRM na njegovom poslužitelju, može naredbom wrm -reset-password resetirati lozinku. Uzbuna: reset se provodi odmah i svi administratori dobiju obavijest. Samo dok je zaustavljen: kao Uzbuna, ali radi samo dok je WRM servis zaustavljen. Potvrda: naredba podnese zahtjev; provodi se kad ga ovdje odobri drugi administrator, uz korisnikov 2FA kod (-reset-code) ili kad se naredba ponovno pokrene nakon sat vremena. AI koji radi kroz WRM je nikad ne može pokrenuti.",
+ "po_cli_password_reset_alert": "Uzbuna administratorima",
+ "po_cli_password_reset_stopped": "Samo dok je WRM zaustavljen",
+ "po_cli_password_reset_confirm": "Potvrda (drugi admin, 2FA ili 1 sat)",
+ "slr_cli_password_reset": "Netko s pristupom poslužitelju ne može tiho preuzeti račun u WRM-u koji radi: reset traži prekid rada ili potvrdu.",
+ "cr_title": "Resetiranja lozinke zatražena na poslužitelju",
+ "cr_mode": "Postavka: {mode}",
+ "cr_none": "Nema zahtjeva. Uz postavku Potvrda wrm -reset-password ovdje podnese zahtjev umjesto da odmah resetira.",
+ "cr_user": "Korisnik",
+ "cr_host": "Poslužitelj",
+ "cr_requested": "Zatraženo",
+ "cr_effective": "Može se provesti od",
+ "cr_status": "Stanje",
+ "cr_st_pending": "Čeka",
+ "cr_st_approved": "Odobreno",
+ "cr_st_rejected": "Odbijeno",
+ "cr_st_done": "Provedeno",
+ "cr_2fa": "isključuje i 2FA",
+ "cr_approve": "Odobri",
+ "cr_reject": "Odbij",
+ "cr_approve_q": "Odobriti reset lozinke korisnika {user}? Osoba na poslužitelju koja ga je zatražila tada dobije novu privremenu lozinku za taj račun kad ponovno pokrene naredbu.",
+ "cr_reject_q": "Odbiti reset lozinke korisnika {user}? Naredba će ga odbiti, i nakon sat vremena.",
+ "cr_own": "O tvom vlastitom računu mora odlučiti drugi administrator.",
 });
 Object.assign(LANGS.en, {
  "name_from_host": "Use the server's hostname as the name",
@@ -9507,7 +9561,7 @@ async function adminShareDelete(id) {
 
 const POLICY_GROUPS = {
   policies: [
-    ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips']],
+    ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips', 'cli_password_reset']],
     ['pg_appearance', ['appearance_default_theme', 'appearance_custom_css']],
     ['pg_screen_lock', ['screen_lock_mode', 'screen_lock_max_minutes', 'screen_lock_pin', 'screen_lock_max_failures']],
     ['pg_sso', ['local_login', 'oidc_revalidate_minutes', 'oidc_unverified_hours']],
@@ -9524,7 +9578,7 @@ const POLICY_GROUPS = {
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_updates', ['update_check', 'update_repo', 'update_signing_keys', 'update_proxy', 'self_update']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days', 'file_edit_history', 'file_edit_max_kb']],
-    ['pg_alerts', ['alert_failed_signins', 'alert_failed_signins_minutes', 'alert_break_glass', 'alert_new_admin', 'alert_secret_reveal', 'alert_ai_full_access', 'alert_audit_off']],
+    ['pg_alerts', ['alert_failed_signins', 'alert_failed_signins_minutes', 'alert_break_glass', 'alert_new_admin', 'alert_secret_reveal', 'alert_ai_full_access', 'alert_audit_off', 'alert_cli_reset']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],
   voice: [
@@ -9701,6 +9755,7 @@ function renderAdminSecurity() {
       <button class="btn-sec btn-sm" onclick="secPrint()">🖨 ${esc(t('sec_print'))}</button></div>
     <div class="sec-checks">${checks}</div>
     <div class="adm-h">${esc(t('sec_deviations'))} (${devs.length})</div>${devTable}
+    <div id="sec-cli-resets"></div>
     <div id="sec-alerts"></div>
     <div id="siem-admin"></div>`;
   if (!ro) secLoadExtra();
@@ -9716,6 +9771,34 @@ async function secLoadExtra() {
   const [lr, sr] = await Promise.all([fetch('/api/admin/lockdown'), fetch('/api/admin/siem')]);
   if (lr.ok) { lockdownCache = await lr.json(); renderLockdownCard(); }
   if (sr.ok) { siemCache = await sr.json(); renderSIEMAdmin(); }
+  cliResetsLoad();
+}
+
+// Password resets requested on the server with wrm -reset-password (v14.6.0).
+async function cliResetsLoad() {
+  const box = document.getElementById('sec-cli-resets');
+  if (!box) return;
+  const res = await fetch('/api/admin/cli-resets');
+  if (!res.ok) { box.innerHTML = ''; return; }
+  const d = await res.json();
+  const me = currentUser ? currentUser.username : '';
+  const reqs = d.requests || [];
+  const rows = reqs.map(q => `<tr><td><b>${esc(q.username)}</b>${q.reset_2fa ? `<div class="sub">${esc(t('cr_2fa'))}</div>` : ''}</td><td>${esc(q.host)}</td>
+      <td style="white-space:nowrap;">${esc(fmtTime(q.created_at))}</td><td style="white-space:nowrap;">${q.status === 'pending' ? esc(fmtTime(q.effective_at)) : '—'}</td>
+      <td><span class="pill ${q.status === 'pending' ? 'warn' : q.status === 'rejected' ? 'bad' : 'ok'}">${esc(t('cr_st_' + q.status))}</span>${q.decided_by ? `<div class="sub">${esc(q.decided_by)}</div>` : ''}</td>
+      <td style="white-space:nowrap;">${q.status !== 'pending' ? '' : q.username.toLowerCase() === me.toLowerCase() ? `<span class="muted-text">${esc(t('cr_own'))}</span>` :
+        `<button class="btn-sec btn-sm" onclick="cliResetDecide(${q.id}, 'approve', ${jsq(q.username)})">✔ ${esc(t('cr_approve'))}</button> <button class="btn-danger btn-sm" onclick="cliResetDecide(${q.id}, 'reject', ${jsq(q.username)})">✖ ${esc(t('cr_reject'))}</button>`}</td></tr>`).join('');
+  box.innerHTML = `<div class="adm-h">🔑 ${esc(t('cr_title'))}</div>
+    <div class="setting-desc">${esc(t('cr_mode').replace('{mode}', t('po_cli_password_reset_' + d.mode)))}</div>` +
+    (reqs.length ? `<div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>${esc(t('cr_user'))}</th><th>${esc(t('cr_host'))}</th><th>${esc(t('cr_requested'))}</th><th>${esc(t('cr_effective'))}</th><th>${esc(t('cr_status'))}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
+      : `<div class="muted-text">${esc(t('cr_none'))}</div>`);
+}
+
+async function cliResetDecide(id, action, user) {
+  if (!(await uiConfirm(t(action === 'approve' ? 'cr_approve_q' : 'cr_reject_q').replace('{user}', user), {okText: t(action === 'approve' ? 'cr_approve' : 'cr_reject'), danger: action === 'approve'}))) return;
+  const res = await fetch('/api/admin/cli-resets/' + id + '/' + action, {method: 'POST'});
+  if (!res.ok) showToast(await apiError(res), 'error', 6000);
+  cliResetsLoad();
 }
 
 function endedList(ended) {

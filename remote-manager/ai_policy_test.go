@@ -230,6 +230,7 @@ func TestAIDestructivePatterns(t *testing.T) {
 		"dd if=/tmp/img of=/dev/mmcblk0":          "dd_disk",
 		"shred -n 3 /dev/sda":                     "shred_disk",
 		":(){ :|:& };:":                           "fork_bomb",
+		"wrm -reset-password admin":               "wrm_recovery",
 		"bomb(){ bomb|bomb& }; bomb":              "fork_bomb",
 		"systemctl isolate rescue.target":         "isolate",
 		"systemctl emergency":                     "isolate",
