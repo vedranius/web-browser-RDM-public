@@ -39,7 +39,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v14.6.0"
+var AppVersion = "v14.6.1"
 
 const sessionCookieName = "wrm_session"
 
@@ -344,6 +344,10 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/users/", apiAdminUserByIDHandler)
 	mux.HandleFunc("/api/admin/settings", apiAdminSettingsHandler)
 	mux.HandleFunc("/api/admin/cli-resets", apiAdminCLIResetsHandler)
+	mux.HandleFunc("/api/admin/mail", apiAdminMailHandler)
+	mux.HandleFunc("/api/admin/mail/", apiAdminMailHandler)
+	mux.HandleFunc("/api/me/email", apiMeEmailHandler)
+	mux.HandleFunc("/api/auth/verify-email", apiVerifyEmailHandler)
 	mux.HandleFunc("/api/admin/cli-resets/", apiAdminCLIResetsHandler)
 	mux.HandleFunc("/api/admin/security", apiAdminSecurityHandler)
 	mux.HandleFunc("/api/admin/security/", apiAdminSecurityHandler)
@@ -633,6 +637,7 @@ func serve(stop <-chan struct{}) int {
 	go guacdAutoStartLoop()
 	go storageStatusLoop()
 	go chainsLoop()
+	go mailLoop()
 	heartbeatStop := make(chan struct{})
 	heartbeatDone := make(chan struct{})
 	go func() { runServerHeartbeat(heartbeatStop); close(heartbeatDone) }()
@@ -1132,6 +1137,7 @@ func initDB() {
 		"max_object_mb", "created_at", "updated_at")
 	db.Exec(`ALTER TABLE storages ADD COLUMN provider TEXT NOT NULL DEFAULT ''`) // v14.4.0
 	initCLIResetSchema()
+	initMailSchema()
 	ensureTable("chains", chainSchema,
 		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
 	ensureTable("chain_samples", chainSampleSchema,

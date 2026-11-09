@@ -1182,6 +1182,8 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
 .sec-val { font-weight: 500; color: var(--text2); font-family: var(--font-mono); font-size: 11.5px; }
 .sec-fix { font-size: 11.5px; color: var(--yellow-t); margin-top: 3px; }
 .sec-check.bad .sec-fix { color: var(--red-t); }
+.mail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0 12px; margin-top: 8px; }
+.mail-preset.active { border-color: var(--accent); color: var(--accent); }
 .ld-card { border: 1px solid var(--border2); border-radius: 10px; padding: 11px 13px; background: var(--bg); margin-bottom: 12px; }
 .ld-card.on { border-color: rgba(var(--red-rgb),.55); background: rgba(var(--red-rgb),.08); }
 .ld-card .ld-ttl { font-weight: 600; margin-bottom: 4px; }
@@ -2864,6 +2866,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="tab-btn" data-tab="mcp" onclick="showAdminTab('mcp')" data-i18n="adm_mcp">AI connections</button>
       <button class="tab-btn" data-tab="voice" onclick="showAdminTab('voice')" data-i18n="adm_voice">Voice &amp; network</button>
       <button class="tab-btn" data-tab="notify" onclick="showAdminTab('notify')" data-i18n="adm_notify">Notifications</button>
+      <button class="tab-btn" data-tab="mail" onclick="showAdminTab('mail')" data-i18n="adm_mail">E-mail</button>
       <button class="tab-btn" data-tab="hosts" onclick="showAdminTab('hosts')" data-i18n="adm_hosts">Host keys</button>
       <button class="tab-btn" data-tab="audit" onclick="showAdminTab('audit')" data-i18n="adm_audit">Audit log</button>
       <button class="tab-btn" data-tab="sessions" onclick="showAdminTab('sessions')" data-i18n="adm_sessions">Sessions &amp; recordings</button>
@@ -5187,6 +5190,7 @@ Object.assign(LANGS.en, {
   adin_ai: 'The built-in AI assistant: which provider and model to use, who may use it and how much it is allowed to do on servers.',
   adin_mcp: 'Lets external AI apps use WRM through MCP. Choose whether it is allowed, what connected apps may do and see active connections.',
   adin_voice: 'Voice chat and the network relay (TURN) that makes calls work behind firewalls.',
+  adin_mail: 'The mail account WRM writes from: confirming users\' e-mail addresses and telling them when their password or two-factor authentication changes.',
   adin_notify: 'Delivery channels (e-mail, chat webhooks and similar) that users can subscribe to for events such as outages and deployments.',
   adin_hosts: 'SSH server fingerprints WRM has seen. A changed fingerprint is blocked until you review it here.',
   adin_audit: 'Who did what and when: sign-ins, setting changes and actions on servers. Secrets are never stored in it.',
@@ -5210,6 +5214,7 @@ Object.assign(LANGS.hr, {
   adin_ai: 'Ugrađeni AI asistent: koji pružatelj i model se koristi, tko ga smije koristiti i koliko smije raditi na serverima.',
   adin_mcp: 'Omogućuje vanjskim AI aplikacijama korištenje WRM-a preko MCP-a. Odaberite je li dopušteno, što povezane aplikacije smiju i pregledajte aktivne veze.',
   adin_voice: 'Glasovni razgovor i mrežni relej (TURN) zbog kojeg pozivi rade iza vatrozida.',
+  adin_mail: 'Račun e-pošte s kojeg WRM piše: potvrda e-mail adresa korisnika i obavijest kad im se promijeni lozinka ili dvofaktorska autentifikacija.',
   adin_notify: 'Kanali dostave (e-pošta, chat webhookovi i slično) na koje se korisnici mogu pretplatiti za događaje poput ispada i isporuka.',
   adin_hosts: 'SSH otisci servera koje je WRM vidio. Promijenjeni otisak je blokiran dok ga ovdje ne pregledate.',
   adin_audit: 'Tko je što i kada radio: prijave, promjene postavki i radnje na serverima. Tajne se nikad ne spremaju u njega.',
@@ -6250,6 +6255,68 @@ Object.assign(LANGS.en, {
  "cr_approve_q": "Approve the password reset of {user}? The person at the server who asked for it then gets a new temporary password for this account when they run the command again.",
  "cr_reject_q": "Reject the password reset of {user}? The command will refuse it, also after one hour.",
  "cr_own": "Another administrator has to decide on your own account.",
+ "adm_mail": "E-mail",
+ "pg_mail": "E-mail",
+ "p_mail_security_notices": "Security notices by e-mail",
+ "p_mail_security_notices_d": "Users with a confirmed e-mail address are told when their password is changed or reset, two-factor authentication is turned on or off, or a new address is set. Needs Admin → E-mail.",
+ "p_user_email_self": "Users set their own e-mail address",
+ "p_user_email_self_d": "Users add or change their address in Settings → Security, confirmed by a link sent to it. Off: only administrators set addresses (Admin → Users → ⋯), still confirmed by the user.",
+ "mail_intro": "WRM writes from one mail account: to confirm users' e-mail addresses and to tell them when their password or two-factor authentication changes. It works the same for a local installation and on a server, as long as this machine can reach the mail server (port 587 or 465). The password is stored encrypted and never shown again.",
+ "mail_provider": "Mail account",
+ "mail_p_gmail": "Gmail",
+ "mail_p_outlook": "Outlook.com",
+ "mail_p_office365": "Microsoft 365",
+ "mail_p_custom": "Other SMTP server",
+ "mail_help_gmail": "Gmail: turn on 2-Step Verification for the Google account, create an app password and enter it below; the user name is the full Gmail address, and the sender must be that address (or an alias set up in Gmail).",
+ "mail_help_outlook": "Outlook.com / Hotmail: turn on two-step verification for the Microsoft account, create an app password and enter it below; the user name and the sender are the Outlook address.",
+ "mail_help_office365": "Microsoft 365 (work account): an administrator of the tenant must allow authenticated SMTP (SMTP AUTH) for this mailbox; with multi-factor sign-in use an app password. Many tenants keep it off: then use your organisation's mail relay as another SMTP server.",
+ "mail_help_custom": "Your own or your provider's mail server, or the organisation's relay: its name, port and security as your mail administrator gives them. Without a user name WRM sends without signing in (a relay that trusts this machine).",
+ "mail_help_link": "How to create an app password",
+ "mail_enabled": "WRM sends mail",
+ "mail_host": "SMTP server",
+ "mail_port": "Port",
+ "mail_security": "Security",
+ "mail_sec_starttls": "STARTTLS (usually 587)",
+ "mail_sec_tls": "TLS (usually 465)",
+ "mail_sec_none": "None (only a local relay)",
+ "mail_user": "User name",
+ "mail_pass": "Password or app password",
+ "mail_pass_kept": "stored, leave empty to keep it",
+ "mail_pass_clear": "Remove the stored password",
+ "mail_from": "Sender address",
+ "mail_from_name": "Sender name",
+ "mail_url": "WRM's address for links",
+ "mail_url_d": "The address users open WRM with, used in the links in mail (e.g. https://wrm.example.com). WRM never takes it from the request, so a forged request cannot put another address in a mail.",
+ "mail_updated": "Changed by {by}, {at}",
+ "mail_test": "Send a test message",
+ "mail_test_q": "Address to send the test message to (sent now, with the saved settings):",
+ "mail_sending": "Sending…",
+ "mail_test_ok": "The test message was sent to {to}. If it does not arrive, look in the spam folder.",
+ "mail_policies_d": "Who gets which mail is set in Admin → Policies → E-mail.",
+ "mail_recent": "Recent messages",
+ "mail_to": "To",
+ "mail_subject": "Subject",
+ "mail_none": "No messages yet.",
+ "mail_st_sent": "Sent",
+ "mail_st_waiting": "Waiting",
+ "mail_st_failed": "Failed",
+ "mail_my": "E-mail address",
+ "mail_my_d": "WRM tells you here when your password or two-factor authentication changes.",
+ "mail_my_off": "WRM cannot send mail yet; an administrator sets it up in Admin → E-mail.",
+ "mail_verified": "confirmed",
+ "mail_unverified": "not confirmed",
+ "mail_pending": "Waiting for confirmation: {a}. Open the link in the message sent there (valid 24 hours).",
+ "mail_add": "Add",
+ "mail_change": "Change",
+ "mail_change_q": "Your e-mail address. WRM sends a link to it; the address is used once you open the link.",
+ "mail_send_link": "Send the link",
+ "mail_link_sent": "A confirmation link was sent to {a}.",
+ "mail_remove_q": "Remove your e-mail address? WRM will not tell you about changes to your account any more.",
+ "mail_set_user": "Set e-mail address",
+ "mail_set_user_d": "WRM sends a confirmation link to the address; it is used once the user opens it. Leave empty to remove the address.",
+ "mail_verify_ok": "Your e-mail address is confirmed.",
+ "mail_verify_expired": "The confirmation link has expired. Add the address again in Settings → Security.",
+ "mail_verify_invalid": "The confirmation link is not valid (it may have been used already).",
 });
 
 Object.assign(LANGS.hr, {
@@ -6394,6 +6461,68 @@ Object.assign(LANGS.hr, {
  "cr_approve_q": "Odobriti reset lozinke korisnika {user}? Osoba na poslužitelju koja ga je zatražila tada dobije novu privremenu lozinku za taj račun kad ponovno pokrene naredbu.",
  "cr_reject_q": "Odbiti reset lozinke korisnika {user}? Naredba će ga odbiti, i nakon sat vremena.",
  "cr_own": "O tvom vlastitom računu mora odlučiti drugi administrator.",
+ "adm_mail": "E-pošta",
+ "pg_mail": "E-pošta",
+ "p_mail_security_notices": "Sigurnosne obavijesti e-poštom",
+ "p_mail_security_notices_d": "Korisnici s potvrđenom e-mail adresom dobiju obavijest kad im se promijeni ili resetira lozinka, uključi ili isključi dvofaktorska autentifikacija ili postavi nova adresa. Treba Admin → E-pošta.",
+ "p_user_email_self": "Korisnici sami postavljaju e-mail adresu",
+ "p_user_email_self_d": "Korisnici dodaju ili mijenjaju adresu u Postavke → Sigurnost, uz potvrdu poveznicom poslanom na nju. Isključeno: adrese postavljaju samo administratori (Admin → Korisnici → ⋯), a korisnik ih i dalje potvrđuje.",
+ "mail_intro": "WRM piše s jednog računa e-pošte: za potvrdu e-mail adresa korisnika i obavijesti kad im se promijeni lozinka ili dvofaktorska autentifikacija. Radi jednako za lokalnu instalaciju i na poslužitelju, sve dok ovo računalo može doći do poslužitelja e-pošte (port 587 ili 465). Lozinka se sprema šifrirano i više se ne prikazuje.",
+ "mail_provider": "Račun e-pošte",
+ "mail_p_gmail": "Gmail",
+ "mail_p_outlook": "Outlook.com",
+ "mail_p_office365": "Microsoft 365",
+ "mail_p_custom": "Drugi SMTP poslužitelj",
+ "mail_help_gmail": "Gmail: uključi potvrdu u 2 koraka za Google račun, napravi lozinku aplikacije i upiši je ispod; korisničko ime je puna Gmail adresa, a pošiljatelj mora biti ta adresa (ili alias postavljen u Gmailu).",
+ "mail_help_outlook": "Outlook.com / Hotmail: uključi potvrdu u dva koraka za Microsoft račun, napravi lozinku aplikacije i upiši je ispod; korisničko ime i pošiljatelj su Outlook adresa.",
+ "mail_help_office365": "Microsoft 365 (poslovni račun): administrator tenanta mora za ovaj sandučić dopustiti SMTP s prijavom (SMTP AUTH); uz višefaktorsku prijavu koristi lozinku aplikacije. Mnogi tenanti to drže isključeno: tada koristi relej e-pošte svoje organizacije kao drugi SMTP poslužitelj.",
+ "mail_help_custom": "Vlastiti poslužitelj e-pošte, onaj tvog pružatelja ili relej organizacije: ime, port i sigurnost kako ih daje administrator e-pošte. Bez korisničkog imena WRM šalje bez prijave (relej koji vjeruje ovom računalu).",
+ "mail_help_link": "Kako napraviti lozinku aplikacije",
+ "mail_enabled": "WRM šalje e-poštu",
+ "mail_host": "SMTP poslužitelj",
+ "mail_port": "Port",
+ "mail_security": "Sigurnost",
+ "mail_sec_starttls": "STARTTLS (obično 587)",
+ "mail_sec_tls": "TLS (obično 465)",
+ "mail_sec_none": "Bez (samo lokalni relej)",
+ "mail_user": "Korisničko ime",
+ "mail_pass": "Lozinka ili lozinka aplikacije",
+ "mail_pass_kept": "spremljena, ostavi prazno da ostane",
+ "mail_pass_clear": "Ukloni spremljenu lozinku",
+ "mail_from": "Adresa pošiljatelja",
+ "mail_from_name": "Ime pošiljatelja",
+ "mail_url": "Adresa WRM-a za poveznice",
+ "mail_url_d": "Adresa na kojoj korisnici otvaraju WRM, koristi se u poveznicama u porukama (npr. https://wrm.example.com). WRM je nikad ne uzima iz zahtjeva, pa krivotvoreni zahtjev ne može u poruku staviti drugu adresu.",
+ "mail_updated": "Promijenio {by}, {at}",
+ "mail_test": "Pošalji probnu poruku",
+ "mail_test_q": "Adresa na koju se šalje probna poruka (šalje se odmah, sa spremljenim postavkama):",
+ "mail_sending": "Šaljem…",
+ "mail_test_ok": "Probna poruka poslana je na {to}. Ako ne stigne, pogledaj u mapu neželjene pošte.",
+ "mail_policies_d": "Tko dobiva koju poštu postavlja se u Admin → Pravila → E-pošta.",
+ "mail_recent": "Nedavne poruke",
+ "mail_to": "Prima",
+ "mail_subject": "Predmet",
+ "mail_none": "Još nema poruka.",
+ "mail_st_sent": "Poslano",
+ "mail_st_waiting": "Čeka",
+ "mail_st_failed": "Nije uspjelo",
+ "mail_my": "E-mail adresa",
+ "mail_my_d": "WRM ti ovdje javlja kad se promijeni tvoja lozinka ili dvofaktorska autentifikacija.",
+ "mail_my_off": "WRM još ne može slati e-poštu; administrator je postavlja u Admin → E-pošta.",
+ "mail_verified": "potvrđena",
+ "mail_unverified": "nije potvrđena",
+ "mail_pending": "Čeka potvrdu: {a}. Otvori poveznicu iz poruke poslane na tu adresu (vrijedi 24 sata).",
+ "mail_add": "Dodaj",
+ "mail_change": "Promijeni",
+ "mail_change_q": "Tvoja e-mail adresa. WRM na nju šalje poveznicu; adresa se koristi kad otvoriš poveznicu.",
+ "mail_send_link": "Pošalji poveznicu",
+ "mail_link_sent": "Poveznica za potvrdu poslana je na {a}.",
+ "mail_remove_q": "Ukloniti tvoju e-mail adresu? WRM ti više neće javljati promjene na računu.",
+ "mail_set_user": "Postavi e-mail adresu",
+ "mail_set_user_d": "WRM na adresu šalje poveznicu za potvrdu; adresa se koristi kad je korisnik otvori. Ostavi prazno za uklanjanje adrese.",
+ "mail_verify_ok": "Tvoja e-mail adresa je potvrđena.",
+ "mail_verify_expired": "Poveznica za potvrdu je istekla. Ponovno dodaj adresu u Postavke → Sigurnost.",
+ "mail_verify_invalid": "Poveznica za potvrdu nije valjana (možda je već iskorištena).",
 });
 Object.assign(LANGS.en, {
  "name_from_host": "Use the server's hostname as the name",
@@ -8580,7 +8709,7 @@ function showAdminTab(tab) {
   setTabIntro('admin-intro', 'adin_' + (document.querySelector(`#admin-tabs [data-tab="${tab}"]`) ? tab : 'overview'));
   body.innerHTML = `<div class="fm-loading">${esc(t('loading'))}</div>`;
   ({overview: adminOverview, security: adminSecurity, users: adminUsers, teams: adminTeams, sso: adminSSO, shares: adminShares, policies: () => adminPolicies('policies'),
-    voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify,
+    voice: () => adminPolicies('voice'), hosts: adminHosts, audit: adminAudit, notify: adminNotify, mail: adminMail,
     sessions: () => { document.getElementById('admin-body').innerHTML = `<div class="hint-box">${esc(t('sessions_help'))}</div><div id="adm-sessions"></div>`; renderTermSessions('adm-sessions', false); },
     transfers: adminTransfers,
     edits: adminFileEdits,
@@ -8754,7 +8883,7 @@ function renderAdminUsers() {
   const list = adminUsersCache.filter(u => !q || (u.username + ' ' + u.display_name).toLowerCase().includes(q.toLowerCase()));
   document.getElementById('adm-users-table').innerHTML = `<table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('status'))}</th><th>${esc(t('last_login'))}</th><th>${esc(t('connections_lc'))}</th><th>${esc(t('created'))}</th><th></th></tr></thead><tbody>` +
     list.map(u => `<tr>
-      <td>${u.online ? '<span class="online-dot"></span>' : ''}<b style="color:var(--text);">${esc(u.username)}</b>${u.display_name ? ' <span class="muted-text">' + esc(u.display_name) + '</span>' : ''}
+      <td>${u.online ? '<span class="online-dot"></span>' : ''}<b style="color:var(--text);">${esc(u.username)}</b>${u.display_name ? ' <span class="muted-text">' + esc(u.display_name) + '</span>' : ''}${u.email || u.email_pending ? `<div class="sub">✉ ${esc(u.email || u.email_pending)}${u.email_verified ? '' : ' · ' + esc(t('mail_unverified'))}</div>` : ''}
         <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${userRolePill(u)}${(u.sso || []).length ? '<span class="pill info" title="' + esc(t(u.sso_only ? 'sso_only_d' : 'sso_linked_d')) + '">🏢 ' + esc(u.sso.join(', ')) + '</span>' : ''}${u.break_glass ? '<span class="pill bad" title="' + esc(t('break_glass_d')) + '">🚨 ' + esc(t('break_glass')) + '</span>' : ''}${u.totp_enabled ? '<span class="pill ok">2FA</span>' : ''}${u.id === currentUser.id ? '<span class="pill info">' + esc(t('you')) + '</span>' : ''}${(u.teams || []).map(tm => '<span class="pill">👥 ' + esc(tm.name) + (tm.lead ? ' ★' : '') + '</span>').join('')}</div></td>
       <td>${u.disabled ? `<span class="pill bad">${esc(t('disabled'))}</span>` : u.locked ? `<span class="pill bad">🔒 ${esc(t('locked'))}</span>` : `<span class="pill ok">${esc(t('active'))}</span>`}${u.must_change_password ? `<div class="sub">${esc(t('must_change_pw_short'))}</div>` : ''}</td>
       <td>${esc(fmtTime(u.last_login_at))}<div class="sub mono">${esc(u.last_login_ip || '')}</div></td>
@@ -8773,6 +8902,7 @@ function adminUserMenu(e, id) {
   menu.innerHTML = `
     <div class="ctx-section">${esc(u.username)}</div>
     <div class="ctx-item" onclick="closeAllCtx(); adminEditDisplayName(${id})">✏ ${esc(t('edit_display_name'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); adminEditEmail(${id})">✉ ${esc(t('mail_set_user'))}</div>
     <div class="ctx-section">${esc(t('role_lbl'))}</div>
     ${['admin', 'operator', 'user', 'auditor'].map(r => `<div class="ctx-item ${self && r !== 'admin' ? 'disabled' : ''}" onclick="closeAllCtx(); adminUserUpdate(${id}, {role: '${r}'})">${u.role === r ? '✓' : '\u2003'} ${esc(t('urole_' + r))}</div>`).join('')}
     ${u.is_admin ? `<div class="ctx-item" onclick="closeAllCtx(); adminBreakGlass(${id}, ${!u.break_glass})">🚨 ${esc(t(u.break_glass ? 'break_glass_off' : 'break_glass_on'))}</div>` : ''}
@@ -8809,6 +8939,13 @@ async function adminUserUpdate(id, body) {
   if (!res.ok) { showToast(await apiError(res), 'error'); return; }
   showToast(t('saved'), 'success', 1500);
   adminUsers();
+}
+
+async function adminEditEmail(id) {
+  const u = adminUsersCache.find(x => x.id === id);
+  const v = await uiPrompt(t('mail_set_user'), u ? (u.email_pending || u.email || '') : '', {message: t('mail_set_user_d')});
+  if (v === null || v === false) return;
+  adminUserUpdate(id, {email: String(v).trim()});
 }
 
 async function adminEditDisplayName(id) {
@@ -9578,6 +9715,7 @@ const POLICY_GROUPS = {
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_updates', ['update_check', 'update_repo', 'update_signing_keys', 'update_proxy', 'self_update']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days', 'file_edit_history', 'file_edit_max_kb']],
+    ['pg_mail', ['mail_security_notices', 'user_email_self']],
     ['pg_alerts', ['alert_failed_signins', 'alert_failed_signins_minutes', 'alert_break_glass', 'alert_new_admin', 'alert_secret_reveal', 'alert_ai_full_access', 'alert_audit_off', 'alert_cli_reset']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],
@@ -9773,6 +9911,125 @@ async function secLoadExtra() {
   if (sr.ok) { siemCache = await sr.json(); renderSIEMAdmin(); }
   cliResetsLoad();
 }
+
+// ══ E-MAIL (v14.6.1): Admin → E-mail, the user's own address ══
+
+let mailAdminCache = null;
+async function adminMail() {
+  const body = document.getElementById('admin-body');
+  const res = await fetch('/api/admin/mail');
+  if (!res.ok) { body.innerHTML = `<div class="fm-error">${esc(await apiError(res))}</div>`; return; }
+  mailAdminCache = await res.json();
+  renderAdminMail();
+}
+
+function mailPresetPick(id) {
+  const p = (mailAdminCache.presets || []).find(x => x.id === id);
+  if (!p) return;
+  document.querySelectorAll('.mail-preset').forEach(b => b.classList.toggle('active', b.dataset.p === id));
+  document.getElementById('mail-preset').value = id;
+  if (p.host) document.getElementById('mail-host').value = p.host;
+  document.getElementById('mail-port').value = p.port;
+  document.getElementById('mail-security').value = p.security;
+  const help = document.getElementById('mail-preset-help');
+  help.innerHTML = `${esc(t('mail_help_' + id))}${p.help ? ` <a href="${esc(p.help)}" target="_blank" rel="noopener noreferrer">${esc(t('mail_help_link'))}</a>` : ''}`;
+}
+
+function renderAdminMail() {
+  const d = mailAdminCache, m = d.settings || {};
+  const pub = m.public_url || location.origin;
+  const recent = d.recent || [];
+  const field = (id, label, val, extra) => `<div class="field"><label for="${id}">${esc(t(label))}</label><input type="text" id="${id}" value="${esc(val == null ? '' : String(val))}" ${extra || ''}></div>`;
+  document.getElementById('admin-body').innerHTML = `
+    <div class="hint-box">${esc(t('mail_intro'))}</div>
+    <div class="adm-h">${esc(t('mail_provider'))}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">${(d.presets || []).map(p => `<button type="button" class="btn-sec btn-sm mail-preset ${p.id === m.preset ? 'active' : ''}" data-p="${esc(p.id)}" onclick="mailPresetPick('${esc(p.id)}')">${esc(t('mail_p_' + p.id))}</button>`).join('')}</div>
+    <div class="setting-desc" id="mail-preset-help" style="margin:6px 0 10px;">${esc(t('mail_help_' + (m.preset || 'custom')))}</div>
+    <input type="hidden" id="mail-preset" value="${esc(m.preset || 'custom')}">
+    <label class="check-row"><input type="checkbox" id="mail-enabled" ${m.enabled ? 'checked' : ''}> <span>${esc(t('mail_enabled'))}</span></label>
+    <div class="mail-grid">
+      ${field('mail-host', 'mail_host', m.host, 'placeholder="smtp.example.com" autocomplete="off"')}
+      ${field('mail-port', 'mail_port', m.port || 587, 'inputmode="numeric" maxlength="5"')}
+      <div class="field"><label for="mail-security">${esc(t('mail_security'))}</label><select id="mail-security">${['starttls', 'tls', 'none'].map(v => `<option value="${v}" ${v === (m.security || 'starttls') ? 'selected' : ''}>${esc(t('mail_sec_' + v))}</option>`).join('')}</select></div>
+      ${field('mail-user', 'mail_user', m.username, 'autocomplete="off" placeholder="wrm@example.com"')}
+      <div class="field"><label for="mail-pass">${esc(t('mail_pass'))}</label><input id="mail-pass" type="password" autocomplete="new-password" placeholder="${esc(m.password_set ? t('mail_pass_kept') : '')}"></div>
+      ${field('mail-from', 'mail_from', m.from, 'placeholder="wrm@example.com"')}
+      ${field('mail-from-name', 'mail_from_name', m.from_name || 'WRM', '')}
+      ${field('mail-url', 'mail_url', pub, 'placeholder="https://wrm.example.com"')}
+    </div>
+    <div class="setting-desc">${esc(t('mail_url_d'))}</div>
+    ${m.updated_at ? `<div class="muted-text" style="margin-top:6px;">${esc(t('mail_updated').replace('{by}', m.updated_by || '—').replace('{at}', fmtTime(m.updated_at)))}</div>` : ''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+      <button class="btn-sm" onclick="mailSave()">💾 ${esc(t('save'))}</button>
+      <button class="btn-sec btn-sm" onclick="mailTest()">✉ ${esc(t('mail_test'))}</button>
+      ${m.password_set ? `<button class="btn-sec btn-sm" onclick="mailSave(true)">${esc(t('mail_pass_clear'))}</button>` : ''}
+    </div>
+    <div class="setting-desc" style="margin-top:8px;">${esc(t('mail_policies_d'))}</div>
+    <div class="adm-h">${esc(t('mail_recent'))} (${recent.length})</div>
+    ${recent.length ? `<div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>${esc(t('mail_to'))}</th><th>${esc(t('mail_subject'))}</th><th>${esc(t('cr_requested'))}</th><th>${esc(t('cr_status'))}</th></tr></thead><tbody>` +
+      recent.map(x => `<tr><td>${esc(x.to)}</td><td>${esc(x.subject)}</td><td style="white-space:nowrap;">${esc(fmtTime(x.created_at))}</td>
+        <td><span class="pill ${x.state === 'sent' ? 'ok' : x.state === 'failed' ? 'bad' : 'warn'}">${esc(t('mail_st_' + x.state))}</span>${x.last_error ? `<div class="sub" title="${esc(x.last_error)}">${esc(x.last_error.slice(0, 120))}</div>` : ''}</td></tr>`).join('') + '</tbody></table></div>'
+      : `<div class="muted-text">${esc(t('mail_none'))}</div>`}`;
+}
+
+async function mailSave(clearPassword) {
+  const v = id => document.getElementById(id).value.trim();
+  const body = {enabled: document.getElementById('mail-enabled').checked, preset: v('mail-preset'), host: v('mail-host'), port: parseInt(v('mail-port'), 10) || 0,
+    security: v('mail-security'), username: v('mail-user'), password: document.getElementById('mail-pass').value, from: v('mail-from'), from_name: v('mail-from-name'),
+    public_url: v('mail-url'), clear_password: !!clearPassword};
+  const res = await fetch('/api/admin/mail', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  if (!res.ok) { showToast(await apiError(res), 'error', 7000); return; }
+  showToast(t('saved'), 'success', 1500);
+  adminMail();
+}
+
+async function mailTest() {
+  const to = await uiPrompt(t('mail_test'), (currentUser && currentUser.email) || '', {message: t('mail_test_q'), placeholder: 'you@example.com', okText: t('mail_test')});
+  if (to === null || to === false || !String(to).trim()) return;
+  showToast(t('mail_sending'), 'info', 2000);
+  const res = await fetch('/api/admin/mail/test', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({to: String(to).trim()})});
+  if (!res.ok) { showToast(await apiError(res), 'error', 12000); return; }
+  showToast(t('mail_test_ok').replace('{to}', String(to).trim()), 'success', 5000);
+}
+
+async function renderMyEmail() {
+  const row = document.getElementById('my-email-row');
+  if (!row) return;
+  const res = await fetch('/api/me/email');
+  if (!res.ok) { row.style.display = 'none'; return; }
+  const d = await res.json();
+  if (currentUser) currentUser.email = d.verified ? d.email : '';
+  let state = '';
+  if (d.email) state = d.verified ? `<span class="pill ok">${esc(t('mail_verified'))}</span>` : `<span class="pill warn">${esc(t('mail_unverified'))}</span>`;
+  const pending = d.pending ? `<div class="setting-desc">⏳ ${esc(t('mail_pending').replace('{a}', d.pending))}</div>` : '';
+  const desc = d.mail_ready ? t('mail_my_d') : t('mail_my_off');
+  row.innerHTML = `<div><div class="setting-label">${esc(t('mail_my'))} ${state}</div><div class="setting-desc">${d.email ? '<b>' + esc(d.email) + '</b> · ' : ''}${esc(desc)}</div>${pending}</div>
+    <div class="setting-control" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${d.self_service && d.mail_ready ? `<button class="btn-sec btn-sm" onclick="myEmailChange()">${esc(t(d.email || d.pending ? 'mail_change' : 'mail_add'))}</button>` : ''}${d.email || d.pending ? `<button class="btn-sec btn-sm" onclick="myEmailRemove()">${esc(t('remove'))}</button>` : ''}</div>`;
+}
+
+async function myEmailChange() {
+  const v = await uiPrompt(t('mail_my'), '', {message: t('mail_change_q'), placeholder: 'you@example.com', okText: t('mail_send_link')});
+  if (v === null || v === false || !String(v).trim()) return;
+  const res = await fetch('/api/me/email', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: String(v).trim()})});
+  if (!res.ok) { showToast(await apiError(res), 'error', 7000); return; }
+  showToast(t('mail_link_sent').replace('{a}', String(v).trim()), 'success', 6000);
+  renderMyEmail();
+}
+
+async function myEmailRemove() {
+  if (!(await uiConfirm(t('mail_remove_q'), {okText: t('remove'), danger: true}))) return;
+  const res = await fetch('/api/me/email', {method: 'DELETE'});
+  if (!res.ok) { showToast(await apiError(res), 'error'); return; }
+  renderMyEmail();
+}
+
+// the verification link lands on /?email_verified=ok|expired|invalid
+(function () {
+  const v = new URLSearchParams(location.search).get('email_verified');
+  if (!v) return;
+  history.replaceState(null, '', location.pathname + location.hash);
+  window.addEventListener('load', () => setTimeout(() => showToast(t('mail_verify_' + (['ok', 'expired'].includes(v) ? v : 'invalid')), v === 'ok' ? 'success' : 'error', 8000), 600));
+})();
 
 // Password resets requested on the server with wrm -reset-password (v14.6.0).
 async function cliResetsLoad() {
@@ -17407,11 +17664,13 @@ async function renderSecurityPane() {
         ? `<button class="btn-sec btn-sm" onclick="regenRecoveryCodes()">${esc(t('new_recovery_codes'))}</button>${me.mfa_required ? '' : `<button class="btn-danger btn-sm" onclick="disable2FA()">${esc(t('turn_off'))}</button>`}`
         : `<button class="btn-sm" onclick="open2FASetup(false)">${esc(t('turn_on'))}</button>`}</div>
     </div>
+    <div class="setting-row" id="my-email-row"></div>
     <div class="adm-h" id="my-sso-h" style="display:none;">${esc(t('sso_my_title'))}</div><div id="my-sso"></div>
     <div id="lock-settings"></div>
     <div class="adm-h" style="display:flex;align-items:center;">${esc(t('signed_in_devices'))}<span style="flex:1"></span><button class="btn-sec btn-sm" onclick="revokeOtherSessions()">${esc(t('sign_out_others'))}</button></div>
     <div id="my-sessions"><div class="fm-loading">${esc(t('loading'))}</div></div>`;
   renderMySSO();
+  renderMyEmail();
   if (window.wrmLock && wrmLock.renderSettings) wrmLock.renderSettings(document.getElementById('lock-settings'));
   const res = await fetch('/api/auth/sessions');
   const box = document.getElementById('my-sessions');

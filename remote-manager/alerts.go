@@ -84,6 +84,7 @@ func detStr(d map[string]interface{}, k string) string {
 }
 
 func alertCheck(in alertInput) {
+	mailObserve(in)
 	d := in.Details
 	switch {
 	case in.Action == "auth.login_failed" || in.Action == "auth.step_up_failed" || in.Action == "auth.mfa_failed" || in.Action == "mcp.auth_failed":

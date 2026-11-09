@@ -1086,6 +1086,7 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		rows, err := db.Query(`SELECT u.id, u.username, COALESCE(u.display_name,''), u.is_admin, COALESCE(u.role,''), COALESCE(u.break_glass,0), u.disabled, u.totp_enabled, u.created_at,
 			COALESCE(u.last_login_at,''), COALESCE(u.last_login_ip,''), COALESCE(u.locked_until,''), u.must_change_password,
+			COALESCE(u.email,''), COALESCE(u.email_verified,0), COALESCE(u.email_pending,''),
 			(SELECT COUNT(*) FROM connections c WHERE c.user_id=u.id),
 			(SELECT COUNT(*) FROM share_links s WHERE s.owner_id=u.id),
 			(SELECT COUNT(*) FROM auth_sessions a WHERE a.user_id=u.id)
@@ -1098,9 +1099,9 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		users := []map[string]interface{}{}
 		for rows.Next() {
-			var id, isAdmin, breakGlass, disabled, totp, mustChange, nConn, nShares, nSess int
-			var username, dn, role, created, lastLogin, lastIP, lockedUntil string
-			rows.Scan(&id, &username, &dn, &isAdmin, &role, &breakGlass, &disabled, &totp, &created, &lastLogin, &lastIP, &lockedUntil, &mustChange, &nConn, &nShares, &nSess)
+			var id, isAdmin, breakGlass, disabled, totp, mustChange, nConn, nShares, nSess, emailOK int
+			var username, dn, role, created, lastLogin, lastIP, lockedUntil, email, emailPending string
+			rows.Scan(&id, &username, &dn, &isAdmin, &role, &breakGlass, &disabled, &totp, &created, &lastLogin, &lastIP, &lockedUntil, &mustChange, &email, &emailOK, &emailPending, &nConn, &nShares, &nSess)
 			locked := false
 			if t, ok := parseTS(lockedUntil); ok && now.Before(t) {
 				locked = true
@@ -1111,6 +1112,7 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 				"locked": locked, "must_change_password": mustChange == 1, "connections": nConn, "shares": nShares,
 				"sessions": nSess, "online": userOnline(id),
 				"role": roleOf(isAdmin == 1, role), "break_glass": breakGlass == 1 && isAdmin == 1,
+				"email": email, "email_verified": emailOK == 1, "email_pending": emailPending,
 			})
 		}
 		rows.Close()
@@ -1228,6 +1230,7 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 			Disabled       *bool   `json:"disabled"`
 			DisplayName    *string `json:"display_name"`
 			RecordingLevel *string `json:"recording_level"`
+			Email          *string `json:"email"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			jsonError(w, "Bad JSON", 400)
@@ -1290,6 +1293,12 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 				for k, v := range endUserAccess(r, id, adminID, "the account was disabled") {
 					changes[k] = v
 				}
+			}
+		}
+		if p.Email != nil {
+			if err := adminSetUserEmail(r, adminID, id, *p.Email); err != nil {
+				jsonError(w, err.Error(), 400)
+				return
 			}
 		}
 		if p.DisplayName != nil {
