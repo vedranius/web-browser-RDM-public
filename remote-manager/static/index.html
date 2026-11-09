@@ -98,6 +98,18 @@ button:hover { background: var(--accent-h); }
   backdrop-filter: blur(2px);
 }
 .modal-overlay.open { display: flex; }
+/* resizable and maximisable big dialogs (wrmWinSize) */
+/* full screen below a 32 px strip that holds the window bar, so the bar never covers the dialog's own buttons */
+.modal.wm-max { width: 100vw !important; height: calc(100vh - 32px) !important; max-width: 100vw !important; max-height: calc(100vh - 32px) !important; margin-top: 32px; border-radius: 0 !important; }
+.modal.wm-sized { max-width: calc(100vw - 8px) !important; max-height: calc(100vh - 8px) !important; }
+.wm-bar { position: fixed; z-index: 2; display: flex; gap: 2px; padding: 2px; border-radius: 7px; background: var(--bg2); border: 1px solid var(--border2); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.wm-bar button { background: transparent; border: 0; color: var(--text2); cursor: pointer; font-size: 13px; line-height: 1; padding: 3px 7px; border-radius: 5px; min-height: 0; }
+.wm-bar button:hover { background: var(--bg4); color: var(--text); }
+.wm-grip { position: fixed; z-index: 2; width: 14px; height: 14px; cursor: nwse-resize; touch-action: none;
+  background: linear-gradient(135deg, transparent 50%, var(--text3) 50%, var(--text3) 58%, transparent 58%, transparent 70%, var(--text3) 70%, var(--text3) 78%, transparent 78%); opacity: .7; }
+.wm-grip:hover { opacity: 1; }
+/* fields outside .field inside dialogs follow the theme (zero specificity: any own rule wins) */
+:where(.modal) :where(input[type=search], input[type=text], input:not([type]), input[type=number], select, textarea) { background: var(--bg); color: var(--text); border: 1px solid var(--border2); border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
 .modal {
   background: var(--bg2);
   border: 1px solid var(--border2);
@@ -6411,6 +6423,9 @@ Object.assign(LANGS.hr, {
  "date_fmt_locale": "Prema jeziku preglednika",
  "date_format_saved": "Format datuma i vremena spremljen",
 });
+// v14.5.1: resizable and maximisable dialogs
+Object.assign(LANGS.en, { win_max: 'Full screen', win_restore: 'Back to the window size', win_reset: 'Default size', win_resize: 'Drag to resize' });
+Object.assign(LANGS.hr, { win_max: 'Preko cijelog zaslona', win_restore: 'Natrag na veličinu prozora', win_reset: 'Zadana veličina', win_resize: 'Povuci za promjenu veličine' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.documentElement.lang = currentLang === 'hr' ? 'hr' : 'en';
@@ -6481,6 +6496,114 @@ function closeModal(id) {
   const back = m.querySelector('.modal-back');
   if (back) back.remove();
 }
+// Big dialogs (the tool windows opened from the menus: storages, chains, monitoring, logs …)
+// can be maximised and resized like windows. A small bar above the dialog's top-right corner
+// holds ⤢ (full screen / back) and ↺ (default size); the corner grip resizes. The size is kept
+// per dialog in localStorage. Small dialogs and phone widths are left as they are.
+const wrmWinSize = (() => {
+  const KEY = 'wrm_win_sizes', MIN_W = 560;
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* storage unavailable */ } };
+  let ctl = null, timer = null;
+  const watched = new WeakSet();
+  const keyOf = (ov, m) => ov.id || m.id || [...m.classList].find(c => c !== 'modal' && !c.startsWith('wm-')) || '';
+  const isOpen = (ov) => ov.isConnected && ov.classList.contains('open') && ov.getClientRects().length > 0;
+  function detach() {
+    if (!ctl) return;
+    ctl.bar.remove(); ctl.grip.remove(); ctl.ro.disconnect();
+    ctl = null;
+  }
+  function apply(m, s) {
+    m.classList.toggle('wm-max', !!(s && s.max));
+    m.classList.toggle('wm-sized', !!(s && s.w));
+    if (s && s.w && !s.max) {
+      m.style.width = Math.min(s.w, innerWidth - 8) + 'px';
+      m.style.height = Math.min(s.h, innerHeight - 8) + 'px';
+    } else {
+      m.style.width = m.dataset.wmW || '';
+      m.style.height = m.dataset.wmH || '';
+    }
+    buttons();
+    place();
+  }
+  function buttons() {
+    if (!ctl) return;
+    const max = ctl.m.classList.contains('wm-max'), s = saved[ctl.key];
+    const b = ctl.bar.querySelector('.wm-max-btn');
+    b.textContent = max ? '⤡' : '⤢';
+    b.title = t(max ? 'win_restore' : 'win_max');
+    ctl.bar.querySelector('.wm-reset').style.display = s ? '' : 'none';
+    ctl.grip.style.display = max ? 'none' : '';
+  }
+  function place() {
+    if (!ctl) return;
+    const r = ctl.m.getBoundingClientRect();
+    const bw = ctl.bar.offsetWidth || 60;
+    if (r.top >= 30) { ctl.bar.style.top = (r.top - 27) + 'px'; ctl.bar.style.left = (r.right - bw) + 'px'; }
+    else { ctl.bar.style.top = (r.top + 3) + 'px'; ctl.bar.style.left = Math.round(r.left + r.width / 2 - bw / 2) + 'px'; }
+    ctl.grip.style.top = (r.bottom - 16) + 'px';
+    ctl.grip.style.left = (r.right - 16) + 'px';
+  }
+  function attach(ov, m) {
+    detach();
+    if (m.dataset.wmW === undefined) { m.dataset.wmW = m.style.width; m.dataset.wmH = m.style.height; }
+    const bar = document.createElement('div');
+    bar.className = 'wm-bar';
+    bar.innerHTML = `<button type="button" class="wm-max-btn"></button><button type="button" class="wm-reset" title="${esc(t('win_reset'))}">↺</button>`;
+    const grip = document.createElement('div');
+    grip.className = 'wm-grip';
+    grip.title = t('win_resize');
+    ov.appendChild(bar); ov.appendChild(grip);
+    const ro = new ResizeObserver(place);
+    ro.observe(m);
+    ctl = {ov, m, bar, grip, ro, key: keyOf(ov, m)};
+    bar.querySelector('.wm-max-btn').onclick = (e) => {
+      e.stopPropagation();
+      const max = !m.classList.contains('wm-max');
+      const s = Object.assign({}, saved[ctl.key] || {}, {max});
+      if (!s.max && !s.w) delete saved[ctl.key]; else saved[ctl.key] = s;
+      save(); apply(m, saved[ctl.key]);
+    };
+    bar.querySelector('.wm-reset').onclick = (e) => { e.stopPropagation(); delete saved[ctl.key]; save(); apply(m, null); };
+    grip.onpointerdown = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const r = m.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY;
+      grip.setPointerCapture(e.pointerId);
+      // the overlay centres the dialog: it grows on both sides, so the grip moves twice the pointer distance
+      grip.onpointermove = (ev) => {
+        const w = Math.max(420, Math.min(innerWidth - 8, r.width + 2 * (ev.clientX - x0)));
+        const h = Math.max(280, Math.min(innerHeight - 8, r.height + 2 * (ev.clientY - y0)));
+        saved[ctl.key] = {w: Math.round(w), h: Math.round(h)};
+        apply(m, saved[ctl.key]);
+      };
+      grip.onpointerup = () => { grip.onpointermove = grip.onpointerup = null; save(); };
+    };
+    apply(m, saved[ctl.key]);
+  }
+  function scan() {
+    timer = null;
+    for (const ov of document.querySelectorAll('.modal-overlay')) {
+      if (watched.has(ov)) continue;
+      watched.add(ov);
+      new MutationObserver(later).observe(ov, {attributes: true, attributeFilter: ['class']});
+    }
+    if (ctl && (!isOpen(ctl.ov) || !ctl.ov.contains(ctl.m))) detach();
+    const open = [...document.querySelectorAll('.modal-overlay.open')].filter(isOpen);
+    const ov = open[open.length - 1];
+    if (!ov || innerWidth < 760 || ov.dataset.wm === 'off') { detach(); return; }
+    const m = [...ov.children].find(c => c.classList.contains('modal'));
+    if (!m || (m.offsetWidth < MIN_W && !m.classList.contains('wm-sized') && !m.classList.contains('wm-max'))) { detach(); return; }
+    if (ctl && ctl.m === m) { place(); return; }
+    attach(ov, m);
+  }
+  function later() { if (!timer) timer = setTimeout(scan, 30); }
+  new MutationObserver(later).observe(document.body, {childList: true});
+  addEventListener('click', later, true);
+  addEventListener('keydown', later, true);
+  addEventListener('resize', () => { if (ctl) apply(ctl.m, saved[ctl.key]); later(); });
+  return {scan: later};
+})();
 // Keyboard focus stays inside the open dialog (a11y): Tab and Shift+Tab wrap around its
 // controls instead of moving into the page behind the overlay.
 document.addEventListener('keydown', (e) => {
