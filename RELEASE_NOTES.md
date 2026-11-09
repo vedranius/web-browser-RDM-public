@@ -1,27 +1,38 @@
-## Web Remote Manager PRO v14.5.0 — Chains that recognise your servers
+## Web Remote Manager PRO v14.5.1 — Resizable windows and storage columns
 
-### A server list that makes sense
+### Windows
+
+- **Full screen and any size.** The big windows opened from the menus (storages, chains, admin, settings, monitoring and other large dialogs) have a small bar above their top-right corner: ⤢ for full screen, ⤡ back, ↺ for the default size. Drag the bottom-right corner to resize. Each window keeps its size in your browser.
+
+### Storage browser
+
+- **Columns like a file manager.** Click *Name*, *Size* or *Date* to sort, drag a column border to widen it, and double-click the *Name* border to fit the longest file name. Long names scroll sideways instead of being cut. The storage list and the S3 activity panel can be resized by dragging their edges.
+- The search field and the sort list follow the dark theme, and the sort direction arrow shows the real direction.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.5.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.5.1) asset. Preserve the database and encryption key. Nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.5.0 — Chains that recognise your servers
+
+#### A server list that makes sense
 
 - **Servers by folder, with search.** The Chains builder, the AI wizard and the templates list your saved SSH servers by folder with their host and tags. Search by name, host, folder or tag, tick several and add them at once. Quick connections are not listed, a server already in the chain cannot be added twice, and two servers with the same name in different folders are marked.
 
-### Recognition and suggestions
+#### Recognition and suggestions
 
 - **What runs on a server becomes a check with one click.** Right after adding servers, WRM looks at them read-only (services, Docker containers, listening ports and network mounts) and suggests checks. Ports carry their service name, e.g. PostgreSQL (5432). *Add the recommended* takes the usual set.
 - **Suggested links.** A network mount from another server of the chain suggests the link between the two. A mount from a host outside the chain suggests adding that host as an outside endpoint.
 - **Smart outside endpoints.** Type a URL, `host:port` or a host name, and WRM adds the fitting checks (HTTP and certificate, TCP port, or DNS). Saved HTTP/HTTPS connections can be added from *Web connections*.
 - **Test now** in the check dialog runs only that check once, without saving.
 
-### Fixes
+#### Fixes
 
 - **WRM no longer freezes while an AI works through MCP.** Every MCP session's live view held its own connection, and over plain HTTP a browser has only six per server for all tabs; at six sessions the page stopped responding. All AI views of a tab now share one connection.
 - The builder's fields follow the dark theme, the Croatian confirm count is grammatical, the automatic states are named in your language, and the fields explain themselves.
 - The lock button follows a language change. Monitoring cards show the server's name as the title, and the doubled gear icon on *Settings* is gone.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.5.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.5.0) asset. Preserve the database and encryption key. Nothing is migrated, and existing chains are unchanged.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.4.0 — S3 activity and costs, AI in the Chains builder
 
