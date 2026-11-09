@@ -1,24 +1,33 @@
-## Web Remote Manager PRO v14.6.1 — WRM sends mail
+## Web Remote Manager PRO v14.6.2 — Forgot password and activation by e-mail
 
-### Set it up once
+### Forgot password
+
+- **Forgot password?** on the sign-in page: enter your user name or confirmed e-mail address and WRM mails a link that works once, for one hour. The page says the same whether or not an account matched, so it does not reveal who has an account.
+- On the link you choose a new password. With two-factor authentication you also enter a code (or a recovery code), so someone who only got into your mailbox cannot change it. Your other sign-ins end and you get a notice by mail.
+- Directory and single sign-on accounts never get a link, and nobody does during a lockdown. At the **Enterprise** level administrators cannot use it at all (policy `password_reset_mail`); they reset each other's passwords instead.
+
+### New accounts
+
+- **Invitations**: when creating a user, enter an e-mail address and tick *Send an invitation*. The user chooses the password through the link (valid three days), which also confirms the address. No more passing temporary passwords around.
+- **Open registration with confirmation**: a new account asks for an e-mail address and starts once the link sent to it is opened. Accounts never confirmed are removed after a week.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.6.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.6.2) asset. Preserve the database and encryption key. One table and one user column are added. Everything here needs *Admin → E-mail* set up with WRM's address for links; without it, sign-in and registration work as before.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.6.1 — WRM sends mail
+
+#### Set it up once
 
 - **Admin → E-mail**: pick **Gmail**, **Outlook.com**, **Microsoft 365** or another SMTP server, enter the user name and an app password, the sender and WRM's address, and press *Send a test message*. WRM says what each provider needs (an app password; for Microsoft 365, SMTP AUTH allowed for the mailbox). It works the same for WRM on your own computer and on a server, as long as that machine can reach the mail server.
 - The password is stored encrypted and never shown again. Mail waits in a queue and is retried, so a slow mail server never slows WRM down.
 
-### For every user
+#### For every user
 
 - **E-mail address with confirmation**: *Settings → Security → E-mail address* sends a link; the address counts once you open it. Administrators can set addresses in *Admin → Users*, still confirmed by the user.
 - **Security notices**: you get a mail when your password is changed or reset (by you, an administrator or on the server), when two-factor authentication is turned on or off, and when a new address is set. Each message is in English and Croatian.
-
-### Coming next
-
-Activation of new accounts by e-mail and *Forgot password* (v14.6.2) use the same mail account.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.6.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.6.1) asset. Preserve the database and encryption key. Two tables and five user columns are added; nothing is sent until an administrator sets up and turns on Admin → E-mail.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.6.0 — Password reset on the server, protected
 

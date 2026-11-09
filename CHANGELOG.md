@@ -1,3 +1,18 @@
+## [14.6.2] - 2026-11-09
+
+*Forgot password* and activation of new accounts by e-mail. Upgrading from v14.6.1 keeps the database and the encryption key; the table `auth_links` and the `users` column `activation_pending` are added, so the previous binary still starts on it.
+
+### Added
+
+- **Forgot password?** on the sign-in page (when mail is set up). WRM mails a link valid for one hour that works once to the account's confirmed address; the page answers the same whether or not an account matched. On the link the user chooses a new password; an account with two-factor authentication also enters a code or a recovery code. Every other sign-in of the account ends, the user then signs in normally, and a security notice follows. Never for disabled, directory (LDAP/AD) or single sign-on accounts, nor while local sign-in is limited or during a lockdown (except break-glass administrators). At most one link every two minutes per account and five requests in 15 minutes per address. API `POST /api/auth/forgot`, `GET/POST /api/auth/reset`.
+- **Policy `password_reset_mail`** (Admin → Policies → E-mail): everyone with a confirmed address (default), not administrators, or off. The Enterprise security level requires *not administrators*, so a taken-over administrator mailbox does not give WRM.
+- **Invitations.** *Admin → Users → New user* takes an e-mail address and *Send an invitation*: the user gets a link valid for three days, chooses the password there and confirms the address by opening it; the administrator never sees a password. An address without an invitation is confirmed by the usual link.
+- **Self-registration confirms the e-mail address** (policy `registration_verify_email`, on, when registration is open and mail is set up): the form asks for an address and the account starts once the link sent to it (valid 24 hours) is opened. Signing in before that says so; the user list marks such accounts; accounts never confirmed are removed after a week. API `GET /api/auth/activate`.
+
+### Changed
+
+- The sign-in button shows the user's language right after the page loads (it showed *Sign In* until the tabs were switched).
+
 ## [14.6.1] - 2026-11-09
 
 WRM sends mail: users confirm their e-mail address and are told when their password or two-factor authentication changes. Upgrading from v14.6.0 keeps the database and the encryption key; two tables (`mail_settings`, `mail_outbox`) and five `users` columns (`email`, `email_verified`, `email_pending`, `email_token`, `email_token_at`) are added, so the previous binary still starts on it.
