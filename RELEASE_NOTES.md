@@ -1,19 +1,32 @@
-## Web Remote Manager PRO v14.5.1 — Resizable windows and storage columns
+## Web Remote Manager PRO v14.6.0 — Password reset on the server, protected
 
-### Windows
+Until now anyone who could run WRM on its server could reset any password, the administrator's included, with `wrm -reset-password`, and nobody was told. That is still possible for a person who really needs it, but it can no longer happen quietly.
 
-- **Full screen and any size.** The big windows opened from the menus (storages, chains, admin, settings, monitoring and other large dialogs) have a small bar above their top-right corner: ⤢ for full screen, ⤡ back, ↺ for the default size. Drag the bottom-right corner to resize. Each window keeps its size in your browser.
+### How it is protected
 
-### Storage browser
-
-- **Columns like a file manager.** Click *Name*, *Size* or *Date* to sort, drag a column border to widen it, and double-click the *Name* border to fit the longest file name. Long names scroll sideways instead of being cut. The storage list and the S3 activity panel can be resized by dragging their edges.
-- The search field and the sort list follow the dark theme, and the sort direction arrow shows the real direction.
+- **By security level** (Admin → Policies → Accounts → *Password reset on the server*):
+  - **Alert administrators** (Home): the reset happens at once and every administrator gets a security alert.
+  - **Only while WRM is stopped** (Business): the command refuses while WRM is running, so a takeover means a visible outage.
+  - **Confirmation** (Enterprise): the command files a request. Another administrator approves it in Admin → Security, or the user confirms it with their own 2FA code (`-reset-code 123456`), or it can be run again after one hour if nobody rejected it.
+- **Every reset is reported.** Resets, refused attempts, requests and wrong codes go to every administrator's inbox and notification channels, the audit log and SIEM.
+- **AI can't do it.** An AI or MCP session can never run `wrm -reset-password`, `-reset-2fa` or `-lockdown` on a server, even with full access, and a temporary password in its output is masked.
 
 ### Upgrade
 
-Use WRM's update action or replace the executable/container with the matching [v14.5.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.5.1) asset. Preserve the database and encryption key. Nothing is migrated.
+Use WRM's update action or replace the executable/container with the matching [v14.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.6.0) asset. Preserve the database and encryption key. Two tables are added; nothing else is migrated. The default stays *Alert administrators*; Business and Enterprise levels raise it.
 
 [Full changelog](CHANGELOG.md)
+
+## Included from v14.5.1 — Resizable windows and storage columns
+
+#### Windows
+
+- **Full screen and any size.** The big windows opened from the menus (storages, chains, admin, settings, monitoring and other large dialogs) have a small bar above their top-right corner: ⤢ for full screen, ⤡ back, ↺ for the default size. Drag the bottom-right corner to resize. Each window keeps its size in your browser.
+
+#### Storage browser
+
+- **Columns like a file manager.** Click *Name*, *Size* or *Date* to sort, drag a column border to widen it, and double-click the *Name* border to fit the longest file name. Long names scroll sideways instead of being cut. The storage list and the S3 activity panel can be resized by dragging their edges.
+- The search field and the sort list follow the dark theme, and the sort direction arrow shows the real direction.
 
 ## Included from v14.5.0 — Chains that recognise your servers
 

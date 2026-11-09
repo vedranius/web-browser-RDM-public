@@ -1,3 +1,19 @@
+## [14.6.0] - 2026-11-09
+
+A password reset on the server (`wrm -reset-password`) is no longer a quiet way into WRM. Upgrading from v14.5.1 keeps the database and the encryption key; two tables are added (`server_heartbeat`, `cli_reset_requests`), so the previous binary still starts on it.
+
+### Added
+
+- **Reset protection by security level** (setting `cli_password_reset`, Admin → Policies → Accounts). *Alert* (Home, the default) resets at once and tells every administrator. *Only while WRM is stopped* (Business) refuses the command while a WRM server uses the database, so taking over an account means a visible outage. *Confirmation* (Enterprise) files a request instead: it takes effect when another administrator approves it in Admin → Security, at once with the user's own 2FA or recovery code (`-reset-code`), or when the command is run again after one hour unless an administrator rejected it. Raising the security level raises the setting; a `WRM_CLI_PASSWORD_RESET` variable in the caller's environment can make the command stricter, never looser.
+- **Security alert on a server reset** (`alert_cli_reset`, on by default). Every reset, refused attempt, filed request and wrong 2FA code reaches every administrator's inbox and notification channels and goes to the audit log and SIEM as `security.alert`, with the server's host name.
+- **Admin → Security → Password resets requested on the server.** Pending and recent requests with *Approve* (always a fresh password/2FA confirmation) and *Reject*. Nobody decides a request for their own account. API: `GET /api/admin/cli-resets`, `POST /api/admin/cli-resets/{id}/approve|reject`.
+- `-reset-code CODE` command-line flag.
+
+### Changed
+
+- **An AI never runs WRM's own account recovery.** Commands that run `wrm -reset-password`, `-reset-2fa` or `-lockdown` on a server are a hard block for AI and MCP sessions (rule `wrm_recovery`), also under full access, and a temporary password printed by the command is masked in any AI output.
+- A running WRM writes a heartbeat to its database every 20 seconds, so the command knows whether a server is running.
+
 ## [14.5.1] - 2026-11-09
 
 Windows you can resize and maximise, and storage columns you can widen. Upgrading from v14.5.0 keeps the database and the encryption key; nothing is migrated.
