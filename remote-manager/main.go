@@ -348,6 +348,9 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/mail/", apiAdminMailHandler)
 	mux.HandleFunc("/api/me/email", apiMeEmailHandler)
 	mux.HandleFunc("/api/auth/verify-email", apiVerifyEmailHandler)
+	mux.HandleFunc("/api/auth/forgot", apiAuthForgotHandler)
+	mux.HandleFunc("/api/auth/reset", apiAuthResetHandler)
+	mux.HandleFunc("/api/auth/activate", apiAuthActivateHandler)
 	mux.HandleFunc("/api/admin/cli-resets/", apiAdminCLIResetsHandler)
 	mux.HandleFunc("/api/admin/security", apiAdminSecurityHandler)
 	mux.HandleFunc("/api/admin/security/", apiAdminSecurityHandler)
@@ -660,6 +663,7 @@ func serve(stop <-chan struct{}) int {
 	go func() {
 		for i := 0; ; i++ {
 			cleanupAuthSessions()
+			authLinksCleanup()
 			if i%24 == 0 {
 				cleanupAuditLog()
 			}
@@ -1138,6 +1142,7 @@ func initDB() {
 	db.Exec(`ALTER TABLE storages ADD COLUMN provider TEXT NOT NULL DEFAULT ''`) // v14.4.0
 	initCLIResetSchema()
 	initMailSchema()
+	initAuthMailSchema()
 	ensureTable("chains", chainSchema,
 		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
 	ensureTable("chain_samples", chainSampleSchema,
