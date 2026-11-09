@@ -10025,6 +10025,7 @@ async function myEmailRemove() {
 
 // the verification link lands on /?email_verified=ok|expired|invalid
 (function () {
+  if (typeof URLSearchParams === 'undefined' || typeof location === 'undefined' || !location.search) return;
   const v = new URLSearchParams(location.search).get('email_verified');
   if (!v) return;
   history.replaceState(null, '', location.pathname + location.hash);
