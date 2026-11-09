@@ -65,6 +65,8 @@ var settingSpecs = []settingSpec{
 	{Key: "alert_ai_full_access", Default: "1", Kind: "bool"},
 	{Key: "alert_audit_off", Default: "1", Kind: "bool"},
 	{Key: "alert_cli_reset", Default: "1", Kind: "bool"},
+	{Key: "mail_security_notices", Default: "1", Kind: "bool"},
+	{Key: "user_email_self", Default: "1", Kind: "bool"},
 	{Key: "cli_password_reset", Default: "alert", Kind: "enum", Enum: []string{"alert", "stopped", "confirm"}},
 	{Key: "password_min_length", Default: "8", Kind: "int", Min: 6, Max: 128},
 	{Key: "session_idle_hours", Default: "168", Kind: "int", Min: 1, Max: 8760},

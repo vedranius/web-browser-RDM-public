@@ -214,6 +214,10 @@ func cliDoReset(u *userRow, reset2FA bool) error {
 	revokeUserSessions(u.ID, 0)
 	auditLogAs(nil, 0, "cli", "admin.user_password_reset", u.Username, map[string]interface{}{"cli": true, "reset_2fa": reset2FA, "mode": cliResetMode()})
 	alerted := cliResetAlert(u.Username, reset2FA)
+	// tell the user too; WRM may be stopped, so try to deliver at once
+	if id := mailSecurityNotice(u.ID, "password_reset", "Your WRM password was reset on the server with wrm -reset-password", "Tvoja WRM lozinka resetirana je na poslužitelju naredbom wrm -reset-password", ""); id > 0 {
+		mailDeliverDue(id)
+	}
 	fmt.Printf("New temporary password for %s: %s\n(The user must change it after signing in.)\n", u.Username, pw)
 	if alerted {
 		fmt.Println("Every administrator was told about this reset (security alert).")

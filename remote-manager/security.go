@@ -586,6 +586,7 @@ var publicAPIPaths = []string{
 	"/api/auth/oidc/start",
 	"/api/auth/oidc/callback",
 	"/api/auth/oidc/result",
+	"/api/auth/verify-email",
 	"/api/auth/saml/start",
 	"/api/share/",
 	"/api/hooks/",
