@@ -1191,6 +1191,7 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
 .siem-dot.ok { background: var(--green); } .siem-dot.behind { background: var(--yellow); } .siem-dot.failing { background: var(--red); }
 .alert-row { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border2); font-size: 12px; flex-wrap: wrap; }
 .alert-row .grow { min-width: 180px; }
+.auth-note.ok { background: rgba(var(--green-rgb),.1); border-color: rgba(var(--green-rgb),.45); color: var(--green-t); }
 .auth-note.bad { background: rgba(var(--red-rgb),.1); border-color: rgba(var(--red-rgb),.45); color: var(--red-t); }
 .sec-plan { padding: 6px 14px 12px; }
 .sec-keep { display: flex; gap: 6px; align-items: center; font-size: 11.5px; color: var(--text2); cursor: pointer; }
@@ -1775,6 +1776,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <input type="password" id="auth-pass" placeholder="Enter password" data-i18n-placeholder="auth_ph_pass" autocomplete="current-password"
                onkeydown="if(event.key==='Enter') doAuth()">
       </div>
+      <div class="auth-field" id="auth-email-row" style="display:none;">
+        <label data-i18n="auth_email" for="auth-email">E-mail address</label>
+        <input type="email" id="auth-email" autocomplete="email" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') doAuth()">
+        <div class="muted-text" style="margin-top:4px;font-size:11px;" data-i18n="auth_email_hint">WRM sends a link to this address; the account works once you open it.</div>
+      </div>
       <div id="auth-level" style="display:none;">
         <label class="auth-lvl-title" data-i18n="sec_first_title">Where will WRM run?</label>
         <div class="auth-levels" id="auth-levels"></div>
@@ -1782,9 +1788,41 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div class="muted-text" id="auth-level-note" style="margin-bottom:10px;font-size:11px;"></div>
       </div>
       <button class="auth-btn" id="auth-submit-btn" onclick="doAuth()">Sign In</button>
+      <a href="#" class="auth-local-link" id="auth-forgot-link" style="display:none;" onclick="event.preventDefault();showForgotStep()" data-i18n="auth_forgot_link">Forgot password?</a>
       </div>
       <a href="#" class="auth-local-link" id="auth-local-link" style="display:none;" onclick="event.preventDefault();showLocalSignIn(true)" data-i18n="sso_local_link">Emergency sign-in with a local account</a>
       <div class="muted-text" id="auth-reg-closed" style="display:none;margin-top:12px;text-align:center;" data-i18n="registration_closed_hint">No account? Ask your administrator to create one.</div>
+    </div>
+    <div id="auth-step-forgot" style="display:none;">
+      <div class="auth-note" data-i18n="auth_forgot_intro">Enter your username or the e-mail address confirmed for your account. WRM sends a link for a new password to that address.</div>
+      <div id="auth-forgot-error" class="auth-error"></div>
+      <div id="auth-forgot-done" class="auth-note ok" style="display:none;"></div>
+      <div class="auth-field">
+        <label data-i18n="auth_forgot_login" for="auth-forgot-login">Username or e-mail</label>
+        <input type="text" id="auth-forgot-login" autocomplete="username" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') doForgot()">
+      </div>
+      <button class="auth-btn" id="auth-forgot-btn" onclick="doForgot()" data-i18n="auth_forgot_send">Send link</button>
+      <div style="text-align:center;margin-top:12px;"><a href="#" onclick="event.preventDefault();resetAuthSteps()" style="color:var(--text2);font-size:12px;" data-i18n="back">Back</a></div>
+    </div>
+    <div id="auth-step-reset" style="display:none;">
+      <div class="auth-note" id="auth-reset-intro"></div>
+      <div id="auth-reset-error" class="auth-error"></div>
+      <div id="auth-reset-form">
+      <div class="auth-field">
+        <label data-i18n="new_password" for="auth-reset-pass">New password</label>
+        <input type="password" id="auth-reset-pass" autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label data-i18n="auth_reset_repeat" for="auth-reset-pass2">Repeat the new password</label>
+        <input type="password" id="auth-reset-pass2" autocomplete="new-password" onkeydown="if(event.key==='Enter') doResetPassword()">
+      </div>
+      <div class="auth-field" id="auth-reset-code-row" style="display:none;">
+        <label data-i18n="auth_reset_code" for="auth-reset-code">Code from your authenticator app (or a recovery code)</label>
+        <input type="text" id="auth-reset-code" class="code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="11" placeholder="123456" onkeydown="if(event.key==='Enter') doResetPassword()">
+      </div>
+      <button class="auth-btn" id="auth-reset-btn" onclick="doResetPassword()" data-i18n="auth_reset_save">Save the password</button>
+      </div>
+      <div style="text-align:center;margin-top:12px;"><a href="#" onclick="event.preventDefault();leaveResetStep()" style="color:var(--text2);font-size:12px;" data-i18n="auth_to_sign_in">To sign-in</a></div>
     </div>
     <div id="auth-step-mfa" style="display:none;">
       <div class="auth-note" data-i18n="mfa_prompt">Enter the 6-digit code from your authenticator app. You can also use one of your recovery codes.</div>
@@ -2918,8 +2956,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <h3>👤 <span data-i18n="new_user">New user</span></h3>
     <div class="field"><label data-i18n="username" for="nu-username">Username</label><input type="text" id="nu-username" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
     <div class="field"><label data-i18n="display_name" for="nu-display">Display name (optional)</label><input type="text" id="nu-display" maxlength="80"></div>
-    <div class="field"><label data-i18n="password" for="nu-password">Password</label><input type="password" id="nu-password" autocomplete="new-password" placeholder=""><div class="muted-text" style="margin-top:4px;" data-i18n="nu_pw_hint">Leave empty to generate a secure temporary password.</div></div>
-    <div class="field field-check"><input type="checkbox" id="nu-must-change" checked><label for="nu-must-change" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="must_change_pw">Must change the password at first sign-in</label></div>
+    <div class="field"><label data-i18n="auth_email" for="nu-email">E-mail address</label><input type="email" id="nu-email" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="" data-i18n-placeholder="nu_email_ph"></div>
+    <div class="field field-check" id="nu-invite-row"><input type="checkbox" id="nu-invite" onchange="nuInviteToggle()"><label for="nu-invite" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="nu_invite">Send an invitation: the user chooses the password through a link</label></div>
+    <div class="muted-text" id="nu-invite-hint" style="margin:-4px 0 10px;font-size:11px;"></div>
+    <div class="field" id="nu-password-row"><label data-i18n="password" for="nu-password">Password</label><input type="password" id="nu-password" autocomplete="new-password" placeholder=""><div class="muted-text" style="margin-top:4px;" data-i18n="nu_pw_hint">Leave empty to generate a secure temporary password.</div></div>
+    <div class="field field-check" id="nu-must-change-row"><input type="checkbox" id="nu-must-change" checked><label for="nu-must-change" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="must_change_pw">Must change the password at first sign-in</label></div>
     <div class="field"><label data-i18n="role_lbl" for="nu-role">Role</label><select id="nu-role">
       <option value="user" data-i18n="urole_user">User</option><option value="operator" data-i18n="urole_operator">Operator</option>
       <option value="auditor" data-i18n="urole_auditor">Security auditor</option><option value="admin" data-i18n="urole_admin">Administrator</option></select>
@@ -6305,6 +6346,43 @@ Object.assign(LANGS.en, {
  "mail_my_off": "WRM cannot send mail yet; an administrator sets it up in Admin → E-mail.",
  "mail_verified": "confirmed",
  "mail_unverified": "not confirmed",
+ "auth_email": "E-mail address",
+ "auth_email_hint": "WRM sends a link to this address; the account works once you open it.",
+ "auth_forgot_link": "Forgot password?",
+ "auth_forgot_intro": "Enter your username or the e-mail address confirmed for your account. WRM sends a link for a new password to that address.",
+ "auth_forgot_login": "Username or e-mail",
+ "auth_forgot_send": "Send link",
+ "auth_forgot_empty": "Enter your username or e-mail address.",
+ "auth_forgot_sent": "If an account with a confirmed e-mail address matches, a link is on its way. It works once, for one hour. No mail? Check the spam folder or ask an administrator.",
+ "auth_reset_repeat": "Repeat the new password",
+ "auth_reset_code": "Code from your authenticator app (or a recovery code)",
+ "auth_reset_save": "Save the password",
+ "auth_to_sign_in": "To sign-in",
+ "auth_reset_intro": "Choose a new password for {u} (at least {n} characters). Other sign-ins of this account end.",
+ "auth_activate_intro": "Welcome! Choose a password for your WRM account {u} (at least {n} characters).",
+ "auth_link_expired": "This link has expired or was already used. Ask for a new one.",
+ "auth_link_invalid": "This link is not valid. Check that it was copied whole, or ask for a new one.",
+ "auth_reset_empty": "Enter the new password.",
+ "auth_reset_mismatch": "The two passwords are not the same.",
+ "auth_reset_done": "The password is set. Sign in with it now.",
+ "auth_register_pending": "Almost done: WRM sent a confirmation link to {e}. Open it within 24 hours, then sign in.",
+ "auth_activated_ok": "Your account is confirmed. Sign in.",
+ "auth_activated_expired": "The confirmation link has expired or was already used. Register again or ask an administrator.",
+ "auth_activated_invalid": "The confirmation link is not valid.",
+ "nu_email_ph": "optional",
+ "nu_invite": "Send an invitation: the user chooses the password through a link",
+ "nu_invite_on": "WRM mails a link valid for 3 days. Opening it confirms the address; the user then sets a password and signs in.",
+ "nu_invite_no_mail": "Invitations need outgoing mail and WRM's address for links (Admin → E-mail). Without them, give the user the password yourself.",
+ "nu_invited": "User created; the invitation was sent to {e}.",
+ "usr_activation_pending": "registered, e-mail not confirmed yet",
+ "p_password_reset_mail": "Forgot password by e-mail",
+ "p_password_reset_mail_d": "The sign-in page offers “Forgot password?”: WRM mails a one-time link valid for one hour to the user's confirmed address. Accounts with 2FA also need a code; directory and single sign-on accounts never get one. Needs outgoing mail and WRM's address for links (Admin → E-mail).",
+ "po_password_reset_mail_all": "Everyone with a confirmed address",
+ "po_password_reset_mail_users": "Not for administrators",
+ "po_password_reset_mail_off": "Off",
+ "slr_password_reset_mail": "Taking over an administrator's mailbox is not enough to take over WRM: administrators reset passwords through another administrator.",
+ "p_registration_verify_email": "Self-registration confirms the e-mail address",
+ "p_registration_verify_email_d": "When registration is open and outgoing mail works, a new account asks for an e-mail address and starts working only after the link sent to it is opened. Accounts never confirmed are removed after a week.",
  "mail_pending": "Waiting for confirmation: {a}. Open the link in the message sent there (valid 24 hours).",
  "mail_add": "Add",
  "mail_change": "Change",
@@ -6511,6 +6589,43 @@ Object.assign(LANGS.hr, {
  "mail_my_off": "WRM još ne može slati e-poštu; administrator je postavlja u Admin → E-pošta.",
  "mail_verified": "potvrđena",
  "mail_unverified": "nije potvrđena",
+ "auth_email": "E-mail adresa",
+ "auth_email_hint": "WRM šalje poveznicu na ovu adresu; račun radi kad je otvoriš.",
+ "auth_forgot_link": "Zaboravljena lozinka?",
+ "auth_forgot_intro": "Upiši korisničko ime ili e-mail adresu potvrđenu za svoj račun. WRM na tu adresu šalje poveznicu za novu lozinku.",
+ "auth_forgot_login": "Korisničko ime ili e-mail",
+ "auth_forgot_send": "Pošalji poveznicu",
+ "auth_forgot_empty": "Upiši korisničko ime ili e-mail adresu.",
+ "auth_forgot_sent": "Ako postoji račun s takvom potvrđenom e-mail adresom, poveznica je na putu. Radi jednom, sat vremena. Nema poruke? Provjeri mapu neželjene pošte ili pitaj administratora.",
+ "auth_reset_repeat": "Ponovi novu lozinku",
+ "auth_reset_code": "Kod iz aplikacije za autentifikaciju (ili rezervni kod)",
+ "auth_reset_save": "Spremi lozinku",
+ "auth_to_sign_in": "Na prijavu",
+ "auth_reset_intro": "Odaberi novu lozinku za {u} (barem {n} znakova). Ostale prijave ovog računa se prekidaju.",
+ "auth_activate_intro": "Dobro došao! Odaberi lozinku za svoj WRM račun {u} (barem {n} znakova).",
+ "auth_link_expired": "Ova poveznica je istekla ili je već iskorištena. Zatraži novu.",
+ "auth_link_invalid": "Ova poveznica nije valjana. Provjeri je li kopirana cijela ili zatraži novu.",
+ "auth_reset_empty": "Upiši novu lozinku.",
+ "auth_reset_mismatch": "Lozinke nisu iste.",
+ "auth_reset_done": "Lozinka je postavljena. Sad se prijavi s njom.",
+ "auth_register_pending": "Još malo: WRM je poslao poveznicu za potvrdu na {e}. Otvori je u roku od 24 sata, zatim se prijavi.",
+ "auth_activated_ok": "Račun je potvrđen. Prijavi se.",
+ "auth_activated_expired": "Poveznica za potvrdu je istekla ili je već iskorištena. Registriraj se ponovno ili pitaj administratora.",
+ "auth_activated_invalid": "Poveznica za potvrdu nije valjana.",
+ "nu_email_ph": "nije obavezno",
+ "nu_invite": "Pošalji pozivnicu: korisnik sam bira lozinku preko poveznice",
+ "nu_invite_on": "WRM šalje poveznicu koja vrijedi 3 dana. Otvaranjem se potvrđuje adresa; korisnik zatim postavi lozinku i prijavi se.",
+ "nu_invite_no_mail": "Za pozivnice treba odlazna pošta i WRM-ova adresa za poveznice (Admin → E-pošta). Bez toga lozinku korisniku daješ sam.",
+ "nu_invited": "Korisnik je stvoren; pozivnica je poslana na {e}.",
+ "usr_activation_pending": "registriran, e-mail još nije potvrđen",
+ "p_password_reset_mail": "Zaboravljena lozinka e-poštom",
+ "p_password_reset_mail_d": "Stranica za prijavu nudi „Zaboravljena lozinka?“: WRM na korisnikovu potvrđenu adresu šalje jednokratnu poveznicu koja vrijedi sat vremena. Računi s 2FA trebaju i kod; računi iz imenika i jedinstvene prijave je nikad ne dobivaju. Treba odlazna pošta i WRM-ova adresa za poveznice (Admin → E-pošta).",
+ "po_password_reset_mail_all": "Svi s potvrđenom adresom",
+ "po_password_reset_mail_users": "Ne za administratore",
+ "po_password_reset_mail_off": "Isključeno",
+ "slr_password_reset_mail": "Preuzimanje administratorovog sandučića nije dovoljno za preuzimanje WRM-a: administratori lozinku resetiraju preko drugog administratora.",
+ "p_registration_verify_email": "Samostalna registracija potvrđuje e-mail adresu",
+ "p_registration_verify_email_d": "Kad je registracija otvorena i odlazna pošta radi, novi račun traži e-mail adresu i proradi tek kad se otvori poveznica poslana na nju. Nepotvrđeni računi uklanjaju se nakon tjedan dana.",
  "mail_pending": "Čeka potvrdu: {a}. Otvori poveznicu iz poruke poslane na tu adresu (vrijedi 24 sata).",
  "mail_add": "Dodaj",
  "mail_change": "Promijeni",
@@ -6903,7 +7018,103 @@ function switchAuthTab(mode) {
   document.getElementById('auth-submit-btn').textContent = mode === 'login' ? t('sign_in') : t('create_account');
   document.getElementById('auth-pass').autocomplete = mode === 'login' ? 'current-password' : 'new-password';
   document.getElementById('auth-error').style.display = 'none';
+  renderAuthExtras();
   renderAuthSSO();
+}
+
+// v14.6.2: the e-mail field of self-registration and the "Forgot password?" link.
+function renderAuthExtras() {
+  const em = document.getElementById('auth-email-row');
+  if (em) em.style.display = authMode === 'register' && !authConfig.first_run && authConfig.registration_email ? '' : 'none';
+  const fl = document.getElementById('auth-forgot-link');
+  if (fl) fl.style.display = authMode === 'login' && !authConfig.first_run && authConfig.password_reset ? '' : 'none';
+}
+
+function showForgotStep() {
+  document.getElementById('auth-step-cred').style.display = 'none';
+  document.getElementById('auth-step-forgot').style.display = '';
+  document.getElementById('auth-forgot-error').style.display = 'none';
+  document.getElementById('auth-forgot-done').style.display = 'none';
+  const f = document.getElementById('auth-forgot-login');
+  f.value = document.getElementById('auth-user').value.trim();
+  setTimeout(() => f.focus(), 50);
+}
+
+async function doForgot() {
+  const login = document.getElementById('auth-forgot-login').value.trim();
+  document.getElementById('auth-forgot-error').style.display = 'none';
+  if (!login) { authErr('auth-forgot-error', t('auth_forgot_empty')); return; }
+  const btn = document.getElementById('auth-forgot-btn');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/auth/forgot', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({login})});
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) { authErr('auth-forgot-error', d.error || t('failed')); return; }
+    const done = document.getElementById('auth-forgot-done');
+    done.textContent = t('auth_forgot_sent');
+    done.style.display = 'block';
+  } catch (_) { authErr('auth-forgot-error', t('network_error_retry')); } finally { btn.disabled = false; }
+}
+
+// A link from a mail: /?reset=TOKEN (Forgot password) or /?activate=TOKEN (invitation).
+let authResetToken = '';
+function authLinkFromURL() {
+  if (typeof URLSearchParams === 'undefined' || typeof location === 'undefined' || !location.search) return null;
+  const q = new URLSearchParams(location.search);
+  const tok = q.get('reset') || q.get('activate');
+  return tok ? {token: tok, kind: q.get('reset') ? 'reset' : 'activate'} : null;
+}
+
+async function showResetStep(link) {
+  authResetToken = link.token;
+  history.replaceState(null, '', location.pathname + location.hash);
+  document.getElementById('auth-step-cred').style.display = 'none';
+  document.getElementById('auth-step-forgot').style.display = 'none';
+  document.getElementById('auth-step-reset').style.display = '';
+  document.getElementById('auth-reset-error').style.display = 'none';
+  const intro = document.getElementById('auth-reset-intro');
+  const form = document.getElementById('auth-reset-form');
+  let d = {};
+  try { const r = await fetch('/api/auth/reset?t=' + encodeURIComponent(link.token)); d = await r.json().catch(() => ({})); if (!r.ok) d = {status: 'error', error: d.error}; } catch (_) { d = {status: 'error'}; }
+  if (d.status !== 'ok') {
+    form.style.display = 'none';
+    intro.textContent = d.error || t(d.status === 'expired' ? 'auth_link_expired' : 'auth_link_invalid');
+    intro.className = 'auth-note bad';
+    return;
+  }
+  form.style.display = '';
+  intro.className = 'auth-note';
+  intro.textContent = t(d.kind === 'activate' ? 'auth_activate_intro' : 'auth_reset_intro').replace('{u}', d.username).replace('{n}', d.min_length || 8);
+  document.getElementById('auth-reset-code-row').style.display = d.totp ? '' : 'none';
+  setTimeout(() => document.getElementById('auth-reset-pass').focus(), 50);
+}
+
+async function doResetPassword() {
+  const p1 = document.getElementById('auth-reset-pass').value, p2 = document.getElementById('auth-reset-pass2').value;
+  document.getElementById('auth-reset-error').style.display = 'none';
+  if (!p1) { authErr('auth-reset-error', t('auth_reset_empty')); return; }
+  if (p1 !== p2) { authErr('auth-reset-error', t('auth_reset_mismatch')); return; }
+  const btn = document.getElementById('auth-reset-btn');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/auth/reset', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token: authResetToken, password: p1, code: document.getElementById('auth-reset-code').value.trim()})});
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) { authErr('auth-reset-error', d.error || t('failed')); return; }
+    ['auth-reset-pass', 'auth-reset-pass2', 'auth-reset-code'].forEach(i => document.getElementById(i).value = '');
+    authResetToken = '';
+    leaveResetStep(d.username, t('auth_reset_done'));
+  } catch (_) { authErr('auth-reset-error', t('network_error_retry')); } finally { btn.disabled = false; }
+}
+
+function leaveResetStep(username, note) {
+  authResetToken = '';
+  resetAuthSteps();
+  switchAuthTab('login');
+  if (username) document.getElementById('auth-user').value = username;
+  const n = document.getElementById('auth-note');
+  if (note) { n.textContent = note; n.className = 'auth-note ok'; n.style.display = 'block'; }
+  setTimeout(() => document.getElementById(username ? 'auth-pass' : 'auth-user').focus(), 50);
 }
 
 // Directory sign-in buttons (v12.6.24). With local_login_limited the password form is only for
@@ -6946,6 +7157,7 @@ function showMFAStep(token) {
 async function loadAuthConfig() {
   try { const r = await fetch('/api/auth/config'); if (r.ok) authConfig = await r.json(); } catch(_) {}
   const note = document.getElementById('auth-note');
+  note.className = 'auth-note';
   const tabs = document.getElementById('auth-tabs');
   renderAuthLevels();
   if (authConfig.first_run) {
@@ -6961,8 +7173,9 @@ async function loadAuthConfig() {
     tabs.style.display = '';
     document.getElementById('auth-tab-register').style.display = authConfig.registration_open ? '' : 'none';
     document.getElementById('auth-reg-closed').style.display = authConfig.registration_open ? 'none' : 'block';
-    if (!authConfig.registration_open) switchAuthTab('login');
+    switchAuthTab(authConfig.registration_open ? authMode : 'login'); // also puts the button text in the user's language
   }
+  renderAuthExtras();
   renderAuthSSO();
   const ld = document.getElementById('auth-lockdown');
   if (authConfig.lockdown) {
@@ -6997,6 +7210,17 @@ function showAuthScreen(noteText) {
   resetAuthSteps();
   loadAuthConfig().then(() => {
     if (noteText) { const n = document.getElementById('auth-note'); n.textContent = noteText; n.style.display = 'block'; }
+    const link = authLinkFromURL();
+    if (link) { showResetStep(link); return; }
+    // back from the confirmation link of a self-registered account: /?activated=ok|expired|invalid
+    const act = typeof URLSearchParams !== 'undefined' && location.search ? new URLSearchParams(location.search).get('activated') : null;
+    if (act) {
+      history.replaceState(null, '', location.pathname + location.hash);
+      const n = document.getElementById('auth-note');
+      n.textContent = t('auth_activated_' + (['ok', 'expired'].includes(act) ? act : 'invalid'));
+      n.className = 'auth-note' + (act === 'ok' ? ' ok' : ' bad');
+      n.style.display = 'block';
+    }
     // Back from a directory sign-in whose account also uses WRM's own 2FA.
     const m = /[#&]sso-mfa=([^&]+)/.exec(location.hash);
     if (m) {
@@ -7012,6 +7236,8 @@ function resetAuthSteps() {
   mfaToken = null;
   document.getElementById('auth-step-cred').style.display = '';
   document.getElementById('auth-step-mfa').style.display = 'none';
+  document.getElementById('auth-step-forgot').style.display = 'none';
+  document.getElementById('auth-step-reset').style.display = 'none';
   document.getElementById('auth-mfa-code').value = '';
 }
 
@@ -7028,6 +7254,7 @@ async function doAuth() {
     const body = {username: user, password: pass};
     const lvl = document.querySelector('input[name="auth-level"]:checked');
     if (authMode !== 'login' && authConfig.first_run && lvl && !lvl.disabled) body.security_level = lvl.value;
+    if (authMode !== 'login' && authConfig.registration_email) body.email = document.getElementById('auth-email').value.trim();
     const res = await fetch('/api/auth/' + (authMode === 'login' ? 'login' : 'register'), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
@@ -7036,6 +7263,14 @@ async function doAuth() {
     if (!res.ok) { authErr('auth-error', data.error || t('auth_failed')); return; }
     if (data.mfa_required) { showMFAStep(data.mfa_token); return; }
     document.getElementById('auth-pass').value = '';
+    if (data.pending_confirmation) {
+      switchAuthTab('login');
+      const n = document.getElementById('auth-note');
+      n.textContent = t('auth_register_pending').replace('{e}', data.email || '');
+      n.className = 'auth-note ok';
+      n.style.display = 'block';
+      return;
+    }
     onSignedIn(data);
   } catch(e) {
     authErr('auth-error', t('network_error_retry'));
@@ -7067,6 +7302,7 @@ function onSignedIn(me) {
 }
 
 async function checkAuth() {
+  if (authLinkFromURL()) { showAuthScreen(); return; } // a reset or invitation link from a mail
   try {
     const res = await fetch('/api/auth/me');
     if (res.ok) { onSignedIn(await res.json()); return; }
@@ -8883,7 +9119,7 @@ function renderAdminUsers() {
   const list = adminUsersCache.filter(u => !q || (u.username + ' ' + u.display_name).toLowerCase().includes(q.toLowerCase()));
   document.getElementById('adm-users-table').innerHTML = `<table class="admin-table"><thead><tr><th>${esc(t('user'))}</th><th>${esc(t('status'))}</th><th>${esc(t('last_login'))}</th><th>${esc(t('connections_lc'))}</th><th>${esc(t('created'))}</th><th></th></tr></thead><tbody>` +
     list.map(u => `<tr>
-      <td>${u.online ? '<span class="online-dot"></span>' : ''}<b style="color:var(--text);">${esc(u.username)}</b>${u.display_name ? ' <span class="muted-text">' + esc(u.display_name) + '</span>' : ''}${u.email || u.email_pending ? `<div class="sub">✉ ${esc(u.email || u.email_pending)}${u.email_verified ? '' : ' · ' + esc(t('mail_unverified'))}</div>` : ''}
+      <td>${u.online ? '<span class="online-dot"></span>' : ''}<b style="color:var(--text);">${esc(u.username)}</b>${u.display_name ? ' <span class="muted-text">' + esc(u.display_name) + '</span>' : ''}${u.email || u.email_pending ? `<div class="sub">✉ ${esc(u.email || u.email_pending)}${u.email_verified ? '' : ' · ' + esc(t('mail_unverified'))}</div>` : ''}${u.activation_pending ? `<div class="sub">⏳ ${esc(t('usr_activation_pending'))}</div>` : ''}
         <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${userRolePill(u)}${(u.sso || []).length ? '<span class="pill info" title="' + esc(t(u.sso_only ? 'sso_only_d' : 'sso_linked_d')) + '">🏢 ' + esc(u.sso.join(', ')) + '</span>' : ''}${u.break_glass ? '<span class="pill bad" title="' + esc(t('break_glass_d')) + '">🚨 ' + esc(t('break_glass')) + '</span>' : ''}${u.totp_enabled ? '<span class="pill ok">2FA</span>' : ''}${u.id === currentUser.id ? '<span class="pill info">' + esc(t('you')) + '</span>' : ''}${(u.teams || []).map(tm => '<span class="pill">👥 ' + esc(tm.name) + (tm.lead ? ' ★' : '') + '</span>').join('')}</div></td>
       <td>${u.disabled ? `<span class="pill bad">${esc(t('disabled'))}</span>` : u.locked ? `<span class="pill bad">🔒 ${esc(t('locked'))}</span>` : `<span class="pill ok">${esc(t('active'))}</span>`}${u.must_change_password ? `<div class="sub">${esc(t('must_change_pw_short'))}</div>` : ''}</td>
       <td>${esc(fmtTime(u.last_login_at))}<div class="sub mono">${esc(u.last_login_ip || '')}</div></td>
@@ -9636,8 +9872,27 @@ async function ssoConfirmSelf() {
   return window.wrmStepUp({action: '2fa', password: false, totp: false, sso});
 }
 
+let nuMailReady = false;
+function nuInviteToggle() {
+  const inv = document.getElementById('nu-invite').checked;
+  document.getElementById('nu-password-row').style.display = inv ? 'none' : '';
+  document.getElementById('nu-must-change-row').style.display = inv ? 'none' : '';
+  document.getElementById('nu-invite-hint').textContent = nuMailReady ? (inv ? t('nu_invite_on') : '') : t('nu_invite_no_mail');
+}
+
 function openNewUser() {
-  ['nu-username', 'nu-display', 'nu-password'].forEach(i => document.getElementById(i).value = '');
+  ['nu-username', 'nu-display', 'nu-password', 'nu-email'].forEach(i => document.getElementById(i).value = '');
+  const inv = document.getElementById('nu-invite');
+  inv.checked = false;
+  inv.disabled = true;
+  nuMailReady = false;
+  nuInviteToggle();
+  fetch('/api/admin/mail').then(r => r.ok ? r.json() : null).then(d => {
+    const m = d && d.settings;
+    nuMailReady = !!(m && m.enabled && m.host && m.from && m.public_url);
+    inv.disabled = !nuMailReady;
+    nuInviteToggle();
+  }).catch(() => {});
   document.getElementById('nu-must-change').checked = true;
   document.getElementById('nu-record').value = '';
   const nr = document.getElementById('nu-role');
@@ -9656,12 +9911,15 @@ async function submitNewUser() {
     role: document.getElementById('nu-role').value,
     must_change_password: document.getElementById('nu-must-change').checked,
     recording_level: document.getElementById('nu-record').value,
+    email: document.getElementById('nu-email').value.trim(),
+    invite: document.getElementById('nu-invite').checked,
   };
   const res = await fetch('/api/admin/users', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   const d = await res.json().catch(() => ({}));
   if (!res.ok) { showToast(d.error || t('failed'), 'error'); return; }
   closeModal('modal-user-new');
-  showToast(t('user_created'), 'success');
+  showToast(d.invited ? t('nu_invited').replace('{e}', d.invited) : t('user_created'), 'success', d.invited ? 7000 : undefined);
+  if (d.email_error) showToast(d.email_error, 'error', 8000);
   if (d.generated_password) showGeneratedPassword(d.username, d.generated_password);
   adminUsers();
 }
@@ -9715,7 +9973,7 @@ const POLICY_GROUPS = {
     ['pg_tunnels', ['tunnels_enabled', 'tunnel_users', 'tunnel_bind_any', 'tunnel_remote_forward', 'tunnel_idle_minutes']],
     ['pg_updates', ['update_check', 'update_repo', 'update_signing_keys', 'update_proxy', 'self_update']],
     ['pg_audit', ['audit_enabled', 'audit_retention_days', 'file_edit_history', 'file_edit_max_kb']],
-    ['pg_mail', ['mail_security_notices', 'user_email_self']],
+    ['pg_mail', ['mail_security_notices', 'user_email_self', 'password_reset_mail', 'registration_verify_email']],
     ['pg_alerts', ['alert_failed_signins', 'alert_failed_signins_minutes', 'alert_break_glass', 'alert_new_admin', 'alert_secret_reveal', 'alert_ai_full_access', 'alert_audit_off', 'alert_cli_reset']],
     ['pg_recording', ['session_recording', 'session_recording_input', 'recording_retention_days', 'recording_max_mb']],
   ],

@@ -539,6 +539,8 @@ func apiAuthConfigHandler(w http.ResponseWriter, r *http.Request) {
 	// Directory sign-in buttons; local_login_limited hides the password form behind "Emergency sign-in".
 	out["sso"], out["local_login_limited"] = oidcSignInOptions(), localLoginLimited()
 	out["ldap"] = ldapSignInOptions()
+	// v14.6.2: "Forgot password?" and the e-mail field of self-registration
+	out["password_reset"], out["registration_email"] = passwordResetOffered(), n > 0 && registrationNeedsEmail()
 	if st := lockdown(); st.On {
 		out["lockdown"] = map[string]string{"reason": st.Reason, "at": st.At}
 	}
@@ -558,6 +560,7 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
 		SecurityLevel string `json:"security_level"`
+		Email         string `json:"email"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		jsonError(w, "Bad JSON", 400)
@@ -592,9 +595,28 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), 400)
 		return
 	}
+	// With mail set up, a self-registered account starts once its e-mail address is confirmed.
+	pendingAddr := ""
+	if !first && registrationNeedsEmail() {
+		addr, ok := validMailAddr(payload.Email)
+		if !ok {
+			jsonError(w, "Enter a valid e-mail address: WRM sends a link to it to confirm the account.", 400)
+			return
+		}
+		pendingAddr = addr
+	}
 	hash, err := hashPassword(payload.Password)
 	if err != nil {
 		jsonError(w, "Server error", 500)
+		return
+	}
+	if pendingAddr != "" {
+		if err := registerPending(r, payload.Username, hash, pendingAddr); err != nil {
+			recordLoginResult(ip, false)
+			jsonError(w, "Username already exists", 400)
+			return
+		}
+		jsonOK(w, map[string]interface{}{"pending_confirmation": true, "email": pendingAddr})
 		return
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -688,6 +710,11 @@ func apiAuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 		db.Exec(`UPDATE users SET failed_logins=?, locked_until=? WHERE id=?`, fails, locked, u.ID)
 		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"reason": "wrong password"})
 		jsonError(w, "Invalid credentials", 401)
+		return
+	}
+	if u.Disabled && userActivationPending(u.ID) {
+		auditLogAs(r, u.ID, u.Username, "auth.login_failed", "", map[string]string{"reason": "account not confirmed"})
+		jsonError(w, "Confirm your e-mail address first: open the link WRM sent you when you registered.", 403)
 		return
 	}
 	if u.Disabled {
@@ -1086,7 +1113,7 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		rows, err := db.Query(`SELECT u.id, u.username, COALESCE(u.display_name,''), u.is_admin, COALESCE(u.role,''), COALESCE(u.break_glass,0), u.disabled, u.totp_enabled, u.created_at,
 			COALESCE(u.last_login_at,''), COALESCE(u.last_login_ip,''), COALESCE(u.locked_until,''), u.must_change_password,
-			COALESCE(u.email,''), COALESCE(u.email_verified,0), COALESCE(u.email_pending,''),
+			COALESCE(u.email,''), COALESCE(u.email_verified,0), COALESCE(u.email_pending,''), COALESCE(u.activation_pending,0),
 			(SELECT COUNT(*) FROM connections c WHERE c.user_id=u.id),
 			(SELECT COUNT(*) FROM share_links s WHERE s.owner_id=u.id),
 			(SELECT COUNT(*) FROM auth_sessions a WHERE a.user_id=u.id)
@@ -1099,9 +1126,9 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		users := []map[string]interface{}{}
 		for rows.Next() {
-			var id, isAdmin, breakGlass, disabled, totp, mustChange, nConn, nShares, nSess, emailOK int
+			var id, isAdmin, breakGlass, disabled, totp, mustChange, nConn, nShares, nSess, emailOK, actPending int
 			var username, dn, role, created, lastLogin, lastIP, lockedUntil, email, emailPending string
-			rows.Scan(&id, &username, &dn, &isAdmin, &role, &breakGlass, &disabled, &totp, &created, &lastLogin, &lastIP, &lockedUntil, &mustChange, &email, &emailOK, &emailPending, &nConn, &nShares, &nSess)
+			rows.Scan(&id, &username, &dn, &isAdmin, &role, &breakGlass, &disabled, &totp, &created, &lastLogin, &lastIP, &lockedUntil, &mustChange, &email, &emailOK, &emailPending, &actPending, &nConn, &nShares, &nSess)
 			locked := false
 			if t, ok := parseTS(lockedUntil); ok && now.Before(t) {
 				locked = true
@@ -1113,6 +1140,7 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 				"sessions": nSess, "online": userOnline(id),
 				"role": roleOf(isAdmin == 1, role), "break_glass": breakGlass == 1 && isAdmin == 1,
 				"email": email, "email_verified": emailOK == 1, "email_pending": emailPending,
+				"activation_pending": actPending == 1 && disabled == 1,
 			})
 		}
 		rows.Close()
@@ -1135,6 +1163,8 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 			Role           string `json:"role"`
 			MustChange     *bool  `json:"must_change_password"`
 			RecordingLevel string `json:"recording_level"`
+			Email          string `json:"email"`
+			Invite         bool   `json:"invite"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			jsonError(w, "Bad JSON", 400)
@@ -1161,8 +1191,25 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		if (p.IsAdmin || role == userRoleAuditor) && !requireStepUp(w, r, "user_create_privileged") {
 			return
 		}
+		// v14.6.2: an e-mail address, optionally with an invitation to choose the password.
+		addr := ""
+		if strings.TrimSpace(p.Email) != "" || p.Invite {
+			a, ok := validMailAddr(p.Email)
+			if !ok {
+				jsonError(w, "Enter a valid e-mail address", 400)
+				return
+			}
+			addr = a
+		}
+		if p.Invite && !mailLinksReady() {
+			jsonError(w, "WRM cannot send the invitation: set up Admin → E-mail first (including WRM's address for links)", 400)
+			return
+		}
 		generated := ""
-		if p.Password == "" {
+		if p.Invite {
+			p.Password = randomPassword() // nobody knows it; the user chooses one through the link
+			p.MustChange = new(bool)
+		} else if p.Password == "" {
 			generated = randomPassword()
 			p.Password = generated
 		} else if err := validatePassword(p.Password); err != nil {
@@ -1189,7 +1236,16 @@ func apiAdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		id, _ := res.LastInsertId()
 		auditLog(r, adminID, "admin.user_created", p.Username, map[string]interface{}{"admin": p.IsAdmin, "role": role, "must_change_password": mustChange, "recording_level": p.RecordingLevel})
-		jsonOK(w, map[string]interface{}{"id": id, "username": p.Username, "generated_password": generated, "recording_level": p.RecordingLevel})
+		out := map[string]interface{}{"id": id, "username": p.Username, "generated_password": generated, "recording_level": p.RecordingLevel}
+		if p.Invite {
+			inviteUser(r, adminID, int(id), p.Username, addr)
+			out["invited"] = addr
+		} else if addr != "" {
+			if err := adminSetUserEmail(r, adminID, int(id), addr); err != nil {
+				out["email_error"] = err.Error()
+			}
+		}
+		jsonOK(w, out)
 	default:
 		jsonError(w, "Method not allowed", 405)
 	}
@@ -1288,6 +1344,9 @@ func apiAdminUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			db.Exec(`UPDATE users SET disabled=? WHERE id=?`, boolToInt(*p.Disabled), id)
+			if !*p.Disabled {
+				db.Exec(`UPDATE users SET activation_pending=0 WHERE id=?`, id) // an administrator lets an unconfirmed account in
+			}
 			changes["disabled"] = *p.Disabled
 			if *p.Disabled {
 				for k, v := range endUserAccess(r, id, adminID, "the account was disabled") {
