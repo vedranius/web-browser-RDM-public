@@ -1,3 +1,17 @@
+## [14.5.1] - 2026-11-09
+
+Windows you can resize and maximise, and storage columns you can widen. Upgrading from v14.5.0 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **Resizable and maximisable dialogs.** The big windows opened from the menus (storages, chains, admin, settings, monitoring and the other dialogs at least 560 px wide) have a small bar above their top-right corner: ⤢ shows the window over the whole screen and ⤡ brings it back, ↺ returns to the default size. The grip in the bottom-right corner resizes the window. The size is kept per window in this browser. Phone widths keep the full-width layout.
+- **Storage columns.** The storage browser has a header row: click *Name*, *Size* or *Date* to sort (again to reverse), drag a column's border to change its width, and double-click the border of *Name* to fit the longest name shown. A wider name column scrolls sideways instead of cutting names. The storage list and the S3 activity panel can be widened or narrowed by dragging their edges. The widths are kept in this browser.
+
+### Fixed
+
+- The storage browser's search field and sort list used the browser's light default style in the dark theme; fields outside a form row in any dialog now follow the theme.
+- The sort direction button showed ↓ (descending) while the list was sorted ascending.
+
 ## [14.5.0] - 2026-11-06
 
 The Chains builder recognises what runs on your servers and suggests the checks and links, and its server list is sorted by folder with search. WRM no longer freezes in the browser while an AI app works through MCP. Upgrading from v14.4.0 keeps the database and the encryption key; nothing is migrated.

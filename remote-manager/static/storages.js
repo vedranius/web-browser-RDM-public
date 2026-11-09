@@ -8,6 +8,7 @@
 Object.assign(LANGS.en, {
   stg_search_ph: 'Search this folder…', stg_sort: 'Sort',
   stg_sort_name: 'Name', stg_sort_size: 'Size', stg_sort_date: 'Date', stg_sort_asc: 'Ascending', stg_sort_desc: 'Descending',
+  stg_col_sort: 'Sort by this column (again: reverse)', stg_col_drag: 'Drag to change the width', stg_col_drag_fit: 'Drag to change the width, double-click to fit the longest name',
   stg_select_all: 'Select all', stg_total: 'Objects: {n} · Folders: {m} · {size}', stg_loading_n: 'Loaded: {n} objects…',
   stg_act_title: 'S3 activity', stg_act_toggle: 'Show or hide the S3 requests WRM sends',
   stg_act_hide: 'Hide the activity panel (the 📡 button shows it again)',
@@ -47,6 +48,7 @@ Object.assign(LANGS.en, {
 Object.assign(LANGS.hr, {
   stg_search_ph: 'Pretraži ovu mapu…', stg_sort: 'Sortiraj',
   stg_sort_name: 'Naziv', stg_sort_size: 'Veličina', stg_sort_date: 'Datum', stg_sort_asc: 'Uzlazno', stg_sort_desc: 'Silazno',
+  stg_col_sort: 'Sortiraj po ovom stupcu (ponovno: obrnuto)', stg_col_drag: 'Povuci za promjenu širine', stg_col_drag_fit: 'Povuci za promjenu širine, dvoklik za širinu najduljeg naziva',
   stg_select_all: 'Odaberi sve', stg_total: 'Objekti: {n} · Mape: {m} · {size}', stg_loading_n: 'Učitano: {n} objekata…',
   stg_act_title: 'S3 aktivnost', stg_act_toggle: 'Prikaži ili sakrij S3 zahtjeve koje WRM šalje',
   stg_act_hide: 'Sakrij panel aktivnosti (gumb 📡 ga ponovno prikazuje)',
@@ -101,7 +103,7 @@ Object.assign(LANGS.hr, {
     const s = document.createElement('style');
     s.textContent = `
 .stg-wrap { display:flex; width:min(1180px,96vw); height:86vh; padding:0; overflow:hidden; }
-.stg-side { width:250px; min-width:200px; border-right:1px solid var(--border2); display:flex; flex-direction:column; }
+.stg-side { width:var(--stg-side,250px); min-width:160px; flex:none; border-right:1px solid var(--border2); display:flex; flex-direction:column; }
 .stg-side-head { padding:14px 14px 8px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .stg-side-head h3 { margin:0; font-size:14px; }
 .stg-list { flex:1; overflow:auto; padding:6px; }
@@ -132,8 +134,8 @@ Object.assign(LANGS.hr, {
 .stg-row { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:6px; font-size:12.5px; }
 .stg-row:hover { background:var(--bg3); }
 .stg-row .k { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.stg-row .s { color:var(--text3); font-size:11px; width:80px; text-align:right; }
-.stg-row .d { color:var(--text3); font-size:11px; width:150px; }
+.stg-row .s { color:var(--text3); font-size:11px; width:var(--stg-size,80px); flex:none; text-align:right; }
+.stg-row .d { color:var(--text3); font-size:11px; width:var(--stg-date,150px); flex:none; }
 .stg-row button { padding:2px 7px; font-size:11px; }
 .stg-empty { padding:30px 14px; text-align:center; color:var(--text3); font-size:12px; }
 .stg-editor { position:absolute; inset:0; background:var(--bg2); display:flex; flex-direction:column; z-index:5; }
@@ -149,8 +151,23 @@ Object.assign(LANGS.hr, {
 .stg-form .row2 { display:flex; gap:10px; }
 .stg-form .row2 .field { flex:1; }
 .stg-hintx { font-size:10.5px; color:var(--text3); margin-top:3px; }
-.stg-act { width:300px; min-width:240px; border-left:1px solid var(--border2); display:flex; flex-direction:column; font-size:11px; }
-.stg-act.off { display:none; }
+.stg-act { width:var(--stg-act,300px); min-width:200px; flex:none; border-left:1px solid var(--border2); display:flex; flex-direction:column; font-size:11px; }
+.stg-act.off, .stg-act.off + .stg-split, .stg-split-act:has(+ .stg-act.off) { display:none; }
+.stg-split { flex:none; width:5px; margin:0 -2px; cursor:col-resize; position:relative; z-index:3; touch-action:none; }
+.stg-split:hover, .stg-split.drag { background:var(--accent); opacity:.5; }
+.stg-hdr { position:sticky; top:-6px; z-index:2; background:var(--bg2); color:var(--text3); font-size:11px; font-weight:600; border-bottom:1px solid var(--border2); border-radius:0; padding-top:5px; padding-bottom:5px; }
+.stg-hdr:hover { background:var(--bg2); }
+.stg-row.stg-hdr > div { position:relative; cursor:pointer; user-select:none; overflow:visible; }
+.stg-row .acts { display:flex; gap:10px; flex:none; }
+.stg-hdr > div:hover { color:var(--text); }
+.stg-hdr > div.on { color:var(--accent); }
+.stg-row .cb { width:13px; flex:none; cursor:default; }
+.stg-hdr .acts { cursor:default; }
+.stg-rz { position:absolute; top:-5px; bottom:-5px; right:-7px; width:9px; cursor:col-resize; touch-action:none; z-index:1; }
+.stg-rz::after { content:''; position:absolute; top:3px; bottom:3px; left:4px; border-left:1px solid var(--border2); }
+.stg-rz:hover::after, .stg-rz.drag::after { border-left:2px solid var(--accent); }
+.stg-wrap.named .stg-row { width:max-content; min-width:100%; }
+.stg-wrap.named .stg-row .k { flex:none; width:var(--stg-name); }
 .stg-act-head { padding:10px 12px; border-bottom:1px solid var(--border2); display:flex; align-items:center; gap:6px; }
 .stg-act-head b { flex:1; font-size:12.5px; }
 .stg-act-sum { padding:8px 12px; border-bottom:1px solid var(--border2); line-height:1.45; color:var(--text2); max-height:48%; overflow:auto; }
@@ -176,6 +193,8 @@ Object.assign(LANGS.hr, {
   .stg-row { flex-wrap:wrap; gap:6px; }
   .stg-row .k { flex:1 1 100%; }
   .stg-row .d { display:none; }
+  .stg-split, .stg-hdr { display:none; }
+  .stg-side, .stg-act { width:auto; }
 }
 `;
     document.head.appendChild(s);
@@ -207,6 +226,71 @@ Object.assign(LANGS.hr, {
     return api('GET', '/api/storages/providers').then((r) => { providerList = (r && r.providers) || []; return providerList; });
   }
 
+  // Column and panel widths (drag the header borders and the panel edges), kept in this browser.
+  const COLS_KEY = 'wrm_stg_cols';
+  let cols = {};
+  try { cols = JSON.parse(localStorage.getItem(COLS_KEY) || '{}') || {}; } catch (e) { cols = {}; }
+  const COL_MIN = { name: 120, size: 50, date: 80, side: 160, act: 200 };
+  function applyCols() {
+    const w = document.querySelector('.stg-wrap');
+    if (!w) return;
+    for (const c of ['name', 'size', 'date', 'side', 'act']) {
+      if (cols[c]) w.style.setProperty('--stg-' + c, cols[c] + 'px'); else w.style.removeProperty('--stg-' + c);
+    }
+    w.classList.toggle('named', !!cols.name);
+  }
+  function saveCols() { try { localStorage.setItem(COLS_KEY, JSON.stringify(cols)); } catch (e) { /* storage unavailable */ } }
+  // drag: pointer on handle h changes column c from its current width; sign -1 for a panel on the right
+  function dragWidth(h, c, current, sign) {
+    h.onpointerdown = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const x0 = e.clientX, w0 = current();
+      h.setPointerCapture(e.pointerId);
+      h.classList.add('drag');
+      h.onpointermove = (ev) => {
+        cols[c] = Math.round(Math.max(COL_MIN[c], Math.min(c === 'name' ? 3000 : 900, w0 + sign * (ev.clientX - x0))));
+        applyCols();
+      };
+      h.onpointerup = () => { h.onpointermove = h.onpointerup = null; h.classList.remove('drag'); saveCols(); };
+    };
+  }
+  // double-click on the name border: as wide as the longest name shown
+  function fitName() {
+    let max = 0;
+    document.querySelectorAll('#stg-rows .stg-row:not(.stg-hdr) .k').forEach((k) => {
+      const prev = k.style.width; k.style.width = 'max-content'; max = Math.max(max, k.offsetWidth); k.style.width = prev;
+    });
+    if (max) { cols.name = Math.max(COL_MIN.name, Math.min(3000, max + 10)); applyCols(); saveCols(); }
+  }
+  function headerRow() {
+    const row = el('div', 'stg-row stg-hdr');
+    if (can('delete')) row.appendChild(el('div', 'cb', ''));
+    const sortBy = (key) => {
+      if (state.sort === key) state.dir = -state.dir; else { state.sort = key; state.dir = 1; }
+      const sel = $('#stg-sort'); if (sel) sel.value = state.sort;
+      const dirBtn = $('#stg-dir'); if (dirBtn) { dirBtn.textContent = state.dir > 0 ? '↑' : '↓'; dirBtn.title = state.dir > 0 ? t('stg_sort_asc') : t('stg_sort_desc'); }
+      renderBrowser();
+    };
+    const arrow = (key) => (state.sort === key ? (state.dir > 0 ? ' ▲' : ' ▼') : '');
+    const cell = (cls, key, label, col) => {
+      const d = el('div', cls + (state.sort === key ? ' on' : ''), label + arrow(key));
+      d.title = t('stg_col_sort');
+      d.onclick = () => sortBy(key);
+      const h = el('span', 'stg-rz');
+      h.title = col === 'name' ? t('stg_col_drag_fit') : t('stg_col_drag');
+      h.onclick = (e) => e.stopPropagation();
+      dragWidth(h, col, () => d.getBoundingClientRect().width, 1);
+      if (col === 'name') h.ondblclick = (e) => { e.stopPropagation(); fitName(); };
+      d.appendChild(h);
+      row.appendChild(d);
+    };
+    cell('k', 'name', t('stg_sort_name'), 'name');
+    cell('s', 'size', t('stg_sort_size'), 'size');
+    cell('d', 'date', t('stg_sort_date'), 'date');
+    row.appendChild(el('div', 'acts', ''));
+    return row;
+  }
+
   function shell() {
     let ov = overlay();
     if (ov) return ov;
@@ -216,6 +300,7 @@ Object.assign(LANGS.hr, {
       <div class="stg-side"><div class="stg-side-head"><h3>${esc(t('stg_title'))}</h3>
         <button class="btn-sec btn-sm" id="stg-add">＋ ${esc(t('stg_add'))}</button></div>
         <div class="stg-list" id="stg-list"></div></div>
+      <div class="stg-split" data-col="side" title="${esc(t('stg_col_drag'))}"></div>
       <div class="stg-main"><div class="stg-head">
           <div class="stg-crumbs" id="stg-crumbs"></div>
           <button class="btn-sec btn-sm" id="stg-upload" style="display:none;">⬆ ${esc(t('stg_upload'))}</button>
@@ -232,7 +317,7 @@ Object.assign(LANGS.hr, {
             <option value="size">${esc(t('stg_sort_size'))}</option>
             <option value="date">${esc(t('stg_sort_date'))}</option>
           </select>
-          <button class="btn-sec btn-sm" id="stg-dir" title="${esc(t('stg_sort_desc'))}">↓</button>
+          <button class="btn-sec btn-sm" id="stg-dir" title="${esc(t('stg_sort_asc'))}">↑</button>
           <label class="stg-all"><input type="checkbox" id="stg-all"> ${esc(t('stg_select_all'))}</label>
           <button class="btn-sec btn-sm danger" id="stg-bulk-del" style="display:none;"></button>
           <span class="stg-count" id="stg-count"></span>
@@ -241,10 +326,16 @@ Object.assign(LANGS.hr, {
         <div class="stg-more" id="stg-more" style="display:none;"><button class="btn-sec btn-sm" id="stg-more-btn">${esc(t('stg_load_more'))}</button></div>
         <div class="stg-empty" id="stg-hint" style="display:none;"></div>
       </div>
+      <div class="stg-split stg-split-act" data-col="act" title="${esc(t('stg_col_drag'))}"></div>
       <div class="stg-act" id="stg-act"><div class="stg-act-head"><b>📡 ${esc(t('stg_act_title'))}</b>
         <button class="btn-sec btn-sm" id="stg-act-hide" title="${esc(t('stg_act_hide'))}" aria-label="${esc(t('stg_act_hide'))}">✕</button></div>
         <div class="stg-act-sum" id="stg-act-sum"></div><div class="stg-act-list" id="stg-act-list"></div></div></div>`;
     document.body.appendChild(ov);
+    applyCols();
+    ov.querySelectorAll('.stg-split').forEach((h) => {
+      const c = h.dataset.col, panel = ov.querySelector(c === 'side' ? '.stg-side' : '.stg-act');
+      dragWidth(h, c, () => panel.getBoundingClientRect().width, c === 'side' ? 1 : -1);
+    });
     ov.addEventListener('mousedown', (e) => { if (e.target === ov) close(); });
     ov.querySelector('#stg-close').onclick = close;
     ov.querySelector('#stg-add').onclick = () => editStorage(null);
@@ -620,9 +711,11 @@ Object.assign(LANGS.hr, {
     }
 
     const { folders, files } = visibleLists();
+    if (folders.length || files.length) rows.appendChild(headerRow());
     folders.forEach((p) => {
       const name = p.slice(state.prefix.length).replace(/\/$/, '');
       const row = el('div', 'stg-row');
+      if (can('delete')) row.appendChild(el('div', 'cb', ''));
       const k = el('div', 'k', '📁 ' + name);
       k.title = p;
       k.onclick = () => loadPrefix(p);
@@ -651,34 +744,39 @@ Object.assign(LANGS.hr, {
       row.appendChild(el('div', 's', fmtSize(o.size)));
       row.appendChild(el('div', 'd', (o.last_modified || '').replace('T', ' ').slice(0, 16)));
 
+      const acts = el('div', 'acts');
+      row.appendChild(acts);
       const dl = el('button', 'btn-sec btn-sm', '⬇');
       dl.title = t('stg_download');
       dl.onclick = () => downloadObject(o.key);
-      row.appendChild(dl);
+      acts.appendChild(dl);
 
       const cp = el('button', 'btn-sec btn-sm', '⧉');
       cp.title = t('stg_copy_path');
       cp.onclick = () => { copyText(o.key); showToast(t('stg_copied'), 'success'); };
-      row.appendChild(cp);
+      acts.appendChild(cp);
 
       if (can('write')) {
         const ed = el('button', 'btn-sec btn-sm', '✏');
         ed.title = t('stg_edit_file');
         ed.onclick = () => openEditor(o.key);
-        row.appendChild(ed);
+        acts.appendChild(ed);
         const rn = el('button', 'btn-sec btn-sm', '⇄');
         rn.title = t('stg_rename');
         rn.onclick = () => renameObject(o.key, false);
-        row.appendChild(rn);
+        acts.appendChild(rn);
       }
       if (can('delete')) {
         const del = el('button', 'btn-sec btn-sm danger', '🗑');
         del.title = t('stg_delete_file');
         del.onclick = () => deleteObject(o.key);
-        row.appendChild(del);
+        acts.appendChild(del);
       }
       rows.appendChild(row);
     });
+    // the header's last cell is as wide as a row's buttons, so the columns line up
+    const hAct = rows.querySelector('.stg-hdr .acts'), fAct = rows.querySelector('.stg-row:not(.stg-hdr) .acts');
+    if (hAct) hAct.style.width = fAct ? fAct.offsetWidth + 'px' : '0';
 
     if (!folders.length && !files.length) {
       hint.textContent = state.filter.trim() ? t('stg_no_match') : t('stg_empty_bucket');
