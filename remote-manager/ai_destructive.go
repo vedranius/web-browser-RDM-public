@@ -29,6 +29,9 @@ type aiBlock struct {
 	Power bool // shutdown / reboot: may be allowed with an approval by policy
 }
 
+// reWRMRecovery matches WRM's recovery flags in any spelling the flag package accepts.
+var reWRMRecovery = regexp.MustCompile(`(?i)(^|[\s;&|(\x60$])--?(reset-password|reset-2fa|lockdown)(\s|=|$)`)
+
 // aiDestructiveRules documents the list (Admin → AI shows it; tests cover each entry).
 var aiDestructiveRules = []struct{ ID, What string }{
 	{"rm_root", "rm -r of /, a top-level system directory, ~, . or * (and --no-preserve-root)"},
@@ -48,6 +51,7 @@ var aiDestructiveRules = []struct{ ID, What string }{
 	{"root_account", "deleting, locking or removing the password of root"},
 	{"protected_write", "writing to password and group files, sudoers, /boot, raw disks, /dev/mem, sysrq, authorized_keys, login records"},
 	{"pipe_shell", "piping into a shell or interpreter (curl … | sh)"},
+	{"wrm_recovery", "WRM's own account recovery on its host: wrm -reset-password, -reset-2fa, -lockdown"},
 	{"windows_recursive_delete", "recursive PowerShell/cmd deletions, enumeration pipelines, loops, or encoded commands not safely inspected"},
 	{"admin_pattern", "patterns added by the administrator (ai_blocked_commands)"},
 }
@@ -422,6 +426,11 @@ func aiDestructiveDepth(cmd string, depth int) *aiBlock {
 		return &aiBlock{Rule: "fork_bomb", Why: "fork bomb"}
 	}
 	norm := strings.NewReplacer(`'`, "", `"`, "").Replace(cmd)
+	// An AI with a session on the WRM host itself could reset an administrator's password
+	// (and read the temporary one) or switch the lockdown: never without a person.
+	if reWRMRecovery.MatchString(norm) {
+		return &aiBlock{Rule: "wrm_recovery", Why: "WRM account recovery (reset-password, reset-2fa, lockdown) is for a person at the server, not for an AI"}
+	}
 	if rePipeShell.MatchString(norm) || rePipeInterp.MatchString(norm) {
 		return &aiBlock{Rule: "pipe_shell", Why: "piping into a shell or interpreter"}
 	}

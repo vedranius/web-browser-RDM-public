@@ -36,6 +36,8 @@ var aiRedactRules = func() []struct {
 		// PEM / OpenSSH private keys, also cut off at the end of the output
 		{regexp.MustCompile(`-----BEGIN ([A-Z0-9 ]*)PRIVATE KEY( BLOCK)?-----[\s\S]*?(-----END ([A-Z0-9 ]*)PRIVATE KEY( BLOCK)?-----|$)`), "-----BEGIN ${1}PRIVATE KEY----- " + aiRedacted + " -----END ${1}PRIVATE KEY-----"},
 		{regexp.MustCompile(`(?s)PuTTY-User-Key-File-[0-9]+:.*?(Private-MAC:[^\n]*|$)`), "PuTTY-User-Key-File " + aiRedacted},
+		// the temporary password printed by wrm -reset-password
+		{regexp.MustCompile(`(New temporary password for [^\n:]{1,80}: )(\S+)`), "${1}" + aiRedacted},
 		// Authorization headers
 		{regexp.MustCompile(`(?i)\b(authorization|proxy-authorization)(\s*[:=]\s*)(bearer|basic|token|digest|negotiate)?\s*[^\s"',;]+`), "${1}${2}${3} " + aiRedacted},
 		{regexp.MustCompile(`(?i)\b(bearer)\s+[A-Za-z0-9\-._~+/]{16,}=*`), "${1} " + aiRedacted},

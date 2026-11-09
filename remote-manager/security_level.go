@@ -74,6 +74,7 @@ var levelRules = []levelRule{
 	{Key: "audit_retention_days", Need: [3]string{"", "365", "730"}},
 	{Key: "session_recording", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}},
 	{Key: "recording_retention_days", Need: [3]string{"", "", "365"}},
+	{Key: "cli_password_reset", Order: []string{"alert", "stopped", "confirm"}, Need: [3]string{"", "stopped", "confirm"}},
 }
 
 func levelRuleFor(key string) (levelRule, bool) {

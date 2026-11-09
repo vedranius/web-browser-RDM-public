@@ -13,6 +13,7 @@ package main
 //   alert_secret_reveal                a stored secret was revealed or exported
 //   alert_ai_full_access               a command WRM normally refuses was approved under AI full access
 //   alert_audit_off                    the audit log or a SIEM export was turned off or removed
+//   alert_cli_reset                    a password was reset on the server with wrm -reset-password
 //
 // The rules run on a separate goroutine fed by a buffered channel, so audit writes never
 // wait for them.

@@ -1452,27 +1452,3 @@ func disconnectUserEverywhere(userID int, reason string) (terminals, rooms, tunn
 	tunnels = tunnelMgr.stopUser(userID, reason)
 	return
 }
-
-// resetPasswordCLI implements "wrm -reset-password <username>" for locked-out admins.
-func resetPasswordCLI(username string, reset2FA bool) error {
-	u, err := loadUser("username=?", username)
-	if err == sql.ErrNoRows || u == nil {
-		return fmt.Errorf("user %q not found", username)
-	}
-	if err != nil {
-		return err
-	}
-	pw := randomPassword()
-	hash, err := hashPassword(pw)
-	if err != nil {
-		return err
-	}
-	db.Exec(`UPDATE users SET password_hash=?, must_change_password=1, failed_logins=0, locked_until='', disabled=0 WHERE id=?`, hash, u.ID)
-	if reset2FA {
-		db.Exec(`UPDATE users SET totp_secret='', totp_enabled=0, totp_pending='', recovery_codes='' WHERE id=?`, u.ID)
-	}
-	revokeUserSessions(u.ID, 0)
-	auditLogAs(nil, 0, "cli", "admin.user_password_reset", u.Username, map[string]bool{"cli": true, "reset_2fa": reset2FA})
-	fmt.Printf("New temporary password for %s: %s\n(The user must change it after signing in.)\n", u.Username, pw)
-	return nil
-}
