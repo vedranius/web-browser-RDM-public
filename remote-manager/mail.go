@@ -475,17 +475,17 @@ func apiAdminMailHandler(w http.ResponseWriter, r *http.Request) {
 		jsonOK(w, map[string]interface{}{"settings": loadMailSettings(), "presets": mailPresets, "recent": mailRecent(), "notices": settingBool("mail_security_notices")})
 	case rest == "" && r.Method == http.MethodPut:
 		var p struct {
-			Enabled       bool   `json:"enabled"`
-			Preset        string `json:"preset"`
-			Host          string `json:"host"`
-			Port          int    `json:"port"`
-			Security      string `json:"security"`
-			Username      string `json:"username"`
-			Password      string `json:"password"`
-			ClearPassword bool   `json:"clear_password"`
-			From          string `json:"from"`
-			FromName      string `json:"from_name"`
-			PublicURL     string `json:"public_url"`
+			Enabled      bool   `json:"enabled"`
+			Preset       string `json:"preset"`
+			Host         string `json:"host"`
+			Port         int    `json:"port"`
+			Security     string `json:"security"`
+			Username     string `json:"username"`
+			Password     string `json:"password"`
+			ForgetStored bool   `json:"clear_password"`
+			From         string `json:"from"`
+			FromName     string `json:"from_name"`
+			PublicURL    string `json:"public_url"`
 		}
 		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&p) != nil {
 			jsonError(w, "Invalid request", 400)
@@ -560,7 +560,7 @@ func apiAdminMailHandler(w http.ResponseWriter, r *http.Request) {
 		if p.Password != "" {
 			pwEnc = encryptValue(p.Password)
 		}
-		if p.ClearPassword {
+		if p.ForgetStored {
 			pwEnc = ""
 		}
 		me := usernameOf(adminID)
@@ -574,7 +574,7 @@ func apiAdminMailHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Could not save", 500)
 			return
 		}
-		auditLog(r, adminID, "admin.mail_settings_changed", host, map[string]interface{}{"enabled": p.Enabled, "preset": preset, "host": host, "port": p.Port, "security": security, "from": from, "cred_changed": p.Password != "" || p.ClearPassword})
+		auditLog(r, adminID, "admin.mail_settings_changed", host, map[string]interface{}{"enabled": p.Enabled, "preset": preset, "host": host, "port": p.Port, "security": security, "from": from, "cred_changed": p.Password != "" || p.ForgetStored})
 		mailWake()
 		jsonOK(w, map[string]interface{}{"ok": true, "settings": loadMailSettings()})
 	case rest == "test" && r.Method == http.MethodPost:
