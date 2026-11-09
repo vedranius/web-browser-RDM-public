@@ -322,6 +322,8 @@ Object.assign(LANGS.hr, {
     if (pinTab) { pinTab.classList.add('active'); pinTab.onclick = () => setMode(true); passTab.onclick = () => setMode(false); }
     $('lock-out').addEventListener('click', () => { if (typeof doLogout === 'function') doLogout(); else location.reload(); });
     overlay.dataset.why = why || '';
+    // a click on the clock or the dimmed page goes back to the field
+    overlay.addEventListener('mousedown', e => { if (!e.target.closest('input, button, a, select, textarea')) { e.preventDefault(); focusLock(); } });
   }
 
   // show(): cover the page. post=true tells the server and the other tabs.
@@ -338,6 +340,13 @@ Object.assign(LANGS.hr, {
       fetch('/api/auth/lock', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({reason})}).catch(() => {});
       if (chan) chan.postMessage({t: 'lock'});
     }
+  }
+
+  // focusLock puts the keyboard on the lock screen's password/PIN field (or its first button).
+  function focusLock() {
+    if (!overlay) return;
+    const el = $('lock-pass') || overlay.querySelector('button');
+    if (el && document.activeElement !== el) { try { el.focus({preventScroll: true}); } catch (_) { el.focus(); } }
   }
 
   function lock(reason) { show(typeof reason === 'string' ? reason : 'manual', true); }
@@ -624,7 +633,16 @@ Object.assign(LANGS.hr, {
     let lastMove = 0;
     window.addEventListener('mousemove', e => { const n = Date.now(); if (n - lastMove > 1000) { lastMove = n; touch(e); } }, {passive: true});
     window.addEventListener('keydown', e => { if (!overlay && signedIn() && matchShortcut(e)) { e.preventDefault(); e.stopPropagation(); lock('shortcut'); } }, true);
+    // While locked the focus stays on the lock screen: a terminal that reconnects behind it
+    // (and focuses itself), a click on the dimmed page or a return to the tab must not take
+    // the keyboard away from the password field (#137).
+    document.addEventListener('focusin', e => { if (overlay && !overlay.contains(e.target)) focusLock(); }, true);
+    window.addEventListener('keydown', e => {
+      if (overlay && !overlay.contains(e.target)) { e.preventDefault(); e.stopPropagation(); focusLock(); }
+    }, true);
+    window.addEventListener('focus', () => { if (overlay) focusLock(); });
     document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && overlay) focusLock();
       if (document.hidden) {
         hiddenAt = Date.now();
         if (prefs.hidden === 0 && !overlay && signedIn()) setTimeout(() => { if (document.hidden && !otherTabVisible()) lock('hidden'); }, 1500);

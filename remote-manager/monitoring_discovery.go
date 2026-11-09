@@ -60,6 +60,12 @@ func monitorDiscoveryView(c Connection) (monitorRootCache, bool) {
 	if x.Owner != c.UserID || x.Config != monitorRootConfig(c.ID) || !time.Now().Before(x.Until) {
 		return monitorRootCache{}, false
 	}
+	// A discovery in use stays valid: an open log viewer or follow keeps it alive, so a
+	// viewer left open for more than an hour does not fail with "Find logs first".
+	if time.Until(x.Until) < 50*time.Minute {
+		x.Until = time.Now().Add(time.Hour)
+		monitorDiscoveredRoots.Store(c.ID, x)
+	}
 	return x, true
 }
 
@@ -188,7 +194,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 		// the folders that actually contain a *.log file so they show up as
 		// services instead of only as unlabeled rows in the file list.
 		if r.Service == "" && r.Operator == "" {
-			if entries, err := fs.ReadDir(p); err == nil {
+			if entries, err := logReadDir(ctx, fs, p); err == nil {
 				subs := 0
 				for _, e := range entries {
 					if subs >= 60 || ctx.Err() != nil {
@@ -198,7 +204,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 						continue
 					}
 					sub := path.Join(p, e.Name())
-					filesIn, err := fs.ReadDir(sub)
+					filesIn, err := logReadDir(ctx, fs, sub)
 					if err != nil {
 						continue
 					}
@@ -250,7 +256,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 		if _, err := monitorSafePath(fs, dir, dir); err != nil {
 			continue
 		}
-		entries, err := fs.ReadDir(dir)
+		entries, err := logReadDir(ctx, fs, dir)
 		if err != nil {
 			continue
 		}
@@ -328,7 +334,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 		if _, err := monitorSafePath(fs, dir, dir); err != nil {
 			continue
 		}
-		entries, err := fs.ReadDir(dir)
+		entries, err := logReadDir(ctx, fs, dir)
 		if err != nil {
 			continue
 		}
@@ -402,7 +408,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 	// it names the container without running docker or the daemon socket.
 	containerDir := "/var/lib/docker/containers"
 	if _, err := monitorSafePath(fs, containerDir, containerDir); err == nil {
-		if entries, err := fs.ReadDir(containerDir); err == nil {
+		if entries, err := logReadDir(ctx, fs, containerDir); err == nil {
 			for i, e := range entries {
 				if i >= 200 || ctx.Err() != nil {
 					break
@@ -478,7 +484,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 				continue
 			}
 		}
-		entries, err := fs.ReadDir(d.p)
+		entries, err := logReadDir(ctx, fs, d.p)
 		if err != nil {
 			continue
 		}
@@ -491,7 +497,7 @@ func monitorDiscoverRoots(ctx context.Context, fs *sftp.Client, c Connection) ([
 			}
 			n := e.Name()
 			lower := strings.ToLower(n)
-			if strings.HasPrefix(n, ".") || strings.HasSuffix(lower, ".egg-info") || oneOf(lower, "node_modules", "venv", "__pycache__", "backups", "build", "dist", "archive", "workingdir", "temp", "privkey") {
+			if strings.HasPrefix(n, ".") || strings.HasSuffix(lower, ".egg-info") || oneOf(lower, "backups", "build", "dist", "archive", "workingdir", "temp", "privkey") || logSkipDir(n, nil) {
 				continue
 			}
 			p := path.Join(d.p, n)

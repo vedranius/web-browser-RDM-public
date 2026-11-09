@@ -1,3 +1,14 @@
+## [14.6.3] - 2026-11-09
+
+Fixes for proxies, the screen lock and log discovery. Upgrading from v14.6.2 keeps the database and the encryption key; nothing is migrated.
+
+### Fixed
+
+- **A dynamic SSH tunnel did not show up as a proxy** ([#188](https://github.com/vedranius/web-browser-RDM-public/issues/188)). A `-D` tunnel could only be used after creating a "WRM SOCKS tunnel" proxy for it by hand. Every dynamic tunnel of yours that no proxy uses yet is now offered in the **Proxy** lists of the connection and folder dialogs and under *Proxies*; picking it creates the proxy, also when its port is *auto*. The lists are refreshed when the dialog opens, so a tunnel added a moment ago appears too. `GET /api/proxies` adds `tunnel_offers`.
+- **The lock screen lost the keyboard** ([#137](https://github.com/vedranius/web-browser-RDM-public/issues/137)). A terminal that reconnected behind the lock took the focus, and a click on the dimmed page removed it. While locked, the focus now always returns to the password/PIN field (also when the tab becomes visible again) and keys never reach the page behind it.
+- **Log discovery stopped on a large or unreadable folder.** Python virtual environments, including renamed copies such as `venv.bak.2026-07-16`, `site-packages`, package caches and `.git` are always skipped (by `find` and by the SFTP walks); a folder that does not answer within 15 seconds is skipped with a note instead of holding up the rest; when the time budget runs out the files found so far are listed.
+- **The log viewer failed with *Find logs first*** when the discovery had expired (after an hour) or the settings changed while a log was open. A discovery in use now stays valid, and when it is gone the viewer and the search run it again for the owner and continue.
+
 ## [14.6.2] - 2026-11-09
 
 *Forgot password* and activation of new accounts by e-mail. Upgrading from v14.6.1 keeps the database and the encryption key; the table `auth_links` and the `users` column `activation_pending` are added, so the previous binary still starts on it.

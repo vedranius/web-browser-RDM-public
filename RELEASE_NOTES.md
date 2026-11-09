@@ -1,21 +1,29 @@
-## Web Remote Manager PRO v14.6.2 — Forgot password and activation by e-mail
+## Web Remote Manager PRO v14.6.3 — Proxies from SSH tunnels, a steady lock screen, log discovery that keeps going
 
-### Forgot password
+### Fixed
+
+- **SSH tunnels as proxies** ([#188](https://github.com/vedranius/web-browser-RDM-public/issues/188)): a dynamic tunnel (`-D`) of your connection now shows up in the connection's and folder's **Proxy** list and under *Proxies*. Pick it and WRM makes it a proxy, also when its port is *auto*.
+- **Lock screen keeps the keyboard** ([#137](https://github.com/vedranius/web-browser-RDM-public/issues/137)): a terminal reconnecting behind the lock, a click on the page or returning to the tab no longer takes the cursor away from the password field.
+- **Log discovery keeps going**: Python virtual environments (also renamed ones such as `venv.bak.2026-07-16`) are skipped, an unreadable or silent folder is skipped with a note, and an open log no longer fails with *Find logs first* after an hour: WRM finds the logs again by itself.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.6.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.6.3) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.6.2 — Forgot password and activation by e-mail
+
+#### Forgot password
 
 - **Forgot password?** on the sign-in page: enter your user name or confirmed e-mail address and WRM mails a link that works once, for one hour. The page says the same whether or not an account matched, so it does not reveal who has an account.
 - On the link you choose a new password. With two-factor authentication you also enter a code (or a recovery code), so someone who only got into your mailbox cannot change it. Your other sign-ins end and you get a notice by mail.
 - Directory and single sign-on accounts never get a link, and nobody does during a lockdown. At the **Enterprise** level administrators cannot use it at all (policy `password_reset_mail`); they reset each other's passwords instead.
 
-### New accounts
+#### New accounts
 
 - **Invitations**: when creating a user, enter an e-mail address and tick *Send an invitation*. The user chooses the password through the link (valid three days), which also confirms the address. No more passing temporary passwords around.
 - **Open registration with confirmation**: a new account asks for an e-mail address and starts once the link sent to it is opened. Accounts never confirmed are removed after a week.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.6.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.6.2) asset. Preserve the database and encryption key. One table and one user column are added. Everything here needs *Admin → E-mail* set up with WRM's address for links; without it, sign-in and registration work as before.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.6.1 — WRM sends mail
 

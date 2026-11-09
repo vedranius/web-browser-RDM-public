@@ -78,6 +78,9 @@ func logGrepHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *c
 		return
 	}
 	files, units, ok := logSearchable(c, in.Files)
+	if !ok && logRediscover(r, c, acc) {
+		files, units, ok = logSearchable(c, in.Files)
+	}
 	if !ok {
 		jsonError(w, "Find logs first: the search uses the discovered file list", 409)
 		return
@@ -265,6 +268,9 @@ func logLinesHandler(w http.ResponseWriter, r *http.Request, c Connection, acc *
 	}
 	q := r.URL.Query()
 	files, units, ok := logSearchable(c, []string{q.Get("path")})
+	if !ok && logRediscover(r, c, acc) {
+		files, units, ok = logSearchable(c, []string{q.Get("path")})
+	}
 	if !ok {
 		jsonError(w, "Find logs first: the viewer uses the discovered file list", 409)
 		return

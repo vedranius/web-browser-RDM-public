@@ -6346,6 +6346,10 @@ Object.assign(LANGS.en, {
  "mail_my_off": "WRM cannot send mail yet; an administrator sets it up in Admin → E-mail.",
  "mail_verified": "confirmed",
  "mail_unverified": "not confirmed",
+ "vp_offer_group": "SSH SOCKS tunnels (-D): pick to use as a proxy",
+ "vp_offer_created": "Proxy “{name}” created from the SSH tunnel.",
+ "vp_offer_hint": "Dynamic SSH tunnels (-D) of your connections that are not a proxy yet. WRM starts the tunnel when a connection needs it, also with an automatic port.",
+ "vp_offer_use": "Use as proxy",
  "auth_email": "E-mail address",
  "auth_email_hint": "WRM sends a link to this address; the account works once you open it.",
  "auth_forgot_link": "Forgot password?",
@@ -6589,6 +6593,10 @@ Object.assign(LANGS.hr, {
  "mail_my_off": "WRM još ne može slati e-poštu; administrator je postavlja u Admin → E-pošta.",
  "mail_verified": "potvrđena",
  "mail_unverified": "nije potvrđena",
+ "vp_offer_group": "SSH SOCKS tuneli (-D): odaberi za korištenje kao proxy",
+ "vp_offer_created": "Proxy „{name}” stvoren iz SSH tunela.",
+ "vp_offer_hint": "Dinamički SSH tuneli (-D) tvojih veza koji još nisu proxy. WRM pokreće tunel kad ga veza zatreba, i s automatskim portom.",
+ "vp_offer_use": "Koristi kao proxy",
  "auth_email": "E-mail adresa",
  "auth_email_hint": "WRM šalje poveznicu na ovu adresu; račun radi kad je otvoriš.",
  "auth_forgot_link": "Zaboravljena lozinka?",
@@ -8530,8 +8538,18 @@ async function openFolderModal(id, parentId) {
     .sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}">${esc(connLabel(x))} (${esc(x.host)})${x.route ? ' ⤳ ' + esc(x.route) : ''}</option>`).join('');
   js.value = f && f.jump_id ? f.jump_id : '';
   const ps = document.getElementById('f-proxy');
-  ps.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('');
+  ps.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('') + proxyOfferOptions();
   ps.value = f && f.proxy_id ? f.proxy_id : '';
+  ps.dataset.prev = ps.value;
+  ps.onchange = async () => {
+    if (!ps.value.startsWith('tun:')) { ps.dataset.prev = ps.value; return; }
+    const tid = Number(ps.value.slice(4));
+    ps.value = ps.dataset.prev || '';
+    const id = await proxyFromTunnel(tid);
+    if (!id) return;
+    ps.innerHTML = `<option value="">— ${esc(t('proxy_none'))} —</option>` + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('') + proxyOfferOptions();
+    ps.value = id; ps.dataset.prev = ps.value;
+  };
   document.getElementById('modal-folder').classList.add('open');
   setTimeout(() => document.getElementById('f-name').focus(), 50);
 }
@@ -12222,7 +12240,7 @@ async function bitwardenAction(action) {
 
 // ══ SSH KEY STORE & CREDENTIALS VAULT (v10.5) ═══════════
 
-let vaultKeys = [], vaultCreds = [], vaultProxies = [], vaultTab = 'keys', proxyCanDefine = true, proxyContainer = false;
+let vaultKeys = [], vaultCreds = [], vaultProxies = [], proxyTunnelOffers = [], vaultLoadedAt = 0, vaultTab = 'keys', proxyCanDefine = true, proxyContainer = false;
 let _vaultLoading = null;
 
 function loadVault() {
@@ -12233,7 +12251,8 @@ function loadVault() {
       const [k, c, p] = await Promise.all([fetch('/api/keys'), fetch('/api/credentials'), fetch('/api/proxies')]);
       if (k.ok) vaultKeys = await k.json();
       if (c.ok) vaultCreds = await c.json();
-      if (p.ok) { const d = await p.json(); vaultProxies = d.proxies || []; proxyCanDefine = d.can_define; proxyContainer = d.container; }
+      if (p.ok) { const d = await p.json(); vaultProxies = d.proxies || []; proxyTunnelOffers = d.tunnel_offers || []; proxyCanDefine = d.can_define; proxyContainer = d.container; }
+      vaultLoadedAt = Date.now();
     } catch (_) {}
     renderVaultBadge();
     if (document.getElementById('modal-vault').classList.contains('open')) renderVault();
@@ -17706,17 +17725,51 @@ function fillProxySelect(c, selectId) {
   sel.innerHTML = (fp ? `<option value="">— ${esc(t('fd_from_folder'))}: ${esc(fp.name)} —</option><option value="-1">— ${esc(t('fd_proxy_none'))} —</option>`
       : `<option value="">— ${esc(t('proxy_none'))} —</option>` + (cur === '-1' ? `<option value="-1">— ${esc(t('fd_proxy_none'))} —</option>` : '')) + vaultProxies.map(p => `<option value="${p.id}">${esc(proxyLabel(p))}</option>`).join('') +
     (c && c.proxy_choice > 0 && !vaultProxies.some(p => p.id === c.proxy_choice) ? `<option value="${c.proxy_choice}">${esc(c.proxy_name || t('vp_missing'))}</option>` : '') +
-    (proxyCanDefine ? `<option value="__new">＋ ${esc(t('vp_new'))}…</option>` : '');
+    proxyOfferOptions() + (proxyCanDefine ? `<option value="__new">＋ ${esc(t('vp_new'))}…</option>` : '');
   sel.value = cur;
   if (sel.value !== cur) sel.value = '';
   sel.dataset.prev = sel.value;
   updateRoutePreview();
+  // A tunnel added since the vault was loaded shows up once the list is fresh (#188).
+  if (Date.now() - vaultLoadedAt > 3000) loadVault().then(() => { if (document.getElementById('modal-conn').classList.contains('open')) fillProxySelect(c, sel.value); });
+}
+
+// Dynamic SSH tunnels (-D) of the user's connections that no proxy uses yet: picking one
+// creates its "WRM SOCKS tunnel" proxy (#188).
+function proxyOfferOptions() {
+  if (!proxyCanDefine || !proxyTunnelOffers.length) return '';
+  return `<optgroup label="${esc(t('vp_offer_group'))}">` + proxyTunnelOffers.map(o => `<option value="tun:${o.tunnel_id}">⇄ ${esc(o.connection)} · ${esc(o.name || 'SOCKS')} (${esc(o.bind_host || '127.0.0.1')}:${o.bind_port || 'auto'})</option>`).join('') + '</optgroup>';
+}
+
+async function proxyFromTunnel(tunnelID) {
+  const o = proxyTunnelOffers.find(x => x.tunnel_id === tunnelID);
+  if (!o) return 0;
+  const base = o.connection + ' · ' + (o.name || 'SOCKS -D');
+  for (let i = 0; i < 5; i++) {
+    const name = i ? base + ' (' + (i + 1) + ')' : base;
+    const r = await fetch('/api/proxies', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, kind: 'wrm_tunnel', tunnel_id: tunnelID, remote_dns: true})});
+    if (r.ok) {
+      const saved = await r.json();
+      await loadVault();
+      showToast(t('vp_offer_created').replace('{name}', name), 'success', 3500);
+      return saved.id;
+    }
+    const err = await apiError(r);
+    if (!/exist|already|name/i.test(err)) { showToast(err, 'error', 6000); return 0; }
+  }
+  return 0;
 }
 
 function onProxyPick() {
   const sel = document.getElementById('m-proxy');
   // "+ New proxy…" opens the proxy dialog; until a new proxy is saved the previous choice stays.
   if (sel.value === '__new') { sel.value = sel.dataset.prev || ''; openProxyModal(null, true); return; }
+  if (sel.value.startsWith('tun:')) {
+    const tid = Number(sel.value.slice(4));
+    sel.value = sel.dataset.prev || '';
+    proxyFromTunnel(tid).then(id => { if (id) fillProxySelect(conns.find(x => x.id === Number(document.getElementById('m-id').value)), id); });
+    return;
+  }
   sel.dataset.prev = sel.value;
   updateRoutePreview();
 }
@@ -17751,7 +17804,13 @@ function renderProxyList() {
     ${(p.grant_names || []).length ? `<div class="sc-meta"><span>👥 ${esc(p.grant_names.join(', '))}</span></div>` : ''}
     <div class="sc-actions">${p.mine ? `<button class="btn-sec btn-sm" onclick="openProxyModal(${p.id})">✏ ${esc(t('edit'))}</button>` : ''}
       <button class="btn-sec btn-sm" onclick="openProxyModal(${p.id}, false, true)">🔌 ${esc(t('vp_test'))}</button></div></div>`).join('')
-    : `<div class="vk-empty">${esc(t('vp_empty'))}</div>`;
+    : (proxyTunnelOffers.length && proxyCanDefine ? '' : `<div class="vk-empty">${esc(t('vp_empty'))}</div>`);
+  if (proxyCanDefine && proxyTunnelOffers.length) {
+    el.innerHTML += `<div class="muted-text" style="margin:12px 0 6px;">${esc(t('vp_offer_hint'))}</div>` + proxyTunnelOffers.map(o => `<div class="share-card">
+      <div class="sc-top"><span class="sc-name">⇄ ${esc(o.connection)} · ${esc(o.name || 'SOCKS')}</span><span class="pill">-D</span></div>
+      <div class="vk-fp mono">${esc(o.bind_host || '127.0.0.1')}:${o.bind_port || 'auto'}</div>
+      <div class="sc-actions"><button class="btn-sec btn-sm" onclick="proxyFromTunnel(${Number(o.tunnel_id)}).then(id => { if (id) renderProxyList(); })">＋ ${esc(t('vp_offer_use'))}</button></div></div>`).join('');
+  }
 }
 
 let pxFromConn = false;

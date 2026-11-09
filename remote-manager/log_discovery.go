@@ -167,7 +167,7 @@ func parseLogMeta(out string) logMeta {
 func logFindScript(paths []string, s logSettings) string {
 	q := func(v string) string { return shellQuote(v) }
 	prune := []string{}
-	for _, e := range s.Exclude {
+	for _, e := range logPruneNames(s.Exclude) {
 		prune = append(prune, "-name "+q(e))
 	}
 	names := []string{"*log*", "*.out", "*.err", "*.trace", "*.jsonl", "*.ndjson", "*.audit", "messages*", "secure*", "maillog*", "cron*", "*access*", "*error*", "stdout*", "stderr*"}
