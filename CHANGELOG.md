@@ -1,3 +1,14 @@
+## [14.6.1] - 2026-11-09
+
+WRM sends mail: users confirm their e-mail address and are told when their password or two-factor authentication changes. Upgrading from v14.6.0 keeps the database and the encryption key; two tables (`mail_settings`, `mail_outbox`) and five `users` columns (`email`, `email_verified`, `email_pending`, `email_token`, `email_token_at`) are added, so the previous binary still starts on it.
+
+### Added
+
+- **Admin → E-mail.** One SMTP account WRM writes from, with presets for **Gmail**, **Outlook.com** and **Microsoft 365** (server, port and STARTTLS filled in, with what each needs: an app password, and SMTP AUTH allowed by the tenant for Microsoft 365) and any other SMTP server or relay. *Send a test message* tries the saved settings at once and explains a failed Gmail/Microsoft login. The password is encrypted at rest and never sent to the browser; changing the server or user asks for it again, a password is sent only over TLS (except to a relay on the same machine), and the sender name cannot carry header lines. WRM's address for links is configured, never taken from the request. Recent messages show whether they were sent, are waiting or failed. API `GET/PUT /api/admin/mail`, `POST /api/admin/mail/test`.
+- **Delivery queue.** Mail goes through `mail_outbox` and is delivered by the running server with retries (1 min, 5 min, 30 min, 2 h, 6 h; given up after six tries), so a slow mail server never delays a page. Messages are kept for 30 days.
+- **Users' e-mail addresses with confirmation.** *Settings → Security → E-mail address* sends a link (valid 24 hours, works once) and uses the address once it is opened; changing it needs a fresh password/2FA confirmation and tells the previous address. Administrators set an address in *Admin → Users → ⋯ → Set e-mail address*, also confirmed by the user, and see it in the user list. Policy `user_email_self` (on) lets users set their own. API `GET/PUT/DELETE /api/me/email`, link `/api/auth/verify-email`.
+- **Security notices by e-mail** (policy `mail_security_notices`, on): password changed, reset by an administrator or on the server with `wrm -reset-password` (sent at once even while WRM is stopped), two-factor authentication turned on or off (also by an administrator), a new e-mail address set. Only a confirmed address gets mail. Each message is in English and Croatian.
+
 ## [14.6.0] - 2026-11-09
 
 A password reset on the server (`wrm -reset-password`) is no longer a quiet way into WRM. Upgrading from v14.5.1 keeps the database and the encryption key; two tables are added (`server_heartbeat`, `cli_reset_requests`), so the previous binary still starts on it.

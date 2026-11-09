@@ -1,8 +1,30 @@
-## Web Remote Manager PRO v14.6.0 — Password reset on the server, protected
+## Web Remote Manager PRO v14.6.1 — WRM sends mail
+
+### Set it up once
+
+- **Admin → E-mail**: pick **Gmail**, **Outlook.com**, **Microsoft 365** or another SMTP server, enter the user name and an app password, the sender and WRM's address, and press *Send a test message*. WRM says what each provider needs (an app password; for Microsoft 365, SMTP AUTH allowed for the mailbox). It works the same for WRM on your own computer and on a server, as long as that machine can reach the mail server.
+- The password is stored encrypted and never shown again. Mail waits in a queue and is retried, so a slow mail server never slows WRM down.
+
+### For every user
+
+- **E-mail address with confirmation**: *Settings → Security → E-mail address* sends a link; the address counts once you open it. Administrators can set addresses in *Admin → Users*, still confirmed by the user.
+- **Security notices**: you get a mail when your password is changed or reset (by you, an administrator or on the server), when two-factor authentication is turned on or off, and when a new address is set. Each message is in English and Croatian.
+
+### Coming next
+
+Activation of new accounts by e-mail and *Forgot password* (v14.6.2) use the same mail account.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.6.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.6.1) asset. Preserve the database and encryption key. Two tables and five user columns are added; nothing is sent until an administrator sets up and turns on Admin → E-mail.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.6.0 — Password reset on the server, protected
 
 Until now anyone who could run WRM on its server could reset any password, the administrator's included, with `wrm -reset-password`, and nobody was told. That is still possible for a person who really needs it, but it can no longer happen quietly.
 
-### How it is protected
+#### How it is protected
 
 - **By security level** (Admin → Policies → Accounts → *Password reset on the server*):
   - **Alert administrators** (Home): the reset happens at once and every administrator gets a security alert.
@@ -10,12 +32,6 @@ Until now anyone who could run WRM on its server could reset any password, the a
   - **Confirmation** (Enterprise): the command files a request. Another administrator approves it in Admin → Security, or the user confirms it with their own 2FA code (`-reset-code 123456`), or it can be run again after one hour if nobody rejected it.
 - **Every reset is reported.** Resets, refused attempts, requests and wrong codes go to every administrator's inbox and notification channels, the audit log and SIEM.
 - **AI can't do it.** An AI or MCP session can never run `wrm -reset-password`, `-reset-2fa` or `-lockdown` on a server, even with full access, and a temporary password in its output is masked.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.6.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.6.0) asset. Preserve the database and encryption key. Two tables are added; nothing else is migrated. The default stays *Alert administrators*; Business and Enterprise levels raise it.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.5.1 — Resizable windows and storage columns
 
