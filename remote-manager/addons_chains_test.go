@@ -101,10 +101,13 @@ func TestAddonChainsRead(t *testing.T) {
 		t.Fatalf("without chains.read: %d %s", r.Code, r.Raw)
 	}
 
-	// A disabled addon.
+	// A disabled addon: users no longer see it, administrators get E_DISABLED.
 	addonReq(admin, "POST", "/api/addons/demo.chains/disable", "")
-	if r := addonReq(alice, "GET", base, ""); r.Code != 409 {
-		t.Fatalf("disabled addon: %d %s", r.Code, r.Raw)
+	if r := addonReq(alice, "GET", base, ""); r.Code != 404 {
+		t.Fatalf("disabled addon for a user: %d %s", r.Code, r.Raw)
+	}
+	if r := addonReq(admin, "GET", base, ""); r.Code != 409 {
+		t.Fatalf("disabled addon for an administrator: %d %s", r.Code, r.Raw)
 	}
 }
 
