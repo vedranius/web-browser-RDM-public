@@ -202,6 +202,7 @@ Object.assign(LANGS.en, {
   add_perm_store: 'Keep up to {kb} KB of settings per instance on the WRM server.',
   add_perm_store_shared: 'Keep up to {kb} KB of settings per instance on the WRM server, one set shared by everybody and written by administrators.',
   add_perm_notify: 'Show short notifications (at most 5 a minute, repeats are dropped).',
+  add_perm_chains: 'Read the state of the chains of whoever opens the window (checked values, scenario, timeline) and check them now. No commands, connections or secrets.',
   add_perm_server: 'Run WebAssembly server code ({exports}) in the sandbox when an administrator calls it.',
   add_perm_other: 'Permission: {p}',
   add_inst: 'Instances',
@@ -259,6 +260,7 @@ Object.assign(LANGS.hr, {
   add_perm_store: 'Čuvati do {kb} KB postavki po instanci na WRM serveru.',
   add_perm_store_shared: 'Čuvati do {kb} KB postavki po instanci na WRM serveru, jedan zajednički skup za sve koji pišu administratori.',
   add_perm_notify: 'Prikazivati kratke obavijesti (najviše 5 u minuti, ponavljanja se odbacuju).',
+  add_perm_chains: 'Čitati stanje lanaca (Chains) osobe koja otvori prozor (provjerene vrijednosti, scenarij, vremensku crtu) i pokrenuti provjeru odmah. Bez naredbi, konekcija i tajni.',
   add_perm_server: 'Izvršavati WebAssembly kôd na serveru ({exports}) u sandboxu kad ga administrator pozove.',
   add_perm_other: 'Dozvola: {p}',
   add_inst: 'Instance',
@@ -867,7 +869,7 @@ Object.assign(LANGS.hr, {
     post(st, {type: 'wrm:context', user: {id: me.id || 0, name: me.display_name || ''},
       lang: typeof currentLang !== 'undefined' ? currentLang : 'en', theme: themeTokens(),
       addon: {id: a.id, key: keyOf(a), version: a.version, instance: st.inst.id, instanceName: st.inst.name},
-      config, features: {store: hasCap(a, 'store'), notify: hasCap(a, 'notify'), http: !!http, jobs: false, history: false, visibility: true}, http,
+      config, features: {store: hasCap(a, 'store'), notify: hasCap(a, 'notify'), http: !!http, chains: hasCap(a, 'chains.read'), jobs: false, history: false, visibility: true}, http,
       size: {w: wc ? wc.clientWidth : 0, h: wc ? wc.clientHeight : 0}, visible: st.visible});
   }
 
@@ -1020,6 +1022,30 @@ Object.assign(LANGS.hr, {
         }
         return;
       }
+      case 'wrm:chains.list':
+      case 'wrm:chains.get':
+      case 'wrm:chains.check': {
+        if (!reqID(d.id)) return addDiag(st, {kind: 'E_BRIDGE', message: d.type + ' needs an id'});
+        const answer = d.type === 'wrm:chains.list' ? 'wrm:chains' : 'wrm:chain';
+        if (!hasCap(a, 'chains.read')) {
+          addDiag(st, {kind: 'E_CAPABILITY', message: d.type + ' needs the chains.read capability'});
+          return fail(answer, d.id, {message: 'The addon does not declare the chains.read capability', code: 'E_CAPABILITY'});
+        }
+        const cid = Number(d.chain);
+        if (d.type !== 'wrm:chains.list' && !(Number.isInteger(cid) && cid > 0)) return fail(answer, d.id, {message: d.type + ' needs a chain id', code: 'E_BRIDGE'});
+        const base = apiBase(a) + '/instances/' + st.inst.id + '/chains';
+        try {
+          const url = d.type === 'wrm:chains.list' ? base : base + '/' + cid + (d.type === 'wrm:chains.check' ? '/check' : '');
+          const res = await fetch(url, {method: d.type === 'wrm:chains.check' ? 'POST' : 'GET', headers: {'Content-Type': 'application/json'}});
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok) throw Object.assign(new Error(j.error || ('HTTP ' + res.status)), {code: j.code || ''});
+          send(Object.assign({type: answer, id: d.id}, j));
+        } catch (e) {
+          addDiag(st, {kind: e.code || 'E_CHAINS', message: e.message});
+          fail(answer, d.id, e);
+        }
+        return;
+      }
       case 'wrm:resize': {
         const w = Number(d.w), h = Number(d.h), el = st.wo.el, wc = $('wc-' + st.wo.id), cont = $('win-container');
         if (!isFinite(w) || !isFinite(h) || !el || !wc || !cont || st.wo.snap) return;
@@ -1140,6 +1166,7 @@ Object.assign(LANGS.hr, {
     if (kind === 'themes') return tf('add_perm_themes', {n: val});
     if (kind === 'store') return tf(extra === 'shared' ? 'add_perm_store_shared' : 'add_perm_store', {kb: val});
     if (kind === 'notify') return t('add_perm_notify');
+    if (kind === 'chains') return t('add_perm_chains');
     if (kind === 'server') return tf('add_perm_server', {exports: (val || '').split(',').join(', ')});
     return tf('add_perm_other', {p});
   }
@@ -1718,6 +1745,7 @@ wrm -addon-dev ./my-addon</pre></div>
       '- WRM also sends {type:"wrm:theme", theme} when the user switches theme, {type:"wrm:visibility", visible} when the window is minimized or restored (stop polling and timers while hidden), and {type:"wrm:fatal", code, message} before it closes the panel.',
       '- store capability: {v:2, type:"wrm:store.get", id, key} and {v:2, type:"wrm:store.set", id, key, value} (any JSON, 32 KB per value, quotaKb per instance). The answer is {type:"wrm:store", id, key, value} or with error and code (E_LIMIT_QUOTA, E_LIMIT_SIZE, E_STORE_KEY, E_STORE_READONLY). Keys: 1-64 letters, digits, dot, dash, underscore, not starting with wrm.',
       '- notify capability: {v:2, type:"wrm:notify", text, level:"info"|"success"|"warn"|"error"}; plain text, 200 characters, at most 5 a minute, repeats within 5 minutes are dropped.',
+      '- chains.read capability: {v:2, type:"wrm:chains.list", id} answers {type:"wrm:chains", id, chains:[{id, name, enabled, scenario, scenario_label, nodes_up, nodes_total, checks_ok, checks_total, last_at}]}; {v:2, type:"wrm:chains.get", id, chain} and {v:2, type:"wrm:chains.check", id, chain} (check now, 20 a minute) answer {type:"wrm:chain", id, chain:{id, name, nodes:[{id, kind, label, role}], checks:[{id, node, type, label, target, format, key}], links, scenarios, state:{at, nodes, checks:{id:{value, ok, detail, error}}, scenario}, confirmed:{…same…}, scenario, scenario_label, last_at}, timeline:[{at, kind, subject, old, new, ok}]}. Only the chains of whoever opens the window; WRM checks chains in the background, the panel only reads them. Codes: E_CAPABILITY, E_CHAINS_OFF, E_NOT_FOUND, E_LIMIT_RATE, E_CHAIN_BUSY.',
       '- {v:2, type:"wrm:resize", w, h} asks for a content size (WRM decides); {v:2, type:"wrm:error", message, source, line} reports an error into the window diagnostics. Use a ResizeObserver to redraw.',
       '- Each instance (the user may open several, e.g. two dashboards) has its own stored values and window. Data is fetched only while the window is open; WRM runs no background jobs for addons.',
       '- http capability: the panel never fetches by itself. Send {v:2, type:"wrm:http", id, method, url, headers:{Accept, Content-Type, Range}, body (string; encoding:"base64" for bytes), secret:"grafana_token"} and WRM performs the request. The answer is {type:"wrm:http", id, ok, status, headers, body, encoding:"text"|"base64", truncated} or {id, ok:false, error, code}. Only origins listed in http.origins (exact scheme://host[:port]; plain http:// only for an origin the administrator approved as private network) and paths in http.paths (prefix with * at the end) are allowed; an administrator approves the origins; local and private addresses are refused unless the administrator allowed the private network for that origin; redirects are checked again; 120 requests a minute, 20 at a time, 10 s timeout, 256 KB request and 8 MB response. Codes: E_HTTP_ORIGIN, E_HTTP_PATH, E_HTTP_METHOD, E_HTTP_UNAPPROVED, E_HTTP_BLOCKED, E_HTTP_SCHEME, E_HTTP_SECRET, E_SECRET_MISSING, E_HTTP_TIMEOUT, E_HTTP_UPSTREAM, E_LIMIT_RATE, E_LIMIT_SIZE.',

@@ -129,6 +129,11 @@
     // A request WRM sends to a site listed in http.origins (http capability).
     // secret names an entry of http.secrets; the panel never sees its value.
     http(req) { return request('wrm:http', req); },
+    // The chains of whoever opens the window (chains.read capability): the
+    // list, one chain with its timeline, and a check now.
+    chains() { return request('wrm:chains.list', {}).then((d) => d.chains || []); },
+    chain(id) { return request('wrm:chains.get', {chain: id}); },
+    chainCheck(id) { return request('wrm:chains.check', {chain: id}); },
     error(message) { send({type: 'wrm:error', message: String(message)}); },
     resize(w, h) { send({type: 'wrm:resize', w, h}); }
   };

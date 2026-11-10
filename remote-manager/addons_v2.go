@@ -260,7 +260,13 @@ func addonValidateV2(m *addonManifest, seen map[string]bool) error {
 		if seen["store"] || seen["notify"] || m.Store != nil {
 			return fmt.Errorf("the store and notify capabilities need \"apiVersion\": 2")
 		}
+		if seen["chains.read"] {
+			return fmt.Errorf("the chains.read capability needs \"apiVersion\": 2")
+		}
 		return nil
+	}
+	if seen["chains.read"] && (m.UI == nil || m.UI.Panel == "") {
+		return fmt.Errorf("the chains.read capability is used from a panel: declare ui.panel")
 	}
 	if m.Store != nil && !seen["store"] {
 		return fmt.Errorf("a store block requires the store capability")
@@ -306,6 +312,9 @@ func addonPermissions(m *addonManifest) []string {
 	}
 	if has["notify"] {
 		out = append(out, "notify")
+	}
+	if has["chains.read"] {
+		out = append(out, "chains")
 	}
 	out = append(out, addonHTTPPermissions(m.HTTP)...)
 	if m.Server != nil {
@@ -783,7 +792,7 @@ func addonInstancesHandler(w http.ResponseWriter, r *http.Request, userID int, a
 		}
 		return
 	}
-	if !rec.Enabled && oneOf(rest[1], "window", "secrets", "http") {
+	if !rec.Enabled && oneOf(rest[1], "window", "secrets", "http", "chains") {
 		addonFail(w, addonErrf("E_DISABLED", "The addon is disabled"), 409)
 		return
 	}
@@ -796,6 +805,9 @@ func addonInstancesHandler(w http.ResponseWriter, r *http.Request, userID int, a
 		return
 	case "http":
 		addonHTTPHandler(w, r, userID, admin, rec, in, rest[2:])
+		return
+	case "chains":
+		addonChainsHandler(w, r, userID, rec, in, rest[2:])
 		return
 	case "store", "export", "import":
 	default:

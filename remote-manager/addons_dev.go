@@ -218,9 +218,32 @@ func (d *addonDevServer) serveAPI(w http.ResponseWriter, r *http.Request, what s
 		jsonOK(w, map[string]interface{}{"ok": true})
 	case what == "http" && r.Method == http.MethodPost:
 		d.serveHTTPProxy(w, r)
+	case what == "chains" && r.Method == http.MethodGet:
+		d.serveChains(w)
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+// serveChains answers chains.read from the JSON file named by WRM_ADDON_CHAINS: a list of
+// {"chain": {...}, "timeline": [...]} objects in the shape WRM sends (see llms.txt).
+func (d *addonDevServer) serveChains(w http.ResponseWriter) {
+	p := os.Getenv("WRM_ADDON_CHAINS")
+	if p == "" {
+		addonFail(w, addonErrf("E_CHAINS_OFF", "The dev server has no chains: set WRM_ADDON_CHAINS to a JSON file"), 404)
+		return
+	}
+	b, err := os.ReadFile(p)
+	if err != nil || len(b) > 4<<20 {
+		addonFail(w, addonErrf("E_CHAINS_OFF", "WRM_ADDON_CHAINS cannot be read (at most 4 MB)"), 500)
+		return
+	}
+	var items []json.RawMessage
+	if err := json.Unmarshal(b, &items); err != nil {
+		addonFail(w, addonErrf("E_CHAINS_OFF", "WRM_ADDON_CHAINS is not a JSON list"), 500)
+		return
+	}
+	jsonOK(w, map[string]interface{}{"items": items})
 }
 
 func addonDevSecret(name string) string {
@@ -409,7 +432,7 @@ h2 { font-size: 13px; margin: 12px 0 6px; color: var(--text3); text-transform: u
     Object.keys(state.secrets || {}).forEach((k) => { secretsReady[k] = !!state.secrets[k]; });
     post({type: 'wrm:context', user: {id: 1, name: 'Developer'}, lang: $('lang').value, theme: THEMES[$('theme').value],
       addon: {id: m.id, key: m.id, version: m.version, instance: 1, instanceName: 'Dev'}, config: await storeValues(),
-      features: {store: has('store'), notify: has('notify'), http: has('http'), jobs: false, history: false, visibility: true},
+      features: {store: has('store'), notify: has('notify'), http: has('http'), chains: has('chains.read'), jobs: false, history: false, visibility: true},
       http: m.http ? {origins: m.http.origins || [], approved: true, ready: secretsReady} : null,
       size: {w: frame.clientWidth, h: frame.clientHeight}, visible});
   }
@@ -461,6 +484,29 @@ h2 { font-size: 13px; margin: 12px 0 6px; color: var(--text3); text-transform: u
           post(Object.assign({type: 'wrm:http', id: d.id}, res));
         } catch (err) { log('error', 'wrm:http ' + d.url + ': ' + err.code + ' ' + err.message); fail('wrm:http', err, {ok: false, status: 0}); }
         return;
+      case 'wrm:chains.list':
+      case 'wrm:chains.get':
+      case 'wrm:chains.check': {
+        const answer = d.type === 'wrm:chains.list' ? 'wrm:chains' : 'wrm:chain';
+        if (!has('chains.read')) { log('error', d.type + ' without the chains.read capability'); return fail(answer, {message: 'The addon does not declare the chains.read capability', code: 'E_CAPABILITY'}); }
+        try {
+          const items = (await api('GET', 'chains')).items || [];
+          if (d.type === 'wrm:chains.list') {
+            post({type: answer, id: d.id, chains: items.map((x) => {
+              const c = x.chain || {}, s = c.state || {}, checks = Object.values(s.checks || {});
+              return {id: c.id, name: c.name, enabled: c.enabled !== false, scenario: c.scenario || '', scenario_label: c.scenario_label || '',
+                nodes_up: Object.values(s.nodes || {}).filter((n) => n.state === 'up').length, nodes_total: (c.nodes || []).filter((n) => n.kind === 'server').length,
+                checks_ok: checks.filter((r) => r.ok).length, checks_total: (c.checks || []).length, last_at: c.last_at || ''};
+            })});
+          } else {
+            const x = items.find((i) => i.chain && i.chain.id === Number(d.chain));
+            if (!x) throw Object.assign(new Error('Chain not found'), {code: 'E_NOT_FOUND'});
+            post(Object.assign({type: answer, id: d.id}, x));
+          }
+          log('info', d.type + (d.chain ? ' ' + d.chain : ''));
+        } catch (err) { log('error', d.type + ': ' + err.code + ' ' + err.message); fail(answer, err); }
+        return;
+      }
       case 'wrm:resize': log('info', 'resize ' + d.w + '×' + d.h); $('win').style.width = Math.max(160, Number(d.w) || 0) + 'px'; $('win').style.height = Math.max(120, Number(d.h) || 0) + 26 + 'px'; return;
       case 'wrm:error': return log('error', 'panel error: ' + String(d.message || '') + (d.source ? ' (' + d.source + ':' + (d.line || 0) + ')' : ''));
       default: log('warning', 'unknown message dropped: ' + String(d.type).slice(0, 40));

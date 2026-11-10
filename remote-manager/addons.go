@@ -51,6 +51,7 @@ var (
 		"store":       "keep its settings on the WRM server (apiVersion 2)",
 		"notify":      "show short notifications from its panel (apiVersion 2)",
 		"http":        "reach the web sites its addon.json lists, through WRM and after an administrator approved them (apiVersion 2)",
+		"chains.read": "read the state of the viewer's chains and ask for a check now, without commands or secrets (apiVersion 2)",
 	}
 	addonExportPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
 	// addonReservedIDs are path words of /api/addons/ that an addon id would

@@ -390,6 +390,7 @@ func addonLintTree(ctx context.Context, rep *addonLintReport, m *addonManifest, 
 	mine := own.String()
 	for _, u := range []struct{ msg, helper, c string }{
 		{"wrm:store.", "wrm.store", "store"}, {"wrm:notify", "wrm.notify(", "notify"}, {"wrm:http", "wrm.http(", "http"},
+		{"wrm:chains.", "wrm.chain", "chains.read"},
 	} {
 		if (strings.Contains(mine, u.msg) || strings.Contains(mine, u.helper)) && !caps[u.c] {
 			rep.add("warning", "E_LINT_CAPABILITY", "addon.json", 0, "The code uses %s but the %s capability is not declared", strings.TrimSuffix(u.msg, "."), u.c)
@@ -424,6 +425,8 @@ func addonPermissionText(a string) string {
 		return kb + " KB of settings per instance"
 	case "notify":
 		return "Short notifications"
+	case "chains":
+		return "Read the state of your chains (values and timeline, no commands or secrets) and check them now"
 	case "http":
 		return "Requests to " + val + " through WRM, after an administrator approves the site"
 	case "http.methods":
