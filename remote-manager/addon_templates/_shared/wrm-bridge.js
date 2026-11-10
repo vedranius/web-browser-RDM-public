@@ -55,14 +55,14 @@
     bridgeInit = null;
   }
 
-  function request(type, fields) {
+  function request(type, fields, timeoutMs) {
     const id = type + '-' + (++seq);
     return new Promise((resolve, reject) => {
       pending.set(id, {resolve, reject});
       send(Object.assign({type, id}, fields));
       setTimeout(() => {
         if (pending.delete(id)) reject(Object.assign(new Error('WRM did not answer'), {code: 'E_TIMEOUT'}));
-      }, 15000);
+      }, timeoutMs || 15000);
     });
   }
 
@@ -129,6 +129,12 @@
     // A request WRM sends to a site listed in http.origins (http capability).
     // secret names an entry of http.secrets; the panel never sees its value.
     http(req) { return request('wrm:http', req); },
+    // The chains of whoever opens the window (chains.read capability): the
+    // list, one chain with its timeline, and a check now.
+    chains() { return request('wrm:chains.list', {}).then((d) => d.chains || []); },
+    chain(id) { return request('wrm:chains.get', {chain: id}); },
+    // A check runs on the servers and may take up to 90 seconds.
+    chainCheck(id) { return request('wrm:chains.check', {chain: id}, 100000); },
     error(message) { send({type: 'wrm:error', message: String(message)}); },
     resize(w, h) { send({type: 'wrm:resize', w, h}); }
   };

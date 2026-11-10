@@ -1,3 +1,18 @@
+## [14.7.0] - 2026-11-10
+
+Addons can read your chains. Upgrading from v14.6.3 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **Addon capability `chains.read`** (apiVersion 2, with a panel). The panel reads the chains of whoever opens its window (a shared instance shows every viewer their own): name, nodes with label, kind and role, checks with type, label, target, format and key, links, scenarios, the latest state and the confirmed state, the active scenario and up to 200 timeline entries. It never gets connection ids, host names, commands or raw output; values are the extracted ones Chains already keep. *Check now* from a panel uses the limit of the Chains window (20 a minute per user) and is audited as `chain.checked` with the addon and instance. Refused with `E_CAPABILITY` without the capability, `E_CHAINS_OFF` when Chains are off and `E_NOT_FOUND` for another user's chain.
+- Bridge messages `wrm:chains.list`, `wrm:chains.get` and `wrm:chains.check` (answers `wrm:chains` and `wrm:chain`), helpers `wrm.chains()`, `wrm.chain(id)` and `wrm.chainCheck(id)` in `wrm-bridge.js`, `features.chains` in the panel context. API `GET /api/addons/{key}/instances/{id}/chains`, `GET …/chains/{chain}`, `POST …/chains/{chain}/check`.
+- The permission sheet, the lint summary and the JSON schema know the capability; lint warns when a panel uses the chain messages without declaring it. `llms.txt` and the *AI addon* prompt document it.
+- `wrm -addon-dev` answers the chain messages from the JSON file named by `WRM_ADDON_CHAINS` (a list of `{"chain": …, "timeline": […]}` objects).
+
+### Changed
+
+- **Chains ask a server once per file.** Checks of one node that ask the same thing (the same type and target, for example forty `config` checks reading keys of one INI file) are sent to the server once and every check reads its own value from that answer. A chain that watches many keys of a large file no longer comes near the 1 MB answer limit per node.
+
 ## [14.6.3] - 2026-11-09
 
 Fixes for proxies, the screen lock and log discovery. Upgrading from v14.6.2 keeps the database and the encryption key; nothing is migrated.

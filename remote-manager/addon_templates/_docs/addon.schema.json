@@ -17,7 +17,7 @@
     "homepage": { "type": "string" },
     "capabilities": {
       "type": "array", "minItems": 1, "maxItems": 8, "uniqueItems": true,
-      "items": { "enum": ["ui.panel", "ui.theme", "store", "notify", "http", "server.wasm"] },
+      "items": { "enum": ["ui.panel", "ui.theme", "store", "notify", "http", "chains.read", "server.wasm"] },
       "description": "The grant list. Every block needs its capability and every capability its block."
     },
     "ui": {
