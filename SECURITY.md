@@ -475,6 +475,12 @@ The Medium native preview (v12.6.0) is read-only: it lists application directori
 - **Dev server** (`wrm -addon-dev`): binds `127.0.0.1` only, answers only `Host: 127.0.0.1 | localhost | [::1]` with its port (DNS rebinding gets 421), protects its own API with a random token, serves the panel with the real sandbox and CSP and refuses hidden files and paths outside the folder (`os.Root`). It reads secrets from `WRM_ADDON_SECRET_*` environment variables, keeps the store in memory and sends web requests through WRM's own checks; private-network and plain-http sites need `-addon-dev-private`. It is a developer tool for your own folder and has no WRM sign-in, so do not expose its port.
 - **Reserved ids** `dev`, `install`, `drafts`, `community` and `users` keep addon URLs from shadowing API paths.
 
+## Addon access to chains (v14.7.0)
+
+- **Read only, the viewer's own.** `chains.read` gives a panel the chains of the signed-in person who opens it (never another user's, also in a shared instance): definitions without connection or storage ids, the extracted values, scenario and timeline. No commands, no SSH, no raw output; Chains already drop keys that look like secrets.
+- **Check now** is the only action. It runs the chain's fixed read-only checks, shares the Chains window's limit (20 a minute per user) and is audited as `chain.checked` with the addon and instance. It is refused when Chains are off (`chains_enabled`) or the addon is disabled.
+- The permission sheet shows the right; an update that adds it waits for approval again.
+
 ## Addon web requests and secrets (v13.11.0)
 
 - **One network path.** An apiVersion 2 panel still has `connect-src 'none'`; the `http` capability lets it ask WRM, which sends the request from the WRM server. Review an addon's origins on the permission sheet like any other outbound access of the server.

@@ -1,16 +1,25 @@
-## Web Remote Manager PRO v14.6.3 — Proxies from SSH tunnels, a steady lock screen, log discovery that keeps going
+## Web Remote Manager PRO v14.7.0 — Addons that show your chains
 
-### Fixed
+### Added
+
+- **`chains.read` for addons**: an addon window can now read your [chains](README.md#chains-live-service-chain-monitoring): the checked values, the active scenario and what changed when. WRM keeps checking the chains in the background, so an addon can present a whole system the way your team needs it (a table per environment, a report, an update of a wiki page) without SSH, commands or secrets of its own.
+- **Check now** from the addon window, with the same limit as in the Chains window, recorded in the audit log.
+- The permission sheet says exactly what the addon may read. Every viewer sees only their own chains, also in a shared instance.
+- For addon authors: `wrm.chains()`, `wrm.chain(id)` and `wrm.chainCheck(id)` in `wrm-bridge.js`, and sample chains in `wrm -addon-dev` through `WRM_ADDON_CHAINS`.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.7.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.0) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.6.3 — Proxies from SSH tunnels, a steady lock screen, log discovery that keeps going
+
+#### Fixed
 
 - **SSH tunnels as proxies** ([#188](https://github.com/vedranius/web-browser-RDM-public/issues/188)): a dynamic tunnel (`-D`) of your connection now shows up in the connection's and folder's **Proxy** list and under *Proxies*. Pick it and WRM makes it a proxy, also when its port is *auto*.
 - **Lock screen keeps the keyboard** ([#137](https://github.com/vedranius/web-browser-RDM-public/issues/137)): a terminal reconnecting behind the lock, a click on the page or returning to the tab no longer takes the cursor away from the password field.
 - **Log discovery keeps going**: Python virtual environments (also renamed ones such as `venv.bak.2026-07-16`) are skipped, an unreadable or silent folder is skipped with a note, and an open log no longer fails with *Find logs first* after an hour: WRM finds the logs again by itself.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.6.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.6.3) asset. Preserve the database and encryption key; nothing is migrated.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.6.2 — Forgot password and activation by e-mail
 

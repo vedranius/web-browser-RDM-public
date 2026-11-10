@@ -55,9 +55,10 @@ Rules:
 | `store` | settings kept on the WRM server per instance (`store.quotaKb` 1-1024, default 64; `store.shared`) |
 | `notify` | short notifications from the panel |
 | `http` | requests to the web sites in `http`, sent by WRM after an administrator approved them (see [Web sites and secrets](#web-sites-and-secrets)) |
+| `chains.read` | read the [chains](../README.md#chains-live-service-chain-monitoring) of whoever opens the window and ask for a check now (see [Chains](#chains)) |
 | `server.wasm` | WebAssembly server code, organisation addons only (see the v1 documentation in ARCHITECTURE.md) |
 
-`store`, `notify` and `http` need `apiVersion: 2` and a panel.
+`store`, `notify`, `http` and `chains.read` need `apiVersion: 2` and a panel.
 
 ### Themes
 
@@ -100,6 +101,9 @@ Panel → WRM:
 | `{v:2, type:'wrm:store.get', id, key}` | read a stored value |
 | `{v:2, type:'wrm:store.set', id, key, value}` | store any JSON value (32 KB at most) |
 | `{v:2, type:'wrm:http', id, method, url, headers, body, encoding, secret}` | a web request sent by WRM (see below) |
+| `{v:2, type:'wrm:chains.list', id}` | the viewer's chains (`chains.read`) |
+| `{v:2, type:'wrm:chains.get', id, chain}` | one chain with its timeline |
+| `{v:2, type:'wrm:chains.check', id, chain}` | check a chain now, then the same answer as `wrm:chains.get` |
 | `{v:2, type:'wrm:notify', text, level}` | a notification: plain text up to 200 characters, `level` is `info`, `success`, `warn` or `error`; at most 5 a minute per instance, a repeat within 5 minutes is dropped |
 | `{v:2, type:'wrm:resize', w, h}` | ask for a content size; WRM decides (not when snapped, pinned or the layout is locked) |
 | `{v:2, type:'wrm:error', message, source, line}` | report an error into the window's diagnostics (⚠ in the title bar) |
@@ -108,11 +112,13 @@ WRM → panel:
 
 | Message | Meaning |
 |---|---|
-| `wrm:context` | `{v, user: {id, name}, lang, theme: {"--bg": …}, addon: {id, key, version, instance, instanceName}, config: {…stored values…}, features: {store, notify, http, jobs: false, history: false, visibility: true}, http: {origins, approved, ready: {secret name: true if a value is set}}, size: {w, h}, visible}` |
+| `wrm:context` | `{v, user: {id, name}, lang, theme: {"--bg": …}, addon: {id, key, version, instance, instanceName}, config: {…stored values…}, features: {store, notify, http, chains, jobs: false, history: false, visibility: true}, http: {origins, approved, ready: {secret name: true if a value is set}}, size: {w, h}, visible}` |
 | `wrm:theme` | `{theme}` after the user switched the theme |
 | `wrm:visibility` | `{visible}`: the window was minimized or restored, or the browser tab hidden. **Stop polling and timers while hidden.** |
 | `wrm:store` | the answer to a store request: `{id, key, value}`, or `{id, key, error, code}` |
 | `wrm:http` | the answer to a web request: `{id, ok, status, headers, body, encoding: 'text'|'base64', truncated, coalesced}`, or `{id, ok: false, error, code}` |
+| `wrm:chains` | `{id, chains: [{id, name, enabled, scenario, scenario_label, nodes_up, nodes_total, checks_ok, checks_total, last_at}]}`, or `{id, error, code}` |
+| `wrm:chain` | `{id, chain: {…}, timeline: […]}` (see [Chains](#chains)), or `{id, error, code}` |
 | `wrm:fatal` | `{code, message}` right before WRM closes the panel (addon disabled or removed) |
 
 `user.name` is the display name, never the sign-in name. WRM runs **no background jobs** for addons: a panel works while its window is open, and 24/7 alerting belongs in the monitored system (for example Grafana alerting).
@@ -163,6 +169,30 @@ How WRM sends it:
 
 The policy `addon_http` (`off`, `admins`, `all`) decides who may use addons with web access at all.
 
+## Chains
+
+With `chains.read` a panel shows the chains of the person who opens the window; in a shared instance every viewer sees their own. WRM checks chains in the background with its fixed read-only checks, so the panel only reads the results: it is how an addon shows the state of a whole system (a table per environment, a report, a sync to a wiki through `http`) without SSH or commands.
+
+A chain in `wrm:chain`:
+
+```json
+{"id": 3, "name": "Demo storage", "enabled": true, "interval_s": 300,
+ "nodes": [{"id": "demo-content", "kind": "server", "label": "Content", "role": "content"}],
+ "checks": [{"id": "keys-type", "node": "demo-content", "type": "config", "label": "keys",
+             "target": "/etc/demo/storage.ini", "format": "ini", "key": "backend:keys.type"}],
+ "links": [], "scenarios": [{"id": "primary", "label": "Primary"}],
+ "state":     {"at": "2026-11-10T10:00:00Z", "nodes": {"demo-content": {"state": "up"}},
+               "checks": {"keys-type": {"value": "s3", "ok": true}}, "scenario": "primary"},
+ "confirmed": {"…": "the same shape, after the chain's confirm count"},
+ "scenario": "primary", "scenario_label": "Primary", "last_at": "2026-11-10T10:00:00Z"}
+```
+
+- `state` is the latest observation, `confirmed` what was seen the chain's *confirm* number of times in a row; use `confirmed` for reports and decisions.
+- `timeline` lists up to 200 changes, newest first: `{at, kind: "check"|"node"|"scenario", subject, old, new, ok}`.
+- The panel never gets connection ids, host names, commands or raw output; values are the extracted ones (Chains drop keys that look like secrets).
+- *Check now* (`wrm:chains.check`) shares the limit of the Chains window (20 a minute per user), waits up to 90 seconds and is audited as `chain.checked` with the addon and instance.
+- With `wrm-bridge.js`: `await wrm.chains()`, `await wrm.chain(id)`, `await wrm.chainCheck(id)`.
+
 ## Approvals and updates
 
 Enabling an addon approves its permission sheet. An update that asks for **more** (a new capability, a larger store, a shared store, more server exports) is installed but stays **off until the sheet is approved again**; the new lines are marked. An update that asks for the same or less keeps the addon enabled.
@@ -197,7 +227,9 @@ Every refusal of the API carries `{error, code, hint}`:
 | `E_HTTP_SECRET`, `E_SECRET_MISSING` | the secret is not declared; it has no value for this instance |
 | `E_HTTP_TIMEOUT`, `E_HTTP_UPSTREAM` | the site did not answer in 10 s; the connection failed |
 | `E_HTTP_OFF` | web access for addons is turned off for you (`addon_http`) |
-| `E_LIMIT_RATE` | too many requests (120 a minute, 20 at once) |
+| `E_LIMIT_RATE` | too many requests (120 a minute, 20 at once), or too many checks now |
+| `E_CHAINS_OFF` | an administrator turned Chains off |
+| `E_CHAIN_BUSY` | the chain is being checked right now |
 
 In the panel, `wrm:store` answers carry the same codes, and *Diagnostics* lists the last 20 bridge errors (`E_BRIDGE`, `E_LIMIT_RATE`, …).
 
@@ -242,7 +274,7 @@ The lint first runs every check of an install (archive size, paths, file count, 
 | `E_LINT_SECRET` | error | something that looks like a token (`glsa_…`, `ghp_…`, `xox…`, `AKIA…`, `sk-…`) or a password or token assigned to a literal |
 | `E_LINT_ORIGIN` | warning | a URL whose origin is not in `http.origins` |
 | `E_LINT_READY`, `E_LINT_HEARTBEAT` | warning | an apiVersion 2 panel that never sends `wrm:ready` or `wrm:heartbeat` |
-| `E_LINT_CAPABILITY` | warning | a bridge message (`wrm:store.*`, `wrm:notify`, `wrm:http`) without its capability |
+| `E_LINT_CAPABILITY` | warning | a bridge message (`wrm:store.*`, `wrm:notify`, `wrm:http`, `wrm:chains.*`) without its capability |
 | `E_LINT_V1` | warning | an apiVersion 1 manifest (no store, notifications or web requests) |
 | `E_LINT_SERVER` | info | server code: only administrators install it, personal addons cannot carry it |
 | `E_LINT_UNSERVED` | info | a file with a type WRM never serves to the panel |
@@ -252,7 +284,7 @@ The lint first runs every check of an install (archive size, paths, file count, 
 
 ### Dev server
 
-`wrm -addon-dev DIR` serves the addon at `http://127.0.0.1:8790` (`-addon-dev-port`): the panel in the same sandboxed frame and with the same CSP as in WRM, inside a host page with a language, theme and visibility switch, *Reload*, the lint report, the bridge log and the watchdog. The host answers like WRM: `wrm:context`, an in-memory store with the same limits, notifications as toasts, and `wrm:http` through the same checks (origin, path, method, address guard, redirects, size). Secrets come from environment variables, `WRM_ADDON_SECRET_<NAME>` with the name in upper case (`grafana_token` → `WRM_ADDON_SECRET_GRAFANA_TOKEN`). Private-network and plain `http://` sites are refused unless you start it with `-addon-dev-private`. When a file in the folder changes the server lints again and the page reloads the panel.
+`wrm -addon-dev DIR` serves the addon at `http://127.0.0.1:8790` (`-addon-dev-port`): the panel in the same sandboxed frame and with the same CSP as in WRM, inside a host page with a language, theme and visibility switch, *Reload*, the lint report, the bridge log and the watchdog. The host answers like WRM: `wrm:context`, an in-memory store with the same limits, notifications as toasts, and `wrm:http` through the same checks (origin, path, method, address guard, redirects, size). Secrets come from environment variables, `WRM_ADDON_SECRET_<NAME>` with the name in upper case (`grafana_token` → `WRM_ADDON_SECRET_GRAFANA_TOKEN`). Private-network and plain `http://` sites are refused unless you start it with `-addon-dev-private`. Chain messages (`chains.read`) are answered from the JSON file named by `WRM_ADDON_CHAINS`: a list of `{"chain": {…}, "timeline": […]}` objects in the shape WRM sends. When a file in the folder changes the server lints again and the page reloads the panel.
 
 The dev server listens on the loopback address only, answers only requests for `127.0.0.1`, `localhost` or `[::1]` with its port (against DNS rebinding), and its own API needs a random token that only its page knows.
 
