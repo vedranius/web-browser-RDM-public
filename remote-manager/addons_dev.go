@@ -233,7 +233,18 @@ func (d *addonDevServer) serveChains(w http.ResponseWriter) {
 		addonFail(w, addonErrf("E_CHAINS_OFF", "The dev server has no chains: set WRM_ADDON_CHAINS to a JSON file"), 404)
 		return
 	}
-	b, err := os.ReadFile(p)
+	// The developer names the file; it is opened inside its own folder like the addon's files.
+	dir, base := filepath.Split(filepath.Clean(p))
+	var b []byte
+	root, err := os.OpenRoot(dir)
+	if err == nil {
+		var f *os.File
+		if f, err = root.Open(base); err == nil {
+			b, err = io.ReadAll(io.LimitReader(f, 4<<20+1))
+			f.Close()
+		}
+		root.Close()
+	}
 	if err != nil || len(b) > 4<<20 {
 		addonFail(w, addonErrf("E_CHAINS_OFF", "WRM_ADDON_CHAINS cannot be read (at most 4 MB)"), 500)
 		return
