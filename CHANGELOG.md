@@ -9,6 +9,10 @@ Addons can read your chains. Upgrading from v14.6.3 keeps the database and the e
 - The permission sheet, the lint summary and the JSON schema know the capability; lint warns when a panel uses the chain messages without declaring it. `llms.txt` and the *AI addon* prompt document it.
 - `wrm -addon-dev` answers the chain messages from the JSON file named by `WRM_ADDON_CHAINS` (a list of `{"chain": …, "timeline": […]}` objects).
 
+### Changed
+
+- **Chains ask a server once per file.** Checks of one node that ask the same thing (the same type and target, for example forty `config` checks reading keys of one INI file) are sent to the server once and every check reads its own value from that answer. A chain that watches many keys of a large file no longer comes near the 1 MB answer limit per node.
+
 ## [14.6.3] - 2026-11-09
 
 Fixes for proxies, the screen lock and log discovery. Upgrading from v14.6.2 keeps the database and the encryption key; nothing is migrated.

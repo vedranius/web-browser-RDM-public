@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 )
 
 // The chains.read capability: an addon panel reads the chains of whoever opens it.
@@ -103,6 +105,28 @@ func TestAddonChainsRead(t *testing.T) {
 	addonReq(admin, "POST", "/api/addons/demo.chains/disable", "")
 	if r := addonReq(alice, "GET", base, ""); r.Code != 409 {
 		t.Fatalf("disabled addon: %d %s", r.Code, r.Raw)
+	}
+}
+
+// TestChainNodeSharedReads: config checks of one file ask the server once and each reads its
+// own key from that one answer.
+func TestChainNodeSharedReads(t *testing.T) {
+	checks := []chainCheck{
+		{ID: "a", Type: "config", Target: "/etc/demo/storage.ini", Format: "ini", Key: "backend:keys.type"},
+		{ID: "b", Type: "config", Target: "/etc/demo/storage.ini", Format: "ini", Key: "backend:keys.backup"},
+		{ID: "c", Type: "config", Target: "/etc/demo/other.ini", Format: "ini", Key: "backend:keys.type"},
+		{ID: "d", Type: "file", Target: "/etc/demo/storage.ini"},
+	}
+	in := chainNodeInput(checks)
+	if strings.Count(in, "\n") != 3 || strings.Contains(in, "b\tconfig") {
+		t.Fatalf("input:\n%s", in)
+	}
+	ini := base64.StdEncoding.EncodeToString([]byte("[backend:keys]\ntype = s3\nbackup = keys_backup\n"))
+	other := base64.StdEncoding.EncodeToString([]byte("[backend:keys]\ntype = fs\n"))
+	out := "@@now 1700000000\n@a b64:" + ini + "\n@c b64:" + other + "\n@d 120 1700000000\n"
+	r := parseChainNodeOutput(out, checks, time.Now())
+	if r["a"].Value != "s3" || r["b"].Value != "keys_backup" || r["c"].Value != "fs" || r["d"].Value != "present" {
+		t.Fatalf("results: %+v", r)
 	}
 }
 

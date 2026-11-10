@@ -97,21 +97,46 @@ while IFS="$tab" read -r id ty a; do
   printf '@%s %s\n' "$id" "$(printf '%s' "$v" | tr '\n\r' '  ')"
 done`
 
-// chainNodeInput is the data the script reads: one line per server check of the node.
-func chainNodeInput(checks []chainCheck) string {
-	var b strings.Builder
+// chainNodeTarget is what the script is asked for one check.
+func chainNodeTarget(c chainCheck) string {
+	target := c.Target
+	if c.Type == "port" {
+		target = strconv.Itoa(c.Port)
+	}
+	if c.Type == "timer" && !strings.HasSuffix(target, ".timer") {
+		target += ".timer"
+	}
+	return target
+}
+
+// chainNodeShared maps a check to the earlier check of the node that asks the server the same
+// thing (same type and target), so a file read by twenty config checks is sent once.
+func chainNodeShared(checks []chainCheck) map[string]string {
+	first := map[string]string{}
+	shared := map[string]string{}
 	for _, c := range checks {
 		if c.Type == "monitor" {
 			continue
 		}
-		target := c.Target
-		if c.Type == "port" {
-			target = strconv.Itoa(c.Port)
+		k := c.Type + "\t" + chainNodeTarget(c)
+		if id, ok := first[k]; ok {
+			shared[c.ID] = id
+		} else {
+			first[k] = c.ID
 		}
-		if c.Type == "timer" && !strings.HasSuffix(target, ".timer") {
-			target += ".timer"
+	}
+	return shared
+}
+
+// chainNodeInput is the data the script reads: one line per distinct server check of the node.
+func chainNodeInput(checks []chainCheck) string {
+	var b strings.Builder
+	shared := chainNodeShared(checks)
+	for _, c := range checks {
+		if c.Type == "monitor" || shared[c.ID] != "" {
+			continue
 		}
-		b.WriteString(c.ID + "\t" + c.Type + "\t" + target + "\n")
+		b.WriteString(c.ID + "\t" + c.Type + "\t" + chainNodeTarget(c) + "\n")
 	}
 	return b.String()
 }
@@ -152,11 +177,16 @@ func parseChainNodeOutput(out string, checks []chainCheck, fallbackNow time.Time
 		answers[id] = strings.TrimSpace(v)
 	}
 	res := map[string]chainResult{}
+	shared := chainNodeShared(checks)
 	for _, c := range checks {
 		if c.Type == "monitor" {
 			continue
 		}
-		v, ok := answers[c.ID]
+		id := c.ID
+		if s := shared[id]; s != "" {
+			id = s
+		}
+		v, ok := answers[id]
 		if !ok {
 			res[c.ID] = chainResult{Value: "unknown", Error: "no answer from the server"}
 			continue
