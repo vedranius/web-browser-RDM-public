@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 )
@@ -58,5 +60,29 @@ func TestV1471AllowedOriginsList(t *testing.T) {
 		if got := originAllowed(r, origin); got != want {
 			t.Errorf("%s: got %v, want %v", origin, got, want)
 		}
+	}
+}
+
+// #190: the administrator can turn HSTS off; WRM then sends max-age=0 so browsers forget it.
+func TestV1471HSTSSetting(t *testing.T) {
+	h := securityMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	get := func() string {
+		r := httptest.NewRequest("GET", "https://wrm.example.com/", nil)
+		r.TLS = &tls.ConnectionState{}
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		return w.Header().Get("Strict-Transport-Security")
+	}
+	setSetting("hsts", "1")
+	if got := get(); got != "max-age=15552000" {
+		t.Fatalf("hsts on: %q", got)
+	}
+	setSetting("hsts", "0")
+	defer setSetting("hsts", "1")
+	if got := get(); got != "max-age=0" {
+		t.Fatalf("hsts off: %q", got)
+	}
+	if ips := wrmHostIPs(); ips == nil {
+		t.Fatal("wrmHostIPs returned nil")
 	}
 }

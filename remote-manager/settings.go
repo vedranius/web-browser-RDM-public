@@ -39,6 +39,7 @@ var settingSpecs = []settingSpec{
 	{Key: "security_level", Default: "home", Kind: "enum", Enum: securityLevels},
 	{Key: "registration", Default: "closed", Kind: "enum", Enum: []string{"closed", "open"}},
 	{Key: "require_https", Default: "0", Kind: "bool"},
+	{Key: "hsts", Default: "1", Kind: "bool"},
 	{Key: "require_2fa", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "require_step_up", Default: "0", Kind: "bool"},
 	{Key: "step_up_minutes", Default: "10", Kind: "int", Min: 1, Max: 240},

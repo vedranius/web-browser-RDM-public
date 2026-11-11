@@ -3559,6 +3559,7 @@ Object.assign(LANGS.en, {
   tun_disabled:'SSH tunnels are turned off or not allowed for your account (Admin panel → Security policies).',
   tun_conns:'connections', tun_temporary:'temporary', tun_started:'Tunnel running on {addr}', tun_on_server:'on server',
   tun_state_up:'Running', tun_state_starting:'Starting', tun_state_reconnecting:'Reconnecting', tun_state_error:'Error', tun_state_stopped:'Stopped',
+  tun_open_ip_title:'Open through this address of the WRM host. Use it when the browser refuses the certificate of the web interface because of HSTS on WRM\'s host name.',
   tun_loopback_remote:'This tunnel listens on 127.0.0.1 of the WRM machine. Open {url} on the computer where WRM runs, or set the listen address of the tunnel to 0.0.0.0 (administrators) to reach it over the network.',
   tun_all_users:'All users', tun_traffic:'Traffic', active_tunnels:'Active SSH tunnels', open:'Open', start:'Start', copy_address:'Copy address', copied:'Copied', remove:'Remove',
   pg_tunnels:'SSH tunnels',
@@ -4075,6 +4076,7 @@ Object.assign(LANGS.hr, {
   tun_disabled:'SSH tuneli su isključeni ili nisu dopušteni za tvoj račun (Admin panel → Sigurnosna pravila).',
   tun_conns:'veza', tun_temporary:'privremeni', tun_started:'Tunel radi na {addr}', tun_on_server:'na serveru',
   tun_state_up:'Radi', tun_state_starting:'Pokreće se', tun_state_reconnecting:'Ponovno spajanje', tun_state_error:'Greška', tun_state_stopped:'Zaustavljen',
+  tun_open_ip_title:'Otvori preko ove adrese WRM hosta. Koristi kad preglednik odbije certifikat web sučelja zbog HSTS-a na nazivu WRM hosta.',
   tun_loopback_remote:'Ovaj tunel sluša na 127.0.0.1 WRM računala. Otvori {url} na računalu gdje radi WRM, ili postavi adresu slušanja tunela na 0.0.0.0 (administratori) da bi bio dostupan preko mreže.',
   tun_all_users:'Svi korisnici', tun_traffic:'Promet', active_tunnels:'Aktivni SSH tuneli', open:'Otvori', start:'Pokreni', copy_address:'Kopiraj adresu', copied:'Kopirano', remove:'Ukloni',
   pg_tunnels:'SSH tuneli',
@@ -5415,6 +5417,9 @@ Object.assign(LANGS.en, {
  "p_link_share_max_days": "Guest link lifetime (days)",
  "p_link_share_max_days_d": "Links for people without an account must expire within this many days (0 = no limit). Existing links keep working until they are changed.",
  "slr_require_https": "Passwords and session cookies cross the network encrypted only with HTTPS.",
+ "p_hsts": "Tell browsers to always use HTTPS (HSTS)",
+ "p_hsts_d": "Over HTTPS, browsers remember for 180 days that this host name only speaks HTTPS, on every port, and refuse certificate exceptions there. Turn off when you open self-signed web interfaces through WRM tunnels on the same name (or open them through the IP address); off makes browsers forget it on the next visit.",
+ "slr_hsts": "Without HSTS a network attacker can downgrade the first request to plain HTTP.",
  "slr_require_2fa": "A stolen password alone is not enough to sign in.",
  "slr_password_min_length": "Longer passwords resist guessing and offline cracking.",
  "slr_session_idle_hours": "A forgotten open browser stops being a way in.",
@@ -5454,6 +5459,10 @@ Object.assign(LANGS.en, {
  "sp_open_links": "Guest links without expiry",
  "sp_open_links_why": "A forgotten guest link stays usable for anyone who has it.",
  "sp_open_links_fix": "Give these links an expiry date in Admin → Shares, or set \"Guest link lifetime\".",
+ "sp_exposed_tunnels": "Tunnels listening on the network",
+ "sp_exposed_tunnels_val": "{n} (SOCKS: {s})",
+ "sp_exposed_tunnels_why": "A tunnel on 0.0.0.0 publishes a remote service to everyone who reaches the WRM host, without a WRM sign-in. A SOCKS (dynamic) tunnel there is an open proxy into the whole remote network.",
+ "sp_exposed_tunnels_fix": "Let tunnels listen on 127.0.0.1 and use them from the WRM host, or limit the WRM host with a firewall. Turn off \"Users may listen on all interfaces\" (tunnel_bind_any) when nobody needs it.",
  "sp_update_signature": "Signed updates",
  "sp_keys": "{n} release keys",
  "sp_update_signature_why": "With a release key the self-update installs only releases signed by the project; without one it checks the SHA-256 only.",
@@ -5543,6 +5552,9 @@ Object.assign(LANGS.hr, {
  "p_link_share_max_days": "Trajanje poveznica za goste (dani)",
  "p_link_share_max_days_d": "Poveznice za ljude bez računa moraju isteći unutar ovoliko dana (0 = bez ograničenja). Postojeće poveznice rade dok ih netko ne promijeni.",
  "slr_require_https": "Lozinke i kolačići sesije putuju mrežom šifrirano samo preko HTTPS-a.",
+ "p_hsts": "Preglednicima reci da uvijek koriste HTTPS (HSTS)",
+ "p_hsts_d": "Preko HTTPS-a preglednici 180 dana pamte da ovaj naziv hosta radi samo preko HTTPS-a, na svim portovima, i tamo ne dopuštaju iznimke za certifikat. Isključi kad kroz WRM tunele na istom nazivu otvaraš web sučelja s vlastitim (self-signed) certifikatom (ili ih otvaraj preko IP adrese); isključeno tjera preglednike da to zaborave pri sljedećem posjetu.",
+ "slr_hsts": "Bez HSTS-a napadač na mreži može prvi zahtjev spustiti na običan HTTP.",
  "slr_require_2fa": "Ukradena lozinka sama nije dovoljna za prijavu.",
  "slr_password_min_length": "Dulje lozinke teže je pogoditi i probiti.",
  "slr_session_idle_hours": "Zaboravljeni otvoreni preglednik prestaje biti ulaz.",
@@ -5582,6 +5594,10 @@ Object.assign(LANGS.hr, {
  "sp_open_links": "Poveznice za goste bez isteka",
  "sp_open_links_why": "Zaboravljena poveznica za goste ostaje upotrebljiva svakome tko je ima.",
  "sp_open_links_fix": "Daj tim poveznicama datum isteka u Admin → Dijeljenja ili postavi \"Trajanje poveznica za goste\".",
+ "sp_exposed_tunnels": "Tuneli koji slušaju na mreži",
+ "sp_exposed_tunnels_val": "{n} (SOCKS: {s})",
+ "sp_exposed_tunnels_why": "Tunel na 0.0.0.0 objavljuje udaljeni servis svakome tko dođe do WRM hosta, bez prijave u WRM. SOCKS (dinamički) tunel tamo je otvoreni proxy u cijelu udaljenu mrežu.",
+ "sp_exposed_tunnels_fix": "Neka tuneli slušaju na 127.0.0.1 i koristi ih s WRM hosta ili ograniči WRM host vatrozidom. Isključi \"Korisnici smiju slušati na svim sučeljima\" (tunnel_bind_any) kad to nikome ne treba.",
  "sp_update_signature": "Potpisana ažuriranja",
  "sp_keys": "{n} ključeva izdanja",
  "sp_update_signature_why": "S ključem izdanja samoažuriranje instalira samo izdanja koja je potpisao projekt; bez njega provjerava samo SHA-256.",
@@ -9974,7 +9990,7 @@ async function adminShareDelete(id) {
 
 const POLICY_GROUPS = {
   policies: [
-    ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips', 'cli_password_reset']],
+    ['pg_accounts', ['registration', 'require_https', 'hsts', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips', 'cli_password_reset']],
     ['pg_appearance', ['appearance_default_theme', 'appearance_custom_css']],
     ['pg_screen_lock', ['screen_lock_mode', 'screen_lock_max_minutes', 'screen_lock_pin', 'screen_lock_max_failures']],
     ['pg_sso', ['local_login', 'oidc_revalidate_minutes', 'oidc_unverified_hours']],
@@ -10131,6 +10147,7 @@ function secCheckInfo(c) {
     case 'version': value = c.value + (c.required ? ' → ' + c.required : ''); break;
     case 'audit_chain': value = c.status === 'ok' ? t('sp_audit_ok').replace('{n}', c.count || 0) : t('sp_audit_broken').replace('{id}', c.value); break;
     case 'any_origin': value = c.status === 'ok' ? t('off') : t('on'); break;
+    case 'exposed_tunnels': value = t('sp_exposed_tunnels_val').replace('{n}', c.count || 0).replace('{s}', c.value || 0); break;
     default: value = String(c.count || 0);
   }
   return {title: t('sp_' + c.id), value, required: '', why: t('sp_' + c.id + '_why'), fix: open ? t('sp_' + c.id + '_fix') : '', canFix: false};
@@ -11257,13 +11274,26 @@ function tunnelMapText(v) {
   return v.kind === 'remote' ? `${t('tun_on_server')} ${listen} → ${target}` : `${listen} → ${target}`;
 }
 
-function tunnelURL(v) {
+function tunnelURL(v, viaIP) {
   if (!v.running || !v.listen || !v.open_scheme) return '';
   const i = v.listen.lastIndexOf(':');
   let host = v.listen.slice(0, i).replace(/^\[|\]$/g, ''), port = v.listen.slice(i + 1);
-  if (host === '0.0.0.0' || host === '::') host = location.hostname;
+  if (host === '0.0.0.0' || host === '::') host = viaIP || location.hostname;
   if (host.includes(':')) host = '[' + host + ']';
   return `${v.open_scheme}://${host}:${port}${v.open_path || ''}`;
+}
+
+// tunnelIPChoices: the WRM host's addresses to open an HTTPS tunnel on 0.0.0.0 with, when WRM
+// itself is open over HTTPS by host name. HSTS of that name covers every port, so a browser
+// refuses a self-signed certificate there; an IP address is not covered (#190).
+function tunnelIPChoices(v) {
+  if (!v.running || v.open_scheme !== 'https' || location.protocol !== 'https:') return [];
+  const h = location.hostname;
+  if (/^[\d.]+$/.test(h) || h.includes(':') || h.startsWith('[')) return [];
+  const i = (v.listen || '').lastIndexOf(':');
+  const bind = (v.listen || '').slice(0, i).replace(/^\[|\]$/g, '');
+  if (bind !== '0.0.0.0' && bind !== '::') return [];
+  return (tunnelState.policy.host_ips || []).filter(ip => bind === '::' || !ip.includes(':')).slice(0, 3);
 }
 
 function listenAddress(v) {
@@ -11324,6 +11354,7 @@ async function renderTunnelsPanel() {
           <div class="t-stats">${stats}</div>
           <div class="t-act">
             ${url ? `<button class="btn-sm" onclick="openTunnelURL(${jsq(v.key)})">🌐 ${esc(t('open'))}</button>` : ''}
+            ${url ? tunnelIPChoices(v).map(ip => `<button class="btn-sec btn-sm mono" title="${esc(t('tun_open_ip_title'))}" onclick="openTunnelURL(${jsq(v.key)}, ${jsq(ip)})">🌐 ${esc(ip)}</button>`).join('') : ''}
             ${v.running && v.listen ? `<button class="btn-sec btn-sm" title="${esc(t('copy_address'))}" onclick="copyText(${jsq(v.kind === 'dynamic' ? 'socks5h://' + listenAddress(v) : (url || listenAddress(v)))})">📋</button>` : ''}
             ${v.running ? `<button class="btn-danger btn-sm" onclick="tunnelStop(${jsq(v.key)})">■ ${esc(t('stop'))}</button>` : (all ? '' : `<button class="btn-sm" onclick="tunnelStart(${jsq(v.key)}, this)">▶ ${esc(t('start'))}</button>`)}
           </div></div>`;
@@ -11358,10 +11389,10 @@ async function stopConnTunnels(connId) {
   for (const v of tunnelState.tunnels.filter(x => x.conn_id === connId && x.running && !x.ephemeral)) await tunnelStop(v.key);
 }
 
-async function openTunnelURL(key) {
+async function openTunnelURL(key, viaIP) {
   const v = tunnelState.tunnels.find(x => x.key === key);
   if (!v) return;
-  const url = tunnelURL(v);
+  const url = tunnelURL(v, viaIP);
   const host = (v.listen || '').slice(0, (v.listen || '').lastIndexOf(':')).replace(/^\[|\]$/g, '');
   if (!browserIsLocal() && ['127.0.0.1', '::1', 'localhost'].includes(host)) {
     await uiConfirm(t('tun_loopback_remote').replace('{url}', url), {okText: t('ok'), cancelText: t('close')});
