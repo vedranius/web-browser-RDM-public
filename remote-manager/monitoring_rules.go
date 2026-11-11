@@ -632,6 +632,6 @@ func monitorBulkHandler(w http.ResponseWriter, r *http.Request, uid int) {
 		}
 		done = append(done, c.ID)
 	}
-	auditLog(r, "monitor.bulk_configured", "", map[string]interface{}{"servers": len(done), "enabled": in.Enabled})
+	auditLog(r, uid, "monitor.bulk_configured", "", map[string]interface{}{"servers": len(done), "enabled": in.Enabled})
 	jsonOK(w, map[string]interface{}{"updated": done, "skipped": skipped})
 }

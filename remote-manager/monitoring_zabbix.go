@@ -142,8 +142,24 @@ func monitorSSHCommandInput(ctx context.Context, cl *ssh.Client, cmd, input stri
 	return buf.buf.String(), err
 }
 func collectMonitor(ctx context.Context, c Connection, cfg monitorConfig) monitorSample {
-	s := monitorSample{ConnID: c.ID, Hostname: hostOnly(c.Host), At: nowRFC(), State: "unknown", Metrics: map[string]monitorMetric{}}
+	s := monitorSample{ConnID: c.ID, Hostname: hostOnly(c.Host), At: nowRFC(), State: "unknown", Metrics: map[string]monitorMetric{}, Source: "zabbix"}
+	if cfg.Mode == "agentless" {
+		s.Source = "agentless"
+		cl, err := dialSSH(c, nil)
+		if err != nil {
+			s.State = "failed"
+			s.Error = "SSH connection failed: " + truncateStr(redactText(err.Error()), 300)
+			return s
+		}
+		defer cl.Close()
+		collectAgentless(ctx, cl, &s)
+		if s.State != "failed" {
+			monitorSSHExtras(ctx, cl, c, cfg, &s)
+		}
+		return s
+	}
 	if cfg.Mode == "api" {
+		s.Source = "api"
 		err := monitorAPI(ctx, cfg, &s)
 		if err != nil {
 			s.Error = err.Error()
@@ -307,8 +323,8 @@ func collectMonitor(ctx context.Context, c Connection, cfg monitorConfig) monito
 	finishMonitor(&s)
 	// Service state is read over the same SSH connection. direct/api transports
 	// have no shell, so a service list only applies to the ssh transport.
-	if cl != nil && len(cfg.Services) > 0 {
-		collectMonitorServices(ctx, cl, cfg.Services, &s)
+	if cl != nil {
+		monitorSSHExtras(ctx, cl, c, cfg, &s)
 	}
 	return s
 }
@@ -347,40 +363,41 @@ func finishMonitor(s *monitorSample) {
 		return
 	}
 	s.State = "healthy"
+	missing := []string{}
 	for _, name := range []string{"cpu_idle", "memory_total", "memory_available", "uptime"} {
 		m, ok := s.Metrics[name]
 		if name == "cpu_idle" && s.Metrics["cpu_percent"].Value != nil {
 			continue
 		}
 		if !ok || m.Value == nil || m.Error != "" {
-			s.State = "warning"
+			missing = append(missing, name)
 		}
 	}
 	if m := s.Metrics["cpu_idle"]; m.Value != nil {
 		v := 100 - *m.Value
 		s.Metrics["cpu_percent"] = monitorMetric{Value: &v, At: m.At}
-		if v > 90 {
-			s.State = "warning"
-		}
 	}
 	total, available := s.Metrics["memory_total"], s.Metrics["memory_available"]
 	if total.Value != nil && available.Value != nil && *total.Value > 0 {
 		v := 100 * (1 - *available.Value / *total.Value)
 		s.Metrics["memory_percent"] = monitorMetric{Value: &v, At: total.At}
-		if v > 90 {
-			s.State = "warning"
-		}
 	}
-	for k, m := range s.Metrics {
-		if strings.HasPrefix(k, "disk:") && m.Value != nil && *m.Value > 90 {
-			s.State = "warning"
-		}
+	stale := false
+	for _, m := range s.Metrics {
 		if m.At != "" {
 			at, e := time.Parse(time.RFC3339, m.At)
 			if e == nil && time.Since(at) > 5*time.Minute {
-				s.State = "warning"
+				stale = true
 			}
 		}
+	}
+	if len(missing) > 0 {
+		s.State = "warning"
+		s.addReason("warning", "missing", strings.Join(missing, ", "), 0, 0)
+	}
+	if stale {
+		s.State = "warning"
+		s.addReason("warning", "stale", "", 0, 0)
 	}
 }
 func addMonitorNetworkRates(s *monitorSample, old monitorSample) {

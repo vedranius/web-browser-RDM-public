@@ -85,6 +85,7 @@ func initMonitoring() {
 	ensureTable("monitor_profiles", `CREATE TABLE IF NOT EXISTS monitor_profiles(conn_id INTEGER PRIMARY KEY,user_id INTEGER NOT NULL,config TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL DEFAULT '')`, "conn_id", "user_id", "config", "updated_at")
 	ensureTable("monitor_samples", `CREATE TABLE IF NOT EXISTS monitor_samples(id INTEGER PRIMARY KEY AUTOINCREMENT,conn_id INTEGER NOT NULL,user_id INTEGER NOT NULL,at TEXT NOT NULL,data TEXT NOT NULL)`, "id", "conn_id", "user_id", "at", "data")
 	db.Exec(`CREATE INDEX IF NOT EXISTS ix_monitor_samples ON monitor_samples(conn_id,id)`)
+	initMonitoringV149()
 }
 func defaultMonitorConfig() monitorConfig {
 	// v14.9.0: a new server is read over its SSH connection without an agent;
@@ -197,6 +198,18 @@ func latestMonitorSample(id int) monitorSample {
 }
 func apiMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 	rest := strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/monitoring"), "/")
+	if rest == "events" || rest == "bulk" {
+		uid, ok := requireAuth(w, r)
+		if !ok {
+			return
+		}
+		if rest == "events" {
+			monitorEventsHandler(w, r, uid)
+		} else {
+			monitorBulkHandler(w, r, uid)
+		}
+		return
+	}
 	if rest == "" {
 		uid, ok := requireAuth(w, r)
 		if !ok {
@@ -211,7 +224,14 @@ func apiMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			cfg := loadMonitorConfig(c.ID)
-			out = append(out, map[string]interface{}{"connection": c.view(), "config": monitorConfigView(cfg), "sample": latestMonitorSample(c.ID)})
+			item := map[string]interface{}{"connection": c.view(), "config": monitorConfigView(cfg), "sample": latestMonitorSample(c.ID)}
+			if r.URL.Query().Get("spark") == "1" && cfg.Enabled {
+				item["spark"] = monitorSpark(c.ID)
+				if v, ok := monitorAvailability(c.ID); ok {
+					item["availability"] = v
+				}
+			}
+			out = append(out, item)
 		}
 		jsonOK(w, out)
 		return
@@ -312,6 +332,15 @@ func apiMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 		if !requireMethod(w, r, http.MethodGet) {
 			return
 		}
+		if rng := r.URL.Query().Get("range"); rng != "" {
+			h, err := monitorHistory(c.ID, rng)
+			if err != nil {
+				jsonError(w, err.Error(), 400)
+				return
+			}
+			jsonOK(w, h)
+			return
+		}
 		rows, err := db.Query(`SELECT data FROM monitor_samples WHERE conn_id=? ORDER BY id DESC LIMIT 1440`, c.ID)
 		out := []monitorSample{}
 		if err == nil {
@@ -326,6 +355,10 @@ func apiMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 			rows.Close()
 		}
 		jsonOK(w, out)
+	case "services/discover":
+		monitorSuggestHandler(w, r, c, acc)
+	case "logs/patterns":
+		logPatternsHandler(w, r, c, acc)
 	case "logs/discover":
 		monitorLogsDiscoverHandler(w, r, c, acc)
 	case "logs/settings":
@@ -363,26 +396,20 @@ func pollMonitor(ctx context.Context, c Connection) (monitorSample, error) {
 		return monitorSample{}, ctx.Err()
 	}
 	cfg := loadMonitorConfig(c.ID)
+	cfg.Thresholds.normalize()
+	started := time.Now()
 	s := collectMonitor(ctx, c, cfg)
+	s.TookMS = time.Since(started).Milliseconds()
 	old := latestMonitorSample(c.ID)
 	if cfg.Mode != "api" {
 		addMonitorNetworkRates(&s, old)
 	}
+	applyMonitorRules(&s, old, cfg.Thresholds)
 	data := string(jsonMarshal(s))
 	db.Exec(`INSERT INTO monitor_samples(conn_id,user_id,at,data) VALUES(?,?,?,?)`, c.ID, c.UserID, s.At, data)
 	db.Exec(`DELETE FROM monitor_samples WHERE conn_id=? AND id NOT IN (SELECT id FROM monitor_samples WHERE conn_id=? ORDER BY id DESC LIMIT 2880)`, c.ID, c.ID)
-	if old.State != s.State && (old.At != "" || s.State != "healthy") {
-		event := "monitor.problem"
-		if s.State == "healthy" {
-			event = "monitor.recovered"
-		}
-		notifyUser(c.UserID, event, func(lang string) (string, string) {
-			if lang == "hr" {
-				return "WRM nadzor: " + c.Name, "Poslužitelj " + c.Name + " (" + c.Host + "): " + s.State + "\n" + s.Error
-			}
-			return "WRM Monitoring: " + c.Name, "Server " + c.Name + " (" + c.Host + "): " + s.State + "\n" + s.Error
-		})
-	}
+	addMonitorRollup(c, s)
+	monitorStateChanged(c, old, s)
 	return s, nil
 }
 func runMonitoring() {
