@@ -242,6 +242,41 @@ func (s *aiSession) planHostTool(name string, in aiToolInput) (*aiPlanned, error
 			Host: &host, NoEdit: true}
 		run.Display = "run addon " + id + " export " + in.Export
 		return run, nil
+	case "addon_lint":
+		id, err := aiAddonID(in.ID)
+		if err != nil {
+			return nil, err
+		}
+		read.Display = "lint addon " + id
+		return read, nil
+	case "addon_new":
+		id, err := aiAddonID(in.ID)
+		if err != nil {
+			return nil, err
+		}
+		tpl := strings.TrimSpace(in.Template)
+		if tpl == "" {
+			tpl = "blank"
+		}
+		if !addonTemplateKnown(tpl) {
+			return nil, fmt.Errorf("unknown template %q (one of %s)", tpl, strings.Join(addonTemplateOrder, ", "))
+		}
+		host.Template = tpl
+		write.Path = "draft:" + id
+		write.Display = "start addon draft " + id + " from the " + tpl + " template"
+		return write, nil
+	case "addon_submit":
+		id, err := aiAddonID(in.ID)
+		if err != nil {
+			return nil, err
+		}
+		if !addonPublishAllowed(s.UserID) {
+			return nil, fmt.Errorf("publishing addons is turned off for this user (addon_publish)")
+		}
+		write.Path = "publish:" + id
+		write.Act.Command = "addon_submit " + id
+		write.Display = "send addon draft " + id + " to " + addonPublishRepo() + " as a pull request"
+		return write, nil
 	case "addon_install_community":
 		id, err := aiAddonID(in.CommunityID)
 		if err != nil {
@@ -370,6 +405,48 @@ func (s *aiSession) runHostTool(ctx context.Context, name string, in aiToolInput
 		}
 		auditLog(nil, s.UserID, "addon.call", id+"/"+in.Export, map[string]interface{}{"version": rec.Version, "bytes_in": len(in.Input), "bytes_out": len(out), "via": "ai"})
 		return out, 0, nil
+	case "addon_lint":
+		id, err := aiAddonID(in.ID)
+		if err != nil {
+			return "", 2, err
+		}
+		dir := addonDraftDir(id)
+		if _, err := os.Stat(dir); err != nil {
+			dir = addonDir(id)
+			if _, err := os.Stat(dir); err != nil {
+				return "", 2, fmt.Errorf("no draft or installed addon %s", id)
+			}
+		}
+		chk := addonPublishPrepare(ctx, dir)
+		b, _ := json.MarshalIndent(map[string]interface{}{"lint": chk.Lint, "publish_blockers": chk.Problems}, "", "  ")
+		return string(b), 0, nil
+	case "addon_new":
+		id, err := aiAddonID(in.ID)
+		if err != nil {
+			return "", 2, err
+		}
+		if err := addonStudioCreate(s.UserID, id, in.Template, "", in.Name); err != nil {
+			return "", 2, err
+		}
+		auditLog(nil, s.UserID, "addon.draft_created", id, map[string]interface{}{"template": in.Template, "via": "ai"})
+		files, _, _ := addonDraftFiles(addonDraftDir(id))
+		b, _ := json.MarshalIndent(map[string]interface{}{"id": id, "files": files}, "", "  ")
+		return "Draft created from the " + in.Template + " template.\n" + string(b), 0, nil
+	case "addon_submit":
+		id, err := aiAddonID(in.ID)
+		if err != nil {
+			return "", 2, err
+		}
+		dir := addonDraftDir(id)
+		if _, err := os.Stat(dir); err != nil {
+			return "", 2, fmt.Errorf("draft %s does not exist", id)
+		}
+		sub, err := addonPublishSubmit(ctx, s.UserID, addonPublishPrepare(ctx, dir), in.Note)
+		if err != nil {
+			return "", 2, err
+		}
+		auditLog(nil, s.UserID, "addon.published", id, map[string]interface{}{"version": sub.Version, "repo": sub.Repo, "pr": sub.PRNumber, "via": "ai"})
+		return fmt.Sprintf("Pull request #%d opened: %s. The repository's checks run now; the addon becomes public after the maintainer approves and merges it.", sub.PRNumber, sub.PRURL), 0, nil
 	case "addon_install_community":
 		id, err := aiAddonID(in.CommunityID)
 		if err != nil {

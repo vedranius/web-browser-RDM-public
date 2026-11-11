@@ -113,6 +113,14 @@ var aiTools = []aiToolSpec{
 			"reason": strProp("One sentence for the user: why run it")}, "id", "export", "reason")}},
 	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_install_community", Description: "Install one addon from the community index. The download must match the SHA-256 in the index and then passes the same archive checks as an upload. Needs the user's approval in every mode.",
 		Schema: obj(map[string]interface{}{"community_id": strProp("Addon id from the community index"), "reason": strProp("One sentence for the user: why install it")}, "community_id", "reason")}},
+	{Kind: "read", Host: true, Def: aiToolDef{Name: "addon_lint", Description: "Lint an addon draft (or the installed addon when there is no draft) exactly as the install and the community repository's CI do: errors, warnings, the permission sheet and what blocks publishing (lint errors, secret-looking values). Use it after every change.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id")}, "id")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_new", Description: "Start an addon draft from a built-in template (blank, fetch-and-render, grafana-panel, server-tools, wasm-hook); the files include wrm-bridge.js. Edit it with addon_write, check it with addon_lint. Needs the user's approval.",
+		Schema: obj(map[string]interface{}{"id": strProp("New addon id"), "template": strProp("Template name (default blank)"), "name": strProp("Display name"),
+			"reason": strProp("One sentence for the user: why this addon")}, "id", "reason")}},
+	{Kind: "write", Host: true, Def: aiToolDef{Name: "addon_submit", Description: "Send an addon draft to the WRM community repository on GitHub as a pull request, with the user's connected GitHub account. WRM lints it and refuses secret-looking values first; the repository's CI checks it again and it becomes public only after the maintainer approves and merges. Needs the user's approval in every mode.",
+		Schema: obj(map[string]interface{}{"id": strProp("Addon id of the draft"), "note": strProp("Optional note for the reviewer: what the addon does and why it needs its permissions"),
+			"reason": strProp("One sentence for the user: why publish it")}, "id", "reason")}},
 	// Chains: the assistant reads, tests and drafts chains; the user applies every draft. MCP
 	// clients get the same tools without a server session (mcp_chains.go, scope chains).
 	{Kind: "read", Host: true, Self: true, PanelOnly: true, Def: aiToolDef{Name: "chain_status", Description: chainToolDesc["chain_status"], Schema: obj(map[string]interface{}{})}},
@@ -250,6 +258,8 @@ type aiToolInput struct {
 	Input         string            `json:"input"`
 	ContentBase64 string            `json:"content_base64"`
 	CommunityID   string            `json:"community_id"`
+	Template      string            `json:"template"`
+	Note          string            `json:"note"`
 	// chain tools (host, built-in assistant)
 	Definition json.RawMessage `json:"definition"`
 	ChainID    int             `json:"chain_id"`

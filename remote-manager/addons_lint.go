@@ -390,7 +390,9 @@ func addonLintTree(ctx context.Context, rep *addonLintReport, m *addonManifest, 
 	mine := own.String()
 	for _, u := range []struct{ msg, helper, c string }{
 		{"wrm:store.", "wrm.store", "store"}, {"wrm:notify", "wrm.notify(", "notify"}, {"wrm:http", "wrm.http(", "http"},
-		{"wrm:chains.", "wrm.chain", "chains.read"},
+		{"wrm:chains.", "wrm.chain", "chains.read"}, {"wrm:connections", "wrm.connections(", "connections.read"},
+		{"wrm:metrics", "wrm.metrics(", "monitoring.read"}, {"wrm:exec", "wrm.exec(", "servers.exec"},
+		{"wrm:file.read", "wrm.readFile(", "files.read"}, {"wrm:file.write", "wrm.writeFile(", "files.write"},
 	} {
 		if (strings.Contains(mine, u.msg) || strings.Contains(mine, u.helper)) && !caps[u.c] {
 			rep.add("warning", "E_LINT_CAPABILITY", "addon.json", 0, "The code uses %s but the %s capability is not declared", strings.TrimSuffix(u.msg, "."), u.c)

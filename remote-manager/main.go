@@ -504,7 +504,7 @@ func main() {
 	flag.StringVar(&initialSecurityLevel, "security-level", "", "`LEVEL` home, business or enterprise: the security level to start with while none was chosen yet (also with -install-service)")
 	addonLint := flag.String("addon-lint", "", "check the addon in `DIR` (or a .zip) as an install would, list what its sandbox refuses, and exit (status 1 on errors)")
 	addonLintJSON := flag.Bool("addon-lint-json", false, "with -addon-lint: print the report as JSON")
-	addonNew := flag.String("addon-new", "", "create an addon from `TEMPLATE` (blank, fetch-and-render, grafana-panel, wasm-hook) in the folder named by the next argument (default ./TEMPLATE) and exit")
+	addonNew := flag.String("addon-new", "", "create an addon from `TEMPLATE` (blank, fetch-and-render, grafana-panel, server-tools, wasm-hook) in the folder named by the next argument (default ./TEMPLATE) and exit")
 	addonNewID := flag.String("addon-id", "", "with -addon-new: the addon `ID` written into addon.json")
 	addonDev := flag.String("addon-dev", "", "serve the addon in `DIR` on 127.0.0.1 with the real sandbox, a stand-in for WRM and reload on change")
 	addonDevPort := flag.Int("addon-dev-port", 8790, "with -addon-dev: the `PORT` (0 picks a free one)")

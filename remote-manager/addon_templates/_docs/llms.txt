@@ -4,7 +4,7 @@
 
 ## Workflow
 
-1. Start from a template: `wrm -addon-new blank ./my-addon` (templates: blank, fetch-and-render, grafana-panel, wasm-hook), or download one from /api/addons/dev/templates/{name}.zip.
+1. Start from a template: `wrm -addon-new blank ./my-addon` (templates: blank, fetch-and-render, grafana-panel, server-tools, wasm-hook), or in WRM: Settings → Addons → Addon Studio → New addon, or download one from /api/addons/dev/templates/{name}.zip.
 2. Edit addon.json (schema: /api/addons/dev/schema.json) and the panel files.
 3. Check it: `wrm -addon-lint ./my-addon` (or `-addon-lint-json` for machine output; POST a ZIP to /api/addons/dev/lint). Every finding is {level, code, message, file, line, hint}. Fix all errors; warnings name what the sandbox will refuse at run time.
 4. Try it: `wrm -addon-dev ./my-addon` serves the panel with the real CSP and a stand-in for WRM (store in memory, web requests sent by the dev server, secrets from WRM_ADDON_SECRET_<NAME> variables) and reloads it when a file changes.
@@ -13,8 +13,8 @@
 ## addon.json (apiVersion 2)
 
 - Unknown fields are rejected (E_MANIFEST_FIELD). Required: apiVersion 2, id (lowercase, 2-64 chars, letters digits . - _), name (1-80), version (dotted numbers), capabilities.
-- Capabilities: ui.panel (a window: ui.panel, ui.title, ui.defaultSize, ui.minSize), ui.theme (ui.themes: id, name, name_hr, mode light|dark, tokens of CSS variables and/or css), store (store.quotaKb 1-1024, store.shared), notify, http (http.origins, paths, methods, secrets), chains.read (read the viewer's Chains), server.wasm (server.module, server.exports; organisation addons only, administrators install them).
-- store, notify, http and chains.read need a panel.
+- Capabilities: ui.panel (a window: ui.panel, ui.title, ui.defaultSize, ui.minSize), ui.theme (ui.themes: id, name, name_hr, mode light|dark, tokens of CSS variables and/or css), store (store.quotaKb 1-1024, store.shared), notify, http (http.origins, paths, methods, secrets), chains.read (read the viewer's Chains), connections.read, monitoring.read, files.read, files.write and servers.exec (the viewer's own servers, see below), server.wasm (server.module, server.exports; organisation addons only, administrators install them).
+- store, notify, http, chains.read and the server capabilities need a panel.
 
 ## The panel
 
@@ -33,6 +33,7 @@ Panel to WRM:
 - {v:2, type:'wrm:notify', text, level} (info, success, warn, error; 200 characters, 5 a minute).
 - {v:2, type:'wrm:http', id, method, url, headers: {Accept, Content-Type, Range}, body, encoding: 'base64' for bytes, secret: '<name from http.secrets>'}.
 - {v:2, type:'wrm:chains.list', id}; {v:2, type:'wrm:chains.get', id, chain}; {v:2, type:'wrm:chains.check', id, chain} (chains.read; check now is limited to 20 a minute).
+- {v:2, type:'wrm:connections', id} (connections.read); {v:2, type:'wrm:metrics', id, connection} (monitoring.read); {v:2, type:'wrm:exec', id, connection, command, timeout_s, reason} (servers.exec); {v:2, type:'wrm:file.read', id, connection, path, reason} (files.read); {v:2, type:'wrm:file.write', id, connection, path, content, encoding, reason} (files.write).
 - {v:2, type:'wrm:resize', w, h}; {v:2, type:'wrm:error', message, source, line}.
 
 WRM to panel:
@@ -40,12 +41,25 @@ WRM to panel:
 - wrm:theme {theme}; wrm:visibility {visible}; wrm:store {id, key, value} or {id, key, error, code}; wrm:http {id, ok, status, headers, body, encoding 'text'|'base64', truncated} or {id, ok: false, error, code}; wrm:fatal {code, message}.
 - wrm:chains {id, chains: [{id, name, enabled, scenario, scenario_label, nodes_up, nodes_total, checks_ok, checks_total, last_at}]}; wrm:chain {id, chain: {id, name, nodes: [{id, kind, label, role}], checks: [{id, node, type, label, target, format, key}], links, scenarios, state: {at, nodes, checks: {check id: {value, ok, detail, error}}, scenario}, confirmed: {the same, after the chain's confirm count}, scenario, scenario_label, last_at}, timeline: [{at, kind, subject, old, new, ok}]}; or {id, error, code}.
 
-The templates ship wrm-bridge.js, which wraps all of this: wrm.ready(), wrm.on('context'|'theme'|'visibility', fn), wrm.storeGet(key, fallback), wrm.storeSet(key, value), wrm.notify(text, level), wrm.http(request), wrm.chains(), wrm.chain(id), wrm.chainCheck(id), wrm.t(en, hr).
+The templates ship wrm-bridge.js, which wraps all of this: wrm.ready(), wrm.on('context'|'theme'|'visibility', fn), wrm.storeGet(key, fallback), wrm.storeSet(key, value), wrm.notify(text, level), wrm.http(request), wrm.chains(), wrm.chain(id), wrm.chainCheck(id), wrm.connections(), wrm.metrics(connection), wrm.exec(connection, command, {timeout_s, reason}), wrm.readFile(connection, path), wrm.writeFile(connection, path, content, {encoding, reason}), wrm.t(en, hr).
 
 ## Chains (chains.read capability)
 
 - The panel reads the chains of the person who opens the window (a shared instance shows every viewer their own). WRM checks chains in the background with fixed read-only checks; the panel only reads results and may ask for a check now. It never sees connections, host names, commands or raw output, and Chains drop keys that look like secrets.
 - Use confirmed for decisions and reports (a value is confirmed after the chain's confirm count), state for the latest observation.
+
+## Your servers (connections.read, monitoring.read, files.read, files.write, servers.exec)
+
+- The addon always acts as the person who looks at its window, with that person's own SSH/SFTP connections and nothing more. It never sees logins, passwords, keys or notes.
+- wrm:connections answers {connections: [{id, name, protocol, host, folder, tags, exec}]}; exec is true for SSH/SFTP.
+- wrm:exec runs one non-interactive command: {output, exit, timed_out, truncated, masked}. Output is capped at 256 KB and secret-looking values are masked. timeout_s 1-300 (default 30). 30 server requests a minute per window.
+- Every command and every write waits for the viewer's approval in WRM, in a dialog outside the panel, unless an administrator marked the addon as trusted (Settings → Addons → Run without asking). Reading a sensitive file (keys, /etc/shadow, .env …) always asks. Give a short reason: the dialog shows it.
+- wrm:file.read returns at most 1 MB (base64 with encoding 'base64' for binary files); wrm:file.write writes at most 1 MB. Paths are absolute or start with ~/.
+- The administrator can turn these layers off or limit them to roles (addon_server_access). Every command and write is audited.
+
+## Publishing to the community library
+
+- Settings → Addons → Addon Studio → Publish (or the addon_submit tool) lints the addon, refuses secret-looking values and opens a pull request in the community repository with the author's GitHub account. The repository's CI runs the same lint and a security scan; the addon is listed for download in every WRM only after the maintainer approves and merges it.
 
 ## Web sites and secrets (http capability)
 
@@ -56,7 +70,7 @@ The templates ship wrm-bridge.js, which wraps all of this: wrm.ready(), wrm.on('
 
 ## Error codes
 
-API and bridge: E_MANIFEST, E_MANIFEST_FIELD, E_API_VERSION, E_MISSING_FILE, E_LIMIT_SIZE, E_LIMIT_QUOTA, E_LIMIT_COUNT, E_LIMIT_RATE, E_STORE_KEY, E_STORE_VALUE, E_STORE_READONLY, E_CAPABILITY, E_DISABLED, E_INTEGRITY, E_DOWNGRADE, E_PERSONAL_OFF, E_PERSONAL_SERVER, E_NOT_FOUND, E_HTTP_REQUEST, E_HTTP_ORIGIN, E_HTTP_PATH, E_HTTP_METHOD, E_HTTP_UNAPPROVED, E_HTTP_SCHEME, E_HTTP_BLOCKED, E_HTTP_REDIRECT, E_HTTP_SECRET, E_SECRET_MISSING, E_HTTP_TIMEOUT, E_HTTP_UPSTREAM, E_HTTP_OFF, E_CHAINS_OFF, E_CHAIN_BUSY.
+API and bridge: E_MANIFEST, E_MANIFEST_FIELD, E_API_VERSION, E_MISSING_FILE, E_LIMIT_SIZE, E_LIMIT_QUOTA, E_LIMIT_COUNT, E_LIMIT_RATE, E_STORE_KEY, E_STORE_VALUE, E_STORE_READONLY, E_CAPABILITY, E_DISABLED, E_INTEGRITY, E_DOWNGRADE, E_PERSONAL_OFF, E_PERSONAL_SERVER, E_NOT_FOUND, E_HTTP_REQUEST, E_HTTP_ORIGIN, E_HTTP_PATH, E_HTTP_METHOD, E_HTTP_UNAPPROVED, E_HTTP_SCHEME, E_HTTP_BLOCKED, E_HTTP_REDIRECT, E_HTTP_SECRET, E_SECRET_MISSING, E_HTTP_TIMEOUT, E_HTTP_UPSTREAM, E_HTTP_OFF, E_CHAINS_OFF, E_CHAIN_BUSY, E_WRM_OFF, E_WRM_CONNECTION, E_WRM_REQUEST, E_WRM_APPROVAL, E_WRM_DENIED, E_WRM_SSH, E_WRM_FILE.
 
 Lint: E_LINT_REMOTE, E_LINT_INLINE_HANDLER, E_LINT_JS_URL, E_LINT_EVAL, E_LINT_NETWORK, E_LINT_STORAGE, E_LINT_SECRET, E_LINT_ORIGIN, E_LINT_READY, E_LINT_HEARTBEAT, E_LINT_CAPABILITY, E_LINT_UNSERVED, E_LINT_V1, E_LINT_SERVER, E_LINT_HIDDEN, E_WASM.
 

@@ -1,0 +1,17 @@
+{
+  "apiVersion": 2,
+  "id": "example.server-tools",
+  "name": "Server tools",
+  "version": "0.1.0",
+  "description": "Pick one of your servers, see its metrics and run a command: every command asks you in WRM first.",
+  "author": "",
+  "license": "MIT",
+  "capabilities": ["ui.panel", "store", "notify", "connections.read", "monitoring.read", "servers.exec"],
+  "ui": {
+    "panel": "panel.html",
+    "title": "Server tools",
+    "defaultSize": { "w": 560, "h": 420 },
+    "minSize": { "w": 320, "h": 240 }
+  },
+  "store": { "quotaKb": 16 }
+}

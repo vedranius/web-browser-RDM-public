@@ -428,6 +428,53 @@ Object.assign(LANGS.hr, {
   add_tpl_llms: 'vodič llms.txt'
 });
 
+Object.assign(LANGS.en, {
+  add_perm_wrm_connections: 'See your connections: names, protocols, hosts, folders and tags. Never logins, passwords, keys or notes.',
+  add_perm_wrm_monitoring: 'Read the current metrics (CPU, memory, disks, load) of your servers.',
+  add_perm_wrm_files_read: 'Read files on your SSH/SFTP servers, as you. Sensitive files (keys, .env …) ask you first and secret-looking values are masked.',
+  add_perm_wrm_exec: 'Run commands on your SSH/SFTP servers, as you. Every command asks you first, unless an administrator lets this addon run without asking.',
+  add_perm_wrm_files_write: 'Write files on your SSH/SFTP servers, as you. Every write asks you first, unless an administrator lets this addon run without asking.',
+  add_wrm_ask_t: '{name} asks for your approval',
+  add_wrm_ask_d: 'The addon runs this as you, on your own connection. Approve only what you understand.',
+  add_wrm_reason: 'Reason given by the addon',
+  add_wrm_allow: 'Approve',
+  add_wrm_deny: 'Deny',
+  add_wrm_auto: 'Run without asking',
+  add_wrm_auto_d: 'Commands and file writes of this addon run without a question for each one. Sensitive files still ask. Turn this on only for an addon you have read.',
+  add_wrm_auto_on: 'This addon now runs commands without asking',
+  add_wrm_auto_off: 'This addon asks before every command again',
+  add_wrm_servers: 'Servers',
+  add_studio: 'Addon Studio',
+  add_studio_d: 'Write an addon here in WRM: start from a template, edit the files, check them, install and try the addon, then send it to the community library. Nothing is public until the maintainer approves it.',
+  add_studio_open: 'Open Addon Studio',
+  add_studio_edit: 'Edit',
+  add_publish: 'Publish',
+  add_publish_mine: 'My submissions'
+});
+Object.assign(LANGS.hr, {
+  add_perm_wrm_connections: 'Vidjeti vaše konekcije: nazive, protokole, hostove, mape i oznake. Nikad korisnička imena, lozinke, ključeve ni bilješke.',
+  add_perm_wrm_monitoring: 'Čitati trenutne metrike (CPU, memorija, diskovi, opterećenje) vaših poslužitelja.',
+  add_perm_wrm_files_read: 'Čitati datoteke na vašim SSH/SFTP poslužiteljima, u vaše ime. Osjetljive datoteke (ključevi, .env …) prvo vas pitaju, a vrijednosti koje izgledaju kao tajne se maskiraju.',
+  add_perm_wrm_exec: 'Pokretati naredbe na vašim SSH/SFTP poslužiteljima, u vaše ime. Svaka naredba prvo vas pita, osim ako administrator dopusti ovom dodatku rad bez pitanja.',
+  add_perm_wrm_files_write: 'Pisati datoteke na vašim SSH/SFTP poslužiteljima, u vaše ime. Svako pisanje prvo vas pita, osim ako administrator dopusti ovom dodatku rad bez pitanja.',
+  add_wrm_ask_t: '{name} traži vaše odobrenje',
+  add_wrm_ask_d: 'Dodatak ovo izvršava u vaše ime, na vašoj konekciji. Odobrite samo ono što razumijete.',
+  add_wrm_reason: 'Razlog koji je naveo dodatak',
+  add_wrm_allow: 'Odobri',
+  add_wrm_deny: 'Odbij',
+  add_wrm_auto: 'Rad bez pitanja',
+  add_wrm_auto_d: 'Naredbe i pisanje datoteka ovog dodatka izvršavaju se bez pitanja za svaku. Osjetljive datoteke i dalje pitaju. Uključite samo za dodatak čiji ste kôd pročitali.',
+  add_wrm_auto_on: 'Dodatak sada pokreće naredbe bez pitanja',
+  add_wrm_auto_off: 'Dodatak opet pita prije svake naredbe',
+  add_wrm_servers: 'Poslužitelji',
+  add_studio: 'Addon Studio',
+  add_studio_d: 'Napišite dodatak ovdje u WRM-u: krenite od predloška, uredite datoteke, provjerite ih, instalirajte i isprobajte dodatak pa ga pošaljite u knjižnicu zajednice. Ništa nije javno dok ga održavatelj ne odobri.',
+  add_studio_open: 'Otvori Addon Studio',
+  add_studio_edit: 'Uredi',
+  add_publish: 'Objavi',
+  add_publish_mine: 'Moje prijave'
+});
+
 (function () {
   const $ = id => document.getElementById(id);
   const tf = (k, vars) => { let s = t(k); for (const [a, b] of Object.entries(vars || {})) s = s.split('{' + a + '}').join(String(b)); return s; };
@@ -497,6 +544,7 @@ Object.assign(LANGS.hr, {
           <b>${esc(d.name || d.id)}</b> ${d.version ? pill(d.version) : ''}
           ${(d.capabilities || []).map(c => pill(c)).join(' ')}
           <span style="flex:1;"></span>
+          <button class="btn-sm" onclick="wrmAddons.studio('open', '${esc(d.id)}')">✎ ${esc(t('add_studio_edit'))}</button>
           <button class="btn-sec btn-sm" onclick="wrmAddons.draftDiff('${esc(d.id)}')">${esc(t('add_draft_diff'))}</button>
           <button class="btn-sec btn-sm" ${d.valid ? '' : 'disabled'} onclick="wrmAddons.draftInstall('${esc(d.id)}')">${esc(t('add_draft_install'))}</button>
           <button class="btn-danger btn-sm" onclick="wrmAddons.draftDiscard('${esc(d.id)}')">${esc(t('add_draft_discard'))}</button>
@@ -869,7 +917,9 @@ Object.assign(LANGS.hr, {
     post(st, {type: 'wrm:context', user: {id: me.id || 0, name: me.display_name || ''},
       lang: typeof currentLang !== 'undefined' ? currentLang : 'en', theme: themeTokens(),
       addon: {id: a.id, key: keyOf(a), version: a.version, instance: st.inst.id, instanceName: st.inst.name},
-      config, features: {store: hasCap(a, 'store'), notify: hasCap(a, 'notify'), http: !!http, chains: hasCap(a, 'chains.read'), jobs: false, history: false, visibility: true}, http,
+      config, features: {store: hasCap(a, 'store'), notify: hasCap(a, 'notify'), http: !!http, chains: hasCap(a, 'chains.read'),
+        connections: hasCap(a, 'connections.read'), metrics: hasCap(a, 'monitoring.read'), exec: hasCap(a, 'servers.exec'),
+        filesRead: hasCap(a, 'files.read'), filesWrite: hasCap(a, 'files.write'), jobs: false, history: false, visibility: true}, http,
       size: {w: wc ? wc.clientWidth : 0, h: wc ? wc.clientHeight : 0}, visible: st.visible});
   }
 
@@ -1046,6 +1096,12 @@ Object.assign(LANGS.hr, {
         }
         return;
       }
+      case 'wrm:connections':
+      case 'wrm:metrics':
+      case 'wrm:exec':
+      case 'wrm:file.read':
+      case 'wrm:file.write':
+        return wrmLayer(st, d, send, fail);
       case 'wrm:resize': {
         const w = Number(d.w), h = Number(d.h), el = st.wo.el, wc = $('wc-' + st.wo.id), cont = $('win-container');
         if (!isFinite(w) || !isFinite(h) || !el || !wc || !cont || st.wo.snap) return;
@@ -1063,6 +1119,79 @@ Object.assign(LANGS.hr, {
       default:
         st.dropped++;
         addDiag(st, {kind: 'E_BRIDGE', message: 'unknown message type dropped: ' + String(d.type).slice(0, 40)});
+    }
+  }
+
+  // ── WRM layers: connections, metrics, commands, files ──
+  // The server decides what needs the viewer's approval and parks the request;
+  // the question is asked here, in WRM's own page, where the panel cannot
+  // reach it. Questions are asked one at a time.
+  const wrmOps = {'wrm:connections': ['connections', 'connections.read'], 'wrm:metrics': ['metrics', 'monitoring.read'], 'wrm:exec': ['exec', 'servers.exec'],
+    'wrm:file.read': ['read', 'files.read'], 'wrm:file.write': ['write', 'files.write']};
+  let wrmAskChain = Promise.resolve();
+
+  function wrmAsk(a, ap) {
+    const run = () => new Promise(resolve => {
+      const m = devModal('addon-wrm-ask');
+      m.style.zIndex = 9690;
+      m.innerHTML = `<div class="modal" style="width:560px;max-width:calc(100vw - 32px);">
+        <h3>🧩 ${esc(tf('add_wrm_ask_t', {name: (a.ui && a.ui.title) || a.name}))}</h3>
+        <div class="hint-box warn">${esc(t('add_wrm_ask_d'))}</div>
+        <pre style="margin:8px 0;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font:12px var(--font-mono);white-space:pre-wrap;word-break:break-word;max-height:40vh;overflow:auto;">${esc(ap.summary || '')}</pre>
+        ${ap.reason ? `<div class="sub" style="font-size:11.5px;color:var(--text2);"><b>${esc(t('add_wrm_reason'))}:</b> ${esc(ap.reason)}</div>` : ''}
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button class="btn-sec" data-act="no">${esc(t('add_wrm_deny'))}</button>
+          <button data-act="yes">${esc(t('add_wrm_allow'))}</button>
+        </div></div>`;
+      const done = v => { m.classList.remove('open'); resolve(v); };
+      m.querySelector('[data-act="no"]').onclick = () => done(false);
+      m.querySelector('[data-act="yes"]').onclick = () => done(true);
+      m.classList.add('open');
+      setTimeout(() => { const b = m.querySelector('[data-act="no"]'); if (b) b.focus(); }, 30); // Enter must not approve
+    });
+    const p = wrmAskChain.then(run, run);
+    wrmAskChain = p.catch(() => {});
+    return p;
+  }
+
+  async function wrmLayer(st, d, send, fail) {
+    const [op, cap] = wrmOps[d.type];
+    const a = st.a, answer = d.type;
+    if (!reqID(d.id)) return addDiag(st, {kind: 'E_BRIDGE', message: d.type + ' needs an id'});
+    if (!hasCap(a, cap)) {
+      addDiag(st, {kind: 'E_CAPABILITY', message: d.type + ' needs the ' + cap + ' capability'});
+      return fail(answer, d.id, {message: 'The addon does not declare the ' + cap + ' capability', code: 'E_CAPABILITY'});
+    }
+    const base = apiBase(a) + '/instances/' + st.inst.id + '/wrm/';
+    const call = async (url, body) => {
+      const res = await fetch(url, {method: body === undefined ? 'GET' : 'POST', headers: {'Content-Type': 'application/json'}, body: body === undefined ? undefined : JSON.stringify(body)});
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw Object.assign(new Error(j.error || ('HTTP ' + res.status)), {code: j.code || ''});
+      return j;
+    };
+    try {
+      let j;
+      if (op === 'connections') j = await call(base + 'connections');
+      else {
+        const conn = Number(d.connection);
+        if (!(Number.isInteger(conn) && conn > 0)) throw Object.assign(new Error(d.type + ' needs a connection id'), {code: 'E_WRM_REQUEST'});
+        const body = {connection: conn};
+        if (shortStr(d.command, 8192)) body.command = d.command;
+        if (shortStr(d.path, 1024)) body.path = d.path;
+        if (typeof d.content === 'string') body.content = d.content;
+        if (d.encoding === 'base64') body.encoding = 'base64';
+        if (Number.isFinite(Number(d.timeout_s))) body.timeout_s = Math.round(Number(d.timeout_s));
+        if (shortStr(d.reason, 300)) body.reason = d.reason;
+        j = await call(base + op, body);
+        if (j.approval) {
+          const yes = await wrmAsk(a, j.approval);
+          j = await call(base + (yes ? 'approve/' : 'deny/') + encodeURIComponent(j.approval.id), {});
+        }
+      }
+      send(Object.assign({type: answer, id: d.id}, j));
+    } catch (e) {
+      addDiag(st, {kind: e.code || 'E_WRM', message: e.message});
+      fail(answer, d.id, e);
     }
   }
 
@@ -1167,6 +1296,11 @@ Object.assign(LANGS.hr, {
     if (kind === 'store') return tf(extra === 'shared' ? 'add_perm_store_shared' : 'add_perm_store', {kb: val});
     if (kind === 'notify') return t('add_perm_notify');
     if (kind === 'chains') return t('add_perm_chains');
+    if (kind === 'wrm') {
+      const key = {'connections.read': 'add_perm_wrm_connections', 'monitoring.read': 'add_perm_wrm_monitoring', 'files.read': 'add_perm_wrm_files_read',
+        'servers.exec': 'add_perm_wrm_exec', 'files.write': 'add_perm_wrm_files_write'}[val];
+      if (key) return t(key);
+    }
     if (kind === 'server') return tf('add_perm_server', {exports: (val || '').split(',').join(', ')});
     return tf('add_perm_other', {p});
   }
@@ -1239,6 +1373,8 @@ Object.assign(LANGS.hr, {
     if (panel && a.enabled) btns.push(`<button class="btn-sec btn-sm" onclick="wrmAddons.openPanel('${k}')">${esc(t('add_open'))}</button>`);
     if (canManage(a)) {
       btns.push(`<label class="mcp-check" style="margin:0;display:flex;align-items:center;gap:6px;"><input type="checkbox" ${a.enabled ? 'checked' : ''} onchange="wrmAddons.toggle('${k}', this.checked)"><span>${esc(a.enabled ? t('add_disable') : t('add_enable'))}</span></label>`);
+      if (admin) btns.push(`<button class="btn-sec btn-sm" onclick="wrmAddons.studio('fromInstalled', '${k}')">✎ ${esc(t('add_studio_edit'))}</button>`);
+      btns.push(`<button class="btn-sec btn-sm" onclick="wrmAddons.studio('publish', '${k}')">⇪ ${esc(t('add_publish'))}</button>`);
       btns.push(`<button class="btn-danger btn-sm" onclick="wrmAddons.remove('${k}')">${esc(t('add_remove'))}</button>`);
     }
     const meta = [a.author ? tf('add_by', {author: a.author}) : '', a.license || '', a.homepage || ''].filter(Boolean).map(esc).join(' · ');
@@ -1264,10 +1400,58 @@ Object.assign(LANGS.hr, {
       ${meta ? `<div class="sub" style="font-size:11px;color:var(--text3);margin-top:2px;">${meta}</div>` : ''}
       <div class="sub" style="font-size:10.5px;color:var(--text3);margin-top:2px;">${esc(a.id)} · ${esc(a.checksum || '')}${a.installed_at ? ' · ' + esc(fmtTime(a.installed_at)) : ''}</div>
       ${wait}
+      ${wrmHTML(a)}
       ${netHTML(a)}
       ${instancesHTML(a)}
       ${runner}
     </div>`;
+  }
+
+  // Commands and writes on the viewer's servers: who may skip the question.
+  const wrmAutoState = {};
+  function wrmHTML(a) {
+    if (!hasCap(a, 'servers.exec') && !hasCap(a, 'files.write')) return '';
+    const k = keyOf(a), on = !!wrmAutoState[k];
+    const ctl = isAdmin() ? `<label class="mcp-check" style="margin:0;display:flex;align-items:center;gap:6px;" title="${esc(t('add_wrm_auto_d'))}"><input type="checkbox" ${on ? 'checked' : ''} onchange="wrmAddons.wrmAuto('${esc(k)}', this.checked, this)"><span>${esc(t('add_wrm_auto'))}</span></label>` : (on ? pill(t('add_wrm_auto')) : '');
+    return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:11.5px;">
+        <b>🖥 ${esc(t('add_wrm_servers'))}</b> <span style="flex:1;min-width:160px;color:var(--text3);">${esc(t(hasCap(a, 'servers.exec') ? 'add_perm_wrm_exec' : 'add_perm_wrm_files_write'))}</span>${ctl}</div>`;
+  }
+
+  async function loadWrmAuto() {
+    if (!isAdmin()) return;
+    await Promise.all(list.filter(a => hasCap(a, 'servers.exec') || hasCap(a, 'files.write')).map(async a => {
+      try { wrmAutoState[keyOf(a)] = !!(await api('GET', apiBase(a) + '/wrm')).auto; } catch (_) {}
+    }));
+  }
+
+  async function wrmAuto(key, on, box) {
+    const a = byKey(key);
+    if (!a) return;
+    if (on && !(await uiConfirm(t('add_wrm_auto_d'), {okText: t('add_wrm_auto'), danger: true}))) { if (box) box.checked = false; return; }
+    try {
+      const res = await fetch(apiBase(a) + '/wrm', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({auto: !!on})});
+      if (!res.ok) throw new Error(await apiError(res));
+      wrmAutoState[key] = !!on;
+      showToast(t(on ? 'add_wrm_auto_on' : 'add_wrm_auto_off'), on ? 'warning' : 'success');
+    } catch (e) {
+      if (box) box.checked = !on;
+      showToast(e.message, 'error', 8000);
+    }
+  }
+
+  // Addon Studio and publishing live in their own script, loaded on first use.
+  let studioLoading = null;
+  function studio(what, arg) {
+    const go = () => window.wrmAddonStudio && window.wrmAddonStudio[what || 'open'](arg);
+    if (window.wrmAddonStudio) return go();
+    if (!studioLoading) studioLoading = new Promise((ok, fail) => {
+      const s = document.createElement('script');
+      s.src = '/static/addonstudio.js';
+      s.onload = ok;
+      s.onerror = () => { studioLoading = null; fail(new Error(t('git_load_failed'))); };
+      document.head.appendChild(s);
+    });
+    return studioLoading.then(go).catch(e => showToast(e.message, 'error'));
   }
 
   // What the addon may reach and who approved it.
@@ -1320,8 +1504,15 @@ Object.assign(LANGS.hr, {
         <button class="btn-sec btn-sm" onclick="wrmAddons.lintCheck()">${esc(t('add_dev_check'))}</button>
         <button class="btn-sec btn-sm" onclick="wrmAddons.templates()">${esc(t('add_dev_templates'))}</button>
       </div></div>` : '';
+    const studioBox = `<div class="setting-row">
+      <div><div class="setting-label">🧩 ${esc(t('add_studio'))}</div><div class="setting-desc">${esc(t('add_studio_d'))}</div></div>
+      <div class="setting-control" style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${admin ? `<button class="btn-sm" onclick="wrmAddons.studio('open')">${esc(t('add_studio_open'))}</button>` : ''}
+        <button class="btn-sec btn-sm" onclick="wrmAddons.studio('submissions')">${esc(t('add_publish_mine'))}</button>
+      </div></div>`;
     el.innerHTML = `<div class="hint-box">${esc(t('add_intro'))}</div>
       <div class="hint-box warn">${esc(t('add_disclaimer'))}</div>
+      ${studioBox}
       ${install}
       ${devBox}
       ${aiBox}
@@ -1340,6 +1531,7 @@ Object.assign(LANGS.hr, {
     await Promise.all(list.filter(a => a.enabled && (a.apiVersion || 1) >= 2 && a.ui && a.ui.panel).map(a => loadInstances(a).catch(() => {})));
     await loadCommunity();
     await loadDrafts();
+    await loadWrmAuto();
     render();
   }
 
@@ -1746,6 +1938,7 @@ wrm -addon-dev ./my-addon</pre></div>
       '- store capability: {v:2, type:"wrm:store.get", id, key} and {v:2, type:"wrm:store.set", id, key, value} (any JSON, 32 KB per value, quotaKb per instance). The answer is {type:"wrm:store", id, key, value} or with error and code (E_LIMIT_QUOTA, E_LIMIT_SIZE, E_STORE_KEY, E_STORE_READONLY). Keys: 1-64 letters, digits, dot, dash, underscore, not starting with wrm.',
       '- notify capability: {v:2, type:"wrm:notify", text, level:"info"|"success"|"warn"|"error"}; plain text, 200 characters, at most 5 a minute, repeats within 5 minutes are dropped.',
       '- chains.read capability: {v:2, type:"wrm:chains.list", id} answers {type:"wrm:chains", id, chains:[{id, name, enabled, scenario, scenario_label, nodes_up, nodes_total, checks_ok, checks_total, last_at}]}; {v:2, type:"wrm:chains.get", id, chain} and {v:2, type:"wrm:chains.check", id, chain} (check now, 20 a minute) answer {type:"wrm:chain", id, chain:{id, name, nodes:[{id, kind, label, role}], checks:[{id, node, type, label, target, format, key}], links, scenarios, state:{at, nodes, checks:{id:{value, ok, detail, error}}, scenario}, confirmed:{…same…}, scenario, scenario_label, last_at}, timeline:[{at, kind, subject, old, new, ok}]}. Only the chains of whoever opens the window; WRM checks chains in the background, the panel only reads them. Codes: E_CAPABILITY, E_CHAINS_OFF, E_NOT_FOUND, E_LIMIT_RATE, E_CHAIN_BUSY.',
+      '- connections.read, monitoring.read, files.read, files.write, servers.exec: the addon works on the servers of whoever opens the window, as that person: {v:2, type:"wrm:connections", id} answers {connections:[{id, name, protocol, host, folder, tags, exec}]} (never logins or secrets); {v:2, type:"wrm:metrics", id, connection}; {v:2, type:"wrm:exec", id, connection, command, timeout_s, reason} answers {output, exit, timed_out, truncated, masked}; {v:2, type:"wrm:file.read", id, connection, path, reason} answers {path, content, size}; {v:2, type:"wrm:file.write", id, connection, path, content, reason}. Every command and write waits for the viewer\'s approval in WRM unless an administrator trusts the addon; secret-looking values are masked; 256 KB output, 1 MB files, 30 requests a minute. Codes: E_WRM_OFF, E_WRM_CONNECTION, E_WRM_REQUEST, E_WRM_DENIED, E_WRM_APPROVAL, E_WRM_SSH, E_WRM_FILE.',
       '- {v:2, type:"wrm:resize", w, h} asks for a content size (WRM decides); {v:2, type:"wrm:error", message, source, line} reports an error into the window diagnostics. Use a ResizeObserver to redraw.',
       '- Each instance (the user may open several, e.g. two dashboards) has its own stored values and window. Data is fetched only while the window is open; WRM runs no background jobs for addons.',
       '- http capability: the panel never fetches by itself. Send {v:2, type:"wrm:http", id, method, url, headers:{Accept, Content-Type, Range}, body (string; encoding:"base64" for bytes), secret:"grafana_token"} and WRM performs the request. The answer is {type:"wrm:http", id, ok, status, headers, body, encoding:"text"|"base64", truncated} or {id, ok:false, error, code}. Only origins listed in http.origins (exact scheme://host[:port]; plain http:// only for an origin the administrator approved as private network) and paths in http.paths (prefix with * at the end) are allowed; an administrator approves the origins; local and private addresses are refused unless the administrator allowed the private network for that origin; redirects are checked again; 120 requests a minute, 20 at a time, 10 s timeout, 256 KB request and 8 MB response. Codes: E_HTTP_ORIGIN, E_HTTP_PATH, E_HTTP_METHOD, E_HTTP_UNAPPROVED, E_HTTP_BLOCKED, E_HTTP_SCHEME, E_HTTP_SECRET, E_SECRET_MISSING, E_HTTP_TIMEOUT, E_HTTP_UPSTREAM, E_LIMIT_RATE, E_LIMIT_SIZE.',
@@ -1757,10 +1950,10 @@ wrm -addon-dev ./my-addon</pre></div>
       '',
       'Nothing runs at install time. Every file is pinned by SHA-256. Enabling the addon shows the user a permission sheet generated from addon.json; an update that asks for more stays off until it is approved again. Errors come back with a code (E_MANIFEST, E_MANIFEST_FIELD, E_MISSING_FILE, E_LIMIT_SIZE, …) and a hint: fix exactly what they name.',
       '',
-      'Tools: the manifest schema is at ' + location.origin + '/api/addons/dev/schema.json and a guide at ' + location.origin + '/api/addons/dev/llms.txt. Templates (blank, fetch-and-render, grafana-panel, wasm-hook) ship wrm-bridge.js, which wraps the bridge (wrm.ready, wrm.storeGet, wrm.storeSet, wrm.notify, wrm.http). Before handing the addon over, check it: wrm -addon-lint <folder> (or POST the ZIP to /api/addons/dev/lint) answers {level, code, message, file, line, hint} for every problem, including what the sandbox will refuse (E_LINT_REMOTE, E_LINT_NETWORK, E_LINT_STORAGE, E_LINT_SECRET, E_LINT_ORIGIN, …); fix every error. wrm -addon-dev <folder> runs it locally with the real CSP.',
+      'Tools: the manifest schema is at ' + location.origin + '/api/addons/dev/schema.json and a guide at ' + location.origin + '/api/addons/dev/llms.txt. Templates (blank, fetch-and-render, grafana-panel, server-tools, wasm-hook) ship wrm-bridge.js, which wraps the bridge (wrm.ready, wrm.storeGet, wrm.storeSet, wrm.notify, wrm.http, wrm.connections, wrm.metrics, wrm.exec, wrm.readFile, wrm.writeFile). Before handing the addon over, check it: wrm -addon-lint <folder> (or POST the ZIP to /api/addons/dev/lint) answers {level, code, message, file, line, hint} for every problem, including what the sandbox will refuse (E_LINT_REMOTE, E_LINT_NETWORK, E_LINT_STORAGE, E_LINT_SECRET, E_LINT_ORIGIN, …); fix every error. wrm -addon-dev <folder> runs it locally with the real CSP.',
       '',
       'Write the smallest addon that does the job, state its license, and tell me how to zip it for install.',
-      'If you are the WRM assistant and have the addon tools, call addon_create with addon.json and the files it declares instead of returning a ZIP; the draft waits for my review in Settings → Addons.'
+      'If you are the WRM assistant or an MCP client with the addon tools: addon_new starts a draft from a template, addon_create / addon_write write files, addon_lint checks it like the install and the community CI, and addon_submit sends it to the community repository as a pull request (it is public only after the maintainer approves). The draft waits for my review in Settings → Addons → Addon Studio.'
     ].join('\n');
   }
 
@@ -1818,10 +2011,10 @@ wrm -addon-dev ./my-addon</pre></div>
     if ($('addons-pane') && $('st-addons') && $('st-addons').classList.contains('active')) render();
   }
 
-  window.wrmAddons = {boot, pane, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, communityInstall, applyThemes, reload: after,
+  window.wrmAddons = {boot, install, toggle, remove, openPanel, run, aiPrompt, closeAIPrompt, copyPrompt, openAssistant, communityInstall, applyThemes, reload: after,
     draftInstall, draftDiff, draftDiscard, closeDraftDiff, windowChanged, windowGone, list: () => list.slice(),
     instNew, instRename, instDelete, instExport, instImport, otherDisable, otherRemove, netApprove, netRevoke, secrets, secretSave, secretClear,
-    lintCheck, lintCopy, templates};
+    lintCheck, lintCopy, templates, studio, wrmAuto, permText, lintReport, pane};
 
   if (typeof window.initApp === 'function' && !window.initApp.__addons) {
     const orig = window.initApp;

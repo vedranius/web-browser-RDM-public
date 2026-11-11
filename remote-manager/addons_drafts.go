@@ -463,6 +463,9 @@ func addonDraftVersion(id string) string {
 // GET /api/addons/drafts, GET /api/addons/drafts/{id}/diff,
 // POST /api/addons/drafts/{id}/install, DELETE /api/addons/drafts/{id}.
 func addonDraftsHandler(w http.ResponseWriter, r *http.Request, adminID int, parts []string) {
+	if addonStudioRoute(w, r, adminID, parts) {
+		return
+	}
 	if len(parts) == 0 {
 		if r.Method != http.MethodGet {
 			jsonError(w, "Method not allowed", 405)

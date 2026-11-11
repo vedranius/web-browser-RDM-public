@@ -34,7 +34,7 @@ type addonTemplateInfo struct {
 	Server      bool   `json:"server,omitempty"`
 }
 
-var addonTemplateOrder = []string{"blank", "fetch-and-render", "grafana-panel", "wasm-hook"}
+var addonTemplateOrder = []string{"blank", "fetch-and-render", "grafana-panel", "server-tools", "wasm-hook"}
 
 func addonTemplateList() []addonTemplateInfo {
 	out := []addonTemplateInfo{}

@@ -62,7 +62,7 @@ var (
 	addonExportPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
 	// addonReservedIDs are path words of /api/addons/ that an addon id would
 	// shadow.
-	addonReservedIDs = map[string]bool{"dev": true, "install": true, "drafts": true, "community": true, "users": true}
+	addonReservedIDs = map[string]bool{"dev": true, "install": true, "drafts": true, "community": true, "users": true, "publish": true, "studio": true, "templates": true}
 )
 
 type addonUI struct {
@@ -154,6 +154,7 @@ func initAddonSchema() {
 	db.Exec(`ALTER TABLE addons ADD COLUMN pending TEXT NOT NULL DEFAULT ''`)
 	initAddonV2Schema()
 	initAddonWRMSchema()
+	initAddonPublishSchema()
 }
 
 func addonsRoot() string { return resolveDBPath() + ".addons" }
@@ -985,6 +986,10 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if parts[0] == "dev" {
 		addonDevAPIHandler(w, r, userID, admin, parts[1:])
+		return
+	}
+	if parts[0] == "publish" {
+		addonPublishHandler(w, r, userID, admin, parts[1:])
 		return
 	}
 	if parts[0] == "drafts" {

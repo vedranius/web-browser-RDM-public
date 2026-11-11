@@ -135,6 +135,24 @@
     chain(id) { return request('wrm:chains.get', {chain: id}); },
     // A check runs on the servers and may take up to 90 seconds.
     chainCheck(id) { return request('wrm:chains.check', {chain: id}, 100000); },
+    // WRM layers: always as the person looking at the window, with their own connections.
+    // connections.read: [{id, name, protocol, host, folder, tags, exec}] (never logins or secrets).
+    connections() { return request('wrm:connections', {}).then((d) => d.connections || []); },
+    // monitoring.read: current metrics of one SSH/SFTP connection.
+    metrics(connection) { return request('wrm:metrics', {connection}, 30000); },
+    // servers.exec: {output, exit, timed_out, truncated, masked}. WRM asks the viewer first
+    // (unless an administrator trusts the addon), so allow time for the answer.
+    exec(connection, command, opts) {
+      const o = opts || {};
+      return request('wrm:exec', {connection, command, timeout_s: o.timeout_s, reason: o.reason}, 150000 + (o.timeout_s || 30) * 1000);
+    },
+    // files.read: {path, content, size, truncated, masked} (base64 with encoding:'base64' for bytes).
+    readFile(connection, path, opts) { return request('wrm:file.read', {connection, path, reason: (opts || {}).reason}, 150000); },
+    // files.write: asks the viewer first unless an administrator trusts the addon.
+    writeFile(connection, path, content, opts) {
+      const o = opts || {};
+      return request('wrm:file.write', {connection, path, content, encoding: o.encoding, reason: o.reason}, 150000);
+    },
     error(message) { send({type: 'wrm:error', message: String(message)}); },
     resize(w, h) { send({type: 'wrm:resize', w, h}); }
   };

@@ -403,6 +403,10 @@ func validateSetting(s settingSpec, v string) (string, error) {
 	switch s.Key {
 	case "break_glass_ips":
 		return validateIPList(v)
+	case "addon_publish_repo":
+		if !addonPublishRepoExpr.MatchString(v) {
+			return "", fmt.Errorf("use owner/repository, for example vedranius/wrm-pro-community-addons")
+		}
 	case "medium_build_user":
 		if v != "" && !regexp.MustCompile(`^[a-z_][a-z0-9_.-]{0,31}$`).MatchString(v) {
 			return "", fmt.Errorf("use an OS account name such as wrm-build")
