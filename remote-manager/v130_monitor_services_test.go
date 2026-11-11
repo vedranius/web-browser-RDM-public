@@ -30,7 +30,7 @@ func TestV130MonitorServiceConfig(t *testing.T) {
 		"empty":     {{Kind: "systemd", Name: ""}},
 	}
 	many := []monitorService{}
-	for i := 0; i < 21; i++ {
+	for i := 0; i < 41; i++ {
 		many = append(many, monitorService{Kind: "systemd", Name: "unit" + strings.Repeat("x", i%5)})
 	}
 	bad["too many"] = many
