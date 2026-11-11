@@ -420,6 +420,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/bookmarks/", apiBookmarksHandler)
 	mux.HandleFunc("/api/tunnels", apiTunnelsHandler)
 	mux.HandleFunc("/api/tunnels/", apiTunnelsHandler)
+	mux.HandleFunc("/api/help", apiHelpHandler)
+	mux.HandleFunc("/api/help/", apiHelpHandler)
 	mux.HandleFunc("/api/ai/", apiAIHandler)
 	mux.HandleFunc("/api/admin/ai/", apiAdminAIHandler)
 	mux.HandleFunc("/api/mcp/", apiMCPHandler)
