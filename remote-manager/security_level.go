@@ -64,6 +64,8 @@ var levelRules = []levelRule{
 	{Key: "allow_secret_export", Order: []string{"1", "0"}, Need: [3]string{"", "0", "0"}},
 	{Key: "allow_link_shares", Order: []string{"1", "0"}, Need: [3]string{"", "", "0"}},
 	{Key: "link_share_max_days", Less: true, ZeroOff: true, Need: [3]string{"", "30", "7"}},
+	{Key: "tunnel_browser_access", Order: []string{"all", "admins", "off"}, Need: [3]string{"", "", "admins"}},
+	{Key: "network_scan_public", Order: []string{"1", "0"}, Need: [3]string{"", "0", "0"}},
 	{Key: "ai_full_access", Order: []string{"1", "0"}, Need: [3]string{"", "0", "0"}},
 	{Key: "require_step_up", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}},
 	{Key: "screen_lock_mode", Order: []string{"browser", "remember", "server"}, Need: [3]string{"", "server", "server"}, Rec: "server"},

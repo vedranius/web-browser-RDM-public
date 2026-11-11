@@ -49,6 +49,9 @@ type tunnelDef struct {
 	OpenPath   string `json:"open_path"`
 	StartMode  string `json:"start_mode"` // manual | connect | always
 	Sort       int    `json:"sort"`
+	// AllowIP: a temporary tunnel opened for a browser on another computer listens on the
+	// network and accepts only this client address (never stored).
+	AllowIP string `json:"client_only,omitempty"`
 }
 
 const tunnelCols = `id, conn_id, user_id, name, kind, bind_host, bind_port, target_host, target_port, open_scheme, open_path, start_mode, sort`
@@ -252,6 +255,51 @@ var tunnelMgr = &tunnelManager{runs: map[string]*tunnelRun{}, holds: map[int]int
 // proxyTunnelIdle: a tunnel started for a proxy stops after this time without traffic.
 var proxyTunnelIdle = 30 * time.Minute
 
+// browserTunnelBind returns where a temporary tunnel for a browser listens: on loopback
+// when the browser runs on the WRM machine (or the policy tunnel_browser_access does not
+// allow more), otherwise on every interface but only for the browser's address.
+func browserTunnelBind(r *http.Request, userID int) (bind, allow string) {
+	if r == nil {
+		return "127.0.0.1", ""
+	}
+	ip := clientIP(r)
+	if ip == "" || isLoopbackHost(ip) || net.ParseIP(ip) == nil || !policyWhoAllows(userID, "tunnel_browser_access") {
+		return "127.0.0.1", ""
+	}
+	if net.ParseIP(ip).To4() == nil {
+		return "::", ip
+	}
+	return "0.0.0.0", ip
+}
+
+// browserTunnelHost is the host name the browser reaches WRM with, for the tunnel's URL.
+func browserTunnelHost(r *http.Request, allow string) string {
+	if allow == "" || r == nil {
+		return "127.0.0.1"
+	}
+	h := r.Host
+	if hh, _, err := net.SplitHostPort(h); err == nil {
+		h = hh
+	}
+	h = strings.Trim(h, "[]")
+	if h == "" || !validHostName(h) {
+		return "127.0.0.1"
+	}
+	if strings.Contains(h, ":") {
+		return "[" + h + "]"
+	}
+	return h
+}
+
+func sameClientIP(a net.Addr, allow string) bool {
+	host, _, err := net.SplitHostPort(a.String())
+	if err != nil {
+		return false
+	}
+	x, y := net.ParseIP(host), net.ParseIP(allow)
+	return x != nil && y != nil && x.Equal(y)
+}
+
 // tunnelConnectGrace: "connect" tunnels stop this long after the last terminal closed.
 var tunnelConnectGrace = 15 * time.Second
 
@@ -404,6 +452,10 @@ func (m *tunnelManager) start(key string, def tunnelDef, c Connection, startedBy
 	if reason == "proxy" && def.StartMode != "always" {
 		t.idleLimit = proxyTunnelIdle
 	}
+	// A tunnel to a web interface found by the network scanner is temporary.
+	if reason == "scan" {
+		t.idleLimit, t.ephemeral = 30*time.Minute, true
+	}
 	t.touch()
 	m.runs[key] = t
 	m.mu.Unlock()
@@ -487,6 +539,10 @@ func (t *tunnelRun) acceptLoop(ln net.Listener) {
 		c, err := ln.Accept()
 		if err != nil {
 			return // listener closed (stop or SSH connection lost)
+		}
+		if t.def.AllowIP != "" && !sameClientIP(c.RemoteAddr(), t.def.AllowIP) {
+			c.Close() // only the browser the tunnel was opened for
+			continue
 		}
 		t.touch()
 		go t.handle(c)
@@ -1234,11 +1290,15 @@ func openWebHandler(w http.ResponseWriter, r *http.Request, userID int, c Connec
 		return
 	}
 	pn, _ := strconv.Atoi(port)
+	bind, allow := browserTunnelBind(r, userID)
 	key := "w" + strconv.Itoa(c.ID) + "u" + strconv.Itoa(userID)
+	if allow != "" {
+		key += "i" + allow
+	}
 	t := tunnelMgr.get(key)
 	if t == nil {
-		def := tunnelDef{ConnID: c.ID, UserID: userID, Name: c.Name, Kind: "local", BindHost: "127.0.0.1", BindPort: 0,
-			TargetHost: host, TargetPort: pn, OpenScheme: scheme, OpenPath: c.WebPath, StartMode: "manual"}
+		def := tunnelDef{ConnID: c.ID, UserID: userID, Name: c.Name, Kind: "local", BindHost: bind, BindPort: 0,
+			TargetHost: host, TargetPort: pn, OpenScheme: scheme, OpenPath: c.WebPath, StartMode: "manual", AllowIP: allow}
 		t, err = tunnelMgr.startEphemeral(key, def, c, userID, "web", r)
 		if err != nil {
 			jsonError(w, err.Error(), 502)
@@ -1246,9 +1306,9 @@ func openWebHandler(w http.ResponseWriter, r *http.Request, userID int, c Connec
 		}
 	}
 	_, lport, _ := net.SplitHostPort(t.view().Listen)
-	url := scheme + "://127.0.0.1:" + lport + c.WebPath
-	auditLogRef(r, userID, usernameOf(userID), "web.open", c.Name, map[string]string{"url": url, "via": jumpPath(c), "target": net.JoinHostPort(host, port)}, auditRef{ConnID: c.ID})
-	jsonOK(w, map[string]interface{}{"url": url, "direct": false, "listen": t.view().Listen, "route": jumpPath(c), "local_only": true})
+	url := scheme + "://" + browserTunnelHost(r, allow) + ":" + lport + c.WebPath
+	auditLogRef(r, userID, usernameOf(userID), "web.open", c.Name, map[string]string{"url": url, "via": jumpPath(c), "target": net.JoinHostPort(host, port), "client_only": allow}, auditRef{ConnID: c.ID})
+	jsonOK(w, map[string]interface{}{"url": url, "direct": false, "listen": t.view().Listen, "route": jumpPath(c), "local_only": allow == "", "client_only": allow})
 }
 
 // startEphemeral starts a temporary local tunnel to c's host:port over c's route (jump

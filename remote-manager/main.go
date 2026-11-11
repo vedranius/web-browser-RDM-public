@@ -318,6 +318,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/connections/test", apiConnectionTestHandler)
 	mux.HandleFunc("/api/connections/quick", apiQuickConnectHandler)
 	mux.HandleFunc("/api/nettools", apiNetToolsHandler)
+	mux.HandleFunc("/api/netscan", apiNetScanHandler)
+	mux.HandleFunc("/api/netscan/", apiNetScanHandler)
 	mux.HandleFunc("/manifest.webmanifest", manifestHandler)
 	mux.HandleFunc("/sw.js", serviceWorkerHandler)
 	mux.HandleFunc("/api/connections/", apiConnectionByIDHandler)
@@ -502,6 +504,9 @@ func main() {
 	lockdownMode := flag.String("lockdown", "", "`on`, off or status: turn the lockdown on or off (only break-glass administrators can sign in, AI stopped, shares paused) and exit; a running WRM applies it within seconds")
 	lockdownReason := flag.String("lockdown-reason", "", "with -lockdown on: the `REASON` shown to everyone")
 	flag.StringVar(&initialSecurityLevel, "security-level", "", "`LEVEL` home, business or enterprise: the security level to start with while none was chosen yet (also with -install-service)")
+	netscanTarget := flag.String("netscan", "", "scan the network `RANGE` (192.168.1.0/24, 10.0.0.5-60) from this computer, print the devices and write a JSON file for WRM's network scanner import, then exit")
+	netscanPorts := flag.String("netscan-ports", "quick", "with -netscan: `PORTS` quick, extended, none or a list such as 22,80,443,8000-8010")
+	netscanOut := flag.String("netscan-out", "", "with -netscan: write the JSON to `FILE` (default: standard output)")
 	addonLint := flag.String("addon-lint", "", "check the addon in `DIR` (or a .zip) as an install would, list what its sandbox refuses, and exit (status 1 on errors)")
 	addonLintJSON := flag.Bool("addon-lint-json", false, "with -addon-lint: print the report as JSON")
 	addonNew := flag.String("addon-new", "", "create an addon from `TEMPLATE` (blank, fetch-and-render, grafana-panel, wasm-hook) in the folder named by the next argument (default ./TEMPLATE) and exit")
@@ -511,6 +516,8 @@ func main() {
 	addonDevPrivate := flag.Bool("addon-dev-private", false, "with -addon-dev: allow private and local addresses for the listed origins")
 	flag.Parse()
 	switch {
+	case *netscanTarget != "":
+		os.Exit(runNetscanCLI(*netscanTarget, *netscanPorts, *netscanOut, os.Stdout, os.Stderr))
 	case *addonLint != "":
 		os.Exit(runAddonLint(*addonLint, *addonLintJSON, os.Stdout))
 	case *addonNew != "":
@@ -1636,6 +1643,7 @@ func initDB() {
 
 	// v13.0: addons (a folder under <DB>.addons plus its manifest)
 	initAddonSchema()
+	initNetScanSchema()
 
 	var nC, nF, nS int
 	db.QueryRow("SELECT COUNT(*) FROM connections").Scan(&nC)

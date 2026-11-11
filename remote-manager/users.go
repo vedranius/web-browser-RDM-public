@@ -382,6 +382,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 			"bmc":              settingBool("bmc_enabled"),
 			"serial":           serialAllowed(u.ID),
 			"network_tools":    networkToolsAllowed(u.ID),
+			"network_scan":     netscanAllowed(u.ID),
 			"notifications":    settingBool("notifications_enabled"),
 			"proxies":          proxiesAllowed(u.ID),
 			"git":              gitAllowed(),

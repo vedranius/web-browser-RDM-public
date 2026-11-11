@@ -97,6 +97,9 @@ var settingSpecs = []settingSpec{
 	{Key: "tunnel_users", Default: "all", Kind: "enum", Enum: []string{"all", "admins"}},
 	{Key: "tunnel_bind_any", Default: "0", Kind: "bool"},
 	{Key: "tunnel_remote_forward", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	// Temporary tunnels (web interfaces, scanner) for a browser on another computer: listen on
+	// the network, accepting only that browser's address. off = loopback only.
+	{Key: "tunnel_browser_access", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	{Key: "tunnel_idle_minutes", Default: "0", Kind: "int", Min: 0, Max: 10080},
 	// Terminal productivity
 	{Key: "broadcast_enabled", Default: "1", Kind: "bool", Alias: "BROADCAST_ENABLED"},
@@ -110,6 +113,9 @@ var settingSpecs = []settingSpec{
 	{Key: "serial_ports", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	// Network tools (port check, ping, traceroute, DNS, HTTP/TLS)
 	{Key: "network_tools", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	// Network scanner (devices of a network with MAC, vendor, names and ports); public ranges need network_scan_public
+	{Key: "network_scan", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "network_scan_public", Default: "0", Kind: "bool"},
 	// Saved proxies (SOCKS / HTTP CONNECT): who may define them (everybody may use shared ones)
 	{Key: "proxies", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	// Live up/down status of connections
