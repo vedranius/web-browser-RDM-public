@@ -130,6 +130,11 @@ func parsePuttyReg(text string) ([]*puttySession, error) {
 }
 
 func importPuTTY(userID int, data []byte, folder string) (*importResult, error) {
+	return importPuTTYWith(newImporter(userID), data, folder)
+}
+
+func importPuTTYWith(im *importer, data []byte, folder string) (*importResult, error) {
+	userID := im.userID
 	sessions, err := parsePuttyReg(decodeRegFile(data))
 	if err != nil {
 		return nil, err
@@ -144,7 +149,6 @@ func importPuTTY(userID int, data []byte, folder string) (*importResult, error) 
 			defaults = s.vals
 		}
 	}
-	im := newImporter(userID)
 	for _, s := range sessions {
 		if strings.EqualFold(s.name, "Default Settings") {
 			continue
@@ -162,6 +166,9 @@ func importPuTTY(userID int, data []byte, folder string) (*importResult, error) 
 	}
 	if err := im.commit(); err != nil {
 		return nil, err
+	}
+	if im.dry {
+		return &im.res, nil
 	}
 	// Remember each imported session's proxy and give it to connections that name the
 	// session (mRemoteNG PuttySession) and have no proxy of their own.

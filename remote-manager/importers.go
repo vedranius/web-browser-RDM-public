@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -21,6 +22,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/pbkdf2"
+	"golang.org/x/crypto/twofish"
 )
 
 // ─── IMPORT FROM mRemoteNG AND OpenSSH ───────────────
@@ -48,6 +50,23 @@ type importResult struct {
 	Skipped  []importIssue  `json:"skipped"`
 	Notes    []importIssue  `json:"notes"`
 	ByProto  map[string]int `json:"by_protocol"`
+	// Format is the detected source format (auto import); Preview lists what a dry run would
+	// create, without secrets.
+	Format  string          `json:"format,omitempty"`
+	Dry     bool            `json:"preview,omitempty"`
+	Preview []importPreview `json:"items,omitempty"`
+}
+
+// importPreview is one connection of a dry run, as shown before the import.
+type importPreview struct {
+	Name     string `json:"name"`
+	Protocol string `json:"protocol"`
+	Host     string `json:"host"`
+	Username string `json:"username,omitempty"`
+	Folder   string `json:"folder,omitempty"`
+	Jump     string `json:"jump,omitempty"`
+	Secret   bool   `json:"has_secret,omitempty"`
+	Tunnels  int    `json:"tunnels,omitempty"`
 }
 
 type importIssue struct {
@@ -77,10 +96,17 @@ type importer struct {
 	folders map[string]int
 	update  bool // update connections with the same ext_id
 	proxies map[string]int
+	dry     bool            // preview: check everything, write nothing
+	dryNew  map[string]bool // preview: folder paths that would be created
+	base    string          // folder every imported connection goes under ("" = as in the source)
 }
 
 func newImporter(userID int) *importer {
 	return &importer{userID: userID, folders: map[string]int{}, res: importResult{Skipped: []importIssue{}, Notes: []importIssue{}, ByProto: map[string]int{}}}
+}
+
+func dupKey(name, host, proto, folder string) string {
+	return strings.ToLower(strings.TrimSpace(name) + "\x00" + strings.TrimSpace(host) + "\x00" + proto + "\x00" + folder)
 }
 
 func (im *importer) skip(name, reason string) {
@@ -96,7 +122,7 @@ func (im *importer) note(name, reason string) {
 }
 
 func (im *importer) folderID(name string) (*int, error) {
-	name = strings.TrimSpace(name)
+	name = im.folderPath(name)
 	if name == "" {
 		return nil, nil
 	}
@@ -105,7 +131,11 @@ func (im *importer) folderID(name string) (*int, error) {
 	}
 	parts := strings.Split(name, " / ")
 	if len(parts) > folderMaxDepth {
-		return nil, fmt.Errorf("at most %d nested folders", folderMaxDepth)
+		// Deeper trees are flattened into the last allowed level instead of failing the import.
+		parts = append(parts[:folderMaxDepth-1], strings.Join(parts[folderMaxDepth-1:], " · "))
+	}
+	if im.dry {
+		return nil, im.dryFolder(parts)
 	}
 	folderHierarchyMu.Lock()
 	defer folderHierarchyMu.Unlock()
@@ -133,6 +163,46 @@ func (im *importer) folderID(name string) (*int, error) {
 	return parent, nil
 }
 
+// folderPath is the folder an item lands in: the chosen base folder, then the source path.
+func (im *importer) folderPath(name string) string {
+	var parts []string
+	for _, p := range strings.Split(strings.TrimSpace(im.base)+" / "+strings.TrimSpace(name), " / ") {
+		if p = strings.TrimSpace(p); p != "" {
+			parts = append(parts, p)
+		}
+	}
+	return strings.Join(parts, " / ")
+}
+
+// dryFolder counts the folders a preview would create, without writing.
+func (im *importer) dryFolder(parts []string) error {
+	if im.dryNew == nil {
+		im.dryNew = map[string]bool{}
+	}
+	var parent *int
+	missing := false
+	for i, part := range parts {
+		part = truncateStr(strings.TrimSpace(part), 120)
+		if part == "" {
+			continue
+		}
+		key := strings.ToLower(strings.Join(parts[:i+1], " / "))
+		if !missing {
+			var id int
+			if err := db.QueryRow(`SELECT id FROM folders WHERE name=? AND user_id=? AND parent_id IS ? ORDER BY id LIMIT 1`, part, im.userID, parent).Scan(&id); err == nil {
+				parent = &id
+				continue
+			}
+			missing = true
+		}
+		if !im.dryNew[key] {
+			im.dryNew[key] = true
+			im.res.Folders++
+		}
+	}
+	return nil
+}
+
 // commit creates the connections, links jump hosts by name and adds the tunnels.
 func (im *importer) commit() error {
 	existing := map[string]int{} // name → id of the user's connections
@@ -141,9 +211,16 @@ func (im *importer) commit() error {
 			existing[strings.ToLower(c.Name)] = c.ID
 		}
 	}
+	// A connection is a duplicate when name, host, protocol and folder are the same: the same
+	// server listed in two folders of the source is imported twice, as the user had it.
 	dup := map[string]bool{}
+	allFolders := loadFolders(im.userID)
 	for _, c := range loadUserConnections(im.userID) {
-		dup[strings.ToLower(c.Name+"\x00"+c.Host+"\x00"+c.Protocol)] = true
+		fp := ""
+		if c.FolderID != nil {
+			fp = folderPath(allFolders, *c.FolderID)
+		}
+		dup[dupKey(c.Name, c.Host, c.Protocol, fp)] = true
 	}
 	type extConn struct {
 		id            int
@@ -172,6 +249,10 @@ func (im *importer) commit() error {
 				im.skip(c.Name, "imported before (turn on \"update\" to refresh it)")
 				continue
 			}
+			if im.dry {
+				im.res.Updated++
+				continue
+			}
 			// Address, tags and folder follow the source; name and login stay as the user set them.
 			tags := tagsString(mergeTags(parseTags(e.tags), parseTags(e.extTags), c.Tags))
 			fid, err := im.folderID(it.folder)
@@ -188,12 +269,32 @@ func (im *importer) commit() error {
 			im.note(c.Name, err.Error()+" — imported without a login")
 			c.AuthMethod, c.KeyID, c.CredentialID = "PASSWORD", nil, nil
 		}
-		key := strings.ToLower(c.Name + "\x00" + c.Host + "\x00" + c.Protocol)
+		key := dupKey(c.Name, c.Host, c.Protocol, im.folderPath(it.folder))
 		if dup[key] {
-			im.skip(c.Name, "already exists (same name, host and protocol)")
+			im.skip(c.Name, "already exists (same name, host, protocol and folder)")
 			continue
 		}
 		dup[key] = true
+		if im.dry {
+			if _, err := im.folderID(it.folder); err != nil {
+				return err
+			}
+			if len(im.res.Preview) < 2000 {
+				im.res.Preview = append(im.res.Preview, importPreview{Name: c.Name, Protocol: c.Protocol, Host: c.Host, Username: c.Username,
+					Folder: im.folderPath(it.folder), Jump: it.jumpName, Secret: c.Password != "" || c.PrivateKey != "", Tunnels: len(it.tunnels)})
+			}
+			ids[i] = -1
+			if _, ok := created[strings.ToLower(c.Name)]; !ok {
+				created[strings.ToLower(c.Name)] = -1
+			}
+			im.res.Imported++
+			im.res.ByProto[c.Protocol]++
+			im.res.Tunnels += len(it.tunnels)
+			if it.proxy != nil {
+				im.res.Proxies++
+			}
+			continue
+		}
 		if it.proxy != nil {
 			if pid := im.itemProxy(it); pid > 0 {
 				c.ProxyID = &pid
@@ -243,6 +344,10 @@ func (im *importer) commit() error {
 			im.note(it.c.Name, fmt.Sprintf("jump host %q not found — set it in the connection", it.jumpName))
 			continue
 		}
+		if im.dry {
+			im.res.Jumps++
+			continue
+		}
 		j := jid
 		if err := validateJump(im.userID, ids[i], &j); err != nil {
 			im.note(it.c.Name, fmt.Sprintf("jump host %q: %v", it.jumpName, err))
@@ -250,6 +355,9 @@ func (im *importer) commit() error {
 		}
 		db.Exec(`UPDATE connections SET jump_conn_id=? WHERE id=?`, jid, ids[i])
 		im.res.Jumps++
+	}
+	if im.dry {
+		return nil
 	}
 	// tunnels
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -303,6 +411,15 @@ type mrCrypto struct {
 	password   string
 	iterations int
 	gcm        bool
+	twofish    bool // EncryptionEngine="Twofish" (AES is the default)
+}
+
+// newBlock returns the block cipher of the file's encryption engine.
+func (mc mrCrypto) newBlock(key []byte) (cipher.Block, error) {
+	if mc.twofish {
+		return twofish.NewCipher(key)
+	}
+	return aes.NewCipher(key)
 }
 
 func (mc mrCrypto) decrypt(b64 string) (string, error) {
@@ -320,7 +437,7 @@ func (mc mrCrypto) decrypt(b64 string) (string, error) {
 		}
 		salt, nonce, ct := data[:16], data[16:32], data[32:]
 		key := pbkdf2.Key([]byte(mc.password), salt, mc.iterations, 32, sha1.New)
-		block, err := aes.NewCipher(key)
+		block, err := mc.newBlock(key)
 		if err != nil {
 			return "", err
 		}
@@ -360,9 +477,37 @@ func (mc mrCrypto) decrypt(b64 string) (string, error) {
 
 var errNeedPassword = fmt.Errorf("this file is protected with a master password")
 
+// mrUnmarshal parses mRemoteNG XML. The browser has already decoded the file to UTF-8, so an
+// encoding declared in the XML header (utf-16 when saved by some tools) is ignored.
+func mrUnmarshal(data []byte, v interface{}) error {
+	d := xml.NewDecoder(strings.NewReader(strings.TrimPrefix(string(data), "\uFEFF")))
+	d.CharsetReader = func(_ string, in io.Reader) (io.Reader, error) { return in, nil }
+	return d.Decode(v)
+}
+
+// mrBase64Only reports a file that is one base64 blob: mRemoteNG before 2.6 encrypted the
+// whole file this way when "full file encryption" was on.
+var mrBase64Only = regexp.MustCompile(`^[A-Za-z0-9+/=\s]+$`)
+
 func importMRemoteNG(userID int, data []byte, password string) (*importResult, error) {
+	return importMRemoteNGWith(newImporter(userID), data, password)
+}
+
+func importMRemoteNGWith(im *importer, data []byte, password string) (*importResult, error) {
+	text := strings.TrimSpace(strings.TrimPrefix(string(data), "\uFEFF"))
+	if text != "" && !strings.HasPrefix(text, "<") && mrBase64Only.MatchString(text) {
+		// Old full-file encryption: AES-CBC with the MD5 of the master password.
+		plain, err := mrCrypto{password: firstNonEmpty(password, "mR3m")}.decrypt(strings.Join(strings.Fields(text), ""))
+		if err != nil {
+			if password == "" {
+				return nil, errNeedPassword
+			}
+			return nil, fmt.Errorf("wrong master password")
+		}
+		data = []byte(plain)
+	}
 	var root mrRoot
-	if err := xml.Unmarshal(data, &root); err != nil {
+	if err := mrUnmarshal(data, &root); err != nil {
 		return nil, fmt.Errorf("not a mRemoteNG connection file (confCons.xml): %v", err)
 	}
 	if root.XMLName.Local != "Connections" {
@@ -373,11 +518,21 @@ func importMRemoteNG(userID int, data []byte, password string) (*importResult, e
 	if n, err := strconv.Atoi(ra.get("KdfIterations")); err == nil && n > 0 && n <= 10000000 {
 		mc.iterations = n
 	}
-	if ra.get("EncryptionEngine") == "" && ra.get("BlockCipherMode") == "" {
+	// mRemoteNG itself decides by the file version: 2.6 and later use the AEAD settings of the
+	// root element, older files AES-CBC.
+	confVer, _ := strconv.ParseFloat(strings.ReplaceAll(ra.get("ConfVersion"), ",", "."), 64)
+	if ra.get("EncryptionEngine") == "" && ra.get("BlockCipherMode") == "" && (confVer == 0 || confVer < 2.6) {
 		mc.gcm = false
 	}
+	switch engine := strings.ToUpper(ra.get("EncryptionEngine")); engine {
+	case "", "AES":
+	case "TWOFISH":
+		mc.twofish = true
+	default:
+		return nil, fmt.Errorf("mRemoteNG encryption engine %s is not supported: in mRemoteNG set Options → Security → Encryption engine to AES (or Twofish) with GCM, save, and import again", ra.get("EncryptionEngine"))
+	}
 	if mode := strings.ToUpper(ra.get("BlockCipherMode")); mode != "" && mode != "GCM" {
-		return nil, fmt.Errorf("unsupported mRemoteNG encryption %s/%s — export without a custom encryption setting", ra.get("EncryptionEngine"), ra.get("BlockCipherMode"))
+		return nil, fmt.Errorf("mRemoteNG block cipher mode %s is not supported: in mRemoteNG set Options → Security → Block cipher mode to GCM, save, and import again", ra.get("BlockCipherMode"))
 	}
 	if password != "" {
 		mc.password = password
@@ -385,10 +540,16 @@ func importMRemoteNG(userID int, data []byte, password string) (*importResult, e
 	// The "Protected" attribute tells whether the master password is right.
 	if p := ra.get("Protected"); p != "" {
 		if _, err := mc.decrypt(p); err != nil {
-			if password == "" {
+			// A password typed for a file that is not protected: the default one still works.
+			dm := mc
+			dm.password = "mR3m"
+			if _, derr := dm.decrypt(p); password != "" && derr == nil {
+				mc = dm
+			} else if password == "" {
 				return nil, errNeedPassword
+			} else {
+				return nil, fmt.Errorf("wrong master password")
 			}
-			return nil, fmt.Errorf("wrong master password")
 		}
 	}
 	nodes := root.Nodes
@@ -400,12 +561,11 @@ func importMRemoteNG(userID int, data []byte, password string) (*importResult, e
 		var wrap struct {
 			Nodes []mrNode `xml:"Node"`
 		}
-		if err := xml.Unmarshal([]byte("<x>"+inner+"</x>"), &wrap); err != nil {
+		if err := mrUnmarshal([]byte("<x>"+inner+"</x>"), &wrap); err != nil {
 			return nil, fmt.Errorf("cannot read the decrypted file: %v", err)
 		}
 		nodes = wrap.Nodes
 	}
-	im := newImporter(userID)
 	var walk func(list []mrNode, path []string, inherited map[string]string)
 	walk = func(list []mrNode, path []string, inherited map[string]string) {
 		for _, n := range list {
@@ -531,6 +691,11 @@ type sshHostBlock struct {
 var proxyCmdJump = regexp.MustCompile(`^ssh\s+(?:.*\s)?-W\s+\S+\s+(\S+)\s*$|^ssh\s+(\S+)\s+(?:.*\s)?-W\s+\S+\s*$`)
 
 func importSSHConfig(userID int, text, folder string) (*importResult, error) {
+	return importSSHConfigWith(newImporter(userID), text, folder)
+}
+
+func importSSHConfigWith(im *importer, text, folder string) (*importResult, error) {
+	userID := im.userID
 	var blocks []*sshHostBlock
 	var cur *sshHostBlock
 	inMatch := false
@@ -598,7 +763,6 @@ func importSSHConfig(userID int, text, folder string) (*importResult, error) {
 	if folder = strings.TrimSpace(folder); folder == "" {
 		folder = "SSH config"
 	}
-	im := newImporter(userID)
 	known := map[string]bool{}
 	for _, b := range blocks {
 		for _, p := range b.patterns {
@@ -785,6 +949,11 @@ func apiImportExternalHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	source := strings.TrimPrefix(r.URL.Path, "/api/config/import/")
+	if source == "formats" && r.Method == http.MethodGet {
+		jsonOK(w, importFormats)
+		return
+	}
 	if r.Method != http.MethodPost {
 		jsonError(w, "Method not allowed", 405)
 		return
@@ -794,7 +963,10 @@ func apiImportExternalHandler(w http.ResponseWriter, r *http.Request) {
 		Text     string `json:"text"`
 		Password string `json:"password"`
 		Folder   string `json:"folder"`
-		Data     string `json:"data"` // PuTTY: the .reg file, base64 (UTF-16 or UTF-8)
+		Data     string `json:"data"`    // PuTTY and auto: the file, base64 (UTF-16 or UTF-8)
+		Name     string `json:"name"`    // auto: the file name (helps to detect the format)
+		Format   string `json:"format"`  // auto: force a format instead of detecting it
+		Preview  bool   `json:"preview"` // auto: dry run, nothing is written
 	}
 	if !decodeImportJSON(w, r, &in) {
 		return
@@ -805,8 +977,32 @@ func apiImportExternalHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var res *importResult
 	var err error
-	source := strings.TrimPrefix(r.URL.Path, "/api/config/import/")
 	switch source {
+	case "auto":
+		raw, derr := base64.StdEncoding.DecodeString(in.Data)
+		if derr != nil {
+			jsonError(w, "data must be the file in base64", 400)
+			return
+		}
+		format := strings.TrimSpace(in.Format)
+		if format == "" {
+			format = detectImportFormat(in.Name, importText(raw))
+		}
+		im := newImporter(userID)
+		im.dry = in.Preview
+		im.base = truncateStr(strings.TrimSpace(in.Folder), 200)
+		res, err = importAuto(im, format, raw, in.Password, in.Name)
+		if err == errNeedPassword {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error(), "need_password": true, "format": format})
+			return
+		}
+		if err == nil && in.Preview {
+			jsonOK(w, res)
+			return
+		}
+		source = "auto:" + format
 	case "mremoteng":
 		res, err = importMRemoteNG(userID, []byte(in.XML), in.Password)
 		if err == errNeedPassword {
