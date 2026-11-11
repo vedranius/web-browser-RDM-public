@@ -282,7 +282,7 @@ func originAllowed(r *http.Request, origin string) bool {
 			return true
 		}
 	}
-	log.Printf("Cross-origin request rejected: %s (host %s). Behind a reverse proxy pass the port too (proxy_set_header Host $http_host, or X-Forwarded-Port), or list the origin in WRM_ALLOWED_ORIGINS", origin, r.Host)
+	log.Printf("Cross-origin request rejected: %q (host %q). Behind a reverse proxy pass the port too (proxy_set_header Host $http_host, or X-Forwarded-Port), or list the origin in WRM_ALLOWED_ORIGINS", origin, r.Host)
 	return false
 }
 

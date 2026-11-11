@@ -226,6 +226,8 @@
   "G703 service.go data, err := os.ReadFile(path)",
   "G703 service.go if fi, err := os.Stat(path); err == nil && fi.Mode().IsRegular() && fi.Mode()&0o100 == 0 {",
   "G703 service.go os.Chmod(path, fi.Mode()|0o100)",
+  "G703 setupcode.go if err := os.WriteFile(path, []byte(setupCode.code+\"\\n\"), 0o600); err == nil {",
+  "G703 setupcode.go os.Remove(path)",
   "G703 siem.go if fi, err := os.Lstat(p); err == nil && fi.Mode()&os.ModeSymlink != 0 {",
   "G703 siem.go if fi, err := os.Stat(filepath.Dir(p)); err != nil || !fi.IsDir() {",
   "G703 update.go os.Remove(name)",
@@ -255,6 +257,7 @@
   "G706 git_medium_activity.go log.Printf(\"Medium (%s): %s failed after %s: %s\", h.User, mediumOpLabel(h.Op), took, redactText(err.Error()))",
   "G706 git_medium_activity.go log.Printf(\"Medium (%s): %s finished in %s\", h.User, mediumOpLabel(h.Op), took)",
   "G706 git_medium_activity.go log.Printf(\"Medium (%s): %s started\", h.User, mediumOpLabel(op))",
+  "G706 helpers.go log.Printf(\"Cross-origin request rejected: %q (host %q). Behind a reverse proxy pass the port too (proxy_set_header Host $http_host, or X-Forwarded-Port), or list the origin in WRM_ALLOWED_ORIGINS\", origin, r.Host)",
   "G706 helpers.go log.Printf(\"Cross-origin request rejected: %s (host %s)\", origin, r.Host)",
   "G706 helpers.go log.Printf(\"Login locked for %s for %s after repeated failures\", ip, loginLockout)",
   "G706 main.go log.Fatalf(\"Schema error: %v\\n%s\", err, q)",
@@ -262,6 +265,7 @@
   "G706 main.go log.Printf(\"Listening on %s — open %s in your browser\", addr, browserURL(addr, false))",
   "G706 recording.go log.Printf(\"recording %s: %v\", t.UID, err)",
   "G706 security.go log.Fatalf(\"ENCRYPTION_KEY_FILE %s: cannot read a key (at least 16 characters): %v\", p, err)",
+  "G706 setupcode.go log.Print(msg)",
   "G710 mcp_oauth.go http.Redirect(w, r, u.String(), http.StatusFound)",
   "G710 security.go http.Redirect(w, r, target, http.StatusFound)"
  ]
