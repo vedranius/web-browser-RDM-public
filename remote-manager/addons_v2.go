@@ -128,6 +128,13 @@ var addonErrorHints = map[string]string{
 	"E_HTTP_UPSTREAM":   "The connection to the site failed; check its address and certificate.",
 	"E_HTTP_OFF":        "Ask an administrator to allow addons with web access (addon_http).",
 	"E_LIMIT_RATE":      "Send fewer requests: 120 a minute and 20 at once per instance.",
+	"E_WRM_OFF":         "Ask an administrator to allow addons to reach servers (addon_server_access).",
+	"E_WRM_CONNECTION":  "Use the id of one of your SSH or SFTP connections (wrm.connections()).",
+	"E_WRM_REQUEST":     "Send connection, and command or an absolute path (or ~/path).",
+	"E_WRM_APPROVAL":    "Send the request again; an approval is valid for two minutes.",
+	"E_WRM_DENIED":      "The person looking at the window refused the request.",
+	"E_WRM_SSH":         "Check the connection in WRM (open a terminal to it); the addon uses the same login.",
+	"E_WRM_FILE":        "Check the path and the file permissions of the connection's user.",
 }
 
 // addonFail answers with {error, code, hint} for coded errors.
@@ -263,7 +270,17 @@ func addonValidateV2(m *addonManifest, seen map[string]bool) error {
 		if seen["chains.read"] {
 			return fmt.Errorf("the chains.read capability needs \"apiVersion\": 2")
 		}
+		for c := range addonWRMCaps {
+			if seen[c] {
+				return fmt.Errorf("the %s capability needs \"apiVersion\": 2", c)
+			}
+		}
 		return nil
+	}
+	for c := range addonWRMCaps {
+		if seen[c] && (m.UI == nil || m.UI.Panel == "") {
+			return fmt.Errorf("the %s capability is used from a panel: declare ui.panel", c)
+		}
 	}
 	if seen["chains.read"] && (m.UI == nil || m.UI.Panel == "") {
 		return fmt.Errorf("the chains.read capability is used from a panel: declare ui.panel")
@@ -315,6 +332,11 @@ func addonPermissions(m *addonManifest) []string {
 	}
 	if has["chains.read"] {
 		out = append(out, "chains")
+	}
+	for _, c := range []string{"connections.read", "monitoring.read", "files.read", "servers.exec", "files.write"} {
+		if has[c] {
+			out = append(out, "wrm:"+c)
+		}
 	}
 	out = append(out, addonHTTPPermissions(m.HTTP)...)
 	if m.Server != nil {
@@ -792,7 +814,7 @@ func addonInstancesHandler(w http.ResponseWriter, r *http.Request, userID int, a
 		}
 		return
 	}
-	if !rec.Enabled && oneOf(rest[1], "window", "secrets", "http", "chains") {
+	if !rec.Enabled && oneOf(rest[1], "window", "secrets", "http", "chains", "wrm") {
 		addonFail(w, addonErrf("E_DISABLED", "The addon is disabled"), 409)
 		return
 	}
@@ -808,6 +830,9 @@ func addonInstancesHandler(w http.ResponseWriter, r *http.Request, userID int, a
 		return
 	case "chains":
 		addonChainsHandler(w, r, userID, rec, in, rest[2:])
+		return
+	case "wrm":
+		addonWRMHandler(w, r, userID, rec, in, rest[2:])
 		return
 	case "store", "export", "import":
 	default:

@@ -52,6 +52,12 @@ var (
 		"notify":      "show short notifications from its panel (apiVersion 2)",
 		"http":        "reach the web sites its addon.json lists, through WRM and after an administrator approved them (apiVersion 2)",
 		"chains.read": "read the state of the viewer's chains and ask for a check now, without commands or secrets (apiVersion 2)",
+		// WRM capability layers (addons_wrm.go): always as the viewer, with the viewer's rights.
+		"connections.read": "list the viewer's connections: names, protocols, hosts, folders and tags, never logins or secrets (apiVersion 2)",
+		"monitoring.read":  "read the current metrics of the viewer's servers (apiVersion 2)",
+		"files.read":       "read files on the viewer's SSH/SFTP connections; sensitive files ask first and secrets are masked (apiVersion 2)",
+		"servers.exec":     "run commands on the viewer's SSH/SFTP connections; each command asks the viewer unless an administrator trusts the addon (apiVersion 2)",
+		"files.write":      "write files on the viewer's SSH/SFTP connections; each write asks the viewer unless an administrator trusts the addon (apiVersion 2)",
 	}
 	addonExportPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
 	// addonReservedIDs are path words of /api/addons/ that an addon id would
@@ -147,6 +153,7 @@ func initAddonSchema() {
 	db.Exec(`ALTER TABLE addons ADD COLUMN approved TEXT NOT NULL DEFAULT ''`)
 	db.Exec(`ALTER TABLE addons ADD COLUMN pending TEXT NOT NULL DEFAULT ''`)
 	initAddonV2Schema()
+	initAddonWRMSchema()
 }
 
 func addonsRoot() string { return resolveDBPath() + ".addons" }
@@ -313,7 +320,7 @@ func (m *addonManifest) validate() error {
 	if len(m.Capabilities) == 0 {
 		return fmt.Errorf("the addon declares no capabilities")
 	}
-	if len(m.Capabilities) > 8 {
+	if len(m.Capabilities) > 16 {
 		return fmt.Errorf("too many capabilities")
 	}
 	seen := map[string]bool{}
@@ -858,6 +865,7 @@ func addonRemoveRef(userID int, ref addonRef) (addonRecord, int, error) {
 	os.RemoveAll(addonRefDir(addonRef{Owner: rec.OwnerID, ID: rec.ID}))
 	addonForgetInstances(ref)
 	db.Exec(`DELETE FROM addon_http_grants WHERE addon_owner=? AND addon_id=?`, rec.OwnerID, rec.ID)
+	addonWRMForget(addonRef{Owner: rec.OwnerID, ID: rec.ID})
 	details := map[string]interface{}{"version": rec.Version}
 	if ref.Owner > 0 {
 		details["personal_owner"] = usernameOf(ref.Owner)
@@ -1049,6 +1057,8 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 			addonSetEnabled(w, r, userID, ref, false)
 		case len(parts) == 4 && parts[3] == "http":
 			addonHTTPGrantHandler(w, r, userID, ref)
+		case len(parts) == 4 && parts[3] == "wrm":
+			addonWRMGrantHandler(w, r, userID, ref)
 		default:
 			jsonError(w, "Not found", 404)
 		}
@@ -1092,6 +1102,15 @@ func apiAddonsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(parts) == 1 && r.Method == http.MethodDelete {
 		addonRemove(w, r, userID, ref)
+		return
+	}
+	// Trusting an addon to run commands without asking is an administrator's.
+	if len(parts) == 2 && parts[1] == "wrm" {
+		if !admin {
+			jsonError(w, "Admin access required", 403)
+			return
+		}
+		addonWRMGrantHandler(w, r, userID, ref)
 		return
 	}
 	// Network approvals are an administrator's, also for personal addons.

@@ -427,6 +427,19 @@ func addonPermissionText(a string) string {
 		return "Short notifications"
 	case "chains":
 		return "Read the state of your chains (values and timeline, no commands or secrets) and check them now"
+	case "wrm":
+		switch val {
+		case "connections.read":
+			return "See your connections (names, protocols, hosts, folders, tags; never logins or secrets)"
+		case "monitoring.read":
+			return "Read the current metrics of your servers"
+		case "files.read":
+			return "Read files on your SSH/SFTP servers (sensitive files ask first, secrets are masked)"
+		case "servers.exec":
+			return "Run commands on your SSH/SFTP servers as you; each command asks you first unless an administrator trusts the addon"
+		case "files.write":
+			return "Write files on your SSH/SFTP servers as you; each write asks you first unless an administrator trusts the addon"
+		}
 	case "http":
 		return "Requests to " + val + " through WRM, after an administrator approves the site"
 	case "http.methods":

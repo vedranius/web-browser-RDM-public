@@ -122,6 +122,11 @@ var settingSpecs = []settingSpec{
 	{Key: "addon_personal", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	// Who may use addons that reach web sites through WRM (http capability).
 	{Key: "addon_http", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	// Who may use addons that reach their servers (connections, commands, files, metrics).
+	{Key: "addon_server_access", Default: "all", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	// Addon publishing: the community repository submissions go to, and who may submit.
+	{Key: "addon_publish_repo", Default: "vedranius/wrm-pro-community-addons", Kind: "string"},
+	{Key: "addon_publish", Default: "admins", Kind: "enum", Enum: []string{"off", "admins", "all"}},
 	// Notifications (e-mail, chat and push channels)
 	{Key: "notifications_enabled", Default: "1", Kind: "bool", Alias: "NOTIFICATIONS_ENABLED"},
 	{Key: "notify_min_interval_seconds", Default: "60", Kind: "int", Min: 0, Max: 86400},
