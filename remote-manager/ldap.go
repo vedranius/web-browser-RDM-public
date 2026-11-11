@@ -653,8 +653,8 @@ func ldapFinishLogin(w http.ResponseWriter, r *http.Request, ip, typed string, l
 		return
 	}
 	recordLoginResult(ip, true)
-	if u.TOTPEnabled {
-		jsonOK(w, map[string]interface{}{"mfa_required": true, "mfa_token": newMFAToken(u.ID)})
+	if need, methods := needsSecondStep(u); need {
+		jsonOK(w, secondStepAnswer(u, newMFAToken(u.ID), methods))
 		return
 	}
 	finishLogin(w, r, u, "ldap")

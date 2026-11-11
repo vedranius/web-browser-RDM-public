@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"regexp"
@@ -213,7 +214,7 @@ func requireStepUpAlways(w http.ResponseWriter, r *http.Request, action string) 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"error":   "Confirm with your password (and 2FA code) to continue",
 		"step_up": true, "action": action, "totp": userHasTOTP(s.UserID),
-		"password": userHasPassword(s.UserID), "sso": userSSOProviders(s.UserID),
+		"password": userHasPassword(s.UserID), "sso": userSSOProviders(s.UserID), "passkey": userHasPasskeyForUnlock(s.UserID),
 	})
 	return false
 }
@@ -241,11 +242,12 @@ func apiAuthStepUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Password string `json:"password"`
-		Code     string `json:"code"`
-		Action   string `json:"action"`
+		Password string        `json:"password"`
+		Code     string        `json:"code"`
+		Action   string        `json:"action"`
+		Passkey  *passkeyProof `json:"passkey"`
 	}
-	if json.NewDecoder(r.Body).Decode(&in) != nil {
+	if json.NewDecoder(io.LimitReader(r.Body, 64<<10)).Decode(&in) != nil {
 		jsonError(w, "Bad JSON", 400)
 		return
 	}
@@ -259,6 +261,19 @@ func apiAuthStepUpHandler(w http.ResponseWriter, r *http.Request) {
 		recordLoginResult(ip, false)
 		auditLogAs(r, u.ID, u.Username, "auth.step_up_failed", action, map[string]string{"reason": reason})
 		jsonError(w, msg, 403)
+	}
+	// A verified passkey (biometric or device PIN) confirms on its own: it is both factors.
+	if in.Passkey != nil {
+		pk, err := verifyPasskeyProof(r, s, "step_up", in.Passkey)
+		if err != nil {
+			fail("passkey: "+truncateStr(err.Error(), 120), "The passkey was not accepted: "+err.Error())
+			return
+		}
+		recordLoginResult(ip, true)
+		db.Exec(`UPDATE auth_sessions SET step_up_at=? WHERE id=?`, nowRFC(), s.ID)
+		auditLogAs(r, u.ID, u.Username, "auth.step_up", action, map[string]string{"method": "passkey", "passkey": pk.Name})
+		jsonOK(w, map[string]interface{}{"ok": true, "minutes": settingInt("step_up_minutes")})
+		return
 	}
 	if !userCheckPassword(u, in.Password) {
 		fail("wrong password", "Wrong password")

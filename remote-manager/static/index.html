@@ -7269,7 +7269,7 @@ async function doAuth() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { authErr('auth-error', data.error || t('auth_failed')); return; }
-    if (data.mfa_required) { showMFAStep(data.mfa_token); return; }
+    if (data.mfa_required) { showMFAStep(data.mfa_token, data.mfa_methods); return; }
     document.getElementById('auth-pass').value = '';
     if (data.pending_confirmation) {
       switchAuthTab('login');
@@ -17984,11 +17984,13 @@ async function renderSecurityPane() {
     </div>
     <div class="setting-row" id="my-email-row"></div>
     <div class="adm-h" id="my-sso-h" style="display:none;">${esc(t('sso_my_title'))}</div><div id="my-sso"></div>
+    <div id="passkey-settings"></div>
     <div id="lock-settings"></div>
     <div class="adm-h" style="display:flex;align-items:center;">${esc(t('signed_in_devices'))}<span style="flex:1"></span><button class="btn-sec btn-sm" onclick="revokeOtherSessions()">${esc(t('sign_out_others'))}</button></div>
     <div id="my-sessions"><div class="fm-loading">${esc(t('loading'))}</div></div>`;
   renderMySSO();
   renderMyEmail();
+  if (window.wrmPasskeys) wrmPasskeys.renderSettings(document.getElementById('passkey-settings'));
   if (window.wrmLock && wrmLock.renderSettings) wrmLock.renderSettings(document.getElementById('lock-settings'));
   const res = await fetch('/api/auth/sessions');
   const box = document.getElementById('my-sessions');
@@ -19785,6 +19787,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 <script src="/static/addons.js"></script>
 <script src="/static/appearance.js"></script>
 <script src="/static/lock.js"></script>
+<script src="/static/passkeys.js"></script>
+<script src="/static/setup.js"></script>
 <script src="/static/aisessions.js"></script>
 </body>
 </html>

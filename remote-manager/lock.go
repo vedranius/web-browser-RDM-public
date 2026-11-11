@@ -58,6 +58,7 @@ func screenLockMode() string { return getSetting("screen_lock_mode") }
 var screenLockAllowedPaths = map[string]bool{
 	"/api/auth/me": true, "/api/auth/logout": true, "/api/auth/keepalive": true,
 	"/api/auth/lock": true, "/api/auth/lock/verify": true, "/api/me/ui/lock": true, "/api/me/ui/appearance": true,
+	"/api/auth/webauthn/begin": true,
 }
 
 // screenLockRefuses: this request comes from a locked sign-in session and must wait for the unlock.
@@ -76,6 +77,8 @@ func screenLockPolicy(userID int) map[string]interface{} {
 		"mode": screenLockMode(), "max_minutes": settingInt("screen_lock_max_minutes"),
 		"pin_allowed": settingBool("screen_lock_pin"), "has_pin": pin != "" && settingBool("screen_lock_pin"),
 		"max_failures": settingInt("screen_lock_max_failures"),
+		"passkey":      userHasPasskeyForUnlock(userID),
+		"smart":        smartLockPolicy(),
 	}
 }
 
@@ -126,10 +129,11 @@ func apiAuthLockVerifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var p struct {
-		Password string `json:"password"`
-		PIN      string `json:"pin"`
+		Password string        `json:"password"`
+		PIN      string        `json:"pin"`
+		Passkey  *passkeyProof `json:"passkey"`
 	}
-	if json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&p) != nil || (p.Password == "" && p.PIN == "") {
+	if json.NewDecoder(io.LimitReader(r.Body, 64<<10)).Decode(&p) != nil || (p.Password == "" && p.PIN == "" && p.Passkey == nil) {
 		jsonError(w, "Enter your password", 400)
 		return
 	}
@@ -143,7 +147,11 @@ func apiAuthLockVerifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	method, ok := "account", false // audit value: "account" (sign-in secret) or "pin"
-	if p.PIN != "" {
+	if p.Passkey != nil {
+		method = "passkey"
+		_, perr := verifyPasskeyProof(r, s, "unlock", p.Passkey)
+		ok = perr == nil
+	} else if p.PIN != "" {
 		method = "pin"
 		var pinHash string
 		db.QueryRow(`SELECT COALESCE(lock_pin_hash,'') FROM users WHERE id=?`, userID).Scan(&pinHash)
@@ -165,7 +173,9 @@ func apiAuthLockVerifyHandler(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(map[string]interface{}{"error": "Too many wrong attempts; you were signed out", "signed_out": true})
 			return
 		}
-		if method == "pin" {
+		if method == "passkey" {
+			jsonError(w, "The passkey was not accepted", 403)
+		} else if method == "pin" {
 			jsonError(w, "The PIN is not correct", 403)
 		} else {
 			jsonError(w, "The password is not correct", 403)

@@ -358,6 +358,11 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/admin/teams/", apiAdminTeamsHandler)
 	mux.HandleFunc("/api/teams", apiTeamsHandler)
 	mux.HandleFunc("/api/auth/step-up", apiAuthStepUpHandler)
+	mux.HandleFunc("/api/auth/webauthn/login/", apiWebAuthnLoginHandler)
+	mux.HandleFunc("/api/auth/webauthn/begin", apiWebAuthnBeginHandler)
+	mux.HandleFunc("/api/me/passkeys", apiMePasskeysHandler)
+	mux.HandleFunc("/api/me/passkeys/", apiMePasskeysHandler)
+	mux.HandleFunc("/api/admin/passkeys/", apiAdminPasskeysHandler)
 	mux.HandleFunc("/api/auth/oidc/start", apiOIDCStartHandler)
 	mux.HandleFunc("/api/admin/lockdown", apiAdminLockdownHandler)
 	mux.HandleFunc("/api/admin/siem", apiAdminSIEMHandler)
@@ -1143,6 +1148,7 @@ func initDB() {
 	initCLIResetSchema()
 	initMailSchema()
 	initAuthMailSchema()
+	initPasskeySchema()
 	ensureTable("chains", chainSchema,
 		"id", "user_id", "name", "definition", "enabled", "created_at", "updated_at", "last_at", "last_state", "confirmed", "last_error")
 	ensureTable("chain_samples", chainSampleSchema,

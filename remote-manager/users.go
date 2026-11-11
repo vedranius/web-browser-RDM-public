@@ -73,11 +73,11 @@ func lookupSession(r *http.Request) (*authSession, error) {
 	}
 	h := tokenHash(cookie.Value)
 	var s authSession
-	var expiresAt, lastActive string
+	var expiresAt, lastActive, sessIP string
 	var disabled int
-	err = db.QueryRow(`SELECT a.id, a.user_id, COALESCE(a.restricted,''), a.expires_at, COALESCE(a.last_active_at,''), u.disabled, COALESCE(a.locked_at,'')
+	err = db.QueryRow(`SELECT a.id, a.user_id, COALESCE(a.restricted,''), a.expires_at, COALESCE(a.last_active_at,''), u.disabled, COALESCE(a.locked_at,''), COALESCE(a.ip,'')
 		FROM auth_sessions a JOIN users u ON u.id=a.user_id WHERE a.token=?`, h).
-		Scan(&s.ID, &s.UserID, &s.Restricted, &expiresAt, &lastActive, &disabled, &s.LockedAt)
+		Scan(&s.ID, &s.UserID, &s.Restricted, &expiresAt, &lastActive, &disabled, &s.LockedAt, &sessIP)
 	if err != nil {
 		return nil, errUnauthenticated
 	}
@@ -97,6 +97,7 @@ func lookupSession(r *http.Request) (*authSession, error) {
 	if !laOK || now.Sub(la) > time.Minute {
 		db.Exec(`UPDATE auth_sessions SET last_active_at=? WHERE id=?`, now.UTC().Format(time.RFC3339), s.ID)
 	}
+	lockOnNetworkChange(r, &s, sessIP)
 	return &s, nil
 }
 
@@ -350,7 +351,7 @@ func restrictionFor(u *userRow) string {
 	if u.MustChange {
 		return "password"
 	}
-	if !u.TOTPEnabled && (mfaRequiredByPolicy(u.IsAdmin) || u.BreakGlass) {
+	if !u.TOTPEnabled && !userPasskeySecondFactor(u) && (mfaRequiredByPolicy(u.IsAdmin) || u.BreakGlass) {
 		return "mfa"
 	}
 	return ""
@@ -371,6 +372,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 		"recovery_codes_left": recoveryCodesLeft(u.Recovery),
 		"password_min_length": settingInt("password_min_length"),
 		"screen_lock":         screenLockPolicy(u.ID),
+		"passkeys":            map[string]interface{}{"enabled": passkeysEnabled(), "login": passkeyLoginMode(), "count": userPasskeyCount(u.ID)},
 		"appearance":          map[string]interface{}{"default_theme": getSetting("appearance_default_theme"), "custom_css": settingBool("appearance_custom_css")},
 		"policy": map[string]interface{}{
 			"server_keys":      u.IsAdmin || settingBool("allow_server_keys"),
@@ -539,6 +541,7 @@ func apiAuthConfigHandler(w http.ResponseWriter, r *http.Request) {
 	// Directory sign-in buttons; local_login_limited hides the password form behind "Emergency sign-in".
 	out["sso"], out["local_login_limited"] = oidcSignInOptions(), localLoginLimited()
 	out["ldap"] = ldapSignInOptions()
+	out["passkey_login"] = passkeyLoginMode()
 	// v14.6.2: "Forgot password?" and the e-mail field of self-registration
 	out["password_reset"], out["registration_email"] = passwordResetOffered(), n > 0 && registrationNeedsEmail()
 	if st := lockdown(); st.On {
@@ -732,8 +735,8 @@ func apiAuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "This emergency (break-glass) account may only sign in from the networks the administrator allowed.", 403)
 		return
 	}
-	if u.TOTPEnabled {
-		jsonOK(w, map[string]interface{}{"mfa_required": true, "mfa_token": newMFAToken(u.ID)})
+	if need, methods := needsSecondStep(u); need {
+		jsonOK(w, secondStepAnswer(u, newMFAToken(u.ID), methods))
 		return
 	}
 	finishLogin(w, r, u, "password")
