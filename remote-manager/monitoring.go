@@ -25,12 +25,16 @@ type monitorLogRoot struct {
 	Unit string `json:"unit,omitempty"`
 }
 type monitorService struct {
-	Kind string `json:"kind"` // systemd | docker
-	Name string `json:"name"`
+	Kind string `json:"kind"` // systemd | docker | http | tcp | process | cert
+	Name string `json:"name"` // unit, container, URL, host:port or process name
+	// Label is an optional display name; Expect is the accepted HTTP status
+	// ("200", "2xx", "200-399"; empty = 200-399).
+	Label  string `json:"label,omitempty"`
+	Expect string `json:"expect,omitempty"`
 }
 type monitorConfig struct {
 	Enabled     bool             `json:"enabled"`
-	Mode        string           `json:"mode"` // ssh | direct | api
+	Mode        string           `json:"mode"` // agentless | ssh | direct | api
 	Address     string           `json:"address"`
 	Interval    int              `json:"interval"`
 	TLS         string           `json:"tls"` // none | certificate | psk-helper
@@ -46,6 +50,9 @@ type monitorConfig struct {
 	HasSecrets  bool             `json:"has_secrets"`
 	Roots       []monitorLogRoot `json:"roots"`
 	Services    []monitorService `json:"services,omitempty"`
+	// v14.9.0: alert limits and log alerts.
+	Thresholds monitorThresholds `json:"thresholds"`
+	LogWatches []monitorLogWatch `json:"log_watches,omitempty"`
 }
 
 type monitorMetric struct {
@@ -62,6 +69,16 @@ type monitorSample struct {
 	Error    string                   `json:"error,omitempty"`
 	Metrics  map[string]monitorMetric `json:"metrics"`
 	Services map[string]string        `json:"services,omitempty"` // "systemd:nginx" -> active
+	// v14.9.0: why the state is what it is, the result of every check, the
+	// busiest processes, the log alerts of this poll and how long each limit
+	// has been exceeded (samples in a row).
+	Source    string                        `json:"source,omitempty"` // agentless | zabbix | api
+	Reasons   []monitorReason               `json:"reasons,omitempty"`
+	Checks    map[string]monitorCheckResult `json:"checks,omitempty"`
+	Top       []monitorProcess              `json:"top,omitempty"`
+	LogAlerts []monitorLogAlert             `json:"log_alerts,omitempty"`
+	Breach    map[string]int                `json:"breach,omitempty"`
+	TookMS    int64                         `json:"took_ms,omitempty"`
 }
 
 func initMonitoring() {
@@ -70,7 +87,9 @@ func initMonitoring() {
 	db.Exec(`CREATE INDEX IF NOT EXISTS ix_monitor_samples ON monitor_samples(conn_id,id)`)
 }
 func defaultMonitorConfig() monitorConfig {
-	return monitorConfig{Mode: "ssh", Address: "127.0.0.1:10050", Interval: 60, TLS: "none", Roots: []monitorLogRoot{{Path: "/var/log"}}}
+	// v14.9.0: a new server is read over its SSH connection without an agent;
+	// a stored configuration keeps the transport it was saved with.
+	return monitorConfig{Mode: "agentless", Address: "127.0.0.1:10050", Interval: 60, TLS: "none", Roots: []monitorLogRoot{{Path: "/var/log"}}, Thresholds: defaultMonitorThresholds()}
 }
 func loadMonitorConfig(id int) monitorConfig {
 	c := defaultMonitorConfig()
@@ -93,10 +112,19 @@ func (c *monitorConfig) normalize() error {
 	if c.Interval < 30 || c.Interval > 3600 {
 		return fmt.Errorf("poll interval must be 30–3600 seconds")
 	}
-	if !oneOf(c.Mode, "ssh", "direct", "api") || !oneOf(c.TLS, "none", "certificate", "psk-helper") {
+	if c.Mode == "" {
+		c.Mode = "agentless"
+	}
+	if c.TLS == "" {
+		c.TLS = "none"
+	}
+	if !oneOf(c.Mode, "agentless", "ssh", "direct", "api") || !oneOf(c.TLS, "none", "certificate", "psk-helper") {
 		return fmt.Errorf("unsupported monitoring transport")
 	}
-	if c.Mode != "api" {
+	if c.Mode == "agentless" && c.Address == "" {
+		c.Address = "127.0.0.1:10050"
+	}
+	if c.Mode == "ssh" || c.Mode == "direct" {
 		h, p, e := net.SplitHostPort(c.Address)
 		if e != nil || h == "" || !validHealthPort(p) || strings.ContainsAny(h, "\x00\r\n") {
 			return fmt.Errorf("agent address must be host:port")
@@ -138,26 +166,23 @@ func (c *monitorConfig) normalize() error {
 	if len(c.CA)+len(c.Certificate)+len(c.PrivateKey) > 128<<10 || len(c.APIToken) > 4096 {
 		return fmt.Errorf("monitoring credentials too large")
 	}
-	if len(c.Services) > 20 {
-		return fmt.Errorf("at most 20 monitored services")
+	if len(c.Services) > 40 {
+		return fmt.Errorf("at most 40 checks")
 	}
 	for i := range c.Services {
-		x := &c.Services[i]
-		x.Name = strings.TrimSpace(x.Name)
-		if x.Kind == "" {
-			x.Kind = "systemd"
+		if err := c.Services[i].normalize(); err != nil {
+			return err
 		}
-		switch x.Kind {
-		case "systemd":
-			if !monitorUnitPattern.MatchString(x.Name) {
-				return fmt.Errorf("invalid systemd unit name %q", x.Name)
-			}
-		case "docker":
-			if !monitorContainerPattern.MatchString(x.Name) {
-				return fmt.Errorf("invalid Docker container name %q", x.Name)
-			}
-		default:
-			return fmt.Errorf("a monitored service is systemd or docker")
+	}
+	if err := c.Thresholds.normalize(); err != nil {
+		return err
+	}
+	if len(c.LogWatches) > 20 {
+		return fmt.Errorf("at most 20 log alerts")
+	}
+	for i := range c.LogWatches {
+		if err := c.LogWatches[i].normalize(); err != nil {
+			return err
 		}
 	}
 	return nil

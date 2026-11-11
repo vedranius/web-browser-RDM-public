@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -12,95 +11,56 @@ import (
 
 // ─── MONITORED SERVICES ──────────────────────────────
 //
-// A monitored service is a systemd unit or a Docker container whose state is
-// read on every SSH poll, in the same round trip as the metrics. The command is
-// one POSIX loop over a quoted heredoc, so a name cannot become shell syntax:
-// the names are also validated against a strict pattern before they are stored.
+// A monitored service is a systemd unit or a Docker container (v14.9.0 adds
+// HTTP, TCP, process and certificate checks, monitoring_checks.go) whose state
+// is read on every SSH poll, in the same round trip as the metrics. The command
+// is one POSIX loop over a quoted heredoc, so a name cannot become shell
+// syntax: the names are also validated against a strict pattern before they
+// are stored.
 
 var (
 	monitorUnitPattern      = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.@:\-]{0,199}$`)
 	monitorContainerPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.\-]{0,63}$`)
 )
 
-// monitorServiceScript prints one "kind:name=state" line per service. A missing
-// container is "missing", a failed unit is what systemctl reports.
-func monitorServiceScript(list []monitorService) string {
-	var b strings.Builder
-	b.WriteString(`while IFS= read -r s; do `)
-	b.WriteString(`case "$s" in `)
-	b.WriteString(`systemd:*) n=${s#systemd:}; st=$(systemctl is-active -- "$n" 2>/dev/null) ;; `)
-	b.WriteString(`docker:*) n=${s#docker:}; st=$(docker inspect -f '{{.State.Status}}' -- "$n" 2>/dev/null) || st=missing ;; `)
-	b.WriteString(`*) st=unknown ;; esac; `)
-	b.WriteString(`printf '%s=%s\n' "$s" "${st:-unknown}"; done <<'WRM_SERVICES'` + "\n")
-	for _, x := range list {
-		b.WriteString(x.Kind + ":" + x.Name + "\n")
-	}
-	b.WriteString("WRM_SERVICES\n")
-	return b.String()
-}
-
-func parseMonitorServiceStates(out string) map[string]string {
-	m := map[string]string{}
-	for _, line := range strings.Split(out, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		k, v, ok := strings.Cut(line, "=")
-		if !ok || !strings.Contains(k, ":") {
-			continue
-		}
-		m[truncateStr(k, 260)] = truncateStr(strings.TrimSpace(v), 40)
-	}
-	return m
-}
-
-// monitorServiceProblem names the services that are not active/running.
-func monitorServiceProblem(states map[string]string) string {
-	bad := []string{}
-	for k, v := range states {
-		if v != "active" && v != "running" {
-			bad = append(bad, k+"="+v)
-		}
-	}
-	if len(bad) == 0 {
-		return ""
-	}
-	sort.Strings(bad)
-	if len(bad) > 5 {
-		bad = append(bad[:5], "…")
-	}
-	return "service problem: " + strings.Join(bad, ", ")
-}
-
-// collectMonitorServices fills s.Services and escalates a healthy sample when a
-// watched service is down, so the existing notification path reports it too.
-func collectMonitorServices(ctx context.Context, cl *ssh.Client, list []monitorService, s *monitorSample) {
-	runCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+// collectMonitorServices fills s.Services and s.Checks and adds a reason for
+// every check that is not ok, so the state and the notification name it.
+func collectMonitorServices(ctx context.Context, cl *ssh.Client, cfg monitorConfig, s *monitorSample) {
+	list := cfg.Services
+	runCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
 	defer cancel()
 	out, err := monitorSSHCommand(runCtx, cl, monitorServiceScript(list))
-	if err != nil {
-		s.Services = map[string]string{}
+	s.Services = map[string]string{}
+	s.Checks = map[string]monitorCheckResult{}
+	if err != nil && strings.TrimSpace(out) == "" {
 		for _, x := range list {
-			s.Services[x.Kind+":"+x.Name] = "unknown"
+			s.Services[x.key()] = "unknown"
+			s.Checks[x.key()] = monitorCheckResult{Kind: x.Kind, Name: x.Name, Label: x.Label, State: "unknown", Detail: "check failed"}
 		}
-		s.Error = strings.TrimSpace(s.Error + "; service check failed")
-		if s.State == "healthy" {
-			s.State = "problem"
-		}
+		s.addReason("warning", "checks_failed", "", 0, 0)
 		return
 	}
-	s.Services = parseMonitorServiceStates(out)
+	raw := parseMonitorServiceStates(out)
+	now := time.Now()
+	bad := map[string]string{}
 	for _, x := range list {
-		k := x.Kind + ":" + x.Name
-		if _, ok := s.Services[k]; !ok {
-			s.Services[k] = "unknown"
+		k := x.key()
+		v, ok := raw[k]
+		if !ok {
+			v = "unknown"
+		}
+		s.Services[k] = v
+		r := judgeMonitorCheck(x, v, cfg.Thresholds.CertDays, now)
+		s.Checks[k] = r
+		switch r.State {
+		case "problem":
+			bad[k] = v
+			s.addReason("problem", "check", nonEmpty(x.Label, k), 0, 0)
+		case "warning":
+			s.addReason("warning", "check", nonEmpty(x.Label, k), 0, 0)
 		}
 	}
-	if msg := monitorServiceProblem(s.Services); msg != "" {
-		if s.State == "healthy" {
-			s.State = "problem"
-		}
+	if msg := monitorServiceProblem(bad); msg != "" {
 		if s.Error != "" {
 			s.Error += "; "
 		}
