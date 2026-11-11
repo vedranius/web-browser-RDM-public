@@ -1,3 +1,24 @@
+## [14.7.1] - 2026-11-11
+
+Security fixes and issue #190. Upgrading from v14.7.0 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **First-run setup code.** While no account exists, WRM creates a one-time code at start, prints it to the console/log and writes it to `first-admin-setup-code.txt` (mode 0600) next to the database. Creating the first (administrator) account from the network needs it; a direct connection from the WRM host itself (loopback, no proxy headers) does not. The sign-in page shows the field only when needed (`setup_code_required` in `/api/auth/config`). Wrong codes count as failed sign-ins for the rate limit. The code and its file are removed when the first account is created.
+- **HSTS switch** (`hsts`, *Admin → Policies*, default on). Off sends `max-age=0`, so browsers forget an earlier entry.
+- **Open a tunnel through an IP address of the WRM host** for tunnels on 0.0.0.0 (HSTS of WRM's host name does not apply to an IP address) ([#190](https://github.com/vedranius/web-browser-RDM-public/issues/190)).
+- **Security overview: tunnels open to the network** (`exposed_tunnels`): a warning for a local tunnel on 0.0.0.0, a failure for a SOCKS (dynamic) tunnel there.
+
+### Fixed
+
+- Two concurrent first registrations could both become administrators; the check and the insert are now serialised.
+- The origin check compares the port: another service on the WRM host (for example a web interface published by a tunnel) is a different origin.
+- One AI client closing a shared AI session (same AI connection) no longer stops the running commands of the others.
+- `~` in AI tool paths could stay unexpanded when several calls started a session at the same moment.
+- A data race on the MCP session's last-seen time.
+- The sign-in page scrolls when the first-run form is taller than the window; before, the *Create account* button could be out of reach.
+- Built with Go 1.27.4 (GO-2026-6859, net/http).
+
 ## [14.7.0] - 2026-11-10
 
 Addons can read your chains. Upgrading from v14.6.3 keeps the database and the encryption key; nothing is migrated.
