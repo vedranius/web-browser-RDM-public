@@ -98,6 +98,28 @@ func mcpConnsOf(grantID int64) int {
 	return n
 }
 
+// mcpSessionHolders counts the live MCP sessions other than except that opened the AI
+// session sid.
+func mcpSessionHolders(sid int64, except *mcpConn) int {
+	mcpConns.Lock()
+	conns := make([]*mcpConn, 0, len(mcpConns.m))
+	for _, x := range mcpConns.m {
+		if x != except {
+			conns = append(conns, x)
+		}
+	}
+	mcpConns.Unlock()
+	n := 0
+	for _, x := range conns {
+		x.mu.Lock()
+		if !x.closed && x.opened[sid] {
+			n++
+		}
+		x.mu.Unlock()
+	}
+	return n
+}
+
 // mcpDropConns ends the MCP sessions matching pred: running calls are cancelled.
 func mcpDropConns(pred func(*mcpConn) bool) int {
 	mcpConns.Lock()
@@ -640,6 +662,15 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		s, why := mcpSessionFor(g, p.Arguments["session_id"])
 		if s == nil {
 			writeRPC(w, 200, rpcResult(m.ID, toolText(why, true)))
+			return
+		}
+		// Several AI clients (or parallel agents) with the same AI connection share the session
+		// of a server: one of them closing it must not stop the others' running commands.
+		c.mu.Lock()
+		delete(c.opened, s.ID)
+		c.mu.Unlock()
+		if mcpSessionHolders(s.ID, c) > 0 {
+			writeRPC(w, 200, rpcResult(m.ID, toolText("Session left open: another AI client of this AI connection still uses it. You are done with it.", false)))
 			return
 		}
 		s.Kill(g.UserID, "closed by the MCP client")
