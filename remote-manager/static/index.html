@@ -915,7 +915,7 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
 /* The top bar lives in #center, so react to the width of #center, not the viewport */
 #center { container-type: inline-size; }
 @container (max-width: 720px) {
-  .app-ver .ver-pfx, .top-sep, .sess-lbl, .btn-top .lbl, #sess-bar-name.empty { display: none; }
+  .app-ver .ver-pfx, .top-sep, .sess-lbl, #sess-bar-name.empty { display: none; }
 }
 @container (max-width: 520px) {
   .add-win-btn .lbl, #user-chip .name { display: none; }
@@ -964,7 +964,6 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
 /* ══ RESPONSIVE ══ */
 @media (max-width: 1100px) {
   .app-ver .ver-pfx, .top-sep, .sess-lbl, #sess-bar-name.empty { display: none; }
-  .btn-top .lbl { display: none; }
 }
 @media (max-width: 760px) {
   :root { --topbar-h: 50px; }
@@ -984,7 +983,8 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
   #drawer-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 8400; }
   #top-bar { padding: 0 8px; gap: 6px; }
   #sess-bar-name { max-width: 90px; }
-  .add-win-btn .lbl, #user-chip .name, #admin-badge { display: none; }
+  .add-win-btn .lbl, #user-chip .name { display: none; }
+  #admin-badge { display: none !important; }
   .win { min-width: 0; min-height: 0; }
   .win-corner-btns, .rh, .win-btn.screen-share { display: none; }
   .modal { padding: 18px 16px; width: 100% !important; max-width: calc(100vw - 20px) !important; max-height: calc(100vh - 20px); }
@@ -994,6 +994,17 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
   .tab-item { padding: 8px 10px; }
   .term-search input { width: 120px; }
   #chat-panel { left: 8px; right: 8px; width: auto; bottom: 8px; height: 60vh; }
+}
+/* v14.11.0: on tablets and narrow laptops (761-1024 px) the right panel (sessions, clipboard,
+   docked AI) slides in as a drawer from the 🗂 button, so the work area keeps its width */
+@media (min-width: 761px) and (max-width: 1024px) {
+  #btn-sess-drawer { display: inline-flex; }
+  #sess-panel { position: fixed; right: 0; top: 0; bottom: 0; z-index: 8500; width: min(90vw, 400px) !important; transform: translateX(102%); transition: transform .22s ease; box-shadow: var(--shadow-lg); }
+  #sess-panel.collapsed { width: min(90vw, 400px) !important; }
+  #sess-panel.collapsed .sess-panel-inner { opacity: 1; pointer-events: auto; }
+  #sess-panel.mobile-open { transform: none; }
+  .sess-toggle-wrap, .sess-resize-handle { display: none; }
+  #drawer-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 8400; }
 }
 @media (pointer: coarse) {
   .file-dl-btn { opacity: 1; }
@@ -1636,16 +1647,34 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
    into the ⋯ menu) whenever it would overflow, whatever the language, zoom or badges */
 .btn-top, .add-win-btn, .upd-badge { white-space: nowrap; flex-shrink: 0; }
 #top-bar.tb1 .top-sep, #top-bar.tb1 .sess-lbl { display: none; }
-#top-bar.tb2 #btn-mcp .lbl, #top-bar.tb2 .upd-badge .lbl { display: none; }
+#top-bar.tb2 #btn-mcp .lbl, #top-bar.tb2 .upd-badge .lbl, #top-bar.tb2 .app-ver .ver-pfx { display: none; }
 #top-bar.tb2 .upd-badge { margin-left: 4px; padding: 2px 7px; }
-#top-bar.tb3 .btn-top .lbl, #top-bar.tb3 .app-ver .ver-pfx { display: none; }
+#top-bar.tb3 .btn-top .lbl { display: none; }
 #top-bar.tb4 .add-win-btn .lbl, #top-bar.tb4 #user-chip .name { display: none; }
 #top-bar.tb5 #sess-bar-name { max-width: 70px; }
 #top-bar.tb5, #top-bar.tb5 #auth-info { gap: 4px; }
-#top-bar.tb6 #admin-badge, #top-bar.tb6 #sess-bar-name { display: none; }
+#top-bar.tb6 #admin-badge, #top-bar.tb6 #sess-bar-name { display: none !important; }
+#tb-canvas-grp.tb-empty { display: none; }
 /* Without its "SESSION:" label an empty session reads like a missing version: hide it then */
 #top-bar.tb1 #sess-bar-name.empty { display: none; }
-#top-bar .tb-moved { display: none !important; }
+#top-bar .tb-moved, #top-bar .tb-user-item { display: none !important; }
+/* v14.11.0: the avatar opens the account menu (shares, lock, sign out) */
+#user-chip { background: transparent; border: 1px solid transparent; color: var(--text2); padding: 2px 8px 2px 2px; border-radius: 999px; box-shadow: none; cursor: pointer; font: inherit; font-size: 12px; min-height: 0; }
+#user-chip:hover, #user-chip[aria-expanded="true"] { background: var(--bg4); border-color: var(--border2); color: var(--text); }
+#user-chip .caret { font-size: 9px; opacity: .7; }
+#top-bar.tb4 #user-chip .caret { display: none; }
+#top-bar.tb4 #user-chip { padding: 2px; }
+.tb-menu { position: fixed; z-index: 9500; display: none; flex-direction: column; min-width: 210px; max-height: calc(100vh - 70px); overflow-y: auto; padding: 6px; background: var(--glass); border: 1px solid var(--border2); border-radius: 10px; box-shadow: var(--shadow-lg); backdrop-filter: blur(10px); }
+.tb-menu.open { display: flex; }
+.tb-menu button { display: flex; align-items: center; gap: 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; color: var(--text); padding: 8px 10px; font-size: 13px; cursor: pointer; box-shadow: none; }
+.tb-menu button:hover, .tb-menu button:focus-visible { background: var(--bg4); }
+.tb-menu .ico { width: 18px; text-align: center; }
+.tb-menu .tun-badge { margin-left: auto; }
+.tb-menu .tbm-head { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.tb-menu .tbm-head b { font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
+.tb-menu .tbm-head span { font-size: 11px; color: var(--text3); }
+.tb-menu .tbm-sep { height: 1px; background: var(--border); margin: 4px 2px; }
+@media (pointer: coarse) { .tb-menu button, #tb-more-menu button { padding: 12px 12px; font-size: 14px; } }
 #btn-more { position: relative; }
 #btn-more .more-dot { position: absolute; top: 2px; right: 2px; width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: none; }
 #btn-more.has-badge .more-dot { display: block; }
@@ -1730,6 +1759,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <body>
 <div id="toast-container" role="status" aria-live="polite"></div>
 <div id="tb-more-menu" role="menu"></div>
+<div id="tb-user-menu" class="tb-menu" role="menu"></div>
 
 <!-- ══ FILE BROWSER CONTEXT MENU ══ -->
 <div id="fm-ctx-menu">
@@ -1890,7 +1920,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
     <div id="auth-info">
-      <span id="user-chip"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span></span>
+      <button type="button" id="user-chip" onclick="toggleUserMenu(event)" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb_user_t" title="Account: shares, lock, sign out"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span><span class="caret" aria-hidden="true">▾</span></button>
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
       <button class="btn-top" id="btn-ai" onclick="openAIHome()" data-i18n-title="ai_btn_t" title="AI assistant">✦ AI</button>
       <button class="btn-top" id="btn-mcp" style="display:none;" onclick="openMCPPop()" title="AI apps connected through MCP"><span>🤖</span><span class="lbl" data-i18n="mcp_connected_lbl">AI connected</span><span class="tun-badge" id="mcp-badge"></span></button>
@@ -1900,7 +1930,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-top" id="btn-git" onclick="openGit()" title="Git"><span>⎇</span><span class="lbl" data-i18n="git_lbl">Git</span></button>
       <button class="btn-top" id="btn-storages" onclick="openStorages()" title="Storages" data-i18n-title="stg_title"><span>🗄</span><span class="lbl" data-i18n="stg_title">Storages</span></button>
       <button class="btn-top" id="btn-chains" onclick="openChains()" title="Chains" data-i18n-title="chn_title"><span>⛓</span><span class="lbl" data-i18n="chn_title">Chains</span></button>
-      <button class="btn-top icon-only" id="btn-shares" onclick="openManageShares()" data-i18n-title="shares_lbl" title="Shares" aria-label="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
+      <button class="btn-top icon-only tb-user-item" id="btn-shares" onclick="openManageShares()" data-i18n-title="shares_lbl" title="Shares" aria-label="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
       <span class="tb-group" id="tb-canvas-grp" role="group">
         <button class="btn-top" id="btn-settings" onclick="openSettings()" data-i18n-title="settings_lbl" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
@@ -1908,9 +1938,9 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <button class="btn-top" id="btn-workboard" onclick="wrmWorkboard.menu(this)" data-i18n-title="wb_title_t" title="Workboard" aria-haspopup="menu"><span>▤</span><span class="lbl" data-i18n="wb_title">Workboard</span><span class="tun-badge" id="wb-badge" style="display:none;"></span></button>
       </span>
       <button class="btn-top" id="btn-more" style="display:none;" onclick="toggleTopMore(event)" data-i18n-title="tb_more_t" title="More" aria-haspopup="menu" aria-expanded="false"><span>⋯</span><span class="more-dot"></span></button>
-      <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
-      <button class="btn-top" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
-      <button class="btn-top" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
+      <button class="btn-top btn-menu" id="btn-sess-drawer" onclick="openDrawer('sess-panel')" data-i18n-title="tb_sess_drawer_t" title="Sessions, clipboard and side panels" aria-label="Sessions, clipboard and side panels">🗂</button>
+      <button class="btn-top tb-user-item" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
+      <button class="btn-top tb-user-item" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
     </div>
     <button class="add-win-btn" onclick="addWindow()" title="New window (Alt+N)"><span>＋</span><span class="lbl" data-i18n="new_window_lbl">New Window</span></button>
   </div>
@@ -6732,6 +6762,17 @@ Object.assign(LANGS.hr, {
 // v14.5.1: resizable and maximisable dialogs
 Object.assign(LANGS.en, { win_max: 'Full screen', win_restore: 'Back to the window size', win_reset: 'Default size', win_resize: 'Drag to resize' });
 Object.assign(LANGS.hr, { win_max: 'Preko cijelog zaslona', win_restore: 'Natrag na veličinu prozora', win_reset: 'Zadana veličina', win_resize: 'Povuci za promjenu veličine' });
+// v14.11.0: account menu, side panel drawer, interface for every screen size
+Object.assign(LANGS.en, {
+  tb_user_t: 'Account: settings, shares, lock, sign out',
+  tb_sess_drawer_t: 'Sessions, clipboard and side panels',
+  tb_role_admin: 'Administrator', tb_role_auditor: 'Auditor', tb_role_operator: 'Operator', tb_role_user: 'User',
+});
+Object.assign(LANGS.hr, {
+  tb_user_t: 'Račun: postavke, dijeljenja, zaključavanje, odjava',
+  tb_sess_drawer_t: 'Sesije, međuspremnik i bočni paneli',
+  tb_role_admin: 'Administrator', tb_role_auditor: 'Revizor', tb_role_operator: 'Operater', tb_role_user: 'Korisnik',
+});
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.documentElement.lang = currentLang === 'hr' ? 'hr' : 'en';
@@ -17497,8 +17538,11 @@ function closeDrawers() {
   const b = document.getElementById('drawer-backdrop'); if (b) b.classList.remove('open');
 }
 
+// sessIsDrawer: the right panel is a slide-in drawer (phones, tablets, narrow laptops).
+function sessIsDrawer() { return window.innerWidth <= 1024; }
+window.addEventListener('resize', () => { const b = document.getElementById('drawer-backdrop'); if (b && b.classList.contains('open') && window.innerWidth > 1024) closeDrawers(); });
 function toggleSessPanel() {
-  if (isCompact()) { openDrawer('sess-panel'); return; }
+  if (sessIsDrawer()) { openDrawer('sess-panel'); return; }
   const sp = document.getElementById('sess-panel');
   const btn = document.getElementById('sess-toggle-btn');
   const collapsed = sp.classList.toggle('collapsed');
@@ -17529,7 +17573,7 @@ function loadSettings() {
   applyAccent();
   try {
     if (!isCompact() && localStorage.getItem('wrm_sidebar_collapsed') === '1') toggleSidebar();
-    if (!isCompact() && localStorage.getItem('wrm_sess_collapsed') === '1') toggleSessPanel();
+    if (!sessIsDrawer() && localStorage.getItem('wrm_sess_collapsed') === '1') toggleSessPanel();
   } catch(_) {}
 }
 
@@ -19703,11 +19747,13 @@ window.addEventListener('load', async () => {
 });
 
 // ══ TOP BAR FIT ══
-// The top bar gives way step by step instead of overlapping: first texts and labels
-// (tb1..tb6), then the less used buttons move into the ⋯ menu. It is measured, so any
-// language, browser zoom, badge or administrator button fits.
+// The top bar gives way step by step instead of overlapping, keeping its buttons labelled
+// for as long as it can: first the session label and other texts (tb1, tb2), then the less
+// used buttons move into the labelled ⋯ menu one by one, and only then the remaining
+// buttons lose their labels (tb3..tb6). It is measured, so any language, browser zoom,
+// badge or administrator button fits. Shares, Lock and Sign out live in the account menu.
 const TB_LEVELS = 6;
-const TB_OVERFLOW = ['btn-shares', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-panels', 'btn-settings', 'btn-workboard'];
+const TB_OVERFLOW = ['btn-panels', 'btn-workboard', 'btn-vault', 'btn-storages', 'btn-chains', 'btn-tunnels', 'btn-tools', 'btn-git', 'btn-monitoring', 'btn-settings'];
 let _tbObserver = null, _tbPending = 0;
 function topBarOverflows() {
   const tb = document.getElementById('top-bar'), a = document.getElementById('auth-info');
@@ -19720,17 +19766,22 @@ function fitTopBar() {
   if (_tbObserver) _tbObserver.disconnect();
   for (let i = 1; i <= TB_LEVELS; i++) tb.classList.remove('tb' + i);
   TB_OVERFLOW.forEach(id => { const b = document.getElementById(id); if (b) b.classList.remove('tb-moved'); });
+  const grp0 = document.getElementById('tb-canvas-grp');
+  const grpEmpty = () => { if (grp0) grp0.classList.toggle('tb-empty', ![...grp0.children].some(b => getComputedStyle(b).display !== 'none')); };
+  grpEmpty();
   more.style.display = 'none';
-  for (let i = 1; i <= TB_LEVELS && topBarOverflows(); i++) tb.classList.add('tb' + i);
+  for (let i = 1; i <= 2 && topBarOverflows(); i++) tb.classList.add('tb' + i);
   if (topBarOverflows()) {
     more.style.display = '';
     for (const id of TB_OVERFLOW) {
       const b = document.getElementById(id);
       if (!b || getComputedStyle(b).display === 'none') continue;
       b.classList.add('tb-moved');
+      grpEmpty();
       if (!topBarOverflows()) break;
     }
   }
+  for (let i = 3; i <= TB_LEVELS && topBarOverflows(); i++) tb.classList.add('tb' + i);
   const moved = [...tb.querySelectorAll('.tb-moved')];
   if (!moved.length) more.style.display = 'none';
   more.classList.toggle('has-badge', moved.some(b => { const g = b.querySelector('.tun-badge'); return g && g.style.display !== 'none' && g.textContent.trim(); }));
@@ -19741,10 +19792,26 @@ function fitTopBar() {
   if (grp) {
     const kids = [...grp.children], shown = kids.filter(b => getComputedStyle(b).display !== 'none');
     kids.forEach(b => { b.classList.toggle('g-first', b === shown[0]); b.classList.toggle('g-last', b === shown[shown.length - 1]); });
+    grp.classList.toggle('tb-empty', !shown.length);
   }
   if (_tbObserver) { _tbObserver.takeRecords(); _tbObserver.observe(tb, {subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class', 'hidden']}); }
 }
 function scheduleFitTopBar() { if (!_tbPending) _tbPending = requestAnimationFrame(fitTopBar); }
+// tbMenuItem turns a top bar button into a labelled menu entry that presses it.
+function tbMenuItem(b, close) {
+  const it = document.createElement('button');
+  it.type = 'button'; it.className = 'tbm-item'; it.setAttribute('role', 'menuitem');
+  const ico = b.querySelector('span'), lbl = b.querySelector('.lbl'), badge = b.querySelector('.tun-badge');
+  const count = badge && badge.style.display !== 'none' ? badge.textContent.trim() : '';
+  it.innerHTML = `<span class="ico">${esc(ico ? ico.textContent : '')}</span><span>${esc((lbl && lbl.textContent.trim()) || b.title)}</span>${count ? `<span class="tun-badge">${esc(count)}</span>` : ''}`;
+  it.onclick = () => { close(); b.click(); };
+  return it;
+}
+function placeTbMenu(m, btn) {
+  const r = btn.getBoundingClientRect();
+  m.style.top = Math.round(r.bottom + 6) + 'px';
+  m.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + 'px';
+}
 function closeTopMore() {
   const m = document.getElementById('tb-more-menu'); if (m) m.classList.remove('open');
   const b = document.getElementById('btn-more'); if (b) b.setAttribute('aria-expanded', 'false');
@@ -19753,24 +19820,59 @@ function toggleTopMore(ev) {
   if (ev) ev.stopPropagation();
   const m = document.getElementById('tb-more-menu'), btn = document.getElementById('btn-more');
   if (m.classList.contains('open')) { closeTopMore(); return; }
+  closeUserMenu();
   m.innerHTML = '';
-  document.querySelectorAll('#top-bar .tb-moved').forEach(b => {
-    const it = document.createElement('button');
-    it.type = 'button'; it.setAttribute('role', 'menuitem');
-    const ico = b.querySelector('span'), lbl = b.querySelector('.lbl'), badge = b.querySelector('.tun-badge');
-    const count = badge && badge.style.display !== 'none' ? badge.textContent.trim() : '';
-    it.innerHTML = `<span class="ico">${esc(ico ? ico.textContent : '')}</span><span>${esc((lbl && lbl.textContent.trim()) || b.title)}</span>${count ? `<span class="tun-badge">${esc(count)}</span>` : ''}`;
-    it.onclick = () => { closeTopMore(); b.click(); };
-    m.appendChild(it);
-  });
-  const r = btn.getBoundingClientRect();
-  m.style.top = Math.round(r.bottom + 6) + 'px';
-  m.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + 'px';
+  document.querySelectorAll('#top-bar .tb-moved').forEach(b => m.appendChild(tbMenuItem(b, closeTopMore)));
+  placeTbMenu(m, btn);
   m.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
   const first = m.querySelector('button'); if (first) first.focus();
 }
-document.addEventListener('click', e => { const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open') && !m.contains(e.target)) closeTopMore(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open')) { closeTopMore(); document.getElementById('btn-more').focus(); } } });
+function closeUserMenu() {
+  const m = document.getElementById('tb-user-menu'); if (m) m.classList.remove('open');
+  const b = document.getElementById('user-chip'); if (b) b.setAttribute('aria-expanded', 'false');
+}
+// The account menu: who is signed in, appearance, shares, lock and sign out.
+function toggleUserMenu(ev) {
+  if (ev) ev.stopPropagation();
+  const m = document.getElementById('tb-user-menu'), btn = document.getElementById('user-chip');
+  if (!m || !btn) return;
+  if (m.classList.contains('open')) { closeUserMenu(); return; }
+  closeTopMore();
+  const name = document.getElementById('username-display').textContent || '';
+  const role = currentUser ? (currentUser.role ? t('tb_role_' + currentUser.role) : '') : t('guest');
+  m.innerHTML = `<div class="tbm-head"><b>${esc(name)}</b>${role && !role.startsWith('tb_role_') ? `<span>${esc(role)}</span>` : ''}</div>`;
+  const add = (ico, label, fn) => {
+    const it = document.createElement('button');
+    it.type = 'button'; it.className = 'tbm-item'; it.setAttribute('role', 'menuitem');
+    it.innerHTML = `<span class="ico">${esc(ico)}</span><span>${esc(label)}</span>`;
+    it.onclick = () => { closeUserMenu(); fn(); };
+    m.appendChild(it);
+  };
+  if (currentUser) {
+    add('⚙', t('settings_lbl'), () => openSettings());
+    add('🎨', t('tab_appearance'), () => openSettings('st-appearance'));
+  }
+  const items = ['btn-shares', 'btn-lock', 'btn-logout'].map(id => document.getElementById(id)).filter(b => b && b.style.display !== 'none');
+  if (items.length) {
+    const sep = document.createElement('div'); sep.className = 'tbm-sep'; m.appendChild(sep);
+    items.forEach(b => m.appendChild(tbMenuItem(b, closeUserMenu)));
+  }
+  const r = btn.getBoundingClientRect();
+  m.style.top = Math.round(r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(Math.round(r.left), window.innerWidth - 230)) + 'px';
+  m.style.right = 'auto';
+  m.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
+  const first = m.querySelector('button'); if (first) first.focus();
+}
+document.addEventListener('click', e => {
+  const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open') && !m.contains(e.target)) closeTopMore();
+  const u = document.getElementById('tb-user-menu'); if (u && u.classList.contains('open') && !u.contains(e.target)) closeUserMenu();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open')) { closeTopMore(); document.getElementById('btn-more').focus(); }
+  const u = document.getElementById('tb-user-menu'); if (u && u.classList.contains('open')) { closeUserMenu(); document.getElementById('user-chip').focus(); }
+});
 (function initTopBarFit() {
   const tb = document.getElementById('top-bar'); if (!tb) return;
   if (window.ResizeObserver) new ResizeObserver(scheduleFitTopBar).observe(tb);
