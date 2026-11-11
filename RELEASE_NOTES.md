@@ -1,17 +1,32 @@
-## Web Remote Manager PRO v14.7.0 — Addons that show your chains
+## Web Remote Manager PRO v14.11.0 — An interface for every screen
 
 ### Added
+
+- **Account menu** on your avatar: your name and role, *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out* in one place.
+- **Tablets get the work area back**: between 761 and 1024 px (a tablet, a narrow laptop or a zoomed-in browser) *Sessions*, *Clipboard*, *Snippets* and the docked AI view slide in from the 🗂 button.
+
+### Changed
+
+- **The top bar keeps its labels.** Instead of turning every button into a bare icon as soon as one label did not fit, WRM now moves the less used buttons into the labelled **⋯** menu first. A 1920 px screen shows every button with its name again, and a laptop keeps the names of the ones you use most.
+
+### Fixed
+
+- Top bar buttons no longer overlap on phones.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.0) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.7.0 — Addons that show your chains
+
+#### Added
 
 - **`chains.read` for addons**: an addon window can now read your [chains](README.md#chains-live-service-chain-monitoring): the checked values, the active scenario and what changed when. WRM keeps checking the chains in the background, so an addon can present a whole system the way your team needs it (a table per environment, a report, an update of a wiki page) without SSH, commands or secrets of its own.
 - **Check now** from the addon window, with the same limit as in the Chains window, recorded in the audit log.
 - The permission sheet says exactly what the addon may read. Every viewer sees only their own chains, also in a shared instance.
 - For addon authors: `wrm.chains()`, `wrm.chain(id)` and `wrm.chainCheck(id)` in `wrm-bridge.js`, and sample chains in `wrm -addon-dev` through `WRM_ADDON_CHAINS`.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.7.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.0) asset. Preserve the database and encryption key; nothing is migrated.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.6.3 — Proxies from SSH tunnels, a steady lock screen, log discovery that keeps going
 

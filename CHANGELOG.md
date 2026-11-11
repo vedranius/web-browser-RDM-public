@@ -1,3 +1,22 @@
+## [14.11.0] - 2026-11-11
+
+The interface fits every screen: the top bar keeps its labels, tablets get the work area back. Upgrading from v14.7.0 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **Account menu** on the avatar in the top bar: who is signed in and their role, *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out*.
+- **Side panel drawer on tablets and narrow laptops** (761–1024 px wide, also a desktop browser zoomed in): *Sessions*, *Clipboard*, *Snippets* and a docked AI view slide in from the 🗂 button instead of taking a third of the screen, the same way phones already worked.
+- `tools/test-ui-sizes.js`: drives a running WRM in Chromium at phone, tablet, laptop and desktop sizes and at browser zoom 67–200 % and checks that the top bar never overlaps or leaves the screen, that buttons keep their labels from 1280 px on, that the page never scrolls sideways and that there are no page errors.
+
+### Changed
+
+- **The top bar keeps its labels.** It used to drop every label as soon as one did not fit, so even a 1920 px screen showed a row of bare icons. Now the less used buttons move into the labelled **⋯** menu one by one (Panels, Workboard, Keys, Storages, Chains, Tunnels, Tools, Git, Monitoring, Settings) and only then do the remaining buttons lose their labels. At 1920 px every button is labelled again; at 1280 px *AI*, *Tools*, *Monitoring*, *Git* and *Settings* keep theirs.
+- *Shares*, *Lock now* and *Sign out* moved from the top bar into the account menu.
+
+### Fixed
+
+- On phones the top bar buttons overlapped (*Storages* and *Chains* never moved into the **⋯** menu), and the *ADMIN* badge stayed visible on narrow screens.
+
 ## [14.7.0] - 2026-11-10
 
 Addons can read your chains. Upgrading from v14.6.3 keeps the database and the encryption key; nothing is migrated.
