@@ -290,9 +290,11 @@ button:hover { background: var(--accent-h); }
 #auth-screen {
   position: fixed; inset: 0;
   background: radial-gradient(ellipse at 30% 50%, #0e1829 0%, var(--bg0) 60%);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: flex-start; justify-content: center;
+  overflow-y: auto; padding: 16px 0; /* a tall first-run form scrolls instead of being cut off */
   z-index: 10000;
 }
+#auth-screen > .auth-card { margin: auto 0; }
 .auth-card {
   background: var(--bg2);
   border: 1px solid var(--border2);
@@ -1780,6 +1782,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <label data-i18n="auth_email" for="auth-email">E-mail address</label>
         <input type="email" id="auth-email" autocomplete="email" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') doAuth()">
         <div class="muted-text" style="margin-top:4px;font-size:11px;" data-i18n="auth_email_hint">WRM sends a link to this address; the account works once you open it.</div>
+      </div>
+      <div class="auth-field" id="auth-setup-row" style="display:none;">
+        <label data-i18n="auth_setup_code" for="auth-setup-code">Setup code</label>
+        <input type="text" id="auth-setup-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX" onkeydown="if(event.key==='Enter') doAuth()">
+        <div class="muted-text" style="margin-top:4px;font-size:11px;" data-i18n="auth_setup_code_hint">WRM printed it to its console/log at start and wrote it to first-admin-setup-code.txt next to its database. Not needed when you open WRM on the server itself (localhost).</div>
       </div>
       <div id="auth-level" style="display:none;">
         <label class="auth-lvl-title" data-i18n="sec_first_title">Where will WRM run?</label>
@@ -6748,6 +6755,8 @@ Object.assign(LANGS.hr, {
 // v14.5.1: resizable and maximisable dialogs
 Object.assign(LANGS.en, { win_max: 'Full screen', win_restore: 'Back to the window size', win_reset: 'Default size', win_resize: 'Drag to resize' });
 Object.assign(LANGS.hr, { win_max: 'Preko cijelog zaslona', win_restore: 'Natrag na veličinu prozora', win_reset: 'Zadana veličina', win_resize: 'Povuci za promjenu veličine' });
+Object.assign(LANGS.en, { auth_setup_code: 'Setup code', auth_setup_code_hint: 'WRM printed it to its console/log at start and wrote it to first-admin-setup-code.txt next to its database. Not needed when you open WRM on the server itself (localhost).' });
+Object.assign(LANGS.hr, { auth_setup_code: 'Kod za postavljanje', auth_setup_code_hint: 'WRM ga je pri pokretanju ispisao u konzolu/log i zapisao u first-admin-setup-code.txt pokraj svoje baze. Nije potreban kad WRM otvarate na samom poslužitelju (localhost).' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.documentElement.lang = currentLang === 'hr' ? 'hr' : 'en';
@@ -7050,6 +7059,8 @@ function switchAuthTab(mode) {
 function renderAuthExtras() {
   const em = document.getElementById('auth-email-row');
   if (em) em.style.display = authMode === 'register' && !authConfig.first_run && authConfig.registration_email ? '' : 'none';
+  const sc = document.getElementById('auth-setup-row');
+  if (sc) sc.style.display = authConfig.first_run && authConfig.setup_code_required ? '' : 'none';
   const fl = document.getElementById('auth-forgot-link');
   if (fl) fl.style.display = authMode === 'login' && !authConfig.first_run && authConfig.password_reset ? '' : 'none';
 }
@@ -7278,6 +7289,7 @@ async function doAuth() {
     const body = {username: user, password: pass};
     const lvl = document.querySelector('input[name="auth-level"]:checked');
     if (authMode !== 'login' && authConfig.first_run && lvl && !lvl.disabled) body.security_level = lvl.value;
+    if (authMode !== 'login' && authConfig.first_run && authConfig.setup_code_required) body.setup_code = document.getElementById('auth-setup-code').value.trim();
     if (authMode !== 'login' && authConfig.registration_email) body.email = document.getElementById('auth-email').value.trim();
     const res = await fetch('/api/auth/' + (authMode === 'login' ? 'login' : 'register'), {
       method: 'POST', headers: {'Content-Type': 'application/json'},

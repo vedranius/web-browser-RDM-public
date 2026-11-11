@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -74,7 +75,7 @@ type mcpConn struct {
 	elicitation   bool
 	ip            string
 	created       time.Time
-	lastSeen      time.Time
+	lastSeenNs    atomic.Int64 // unix nanoseconds of the last request; read without c.mu
 	elicits       map[string]mcpElicit
 	inflight      map[string]context.CancelFunc
 	opened        map[int64]bool // AI sessions opened through this MCP session
@@ -304,9 +305,7 @@ func mcpConnFor(r *http.Request, g *mcpGrant) *mcpConn {
 	if c == nil || c.grantID != g.ID {
 		return nil
 	}
-	c.mu.Lock()
-	c.lastSeen = time.Now()
-	c.mu.Unlock()
+	c.lastSeenNs.Store(time.Now().UnixNano())
 	return c
 }
 
@@ -413,7 +412,7 @@ func mcpInitialize(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg
 	for _, c := range mcpConns.m {
 		if c.userID == g.UserID {
 			n++
-			if oldest == nil || c.lastSeen.Before(oldest.lastSeen) {
+			if oldest == nil || c.lastSeenNs.Load() < oldest.lastSeenNs.Load() {
 				oldest = c
 			}
 		}
@@ -423,8 +422,9 @@ func mcpInitialize(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg
 		mcpDropConns(func(x *mcpConn) bool { return x == oldest })
 	}
 	c := &mcpConn{id: randomToken(24), grantID: g.ID, userID: g.UserID, clientName: name, clientVersion: truncateStr(p.ClientInfo.Version, 40),
-		protocol: ver, elicitation: elicit, ip: clientIP(r), created: time.Now(), lastSeen: time.Now(),
+		protocol: ver, elicitation: elicit, ip: clientIP(r), created: time.Now(),
 		elicits: map[string]mcpElicit{}, inflight: map[string]context.CancelFunc{}, opened: map[int64]bool{}}
+	c.lastSeenNs.Store(time.Now().UnixNano())
 	mcpConns.Lock()
 	mcpConns.m[c.id] = c
 	mcpConns.Unlock()
