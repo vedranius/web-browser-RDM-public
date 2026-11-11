@@ -189,11 +189,65 @@ func joinRemote(dir, name string) string {
 
 // ─── WEBSOCKET ORIGIN CHECK ──────────────────────────
 
-// checkWSOrigin blocks cross-site WebSocket hijacking: the Origin host must match the
-// Host (or X-Forwarded-Host) of the request. Set WRM_ALLOW_ANY_ORIGIN=1 to disable, or
-// WRM_ALLOWED_ORIGINS=a.example.com,b.example.com to allow extra hosts.
+// checkWSOrigin blocks cross-site WebSocket hijacking: the Origin host and port must match
+// the Host (or X-Forwarded-Host) of the request. Set WRM_ALLOW_ANY_ORIGIN=1 to disable, or
+// WRM_ALLOWED_ORIGINS=a.example.com,https://b.example.com:8443 to allow extra origins.
 func checkWSOrigin(r *http.Request) bool {
 	return originAllowed(r, r.Header.Get("Origin"))
+}
+
+// defaultPort is the port a browser leaves out of an origin for the scheme.
+func defaultPort(scheme string) string {
+	switch strings.ToLower(scheme) {
+	case "https", "wss":
+		return "443"
+	case "http", "ws":
+		return "80"
+	}
+	return ""
+}
+
+// originHostPort splits an Origin/Referer URL into lower-case host and port, filling in the
+// scheme's default port.
+func originHostPort(origin string) (scheme, host, port string, ok bool) {
+	u, err := url.Parse(origin)
+	if err != nil || u.Host == "" {
+		return "", "", "", false
+	}
+	scheme = strings.ToLower(u.Scheme)
+	host = strings.ToLower(strings.Trim(u.Hostname(), "[]"))
+	port = u.Port()
+	if port == "" {
+		port = defaultPort(scheme)
+	}
+	return scheme, host, port, host != ""
+}
+
+// selfHostMatches reports whether one Host/X-Forwarded-Host value names the origin. The port
+// counts: browsers send cookies to every port of a host, so another service on the same host
+// (for example a web interface published through a WRM tunnel on 0.0.0.0) must not count as
+// WRM. A value without a port (a reverse proxy passing `Host $host`) matches an origin on the
+// scheme's default port, or on the port in X-Forwarded-Port.
+func selfHostMatches(r *http.Request, value, oScheme, oHost, oPort string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return false
+	}
+	h, p, err := net.SplitHostPort(value)
+	if err != nil {
+		h, p = value, ""
+	}
+	if strings.ToLower(strings.Trim(h, "[]")) != oHost {
+		return false
+	}
+	if p != "" {
+		return p == oPort
+	}
+	if oPort == defaultPort(oScheme) {
+		return true
+	}
+	xfp := strings.TrimSpace(strings.Split(r.Header.Get("X-Forwarded-Port"), ",")[0])
+	return xfp != "" && xfp == oPort
 }
 
 // originAllowed reports whether an Origin/Referer URL belongs to this server.
@@ -201,24 +255,34 @@ func originAllowed(r *http.Request, origin string) bool {
 	if origin == "" || os.Getenv("WRM_ALLOW_ANY_ORIGIN") == "1" {
 		return true
 	}
-	u, err := url.Parse(origin)
-	if err != nil {
+	oScheme, oHost, oPort, ok := originHostPort(origin)
+	if !ok {
 		return false
 	}
-	oh := strings.ToLower(hostOnly(u.Host))
-	for _, h := range []string{r.Host, r.Header.Get("X-Forwarded-Host")} {
-		for _, part := range strings.Split(h, ",") {
-			if part = strings.TrimSpace(part); part != "" && strings.ToLower(hostOnly(part)) == oh {
-				return true
-			}
-		}
+	if selfHostMatches(r, r.Host, oScheme, oHost, oPort) {
+		return true
 	}
-	for _, allowed := range strings.Split(os.Getenv("WRM_ALLOWED_ORIGINS"), ",") {
-		if a := strings.TrimSpace(allowed); a != "" && strings.ToLower(hostOnly(a)) == oh {
+	for _, part := range strings.Split(r.Header.Get("X-Forwarded-Host"), ",") {
+		if selfHostMatches(r, part, oScheme, oHost, oPort) {
 			return true
 		}
 	}
-	log.Printf("Cross-origin request rejected: %s (host %s)", origin, r.Host)
+	for _, allowed := range strings.Split(os.Getenv("WRM_ALLOWED_ORIGINS"), ",") {
+		a := strings.TrimSpace(allowed)
+		if a == "" {
+			continue
+		}
+		if strings.Contains(a, "://") {
+			// A full origin: scheme, host and port must all match.
+			if s, h, p, ok := originHostPort(a); ok && s == oScheme && h == oHost && p == oPort {
+				return true
+			}
+		} else if strings.ToLower(hostOnly(a)) == oHost {
+			// A bare host name keeps its old meaning: any port of that host.
+			return true
+		}
+	}
+	log.Printf("Cross-origin request rejected: %s (host %s). Behind a reverse proxy pass the port too (proxy_set_header Host $http_host, or X-Forwarded-Port), or list the origin in WRM_ALLOWED_ORIGINS", origin, r.Host)
 	return false
 }
 
