@@ -33,7 +33,6 @@ func autoImport(t *testing.T, u *testClient, name, content string, extra map[str
 	return code, res, raw
 }
 
-
 func TestImportDetectFormats(t *testing.T) {
 	cases := map[string][2]string{
 		"mremoteng":     {"confCons.xml", `<?xml version="1.0" encoding="utf-16"?><mrng:Connections xmlns:mrng="http://mremoteng.org" Name="Connections"></mrng:Connections>`},
