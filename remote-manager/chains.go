@@ -49,6 +49,7 @@ type chainDef struct {
 	Checks      []chainCheck    `json:"checks"`
 	Links       []chainLink     `json:"links,omitempty"`
 	Scenarios   []chainScenario `json:"scenarios,omitempty"`
+	Actions     []chainAction   `json:"actions,omitempty"`
 }
 
 // chainNode is a server (a saved SSH connection), a storage (from Storages) or an outside
@@ -78,6 +79,9 @@ type chainCheck struct {
 	Prefix   string     `json:"prefix,omitempty"`
 	MaxAgeS  int        `json:"max_age_s,omitempty"`
 	WarnDays int        `json:"warn_days,omitempty"`
+	Max      float64    `json:"max,omitempty"`      // disk, memory, load: highest healthy value
+	MaxMS    int        `json:"max_ms,omitempty"`   // http, tcp: slower answers count as "slow"
+	Severity string     `json:"severity,omitempty"` // critical (default) or warning
 	Expect   *chainCond `json:"expect,omitempty"`
 }
 
@@ -333,6 +337,7 @@ func validateChain(d *chainDef, userID int) []string {
 			errs = append(errs, p+": label at most 120 characters")
 		}
 	}
+	errs = append(errs, validateChainActions(d, nodes, checks)...)
 	seen := map[string]bool{}
 	for i := range d.Scenarios {
 		sc := &d.Scenarios[i]
@@ -709,6 +714,7 @@ func pollChain(ctx context.Context, id int) (chainRow, error) {
 		db.Exec(`DELETE FROM chain_samples WHERE chain_id=? AND id NOT IN (SELECT id FROM chain_samples WHERE chain_id=? ORDER BY id DESC LIMIT ?)`,
 			id, id, chainSamplesKept)
 	}
+	chainOpsAfterPoll(c, changes)
 	hub.sendTo(c.UserID, []byte(fmt.Sprintf(`{"type":"chain_changed","id":%d}`, id)))
 	return c, nil
 }
@@ -716,6 +722,9 @@ func pollChain(ctx context.Context, id int) (chainRow, error) {
 // notifyChainChange sends the events of one confirmed change. Every change is in the timeline;
 // a check notifies only when it turns good or bad, not on every new value.
 func notifyChainChange(c chainRow, ch chainChange) {
+	if chainInMaintenance(c.ID) {
+		return // recorded in the timeline; nobody is notified during maintenance
+	}
 	name := c.Def.Name
 	switch ch.Kind {
 	case "scenario":
@@ -841,6 +850,14 @@ type chainSummary struct {
 	ChecksOK      int    `json:"checks_ok"`
 	ChecksTotal   int    `json:"checks_total"`
 	LastAt        string `json:"last_at"`
+	// v14.8.0: what the overview of all chains shows
+	Status      string         `json:"status"`
+	Critical    int            `json:"critical"`
+	Warning     int            `json:"warning"`
+	Problems    []chainProblem `json:"problems"`
+	Maintenance string         `json:"maintenance_until,omitempty"`
+	History24   []string       `json:"history24"`
+	IntervalS   int            `json:"interval_s"`
 }
 
 func summarizeChain(c chainRow) chainSummary {
@@ -854,6 +871,22 @@ func summarizeChain(c chainRow) chainSummary {
 			}
 		}
 	}
+	o := loadChainOps(c.ID)
+	s.Problems = chainProblems(c, o, chainSince(c.ID))
+	if s.Problems == nil {
+		s.Problems = []chainProblem{}
+	}
+	for _, p := range s.Problems {
+		if p.Severity == "critical" {
+			s.Critical++
+		} else {
+			s.Warning++
+		}
+	}
+	s.Status = chainStatus(c, o, s.Problems)
+	s.Maintenance = o.MaintUntil
+	s.History24 = chainHistory24(c)
+	s.IntervalS = int(c.Def.interval() / time.Second)
 	for _, r := range c.State.Checks {
 		if r.OK {
 			s.ChecksOK++
@@ -983,6 +1016,8 @@ func apiChainsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch parts[1] {
+	case "ops", "maintenance", "ack", "discover-links", "actions":
+		apiChainOps(w, r, c, userID, parts)
 	case "layout":
 		apiChainLayout(w, r, c)
 	case "check":
@@ -1048,7 +1083,7 @@ func chainFileName(name string) string {
 func chainView(c chainRow) map[string]interface{} {
 	return map[string]interface{}{"id": c.ID, "enabled": c.Enabled, "definition": c.Def, "state": c.State,
 		"scenario": c.Confirmed.Scenario, "scenario_label": c.Def.scenarioLabel(c.Confirmed.Scenario),
-		"last_at": c.LastAt, "created_at": c.CreatedAt, "updated_at": c.UpdatedAt}
+		"last_at": c.LastAt, "created_at": c.CreatedAt, "updated_at": c.UpdatedAt, "ops": chainOpsView(c)}
 }
 
 func apiChainsRoot(w http.ResponseWriter, r *http.Request) {
@@ -1135,6 +1170,7 @@ func apiChainByID(w http.ResponseWriter, r *http.Request, c chainRow, userID int
 		jsonOK(w, chainView(got))
 	case http.MethodDelete:
 		db.Exec(`DELETE FROM chain_samples WHERE chain_id=?`, c.ID)
+		db.Exec(`DELETE FROM chain_ops WHERE chain_id=?`, c.ID)
 		if _, err := db.Exec(`DELETE FROM chains WHERE id=?`, c.ID); err != nil {
 			jsonError(w, "Server error", http.StatusInternalServerError)
 			return

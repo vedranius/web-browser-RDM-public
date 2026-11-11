@@ -1150,6 +1150,7 @@ func initDB() {
 	ensureTable("chain_drafts", chainDraftSchema,
 		"id", "user_id", "session_id", "name", "definition", "created_at", "updated_at")
 	initChainAISchema()
+	initChainOpsSchema()
 	ensureTable("snippets", `CREATE TABLE IF NOT EXISTS snippets (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,
