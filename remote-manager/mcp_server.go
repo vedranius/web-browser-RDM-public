@@ -670,8 +670,13 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 			return
 		}
 		id, _ := p.Arguments["approval_id"].(string)
-		secs := max(0, min(asID(p.Arguments["seconds"]), 55)) // bounded before the conversion
-		text, isErr := mcpWaitApproval(r.Context(), s, strings.TrimSpace(id), int(secs))
+		secs := 0 // bounded before the conversion; 0 means the default
+		if v := asID(p.Arguments["seconds"]); v > 55 {
+			secs = 55
+		} else if v > 0 {
+			secs = int(v)
+		}
+		text, isErr := mcpWaitApproval(r.Context(), s, strings.TrimSpace(id), secs)
 		writeRPC(w, 200, rpcResult(m.ID, toolText(text, isErr)))
 		return
 	case "close_session":
