@@ -371,7 +371,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 		"recovery_codes_left": recoveryCodesLeft(u.Recovery),
 		"password_min_length": settingInt("password_min_length"),
 		"screen_lock":         screenLockPolicy(u.ID),
-		"appearance":          map[string]interface{}{"default_theme": getSetting("appearance_default_theme"), "custom_css": settingBool("appearance_custom_css")},
+		"appearance":          appearancePolicy(),
 		"policy": map[string]interface{}{
 			"server_keys":      u.IsAdmin || settingBool("allow_server_keys"),
 			"link_shares":      u.IsAdmin || settingBool("allow_link_shares"),
