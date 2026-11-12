@@ -494,3 +494,10 @@ The Medium native preview (v12.6.0) is read-only: it lists application directori
 ## First-run setup code (v14.7.1)
 
 A new installation has no account, and the first account becomes the administrator. So that nobody else on the network can claim a fresh server first, `serve()` creates a one-time code (12 characters, `crypto/rand`) while the database has no account, logs it and writes it to `first-admin-setup-code.txt` (0600) next to the database. `POST /api/auth/register` for the first account requires `setup_code` unless the request is a direct loopback connection without `X-Forwarded-For`, `X-Real-IP` or `Forwarded` headers (a reverse proxy on the same host therefore still needs the code). The comparison ignores case and dashes and runs in constant time; a wrong code counts as a failed sign-in for the rate limit. The count of accounts is re-checked under a lock before the insert, so concurrent first registrations cannot create two administrators. The code and its file are removed when the first account exists, and at every later start.
+
+## Team-managed shares (v14.7.2)
+
+- Two per-share switches, off by default: `allow_edit` (operators may add and edit connections and folders) and `allow_tunnels` (operators may start and stop the owner's tunnels). They never apply to guests or auditors and are checked on every request (`sharePerms`, `shareTeamAccess`).
+- Members act on the owner's rows only inside the share (`shareHasConnection`, `shareHasFolder`); they cannot delete, cannot move items out of the share and cannot set jump hosts, proxies, key files, key store keys, vault credentials or Bitwarden items.
+- Changing a connection's host or protocol through a share clears its saved password and key and drops a stored-secret reference, so the owner's secret is never sent to a target a member chose. Members never receive secrets (`has_password` only).
+- Tunnels started by a member run as the owner's: the owner's tunnel policy and bind validation apply, and the member's account must be allowed to use tunnels. All changes are audited under the member's name with `share_id` and `owner`.

@@ -1,23 +1,33 @@
-## Web Remote Manager PRO v14.7.1 — Security fixes, tunnels behind HSTS
+## Web Remote Manager PRO v14.7.2 — Shares a team can manage together
 
 ### Added
+
+- **Team management of shares** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)): the share dialog has two new switches, both off by default. *Operators may add and edit connections and folders* lets signed-in members with the operator role or higher edit shared connections and add connections and folders inside the shared folders (right-click a shared connection or folder). *Operators may start and stop tunnels* adds **⇄ Tunnels…** to the share, with *Start* / *Stop* for the tunnels you configured. Guests never get these rights.
+
+### Security
+
+- Everything members add stays in your account. Members never see or pick your saved secrets, and changing a connection's host or protocol removes its saved password, so it is never sent to a server a member chose. Every change is audited under the member's name.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.7.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.2) asset. Preserve the database and encryption key; two columns are added to `share_links` and an older binary still starts on the database.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.7.1 — Security fixes, tunnels behind HSTS
+
+#### Added
 
 - **Setup code for a new installation**: until the first account exists, creating the administrator from another computer needs a one-time code that WRM prints to its console/log and writes to `first-admin-setup-code.txt` next to its database. On the WRM host itself (localhost) no code is needed. Before, whoever reached a fresh server first became its administrator.
 - **Tunnels behind HSTS** ([#190](https://github.com/vedranius/web-browser-RDM-public/issues/190)): a tunnel on 0.0.0.0 can be opened through an IP address of the WRM host, and *Admin → Policies* can turn HSTS off, so a self-signed web interface behind a tunnel opens in the browser.
 - **Security overview** warns about tunnels open to the network; a SOCKS tunnel on 0.0.0.0 is marked as a failure.
 
-### Fixed
+#### Fixed
 
 - Two simultaneous first registrations can no longer both become administrators.
 - The origin check compares the port, so another service on the WRM host is not trusted as WRM.
 - One AI client closing a shared AI session no longer stops the others; `~` in AI paths is expanded reliably under parallel calls.
 - Built with Go 1.27.4 (net/http fix GO-2026-6859).
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.7.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.1) asset. Preserve the database and encryption key; nothing is migrated.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.7.0 — Addons that show your chains
 

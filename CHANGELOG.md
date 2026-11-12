@@ -1,3 +1,16 @@
+## [14.7.2] - 2026-11-12
+
+Shares a team can manage together. Upgrading from v14.7.1 keeps the database and the encryption key; two columns are added to `share_links`.
+
+### Added
+
+- **Team management of shares** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)): two per-share switches, off by default, for signed-in members with the operator role or higher (never guests). *Operators may add and edit connections and folders* (`allow_edit`): edit a shared connection's name, protocol, host, user name, password, folder (inside the share) and notes; add connections and folders under a shared folder and rename shared folders. New items are created in the owner's account. *Operators may start and stop tunnels* (`allow_tunnels`): start and stop the tunnels the owner configured on the shared connections; the owner's tunnel policy applies and the member's account must be allowed to use tunnels.
+- API `/api/share-team/{share}/connections[/{id}]`, `…/folders[/{id}]`, `…/tunnels[/{key}/start|stop]`; `allow_edit` and `allow_tunnels` in `/api/shares`; `manage_connections` and `manage_tunnels` in the share permissions (`/api/shared`, `/api/share/{token}`, the room).
+
+### Security
+
+- Members never see or choose the owner's stored secrets (key store, vault credentials, Bitwarden, server key files). Changing a connection's host or protocol through a share removes its saved password and key and any stored-secret reference, so the owner's secret is never sent to a server a member picked. Members cannot delete items or move them out of the share. All changes are audited with the member's name, `share_id` and `owner`.
+
 ## [14.7.1] - 2026-11-11
 
 Security fixes and issue #190. Upgrading from v14.7.0 keeps the database and the encryption key; nothing is migrated.
