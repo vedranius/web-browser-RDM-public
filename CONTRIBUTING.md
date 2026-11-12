@@ -44,7 +44,7 @@ Code layout:
 | `users.go`, `totp.go` | Accounts, sessions, sign-in, 2FA, admin user management |
 | `settings.go`, `audit.go`, `admin.go` | Policies (feature flags), audit log (hash chain, append-only), admin panel API, terminal registry |
 | `recording.go` | Terminal sessions, asciicast session recorder, file transfer log, recordings & transfers API |
-| `shares.go`, `collab.go` | Shares, roles & permissions, collaboration rooms (chat, terminal sharing, voice signalling) |
+| `shares.go`, `share_team.go`, `collab.go` | Shares, roles & permissions, collaboration rooms (chat, terminal sharing, voice signalling) |
 | `turn.go` | Built-in TURN relay for voice calls |
 | `ssh_ws.go`, `files.go`, `sftp_pool.go`, `search.go`, `conntest.go`, `hostkeys.go` | Terminal, file manager, SFTP connection pool, search, connection test, host key verification |
 | `jump.go`, `tunnels.go` | Jump hosts (dialing through chains of SSH connections), SSH tunnels (local / remote / SOCKS5), tunnels API, web interface connections |

@@ -2209,6 +2209,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
       <div class="member-list" id="share-team-list"></div>
     </div>
+    <div class="field" id="share-team-block">
+      <label data-i18n="share_team_title">Team management</label>
+      <div class="field-check"><input type="checkbox" id="share-allow-edit"><label for="share-allow-edit" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_edit">Operators may add and edit connections and folders</label></div>
+      <div class="field-check"><input type="checkbox" id="share-allow-tunnels"><label for="share-allow-tunnels" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_tunnels">Operators may start and stop tunnels</label></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;" data-i18n="share_team_hint"></div>
+    </div>
     <div id="share-others-block">
       <div class="field">
         <label data-i18n="others_role" for="share-guest-role">Role for everyone else who opens the link</label>
@@ -7748,6 +7754,7 @@ function renderTree() {
       groupLabel.style.cssText = 'padding:6px 8px 3px;font-size:10.5px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:6px;';
       groupLabel.innerHTML = `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(sh.name)}">🤝 ${esc(sh.name || 'Share')} <span style="color:var(--text3);font-weight:500;">· ${esc(sh.owner_username || '')}</span></span>`
         + (sh.locked ? '<span class="pill warn" title="' + esc(t('share_locked_hint')) + '">🔒</span>' : roleBadge(sh.role))
+        + (!sh.locked && typeof shareTeamGroupButtons === 'function' ? shareTeamGroupButtons(sh) : '')
         + `<button class="icon-btn" style="padding:2px 5px;font-size:11px;" title="${esc(t('open_room'))}" onclick="openShareRoom('/share#${encodeURIComponent(sh.token)}')">↗</button>`;
       wrap.appendChild(groupLabel);
       if (sh.locked) {
@@ -7775,7 +7782,7 @@ function renderTree() {
         return item;
       };
       const visibleConns = (g.connections || []).filter(c => !query || connMatches(c, query));
-      appendSharedFolderTree(wrap, g.folders || [], visibleConns, makeSharedItem);
+      appendSharedFolderTree(wrap, g.folders || [], visibleConns, makeSharedItem, perms.manage_connections && typeof shareTeamFolderCtx === 'function' ? (e, f) => shareTeamFolderCtx(e, f, sh) : null);
     });
   }
 
@@ -7795,7 +7802,7 @@ function connMatches(c, q) {
   });
 }
 
-function appendSharedFolderTree(container, folderList, connList, makeItem) {
+function appendSharedFolderTree(container, folderList, connList, makeItem, folderCtx) {
   const children = new Map();
   const ids = new Set(folderList.map(f => f.id));
   folderList.forEach(f => {
@@ -7814,6 +7821,7 @@ function appendSharedFolderTree(container, folderList, connList, makeItem) {
     box.className = 'folder-children open';
     connList.filter(c => c.folder_id === f.id).forEach(c => box.appendChild(makeItem(c)));
     (children.get(f.id) || []).forEach(ch => add(ch, box, depth + 1));
+    if (folderCtx) row.oncontextmenu = e => folderCtx(e, f);
     row.onclick = () => {
       const open = box.classList.toggle('open');
       row.querySelector('.folder-chevron').classList.toggle('open', open);
@@ -8051,6 +8059,7 @@ function showSharedCtx(x, y, conn, perms) {
     <div class="ctx-section">${esc(t('shared_connection'))}</div>
     ${canTerm ? buildWinOptions('ssh') + '<div class="ctx-hr"></div>' : ''}
     ${perms.files_read ? buildWinOptions('sftp') : `<div class="ctx-item disabled">${esc(t('no_access_role'))}</div>`}
+    ${typeof shareTeamCtxItems === 'function' && ctxShareToken ? shareTeamCtxItems(conn, ctxShareToken, perms) : ''}
   `;
   showCtx('dyn-ctx-menu', x, y);
 }
@@ -8674,6 +8683,8 @@ function openShareModal(opts) {
   document.getElementById('share-name').value = edit ? edit.name : (opts.name || '');
   document.getElementById('share-member-role').innerHTML = roleOptions('operator');
   document.getElementById('share-guest-role').innerHTML = roleOptions(edit ? edit.guest_role : 'viewer', 'operator');
+  document.getElementById('share-allow-edit').checked = !!(edit && edit.allow_edit);
+  document.getElementById('share-allow-tunnels').checked = !!(edit && edit.allow_tunnels);
   document.getElementById('share-pass').value = '';
   document.getElementById('share-pass').placeholder = shareDraft.hadPassword ? t('share_pass_keep') : t('share_pass_none');
   document.getElementById('share-pass-clear').checked = false;
@@ -8814,6 +8825,8 @@ async function submitShare() {
     name: document.getElementById('share-name').value.trim() || t('shared_connections'),
     access_mode: shareDraft.mode,
     guest_role: document.getElementById('share-guest-role').value,
+    allow_edit: document.getElementById('share-allow-edit').checked,
+    allow_tunnels: document.getElementById('share-allow-tunnels').checked,
     public: shareDraft.mode !== 'members' && document.getElementById('share-public').checked,
     connection_ids: [...shareDraft.connIds].filter(id => { const c = conns.find(x => x.id === id); return c && !(shareFolderCovers(c.folder_id)); }),
     folder_ids: [...shareDraft.folderIds],
@@ -18357,7 +18370,7 @@ function renderCollabTree() {
     item.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = collabToken; showSharedCtx(e.clientX, e.clientY, c, collab.perms); };
     return item;
   };
-  appendSharedFolderTree(wrap, collabFolders, collabConns, makeItem);
+  appendSharedFolderTree(wrap, collabFolders, collabConns, makeItem, collab.perms && collab.perms.manage_connections && typeof shareTeamFolderCtx === 'function' ? (e, f) => shareTeamFolderCtx(e, f, {token: collabToken, perms: collab.perms}) : null);
   if (!collab.perms.terminal) {
     const hint = document.createElement('div');
     hint.className = 'muted-text'; hint.style.padding = '8px 10px';
@@ -19829,5 +19842,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 <script src="/static/appearance.js"></script>
 <script src="/static/lock.js"></script>
 <script src="/static/aisessions.js"></script>
+<script src="/static/shareteam.js"></script>
 </body>
 </html>

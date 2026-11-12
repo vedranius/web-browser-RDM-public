@@ -39,7 +39,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v14.7.1"
+var AppVersion = "v14.7.2"
 
 const sessionCookieName = "wrm_session"
 
@@ -339,6 +339,7 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/share/access", apiShareAccessHandler)
 	mux.HandleFunc("/api/share/", apiShareByTokenHandler)
 	mux.HandleFunc("/api/shared", apiSharedHandler)
+	mux.HandleFunc("/api/share-team/", apiShareTeamHandler)
 	// administration
 	mux.HandleFunc("/api/admin/users", apiAdminUsersHandler)
 	mux.HandleFunc("/api/admin/users/", apiAdminUserByIDHandler)
@@ -1538,6 +1539,8 @@ func initDB() {
 		`ALTER TABLE share_links ADD COLUMN access_mode TEXT NOT NULL DEFAULT 'link'`,
 		`ALTER TABLE share_links ADD COLUMN guest_role TEXT NOT NULL DEFAULT 'operator'`,
 		`ALTER TABLE share_links ADD COLUMN expires_at TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE share_links ADD COLUMN allow_tunnels INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE share_links ADD COLUMN allow_edit INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE share_members ADD COLUMN role TEXT NOT NULL DEFAULT 'operator'`,
 		`ALTER TABLE share_members ADD COLUMN added_at TEXT NOT NULL DEFAULT ''`,
 		// v10.1: audit entries reference connections and terminal sessions, and are hash-chained
