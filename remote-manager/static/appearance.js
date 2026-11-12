@@ -7,7 +7,7 @@
 // the older single ui.theme stylesheet) and themes the user saved. The choice follows the user
 // to every browser (/api/me/ui/appearance); a copy in localStorage paints the next load before
 // the server answers. The administrator picks the default theme (appearance_default_theme) and
-// whether users may add their own CSS (appearance_custom_css). Since v14.11.7 the administrator
+// whether users may add their own CSS (appearance_custom_css). Since v14.11.8 the administrator
 // can also publish themes to everyone (appearance_shared_themes, source 'org') and lock the
 // colours to the default theme (appearance_lock); accessibility options are never locked.
 'use strict';
@@ -131,7 +131,7 @@ Object.assign(LANGS.en, {
   p_appearance_default_theme_ph: 'graphite',
   p_appearance_custom_css: 'Allow custom CSS',
   p_appearance_custom_css_d: 'Users may add CSS to their own interface (Settings → Appearance). It never reaches other users.',
-  // v14.11.7: shared themes, appearance lock, editor
+  // v14.11.8: shared themes, appearance lock, editor
   ap_shared: 'From your organisation',
   ap_share: 'Share with everyone',
   ap_share_d: 'Publish this theme to every user of this WRM (Admin → Policies keeps the list).',
@@ -271,7 +271,7 @@ Object.assign(LANGS.hr, {
   p_appearance_default_theme_ph: 'graphite',
   p_appearance_custom_css: 'Dopusti vlastiti CSS',
   p_appearance_custom_css_d: 'Korisnici mogu dodati CSS vlastitom sučelju (Postavke → Izgled). Nikad ne dolazi do drugih korisnika.',
-  // v14.11.7: zajedničke teme, zaključan izgled, uređivač
+  // v14.11.8: zajedničke teme, zaključan izgled, uređivač
   ap_shared: 'Od vaše organizacije',
   ap_share: 'Podijeli sa svima',
   ap_share_d: 'Objavi ovu temu svim korisnicima ovog WRM-a (popis je u Admin → Pravila).',

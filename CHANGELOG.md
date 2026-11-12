@@ -1,4 +1,4 @@
-## [14.11.7] - 2026-11-12
+## [14.11.8] - 2026-11-12
 
 ### Added
 - **Share a theme with everyone**: administrators publish one of their themes from *Settings → Appearance* (**📢 Share with everyone**, **Stop sharing**); users see it under *From your organisation*, and it can be the default theme. Setting `appearance_shared_themes`, checked on the server (`appearance_themes.go`: `org-` ids, at most 12 themes, token names and values without `url(`, `expression`, `@import`, `;`, braces or angle brackets).

@@ -1,4 +1,4 @@
-## Web Remote Manager PRO v14.11.7 — One look for the whole team
+## Web Remote Manager PRO v14.11.8 — One look for the whole team
 
 ### Added
 
@@ -13,7 +13,7 @@
 
 ### Upgrade
 
-Use WRM's update action or replace the executable/container with the matching [v14.11.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.7) asset. Preserve the database and encryption key; nothing is migrated. New settings `appearance_lock` (off) and `appearance_shared_themes` (empty).
+Use WRM's update action or replace the executable/container with the matching [v14.11.8](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.8) asset. Preserve the database and encryption key; nothing is migrated. New settings `appearance_lock` (off) and `appearance_shared_themes` (empty).
 
 [Full changelog](CHANGELOG.md)
 

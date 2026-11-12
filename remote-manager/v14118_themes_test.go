@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-// v14.11.7: themes an administrator shares with everyone and the appearance lock.
-func TestV14117SharedThemesAndLock(t *testing.T) {
+// v14.11.8: themes an administrator shares with everyone and the appearance lock.
+func TestV14118SharedThemesAndLock(t *testing.T) {
 	srv := newTestServer(t)
 	defer setSetting("appearance_shared_themes", "[]")
 	defer setSetting("appearance_lock", "0")

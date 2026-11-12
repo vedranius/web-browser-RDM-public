@@ -20,7 +20,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
 
-## What's new in v14.11.7
+## What's new in v14.11.8
 
 **One look for the whole team, and better tools for making it.** An administrator can **📢 share a saved theme with everyone** from *Settings → Appearance*; it appears for all users under *From your organisation* and can be the default. **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance) gives everyone the same colours, while accessibility options, fonts and size stay with each user. The editor can now **💾 save changes into one of your themes** instead of only saving a copy, and a **contrast check** next to the preview shows the WCAG ratio of text, accent and terminal colours while you edit. See [Appearance, themes and accessibility](#appearance-themes-and-accessibility).
 
@@ -483,21 +483,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.11.7-linux-amd64
-   ./wrm-pro-v14.11.7-linux-amd64
+   chmod +x wrm-pro-v14.11.8-linux-amd64
+   ./wrm-pro-v14.11.8-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.11.7-windows-amd64.exe
+   .\wrm-pro-v14.11.8-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.11.7-linux-amd64.AppImage
-   ./wrm-pro-v14.11.7-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.11.7-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.11.8-linux-amd64.AppImage
+   ./wrm-pro-v14.11.8-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.11.8-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -506,8 +506,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.7/wrm-pro-v14.11.7-android-arm64
-   chmod +x wrm-pro-v14.11.7-android-arm64 && ./wrm-pro-v14.11.7-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.8/wrm-pro-v14.11.8-android-arm64
+   chmod +x wrm-pro-v14.11.8-android-arm64 && ./wrm-pro-v14.11.8-android-arm64
    ```
 
    **Docker**
@@ -3851,7 +3851,7 @@ remote-manager/
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
   upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs, restarts that keep every table, restored addon instances)
   diag_dump_test.go unit tests (freeze diagnostics written and pruned)
-  v14117_themes_test.go  shared themes (value checks, ids, limits) and the appearance lock in /api/auth/me
+  v14118_themes_test.go  shared themes (value checks, ids, limits) and the appearance lock in /api/auth/me
   v1450_ai_events_mux_test.go  several AI sessions over one stream, positions, own sessions only, the session cap
   v1463_test.go           log discovery skips virtual environments, discovery kept alive and run again by the viewer and search (not for shares), dynamic tunnels offered as proxies
   v1462_auth_mail_test.go forgot password (same answer, one-time and expiring links, 2FA code, sessions end, notice, policy all/users/off, limit), invitations, self-registration confirmation and cleanup

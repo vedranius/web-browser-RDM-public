@@ -1,6 +1,6 @@
 package main
 
-// Shared (organisation) themes and the appearance lock (v14.11.7).
+// Shared (organisation) themes and the appearance lock (v14.11.8).
 //
 // An administrator publishes a theme made in Settings → Appearance to everyone
 // (appearance_shared_themes) and may lock the colours (appearance_lock): then every user
