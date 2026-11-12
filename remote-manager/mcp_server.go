@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -74,7 +75,7 @@ type mcpConn struct {
 	elicitation   bool
 	ip            string
 	created       time.Time
-	lastSeen      time.Time
+	lastSeenNs    atomic.Int64 // unix nanoseconds of the last request; read without c.mu
 	elicits       map[string]mcpElicit
 	inflight      map[string]context.CancelFunc
 	opened        map[int64]bool // AI sessions opened through this MCP session
@@ -94,6 +95,28 @@ func mcpConnsOf(grantID int64) int {
 		if c.grantID == grantID {
 			n++
 		}
+	}
+	return n
+}
+
+// mcpSessionHolders counts the live MCP sessions other than except that opened the AI
+// session sid.
+func mcpSessionHolders(sid int64, except *mcpConn) int {
+	mcpConns.Lock()
+	conns := make([]*mcpConn, 0, len(mcpConns.m))
+	for _, x := range mcpConns.m {
+		if x != except {
+			conns = append(conns, x)
+		}
+	}
+	mcpConns.Unlock()
+	n := 0
+	for _, x := range conns {
+		x.mu.Lock()
+		if !x.closed && x.opened[sid] {
+			n++
+		}
+		x.mu.Unlock()
 	}
 	return n
 }
@@ -282,9 +305,7 @@ func mcpConnFor(r *http.Request, g *mcpGrant) *mcpConn {
 	if c == nil || c.grantID != g.ID {
 		return nil
 	}
-	c.mu.Lock()
-	c.lastSeen = time.Now()
-	c.mu.Unlock()
+	c.lastSeenNs.Store(time.Now().UnixNano())
 	return c
 }
 
@@ -391,7 +412,7 @@ func mcpInitialize(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg
 	for _, c := range mcpConns.m {
 		if c.userID == g.UserID {
 			n++
-			if oldest == nil || c.lastSeen.Before(oldest.lastSeen) {
+			if oldest == nil || c.lastSeenNs.Load() < oldest.lastSeenNs.Load() {
 				oldest = c
 			}
 		}
@@ -401,8 +422,9 @@ func mcpInitialize(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg
 		mcpDropConns(func(x *mcpConn) bool { return x == oldest })
 	}
 	c := &mcpConn{id: randomToken(24), grantID: g.ID, userID: g.UserID, clientName: name, clientVersion: truncateStr(p.ClientInfo.Version, 40),
-		protocol: ver, elicitation: elicit, ip: clientIP(r), created: time.Now(), lastSeen: time.Now(),
+		protocol: ver, elicitation: elicit, ip: clientIP(r), created: time.Now(),
 		elicits: map[string]mcpElicit{}, inflight: map[string]context.CancelFunc{}, opened: map[int64]bool{}}
+	c.lastSeenNs.Store(time.Now().UnixNano())
 	mcpConns.Lock()
 	mcpConns.m[c.id] = c
 	mcpConns.Unlock()
@@ -640,6 +662,15 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		s, why := mcpSessionFor(g, p.Arguments["session_id"])
 		if s == nil {
 			writeRPC(w, 200, rpcResult(m.ID, toolText(why, true)))
+			return
+		}
+		// Several AI clients (or parallel agents) with the same AI connection share the session
+		// of a server: one of them closing it must not stop the others' running commands.
+		c.mu.Lock()
+		delete(c.opened, s.ID)
+		c.mu.Unlock()
+		if mcpSessionHolders(s.ID, c) > 0 {
+			writeRPC(w, 200, rpcResult(m.ID, toolText("Session left open: another AI client of this AI connection still uses it. You are done with it.", false)))
 			return
 		}
 		s.Kill(g.UserID, "closed by the MCP client")

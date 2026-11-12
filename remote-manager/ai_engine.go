@@ -120,12 +120,13 @@ type aiSession struct {
 	TokenID     int64
 	Scopes      []string
 
-	conn     Connection
-	client   *ssh.Client
-	home     string
-	osInfo   string
-	notes    string
-	gathered bool
+	conn       Connection
+	client     *ssh.Client
+	home       string
+	osInfo     string
+	notes      string
+	gatherMu   sync.Mutex // concurrent callers wait until the running gather has finished
+	gatheredOK bool       // the server answered; a failed gather is tried again by the next caller
 
 	history       []aiMsg
 	modeNotice    string
@@ -780,13 +781,17 @@ func sanitizeServerInfo(s string) string {
 }
 
 func (s *aiSession) gather(ctx context.Context) {
-	s.mu.Lock()
-	done := s.gathered
-	s.gathered = true
-	s.mu.Unlock()
-	if done {
+	s.gatherMu.Lock()
+	defer s.gatherMu.Unlock()
+	if s.gatheredOK {
 		return
 	}
+	s.gatheredOK = s.gatherNow(ctx)
+}
+
+// gatherNow reads the server's system, home directory and login once; false when the server
+// could not be reached.
+func (s *aiSession) gatherNow(ctx context.Context) bool {
 	out, _, err := s.exec(ctx, `uname -srm 2>/dev/null; (. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME"); printf 'WRM-HOME %s\n' "$HOME"; printf 'WRM-USER %s\n' "$(id -un 2>/dev/null)"`, "", 20*time.Second)
 	info := []string{}
 	if err == nil {
@@ -816,6 +821,7 @@ func (s *aiSession) gather(ctx context.Context) {
 	s.notes = notes
 	s.mu.Unlock()
 	s.audit(nil, "ai.context", map[string]interface{}{"os": s.osInfo, "notes_shared": s.ShareNotes && s.notes != ""})
+	return err == nil
 }
 
 // ─── the permission engine at work ───────────────────

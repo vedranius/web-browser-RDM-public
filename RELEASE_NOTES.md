@@ -1,17 +1,32 @@
-## Web Remote Manager PRO v14.7.0 — Addons that show your chains
+## Web Remote Manager PRO v14.7.1 — Security fixes, tunnels behind HSTS
 
 ### Added
+
+- **Setup code for a new installation**: until the first account exists, creating the administrator from another computer needs a one-time code that WRM prints to its console/log and writes to `first-admin-setup-code.txt` next to its database. On the WRM host itself (localhost) no code is needed. Before, whoever reached a fresh server first became its administrator.
+- **Tunnels behind HSTS** ([#190](https://github.com/vedranius/web-browser-RDM-public/issues/190)): a tunnel on 0.0.0.0 can be opened through an IP address of the WRM host, and *Admin → Policies* can turn HSTS off, so a self-signed web interface behind a tunnel opens in the browser.
+- **Security overview** warns about tunnels open to the network; a SOCKS tunnel on 0.0.0.0 is marked as a failure.
+
+### Fixed
+
+- Two simultaneous first registrations can no longer both become administrators.
+- The origin check compares the port, so another service on the WRM host is not trusted as WRM.
+- One AI client closing a shared AI session no longer stops the others; `~` in AI paths is expanded reliably under parallel calls.
+- Built with Go 1.27.4 (net/http fix GO-2026-6859).
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.7.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.1) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.7.0 — Addons that show your chains
+
+#### Added
 
 - **`chains.read` for addons**: an addon window can now read your [chains](README.md#chains-live-service-chain-monitoring): the checked values, the active scenario and what changed when. WRM keeps checking the chains in the background, so an addon can present a whole system the way your team needs it (a table per environment, a report, an update of a wiki page) without SSH, commands or secrets of its own.
 - **Check now** from the addon window, with the same limit as in the Chains window, recorded in the audit log.
 - The permission sheet says exactly what the addon may read. Every viewer sees only their own chains, also in a shared instance.
 - For addon authors: `wrm.chains()`, `wrm.chain(id)` and `wrm.chainCheck(id)` in `wrm-bridge.js`, and sample chains in `wrm -addon-dev` through `WRM_ADDON_CHAINS`.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.7.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.0) asset. Preserve the database and encryption key; nothing is migrated.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.6.3 — Proxies from SSH tunnels, a steady lock screen, log discovery that keeps going
 
