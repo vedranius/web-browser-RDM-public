@@ -46,7 +46,6 @@ func validateSharedThemes(v string) (string, error) {
 		return "", fmt.Errorf("at most %d shared themes", maxSharedThemes)
 	}
 	seen := map[string]bool{}
-	out := make([]sharedTheme, 0, len(in))
 	for _, th := range in {
 		if !sharedThemeIDRe.MatchString(th.ID) || seen[th.ID] {
 			return "", fmt.Errorf("invalid or repeated theme id %q (use org-<name>)", th.ID)
@@ -56,8 +55,8 @@ func validateSharedThemes(v string) (string, error) {
 		if name == "" || len([]rune(name)) > 60 || strings.ContainsAny(name, "<>") {
 			return "", fmt.Errorf("theme %s: name must be 1 to 60 characters without < or >", th.ID)
 		}
-		if th.Mode != "light" {
-			th.Mode = "dark"
+		if th.Mode != "light" && th.Mode != "dark" && th.Mode != "" {
+			return "", fmt.Errorf("theme %s: mode must be dark or light", th.ID)
 		}
 		if len(th.Tokens) == 0 || len(th.Tokens) > 64 || len(th.Term) > 32 {
 			return "", fmt.Errorf("theme %s: 1 to 64 colours and at most 32 terminal colours", th.ID)
@@ -72,10 +71,10 @@ func validateSharedThemes(v string) (string, error) {
 				return "", fmt.Errorf("theme %s: invalid terminal colour %q", th.ID, k)
 			}
 		}
-		out = append(out, sharedTheme{ID: th.ID, Name: name, Mode: th.Mode, Tokens: th.Tokens, Term: th.Term})
 	}
-	b, _ := json.Marshal(out)
-	return string(b), nil
+	// The checked input is stored as it came (re-encoding it would hand CodeQL a JSON
+	// value it then follows into every other setting read).
+	return v, nil
 }
 
 // sharedThemes returns the published themes for the page (an empty list on any error).
