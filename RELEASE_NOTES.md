@@ -1,12 +1,24 @@
-## Web Remote Manager PRO v14.11.2 — Workboard and panels in one place
+## Web Remote Manager PRO v14.11.3 — AI apps keep their approved access
 
-### Changed
+### Fixed
+
+- **No early re-approval of AI connections**: the WRM PRO Claude plugin and the Claude Desktop extension asked for a new approval whenever WRM did not answer for a moment (restarting, updating, hanging, or the computer off the network), although the chosen lifetime had not passed. Now only a token WRM refuses leads to a new sign-in; otherwise the AI app is told WRM is unreachable and the bridge reconnects by itself with the saved access.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.3) asset. Preserve the database and encryption key; nothing is migrated. Update the WRM PRO Claude plugin to 1.2.3 (or download the Claude Desktop extension again); the saved connection stays, so no new sign-in is needed.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.2 — Workboard and panels in one place
+
+#### Changed
 
 - **One menu for panels and addons**: the ▤ Workboard menu lists every panel with where it is, so you show, hide, lock and reset the layout where you add addons and arrange the canvas.
 - **Tidier top bar**: the separate ▦ Panels button is gone while the Workboard is available, and a locked layout shows 🔒 on the Workboard button.
 - **Add to the Workboard** lists the panels next to the addons; a hidden panel comes back with *Show*.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.2) asset. Preserve the database and encryption key; nothing is migrated.
 
