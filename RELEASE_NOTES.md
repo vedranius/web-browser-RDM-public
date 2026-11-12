@@ -3,6 +3,8 @@
 ### Added
 
 - **Account menu** on your avatar: your name and role, *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out* in one place.
+- **Minimise dialogs**: the ▁ button above a big dialog turns it into a chip at the bottom of the screen; click the chip to continue where you left off.
+- **Grouped notifications**: repeated messages show a ×N counter and older ones fold into one *more notifications* toast.
 - **Tablets get the work area back**: between 761 and 1024 px (a tablet, a narrow laptop or a zoomed-in browser) *Sessions*, *Clipboard*, *Snippets* and the docked AI view slide in from the 🗂 button.
 
 ### Changed

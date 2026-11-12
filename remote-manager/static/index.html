@@ -108,6 +108,13 @@ button:hover { background: var(--accent-h); }
 .wm-grip { position: fixed; z-index: 2; width: 14px; height: 14px; cursor: nwse-resize; touch-action: none;
   background: linear-gradient(135deg, transparent 50%, var(--text3) 50%, var(--text3) 58%, transparent 58%, transparent 70%, var(--text3) 70%, var(--text3) 78%, transparent 78%); opacity: .7; }
 .wm-grip:hover { opacity: 1; }
+/* minimised dialogs wait as chips in a tray at the bottom of the screen */
+#wm-tray { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 8500; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: calc(100vw - 16px); pointer-events: none; }
+#wm-tray:empty { display: none; }
+.wm-chip { pointer-events: auto; display: inline-flex; align-items: center; gap: 4px; max-width: 260px; padding: 0 2px 0 10px; height: 30px; border-radius: 15px; background: var(--bg2); border: 1px solid var(--border2); box-shadow: 0 4px 14px rgba(0,0,0,.35); color: var(--text); font-size: 12.5px; }
+.wm-chip .wm-chip-open { background: transparent; border: 0; color: inherit; cursor: pointer; padding: 0; min-height: 0; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wm-chip .wm-chip-x { background: transparent; border: 0; color: var(--text2); cursor: pointer; width: 24px; height: 24px; border-radius: 12px; padding: 0; min-height: 0; line-height: 1; }
+.wm-chip .wm-chip-x:hover, .wm-chip:hover { background: var(--bg4); }
 /* fields outside .field inside dialogs follow the theme (zero specificity: any own rule wins) */
 :where(.modal) :where(input[type=search], input[type=text], input:not([type]), input[type=number], select, textarea) { background: var(--bg); color: var(--text); border: 1px solid var(--border2); border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
 .modal {
@@ -1145,6 +1152,15 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
 .toast .toast-actions { display: flex; gap: 6px; margin-left: 8px; }
 .toast .toast-actions button { padding: 3px 9px; font-size: 11px; }
 .toast.persist { border-left-color: var(--purple); }
+.toast .toast-n { flex: none; font-size: 11px; padding: 0 6px; border-radius: 8px; background: var(--bg4); color: var(--text2); }
+.toast.toast-group { flex-direction: column; align-items: stretch; gap: 6px; }
+.toast-group-head { display: flex; align-items: center; gap: 8px; }
+.toast-group-head .toast-msg { flex: 1; }
+.toast-group-head button { padding: 2px 8px; font-size: 11px; min-height: 0; }
+.toast-group-head .toast-x { background: transparent; border: 0; color: var(--text2); cursor: pointer; }
+.toast-group-list { max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.toast-group-item { border-left: 3px solid var(--accent); padding: 2px 8px; font-size: 11.5px; }
+.toast-group-item.success { border-color: var(--green); } .toast-group-item.error { border-color: var(--red); } .toast-group-item.warning { border-color: var(--yellow); }
 
 /* Tabs (settings & admin) */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: -4px 0 14px; overflow-x: auto; scrollbar-width: none; position: relative; }
@@ -6789,8 +6805,8 @@ Object.assign(LANGS.hr, {
  "date_format_saved": "Format datuma i vremena spremljen",
 });
 // v14.5.1: resizable and maximisable dialogs
-Object.assign(LANGS.en, { win_max: 'Full screen', win_restore: 'Back to the window size', win_reset: 'Default size', win_resize: 'Drag to resize' });
-Object.assign(LANGS.hr, { win_max: 'Preko cijelog zaslona', win_restore: 'Natrag na veličinu prozora', win_reset: 'Zadana veličina', win_resize: 'Povuci za promjenu veličine' });
+Object.assign(LANGS.en, { win_max: 'Full screen', win_restore: 'Back to the window size', win_reset: 'Default size', win_resize: 'Drag to resize', win_min: 'Minimise: keep it as a button at the bottom of the screen', win_restore_min: 'Open the dialog again', win_dialog: 'Dialog', toast_more: '{n} more notifications', toast_show: 'Show', toast_hide: 'Hide' });
+Object.assign(LANGS.hr, { win_max: 'Preko cijelog zaslona', win_restore: 'Natrag na veličinu prozora', win_reset: 'Zadana veličina', win_resize: 'Povuci za promjenu veličine', win_min: 'Smanji: zadrži ga kao gumb na dnu zaslona', win_restore_min: 'Ponovno otvori dijalog', win_dialog: 'Dijalog', toast_more: 'Još obavijesti: {n}', toast_show: 'Prikaži', toast_hide: 'Sakrij' });
 // v14.11.0: account menu, side panel drawer, interface for every screen size
 Object.assign(LANGS.en, {
   tb_user_t: 'Account: settings, shares, lock, sign out',
@@ -6859,12 +6875,65 @@ function esc(s) {
 // A value for a JavaScript string argument inside an inline HTML event handler.
 function jsq(v) { return esc(JSON.stringify(String(v == null ? '' : v))); }
 
+// Toasts are grouped: the same message again only raises a ×N counter on the toast already
+// shown, and beyond TOAST_MAX the oldest ones fold into one "more notifications" toast that
+// lists them on demand, so a burst (many servers going down at once) never fills the screen.
+const TOAST_MAX = 4;
+let toastFolded = [], toastGroup = null;
+function toastDismiss(d) {
+  if (d._closing) return;
+  d._closing = true;
+  clearTimeout(d._timer);
+  d.style.animation = 'fadeOut .3s ease forwards';
+  setTimeout(() => { d.remove(); if (d === toastGroup) { toastGroup = null; toastFolded = []; } }, 300);
+}
+function toastArm(d, dur) { clearTimeout(d._timer); d._timer = setTimeout(() => toastDismiss(d), dur); }
+function toastRenderGroup(box) {
+  if (!toastFolded.length) return;
+  if (!toastGroup || toastGroup._closing) {
+    toastGroup = document.createElement('div');
+    toastGroup.className = 'toast info toast-group';
+    toastGroup.innerHTML = `<div class="toast-group-head"><span class="toast-msg"></span><button type="button" class="btn-sec btn-sm toast-group-tog"></button><button type="button" class="toast-x" title="${esc(t('close'))}">✕</button></div><div class="toast-group-list" hidden></div>`;
+    toastGroup.querySelector('.toast-group-tog').onclick = () => { const l = toastGroup.querySelector('.toast-group-list'); l.hidden = !l.hidden; toastRenderGroup(box); };
+    toastGroup.querySelector('.toast-x').onclick = () => toastDismiss(toastGroup);
+    box.prepend(toastGroup);
+  }
+  const g = toastGroup, list = g.querySelector('.toast-group-list');
+  g.querySelector('.toast-msg').textContent = '🔔 ' + t('toast_more').replace('{n}', toastFolded.reduce((a, x) => a + x.n, 0));
+  g.querySelector('.toast-group-tog').textContent = t(list.hidden ? 'toast_show' : 'toast_hide');
+  list.innerHTML = toastFolded.slice().reverse().map(x => `<div class="toast-group-item ${esc(x.type)}">${esc(x.msg)}${x.n > 1 ? ` <b class="toast-n">×${x.n}</b>` : ''}</div>`).join('');
+  toastArm(g, list.hidden ? 15000 : 60000);
+}
 function showToast(msg, type = 'info', dur = 3000) {
+  const box = document.getElementById('toast-container');
+  const plain = () => [...box.children].filter(x => x._msg !== undefined && !x._closing);
+  const same = plain().find(x => x._msg === msg && x._type === type);
+  if (same) {
+    same._n++;
+    let n = same.querySelector('.toast-n');
+    if (!n) { n = document.createElement('b'); n.className = 'toast-n'; same.appendChild(n); }
+    n.textContent = '×' + same._n;
+    toastArm(same, dur);
+    return same;
+  }
   const d = document.createElement('div');
   d.className = 'toast ' + type;
-  d.textContent = msg;
-  document.getElementById('toast-container').appendChild(d);
-  setTimeout(() => { d.style.animation = 'fadeOut .3s ease forwards'; setTimeout(() => d.remove(), 300); }, dur);
+  d._msg = msg; d._type = type; d._n = 1;
+  const span = document.createElement('span');
+  span.textContent = msg;
+  d.appendChild(span);
+  box.appendChild(d);
+  toastArm(d, dur);
+  const shown = plain();
+  if (shown.length > TOAST_MAX) {
+    for (const old of shown.slice(0, shown.length - TOAST_MAX)) {
+      const f = toastFolded.find(x => x.msg === old._msg && x.type === old._type);
+      if (f) f.n += old._n; else toastFolded.push({msg: old._msg, type: old._type, n: old._n});
+      clearTimeout(old._timer); old._closing = true; old.remove();
+    }
+    toastFolded = toastFolded.slice(-50);
+    toastRenderGroup(box);
+  }
   return d;
 }
 
@@ -6928,7 +6997,7 @@ const wrmWinSize = (() => {
     if (m.dataset.wmW === undefined) { m.dataset.wmW = m.style.width; m.dataset.wmH = m.style.height; }
     const bar = document.createElement('div');
     bar.className = 'wm-bar';
-    bar.innerHTML = `<button type="button" class="wm-max-btn"></button><button type="button" class="wm-reset" title="${esc(t('win_reset'))}">↺</button>`;
+    bar.innerHTML = `<button type="button" class="wm-min-btn" title="${esc(t('win_min'))}">▁</button><button type="button" class="wm-max-btn"></button><button type="button" class="wm-reset" title="${esc(t('win_reset'))}">↺</button>`;
     const grip = document.createElement('div');
     grip.className = 'wm-grip';
     grip.title = t('win_resize');
@@ -6943,6 +7012,7 @@ const wrmWinSize = (() => {
       if (!s.max && !s.w) delete saved[ctl.key]; else saved[ctl.key] = s;
       save(); apply(m, saved[ctl.key]);
     };
+    bar.querySelector('.wm-min-btn').onclick = (e) => { e.stopPropagation(); minimise(ov, m); };
     bar.querySelector('.wm-reset').onclick = (e) => { e.stopPropagation(); delete saved[ctl.key]; save(); apply(m, null); };
     grip.onpointerdown = (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -6959,8 +7029,41 @@ const wrmWinSize = (() => {
     };
     apply(m, saved[ctl.key]);
   }
+  // Minimise: the dialog is closed for the rest of the page (Escape, focus, polling) but keeps
+  // its contents; a chip in the tray brings it back. Opening it again from a menu does too.
+  const chips = new Map();
+  function tray() {
+    let el = document.getElementById('wm-tray');
+    if (!el) { el = document.createElement('div'); el.id = 'wm-tray'; document.body.appendChild(el); }
+    return el;
+  }
+  function dropChip(ov) {
+    const c = chips.get(ov);
+    if (c) c.remove();
+    chips.delete(ov);
+    ov.classList.remove('wm-min');
+  }
+  function minimise(ov, m) {
+    const h = m.querySelector('h3, h2, .modal-title');
+    const label = ((h && h.textContent) || '').replace(/\s+/g, ' ').trim() || t('win_dialog');
+    const c = document.createElement('div');
+    c.className = 'wm-chip';
+    c.innerHTML = `<button type="button" class="wm-chip-open"></button><button type="button" class="wm-chip-x" title="${esc(t('close'))}">✕</button>`;
+    const open = c.querySelector('.wm-chip-open');
+    open.textContent = label;
+    open.title = t('win_restore_min');
+    open.onclick = () => { dropChip(ov); ov.classList.add('open'); later(); };
+    c.querySelector('.wm-chip-x').onclick = () => dropChip(ov);
+    dropChip(ov);
+    chips.set(ov, c);
+    tray().appendChild(c);
+    ov.classList.add('wm-min');
+    ov.classList.remove('open');
+    detach();
+  }
   function scan() {
     timer = null;
+    for (const ov of [...chips.keys()]) if (!ov.isConnected || ov.classList.contains('open')) dropChip(ov);
     for (const ov of document.querySelectorAll('.modal-overlay')) {
       if (watched.has(ov)) continue;
       watched.add(ov);
@@ -6980,7 +7083,7 @@ const wrmWinSize = (() => {
   addEventListener('click', later, true);
   addEventListener('keydown', later, true);
   addEventListener('resize', () => { if (ctl) apply(ctl.m, saved[ctl.key]); later(); });
-  return {scan: later};
+  return {scan: later, minimise};
 })();
 // Keyboard focus stays inside the open dialog (a11y): Tab and Shift+Tab wrap around its
 // controls instead of moving into the page behind the overlay.

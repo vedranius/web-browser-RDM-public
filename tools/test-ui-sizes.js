@@ -69,3 +69,40 @@ test('top bar fits at every screen size and zoom', {skip: !url && 'WRM_URL not s
     await browser.close();
   }
 });
+
+test('dialogs minimise to a chip and toasts are grouped', {skip: !url && 'WRM_URL not set'}, async () => {
+  const {chromium} = require('playwright');
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({viewport: {width: 1400, height: 900}});
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.goto(url);
+    await page.evaluate(async ([u, p]) => {
+      await fetch('/api/auth/login', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-WRM-Request': '1'}, body: JSON.stringify({username: u, password: p})});
+    }, [process.env.WRM_USER || 'admin', process.env.WRM_PASS || '']);
+    await page.goto(url);
+    await page.waitForSelector('#top-bar', {state: 'visible'});
+    await page.evaluate(() => openSettings());
+    await page.click('.wm-min-btn');
+    const count = () => page.evaluate(() => [document.querySelectorAll('.modal-overlay.open').length, document.querySelectorAll('#wm-tray .wm-chip').length]);
+    assert.deepEqual(await count(), [0, 1], 'minimised dialog leaves a chip');
+    await page.click('.wm-chip-open');
+    await page.waitForTimeout(100);
+    assert.deepEqual(await count(), [1, 0], 'the chip opens the dialog again');
+    await page.click('.wm-min-btn');
+    await page.evaluate(() => openSettings());
+    await page.waitForTimeout(100);
+    assert.deepEqual(await count(), [1, 0], 'opening the dialog from the menu removes its chip');
+    const toasts = await page.evaluate(() => {
+      for (let i = 0; i < 3; i++) showToast('same', 'error', 20000);
+      for (let i = 1; i <= 6; i++) showToast('server ' + i, 'error', 20000);
+      const box = document.getElementById('toast-container');
+      return {n: box.querySelectorAll('.toast').length, group: !!box.querySelector('.toast-group'), same: box.textContent.includes('×3')};
+    });
+    assert.deepEqual(toasts, {n: 5, group: true, same: true});
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+  }
+});

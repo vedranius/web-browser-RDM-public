@@ -6,6 +6,8 @@ The interface fits every screen: the top bar keeps its labels, tablets get the w
 
 - **Account menu** on the avatar in the top bar: who is signed in and their role, *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out*.
 - **Side panel drawer on tablets and narrow laptops** (761–1024 px wide, also a desktop browser zoomed in): *Sessions*, *Clipboard*, *Snippets* and a docked AI view slide in from the 🗂 button instead of taking a third of the screen, the same way phones already worked.
+- **Minimise a dialog** with the new ▁ button above big dialogs (Settings, Storages, Monitoring …): it becomes a chip at the bottom of the screen and keeps what you typed; click the chip, or open the dialog again from its menu, to bring it back.
+- **Grouped notifications**: the same message again raises a ×N counter instead of another toast, and beyond four toasts the oldest fold into one *N more notifications* toast with *Show* to list them, so a burst of alerts never fills the screen.
 - `tools/test-ui-sizes.js`: drives a running WRM in Chromium at phone, tablet, laptop and desktop sizes and at browser zoom 67–200 % and checks that the top bar never overlaps or leaves the screen, that buttons keep their labels from 1280 px on, that the page never scrolls sideways and that there are no page errors.
 
 ### Changed

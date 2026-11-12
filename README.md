@@ -22,7 +22,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 ## What's new in v14.11.0
 
-**An interface for every screen.** The top bar keeps its labels: less used buttons move into the labelled **⋯** menu first, so a 1920 px screen shows every button with its name again and a laptop keeps the ones you use most. Your avatar opens an **account menu** with *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out*. On tablets and narrow laptops (761–1024 px, also a zoomed-in browser) the right panel with *Sessions*, *Clipboard* and *Snippets* slides in from the 🗂 button, so the work area keeps its width. See [Screen sizes, zoom and touch](#mobile-responsive-ui--installable-app).
+**An interface for every screen.** The top bar keeps its labels: less used buttons move into the labelled **⋯** menu first, so a 1920 px screen shows every button with its name again and a laptop keeps the ones you use most. Your avatar opens an **account menu** with *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out*. On tablets and narrow laptops (761–1024 px, also a zoomed-in browser) the right panel with *Sessions*, *Clipboard* and *Snippets* slides in from the 🗂 button, so the work area keeps its width. Big dialogs can be **minimised** to a chip at the bottom of the screen (▁), and **notifications are grouped**: repeats get a ×N counter and older ones fold into one *more notifications* toast. See [Screen sizes, zoom and touch](#mobile-responsive-ui--installable-app).
 
 ## What's new in v14.7.2
 
