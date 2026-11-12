@@ -12,8 +12,9 @@
   'use strict';
 
   Object.assign(LANGS.en, {
-    wb_title: 'Workboard', wb_title_t: 'Workboard: your canvas. Add addons, arrange windows and panels, grid, saved layouts, export and import',
-    wb_add: 'Add addon', wb_catalog: 'Addons', wb_catalog_hint: 'Add only what helps you. Every addon is a window on the canvas next to your terminals: move it, resize it, snap it, pin it, dock it as a panel, configure it and remove it again.',
+    wb_title: 'Workboard', wb_title_t: 'Workboard: your canvas. Add addons, show, hide and move panels, arrange windows, grid, lock, saved layouts, export and import',
+    wb_add: 'Add to the Workboard', wb_catalog: 'Add to the Workboard', wb_catalog_hint: 'Add only what helps you. Panels (connections, sessions, snippets, clipboard) and addons live on the same canvas: dock them at an edge, stack them as tabs, or place them anywhere next to your terminals.',
+    wb_cat_panels: 'Panels', wb_cat_addons: 'Addons', wb_cat_show: 'Show', wb_cat_shown: 'Shown', wb_cat_hidden: 'Hidden. Show it where it was last.',
     wb_added: 'Added: {name}', wb_max: 'The canvas holds at most {n} addons.',
     wb_t_settings: 'Settings', wb_t_remove: 'Remove', wb_t_refresh: 'Refresh now', wb_t_dock: 'Dock as a panel',
     wb_remove_q: 'Remove the addon {name}? Its settings are lost.', wb_removed: 'Removed: {name}',
@@ -65,8 +66,9 @@
     wb_unavailable: 'Not available', wb_add_btn: 'Add',
   });
   Object.assign(LANGS.hr, {
-    wb_title: 'Workboard', wb_title_t: 'Workboard: tvoj canvas. Dodaj addone, složi prozore i panele, mreža, spremljeni rasporedi, izvoz i uvoz',
-    wb_add: 'Dodaj addon', wb_catalog: 'Addoni', wb_catalog_hint: 'Dodaj samo ono što ti pomaže. Svaki addon je prozor na canvasu pored tvojih terminala: premjesti ga, promijeni veličinu, poravnaj, prikvači, usidri kao panel, podesi i opet ukloni.',
+    wb_title: 'Workboard', wb_title_t: 'Workboard: tvoj canvas. Dodaj addone, prikaži, sakrij i premjesti panele, složi prozore, mreža, zaključavanje, spremljeni rasporedi, izvoz i uvoz',
+    wb_add: 'Dodaj na Workboard', wb_catalog: 'Dodaj na Workboard', wb_catalog_hint: 'Dodaj samo ono što ti pomaže. Paneli (veze, sesije, snippeti, međuspremnik) i addoni žive na istom canvasu: usidri ih uz rub, složi kao kartice ili ih postavi bilo gdje uz terminale.',
+    wb_cat_panels: 'Paneli', wb_cat_addons: 'Addoni', wb_cat_show: 'Prikaži', wb_cat_shown: 'Prikazan', wb_cat_hidden: 'Skriven. Prikaži ga tamo gdje je bio zadnji put.',
     wb_added: 'Dodano: {name}', wb_max: 'Canvas ima najviše {n} addona.',
     wb_t_settings: 'Postavke', wb_t_remove: 'Ukloni', wb_t_refresh: 'Osvježi sada', wb_t_dock: 'Usidri kao panel',
     wb_remove_q: 'Ukloniti addon {name}? Njegove postavke se gube.', wb_removed: 'Uklonjeno: {name}',
@@ -481,7 +483,11 @@
 
   async function init() {
     const hb = $('hint-add-addon');
-    if (!canSave()) { const b = $('btn-workboard'); if (b) b.style.display = 'none'; if (hb) hb.style.display = 'none'; return; }
+    // One ▤ Workboard button manages addons and panels; the separate ▦ Panels button is only
+    // shown when the Workboard is not available to this account.
+    const pb = $('btn-panels');
+    if (!canSave()) { const b = $('btn-workboard'); if (b) b.style.display = 'none'; if (hb) hb.style.display = 'none'; if (pb) pb.style.display = ''; return; }
+    if (pb) pb.style.display = 'none';
     if (hb) hb.style.display = '';
     let local = null;
     try { local = JSON.parse(localStorage.getItem(lsKey()) || 'null'); } catch (e) { /* none */ }
@@ -817,6 +823,8 @@
     const again = () => menu(anchor, true);
     const items = [{head: '▤ ' + t('wb_title')},
       {ico: '＋', label: t('wb_add') + '…', do: () => setTimeout(catalog, 0)}];
+    // Panels and addons are managed here together: the panel list sits right under "Add".
+    if (!cp && wrmLayout.panelItems) items.push('-', ...wrmLayout.panelItems(again));
     if (!cp) {
       items.push('-', {head: t('wb_m_canvas')},
         {check: cv.grid, label: t('wb_m_grid'), title: t('wb_m_grid_t'), do: () => { cv.grid = !cv.grid; saveSoon(); applyCanvas(); }, again},
@@ -829,13 +837,13 @@
       if (anyMin) items.push({ico: '▢', label: t('wb_m_show_all'), do: () => arrangeWindows('show')});
       if (addons.length) items.push({ico: '▤', label: t(addonsHidden ? 'wb_m_show_addons' : 'wb_m_hide_addons'), do: () => arrangeWindows(addonsHidden ? 'show' : 'min', w => w.mode === 'addon')});
       items.push({ico: lk ? '🔓' : '🔒', label: t(lk ? 'dk_unlock' : 'dk_lock'), do: () => wrmLayout.setLocked(!lk), again});
+      if (wrmLayout.reset) items.push({ico: '↺', label: t('dk_reset'), off: lk, title: lk ? t('dk_locked_t') : '', do: () => wrmLayout.reset()});
     }
     items.push('-', {head: t('wb_m_layouts')});
     S.saved.forEach(sv => items.push({ico: '▸', label: sv.name, side: sv.at ? fmtDay(sv.at) : '', do: () => applySaved(sv.name)}));
     items.push({ico: '💾', label: t('wb_m_save'), do: () => setTimeout(() => savedDialog(true), 0)});
     if (S.saved.length) items.push({ico: '☰', label: t('wb_m_manage'), do: () => setTimeout(() => savedDialog(false), 0)});
     items.push({ico: '⇩', label: t('wb_m_export'), do: exportLayout}, {ico: '⇧', label: t('wb_m_import'), do: importLayout});
-    if (!cp) items.push('-', {ico: '▦', label: t('dk_panels') + '…', do: () => setTimeout(() => wrmLayout.openPanels(anchor), 0)});
     items.push({hint: t('wb_m_hint')});
     items.keep = !!reopen;
     wrmLayout.menu(anchor, items);
@@ -954,12 +962,18 @@
   }
   function catalog() {
     if (!S) return;
-    const m = modal('modal-wb-catalog', `<h3>▤ ${esc(t('wb_catalog'))}</h3><div class="muted-text" style="line-height:1.5;margin-bottom:10px;">${esc(t('wb_catalog_hint'))}</div><div class="wb-cat">${ORDER.map(k => {
+    const pans = !compact() && wrmLayout.catalogPanels ? wrmLayout.catalogPanels() : [];
+    const panHtml = pans.length ? `<div class="wb-cat-h">▦ ${esc(t('wb_cat_panels'))}</div><div class="wb-cat">${pans.map(p => {
+      const on = p.where !== 'hidden';
+      return `<div class="wb-ci"><span class="ico">${esc(p.ico)}</span><div class="tx"><div class="nm">${esc(p.name)}</div><div class="ds">${esc(on ? t('wb_cat_shown') + ' · ' + t('dk_where_' + p.where) : t('wb_cat_hidden'))}</div></div><button type="button" class="btn-sm${on ? ' btn-sec' : ''}" data-p="${esc(p.id)}" ${on || !p.avail ? 'disabled' : ''}>${esc(on ? t('wb_cat_shown') : t('wb_cat_show'))}</button></div>`;
+    }).join('')}</div><div class="wb-cat-h">▤ ${esc(t('wb_cat_addons'))}</div>` : '';
+    const m = modal('modal-wb-catalog', `<h3>▤ ${esc(t('wb_catalog'))}</h3><div class="muted-text" style="line-height:1.5;margin-bottom:10px;">${esc(t('wb_catalog_hint'))}</div>${panHtml}<div class="wb-cat">${ORDER.map(k => {
       const d = A[k], why = d.avail ? d.avail() : '', n = S.tiles.filter(x => x.type === k).length;
       return `<div class="wb-ci"><span class="ico">${esc(d.ico)}</span><div class="tx"><div class="nm">${esc(t(d.key))}${n ? ` <span class="wb-n">×${n}</span>` : ''}</div><div class="ds">${esc(why || t(d.desc))}</div></div><button type="button" class="btn-sm" data-k="${k}" ${why ? 'disabled' : ''}>${esc(why ? t('wb_unavailable') : t('wb_add_btn'))}</button></div>`;
     }).join('')}</div><div class="modal-footer"><button class="btn-sec" data-a="close">${esc(t('close'))}</button></div>`);
     m.querySelector('[data-a="close"]').onclick = () => closeModal('modal-wb-catalog');
     m.querySelectorAll('[data-k]').forEach(b => { b.onclick = () => add(b.dataset.k); });
+    m.querySelectorAll('[data-p]').forEach(b => { b.onclick = () => { wrmLayout.show(b.dataset.p); closeModal('modal-wb-catalog'); if (typeof closeDrawers === 'function') closeDrawers(); }; });
   }
   function add(type) {
     if (S.tiles.length >= MAX_TILES) { showToast(tn('wb_max', {n: MAX_TILES}), 'warning', 3500); return; }
@@ -1139,6 +1153,8 @@
 .wb-note { width: 100%; height: 100%; min-height: 110px; resize: none; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 7px; padding: 8px; font-family: inherit; font-size: 12px; line-height: 1.5; box-sizing: border-box; }
 .wb-modal { width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 32px); overflow: auto; }
 .wb-cat { display: flex; flex-direction: column; gap: 6px; }
+.wb-cat-h { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); margin: 12px 0 6px; }
+.wb-cat-h:first-of-type { margin-top: 2px; }
 .wb-ci { display: flex; align-items: center; gap: 12px; padding: 9px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; }
 .wb-ci .ico { font-size: 20px; width: 28px; text-align: center; flex: none; }
 .wb-ci .tx { flex: 1; min-width: 0; }
@@ -1190,7 +1206,7 @@ a.wb-row { text-decoration: none; }
   })());
 
   window.wrmWorkboard = {
-    init, menu, catalog, closeAddon, windowGone, windowMoved, grid,
+    init, menu, catalog, closeAddon, windowGone, windowMoved, grid, ready: () => !!S,
     tabInfo(wo) { const tile = tileOfWin(wo); return tile ? {ico: A[tile.type].ico, title: nameOf(tile)} : {ico: '▤', title: t('wb_title')}; },
     // ctxItems adds the addon's own entries to the title bar / tab context menu.
     ctxItems(wo) {

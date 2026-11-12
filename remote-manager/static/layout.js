@@ -326,8 +326,10 @@
       lastShown[id] = s;
     });
     document.body.classList.toggle('dk-locked', !!(S && S.locked) && !compact());
-    const pb = $('btn-panels');
-    if (pb) { const i = pb.querySelector('span'); if (i) i.textContent = S && S.locked ? '🔒' : '▦'; pb.classList.toggle('dk-is-locked', !!(S && S.locked)); }
+    [['btn-panels', '▦'], ['btn-workboard', '▤']].forEach(([bid, ico]) => {
+      const pb = $(bid);
+      if (pb) { const i = pb.querySelector('span'); if (i) i.textContent = S && S.locked ? '🔒' : ico; pb.classList.toggle('dk-is-locked', !!(S && S.locked)); }
+    });
     if (typeof rightTab !== 'undefined') {
       const a = ['snip', 'ai', 'sess'].find(isShown);
       if (a) rightTab = a === 'snip' ? 'snippets' : a === 'ai' ? 'ai' : 'sessions';
@@ -720,21 +722,34 @@
     items.push({ico: '↺', label: t('dk_reset'), off: compact() || lk, do: reset});
     openMenu(anchor, items);
   }
-  function openPanels(anchor) {
-    if (!S) return;
-    anchor = anchor || $('btn-panels');
+  // panelItems lists every panel (and every addon docked as a panel) as show/hide entries for
+  // a menu. The ▤ Workboard menu shows them in its Panels section, so panels and addons are
+  // managed in one place; openPanels is the stand-alone list when the Workboard is off.
+  function panelItems(again) {
+    if (!S) return [];
     const items = [{head: '▦ ' + t('dk_panels')}];
     IDS.forEach(id => {
       const w = where(id), on = w !== 'hidden', ok = avail(id) || !on;
       items.push({check: on, label: P[id].ico + ' ' + t(P[id].key), side: !avail(id) && on && P[id].auto ? t('dk_hint_auto') : t('dk_where_' + w),
-        off: compact() || (!ok && !P[id].auto), do: () => (on ? hide(id) : show(id)), again: () => openPanels(anchor)});
+        off: compact() || (!ok && !P[id].auto), do: () => (on ? hide(id) : show(id)), again});
     });
     const dyn = allIds().filter(id => P[id].dyn && where(id) !== 'hidden');
     if (dyn.length) {
       items.push({head: t('dk_wb_head')});
       dyn.forEach(id => items.push({check: true, label: P[id].ico + ' ' + nameOf(id), side: t('dk_where_' + where(id)), title: t('dk_wb_back'),
-        off: compact(), do: () => hide(id), again: () => openPanels(anchor)}));
+        off: compact(), do: () => hide(id), again}));
     }
+    return items;
+  }
+  // catalogPanels describes the built-in panels for the "Add to the Workboard" dialog.
+  function catalogPanels() {
+    return IDS.filter(id => !P[id].auto).map(id => ({id, ico: P[id].ico, name: t(P[id].key), where: where(id), avail: avail(id)}));
+  }
+  function openPanels(anchor) {
+    if (!S) return;
+    anchor = anchor || $('btn-workboard') || $('btn-panels');
+    if (window.wrmWorkboard && wrmWorkboard.ready && wrmWorkboard.ready()) { wrmWorkboard.menu(anchor); return; }
+    const items = panelItems(() => openPanels(anchor));
     items.push('-');
     items.push({ico: S.locked ? '🔓' : '🔒', label: t(S.locked ? 'dk_unlock' : 'dk_lock'), off: compact(), do: () => setLocked(!S.locked), again: () => openPanels(anchor)});
     items.push({ico: '↺', label: t('dk_reset'), off: compact() || S.locked, do: reset});
@@ -810,7 +825,7 @@ body.dk-resizing, body.dk-resizing * { user-select: none !important; }
 .dk-mh { padding: 6px 9px 4px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); }
 .dk-msep { height: 1px; background: var(--border); margin: 4px 2px; }
 .dk-mhint { padding: 6px 9px; font-size: 11px; color: var(--text3); line-height: 1.45; }
-#btn-panels.dk-is-locked { color: var(--yellow); }
+#btn-panels.dk-is-locked, #btn-workboard.dk-is-locked { color: var(--yellow); }
 @media (max-width: 759px) { #btn-panels { display: none !important; } .dk-mbtn { display: none; } .dk-tab { touch-action: auto; } #dz-left > .dk-group:first-child > .dk-tabs, #dz-right > .dk-group:first-child > .dk-tabs { padding-left: 6px; padding-right: 6px; } }
 `;
   document.head.appendChild(css);
@@ -833,7 +848,7 @@ body.dk-resizing, body.dk-resizing * { user-select: none !important; }
   window.wrmLayout = {
     init, refresh: render, activate, moveTo, hide, show, reset, openPanels, closeMenu, zoneResized, zoneMax, where, isShown,
     isHidden: id => where(id) === 'hidden', locked: () => !!(S && S.locked && !compact()), setLocked, ready: () => !!S,
-    register, remove, placed, clampFloats, snapshot, apply, menu: openMenu,
+    register, remove, placed, clampFloats, snapshot, apply, menu: openMenu, panelItems, catalogPanels,
     _state: () => S, _sanitize: sanitize,
   };
 })();
