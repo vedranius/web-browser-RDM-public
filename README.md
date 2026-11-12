@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.11.5** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.11.6** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.11.6
+
+**A clipboard and snippets made for daily terminal work.** Clipboard entries show where they were copied from and when, can be **📌 pinned** (stay on top, not pushed out of the 20-entry list), filtered, removed one by one and **⚡ saved as a snippet** on the server. **Paste** types into the focused or last used terminal; several lines use bracketed paste or ask first, and dangerous commands always ask. Snippets get a **★ Recently used** group. See [Clipboard panel](#clipboard-panel) and [Snippets & run on connect](#snippets--run-on-connect).
 
 ## What's new in v14.11.5
 
@@ -359,7 +363,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v14.11.4](#upgrading-from-v14114) · [from v14.11.3](#upgrading-from-v14113) · [from v14.11.2](#upgrading-from-v14112) · [from v14.11.1](#upgrading-from-v14111) · [from v14.11.0](#upgrading-from-v14110) · [from v14.7.2](#upgrading-from-v1472) · [from v14.7.1](#upgrading-from-v1471) · [from v14.7.0](#upgrading-from-v1470) · [from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v14.11.5](#upgrading-from-v14115) · [from v14.11.4](#upgrading-from-v14114) · [from v14.11.3](#upgrading-from-v14113) · [from v14.11.2](#upgrading-from-v14112) · [from v14.11.1](#upgrading-from-v14111) · [from v14.11.0](#upgrading-from-v14110) · [from v14.7.2](#upgrading-from-v1472) · [from v14.7.1](#upgrading-from-v1471) · [from v14.7.0](#upgrading-from-v1470) · [from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -475,21 +479,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.11.5-linux-amd64
-   ./wrm-pro-v14.11.5-linux-amd64
+   chmod +x wrm-pro-v14.11.6-linux-amd64
+   ./wrm-pro-v14.11.6-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.11.5-windows-amd64.exe
+   .\wrm-pro-v14.11.6-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.11.5-linux-amd64.AppImage
-   ./wrm-pro-v14.11.5-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.11.5-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.11.6-linux-amd64.AppImage
+   ./wrm-pro-v14.11.6-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.11.6-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -498,8 +502,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.5/wrm-pro-v14.11.5-android-arm64
-   chmod +x wrm-pro-v14.11.5-android-arm64 && ./wrm-pro-v14.11.5-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.6/wrm-pro-v14.11.6-android-arm64
+   chmod +x wrm-pro-v14.11.6-android-arm64 && ./wrm-pro-v14.11.6-android-arm64
    ```
 
    **Docker**
@@ -569,6 +573,10 @@ Whoever can run WRM's executable against its database on the server can reset an
 - An AI or MCP session never runs `wrm -reset-password`, `-reset-2fa` or `-lockdown` on a server (hard block `wrm_recovery`, also under full access), and a temporary password in a command's output is masked before an AI sees it.
 
 ---
+
+## Upgrading from v14.11.5
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database or API change. The clipboard history in the browser is converted to the new format on first load; pins and the recently used snippets are kept in the browser only.
 
 ## Upgrading from v14.11.4
 
@@ -1602,6 +1610,7 @@ Snippets are saved commands. Open them in the right panel (**⚡ Snippets** tab)
 - **Multi-line snippets:** every line is one command.
 - **Variables** are filled in for each terminal: `{{host}}`, `{{port}}`, `{{user}}`, `{{name}}` (connection), `{{folder}}`, `{{wrm_user}}`, `{{date}}`, `{{time}}`. **Prompts** are asked before the snippet runs, with a live preview: `{{?Service}}` or with a default `{{?Service=nginx}}`. Example: `journalctl -u {{?Service=nginx}} --since "{{?Since=1 hour ago}}" --no-pager`.
 - **Run on connect:** tick *Run on connect* and WRM types the snippet into the shell as soon as a terminal of a matching connection is connected (also after a reconnect) — `sudo -i`, `cd /srv/app`, `tmux attach || tmux new`, `export KUBECONFIG=…`. Right-click a connection or a folder → **⚡ Run on connect…** creates one. Order: all-connection snippets, then folder, then connection snippets. A message lists what ran; the audit log records it (`terminal.auto_run`).
+- **★ Recently used:** with more than five snippets, the last ones you ran or inserted are listed on top (remembered in this browser, per user).
 - **Shared snippets:** administrators can share a snippet with all users (read-only for them, all connections, never auto-run) — a team runbook in the terminal.
 - **✨ Add example snippets** creates a starter set (disk, memory, top processes, failed services, journal errors, listening ports, big files, service status/restart…).
 - Snippets are included in *Export* / *Import*, copied with *Duplicate*, and removed with their connection or folder.
@@ -2426,8 +2435,10 @@ The **Sessions** panel (right by default; see [Panel layout](#panel-layout-dock-
 
 The **Clipboard** panel (right by default): the last 20 texts you copied from terminals (and copied paths).
 
-- Click an entry to copy it again. **Paste** sends it to the focused terminal.
-- The history is kept per workspace session and **per user** in your browser (local storage), not on the server. Another account signing in on the same browser does not see it, and **signing out removes it**. Use **Clear** to empty it.
+- Each entry shows its first line, the number of lines, the connection it was copied from and how long ago.
+- Click an entry to copy it again. **Paste** types it into the focused terminal (or the last used one; without an open terminal it is copied instead). Several lines are sent as a bracketed paste when the shell supports it, so nothing runs before you press Enter; otherwise WRM asks first, because every line would run. Dangerous-looking commands always ask.
+- **📌 Pin** keeps an entry on top; pinned entries are not pushed out by new copies and survive **Clear** (a second **Clear** removes them too). **⚡** opens *New snippet* with the text, to keep it on the server. **✕** removes one entry. With more than four entries a filter field appears.
+- The history is kept per workspace session and **per user** in your browser (local storage), not on the server. Another account signing in on the same browser does not see it, and **signing out removes it**. The history, pins included, is erased after an hour without use, because copied terminal text may hold secrets.
 
 ### Sharing: members, roles & links
 

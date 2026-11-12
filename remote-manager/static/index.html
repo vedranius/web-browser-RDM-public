@@ -558,7 +558,18 @@ button:hover { background: var(--accent-h); }
 #clipboard-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 .clip-entry { padding: 6px 8px; border-radius: 5px; background: rgba(var(--fg-rgb),.03); margin-bottom: 4px; display: flex; align-items: center; gap: 7px; cursor: pointer; border: 1px solid transparent; transition: all .12px; font-size: 11px; font-family: var(--font-mono); }
 .clip-entry:hover { background: var(--bg3); border-color: var(--border2); }
-.clip-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text2); }
+.clip-entry { flex-direction: column; align-items: stretch; gap: 2px; }
+.clip-row { display: flex; align-items: center; gap: 4px; min-height: 18px; }
+.clip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text2); }
+.clip-meta { flex: 1; min-width: 0; font-size: 9px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clip-entry.pinned { border-color: var(--accent-d); }
+.clip-acts { display: flex; align-items: center; gap: 1px; flex-shrink: 0; }
+.clip-acts button:not(.clip-paste-btn) { background: none !important; border: none !important; box-shadow: none; min-width: 0; min-height: 0; color: var(--text2) !important; cursor: pointer; font-size: 10px; padding: 2px 3px; border-radius: 3px; opacity: .55; }
+.clip-entry:hover .clip-acts button, .clip-acts button:focus-visible { opacity: 1; }
+.clip-acts button:not(.clip-paste-btn):hover { background: var(--bg2) !important; color: var(--text) !important; }
+#clip-search { flex: 1; min-width: 0; margin: 0 6px; font-size: 10px; padding: 2px 6px; }
+.clip-empty { padding: 10px 8px; font-size: 10px; color: var(--text3); text-align: center; font-family: var(--font-mono); }
+.clip-empty .sub { margin-top: 4px; font-size: 9px; opacity: .8; font-family: var(--font-sans, inherit); }
 .clip-paste-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 10px; padding: 2px 5px; border-radius: 3px; transition: all .1s; }
 .clip-paste-btn:hover { background: var(--accent-d); }
 
@@ -2028,7 +2039,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="clip-panel" id="clip-panel">
       <div class="clip-header">
         <span data-i18n="clipboard">Clipboard</span>
-        <button class="btn-sec btn-sm" onclick="clearClipboard()" style="font-size:10px;padding:2px 7px;" data-i18n="clear">Clear</button>
+        <input type="text" id="clip-search" data-i18n-placeholder="clip_search" placeholder="Filter…" oninput="renderClipboard(currentSessionId)" style="display:none;">
+        <button class="btn-sec btn-sm" onclick="clearClipboard()" style="font-size:10px;padding:2px 7px;" data-i18n="clear" data-i18n-title="clip_clear_t" title="Clear (pinned entries stay)">Clear</button>
       </div>
       <div id="clipboard-list"></div>
     </div>
@@ -6825,6 +6837,8 @@ Object.assign(LANGS.hr, {
 });
 Object.assign(LANGS.en, { auth_setup_code: 'Setup code', auth_setup_code_hint: 'WRM printed it to its console/log at start and wrote it to first-admin-setup-code.txt next to its database. Not needed when you open WRM on the server itself (localhost).' });
 Object.assign(LANGS.hr, { auth_setup_code: 'Kod za postavljanje', auth_setup_code_hint: 'WRM ga je pri pokretanju ispisao u konzolu/log i zapisao u first-admin-setup-code.txt pokraj svoje baze. Nije potreban kad WRM otvarate na samom poslužitelju (localhost).' });
+Object.assign(LANGS.en, { clip_search: 'Filter…', clip_clear_t: 'Clear the list (pinned entries stay; click again to clear them too)', clip_now: 'just now', clip_min_ago: '{n} min ago', clip_h_ago: '{n} h ago', clip_lines: '{n} lines', clip_lines_few: '{n} lines', clip_click_help: 'Click: copy · Paste: type into the focused terminal · 📌 pin · ⚡ save as snippet', clip_paste_t: 'Type into the focused (or last used) terminal', clip_pin: 'Pin (stays on top and is not pushed out)', clip_unpin: 'Unpin', clip_to_snippet: 'Save as snippet (kept on the server)', clip_snip_group: 'From clipboard', clip_no_terminal: 'No open terminal: copied to the system clipboard instead.', clip_multi_confirm: 'Paste {n} lines into {name}? This shell does not support bracketed paste, so every line runs as it arrives.', snip_recent: 'Recently used', snip_recent_t: 'The last snippets you ran or inserted (remembered in this browser)', clip_kept_hint: 'Text you select in a terminal lands here. It stays only in this browser, for your account, and is erased after an hour without use. Use ⚡ to keep a command as a snippet.' });
+Object.assign(LANGS.hr, { clip_search: 'Filtriraj…', clip_clear_t: 'Očisti popis (prikvačeni ostaju; ponovni klik briše i njih)', clip_now: 'upravo', clip_min_ago: 'prije {n} min', clip_h_ago: 'prije {n} h', clip_lines: '{n} redaka', clip_lines_few: '{n} retka', clip_click_help: 'Klik: kopiraj · Zalijepi: upiši u aktivni terminal · 📌 prikvači · ⚡ spremi kao snippet', clip_paste_t: 'Upiši u aktivni (ili zadnji korišteni) terminal', clip_pin: 'Prikvači (ostaje na vrhu i ne ispada s popisa)', clip_unpin: 'Otkvači', clip_to_snippet: 'Spremi kao snippet (čuva se na poslužitelju)', clip_snip_group: 'Iz međuspremnika', clip_no_terminal: 'Nema otvorenog terminala: kopirano u sistemski međuspremnik.', clip_multi_confirm: 'Zalijepiti {n} redaka u {name}? Ova ljuska ne podržava bracketed paste pa se svaki redak izvrši čim stigne.', snip_recent: 'Nedavno korišteni', snip_recent_t: 'Zadnji snippeti koje ste pokrenuli ili upisali (pamti ovaj preglednik)', clip_kept_hint: 'Ovdje dolazi tekst koji označite u terminalu. Ostaje samo u ovom pregledniku, za vaš račun, i briše se nakon sat vremena bez korištenja. Gumbom ⚡ naredbu trajno spremate kao snippet.' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.documentElement.lang = currentLang === 'hr' ? 'hr' : 'en';
@@ -13652,14 +13666,22 @@ function renderSnippets() {
   const items = snippets.filter(s => !q || [s.name, s.command, s.group, s.description].some(v => (v || '').toLowerCase().includes(q)));
   if (!items.length) { list.innerHTML = `<div class="snip-empty">${esc(t('snip_no_match'))}</div>`; return; }
   const target = snippetTargetWin(), tc = target ? winConn(target) : null;
+  const recent = !q && snippets.length > 5 ? snipRecent().map(id => snippets.find(s => s.id === id)).filter(Boolean).slice(0, 5) : [];
+  const recentHTML = recent.length ? `<div class="snip-group"><div class="snip-group-h" onclick="toggleSnipGroup('\u2605')" title="${esc(t('snip_recent_t'))}">${snipGroupsClosed['\u2605'] ? '▸' : '▾'} ★ ${esc(t('snip_recent'))} <span class="sub">${recent.length}</span></div>` +
+    (snipGroupsClosed['\u2605'] ? '' : recent.map(s => snippetItemHTML(s, tc)).join('')) + '</div>' : '';
   const groups = {};
   items.forEach(s => { const g = s.group || t('snip_ungrouped'); (groups[g] = groups[g] || []).push(s); });
-  list.innerHTML = Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(g => {
+  list.innerHTML = recentHTML + Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(g => {
     const closed = snipGroupsClosed[g] && !q;
     return `<div class="snip-group"><div class="snip-group-h" onclick="toggleSnipGroup(${jsq(g)})">${closed ? '▸' : '▾'} ${esc(g)} <span class="sub">${groups[g].length}</span></div>` +
       (closed ? '' : groups[g].map(s => snippetItemHTML(s, tc)).join('')) + '</div>';
   }).join('') + (snippets.length < 6 && !q ? `<div class="snip-empty"><button class="btn-sec btn-sm" onclick="addExampleSnippets()">✨ ${esc(t('snip_examples'))}</button></div>` : '');
 }
+
+// Recently used snippets (ids, newest first) are remembered per user in this browser only.
+function snipRecentKey() { return currentUser && currentUser.id != null ? 'wrm_snip_recent:u' + currentUser.id : ''; }
+function snipRecent() { try { const k = snipRecentKey(); const v = k ? JSON.parse(localStorage.getItem(k) || '[]') : []; return Array.isArray(v) ? v.filter(Number.isInteger) : []; } catch (_) { return []; } }
+function snipMarkUsed(id) { const k = snipRecentKey(); if (!k) return; try { localStorage.setItem(k, JSON.stringify([id, ...snipRecent().filter(x => x !== id)].slice(0, 10))); } catch (_) {} }
 
 function toggleSnipGroup(g) { snipGroupsClosed[g] = !snipGroupsClosed[g]; renderSnippets(); }
 
@@ -13755,6 +13777,8 @@ async function runSnippet(id, mode, winId) {
     else termSend(w, txt + '\r');
   });
   if (targets.length > 1) bcast.line = '';
+  snipMarkUsed(s.id);
+  if (snippets.length > 5) renderSnippets();
   try { wo.term.focus(); } catch (_) {}
 }
 
@@ -14545,20 +14569,27 @@ function sessionClipKey(sessId) { return sessId ? 'session_' + sessId : 'global'
 // same browser never sees it. The old unscoped key cannot be attributed to a user and is dropped.
 function clipStorageKey() { return currentUser && currentUser.id != null ? CLIP_KEY + ':u' + currentUser.id : ''; }
 
+const CLIP_MAX = 20;      // unpinned entries kept per list
+const CLIP_TTL = 60 * 60 * 1000; // whole history expires after an hour of no use (it may hold secrets)
+
+// Entries are {text, at, src, pin}. Older versions stored plain strings; they are converted on load.
+function clipNorm(v) { return typeof v === 'string' ? {text: v, at: 0, src: '', pin: false} : (v && typeof v.text === 'string' ? {text: v.text, at: Number(v.at) || 0, src: String(v.src || ''), pin: !!v.pin} : null); }
+
 function loadClipboard() {
   try { localStorage.removeItem(CLIP_KEY); } catch(_) {}
   const key = clipStorageKey();
   try {
     if (key) {
-      // Terminal clipboard history may hold secrets; it expires after an hour of no use.
       const at = Number(localStorage.getItem(key + ':at') || 0);
-      if (at && Date.now() - at > 60 * 60 * 1000) {
+      if (at && Date.now() - at > CLIP_TTL) {
         localStorage.removeItem(key);
         localStorage.removeItem(key + ':at');
         clipData = {};
       }
     }
-    clipData = key ? JSON.parse(localStorage.getItem(key) || '{}') : {};
+    const raw = key ? JSON.parse(localStorage.getItem(key) || '{}') : {};
+    clipData = {};
+    Object.keys(raw || {}).forEach(k => { if (Array.isArray(raw[k])) clipData[k] = raw[k].map(clipNorm).filter(Boolean); });
   } catch(_) { clipData = {}; }
   renderClipboard(currentSessionId);
 }
@@ -14577,53 +14608,119 @@ function saveClipboard() {
   } catch(_) {}
 }
 
-function addClip(text) {
+// clipSource names where a copy came from: the focused window's connection.
+function clipSource() {
+  const wo = winObjects.find(w => w.el && w.el.classList.contains('focused'));
+  const c = wo ? winConn(wo) : null;
+  return c ? (c.name || c.host || '') : '';
+}
+
+function addClip(text, src) {
   if (!text || !text.trim()) return;
   const key = sessionClipKey(currentSessionId);
-  if (!clipData[key]) clipData[key] = [];
-  if (clipData[key][0] === text) return;
-  clipData[key] = clipData[key].filter(t2 => t2 !== text);
-  clipData[key].unshift(text);
-  clipData[key] = clipData[key].slice(0, 20);
+  const list = (clipData[key] || []).map(clipNorm).filter(Boolean);
+  if (list[0] && list[0].text === text) return;
+  const old = list.find(e => e.text === text);
+  const rest = list.filter(e => e.text !== text);
+  const entry = {text, at: Date.now(), src: src != null ? src : clipSource(), pin: !!(old && old.pin)};
+  const pinned = rest.filter(e => e.pin), loose = rest.filter(e => !e.pin);
+  clipData[key] = entry.pin ? [entry, ...pinned, ...loose.slice(0, CLIP_MAX)] : [...pinned, entry, ...loose.slice(0, CLIP_MAX - 1)];
   saveClipboard();
   renderClipboard(currentSessionId);
+}
+
+function clipListKey(sessId) {
+  const key = sessionClipKey(sessId);
+  return (clipData[key] || []).length || !sessId ? key : 'global';
+}
+
+function clipAgo(at) {
+  if (!at) return '';
+  const s = Math.max(0, Math.round((Date.now() - at) / 1000));
+  if (s < 60) return t('clip_now');
+  if (s < 3600) return t('clip_min_ago').replace('{n}', Math.round(s / 60));
+  return t('clip_h_ago').replace('{n}', Math.round(s / 3600));
 }
 
 function renderClipboard(sessId) {
   const list = document.getElementById('clipboard-list');
   if (!list) return;
-  list.innerHTML = '';
-  const key = sessionClipKey(sessId);
-  let items = clipData[key] || [];
-  if (items.length === 0 && sessId) items = clipData['global'] || [];
-  items.forEach((text, i) => {
-    const r = document.createElement('div');
-    r.className = 'clip-entry';
-    r.title = text;
-    r.innerHTML = `<span class="clip-text">${esc(text)}</span><button class="clip-paste-btn" onclick="pasteClipItem(${jsq(key)},${i})">${t('paste')}</button>`;
-    r.onclick = e => { if (e.target.classList.contains('clip-paste-btn')) return; navigator.clipboard.writeText(text).then(() => showToast(t('copied'), 'success')); };
-    list.appendChild(r);
-  });
-  if (items.length === 0) {
-    const e = document.createElement('div');
-    e.style.cssText = 'padding:10px 8px;font-size:10px;color:var(--text3);text-align:center;font-family:"JetBrains Mono",monospace;';
-    e.textContent = t('no_items');
-    list.appendChild(e);
+  const key = clipListKey(sessId);
+  const all = clipData[key] || [];
+  const q = ((document.getElementById('clip-search') || {}).value || '').toLowerCase().trim();
+  const sb = document.getElementById('clip-search');
+  if (sb) sb.style.display = all.length > 4 || q ? '' : 'none';
+  const items = all.map((e, i) => ({e, i})).filter(x => !q || x.e.text.toLowerCase().includes(q) || x.e.src.toLowerCase().includes(q));
+  list.innerHTML = items.map(({e, i}) => {
+    const lines = e.text.split('\n').length;
+    const meta = [e.pin ? '📌' : '', lines > 1 ? t(lines % 10 >= 2 && lines % 10 <= 4 && (lines % 100 < 12 || lines % 100 > 14) ? 'clip_lines_few' : 'clip_lines').replace('{n}', lines) : '', e.src ? esc(e.src) : '', clipAgo(e.at)].filter(Boolean).join(' · ');
+    return `<div class="clip-entry${e.pin ? ' pinned' : ''}" title="${esc(e.text.slice(0, 2000) + '\n\n' + t('clip_click_help'))}" onclick="clipCopy(${jsq(key)},${i})">
+      <span class="clip-text">${esc(e.text.split('\n')[0])}</span>
+      <div class="clip-row"><span class="clip-meta">${meta}</span><div class="clip-acts" onclick="event.stopPropagation()">
+        <button class="clip-paste-btn" onclick="pasteClipItem(${jsq(key)},${i})" title="${esc(t('clip_paste_t'))}">${t('paste')}</button>
+        <button onclick="clipTogglePin(${jsq(key)},${i})" title="${esc(t(e.pin ? 'clip_unpin' : 'clip_pin'))}">${e.pin ? '📍' : '📌'}</button>
+        <button onclick="clipToSnippet(${jsq(key)},${i})" title="${esc(t('clip_to_snippet'))}">⚡</button>
+        <button onclick="clipRemove(${jsq(key)},${i})" title="${esc(t('delete'))}">✕</button>
+      </div></div></div>`;
+  }).join('') || `<div class="clip-empty">${esc(t(all.length ? 'snip_no_match' : 'no_items'))}<div class="sub">${esc(t('clip_kept_hint'))}</div></div>`;
+}
+
+function clipEntry(key, i) { return (clipData[key] || [])[i] || null; }
+
+function clipCopy(key, i) { const e = clipEntry(key, i); if (e) copyText(e.text); }
+
+function clipTogglePin(key, i) {
+  const e = clipEntry(key, i);
+  if (!e) return;
+  e.pin = !e.pin;
+  const l = clipData[key];
+  clipData[key] = [...l.filter(x => x.pin), ...l.filter(x => !x.pin)];
+  saveClipboard();
+  renderClipboard(currentSessionId);
+}
+
+function clipRemove(key, i) {
+  if (!clipData[key]) return;
+  clipData[key].splice(i, 1);
+  saveClipboard();
+  renderClipboard(currentSessionId);
+}
+
+function clipToSnippet(key, i) {
+  const e = clipEntry(key, i);
+  if (!e) return;
+  const first = e.text.trim().split('\n')[0];
+  openSnippetModal(null, {name: first.length > 40 ? first.slice(0, 40) + '…' : first, command: e.text.trim(), group: t('clip_snip_group')});
+}
+
+// pasteClipItem types an entry into the focused (or last used) terminal. Several lines use
+// bracketed paste when the shell supports it; otherwise the user confirms that every line runs.
+// Dangerous commands (rm -rf, mkfs …) always ask first, as snippets do.
+async function pasteClipItem(key, index) {
+  const e = clipEntry(key, index);
+  if (!e) return;
+  const wo = winObjects.find(w => w.el && w.el.classList.contains('focused') && w.term && w.socket && w.socket.readyState === 1) || snippetTargetWin();
+  if (!wo || !wo.term || !wo.socket || wo.socket.readyState !== 1) { copyText(e.text); showToast(t('clip_no_terminal'), 'info', 3500); return; }
+  const text = e.text.replace(/\r?\n/g, '\r');
+  const lines = e.text.split('\n').filter(l => l.trim()).length;
+  const bracketed = !!(wo.term.modes && wo.term.modes.bracketedPasteMode);
+  const danger = e.text.split('\n').find(isDangerousCommand);
+  const c = winConn(wo), name = c ? (c.name || c.host) : t('fm_terminal');
+  if (danger || (lines > 1 && !bracketed)) {
+    const msg = [lines > 1 && !bracketed ? t('clip_multi_confirm').replace('{n}', lines).replace('{name}', name) : '',
+      danger ? '⚠ ' + t('bc_danger').replace('{cmd}', danger.trim()) : ''].filter(Boolean).join('\n\n');
+    if (!await uiConfirm(msg, {title: '📋 ' + name, okText: t('paste'), danger: !!danger})) { try { wo.term.focus(); } catch(_) {} return; }
   }
+  termSend(wo, bracketed ? '\x1b[200~' + text + '\x1b[201~' : text);
+  showToast(t('pasted') + ' → ' + name, 'success', 1500);
+  try { wo.term.focus(); } catch(_) {}
 }
 
-function pasteClipItem(key, index) {
-  const items = clipData[key] || [];
-  const text = items[index];
-  if (!text) return;
-  const wo = winObjects.find(w => w.el && w.el.classList.contains('focused') && w.socket && w.socket.readyState === 1);
-  if (wo) { termSend(wo, text); showToast(t('pasted'), 'success'); try { wo.term.focus(); } catch(_) {} }
-  else copyText(text);
-}
-
+// clearClipboard empties the list but keeps pinned entries; a second click with only pins left clears those too.
 function clearClipboard() {
-  const key = sessionClipKey(currentSessionId);
-  clipData[key] = [];
+  const key = clipListKey(currentSessionId);
+  const l = clipData[key] || [];
+  clipData[key] = l.some(e => !e.pin) ? l.filter(e => e.pin) : [];
   saveClipboard();
   renderClipboard(currentSessionId);
   showToast(t('clipboard_cleared'), 'success');

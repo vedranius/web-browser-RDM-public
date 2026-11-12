@@ -1,3 +1,17 @@
+## [14.11.6] - 2026-11-12
+
+Clipboard and snippets for daily terminal work. No database or API change.
+
+### Added
+
+- Clipboard entries show the source connection, age and line count; **📌 pin** (pinned entries stay on top, are not pushed out and survive the first *Clear*), **✕** remove one entry, **⚡** save as snippet, and a filter field with more than four entries.
+- Snippets: a **★ Recently used** group (last snippets run or inserted, per user, in this browser).
+- `tools/test-clipboard.js` (history limit, pins, old format, paste safety), run in CI.
+
+### Changed
+
+- **Paste** from the clipboard targets the focused or last used terminal, uses bracketed paste for several lines when the shell supports it, otherwise asks first; dangerous-looking commands always ask (as snippets do). Without a terminal the text is copied.
+
 ## [14.11.5] - 2026-11-12
 
 Separate share permissions for adding/editing tunnels and for enabling/disabling them ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)). Upgrading from v14.11.4 keeps the database and the encryption key; one column is added.

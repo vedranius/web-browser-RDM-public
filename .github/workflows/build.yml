@@ -18,7 +18,7 @@ permissions:
 
 env:
   # Version for branch builds. Tag builds use the tag name (e.g. v10.10.0) as version and in file names.
-  APP_VERSION: v14.11.5
+  APP_VERSION: v14.11.6
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -73,7 +73,7 @@ jobs:
         run: |
           python3 tools/test-medium-wrapper.py
           node tools/check-ui.js
-          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js tools/test-git-client.js tools/test-monitoring.js tools/test-addon-bridge.js tools/test-addon-host-bridge.js tools/test-mcp-server-select.js tools/test-ui-actions.js tools/test-mcpb-restart.js
+          node --test tools/test-git-simple.js tools/test-ai-events.js tools/test-appimage.js tools/test-workspace-context.js tools/test-git-client.js tools/test-monitoring.js tools/test-addon-bridge.js tools/test-addon-host-bridge.js tools/test-mcp-server-select.js tools/test-ui-actions.js tools/test-mcpb-restart.js tools/test-clipboard.js
 
   # Windows: the test suite needs a POSIX shell, but the server must still compile and pass
   # vet on Windows (file handling, service install, path separators).
