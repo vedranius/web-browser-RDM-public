@@ -1,14 +1,33 @@
-## Web Remote Manager PRO v14.11.5 — Separate permissions for adding and switching tunnels
+## Web Remote Manager PRO v14.11.6 — Clipboard and snippets for daily terminal work
 
 ### Added
 
-- **Share switch "Operators may add, edit and remove tunnels"** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)), off by default: members with the operator role or higher get **🛠 Edit tunnels…** on a shared SSH connection and may add, change and remove its tunnels. The tunnels stay in the owner's account and must be allowed by the tunnel policies of both the owner and the member.
+- **Clipboard entries say where and when**: source connection, age and number of lines.
+- **📌 Pin** an entry: it stays on top, is not pushed out by new copies and survives the first *Clear*.
+- **⚡ Save as snippet** keeps a copied command on the server; **✕** removes one entry; a filter appears with more than four entries.
+- **★ Recently used** snippets on top of the Snippets panel.
 
 ### Changed
 
-- The existing switch now reads *Operators may enable and disable (start and stop) tunnels*; its meaning is unchanged. The two switches are independent, so some people can only switch tunnels on and off while others can also add and edit them. Existing shares keep what they allowed.
+- **Paste** types into the focused or last used terminal. Several lines use bracketed paste when the shell supports it, otherwise WRM asks first; dangerous-looking commands always ask.
 
 ### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.6](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.6) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.5 — Separate permissions for adding and switching tunnels
+
+#### Added
+
+- **Share switch "Operators may add, edit and remove tunnels"** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)), off by default: members with the operator role or higher get **🛠 Edit tunnels…** on a shared SSH connection and may add, change and remove its tunnels. The tunnels stay in the owner's account and must be allowed by the tunnel policies of both the owner and the member.
+
+#### Changed
+
+- The existing switch now reads *Operators may enable and disable (start and stop) tunnels*; its meaning is unchanged. The two switches are independent, so some people can only switch tunnels on and off while others can also add and edit them. Existing shares keep what they allowed.
+
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.5](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.5) asset. Preserve the database and encryption key. One column is added (`share_links.allow_tunnel_edit`, off); an older binary still starts on the database.
 
