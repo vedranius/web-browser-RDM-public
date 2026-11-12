@@ -231,6 +231,11 @@ var settingSpecs = []settingSpec{
 	{Key: "storage_check_minutes", Default: "15", Kind: "int", Min: 0, Max: 1440},
 	// Chains: live monitoring of a service chain; the interval is the default for a chain without one.
 	{Key: "chains_enabled", Default: "1", Kind: "bool"},
+	// Chain actions (v14.8.0): restart or start a unit or container on a chain's server, from a
+	// fixed catalog. chains_actions_who limits who may run them; automatic actions (run when the
+	// check they fix turns bad) additionally need chains_auto_actions and the action's own switch.
+	{Key: "chains_actions_who", Default: "operators", Kind: "enum", Enum: []string{"off", "admins", "operators", "all"}},
+	{Key: "chains_auto_actions", Default: "1", Kind: "bool"},
 	{Key: "chain_interval_s", Default: "30", Kind: "int", Min: 15, Max: 3600},
 	// A chain's storage checks ask the bucket at most this often (HEAD, or one LIST for a prefix);
 	// in between the last answer is reused. 0 asks on every poll.

@@ -2571,9 +2571,9 @@ Object.assign(LANGS.hr, {
         const p = el('input'); p.type = 'number'; p.min = 1; p.max = 65535; p.value = chk.port || '';
         p.oninput = () => { chk.port = Number(p.value) || 0; };
         fieldRow(form, t('chn_g_port'), p);
-      } else if (chk.type !== 'monitor') {
+      } else if (chk.type !== 'monitor' && chk.type !== 'load' && chk.type !== 'memory') {
         const tgt = el('input'); tgt.value = chk.target || '';
-        tgt.placeholder = need.includes('target') ? (chk.type === 'dns' ? 'app.example.com' : chk.type === 'tcp' ? 'host:443' : chk.type === 'http' ? 'https://…' : chk.type === 'tls' ? 'example.com' : chk.type === 'systemd' ? 'nginx.service' : '/absolute/path') : '';
+        tgt.placeholder = need.includes('target') ? (chk.type === 'disk' ? '/' : chk.type === 'dns' ? 'app.example.com' : chk.type === 'tcp' ? 'host:443' : chk.type === 'http' ? 'https://…' : chk.type === 'tls' ? 'example.com' : chk.type === 'systemd' ? 'nginx.service' : '/absolute/path') : '';
         tgt.oninput = () => { chk.target = tgt.value; };
         // what recognition found on this server, as choices for the target
         const f = node.kind === 'server' && state.facts && state.facts[node.conn_id];
@@ -2622,6 +2622,21 @@ Object.assign(LANGS.hr, {
         w.oninput = () => { chk.warn_days = Number(w.value) || 0; };
         fieldRow(form, t('chn_g_warn_days'), w);
       }
+      if (chk.type === 'disk' || chk.type === 'memory' || chk.type === 'load') {
+        const mx = el('input'); mx.type = 'number'; mx.min = 0; mx.step = chk.type === 'load' ? '0.1' : '1'; mx.value = chk.max || '';
+        mx.placeholder = chk.type === 'load' ? '2' : '90';
+        mx.oninput = () => { chk.max = Number(mx.value) || 0; };
+        fieldRow(form, t(chk.type === 'load' ? 'chx_max_load' : 'chx_max_pct'), mx);
+      }
+      if (chk.type === 'http' || chk.type === 'tcp') {
+        const ms = el('input'); ms.type = 'number'; ms.min = 0; ms.value = chk.max_ms || ''; ms.placeholder = '—';
+        ms.oninput = () => { chk.max_ms = Number(ms.value) || 0; };
+        fieldRow(form, t('chx_max_ms'), ms, t('chx_max_ms_h'));
+      }
+      const sev = el('select');
+      [['', t('chx_sev_critical')], ['warning', t('chx_sev_warning')]].forEach(([v, l]) => { const o = el('option', '', l); o.value = v; if ((chk.severity || '') === v) o.selected = true; sev.appendChild(o); });
+      sev.onchange = () => { if (sev.value) chk.severity = sev.value; else delete chk.severity; };
+      fieldRow(form, t('chx_severity'), sev, t('chx_severity_h'));
       const ex = el('div', 'chn-expect');
       const op = el('select');
       [['', t('chn_g_expect_none')], ['==', '=='], ['!=', '!='], ['contains', 'contains'], ['exists', 'exists']].forEach(([v, l]) => { const o = el('option', '', l); o.value = v; if ((chk.expect && chk.expect.op) === v || (!chk.expect && v === '')) o.selected = true; op.appendChild(o); });
@@ -2636,6 +2651,7 @@ Object.assign(LANGS.hr, {
       const result = el('div', 'chn-test-result');
       const missing = () => {
         if (need.includes('target') && !String(chk.target || '').trim()) return t('chn_g_target');
+        if (chk.type === 'load' || chk.type === 'memory') chk.target = '';
         if (chk.type === 'port' && (!chk.port || chk.port < 1)) return t('chn_g_port');
         if ((chk.type === 'config') && (!chk.format || !String(chk.key || '').trim())) return t('chn_g_key');
         return '';

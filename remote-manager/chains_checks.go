@@ -45,6 +45,9 @@ var chainCheckTypes = map[string]chainCheckType{
 	"mount":     {Where: "server", Needs: "target", Help: "a mount point is mounted, read-write or read-only (target: mount point)"},
 	"cron":      {Where: "server", Needs: "target", Help: "a crontab line containing the text is enabled, disabled (commented out) or missing (target: text)"},
 	"monitor":   {Where: "server", Needs: "", Help: "the state of WRM's own monitoring for the server (healthy, warning, …)"},
+	"disk":      {Where: "server", Needs: "target", Help: "used space of a filesystem in percent (target: mount point or path; max: highest healthy percent, default 90)"},
+	"load":      {Where: "server", Needs: "", Help: "1-minute load average per CPU core (max: highest healthy value, default 2)"},
+	"memory":    {Where: "server", Needs: "", Help: "used memory in percent, without caches (max: highest healthy percent, default 90)"},
 	"dns":       {Where: "wrm", Needs: "target", Help: "DNS answer for a name (target: name; record: A, AAAA, CNAME, TXT, MX, NS; resolver: optional ip[:port])"},
 	"tcp":       {Where: "wrm", Needs: "target", Help: "a TCP port answers, checked from WRM (target: host:port)"},
 	"http":      {Where: "wrm", Needs: "target", Help: "HTTP(S) status, or a JSON value with key (target: URL)"},
@@ -91,6 +94,9 @@ while IFS="$tab" read -r id ty a; do
   dir_count) if [ -d "$a" ]; then v=$(find "$a" -mindepth 1 -maxdepth 1 -type f 2>/dev/null | wc -l | tr -d ' '); else v=missing; fi ;;
   config) if [ -r "$a" ] && [ -f "$a" ]; then v=b64:$(head -c 262144 -- "$a" | base64 | tr -d '\n'); else v=missing; fi ;;
   mount) v=$(findmnt -n -o SOURCE,FSTYPE,OPTIONS -M "$a" 2>/dev/null | head -n 1); [ -n "$v" ] || v=missing ;;
+  disk) v=$(df -P -- "$a" 2>/dev/null | awk 'NR==2{gsub("%","",$5); print $5}'); [ -n "$v" ] || v=missing ;;
+  load) v="$(cut -d' ' -f1 /proc/loadavg 2>/dev/null) $(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)" ;;
+  memory) v=$(awk '/^MemTotal:/{t=$2} /^MemAvailable:/{a=$2} END{if(t>0) printf "%d", (t-a)*100/t}' /proc/meminfo 2>/dev/null); [ -n "$v" ] || v=unknown ;;
   cron) v=b64:$( { crontab -l 2>/dev/null; cat /etc/crontab /etc/cron.d/* 2>/dev/null; } | head -c 262144 | base64 | tr -d '\n') ;;
   *) v=unknown ;;
   esac
@@ -267,6 +273,32 @@ func interpretChainAnswer(c chainCheck, v string, now int64) chainResult {
 			}
 			r.Detail = f[0] + " (" + f[1] + ")"
 		}
+	case "disk", "memory":
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			r.Value, r.OK = v, false
+			if v != "missing" {
+				r.Value, r.Error = "unknown", "unexpected answer"
+			}
+			break
+		}
+		r.Value, r.OK = strconv.Itoa(n)+"%", float64(n) <= c.limit(90)
+		r.Detail = fmt.Sprintf("limit %s%%", strconv.FormatFloat(c.limit(90), 'f', -1, 64))
+	case "load":
+		f := strings.Fields(v)
+		if len(f) != 2 {
+			r.Value, r.Error = "unknown", "unexpected answer"
+			break
+		}
+		load, err1 := strconv.ParseFloat(f[0], 64)
+		cpus, err2 := strconv.Atoi(f[1])
+		if err1 != nil || err2 != nil || cpus < 1 {
+			r.Value, r.Error = "unknown", "unexpected answer"
+			break
+		}
+		per := load / float64(cpus)
+		r.Value, r.OK = strconv.FormatFloat(per, 'f', 2, 64), per <= c.limit(2)
+		r.Detail = fmt.Sprintf("load %s on %d cores", f[0], cpus)
 	case "cron":
 		data, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(v, "b64:"))
 		if err != nil {
@@ -457,15 +489,21 @@ func runChainWRMCheck(ctx context.Context, c chainCheck, owner int, node chainNo
 	case "dns":
 		r = chainDNS(ctx, c)
 	case "tcp":
+		start := time.Now()
 		conn, err := egressDialContext(ctx, "tcp", c.Target)
 		if err != nil {
 			r = chainResult{Value: "closed", Detail: chainShortErr(err)}
 		} else {
 			conn.Close()
 			r = chainResult{Value: "open", OK: true}
+			chainLatency(&r, c, time.Since(start))
 		}
 	case "http":
+		start := time.Now()
 		r = chainHTTP(ctx, c)
+		if r.OK {
+			chainLatency(&r, c, time.Since(start))
+		}
 	case "tls":
 		r = chainTLS(ctx, c)
 	case "storage":
@@ -487,6 +525,29 @@ func runChainWRMCheck(ctx context.Context, c chainCheck, owner int, node chainNo
 		r.OK = c.Expect.matchValue(r.Value)
 	}
 	return r
+}
+
+// chainLatency adds the response time to a result and, with max_ms, turns a slow answer into
+// a failed check ("slow"), so a chain sees a degrading service before it stops answering.
+func chainLatency(r *chainResult, c chainCheck, d time.Duration) {
+	ms := d.Milliseconds()
+	lat := strconv.FormatInt(ms, 10) + " ms"
+	if r.Detail == "" {
+		r.Detail = lat
+	} else {
+		r.Detail += ", " + lat
+	}
+	if c.MaxMS > 0 && ms > int64(c.MaxMS) {
+		r.Value, r.OK = "slow", false
+	}
+}
+
+// limit is the check's max, or def when none is set.
+func (c chainCheck) limit(def float64) float64 {
+	if c.Max > 0 {
+		return c.Max
+	}
+	return def
 }
 
 func chainShortErr(err error) string {
@@ -719,8 +780,11 @@ func validateChainCheck(c *chainCheck, node chainNode) error {
 	if strings.Contains(ct.Needs, "target") && c.Target == "" {
 		return fmt.Errorf("target is required")
 	}
-	if c.MaxAgeS < 0 || c.WarnDays < 0 {
-		return fmt.Errorf("max_age_s and warn_days must not be negative")
+	if c.MaxAgeS < 0 || c.WarnDays < 0 || c.MaxMS < 0 || c.Max < 0 || c.Max > 1e6 || c.MaxMS > 600000 {
+		return fmt.Errorf("max_age_s, warn_days, max and max_ms must not be negative or too large")
+	}
+	if c.Severity != "" && c.Severity != "critical" && c.Severity != "warning" {
+		return fmt.Errorf("severity must be critical or warning")
 	}
 	abs := func() error {
 		if !strings.HasPrefix(c.Target, "/") {
@@ -745,8 +809,10 @@ func validateChainCheck(c *chainCheck, node chainNode) error {
 		if c.Port < 1 || c.Port > 65535 {
 			return fmt.Errorf("port must be 1-65535")
 		}
-	case "file", "dir_count", "mount":
+	case "file", "dir_count", "mount", "disk":
 		return abs()
+	case "load", "memory":
+		c.Target = ""
 	case "config":
 		if err := abs(); err != nil {
 			return err

@@ -28,7 +28,10 @@ printf '@os %s\n' "$(uname -srm 2>/dev/null)"
 { systemctl list-units --type=service --state=running --no-legend --no-pager 2>/dev/null || true; } | awk '{print $1}' | head -n 40 | while IFS= read -r u; do [ -n "$u" ] && printf '@service %s\n' "$u"; done
 { docker ps --format '{{.Names}}' 2>/dev/null || true; } | head -n 20 | while IFS= read -r c; do [ -n "$c" ] && printf '@container %s\n' "$c"; done
 { ss -Hltn 2>/dev/null || netstat -ltn 2>/dev/null || true; } | awk '{print $4}' | sed 's/.*[:.]//' | grep -E '^[0-9]+$' | sort -n -u | head -n 30 | while IFS= read -r p; do [ -n "$p" ] && printf '@port %s\n' "$p"; done
-{ findmnt -rn -o TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null || true; } | head -n 40 | while IFS= read -r line; do [ -n "$line" ] && printf '@mount %s\n' "$(printf '%s' "$line" | base64 | tr -d '\n')"; done`
+{ findmnt -rn -o TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null || true; } | head -n 40 | while IFS= read -r line; do [ -n "$line" ] && printf '@mount %s\n' "$(printf '%s' "$line" | base64 | tr -d '\n')"; done
+{ hostname -I 2>/dev/null || true; } | tr ' ' '\n' | head -n 16 | while IFS= read -r a; do [ -n "$a" ] && printf '@addr %s\n' "$a"; done
+{ ss -Hltn 2>/dev/null || true; } | awk '{print $4}' | sed 's/.*[:.]//' | grep -E '^[0-9]+$' | sort -n -u | head -n 200 | while IFS= read -r p; do printf '@listen %s\n' "$p"; done
+{ ss -Htn state established 2>/dev/null || netstat -tn 2>/dev/null | awk '$6=="ESTABLISHED"{print 0, 0, $4, $5}' || true; } | awk '{print $3, $4}' | head -n 600 | while IFS= read -r l p; do printf '@est %s %s\n' "$l" "$p"; done`
 
 type chainMountFact struct {
 	Target  string `json:"target"`
@@ -47,6 +50,19 @@ type chainServerFacts struct {
 	Ports      []int            `json:"ports,omitempty"`
 	Mounts     []chainMountFact `json:"mounts,omitempty"`
 	Error      string           `json:"error,omitempty"`
+	// Used by the link discovery of an existing chain only (chains_ops.go), not sent to the AI.
+	Addrs  []string       `json:"-"`
+	Listen map[int]bool   `json:"-"`
+	Est    []chainEstConn `json:"-"`
+}
+
+// chainEstConn is one established TCP connection seen on a server: its own and the peer's
+// address and port.
+type chainEstConn struct {
+	LocalIP  string
+	LocalP   int
+	PeerIP   string
+	PeerPort int
 }
 
 var chainDiscoveryNoise = map[string]bool{
@@ -113,6 +129,24 @@ func parseChainDiscovery(out string, connID int, name string) chainServerFacts {
 			}
 			seenPort[n] = true
 			f.Ports = append(f.Ports, n)
+		case "addr":
+			if ip := chainCleanIP(val); ip != "" && len(f.Addrs) < 16 {
+				f.Addrs = append(f.Addrs, ip)
+			}
+		case "listen":
+			if n, err := strconv.Atoi(val); err == nil && n > 0 && n < 65536 {
+				if f.Listen == nil {
+					f.Listen = map[int]bool{}
+				}
+				f.Listen[n] = true
+			}
+		case "est":
+			a, b, _ := strings.Cut(val, " ")
+			lip, lp, ok1 := chainSplitAddr(a)
+			pip, pp, ok2 := chainSplitAddr(b)
+			if ok1 && ok2 && len(f.Est) < 600 {
+				f.Est = append(f.Est, chainEstConn{LocalIP: lip, LocalP: lp, PeerIP: pip, PeerPort: pp})
+			}
 		case "mount":
 			raw, err := base64.StdEncoding.DecodeString(val)
 			if err != nil {
