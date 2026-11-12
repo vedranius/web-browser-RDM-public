@@ -1,3 +1,14 @@
+## [14.11.1] - 2026-11-12
+
+Your own order in the connection tree. Upgrading from v14.11.0 keeps the database and the encryption key; a table `connection_order` is added.
+
+### Added
+
+- **Drag and drop order for connections**: drop a connection (or a selection) above or below another connection to put it there; dropped on a connection in another folder it moves into that folder at that place. The order is kept per user in the new `connection_order` table; connections you have not placed follow by name, and a connection moved with *Move to folder…* or onto a folder row goes after the placed ones.
+- Connection context menu: **Move connection up / down** and **Sort connections here A–Z**; folder context menu: **Sort connections in this folder A–Z**.
+- API `POST /api/connections/order` (`{ids, reset}`, your own connections only), audited as `connection.reordered` / `connection.order_reset`; `GET /api/connections` lists in your order with `sort_order`.
+- Tests: `conn_order_test.go` (order, ownership, moves, reset, delete) and `tools/test-conn-order.js` (drag in Chromium, order kept after a reload, context menu, reset, no console errors).
+
 ## [14.11.0] - 2026-11-12
 
 The interface fits every screen: the top bar keeps its labels, tablets get the work area back. Upgrading from v14.7.2 keeps the database and the encryption key; nothing is migrated.
