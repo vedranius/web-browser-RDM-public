@@ -361,7 +361,8 @@
     if (loc.f) { const e = P[id] && $(P[id].el), w = e && e.closest('.dk-float'); if (w) raise(w); }
     if (o && o.reveal && !compact()) {
       if (loc.z === 'left' && $('sidebar').classList.contains('collapsed') && typeof toggleSidebar === 'function') toggleSidebar();
-      if (loc.z === 'right' && $('sess-panel').classList.contains('collapsed') && typeof toggleSessPanel === 'function') toggleSessPanel();
+      if (loc.z === 'right' && typeof sessIsDrawer === 'function' && sessIsDrawer()) { if (!$('sess-panel').classList.contains('mobile-open') && typeof openDrawer === 'function') openDrawer('sess-panel'); }
+      else if (loc.z === 'right' && $('sess-panel').classList.contains('collapsed') && typeof toggleSessPanel === 'function') toggleSessPanel();
     }
   }
   function blocked() {

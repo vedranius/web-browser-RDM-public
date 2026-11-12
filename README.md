@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.7.2** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.11.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.11.0
+
+**An interface for every screen.** The top bar keeps its labels: less used buttons move into the labelled **⋯** menu first, so a 1920 px screen shows every button with its name again and a laptop keeps the ones you use most. Your avatar opens an **account menu** with *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out*. On tablets and narrow laptops (761–1024 px, also a zoomed-in browser) the right panel with *Sessions*, *Clipboard* and *Snippets* slides in from the 🗂 button, so the work area keeps its width. Big dialogs can be **minimised** to a chip at the bottom of the screen (▁), and **notifications are grouped**: repeats get a ×N counter and older ones fold into one *more notifications* toast. See [Screen sizes, zoom and touch](#mobile-responsive-ui--installable-app).
 
 ## What's new in v14.7.2
 
@@ -335,7 +339,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v14.7.1](#upgrading-from-v1471) · [from v14.7.0](#upgrading-from-v1470) · [from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v14.7.2](#upgrading-from-v1472) · [from v14.7.1](#upgrading-from-v1471) · [from v14.7.0](#upgrading-from-v1470) · [from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -451,21 +455,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.14.9-linux-amd64
-   ./wrm-pro-v13.14.9-linux-amd64
+   chmod +x wrm-pro-v14.11.0-linux-amd64
+   ./wrm-pro-v14.11.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.14.9-windows-amd64.exe
+   .\wrm-pro-v14.11.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.14.9-linux-amd64.AppImage
-   ./wrm-pro-v13.14.9-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.14.9-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.11.0-linux-amd64.AppImage
+   ./wrm-pro-v14.11.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.11.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -474,8 +478,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.14.1/wrm-pro-v13.14.9-android-arm64
-   chmod +x wrm-pro-v13.14.9-android-arm64 && ./wrm-pro-v13.14.9-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.14.1/wrm-pro-v14.11.0-android-arm64
+   chmod +x wrm-pro-v14.11.0-android-arm64 && ./wrm-pro-v14.11.0-android-arm64
    ```
 
    **Docker**
@@ -545,6 +549,10 @@ Whoever can run WRM's executable against its database on the server can reset an
 - An AI or MCP session never runs `wrm -reset-password`, `-reset-2fa` or `-lockdown` on a server (hard block `wrm_recovery`, also under full access), and a temporary password in a command's output is masked before an AI sees it.
 
 ---
+
+## Upgrading from v14.7.2
+
+Replace the executable/AppImage/container and keep the database and encryption key; nothing is migrated. *Shares*, *Lock now* and *Sign out* are now in the account menu on your avatar (top bar, left of the AI button). Between 761 and 1024 px the right panel is a drawer opened with 🗂.
 
 ## Upgrading from v14.7.1
 
@@ -2679,7 +2687,8 @@ To turn it on, add under *Settings → Secrets and variables → Actions* the re
 
 ### Mobile, responsive UI & installable app
 
-- The top bar and the collaboration bar adapt to the available width (labels collapse into icons, step by step).
+- The top bar adapts to the available width, browser zoom and language while keeping its labels as long as it can: first the session label goes, then the less used buttons move one by one into the labelled **⋯** menu (Panels, Workboard, Keys, Storages, Chains, Tunnels, Tools, Git, Monitoring, Settings), and only then do the remaining buttons become icons. Your **avatar** opens the account menu (Settings, Appearance, Shares, Lock now, Sign out). The collaboration bar collapses its labels step by step.
+- On tablets and narrow laptops (761–1024 px, also a desktop browser zoomed to 150–200 %): the Sessions/Snippets/Clipboard panel (and an AI view docked there) is a **slide-in drawer** opened with 🗂, so the work area keeps its width; the connection list stays.
 - **Installable app (PWA):** *Settings → General → Install as an app* (or the install icon in the address bar; on iPhone/iPad: *Share → Add to Home Screen*) opens WRM in its own window, from the dock, start menu or home screen. The app caches only its own scripts and fonts (per version); connections and data always come live from the server, and without the server it shows an offline page. Browsers allow this only over **HTTPS with a trusted certificate** (or on `localhost`). The *Install as an app* row shows the steps for the current browser, or why installing is not possible (plain `http://`, an untrusted certificate, Firefox on the desktop); the *Install* button appears only when the browser can install right away.
 - On phones (< 760 px): the connection list and the Sessions/Snippets/Clipboard panel become **slide-in drawers** (in the fixed start layout, whatever you arranged on a larger screen) (☰ and 🗂 buttons), windows open **full screen**, and a single tap opens a connection. Chat and People open as full-width panels.
 

@@ -1,18 +1,39 @@
-## Web Remote Manager PRO v14.7.2 — Shares a team can manage together
+## Web Remote Manager PRO v14.11.0 — An interface for every screen
 
 ### Added
 
-- **Team management of shares** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)): the share dialog has two new switches, both off by default. *Operators may add and edit connections and folders* lets signed-in members with the operator role or higher edit shared connections and add connections and folders inside the shared folders (right-click a shared connection or folder). *Operators may start and stop tunnels* adds **⇄ Tunnels…** to the share, with *Start* / *Stop* for the tunnels you configured. Guests never get these rights.
+- **Account menu** on your avatar: your name and role, *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out* in one place.
+- **Minimise dialogs**: the ▁ button above a big dialog turns it into a chip at the bottom of the screen; click the chip to continue where you left off.
+- **Grouped notifications**: repeated messages show a ×N counter and older ones fold into one *more notifications* toast.
+- **Tablets get the work area back**: between 761 and 1024 px (a tablet, a narrow laptop or a zoomed-in browser) *Sessions*, *Clipboard*, *Snippets* and the docked AI view slide in from the 🗂 button.
 
-### Security
+### Changed
 
-- Everything members add stays in your account. Members never see or pick your saved secrets, and changing a connection's host or protocol removes its saved password, so it is never sent to a server a member chose. Every change is audited under the member's name.
+- **The top bar keeps its labels.** Instead of turning every button into a bare icon as soon as one label did not fit, WRM now moves the less used buttons into the labelled **⋯** menu first. A 1920 px screen shows every button with its name again, and a laptop keeps the names of the ones you use most.
+
+### Fixed
+
+- Top bar buttons no longer overlap on phones.
 
 ### Upgrade
 
-Use WRM's update action or replace the executable/container with the matching [v14.7.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.2) asset. Preserve the database and encryption key; two columns are added to `share_links` and an older binary still starts on the database.
+Use WRM's update action or replace the executable/container with the matching [v14.11.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.0) asset. Preserve the database and encryption key; nothing is migrated.
 
 [Full changelog](CHANGELOG.md)
+
+## Included from v14.7.2 — Shares a team can manage together
+
+#### Added
+
+- **Team management of shares** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)): the share dialog has two new switches, both off by default. *Operators may add and edit connections and folders* lets signed-in members with the operator role or higher edit shared connections and add connections and folders inside the shared folders (right-click a shared connection or folder). *Operators may start and stop tunnels* adds **⇄ Tunnels…** to the share, with *Start* / *Stop* for the tunnels you configured. Guests never get these rights.
+
+#### Security
+
+- Everything members add stays in your account. Members never see or pick your saved secrets, and changing a connection's host or protocol removes its saved password, so it is never sent to a server a member chose. Every change is audited under the member's name.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.7.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.2) asset. Preserve the database and encryption key; two columns are added to `share_links` and an older binary still starts on the database.
 
 ## Included from v14.7.1 — Security fixes, tunnels behind HSTS
 
