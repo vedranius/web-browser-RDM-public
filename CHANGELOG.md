@@ -1,3 +1,17 @@
+## [14.11.3] - 2026-11-12
+
+AI apps keep their approved access while WRM is briefly unreachable. Upgrading from v14.11.2 keeps the database and the encryption key; nothing is migrated.
+
+### Fixed
+
+- **No early re-approval of AI connections**: the bridge of the WRM PRO Claude plugin and the Claude Desktop extension went into its "not connected" mode whenever WRM did not answer when the AI app started or after a restart (WRM restarting, updating or hanging, or the computer off the network), and then told the AI app to call `wrm_connect`, which registered a new client and asked for a new approval although the saved access was still valid for days. Now only a token WRM refuses (HTTP 401) asks for a new sign-in. Otherwise the bridge reports that WRM is unreachable and that the saved sign-in is still valid, reconnects with the saved token before the next request (also with a token another app on the computer renewed in `~/.wrm/mcp.json`) and tells the app that the tool list changed; `wrm_connect` reconnects instead of starting a new sign-in while the saved access is valid (`force: true` signs in anyway).
+- The bridge's first request to WRM gives up after 20 seconds (`WRM_MCP_INIT_TIMEOUT_MS`) instead of waiting forever on a hanging WRM.
+
+### Changed
+
+- WRM PRO Claude plugin 1.2.3 (regenerated `packaging/claude-plugin/wrm-pro/server/wrm.mcpb`).
+- `tools/test-mcpb-restart.js`: a second test starts the bridge while WRM is down and checks the message, that `wrm_connect` does not sign in again, the reconnect when WRM is back, and that a refused token still asks for `wrm_connect`.
+
 ## [14.11.2] - 2026-11-12
 
 Workboard and panels in one place. Upgrading from v14.11.1 keeps the database and the encryption key; nothing is migrated.
