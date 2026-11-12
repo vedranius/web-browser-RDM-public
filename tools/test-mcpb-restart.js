@@ -181,3 +181,57 @@ test('Claude bridge keeps a valid saved access while WRM is unreachable', async 
   const signin = await send({jsonrpc: '2.0', id: 7, method: 'tools/call', params: {name: 'wrm_connect', arguments: {}}});
   assert.doesNotMatch(signin.result.content[0].text, /Already connected/);
 });
+
+// An approval request from WRM becomes one desktop notification on this computer (Linux:
+// notify-send), also when no WRM tab is open; WRM_MCP_NOTIFY=0 turns it off.
+test('Claude bridge shows a desktop notification for an approval request', {skip: process.platform !== 'linux'}, async t => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wrm-mcpb-notify-'));
+  t.after(() => fs.rmSync(dir, {recursive: true, force: true}));
+  const out = path.join(dir, 'notified.txt');
+  fs.writeFileSync(path.join(dir, 'notify-send'), '#!/bin/sh\nprintf "%s|" "$@" >> "' + out + '"\necho >> "' + out + '"\n', {mode: 0o755});
+  const note = {jsonrpc: '2.0', method: 'notifications/message', params: {level: 'warning', logger: 'wrm.approval',
+    data: {type: 'approval_required', approval_id: 'ab12', server: 'demo-api', message: 'systemctl restart nginx'}}};
+  const server = http.createServer(async (req, res) => {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {};
+    if (body.method === 'initialize') {
+      res.writeHead(200, {'Content-Type': 'application/json', 'Mcp-Session-Id': 's1'});
+      res.end(JSON.stringify({jsonrpc: '2.0', id: body.id, result: {protocolVersion: '2025-06-18', capabilities: {tools: {}}, serverInfo: {name: 'wrm', version: '1'}}}));
+      return;
+    }
+    if (body.method === 'notifications/initialized') { res.writeHead(202); res.end(); return; }
+    res.writeHead(200, {'Content-Type': 'text/event-stream'});
+    const ev = m => res.write('event: message\ndata: ' + JSON.stringify(m) + '\n\n');
+    ev(note);
+    ev(note); // the same request twice: one notification
+    ev({jsonrpc: '2.0', id: body.id, result: {content: [{type: 'text', text: 'done'}]}});
+    res.end();
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const child = spawn(process.execPath, [bridge], {
+    env: {...process.env, PATH: dir + ':' + process.env.PATH, WRM_MCP_URL: `http://127.0.0.1:${server.address().port}/mcp`, WRM_MCP_TOKEN: 'wrm_pat_test', WRM_MCP_CONFIG: path.join(dir, 'none.json')},
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  t.after(() => { if (!child.killed) child.kill(); });
+  child.stderr.resume();
+  const got = [];
+  const waitFor = id => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timed out')), 5000);
+    readline.createInterface({input: child.stdout}).on('line', l => { const m = JSON.parse(l); got.push(m); if (m.id === id) { clearTimeout(timer); resolve(m); } });
+  });
+  const done = waitFor(2);
+  child.stdin.write(JSON.stringify({jsonrpc: '2.0', id: 1, method: 'initialize', params: {protocolVersion: '2025-06-18', capabilities: {}, clientInfo: {name: 'n'}}}) + '\n');
+  child.stdin.write(JSON.stringify({jsonrpc: '2.0', id: 2, method: 'tools/call', params: {name: 'run_command', arguments: {}}}) + '\n');
+  const res = await done;
+  assert.equal(res.result.content[0].text, 'done');
+  assert.ok(got.some(m => m.method === 'notifications/message'), 'the log message still reaches the app');
+  for (let i = 0; i < 40 && !fs.existsSync(out); i++) await new Promise(r => setTimeout(r, 50));
+  await new Promise(r => setTimeout(r, 200));
+  const lines = fs.readFileSync(out, 'utf8').trim().split('\n');
+  assert.equal(lines.length, 1, 'one notification per approval');
+  assert.match(lines[0], /WRM PRO: approval needed\|demo-api: systemctl restart nginx/);
+});

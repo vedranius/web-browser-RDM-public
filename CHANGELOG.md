@@ -1,3 +1,17 @@
+## [14.11.4] - 2026-11-12
+
+AI apps wait for your approval and show it on the desktop. Upgrading from v14.11.3 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **`wait_for_approval` MCP tool**: when an AI app stopped waiting for an approval (its own tool timeout, e.g. Codex after 60 s, or it declined the question), the tool result names the `approval_id` and tells the AI to wait; `wait_for_approval` (`session_id`, `approval_id`, `seconds` 5–55, default 45) returns *Still waiting*, *Approved* (call the tool again with the same arguments) or *Denied*. The AI no longer carries on without the step or assumes an answer. The plugin's skills `wrm` and `wrm-safe-operator` say so.
+- **Desktop notifications from the plugin**: while a tool call waits for an approval, WRM sends a `notifications/message` (logger `wrm.approval`) on the call's stream; the bridge of the WRM PRO plugin and the Claude Desktop extension shows it once per request as an operating-system notification (Windows balloon via PowerShell, macOS `osascript`, Linux `notify-send`), also when no WRM tab is open or in front. A click opens WRM at the saved address (never one from the message); texts are passed through environment variables. `WRM_MCP_NOTIFY=0` turns it off.
+- Tests: `v14114_wait_test.go` (deferred result names the approval, still waiting, approved, denied, unknown id) and a notification test in `tools/test-mcpb-restart.js` (one notification per request, the log message still reaches the app).
+
+### Changed
+
+- WRM PRO Claude plugin 1.2.4 (regenerated `packaging/claude-plugin/wrm-pro/server/wrm.mcpb`).
+
 ## [14.11.3] - 2026-11-12
 
 AI apps keep their approved access while WRM is briefly unreachable. Upgrading from v14.11.2 keeps the database and the encryption key; nothing is migrated.
