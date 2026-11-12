@@ -1,21 +1,32 @@
-## Web Remote Manager PRO v14.11.6 — Clipboard and snippets for daily terminal work
+## Web Remote Manager PRO v14.11.7 — Lock now is back in the top bar
 
-### Added
+### Fixed
+
+- **🔒 Lock now** is again a one-click icon in the top bar, next to *New Window*, on every screen width. It is still in the account menu too.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.7) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.6 — Clipboard and snippets for daily terminal work
+
+#### Added
 
 - **Clipboard entries say where and when**: source connection, age and number of lines.
 - **📌 Pin** an entry: it stays on top, is not pushed out by new copies and survives the first *Clear*.
 - **⚡ Save as snippet** keeps a copied command on the server; **✕** removes one entry; a filter appears with more than four entries.
 - **★ Recently used** snippets on top of the Snippets panel.
 
-### Changed
+#### Changed
 
 - **Paste** types into the focused or last used terminal. Several lines use bracketed paste when the shell supports it, otherwise WRM asks first; dangerous-looking commands always ask.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.6](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.6) asset. Preserve the database and encryption key; nothing is migrated.
 
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.11.5 — Separate permissions for adding and switching tunnels
 

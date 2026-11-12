@@ -1,3 +1,11 @@
+## [14.11.7] - 2026-11-12
+
+The lock button is visible again. No database or API change.
+
+### Fixed
+
+- **🔒 Lock now** is back in the top bar as a one-click icon (since v14.11.0 it was only in the account menu). It is never moved into *More* and stays in the account menu as well.
+
 ## [14.11.6] - 2026-11-12
 
 Clipboard and snippets for daily terminal work. No database or API change.
