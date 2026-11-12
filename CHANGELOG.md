@@ -1,3 +1,17 @@
+## [14.11.2] - 2026-11-12
+
+Workboard and panels in one place. Upgrading from v14.11.1 keeps the database and the encryption key; nothing is migrated.
+
+### Changed
+
+- **The ▤ Workboard menu manages panels too**: a *Panels* section lists every panel and every addon docked as a panel with where it is, and ticks show or hide them, next to *Add to the Workboard*, the canvas tools, *Lock the layout* and the new *Reset the layout* entry. A panel's ⋯ → *Panels…* opens the same menu.
+- **One top bar button**: the separate ▦ *Panels* button is hidden while the Workboard is available (it still appears for accounts without it), so the top bar keeps more labels. A locked layout shows 🔒 on the ▤ Workboard button.
+- **Add to the Workboard** (formerly *Addons*) lists the built-in panels before the addons; a hidden panel has *Show*, which brings it back where it was last.
+
+### Added
+
+- `tools/test-workboard-panels.js`: drives a running WRM in Chromium and checks the Panels section of the Workboard menu, hiding and showing a panel, the catalog's *Show*, the lock mark, the Croatian texts and that there are no page errors.
+
 ## [14.11.1] - 2026-11-12
 
 Your own order in the connection tree. Upgrading from v14.11.0 keeps the database and the encryption key; a table `connection_order` is added.

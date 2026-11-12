@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.11.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.11.2** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.11.2
+
+**Workboard and panels in one place.** The **▤ Workboard** menu now lists every panel (*Connections*, *Sessions*, *AI sessions*, *Snippets*, *Clipboard*, the AI view and docked addons) with where it is, so you show, hide, lock and reset the layout from the same menu where you add addons and arrange the canvas. The separate ▦ *Panels* button is gone from the top bar, which leaves room for the other buttons; **＋ Add to the Workboard** lists the panels next to the addons, so a hidden panel comes back with *Show*. A locked layout shows 🔒 on the Workboard button. See [Workboard: the shared canvas and addons](#workboard-the-shared-canvas-and-addons).
 
 ## What's new in v14.11.1
 
@@ -343,7 +347,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v14.11.0](#upgrading-from-v14110) · [from v14.7.2](#upgrading-from-v1472) · [from v14.7.1](#upgrading-from-v1471) · [from v14.7.0](#upgrading-from-v1470) · [from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v14.11.1](#upgrading-from-v14111) · [from v14.11.0](#upgrading-from-v14110) · [from v14.7.2](#upgrading-from-v1472) · [from v14.7.1](#upgrading-from-v1471) · [from v14.7.0](#upgrading-from-v1470) · [from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -459,21 +463,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.11.1-linux-amd64
-   ./wrm-pro-v14.11.1-linux-amd64
+   chmod +x wrm-pro-v14.11.2-linux-amd64
+   ./wrm-pro-v14.11.2-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.11.1-windows-amd64.exe
+   .\wrm-pro-v14.11.2-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.11.1-linux-amd64.AppImage
-   ./wrm-pro-v14.11.1-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.11.1-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.11.2-linux-amd64.AppImage
+   ./wrm-pro-v14.11.2-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.11.2-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -482,8 +486,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.14.1/wrm-pro-v14.11.1-android-arm64
-   chmod +x wrm-pro-v14.11.1-android-arm64 && ./wrm-pro-v14.11.1-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.2/wrm-pro-v14.11.2-android-arm64
+   chmod +x wrm-pro-v14.11.2-android-arm64 && ./wrm-pro-v14.11.2-android-arm64
    ```
 
    **Docker**
@@ -553,6 +557,10 @@ Whoever can run WRM's executable against its database on the server can reset an
 - An AI or MCP session never runs `wrm -reset-password`, `-reset-2fa` or `-lockdown` on a server (hard block `wrm_recovery`, also under full access), and a temporary password in a command's output is masked before an AI sees it.
 
 ---
+
+## Upgrading from v14.11.1
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database change and no API change. The ▦ *Panels* button is no longer in the top bar while the Workboard is available: its list is now the *Panels* section of the **▤ Workboard** menu (a panel's ⋯ → *Panels…* opens it too).
 
 ## Upgrading from v14.11.0
 
@@ -1450,7 +1458,7 @@ The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snip
   - anywhere else on the canvas: it is placed right there, between your windows. It shares their stacking order (click it to bring it to the front), stays inside the canvas when the browser or the side panels change size, and lands on the grid when *Snap to the grid* is on.
 - **Resize:** the line between two groups, the inner edge of the left and right zones and the top edge of the bottom zone. A panel on the canvas moves by the empty part of its tab bar and resizes by its bottom right corner.
 - **⋯ on every group:** *Dock on the left*, *Dock on the right*, *Dock at the bottom* (as a tab of the zone's first group), *On the canvas (anywhere)*, *Hide*, *Lock the layout*, *Panels…*, *Reset the layout*.
-- **Panels** (▦ in the top bar, or in its ⋯ menu when the bar is narrow) lists every panel and where it is (left, right, bottom, on the canvas, hidden). Tick a panel to show it again where it was, untick to hide it. The AI live view is listed but appears only while an AI app works on a server.
+- **Panels** (the *Panels* section of the **▤ Workboard** menu since v14.11.2; ▦ in the top bar only for accounts without the Workboard) lists every panel and where it is (left, right, bottom, on the canvas, hidden). Tick a panel to show it again where it was, untick to hide it. The AI live view is listed but appears only while an AI app works on a server.
 - **Lock the layout** (in *Panels*, the ▤ Workboard menu or any ⋯ menu): no panel or window can be dragged, split, resized or moved (the snap and maximize buttons still work), and the ▦ button shows 🔒. Switching tabs, collapsing the side panels and showing or hiding panels still work. Dragging a tab while locked says how to unlock.
 - **Reset the layout** puts every panel back: *Connections* left; *Sessions*, *Snippets* and the AI live view as tabs on the right with *Clipboard* under them.
 - **Saved per user on the server** (`/api/me/ui/layout`), so the layout follows you to every browser, with a copy in the browser for an instant start. A zone without panels disappears. While the AI live view is shown in a side zone, that zone keeps its own width (up to half the window).
@@ -1459,18 +1467,19 @@ The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snip
 
 ### Workboard: the shared canvas and addons
 
-The window area is **one canvas** (v12.6.10): terminals, file managers, desktops, **Workboard addons** and the panels you place on it share it, and you arrange it as you like. **▤ Workboard** (in the *Settings · Panels · Workboard* group of the top bar, or its ⋯ menu when the bar is narrow) opens the canvas menu. Addons start **empty**: you add only what you want from the catalog (**＋ Add addon**, also on the empty canvas), up to 24, the same addon several times if you like (for example two *Server load* addons for two groups of servers).
+The window area is **one canvas** (v12.6.10): terminals, file managers, desktops, **Workboard addons** and the panels you place on it share it, and you arrange it as you like. **▤ Workboard** (in the *Settings · Workboard* group of the top bar, or its ⋯ menu when the bar is narrow) opens the canvas menu, which manages **panels and addons together** (v14.11.2). Addons start **empty**: you add only what you want from the catalog (**＋ Add to the Workboard**, also on the empty canvas; it lists the built-in panels first, with *Show* for a hidden one), up to 24, the same addon several times if you like (for example two *Server load* addons for two groups of servers).
 
 - **Addons are windows:** move by the title bar, resize from any edge or corner, snap by dragging to an edge or with the snap buttons, double-click to maximize, minimize, switch with the tabs. Title bar buttons: **↻** refresh (addons that fetch data; hover the title to see how old the data is), **⚙** settings, **⇥** dock as a panel, and the usual minimize, maximize and **✕ remove** (it asks first when settings or a note would be lost). Addons stay visible with any connection folder tab chosen. A new addon finds a free spot beside your windows.
 - **Window menu** (right-click a title bar or a tab), for every window: snap layouts, **📌 Pin in place** (no moving or resizing until unpinned; 📌 shows in the title bar) and **Always on top**; for addons also *Settings*, *Refresh now* and *Dock on the right / left / at the bottom*.
 - **Docked as a panel**, an addon is a panel of the [panel layout](#panel-layout-dock-stack-float-and-lock): stack it with *Sessions*, split a column, move it to another edge or anywhere on the canvas. Its bar keeps ↻, ⚙ and **⧉ Back onto the canvas as a window**, which returns it to its last place.
 - **The ▤ Workboard menu:**
-  - *Add addon…*
+  - *Add to the Workboard…*
+  - **Panels** (v14.11.2): every panel with where it is (left, right, bottom, on the canvas, hidden) and the addons docked as panels; tick to show, untick to hide. This is the list the ▦ *Panels* button used to open; that button now appears only for accounts without the Workboard.
   - **Canvas:** *Snap to the grid* (windows and panels land on grid lines when moved, and moved edges when resized), *Grid size* 10 / 20 / 40 px, *Canvas background* (*only with the grid* shows dots while snapping is on; or always dots, lines, plain).
-  - *Tile the windows* (a grid of all shown, unpinned windows), *Cascade the windows*, *Minimize all windows*, *Show all minimized windows*, *Minimize / Show the addons*, *Lock the layout*.
+  - *Tile the windows* (a grid of all shown, unpinned windows), *Cascade the windows*, *Minimize all windows*, *Show all minimized windows*, *Minimize / Show the addons*, *Lock the layout* (the ▤ button then shows 🔒), *Reset the layout*.
   - **Saved layouts:** *Save this layout…* stores the addons with their places and settings, the panel layout and the canvas settings under a name (up to 10); tick *Also the open terminals, file managers and desktops* to keep those windows too (like a [workspace session](#workspace-sessions)). Choosing a saved layout replaces your addons and panel layout; with windows in it, WRM asks whether to replace or add to your open windows. *Manage saved layouts…* applies or deletes them.
   - *Export the layout (JSON)* downloads the addons, canvas settings, panel layout and saved layouts as `wrm-workboard-<date>.json`; *Import a layout…* reads such a file (up to 512 KiB, everything checked as when loading), replaces your addons and panel layout and adds its saved layouts to yours. Exported files contain addon settings and notes, but no secrets.
-  - *Panels…* and a short help text.
+  - A short help text.
 - **Every addon's settings:** your own title, *Colour* (a coloured edge on the title bar), *Text size* (small to extra large), the addon's own options, and *Remove*.
 - **Saved per user on the server** (`/api/me/ui/workboard`, with a copy in the browser), so the canvas follows you to every browser. Places are kept as fractions of the canvas, so they fit other screen sizes.
 - Addons load and refresh **only while visible**: not minimized and not completely covered by other windows (a countdown still ends on time).

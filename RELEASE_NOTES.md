@@ -1,15 +1,27 @@
-## Web Remote Manager PRO v14.11.1 — Your own order in the connection tree
+## Web Remote Manager PRO v14.11.2 — Workboard and panels in one place
 
-### Added
+### Changed
+
+- **One menu for panels and addons**: the ▤ Workboard menu lists every panel with where it is, so you show, hide, lock and reset the layout where you add addons and arrange the canvas.
+- **Tidier top bar**: the separate ▦ Panels button is gone while the Workboard is available, and a locked layout shows 🔒 on the Workboard button.
+- **Add to the Workboard** lists the panels next to the addons; a hidden panel comes back with *Show*.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.2) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.1 — Your own order in the connection tree
+
+#### Added
 
 - **Drag connections into your order**: drop a connection above or below another one to put it there, or on a connection in another folder to move it into that folder at that place. Each user keeps their own order.
 - **Move connection up / down** and **Sort connections here A–Z** in the connection menu, **Sort connections in this folder A–Z** in the folder menu.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.1) asset. Preserve the database and encryption key; one table (`connection_order`) is added and a previous version still starts on the database.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.11.0 — An interface for every screen
 
