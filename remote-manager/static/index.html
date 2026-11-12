@@ -2261,6 +2261,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <label data-i18n="share_team_title">Team management</label>
       <div class="field-check"><input type="checkbox" id="share-allow-edit"><label for="share-allow-edit" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_edit">Operators may add and edit connections and folders</label></div>
       <div class="field-check"><input type="checkbox" id="share-allow-tunnels"><label for="share-allow-tunnels" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_tunnels">Operators may start and stop tunnels</label></div>
+      <div class="field-check"><input type="checkbox" id="share-allow-tunnel-edit"><label for="share-allow-tunnel-edit" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_tunnel_edit">Operators may add, edit and remove tunnels</label></div>
       <div style="font-size:11px;color:var(--text3);margin-top:4px;" data-i18n="share_team_hint"></div>
     </div>
     <div id="share-others-block">
@@ -8884,6 +8885,7 @@ function openShareModal(opts) {
   document.getElementById('share-guest-role').innerHTML = roleOptions(edit ? edit.guest_role : 'viewer', 'operator');
   document.getElementById('share-allow-edit').checked = !!(edit && edit.allow_edit);
   document.getElementById('share-allow-tunnels').checked = !!(edit && edit.allow_tunnels);
+  document.getElementById('share-allow-tunnel-edit').checked = !!(edit && edit.allow_tunnel_edit);
   document.getElementById('share-pass').value = '';
   document.getElementById('share-pass').placeholder = shareDraft.hadPassword ? t('share_pass_keep') : t('share_pass_none');
   document.getElementById('share-pass-clear').checked = false;
@@ -9026,6 +9028,7 @@ async function submitShare() {
     guest_role: document.getElementById('share-guest-role').value,
     allow_edit: document.getElementById('share-allow-edit').checked,
     allow_tunnels: document.getElementById('share-allow-tunnels').checked,
+    allow_tunnel_edit: document.getElementById('share-allow-tunnel-edit').checked,
     public: shareDraft.mode !== 'members' && document.getElementById('share-public').checked,
     connection_ids: [...shareDraft.connIds].filter(id => { const c = conns.find(x => x.id === id); return c && !(shareFolderCovers(c.folder_id)); }),
     folder_ids: [...shareDraft.folderIds],

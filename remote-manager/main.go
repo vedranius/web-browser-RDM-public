@@ -39,7 +39,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v14.11.4"
+var AppVersion = "v14.11.5"
 
 const sessionCookieName = "wrm_session"
 
@@ -1544,6 +1544,8 @@ func initDB() {
 		`ALTER TABLE share_links ADD COLUMN expires_at TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE share_links ADD COLUMN allow_tunnels INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE share_links ADD COLUMN allow_edit INTEGER NOT NULL DEFAULT 0`,
+		// v14.11.5: separate "add and edit tunnels" share switch (#192)
+		`ALTER TABLE share_links ADD COLUMN allow_tunnel_edit INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE share_members ADD COLUMN role TEXT NOT NULL DEFAULT 'operator'`,
 		`ALTER TABLE share_members ADD COLUMN added_at TEXT NOT NULL DEFAULT ''`,
 		// v10.1: audit entries reference connections and terminal sessions, and are hash-chained

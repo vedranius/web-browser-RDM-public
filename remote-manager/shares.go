@@ -65,7 +65,8 @@ func rolePerms(role string) map[string]bool {
 
 // Extra share permissions that depend on the share's team-management switches (#192).
 const (
-	PermManageTunnels     = "manage_tunnels"
+	PermManageTunnels     = "manage_tunnels" // start and stop (enable / disable) tunnels
+	PermEditTunnels       = "edit_tunnels"   // add, edit and remove tunnels
 	PermManageConnections = "manage_connections"
 )
 
@@ -75,6 +76,7 @@ func sharePerms(s ShareLink, role string, guest bool) map[string]bool {
 	out := rolePerms(role)
 	team := !guest && roleRank[role] >= roleRank[RoleOperator]
 	out[PermManageTunnels] = team && s.AllowTunnels
+	out[PermEditTunnels] = team && s.AllowTunnelEdit
 	out[PermManageConnections] = team && s.AllowEdit
 	return out
 }
@@ -99,15 +101,18 @@ type ShareLink struct {
 	ExpiresAt    string `json:"expires_at"`
 	// Team management switches (#192): operators and above may manage the shared
 	// connections' tunnels / add and edit connections and folders. Off by default.
-	AllowTunnels bool `json:"allow_tunnels"`
+	AllowTunnels bool `json:"allow_tunnels"` // start and stop (enable / disable) tunnels
 	AllowEdit    bool `json:"allow_edit"`
+	// AllowTunnelEdit: operators and above may add, edit and remove the tunnels of the
+	// shared SSH connections (v14.11.5). Separate from AllowTunnels, off by default.
+	AllowTunnelEdit bool `json:"allow_tunnel_edit"`
 }
 
-const shareCols = `id, owner_id, token, name, COALESCE(password_hash,''), public, active, created_at, access_mode, guest_role, expires_at, allow_tunnels, allow_edit`
+const shareCols = `id, owner_id, token, name, COALESCE(password_hash,''), public, active, created_at, access_mode, guest_role, expires_at, allow_tunnels, allow_edit, allow_tunnel_edit`
 
 func scanShare(sc interface{ Scan(...interface{}) error }) (ShareLink, error) {
 	var s ShareLink
-	err := sc.Scan(&s.ID, &s.OwnerID, &s.Token, &s.Name, &s.PasswordHash, &s.Public, &s.Active, &s.CreatedAt, &s.AccessMode, &s.GuestRole, &s.ExpiresAt, &s.AllowTunnels, &s.AllowEdit)
+	err := sc.Scan(&s.ID, &s.OwnerID, &s.Token, &s.Name, &s.PasswordHash, &s.Public, &s.Active, &s.CreatedAt, &s.AccessMode, &s.GuestRole, &s.ExpiresAt, &s.AllowTunnels, &s.AllowEdit, &s.AllowTunnelEdit)
 	return s, err
 }
 
@@ -620,6 +625,7 @@ type shareInput struct {
 	ExpiresAt     *string            `json:"expires_at"`
 	AllowTunnels  *bool              `json:"allow_tunnels"`
 	AllowEdit     *bool              `json:"allow_edit"`
+	AllowTunEdit  *bool              `json:"allow_tunnel_edit"`
 	Active        *bool              `json:"active"`
 	Members       *[]memberInput     `json:"members"`
 	Teams         *[]teamMemberInput `json:"teams"`
@@ -764,7 +770,7 @@ func shareDetails(s ShareLink) map[string]interface{} {
 	return map[string]interface{}{
 		"id": s.ID, "token": s.Token, "name": s.Name, "owner_id": s.OwnerID, "owner_username": owner,
 		"access_mode": s.AccessMode, "guest_role": s.GuestRole, "public": s.Public,
-		"allow_tunnels": s.AllowTunnels, "allow_edit": s.AllowEdit,
+		"allow_tunnels": s.AllowTunnels, "allow_edit": s.AllowEdit, "allow_tunnel_edit": s.AllowTunnelEdit,
 		"password_protected": s.PasswordHash != "", "expires_at": s.ExpiresAt, "expired": s.expired(),
 		"active": s.Active, "created_at": s.CreatedAt, "connection_ids": connIDs, "folder_ids": folderIDs,
 		"items": items, "members": members, "teams": shareTeamsOf(s.ID), "online": roomOnlineCount(s.ID),
@@ -860,8 +866,9 @@ func apiSharesHandler(w http.ResponseWriter, r *http.Request) {
 		defer tx.Rollback()
 		allowTunnels := in.AllowTunnels != nil && *in.AllowTunnels
 		allowEdit := in.AllowEdit != nil && *in.AllowEdit
-		res, err := tx.Exec(`INSERT INTO share_links (owner_id, token, name, password_hash, public, active, created_at, access_mode, guest_role, expires_at, allow_tunnels, allow_edit) VALUES (?,?,?,?,?,1,?,?,?,?,?,?)`,
-			userID, token, name, ph, boolToInt(public), time.Now().UTC().Format(time.RFC3339), *in.AccessMode, guestRole, expires, boolToInt(allowTunnels), boolToInt(allowEdit))
+		allowTunEdit := in.AllowTunEdit != nil && *in.AllowTunEdit
+		res, err := tx.Exec(`INSERT INTO share_links (owner_id, token, name, password_hash, public, active, created_at, access_mode, guest_role, expires_at, allow_tunnels, allow_edit, allow_tunnel_edit) VALUES (?,?,?,?,?,1,?,?,?,?,?,?,?)`,
+			userID, token, name, ph, boolToInt(public), time.Now().UTC().Format(time.RFC3339), *in.AccessMode, guestRole, expires, boolToInt(allowTunnels), boolToInt(allowEdit), boolToInt(allowTunEdit))
 		if err != nil {
 			jsonError(w, err.Error(), 500)
 			return
@@ -889,7 +896,7 @@ func apiSharesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		auditLog(r, userID, "share.created", name, map[string]interface{}{"share_id": shareID, "access_mode": *in.AccessMode, "guest_role": guestRole,
 			"password": ph != nil, "connections": len(connIDs), "folders": len(folderIDs), "expires_at": expires,
-			"allow_tunnels": allowTunnels, "allow_edit": allowEdit})
+			"allow_tunnels": allowTunnels, "allow_edit": allowEdit, "allow_tunnel_edit": allowTunEdit})
 		s, _ := getShareByID(shareID)
 		out := shareDetails(s)
 		out["share_url"] = "/share#" + token
@@ -982,6 +989,10 @@ func apiSharesByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if in.AllowEdit != nil && *in.AllowEdit != s.AllowEdit {
 			tx.Exec(`UPDATE share_links SET allow_edit=? WHERE id=?`, boolToInt(*in.AllowEdit), id)
 			changes["allow_edit"] = *in.AllowEdit
+		}
+		if in.AllowTunEdit != nil && *in.AllowTunEdit != s.AllowTunnelEdit {
+			tx.Exec(`UPDATE share_links SET allow_tunnel_edit=? WHERE id=?`, boolToInt(*in.AllowTunEdit), id)
+			changes["allow_tunnel_edit"] = *in.AllowTunEdit
 		}
 		if in.ClearPassword && s.PasswordHash != "" {
 			tx.Exec(`UPDATE share_links SET password_hash=NULL WHERE id=?`, id)
