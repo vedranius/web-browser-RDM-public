@@ -1,17 +1,36 @@
-## Web Remote Manager PRO v14.11.6 — Clipboard and snippets for daily terminal work
+## Web Remote Manager PRO v14.11.7 — One look for the whole team
 
 ### Added
+
+- **📢 Share with everyone**: an administrator publishes a theme from *Settings → Appearance*; every user sees it under *From your organisation*, and it can be made the default.
+- **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance). Accessibility options, fonts and size stay with each user; administrators are not locked.
+- **💾 Save changes to this theme** for your own themes.
+- **Contrast check** next to the preview with WCAG ratios for text, accent and terminal colours.
+
+### Changed
+
+- Themes with only some colours fill the rest from Graphite or Daylight.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.7) asset. Preserve the database and encryption key; nothing is migrated. New settings `appearance_lock` (off) and `appearance_shared_themes` (empty).
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.6 — Clipboard and snippets for daily terminal work
+
+#### Added
 
 - **Clipboard entries say where and when**: source connection, age and number of lines.
 - **📌 Pin** an entry: it stays on top, is not pushed out by new copies and survives the first *Clear*.
 - **⚡ Save as snippet** keeps a copied command on the server; **✕** removes one entry; a filter appears with more than four entries.
 - **★ Recently used** snippets on top of the Snippets panel.
 
-### Changed
+#### Changed
 
 - **Paste** types into the focused or last used terminal. Several lines use bracketed paste when the shell supports it, otherwise WRM asks first; dangerous-looking commands always ask.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.6](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.6) asset. Preserve the database and encryption key; nothing is migrated.
 
