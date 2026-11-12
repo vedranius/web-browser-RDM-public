@@ -1,10 +1,23 @@
-## Web Remote Manager PRO v14.11.3 — AI apps keep their approved access
+## Web Remote Manager PRO v14.11.4 — AI apps wait for your approval
 
-### Fixed
+### Added
+
+- **AI apps wait for your decision**: when Claude Code, Codex or another AI app stops waiting for a tool call (its own timeout), WRM tells it the request still waits and gives it `wait_for_approval`, so it waits until you approve or deny instead of going on without the step.
+- **Approval requests on the desktop**: the WRM PRO plugin shows each approval request as a Windows, macOS or Linux notification, also when no WRM tab is open; a click opens WRM.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.4](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.4) asset. Preserve the database and encryption key; nothing is migrated. Update the WRM PRO Claude plugin to 1.2.4 (or download the Claude Desktop extension again).
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.3 — AI apps keep their approved access
+
+#### Fixed
 
 - **No early re-approval of AI connections**: the WRM PRO Claude plugin and the Claude Desktop extension asked for a new approval whenever WRM did not answer for a moment (restarting, updating, hanging, or the computer off the network), although the chosen lifetime had not passed. Now only a token WRM refuses leads to a new sign-in; otherwise the AI app is told WRM is unreachable and the bridge reconnects by itself with the saved access.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.3) asset. Preserve the database and encryption key; nothing is migrated. Update the WRM PRO Claude plugin to 1.2.3 (or download the Claude Desktop extension again); the saved connection stays, so no new sign-in is needed.
 
