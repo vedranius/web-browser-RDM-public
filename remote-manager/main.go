@@ -39,7 +39,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v14.11.0"
+var AppVersion = "v14.11.1"
 
 const sessionCookieName = "wrm_session"
 
@@ -114,6 +114,7 @@ type connView struct {
 	AuthMethod  string            `json:"auth_method"`
 	KeyPath     string            `json:"key_path"`
 	FolderID    *int              `json:"folder_id"`
+	SortOrder   int               `json:"sort_order,omitempty"` // the user's position in the tree (0 = by name)
 	JumpID      *int              `json:"jump_id"`
 	ProxyID     *int              `json:"proxy_id"`
 	ProxyName   string            `json:"proxy_name,omitempty"`
@@ -315,6 +316,7 @@ func newRouter() http.Handler {
 	// connections, folders, workspace sessions
 	mux.HandleFunc("/api/connections", apiConnectionsHandler)
 	mux.HandleFunc("/api/connections/bulk", apiConnectionsBulkHandler)
+	mux.HandleFunc("/api/connections/order", apiConnectionOrderHandler)
 	mux.HandleFunc("/api/connections/test", apiConnectionTestHandler)
 	mux.HandleFunc("/api/connections/quick", apiQuickConnectHandler)
 	mux.HandleFunc("/api/nettools", apiNetToolsHandler)
@@ -1033,6 +1035,7 @@ func initDB() {
 		kind TEXT NOT NULL DEFAULT 'chat',
 		text TEXT NOT NULL DEFAULT '')`,
 		"id", "share_id", "ts", "pkey", "name", "kind", "text")
+	initConnOrderTable()
 	ensureTable("audit_log", `CREATE TABLE IF NOT EXISTS audit_log (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		ts TEXT NOT NULL,
@@ -1953,9 +1956,13 @@ func apiConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		views := []connView{}
+		order := connOrderOf(userID)
 		for _, c := range loadUserConnections(userID) {
-			views = append(views, c.view())
+			v := c.view()
+			v.SortOrder = order[c.ID]
+			views = append(views, v)
 		}
+		sortConnViews(views)
 		jsonOK(w, views)
 	case http.MethodPost:
 		var c Connection
@@ -2051,6 +2058,7 @@ func deleteConnectionRows(connID int) {
 		`DELETE FROM monitor_profiles WHERE conn_id=?`,
 		`DELETE FROM log_settings WHERE conn_id=?`,
 		`DELETE FROM git_server_health WHERE conn_id=?`,
+		`DELETE FROM connection_order WHERE conn_id=?`,
 	} {
 		db.Exec(q, connID)
 	}
@@ -2340,6 +2348,8 @@ func apiConnectionsBulkHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		for _, id := range moved {
 			tunnelMgr.restartConn(id)
+			// a moved connection joins the end of its new folder (by name) until it is placed
+			db.Exec(`DELETE FROM connection_order WHERE conn_id=? AND user_id=?`, id, userID)
 		}
 		statusMon.poke()
 	case "tag":

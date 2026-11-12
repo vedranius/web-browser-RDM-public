@@ -1,21 +1,34 @@
-## Web Remote Manager PRO v14.11.0 — An interface for every screen
+## Web Remote Manager PRO v14.11.1 — Your own order in the connection tree
 
 ### Added
+
+- **Drag connections into your order**: drop a connection above or below another one to put it there, or on a connection in another folder to move it into that folder at that place. Each user keeps their own order.
+- **Move connection up / down** and **Sort connections here A–Z** in the connection menu, **Sort connections in this folder A–Z** in the folder menu.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.1) asset. Preserve the database and encryption key; one table (`connection_order`) is added and a previous version still starts on the database.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.0 — An interface for every screen
+
+#### Added
 
 - **Account menu** on your avatar: your name and role, *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out* in one place.
 - **Minimise dialogs**: the ▁ button above a big dialog turns it into a chip at the bottom of the screen; click the chip to continue where you left off.
 - **Grouped notifications**: repeated messages show a ×N counter and older ones fold into one *more notifications* toast.
 - **Tablets get the work area back**: between 761 and 1024 px (a tablet, a narrow laptop or a zoomed-in browser) *Sessions*, *Clipboard*, *Snippets* and the docked AI view slide in from the 🗂 button.
 
-### Changed
+#### Changed
 
 - **The top bar keeps its labels.** Instead of turning every button into a bare icon as soon as one label did not fit, WRM now moves the less used buttons into the labelled **⋯** menu first. A 1920 px screen shows every button with its name again, and a laptop keeps the names of the ones you use most.
 
-### Fixed
+#### Fixed
 
 - Top bar buttons no longer overlap on phones.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.0) asset. Preserve the database and encryption key; nothing is migrated.
 

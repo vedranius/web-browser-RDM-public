@@ -403,6 +403,8 @@ button:hover { background: var(--accent-h); }
 .folder-row { display: flex; align-items: center; gap: 5px; padding: 6px 8px; cursor: pointer; border-radius: 5px; font-size: 12px; color: #a5b4fc; font-weight: 600; }
 .folder-row:hover { background: var(--bg3); }
 .folder-row.drag-over { background: var(--accent-d); outline: 1px dashed var(--accent); }
+.conn-item.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
+.conn-item.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
 .folder-chevron { font-size: 9px; color: var(--text3); transition: transform .15s; flex-shrink: 0; width: 10px; }
 .folder-chevron.open { transform: rotate(90deg); }
 .folder-children { padding-left: 12px; display: none; }
@@ -5341,6 +5343,8 @@ Object.assign(LANGS.hr, {stin_ai:'Stanje AI asistenta, postavljanje i pristup za
 
 Object.assign(LANGS.en, {fd_up:'Move folder up',fd_down:'Move folder down'});
 Object.assign(LANGS.hr, {fd_up:'Pomakni folder gore',fd_down:'Pomakni folder dolje'});
+Object.assign(LANGS.en, {co_up:'Move connection up',co_down:'Move connection down',co_sort:'Sort connections in this folder A–Z',co_sorted:'Connections are listed by name again.',co_sort_here:'Sort connections here A–Z'});
+Object.assign(LANGS.hr, {co_up:'Pomakni vezu gore',co_down:'Pomakni vezu dolje',co_sort:'Poredaj veze u ovom folderu A–Ž',co_sorted:'Veze su opet poredane po imenu.',co_sort_here:'Poredaj veze ovdje A–Ž'});
 Object.assign(LANGS.en, {adm_edits: 'File edits', adin_edits: 'The diff of every file saved from the file editor or written by the AI assistant.',
   edits_help: 'Every file saved from the file editor or written by the AI assistant, with the change as a diff (the same one the editor shows before saving). Secret-looking values are masked and the diffs are encrypted at rest. They are kept as long as the audit log.',
   edits_all_sources: 'All sources', edits_src_editor: 'File editor', edits_src_ai: 'AI assistant', edits_server_ph: 'Server', edits_session_ph: 'Session',
@@ -8017,9 +8021,56 @@ function makeConnItem(c) {
   };
   el.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = null; showConnCtx(e.clientX, e.clientY, c); };
   el.ondragstart = e => { const ids = selectedConns.has(c.id) ? [...selectedConns] : [c.id]; e.dataTransfer.setData('connIds', JSON.stringify(ids)); e.dataTransfer.setData('connId', c.id); e.dataTransfer.effectAllowed = 'move'; };
+  if (!c.temporary) {
+    // Dropping connections on a connection places them above or below it (the user's own order).
+    const half = e => { const b = el.getBoundingClientRect(); return (e.clientY - b.top) > b.height / 2; };
+    const clear = () => el.classList.remove('drop-before', 'drop-after');
+    el.ondragover = e => {
+      if (![...(e.dataTransfer.types || [])].includes('connids')) return;
+      e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move';
+      const after = half(e); el.classList.toggle('drop-after', after); el.classList.toggle('drop-before', !after);
+    };
+    el.ondragleave = clear;
+    el.ondragend = clear;
+    el.ondrop = e => {
+      const ids = dragConnIDs(e); clear();
+      if (!ids.length) return;
+      e.preventDefault(); e.stopPropagation();
+      placeConns(ids, c.id, half(e));
+    };
+  }
   return el;
 }
 
+// placeConns moves the connections ids next to the connection targetId (after = below it),
+// into its folder when they come from another one, and saves the user's order of that folder.
+async function placeConns(ids, targetId, after) {
+  const target = conns.find(x => x.id === targetId);
+  ids = ids.filter(id => id !== targetId && conns.some(x => x.id === id && !x.temporary));
+  if (!target || !ids.length) return;
+  const fid = target.folder_id || null;
+  const sameFolder = c => (folders.some(f => f.id === c.folder_id) ? c.folder_id : null) === (folders.some(f => f.id === fid) ? fid : null);
+  try {
+    const moving = ids.filter(id => !sameFolder(conns.find(x => x.id === id)));
+    if (moving.length && !(await apiOk('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids: moving, folder_id: fid})}))) return;
+    const order = conns.filter(x => !x.temporary && sameFolder(x) && !ids.includes(x.id)).map(x => x.id);
+    order.splice(order.indexOf(targetId) + (after ? 1 : 0), 0, ...ids);
+    await apiOk('/api/connections/order', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ids: order})});
+  } catch (e) { showToast(String(e.message || e), 'error'); }
+  await loadData();
+}
+function moveConnStep(id, direction) {
+  const c = conns.find(x => x.id === id); if (!c) return;
+  const sibs = conns.filter(x => !x.temporary && (x.folder_id || null) === (c.folder_id || null));
+  const target = sibs[sibs.findIndex(x => x.id === id) + direction];
+  if (target) placeConns([id], target.id, direction > 0);
+}
+// resetConnOrder lists the connections of a folder by name again (folder 0 / null = top level).
+async function resetConnOrder(folderId) {
+  const ids = conns.filter(x => !x.temporary && (x.folder_id || null) === (folderId || null)).map(x => x.id);
+  if (!ids.length) return;
+  if (await apiOk('/api/connections/order', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ids, reset: true})})) { showToast(t('co_sorted'), 'success'); await loadData(); }
+}
 function dragConnIDs(e) {
   try {
     const ids = JSON.parse(e.dataTransfer.getData('connIds') || '[]');
@@ -8180,6 +8231,9 @@ function showConnCtx(x, y, conn) {
     <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow([${conn.id}])">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">${t('edit_connection')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openMoveModal('conn', ${conn.id})">${esc(t('move_to_folder'))}</div>
+    ${conn.temporary ? '' : `<div class="ctx-item" onclick="closeAllCtx(); moveConnStep(${conn.id},-1)">↑ ${esc(t('co_up'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); moveConnStep(${conn.id},1)">↓ ${esc(t('co_down'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); resetConnOrder(${conn.folder_id || 0})">🔤 ${esc(t('co_sort_here'))}</div>`}
     <div class="ctx-item" onclick="closeAllCtx(); duplicateConn(${conn.id})">⧉ ${t('duplicate')}</div>
     ${conn.protocol !== 'SERIAL' && !web ? `<div class="ctx-item" onclick="closeAllCtx(); nameFromHostname(${conn.id})">🏷 ${esc(t('name_from_host_menu'))}</div>` : ''}
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalConn(${conn.id})">${t('share_connection')}</div>
@@ -8277,6 +8331,7 @@ function showFolderCtx(x, y) {
     <div class="ctx-item" onclick="closeAllCtx(); sortFolders(ctxFolderId)">🔤 ${esc(t('fd_sort'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); sortFolders(ctxFolderId, !(folders.find(x => x.id === ctxFolderId) || {}).auto_sort)">${(folders.find(x => x.id === ctxFolderId) || {}).auto_sort ? '☑' : '☐'} ${esc(t('fd_keep_sorted'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); sortFolders(0)">🔤 ${esc(t('fd_sort_all'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); resetConnOrder(ctxFolderId)">🔤 ${esc(t('co_sort'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); sortFolders(0, !foldersKeepAll)">${foldersKeepAll ? '☑' : '☐'} ${esc(t('fd_keep_all'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
