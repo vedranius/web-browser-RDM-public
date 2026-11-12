@@ -497,7 +497,7 @@ A new installation has no account, and the first account becomes the administrat
 
 ## Team-managed shares (v14.7.2)
 
-- Two per-share switches, off by default: `allow_edit` (operators may add and edit connections and folders) and `allow_tunnels` (operators may start and stop the owner's tunnels). They never apply to guests or auditors and are checked on every request (`sharePerms`, `shareTeamAccess`).
+- Two per-share switches, off by default: `allow_edit` (operators may add and edit connections and folders) and `allow_tunnels` (operators may start and stop the owner's tunnels); since v14.11.5 also `allow_tunnel_edit` (operators may add, edit and remove the tunnels of shared SSH connections; the tunnels stay the owner's and every tunnel is validated against the tunnel policies of both the owner and the member, so a member cannot use the owner's rights to listen beyond loopback or forward remotely). They never apply to guests or auditors and are checked on every request (`sharePerms`, `shareTeamAccess`).
 - Members act on the owner's rows only inside the share (`shareHasConnection`, `shareHasFolder`); they cannot delete, cannot move items out of the share and cannot set jump hosts, proxies, key files, key store keys, vault credentials or Bitwarden items.
 - Changing a connection's host or protocol through a share clears its saved password and key and drops a stored-secret reference, so the owner's secret is never sent to a target a member chose. Members never receive secrets (`has_password` only).
 - Tunnels started by a member run as the owner's: the owner's tunnel policy and bind validation apply, and the member's account must be allowed to use tunnels. All changes are audited under the member's name with `share_id` and `owner`.

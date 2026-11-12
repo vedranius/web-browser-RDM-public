@@ -1,11 +1,27 @@
-## Web Remote Manager PRO v14.11.4 — AI apps wait for your approval
+## Web Remote Manager PRO v14.11.5 — Separate permissions for adding and switching tunnels
 
 ### Added
+
+- **Share switch "Operators may add, edit and remove tunnels"** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)), off by default: members with the operator role or higher get **🛠 Edit tunnels…** on a shared SSH connection and may add, change and remove its tunnels. The tunnels stay in the owner's account and must be allowed by the tunnel policies of both the owner and the member.
+
+### Changed
+
+- The existing switch now reads *Operators may enable and disable (start and stop) tunnels*; its meaning is unchanged. The two switches are independent, so some people can only switch tunnels on and off while others can also add and edit them. Existing shares keep what they allowed.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.5](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.5) asset. Preserve the database and encryption key. One column is added (`share_links.allow_tunnel_edit`, off); an older binary still starts on the database.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.4 — AI apps wait for your approval
+
+#### Added
 
 - **AI apps wait for your decision**: when Claude Code, Codex or another AI app stops waiting for a tool call (its own timeout), WRM tells it the request still waits and gives it `wait_for_approval`, so it waits until you approve or deny instead of going on without the step.
 - **Approval requests on the desktop**: the WRM PRO plugin shows each approval request as a Windows, macOS or Linux notification, also when no WRM tab is open; a click opens WRM.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.4](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.4) asset. Preserve the database and encryption key; nothing is migrated. Update the WRM PRO Claude plugin to 1.2.4 (or download the Claude Desktop extension again).
 

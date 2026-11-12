@@ -13,6 +13,7 @@ import (
 // A share owner can let the team manage the shared connections with two switches:
 //   allow_edit    – operators and above may add and edit connections and folders
 //   allow_tunnels – operators and above may start and stop the connections' tunnels
+//   allow_tunnel_edit – operators and above may add, edit and remove those tunnels
 // Both are off by default and never apply to guests (people without an account).
 //
 // The connections and folders stay the owner's: new ones are created in the owner's
@@ -26,6 +27,7 @@ import (
 // /api/share-team/{share}/connections/{id}     GET · PUT
 // /api/share-team/{share}/folders              POST  add a folder under a shared folder
 // /api/share-team/{share}/folders/{id}         PUT   rename
+// /api/share-team/{share}/connections/{id}/tunnels GET · PUT  the connection's tunnels (allow_tunnel_edit)
 // /api/share-team/{share}/tunnels              GET   tunnels of the shared connections
 // /api/share-team/{share}/tunnels/{key}/start|stop
 // {share} is the share's token or id (as /api/connections/… ?share_id= uses it).
@@ -86,6 +88,10 @@ func apiShareTeamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	switch parts[1] {
 	case "connections":
+		if len(parts) == 4 && parts[3] == "tunnels" {
+			shareTeamConnTunnels(w, r, parts[0], parts[2])
+			return
+		}
 		sa, ok := shareTeamAccess(w, r, parts[0], PermManageConnections)
 		if !ok {
 			return
@@ -427,5 +433,34 @@ func shareTeamTunnels(w http.ResponseWriter, r *http.Request, sa *ShareAccess, r
 		jsonOK(w, t.view())
 	default:
 		jsonError(w, "Not found", 404)
+	}
+}
+
+// shareTeamConnTunnels lists and replaces the tunnels of a shared SSH connection for a
+// member with the "add and edit tunnels" permission. The tunnels stay the owner's and
+// must be allowed by the tunnel policies of both the owner and the member.
+func shareTeamConnTunnels(w http.ResponseWriter, r *http.Request, ident, connIdent string) {
+	sa, ok := shareTeamAccess(w, r, ident, PermEditTunnels)
+	if !ok {
+		return
+	}
+	id, _ := strconv.Atoi(connIdent)
+	if id <= 0 || !shareHasConnection(sa.Share, id) {
+		jsonError(w, "Connection not found", 404)
+		return
+	}
+	c, err := loadConnection(id) // decrypted: changed running tunnels are restarted
+	if err != nil || c.UserID != sa.Share.OwnerID {
+		jsonError(w, "Connection not found", 404)
+		return
+	}
+	switch r.Method {
+	case http.MethodGet:
+		jsonOK(w, loadTunnelDefs("conn_id=?", c.ID))
+	case http.MethodPut:
+		putConnectionTunnels(w, r, c, sa.Share.OwnerID, sa.UserID, map[string]interface{}{
+			"share_id": sa.Share.ID, "owner": usernameOf(sa.Share.OwnerID)})
+	default:
+		jsonError(w, "Method not allowed", 405)
 	}
 }

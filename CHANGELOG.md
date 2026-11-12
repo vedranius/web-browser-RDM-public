@@ -1,3 +1,17 @@
+## [14.11.5] - 2026-11-12
+
+Separate share permissions for adding/editing tunnels and for enabling/disabling them ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)). Upgrading from v14.11.4 keeps the database and the encryption key; one column is added.
+
+### Added
+
+- **Share switch "Operators may add, edit and remove tunnels"** (`allow_tunnel_edit`, off by default): signed-in operators and above get **🛠 Edit tunnels…** on a shared SSH connection and may add, change and remove its tunnels. The tunnels stay in the owner's account; each one must be allowed by the tunnel policies of both the owner and the member (listening beyond 127.0.0.1, remote forwarding). New share permission `edit_tunnels`.
+- API `GET/PUT /api/share-team/{share}/connections/{id}/tunnels`; `allow_tunnel_edit` in `/api/shares`.
+
+### Changed
+
+- The existing switch now reads *Operators may enable and disable (start and stop) tunnels*. Its meaning is unchanged, and the two tunnel switches are independent, so a member may have either one or both. Existing shares keep what they allowed; adding and editing stays off until the owner turns it on.
+- The owner's tunnel editor and the share editor use one code path (`putConnectionTunnels`).
+
 ## [14.11.4] - 2026-11-12
 
 AI apps wait for your approval and show it on the desktop. Upgrading from v14.11.3 keeps the database and the encryption key; nothing is migrated.

@@ -1116,6 +1116,23 @@ func connectionTunnelsHandler(w http.ResponseWriter, r *http.Request, userID int
 	case http.MethodGet:
 		jsonOK(w, loadTunnelDefs("conn_id=?", c.ID))
 	case http.MethodPut:
+		putConnectionTunnels(w, r, c, userID, userID, nil)
+	default:
+		jsonError(w, "Method not allowed", 405)
+	}
+}
+
+// putConnectionTunnels replaces the tunnels of connection c, which belongs to ownerID.
+// actorID is who makes the change: the owner, or a share member with the "add and edit
+// tunnels" permission (#192). The tunnel policies of both must allow every tunnel, the
+// tunnels stay the owner's. extra is added to the audit entry.
+func putConnectionTunnels(w http.ResponseWriter, r *http.Request, c Connection, ownerID, actorID int, extra map[string]interface{}) {
+	userID := ownerID
+	policyUsers := []int{ownerID}
+	if actorID != ownerID {
+		policyUsers = append(policyUsers, actorID)
+	}
+	{
 		var in []tunnelDef
 		if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&in); err != nil {
 			jsonError(w, "Bad JSON", 400)
@@ -1125,10 +1142,13 @@ func connectionTunnelsHandler(w http.ResponseWriter, r *http.Request, userID int
 			jsonError(w, "Too many tunnels (max. 50 per connection)", 400)
 			return
 		}
-		if len(in) > 0 {
-			if err := tunnelsAllowedFor(userID); err != nil {
-				jsonError(w, err.Error(), 403)
-				return
+		// A share member needs the tunnel policy even to remove tunnels; the owner only to add.
+		if len(in) > 0 || actorID != ownerID {
+			for _, uid := range policyUsers {
+				if err := tunnelsAllowedFor(uid); err != nil {
+					jsonError(w, err.Error(), 403)
+					return
+				}
 			}
 			if !isSSHProtocol(c) {
 				jsonError(w, "Tunnels need an SSH connection", 400)
@@ -1141,9 +1161,11 @@ func connectionTunnelsHandler(w http.ResponseWriter, r *http.Request, userID int
 		}
 		seenPort := map[string]bool{}
 		for i := range in {
-			if err := validateTunnelDef(&in[i], userID); err != nil {
-				jsonError(w, fmt.Sprintf("Tunnel %d: %v", i+1, err), 400)
-				return
+			for _, uid := range policyUsers {
+				if err := validateTunnelDef(&in[i], uid); err != nil {
+					jsonError(w, fmt.Sprintf("Tunnel %d: %v", i+1, err), 400)
+					return
+				}
 			}
 			if in[i].BindPort > 0 && in[i].Kind != "remote" {
 				k := in[i].BindHost + ":" + strconv.Itoa(in[i].BindPort)
@@ -1200,17 +1222,22 @@ func connectionTunnelsHandler(w http.ResponseWriter, r *http.Request, userID int
 				continue
 			}
 			reason := t.reason
-			tunnelMgr.stop(k, userID, "tunnel settings changed")
+			tunnelMgr.stop(k, actorID, "tunnel settings changed")
 			id, _ := strconv.Atoi(strings.TrimPrefix(k, "t"))
 			if def, err := loadTunnelDef(id); err == nil {
-				go tunnelMgr.start(k, def, c, userID, reason, nil)
+				go tunnelMgr.start(k, def, c, actorID, reason, nil)
 			}
 		}
-		auditLogRef(r, userID, usernameOf(userID), "tunnel.configured", c.Name, map[string]interface{}{"tunnels": len(in)}, auditRef{ConnID: c.ID})
-		tunnelMgr.notify(userID)
+		detail := map[string]interface{}{"tunnels": len(in)}
+		for k, v := range extra {
+			detail[k] = v
+		}
+		auditLogRef(r, actorID, usernameOf(actorID), "tunnel.configured", c.Name, detail, auditRef{ConnID: c.ID})
+		tunnelMgr.notify(ownerID)
+		if actorID != ownerID {
+			tunnelMgr.notify(actorID)
+		}
 		jsonOK(w, loadTunnelDefs("conn_id=?", c.ID))
-	default:
-		jsonError(w, "Method not allowed", 405)
 	}
 }
 

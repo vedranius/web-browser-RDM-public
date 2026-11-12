@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.11.4** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.11.5** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.11.5
+
+**Separate permissions for adding and for switching tunnels** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)). A share now has two tunnel switches instead of one: *Operators may enable and disable (start and stop) tunnels* (the existing switch, unchanged) and the new *Operators may add, edit and remove tunnels*. Give some people only the on/off switch and others both. With the new switch a member right-clicks a shared SSH connection, **🛠 Edit tunnels…**, and adds, changes or removes its tunnels; they stay in the owner's account and must pass the tunnel policies of both the owner and the member.
 
 ## What's new in v14.11.4
 
@@ -355,7 +359,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 1. [What WRM is](#what-wrm-is)
 2. [Quick start](#quick-start)
-3. [Upgrading from v14.11.3](#upgrading-from-v14113) · [from v14.11.2](#upgrading-from-v14112) · [from v14.11.1](#upgrading-from-v14111) · [from v14.11.0](#upgrading-from-v14110) · [from v14.7.2](#upgrading-from-v1472) · [from v14.7.1](#upgrading-from-v1471) · [from v14.7.0](#upgrading-from-v1470) · [from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading from v14.11.4](#upgrading-from-v14114) · [from v14.11.3](#upgrading-from-v14113) · [from v14.11.2](#upgrading-from-v14112) · [from v14.11.1](#upgrading-from-v14111) · [from v14.11.0](#upgrading-from-v14110) · [from v14.7.2](#upgrading-from-v1472) · [from v14.7.1](#upgrading-from-v1471) · [from v14.7.0](#upgrading-from-v1470) · [from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -471,21 +475,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.11.4-linux-amd64
-   ./wrm-pro-v14.11.4-linux-amd64
+   chmod +x wrm-pro-v14.11.5-linux-amd64
+   ./wrm-pro-v14.11.5-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.11.4-windows-amd64.exe
+   .\wrm-pro-v14.11.5-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.11.4-linux-amd64.AppImage
-   ./wrm-pro-v14.11.4-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.11.4-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.11.5-linux-amd64.AppImage
+   ./wrm-pro-v14.11.5-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.11.5-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -494,8 +498,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.4/wrm-pro-v14.11.4-android-arm64
-   chmod +x wrm-pro-v14.11.4-android-arm64 && ./wrm-pro-v14.11.4-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.5/wrm-pro-v14.11.5-android-arm64
+   chmod +x wrm-pro-v14.11.5-android-arm64 && ./wrm-pro-v14.11.5-android-arm64
    ```
 
    **Docker**
@@ -565,6 +569,10 @@ Whoever can run WRM's executable against its database on the server can reset an
 - An AI or MCP session never runs `wrm -reset-password`, `-reset-2fa` or `-lockdown` on a server (hard block `wrm_recovery`, also under full access), and a temporary password in a command's output is masked before an AI sees it.
 
 ---
+
+## Upgrading from v14.11.4
+
+Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new column, `share_links.allow_tunnel_edit` (off); an older binary still starts on it. Existing shares keep exactly what they allowed: *start and stop tunnels* stays as it was, and adding or editing tunnels stays off until the owner turns it on.
 
 ## Upgrading from v14.11.3
 
@@ -2451,9 +2459,10 @@ Right-click a connection → **🤝 Share**, a folder → **Share Folder**, sele
   | Share settings & members | — | — | — | — | ✔ |
 
   Roles are **enforced by the server** on every request; the UI only hides what would be refused anyway.
-- **Team management** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)), two switches, both off by default. They apply to signed-in people with the **operator** role or higher, never to guests:
+- **Team management** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)), three switches, all off by default. They apply to signed-in people with the **operator** role or higher, never to guests:
   - *Operators may add and edit connections and folders*: **Edit connection…** (name, protocol, host, user name, password, folder inside the share, notes) on a shared connection; **New connection here…**, **New folder…** and **Rename folder…** on a shared folder (right-click). New connections and folders are created in the **owner's account** inside the shared folder, so they are shared at once. Members cannot delete, cannot move anything out of the share and never see or choose the owner's stored secrets (key store keys, vault credentials, Bitwarden items, key files on the server). **Changing the host or protocol removes the saved password and key** (and a stored-secret reference), so the owner's secret is never sent to a server a member chose; the member can type a new password.
   - *Operators may start and stop tunnels*: **⇄ Tunnels…** on the share lists the tunnels the owner configured on the shared connections, with *Start* / *Stop*. Tunnels run as the owner's (the owner's tunnel policy and bind rules apply) and the member's own account must be allowed to use tunnels too.
+  - *Operators may add, edit and remove tunnels* (v14.11.5): **🛠 Edit tunnels…** on a shared SSH connection (right-click) edits its tunnels: name, type (local, remote, dynamic), start mode, listen address and port, target. The tunnels stay in the owner's account. Both the owner's and the member's tunnel policies must allow each tunnel (listening beyond 127.0.0.1, remote forwarding). Independent of the start/stop switch: a member may have either one or both.
   - Every change is audited under the member's name with `share_id` and `owner`.
 - **🤝 Shares** (top bar) lists your shares with mode, members, expiry and **how many people are online**. Actions: **Open room**, **Copy link**, **Edit** (everything above), **People** (everyone who ever opened the share, with last seen and IP — change a person's role or **ban** them), **New link** (the old link stops working immediately), **Pause/Resume**, **Delete**.
 - **Revocation is immediate:** deleting, pausing or rotating a share, removing a member, lowering a role, banning, or disabling a user closes the affected terminals and room connections at once.
@@ -3540,7 +3549,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET / POST | `/api/shares` | My shares / create `{name, connection_ids, folder_ids, access_mode, guest_role, allow_edit, allow_tunnels, members:[{username, role}], password, public, expires_at}` |
+| GET / POST | `/api/shares` | My shares / create `{name, connection_ids, folder_ids, access_mode, guest_role, allow_edit, allow_tunnels, allow_tunnel_edit, members:[{username, role}], password, public, expires_at}` |
 | GET / PUT / DELETE | `/api/shares/{id}` | Details / update (also `active`, `clear_password`) / delete |
 | POST | `/api/shares/{id}/rotate` | New link |
 | GET / POST | `/api/shares/{id}/members` · PUT / DELETE `…/members/{userID}` | Members and roles |
@@ -3551,6 +3560,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | POST · GET / PUT | `/api/share-team/{share}/connections` · `…/connections/{id}` | Team management: add a connection to a shared folder · view / edit (`allow_edit`) |
 | POST · PUT | `/api/share-team/{share}/folders` · `…/folders/{id}` | Add a folder `{name, parent_id}` · rename (`allow_edit`) |
 | GET · POST | `/api/share-team/{share}/tunnels` · `…/tunnels/{key}/start\|stop` | Tunnels of the shared connections (`allow_tunnels`) |
+| GET · PUT | `/api/share-team/{share}/connections/{id}/tunnels` | A shared connection's tunnels · replace them, same body as `/api/connections/{id}/tunnels` (`allow_tunnel_edit`) |
 
 **Administration** (administrators)
 
@@ -3713,7 +3723,7 @@ remote-manager/
   recording.go    terminal sessions, asciicast recorder, file transfer log, recordings & transfers API
   hostkeys.go     SSH host key verification (TOFU/strict), FTPS certificate pinning
   shares.go       sharing model: access modes, roles, members, participants, authorization
-  share_team.go   team management of shares: members edit connections/folders, start/stop tunnels
+  share_team.go   team management of shares: members edit connections/folders, start/stop and edit tunnels
   collab.go       collaboration rooms: presence, chat, terminal sharing, control, voice signalling, moderation
   turn.go         built-in TURN relay for voice (turn_android.go: stub for Android)
   admin.go        open-terminal registry, admin status
