@@ -1,6 +1,6 @@
-## [14.11.0] - 2026-11-11
+## [14.11.0] - 2026-11-12
 
-The interface fits every screen: the top bar keeps its labels, tablets get the work area back. Upgrading from v14.7.0 keeps the database and the encryption key; nothing is migrated.
+The interface fits every screen: the top bar keeps its labels, tablets get the work area back. Upgrading from v14.7.2 keeps the database and the encryption key; nothing is migrated.
 
 ### Added
 
@@ -16,6 +16,40 @@ The interface fits every screen: the top bar keeps its labels, tablets get the w
 ### Fixed
 
 - On phones the top bar buttons overlapped (*Storages* and *Chains* never moved into the **⋯** menu), and the *ADMIN* badge stayed visible on narrow screens.
+
+## [14.7.2] - 2026-11-12
+
+Shares a team can manage together. Upgrading from v14.7.1 keeps the database and the encryption key; two columns are added to `share_links`.
+
+### Added
+
+- **Team management of shares** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)): two per-share switches, off by default, for signed-in members with the operator role or higher (never guests). *Operators may add and edit connections and folders* (`allow_edit`): edit a shared connection's name, protocol, host, user name, password, folder (inside the share) and notes; add connections and folders under a shared folder and rename shared folders. New items are created in the owner's account. *Operators may start and stop tunnels* (`allow_tunnels`): start and stop the tunnels the owner configured on the shared connections; the owner's tunnel policy applies and the member's account must be allowed to use tunnels.
+- API `/api/share-team/{share}/connections[/{id}]`, `…/folders[/{id}]`, `…/tunnels[/{key}/start|stop]`; `allow_edit` and `allow_tunnels` in `/api/shares`; `manage_connections` and `manage_tunnels` in the share permissions (`/api/shared`, `/api/share/{token}`, the room).
+
+### Security
+
+- Members never see or choose the owner's stored secrets (key store, vault credentials, Bitwarden, server key files). Changing a connection's host or protocol through a share removes its saved password and key and any stored-secret reference, so the owner's secret is never sent to a server a member picked. Members cannot delete items or move them out of the share. All changes are audited with the member's name, `share_id` and `owner`.
+
+## [14.7.1] - 2026-11-11
+
+Security fixes and issue #190. Upgrading from v14.7.0 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **First-run setup code.** While no account exists, WRM creates a one-time code at start, prints it to the console/log and writes it to `first-admin-setup-code.txt` (mode 0600) next to the database. Creating the first (administrator) account from the network needs it; a direct connection from the WRM host itself (loopback, no proxy headers) does not. The sign-in page shows the field only when needed (`setup_code_required` in `/api/auth/config`). Wrong codes count as failed sign-ins for the rate limit. The code and its file are removed when the first account is created.
+- **HSTS switch** (`hsts`, *Admin → Policies*, default on). Off sends `max-age=0`, so browsers forget an earlier entry.
+- **Open a tunnel through an IP address of the WRM host** for tunnels on 0.0.0.0 (HSTS of WRM's host name does not apply to an IP address) ([#190](https://github.com/vedranius/web-browser-RDM-public/issues/190)).
+- **Security overview: tunnels open to the network** (`exposed_tunnels`): a warning for a local tunnel on 0.0.0.0, a failure for a SOCKS (dynamic) tunnel there.
+
+### Fixed
+
+- Two concurrent first registrations could both become administrators; the check and the insert are now serialised.
+- The origin check compares the port: another service on the WRM host (for example a web interface published by a tunnel) is a different origin.
+- One AI client closing a shared AI session (same AI connection) no longer stops the running commands of the others.
+- `~` in AI tool paths could stay unexpanded when several calls started a session at the same moment.
+- A data race on the MCP session's last-seen time.
+- The sign-in page scrolls when the first-run form is taller than the window; before, the *Create account* button could be out of reach.
+- Built with Go 1.27.4 (GO-2026-6859, net/http).
 
 ## [14.7.0] - 2026-11-10
 

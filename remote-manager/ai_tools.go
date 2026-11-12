@@ -325,6 +325,8 @@ func aiReadMax() int64 { return int64(settingInt("ai_output_max_kb")) << 10 }
 // plan turns a tool call into an action. File edits read the current file first (through
 // a read-only script) to build the diff.
 func (s *aiSession) plan(ctx context.Context, name string, in aiToolInput) (*aiPlanned, error) {
+	// ~ in paths needs the login's home directory: wait for (or retry) the first look at the server.
+	s.gather(ctx)
 	if spec, ok := aiToolSpecFor(name); ok && spec.Host {
 		return s.planHostTool(name, in)
 	}

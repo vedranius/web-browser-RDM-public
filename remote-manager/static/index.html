@@ -290,9 +290,11 @@ button:hover { background: var(--accent-h); }
 #auth-screen {
   position: fixed; inset: 0;
   background: radial-gradient(ellipse at 30% 50%, #0e1829 0%, var(--bg0) 60%);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: flex-start; justify-content: center;
+  overflow-y: auto; padding: 16px 0; /* a tall first-run form scrolls instead of being cut off */
   z-index: 10000;
 }
+#auth-screen > .auth-card { margin: auto 0; }
 .auth-card {
   background: var(--bg2);
   border: 1px solid var(--border2);
@@ -1811,6 +1813,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <input type="email" id="auth-email" autocomplete="email" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') doAuth()">
         <div class="muted-text" style="margin-top:4px;font-size:11px;" data-i18n="auth_email_hint">WRM sends a link to this address; the account works once you open it.</div>
       </div>
+      <div class="auth-field" id="auth-setup-row" style="display:none;">
+        <label data-i18n="auth_setup_code" for="auth-setup-code">Setup code</label>
+        <input type="text" id="auth-setup-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX" onkeydown="if(event.key==='Enter') doAuth()">
+        <div class="muted-text" style="margin-top:4px;font-size:11px;" data-i18n="auth_setup_code_hint">WRM printed it to its console/log at start and wrote it to first-admin-setup-code.txt next to its database. Not needed when you open WRM on the server itself (localhost).</div>
+      </div>
       <div id="auth-level" style="display:none;">
         <label class="auth-lvl-title" data-i18n="sec_first_title">Where will WRM run?</label>
         <div class="auth-levels" id="auth-levels"></div>
@@ -2231,6 +2238,12 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <button class="btn-sec" onclick="addShareTeam()" data-i18n="add">Add</button>
       </div>
       <div class="member-list" id="share-team-list"></div>
+    </div>
+    <div class="field" id="share-team-block">
+      <label data-i18n="share_team_title">Team management</label>
+      <div class="field-check"><input type="checkbox" id="share-allow-edit"><label for="share-allow-edit" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_edit">Operators may add and edit connections and folders</label></div>
+      <div class="field-check"><input type="checkbox" id="share-allow-tunnels"><label for="share-allow-tunnels" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_tunnels">Operators may start and stop tunnels</label></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;" data-i18n="share_team_hint"></div>
     </div>
     <div id="share-others-block">
       <div class="field">
@@ -3589,6 +3602,7 @@ Object.assign(LANGS.en, {
   tun_disabled:'SSH tunnels are turned off or not allowed for your account (Admin panel → Security policies).',
   tun_conns:'connections', tun_temporary:'temporary', tun_started:'Tunnel running on {addr}', tun_on_server:'on server',
   tun_state_up:'Running', tun_state_starting:'Starting', tun_state_reconnecting:'Reconnecting', tun_state_error:'Error', tun_state_stopped:'Stopped',
+  tun_open_ip_title:'Open through this address of the WRM host. Use it when the browser refuses the certificate of the web interface because of HSTS on WRM\'s host name.',
   tun_loopback_remote:'This tunnel listens on 127.0.0.1 of the WRM machine. Open {url} on the computer where WRM runs, or set the listen address of the tunnel to 0.0.0.0 (administrators) to reach it over the network.',
   tun_all_users:'All users', tun_traffic:'Traffic', active_tunnels:'Active SSH tunnels', open:'Open', start:'Start', copy_address:'Copy address', copied:'Copied', remove:'Remove',
   pg_tunnels:'SSH tunnels',
@@ -4105,6 +4119,7 @@ Object.assign(LANGS.hr, {
   tun_disabled:'SSH tuneli su isključeni ili nisu dopušteni za tvoj račun (Admin panel → Sigurnosna pravila).',
   tun_conns:'veza', tun_temporary:'privremeni', tun_started:'Tunel radi na {addr}', tun_on_server:'na serveru',
   tun_state_up:'Radi', tun_state_starting:'Pokreće se', tun_state_reconnecting:'Ponovno spajanje', tun_state_error:'Greška', tun_state_stopped:'Zaustavljen',
+  tun_open_ip_title:'Otvori preko ove adrese WRM hosta. Koristi kad preglednik odbije certifikat web sučelja zbog HSTS-a na nazivu WRM hosta.',
   tun_loopback_remote:'Ovaj tunel sluša na 127.0.0.1 WRM računala. Otvori {url} na računalu gdje radi WRM, ili postavi adresu slušanja tunela na 0.0.0.0 (administratori) da bi bio dostupan preko mreže.',
   tun_all_users:'Svi korisnici', tun_traffic:'Promet', active_tunnels:'Aktivni SSH tuneli', open:'Otvori', start:'Pokreni', copy_address:'Kopiraj adresu', copied:'Kopirano', remove:'Ukloni',
   pg_tunnels:'SSH tuneli',
@@ -5445,6 +5460,9 @@ Object.assign(LANGS.en, {
  "p_link_share_max_days": "Guest link lifetime (days)",
  "p_link_share_max_days_d": "Links for people without an account must expire within this many days (0 = no limit). Existing links keep working until they are changed.",
  "slr_require_https": "Passwords and session cookies cross the network encrypted only with HTTPS.",
+ "p_hsts": "Tell browsers to always use HTTPS (HSTS)",
+ "p_hsts_d": "Over HTTPS, browsers remember for 180 days that this host name only speaks HTTPS, on every port, and refuse certificate exceptions there. Turn off when you open self-signed web interfaces through WRM tunnels on the same name (or open them through the IP address); off makes browsers forget it on the next visit.",
+ "slr_hsts": "Without HSTS a network attacker can downgrade the first request to plain HTTP.",
  "slr_require_2fa": "A stolen password alone is not enough to sign in.",
  "slr_password_min_length": "Longer passwords resist guessing and offline cracking.",
  "slr_session_idle_hours": "A forgotten open browser stops being a way in.",
@@ -5484,6 +5502,10 @@ Object.assign(LANGS.en, {
  "sp_open_links": "Guest links without expiry",
  "sp_open_links_why": "A forgotten guest link stays usable for anyone who has it.",
  "sp_open_links_fix": "Give these links an expiry date in Admin → Shares, or set \"Guest link lifetime\".",
+ "sp_exposed_tunnels": "Tunnels listening on the network",
+ "sp_exposed_tunnels_val": "{n} (SOCKS: {s})",
+ "sp_exposed_tunnels_why": "A tunnel on 0.0.0.0 publishes a remote service to everyone who reaches the WRM host, without a WRM sign-in. A SOCKS (dynamic) tunnel there is an open proxy into the whole remote network.",
+ "sp_exposed_tunnels_fix": "Let tunnels listen on 127.0.0.1 and use them from the WRM host, or limit the WRM host with a firewall. Turn off \"Users may listen on all interfaces\" (tunnel_bind_any) when nobody needs it.",
  "sp_update_signature": "Signed updates",
  "sp_keys": "{n} release keys",
  "sp_update_signature_why": "With a release key the self-update installs only releases signed by the project; without one it checks the SHA-256 only.",
@@ -5573,6 +5595,9 @@ Object.assign(LANGS.hr, {
  "p_link_share_max_days": "Trajanje poveznica za goste (dani)",
  "p_link_share_max_days_d": "Poveznice za ljude bez računa moraju isteći unutar ovoliko dana (0 = bez ograničenja). Postojeće poveznice rade dok ih netko ne promijeni.",
  "slr_require_https": "Lozinke i kolačići sesije putuju mrežom šifrirano samo preko HTTPS-a.",
+ "p_hsts": "Preglednicima reci da uvijek koriste HTTPS (HSTS)",
+ "p_hsts_d": "Preko HTTPS-a preglednici 180 dana pamte da ovaj naziv hosta radi samo preko HTTPS-a, na svim portovima, i tamo ne dopuštaju iznimke za certifikat. Isključi kad kroz WRM tunele na istom nazivu otvaraš web sučelja s vlastitim (self-signed) certifikatom (ili ih otvaraj preko IP adrese); isključeno tjera preglednike da to zaborave pri sljedećem posjetu.",
+ "slr_hsts": "Bez HSTS-a napadač na mreži može prvi zahtjev spustiti na običan HTTP.",
  "slr_require_2fa": "Ukradena lozinka sama nije dovoljna za prijavu.",
  "slr_password_min_length": "Dulje lozinke teže je pogoditi i probiti.",
  "slr_session_idle_hours": "Zaboravljeni otvoreni preglednik prestaje biti ulaz.",
@@ -5612,6 +5637,10 @@ Object.assign(LANGS.hr, {
  "sp_open_links": "Poveznice za goste bez isteka",
  "sp_open_links_why": "Zaboravljena poveznica za goste ostaje upotrebljiva svakome tko je ima.",
  "sp_open_links_fix": "Daj tim poveznicama datum isteka u Admin → Dijeljenja ili postavi \"Trajanje poveznica za goste\".",
+ "sp_exposed_tunnels": "Tuneli koji slušaju na mreži",
+ "sp_exposed_tunnels_val": "{n} (SOCKS: {s})",
+ "sp_exposed_tunnels_why": "Tunel na 0.0.0.0 objavljuje udaljeni servis svakome tko dođe do WRM hosta, bez prijave u WRM. SOCKS (dinamički) tunel tamo je otvoreni proxy u cijelu udaljenu mrežu.",
+ "sp_exposed_tunnels_fix": "Neka tuneli slušaju na 127.0.0.1 i koristi ih s WRM hosta ili ograniči WRM host vatrozidom. Isključi \"Korisnici smiju slušati na svim sučeljima\" (tunnel_bind_any) kad to nikome ne treba.",
  "sp_update_signature": "Potpisana ažuriranja",
  "sp_keys": "{n} ključeva izdanja",
  "sp_update_signature_why": "S ključem izdanja samoažuriranje instalira samo izdanja koja je potpisao projekt; bez njega provjerava samo SHA-256.",
@@ -6773,6 +6802,8 @@ Object.assign(LANGS.hr, {
   tb_sess_drawer_t: 'Sesije, međuspremnik i bočni paneli',
   tb_role_admin: 'Administrator', tb_role_auditor: 'Revizor', tb_role_operator: 'Operater', tb_role_user: 'Korisnik',
 });
+Object.assign(LANGS.en, { auth_setup_code: 'Setup code', auth_setup_code_hint: 'WRM printed it to its console/log at start and wrote it to first-admin-setup-code.txt next to its database. Not needed when you open WRM on the server itself (localhost).' });
+Object.assign(LANGS.hr, { auth_setup_code: 'Kod za postavljanje', auth_setup_code_hint: 'WRM ga je pri pokretanju ispisao u konzolu/log i zapisao u first-admin-setup-code.txt pokraj svoje baze. Nije potreban kad WRM otvarate na samom poslužitelju (localhost).' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.documentElement.lang = currentLang === 'hr' ? 'hr' : 'en';
@@ -7075,6 +7106,8 @@ function switchAuthTab(mode) {
 function renderAuthExtras() {
   const em = document.getElementById('auth-email-row');
   if (em) em.style.display = authMode === 'register' && !authConfig.first_run && authConfig.registration_email ? '' : 'none';
+  const sc = document.getElementById('auth-setup-row');
+  if (sc) sc.style.display = authConfig.first_run && authConfig.setup_code_required ? '' : 'none';
   const fl = document.getElementById('auth-forgot-link');
   if (fl) fl.style.display = authMode === 'login' && !authConfig.first_run && authConfig.password_reset ? '' : 'none';
 }
@@ -7303,6 +7336,7 @@ async function doAuth() {
     const body = {username: user, password: pass};
     const lvl = document.querySelector('input[name="auth-level"]:checked');
     if (authMode !== 'login' && authConfig.first_run && lvl && !lvl.disabled) body.security_level = lvl.value;
+    if (authMode !== 'login' && authConfig.first_run && authConfig.setup_code_required) body.setup_code = document.getElementById('auth-setup-code').value.trim();
     if (authMode !== 'login' && authConfig.registration_email) body.email = document.getElementById('auth-email').value.trim();
     const res = await fetch('/api/auth/' + (authMode === 'login' ? 'login' : 'register'), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -7761,6 +7795,7 @@ function renderTree() {
       groupLabel.style.cssText = 'padding:6px 8px 3px;font-size:10.5px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:6px;';
       groupLabel.innerHTML = `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(sh.name)}">🤝 ${esc(sh.name || 'Share')} <span style="color:var(--text3);font-weight:500;">· ${esc(sh.owner_username || '')}</span></span>`
         + (sh.locked ? '<span class="pill warn" title="' + esc(t('share_locked_hint')) + '">🔒</span>' : roleBadge(sh.role))
+        + (!sh.locked && typeof shareTeamGroupButtons === 'function' ? shareTeamGroupButtons(sh) : '')
         + `<button class="icon-btn" style="padding:2px 5px;font-size:11px;" title="${esc(t('open_room'))}" onclick="openShareRoom('/share#${encodeURIComponent(sh.token)}')">↗</button>`;
       wrap.appendChild(groupLabel);
       if (sh.locked) {
@@ -7788,7 +7823,7 @@ function renderTree() {
         return item;
       };
       const visibleConns = (g.connections || []).filter(c => !query || connMatches(c, query));
-      appendSharedFolderTree(wrap, g.folders || [], visibleConns, makeSharedItem);
+      appendSharedFolderTree(wrap, g.folders || [], visibleConns, makeSharedItem, perms.manage_connections && typeof shareTeamFolderCtx === 'function' ? (e, f) => shareTeamFolderCtx(e, f, sh) : null);
     });
   }
 
@@ -7808,7 +7843,7 @@ function connMatches(c, q) {
   });
 }
 
-function appendSharedFolderTree(container, folderList, connList, makeItem) {
+function appendSharedFolderTree(container, folderList, connList, makeItem, folderCtx) {
   const children = new Map();
   const ids = new Set(folderList.map(f => f.id));
   folderList.forEach(f => {
@@ -7827,6 +7862,7 @@ function appendSharedFolderTree(container, folderList, connList, makeItem) {
     box.className = 'folder-children open';
     connList.filter(c => c.folder_id === f.id).forEach(c => box.appendChild(makeItem(c)));
     (children.get(f.id) || []).forEach(ch => add(ch, box, depth + 1));
+    if (folderCtx) row.oncontextmenu = e => folderCtx(e, f);
     row.onclick = () => {
       const open = box.classList.toggle('open');
       row.querySelector('.folder-chevron').classList.toggle('open', open);
@@ -8064,6 +8100,7 @@ function showSharedCtx(x, y, conn, perms) {
     <div class="ctx-section">${esc(t('shared_connection'))}</div>
     ${canTerm ? buildWinOptions('ssh') + '<div class="ctx-hr"></div>' : ''}
     ${perms.files_read ? buildWinOptions('sftp') : `<div class="ctx-item disabled">${esc(t('no_access_role'))}</div>`}
+    ${typeof shareTeamCtxItems === 'function' && ctxShareToken ? shareTeamCtxItems(conn, ctxShareToken, perms) : ''}
   `;
   showCtx('dyn-ctx-menu', x, y);
 }
@@ -8687,6 +8724,8 @@ function openShareModal(opts) {
   document.getElementById('share-name').value = edit ? edit.name : (opts.name || '');
   document.getElementById('share-member-role').innerHTML = roleOptions('operator');
   document.getElementById('share-guest-role').innerHTML = roleOptions(edit ? edit.guest_role : 'viewer', 'operator');
+  document.getElementById('share-allow-edit').checked = !!(edit && edit.allow_edit);
+  document.getElementById('share-allow-tunnels').checked = !!(edit && edit.allow_tunnels);
   document.getElementById('share-pass').value = '';
   document.getElementById('share-pass').placeholder = shareDraft.hadPassword ? t('share_pass_keep') : t('share_pass_none');
   document.getElementById('share-pass-clear').checked = false;
@@ -8827,6 +8866,8 @@ async function submitShare() {
     name: document.getElementById('share-name').value.trim() || t('shared_connections'),
     access_mode: shareDraft.mode,
     guest_role: document.getElementById('share-guest-role').value,
+    allow_edit: document.getElementById('share-allow-edit').checked,
+    allow_tunnels: document.getElementById('share-allow-tunnels').checked,
     public: shareDraft.mode !== 'members' && document.getElementById('share-public').checked,
     connection_ids: [...shareDraft.connIds].filter(id => { const c = conns.find(x => x.id === id); return c && !(shareFolderCovers(c.folder_id)); }),
     folder_ids: [...shareDraft.folderIds],
@@ -10015,7 +10056,7 @@ async function adminShareDelete(id) {
 
 const POLICY_GROUPS = {
   policies: [
-    ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips', 'cli_password_reset']],
+    ['pg_accounts', ['registration', 'require_https', 'hsts', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips', 'cli_password_reset']],
     ['pg_appearance', ['appearance_default_theme', 'appearance_custom_css']],
     ['pg_screen_lock', ['screen_lock_mode', 'screen_lock_max_minutes', 'screen_lock_pin', 'screen_lock_max_failures']],
     ['pg_sso', ['local_login', 'oidc_revalidate_minutes', 'oidc_unverified_hours']],
@@ -10172,6 +10213,7 @@ function secCheckInfo(c) {
     case 'version': value = c.value + (c.required ? ' → ' + c.required : ''); break;
     case 'audit_chain': value = c.status === 'ok' ? t('sp_audit_ok').replace('{n}', c.count || 0) : t('sp_audit_broken').replace('{id}', c.value); break;
     case 'any_origin': value = c.status === 'ok' ? t('off') : t('on'); break;
+    case 'exposed_tunnels': value = t('sp_exposed_tunnels_val').replace('{n}', c.count || 0).replace('{s}', c.value || 0); break;
     default: value = String(c.count || 0);
   }
   return {title: t('sp_' + c.id), value, required: '', why: t('sp_' + c.id + '_why'), fix: open ? t('sp_' + c.id + '_fix') : '', canFix: false};
@@ -11298,13 +11340,26 @@ function tunnelMapText(v) {
   return v.kind === 'remote' ? `${t('tun_on_server')} ${listen} → ${target}` : `${listen} → ${target}`;
 }
 
-function tunnelURL(v) {
+function tunnelURL(v, viaIP) {
   if (!v.running || !v.listen || !v.open_scheme) return '';
   const i = v.listen.lastIndexOf(':');
   let host = v.listen.slice(0, i).replace(/^\[|\]$/g, ''), port = v.listen.slice(i + 1);
-  if (host === '0.0.0.0' || host === '::') host = location.hostname;
+  if (host === '0.0.0.0' || host === '::') host = viaIP || location.hostname;
   if (host.includes(':')) host = '[' + host + ']';
   return `${v.open_scheme}://${host}:${port}${v.open_path || ''}`;
+}
+
+// tunnelIPChoices: the WRM host's addresses to open an HTTPS tunnel on 0.0.0.0 with, when WRM
+// itself is open over HTTPS by host name. HSTS of that name covers every port, so a browser
+// refuses a self-signed certificate there; an IP address is not covered (#190).
+function tunnelIPChoices(v) {
+  if (!v.running || v.open_scheme !== 'https' || location.protocol !== 'https:') return [];
+  const h = location.hostname;
+  if (/^[\d.]+$/.test(h) || h.includes(':') || h.startsWith('[')) return [];
+  const i = (v.listen || '').lastIndexOf(':');
+  const bind = (v.listen || '').slice(0, i).replace(/^\[|\]$/g, '');
+  if (bind !== '0.0.0.0' && bind !== '::') return [];
+  return (tunnelState.policy.host_ips || []).filter(ip => bind === '::' || !ip.includes(':')).slice(0, 3);
 }
 
 function listenAddress(v) {
@@ -11365,6 +11420,7 @@ async function renderTunnelsPanel() {
           <div class="t-stats">${stats}</div>
           <div class="t-act">
             ${url ? `<button class="btn-sm" onclick="openTunnelURL(${jsq(v.key)})">🌐 ${esc(t('open'))}</button>` : ''}
+            ${url ? tunnelIPChoices(v).map(ip => `<button class="btn-sec btn-sm mono" title="${esc(t('tun_open_ip_title'))}" onclick="openTunnelURL(${jsq(v.key)}, ${jsq(ip)})">🌐 ${esc(ip)}</button>`).join('') : ''}
             ${v.running && v.listen ? `<button class="btn-sec btn-sm" title="${esc(t('copy_address'))}" onclick="copyText(${jsq(v.kind === 'dynamic' ? 'socks5h://' + listenAddress(v) : (url || listenAddress(v)))})">📋</button>` : ''}
             ${v.running ? `<button class="btn-danger btn-sm" onclick="tunnelStop(${jsq(v.key)})">■ ${esc(t('stop'))}</button>` : (all ? '' : `<button class="btn-sm" onclick="tunnelStart(${jsq(v.key)}, this)">▶ ${esc(t('start'))}</button>`)}
           </div></div>`;
@@ -11399,10 +11455,10 @@ async function stopConnTunnels(connId) {
   for (const v of tunnelState.tunnels.filter(x => x.conn_id === connId && x.running && !x.ephemeral)) await tunnelStop(v.key);
 }
 
-async function openTunnelURL(key) {
+async function openTunnelURL(key, viaIP) {
   const v = tunnelState.tunnels.find(x => x.key === key);
   if (!v) return;
-  const url = tunnelURL(v);
+  const url = tunnelURL(v, viaIP);
   const host = (v.listen || '').slice(0, (v.listen || '').lastIndexOf(':')).replace(/^\[|\]$/g, '');
   if (!browserIsLocal() && ['127.0.0.1', '::1', 'localhost'].includes(host)) {
     await uiConfirm(t('tun_loopback_remote').replace('{url}', url), {okText: t('ok'), cancelText: t('close')});
@@ -18358,7 +18414,7 @@ function renderCollabTree() {
     item.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = collabToken; showSharedCtx(e.clientX, e.clientY, c, collab.perms); };
     return item;
   };
-  appendSharedFolderTree(wrap, collabFolders, collabConns, makeItem);
+  appendSharedFolderTree(wrap, collabFolders, collabConns, makeItem, collab.perms && collab.perms.manage_connections && typeof shareTeamFolderCtx === 'function' ? (e, f) => shareTeamFolderCtx(e, f, {token: collabToken, perms: collab.perms}) : null);
   if (!collab.perms.terminal) {
     const hint = document.createElement('div');
     hint.className = 'muted-text'; hint.style.padding = '8px 10px';
@@ -19888,5 +19944,6 @@ document.addEventListener('keydown', e => {
 <script src="/static/appearance.js"></script>
 <script src="/static/lock.js"></script>
 <script src="/static/aisessions.js"></script>
+<script src="/static/shareteam.js"></script>
 </body>
 </html>

@@ -1047,6 +1047,11 @@ func apiTunnelsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		pol := map[string]interface{}{"enabled": settingBool("tunnels_enabled"), "allowed": tunnelsAllowedFor(userID) == nil,
 			"bind_any": isAdminUser(userID) || settingBool("tunnel_bind_any"), "remote": policyWhoAllows(userID, "tunnel_remote_forward")}
+		if pol["bind_any"] == true {
+			// A tunnel on 0.0.0.0 can also be opened through an address of the WRM host: HSTS
+			// of WRM's host name does not apply to an IP address (#190).
+			pol["host_ips"] = wrmHostIPs()
+		}
 		jsonOK(w, map[string]interface{}{"tunnels": tunnelsForUser(userID), "policy": pol})
 		return
 	}
@@ -1307,4 +1312,45 @@ func testWebReachable(c Connection) error {
 		return fmt.Errorf("%s cannot reach %s: %v", jumpPath(c), addr, err)
 	}
 	return conn.Close()
+}
+
+var hostIPsCache struct {
+	sync.Mutex
+	at  time.Time
+	ips []string
+}
+
+// wrmHostIPs lists the unicast addresses of this host's interfaces that are up (no loopback,
+// no link-local), IPv4 first, for opening a tunnel on 0.0.0.0 by address. Cached for a minute.
+func wrmHostIPs() []string {
+	hostIPsCache.Lock()
+	defer hostIPsCache.Unlock()
+	if time.Since(hostIPsCache.at) < time.Minute && hostIPsCache.ips != nil {
+		return hostIPsCache.ips
+	}
+	v4, v6 := []string{}, []string{}
+	ifaces, _ := net.Interfaces()
+	for _, ifc := range ifaces {
+		if ifc.Flags&net.FlagUp == 0 || ifc.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addrs, _ := ifc.Addrs()
+		for _, a := range addrs {
+			ipn, ok := a.(*net.IPNet)
+			if !ok || ipn.IP.IsLoopback() || ipn.IP.IsLinkLocalUnicast() || !ipn.IP.IsGlobalUnicast() {
+				continue
+			}
+			if ipn.IP.To4() != nil {
+				v4 = append(v4, ipn.IP.String())
+			} else {
+				v6 = append(v6, ipn.IP.String())
+			}
+		}
+	}
+	ips := append(v4, v6...)
+	if len(ips) > 8 {
+		ips = ips[:8]
+	}
+	hostIPsCache.at, hostIPsCache.ips = time.Now(), ips
+	return ips
 }
