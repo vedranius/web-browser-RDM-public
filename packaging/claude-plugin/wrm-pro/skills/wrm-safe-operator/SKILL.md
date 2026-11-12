@@ -42,6 +42,11 @@ missing (for example running commands) instead of working around it.
 - Changes go through `run_command`, `edit_file`, `write_file` or `transfer_file`. In the "ask"
   mode WRM shows the change to the user, who may approve, edit or deny it. A denial is an answer:
   do not retry the same change in another form.
+- If a tool result says the call is "Not run yet" and waits for an approval, the user has not
+  decided yet. Wait for them: call `wait_for_approval` with the approval id from that result again and
+  again while it says "Still waiting", and do nothing else on that task meanwhile. Never skip the
+  step, assume an answer or go on without the check it was meant to do. When it reports the
+  approval, call the original tool again with the same arguments.
 - One change at a time, then check the result (service status, the log, the file) before the next.
 - For a configuration file, keep a backup copy next to it and run the program's own check (for
   example `nginx -t`, `sshd -t`, `apachectl configtest`) before a reload.

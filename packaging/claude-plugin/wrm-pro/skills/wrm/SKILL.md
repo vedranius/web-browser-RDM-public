@@ -54,6 +54,7 @@ skip the overview and start the work.
 | Commands | `run_command` | Run a command; in ask mode the user approves, edits or denies it in WRM |
 | Changes to files | `edit_file`, `write_file` | Edit or write a file, shown as a diff for approval |
 | Transfer | `transfer_file` | Copy a file between the user's servers through WRM |
+| Approvals | `wait_for_approval` | Wait for the user's decision on a request WRM kept open after the app stopped waiting |
 | Connection | `wrm_connect` | Sign in to WRM, again after expiry, or to another WRM |
 
 The WRM server may also offer a `wrm` prompt (WRM help and server selection) in the app's

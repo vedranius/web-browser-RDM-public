@@ -568,6 +568,11 @@ func mcpToolList(g *mcpGrant) []map[string]interface{} {
 		{"name": "open_session", "title": "Open a session", "description": "Open a WRM session to one server (by id or name from list_connections). Returns the session_id for the other tools, the mode, the scopes and the system.",
 			"inputSchema": obj(map[string]interface{}{"connection": strProp("Connection id or name")}, "connection"),
 			"annotations": map[string]interface{}{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false}},
+		{"name": "wait_for_approval", "title": "Wait for the user's approval", "description": "Wait (up to `seconds`, default 45) for the user's decision on an approval request WRM kept open after a tool call stopped waiting. " +
+			"Call it again while it reports that the request is still waiting; do not go on with other work meanwhile.",
+			"inputSchema": obj(map[string]interface{}{"session_id": sid, "approval_id": strProp("The approval_id from the tool result"),
+				"seconds": map[string]interface{}{"type": "integer", "minimum": 5, "maximum": 55, "description": "How long to wait in this call (5-55, default 45)"}}, "session_id", "approval_id"),
+			"annotations": map[string]interface{}{"readOnlyHint": true, "openWorldHint": false}},
 		{"name": "close_session", "title": "Close a session", "description": "Close a WRM session when you are done with the server.",
 			"inputSchema": obj(map[string]interface{}{"session_id": sid}, "session_id"),
 			"annotations": map[string]interface{}{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false}},
@@ -657,6 +662,16 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		}
 		defer func() { <-mcpToolSlots }()
 		writeRPC(w, 200, rpcResult(m.ID, mcpOpenSession(r, c, g, p.Arguments)))
+		return
+	case "wait_for_approval":
+		s, why := mcpSessionFor(g, p.Arguments["session_id"])
+		if s == nil {
+			writeRPC(w, 200, rpcResult(m.ID, toolText(why, true)))
+			return
+		}
+		id, _ := p.Arguments["approval_id"].(string)
+		text, isErr := mcpWaitApproval(r.Context(), s, strings.TrimSpace(id), int(asID(p.Arguments["seconds"])))
+		writeRPC(w, 200, rpcResult(m.ID, toolText(text, isErr)))
 		return
 	case "close_session":
 		s, why := mcpSessionFor(g, p.Arguments["session_id"])
@@ -806,6 +821,11 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 						}},
 					}})
 				}
+				// a log message the WRM bridge on the user's computer turns into an operating-system
+				// notification, so the request is seen also when no WRM tab is open or in front
+				send(map[string]interface{}{"jsonrpc": "2.0", "method": "notifications/message", "params": map[string]interface{}{
+					"level": "warning", "logger": "wrm.approval", "data": map[string]interface{}{"type": "approval_required", "approval_id": a.ID,
+						"server": s.ConnName, "message": truncateStr(nonEmpty(a.Command, nonEmpty(a.Transfer, nonEmpty(a.Path, a.Tool))), 300)}}})
 			}
 		case <-ping.C:
 			if p.Meta.ProgressToken != nil {

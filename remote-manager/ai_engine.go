@@ -48,6 +48,7 @@ type aiApprovalResult struct {
 	Outcome  string // approved | denied | timeout | cancelled
 	Via      string // "mcp" when answered through MCP elicitation, "later" when approved earlier in WRM
 	Deferred bool   // not answered in time (or declined by the app): kept in WRM to approve later
+	ID       string // the approval request (set when Deferred), for wait_for_approval
 }
 
 type aiApproval struct {
@@ -997,8 +998,10 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 				}
 				return fail("Not run yet: " + what + ". WRM keeps the request open in the user's WRM (the live panel and the 🤖 menu show the full " +
 					"command with Approve / Deny) for " + aiLaterTTL.String() + "." + " " + aiApprovalWhy(dec, true) +
-					" Tell the user exactly what you want to run, why, and that they can approve it in WRM. When they say they approved it, call this tool again " +
-					"with exactly the same arguments: " + then + ". Do not run a variant of it on your own.")
+					" WAIT for the user's decision: call the wait_for_approval tool with approval_id \"" + r.ID + "\" (and this session_id), again and again while it says " +
+					"the request is still waiting. Do not continue with other steps, do not skip this step and do not assume an answer in the meantime. " +
+					"Tell the user once what you want to run, why, and that it waits for their approval in WRM. When wait_for_approval reports the approval, call this tool again " +
+					"with exactly the same arguments: " + then + ". After a denial or when the request expired, ask the user how to go on. Do not run a variant of it on your own.")
 			}
 			switch r.Outcome {
 			case "timeout":
@@ -1269,7 +1272,7 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	if s.Transport == "mcp" && !s.ended && (r.Outcome == "timeout" || r.Outcome == "cancelled" || r.Outcome == "denied" && r.Via == aiViaMCPDeclined) {
 		a.Later, a.Expires, a.ch, a.RunNow = true, time.Now().Add(aiLaterTTL), make(chan aiApprovalResult, 1), aiLaterRunsNow()
 		s.pending[a.ID] = a
-		r.Deferred = true
+		r.Deferred, r.ID = true, a.ID
 	}
 	s.mu.Unlock()
 	d := map[string]interface{}{"approval": a.ID, "tool": call.Name, "outcome": r.Outcome}

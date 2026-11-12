@@ -174,6 +174,57 @@ function readAll(res, limit) {
   });
 }
 
+// ─── desktop notification of an approval request ─────
+//
+// WRM sends a log message (logger "wrm.approval") when a tool call waits for the user's
+// approval. The bridge shows it as an operating-system notification, so the user sees it also
+// when no WRM tab is open or in front; a click opens WRM (the address of this connection, never
+// one from the message). WRM_MCP_NOTIFY=0 turns it off. Texts go through environment variables,
+// never through a command line a shell would parse.
+const notified = new Set();
+function wrmPage() { return url.replace(/\/mcp$/, '/'); }
+
+function osNotify(title, body, link) {
+  if (process.env.WRM_MCP_NOTIFY === '0') return;
+  if (!/^https?:\/\//i.test(link)) link = '';
+  const env = Object.assign({}, process.env, {WRM_N_TITLE: title.slice(0, 63), WRM_N_BODY: body.slice(0, 250), WRM_N_URL: link});
+  let cmd, args;
+  if (process.platform === 'win32') {
+    cmd = 'powershell.exe';
+    args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-Command',
+      'Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName System.Drawing; ' +
+      '$n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Warning; $n.Visible = $true; ' +
+      '$n.BalloonTipTitle = $env:WRM_N_TITLE; $n.BalloonTipText = $env:WRM_N_BODY; $n.BalloonTipIcon = \'Warning\'; ' +
+      'if ($env:WRM_N_URL) { Register-ObjectEvent -InputObject $n -EventName BalloonTipClicked -Action { Start-Process $env:WRM_N_URL } | Out-Null }; ' +
+      '$n.ShowBalloonTip(60000); $end = (Get-Date).AddSeconds(90); ' +
+      'while ((Get-Date) -lt $end) { [System.Windows.Forms.Application]::DoEvents(); Start-Sleep -Milliseconds 200 }; $n.Dispose()'];
+  } else if (process.platform === 'darwin') {
+    cmd = 'osascript';
+    args = ['-e', 'display notification (system attribute "WRM_N_BODY") with title (system attribute "WRM_N_TITLE") sound name "Glass"'];
+  } else {
+    cmd = 'notify-send';
+    args = ['-u', 'critical', '-a', 'WRM PRO', title.slice(0, 63), body.slice(0, 250)];
+  }
+  try {
+    const p = childProcess.spawn(cmd, args, {env, detached: true, stdio: 'ignore', windowsHide: true});
+    p.on('error', e => log('cannot show a desktop notification: ' + e.message));
+    p.unref();
+  } catch (e) { log('cannot show a desktop notification: ' + e.message); }
+}
+
+// noticeApproval looks at one message from WRM and announces an approval request once.
+function noticeApproval(text) {
+  if (text.indexOf('wrm.approval') < 0) return;
+  let m;
+  try { m = JSON.parse(text); } catch (e) { return; }
+  const p = m && m.method === 'notifications/message' && m.params;
+  const d = p && p.logger === 'wrm.approval' && p.data;
+  if (!d || d.type !== 'approval_required' || !d.approval_id || notified.has(d.approval_id)) return;
+  notified.add(d.approval_id);
+  if (notified.size > 500) notified.clear();
+  osNotify('WRM PRO: approval needed', String(d.server || '') + ': ' + String(d.message || '') + ' (approve or deny in WRM)', wrmPage());
+}
+
 // copyEvents writes the data of every server-sent event to stdout as it arrives (an
 // approval question must reach the app while the tool call still waits).
 function copyEvents(res, transform) {
@@ -181,7 +232,7 @@ function copyEvents(res, transform) {
     res.setEncoding('utf8');
     let buf = '';
     let data = [];
-    const flush = () => { if (data.length) { write(transform(data.join('\n'))); data = []; } };
+    const flush = () => { if (data.length) { const text = data.join('\n'); noticeApproval(text); write(transform(text)); data = []; } };
     const line = l => {
       if (l.endsWith('\r')) l = l.slice(0, -1);
       if (l === '') flush();
