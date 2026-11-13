@@ -21,6 +21,7 @@
 <script src="/static/vendor/xterm-addon-search.js"></script>
 <script src="/static/vendor/xterm-addon-web-links.js"></script>
 <script src="/static/vendor/xterm-addon-serialize.js"></script>
+<script src="/static/serial_terminal.js"></script>
 <style>
 :root {
   --bg:      #0d0f12;
@@ -1632,6 +1633,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-top" id="btn-tunnels" onclick="openTunnelsPanel()" title="Tunnels"><span>🔀</span><span class="lbl" data-i18n="tunnels_lbl">Tunnels</span><span class="tun-badge" id="tun-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-tools" onclick="openTools()" title="Network tools"><span>🧰</span><span class="lbl" data-i18n="tools_lbl">Tools</span></button>
       <button class="btn-top" id="btn-git" onclick="openGit()" title="Git"><span>⎇</span><span class="lbl" data-i18n="git_lbl">Git</span></button>
+      <button class="btn-top" id="btn-serial" onclick="openSerial()" title="Serial / USB"><span>⌁</span><span class="lbl" data-i18n="serial_lbl">Serial</span></button>
       <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
       <button class="btn-top" id="btn-shares" onclick="openManageShares()" title="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
@@ -7299,6 +7301,20 @@ function openGit() {
     document.head.appendChild(s);
   });
   gitLoading.then(() => window.gitWorkspace.open(), () => showToast(t('git_load_failed'), 'error'));
+}
+
+// Serial workspace is browser-local and loads only when opened.
+let serialLoading = null;
+function openSerial() {
+  if (window.serialWorkspace) { window.serialWorkspace.open(); return; }
+  if (!serialLoading) serialLoading = new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = '/static/serial.js';
+    s.onload = ok;
+    s.onerror = () => { serialLoading = null; fail(); };
+    document.head.appendChild(s);
+  });
+  serialLoading.then(() => window.serialWorkspace.open(), () => showToast('Could not load Serial Device Manager', 'error'));
 }
 
 // AI assistant: its code (static/ai.js) is loaded the first time it is used.

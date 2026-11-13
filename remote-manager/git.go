@@ -537,6 +537,7 @@ func decodeGitJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 //	PUT    /api/git/catalog/apps/{name}      add or change one service; DELETE removes it
 //	POST   /api/git/sources                  {kind, name, url, token}; PUT/DELETE /api/git/sources/{id}
 //	POST   /api/git/sources/{id}/test        → projects
+//	GET    /api/git/refs?app=                branches and tags of a service's project
 //	POST   /api/git/suggest                  {project, ref} → catalog entry from the tree
 //	POST   /api/git/bundles                  .tar.gz body → imported bundle
 //	POST   /api/git/bundles/export           {apps} → .tar.gz
@@ -787,6 +788,43 @@ func apiGitHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		jsonOK(w, map[string]interface{}{"projects": projects, "groups": cat.GitLab.Groups})
+
+	case rest == "refs" && r.Method == http.MethodGet:
+		cat, st := loadGitWorkspace(userID)
+		app, found := cat.app(r.URL.Query().Get("app"))
+		if !found {
+			jsonError(w, "Service not found", 404)
+			return
+		}
+		api, _ := pickSources(userID, st)
+		if api == nil {
+			jsonError(w, "Add a Git source first (Settings)", 400)
+			return
+		}
+		p, err := newGitProvider(*api)
+		if err != nil {
+			jsonError(w, err.Error(), 400)
+			return
+		}
+		branches, err := p.branches(app.Project)
+		if err != nil {
+			jsonError(w, err.Error(), 502)
+			return
+		}
+		tags, err := p.tags(app.Project)
+		if err != nil {
+			jsonError(w, err.Error(), 502)
+			return
+		}
+		sort.Strings(branches)
+		sort.SliceStable(tags, func(i, j int) bool {
+			return compareVersions(tags[i].Name, tags[j].Name) > 0
+		})
+		names := make([]string, 0, len(tags))
+		for _, tag := range tags {
+			names = append(names, tag.Name)
+		}
+		jsonOK(w, map[string]interface{}{"project": app.Project, "branches": branches, "tags": names})
 
 	case rest == "suggest" && r.Method == http.MethodPost:
 		var in struct {
