@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/pbkdf2"
+	//lint:ignore SA1019 only to read old mRemoteNG files that were encrypted with Twofish; WRM never encrypts with it
 	"golang.org/x/crypto/twofish"
 )
 
