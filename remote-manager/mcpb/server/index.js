@@ -34,6 +34,8 @@ const VERSION = '0.0.0'; // replaced with the WRM version when the bundle is gen
 const MAX_BODY = 32 << 20;
 const CONNECT_WAIT_MS = Number(process.env.WRM_MCP_CONNECT_WAIT_MS) || 90000;
 const LOGIN_TTL_MS = 15 * 60 * 1000;
+const INIT_TIMEOUT_MS = Number(process.env.WRM_MCP_INIT_TIMEOUT_MS) || 20000;
+const RECONNECT_EVERY_MS = Number(process.env.WRM_MCP_RECONNECT_MS) || 5000;
 const CONFIG_FILE = clean(process.env.WRM_MCP_CONFIG) || path.join(os.homedir(), '.wrm', 'mcp.json');
 
 function clean(v) {
@@ -55,6 +57,10 @@ let lib = http;
 let ca;
 let source = '';
 let lastError = '';
+// authFailed: WRM refused the saved token (HTTP 401). Only then does the user have to sign in
+// again; an unreachable or busy WRM keeps the saved, still valid access.
+let authFailed = false;
+let savedExpiry = '';
 
 function readConfigFile() {
   try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')) || {}; } catch (e) { return {}; }
@@ -74,6 +80,7 @@ function useConnection(u, t, caFile, from) {
   url = mcpURL(u);
   token = String(t || '').trim();
   source = from;
+  authFailed = false;
   try { target = new URL(url); } catch (e) { lastError = 'invalid WRM address: ' + url; target = null; return false; }
   if (target.protocol !== 'http:' && target.protocol !== 'https:') { lastError = 'invalid WRM address: ' + url; target = null; return false; }
   lib = target.protocol === 'https:' ? https : http;
@@ -88,7 +95,10 @@ function loadConnection() {
   const envURL = clean(process.env.WRM_MCP_URL), envToken = clean(process.env.WRM_MCP_TOKEN);
   if (envURL && envToken) return useConnection(envURL, envToken, clean(process.env.WRM_MCP_CA_FILE), 'settings');
   const f = readConfigFile();
-  if (f.url && f.token) return useConnection(f.url, f.token, clean(process.env.WRM_MCP_CA_FILE) || clean(f.ca_file), 'file');
+  if (f.url && f.token) {
+    savedExpiry = String(f.expires_at || '');
+    return useConnection(f.url, f.token, clean(process.env.WRM_MCP_CA_FILE) || clean(f.ca_file), 'file');
+  }
   return false;
 }
 
@@ -96,6 +106,7 @@ function saveConnection(u, t, expiresIn, caFile) {
   const old = readConfigFile();
   const data = {url: u, token: t, ca_file: caFile || old.ca_file || undefined, saved_at: new Date().toISOString(),
     expires_at: expiresIn > 0 ? new Date(Date.now() + expiresIn * 1000).toISOString() : undefined};
+  savedExpiry = data.expires_at || '';
   fs.mkdirSync(path.dirname(CONFIG_FILE), {recursive: true, mode: 0o700});
   const tmp = CONFIG_FILE + '.' + process.pid + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2) + '\n', {mode: 0o600});
@@ -109,7 +120,7 @@ let session = '';
 let protocolVersion = '';
 let reinitializePromise = null;
 
-function request(method, body) {
+function request(method, body, timeoutMs) {
   return new Promise((resolve, reject) => {
     const headers = {
       'Authorization': 'Bearer ' + token,
@@ -121,7 +132,8 @@ function request(method, body) {
     if (protocolVersion) headers['MCP-Protocol-Version'] = protocolVersion;
     const opts = {method, headers};
     if (ca) opts.ca = ca;
-    const req = lib.request(target, opts, resolve);
+    const req = lib.request(target, opts, res => { req.setTimeout(0); resolve(res); });
+    if (timeoutMs) req.setTimeout(timeoutMs, () => req.destroy(new Error('no answer within ' + Math.round(timeoutMs / 1000) + ' seconds')));
     req.on('error', reject);
     if (body) req.write(body);
     req.end();
@@ -162,6 +174,57 @@ function readAll(res, limit) {
   });
 }
 
+// ─── desktop notification of an approval request ─────
+//
+// WRM sends a log message (logger "wrm.approval") when a tool call waits for the user's
+// approval. The bridge shows it as an operating-system notification, so the user sees it also
+// when no WRM tab is open or in front; a click opens WRM (the address of this connection, never
+// one from the message). WRM_MCP_NOTIFY=0 turns it off. Texts go through environment variables,
+// never through a command line a shell would parse.
+const notified = new Set();
+function wrmPage() { return url.replace(/\/mcp$/, '/'); }
+
+function osNotify(title, body, link) {
+  if (process.env.WRM_MCP_NOTIFY === '0') return;
+  if (!/^https?:\/\//i.test(link)) link = '';
+  const env = Object.assign({}, process.env, {WRM_N_TITLE: title.slice(0, 63), WRM_N_BODY: body.slice(0, 250), WRM_N_URL: link});
+  let cmd, args;
+  if (process.platform === 'win32') {
+    cmd = 'powershell.exe';
+    args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-Command',
+      'Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName System.Drawing; ' +
+      '$n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Warning; $n.Visible = $true; ' +
+      '$n.BalloonTipTitle = $env:WRM_N_TITLE; $n.BalloonTipText = $env:WRM_N_BODY; $n.BalloonTipIcon = \'Warning\'; ' +
+      'if ($env:WRM_N_URL) { Register-ObjectEvent -InputObject $n -EventName BalloonTipClicked -Action { Start-Process $env:WRM_N_URL } | Out-Null }; ' +
+      '$n.ShowBalloonTip(60000); $end = (Get-Date).AddSeconds(90); ' +
+      'while ((Get-Date) -lt $end) { [System.Windows.Forms.Application]::DoEvents(); Start-Sleep -Milliseconds 200 }; $n.Dispose()'];
+  } else if (process.platform === 'darwin') {
+    cmd = 'osascript';
+    args = ['-e', 'display notification (system attribute "WRM_N_BODY") with title (system attribute "WRM_N_TITLE") sound name "Glass"'];
+  } else {
+    cmd = 'notify-send';
+    args = ['-u', 'critical', '-a', 'WRM PRO', title.slice(0, 63), body.slice(0, 250)];
+  }
+  try {
+    const p = childProcess.spawn(cmd, args, {env, detached: true, stdio: 'ignore', windowsHide: true});
+    p.on('error', e => log('cannot show a desktop notification: ' + e.message));
+    p.unref();
+  } catch (e) { log('cannot show a desktop notification: ' + e.message); }
+}
+
+// noticeApproval looks at one message from WRM and announces an approval request once.
+function noticeApproval(text) {
+  if (text.indexOf('wrm.approval') < 0) return;
+  let m;
+  try { m = JSON.parse(text); } catch (e) { return; }
+  const p = m && m.method === 'notifications/message' && m.params;
+  const d = p && p.logger === 'wrm.approval' && p.data;
+  if (!d || d.type !== 'approval_required' || !d.approval_id || notified.has(d.approval_id)) return;
+  notified.add(d.approval_id);
+  if (notified.size > 500) notified.clear();
+  osNotify('WRM PRO: approval needed', String(d.server || '') + ': ' + String(d.message || '') + ' (approve or deny in WRM)', wrmPage());
+}
+
 // copyEvents writes the data of every server-sent event to stdout as it arrives (an
 // approval question must reach the app while the tool call still waits).
 function copyEvents(res, transform) {
@@ -169,7 +232,7 @@ function copyEvents(res, transform) {
     res.setEncoding('utf8');
     let buf = '';
     let data = [];
-    const flush = () => { if (data.length) { write(transform(data.join('\n'))); data = []; } };
+    const flush = () => { if (data.length) { const text = data.join('\n'); noticeApproval(text); write(transform(text)); data = []; } };
     const line = l => {
       if (l.endsWith('\r')) l = l.slice(0, -1);
       if (l === '') flush();
@@ -202,20 +265,39 @@ async function firstResult(res, id) {
 function httpFailure(status, body) {
   let m = String(body || '').trim();
   try { m = JSON.parse(body).error.message || m; } catch (e) { /* plain text */ }
+  if (status === 401) authFailed = true;
   if (status === 401) m += ' (the token is wrong, expired or revoked: call the wrm_connect tool to sign in again, or create a new token in WRM → Settings → AI connections)';
   return 'WRM answered HTTP ' + status + ': ' + m;
 }
 
 // ─── local tools (always offered) ────────────────────
 
+// While WRM cannot be reached the saved sign-in still holds: keptAccess tells the AI app so,
+// and it must not send the user through a new approval for a passing network or server problem.
+function savedAccessValid() {
+  if (!target || !token || authFailed) return false;
+  const t = Date.parse(savedExpiry);
+  return !(t > 0 && t <= Date.now());
+}
+
+function keptAccess() {
+  const t = Date.parse(savedExpiry);
+  return 'WRM at ' + url + ' does not answer right now' + (lastError ? ' (' + lastError + ')' : '') +
+    '. The saved sign-in is still valid' + (t > 0 ? ' until ' + new Date(t).toISOString() : '') +
+    ': do NOT call wrm_connect and do not ask the user to approve again. Tell the user WRM is not reachable (WRM stopped, restarting or busy, or this computer is off the network) and try the WRM tool again in a moment; the bridge reconnects by itself.';
+}
+
 function connectToolDef() {
-  const state = mode === 'proxy' ? 'Connected to ' + url + '. Call it only to sign in again or to switch to another WRM.'
+  const state = mode === 'proxy' ? 'Connected to ' + url + '. Call it only when the user asks to sign in again or to switch to another WRM.'
+    : savedAccessValid() ? keptAccess()
     : 'Not connected to WRM yet' + (lastError ? ' (' + lastError + ')' : '') + '. Ask the user for the WRM address (the one they open in the browser, for example http://192.168.1.10:8780 or https://wrm.example.com) and call this tool with it.';
   return {
     name: 'wrm_connect',
     title: 'Connect to WRM PRO',
     description: 'Sign in to a WRM PRO server: opens WRM in the browser, where the user signs in and approves which servers and permissions this AI app gets; the token goes straight to this computer, never into the chat. ' + state,
-    inputSchema: {type: 'object', properties: {address: {type: 'string', description: 'WRM address, for example http://192.168.1.10:8780 or https://wrm.example.com (with or without /mcp). Empty: the last used address.'}}},
+    inputSchema: {type: 'object', properties: {
+      address: {type: 'string', description: 'WRM address, for example http://192.168.1.10:8780 or https://wrm.example.com (with or without /mcp). Empty: the last used address.'},
+      force: {type: 'boolean', description: 'Sign in again although the saved access is still valid. Only when the user asks for it.'}}},
     annotations: {readOnlyHint: false, openWorldHint: true},
   };
 }
@@ -316,6 +398,17 @@ async function connectTool(id, args) {
     return;
   }
   const base = mcpURL(addr).replace(/\/mcp$/, '');
+  const sameWRM = mcpURL(addr) === url;
+  if (sameWRM && !(args && args.force) && mode === 'proxy' && savedAccessValid()) {
+    write(toolText(id, 'Already connected to WRM PRO at ' + base + (Date.parse(savedExpiry) > 0 ? '; the access is valid until ' + new Date(Date.parse(savedExpiry)).toISOString() : '') +
+      '. No new sign-in is needed. Call wrm_connect with force: true only if the user asks to sign in again.'));
+    return;
+  }
+  if (sameWRM && !(args && args.force) && mode !== 'proxy' && savedAccessValid()) {
+    if (await reconnect(true)) { write(toolText(id, 'Reconnected to WRM PRO at ' + base + ' with the saved sign-in. The WRM tools are available again.')); return; }
+    write(toolText(id, keptAccess() + ' Call wrm_connect with force: true only if the user asks to sign in again.', true));
+    return;
+  }
   try {
     if (!login || login.base !== base) {
       login = await startLogin(base, async (u, t, expiresIn) => { saveConnection(u, t, expiresIn); await switchTo(u, t); });
@@ -347,7 +440,7 @@ function localInitialize(msg) {
   const p = (msg.params && msg.params.protocolVersion) || '2025-06-18';
   return rpcResult(msg.id, {protocolVersion: p, capabilities: {tools: {listChanged: true}},
     serverInfo: {name: 'wrm-pro', title: 'WRM PRO (not connected)', version: VERSION},
-    instructions: 'WRM PRO is not connected on this computer yet' + (lastError ? ' (' + lastError + ')' : '') +
+    instructions: savedAccessValid() ? keptAccess() : 'WRM PRO is not connected on this computer yet' + (lastError ? ' (' + lastError + ')' : '') +
       '. Ask the user for the WRM address and call the wrm_connect tool; WRM then opens in the browser for sign-in and approval.'});
 }
 
@@ -362,6 +455,7 @@ function local(raw, msg) {
     case 'resources/list': write(rpcResult(msg.id, {resources: []})); return;
     case 'tools/call':
       if (msg.params && msg.params.name === 'wrm_connect') return connectTool(msg.id, msg.params.arguments);
+      if (savedAccessValid()) { write(toolText(msg.id, keptAccess(), true)); return; }
       write(toolText(msg.id, 'WRM PRO is not connected yet' + (lastError ? ' (' + lastError + ')' : '') + '. Call wrm_connect with the WRM address first.', true));
       return;
     default: write(rpcError(msg.id, 'method not available until WRM is connected: ' + msg.method, -32601));
@@ -371,7 +465,7 @@ function local(raw, msg) {
 // openWRM starts a WRM session with the app's own initialize request; on success the bridge
 // forwards everything from then on.
 async function openWRM(initMsg) {
-  const res = await request('POST', JSON.stringify(initMsg));
+  const res = await request('POST', JSON.stringify(initMsg), INIT_TIMEOUT_MS);
   if (res.statusCode !== 200) throw new Error(httpFailure(res.statusCode, await readAll(res, 4096)));
   session = res.headers['mcp-session-id'] || '';
   const m = await firstResult(res, initMsg.id);
@@ -410,6 +504,27 @@ async function reinitializeWRM() {
   return reinitializePromise;
 }
 
+// reconnect is tried before a request while the bridge is in local mode with a saved, still
+// valid access: WRM may be back, or another AI app on this computer may have renewed the
+// connection file. On success the app learns that the WRM tools are there again.
+let lastReconnect = 0;
+async function reconnect(now) {
+  if (!clientInit || (!now && Date.now() - lastReconnect < RECONNECT_EVERY_MS)) return false;
+  lastReconnect = Date.now();
+  const before = url + '\n' + token;
+  loadConnection();
+  if (before !== url + '\n' + token) authFailed = false;
+  if (!savedAccessValid()) return false;
+  try {
+    await reinitializeWRM();
+  } catch (e) {
+    lastError = (e.code ? 'not reachable: ' : '') + e.message;
+    return false;
+  }
+  write({jsonrpc: '2.0', method: 'notifications/tools/list_changed'});
+  return true;
+}
+
 // switchTo moves the running bridge to a freshly signed-in WRM and tells the app that the
 // tool list changed.
 async function switchTo(u, t) {
@@ -438,6 +553,7 @@ async function initialize(raw, msg) {
   } catch (e) {
     lastError = (e.code ? 'WRM is not reachable at ' + url + ': ' : '') + e.message;
     log(lastError);
+    lastReconnect = Date.now();
     session = '';
     mode = 'local';
     local(raw, msg);
@@ -445,13 +561,13 @@ async function initialize(raw, msg) {
 }
 
 async function forward(raw, msg) {
-  if (mode !== 'proxy') { local(raw, msg); return; }
+  if (mode !== 'proxy' && !(msg.method === 'tools/call' && msg.params && msg.params.name === 'wrm_connect') && !(await reconnect())) { local(raw, msg); return; }
   if (msg.method === 'tools/call' && msg.params && msg.params.name === 'wrm_connect') { await connectTool(msg.id, msg.params.arguments); return; }
   const isRequest = msg.id !== undefined && msg.id !== null && typeof msg.method === 'string';
   const fail = text => { log(text); if (isRequest) write(rpcError(msg.id, text)); };
   const transform = msg.method === 'tools/list' ? s => withConnectTool(s, msg.id) : s => s;
   let res;
-  try { res = await request('POST', raw); } catch (e) { fail('WRM is not reachable at ' + url + ': ' + e.message); return; }
+  try { res = await request('POST', raw); } catch (e) { fail('WRM is not reachable at ' + url + ': ' + e.message + '. The saved sign-in is still valid: do not call wrm_connect, try again in a moment.'); return; }
   let ct = String(res.headers['content-type'] || '');
   if (res.statusCode === 202) { res.resume(); return; }
   if (ct.startsWith('text/event-stream')) { await copyEvents(res, transform); return; }

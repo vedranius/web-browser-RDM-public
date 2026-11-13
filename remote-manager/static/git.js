@@ -84,7 +84,7 @@ Object.assign(LANGS.en, {
   git_k_update: 'Update', git_k_upgrade: 'Upgrade', git_k_rollback: 'Rollback', git_k_stamp: 'Stamp', git_k_restart: 'Restart',
   git_rs_scheduled: 'Scheduled', git_rs_starting: 'Starting', git_rs_running: 'Running', git_rs_done: 'Done', git_rs_failed: 'Failed', git_rs_cancelled: 'Cancelled',
   git_rs_skipped: 'Skipped', git_rs_interrupted: 'Interrupted', git_rs_pending: 'Waiting', git_rs_ok: 'OK', git_rs_rolled_back: 'Rolled back',
-  git_plan_loading: 'Preparing…', git_upgrade_ref: 'Branch or tag to upgrade to', git_upgrade_ref_h: 'A branch (main) or a tag (tag:v2, tag:latest)', git_show_changes: 'Show changes',
+  git_plan_loading: 'Preparing…', git_upgrade_ref: 'Branch or tag to upgrade to', git_upgrade_ref_h: 'A branch (main) or a tag (tag:v2, tag:latest)', git_upgrade_custom: 'Enter a custom ref…', git_upgrade_loading: 'Loading refs…', git_upgrade_branch: 'Branch', git_upgrade_tag: 'Tag', git_show_changes: 'Show changes',
   git_upgrade_warn: 'An upgrade switches the installations to another branch or version. Read the summary of the changes before you continue.',
   git_changes_summary: '{changed} to change, {missing} new, {local} changed locally, {removed} no longer in the target (they stay on the server)',
   git_prod: 'production', git_files_none: 'Nothing to change: the files are up to date.', git_show_all: 'Show all files', git_local: 'changed locally',
@@ -114,7 +114,7 @@ Object.assign(LANGS.hr, {
   git_k_update: 'Ažuriranje', git_k_upgrade: 'Nadogradnja', git_k_rollback: 'Vraćanje', git_k_stamp: 'Označavanje', git_k_restart: 'Ponovno pokretanje',
   git_rs_scheduled: 'Zakazano', git_rs_starting: 'Pokreće se', git_rs_running: 'U tijeku', git_rs_done: 'Gotovo', git_rs_failed: 'Nije uspjelo', git_rs_cancelled: 'Otkazano',
   git_rs_skipped: 'Preskočeno', git_rs_interrupted: 'Prekinuto', git_rs_pending: 'Čeka', git_rs_ok: 'U redu', git_rs_rolled_back: 'Vraćeno',
-  git_plan_loading: 'Priprema…', git_upgrade_ref: 'Grana ili tag za nadogradnju', git_upgrade_ref_h: 'Grana (main) ili tag (tag:v2, tag:latest)', git_show_changes: 'Prikaži promjene',
+  git_plan_loading: 'Priprema…', git_upgrade_ref: 'Grana ili tag za nadogradnju', git_upgrade_ref_h: 'Grana (main) ili tag (tag:v2, tag:latest)', git_upgrade_custom: 'Unesite vlastiti ref…', git_upgrade_loading: 'Učitavanje refova…', git_upgrade_branch: 'Grana', git_upgrade_tag: 'Tag', git_show_changes: 'Prikaži promjene',
   git_upgrade_warn: 'Nadogradnja prebacuje instalacije na drugu granu ili verziju. Prije nastavka pročitajte sažetak promjena.',
   git_changes_summary: '{changed} za promjenu, {missing} novih, {local} lokalno izmijenjenih, {removed} više nije u cilju (ostaju na serveru)',
   git_prod: 'produkcija', git_files_none: 'Nema promjena: datoteke su ažurne.', git_show_all: 'Prikaži sve datoteke', git_local: 'lokalno izmijenjeno',
@@ -2026,12 +2026,42 @@ Object.assign(LANGS.hr, {
   function upgrade(ids) {
     ids = pickIds(ids);
     if (!ids.length) return;
+    const apps = [...new Set(ids.map(id => installById(id).app).filter(Boolean))];
     modal(`<h3>${esc(kindName('upgrade'))}</h3><div class="hint-box warn">${esc(t('git_upgrade_warn'))}</div>
-      <div class="g-grid"><div><label>${esc(t('git_upgrade_ref'))}</label><input id="gu-ref" value="${esc(D.ref || '')}" placeholder="${esc(t('git_upgrade_ref_h'))}"></div></div>
+      <div class="g-grid">${apps.length > 1 ? `<div><label>${esc(t('git_service'))}</label><select id="gu-app">${apps.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('')}</select></div>` : ''}
+        <div><label>${esc(t('git_upgrade_ref'))}</label><select id="gu-choice"><option value="">${esc(t('git_upgrade_loading'))}</option><option value="custom">${esc(t('git_upgrade_custom'))}</option></select>
+        <input id="gu-ref" value="${esc(D.ref || '')}" placeholder="${esc(t('git_upgrade_ref_h'))}" style="margin-top:6px"></div></div>
+      <div id="gu-error" class="hint-box bad" style="display:none"></div>
       <div class="g-btns"><button class="btn-sec" onclick="gitWorkspace.closeModal()">${esc(t('git_cancel'))}</button><button id="gu-go">${esc(t('git_show_changes'))}</button></div>`);
-    const go = () => { const ref = $('gu-ref').value.trim(); if (ref) { D.ref = ref; openDeploy('upgrade', ids, ref); } };
+    const choice = $('gu-choice'), input = $('gu-ref');
+    choice.onchange = () => { input.style.display = choice.value === 'custom' ? '' : 'none'; if (choice.value === 'custom') input.focus(); };
+    const load = async () => {
+      const app = $('gu-app') ? $('gu-app').value : apps[0];
+      const r = await fetch('/api/git/refs?app=' + encodeURIComponent(app));
+      if ($('gu-choice') !== choice || ($('gu-app') && $('gu-app').value !== app)) return;
+      if (!r.ok) {
+        $('gu-error').textContent = await apiError(r);
+        $('gu-error').style.display = '';
+        choice.innerHTML = `<option value="custom">${esc(t('git_upgrade_custom'))}</option>`;
+        choice.onchange();
+        return;
+      }
+      const refs = await r.json();
+      if ($('gu-choice') !== choice || ($('gu-app') && $('gu-app').value !== app)) return;
+      $('gu-error').style.display = 'none';
+      const selected = choice.value === 'custom' ? input.value.trim() : choice.value;
+      choice.innerHTML = `<option value="">${esc(t('git_upgrade_ref'))}</option>` +
+        `<optgroup label="${esc(t('git_upgrade_branch'))}">${(refs.branches || []).map(b => `<option value="${esc(b)}">⑂ ${esc(b)}</option>`).join('')}</optgroup>` +
+        `<optgroup label="${esc(t('git_upgrade_tag'))}">${(refs.tags || []).map(tag => `<option value="${esc('tag:' + tag)}">🏷 ${esc(tag)}</option>`).join('')}</optgroup>` +
+        `<option value="custom">${esc(t('git_upgrade_custom'))}</option>`;
+      choice.value = selected && [...choice.options].some(o => o.value === selected) ? selected : selected ? 'custom' : '';
+      choice.onchange();
+    };
+    if ($('gu-app')) $('gu-app').onchange = () => { choice.value = 'custom'; load(); };
+    const go = () => { const ref = (choice.value === 'custom' ? input.value : choice.value).trim(); if (ref) { D.ref = ref; openDeploy('upgrade', ids, ref); } };
     $('gu-go').onclick = go;
-    $('gu-ref').onkeydown = e => { if (e.key === 'Enter') go(); };
+    input.onkeydown = e => { if (e.key === 'Enter') go(); };
+    load();
   }
 
   async function openDeploy(kind, ids, ref) {

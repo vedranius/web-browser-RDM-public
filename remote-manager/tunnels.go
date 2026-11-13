@@ -1047,6 +1047,11 @@ func apiTunnelsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		pol := map[string]interface{}{"enabled": settingBool("tunnels_enabled"), "allowed": tunnelsAllowedFor(userID) == nil,
 			"bind_any": isAdminUser(userID) || settingBool("tunnel_bind_any"), "remote": policyWhoAllows(userID, "tunnel_remote_forward")}
+		if pol["bind_any"] == true {
+			// A tunnel on 0.0.0.0 can also be opened through an address of the WRM host: HSTS
+			// of WRM's host name does not apply to an IP address (#190).
+			pol["host_ips"] = wrmHostIPs()
+		}
 		jsonOK(w, map[string]interface{}{"tunnels": tunnelsForUser(userID), "policy": pol})
 		return
 	}
@@ -1111,6 +1116,23 @@ func connectionTunnelsHandler(w http.ResponseWriter, r *http.Request, userID int
 	case http.MethodGet:
 		jsonOK(w, loadTunnelDefs("conn_id=?", c.ID))
 	case http.MethodPut:
+		putConnectionTunnels(w, r, c, userID, userID, nil)
+	default:
+		jsonError(w, "Method not allowed", 405)
+	}
+}
+
+// putConnectionTunnels replaces the tunnels of connection c, which belongs to ownerID.
+// actorID is who makes the change: the owner, or a share member with the "add and edit
+// tunnels" permission (#192). The tunnel policies of both must allow every tunnel, the
+// tunnels stay the owner's. extra is added to the audit entry.
+func putConnectionTunnels(w http.ResponseWriter, r *http.Request, c Connection, ownerID, actorID int, extra map[string]interface{}) {
+	userID := ownerID
+	policyUsers := []int{ownerID}
+	if actorID != ownerID {
+		policyUsers = append(policyUsers, actorID)
+	}
+	{
 		var in []tunnelDef
 		if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&in); err != nil {
 			jsonError(w, "Bad JSON", 400)
@@ -1120,10 +1142,13 @@ func connectionTunnelsHandler(w http.ResponseWriter, r *http.Request, userID int
 			jsonError(w, "Too many tunnels (max. 50 per connection)", 400)
 			return
 		}
-		if len(in) > 0 {
-			if err := tunnelsAllowedFor(userID); err != nil {
-				jsonError(w, err.Error(), 403)
-				return
+		// A share member needs the tunnel policy even to remove tunnels; the owner only to add.
+		if len(in) > 0 || actorID != ownerID {
+			for _, uid := range policyUsers {
+				if err := tunnelsAllowedFor(uid); err != nil {
+					jsonError(w, err.Error(), 403)
+					return
+				}
 			}
 			if !isSSHProtocol(c) {
 				jsonError(w, "Tunnels need an SSH connection", 400)
@@ -1136,9 +1161,11 @@ func connectionTunnelsHandler(w http.ResponseWriter, r *http.Request, userID int
 		}
 		seenPort := map[string]bool{}
 		for i := range in {
-			if err := validateTunnelDef(&in[i], userID); err != nil {
-				jsonError(w, fmt.Sprintf("Tunnel %d: %v", i+1, err), 400)
-				return
+			for _, uid := range policyUsers {
+				if err := validateTunnelDef(&in[i], uid); err != nil {
+					jsonError(w, fmt.Sprintf("Tunnel %d: %v", i+1, err), 400)
+					return
+				}
 			}
 			if in[i].BindPort > 0 && in[i].Kind != "remote" {
 				k := in[i].BindHost + ":" + strconv.Itoa(in[i].BindPort)
@@ -1195,17 +1222,22 @@ func connectionTunnelsHandler(w http.ResponseWriter, r *http.Request, userID int
 				continue
 			}
 			reason := t.reason
-			tunnelMgr.stop(k, userID, "tunnel settings changed")
+			tunnelMgr.stop(k, actorID, "tunnel settings changed")
 			id, _ := strconv.Atoi(strings.TrimPrefix(k, "t"))
 			if def, err := loadTunnelDef(id); err == nil {
-				go tunnelMgr.start(k, def, c, userID, reason, nil)
+				go tunnelMgr.start(k, def, c, actorID, reason, nil)
 			}
 		}
-		auditLogRef(r, userID, usernameOf(userID), "tunnel.configured", c.Name, map[string]interface{}{"tunnels": len(in)}, auditRef{ConnID: c.ID})
-		tunnelMgr.notify(userID)
+		detail := map[string]interface{}{"tunnels": len(in)}
+		for k, v := range extra {
+			detail[k] = v
+		}
+		auditLogRef(r, actorID, usernameOf(actorID), "tunnel.configured", c.Name, detail, auditRef{ConnID: c.ID})
+		tunnelMgr.notify(ownerID)
+		if actorID != ownerID {
+			tunnelMgr.notify(actorID)
+		}
 		jsonOK(w, loadTunnelDefs("conn_id=?", c.ID))
-	default:
-		jsonError(w, "Method not allowed", 405)
 	}
 }
 
@@ -1307,4 +1339,45 @@ func testWebReachable(c Connection) error {
 		return fmt.Errorf("%s cannot reach %s: %v", jumpPath(c), addr, err)
 	}
 	return conn.Close()
+}
+
+var hostIPsCache struct {
+	sync.Mutex
+	at  time.Time
+	ips []string
+}
+
+// wrmHostIPs lists the unicast addresses of this host's interfaces that are up (no loopback,
+// no link-local), IPv4 first, for opening a tunnel on 0.0.0.0 by address. Cached for a minute.
+func wrmHostIPs() []string {
+	hostIPsCache.Lock()
+	defer hostIPsCache.Unlock()
+	if time.Since(hostIPsCache.at) < time.Minute && hostIPsCache.ips != nil {
+		return hostIPsCache.ips
+	}
+	v4, v6 := []string{}, []string{}
+	ifaces, _ := net.Interfaces()
+	for _, ifc := range ifaces {
+		if ifc.Flags&net.FlagUp == 0 || ifc.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addrs, _ := ifc.Addrs()
+		for _, a := range addrs {
+			ipn, ok := a.(*net.IPNet)
+			if !ok || ipn.IP.IsLoopback() || ipn.IP.IsLinkLocalUnicast() || !ipn.IP.IsGlobalUnicast() {
+				continue
+			}
+			if ipn.IP.To4() != nil {
+				v4 = append(v4, ipn.IP.String())
+			} else {
+				v6 = append(v6, ipn.IP.String())
+			}
+		}
+	}
+	ips := append(v4, v6...)
+	if len(ips) > 8 {
+		ips = ips[:8]
+	}
+	hostIPsCache.at, hostIPsCache.ips = time.Now(), ips
+	return ips
 }

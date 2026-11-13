@@ -92,7 +92,7 @@ func mcpbManifest(mcpURL, token string) map[string]interface{} {
 // pluginMCPBVersion is the version of the WRM PRO Claude plugin
 // (packaging/claude-plugin/wrm-pro/.claude-plugin/plugin.json) and of the bridge bundle it
 // carries. Raise it together with plugin.json when the bridge or the plugin changes.
-const pluginMCPBVersion = "1.2.2"
+const pluginMCPBVersion = "1.2.4"
 
 // pluginMCPBManifest is the manifest of the bundle inside the Claude plugin: no settings at
 // all, because Claude Desktop, Cowork and chat cannot ask for plugin settings. The bridge

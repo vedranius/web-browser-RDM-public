@@ -1,3 +1,180 @@
+## [14.12.0] - 2026-11-13
+
+### Added
+- **Branch and tag list in Git *Upgrade…***: the dialog lists the branches (⑂) and tags (🏷, newest version first) of the service's project from GitLab, GitHub or Gitea; *Enter a custom ref…* keeps the free text field (`main`, `tag:v2`, `tag:latest`). With installations of several services selected, a *Service* list picks whose refs are shown. New `GET /api/git/refs?app=` (`{project, branches, tags}`); the project always comes from the catalog entry, never from the request.
+- **Serial / USB devices** (*Tools → Serial / USB devices…*): a browser-local manager for serial and USB-serial devices plugged into the computer that runs the browser (Web Serial, Chromium-based browsers over HTTPS or localhost). It recognises common boards by USB VID:PID (Arduino Uno / Mega / Nano, ESP32 native USB, STM32 virtual COM port, Raspberry Pi Pico, CP210x / CH340 / FTDI bridges, without guessing unknown ones), suggests and checks port settings, opens an xterm terminal with send box and line ending, counts received / sent bytes and errors, saves profiles per user in this browser, and copies prompts for the AI assistant (identify the device, minimal serial example). Serial data never goes to the WRM server. The entry follows the existing `serial` policy. Code in `static/serial.js` and `static/serial_terminal.js`, loaded on first use; tests in `tools/test-serial.js`.
+
+## [14.11.9] - 2026-11-13
+
+### Added
+- **Remote desktop clipboard like an RDP client**: the local clipboard goes to the remote desktop when the desktop gets the pointer or focus and right before **Ctrl+V** / **Shift+Insert**; text copied on the remote desktop goes to the local clipboard without taking the keyboard away from the desktop. Reading the local clipboard needs HTTPS or localhost and the browser's permission; the 📋 *Clipboard* button stays for other cases. The connection's *Clipboard* option still turns both directions off.
+
+### Fixed
+- **Remote desktop stuck on "Connecting…"**: guacamole-common-js 1.5 does not report errors of the tunnel itself, so a WebSocket that failed, timed out ("Server timeout.") or closed before the first frame left the window on *Connecting…* for ever. The desktop window now watches the tunnel and shows the error with **↻ Reconnect**; a tunnel that closes after the desktop appeared shows *Disconnected*.
+- **guacd that accepts but does not answer** (Docker Desktop paused): WRM waits 8 seconds for guacd's answer to `select` instead of 20 and says that guacd does not answer and that Docker may be paused, before the browser's own 15-second timeout.
+- **Target that never shows a frame**: when guacd reports *ready* but no frame (`sync`) follows within 45 seconds, WRM ends the session with the address guacd tried (and the jump-host route) instead of waiting for ever; the session is logged as failed with a `desktop.error` audit entry.
+
+- **Remote desktop pointer offset and blurry picture with a larger UI size**: with *Settings → Appearance → Size* above or below 100 % the page uses CSS zoom, which guacamole-common-js ignores when it measures the pointer, so clicks landed centimetres away from the mouse. The pointer is now measured against the element's real box, and the desktop is requested in real screen pixels and scaled back, so it stays sharp.
+
+### Changed
+- guacd's errors after the handshake name the address WRM gave it, e.g. *Server refused connection (server unreachable?) (target 192.0.2.10:3389)*, so a wrong host in the connection is visible at once.
+- RDP errors that mention *refused* or *unreachable* show a hint: check address, firewall and that Remote Desktop is on, then try another *Security* mode (NLA, TLS, RDP).
+
+## [14.11.8] - 2026-11-13
+
+### Added
+- **Share a theme with everyone**: administrators publish one of their themes from *Settings → Appearance* (**📢 Share with everyone**, **Stop sharing**); users see it under *From your organisation*, and it can be the default theme. Setting `appearance_shared_themes`, checked on the server (`appearance_themes.go`: `org-` ids, at most 12 themes, token names and values without `url(`, `expression`, `@import`, `;`, braces or angle brackets).
+- **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance): everyone gets the default theme; theme choice, colour editor, import and custom CSS are hidden. Accessibility options, fonts and size stay per user; administrators are not locked.
+- **Save changes to this theme**: colour changes go into the selected theme of your own instead of only a new copy.
+- **Contrast check** beside the preview: WCAG ratio for text, secondary and faint text, text on the accent and terminal text, updated while you edit.
+
+### Changed
+- A theme that lists only some colours (shared, imported or from an addon) takes the missing ones from Graphite or Daylight instead of leaving them unset.
+
+## [14.11.7] - 2026-11-12
+
+The lock button is visible again. No database or API change.
+
+### Fixed
+
+- **🔒 Lock now** is back in the top bar as a one-click icon (since v14.11.0 it was only in the account menu). It is never moved into *More* and stays in the account menu as well.
+
+## [14.11.6] - 2026-11-12
+
+Clipboard and snippets for daily terminal work. No database or API change.
+
+### Added
+
+- Clipboard entries show the source connection, age and line count; **📌 pin** (pinned entries stay on top, are not pushed out and survive the first *Clear*), **✕** remove one entry, **⚡** save as snippet, and a filter field with more than four entries.
+- Snippets: a **★ Recently used** group (last snippets run or inserted, per user, in this browser).
+- `tools/test-clipboard.js` (history limit, pins, old format, paste safety), run in CI.
+
+### Changed
+
+- **Paste** from the clipboard targets the focused or last used terminal, uses bracketed paste for several lines when the shell supports it, otherwise asks first; dangerous-looking commands always ask (as snippets do). Without a terminal the text is copied.
+
+## [14.11.5] - 2026-11-12
+
+Separate share permissions for adding/editing tunnels and for enabling/disabling them ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)). Upgrading from v14.11.4 keeps the database and the encryption key; one column is added.
+
+### Added
+
+- **Share switch "Operators may add, edit and remove tunnels"** (`allow_tunnel_edit`, off by default): signed-in operators and above get **🛠 Edit tunnels…** on a shared SSH connection and may add, change and remove its tunnels. The tunnels stay in the owner's account; each one must be allowed by the tunnel policies of both the owner and the member (listening beyond 127.0.0.1, remote forwarding). New share permission `edit_tunnels`.
+- API `GET/PUT /api/share-team/{share}/connections/{id}/tunnels`; `allow_tunnel_edit` in `/api/shares`.
+
+### Changed
+
+- The existing switch now reads *Operators may enable and disable (start and stop) tunnels*. Its meaning is unchanged, and the two tunnel switches are independent, so a member may have either one or both. Existing shares keep what they allowed; adding and editing stays off until the owner turns it on.
+- The owner's tunnel editor and the share editor use one code path (`putConnectionTunnels`).
+
+## [14.11.4] - 2026-11-12
+
+AI apps wait for your approval and show it on the desktop. Upgrading from v14.11.3 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **`wait_for_approval` MCP tool**: when an AI app stopped waiting for an approval (its own tool timeout, e.g. Codex after 60 s, or it declined the question), the tool result names the `approval_id` and tells the AI to wait; `wait_for_approval` (`session_id`, `approval_id`, `seconds` 5–55, default 45) returns *Still waiting*, *Approved* (call the tool again with the same arguments) or *Denied*. The AI no longer carries on without the step or assumes an answer. The plugin's skills `wrm` and `wrm-safe-operator` say so.
+- **Desktop notifications from the plugin**: while a tool call waits for an approval, WRM sends a `notifications/message` (logger `wrm.approval`) on the call's stream; the bridge of the WRM PRO plugin and the Claude Desktop extension shows it once per request as an operating-system notification (Windows balloon via PowerShell, macOS `osascript`, Linux `notify-send`), also when no WRM tab is open or in front. A click opens WRM at the saved address (never one from the message); texts are passed through environment variables. `WRM_MCP_NOTIFY=0` turns it off.
+- Tests: `v14114_wait_test.go` (deferred result names the approval, still waiting, approved, denied, unknown id) and a notification test in `tools/test-mcpb-restart.js` (one notification per request, the log message still reaches the app).
+
+### Changed
+
+- WRM PRO Claude plugin 1.2.4 (regenerated `packaging/claude-plugin/wrm-pro/server/wrm.mcpb`).
+
+## [14.11.3] - 2026-11-12
+
+AI apps keep their approved access while WRM is briefly unreachable. Upgrading from v14.11.2 keeps the database and the encryption key; nothing is migrated.
+
+### Fixed
+
+- **No early re-approval of AI connections**: the bridge of the WRM PRO Claude plugin and the Claude Desktop extension went into its "not connected" mode whenever WRM did not answer when the AI app started or after a restart (WRM restarting, updating or hanging, or the computer off the network), and then told the AI app to call `wrm_connect`, which registered a new client and asked for a new approval although the saved access was still valid for days. Now only a token WRM refuses (HTTP 401) asks for a new sign-in. Otherwise the bridge reports that WRM is unreachable and that the saved sign-in is still valid, reconnects with the saved token before the next request (also with a token another app on the computer renewed in `~/.wrm/mcp.json`) and tells the app that the tool list changed; `wrm_connect` reconnects instead of starting a new sign-in while the saved access is valid (`force: true` signs in anyway).
+- The bridge's first request to WRM gives up after 20 seconds (`WRM_MCP_INIT_TIMEOUT_MS`) instead of waiting forever on a hanging WRM.
+
+### Changed
+
+- WRM PRO Claude plugin 1.2.3 (regenerated `packaging/claude-plugin/wrm-pro/server/wrm.mcpb`).
+- `tools/test-mcpb-restart.js`: a second test starts the bridge while WRM is down and checks the message, that `wrm_connect` does not sign in again, the reconnect when WRM is back, and that a refused token still asks for `wrm_connect`.
+
+## [14.11.2] - 2026-11-12
+
+Workboard and panels in one place. Upgrading from v14.11.1 keeps the database and the encryption key; nothing is migrated.
+
+### Changed
+
+- **The ▤ Workboard menu manages panels too**: a *Panels* section lists every panel and every addon docked as a panel with where it is, and ticks show or hide them, next to *Add to the Workboard*, the canvas tools, *Lock the layout* and the new *Reset the layout* entry. A panel's ⋯ → *Panels…* opens the same menu.
+- **One top bar button**: the separate ▦ *Panels* button is hidden while the Workboard is available (it still appears for accounts without it), so the top bar keeps more labels. A locked layout shows 🔒 on the ▤ Workboard button.
+- **Add to the Workboard** (formerly *Addons*) lists the built-in panels before the addons; a hidden panel has *Show*, which brings it back where it was last.
+
+### Added
+
+- `tools/test-workboard-panels.js`: drives a running WRM in Chromium and checks the Panels section of the Workboard menu, hiding and showing a panel, the catalog's *Show*, the lock mark, the Croatian texts and that there are no page errors.
+
+## [14.11.1] - 2026-11-12
+
+Your own order in the connection tree. Upgrading from v14.11.0 keeps the database and the encryption key; a table `connection_order` is added.
+
+### Added
+
+- **Drag and drop order for connections**: drop a connection (or a selection) above or below another connection to put it there; dropped on a connection in another folder it moves into that folder at that place. The order is kept per user in the new `connection_order` table; connections you have not placed follow by name, and a connection moved with *Move to folder…* or onto a folder row goes after the placed ones.
+- Connection context menu: **Move connection up / down** and **Sort connections here A–Z**; folder context menu: **Sort connections in this folder A–Z**.
+- API `POST /api/connections/order` (`{ids, reset}`, your own connections only), audited as `connection.reordered` / `connection.order_reset`; `GET /api/connections` lists in your order with `sort_order`.
+- Tests: `conn_order_test.go` (order, ownership, moves, reset, delete) and `tools/test-conn-order.js` (drag in Chromium, order kept after a reload, context menu, reset, no console errors).
+
+## [14.11.0] - 2026-11-12
+
+The interface fits every screen: the top bar keeps its labels, tablets get the work area back. Upgrading from v14.7.2 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **Account menu** on the avatar in the top bar: who is signed in and their role, *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out*.
+- **Side panel drawer on tablets and narrow laptops** (761–1024 px wide, also a desktop browser zoomed in): *Sessions*, *Clipboard*, *Snippets* and a docked AI view slide in from the 🗂 button instead of taking a third of the screen, the same way phones already worked.
+- **Minimise a dialog** with the new ▁ button above big dialogs (Settings, Storages, Monitoring …): it becomes a chip at the bottom of the screen and keeps what you typed; click the chip, or open the dialog again from its menu, to bring it back.
+- **Grouped notifications**: the same message again raises a ×N counter instead of another toast, and beyond four toasts the oldest fold into one *N more notifications* toast with *Show* to list them, so a burst of alerts never fills the screen.
+- `tools/test-ui-sizes.js`: drives a running WRM in Chromium at phone, tablet, laptop and desktop sizes and at browser zoom 67–200 % and checks that the top bar never overlaps or leaves the screen, that buttons keep their labels from 1280 px on, that the page never scrolls sideways and that there are no page errors.
+
+### Changed
+
+- **The top bar keeps its labels.** It used to drop every label as soon as one did not fit, so even a 1920 px screen showed a row of bare icons. Now the less used buttons move into the labelled **⋯** menu one by one (Panels, Workboard, Keys, Storages, Chains, Tunnels, Tools, Git, Monitoring, Settings) and only then do the remaining buttons lose their labels. At 1920 px every button is labelled again; at 1280 px *AI*, *Tools*, *Monitoring*, *Git* and *Settings* keep theirs.
+- *Shares*, *Lock now* and *Sign out* moved from the top bar into the account menu.
+
+### Fixed
+
+- On phones the top bar buttons overlapped (*Storages* and *Chains* never moved into the **⋯** menu), and the *ADMIN* badge stayed visible on narrow screens.
+
+## [14.7.2] - 2026-11-12
+
+Shares a team can manage together. Upgrading from v14.7.1 keeps the database and the encryption key; two columns are added to `share_links`.
+
+### Added
+
+- **Team management of shares** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)): two per-share switches, off by default, for signed-in members with the operator role or higher (never guests). *Operators may add and edit connections and folders* (`allow_edit`): edit a shared connection's name, protocol, host, user name, password, folder (inside the share) and notes; add connections and folders under a shared folder and rename shared folders. New items are created in the owner's account. *Operators may start and stop tunnels* (`allow_tunnels`): start and stop the tunnels the owner configured on the shared connections; the owner's tunnel policy applies and the member's account must be allowed to use tunnels.
+- API `/api/share-team/{share}/connections[/{id}]`, `…/folders[/{id}]`, `…/tunnels[/{key}/start|stop]`; `allow_edit` and `allow_tunnels` in `/api/shares`; `manage_connections` and `manage_tunnels` in the share permissions (`/api/shared`, `/api/share/{token}`, the room).
+
+### Security
+
+- Members never see or choose the owner's stored secrets (key store, vault credentials, Bitwarden, server key files). Changing a connection's host or protocol through a share removes its saved password and key and any stored-secret reference, so the owner's secret is never sent to a server a member picked. Members cannot delete items or move them out of the share. All changes are audited with the member's name, `share_id` and `owner`.
+
+## [14.7.1] - 2026-11-11
+
+Security fixes and issue #190. Upgrading from v14.7.0 keeps the database and the encryption key; nothing is migrated.
+
+### Added
+
+- **First-run setup code.** While no account exists, WRM creates a one-time code at start, prints it to the console/log and writes it to `first-admin-setup-code.txt` (mode 0600) next to the database. Creating the first (administrator) account from the network needs it; a direct connection from the WRM host itself (loopback, no proxy headers) does not. The sign-in page shows the field only when needed (`setup_code_required` in `/api/auth/config`). Wrong codes count as failed sign-ins for the rate limit. The code and its file are removed when the first account is created.
+- **HSTS switch** (`hsts`, *Admin → Policies*, default on). Off sends `max-age=0`, so browsers forget an earlier entry.
+- **Open a tunnel through an IP address of the WRM host** for tunnels on 0.0.0.0 (HSTS of WRM's host name does not apply to an IP address) ([#190](https://github.com/vedranius/web-browser-RDM-public/issues/190)).
+- **Security overview: tunnels open to the network** (`exposed_tunnels`): a warning for a local tunnel on 0.0.0.0, a failure for a SOCKS (dynamic) tunnel there.
+
+### Fixed
+
+- Two concurrent first registrations could both become administrators; the check and the insert are now serialised.
+- The origin check compares the port: another service on the WRM host (for example a web interface published by a tunnel) is a different origin.
+- One AI client closing a shared AI session (same AI connection) no longer stops the running commands of the others.
+- `~` in AI tool paths could stay unexpanded when several calls started a session at the same moment.
+- A data race on the MCP session's last-seen time.
+- The sign-in page scrolls when the first-run form is taller than the window; before, the *Create account* button could be out of reach.
+- Built with Go 1.27.4 (GO-2026-6859, net/http).
+
 ## [14.7.0] - 2026-11-10
 
 Addons can read your chains. Upgrading from v14.6.3 keeps the database and the encryption key; nothing is migrated.

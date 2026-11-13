@@ -1,17 +1,210 @@
-## Web Remote Manager PRO v14.7.0 — Addons that show your chains
+## Web Remote Manager PRO v14.12.0 — Branch and tag list for Git upgrades, serial and USB devices in the browser
 
 ### Added
+
+- **Git *Upgrade…* lists the branches and tags** of the service's project (tags newest first), so you pick the target instead of typing it; *Enter a custom ref…* still takes any branch or `tag:…`.
+- **Serial / USB devices** in *Tools*: connect to an Arduino, ESP32, STM32, Raspberry Pi Pico or a USB-serial adapter plugged into your own computer, with a terminal, saved settings per device and AI prompt helpers. Works in Chrome, Edge and other Chromium browsers over HTTPS or localhost; the data stays in the browser.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.12.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.12.0) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.9 — Remote desktops no longer hang on "Connecting"
+
+#### Added
+
+- **Copy and paste with the remote desktop like in an RDP client**: copy locally and press Ctrl+V in the remote desktop, or copy there and paste locally. The browser asks once for clipboard permission (HTTPS or localhost).
+
+#### Fixed
+
+- **Remote desktop stuck on "Connecting…"**: when the connection to WRM failed, timed out or closed before the first picture, the window now shows the error with **↻ Reconnect**.
+- **guacd that does not answer** (Docker Desktop paused) is reported after 8 seconds, with a hint to resume Docker.
+- **A target that never shows a picture** ends after 45 seconds with the address guacd tried, logged as a failed session.
+- **Remote desktop pointer in the right place** with a UI size other than 100 % (*Settings → Appearance → Size*), and a sharp picture at that size.
+
+#### Changed
+
+- guacd's errors name the target address WRM used, so a wrong host is visible at once.
+- RDP errors such as *Server refused connection* explain what to check: address, firewall, Remote Desktop on, *Security* mode.
+
+
+## Included from v14.11.8 — One look for the whole team
+
+#### Added
+
+- **📢 Share with everyone**: an administrator publishes a theme from *Settings → Appearance*; every user sees it under *From your organisation*, and it can be made the default.
+- **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance). Accessibility options, fonts and size stay with each user; administrators are not locked.
+- **💾 Save changes to this theme** for your own themes.
+- **Contrast check** next to the preview with WCAG ratios for text, accent and terminal colours.
+
+#### Changed
+
+- Themes with only some colours fill the rest from Graphite or Daylight.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.8](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.8) asset. Preserve the database and encryption key; nothing is migrated. New settings `appearance_lock` (off) and `appearance_shared_themes` (empty).
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.7 — Lock now is back in the top bar
+
+#### Fixed
+
+- **🔒 Lock now** is again a one-click icon in the top bar, next to *New Window*, on every screen width. It is still in the account menu too.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.7) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.6 — Clipboard and snippets for daily terminal work
+
+#### Added
+
+- **Clipboard entries say where and when**: source connection, age and number of lines.
+- **📌 Pin** an entry: it stays on top, is not pushed out by new copies and survives the first *Clear*.
+- **⚡ Save as snippet** keeps a copied command on the server; **✕** removes one entry; a filter appears with more than four entries.
+- **★ Recently used** snippets on top of the Snippets panel.
+
+#### Changed
+
+- **Paste** types into the focused or last used terminal. Several lines use bracketed paste when the shell supports it, otherwise WRM asks first; dangerous-looking commands always ask.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.6](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.6) asset. Preserve the database and encryption key; nothing is migrated.
+
+
+## Included from v14.11.5 — Separate permissions for adding and switching tunnels
+
+#### Added
+
+- **Share switch "Operators may add, edit and remove tunnels"** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)), off by default: members with the operator role or higher get **🛠 Edit tunnels…** on a shared SSH connection and may add, change and remove its tunnels. The tunnels stay in the owner's account and must be allowed by the tunnel policies of both the owner and the member.
+
+#### Changed
+
+- The existing switch now reads *Operators may enable and disable (start and stop) tunnels*; its meaning is unchanged. The two switches are independent, so some people can only switch tunnels on and off while others can also add and edit them. Existing shares keep what they allowed.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.5](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.5) asset. Preserve the database and encryption key. One column is added (`share_links.allow_tunnel_edit`, off); an older binary still starts on the database.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.4 — AI apps wait for your approval
+
+#### Added
+
+- **AI apps wait for your decision**: when Claude Code, Codex or another AI app stops waiting for a tool call (its own timeout), WRM tells it the request still waits and gives it `wait_for_approval`, so it waits until you approve or deny instead of going on without the step.
+- **Approval requests on the desktop**: the WRM PRO plugin shows each approval request as a Windows, macOS or Linux notification, also when no WRM tab is open; a click opens WRM.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.4](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.4) asset. Preserve the database and encryption key; nothing is migrated. Update the WRM PRO Claude plugin to 1.2.4 (or download the Claude Desktop extension again).
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.3 — AI apps keep their approved access
+
+#### Fixed
+
+- **No early re-approval of AI connections**: the WRM PRO Claude plugin and the Claude Desktop extension asked for a new approval whenever WRM did not answer for a moment (restarting, updating, hanging, or the computer off the network), although the chosen lifetime had not passed. Now only a token WRM refuses leads to a new sign-in; otherwise the AI app is told WRM is unreachable and the bridge reconnects by itself with the saved access.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.3](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.3) asset. Preserve the database and encryption key; nothing is migrated. Update the WRM PRO Claude plugin to 1.2.3 (or download the Claude Desktop extension again); the saved connection stays, so no new sign-in is needed.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.2 — Workboard and panels in one place
+
+#### Changed
+
+- **One menu for panels and addons**: the ▤ Workboard menu lists every panel with where it is, so you show, hide, lock and reset the layout where you add addons and arrange the canvas.
+- **Tidier top bar**: the separate ▦ Panels button is gone while the Workboard is available, and a locked layout shows 🔒 on the Workboard button.
+- **Add to the Workboard** lists the panels next to the addons; a hidden panel comes back with *Show*.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.2) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.1 — Your own order in the connection tree
+
+#### Added
+
+- **Drag connections into your order**: drop a connection above or below another one to put it there, or on a connection in another folder to move it into that folder at that place. Each user keeps their own order.
+- **Move connection up / down** and **Sort connections here A–Z** in the connection menu, **Sort connections in this folder A–Z** in the folder menu.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.1) asset. Preserve the database and encryption key; one table (`connection_order`) is added and a previous version still starts on the database.
+
+## Included from v14.11.0 — An interface for every screen
+
+#### Added
+
+- **Account menu** on your avatar: your name and role, *Settings*, *Appearance*, *Shares*, *Lock now* and *Sign out* in one place.
+- **Minimise dialogs**: the ▁ button above a big dialog turns it into a chip at the bottom of the screen; click the chip to continue where you left off.
+- **Grouped notifications**: repeated messages show a ×N counter and older ones fold into one *more notifications* toast.
+- **Tablets get the work area back**: between 761 and 1024 px (a tablet, a narrow laptop or a zoomed-in browser) *Sessions*, *Clipboard*, *Snippets* and the docked AI view slide in from the 🗂 button.
+
+#### Changed
+
+- **The top bar keeps its labels.** Instead of turning every button into a bare icon as soon as one label did not fit, WRM now moves the less used buttons into the labelled **⋯** menu first. A 1920 px screen shows every button with its name again, and a laptop keeps the names of the ones you use most.
+
+#### Fixed
+
+- Top bar buttons no longer overlap on phones.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.0) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.7.2 — Shares a team can manage together
+
+#### Added
+
+- **Team management of shares** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)): the share dialog has two new switches, both off by default. *Operators may add and edit connections and folders* lets signed-in members with the operator role or higher edit shared connections and add connections and folders inside the shared folders (right-click a shared connection or folder). *Operators may start and stop tunnels* adds **⇄ Tunnels…** to the share, with *Start* / *Stop* for the tunnels you configured. Guests never get these rights.
+
+#### Security
+
+- Everything members add stays in your account. Members never see or pick your saved secrets, and changing a connection's host or protocol removes its saved password, so it is never sent to a server a member chose. Every change is audited under the member's name.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.7.2](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.2) asset. Preserve the database and encryption key; two columns are added to `share_links` and an older binary still starts on the database.
+
+## Included from v14.7.1 — Security fixes, tunnels behind HSTS
+
+#### Added
+
+- **Setup code for a new installation**: until the first account exists, creating the administrator from another computer needs a one-time code that WRM prints to its console/log and writes to `first-admin-setup-code.txt` next to its database. On the WRM host itself (localhost) no code is needed. Before, whoever reached a fresh server first became its administrator.
+- **Tunnels behind HSTS** ([#190](https://github.com/vedranius/web-browser-RDM-public/issues/190)): a tunnel on 0.0.0.0 can be opened through an IP address of the WRM host, and *Admin → Policies* can turn HSTS off, so a self-signed web interface behind a tunnel opens in the browser.
+- **Security overview** warns about tunnels open to the network; a SOCKS tunnel on 0.0.0.0 is marked as a failure.
+
+#### Fixed
+
+- Two simultaneous first registrations can no longer both become administrators.
+- The origin check compares the port, so another service on the WRM host is not trusted as WRM.
+- One AI client closing a shared AI session no longer stops the others; `~` in AI paths is expanded reliably under parallel calls.
+- Built with Go 1.27.4 (net/http fix GO-2026-6859).
+
+## Included from v14.7.0 — Addons that show your chains
+
+#### Added
 
 - **`chains.read` for addons**: an addon window can now read your [chains](README.md#chains-live-service-chain-monitoring): the checked values, the active scenario and what changed when. WRM keeps checking the chains in the background, so an addon can present a whole system the way your team needs it (a table per environment, a report, an update of a wiki page) without SSH, commands or secrets of its own.
 - **Check now** from the addon window, with the same limit as in the Chains window, recorded in the audit log.
 - The permission sheet says exactly what the addon may read. Every viewer sees only their own chains, also in a shared instance.
 - For addon authors: `wrm.chains()`, `wrm.chain(id)` and `wrm.chainCheck(id)` in `wrm-bridge.js`, and sample chains in `wrm -addon-dev` through `WRM_ADDON_CHAINS`.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.7.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.7.0) asset. Preserve the database and encryption key; nothing is migrated.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.6.3 — Proxies from SSH tunnels, a steady lock screen, log discovery that keeps going
 

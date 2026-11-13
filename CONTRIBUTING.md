@@ -44,7 +44,7 @@ Code layout:
 | `users.go`, `totp.go` | Accounts, sessions, sign-in, 2FA, admin user management |
 | `settings.go`, `audit.go`, `admin.go` | Policies (feature flags), audit log (hash chain, append-only), admin panel API, terminal registry |
 | `recording.go` | Terminal sessions, asciicast session recorder, file transfer log, recordings & transfers API |
-| `shares.go`, `collab.go` | Shares, roles & permissions, collaboration rooms (chat, terminal sharing, voice signalling) |
+| `shares.go`, `share_team.go`, `collab.go` | Shares, roles & permissions, collaboration rooms (chat, terminal sharing, voice signalling) |
 | `turn.go` | Built-in TURN relay for voice calls |
 | `ssh_ws.go`, `files.go`, `sftp_pool.go`, `search.go`, `conntest.go`, `hostkeys.go` | Terminal, file manager, SFTP connection pool, search, connection test, host key verification |
 | `jump.go`, `tunnels.go` | Jump hosts (dialing through chains of SSH connections), SSH tunnels (local / remote / SOCKS5), tunnels API, web interface connections |
@@ -124,5 +124,7 @@ Include `v1244_test.go`, `v1244_extra_test.go` and `git_relay_test.go` in the fu
 Use isolated generic browser/agent fixtures for Monitoring, simultaneous live panels, Functionality hostname filters, real XML/registry uploads, MCP controls/install scripts, terminal startup/context and replay at phone/desktop widths. Never add private attachments, actual hostnames, exported credentials or downloaded fixture databases to the repository. Distinguish actual Zabbix/PSK/provider requests from protocol mocks and cross-builds from native OS runs. See [v12.4.4 validation](docs/RELEASE_SUMMARY_v12.4.4.md).
 
 `node --test tools/test-git-client.js` verifies client relay response bytes and cancellation at the 8 MiB budget, including responses without a declared Content-Length. The release workflow runs it with the existing Node suites.
+
+For interface changes, start a scratch WRM (`PORT=8791 DB_PATH=/tmp/wrm-ui/wrm.db ./wrm`), create an administrator and run `WRM_URL=http://localhost:8791 WRM_PASS=<password> node --test tools/test-ui-sizes.js`: it opens WRM in Chromium (Playwright) at phone, tablet, laptop and desktop sizes and at browser zoom 67–200 % and fails when top bar items overlap or leave the screen, labels are lost from 1280 px on, the page scrolls sideways or a page error occurs. Without `WRM_URL` it is skipped. Still look at screenshots yourself. `tools/test-conn-order.js` (same variables) drags connections in the tree and checks that the order survives a reload.
 
 For Medium/Monitoring changes, run `node --test tools/test-monitoring.js` and the v12.4.5 Go regressions. Test actual progressive discovery, date-only and keyword historical searches, tab changes during pending requests, timezone/event details, combined environment filters and all sticky control rows at phone/desktop widths. Use generic service/config fixtures only. Windows Docker first-install paths need a real Windows session for runtime verification; Linux Docker tests/cross-builds do not establish that result.

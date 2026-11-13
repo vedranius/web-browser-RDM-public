@@ -7,7 +7,9 @@
 // the older single ui.theme stylesheet) and themes the user saved. The choice follows the user
 // to every browser (/api/me/ui/appearance); a copy in localStorage paints the next load before
 // the server answers. The administrator picks the default theme (appearance_default_theme) and
-// whether users may add their own CSS (appearance_custom_css).
+// whether users may add their own CSS (appearance_custom_css). Since v14.11.8 the administrator
+// can also publish themes to everyone (appearance_shared_themes, source 'org') and lock the
+// colours to the default theme (appearance_lock); accessibility options are never locked.
 'use strict';
 
 Object.assign(LANGS.en, {
@@ -129,6 +131,27 @@ Object.assign(LANGS.en, {
   p_appearance_default_theme_ph: 'graphite',
   p_appearance_custom_css: 'Allow custom CSS',
   p_appearance_custom_css_d: 'Users may add CSS to their own interface (Settings → Appearance). It never reaches other users.',
+  // v14.11.8: shared themes, appearance lock, editor
+  ap_shared: 'From your organisation',
+  ap_share: 'Share with everyone',
+  ap_share_d: 'Publish this theme to every user of this WRM (Admin → Policies keeps the list).',
+  ap_shared_done: '"{name}" is now offered to everyone',
+  ap_unshare: 'Stop sharing',
+  ap_unshare_q: 'Stop offering "{name}" to everyone? Users who picked it return to the default theme.',
+  ap_update: 'Save changes to this theme',
+  ap_updated: 'Theme saved',
+  ap_locked: 'Your administrator set one colour theme for everyone. Accessibility, fonts and size below are still yours.',
+  ap_locked_admin: 'Colours are locked for other users to the default theme ({name}). You can still edit themes as an administrator.',
+  ap_check: 'Contrast check',
+  ap_check_d: 'WCAG ratio of text on its background: 4.5 or more passes AA, 7 or more AAA.',
+  ap_ck_text: 'Text on panels',
+  ap_ck_text2: 'Secondary text',
+  ap_ck_text3: 'Faint text',
+  ap_ck_accent: 'Text on accent',
+  ap_ck_term: 'Terminal text',
+  ap_ck_low: 'low',
+  p_appearance_lock: 'Lock colours to the default theme',
+  p_appearance_lock_d: 'Everyone uses the default theme; choosing, editing and importing themes and custom CSS are off. Accessibility options, fonts and size stay with each user. Administrators are not locked.',
 });
 
 Object.assign(LANGS.hr, {
@@ -248,6 +271,27 @@ Object.assign(LANGS.hr, {
   p_appearance_default_theme_ph: 'graphite',
   p_appearance_custom_css: 'Dopusti vlastiti CSS',
   p_appearance_custom_css_d: 'Korisnici mogu dodati CSS vlastitom sučelju (Postavke → Izgled). Nikad ne dolazi do drugih korisnika.',
+  // v14.11.8: zajedničke teme, zaključan izgled, uređivač
+  ap_shared: 'Od vaše organizacije',
+  ap_share: 'Podijeli sa svima',
+  ap_share_d: 'Objavi ovu temu svim korisnicima ovog WRM-a (popis je u Admin → Pravila).',
+  ap_shared_done: '„{name}” je sada ponuđena svima',
+  ap_unshare: 'Prestani dijeliti',
+  ap_unshare_q: 'Prestati nuditi „{name}” svima? Korisnici koji su je odabrali vraćaju se na zadanu temu.',
+  ap_update: 'Spremi promjene u ovu temu',
+  ap_updated: 'Tema je spremljena',
+  ap_locked: 'Administrator je postavio jednu temu boja za sve. Pristupačnost, fontovi i veličina ispod i dalje su vaši.',
+  ap_locked_admin: 'Boje su ostalim korisnicima zaključane na zadanu temu ({name}). Kao administrator i dalje možete uređivati teme.',
+  ap_check: 'Provjera kontrasta',
+  ap_check_d: 'WCAG omjer teksta i pozadine: 4,5 ili više prolazi AA, 7 ili više AAA.',
+  ap_ck_text: 'Tekst na pločama',
+  ap_ck_text2: 'Sporedni tekst',
+  ap_ck_text3: 'Blijedi tekst',
+  ap_ck_accent: 'Tekst na naglasku',
+  ap_ck_term: 'Tekst terminala',
+  ap_ck_low: 'slabo',
+  p_appearance_lock: 'Zaključaj boje na zadanu temu',
+  p_appearance_lock_d: 'Svi koriste zadanu temu; odabir, uređivanje i uvoz tema te vlastiti CSS su isključeni. Opcije pristupačnosti, fontovi i veličina ostaju svakom korisniku. Administratori nisu zaključani.',
 });
 
 (function () {
@@ -367,6 +411,16 @@ Object.assign(LANGS.hr, {
   }
   function lang() { return typeof currentLang !== 'undefined' ? currentLang : 'en'; }
   function policy() { return (typeof currentUser !== 'undefined' && currentUser && currentUser.appearance) || {default_theme: 'graphite', custom_css: true}; }
+  function isAdmin() { return typeof currentUser !== 'undefined' && !!(currentUser && currentUser.is_admin); }
+  // locked(): the administrator set one colour theme for everyone (administrators stay free).
+  function locked() { return !!policy().lock && !isAdmin(); }
+  function sharedList() { return Array.isArray(policy().shared) ? policy().shared : []; }
+  function cleanTheme(x) {
+    const tokens = {}, term = {};
+    Object.entries(x.tokens || {}).forEach(([k, v]) => { const n = String(k).replace(/^--/, ''); if (/^[a-z0-9-]{1,40}$/.test(n) && safeValue(v)) tokens[n] = safeValue(v); });
+    Object.entries(x.term || {}).forEach(([k, v]) => { if (/^[a-zA-Z]{1,30}$/.test(k) && safeValue(v)) term[k] = safeValue(v); });
+    return {tokens, term};
+  }
 
   // ── colour helpers ────────────────────────────────
   function hexToRgb(h) {
@@ -390,6 +444,7 @@ Object.assign(LANGS.hr, {
   function allThemes() {
     return BUILTIN.map(x => Object.assign({source: 'builtin'}, x))
       .concat(addonThemes.map(x => Object.assign({source: 'addon'}, x)))
+      .concat(sharedList().filter(x => x && /^org-/.test(x.id)).map(x => Object.assign({source: 'org', id: x.id, name: x.name, mode: x.mode === 'light' ? 'light' : 'dark'}, cleanTheme(x))))
       .concat((prefs.mine || []).map(x => Object.assign({source: 'mine'}, x)));
   }
   function themeById(id) { return allThemes().find(x => x.id === id); }
@@ -400,6 +455,7 @@ Object.assign(LANGS.hr, {
   }
   function osLight() { return !!(mq && mq.matches); }
   function activeId() {
+    if (locked()) return policy().default_theme || 'graphite';
     if (prefs.follow_os) return osLight() ? prefs.light_theme : prefs.dark_theme;
     return prefs.theme || policy().default_theme || 'graphite';
   }
@@ -410,8 +466,11 @@ Object.assign(LANGS.hr, {
   function tokensFor(th) {
     const light = th.mode === 'light';
     const base = th.base ? (themeById(th.base) || BUILTIN[0]) : null;
-    const tk = Object.assign({}, light ? LIGHT_TINTS : DARK_TINTS, base ? base.tokens : {}, th.tokens || {});
-    const ov = prefs.overrides || {};
+    // A theme that lists only some colours (shared, imported, addon) takes the rest from
+    // Graphite or Daylight, so every token has a value.
+    const fallback = base || BUILTIN.find(x => x.id === (light ? 'daylight' : 'graphite'));
+    const tk = Object.assign({}, light ? LIGHT_TINTS : DARK_TINTS, fallback.tokens, th.tokens || {});
+    const ov = locked() ? {} : (prefs.overrides || {});
     Object.keys(ov).forEach(k => { if (!k.startsWith('term-') && ov[k]) tk[k] = ov[k]; });
     if (prefs.cvd && prefs.cvd !== 'none') {
       const set = prefs.cvd === 'achroma' ? (light ? CVD.achromaLight : CVD.achromaDark)
@@ -494,7 +553,7 @@ Object.assign(LANGS.hr, {
       document.head.appendChild(l);
     }
     let st = $('ap-custom-css');
-    const css = policy().custom_css ? String(prefs.custom_css || '') : '';
+    const css = policy().custom_css && !locked() ? String(prefs.custom_css || '') : '';
     if (css) {
       if (!st) { st = document.createElement('style'); st.id = 'ap-custom-css'; document.head.appendChild(st); }
       st.textContent = css;
@@ -650,15 +709,25 @@ Object.assign(LANGS.hr, {
     const th = activeTheme();
     const {vars, term} = tokensFor(th);
     const val = k => k.startsWith('term-') ? term[k.slice(5)] : vars['--' + k];
-    const groups = [['ap_builtin', allThemes().filter(x => x.source === 'builtin')], ['ap_from_addons', allThemes().filter(x => x.source === 'addon')], ['ap_mine', allThemes().filter(x => x.source === 'mine')]];
+    const groups = [['ap_builtin', allThemes().filter(x => x.source === 'builtin')], ['ap_shared', allThemes().filter(x => x.source === 'org')], ['ap_from_addons', allThemes().filter(x => x.source === 'addon')], ['ap_mine', allThemes().filter(x => x.source === 'mine')]];
     const themeOpts = mode => allThemes().filter(x => x.mode === mode).map(x => [x.id, themeName(x)]);
-    const isAdmin = typeof currentUser !== 'undefined' && currentUser && currentUser.is_admin;
+    const admin = isAdmin(), lk = locked();
+    const own = Object.keys(prefs.overrides || {}).length > 0;
+    const ck = (label, fg, bg) => {
+      const r = Math.floor(contrast(fg, bg) * 10) / 10;
+      const grade = r >= 7 ? 'AAA' : r >= 4.5 ? 'AA' : t('ap_ck_low');
+      return `<div class="ap-ck"><span>${esc(label)}</span><b class="pill ${r >= 4.5 ? 'ok' : r >= 3 ? 'warn' : 'bad'}">${r.toFixed(1)} · ${esc(grade)}</b></div>`;
+    };
+    const checks = [ck(t('ap_ck_text'), vars['--text'], vars['--bg2']), ck(t('ap_ck_text2'), vars['--text2'], vars['--bg2']), ck(t('ap_ck_text3'), vars['--text3'], vars['--bg2']),
+      ck(t('ap_ck_accent'), vars['--on-accent'], vars['--accent']), ck(t('ap_ck_term'), term.foreground, term.background)].join('');
     const fontOpts = (list, v) => option(list.concat(v && !list.some(o => o[0] === v) ? [[v, v]] : []).concat([['__custom', t('ap_font_custom')]]), v);
     pane.innerHTML = `
       <div class="ap-wrap">
       <div class="ap-main">
         <div class="adm-h">${esc(t('ap_themes'))}</div>
-        ${row(t('ap_follow_os'), t('ap_follow_os_d'), sw('ap-follow', prefs.follow_os))}
+        ${lk ? `<div class="hint-box" id="ap-locked">🔒 ${esc(t('ap_locked'))}</div><div class="ap-grid">${card(th, th.id)}</div>` : ''}
+        ${!lk && admin && policy().lock ? `<div class="hint-box" id="ap-locked">🔒 ${esc(tf('ap_locked_admin', {name: themeName(themeById(pol.default_theme) || BUILTIN[0])}))}</div>` : ''}
+        ${lk ? '' : `${row(t('ap_follow_os'), t('ap_follow_os_d'), sw('ap-follow', prefs.follow_os))}
         ${prefs.follow_os ? row(t('ap_dark_theme'), '', `<select class="setting-select" id="ap-dark">${option(themeOpts('dark'), prefs.dark_theme)}</select>`) +
           row(t('ap_light_theme'), '', `<select class="setting-select" id="ap-light">${option(themeOpts('light'), prefs.light_theme)}</select>`) : ''}
         ${groups.filter(g => g[1].length).map(g => `<div class="ap-gh">${esc(t(g[0]))}</div><div class="ap-grid">${g[1].map(x => card(x, cur)).join('')}</div>`).join('')}
@@ -666,11 +735,14 @@ Object.assign(LANGS.hr, {
           <button class="btn-sec btn-sm" id="ap-save-as">💾 ${esc(t('ap_save_as'))}</button>
           <button class="btn-sec btn-sm" id="ap-export">⬇ ${esc(t('ap_export'))}</button>
           <button class="btn-sec btn-sm" id="ap-import">⬆ ${esc(t('ap_import'))}</button>
+          ${th.source === 'mine' && own ? `<button class="btn-sm" id="ap-update">💾 ${esc(t('ap_update'))}</button>` : ''}
+          ${admin && th.source === 'mine' ? `<button class="btn-sec btn-sm" id="ap-share" title="${esc(t('ap_share_d'))}">📢 ${esc(t('ap_share'))}</button>` : ''}
+          ${admin && th.source === 'org' ? `<button class="btn-sec btn-sm" id="ap-unshare">🚫 ${esc(t('ap_unshare'))}</button>` : ''}
           ${th.source === 'mine' ? `<button class="btn-sec btn-sm" id="ap-del">🗑 ${esc(t('ap_delete_theme'))}</button>` : ''}
-          ${isAdmin && th.id !== pol.default_theme && th.source !== 'mine' && !th.personal ? `<button class="btn-sec btn-sm" id="ap-admin-default" title="${esc(t('ap_admin_default_d'))}">🛡 ${esc(t('ap_admin_default'))}</button>` : ''}
+          ${admin && th.id !== pol.default_theme && th.source !== 'mine' && !th.personal ? `<button class="btn-sec btn-sm" id="ap-admin-default" title="${esc(t('ap_admin_default_d'))}">🛡 ${esc(t('ap_admin_default'))}</button>` : ''}
           <button class="btn-sec btn-sm" id="ap-reset">↺ ${esc(t('ap_reset_all'))}</button>
           <input type="file" id="ap-import-file" accept=".json,application/json" style="display:none">
-        </div>
+        </div>`}
 
         <div class="adm-h">${esc(t('ap_a11y'))}</div>
         ${row(t('ap_cvd'), t('ap_cvd_d'), `<select class="setting-select" id="ap-cvd">${option([['none', t('ap_cvd_none')], ['deutan', t('ap_cvd_deutan')], ['protan', t('ap_cvd_protan')], ['tritan', t('ap_cvd_tritan')], ['achroma', t('ap_cvd_achroma')]], prefs.cvd)}</select>`)}
@@ -693,14 +765,14 @@ Object.assign(LANGS.hr, {
         ${row(t('ap_letter'), '', `<select class="setting-select" id="ap-letter">${option([[0, t('ap_contrast_normal')], [0.03, '+3 %'], [0.06, '+6 %'], [0.12, '+12 %']], prefs.letter)}</select>`)}
         ${row(t('ap_weight'), '', sw('ap-weight', prefs.weight))}
 
-        <div class="adm-h">${esc(t('ap_customize'))}</div>
+        ${lk ? '' : `<div class="adm-h">${esc(t('ap_customize'))}</div>
         <div class="setting-desc" style="margin-bottom:8px;">${esc(t('ap_customize_d'))}</div>
         ${GROUPS.map(g => `<div class="ap-gh">${esc(t(g[0]))}</div><div class="ap-toks">${g[1].map(k => tokenRow(k, val(k))).join('')}</div>`).join('')}
 
         <div class="adm-h">${esc(t('ap_custom_css'))}</div>
         ${pol.custom_css ? `<div class="setting-desc" style="margin-bottom:6px;">${esc(t('ap_custom_css_d'))}</div>
           <textarea id="ap-css" spellcheck="false" rows="6" style="width:100%;font-family:var(--font-mono);font-size:12px;" placeholder=".conn-name { font-weight: 600; }">${esc(prefs.custom_css || '')}</textarea>`
-          : `<div class="setting-desc">${esc(t('ap_custom_css_off'))}</div>`}
+          : `<div class="setting-desc">${esc(t('ap_custom_css_off'))}</div>`}`}
       </div>
       <aside class="ap-preview" aria-label="${esc(t('ap_preview'))}">
         <div class="ap-gh">${esc(t('ap_preview'))}</div>
@@ -719,6 +791,8 @@ Object.assign(LANGS.hr, {
             <div><span style="color:${esc(term.green)}">●</span> active (running) <span style="color:${esc(term.yellow)}">warn</span> <span style="color:${esc(term.red)}">error</span></div>
             <div><span style="color:${esc(term.blue)}">blue</span> <span style="color:${esc(term.magenta)}">magenta</span> <span style="color:${esc(term.cyan)}">cyan</span> <span style="color:${esc(term.brightBlack)}">dim</span></div></div>
         </div>
+        <div class="ap-gh" style="margin-top:10px;">${esc(t('ap_check'))}</div>
+        <div class="ap-pv" id="ap-check" title="${esc(t('ap_check_d'))}">${checks}<div class="setting-desc" style="margin-top:6px;">${esc(t('ap_check_d'))}</div></div>
       </aside>
       </div>`;
     wire(pane);
@@ -788,6 +862,42 @@ Object.assign(LANGS.hr, {
       const mine = (prefs.mine || []).concat([{id, name, mode: th.mode, tokens, term: termOut}]).slice(-30);
       save({mine, theme: id, follow_os: false, overrides: {}});
       showToast(t('ap_saved'), 'success');
+      render();
+    });
+    const putShared = async list => {
+      const r = await fetch('/api/admin/settings', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({appearance_shared_themes: JSON.stringify(list)})});
+      if (!r.ok) { showToast(await apiError(r), 'error'); return false; }
+      if (currentUser.appearance) currentUser.appearance.shared = list;
+      return true;
+    };
+    on('ap-update', 'click', () => {
+      const th = activeTheme();
+      const {vars, term} = tokensFor(Object.assign({}, th));
+      const tokens = Object.assign({}, th.tokens), termOut = Object.assign({}, th.term);
+      Object.keys(prefs.overrides || {}).forEach(k => {
+        if (k.startsWith('term-')) { if (term[k.slice(5)]) termOut[k.slice(5)] = term[k.slice(5)]; } else if (vars['--' + k]) tokens[k] = vars['--' + k];
+      });
+      save({mine: (prefs.mine || []).map(x => x.id === th.id ? Object.assign({}, x, {tokens, term: termOut}) : x), overrides: {}});
+      showToast(t('ap_updated'), 'success');
+      render();
+    });
+    on('ap-share', 'click', async () => {
+      const th = activeTheme();
+      const {tokens, term} = cleanTheme(th);
+      Object.keys(prefs.overrides || {}).forEach(k => { const v = safeValue(prefs.overrides[k]); if (!v) return; if (k.startsWith('term-')) term[k.slice(5)] = v; else tokens[k] = v; });
+      const base = String(themeName(th)).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 20) || 'theme';
+      const id = 'org-' + base + '-' + Date.now().toString(36).slice(-4);
+      const list = sharedList().concat([{id, name: themeName(th).slice(0, 60), mode: th.mode, tokens, term}]);
+      if (!(await putShared(list))) return;
+      save({theme: id, overrides: {}});
+      showToast(tf('ap_shared_done', {name: themeName(th)}), 'success');
+      render();
+    });
+    on('ap-unshare', 'click', async () => {
+      const th = activeTheme();
+      if (!(await uiConfirm(tf('ap_unshare_q', {name: themeName(th)}), {okText: t('ap_unshare')}))) return;
+      if (!(await putShared(sharedList().filter(x => x.id !== th.id)))) return;
+      save({theme: ''});
       render();
     });
     on('ap-del', 'click', async () => {

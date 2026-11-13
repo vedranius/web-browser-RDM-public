@@ -13,292 +13,34 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.7.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.12.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
 
-## What's new in v14.7.0
+## What's new in v14.12.0
 
-**Addons can show your chains.** A new addon capability, `chains.read`, lets an addon window read the [chains](#chains-live-service-chain-monitoring) of whoever opens it: the checked values, the active scenario and the timeline of changes, and ask for a check now. WRM keeps checking in the background as before, so an addon can show the state of a whole system the way your team needs it (a table per environment, a report, a sync to a wiki) without SSH, commands or secrets of its own. The permission sheet names the new right, and `wrm -addon-dev` can feed sample chains from a JSON file. See [Addons](#addons).
+**Pick the branch or tag for a Git upgrade from a list, and talk to serial and USB devices from the browser.** *Upgrade…* in the Git workspace now lists the branches and tags (newest first) of the service's project, with *Enter a custom ref…* for anything else. *Tools → Serial / USB devices…* opens a terminal to an Arduino, ESP32, STM32, Raspberry Pi Pico or USB-serial adapter plugged into your own computer, recognises the board by its USB ID, suggests port settings, keeps profiles per device and copies prompts for the AI assistant. It uses Web Serial (Chromium browsers, HTTPS or localhost); serial data stays in the browser.
 
-## What's new in v14.6.3
+## What's new in v14.11.9
 
-**Fixes for proxies, the screen lock and log discovery.** A dynamic SSH tunnel (`-D`) of your connection now appears in every proxy list (connection, folder, *Proxies*) and becomes a proxy when picked, also with an automatic port ([#188](https://github.com/vedranius/web-browser-RDM-public/issues/188)). The lock screen keeps the keyboard on its password field even when a terminal reconnects behind it ([#137](https://github.com/vedranius/web-browser-RDM-public/issues/137)). Log discovery skips Python virtual environments (also renamed copies such as `venv.bak.2026-07-16`) and folders that do not answer instead of stopping, and an open log viewer or search finds the logs again by itself when the discovery expired instead of failing with *Find logs first*.
+**Remote desktops no longer hang on "Connecting…", and the pointer lands where the mouse is.** When the WebSocket to WRM failed, timed out or closed before the first picture, the window used to keep showing *Connecting…*; now it shows what went wrong with **↻ Reconnect**. A guacd that accepts the connection but never answers (Docker Desktop paused) is reported after 8 seconds, and a session whose target never shows a picture ends after 45 seconds with the address guacd tried. guacd's errors now name the target address, and RDP errors such as *Server refused connection* come with a hint about the address, firewall and Security mode. With a UI size other than 100 % (*Settings → Appearance → Size*) the remote pointer used to land centimetres away from the mouse; it is now exact and the picture stays sharp. **Copy and paste works both ways like in an RDP client**: copy on your computer and press Ctrl+V in the remote desktop, or copy there and paste locally. See [Troubleshooting](#troubleshooting).
 
-## What's new in v14.6.2
+## What's new in v14.11.8
 
-**Forgot password and account activation by e-mail.** The sign-in page offers *Forgot password?*: WRM mails a one-time link (valid one hour) to the account's confirmed address, and an account with 2FA also needs a code. Administrators can create a user with an e-mail address and *Send an invitation*, so the user chooses the password through a link instead of being given one. With open registration, a new account starts once its e-mail address is confirmed. At the Enterprise level administrators cannot use *Forgot password*. See [Forgot password, invitations and registration](#forgot-password-invitations-and-registration).
+**One look for the whole team, and better tools for making it.** An administrator can **📢 share a saved theme with everyone** from *Settings → Appearance*; it appears for all users under *From your organisation* and can be the default. **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance) gives everyone the same colours, while accessibility options, fonts and size stay with each user. The editor can now **💾 save changes into one of your themes** instead of only saving a copy, and a **contrast check** next to the preview shows the WCAG ratio of text, accent and terminal colours while you edit. See [Appearance, themes and accessibility](#appearance-themes-and-accessibility).
 
-## What's new in v14.6.1
+## What's new in v14.11.7
 
-**WRM sends mail.** *Admin → E-mail* sets up one account with presets for Gmail, Outlook.com and Microsoft 365 (or any SMTP server) and a test button. Users confirm their e-mail address with a link and get a mail when their password is changed or reset, or two-factor authentication is turned on or off. See [E-mail](#e-mail).
+**🔒 Lock now is back in the top bar.** Since v14.11.0 it was only in the account menu (click your name); now it is a one-click lock icon next to *New Window* again, on every screen width, and it stays in the account menu too. See [Screen lock](#screen-lock).
 
-## What's new in v14.6.0
+## What's new in v14.11.6
 
-**A password reset on the server is no longer a quiet way in.** `wrm -reset-password` now tells every administrator, and how strict it is follows the security level: *Alert* (Home) resets at once, *Only while WRM is stopped* (Business) refuses while WRM runs, and *Confirmation* (Enterprise) files a request that another administrator approves in Admin → Security, that the user confirms with their own 2FA code, or that can be completed after one hour if nobody rejected it. An AI working through WRM can never run it. See [Password reset on the server](#password-reset-on-the-server).
+**A clipboard and snippets made for daily terminal work.** Clipboard entries show where they were copied from and when, can be **📌 pinned** (stay on top, not pushed out of the 20-entry list), filtered, removed one by one and **⚡ saved as a snippet** on the server. **Paste** types into the focused or last used terminal; several lines use bracketed paste or ask first, and dangerous commands always ask. Snippets get a **★ Recently used** group. See [Clipboard panel](#clipboard-panel) and [Snippets & run on connect](#snippets--run-on-connect).
 
-## What's new in v14.5.1
-
-**Resizable windows and storage columns.** The big windows opened from the menus can be shown over the whole screen (⤢ above their top-right corner) or resized by their bottom-right corner, and keep their size. The storage browser sorts by clicking the column headers, widens columns by dragging their borders (double-click fits the longest name), and its side panels can be resized. See [Storages](#storages-s3).
-
-## What's new in v14.5.0
-
-**Chains recognise your servers.** The builder lists servers by folder with search and adds several at once, without quick connections and without adding a server twice. Right after adding them, WRM looks at the servers read-only and turns their services, containers, named ports (PostgreSQL (5432), HTTPS (443) …) and network mounts into one-click check suggestions. Mounts between servers suggest the links. A URL, `host:port` or host name becomes an outside endpoint with the fitting checks, and **Test now** tries one check without saving. See [Chains](#chains-live-service-chain-monitoring).
-
-**No more freezing while an AI works through MCP.** The MCP live view used one connection per session, and over plain HTTP a browser has only six per server for all its tabs, so WRM stopped responding once an AI app had opened six sessions. All AI and MCP views of a tab now share one stream.
-
-## What's new in v14.4.0
-
-**See every S3 request, and what it costs.** The storage window has a live **📡 S3 activity** panel beside the file browser, shown by default and hidden with one button. It lists every request WRM sends to the bucket as it happens (operation, key, answer, time, and whether you, the background check, a chain or an AI connection caused it) and counts each operation for today and in total. The storage form has a **Provider** picker (Hetzner, DigitalOcean Spaces, Amazon S3, Backblaze B2, Cloudflare R2, MinIO, other). It says whether that provider bills the requests WRM uses, and how much, quoting the provider's price page. The activity panel prices the counted requests the same way.
-
-**The AI works inside the Chains builder.** The 🤖 AI button on a chain or draft takes one instruction ("add a TLS check for example.com", "why is the backup path red?"). The AI reads the chain and its last results and writes a draft. A draft that changes an existing chain says so, and the chain changes only when you press **Apply changes**; it keeps its id and history. **Test once** runs a draft's checks a single time and shows the results on the diagram, without saving anything. WRM's AI panel gets `chain_get` and `chain_test`, and `chain_draft` can now change a chain. The same four tools are available to MCP clients (Claude Desktop, Claude Code and others) behind the new opt-in **`chains`** scope.
-
-## What's new in v14.3.2
-
-**A storage can be edited and removed again.** Each storage in the list has a ✎ (edit) and a 🗑 (remove) button, and the open storage has *Edit* in the toolbar; the form also has *Remove storage*. Renaming or changing permissions no longer contacts the bucket, so it also works while the endpoint is down. The background bucket check runs every 15 minutes instead of 5 (`storage_check_minutes`, `0` turns it off), a chain's storage check asks the bucket at most every 5 minutes instead of on every 30-second poll (`chain_storage_check_s`), and [docs/STORAGES.md](docs/STORAGES.md) lists every S3 request WRM sends.
-
-## What's new in v14.3.1
-
-**Log reads and WRM responsiveness with Claude/MCP.** A log glob such as `follower.log*` is no longer mistaken for a PuTTY private key; explicit `.ppk` files are still refused. The database pool now has headroom for parallel MCP calls and several browser tabs, and connection/folder lists load their labels in one query instead of one per row, so WRM no longer becomes unreachable until a restart.
-
-## What's new in v14.3.0
-
-**Storage folders are shown completely.** The browser follows every S3 continuation token instead of stopping at the first page: it reports the running count while loading, then the total object and folder count and size with a clear "all objects in this folder are shown" line (and *Load more* above a 100-page safety limit). Search filters the whole folder, sort goes by name/size/date, and select-all, bulk delete and copy-path are available. **Test connection** now checks the values in the add form before saving.
-
-**The S3 share links are gone for security.** The Share button, its API and the public `/s3/` page were removed; links created by an older version stop working, and storage access always needs a signed-in account with the storage's permissions.
-
-**The Chains wizard works with four or more servers.** Check ids are kept inside the 40-character limit and a large "all checks OK" state is nested instead of exceeding the rule limit.
-
-## What's new in v14.2.0
-
-**Chains are now built, not typed.** A new guided builder picks servers from your saved connections, adds checks with a form, connects nodes (or drag from a node's connector dot, like a workflow canvas) and edits states (scenarios) without JSON. Templates and the advanced JSON editor are still there, but nothing has to start as JSON.
-
-**The AI wizard looks at the servers first.** Pick servers, optionally describe the system, and WRM reads the OS, running services, Docker containers, listening ports and network/object-storage mounts (rclone, s3fs, NFS, CIFS, SSHFS) with fixed read-only checks; the assistant then drafts a chain from real service names and ports instead of invented ones. Without an AI provider the same facts build a deterministic starter.
-
-**No storage required.** A chain of servers is complete on its own; discovered mounts become `mount` checks and, when the source names a host, an outside endpoint with a DNS check. WRM never attaches to a discovered storage, never asks for its credentials and never creates a storage entry for it.
-
-## What's new in v14.1.0
-
-**Chains: a whole system watched as one.** WRM now links the servers, storages and outside endpoints that form one working system (for example ingest → transcoding → content → CDN with a primary and a backup path), checks them in the background with read-only checks over the SSH connections it already has, and shows the chain as a live diagram whose links animate with traffic and turn red when something fails. Scenarios decide the active path (primary, backup, degraded), and every change is kept in a timeline and notified. **Describe the system to WRM's AI assistant**: `chain_status` and `chain_draft` let it write a draft with catalog checks only; you review that draft on the same diagram and approve it before any monitoring starts. Nothing is installed on a server, and a chain can never run a command. See [Chains](#chains-live-service-chain-monitoring).
-
-## What's new in v14.0.0
-
-**One combined release: Storages, its release review, and the security work of v13.14.11.** Everything below arrives together when you upgrade from v13.14.10 or older; from v13.14.11 the new part is Storages. Next on the [roadmap](ROADMAP.md) is **Chains**, live monitoring of a whole service chain.
-
-**Storages: S3-compatible object storage as a section of its own.** Add a Hetzner, DigitalOcean Spaces, Amazon S3, MinIO or Backblaze B2 bucket (confined to a prefix), browse it, preview images, play video with a sibling subtitle track, download, and edit small text objects (JSON, configuration, subtitles) with BOM/CRLF kept and a conflict check. Uploads, writes and deletes are allowed per storage; a delete needs an explicit confirmation. A background check notifies `storage.down` / `storage.up`, and AI connections get `storage_list/read/write/delete` behind the opt-in scopes `storage_read`, `storage_write` and `storage_delete` (changes only in the automatic mode). See [Storages (S3)](#storages-s3) and [docs/STORAGES.md](docs/STORAGES.md).
-
-## What's new in v13.14.11
-
-**AI connections survive WRM restarts.** Claude's bridge recovers its in-memory MCP session with the saved grant, and the server list stays selected. Grant creation and OAuth consent also have **Select all** controls.
-
-**Share links and security checks are stronger.** New share links keep bearer tokens out of request URLs; saved credentials stay bound to their connection destination; AI approvals are rechecked before execution; outbound requests and addon messages are constrained.
-
-**Pending AI approvals are harder to miss.** WRM can show desktop notifications that focus the related approval.
-
-## What's new in v13.14.10
-
-**Self-update works on Windows when an antivirus scanner holds the new file.** WRM waits for the lock for about 15 seconds and copies the file into place if it stays locked, instead of stopping with *being used by another process*.
-
-## What's new in v13.14.9
-
-**The original deploy tool's Git section is explained, and locks name the right computer.** The original tool shows its *Git* section (pull, commit and push of deploy-config) only when deploy-config is a Git clone; a deploy-config imported as a ZIP has no Git history. Medium step 3 now says so and points to `DEPLOY_CONFIG_REPO` in *Original runtime settings*, whose fields show in grey what an empty field means. In the managed Docker runtime `DEPLOY_HOSTNAME` now defaults to the WRM computer's name instead of the container ID, so locks and deploy history name a real computer.
-
-## What's new in v13.14.1
-
-**Addon settings survive restarts, and a frozen WRM leaves a record.** Since v13.9.0 every start of WRM set the addon instances aside (for example a Grafana panel's configurations), so addons came back empty after a restart or an update; v13.14.1 keeps them and restores the most recent ones with their settings and window positions. WRM also writes what it was doing to `remote_manager.db.diag/` next to the database whenever it is stopped or restarted and when its own watchdog sees that it no longer answers (see [Troubleshooting](#troubleshooting)).
-
-## What's new in v13.14.0
-
-**The Git workspace checks only what Git tracks, folders sort themselves, and every file edit is on record.** The Git overview names servers by their hostname or connection name instead of an IP. A check compares only the files the catalog tracks: logs and other files outside the check are listed as *outside the check* and never compared, and the .gitignore helper has a **Logs** group. Every Git filter can narrow to a **folder on the servers** (a tree with counts, like the log viewer's folder filter), and the connection-folder filter includes subfolders. Right-click a folder to **sort its subfolders A–Z** or **keep them sorted** ([#134](https://github.com/vedranius/web-browser-RDM-public/issues/134)). *Admin → File edits* keeps **every file edit with its diff**, from the editor and from the AI, filterable by user, server, session and AI ([#129](https://github.com/vedranius/web-browser-RDM-public/issues/129)). SSH keys can log in with an **OpenSSH user certificate**, also the short-lived ones from **opkssh** ([#119](https://github.com/vedranius/web-browser-RDM-public/issues/119)). See [Connections & folders](#connections--folders), [SSH user certificates and opkssh](#ssh-user-certificates-and-opkssh), [File edit history](#file-edit-history) and [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks).
-
-## What's new in v13.13.1
-
-**Adding the WRM PRO marketplace in the Claude app.** Enter the repository in lowercase, `vedranius/web-browser-rdm-public`: the Claude app names the marketplace after the repository, and GitHub accepts the name in any case. If the app still says only *Failed to add marketplace*, [Troubleshooting](#troubleshooting) says what to check and where its log keeps the reason; *Upload plugin* with `claude-plugin-wrm-pro.zip` from the release installs the same plugin.
-
-## What's new in v13.13.0
-
-**The WRM PRO plugin installs from the Claude app with one pick, and one script connects every AI app.** The plugin needs no settings any more: it carries the WRM bridge, and the first `/wrm-pro:wrm` asks for the WRM address and opens WRM in the browser, where you sign in and approve; the token goes straight to your computer, never into the chat. `/wrm-pro:wrm` then lists your servers and everything WRM can do. Before, the plugin depended on settings the Claude app cannot ask for, and its HTTP connector would have connected from the cloud, which cannot reach a WRM on your own network. *Settings → AI connections → 🧰 All AI apps at once* downloads one script (Windows or Linux/macOS) that signs in once and adds WRM to Claude Code, the Claude app, Codex, Gemini CLI, VS Code, Cursor, Windsurf and OpenCode. Releases carry `claude-plugin-wrm-pro.zip` for *Customize → Plugins → Upload plugin*. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
-
-## What's new in v13.12.0
-
-**Tools for writing addons, also with an AI.** `wrm -addon-lint ./my-addon` checks an addon before you install it: the manifest against its schema, every file, and the code for what the sandbox would refuse (remote scripts, inline handlers, `eval`, `fetch`, `localStorage`, tokens in the ZIP, sites missing from `http.origins`, a panel that never says *ready*). Every finding has a code, the file, the line and a hint, so an AI can fix its own addon; `-addon-lint-json` gives the same as JSON, and a failed install in *Settings → Addons* opens the report by itself. `wrm -addon-new grafana-panel ./my-addon` starts from one of four templates (blank, fetch-and-render, grafana-panel, wasm-hook) that come with `wrm-bridge.js`, a small helper for the bridge. `wrm -addon-dev ./my-addon` opens the panel on your computer with the real sandbox and CSP, a stand-in for WRM (settings, web requests, secrets from environment variables) and a reload whenever a file changes. WRM also serves the manifest schema and an `llms.txt` guide for AI assistants. See [Addons](#addons) and the [addon developer guide](docs/ADDONS.md#tools-for-writing-addons).
-
-## What's new in v13.11.0
-
-**Addons can reach web sites, through WRM and only where an administrator said yes.** An addon now lists the sites it needs in `addon.json` (for example `https://grafana.example.com`, with the methods and paths it uses). WRM makes the request on the panel's behalf, so the panel itself still has no network: anything not listed is refused, every name is resolved by WRM and private or local addresses are blocked unless the administrator ticked *private network* for that site, and redirects are checked again. API keys and passwords for those sites are **secrets** that you type into WRM (🔑 *Secrets* on the instance): per instance, with your own value in a shared instance if you need one. They are stored encrypted, added to the request by WRM and never shown to the panel. A personal addon's sites wait for an administrator's approval. Recent requests are listed in the window's diagnostics. See [Addons](#addons) and the [addon developer guide](docs/ADDONS.md).
-
-## What's new in v13.10.0
-
-**Saved logins on demand, hostname names and a calmer top bar.** *Edit connection* has **👁 Show saved login**: after you confirm with your WRM password (or your domain password), WRM shows what the connection logs in with. Right-click a connection for **Copy username**, **Copy password** (same confirmation) and **Copy IP address**. A new connection can take its **name from the server's hostname**. Tabs show just the connection's name, the version next to the logo stays visible, the user name no longer jumps every 5 seconds, and the Git workspace server filter has no blank entries any more. See [Connections & folders](#connections--folders).
-
-## What's new in v13.9.0
-
-**Addon platform v2: your own addons, several windows each, and settings that stay.** Every user can now install **personal addons** that only they see (an administrator decides who may with `addon_personal` and can turn any of them off). An addon with a panel opens as **instances**, each with its own settings and window, for example two dashboards side by side; administrators can set up shared instances for everybody. Settings are kept **on the WRM server** with export and import, and windows come back where you left them after a reload or on another device. Addon **themes** appear in *Settings → Appearance* for whoever picks them. Before an addon is enabled WRM shows a **permission sheet** generated from `addon.json`; an update that asks for more waits for approval again. apiVersion 2 panels run without any network of their own, every file is pinned by SHA-256, and a watchdog offers *Reload* when a panel hangs. See [Addons](#addons) and the [addon developer guide](docs/ADDONS.md).
-
-## What's new in v13.8.0
-
-**AI sessions, your own AI settings and approvals that do what they say.** The new **🧠 AI sessions** panel lists every AI session you had, from the assistant, the log and file assistants, OpenCode agents and AI apps over MCP, with search (also in the conversation), filters, a transcript viewer, **Continue** (also an MCP session, whose steps become the earlier context), **Save** (kept beyond the transcript retention) and export to Markdown or JSON. Everybody sees only their own sessions. *⚙ My AI settings* in the assistant keep your own default provider (your own key, e.g. your OpenAI or Anthropic account), model, mode, engine and whether you see the model's thinking. Over MCP an approval given in WRM after the AI app stopped waiting now **runs the call at once** (`ai_mcp_later_approval`), *Deny* in the AI app is final, an app's open question is closed when you decide in WRM, and deciding a request that is no longer waiting says who decided it and where. The work log keeps the whole thinking text instead of its last lines. See [AI sessions](#ai-sessions) and [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
-
-## What's new in v13.7.0
-
-**Themes, accessibility and a screen lock you can rely on.** *Settings → Appearance* offers eleven themes (dark, OLED black, Fjord, Solar, Forest, Ember, light Daylight, Paper, Solar light and two high-contrast themes), follows the system's light/dark setting if you want, and lets you change every colour, the fonts, the interface size, corners and spacing, save your own themes, export and import them, and add your own CSS. Themes from addons are picked there per user instead of being forced on everyone. For colour vision deficiency (deuteranopia, protanopia, tritanopia, achromatopsia) WRM switches status colours, diffs and optionally the terminal palette to colours you can tell apart, can add ✓ ✕ ! signs and shapes so nothing relies on colour alone, and offers more contrast, a terminal minimum contrast, reduced motion and transparency and a strong focus outline. *Settings → Security → Screen lock* sets when WRM locks (inactivity with a warning, a hidden window, the computer locking or sleeping, on every start, a keyboard shortcut) and how the lock screen looks; **Lock now** locks at once while terminals, transfers, tunnels, AI and MCP keep running. The lock is now kept by the server: a reload or a new tab stays locked, directory (LDAP) accounts can unlock, and a personal PIN can unlock instead of the password. See [Appearance, themes and accessibility](#appearance-themes-and-accessibility) and [Screen lock](#screen-lock).
-
-## What's new in v13.6.0
-
-**Log folders, a folder tree and smarter operators.** *Monitoring → Logs* can show the logs as a **folder tree** under their main folders (`/var/log`, `/home/scripts` …) and has a **Folder** filter for one folder and everything below it; *Log settings* take your own **main folders**. Operators are recognised from words that repeat in folder and service names (`nova`, `NOVA2`, `novatv` → one operator group), and every log says whether it sits in a log folder or an app folder. A log folder and a script folder with the same name (different case) no longer hide each other's logs. See [Logs: viewer, search and log settings](#logs-viewer-search-and-log-settings).
-
-## What's new in v13.5.0
-
-**A professional log viewer, a smart editor and an AI that shows its work.** *Monitoring → Logs* lists every log of a server in about a second (one read-only SSH command), sortable and filterable by operator and service, and never lists scripts such as `.py`. Logs open in tabs with level colours, smart highlighting, find, level filters and **Follow**; the **Search** tab greps all selected logs on the server for a From/To range in the EU date format and sorts the hits on a timeline. *Log settings* are now separate from Zabbix. The file manager's editor highlights syntax, finds and replaces, shows your changes before saving, warns when the file changed on the server and has an **AI assistant** that reviews and edits the open file with your approval. The log viewer has an AI log assistant (`search_logs`). The AI work log shows the assistant's thinking and each step, chats get a short title with date and time, and an ended chat can be **continued**. See [Logs: viewer, search and log settings](#logs-viewer-search-and-log-settings), [Text editor](#text-editor) and [AI assistant](#ai-assistant).
-
-v13.0.0 to v13.4.4 (log engine, addons, screen lock, OpenCode Go, Claude quick start, Claude Desktop and Claude Code setup) are described in the [changelog](CHANGELOG.md).
-
-## What's new in v12.9.1
-
-**Medium runs without the original tool.** The WRM engine is now the default for projects nobody chose an engine for, its card comes first on the Medium page, and the original deploy tool with its Docker runtime is folded away as optional. Upgraded installations that already use the original tool keep it as their default until an administrator switches **Medium: default engine** to `native`. The deploy-config editor can now pull the configuration from its Git repository, show your local changes and **Commit and push** them through the WRM Git source, after checking that the whole configuration loads. WRM-host builds can run as an unprivileged account (`medium_build_user`) with a clean environment.
-
-## What's new in v12.9.0
-
-**Medium shows what changes in each file and lets you edit deploy-config.** In the WRM engine's plan, **Details** opens the server's version of a changed file against the branch, line by line. Files that differ only in CRLF/LF are marked *line endings only* and counted separately, as in the original tool. *Edit deploy-config* edits `servers.yaml`, `environments.yaml` and the project files in WRM: a file is saved only when the whole configuration still loads, and comments, layout and line endings stay as you wrote them.
-
-## What's new in v12.8.1
-
-**Security update without a database change.** The build toolchain is now Go 1.27.3, which fixes **GO-2026-6809 / CVE-2026-111943**: `crypto/x509` now rejects known compromised intermediate certificates that an older system trust store may still contain. The gosec G702 finding in the OpenCode Docker sandbox was reviewed and accepted as a false positive: the Docker path is operator-configured and the container name is generated by WRM, both passed as separate arguments without a shell. See the [release notes](RELEASE_NOTES.md) for the provenance of both findings.
-
-## What's new in v12.8.0
-
-**Folders now behave like a proper remote manager.** Deleting a folder removes its subfolders and every connection inside in one step, without moving anything to the root first. Folders and connections can be moved from the context menu or dragged, including several selected connections at once, and the new position is saved. Shared and collaboration trees keep their nested folder structure; connection names sort case-insensitively, while folders keep their manual order.
-
-**Every reported detail is covered.** The Settings window opens at the size of the Admin window and wide tab rows have scroll arrows. Terminal windows have **Edit** and **Tunnels** buttons in the title bar. The file manager can change permissions (including recursively and with an optional sudo password), and the transfer destination can create a folder. Additional uploads can be queued while one is running. Tunnels can be filtered by port, description or host, with an active-only switch, and proxy settings are reachable from **Tools** and the Tunnels panel. Save buttons show progress and reject a second click, and **+ Connection** on a folder is pre-filled with that folder and its defaults.
-
-## What's new in v12.7.4
-
-**RDP works on Windows without preparing guacd by hand.** When guacd does not answer and its address is local (`127.0.0.1:4822`), WRM starts the official `guacamole/guacd:1.5.5` container in Docker Desktop, publishes it on loopback only, and keeps it running with Docker (`wrm-guacd`, `unless-stopped`). The first RDP/VNC/Telnet connection can start it; later starts happen with WRM. *Admin → Overview* shows the state and has **Start guacd**, `-setup-guacd` does the same from the command line, and the desktop window explains when Docker Desktop is missing or stopped. A custom guacd on another machine is never touched. Linux keeps using its system guacd or the `docker-compose.yml` service.
-
-**Every text file previews with its formatting.** Preview now detects text from the file content, so shell/Python scripts, XML/SMIL, JSON, YAML, configuration files and extensionless files open as text instead of being refused. A bundled offline PrismJS highlighter colors the formats it knows; binary files still get the clear answer to download them. The 256 KiB preview limit and escaped-text safety policy are unchanged.
-
-## What's new in v12.7.3
-
-**Medium builds where you choose.** Projects with a build step can now deploy with the **WRM native** engine. For each project, choose where the build runs: on the WRM host, on a chosen Linux build server over SSH, or not at all. The plan shows the place and the build's platform and architecture before anything runs; a destination with a different platform or architecture is refused with the reason. A build server receives only the prepared source in a temporary directory (no Git metadata and no SSH keys), and the directory is removed afterwards.
-
-**Monitoring → Logs finds every service.** Service logs are now discovered under `/home/<operator>/<operator>/<service>/log` and `/logs`, with the correct Service and Operator labels. Non-compressed service logs, including FTP `.txt` files, are listed; virtual environments, build/archive directories and old backups are skipped. Discovery and listing have larger time budgets, so large hosts no longer show incomplete results.
-
-## What's new in v12.7.2
-
-**The version is read from the code.** The Git workspace no longer trusts `VERSION.md` to say what is deployed. It compares every tracked file on the server with the repository tree at the target and at the earlier tags: all files matching one version show that version, a consistent older version is named exactly from its commit tree, and a mix or a hand-edited file shows **Mixed / modified** with the per-file details. A new checkbox next to *Check now* (off by default) also checks `VERSION.md` and warns when it disagrees. See [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks).
-
-## What's new in v12.7.1
-
-**Medium: per-environment server lists.** `environments.yaml` now accepts the original deploy tool's `servers: [name, ...]` key, so an environment can be limited to chosen servers. A project target in that environment cannot deploy to any other server; an unknown, duplicate or empty list is refused with the file and key named. Existing configs without the key keep every server. See [Medium native engine](#medium-native-engine).
-
-## What's new in v12.7.0
-
-**Medium deploys natively.** Switch a Medium project to the **WRM native** engine and WRM deploys it itself, from your WRM Git source to every server of the environment through your saved WRM connections, without Docker and without the original tool. Each server gets a lock, a backup of everything that changes, a SHA-256 check of every uploaded file, `post_deploy` and a history entry, all in the original tool's format, so both engines can take turns on the same servers and roll back each other's deployments. A **dry run** compares again under the lock and changes nothing; changes can be **left out** of a deployment; **History and rollback** shows what runs where, rolls back the last deployment and releases a lock someone left behind. Projects with a build step gained native builds in v12.7.3. See [Medium native engine](#medium-native-engine).
-
-## What's new in v12.6.26
-
-**SIEM export, security alerts and lockdown.** WRM sends every audit entry to your **SIEM**: syslog over TLS (RFC 5424), a JSON lines file, Splunk HEC, Elastic, Microsoft Sentinel or any HTTPS collector, with user, role, directory identity, source address and the audit hash chain, and catches up after an outage. The admin sees per destination whether it delivers and what is waiting. **Security alerts** tell administrators about repeated failed sign-ins, break-glass sign-ins, new administrators, revealed secrets, AI full-access approvals and the audit being turned off. **Stop user** ends everything an account has open in one click, and **lockdown** keeps everyone except break-glass administrators out, switches AI off and pauses shares, from the UI, `wrm -lockdown` or `WRM_LOCKDOWN=1`. See [SIEM export, alerts and lockdown](#siem-export-alerts-and-lockdown).
-
-## What's new in v12.6.25
-
-**Active Directory, LDAP and SCIM.** People sign in with their **Active Directory or LDAP** name and password on the normal sign-in page; WRM checks the password with the directory over LDAPS or StartTLS and never stores it. Rules turn directory groups (nested AD groups included) into WRM roles and teams, and WRM **checks every linked account regularly**: someone deleted, disabled, locked or removed from the WRM groups loses access at once. **SCIM 2.0** lets Microsoft Entra ID or Okta create, change and disable WRM accounts and groups immediately. Whichever way an account is stopped, WRM ends its sessions, terminals, tunnels, rooms, AI sessions and AI connections. See [LDAP / Active Directory and SCIM](#ldap--active-directory-and-scim).
-
-## What's new in v12.6.24
-
-**Sign in with your organisation's account.** WRM now signs people in through **Microsoft Entra ID, ADFS, Okta, Keycloak, Google Workspace or any OpenID Connect provider** (authorization code with PKCE). In *Admin panel → Directory sign-in* you add the provider, test the connection step by step, and write rules: an Entra **app role** or a **group ID** gives a WRM role and teams. Accounts are created on the first sign-in only for people a rule matches; everyone else is refused with a message that says why. People are recognised by their immutable directory ID, never by their name, so a renamed or re-used name cannot take over an account. A provider can require **MFA proven by the token**. WRM **checks regularly** with the provider that each signed-in user may still sign in: someone disabled or removed from the WRM group loses their sessions and terminals. Password sign-in can be limited to the **break-glass** administrators (the Enterprise level requires it once a directory sign-in is on). **Test sign-in** shows what the provider sends and what WRM would do, without creating anything. See [Directory sign-in (OIDC)](#directory-sign-in-oidc).
-
-## What's new in v12.6.23
-
-**Roles, teams and a second confirmation for risky actions.** Every account now has a role: *Administrator*, *Security auditor* (reads the audit log, terminal sessions, recordings, file transfers and the security posture, and changes nothing), *Operator* or *User*. Administrators create **teams** in *Admin panel → Teams*; a share can include a whole team with one role, and policies that say who may use a feature accept `operators` and `teams:<names>` besides `off / admins / all`. With **step-up** on (required from the Business level), changing policies, roles, the security level, deleting or disabling users, resetting passwords or 2FA and revealing stored secrets ask for your password (and 2FA code) again. A **break-glass** administrator account must use 2FA, can be limited to chosen networks, and every sign-in is audited and sent to the other administrators. When you delete a user, their connections, folders, credentials, keys, shares and proxies can **pass to their team lead or another account** instead of being deleted. See [Roles, teams, step-up and break-glass](#roles-teams-step-up-and-break-glass).
-
-## What's new in v12.6.22
-
-**Security levels: Home, Business, Enterprise.** Pick how strict WRM is on the first-run screen, at install (`-security-level`, `WRM_INITIAL_SECURITY_LEVEL`, forced with `WRM_SECURITY_LEVEL`) or later in **Admin panel → Security**. A level sets minimums for HTTPS, two-factor authentication, passwords, sessions, registration, host keys, secret export, guest links, AI full access, audit and session recording. Before you switch, a preview shows every change, what blocks it and whom it affects; a setting you keep below the level is a **deviation** with a written reason, on record and audited. The **security posture** page grades the installation item by item with the exact fix, and exports a report for auditors (JSON or PDF). See [Security levels and posture](#security-levels-and-posture).
-
-## What's new in v12.6.21
-
-**Signed releases.** Every release from now on carries an ed25519 signature of its `SHA256SUMS.txt`, a software bill of materials (CycloneDX) and GitHub build provenance. Once the project's public key is built in, the one-click update refuses a release whose signature is missing or wrong, so a changed file on the release page cannot be installed. `wrm -release-verify SHA256SUMS.txt` checks a download by hand. Every night, fuzz tests feed random input to the import parsers (mRemoteNG, SSH config, CSV/XLSX, PuTTY, WinSCP, configuration files, deploy-config YAML) and OWASP ZAP scans a running WRM, signed out and as an administrator. The fuzz tests already found and fixed a crash in the PuTTY import.
-
-## What's new in v12.6.20
-
-**Security checked on every change.** WRM is now built with a supported Go release (1.27) and up-to-date libraries, and every push and pull request runs automatic security checks: known vulnerabilities in Go and the libraries WRM uses (govulncheck), GitHub CodeQL for the server and the web UI, gosec and staticcheck, secret scanning (gitleaks), checks of the build workflows themselves, a dependency review, a vulnerability scan of the Docker image and the OpenSSF Scorecard. Dependabot proposes library updates every week, and Claude can review pull requests for security problems. The Medium proxy uses Go's safer `Rewrite` hook. No change for users; see [Continuous security checks](SECURITY.md#continuous-security-checks) and the [security roadmap](ROADMAP.md) (signed releases, security levels for home, business and enterprise, roles and teams, sign-in with Microsoft Entra ID / AD, LDAP and SCIM, SIEM export).
-
-## What's new in v12.6.11
-
-**OpenCode inside WRM.** Add the **OpenCode Zen** provider and use OpenCode's free models in the AI assistant without an account, or paste an OpenCode account's Zen key for all its models. A **Go subscription** has its own **OpenCode Go** provider, so a Go key is sent to Go's endpoints instead of Zen. Choose **OpenCode agent** as the assistant's engine (agents *build* and *plan*): WRM downloads OpenCode itself after one click by an administrator (sha512 checked) and runs it on the WRM host with its own shell, file and web tools switched off, so it works on your servers only through WRM and every command still waits for your approval. The assistant can also hand text jobs to **helper models**, picked automatically by the kind of job (free first), each labelled with how it treats your data; models that may train on prompts stay off until you switch them on. See [OpenCode Zen, Go, agents and helper models](#opencode-zen-go-agents-and-helper-models).
-
-## What's new in v12.6.10
-
-**One canvas, arranged your way.** The window area is one canvas: terminals, file managers, desktops, Workboard addons and panels share it. Addons are windows you move, resize, snap, pin or dock; panels can be placed anywhere on the canvas, not only at the edges. The **▤ Workboard** menu adds addons and holds the canvas tools: grid, tile and cascade, lock, saved layouts (optionally with your terminals) and export / import. New addons: links, saved sessions and a timer. The top bar is tidier: *Broadcast* is in **🧰 Tools**, *Shares* is an icon, and **Settings · Panels · Workboard** sit together. A closed terminal's banner has a **✕ Close window** button. See [Workboard: the shared canvas and addons](#workboard-the-shared-canvas-and-addons).
-
-## What's new in v12.6.9
-
-**Workboard: what matters, at a glance.** **▤ Workboard** in the top bar opens a page of tiles you put together yourself from an addon catalog, so nothing appears until you add it: server status, CPU / RAM / disk bars of chosen servers (from Monitoring, or read over SSH), WRM's notifications inside WRM, clocks for your time zones, the last commits of a Git service, running tunnels, quick connect buttons and notes. Any tile can be pulled out into a panel and docked, stacked or floated like the other panels. See [Workboard and addons](#workboard-the-shared-canvas-and-addons).
-
-## What's new in v12.6.8
-
-**Your panels, where you want them.** *Connections*, *Sessions*, *Snippets*, *Clipboard* and the AI live view are panels with a tab you can drag: onto another panel's tab bar to stack them as tabs, onto the top or bottom part of a panel to split the column, onto an edge strip to dock it left, right or under the windows, or anywhere else to let it float. **Panels** (▦) in the top bar shows and hides them, and **Lock the layout** keeps everything in place. The layout is stored for your account on the server, so it follows you to every browser. See [Panel layout](#panel-layout-dock-stack-float-and-lock).
-
-## What's new in v12.6.7
-
-**A top bar that fits and an AI panel that docks.** The top bar now fits at any width and browser zoom: labels go first, then less used buttons move into a **⋯** menu, so nothing overlaps. The AI live view (what an AI app runs on your servers, with approvals and output) no longer covers your windows: it is a **🤖 AI** tab next to *Sessions* and *Snippets*, a dock under the windows, a floating window, or hidden, chosen with its title bar buttons or by dragging it to an edge, and remembered per user. Approval cards still always pop up. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp). Every text on the page can be selected and copied again, and Medium's Docker runtime trusts your computer's certificates, so it works behind proxies and antivirus that inspect HTTPS (see [Docker for Medium](#docker-for-medium-installed-by-wrm)).
-
-## What's new in v12.6.6
-
-**Docker everywhere, installed by WRM.** The original deploy tool now runs in WRM's managed Docker runtime on Linux, macOS and Windows alike, and WRM installs Docker itself when it is missing: an administrator presses **Install Docker** in Medium step 2 once (accepting Docker Desktop's licence on Windows and macOS), and WRM installs Docker Engine from the Linux distribution's packages or Docker Desktop from docker.com (signature checked), starts it, waits for it and prepares the runtime, every step with its output in the activity log. Afterwards a tool ZIP import does all of it by itself. Where WRM has no administrator rights it shows the one command to run, `sudo wrm -setup-docker`. See [Docker for Medium](#docker-for-medium-installed-by-wrm).
-
-## What's new in v12.6.5
-
-**Medium tells you what it is doing.** The Medium view now has a numbered **step-by-step guide** for the original deploy tool (1 import the tool ZIP, 2 prepare its runtime, 3 your deploy-config, 4 your SSH profile, 5 start/stop), each with a light, what it waits for and what to do when it fails. While something runs you see **what runs, who started it, since when and every step with its time**, with the output of Docker, pip and the original tool (secrets redacted). A deploy-config ZIP is checked by WRM at once and kept for the next start while the runtime is still being prepared, so you no longer wait to upload it. A new **activity log** lists every Medium action with its result, duration, steps and output, and WRM's console logs each step. The read-only WRM preview is a separate, clearly labelled panel. See [Medium step by step](#medium-step-by-step-status-and-activity-log).
-
-## What's new in v12.6.4
-
-**Your blocked commands, your choice.** With full access on, the administrator now decides whether their own list of blocked commands (`ai_blocked_commands`) asks for approval like everything else (default) or stays blocked even with full access (`ai_full_access_blocked`, *Admin panel → AI connections*). See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
-
-## What's new in v12.6.3
-
-**Full access with one switch.** The administrator now chooses how full access applies (`ai_full_access_mode`): by default the **Full access for the AI** switch alone opens it for every AI session; it can instead apply only to AI connections with the **⚠ Full access** scope, or to users who turn it on for themselves in *Settings → AI connections*. Claude still asks before anything WRM would otherwise refuse. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
-
-## What's new in v12.6.2
-
-**Full access, but Claude still asks.** When an administrator allows it (`ai_full_access`), an AI connection can get the **⚠ Full access** scope. WRM then refuses nothing outright: destructive and blocked commands, deny lists, shutdown and secret files come to you as an approval marked *FULL ACCESS*, every time and never automatically. Read-only connections stay read-only. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
-
-## What's new in v12.6.1
-
-**"Allow everything" now means everything.** In an AI connection's automatic mode, **Allow everything** fills in `*` for commands and `/**` for files, and **No time or action limit** keeps the connection automatic for as long as it is valid. Chains with `&&`, variables and redirections no longer stop at an approval when `*` is allowed; blocked commands, your deny lists and sensitive files still do. When WRM does ask and nobody answers in time (or the app declines the question), the request stays in WRM to **approve later**, and the AI repeats it once you have. Files that may hold secrets are read after your approval, with secrets redacted. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
-
-## What's new in v12.6.0
-
-**Medium's native engine, first step.** The Medium view has a read-only *Native engine* panel: WRM reads your `deploy-config` as it is, matches its servers to your saved WRM connections, prepares the chosen branch or tag from your WRM Git source and shows what a deployment would change on each server, without Docker and without writing anything. **Compare with the original tool** runs the original comparison next to it and shows whether both give the same result. Deploying natively and rollback followed in v12.7.0. See [Medium native engine](#medium-native-engine).
-
-## What's new in v12.5.1
-
-**Claude Desktop and Claude Code in one step.** *Settings → AI connections → Claude Desktop* now downloads a **WRM PRO extension** (`wrm-pro.mcpb`) with your WRM address and token already filled in: open it, press **Install**, done. It works with a WRM on your own network and over plain HTTP, because Claude Desktop talks to WRM from your computer (a claude.ai custom connector connects from Anthropic's cloud and needs a public HTTPS address). For Claude Code there is a **WRM PRO plugin**: `claude plugin install wrm-pro --marketplace vedranius/web-browser-RDM-public --config wrm_url=… --config wrm_token=…`. Token lifetimes are entered in hours or days and default to 7 days (at most 30), so you are not asked to approve again every day. While an AI app works on a server, a **live panel** in WRM shows each command, the approval buttons and the output; after a denial the AI asks you how to go on. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
-
-## What's new in v12.5.0
-
-**Stamp as it is:** the Stamp dialog shows which files differ and why an installation cannot be stamped. Tick **Also stamp installations that are not up to date** to write VERSION.md with each file's actual version and a note that the installation is partial.
-
-**Back in dialogs:** dialogs opened from another dialog (for example Details → Update → confirmation) have **← Back** (Alt+←) and keep what you ticked or typed. A code review of the v12.4.x features fixed production confirmations, Medium start/stop/settings and imports, log search with non-UTF-8 bytes and special characters, and the client GitLab cache. The next versions run Medium without Docker on WRM's own engine ([roadmap](ROADMAP.md)).
-
-## What's new in v12.4.5
-
-**Medium:** select the trusted tool/config ZIPs and click **Prepare and run**. WRM retains the imports, starts Docker, prepares the original dependencies, validates config, synchronizes the private profile and opens the unchanged original tool. First Windows setup can invoke the signed official Docker installer; OS/vendor prompts and required restarts remain visible. Existing custom configuration Git settings are replaced by the explicitly uploaded local config ZIP.
-
-**Monitoring → Logs:** discovery starts automatically and streams results by server. Service log folders and Supervisor paths supplement manual roots. Filter by server/operator/service and event time, then search a keyword across all matching files from their beginning. Results show file modification time, matching event range, highlighted excerpts and open/follow actions. Progress, permission errors and partial searches remain visible; continue a bounded scan when necessary. Host metrics, service checks and SSH logs have separate setup requirements.
-
-Overview/Installations keep filters, check controls and actions together while scrolling. Environments adds combined search/service/environment/server filters.
-
-[Operation and limits](docs/V12.4.5_GUIDE.md) · [Validation](docs/RELEASE_SUMMARY_v12.4.5.md).
-
-## What's new in v12.4.4
-
-Monitoring with Zabbix metrics/history and service Functionality, multi-window logs, client GitLab token access with persistent snapshots, easier MCP setup and editable grants, structured configuration inventory, terminal selection-to-AI/Open terminal here, visual folder/connection labels, longer provider timeouts, sticky filters and replay/import fixes.
-
-[Operation and limits](docs/V12.4.4_GUIDE.md) · [Release validation](docs/RELEASE_SUMMARY_v12.4.4.md) · [Original Medium tool parity](docs/MEDIUM_PARITY_v12.4.3.md). General configuration import now recognizes mRemoteNG XML and PuTTY registry files ([#5](https://github.com/vedranius/web-browser-RDM-public/issues/5)).
+Older versions: [What's new in earlier versions](docs/WHATS-NEW.md) · [Changelog](CHANGELOG.md) · [Upgrading](docs/UPGRADING.md)
 
 ## 📜 License: free for personal use and as a work tool in companies
 
@@ -325,9 +67,9 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
 
 ## Table of contents
 
-1. [What WRM is](#what-wrm-is)
+1. [What WRM is](#what-wrm-is) · [How WRM compares](#how-wrm-compares)
 2. [Quick start](#quick-start)
-3. [Upgrading from v14.6.3](#upgrading-from-v1463) · [from v14.6.2](#upgrading-from-v1462) · [from v14.6.1](#upgrading-from-v1461) · [from v14.6.0](#upgrading-from-v1460) · [from v14.5.1](#upgrading-from-v1451) · [from v14.5.0](#upgrading-from-v1450) · [from v14.4.0](#upgrading-from-v1440) · [from v14.3.2](#upgrading-from-v1432) · [from v14.3.1](#upgrading-from-v1431) · [from v14.3.0](#upgrading-from-v1430) · [from v14.2.0](#upgrading-from-v1420) · [from v14.1.0](#upgrading-from-v1410) · [from v14.0.0](#upgrading-from-v1400) · [from v13.14.11](#upgrading-from-v131411) · [from v13.14.9](#upgrading-from-v13149) · [from v13.14.8](#upgrading-from-v13148) · [from v13.14.0](#upgrading-from-v13140) · [from v13.13.1](#upgrading-from-v13131) · [from v13.13.0](#upgrading-from-v13130) · [from v13.12.0](#upgrading-from-v13120) · [from v13.11.0](#upgrading-from-v13110) · [from v13.10.0](#upgrading-from-v13100) · [from v13.9.0](#upgrading-from-v1390) · [from v13.8.0](#upgrading-from-v1380) · [from v13.7.0](#upgrading-from-v1370) · [from v13.6.0](#upgrading-from-v1360) · [from v13.5.0](#upgrading-from-v1350) · [from v13.4.4](#upgrading-from-v1344) · [from v12.9.0](#upgrading-from-v1290) · [from v12.8.1](#upgrading-from-v1281) · [from v12.7.1](#upgrading-from-v1271) · [from v12.7.0](#upgrading-from-v1270) · [from v12.6.26](#upgrading-from-v12626) · [from v12.6.25](#upgrading-from-v12625) · [from v12.6.24](#upgrading-from-v12624) · [from v12.6.23](#upgrading-from-v12623) · [from v12.6.22](#upgrading-from-v12622) · [from v12.6.21](#upgrading-from-v12621) · [from v12.6.20](#upgrading-from-v12620) · [from v12.6.19](#upgrading-from-v12619) · [from v12.6.11](#upgrading-from-v12611) · [from v12.6.10](#upgrading-from-v12610) · [from v12.6.9](#upgrading-from-v1269) · [from v12.6.8](#upgrading-from-v1268) · [from v12.6.7](#upgrading-from-v1267) · [from v12.6.6](#upgrading-from-v1266) · [from v12.6.5](#upgrading-from-v1265) · [from v12.6.4](#upgrading-from-v1264) · [from v12.6.3](#upgrading-from-v1263) · [from v12.6.2](#upgrading-from-v1262) · [from v12.6.1](#upgrading-from-v1261) · [from v12.6.0](#upgrading-from-v1260) · [from v12.5.1](#upgrading-from-v1251) · [from v12.5.0](#upgrading-from-v1250) · [from v12.4.5](#upgrading-from-v1245) · [from v12.4.4](#upgrading-from-v1244) · [from v12.4.3b](#upgrading-from-v1243b) · [from v12.4.3](#upgrading-from-v1243) · [from v12.4.0](#upgrading-from-v1240) · [from v12.3.6](#upgrading-from-v1236) · [from v12.2.8](#upgrading-from-v1228) · [from v12.2.7](#upgrading-from-v1227) · [from v12.2.6](#upgrading-from-v1226) · [from v12.2.5](#upgrading-from-v1225) · [from v12.2.4](#upgrading-from-v1224) · [from v12.2.3](#upgrading-from-v1223) · [from v12.2.2](#upgrading-from-v1222) · [from v12.2.1](#upgrading-from-v1221) · [from v12.2.0](#upgrading-from-v1220) · [from v12.1.0](#upgrading-from-v1210) · [from v12.0.0](#upgrading-from-v1200) · [from v11.7.0](#upgrading-from-v1170) · [from v11.6.1](#upgrading-from-v1161) · [from v11.6.0](#upgrading-from-v1160) · [from v11.5.0](#upgrading-from-v1150) · [from v11.4.1](#upgrading-from-v1141) · [from v11.4.0](#upgrading-from-v1140) · [from v11.3.0](#upgrading-from-v1130) · [from v11.2.0](#upgrading-from-v1120) · [from v11.1.0](#upgrading-from-v1110) · [from v11.0.0](#upgrading-from-v1100) · [from v10.10.0](#upgrading-from-v10100) · [from v10.9.1](#upgrading-from-v1091) · [from v10.9.0](#upgrading-from-v1090) · [from v10.8.1](#upgrading-from-v1081) · [from v10.8.0](#upgrading-from-v1080) · [from v10.7](#upgrading-from-v107) · [from v10.6](#upgrading-from-v106) · [from v10.5](#upgrading-from-v105) · [from v10.4](#upgrading-from-v104) · [from v10.3](#upgrading-from-v103) · [from v10.2](#upgrading-from-v102) · [from v10.1](#upgrading-from-v101) · [from v10.0](#upgrading-from-v100) · [from v9](#upgrading-from-v9)
+3. [Upgrading](docs/UPGRADING.md) (notes for every version)
 4. [How it works](#how-it-works)
 5. [Features in detail](#features-in-detail)
    - [Accounts, sign-in & two-factor authentication](#accounts-sign-in--two-factor-authentication)
@@ -412,7 +154,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **SSH terminals** in the browser (xterm.js, 256 colors, full-screen apps like `nano`, `vim`, `htop`, `mc`), with **snippets** (saved commands with variables, one click or Ctrl+Shift+Space), **run on connect** (`sudo -i`, `cd /srv/app`…) and **broadcast input** (type into many terminals at once, with a safety check for dangerous commands).
 - **Live up/down status** of every saved connection in the sidebar, with latency, server banner and a notification when a server goes down.
 - **Quick connect** — type `root@10.0.0.5:22` (or `rdp://…`, `vnc://…`) and connect without saving; **notes & runbooks** per connection (procedures, contacts, links); **network tools** — port check, ping, traceroute, DNS and HTTP/TLS check from the WRM server or **from any of your servers** ("can app-01 reach the database on 5432?").
-- **Out-of-band management** — power on/off/restart, health and inventory through the server's **BMC** (iDRAC, iLO, XClarity, Supermicro, OpenBMC via **Redfish**, or **IPMI**), and its **serial console** (BMC SSH or IPMI Serial-over-LAN) in a terminal window; **serial ports** of the WRM machine for switch and router consoles.
+- **Out-of-band management** — power on/off/restart, health and inventory through the server's **BMC** (iDRAC, iLO, XClarity, Supermicro, OpenBMC via **Redfish**, or **IPMI**), and its **serial console** (BMC SSH or IPMI Serial-over-LAN) in a terminal window; **serial ports** of the WRM machine for switch and router consoles; and **serial / USB devices on your own computer** (Arduino, ESP32, STM32, Pico, USB-serial adapters) from the browser through Web Serial.
 - **Remote desktops** — **RDP** (Windows), **VNC** and **Telnet** in a browser window, also behind jump hosts, with clipboard, Ctrl+Alt+Del, recording and replay (through guacd, the Apache Guacamole proxy).
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
 - **SSH keys & credentials vault**: generate SSH keys, put them on many servers at once (like `ssh-copy-id`), see **who has access** to a server; one shared login such as `root@dc1` for many connections, shared with colleagues without revealing it, with **password rotation** on all its servers.
@@ -436,6 +178,25 @@ Everything is stored in one local **SQLite** file. There is no external database
 
 ---
 
+## How WRM compares
+
+A short, fair comparison with tools sysadmins often use for the same job. It is based on the vendors' public pages as of November 2026; products change, so check the vendor before you decide, and [open an issue](https://github.com/vedranius/web-browser-RDM-public/issues) if a cell is wrong.
+
+| | **WRM PRO** | Devolutions RDM | mRemoteNG | MobaXterm | Royal TS / TSX | Termius |
+|---|---|---|---|---|---|---|
+| **Licence / price** | free for personal use and internal company use (source available) | commercial, free edition | free, open source (GPL) | free Home edition, paid Professional | commercial, free with a connection limit | free tier, paid plans |
+| **Runs on** | a server or PC you choose; used from any browser (Windows, macOS, Linux, tablet, phone) | Windows, macOS, Linux, iOS, Android apps | Windows | Windows | Windows (TS), macOS (TSX), iOS, Android | Windows, macOS, Linux, iOS, Android |
+| **Nothing to install on the client** | ✅ browser only | ❌ app | ❌ app | ❌ app (portable exe) | ❌ app | ❌ app |
+| **Self-hosted team server** | ✅ one executable with SQLite | ✅ with Devolutions Server (separate product) | ⚠️ shared SQL Server database | ❌ | ⚠️ shared documents, Royal Server (separate product) | ❌ vendor cloud sync |
+| **SSH terminal** | ✅ | ✅ | ✅ (PuTTY) | ✅ | ✅ | ✅ |
+| **RDP and VNC** | ✅ in the browser | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **SFTP file manager** | ✅ also FTP/FTPS, server-to-server copy | ✅ | ⚠️ basic transfer dialog | ✅ | ✅ | ✅ |
+| **SSH tunnels and jump hosts** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Share connections without revealing passwords** | ✅ roles Observer → Moderator, guest links | ✅ with a team data source | ❌ | ❌ | ⚠️ through shared documents | ✅ team vault (paid) |
+| **Works offline in a closed network** | ✅ no CDN, no cloud account | ✅ | ✅ | ✅ | ✅ | ⚠️ needs an account for sync |
+
+**Where WRM is different:** it is one self-hosted program that the whole team opens in a browser, with live up/down status of every server, out-of-band management (Redfish / IPMI power and serial console), a Git workspace that compares and updates deployed services, chains that monitor whole service paths, live collaboration (chat, voice, shared terminals) and an AI assistant and MCP server whose every change waits for your approval. **Where others are stronger:** native desktop apps with deep Windows integration (RDM, Royal TS), the X11 server and local Unix tools of MobaXterm, and polished mobile apps (Termius, RDM).
+
 ## Quick start
 
 1. Download the binary for your system from **[Releases](https://github.com/vedranius/web-browser-RDM-public/releases/latest)** and optionally verify it: put `SHA256SUMS.txt` and `SHA256SUMS.txt.sig` next to it and run `wrm-pro-… -release-verify SHA256SUMS.txt` (signature and SHA-256), or compare the SHA-256 yourself. `gh attestation verify <file> --repo vedranius/web-browser-RDM-public` shows which workflow and commit built it.
@@ -443,21 +204,21 @@ Everything is stored in one local **SQLite** file. There is no external database
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v13.14.9-linux-amd64
-   ./wrm-pro-v13.14.9-linux-amd64
+   chmod +x wrm-pro-v14.12.0-linux-amd64
+   ./wrm-pro-v14.12.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v13.14.9-windows-amd64.exe
+   .\wrm-pro-v14.12.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v13.14.9-linux-amd64.AppImage
-   ./wrm-pro-v13.14.9-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v13.14.9-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.12.0-linux-amd64.AppImage
+   ./wrm-pro-v14.12.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.12.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -466,8 +227,8 @@ Everything is stored in one local **SQLite** file. There is no external database
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v13.14.1/wrm-pro-v13.14.9-android-arm64
-   chmod +x wrm-pro-v13.14.9-android-arm64 && ./wrm-pro-v13.14.9-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.12.0/wrm-pro-v14.12.0-android-arm64
+   chmod +x wrm-pro-v14.12.0-android-arm64 && ./wrm-pro-v14.12.0-android-arm64
    ```
 
    **Docker**
@@ -538,544 +299,6 @@ Whoever can run WRM's executable against its database on the server can reset an
 
 ---
 
-## Upgrading from v14.6.3
-
-Replace the executable/AppImage/container and keep the database and encryption key; nothing is migrated. Addons may declare the new capability `chains.read` (apiVersion 2, with a panel); the permission sheet shows it, and an update of an installed addon that adds it waits for a new approval. New API `GET /api/addons/{key}/instances/{id}/chains`, `GET …/chains/{chain}` and `POST …/chains/{chain}/check`; the panel context's `features` adds `chains`. See [Addons](#addons).
-
-## Upgrading from v14.6.2
-
-Replace the executable/AppImage/container and keep the database and encryption key; nothing is migrated. `GET /api/proxies` adds `tunnel_offers` (your dynamic tunnels not yet used by a proxy). Log discovery always skips folders named `venv*`, `.venv*`, `virtualenv*`, `site-packages`, `dist-packages`, `node_modules`, `__pycache__`, `.git`, `.tox`, `.mypy_cache` and `.pytest_cache`, in addition to the excluded names of *Log settings*.
-
-## Upgrading from v14.6.1
-
-Replace the executable/AppImage/container and keep the database and encryption key. The table `auth_links` and the `users` column `activation_pending` are added; v14.6.1 still starts on the database. New policies `password_reset_mail` (`all`; the Enterprise level requires `users`, so such an installation shows it as a check to fix in *Admin panel → Security*) and `registration_verify_email` (on). New public API `/api/auth/forgot`, `/api/auth/reset`, `/api/auth/activate`; `GET /api/auth/config` adds `password_reset` and `registration_email`, `POST /api/auth/register` takes `email`, `POST /api/admin/users` takes `email` and `invite`, `GET /api/admin/users` adds `activation_pending`. See [Forgot password, invitations and registration](#forgot-password-invitations-and-registration).
-
-## Upgrading from v14.6.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. Two tables (`mail_settings`, `mail_outbox`) and the `users` columns `email`, `email_verified`, `email_pending`, `email_token`, `email_token_at` are added; v14.6.0 still starts on the database. Nothing is sent until an administrator sets up and turns on *Admin → E-mail*. New policies `mail_security_notices` and `user_email_self` (both on), new API `/api/admin/mail`, `/api/me/email`, `/api/auth/verify-email`; `GET /api/admin/users` adds `email`, `email_verified`, `email_pending` and `PUT /api/admin/users/{id}` takes `email`. See [E-mail](#e-mail).
-
-## Upgrading from v14.5.1
-
-Replace the executable/AppImage/container and keep the database and encryption key. Two tables are added (`server_heartbeat`, `cli_reset_requests`); v14.5.1 still starts on the database. New settings `cli_password_reset` (`alert`; the Business level requires `stopped`, Enterprise `confirm`, so an installation at those levels shows it as a check to fix in *Admin panel → Security*) and `alert_cli_reset` (on), new flag `-reset-code`, new API `/api/admin/cli-resets`. AI sessions can no longer run `wrm -reset-password`, `-reset-2fa` or `-lockdown`. See [Password reset on the server](#password-reset-on-the-server).
-
-## Upgrading from v14.5.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. Nothing is migrated, no setting or API changes. Window sizes are kept in the browser's local storage (`wrm_win_sizes`), storage column and panel widths in `wrm_stg_cols`; ↺ on a window, or clearing the site data, returns to the defaults.
-
-## Upgrading from v14.4.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. Nothing is migrated and no setting changes. Recognition uses the same fixed read-only discovery as the AI wizard (`POST /api/chains/discover`) and runs only when you add servers in the builder or press *Recognise services*; turn off *Recognise … right after adding* in the builder to add servers without it. *Test now* uses `POST /api/chains/test` with a one-check definition and saves nothing. The browser follows AI and MCP sessions over one stream per tab, `GET /api/ai/events`; the per-session stream stays for other clients.
-
-## Upgrading from v14.3.2
-
-Replace the executable/AppImage/container and keep the database and encryption key. Two columns are added (`storages.provider`, `chain_drafts.base_chain_id`); an older binary still starts on the database. Existing storages get their provider from the endpoint (Hetzner, DigitalOcean, AWS, Backblaze, Cloudflare R2, otherwise *Other*); change it in the storage form. AI connections do not get the new **`chains`** scope automatically. An administrator adds it to `ai_mcp_scopes` (*Admin panel → AI connections → allowed scopes*), and then a user enables it on an AI connection.
-
-## Upgrading from v14.3.1
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. Two new settings: `storage_check_minutes` (default 15) replaces the fixed 5-minute background bucket check (set it to `0` to send no background requests at all), and `chain_storage_check_s` (default 300) limits how often a chain's storage check asks the bucket.
-
-## Upgrading from v14.3.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database or setting change: this is a bug-fix release for AI/MCP responsiveness and sensitive-path matching; existing connections, storages and chains are unchanged.
-
-## Upgrading from v14.2.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database or setting change: the storage browser uses the same tables, and existing storages and chains are unchanged. **Read-only S3 share links no longer work**: the Share button, its API and `/s3/` were removed for security. Delete any link you shared from an older version; storage access now needs a signed-in account. The unused `storage_shares` table may remain and can be dropped.
-
-## Upgrading from v14.1.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database or setting change: the guided builder and the discovery run in the existing Chains section and use the connections you already saved. Existing chains are unchanged. Discovery is read-only and happens only when you open the wizard or press *Look at the servers*; a discovered mount is shown as a check, not attached and not turned into a storage.
-
-## Upgrading from v14.0.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. Three tables are added (`chains`, `chain_samples`, `chain_drafts`); an older binary still starts on the database. The **Chains** button appears in the top bar: turn the section and its background checks off with `chains_enabled=0`, and set the default interval with `chain_interval_s` (default 30 s, minimum 15 s). Nothing on your servers changes: chains use the SSH connections and storages you already saved, install nothing and run no commands. AI connection scopes do not change; the chain builder is in WRM's built-in assistant, not in MCP clients.
-
-## Upgrading from v13.14.11
-
-Replace the executable/AppImage/container and keep the database and encryption key. Two tables are added (`storages`, `storage_shares`); an older binary still starts on the database. The **Storages** button appears in the top bar (turn the section off with `storages_enabled=0`). AI connections do not get the new storage scopes: an installation that never changed `ai_mcp_scopes` now defaults to the five server scopes plus `addons.manage`; add `storage_read`, `storage_write` or `storage_delete` there, and then to an AI connection, to let it reach a storage; writes and deletes by an AI need the automatic mode. Upgrading from v13.14.10 or older also brings the v13.14.11 changes (share links with a per-share cookie, credentials bound to their destination; see the [changelog](CHANGELOG.md)).
-
-## Upgrading from v13.14.9
-
-Replace the executable/AppImage/container and keep the database and encryption key. No schema change. On Windows, a self-update that failed with *put the new binary in place: … being used by another process* has to be done once by hand: stop WRM, replace the `.exe` (keep its file name if a shortcut or service points to it), delete leftover `.wrm-update-*.exe` files and start WRM again. From v13.14.10 on, the self-update waits for the lock and copies the file if the lock stays.
-
-## Upgrading from v13.14.8
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. In the managed Docker runtime of the original deploy tool, an empty `DEPLOY_HOSTNAME` now becomes the WRM computer's name at the next start of the tool; a value set in *Original runtime settings* is kept. To use the original tool's Git section, set `DEPLOY_CONFIG_REPO` there (see [Git workspace: Medium original deploy tool](#git-workspace-medium-original-deploy-tool)).
-
-## Upgrading from v13.14.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No new tables or columns. On the first start, when `addon_instances` is empty, WRM copies the rows of the newest non-empty `addon_instances_old_<time>` table (left there by the start-up bug of v13.9.0–v13.14.0) back with their ids and logs *Addon instances: restored …*; the old copies are kept and can be dropped by hand once the addons look right. WRM now creates the folder `<DB_PATH>.diag/` (goroutine dumps, newest 20 kept) on every stop and restart.
-
-## Upgrading from v13.13.1
-
-From v13.13.0, also read the next section. Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: a new table `file_edits` (append-only like the audit log, kept for `audit_retention_days`) and new columns `folders.auto_sort` and `ssh_keys.certificate`; a previous version still starts on the database. New settings `file_edit_history` (`1`) and `file_edit_max_kb` (`1024`). New endpoints `GET / POST /api/folders/sort` and `GET /api/admin/file-edits[/{id}]`; `PUT /api/keys/{id}` also takes `certificate`. Git checks no longer compare files the catalog does not track: their state is *outside the check* instead of *same* / *differs*, and log files (`*.log`, `*.log.*`, files below a `log` or `logs` folder) are never compared nor deployed unless the catalog's include list names them. A key file on the WRM server with a `<key>-cert.pub` next to it now logs in with that certificate first.
-
-## Upgrading from v13.13.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. The WRM PRO Claude plugin is now 1.2.1 (icon path only). If adding the marketplace failed in the Claude app, add it again with the lowercase repository name `vedranius/web-browser-rdm-public`.
-
-## Upgrading from v13.12.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. New endpoint `POST /api/mcp/setup-all` (audited as `mcp.setup_script`). The WRM PRO Claude plugin 1.2.0 no longer has the settings `wrm_url` and `wrm_token`: after updating the plugin, run `/wrm-pro:wrm` (or `/wrm-pro:connect`) once and approve the sign-in in the browser; drop `--config` from scripts that install it. A Claude Desktop extension downloaded from this version keeps running when its token is refused and offers `wrm_connect`.
-
-## Upgrading from v13.11.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. New command-line options `-addon-lint`, `-addon-lint-json`, `-addon-new`, `-addon-id`, `-addon-dev`, `-addon-dev-port` and `-addon-dev-private`, and new endpoints under `/api/addons/dev/`. The addon ids `dev`, `install`, `drafts`, `community` and `users` are now reserved; an installed addon with one of those ids keeps working but cannot be installed again under that id.
-
-## Upgrading from v13.10.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: new tables `addon_http_grants`, `addon_secrets` and `addon_http_log`; a previous version still starts on the database (it ignores them, and addons with an `http` block were not installable there). New policy `addon_http` (`all`): who may use addons that reach web sites (`off`, `admins`, `all`). Existing addons are unchanged; an addon gets network access only after an update that declares `http` and a new approval.
-
-## Upgrading from v13.9.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change; a previous version still starts on the database. Git workspace installations whose connection was deleted are no longer listed, and deleting a connection now removes its installations. *Show saved login* and *Copy password* follow the existing *Allow export of passwords & keys* policy (`allow_secret_export`, on by default; administrators always can) and the step-up policy.
-
-## Upgrading from v13.8.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: new tables `addons_personal`, `addon_instances`, `addon_store` and `addon_windows` and new columns `files`, `approved` and `pending` in `addons`; a previous version still starts on the database (it ignores personal addons, instances and stored values). Installed addons keep working; their files are pinned by SHA-256 the next time they are installed. New policy `addon_personal` (`all`): set it to `admins` or `off` if users must not install their own addons.
-
-## Upgrading from v13.7.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: a new column `saved` in `ai_sessions` and an index; a previous version still starts on the database. New settings `ai_mcp_later_approval` (`run`: an approval given in WRM after the AI app stopped waiting runs the call at once; `repeat` keeps the earlier behaviour, where the AI must repeat the call) and `ai_keep_saved_sessions` (`1`). *Deny* in an AI app's approval question is now a final denial; closing the question without an answer still keeps the request in WRM. New endpoints: `GET /api/ai/sessions?view=all`, `POST /api/ai/sessions/{id}/save`, `GET /api/ai/sessions/{id}/export`, and the key `ai` of `/api/me/ui/{key}`. A decision on a request that is no longer waiting answers `409` with `decided`.
-
-## Upgrading from v13.6.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: new columns `locked_at` and `lock_failures` in `auth_sessions` and `lock_pin_hash` in `users`; a previous version still starts on the database. New settings `screen_lock_mode` (`server`), `screen_lock_max_minutes` (`0`), `screen_lock_pin` (`1`), `screen_lock_max_failures` (`0`), `appearance_default_theme` (`graphite`) and `appearance_custom_css` (`1`); the Business and Enterprise security levels require `screen_lock_mode=server` and an idle lock of at most 30 / 15 minutes, and Enterprise turns the PIN off. **Two behaviour changes:** a locked browser session can no longer reach the API until it is unlocked (set `screen_lock_mode` to `remember` or `browser` for the looser behaviour), and a colour theme from an addon is no longer applied to everyone: each user picks it in *Settings → Appearance*, or the administrator makes it the default (`appearance_default_theme=addon:<addon>:theme`). The accent colour chosen in *Settings → General* before v13.7 is carried over into the theme once.
-
-## Upgrading from v13.5.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No migration: the log settings gain `main_folders` (empty) and `guess_operators` (on) inside the existing per-server JSON, and a previous version ignores them. Labels of logs under a configured main folder are taken from it before the default patterns.
-
-## Upgrading from v13.4.4
-
-Replace the executable/AppImage/container and keep the database and encryption key. Additive migration: a new table `log_settings` (per connection, encrypted) and new columns `title`, `purpose`, `resumed_from` and `file_path` in `ai_sessions`; a previous version still starts on the database. Log folders and journal units configured in the Zabbix dialog are read into the new *Log settings* until you save them there. New settings `ai_show_thinking` and `ai_auto_titles` (both `1`). Dates are shown in the EU format by default; pick another in *Settings → Date and time format* (per browser).
-
-## Upgrading from v12.9.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. New policies: `medium_default_engine` (`native`) and `medium_build_user` (empty). If the original deploy tool was already imported, WRM sets `medium_default_engine=original` once at the first start and logs it, so projects keep their engine; set it to `native` in *Admin → Policies* to deploy with WRM by default. A project with an engine chosen explicitly keeps it. Pulling deploy-config from Git needs `DEPLOY_CONFIG_REPO` in the Medium settings and a WRM Git source for that repository (with a write token for commit and push).
-
-## Upgrading from v12.8.1
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. Editing deploy-config in WRM uses the existing `medium_native` policy (default `admins`); users without it see the files read-only.
-
-## Upgrading from v12.7.1
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. The Git check reads the version from the code by default; `VERSION.md` is only compared when the new checkbox is on. Deployments and updates still write `VERSION.md`. The first check after the upgrade may need a target refresh to load the older version trees; until then the per-file history is used.
-
-## Upgrading from v12.7.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. Existing `deploy-config` files keep working; an environment may now add `servers: [name, ...]` to limit its projects to those servers. Importing a config ZIP still replaces the config directory and removes its Git history, so use Git for changes once the directory is a clone.
-
-## Upgrading from v12.6.26
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets the table `medium_project_engine`; a previous version still starts on it (projects switched to the native engine are then deployed by the original tool again, which reads the same server state). Every project stays on the Docker runtime until someone allowed by the new policy `medium_native` (default `admins`) switches it to *WRM native*. New settings `medium_command_timeout` (300) and `medium_transfer_timeout` (3600). With step-up on, native deployments, rollbacks and lock releases ask for a confirmation (`medium.deploy`, `medium.rollback`, `medium.lock_release`).
-
-## Upgrading from v12.6.25
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets the table `siem_destinations`; a previous version still starts on it (it does not enforce a lockdown, so end a lockdown before going back). Nothing is exported until an administrator adds a SIEM destination. New settings `alert_failed_signins` (10), `alert_failed_signins_minutes` (10), `alert_break_glass`, `alert_new_admin`, `alert_secret_reveal`, `alert_ai_full_access` and `alert_audit_off` (all on); new notification event `security.alert`; new command line flags `-lockdown` / `-lockdown-reason` and environment variable `WRM_LOCKDOWN`. Security events (`security.*`) are now recorded even with `audit_enabled` off.
-
-## Upgrading from v12.6.24
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets the tables `ldap_directories`, `ldap_identities`, `scim_clients`, `scim_users`, `scim_groups` and `scim_group_members`; a previous version still starts on it (accounts that sign in with a directory password then cannot sign in, since WRM keeps no password for them). Nothing changes until an administrator adds an LDAP directory or a SCIM client. New setting `ldap_sync_minutes` (15). Changing an OIDC provider's issuer now asks for its client secret again.
-
-## Upgrading from v12.6.23
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets the tables `oidc_providers` and `user_identities` and the columns `users.sso_only`, `auth_sessions.identity_id` and `team_members.source`; a previous version still starts on it (directory accounts then cannot sign in, since they have no password). Nothing changes until an administrator adds an identity provider. New settings `local_login` (`all`), `oidc_revalidate_minutes` (60) and `oidc_unverified_hours` (12). The Enterprise level now requires `local_login` = `break_glass`; it takes effect only while a directory sign-in is enabled, so nobody is locked out of an installation without one. Releases from this version on are signed and published automatically when a version is merged.
-
-## Upgrading from v12.6.22
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets the tables `teams`, `team_members` and `share_teams` and the columns `users.role`, `users.break_glass` and `auth_sessions.step_up_at`; a previous version still starts on it (it sees administrators as before, and auditors and operators as ordinary users). Existing accounts keep their rights: administrators stay administrators, everyone else is a *User*. New settings `require_step_up` (off; the Business and Enterprise levels require it, so an installation at one of those levels shows it in the security posture until it is turned on), `step_up_minutes` and `break_glass_ips`. Scripts that call `PUT /api/admin/settings`, change roles or delete users with step-up on get `403 {"step_up": true}` unless the session confirmed with `POST /api/auth/step-up` (signing in counts as a confirmation for `step_up_minutes`). `DELETE /api/admin/users/{id}` still deletes everything the user owns unless `?transfer_to=<user id>` is given.
-
-## Upgrading from v12.6.21
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new table, `security_deviations`; a previous version still starts on it. Existing installations stay at the **Home** level and no setting changes until an administrator picks another level in *Admin panel → Security* (or sets `WRM_INITIAL_SECURITY_LEVEL` / `WRM_SECURITY_LEVEL`). New settings `security_level`, `require_https` and `link_share_max_days`; new endpoints `GET /api/admin/security` and `POST /api/admin/security/level`. Loosening a policy below the chosen level now needs a reason (`_deviation_notes` in `PUT /api/admin/settings`); scripts that set settings at the Home level are not affected.
-
-## Upgrading from v12.6.20
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. New setting `update_signing_keys` (empty: only the built-in key). This version has no built-in release key yet, so its self-update still verifies the SHA-256 only and the update dialog says *Signature: not checked*; the version that adds the key turns the signature check on. New command-line options `-release-keygen`, `-release-sign`, `-release-verify`.
-
-## Upgrading from v12.6.19
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database or setting change. Building from source now needs **Go 1.26 or newer** (`go.mod` asks for the Go 1.27.2 toolchain, which `go` downloads by itself when `GOTOOLCHAIN` allows it).
-
-## Upgrading from v12.6.11
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. Nothing changes until an administrator sets `ai_opencode_sandbox` (`admins` or `all`) and presses **Download and install** again in *Admin panel → AI assistant → OpenCode agents*, which prepares the Docker sandbox. New settings `ai_opencode_sandbox` and `ai_opencode_sandbox_image`; `POST /api/ai/sessions` takes `sandbox: true`.
-
-## Upgrading from v12.6.10
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new column, `users.ai_delegate_training` (a user's own choice to allow helper models that may train on prompts); a previous version still starts on it. Nothing changes until an administrator adds an **OpenCode Zen** provider, turns on delegation (`ai_delegate`) or installs OpenCode in *Admin panel → AI assistant → OpenCode agents*. `ai_provider_kinds` now includes `opencode`; if you set it yourself, add `opencode` to allow the new provider. New settings `ai_delegate*` and `ai_opencode*`; new endpoints `/api/ai/delegate` and `/api/admin/opencode`. OpenCode itself is stored next to the database in `<DB>.opencode/`.
-
-## Upgrading from v12.6.9
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. The Workboard is now the canvas itself: your v12.6.9 tiles open as addon windows beside your terminals the first time (from the top right), and tiles you pulled out into panels stay where they are. *Broadcast* moved from the top bar into **🧰 Tools**. `/api/me/ui/{key}` now accepts values up to 256 KiB.
-
-## Upgrading from v12.6.8
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new table, `user_events` (each user's in-app notifications, newest 200); a previous version still starts on it and ignores it. Nothing changes on the page until you open **▤ Workboard** and add an addon. New policy `workboard_ssh_metrics` (on): turn it off if the *Server load* addon must not log in to servers over SSH; servers with Monitoring still show their values. New endpoints `/api/me/events` and `/api/workboard/metrics`.
-
-## Upgrading from v12.6.7
-
-Replace the executable/AppImage/container and keep the database and encryption key. The database gets one new table, `user_ui` (your panel layout); a previous version still starts on it and ignores it. Nothing moves: your first layout is built from what the browser remembered in v12.6.7 (the right panel's tab and width, where the AI live view was docked, floating or hidden). New endpoint `/api/me/ui/{key}`.
-
-## Upgrading from v12.6.6
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database or API change. The AI live view now opens as a **🤖 AI** tab in the right panel instead of a box at the bottom left; pick *Floating* in its title bar (or the 🤖 menu) for the old behaviour. Medium's Docker runtime now trusts the WRM host's root certificates (policy `medium_host_ca`, default on); if runtime preparation failed with *certificate verify failed*, press *Prepare runtime* again.
-
-## Upgrading from v12.6.5
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. Medium now uses the managed Docker runtime by default on Linux and macOS too. An installation whose host runtime (Python virtual environment) is already prepared keeps it; set `WRM_MEDIUM_RUNTIME=docker` to move it to Docker, or `native` to keep the host runtime for good. Nothing is installed until an administrator presses **Install Docker** in Medium step 2; the new policy `medium_docker_install` (default on) switches that button and the automatic installation off.
-
-## Upgrading from v12.6.4
-
-Replace the executable/AppImage/container and keep the database and encryption key. One additive table (`medium_activity`); a previous binary still starts on the database. `POST /api/git/medium/start` now answers `202` and starts in the background (poll `GET /api/git/medium`), and a deploy-config or SSH ZIP uploaded while Medium is busy or not prepared yet is kept and applied at the next start (`202`, `pending`). Command output is shown in the Medium activity log to the user who ran it and, for the shared runtime, to every Medium user; set `medium_log_output` to `admins` or `none` to limit that.
-
-## Upgrading from v12.6.3
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. Blocked commands keep asking under full access until an administrator sets `ai_full_access_blocked` to `deny` (*Admin panel → AI connections → Blocked commands with full access*).
-
-## Upgrading from v12.6.2
-
-Replace the executable/AppImage/container and keep the database and encryption key. One additive column (`users.ai_full_access`); a previous binary still starts on the database. If `ai_full_access` was already on, it now applies to every AI session (`ai_full_access_mode` = `all`, the default); set the mode to *AI connections with the Full access scope* (`connection`) in *Admin panel → AI connections* to keep the v12.6.2 behaviour, or to *Users who turn it on themselves* (`user`).
-
-## Upgrading from v12.6.1
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. Full access stays off until an administrator turns on `ai_full_access` (*Admin panel → AI connections*); then edit an AI connection and tick **⚠ Full access**. Open sessions of that connection end and the app reopens them with the new rules.
-
-## Upgrading from v12.6.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. Existing AI connections keep their limits. To let an app work without limits, edit its AI connection in *Settings → AI connections*, press **Allow everything** (it also ticks **No time or action limit**), confirm and save; open sessions end and the app opens them again with the new rules. Administrators can forbid connections without limits with `ai_auto_until_grant` = off.
-
-## Upgrading from v12.5.1
-
-Replace the executable/AppImage/container and keep the database, encryption key and Medium directories. One additive table (`medium_server_links`) is created at start; a previous binary still starts on the database. The native preview uses your existing WRM Git sources and SSH connections and writes nothing to servers. Medium deployments keep running through the original tool.
-
-## Upgrading from v12.5.0
-
-Replace the executable/AppImage/container and keep the database and encryption key. No database change. AI connections (MCP) stay off by default; once an administrator turns them on (*Admin panel → AI connections*), **Claude Desktop** users pick *Claude Desktop* in *Settings → AI connections*, download the extension and install it. An old `claude_desktop_config.json` entry with the stdio bridge keeps working. Token lifetimes can now be chosen in **hours or days**. The defaults change from 8 hours (at most 24) to **7 days (at most 30 days)**: `ai_mcp_token_hours` 168, `ai_mcp_max_token_hours` 720. A value an administrator saved explicitly stays in force; lower them again in *Admin panel → AI connections* if your policy needs short lifetimes.
-
-## Upgrading from v12.4.5
-
-Replace the executable/AppImage/container and keep the database, encryption key and private Medium directories/volumes. No database migration. Medium settings saved empty now mean "original default" and are no longer passed to the tool; earlier `.previous` copies of replaced SSH profiles are deleted at the next Medium start. Stamp no longer refuses silently: choose **Also stamp installations that are not up to date** to stamp an installation as it is.
-
-## Upgrading from v12.4.4
-
-Replace the executable/AppImage/container, preserving your database, encryption key and private runtime directories/volumes. No database migration is needed. In Medium use the combined ZIP fields and **Prepare and run**; empty fields reuse existing imports. Setup failure retains approved archives for retry. Existing original-tool deployment history and behavior are retained.
-
-In Monitoring select **Logs** and a server. Discovery uses the same SSH account without sudo; it finds known service `log`/`logs` directories, bounded configured service roots and Supervisor log directories. Manual roots remain editable from the log toolbar. Date/timezone filters and keyword search read historical segments across matching logs, rather than only their recent tail. Progress and bounds remain visible. Zabbix is needed for host metrics, not SSH logs.
-
-Windows first setup can require Docker/WSL license, OS permissions, virtualization setup or a restart on the WRM host. A Windows service cannot display a desktop installer: install Docker once for its account, then resume. Docker in Windows-container mode is not switched automatically because other containers may be using it. See the [guide](docs/V12.4.5_GUIDE.md).
-
-## Upgrading from v12.4.3b
-
-Replace the executable/container with v12.4.4 and retain the DB, encryption key and private runtime directories/volumes. Migrations are additive. Existing explicit policy values remain in force; MCP is still off by default. Functionality moves to **Monitoring → Functionality**. Configure each server's agent transport/log roots; automatic metrics polling is opt-in.
-
-Client GitLab cache requires a client token and browser CORS permission or the companion on the computer that can access GitLab. Native Medium's Git/build subprocesses still need their direct route. [v12.4.4 setup, limits and troubleshooting](docs/V12.4.4_GUIDE.md).
-
-## Upgrading from v12.4.3
-
-Download the v12.4.3b Windows executable, stop WRM and replace the previous executable while retaining its database and encryption key. **The v12.4.3 updater cannot parse the `b` suffix, so this first hotfix needs a manual download.** v12.4.3b adds letter-hotfix support for subsequent checks/updates.
-
-For Windows 10/11, install/start [Docker Desktop with Linux containers](https://docs.docker.com/desktop/setup/install/windows-install/) under the account running WRM. In **Git → Medium**, import the original tool ZIP or, if it is already imported, click **Prepare runtime / retry**. WRM pulls the pinned Linux image and installs the original lockfile in a Linux volume. Import your deploy-config and SSH profile and start Medium. Standard `~/.ssh/key` references work inside its private Linux home. No Windows Python/rsync installation is needed. Browser clients need no deploy tools.
-
-Docker Desktop is not supported on Windows Server: run WRM/Medium on a supported Linux host or Linux VM/container and access it from the Windows browser. A remote Docker daemon is not supported by this bind-mount/localhost bridge. Docker engine access must belong to the account running WRM; installing Docker for a different desktop account does not grant a Windows service access automatically.
-
-Back up the database/key and private `.medium` source/config/preferences **plus** Docker volumes named `wrm-medium-<instance>-runtime` and `wrm-medium-<instance>-u<user>`. Stop Medium before backing up user volumes. Runtime source/venv are read-only; user volumes retain native edits/history across restarts. Re-importing config/SSH replaces that profile explicitly without deleting deploy history. Existing native Linux runtime data is copied into a new user volume on its first Docker start. Source and SSH keys remain private.
-
-Linux keeps its native runtime when dependencies exist; use `WRM_MEDIUM_RUNTIME=docker` to select the managed runtime or `native` to select native explicitly. Windows always selects Docker. Custom Docker paths/images use `WRM_MEDIUM_DOCKER` and `WRM_MEDIUM_CONTAINER_IMAGE`. The Windows CLI is also discovered at standard Docker Desktop installation paths without requiring a PATH refresh. Additional build toolchains/users may require a trusted custom Linux image; the pinned image uses its unprivileged `wrm` account for builds. Unix host-agent forwarding remains a native-runtime option; managed Docker uses the private SSH profile.
-
-## Upgrading from v12.4.0
-
-Replace the binary/AppImage or update the container. Additive migrations create `git_config_profiles` and add `folders.sort_order`. Existing folders retain alphabetical order until reordered. Back up the database, matching encryption key and adjacent `.medium` / `.bitwarden` directories; they contain private runtime/configuration data. Older binaries ignore the new fields, but cannot use the new features.
-
-Medium is enabled for administrators by default. Import the original deploy-tool ZIP once as an administrator, then each operator imports their deploy-config and optional SSH profile. The Docker image includes Python 3.12+, git, OpenSSH, rsync and the official Bitwarden CLI. Standalone binaries keep these dependencies optional: install them on the WRM host before enabling the corresponding feature. Medium uses the original engine's own plans, locks, backups and history; it does not import those into Simple/Advanced runs.
-
-The earlier client GitLab relay/replay and AI/navigation/color/icon requests are delivered in v12.4.4; see the [operation guide](docs/V12.4.4_GUIDE.md).
-
-## Upgrading from v12.3.6
-
-Replace the binary or use the in-app updater; update the AppImage/container as appropriate. Startup adds a nullable folder parent and the `git_server_health` cache table. Existing folders, catalogs and route defaults keep their settings; previous binaries ignore the new fields.
-
-The new **Functionality** view is available from Git Simple and Advanced. Run a Git check to populate it, and enable periodic monitoring/notification subscriptions if desired. Runtime commands read service state with the SSH login's permissions; no services are started or restarted. For AI availability, open **Settings → AI assistant**; provider connectivity and effective account permission are shown separately.
-
-## Upgrading from v12.2.8
-
-Replace the binary. One additive table (`git_hostnames`) is created automatically; v12.2.8 still starts on the same database. No configuration changes.
-
-- **Git Simple mode is automatic.** Services and environments the checker found on your servers appear as ready cards without defining environments per service; **Save detected environments** stores them in the catalog (audited). Advanced is unchanged and your own definitions keep priority.
-- **Servers are shown by hostname** (read once over the existing SSH login and cached, falling back to the connection host) instead of the connection name.
-
-## Upgrading from v12.2.7
-
-Replace the binary. No database or configuration changes; v12.2.7 still starts on the same database.
-
-- The **version label in the top bar** ("WRM v12.2.8") now opens the **Updates** dialog, so an administrator can always press **Check now**, even when no update is known and the green badge is hidden. Non-administrators see the versions only.
-
-## Upgrading from v12.2.6
-
-Replace the binary. One additive table (`ai_ollama_runs`) is created automatically; v12.2.6 still starts on the same database. No configuration changes.
-
-- The **AI provider wizard** has presets for xAI, DeepSeek, Together AI, Fireworks AI, Cerebras, Cohere and Perplexity, refreshed model suggestions and a **Load the model list** button (the provider's `/models`). Models can always be typed freely.
-- **Ollama, step by step:** detection, status, installed models, per-OS install / background-service / download commands and, optionally, **running them through WRM**. The last is off by default: an administrator enables the policy `ai_ollama_manage` (`WRM_AI_OLLAMA_MANAGE=1`). Each run needs a confirmation, is permission-checked on the server and written to the audit log (`admin.ai_ollama_*`). See the configuration table and the API reference below.
-
-## Upgrading from v12.2.5
-
-Replace the binary. No database or configuration changes; v12.2.5 still starts on the same database.
-
-- **Settings → AI connections** now has a step-by-step **wizard** for connecting Codex CLI, Claude Code, Gemini CLI, Cursor / VS Code, Claude and ChatGPT: it creates the token, shows (and lets you download) the ready command or config file and tests the connection. The AI assistant has a matching **provider wizard**. See *Connect an AI app* below.
-- The MCP server explains what "wrm" is to its clients, and permission denials now say which scope is missing and how to fix it.
-
-## Upgrading from v12.2.4
-
-Replace the binary. No database or configuration changes; v12.2.4 still starts on the same database.
-
-- The **AI assistant window** inside a terminal window can now be docked left / right / top / bottom, floated, moved, resized and expanded over the whole terminal window. See *AI assistant* below.
-
-## Upgrading from v12.2.3
-
-Replace the binary. No database or configuration changes; v12.2.3 still starts on the same database.
-
-- The **session recording replay** window can now be resized (drag its bottom-right corner) and expanded to **fullscreen** (⛶ button, **Esc** leaves). The terminal is scaled to the window width, so there is no sideways scrolling. See *Session recording* below.
-
-## Upgrading from v12.2.2
-
-Replace the binary. No database or configuration changes; v12.2.2 still starts on the same database.
-
-- Every tab of the Advanced Git workspace, of Settings and of the Admin panel now has a short explanation of what it is for. See [Git workspace: tab explanations](#git-workspace-tab-explanations).
-
-## Upgrading from v12.2.1
-
-Replace the binary. No database or configuration changes; v12.2.1 still starts on the same database.
-
-- The Git workspace has a **Simple / Advanced** switch in its header. **Simple** shows one guided card per service environment (what runs on the server vs. the latest version on the branch, a clear status) with **Install / Update / Deploy again** and **Roll back to the previous version**. **Advanced** is the unchanged Git workspace and stays the default. See [Git workspace: Simple mode](#git-workspace-simple-mode).
-
-## Upgrading from v12.2.0
-
-Replace the binary. No database or configuration changes.
-
-- New terminal windows open **maximized** with the cursor in the terminal; windows of a saved session keep their layout.
-- Selecting more text than fits on the screen now copies the **whole selection** (it is copied when you release the mouse).
-- A click or double-click on the title bar of a maximized window no longer shrinks it; only dragging restores it.
-
-## Upgrading from v12.1.0
-Replace the binary. There are no database changes; v12.1.0 still starts on the same database.
-
-- **Gemini and other OpenAI-compatible providers** work with tools: the provider's `extra_content` (Gemini's `thought_signature`) of each tool call is stored in the session and sent back unchanged, which fixes *HTTP 400: Function call is missing a thought_signature*.
-- **Temporary provider errors** no longer end the turn at once: HTTP 408 / 429 / 5xx (for example 503 *high demand*) are retried up to three times with a back-off, and a request that is too large for the provider (HTTP 413, or a token limit such as Groq's) shortens the long command output of the conversation and is retried. The assistant shows a short notice for both.
-
-## Upgrading from v12.0.0
-Replace the binary. The database gets new tables (`mcp_tokens`, `mcp_clients`) and the column `ai_sessions.mcp_token_id`; v12.0.0 still starts on it and ignores them.
-
-- **AI desktop apps (MCP)** are **off by default**. An administrator turns them on in *Admin panel → AI connections* (`ai_mcp_enabled`); by default only administrators may create AI connections (`ai_mcp` = `admins`), with the modes `read_only,ask,auto` (`ai_mcp_modes`), a default lifetime of 8 hours (`ai_mcp_token_hours`) and at most 24 hours (`ai_mcp_max_token_hours`; since v12.5.1 the defaults are 7 and 30 days). Users then find *Settings → AI connections*. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
-- MCP clients reach WRM at `https://<your WRM>/mcp`. Hosted connectors (claude.ai, ChatGPT) connect **from the provider's cloud**: WRM must be reachable from the internet over HTTPS for them. Behind a reverse proxy set `ai_mcp_public_url` (the address the apps use) and pass `/mcp`, `/oauth/` and `/.well-known/` through. Desktop apps with the stdio bridge only need to reach WRM from your computer.
-- The kill switch of the AI assistant (`ai_kill_switch`) also stops every AI connection. Turning off the built-in assistant (`ai_assistant`) does not turn off MCP, and the other way round.
-- The top bar shows **🤖 AI connected** while an AI app is connected; at narrower widths the top-bar labels hide a little earlier than before so nothing overlaps.
-
-## Upgrading from v11.7.0
-
-Replace the binary. The database gets new tables (`ai_providers`, `ai_sessions`, `ai_messages`) and the column `users.ai_blocked`; v11.7.0 still starts on it and ignores them.
-
-- **AI assistant** (off by default). An administrator turns it on in *Admin panel → AI assistant* (`ai_assistant` = `admins` or `all`) and adds the organisation's provider (Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Vertex AI or an OpenAI-compatible endpoint). Users then get an **AI** button in the title bar of SSH terminals and file managers. See [AI assistant](#ai-assistant).
-- New modes are restrictive by default: `ai_modes` = `read_only,ask` (the automatic mode must be allowed explicitly), personal API keys are off (`ai_personal_keys`), output is redacted before it is sent to the provider (`ai_redact_output`).
-- **Consumer chat subscriptions (Claude.ai, ChatGPT) cannot be used** by WRM or any other third-party application: use an API key, an enterprise gateway, or the MCP integration of v12.1.0 ([AI desktop apps](#ai-desktop-apps-mcp)).
-- AI sessions appear in *Sessions & recordings* with an **✦ AI** mark (the transcript is recorded like a terminal) and in the audit log as `ai.*` events.
-- The top bar no longer overlaps the *New window* button at about 1100 px.
-
-## Upgrading from v11.6.1
-
-Replace the binary (or use the new one-click update from the next release on); the database does not change.
-
-- **Run as a service:** on an interactive start WRM asks once whether to install itself as a service that starts at boot (systemd, launchd, rc.d or a Windows service; *Don't ask again* is remembered in `<DB_PATH>.service.json`). Scripts use `-install-service`, `-uninstall-service` and `-service-status`; `-no-service-prompt` skips the question. See [Service](#service). `sudo wrm -setup-docker [-service-user ACCOUNT]` (Linux) installs Docker Engine for Medium, lets the WRM account use it and restarts the WRM service.
-- **Updates:** WRM checks the project's GitHub releases once a day (no user data is sent). The version in the top bar shows **⬆ Update vX.Y.Z** with the release notes; administrators update with one click (SHA-256 checked against `SHA256SUMS.txt`, previous binary kept for a rollback). Air-gapped installations: `WRM_UPDATE_CHECK=off`. Docker never replaces itself. See [Updates & self-update](#updates--self-update).
-- **📂 in an SSH terminal** is now a menu: *Open here*, *Open /*, *Open home*. "Here" works without configuring OSC 7. See [Windows, tabs & snapping](#windows-tabs--snapping).
-- A systemd unit that runs WRM with `ProtectSystem=strict` needs the binary's folder in `ReadWritePaths` for the one-click update (units written by `-install-service` have it).
-
-## Upgrading from v11.6.0
-
-Replace the binary; the database does not change.
-
-- **📂 in the title bar of SSH terminals** opens the file manager of the same server, in the terminal's current directory when the shell reports it (OSC 7) ([#24](https://github.com/vedranius/web-browser-RDM-public/issues/24)). See [Windows, tabs & snapping](#windows-tabs--snapping).
-
-## Upgrading from v11.5.0
-
-Replace the binary; the database does not change.
-
-- **Activity tab** in the Git workspace with three views — *Git activity* (pushes and commits per branch and author from the Git server), *Deploy history* (the `history.jsonl` of every environment destination merged with the WRM runs of installations without environments) and *What is where* (branch, commit, version, who and when per environment and server, commits behind the branch head, drift). Each view has a **CSV export** of what its filters show. See [Git workspace: activity, deploy history & what is where](#git-workspace-activity-deploy-history--what-is-where).
-- **Gitea sources:** a Git source can now be a Gitea server (API v1, `Authorization: token …`). Targets, comparisons, deploys and the activity work as with GitHub; a .gitignore pull request is not available for Gitea yet (download the file).
-- The activity reads the provider API with the source's **read-only token**; for GitHub repository activity (pushes, force pushes) the token needs read access to the repository's metadata, otherwise only commits are shown. The deploy history and the matrix read the destinations over SSH like the *Environments* tab and need the `git_checks` policy; without it only WRM's own records are shown.
-- No new settings or policies.
-
-## Upgrading from v11.4.1
-
-Replace the binary. The database gets one new table (`git_env_exclusions`); the previous binary still starts on it and ignores it. Catalogs and installations without environments work exactly as before.
-
-- **Environments (optional):** a service of the catalog can get named environments — ordered destinations `server:/path` (the server is the name of an SSH connection) with rules: typed confirmation, `allowed_refs`, extra ignore patterns, an optional `post_deploy` command and the number of backups to keep. Add them on the new *Environments* tab (✎) or in the catalog JSON (`apps[].environments`). See [Git workspace: environments, deploy plans & safe deploys](#git-workspace-environments-deploy-plans--safe-deploys).
-- **Server-side state:** an environment deploy keeps its state next to the installation, by default in `<path>/.deploy-bak` (the existing backup directory): `state.json`, `history.jsonl`, `deploys/<id>.json`, `backups/rollback-<id>/` and the lock `.lock/`. Backups keep the existing `<id>-<YYYYMMDD-HHMMSS>` layout, and `VERSION.md` / `updates.jsonl` are written as before, so file-based tools keep working.
-- **Anchored patterns:** an exclude or ignore pattern that starts with `/` now matches the whole relative path only (`/lib/a.py` does not match `x/lib/a.py`). *Exclude permanently* writes such patterns; existing patterns are unchanged.
-- The same policies apply: `git_update` (deploy), `git_upgrade` (deploy of another ref), `git_rollback`, `git_restart`. Environment deploys run right away (no scheduling); use a dry run to preview.
-
-## Upgrading from v11.4.0
-
-Replace the binary; the database does not change.
-
-- **Clipboard history per user:** the *Clipboard* panel now keeps its history per signed-in user, and signing out removes it from the browser ([#30](https://github.com/vedranius/web-browser-RDM-public/issues/30)). The browser-wide history of earlier versions is deleted on the first sign-in, so the panel starts empty once.
-
-## Upgrading from v11.3.0
-
-Replace the binary. The database gets two new columns of `git_installs` (`last_ok_at`, `last_ok_state`); the previous binary still starts on it and ignores them.
-
-- **Git sources lost by the v11.3.0 upgrade come back:** upgrading a database from v11.2.0 or earlier to v11.3.0 set the `git_sources` table aside as `git_sources_old_<time>`. On the first start, v11.4.0 restores those sources (with their encrypted tokens) when no source exists yet; the old table is renamed to `git_sources_restored_<time>`.
-- **Every file of an installation:** the details list every file of the server folder and of the repository, with the reason for each state, and diff any repository file (also the ones the catalog excludes). **Refresh the targets once** so the targets keep their full commit and the repository files outside the catalog are listed too. See [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks).
-- **Partial checks:** select installations, servers or services and check only those (or only stale ones); results stream in and can be cancelled. Two new settings: `git_check_parallel` (8) and `git_check_per_server` (2).
-
-## Upgrading from v11.2.0
-
-Replace the binary. The database gets two new tables (`git_feeds`, `git_pipelines`) and four new columns of `git_sources` (`write_token`, `hook_id`, `hook_secret`, `hook_at`); the previous binary still starts on it and ignores them.
-
-- **.gitignore helper:** a new *.gitignore* tab in the Git workspace. The output is a download; a merge / pull request needs an optional **write token** on the Git source and the new policy `git_gitignore_mr` (**administrators only** by default). See [Git workspace: .gitignore helper](#git-workspace-gitignore-helper).
-- **Optional CI integration:** a webhook per Git source, bundles fetched from CI artifacts, and the deploy method *CI pipeline* per service. All of it is off until you set it up; WRM works without any CI. See [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional).
-- Webhooks arrive at `/api/hooks/git/<id>`: if WRM is behind a reverse proxy that only forwards some paths, forward this one too.
-- Checks now also record the size of files found only on servers; installations show it after their next check.
-
-## Upgrading from v11.1.0
-
-Replace the binary. The database is unchanged: installs and transfers are stored as runs in `git_runs`; the previous binary still starts on it.
-
-- **New servers from the Git workspace:** *Install…* on the *Installations* tab (a wizard: server, services with their version, target directory, pre-checks, per-host files from templates / copies / typed, optional systemd or supervisor unit, optional start) and *Transfer…* for an installation (copy it to another server with its per-host configuration). See [Git workspace: new servers (install & transfer)](#git-workspace-new-servers-install--transfer).
-- New policies `git_install` and `git_transfer` — **administrators only** by default; change them in *Admin panel → Policies*.
-- Installs and transfers send the existing run notifications (*Git: … started / succeeded / failed*) and are audited as `git.install` / `git.transfer`.
-
-## Upgrading from v11.0.0
-
-Replace the binary. The database gets two new tables (`git_runs`, `git_pending_restarts`); the previous binary still starts on it and ignores them.
-
-- **Deploying from the Git workspace:** *Update*, *Upgrade…*, *Rollback…*, *Restart…* and *Stamp* on the *Installations* tab and in the details of an installation, a new *Runs* tab, and scheduled runs. See [Git workspace: update, upgrade, rollback & restarts](#git-workspace-update-upgrade-rollback--restarts).
-- New policies `git_update`, `git_upgrade`, `git_rollback`, `git_restart` — **administrators only** by default; change them in *Admin panel → Policies* — and `git_schedule_grace_minutes` (30).
-- New notification events for runs and restarts (*Git: an update, upgrade or rollback started / succeeded / failed*, *a service restart is scheduled / done*, *a scheduled run starts soon*) in *Settings → Notifications*.
-- WRM writes on servers only when you start or schedule a run; checks stay read-only.
-
-## Upgrading from v10.10.0
-
-Replace the binary. The database gets new tables (`git_sources`, `git_trees`, `git_blobs`, `git_workspace`, `git_targets`, `git_installs`); the previous binary still starts on it and ignores them.
-
-- **Git workspace:** the new **⎇ Git** button in the top bar compares the services installed on your servers with GitLab / GitHub or an offline bundle, file by file and read-only. See [Git workspace](#git-workspace-compare-services).
-- It is on for everyone. Administrators can hide it (`git_enabled` off, or `WRM_GIT_ENABLED=0`) or limit checks to administrators (`git_checks`).
-- New notification events *Git: a new version is available*, *Git: files changed by hand on a server* and *Git: a server is unreachable for checks* in *Settings → Notifications*.
-
-## Upgrading from v10.9.1
-
-Replace the binary. The database gets a new table `bookmarks`; the previous binary still starts on it and ignores it.
-
-- **Folder bookmarks:** ★ next to the path bar of the file manager and in a terminal's title bar. *Bookmark this directory…* saves the current folder for one connection, a folder, a tag or all connections; paths may use `~`, `$USER`, `{host}` and `{name}`. A bookmark can be the **start directory** of a connection. See [Folder bookmarks](#folder-bookmarks).
-- **WinSCP bookmarks:** *★ → Manage bookmarks… → Import WinSCP.ini* adds the remote directory bookmarks of a WinSCP configuration as global bookmarks.
-- Bookmarks are part of *Export* / *Import*.
-
-## Upgrading from v10.9.0
-
-Replace the binary. The database gets a new table `putty_sessions` and a column `connections.putty_session`; the previous binary still starts on it and ignores them.
-
-- **Import from PuTTY:** *Settings → Data → Import from PuTTY* reads a `.reg` export of your saved PuTTY sessions, with their proxies. See [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh).
-- mRemoteNG connections imported **before** v10.9.1 do not remember their *PuttySession*, and importing the file again skips them as existing: give them the proxy by hand (or through their folder's default proxy).
-
-## Upgrading from v10.8.1
-
-Replace the binary. The database gets new tables (`proxies`, `proxy_grants`, `notify_channels`, `notify_subscriptions`, `notify_prefs`, `notify_pending`, `notify_state`) and columns (`connections.proxy_id`, `folders.jump_conn_id`, `folders.proxy_id`); the previous binary still starts on it and ignores them (connections then go without their proxy and folder defaults).
-
-- **Proxies:** define SOCKS5, SOCKS4/4a or HTTP CONNECT proxies (or a SOCKS tunnel of a connection) under *🔑 SSH keys & credentials → 🌐 Proxies* and choose one in a connection (*Proxy*, next to *Jump host*). See [Proxies](#proxies-socks--http).
-- **Folder defaults:** right-click a folder → *Folder settings…* to give it a default jump host and proxy. Connections in the folder that have no jump host of their own then use the folder's (existing connections without a jump host included). Choose *no jump host (not the folder's)* where a connection must stay direct.
-- **Notifications:** an administrator adds channels in *Admin panel → Notifications* (e-mail, Telegram, Slack / Mattermost / Rocket.Chat, Teams, Discord, ntfy, Gotify, Pushover, webhook); users subscribe in *Settings → Notifications*. Nothing is sent until both happened. See [Notifications](#notifications-e-mail-chat-push-webhook).
-- **Docker:** `docker-compose.yml` now maps `host.docker.internal` to the Docker host (`extra_hosts`), for proxies that run on the host.
-- Deleting a jump host now makes the connections that used it fall back to their folder's default jump host (or go direct).
-
-## Upgrading from v10.8.0
-
-Replace the binary. Nothing changes in the database.
-
-- **Larger imports work:** mRemoteNG, OpenSSH config and inventory (CSV / Excel) files up to **20 MB** import again (from about 1 MB on they failed with *Bad JSON*). A larger file gets a clear message with its size and the limit, already in the browser.
-- **Install as an app** (*Settings → General*) now shows the steps for your browser, or the reason why installing is not possible here (plain `http://` to an address other than `localhost`, an untrusted certificate, Firefox on the desktop). The *Install* button appears only when the browser can install right away. To get HTTPS quickly, see [HTTPS with Caddy](#https-with-caddy).
-- A reverse proxy in front of WRM must allow request bodies of at least 32 MB for imports (`client_max_body_size 0;` in the nginx example does).
-
-## Upgrading from v10.7
-
-Replace the binary. The database gets two new columns (`connections.notes`, `connections.temp_until`); the previous binary still starts on it (it shows quick connections as normal ones).
-
-- **⚡ Quick connect** field at the top of the sidebar: `user@host:port` + Enter.
-- **📝 Notes** in the connection dialog and in the right-click menu; a 📝 next to a connection opens them.
-- **🧰 Tools** in the top bar, and *Network tools from this server…* / *Check ports of this host* in the right-click menu (policy `network_tools`, default: all users).
-- **Install as an app**: *Settings → General*, or the install icon of the browser's address bar (needs HTTPS with a trusted certificate, or `localhost`).
-
-## Upgrading from v10.6
-
-Replace the binary. The database gets one new column (`connections.bmc`); the previous binary still starts on it.
-
-- Connections can have a **BMC** (*Edit → Out-of-band management*); right-click → *Power & status (BMC)…* and *Serial console*. For IPMI install `ipmitool` on the WRM server or on the jump host (`apt install ipmitool`).
-- New protocol **Serial port** for console cables on the WRM machine (administrators by default, policy `serial_ports`).
-- Saved workspace sessions now really keep remote desktop windows (and console windows).
-
-## Upgrading from v10.5
-
-Replace the binary. The database gets three new columns (`connections.tags`, `ext_id`, `ext_tags`) and a table `inventory_sources`; the previous binary still starts on it (it ignores the tags).
-
-- Connections have **tags**; the sidebar shows a tag filter and an environment badge (`env:prod` …). See [Tags & inventory import](#tags--inventory-import-csv-excel-netbox).
-- **Settings → Data → Import inventory**: CSV / Excel files and NetBox.
-
-## Upgrading from v10.4
-
-Replace the binary. The database gets new tables (`ssh_keys`, `ssh_key_deployments`, `credentials`, `credential_grants`) and two new columns (`connections.key_id`, `connections.credential_id`); the previous binary still starts on it (connections that use the new login types then cannot log in).
-
-- New **🔑 Keys** button: your SSH key store and the credentials vault. See [SSH keys & credentials vault](#ssh-keys--credentials-vault).
-- Connections can log in with an **SSH key from the key store** or a **credential from the vault**; remote desktops and FTP can use vault credentials too.
-- Deleting an account now also deletes its snippets, tunnels, keys and credentials.
-
-## Upgrading from v10.3
-
-Replace the binary. The database gets one new column (`connections.options`); the previous binary still starts on it.
-
-- **Remote desktops need guacd** next to WRM: `apt install guacd` (Debian/Ubuntu), `docker run -d --network host guacamole/guacd`, or the `guacd` service that `docker-compose.yml` now contains. Without guacd everything else keeps working; opening an RDP/VNC/Telnet connection then explains what is missing. See [Remote desktop](#remote-desktop-rdp-vnc-telnet).
-- Importing from **mRemoteNG** now also brings RDP, VNC and Telnet connections (with domain, console, colors and RD Gateway).
-- SQLite now waits up to 10 s for a busy database on every connection (fixes rare *database is locked* errors under load).
-
-## Upgrading from v10.2
-
-Replace the binary. The database gets a new table (`snippets`) and one new column (`connections.monitor`); the previous binary still starts on it.
-
-- **File names no longer carry a suffix:** releases are `v10.3.0`, binaries `wrm-pro-v10.3.0-linux-amd64` etc. Update scripts and systemd units that use the file name.
-- **Live status is on by default:** WRM opens a TCP connection to every saved host:port once a minute (SSH and FTP: it reads the greeting and closes politely, like Nagios `check_ssh`). Servers see it in their logs. Change the interval or turn it off in *Admin panel → Security policies → Live status*, or untick *Monitor up/down status* in a connection. See [Live up/down status](#live-updown-status) about fail2ban.
-- **Broadcast input** is available to everybody; turn it off with `broadcast_enabled` if you do not want it. Every start and stop is in the audit log.
-
-## Upgrading from v10.1
-
-Replace the binary. The database gets a new table (`connection_tunnels`) and two new columns on `connections` (`jump_conn_id`, `web_path`); nothing else changes. To go back, run the v10.1 binary on the same database; it does not know these features (connections behind a jump host then try to connect directly, web interface connections cannot be opened, tunnels do not run).
-
-- New: [jump hosts](#jump-hosts-bastions), [SSH tunnels](#ssh-tunnels-port-forwarding), [web interface connections](#web-interfaces-http--https-connections) and [import from mRemoteNG / OpenSSH](#import-from-mremoteng-putty-and-openssh).
-- **Tunnels are on by default for all users**, listening on `127.0.0.1` of the WRM machine only. Remote forwards (`-R`) and listening on network addresses are limited to administrators. Review *Admin panel → Security policies → SSH tunnels* — e.g. turn tunnels off (`WRM_TUNNELS_ENABLED=0`) or limit them to administrators if WRM runs on a shared server.
-- Jump hosts need `AllowTcpForwarding yes` on the bastion (the OpenSSH default), exactly like `ssh -J`.
-
-## Upgrading from v10.0
-
-Replace the binary. The database is extended automatically (new tables, columns and triggers only — nothing is changed or removed; the previous binary still runs on the upgraded database).
-
-- **Terminal sessions are now recorded by default** (`session_recording`). Users see *“This session is recorded”* and a **● REC** badge on the terminal. Inform your users (in many countries this is required), or turn it off in *Admin panel → Security policies → Session recording*. Keystrokes are **not** recorded unless you turn on *Record keystrokes*.
-- Recordings use disk space next to the database (`recordings/`, typically a few KB to a few MB per session; limit per session `recording_max_mb`, kept `recording_retention_days` = 90 days). Back up or exclude that folder as you need.
-- The audit log is now **append-only and hash-chained**. *Admin panel → Audit log → Verify integrity* checks it. Entries written before the upgrade have no hash and are skipped by the check.
-- Every upload, download (also files opened in the editor and files in ZIP downloads) and server-to-server copy is logged in *Admin panel → File transfers* with size and SHA-256.
-- New: `/healthz` for load balancers and monitoring, `wrm -healthcheck` for container health checks, a `Dockerfile` and `docker-compose.yml`.
-
-## Upgrading from v9
-
-Replace the binary and start it with the same database and the same `ENCRYPTION_KEY` (if you set one). Everything is migrated automatically. Things to know:
-
-- **Stored secrets are re-encrypted.** Without `ENCRYPTION_KEY`, v9 used a public default key. v10 generates a random key file (`remote_manager.db.key`) and re-encrypts all secrets with it on the first start. Back that file up. (If you did set `ENCRYPTION_KEY`, nothing changes.)
-- **Self-registration is closed by default.** Existing accounts keep working. Open it again in *Admin panel → Security policies* if you want it.
-- **Passwords and keys are no longer sent to the browser.** The *Edit connection* dialog shows “saved and encrypted — leave empty to keep it”. *Export* is without secrets; *Export with passwords & keys* asks for your password.
-- **SSH host keys are verified** (trust on first use). The first connection to each server remembers its key; a changed key is refused until you accept it.
-- **Key file / Auto (~/.ssh)** authentication (keys stored on the WRM server) is limited to administrators unless the policy *Allow server key files for all users* is on.
-- **Existing shares keep their behaviour** (anyone with the link, role *Operator*). Edit them to use the new access modes and roles.
-- **Behind a reverse proxy:** state-changing API calls now require the `Origin` to match the `Host` (like WebSockets already did). Pass the `Host` header, or set `WRM_ALLOWED_ORIGINS`. Set `WRM_TRUST_PROXY=1` so rate limits and the audit log see real client IPs.
-- The per-IP sign-in limit is now 20 failures / 10 minutes; accounts additionally lock for 15 minutes after 10 wrong passwords (policy).
-- If the database comes from an earlier build that already had tables named like the new v10 tables (`audit_log`, `collab_messages`, …) but with a different layout, WRM keeps them as `<table>_old_<time>` and creates new ones (logged as *Upgraded table …*). Nothing is deleted.
-- The app is served at `/`. Old bookmarks to `/static/` are forwarded there.
-
 ---
 
 ## How it works
@@ -1120,7 +343,7 @@ Replace the binary and start it with the same database and the same `ENCRYPTION_
 
 Folders can have a **Parent folder** (up to 32 levels); right-click a folder to create a subfolder or edit its parent. The sidebar renders the hierarchy and connection pickers show the complete folder path; tabs and window titles show only the connection's name, with the folder path in their tooltip. The row above connection tabs filters open tabs/windows by folder and focuses its most recently used window. Config export/import and new mRemoteNG imports preserve nesting. Deleting a folder moves its child folders to its former parent and keeps their connections. Sharing a folder includes descendants; jump/proxy defaults apply to the immediate folder only.
 
-**Sorting folders (v13.14.0).** Folders keep the order you give them by drag and drop. Right-click a folder for **Sort subfolders A–Z (all levels)** or **Keep subfolders sorted A–Z**, and the top level offers **Sort all folders A–Z** and **Keep all folders sorted A–Z**. A kept-sorted folder puts new, renamed and moved subfolders in their place by name at every level below it. Names compare without case and with numbers in their natural order (`srv2` before `srv10`). Connections inside a folder are always listed by name. Sorting is audited as `folder.sorted`.
+<a id="sorting-folders-and-connections"></a>**Sorting folders (v13.14.0) and connections (v14.11.1).** Folders keep the order you give them by drag and drop. Right-click a folder for **Sort subfolders A–Z (all levels)** or **Keep subfolders sorted A–Z**, and the top level offers **Sort all folders A–Z** and **Keep all folders sorted A–Z**. A kept-sorted folder puts new, renamed and moved subfolders in their place by name at every level below it. Names compare without case and with numbers in their natural order (`srv2` before `srv10`). Connections inside a folder are listed by name until you drag one above or below another connection: from then on that folder keeps your order, and connections you have not placed follow by name. Dropping a connection on a connection in another folder moves it there at that place; moving it with *Move to folder…* or onto a folder row puts it after the placed ones. The order is per user, so a colleague's tree is unaffected. Right-click a connection for **Move connection up / down** and **Sort connections here A–Z**, or a folder for **Sort connections in this folder A–Z**. Sorting is audited as `folder.sorted`, `connection.reordered` and `connection.order_reset`.
 
 Left sidebar ("PRO MANAGER"):
 
@@ -1393,6 +616,9 @@ Every opened connection is a **window** inside the workspace. There is also a **
 - **Colour vision:** deuteranopia, protanopia, tritanopia and achromatopsia switch OK / warning / error / info colours and diffs to an Okabe–Ito based palette, optionally also in terminals. *Do not rely on colour alone* adds ✓ ✕ ! signs to status badges and toasts, shapes to connection status dots (● up, ◆ slow, ■ down) and underlines links.
 - **Other options:** contrast (normal, more, maximum), minimum contrast in terminals (WCAG 4.5:1 or 7:1), animations (system, reduce, full), reduce transparency and blur, strong keyboard focus outline, underline links.
 - **Custom CSS** for your own interface only (`appearance_custom_css`, default on).
+- **Save changes to this theme** writes your colour changes into the selected theme of your own instead of making a copy. A **contrast check** beside the preview shows the WCAG ratio of text, secondary and faint text on panels, text on the accent and terminal text (4.5 passes AA, 7 AAA) while you edit.
+- **Themes for everyone (administrators):** **📢 Share with everyone** on one of your themes publishes it to every user under *From your organisation* (up to 12, stored in `appearance_shared_themes` with the same value checks as addon themes); **Default for everyone** can then make it the default, and **Stop sharing** removes it.
+- **Lock colours** (`appearance_lock`, Admin → Policies → Appearance): every user gets the default theme; choosing, editing and importing themes and custom CSS are hidden. Accessibility options (colour vision, contrast, motion), fonts, size and spacing stay with each user, and administrators are not locked so they can keep editing themes.
 - **Themes from addons:** an enabled addon offers its themes here (`ui.themes` in `addon.json` with `id`, `name`, `name_hr`, `mode`, `tokens` and/or `css`; the older single `ui.theme` stylesheet appears as one theme). Nothing is applied to users who did not pick it. An administrator can make any theme the default with **Default for everyone** or `appearance_default_theme`.
 
 ### Screen lock
@@ -1418,7 +644,7 @@ The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snip
   - anywhere else on the canvas: it is placed right there, between your windows. It shares their stacking order (click it to bring it to the front), stays inside the canvas when the browser or the side panels change size, and lands on the grid when *Snap to the grid* is on.
 - **Resize:** the line between two groups, the inner edge of the left and right zones and the top edge of the bottom zone. A panel on the canvas moves by the empty part of its tab bar and resizes by its bottom right corner.
 - **⋯ on every group:** *Dock on the left*, *Dock on the right*, *Dock at the bottom* (as a tab of the zone's first group), *On the canvas (anywhere)*, *Hide*, *Lock the layout*, *Panels…*, *Reset the layout*.
-- **Panels** (▦ in the top bar, or in its ⋯ menu when the bar is narrow) lists every panel and where it is (left, right, bottom, on the canvas, hidden). Tick a panel to show it again where it was, untick to hide it. The AI live view is listed but appears only while an AI app works on a server.
+- **Panels** (the *Panels* section of the **▤ Workboard** menu since v14.11.2; ▦ in the top bar only for accounts without the Workboard) lists every panel and where it is (left, right, bottom, on the canvas, hidden). Tick a panel to show it again where it was, untick to hide it. The AI live view is listed but appears only while an AI app works on a server.
 - **Lock the layout** (in *Panels*, the ▤ Workboard menu or any ⋯ menu): no panel or window can be dragged, split, resized or moved (the snap and maximize buttons still work), and the ▦ button shows 🔒. Switching tabs, collapsing the side panels and showing or hiding panels still work. Dragging a tab while locked says how to unlock.
 - **Reset the layout** puts every panel back: *Connections* left; *Sessions*, *Snippets* and the AI live view as tabs on the right with *Clipboard* under them.
 - **Saved per user on the server** (`/api/me/ui/layout`), so the layout follows you to every browser, with a copy in the browser for an instant start. A zone without panels disappears. While the AI live view is shown in a side zone, that zone keeps its own width (up to half the window).
@@ -1427,18 +653,19 @@ The side panels are yours to arrange (v12.6.8). *Connections*, *Sessions*, *Snip
 
 ### Workboard: the shared canvas and addons
 
-The window area is **one canvas** (v12.6.10): terminals, file managers, desktops, **Workboard addons** and the panels you place on it share it, and you arrange it as you like. **▤ Workboard** (in the *Settings · Panels · Workboard* group of the top bar, or its ⋯ menu when the bar is narrow) opens the canvas menu. Addons start **empty**: you add only what you want from the catalog (**＋ Add addon**, also on the empty canvas), up to 24, the same addon several times if you like (for example two *Server load* addons for two groups of servers).
+The window area is **one canvas** (v12.6.10): terminals, file managers, desktops, **Workboard addons** and the panels you place on it share it, and you arrange it as you like. **▤ Workboard** (in the *Settings · Workboard* group of the top bar, or its ⋯ menu when the bar is narrow) opens the canvas menu, which manages **panels and addons together** (v14.11.2). Addons start **empty**: you add only what you want from the catalog (**＋ Add to the Workboard**, also on the empty canvas; it lists the built-in panels first, with *Show* for a hidden one), up to 24, the same addon several times if you like (for example two *Server load* addons for two groups of servers).
 
 - **Addons are windows:** move by the title bar, resize from any edge or corner, snap by dragging to an edge or with the snap buttons, double-click to maximize, minimize, switch with the tabs. Title bar buttons: **↻** refresh (addons that fetch data; hover the title to see how old the data is), **⚙** settings, **⇥** dock as a panel, and the usual minimize, maximize and **✕ remove** (it asks first when settings or a note would be lost). Addons stay visible with any connection folder tab chosen. A new addon finds a free spot beside your windows.
 - **Window menu** (right-click a title bar or a tab), for every window: snap layouts, **📌 Pin in place** (no moving or resizing until unpinned; 📌 shows in the title bar) and **Always on top**; for addons also *Settings*, *Refresh now* and *Dock on the right / left / at the bottom*.
 - **Docked as a panel**, an addon is a panel of the [panel layout](#panel-layout-dock-stack-float-and-lock): stack it with *Sessions*, split a column, move it to another edge or anywhere on the canvas. Its bar keeps ↻, ⚙ and **⧉ Back onto the canvas as a window**, which returns it to its last place.
 - **The ▤ Workboard menu:**
-  - *Add addon…*
+  - *Add to the Workboard…*
+  - **Panels** (v14.11.2): every panel with where it is (left, right, bottom, on the canvas, hidden) and the addons docked as panels; tick to show, untick to hide. This is the list the ▦ *Panels* button used to open; that button now appears only for accounts without the Workboard.
   - **Canvas:** *Snap to the grid* (windows and panels land on grid lines when moved, and moved edges when resized), *Grid size* 10 / 20 / 40 px, *Canvas background* (*only with the grid* shows dots while snapping is on; or always dots, lines, plain).
-  - *Tile the windows* (a grid of all shown, unpinned windows), *Cascade the windows*, *Minimize all windows*, *Show all minimized windows*, *Minimize / Show the addons*, *Lock the layout*.
+  - *Tile the windows* (a grid of all shown, unpinned windows), *Cascade the windows*, *Minimize all windows*, *Show all minimized windows*, *Minimize / Show the addons*, *Lock the layout* (the ▤ button then shows 🔒), *Reset the layout*.
   - **Saved layouts:** *Save this layout…* stores the addons with their places and settings, the panel layout and the canvas settings under a name (up to 10); tick *Also the open terminals, file managers and desktops* to keep those windows too (like a [workspace session](#workspace-sessions)). Choosing a saved layout replaces your addons and panel layout; with windows in it, WRM asks whether to replace or add to your open windows. *Manage saved layouts…* applies or deletes them.
   - *Export the layout (JSON)* downloads the addons, canvas settings, panel layout and saved layouts as `wrm-workboard-<date>.json`; *Import a layout…* reads such a file (up to 512 KiB, everything checked as when loading), replaces your addons and panel layout and adds its saved layouts to yours. Exported files contain addon settings and notes, but no secrets.
-  - *Panels…* and a short help text.
+  - A short help text.
 - **Every addon's settings:** your own title, *Colour* (a coloured edge on the title bar), *Text size* (small to extra large), the addon's own options, and *Remove*.
 - **Saved per user on the server** (`/api/me/ui/workboard`, with a copy in the browser), so the canvas follows you to every browser. Places are kept as fractions of the canvas, so they fit other screen sizes.
 - Addons load and refresh **only while visible**: not minimized and not completely covered by other windows (a countdown still ends on time).
@@ -1525,6 +752,8 @@ Windows servers (RDP), Linux desktops and KVM/IPMI consoles (VNC) and old networ
 
 **🔌 Serial ports of the WRM machine** (USB console cables, `ttyS0`): protocol *Serial port*, the device name (`ttyUSB0`, `ttyACM0`, `ttyS0`) as host and the line settings — speed (default 9600; 115200 is common too), data bits, parity, stop bits, flow control (none, RTS/CTS, XON/XOFF). *Test connection* opens the port; a double-click opens it in a terminal (raw, recorded). Serial ports belong to the WRM server like its key files: by default only administrators may add them (policy `serial_ports`: off / admins / all); WRM must run on Linux, as a user that may open the device (group `dialout`).
 
+**Serial / USB devices on your own computer** (*Tools → Serial / USB devices…*, since v14.12.0): for a board or adapter plugged into the computer in front of you rather than into the WRM server. **Select USB device** asks the browser for permission (Web Serial: Chrome, Edge and other Chromium browsers, over HTTPS or localhost); authorised ports are listed again next time. WRM recognises common boards by USB VID:PID (Arduino Uno / Mega / Nano, ESP32 native USB, STM32 virtual COM port, Raspberry Pi Pico, CP210x / CH340 / FTDI bridges; an adapter is named as an adapter, since the board behind it cannot be known), suggests baud rate and framing, opens a terminal with a send box and line ending (none, LF, CRLF, CR) and counts bytes and errors. *Save profile* keeps a name and settings per device in this browser for your user. *AI recognition prompt* and *AI coding prompt* copy a prompt for the AI assistant. Serial data never goes to the WRM server. Hidden when the user's serial policy is off.
+
 Policies: `bmc_enabled` (`BMC_ENABLED`), `serial_ports`.
 
 ### Snippets & run on connect
@@ -1537,6 +766,7 @@ Snippets are saved commands. Open them in the right panel (**⚡ Snippets** tab)
 - **Multi-line snippets:** every line is one command.
 - **Variables** are filled in for each terminal: `{{host}}`, `{{port}}`, `{{user}}`, `{{name}}` (connection), `{{folder}}`, `{{wrm_user}}`, `{{date}}`, `{{time}}`. **Prompts** are asked before the snippet runs, with a live preview: `{{?Service}}` or with a default `{{?Service=nginx}}`. Example: `journalctl -u {{?Service=nginx}} --since "{{?Since=1 hour ago}}" --no-pager`.
 - **Run on connect:** tick *Run on connect* and WRM types the snippet into the shell as soon as a terminal of a matching connection is connected (also after a reconnect) — `sudo -i`, `cd /srv/app`, `tmux attach || tmux new`, `export KUBECONFIG=…`. Right-click a connection or a folder → **⚡ Run on connect…** creates one. Order: all-connection snippets, then folder, then connection snippets. A message lists what ran; the audit log records it (`terminal.auto_run`).
+- **★ Recently used:** with more than five snippets, the last ones you ran or inserted are listed on top (remembered in this browser, per user).
 - **Shared snippets:** administrators can share a snippet with all users (read-only for them, all connections, never auto-run) — a team runbook in the terminal.
 - **✨ Add example snippets** creates a starter set (disk, memory, top processes, failed services, journal errors, listening ports, big files, service status/restart…).
 - Snippets are included in *Export* / *Import*, copied with *Duplicate*, and removed with their connection or folder.
@@ -1763,7 +993,7 @@ The Medium view has a **WRM engine** panel. It compares a branch or tag with eve
 
 Runs change servers only when you start or schedule them. Select installations on the *Installations* tab (or open one) and choose an action; a run works on the installations **one after another** and **stops at the first failure** (*rolling*). Everything goes over SSH with POSIX tools (`sh`, `cp`, `mv`, `find`, `awk`, `tr`, `sha256sum`).
 
-- **Update** — the newest version of the ref the installation follows. **Upgrade…** — another branch or tag (`main`, `tag:v2`, `tag:latest`), with a warning and a summary per installation: files to change, new files, files changed locally, and files that the new version no longer has (they stay on the server). *Follow this ref from now on* sets the services' ref override, so later comparisons use it. **Rollback…** — restore a backup from `.deploy-bak/`. **Stamp** — write `VERSION.md` where an installation is up to date and has none (*Overwrite an existing VERSION.md* forces it). The dialog lists the files that differ; *Also stamp installations that are not up to date* writes it anyway with each file's actual version (older files their matching version, hand-changed files `(local)`) and a `Napomena` line saying the installation is partial. Dialogs opened from another one have **← Back** (Alt+←).
+- **Update** — the newest version of the ref the installation follows. **Upgrade…** — another branch or tag, picked from the project's branches (⑂) and tags (🏷, newest first) or typed with *Enter a custom ref…* (`main`, `tag:v2`, `tag:latest`), with a warning and a summary per installation: files to change, new files, files changed locally, and files that the new version no longer has (they stay on the server). *Follow this ref from now on* sets the services' ref override, so later comparisons use it. **Rollback…** — restore a backup from `.deploy-bak/`. **Stamp** — write `VERSION.md` where an installation is up to date and has none (*Overwrite an existing VERSION.md* forces it). The dialog lists the files that differ; *Also stamp installations that are not up to date* writes it anyway with each file's actual version (older files their matching version, hand-changed files `(local)`) and a `Napomena` line saying the installation is partial. Dialogs opened from another one have **← Back** (Alt+←).
 - **Choosing files:** *old* and *missing* files are ticked. A file **changed by hand** is written only when you tick it, with a warning (its content stays in the backup). **Protected** files are never written. *Show all files* lists the current ones too.
 - **Confirmation:** a summary, and for **production** installations — tag `env:prod` (or `prod`, `production`, `prd`, `live`) or an environment directory with that name — you type the server name. The server checks it again.
 - **Steps per installation**, shown live in the run's details:
@@ -2099,7 +1329,7 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
   - The layout is stored for your account. Approval cards always pop up at the bottom right, whatever the layout. On a phone the live view is a sheet at the bottom of the screen.
 - **After a refusal** (denied in WRM or in the app, or no answer within `ai_approval_timeout_seconds`) the tool result tells the AI where it was refused, **which rule made WRM ask** (the time or action limit, a command outside the allow list, ask mode, a power command) and what you can change in WRM, and to ask you whether to continue, change the command or stop, instead of retrying a variant on its own.
 - **Full access (v12.6.2, modes v12.6.3):** the administrator's `ai_full_access` switch applies, depending on `ai_full_access_mode`, to every AI session (`all`, the default: the WRM AI panel and every AI connection), only to AI connections with the scope `full_access` (`connection`; the scope is offered only in this mode), or to users who turn on **Full access for my AI sessions** in *Settings → AI connections* (`user`). Then nothing is refused outright: commands on the destructive list or `ai_blocked_commands`, the connection's deny lists, power commands, protected paths and secret files (also with `ai_sensitive_reads` = `deny`) become approvals marked *FULL ACCESS*, asked every time and never automatic, even with "Allow everything". A read-only connection stays read-only and the other scopes still apply. With `ai_full_access_blocked` = `deny` (v12.6.4) the administrator's `ai_blocked_commands` stay refused even under full access. Turning the policy off restores the refusals at the next call.
-- **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Since v13.8.0 approving it there **runs the call at once** (`ai_mcp_later_approval` = `run`, the default): the output appears in the live view, and when the AI repeats the same call it gets that output (marked as run after your approval) instead of running it again. With `repeat` the approval only lets the identical call run once without asking when the AI repeats it. This also works after the AI app closed its session (v12.6.5): the approval covers the same call once in your next session on that connection. A denial in WRM stays a denial, and so does *Deny* in the app's question (v13.8.0); only closing the question without an answer keeps the request for later. When you decide in WRM, the app's open question is closed. Deciding a request that is no longer waiting tells you who decided it and where (in WRM or in the AI app), or that the AI stopped waiting. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.
+- **Approve later:** an approval nobody answers within `ai_approval_timeout_seconds`, that the app declines on its own, or that the app stops waiting for does not disappear: it stays in WRM for an hour (card, live panel, 🤖 counter). Since v13.8.0 approving it there **runs the call at once** (`ai_mcp_later_approval` = `run`, the default): the output appears in the live view, and when the AI repeats the same call it gets that output (marked as run after your approval) instead of running it again. With `repeat` the approval only lets the identical call run once without asking when the AI repeats it. This also works after the AI app closed its session (v12.6.5): the approval covers the same call once in your next session on that connection. A denial in WRM stays a denial, and so does *Deny* in the app's question (v13.8.0); only closing the question without an answer keeps the request for later. When you decide in WRM, the app's open question is closed. Since v14.11.4 the tool result of a request kept for later names its `approval_id` and tells the AI to **wait**: it calls `wait_for_approval` (`session_id`, `approval_id`, `seconds` 5–55, default 45) again while that says *Still waiting*, and continues only after your decision, so an app's short tool timeout no longer lets it go on without the step. Deciding a request that is no longer waiting tells you who decided it and where (in WRM or in the AI app), or that the AI stopped waiting. Refusals that an approval cannot change (destructive patterns, deny lists, read-only sessions, scopes) say so.
 - **Allow everything:** in automatic mode an AI connection can allow every command (`*`) and file (`/**`) with **no time or action limit**: it then stays automatic until the AI connection expires or you revoke it. With `*`, chains, variables, groups and redirections run too. Still refused or asked: the built-in destructive patterns and `ai_blocked_commands`, your deny lists, sensitive files, commands WRM cannot parse, power commands, and servers the connection does not include. The policy `ai_auto_until_grant` (default on) decides whether users may choose no limits; the browser's built-in assistant always keeps its limits.
 - **🤖 AI connected** in the top bar shows while an app has an open session (with the number of pending approvals); click it to see the apps and **revoke** one or all with one click. Revoking ends the sessions at once; so do expiry, the kill switch and the policies.
 - Each session is an AI session with transport *mcp*: in the audit log (`mcp.*` for connecting, tokens and OAuth; `ai.*` for every tool call, approval and denial), in the transcripts and in **Sessions & recordings** (✦ AI), like the built-in assistant.
@@ -2107,7 +1337,7 @@ The wizard also offers an `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` text that expl
 **Set up your app** — *Settings → AI connections* shows the address (`https://<your WRM>/mcp`) and, after you create a token, ready-to-copy snippets:
 
 1. **Claude Desktop — one-click extension (recommended for Claude Desktop).** In the wizard pick *Claude Desktop*, choose the servers and press *Create token*, then **Download Claude Desktop extension**. Open the downloaded `wrm-pro.mcpb` (or *Claude → Settings → Extensions → Advanced settings → Install extension…*) and press **Install**: the WRM address and the token are already filled in. The extension is an [MCP bundle](https://github.com/modelcontextprotocol/mcpb) with a small Node.js bridge (`remote-manager/mcpb/server/index.js`, no dependencies) that Claude Desktop runs with its own built-in Node.js; it passes MCP messages, including approval questions, between Claude and WRM's `/mcp`. It runs on your computer, so it reaches a WRM on your own network and over plain HTTP; for a self-signed HTTPS certificate choose the CA file in the extension's settings. Claude Desktop keeps the token in the operating system's secure storage; delete the downloaded file after installing, since it contains the token. When the token expires or is revoked, the extension keeps running and offers `wrm_connect` with the reason (since v13.13.0): ask Claude to connect to WRM again and approve the sign-in in the browser, or download the extension again with a new token. `POST /api/mcp/claude-desktop` builds the bundle; downloads are audited (`mcp.desktop_extension`).
-2. **Claude app and Claude Code — WRM PRO plugin** (no settings, see the quick start above). The plugin (`packaging/claude-plugin/wrm-pro`, version 1.2.1) carries the bridge as an MCP bundle, the skills `wrm` (`/wrm-pro:wrm`), `wrm-safe-operator` and `linux-incident-triage`, and the command `/wrm-pro:connect`. Without a saved connection the bridge starts anyway and offers one tool, `wrm_connect`; a wrong, expired or revoked token or an unreachable WRM also leaves it running with that tool and the reason. `wrm_connect` registers itself with WRM (dynamic client registration with a `http://127.0.0.1:<port>/callback` redirect, which the default `ai_mcp_redirect_uris` allows), opens WRM's consent dialog in the browser, exchanges the code with PKCE and saves the token in `~/.wrm/mcp.json` (`WRM_MCP_CONFIG` to move it; mode 0600). The app is told that the tool list changed, and the WRM tools appear. `wrm_connect` with another address switches to another WRM. It needs AI connections with OAuth (`ai_mcp_oauth`, on by default). Needs Claude Code 2.1.275 or later for the one-line install.
+2. **Claude app and Claude Code — WRM PRO plugin** (no settings, see the quick start above). The plugin (`packaging/claude-plugin/wrm-pro`, version 1.2.4) carries the bridge as an MCP bundle, the skills `wrm` (`/wrm-pro:wrm`), `wrm-safe-operator` and `linux-incident-triage`, and the command `/wrm-pro:connect`. Without a saved connection the bridge starts anyway and offers one tool, `wrm_connect`; a wrong, expired or revoked token also leaves it running with that tool and the reason. An unreachable WRM (restarting, updating, hanging or off the network) does not: while the saved access is still valid (`expires_at` in `~/.wrm/mcp.json`), the bridge tells the app that WRM does not answer and that no new sign-in is needed, tries the saved token again before the next request (and picks up a token another app on the computer renewed), and `wrm_connect` reconnects with it instead of opening a new approval (`force: true` signs in again anyway). The first request to WRM gives up after 20 seconds (`WRM_MCP_INIT_TIMEOUT_MS`), so a hanging WRM cannot block the app. Since v14.11.4 the bridge shows every approval request as an operating-system notification (Windows notification area balloon, macOS Notification Center, `notify-send` on Linux) with the server and the command, also when no WRM tab is open or in front; a click opens WRM at the saved address. `WRM_MCP_NOTIFY=0` turns it off. `wrm_connect` registers itself with WRM (dynamic client registration with a `http://127.0.0.1:<port>/callback` redirect, which the default `ai_mcp_redirect_uris` allows), opens WRM's consent dialog in the browser, exchanges the code with PKCE and saves the token in `~/.wrm/mcp.json` (`WRM_MCP_CONFIG` to move it; mode 0600). The app is told that the tool list changed, and the WRM tools appear. `wrm_connect` with another address switches to another WRM. It needs AI connections with OAuth (`ai_mcp_oauth`, on by default). Needs Claude Code 2.1.275 or later for the one-line install.
 3. **claude.ai — custom connector with OAuth.** *Settings → Connectors → Add custom connector*, enter `https://<your WRM>/mcp`. Claude registers itself (dynamic client registration), opens WRM in the browser, you sign in (with 2FA) and choose the servers, the mode, the scopes and the lifetime; Claude then gets a token for exactly that. claude.ai connects from Anthropic's cloud, so WRM must be reachable from the internet over HTTPS (put it behind a reverse proxy with a real certificate, and keep the other hardening of [SECURITY.md](SECURITY.md)).
 4. **ChatGPT — connector.** *Settings → Apps & Connectors → Advanced settings → Developer mode*, then *Create* (*Add custom connector*): the MCP server URL `https://<your WRM>/mcp`, authentication **OAuth**. ChatGPT opens WRM for your approval, as above. ChatGPT also connects from its cloud: WRM must be reachable over HTTPS.
 5. **Any stdio client — the bridge in the WRM binary** (no inbound access from the internet needed; Claude Desktop users prefer the extension above). Copy the WRM binary for your computer's system (the same release file as the server) to your computer, create a token, and add to `claude_desktop_config.json` (*Claude → Settings → Developer → Edit config*):
@@ -2361,8 +1591,10 @@ The **Sessions** panel (right by default; see [Panel layout](#panel-layout-dock-
 
 The **Clipboard** panel (right by default): the last 20 texts you copied from terminals (and copied paths).
 
-- Click an entry to copy it again. **Paste** sends it to the focused terminal.
-- The history is kept per workspace session and **per user** in your browser (local storage), not on the server. Another account signing in on the same browser does not see it, and **signing out removes it**. Use **Clear** to empty it.
+- Each entry shows its first line, the number of lines, the connection it was copied from and how long ago.
+- Click an entry to copy it again. **Paste** types it into the focused terminal (or the last used one; without an open terminal it is copied instead). Several lines are sent as a bracketed paste when the shell supports it, so nothing runs before you press Enter; otherwise WRM asks first, because every line would run. Dangerous-looking commands always ask.
+- **📌 Pin** keeps an entry on top; pinned entries are not pushed out by new copies and survive **Clear** (a second **Clear** removes them too). **⚡** opens *New snippet* with the text, to keep it on the server. **✕** removes one entry. With more than four entries a filter field appears.
+- The history is kept per workspace session and **per user** in your browser (local storage), not on the server. Another account signing in on the same browser does not see it, and **signing out removes it**. The history, pins included, is erased after an hour without use, because copied terminal text may hold secrets.
 
 ### Sharing: members, roles & links
 
@@ -2394,6 +1626,11 @@ Right-click a connection → **🤝 Share**, a folder → **Share Folder**, sele
   | Share settings & members | — | — | — | — | ✔ |
 
   Roles are **enforced by the server** on every request; the UI only hides what would be refused anyway.
+- **Team management** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)), three switches, all off by default. They apply to signed-in people with the **operator** role or higher, never to guests:
+  - *Operators may add and edit connections and folders*: **Edit connection…** (name, protocol, host, user name, password, folder inside the share, notes) on a shared connection; **New connection here…**, **New folder…** and **Rename folder…** on a shared folder (right-click). New connections and folders are created in the **owner's account** inside the shared folder, so they are shared at once. Members cannot delete, cannot move anything out of the share and never see or choose the owner's stored secrets (key store keys, vault credentials, Bitwarden items, key files on the server). **Changing the host or protocol removes the saved password and key** (and a stored-secret reference), so the owner's secret is never sent to a server a member chose; the member can type a new password.
+  - *Operators may start and stop tunnels*: **⇄ Tunnels…** on the share lists the tunnels the owner configured on the shared connections, with *Start* / *Stop*. Tunnels run as the owner's (the owner's tunnel policy and bind rules apply) and the member's own account must be allowed to use tunnels too.
+  - *Operators may add, edit and remove tunnels* (v14.11.5): **🛠 Edit tunnels…** on a shared SSH connection (right-click) edits its tunnels: name, type (local, remote, dynamic), start mode, listen address and port, target. The tunnels stay in the owner's account. Both the owner's and the member's tunnel policies must allow each tunnel (listening beyond 127.0.0.1, remote forwarding). Independent of the start/stop switch: a member may have either one or both.
+  - Every change is audited under the member's name with `share_id` and `owner`.
 - **🤝 Shares** (top bar) lists your shares with mode, members, expiry and **how many people are online**. Actions: **Open room**, **Copy link**, **Edit** (everything above), **People** (everyone who ever opened the share, with last seen and IP — change a person's role or **ban** them), **New link** (the old link stops working immediately), **Pause/Resume**, **Delete**.
 - **Revocation is immediate:** deleting, pausing or rotating a share, removing a member, lowering a role, banning, or disabling a user closes the affected terminals and room connections at once.
 
@@ -2659,7 +1896,8 @@ To turn it on, add under *Settings → Secrets and variables → Actions* the re
 
 ### Mobile, responsive UI & installable app
 
-- The top bar and the collaboration bar adapt to the available width (labels collapse into icons, step by step).
+- The top bar adapts to the available width, browser zoom and language while keeping its labels as long as it can: first the session label goes, then the less used buttons move one by one into the labelled **⋯** menu (Panels, Workboard, Keys, Storages, Chains, Tunnels, Tools, Git, Monitoring, Settings), and only then do the remaining buttons become icons. Your **avatar** opens the account menu (Settings, Appearance, Shares, Lock now, Sign out). The collaboration bar collapses its labels step by step.
+- On tablets and narrow laptops (761–1024 px, also a desktop browser zoomed to 150–200 %): the Sessions/Snippets/Clipboard panel (and an AI view docked there) is a **slide-in drawer** opened with 🗂, so the work area keeps its width; the connection list stays.
 - **Installable app (PWA):** *Settings → General → Install as an app* (or the install icon in the address bar; on iPhone/iPad: *Share → Add to Home Screen*) opens WRM in its own window, from the dock, start menu or home screen. The app caches only its own scripts and fonts (per version); connections and data always come live from the server, and without the server it shows an offline page. Browsers allow this only over **HTTPS with a trusted certificate** (or on `localhost`). The *Install as an app* row shows the steps for the current browser, or why installing is not possible (plain `http://`, an untrusted certificate, Firefox on the desktop); the *Install* button appears only when the browser can install right away.
 - On phones (< 760 px): the connection list and the Sessions/Snippets/Clipboard panel become **slide-in drawers** (in the fixed start layout, whatever you arranged on a larger screen) (☰ and 🗂 buttons), windows open **full screen**, and a single tap opens a connection. Chat and People open as full-width panels.
 
@@ -2845,6 +2083,8 @@ Medium runtime settings (introduced in v12.4.3b):
 | `screen_lock_max_failures` | `0` | sign the browser session out after this many wrong unlock attempts; `0` = never |
 | `appearance_default_theme` | `graphite` | theme for users who have not chosen one: a built-in id or `addon:<addon>:<theme>` |
 | `appearance_custom_css` | `1` | users may add CSS to their own interface |
+| `appearance_lock` | `0` | everyone uses the default theme's colours (accessibility, fonts and size stay per user) |
+| `appearance_shared_themes` | `[]` | themes an administrator shared with everyone (JSON, set from *Settings → Appearance*) |
 | `ai_show_thinking` | `1` | show the assistant's thinking (reasoning summaries) in the work log and keep it in the transcript |
 | `ai_auto_titles` | `1` | give each AI chat a short title after its first answer (one small extra request without tools) |
 | `ai_share_notes` | `1` | users may opt in to send their connection notes |
@@ -3129,6 +2369,7 @@ Ideas and pull requests for any of these are welcome. See [CONTRIBUTING.md](CONT
 
 | Endpoint | Behavior |
 |---|---|
+| `POST /api/connections/order` | `{ids, reset}` (v14.11.1): your order of these connections (position 1 first) in their folder; with `reset: true` they are listed by name again. Every id must be one of your connections (404 otherwise). Audited as `connection.reordered` / `connection.order_reset`. |
 | `GET /api/folders/sort` | `{keep_all}`: whether all your folders are kept sorted. |
 | `POST /api/folders/sort` | `{folder_id, recursive, keep}`: sort the subfolders of a folder (`0` = top level) by name, at every level with `recursive`; `keep` switches automatic sorting for that folder (for `0`: all folders). Returns `{folders, keep_all, moved}`; audited as `folder.sorted`. |
 | `GET /api/admin/file-edits` | File edit history (administrators, auditors): filters `q`, `user`, `source` (`editor`, `ai`), `session`, `server`, `conn`, `from`, `to`, `before_id`; `format=csv` exports. |
@@ -3397,6 +2638,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | PUT / DELETE | `/api/git/catalog/apps/{name}` | Add or change / delete one service |
 | POST | `/api/git/sources` | `{kind: "gitlab"\|"github"\|"gitea", name, url, token}`; `PUT` / `DELETE /api/git/sources/{id}` (an omitted `token` keeps the stored one) |
 | POST | `/api/git/sources/{id}/test` | `{projects}` of the catalog's groups |
+| GET | `/api/git/refs?app=` | `{project, branches, tags}` of a catalog service's project (tags newest first); the project comes from the catalog |
 | POST | `/api/git/suggest` | `{project, ref}` → `{app, files}` (catalog entry from the repository tree) |
 | POST | `/api/git/bundles` | Body: a bundle `.tar.gz` → `{result: {source, files, payload, warnings}, state}` |
 | POST | `/api/git/bundles/export` | `{apps: [...]}` → bundle `.tar.gz` |
@@ -3477,7 +2719,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET / POST | `/api/shares` | My shares / create `{name, connection_ids, folder_ids, access_mode, guest_role, members:[{username, role}], password, public, expires_at}` |
+| GET / POST | `/api/shares` | My shares / create `{name, connection_ids, folder_ids, access_mode, guest_role, allow_edit, allow_tunnels, allow_tunnel_edit, members:[{username, role}], password, public, expires_at}` |
 | GET / PUT / DELETE | `/api/shares/{id}` | Details / update (also `active`, `clear_password`) / delete |
 | POST | `/api/shares/{id}/rotate` | New link |
 | GET / POST | `/api/shares/{id}/members` · PUT / DELETE `…/members/{userID}` | Members and roles |
@@ -3485,6 +2727,10 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | GET | `/api/share/{token}` | Share info, my role and permissions, connections |
 | POST | `/api/share/{token}/unlock` · `…/profile` | Password unlock · guest name |
 | GET | `/api/shared` | “Shared with me” |
+| POST · GET / PUT | `/api/share-team/{share}/connections` · `…/connections/{id}` | Team management: add a connection to a shared folder · view / edit (`allow_edit`) |
+| POST · PUT | `/api/share-team/{share}/folders` · `…/folders/{id}` | Add a folder `{name, parent_id}` · rename (`allow_edit`) |
+| GET · POST | `/api/share-team/{share}/tunnels` · `…/tunnels/{key}/start\|stop` | Tunnels of the shared connections (`allow_tunnels`) |
+| GET · PUT | `/api/share-team/{share}/connections/{id}/tunnels` | A shared connection's tunnels · replace them, same body as `/api/connections/{id}/tunnels` (`allow_tunnel_edit`) |
 
 **Administration** (administrators)
 
@@ -3647,6 +2893,7 @@ remote-manager/
   recording.go    terminal sessions, asciicast recorder, file transfer log, recordings & transfers API
   hostkeys.go     SSH host key verification (TOFU/strict), FTPS certificate pinning
   shares.go       sharing model: access modes, roles, members, participants, authorization
+  share_team.go   team management of shares: members edit connections/folders, start/stop and edit tunnels
   collab.go       collaboration rooms: presence, chat, terminal sharing, control, voice signalling, moderation
   turn.go         built-in TURN relay for voice (turn_android.go: stub for Android)
   admin.go        open-terminal registry, admin status
@@ -3750,6 +2997,7 @@ remote-manager/
   security_test.go  unit tests (TOTP, roles, share access, CSRF, encryption migration, settings)
   upgrade_test.go   unit tests (upgrading databases from earlier builds, old URLs, restarts that keep every table, restored addon instances)
   diag_dump_test.go unit tests (freeze diagnostics written and pruned)
+  v14118_themes_test.go  shared themes (value checks, ids, limits) and the appearance lock in /api/auth/me
   v1450_ai_events_mux_test.go  several AI sessions over one stream, positions, own sessions only, the session cap
   v1463_test.go           log discovery skips virtual environments, discovery kept alive and run again by the viewer and search (not for shares), dynamic tunnels offered as proxies
   v1462_auth_mail_test.go forgot password (same answer, one-time and expiring links, 2FA code, sessions end, notice, policy all/users/off, limit), invitations, self-registration confirmation and cleanup
@@ -3990,6 +3238,8 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 | Remote desktop: *guacd … is not reachable* | Install and start guacd on the WRM machine (`apt install guacd` or the Docker image) or set `guacd_address`. *Admin panel → Overview* shows its state |
 | RDP: *login failed* / black screen and disconnect | Check user, password and **domain**; try *Security: NLA* or *TLS*; older servers need *RDP*. Accept the server certificate (option) for self-signed certificates |
 | RDP: wrong characters when typing | Set the **keyboard layout** to the server's layout (or *Unicode*) |
+| Remote desktop stays on "Connecting…" or says guacd does not answer | guacd must be running: with Docker Desktop, check that Docker is running and **not paused**. If guacd answers but the target does not, check from where guacd runs: `docker run --rm busybox nc -zv -w 3 <host> 3389`; a host name that only Windows resolves (hosts file, NetBIOS) is unknown inside the container, use the IP |
+| RDP: "Server refused connection" / "server unreachable" | guacd could not open the RDP session: check address and firewall, that Remote Desktop is on, and try another *Security* mode (NLA, TLS, RDP) in the connection's remote desktop options |
 | Remote desktop behind a jump host does not connect | guacd must reach the temporary tunnel on `desktop_tunnel_bind` (127.0.0.1): run guacd on the WRM machine or in the same network namespace (compose file) |
 | fail2ban bans the WRM server | Add WRM's IP to `ignoreip`, raise `status_interval_seconds`, or untick monitoring for those hosts |
 | Tunnel runs but the page does not open from my PC | The tunnel listens on `127.0.0.1` of the **WRM machine**. See [Where is the tunnel port?](#ssh-tunnels-port-forwarding) |
