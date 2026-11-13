@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/csv"
+	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"net"
@@ -676,32 +677,34 @@ func importMobaXterm(im *importer, text string) (*importResult, error) {
 func winscpDecrypt(host, user, enc string) (string, bool) {
 	const magic = 0xA3
 	enc = strings.ToUpper(strings.TrimSpace(enc))
-	next := func() (int, bool) {
+	next := func() (byte, bool) {
 		if len(enc) < 2 {
 			return 0, false
 		}
-		a := strings.IndexByte("0123456789ABCDEF", enc[0])
-		b := strings.IndexByte("0123456789ABCDEF", enc[1])
-		if a < 0 || b < 0 {
+		v, err := hex.DecodeString(enc[:2])
+		if err != nil {
 			return 0, false
 		}
 		enc = enc[2:]
-		return ^((a<<4 + b) ^ magic) & 0xff, true
+		return ^(v[0] ^ magic), true
 	}
 	flag, ok := next()
 	if !ok {
 		return "", false
 	}
-	length := flag
+	length := int(flag)
 	if flag == 0xff {
 		if _, ok = next(); !ok {
 			return "", false
 		}
-		if length, ok = next(); !ok {
+		l, ok := next()
+		if !ok {
 			return "", false
 		}
+		length = int(l)
 	}
-	skip, ok := next()
+	sk, ok := next()
+	skip := int(sk)
 	if !ok || skip*2 > len(enc) {
 		return "", false
 	}
@@ -712,7 +715,7 @@ func winscpDecrypt(host, user, enc string) (string, bool) {
 		if !ok {
 			return "", false
 		}
-		out = append(out, byte(c))
+		out = append(out, c)
 	}
 	s := string(out)
 	if flag == 0xff {
