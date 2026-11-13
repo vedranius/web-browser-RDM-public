@@ -665,7 +665,14 @@ func securityMiddleware(next http.Handler) http.Handler {
 		h.Set("Cross-Origin-Resource-Policy", "same-origin")
 		h.Set("Content-Security-Policy", contentSecurityPolicy(r))
 		if isHTTPS(r) {
-			h.Set("Strict-Transport-Security", "max-age=15552000")
+			// HSTS covers every port of the host name, so a self-signed web interface opened
+			// through a WRM tunnel on the same name cannot be accepted in the browser (#190).
+			// Off sends max-age=0, which makes browsers forget an earlier HSTS entry.
+			if settingBool("hsts") {
+				h.Set("Strict-Transport-Security", "max-age=15552000")
+			} else {
+				h.Set("Strict-Transport-Security", "max-age=0")
+			}
 		}
 		if strings.HasPrefix(r.URL.Path, "/api/") {
 			h.Set("Cache-Control", "no-store")

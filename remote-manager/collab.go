@@ -369,7 +369,7 @@ func shareWSHandler(w http.ResponseWriter, r *http.Request) {
 	hist := make([]map[string]interface{}, len(rm.history))
 	copy(hist, rm.history)
 	p.sendJSON(map[string]interface{}{
-		"type": "welcome", "pid": p.pid, "name": p.name, "role": sa.Role, "perms": rolePerms(sa.Role),
+		"type": "welcome", "pid": p.pid, "name": p.name, "role": sa.Role, "perms": sharePerms(sa.Share, sa.Role, sa.Guest),
 		"guest": sa.Guest, "owner": sa.IsOwner, "chat_file_max_mb": settingInt("chat_file_max_mb"),
 		"share":        map[string]interface{}{"id": sa.Share.ID, "name": sa.Share.Name},
 		"participants": rm.participantsLocked(), "history": hist,
@@ -924,7 +924,7 @@ func revalidateRoom(shareID int, check func(accessCtx) (*ShareAccess, *shareDeni
 		}
 		if sa.Role != p.sa.Role {
 			p.sa.Role = sa.Role
-			p.sendJSON(map[string]interface{}{"type": "role", "role": sa.Role, "perms": rolePerms(sa.Role)})
+			p.sendJSON(map[string]interface{}{"type": "role", "role": sa.Role, "perms": sharePerms(sa.Share, sa.Role, sa.Guest)})
 			if !roleCan(sa.Role, PermShareScreen) && len(p.streams) > 0 {
 				p.sendJSON(map[string]interface{}{"type": "force-stop-share"})
 				rm.stopStreamsLocked(p, "")

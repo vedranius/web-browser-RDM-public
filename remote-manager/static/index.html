@@ -108,6 +108,13 @@ button:hover { background: var(--accent-h); }
 .wm-grip { position: fixed; z-index: 2; width: 14px; height: 14px; cursor: nwse-resize; touch-action: none;
   background: linear-gradient(135deg, transparent 50%, var(--text3) 50%, var(--text3) 58%, transparent 58%, transparent 70%, var(--text3) 70%, var(--text3) 78%, transparent 78%); opacity: .7; }
 .wm-grip:hover { opacity: 1; }
+/* minimised dialogs wait as chips in a tray at the bottom of the screen */
+#wm-tray { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 8500; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: calc(100vw - 16px); pointer-events: none; }
+#wm-tray:empty { display: none; }
+.wm-chip { pointer-events: auto; display: inline-flex; align-items: center; gap: 4px; max-width: 260px; padding: 0 2px 0 10px; height: 30px; border-radius: 15px; background: var(--bg2); border: 1px solid var(--border2); box-shadow: 0 4px 14px rgba(0,0,0,.35); color: var(--text); font-size: 12.5px; }
+.wm-chip .wm-chip-open { background: transparent; border: 0; color: inherit; cursor: pointer; padding: 0; min-height: 0; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wm-chip .wm-chip-x { background: transparent; border: 0; color: var(--text2); cursor: pointer; width: 24px; height: 24px; border-radius: 12px; padding: 0; min-height: 0; line-height: 1; }
+.wm-chip .wm-chip-x:hover, .wm-chip:hover { background: var(--bg4); }
 /* fields outside .field inside dialogs follow the theme (zero specificity: any own rule wins) */
 :where(.modal) :where(input[type=search], input[type=text], input:not([type]), input[type=number], select, textarea) { background: var(--bg); color: var(--text); border: 1px solid var(--border2); border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
 .modal {
@@ -290,9 +297,11 @@ button:hover { background: var(--accent-h); }
 #auth-screen {
   position: fixed; inset: 0;
   background: radial-gradient(ellipse at 30% 50%, #0e1829 0%, var(--bg0) 60%);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: flex-start; justify-content: center;
+  overflow-y: auto; padding: 16px 0; /* a tall first-run form scrolls instead of being cut off */
   z-index: 10000;
 }
+#auth-screen > .auth-card { margin: auto 0; }
 .auth-card {
   background: var(--bg2);
   border: 1px solid var(--border2);
@@ -394,6 +403,8 @@ button:hover { background: var(--accent-h); }
 .folder-row { display: flex; align-items: center; gap: 5px; padding: 6px 8px; cursor: pointer; border-radius: 5px; font-size: 12px; color: #a5b4fc; font-weight: 600; }
 .folder-row:hover { background: var(--bg3); }
 .folder-row.drag-over { background: var(--accent-d); outline: 1px dashed var(--accent); }
+.conn-item.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
+.conn-item.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
 .folder-chevron { font-size: 9px; color: var(--text3); transition: transform .15s; flex-shrink: 0; width: 10px; }
 .folder-chevron.open { transform: rotate(90deg); }
 .folder-children { padding-left: 12px; display: none; }
@@ -547,7 +558,18 @@ button:hover { background: var(--accent-h); }
 #clipboard-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 .clip-entry { padding: 6px 8px; border-radius: 5px; background: rgba(var(--fg-rgb),.03); margin-bottom: 4px; display: flex; align-items: center; gap: 7px; cursor: pointer; border: 1px solid transparent; transition: all .12px; font-size: 11px; font-family: var(--font-mono); }
 .clip-entry:hover { background: var(--bg3); border-color: var(--border2); }
-.clip-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text2); }
+.clip-entry { flex-direction: column; align-items: stretch; gap: 2px; }
+.clip-row { display: flex; align-items: center; gap: 4px; min-height: 18px; }
+.clip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text2); }
+.clip-meta { flex: 1; min-width: 0; font-size: 9px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clip-entry.pinned { border-color: var(--accent-d); }
+.clip-acts { display: flex; align-items: center; gap: 1px; flex-shrink: 0; }
+.clip-acts button:not(.clip-paste-btn) { background: none !important; border: none !important; box-shadow: none; min-width: 0; min-height: 0; color: var(--text2) !important; cursor: pointer; font-size: 10px; padding: 2px 3px; border-radius: 3px; opacity: .55; }
+.clip-entry:hover .clip-acts button, .clip-acts button:focus-visible { opacity: 1; }
+.clip-acts button:not(.clip-paste-btn):hover { background: var(--bg2) !important; color: var(--text) !important; }
+#clip-search { flex: 1; min-width: 0; margin: 0 6px; font-size: 10px; padding: 2px 6px; }
+.clip-empty { padding: 10px 8px; font-size: 10px; color: var(--text3); text-align: center; font-family: var(--font-mono); }
+.clip-empty .sub { margin-top: 4px; font-size: 9px; opacity: .8; font-family: var(--font-sans, inherit); }
 .clip-paste-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 10px; padding: 2px 5px; border-radius: 3px; transition: all .1s; }
 .clip-paste-btn:hover { background: var(--accent-d); }
 
@@ -915,7 +937,7 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
 /* The top bar lives in #center, so react to the width of #center, not the viewport */
 #center { container-type: inline-size; }
 @container (max-width: 720px) {
-  .app-ver .ver-pfx, .top-sep, .sess-lbl, .btn-top .lbl, #sess-bar-name.empty { display: none; }
+  .app-ver .ver-pfx, .top-sep, .sess-lbl, #sess-bar-name.empty { display: none; }
 }
 @container (max-width: 520px) {
   .add-win-btn .lbl, #user-chip .name { display: none; }
@@ -964,7 +986,6 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
 /* ══ RESPONSIVE ══ */
 @media (max-width: 1100px) {
   .app-ver .ver-pfx, .top-sep, .sess-lbl, #sess-bar-name.empty { display: none; }
-  .btn-top .lbl { display: none; }
 }
 @media (max-width: 760px) {
   :root { --topbar-h: 50px; }
@@ -984,7 +1005,8 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
   #drawer-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 8400; }
   #top-bar { padding: 0 8px; gap: 6px; }
   #sess-bar-name { max-width: 90px; }
-  .add-win-btn .lbl, #user-chip .name, #admin-badge { display: none; }
+  .add-win-btn .lbl, #user-chip .name { display: none; }
+  #admin-badge { display: none !important; }
   .win { min-width: 0; min-height: 0; }
   .win-corner-btns, .rh, .win-btn.screen-share { display: none; }
   .modal { padding: 18px 16px; width: 100% !important; max-width: calc(100vw - 20px) !important; max-height: calc(100vh - 20px); }
@@ -994,6 +1016,17 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
   .tab-item { padding: 8px 10px; }
   .term-search input { width: 120px; }
   #chat-panel { left: 8px; right: 8px; width: auto; bottom: 8px; height: 60vh; }
+}
+/* v14.11.0: on tablets and narrow laptops (761-1024 px) the right panel (sessions, clipboard,
+   docked AI) slides in as a drawer from the 🗂 button, so the work area keeps its width */
+@media (min-width: 761px) and (max-width: 1024px) {
+  #btn-sess-drawer { display: inline-flex; }
+  #sess-panel { position: fixed; right: 0; top: 0; bottom: 0; z-index: 8500; width: min(90vw, 400px) !important; transform: translateX(102%); transition: transform .22s ease; box-shadow: var(--shadow-lg); }
+  #sess-panel.collapsed { width: min(90vw, 400px) !important; }
+  #sess-panel.collapsed .sess-panel-inner { opacity: 1; pointer-events: auto; }
+  #sess-panel.mobile-open { transform: none; }
+  .sess-toggle-wrap, .sess-resize-handle { display: none; }
+  #drawer-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 8400; }
 }
 @media (pointer: coarse) {
   .file-dl-btn { opacity: 1; }
@@ -1132,6 +1165,15 @@ kbd { font-family: var(--font-mono); font-size: 10px; background: var(--bg4); bo
 .toast .toast-actions { display: flex; gap: 6px; margin-left: 8px; }
 .toast .toast-actions button { padding: 3px 9px; font-size: 11px; }
 .toast.persist { border-left-color: var(--purple); }
+.toast .toast-n { flex: none; font-size: 11px; padding: 0 6px; border-radius: 8px; background: var(--bg4); color: var(--text2); }
+.toast.toast-group { flex-direction: column; align-items: stretch; gap: 6px; }
+.toast-group-head { display: flex; align-items: center; gap: 8px; }
+.toast-group-head .toast-msg { flex: 1; }
+.toast-group-head button { padding: 2px 8px; font-size: 11px; min-height: 0; }
+.toast-group-head .toast-x { background: transparent; border: 0; color: var(--text2); cursor: pointer; }
+.toast-group-list { max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.toast-group-item { border-left: 3px solid var(--accent); padding: 2px 8px; font-size: 11.5px; }
+.toast-group-item.success { border-color: var(--green); } .toast-group-item.error { border-color: var(--red); } .toast-group-item.warning { border-color: var(--yellow); }
 
 /* Tabs (settings & admin) */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: -4px 0 14px; overflow-x: auto; scrollbar-width: none; position: relative; }
@@ -1484,6 +1526,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 #btn-tools.bc-active { background: rgba(234,88,12,.24); border-color: rgba(234,88,12,.65); color: var(--orange-t); }
 .tools-bc { font-size: 11px; }
 #btn-shares.icon-only .lbl { display: none; }
+/* v14.11.7: Lock now is back in the top bar as a one-click icon (also in the account menu) */
+#btn-lock.icon-only .lbl { display: none; }
 .tb-group { display: inline-flex; align-items: stretch; flex-shrink: 0; }
 .tb-group > .btn-top { border-radius: 0; margin-left: -1px; }
 .tb-group > .btn-top.g-first { border-radius: 8px 0 0 8px; margin-left: 0; }
@@ -1636,16 +1680,34 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
    into the ⋯ menu) whenever it would overflow, whatever the language, zoom or badges */
 .btn-top, .add-win-btn, .upd-badge { white-space: nowrap; flex-shrink: 0; }
 #top-bar.tb1 .top-sep, #top-bar.tb1 .sess-lbl { display: none; }
-#top-bar.tb2 #btn-mcp .lbl, #top-bar.tb2 .upd-badge .lbl { display: none; }
+#top-bar.tb2 #btn-mcp .lbl, #top-bar.tb2 .upd-badge .lbl, #top-bar.tb2 .app-ver .ver-pfx { display: none; }
 #top-bar.tb2 .upd-badge { margin-left: 4px; padding: 2px 7px; }
-#top-bar.tb3 .btn-top .lbl, #top-bar.tb3 .app-ver .ver-pfx { display: none; }
+#top-bar.tb3 .btn-top .lbl { display: none; }
 #top-bar.tb4 .add-win-btn .lbl, #top-bar.tb4 #user-chip .name { display: none; }
 #top-bar.tb5 #sess-bar-name { max-width: 70px; }
 #top-bar.tb5, #top-bar.tb5 #auth-info { gap: 4px; }
-#top-bar.tb6 #admin-badge, #top-bar.tb6 #sess-bar-name { display: none; }
+#top-bar.tb6 #admin-badge, #top-bar.tb6 #sess-bar-name { display: none !important; }
+#tb-canvas-grp.tb-empty { display: none; }
 /* Without its "SESSION:" label an empty session reads like a missing version: hide it then */
 #top-bar.tb1 #sess-bar-name.empty { display: none; }
-#top-bar .tb-moved { display: none !important; }
+#top-bar .tb-moved, #top-bar .tb-user-item { display: none !important; }
+/* v14.11.0: the avatar opens the account menu (shares, lock, sign out) */
+#user-chip { background: transparent; border: 1px solid transparent; color: var(--text2); padding: 2px 8px 2px 2px; border-radius: 999px; box-shadow: none; cursor: pointer; font: inherit; font-size: 12px; min-height: 0; }
+#user-chip:hover, #user-chip[aria-expanded="true"] { background: var(--bg4); border-color: var(--border2); color: var(--text); }
+#user-chip .caret { font-size: 9px; opacity: .7; }
+#top-bar.tb4 #user-chip .caret { display: none; }
+#top-bar.tb4 #user-chip { padding: 2px; }
+.tb-menu { position: fixed; z-index: 9500; display: none; flex-direction: column; min-width: 210px; max-height: calc(100vh - 70px); overflow-y: auto; padding: 6px; background: var(--glass); border: 1px solid var(--border2); border-radius: 10px; box-shadow: var(--shadow-lg); backdrop-filter: blur(10px); }
+.tb-menu.open { display: flex; }
+.tb-menu button { display: flex; align-items: center; gap: 10px; text-align: left; background: transparent; border: 0; border-radius: 6px; color: var(--text); padding: 8px 10px; font-size: 13px; cursor: pointer; box-shadow: none; }
+.tb-menu button:hover, .tb-menu button:focus-visible { background: var(--bg4); }
+.tb-menu .ico { width: 18px; text-align: center; }
+.tb-menu .tun-badge { margin-left: auto; }
+.tb-menu .tbm-head { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.tb-menu .tbm-head b { font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
+.tb-menu .tbm-head span { font-size: 11px; color: var(--text3); }
+.tb-menu .tbm-sep { height: 1px; background: var(--border); margin: 4px 2px; }
+@media (pointer: coarse) { .tb-menu button, #tb-more-menu button { padding: 12px 12px; font-size: 14px; } }
 #btn-more { position: relative; }
 #btn-more .more-dot { position: absolute; top: 2px; right: 2px; width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: none; }
 #btn-more.has-badge .more-dot { display: block; }
@@ -1684,6 +1746,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .ap-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 16px; align-items: start; }
 .ap-preview { position: sticky; top: 0; }
 .ap-pv { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; font-size: 12.5px; line-height: 1.5; }
+.ap-ck { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 2px 0; }
 .ap-term { font-family: var(--font-mono); font-size: 11.5px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); line-height: 1.5; }
 .ap-gh { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text2); margin: 12px 0 6px; font-weight: 600; }
 .ap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
@@ -1730,6 +1793,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 <body>
 <div id="toast-container" role="status" aria-live="polite"></div>
 <div id="tb-more-menu" role="menu"></div>
+<div id="tb-user-menu" class="tb-menu" role="menu"></div>
 
 <!-- ══ FILE BROWSER CONTEXT MENU ══ -->
 <div id="fm-ctx-menu">
@@ -1780,6 +1844,11 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <label data-i18n="auth_email" for="auth-email">E-mail address</label>
         <input type="email" id="auth-email" autocomplete="email" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') doAuth()">
         <div class="muted-text" style="margin-top:4px;font-size:11px;" data-i18n="auth_email_hint">WRM sends a link to this address; the account works once you open it.</div>
+      </div>
+      <div class="auth-field" id="auth-setup-row" style="display:none;">
+        <label data-i18n="auth_setup_code" for="auth-setup-code">Setup code</label>
+        <input type="text" id="auth-setup-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX" onkeydown="if(event.key==='Enter') doAuth()">
+        <div class="muted-text" style="margin-top:4px;font-size:11px;" data-i18n="auth_setup_code_hint">WRM printed it to its console/log at start and wrote it to first-admin-setup-code.txt next to its database. Not needed when you open WRM on the server itself (localhost).</div>
       </div>
       <div id="auth-level" style="display:none;">
         <label class="auth-lvl-title" data-i18n="sec_first_title">Where will WRM run?</label>
@@ -1890,7 +1959,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <span class="sess-lbl" data-i18n="session_label">SESSION:</span>
     <span id="sess-bar-name" class="empty">— none —</span>
     <div id="auth-info">
-      <span id="user-chip"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span></span>
+      <button type="button" id="user-chip" onclick="toggleUserMenu(event)" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb_user_t" title="Account: shares, lock, sign out"><span class="avatar" id="user-avatar">?</span><span class="name" id="username-display"></span><span class="caret" aria-hidden="true">▾</span></button>
       <span id="admin-badge" class="admin-badge" style="display:none;">ADMIN</span>
       <button class="btn-top" id="btn-ai" onclick="openAIHome()" data-i18n-title="ai_btn_t" title="AI assistant">✦ AI</button>
       <button class="btn-top" id="btn-mcp" style="display:none;" onclick="openMCPPop()" title="AI apps connected through MCP"><span>🤖</span><span class="lbl" data-i18n="mcp_connected_lbl">AI connected</span><span class="tun-badge" id="mcp-badge"></span></button>
@@ -1900,7 +1969,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <button class="btn-top" id="btn-git" onclick="openGit()" title="Git"><span>⎇</span><span class="lbl" data-i18n="git_lbl">Git</span></button>
       <button class="btn-top" id="btn-storages" onclick="openStorages()" title="Storages" data-i18n-title="stg_title"><span>🗄</span><span class="lbl" data-i18n="stg_title">Storages</span></button>
       <button class="btn-top" id="btn-chains" onclick="openChains()" title="Chains" data-i18n-title="chn_title"><span>⛓</span><span class="lbl" data-i18n="chn_title">Chains</span></button>
-      <button class="btn-top icon-only" id="btn-shares" onclick="openManageShares()" data-i18n-title="shares_lbl" title="Shares" aria-label="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
+      <button class="btn-top icon-only tb-user-item" id="btn-shares" onclick="openManageShares()" data-i18n-title="shares_lbl" title="Shares" aria-label="Shares"><span>🤝</span><span class="lbl" data-i18n="shares_lbl">Shares</span></button>
       <button class="btn-top" id="btn-vault" onclick="openVault()" title="SSH keys &amp; credentials"><span>🔑</span><span class="lbl" data-i18n="vault_lbl">Keys</span><span class="tun-badge" id="vault-badge" style="display:none;"></span></button>
       <span class="tb-group" id="tb-canvas-grp" role="group">
         <button class="btn-top" id="btn-settings" onclick="openSettings()" data-i18n-title="settings_lbl" title="Settings"><span>⚙</span><span class="lbl" data-i18n="settings_lbl">Settings</span></button>
@@ -1908,9 +1977,9 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <button class="btn-top" id="btn-workboard" onclick="wrmWorkboard.menu(this)" data-i18n-title="wb_title_t" title="Workboard" aria-haspopup="menu"><span>▤</span><span class="lbl" data-i18n="wb_title">Workboard</span><span class="tun-badge" id="wb-badge" style="display:none;"></span></button>
       </span>
       <button class="btn-top" id="btn-more" style="display:none;" onclick="toggleTopMore(event)" data-i18n-title="tb_more_t" title="More" aria-haspopup="menu" aria-expanded="false"><span>⋯</span><span class="more-dot"></span></button>
-      <button class="btn-top btn-menu" onclick="openDrawer('sess-panel')" title="Sessions">🗂</button>
-      <button class="btn-top" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
-      <button class="btn-top" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
+      <button class="btn-top btn-menu" id="btn-sess-drawer" onclick="openDrawer('sess-panel')" data-i18n-title="tb_sess_drawer_t" title="Sessions, clipboard and side panels" aria-label="Sessions, clipboard and side panels">🗂</button>
+      <button class="btn-top icon-only" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
+      <button class="btn-top tb-user-item" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
     </div>
     <button class="add-win-btn" onclick="addWindow()" title="New window (Alt+N)"><span>＋</span><span class="lbl" data-i18n="new_window_lbl">New Window</span></button>
   </div>
@@ -1973,7 +2042,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
     <div class="clip-panel" id="clip-panel">
       <div class="clip-header">
         <span data-i18n="clipboard">Clipboard</span>
-        <button class="btn-sec btn-sm" onclick="clearClipboard()" style="font-size:10px;padding:2px 7px;" data-i18n="clear">Clear</button>
+        <input type="text" id="clip-search" data-i18n-placeholder="clip_search" placeholder="Filter…" oninput="renderClipboard(currentSessionId)" style="display:none;">
+        <button class="btn-sec btn-sm" onclick="clearClipboard()" style="font-size:10px;padding:2px 7px;" data-i18n="clear" data-i18n-title="clip_clear_t" title="Clear (pinned entries stay)">Clear</button>
       </div>
       <div id="clipboard-list"></div>
     </div>
@@ -2202,6 +2272,13 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </div>
       <div class="member-list" id="share-team-list"></div>
     </div>
+    <div class="field" id="share-team-block">
+      <label data-i18n="share_team_title">Team management</label>
+      <div class="field-check"><input type="checkbox" id="share-allow-edit"><label for="share-allow-edit" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_edit">Operators may add and edit connections and folders</label></div>
+      <div class="field-check"><input type="checkbox" id="share-allow-tunnels"><label for="share-allow-tunnels" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_tunnels">Operators may start and stop tunnels</label></div>
+      <div class="field-check"><input type="checkbox" id="share-allow-tunnel-edit"><label for="share-allow-tunnel-edit" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;color:var(--text);" data-i18n="share_allow_tunnel_edit">Operators may add, edit and remove tunnels</label></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;" data-i18n="share_team_hint"></div>
+    </div>
     <div id="share-others-block">
       <div class="field">
         <label data-i18n="others_role" for="share-guest-role">Role for everyone else who opens the link</label>
@@ -2388,16 +2465,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div class="setting-control"><button class="btn-sec btn-sm" onclick="const tab = settingsTabNow(); openInsteadOf('modal-settings', () => openInventory(), () => openSettings(tab))" data-i18n="import">Import</button></div>
       </div>
       <div class="setting-row">
-        <div><div class="setting-label" data-i18n="import_mrng">Import from mRemoteNG</div><div class="setting-desc" data-i18n="import_mrng_desc">confCons.xml: folders, SSH, RDP, VNC, Telnet and web connections with passwords, SSH tunnel → jump host.</div></div>
-        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".xml,.config" onchange="importExternal(this, 'mremoteng')" style="display:none;"></label></div>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label" data-i18n="import_sshcfg">Import OpenSSH config</div><div class="setting-desc" data-i18n="import_sshcfg_desc">~/.ssh/config: hosts, users, ports, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.</div></div>
-        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" onchange="importExternal(this, 'sshconfig')" style="display:none;"></label></div>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label" data-i18n="import_putty">Import from PuTTY</div><div class="setting-desc" data-i18n="import_putty_desc">Saved sessions exported with regedit (.reg of …\PuTTY\Sessions): SSH and Telnet sessions with host, port and user; proxies are saved and linked.</div></div>
-        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".reg" onchange="importExternal(this, 'putty')" style="display:none;"></label></div>
+        <div><div class="setting-label" data-i18n="import_other">Import from another tool</div><div class="setting-desc" data-i18n="import_other_desc">mRemoteNG, Remote Desktop Manager, RDCMan, .rdp, MobaXterm, WinSCP, Remmina, OpenSSH config and PuTTY, with a preview.</div></div>
+        <div class="setting-control"><button class="btn-sec btn-sm" id="btn-import-other" onclick="openImportPicker()" data-i18n="import">Import</button></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -3559,6 +3628,7 @@ Object.assign(LANGS.en, {
   tun_disabled:'SSH tunnels are turned off or not allowed for your account (Admin panel → Security policies).',
   tun_conns:'connections', tun_temporary:'temporary', tun_started:'Tunnel running on {addr}', tun_on_server:'on server',
   tun_state_up:'Running', tun_state_starting:'Starting', tun_state_reconnecting:'Reconnecting', tun_state_error:'Error', tun_state_stopped:'Stopped',
+  tun_open_ip_title:'Open through this address of the WRM host. Use it when the browser refuses the certificate of the web interface because of HSTS on WRM\'s host name.',
   tun_loopback_remote:'This tunnel listens on 127.0.0.1 of the WRM machine. Open {url} on the computer where WRM runs, or set the listen address of the tunnel to 0.0.0.0 (administrators) to reach it over the network.',
   tun_all_users:'All users', tun_traffic:'Traffic', active_tunnels:'Active SSH tunnels', open:'Open', start:'Start', copy_address:'Copy address', copied:'Copied', remove:'Remove',
   pg_tunnels:'SSH tunnels',
@@ -4075,6 +4145,7 @@ Object.assign(LANGS.hr, {
   tun_disabled:'SSH tuneli su isključeni ili nisu dopušteni za tvoj račun (Admin panel → Sigurnosna pravila).',
   tun_conns:'veza', tun_temporary:'privremeni', tun_started:'Tunel radi na {addr}', tun_on_server:'na serveru',
   tun_state_up:'Radi', tun_state_starting:'Pokreće se', tun_state_reconnecting:'Ponovno spajanje', tun_state_error:'Greška', tun_state_stopped:'Zaustavljen',
+  tun_open_ip_title:'Otvori preko ove adrese WRM hosta. Koristi kad preglednik odbije certifikat web sučelja zbog HSTS-a na nazivu WRM hosta.',
   tun_loopback_remote:'Ovaj tunel sluša na 127.0.0.1 WRM računala. Otvori {url} na računalu gdje radi WRM, ili postavi adresu slušanja tunela na 0.0.0.0 (administratori) da bi bio dostupan preko mreže.',
   tun_all_users:'Svi korisnici', tun_traffic:'Promet', active_tunnels:'Aktivni SSH tuneli', open:'Otvori', start:'Pokreni', copy_address:'Kopiraj adresu', copied:'Kopirano', remove:'Ukloni',
   pg_tunnels:'SSH tuneli',
@@ -4651,7 +4722,7 @@ Object.assign(LANGS.en, {
   desk_lib_failed:'The remote desktop component could not be loaded.', desk_disconnected:'Disconnected', desk_failed:'Connection failed',
   desk_guacd_hint:'Remote desktop needs guacd next to WRM. Windows and macOS: WRM starts it automatically in Docker Desktop when guacd_address is local (127.0.0.1:4822); install Docker Desktop if it is missing. Linux: apt install guacd or the guacd service in docker-compose.yml. Administrators set the address in Security policies → Remote desktop.',
   desk_setup:'Start guacd', desk_setup_started:'guacd is starting (the first start can take a minute)', desk_setup_starting:'guacd is starting automatically…',
-  desk_login_hint:'Check the user name, password and domain of the connection.', desk_required:'The server asks for: {name}', desk_clip_sent:'Sent to the remote clipboard',
+  desk_login_hint:'Check the user name, password and domain of the connection.', desk_no_answer:'No answer from WRM or guacd. If guacd runs in Docker Desktop, check that Docker is running and not paused.', desk_closed_early:'The connection to WRM closed before the remote desktop appeared.', desk_refused_hint:'guacd could not open the RDP session. Check the address, the firewall and that Remote Desktop is enabled on the target. If guacd reaches the port, try another Security mode in the connection\'s remote desktop options (NLA, TLS or RDP).', desk_required:'The server asks for: {name}', desk_clip_sent:'Sent to the remote clipboard',
   desk_open:'Open remote desktop', jump_host_help_desk:'WRM opens a temporary tunnel through this SSH connection for the remote desktop (guacd must run on the WRM machine).',
   desk_proxy:'Remote desktop (guacd)', desk_proxy_down:'not reachable', desk_tunnel:'Remote desktop',
   pg_desktop:'Remote desktop (RDP / VNC / Telnet)', p_desktop_enabled:'Remote desktop', p_desktop_enabled_d:'RDP, VNC and Telnet connections in the browser, through guacd (Apache Guacamole proxy).',
@@ -4674,7 +4745,7 @@ Object.assign(LANGS.hr, {
   desk_lib_failed:'Komponenta za udaljenu radnu površinu nije se mogla učitati.', desk_disconnected:'Veza prekinuta', desk_failed:'Spajanje nije uspjelo',
   desk_guacd_hint:'Udaljena radna površina treba guacd uz WRM. Windows i macOS: WRM ga automatski pokreće u Docker Desktopu kad je guacd_address lokalna adresa (127.0.0.1:4822); instaliraj Docker Desktop ako nedostaje. Linux: apt install guacd ili servis guacd u docker-compose.yml. Administrator postavlja adresu u Sigurnosne politike → Udaljena radna površina.',
   desk_setup:'Pokreni guacd', desk_setup_started:'guacd se pokreće (prvo pokretanje može potrajati minutu)', desk_setup_starting:'guacd se automatski pokreće…',
-  desk_login_hint:'Provjeri korisničko ime, lozinku i domenu veze.', desk_required:'Server traži: {name}', desk_clip_sent:'Poslano u udaljeni međuspremnik',
+  desk_login_hint:'Provjeri korisničko ime, lozinku i domenu veze.', desk_no_answer:'Nema odgovora od WRM-a ili guacd-a. Ako guacd radi u Docker Desktopu, provjeri da je Docker pokrenut i nije pauziran.', desk_closed_early:'Veza prema WRM-u zatvorila se prije nego se pojavila udaljena radna površina.', desk_refused_hint:'guacd nije uspio otvoriti RDP sesiju. Provjeri adresu, vatrozid i je li Remote Desktop uključen na cilju. Ako guacd dohvaća port, probaj drugi Security način u opcijama udaljene radne površine veze (NLA, TLS ili RDP).', desk_required:'Server traži: {name}', desk_clip_sent:'Poslano u udaljeni međuspremnik',
   desk_open:'Otvori udaljenu radnu površinu', jump_host_help_desk:'WRM otvara privremeni tunel kroz ovu SSH vezu za udaljenu radnu površinu (guacd mora raditi na WRM računalu).',
   desk_proxy:'Udaljena radna površina (guacd)', desk_proxy_down:'nedostupan', desk_tunnel:'Udaljena radna površina',
   pg_desktop:'Udaljena radna površina (RDP / VNC / Telnet)', p_desktop_enabled:'Udaljena radna površina', p_desktop_enabled_d:'RDP, VNC i Telnet veze u pregledniku, preko guacd-a (Apache Guacamole proxy).',
@@ -5280,6 +5351,8 @@ Object.assign(LANGS.hr, {stin_ai:'Stanje AI asistenta, postavljanje i pristup za
 
 Object.assign(LANGS.en, {fd_up:'Move folder up',fd_down:'Move folder down'});
 Object.assign(LANGS.hr, {fd_up:'Pomakni folder gore',fd_down:'Pomakni folder dolje'});
+Object.assign(LANGS.en, {co_up:'Move connection up',co_down:'Move connection down',co_sort:'Sort connections in this folder A–Z',co_sorted:'Connections are listed by name again.',co_sort_here:'Sort connections here A–Z'});
+Object.assign(LANGS.hr, {co_up:'Pomakni vezu gore',co_down:'Pomakni vezu dolje',co_sort:'Poredaj veze u ovom folderu A–Ž',co_sorted:'Veze su opet poredane po imenu.',co_sort_here:'Poredaj veze ovdje A–Ž'});
 Object.assign(LANGS.en, {adm_edits: 'File edits', adin_edits: 'The diff of every file saved from the file editor or written by the AI assistant.',
   edits_help: 'Every file saved from the file editor or written by the AI assistant, with the change as a diff (the same one the editor shows before saving). Secret-looking values are masked and the diffs are encrypted at rest. They are kept as long as the audit log.',
   edits_all_sources: 'All sources', edits_src_editor: 'File editor', edits_src_ai: 'AI assistant', edits_server_ph: 'Server', edits_session_ph: 'Session',
@@ -5321,12 +5394,12 @@ Object.assign(LANGS.hr, { p_medium_default_engine: 'Medium: zadani engine', p_me
 Object.assign(LANGS.en, { p_medium_build_user: 'Medium: build user on the WRM host', p_medium_build_user_d: 'OS account that runs Medium builds on the WRM host, for example wrm-build. Empty: builds run with the WRM account. Needs WRM running as root on Linux or another Unix system; root and accounts that can read the WRM database, its key or the Medium data are refused. The build gets a clean environment without WRM variables.' });
 Object.assign(LANGS.hr, { p_medium_build_user: 'Medium: korisnik za build na WRM hostu', p_medium_build_user_d: 'OS račun koji izvodi Medium buildove na WRM hostu, npr. wrm-build. Prazno: buildovi se izvode s WRM računom. Treba WRM pokrenut kao root na Linuxu ili drugom Unixu; root i računi koji mogu čitati WRM bazu, njezin ključ ili Medium podatke se odbijaju. Build dobiva čisto okruženje bez WRM varijabli.' });
 Object.assign(LANGS.en, {
-  tools_menu_t: 'Tools: network tools and broadcast input', tools_net: 'Network tools…', tools_net_t: 'Ping, port check, DNS, traceroute and more, from WRM or a server', tools_bc_on: 'on', tools_bc_t: 'Type into several terminals at once',
+  tools_menu_t: 'Tools: network tools and broadcast input', tools_serial: 'Serial / USB devices…', tools_serial_t: 'Talk to a serial or USB device plugged into this computer (Web Serial, stays in the browser)', serial_load_failed: 'Could not load the serial device manager', tools_net: 'Network tools…', tools_net_t: 'Ping, port check, DNS, traceroute and more, from WRM or a server', tools_bc_on: 'on', tools_bc_t: 'Type into several terminals at once',
   cv_pin: 'Pin in place', cv_unpin: 'Unpin', cv_pinned_t: 'Pinned: this window does not move or resize. Unpin it from its menu (right-click the title bar).',
   cv_ontop: 'Always on top', cv_hint_add: 'Add an addon', cv_hint_add_t: 'Put addons such as server status, load, clock or notes on the canvas next to your terminals',
 });
 Object.assign(LANGS.hr, {
-  tools_menu_t: 'Alati: mrežni alati i istovremeni unos', tools_net: 'Mrežni alati…', tools_net_t: 'Ping, provjera portova, DNS, traceroute i drugo, s WRM-a ili s poslužitelja', tools_bc_on: 'uključen', tools_bc_t: 'Tipkaj u više terminala odjednom',
+  tools_menu_t: 'Alati: mrežni alati i istovremeni unos', tools_serial: 'Serijski / USB uređaji…', tools_serial_t: 'Komunikacija sa serijskim ili USB uređajem spojenim na ovo računalo (Web Serial, ostaje u pregledniku)', serial_load_failed: 'Upravitelj serijskih uređaja nije se mogao učitati', tools_net: 'Mrežni alati…', tools_net_t: 'Ping, provjera portova, DNS, traceroute i drugo, s WRM-a ili s poslužitelja', tools_bc_on: 'uključen', tools_bc_t: 'Tipkaj u više terminala odjednom',
   cv_pin: 'Prikvači na mjesto', cv_unpin: 'Otkvači', cv_pinned_t: 'Prikvačeno: ovaj se prozor ne miče i ne mijenja veličinu. Otkvači ga iz njegovog izbornika (desni klik na naslovnu traku).',
   cv_ontop: 'Uvijek na vrhu', cv_hint_add: 'Dodaj addon', cv_hint_add_t: 'Stavi addone poput stanja poslužitelja, opterećenja, sata ili bilješki na canvas pored terminala',
 });
@@ -5415,6 +5488,9 @@ Object.assign(LANGS.en, {
  "p_link_share_max_days": "Guest link lifetime (days)",
  "p_link_share_max_days_d": "Links for people without an account must expire within this many days (0 = no limit). Existing links keep working until they are changed.",
  "slr_require_https": "Passwords and session cookies cross the network encrypted only with HTTPS.",
+ "p_hsts": "Tell browsers to always use HTTPS (HSTS)",
+ "p_hsts_d": "Over HTTPS, browsers remember for 180 days that this host name only speaks HTTPS, on every port, and refuse certificate exceptions there. Turn off when you open self-signed web interfaces through WRM tunnels on the same name (or open them through the IP address); off makes browsers forget it on the next visit.",
+ "slr_hsts": "Without HSTS a network attacker can downgrade the first request to plain HTTP.",
  "slr_require_2fa": "A stolen password alone is not enough to sign in.",
  "slr_password_min_length": "Longer passwords resist guessing and offline cracking.",
  "slr_session_idle_hours": "A forgotten open browser stops being a way in.",
@@ -5454,6 +5530,10 @@ Object.assign(LANGS.en, {
  "sp_open_links": "Guest links without expiry",
  "sp_open_links_why": "A forgotten guest link stays usable for anyone who has it.",
  "sp_open_links_fix": "Give these links an expiry date in Admin → Shares, or set \"Guest link lifetime\".",
+ "sp_exposed_tunnels": "Tunnels listening on the network",
+ "sp_exposed_tunnels_val": "{n} (SOCKS: {s})",
+ "sp_exposed_tunnels_why": "A tunnel on 0.0.0.0 publishes a remote service to everyone who reaches the WRM host, without a WRM sign-in. A SOCKS (dynamic) tunnel there is an open proxy into the whole remote network.",
+ "sp_exposed_tunnels_fix": "Let tunnels listen on 127.0.0.1 and use them from the WRM host, or limit the WRM host with a firewall. Turn off \"Users may listen on all interfaces\" (tunnel_bind_any) when nobody needs it.",
  "sp_update_signature": "Signed updates",
  "sp_keys": "{n} release keys",
  "sp_update_signature_why": "With a release key the self-update installs only releases signed by the project; without one it checks the SHA-256 only.",
@@ -5543,6 +5623,9 @@ Object.assign(LANGS.hr, {
  "p_link_share_max_days": "Trajanje poveznica za goste (dani)",
  "p_link_share_max_days_d": "Poveznice za ljude bez računa moraju isteći unutar ovoliko dana (0 = bez ograničenja). Postojeće poveznice rade dok ih netko ne promijeni.",
  "slr_require_https": "Lozinke i kolačići sesije putuju mrežom šifrirano samo preko HTTPS-a.",
+ "p_hsts": "Preglednicima reci da uvijek koriste HTTPS (HSTS)",
+ "p_hsts_d": "Preko HTTPS-a preglednici 180 dana pamte da ovaj naziv hosta radi samo preko HTTPS-a, na svim portovima, i tamo ne dopuštaju iznimke za certifikat. Isključi kad kroz WRM tunele na istom nazivu otvaraš web sučelja s vlastitim (self-signed) certifikatom (ili ih otvaraj preko IP adrese); isključeno tjera preglednike da to zaborave pri sljedećem posjetu.",
+ "slr_hsts": "Bez HSTS-a napadač na mreži može prvi zahtjev spustiti na običan HTTP.",
  "slr_require_2fa": "Ukradena lozinka sama nije dovoljna za prijavu.",
  "slr_password_min_length": "Dulje lozinke teže je pogoditi i probiti.",
  "slr_session_idle_hours": "Zaboravljeni otvoreni preglednik prestaje biti ulaz.",
@@ -5582,6 +5665,10 @@ Object.assign(LANGS.hr, {
  "sp_open_links": "Poveznice za goste bez isteka",
  "sp_open_links_why": "Zaboravljena poveznica za goste ostaje upotrebljiva svakome tko je ima.",
  "sp_open_links_fix": "Daj tim poveznicama datum isteka u Admin → Dijeljenja ili postavi \"Trajanje poveznica za goste\".",
+ "sp_exposed_tunnels": "Tuneli koji slušaju na mreži",
+ "sp_exposed_tunnels_val": "{n} (SOCKS: {s})",
+ "sp_exposed_tunnels_why": "Tunel na 0.0.0.0 objavljuje udaljeni servis svakome tko dođe do WRM hosta, bez prijave u WRM. SOCKS (dinamički) tunel tamo je otvoreni proxy u cijelu udaljenu mrežu.",
+ "sp_exposed_tunnels_fix": "Neka tuneli slušaju na 127.0.0.1 i koristi ih s WRM hosta ili ograniči WRM host vatrozidom. Isključi \"Korisnici smiju slušati na svim sučeljima\" (tunnel_bind_any) kad to nikome ne treba.",
  "sp_update_signature": "Potpisana ažuriranja",
  "sp_keys": "{n} ključeva izdanja",
  "sp_update_signature_why": "S ključem izdanja samoažuriranje instalira samo izdanja koja je potpisao projekt; bez njega provjerava samo SHA-256.",
@@ -6730,8 +6817,23 @@ Object.assign(LANGS.hr, {
  "date_format_saved": "Format datuma i vremena spremljen",
 });
 // v14.5.1: resizable and maximisable dialogs
-Object.assign(LANGS.en, { win_max: 'Full screen', win_restore: 'Back to the window size', win_reset: 'Default size', win_resize: 'Drag to resize' });
-Object.assign(LANGS.hr, { win_max: 'Preko cijelog zaslona', win_restore: 'Natrag na veličinu prozora', win_reset: 'Zadana veličina', win_resize: 'Povuci za promjenu veličine' });
+Object.assign(LANGS.en, { win_max: 'Full screen', win_restore: 'Back to the window size', win_reset: 'Default size', win_resize: 'Drag to resize', win_min: 'Minimise: keep it as a button at the bottom of the screen', win_restore_min: 'Open the dialog again', win_dialog: 'Dialog', toast_more: '{n} more notifications', toast_show: 'Show', toast_hide: 'Hide' });
+Object.assign(LANGS.hr, { win_max: 'Preko cijelog zaslona', win_restore: 'Natrag na veličinu prozora', win_reset: 'Zadana veličina', win_resize: 'Povuci za promjenu veličine', win_min: 'Smanji: zadrži ga kao gumb na dnu zaslona', win_restore_min: 'Ponovno otvori dijalog', win_dialog: 'Dijalog', toast_more: 'Još obavijesti: {n}', toast_show: 'Prikaži', toast_hide: 'Sakrij' });
+// v14.11.0: account menu, side panel drawer, interface for every screen size
+Object.assign(LANGS.en, {
+  tb_user_t: 'Account: settings, shares, lock, sign out',
+  tb_sess_drawer_t: 'Sessions, clipboard and side panels',
+  tb_role_admin: 'Administrator', tb_role_auditor: 'Auditor', tb_role_operator: 'Operator', tb_role_user: 'User',
+});
+Object.assign(LANGS.hr, {
+  tb_user_t: 'Račun: postavke, dijeljenja, zaključavanje, odjava',
+  tb_sess_drawer_t: 'Sesije, međuspremnik i bočni paneli',
+  tb_role_admin: 'Administrator', tb_role_auditor: 'Revizor', tb_role_operator: 'Operater', tb_role_user: 'Korisnik',
+});
+Object.assign(LANGS.en, { auth_setup_code: 'Setup code', auth_setup_code_hint: 'WRM printed it to its console/log at start and wrote it to first-admin-setup-code.txt next to its database. Not needed when you open WRM on the server itself (localhost).' });
+Object.assign(LANGS.hr, { auth_setup_code: 'Kod za postavljanje', auth_setup_code_hint: 'WRM ga je pri pokretanju ispisao u konzolu/log i zapisao u first-admin-setup-code.txt pokraj svoje baze. Nije potreban kad WRM otvarate na samom poslužitelju (localhost).' });
+Object.assign(LANGS.en, { clip_search: 'Filter…', clip_clear_t: 'Clear the list (pinned entries stay; click again to clear them too)', clip_now: 'just now', clip_min_ago: '{n} min ago', clip_h_ago: '{n} h ago', clip_lines: '{n} lines', clip_lines_few: '{n} lines', clip_click_help: 'Click: copy · Paste: type into the focused terminal · 📌 pin · ⚡ save as snippet', clip_paste_t: 'Type into the focused (or last used) terminal', clip_pin: 'Pin (stays on top and is not pushed out)', clip_unpin: 'Unpin', clip_to_snippet: 'Save as snippet (kept on the server)', clip_snip_group: 'From clipboard', clip_no_terminal: 'No open terminal: copied to the system clipboard instead.', clip_multi_confirm: 'Paste {n} lines into {name}? This shell does not support bracketed paste, so every line runs as it arrives.', snip_recent: 'Recently used', snip_recent_t: 'The last snippets you ran or inserted (remembered in this browser)', clip_kept_hint: 'Text you select in a terminal lands here. It stays only in this browser, for your account, and is erased after an hour without use. Use ⚡ to keep a command as a snippet.' });
+Object.assign(LANGS.hr, { clip_search: 'Filtriraj…', clip_clear_t: 'Očisti popis (prikvačeni ostaju; ponovni klik briše i njih)', clip_now: 'upravo', clip_min_ago: 'prije {n} min', clip_h_ago: 'prije {n} h', clip_lines: '{n} redaka', clip_lines_few: '{n} retka', clip_click_help: 'Klik: kopiraj · Zalijepi: upiši u aktivni terminal · 📌 prikvači · ⚡ spremi kao snippet', clip_paste_t: 'Upiši u aktivni (ili zadnji korišteni) terminal', clip_pin: 'Prikvači (ostaje na vrhu i ne ispada s popisa)', clip_unpin: 'Otkvači', clip_to_snippet: 'Spremi kao snippet (čuva se na poslužitelju)', clip_snip_group: 'Iz međuspremnika', clip_no_terminal: 'Nema otvorenog terminala: kopirano u sistemski međuspremnik.', clip_multi_confirm: 'Zalijepiti {n} redaka u {name}? Ova ljuska ne podržava bracketed paste pa se svaki redak izvrši čim stigne.', snip_recent: 'Nedavno korišteni', snip_recent_t: 'Zadnji snippeti koje ste pokrenuli ili upisali (pamti ovaj preglednik)', clip_kept_hint: 'Ovdje dolazi tekst koji označite u terminalu. Ostaje samo u ovom pregledniku, za vaš račun, i briše se nakon sat vremena bez korištenja. Gumbom ⚡ naredbu trajno spremate kao snippet.' });
 function t(k) { return (LANGS[currentLang] && LANGS[currentLang][k]) || (LANGS.en && LANGS.en[k]) || k; }
 function applyLang() {
   document.documentElement.lang = currentLang === 'hr' ? 'hr' : 'en';
@@ -6787,12 +6889,65 @@ function esc(s) {
 // A value for a JavaScript string argument inside an inline HTML event handler.
 function jsq(v) { return esc(JSON.stringify(String(v == null ? '' : v))); }
 
+// Toasts are grouped: the same message again only raises a ×N counter on the toast already
+// shown, and beyond TOAST_MAX the oldest ones fold into one "more notifications" toast that
+// lists them on demand, so a burst (many servers going down at once) never fills the screen.
+const TOAST_MAX = 4;
+let toastFolded = [], toastGroup = null;
+function toastDismiss(d) {
+  if (d._closing) return;
+  d._closing = true;
+  clearTimeout(d._timer);
+  d.style.animation = 'fadeOut .3s ease forwards';
+  setTimeout(() => { d.remove(); if (d === toastGroup) { toastGroup = null; toastFolded = []; } }, 300);
+}
+function toastArm(d, dur) { clearTimeout(d._timer); d._timer = setTimeout(() => toastDismiss(d), dur); }
+function toastRenderGroup(box) {
+  if (!toastFolded.length) return;
+  if (!toastGroup || toastGroup._closing) {
+    toastGroup = document.createElement('div');
+    toastGroup.className = 'toast info toast-group';
+    toastGroup.innerHTML = `<div class="toast-group-head"><span class="toast-msg"></span><button type="button" class="btn-sec btn-sm toast-group-tog"></button><button type="button" class="toast-x" title="${esc(t('close'))}">✕</button></div><div class="toast-group-list" hidden></div>`;
+    toastGroup.querySelector('.toast-group-tog').onclick = () => { const l = toastGroup.querySelector('.toast-group-list'); l.hidden = !l.hidden; toastRenderGroup(box); };
+    toastGroup.querySelector('.toast-x').onclick = () => toastDismiss(toastGroup);
+    box.prepend(toastGroup);
+  }
+  const g = toastGroup, list = g.querySelector('.toast-group-list');
+  g.querySelector('.toast-msg').textContent = '🔔 ' + t('toast_more').replace('{n}', toastFolded.reduce((a, x) => a + x.n, 0));
+  g.querySelector('.toast-group-tog').textContent = t(list.hidden ? 'toast_show' : 'toast_hide');
+  list.innerHTML = toastFolded.slice().reverse().map(x => `<div class="toast-group-item ${esc(x.type)}">${esc(x.msg)}${x.n > 1 ? ` <b class="toast-n">×${x.n}</b>` : ''}</div>`).join('');
+  toastArm(g, list.hidden ? 15000 : 60000);
+}
 function showToast(msg, type = 'info', dur = 3000) {
+  const box = document.getElementById('toast-container');
+  const plain = () => [...box.children].filter(x => x._msg !== undefined && !x._closing);
+  const same = plain().find(x => x._msg === msg && x._type === type);
+  if (same) {
+    same._n++;
+    let n = same.querySelector('.toast-n');
+    if (!n) { n = document.createElement('b'); n.className = 'toast-n'; same.appendChild(n); }
+    n.textContent = '×' + same._n;
+    toastArm(same, dur);
+    return same;
+  }
   const d = document.createElement('div');
   d.className = 'toast ' + type;
-  d.textContent = msg;
-  document.getElementById('toast-container').appendChild(d);
-  setTimeout(() => { d.style.animation = 'fadeOut .3s ease forwards'; setTimeout(() => d.remove(), 300); }, dur);
+  d._msg = msg; d._type = type; d._n = 1;
+  const span = document.createElement('span');
+  span.textContent = msg;
+  d.appendChild(span);
+  box.appendChild(d);
+  toastArm(d, dur);
+  const shown = plain();
+  if (shown.length > TOAST_MAX) {
+    for (const old of shown.slice(0, shown.length - TOAST_MAX)) {
+      const f = toastFolded.find(x => x.msg === old._msg && x.type === old._type);
+      if (f) f.n += old._n; else toastFolded.push({msg: old._msg, type: old._type, n: old._n});
+      clearTimeout(old._timer); old._closing = true; old.remove();
+    }
+    toastFolded = toastFolded.slice(-50);
+    toastRenderGroup(box);
+  }
   return d;
 }
 
@@ -6856,7 +7011,7 @@ const wrmWinSize = (() => {
     if (m.dataset.wmW === undefined) { m.dataset.wmW = m.style.width; m.dataset.wmH = m.style.height; }
     const bar = document.createElement('div');
     bar.className = 'wm-bar';
-    bar.innerHTML = `<button type="button" class="wm-max-btn"></button><button type="button" class="wm-reset" title="${esc(t('win_reset'))}">↺</button>`;
+    bar.innerHTML = `<button type="button" class="wm-min-btn" title="${esc(t('win_min'))}">▁</button><button type="button" class="wm-max-btn"></button><button type="button" class="wm-reset" title="${esc(t('win_reset'))}">↺</button>`;
     const grip = document.createElement('div');
     grip.className = 'wm-grip';
     grip.title = t('win_resize');
@@ -6871,6 +7026,7 @@ const wrmWinSize = (() => {
       if (!s.max && !s.w) delete saved[ctl.key]; else saved[ctl.key] = s;
       save(); apply(m, saved[ctl.key]);
     };
+    bar.querySelector('.wm-min-btn').onclick = (e) => { e.stopPropagation(); minimise(ov, m); };
     bar.querySelector('.wm-reset').onclick = (e) => { e.stopPropagation(); delete saved[ctl.key]; save(); apply(m, null); };
     grip.onpointerdown = (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -6887,8 +7043,41 @@ const wrmWinSize = (() => {
     };
     apply(m, saved[ctl.key]);
   }
+  // Minimise: the dialog is closed for the rest of the page (Escape, focus, polling) but keeps
+  // its contents; a chip in the tray brings it back. Opening it again from a menu does too.
+  const chips = new Map();
+  function tray() {
+    let el = document.getElementById('wm-tray');
+    if (!el) { el = document.createElement('div'); el.id = 'wm-tray'; document.body.appendChild(el); }
+    return el;
+  }
+  function dropChip(ov) {
+    const c = chips.get(ov);
+    if (c) c.remove();
+    chips.delete(ov);
+    ov.classList.remove('wm-min');
+  }
+  function minimise(ov, m) {
+    const h = m.querySelector('h3, h2, .modal-title');
+    const label = ((h && h.textContent) || '').replace(/\s+/g, ' ').trim() || t('win_dialog');
+    const c = document.createElement('div');
+    c.className = 'wm-chip';
+    c.innerHTML = `<button type="button" class="wm-chip-open"></button><button type="button" class="wm-chip-x" title="${esc(t('close'))}">✕</button>`;
+    const open = c.querySelector('.wm-chip-open');
+    open.textContent = label;
+    open.title = t('win_restore_min');
+    open.onclick = () => { dropChip(ov); ov.classList.add('open'); later(); };
+    c.querySelector('.wm-chip-x').onclick = () => dropChip(ov);
+    dropChip(ov);
+    chips.set(ov, c);
+    tray().appendChild(c);
+    ov.classList.add('wm-min');
+    ov.classList.remove('open');
+    detach();
+  }
   function scan() {
     timer = null;
+    for (const ov of [...chips.keys()]) if (!ov.isConnected || ov.classList.contains('open')) dropChip(ov);
     for (const ov of document.querySelectorAll('.modal-overlay')) {
       if (watched.has(ov)) continue;
       watched.add(ov);
@@ -6908,7 +7097,7 @@ const wrmWinSize = (() => {
   addEventListener('click', later, true);
   addEventListener('keydown', later, true);
   addEventListener('resize', () => { if (ctl) apply(ctl.m, saved[ctl.key]); later(); });
-  return {scan: later};
+  return {scan: later, minimise};
 })();
 // Keyboard focus stays inside the open dialog (a11y): Tab and Shift+Tab wrap around its
 // controls instead of moving into the page behind the overlay.
@@ -7034,6 +7223,8 @@ function switchAuthTab(mode) {
 function renderAuthExtras() {
   const em = document.getElementById('auth-email-row');
   if (em) em.style.display = authMode === 'register' && !authConfig.first_run && authConfig.registration_email ? '' : 'none';
+  const sc = document.getElementById('auth-setup-row');
+  if (sc) sc.style.display = authConfig.first_run && authConfig.setup_code_required ? '' : 'none';
   const fl = document.getElementById('auth-forgot-link');
   if (fl) fl.style.display = authMode === 'login' && !authConfig.first_run && authConfig.password_reset ? '' : 'none';
 }
@@ -7262,6 +7453,7 @@ async function doAuth() {
     const body = {username: user, password: pass};
     const lvl = document.querySelector('input[name="auth-level"]:checked');
     if (authMode !== 'login' && authConfig.first_run && lvl && !lvl.disabled) body.security_level = lvl.value;
+    if (authMode !== 'login' && authConfig.first_run && authConfig.setup_code_required) body.setup_code = document.getElementById('auth-setup-code').value.trim();
     if (authMode !== 'login' && authConfig.registration_email) body.email = document.getElementById('auth-email').value.trim();
     const res = await fetch('/api/auth/' + (authMode === 'login' ? 'login' : 'register'), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -7720,6 +7912,7 @@ function renderTree() {
       groupLabel.style.cssText = 'padding:6px 8px 3px;font-size:10.5px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:6px;';
       groupLabel.innerHTML = `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(sh.name)}">🤝 ${esc(sh.name || 'Share')} <span style="color:var(--text3);font-weight:500;">· ${esc(sh.owner_username || '')}</span></span>`
         + (sh.locked ? '<span class="pill warn" title="' + esc(t('share_locked_hint')) + '">🔒</span>' : roleBadge(sh.role))
+        + (!sh.locked && typeof shareTeamGroupButtons === 'function' ? shareTeamGroupButtons(sh) : '')
         + `<button class="icon-btn" style="padding:2px 5px;font-size:11px;" title="${esc(t('open_room'))}" onclick="openShareRoom('/share#${encodeURIComponent(sh.token)}')">↗</button>`;
       wrap.appendChild(groupLabel);
       if (sh.locked) {
@@ -7747,7 +7940,7 @@ function renderTree() {
         return item;
       };
       const visibleConns = (g.connections || []).filter(c => !query || connMatches(c, query));
-      appendSharedFolderTree(wrap, g.folders || [], visibleConns, makeSharedItem);
+      appendSharedFolderTree(wrap, g.folders || [], visibleConns, makeSharedItem, perms.manage_connections && typeof shareTeamFolderCtx === 'function' ? (e, f) => shareTeamFolderCtx(e, f, sh) : null);
     });
   }
 
@@ -7767,7 +7960,7 @@ function connMatches(c, q) {
   });
 }
 
-function appendSharedFolderTree(container, folderList, connList, makeItem) {
+function appendSharedFolderTree(container, folderList, connList, makeItem, folderCtx) {
   const children = new Map();
   const ids = new Set(folderList.map(f => f.id));
   folderList.forEach(f => {
@@ -7786,6 +7979,7 @@ function appendSharedFolderTree(container, folderList, connList, makeItem) {
     box.className = 'folder-children open';
     connList.filter(c => c.folder_id === f.id).forEach(c => box.appendChild(makeItem(c)));
     (children.get(f.id) || []).forEach(ch => add(ch, box, depth + 1));
+    if (folderCtx) row.oncontextmenu = e => folderCtx(e, f);
     row.onclick = () => {
       const open = box.classList.toggle('open');
       row.querySelector('.folder-chevron').classList.toggle('open', open);
@@ -7837,9 +8031,56 @@ function makeConnItem(c) {
   };
   el.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = null; showConnCtx(e.clientX, e.clientY, c); };
   el.ondragstart = e => { const ids = selectedConns.has(c.id) ? [...selectedConns] : [c.id]; e.dataTransfer.setData('connIds', JSON.stringify(ids)); e.dataTransfer.setData('connId', c.id); e.dataTransfer.effectAllowed = 'move'; };
+  if (!c.temporary) {
+    // Dropping connections on a connection places them above or below it (the user's own order).
+    const half = e => { const b = el.getBoundingClientRect(); return (e.clientY - b.top) > b.height / 2; };
+    const clear = () => el.classList.remove('drop-before', 'drop-after');
+    el.ondragover = e => {
+      if (![...(e.dataTransfer.types || [])].includes('connids')) return;
+      e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move';
+      const after = half(e); el.classList.toggle('drop-after', after); el.classList.toggle('drop-before', !after);
+    };
+    el.ondragleave = clear;
+    el.ondragend = clear;
+    el.ondrop = e => {
+      const ids = dragConnIDs(e); clear();
+      if (!ids.length) return;
+      e.preventDefault(); e.stopPropagation();
+      placeConns(ids, c.id, half(e));
+    };
+  }
   return el;
 }
 
+// placeConns moves the connections ids next to the connection targetId (after = below it),
+// into its folder when they come from another one, and saves the user's order of that folder.
+async function placeConns(ids, targetId, after) {
+  const target = conns.find(x => x.id === targetId);
+  ids = ids.filter(id => id !== targetId && conns.some(x => x.id === id && !x.temporary));
+  if (!target || !ids.length) return;
+  const fid = target.folder_id || null;
+  const sameFolder = c => (folders.some(f => f.id === c.folder_id) ? c.folder_id : null) === (folders.some(f => f.id === fid) ? fid : null);
+  try {
+    const moving = ids.filter(id => !sameFolder(conns.find(x => x.id === id)));
+    if (moving.length && !(await apiOk('/api/connections/bulk', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'move', ids: moving, folder_id: fid})}))) return;
+    const order = conns.filter(x => !x.temporary && sameFolder(x) && !ids.includes(x.id)).map(x => x.id);
+    order.splice(order.indexOf(targetId) + (after ? 1 : 0), 0, ...ids);
+    await apiOk('/api/connections/order', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ids: order})});
+  } catch (e) { showToast(String(e.message || e), 'error'); }
+  await loadData();
+}
+function moveConnStep(id, direction) {
+  const c = conns.find(x => x.id === id); if (!c) return;
+  const sibs = conns.filter(x => !x.temporary && (x.folder_id || null) === (c.folder_id || null));
+  const target = sibs[sibs.findIndex(x => x.id === id) + direction];
+  if (target) placeConns([id], target.id, direction > 0);
+}
+// resetConnOrder lists the connections of a folder by name again (folder 0 / null = top level).
+async function resetConnOrder(folderId) {
+  const ids = conns.filter(x => !x.temporary && (x.folder_id || null) === (folderId || null)).map(x => x.id);
+  if (!ids.length) return;
+  if (await apiOk('/api/connections/order', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ids, reset: true})})) { showToast(t('co_sorted'), 'success'); await loadData(); }
+}
 function dragConnIDs(e) {
   try {
     const ids = JSON.parse(e.dataTransfer.getData('connIds') || '[]');
@@ -8000,6 +8241,9 @@ function showConnCtx(x, y, conn) {
     <div class="ctx-item" onclick="closeAllCtx(); checkStatusNow([${conn.id}])">🔄 ${esc(t('st_check_now'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openConnModal(${conn.id})">${t('edit_connection')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openMoveModal('conn', ${conn.id})">${esc(t('move_to_folder'))}</div>
+    ${conn.temporary ? '' : `<div class="ctx-item" onclick="closeAllCtx(); moveConnStep(${conn.id},-1)">↑ ${esc(t('co_up'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); moveConnStep(${conn.id},1)">↓ ${esc(t('co_down'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); resetConnOrder(${conn.folder_id || 0})">🔤 ${esc(t('co_sort_here'))}</div>`}
     <div class="ctx-item" onclick="closeAllCtx(); duplicateConn(${conn.id})">⧉ ${t('duplicate')}</div>
     ${conn.protocol !== 'SERIAL' && !web ? `<div class="ctx-item" onclick="closeAllCtx(); nameFromHostname(${conn.id})">🏷 ${esc(t('name_from_host_menu'))}</div>` : ''}
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalConn(${conn.id})">${t('share_connection')}</div>
@@ -8023,6 +8267,7 @@ function showSharedCtx(x, y, conn, perms) {
     <div class="ctx-section">${esc(t('shared_connection'))}</div>
     ${canTerm ? buildWinOptions('ssh') + '<div class="ctx-hr"></div>' : ''}
     ${perms.files_read ? buildWinOptions('sftp') : `<div class="ctx-item disabled">${esc(t('no_access_role'))}</div>`}
+    ${typeof shareTeamCtxItems === 'function' && ctxShareToken ? shareTeamCtxItems(conn, ctxShareToken, perms) : ''}
   `;
   showCtx('dyn-ctx-menu', x, y);
 }
@@ -8096,6 +8341,7 @@ function showFolderCtx(x, y) {
     <div class="ctx-item" onclick="closeAllCtx(); sortFolders(ctxFolderId)">🔤 ${esc(t('fd_sort'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); sortFolders(ctxFolderId, !(folders.find(x => x.id === ctxFolderId) || {}).auto_sort)">${(folders.find(x => x.id === ctxFolderId) || {}).auto_sort ? '☑' : '☐'} ${esc(t('fd_keep_sorted'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); sortFolders(0)">🔤 ${esc(t('fd_sort_all'))}</div>
+    <div class="ctx-item" onclick="closeAllCtx(); resetConnOrder(ctxFolderId)">🔤 ${esc(t('co_sort'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); sortFolders(0, !foldersKeepAll)">${foldersKeepAll ? '☑' : '☐'} ${esc(t('fd_keep_all'))}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openShareModalFolder()">${t('share_folder')}</div>
     <div class="ctx-item" onclick="closeAllCtx(); openSnippetModal(null, {scope: 'folder', scope_id: ctxFolderId, auto_run: true, group: t('snip_group_onconnect')})">⚡ ${esc(t('snip_onconnect'))}</div>
@@ -8646,6 +8892,9 @@ function openShareModal(opts) {
   document.getElementById('share-name').value = edit ? edit.name : (opts.name || '');
   document.getElementById('share-member-role').innerHTML = roleOptions('operator');
   document.getElementById('share-guest-role').innerHTML = roleOptions(edit ? edit.guest_role : 'viewer', 'operator');
+  document.getElementById('share-allow-edit').checked = !!(edit && edit.allow_edit);
+  document.getElementById('share-allow-tunnels').checked = !!(edit && edit.allow_tunnels);
+  document.getElementById('share-allow-tunnel-edit').checked = !!(edit && edit.allow_tunnel_edit);
   document.getElementById('share-pass').value = '';
   document.getElementById('share-pass').placeholder = shareDraft.hadPassword ? t('share_pass_keep') : t('share_pass_none');
   document.getElementById('share-pass-clear').checked = false;
@@ -8786,6 +9035,9 @@ async function submitShare() {
     name: document.getElementById('share-name').value.trim() || t('shared_connections'),
     access_mode: shareDraft.mode,
     guest_role: document.getElementById('share-guest-role').value,
+    allow_edit: document.getElementById('share-allow-edit').checked,
+    allow_tunnels: document.getElementById('share-allow-tunnels').checked,
+    allow_tunnel_edit: document.getElementById('share-allow-tunnel-edit').checked,
     public: shareDraft.mode !== 'members' && document.getElementById('share-public').checked,
     connection_ids: [...shareDraft.connIds].filter(id => { const c = conns.find(x => x.id === id); return c && !(shareFolderCovers(c.folder_id)); }),
     folder_ids: [...shareDraft.folderIds],
@@ -9974,8 +10226,8 @@ async function adminShareDelete(id) {
 
 const POLICY_GROUPS = {
   policies: [
-    ['pg_accounts', ['registration', 'require_https', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips', 'cli_password_reset']],
-    ['pg_appearance', ['appearance_default_theme', 'appearance_custom_css']],
+    ['pg_accounts', ['registration', 'require_https', 'hsts', 'require_2fa', 'password_min_length', 'login_max_failures', 'session_idle_hours', 'session_max_days', 'require_step_up', 'step_up_minutes', 'break_glass_ips', 'cli_password_reset']],
+    ['pg_appearance', ['appearance_default_theme', 'appearance_lock', 'appearance_custom_css']],
     ['pg_screen_lock', ['screen_lock_mode', 'screen_lock_max_minutes', 'screen_lock_pin', 'screen_lock_max_failures']],
     ['pg_sso', ['local_login', 'oidc_revalidate_minutes', 'oidc_unverified_hours']],
     ['pg_connections', ['host_key_policy', 'allow_server_keys', 'max_upload_mb', 'allow_secret_export', 'bitwarden', 'bitwarden_idle_minutes']],
@@ -10131,6 +10383,7 @@ function secCheckInfo(c) {
     case 'version': value = c.value + (c.required ? ' → ' + c.required : ''); break;
     case 'audit_chain': value = c.status === 'ok' ? t('sp_audit_ok').replace('{n}', c.count || 0) : t('sp_audit_broken').replace('{id}', c.value); break;
     case 'any_origin': value = c.status === 'ok' ? t('off') : t('on'); break;
+    case 'exposed_tunnels': value = t('sp_exposed_tunnels_val').replace('{n}', c.count || 0).replace('{s}', c.value || 0); break;
     default: value = String(c.count || 0);
   }
   return {title: t('sp_' + c.id), value, required: '', why: t('sp_' + c.id + '_why'), fix: open ? t('sp_' + c.id + '_fix') : '', canFix: false};
@@ -11257,13 +11510,26 @@ function tunnelMapText(v) {
   return v.kind === 'remote' ? `${t('tun_on_server')} ${listen} → ${target}` : `${listen} → ${target}`;
 }
 
-function tunnelURL(v) {
+function tunnelURL(v, viaIP) {
   if (!v.running || !v.listen || !v.open_scheme) return '';
   const i = v.listen.lastIndexOf(':');
   let host = v.listen.slice(0, i).replace(/^\[|\]$/g, ''), port = v.listen.slice(i + 1);
-  if (host === '0.0.0.0' || host === '::') host = location.hostname;
+  if (host === '0.0.0.0' || host === '::') host = viaIP || location.hostname;
   if (host.includes(':')) host = '[' + host + ']';
   return `${v.open_scheme}://${host}:${port}${v.open_path || ''}`;
+}
+
+// tunnelIPChoices: the WRM host's addresses to open an HTTPS tunnel on 0.0.0.0 with, when WRM
+// itself is open over HTTPS by host name. HSTS of that name covers every port, so a browser
+// refuses a self-signed certificate there; an IP address is not covered (#190).
+function tunnelIPChoices(v) {
+  if (!v.running || v.open_scheme !== 'https' || location.protocol !== 'https:') return [];
+  const h = location.hostname;
+  if (/^[\d.]+$/.test(h) || h.includes(':') || h.startsWith('[')) return [];
+  const i = (v.listen || '').lastIndexOf(':');
+  const bind = (v.listen || '').slice(0, i).replace(/^\[|\]$/g, '');
+  if (bind !== '0.0.0.0' && bind !== '::') return [];
+  return (tunnelState.policy.host_ips || []).filter(ip => bind === '::' || !ip.includes(':')).slice(0, 3);
 }
 
 function listenAddress(v) {
@@ -11324,6 +11590,7 @@ async function renderTunnelsPanel() {
           <div class="t-stats">${stats}</div>
           <div class="t-act">
             ${url ? `<button class="btn-sm" onclick="openTunnelURL(${jsq(v.key)})">🌐 ${esc(t('open'))}</button>` : ''}
+            ${url ? tunnelIPChoices(v).map(ip => `<button class="btn-sec btn-sm mono" title="${esc(t('tun_open_ip_title'))}" onclick="openTunnelURL(${jsq(v.key)}, ${jsq(ip)})">🌐 ${esc(ip)}</button>`).join('') : ''}
             ${v.running && v.listen ? `<button class="btn-sec btn-sm" title="${esc(t('copy_address'))}" onclick="copyText(${jsq(v.kind === 'dynamic' ? 'socks5h://' + listenAddress(v) : (url || listenAddress(v)))})">📋</button>` : ''}
             ${v.running ? `<button class="btn-danger btn-sm" onclick="tunnelStop(${jsq(v.key)})">■ ${esc(t('stop'))}</button>` : (all ? '' : `<button class="btn-sm" onclick="tunnelStart(${jsq(v.key)}, this)">▶ ${esc(t('start'))}</button>`)}
           </div></div>`;
@@ -11358,10 +11625,10 @@ async function stopConnTunnels(connId) {
   for (const v of tunnelState.tunnels.filter(x => x.conn_id === connId && x.running && !x.ephemeral)) await tunnelStop(v.key);
 }
 
-async function openTunnelURL(key) {
+async function openTunnelURL(key, viaIP) {
   const v = tunnelState.tunnels.find(x => x.key === key);
   if (!v) return;
-  const url = tunnelURL(v);
+  const url = tunnelURL(v, viaIP);
   const host = (v.listen || '').slice(0, (v.listen || '').lastIndexOf(':')).replace(/^\[|\]$/g, '');
   if (!browserIsLocal() && ['127.0.0.1', '::1', 'localhost'].includes(host)) {
     await uiConfirm(t('tun_loopback_remote').replace('{url}', url), {okText: t('ok'), cancelText: t('close')});
@@ -11409,38 +11676,7 @@ function importFileTooBig(file) {
   return true;
 }
 
-// ── import from mRemoteNG / OpenSSH ──
-async function importExternal(input, kind, password) {
-  const file = input.files ? input.files[0] : null;
-  if (importFileTooBig(file)) { input.value = ''; return; }
-  let text = input._text;
-  if (file && kind === 'putty') { // .reg files from regedit are UTF-16: the server decodes the raw bytes
-    const b = new Uint8Array(await file.arrayBuffer());
-    let bin = '';
-    for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
-    text = btoa(bin);
-  } else if (file) { const bytes=new Uint8Array(await file.arrayBuffer()); text=new TextDecoder(bytes[0]===255&&bytes[1]===254?'utf-16le':'utf-8').decode(bytes).replace(/^\uFEFF/,''); }
-  if (input.files) input.value = '';
-  if (!text) return;
-  const body = kind === 'mremoteng' ? {xml: text, password: password || ''} : kind === 'putty' ? {data: text} : {text, folder: ''};
-  const r = await fetch('/api/config/import/' + kind, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) {
-    if (d.need_password || (password && /master password/.test(d.error || ''))) {
-      const pw = await uiPrompt(t('mrng_master_pw'), '', {okText: t('import'), message: password ? t('mrng_wrong_pw') : t('mrng_master_pw_d'), password: true});
-      if (pw) importExternal({_text: text}, kind, pw);
-      return;
-    }
-    showToast(d.error || t('failed'), 'error', 8000);
-    return;
-  }
-  const lines = [t('import_result').replace('{n}', d.imported).replace('{f}', d.folders).replace('{j}', d.jump_hosts).replace('{t}', d.tunnels)];
-  if (d.proxies || d.proxy_links) lines.push(t('import_result_proxies').replace('{p}', d.proxies || 0).replace('{l}', d.proxy_links || 0));
-  if ((d.skipped || []).length) lines.push('', t('import_skipped_h') + ':', ...d.skipped.slice(0, 30).map(x => '• ' + x.name + ' — ' + x.reason));
-  if ((d.notes || []).length) lines.push('', t('import_notes_h') + ':', ...d.notes.slice(0, 30).map(x => '• ' + x.name + ' — ' + x.reason));
-  await uiDialog({title: t('import_done_title'), message: lines.join('\n'), okText: t('ok'), cancelText: t('close')});
-  loadData();
-}
+// Import from other tools: static/importer.js (openImportPicker).
 
 
 // ══ QUICK CONNECT, NOTES, NETWORK TOOLS, APP (v10.8) ═════
@@ -11609,6 +11845,23 @@ function openMonitoring(tab) {
  monitoringLoading.then(()=>window.wrmMonitoring.open(tab)).catch(e=>showToast(e.message,'error'));
 }
 function openGit(){closeDrawers();loadGitModule().then(()=>window.gitWorkspace.open()).catch(e=>showToast(e.message,'error'));}
+
+// Serial / USB device manager (static/serial_terminal.js + static/serial.js): browser-local
+// Web Serial, loaded the first time it is opened. No serial data goes to WRM.
+let serialLoading = null;
+function loadScriptOnce(src) {
+  return new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = ok; s.onerror = fail;
+    document.head.appendChild(s);
+  });
+}
+function openSerial() {
+  closeDrawers();
+  if (window.serialWorkspace) { window.serialWorkspace.open(); return; }
+  if (!serialLoading) serialLoading = loadScriptOnce('/static/serial_terminal.js').then(() => loadScriptOnce('/static/serial.js'));
+  serialLoading.then(() => window.serialWorkspace.open(), () => { serialLoading = null; showToast(t('serial_load_failed'), 'error'); });
+}
 
 // AI assistant: its code (static/ai.js) is loaded the first time it is used.
 let aiLoading = null;
@@ -12923,25 +13176,37 @@ async function startDesktop(wo) {
       deskOverlay(wo, null);
       deskStatus(wo, (c ? c.protocol : '') + (desk.route ? ' · ' + t('via') + ' ' + desk.route : ''));
       deskRescale(wo);
-      try { wrap.focus(); } catch (_) {}
+      try { wrap.focus({preventScroll: true}); } catch (_) {}
     } else if (st === 5) { // DISCONNECTED
       setTermState(wo, 'disconnected');
       if (!desk.error) deskOverlay(wo, `<div class="big">${esc(t('desk_disconnected'))}</div><button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button> <button class="btn-danger btn-sm" onclick="handleCloseWindow(${wo.id})">✕ ${esc(t('close_window'))}</button>`);
     }
   };
   client.onerror = status => {
+    if (desk !== wo.desk || desk.error) return;
     desk.error = status;
     setTermState(wo, 'disconnected');
-    const msg = (status && status.message) || t('desk_failed');
-    const hint = /guacd/i.test(msg) ? t('desk_guacd_hint') : (status && status.code === 769 ? t('desk_login_hint') : '');
+    let msg = (status && status.message) || t('desk_failed');
+    // guacamole-common-js reports a silent server as "Server timeout." (code 516)
+    if (status && status.code === 516 && /^server timeout/i.test(msg)) msg = t('desk_no_answer');
+    const hint = /guacd/i.test(msg) ? t('desk_guacd_hint') : (status && status.code === 769 ? t('desk_login_hint')
+      : (c && c.protocol === 'RDP' && /refused|unreachable/i.test(msg) ? t('desk_refused_hint') : ''));
     deskOverlay(wo, `<div class="big">⚠ ${esc(msg)}</div>${hint ? `<div class="hint">${esc(hint)}</div>` : ''}<button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button> <button class="btn-danger btn-sm" onclick="handleCloseWindow(${wo.id})">✕ ${esc(t('close_window'))}</button>`);
+  };
+  // Guacamole.Client 1.5 does not watch the tunnel itself: a WebSocket that fails, times
+  // out or closes without an "error" instruction would leave "Connecting…" for ever.
+  tunnel.onerror = status => client.onerror(status);
+  tunnel.onstatechange = st => {
+    if (st !== Guacamole.Tunnel.State.CLOSED || desk !== wo.desk || desk.error) return;
+    if (!desk.connected) client.onerror({code: 514, message: t('desk_closed_early')});
+    else client.disconnect();
   };
   client.onclipboard = (stream, mimetype) => {
     if (!/^text\//.test(mimetype)) return;
     const reader = new Guacamole.StringReader(stream);
     let data = '';
     reader.ontext = txt => { data += txt; };
-    reader.onend = () => { if (data) { addClip(data); copyText(data, true); } };
+    reader.onend = () => { if (data) { desk.lastClip = data; addClip(data); deskCopyLocal(wo, data); } };
   };
   client.onrequired = async params => {
     for (const name of params) {
@@ -12952,20 +13217,55 @@ async function startDesktop(wo) {
       w.sendText(val); w.sendEnd();
     }
   };
+  // Guacamole.Mouse measures the pointer with offsetLeft/offsetTop, which ignores the CSS
+  // zoom of Settings → Appearance → Size (and any transform): the remote pointer then lands
+  // centimetres away. WRM keeps the last pointer position and measures it against the
+  // element's real box instead.
+  let lastPt = null;
+  const notePt = ev => { const p = ev.touches && ev.touches.length ? ev.touches[0] : (ev.changedTouches && ev.changedTouches.length ? ev.changedTouches[0] : ev); if (p && typeof p.clientX === 'number') lastPt = {x: p.clientX, y: p.clientY}; };
+  ['pointerdown', 'pointermove', 'pointerup', 'mousedown', 'mousemove', 'mouseup', 'wheel', 'touchstart', 'touchmove', 'touchend'].forEach(n => view.addEventListener(n, notePt, {capture: true, passive: true}));
+  const sendMouse = st => {
+    if (desk !== wo.desk) return;
+    const r = del.getBoundingClientRect();
+    if (lastPt && r.width > 0 && r.height > 0) {
+      st.x = (lastPt.x - r.left) * del.offsetWidth / r.width;
+      st.y = (lastPt.y - r.top) * del.offsetHeight / r.height;
+    }
+    client.sendMouseState(st, true);
+  };
   const mouse = new Guacamole.Mouse(del);
-  mouse.onEach(['mousedown', 'mouseup', 'mousemove'], e => { if (desk === wo.desk) client.sendMouseState(e.state, true); });
+  mouse.onEach(['mousedown', 'mouseup', 'mousemove'], e => sendMouse(e.state));
   try {
     const touch = new Guacamole.Mouse.Touchscreen(del);
-    touch.onEach(['mousedown', 'mouseup', 'mousemove'], e => { if (desk === wo.desk) client.sendMouseState(e.state, true); });
+    touch.onEach(['mousedown', 'mouseup', 'mousemove'], e => sendMouse(e.state));
   } catch (_) {}
+  // Clipboard like an RDP client: the local clipboard goes to the remote one when the
+  // desktop gets focus or the pointer, and right before Ctrl+V / Shift+Insert.
+  desk.lastClip = '';
+  desk.keyQ = Promise.resolve();
+  const pushClip = () => deskPushClipboard(wo);
+  wrap.addEventListener('focus', pushClip);
+  wrap.addEventListener('mouseenter', pushClip);
+  const mods = new Set();
   const kb = new Guacamole.Keyboard(wrap);
-  kb.onkeydown = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(1, keysym); return false; };
-  kb.onkeyup = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(0, keysym); };
+  kb.onkeydown = keysym => {
+    if (desk !== wo.desk || !desk.connected) return false;
+    mods.add(keysym);
+    const ctrl = mods.has(0xFFE3) || mods.has(0xFFE4), shift = mods.has(0xFFE1) || mods.has(0xFFE2);
+    const paste = (ctrl && (keysym === 0x76 || keysym === 0x56)) || (shift && keysym === 0xFF63);
+    desk.keyQ = desk.keyQ.then(() => (paste ? pushClip() : null)).then(() => { if (desk === wo.desk) client.sendKeyEvent(1, keysym); });
+    return false;
+  };
+  kb.onkeyup = keysym => {
+    mods.delete(keysym);
+    if (desk === wo.desk && desk.connected) desk.keyQ = desk.keyQ.then(() => { if (desk === wo.desk) client.sendKeyEvent(0, keysym); });
+  };
   desk.keyboard = kb;
-  wrap.onmousedown = () => { focusWindow(wo.id); setTimeout(() => { try { wrap.focus(); } catch (_) {} }, 0); };
+  wrap.onmousedown = () => { focusWindow(wo.id); setTimeout(() => { try { wrap.focus({preventScroll: true}); } catch (_) {} }, 0); };
   wo.resizeObs = new ResizeObserver(() => { clearTimeout(desk._rt); desk._rt = setTimeout(() => deskResized(wo), 250); });
   wo.resizeObs.observe(view);
-  const w = Math.max(320, Math.round(view.clientWidth)), h = Math.max(240, Math.round(view.clientHeight));
+  const z = deskZoom();
+  const w = Math.max(320, Math.round(view.clientWidth * z)), h = Math.max(240, Math.round(view.clientHeight * z));
   const qs = new URLSearchParams({id: wo.connId, width: w, height: h, dpi: Math.round(96 * Math.min(2, window.devicePixelRatio || 1)),
     tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || '')});
   if (wo.shareID) qs.set('share_id', wo.shareID);
@@ -12973,14 +13273,44 @@ async function startDesktop(wo) {
   client.connect(qs.toString());
 }
 
+// deskPushClipboard sends the local clipboard text to the remote desktop when it changed.
+// Reading needs a secure page (HTTPS or localhost) and the browser's permission; without
+// them the 📋 Clipboard button still works.
+async function deskPushClipboard(wo) {
+  const d = wo && wo.desk;
+  if (!d || !d.connected || !navigator.clipboard || !navigator.clipboard.readText) return;
+  let text = '';
+  try { text = await Promise.race([navigator.clipboard.readText(), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500))]); } catch (_) { return; }
+  if (!text || text === d.lastClip || d !== wo.desk) return;
+  d.lastClip = text;
+  const w = new Guacamole.StringWriter(d.client.createClipboardStream('text/plain'));
+  w.sendText(text); w.sendEnd();
+}
+
+// deskCopyLocal puts text copied on the remote desktop into the local clipboard without
+// taking the keyboard focus away from the desktop.
+function deskCopyLocal(wo, text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    return;
+  }
+  copyText(text, true);
+  try { document.getElementById('dw-' + wo.id).focus({preventScroll: true}); } catch (_) {}
+}
+
 function deskResized(wo) {
   const d = wo.desk, view = document.getElementById('dv-' + wo.id);
   if (!d || !view || !d.connected) return;
-  const w = Math.round(view.clientWidth), h = Math.round(view.clientHeight);
+  const z = deskZoom();
+  const w = Math.round(view.clientWidth * z), h = Math.round(view.clientHeight * z);
   if (w < 100 || h < 100) return;
   if (d.fit && d.lastSize !== w + 'x' + h) { d.lastSize = w + 'x' + h; try { d.client.sendSize(w, h); } catch (_) {} }
   deskRescale(wo);
 }
+
+// CSS zoom of the page (Settings → Appearance → Size): the remote desktop is requested in
+// real screen pixels and scaled back, so it stays sharp and fills the window.
+function deskZoom() { const z = parseFloat(document.body && document.body.style.zoom); return z > 0 ? z : 1; }
 
 function deskRescale(wo) {
   const d = wo.desk, view = document.getElementById('dv-' + wo.id);
@@ -13016,7 +13346,7 @@ async function deskSendClipboard(id) {
   const w = new Guacamole.StringWriter(st);
   w.sendText(text); w.sendEnd();
   showToast('📋 ' + t('desk_clip_sent'), 'success', 2500);
-  try { document.getElementById('dw-' + id).focus(); } catch (_) {}
+  try { document.getElementById('dw-' + id).focus({preventScroll: true}); } catch (_) {}
 }
 
 async function deskTypeText(id) {
@@ -13030,7 +13360,7 @@ async function deskTypeText(id) {
     wo.desk.client.sendKeyEvent(1, keysym);
     wo.desk.client.sendKeyEvent(0, keysym);
   }
-  try { document.getElementById('dw-' + id).focus(); } catch (_) {}
+  try { document.getElementById('dw-' + id).focus({preventScroll: true}); } catch (_) {}
 }
 
 function deskReconnect(id) {
@@ -13394,14 +13724,22 @@ function renderSnippets() {
   const items = snippets.filter(s => !q || [s.name, s.command, s.group, s.description].some(v => (v || '').toLowerCase().includes(q)));
   if (!items.length) { list.innerHTML = `<div class="snip-empty">${esc(t('snip_no_match'))}</div>`; return; }
   const target = snippetTargetWin(), tc = target ? winConn(target) : null;
+  const recent = !q && snippets.length > 5 ? snipRecent().map(id => snippets.find(s => s.id === id)).filter(Boolean).slice(0, 5) : [];
+  const recentHTML = recent.length ? `<div class="snip-group"><div class="snip-group-h" onclick="toggleSnipGroup('\u2605')" title="${esc(t('snip_recent_t'))}">${snipGroupsClosed['\u2605'] ? '▸' : '▾'} ★ ${esc(t('snip_recent'))} <span class="sub">${recent.length}</span></div>` +
+    (snipGroupsClosed['\u2605'] ? '' : recent.map(s => snippetItemHTML(s, tc)).join('')) + '</div>' : '';
   const groups = {};
   items.forEach(s => { const g = s.group || t('snip_ungrouped'); (groups[g] = groups[g] || []).push(s); });
-  list.innerHTML = Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(g => {
+  list.innerHTML = recentHTML + Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(g => {
     const closed = snipGroupsClosed[g] && !q;
     return `<div class="snip-group"><div class="snip-group-h" onclick="toggleSnipGroup(${jsq(g)})">${closed ? '▸' : '▾'} ${esc(g)} <span class="sub">${groups[g].length}</span></div>` +
       (closed ? '' : groups[g].map(s => snippetItemHTML(s, tc)).join('')) + '</div>';
   }).join('') + (snippets.length < 6 && !q ? `<div class="snip-empty"><button class="btn-sec btn-sm" onclick="addExampleSnippets()">✨ ${esc(t('snip_examples'))}</button></div>` : '');
 }
+
+// Recently used snippets (ids, newest first) are remembered per user in this browser only.
+function snipRecentKey() { return currentUser && currentUser.id != null ? 'wrm_snip_recent:u' + currentUser.id : ''; }
+function snipRecent() { try { const k = snipRecentKey(); const v = k ? JSON.parse(localStorage.getItem(k) || '[]') : []; return Array.isArray(v) ? v.filter(Number.isInteger) : []; } catch (_) { return []; } }
+function snipMarkUsed(id) { const k = snipRecentKey(); if (!k) return; try { localStorage.setItem(k, JSON.stringify([id, ...snipRecent().filter(x => x !== id)].slice(0, 10))); } catch (_) {} }
 
 function toggleSnipGroup(g) { snipGroupsClosed[g] = !snipGroupsClosed[g]; renderSnippets(); }
 
@@ -13497,6 +13835,8 @@ async function runSnippet(id, mode, winId) {
     else termSend(w, txt + '\r');
   });
   if (targets.length > 1) bcast.line = '';
+  snipMarkUsed(s.id);
+  if (snippets.length > 5) renderSnippets();
   try { wo.term.focus(); } catch (_) {}
 }
 
@@ -14010,6 +14350,7 @@ function openToolsMenu(anchor) {
   const pol = (currentUser && currentUser.policy) || {};
   const items = [{head: '🧰 ' + t('tools_lbl')}];
   if (pol.network_tools !== false) items.push({ico: '🛠', label: t('tools_net'), title: t('tools_net_t'), do: () => openTools()});
+  if (pol.serial !== false) items.push({ico: '⌁', label: t('tools_serial'), title: t('tools_serial_t'), do: () => openSerial()});
   items.push({ico: '🌐', label: t('vault_proxies'), title: t('p_proxies_d'), do: () => openVault('proxies')});
   if (pol.broadcast !== false) {
     items.push({ico: '📣', label: t('broadcast_lbl') + '…', side: bcast.on ? t('tools_bc_on') : '', title: t('tools_bc_t'), do: () => openBroadcastModal()});
@@ -14287,20 +14628,27 @@ function sessionClipKey(sessId) { return sessId ? 'session_' + sessId : 'global'
 // same browser never sees it. The old unscoped key cannot be attributed to a user and is dropped.
 function clipStorageKey() { return currentUser && currentUser.id != null ? CLIP_KEY + ':u' + currentUser.id : ''; }
 
+const CLIP_MAX = 20;      // unpinned entries kept per list
+const CLIP_TTL = 60 * 60 * 1000; // whole history expires after an hour of no use (it may hold secrets)
+
+// Entries are {text, at, src, pin}. Older versions stored plain strings; they are converted on load.
+function clipNorm(v) { return typeof v === 'string' ? {text: v, at: 0, src: '', pin: false} : (v && typeof v.text === 'string' ? {text: v.text, at: Number(v.at) || 0, src: String(v.src || ''), pin: !!v.pin} : null); }
+
 function loadClipboard() {
   try { localStorage.removeItem(CLIP_KEY); } catch(_) {}
   const key = clipStorageKey();
   try {
     if (key) {
-      // Terminal clipboard history may hold secrets; it expires after an hour of no use.
       const at = Number(localStorage.getItem(key + ':at') || 0);
-      if (at && Date.now() - at > 60 * 60 * 1000) {
+      if (at && Date.now() - at > CLIP_TTL) {
         localStorage.removeItem(key);
         localStorage.removeItem(key + ':at');
         clipData = {};
       }
     }
-    clipData = key ? JSON.parse(localStorage.getItem(key) || '{}') : {};
+    const raw = key ? JSON.parse(localStorage.getItem(key) || '{}') : {};
+    clipData = {};
+    Object.keys(raw || {}).forEach(k => { if (Array.isArray(raw[k])) clipData[k] = raw[k].map(clipNorm).filter(Boolean); });
   } catch(_) { clipData = {}; }
   renderClipboard(currentSessionId);
 }
@@ -14319,53 +14667,119 @@ function saveClipboard() {
   } catch(_) {}
 }
 
-function addClip(text) {
+// clipSource names where a copy came from: the focused window's connection.
+function clipSource() {
+  const wo = winObjects.find(w => w.el && w.el.classList.contains('focused'));
+  const c = wo ? winConn(wo) : null;
+  return c ? (c.name || c.host || '') : '';
+}
+
+function addClip(text, src) {
   if (!text || !text.trim()) return;
   const key = sessionClipKey(currentSessionId);
-  if (!clipData[key]) clipData[key] = [];
-  if (clipData[key][0] === text) return;
-  clipData[key] = clipData[key].filter(t2 => t2 !== text);
-  clipData[key].unshift(text);
-  clipData[key] = clipData[key].slice(0, 20);
+  const list = (clipData[key] || []).map(clipNorm).filter(Boolean);
+  if (list[0] && list[0].text === text) return;
+  const old = list.find(e => e.text === text);
+  const rest = list.filter(e => e.text !== text);
+  const entry = {text, at: Date.now(), src: src != null ? src : clipSource(), pin: !!(old && old.pin)};
+  const pinned = rest.filter(e => e.pin), loose = rest.filter(e => !e.pin);
+  clipData[key] = entry.pin ? [entry, ...pinned, ...loose.slice(0, CLIP_MAX)] : [...pinned, entry, ...loose.slice(0, CLIP_MAX - 1)];
   saveClipboard();
   renderClipboard(currentSessionId);
+}
+
+function clipListKey(sessId) {
+  const key = sessionClipKey(sessId);
+  return (clipData[key] || []).length || !sessId ? key : 'global';
+}
+
+function clipAgo(at) {
+  if (!at) return '';
+  const s = Math.max(0, Math.round((Date.now() - at) / 1000));
+  if (s < 60) return t('clip_now');
+  if (s < 3600) return t('clip_min_ago').replace('{n}', Math.round(s / 60));
+  return t('clip_h_ago').replace('{n}', Math.round(s / 3600));
 }
 
 function renderClipboard(sessId) {
   const list = document.getElementById('clipboard-list');
   if (!list) return;
-  list.innerHTML = '';
-  const key = sessionClipKey(sessId);
-  let items = clipData[key] || [];
-  if (items.length === 0 && sessId) items = clipData['global'] || [];
-  items.forEach((text, i) => {
-    const r = document.createElement('div');
-    r.className = 'clip-entry';
-    r.title = text;
-    r.innerHTML = `<span class="clip-text">${esc(text)}</span><button class="clip-paste-btn" onclick="pasteClipItem(${jsq(key)},${i})">${t('paste')}</button>`;
-    r.onclick = e => { if (e.target.classList.contains('clip-paste-btn')) return; navigator.clipboard.writeText(text).then(() => showToast(t('copied'), 'success')); };
-    list.appendChild(r);
-  });
-  if (items.length === 0) {
-    const e = document.createElement('div');
-    e.style.cssText = 'padding:10px 8px;font-size:10px;color:var(--text3);text-align:center;font-family:"JetBrains Mono",monospace;';
-    e.textContent = t('no_items');
-    list.appendChild(e);
+  const key = clipListKey(sessId);
+  const all = clipData[key] || [];
+  const q = ((document.getElementById('clip-search') || {}).value || '').toLowerCase().trim();
+  const sb = document.getElementById('clip-search');
+  if (sb) sb.style.display = all.length > 4 || q ? '' : 'none';
+  const items = all.map((e, i) => ({e, i})).filter(x => !q || x.e.text.toLowerCase().includes(q) || x.e.src.toLowerCase().includes(q));
+  list.innerHTML = items.map(({e, i}) => {
+    const lines = e.text.split('\n').length;
+    const meta = [e.pin ? '📌' : '', lines > 1 ? t(lines % 10 >= 2 && lines % 10 <= 4 && (lines % 100 < 12 || lines % 100 > 14) ? 'clip_lines_few' : 'clip_lines').replace('{n}', lines) : '', e.src ? esc(e.src) : '', clipAgo(e.at)].filter(Boolean).join(' · ');
+    return `<div class="clip-entry${e.pin ? ' pinned' : ''}" title="${esc(e.text.slice(0, 2000) + '\n\n' + t('clip_click_help'))}" onclick="clipCopy(${jsq(key)},${i})">
+      <span class="clip-text">${esc(e.text.split('\n')[0])}</span>
+      <div class="clip-row"><span class="clip-meta">${meta}</span><div class="clip-acts" onclick="event.stopPropagation()">
+        <button class="clip-paste-btn" onclick="pasteClipItem(${jsq(key)},${i})" title="${esc(t('clip_paste_t'))}">${t('paste')}</button>
+        <button onclick="clipTogglePin(${jsq(key)},${i})" title="${esc(t(e.pin ? 'clip_unpin' : 'clip_pin'))}">${e.pin ? '📍' : '📌'}</button>
+        <button onclick="clipToSnippet(${jsq(key)},${i})" title="${esc(t('clip_to_snippet'))}">⚡</button>
+        <button onclick="clipRemove(${jsq(key)},${i})" title="${esc(t('delete'))}">✕</button>
+      </div></div></div>`;
+  }).join('') || `<div class="clip-empty">${esc(t(all.length ? 'snip_no_match' : 'no_items'))}<div class="sub">${esc(t('clip_kept_hint'))}</div></div>`;
+}
+
+function clipEntry(key, i) { return (clipData[key] || [])[i] || null; }
+
+function clipCopy(key, i) { const e = clipEntry(key, i); if (e) copyText(e.text); }
+
+function clipTogglePin(key, i) {
+  const e = clipEntry(key, i);
+  if (!e) return;
+  e.pin = !e.pin;
+  const l = clipData[key];
+  clipData[key] = [...l.filter(x => x.pin), ...l.filter(x => !x.pin)];
+  saveClipboard();
+  renderClipboard(currentSessionId);
+}
+
+function clipRemove(key, i) {
+  if (!clipData[key]) return;
+  clipData[key].splice(i, 1);
+  saveClipboard();
+  renderClipboard(currentSessionId);
+}
+
+function clipToSnippet(key, i) {
+  const e = clipEntry(key, i);
+  if (!e) return;
+  const first = e.text.trim().split('\n')[0];
+  openSnippetModal(null, {name: first.length > 40 ? first.slice(0, 40) + '…' : first, command: e.text.trim(), group: t('clip_snip_group')});
+}
+
+// pasteClipItem types an entry into the focused (or last used) terminal. Several lines use
+// bracketed paste when the shell supports it; otherwise the user confirms that every line runs.
+// Dangerous commands (rm -rf, mkfs …) always ask first, as snippets do.
+async function pasteClipItem(key, index) {
+  const e = clipEntry(key, index);
+  if (!e) return;
+  const wo = winObjects.find(w => w.el && w.el.classList.contains('focused') && w.term && w.socket && w.socket.readyState === 1) || snippetTargetWin();
+  if (!wo || !wo.term || !wo.socket || wo.socket.readyState !== 1) { copyText(e.text); showToast(t('clip_no_terminal'), 'info', 3500); return; }
+  const text = e.text.replace(/\r?\n/g, '\r');
+  const lines = e.text.split('\n').filter(l => l.trim()).length;
+  const bracketed = !!(wo.term.modes && wo.term.modes.bracketedPasteMode);
+  const danger = e.text.split('\n').find(isDangerousCommand);
+  const c = winConn(wo), name = c ? (c.name || c.host) : t('fm_terminal');
+  if (danger || (lines > 1 && !bracketed)) {
+    const msg = [lines > 1 && !bracketed ? t('clip_multi_confirm').replace('{n}', lines).replace('{name}', name) : '',
+      danger ? '⚠ ' + t('bc_danger').replace('{cmd}', danger.trim()) : ''].filter(Boolean).join('\n\n');
+    if (!await uiConfirm(msg, {title: '📋 ' + name, okText: t('paste'), danger: !!danger})) { try { wo.term.focus(); } catch(_) {} return; }
   }
+  termSend(wo, bracketed ? '\x1b[200~' + text + '\x1b[201~' : text);
+  showToast(t('pasted') + ' → ' + name, 'success', 1500);
+  try { wo.term.focus(); } catch(_) {}
 }
 
-function pasteClipItem(key, index) {
-  const items = clipData[key] || [];
-  const text = items[index];
-  if (!text) return;
-  const wo = winObjects.find(w => w.el && w.el.classList.contains('focused') && w.socket && w.socket.readyState === 1);
-  if (wo) { termSend(wo, text); showToast(t('pasted'), 'success'); try { wo.term.focus(); } catch(_) {} }
-  else copyText(text);
-}
-
+// clearClipboard empties the list but keeps pinned entries; a second click with only pins left clears those too.
 function clearClipboard() {
-  const key = sessionClipKey(currentSessionId);
-  clipData[key] = [];
+  const key = clipListKey(currentSessionId);
+  const l = clipData[key] || [];
+  clipData[key] = l.some(e => !e.pin) ? l.filter(e => e.pin) : [];
   saveClipboard();
   renderClipboard(currentSessionId);
   showToast(t('clipboard_cleared'), 'success');
@@ -17497,8 +17911,11 @@ function closeDrawers() {
   const b = document.getElementById('drawer-backdrop'); if (b) b.classList.remove('open');
 }
 
+// sessIsDrawer: the right panel is a slide-in drawer (phones, tablets, narrow laptops).
+function sessIsDrawer() { return window.innerWidth <= 1024; }
+window.addEventListener('resize', () => { const b = document.getElementById('drawer-backdrop'); if (b && b.classList.contains('open') && window.innerWidth > 1024) closeDrawers(); });
 function toggleSessPanel() {
-  if (isCompact()) { openDrawer('sess-panel'); return; }
+  if (sessIsDrawer()) { openDrawer('sess-panel'); return; }
   const sp = document.getElementById('sess-panel');
   const btn = document.getElementById('sess-toggle-btn');
   const collapsed = sp.classList.toggle('collapsed');
@@ -17529,7 +17946,7 @@ function loadSettings() {
   applyAccent();
   try {
     if (!isCompact() && localStorage.getItem('wrm_sidebar_collapsed') === '1') toggleSidebar();
-    if (!isCompact() && localStorage.getItem('wrm_sess_collapsed') === '1') toggleSessPanel();
+    if (!sessIsDrawer() && localStorage.getItem('wrm_sess_collapsed') === '1') toggleSessPanel();
   } catch(_) {}
 }
 
@@ -18155,9 +18572,9 @@ async function importConfig(input) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const utf16 = bytes[0] === 255 && bytes[1] === 254;
   const text = new TextDecoder(utf16 ? 'utf-16le' : 'utf-8').decode(bytes).replace(/^\uFEFF/, '');
-  if (/^\s*(?:<\?xml[^>]*>\s*)?<(?:[A-Za-z_][\w.-]*:)?Connections\b/i.test(text)) return importExternal(input, 'mremoteng');
-  if (/^\s*(?:Windows Registry Editor|REGEDIT4)/i.test(text) || /\.reg$/i.test(file.name)) return importExternal(input, 'putty');
   input.value = '';
+  // Not WRM's own JSON export: hand the file to the picker (mRemoteNG, PuTTY, RDM CSV …) with a preview.
+  if (!/^\s*[\[{]/.test(text)) return openImportPicker(file);
   let data; try { data = JSON.parse(text); } catch(_) { showToast(t('invalid_json'), 'error'); return; }
   const res = await fetch('/api/config/import', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
   if (res.ok) {
@@ -18314,7 +18731,7 @@ function renderCollabTree() {
     item.oncontextmenu = e => { e.preventDefault(); ctxConnId = c.id; ctxShareToken = collabToken; showSharedCtx(e.clientX, e.clientY, c, collab.perms); };
     return item;
   };
-  appendSharedFolderTree(wrap, collabFolders, collabConns, makeItem);
+  appendSharedFolderTree(wrap, collabFolders, collabConns, makeItem, collab.perms && collab.perms.manage_connections && typeof shareTeamFolderCtx === 'function' ? (e, f) => shareTeamFolderCtx(e, f, {token: collabToken, perms: collab.perms}) : null);
   if (!collab.perms.terminal) {
     const hint = document.createElement('div');
     hint.className = 'muted-text'; hint.style.padding = '8px 10px';
@@ -19703,11 +20120,13 @@ window.addEventListener('load', async () => {
 });
 
 // ══ TOP BAR FIT ══
-// The top bar gives way step by step instead of overlapping: first texts and labels
-// (tb1..tb6), then the less used buttons move into the ⋯ menu. It is measured, so any
-// language, browser zoom, badge or administrator button fits.
+// The top bar gives way step by step instead of overlapping, keeping its buttons labelled
+// for as long as it can: first the session label and other texts (tb1, tb2), then the less
+// used buttons move into the labelled ⋯ menu one by one, and only then the remaining
+// buttons lose their labels (tb3..tb6). It is measured, so any language, browser zoom,
+// badge or administrator button fits. Shares, Lock and Sign out live in the account menu.
 const TB_LEVELS = 6;
-const TB_OVERFLOW = ['btn-shares', 'btn-tunnels', 'btn-tools', 'btn-monitoring', 'btn-vault', 'btn-git', 'btn-panels', 'btn-settings', 'btn-workboard'];
+const TB_OVERFLOW = ['btn-panels', 'btn-workboard', 'btn-vault', 'btn-storages', 'btn-chains', 'btn-tunnels', 'btn-tools', 'btn-git', 'btn-monitoring', 'btn-settings'];
 let _tbObserver = null, _tbPending = 0;
 function topBarOverflows() {
   const tb = document.getElementById('top-bar'), a = document.getElementById('auth-info');
@@ -19720,17 +20139,22 @@ function fitTopBar() {
   if (_tbObserver) _tbObserver.disconnect();
   for (let i = 1; i <= TB_LEVELS; i++) tb.classList.remove('tb' + i);
   TB_OVERFLOW.forEach(id => { const b = document.getElementById(id); if (b) b.classList.remove('tb-moved'); });
+  const grp0 = document.getElementById('tb-canvas-grp');
+  const grpEmpty = () => { if (grp0) grp0.classList.toggle('tb-empty', ![...grp0.children].some(b => getComputedStyle(b).display !== 'none')); };
+  grpEmpty();
   more.style.display = 'none';
-  for (let i = 1; i <= TB_LEVELS && topBarOverflows(); i++) tb.classList.add('tb' + i);
+  for (let i = 1; i <= 2 && topBarOverflows(); i++) tb.classList.add('tb' + i);
   if (topBarOverflows()) {
     more.style.display = '';
     for (const id of TB_OVERFLOW) {
       const b = document.getElementById(id);
       if (!b || getComputedStyle(b).display === 'none') continue;
       b.classList.add('tb-moved');
+      grpEmpty();
       if (!topBarOverflows()) break;
     }
   }
+  for (let i = 3; i <= TB_LEVELS && topBarOverflows(); i++) tb.classList.add('tb' + i);
   const moved = [...tb.querySelectorAll('.tb-moved')];
   if (!moved.length) more.style.display = 'none';
   more.classList.toggle('has-badge', moved.some(b => { const g = b.querySelector('.tun-badge'); return g && g.style.display !== 'none' && g.textContent.trim(); }));
@@ -19741,10 +20165,26 @@ function fitTopBar() {
   if (grp) {
     const kids = [...grp.children], shown = kids.filter(b => getComputedStyle(b).display !== 'none');
     kids.forEach(b => { b.classList.toggle('g-first', b === shown[0]); b.classList.toggle('g-last', b === shown[shown.length - 1]); });
+    grp.classList.toggle('tb-empty', !shown.length);
   }
   if (_tbObserver) { _tbObserver.takeRecords(); _tbObserver.observe(tb, {subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class', 'hidden']}); }
 }
 function scheduleFitTopBar() { if (!_tbPending) _tbPending = requestAnimationFrame(fitTopBar); }
+// tbMenuItem turns a top bar button into a labelled menu entry that presses it.
+function tbMenuItem(b, close) {
+  const it = document.createElement('button');
+  it.type = 'button'; it.className = 'tbm-item'; it.setAttribute('role', 'menuitem');
+  const ico = b.querySelector('span'), lbl = b.querySelector('.lbl'), badge = b.querySelector('.tun-badge');
+  const count = badge && badge.style.display !== 'none' ? badge.textContent.trim() : '';
+  it.innerHTML = `<span class="ico">${esc(ico ? ico.textContent : '')}</span><span>${esc((lbl && lbl.textContent.trim()) || b.title)}</span>${count ? `<span class="tun-badge">${esc(count)}</span>` : ''}`;
+  it.onclick = () => { close(); b.click(); };
+  return it;
+}
+function placeTbMenu(m, btn) {
+  const r = btn.getBoundingClientRect();
+  m.style.top = Math.round(r.bottom + 6) + 'px';
+  m.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + 'px';
+}
 function closeTopMore() {
   const m = document.getElementById('tb-more-menu'); if (m) m.classList.remove('open');
   const b = document.getElementById('btn-more'); if (b) b.setAttribute('aria-expanded', 'false');
@@ -19753,24 +20193,59 @@ function toggleTopMore(ev) {
   if (ev) ev.stopPropagation();
   const m = document.getElementById('tb-more-menu'), btn = document.getElementById('btn-more');
   if (m.classList.contains('open')) { closeTopMore(); return; }
+  closeUserMenu();
   m.innerHTML = '';
-  document.querySelectorAll('#top-bar .tb-moved').forEach(b => {
-    const it = document.createElement('button');
-    it.type = 'button'; it.setAttribute('role', 'menuitem');
-    const ico = b.querySelector('span'), lbl = b.querySelector('.lbl'), badge = b.querySelector('.tun-badge');
-    const count = badge && badge.style.display !== 'none' ? badge.textContent.trim() : '';
-    it.innerHTML = `<span class="ico">${esc(ico ? ico.textContent : '')}</span><span>${esc((lbl && lbl.textContent.trim()) || b.title)}</span>${count ? `<span class="tun-badge">${esc(count)}</span>` : ''}`;
-    it.onclick = () => { closeTopMore(); b.click(); };
-    m.appendChild(it);
-  });
-  const r = btn.getBoundingClientRect();
-  m.style.top = Math.round(r.bottom + 6) + 'px';
-  m.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + 'px';
+  document.querySelectorAll('#top-bar .tb-moved').forEach(b => m.appendChild(tbMenuItem(b, closeTopMore)));
+  placeTbMenu(m, btn);
   m.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
   const first = m.querySelector('button'); if (first) first.focus();
 }
-document.addEventListener('click', e => { const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open') && !m.contains(e.target)) closeTopMore(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open')) { closeTopMore(); document.getElementById('btn-more').focus(); } } });
+function closeUserMenu() {
+  const m = document.getElementById('tb-user-menu'); if (m) m.classList.remove('open');
+  const b = document.getElementById('user-chip'); if (b) b.setAttribute('aria-expanded', 'false');
+}
+// The account menu: who is signed in, appearance, shares, lock and sign out.
+function toggleUserMenu(ev) {
+  if (ev) ev.stopPropagation();
+  const m = document.getElementById('tb-user-menu'), btn = document.getElementById('user-chip');
+  if (!m || !btn) return;
+  if (m.classList.contains('open')) { closeUserMenu(); return; }
+  closeTopMore();
+  const name = document.getElementById('username-display').textContent || '';
+  const role = currentUser ? (currentUser.role ? t('tb_role_' + currentUser.role) : '') : t('guest');
+  m.innerHTML = `<div class="tbm-head"><b>${esc(name)}</b>${role && !role.startsWith('tb_role_') ? `<span>${esc(role)}</span>` : ''}</div>`;
+  const add = (ico, label, fn) => {
+    const it = document.createElement('button');
+    it.type = 'button'; it.className = 'tbm-item'; it.setAttribute('role', 'menuitem');
+    it.innerHTML = `<span class="ico">${esc(ico)}</span><span>${esc(label)}</span>`;
+    it.onclick = () => { closeUserMenu(); fn(); };
+    m.appendChild(it);
+  };
+  if (currentUser) {
+    add('⚙', t('settings_lbl'), () => openSettings());
+    add('🎨', t('tab_appearance'), () => openSettings('st-appearance'));
+  }
+  const items = ['btn-shares', 'btn-lock', 'btn-logout'].map(id => document.getElementById(id)).filter(b => b && b.style.display !== 'none');
+  if (items.length) {
+    const sep = document.createElement('div'); sep.className = 'tbm-sep'; m.appendChild(sep);
+    items.forEach(b => m.appendChild(tbMenuItem(b, closeUserMenu)));
+  }
+  const r = btn.getBoundingClientRect();
+  m.style.top = Math.round(r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(Math.round(r.left), window.innerWidth - 230)) + 'px';
+  m.style.right = 'auto';
+  m.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
+  const first = m.querySelector('button'); if (first) first.focus();
+}
+document.addEventListener('click', e => {
+  const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open') && !m.contains(e.target)) closeTopMore();
+  const u = document.getElementById('tb-user-menu'); if (u && u.classList.contains('open') && !u.contains(e.target)) closeUserMenu();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const m = document.getElementById('tb-more-menu'); if (m && m.classList.contains('open')) { closeTopMore(); document.getElementById('btn-more').focus(); }
+  const u = document.getElementById('tb-user-menu'); if (u && u.classList.contains('open')) { closeUserMenu(); document.getElementById('user-chip').focus(); }
+});
 (function initTopBarFit() {
   const tb = document.getElementById('top-bar'); if (!tb) return;
   if (window.ResizeObserver) new ResizeObserver(scheduleFitTopBar).observe(tb);
@@ -19786,5 +20261,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 <script src="/static/appearance.js"></script>
 <script src="/static/lock.js"></script>
 <script src="/static/aisessions.js"></script>
+<script src="/static/shareteam.js"></script>
+<script src="/static/importer.js"></script>
 </body>
 </html>

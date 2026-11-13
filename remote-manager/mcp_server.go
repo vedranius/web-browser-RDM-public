@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -74,7 +75,7 @@ type mcpConn struct {
 	elicitation   bool
 	ip            string
 	created       time.Time
-	lastSeen      time.Time
+	lastSeenNs    atomic.Int64 // unix nanoseconds of the last request; read without c.mu
 	elicits       map[string]mcpElicit
 	inflight      map[string]context.CancelFunc
 	opened        map[int64]bool // AI sessions opened through this MCP session
@@ -94,6 +95,28 @@ func mcpConnsOf(grantID int64) int {
 		if c.grantID == grantID {
 			n++
 		}
+	}
+	return n
+}
+
+// mcpSessionHolders counts the live MCP sessions other than except that opened the AI
+// session sid.
+func mcpSessionHolders(sid int64, except *mcpConn) int {
+	mcpConns.Lock()
+	conns := make([]*mcpConn, 0, len(mcpConns.m))
+	for _, x := range mcpConns.m {
+		if x != except {
+			conns = append(conns, x)
+		}
+	}
+	mcpConns.Unlock()
+	n := 0
+	for _, x := range conns {
+		x.mu.Lock()
+		if !x.closed && x.opened[sid] {
+			n++
+		}
+		x.mu.Unlock()
 	}
 	return n
 }
@@ -282,9 +305,7 @@ func mcpConnFor(r *http.Request, g *mcpGrant) *mcpConn {
 	if c == nil || c.grantID != g.ID {
 		return nil
 	}
-	c.mu.Lock()
-	c.lastSeen = time.Now()
-	c.mu.Unlock()
+	c.lastSeenNs.Store(time.Now().UnixNano())
 	return c
 }
 
@@ -391,7 +412,7 @@ func mcpInitialize(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg
 	for _, c := range mcpConns.m {
 		if c.userID == g.UserID {
 			n++
-			if oldest == nil || c.lastSeen.Before(oldest.lastSeen) {
+			if oldest == nil || c.lastSeenNs.Load() < oldest.lastSeenNs.Load() {
 				oldest = c
 			}
 		}
@@ -401,8 +422,9 @@ func mcpInitialize(w http.ResponseWriter, r *http.Request, g *mcpGrant, m rpcMsg
 		mcpDropConns(func(x *mcpConn) bool { return x == oldest })
 	}
 	c := &mcpConn{id: randomToken(24), grantID: g.ID, userID: g.UserID, clientName: name, clientVersion: truncateStr(p.ClientInfo.Version, 40),
-		protocol: ver, elicitation: elicit, ip: clientIP(r), created: time.Now(), lastSeen: time.Now(),
+		protocol: ver, elicitation: elicit, ip: clientIP(r), created: time.Now(),
 		elicits: map[string]mcpElicit{}, inflight: map[string]context.CancelFunc{}, opened: map[int64]bool{}}
+	c.lastSeenNs.Store(time.Now().UnixNano())
 	mcpConns.Lock()
 	mcpConns.m[c.id] = c
 	mcpConns.Unlock()
@@ -546,6 +568,11 @@ func mcpToolList(g *mcpGrant) []map[string]interface{} {
 		{"name": "open_session", "title": "Open a session", "description": "Open a WRM session to one server (by id or name from list_connections). Returns the session_id for the other tools, the mode, the scopes and the system.",
 			"inputSchema": obj(map[string]interface{}{"connection": strProp("Connection id or name")}, "connection"),
 			"annotations": map[string]interface{}{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false}},
+		{"name": "wait_for_approval", "title": "Wait for the user's approval", "description": "Wait (up to `seconds`, default 45) for the user's decision on an approval request WRM kept open after a tool call stopped waiting. " +
+			"Call it again while it reports that the request is still waiting; do not go on with other work meanwhile.",
+			"inputSchema": obj(map[string]interface{}{"session_id": sid, "approval_id": strProp("The approval_id from the tool result"),
+				"seconds": map[string]interface{}{"type": "integer", "minimum": 5, "maximum": 55, "description": "How long to wait in this call (5-55, default 45)"}}, "session_id", "approval_id"),
+			"annotations": map[string]interface{}{"readOnlyHint": true, "openWorldHint": false}},
 		{"name": "close_session", "title": "Close a session", "description": "Close a WRM session when you are done with the server.",
 			"inputSchema": obj(map[string]interface{}{"session_id": sid}, "session_id"),
 			"annotations": map[string]interface{}{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false}},
@@ -636,10 +663,35 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		defer func() { <-mcpToolSlots }()
 		writeRPC(w, 200, rpcResult(m.ID, mcpOpenSession(r, c, g, p.Arguments)))
 		return
+	case "wait_for_approval":
+		s, why := mcpSessionFor(g, p.Arguments["session_id"])
+		if s == nil {
+			writeRPC(w, 200, rpcResult(m.ID, toolText(why, true)))
+			return
+		}
+		id, _ := p.Arguments["approval_id"].(string)
+		secs := 0 // bounded before the conversion; 0 means the default
+		if v := asID(p.Arguments["seconds"]); v > 55 {
+			secs = 55
+		} else if v > 0 {
+			secs = int(v)
+		}
+		text, isErr := mcpWaitApproval(r.Context(), s, strings.TrimSpace(id), secs)
+		writeRPC(w, 200, rpcResult(m.ID, toolText(text, isErr)))
+		return
 	case "close_session":
 		s, why := mcpSessionFor(g, p.Arguments["session_id"])
 		if s == nil {
 			writeRPC(w, 200, rpcResult(m.ID, toolText(why, true)))
+			return
+		}
+		// Several AI clients (or parallel agents) with the same AI connection share the session
+		// of a server: one of them closing it must not stop the others' running commands.
+		c.mu.Lock()
+		delete(c.opened, s.ID)
+		c.mu.Unlock()
+		if mcpSessionHolders(s.ID, c) > 0 {
+			writeRPC(w, 200, rpcResult(m.ID, toolText("Session left open: another AI client of this AI connection still uses it. You are done with it.", false)))
 			return
 		}
 		s.Kill(g.UserID, "closed by the MCP client")
@@ -775,6 +827,11 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 						}},
 					}})
 				}
+				// a log message the WRM bridge on the user's computer turns into an operating-system
+				// notification, so the request is seen also when no WRM tab is open or in front
+				send(map[string]interface{}{"jsonrpc": "2.0", "method": "notifications/message", "params": map[string]interface{}{
+					"level": "warning", "logger": "wrm.approval", "data": map[string]interface{}{"type": "approval_required", "approval_id": a.ID,
+						"server": s.ConnName, "message": truncateStr(nonEmpty(a.Command, nonEmpty(a.Transfer, nonEmpty(a.Path, a.Tool))), 300)}}})
 			}
 		case <-ping.C:
 			if p.Meta.ProgressToken != nil {

@@ -53,6 +53,7 @@ type levelRule struct {
 
 var levelRules = []levelRule{
 	{Key: "require_https", Order: []string{"0", "1"}, Need: [3]string{"", "1", "1"}},
+	{Key: "hsts", Order: []string{"0", "1"}, Need: [3]string{"", "", "1"}, Rec: "1"},
 	{Key: "require_2fa", Order: []string{"off", "admins", "all"}, Need: [3]string{"", "all", "all"}, Rec: "admins"},
 	{Key: "password_min_length", Need: [3]string{"", "12", "14"}},
 	{Key: "session_idle_hours", Less: true, Need: [3]string{"", "12", "8"}},

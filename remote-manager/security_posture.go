@@ -109,6 +109,31 @@ func securityPosture(r *http.Request) map[string]interface{} {
 	}
 	checks = append(checks, postureCheck{ID: "open_links", Kind: "check", Status: linkSt, Count: openLinks})
 
+	// Tunnels that listen on the network instead of on this machine only. A dynamic (SOCKS)
+	// tunnel on 0.0.0.0 is an open proxy into the remote network for everyone who reaches
+	// the WRM host; a local tunnel publishes one remote service the same way.
+	var exposedTun, exposedSocks int
+	if rows, err := db.Query(`SELECT kind, bind_host FROM connection_tunnels WHERE kind IN ('local','dynamic')`); err == nil {
+		for rows.Next() {
+			var kind, bind string
+			if rows.Scan(&kind, &bind) == nil && !isLoopbackHost(bind) {
+				exposedTun++
+				if kind == "dynamic" {
+					exposedSocks++
+				}
+			}
+		}
+		rows.Close()
+	}
+	tunSt := "ok"
+	switch {
+	case exposedSocks > 0:
+		tunSt = bad(false)
+	case exposedTun > 0:
+		tunSt = "warn"
+	}
+	checks = append(checks, postureCheck{ID: "exposed_tunnels", Kind: "check", Status: tunSt, Count: exposedTun, Value: strconv.Itoa(exposedSocks)})
+
 	// Signed updates and the current version.
 	checks = append(checks, postureCheck{ID: "update_signature", Kind: "check", Status: map[bool]string{true: "ok", false: "warn"}[len(releaseTrustedKeys()) > 0], Count: len(releaseTrustedKeys())})
 	ver := postureCheck{ID: "version", Kind: "check", Status: "ok", Value: AppVersion}

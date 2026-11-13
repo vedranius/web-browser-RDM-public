@@ -359,6 +359,33 @@ func TestGitHelpers(t *testing.T) {
 	}
 }
 
+func TestGitUpgradeRefs(t *testing.T) {
+	srv := newTestServer(t)
+	for _, kind := range []string{"gitlab", "github", "gitea"} {
+		t.Run(kind, func(t *testing.T) {
+			g := newFakeGit(t, kind)
+			u := setupGitUser(t, srv, "refs-"+kind, g)
+			var got struct {
+				Project  string   `json:"project"`
+				Branches []string `json:"branches"`
+				Tags     []string `json:"tags"`
+			}
+			if code := u.jsonDo("GET", "/api/git/refs?app=demo-api", nil, &got); code != 200 {
+				t.Fatalf("refs status: %d", code)
+			}
+			if got.Project != "demo/demo-api" || strings.Join(got.Branches, ",") != "feature,main" || strings.Join(got.Tags, ",") != "v2.0,v1.10,v1.9" {
+				t.Fatalf("refs: %+v", got)
+			}
+			if code := u.jsonDo("GET", "/api/git/refs?app=missing", nil, nil); code != 404 {
+				t.Fatalf("unknown app: %d", code)
+			}
+			if code := u.jsonDo("GET", "/api/git/refs?app=demo-api&project=other/private", nil, &got); code != 200 || got.Project != "demo/demo-api" {
+				t.Fatalf("project must come from catalog: %d %+v", code, got)
+			}
+		})
+	}
+}
+
 func TestGitTargets(t *testing.T) {
 	srv := newTestServer(t)
 	for _, kind := range []string{"gitlab", "github", "gitea"} {

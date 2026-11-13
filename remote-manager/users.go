@@ -371,7 +371,7 @@ func mePayload(userID int, restricted string) map[string]interface{} {
 		"recovery_codes_left": recoveryCodesLeft(u.Recovery),
 		"password_min_length": settingInt("password_min_length"),
 		"screen_lock":         screenLockPolicy(u.ID),
-		"appearance":          map[string]interface{}{"default_theme": getSetting("appearance_default_theme"), "custom_css": settingBool("appearance_custom_css")},
+		"appearance":          appearancePolicy(),
 		"policy": map[string]interface{}{
 			"server_keys":      u.IsAdmin || settingBool("allow_server_keys"),
 			"link_shares":      u.IsAdmin || settingBool("allow_link_shares"),
@@ -532,6 +532,7 @@ func apiAuthConfigHandler(w http.ResponseWriter, r *http.Request) {
 		// The first-run screen offers the security level (preselected when -security-level chose one).
 		out["security_level"], out["security_level_fixed"] = securityLevel(), levelChosen() || settingLocked("security_level")
 		out["secure_transport"] = secureTransport(r)
+		out["setup_code_required"] = setupCodeRequired(r)
 	}
 	if msg := signInTransportError(r); msg != "" {
 		out["https_required"] = msg
@@ -561,6 +562,7 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		Password      string `json:"password"`
 		SecurityLevel string `json:"security_level"`
 		Email         string `json:"email"`
+		SetupCode     string `json:"setup_code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		jsonError(w, "Bad JSON", 400)
@@ -578,6 +580,11 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var existing int
 	db.QueryRow("SELECT COUNT(*) FROM users").Scan(&existing)
 	first := existing == 0
+	if first && setupCodeRequired(r) && !setupCodeMatches(payload.SetupCode) {
+		recordLoginResult(ip, false)
+		jsonError(w, "Enter the setup code: WRM printed it to its console/log at start and wrote it to "+setupCodeFile+" next to its database.", 403)
+		return
+	}
 	if !first && getSetting("registration") != "open" {
 		jsonError(w, "Registration is disabled. Ask an administrator to create an account for you.", 403)
 		return
@@ -620,6 +627,16 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
+	if first {
+		// Re-check under the lock: a concurrent first registration may have won.
+		firstUserMu.Lock()
+		defer firstUserMu.Unlock()
+		db.QueryRow("SELECT COUNT(*) FROM users").Scan(&existing)
+		if existing > 0 {
+			jsonError(w, "The administrator account was just created. Sign in, or ask the administrator for an account.", 409)
+			return
+		}
+	}
 	res, err := db.Exec(`INSERT INTO users (username, password_hash, is_admin, created_at, password_changed_at) VALUES (?,?,?,?,?)`,
 		payload.Username, hash, boolToInt(first), now, now)
 	if err != nil {
@@ -628,6 +645,9 @@ func apiAuthRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := res.LastInsertId()
+	if first {
+		clearSetupCode()
+	}
 	auditLogAs(r, int(id), payload.Username, "auth.register", "", map[string]bool{"admin": first})
 	if first && payload.SecurityLevel != "" {
 		applyFirstRunLevel(r, int(id), payload.SecurityLevel)

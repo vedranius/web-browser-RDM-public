@@ -48,6 +48,7 @@ type aiApprovalResult struct {
 	Outcome  string // approved | denied | timeout | cancelled
 	Via      string // "mcp" when answered through MCP elicitation, "later" when approved earlier in WRM
 	Deferred bool   // not answered in time (or declined by the app): kept in WRM to approve later
+	ID       string // the approval request (set when Deferred), for wait_for_approval
 }
 
 type aiApproval struct {
@@ -120,12 +121,13 @@ type aiSession struct {
 	TokenID     int64
 	Scopes      []string
 
-	conn     Connection
-	client   *ssh.Client
-	home     string
-	osInfo   string
-	notes    string
-	gathered bool
+	conn       Connection
+	client     *ssh.Client
+	home       string
+	osInfo     string
+	notes      string
+	gatherMu   sync.Mutex // concurrent callers wait until the running gather has finished
+	gatheredOK bool       // the server answered; a failed gather is tried again by the next caller
 
 	history       []aiMsg
 	modeNotice    string
@@ -780,13 +782,17 @@ func sanitizeServerInfo(s string) string {
 }
 
 func (s *aiSession) gather(ctx context.Context) {
-	s.mu.Lock()
-	done := s.gathered
-	s.gathered = true
-	s.mu.Unlock()
-	if done {
+	s.gatherMu.Lock()
+	defer s.gatherMu.Unlock()
+	if s.gatheredOK {
 		return
 	}
+	s.gatheredOK = s.gatherNow(ctx)
+}
+
+// gatherNow reads the server's system, home directory and login once; false when the server
+// could not be reached.
+func (s *aiSession) gatherNow(ctx context.Context) bool {
 	out, _, err := s.exec(ctx, `uname -srm 2>/dev/null; (. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME"); printf 'WRM-HOME %s\n' "$HOME"; printf 'WRM-USER %s\n' "$(id -un 2>/dev/null)"`, "", 20*time.Second)
 	info := []string{}
 	if err == nil {
@@ -816,6 +822,7 @@ func (s *aiSession) gather(ctx context.Context) {
 	s.notes = notes
 	s.mu.Unlock()
 	s.audit(nil, "ai.context", map[string]interface{}{"os": s.osInfo, "notes_shared": s.ShareNotes && s.notes != ""})
+	return err == nil
 }
 
 // ─── the permission engine at work ───────────────────
@@ -991,8 +998,10 @@ func (s *aiSession) CallTool(ctx context.Context, call aiToolCall) aiToolResult 
 				}
 				return fail("Not run yet: " + what + ". WRM keeps the request open in the user's WRM (the live panel and the 🤖 menu show the full " +
 					"command with Approve / Deny) for " + aiLaterTTL.String() + "." + " " + aiApprovalWhy(dec, true) +
-					" Tell the user exactly what you want to run, why, and that they can approve it in WRM. When they say they approved it, call this tool again " +
-					"with exactly the same arguments: " + then + ". Do not run a variant of it on your own.")
+					" WAIT for the user's decision: call the wait_for_approval tool with approval_id \"" + r.ID + "\" (and this session_id), again and again while it says " +
+					"the request is still waiting. Do not continue with other steps, do not skip this step and do not assume an answer in the meantime. " +
+					"Tell the user once what you want to run, why, and that it waits for their approval in WRM. When wait_for_approval reports the approval, call this tool again " +
+					"with exactly the same arguments: " + then + ". After a denial or when the request expired, ask the user how to go on. Do not run a variant of it on your own.")
 			}
 			switch r.Outcome {
 			case "timeout":
@@ -1263,7 +1272,7 @@ func (s *aiSession) requestApproval(ctx context.Context, call aiToolCall, pl *ai
 	if s.Transport == "mcp" && !s.ended && (r.Outcome == "timeout" || r.Outcome == "cancelled" || r.Outcome == "denied" && r.Via == aiViaMCPDeclined) {
 		a.Later, a.Expires, a.ch, a.RunNow = true, time.Now().Add(aiLaterTTL), make(chan aiApprovalResult, 1), aiLaterRunsNow()
 		s.pending[a.ID] = a
-		r.Deferred = true
+		r.Deferred, r.ID = true, a.ID
 	}
 	s.mu.Unlock()
 	d := map[string]interface{}{"approval": a.ID, "tool": call.Name, "outcome": r.Outcome}

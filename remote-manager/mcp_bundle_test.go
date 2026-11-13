@@ -90,7 +90,7 @@ func TestMCPClaudeDesktopBridgeNode(t *testing.T) {
 	script := filepath.Join(t.TempDir(), "index.js")
 	os.WriteFile(script, []byte(mcpbBridgeJS), 0o600)
 	cmd := exec.Command(node, script)
-	cmd.Env = append(os.Environ(), "WRM_MCP_URL="+e.srv, "WRM_MCP_TOKEN="+tok, "WRM_MCP_CA_FILE=${user_config.wrm_ca_file}")
+	cmd.Env = append(os.Environ(), "WRM_MCP_URL="+e.srv, "WRM_MCP_TOKEN="+tok, "WRM_MCP_CA_FILE=${user_config.wrm_ca_file}", "WRM_MCP_NOTIFY=0")
 	in, _ := cmd.StdinPipe()
 	out, _ := cmd.StdoutPipe()
 	var stderr bytes.Buffer
@@ -146,8 +146,9 @@ func TestMCPClaudeDesktopBridgeNode(t *testing.T) {
 		t.Fatalf("expected an elicitation: %v", m)
 	}
 	send(map[string]interface{}{"jsonrpc": "2.0", "id": m["id"], "result": map[string]interface{}{"action": "accept", "content": map[string]interface{}{"decision": "approve"}}})
-	m = next()
-	if m["id"].(float64) != 4 || asMap(m["result"])["isError"] == true || !aiFileExists(filepath.Join(e.host.home, "via-mcpb")) {
+	for m = next(); m["method"] == "notifications/message"; m = next() { // WRM's approval notice for the desktop
+	}
+	if m["id"] != float64(4) || asMap(m["result"])["isError"] == true || !aiFileExists(filepath.Join(e.host.home, "via-mcpb")) {
 		t.Fatalf("run_command through the bridge: %v", m)
 	}
 	in.Close()

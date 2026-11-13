@@ -963,8 +963,9 @@ func TestMCPStdioBridge(t *testing.T) {
 		t.Fatalf("expected an elicitation: %v", m)
 	}
 	send(map[string]interface{}{"jsonrpc": "2.0", "id": m["id"], "result": map[string]interface{}{"action": "accept", "content": map[string]interface{}{"decision": "approve"}}})
-	m = next()
-	if m["id"].(float64) != 3 || asMap(m["result"])["isError"] == true || !aiFileExists(filepath.Join(e.host.home, "via-bridge")) {
+	for m = next(); m["method"] == "notifications/message"; m = next() { // WRM's approval notice for the desktop
+	}
+	if m["id"] != float64(3) || asMap(m["result"])["isError"] == true || !aiFileExists(filepath.Join(e.host.home, "via-bridge")) {
 		t.Fatalf("run_command through the bridge: %v", m)
 	}
 	send(map[string]interface{}{"jsonrpc": "2.0", "id": 4, "method": "nope"})

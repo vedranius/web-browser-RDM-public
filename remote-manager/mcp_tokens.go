@@ -574,7 +574,7 @@ func mcpJanitorTick(now time.Time) {
 	}
 	mcpDropConns(func(c *mcpConn) bool {
 		c.mu.Lock()
-		idle := now.Sub(c.lastSeen) > mcpConnIdle
+		idle := now.Sub(time.Unix(0, c.lastSeenNs.Load())) > mcpConnIdle
 		c.mu.Unlock()
 		return idle || !mcpGrantActive(c.grantID)
 	})
