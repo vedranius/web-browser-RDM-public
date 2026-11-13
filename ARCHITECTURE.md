@@ -14,6 +14,14 @@ every phase of that plan to the code that it touches.
 | Database | SQLite in WAL mode (`DB_PATH`, default `./remote_manager.db`), mode `0600`. |
 | Build / run | `go build`; CI (`.github/workflows/build.yml`) runs gofmt, vet, tests with the race detector, a JS syntax check, cross-compiles 13 targets and publishes releases on tags. Security checks (v12.6.20): `security.yml` (govulncheck, staticcheck, gosec against `.github/security/gosec-baseline.json`, gitleaks, actionlint/zizmor, dependency review), `codeql.yml`, `scorecard.yml`, `claude-security-review.yml`, Trivy in the Docker job, Dependabot; `nightly.yml` (v12.6.21: Go fuzzing of the import parsers, OWASP ZAP). Releases: `SHA256SUMS.txt` signed with ed25519 (`releasesign.go`, checked by the self-update), CycloneDX SBOM, build provenance; all actions pinned to commit SHAs with read-only tokens by default. `Dockerfile` + `docker-compose.yml` for container deployments. |
 
+## Help centre and the help AI (v14.14.0)
+
+- `help.go`: the articles `help/<lang>/<id>.md` (front matter `id, title, section, order, summary, keywords, ui, open, admin`) are embedded (`//go:embed help`), parsed once (`loadHelp`) and searched with folded text (`helpFold`: lower case, no diacritics) and a cheap prefix stemmer. `docs/HELP.md` is generated from them (`helpDocsIndex`, checked by `TestHelpDocsIndex`).
+- `/api/help/ask` builds a system prompt from the open article, the search hits and the articles whose `ui` selectors match the picked element, plus the rules (no running, no secrets, `wrm-actions` block). The picked screen text arrives as `<ui_context>` data and is passed through `redactText`. One question at a time per user and 12 per minute (`helpAskLimiter`); policy `ai_help` (`helpAIAllowed`) on top of the kill switch, lockdown and per-user AI block.
+- `static/help.js` (loaded with the page): the side panel, ⌖ Pick, the chat (SSE over `fetch`), the action buttons and the AI setup page. `parseActions` keeps only known action types; `open` targets come from a fixed map (`OPEN`, settings and admin tab lists), and nothing runs without a click. Settings go through `PUT /api/admin/settings`, so validation, locks and step-up apply.
+- `ai_models_sync.go`: `aiSyncProviderModels` uses `aiListModels` and appends the missing models to `ai_providers.models` (up to `aiModelsMaxChars`), keeping the existing order and default.
+- MCP: `wrm_help` (`mcpHelp`) is answered before the session tools and needs no session.
+
 ## Chains (v14.2.0)
 
 `chains.go` holds:

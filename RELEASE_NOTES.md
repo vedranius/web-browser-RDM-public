@@ -1,20 +1,31 @@
-## Web Remote Manager PRO v14.13.0 — One import with a preview for every tool
+## Web Remote Manager PRO v14.14.0 — Built-in help in two languages, and AI that is easier to set up
 
 ### Added
+
+- **Help** (**?** in the top bar, **F1**, or the account menu on phones): 34 articles in English and Croatian, search with or without Croatian letters, the article about the open dialog first, links to the same pages on GitHub.
+- **⌖ Pick** a button, dialog, window or area of the screen to see the articles about it and ask the help AI about it.
+- **Help AI**: answers from the articles; when you ask it to do something it offers buttons that say exactly what they do, and nothing happens until you press one. Error messages get a **?** that asks Help about the error.
+- **🧭 Set up AI**: one page with a light for every step and a button for what is missing.
+- **Adding an AI service adds all its models**: after a passing test WRM lists the models the service offers (installed models for Ollama) and adds them; **⟳ Models** refreshes the list later.
+- **wrm_help** for AI apps connected over MCP: they read the same help.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.14.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.14.0) asset. Preserve the database and encryption key. No database or setting changes; see [UPGRADING.md](docs/UPGRADING.md).
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.13.0 — One import with a preview for every tool
+
+#### Added
 
 - **Import from another tool** in *Settings → Data*: one dialog for mRemoteNG (XML or CSV), Remote Desktop Manager CSV, RDCMan (`.rdg`), `.rdp` files, MobaXterm, WinSCP, Remmina, OpenSSH config and PuTTY. WRM recognises the file and shows what it would create before anything is saved.
 - **Old encrypted mRemoteNG files** (before 2.6) and the Twofish engine are read.
 
-### Changed
+#### Changed
 
 - The same server in two folders of the source is imported into both folders; importing the same file again still creates nothing new.
 - A storage rename that overwrites the target sends one S3 request less. The storage guide lists every request and what it costs per provider.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.13.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.13.0) asset. Preserve the database and encryption key; nothing is migrated.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.12.0 — Branch and tag list for Git upgrades, serial and USB devices in the browser
 
