@@ -44,7 +44,8 @@ node ../tools/check-ui.js       # UI: JS syntax + en/hr translation keys
   - README (current version, download file names).
 - **CHANGELOG.md:** a new section at the top (Keep a Changelog: Added / Changed / Fixed).
 - **RELEASE_NOTES.md:** a new top section (same structure as the current one, links to the new tag). The previous top section becomes "Included from vX.Y.Z" (its `###` headings become `####`). Download links point to the new version.
-- **README.md:** an "Upgrading from vPrev" section (and its TOC link), feature documentation, configuration table, API reference, project layout, tests list, troubleshooting, as far as the change touches them.
+- **README.md:** a "What's new in vX.Y.Z" section at the top; the README keeps only the **five latest**, so move the oldest one to the top of `docs/WHATS-NEW.md`. Also feature documentation, configuration table, API reference, project layout, tests list, troubleshooting, as far as the change touches them. The README is the product page: no upgrade notes there.
+- **docs/UPGRADING.md:** a new top "Upgrading from vPrev" section (database, settings, behaviour changes).
 - **ARCHITECTURE.md, SECURITY.md, CONTRIBUTING.md:** where the change touches them.
 - **Never** use the suffix `-mimo` anywhere (old releases had it; new ones must not).
 
