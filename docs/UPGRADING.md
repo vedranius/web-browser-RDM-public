@@ -2,6 +2,10 @@
 
 In general: replace the executable, AppImage or container image and keep the database and the encryption key. Database changes are additive, so the previous version still starts on the database after an upgrade. The notes below list what changes per version, newest first; see also the [changelog](../CHANGELOG.md).
 
+## Upgrading from v14.11.8
+
+Replace the executable/AppImage/container and keep the database and encryption key. No database, API or setting change. Behaviour: a desktop session whose guacd does not answer `select` within 8 seconds, or whose target shows no frame within 45 seconds after guacd's *ready*, now ends with an error (status `failed`, audit `desktop.error`) instead of waiting.
+
 ## Upgrading from v14.11.7
 
 Replace the executable/AppImage/container and keep the database and encryption key. No database migration. Two new settings: `appearance_lock` (`0`) and `appearance_shared_themes` (`[]`, managed from *Settings → Appearance*); `/api/auth/me` returns them in `appearance.lock` and `appearance.shared`. Nothing changes until an administrator uses them.

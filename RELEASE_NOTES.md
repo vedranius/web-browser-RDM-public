@@ -1,17 +1,35 @@
-## Web Remote Manager PRO v14.11.8 — One look for the whole team
+## Web Remote Manager PRO v14.11.9 — Remote desktops no longer hang on "Connecting"
 
-### Added
+### Fixed
+
+- **Remote desktop stuck on "Connecting…"**: when the connection to WRM failed, timed out or closed before the first picture, the window now shows the error with **↻ Reconnect**.
+- **guacd that does not answer** (Docker Desktop paused) is reported after 8 seconds, with a hint to resume Docker.
+- **A target that never shows a picture** ends after 45 seconds with the address guacd tried, logged as a failed session.
+
+### Changed
+
+- RDP errors such as *Server refused connection* explain what to check: address, firewall, Remote Desktop on, *Security* mode.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.9](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.9) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.8 — One look for the whole team
+
+#### Added
 
 - **📢 Share with everyone**: an administrator publishes a theme from *Settings → Appearance*; every user sees it under *From your organisation*, and it can be made the default.
 - **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance). Accessibility options, fonts and size stay with each user; administrators are not locked.
 - **💾 Save changes to this theme** for your own themes.
 - **Contrast check** next to the preview with WCAG ratios for text, accent and terminal colours.
 
-### Changed
+#### Changed
 
 - Themes with only some colours fill the rest from Graphite or Daylight.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.8](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.8) asset. Preserve the database and encryption key; nothing is migrated. New settings `appearance_lock` (off) and `appearance_shared_themes` (empty).
 

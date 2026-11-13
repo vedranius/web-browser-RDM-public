@@ -2,6 +2,10 @@
 
 The [README](../README.md) shows the five latest versions. Earlier highlights are kept here, newest first; every change is in the [changelog](../CHANGELOG.md), and upgrade notes per version are in [UPGRADING.md](UPGRADING.md).
 
+## What's new in v14.11.4
+
+**AI apps wait for your approval, and you see it on the desktop.** Claude Code, Codex and other AI apps stop waiting for a tool call after their own timeout (Codex after 60 seconds), and then used to carry on without the step. Now WRM tells the AI that the request still waits in WRM and gives it a new tool, `wait_for_approval`, which it calls again and again until you approve or deny; only then does it go on. The WRM PRO plugin (and every AI app set up with *All AI apps at once*) also shows each approval request as a **notification of the operating system** (a Windows notification, macOS Notification Center, `notify-send` on Linux), also when no WRM tab is open or in front; a click opens WRM. Update the plugin to 1.2.4. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
+
 ## What's new in v14.11.3
 
 **AI apps stop asking for a new approval too early.** The WRM PRO Claude plugin (and the Claude Desktop extension, which share one bridge) asked you to approve the AI connection again whenever WRM did not answer for a moment, for example while WRM restarted, updated or hung, or while your computer was off the network, although the access you chose (say 7 days) was still valid. Now only a token that WRM refuses (expired or revoked) leads to a new sign-in: otherwise the AI app is told that WRM is unreachable, the bridge reconnects by itself with the saved access, and `wrm_connect` does not start a new sign-in while that access is valid. Update the plugin to 1.2.3 (or download the Claude Desktop extension again) to get it. See [AI desktop apps (MCP)](../README.md#ai-desktop-apps-mcp).
