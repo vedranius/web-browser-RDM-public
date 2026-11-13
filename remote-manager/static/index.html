@@ -14389,7 +14389,7 @@ function openToolsMenu(anchor) {
   const pol = (currentUser && currentUser.policy) || {};
   const items = [{head: '🧰 ' + t('tools_lbl')}];
   if (pol.network_tools !== false) items.push({ico: '🛠', label: t('tools_net'), title: t('tools_net_t'), do: () => openTools()});
-  items.push({ico: '⌁', label: t('tools_serial'), title: t('tools_serial_t'), do: () => openSerial()});
+  if (pol.serial !== false) items.push({ico: '⌁', label: t('tools_serial'), title: t('tools_serial_t'), do: () => openSerial()});
   items.push({ico: '🌐', label: t('vault_proxies'), title: t('p_proxies_d'), do: () => openVault('proxies')});
   if (pol.broadcast !== false) {
     items.push({ico: '📣', label: t('broadcast_lbl') + '…', side: bcast.on ? t('tools_bc_on') : '', title: t('tools_bc_t'), do: () => openBroadcastModal()});
