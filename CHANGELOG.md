@@ -6,6 +6,7 @@
 - **Target that never shows a frame**: when guacd reports *ready* but no frame (`sync`) follows within 45 seconds, WRM ends the session with the address guacd tried (and the jump-host route) instead of waiting for ever; the session is logged as failed with a `desktop.error` audit entry.
 
 ### Changed
+- guacd's errors after the handshake name the address WRM gave it, e.g. *Server refused connection (server unreachable?) (target 192.0.2.10:3389)*, so a wrong host in the connection is visible at once.
 - RDP errors that mention *refused* or *unreachable* show a hint: check address, firewall and that Remote Desktop is on, then try another *Security* mode (NLA, TLS, RDP).
 
 ## [14.11.8] - 2026-11-13

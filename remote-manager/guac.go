@@ -675,6 +675,12 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				return
 			}
+			if el[0] == "error" && len(el) >= 3 {
+				// guacd names no address ("server unreachable?"): add the target the
+				// connection points at, so a wrong host is visible at once.
+				el = []string{"error", el[1] + " (target " + addr + desktopRouteNote(route) + ")", el[2]}
+				raw = guacEncode(el[0], el[1:]...)
+			}
 			ta.desktopOutput(raw)
 			if el[0] == "sync" {
 				firstFrame.Store(true)
@@ -729,6 +735,13 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 	<-done
 	gconn.Close()
 	ws.Close()
+}
+
+func desktopRouteNote(route string) string {
+	if route == "" {
+		return ""
+	}
+	return " via " + route
 }
 
 // guacdAnswerTimeout is how long WRM waits for guacd's answer to "select".

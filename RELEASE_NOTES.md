@@ -8,6 +8,7 @@
 
 ### Changed
 
+- guacd's errors name the target address WRM used, so a wrong host is visible at once.
 - RDP errors such as *Server refused connection* explain what to check: address, firewall, Remote Desktop on, *Security* mode.
 
 ### Upgrade

@@ -105,6 +105,10 @@ func (f *fakeGuacd) serve(c net.Conn, dialTarget bool) {
 		return
 	}
 	c.Write(guacEncode("ready", "$fake-id"))
+	if params["password"] == "unreachable" { // guacd's own wording after "ready"
+		c.Write(guacEncode("error", "Server refused connection (server unreachable?)", "519"))
+		return
+	}
 	if params["password"] == "silent" { // the target never answers: keep-alives only
 		for i := 0; i < 50; i++ {
 			if _, err := c.Write(guacEncode("nop")); err != nil {
@@ -319,6 +323,14 @@ func TestDesktopSession(t *testing.T) {
 	dc2.wait(t)
 	if !strings.Contains(dc2.text(), "wrong user name or password") {
 		t.Fatalf("login error not shown: %q", dc2.text())
+	}
+
+	// guacd's error after "ready" names the target address
+	db.Exec(`UPDATE connections SET password=? WHERE id=?`, encryptValue("unreachable"), cv.ID)
+	dcu := u.openDesktop(cv.ID)
+	dcu.wait(t)
+	if txt := dcu.text(); !strings.Contains(txt, "(server unreachable?) (target 10.9.8.7:3390)") || strings.Contains(txt, "INCOMPLETE") {
+		t.Fatalf("error without target: %q", txt)
 	}
 
 	// target silent after "ready": WRM ends the session instead of "Connecting" for ever

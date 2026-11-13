@@ -22,7 +22,7 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 
 ## What's new in v14.11.9
 
-**Remote desktops no longer hang on "Connecting…".** When the WebSocket to WRM failed, timed out or closed before the first picture, the window used to keep showing *Connecting…*; now it shows what went wrong with **↻ Reconnect**. A guacd that accepts the connection but never answers (Docker Desktop paused) is reported after 8 seconds, and a session whose target never shows a picture ends after 45 seconds with the address guacd tried. RDP errors such as *Server refused connection* come with a hint about the address, firewall and Security mode. See [Troubleshooting](#troubleshooting).
+**Remote desktops no longer hang on "Connecting…".** When the WebSocket to WRM failed, timed out or closed before the first picture, the window used to keep showing *Connecting…*; now it shows what went wrong with **↻ Reconnect**. A guacd that accepts the connection but never answers (Docker Desktop paused) is reported after 8 seconds, and a session whose target never shows a picture ends after 45 seconds with the address guacd tried. guacd's errors now name the target address, and RDP errors such as *Server refused connection* come with a hint about the address, firewall and Security mode. See [Troubleshooting](#troubleshooting).
 
 ## What's new in v14.11.8
 
