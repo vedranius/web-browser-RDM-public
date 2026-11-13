@@ -1,32 +1,32 @@
 ---
 id: users-roles-teams
-title: Users, roles and teams
-section: Administration
+title: Korisnici, uloge i timovi
+section: Administracija
 order: 150
-summary: Create accounts, give roles, build teams, require re-authentication for dangerous actions and keep a break-glass admin.
-keywords: user, users, account, create user, role, administrator, admin, operator, auditor, team, teams, permission, policy, step-up, break-glass, disable, delete, reset password, reset 2fa, registration
+summary: Napravite račune, dodijelite uloge, složite timove, tražite ponovnu provjeru za opasne radnje i čuvajte break-glass administratora.
+keywords: korisnik, korisnici, račun, novi korisnik, uloga, administrator, admin, operater, revizor, tim, timovi, dozvola, pravilo, step-up, break-glass, onemogući, obriši, reset lozinke, reset 2fa, registracija, user, account, role, auditor, team, permission, policy, disable, delete, reset password, registration
 ui: #modal-admin, #modal-user-new, #modal-team, #modal-user-delete
 open: admin:users
 admin: true
 ---
-**Settings → 🛡 Admin panel → Users** (administrators).
+**Postavke → 🛡 Admin panel → Korisnici** (administratori).
 
-## Accounts
-- **New user:** name, role, optional e-mail (an activation link when mail is set up) or a temporary password that must be changed at first sign-in.
-- **⋯** on a user: change role, reset password or 2FA, sign out everywhere, unlock, disable, delete (with everything the user owns, or handed over to another account).
-- Registration is closed after the first account unless you open it (*Policies*).
+## Računi
+- **Novi korisnik:** ime, uloga, neobavezni e-mail (poveznica za aktivaciju kad je pošta postavljena) ili privremena lozinka koja se mora promijeniti pri prvoj prijavi.
+- **⋯** na korisniku: promjena uloge, reset lozinke ili 2FA, odjava svugdje, otključavanje, onemogućavanje, brisanje (sa svime što korisnik posjeduje ili predano drugom računu).
+- Registracija je zatvorena nakon prvog računa, osim ako je ne otvorite (*Pravila*).
 
-## Roles
-- **Administrator:** everything.
-- **Operator:** features limited to operators by policies (for example deploys).
-- **User:** own connections and what is shared with them.
-- **Security auditor:** reads the audit log, sessions and file edits; uses no features.
+## Uloge
+- **Administrator:** sve.
+- **Operater:** funkcije koje pravila ograničavaju na operatere (npr. deployevi).
+- **Korisnik:** vlastite veze i ono što je s njim podijeljeno.
+- **Sigurnosni revizor:** čita revizijski zapis, sesije i izmjene datoteka; ne koristi funkcije.
 
-## Teams
-**Teams** groups people; policies can name `teams:<name>` and shares can be given to a team.
+## Timovi
+**Timovi** grupiraju ljude; pravila mogu navesti `teams:<ime>`, a dijeljenja se mogu dati timu.
 
-## Policies
-**Admin → Policies** decides who may use each feature (off, administrators, operators, teams or everybody) and sets limits. A policy forced by a `WRM_<KEY>` environment variable is shown as locked.
+## Pravila
+**Admin → Pravila** odlučuje tko smije koristiti koju funkciju (isključeno, administratori, operateri, timovi ili svi) i postavlja ograničenja. Pravilo nametnuto varijablom okruženja `WRM_<KLJUČ>` prikazuje se kao zaključano.
 
-## Step-up and break-glass
-Dangerous actions (policies, roles, secrets) ask for the password and 2FA again (*step-up*). A **break-glass** administrator can still sign in during a lockdown or when directory sign-in fails; keep one with a strong password and 2FA.
+## Step-up i break-glass
+Opasne radnje (pravila, uloge, tajne) ponovno traže lozinku i 2FA (*step-up*). **Break-glass** administrator se može prijaviti i tijekom lockdowna ili kad prijava preko imenika ne radi; čuvajte jednog s jakom lozinkom i 2FA.

@@ -1,27 +1,27 @@
 ---
 id: security
-title: Security levels and posture
-section: Administration
+title: Razine sigurnosti i stanje
+section: Administracija
 order: 155
-summary: Choose Home, Business or Enterprise security, see deviations and fix weak settings with one click.
-keywords: security, level, home, business, enterprise, posture, https, hardening, deviation, warnings, 2fa required, password policy, host keys, csp
+summary: Odaberite sigurnost Home, Business ili Enterprise, pogledajte odstupanja i jednim klikom popravite slabe postavke.
+keywords: sigurnost, razina, home, business, enterprise, stanje, https, učvršćivanje, odstupanje, upozorenja, obavezni 2fa, pravila lozinki, ključevi hosta, csp, security, level, posture, hardening, deviation, warnings, 2fa required, password policy, host keys
 ui: #modal-admin
 open: admin:security
 admin: true
 ---
-**Admin panel → Security**.
+**Admin panel → Sigurnost**.
 
-## Security level
-- **Home:** sensible defaults for one person or a lab.
-- **Business:** HTTPS for sign-in, 2FA for administrators, stricter passwords and sessions, recordings.
-- **Enterprise:** 2FA for everybody, short sessions, step-up, audit to a SIEM.
-Pick it at the first start, with `wrm -security-level …`, or here (WRM shows the plan before it changes anything). `WRM_SECURITY_LEVEL` forces it.
+## Razina sigurnosti
+- **Home:** razumne zadane postavke za jednu osobu ili laboratorij.
+- **Business:** HTTPS za prijavu, 2FA za administratore, strože lozinke i sesije, snimke.
+- **Enterprise:** 2FA za sve, kratke sesije, step-up, revizijski zapis u SIEM.
+Odaberite je pri prvom pokretanju, s `wrm -security-level …` ili ovdje (WRM pokaže plan prije nego išta promijeni). `WRM_SECURITY_LEVEL` je nameće.
 
-## Posture
-The page lists every setting that is weaker than the level asks (a **deviation**) with *Fix*. A deviation you keep on purpose needs a note, which is audited. The Overview tab shows security warnings too (no HTTPS, open registration, administrators without 2FA…).
+## Stanje
+Stranica navodi svaku postavku slabiju od onoga što razina traži (**odstupanje**) s gumbom *Popravi*. Odstupanje koje namjerno zadržite traži bilješku, koja se bilježi u revizijski zapis. Kartica Pregled također pokazuje sigurnosna upozorenja (nema HTTPS-a, otvorena registracija, administratori bez 2FA…).
 
-## Good practice
-- Run WRM behind HTTPS (built-in certificate or a reverse proxy).
-- Back up the database **and** `remote_manager.db.key` separately.
-- Keep host-key checking on and use credentials with allowed hosts.
-- Use roles, teams and shares instead of sharing passwords.
+## Dobra praksa
+- Pokrenite WRM iza HTTPS-a (ugrađeni certifikat ili reverse proxy).
+- Radite sigurnosnu kopiju baze **i** `remote_manager.db.key` odvojeno.
+- Ostavite provjeru ključeva hosta uključenom i koristite vjerodajnice s dopuštenim hostovima.
+- Koristite uloge, timove i dijeljenja umjesto dijeljenja lozinki.

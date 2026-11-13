@@ -1,26 +1,26 @@
 ---
 id: files
-title: Files, editor and transfers
-section: Basics
+title: Datoteke, uređivač i prijenosi
+section: Osnove
 order: 35
-summary: The SFTP/FTP file manager, search in files, the text editor with AI, previews and server-to-server copy.
-keywords: files, sftp, ftp, ftps, upload, download, editor, edit, search, find, transfer, copy, server to server, preview, permissions, chmod, bookmark
+summary: SFTP/FTP upravitelj datoteka, pretraga u datotekama, uređivač teksta s AI-jem, pregledi i kopiranje sa servera na server.
+keywords: datoteke, sftp, ftp, ftps, prijenos, učitaj, preuzmi, uređivač, uredi, pretraga, traži, kopiraj, server na server, pregled, dozvole, chmod, zabilješka, files, upload, download, editor, transfer
 ui: .fm-wrap, .fm-toolbar, #modal-editor, #modal-transfer, .ed-wrap
 open: help:files
 ---
-SFTP, FTP and FTPS connections open a file manager; on an SSH connection use **📂 Files** in the terminal's title bar.
+SFTP, FTP i FTPS veze otvaraju upravitelj datoteka; na SSH vezi koristite **📂 Datoteke** u naslovnoj traci terminala.
 
-## Browse and manage
-- Click a part of the **path bar** to jump there, or click empty space and type a path. **↑** goes up, **⟳** (F5) refreshes.
-- Drag files from your computer into the window to **upload**; right-click → **Download** (folders as ZIP).
-- Right-click for rename, delete, new folder or file, permissions, copy path, **Preview** (images, video, PDF, text) and **Edit**.
-- **★** bookmarks deep folders per server, folder, tag or for all servers.
+## Pregledavanje i upravljanje
+- Kliknite dio **trake putanje** da skočite tamo ili kliknite prazno mjesto i upišite putanju. **↑** ide gore, **⟳** (F5) osvježava.
+- Povucite datoteke s računala u prozor da ih **učitate**; desni klik → **Preuzmi** (mape kao ZIP).
+- Desni klik za preimenovanje, brisanje, novu mapu ili datoteku, dozvole, kopiranje putanje, **Pregled** (slike, video, PDF, tekst) i **Uredi**.
+- **★** sprema duboke mape po serveru, mapi, oznaci ili za sve servere.
 
-## Search in files
-The search box filters the current folder as you type (`*.log`, `nginx*.conf`). **Enter** searches all subfolders on the server; results stream in and can be stopped. ▾ adds content search, size and date filters.
+## Pretraga u datotekama
+Okvir za pretragu filtrira trenutnu mapu dok tipkate (`*.log`, `nginx*.conf`). **Enter** pretražuje sve podmape na serveru; rezultati stižu postupno i pretraga se može zaustaviti. ▾ dodaje pretragu sadržaja te filtre veličine i datuma.
 
-## Text editor
-Opens text files up to 5 MB: syntax highlighting, **Ctrl+F / Ctrl+H** find and replace, **Ctrl+G** go to line, *Check JSON*, **Ctrl+S** save. Saving detects when somebody else changed the file meanwhile. **✦ AI** in the editor opens the file assistant: it reviews or explains the file and proposes changes as a diff you approve.
+## Uređivač teksta
+Otvara tekstualne datoteke do 5 MB: isticanje sintakse, **Ctrl+F / Ctrl+H** traži i zamijeni, **Ctrl+G** idi na redak, *Provjeri JSON*, **Ctrl+S** spremi. Pri spremanju prepoznaje je li netko drugi u međuvremenu promijenio datoteku. **✦ AI** u uređivaču otvara asistenta za datoteke: pregledava ili objašnjava datoteku i predlaže promjene kao diff koji odobravate.
 
-## Server-to-server transfer
-**⚡ Transfer** copies files and folders from one SSH/SFTP server directly to another, through WRM and not through your browser. Choose what happens when a file exists (ask, overwrite, skip, overwrite if newer). Every transfer is listed with its SHA-256 in the audit.
+## Prijenos sa servera na server
+**⚡ Prijenos** kopira datoteke i mape s jednog SSH/SFTP servera izravno na drugi, kroz WRM, a ne kroz vaš preglednik. Odaberite što se događa kad datoteka postoji (pitaj, prepiši, preskoči, prepiši ako je novija). Svaki prijenos je u revizijskom zapisu sa svojim SHA-256.

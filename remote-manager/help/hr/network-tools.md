@@ -1,22 +1,22 @@
 ---
 id: network-tools
-title: Network tools
-section: Operations
+title: Mrežni alati
+section: Rad
 order: 95
-summary: Port check, ping, traceroute, DNS, HTTP/TLS checks and more, from WRM or from any of your servers.
-keywords: tools, network, port, ping, traceroute, dns, http, tls, certificate, check, reach, firewall, scan, nslookup, dig, curl
+summary: Provjera porta, ping, traceroute, DNS, HTTP/TLS provjere i više, s WRM-a ili s bilo kojeg vašeg servera.
+keywords: alati, mreža, port, ping, traceroute, dns, http, tls, certifikat, provjera, dostupnost, vatrozid, firewall, skeniranje, nslookup, dig, curl, tools, network, certificate, check, reach, scan
 ui: #modal-tools, #btn-tools
 open: tools
 ---
-**🧰 Tools** in the top bar (or right-click a connection → *Network tools from this server…*).
+**🧰 Alati** u gornjoj traci (ili desni klik na vezu → *Mrežni alati s ovog servera…*).
 
-## Tools
-- **Port check:** up to 100 ports (`22,80,443`, `8000-8010`): open, closed or no answer.
-- **Ping** and **Traceroute.**
-- **DNS:** A, AAAA, MX, TXT, CNAME and more.
-- **HTTP / TLS:** status, headers, redirects and the certificate with its expiry.
+## Alati
+- **Provjera porta:** do 100 portova (`22,80,443`, `8000-8010`): otvoren, zatvoren ili bez odgovora.
+- **Ping** i **Traceroute.**
+- **DNS:** A, AAAA, MX, TXT, CNAME i drugi.
+- **HTTP / TLS:** status, zaglavlja, preusmjeravanja i certifikat s istekom.
 
-## From where
-Run a tool **from the WRM server** or **from one of your SSH servers** (*can app-01 reach the database on 5432?*). From a server, WRM runs read-only commands over SSH; jump hosts apply.
+## Odakle
+Pokrenite alat **s WRM servera** ili **s jednog od vaših SSH servera** (*može li app-01 doći do baze na 5432?*). Sa servera WRM izvodi naredbe samo za čitanje preko SSH-a; jump hostovi vrijede.
 
-Administrators decide who may use the tools (policy `network_tools`). **📣 Broadcast** is in the same menu (see *SSH terminal*).
+Administratori odlučuju tko smije koristiti alate (pravilo `network_tools`). **📣 Broadcast** je u istom izborniku (vidi *SSH terminal*).

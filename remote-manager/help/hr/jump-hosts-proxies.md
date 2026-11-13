@@ -1,25 +1,25 @@
 ---
 id: jump-hosts-proxies
-title: Jump hosts and proxies
-section: Access
+title: Jump hostovi i proxyji
+section: Pristup
 order: 55
-summary: Reach servers behind a bastion (like ssh -J) or through a SOCKS/HTTP proxy, also as folder defaults.
-keywords: jump host, bastion, proxyjump, ssh -J, via, proxy, socks, socks5, http connect, folder default, behind, internal network
+summary: Dođite do servera iza bastiona (kao ssh -J) ili kroz SOCKS/HTTP proxy, i kao zadano za mapu.
+keywords: jump host, bastion, skok, proxyjump, ssh -J, preko, proxy, socks, socks5, http connect, zadano za mapu, iza, interna mreža, via, behind, internal network, folder default
 ui: #m-jump-help, #m-proxy-help, #modal-proxy
 open: vault:proxies
 ---
 ## Jump host (bastion)
-1. Save the bastion as a normal SSH connection.
-2. In the internal server's connection choose **Jump host (connect via) → the bastion**.
-3. Double-click it: the terminal says *Connecting to 10.0.0.21 via bastion…*. Bastions can have their own jump host (chains); files, transfers and tunnels use the same route.
+1. Spremite bastion kao običnu SSH vezu.
+2. U vezi internog servera odaberite **Jump host (spoji preko) → bastion**.
+3. Dvaput je kliknite: terminal piše *Connecting to 10.0.0.21 via bastion…*. Bastioni mogu imati svoj jump host (lanci); datoteke, prijenosi i tuneli koriste isti put.
 
 ## Proxy
-For networks reached through a SOCKS5/4 or HTTP CONNECT proxy:
-1. **🔑 Keys → 🌐 Proxies → New proxy** (or *＋ New proxy…* in the connection's Proxy field).
-2. Address, port, optional login (or a credential), *DNS at the proxy*.
-3. Choose it in a connection. A proxy can also be a SOCKS tunnel (-D) of one of your connections; WRM starts it when needed.
+Za mreže do kojih se dolazi kroz SOCKS5/4 ili HTTP CONNECT proxy:
+1. **🔑 Ključevi → 🌐 Proxyji → Novi proxy** (ili *＋ Novi proxy…* u polju Proxy veze).
+2. Adresa, port, neobavezna prijava (ili vjerodajnica), *DNS na proxyju*.
+3. Odaberite ga u vezi. Proxy može biti i SOCKS tunel (-D) jedne od vaših veza; WRM ga pokreće kad zatreba.
 
-## Folder defaults
-Edit a folder and set its default jump host and proxy: every connection in it (also new ones) uses them unless it chooses its own.
+## Zadano za mapu
+Uredite mapu i postavite njezin zadani jump host i proxy: svaka veza u njoj (i nove) ih koristi, osim ako ne odabere svoje.
 
-RDP/VNC desktops and web interfaces go through the jump host too; IPMI uses UDP and runs on the last jump host instead.
+RDP/VNC radne površine i web sučelja također idu kroz jump host; IPMI koristi UDP pa se izvodi na zadnjem jump hostu.

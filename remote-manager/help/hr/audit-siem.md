@@ -1,24 +1,24 @@
 ---
 id: audit-siem
-title: Audit log, recordings, SIEM and lockdown
-section: Administration
+title: Revizijski zapis, snimke, SIEM i lockdown
+section: Administracija
 order: 165
-summary: Who did what and when, session recordings, file edits, export to a SIEM, security alerts and the emergency lockdown.
-keywords: audit, log, history, who, recording, replay, session, file edit, transfer, siem, syslog, splunk, elastic, alert, lockdown, stop user, kill switch, integrity, hash chain, csv
+summary: Tko je što i kada napravio, snimke sesija, izmjene datoteka, izvoz u SIEM, sigurnosna upozorenja i hitni lockdown.
+keywords: revizija, revizijski zapis, audit, log, povijest, tko, snimka, reprodukcija, sesija, izmjena datoteke, prijenos, siem, syslog, splunk, elastic, upozorenje, lockdown, zaustavi korisnika, prekidač, integritet, lanac hasheva, csv, recording, replay, file edit, alert, stop user, kill switch, integrity, hash chain
 ui: #modal-admin, #modal-replay, #modal-siem
 open: admin:audit
 admin: true
 ---
-## Audit log
-**Admin → Audit log:** sign-ins, account and policy changes, connections, shares, terminal sessions, file transfers and edits, AI actions, help AI questions. Filter by text, event, user and date; **CSV export**; **Verify integrity** checks the hash chain (entries cannot be changed or removed before the retention time).
+## Revizijski zapis
+**Admin → Revizijski zapis:** prijave, promjene računa i pravila, veze, dijeljenja, terminalske sesije, prijenosi i izmjene datoteka, AI radnje, pitanja AI pomoći. Filtrirajte po tekstu, događaju, korisniku i datumu; **CSV izvoz**; **Provjeri integritet** provjerava lanac hasheva (unosi se ne mogu mijenjati ni brisati prije isteka vremena čuvanja).
 
-## Sessions and recordings
-**Admin → Sessions & recordings:** every terminal and desktop session, with replay. Users see their own in *Settings → Session history*. **Admin → File edits** shows every changed file with its diff.
+## Sesije i snimke
+**Admin → Sesije i snimke:** svaka terminalska sesija i sesija radne površine, s reprodukcijom. Korisnici vide svoje u *Postavke → Povijest sesija*. **Admin → Izmjene datoteka** pokazuje svaku promijenjenu datoteku s diffom.
 
-## SIEM export and alerts
-**Admin → Security → SIEM export:** syslog, HTTP (Splunk HEC, Elastic and others) with *Test*. **Security alerts** notify administrators about failed sign-in waves, new administrators, lockdown and similar.
+## Izvoz u SIEM i upozorenja
+**Admin → Sigurnost → Izvoz u SIEM:** syslog, HTTP (Splunk HEC, Elastic i drugi) s *Testom*. **Sigurnosna upozorenja** obavještavaju administratore o valovima neuspjelih prijava, novim administratorima, lockdownu i slično.
 
-## When something is wrong
-- **Stop user:** signs a person out everywhere, ends their terminals, tunnels and AI sessions and disables the account.
-- **Lockdown:** only break-glass administrators can sign in, AI stops and shares pause (`wrm -lockdown on` works from the server too).
-- **AI kill switch:** *Admin → AI assistant*.
+## Kad nešto nije u redu
+- **Zaustavi korisnika:** odjavljuje osobu svugdje, završava njezine terminale, tunele i AI sesije i onemogućava račun.
+- **Lockdown:** prijaviti se mogu samo break-glass administratori, AI staje, a dijeljenja se pauziraju (`wrm -lockdown on` radi i sa servera).
+- **AI prekidač za isključivanje:** *Admin → AI asistent*.

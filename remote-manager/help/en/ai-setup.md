@@ -4,22 +4,22 @@ title: Set up AI (the short way)
 section: AI
 order: 100
 summary: One page that turns AI on, adds an AI service (Claude, ChatGPT, Gemini, local models…) and connects AI apps.
-keywords: ai, setup, set up, turn on, enable, provider, api key, claude, anthropic, openai, chatgpt, gemini, ollama, local model, openrouter, mistral, groq, deepseek, opencode, free, mcp, connect, wizard
+keywords: ai, models, model list, setup, set up, turn on, enable, provider, api key, claude, anthropic, openai, chatgpt, gemini, ollama, local model, openrouter, mistral, groq, deepseek, opencode, free, mcp, connect, wizard
 ui: #ai-setup, #st-ai
 open: ai_setup
 ---
-**✦ AI → Set up AI** (also in Help) is one page with every step and a light for each: green when done, with a button for what is missing.
+**✦ AI → 🧭 Set up AI** (also in *Settings → AI assistant* and in Help) is one page with every step and a light for each: green when done, with a button for what is missing.
 
 ## 1. Turn the AI on (administrator)
 Choose who may use it: **Administrators** or **Everybody**. Nothing is sent to an AI service until a service is added and somebody asks.
 
 ## 2. Add an AI service
-**Add an AI service** opens a short wizard: pick the service, paste its key, choose the model, **Test**.
+**Add an AI service** opens a short wizard: pick the service, paste its key, choose the model, **Test**. When the test passes, WRM connects to the service and **adds every model it offers** automatically (for Ollama every installed model). **⟳ Models** in the list of services does it again when the service gets new models.
 - **Claude (Anthropic), ChatGPT (OpenAI), Gemini, Mistral, xAI, DeepSeek, Groq, OpenRouter, Together, Fireworks, Cerebras, Cohere, Perplexity:** paste an API key from the service's console.
 - **OpenCode Zen:** free models **without a key**, a good way to try it.
 - **Ollama (local models, nothing leaves your network):** the wizard finds Ollama, and an administrator can install it, start it and download a model with one click each.
 - Azure OpenAI, AWS Bedrock and Google Vertex AI are in the full form (*Admin → AI assistant → Providers*).
-Administrators add services for everybody; users add their own key under *My API keys* when the policy `ai_personal_keys` allows it.
+Administrators add services for everybody; users add their own key under *My API keys* when the policy `ai_personal_keys` allows it. *Admin → AI → Allowed models* limits which models users may choose.
 
 ## 3. Connect your AI apps (optional)
 To work with WRM from **Claude Desktop, claude.ai, ChatGPT, Claude Code, Codex, Gemini CLI, Cursor, OpenCode** or another MCP app:

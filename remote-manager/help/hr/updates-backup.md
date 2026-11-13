@@ -1,25 +1,25 @@
 ---
 id: updates-backup
-title: Updates, backups and installation
-section: Administration
+title: Ažuriranja, sigurnosne kopije i instalacija
+section: Administracija
 order: 170
-summary: One-click signed updates, what to back up, running WRM as a service, in Docker and behind a reverse proxy.
-keywords: update, upgrade, version, release, self-update, signature, backup, restore, database, key, service, systemd, windows service, docker, reverse proxy, nginx, https, certificate, port, install
+summary: Potpisana ažuriranja jednim klikom, što spremati u sigurnosnu kopiju, WRM kao servis, u Dockeru i iza reverse proxyja.
+keywords: ažuriranje, nadogradnja, verzija, izdanje, samoažuriranje, potpis, sigurnosna kopija, vraćanje, baza, ključ, servis, systemd, windows servis, docker, reverse proxy, nginx, https, certifikat, port, instalacija, update, upgrade, release, signature, backup, restore, database, service, install
 ui: #modal-update, .app-ver
 open: updates
 admin: true
 ---
-## Update
-Click the version in the top bar. WRM shows what is new; administrators press **Update**: the release is downloaded, its **signature** checked, and WRM restarts with it. A Docker install is updated by pulling the new image.
+## Ažuriranje
+Kliknite verziju u gornjoj traci. WRM pokazuje što je novo; administratori pritisnu **Ažuriraj**: izdanje se preuzima, provjerava mu se **potpis** i WRM se ponovno pokreće s njim. Docker instalacija se ažurira povlačenjem nove slike.
 
-## Back up
-Keep copies of both files next to each other:
-- `remote_manager.db` (everything: connections, users, settings, history),
-- `remote_manager.db.key` (the key that decrypts stored passwords and keys). **Without it stored secrets are lost.**
-Copy them while WRM is stopped, or use the SQLite backup of your choice. A previous version still starts on a newer database.
+## Sigurnosna kopija
+Čuvajte kopije obje datoteke jednu uz drugu:
+- `remote_manager.db` (sve: veze, korisnici, postavke, povijest),
+- `remote_manager.db.key` (ključ koji dešifrira spremljene lozinke i ključeve). **Bez njega su spremljene tajne izgubljene.**
+Kopirajte ih dok je WRM zaustavljen ili koristite SQLite sigurnosnu kopiju po izboru. Prethodna verzija i dalje se pokreće na novijoj bazi.
 
-## Run it
-- **As a service:** `wrm -install-service` (systemd, launchd, rc.d or a Windows service).
-- **Docker:** `docker compose up -d` with the file from the repository (includes guacd).
-- **Reverse proxy:** pass WebSockets through; set `ai_mcp_public_url` when the outside address differs.
-The README on GitHub has every option (`PORT`, `DB_PATH`, TLS, environment variables).
+## Pokretanje
+- **Kao servis:** `wrm -install-service` (systemd, launchd, rc.d ili Windows servis).
+- **Docker:** `docker compose up -d` s datotekom iz repozitorija (uključuje guacd).
+- **Reverse proxy:** propustite WebSockete; postavite `ai_mcp_public_url` kad se vanjska adresa razlikuje.
+README na GitHubu ima svaku opciju (`PORT`, `DB_PATH`, TLS, varijable okruženja).

@@ -1,28 +1,28 @@
 ---
 id: troubleshooting
-title: Troubleshooting
-section: Help
+title: Rješavanje problema
+section: Pomoć
 order: 190
-summary: What to do when a connection, a desktop, the AI, an import or WRM itself does not work.
-keywords: problem, error, fails, not working, broken, cannot connect, timeout, refused, host key, permission denied, slow, freeze, crash, log, debug, help
+summary: Što napraviti kad veza, radna površina, AI, uvoz ili sam WRM ne radi.
+keywords: problem, greška, ne radi, pokvareno, ne mogu se spojiti, istek vremena, odbijeno, ključ hosta, permission denied, sporo, zamrznuto, rušenje, log, debug, pomoć, error, fails, not working, broken, cannot connect, timeout, refused, host key, slow, freeze, crash, help
 ui: .toast.error
 open: help:troubleshooting
 ---
-**First:** press **?** on the error message, or open Help and ask the help AI with the message; it explains the usual causes.
+**Najprije:** pritisnite **?** na poruci o grešci ili otvorite Pomoć i pitajte AI pomoć s tom porukom; objašnjava uobičajene uzroke.
 
-## A server does not connect
-- *Connection refused / timeout:* check the address and port, the firewall, and whether the server needs a **jump host**. **🧰 Tools → Port check** from WRM (or from another server) shows where it stops.
-- *Host key changed:* the server was reinstalled or something is in between. If you know it was reinstalled, forget the old key in **Admin → Host keys** (or accept the new one when asked).
-- *Permission denied:* wrong user, password or key; with a key, check **Who has access**.
+## Server se ne spaja
+- *Connection refused / timeout:* provjerite adresu i port, vatrozid i treba li serveru **jump host**. **🧰 Alati → Provjera porta** s WRM-a (ili s drugog servera) pokazuje gdje staje.
+- *Host key changed:* server je ponovno instaliran ili je nešto između. Ako znate da je ponovno instaliran, zaboravite stari ključ u **Admin → Ključevi hostova** (ili prihvatite novi kad pita).
+- *Permission denied:* krivi korisnik, lozinka ili ključ; s ključem provjerite **Tko ima pristup**.
 
-## Remote desktop stays black
-guacd is missing or cannot reach the server. The window names the cause; see *Remote desktop*.
+## Udaljena radna površina ostaje crna
+guacd nedostaje ili ne može doći do servera. Prozor navodi uzrok; vidi *Udaljena radna površina*.
 
-## AI does not answer
-Open **✦ AI → Set up AI**: every step has a light and says what is missing (AI off, no service, failed test, kill switch, lockdown). Provider errors (wrong key, no credit, unknown model) are shown as the service sent them.
+## AI ne odgovara
+Otvorite **✦ AI → 🧭 Postavi AI**: svaki korak ima svjetlo i kaže što nedostaje (AI isključen, nema servisa, neuspjeli test, prekidač za isključivanje, lockdown). Greške pružatelja (krivi ključ, nema kredita, nepoznat model) prikazuju se onako kako ih je servis poslao.
 
-## Import misses entries
-The import preview lists every skipped entry with the reason. For mRemoteNG, make sure the file is `confCons.xml` and enter the master password if it has one.
+## Uvoz propušta unose
+Pregled uvoza navodi svaki preskočeni unos s razlogom. Za mRemoteNG provjerite je li datoteka `confCons.xml` i upišite glavnu lozinku ako je ima.
 
-## WRM is slow or hangs
-Reload the page. Administrators: the Overview tab shows open terminals, tunnels and AI sessions; the server log (`journalctl -u wrm`, or the console) shows errors. Report a bug on GitHub with the version and the log lines.
+## WRM je spor ili visi
+Ponovno učitajte stranicu. Administratori: kartica Pregled pokazuje otvorene terminale, tunele i AI sesije; log servera (`journalctl -u wrm` ili konzola) pokazuje greške. Prijavite grešku na GitHubu s verzijom i retcima loga.

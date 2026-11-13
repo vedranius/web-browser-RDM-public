@@ -15,4 +15,4 @@ WRM adapts to small screens:
 
 **Install it:** in the browser menu choose *Add to Home Screen* (iOS Safari) or *Install app* (Android Chrome): WRM opens full screen like an app.
 
-Help works on phones too: **?** opens it full screen; **⌖ Pick** then a tap picks a part of the screen.
+Help works on phones too: on a phone it is in the account menu (your avatar) and opens full screen; **⌖ Pick** then a tap picks a part of the screen.

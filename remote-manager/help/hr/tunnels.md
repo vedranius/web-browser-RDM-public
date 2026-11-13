@@ -1,24 +1,24 @@
 ---
 id: tunnels
-title: SSH tunnels and web interfaces
-section: Access
+title: SSH tuneli i web sučelja
+section: Pristup
 order: 60
-summary: Local, remote and SOCKS port forwarding, the Tunnels panel and web interface connections behind servers.
-keywords: tunnel, port forwarding, ssh -L, ssh -R, ssh -D, socks, local, remote, dynamic, web interface, https, idrac web, switch web ui, browser
+summary: Lokalno, udaljeno i SOCKS prosljeđivanje portova, panel Tuneli i veze na web sučelja iza servera.
+keywords: tunel, prosljeđivanje portova, port forwarding, ssh -L, ssh -R, ssh -D, socks, lokalni, udaljeni, dinamički, web sučelje, https, idrac web, switch web, preglednik, tunnel, local, remote, dynamic, web interface, browser
 ui: #modal-tunnels, #btn-tunnels, #tun-help
 open: tunnels
 ---
-## Kinds of tunnels
-- **Local (-L):** a port on the WRM machine leads to `host:port` as seen from the server. Example: `127.0.0.1:2443 → 10.0.0.5:443` opens a switch's web page behind the server.
-- **SOCKS (-D):** a proxy for your browser or tools that reaches everything the server reaches.
-- **Remote (-R):** a port on the server leads back to something WRM reaches (needs the policy `tunnel_remote_forward`).
+## Vrste tunela
+- **Lokalni (-L):** port na WRM računalu vodi do `host:port` kako ga vidi server. Primjer: `127.0.0.1:2443 → 10.0.0.5:443` otvara web stranicu switcha iza servera.
+- **SOCKS (-D):** proxy za vaš preglednik ili alate koji dolazi do svega do čega dolazi server.
+- **Udaljeni (-R):** port na serveru vodi natrag do nečega do čega dolazi WRM (treba pravilo `tunnel_remote_forward`).
 
-## Set up and use
-1. **Edit connection → 🔀 SSH tunnels → Add** (or right-click → *Add tunnel…*).
-2. Start and stop them in **🔀 Tunnels** in the top bar. Running tunnels reconnect by themselves.
-3. **Open** opens a web tunnel in a new browser tab; the copy button copies the address.
+## Postavljanje i korištenje
+1. **Uredi vezu → 🔀 SSH tuneli → Dodaj** (ili desni klik → *Dodaj tunel…*).
+2. Pokrećite ih i zaustavljajte u **🔀 Tuneli** u gornjoj traci. Pokrenuti tuneli se sami ponovno spajaju.
+3. **Otvori** otvara web tunel u novoj kartici preglednika; gumb za kopiranje kopira adresu.
 
-The listen address `127.0.0.1` (default) keeps the tunnel to the WRM machine. A network address (`0.0.0.0`, a LAN IP) lets other computers use it; only administrators may set one unless the policy `tunnel_bind_any` allows it. Leave the port empty to get a free one.
+Adresa slušanja `127.0.0.1` (zadano) drži tunel na WRM računalu. Mrežna adresa (`0.0.0.0`, LAN IP) dopušta drugim računalima da ga koriste; postaviti je smiju samo administratori, osim ako pravilo `tunnel_bind_any` to dopušta. Ostavite port prazan da dobijete slobodan.
 
-## Web interface connections
-A connection with protocol **Web interface (HTTPS/HTTP)** opens that page with a double-click. With a jump host WRM opens a temporary tunnel itself and stops it after 30 minutes without traffic.
+## Veze na web sučelja
+Veza s protokolom **Web sučelje (HTTPS/HTTP)** dvoklikom otvara tu stranicu. S jump hostom WRM sam otvara privremeni tunel i zaustavlja ga nakon 30 minuta bez prometa.

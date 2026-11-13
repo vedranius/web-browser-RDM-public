@@ -1,23 +1,23 @@
 ---
 id: chains
-title: Chains
-section: Operations
+title: Lanci
+section: Rad
 order: 80
-summary: Watch a whole working system (servers, storages, endpoints and the links between them) on one live diagram.
-keywords: chain, chains, diagram, flow, pipeline, ingest, cdn, primary, backup, scenario, state, check, dependency, topology, build with ai
+summary: Pratite cijeli radni sustav (servere, spremišta, krajnje točke i veze među njima) na jednom dijagramu uživo.
+keywords: lanac, lanci, dijagram, tok, pipeline, ingest, cdn, primarni, rezervni, scenarij, stanje, provjera, ovisnost, topologija, izradi s ai, chain, flow, backup, state, check, dependency, topology
 ui: #btn-chains, .chn-wrap, .chains
 open: chains
 ---
-A chain watches a system instead of single servers, for example ingest → transcoding → storage → CDN with a primary and a backup path.
+Lanac prati sustav umjesto pojedinačnih servera, npr. ingest → transkodiranje → spremište → CDN s primarnim i rezervnim putem.
 
-## Build a chain
-**⛓ Chains → New chain**, then:
-- **Build with AI:** describe the system in words; the AI looks at your connections and storages and drafts the chain. Nothing is monitored until you review the draft on the diagram and create it.
-- **Step by step:** pick nodes (your SSH connections, storages, outside endpoints), add checks from the catalog (process, port, HTTP, file age, disk, log pattern…), connect them and describe **states** (for example *running on backup*) with conditions.
-- **Templates** and an advanced JSON editor are there too.
+## Izrada lanca
+**⛓ Lanci → Novi lanac**, zatim:
+- **Izradi s AI-jem:** opišite sustav riječima; AI pogleda vaše veze i spremišta i napravi nacrt lanca. Ništa se ne nadzire dok ne pregledate nacrt na dijagramu i ne napravite ga.
+- **Korak po korak:** odaberite čvorove (vaše SSH veze, spremišta, vanjske krajnje točke), dodajte provjere iz kataloga (proces, port, HTTP, starost datoteke, disk, uzorak u logu…), povežite ih i opišite **stanja** (npr. *radi na rezervi*) s uvjetima.
+- Tu su i **predlošci** i napredni JSON uređivač.
 
-## Use it
-The diagram shows each node and link in colour with the time of the last check. Click a node for its checks and history; *Test now* runs all checks once. Notifications can tell you when the chain changes state.
+## Korištenje
+Dijagram prikazuje svaki čvor i vezu u boji s vremenom zadnje provjere. Kliknite čvor za njegove provjere i povijest; *Testiraj sada* jednom pokreće sve provjere. Obavijesti vam mogu javiti kad lanac promijeni stanje.
 
-## AI on a chain
-From the chain's window, ask the AI to explain a state or to propose a change; it returns a draft you apply yourself.
+## AI na lancu
+Iz prozora lanca pitajte AI da objasni stanje ili predloži promjenu; vraća nacrt koji sami primijenite.

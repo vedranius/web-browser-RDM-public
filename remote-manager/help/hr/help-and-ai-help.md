@@ -1,30 +1,30 @@
 ---
 id: help-and-ai-help
-title: Using Help and the help AI
+title: Korištenje Pomoći i AI pomoći
 section: AI
 order: 115
-summary: Search the help, pick any part of the screen to ask about it, and let the help AI explain or do it for you.
-keywords: help, f1, question mark, search, pick, select, frame, explain, how to, ask ai, do it for me, documentation, manual, guide
+summary: Pretražite pomoć, odaberite bilo koji dio zaslona da pitate o njemu i neka vam AI pomoć objasni ili napravi.
+keywords: pomoć, f1, upitnik, pretraga, odaberi, označi, okvir, objasni, kako, pitaj ai, napravi umjesto mene, dokumentacija, priručnik, vodič, help, question mark, search, pick, select, frame, explain, how to, ask ai, documentation, manual, guide
 ui: #help-panel, #btn-help
 open: help:help-and-ai-help
 ---
-**?** in the top bar or **F1** opens Help on the side; WRM keeps working next to it, and you can keep a dialog open while reading.
+**?** u gornjoj traci ili **F1** otvara Pomoć sa strane; WRM radi dalje pokraj nje, a dijalog može ostati otvoren dok čitate.
 
-## Find an answer
-- **Search** in English or Croatian, with or without č, ć, š, ž, đ.
-- **Topics** lists every article by section; each one also has a link to the same page on GitHub.
-- Help opens on the article about what is in front of you (for example the dialog you have open).
+## Pronalaženje odgovora
+- **Pretraga** na engleskom ili hrvatskom, sa ili bez č, ć, š, ž, đ.
+- **Teme** navode svaki članak po odjeljcima; svaki ima i poveznicu na istu stranicu na GitHubu.
+- Pomoć se otvara na članku o onome što je pred vama (npr. dijalog koji imate otvoren).
 
-## Pick a part of the screen
-1. Press **⌖ Pick** in Help.
-2. Point at a button, a dialog, a window or a list: it is outlined. Click to pick it, or **drag a frame** around an area. **Esc** cancels.
-3. Help shows the articles about it and puts it into the AI chat as context, so you can ask *what does this do?* or *why is this red?*
+## Odabir dijela zaslona
+1. Pritisnite **⌖ Odaberi** u Pomoći.
+2. Pokažite gumb, dijalog, prozor ili popis: dobiva okvir. Kliknite da ga odaberete ili **povucite okvir** oko područja. **Esc** odustaje.
+3. Pomoć pokazuje članke o tome i stavlja ga u AI chat kao kontekst, pa možete pitati *što ovo radi?* ili *zašto je ovo crveno?* Šalje se samo vidljivi tekst, nikad vrijednosti polja.
 
-## Ask the help AI
-Type a question in your own words, for example *how do I reach a server behind a bastion?* The answer comes from these articles, with menu paths and steps.
+## Pitajte AI pomoć
+Upišite pitanje svojim riječima, npr. *kako doći do servera iza bastiona?* Odgovor dolazi iz ovih članaka, s putanjama izbornika i koracima.
 
-If you ask it to **do it for you**, it offers buttons such as *Open new connection (filled in)*, *Open Settings → AI* or *Open app-01 with the AI assistant*. Each button says exactly what it does, and **nothing happens until you press it**. Changes on a server still go through the AI assistant's approvals.
+Ako tražite da **napravi umjesto vas**, nudi gumbe kao *Otvori novu vezu (popunjenu)*, *Otvori Postavke → AI* ili *Otvori app-01 s AI asistentom*. Svaki gumb točno kaže što radi i **ništa se ne događa dok ga ne pritisnete**. Promjena postavke pita još jednom prije spremanja, a promjene na serveru i dalje idu kroz odobrenja AI asistenta.
 
-The help AI needs an AI service (see *Set up AI*); search and articles work without one. Administrators choose who may use it with the policy `ai_help` (default: the same people as the AI assistant). Questions are audited (`help.ask`), without their text.
+AI pomoć treba AI servis (vidi *Postavi AI*); pretraga i članci rade i bez njega. Administratori biraju tko je smije koristiti pravilom `ai_help` (zadano: isti ljudi kao za AI asistenta). Pitanja se bilježe u revizijski zapis (`help.ask`), bez njihova teksta.
 
-Error messages have a **?** button too: it opens Help with the error filled in.
+Poruke o greškama također imaju gumb **?**: otvara Pomoć s upisanom greškom.

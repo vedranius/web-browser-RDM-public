@@ -21,7 +21,7 @@ WRM PRO is one program with a web interface. It runs on a PC, a server or a Rasp
 2. Double-click it: an SSH terminal opens. **📂 Files** in its title bar opens the file manager of the same server.
 3. Already have mRemoteNG, PuTTY or `~/.ssh/config`? Import them in **Settings → Data**.
 4. Turn on two-factor sign-in: **Settings → Security**.
-5. Want AI? Open **✦ AI → Set up AI**: one page turns it on and adds an AI service.
+5. Want AI? Open **✦ AI → 🧭 Set up AI**: one page turns it on and adds an AI service.
 
 ## Getting help
 - **?** in the top bar (or **F1**) opens this help. Search it, or ask the help AI in your own words.

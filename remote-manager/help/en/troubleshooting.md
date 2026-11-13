@@ -19,7 +19,7 @@ open: help:troubleshooting
 guacd is missing or cannot reach the server. The window names the cause; see *Remote desktop*.
 
 ## AI does not answer
-Open **✦ AI → Set up AI**: every step has a light and says what is missing (AI off, no service, failed test, kill switch, lockdown). Provider errors (wrong key, no credit, unknown model) are shown as the service sent them.
+Open **✦ AI → 🧭 Set up AI**: every step has a light and says what is missing (AI off, no service, failed test, kill switch, lockdown). Provider errors (wrong key, no credit, unknown model) are shown as the service sent them.
 
 ## Import misses entries
 The import preview lists every skipped entry with the reason. For mRemoteNG, make sure the file is `confCons.xml` and enter the master password if it has one.

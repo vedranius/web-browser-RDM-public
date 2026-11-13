@@ -1,21 +1,21 @@
 ---
 id: appearance
-title: Appearance, themes and language
-section: Personalise
+title: Izgled, teme i jezik
+section: Prilagodba
 order: 125
-summary: Themes, your own colours, fonts, interface size, spacing, colour-vision aids and the language.
-keywords: theme, dark, light, colour, color, font, size, zoom, scale, spacing, contrast, accessibility, colour blind, language, croatian, english, hrvatski
+summary: Teme, vlastite boje, fontovi, veličina sučelja, razmaci, pomagala za raspoznavanje boja i jezik.
+keywords: tema, tamno, svijetlo, boja, font, veličina, zum, skaliranje, razmak, kontrast, pristupačnost, daltonizam, jezik, hrvatski, engleski, theme, dark, light, colour, color, size, zoom, scale, spacing, contrast, accessibility, colour blind, language, croatian, english
 ui: #st-appearance, #appearance-pane, #st-general
 open: appearance
 ---
-**Settings → Appearance** changes how WRM looks for you; it follows you to every browser.
+**Postavke → Izgled** mijenja kako WRM izgleda za vas; prati vas u svaki preglednik.
 
-- **Themes:** Graphite (default), Midnight, Fjord, Solar dark, Forest, Ember, Daylight, Paper, Solar light and two high-contrast themes. *Follow the system* switches between a dark and a light one.
-- **Your own colours:** every colour has a picker; **Save as my theme**, **Export** and **Import** themes as JSON.
-- **Fonts and size:** interface font, terminal font, interface size 70–160 %, spacing (compact, normal, roomy), corners, heavier text.
-- **Colour vision:** status colours and patterns for red-green and blue-yellow colour blindness.
-- Addons can bring more themes.
+- **Teme:** Graphite (zadana), Midnight, Fjord, Solar dark, Forest, Ember, Daylight, Paper, Solar light i dvije teme visokog kontrasta. *Prati sustav* prebacuje između tamne i svijetle.
+- **Vlastite boje:** svaka boja ima birač; **Spremi kao moju temu**, **Izvezi** i **Uvezi** teme kao JSON.
+- **Fontovi i veličina:** font sučelja, font terminala, veličina sučelja 70–160 %, razmaci (zbijeno, normalno, prozračno), kutovi, deblji tekst.
+- **Raspoznavanje boja:** boje stanja i uzorci za crveno-zelenu i plavo-žutu sljepoću za boje.
+- Dodaci mogu donijeti još tema.
 
-**Language:** Settings → General → Language (English / Hrvatski).
+**Jezik:** Postavke → Općenito → Jezik (English / Hrvatski).
 
-The browser's zoom (Ctrl + / Ctrl −) also works; WRM adapts its layout to the space it has.
+Zum preglednika (Ctrl + / Ctrl −) također radi; WRM prilagođava raspored prostoru koji ima.

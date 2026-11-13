@@ -32,7 +32,7 @@ import (
 //   POST ollama/action                        {action: install|start|pull, model?, confirm} admin + policy ai_ollama_manage
 //   GET  ollama/runs[/{id}]                   recorded Ollama actions (admin)
 // Admin API (/api/admin/ai/…):
-//   GET|POST|PUT|DELETE providers[/{id}], POST providers/{id}/test, GET providers/{id}/models   organisation providers
+//   GET|POST|PUT|DELETE providers[/{id}], POST providers/{id}/test, GET providers/{id}/models, POST providers/{id}/models/sync   organisation providers
 //   GET  sessions?user&conn&status&limit      every session (active ones marked live)
 //   GET  sessions/{id}                        transcript
 //   POST sessions/{id}/kill

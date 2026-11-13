@@ -1,26 +1,26 @@
 ---
 id: import
-title: Import and export
-section: Basics
+title: Uvoz i izvoz
+section: Osnove
 order: 25
-summary: Bring connections in from mRemoteNG, PuTTY, OpenSSH, CSV/Excel, NetBox or another WRM.
-keywords: import, export, mremoteng, confcons, putty, ssh config, csv, excel, xlsx, netbox, backup, migrate, move
+summary: Uvezite veze iz mRemoteNG-a, PuTTY-ja, OpenSSH-a, CSV/Excela, NetBoxa ili drugog WRM-a.
+keywords: uvoz, izvoz, prijenos, migracija, sigurnosna kopija, import, export, mremoteng, confcons, putty, ssh config, csv, excel, xlsx, netbox, backup, migrate
 ui: #st-data, #modal-inventory
 open: settings:st-data
 ---
-## From other programs (Settings → Data)
-- **mRemoteNG:** choose `confCons.xml` (`%APPDATA%\mRemoteNG\confCons.xml`, or *File → Export* in mRemoteNG). Containers become folders, SSH/RDP/VNC/Telnet/HTTP connections keep their options, and passwords are decrypted and stored encrypted in WRM. If the file has a master password, WRM asks for it. Check the preview, then import.
-- **PuTTY:** export the registry key `HKCU\Software\SimonTatham\PuTTY\Sessions` to a `.reg` file and import it; proxies come along.
-- **OpenSSH:** import `~/.ssh/config`; `Host` entries become connections, `ProxyJump` becomes a jump host.
+## Iz drugih programa (Postavke → Podaci)
+- **mRemoteNG:** odaberite `confCons.xml` (`%APPDATA%\mRemoteNG\confCons.xml` ili *File → Export* u mRemoteNG-u). Kontejneri postaju mape, SSH/RDP/VNC/Telnet/HTTP veze zadržavaju opcije, a lozinke se dešifriraju i šifrirano spremaju u WRM. Ako datoteka ima glavnu lozinku, WRM je traži. Provjerite pregled, pa uvezite.
+- **PuTTY:** izvezite ključ registra `HKCU\Software\SimonTatham\PuTTY\Sessions` u `.reg` datoteku i uvezite je; proxyji dolaze s njom.
+- **OpenSSH:** uvezite `~/.ssh/config`; unosi `Host` postaju veze, `ProxyJump` postaje jump host.
 
-If something is not imported as you expect, the preview names each skipped entry and why. Ask the help AI with the message; it can explain the cause.
+Ako se nešto ne uveze kako očekujete, pregled navodi svaki preskočeni unos i razlog. Pitajte AI pomoć s tom porukom; može objasniti uzrok.
 
-## Inventory (CSV, Excel, NetBox)
-**Settings → Data → Inventory** (or the sidebar ⋯ menu):
-- **CSV / Excel (.xlsx):** the first row holds column names; WRM guesses which column is the name, host, port, user, folder and tags. Check the mapping in the preview.
-- **NetBox:** the API address and a read-only token. Sites, racks, roles and tenants become tags; importing again updates what was imported before.
+## Inventar (CSV, Excel, NetBox)
+**Postavke → Podaci → Inventar** (ili izbornik ⋯ u bočnoj traci):
+- **CSV / Excel (.xlsx):** prvi redak sadrži nazive stupaca; WRM pogađa koji je stupac ime, host, port, korisnik, mapa i oznake. Provjerite mapiranje u pregledu.
+- **NetBox:** adresa API-ja i token samo za čitanje. Lokacije, rackovi, uloge i tenanti postaju oznake; ponovni uvoz ažurira ono što je prije uvezeno.
 
-## Export and backup
-- **Export connections** writes your connections, folders, jump hosts and tunnels as a file without secrets. **Export with passwords & keys** includes them; it asks for your password and the policy must allow it.
-- **Import** of a WRM export restores it on another WRM or after a reinstall.
-- Administrators back up the whole WRM: the database file and its encryption key (see *Updates and backups*).
+## Izvoz i sigurnosna kopija
+- **Izvezi veze** zapisuje veze, mape, jump hostove i tunele u datoteku bez tajni. **Izvoz s lozinkama i ključevima** ih uključuje; traži vašu lozinku i pravilo to mora dopuštati.
+- **Uvoz** WRM izvoza vraća ga na drugom WRM-u ili nakon ponovne instalacije.
+- Administratori rade sigurnosnu kopiju cijelog WRM-a: datoteku baze i njezin ključ za šifriranje (vidi *Ažuriranja i sigurnosne kopije*).

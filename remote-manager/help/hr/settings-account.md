@@ -1,34 +1,34 @@
 ---
 id: settings-account
-title: Your account and settings
-section: Personalise
+title: Vaš račun i postavke
+section: Prilagodba
 order: 140
-summary: Password, two-factor sign-in, signed-in devices, the Settings tabs and installing WRM as an app.
-keywords: settings, account, password, change password, 2fa, two factor, totp, authenticator, recovery codes, sessions, devices, sign out, install app, pwa, profile, e-mail
+summary: Lozinka, prijava u dva koraka, prijavljeni uređaji, kartice Postavki i instalacija WRM-a kao aplikacije.
+keywords: postavke, račun, lozinka, promjena lozinke, 2fa, dva koraka, totp, autentifikator, kodovi za oporavak, sesije, uređaji, odjava, instaliraj aplikaciju, pwa, profil, e-mail, settings, account, password, two factor, authenticator, recovery codes, devices, sign out, install app
 ui: #modal-settings, #st-security, #modal-2fa, #modal-password, #btn-settings
 open: settings:st-security
 ---
-**⚙ Settings** in the top bar:
+**⚙ Postavke** u gornjoj traci:
 
-| Tab | What it holds |
+| Kartica | Što sadrži |
 |---|---|
-| General | language, install as an app, notifications when a server goes down |
-| Appearance | themes, fonts, size |
-| Terminal | font size, scrollback, automatic reconnect |
-| Security | password, two-factor sign-in, signed-in devices, screen lock |
-| Notifications | what you receive and where |
-| Voice & audio | microphone, speaker, push-to-talk |
-| Session history | your terminal sessions and recordings |
-| AI assistant | your AI status, your own keys and preferences |
-| AI connections | AI apps connected over MCP |
-| Addons | install and manage addons |
-| Data | import and export |
+| Općenito | jezik, instalacija kao aplikacija, obavijesti kad server prestane raditi |
+| Izgled | teme, fontovi, veličina |
+| Terminal | veličina fonta, povijest pomicanja, automatsko ponovno spajanje |
+| Sigurnost | lozinka, prijava u dva koraka, prijavljeni uređaji, zaključavanje zaslona |
+| Obavijesti | što primate i gdje |
+| Glas i zvuk | mikrofon, zvučnik, push-to-talk |
+| Povijest sesija | vaše terminalske sesije i snimke |
+| AI asistent | vaše AI stanje, vlastiti ključevi i postavke, 🧭 Postavi AI |
+| AI veze | AI aplikacije spojene preko MCP-a |
+| Dodaci | instalacija i upravljanje dodacima |
+| Podaci | uvoz i izvoz |
 
-## Two-factor sign-in
-**Settings → Security → Two-factor authentication**: scan the QR code with an authenticator app, enter a code, and keep the 10 recovery codes safe.
+## Prijava u dva koraka
+**Postavke → Sigurnost → Prijava u dva koraka**: skenirajte QR kod aplikacijom za autentifikaciju, upišite kod i sačuvajte 10 kodova za oporavak.
 
-## Devices
-*Signed-in sessions* lists every browser with your account; *Sign out* ends one, *Sign out everywhere else* ends the rest.
+## Uređaji
+*Prijavljene sesije* navodi svaki preglednik s vašim računom; *Odjavi* završava jednu, *Odjavi sve ostale* završava ostale.
 
-## Install as an app
-**Settings → General → Install** (Chrome, Edge, Safari on iOS: *Add to Home Screen*) opens WRM in its own window, also on phones and tablets.
+## Instalacija kao aplikacija
+**Postavke → Općenito → Instaliraj** (Chrome, Edge, Safari na iOS-u: *Dodaj na početni zaslon*) otvara WRM u vlastitom prozoru, i na mobitelima i tabletima.

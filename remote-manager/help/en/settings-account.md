@@ -19,7 +19,7 @@ open: settings:st-security
 | Notifications | what you receive and where |
 | Voice & audio | microphone, speaker, push-to-talk |
 | Session history | your terminal sessions and recordings |
-| AI assistant | your AI status, your own keys and preferences |
+| AI assistant | your AI status, your own keys and preferences, 🧭 Set up AI |
 | AI connections | AI apps connected over MCP |
 | Addons | install and manage addons |
 | Data | import and export |

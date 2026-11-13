@@ -1,34 +1,34 @@
 ---
 id: connections
-title: Connections and folders
-section: Basics
+title: Veze i mape
+section: Osnove
 order: 20
-summary: Add, edit, organise, move and search your servers; protocols, tags and notes.
-keywords: connection, server, add, new, edit, folder, move, drag, order, sort, tag, search, ssh, rdp, vnc, telnet, web, quick connect, notes, status
+summary: Dodajte, uredite, organizirajte, premjestite i pretražite servere; protokoli, oznake i bilješke.
+keywords: veza, konekcija, server, dodaj, nova, uredi, mapa, premjesti, povuci, redoslijed, sortiraj, oznaka, tag, pretraga, ssh, rdp, vnc, telnet, web, brzo spajanje, bilješke, status, connection, folder, quick connect
 ui: #sidebar, #modal-conn, #modal-folder, #modal-move, #modal-quick, #modal-notes
 open: new_connection
 ---
-A connection is one saved server: protocol, address, login and options. Connections live in folders in the left sidebar.
+Veza je jedan spremljeni server: protokol, adresa, prijava i opcije. Veze su u mapama u lijevoj bočnoj traci.
 
-## Add a connection
-1. **+ Connection** in the sidebar.
-2. Choose the **protocol**: SSH (terminal and files), SFTP/FTP/FTPS (files only), RDP, VNC, Telnet (remote desktop), or **Web interface** (HTTP/HTTPS page of a switch, iDRAC, NAS…).
-3. Enter **host**, **port** and **user**. For the login choose a password, a key from **🔑 Keys**, a shared **credential**, or a Bitwarden SSH key.
-4. Optional: **folder**, **tags** (`env:prod`, `site:dc1`), a **jump host** or **proxy**, SSH **tunnels**, **notes**, out-of-band management (BMC).
-5. **Save**, then double-click the connection to open it.
+## Dodavanje veze
+1. **+ Veza** u bočnoj traci.
+2. Odaberite **protokol**: SSH (terminal i datoteke), SFTP/FTP/FTPS (samo datoteke), RDP, VNC, Telnet (udaljena radna površina) ili **Web sučelje** (HTTP/HTTPS stranica switcha, iDRAC-a, NAS-a…).
+3. Upišite **host**, **port** i **korisnika**. Za prijavu odaberite lozinku, ključ iz **🔑 Ključeva**, dijeljenu **vjerodajnicu** ili Bitwarden SSH ključ.
+4. Neobavezno: **mapa**, **oznake** (`env:prod`, `site:dc1`), **jump host** ili **proxy**, SSH **tuneli**, **bilješke**, upravljanje izvan pojasa (BMC).
+5. **Spremi**, pa dvaput kliknite vezu da je otvorite.
 
-## Quick connect
-Type `user@host:port` (or `rdp://…`, `vnc://…`, `https://…`) into **⚡ Quick connect** and press Enter. It is kept 24 hours under *Quick connections*; 💾 saves it for good.
+## Brzo spajanje
+Upišite `korisnik@host:port` (ili `rdp://…`, `vnc://…`, `https://…`) u **⚡ Brzo spajanje** i pritisnite Enter. Čuva se 24 sata pod *Brze veze*; 💾 je trajno sprema.
 
-## Folders and order
-- **📁 Folder** creates a folder; right-click a folder for a subfolder, rename, share, sort A–Z or *keep sorted*.
-- **Drag** connections and folders to move them; drop between two rows to put it exactly there. Ctrl+click selects several, then drag them together or use right-click → **Move to…**.
-- Right-click a connection: open, edit, duplicate, share, network tools, tunnels, notes, delete.
+## Mape i redoslijed
+- **📁 Mapa** stvara mapu; desni klik na mapu za podmapu, preimenovanje, dijeljenje, sortiranje A–Ž ili *uvijek sortirano*.
+- **Povucite** veze i mape da ih premjestite; spustite između dva retka da je stavite točno tamo. Ctrl+klik označava više njih, pa ih povucite zajedno ili desni klik → **Premjesti u…**.
+- Desni klik na vezu: otvori, uredi, dupliciraj, podijeli, mrežni alati, tuneli, bilješke, obriši.
 
-## Find a server
-- The **search** box filters by name, host, user and tags (`#env:prod`).
-- The **🏷 tag bar** filters by tags; `env:prod` connections get a red **PROD** badge.
-- The light next to each connection: 🟢 up, 🟡 slow, 🔴 down (hover for why). A red bar lists only the servers that are down.
+## Pronalaženje servera
+- Okvir za **pretragu** filtrira po imenu, hostu, korisniku i oznakama (`#env:prod`).
+- **🏷 Traka oznaka** filtrira po oznakama; veze s `env:prod` dobivaju crvenu oznaku **PROD**.
+- Svjetlo pokraj svake veze: 🟢 radi, 🟡 sporo, 🔴 ne radi (zadržite miš za razlog). Crvena traka navodi samo servere koji ne rade.
 
-## Notes
-📝 on a connection holds procedures, contacts and links (small Markdown). They are shown in the terminal window too.
+## Bilješke
+📝 na vezi čuva procedure, kontakte i poveznice (jednostavni Markdown). Prikazuju se i u prozoru terminala.

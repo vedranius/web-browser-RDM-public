@@ -11,7 +11,7 @@ open: mcp_setup
 WRM is an MCP server. An AI app on your computer can open a WRM session to a server you allowed and work on it under the same rules as the built-in assistant. The model runs in the app; WRM never needs a provider key for this.
 
 ## Connect an app
-1. An administrator turns on **AI connections** (*✦ AI → Set up AI*, or *Admin → AI connections*).
+1. An administrator turns on **AI connections** (*✦ AI → 🧭 Set up AI*, or *Admin → AI connections*).
 2. **Settings → AI connections → Connect an AI app** and pick your app:
    - **Claude Desktop:** download the WRM extension (`.mcpb`) and open it.
    - **claude.ai / ChatGPT:** add WRM's MCP address as a connector (WRM must be reachable from the internet for these).

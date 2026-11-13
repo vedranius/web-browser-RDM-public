@@ -685,6 +685,40 @@ func helpDocsIndex() string {
 		}
 		fmt.Fprintf(&b, "| [%s](../remote-manager/help/en/%s.md) | [%s](../remote-manager/help/hr/%s.md) | %s |\n", a.Title, a.ID, hrTitle, a.ID, strings.ReplaceAll(a.Summary, "|", "/"))
 	}
-	b.WriteString("\nThe articles live in [`remote-manager/help/`](../remote-manager/help/) and are built into the WRM binary. To improve one, edit its Markdown file (both languages) and open a pull request; `go test -run TestHelp` checks the front matter and regenerates nothing, it only compares this index (`WRM_WRITE_HELP_INDEX=1 go test -run TestHelpDocsIndex` rewrites it).\n")
+	b.WriteString("\nThe articles live in [`remote-manager/help/`](../remote-manager/help/) and are built into the WRM binary. To improve one, edit its Markdown file (both languages) and open a pull request. `go test -run TestHelp` checks both languages and this index; `WRM_WRITE_HELP_INDEX=1 go test -run TestHelpDocsIndex` rewrites the index.\n")
 	return b.String()
+}
+
+// mcpHelp is the MCP tool wrm_help: AI apps connected to WRM read the same help as the
+// help panel. It returns search hits, one article, or the list of articles.
+func mcpHelp(args map[string]interface{}) map[string]interface{} {
+	if err := loadHelp(); err != nil {
+		return toolText("The help is not available: "+err.Error(), true)
+	}
+	str := func(k string) string { v, _ := args[k].(string); return strings.TrimSpace(v) }
+	lang := helpLang(str("lang"))
+	if id := str("article"); id != "" {
+		a := helpArticleFor(lang, truncateStr(id, 80))
+		if a == nil {
+			return toolText("No help article "+truncateStr(id, 80)+". Search with query, or call wrm_help without arguments for the list.", true)
+		}
+		return toolText(fmt.Sprintf("# %s\n(section %s, article %s; on GitHub: %s)\n\n%s", a.Title, a.Section, a.ID, helpGitHubURL(a.Lang, a.ID), a.Body), false)
+	}
+	var b strings.Builder
+	if q := truncateStr(str("query"), 300); q != "" {
+		hits := searchHelp(lang, q, 8)
+		if len(hits) == 0 {
+			return toolText("Nothing in the WRM help matches "+strconv.Quote(q)+". Call wrm_help without arguments for the list of articles.", false)
+		}
+		fmt.Fprintf(&b, "WRM help articles for %q (read one with the article argument):\n", q)
+		for _, h := range hits {
+			fmt.Fprintf(&b, "- %s: %s — %s\n", h.ID, h.Title, nonEmpty(h.Snippet, h.Summary))
+		}
+		return toolText(b.String(), false)
+	}
+	b.WriteString("WRM help articles (read one with the article argument, or search with query):\n")
+	for _, a := range helpList[lang] {
+		fmt.Fprintf(&b, "- %s: %s (%s) — %s\n", a.ID, a.Title, a.Section, a.Summary)
+	}
+	return toolText(b.String(), false)
 }

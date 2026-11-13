@@ -1,24 +1,24 @@
 ---
 id: monitoring
-title: Monitoring and server status
-section: Operations
+title: Nadzor i stanje servera
+section: Rad
 order: 70
-summary: Live up/down status, the Monitoring window (services, functionality, metrics) and alerts when something breaks.
-keywords: monitoring, status, up, down, ping, latency, alert, metrics, cpu, memory, disk, services, functionality, health, zabbix, checks
+summary: Stanje radi/ne radi uživo, prozor Nadzor (servisi, funkcionalnost, metrike) i upozorenja kad se nešto pokvari.
+keywords: nadzor, monitoring, stanje, radi, ne radi, ping, latencija, upozorenje, alarm, metrike, cpu, memorija, disk, servisi, funkcionalnost, zdravlje, zabbix, provjere, status, alert, metrics, health, checks
 ui: #btn-monitoring, .mon-wrap, #mon-modal
 open: monitoring
 ---
-## Live status in the sidebar
-WRM checks every saved connection in the background: 🟢 up (hover for latency and SSH version), 🟡 slow, 🔴 down (hover for why: refused, timeout, unknown host). A folder shows how many are down; the red bar shows only the servers that are down. Turn on desktop notifications in **Settings → General**.
+## Stanje uživo u bočnoj traci
+WRM u pozadini provjerava svaku spremljenu vezu: 🟢 radi (zadržite miš za latenciju i SSH verziju), 🟡 sporo, 🔴 ne radi (zadržite miš za razlog: odbijeno, istek vremena, nepoznat host). Mapa pokazuje koliko ih ne radi; crvena traka pokazuje samo servere koji ne rade. Obavijesti na radnoj površini uključite u **Postavke → Općenito**.
 
-## The Monitoring window
-**📊 Monitoring** in the top bar:
-- **Servers:** status and history of your connections, with metrics from a Zabbix agent: read through SSH, through the network route, or from an existing Zabbix server API (*Monitoring settings* per server; *Detect OS and installed agent* helps). *Check now* reads at once.
-- **Services and functionality:** Supervisor workers, failed systemd units, disk and memory per server, and health URLs or TCP checks of catalog services.
-- **Logs:** the log viewer (see *Logs*).
+## Prozor Nadzor
+**📊 Nadzor** u gornjoj traci:
+- **Serveri:** stanje i povijest vaših veza, s metrikama iz Zabbix agenta: čitano kroz SSH, kroz mrežni put ili iz API-ja postojećeg Zabbix servera (*Postavke nadzora* po serveru; pomaže *Prepoznaj OS i instaliranog agenta*). *Provjeri sada* čita odmah.
+- **Servisi i funkcionalnost:** Supervisor workeri, neuspjele systemd jedinice, disk i memorija po serveru te health URL-ovi ili TCP provjere servisa iz kataloga.
+- **Logovi:** preglednik logova (vidi *Logovi*).
 
-## Alerts outside WRM
-**Settings → Notifications** chooses what you receive (server down/up, rotation due, new versions, chain state…) and where: e-mail, Telegram, Slack/Mattermost, Teams, Discord, ntfy, Gotify, Pushover or a signed webhook. Administrators add the channels in **Admin → Notifications**.
+## Upozorenja izvan WRM-a
+**Postavke → Obavijesti** bira što primate (server ne radi/radi, dospjela rotacija, nove verzije, stanje lanca…) i gdje: e-mail, Telegram, Slack/Mattermost, Teams, Discord, ntfy, Gotify, Pushover ili potpisani webhook. Administratori dodaju kanale u **Admin → Obavijesti**.
 
-## Ask the AI
-On a server window, **AI** answers questions such as *why is the load high?* by reading processes, services and logs (it only reads unless you approve a change).
+## Pitajte AI
+U prozoru servera **AI** odgovara na pitanja kao *zašto je opterećenje visoko?* čitajući procese, servise i logove (samo čita, osim ako ne odobrite promjenu).

@@ -1,18 +1,18 @@
 ---
 id: mobile
-title: Phones and tablets
-section: Personalise
+title: Mobiteli i tableti
+section: Prilagodba
 order: 175
-summary: Use WRM on a phone or tablet; drawers, touch gestures and installing it on the home screen.
-keywords: mobile, phone, tablet, ipad, android, iphone, touch, small screen, drawer, responsive, home screen
+summary: Koristite WRM na mobitelu ili tabletu; ladice, geste dodirom i instalacija na početni zaslon.
+keywords: mobitel, telefon, tablet, ipad, android, iphone, dodir, mali zaslon, ladica, prilagodljivo, početni zaslon, mobile, phone, touch, small screen, drawer, responsive, home screen
 ui: .btn-menu
 open: help:mobile
 ---
-WRM adapts to small screens:
-- **☰** opens the connections, **🗂** the sessions and panels; they slide in as drawers.
-- A tap opens a connection; windows fill the screen and switch with the tabs.
-- The top bar keeps the most used buttons; the rest is under **⋯**.
+WRM se prilagođava malim zaslonima:
+- **☰** otvara veze, **🗂** sesije i panele; uklizavaju kao ladice.
+- Dodir otvara vezu; prozori ispunjavaju zaslon i mijenjaju se karticama.
+- Gornja traka zadržava najkorištenije gumbe; ostalo je pod **⋯**.
 
-**Install it:** in the browser menu choose *Add to Home Screen* (iOS Safari) or *Install app* (Android Chrome): WRM opens full screen like an app.
+**Instalacija:** u izborniku preglednika odaberite *Dodaj na početni zaslon* (iOS Safari) ili *Instaliraj aplikaciju* (Android Chrome): WRM se otvara preko cijelog zaslona kao aplikacija.
 
-Help works on phones too: **?** opens it full screen; **⌖ Pick** then a tap picks a part of the screen.
+Pomoć radi i na mobitelima: na mobitelu je u izborniku računa (vaš avatar) i otvara se preko cijelog zaslona; **⌖ Odaberi** pa dodir odabire dio zaslona.

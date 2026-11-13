@@ -1,23 +1,23 @@
 ---
 id: sharing
-title: Sharing and collaboration
-section: Access
+title: Dijeljenje i suradnja
+section: Pristup
 order: 65
-summary: Share connections or folders with roles and links, work together in a live room with chat, voice and shared terminals.
-keywords: share, sharing, link, guest, role, observer, viewer, operator, moderator, collaboration, room, chat, voice, call, people, raise hand, together
+summary: Dijelite veze ili mape s ulogama i poveznicama, radite zajedno u sobi uživo s chatom, glasom i dijeljenim terminalima.
+keywords: dijeli, dijeljenje, poveznica, link, gost, uloga, promatrač, čitatelj, operater, moderator, suradnja, soba, chat, glas, poziv, ljudi, digni ruku, zajedno, share, guest, role, observer, viewer, operator, collaboration, room, voice
 ui: #modal-share, #modal-manage-shares, #collab-bar, #btn-shares
 open: shares
 ---
-Recipients use shared connections **with your stored login without ever seeing it**.
+Primatelji koriste dijeljene veze **s vašom spremljenom prijavom, a da je nikad ne vide**.
 
-## Share
-1. Right-click a connection → **🤝 Share** (a folder → *Share Folder*, or select several and use 🤝).
-2. Tick connections and folders (a folder also includes connections added later).
-3. Choose who may open the link: chosen WRM users or teams, anyone with the link (guests), with an optional password and expiry.
-4. Choose the **role**: *Observer* (watches), *Viewer* (reads files), *Operator* (terminals and files), *Moderator* (also manages the room).
-5. Create, then copy the link. **🤝** in the top bar lists your shares: pause, edit, see who used them, delete.
+## Dijeljenje
+1. Desni klik na vezu → **🤝 Podijeli** (mapa → *Podijeli mapu*, ili označite više njih i koristite 🤝).
+2. Označite veze i mape (mapa uključuje i veze dodane kasnije).
+3. Odaberite tko smije otvoriti poveznicu: odabrani WRM korisnici ili timovi, ili bilo tko s poveznicom (gosti), s neobaveznom lozinkom i istekom.
+4. Odaberite **ulogu**: *Promatrač* (gleda), *Čitatelj* (čita datoteke), *Operater* (terminali i datoteke), *Moderator* (upravlja i sobom).
+5. Napravite, pa kopirajte poveznicu. **🤝** u gornjoj traci navodi vaša dijeljenja: pauziraj, uredi, vidi tko ih je koristio, obriši.
 
-## Live room
-Everybody who opens the same link joins its room: the bar at the top shows who is online. **💬 Chat** (with history and files), **🎙 Join voice** (push-to-talk, noise suppression), **📡 share a terminal** so others watch, and *request control* to let someone type. Moderators can mute, remove or ban.
+## Soba uživo
+Svi koji otvore istu poveznicu ulaze u njezinu sobu: traka na vrhu pokazuje tko je online. **💬 Chat** (s poviješću i datotekama), **🎙 Uđi u glasovni razgovor** (push-to-talk, suzbijanje šuma), **📡 podijeli terminal** da ga drugi gledaju i *zatraži kontrolu* da netko drugi tipka. Moderatori mogu utišati, ukloniti ili zabraniti.
 
-Everything people do through a share is in the audit log of the owner and the administrators.
+Sve što ljudi rade kroz dijeljenje nalazi se u revizijskom zapisu vlasnika i administratora.

@@ -1,19 +1,19 @@
 ---
 id: notifications
-title: Notifications
-section: Personalise
+title: Obavijesti
+section: Prilagodba
 order: 135
-summary: In-app messages and alerts by e-mail, chat, push or webhook, and how to keep them tidy.
-keywords: notification, alert, message, email, e-mail, telegram, slack, teams, discord, ntfy, gotify, pushover, webhook, bell, inbox, quiet
+summary: Poruke u aplikaciji i upozorenja e-mailom, chatom, pushom ili webhookom te kako ih držati urednima.
+keywords: obavijest, obavijesti, upozorenje, poruka, email, e-mail, telegram, slack, teams, discord, ntfy, gotify, pushover, webhook, zvono, sandučić, tiho, notification, alert, message, bell, inbox, quiet
 ui: #st-notify, #notify-pane, #modal-notify-ch
 open: settings:st-notify
 ---
-## In WRM
-Short messages appear at the bottom right; important ones also stay in the inbox of the Workboard. While an AI app works, its steps go to the AI live view instead of separate messages.
+## U WRM-u
+Kratke poruke pojavljuju se dolje desno; važne ostaju i u sandučiću Workboarda. Dok AI aplikacija radi, njezini koraci idu u AI pregled uživo umjesto zasebnih poruka.
 
-## Outside WRM
-**Settings → Notifications** chooses what you receive (server down and back up, password rotation due, new versions of services, chain state changes, security alerts for administrators…) and on which channel.
+## Izvan WRM-a
+**Postavke → Obavijesti** bira što primate (server ne radi i ponovno radi, dospjela rotacija lozinke, nove verzije servisa, promjene stanja lanca, sigurnosna upozorenja za administratore…) i na kojem kanalu.
 
-Administrators add channels in **Admin → Notifications**: e-mail (SMTP, set in *Admin → Mail*), Telegram, Slack / Mattermost, Microsoft Teams, Discord, ntfy, Gotify, Pushover or a signed webhook. *Test* sends one message.
+Administratori dodaju kanale u **Admin → Obavijesti**: e-mail (SMTP, postavlja se u *Admin → Pošta*), Telegram, Slack / Mattermost, Microsoft Teams, Discord, ntfy, Gotify, Pushover ili potpisani webhook. *Test* šalje jednu poruku.
 
-Desktop notifications while WRM is in the background: **Settings → General → Notify when a server goes down** (the browser asks for permission once).
+Obavijesti na radnoj površini dok je WRM u pozadini: **Postavke → Općenito → Obavijesti kad server prestane raditi** (preglednik jednom traži dopuštenje).

@@ -304,7 +304,7 @@ func (in aiProviderInput) apply(p *aiProvider) error {
 	set(&p.Deployment, in.Deployment, 200)
 	set(&p.APIVersion, in.APIVersion, 40)
 	set(&p.APIMode, in.APIMode, 20)
-	set(&p.Models, in.Models, 2000)
+	set(&p.Models, in.Models, aiModelsMaxChars)
 	set(&p.DefaultModel, in.DefaultModel, 200)
 	if in.PriceIn != nil {
 		p.PriceIn = *in.PriceIn
@@ -463,6 +463,7 @@ func saveAIProvider(p *aiProvider) error {
 //	PUT    …/{id}            update (secrets: omitted = unchanged, "" = remove)
 //	DELETE …/{id}
 //	POST   …/{id}/test       one small request to check the endpoint and key
+//	POST   …/{id}/models/sync add every model the provider offers (installed models for Ollama)
 func handleAIProviders(w http.ResponseWriter, r *http.Request, userID int, scope, rest string) {
 	parts := strings.Split(strings.Trim(rest, "/"), "/")
 	where, args := `scope='org'`, []interface{}{}
@@ -536,6 +537,20 @@ func handleAIProviders(w http.ResponseWriter, r *http.Request, userID int, scope
 			return
 		}
 		jsonOK(w, map[string]interface{}{"ok": true, "reply": truncateStr(res, 200)})
+		return
+	}
+	if len(parts) == 3 && parts[1] == "models" && parts[2] == "sync" && r.Method == http.MethodPost {
+		added, err := aiSyncProviderModels(r.Context(), &p)
+		d := map[string]interface{}{"id": p.ID, "kind": p.Kind, "ok": err == nil, "added": len(added)}
+		if err != nil {
+			d["error"] = truncateStr(err.Error(), 300)
+		}
+		auditLog(r, userID, "ai.provider_models_synced", p.Name, d)
+		if err != nil {
+			jsonOK(w, map[string]interface{}{"ok": false, "error": err.Error(), "added": []string{}})
+			return
+		}
+		jsonOK(w, map[string]interface{}{"ok": true, "added": added, "models": p.modelList(), "default_model": p.DefaultModel})
 		return
 	}
 	if len(parts) == 2 && parts[1] == "models" && r.Method == http.MethodGet {

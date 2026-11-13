@@ -1,31 +1,31 @@
 ---
 id: ai-setup
-title: Set up AI (the short way)
+title: Postavi AI (kratki put)
 section: AI
 order: 100
-summary: One page that turns AI on, adds an AI service (Claude, ChatGPT, Gemini, local models…) and connects AI apps.
-keywords: ai, setup, set up, turn on, enable, provider, api key, claude, anthropic, openai, chatgpt, gemini, ollama, local model, openrouter, mistral, groq, deepseek, opencode, free, mcp, connect, wizard
+summary: Jedna stranica koja uključuje AI, dodaje AI servis (Claude, ChatGPT, Gemini, lokalni modeli…) i spaja AI aplikacije.
+keywords: ai, postavi, postavljanje, uključi, omogući, pružatelj, servis, api ključ, claude, anthropic, openai, chatgpt, gemini, ollama, lokalni model, openrouter, mistral, groq, deepseek, opencode, besplatno, mcp, spoji, čarobnjak, modeli, setup, enable, provider, api key, local model, free, connect, wizard
 ui: #ai-setup, #st-ai
 open: ai_setup
 ---
-**✦ AI → Set up AI** (also in Help) is one page with every step and a light for each: green when done, with a button for what is missing.
+**✦ AI → 🧭 Postavi AI** (i u *Postavke → AI asistent* te u Pomoći) je jedna stranica sa svim koracima i svjetlom za svaki: zeleno kad je gotov, s gumbom za ono što nedostaje.
 
-## 1. Turn the AI on (administrator)
-Choose who may use it: **Administrators** or **Everybody**. Nothing is sent to an AI service until a service is added and somebody asks.
+## 1. Uključite AI (administrator)
+Odaberite tko ga smije koristiti: **Administratori** ili **Svi**. AI servisu se ništa ne šalje dok se servis ne doda i netko ne pita.
 
-## 2. Add an AI service
-**Add an AI service** opens a short wizard: pick the service, paste its key, choose the model, **Test**.
-- **Claude (Anthropic), ChatGPT (OpenAI), Gemini, Mistral, xAI, DeepSeek, Groq, OpenRouter, Together, Fireworks, Cerebras, Cohere, Perplexity:** paste an API key from the service's console.
-- **OpenCode Zen:** free models **without a key**, a good way to try it.
-- **Ollama (local models, nothing leaves your network):** the wizard finds Ollama, and an administrator can install it, start it and download a model with one click each.
-- Azure OpenAI, AWS Bedrock and Google Vertex AI are in the full form (*Admin → AI assistant → Providers*).
-Administrators add services for everybody; users add their own key under *My API keys* when the policy `ai_personal_keys` allows it.
+## 2. Dodajte AI servis
+**Dodaj AI servis** otvara kratki čarobnjak: odaberite servis, zalijepite ključ, odaberite model, **Testiraj**. Kad test uspije, WRM se spaja na servis i **automatski dodaje sve modele koje nudi** (za Ollamu sve instalirane modele). Gumb **⟳ Modeli** na popisu servisa to ponavlja kad servis doda nove modele.
+- **Claude (Anthropic), ChatGPT (OpenAI), Gemini, Mistral, xAI, DeepSeek, Groq, OpenRouter, Together, Fireworks, Cerebras, Cohere, Perplexity:** zalijepite API ključ iz konzole servisa.
+- **OpenCode Zen:** besplatni modeli **bez ključa**, dobar način da isprobate.
+- **Ollama (lokalni modeli, ništa ne napušta vašu mrežu):** čarobnjak pronalazi Ollamu, a administrator je može instalirati, pokrenuti i preuzeti model s po jednim klikom.
+- Azure OpenAI, AWS Bedrock i Google Vertex AI su u punom obrascu (*Admin → AI asistent → Pružatelji*).
+Administratori dodaju servise za sve; korisnici dodaju svoj ključ pod *Moji API ključevi* kad pravilo `ai_personal_keys` to dopušta. Koje modele korisnici smiju birati ograničava *Admin → AI → Dopušteni modeli*.
 
-## 3. Connect your AI apps (optional)
-To work with WRM from **Claude Desktop, claude.ai, ChatGPT, Claude Code, Codex, Gemini CLI, Cursor, OpenCode** or another MCP app:
-1. An administrator turns on **AI connections (MCP)** on the same page.
-2. **Connect an AI app** opens the wizard in *Settings → AI connections*: pick the app, choose servers and mode, and copy the one line or download the file it shows. **All AI apps at once** downloads one setup script.
+## 3. Spojite AI aplikacije (neobavezno)
+Za rad s WRM-om iz **Claude Desktopa, claude.ai, ChatGPT-a, Claude Codea, Codexa, Gemini CLI-ja, Cursora, OpenCodea** ili druge MCP aplikacije:
+1. Administrator uključuje **AI veze (MCP)** na istoj stranici.
+2. **Spoji AI aplikaciju** otvara čarobnjak u *Postavke → AI veze*: odaberite aplikaciju, servere i način, pa kopirajte jedan redak ili preuzmite datoteku koju pokaže. **Sve AI aplikacije odjednom** preuzima jednu skriptu za postavljanje.
 
-## What happens next
-- **✦ AI** next to a terminal, in the file editor, the log viewer, Chains and Help.
-- The AI **never runs anything by itself**: it says what it wants to run, and changes wait for your approval.
+## Što dalje
+- **✦ AI** pokraj terminala, u uređivaču datoteka, pregledniku logova, Lancima i Pomoći.
+- AI **nikad ništa ne pokreće sam**: kaže što želi pokrenuti, a promjene čekaju vaše odobrenje.

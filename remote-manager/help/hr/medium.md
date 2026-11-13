@@ -1,23 +1,23 @@
 ---
 id: medium
-title: Medium deploys
-section: Operations
+title: Medium deployevi
+section: Rad
 order: 88
-summary: Deploy projects described in a deploy-config (servers, environments, projects) with WRM's native engine.
-keywords: medium, deploy, deploy-config, yaml, environment, project, dry run, lock, backup, rollback, history, build, engine
+summary: Deployajte projekte opisane u deploy-configu (serveri, okruženja, projekti) WRM-ovim ugrađenim mehanizmom.
+keywords: medium, deploy, deploy-config, yaml, okruženje, projekt, probno pokretanje, zaključavanje, sigurnosna kopija, vraćanje, povijest, build, mehanizam, environment, project, dry run, lock, backup, rollback, history, engine
 ui: .medium-wrap, .md-engine
 open: git
 ---
-**⎇ Git → Medium** deploys projects that are described in a `deploy-config` (`servers.yaml`, `environments.yaml`, `projects/*.yaml`).
+**⎇ Git → Medium** deploya projekte opisane u `deploy-config` (`servers.yaml`, `environments.yaml`, `projects/*.yaml`).
 
-## Set up
-1. Import your **deploy-config ZIP** (or link its Git repository with `DEPLOY_CONFIG_REPO`). WRM checks it at once and names the file and key of an error.
-2. **Servers** are matched to your saved SSH connections with the same address and user, or linked by hand. Keys stay in WRM.
-3. Per project choose where builds run: on the WRM host, on a Linux build server over SSH, or no build.
+## Postavljanje
+1. Uvezite svoj **deploy-config ZIP** (ili povežite njegov Git repozitorij s `DEPLOY_CONFIG_REPO`). WRM ga odmah provjerava i navodi datoteku i ključ greške.
+2. **Serveri** se povezuju s vašim spremljenim SSH vezama iste adrese i korisnika ili ručno. Ključevi ostaju u WRM-u.
+3. Po projektu odaberite gdje se radi build: na WRM hostu, na Linux build serveru preko SSH-a ili bez builda.
 
 ## Deploy
-1. Choose project, environment and branch or tag; **Compare** shows what differs on every server.
-2. **Dry run** shows the plan without changing anything.
-3. **Deploy** takes a server-side lock, makes a backup, transfers, checks and records history. **Rollback** returns to an earlier deploy.
+1. Odaberite projekt, okruženje i granu ili tag; **Usporedi** pokazuje što se razlikuje na svakom serveru.
+2. **Probno pokretanje** pokazuje plan bez ikakve promjene.
+3. **Deploy** uzima zaključavanje na serveru, radi sigurnosnu kopiju, prenosi, provjerava i bilježi povijest. **Vrati** se vraća na raniji deploy.
 
-Some steps need step-up re-authentication (your password again). Medium runs build and post-deploy commands from the config, so only trusted operators should use it (policy `medium_native`).
+Neki koraci traže ponovnu provjeru identiteta (ponovno vašu lozinku). Medium pokreće build i post-deploy naredbe iz konfiguracije, pa ga trebaju koristiti samo operateri od povjerenja (pravilo `medium_native`).

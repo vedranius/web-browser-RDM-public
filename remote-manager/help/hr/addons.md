@@ -1,24 +1,24 @@
 ---
 id: addons
-title: Addons
-section: Personalise
+title: Dodaci
+section: Prilagodba
 order: 120
-summary: Extend WRM with addons (panels, themes, server code), install from the community list or build your own with AI.
-keywords: addon, addons, plugin, extension, install, zip, community, theme, panel, wasm, build addon, develop, permissions, instance
+summary: Proširite WRM dodacima (paneli, teme, kod na serveru), instalirajte s popisa zajednice ili izradite svoj s AI-jem.
+keywords: dodatak, dodaci, plugin, proširenje, instaliraj, zip, zajednica, tema, panel, wasm, izradi dodatak, razvoj, dozvole, instanca, addon, extension, install, community, theme, develop, permissions, instance
 ui: #st-addons, #addons-pane
 open: addons
 ---
-An addon is a ZIP with `addon.json`: a panel (window), colour themes and, for organisation addons, WebAssembly server code. Nothing runs at install time and a new addon is installed **off**.
+Dodatak je ZIP s `addon.json`: panel (prozor), teme boja i, za dodatke organizacije, WebAssembly kod na serveru. Pri instalaciji se ništa ne pokreće, a novi dodatak se instalira **isključen**.
 
-## Install
-**Settings → Addons**:
-- **Community** lists published addons with their trust level; the download is checked against its SHA-256.
-- **Upload ZIP** installs your own. Administrators install for everybody or only for themselves; others install **personal** addons (policy `addon_personal`).
-- **Enable** shows the **permission sheet**: what the addon may do (network origins, secrets, notifications, server code). An update that asks for more waits for your approval again.
+## Instalacija
+**Postavke → Dodaci**:
+- **Zajednica** navodi objavljene dodatke s razinom povjerenja; preuzimanje se provjerava prema njegovom SHA-256.
+- **Učitaj ZIP** instalira vaš. Administratori instaliraju za sve ili samo za sebe; ostali instaliraju **osobne** dodatke (pravilo `addon_personal`).
+- **Uključi** pokazuje **list dozvola**: što dodatak smije (mrežna ishodišta, tajne, obavijesti, kod na serveru). Ažuriranje koje traži više ponovno čeka vaše odobrenje.
 
-## Use
-*Open panel* opens it as a window on the canvas (or dock it as a panel). **Instances** keep separate settings, for example one *Server metrics* per cluster.
+## Korištenje
+*Otvori panel* ga otvara kao prozor na platnu (ili ga usidrite kao panel). **Instance** čuvaju zasebne postavke, npr. jedan *Server metrics* po klasteru.
 
-## Build your own
-- **With AI:** ask the AI assistant (or an AI app over MCP) to build an addon; it writes a **draft** that you review as a diff in Settings → Addons and install yourself.
-- **By hand:** start from a template (*New addon*), use the dev server and `addon lint`; the format is in `docs/ADDONS.md` on GitHub.
+## Izradite svoj
+- **S AI-jem:** zamolite AI asistenta (ili AI aplikaciju preko MCP-a) da izradi dodatak; piše **nacrt** koji pregledate kao diff u Postavke → Dodaci i sami instalirate.
+- **Ručno:** krenite od predloška (*Novi dodatak*), koristite razvojni server i `addon lint`; format je u `docs/ADDONS.md` na GitHubu.

@@ -92,7 +92,7 @@ Object.assign(LANGS.en, {
   aiw_o_nosupport: 'Automatic setup is not available on this operating system. Follow the steps from ollama.com/download.',
   aiw_o_run_running: 'Running…', aiw_o_run_done: 'Finished.', aiw_o_run_failed: 'Failed.', aiw_o_refresh: 'Check again', aiw_o_copy: 'Copy', aiw_o_copied: 'Copied.',
   aiw_o_history: 'Recent actions', aiw_o_model_ph: 'model, e.g. qwen2.5-coder:7b', aiw_o_next: 'Continue',
-  aiw_load_models: 'Load the model list', aiw_models_loaded: 'Models offered by the provider (click to add):', aiw_models_none: 'The provider returned no models.', aiw_models_added: 'Model added.',
+  aiw_load_models: 'Load the model list', ai_prov_sync: 'Models', ai_prov_sync_d: 'Connect to the service and add every model it offers (installed models for Ollama)', ai_prov_more: '+{n} more', aiw_synced: 'Connected to the service: {n} more models were added automatically ({total} in all). Users choose among them; Admin → AI → Allowed models can limit them.', aiw_synced_none: 'Connected to the service: every model it offers is already on the list ({total}).', aiw_sync_fail: 'The model list could not be loaded automatically ({err}); type the model names yourself.', aiw_models_loaded: 'Models offered by the provider (click to add):', aiw_models_none: 'The provider returned no models.', aiw_models_added: 'Model added.',
   p_ai_ollama_manage: 'Let administrators install and start Ollama from WRM', p_ai_ollama_manage_d: 'Allows administrators to install Ollama, start it as a background service and download models on the WRM server from the provider wizard. Every action is confirmed, recorded and audited. Off by default.',
   // admin
   adm_ai_kill: 'Kill switch', ai_kill_all: 'Stop every AI session now', ai_kill_all_q: 'End every AI session of every user now?', ai_killed_n: '{n} sessions ended',
@@ -214,7 +214,7 @@ Object.assign(LANGS.hr, {
   aiw_o_nosupport: 'Automatsko postavljanje nije dostupno na ovom operacijskom sustavu. Slijedite korake s ollama.com/download.',
   aiw_o_run_running: 'U tijeku…', aiw_o_run_done: 'Završeno.', aiw_o_run_failed: 'Neuspjelo.', aiw_o_refresh: 'Provjeri ponovno', aiw_o_copy: 'Kopiraj', aiw_o_copied: 'Kopirano.',
   aiw_o_history: 'Nedavne radnje', aiw_o_model_ph: 'model, npr. qwen2.5-coder:7b', aiw_o_next: 'Nastavi',
-  aiw_load_models: 'Učitaj popis modela', aiw_models_loaded: 'Modeli koje nudi pružatelj (kliknite za dodavanje):', aiw_models_none: 'Pružatelj nije vratio nijedan model.', aiw_models_added: 'Model je dodan.',
+  aiw_load_models: 'Učitaj popis modela', ai_prov_sync: 'Modeli', ai_prov_sync_d: 'Spoji se na servis i dodaj sve modele koje nudi (za Ollamu instalirane modele)', ai_prov_more: '+još {n}', aiw_synced: 'Spojeno na servis: automatski je dodano još {n} modela (ukupno {total}). Korisnici biraju među njima; Admin → AI → Dopušteni modeli ih može ograničiti.', aiw_synced_none: 'Spojeno na servis: svi modeli koje nudi već su na popisu ({total}).', aiw_sync_fail: 'Popis modela nije se mogao učitati automatski ({err}); upišite nazive modela sami.', aiw_models_loaded: 'Modeli koje nudi pružatelj (kliknite za dodavanje):', aiw_models_none: 'Pružatelj nije vratio nijedan model.', aiw_models_added: 'Model je dodan.',
   p_ai_ollama_manage: 'Dopusti administratorima instalaciju i pokretanje Ollame iz WRM-a', p_ai_ollama_manage_d: 'Dopušta administratorima da iz čarobnjaka za pružatelje instaliraju Ollamu, pokrenu je kao pozadinsku uslugu i preuzmu modele na WRM poslužitelju. Svaka radnja se potvrđuje, bilježi i evidentira u reviziji. Isključeno prema zadanim postavkama.',
   adm_ai_kill: 'Prekidač za hitno zaustavljanje', ai_kill_all: 'Odmah zaustavi sve AI sesije', ai_kill_all_q: 'Odmah završiti sve AI sesije svih korisnika?', ai_killed_n: 'Završeno sesija: {n}',
   ai_kill_switch_on: 'Prekidač je UKLJUČEN: nitko ne može koristiti AI asistenta.', ai_kill_switch_off: 'Prekidač je isključen.',
@@ -1355,13 +1355,26 @@ Object.assign(LANGS.hr, {
     provAfter = after;
   }
   let provAfter = null, provCache = [];
+  function provModelsShort(m) {
+    const l = (m || '').split(',').filter(Boolean);
+    return l.length > 6 ? l.slice(0, 6).join(',') + ' ' + tf('ai_prov_more', {n: l.length - 6}) : l.join(',');
+  }
+  async function syncProv(scope, id) {
+    const base = scope === 'org' ? '/api/admin/ai/providers' : '/api/ai/providers';
+    try {
+      const r = await api('POST', `${base}/${id}/models/sync`, {});
+      if (!r.ok) { showToast(tf('aiw_sync_fail', {err: r.error || ''}), 'error'); return; }
+      showToast(r.added.length ? tf('aiw_synced', {n: r.added.length, total: (r.models || []).length}) : tf('aiw_synced_none', {total: (r.models || []).length}), 'success', 4000);
+      providersDialog(scope, provAfter);
+    } catch (e) { showToast(e.message, 'error'); }
+  }
   function provList(list, scope) {
     provCache = list;
     if (!list.length) return `<div class="chat-empty">${esc(t('ai_prov_none'))}</div>`;
     return `<div class="tbl-scroll"><table class="admin-table"><thead><tr><th>${esc(t('ai_prov_name'))}</th><th>${esc(t('ai_prov_kind'))}</th><th>${esc(t('ai_models_col'))}</th><th>${esc(t('ai_prov_secrets'))}</th><th></th></tr></thead><tbody>` +
       list.map(p => `<tr><td>${esc(p.name)}${p.enabled ? '' : ` <span class="pill">${esc(t('off'))}</span>`}</td><td>${esc(t('ai_kind_' + p.kind))}${p.region ? `<div class="sub">${esc(p.region)}</div>` : ''}</td>
-        <td class="mono" style="font-size:11px;">${esc(p.models)}</td><td>${p.has_api_key || p.has_access_key || p.has_service_account ? '🔒' : '—'}</td>
-        <td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn-sec btn-sm" onclick="wrmAI.testProv('${scope}', ${p.id})">${esc(t('ai_prov_test'))}</button>
+        <td class="mono" style="font-size:11px;" title="${esc(p.models)}">${esc(provModelsShort(p.models))}</td><td>${p.has_api_key || p.has_access_key || p.has_service_account ? '🔒' : '—'}</td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn-sec btn-sm" onclick="wrmAI.testProv('${scope}', ${p.id})">${esc(t('ai_prov_test'))}</button><button class="btn-sec btn-sm" title="${esc(t('ai_prov_sync_d'))}" onclick="wrmAI.syncProv('${scope}', ${p.id})">⟳ ${esc(t('ai_prov_sync'))}</button>
           <button class="btn-sec btn-sm" onclick="wrmAI.editProv('${scope}', ${p.id})">✏️</button><button class="btn-sec btn-sm" onclick="wrmAI.delProv('${scope}', ${p.id})">🗑</button></div></td></tr>`).join('') + '</tbody></table></div>';
   }
   function editProv(scope, pid) {
@@ -1520,13 +1533,21 @@ Object.assign(LANGS.hr, {
     } else {
       const r = AW.result;
       body = !r ? `<div class="ai-see">${esc(t('aiw_testing'))}</div>` : r.ok
-        ? `<div class="hint-box">✅ ${esc(tf('aiw_ok', {reply: r.reply ? ': ' + r.reply : ''}))}</div><div class="ai-see">${esc(t('aiw_use'))}</div>${availabilityHTML(AW.availability)}
+        ? `<div class="hint-box">✅ ${esc(tf('aiw_ok', {reply: r.reply ? ': ' + r.reply : ''}))}</div>${awSyncedHTML()}<div class="ai-see">${esc(t('aiw_use'))}</div>${availabilityHTML(AW.availability)}
           <div style="margin:8px 0;"><button class="btn-sec btn-sm" onclick="wrmAI.awLoadModels()">${esc(t('aiw_load_models'))}</button></div>${awAvailHTML()}`
         : `<div class="hint-box warn">❌ ${esc(tf('aiw_fail', {err: r.error}))}</div><div class="ai-see">${esc(t('aiw_fix'))}</div>`;
       nav = r && !r.ok ? `<button class="btn-sec" onclick="wrmAI.awGo(-1)">← ${esc(t('aiw_back'))}</button>` : '';
       nav += r && r.ok ? `<button onclick="wrmAI.awFinish()">✓ ${esc(t('aiw_finish'))}</button>` : '';
     }
     modal(`<div style="display:flex;align-items:center;gap:10px;"><h3 style="margin:0;flex:1;">🧭 ${esc(t('aiw_title'))}</h3><button class="icon-btn" onclick="wrmAI.awFinish()">✕</button></div>${bar}${body}${nav ? `<div class="modal-footer">${nav}</div>` : ''}`);
+  }
+  function awSyncedHTML() {
+    const r = AW.synced;
+    if (!r) return '';
+    if (!r.ok) return `<div class="ai-see">${esc(tf('aiw_sync_fail', {err: r.error || ''}))}</div>`;
+    const all = r.models || [];
+    return `<div class="ai-see">${esc(r.added.length ? tf('aiw_synced', {n: r.added.length, total: all.length}) : tf('aiw_synced_none', {total: all.length}))}</div>`
+      + (all.length ? `<div class="ai-see" style="max-height:90px;overflow:auto;font-family:var(--font-mono);">${all.map(esc).join(', ')}</div>` : '');
   }
   function awAvailHTML() {
     if (!AW.avail) return '';
@@ -1582,6 +1603,8 @@ Object.assign(LANGS.hr, {
         AW.pid = mine ? mine.id : 0;
       }
       AW.result = AW.pid ? await api('POST', `${base}/${AW.pid}/test`, {}) : {ok: false, error: t('aiw_need')};
+      // connected: add every model the service offers (installed models for Ollama)
+      AW.synced = AW.result && AW.result.ok ? await api('POST', `${base}/${AW.pid}/models/sync`, {}).catch(e => ({ok: false, error: e.message})) : null;
     } catch (e) { AW.result = {ok: false, error: e.message}; }
     if (AW && AW.step === awSteps().length) { AW.availability = await loadCfg().catch(() => null); if (typeof refreshUserPolicy === 'function') await refreshUserPolicy(); awRender(); }
   }
@@ -1741,7 +1764,7 @@ Object.assign(LANGS.hr, {
     queueContext, toggle, dock, expand, start, attach, models, modeHelp, send, stop, end, decide, setMode, see, history, transcript, newSession, resume, rename, sound, pendingDetails,
     myKeys: id => providersDialog('user', () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) renderSetup(wo); else if (!wo) statusPane(); }),
     providers: scope => providersDialog(scope, provAfter), editProv, saveProv, testProv, delProv, formKind: () => formKind(),
-    awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,
+    syncProv, awOpen, awPick, awGo, awTest, awFinish, awCopy, awOllAct, awOllUse, awOllRefresh, awPullModel, awLoadModels, awAddModel,
     myWizard: id => { provAfter = () => { const wo = winOf(id); if (wo && !(S[id] && S[id].sid)) loadCfg().then(() => renderSetup(wo)); else if (!wo) statusPane(); }; awOpen('user'); },
     openPanel, busyIn, focusSession, focusApproval, prefsProv, savePrefs,
     statusPane, policyChanged, closeModal: closeAIModal, adminTab: adminAI, engine, ocInstall, ocRefresh, delegProv, delegLoad, delegAdd, delegTraining, killAll, killUser, blockUser, adminKill, onWinClose, refresh, indicators,

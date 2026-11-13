@@ -1,26 +1,26 @@
 ---
 id: directory-sign-in
-title: Directory sign-in (Entra ID, AD, LDAP, SCIM)
-section: Administration
+title: Prijava preko imenika (Entra ID, AD, LDAP, SCIM)
+section: Administracija
 order: 160
-summary: Let people sign in with Microsoft Entra ID, Okta, Google or any OpenID Connect provider, or LDAP/Active Directory, and provision with SCIM.
-keywords: sso, single sign-on, oidc, openid, entra, azure ad, active directory, ad, ldap, adfs, okta, keycloak, google workspace, scim, groups, domain, provisioning
+summary: Neka se ljudi prijavljuju s Microsoft Entra ID, Okta, Google ili bilo kojim OpenID Connect pružateljem, ili LDAP/Active Directoryjem, i dodjeljujte račune preko SCIM-a.
+keywords: sso, jedinstvena prijava, oidc, openid, entra, azure ad, active directory, ad, ldap, adfs, okta, keycloak, google workspace, scim, grupe, domena, dodjela računa, single sign-on, groups, domain, provisioning
 ui: #modal-sso, #modal-ldap, #modal-scim, #modal-sso-test
 open: admin:sso
 admin: true
 ---
-**Admin panel → Directory sign-in**.
+**Admin panel → Prijava preko imenika**.
 
 ## OpenID Connect (Entra ID, ADFS, Okta, Keycloak, Google)
-1. **Add a provider** and choose its kind; the editor says where to create the client there.
-2. Register the **redirect address** shown (`https://<WRM>/api/auth/oidc/callback`).
-3. Enter the issuer, client ID and secret; **Test connection** checks every step.
-4. **Rules** map a claim (`roles`, `groups`, `hd`…) to a WRM role and teams. Without rules only linked accounts may sign in.
+1. **Dodajte pružatelja** i odaberite vrstu; uređivač kaže gdje tamo napraviti klijenta.
+2. Registrirajte prikazanu **adresu za preusmjeravanje** (`https://<WRM>/api/auth/oidc/callback`).
+3. Upišite issuer, client ID i tajnu; **Testiraj vezu** provjerava svaki korak.
+4. **Pravila** povezuju claim (`roles`, `groups`, `hd`…) s WRM ulogom i timovima. Bez pravila se mogu prijaviti samo povezani računi.
 
 ## LDAP / Active Directory
-**Add directory:** kind (Active Directory or other LDAP), `ldaps://` server (or `ldap://` with StartTLS), a service account that may read users and groups, the user and group base, and rules from groups to roles. *Test* signs in a user of your choice.
+**Dodaj imenik:** vrsta (Active Directory ili drugi LDAP), `ldaps://` server (ili `ldap://` sa StartTLS-om), servisni račun koji smije čitati korisnike i grupe, baza korisnika i grupa te pravila od grupa do uloga. *Testiraj* prijavljuje korisnika po vašem izboru.
 
 ## SCIM
-Entra ID or Okta can create, change and disable WRM accounts automatically: **SCIM → New token**, then give the address and token to the directory.
+Entra ID ili Okta mogu automatski stvarati, mijenjati i onemogućavati WRM račune: **SCIM → Novi token**, pa adresu i token dajte imeniku.
 
-Directory users cannot sign in with a local password unless you allow it; the break-glass administrator always can.
+Korisnici iz imenika se ne mogu prijaviti lokalnom lozinkom osim ako to dopustite; break-glass administrator uvijek može.

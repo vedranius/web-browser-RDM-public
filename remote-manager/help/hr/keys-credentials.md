@@ -1,27 +1,27 @@
 ---
 id: keys-credentials
-title: SSH keys, credentials and Bitwarden
-section: Access
+title: SSH ključevi, vjerodajnice i Bitwarden
+section: Pristup
 order: 50
-summary: Generate and deploy SSH keys, share logins without revealing them, rotate passwords, use certificates and Bitwarden.
-keywords: key, ssh key, ed25519, rsa, deploy key, ssh-copy-id, credential, password, vault, share login, rotate, rotation, who has access, certificate, opkssh, bitwarden, passphrase, ppk
+summary: Generirajte i rasporedite SSH ključeve, dijelite prijave bez otkrivanja, rotirajte lozinke, koristite certifikate i Bitwarden.
+keywords: ključ, ssh ključ, ed25519, rsa, rasporedi ključ, ssh-copy-id, vjerodajnica, lozinka, trezor, dijeli prijavu, rotacija, tko ima pristup, certifikat, opkssh, bitwarden, passphrase, ppk, key, credential, password, vault, rotate, certificate
 ui: #modal-vault, #modal-keynew, #modal-keydeploy, #modal-cred, #modal-rotate, #modal-authkeys, #btn-vault
 open: vault
 ---
-**🔑 Keys** in the top bar opens the vault. Everything in it is stored encrypted on the WRM server and never sent back to the browser.
+**🔑 Ključevi** u gornjoj traci otvara trezor. Sve u njemu je šifrirano spremljeno na WRM serveru i nikad se ne šalje natrag u preglednik.
 
-## SSH keys
-1. **Generate key** (ED25519 recommended) or **Import key** (OpenSSH or PEM; a passphrase is asked once). PuTTY `.ppk`: export it as OpenSSH key in PuTTYgen first.
-2. **Deploy**: choose connections and WRM appends the public key to their `authorized_keys` (like `ssh-copy-id`), through jump hosts too.
-3. In a connection choose **Login: key from the key store**.
-4. **Who has access** on an SSH connection lists the keys in its `authorized_keys` and which of them are yours.
+## SSH ključevi
+1. **Generiraj ključ** (preporuka ED25519) ili **Uvezi ključ** (OpenSSH ili PEM; passphrase se traži jednom). PuTTY `.ppk`: najprije ga u PuTTYgenu izvezite kao OpenSSH ključ.
+2. **Rasporedi**: odaberite veze i WRM dodaje javni ključ u njihov `authorized_keys` (kao `ssh-copy-id`), i kroz jump hostove.
+3. U vezi odaberite **Prijava: ključ iz spremišta ključeva**.
+4. **Tko ima pristup** na SSH vezi navodi ključeve u njezinom `authorized_keys` i koji su od njih vaši.
 
-## Credentials
-A credential is one login (user + password or key) used by many connections, for example `root@dc1`. Change it once and every connection uses the new one.
-- **Share** it with colleagues: they can use it but never see it.
-- **Allowed hosts** (`*.dc1.example.com`, `10.0.0.0/8`) stop a shared password from being sent to a foreign server.
-- **Rotation:** *Check* logs in everywhere without changing anything; *Rotate* sets a new password on all its SSH servers and rolls back if one fails.
+## Vjerodajnice
+Vjerodajnica je jedna prijava (korisnik + lozinka ili ključ) koju koristi više veza, npr. `root@dc1`. Promijenite je jednom i sve veze koriste novu.
+- **Podijelite** je s kolegama: mogu je koristiti, ali je nikad ne vide.
+- **Dopušteni hostovi** (`*.dc1.example.com`, `10.0.0.0/8`) sprječavaju slanje dijeljene lozinke na tuđi server.
+- **Rotacija:** *Provjeri* se prijavljuje svugdje bez ikakve promjene; *Rotiraj* postavlja novu lozinku na svim njezinim SSH serverima i vraća staru ako jedan ne uspije.
 
-## Certificates and Bitwarden
-- An OpenSSH user certificate (also from `opkssh login`) can be saved with a key: **📜 Certificate**.
-- **Bitwarden:** sign in to your vault in **Keys → Bitwarden**, unlock it and choose *Bitwarden SSH key* in a connection; the key is fetched on the server only when logging in.
+## Certifikati i Bitwarden
+- OpenSSH korisnički certifikat (i iz `opkssh login`) može se spremiti uz ključ: **📜 Certifikat**.
+- **Bitwarden:** prijavite se u svoj trezor u **Ključevi → Bitwarden**, otključajte ga i u vezi odaberite *Bitwarden SSH ključ*; ključ se dohvaća na serveru samo pri prijavi.
