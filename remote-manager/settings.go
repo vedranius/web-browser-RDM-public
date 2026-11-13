@@ -52,6 +52,10 @@ var settingSpecs = []settingSpec{
 	// users may add their own CSS to their own interface.
 	{Key: "appearance_default_theme", Default: "graphite", Kind: "string"},
 	{Key: "appearance_custom_css", Default: "1", Kind: "bool"},
+	// v14.11.8 (appearance_themes.go): one colour theme for everyone, and themes the
+	// administrator publishes from Settings → Appearance.
+	{Key: "appearance_lock", Default: "0", Kind: "bool"},
+	{Key: "appearance_shared_themes", Default: "[]", Kind: "json"},
 	{Key: "break_glass_ips", Default: "", Kind: "string"},
 	{Key: "local_login", Default: "all", Kind: "enum", Enum: []string{"all", "break_glass"}},
 	{Key: "oidc_revalidate_minutes", Default: "60", Kind: "int", Min: 5, Max: 1440},
@@ -390,6 +394,9 @@ func validateSetting(s settingSpec, v string) (string, error) {
 		}
 		if s.Key == "ai_mode_rules" {
 			return validateAIModeRules(v)
+		}
+		if s.Key == "appearance_shared_themes" {
+			return validateSharedThemes(v)
 		}
 		return v, nil
 	}

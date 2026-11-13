@@ -1,3 +1,14 @@
+## [14.11.8] - 2026-11-13
+
+### Added
+- **Share a theme with everyone**: administrators publish one of their themes from *Settings → Appearance* (**📢 Share with everyone**, **Stop sharing**); users see it under *From your organisation*, and it can be the default theme. Setting `appearance_shared_themes`, checked on the server (`appearance_themes.go`: `org-` ids, at most 12 themes, token names and values without `url(`, `expression`, `@import`, `;`, braces or angle brackets).
+- **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance): everyone gets the default theme; theme choice, colour editor, import and custom CSS are hidden. Accessibility options, fonts and size stay per user; administrators are not locked.
+- **Save changes to this theme**: colour changes go into the selected theme of your own instead of only a new copy.
+- **Contrast check** beside the preview: WCAG ratio for text, secondary and faint text, text on the accent and terminal text, updated while you edit.
+
+### Changed
+- A theme that lists only some colours (shared, imported or from an addon) takes the missing ones from Graphite or Daylight instead of leaving them unset.
+
 ## [14.11.7] - 2026-11-12
 
 The lock button is visible again. No database or API change.

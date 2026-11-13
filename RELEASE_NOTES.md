@@ -1,10 +1,29 @@
-## Web Remote Manager PRO v14.11.7 — Lock now is back in the top bar
+## Web Remote Manager PRO v14.11.8 — One look for the whole team
 
-### Fixed
+### Added
+
+- **📢 Share with everyone**: an administrator publishes a theme from *Settings → Appearance*; every user sees it under *From your organisation*, and it can be made the default.
+- **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance). Accessibility options, fonts and size stay with each user; administrators are not locked.
+- **💾 Save changes to this theme** for your own themes.
+- **Contrast check** next to the preview with WCAG ratios for text, accent and terminal colours.
+
+### Changed
+
+- Themes with only some colours fill the rest from Graphite or Daylight.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.8](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.8) asset. Preserve the database and encryption key; nothing is migrated. New settings `appearance_lock` (off) and `appearance_shared_themes` (empty).
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.11.7 — Lock now is back in the top bar
+
+#### Fixed
 
 - **🔒 Lock now** is again a one-click icon in the top bar, next to *New Window*, on every screen width. It is still in the account menu too.
 
-### Upgrade
+#### Upgrade
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.7) asset. Preserve the database and encryption key; nothing is migrated.
 
