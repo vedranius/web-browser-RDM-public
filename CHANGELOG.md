@@ -1,3 +1,19 @@
+## [14.11.9] - 2026-11-13
+
+### Added
+- **Remote desktop clipboard like an RDP client**: the local clipboard goes to the remote desktop when the desktop gets the pointer or focus and right before **Ctrl+V** / **Shift+Insert**; text copied on the remote desktop goes to the local clipboard without taking the keyboard away from the desktop. Reading the local clipboard needs HTTPS or localhost and the browser's permission; the 📋 *Clipboard* button stays for other cases. The connection's *Clipboard* option still turns both directions off.
+
+### Fixed
+- **Remote desktop stuck on "Connecting…"**: guacamole-common-js 1.5 does not report errors of the tunnel itself, so a WebSocket that failed, timed out ("Server timeout.") or closed before the first frame left the window on *Connecting…* for ever. The desktop window now watches the tunnel and shows the error with **↻ Reconnect**; a tunnel that closes after the desktop appeared shows *Disconnected*.
+- **guacd that accepts but does not answer** (Docker Desktop paused): WRM waits 8 seconds for guacd's answer to `select` instead of 20 and says that guacd does not answer and that Docker may be paused, before the browser's own 15-second timeout.
+- **Target that never shows a frame**: when guacd reports *ready* but no frame (`sync`) follows within 45 seconds, WRM ends the session with the address guacd tried (and the jump-host route) instead of waiting for ever; the session is logged as failed with a `desktop.error` audit entry.
+
+- **Remote desktop pointer offset and blurry picture with a larger UI size**: with *Settings → Appearance → Size* above or below 100 % the page uses CSS zoom, which guacamole-common-js ignores when it measures the pointer, so clicks landed centimetres away from the mouse. The pointer is now measured against the element's real box, and the desktop is requested in real screen pixels and scaled back, so it stays sharp.
+
+### Changed
+- guacd's errors after the handshake name the address WRM gave it, e.g. *Server refused connection (server unreachable?) (target 192.0.2.10:3389)*, so a wrong host in the connection is visible at once.
+- RDP errors that mention *refused* or *unreachable* show a hint: check address, firewall and that Remote Desktop is on, then try another *Security* mode (NLA, TLS, RDP).
+
 ## [14.11.8] - 2026-11-13
 
 ### Added

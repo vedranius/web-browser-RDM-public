@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.11.8** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.11.9** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.11.9
+
+**Remote desktops no longer hang on "Connecting…", and the pointer lands where the mouse is.** When the WebSocket to WRM failed, timed out or closed before the first picture, the window used to keep showing *Connecting…*; now it shows what went wrong with **↻ Reconnect**. A guacd that accepts the connection but never answers (Docker Desktop paused) is reported after 8 seconds, and a session whose target never shows a picture ends after 45 seconds with the address guacd tried. guacd's errors now name the target address, and RDP errors such as *Server refused connection* come with a hint about the address, firewall and Security mode. With a UI size other than 100 % (*Settings → Appearance → Size*) the remote pointer used to land centimetres away from the mouse; it is now exact and the picture stays sharp. **Copy and paste works both ways like in an RDP client**: copy on your computer and press Ctrl+V in the remote desktop, or copy there and paste locally. See [Troubleshooting](#troubleshooting).
 
 ## What's new in v14.11.8
 
@@ -35,10 +39,6 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 ## What's new in v14.11.5
 
 **Separate permissions for adding and for switching tunnels** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)). A share now has two tunnel switches instead of one: *Operators may enable and disable (start and stop) tunnels* (the existing switch, unchanged) and the new *Operators may add, edit and remove tunnels*. Give some people only the on/off switch and others both. With the new switch a member right-clicks a shared SSH connection, **🛠 Edit tunnels…**, and adds, changes or removes its tunnels; they stay in the owner's account and must pass the tunnel policies of both the owner and the member.
-
-## What's new in v14.11.4
-
-**AI apps wait for your approval, and you see it on the desktop.** Claude Code, Codex and other AI apps stop waiting for a tool call after their own timeout (Codex after 60 seconds), and then used to carry on without the step. Now WRM tells the AI that the request still waits in WRM and gives it a new tool, `wait_for_approval`, which it calls again and again until you approve or deny; only then does it go on. The WRM PRO plugin (and every AI app set up with *All AI apps at once*) also shows each approval request as a **notification of the operating system** (a Windows notification, macOS Notification Center, `notify-send` on Linux), also when no WRM tab is open or in front; a click opens WRM. Update the plugin to 1.2.4. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 
 Older versions: [What's new in earlier versions](docs/WHATS-NEW.md) · [Changelog](CHANGELOG.md) · [Upgrading](docs/UPGRADING.md)
 
@@ -204,21 +204,21 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.11.8-linux-amd64
-   ./wrm-pro-v14.11.8-linux-amd64
+   chmod +x wrm-pro-v14.11.9-linux-amd64
+   ./wrm-pro-v14.11.9-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.11.8-windows-amd64.exe
+   .\wrm-pro-v14.11.9-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.11.8-linux-amd64.AppImage
-   ./wrm-pro-v14.11.8-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.11.8-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.11.9-linux-amd64.AppImage
+   ./wrm-pro-v14.11.9-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.11.9-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -227,8 +227,8 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.8/wrm-pro-v14.11.8-android-arm64
-   chmod +x wrm-pro-v14.11.8-android-arm64 && ./wrm-pro-v14.11.8-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.9/wrm-pro-v14.11.9-android-arm64
+   chmod +x wrm-pro-v14.11.9-android-arm64 && ./wrm-pro-v14.11.9-android-arm64
    ```
 
    **Docker**
@@ -3235,6 +3235,8 @@ For v12.4.4, **AI missing/unavailable** is diagnosed in Settings → AI assistan
 | Remote desktop: *guacd … is not reachable* | Install and start guacd on the WRM machine (`apt install guacd` or the Docker image) or set `guacd_address`. *Admin panel → Overview* shows its state |
 | RDP: *login failed* / black screen and disconnect | Check user, password and **domain**; try *Security: NLA* or *TLS*; older servers need *RDP*. Accept the server certificate (option) for self-signed certificates |
 | RDP: wrong characters when typing | Set the **keyboard layout** to the server's layout (or *Unicode*) |
+| Remote desktop stays on "Connecting…" or says guacd does not answer | guacd must be running: with Docker Desktop, check that Docker is running and **not paused**. If guacd answers but the target does not, check from where guacd runs: `docker run --rm busybox nc -zv -w 3 <host> 3389`; a host name that only Windows resolves (hosts file, NetBIOS) is unknown inside the container, use the IP |
+| RDP: "Server refused connection" / "server unreachable" | guacd could not open the RDP session: check address and firewall, that Remote Desktop is on, and try another *Security* mode (NLA, TLS, RDP) in the connection's remote desktop options |
 | Remote desktop behind a jump host does not connect | guacd must reach the temporary tunnel on `desktop_tunnel_bind` (127.0.0.1): run guacd on the WRM machine or in the same network namespace (compose file) |
 | fail2ban bans the WRM server | Add WRM's IP to `ignoreip`, raise `status_interval_seconds`, or untick monitoring for those hosts |
 | Tunnel runs but the page does not open from my PC | The tunnel listens on `127.0.0.1` of the **WRM machine**. See [Where is the tunnel port?](#ssh-tunnels-port-forwarding) |

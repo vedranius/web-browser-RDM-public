@@ -4730,7 +4730,7 @@ Object.assign(LANGS.en, {
   desk_lib_failed:'The remote desktop component could not be loaded.', desk_disconnected:'Disconnected', desk_failed:'Connection failed',
   desk_guacd_hint:'Remote desktop needs guacd next to WRM. Windows and macOS: WRM starts it automatically in Docker Desktop when guacd_address is local (127.0.0.1:4822); install Docker Desktop if it is missing. Linux: apt install guacd or the guacd service in docker-compose.yml. Administrators set the address in Security policies → Remote desktop.',
   desk_setup:'Start guacd', desk_setup_started:'guacd is starting (the first start can take a minute)', desk_setup_starting:'guacd is starting automatically…',
-  desk_login_hint:'Check the user name, password and domain of the connection.', desk_required:'The server asks for: {name}', desk_clip_sent:'Sent to the remote clipboard',
+  desk_login_hint:'Check the user name, password and domain of the connection.', desk_no_answer:'No answer from WRM or guacd. If guacd runs in Docker Desktop, check that Docker is running and not paused.', desk_closed_early:'The connection to WRM closed before the remote desktop appeared.', desk_refused_hint:'guacd could not open the RDP session. Check the address, the firewall and that Remote Desktop is enabled on the target. If guacd reaches the port, try another Security mode in the connection\'s remote desktop options (NLA, TLS or RDP).', desk_required:'The server asks for: {name}', desk_clip_sent:'Sent to the remote clipboard',
   desk_open:'Open remote desktop', jump_host_help_desk:'WRM opens a temporary tunnel through this SSH connection for the remote desktop (guacd must run on the WRM machine).',
   desk_proxy:'Remote desktop (guacd)', desk_proxy_down:'not reachable', desk_tunnel:'Remote desktop',
   pg_desktop:'Remote desktop (RDP / VNC / Telnet)', p_desktop_enabled:'Remote desktop', p_desktop_enabled_d:'RDP, VNC and Telnet connections in the browser, through guacd (Apache Guacamole proxy).',
@@ -4753,7 +4753,7 @@ Object.assign(LANGS.hr, {
   desk_lib_failed:'Komponenta za udaljenu radnu površinu nije se mogla učitati.', desk_disconnected:'Veza prekinuta', desk_failed:'Spajanje nije uspjelo',
   desk_guacd_hint:'Udaljena radna površina treba guacd uz WRM. Windows i macOS: WRM ga automatski pokreće u Docker Desktopu kad je guacd_address lokalna adresa (127.0.0.1:4822); instaliraj Docker Desktop ako nedostaje. Linux: apt install guacd ili servis guacd u docker-compose.yml. Administrator postavlja adresu u Sigurnosne politike → Udaljena radna površina.',
   desk_setup:'Pokreni guacd', desk_setup_started:'guacd se pokreće (prvo pokretanje može potrajati minutu)', desk_setup_starting:'guacd se automatski pokreće…',
-  desk_login_hint:'Provjeri korisničko ime, lozinku i domenu veze.', desk_required:'Server traži: {name}', desk_clip_sent:'Poslano u udaljeni međuspremnik',
+  desk_login_hint:'Provjeri korisničko ime, lozinku i domenu veze.', desk_no_answer:'Nema odgovora od WRM-a ili guacd-a. Ako guacd radi u Docker Desktopu, provjeri da je Docker pokrenut i nije pauziran.', desk_closed_early:'Veza prema WRM-u zatvorila se prije nego se pojavila udaljena radna površina.', desk_refused_hint:'guacd nije uspio otvoriti RDP sesiju. Provjeri adresu, vatrozid i je li Remote Desktop uključen na cilju. Ako guacd dohvaća port, probaj drugi Security način u opcijama udaljene radne površine veze (NLA, TLS ili RDP).', desk_required:'Server traži: {name}', desk_clip_sent:'Poslano u udaljeni međuspremnik',
   desk_open:'Otvori udaljenu radnu površinu', jump_host_help_desk:'WRM otvara privremeni tunel kroz ovu SSH vezu za udaljenu radnu površinu (guacd mora raditi na WRM računalu).',
   desk_proxy:'Udaljena radna površina (guacd)', desk_proxy_down:'nedostupan', desk_tunnel:'Udaljena radna površina',
   pg_desktop:'Udaljena radna površina (RDP / VNC / Telnet)', p_desktop_enabled:'Udaljena radna površina', p_desktop_enabled_d:'RDP, VNC i Telnet veze u pregledniku, preko guacd-a (Apache Guacamole proxy).',
@@ -13198,25 +13198,37 @@ async function startDesktop(wo) {
       deskOverlay(wo, null);
       deskStatus(wo, (c ? c.protocol : '') + (desk.route ? ' · ' + t('via') + ' ' + desk.route : ''));
       deskRescale(wo);
-      try { wrap.focus(); } catch (_) {}
+      try { wrap.focus({preventScroll: true}); } catch (_) {}
     } else if (st === 5) { // DISCONNECTED
       setTermState(wo, 'disconnected');
       if (!desk.error) deskOverlay(wo, `<div class="big">${esc(t('desk_disconnected'))}</div><button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button> <button class="btn-danger btn-sm" onclick="handleCloseWindow(${wo.id})">✕ ${esc(t('close_window'))}</button>`);
     }
   };
   client.onerror = status => {
+    if (desk !== wo.desk || desk.error) return;
     desk.error = status;
     setTermState(wo, 'disconnected');
-    const msg = (status && status.message) || t('desk_failed');
-    const hint = /guacd/i.test(msg) ? t('desk_guacd_hint') : (status && status.code === 769 ? t('desk_login_hint') : '');
+    let msg = (status && status.message) || t('desk_failed');
+    // guacamole-common-js reports a silent server as "Server timeout." (code 516)
+    if (status && status.code === 516 && /^server timeout/i.test(msg)) msg = t('desk_no_answer');
+    const hint = /guacd/i.test(msg) ? t('desk_guacd_hint') : (status && status.code === 769 ? t('desk_login_hint')
+      : (c && c.protocol === 'RDP' && /refused|unreachable/i.test(msg) ? t('desk_refused_hint') : ''));
     deskOverlay(wo, `<div class="big">⚠ ${esc(msg)}</div>${hint ? `<div class="hint">${esc(hint)}</div>` : ''}<button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button> <button class="btn-danger btn-sm" onclick="handleCloseWindow(${wo.id})">✕ ${esc(t('close_window'))}</button>`);
+  };
+  // Guacamole.Client 1.5 does not watch the tunnel itself: a WebSocket that fails, times
+  // out or closes without an "error" instruction would leave "Connecting…" for ever.
+  tunnel.onerror = status => client.onerror(status);
+  tunnel.onstatechange = st => {
+    if (st !== Guacamole.Tunnel.State.CLOSED || desk !== wo.desk || desk.error) return;
+    if (!desk.connected) client.onerror({code: 514, message: t('desk_closed_early')});
+    else client.disconnect();
   };
   client.onclipboard = (stream, mimetype) => {
     if (!/^text\//.test(mimetype)) return;
     const reader = new Guacamole.StringReader(stream);
     let data = '';
     reader.ontext = txt => { data += txt; };
-    reader.onend = () => { if (data) { addClip(data); copyText(data, true); } };
+    reader.onend = () => { if (data) { desk.lastClip = data; addClip(data); deskCopyLocal(wo, data); } };
   };
   client.onrequired = async params => {
     for (const name of params) {
@@ -13227,20 +13239,55 @@ async function startDesktop(wo) {
       w.sendText(val); w.sendEnd();
     }
   };
+  // Guacamole.Mouse measures the pointer with offsetLeft/offsetTop, which ignores the CSS
+  // zoom of Settings → Appearance → Size (and any transform): the remote pointer then lands
+  // centimetres away. WRM keeps the last pointer position and measures it against the
+  // element's real box instead.
+  let lastPt = null;
+  const notePt = ev => { const p = ev.touches && ev.touches.length ? ev.touches[0] : (ev.changedTouches && ev.changedTouches.length ? ev.changedTouches[0] : ev); if (p && typeof p.clientX === 'number') lastPt = {x: p.clientX, y: p.clientY}; };
+  ['pointerdown', 'pointermove', 'pointerup', 'mousedown', 'mousemove', 'mouseup', 'wheel', 'touchstart', 'touchmove', 'touchend'].forEach(n => view.addEventListener(n, notePt, {capture: true, passive: true}));
+  const sendMouse = st => {
+    if (desk !== wo.desk) return;
+    const r = del.getBoundingClientRect();
+    if (lastPt && r.width > 0 && r.height > 0) {
+      st.x = (lastPt.x - r.left) * del.offsetWidth / r.width;
+      st.y = (lastPt.y - r.top) * del.offsetHeight / r.height;
+    }
+    client.sendMouseState(st, true);
+  };
   const mouse = new Guacamole.Mouse(del);
-  mouse.onEach(['mousedown', 'mouseup', 'mousemove'], e => { if (desk === wo.desk) client.sendMouseState(e.state, true); });
+  mouse.onEach(['mousedown', 'mouseup', 'mousemove'], e => sendMouse(e.state));
   try {
     const touch = new Guacamole.Mouse.Touchscreen(del);
-    touch.onEach(['mousedown', 'mouseup', 'mousemove'], e => { if (desk === wo.desk) client.sendMouseState(e.state, true); });
+    touch.onEach(['mousedown', 'mouseup', 'mousemove'], e => sendMouse(e.state));
   } catch (_) {}
+  // Clipboard like an RDP client: the local clipboard goes to the remote one when the
+  // desktop gets focus or the pointer, and right before Ctrl+V / Shift+Insert.
+  desk.lastClip = '';
+  desk.keyQ = Promise.resolve();
+  const pushClip = () => deskPushClipboard(wo);
+  wrap.addEventListener('focus', pushClip);
+  wrap.addEventListener('mouseenter', pushClip);
+  const mods = new Set();
   const kb = new Guacamole.Keyboard(wrap);
-  kb.onkeydown = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(1, keysym); return false; };
-  kb.onkeyup = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(0, keysym); };
+  kb.onkeydown = keysym => {
+    if (desk !== wo.desk || !desk.connected) return false;
+    mods.add(keysym);
+    const ctrl = mods.has(0xFFE3) || mods.has(0xFFE4), shift = mods.has(0xFFE1) || mods.has(0xFFE2);
+    const paste = (ctrl && (keysym === 0x76 || keysym === 0x56)) || (shift && keysym === 0xFF63);
+    desk.keyQ = desk.keyQ.then(() => (paste ? pushClip() : null)).then(() => { if (desk === wo.desk) client.sendKeyEvent(1, keysym); });
+    return false;
+  };
+  kb.onkeyup = keysym => {
+    mods.delete(keysym);
+    if (desk === wo.desk && desk.connected) desk.keyQ = desk.keyQ.then(() => { if (desk === wo.desk) client.sendKeyEvent(0, keysym); });
+  };
   desk.keyboard = kb;
-  wrap.onmousedown = () => { focusWindow(wo.id); setTimeout(() => { try { wrap.focus(); } catch (_) {} }, 0); };
+  wrap.onmousedown = () => { focusWindow(wo.id); setTimeout(() => { try { wrap.focus({preventScroll: true}); } catch (_) {} }, 0); };
   wo.resizeObs = new ResizeObserver(() => { clearTimeout(desk._rt); desk._rt = setTimeout(() => deskResized(wo), 250); });
   wo.resizeObs.observe(view);
-  const w = Math.max(320, Math.round(view.clientWidth)), h = Math.max(240, Math.round(view.clientHeight));
+  const z = deskZoom();
+  const w = Math.max(320, Math.round(view.clientWidth * z)), h = Math.max(240, Math.round(view.clientHeight * z));
   const qs = new URLSearchParams({id: wo.connId, width: w, height: h, dpi: Math.round(96 * Math.min(2, window.devicePixelRatio || 1)),
     tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || '')});
   if (wo.shareID) qs.set('share_id', wo.shareID);
@@ -13248,14 +13295,44 @@ async function startDesktop(wo) {
   client.connect(qs.toString());
 }
 
+// deskPushClipboard sends the local clipboard text to the remote desktop when it changed.
+// Reading needs a secure page (HTTPS or localhost) and the browser's permission; without
+// them the 📋 Clipboard button still works.
+async function deskPushClipboard(wo) {
+  const d = wo && wo.desk;
+  if (!d || !d.connected || !navigator.clipboard || !navigator.clipboard.readText) return;
+  let text = '';
+  try { text = await Promise.race([navigator.clipboard.readText(), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500))]); } catch (_) { return; }
+  if (!text || text === d.lastClip || d !== wo.desk) return;
+  d.lastClip = text;
+  const w = new Guacamole.StringWriter(d.client.createClipboardStream('text/plain'));
+  w.sendText(text); w.sendEnd();
+}
+
+// deskCopyLocal puts text copied on the remote desktop into the local clipboard without
+// taking the keyboard focus away from the desktop.
+function deskCopyLocal(wo, text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    return;
+  }
+  copyText(text, true);
+  try { document.getElementById('dw-' + wo.id).focus({preventScroll: true}); } catch (_) {}
+}
+
 function deskResized(wo) {
   const d = wo.desk, view = document.getElementById('dv-' + wo.id);
   if (!d || !view || !d.connected) return;
-  const w = Math.round(view.clientWidth), h = Math.round(view.clientHeight);
+  const z = deskZoom();
+  const w = Math.round(view.clientWidth * z), h = Math.round(view.clientHeight * z);
   if (w < 100 || h < 100) return;
   if (d.fit && d.lastSize !== w + 'x' + h) { d.lastSize = w + 'x' + h; try { d.client.sendSize(w, h); } catch (_) {} }
   deskRescale(wo);
 }
+
+// CSS zoom of the page (Settings → Appearance → Size): the remote desktop is requested in
+// real screen pixels and scaled back, so it stays sharp and fills the window.
+function deskZoom() { const z = parseFloat(document.body && document.body.style.zoom); return z > 0 ? z : 1; }
 
 function deskRescale(wo) {
   const d = wo.desk, view = document.getElementById('dv-' + wo.id);
@@ -13291,7 +13368,7 @@ async function deskSendClipboard(id) {
   const w = new Guacamole.StringWriter(st);
   w.sendText(text); w.sendEnd();
   showToast('📋 ' + t('desk_clip_sent'), 'success', 2500);
-  try { document.getElementById('dw-' + id).focus(); } catch (_) {}
+  try { document.getElementById('dw-' + id).focus({preventScroll: true}); } catch (_) {}
 }
 
 async function deskTypeText(id) {
@@ -13305,7 +13382,7 @@ async function deskTypeText(id) {
     wo.desk.client.sendKeyEvent(1, keysym);
     wo.desk.client.sendKeyEvent(0, keysym);
   }
-  try { document.getElementById('dw-' + id).focus(); } catch (_) {}
+  try { document.getElementById('dw-' + id).focus({preventScroll: true}); } catch (_) {}
 }
 
 function deskReconnect(id) {
