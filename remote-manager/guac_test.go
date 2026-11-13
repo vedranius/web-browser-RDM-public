@@ -335,11 +335,11 @@ func TestDesktopSession(t *testing.T) {
 
 	// target silent after "ready": WRM ends the session instead of "Connecting" for ever
 	db.Exec(`UPDATE connections SET password=? WHERE id=?`, encryptValue("silent"), cv.ID)
-	prevWait := desktopFirstFrameTimeout
-	desktopFirstFrameTimeout = 800 * time.Millisecond
+	prevWait := desktopFirstFrameTimeout.Load()
+	desktopFirstFrameTimeout.Store(int64(800 * time.Millisecond))
 	dc4 := u.openDesktop(cv.ID)
 	dc4.wait(t)
-	desktopFirstFrameTimeout = prevWait
+	desktopFirstFrameTimeout.Store(prevWait)
 	if txt := dc4.text(); !strings.Contains(txt, "did not answer within") || !strings.Contains(txt, "10.9.8.7:3390") || !strings.Contains(txt, "3.516;") {
 		t.Fatalf("silent target: %q", txt)
 	}
@@ -457,9 +457,9 @@ func TestDesktopGuacdSilent(t *testing.T) {
 	}()
 	setSetting("guacd_address", l.Addr().String())
 	defer setSetting("guacd_address", "127.0.0.1:4822")
-	prev := guacdAnswerTimeout
-	guacdAnswerTimeout = 500 * time.Millisecond
-	defer func() { guacdAnswerTimeout = prev }()
+	prev := guacdAnswerTimeout.Load()
+	guacdAnswerTimeout.Store(int64(500 * time.Millisecond))
+	defer guacdAnswerTimeout.Store(prev)
 	srv := httptest.NewServer(newRouter())
 	defer srv.Close()
 	u := newTestUser(t, srv, "rdp-silent", false)

@@ -325,7 +325,7 @@ func guacHandshake(conn net.Conn, gr *guacReader, protocol string, params map[st
 	// guacd answers "select" at once. A paused Docker Desktop still accepts the TCP
 	// connection on the published port but never answers: say so before the browser
 	// gives up on its own (15 s without data).
-	conn.SetReadDeadline(time.Now().Add(guacdAnswerTimeout))
+	conn.SetReadDeadline(time.Now().Add(time.Duration(guacdAnswerTimeout.Load())))
 	_, el, err := gr.next()
 	if err != nil {
 		var ne net.Error
@@ -645,7 +645,8 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 	// a first frame in time WRM ends the session with a message that says where it hangs.
 	var firstFrame atomic.Bool
 	go func() {
-		tm := time.NewTimer(desktopFirstFrameTimeout)
+		wait := time.Duration(desktopFirstFrameTimeout.Load())
+		tm := time.NewTimer(wait)
 		defer tm.Stop()
 		select {
 		case <-done:
@@ -655,7 +656,7 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 		if firstFrame.Load() {
 			return
 		}
-		msg := desktopNoFrameMessage(c.Protocol, host, port, route, desktopFirstFrameTimeout)
+		msg := desktopNoFrameMessage(c.Protocol, host, port, route, wait)
 		auditLogRef(r, actorID, actorName, "desktop.error", c.Name, map[string]interface{}{"error": truncateStr(msg, 300)}, ta.ref())
 		endStatus.Store("failed")
 		send(guacEncode("error", msg, "516"))
@@ -744,12 +745,18 @@ func desktopRouteNote(route string) string {
 	return " via " + route
 }
 
-// guacdAnswerTimeout is how long WRM waits for guacd's answer to "select".
-var guacdAnswerTimeout = 8 * time.Second
+// guacdAnswerTimeout is how long WRM waits for guacd's answer to "select" (nanoseconds;
+// atomic because tests shorten it while earlier sessions still run).
+var guacdAnswerTimeout atomic.Int64
 
 // desktopFirstFrameTimeout is how long WRM waits after guacd's "ready" for the first
 // frame of the remote desktop (a variable so tests can shorten it).
-var desktopFirstFrameTimeout = 45 * time.Second
+var desktopFirstFrameTimeout atomic.Int64
+
+func init() {
+	guacdAnswerTimeout.Store(int64(8 * time.Second))
+	desktopFirstFrameTimeout.Store(int64(45 * time.Second))
+}
 
 // desktopNoFrameMessage explains a desktop session that never showed a frame.
 func desktopNoFrameMessage(protocol, host string, port int, route string, wait time.Duration) string {
