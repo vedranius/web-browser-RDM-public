@@ -1,15 +1,28 @@
-## Web Remote Manager PRO v14.12.0 — Branch and tag list for Git upgrades, serial and USB devices in the browser
+## Web Remote Manager PRO v14.13.0 — One import with a preview for every tool
 
 ### Added
+
+- **Import from another tool** in *Settings → Data*: one dialog for mRemoteNG (XML or CSV), Remote Desktop Manager CSV, RDCMan (`.rdg`), `.rdp` files, MobaXterm, WinSCP, Remmina, OpenSSH config and PuTTY. WRM recognises the file and shows what it would create before anything is saved.
+- **Old encrypted mRemoteNG files** (before 2.6) and the Twofish engine are read.
+
+### Changed
+
+- The same server in two folders of the source is imported into both folders; importing the same file again still creates nothing new.
+- A storage rename that overwrites the target sends one S3 request less. The storage guide lists every request and what it costs per provider.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.13.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.13.0) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.12.0 — Branch and tag list for Git upgrades, serial and USB devices in the browser
+
+#### Added
 
 - **Git *Upgrade…* lists the branches and tags** of the service's project (tags newest first), so you pick the target instead of typing it; *Enter a custom ref…* still takes any branch or `tag:…`.
 - **Serial / USB devices** in *Tools*: connect to an Arduino, ESP32, STM32, Raspberry Pi Pico or a USB-serial adapter plugged into your own computer, with a terminal, saved settings per device and AI prompt helpers. Works in Chrome, Edge and other Chromium browsers over HTTPS or localhost; the data stays in the browser.
 
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.12.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.12.0) asset. Preserve the database and encryption key; nothing is migrated.
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.11.9 — Remote desktops no longer hang on "Connecting"
 

@@ -2,6 +2,10 @@
 
 The [README](../README.md) shows the five latest versions. Earlier highlights are kept here, newest first; every change is in the [changelog](../CHANGELOG.md), and upgrade notes per version are in [UPGRADING.md](UPGRADING.md).
 
+## What's new in v14.11.6
+
+**A clipboard and snippets made for daily terminal work.** Clipboard entries show where they were copied from and when, can be **📌 pinned** (stay on top, not pushed out of the 20-entry list), filtered, removed one by one and **⚡ saved as a snippet** on the server. **Paste** types into the focused or last used terminal; several lines use bracketed paste or ask first, and dangerous commands always ask. Snippets get a **★ Recently used** group. See [Clipboard panel](#clipboard-panel) and [Snippets & run on connect](#snippets--run-on-connect).
+
 ## What's new in v14.11.5
 
 **Separate permissions for adding and for switching tunnels** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)). A share now has two tunnel switches instead of one: *Operators may enable and disable (start and stop) tunnels* (the existing switch, unchanged) and the new *Operators may add, edit and remove tunnels*. Give some people only the on/off switch and others both. With the new switch a member right-clicks a shared SSH connection, **🛠 Edit tunnels…**, and adds, changes or removes its tunnels; they stay in the owner's account and must pass the tunnel policies of both the owner and the member.

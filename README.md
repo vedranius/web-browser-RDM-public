@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.12.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.13.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.13.0
+
+**One import with a preview for every tool you come from.** *Settings → Data → Import from another tool* takes a file from **mRemoteNG** (XML or CSV, also old fully encrypted files), **Remote Desktop Manager** (CSV), **RDCMan** (`.rdg`), a Windows **`.rdp`** file, **MobaXterm**, **WinSCP** (with stored passwords), **Remmina**, an **OpenSSH config** or **PuTTY**. WRM recognises the format and shows every connection it would create, with folder and jump host, and what it would skip, before anything is saved. The same server in two folders comes over into both, and importing the same file again creates nothing new. See [Import from other tools](#import-from-other-tools).
 
 ## What's new in v14.12.0
 
@@ -35,10 +39,6 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 ## What's new in v14.11.7
 
 **🔒 Lock now is back in the top bar.** Since v14.11.0 it was only in the account menu (click your name); now it is a one-click lock icon next to *New Window* again, on every screen width, and it stays in the account menu too. See [Screen lock](#screen-lock).
-
-## What's new in v14.11.6
-
-**A clipboard and snippets made for daily terminal work.** Clipboard entries show where they were copied from and when, can be **📌 pinned** (stay on top, not pushed out of the 20-entry list), filtered, removed one by one and **⚡ saved as a snippet** on the server. **Paste** types into the focused or last used terminal; several lines use bracketed paste or ask first, and dangerous commands always ask. Snippets get a **★ Recently used** group. See [Clipboard panel](#clipboard-panel) and [Snippets & run on connect](#snippets--run-on-connect).
 
 Older versions: [What's new in earlier versions](docs/WHATS-NEW.md) · [Changelog](CHANGELOG.md) · [Upgrading](docs/UPGRADING.md)
 
@@ -82,7 +82,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [SSH tunnels (port forwarding)](#ssh-tunnels-port-forwarding)
    - [Web interfaces (HTTP / HTTPS connections)](#web-interfaces-http--https-connections)
    - [Tags & inventory import (CSV, Excel, NetBox)](#tags--inventory-import-csv-excel-netbox)
-   - [Import from mRemoteNG, PuTTY and OpenSSH](#import-from-mremoteng-putty-and-openssh)
+   - [Import from other tools](#import-from-other-tools)
    - [Windows, tabs & snapping](#windows-tabs--snapping)
    - [Panel layout: dock, stack, float and lock](#panel-layout-dock-stack-float-and-lock)
    - [Appearance, themes and accessibility](#appearance-themes-and-accessibility)
@@ -162,7 +162,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **Bookmarks** for deep directories (like WinSCP): per server, per folder or tag, or global, with variables such as `{name}` — one click opens the directory in the file manager or `cd`s there in the terminal.
 - **Notifications** when a server goes down or comes back, a password is due for rotation or a new service version is out: in WRM, in the browser, by e-mail, Telegram, Slack / Mattermost, Microsoft Teams, Discord, ntfy, Gotify, Pushover or a signed webhook.
 - **SSH tunnels** (like `ssh -L / -R / -D`, PuTTY, mRemoteNG): reach the web interface of a switch, an iDRAC/iLO or a database behind a server; a SOCKS proxy into a whole management network. **Web interface connections** open such pages with one double-click.
-- **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels), **PuTTY** (with proxies) and **OpenSSH** `~/.ssh/config`. **Tags** filter the sidebar and mark production servers.
+- **Import** your server inventory from **CSV / Excel** files and **NetBox** (with tags for environment, site and rack, and sync), and your connections from **mRemoteNG** (with passwords, folders and SSH tunnels), **PuTTY** (with proxies), **OpenSSH** `~/.ssh/config`, **Remote Desktop Manager**, **RDCMan**, **MobaXterm**, **WinSCP**, **Remmina** and `.rdp` files, with a preview first. **Tags** filter the sidebar and mark production servers.
 - **Git workspace**: which version of which service runs where — compare installations on your servers **file by file** with **GitLab / GitHub** or an **offline bundle**, see what is *old*, *missing* or *changed by hand*, with diffs and notifications — and **update, upgrade or roll back** them over SSH (backups, atomic writes, checks, automatic rollback, opt-in restarts, maintenance windows), deploy to **environments** of ordered servers with a reviewed one-shot plan, a dry run, a server-side lock, history and rollback per deploy, or **install them on a new server** and **transfer** them between servers with their per-host configuration; a **.gitignore helper**, and optional **CI integration** (GitLab / GitHub / Jenkins webhooks, bundles from CI artifacts, deploy through a pipeline).
 - **AI desktop apps (MCP):** connect Claude (desktop or claude.ai), ChatGPT or any other MCP client to WRM — with OAuth or a personal access token, or through the small stdio bridge in the WRM binary. The app gets time-limited access to the servers, mode and scopes you choose; every call goes through the same permission engine, changes wait for your approval (in WRM or in the app), an **AI connected** indicator shows the session and revokes it with one click.
 - **AI assistant** next to the terminal and the file manager: ask about a server and the assistant reads logs, services, packages and files through WRM's own tools. **Read-only**, **ask before every change** (the exact command or a diff, approved, edited or denied by you) or **automatic within limits** (an allow list, a time and an action limit you opt into). Destructive commands are always refused; administrators decide which modes, providers and models are allowed per connection, folder or tag, and every request, tool call and approval is audited and recorded. Works with the Anthropic API, OpenAI, Azure OpenAI, AWS Bedrock, Google Vertex AI and OpenAI-compatible local models, with the organisation's key or your own.
@@ -204,21 +204,21 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.12.0-linux-amd64
-   ./wrm-pro-v14.12.0-linux-amd64
+   chmod +x wrm-pro-v14.13.0-linux-amd64
+   ./wrm-pro-v14.13.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.12.0-windows-amd64.exe
+   .\wrm-pro-v14.13.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.12.0-linux-amd64.AppImage
-   ./wrm-pro-v14.12.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.12.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.13.0-linux-amd64.AppImage
+   ./wrm-pro-v14.13.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.13.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -227,8 +227,8 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.12.0/wrm-pro-v14.12.0-android-arm64
-   chmod +x wrm-pro-v14.12.0-android-arm64 && ./wrm-pro-v14.12.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.13.0/wrm-pro-v14.13.0-android-arm64
+   chmod +x wrm-pro-v14.13.0-android-arm64 && ./wrm-pro-v14.13.0-android-arm64
    ```
 
    **Docker**
@@ -562,23 +562,37 @@ Save the web interfaces of your devices — iDRAC / iLO / IPMI, switches, firewa
 
 *For both:* choose the **login** of the imported connections — none (set it later), a **vault credential** (e.g. `root@dc1`) or a **stored SSH key** — a default user name and protocol, **folders** (from a column, one per site / role / tenant, all in one, or none) and extra tags for all. Rows with their own password keep it. Existing connections (same name, host and protocol) are skipped, so importing again is safe. The result lists what was imported, updated and skipped (with reasons).
 
-### Import from mRemoteNG, PuTTY and OpenSSH
+### Import from other tools
 
-*Settings → Data*:
+*Settings → Data → Import from another tool* opens one dialog for every format. Choose the file: WRM detects the format (or pick it in the list), and shows a **preview** of the connections it would create (name, protocol, host, user, folder, jump host, 🔑 when a password or key comes along), the number of new folders, jump hosts and tunnels, and what it would skip and why. Nothing is saved until **Import**. *Put everything into folder* places the whole import under one folder. An encrypted file asks for its master password inside the dialog; the password is used for this import only. A connection whose name, host, protocol and folder match one you already have is skipped, so importing the same file again is safe; the same server in two folders of the source is imported into both. A file that is not WRM's own JSON export, chosen in *Import connections*, opens the same dialog.
 
-- **Import from mRemoteNG** — the `confCons.xml` file (`%APPDATA%\mRemoteNG\confCons.xml`, or *File → Export* in mRemoteNG):
+| Tool | File | What comes over |
+|---|---|---|
+| mRemoteNG | `confCons.xml` (also fully encrypted files from versions before 2.6, AES or Twofish) or *Export → mRemoteNG CSV* | see below |
+| Remote Desktop Manager | CSV export | groups as folders, RDP, SSH, SFTP, VNC, Telnet, FTP and web entries with port, user, domain and the password when the export contains it |
+| Remote Desktop Connection Manager | `.rdg` | groups as folders, RDP servers with display name, user, domain and gateway; passwords protected by Windows DPAPI cannot be read and are noted |
+| Remote Desktop file | `.rdp` | one RDP connection: address, port, user, domain and gateway |
+| MobaXterm | `.mxtsessions` or the `[Bookmarks]` of `MobaXterm.ini` | folders, SSH, RDP, VNC, Telnet, FTP, SFTP and browser sessions with port and user; other session types are listed as skipped |
+| WinSCP | `WinSCP.ini` | sites with folders as SFTP (also SCP sites), FTP or FTPS with user, port and **stored passwords** (decrypted unless WinSCP uses a master password); WebDAV and S3 sites are listed as skipped |
+| Remmina | `.remmina` | SSH, RDP, VNC and SFTP profiles with their group as folder; the password is encrypted per installation and is not imported (noted) |
+| OpenSSH | `~/.ssh/config` | see below |
+| PuTTY | `.reg` export of the saved sessions | see below |
+
+Details for the three most common sources:
+
+- **mRemoteNG** — the `confCons.xml` file (`%APPDATA%\mRemoteNG\confCons.xml`, or *File → Export* in mRemoteNG):
   - containers become folders (`DC1 / Rack A`); SSH1/SSH2 connections become SSH connections, RDP, VNC and Telnet connections remote desktops (with their options), HTTP/HTTPS connections web interface connections (with the path of the URL);
   - **passwords are decrypted** (current AES-GCM format, older AES-CBC format, *FullFileEncryption*) and stored encrypted in WRM. If the file is protected with a **master password**, WRM asks for it;
   - inherited settings (*Inherit* user name, password, port, domain, SSH tunnel) are resolved from the parent folders;
   - the **SSH tunnel** setting (`SSHTunnelConnectionName`) becomes the **jump host**;
-  - ICA, rlogin and other protocols WRM does not open are listed as *skipped*; connections that already exist (same name, host and protocol) are skipped too, so importing again is safe.
-- **Import OpenSSH config** — `~/.ssh/config` (folder *SSH config*):
+  - ICA, rlogin and other protocols WRM does not open are listed as *skipped*; connections that already exist (same name, host, protocol and folder) are skipped too, so importing again is safe.
+- **OpenSSH config** — `~/.ssh/config` (folder *SSH config*):
   - `Host` entries with `HostName`, `User`, `Port`; defaults from `Host *` and from wildcard patterns;
   - **`ProxyJump`** (also `user@host:port`; a jump host that is not its own `Host` entry is created) and `ProxyCommand ssh -W …` become the **jump host**;
   - **`LocalForward`, `RemoteForward`, `DynamicForward`** become tunnels that start with the terminal;
   - `IdentityFile` becomes *Key file* authentication (only if key files on the WRM server are allowed for you; otherwise a note asks you to add the key or a password);
   - `Match` blocks and wildcard-only hosts are skipped.
-- **Import from PuTTY** — a registry export of the saved sessions (folder *PuTTY*). In `regedit` right-click `HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions` → *Export*, or run `reg export HKCU\Software\SimonTatham\PuTTY\Sessions putty.reg`. Both UTF-16 (regedit's default) and UTF-8 files are read:
+- **PuTTY** — a registry export of the saved sessions (folder *PuTTY*). In `regedit` right-click `HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions` → *Export*, or run `reg export HKCU\Software\SimonTatham\PuTTY\Sessions putty.reg`. Both UTF-16 (regedit's default) and UTF-8 files are read:
   - session names are decoded (`My%20Server` → *My Server*); `HostName` (also `user@host`), `PortNumber`, `UserName` and `Protocol` are imported. *Default Settings* is not imported as a connection, but its values are the defaults of the other sessions;
   - **SSH** and **Telnet** sessions become connections; raw, rlogin and serial sessions (a COM port of the Windows PC) are listed as *skipped*;
   - `PublicKeyFile` gives a note: convert the `.ppk` with PuTTYgen (*Conversions → Export OpenSSH key*) and add it under *🔑 SSH keys*;
@@ -2503,6 +2517,8 @@ All endpoints (except sign-in, `/api/auth/config`, version and share pages) need
 | GET | `/api/config/export` | Export without secrets (with jump hosts and tunnels) |
 | POST | `/api/config/export` | `{password}` export with secrets |
 | POST | `/api/config/import` | Import → `{imported, skipped, tunnels}` |
+| GET | `/api/config/import/formats` | Formats of the auto import → `[{ID, Name}]` |
+| POST | `/api/config/import/auto` | `{data, name, format, folder, password, preview}`: `data` = the file in base64; detects the format from the content and `name` unless `format` is given; `preview: true` is a dry run that returns `items` (name, protocol, host, username, folder, jump, has_secret, tunnels) and writes nothing; HTTP 400 with `need_password: true` for an encrypted file |
 | POST | `/api/config/import/mremoteng` | `{xml, password}` import an mRemoteNG `confCons.xml` → `{imported, folders, jump_hosts, tunnels, skipped, notes}`; HTTP 400 with `need_password: true` when a master password is needed |
 | POST | `/api/config/import/sshconfig` | `{text, folder}` import an OpenSSH config |
 | POST | `/api/config/import/putty` | `{data, folder}` import a PuTTY `.reg` export (`data` = the file, base64; UTF-16 or UTF-8) → also `{proxies, proxy_links}` |
@@ -2948,6 +2964,7 @@ remote-manager/
   notify.go       notifications: channels (SMTP, chat, push, webhook), subscriptions, digests, quiet hours
   tunnels.go      SSH tunnels (local, remote, SOCKS5), manager, reconnects, tunnels API, web interfaces
   importers.go    import from mRemoteNG confCons.xml and OpenSSH config
+  importers_more.go  format detection, preview and more import formats (RDM, RDCMan, .rdp, MobaXterm, WinSCP, Remmina)
   putty.go        import of PuTTY sessions (.reg) with proxies, link to mRemoteNG PuttySession
   snippets.go     snippets (saved commands), variables, run on connect
   bookmarks.go    folder bookmarks: scopes, variables, shell-quoted cd, start directory, WinSCP import

@@ -1,3 +1,14 @@
+## [14.13.0] - 2026-11-13
+
+### Added
+- **One import for every tool** (*Settings → Data → Import from another tool*): pick a file, WRM detects the format and shows a **preview** (connections with protocol, host, user, folder and jump host, new folders, what would be skipped) before anything is saved; *Import* writes it. The format can be chosen by hand, everything can go under one folder, and an encrypted file asks for its master password inside the dialog. Replaces the three separate mRemoteNG, OpenSSH and PuTTY rows; a non-JSON file chosen in *Import connections* opens the same dialog. Code in `static/importer.js`; browser test `tools/test-import-picker.js`.
+- **New import formats**: mRemoteNG CSV export, Remote Desktop Manager CSV export, Remote Desktop Connection Manager (`.rdg`), Windows `.rdp` files, MobaXterm (`.mxtsessions` or the bookmarks of `MobaXterm.ini`), WinSCP (`WinSCP.ini`, with stored passwords) and Remmina (`.remmina`). API: `POST /api/config/import/auto` (`{data, name, format, folder, password, preview}`) and `GET /api/config/import/formats`.
+- **Old mRemoteNG files**: fully encrypted `confCons.xml` from versions before 2.6 and the Twofish engine are read; Serpent, CCM and EAX get a clear message instead of a decryption error.
+
+### Changed
+- Duplicates on import are judged per folder: the same server listed in two folders of the source is imported twice, as in the source; importing the same file again still creates nothing new.
+- **S3 requests**: a rename that overwrites the target no longer sends a `HEAD` for the target first. docs/STORAGES.md lists the requests of every storage action (also *New folder* and *Save in the editor*) and what they cost on AWS (Tier-1 / Tier-2) compared with Hetzner, DigitalOcean, Backblaze, R2 and MinIO.
+
 ## [14.12.0] - 2026-11-13
 
 ### Added

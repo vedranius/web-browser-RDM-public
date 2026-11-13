@@ -2,6 +2,12 @@
 
 In general: replace the executable, AppImage or container image and keep the database and the encryption key. Database changes are additive, so the previous version still starts on the database after an upgrade. The notes below list what changes per version, newest first; see also the [changelog](../CHANGELOG.md).
 
+## Upgrading from v14.12.0
+
+- No database or setting changes.
+- *Settings → Data*: the rows *Import from mRemoteNG*, *Import OpenSSH config* and *Import from PuTTY* are replaced by **Import from another tool**. The old API endpoints (`/api/config/import/mremoteng`, `/sshconfig`, `/putty`) still work; new are `POST /api/config/import/auto` and `GET /api/config/import/formats`.
+- Behaviour: an import now judges duplicates per folder. A server that is in two folders of the source file is imported into both; before it was imported once. Importing the same file again still skips everything.
+
 ## Upgrading from v14.11.9
 
 - No database or setting changes.
