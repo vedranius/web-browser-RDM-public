@@ -101,12 +101,20 @@ WRM never polls a folder or an object. Apart from the two background checks belo
 | Edit only the name or the permissions, remove a storage | none |
 | Open a folder | one `LIST` (`ListObjectsV2`, 1000 keys) per page, at most 100 pages before *Load more* |
 | Download, preview, play, open in the editor | `GET` (video: `GET` with `Range`) |
-| Upload or save | `HEAD` (does the object exist?) + `PUT` |
-| Rename | `HEAD` ×2 + `PUT` copy + `DELETE` |
+| Upload | `HEAD` (does the object exist? decides between the upload and write permissions and tells the audit log "created" or "replaced") + `PUT` |
+| Save in the editor | `PUT` with `If-Match`; a `HEAD` first only when the storage does not allow uploads and the file is new |
+| New folder | `PUT` of an empty `name/` object |
+| Rename | `HEAD` source + `HEAD` target (skipped when overwriting) + `PUT` copy + `DELETE` |
 | Delete | `HEAD` (size for the audit log) + `DELETE` |
 
 A retried request (WRM retries a 5xx answer up to twice) is a request of its own and is counted
 as such in the activity panel.
+
+What this costs: on Hetzner, DigitalOcean Spaces, Backblaze B2 (S3 API), Cloudflare R2 within its
+free allowance and MinIO, none of these requests is billed. On Amazon S3, `LIST` and `PUT` (and the
+copy of a rename) are Tier-1 requests, `GET` and `HEAD` are Tier-2, `DELETE` is free. The most
+expensive everyday action on AWS is opening a large folder (one Tier-1 `LIST` per 1000 keys); the
+extra `HEAD` requests are kept because they protect the permissions and the audit log.
 
 ## What each provider bills
 

@@ -2465,16 +2465,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
         <div class="setting-control"><button class="btn-sec btn-sm" onclick="const tab = settingsTabNow(); openInsteadOf('modal-settings', () => openInventory(), () => openSettings(tab))" data-i18n="import">Import</button></div>
       </div>
       <div class="setting-row">
-        <div><div class="setting-label" data-i18n="import_mrng">Import from mRemoteNG</div><div class="setting-desc" data-i18n="import_mrng_desc">confCons.xml: folders, SSH, RDP, VNC, Telnet and web connections with passwords, SSH tunnel → jump host.</div></div>
-        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".xml,.config" onchange="importExternal(this, 'mremoteng')" style="display:none;"></label></div>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label" data-i18n="import_sshcfg">Import OpenSSH config</div><div class="setting-desc" data-i18n="import_sshcfg_desc">~/.ssh/config: hosts, users, ports, ProxyJump, LocalForward / RemoteForward / DynamicForward, IdentityFile.</div></div>
-        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" onchange="importExternal(this, 'sshconfig')" style="display:none;"></label></div>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label" data-i18n="import_putty">Import from PuTTY</div><div class="setting-desc" data-i18n="import_putty_desc">Saved sessions exported with regedit (.reg of …\PuTTY\Sessions): SSH and Telnet sessions with host, port and user; proxies are saved and linked.</div></div>
-        <div class="setting-control"><label class="btn-sec btn-sm" style="cursor:pointer;display:flex;align-items:center;"><span data-i18n="import">Import</span><input type="file" accept=".reg" onchange="importExternal(this, 'putty')" style="display:none;"></label></div>
+        <div><div class="setting-label" data-i18n="import_other">Import from another tool</div><div class="setting-desc" data-i18n="import_other_desc">mRemoteNG, Remote Desktop Manager, RDCMan, .rdp, MobaXterm, WinSCP, Remmina, OpenSSH config and PuTTY, with a preview.</div></div>
+        <div class="setting-control"><button class="btn-sec btn-sm" id="btn-import-other" onclick="openImportPicker()" data-i18n="import">Import</button></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -11684,38 +11676,7 @@ function importFileTooBig(file) {
   return true;
 }
 
-// ── import from mRemoteNG / OpenSSH ──
-async function importExternal(input, kind, password) {
-  const file = input.files ? input.files[0] : null;
-  if (importFileTooBig(file)) { input.value = ''; return; }
-  let text = input._text;
-  if (file && kind === 'putty') { // .reg files from regedit are UTF-16: the server decodes the raw bytes
-    const b = new Uint8Array(await file.arrayBuffer());
-    let bin = '';
-    for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
-    text = btoa(bin);
-  } else if (file) { const bytes=new Uint8Array(await file.arrayBuffer()); text=new TextDecoder(bytes[0]===255&&bytes[1]===254?'utf-16le':'utf-8').decode(bytes).replace(/^\uFEFF/,''); }
-  if (input.files) input.value = '';
-  if (!text) return;
-  const body = kind === 'mremoteng' ? {xml: text, password: password || ''} : kind === 'putty' ? {data: text} : {text, folder: ''};
-  const r = await fetch('/api/config/import/' + kind, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) {
-    if (d.need_password || (password && /master password/.test(d.error || ''))) {
-      const pw = await uiPrompt(t('mrng_master_pw'), '', {okText: t('import'), message: password ? t('mrng_wrong_pw') : t('mrng_master_pw_d'), password: true});
-      if (pw) importExternal({_text: text}, kind, pw);
-      return;
-    }
-    showToast(d.error || t('failed'), 'error', 8000);
-    return;
-  }
-  const lines = [t('import_result').replace('{n}', d.imported).replace('{f}', d.folders).replace('{j}', d.jump_hosts).replace('{t}', d.tunnels)];
-  if (d.proxies || d.proxy_links) lines.push(t('import_result_proxies').replace('{p}', d.proxies || 0).replace('{l}', d.proxy_links || 0));
-  if ((d.skipped || []).length) lines.push('', t('import_skipped_h') + ':', ...d.skipped.slice(0, 30).map(x => '• ' + x.name + ' — ' + x.reason));
-  if ((d.notes || []).length) lines.push('', t('import_notes_h') + ':', ...d.notes.slice(0, 30).map(x => '• ' + x.name + ' — ' + x.reason));
-  await uiDialog({title: t('import_done_title'), message: lines.join('\n'), okText: t('ok'), cancelText: t('close')});
-  loadData();
-}
+// Import from other tools: static/importer.js (openImportPicker).
 
 
 // ══ QUICK CONNECT, NOTES, NETWORK TOOLS, APP (v10.8) ═════
@@ -18611,9 +18572,9 @@ async function importConfig(input) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const utf16 = bytes[0] === 255 && bytes[1] === 254;
   const text = new TextDecoder(utf16 ? 'utf-16le' : 'utf-8').decode(bytes).replace(/^\uFEFF/, '');
-  if (/^\s*(?:<\?xml[^>]*>\s*)?<(?:[A-Za-z_][\w.-]*:)?Connections\b/i.test(text)) return importExternal(input, 'mremoteng');
-  if (/^\s*(?:Windows Registry Editor|REGEDIT4)/i.test(text) || /\.reg$/i.test(file.name)) return importExternal(input, 'putty');
   input.value = '';
+  // Not WRM's own JSON export: hand the file to the picker (mRemoteNG, PuTTY, RDM CSV …) with a preview.
+  if (!/^\s*[\[{]/.test(text)) return openImportPicker(file);
   let data; try { data = JSON.parse(text); } catch(_) { showToast(t('invalid_json'), 'error'); return; }
   const res = await fetch('/api/config/import', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
   if (res.ok) {
@@ -20301,5 +20262,6 @@ document.addEventListener('keydown', e => {
 <script src="/static/lock.js"></script>
 <script src="/static/aisessions.js"></script>
 <script src="/static/shareteam.js"></script>
+<script src="/static/importer.js"></script>
 </body>
 </html>

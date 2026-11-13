@@ -200,9 +200,10 @@ func storageStoreObject(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	meta, headErr := c.head(r.Context(), key)
+	// The HEAD decides between the upload and write permissions and tells the audit log whether
+	// the object was created or replaced (one Tier-2 request on AWS).
+	_, headErr := c.head(r.Context(), key)
 	exists := headErr == nil
-	_ = meta
 	capability := "upload"
 	if exists {
 		capability = "write"
@@ -341,7 +342,9 @@ func apiStorageMove(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "The source object does not exist", http.StatusNotFound)
 		return
 	}
-	if _, err := c.head(r.Context(), in.To); err == nil && !in.Overwrite {
+	if in.Overwrite {
+		// no existence check: the copy replaces the target anyway
+	} else if _, err := c.head(r.Context(), in.To); err == nil {
 		jsonError(w, "An object with that name already exists", http.StatusConflict)
 		return
 	}

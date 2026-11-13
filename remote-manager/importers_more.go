@@ -15,7 +15,7 @@ import (
 	"unicode/utf8"
 )
 
-// ─── MORE IMPORT SOURCES AND AUTO-DETECTION (v14.15.0) ─────────────────────────────
+// ─── MORE IMPORT SOURCES AND AUTO-DETECTION (v14.13.0) ─────────────────────────────
 //
 // One file picker for every tool WRM imports from. The server looks at the bytes, picks the
 // format, and can show a preview (dry run) before anything is written:
