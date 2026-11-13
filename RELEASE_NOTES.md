@@ -17,6 +17,18 @@ Use WRM's update action or replace the executable/container with the matching [v
 
 [Full changelog](CHANGELOG.md)
 
+## Included from v14.11.7 — Lock now is back in the top bar
+
+#### Fixed
+
+- **🔒 Lock now** is again a one-click icon in the top bar, next to *New Window*, on every screen width. It is still in the account menu too.
+
+#### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.11.7](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.7) asset. Preserve the database and encryption key; nothing is migrated.
+
+[Full changelog](CHANGELOG.md)
+
 ## Included from v14.11.6 — Clipboard and snippets for daily terminal work
 
 #### Added
@@ -34,7 +46,6 @@ Use WRM's update action or replace the executable/container with the matching [v
 
 Use WRM's update action or replace the executable/container with the matching [v14.11.6](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.11.6) asset. Preserve the database and encryption key; nothing is migrated.
 
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.11.5 — Separate permissions for adding and switching tunnels
 

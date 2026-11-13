@@ -1,4 +1,4 @@
-## [14.11.8] - 2026-11-12
+## [14.11.8] - 2026-11-13
 
 ### Added
 - **Share a theme with everyone**: administrators publish one of their themes from *Settings → Appearance* (**📢 Share with everyone**, **Stop sharing**); users see it under *From your organisation*, and it can be the default theme. Setting `appearance_shared_themes`, checked on the server (`appearance_themes.go`: `org-` ids, at most 12 themes, token names and values without `url(`, `expression`, `@import`, `;`, braces or angle brackets).
@@ -8,6 +8,14 @@
 
 ### Changed
 - A theme that lists only some colours (shared, imported or from an addon) takes the missing ones from Graphite or Daylight instead of leaving them unset.
+
+## [14.11.7] - 2026-11-12
+
+The lock button is visible again. No database or API change.
+
+### Fixed
+
+- **🔒 Lock now** is back in the top bar as a one-click icon (since v14.11.0 it was only in the account menu). It is never moved into *More* and stays in the account menu as well.
 
 ## [14.11.6] - 2026-11-12
 

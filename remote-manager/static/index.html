@@ -1526,6 +1526,8 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 #btn-tools.bc-active { background: rgba(234,88,12,.24); border-color: rgba(234,88,12,.65); color: var(--orange-t); }
 .tools-bc { font-size: 11px; }
 #btn-shares.icon-only .lbl { display: none; }
+/* v14.11.7: Lock now is back in the top bar as a one-click icon (also in the account menu) */
+#btn-lock.icon-only .lbl { display: none; }
 .tb-group { display: inline-flex; align-items: stretch; flex-shrink: 0; }
 .tb-group > .btn-top { border-radius: 0; margin-left: -1px; }
 .tb-group > .btn-top.g-first { border-radius: 8px 0 0 8px; margin-left: 0; }
@@ -1976,7 +1978,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </span>
       <button class="btn-top" id="btn-more" style="display:none;" onclick="toggleTopMore(event)" data-i18n-title="tb_more_t" title="More" aria-haspopup="menu" aria-expanded="false"><span>⋯</span><span class="more-dot"></span></button>
       <button class="btn-top btn-menu" id="btn-sess-drawer" onclick="openDrawer('sess-panel')" data-i18n-title="tb_sess_drawer_t" title="Sessions, clipboard and side panels" aria-label="Sessions, clipboard and side panels">🗂</button>
-      <button class="btn-top tb-user-item" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
+      <button class="btn-top icon-only" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
       <button class="btn-top tb-user-item" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
     </div>
     <button class="add-win-btn" onclick="addWindow()" title="New window (Alt+N)"><span>＋</span><span class="lbl" data-i18n="new_window_lbl">New Window</span></button>
