@@ -322,10 +322,19 @@ func guacHandshake(conn net.Conn, gr *guacReader, protocol string, params map[st
 	if _, err := conn.Write(guacEncode("select", strings.ToLower(protocol))); err != nil {
 		return "", "", err
 	}
+	// guacd answers "select" at once. A paused Docker Desktop still accepts the TCP
+	// connection on the published port but never answers: say so before the browser
+	// gives up on its own (15 s without data).
+	conn.SetReadDeadline(time.Now().Add(guacdAnswerTimeout))
 	_, el, err := gr.next()
 	if err != nil {
+		var ne net.Error
+		if errors.As(err, &ne) && ne.Timeout() {
+			return "", "", fmt.Errorf("guacd at %s accepted the connection but does not answer. If guacd runs in Docker Desktop, check that Docker is running and not paused (Resume)", conn.RemoteAddr())
+		}
 		return "", "", fmt.Errorf("guacd: %v", err)
 	}
+	conn.SetDeadline(time.Now().Add(20 * time.Second))
 	if el[0] == "error" {
 		return "", "", fmt.Errorf("guacd: %s", strings.Join(el[1:], " "))
 	}
@@ -630,6 +639,30 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 	var doneOnce sync.Once
 	finish := func() { doneOnce.Do(func() { close(done) }) }
 
+	// guacd answers "ready" before it reaches the remote desktop. If the target never
+	// answers (firewall drops the packets, NLA or the security mode hangs), guacd sends
+	// nothing but keep-alives and the browser would show "Connecting" for ever. Without
+	// a first frame in time WRM ends the session with a message that says where it hangs.
+	var firstFrame atomic.Bool
+	go func() {
+		tm := time.NewTimer(desktopFirstFrameTimeout)
+		defer tm.Stop()
+		select {
+		case <-done:
+			return
+		case <-tm.C:
+		}
+		if firstFrame.Load() {
+			return
+		}
+		msg := desktopNoFrameMessage(c.Protocol, host, port, route, desktopFirstFrameTimeout)
+		auditLogRef(r, actorID, actorName, "desktop.error", c.Name, map[string]interface{}{"error": truncateStr(msg, 300)}, ta.ref())
+		endStatus.Store("failed")
+		send(guacEncode("error", msg, "516"))
+		time.Sleep(200 * time.Millisecond)
+		finish()
+	}()
+
 	// guacd → browser: complete instructions, batched into WebSocket messages.
 	go func() {
 		defer finish()
@@ -643,6 +676,9 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			ta.desktopOutput(raw)
+			if el[0] == "sync" {
+				firstFrame.Store(true)
+			}
 			if el[0] == "error" {
 				msg := guacErrorText(el)
 				auditLogRef(r, actorID, actorName, "desktop.error", c.Name, map[string]interface{}{"error": truncateStr(msg, 300)}, ta.ref())
@@ -693,6 +729,27 @@ func desktopWSHandler(w http.ResponseWriter, r *http.Request) {
 	<-done
 	gconn.Close()
 	ws.Close()
+}
+
+// guacdAnswerTimeout is how long WRM waits for guacd's answer to "select".
+var guacdAnswerTimeout = 8 * time.Second
+
+// desktopFirstFrameTimeout is how long WRM waits after guacd's "ready" for the first
+// frame of the remote desktop (a variable so tests can shorten it).
+var desktopFirstFrameTimeout = 45 * time.Second
+
+// desktopNoFrameMessage explains a desktop session that never showed a frame.
+func desktopNoFrameMessage(protocol, host string, port int, route string, wait time.Duration) string {
+	target := net.JoinHostPort(host, strconv.Itoa(port))
+	msg := fmt.Sprintf("guacd accepted the session but %s at %s did not answer within %d s.", strings.ToUpper(protocol), target, int(wait.Seconds()))
+	if route != "" {
+		msg += " Route: " + route + "."
+	}
+	msg += " Check that guacd can reach this address (firewall, Docker network)"
+	if strings.EqualFold(protocol, "RDP") {
+		msg += ", and try another Security mode in the connection's remote desktop options (NLA, TLS or RDP)"
+	}
+	return msg + "; guacd's log shows the cause."
 }
 
 // ─── session audit ───────────────────────────────────

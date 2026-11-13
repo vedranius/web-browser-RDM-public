@@ -105,6 +105,15 @@ func (f *fakeGuacd) serve(c net.Conn, dialTarget bool) {
 		return
 	}
 	c.Write(guacEncode("ready", "$fake-id"))
+	if params["password"] == "silent" { // the target never answers: keep-alives only
+		for i := 0; i < 50; i++ {
+			if _, err := c.Write(guacEncode("nop")); err != nil {
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		return
+	}
 	c.Write(append(guacEncode("size", "0", "1024", "768"), guacEncode("sync", "1000")...))
 	if dialTarget {
 		tc, err := net.DialTimeout("tcp", net.JoinHostPort(params["hostname"], params["port"]), 5*time.Second)
@@ -312,6 +321,22 @@ func TestDesktopSession(t *testing.T) {
 		t.Fatalf("login error not shown: %q", dc2.text())
 	}
 
+	// target silent after "ready": WRM ends the session instead of "Connecting" for ever
+	db.Exec(`UPDATE connections SET password=? WHERE id=?`, encryptValue("silent"), cv.ID)
+	prevWait := desktopFirstFrameTimeout
+	desktopFirstFrameTimeout = 800 * time.Millisecond
+	dc4 := u.openDesktop(cv.ID)
+	dc4.wait(t)
+	desktopFirstFrameTimeout = prevWait
+	if txt := dc4.text(); !strings.Contains(txt, "did not answer within") || !strings.Contains(txt, "10.9.8.7:3390") || !strings.Contains(txt, "3.516;") {
+		t.Fatalf("silent target: %q", txt)
+	}
+	waitUntil(t, "silent session failed", func() bool {
+		var st string
+		db.QueryRow(`SELECT status FROM terminal_sessions WHERE conn_id=? ORDER BY id DESC LIMIT 1`, cv.ID).Scan(&st)
+		return st == "failed"
+	})
+
 	// terminals, file manager and transfers refuse desktop connections
 	if resp := u.do("GET", "/api/remote/list?id="+strconv.Itoa(cv.ID)+"&path=/", nil, ""); resp.StatusCode != 400 {
 		t.Fatalf("file manager on RDP: %d", resp.StatusCode)
@@ -398,5 +423,42 @@ func TestDesktopThroughJumpHost(t *testing.T) {
 	dc2.wait(t)
 	if !strings.Contains(dc2.text(), "guacd") {
 		t.Fatalf("missing guacd not explained: %q", dc2.text())
+	}
+}
+
+// A guacd that accepts TCP but never answers (Docker Desktop paused) gets a clear error
+// before the browser's own 15 s timeout.
+func TestDesktopGuacdSilent(t *testing.T) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	go func() {
+		for {
+			c, err := l.Accept()
+			if err != nil {
+				return
+			}
+			defer c.Close()
+		}
+	}()
+	setSetting("guacd_address", l.Addr().String())
+	defer setSetting("guacd_address", "127.0.0.1:4822")
+	prev := guacdAnswerTimeout
+	guacdAnswerTimeout = 500 * time.Millisecond
+	defer func() { guacdAnswerTimeout = prev }()
+	srv := httptest.NewServer(newRouter())
+	defer srv.Close()
+	u := newTestUser(t, srv, "rdp-silent", false)
+	var cv connView
+	if code := u.jsonDo("POST", "/api/connections", map[string]interface{}{"name": "win-02", "protocol": "RDP", "host": "10.9.8.7",
+		"username": "administrator", "auth_method": "PASSWORD", "password": "x"}, &cv); code != 201 {
+		t.Fatalf("create RDP connection: %d", code)
+	}
+	dc := u.openDesktop(cv.ID)
+	dc.wait(t)
+	if txt := dc.text(); !strings.Contains(txt, "does not answer") || !strings.Contains(txt, "not paused") {
+		t.Fatalf("silent guacd: %q", txt)
 	}
 }
