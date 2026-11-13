@@ -1,5 +1,9 @@
 ## Web Remote Manager PRO v14.11.9 — Remote desktops no longer hang on "Connecting"
 
+### Added
+
+- **Copy and paste with the remote desktop like in an RDP client**: copy locally and press Ctrl+V in the remote desktop, or copy there and paste locally. The browser asks once for clipboard permission (HTTPS or localhost).
+
 ### Fixed
 
 - **Remote desktop stuck on "Connecting…"**: when the connection to WRM failed, timed out or closed before the first picture, the window now shows the error with **↻ Reconnect**.

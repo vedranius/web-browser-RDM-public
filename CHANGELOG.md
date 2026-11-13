@@ -1,5 +1,8 @@
 ## [14.11.9] - 2026-11-13
 
+### Added
+- **Remote desktop clipboard like an RDP client**: the local clipboard goes to the remote desktop when the desktop gets the pointer or focus and right before **Ctrl+V** / **Shift+Insert**; text copied on the remote desktop goes to the local clipboard without taking the keyboard away from the desktop. Reading the local clipboard needs HTTPS or localhost and the browser's permission; the 📋 *Clipboard* button stays for other cases. The connection's *Clipboard* option still turns both directions off.
+
 ### Fixed
 - **Remote desktop stuck on "Connecting…"**: guacamole-common-js 1.5 does not report errors of the tunnel itself, so a WebSocket that failed, timed out ("Server timeout.") or closed before the first frame left the window on *Connecting…* for ever. The desktop window now watches the tunnel and shows the error with **↻ Reconnect**; a tunnel that closes after the desktop appeared shows *Disconnected*.
 - **guacd that accepts but does not answer** (Docker Desktop paused): WRM waits 8 seconds for guacd's answer to `select` instead of 20 and says that guacd does not answer and that Docker may be paused, before the browser's own 15-second timeout.

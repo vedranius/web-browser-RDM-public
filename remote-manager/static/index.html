@@ -13198,7 +13198,7 @@ async function startDesktop(wo) {
       deskOverlay(wo, null);
       deskStatus(wo, (c ? c.protocol : '') + (desk.route ? ' · ' + t('via') + ' ' + desk.route : ''));
       deskRescale(wo);
-      try { wrap.focus(); } catch (_) {}
+      try { wrap.focus({preventScroll: true}); } catch (_) {}
     } else if (st === 5) { // DISCONNECTED
       setTermState(wo, 'disconnected');
       if (!desk.error) deskOverlay(wo, `<div class="big">${esc(t('desk_disconnected'))}</div><button class="btn-sm" onclick="deskReconnect(${wo.id})">↻ ${esc(t('reconnect'))}</button> <button class="btn-danger btn-sm" onclick="handleCloseWindow(${wo.id})">✕ ${esc(t('close_window'))}</button>`);
@@ -13228,7 +13228,7 @@ async function startDesktop(wo) {
     const reader = new Guacamole.StringReader(stream);
     let data = '';
     reader.ontext = txt => { data += txt; };
-    reader.onend = () => { if (data) { addClip(data); copyText(data, true); } };
+    reader.onend = () => { if (data) { desk.lastClip = data; addClip(data); deskCopyLocal(wo, data); } };
   };
   client.onrequired = async params => {
     for (const name of params) {
@@ -13261,11 +13261,29 @@ async function startDesktop(wo) {
     const touch = new Guacamole.Mouse.Touchscreen(del);
     touch.onEach(['mousedown', 'mouseup', 'mousemove'], e => sendMouse(e.state));
   } catch (_) {}
+  // Clipboard like an RDP client: the local clipboard goes to the remote one when the
+  // desktop gets focus or the pointer, and right before Ctrl+V / Shift+Insert.
+  desk.lastClip = '';
+  desk.keyQ = Promise.resolve();
+  const pushClip = () => deskPushClipboard(wo);
+  wrap.addEventListener('focus', pushClip);
+  wrap.addEventListener('mouseenter', pushClip);
+  const mods = new Set();
   const kb = new Guacamole.Keyboard(wrap);
-  kb.onkeydown = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(1, keysym); return false; };
-  kb.onkeyup = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(0, keysym); };
+  kb.onkeydown = keysym => {
+    if (desk !== wo.desk || !desk.connected) return false;
+    mods.add(keysym);
+    const ctrl = mods.has(0xFFE3) || mods.has(0xFFE4), shift = mods.has(0xFFE1) || mods.has(0xFFE2);
+    const paste = (ctrl && (keysym === 0x76 || keysym === 0x56)) || (shift && keysym === 0xFF63);
+    desk.keyQ = desk.keyQ.then(() => (paste ? pushClip() : null)).then(() => { if (desk === wo.desk) client.sendKeyEvent(1, keysym); });
+    return false;
+  };
+  kb.onkeyup = keysym => {
+    mods.delete(keysym);
+    if (desk === wo.desk && desk.connected) desk.keyQ = desk.keyQ.then(() => { if (desk === wo.desk) client.sendKeyEvent(0, keysym); });
+  };
   desk.keyboard = kb;
-  wrap.onmousedown = () => { focusWindow(wo.id); setTimeout(() => { try { wrap.focus(); } catch (_) {} }, 0); };
+  wrap.onmousedown = () => { focusWindow(wo.id); setTimeout(() => { try { wrap.focus({preventScroll: true}); } catch (_) {} }, 0); };
   wo.resizeObs = new ResizeObserver(() => { clearTimeout(desk._rt); desk._rt = setTimeout(() => deskResized(wo), 250); });
   wo.resizeObs.observe(view);
   const z = deskZoom();
@@ -13275,6 +13293,31 @@ async function startDesktop(wo) {
   if (wo.shareID) qs.set('share_id', wo.shareID);
   desk.lastSize = w + 'x' + h;
   client.connect(qs.toString());
+}
+
+// deskPushClipboard sends the local clipboard text to the remote desktop when it changed.
+// Reading needs a secure page (HTTPS or localhost) and the browser's permission; without
+// them the 📋 Clipboard button still works.
+async function deskPushClipboard(wo) {
+  const d = wo && wo.desk;
+  if (!d || !d.connected || !navigator.clipboard || !navigator.clipboard.readText) return;
+  let text = '';
+  try { text = await Promise.race([navigator.clipboard.readText(), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500))]); } catch (_) { return; }
+  if (!text || text === d.lastClip || d !== wo.desk) return;
+  d.lastClip = text;
+  const w = new Guacamole.StringWriter(d.client.createClipboardStream('text/plain'));
+  w.sendText(text); w.sendEnd();
+}
+
+// deskCopyLocal puts text copied on the remote desktop into the local clipboard without
+// taking the keyboard focus away from the desktop.
+function deskCopyLocal(wo, text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    return;
+  }
+  copyText(text, true);
+  try { document.getElementById('dw-' + wo.id).focus({preventScroll: true}); } catch (_) {}
 }
 
 function deskResized(wo) {
@@ -13325,7 +13368,7 @@ async function deskSendClipboard(id) {
   const w = new Guacamole.StringWriter(st);
   w.sendText(text); w.sendEnd();
   showToast('📋 ' + t('desk_clip_sent'), 'success', 2500);
-  try { document.getElementById('dw-' + id).focus(); } catch (_) {}
+  try { document.getElementById('dw-' + id).focus({preventScroll: true}); } catch (_) {}
 }
 
 async function deskTypeText(id) {
@@ -13339,7 +13382,7 @@ async function deskTypeText(id) {
     wo.desk.client.sendKeyEvent(1, keysym);
     wo.desk.client.sendKeyEvent(0, keysym);
   }
-  try { document.getElementById('dw-' + id).focus(); } catch (_) {}
+  try { document.getElementById('dw-' + id).focus({preventScroll: true}); } catch (_) {}
 }
 
 function deskReconnect(id) {
