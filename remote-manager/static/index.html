@@ -5402,12 +5402,12 @@ Object.assign(LANGS.hr, { p_medium_default_engine: 'Medium: zadani engine', p_me
 Object.assign(LANGS.en, { p_medium_build_user: 'Medium: build user on the WRM host', p_medium_build_user_d: 'OS account that runs Medium builds on the WRM host, for example wrm-build. Empty: builds run with the WRM account. Needs WRM running as root on Linux or another Unix system; root and accounts that can read the WRM database, its key or the Medium data are refused. The build gets a clean environment without WRM variables.' });
 Object.assign(LANGS.hr, { p_medium_build_user: 'Medium: korisnik za build na WRM hostu', p_medium_build_user_d: 'OS račun koji izvodi Medium buildove na WRM hostu, npr. wrm-build. Prazno: buildovi se izvode s WRM računom. Treba WRM pokrenut kao root na Linuxu ili drugom Unixu; root i računi koji mogu čitati WRM bazu, njezin ključ ili Medium podatke se odbijaju. Build dobiva čisto okruženje bez WRM varijabli.' });
 Object.assign(LANGS.en, {
-  tools_menu_t: 'Tools: network tools and broadcast input', tools_net: 'Network tools…', tools_net_t: 'Ping, port check, DNS, traceroute and more, from WRM or a server', tools_bc_on: 'on', tools_bc_t: 'Type into several terminals at once',
+  tools_menu_t: 'Tools: network tools and broadcast input', tools_serial: 'Serial / USB devices…', tools_serial_t: 'Talk to a serial or USB device plugged into this computer (Web Serial, stays in the browser)', serial_load_failed: 'Could not load the serial device manager', tools_net: 'Network tools…', tools_net_t: 'Ping, port check, DNS, traceroute and more, from WRM or a server', tools_bc_on: 'on', tools_bc_t: 'Type into several terminals at once',
   cv_pin: 'Pin in place', cv_unpin: 'Unpin', cv_pinned_t: 'Pinned: this window does not move or resize. Unpin it from its menu (right-click the title bar).',
   cv_ontop: 'Always on top', cv_hint_add: 'Add an addon', cv_hint_add_t: 'Put addons such as server status, load, clock or notes on the canvas next to your terminals',
 });
 Object.assign(LANGS.hr, {
-  tools_menu_t: 'Alati: mrežni alati i istovremeni unos', tools_net: 'Mrežni alati…', tools_net_t: 'Ping, provjera portova, DNS, traceroute i drugo, s WRM-a ili s poslužitelja', tools_bc_on: 'uključen', tools_bc_t: 'Tipkaj u više terminala odjednom',
+  tools_menu_t: 'Alati: mrežni alati i istovremeni unos', tools_serial: 'Serijski / USB uređaji…', tools_serial_t: 'Komunikacija sa serijskim ili USB uređajem spojenim na ovo računalo (Web Serial, ostaje u pregledniku)', serial_load_failed: 'Upravitelj serijskih uređaja nije se mogao učitati', tools_net: 'Mrežni alati…', tools_net_t: 'Ping, provjera portova, DNS, traceroute i drugo, s WRM-a ili s poslužitelja', tools_bc_on: 'uključen', tools_bc_t: 'Tipkaj u više terminala odjednom',
   cv_pin: 'Prikvači na mjesto', cv_unpin: 'Otkvači', cv_pinned_t: 'Prikvačeno: ovaj se prozor ne miče i ne mijenja veličinu. Otkvači ga iz njegovog izbornika (desni klik na naslovnu traku).',
   cv_ontop: 'Uvijek na vrhu', cv_hint_add: 'Dodaj addon', cv_hint_add_t: 'Stavi addone poput stanja poslužitelja, opterećenja, sata ili bilješki na canvas pored terminala',
 });
@@ -11885,6 +11885,23 @@ function openMonitoring(tab) {
 }
 function openGit(){closeDrawers();loadGitModule().then(()=>window.gitWorkspace.open()).catch(e=>showToast(e.message,'error'));}
 
+// Serial / USB device manager (static/serial_terminal.js + static/serial.js): browser-local
+// Web Serial, loaded the first time it is opened. No serial data goes to WRM.
+let serialLoading = null;
+function loadScriptOnce(src) {
+  return new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = ok; s.onerror = fail;
+    document.head.appendChild(s);
+  });
+}
+function openSerial() {
+  closeDrawers();
+  if (window.serialWorkspace) { window.serialWorkspace.open(); return; }
+  if (!serialLoading) serialLoading = loadScriptOnce('/static/serial_terminal.js').then(() => loadScriptOnce('/static/serial.js'));
+  serialLoading.then(() => window.serialWorkspace.open(), () => { serialLoading = null; showToast(t('serial_load_failed'), 'error'); });
+}
+
 // AI assistant: its code (static/ai.js) is loaded the first time it is used.
 let aiLoading = null;
 function loadAI() {
@@ -14372,6 +14389,7 @@ function openToolsMenu(anchor) {
   const pol = (currentUser && currentUser.policy) || {};
   const items = [{head: '🧰 ' + t('tools_lbl')}];
   if (pol.network_tools !== false) items.push({ico: '🛠', label: t('tools_net'), title: t('tools_net_t'), do: () => openTools()});
+  if (pol.serial !== false) items.push({ico: '⌁', label: t('tools_serial'), title: t('tools_serial_t'), do: () => openSerial()});
   items.push({ico: '🌐', label: t('vault_proxies'), title: t('p_proxies_d'), do: () => openVault('proxies')});
   if (pol.broadcast !== false) {
     items.push({ico: '📣', label: t('broadcast_lbl') + '…', side: bcast.on ? t('tools_bc_on') : '', title: t('tools_bc_t'), do: () => openBroadcastModal()});

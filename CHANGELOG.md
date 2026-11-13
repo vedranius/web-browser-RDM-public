@@ -1,3 +1,9 @@
+## [14.12.0] - 2026-11-13
+
+### Added
+- **Branch and tag list in Git *Upgrade…***: the dialog lists the branches (⑂) and tags (🏷, newest version first) of the service's project from GitLab, GitHub or Gitea; *Enter a custom ref…* keeps the free text field (`main`, `tag:v2`, `tag:latest`). With installations of several services selected, a *Service* list picks whose refs are shown. New `GET /api/git/refs?app=` (`{project, branches, tags}`); the project always comes from the catalog entry, never from the request.
+- **Serial / USB devices** (*Tools → Serial / USB devices…*): a browser-local manager for serial and USB-serial devices plugged into the computer that runs the browser (Web Serial, Chromium-based browsers over HTTPS or localhost). It recognises common boards by USB VID:PID (Arduino Uno / Mega / Nano, ESP32 native USB, STM32 virtual COM port, Raspberry Pi Pico, CP210x / CH340 / FTDI bridges, without guessing unknown ones), suggests and checks port settings, opens an xterm terminal with send box and line ending, counts received / sent bytes and errors, saves profiles per user in this browser, and copies prompts for the AI assistant (identify the device, minimal serial example). Serial data never goes to the WRM server. The entry follows the existing `serial` policy. Code in `static/serial.js` and `static/serial_terminal.js`, loaded on first use; tests in `tools/test-serial.js`.
+
 ## [14.11.9] - 2026-11-13
 
 ### Added

@@ -2,6 +2,12 @@
 
 In general: replace the executable, AppImage or container image and keep the database and the encryption key. Database changes are additive, so the previous version still starts on the database after an upgrade. The notes below list what changes per version, newest first; see also the [changelog](../CHANGELOG.md).
 
+## Upgrading from v14.11.9
+
+- No database or setting changes.
+- New read-only API `GET /api/git/refs?app=` (needs the Git workspace like the other `/api/git` calls).
+- *Tools → Serial / USB devices…* follows the existing `serial` policy (Admin → Policies). It talks to devices on the computer running the browser, never on the WRM server, and needs a Chromium-based browser over **HTTPS or localhost**: on plain `http://` from another computer the browser hides Web Serial and the manager says so. WRM's `Permissions-Policy` header does not block `serial`.
+
 ## Upgrading from v14.11.8
 
 Replace the executable/AppImage/container and keep the database and encryption key. No database, API or setting change. Behaviour: a desktop session whose guacd does not answer `select` within 8 seconds, or whose target shows no frame within 45 seconds after guacd's *ready*, now ends with an error (status `failed`, audit `desktop.error`) instead of waiting.
