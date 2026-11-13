@@ -13239,11 +13239,27 @@ async function startDesktop(wo) {
       w.sendText(val); w.sendEnd();
     }
   };
+  // Guacamole.Mouse measures the pointer with offsetLeft/offsetTop, which ignores the CSS
+  // zoom of Settings → Appearance → Size (and any transform): the remote pointer then lands
+  // centimetres away. WRM keeps the last pointer position and measures it against the
+  // element's real box instead.
+  let lastPt = null;
+  const notePt = ev => { const p = ev.touches && ev.touches.length ? ev.touches[0] : (ev.changedTouches && ev.changedTouches.length ? ev.changedTouches[0] : ev); if (p && typeof p.clientX === 'number') lastPt = {x: p.clientX, y: p.clientY}; };
+  ['pointerdown', 'pointermove', 'pointerup', 'mousedown', 'mousemove', 'mouseup', 'wheel', 'touchstart', 'touchmove', 'touchend'].forEach(n => view.addEventListener(n, notePt, {capture: true, passive: true}));
+  const sendMouse = st => {
+    if (desk !== wo.desk) return;
+    const r = del.getBoundingClientRect();
+    if (lastPt && r.width > 0 && r.height > 0) {
+      st.x = (lastPt.x - r.left) * del.offsetWidth / r.width;
+      st.y = (lastPt.y - r.top) * del.offsetHeight / r.height;
+    }
+    client.sendMouseState(st, true);
+  };
   const mouse = new Guacamole.Mouse(del);
-  mouse.onEach(['mousedown', 'mouseup', 'mousemove'], e => { if (desk === wo.desk) client.sendMouseState(e.state, true); });
+  mouse.onEach(['mousedown', 'mouseup', 'mousemove'], e => sendMouse(e.state));
   try {
     const touch = new Guacamole.Mouse.Touchscreen(del);
-    touch.onEach(['mousedown', 'mouseup', 'mousemove'], e => { if (desk === wo.desk) client.sendMouseState(e.state, true); });
+    touch.onEach(['mousedown', 'mouseup', 'mousemove'], e => sendMouse(e.state));
   } catch (_) {}
   const kb = new Guacamole.Keyboard(wrap);
   kb.onkeydown = keysym => { if (desk === wo.desk && desk.connected) client.sendKeyEvent(1, keysym); return false; };
@@ -13252,7 +13268,8 @@ async function startDesktop(wo) {
   wrap.onmousedown = () => { focusWindow(wo.id); setTimeout(() => { try { wrap.focus(); } catch (_) {} }, 0); };
   wo.resizeObs = new ResizeObserver(() => { clearTimeout(desk._rt); desk._rt = setTimeout(() => deskResized(wo), 250); });
   wo.resizeObs.observe(view);
-  const w = Math.max(320, Math.round(view.clientWidth)), h = Math.max(240, Math.round(view.clientHeight));
+  const z = deskZoom();
+  const w = Math.max(320, Math.round(view.clientWidth * z)), h = Math.max(240, Math.round(view.clientHeight * z));
   const qs = new URLSearchParams({id: wo.connId, width: w, height: h, dpi: Math.round(96 * Math.min(2, window.devicePixelRatio || 1)),
     tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || '')});
   if (wo.shareID) qs.set('share_id', wo.shareID);
@@ -13263,11 +13280,16 @@ async function startDesktop(wo) {
 function deskResized(wo) {
   const d = wo.desk, view = document.getElementById('dv-' + wo.id);
   if (!d || !view || !d.connected) return;
-  const w = Math.round(view.clientWidth), h = Math.round(view.clientHeight);
+  const z = deskZoom();
+  const w = Math.round(view.clientWidth * z), h = Math.round(view.clientHeight * z);
   if (w < 100 || h < 100) return;
   if (d.fit && d.lastSize !== w + 'x' + h) { d.lastSize = w + 'x' + h; try { d.client.sendSize(w, h); } catch (_) {} }
   deskRescale(wo);
 }
+
+// CSS zoom of the page (Settings → Appearance → Size): the remote desktop is requested in
+// real screen pixels and scaled back, so it stays sharp and fills the window.
+function deskZoom() { const z = parseFloat(document.body && document.body.style.zoom); return z > 0 ? z : 1; }
 
 function deskRescale(wo) {
   const d = wo.desk, view = document.getElementById('dv-' + wo.id);

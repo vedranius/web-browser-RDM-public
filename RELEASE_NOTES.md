@@ -5,6 +5,7 @@
 - **Remote desktop stuck on "Connecting…"**: when the connection to WRM failed, timed out or closed before the first picture, the window now shows the error with **↻ Reconnect**.
 - **guacd that does not answer** (Docker Desktop paused) is reported after 8 seconds, with a hint to resume Docker.
 - **A target that never shows a picture** ends after 45 seconds with the address guacd tried, logged as a failed session.
+- **Remote desktop pointer in the right place** with a UI size other than 100 % (*Settings → Appearance → Size*), and a sharp picture at that size.
 
 ### Changed
 
