@@ -2,6 +2,10 @@
 
 The [README](../README.md) shows the five latest versions. Earlier highlights are kept here, newest first; every change is in the [changelog](../CHANGELOG.md), and upgrade notes per version are in [UPGRADING.md](UPGRADING.md).
 
+## What's new in v14.11.5
+
+**Separate permissions for adding and for switching tunnels** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)). A share now has two tunnel switches instead of one: *Operators may enable and disable (start and stop) tunnels* (the existing switch, unchanged) and the new *Operators may add, edit and remove tunnels*. Give some people only the on/off switch and others both. With the new switch a member right-clicks a shared SSH connection, **🛠 Edit tunnels…**, and adds, changes or removes its tunnels; they stay in the owner's account and must pass the tunnel policies of both the owner and the member.
+
 ## What's new in v14.11.4
 
 **AI apps wait for your approval, and you see it on the desktop.** Claude Code, Codex and other AI apps stop waiting for a tool call after their own timeout (Codex after 60 seconds), and then used to carry on without the step. Now WRM tells the AI that the request still waits in WRM and gives it a new tool, `wait_for_approval`, which it calls again and again until you approve or deny; only then does it go on. The WRM PRO plugin (and every AI app set up with *All AI apps at once*) also shows each approval request as a **notification of the operating system** (a Windows notification, macOS Notification Center, `notify-send` on Linux), also when no WRM tab is open or in front; a click opens WRM. Update the plugin to 1.2.4. See [AI desktop apps (MCP)](#ai-desktop-apps-mcp).

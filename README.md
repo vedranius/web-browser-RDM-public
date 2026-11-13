@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.11.9** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.12.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.12.0
+
+**Pick the branch or tag for a Git upgrade from a list, and talk to serial and USB devices from the browser.** *Upgrade…* in the Git workspace now lists the branches and tags (newest first) of the service's project, with *Enter a custom ref…* for anything else. *Tools → Serial / USB devices…* opens a terminal to an Arduino, ESP32, STM32, Raspberry Pi Pico or USB-serial adapter plugged into your own computer, recognises the board by its USB ID, suggests port settings, keeps profiles per device and copies prompts for the AI assistant. It uses Web Serial (Chromium browsers, HTTPS or localhost); serial data stays in the browser.
 
 ## What's new in v14.11.9
 
@@ -35,10 +39,6 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 ## What's new in v14.11.6
 
 **A clipboard and snippets made for daily terminal work.** Clipboard entries show where they were copied from and when, can be **📌 pinned** (stay on top, not pushed out of the 20-entry list), filtered, removed one by one and **⚡ saved as a snippet** on the server. **Paste** types into the focused or last used terminal; several lines use bracketed paste or ask first, and dangerous commands always ask. Snippets get a **★ Recently used** group. See [Clipboard panel](#clipboard-panel) and [Snippets & run on connect](#snippets--run-on-connect).
-
-## What's new in v14.11.5
-
-**Separate permissions for adding and for switching tunnels** ([#192](https://github.com/vedranius/web-browser-RDM-public/issues/192)). A share now has two tunnel switches instead of one: *Operators may enable and disable (start and stop) tunnels* (the existing switch, unchanged) and the new *Operators may add, edit and remove tunnels*. Give some people only the on/off switch and others both. With the new switch a member right-clicks a shared SSH connection, **🛠 Edit tunnels…**, and adds, changes or removes its tunnels; they stay in the owner's account and must pass the tunnel policies of both the owner and the member.
 
 Older versions: [What's new in earlier versions](docs/WHATS-NEW.md) · [Changelog](CHANGELOG.md) · [Upgrading](docs/UPGRADING.md)
 
@@ -154,7 +154,7 @@ WRM is a **single executable** with a built-in web server and a built-in web app
 - **SSH terminals** in the browser (xterm.js, 256 colors, full-screen apps like `nano`, `vim`, `htop`, `mc`), with **snippets** (saved commands with variables, one click or Ctrl+Shift+Space), **run on connect** (`sudo -i`, `cd /srv/app`…) and **broadcast input** (type into many terminals at once, with a safety check for dangerous commands).
 - **Live up/down status** of every saved connection in the sidebar, with latency, server banner and a notification when a server goes down.
 - **Quick connect** — type `root@10.0.0.5:22` (or `rdp://…`, `vnc://…`) and connect without saving; **notes & runbooks** per connection (procedures, contacts, links); **network tools** — port check, ping, traceroute, DNS and HTTP/TLS check from the WRM server or **from any of your servers** ("can app-01 reach the database on 5432?").
-- **Out-of-band management** — power on/off/restart, health and inventory through the server's **BMC** (iDRAC, iLO, XClarity, Supermicro, OpenBMC via **Redfish**, or **IPMI**), and its **serial console** (BMC SSH or IPMI Serial-over-LAN) in a terminal window; **serial ports** of the WRM machine for switch and router consoles.
+- **Out-of-band management** — power on/off/restart, health and inventory through the server's **BMC** (iDRAC, iLO, XClarity, Supermicro, OpenBMC via **Redfish**, or **IPMI**), and its **serial console** (BMC SSH or IPMI Serial-over-LAN) in a terminal window; **serial ports** of the WRM machine for switch and router consoles; and **serial / USB devices on your own computer** (Arduino, ESP32, STM32, Pico, USB-serial adapters) from the browser through Web Serial.
 - **Remote desktops** — **RDP** (Windows), **VNC** and **Telnet** in a browser window, also behind jump hosts, with clipboard, Ctrl+Alt+Del, recording and replay (through guacd, the Apache Guacamole proxy).
 - **File manager** for **SFTP** (over SSH), **FTP** and **FTPS**: browse, upload, download, rename, delete, edit, search.
 - **SSH keys & credentials vault**: generate SSH keys, put them on many servers at once (like `ssh-copy-id`), see **who has access** to a server; one shared login such as `root@dc1` for many connections, shared with colleagues without revealing it, with **password rotation** on all its servers.
@@ -204,21 +204,21 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.11.9-linux-amd64
-   ./wrm-pro-v14.11.9-linux-amd64
+   chmod +x wrm-pro-v14.12.0-linux-amd64
+   ./wrm-pro-v14.12.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.11.9-windows-amd64.exe
+   .\wrm-pro-v14.12.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.11.9-linux-amd64.AppImage
-   ./wrm-pro-v14.11.9-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.11.9-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.12.0-linux-amd64.AppImage
+   ./wrm-pro-v14.12.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.12.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -227,8 +227,8 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.11.9/wrm-pro-v14.11.9-android-arm64
-   chmod +x wrm-pro-v14.11.9-android-arm64 && ./wrm-pro-v14.11.9-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.12.0/wrm-pro-v14.12.0-android-arm64
+   chmod +x wrm-pro-v14.12.0-android-arm64 && ./wrm-pro-v14.12.0-android-arm64
    ```
 
    **Docker**
@@ -752,6 +752,8 @@ Windows servers (RDP), Linux desktops and KVM/IPMI consoles (VNC) and old networ
 
 **🔌 Serial ports of the WRM machine** (USB console cables, `ttyS0`): protocol *Serial port*, the device name (`ttyUSB0`, `ttyACM0`, `ttyS0`) as host and the line settings — speed (default 9600; 115200 is common too), data bits, parity, stop bits, flow control (none, RTS/CTS, XON/XOFF). *Test connection* opens the port; a double-click opens it in a terminal (raw, recorded). Serial ports belong to the WRM server like its key files: by default only administrators may add them (policy `serial_ports`: off / admins / all); WRM must run on Linux, as a user that may open the device (group `dialout`).
 
+**Serial / USB devices on your own computer** (*Tools → Serial / USB devices…*, since v14.12.0): for a board or adapter plugged into the computer in front of you rather than into the WRM server. **Select USB device** asks the browser for permission (Web Serial: Chrome, Edge and other Chromium browsers, over HTTPS or localhost); authorised ports are listed again next time. WRM recognises common boards by USB VID:PID (Arduino Uno / Mega / Nano, ESP32 native USB, STM32 virtual COM port, Raspberry Pi Pico, CP210x / CH340 / FTDI bridges; an adapter is named as an adapter, since the board behind it cannot be known), suggests baud rate and framing, opens a terminal with a send box and line ending (none, LF, CRLF, CR) and counts bytes and errors. *Save profile* keeps a name and settings per device in this browser for your user. *AI recognition prompt* and *AI coding prompt* copy a prompt for the AI assistant. Serial data never goes to the WRM server. Hidden when the user's serial policy is off.
+
 Policies: `bmc_enabled` (`BMC_ENABLED`), `serial_ports`.
 
 ### Snippets & run on connect
@@ -991,7 +993,7 @@ The Medium view has a **WRM engine** panel. It compares a branch or tag with eve
 
 Runs change servers only when you start or schedule them. Select installations on the *Installations* tab (or open one) and choose an action; a run works on the installations **one after another** and **stops at the first failure** (*rolling*). Everything goes over SSH with POSIX tools (`sh`, `cp`, `mv`, `find`, `awk`, `tr`, `sha256sum`).
 
-- **Update** — the newest version of the ref the installation follows. **Upgrade…** — another branch or tag (`main`, `tag:v2`, `tag:latest`), with a warning and a summary per installation: files to change, new files, files changed locally, and files that the new version no longer has (they stay on the server). *Follow this ref from now on* sets the services' ref override, so later comparisons use it. **Rollback…** — restore a backup from `.deploy-bak/`. **Stamp** — write `VERSION.md` where an installation is up to date and has none (*Overwrite an existing VERSION.md* forces it). The dialog lists the files that differ; *Also stamp installations that are not up to date* writes it anyway with each file's actual version (older files their matching version, hand-changed files `(local)`) and a `Napomena` line saying the installation is partial. Dialogs opened from another one have **← Back** (Alt+←).
+- **Update** — the newest version of the ref the installation follows. **Upgrade…** — another branch or tag, picked from the project's branches (⑂) and tags (🏷, newest first) or typed with *Enter a custom ref…* (`main`, `tag:v2`, `tag:latest`), with a warning and a summary per installation: files to change, new files, files changed locally, and files that the new version no longer has (they stay on the server). *Follow this ref from now on* sets the services' ref override, so later comparisons use it. **Rollback…** — restore a backup from `.deploy-bak/`. **Stamp** — write `VERSION.md` where an installation is up to date and has none (*Overwrite an existing VERSION.md* forces it). The dialog lists the files that differ; *Also stamp installations that are not up to date* writes it anyway with each file's actual version (older files their matching version, hand-changed files `(local)`) and a `Napomena` line saying the installation is partial. Dialogs opened from another one have **← Back** (Alt+←).
 - **Choosing files:** *old* and *missing* files are ticked. A file **changed by hand** is written only when you tick it, with a warning (its content stays in the backup). **Protected** files are never written. *Show all files* lists the current ones too.
 - **Confirmation:** a summary, and for **production** installations — tag `env:prod` (or `prod`, `production`, `prd`, `live`) or an environment directory with that name — you type the server name. The server checks it again.
 - **Steps per installation**, shown live in the run's details:
@@ -2636,6 +2638,7 @@ Connections also have `monitor` (live status on/off). The terminal WebSocket acc
 | PUT / DELETE | `/api/git/catalog/apps/{name}` | Add or change / delete one service |
 | POST | `/api/git/sources` | `{kind: "gitlab"\|"github"\|"gitea", name, url, token}`; `PUT` / `DELETE /api/git/sources/{id}` (an omitted `token` keeps the stored one) |
 | POST | `/api/git/sources/{id}/test` | `{projects}` of the catalog's groups |
+| GET | `/api/git/refs?app=` | `{project, branches, tags}` of a catalog service's project (tags newest first); the project comes from the catalog |
 | POST | `/api/git/suggest` | `{project, ref}` → `{app, files}` (catalog entry from the repository tree) |
 | POST | `/api/git/bundles` | Body: a bundle `.tar.gz` → `{result: {source, files, payload, warnings}, state}` |
 | POST | `/api/git/bundles/export` | `{apps: [...]}` → bundle `.tar.gz` |
