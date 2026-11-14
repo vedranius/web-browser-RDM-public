@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.14.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.14.1** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Wiki](https://github.com/vedranius/web-browser-RDM-public/wiki) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.14.1
+
+**A wiki with a screenshot of every feature, in English and Croatian.** The [wiki](https://github.com/vedranius/web-browser-RDM-public/wiki) has a page for every help article with a picture of the feature it explains, a home page per language, a keyword index, what's new, the comparison with other tools and the quick start. It is rebuilt automatically, screenshots included, whenever the help or the interface changes, so it always matches the current version. *Open it* in Help now always opens the requested administration tab.
 
 ## What's new in v14.14.0
 
@@ -35,12 +39,6 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 ## What's new in v14.11.9
 
 **Remote desktops no longer hang on "Connecting…", and the pointer lands where the mouse is.** When the WebSocket to WRM failed, timed out or closed before the first picture, the window used to keep showing *Connecting…*; now it shows what went wrong with **↻ Reconnect**. A guacd that accepts the connection but never answers (Docker Desktop paused) is reported after 8 seconds, and a session whose target never shows a picture ends after 45 seconds with the address guacd tried. guacd's errors now name the target address, and RDP errors such as *Server refused connection* come with a hint about the address, firewall and Security mode. With a UI size other than 100 % (*Settings → Appearance → Size*) the remote pointer used to land centimetres away from the mouse; it is now exact and the picture stays sharp. **Copy and paste works both ways like in an RDP client**: copy on your computer and press Ctrl+V in the remote desktop, or copy there and paste locally. See [Troubleshooting](#troubleshooting).
-
-## What's new in v14.11.8
-
-**One look for the whole team, and better tools for making it.** An administrator can **📢 share a saved theme with everyone** from *Settings → Appearance*; it appears for all users under *From your organisation* and can be the default. **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance) gives everyone the same colours, while accessibility options, fonts and size stay with each user. The editor can now **💾 save changes into one of your themes** instead of only saving a copy, and a **contrast check** next to the preview shows the WCAG ratio of text, accent and terminal colours while you edit. See [Appearance, themes and accessibility](#appearance-themes-and-accessibility).
-
-Older versions: [What's new in earlier versions](docs/WHATS-NEW.md) · [Changelog](CHANGELOG.md) · [Upgrading](docs/UPGRADING.md)
 
 ## 📜 License: free for personal use and as a work tool in companies
 
@@ -205,21 +203,21 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.14.0-linux-amd64
-   ./wrm-pro-v14.14.0-linux-amd64
+   chmod +x wrm-pro-v14.14.1-linux-amd64
+   ./wrm-pro-v14.14.1-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.14.0-windows-amd64.exe
+   .\wrm-pro-v14.14.1-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.14.0-linux-amd64.AppImage
-   ./wrm-pro-v14.14.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.14.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.14.1-linux-amd64.AppImage
+   ./wrm-pro-v14.14.1-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.14.1-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -228,8 +226,8 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.14.0/wrm-pro-v14.14.0-android-arm64
-   chmod +x wrm-pro-v14.14.0-android-arm64 && ./wrm-pro-v14.14.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.14.1/wrm-pro-v14.14.1-android-arm64
+   chmod +x wrm-pro-v14.14.1-android-arm64 && ./wrm-pro-v14.14.1-android-arm64
    ```
 
    **Docker**
@@ -1207,7 +1205,7 @@ WRM does not need Jenkins or GitLab CI; each of these is opt-in.
 
 **?** in the top bar, **F1** (a terminal with the focus keeps F1) or *Help* in the account menu opens Help on the side; WRM keeps working next to it.
 
-- **Articles:** one per feature, in English and Croatian (`remote-manager/help/en|hr/*.md`, built into the binary; index on GitHub: [docs/HELP.md](docs/HELP.md)). *Topics* lists them by section, the article about the dialog you have open comes first, and search works with or without č, ć, š, ž, đ.
+- **Articles:** one per feature, in English and Croatian (`remote-manager/help/en|hr/*.md`, built into the binary; index on GitHub: [docs/HELP.md](docs/HELP.md)). The same articles, with a screenshot of every feature in English and Croatian, make up the [wiki](https://github.com/vedranius/web-browser-RDM-public/wiki), rebuilt automatically on every release. *Topics* lists them by section, the article about the dialog you have open comes first, and search works with or without č, ć, š, ž, đ.
 - **⌖ Pick:** click a button, dialog or window, or drag a frame around an area; Help shows the articles about it and gives the help AI its title, place and visible text (never form values) as context.
 - **Help AI:** answers from the articles with menu paths and steps (policy `ai_help`: same as the AI assistant by default, or off / admins / all). It never runs anything. When you ask it to do something it offers up to four buttons, each saying exactly what it does: open a part of WRM, open *New connection* filled in, open a saved connection, open a connection with the AI assistant and its prompt filled in (you send it), or, for administrators, change one setting (asked again with old and new value, through the normal settings API). Questions are audited as `help.ask` without their text.
 - **Error messages** have a **?** that opens Help with the error.
