@@ -1527,7 +1527,9 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
 .tools-bc { font-size: 11px; }
 #btn-shares.icon-only .lbl { display: none; }
 /* v14.11.7: Lock now is back in the top bar as a one-click icon (also in the account menu) */
-#btn-lock.icon-only .lbl { display: none; }
+#btn-lock.icon-only .lbl, #btn-help.icon-only .lbl { display: none; }
+/* Help: on phones the ? is in the account menu */
+@media (max-width: 600px) { #btn-help { display: none; } }
 .tb-group { display: inline-flex; align-items: stretch; flex-shrink: 0; }
 .tb-group > .btn-top { border-radius: 0; margin-left: -1px; }
 .tb-group > .btn-top.g-first { border-radius: 8px 0 0 8px; margin-left: 0; }
@@ -1978,6 +1980,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       </span>
       <button class="btn-top" id="btn-more" style="display:none;" onclick="toggleTopMore(event)" data-i18n-title="tb_more_t" title="More" aria-haspopup="menu" aria-expanded="false"><span>⋯</span><span class="more-dot"></span></button>
       <button class="btn-top btn-menu" id="btn-sess-drawer" onclick="openDrawer('sess-panel')" data-i18n-title="tb_sess_drawer_t" title="Sessions, clipboard and side panels" aria-label="Sessions, clipboard and side panels">🗂</button>
+      <button class="btn-top icon-only" id="btn-help" onclick="openHelp()" data-i18n-title="help_t" title="Help (F1)" aria-label="Help"><span>?</span><span class="lbl" data-i18n="help_lbl">Help</span></button>
       <button class="btn-top icon-only" id="btn-lock" onclick="window.wrmLock && wrmLock.lock()" title="Lock now" aria-label="Lock now"><span>🔒</span><span class="lbl">Lock</span></button>
       <button class="btn-top tb-user-item" id="btn-logout" onclick="doLogout()" title="Sign Out"><span>⏻</span><span class="lbl" data-i18n="sign_out">Sign Out</span></button>
     </div>
@@ -2443,7 +2446,7 @@ details.help summary { cursor: pointer; color: var(--accent); font-weight: 600; 
       <div class="hint-box" data-i18n="history_help">Your terminal sessions and sessions of other people on your connections. Replay a recording or download it as an asciinema .cast file.</div>
       <div id="history-pane"></div>
     </div>
-    <div class="tab-pane" id="st-ai"><div id="ai-status-pane"></div></div>
+    <div class="tab-pane" id="st-ai"><div style="margin-bottom:8px;"><button class="btn-sec btn-sm" onclick="openHelpAISetup()">🧭 <span data-i18n="ais_title">Set up AI</span></button></div><div id="ai-status-pane"></div></div>
     <div class="tab-pane" id="st-mcp"><div id="mcp-pane"></div></div>
     <div class="tab-pane" id="st-addons"><div id="addons-pane"></div></div>
     <div class="tab-pane" id="st-appearance"><div id="appearance-pane"></div></div>
@@ -6936,6 +6939,12 @@ function showToast(msg, type = 'info', dur = 3000) {
   const span = document.createElement('span');
   span.textContent = msg;
   d.appendChild(span);
+  if (type === 'error' && window.wrmHelp) {
+    const q = document.createElement('button');
+    q.className = 'toast-help'; q.textContent = '?'; q.title = t('help_err_btn_t');
+    q.onclick = ev => { ev.stopPropagation(); wrmHelp.askError(msg); };
+    d.appendChild(q);
+  }
   box.appendChild(d);
   toastArm(d, dur);
   const shown = plain();
@@ -20224,6 +20233,7 @@ function toggleUserMenu(ev) {
   if (currentUser) {
     add('⚙', t('settings_lbl'), () => openSettings());
     add('🎨', t('tab_appearance'), () => openSettings('st-appearance'));
+    if (window.wrmHelp) add('❓', t('help_lbl'), () => openHelp());
   }
   const items = ['btn-shares', 'btn-lock', 'btn-logout'].map(id => document.getElementById(id)).filter(b => b && b.style.display !== 'none');
   if (items.length) {
@@ -20263,5 +20273,6 @@ document.addEventListener('keydown', e => {
 <script src="/static/aisessions.js"></script>
 <script src="/static/shareteam.js"></script>
 <script src="/static/importer.js"></script>
+<script src="/static/help.js"></script>
 </body>
 </html>

@@ -576,6 +576,10 @@ func mcpToolList(g *mcpGrant) []map[string]interface{} {
 		{"name": "close_session", "title": "Close a session", "description": "Close a WRM session when you are done with the server.",
 			"inputSchema": obj(map[string]interface{}{"session_id": sid}, "session_id"),
 			"annotations": map[string]interface{}{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false}},
+		{"name": "wrm_help", "title": "WRM help", "description": "Read WRM PRO's own help: search it with `query`, or read one article by `article` id (from the search). Use it to explain how to use a WRM feature, where a setting is, or to set things up. Read-only.",
+			"inputSchema": obj(map[string]interface{}{"query": strProp("Words to search for, e.g. jump host or AI setup"), "article": strProp("Article id to read, e.g. ai-setup"),
+				"lang": map[string]interface{}{"type": "string", "enum": []string{"en", "hr"}, "description": "Language of the help (default en)"}}),
+			"annotations": map[string]interface{}{"readOnlyHint": true, "openWorldHint": false}},
 	}
 	for _, t := range aiTools {
 		if !aiToolInScopes(t.Def.Name, g.Scopes) || (t.Kind == "write" && g.Mode == aiModeReadOnly) || (t.Host && !t.Self && !isAdminUser(g.UserID)) {
@@ -655,6 +659,9 @@ func mcpToolsCall(w http.ResponseWriter, r *http.Request, c *mcpConn, g *mcpGran
 		return
 	case "list_connections":
 		writeRPC(w, 200, rpcResult(m.ID, mcpListConnections(g)))
+		return
+	case "wrm_help":
+		writeRPC(w, 200, rpcResult(m.ID, mcpHelp(p.Arguments)))
 		return
 	case "open_session":
 		if !mcpStartToolCall(w, m.ID) {

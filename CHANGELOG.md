@@ -1,3 +1,19 @@
+## [14.14.0] - 2026-11-13
+
+### Added
+- **Help panel** (`static/help.js`): **?** in the top bar, **F1** (not while a terminal has the focus) or the account menu opens Help on the side. *Topics* lists every article by section with the articles about the open dialog first; search folds Croatian letters; each article links to the same file on GitHub and has *Open it* for the feature it explains.
+- **⌖ Pick**: click a part of WRM or drag a frame around an area (Esc cancels). Help shows the articles whose UI selectors match it and passes the picked part (its title, location and visible text, never form values) to the help AI as context.
+- **Help AI chat** over `POST /api/help/ask` (server-sent events). Answers may carry a `wrm-actions` block; the browser keeps only known actions (`open` with a whitelisted target, `connection` with name/protocol/host/port/username/folder, `connect`, `assistant`, and `setting` for administrators), shows what each does, and runs one only when its button is pressed. A setting change asks again with the old and new value and goes through the normal settings API (step-up included); `assistant` only fills the prompt box.
+- **🧭 Set up AI**: one page (Settings → AI assistant, Help) with a light per step: AI policy, AI services, help AI policy, AI apps (MCP), with buttons for what is missing.
+- **Error toasts** get a **?** that opens Help with the error as context.
+- **Croatian help**: all 34 articles in `help/hr` translated (titles, sections, summaries, keywords in both languages). `docs/HELP.md` is generated from the articles (`WRM_WRITE_HELP_INDEX=1 go test -run TestHelpDocsIndex`).
+- **Automatic model lists**: `POST /api/admin/ai/providers/{id}/models/sync` (and `/api/ai/providers/{id}/models/sync` for own keys) connects to the provider, lists its models (installed models for Ollama and other OpenAI-compatible servers) and adds the missing ones after the existing ones; the default model stays. The AI service wizard runs it after a passing test and shows what was added; the services list has **⟳ Models**. Audited as `ai.provider_models_synced`. A provider's model list may now hold up to 20 000 characters (was 2 000).
+- **MCP tool `wrm_help`** (read-only): search the help (`query`), read one article (`article`), or list them, in English or Croatian.
+- Tests: `v14140_help_test.go` (both languages, search, docs index, API, help AI prompt and audit, policy, MCP tool), `v14140_models_sync_test.go`, browser test `tools/test-help.js`.
+
+### Changed
+- The help articles mention the new places (*✦ AI → 🧭 Set up AI*, Help in the account menu on phones).
+
 ## [14.13.0] - 2026-11-13
 
 ### Added

@@ -13,12 +13,16 @@
 
 Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git service comparison and deployment, jump hosts, proxies, tunnels, BMC and serial consoles, keys and credentials, inventory imports, server-to-server transfers, notifications and collaboration with voice. AI tools can inspect logs and services, diagnose problems, run permitted commands and propose file changes with read-only, approval or limited automatic modes. WRM also provides sharing roles, 2FA, audit logs and session recordings. Run WRM as one self-hosted binary, a Docker container or a Linux AppImage.
 
-**Current version: v14.13.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
+**Current version: v14.14.0** · [Download](https://github.com/vedranius/web-browser-RDM-public/releases/latest) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Architecture](ARCHITECTURE.md)
 
 <p align="center">
   <a href="docs/video/wrm-pro-overview.mp4"><img src="docs/video/wrm-pro-overview.jpg" alt="WRM PRO overview video (1:45): terminals, files, monitoring, logs, chains, security, keys and themes" width="720"></a>
   <br><sub>▶ <a href="docs/video/wrm-pro-overview.mp4">Watch the 1:45 overview</a>, recorded in a simulated demo installation with invented servers and data. Music is original and generated for this video.</sub>
 </p>
+
+## What's new in v14.14.0
+
+**Help is built in, in English and Croatian, and it can show you or do it for you.** **?** in the top bar (or **F1**; on phones in the account menu) opens Help on the side: 34 articles, one per feature, searchable with or without č, ć, š, ž, đ, and the article about the dialog you have open comes first. **⌖ Pick** lets you click any button, dialog or window (or drag a frame around an area) to see the articles about it and ask the **help AI** what it does. The help AI answers from the articles and never runs anything: when you ask it to do something it offers buttons such as *Open New connection (filled in)* or *Open app-01 with the AI assistant*, each saying exactly what it does. Error messages get a **?** that opens Help with the error. **🧭 Set up AI** is one page with a light per step (AI on, an AI service, help AI, AI apps). Adding an AI service now **connects to it and adds every model it offers** (every installed model for Ollama), and **⟳ Models** refreshes the list later. AI apps connected over MCP get the **wrm_help** tool to read the same help. The articles are also on GitHub: [docs/HELP.md](docs/HELP.md).
 
 ## What's new in v14.13.0
 
@@ -35,10 +39,6 @@ Manage **SSH terminals, SFTP / FTP / FTPS files and RDP / VNC desktops**, Git se
 ## What's new in v14.11.8
 
 **One look for the whole team, and better tools for making it.** An administrator can **📢 share a saved theme with everyone** from *Settings → Appearance*; it appears for all users under *From your organisation* and can be the default. **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance) gives everyone the same colours, while accessibility options, fonts and size stay with each user. The editor can now **💾 save changes into one of your themes** instead of only saving a copy, and a **contrast check** next to the preview shows the WCAG ratio of text, accent and terminal colours while you edit. See [Appearance, themes and accessibility](#appearance-themes-and-accessibility).
-
-## What's new in v14.11.7
-
-**🔒 Lock now is back in the top bar.** Since v14.11.0 it was only in the account menu (click your name); now it is a one-click lock icon next to *New Window* again, on every screen width, and it stays in the account menu too. See [Screen lock](#screen-lock).
 
 Older versions: [What's new in earlier versions](docs/WHATS-NEW.md) · [Changelog](CHANGELOG.md) · [Upgrading](docs/UPGRADING.md)
 
@@ -109,6 +109,7 @@ WRM is built in my spare time. If it saves you time, you can buy me a coffee:
    - [Git workspace: .gitignore helper](#git-workspace-gitignore-helper)
    - [Git workspace: CI integration (optional)](#git-workspace-ci-integration-optional)
    - [Git workspace: every file and partial checks](#git-workspace-every-file-and-partial-checks)
+   - [Help and the help AI](#help-and-the-help-ai)
    - [AI assistant](#ai-assistant)
    - [AI desktop apps (MCP)](#ai-desktop-apps-mcp)
    - [Network tools](#network-tools)
@@ -204,21 +205,21 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
 
    **Linux / macOS / FreeBSD / OpenBSD**
    ```bash
-   chmod +x wrm-pro-v14.13.0-linux-amd64
-   ./wrm-pro-v14.13.0-linux-amd64
+   chmod +x wrm-pro-v14.14.0-linux-amd64
+   ./wrm-pro-v14.14.0-linux-amd64
    ```
    On macOS, if Gatekeeper blocks the file: `xattr -d com.apple.quarantine wrm-pro-*-darwin-*`.
 
    **Windows** (PowerShell), or just double-click the `.exe`:
    ```powershell
-   .\wrm-pro-v14.13.0-windows-amd64.exe
+   .\wrm-pro-v14.14.0-windows-amd64.exe
    ```
 
    **Linux AppImage (x86_64 / ARM64)**
    ```bash
-   chmod +x wrm-pro-v14.13.0-linux-amd64.AppImage
-   ./wrm-pro-v14.13.0-linux-amd64.AppImage
-   # On ARM64 use wrm-pro-v14.13.0-linux-arm64.AppImage instead.
+   chmod +x wrm-pro-v14.14.0-linux-amd64.AppImage
+   ./wrm-pro-v14.14.0-linux-amd64.AppImage
+   # On ARM64 use wrm-pro-v14.14.0-linux-arm64.AppImage instead.
    ```
    Open **http://localhost:8080**. The AppImage runs in a terminal and binds to localhost by default; use `PORT` or `LISTEN_ADDR` to change that. Stop it with Ctrl+C. If FUSE is unavailable, run with `--appimage-extract-and-run`.
 
@@ -227,8 +228,8 @@ A short, fair comparison with tools sysadmins often use for the same job. It is 
    **Android (Termux)**
    ```bash
    pkg install wget
-   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.13.0/wrm-pro-v14.13.0-android-arm64
-   chmod +x wrm-pro-v14.13.0-android-arm64 && ./wrm-pro-v14.13.0-android-arm64
+   wget https://github.com/vedranius/web-browser-RDM-public/releases/download/v14.14.0/wrm-pro-v14.14.0-android-arm64
+   chmod +x wrm-pro-v14.14.0-android-arm64 && ./wrm-pro-v14.14.0-android-arm64
    ```
 
    **Docker**
@@ -1202,6 +1203,17 @@ WRM does not need Jenkins or GitLab CI; each of these is opt-in.
   - **GitLab pipeline:** the GitLab address (default: the Git source), the project (default: the service's project), the branch (default: the target's branch) and a **pipeline trigger token**; the variables are `server`, `install_path` and `version`. The status is read with the read token of the GitLab source on the same host.
   - The run goes through the **same plan, confirmation (production: the server name typed), policies and audit** (`git.update` / `git.upgrade` with `via: ci`, the link and the result) as a normal update. No files are written; the run history shows the CI status and a link. Afterwards WRM compares the installation again when it can log in. *Stop* stops waiting (the job keeps running in CI).
 
+### Help and the help AI
+
+**?** in the top bar, **F1** (a terminal with the focus keeps F1) or *Help* in the account menu opens Help on the side; WRM keeps working next to it.
+
+- **Articles:** one per feature, in English and Croatian (`remote-manager/help/en|hr/*.md`, built into the binary; index on GitHub: [docs/HELP.md](docs/HELP.md)). *Topics* lists them by section, the article about the dialog you have open comes first, and search works with or without č, ć, š, ž, đ.
+- **⌖ Pick:** click a button, dialog or window, or drag a frame around an area; Help shows the articles about it and gives the help AI its title, place and visible text (never form values) as context.
+- **Help AI:** answers from the articles with menu paths and steps (policy `ai_help`: same as the AI assistant by default, or off / admins / all). It never runs anything. When you ask it to do something it offers up to four buttons, each saying exactly what it does: open a part of WRM, open *New connection* filled in, open a saved connection, open a connection with the AI assistant and its prompt filled in (you send it), or, for administrators, change one setting (asked again with old and new value, through the normal settings API). Questions are audited as `help.ask` without their text.
+- **Error messages** have a **?** that opens Help with the error.
+- **🧭 Set up AI** (*Settings → AI assistant*, Help): one page with a light per step (AI policy, an AI service, help AI, AI apps) and a button for what is missing.
+- **AI apps over MCP** get the read-only tool `wrm_help` (search, read an article, list articles).
+
 ### AI assistant
 
 Use the top **AI** button or **Settings → AI assistant** to inspect effective account permission, provider availability and setup blockers. SSH and SSH-backed SFTP windows have an AI button; if access is disabled it opens the diagnostic view. Enabling/disabling policy refreshes open browsers, including after event-bus reconnect. A successful provider test confirms connectivity, and the setup result separately shows whether the account can use the assistant. Terminal AI does not depend on MCP settings.
@@ -1227,6 +1239,7 @@ An AI assistant in a panel **next to the terminal** (also from the file manager)
 - **My AI settings** (⚙ in the panel, stored per user like the panel layout): your default provider (an organisation provider or your own key, when `ai_personal_keys` allows), model, mode and engine for new chats, and whether you see the model's thinking (only while `ai_show_thinking` is on). The work log keeps the whole thinking text in a scrolling box.
 - **Stop and kill:** ■ *Stop* cancels the running request and command; ⏻ ends the session. Administrators end one session, all sessions of a user, or every session (*Stop every AI session now*), turn the assistant off for a user, or turn on the **kill switch** (`ai_kill_switch`, also `WRM_AI_KILL_SWITCH=1`), which ends everything and blocks new sessions. An **✦ AI** badge on the window shows that a session is active.
 - **Providers:** the **Anthropic API** (the latest Claude models, e.g. `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; an optional gateway base URL), the **OpenAI API**, **Azure OpenAI** (deployment + api-version, or the v1 API), **AWS Bedrock** (the Converse API with SigV4 access keys or a Bedrock API key, or the Messages API endpoint with an API key; model IDs such as `anthropic.claude-opus-5-5`), **Google Vertex AI** (Claude through `rawPredict`, or the OpenAI-compatible endpoint, with a service account key) **OpenCode Zen** (pay-as-you-go: free models without a key, every model with an OpenCode account's key), **OpenCode Go** (the Go subscription key; see [OpenCode Zen, Go, agents and helper models](#opencode-zen-go-agents-and-helper-models)) and any **OpenAI-compatible** base URL (Ollama, vLLM, LM Studio …). Responses are streamed; tokens and the estimated cost are counted per request (built-in list prices for Anthropic models, your own prices for others); requests time out and are cancelled with *Stop*.
+- **Model lists:** after a passing test the wizard connects to the service and adds every model it offers (every installed model for Ollama and other OpenAI-compatible servers); **⟳ Models** in the list of services does it again (`POST …/ai/providers/{id}/models/sync`, audited as `ai.provider_models_synced`). *Allowed models* (`ai_models`) still limits what users see.
 - **Keys:** the organisation's providers are managed by administrators (*Admin panel → AI assistant → Organisation providers*); personal keys (*🔑 My API keys* in the panel) only when `ai_personal_keys` allows them. Keys are encrypted at rest and **never sent to the browser**; *Test* sends one tiny request.
 - **Consumer subscriptions do not work here:** Claude.ai and ChatGPT chat subscriptions cannot be used by third-party applications as an API. Use an API key (or your company's gateway) for this panel — or let the chat app itself connect to WRM over MCP: see [AI desktop apps (MCP)](#ai-desktop-apps-mcp).
 - **Shared connections:** the assistant can be used on a shared connection by signed-in users whose role allows terminals and file changes (*Operator* and up); their notes are not shared.

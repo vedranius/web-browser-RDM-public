@@ -2,6 +2,14 @@
 
 In general: replace the executable, AppImage or container image and keep the database and the encryption key. Database changes are additive, so the previous version still starts on the database after an upgrade. The notes below list what changes per version, newest first; see also the [changelog](../CHANGELOG.md).
 
+## Upgrading from v14.13.0
+
+- No database changes. The setting `ai_help` (who may use the help AI: `assistant` = same as the AI assistant, default; `off`, `admins`, `all`) is new and can be forced with `WRM_AI_HELP`.
+- New API: `GET /api/help`, `GET /api/help/articles/{id}`, `GET /api/help/search`, `GET /api/help/ai`, `POST /api/help/ask` (signed-in users) and `POST …/ai/providers/{id}/models/sync`. Help questions are audited as `help.ask` without their text; model refreshes as `ai.provider_models_synced`.
+- Behaviour: the AI service wizard adds every model the service offers after a passing test. Users still see only models allowed by *Allowed models* (`ai_models`); set it if a long list is not wanted.
+- **F1** opens Help unless a terminal has the focus (the terminal keeps F1).
+- AI apps connected over MCP see one more read-only tool, `wrm_help`.
+
 ## Upgrading from v14.12.0
 
 - No database or setting changes.

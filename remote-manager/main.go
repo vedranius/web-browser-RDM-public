@@ -39,7 +39,7 @@ import (
 var staticFiles embed.FS
 
 // AppVersion can be overridden at build time with -ldflags "-X main.AppVersion=..."
-var AppVersion = "v14.13.0"
+var AppVersion = "v14.14.0"
 
 const sessionCookieName = "wrm_session"
 
@@ -423,6 +423,8 @@ func newRouter() http.Handler {
 	mux.HandleFunc("/api/bookmarks/", apiBookmarksHandler)
 	mux.HandleFunc("/api/tunnels", apiTunnelsHandler)
 	mux.HandleFunc("/api/tunnels/", apiTunnelsHandler)
+	mux.HandleFunc("/api/help", apiHelpHandler)
+	mux.HandleFunc("/api/help/", apiHelpHandler)
 	mux.HandleFunc("/api/ai/", apiAIHandler)
 	mux.HandleFunc("/api/admin/ai/", apiAdminAIHandler)
 	mux.HandleFunc("/api/mcp/", apiMCPHandler)

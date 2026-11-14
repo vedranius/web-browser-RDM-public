@@ -2,6 +2,10 @@
 
 The [README](../README.md) shows the five latest versions. Earlier highlights are kept here, newest first; every change is in the [changelog](../CHANGELOG.md), and upgrade notes per version are in [UPGRADING.md](UPGRADING.md).
 
+## What's new in v14.11.7
+
+**🔒 Lock now is back in the top bar.** Since v14.11.0 it was only in the account menu (click your name); now it is a one-click lock icon next to *New Window* again, on every screen width, and it stays in the account menu too. See [Screen lock](#screen-lock).
+
 ## What's new in v14.11.6
 
 **A clipboard and snippets made for daily terminal work.** Clipboard entries show where they were copied from and when, can be **📌 pinned** (stay on top, not pushed out of the 20-entry list), filtered, removed one by one and **⚡ saved as a snippet** on the server. **Paste** types into the focused or last used terminal; several lines use bracketed paste or ask first, and dangerous commands always ask. Snippets get a **★ Recently used** group. See [Clipboard panel](#clipboard-panel) and [Snippets & run on connect](#snippets--run-on-connect).

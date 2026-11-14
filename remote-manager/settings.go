@@ -166,6 +166,7 @@ var settingSpecs = []settingSpec{
 	{Key: "bitwarden_idle_minutes", Default: "15", Kind: "int", Min: 1, Max: 240},
 	// AI assistant: who may use it, permission modes, providers, data handling, kill switch
 	{Key: "ai_assistant", Default: "off", Kind: "enum", Enum: []string{"off", "admins", "all"}},
+	{Key: "ai_help", Default: "assistant", Kind: "enum", Enum: []string{"off", "assistant", "admins", "all"}},
 	{Key: "ai_kill_switch", Default: "0", Kind: "bool"},
 	{Key: "ai_modes", Default: "read_only,ask", Kind: "string"},
 	{Key: "ai_default_mode", Default: "read_only", Kind: "enum", Enum: []string{"read_only", "ask"}},
