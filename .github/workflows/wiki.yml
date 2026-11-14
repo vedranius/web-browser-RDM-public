@@ -49,7 +49,7 @@ jobs:
           WRM_PASS: wiki-screens-${{ github.run_id }}
         run: |
           PORT=8780 DB_PATH="$RUNNER_TEMP/wrm.db" nohup "$RUNNER_TEMP/wrm" > "$RUNNER_TEMP/wrm.log" 2>&1 &
-          for i in $(seq 1 30); do curl -fs http://localhost:8780/ > /dev/null && break; sleep 1; done
+          for _ in $(seq 1 30); do curl -fs http://localhost:8780/ > /dev/null && break; sleep 1; done
           curl -fsS -X POST http://localhost:8780/api/auth/register \
             -H 'Content-Type: application/json' -H 'Origin: http://localhost:8780' -H 'X-WRM-Request: 1' \
             -d "{\"username\":\"admin\",\"password\":\"${WRM_PASS}\"}" > /dev/null
@@ -86,4 +86,4 @@ jobs:
           git commit -q -m "Wiki generated from ${SHA}"
           # one generated commit: the history of screenshots would only grow the wiki repository
           git -c http.extraheader="$auth" push -q --force "https://github.com/${REPO}.wiki.git" master
-          echo "Published $(ls *.md | wc -l) pages and $(ls images | wc -l) images."
+          echo "Published $(find . -maxdepth 1 -name '*.md' | wc -l) pages and $(find images -type f | wc -l) images."
