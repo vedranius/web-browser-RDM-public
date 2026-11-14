@@ -59,7 +59,7 @@ jobs:
           WRM_URL: http://localhost:8780
           WRM_PASS: wiki-screens-${{ github.run_id }}
         run: |
-          npm install --no-save --ignore-scripts --no-audit --no-fund playwright-core@1.63.0
+          npm ci --prefix tools/wiki --ignore-scripts --no-audit --no-fund
           CHROMIUM_PATH="$(command -v google-chrome || command -v chromium)" node tools/wiki/screenshots.js "$RUNNER_TEMP/images"
 
       - name: Generate pages

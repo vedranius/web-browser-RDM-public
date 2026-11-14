@@ -32,3 +32,4 @@ recordings/
 # Python bridge bytecode
 __pycache__/
 *.py[cod]
+tools/wiki/node_modules/

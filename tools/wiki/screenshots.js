@@ -74,7 +74,8 @@ async function main() {
   let count = 0;
   try {
     for (const lang of ['en', 'hr']) {
-      const ctx = await browser.newContext({viewport: {width: 1440, height: 900}, deviceScaleFactor: 1});
+      const locale = lang === 'hr' ? 'hr-HR' : 'en-GB';
+      const ctx = await browser.newContext({viewport: {width: 1440, height: 900}, deviceScaleFactor: 1, locale});
       const page = await ctx.newPage();
       let at = 'main';
       page.on('pageerror', e => errors.push(`${lang}/${at}: ${e.message}`));
@@ -108,7 +109,7 @@ async function main() {
       }
       // the same screen at phone width
       await ctx.close();
-      const phone = await browser.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
+      const phone = await browser.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale});
       const pp = await phone.newPage();
       await login(pp, lang);
       await pp.goto(url);

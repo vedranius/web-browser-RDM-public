@@ -1,0 +1,9 @@
+{
+  "name": "wrm-wiki-tools",
+  "private": true,
+  "description": "Screenshots for the generated GitHub wiki (see tools/wiki/screenshots.js).",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "playwright-core": "1.63.0"
+  }
+}
