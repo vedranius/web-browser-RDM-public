@@ -122,7 +122,7 @@ body.help-open #help-panel { display: flex; }
     if (OPEN[target]) { OPEN[target](); return true; }
     const [kind, arg] = target.split(/:(.*)/s);
     if (kind === 'settings' && SETTINGS_TABS.includes(arg)) { openSettings(arg); return true; }
-    if (kind === 'admin' && ADMIN_TABS.includes(arg) && currentUser && currentUser.is_admin) { openAdminPanel(); showAdminTab(arg); return true; }
+    if (kind === 'admin' && ADMIN_TABS.includes(arg) && currentUser && currentUser.is_admin) { adminTab = arg; openAdminPanel(); return true; } // one load: a second one raced the first
     if (kind === 'help' && /^[a-z0-9-]{1,60}$/.test(arg)) { open(arg); return true; }
     return false;
   }

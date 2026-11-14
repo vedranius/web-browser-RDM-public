@@ -2,6 +2,11 @@
 
 In general: replace the executable, AppImage or container image and keep the database and the encryption key. Database changes are additive, so the previous version still starts on the database after an upgrade. The notes below list what changes per version, newest first; see also the [changelog](../CHANGELOG.md).
 
+## Upgrading from v14.14.0
+
+- No database, setting or API changes. The fix for admin tabs opened from Help is in the browser only.
+- The GitHub wiki is now generated from the help articles by the `Wiki` workflow; edit `remote-manager/help/en|hr` instead of wiki pages.
+
 ## Upgrading from v14.13.0
 
 - No database changes. The setting `ai_help` (who may use the help AI: `assistant` = same as the AI assistant, default; `off`, `admins`, `all`) is new and can be forced with `WRM_AI_HELP`.

@@ -1,0 +1,89 @@
+name: Wiki
+
+# Rebuilds the GitHub wiki from the in-app help articles (remote-manager/help/en|hr) and the
+# README on every push to main that touches them or the UI, so the wiki follows every release.
+# Screenshots are taken from a freshly built WRM with invented demo data (tools/wiki/).
+# The wiki must be enabled and have one page created once in the GitHub web UI before the
+# first run (GitHub creates the wiki repository only then); until then this job only warns.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'remote-manager/help/**'
+      - 'remote-manager/static/**'
+      - 'README.md'
+      - 'tools/wiki/**'
+      - '.github/workflows/wiki.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wiki
+  cancel-in-progress: true
+
+jobs:
+  wiki:
+    name: Build and publish the wiki
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # push to the repository's wiki
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: remote-manager/go.mod
+          cache: false
+
+      - name: Build WRM
+        working-directory: remote-manager
+        run: go build -o "$RUNNER_TEMP/wrm" .
+
+      - name: Start WRM with an empty database and an admin account
+        env:
+          WRM_PASS: wiki-screens-${{ github.run_id }}
+        run: |
+          PORT=8780 DB_PATH="$RUNNER_TEMP/wrm.db" nohup "$RUNNER_TEMP/wrm" > "$RUNNER_TEMP/wrm.log" 2>&1 &
+          for _ in $(seq 1 30); do curl -fs http://localhost:8780/ > /dev/null && break; sleep 1; done
+          curl -fsS -X POST http://localhost:8780/api/auth/register \
+            -H 'Content-Type: application/json' -H 'Origin: http://localhost:8780' -H 'X-WRM-Request: 1' \
+            -d "{\"username\":\"admin\",\"password\":\"${WRM_PASS}\"}" > /dev/null
+
+      - name: Screenshots
+        env:
+          WRM_URL: http://localhost:8780
+          WRM_PASS: wiki-screens-${{ github.run_id }}
+        run: |
+          npm ci --prefix tools/wiki --ignore-scripts --no-audit --no-fund
+          CHROMIUM_PATH="$(command -v google-chrome || command -v chromium)" node tools/wiki/screenshots.js "$RUNNER_TEMP/images"
+
+      - name: Generate pages
+        run: |
+          node --test tools/test-wiki.js
+          node tools/wiki/build-wiki.js "$RUNNER_TEMP/wiki" "$RUNNER_TEMP/images"
+
+      - name: Publish to the wiki
+        env:
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)"
+          if ! git -c http.extraheader="$auth" ls-remote "https://github.com/${REPO}.wiki.git" > /dev/null 2>&1; then
+            echo "::warning::The wiki repository does not exist yet. Enable Wiki in the repository settings, create any first page in the web UI, then run this workflow again."
+            exit 0
+          fi
+          cd "$RUNNER_TEMP/wiki"
+          git init -q -b master
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -q -m "Wiki generated from ${SHA}"
+          # one generated commit: the history of screenshots would only grow the wiki repository
+          git -c http.extraheader="$auth" push -q --force "https://github.com/${REPO}.wiki.git" master
+          echo "Published $(find . -maxdepth 1 -name '*.md' | wc -l) pages and $(find images -type f | wc -l) images."

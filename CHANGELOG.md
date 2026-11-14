@@ -1,3 +1,15 @@
+## [14.14.1] - 2026-11-14
+
+### Added
+- **GitHub wiki generated from the help**: `tools/wiki/build-wiki.js` turns the 34 help articles of `remote-manager/help/en` and `help/hr` into wiki pages (one per article and language, with links to the other language and to the previous and next article), a home page per language with every section, keyword indexes (`Keyword-index`, `Indeks-pojmova`), a sidebar, and *What's new*, *How WRM compares* and *Quick start* taken from the README.
+- **Screenshots of every feature**: `tools/wiki/screenshots.js` signs in to a fresh WRM, adds invented demo folders and connections, and for every article opens the feature it explains (its `open:` target) or the help panel, in English and Croatian, plus the main screen and the phone layout.
+- **`Wiki` workflow** (`.github/workflows/wiki.yml`): on pushes to `main` that touch the help, the UI, the README or the generator it builds WRM, takes the screenshots, generates the pages and force-pushes them as one commit to the repository's wiki. If the wiki repository does not exist yet it only warns.
+- Tests: `tools/test-wiki.js` (every article in both languages, no broken wiki links, README sections found), run with the other UI checks.
+
+### Fixed
+- *Open it* in Help for an administration tab loaded the admin panel twice; the first load could finish last and show *Overview* instead of the requested tab.
+- The audit log no longer throws in the browser when its tab is changed while the list is loading.
+
 ## [14.14.0] - 2026-11-13
 
 ### Added

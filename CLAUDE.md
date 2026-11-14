@@ -47,6 +47,7 @@ node ../tools/check-ui.js       # UI: JS syntax + en/hr translation keys
 - **README.md:** a "What's new in vX.Y.Z" section at the top; the README keeps only the **five latest**, so move the oldest one to the top of `docs/WHATS-NEW.md`. Also feature documentation, configuration table, API reference, project layout, tests list, troubleshooting, as far as the change touches them. The README is the product page: no upgrade notes there.
 - **docs/UPGRADING.md:** a new top "Upgrading from vPrev" section (database, settings, behaviour changes).
 - **ARCHITECTURE.md, SECURITY.md, CONTRIBUTING.md:** where the change touches them.
+- **Wiki:** the GitHub wiki is generated, never edited by hand. A new or changed feature needs its help article in `remote-manager/help/en` **and** `help/hr` (see docs/HELP.md); after the merge the `Wiki` workflow (`.github/workflows/wiki.yml`) rebuilds every page and screenshot from the help articles and the README (`tools/wiki/`). Check that its run on `main` succeeded. A new article whose feature opens from Help (`open:`) gets its screenshot automatically; otherwise the help panel is shown. Preview locally: `node tools/wiki/build-wiki.js /tmp/wiki [images dir]`.
 - **Never** use the suffix `-mimo` anywhere (old releases had it; new ones must not).
 
 ## Git, PRs and merging

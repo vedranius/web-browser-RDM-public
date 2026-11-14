@@ -1,6 +1,23 @@
-## Web Remote Manager PRO v14.14.0 — Built-in help in two languages, and AI that is easier to set up
+## Web Remote Manager PRO v14.14.1 — A wiki with a screenshot of every feature
 
 ### Added
+
+- **[Wiki](https://github.com/vedranius/web-browser-RDM-public/wiki)** in English and Croatian: every help article as a page with a screenshot of the feature it explains, a home page per language, a keyword index, What's new, the comparison with other tools and the quick start. It is rebuilt automatically, screenshots included, whenever the help or the interface changes.
+
+### Fixed
+
+- *Open it* in Help for an administration tab sometimes showed *Overview* instead of the tab.
+- The audit log no longer shows a script error when you switch tabs while it loads.
+
+### Upgrade
+
+Use WRM's update action or replace the executable/container with the matching [v14.14.1](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.14.1) asset. Preserve the database and encryption key. No database or setting changes; see [UPGRADING.md](docs/UPGRADING.md).
+
+[Full changelog](CHANGELOG.md)
+
+## Included from v14.14.0 — Built-in help in two languages, and AI that is easier to set up
+
+#### Added
 
 - **Help** (**?** in the top bar, **F1**, or the account menu on phones): 34 articles in English and Croatian, search with or without Croatian letters, the article about the open dialog first, links to the same pages on GitHub.
 - **⌖ Pick** a button, dialog, window or area of the screen to see the articles about it and ask the help AI about it.
@@ -8,12 +25,6 @@
 - **🧭 Set up AI**: one page with a light for every step and a button for what is missing.
 - **Adding an AI service adds all its models**: after a passing test WRM lists the models the service offers (installed models for Ollama) and adds them; **⟳ Models** refreshes the list later.
 - **wrm_help** for AI apps connected over MCP: they read the same help.
-
-### Upgrade
-
-Use WRM's update action or replace the executable/container with the matching [v14.14.0](https://github.com/vedranius/web-browser-RDM-public/releases/tag/v14.14.0) asset. Preserve the database and encryption key. No database or setting changes; see [UPGRADING.md](docs/UPGRADING.md).
-
-[Full changelog](CHANGELOG.md)
 
 ## Included from v14.13.0 — One import with a preview for every tool
 

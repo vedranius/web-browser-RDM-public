@@ -2,6 +2,12 @@
 
 The [README](../README.md) shows the five latest versions. Earlier highlights are kept here, newest first; every change is in the [changelog](../CHANGELOG.md), and upgrade notes per version are in [UPGRADING.md](UPGRADING.md).
 
+## What's new in v14.11.8
+
+**One look for the whole team, and better tools for making it.** An administrator can **📢 share a saved theme with everyone** from *Settings → Appearance*; it appears for all users under *From your organisation* and can be the default. **Lock colours to the default theme** (`appearance_lock`, Admin → Policies → Appearance) gives everyone the same colours, while accessibility options, fonts and size stay with each user. The editor can now **💾 save changes into one of your themes** instead of only saving a copy, and a **contrast check** next to the preview shows the WCAG ratio of text, accent and terminal colours while you edit. See [Appearance, themes and accessibility](#appearance-themes-and-accessibility).
+
+Older versions: [What's new in earlier versions](docs/WHATS-NEW.md) · [Changelog](CHANGELOG.md) · [Upgrading](docs/UPGRADING.md)
+
 ## What's new in v14.11.7
 
 **🔒 Lock now is back in the top bar.** Since v14.11.0 it was only in the account menu (click your name); now it is a one-click lock icon next to *New Window* again, on every screen width, and it stays in the account menu too. See [Screen lock](#screen-lock).

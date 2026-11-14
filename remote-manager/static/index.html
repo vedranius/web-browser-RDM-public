@@ -10884,6 +10884,7 @@ async function adminAudit(more) {
   if (!res.ok) { showToast(await apiError(res), 'error'); return; }
   const list = await res.json();
   const tbl = document.getElementById('aud-table');
+  if (!tbl) return; // the tab was switched (or opened twice) while this request ran
   const rows = list.map(e => `<tr><td style="white-space:nowrap;">${esc(fmtTime(e.ts))}</td><td>${esc(e.username || '—')}</td><td class="mono">${esc(e.ip)}</td><td><b style="color:var(--text);">${esc(e.action)}</b>${e.session_id ? ` <a href="#" class="sub" onclick="openReplay(${Number(e.session_id)});return false;" title="${esc(t('replay'))}">▶ #${Number(e.session_id)}</a>` : ''}</td><td>${esc(e.target)}</td><td class="mono" style="font-size:10.5px;word-break:break-all;max-width:320px;">${esc(e.details)}</td></tr>`).join('');
   if (!more) tbl.innerHTML = `<table class="admin-table"><thead><tr><th>${esc(t('time'))}</th><th>${esc(t('user'))}</th><th>IP</th><th>${esc(t('event'))}</th><th>${esc(t('target'))}</th><th>${esc(t('details'))}</th></tr></thead><tbody id="aud-body">${rows}</tbody></table>`;
   else document.getElementById('aud-body').insertAdjacentHTML('beforeend', rows);
